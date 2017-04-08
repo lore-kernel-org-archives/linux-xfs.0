@@ -1,70 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48886 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:20532 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754220AbdDGHtU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2017 03:49:20 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v377nJI7018319
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 7 Apr 2017 07:49:19 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v377nIo9031099
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 7 Apr 2017 07:49:19 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v377nI86011969
-        for <linux-xfs@vger.kernel.org>; Fri, 7 Apr 2017 07:49:18 GMT
-From: Shan Hai <shan.hai@oracle.com>
-Subject: [PATCH 1/1] xfsprogs/db: fix a segfault by bailing out the print on a corrupted block
-Date: Fri,  7 Apr 2017 15:49:04 +0800
-Message-Id: <1491551344-5236-2-git-send-email-shan.hai@oracle.com>
-In-Reply-To: <1491551344-5236-1-git-send-email-shan.hai@oracle.com>
-References: <1491551344-5236-1-git-send-email-shan.hai@oracle.com>
+        with ESMTP id S1750990AbdDHDEG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2017 23:04:06 -0400
+Subject: [PATCH 3/4] xfs_db: complain about dir/attr blocks with bad magics
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 07 Apr 2017 20:04:01 -0700
+Message-ID: <149162064132.22901.4527238530152226772.stgit@birch.djwong.org>
+In-Reply-To: <149162062276.22901.7801103937404880951.stgit@birch.djwong.org>
+References: <149162062276.22901.7801103937404880951.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-The print command of the xfs_db would cause segfault on a corrupted
-or CRC error block, fix it by bailing out the print when encountered
-a corrupted or CRC error block, below is an example to reproduce the
-segfault:
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-mkfs.xfs -f /dev/sda1
-xfs_db -r -c "agf 0" -c "addr rmaproot" -c "p" /dev/sda1
-Metadata CRC error detected at xfs_rmapbt block 0x0/0x1000
-Segmentation fault (core dumped)
+The directory and attribute manipulation code also use the block's magic
+number to figure out the real type of the block we're analyzing.  If the
+magic doesn't match any of the known magics, we end up with the field
+type set to the raw attr3/dir3 type and no child type to descend into.
+Since there's no print function, we trip over the assertion about
+FTARG_OKEMPTY and crash.  Instead provide a print function that
+complains about the bad magic number.
 
-Signed-off-by: Shan Hai <shan.hai@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/print.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ db/attr.c  |   21 +++++++++++++++++++++
+ db/attr.h  |    3 +++
+ db/dir2.c  |   21 +++++++++++++++++++++
+ db/dir2.h  |    3 +++
+ db/field.c |   16 ++++++++--------
+ 5 files changed, 56 insertions(+), 8 deletions(-)
 
-diff --git a/db/print.c b/db/print.c
-index e31372f..08bb39a 100644
---- a/db/print.c
-+++ b/db/print.c
-@@ -69,11 +69,19 @@ print_f(
- 	char	**argv)
- {
- 	pfunc_t	pf;
-+	int err;
+
+diff --git a/db/attr.c b/db/attr.c
+index e26ac67..68a3116 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -574,3 +574,24 @@ const struct xfs_buf_ops xfs_attr3_db_buf_ops = {
+ 	.verify_read = xfs_attr3_db_read_verify,
+ 	.verify_write = xfs_attr3_db_write_verify,
+ };
++
++int
++attr_print_func(
++	void		*obj,
++	int		bit,
++	int		count,
++	char		*fmtstr,
++	int		size,
++	int		arg,
++	int		base,
++	int		array)
++{
++	__be32			magic32;
++	__be16			magic16;
++
++	magic32 = *(__be32 *)obj;
++	magic16 = ((struct xfs_da_blkinfo *)obj)->magic;
++	dbprintf(_("Unknown attribute buffer magic (0x%x:0x%x)!\n"),
++		magic32, magic16);
++	return 0;
++}
+diff --git a/db/attr.h b/db/attr.h
+index bc3431f..525b144 100644
+--- a/db/attr.h
++++ b/db/attr.h
+@@ -35,3 +35,6 @@ extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
+ extern int	attr_size(void *obj, int startoff, int idx);
  
- 	if (cur_typ == NULL) {
- 		dbprintf(_("no current type\n"));
- 		return 0;
- 	}
+ extern const struct xfs_buf_ops xfs_attr3_db_buf_ops;
 +
-+	err = iocur_top->bp->b_error;
-+	if ((err == -EFSCORRUPTED) || (err == -EFSBADCRC)) {
-+		dbprintf(_("data corrupted or CRC error\n"));
-+		return 0;
-+	}
++extern int	attr_print_func(void *obj, int bit, int count, char *fmtstr,
++		int size, int arg, int base, int array);
+diff --git a/db/dir2.c b/db/dir2.c
+index 533f705..3b89330 100644
+--- a/db/dir2.c
++++ b/db/dir2.c
+@@ -1041,3 +1041,24 @@ const struct xfs_buf_ops xfs_dir3_db_buf_ops = {
+ 	.verify_read = xfs_dir3_db_read_verify,
+ 	.verify_write = xfs_dir3_db_write_verify,
+ };
 +
- 	pf = cur_typ->pfunc;
- 	if (pf == NULL) {
- 		dbprintf(_("no print function for type %s\n"), cur_typ->name);
--- 
-2.7.4
++int
++dir2_print_func(
++	void		*obj,
++	int		bit,
++	int		count,
++	char		*fmtstr,
++	int		size,
++	int		arg,
++	int		base,
++	int		array)
++{
++	__be32			magic32;
++	__be16			magic16;
++
++	magic32 = *(__be32 *)obj;
++	magic16 = ((struct xfs_da_blkinfo *)obj)->magic;
++	dbprintf(_("Unknown directory buffer magic (0x%x:0x%x)!\n"),
++		magic32, magic16);
++	return 0;
++}
+diff --git a/db/dir2.h b/db/dir2.h
+index 0c2a62e..6d12cc1 100644
+--- a/db/dir2.h
++++ b/db/dir2.h
+@@ -62,3 +62,6 @@ extern int	dir2_data_union_size(void *obj, int startoff, int idx);
+ extern int	dir2_size(void *obj, int startoff, int idx);
+ 
+ extern const struct xfs_buf_ops xfs_dir3_db_buf_ops;
++
++extern int	dir2_print_func(void *obj, int bit, int count, char *fmtstr,
++		int size, int arg, int base, int array);
+diff --git a/db/field.c b/db/field.c
+index 1968dd5..5496789 100644
+--- a/db/field.c
++++ b/db/field.c
+@@ -59,8 +59,8 @@ const ftattr_t	ftattrtab[] = {
+ 	  FTARG_DONULL, NULL, NULL },
+ 
+ /* attr fields */
+-	{ FLDT_ATTR, "attr", NULL, (char *)attr_flds, attr_size, FTARG_SIZE,
+-	  NULL, attr_flds },
++	{ FLDT_ATTR, "attr", attr_print_func, (char *)attr_flds, attr_size,
++	  FTARG_SIZE, NULL, attr_flds },
+ 	{ FLDT_ATTR_BLKINFO, "attr_blkinfo", NULL, (char *)attr_blkinfo_flds,
+ 	  SI(bitsz(struct xfs_da_blkinfo)), 0, NULL, attr_blkinfo_flds },
+ 	{ FLDT_ATTR_LEAF_ENTRY, "attr_leaf_entry", fp_sarray,
+@@ -89,8 +89,8 @@ const ftattr_t	ftattrtab[] = {
+ 	  attrshort_size, FTARG_SIZE, NULL, attr_shortform_flds },
+ 
+ /* attr3 specific fields */
+-	{ FLDT_ATTR3, "attr3", NULL, (char *)attr3_flds, attr_size, FTARG_SIZE,
+-	  NULL, attr3_flds },
++	{ FLDT_ATTR3, "attr3", attr_print_func, (char *)attr3_flds, attr_size,
++	  FTARG_SIZE, NULL, attr3_flds },
+ 	{ FLDT_ATTR3_LEAF_HDR, "attr3_leaf_hdr", NULL,
+ 	  (char *)attr3_leaf_hdr_flds, SI(bitsz(struct xfs_attr3_leaf_hdr)),
+ 	  0, NULL, attr3_leaf_hdr_flds },
+@@ -219,8 +219,8 @@ const ftattr_t	ftattrtab[] = {
+ 	  SI(bitsz(xfs_dinode_t)), 0, NULL, inode_v3_flds },
+ 
+ /* dir v2 fields */
+-	{ FLDT_DIR2, "dir2", NULL, (char *)dir2_flds, dir2_size, FTARG_SIZE,
+-	  NULL, dir2_flds },
++	{ FLDT_DIR2, "dir2", dir2_print_func, (char *)dir2_flds, dir2_size,
++	  FTARG_SIZE, NULL, dir2_flds },
+ 	{ FLDT_DIR2_BLOCK_TAIL, "dir2_block_tail", NULL,
+ 	  (char *)dir2_block_tail_flds, SI(bitsz(xfs_dir2_block_tail_t)), 0,
+ 	  NULL, dir2_block_tail_flds },
+@@ -262,8 +262,8 @@ const ftattr_t	ftattrtab[] = {
+ 	  FTARG_SIZE, NULL, dir2sf_flds },
+ 
+ /* dir v3 fields */
+-	{ FLDT_DIR3, "dir3", NULL, (char *)dir3_flds, dir2_size, FTARG_SIZE,
+-	  NULL, dir3_flds },
++	{ FLDT_DIR3, "dir3", dir2_print_func, (char *)dir3_flds, dir2_size,
++	  FTARG_SIZE, NULL, dir3_flds },
+ 	{ FLDT_DIR3_BLKHDR, "dir3_blk_hdr", NULL, (char *)dir3_blkhdr_flds,
+ 	  SI(bitsz(struct xfs_dir3_blk_hdr)), 0, NULL, dir3_blkhdr_flds },
+ 	{ FLDT_DIR3_DATA_HDR, "dir3_data_hdr", NULL, (char *)dir3_data_hdr_flds,
 
