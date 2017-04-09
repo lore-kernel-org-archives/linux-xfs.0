@@ -1,71 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57108 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752502AbdDKLKZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2017 07:10:25 -0400
-Received: from 212095007090.public.telering.at ([212.95.7.90] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cxtgm-0004oq-Hj
-        for linux-xfs@vger.kernel.org; Tue, 11 Apr 2017 11:10:24 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/6] xfs: remove attr fork handling in xfs_bmap_finish_one
-Date: Tue, 11 Apr 2017 13:10:07 +0200
-Message-Id: <20170411111011.9437-3-hch@lst.de>
-In-Reply-To: <20170411111011.9437-1-hch@lst.de>
-References: <20170411111011.9437-1-hch@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:25576 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752631AbdDITjq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 Apr 2017 15:39:46 -0400
+Date: Sun, 9 Apr 2017 12:39:05 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/4] xfstests: Add first statx test [ver #10]
+Message-ID: <20170409193905.GS4864@birch.djwong.org>
+References: <149146774821.12770.3592235770964461857.stgit@warthog.procyon.org.uk>
+ <149146775556.12770.11943651470996193921.stgit@warthog.procyon.org.uk>
+ <CAOQ4uxiXF4_N9Zu_OAWzC5STYyNY7VuGRYPeg1m4WPqhyZBOtA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxiXF4_N9Zu_OAWzC5STYyNY7VuGRYPeg1m4WPqhyZBOtA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: David Howells <dhowells@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-We never do COW operations for the attr fork, so don't pretend we handle
-them.
+On Sun, Apr 09, 2017 at 10:47:10AM +0300, Amir Goldstein wrote:
+> On Thu, Apr 6, 2017 at 11:35 AM, David Howells <dhowells@redhat.com> wrote:
+> > Add a statx test script that does the following:
+> >
+> 
+> David,
+> 
+> Just wanted to mention that albeit 'xfs' in 'xfstests', you don't need
+> to send generic
+> xfstests patched in the future to linux-xfs list.
+> I don't know that xfs folks mind, but you're discriminating other-fs folks ;-)
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+It's a test for generic vfs functionality that has just been wired up in
+XFS, so it /is/ appropriate to cc the xfs list.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 2a426d127e05..b95e66fd0935 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -6491,7 +6491,6 @@ xfs_bmap_finish_one(
- 	struct xfs_bmbt_irec		bmap;
- 	int				nimaps = 1;
- 	xfs_fsblock_t			firstfsb;
--	int				flags = XFS_BMAPI_REMAP;
- 	int				done;
- 	int				error = 0;
- 
-@@ -6505,10 +6504,8 @@ xfs_bmap_finish_one(
- 			XFS_FSB_TO_AGBNO(tp->t_mountp, startblock),
- 			ip->i_ino, whichfork, startoff, blockcount, state);
- 
--	if (whichfork != XFS_DATA_FORK && whichfork != XFS_ATTR_FORK)
-+	if (WARN_ON_ONCE(whichfork != XFS_DATA_FORK))
- 		return -EFSCORRUPTED;
--	if (whichfork == XFS_ATTR_FORK)
--		flags |= XFS_BMAPI_ATTRFORK;
- 
- 	if (XFS_TEST_ERROR(false, tp->t_mountp,
- 			XFS_ERRTAG_BMAP_FINISH_ONE,
-@@ -6519,13 +6516,13 @@ xfs_bmap_finish_one(
- 	case XFS_BMAP_MAP:
- 		firstfsb = bmap.br_startblock;
- 		error = xfs_bmapi_write(tp, ip, bmap.br_startoff,
--					bmap.br_blockcount, flags, &firstfsb,
-+					bmap.br_blockcount, XFS_BMAPI_REMAP, &firstfsb,
- 					bmap.br_blockcount, &bmap, &nimaps,
- 					dfops);
- 		break;
- 	case XFS_BMAP_UNMAP:
- 		error = xfs_bunmapi(tp, ip, bmap.br_startoff,
--				bmap.br_blockcount, flags, 1, &firstfsb,
-+				bmap.br_blockcount, XFS_BMAPI_REMAP, 1, &firstfsb,
- 				dfops, &done);
- 		ASSERT(done);
- 		break;
--- 
-2.11.0
+That said, it just got wired up in ext4 so they should be cc'd as well.
 
+--D
+
+> 
+> Cheers,
+> Amir.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
