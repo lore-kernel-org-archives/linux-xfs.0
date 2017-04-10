@@ -1,331 +1,315 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:44339 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751862AbdDJXzb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 19:55:31 -0400
-Date: Tue, 11 Apr 2017 09:55:25 +1000
-From: Dave Chinner <david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46730 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753310AbdDJOTh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 10 Apr 2017 10:19:37 -0400
+Date: Mon, 10 Apr 2017 10:19:34 -0400
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: [PATCH 2/3] xfs: push buffer of flush locked dquot to avoid
  quotacheck deadlock
-Message-ID: <20170410235525.GA12369@dastard>
+Message-ID: <20170410141934.GC3991@bfoster.bfoster>
 References: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
  <1487966001-63263-3-git-send-email-bfoster@redhat.com>
- <20170410050001.GI23007@dastard>
- <20170410141521.GB3991@bfoster.bfoster>
+ <20170406223417.GJ4874@birch.djwong.org>
+ <20170407120631.GB54992@bfoster.bfoster>
+ <20170407200725.GM4874@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170410141521.GB3991@bfoster.bfoster>
+In-Reply-To: <20170407200725.GM4874@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Martin Svec <martin.svec@zoner.cz>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Martin Svec <martin.svec@zoner.cz>, Christian Affolter <c.affolter@stepping-stone.ch>
 
-On Mon, Apr 10, 2017 at 10:15:21AM -0400, Brian Foster wrote:
-> On Mon, Apr 10, 2017 at 03:00:01PM +1000, Dave Chinner wrote:
-> > On Fri, Feb 24, 2017 at 02:53:20PM -0500, Brian Foster wrote:
-> > > +	/*
-> > > +	 * Move the buffer to an empty list and submit. Pass the original list
-> > > +	 * as the wait list so delwri submission moves the buf back to it before
-> > > +	 * it is submitted (and thus before it is unlocked). This means the
-> > > +	 * buffer cannot be placed on another list while we wait for it.
-> > > +	 */
-> > > +	list_move(&bp->b_list, &submit_list);
-> > > +	xfs_buf_unlock(bp);
+On Fri, Apr 07, 2017 at 01:07:25PM -0700, Darrick J. Wong wrote:
+> On Fri, Apr 07, 2017 at 08:06:31AM -0400, Brian Foster wrote:
+> > On Thu, Apr 06, 2017 at 03:34:17PM -0700, Darrick J. Wong wrote:
+> > > On Fri, Feb 24, 2017 at 02:53:20PM -0500, Brian Foster wrote:
+> > > > Reclaim during quotacheck can lead to deadlocks on the dquot flush
+> > > > lock:
+> > > > 
+> > > >  - Quotacheck populates a local delwri queue with the physical dquot
+> > > >    buffers.
+> > > >  - Quotacheck performs the xfs_qm_dqusage_adjust() bulkstat and
+> > > >    dirties all of the dquots.
+> > > >  - Reclaim kicks in and attempts to flush a dquot whose buffer is
+> > > >    already queud on the quotacheck queue. The flush succeeds but
+> > > >    queueing to the reclaim delwri queue fails as the backing buffer is
+> > > >    already queued. The flush unlock is now deferred to I/O completion
+> > > >    of the buffer from the quotacheck queue.
+> > > 
+> > > <typing aloud here, trying to follow along...>
+> > > 
+> > > If I'm reading this correctly, this is the _buf_delwri_queue call
+> > > towards the end of the _DQ_IS_DIRTY clause in _qm_dquot_isolate?  Once
+> > > the dquot is flushed we fail to add it to isol->buffers because it's
+> > > already on quotacheck's buffer_list, which means that the
+> > > _buf_delwri_submit call in _qm_shrink_scan never sees our dirty dquot.
+> > > 
+> > > Therefore, the dquot doesn't get written and the flush lock stays
+> > > locked...
+> > > 
 > > 
-> > .... this is safe/racy as we may have just moved it off the delwri
-> > queue without changing state, reference counts, etc?
+> > Yes, exactly.
 > > 
+> > > >  - The dqadjust bulkstat continues and dirties the recently flushed
+> > > >    dquot once again.
+> > > >  - Quotacheck proceeds to the xfs_qm_flush_one() walk which requires
+> > > >    the flush lock to update the backing buffers with the in-core
+> > > >    recalculated values. It deadlocks on the redirtied dquot as the
+> > > >    flush lock was already acquired by reclaim, but the buffer resides
+> > > >    on the local delwri queue which isn't submitted until the end of
+> > > >    quotacheck.
+> > > 
+> > > ...until quotacheck tries to relock it and deadlocks, like you said.
+> > > Ok, I think I understand the deadlock...
+> > > 
+> > 
+> > Yep.
+> > 
+> > > > This is reproduced by running quotacheck on a filesystem with a
+> > > > couple million inodes in low memory (512MB-1GB) situations. This is
+> > > > a regression as of commit 43ff2122e6 ("xfs: on-stack delayed write
+> > > > buffer lists"), which removed a trylock and buffer I/O submission
+> > > > from the quotacheck dquot flush sequence.
+> > > > 
+> > > > Quotacheck first resets and collects the physical dquot buffers in a
+> > > > delwri queue. Then, it traverses the filesystem inodes via bulkstat,
+> > > > updates the in-core dquots, flushes the corrected dquots to the
+> > > > backing buffers and finally submits the delwri queue for I/O. Since
+> > > > the backing buffers are queued across the entire quotacheck
+> > > > operation, dquot reclaim cannot possibly complete a dquot flush
+> > > > before quotacheck completes.
+> > > > 
+> > > > Therefore, quotacheck must submit the buffer for I/O in order to
+> > > > cycle the flush lock and flush the dirty in-core dquot to the
+> > > > buffer. Add a delwri queue buffer push mechanism to submit an
+> > > > individual buffer for I/O without losing the delwri queue status and
+> > > > use it from quotacheck to avoid the deadlock. This restores
+> > > > quotacheck behavior to as before the regression was introduced.
+> > > 
+> > > ...and therefore why this patch changes quotacheck to check if the
+> > > dquot's flush lock is already held and if so, to call
+> > > _buf_delwri_submit_buffers so that the io completion will unlock the
+> > > flush lock and try again.
+> > > 
+> > 
+> > Yes, though only for the specific buffer.
+> > 
+> > > When we return to _qm_flush_one, the dquot is no longer dirty and we're
+> > > done.  I /think/ this looks ok, though I also think I want to hear if
+> > > either Christian Affolter or Martin Svec have had any problems with
+> > > these two patches applied.  My current feeling is that this is a bit
+> > > late for 4.12, but I'd certainly put it in -washme for wider testing.
+> > > If anyone thinks this needs to happen sooner, please speak up.
+> > > 
+> > 
+> > The dquot is still dirty and needs to be flushed on the second go around
+> > (otherwise we wouldn't have needed the flush lock here on the first
+> > try). The issue is basically that the dquot was adjusted (dirtied) at
+> > some point during the bulkstat scan, reclaimed and flushed, and then
+> > subsequently dirtied again such that another flush is required via
+> > qm_flush_one(). The buffer push frees up the held flush lock so that
+> > final flush can proceed.
 > 
-> Racy with..?
-
-Whatever might possibly manipulate the buffer that thinks it's on a
-specific delwri list. We've unlocked it.
-
-As I said, I haven't spend hours thinking this all through, I'm just
-throwing out the questions I had....
-
-> The buffer is effectively still on the delwri queue here.
-> We've just replaced the caller queue with a local queue to reuse the
-> existing submission infrastructure. IOW, we've just changed the queue
-> that the buffer is on.
-
-Yes, in theory, but it's not something we every considered would be
-done when designing the private delwri queue infrastructure...
-
-> > > +
-> > > +	xfs_buf_delwri_submit_buffers(&submit_list, buffer_list);
-> > 
-> > .... using a caller supplied delwri buffer list as the buffer IO
-> > wait list destination is making big assumptions about the internal
-> > use of the wait list? e.g that xfs_buf_delwri_submit_buffers() does
-> > not initialise the list_head before use...
-> > 
+> Ok.  I'd thought that the dquot could still be dirty when we got to there.
 > 
-> This is the scope at which the wait list is defined/initialized.
+> > BTW, what's the reasoning for being late to 4.12? I actually don't have
+> > much of an opinion which release this goes into, so I guess my question
+> > is more logistical due to the fact that up until recently I haven't paid
+> > much attention to the upstream release cycles. ;P The 4.12 merge window
+> > hasn't opened as we are still on 4.11-rc5, right? Is the concern then
+> > that the merge window is close enough that this has missed 4.12
+> > linux-next soak time?
+> 
+> We're still at least a week or two away from the merge window opening,
+> but I want to hear from the two bug reporters that this patch series has
+> made their symptoms go away, and that they've mounted enough times to be
+> reasonably confident that they haven't simply gotten lucky and not hit
+> the deadlock.  I don't know that both of those things will happen in the
+> time we have left, and seeing as the frequency of reports is pretty low,
+> it doesn't seem like we have to rush it into 4.12.
+> 
+> > Also, can you clarify the semantics of the -washme thing? ;) That
+> > doesn't necessarily mean the patch has been "merged." Rather, it might
+> > be suitable for the next for-next (4.13) provided nothing explodes by
+> > then, correct?
+> 
+> Yep.
+> 
+> > I'm also a little curious on what extra testing that entails, if any,
+> > though perhaps this topic is better suited by an independent thread..
+> 
+> Same testing as for-next gets (nightly auto group runs, ltp every now
+> and then, various $magic workloads); it's really just a place to land
+> patches that have been code reviewed but I'm not yet confident enough
+> about to put into for-next for the next cycle.
+> 
 
-It is now - passing in a list that is not empty effectively prevents
-us from implementing anything differently in future....
+Ok, thanks. Note there will be another version incoming based on Dave's
+feedback. Otherwise sounds good.
 
-> E.g.,
-> _delwri_submit() initializes its local wait list and passes it down for
-> _delwri_submit_buffers() to use. This basically ensures that the buffer
-> is placed back on the original delwri queue because the latter moves the
-> buffer over under lock, before it is submitted for I/O.
+Brian
 
-But xfs_buf_delwri_submit_buffers() adds a reference count to the
-buffer if it's placed on a wait list. but we just moved it back to
-the original buffer list. Now I have to look for why that works, and
-determine if that was intended behaviour or not.
-
-i.e. _delwri_submit_buffers is being used for more than just moving
-the buffer back to the buffer list - there's reference counting
-shenanigans going on here, too....
-
-> We could probably use a local wait_list just the same if that is
-> preferred, and explicitly add the buffer back from the wait_list to the
-> original delwri queue. FWIW, it's not clear to me whether you're asking
-> about the use of the wait_list here or indicating preference.
-
-All I'm pointing out is that I don't think the patch is a good
-solution, not what the solution should be. I haven't spent the hours
-needed to think out a proper solution.
-
-> > .... we should be doing IO submission while holding other things on
-> > the delwri list and unknown caller locks?
+> --D
+> 
 > > 
-> 
-> I'm not following... this is effectively a move/submit of a delwri queue
-> item to another delwri queue. If the delwri queue is by design a local
-> data structure then only one thread should be queue processing at a
-> time. Why would this particular action be problematic?
-
-No, no it's not just a "list move". xfs_buf_delwri_submit_buffers()
-calls xfs_buf_submit() to start IO on the buffers passed in on the
-submit list. We're adding a new IO submission path here....
-
-> Technically, we could rework this into something like a
-> delwri_queue_move()/delwri_submit() sequence, but the problem with that
-> is we lose the queue-populated state of the buffer for a period of time
-> and thus somebody else (i.e., reclaim) can jump in and queue it out from
-> underneath the caller. The purpose of this mechanism is to preserve
-> original delwri queue ownership of the buffer.
-
-Sure, I understand that, but I still don't think this is the right
-thing to be doing.
-
-> > .... we have all the buffer reference counts we need to make this
-> > work correctly?
+> > > Sorry this one took me a while to get to. :/
+> > > 
+> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
 > > 
-> 
-> AFAICT, we follow the existing delwri queue rules with regard to locking
-> and reference counting. A buffer is queued under the buf lock and the
-> queue takes a reference on the buffer. Queue submission locks the
-> buffer, acquires a wait_list reference and moves to the wait list if one
-> is specified and submits the buffer. Buffer I/O completion drops the
-> original queue reference. If the wait_list was specified, we cycle the
-> buffer lock (to wait for I/O completion), remove from the wait_list and
-> drop the wait_list reference.
->
-> The pushbuf() call moves the buffer to the submit_list under the buffer
-> lock, which is effectively another local delwri queue. This takes
-> ownership of the original delwri queue reference. Queue submission
-> occurs as above: the buffer is moved to the wait_list, an associated
-> wait_list reference is acquired and the buffer is submitted. I/O
-> completion drops the original delwri queue reference as before, so we
-> are in the same state as delwri_submit() up through I/O completion.
-> 
-> We again cycle the buf lock to wait on I/O completion and process an
-> error. Rather than remove from the wait_list and drop the reference,
-> however, pushbuf() has the buffer back on the original delwri queue with
-> an associated reference. The only explicit state change here is the
-> DELWRI_Q flag, which is reset.
-> 
-> So am I missing something here with regard to proper reference
-> counting..? If so, please elaborate and I'll try to dig into it.
-
-IOWs, your abusing the waitlist reference count added deep inside
-xfs_buf_delwri_submit_buffers() to handle the fact
-that the IO submission removes the delwri queue reference count that
-the buffer had on entry to the function, but still needs on exit to
-the function.
-
-I guarantee we'll break this in future - it's too subtle and fragile
-for core infrastructure. Also, there's no comments to explain any of
-these games being played, which makes it even less maintainable...
-
-
-> > > +	/*
-> > > +	 * Lock the buffer to wait for I/O completion. It's already held on the
-> > > +	 * original list, so all we have to do is reset the delwri queue flag
-> > > +	 * that was cleared by delwri submission.
-> > > +	 */
-> > > +	xfs_buf_lock(bp);
-> > > +	error = bp->b_error;
-> > > +	bp->b_flags |= _XBF_DELWRI_Q;
-> > > +	xfs_buf_unlock(bp);
+> > No problem. Thanks for review...
 > > 
-> > .... this is racy w.r.t. the buffer going back onto the
-> > buffer list without holding the buffer lock, or that the
-> > _XBF_DELWRI_Q setting/clearing is not atomic w.r.t. the delwri queue
-> > manipulations (i.e. can now be on the delwri list but not have
-> > _XBF_DELWRI_Q set)?
+> > Brian
 > > 
-> 
-> The buffer has been put back on the original delwri queue (by
-> _delwri_submit_buffers()) before the lock was dropped. Using the delwri
-> queue as the wait_list does mean that the flag might not be set until
-> the delwri queue processing is done and we have returned to the caller.
-> If another delwri queue occurs, the flag may be reset but the buffer
-> cannot be added to another queue, which is what we want (as noted
-> above).
-
-Yes, I know this is what happens. My point is that the internal
-_XBF_DELWRI_Q no longer indicates that a buffer is on a delwri queue
-(i.e. that bp->b_list is valid). IOWs, if we want to check a buffer
-is on a delwri queue, we can no longer just check the flag, we have
-to check both the flag and list_empty(bp->b_list) because they are
-no longer atomically updated.
-
-To me this is a design rule violation, regardless of whether the
-code works or not...
-
-> (I'm not sure why delwri_queue() returns true in that case, but that's a
-> separate issue.)
-> 
-> > .... the error is left on the buffer so it gets tripped over when
-> > it is next accessed?
-> > 
-> 
-> Same as delwri_submit(). IIUC, errors are left on buffers by design and
-> cleared on a subsequemt I/O submission.
-
-That doesn't mean it's the right thing to do here. Think about how
-the error shold be handled in this case, don't copy something from a
-bulk IO submission interface....
-
-> > > +	/*
-> > > +	 * The only way the dquot is already flush locked by the time quotacheck
-> > > +	 * gets here is if reclaim flushed it before the dqadjust walk dirtied
-> > > +	 * it for the final time. Quotacheck collects all dquot bufs in the
-> > > +	 * local delwri queue before dquots are dirtied, so reclaim can't have
-> > > +	 * possibly queued it for I/O. The only way out is to push the buffer to
-> > > +	 * cycle the flush lock.
-> > > +	 */
-> > > +	if (!xfs_dqflock_nowait(dqp)) {
-> > > +		/* buf is pinned in-core by delwri list */
-> > > +		DEFINE_SINGLE_BUF_MAP(map, dqp->q_blkno,
-> > > +				      mp->m_quotainfo->qi_dqchunklen);
-> > > +		bp = _xfs_buf_find(mp->m_ddev_targp, &map, 1, 0, NULL);
-> > > +		if (!bp) {
-> > > +			error = -EINVAL;
-> > > +			goto out_unlock;
-> > > +		}
-> > > +
-> > > +		/* delwri_pushbuf drops the buf lock */
-> > > +		xfs_buf_delwri_pushbuf(bp, buffer_list);
-> > 
-> > Ummm - you threw away the returned error....
-> > 
-> 
-> The I/O is going to be retried, but I'll fix it to just return from
-> here.
-> 
-> > > +		xfs_buf_rele(bp);
-> > 
-> > And despite the comment, I think this is simply wrong. We try really
-> > hard to maintain balanced locking, and as such xfs_buf_relse() is
-> > what goes along with _xfs_buf_find(). i.e. we are returned a locked
-> > buffer with a reference by xfs_buf_find(), but xfs_buf_rele() only
-> > drops the reference.
-> > 
-> 
-> I'm not quite following if you are saying the locking is unbalanced or
-> it simply looks that way. If the former, can you please elaborate?
-
-It's not obviously correct, which to me is a bug. If I read this
-code, you're forcing me to go read more code to work out why it is
-correct because it doesn't follow the expected patterns. And then
-the reader disappears down a hole for hours trying to work out how
-this code actually works.
-
-> Otherwise, we can probably have pushbuf() return with the buffer lock
-> held so the caller remains responsible for the lock and reference it
-> acquired.
->
-> > So if I look at this code in isolation, it looks like it leaks a
-> > buffer lock, and now I have to go read other code to understand why
-> > it doesn't and I'm left to wonder why it was implemented this
-> > way....
-> > 
-> 
-> Thanks for taking the time to send feedback. FWIW, I take most of these
-> questions as "things one would have to verify in order to review this
-> patch if one were not on vacation" :P as opposed to pointing things out
-> as explicitly broken.
-
-Keep in mind that while the code /might work/, that doesn't mean it
-can be merged. The more I look at the patch and think about it, the
-more strongly I feel that we need to "go back to the drawing board
-and try again".
-
-So, rather than just being a negative prick that says no and doesn't
-provide any real help, how about considering this line of
-thinking....
-
-We hold the buffer locked, the dquot is locked and the dquot is
-flush locked already, right? We know the IO has not been submitted
-because we have the buffer lock and the dquot is still flush locked,
-which means /some/ dirty dquot data is already in the buffer.
-
-So why can't we just modify the dquot in the buffer?  We already
-hold all the locks needed to guarantee exclusive access to the dquot
-and buffer, and they are all we hold when we do the initial flush to
-the buffer. So why do we need to do IO to unlock the dquot flush
-lock when we could just rewrite before we submit the buffer for IO?
-
-Indeed, let's go look at inodes for an example of this, 
-xfs_ifree_cluster() to be precise:
-
-                /*                                                               
-                 * We obtain and lock the backing buffer first in the process    
-                 * here, as we have to ensure that any dirty inode that we       
-                 * can't get the flush lock on is attached to the buffer.        
-                 * If we scan the in-memory inodes first, then buffer IO can     
-                 * complete before we get a lock on it, and hence we may fail    
-                 * to mark all the active inodes on the buffer stale.            
-                 */                                                              
- .....
-                /*                                                               
-                 * Walk the inodes already attached to the buffer and mark them  
-                 * stale. These will all have the flush locks held, so an        
-                 * in-memory inode walk can't lock them. By marking them all     
-                 * stale first, we will not attempt to lock them in the loop     
-                 * below as the XFS_ISTALE flag will be set.                     
-                 */                                                              
-.....
-                /*                                                               
-                 * For each inode in memory attempt to add it to the inode       
-                 * buffer and set it up for being staled on buffer IO            
-                 * completion.  This is safe as we've locked out tail pushing    
-                 * and flushing by locking the buffer.                           
-                 *                                                               
-                 * We have already marked every inode that was part of a         
-                 * transaction stale above, which means there is no point in     
-                 * even trying to lock them.                                     
-                 */                                                              
-
-IOWs, what we have here is precendence for modifying the flush
-locked objects attached to a buffer after first locking the buffer.
-dquots have the same transaction/flush model as inodes, so I'm
-pretty sure this will lead to the simplest, cleanest way to avoid
-this deadlock....
-
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > > --D
+> > > 
+> > > > Reported-by: Martin Svec <martin.svec@zoner.cz>
+> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > ---
+> > > >  fs/xfs/xfs_buf.c   | 37 +++++++++++++++++++++++++++++++++++++
+> > > >  fs/xfs/xfs_buf.h   |  1 +
+> > > >  fs/xfs/xfs_qm.c    | 28 +++++++++++++++++++++++++++-
+> > > >  fs/xfs/xfs_trace.h |  1 +
+> > > >  4 files changed, 66 insertions(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > > > index e566510..e97cf56 100644
+> > > > --- a/fs/xfs/xfs_buf.c
+> > > > +++ b/fs/xfs/xfs_buf.c
+> > > > @@ -2011,6 +2011,43 @@ xfs_buf_delwri_submit(
+> > > >  	return error;
+> > > >  }
+> > > >  
+> > > > +int
+> > > > +xfs_buf_delwri_pushbuf(
+> > > > +	struct xfs_buf		*bp,
+> > > > +	struct list_head	*buffer_list)
+> > > > +{
+> > > > +	LIST_HEAD		(submit_list);
+> > > > +	int			error;
+> > > > +
+> > > > +	ASSERT(xfs_buf_islocked(bp));
+> > > > +	ASSERT(bp->b_flags & _XBF_DELWRI_Q);
+> > > > +
+> > > > +	trace_xfs_buf_delwri_pushbuf(bp, _RET_IP_);
+> > > > +
+> > > > +	/*
+> > > > +	 * Move the buffer to an empty list and submit. Pass the original list
+> > > > +	 * as the wait list so delwri submission moves the buf back to it before
+> > > > +	 * it is submitted (and thus before it is unlocked). This means the
+> > > > +	 * buffer cannot be placed on another list while we wait for it.
+> > > > +	 */
+> > > > +	list_move(&bp->b_list, &submit_list);
+> > > > +	xfs_buf_unlock(bp);
+> > > > +
+> > > > +	xfs_buf_delwri_submit_buffers(&submit_list, buffer_list);
+> > > > +
+> > > > +	/*
+> > > > +	 * Lock the buffer to wait for I/O completion. It's already held on the
+> > > > +	 * original list, so all we have to do is reset the delwri queue flag
+> > > > +	 * that was cleared by delwri submission.
+> > > > +	 */
+> > > > +	xfs_buf_lock(bp);
+> > > > +	error = bp->b_error;
+> > > > +	bp->b_flags |= _XBF_DELWRI_Q;
+> > > > +	xfs_buf_unlock(bp);
+> > > > +
+> > > > +	return error;
+> > > > +}
+> > > > +
+> > > >  int __init
+> > > >  xfs_buf_init(void)
+> > > >  {
+> > > > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> > > > index 8a9d3a9..cd74216 100644
+> > > > --- a/fs/xfs/xfs_buf.h
+> > > > +++ b/fs/xfs/xfs_buf.h
+> > > > @@ -334,6 +334,7 @@ extern void xfs_buf_stale(struct xfs_buf *bp);
+> > > >  extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
+> > > >  extern int xfs_buf_delwri_submit(struct list_head *);
+> > > >  extern int xfs_buf_delwri_submit_nowait(struct list_head *);
+> > > > +extern int xfs_buf_delwri_pushbuf(struct xfs_buf *, struct list_head *);
+> > > >  
+> > > >  /* Buffer Daemon Setup Routines */
+> > > >  extern int xfs_buf_init(void);
+> > > > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> > > > index 4ff993c..3815ed3 100644
+> > > > --- a/fs/xfs/xfs_qm.c
+> > > > +++ b/fs/xfs/xfs_qm.c
+> > > > @@ -1247,6 +1247,7 @@ xfs_qm_flush_one(
+> > > >  	struct xfs_dquot	*dqp,
+> > > >  	void			*data)
+> > > >  {
+> > > > +	struct xfs_mount	*mp = dqp->q_mount;
+> > > >  	struct list_head	*buffer_list = data;
+> > > >  	struct xfs_buf		*bp = NULL;
+> > > >  	int			error = 0;
+> > > > @@ -1257,7 +1258,32 @@ xfs_qm_flush_one(
+> > > >  	if (!XFS_DQ_IS_DIRTY(dqp))
+> > > >  		goto out_unlock;
+> > > >  
+> > > > -	xfs_dqflock(dqp);
+> > > > +	/*
+> > > > +	 * The only way the dquot is already flush locked by the time quotacheck
+> > > > +	 * gets here is if reclaim flushed it before the dqadjust walk dirtied
+> > > > +	 * it for the final time. Quotacheck collects all dquot bufs in the
+> > > > +	 * local delwri queue before dquots are dirtied, so reclaim can't have
+> > > > +	 * possibly queued it for I/O. The only way out is to push the buffer to
+> > > > +	 * cycle the flush lock.
+> > > > +	 */
+> > > > +	if (!xfs_dqflock_nowait(dqp)) {
+> > > > +		/* buf is pinned in-core by delwri list */
+> > > > +		DEFINE_SINGLE_BUF_MAP(map, dqp->q_blkno,
+> > > > +				      mp->m_quotainfo->qi_dqchunklen);
+> > > > +		bp = _xfs_buf_find(mp->m_ddev_targp, &map, 1, 0, NULL);
+> > > > +		if (!bp) {
+> > > > +			error = -EINVAL;
+> > > > +			goto out_unlock;
+> > > > +		}
+> > > > +
+> > > > +		/* delwri_pushbuf drops the buf lock */
+> > > > +		xfs_buf_delwri_pushbuf(bp, buffer_list);
+> > > > +		xfs_buf_rele(bp);
+> > > > +
+> > > > +		error = -EAGAIN;
+> > > > +		goto out_unlock;
+> > > > +	}
+> > > > +
+> > > >  	error = xfs_qm_dqflush(dqp, &bp);
+> > > >  	if (error)
+> > > >  		goto out_unlock;
+> > > > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > > > index fb7555e..c8d28a9 100644
+> > > > --- a/fs/xfs/xfs_trace.h
+> > > > +++ b/fs/xfs/xfs_trace.h
+> > > > @@ -365,6 +365,7 @@ DEFINE_BUF_EVENT(xfs_buf_iowait_done);
+> > > >  DEFINE_BUF_EVENT(xfs_buf_delwri_queue);
+> > > >  DEFINE_BUF_EVENT(xfs_buf_delwri_queued);
+> > > >  DEFINE_BUF_EVENT(xfs_buf_delwri_split);
+> > > > +DEFINE_BUF_EVENT(xfs_buf_delwri_pushbuf);
+> > > >  DEFINE_BUF_EVENT(xfs_buf_get_uncached);
+> > > >  DEFINE_BUF_EVENT(xfs_buf_item_relse);
+> > > >  DEFINE_BUF_EVENT(xfs_buf_item_iodone_async);
+> > > > -- 
+> > > > 2.7.4
+> > > > 
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
