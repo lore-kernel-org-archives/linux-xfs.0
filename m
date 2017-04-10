@@ -1,291 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41767 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753629AbdDJTuJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 15:50:09 -0400
-Date: Mon, 10 Apr 2017 12:50:04 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:16534 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752211AbdDJT5l (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 15:57:41 -0400
+Date: Mon, 10 Apr 2017 12:57:35 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/6] xfs: introduce xfs_bmapi_remap
-Message-ID: <20170410195004.GA10459@birch.djwong.org>
+Subject: Re: [PATCH 6/6] xfs: remove bmap block allocation retries
+Message-ID: <20170410195735.GB10459@birch.djwong.org>
 References: <20170403121833.7825-1-hch@lst.de>
- <20170403121833.7825-5-hch@lst.de>
+ <20170403121833.7825-7-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170403121833.7825-5-hch@lst.de>
+In-Reply-To: <20170403121833.7825-7-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Apr 03, 2017 at 02:18:31PM +0200, Christoph Hellwig wrote:
-> Add a new helper to be used for reflink extent list additions instead of
-> funneling them through xfs_bmapi_write and overloading the firstblock
-> member in struct xfs_bmalloca and struct xfs_alloc_args.
-> 
-> With some small changes to xfs_bmap_remap_alloc this also means we do
-> not need a xfs_bmalloca structure for this case at all.
+On Mon, Apr 03, 2017 at 02:18:33PM +0200, Christoph Hellwig wrote:
+> Now that reflink operations don't set the firstblock value we don't
+> need the workarounds for non-NULL firstblock values without a prior
+> allocation.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 152 +++++++++++++++++++++++++++++++++--------------
->  1 file changed, 107 insertions(+), 45 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index d404dee7ede4..caadfe27af39 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3862,11 +3862,12 @@ xfs_bmap_btalloc(
->   */
->  STATIC int
->  xfs_bmap_remap_alloc(
-> -	struct xfs_bmalloca	*ap)
-> +	struct xfs_trans	*tp,
-> +	struct xfs_inode	*ip,
-> +	xfs_fsblock_t		startblock,
-> +	xfs_extlen_t		length)
 
-Why change all this if the next patch removes the whole function except:
-
-ip->i_d.di_nblocks += length;
-xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-
-Wouldn't it make more sense to have this patch add _bmapi_remap (as it
-appears in the next patch) and change the callers to use it; and then
-the next patch removes the old _bmap_remap_alloc and its callers?
-
->  {
-> -	struct xfs_trans	*tp = ap->tp;
->  	struct xfs_mount	*mp = tp->t_mountp;
-> -	xfs_fsblock_t		bno;
->  	struct xfs_alloc_arg	args;
->  	int			error;
->  
-> @@ -3875,24 +3876,24 @@ xfs_bmap_remap_alloc(
->  	 * and handle a silent filesystem corruption rather than crashing.
->  	 */
->  	memset(&args, 0, sizeof(struct xfs_alloc_arg));
-> -	args.tp = ap->tp;
-> -	args.mp = ap->tp->t_mountp;
-> -	bno = *ap->firstblock;
-> -	args.agno = XFS_FSB_TO_AGNO(mp, bno);
-> -	args.agbno = XFS_FSB_TO_AGBNO(mp, bno);
-> +	args.tp = tp;
-> +	args.mp = mp;
-> +	args.agno = XFS_FSB_TO_AGNO(mp, startblock);
-> +	args.agbno = XFS_FSB_TO_AGBNO(mp, startblock);
-> +
->  	if (args.agno >= mp->m_sb.sb_agcount ||
->  	    args.agbno >= mp->m_sb.sb_agblocks)
->  		return -EFSCORRUPTED;
->  
->  	/* "Allocate" the extent from the range we passed in. */
-> -	trace_xfs_bmap_remap_alloc(ap->ip, *ap->firstblock, ap->length);
-> -	ap->blkno = bno;
-> -	ap->ip->i_d.di_nblocks += ap->length;
-> -	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
-> +	trace_xfs_bmap_remap_alloc(ip, startblock, length);
-> +
-> +	ip->i_d.di_nblocks += length;
-> +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->  
->  	/* Fix the freelist, like a real allocator does. */
-> -	args.datatype = ap->datatype;
-> -	args.pag = xfs_perag_get(args.mp, args.agno);
-> +	args.datatype = XFS_ALLOC_USERDATA | XFS_ALLOC_NOBUSY;
-> +	args.pag = xfs_perag_get(mp, args.agno);
->  	ASSERT(args.pag);
->  
->  	/*
-> @@ -3905,7 +3906,7 @@ xfs_bmap_remap_alloc(
->  	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
->  	xfs_perag_put(args.pag);
->  	if (error)
-> -		trace_xfs_bmap_remap_alloc_error(ap->ip, error, _RET_IP_);
-> +		trace_xfs_bmap_remap_alloc_error(ip, error, _RET_IP_);
->  	return error;
->  }
->  
-> @@ -3917,8 +3918,6 @@ STATIC int
->  xfs_bmap_alloc(
->  	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
->  {
-> -	if (ap->flags & XFS_BMAPI_REMAP)
-> -		return xfs_bmap_remap_alloc(ap);
->  	if (XFS_IS_REALTIME_INODE(ap->ip) &&
->  	    xfs_alloc_is_userdata(ap->datatype))
->  		return xfs_bmap_rtalloc(ap);
-> @@ -4554,9 +4553,7 @@ xfs_bmapi_write(
->  	ASSERT(len > 0);
->  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> -	ASSERT(!(flags & XFS_BMAPI_REMAP) || whichfork == XFS_DATA_FORK);
-> -	ASSERT(!(flags & XFS_BMAPI_PREALLOC) || !(flags & XFS_BMAPI_REMAP));
-> -	ASSERT(!(flags & XFS_BMAPI_CONVERT) || !(flags & XFS_BMAPI_REMAP));
-> +	ASSERT(!(flags & XFS_BMAPI_REMAP));
->  
->  	/* zeroing is for currently only for data extents, not metadata */
->  	ASSERT((flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ZERO)) !=
-> @@ -4640,13 +4637,8 @@ xfs_bmapi_write(
->  			} else {
->  				need_alloc = true;
->  			}
-> -		} else {
-> -			/*
-> -			 * Make sure we only reflink into a hole.
-> -			 */
-> -			ASSERT(!(flags & XFS_BMAPI_REMAP));
-> -			if (isnullstartblock(bma.got.br_startblock))
-> -				wasdelay = true;
-> +		} else if (isnullstartblock(bma.got.br_startblock)) {
-> +			wasdelay = true;
->  		}
->  
->  		/*
-> @@ -4775,6 +4767,89 @@ xfs_bmapi_write(
->  	return error;
->  }
->  
-> +static int
-> +xfs_bmapi_remap(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_inode	*ip,
-> +	xfs_fileoff_t		bno,
-> +	xfs_filblks_t		len,
-> +	xfs_fsblock_t		startblock,
-> +	struct xfs_defer_ops	*dfops)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> +	struct xfs_btree_cur	*cur = NULL;
-> +	xfs_fsblock_t		firstblock = NULLFSBLOCK;
-> +	struct xfs_bmbt_irec	got;
-> +	xfs_extnum_t		idx;
-> +	int			logflags = 0, error;
-> +
-> +	ASSERT(len > 0);
-> +	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
-> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> +	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
-> +
-> +	if (unlikely(XFS_TEST_ERROR(
-> +	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
-> +	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
-> +	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
-> +		XFS_ERROR_REPORT("xfs_bmapi_remap", XFS_ERRLEVEL_LOW, mp);
-> +		return -EFSCORRUPTED;
-> +	}
-> +
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		return -EIO;
-> +
-> +	if (xfs_iext_lookup_extent(ip, ifp, bno, &idx, &got)) {
-> +		/* make sure we only reflink into a hole. */
-> +		ASSERT(got.br_startoff > bno);
-> +		ASSERT(got.br_startoff - bno >= len);
-> +	}
-> +
-> +	error = xfs_bmap_remap_alloc(tp, ip, startblock, len);
-> +	if (error)
-> +		goto error0;
-> +
-> +	if (ifp->if_flags & XFS_IFBROOT) {
-> +		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
-> +		cur->bc_private.b.firstblock = firstblock;
-> +		cur->bc_private.b.dfops = dfops;
-> +		cur->bc_private.b.flags = 0;
-> +	}
-> +
-> +	got.br_startoff = bno;
-> +	got.br_startblock = startblock;
-> +	got.br_blockcount = len;
-> +	got.br_state = XFS_EXT_NORM;
-> +
-> +	error = xfs_bmap_add_extent_hole_real(tp, ip, XFS_DATA_FORK, &idx, &cur,
-> +			&got, &firstblock, dfops, &logflags);
-> +	if (error)
-> +		goto error0;
-> +
-> +	if (xfs_bmap_wants_extents(ip, XFS_DATA_FORK)) {
-> +		int		tmp_logflags = 0;
-> +
-> +		error = xfs_bmap_btree_to_extents(tp, ip, cur,
-> +			&tmp_logflags, XFS_DATA_FORK);
-> +		logflags |= tmp_logflags;
-> +	}
-> +
-> +error0:
-> +	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS)
-> +		logflags &= ~XFS_ILOG_DEXT;
-> +	else if (ip->i_d.di_format != XFS_DINODE_FMT_BTREE)
-> +		logflags &= ~XFS_ILOG_DBROOT;
-> +
-> +	if (logflags)
-> +		xfs_trans_log_inode(tp, ip, logflags);
-> +	if (cur) {
-> +		xfs_btree_del_cursor(cur,
-> +			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-
-Double indent here?
-
-xfs_btree_del_cursor(cur,
-		error ? ...);
-
-Especially since you do that in one of the subsequent hunks.
-
-> +	}
-> +	return error;
-
-I think the code in this function looks ok aside from my earlier
-comments.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> +}
-> +
->  /*
->   * When a delalloc extent is split (e.g., due to a hole punch), the original
->   * indlen reservation must be shared across the two new extents that are left
-> @@ -6493,16 +6568,7 @@ xfs_bmap_finish_one(
->  	xfs_filblks_t			blockcount,
->  	xfs_exntst_t			state)
->  {
-> -	struct xfs_bmbt_irec		bmap;
-> -	int				nimaps = 1;
-> -	xfs_fsblock_t			firstfsb;
-> -	int				done;
-> -	int				error = 0;
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c       | 29 -----------------------------
+>  fs/xfs/libxfs/xfs_bmap_btree.c | 17 -----------------
+>  2 files changed, 46 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 0035f96a6e5a..c66e9c25e3c2 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -764,7 +764,6 @@ xfs_bmap_extents_to_btree(
+>  		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
+>  	} else if (dfops->dop_low) {
+>  		args.type = XFS_ALLOCTYPE_START_BNO;
+> -try_another_ag:
+>  		args.fsbno = *firstblock;
+>  	} else {
+>  		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+> @@ -779,20 +778,6 @@ xfs_bmap_extents_to_btree(
+>  		return error;
+>  	}
+>  
+> -	/*
+> -	 * During a CoW operation, the allocation and bmbt updates occur in
+> -	 * different transactions.  The mapping code tries to put new bmbt
+> -	 * blocks near extents being mapped, but the only way to guarantee this
+> -	 * is if the alloc and the mapping happen in a single transaction that
+> -	 * has a block reservation.  That isn't the case here, so if we run out
+> -	 * of space we'll try again with another AG.
+> -	 */
+> -	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
+> -	    args.fsbno == NULLFSBLOCK &&
+> -	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
+> -		args.type = XFS_ALLOCTYPE_FIRST_AG;
+> -		goto try_another_ag;
+> -	}
+>  	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
+>  		xfs_iroot_realloc(ip, -1, whichfork);
+>  		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> @@ -925,7 +910,6 @@ xfs_bmap_local_to_extents(
+>  	 * file currently fits in an inode.
+>  	 */
+>  	if (*firstblock == NULLFSBLOCK) {
+> -try_another_ag:
+>  		args.fsbno = XFS_INO_TO_FSB(args.mp, ip->i_ino);
+>  		args.type = XFS_ALLOCTYPE_START_BNO;
+>  	} else {
+> @@ -938,19 +922,6 @@ xfs_bmap_local_to_extents(
+>  	if (error)
+>  		goto done;
+>  
+> -	/*
+> -	 * During a CoW operation, the allocation and bmbt updates occur in
+> -	 * different transactions.  The mapping code tries to put new bmbt
+> -	 * blocks near extents being mapped, but the only way to guarantee this
+> -	 * is if the alloc and the mapping happen in a single transaction that
+> -	 * has a block reservation.  That isn't the case here, so if we run out
+> -	 * of space we'll try again with another AG.
+> -	 */
+> -	if (xfs_sb_version_hasreflink(&ip->i_mount->m_sb) &&
+> -	    args.fsbno == NULLFSBLOCK &&
+> -	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
+> -		goto try_another_ag;
+> -	}
+>  	/* Can't fail, the space was reserved. */
+>  	ASSERT(args.fsbno != NULLFSBLOCK);
+>  	ASSERT(args.len == 1);
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+> index fd55db479385..3e17ceda038c 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+> @@ -448,7 +448,6 @@ xfs_bmbt_alloc_block(
+>  	if (args.fsbno == NULLFSBLOCK) {
+>  		args.fsbno = be64_to_cpu(start->l);
+>  		args.type = XFS_ALLOCTYPE_START_BNO;
+> -try_another_ag:
+>  		/*
+>  		 * Make sure there is sufficient room left in the AG to
+>  		 * complete a full tree split for an extent insert.  If
+> @@ -477,22 +476,6 @@ xfs_bmbt_alloc_block(
+>  	if (error)
+>  		goto error0;
+>  
+> -	/*
+> -	 * During a CoW operation, the allocation and bmbt updates occur in
+> -	 * different transactions.  The mapping code tries to put new bmbt
+> -	 * blocks near extents being mapped, but the only way to guarantee this
+> -	 * is if the alloc and the mapping happen in a single transaction that
+> -	 * has a block reservation.  That isn't the case here, so if we run out
+> -	 * of space we'll try again with another AG.
+> -	 */
+> -	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
+> -	    args.fsbno == NULLFSBLOCK &&
+> -	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
+> -		args.fsbno = cur->bc_private.b.firstblock;
+> -		args.type = XFS_ALLOCTYPE_FIRST_AG;
+> -		goto try_another_ag;
+> -	}
 > -
-> -	bmap.br_startblock = startblock;
-> -	bmap.br_startoff = startoff;
-> -	bmap.br_blockcount = blockcount;
-> -	bmap.br_state = state;
-> +	int				error = 0, done;
->  
->  	trace_xfs_bmap_deferred(tp->t_mountp,
->  			XFS_FSB_TO_AGNO(tp->t_mountp, startblock), type,
-> @@ -6519,16 +6585,12 @@ xfs_bmap_finish_one(
->  
->  	switch (type) {
->  	case XFS_BMAP_MAP:
-> -		firstfsb = bmap.br_startblock;
-> -		error = xfs_bmapi_write(tp, ip, bmap.br_startoff,
-> -					bmap.br_blockcount, XFS_BMAPI_REMAP, &firstfsb,
-> -					bmap.br_blockcount, &bmap, &nimaps,
-> -					dfops);
-> +		error = xfs_bmapi_remap(tp, ip, startoff, blockcount,
-> +				startblock, dfops);
->  		break;
->  	case XFS_BMAP_UNMAP:
-> -		error = xfs_bunmapi(tp, ip, bmap.br_startoff,
-> -				bmap.br_blockcount, XFS_BMAPI_REMAP, 1, &firstfsb,
-> -				dfops, &done);
-> +		error = xfs_bunmapi(tp, ip, startoff, blockcount,
-> +				XFS_BMAPI_REMAP, 1, &startblock, dfops, &done);
->  		ASSERT(done);
->  		break;
->  	default:
+>  	if (args.fsbno == NULLFSBLOCK && args.minleft) {
+>  		/*
+>  		 * Could not find an AG with enough free space to satisfy
 > -- 
 > 2.11.0
 > 
