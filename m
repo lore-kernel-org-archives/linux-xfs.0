@@ -1,128 +1,158 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:55192 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1432474AbdDZAFx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Apr 2017 20:05:53 -0400
-Date: Wed, 26 Apr 2017 10:04:26 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Reviewing determinism of xfs_reclaim_inodes_ag()
-Message-ID: <20170426000426.GK12369@dastard>
-References: <20170425082503.GN28800@wotan.suse.de>
+Received: from mail-ua0-f181.google.com ([209.85.217.181]:34588 "EHLO
+        mail-ua0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751643AbdDJInJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 04:43:09 -0400
+Received: by mail-ua0-f181.google.com with SMTP id u103so29391660uau.1
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2017 01:43:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170425082503.GN28800@wotan.suse.de>
+In-Reply-To: <20170408235922.GG23007@dastard>
+References: <20170406144139.20284-1-jtulak@redhat.com> <20170407014959.GT17542@dastard>
+ <CACj3i71f3aDPYrMe1qN4YUxj2OmvcrC9OoNS3=u1tiHew9s0Fg@mail.gmail.com> <20170408235922.GG23007@dastard>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Mon, 10 Apr 2017 10:42:48 +0200
+Message-ID: <CACj3i70PkWXYT9wxjBDrk=jn5sNOu0i+Z5CrxsxTGOJcA+WCYw@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/2] mkfs: unify numeric types of main variables in main()
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Nikolay Borisov <nborisov@suse.com>, Jan Kara <jack@suse.cz>, Michal Hocko <mhocko@suse.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-[Luis, FYI - lots of stray whitespace in this email - I've trimmed
-it from my reply...]
-
-On Tue, Apr 25, 2017 at 10:25:03AM +0200, Luis R. Rodriguez wrote:
-> I've been staring at xfs_reclaim_inodes_ag() for a bit now to determine
-> if and how its deterministic it is. Fortunately the code makes it relatively
-> clear it chugs on 32 xfs_inodes at at a time before cond_resched()'ing. I was
-> concerned originally if we cond_resched() even if we goto restart but it seems
-> we do.
-> 
-> While reviewing this however I ran into the following question based on a
-> comment on the routine. Is such a thing as the below change needed ?
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 3531f8f72fa5..05f3c79b4f11 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1157,7 +1157,9 @@ xfs_reclaim_inodes_ag(
->  			for (i = 0; i < nr_found; i++) {
->  				struct xfs_inode *ip = batch[i];
->  
-> -				if (done || xfs_reclaim_inode_grab(ip, flags))
-> +				if (done ||
-> +				    XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno ||
-> +				    xfs_reclaim_inode_grab(ip, flags))
->  					batch[i] = NULL;
-
-If a new check is required here, it belongs in
-xfs_reclaim_inode_grab(), not as separate logic in the if statement
-here as it needs to be serialised with other checks the grab does.
-
-As it is, the grab code first checks for a zero ip->ino, which will
-catch all cases where the inode is still in the RCU grace period and
-a lookup has raced. If the inode is not under reclaim (i.e the inode
-number is non-zero) then the grab code checks and sets XFS_IRECLAIM
-under a spinlock, thereby prevent all further inode cache
-lookup+grab operations from succeeding until reclaim completes and
-the RCU grace period expires and frees the inode. i.e. if the
-XFS_IRECLAIM flag is already set, then the inode is skipped
-regardless of the inode number because it's already on it's way to
-being freed by RCU.
-
-Hence, IMO, adding this check here doesn't change lookup/reclaim
-processing correctness.
-
-> This is what the code looks like before but pay special attention to the
-> comment and a race with RCU:
-> 
->                                 if (done || xfs_reclaim_inode_grab(ip, flags))
->                                         batch[i] = NULL;
+On Sun, Apr 9, 2017 at 1:59 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Fri, Apr 07, 2017 at 03:17:20PM +0200, Jan Tulak wrote:
+>> On Fri, Apr 7, 2017 at 3:50 AM, Dave Chinner <david@fromorbit.com> wrote:
+>> > On Thu, Apr 06, 2017 at 04:41:38PM +0200, Jan Tulak wrote:
+>> >> Followup of my "[xfsprogs] Do we need so many data types for user input?" email.
+>> >>
+>> >> In the past, when mkfs was first written, it used atoi and
+>> >> similar calls, so the variables were ints. However, the situation moved
+>> >> since then and in course of the time, mkfs began to use other types too.
+>> >>
+>> >> Clean and unify it. We don't need negative values anywhere in the code and
+>> >> some numbers has to be 64bit. Thus, uint64 is the best candidate as the target
+>> >> type.
+>> >
+>> > I'm with Darrick and Eric on this - it's not the right conversion to
+>> > make for all the reasons they've pointed out. Further, I think it's
+>> > the wrong direction to be working in.
+>> >
+>> > What I originally intended the config option table to be used for
+>> > was to /replace all these config variables/ with config option table
+>> > lookups. We don't need tens of variables to say we certain options
+>> > set - once option parsing is complete we can just lookup the config
+>> > table and use the option value directly. i.e.  we need to work
+>> > towards removing all the variables, not try to make them pretty....
+>> >
+>>
+>> Removing them entirely is not as easy... Right now, there is this
+>> thing in "[PATCH 17/22] mkfs: use old variables as pointers to the new
+>> opts struct values" in the main:
+>>
+>> (Link to the patch: https://www.spinics.net/lists/linux-xfs/msg04977.html)
+>>
+>> -       __uint64_t              agcount;
+>> +       __uint64_t              *agcount;
+>> ...
+>>
+>> +       /*
+>> +        * Set up pointers, so we can use shorter names and to let gcc
+>> +        * check the correct type. We don't want to inadvertently use an int as
+>> +        * unsigned int and so on...
+>> +        */
+>> +       agcount = &opts[OPT_D].subopt_params[D_AGCOUNT].value.uint64;
 >
->                                 /*
->                                  * Update the index for the next lookup.
->                                  * Catch overflows into the next AG range
->                                  * which can occur if we have inodes in the
->                                  * last block of the AG and we are
->                                  * currently pointing to the last inode.
->                                  *
->                                  * Because we may see inodes that are from
->                                  * the wrong AG due to RCU freeing and
->                                  * reallocation, only update the index if
->                                  * it lies in this AG. It was a race that
->                                  * lead us to see this inode, so another
->                                  * lookup from
->                                  * the same index will not find it again.
->                                  */
->                                 if (XFS_INO_TO_AGNO(mp, ip->i_ino) !=
->                                                                 pag->pag_agno)
->                                         continue;
+> That's .... an interesting interpretation....
+>
+> What I intended was replacing all the uses of the agcount variable
+> with calls like:
+>
+>         get_config_val(OPT_D, D_AGCOUNT)
+>
+> [....]
+>
+>> transformed the variables into pointers in the patchset). But at least
+>> it could be possible to catch an incorrect type use easily, something
+>> we couldn't do in the macro:
+>>
+>> int get_opt_int(opt, sub)
+>> {
+>>   if (opts[opt].subopt_params[sub].type != INT)
+>>        print an error and exit();
+>>   return opts[opt].subopt_params[sub].value.int;
+>> }
+>
+> Yes, but why do we need to add type checking like this? It seems to
+> me that you're trying to over-engineer a simple thing that does not
+> need to be complex. For options with integer/flag values:
+>
+> /* return default value if nothing specified on the CLI */
+> static inline uint64_t
+> get_config_val(int opt, int subopt)
+> {
+>         if (!opts[opt].subopt_params[subopt].seen)
+>                 return opts[opt].subopt_params[subopt].defaultval;
+>         return opts[opt].subopt_params[subopt].value;
+> }
+>
+> And for options that are strings (e.g. device names):
+>
+> static inline char *
+> get_config_str(int opt, int subopt)
+> {
+>         if (!opts[opt].subopt_params[subopt].str_seen)
+>                 return NULL;
+>         return opts[opt].subopt_params[subopt].string;
+> }
+>
+> That's all that is necessary. The config table is guaranteed to
+> contain valid default values, and by the time we get to checking
+> options we've done all the conflict/validity checking so we can
+> trust the config settings to be valid and just use them directly
+> like this.
+>
 
-It's stale code left over from development of the RCU freeing of
-inodes where .....
+Yes, but to be able to do this, we have to remove the other numeric
+types. As long we have int, uint, various sizes... then there isn't an
+overarching data type that can be used, so we either lose part of the
+value range, or we need multiple functions. If we have only the
+uint64, then this works.
 
-> I checked with Jan Kara and he believes the current code is correct but that
-> its the comment that that may be misleading. As per Jan the race is between
-> getting an inode reclaimed and grabbing it. Ie, XFS frees the inodes by RCU.
-> However it doesn't actually *reuse* the inode until RCU period passes
-> (unlike inodes allocated from slab with SLAB_RCU can be). So it can happen
+>> >> +     __uint64_t      *dswidth,
+>> >> +     __uint64_t      *lsunit)
+>> >
+>> > My, what big raid stripes you have! ;)
+>>
+>> Well, yes, 64 bits is not necessary here, but I would say that having
+>> just one size of uint removes some (even if small) ambiguity, while
+>> performance-wise, it won't do anything noticeable.
+>
+> However, it makes me cringe when I read code written like this. You
+> say it removes ambiguity but to me, after more than 20 years of C
+> coding using appropriate types for variable contents, using uint64_t
+> for all variables (especially those that don't require 64 bit types)
+> introduces ambiguity and raises questions about the code quality.
+>
+> e.g.  declaring a flag as boolean means the author intended it to
+> only have two values (i.e. it's self documenting then intent of a
+> flag value!) whereas declaring them all as uint64_t makes me wonder
+> why the author of this code didn't know what the valid value range
+> for this variable is, why none of the reviewers cared either, what
+> happens if I put a really large value into the field instead of 0 or
+> 1, if that was tested, etc. Using the right type removes all this
+> potential ambiguity in the use/value of the variables.....
 
-..... I initially tried using SLAB_DESTROY_BY_RCU which meant the
-RCU grace period did not prevent reallocation of inodes that had
-been freed. Hence this check was (once) necessary to prevent the
-reclaim index going whacky on a reallocated inode.
-
-However, I dropped the SLAB_DESTROY_BY_RCU behaviour because I
-couldn't get it to work reliably and race free, and there was no
-measurable improvement in performance just using call_rcu() t delay
-the freeing of individual inodes to the end of the RCU grace period.
-
-In hindsight, I forgot to remove the second comment hunk and the
-check that was eventually committed as 1a3e8f3da09c ("xfs: convert
-inode cache lookups to use RCU locking"). It also appears the commit
-message was not updated, too. It says:
-
-    To avoid the read vs write contention, change the cache to use
-    RCU locking on the read side. To avoid needing to RCU free every
-    single inode, use the built in slab RCU freeing mechanism. This
-    requires us to be able to detect lookups of freed inodes, [...]
-
-So, really, the comment+check you're confused about can simply be
-removed....
+The boolean flag is something I acknowledged in my previous email; it
+indeed makes sense to keep that as a boolean. With other types though,
+that goes against the idea of a single get_config_val().
 
 Cheers,
+Jan
 
-Dave.
+
+
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
