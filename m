@@ -1,110 +1,497 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:37851 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751514AbdDKMDQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2017 08:03:16 -0400
-Received: by mail-wm0-f42.google.com with SMTP id u2so59220899wmu.0
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2017 05:03:16 -0700 (PDT)
-Subject: Re: filesystem dead, xfs_repair won't help
-References: <CAF950WLvp7SWnDHU_AY+j3CYtCDWYLdN=AkNZgNB2yU3sVxsJQ@mail.gmail.com>
- <612a9d5a-9877-405c-ef7c-dc9632a1d8bc@scylladb.com>
- <20170410153529.GE3991@bfoster.bfoster>
- <974df72a-04fe-fba4-4b48-89426b8783e0@scylladb.com>
- <20170411133033.65c89ee8@harpe.intellique.com>
- <13452866-4e5e-371c-269b-cee60e0c6b59@scylladb.com>
- <20170411140007.05af2bcd@harpe.intellique.com>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <9d2587d5-e1f1-e5bb-d276-bc6731b2fce8@scylladb.com>
-Date: Tue, 11 Apr 2017 15:03:12 +0300
+Received: from aserp1040.oracle.com ([141.146.126.69]:43312 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751799AbdDJV4a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 17:56:30 -0400
+Date: Mon, 10 Apr 2017 14:56:22 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/3 V4] xfs_io: hook up statx
+Message-ID: <20170410215622.GF10459@birch.djwong.org>
+References: <4bb89f72-962d-a9a2-c224-daa828558444@sandeen.net>
+ <e3d67608-f309-2f18-2122-197b6cf60b26@sandeen.net>
+ <8ac78256-8280-7355-736f-64e6ce55d277@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20170411140007.05af2bcd@harpe.intellique.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8ac78256-8280-7355-736f-64e6ce55d277@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, fsdevel <linux-fsdevel@vger.kernel.org>, David Howells <dhowells@redhat.com>
 
+On Mon, Apr 10, 2017 at 04:33:44PM -0500, Eric Sandeen wrote:
+> Wire up the statx syscall to xfs_io.
+> 
+> xfs_io> help statx
+> statx [-v|-r][-m basic | -m all | -m <mask>][-FD] -- extended statistics on the currently open file
+> 
+>  Display extended file status.
+> 
+>  Options:
+>  -v -- More verbose output
+>  -r -- Print raw statx structure fields
+>  -m mask -- Specify the field mask for the statx call
+>             (can also be 'basic' or 'all'; default STATX_ALL)
+>  -D -- Don't sync attributes with the server
+>  -F -- Force the attributes to be sync'd with the server
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> V4: Fix up __NR_statx defines, handle it if not defined (ala dhowells testcase)
+>     fix trailing whitespace in manpage :)
+> 
+> V3: remove -A, -L, and -O options
+> allow "basic" and "all" masks
+> change raw dump format to match stat raw format
+> make -r and -v exclusive
+> follow factoring of stat_f()
+> 
+> diff --git a/io/stat.c b/io/stat.c
+> index 770f3c7..efd552f 100644
+> --- a/io/stat.c
+> +++ b/io/stat.c
+> @@ -2,6 +2,9 @@
+>   * Copyright (c) 2003-2005 Silicon Graphics, Inc.
+>   * All Rights Reserved.
+>   *
+> + * Copyright (C) 2015, 2017 Red Hat, Inc.
+> + * Portions of statx support written by David Howells (dhowells@redhat.com)
+> + *
+>   * This program is free software; you can redistribute it and/or
+>   * modify it under the terms of the GNU General Public License as
+>   * published by the Free Software Foundation.
+> @@ -20,10 +23,14 @@
+>  #include "input.h"
+>  #include "init.h"
+>  #include "io.h"
+> +#include "statx.h"
+>  #include "libxfs.h"
+>  
+> +#include <fcntl.h>
+> +
+>  static cmdinfo_t stat_cmd;
+>  static cmdinfo_t statfs_cmd;
+> +static cmdinfo_t statx_cmd;
+>  
+>  off64_t
+>  filesize(void)
+> @@ -226,6 +233,151 @@ statfs_f(
+>  	return 0;
+>  }
+>  
+> +static ssize_t
+> +_statx(int dfd, const char *filename, unsigned flags,
 
+unsigned int flags?
 
-On 04/11/2017 03:00 PM, Emmanuel Florac wrote:
-> Le Tue, 11 Apr 2017 14:40:15 +0300
-> Avi Kivity <avi@scylladb.com> écrivait:
->
->> $ sudo xfs_db -c "sb 0" /tmp/fs
->> xfs_db: /tmp/fs is not a valid XFS filesystem (unexpected SB magic
->> number 0x5846534d)
->> Use -F to force a read attempt.
->> $ sudo xfs_db -F -c "sb 0" /tmp/fs
->> xfs_db: /tmp/fs is not a valid XFS filesystem (unexpected SB magic
->> number 0x5846534d)
->> xfs_db: V1 inodes unsupported. Please try an older xfsprogs.
-> Oops, I forgot one important part, sorry, you must restore the
-> meta_dump to a file first:
->
-> xfs_mdrestore /tmp/fs /tmp/fsimage
->
-> then run xfs_db on the /tmp/fsimage:
->
-> xfs_db -c 'sb 0' -c 'p' /tmp/fsimage
->
+> +      unsigned int mask, struct statx *buffer)
 
-magicnum = 0x58465342
-blocksize = 4096
-dblocks = 125026902
-rblocks = 0
-rextents = 0
-uuid = 50b25ad8-3eb9-4273-b7f2-d0a435b3a08f
-logstart = 67108869
-rootino = 96
-rbmino = 97
-rsumino = 98
-rextsize = 1
-agblocks = 31256726
-agcount = 4
-rbmblocks = 0
-logblocks = 61048
-versionnum = 0xb4b5
-sectsize = 512
-inodesize = 512
-inopblock = 8
-fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
-blocklog = 12
-sectlog = 9
-inodelog = 9
-inopblog = 3
-agblklog = 25
-rextslog = 0
-inprogress = 0
-imax_pct = 25
-icount = 1959744
-ifree = 89
-fdblocks = 91586587
-frextents = 0
-uquotino = null
-gquotino = null
-qflags = 0
-flags = 0
-shared_vn = 0
-inoalignmt = 4
-unit = 0
-width = 0
-dirblklog = 0
-logsectlog = 0
-logsectsize = 0
-logsunit = 1
-features2 = 0x18a
-bad_features2 = 0x18a
-features_compat = 0
-features_ro_compat = 0x1
-features_incompat = 0x1
-features_log_incompat = 0
-crc = 0x3ebf41de (correct)
-spino_align = 0
-pquotino = null
-lsn = 0x70002828b
-meta_uuid = 00000000-0000-0000-0000-000000000000
+Parameter indentation? i.e.
 
+static ssize_t
+_statx(
+	int		dfd,
+	const char	*filename,
+	unsigned int	flags,
+	unsigned int	mask,
+	struct statx	*buffer)
+{
 
+> +{
+> +#ifdef __NR_statx
+> +	return syscall(__NR_statx, dfd, filename, flags, mask, buffer);
+> +#else
+> +	errno = ENOSYS;
+> +	return -1;
+> +#endif
+> +}
+> +
+> +static void
+> +statx_help(void)
+> +{
+> +        printf(_(
+> +"\n"
+> +" Display extended file status.\n"
+> +"\n"
+> +" Options:\n"
+> +" -v -- More verbose output\n"
+> +" -r -- Print raw statx structure fields\n"
+> +" -m mask -- Specify the field mask for the statx call\n"
+> +"            (can also be 'basic' or 'all'; default STATX_ALL)\n"
+> +" -D -- Don't sync attributes with the server\n"
+> +" -F -- Force the attributes to be sync'd with the server\n"
+> +"\n"));
+> +}
+> +
+> +/* statx helper */
+> +static int
+> +dump_raw_statx(struct statx *stx)
+> +{
+> +	printf("stat.mask = 0x%x\n", stx->stx_mask);
+> +	printf("stat.blksize = %u\n", stx->stx_blksize);
+> +	printf("stat.attributes = 0x%llx\n", stx->stx_attributes);
+> +	printf("stat.nlink = %u\n", stx->stx_nlink);
+> +	printf("stat.uid = %u\n", stx->stx_uid);
+> +	printf("stat.gid = %u\n", stx->stx_gid);
+> +	printf("stat.mode: 0%o\n", stx->stx_mode);
+> +	printf("stat.ino = %llu\n", stx->stx_ino);
+> +	printf("stat.size = %llu\n", stx->stx_size);
+> +	printf("stat.blocks = %llu\n", stx->stx_blocks);
+> +	printf("stat.atime.tv_sec = %lld\n", stx->stx_atime.tv_sec);
+> +	printf("stat.atime.tv_nsec = %d\n", stx->stx_atime.tv_nsec);
+> +	printf("stat.btime.tv_sec = %lld\n", stx->stx_btime.tv_sec);
+> +	printf("stat.btime.tv_nsec = %d\n", stx->stx_btime.tv_nsec);
+> +	printf("stat.ctime.tv_sec = %lld\n", stx->stx_ctime.tv_sec);
+> +	printf("stat.ctime.tv_nsec = %d\n", stx->stx_ctime.tv_nsec);
+> +	printf("stat.mtime.tv_sec = %lld\n", stx->stx_mtime.tv_sec);
+> +	printf("stat.mtime.tv_nsec = %d\n", stx->stx_mtime.tv_nsec);
+> +	printf("stat.rdev_major = %u\n", stx->stx_rdev_major);
+> +	printf("stat.rdev_minor = %u\n", stx->stx_rdev_minor);
+> +	printf("stat.dev_major = %u\n", stx->stx_dev_major);
+> +	printf("stat.dev_minor = %u\n", stx->stx_dev_minor);
+> +	return 0;
+> +}
+> +
+> +/*
+> + * options:
+> + * 	- input flags - query type
+> + * 	- output style for flags (and all else?) (chars vs. hex?)
+> + * 	- output - mask out incidental flag or not?
+> + */
+> +int
+> +statx_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	int		c, verbose = 0, raw = 0;
+> +	char		*p;
+> +	struct statx	stx;
+> +	int		atflag = 0;
+> +	unsigned int	mask = STATX_ALL;
+> +
+> +	while ((c = getopt(argc, argv, "m:rvFD")) != EOF) {
+> +		switch (c) {
+> +		case 'm':
+> +			if (strcmp(optarg, "basic") == 0)
+> +				mask = STATX_BASIC_STATS;
+> +			else if (strcmp(optarg, "all") == 0)
+> +				mask = STATX_ALL;
+> +			else {
+> +				mask = strtoul(optarg, &p, 0);
+> +				if (!p || p == optarg) {
+> +					printf(
+> +				_("non-numeric mask -- %s\n"), optarg);
+> +					return 0;
+> +				}
+> +			}
+> +			break;
+> +		case 'r':
+> +			raw = 1;
+> +			break;
+> +		case 'v':
+> +			verbose = 1;
+> +			break;
+> +		case 'F':
+> +			atflag &= ~AT_STATX_SYNC_TYPE;
+> +			atflag |= AT_STATX_FORCE_SYNC;
+> +			break;
+> +		case 'D':
+> +			atflag &= ~AT_STATX_SYNC_TYPE;
+> +			atflag |= AT_STATX_DONT_SYNC;
+> +			break;
+> +		default:
+> +			return command_usage(&statx_cmd);
+> +		}
+> +	}
+> +
+> +	if (raw && verbose)
+> +		return command_usage(&statx_cmd);
+> +
+> +	memset(&stx, 0xbf, sizeof(stx));
+> +	if (_statx(file->fd, NULL, atflag, mask, &stx) < 0) {
+> +		perror("statx");
+> +		return 0;
+> +	}
+> +
+> +	if (raw)
+> +		return dump_raw_statx(&stx);
+> +
+> +	print_file_info();
+> +
+> +	printf(_("stat.ino = %lld\n"), (long long)stx.stx_ino);
+> +	printf(_("stat.type = %s\n"), filetype(stx.stx_mode));
+> +	printf(_("stat.size = %lld\n"), (long long)stx.stx_size);
+> +	printf(_("stat.blocks = %lld\n"), (long long)stx.stx_blocks);
+> +	if (verbose) {
+> +		printf(_("stat.atime = %s"), ctime((time_t *)&stx.stx_atime.tv_sec));
+> +		printf(_("stat.mtime = %s"), ctime((time_t *)&stx.stx_mtime.tv_sec));
+> +		printf(_("stat.ctime = %s"), ctime((time_t *)&stx.stx_ctime.tv_sec));
+> +		if (stx.stx_mask & STATX_BTIME)
+> +			printf(_("stat.btime = %s"),
+> +				ctime((time_t *)&stx.stx_btime.tv_sec));
+> +	}
+> +
+> +	if (file->flags & IO_FOREIGN)
+> +		return 0;
+> +
+> +	print_xfs_info(verbose);
+> +
+> +	return 0;
+> +}
+> +
+>  void
+>  stat_init(void)
+>  {
+> @@ -237,6 +389,15 @@ stat_init(void)
+>  	stat_cmd.args = _("[-v|-r]");
+>  	stat_cmd.oneline = _("statistics on the currently open file");
+>  
+> +	statx_cmd.name = "statx";
+> +	statx_cmd.cfunc = statx_f;
+> +	statx_cmd.argmin = 0;
+> +	statx_cmd.argmax = -1;
+> +	statx_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+> +	statx_cmd.args = _("[-v|-r][-m basic | -m all | -m <mask>][-FD]");
+> +	statx_cmd.oneline = _("extended statistics on the currently open file");
+> +	statx_cmd.help = statx_help;
+> +
+>  	statfs_cmd.name = "statfs";
+>  	statfs_cmd.cfunc = statfs_f;
+>  	statfs_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+> @@ -244,5 +405,6 @@ stat_init(void)
+>  		_("statistics on the filesystem of the currently open file");
+>  
+>  	add_command(&stat_cmd);
+> +	add_command(&statx_cmd);
+>  	add_command(&statfs_cmd);
+>  }
+> diff --git a/io/statx.h b/io/statx.h
+> new file mode 100644
+> index 0000000..2d919b9
+> --- /dev/null
+> +++ b/io/statx.h
+> @@ -0,0 +1,161 @@
+> +#ifndef XFS_IO_STATX_H
+> +#define XFS_IO_STATX_H
+> +
+> +#include <unistd.h>
+> +#include <sys/syscall.h>
+> +
+> +#ifndef AT_STATX_SYNC_TYPE
+> +#define AT_STATX_SYNC_TYPE      0x6000  /* Type of synchronisation required from statx() */
+> +#define AT_STATX_SYNC_AS_STAT   0x0000  /* - Do whatever stat() does */
+> +#define AT_STATX_FORCE_SYNC     0x2000  /* - Force the attributes to be sync'd with the server */
+> +#define AT_STATX_DONT_SYNC      0x4000  /* - Don't sync attributes with the server */
+> +#endif
+> +
+> +#ifndef AT_NO_AUTOMOUNT
+> +#define AT_NO_AUTOMOUNT		0x800	/* Suppress terminal automount traversal */
+> +#endif
+> +
+> +#ifndef __NR_statx
+> +# ifdef __i386__
+> +#  define __NR_statx 383
+> +# elif defined (__ILP32__)
+> +#  define __NR_statx (__X32_SYSCALL_BIT + 332)
+> +# elif defined (__x86_64__)
+> +#  define __NR_statx 332
+> +# endif
+> +#endif
+
+No love for m68k? :)
+
+> +
+> +#ifndef STATX_TYPE
+> +
+> +/*
+> + * Timestamp structure for the timestamps in struct statx.
+> + *
+> + * tv_sec holds the number of seconds before (negative) or after (positive)
+> + * 00:00:00 1st January 1970 UTC.
+> + *
+> + * tv_nsec holds a number of nanoseconds before (0..-999,999,999 if tv_sec is
+> + * negative) or after (0..999,999,999 if tv_sec is positive) the tv_sec time.
+> + *
+> + * Note that if both tv_sec and tv_nsec are non-zero, then the two values must
+> + * either be both positive or both negative.
+> + *
+> + * __reserved is held in case we need a yet finer resolution.
+> + */
+> +struct statx_timestamp {
+> +	__s64	tv_sec;
+> +	__s32	tv_nsec;
+> +	__s32	__reserved;
+> +};
+> +
+> +/*
+> + * Structures for the extended file attribute retrieval system call
+> + * (statx()).
+> + *
+> + * The caller passes a mask of what they're specifically interested in as a
+> + * parameter to statx().  What statx() actually got will be indicated in
+> + * st_mask upon return.
+> + *
+> + * For each bit in the mask argument:
+> + *
+> + * - if the datum is not supported:
+> + *
+> + *   - the bit will be cleared, and
+> + *
+> + *   - the datum will be set to an appropriate fabricated value if one is
+> + *     available (eg. CIFS can take a default uid and gid), otherwise
+> + *
+> + *   - the field will be cleared;
+> + *
+> + * - otherwise, if explicitly requested:
+> + *
+> + *   - the datum will be synchronised to the server if AT_STATX_FORCE_SYNC is
+> + *     set or if the datum is considered out of date, and
+> + *
+> + *   - the field will be filled in and the bit will be set;
+> + *
+> + * - otherwise, if not requested, but available in approximate form without any
+> + *   effort, it will be filled in anyway, and the bit will be set upon return
+> + *   (it might not be up to date, however, and no attempt will be made to
+> + *   synchronise the internal state first);
+> + *
+> + * - otherwise the field and the bit will be cleared before returning.
+> + *
+> + * Items in STATX_BASIC_STATS may be marked unavailable on return, but they
+> + * will have values installed for compatibility purposes so that stat() and
+> + * co. can be emulated in userspace.
+> + */
+> +struct statx {
+> +	/* 0x00 */
+> +	__u32	stx_mask;	/* What results were written [uncond] */
+> +	__u32	stx_blksize;	/* Preferred general I/O size [uncond] */
+> +	__u64	stx_attributes;	/* Flags conveying information about the file [uncond] */
+> +	/* 0x10 */
+> +	__u32	stx_nlink;	/* Number of hard links */
+> +	__u32	stx_uid;	/* User ID of owner */
+> +	__u32	stx_gid;	/* Group ID of owner */
+> +	__u16	stx_mode;	/* File mode */
+> +	__u16	__spare0[1];
+> +	/* 0x20 */
+> +	__u64	stx_ino;	/* Inode number */
+> +	__u64	stx_size;	/* File size */
+> +	__u64	stx_blocks;	/* Number of 512-byte blocks allocated */
+> +	__u64	__spare1[1];
+> +	/* 0x40 */
+> +	struct statx_timestamp	stx_atime;	/* Last access time */
+> +	struct statx_timestamp	stx_btime;	/* File creation time */
+> +	struct statx_timestamp	stx_ctime;	/* Last attribute change time */
+> +	struct statx_timestamp	stx_mtime;	/* Last data modification time */
+> +	/* 0x80 */
+> +	__u32	stx_rdev_major;	/* Device ID of special file [if bdev/cdev] */
+> +	__u32	stx_rdev_minor;
+> +	__u32	stx_dev_major;	/* ID of device containing file [uncond] */
+> +	__u32	stx_dev_minor;
+> +	/* 0x90 */
+> +	__u64	__spare2[14];	/* Spare space for future expansion */
+> +	/* 0x100 */
+> +};
+> +
+> +/*
+> + * Flags to be stx_mask
+> + *
+> + * Query request/result mask for statx() and struct statx::stx_mask.
+> + *
+> + * These bits should be set in the mask argument of statx() to request
+> + * particular items when calling statx().
+> + */
+> +#define STATX_TYPE		0x00000001U	/* Want/got stx_mode & S_IFMT */
+> +#define STATX_MODE		0x00000002U	/* Want/got stx_mode & ~S_IFMT */
+> +#define STATX_NLINK		0x00000004U	/* Want/got stx_nlink */
+> +#define STATX_UID		0x00000008U	/* Want/got stx_uid */
+> +#define STATX_GID		0x00000010U	/* Want/got stx_gid */
+> +#define STATX_ATIME		0x00000020U	/* Want/got stx_atime */
+> +#define STATX_MTIME		0x00000040U	/* Want/got stx_mtime */
+> +#define STATX_CTIME		0x00000080U	/* Want/got stx_ctime */
+> +#define STATX_INO		0x00000100U	/* Want/got stx_ino */
+> +#define STATX_SIZE		0x00000200U	/* Want/got stx_size */
+> +#define STATX_BLOCKS		0x00000400U	/* Want/got stx_blocks */
+> +#define STATX_BASIC_STATS	0x000007ffU	/* The stuff in the normal stat struct */
+> +#define STATX_BTIME		0x00000800U	/* Want/got stx_btime */
+> +#define STATX_ALL		0x00000fffU	/* All currently supported flags */
+
+Missing STATX__RESERVED here.
+
+(Yeah yeah, I'm being pedantic...)
+
+> +
+> +/*
+> + * Attributes to be found in stx_attributes
+> + *
+> + * These give information about the features or the state of a file that might
+> + * be of use to ordinary userspace programs such as GUIs or ls rather than
+> + * specialised tools.
+> + *
+> + * Note that the flags marked [I] correspond to generic FS_IOC_FLAGS
+> + * semantically.  Where possible, the numerical value is picked to correspond
+> + * also.
+> + */
+> +#define STATX_ATTR_COMPRESSED		0x00000004 /* [I] File is compressed by the fs */
+> +#define STATX_ATTR_IMMUTABLE		0x00000010 /* [I] File is marked immutable */
+> +#define STATX_ATTR_APPEND		0x00000020 /* [I] File is append-only */
+> +#define STATX_ATTR_NODUMP		0x00000040 /* [I] File is not to be dumped */
+> +#define STATX_ATTR_ENCRYPTED		0x00000800 /* [I] File requires key to decrypt in fs */
+> +
+> +#define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
+> +
+> +#endif /* STATX_TYPE */
+> +#endif /* XFS_IO_STATX_H */
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index e384327..1e5c225 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -882,6 +882,36 @@ option is specified, the atime (last access), mtime
+>  .B \-r
+>  option dumps raw fields from the stat structure.
+>  .TP
+> +.BI "statx [ \-v|\-r ][ \-m " basic " | \-m " all " | -m " <mask> " ][ \-FD ]"
+> +Selected statistics from
+> +.BR stat (2)
+> +and the XFS_IOC_GETXATTR system call on the current file.
+> +.RS 1.0i
+> +.PD 0
+> +.TP 0.4i
+> +.B \-v
+> +Show timestamps
+> +.TP
+> +.B \-r
+> +Dump raw statx structure values
+> +.TP
+> +.B \-m basic
+> +Set the field mask for the statx call to STATX_BASIC_STATS
+> +.TP
+> +.B \-m all
+> +Set the the field mask for the statx call to STATX_ALL (default)
+> +.TP
+> +.B \-m <mask>
+> +Specify a numeric field mask for the statx call
+> +.TP
+> +.B \-F
+> +Force the attributes to be synced with the server
+> +.TP
+> +.B \-D
+> +Don't sync attributes with the server
+
+All of these need trailing end-of-sentence periods since they are full
+sentences.
+
+--D
+
+> +.PD
+> +.RE
+> +.TP
+>  .B statfs
+>  Selected statistics from
+>  .BR statfs (2)
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
