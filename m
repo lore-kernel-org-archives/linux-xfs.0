@@ -1,168 +1,204 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f170.google.com ([209.85.217.170]:34873 "EHLO
-        mail-ua0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750765AbdDMJmN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2017 05:42:13 -0400
-Received: by mail-ua0-f170.google.com with SMTP id f10so9724197uaa.2
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2017 02:42:12 -0700 (PDT)
+Received: from aserp1040.oracle.com ([141.146.126.69]:39627 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751702AbdDJVsg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 17:48:36 -0400
+Date: Mon, 10 Apr 2017 14:48:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/3] xfs_io: refactor stat functions, add raw dump
+Message-ID: <20170410214830.GE10459@birch.djwong.org>
+References: <4bb89f72-962d-a9a2-c224-daa828558444@sandeen.net>
+ <c93e8f2d-8164-c56c-e3a3-6f3b8fa43f99@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <CACj3i70PkWXYT9wxjBDrk=jn5sNOu0i+Z5CrxsxTGOJcA+WCYw@mail.gmail.com>
-References: <20170406144139.20284-1-jtulak@redhat.com> <20170407014959.GT17542@dastard>
- <CACj3i71f3aDPYrMe1qN4YUxj2OmvcrC9OoNS3=u1tiHew9s0Fg@mail.gmail.com>
- <20170408235922.GG23007@dastard> <CACj3i70PkWXYT9wxjBDrk=jn5sNOu0i+Z5CrxsxTGOJcA+WCYw@mail.gmail.com>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Thu, 13 Apr 2017 11:41:51 +0200
-Message-ID: <CACj3i73cXhKYYD5XwjdV3VhiiabSjKPH3b9rtbNXPS9xy2GiWQ@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/2] mkfs: unify numeric types of main variables in main()
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c93e8f2d-8164-c56c-e3a3-6f3b8fa43f99@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, fsdevel <linux-fsdevel@vger.kernel.org>, David Howells <dhowells@redhat.com>
 
-On Mon, Apr 10, 2017 at 10:42 AM, Jan Tulak <jtulak@redhat.com> wrote:
-> On Sun, Apr 9, 2017 at 1:59 AM, Dave Chinner <david@fromorbit.com> wrote:
->> On Fri, Apr 07, 2017 at 03:17:20PM +0200, Jan Tulak wrote:
->>> On Fri, Apr 7, 2017 at 3:50 AM, Dave Chinner <david@fromorbit.com> wrote:
->>> > On Thu, Apr 06, 2017 at 04:41:38PM +0200, Jan Tulak wrote:
->>> >> Followup of my "[xfsprogs] Do we need so many data types for user input?" email.
->>> >>
->>> >> In the past, when mkfs was first written, it used atoi and
->>> >> similar calls, so the variables were ints. However, the situation moved
->>> >> since then and in course of the time, mkfs began to use other types too.
->>> >>
->>> >> Clean and unify it. We don't need negative values anywhere in the code and
->>> >> some numbers has to be 64bit. Thus, uint64 is the best candidate as the target
->>> >> type.
->>> >
->>> > I'm with Darrick and Eric on this - it's not the right conversion to
->>> > make for all the reasons they've pointed out. Further, I think it's
->>> > the wrong direction to be working in.
->>> >
->>> > What I originally intended the config option table to be used for
->>> > was to /replace all these config variables/ with config option table
->>> > lookups. We don't need tens of variables to say we certain options
->>> > set - once option parsing is complete we can just lookup the config
->>> > table and use the option value directly. i.e.  we need to work
->>> > towards removing all the variables, not try to make them pretty....
->>> >
->>>
->>> Removing them entirely is not as easy... Right now, there is this
->>> thing in "[PATCH 17/22] mkfs: use old variables as pointers to the new
->>> opts struct values" in the main:
->>>
->>> (Link to the patch: https://www.spinics.net/lists/linux-xfs/msg04977.html)
->>>
->>> -       __uint64_t              agcount;
->>> +       __uint64_t              *agcount;
->>> ...
->>>
->>> +       /*
->>> +        * Set up pointers, so we can use shorter names and to let gcc
->>> +        * check the correct type. We don't want to inadvertently use an int as
->>> +        * unsigned int and so on...
->>> +        */
->>> +       agcount = &opts[OPT_D].subopt_params[D_AGCOUNT].value.uint64;
->>
->> That's .... an interesting interpretation....
->>
->> What I intended was replacing all the uses of the agcount variable
->> with calls like:
->>
->>         get_config_val(OPT_D, D_AGCOUNT)
->>
->> [....]
->>
->>> transformed the variables into pointers in the patchset). But at least
->>> it could be possible to catch an incorrect type use easily, something
->>> we couldn't do in the macro:
->>>
->>> int get_opt_int(opt, sub)
->>> {
->>>   if (opts[opt].subopt_params[sub].type != INT)
->>>        print an error and exit();
->>>   return opts[opt].subopt_params[sub].value.int;
->>> }
->>
->> Yes, but why do we need to add type checking like this? It seems to
->> me that you're trying to over-engineer a simple thing that does not
->> need to be complex. For options with integer/flag values:
->>
->> /* return default value if nothing specified on the CLI */
->> static inline uint64_t
->> get_config_val(int opt, int subopt)
->> {
->>         if (!opts[opt].subopt_params[subopt].seen)
->>                 return opts[opt].subopt_params[subopt].defaultval;
->>         return opts[opt].subopt_params[subopt].value;
->> }
->>
->> And for options that are strings (e.g. device names):
->>
->> static inline char *
->> get_config_str(int opt, int subopt)
->> {
->>         if (!opts[opt].subopt_params[subopt].str_seen)
->>                 return NULL;
->>         return opts[opt].subopt_params[subopt].string;
->> }
->>
->> That's all that is necessary. The config table is guaranteed to
->> contain valid default values, and by the time we get to checking
->> options we've done all the conflict/validity checking so we can
->> trust the config settings to be valid and just use them directly
->> like this.
->>
->
-> Yes, but to be able to do this, we have to remove the other numeric
-> types. As long we have int, uint, various sizes... then there isn't an
-> overarching data type that can be used, so we either lose part of the
-> value range, or we need multiple functions. If we have only the
-> uint64, then this works.
->
->>> >> +     __uint64_t      *dswidth,
->>> >> +     __uint64_t      *lsunit)
->>> >
->>> > My, what big raid stripes you have! ;)
->>>
->>> Well, yes, 64 bits is not necessary here, but I would say that having
->>> just one size of uint removes some (even if small) ambiguity, while
->>> performance-wise, it won't do anything noticeable.
->>
->> However, it makes me cringe when I read code written like this. You
->> say it removes ambiguity but to me, after more than 20 years of C
->> coding using appropriate types for variable contents, using uint64_t
->> for all variables (especially those that don't require 64 bit types)
->> introduces ambiguity and raises questions about the code quality.
->>
->> e.g.  declaring a flag as boolean means the author intended it to
->> only have two values (i.e. it's self documenting then intent of a
->> flag value!) whereas declaring them all as uint64_t makes me wonder
->> why the author of this code didn't know what the valid value range
->> for this variable is, why none of the reviewers cared either, what
->> happens if I put a really large value into the field instead of 0 or
->> 1, if that was tested, etc. Using the right type removes all this
->> potential ambiguity in the use/value of the variables.....
->
-> The boolean flag is something I acknowledged in my previous email; it
-> indeed makes sense to keep that as a boolean. With other types though,
-> that goes against the idea of a single get_config_val().
+On Thu, Apr 06, 2017 at 01:48:50PM -0500, Eric Sandeen wrote:
+> This adds a "-r" raw structure dump to stat options, and
+> factors the code a bit; statx will also use print_file_info
+> and print_xfs_info.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Pinging this a bit. I changed all the flags to bool - these shouldn't
-be an issue now. How about the other options like dswidth, though? Is
-it ok if those are kept uint64?
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-And I'm not sure whether to use uint64_t or __uint64_t - as I wrote
-before, I picked the __uint64_t because it was already used in this
-file and is defined in xfs_linux.h, but I'm open to change it if it is
-a legacy type and standard uint64_t is preferred...
+--D
 
-Thanks.
-
-Cheers,
-Jan
-
--- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+> ---
+> 
+> diff --git a/io/stat.c b/io/stat.c
+> index 3ae9903..770f3c7 100644
+> --- a/io/stat.c
+> +++ b/io/stat.c
+> @@ -59,16 +59,32 @@ filetype(mode_t mode)
+>  	return NULL;
+>  }
+>  
+> -int
+> -stat_f(
+> -	int		argc,
+> -	char		**argv)
+> +static int
+> +dump_raw_stat(struct stat *st)
+>  {
+> -	struct dioattr	dio;
+> -	struct fsxattr	fsx, fsxa;
+> -	struct stat	st;
+> -	int		verbose = (argc == 2 && !strcmp(argv[1], "-v"));
+> +	printf("stat.blksize = %lu\n", st->st_blksize);
+> +	printf("stat.nlink = %lu\n", st->st_nlink);
+> +	printf("stat.uid = %u\n", st->st_uid);
+> +	printf("stat.gid = %u\n", st->st_gid);
+> +	printf("stat.mode: 0%o\n", st->st_mode);
+> +	printf("stat.ino = %lu\n", st->st_ino);
+> +	printf("stat.size = %lu\n", st->st_size);
+> +	printf("stat.blocks = %lu\n", st->st_blocks);
+> +	printf("stat.atime.tv_sec = %ld\n", st->st_atim.tv_sec);
+> +	printf("stat.atime.tv_nsec = %ld\n", st->st_atim.tv_nsec);
+> +	printf("stat.ctime.tv_sec = %ld\n", st->st_ctim.tv_sec);
+> +	printf("stat.ctime.tv_nsec = %ld\n", st->st_ctim.tv_nsec);
+> +	printf("stat.mtime.tv_sec = %ld\n", st->st_mtim.tv_sec);
+> +	printf("stat.mtime.tv_nsec = %ld\n", st->st_mtim.tv_nsec);
+> +	printf("stat.rdev_major = %u\n", major(st->st_rdev));
+> +	printf("stat.rdev_minor = %u\n", minor(st->st_rdev));
+> +	printf("stat.dev_major = %u\n", major(st->st_dev));
+> +	printf("stat.dev_minor = %u\n", minor(st->st_dev));
+> +	return 0;
+> +}
+>  
+> +void print_file_info(void)
+> +{
+>  	printf(_("fd.path = \"%s\"\n"), file->name);
+>  	printf(_("fd.flags = %s,%s,%s%s%s%s%s\n"),
+>  		file->flags & IO_OSYNC ? _("sync") : _("non-sync"),
+> @@ -78,21 +94,13 @@ stat_f(
+>  		file->flags & IO_APPEND ? _(",append-only") : "",
+>  		file->flags & IO_NONBLOCK ? _(",non-block") : "",
+>  		file->flags & IO_TMPFILE ? _(",tmpfile") : "");
+> -	if (fstat(file->fd, &st) < 0) {
+> -		perror("fstat");
+> -	} else {
+> -		printf(_("stat.ino = %lld\n"), (long long)st.st_ino);
+> -		printf(_("stat.type = %s\n"), filetype(st.st_mode));
+> -		printf(_("stat.size = %lld\n"), (long long)st.st_size);
+> -		printf(_("stat.blocks = %lld\n"), (long long)st.st_blocks);
+> -		if (verbose) {
+> -			printf(_("stat.atime = %s"), ctime(&st.st_atime));
+> -			printf(_("stat.mtime = %s"), ctime(&st.st_mtime));
+> -			printf(_("stat.ctime = %s"), ctime(&st.st_ctime));
+> -		}
+> -	}
+> -	if (file->flags & IO_FOREIGN)
+> -		return 0;
+> +}
+> +
+> +void print_xfs_info(int verbose)
+> +{
+> +	struct dioattr	dio;
+> +	struct fsxattr	fsx, fsxa;
+> +
+>  	if ((xfsctl(file->name, file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0 ||
+>  	    (xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTRA, &fsxa)) < 0) {
+>  		perror("FS_IOC_FSGETXATTR");
+> @@ -112,6 +120,57 @@ stat_f(
+>  		printf(_("dioattr.miniosz = %u\n"), dio.d_miniosz);
+>  		printf(_("dioattr.maxiosz = %u\n"), dio.d_maxiosz);
+>  	}
+> +}
+> +
+> +int
+> +stat_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	struct stat	st;
+> +	int		c, verbose = 0, raw = 0;
+> +
+> +	while ((c = getopt(argc, argv, "rv")) != EOF) {
+> +		switch (c) {
+> +		case 'r':
+> +			raw = 1;
+> +			break;
+> +		case 'v':
+> +			verbose = 1;
+> +			break;
+> +		default:
+> +			return command_usage(&stat_cmd);
+> +		}
+> +	}
+> +
+> +	if (raw && verbose)
+> +		return command_usage(&stat_cmd);
+> +
+> +	if (fstat(file->fd, &st) < 0) {
+> +		perror("fstat");
+> +		return 0;
+> +	}
+> +
+> +	if (raw)
+> +		return dump_raw_stat(&st);
+> +
+> +	print_file_info();
+> +
+> +	printf(_("stat.ino = %lld\n"), (long long)st.st_ino);
+> +	printf(_("stat.type = %s\n"), filetype(st.st_mode));
+> +	printf(_("stat.size = %lld\n"), (long long)st.st_size);
+> +	printf(_("stat.blocks = %lld\n"), (long long)st.st_blocks);
+> +	if (verbose) {
+> +		printf(_("stat.atime = %s"), ctime(&st.st_atime));
+> +		printf(_("stat.mtime = %s"), ctime(&st.st_mtime));
+> +		printf(_("stat.ctime = %s"), ctime(&st.st_ctime));
+> +	}
+> +
+> +	if (file->flags & IO_FOREIGN)
+> +		return 0;
+> +
+> +	print_xfs_info(verbose);
+> +
+>  	return 0;
+>  }
+>  
+> @@ -175,7 +234,7 @@ stat_init(void)
+>  	stat_cmd.argmin = 0;
+>  	stat_cmd.argmax = 1;
+>  	stat_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+> -	stat_cmd.args = _("[-v]");
+> +	stat_cmd.args = _("[-v|-r]");
+>  	stat_cmd.oneline = _("statistics on the currently open file");
+>  
+>  	statfs_cmd.name = "statfs";
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 19e1ae4..e384327 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -872,13 +872,15 @@ Only available in expert mode and requires privileges.
+>  Force the filesystem to shutdown (with or without flushing the log).
+>  Only available in expert mode and requires privileges.
+>  .TP
+> -.BR stat " [ " \-v " ]"
+> +.BR stat " [ " \-v "|" \-r " ]"
+>  Selected statistics from
+>  .BR stat (2)
+>  and the XFS_IOC_GETXATTR system call on the current file. If the
+>  .B \-v
+>  option is specified, the atime (last access), mtime
+> -(last modify), and ctime (last change) timestamps are also displayed.
+> +(last modify), and ctime (last change) timestamps are also displayed.  The
+> +.B \-r
+> +option dumps raw fields from the stat structure.
+>  .TP
+>  .B statfs
+>  Selected statistics from
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
