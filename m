@@ -1,90 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43620 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:51997 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753176AbdDJRgj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Apr 2017 13:36:39 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9C002A794
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2017 17:36:33 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 7EF2B17145
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2017 17:36:33 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: drop iolock from reclaim context to appease lockdep
-Date: Mon, 10 Apr 2017 13:36:32 -0400
-Message-Id: <1491845792-7143-1-git-send-email-bfoster@redhat.com>
+        id S1754099AbdDJRml (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 10 Apr 2017 13:42:41 -0400
+Date: Mon, 10 Apr 2017 19:42:34 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/6] xfs: pass individual arguments to
+        xfs_bmap_add_extent_hole_real
+Message-ID: <20170410174234.GB19106@lst.de>
+References: <20170403121833.7825-1-hch@lst.de> <20170403121833.7825-4-hch@lst.de> <20170410171316.GV4864@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170410171316.GV4864@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-Lockdep complains about use of the iolock in inode reclaim context
-because it doesn't understand that reclaim has the last reference to
-the inode, and thus an iolock->reclaim->iolock deadlock is not
-possible.
+On Mon, Apr 10, 2017 at 10:13:16AM -0700, Darrick J. Wong wrote:
+> > -	struct xfs_bmalloca	*bma,
+> > -	int			whichfork)
+> > +	struct xfs_trans	*tp,
+> > +	xfs_inode_t		*ip,	/* incore inode pointer */
+> > +	int			whichfork,
+> > +	xfs_extnum_t		*idx,	/* extent number to update/insert */
+> > +	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
+> > +	xfs_bmbt_irec_t		*new,	/* new data to add to file extents */
+> 
+> struct xfs_inode vs. xfs_inode_t ?
 
-The iolock is technically not necessary in xfs_inactive() and was
-only added to appease an assert in xfs_free_eofblocks(), which can
-be called from other non-reclaim contexts. Therefore, just kill the
-assert and drop the use of the iolock from reclaim context to quiet
-lockdep.
+Sure, I can fix this up.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_bmap_util.c | 8 +++-----
- fs/xfs/xfs_inode.c     | 9 +++++----
- 2 files changed, 8 insertions(+), 9 deletions(-)
+> 
+> I was under the impression that we don't add comments to the function
+> arguments anymore, but TBH they don't bother me.
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 4d1920e..de94798 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -903,9 +903,9 @@ xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
- }
- 
- /*
-- * This is called by xfs_inactive to free any blocks beyond eof
-- * when the link count isn't zero and by xfs_dm_punch_hole() when
-- * punching a hole to EOF.
-+ * This is called to free any blocks beyond eof. The caller must hold
-+ * IOLOCK_EXCL unless we are in the inode reclaim path and have the only
-+ * reference to the inode.
-  */
- int
- xfs_free_eofblocks(
-@@ -920,8 +920,6 @@ xfs_free_eofblocks(
- 	struct xfs_bmbt_irec	imap;
- 	struct xfs_mount	*mp = ip->i_mount;
- 
--	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
--
- 	/*
- 	 * Figure out if there are any blocks beyond the end
- 	 * of the file.  If not, then there is nothing to do.
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 7605d83..ec9826c 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1906,12 +1906,13 @@ xfs_inactive(
- 		 * force is true because we are evicting an inode from the
- 		 * cache. Post-eof blocks must be freed, lest we end up with
- 		 * broken free space accounting.
-+		 *
-+		 * Note: don't bother with iolock here since lockdep complains
-+		 * about acquiring it in reclaim context. We have the only
-+		 * reference to the inode at this point anyways.
- 		 */
--		if (xfs_can_free_eofblocks(ip, true)) {
--			xfs_ilock(ip, XFS_IOLOCK_EXCL);
-+		if (xfs_can_free_eofblocks(ip, true))
- 			xfs_free_eofblocks(ip);
--			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
--		}
- 
- 		return;
- 	}
--- 
-2.7.4
-
+It's copy and paste from the other function in the family that
+takes individual parameters.  I can remove it.
