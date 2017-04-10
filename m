@@ -1,205 +1,295 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ishtar.tlinx.org ([173.164.175.65]:42016 "EHLO
-        Ishtar.sc.tlinx.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751064AbdDJSFm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 14:05:42 -0400
-Message-ID: <58EBC972.6040509@tlinx.org>
-Date: Mon, 10 Apr 2017 11:05:38 -0700
-From: L A Walsh <xfs@tlinx.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:41767 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753629AbdDJTuJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 15:50:09 -0400
+Date: Mon, 10 Apr 2017 12:50:04 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/6] xfs: introduce xfs_bmapi_remap
+Message-ID: <20170410195004.GA10459@birch.djwong.org>
+References: <20170403121833.7825-1-hch@lst.de>
+ <20170403121833.7825-5-hch@lst.de>
 MIME-Version: 1.0
-Subject: Re: allow mounting w/crc-checking disabled? (was Re: filesystem dead,
- xfs_repair won't help)
-References: <CAF950WLvp7SWnDHU_AY+j3CYtCDWYLdN=AkNZgNB2yU3sVxsJQ@mail.gmail.com> <58EB53CA.7030608@tlinx.org> <8b9b764e-8fb5-af30-f135-be51b6a67558@sandeen.net>
-In-Reply-To: <8b9b764e-8fb5-af30-f135-be51b6a67558@sandeen.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170403121833.7825-5-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-Eric Sandeen wrote:
-> On 4/10/17 4:43 AM, L A Walsh wrote:
->> Avi Kivity wrote:
->>> Today my kernel complained that in memory metadata is corrupt and
->>> asked that I run xfs_repair.  But xfs_repair doesn't like the
->>> superblock and isn't able to find a secondary superblock.
->>>   
->> Why doesn't xfs have an option to mount with metadata checksumming
->> disabled so people can recover their data?
+On Mon, Apr 03, 2017 at 02:18:31PM +0200, Christoph Hellwig wrote:
+> Add a new helper to be used for reflink extent list additions instead of
+> funneling them through xfs_bmapi_write and overloading the firstblock
+> member in struct xfs_bmalloca and struct xfs_alloc_args.
 > 
-> Because if checksums are bad, your metadata is almost certainly bad,
-> and with bad metadata, you're not going to be recovering data either.
-----
-
-	Sorry, but I really don't by that a 1 bit error
-in metadata will automatically cause problems with data recovery.
-
-	If the date on the file shows it was created at some
-time with nanoseconds=1 and that gets bumped to 3 (or virtually
-any number < an equivalent of 1 second) it will trigger a crc
-error.  But I don't care.
-
+> With some small changes to xfs_bmap_remap_alloc this also means we do
+> not need a xfs_bmalloca structure for this case at all.
 > 
-> (and FWIW, CRCs are only the first line of defense: structure
-> verifiers come after that.  The chance of a CRC being bad and
-> everything else checking out is extremely small.)
-----	
-
-	If the crc error has caught a bit rot, that wouldn't be
-true. Only if the crc error catches a bug in the XFS SW, would
-that be likely.  Since I was told that it was protecting me
-against bit-rot and not a lower stability or quality of XFS overall,
-then it's more likely that data could be recovered.
-
-	Though, again, this is one of those things like allowing
-use of the free-space extent that you could *allow* users to use
-at their own risk -- but something, likely, that you won't.  
-
-	This is another case where your logic is flawed.  
-Permitting mounting w/o enforcement is not a guarantee of 
-data recovery, BUT allowing the user to make the decision of
-whether or not they can recover anything useful should be up
-to the owner of the computer.  Yet it seems clear you aren't
-using sound engineering practice to justify your actions.
-
-	Any bit rot metadata corruption is unlikely to wipe
-10 TeraBytes of data.  
-
-	Understand your position.  You are claiming the crc option is
-detecting errors that were previously undetected.  People have
-operated huge filesystems (I'm certain that my 10TB partition is
-tiny compared to enterprise usage) for years without experiencing
-noticeable problems.  Yet when crc is turned on, suddenly they are
-expected to buy into crc detecting corruption so severe that nothing
-can be recovered (when such has not been the case since XFS's
-inception).  
-
->> Seems like it should be easy to provide, no?
->>
->> Or rather, if a disk is created with the crc option, is it possible
->> to later switch it off or mount it without with checking disabled?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 152 +++++++++++++++++++++++++++++++++--------------
+>  1 file changed, 107 insertions(+), 45 deletions(-)
 > 
-> It is not possible.
------
-	Not possible eh?  In the SW world?  The only way it would
-not be possible is if it were *administratively prohibited*.  
-Working around detected bugs or flaws isn't known to be "not
-possible" by a long shot. Take ZFS, which , I'm told, 
-can not only recover corrupted data from other sectors, 
-but doesn't require shutting down the file system due to
-the problem detection.  That certainly doesn't sound 
-like "impossible".
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index d404dee7ede4..caadfe27af39 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3862,11 +3862,12 @@ xfs_bmap_btalloc(
+>   */
+>  STATIC int
+>  xfs_bmap_remap_alloc(
+> -	struct xfs_bmalloca	*ap)
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	xfs_fsblock_t		startblock,
+> +	xfs_extlen_t		length)
 
-	If the crc option is only a canary, and not a cipher then
-recovery of most data should be possible.
+Why change all this if the next patch removes the whole function except:
 
-	Are you saying that the crc option doesn't simply do an integrity
-check but is converting what was "plaintext" into some encoded form?
-That isn't what it is documented to do.
+ip->i_d.di_nblocks += length;
+xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 
- 
->> Yes, I know the mantra is that they should have had backups, but
->> in practice it's seems not the case in a majority of uses outside
->> of enterprise usage.  It sure seems that disabling a particular file
->> or directory (if necessary) affected by a bad-crc, would be
->> preferable to losing the whole disk.  That said, how many crc
->> errors would be likely to make things unreadable or inaccessible?
+Wouldn't it make more sense to have this patch add _bmapi_remap (as it
+appears in the next patch) and change the callers to use it; and then
+the next patch removes the old _bmap_remap_alloc and its callers?
+
+>  {
+> -	struct xfs_trans	*tp = ap->tp;
+>  	struct xfs_mount	*mp = tp->t_mountp;
+> -	xfs_fsblock_t		bno;
+>  	struct xfs_alloc_arg	args;
+>  	int			error;
+>  
+> @@ -3875,24 +3876,24 @@ xfs_bmap_remap_alloc(
+>  	 * and handle a silent filesystem corruption rather than crashing.
+>  	 */
+>  	memset(&args, 0, sizeof(struct xfs_alloc_arg));
+> -	args.tp = ap->tp;
+> -	args.mp = ap->tp->t_mountp;
+> -	bno = *ap->firstblock;
+> -	args.agno = XFS_FSB_TO_AGNO(mp, bno);
+> -	args.agbno = XFS_FSB_TO_AGBNO(mp, bno);
+> +	args.tp = tp;
+> +	args.mp = mp;
+> +	args.agno = XFS_FSB_TO_AGNO(mp, startblock);
+> +	args.agbno = XFS_FSB_TO_AGBNO(mp, startblock);
+> +
+>  	if (args.agno >= mp->m_sb.sb_agcount ||
+>  	    args.agbno >= mp->m_sb.sb_agblocks)
+>  		return -EFSCORRUPTED;
+>  
+>  	/* "Allocate" the extent from the range we passed in. */
+> -	trace_xfs_bmap_remap_alloc(ap->ip, *ap->firstblock, ap->length);
+> -	ap->blkno = bno;
+> -	ap->ip->i_d.di_nblocks += ap->length;
+> -	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
+> +	trace_xfs_bmap_remap_alloc(ip, startblock, length);
+> +
+> +	ip->i_d.di_nblocks += length;
+> +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>  
+>  	/* Fix the freelist, like a real allocator does. */
+> -	args.datatype = ap->datatype;
+> -	args.pag = xfs_perag_get(args.mp, args.agno);
+> +	args.datatype = XFS_ALLOC_USERDATA | XFS_ALLOC_NOBUSY;
+> +	args.pag = xfs_perag_get(mp, args.agno);
+>  	ASSERT(args.pag);
+>  
+>  	/*
+> @@ -3905,7 +3906,7 @@ xfs_bmap_remap_alloc(
+>  	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
+>  	xfs_perag_put(args.pag);
+>  	if (error)
+> -		trace_xfs_bmap_remap_alloc_error(ap->ip, error, _RET_IP_);
+> +		trace_xfs_bmap_remap_alloc_error(ip, error, _RET_IP_);
+>  	return error;
+>  }
+>  
+> @@ -3917,8 +3918,6 @@ STATIC int
+>  xfs_bmap_alloc(
+>  	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+>  {
+> -	if (ap->flags & XFS_BMAPI_REMAP)
+> -		return xfs_bmap_remap_alloc(ap);
+>  	if (XFS_IS_REALTIME_INODE(ap->ip) &&
+>  	    xfs_alloc_is_userdata(ap->datatype))
+>  		return xfs_bmap_rtalloc(ap);
+> @@ -4554,9 +4553,7 @@ xfs_bmapi_write(
+>  	ASSERT(len > 0);
+>  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> -	ASSERT(!(flags & XFS_BMAPI_REMAP) || whichfork == XFS_DATA_FORK);
+> -	ASSERT(!(flags & XFS_BMAPI_PREALLOC) || !(flags & XFS_BMAPI_REMAP));
+> -	ASSERT(!(flags & XFS_BMAPI_CONVERT) || !(flags & XFS_BMAPI_REMAP));
+> +	ASSERT(!(flags & XFS_BMAPI_REMAP));
+>  
+>  	/* zeroing is for currently only for data extents, not metadata */
+>  	ASSERT((flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ZERO)) !=
+> @@ -4640,13 +4637,8 @@ xfs_bmapi_write(
+>  			} else {
+>  				need_alloc = true;
+>  			}
+> -		} else {
+> -			/*
+> -			 * Make sure we only reflink into a hole.
+> -			 */
+> -			ASSERT(!(flags & XFS_BMAPI_REMAP));
+> -			if (isnullstartblock(bma.got.br_startblock))
+> -				wasdelay = true;
+> +		} else if (isnullstartblock(bma.got.br_startblock)) {
+> +			wasdelay = true;
+>  		}
+>  
+>  		/*
+> @@ -4775,6 +4767,89 @@ xfs_bmapi_write(
+>  	return error;
+>  }
+>  
+> +static int
+> +xfs_bmapi_remap(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	xfs_fileoff_t		bno,
+> +	xfs_filblks_t		len,
+> +	xfs_fsblock_t		startblock,
+> +	struct xfs_defer_ops	*dfops)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> +	struct xfs_btree_cur	*cur = NULL;
+> +	xfs_fsblock_t		firstblock = NULLFSBLOCK;
+> +	struct xfs_bmbt_irec	got;
+> +	xfs_extnum_t		idx;
+> +	int			logflags = 0, error;
+> +
+> +	ASSERT(len > 0);
+> +	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
+> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> +	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
+> +
+> +	if (unlikely(XFS_TEST_ERROR(
+> +	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
+> +	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
+> +	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
+> +		XFS_ERROR_REPORT("xfs_bmapi_remap", XFS_ERRLEVEL_LOW, mp);
+> +		return -EFSCORRUPTED;
+> +	}
+> +
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return -EIO;
+> +
+> +	if (xfs_iext_lookup_extent(ip, ifp, bno, &idx, &got)) {
+> +		/* make sure we only reflink into a hole. */
+> +		ASSERT(got.br_startoff > bno);
+> +		ASSERT(got.br_startoff - bno >= len);
+> +	}
+> +
+> +	error = xfs_bmap_remap_alloc(tp, ip, startblock, len);
+> +	if (error)
+> +		goto error0;
+> +
+> +	if (ifp->if_flags & XFS_IFBROOT) {
+> +		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
+> +		cur->bc_private.b.firstblock = firstblock;
+> +		cur->bc_private.b.dfops = dfops;
+> +		cur->bc_private.b.flags = 0;
+> +	}
+> +
+> +	got.br_startoff = bno;
+> +	got.br_startblock = startblock;
+> +	got.br_blockcount = len;
+> +	got.br_state = XFS_EXT_NORM;
+> +
+> +	error = xfs_bmap_add_extent_hole_real(tp, ip, XFS_DATA_FORK, &idx, &cur,
+> +			&got, &firstblock, dfops, &logflags);
+> +	if (error)
+> +		goto error0;
+> +
+> +	if (xfs_bmap_wants_extents(ip, XFS_DATA_FORK)) {
+> +		int		tmp_logflags = 0;
+> +
+> +		error = xfs_bmap_btree_to_extents(tp, ip, cur,
+> +			&tmp_logflags, XFS_DATA_FORK);
+> +		logflags |= tmp_logflags;
+> +	}
+> +
+> +error0:
+> +	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS)
+> +		logflags &= ~XFS_ILOG_DEXT;
+> +	else if (ip->i_d.di_format != XFS_DINODE_FMT_BTREE)
+> +		logflags &= ~XFS_ILOG_DBROOT;
+> +
+> +	if (logflags)
+> +		xfs_trans_log_inode(tp, ip, logflags);
+> +	if (cur) {
+> +		xfs_btree_del_cursor(cur,
+> +			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+
+Double indent here?
+
+xfs_btree_del_cursor(cur,
+		error ? ...);
+
+Especially since you do that in one of the subsequent hunks.
+
+> +	}
+> +	return error;
+
+I think the code in this function looks ok aside from my earlier
+comments.
+
+--D
+
+> +}
+> +
+>  /*
+>   * When a delalloc extent is split (e.g., due to a hole punch), the original
+>   * indlen reservation must be shared across the two new extents that are left
+> @@ -6493,16 +6568,7 @@ xfs_bmap_finish_one(
+>  	xfs_filblks_t			blockcount,
+>  	xfs_exntst_t			state)
+>  {
+> -	struct xfs_bmbt_irec		bmap;
+> -	int				nimaps = 1;
+> -	xfs_fsblock_t			firstfsb;
+> -	int				done;
+> -	int				error = 0;
+> -
+> -	bmap.br_startblock = startblock;
+> -	bmap.br_startoff = startoff;
+> -	bmap.br_blockcount = blockcount;
+> -	bmap.br_state = state;
+> +	int				error = 0, done;
+>  
+>  	trace_xfs_bmap_deferred(tp->t_mountp,
+>  			XFS_FSB_TO_AGNO(tp->t_mountp, startblock), type,
+> @@ -6519,16 +6585,12 @@ xfs_bmap_finish_one(
+>  
+>  	switch (type) {
+>  	case XFS_BMAP_MAP:
+> -		firstfsb = bmap.br_startblock;
+> -		error = xfs_bmapi_write(tp, ip, bmap.br_startoff,
+> -					bmap.br_blockcount, XFS_BMAPI_REMAP, &firstfsb,
+> -					bmap.br_blockcount, &bmap, &nimaps,
+> -					dfops);
+> +		error = xfs_bmapi_remap(tp, ip, startoff, blockcount,
+> +				startblock, dfops);
+>  		break;
+>  	case XFS_BMAP_UNMAP:
+> -		error = xfs_bunmapi(tp, ip, bmap.br_startoff,
+> -				bmap.br_blockcount, XFS_BMAPI_REMAP, 1, &firstfsb,
+> -				dfops, &done);
+> +		error = xfs_bunmapi(tp, ip, startoff, blockcount,
+> +				XFS_BMAPI_REMAP, 1, &startblock, dfops, &done);
+>  		ASSERT(done);
+>  		break;
+>  	default:
+> -- 
+> 2.11.0
 > 
-> How log is a piece of string?  ;)  Totally depends on the details.
---
-	That depends on whether or not it is a software error
-caused by a typo or by 1 or more bit-flips in a given sector.
-
-
-> 
->> Given that the default before crc-checking was that the disks
->> were still usable (often with no error being flagged or noticed),
-> 
-> Before, we had a lot of ad-hoc checks (or not.)  Many of those checks,
-> and/or IO errors when trying to read garbage metadata, would also
-> shut down the filesystem.
----
-	But those checks were rarely triggered.  It was often the
-case (you claim) that they went undiscovered for some time -- thus
-a "need"[sic] for crc to detect a 1 bit-rot-flip in a 100TB
-file system and mark the entire file system as bad.
-
-	Sorry, that's bull.  You need to compartmentalize damage
-or its worthless.  Noticing a error in 1 sector shouldn't shutdown
-or prevent 100TB of other daya from being accessed (or usable).
-
-
-
-> Proceeding with mutilated metadata is almost never a good thing.
-> You'll wander off into garbage and shut down the fs at best, and OOPS
-> at worst.  (Losing a filesystem is preferable to losing a system!)
-----
-	
-> 
->> I'd suspect that the crc-checking is causing many errors to be
->> be flagged that before wouldn't have even been noticed.
-> 
-> Yes, that's precisely the point of CRCs.  :)
-----
-
-	If they wouldn't have been noticed -- then they wouldn't
-have caused problems.  crc is creating problems where before
-they didn't -- by definition -- because they catch "many errors...
-that before, WOULDN'T HAVE BEEN NOTICED".  That's my point.
-
-
->> Overall I'm wondering if the crc option won't cause more
->> disk-losses than would occur without the option.  Or, in other
->> words, it seems that since crc-checking seems to cause the disk
->> to be lost, turning on crc checking is almost guaranteed to cause
->> a higher incidence of data loss if it can't be disable.
-> 
-> When CRCs detect metadata corruption, the next step is to run
-> xfs_repair to salvage what can be salvaged, and retrieve what's
-> left of your data after that.  Disabling CRCs and proceeding in
-> kernelspace with known metadata corruption would be a dangerous
-> total crapshoot.
----
-
-	Right..xfsrepair -- like the base-note poster tried and
-and had fail.  The crc errors I'm seen complaints about are ones
-were xfsrepair don't work.  At that point, disabling the volume
-is not helpful.
-
-	I'm sure it wouldn't be trivial, but creating a separate
-file system, "XFS2" from the original XFS sources that responded
-to data or metadata corruption by returning empty data where
-it was impossible to return anything useful instead of flagging
-the disk as "bad", would be a way to allow data recovery to
-the extent that it made sense (assuming the original sources
-couldn't do the same toggling off a config-flag).
-
-	I'm sure you can out-type and come up with various
-reasons as to why XFS or crc can't auto-correct.  Maybe instead
-of a crc, you should be using a well established check that
-allows recovery from multiple data bit failure.
-
-	Supposedly the 4K block size had more error-resistance and
-*recover* than the 512-byte format.  Certainly, with crc's
-on all the metadata, a more robust algorithm could automatically
-recover from such errors.
-
-	If it is that fragile, then perhaps you should consider enabling
-the independant use of the free-inode, which would certainly 
-raise performance on mature filesystems.
-
-	I did get that it's been tested on virgin and fresh file
-systems and showed no benefit with such, but it would be nice
-if such tests were done on 7-10+ year-old filesystems that
-"often" exceeded 75% disk space usage -- even going over 
-80-90% usage at times for a short period.  It may not be a
-normal state, but it does happen.  Certainly it would be
-something worthy of testing with real-life data.
-
-:)
-
-*cheers*
--linda
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
