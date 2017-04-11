@@ -1,55 +1,191 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ishtar.tlinx.org ([173.164.175.65]:46170 "EHLO
-        Ishtar.sc.tlinx.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752963AbdDJKNm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 06:13:42 -0400
-Received: from [192.168.3.12] (Athenae [192.168.3.12])
-        by Ishtar.sc.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id v3A9hcBH078461
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2017 02:43:40 -0700
-Message-ID: <58EB53CA.7030608@tlinx.org>
-Date: Mon, 10 Apr 2017 02:43:38 -0700
-From: L A Walsh <xfs@tlinx.org>
+Received: from mail-pg0-f50.google.com ([74.125.83.50]:34538 "EHLO
+        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752076AbdDKDyl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 23:54:41 -0400
+Received: by mail-pg0-f50.google.com with SMTP id 21so115826432pgg.1
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2017 20:54:41 -0700 (PDT)
 MIME-Version: 1.0
-Subject: allow mounting w/crc-checking disabled?  (was Re: filesystem dead,
- xfs_repair won't help)
-References: <CAF950WLvp7SWnDHU_AY+j3CYtCDWYLdN=AkNZgNB2yU3sVxsJQ@mail.gmail.com>
-In-Reply-To: <CAF950WLvp7SWnDHU_AY+j3CYtCDWYLdN=AkNZgNB2yU3sVxsJQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20170410222305.GQ4874@birch.djwong.org>
+References: <CALRRBv8169Y7r9BCX8Hsye9YAZVQGFHX2yoiYw5-=XLBKMN9nA@mail.gmail.com>
+ <20170407162917.GH4864@birch.djwong.org> <CALRRBv_WD=tVCq4o0At43ZBP+JQnLNTYeGBy3R3Z5_RX84G3iQ@mail.gmail.com>
+ <20170410222305.GQ4874@birch.djwong.org>
+From: Arkadiusz <arek2407066@gmail.com>
+Date: Tue, 11 Apr 2017 05:54:40 +0200
+Message-ID: <CALRRBv8hYTL7DJMqv4stwZHirSb=9cKYn8DEW0UOQbY4YMNj=g@mail.gmail.com>
+Subject: Re: Question about large file fragmentation.
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-Avi Kivity wrote:
-> Today my kernel complained that in memory metadata is corrupt and
-> asked that I run xfs_repair.  But xfs_repair doesn't like the
-> superblock and isn't able to find a secondary superblock.
->   
-Why doesn't xfs have an option to mount with metadata checksumming
-disabled so people can recover their data?
-
-Seems like it should be easy to provide, no?
-
-Or rather, if a disk is created with the crc option, is it possible
-to later switch it off or mount it without with checking disabled?
-
-Yes, I know the mantra is that they should have had backups, but
-in practice it's seems not the case in a majority of uses outside
-of enterprise usage.  It sure seems that disabling a particular file
-or directory (if necessary) affected by a bad-crc, would be
-preferable to losing the whole disk.  That said, how many crc
-errors would be likely to make things unreadable or inaccessible?
-Given that the default before crc-checking was that the disks
-were still usable (often with no error being flagged or noticed),
-I'd suspect that the crc-checking is causing many errors to be
-be flagged that before wouldn't have even been noticed. 
-
-Overall I'm wondering if the crc option won't cause more disk-losses
-than would occur without the option.  Or, in other words, it seems
-that since crc-checking seems to cause the disk to be lost, turning
-on crc checking is almost guaranteed to cause a higher incidence of
-data loss if it can't be disable. 
+Thank you for explanation. I though that it is possible to write only
+extents since I don't care about the data. As I understand correctly
+currently there is no possibility to do that?
 
 
 
+On Tue, Apr 11, 2017 at 12:23 AM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Mon, Apr 10, 2017 at 08:12:19AM +0200, Arkadiusz wrote:
+>> I know that the flag means "0010000 Unwritten preallocated extent" but
+>> is there any way to allocate extents fast without filling whole file
+>> with data?
+>
+> Nope.  I wonder if fallocate(ZERO_RANGE) could be taught to issue a
+> zeroing discard before ensuring that all the extents are marked as
+> written?
+>
+> (Ask the list, see what people say.)
+>
+> --D
+>
+>>
+>> On Fri, Apr 7, 2017 at 6:29 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>> > On Fri, Apr 07, 2017 at 02:52:01PM +0200, Arkadiusz wrote:
+>> >> Dear maintainers,
+>> >> I have a question about large file fragmentation.
+>> >>
+>> >> When I create large file (20G) on XFS by filling it with zeros. For example:
+>> >> dd if=/dev/zero of=lun bs=512 count=41873408
+>> >>
+>> >> The bitmap looks as follows:
+>> >>
+>> >> xfs_bmap -vp lun
+>> >> lun:
+>> >>  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
+>> >>   TOTAL FLAGS
+>> >>    0: [0..8388479]:         112..8388591        0 (112..8388591)
+>> >> 8388480 00000
+>> >>    1: [8388480..16777087]:  10485824..18874431  1 (64..8388671)
+>> >> 8388608 00000
+>> >>    2: [16777088..25165695]: 20992064..29380671  2 (20544..8409151)
+>> >> 8388608 00000
+>> >>    3: [25165696..35651383]: 31457344..41943031  3 (64..10485751)
+>> >> 10485688 00000
+>> >>    4: [35651384..37748551]: 8388592..10485759   0 (8388592..10485759)
+>> >> 2097168 00000
+>> >>    5: [37748552..39845631]: 18874432..20971511  1 (8388672..10485751)
+>> >> 2097080 00000
+>> >>    6: [39845632..41873407]: 29380672..31408447  2 (8409152..10436927)
+>> >> 2027776 00000
+>> >>
+>> >> When I use this file for iSCSI file I/O and then I fill whole volume
+>> >> from the initiator side with random data. The bitmap doesn't change.
+>> >>
+>> >> However, when I create file of the same size using fallocate:
+>> >> fallocate -l 21439184896 lun
+>> >> the bitmap at the beginning looks as follows:
+>> >> xfs_bmap -vp lun
+>> >> lun:
+>> >>  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
+>> >> TOTAL FLAGS
+>> >>    0: [0..10485647]:        112..10485759       0 (112..10485759)
+>> >> 10485648 10000
+>> >>    1: [10485648..10485655]: 104..111            0 (104..111)
+>> >>     8 10000
+>> >>    2: [10485656..20971351]: 10485824..20971519  1 (64..10485759)
+>> >> 10485696 10000
+>> >>    3: [20971352..31436559]: 20992064..31457271  2 (20544..10485751)
+>> >> 10465208 10000
+>> >>    4: [31436560..41873407]: 31457344..41894191  3 (64..10436911)
+>> >> 10436848 10000
+>> >>
+>> >> but when I write some data from the initiator side the extents count grows:
+>> >> xfs_bmap -vp lun
+>> >> lun:
+>> >>  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
+>> >>    TOTAL FLAGS
+>> >>    0: [0..7]:               112..119            0 (112..119)
+>> >>        8 00000
+>> >>    1: [8..2047]:            120..2159           0 (120..2159)
+>> >>     2040 10000
+>> >
+>> > Have a look at "xfs_bmap -vvp lun" for the flags output. ;)
+>> >
+>> > --D
+>> >
+>> >>    2: [2048..365807]:       2160..365919        0 (2160..365919)
+>> >>   363760 00000
+>> >>    3: [365808..406727]:     365920..406839      0 (365920..406839)
+>> >>    40920 10000
+>> >>    4: [406728..506487]:     406840..506599      0 (406840..506599)
+>> >>    99760 00000
+>> >>    5: [506488..514071]:     506600..514183      0 (506600..514183)
+>> >>     7584 10000
+>> >>    6: [514072..514079]:     514184..514191      0 (514184..514191)
+>> >>        8 00000
+>> >>    7: [514080..524495]:     514192..524607      0 (514192..524607)
+>> >>    10416 10000
+>> >>    8: [524496..524503]:     524608..524615      0 (524608..524615)
+>> >>        8 00000
+>> >>    9: [524504..524543]:     524616..524655      0 (524616..524655)
+>> >>       40 10000
+>> >>   10: [524544..524551]:     524656..524663      0 (524656..524663)
+>> >>        8 00000
+>> >>   11: [524552..529559]:     524664..529671      0 (524664..529671)
+>> >>     5008 10000
+>> >>   12: [529560..529567]:     529672..529679      0 (529672..529679)
+>> >>        8 00000
+>> >>   13: [529568..550255]:     529680..550367      0 (529680..550367)
+>> >>    20688 10000
+>> >>   14: [550256..550263]:     550368..550375      0 (550368..550375)
+>> >>        8 00000
+>> >>   15: [550264..552295]:     550376..552407      0 (550376..552407)
+>> >>     2032 10000
+>> >>   16: [552296..552303]:     552408..552415      0 (552408..552415)
+>> >>        8 00000
+>> >>   17: [552304..554279]:     552416..554391      0 (552416..554391)
+>> >>     1976 10000
+>> >>   18: [554280..554287]:     554392..554399      0 (554392..554399)
+>> >>        8 00000
+>> >>   19: [554288..570623]:     554400..570735      0 (554400..570735)
+>> >>    16336 10000
+>> >>   20: [570624..570631]:     570736..570743      0 (570736..570743)
+>> >>        8 00000
+>> >>   21: [570632..1330943]:    570744..1331055     0 (570744..1331055)
+>> >>   760312 10000
+>> >>   22: [1330944..1330951]:   1331056..1331063    0 (1331056..1331063)
+>> >>        8 00000
+>> >>   23: [1330952..6173167]:   1331064..6173279    0 (1331064..6173279)
+>> >>  4842216 10000
+>> >>   24: [6173168..6232727]:   6173280..6232839    0 (6173280..6232839)
+>> >>    59560 00000
+>> >>   25: [6232728..6249039]:   6232840..6249151    0 (6232840..6249151)
+>> >>    16312 10000
+>> >>   26: [6249040..6249111]:   6249152..6249223    0 (6249152..6249223)
+>> >>       72 00000
+>> >>   27: [6249112..6251087]:   6249224..6251199    0 (6249224..6251199)
+>> >>     1976 10000
+>> >>   28: [6251088..6251127]:   6251200..6251239    0 (6251200..6251239)
+>> >>       40 00000
+>> >>   29: [6251128..6251631]:   6251240..6251743    0 (6251240..6251743)
+>> >>      504 10000
+>> >>   30: [6251632..6296063]:   6251744..6296175    0 (6251744..6296175)
+>> >>    44432 00000
+>> >>   31: [6296064..10485647]:  6296176..10485759   0 (6296176..10485759)
+>> >>  4189584 10000
+>> >>   32: [10485648..10485655]: 104..111            0 (104..111)
+>> >>        8 10000
+>> >>   33: [10485656..20971351]: 10485824..20971519  1 (64..10485759)
+>> >> 10485696 10000
+>> >>   34: [20971352..31436559]: 20992064..31457271  2 (20544..10485751)
+>> >> 10465208 10000
+>> >>   35: [31436560..41869303]: 31457344..41890087  3 (64..10432807)
+>> >> 10432744 10000
+>> >>   36: [41869304..41869311]: 41890088..41890095  3 (10432808..10432815)
+>> >>        8 00000
+>> >>   37: [41869312..41873407]: 41890096..41894191  3 (10432816..10436911)
+>> >>     4096 10000
+>> >>
+>> >> I thought that fallocate allocates extents and fragmentation shouldn't increase.
+>> >>
+>> >> Is there any way to create large files resistant to fragmentation that
+>> >> doesn't need to fill whole file with zeros?
+>> >>
+>> >> Thanks.
+>> >> --
+>> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> >> the body of a message to majordomo@vger.kernel.org
+>> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
