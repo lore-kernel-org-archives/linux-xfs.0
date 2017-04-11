@@ -1,191 +1,333 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:34538 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752076AbdDKDyl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 23:54:41 -0400
-Received: by mail-pg0-f50.google.com with SMTP id 21so115826432pgg.1
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2017 20:54:41 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:51674 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751047AbdDKMux (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Apr 2017 08:50:53 -0400
+Date: Tue, 11 Apr 2017 08:50:51 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/3] xfs: push buffer of flush locked dquot to avoid
+ quotacheck deadlock
+Message-ID: <20170411125051.GA10603@bfoster.bfoster>
+References: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
+ <1487966001-63263-3-git-send-email-bfoster@redhat.com>
+ <20170410050001.GI23007@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20170410222305.GQ4874@birch.djwong.org>
-References: <CALRRBv8169Y7r9BCX8Hsye9YAZVQGFHX2yoiYw5-=XLBKMN9nA@mail.gmail.com>
- <20170407162917.GH4864@birch.djwong.org> <CALRRBv_WD=tVCq4o0At43ZBP+JQnLNTYeGBy3R3Z5_RX84G3iQ@mail.gmail.com>
- <20170410222305.GQ4874@birch.djwong.org>
-From: Arkadiusz <arek2407066@gmail.com>
-Date: Tue, 11 Apr 2017 05:54:40 +0200
-Message-ID: <CALRRBv8hYTL7DJMqv4stwZHirSb=9cKYn8DEW0UOQbY4YMNj=g@mail.gmail.com>
-Subject: Re: Question about large file fragmentation.
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170410050001.GI23007@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Martin Svec <martin.svec@zoner.cz>
 
-Thank you for explanation. I though that it is possible to write only
-extents since I don't care about the data. As I understand correctly
-currently there is no possibility to do that?
+On Mon, Apr 10, 2017 at 03:00:01PM +1000, Dave Chinner wrote:
+> On Fri, Feb 24, 2017 at 02:53:20PM -0500, Brian Foster wrote:
+> > Reclaim during quotacheck can lead to deadlocks on the dquot flush
+> > lock:
+> > 
+> >  - Quotacheck populates a local delwri queue with the physical dquot
+> >    buffers.
+> >  - Quotacheck performs the xfs_qm_dqusage_adjust() bulkstat and
+> >    dirties all of the dquots.
+> >  - Reclaim kicks in and attempts to flush a dquot whose buffer is
+> >    already queud on the quotacheck queue. The flush succeeds but
+> >    queueing to the reclaim delwri queue fails as the backing buffer is
+> >    already queued. The flush unlock is now deferred to I/O completion
+> >    of the buffer from the quotacheck queue.
+> >  - The dqadjust bulkstat continues and dirties the recently flushed
+> >    dquot once again.
+> >  - Quotacheck proceeds to the xfs_qm_flush_one() walk which requires
+> >    the flush lock to update the backing buffers with the in-core
+> >    recalculated values. It deadlocks on the redirtied dquot as the
+> >    flush lock was already acquired by reclaim, but the buffer resides
+> >    on the local delwri queue which isn't submitted until the end of
+> >    quotacheck.
+> > 
+> > This is reproduced by running quotacheck on a filesystem with a
+> > couple million inodes in low memory (512MB-1GB) situations. This is
+> > a regression as of commit 43ff2122e6 ("xfs: on-stack delayed write
+> > buffer lists"), which removed a trylock and buffer I/O submission
+> > from the quotacheck dquot flush sequence.
+> > 
+> > Quotacheck first resets and collects the physical dquot buffers in a
+> > delwri queue. Then, it traverses the filesystem inodes via bulkstat,
+> > updates the in-core dquots, flushes the corrected dquots to the
+> > backing buffers and finally submits the delwri queue for I/O. Since
+> > the backing buffers are queued across the entire quotacheck
+> > operation, dquot reclaim cannot possibly complete a dquot flush
+> > before quotacheck completes.
+> > 
+> > Therefore, quotacheck must submit the buffer for I/O in order to
+> > cycle the flush lock and flush the dirty in-core dquot to the
+> > buffer. Add a delwri queue buffer push mechanism to submit an
+> > individual buffer for I/O without losing the delwri queue status and
+> > use it from quotacheck to avoid the deadlock. This restores
+> > quotacheck behavior to as before the regression was introduced.
+> 
+> While it may fix the problem, the solution gives me the heebee
+> jeebees. I'm on holidays, so I haven't bothered to spend the hours
+> necessary to answer these questions, but to give you an idea, this
+> was what I thought as I read the patch.  i.e. I have concerns about
+> whether....
+> 
 
+Thanks for looking at this. FWIW, this is based on a preexisting
+solution prior to the commit referenced above (obviously this doesn't
+mean the code is correct or that this is the best solution).
 
+> > Reported-by: Martin Svec <martin.svec@zoner.cz>
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/xfs_buf.c   | 37 +++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_buf.h   |  1 +
+> >  fs/xfs/xfs_qm.c    | 28 +++++++++++++++++++++++++++-
+> >  fs/xfs/xfs_trace.h |  1 +
+> >  4 files changed, 66 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index e566510..e97cf56 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -2011,6 +2011,43 @@ xfs_buf_delwri_submit(
+> >  	return error;
+> >  }
+> >  
+> > +int
+> > +xfs_buf_delwri_pushbuf(
+> > +	struct xfs_buf		*bp,
+> > +	struct list_head	*buffer_list)
+> > +{
+> > +	LIST_HEAD		(submit_list);
+> > +	int			error;
+> > +
+> > +	ASSERT(xfs_buf_islocked(bp));
+> > +	ASSERT(bp->b_flags & _XBF_DELWRI_Q);
+> > +
+> > +	trace_xfs_buf_delwri_pushbuf(bp, _RET_IP_);
+> > +
+> > +	/*
+> > +	 * Move the buffer to an empty list and submit. Pass the original list
+> > +	 * as the wait list so delwri submission moves the buf back to it before
+> > +	 * it is submitted (and thus before it is unlocked). This means the
+> > +	 * buffer cannot be placed on another list while we wait for it.
+> > +	 */
+> > +	list_move(&bp->b_list, &submit_list);
+> > +	xfs_buf_unlock(bp);
+> 
+> .... this is safe/racy as we may have just moved it off the delwri
+> queue without changing state, reference counts, etc?
+> 
 
-On Tue, Apr 11, 2017 at 12:23 AM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Mon, Apr 10, 2017 at 08:12:19AM +0200, Arkadiusz wrote:
->> I know that the flag means "0010000 Unwritten preallocated extent" but
->> is there any way to allocate extents fast without filling whole file
->> with data?
->
-> Nope.  I wonder if fallocate(ZERO_RANGE) could be taught to issue a
-> zeroing discard before ensuring that all the extents are marked as
-> written?
->
-> (Ask the list, see what people say.)
->
-> --D
->
->>
->> On Fri, Apr 7, 2017 at 6:29 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
->> > On Fri, Apr 07, 2017 at 02:52:01PM +0200, Arkadiusz wrote:
->> >> Dear maintainers,
->> >> I have a question about large file fragmentation.
->> >>
->> >> When I create large file (20G) on XFS by filling it with zeros. For example:
->> >> dd if=/dev/zero of=lun bs=512 count=41873408
->> >>
->> >> The bitmap looks as follows:
->> >>
->> >> xfs_bmap -vp lun
->> >> lun:
->> >>  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
->> >>   TOTAL FLAGS
->> >>    0: [0..8388479]:         112..8388591        0 (112..8388591)
->> >> 8388480 00000
->> >>    1: [8388480..16777087]:  10485824..18874431  1 (64..8388671)
->> >> 8388608 00000
->> >>    2: [16777088..25165695]: 20992064..29380671  2 (20544..8409151)
->> >> 8388608 00000
->> >>    3: [25165696..35651383]: 31457344..41943031  3 (64..10485751)
->> >> 10485688 00000
->> >>    4: [35651384..37748551]: 8388592..10485759   0 (8388592..10485759)
->> >> 2097168 00000
->> >>    5: [37748552..39845631]: 18874432..20971511  1 (8388672..10485751)
->> >> 2097080 00000
->> >>    6: [39845632..41873407]: 29380672..31408447  2 (8409152..10436927)
->> >> 2027776 00000
->> >>
->> >> When I use this file for iSCSI file I/O and then I fill whole volume
->> >> from the initiator side with random data. The bitmap doesn't change.
->> >>
->> >> However, when I create file of the same size using fallocate:
->> >> fallocate -l 21439184896 lun
->> >> the bitmap at the beginning looks as follows:
->> >> xfs_bmap -vp lun
->> >> lun:
->> >>  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
->> >> TOTAL FLAGS
->> >>    0: [0..10485647]:        112..10485759       0 (112..10485759)
->> >> 10485648 10000
->> >>    1: [10485648..10485655]: 104..111            0 (104..111)
->> >>     8 10000
->> >>    2: [10485656..20971351]: 10485824..20971519  1 (64..10485759)
->> >> 10485696 10000
->> >>    3: [20971352..31436559]: 20992064..31457271  2 (20544..10485751)
->> >> 10465208 10000
->> >>    4: [31436560..41873407]: 31457344..41894191  3 (64..10436911)
->> >> 10436848 10000
->> >>
->> >> but when I write some data from the initiator side the extents count grows:
->> >> xfs_bmap -vp lun
->> >> lun:
->> >>  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
->> >>    TOTAL FLAGS
->> >>    0: [0..7]:               112..119            0 (112..119)
->> >>        8 00000
->> >>    1: [8..2047]:            120..2159           0 (120..2159)
->> >>     2040 10000
->> >
->> > Have a look at "xfs_bmap -vvp lun" for the flags output. ;)
->> >
->> > --D
->> >
->> >>    2: [2048..365807]:       2160..365919        0 (2160..365919)
->> >>   363760 00000
->> >>    3: [365808..406727]:     365920..406839      0 (365920..406839)
->> >>    40920 10000
->> >>    4: [406728..506487]:     406840..506599      0 (406840..506599)
->> >>    99760 00000
->> >>    5: [506488..514071]:     506600..514183      0 (506600..514183)
->> >>     7584 10000
->> >>    6: [514072..514079]:     514184..514191      0 (514184..514191)
->> >>        8 00000
->> >>    7: [514080..524495]:     514192..524607      0 (514192..524607)
->> >>    10416 10000
->> >>    8: [524496..524503]:     524608..524615      0 (524608..524615)
->> >>        8 00000
->> >>    9: [524504..524543]:     524616..524655      0 (524616..524655)
->> >>       40 10000
->> >>   10: [524544..524551]:     524656..524663      0 (524656..524663)
->> >>        8 00000
->> >>   11: [524552..529559]:     524664..529671      0 (524664..529671)
->> >>     5008 10000
->> >>   12: [529560..529567]:     529672..529679      0 (529672..529679)
->> >>        8 00000
->> >>   13: [529568..550255]:     529680..550367      0 (529680..550367)
->> >>    20688 10000
->> >>   14: [550256..550263]:     550368..550375      0 (550368..550375)
->> >>        8 00000
->> >>   15: [550264..552295]:     550376..552407      0 (550376..552407)
->> >>     2032 10000
->> >>   16: [552296..552303]:     552408..552415      0 (552408..552415)
->> >>        8 00000
->> >>   17: [552304..554279]:     552416..554391      0 (552416..554391)
->> >>     1976 10000
->> >>   18: [554280..554287]:     554392..554399      0 (554392..554399)
->> >>        8 00000
->> >>   19: [554288..570623]:     554400..570735      0 (554400..570735)
->> >>    16336 10000
->> >>   20: [570624..570631]:     570736..570743      0 (570736..570743)
->> >>        8 00000
->> >>   21: [570632..1330943]:    570744..1331055     0 (570744..1331055)
->> >>   760312 10000
->> >>   22: [1330944..1330951]:   1331056..1331063    0 (1331056..1331063)
->> >>        8 00000
->> >>   23: [1330952..6173167]:   1331064..6173279    0 (1331064..6173279)
->> >>  4842216 10000
->> >>   24: [6173168..6232727]:   6173280..6232839    0 (6173280..6232839)
->> >>    59560 00000
->> >>   25: [6232728..6249039]:   6232840..6249151    0 (6232840..6249151)
->> >>    16312 10000
->> >>   26: [6249040..6249111]:   6249152..6249223    0 (6249152..6249223)
->> >>       72 00000
->> >>   27: [6249112..6251087]:   6249224..6251199    0 (6249224..6251199)
->> >>     1976 10000
->> >>   28: [6251088..6251127]:   6251200..6251239    0 (6251200..6251239)
->> >>       40 00000
->> >>   29: [6251128..6251631]:   6251240..6251743    0 (6251240..6251743)
->> >>      504 10000
->> >>   30: [6251632..6296063]:   6251744..6296175    0 (6251744..6296175)
->> >>    44432 00000
->> >>   31: [6296064..10485647]:  6296176..10485759   0 (6296176..10485759)
->> >>  4189584 10000
->> >>   32: [10485648..10485655]: 104..111            0 (104..111)
->> >>        8 10000
->> >>   33: [10485656..20971351]: 10485824..20971519  1 (64..10485759)
->> >> 10485696 10000
->> >>   34: [20971352..31436559]: 20992064..31457271  2 (20544..10485751)
->> >> 10465208 10000
->> >>   35: [31436560..41869303]: 31457344..41890087  3 (64..10432807)
->> >> 10432744 10000
->> >>   36: [41869304..41869311]: 41890088..41890095  3 (10432808..10432815)
->> >>        8 00000
->> >>   37: [41869312..41873407]: 41890096..41894191  3 (10432816..10436911)
->> >>     4096 10000
->> >>
->> >> I thought that fallocate allocates extents and fragmentation shouldn't increase.
->> >>
->> >> Is there any way to create large files resistant to fragmentation that
->> >> doesn't need to fill whole file with zeros?
->> >>
->> >> Thanks.
->> >> --
->> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> >> the body of a message to majordomo@vger.kernel.org
->> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Racy with..? The buffer is effectively still on the delwri queue here.
+We've just replaced the caller queue with a local queue to reuse the
+existing submission infrastructure. IOW, we've just changed the queue
+that the buffer is on.
+
+> > +
+> > +	xfs_buf_delwri_submit_buffers(&submit_list, buffer_list);
+> 
+> .... using a caller supplied delwri buffer list as the buffer IO
+> wait list destination is making big assumptions about the internal
+> use of the wait list? e.g that xfs_buf_delwri_submit_buffers() does
+> not initialise the list_head before use...
+> 
+
+This is the scope at which the wait list is defined/initialized. E.g.,
+_delwri_submit() initializes its local wait list and passes it down for
+_delwri_submit_buffers() to use. This basically ensures that the buffer
+is placed back on the original delwri queue because the latter moves the
+buffer over under lock, before it is submitted for I/O.
+
+We could probably use a local wait_list just the same if that is
+preferred, and explicitly add the buffer back from the wait_list to the
+original delwri queue. FWIW, it's not clear to me whether you're asking
+about the use of the wait_list here or indicating preference.
+
+> .... we should be doing IO submission while holding other things on
+> the delwri list and unknown caller locks?
+> 
+
+I'm not following... this is effectively a move/submit of a delwri queue
+item to another delwri queue. If the delwri queue is by design a local
+data structure then only one thread should be queue processing at a
+time. Why would this particular action be problematic?
+
+Technically, we could rework this into something like a
+delwri_queue_move()/delwri_submit() sequence, but the problem with that
+is we lose the queue-populated state of the buffer for a period of time
+and thus somebody else (i.e., reclaim) can jump in and queue it out from
+underneath the caller. The purpose of this mechanism is to preserve
+original delwri queue ownership of the buffer.
+
+> .... we have all the buffer reference counts we need to make this
+> work correctly?
+> 
+
+AFAICT, we follow the existing delwri queue rules with regard to locking
+and reference counting. A buffer is queued under the buf lock and the
+queue takes a reference on the buffer. Queue submission locks the
+buffer, acquires a wait_list reference and moves to the wait list if one
+is specified and submits the buffer. Buffer I/O completion drops the
+original queue reference. If the wait_list was specified, we cycle the
+buffer lock (to wait for I/O completion), remove from the wait_list and
+drop the wait_list reference.
+
+The pushbuf() call moves the buffer to the submit_list under the buffer
+lock, which is effectively another local delwri queue. This takes
+ownership of the original delwri queue reference. Queue submission
+occurs as above: the buffer is moved to the wait_list, an associated
+wait_list reference is acquired and the buffer is submitted. I/O
+completion drops the original delwri queue reference as before, so we
+are in the same state as delwri_submit() up through I/O completion.
+
+We again cycle the buf lock to wait on I/O completion and process an
+error. Rather than remove from the wait_list and drop the reference,
+however, pushbuf() has the buffer back on the original delwri queue with
+an associated reference. The only explicit state change here is the
+DELWRI_Q flag, which is reset.
+
+So am I missing something here with regard to proper reference
+counting..? If so, please elaborate and I'll try to dig into it.
+
+> > +	/*
+> > +	 * Lock the buffer to wait for I/O completion. It's already held on the
+> > +	 * original list, so all we have to do is reset the delwri queue flag
+> > +	 * that was cleared by delwri submission.
+> > +	 */
+> > +	xfs_buf_lock(bp);
+> > +	error = bp->b_error;
+> > +	bp->b_flags |= _XBF_DELWRI_Q;
+> > +	xfs_buf_unlock(bp);
+> 
+> .... this is racy w.r.t. the buffer going back onto the
+> buffer list without holding the buffer lock, or that the
+> _XBF_DELWRI_Q setting/clearing is not atomic w.r.t. the delwri queue
+> manipulations (i.e. can now be on the delwri list but not have
+> _XBF_DELWRI_Q set)?
+> 
+
+The buffer has been put back on the original delwri queue (by
+_delwri_submit_buffers()) before the lock was dropped. Using the delwri
+queue as the wait_list does mean that the flag might not be set until
+the delwri queue processing is done and we have returned to the caller.
+If another delwri queue occurs, the flag may be reset but the buffer
+cannot be added to another queue, which is what we want (as noted
+above).
+
+(I'm not sure why delwri_queue() would return true in that case, but
+that's a separate issue.)
+
+> .... the error is left on the buffer so it gets tripped over when
+> it is next accessed?
+> 
+
+Same as delwri_submit(). IIUC, errors are left on buffers by design and
+cleared on a subsequemt I/O submission.
+
+> .... that the buffer locking is unbalanced for some undocumented
+> reason?
+> 
+> > +	return error;
+> > +}
+> > +
+> >  int __init
+> >  xfs_buf_init(void)
+> >  {
+> > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> > index 8a9d3a9..cd74216 100644
+> > --- a/fs/xfs/xfs_buf.h
+> > +++ b/fs/xfs/xfs_buf.h
+> > @@ -334,6 +334,7 @@ extern void xfs_buf_stale(struct xfs_buf *bp);
+> >  extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
+> >  extern int xfs_buf_delwri_submit(struct list_head *);
+> >  extern int xfs_buf_delwri_submit_nowait(struct list_head *);
+> > +extern int xfs_buf_delwri_pushbuf(struct xfs_buf *, struct list_head *);
+> >  
+> >  /* Buffer Daemon Setup Routines */
+> >  extern int xfs_buf_init(void);
+> > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> > index 4ff993c..3815ed3 100644
+> > --- a/fs/xfs/xfs_qm.c
+> > +++ b/fs/xfs/xfs_qm.c
+> > @@ -1247,6 +1247,7 @@ xfs_qm_flush_one(
+> >  	struct xfs_dquot	*dqp,
+> >  	void			*data)
+> >  {
+> > +	struct xfs_mount	*mp = dqp->q_mount;
+> >  	struct list_head	*buffer_list = data;
+> >  	struct xfs_buf		*bp = NULL;
+> >  	int			error = 0;
+> > @@ -1257,7 +1258,32 @@ xfs_qm_flush_one(
+> >  	if (!XFS_DQ_IS_DIRTY(dqp))
+> >  		goto out_unlock;
+> >  
+> > -	xfs_dqflock(dqp);
+> > +	/*
+> > +	 * The only way the dquot is already flush locked by the time quotacheck
+> > +	 * gets here is if reclaim flushed it before the dqadjust walk dirtied
+> > +	 * it for the final time. Quotacheck collects all dquot bufs in the
+> > +	 * local delwri queue before dquots are dirtied, so reclaim can't have
+> > +	 * possibly queued it for I/O. The only way out is to push the buffer to
+> > +	 * cycle the flush lock.
+> > +	 */
+> > +	if (!xfs_dqflock_nowait(dqp)) {
+> > +		/* buf is pinned in-core by delwri list */
+> > +		DEFINE_SINGLE_BUF_MAP(map, dqp->q_blkno,
+> > +				      mp->m_quotainfo->qi_dqchunklen);
+> > +		bp = _xfs_buf_find(mp->m_ddev_targp, &map, 1, 0, NULL);
+> > +		if (!bp) {
+> > +			error = -EINVAL;
+> > +			goto out_unlock;
+> > +		}
+> > +
+> > +		/* delwri_pushbuf drops the buf lock */
+> > +		xfs_buf_delwri_pushbuf(bp, buffer_list);
+> 
+> Ummm - you threw away the returned error....
+> 
+
+The I/O is going to be retried, but I'll fix it to just return from
+here.
+
+> > +		xfs_buf_rele(bp);
+> 
+> And despite the comment, I think this is simply wrong. We try really
+> hard to maintain balanced locking, and as such xfs_buf_relse() is
+> what goes along with _xfs_buf_find(). i.e. we are returned a locked
+> buffer with a reference by xfs_buf_find(), but xfs_buf_rele() only
+> drops the reference.
+> 
+
+I'm not quite following if you are saying the locking is unbalanced or
+it simply looks that way. If the former, can you please elaborate?
+
+Otherwise, we can probably have pushbuf() return with the buffer lock
+held so the caller remains responsible for the lock and reference it
+acquired.
+
+> So if I look at this code in isolation, it looks like it leaks a
+> buffer lock, and now I have to go read other code to understand why
+> it doesn't and I'm left to wonder why it was implemented this
+> way....
+> 
+
+Thanks for taking the time to send feedback. FWIW, I take most of these
+questions as "things one would have to verify in order to review this
+patch if one were not on vacation" :P as opposed to pointing things out
+as explicitly broken. As noted previously, please do point out anything
+I've missed to the contrary. Otherwise, I'll plan to send another
+version that includes the error and locking API fixups.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
