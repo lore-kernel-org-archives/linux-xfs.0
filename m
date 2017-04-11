@@ -1,10 +1,10 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:33602 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751564AbdDKNIB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2017 09:08:01 -0400
-Received: by mail-wm0-f45.google.com with SMTP id y18so13671783wmh.0
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2017 06:08:00 -0700 (PDT)
+Received: from mail-wr0-f176.google.com ([209.85.128.176]:34040 "EHLO
+        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751861AbdDKQoL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2017 12:44:11 -0400
+Received: by mail-wr0-f176.google.com with SMTP id z109so1768980wrb.1
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2017 09:44:10 -0700 (PDT)
 Subject: Re: filesystem dead, xfs_repair won't help
 References: <CAF950WLvp7SWnDHU_AY+j3CYtCDWYLdN=AkNZgNB2yU3sVxsJQ@mail.gmail.com>
  <612a9d5a-9877-405c-ef7c-dc9632a1d8bc@scylladb.com>
@@ -15,11 +15,13 @@ References: <CAF950WLvp7SWnDHU_AY+j3CYtCDWYLdN=AkNZgNB2yU3sVxsJQ@mail.gmail.com>
  <20170411140007.05af2bcd@harpe.intellique.com>
  <9d2587d5-e1f1-e5bb-d276-bc6731b2fce8@scylladb.com>
  <20170411144906.39323b30@harpe.intellique.com>
+ <68ab8fb6-1cfd-66de-d2f3-eab21796fb16@scylladb.com>
+ <20170411181355.59c1ee1f@harpe.intellique.com>
 From: Avi Kivity <avi@scylladb.com>
-Message-ID: <68ab8fb6-1cfd-66de-d2f3-eab21796fb16@scylladb.com>
-Date: Tue, 11 Apr 2017 16:07:56 +0300
+Message-ID: <02304e07-022e-0191-e62b-734b59a818fb@scylladb.com>
+Date: Tue, 11 Apr 2017 19:44:06 +0300
 MIME-Version: 1.0
-In-Reply-To: <20170411144906.39323b30@harpe.intellique.com>
+In-Reply-To: <20170411181355.59c1ee1f@harpe.intellique.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Content-Language: en-US
@@ -31,108 +33,30 @@ Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
 
 
-On 04/11/2017 03:49 PM, Emmanuel Florac wrote:
-> Le Tue, 11 Apr 2017 15:03:12 +0300
+On 04/11/2017 07:13 PM, Emmanuel Florac wrote:
+> Le Tue, 11 Apr 2017 16:07:56 +0300
 > Avi Kivity <avi@scylladb.com> écrivait:
 >
->> On 04/11/2017 03:00 PM, Emmanuel Florac wrote:
->>> Le Tue, 11 Apr 2017 14:40:15 +0300
->>> Avi Kivity <avi@scylladb.com> écrivait:
->>>   
->>>> $ sudo xfs_db -c "sb 0" /tmp/fs
->>>> xfs_db: /tmp/fs is not a valid XFS filesystem (unexpected SB magic
->>>> number 0x5846534d)
->>>> Use -F to force a read attempt.
->>>> $ sudo xfs_db -F -c "sb 0" /tmp/fs
->>>> xfs_db: /tmp/fs is not a valid XFS filesystem (unexpected SB magic
->>>> number 0x5846534d)
->>>> xfs_db: V1 inodes unsupported. Please try an older xfsprogs.
->>> Oops, I forgot one important part, sorry, you must restore the
->>> meta_dump to a file first:
->>>
->>> xfs_mdrestore /tmp/fs /tmp/fsimage
->>>
->>> then run xfs_db on the /tmp/fsimage:
->>>
->>> xfs_db -c 'sb 0' -c 'p' /tmp/fsimage
->>>   
->> magicnum = 0x58465342
->> blocksize = 4096
->> dblocks = 125026902
->> rblocks = 0
->> rextents = 0
->> uuid = 50b25ad8-3eb9-4273-b7f2-d0a435b3a08f
->> logstart = 67108869
->> rootino = 96
->> rbmino = 97
->> rsumino = 98
->> rextsize = 1
->> agblocks = 31256726
->> agcount = 4
->> rbmblocks = 0
->> logblocks = 61048
->> versionnum = 0xb4b5
->> sectsize = 512
->> inodesize = 512
->> inopblock = 8
->> fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
->> blocklog = 12
->> sectlog = 9
->> inodelog = 9
->> inopblog = 3
->> agblklog = 25
->> rextslog = 0
->> inprogress = 0
->> imax_pct = 25
->> icount = 1959744
->> ifree = 89
->> fdblocks = 91586587
->> frextents = 0
->> uquotino = null
->> gquotino = null
->> qflags = 0
->> flags = 0
->> shared_vn = 0
->> inoalignmt = 4
->> unit = 0
->> width = 0
->> dirblklog = 0
->> logsectlog = 0
->> logsectsize = 0
->> logsunit = 1
->> features2 = 0x18a
->> bad_features2 = 0x18a
->> features_compat = 0
->> features_ro_compat = 0x1
->> features_incompat = 0x1
->> features_log_incompat = 0
->> crc = 0x3ebf41de (correct)
->> spino_align = 0
->> pquotino = null
->> lsn = 0x70002828b
->> meta_uuid = 00000000-0000-0000-0000-000000000000
+>> $ sudo xfs_db -c 'sb 0' -c 'check' /tmp/fsimage
+>> ERROR: The filesystem has valuable metadata changes in a log which
+>> needs to be replayed.  Mount the filesystem to replay the log, and
+>> unmount it before re-running xfs_db.  If you are unable to mount the
+>> filesystem, then use the xfs_repair -L option to destroy the log and
+>> attempt a repair. Note that destroying the log may cause corruption
+>> -- please attempt a mount of the filesystem before doing this.
 >>
 >>
-> Tha looks reasonable enough... Heck, what's happening? You could try
-> to run an integrity check from xfs_db (still using the dump) to locate
-> the error:
+>> xfs_repair did not recognize the superblock, and started hunting for
+>> the second one, emitting dots in the process.  I stopped it, since it
+>> failed on the live disk.
+>>
+> Can you mount the image, or does it fail immmediately because of the
+> CRC error?
 >
-> xfs_db -c 'sb 0' -c 'check' /tmp/fsimage
->
-> What does it report?
->
 
+Fails immediately.
 
-$ sudo xfs_db -c 'sb 0' -c 'check' /tmp/fsimage
-ERROR: The filesystem has valuable metadata changes in a log which needs to
-be replayed.  Mount the filesystem to replay the log, and unmount it before
-re-running xfs_db.  If you are unable to mount the filesystem, then use
-the xfs_repair -L option to destroy the log and attempt a repair.
-Note that destroying the log may cause corruption -- please attempt a mount
-of the filesystem before doing this.
-
-
-xfs_repair did not recognize the superblock, and started hunting for the 
-second one, emitting dots in the process.  I stopped it, since it failed 
-on the live disk.
-
+I'll probably format it with ext4, wait for the firmware update, and 
+then reformat it with xfs.  Since the firmware bug was acknowledged, I 
+don't know what we can gain from it.  My disk is mostly a git and imap 
+mirror anyway, + a large ccache repository, + a throwaway database.
