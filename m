@@ -1,233 +1,306 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50584 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752151AbdDKSj4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Apr 2017 14:39:56 -0400
-Subject: Re: [PATCH 2/2] mdrestore: warn about corruption if log is dirty
-References: <20170411141237.9274-1-jtulak@redhat.com>
- <20170411141237.9274-3-jtulak@redhat.com>
- <20170411183356.GB3865@bfoster.bfoster>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <601745b4-296f-3ce8-d676-2387890a86a1@sandeen.net>
-Date: Tue, 11 Apr 2017 13:39:55 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:49541 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752436AbdDKVss (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2017 17:48:48 -0400
+Date: Tue, 11 Apr 2017 14:48:40 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/6] xfs: pass individual arguments to
+ xfs_bmap_add_extent_hole_real
+Message-ID: <20170411214840.GC8502@birch.djwong.org>
+References: <20170411111011.9437-1-hch@lst.de>
+ <20170411111011.9437-4-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20170411183356.GB3865@bfoster.bfoster>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170411111011.9437-4-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, Jan Tulak <jtulak@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On 4/11/17 1:33 PM, Brian Foster wrote:
-> On Tue, Apr 11, 2017 at 04:12:37PM +0200, Jan Tulak wrote:
->> A dirty log in an obfuscated dump means that a corruption can happen
->> when replaying the log (which contains unobfuscated data). Warn the user
->> about this possibility.
->>
->> The xlog workaround is copy&paste solution from repair/phase2.c and
->> other tools, because the function is not implemented in libxlog.
->>
->> Signed-off-by: Jan Tulak <jtulak@redhat.com>
->> ---
->>  mdrestore/Makefile        |  4 +--
->>  mdrestore/xfs_mdrestore.c | 84 +++++++++++++++++++++++++++++++++++++++++++++++
->>  2 files changed, 86 insertions(+), 2 deletions(-)
->>
->> diff --git a/mdrestore/Makefile b/mdrestore/Makefile
->> index 5171306..6355df9 100644
->> --- a/mdrestore/Makefile
->> +++ b/mdrestore/Makefile
->> @@ -8,8 +8,8 @@ include $(TOPDIR)/include/builddefs
->>  LTCOMMAND = xfs_mdrestore
->>  CFILES = xfs_mdrestore.c
->>  
->> -LLDLIBS = $(LIBXFS) $(LIBRT) $(LIBPTHREAD) $(LIBUUID)
->> -LTDEPENDENCIES = $(LIBXFS)
->> +LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBRT) $(LIBPTHREAD) $(LIBUUID)
->> +LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
->>  LLDFLAGS = -static
->>  
+On Tue, Apr 11, 2017 at 01:10:08PM +0200, Christoph Hellwig wrote:
+> For the reflink case we'd much rather pass the required arguments than
+> faking up a struct xfs_bmalloca.
 > 
-> FYI, I get the following on a 'make -j 4':
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 123 ++++++++++++++++++++++++-----------------------
+>  1 file changed, 64 insertions(+), 59 deletions(-)
 > 
-> ...
-> Building mdrestore
-> gmake[3]: *** No rule to make target '../libxlog/libxlog.la', needed by 'xfs_mdrestore'.  Stop.
-> gmake[3]: *** Waiting for unfinished jobs....
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index b95e66fd0935..f32b2dab16a4 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -2879,27 +2879,30 @@ xfs_bmap_add_extent_hole_delay(
+>   */
+>  STATIC int				/* error */
+>  xfs_bmap_add_extent_hole_real(
+> -	struct xfs_bmalloca	*bma,
+> -	int			whichfork)
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	int			whichfork,
+> +	xfs_extnum_t		*idx,
+> +	struct xfs_btree_cur	**curp,
+> +	struct xfs_bmbt_irec	*new,
+> +	xfs_fsblock_t		*first,
+> +	struct xfs_defer_ops	*dfops,
+> +	int			*logflagsp)
+>  {
+> -	struct xfs_bmbt_irec	*new = &bma->got;
+> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_btree_cur	*cur = *curp;
+>  	int			error;	/* error return value */
+>  	int			i;	/* temp state */
+> -	xfs_ifork_t		*ifp;	/* inode fork pointer */
+>  	xfs_bmbt_irec_t		left;	/* left neighbor extent entry */
+>  	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
+>  	int			rval=0;	/* return value (logging flags) */
+>  	int			state;	/* state bits, accessed thru macros */
+> -	struct xfs_mount	*mp;
+>  
+> -	mp = bma->ip->i_mount;
+> -	ifp = XFS_IFORK_PTR(bma->ip, whichfork);
+> -
+> -	ASSERT(bma->idx >= 0);
+> -	ASSERT(bma->idx <= xfs_iext_count(ifp));
+> +	ASSERT(*idx >= 0);
+> +	ASSERT(*idx <= xfs_iext_count(ifp));
+>  	ASSERT(!isnullstartblock(new->br_startblock));
+> -	ASSERT(!bma->cur ||
+> -	       !(bma->cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
+> +	ASSERT(!cur || !(cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
+>  
+>  	XFS_STATS_INC(mp, xs_add_exlist);
+>  
+> @@ -2912,9 +2915,9 @@ xfs_bmap_add_extent_hole_real(
+>  	/*
+>  	 * Check and set flags if this segment has a left neighbor.
+>  	 */
+> -	if (bma->idx > 0) {
+> +	if (*idx > 0) {
+>  		state |= BMAP_LEFT_VALID;
+> -		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx - 1), &left);
+> +		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx - 1), &left);
+>  		if (isnullstartblock(left.br_startblock))
+>  			state |= BMAP_LEFT_DELAY;
+>  	}
+> @@ -2923,9 +2926,9 @@ xfs_bmap_add_extent_hole_real(
+>  	 * Check and set flags if this segment has a current value.
+>  	 * Not true if we're inserting into the "hole" at eof.
+>  	 */
+> -	if (bma->idx < xfs_iext_count(ifp)) {
+> +	if (*idx < xfs_iext_count(ifp)) {
+>  		state |= BMAP_RIGHT_VALID;
+> -		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx), &right);
+> +		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx), &right);
+>  		if (isnullstartblock(right.br_startblock))
+>  			state |= BMAP_RIGHT_DELAY;
+>  	}
+> @@ -2962,36 +2965,36 @@ xfs_bmap_add_extent_hole_real(
+>  		 * left and on the right.
+>  		 * Merge all three into a single extent record.
+>  		 */
+> -		--bma->idx;
+> -		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
+> -		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, bma->idx),
+> +		--*idx;
+> +		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+> +		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
+>  			left.br_blockcount + new->br_blockcount +
+>  			right.br_blockcount);
+> -		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
+> +		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+>  
+> -		xfs_iext_remove(bma->ip, bma->idx + 1, 1, state);
+> +		xfs_iext_remove(ip, *idx + 1, 1, state);
+>  
+> -		XFS_IFORK_NEXT_SET(bma->ip, whichfork,
+> -			XFS_IFORK_NEXTENTS(bma->ip, whichfork) - 1);
+> -		if (bma->cur == NULL) {
+> +		XFS_IFORK_NEXT_SET(ip, whichfork,
+> +			XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
+> +		if (cur == NULL) {
+>  			rval = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
+>  		} else {
+>  			rval = XFS_ILOG_CORE;
+> -			error = xfs_bmbt_lookup_eq(bma->cur, right.br_startoff,
+> +			error = xfs_bmbt_lookup_eq(cur, right.br_startoff,
+>  					right.br_startblock, right.br_blockcount,
+>  					&i);
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_btree_delete(bma->cur, &i);
+> +			error = xfs_btree_delete(cur, &i);
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_btree_decrement(bma->cur, 0, &i);
+> +			error = xfs_btree_decrement(cur, 0, &i);
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(bma->cur, left.br_startoff,
+> +			error = xfs_bmbt_update(cur, left.br_startoff,
+>  					left.br_startblock,
+>  					left.br_blockcount +
+>  						new->br_blockcount +
+> @@ -3008,23 +3011,23 @@ xfs_bmap_add_extent_hole_real(
+>  		 * on the left.
+>  		 * Merge the new allocation with the left neighbor.
+>  		 */
+> -		--bma->idx;
+> -		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
+> -		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, bma->idx),
+> +		--*idx;
+> +		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+> +		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
+>  			left.br_blockcount + new->br_blockcount);
+> -		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
+> +		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+>  
+> -		if (bma->cur == NULL) {
+> +		if (cur == NULL) {
+>  			rval = xfs_ilog_fext(whichfork);
+>  		} else {
+>  			rval = 0;
+> -			error = xfs_bmbt_lookup_eq(bma->cur, left.br_startoff,
+> +			error = xfs_bmbt_lookup_eq(cur, left.br_startoff,
+>  					left.br_startblock, left.br_blockcount,
+>  					&i);
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(bma->cur, left.br_startoff,
+> +			error = xfs_bmbt_update(cur, left.br_startoff,
+>  					left.br_startblock,
+>  					left.br_blockcount +
+>  						new->br_blockcount,
+> @@ -3040,25 +3043,25 @@ xfs_bmap_add_extent_hole_real(
+>  		 * on the right.
+>  		 * Merge the new allocation with the right neighbor.
+>  		 */
+> -		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
+> -		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, bma->idx),
+> +		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+> +		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
+>  			new->br_startoff, new->br_startblock,
+>  			new->br_blockcount + right.br_blockcount,
+>  			right.br_state);
+> -		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
+> +		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+>  
+> -		if (bma->cur == NULL) {
+> +		if (cur == NULL) {
+>  			rval = xfs_ilog_fext(whichfork);
+>  		} else {
+>  			rval = 0;
+> -			error = xfs_bmbt_lookup_eq(bma->cur,
+> +			error = xfs_bmbt_lookup_eq(cur,
+>  					right.br_startoff,
+>  					right.br_startblock,
+>  					right.br_blockcount, &i);
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> -			error = xfs_bmbt_update(bma->cur, new->br_startoff,
+> +			error = xfs_bmbt_update(cur, new->br_startoff,
+>  					new->br_startblock,
+>  					new->br_blockcount +
+>  						right.br_blockcount,
+> @@ -3074,22 +3077,22 @@ xfs_bmap_add_extent_hole_real(
+>  		 * real allocation.
+>  		 * Insert a new entry.
+>  		 */
+> -		xfs_iext_insert(bma->ip, bma->idx, 1, new, state);
+> -		XFS_IFORK_NEXT_SET(bma->ip, whichfork,
+> -			XFS_IFORK_NEXTENTS(bma->ip, whichfork) + 1);
+> -		if (bma->cur == NULL) {
+> +		xfs_iext_insert(ip, *idx, 1, new, state);
+> +		XFS_IFORK_NEXT_SET(ip, whichfork,
+> +			XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
+> +		if (cur == NULL) {
+>  			rval = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
+>  		} else {
+>  			rval = XFS_ILOG_CORE;
+> -			error = xfs_bmbt_lookup_eq(bma->cur,
+> +			error = xfs_bmbt_lookup_eq(cur,
+>  					new->br_startoff,
+>  					new->br_startblock,
+>  					new->br_blockcount, &i);
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
+> -			bma->cur->bc_rec.b.br_state = new->br_state;
+> -			error = xfs_btree_insert(bma->cur, &i);
+> +			cur->bc_rec.b.br_state = new->br_state;
+> +			error = xfs_btree_insert(cur, &i);
+>  			if (error)
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> @@ -3098,30 +3101,30 @@ xfs_bmap_add_extent_hole_real(
+>  	}
+>  
+>  	/* add reverse mapping */
+> -	error = xfs_rmap_map_extent(mp, bma->dfops, bma->ip, whichfork, new);
+> +	error = xfs_rmap_map_extent(mp, dfops, ip, whichfork, new);
+>  	if (error)
+>  		goto done;
+>  
+>  	/* convert to a btree if necessary */
+> -	if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
+> +	if (xfs_bmap_needs_btree(ip, whichfork)) {
+>  		int	tmp_logflags;	/* partial log flag return val */
+>  
+> -		ASSERT(bma->cur == NULL);
+> -		error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
+> -				bma->firstblock, bma->dfops, &bma->cur,
+> +		ASSERT(cur == NULL);
+> +		error = xfs_bmap_extents_to_btree(tp, ip, first, dfops, curp,
+>  				0, &tmp_logflags, whichfork);
+> -		bma->logflags |= tmp_logflags;
+> +		*logflagsp |= tmp_logflags;
+> +		cur = *curp;
+>  		if (error)
+>  			goto done;
+>  	}
+>  
+>  	/* clear out the allocated field, done with it now in any case. */
+> -	if (bma->cur)
+> -		bma->cur->bc_private.b.allocated = 0;
+> +	if (cur)
+> +		cur->bc_private.b.allocated = 0;
+>  
+> -	xfs_bmap_check_leaf_extents(bma->cur, bma->ip, whichfork);
+> +	xfs_bmap_check_leaf_extents(cur, ip, whichfork);
+>  done:
+> -	bma->logflags |= rval;
+> +	*logflagsp |= rval;
+>  	return error;
+>  }
+>  
+> @@ -4386,7 +4389,9 @@ xfs_bmapi_allocate(
+>  	if (bma->wasdel)
+>  		error = xfs_bmap_add_extent_delay_real(bma, whichfork);
+>  	else
+> -		error = xfs_bmap_add_extent_hole_real(bma, whichfork);
+> +		error = xfs_bmap_add_extent_hole_real(bma->tp, bma->ip,
+> +				whichfork, &bma->idx, &bma->cur, &bma->got,
+> +				bma->firstblock, bma->dfops, &bma->logflags);
+>  
+>  	bma->logflags |= tmp_logflags;
+>  	if (error)
+> -- 
+> 2.11.0
 > 
-> It succeeds if I restart the build so I suspect something might be up
-> with the dependency tracking here.
-
-
-need something like this in the top Makefile:
-
- repair: libxlog libxcmd
- copy: libxlog
- mkfs: libxcmd
-+mdrestore: libxlog
- 
-
->>  default: depend $(LTCOMMAND)
->> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
->> index 0d399f1..3797955 100644
->> --- a/mdrestore/xfs_mdrestore.c
->> +++ b/mdrestore/xfs_mdrestore.c
->> @@ -17,6 +17,7 @@
->>   */
->>  
->>  #include "libxfs.h"
->> +#include "libxlog.h"
->>  #include "xfs_metadump.h"
->>  
->>  char 		*progname;
->> @@ -190,6 +191,87 @@ perform_restore(
->>  	free(metablock);
->>  }
->>  
->> +/* workaround craziness in the xlog routines */
->> +int xlog_recover_do_trans(struct xlog *log, xlog_recover_t *t, int p)
->> +{
->> +	return 0;
->> +}
->> +
->> +/*
->> + * Warn if we just wrote a dump with a dirty log.
->> + */
->> +void
->> +test_dirty_log(
->> +	bool	is_target_file,
->> +	char*	target_name)
->> +{
->> +	struct xfs_sb	*sbp;
->> +	struct xfs_buf	*bp;
->> +	struct xfs_mount	xmount;
->> +	struct xfs_mount	*mp;
->> +	struct xlog		xlog;
->> +	libxfs_init_t		x;
->> +
->> +	x.isreadonly = LIBXFS_ISREADONLY;
->> +	if (is_target_file) {
->> +		x.dname = target_name;
->> +		x.disfile = true;
->> +	} else {
->> +		x.disfile = false;
->> +		x.volname = target_name;
->> +	}
->> +
->> +	if (!libxfs_init(&x)) {
->> +		fatal(_("\nfatal error -- couldn't initialize XFS library\n"),
->> +		      strerror(errno));
->> +	}
->> +
->> +	memset(&xmount, 0, sizeof(struct xfs_mount));
->> +	libxfs_buftarg_init(&xmount, x.ddev, x.logdev, x.rtdev);
->> +	bp = libxfs_readbuf(xmount.m_ddev_targp, XFS_SB_DADDR,
->> +			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
->> +
->> +	if (!bp || bp->b_error) {
->> +		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
->> +			"bytes)\n"), progname, target_name);
->> +		exit(1);
->> +	}
->> +
->> +	/* copy SB from buffer to in-core, converting architecture as we go */
->> +	libxfs_sb_from_disk(&xmount.m_sb, XFS_BUF_TO_SBP(bp));
->> +	libxfs_putbuf(bp);
->> +	libxfs_purgebuf(bp);
->> +
->> +	sbp = &xmount.m_sb;
->> +	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
->> +			  LIBXFS_MOUNT_DEBUGGER);
->> +	if (!mp) {
->> +		fprintf(stderr,
->> +			_("%s: restored device %s unusable (not an XFS filesystem?)\n"),
->> +			progname, target_name);
->> +		exit(1);
->> +	}
-> 
-> It might be cleaner to bury all of this init stuff in a separate init
-> function to be called before the log check. We also may not want to exit
-> the program if parsing the log or something happens to fail, given that
-> this is a debug tool.
-
-This is at the very end of restore, so the image is what it is at this point.
-But sure, no need to exit with failure I think, all it means is that we
-can't issue a meaningful warning.
-
- 
->> +
->> +	switch (xlog_is_dirty(mp, &xlog, &x,0)) {
->> +		case -1:
->> +			/* An error occured and we can't read the log. */
->> +			fprintf(stderr,
->> +			_("Warning: can't discern a log.\n"));
->> +			break;
->> +		case 1:
->> +			/* The log is dirty, warn. */
->> +			fprintf(stderr,
->> +			_("Warning: The log is dirty. If the image was obfuscated, "
->> +			  "an attempt to replay the log may lead to corruption.\n"));
->> +			break;
-> 
-> Then the above can remain in the test_log_dirty() helper or just be
-> open-coded at the end of main(), provided the mount was initialized
-> successfully (or we could still warn if we can't make sense of the log).
-> 
-> BTW, this is going to warn on every xfs_mdrestore of an image with a
-> dirty log, right? That is slightly unfortunate, if so. Do we have any
-> method to track or determine whether an image is obfuscated (I'm
-> guessing not easily...)?
-
-Nope!  There is an unused slot in the header, maybe we could add flags?
-
-Hm, or we could do a trick like setting the fs label to "OBFUSCATED"
-instead of "label" like we currently do.  That might be reasonable...
-
-                /* Replace any filesystem label with "L's" */
-                if (obfuscate) {
-                        struct xfs_sb *sb = iocur_top->data;
-                        memset(sb->sb_fname, 'L',
-                               min(strlen(sb->sb_fname), sizeof(sb->sb_fname)));
-                        iocur_top->need_crc = 1;
-                }
-
-(today we keep the same label length, but that's probably not
-necessary?)
-
--Eric
- 
-> Brian
-> 
->> +		case 0:
->> +			 /* Everything is ok. */
->> +			break;
->> +	}
->> +
->> +}
->> +
->> +
->>  static void
->>  usage(void)
->>  {
->> @@ -271,5 +353,7 @@ main(
->>  	if (src_f != stdin)
->>  		fclose(src_f);
->>  
->> +	test_dirty_log(is_target_file, argv[optind]);
->> +
->>  	return 0;
->>  }
->> -- 
->> 2.1.4
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
