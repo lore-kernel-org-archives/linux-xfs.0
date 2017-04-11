@@ -1,185 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48272 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:52188 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752412AbdDLPjs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Apr 2017 11:39:48 -0400
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH v2] fstests/xfs: xfs_repair should junk empty attribute leaf blocks
-Date: Wed, 12 Apr 2017 23:39:37 +0800
-Message-Id: <1492011577-13436-1-git-send-email-zlang@redhat.com>
+        id S1753176AbdDKS7e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Apr 2017 14:59:34 -0400
+Subject: Re: [PATCH 2/2] mdrestore: warn about corruption if log is dirty
+References: <20170411141237.9274-1-jtulak@redhat.com>
+ <20170411141237.9274-3-jtulak@redhat.com>
+ <20170411183356.GB3865@bfoster.bfoster>
+ <601745b4-296f-3ce8-d676-2387890a86a1@sandeen.net>
+ <20170411184903.GD3865@bfoster.bfoster>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d40ffca0-31ea-ff31-4a3f-0e9ca4f404ff@sandeen.net>
+Date: Tue, 11 Apr 2017 13:59:33 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170411184903.GD3865@bfoster.bfoster>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
 
-There was a bug during log replay, the attr/attr3 leaf verifier
-reported corruption when encountering a leaf attribute with a
-count of 0 in the header, as below:
+On 4/11/17 1:49 PM, Brian Foster wrote:
+> On Tue, Apr 11, 2017 at 01:39:55PM -0500, Eric Sandeen wrote:
+>> On 4/11/17 1:33 PM, Brian Foster wrote:
 
-Metadata corruption detected at xfs_attr3_leaf block 0x480988/0x1000
+...
 
-commit f714016 from xfsprogs has fixed this bug. This test case
-will emulate this corruption by xfs_db and use xfs_repair to fix
-it.
+>>> BTW, this is going to warn on every xfs_mdrestore of an image with a
+>>> dirty log, right? That is slightly unfortunate, if so. Do we have any
+>>> method to track or determine whether an image is obfuscated (I'm
+>>> guessing not easily...)?
+>>
+>> Nope!  There is an unused slot in the header, maybe we could add flags?
+>>
+>> Hm, or we could do a trick like setting the fs label to "OBFUSCATED"
+>> instead of "label" like we currently do.  That might be reasonable...
+>>
+>>                 /* Replace any filesystem label with "L's" */
+>>                 if (obfuscate) {
+>>                         struct xfs_sb *sb = iocur_top->data;
+>>                         memset(sb->sb_fname, 'L',
+>>                                min(strlen(sb->sb_fname), sizeof(sb->sb_fname)));
+>>                         iocur_top->need_crc = 1;
+>>                 }
+>>
+>> (today we keep the same label length, but that's probably not
+>> necessary?)
+> 
+> That's an interesting idea. It looks like we currently set the fname to
+> L's when obfuscated. Could we just key off that in mdrestore?
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
+Right, like the code above.  :)
 
-Hi,
+I guess the problem is that if a filesystem had no label, then we replaced
+it with "no" L's, i.e. it stays empty.
 
-V2 did below changes:
-1) remove the requirement for xfs_db's write and addr commands
-2) check if xfs_db support write -d option
-3) turn to get filesystem block size from _filter_mkfs output
-4) add more comments
+So we may want to:
 
-Thanks,
-Zorro
+1) Start replacing it with 12 L's going forward, no matter what, and
+2) Look for L's in mdrestore as a clue, which may sometimes fail ...
+3) Any non-NULL label != "LLL..." probably isn't obfuscated, and can skip warning
 
- tests/xfs/288     | 110 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/288.out |   2 +
- tests/xfs/group   |   1 +
- 3 files changed, 113 insertions(+)
- create mode 100755 tests/xfs/288
- create mode 100644 tests/xfs/288.out
+-Eric
 
-diff --git a/tests/xfs/288 b/tests/xfs/288
-new file mode 100755
-index 0000000..81e7b50
---- /dev/null
-+++ b/tests/xfs/288
-@@ -0,0 +1,110 @@
-+#! /bin/bash
-+# FS QA Test 288
-+#
-+# When an attribute leaf block count is 0, xfs_repair should junk
-+# that leaf directly (as xfsprogs commit f714016).
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Red Hat Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/attr
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# V4 XFS attr type is 'attr'
-+write_cmd="write"
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os Linux
-+_require_scratch
-+_require_attrs
-+
-+_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+. $tmp.mkfs
-+
-+# If test on XFS with CRC enabled, after change attr's hdr.count we need
-+# to recalculate crc by use write -d option
-+if [ $_fs_has_crcs -eq 1 ]; then
-+	# check if xfs_db support write -d option
-+	_scratch_xfs_db -x -c "sb" -c "write -d" 2>&1 | \
-+		grep -q "invalid option"
-+	if [ $? -eq 0 ];then
-+		_notrun "xfs_db doesn't support write -d option"
-+	fi
-+	# This's a trick to check if xfs_db support recalculating
-+	# CRCs of attr3
-+	_scratch_xfs_db -x -c "daddr 0" \
-+			   -c "type attr3" \
-+			   -c "write -d" 2>/dev/null | \
-+		grep -q "Cannot recalculate CRCs on this type of object"
-+	if [ $? -eq 0 ];then
-+		_notrun "xfs_db can't recalculate CRCs of attr3"
-+	fi
-+	# V5 XFS attr type is 'attr3'
-+	write_cmd="write -d"
-+fi
-+
-+_scratch_mount
-+
-+touch $SCRATCH_MNT/$seq.attrfile
-+inum=$(stat -c '%i' $SCRATCH_MNT/$seq.attrfile)
-+
-+# To get an attr block leaf, we need to extend attr format to extent
-+# format at least, and the max inode size is half of filesystem
-+# block size, so write half of block size attr to make sure attr
-+# out of local format.
-+maxisize=$((dbsize/2))
-+$SETFATTR_PROG -n "user.testattr${seq}" \
-+	       -v `python -c "print ($maxisize * 'a')"` \
-+	       $SCRATCH_MNT/$seq.attrfile
-+
-+_scratch_unmount
-+# manually corrupt the XFS, by set the header count of attr to 0
-+_scratch_xfs_db -x -c "inode $inum" \
-+		   -c "addr a.bmx[0].startblock" \
-+		   -c "$write_cmd hdr.count 0" >> $seqres.full
-+
-+# This repair should junk above leaf attribute and fix this XFS, then
-+# SCRATCH_DEV shouldn't be corrupted after this case done.
-+_repair_scratch_fs >> $seqres.full
-+
-+echo "Silence is golden"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/288.out b/tests/xfs/288.out
-new file mode 100644
-index 0000000..2958a5c
---- /dev/null
-+++ b/tests/xfs/288.out
-@@ -0,0 +1,2 @@
-+QA output created by 288
-+Silence is golden
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 75769f9..f27a7b6 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -285,6 +285,7 @@
- 285 dangerous_fuzzers dangerous_scrub
- 286 dangerous_fuzzers dangerous_scrub dangerous_online_repair
- 287 auto dump quota quick
-+288 auto quick repair fuzzers
- 290 auto rw prealloc quick ioctl zero
- 291 auto repair
- 292 auto mkfs quick
--- 
-2.7.4
-
+> Brian
+> 
+>> -Eric
+>>  
+>>> Brian
+>>>
+>>>> +		case 0:
+>>>> +			 /* Everything is ok. */
+>>>> +			break;
+>>>> +	}
+>>>> +
+>>>> +}
+>>>> +
+>>>> +
+>>>>  static void
+>>>>  usage(void)
+>>>>  {
+>>>> @@ -271,5 +353,7 @@ main(
+>>>>  	if (src_f != stdin)
+>>>>  		fclose(src_f);
+>>>>  
+>>>> +	test_dirty_log(is_target_file, argv[optind]);
+>>>> +
+>>>>  	return 0;
+>>>>  }
+>>>> -- 
+>>>> 2.1.4
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
