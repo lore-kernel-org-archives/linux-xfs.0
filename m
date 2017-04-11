@@ -1,81 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:58638 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:52872 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754371AbdDJQBt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Apr 2017 12:01:49 -0400
+        id S1753017AbdDKNev (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Apr 2017 09:34:51 -0400
 Subject: Re: allow mounting w/crc-checking disabled? (was Re: filesystem dead,
  xfs_repair won't help)
 References: <CAF950WLvp7SWnDHU_AY+j3CYtCDWYLdN=AkNZgNB2yU3sVxsJQ@mail.gmail.com>
  <58EB53CA.7030608@tlinx.org>
+ <8b9b764e-8fb5-af30-f135-be51b6a67558@sandeen.net>
+ <58EBC972.6040509@tlinx.org> <20170411145721.7d3676a1@harpe.intellique.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <8b9b764e-8fb5-af30-f135-be51b6a67558@sandeen.net>
-Date: Mon, 10 Apr 2017 11:01:47 -0500
+Message-ID: <7847f469-6a83-8a35-360d-13a0e0341f5d@sandeen.net>
+Date: Tue, 11 Apr 2017 08:34:44 -0500
 MIME-Version: 1.0
-In-Reply-To: <58EB53CA.7030608@tlinx.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170411145721.7d3676a1@harpe.intellique.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="lnfMfO5wjwj3hoMkdt6XIsCpnkvrNe961"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: L A Walsh <xfs@tlinx.org>, linux-xfs@vger.kernel.org
+To: Emmanuel Florac <eflorac@intellique.com>, L A Walsh <xfs@tlinx.org>
+Cc: linux-xfs@vger.kernel.org
 
-On 4/10/17 4:43 AM, L A Walsh wrote:
-> Avi Kivity wrote:
->> Today my kernel complained that in memory metadata is corrupt and
->> asked that I run xfs_repair.  But xfs_repair doesn't like the
->> superblock and isn't able to find a secondary superblock.
->>   
-> Why doesn't xfs have an option to mount with metadata checksumming
-> disabled so people can recover their data?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--lnfMfO5wjwj3hoMkdt6XIsCpnkvrNe961
+Content-Type: multipart/mixed; boundary="XqtNPDeDNwdJhAIF4RNpO6LTi34oPap3N";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: Emmanuel Florac <eflorac@intellique.com>, L A Walsh <xfs@tlinx.org>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <7847f469-6a83-8a35-360d-13a0e0341f5d@sandeen.net>
+Subject: Re: allow mounting w/crc-checking disabled? (was Re: filesystem dead,
+ xfs_repair won't help)
+References: <CAF950WLvp7SWnDHU_AY+j3CYtCDWYLdN=AkNZgNB2yU3sVxsJQ@mail.gmail.com>
+ <58EB53CA.7030608@tlinx.org>
+ <8b9b764e-8fb5-af30-f135-be51b6a67558@sandeen.net>
+ <58EBC972.6040509@tlinx.org> <20170411145721.7d3676a1@harpe.intellique.com>
+In-Reply-To: <20170411145721.7d3676a1@harpe.intellique.com>
 
-Because if checksums are bad, your metadata is almost certainly bad,
-and with bad metadata, you're not going to be recovering data either.
+--XqtNPDeDNwdJhAIF4RNpO6LTi34oPap3N
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-(and FWIW, CRCs are only the first line of defense: structure verifiers
-come after that.  The chance of a CRC being bad and everything else
-checking out is extremely small.)
+On 4/11/17 7:57 AM, Emmanuel Florac wrote:
+> Le Mon, 10 Apr 2017 11:05:38 -0700
+> L A Walsh <xfs@tlinx.org> =C3=A9crivait:
+>=20
+>> 	I'm sure it wouldn't be trivial, but creating a separate
+>> file system, "XFS2" from the original XFS sources that responded
+>> to data or metadata corruption by returning empty data where
+>> it was impossible to return anything useful instead of flagging
+>> the disk as "bad", would be a way to allow data recovery to
+>> the extent that it made sense (assuming the original sources
+>> couldn't do the same toggling off a config-flag).
+>=20
+> It would probably much easier to add an option to mount the filesystem
+> without crc, similar to "norecovery", that doesn't replay the journal.
+> It would be of course read-only, but in a similar case it would be much=
 
-> Seems like it should be easy to provide, no?
-> 
-> Or rather, if a disk is created with the crc option, is it possible
-> to later switch it off or mount it without with checking disabled?
+> easier and practical for everyone.
 
-It is not possible.
+Yes, I actually whipped up a patch to do just that, because I was curious=
+=2E
+Although I don't think it would fly, I may send it just to have
+a record out on the list.
 
-> Yes, I know the mantra is that they should have had backups, but
-> in practice it's seems not the case in a majority of uses outside
-> of enterprise usage.  It sure seems that disabling a particular file
-> or directory (if necessary) affected by a bad-crc, would be
-> preferable to losing the whole disk.  That said, how many crc
-> errors would be likely to make things unreadable or inaccessible?
+> So far I believed that metadata CRCs were a promise of safer
+> filesystems; now that I've setup several multi-hundred terabytes
+> volumes with CRC enabled, I'm getting nervous...
 
-How log is a piece of string?  ;)  Totally depends on the details.
+Why?
 
-> Given that the default before crc-checking was that the disks
-> were still usable (often with no error being flagged or noticed),
+So far there's a lot of fear & speculation from some quarters, but no
+reports of any actual real-world significant downside to CRC integrity
+checking.
 
-Before, we had a lot of ad-hoc checks (or not.)  Many of those checks,
-and/or IO errors when trying to read garbage metadata, would also
-shut down the filesystem.
+A few amendments to my possibly too-quick reply yesterday, though...
 
-Proceeding with mutilated metadata is almost never a good thing.
-You'll wander off into garbage and shut down the fs at best, and OOPS
-at worst.  (Losing a filesystem is preferable to losing a system!)
+One, not every CRC error will shut down your filesystem - far from it.
+As a quick test of Linda's first scenario, you can corrupt a timestamp
+without changing the CRC, using xfs_db's expert mode.  That inode
+will be inaccessible until it's fixed with xfs_repair, but the filesystem=
 
-> I'd suspect that the crc-checking is causing many errors to be
-> be flagged that before wouldn't have even been noticed.
+continues on happily.
 
-Yes, that's precisely the point of CRCs.  :)
+Two, after talking with Darrick I realized that I misrepresented
+things a bit; we checksum the entire sector of metadata, so yes,
+even a bitflip in an unused portion of that location could cause
+a crc mismatch and therefore a metadata read error.  But again, this woul=
+d
+render that data structure inaccessible until repair, but it would not ta=
+ke
+the entire filesystem offline.
 
-> Overall I'm wondering if the crc option won't cause more disk-losses
-> than would occur without the option.  Or, in other words, it seems
-> that since crc-checking seems to cause the disk to be lost, turning
-> on crc checking is almost guaranteed to cause a higher incidence of
-> data loss if it can't be disable.
+Three, none of this has anything to do with the email that started
+this thread.  Bad firmware turned Avi's SSD into a vat of goo, and CRCs
+are not in any way related to his inability to recover his filesystem.
 
-When CRCs detect metadata corruption, the next step is to run
-xfs_repair to salvage what can be salvaged, and retrieve what's left of
-your data after that.  Disabling CRCs and proceeding in kernelspace with
-known metadata corruption would be a dangerous total crapshoot.
-
+Thanks,
 -Eric
+
+=20
+
+
+--XqtNPDeDNwdJhAIF4RNpO6LTi34oPap3N--
+
+--lnfMfO5wjwj3hoMkdt6XIsCpnkvrNe961
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJY7Nt6AAoJECCuFpLhPd7gFM4QAJ1SwwLF2HuNO0kFxzzLqw62
+775Q6yg1R1Qwqq40fLLJC+GVuu5OIjZjij23j8vyotCM4PecrT8AfTKh1ysYWONx
++gQTB16vuAgFcc9OjHqmoBMgV6e6NPdpIwDXLmcve0ym4RNzERe+gryiVl2v0PV5
+ER2Ex+4YDlTUQHtkeTwKhnWp0Z1fM1gpp1W+7LlTGCRtlQ9xbxSOhMQrI2hAMaa2
+z/VZbaOkJiYBSnrvfHm88GYz6T/J15Q5OTk3mfb6JVr9tpiatmBqrdxLt/8GvDA+
+NzFg59xdxYCuJ4KGhVumPzFXXTeFHwH+vhGpE6m1ifDFl5pia5f3j+L+PcHxLCS/
+E5Xcr4vOWupwbV95V2el6noRV3HXGI7aVgxUQI2y9SUuvokG8HIsBQd1Y2KpS+cO
+YNCMl0aZjK3maztsqVstAvAoowuyI9UNN5DkP/dTDHyWADCO9kKEAlafkIaQIhz+
+LQe+z6DSYJw8I7FFP673nFLC+3PtXUBTf79WdZYiITjMvqdhrCvlP4E5N0/amUSr
+fDMxtJJlK29waW/kUxeYhj2ZyhfjcJ3D3N++SUt9LCq/FJRS4cpttzYawg9+RLR7
+EY9EB5Gb8zygrK8PiQJnJHSSIVqPEC8q6U9W0QItgw1Eq2RuULpZAqVvlsVZ0WrS
++J0orUQ1zCusAWBuEHHl
+=HvMW
+-----END PGP SIGNATURE-----
+
+--lnfMfO5wjwj3hoMkdt6XIsCpnkvrNe961--
