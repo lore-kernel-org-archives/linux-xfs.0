@@ -1,169 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19915 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751983AbdDJWsD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 18:48:03 -0400
-Subject: [PATCH 3/4] xfs_db: complain about dir/attr blocks with bad magics
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 10 Apr 2017 15:47:59 -0700
-Message-ID: <149186447976.32572.12577770552523190852.stgit@birch.djwong.org>
-In-Reply-To: <149186446125.32572.5134583964816531229.stgit@birch.djwong.org>
-References: <149186446125.32572.5134583964816531229.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([65.50.211.133]:55635 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752069AbdDKLKh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2017 07:10:37 -0400
+Received: from 212095007090.public.telering.at ([212.95.7.90] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1cxtgy-0004pd-7v
+        for linux-xfs@vger.kernel.org; Tue, 11 Apr 2017 11:10:36 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 5/6] xfs: remove xfs_bmap_remap_alloc
+Date: Tue, 11 Apr 2017 13:10:10 +0200
+Message-Id: <20170411111011.9437-6-hch@lst.de>
+In-Reply-To: <20170411111011.9437-1-hch@lst.de>
+References: <20170411111011.9437-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+The main thing that xfs_bmap_remap_alloc does is fixing the AGFL, similar
+to what we do in the space allocator.  But the reflink code doesn't touch
+the allocation btree unlike the normal space allocator, so we couldn't
+care less about the state of the AGFL.
 
-The directory and attribute manipulation code also use the block's magic
-number to figure out the real type of the block we're analyzing.  If the
-magic doesn't match any of the known magics, we end up with the field
-type set to the raw attr3/dir3 type and no child type to descend into.
-Since there's no print function, we trip over the assertion about
-FTARG_OKEMPTY and crash.  Instead provide a print function that
-complains about the bad magic number.
+So remove xfs_bmap_remap_alloc and just handle the di_nblocks update in
+the caller.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- db/attr.c  |   21 +++++++++++++++++++++
- db/attr.h  |    3 +++
- db/dir2.c  |   21 +++++++++++++++++++++
- db/dir2.h  |    3 +++
- db/field.c |   16 ++++++++--------
- 5 files changed, 56 insertions(+), 8 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 60 ++----------------------------------------------
+ fs/xfs/xfs_trace.h       | 25 --------------------
+ 2 files changed, 2 insertions(+), 83 deletions(-)
 
-
-diff --git a/db/attr.c b/db/attr.c
-index e26ac67..68a3116 100644
---- a/db/attr.c
-+++ b/db/attr.c
-@@ -574,3 +574,24 @@ const struct xfs_buf_ops xfs_attr3_db_buf_ops = {
- 	.verify_read = xfs_attr3_db_read_verify,
- 	.verify_write = xfs_attr3_db_write_verify,
- };
-+
-+int
-+attr_print_func(
-+	void		*obj,
-+	int		bit,
-+	int		count,
-+	char		*fmtstr,
-+	int		size,
-+	int		arg,
-+	int		base,
-+	int		array)
-+{
-+	__be32			magic32;
-+	__be16			magic16;
-+
-+	magic32 = *(__be32 *)obj;
-+	magic16 = ((struct xfs_da_blkinfo *)obj)->magic;
-+	dbprintf(_("Unknown attribute buffer magic (0x%x:0x%x)!\n"),
-+		magic32, magic16);
-+	return 0;
-+}
-diff --git a/db/attr.h b/db/attr.h
-index bc3431f..525b144 100644
---- a/db/attr.h
-+++ b/db/attr.h
-@@ -35,3 +35,6 @@ extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
- extern int	attr_size(void *obj, int startoff, int idx);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index faf7cb0a28f9..414cfa91af01 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3856,61 +3856,6 @@ xfs_bmap_btalloc(
+ }
  
- extern const struct xfs_buf_ops xfs_attr3_db_buf_ops;
-+
-+extern int	attr_print_func(void *obj, int bit, int count, char *fmtstr,
-+		int size, int arg, int base, int array);
-diff --git a/db/dir2.c b/db/dir2.c
-index 533f705..3b89330 100644
---- a/db/dir2.c
-+++ b/db/dir2.c
-@@ -1041,3 +1041,24 @@ const struct xfs_buf_ops xfs_dir3_db_buf_ops = {
- 	.verify_read = xfs_dir3_db_read_verify,
- 	.verify_write = xfs_dir3_db_write_verify,
- };
-+
-+int
-+dir2_print_func(
-+	void		*obj,
-+	int		bit,
-+	int		count,
-+	char		*fmtstr,
-+	int		size,
-+	int		arg,
-+	int		base,
-+	int		array)
-+{
-+	__be32			magic32;
-+	__be16			magic16;
-+
-+	magic32 = *(__be32 *)obj;
-+	magic16 = ((struct xfs_da_blkinfo *)obj)->magic;
-+	dbprintf(_("Unknown directory buffer magic (0x%x:0x%x)!\n"),
-+		magic32, magic16);
-+	return 0;
-+}
-diff --git a/db/dir2.h b/db/dir2.h
-index 0c2a62e..6d12cc1 100644
---- a/db/dir2.h
-+++ b/db/dir2.h
-@@ -62,3 +62,6 @@ extern int	dir2_data_union_size(void *obj, int startoff, int idx);
- extern int	dir2_size(void *obj, int startoff, int idx);
+ /*
+- * For a remap operation, just "allocate" an extent at the address that the
+- * caller passed in, and ensure that the AGFL is the right size.  The caller
+- * will then map the "allocated" extent into the file somewhere.
+- */
+-STATIC int
+-xfs_bmap_remap_alloc(
+-	struct xfs_trans	*tp,
+-	struct xfs_inode	*ip,
+-	xfs_fsblock_t		startblock,
+-	xfs_extlen_t		length)
+-{
+-	struct xfs_mount	*mp = tp->t_mountp;
+-	struct xfs_alloc_arg	args;
+-	int			error;
+-
+-	/*
+-	 * validate that the block number is legal - the enables us to detect
+-	 * and handle a silent filesystem corruption rather than crashing.
+-	 */
+-	memset(&args, 0, sizeof(struct xfs_alloc_arg));
+-	args.tp = tp;
+-	args.mp = mp;
+-	args.agno = XFS_FSB_TO_AGNO(mp, startblock);
+-	args.agbno = XFS_FSB_TO_AGBNO(mp, startblock);
+-
+-	if (args.agno >= mp->m_sb.sb_agcount ||
+-	    args.agbno >= mp->m_sb.sb_agblocks)
+-		return -EFSCORRUPTED;
+-
+-	/* "Allocate" the extent from the range we passed in. */
+-	trace_xfs_bmap_remap_alloc(ip, startblock, length);
+-
+-	ip->i_d.di_nblocks += length;
+-	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-
+-	/* Fix the freelist, like a real allocator does. */
+-	args.datatype = XFS_ALLOC_USERDATA | XFS_ALLOC_NOBUSY;
+-	args.pag = xfs_perag_get(mp, args.agno);
+-	ASSERT(args.pag);
+-
+-	/*
+-	 * The freelist fixing code will decline the allocation if
+-	 * the size and shape of the free space doesn't allow for
+-	 * allocating the extent and updating all the metadata that
+-	 * happens during an allocation.  We're remapping, not
+-	 * allocating, so skip that check by pretending to be freeing.
+-	 */
+-	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
+-	xfs_perag_put(args.pag);
+-	if (error)
+-		trace_xfs_bmap_remap_alloc_error(ip, error, _RET_IP_);
+-	return error;
+-}
+-
+-/*
+  * xfs_bmap_alloc is called by xfs_bmapi to allocate an extent for a file.
+  * It figures out where to ask the underlying allocator to put the new extent.
+  */
+@@ -4806,9 +4751,8 @@ xfs_bmapi_remap(
+ 		ASSERT(got.br_startoff - bno >= len);
+ 	}
  
- extern const struct xfs_buf_ops xfs_dir3_db_buf_ops;
-+
-+extern int	dir2_print_func(void *obj, int bit, int count, char *fmtstr,
-+		int size, int arg, int base, int array);
-diff --git a/db/field.c b/db/field.c
-index 1968dd5..5496789 100644
---- a/db/field.c
-+++ b/db/field.c
-@@ -59,8 +59,8 @@ const ftattr_t	ftattrtab[] = {
- 	  FTARG_DONULL, NULL, NULL },
+-	error = xfs_bmap_remap_alloc(tp, ip, startblock, len);
+-	if (error)
+-		goto error0;
++	ip->i_d.di_nblocks += len;
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
  
- /* attr fields */
--	{ FLDT_ATTR, "attr", NULL, (char *)attr_flds, attr_size, FTARG_SIZE,
--	  NULL, attr_flds },
-+	{ FLDT_ATTR, "attr", attr_print_func, (char *)attr_flds, attr_size,
-+	  FTARG_SIZE, NULL, attr_flds },
- 	{ FLDT_ATTR_BLKINFO, "attr_blkinfo", NULL, (char *)attr_blkinfo_flds,
- 	  SI(bitsz(struct xfs_da_blkinfo)), 0, NULL, attr_blkinfo_flds },
- 	{ FLDT_ATTR_LEAF_ENTRY, "attr_leaf_entry", fp_sarray,
-@@ -89,8 +89,8 @@ const ftattr_t	ftattrtab[] = {
- 	  attrshort_size, FTARG_SIZE, NULL, attr_shortform_flds },
+ 	if (ifp->if_flags & XFS_IFBROOT) {
+ 		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 4f96dc953fbe..cba10daf8391 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3003,31 +3003,6 @@ DEFINE_EVENT(xfs_inode_error_class, name, \
+ 		 unsigned long caller_ip), \
+ 	TP_ARGS(ip, error, caller_ip))
  
- /* attr3 specific fields */
--	{ FLDT_ATTR3, "attr3", NULL, (char *)attr3_flds, attr_size, FTARG_SIZE,
--	  NULL, attr3_flds },
-+	{ FLDT_ATTR3, "attr3", attr_print_func, (char *)attr3_flds, attr_size,
-+	  FTARG_SIZE, NULL, attr3_flds },
- 	{ FLDT_ATTR3_LEAF_HDR, "attr3_leaf_hdr", NULL,
- 	  (char *)attr3_leaf_hdr_flds, SI(bitsz(struct xfs_attr3_leaf_hdr)),
- 	  0, NULL, attr3_leaf_hdr_flds },
-@@ -219,8 +219,8 @@ const ftattr_t	ftattrtab[] = {
- 	  SI(bitsz(xfs_dinode_t)), 0, NULL, inode_v3_flds },
+-/* reflink allocator */
+-TRACE_EVENT(xfs_bmap_remap_alloc,
+-	TP_PROTO(struct xfs_inode *ip, xfs_fsblock_t fsbno,
+-		 xfs_extlen_t len),
+-	TP_ARGS(ip, fsbno, len),
+-	TP_STRUCT__entry(
+-		__field(dev_t, dev)
+-		__field(xfs_ino_t, ino)
+-		__field(xfs_fsblock_t, fsbno)
+-		__field(xfs_extlen_t, len)
+-	),
+-	TP_fast_assign(
+-		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+-		__entry->ino = ip->i_ino;
+-		__entry->fsbno = fsbno;
+-		__entry->len = len;
+-	),
+-	TP_printk("dev %d:%d ino 0x%llx fsbno 0x%llx len %x",
+-		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __entry->ino,
+-		  __entry->fsbno,
+-		  __entry->len)
+-);
+-DEFINE_INODE_ERROR_EVENT(xfs_bmap_remap_alloc_error);
+-
+ /* reflink tracepoint classes */
  
- /* dir v2 fields */
--	{ FLDT_DIR2, "dir2", NULL, (char *)dir2_flds, dir2_size, FTARG_SIZE,
--	  NULL, dir2_flds },
-+	{ FLDT_DIR2, "dir2", dir2_print_func, (char *)dir2_flds, dir2_size,
-+	  FTARG_SIZE, NULL, dir2_flds },
- 	{ FLDT_DIR2_BLOCK_TAIL, "dir2_block_tail", NULL,
- 	  (char *)dir2_block_tail_flds, SI(bitsz(xfs_dir2_block_tail_t)), 0,
- 	  NULL, dir2_block_tail_flds },
-@@ -262,8 +262,8 @@ const ftattr_t	ftattrtab[] = {
- 	  FTARG_SIZE, NULL, dir2sf_flds },
- 
- /* dir v3 fields */
--	{ FLDT_DIR3, "dir3", NULL, (char *)dir3_flds, dir2_size, FTARG_SIZE,
--	  NULL, dir3_flds },
-+	{ FLDT_DIR3, "dir3", dir2_print_func, (char *)dir3_flds, dir2_size,
-+	  FTARG_SIZE, NULL, dir3_flds },
- 	{ FLDT_DIR3_BLKHDR, "dir3_blk_hdr", NULL, (char *)dir3_blkhdr_flds,
- 	  SI(bitsz(struct xfs_dir3_blk_hdr)), 0, NULL, dir3_blkhdr_flds },
- 	{ FLDT_DIR3_DATA_HDR, "dir3_data_hdr", NULL, (char *)dir3_data_hdr_flds,
+ /* two-file io tracepoint class */
+-- 
+2.11.0
 
