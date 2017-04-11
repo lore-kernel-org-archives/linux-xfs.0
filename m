@@ -1,152 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49242 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751921AbdDLKaa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 06:30:30 -0400
-Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cyFXh-0004jz-Ix
-        for linux-xfs@vger.kernel.org; Wed, 12 Apr 2017 10:30:29 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/6] xfs: remove xfs_bmap_remap_alloc
-Date: Wed, 12 Apr 2017 12:30:12 +0200
-Message-Id: <20170412103013.9355-6-hch@lst.de>
-In-Reply-To: <20170412103013.9355-1-hch@lst.de>
-References: <20170412103013.9355-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:51303 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753725AbdDKO07 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Apr 2017 10:26:59 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 8/9] nowait aio: btrfs
+Date: Tue, 11 Apr 2017 09:26:18 -0500
+Message-Id: <20170411142619.27205-9-rgoldwyn@suse.de>
+In-Reply-To: <20170411142619.27205-1-rgoldwyn@suse.de>
+References: <20170411142619.27205-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-The main thing that xfs_bmap_remap_alloc does is fixing the AGFL, similar
-to what we do in the space allocator.  But the reflink code doesn't touch
-the allocation btree unlike the normal space allocator, so we couldn't
-care less about the state of the AGFL.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-So remove xfs_bmap_remap_alloc and just handle the di_nblocks update in
-the caller.
+Return EAGAIN if any of the following checks fail
+ + i_rwsem is not lockable
+ + NODATACOW or PREALLOC is not set
+ + Cannot nocow at the desired location
+ + Writing beyond end of file which is not allocated
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 60 ++----------------------------------------------
- fs/xfs/xfs_trace.h       | 25 --------------------
- 2 files changed, 2 insertions(+), 83 deletions(-)
+ fs/btrfs/file.c  | 25 ++++++++++++++++++++-----
+ fs/btrfs/inode.c |  3 +++
+ 2 files changed, 23 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index a1d9086ac737..9f55e5185d56 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3856,61 +3856,6 @@ xfs_bmap_btalloc(
- }
+diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+index 520cb7230b2d..a870e5dd2b4d 100644
+--- a/fs/btrfs/file.c
++++ b/fs/btrfs/file.c
+@@ -1823,12 +1823,29 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
+ 	ssize_t num_written = 0;
+ 	bool sync = (file->f_flags & O_DSYNC) || IS_SYNC(file->f_mapping->host);
+ 	ssize_t err;
+-	loff_t pos;
+-	size_t count;
++	loff_t pos = iocb->ki_pos;
++	size_t count = iov_iter_count(from);
+ 	loff_t oldsize;
+ 	int clean_page = 0;
  
- /*
-- * For a remap operation, just "allocate" an extent at the address that the
-- * caller passed in, and ensure that the AGFL is the right size.  The caller
-- * will then map the "allocated" extent into the file somewhere.
-- */
--STATIC int
--xfs_bmap_remap_alloc(
--	struct xfs_trans	*tp,
--	struct xfs_inode	*ip,
--	xfs_fsblock_t		startblock,
--	xfs_extlen_t		length)
--{
--	struct xfs_mount	*mp = tp->t_mountp;
--	struct xfs_alloc_arg	args;
--	int			error;
--
--	/*
--	 * validate that the block number is legal - the enables us to detect
--	 * and handle a silent filesystem corruption rather than crashing.
--	 */
--	memset(&args, 0, sizeof(struct xfs_alloc_arg));
--	args.tp = tp;
--	args.mp = mp;
--	args.agno = XFS_FSB_TO_AGNO(mp, startblock);
--	args.agbno = XFS_FSB_TO_AGBNO(mp, startblock);
--
--	if (args.agno >= mp->m_sb.sb_agcount ||
--	    args.agbno >= mp->m_sb.sb_agblocks)
--		return -EFSCORRUPTED;
--
--	/* "Allocate" the extent from the range we passed in. */
--	trace_xfs_bmap_remap_alloc(ip, startblock, length);
--
--	ip->i_d.di_nblocks += length;
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--
--	/* Fix the freelist, like a real allocator does. */
--	args.datatype = XFS_ALLOC_USERDATA | XFS_ALLOC_NOBUSY;
--	args.pag = xfs_perag_get(mp, args.agno);
--	ASSERT(args.pag);
--
--	/*
--	 * The freelist fixing code will decline the allocation if
--	 * the size and shape of the free space doesn't allow for
--	 * allocating the extent and updating all the metadata that
--	 * happens during an allocation.  We're remapping, not
--	 * allocating, so skip that check by pretending to be freeing.
--	 */
--	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
--	xfs_perag_put(args.pag);
--	if (error)
--		trace_xfs_bmap_remap_alloc_error(ip, error, _RET_IP_);
--	return error;
--}
--
--/*
-  * xfs_bmap_alloc is called by xfs_bmapi to allocate an extent for a file.
-  * It figures out where to ask the underlying allocator to put the new extent.
-  */
-@@ -4811,9 +4756,8 @@ xfs_bmapi_remap(
- 		ASSERT(got.br_startoff - bno >= len);
- 	}
+-	inode_lock(inode);
++	if ((iocb->ki_flags & IOCB_NOWAIT) &&
++			(iocb->ki_flags & IOCB_DIRECT)) {
++		/* Don't sleep on inode rwsem */
++		if (!inode_trylock(inode))
++			return -EAGAIN;
++		/*
++		 * We will allocate space in case nodatacow is not set,
++		 * so bail
++		 */
++		if (!(BTRFS_I(inode)->flags & (BTRFS_INODE_NODATACOW |
++					      BTRFS_INODE_PREALLOC)) ||
++		    check_can_nocow(BTRFS_I(inode), pos, &count) <= 0) {
++			inode_unlock(inode);
++			return -EAGAIN;
++		}
++	} else
++		inode_lock(inode);
++
+ 	err = generic_write_checks(iocb, from);
+ 	if (err <= 0) {
+ 		inode_unlock(inode);
+@@ -1862,8 +1879,6 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
+ 	 */
+ 	update_time_for_write(inode);
  
--	error = xfs_bmap_remap_alloc(tp, ip, startblock, len);
--	if (error)
--		goto error0;
-+	ip->i_d.di_nblocks += len;
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
- 	if (ifp->if_flags & XFS_IFBROOT) {
- 		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 4f96dc953fbe..cba10daf8391 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3003,31 +3003,6 @@ DEFINE_EVENT(xfs_inode_error_class, name, \
- 		 unsigned long caller_ip), \
- 	TP_ARGS(ip, error, caller_ip))
- 
--/* reflink allocator */
--TRACE_EVENT(xfs_bmap_remap_alloc,
--	TP_PROTO(struct xfs_inode *ip, xfs_fsblock_t fsbno,
--		 xfs_extlen_t len),
--	TP_ARGS(ip, fsbno, len),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(xfs_ino_t, ino)
--		__field(xfs_fsblock_t, fsbno)
--		__field(xfs_extlen_t, len)
--	),
--	TP_fast_assign(
--		__entry->dev = VFS_I(ip)->i_sb->s_dev;
--		__entry->ino = ip->i_ino;
--		__entry->fsbno = fsbno;
--		__entry->len = len;
--	),
--	TP_printk("dev %d:%d ino 0x%llx fsbno 0x%llx len %x",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->ino,
--		  __entry->fsbno,
--		  __entry->len)
--);
--DEFINE_INODE_ERROR_EVENT(xfs_bmap_remap_alloc_error);
--
- /* reflink tracepoint classes */
- 
- /* two-file io tracepoint class */
+-	pos = iocb->ki_pos;
+-	count = iov_iter_count(from);
+ 	start_pos = round_down(pos, fs_info->sectorsize);
+ 	oldsize = i_size_read(inode);
+ 	if (start_pos > oldsize) {
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index a18510be76c1..d91b21a76d6d 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -8627,6 +8627,9 @@ static ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 			dio_data.overwrite = 1;
+ 			inode_unlock(inode);
+ 			relock = true;
++		} else if (iocb->ki_flags & IOCB_NOWAIT) {
++			ret = -EAGAIN;
++			goto out;
+ 		}
+ 		ret = btrfs_delalloc_reserve_space(inode, offset, count);
+ 		if (ret)
 -- 
-2.11.0
+2.12.0
 
