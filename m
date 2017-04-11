@@ -1,46 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:54003 "EHLO newverein.lst.de"
+Received: from mail1.g1.pair.com ([66.39.3.162]:17553 "EHLO mail1.g1.pair.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752757AbdDKFmC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Apr 2017 01:42:02 -0400
-Date: Tue, 11 Apr 2017 07:42:01 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 4/6] xfs: introduce xfs_bmapi_remap
-Message-ID: <20170411054201.GA27917@lst.de>
-References: <20170403121833.7825-1-hch@lst.de> <20170403121833.7825-5-hch@lst.de> <20170410195004.GA10459@birch.djwong.org>
+        id S1752901AbdDKLae (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Apr 2017 07:30:34 -0400
+Date: Tue, 11 Apr 2017 13:30:33 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: filesystem dead, xfs_repair won't help
+Message-ID: <20170411133033.65c89ee8@harpe.intellique.com>
+In-Reply-To: <974df72a-04fe-fba4-4b48-89426b8783e0@scylladb.com>
+References: <CAF950WLvp7SWnDHU_AY+j3CYtCDWYLdN=AkNZgNB2yU3sVxsJQ@mail.gmail.com>
+        <612a9d5a-9877-405c-ef7c-dc9632a1d8bc@scylladb.com>
+        <20170410153529.GE3991@bfoster.bfoster>
+        <974df72a-04fe-fba4-4b48-89426b8783e0@scylladb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170410195004.GA10459@birch.djwong.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/004zl8gYvAEc5d/wEH=BuP9"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Avi Kivity <avi@scylladb.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Mon, Apr 10, 2017 at 12:50:04PM -0700, Darrick J. Wong wrote:
-> Why change all this if the next patch removes the whole function except:
-> 
-> ip->i_d.di_nblocks += length;
-> xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> 
-> Wouldn't it make more sense to have this patch add _bmapi_remap (as it
-> appears in the next patch) and change the callers to use it; and then
-> the next patch removes the old _bmap_remap_alloc and its callers?
+--Sig_/004zl8gYvAEc5d/wEH=BuP9
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I'd rather keep steps as small and self-explaining as possible,
-so one is factoring out a new helper, and the other is removing a call
-that's no needed.
+Le Tue, 11 Apr 2017 10:46:07 +0300
+Avi Kivity <avi@scylladb.com> =C3=A9crivait:
 
-> > +	else if (ip->i_d.di_format != XFS_DINODE_FMT_BTREE)
-> > +		logflags &= ~XFS_ILOG_DBROOT;
-> > +
-> > +	if (logflags)
-> > +		xfs_trans_log_inode(tp, ip, logflags);
-> > +	if (cur) {
-> > +		xfs_btree_del_cursor(cur,
-> > +			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-> 
-> Double indent here?
+> $ sudo xfs_repair /dev/nvme0n1
+> Phase 1 - find and verify superblock...
+> couldn't verify primary superblock - not enough secondary superblocks=20
+> with matching geometry !!!
 
-Sure..
+Which version of xfs_repair is this?
+
+Try to export the FS structure with xfs_metadump, something like
+
+xfs_metadump /dev/nvme0n1 /some/file.dmp
+
+And check the errors it reports, they may be informative.=20
+
+In the case where metadump works out fine, you should then try to have a
+look at the FS structure using the dump (to avoid wrecking it more that
+it already is):
+
+xfs_db -c "sb 0" /some/file.dmp
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/004zl8gYvAEc5d/wEH=BuP9
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAljsvloACgkQX3jQXNUicVZ9IQCg2e+xe49RzL54Km+wq3OLmcCn
+sl8An1y1C35VXpfn7DebR3rdEe3KzR4/
+=8u0j
+-----END PGP SIGNATURE-----
+
+--Sig_/004zl8gYvAEc5d/wEH=BuP9--
