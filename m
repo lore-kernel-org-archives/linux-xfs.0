@@ -1,126 +1,216 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33084 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42660 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751992AbdDLLDV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Apr 2017 07:03:21 -0400
-Date: Wed, 12 Apr 2017 07:03:19 -0400
+        id S1752437AbdDKO6F (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Apr 2017 10:58:05 -0400
+Date: Tue, 11 Apr 2017 10:58:03 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] metadump: warn about corruption if log is dirty
-Message-ID: <20170412110318.GA6834@bfoster.bfoster>
-References: <20170411141237.9274-1-jtulak@redhat.com>
- <20170411141237.9274-2-jtulak@redhat.com>
- <20170411183036.GA3865@bfoster.bfoster>
- <272b1e64-96fe-ab9a-12f3-1fc73a0c85ea@sandeen.net>
- <20170411184350.GC3865@bfoster.bfoster>
- <bbbb0472-7b6d-b3df-3ca7-8d8a574ff377@sandeen.net>
- <20170411234444.GH8502@birch.djwong.org>
+Subject: Re: XFS mount hangs during quotacheck
+Message-ID: <20170411145803.GA12238@bfoster.bfoster>
+References: <94fae78c-056b-3055-0714-c4df9239fffb@stepping-stone.ch>
+ <20170406125120.GA50328@bfoster.bfoster>
+ <c29ade94-ea74-07ac-db58-e203219f9426@stepping-stone.ch>
+ <20170406132058.GB50328@bfoster.bfoster>
+ <019caacc-f5b5-fb29-c10c-f1de72b25caf@stepping-stone.ch>
+ <4bec2296-0ac0-68a0-4b97-fb2df2616202@stepping-stone.ch>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170411234444.GH8502@birch.djwong.org>
+In-Reply-To: <4bec2296-0ac0-68a0-4b97-fb2df2616202@stepping-stone.ch>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+To: Christian Affolter <c.affolter@stepping-stone.ch>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Apr 11, 2017 at 04:44:44PM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 11, 2017 at 02:01:41PM -0500, Eric Sandeen wrote:
-> > On 4/11/17 1:43 PM, Brian Foster wrote:
-> > > On Tue, Apr 11, 2017 at 01:34:25PM -0500, Eric Sandeen wrote:
-> > >> On 4/11/17 1:30 PM, Brian Foster wrote:
-> > >>> On Tue, Apr 11, 2017 at 04:12:36PM +0200, Jan Tulak wrote:
-> > >>>> Add a warning about possible corruption when exporting a dirty log, as
-> > >>>> the log content does not agree with obfuscated metadata.
-> > >>>>
-> > >>>> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> > >>>> ---
-> > >>>
-> > >>> Thanks for posting this...
-> > >>>
-> > >>>>  db/metadump.c | 3 ++-
-> > >>>>  1 file changed, 2 insertions(+), 1 deletion(-)
-> > >>>>
-> > >>>> diff --git a/db/metadump.c b/db/metadump.c
-> > >>>> index 66952f6..74e24b2 100644
-> > >>>> --- a/db/metadump.c
-> > >>>> +++ b/db/metadump.c
-> > >>>> @@ -2726,7 +2726,8 @@ copy_log(void)
-> > >>>>  		/* keep the dirty log */
-> > >>>>  		if (obfuscate)
-> > >>>>  			print_warning(
-> > >>>> -_("Filesystem log is dirty; image will contain unobfuscated metadata in log."));
-> > >>>> +_("Filesystem log is dirty; image will contain unobfuscated metadata in log "
-> > >>>> +  "and a log replay can cause a corruption."));
-> > >>>
-> > >>> I think a slightly more verbose message might be a good idea. For
-> > >>> example, something like the following:
-> > >>>
-> > >>> "Filesystem log is dirty; image will contain unobfuscated metadata in
-> > >>> the log. Log recovery of an obfuscated image can cause filesystem
-> > >>> corruption. Please mount the source image to clean the log or disable
-> > >>> metadump obfuscation."
-> > >>>
-> > >>> That could also say "... or verify that log recovery of the resulting
-> > >>> image does not cause corruption," but that might be overkill. Thoughts?
-> > >>> Eric?
-> > >>
-> > >> I think we do need a good explanation, but that will take a lot of workd.
-> > >> We could also refer to the man page for more details - it's getting pretty
-> > >> long for a warning from the tool.
-> > >>
+On Tue, Apr 11, 2017 at 12:28:12PM +0200, Christian Affolter wrote:
+> Hello Brian,
+> 
+> On 06.04.2017 15:35, Christian Affolter wrote:
+> > On 06.04.2017 15:21, Brian Foster wrote:
+> > > On Thu, Apr 06, 2017 at 03:10:41PM +0200, Christian Affolter wrote:
+> > > > Hi Brian,
+> > > > 
+> > > > thanks a lot for taking the time to help.
+> > > > 
+> > > > On 06.04.2017 14:51, Brian Foster wrote:
+> > > > > On Wed, Apr 05, 2017 at 03:08:03PM +0200, Christian Affolter wrote:
+> > > > > > Hi everyone,
+> > > > > > 
+> > > > > > I'm having a system with a 15 TiB XFS volume with user and project
+> > > > > > quotas,
+> > > > > > which recently crashed.
+> > > > > > 
+> > > > > > After a successful xfs_repair run, I'm trying to mount the file system
+> > > > > > again. According to dmesg a quotacheck is needed (XFS (vdc):
+> > > > > > Quotacheck
+> > > > > > needed: Please wait.), for about 20 minutes I see expected
+> > > > > > read-activity on
+> > > > > > the device within iotop, then it suddenly stops but the mount
+> > > > > > command still
+> > > > > > hangs in uninterruptable sleep state (D+) while the system remains
+> > > > > > completely idle (I/O and CPU wise).
+> > > > > > 
+> > > > > > [...]
+> > > > > 
+> > > > > > Apr  5 10:33:48 sysresccd kernel: XFS (vdc): Mounting V5 Filesystem
+> > > > > > Apr  5 10:33:48 sysresccd kernel: XFS (vdc): Ending clean mount
+> > > > > > Apr  5 10:33:53 sysresccd kernel: XFS (vdc): Unmounting Filesystem
+> > > > > > Apr  5 10:34:00 sysresccd kernel: Adding 4193276k swap on
+> > > > > > /dev/vda2.  Priority:-1 extents:1 across:4193276k FS
+> > > > > > Apr  5 10:34:35 sysresccd kernel: XFS (vdc): Mounting V5 Filesystem
+> > > > > > Apr  5 10:34:35 sysresccd kernel: XFS (vdc): Ending clean mount
+> > > > > > Apr  5 10:34:35 sysresccd kernel: XFS (vdc): Quotacheck needed:
+> > > > > > Please wait.
+> > > > > > Apr  5 10:34:43 sysresccd su[2622]: Successful su for root by root
+> > > > > > Apr  5 10:34:43 sysresccd su[2622]: + /dev/tty2 root:root
+> > > > > > Apr  5 12:03:49 sysresccd kernel: sysrq: SysRq : Show Blocked State
+> > > > > > Apr  5 12:03:49 sysresccd kernel:   task                        PC
+> > > > > > stack   pid father
+> > > > > > Apr  5 12:03:49 sysresccd kernel: mount           D
+> > > > > > ffff880310653958     0  2611   2571 0x20020000
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  ffff880310653958
+> > > > > > ffff880310653958 0000000500370b74 ffff880002789d40
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  ffff880310654000
+> > > > > > ffff8803111da198 0000000000000002 ffffffff817fbb2a
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  ffff880002789d40
+> > > > > > ffff880310653970 ffffffff817f9f58 7fffffffffffffff
+> > > > > > Apr  5 12:03:49 sysresccd kernel: Call Trace:
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fbb2a>] ?
+> > > > > > usleep_range+0x3a/0x3a
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817f9f58>]
+> > > > > > schedule+0x70/0x7e
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fbb59>]
+> > > > > > schedule_timeout+0x2f/0x107
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81170dcd>] ?
+> > > > > > __kmalloc+0xeb/0x114
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81389780>] ?
+> > > > > > kmem_alloc+0x33/0x96
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff810b58f0>] ?
+> > > > > > arch_local_irq_save+0x15/0x1b
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fc3f7>] ?
+> > > > > > _raw_spin_unlock_irqrestore+0xf/0x11
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa72d>]
+> > > > > > do_wait_for_common+0xe4/0x11a
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa72d>] ?
+> > > > > > do_wait_for_common+0xe4/0x11a
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff810a315c>] ?
+> > > > > > wake_up_q+0x42/0x42
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa7d9>]
+> > > > > > wait_for_common+0x36/0x4f
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa80a>]
+> > > > > > wait_for_completion+0x18/0x1a
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139a223>]
+> > > > > > xfs_qm_flush_one+0x42/0x7f
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139a586>]
+> > > > > > xfs_qm_dquot_walk.isra.8+0xc1/0x106
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139a1e1>] ?
+> > > > > > xfs_qm_dqattach_one+0xe3/0xe3
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139bd27>]
+> > > > > > xfs_qm_quotacheck+0x131/0x252
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139bedf>]
+> > > > > > xfs_qm_mount_quotas+0x97/0x143
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff813840a1>]
+> > > > > > xfs_mountfs+0x587/0x6b1
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff813868ea>]
+> > > > > > xfs_fs_fill_super+0x411/0x4b5
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff811846d1>]
+> > > > > > mount_bdev+0x141/0x195
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff813864d9>] ?
+> > > > > > xfs_parseargs+0x8e8/0x8e8
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81168bff>] ?
+> > > > > > alloc_pages_current+0x96/0x9f
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8138502b>]
+> > > > > > xfs_fs_mount+0x10/0x12
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff811851f3>]
+> > > > > > mount_fs+0x62/0x12b
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81199646>]
+> > > > > > vfs_kern_mount+0x64/0xd0
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8119bccd>]
+> > > > > > do_mount+0x8d5/0x9e6
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff811c07b1>]
+> > > > > > compat_SyS_mount+0x179/0x1a5
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff810039bb>]
+> > > > > > do_syscall_32_irqs_off+0x52/0x61
+> > > > > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817feee6>]
+> > > > > > entry_INT80_compat+0x36/0x50
+> > > > > 
+> > > > > This looks like a known quotacheck vs. reclaim deadlock. Quotacheck is
+> > > > > in the phase where it has completed all of the updates of in-core
+> > > > > accounting and now needs to flush the in-core xfs_dquot structures to
+> > > > > their associated backing buffers and submit them for I/O. The flush
+> > > > > sequence is stuck waiting on an xfs_dquot flush lock, however.
+> > > > > 
+> > > > > The problem is that quotacheck holds the underlying buffers and then
+> > > > > does a blocking xfs_dqflock(), which is effectively an inverse locking
+> > > > > order from xfs_dquot memory reclaim. If reclaim runs during the
+> > > > > previous
+> > > > > quotacheck phase, it acquires the flush lock and fails to submit the
+> > > > > underlying buffer for I/O (because quotacheck effectively holds/pins
+> > > > > the
+> > > > > buffer). When the quotacheck flush gets to the dquot, it thus waits
+> > > > > indefinitely on a flush lock that will never unlock.
+> > > > > 
+> > > > > If you're comfortable building a kernel from source, you could try the
+> > > > > following patch and see if it helps quotacheck to complete:
+> > > > > 
+> > > > >   http://www.spinics.net/lists/linux-xfs/msg04485.html
+> > > > > 
+> > > > > (Note that I've not been able to get this patch merged.)
+> > > > 
+> > > > Shall I only apply "[PATCH 2/3] xfs: push buffer of flush locked
+> > > > dquot to
+> > > > avoid quotacheck deadlock" or are all patches of this series required?
+> > > > 
+> > > > Which kernel version would you recommend for applying the patch?
+> > > > 
 > > > 
-> > > Hm, yeah. Maybe the existing warning can be condensed a bit more to
-> > > something like:
+> > > You could apply patches 1-2 of that series. Patch 3 was a
+> > > hack/experiment. Definitely do not apply that one.
 > > > 
-> > > "Warning: log recovery of an obfuscated metadata image can leak
-> > > unobfuscated metadata and/or cause filesystem corruption. Please mount
-> > > the source image to clean the log or disable obfuscation."
+> > > I think they should apply fine to any v4.10 or newer kernel. I'm not
+> > > sure that quotacheck changes all that often so you could probably pull
+> > > them into an older kernel as well, but you'd have to try to apply them
+> > > to know for sure.
+> > > 
+> > > Brian
 > > 
-> > s/filesystem corruption/image corruption/ - we don't want anyone to think
-> > that it damaged the original fs!
+> > OK, I will build a 4.10.X kernel with your patches applied and try to
+> > re-mount the volume within the next few days.
+> > 
+> > I will keep you posted.
 > 
-> OTOH the fs might be damaged just badly enough that log recovery is
-> impossible (which is why we're creating the metadump to send to support)
-> so aborting metadump is the wrong thing to do.
+> I'm glad to report that your patches helped to mount the volume with enabled
+> quota support again.
+> 
+> I've built two 4.10.8 kernels, the first one without your patches and the
+> second one with your patches applied.
+> First I've tried to mount the volume with the unpatched kernel, which
+> resulted in the same mount hang as before. Afterwards, I've booted with the
+> patched kernel on which the quota check succeeded:
+> 
+> [  101.304031] XFS (vdc): Mounting V5 Filesystem
+> [  101.706020] XFS (vdc): Starting recovery (logdev: internal)
+> [  102.276708] XFS (vdc): Ending recovery (logdev: internal)
+> [  102.278253] XFS (vdc): Quotacheck needed: Please wait.
+> [ 1388.403236] XFS (vdc): Quotacheck: Done.
+> 
+> I've run some basic checks with "xfs_quota" and the user as well as the
+> project quotas look good.
+> 
+> For the record, I've applied the following two patches:
+> https://patchwork.kernel.org/patch/9591113
+> https://patchwork.kernel.org/patch/9591117
+> 
+> Thank you very much for your help!
 > 
 
-Indeed..
-
-> It seems sort of silly even to lecture the user about log recovery when
-> they might not be able to recover said log and might not ever even start
-> the log recovery process.
-> 
-
-There's a bit of a balance here between handling dirty log + obfuscation
-cases where a log recovery issue is the purpose of the metadump, it is
-not the purpose and the original fs can run log recovery without
-disrupting problem diagnosis, or something in between and the resulting
-image is explicitly verified to not lead to such metadump-specific
-corruption.
-
-I think adjusting the preexisting warning wrt to the fact that log data
-is not obfuscated to point out this issue is a relatively minor change
-given the potential result.. (put another way, it seems kind of silly
-that we'd warn about leaking unobfuscated data but not this..).
+Thanks for the feedback. I'm still not sure this is something that's
+going to be fixed upstream any time soon, but quotacheck doesn't run on
+every mount and so this probably shouldn't be a recurring problem for
+you once you've made it through a quotacheck mount successfully.
 
 Brian
 
-> --D
-> 
-> > 
-> > > I suppose we could also just exit under such conditions unless the user
-> > > passes a force flag or something. Maybe that's overkill too, though..
-> > 
-> > yeah, let's not overengineer - dumping a dirty, obfuscated log is quite
-> > typical I think.
-> > 
-> > -Eric
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Best,
+> Chris
