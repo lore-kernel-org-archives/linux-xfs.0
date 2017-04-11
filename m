@@ -1,42 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58963 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:51370 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751181AbdDLFiv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Apr 2017 01:38:51 -0400
-Date: Wed, 12 Apr 2017 07:38:39 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 5/6] xfs: remove xfs_bmap_remap_alloc
-Message-ID: <20170412053839.GA19900@lst.de>
-References: <20170411111011.9437-1-hch@lst.de> <20170411111011.9437-6-hch@lst.de> <20170411230246.GG8502@birch.djwong.org>
+        id S1753176AbdDKSak (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Apr 2017 14:30:40 -0400
+Date: Tue, 11 Apr 2017 14:30:37 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] metadump: warn about corruption if log is dirty
+Message-ID: <20170411183036.GA3865@bfoster.bfoster>
+References: <20170411141237.9274-1-jtulak@redhat.com>
+ <20170411141237.9274-2-jtulak@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170411230246.GG8502@birch.djwong.org>
+In-Reply-To: <20170411141237.9274-2-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-On Tue, Apr 11, 2017 at 04:02:46PM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 11, 2017 at 01:10:10PM +0200, Christoph Hellwig wrote:
-> > The main thing that xfs_bmap_remap_alloc does is fixing the AGFL, similar
-> > to what we do in the space allocator.  But the reflink code doesn't touch
-> > the allocation btree unlike the normal space allocator, so we couldn't
-> > care less about the state of the AGFL.
-> > 
-> > So remove xfs_bmap_remap_alloc and just handle the di_nblocks update in
-> > the caller.
+On Tue, Apr 11, 2017 at 04:12:36PM +0200, Jan Tulak wrote:
+> Add a warning about possible corruption when exporting a dirty log, as
+> the log content does not agree with obfuscated metadata.
 > 
-> Looks ok, will go test.  By the way, what release were you targeting
-> with this patchset?
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> ---
 
-The patches are against for-next.  Given how late we are in 4.11 I didn't
-dare to send them for 4.11, although I'd like to backport it to 4.11-stable
-and 4.9-stable eventually.
+Thanks for posting this...
 
-> AFAICT the only behavioral change is that we no
-> longer ensure the AGFL in the remap step prior to (if necessary)
-> ensuring the AGFL again in the subsequent rmap step.
+>  db/metadump.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 66952f6..74e24b2 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -2726,7 +2726,8 @@ copy_log(void)
+>  		/* keep the dirty log */
+>  		if (obfuscate)
+>  			print_warning(
+> -_("Filesystem log is dirty; image will contain unobfuscated metadata in log."));
+> +_("Filesystem log is dirty; image will contain unobfuscated metadata in log "
+> +  "and a log replay can cause a corruption."));
 
-Yes.
+I think a slightly more verbose message might be a good idea. For
+example, something like the following:
+
+"Filesystem log is dirty; image will contain unobfuscated metadata in
+the log. Log recovery of an obfuscated image can cause filesystem
+corruption. Please mount the source image to clean the log or disable
+metadump obfuscation."
+
+That could also say "... or verify that log recovery of the resulting
+image does not cause corruption," but that might be overkill. Thoughts?
+Eric?
+
+Brian
+
+>  		break;
+>  	case -1:
+>  		/* log detection error */
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
