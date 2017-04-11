@@ -1,96 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from firestarter.dermichi.com ([194.177.153.153]:54598 "EHLO
-        firestarter.dermichi.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1764283AbdDSVrr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 17:47:47 -0400
-Subject: Re: xfsaild in D state seems to be blocking all other i/o
- sporadically
-References: <e5f2ccc2-7923-934c-e655-59983903ca11@dermichi.com>
- <20170419121202.2m3pi4ffojpnqyxc@eorzea.usersys.redhat.com>
- <ced08a44-d736-6250-c682-0f495a882bea@dermichi.com>
- <82e1fa48-909c-97a4-6bf9-5b84cf0af986@dermichi.com>
- <20170419140446.3rl2pruz2dlcr5cg@eorzea.usersys.redhat.com>
- <d6f598d1-7e7e-ac85-3cdc-e4f4bfdba94e@dermichi.com>
- <20170419180811.GB41631@bfoster.bfoster>
- <268ce851-dad0-a777-526a-82ad967490cd@dermichi.com>
- <20170419205525.GD5205@birch.djwong.org>
-From: Michael Weissenbacher <mw@dermichi.com>
-Message-ID: <86fbec25-f026-350b-ffe3-b0b182b768ac@dermichi.com>
-Date: Wed, 19 Apr 2017 23:47:43 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170419205525.GD5205@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:35796 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752389AbdDKRWl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Apr 2017 13:22:41 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 29A0680482
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2017 17:22:36 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-123-0.rdu2.redhat.com [10.10.123.0])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id CD6B7C05A4
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2017 17:22:35 +0000 (UTC)
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: [PATCH v2] xfsprogs: ensure growfs rejects non-existent mount point
+Date: Tue, 11 Apr 2017 12:22:35 -0500
+Message-Id: <20170411172235.9361-1-billodo@redhat.com>
+In-Reply-To: <20170407175809.8540-1-billodo@redhat.com>
+References: <20170407175809.8540-1-billodo@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Hi Darrick!
-Thanks for your input.
+xfs_growfs manpage clearly states that the filesystem must
+be mounted to be grown. Current behavior allows xfs_growfs
+to proceed if the filesystem /containing/ the path
+of the desired target is mounted. This is not the specified
+behavior. Instead, also check the targeted fs argument against
+the entry found in the fstable lookup. Unless the targeted
+fs is actually mounted, reject the command.
 
-> 
-> So... (speculating a bit here) you're running 20 different copies of
-> rsnapshot and rsync, which are generating a lot of dirty data and dirty
-> inodes.  Each of the threads reported by the hung task timeout are
-> trying to reserve space in the log for metadata updates, and clearly
-> those log reservation requests have poked the AIL to flush itself to
-> clear space for new transactions.
-> 
-Yes, that is a pretty precise description of what the system is doing.
-Although 20 parallel rsync's are pretty much the worst case scenario
-(the cron jobs are designed to be starting at differing times). Usually
-there are roughly 5 rsync's going on at the same time. The majority of
-the files are not copied but hard linked during this process.
+In order to cover bind-mounts, create a new lookup function
+based on the mountpoints instead of just the device name.
 
-> The AIL thread is flushing inode updates to disk, which is a lot of RMW
-> of dirty inodes, hence the high amounts of io reads you see.  The log is
-> already 2GB in size on disk, so it cannot be made larger.  TBH, a
-> /smaller/ log might help here since at least when we have to push the
-> AIL to free up log space there'll be less of it that has to be freed up.
-> 
-That's interesting. I could try to create an external log of 500MB size
-and see if that changes anything?
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
 
-> OTOH I wouldn't expect the system to stall for 5-15 minutes ... but I
-> guess a quarter of a 2GB log is 500MB, and if that's mostly dirty inode
-> records, that's a /lot/ of inode updates that the AIL has to do (single
-> threaded!) to clean out the space.  You /do/ seem to have 13 million
-> inodes in slab, so it's not implausible...
-> 
-OK, do i understand you correctly that the xfsaild does all the actual
-work of updating the inodes? And it's doing that single-threaded,
-reading both the log and the indoes themselves?
+v2: in order to properly handle relative pathnames, symlinks,
+and bind-mounts, use realpath to establish canonical path name.
+This also requires the introduction of a lookup function based
+on the target mountpoint.
 
-> ...500MB / 200 bytes per dirty inode record = ~2.5 million inodes.
-> ~2.5m inodes / 10 minutes = ~4200 inodes per second...
-Yes, these numbers sound plausible. When everything is running smoothly
-(i.e. most of the time) i do see up to 4500 combined reads+writes per
-second. But when the problem arises, all i see i xfsaild doing around
-120 reads/second, which is roughly the performance of a single 7200rpm
-drive. Directly after this "read only phase" (which lasts for about 5-10
-minutes most of the time) there is a short burst of up to 10000+
-writes/sec (writing to the RAID controller cache I suppose). And then
-the system goes back to the "normal phase" where it is doing both reads
-and writes and all those blocked D state processes continue working.
+ growfs/xfs_growfs.c | 10 +++++++++-
+ include/path.h      |  1 +
+ libxcmd/paths.c     | 21 +++++++++++++++++++++
+ 3 files changed, 31 insertions(+), 1 deletion(-)
 
-> 
-> That's probably within the ballpark of what 12 drives can handle.
-> Considering that the inodes get allocated out in chunks of 64, we can
-> take advantage of /some/ locality...
-> 
-> IOWs, the xfs is flushing big chunks of log all at once.  You might look
-> at the io stats of each drive, to see if they're all busy, and how many
-> io operations they're managing per second.  (But since you know the
-> exact model of drives, you'll have to take my ballpark figures and work
-> out whether or not they map to what you'd expect iops-wise from each
-> drive.)
-> 
-Hm, i don't think i can query the io stats of the individual drives
-behind the hardware RAID controller. If your theory is correct i should
-only see a single drive busy during the "problem phase". Will look into
-that. Maybe simply by eyeballing the drive led's ;-)
+diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+index a294e14..a61e2f1 100644
+--- a/growfs/xfs_growfs.c
++++ b/growfs/xfs_growfs.c
+@@ -133,6 +133,7 @@ main(int argc, char **argv)
+ 	int			spinodes;
+ 	int			rmapbt_enabled;
+ 	int			reflink_enabled;
++	char			rpath[PATH_MAX];
+ 
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+@@ -202,7 +203,14 @@ main(int argc, char **argv)
+ 		aflag = 1;
+ 
+ 	fs_table_initialise(0, NULL, 0, NULL);
+-	fs = fs_table_lookup(argv[optind], FS_MOUNT_POINT);
++
++	if (!realpath(argv[optind], rpath)) {
++		fprintf(stderr, _("%s: %s is not a mounted XFS filesystem\n"),
++			progname, argv[optind]);
++		return 1;
++	}
++
++	fs = fs_table_lookup_mount(rpath);
+ 	if (!fs) {
+ 		fprintf(stderr, _("%s: %s is not a mounted XFS filesystem\n"),
+ 			progname, argv[optind]);
+diff --git a/include/path.h b/include/path.h
+index d077bac..1d3a902 100644
+--- a/include/path.h
++++ b/include/path.h
+@@ -56,6 +56,7 @@ extern void fs_table_insert_project_path(char *__dir, uint __projid);
+ 
+ 
+ extern fs_path_t *fs_table_lookup(const char *__dir, uint __flags);
++extern fs_path_t *fs_table_lookup_mount(const char *__dir);
+ 
+ typedef struct fs_cursor {
+ 	uint		count;		/* total count of mount entries	*/
+diff --git a/libxcmd/paths.c b/libxcmd/paths.c
+index 816acc2..10927c6 100644
+--- a/libxcmd/paths.c
++++ b/libxcmd/paths.c
+@@ -86,6 +86,27 @@ fs_table_lookup(
+ 	return NULL;
+ }
+ 
++/*
++ * Find the FS table entry for the given path. Compare
++ * the path to mountpoint entries in the table.
++ */
++struct fs_path *
++fs_table_lookup_mount(
++	const char *dir)
++{
++	uint		i;
++	dev_t		dev = 0;
++
++	if (fs_device_number(dir, &dev))
++		return NULL;
++
++	for (i = 0; i < fs_count; i++) {
++		if (strcmp(fs_table[i].fs_dir, dir) == 0)
++			return &fs_table[i];
++	}
++	return NULL;
++}
++
+ static int
+ fs_table_insert(
+ 	char		*dir,
+-- 
+2.9.3
 
-thanks,
-Michael
