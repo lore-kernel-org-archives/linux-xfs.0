@@ -1,490 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32424 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751862AbdDJVrv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 17:47:51 -0400
-Date: Mon, 10 Apr 2017 14:47:42 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] xfs_io: move stat functions to new file
-Message-ID: <20170410214742.GD10459@birch.djwong.org>
-References: <4bb89f72-962d-a9a2-c224-daa828558444@sandeen.net>
- <1db22b7b-b017-2584-49d8-bd875b2e1ae3@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:40336 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751449AbdDKRhB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Apr 2017 13:37:01 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 98F998F86B
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2017 17:37:00 +0000 (UTC)
+Date: Tue, 11 Apr 2017 13:36:57 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: remove custom do_div implementations
+Message-ID: <20170411173656.GB12238@bfoster.bfoster>
+References: <0c0a6e24-f5c9-7610-fa38-b61be6d7439a@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1db22b7b-b017-2584-49d8-bd875b2e1ae3@sandeen.net>
+In-Reply-To: <0c0a6e24-f5c9-7610-fa38-b61be6d7439a@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, fsdevel <linux-fsdevel@vger.kernel.org>, David Howells <dhowells@redhat.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Apr 06, 2017 at 01:46:23PM -0500, Eric Sandeen wrote:
-> Adding statx will add a bit of code, so break stat-related
-> functions out of open.c into their own new file.
+On Fri, Apr 07, 2017 at 04:42:18PM -0500, Eric Sandeen wrote:
+> Long ago, all this gunk was added with a lament about problems
+> with gcc's do_div, and a fun recommendation in the changelog:
+> 
+>  egcs-2.91.66 is the recommended compiler version for building XFS.
+> 
+> All this special stuff was needed to work around an old gcc bug,
+> apparently, and it's been there ever since.
+> 
+> There should be no need for this anymore, so remove it.
+> 
+> Remove the special 32-bit xfs_do_mod as well; just let the
+> kernel's do_div() handle all this.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
 > ---
+
+Looks Ok to me:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
 > 
-> V3: remember to call stat_init()!
+> I'm currently running through xfstests on a 32-bit box with
+> no issues, so going ahead & sending it out.
 > 
+> Darrick, please queue this for -rc7.  (I KID!)  ;)
 > 
-> diff --git a/io/Makefile b/io/Makefile
-> index 32df568..435ccff 100644
-> --- a/io/Makefile
-> +++ b/io/Makefile
-> @@ -11,7 +11,7 @@ HFILES = init.h io.h
->  CFILES = init.c \
->  	attr.c bmap.c cowextsize.c encrypt.c file.c freeze.c fsync.c \
->  	getrusage.c imap.c link.c mmap.c open.c parent.c pread.c prealloc.c \
-> -	pwrite.c reflink.c seek.c shutdown.c sync.c truncate.c utimes.c
-> +	pwrite.c reflink.c seek.c shutdown.c stat.c sync.c truncate.c utimes.c
+> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+> index 592fdf7..044fb0e 100644
+> --- a/fs/xfs/xfs_linux.h
+> +++ b/fs/xfs/xfs_linux.h
+> @@ -212,88 +212,6 @@ static inline kgid_t xfs_gid_to_kgid(__uint32_t gid)
+>  #define xfs_sort(a,n,s,fn)	sort(a,n,s,fn,NULL)
+>  #define xfs_stack_trace()	dump_stack()
 >  
->  LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBPTHREAD)
->  LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
-> diff --git a/io/init.c b/io/init.c
-> index 06002e6..c15a1e1 100644
-> --- a/io/init.c
-> +++ b/io/init.c
-> @@ -86,6 +86,7 @@ init_commands(void)
->  	seek_init();
->  	sendfile_init();
->  	shutdown_init();
-> +	stat_init();
->  	sync_init();
->  	sync_range_init();
->  	truncate_init();
-> diff --git a/io/io.h b/io/io.h
-> index c40aad0..952bdb8 100644
-> --- a/io/io.h
-> +++ b/io/io.h
-> @@ -53,7 +53,7 @@ extern fileio_t		*filetable;	/* open file table */
->  extern int		filecount;	/* number of open files */
->  extern fileio_t		*file;		/* active file in file table */
->  extern int filelist_f(void);
 > -
-> +extern int stat_f(int argc, char **argv);
->  /*
->   * Memory mapped file regions
->   */
-> @@ -112,6 +112,7 @@ extern void		pwrite_init(void);
->  extern void		quit_init(void);
->  extern void		seek_init(void);
->  extern void		shutdown_init(void);
-> +extern void		stat_init(void);
->  extern void		sync_init(void);
->  extern void		truncate_init(void);
->  extern void		utimes_init(void);
-> diff --git a/io/open.c b/io/open.c
-> index 941fdc1..2ed55cf 100644
-> --- a/io/open.c
-> +++ b/io/open.c
-> @@ -39,9 +39,7 @@
->  #endif
->  
->  static cmdinfo_t open_cmd;
-> -static cmdinfo_t stat_cmd;
->  static cmdinfo_t close_cmd;
-> -static cmdinfo_t statfs_cmd;
->  static cmdinfo_t chproj_cmd;
->  static cmdinfo_t lsproj_cmd;
->  static cmdinfo_t extsize_cmd;
-> @@ -49,96 +47,6 @@ static cmdinfo_t inode_cmd;
->  static prid_t prid;
->  static long extsize;
->  
-> -off64_t
-> -filesize(void)
+> -/* Move the kernel do_div definition off to one side */
+> -
+> -#if defined __i386__
+> -/* For ia32 we need to pull some tricks to get past various versions
+> - * of the compiler which do not like us using do_div in the middle
+> - * of large functions.
+> - */
+> -static inline __u32 xfs_do_div(void *a, __u32 b, int n)
 > -{
-> -	struct stat	st;
+> -	__u32	mod;
 > -
-> -	if (fstat(file->fd, &st) < 0) {
-> -		perror("fstat");
-> -		return -1;
+> -	switch (n) {
+> -		case 4:
+> -			mod = *(__u32 *)a % b;
+> -			*(__u32 *)a = *(__u32 *)a / b;
+> -			return mod;
+> -		case 8:
+> -			{
+> -			unsigned long __upper, __low, __high, __mod;
+> -			__u64	c = *(__u64 *)a;
+> -			__upper = __high = c >> 32;
+> -			__low = c;
+> -			if (__high) {
+> -				__upper = __high % (b);
+> -				__high = __high / (b);
+> -			}
+> -			asm("divl %2":"=a" (__low), "=d" (__mod):"rm" (b), "0" (__low), "1" (__upper));
+> -			asm("":"=A" (c):"a" (__low),"d" (__high));
+> -			*(__u64 *)a = c;
+> -			return __mod;
+> -			}
 > -	}
-> -	return st.st_size;
-> -}
 > -
-> -static char *
-> -filetype(mode_t mode)
-> -{
-> -	switch (mode & S_IFMT) {
-> -	case S_IFSOCK:
-> -		return _("socket");
-> -	case S_IFDIR:
-> -		return _("directory");
-> -	case S_IFCHR:
-> -		return _("char device");
-> -	case S_IFBLK:
-> -		return _("block device");
-> -	case S_IFREG:
-> -		return _("regular file");
-> -	case S_IFLNK:
-> -		return _("symbolic link");
-> -	case S_IFIFO:
-> -		return _("fifo");
-> -	}
-> -	return NULL;
-> -}
-> -
-> -static int
-> -stat_f(
-> -	int		argc,
-> -	char		**argv)
-> -{
-> -	struct dioattr	dio;
-> -	struct fsxattr	fsx, fsxa;
-> -	struct stat	st;
-> -	int		verbose = (argc == 2 && !strcmp(argv[1], "-v"));
-> -
-> -	printf(_("fd.path = \"%s\"\n"), file->name);
-> -	printf(_("fd.flags = %s,%s,%s%s%s%s%s\n"),
-> -		file->flags & IO_OSYNC ? _("sync") : _("non-sync"),
-> -		file->flags & IO_DIRECT ? _("direct") : _("non-direct"),
-> -		file->flags & IO_READONLY ? _("read-only") : _("read-write"),
-> -		file->flags & IO_REALTIME ? _(",real-time") : "",
-> -		file->flags & IO_APPEND ? _(",append-only") : "",
-> -		file->flags & IO_NONBLOCK ? _(",non-block") : "",
-> -		file->flags & IO_TMPFILE ? _(",tmpfile") : "");
-> -	if (fstat(file->fd, &st) < 0) {
-> -		perror("fstat");
-> -	} else {
-> -		printf(_("stat.ino = %lld\n"), (long long)st.st_ino);
-> -		printf(_("stat.type = %s\n"), filetype(st.st_mode));
-> -		printf(_("stat.size = %lld\n"), (long long)st.st_size);
-> -		printf(_("stat.blocks = %lld\n"), (long long)st.st_blocks);
-> -		if (verbose) {
-> -			printf(_("stat.atime = %s"), ctime(&st.st_atime));
-> -			printf(_("stat.mtime = %s"), ctime(&st.st_mtime));
-> -			printf(_("stat.ctime = %s"), ctime(&st.st_ctime));
-> -		}
-> -	}
-> -	if (file->flags & IO_FOREIGN)
-> -		return 0;
-> -	if ((xfsctl(file->name, file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0 ||
-> -	    (xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTRA, &fsxa)) < 0) {
-> -		perror("FS_IOC_FSGETXATTR");
-> -	} else {
-> -		printf(_("fsxattr.xflags = 0x%x "), fsx.fsx_xflags);
-> -		printxattr(fsx.fsx_xflags, verbose, 0, file->name, 1, 1);
-> -		printf(_("fsxattr.projid = %u\n"), fsx.fsx_projid);
-> -		printf(_("fsxattr.extsize = %u\n"), fsx.fsx_extsize);
-> -		printf(_("fsxattr.cowextsize = %u\n"), fsx.fsx_cowextsize);
-> -		printf(_("fsxattr.nextents = %u\n"), fsx.fsx_nextents);
-> -		printf(_("fsxattr.naextents = %u\n"), fsxa.fsx_nextents);
-> -	}
-> -	if ((xfsctl(file->name, file->fd, XFS_IOC_DIOINFO, &dio)) < 0) {
-> -		perror("XFS_IOC_DIOINFO");
-> -	} else {
-> -		printf(_("dioattr.mem = 0x%x\n"), dio.d_mem);
-> -		printf(_("dioattr.miniosz = %u\n"), dio.d_miniosz);
-> -		printf(_("dioattr.maxiosz = %u\n"), dio.d_maxiosz);
-> -	}
+> -	/* NOTREACHED */
 > -	return 0;
 > -}
 > -
->  int
->  openfile(
->  	char		*path,
-> @@ -697,58 +605,6 @@ extsize_f(
+> -/* Side effect free 64 bit mod operation */
+> -static inline __u32 xfs_do_mod(void *a, __u32 b, int n)
+> -{
+> -	switch (n) {
+> -		case 4:
+> -			return *(__u32 *)a % b;
+> -		case 8:
+> -			{
+> -			unsigned long __upper, __low, __high, __mod;
+> -			__u64	c = *(__u64 *)a;
+> -			__upper = __high = c >> 32;
+> -			__low = c;
+> -			if (__high) {
+> -				__upper = __high % (b);
+> -				__high = __high / (b);
+> -			}
+> -			asm("divl %2":"=a" (__low), "=d" (__mod):"rm" (b), "0" (__low), "1" (__upper));
+> -			asm("":"=A" (c):"a" (__low),"d" (__high));
+> -			return __mod;
+> -			}
+> -	}
+> -
+> -	/* NOTREACHED */
+> -	return 0;
+> -}
+> -#else
+> -static inline __u32 xfs_do_div(void *a, __u32 b, int n)
+> -{
+> -	__u32	mod;
+> -
+> -	switch (n) {
+> -		case 4:
+> -			mod = *(__u32 *)a % b;
+> -			*(__u32 *)a = *(__u32 *)a / b;
+> -			return mod;
+> -		case 8:
+> -			mod = do_div(*(__u64 *)a, b);
+> -			return mod;
+> -	}
+> -
+> -	/* NOTREACHED */
+> -	return 0;
+> -}
+> -
+>  /* Side effect free 64 bit mod operation */
+>  static inline __u32 xfs_do_mod(void *a, __u32 b, int n)
+>  {
+> @@ -310,10 +228,7 @@ static inline __u32 xfs_do_mod(void *a, __u32 b, int n)
+>  	/* NOTREACHED */
 >  	return 0;
 >  }
+> -#endif
 >  
-> -static int
-> -statfs_f(
-> -	int			argc,
-> -	char			**argv)
-> -{
-> -	struct xfs_fsop_counts	fscounts;
-> -	struct xfs_fsop_geom	fsgeo;
-> -	struct statfs		st;
-> -
-> -	printf(_("fd.path = \"%s\"\n"), file->name);
-> -	if (platform_fstatfs(file->fd, &st) < 0) {
-> -		perror("fstatfs");
-> -	} else {
-> -		printf(_("statfs.f_bsize = %lld\n"), (long long) st.f_bsize);
-> -		printf(_("statfs.f_blocks = %lld\n"), (long long) st.f_blocks);
-> -		printf(_("statfs.f_bavail = %lld\n"), (long long) st.f_bavail);
-> -		printf(_("statfs.f_files = %lld\n"), (long long) st.f_files);
-> -		printf(_("statfs.f_ffree = %lld\n"), (long long) st.f_ffree);
-> -	}
-> -	if (file->flags & IO_FOREIGN)
-> -		return 0;
-> -	if ((xfsctl(file->name, file->fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo)) < 0) {
-> -		perror("XFS_IOC_FSGEOMETRY_V1");
-> -	} else {
-> -		printf(_("geom.bsize = %u\n"), fsgeo.blocksize);
-> -		printf(_("geom.agcount = %u\n"), fsgeo.agcount);
-> -		printf(_("geom.agblocks = %u\n"), fsgeo.agblocks);
-> -		printf(_("geom.datablocks = %llu\n"),
-> -			(unsigned long long) fsgeo.datablocks);
-> -		printf(_("geom.rtblocks = %llu\n"),
-> -			(unsigned long long) fsgeo.rtblocks);
-> -		printf(_("geom.rtextents = %llu\n"),
-> -			(unsigned long long) fsgeo.rtextents);
-> -		printf(_("geom.rtextsize = %u\n"), fsgeo.rtextsize);
-> -		printf(_("geom.sunit = %u\n"), fsgeo.sunit);
-> -		printf(_("geom.swidth = %u\n"), fsgeo.swidth);
-> -	}
-> -	if ((xfsctl(file->name, file->fd, XFS_IOC_FSCOUNTS, &fscounts)) < 0) {
-> -		perror("XFS_IOC_FSCOUNTS");
-> -	} else {
-> -		printf(_("counts.freedata = %llu\n"),
-> -			(unsigned long long) fscounts.freedata);
-> -		printf(_("counts.freertx = %llu\n"),
-> -			(unsigned long long) fscounts.freertx);
-> -		printf(_("counts.freeino = %llu\n"),
-> -			(unsigned long long) fscounts.freeino);
-> -		printf(_("counts.allocino = %llu\n"),
-> -			(unsigned long long) fscounts.allocino);
-> -	}
-> -	return 0;
-> -}
-> -
->  static void
->  inode_help(void)
->  {
-> @@ -920,14 +776,6 @@ open_init(void)
->  	open_cmd.oneline = _("open the file specified by path");
->  	open_cmd.help = open_help;
+> -#undef do_div
+> -#define do_div(a, b)	xfs_do_div(&(a), (b), sizeof(a))
+>  #define do_mod(a, b)	xfs_do_mod(&(a), (b), sizeof(a))
 >  
-> -	stat_cmd.name = "stat";
-> -	stat_cmd.cfunc = stat_f;
-> -	stat_cmd.argmin = 0;
-> -	stat_cmd.argmax = 1;
-> -	stat_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-> -	stat_cmd.args = _("[-v]");
-> -	stat_cmd.oneline = _("statistics on the currently open file");
-> -
->  	close_cmd.name = "close";
->  	close_cmd.altname = "c";
->  	close_cmd.cfunc = close_f;
-> @@ -936,12 +784,6 @@ open_init(void)
->  	close_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK | CMD_FLAG_ONESHOT;
->  	close_cmd.oneline = _("close the current open file");
->  
-> -	statfs_cmd.name = "statfs";
-> -	statfs_cmd.cfunc = statfs_f;
-> -	statfs_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-> -	statfs_cmd.oneline =
-> -		_("statistics on the filesystem of the currently open file");
-> -
->  	chproj_cmd.name = "chproj";
->  	chproj_cmd.cfunc = chproj_f;
->  	chproj_cmd.args = _("[-D | -R] projid");
-> @@ -983,9 +825,7 @@ open_init(void)
->  	inode_cmd.help = inode_help;
->  
->  	add_command(&open_cmd);
-> -	add_command(&stat_cmd);
->  	add_command(&close_cmd);
-> -	add_command(&statfs_cmd);
->  	add_command(&chproj_cmd);
->  	add_command(&lsproj_cmd);
->  	add_command(&extsize_cmd);
-> diff --git a/io/stat.c b/io/stat.c
-> new file mode 100644
-> index 0000000..3ae9903
-> --- /dev/null
-> +++ b/io/stat.c
-> @@ -0,0 +1,189 @@
-> +/*
-> + * Copyright (c) 2003-2005 Silicon Graphics, Inc.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +
-> +#include "command.h"
-> +#include "input.h"
-> +#include "init.h"
-> +#include "io.h"
-> +#include "libxfs.h"
-> +
-> +static cmdinfo_t stat_cmd;
-> +static cmdinfo_t statfs_cmd;
-> +
-> +off64_t
-> +filesize(void)
-> +{
-> +	struct stat	st;
-> +
-> +	if (fstat(file->fd, &st) < 0) {
-> +		perror("fstat");
-> +		return -1;
-> +	}
-> +	return st.st_size;
-> +}
-> +
-> +static char *
-> +filetype(mode_t mode)
-> +{
-> +	switch (mode & S_IFMT) {
-> +	case S_IFSOCK:
-> +		return _("socket");
-> +	case S_IFDIR:
-> +		return _("directory");
-> +	case S_IFCHR:
-> +		return _("char device");
-> +	case S_IFBLK:
-> +		return _("block device");
-> +	case S_IFREG:
-> +		return _("regular file");
-> +	case S_IFLNK:
-> +		return _("symbolic link");
-> +	case S_IFIFO:
-> +		return _("fifo");
-> +	}
-> +	return NULL;
-> +}
-> +
-> +int
-> +stat_f(
-> +	int		argc,
-> +	char		**argv)
-> +{
-> +	struct dioattr	dio;
-> +	struct fsxattr	fsx, fsxa;
-> +	struct stat	st;
-> +	int		verbose = (argc == 2 && !strcmp(argv[1], "-v"));
-> +
-> +	printf(_("fd.path = \"%s\"\n"), file->name);
-> +	printf(_("fd.flags = %s,%s,%s%s%s%s%s\n"),
-> +		file->flags & IO_OSYNC ? _("sync") : _("non-sync"),
-> +		file->flags & IO_DIRECT ? _("direct") : _("non-direct"),
-> +		file->flags & IO_READONLY ? _("read-only") : _("read-write"),
-> +		file->flags & IO_REALTIME ? _(",real-time") : "",
-> +		file->flags & IO_APPEND ? _(",append-only") : "",
-> +		file->flags & IO_NONBLOCK ? _(",non-block") : "",
-> +		file->flags & IO_TMPFILE ? _(",tmpfile") : "");
-> +	if (fstat(file->fd, &st) < 0) {
-> +		perror("fstat");
-> +	} else {
-> +		printf(_("stat.ino = %lld\n"), (long long)st.st_ino);
-> +		printf(_("stat.type = %s\n"), filetype(st.st_mode));
-> +		printf(_("stat.size = %lld\n"), (long long)st.st_size);
-> +		printf(_("stat.blocks = %lld\n"), (long long)st.st_blocks);
-> +		if (verbose) {
-> +			printf(_("stat.atime = %s"), ctime(&st.st_atime));
-> +			printf(_("stat.mtime = %s"), ctime(&st.st_mtime));
-> +			printf(_("stat.ctime = %s"), ctime(&st.st_ctime));
-> +		}
-> +	}
-> +	if (file->flags & IO_FOREIGN)
-> +		return 0;
-> +	if ((xfsctl(file->name, file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0 ||
-> +	    (xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTRA, &fsxa)) < 0) {
-> +		perror("FS_IOC_FSGETXATTR");
-> +	} else {
-> +		printf(_("fsxattr.xflags = 0x%x "), fsx.fsx_xflags);
-> +		printxattr(fsx.fsx_xflags, verbose, 0, file->name, 1, 1);
-> +		printf(_("fsxattr.projid = %u\n"), fsx.fsx_projid);
-> +		printf(_("fsxattr.extsize = %u\n"), fsx.fsx_extsize);
-> +		printf(_("fsxattr.cowextsize = %u\n"), fsx.fsx_cowextsize);
-> +		printf(_("fsxattr.nextents = %u\n"), fsx.fsx_nextents);
-> +		printf(_("fsxattr.naextents = %u\n"), fsxa.fsx_nextents);
-> +	}
-> +	if ((xfsctl(file->name, file->fd, XFS_IOC_DIOINFO, &dio)) < 0) {
-> +		perror("XFS_IOC_DIOINFO");
-> +	} else {
-> +		printf(_("dioattr.mem = 0x%x\n"), dio.d_mem);
-> +		printf(_("dioattr.miniosz = %u\n"), dio.d_miniosz);
-> +		printf(_("dioattr.maxiosz = %u\n"), dio.d_maxiosz);
-> +	}
-> +	return 0;
-> +}
-> +
-> +static int
-> +statfs_f(
-> +	int			argc,
-> +	char			**argv)
-> +{
-> +	struct xfs_fsop_counts	fscounts;
-> +	struct xfs_fsop_geom	fsgeo;
-> +	struct statfs		st;
-> +
-> +	printf(_("fd.path = \"%s\"\n"), file->name);
-> +	if (platform_fstatfs(file->fd, &st) < 0) {
-> +		perror("fstatfs");
-> +	} else {
-> +		printf(_("statfs.f_bsize = %lld\n"), (long long) st.f_bsize);
-> +		printf(_("statfs.f_blocks = %lld\n"), (long long) st.f_blocks);
-> +		printf(_("statfs.f_bavail = %lld\n"), (long long) st.f_bavail);
-> +		printf(_("statfs.f_files = %lld\n"), (long long) st.f_files);
-> +		printf(_("statfs.f_ffree = %lld\n"), (long long) st.f_ffree);
-> +	}
-> +	if (file->flags & IO_FOREIGN)
-> +		return 0;
-> +	if ((xfsctl(file->name, file->fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo)) < 0) {
-> +		perror("XFS_IOC_FSGEOMETRY_V1");
-> +	} else {
-> +		printf(_("geom.bsize = %u\n"), fsgeo.blocksize);
-> +		printf(_("geom.agcount = %u\n"), fsgeo.agcount);
-> +		printf(_("geom.agblocks = %u\n"), fsgeo.agblocks);
-> +		printf(_("geom.datablocks = %llu\n"),
-> +			(unsigned long long) fsgeo.datablocks);
-> +		printf(_("geom.rtblocks = %llu\n"),
-> +			(unsigned long long) fsgeo.rtblocks);
-> +		printf(_("geom.rtextents = %llu\n"),
-> +			(unsigned long long) fsgeo.rtextents);
-> +		printf(_("geom.rtextsize = %u\n"), fsgeo.rtextsize);
-> +		printf(_("geom.sunit = %u\n"), fsgeo.sunit);
-> +		printf(_("geom.swidth = %u\n"), fsgeo.swidth);
-> +	}
-> +	if ((xfsctl(file->name, file->fd, XFS_IOC_FSCOUNTS, &fscounts)) < 0) {
-> +		perror("XFS_IOC_FSCOUNTS");
-> +	} else {
-> +		printf(_("counts.freedata = %llu\n"),
-> +			(unsigned long long) fscounts.freedata);
-> +		printf(_("counts.freertx = %llu\n"),
-> +			(unsigned long long) fscounts.freertx);
-> +		printf(_("counts.freeino = %llu\n"),
-> +			(unsigned long long) fscounts.freeino);
-> +		printf(_("counts.allocino = %llu\n"),
-> +			(unsigned long long) fscounts.allocino);
-> +	}
-> +	return 0;
-> +}
-> +
-> +void
-> +stat_init(void)
-> +{
-> +	stat_cmd.name = "stat";
-> +	stat_cmd.cfunc = stat_f;
-> +	stat_cmd.argmin = 0;
-> +	stat_cmd.argmax = 1;
-> +	stat_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-> +	stat_cmd.args = _("[-v]");
-> +	stat_cmd.oneline = _("statistics on the currently open file");
-> +
-> +	statfs_cmd.name = "statfs";
-> +	statfs_cmd.cfunc = statfs_f;
-> +	statfs_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-> +	statfs_cmd.oneline =
-> +		_("statistics on the filesystem of the currently open file");
-> +
-> +	add_command(&stat_cmd);
-> +	add_command(&statfs_cmd);
-> +}
-> 
+>  static inline __uint64_t roundup_64(__uint64_t x, __uint32_t y)
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
