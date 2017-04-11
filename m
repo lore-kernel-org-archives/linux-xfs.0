@@ -1,87 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53923 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752164AbdDLLEF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Apr 2017 07:04:05 -0400
-Date: Wed, 12 Apr 2017 07:04:04 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] mdrestore: warn about corruption if log is dirty
-Message-ID: <20170412110403.GB6834@bfoster.bfoster>
-References: <20170411141237.9274-1-jtulak@redhat.com>
- <20170411141237.9274-3-jtulak@redhat.com>
- <20170411223405.GC12369@dastard>
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:37110 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752619AbdDKHqM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2017 03:46:12 -0400
+Received: by mail-wm0-f44.google.com with SMTP id u2so54124634wmu.0
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2017 00:46:11 -0700 (PDT)
+Subject: Re: filesystem dead, xfs_repair won't help
+References: <CAF950WLvp7SWnDHU_AY+j3CYtCDWYLdN=AkNZgNB2yU3sVxsJQ@mail.gmail.com>
+ <612a9d5a-9877-405c-ef7c-dc9632a1d8bc@scylladb.com>
+ <20170410153529.GE3991@bfoster.bfoster>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <974df72a-04fe-fba4-4b48-89426b8783e0@scylladb.com>
+Date: Tue, 11 Apr 2017 10:46:07 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170411223405.GC12369@dastard>
+In-Reply-To: <20170410153529.GE3991@bfoster.bfoster>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Apr 12, 2017 at 08:34:05AM +1000, Dave Chinner wrote:
-> On Tue, Apr 11, 2017 at 04:12:37PM +0200, Jan Tulak wrote:
-> > A dirty log in an obfuscated dump means that a corruption can happen
-> > when replaying the log (which contains unobfuscated data). Warn the user
-> > about this possibility.
-> > 
-> > The xlog workaround is copy&paste solution from repair/phase2.c and
-> > other tools, because the function is not implemented in libxlog.
-> > 
-> > Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> 
-> I think this is overkill. mdrestore is not the place
-> to be interpreting the state of the dumped image - it is a basic
-> "restore the image" program, not a "check the validity of the image"
-> program.
-> 
 
-I think that's a reasonable argument for the mdrestore side. I'm less
-interested in seeing a warning on the restore side in general,
-personally. I was initially thinking it would have required less code
-and the whole obfuscation detection thing is getting into hackish
-territory, to be fair.
 
-> Secondly, if people are having problems with running log recovery on
-> a restored obfuscated image and getting corruption and not knowing
-> why or what to do, then that is a /documentation and training/
-> problem, not a code problem.
-> 
-> i.e. the problem is that people who aren't developers are trying to
-> use tools that were written for developers to do forensic analysis
-> of failures. Don't dumb down the tool for clueless users - point the
-> users at the documentation that the tool requires to use correctly...
-> 
+On 04/10/2017 06:35 PM, Brian Foster wrote:
+> On Mon, Apr 10, 2017 at 12:42:33PM +0300, Avi Kivity wrote:
+>> On 04/10/2017 12:23 PM, Avi Kivity wrote:
+>>> Today my kernel complained that in memory metadata is corrupt and
+>>> asked that I run xfs_repair.  But xfs_repair doesn't like the
+>>> superblock and isn't able to find a secondary superblock.
+>>>
+>>> Latest Fedora 25 kernel, new Intel NVMe drive (worked for a few weeks=
 
-Put me in the clueless users bucket, then. This started with a customer
-with a corrupted filesystem that provided a metadump that exhibited
-filesystem corruption. A support person began the process of diagnosing
-the problem and it eventually got to me, who had to spend a nontrivial
-amount of time trying to identify what the problem was, see if I could
-reproduce it on my own to verify it was actually specific to the
-metadump, etc.
+>>> without issue).
+>>>
+>>> Anything I can do to recover the data?
+> Well I can't explain why you have a checksum error, but what do you mea=
+n
+> that xfs_repair doesn't like the superblock? Can you provide the
+> xfs_repair output?
+>
+> It seems strange for xfs_repair to not find the superblock of a
+> filesystem that can otherwise run log recovery up until it encounters
+> the buffer with a bad crc.
 
-This is not an obvious "your metadump is broken" log recovery failure.
-It's a latent directory corruption that doesn't obviously have anything
-to do with log recovery in the first place. I'm sure I'll be able to
-spot it going forward for some time while it's fresh in my mind, but I
-expect to lose track of that eventually given the rarity (of debugging
-log recovery issues). It's not reasonable at all to expect regular users
-or support people to understand this enough to filter out bad images or
-know when to use or not use a certain combination of metadump options,
-because it otherwise requires a detailed understanding of XFS logging
-and directory internals.
+Sorry, should have done it earlier.
 
-Brian
+$ sudo xfs_repair /dev/nvme0n1
+Phase 1 - find and verify superblock...
+couldn't verify primary superblock - not enough secondary superblocks=20
+with matching geometry !!!
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+attempting to find secondary superblock...
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E......................................................................=
+=2E.......................................^C
+
+
+In a previous run, after returning from lunch, xfs_repair did not find=20
+the secondary superblock.
+
+
+The superblock is there though:
+
+$ sudo file -s /dev/nvme0n1
+/dev/nvme0n1: SGI XFS filesystem data (blksz 4096, inosz 512, v2 dirs)
+
+
+I can provide it if it will help.
+
+>
+> It also might be useful to find out exactly what that error reported by=
+
+> smartctl means. Are you aware of whether it pre-existed the filesystem
+> issue or not?
+
+I believe I ran it before and did not notice the error.  I deal with=20
+many disks, though, so it could have been that I just didn't notice it,=20
+or that I ran it on a different machine.
+
+>
+>> Error Information (NVMe Log 0x01, max 64 entries)
+>> Num   ErrCount  SQId   CmdId  Status  PELoc          LBA  NSID    VS
+>>    0          1     1  0x0000  0x0286      -            0     1     -
+>>
+>>
+
+
+If CmdId is the opcode, then it's a flush (matches the fact that LBA=3D0)=
+,=20
+but I'm guessing it's the tag. 0x0286 is NVME_SC_ACCESS_DENIED, which=20
+doesn't appear to match, though (if I picked the right enum).
+
+
+
