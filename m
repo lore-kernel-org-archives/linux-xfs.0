@@ -1,136 +1,249 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26983 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751983AbdDJWr6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 18:47:58 -0400
-Subject: [PATCH 2/4] xfs_db: use iocursor type to guess btree geometry if
- bad magic
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 10 Apr 2017 15:47:53 -0700
-Message-ID: <149186447366.32572.11858750403661352513.stgit@birch.djwong.org>
-In-Reply-To: <149186446125.32572.5134583964816531229.stgit@birch.djwong.org>
-References: <149186446125.32572.5134583964816531229.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58148 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752497AbdDKDZn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 10 Apr 2017 23:25:43 -0400
+Date: Tue, 11 Apr 2017 11:25:41 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH v3] repair: handle reading superblock from image on
+ larger sector size filesystem
+Message-ID: <20170411032541.GO21915@dhcp12-143.nay.redhat.com>
+References: <1491480320-6511-1-git-send-email-zlang@redhat.com>
+ <47d79267-118f-1b27-94e2-bbfcba98cd41@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <47d79267-118f-1b27-94e2-bbfcba98cd41@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Apr 10, 2017 at 12:16:41PM -0500, Eric Sandeen wrote:
+> On 4/6/17 7:05 AM, Zorro Lang wrote:
+> > Due to xfs_repair uses direct IO, sometimes it can't read superblock
+> > from an image file has smaller sector size than host filesystem.
+> > Especially that superblock doesn't align with host filesystem's
+> > sector size.
+> > 
+> > Fortunately, xfsprogs already has code to do isa_file and geometry
+> > check in xfs_repair.c, it turns off O_DIRECT after phase1() if the
+> > sector size is less than the host filesystem's geometry. So move
+> > the isa_file auto detection over up the phase1(), and try to do
+> > once geometry check before phase1() if get_sb() return OK.
+> 
+> Zorro, can you do a quick test for me - does a filesystem which fails
+> repair without this patch also fail xfs_copy if the source and/or
+> destination of the copy is on this same filesystem/device as the image
+> file in your xfs_repair test?
 
-The function block_to_bt plays an integral role in determining the btree
-geometry of a block that we want to manipulate with the debugger.
-Normally we use the block magic to find the geometry profile, but if the
-magic is bad we'll never find it and return NULL.  The callers of this
-function do not check for NULL and crash.
+Sure, the xfs_copy has similar problem. I'm writting a xfstests case to
+do xfs_repair and xfs_copy a file image likes this. Do you have any other
+related suggestions which I can write them together?
 
-Therefore, if we can't find a geometry profile matching the magic
-number, use the iocursor type to guess the profile and scowl about that
-to stdout.  This makes it so that even with a corrupt magic we can try
-to print the fields instead of crashing the debugger.
+About the xfs_copy, the test result likes below:
+[root@ibm-x3850x5-03 test]# xfs_info .
+meta-data=/dev/sdb               isize=512    agcount=4, agsize=960000 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+         =                       reflink=0
+data     =                       bsize=4096   blocks=3840000, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+[root@ibm-x3850x5-03 test]# mount -oloop 078.fs /mnt/tmp
+[root@ibm-x3850x5-03 test]# xfs_info 078.fs
+meta-data=/dev/sdb               isize=512    agcount=4, agsize=960000 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+         =                       reflink=0
+data     =                       bsize=4096   blocks=3840000, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+[root@ibm-x3850x5-03 test]# umount /mnt/tmp
+[root@ibm-x3850x5-03 test]# xfs_repair -f 078.fs
+Phase 1 - find and verify superblock...
+superblock read failed, offset 43014144, size 131072, ag 1, rval -1
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: be less macro-happy and only evaluate hascrc once
----
- db/btblock.c |   52 ++++++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 44 insertions(+), 8 deletions(-)
+fatal error -- Invalid argument
+[root@ibm-x3850x5-03 test]# xfs_copy 078.fs 078.fs.bk
+xfs_copy: read failed: Invalid argument
+xfs_copy: read failed: Invalid argument
+[root@ibm-x3850x5-03 test]# xfs_copy 078.fs /tmp
+xfs_copy: read failed: Invalid argument
+xfs_copy: read failed: Invalid argument
+[root@ibm-x3850x5-03 test]# strace xfs_copy 078.fs 078.fs.img
+...
+...
+open("078.fs", O_RDONLY|O_DIRECT)       = 5
+fstat(5, {st_mode=S_IFREG|0600, st_size=688231424, ...}) = 0
+fstat(5, {st_mode=S_IFREG|0600, st_size=688231424, ...}) = 0
+ioctl(5, _IOC(_IOC_READ, 0x58, 0x1e, 0x0c), 0x7ffd28252c80) = 0
+chdir("/mnt/test")                      = 0
+pread64(5, "XFSB\0\0\4\0\0\0\0\0\0\nA`\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 32768, 0) = 32768
+pread64(5, 0x74c000, 512, 0)            = -1 EINVAL (Invalid argument)
+write(2, "xfs_copy: read failed: Invalid a"..., 40xfs_copy: read failed: Invalid argument
+) = 40
+pread64(5, 0x74d000, 512, 688225792)    = -1 EINVAL (Invalid argument)
+write(2, "xfs_copy: read failed: Invalid a"..., 40xfs_copy: read failed: Invalid argument
+) = 40
+exit_group(1)                           = ?
++++ exited with 1 +++
 
-
-diff --git a/db/btblock.c b/db/btblock.c
-index 835a5f0..e494f3e 100644
---- a/db/btblock.c
-+++ b/db/btblock.c
-@@ -25,6 +25,8 @@
- #include "print.h"
- #include "bit.h"
- #include "init.h"
-+#include "io.h"
-+#include "output.h"
- 
- /*
-  * Definition of the possible btree block layouts.
-@@ -122,13 +124,50 @@ static struct xfs_db_btree *
- block_to_bt(
- 	struct xfs_btree_block	*bb)
- {
--	struct xfs_db_btree *btp = &btrees[0];
-+	struct xfs_db_btree	*btp;
-+	uint32_t		magic;
-+	bool			crc;
-+
-+	magic = be32_to_cpu((bb)->bb_magic);
-+	for (btp = &btrees[0]; btp->magic != 0; btp++)
-+		if (magic == btp->magic)
-+			return btp;
- 
--	do {
--		if (be32_to_cpu((bb)->bb_magic) == btp->magic)
-+	crc = xfs_sb_version_hascrc(&mp->m_sb);
-+	switch (iocur_top->typ->typnm) {
-+	case TYP_BMAPBTA:
-+	case TYP_BMAPBTD:
-+		magic = crc ? XFS_BMAP_CRC_MAGIC : XFS_BMAP_MAGIC;
-+		break;
-+	case TYP_BNOBT:
-+		magic = crc ? XFS_ABTB_CRC_MAGIC : XFS_ABTB_MAGIC;
-+		break;
-+	case TYP_CNTBT:
-+		magic = crc ? XFS_ABTC_CRC_MAGIC : XFS_ABTC_MAGIC;
-+		break;
-+	case TYP_INOBT:
-+		magic = crc ? XFS_IBT_CRC_MAGIC : XFS_IBT_MAGIC;
-+		break;
-+	case TYP_FINOBT:
-+		magic = crc ? XFS_FIBT_CRC_MAGIC : XFS_FIBT_MAGIC;
-+		break;
-+	case TYP_RMAPBT:
-+		magic = crc ? XFS_RMAP_CRC_MAGIC : 0;
-+		break;
-+	case TYP_REFCBT:
-+		magic = crc ? XFS_REFC_CRC_MAGIC : 0;
-+		break;
-+	default:
-+		ASSERT(0);
-+	}
-+
-+	dbprintf(_("Bad btree magic 0x%x; coercing to %s.\n"),
-+		be32_to_cpu((bb)->bb_magic),
-+		iocur_top->typ->name);
-+
-+	for (btp = &btrees[0]; btp->magic != 0; btp++)
-+		if (magic == btp->magic)
- 			return btp;
--		btp++;
--	} while (btp->magic != 0);
- 
- 	return NULL;
- }
-@@ -193,7 +232,6 @@ btblock_key_offset(
- 	int			offset;
- 
- 	ASSERT(startoff == 0);
--	ASSERT(block->bb_level != 0);
- 
- 	offset = bt->block_len + (idx - 1) * bt->key_len;
- 	return bitize(offset);
-@@ -214,7 +252,6 @@ btblock_ptr_offset(
- 	int			maxrecs;
- 
- 	ASSERT(startoff == 0);
--	ASSERT(block->bb_level != 0);
- 
- 	maxrecs = btblock_maxrecs(bt, mp->m_sb.sb_blocksize);
- 	offset = bt->block_len +
-@@ -238,7 +275,6 @@ btblock_rec_offset(
- 	int			offset;
- 
- 	ASSERT(startoff == 0);
--	ASSERT(block->bb_level == 0);
- 
- 	offset = bt->block_len + (idx - 1) * bt->rec_len;
- 	return bitize(offset);
-
+> 
+> Thanks,
+> -Eric
+> 
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > ---
+> > 
+> > Hi,
+> > 
+> > V2 did a stupid change, it tried to check superblock before get_sb(). So
+> > V3 fix this problem by below changes:
+> > 
+> > 1) move the "if (!isa_file)" auto detection over up the phase1().
+> > 2) try to get_sb() before phase1, and check the sector size. Turn
+> >    off the O_DIRECT if the sector size is smaller than the underlying
+> >    filesystem.
+> > 3) The step#2 maybe fail, due to can't get a valid primary superblock.
+> >    So keep the similar steps after phase1(), I didn't remove it.
+> > 
+> > Thanks,
+> > Zorro
+> > 
+> >  repair/xfs_repair.c | 96 ++++++++++++++++++++++++++++++-----------------------
+> >  1 file changed, 54 insertions(+), 42 deletions(-)
+> > 
+> > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> > index b07567b..9df5719 100644
+> > --- a/repair/xfs_repair.c
+> > +++ b/repair/xfs_repair.c
+> > @@ -627,6 +627,42 @@ is_multidisk_filesystem(
+> >  	return true;
+> >  }
+> >  
+> > +/*
+> > + * if the sector size of the filesystem we are trying to repair is
+> > + * smaller than that of the underlying filesystem (i.e. we are repairing
+> > + * an image), the we have to turn off direct IO because we cannot do IO
+> > + * smaller than the host filesystem's sector size.
+> > + */
+> > +static void
+> > +check_geometry_sectsize(
+> > +	struct xfs_sb	*sb)
+> > +{
+> > +	int	fd;
+> > +	long	old_flags;
+> > +	struct xfs_fsop_geom_v1 geom = { 0 };
+> > +
+> > +	if (isa_file) {
+> > +		fd = libxfs_device_to_fd(x.ddev);
+> > +
+> > +		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
+> > +			do_log(_("Cannot get host filesystem geometry.\n"
+> > +		"Repair may fail if there is a sector size mismatch between\n"
+> > +		"the image and the host filesystem.\n"));
+> > +			geom.sectsize = BBSIZE;
+> > +		}
+> > +
+> > +		if (sb->sb_sectsize < geom.sectsize) {
+> > +			old_flags = fcntl(fd, F_GETFL, 0);
+> > +			if (fcntl(fd, F_SETFL, old_flags & ~O_DIRECT) < 0) {
+> > +				do_warn(_(
+> > +		"Sector size on host filesystem larger than image sector size.\n"
+> > +		"Cannot turn off direct IO, so exiting.\n"));
+> > +				exit(1);
+> > +			}
+> > +		}
+> > +	}
+> > +}
+> > +
+> >  int
+> >  main(int argc, char **argv)
+> >  {
+> > @@ -657,6 +693,23 @@ main(int argc, char **argv)
+> >  	timestamp(PHASE_START, 0, NULL);
+> >  	timestamp(PHASE_END, 0, NULL);
+> >  
+> > +	/* -f forces this, but let's be nice and autodetect it, as well. */
+> > +	if (!isa_file) {
+> > +		int		fd = libxfs_device_to_fd(x.ddev);
+> > +		struct stat	statbuf;
+> > +
+> > +		if (fstat(fd, &statbuf) < 0)
+> > +			do_warn(_("%s: couldn't stat \"%s\"\n"),
+> > +				progname, fs_name);
+> > +		else if (S_ISREG(statbuf.st_mode))
+> > +			isa_file = 1;
+> > +	}
+> > +
+> > +	rval = get_sb(&psb, 0, XFS_MAX_SECTORSIZE, 0);
+> > +	if (rval == XR_OK) {
+> > +		check_geometry_sectsize(&psb);
+> > +	}
+> > +
+> >  	/* do phase1 to make sure we have a superblock */
+> >  	phase1(temp_mp);
+> >  	timestamp(PHASE_END, 1, NULL);
+> > @@ -674,48 +727,7 @@ main(int argc, char **argv)
+> >  			  "Exiting now.\n"));
+> >  		exit(1);
+> >  	}
+> > -
+> > -	/* -f forces this, but let's be nice and autodetect it, as well. */
+> > -	if (!isa_file) {
+> > -		int		fd = libxfs_device_to_fd(x.ddev);
+> > -		struct stat	statbuf;
+> > -
+> > -		if (fstat(fd, &statbuf) < 0)
+> > -			do_warn(_("%s: couldn't stat \"%s\"\n"),
+> > -				progname, fs_name);
+> > -		else if (S_ISREG(statbuf.st_mode))
+> > -			isa_file = 1;
+> > -	}
+> > -
+> > -	/*
+> > -	 * if the sector size of the filesystem we are trying to repair is
+> > -	 * smaller than that of the underlying filesystem (i.e. we are repairing
+> > -	 * an image), the we have to turn off direct IO because we cannot do IO
+> > -	 * smaller than the host filesystem's sector size.
+> > -	 */
+> > -	if (isa_file) {
+> > -		int     fd = libxfs_device_to_fd(x.ddev);
+> > -		struct xfs_fsop_geom_v1 geom = { 0 };
+> > -
+> > -		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
+> > -			do_log(_("Cannot get host filesystem geometry.\n"
+> > -		"Repair may fail if there is a sector size mismatch between\n"
+> > -		"the image and the host filesystem.\n"));
+> > -			geom.sectsize = BBSIZE;
+> > -		}
+> > -
+> > -		if (psb.sb_sectsize < geom.sectsize) {
+> > -			long	old_flags;
+> > -
+> > -			old_flags = fcntl(fd, F_GETFL, 0);
+> > -			if (fcntl(fd, F_SETFL, old_flags & ~O_DIRECT) < 0) {
+> > -				do_warn(_(
+> > -		"Sector size on host filesystem larger than image sector size.\n"
+> > -		"Cannot turn off direct IO, so exiting.\n"));
+> > -				exit(1);
+> > -			}
+> > -		}
+> > -	}
+> > +	check_geometry_sectsize(&psb);
+> >  
+> >  	/*
+> >  	 * Prepare the mount structure. Point the log reference to our local
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
