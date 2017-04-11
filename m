@@ -1,130 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35984 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751921AbdDLKad (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 06:30:33 -0400
-Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cyFXk-0004kA-7X
-        for linux-xfs@vger.kernel.org; Wed, 12 Apr 2017 10:30:32 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 6/6] xfs: remove bmap block allocation retries
-Date: Wed, 12 Apr 2017 12:30:13 +0200
-Message-Id: <20170412103013.9355-7-hch@lst.de>
-In-Reply-To: <20170412103013.9355-1-hch@lst.de>
-References: <20170412103013.9355-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:51284 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753631AbdDKO0s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Apr 2017 10:26:48 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 6/9] nowait aio: ext4
+Date: Tue, 11 Apr 2017 09:26:16 -0500
+Message-Id: <20170411142619.27205-7-rgoldwyn@suse.de>
+In-Reply-To: <20170411142619.27205-1-rgoldwyn@suse.de>
+References: <20170411142619.27205-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Now that reflink operations don't set the firstblock value we don't
-need the workarounds for non-NULL firstblock values without a prior
-allocation.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Return EAGAIN if any of the following checks fail for direct I/O:
+  + i_rwsem is lockable
+  + Writing beyond end of file (will trigger allocation)
+  + Blocks are not allocated at the write location
+
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c       | 29 -----------------------------
- fs/xfs/libxfs/xfs_bmap_btree.c | 17 -----------------
- 2 files changed, 46 deletions(-)
+ fs/ext4/file.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9f55e5185d56..7f42f6067eb5 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -764,7 +764,6 @@ xfs_bmap_extents_to_btree(
- 		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
- 	} else if (dfops->dop_low) {
- 		args.type = XFS_ALLOCTYPE_START_BNO;
--try_another_ag:
- 		args.fsbno = *firstblock;
- 	} else {
- 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
-@@ -779,20 +778,6 @@ xfs_bmap_extents_to_btree(
- 		return error;
- 	}
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index cefa9835f275..2efdc6d4d3e8 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -216,7 +216,13 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 		return ext4_dax_write_iter(iocb, from);
+ #endif
  
--	/*
--	 * During a CoW operation, the allocation and bmbt updates occur in
--	 * different transactions.  The mapping code tries to put new bmbt
--	 * blocks near extents being mapped, but the only way to guarantee this
--	 * is if the alloc and the mapping happen in a single transaction that
--	 * has a block reservation.  That isn't the case here, so if we run out
--	 * of space we'll try again with another AG.
--	 */
--	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
--	    args.fsbno == NULLFSBLOCK &&
--	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
--		args.type = XFS_ALLOCTYPE_FIRST_AG;
--		goto try_another_ag;
--	}
- 	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
- 		xfs_iroot_realloc(ip, -1, whichfork);
- 		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-@@ -925,7 +910,6 @@ xfs_bmap_local_to_extents(
- 	 * file currently fits in an inode.
- 	 */
- 	if (*firstblock == NULLFSBLOCK) {
--try_another_ag:
- 		args.fsbno = XFS_INO_TO_FSB(args.mp, ip->i_ino);
- 		args.type = XFS_ALLOCTYPE_START_BNO;
- 	} else {
-@@ -938,19 +922,6 @@ xfs_bmap_local_to_extents(
- 	if (error)
- 		goto done;
+-	inode_lock(inode);
++	if (iocb->ki_flags & IOCB_NOWAIT) {
++		if (!inode_trylock(inode))
++			return -EAGAIN;
++	} else {
++		inode_lock(inode);
++	}
++
+ 	ret = ext4_write_checks(iocb, from);
+ 	if (ret <= 0)
+ 		goto out;
+@@ -235,9 +241,15 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
  
--	/*
--	 * During a CoW operation, the allocation and bmbt updates occur in
--	 * different transactions.  The mapping code tries to put new bmbt
--	 * blocks near extents being mapped, but the only way to guarantee this
--	 * is if the alloc and the mapping happen in a single transaction that
--	 * has a block reservation.  That isn't the case here, so if we run out
--	 * of space we'll try again with another AG.
--	 */
--	if (xfs_sb_version_hasreflink(&ip->i_mount->m_sb) &&
--	    args.fsbno == NULLFSBLOCK &&
--	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
--		goto try_another_ag;
--	}
- 	/* Can't fail, the space was reserved. */
- 	ASSERT(args.fsbno != NULLFSBLOCK);
- 	ASSERT(args.len == 1);
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index fd55db479385..3e17ceda038c 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -448,7 +448,6 @@ xfs_bmbt_alloc_block(
- 	if (args.fsbno == NULLFSBLOCK) {
- 		args.fsbno = be64_to_cpu(start->l);
- 		args.type = XFS_ALLOCTYPE_START_BNO;
--try_another_ag:
- 		/*
- 		 * Make sure there is sufficient room left in the AG to
- 		 * complete a full tree split for an extent insert.  If
-@@ -477,22 +476,6 @@ xfs_bmbt_alloc_block(
- 	if (error)
- 		goto error0;
+ 	iocb->private = &overwrite;
+ 	/* Check whether we do a DIO overwrite or not */
+-	if (o_direct && ext4_should_dioread_nolock(inode) && !unaligned_aio &&
+-	    ext4_overwrite_io(inode, iocb->ki_pos, iov_iter_count(from)))
+-		overwrite = 1;
++	if (o_direct && !unaligned_aio) {
++		if (ext4_overwrite_io(inode, iocb->ki_pos, iov_iter_count(from))) {
++			if (ext4_should_dioread_nolock(inode))
++				overwrite = 1;
++		} else if (iocb->ki_flags & IOCB_NOWAIT) {
++			ret = -EAGAIN;
++			goto out;
++		}
++	}
  
--	/*
--	 * During a CoW operation, the allocation and bmbt updates occur in
--	 * different transactions.  The mapping code tries to put new bmbt
--	 * blocks near extents being mapped, but the only way to guarantee this
--	 * is if the alloc and the mapping happen in a single transaction that
--	 * has a block reservation.  That isn't the case here, so if we run out
--	 * of space we'll try again with another AG.
--	 */
--	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
--	    args.fsbno == NULLFSBLOCK &&
--	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
--		args.fsbno = cur->bc_private.b.firstblock;
--		args.type = XFS_ALLOCTYPE_FIRST_AG;
--		goto try_another_ag;
--	}
--
- 	if (args.fsbno == NULLFSBLOCK && args.minleft) {
- 		/*
- 		 * Could not find an AG with enough free space to satisfy
+ 	ret = __generic_file_write_iter(iocb, from);
+ 	inode_unlock(inode);
 -- 
-2.11.0
+2.12.0
 
