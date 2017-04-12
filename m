@@ -1,53 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53430 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2998769AbdDZK4E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 Apr 2017 06:56:04 -0400
-Date: Wed, 26 Apr 2017 12:55:56 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Reviewing determinism of xfs_reclaim_inodes_ag()
-Message-ID: <20170426105556.GA24825@quack2.suse.cz>
-References: <20170425082503.GN28800@wotan.suse.de>
- <20170426000426.GK12369@dastard>
- <20170426091206.GA28800@wotan.suse.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:47023 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752010AbdDLGHj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 02:07:39 -0400
+Date: Tue, 11 Apr 2017 23:07:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_db: set buf flag for inode or dqblk with "type"
+Message-ID: <20170412060730.GJ8502@birch.djwong.org>
+References: <20170411225334.GE8502@birch.djwong.org>
+ <d7c0fbec-5229-3d69-a435-a68e76ada593@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170426091206.GA28800@wotan.suse.de>
+In-Reply-To: <d7c0fbec-5229-3d69-a435-a68e76ada593@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Nikolay Borisov <nborisov@suse.com>, Jan Kara <jack@suse.cz>, Michal Hocko <mhocko@suse.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Wed 26-04-17 11:12:06, Luis R. Rodriguez wrote:
-> On Wed, Apr 26, 2017 at 10:04:26AM +1000, Dave Chinner wrote:
-> > On Tue, Apr 25, 2017 at 10:25:03AM +0200, Luis R. Rodriguez wrote:
-> > > I checked with Jan Kara and he believes the current code is correct but that
-> > > its the comment that that may be misleading. As per Jan the race is between
-> > > getting an inode reclaimed and grabbing it. Ie, XFS frees the inodes by RCU.
-> > > However it doesn't actually *reuse* the inode until RCU period passes
-> > > (unlike inodes allocated from slab with SLAB_RCU can be). So it can happen
-> > 
-> > ..... I initially tried using SLAB_DESTROY_BY_RCU which meant the
-> > RCU grace period did not prevent reallocation of inodes that had
-> > been freed. Hence this check was (once) necessary to prevent the
-> > reclaim index going whacky on a reallocated inode.
+On Tue, Apr 11, 2017 at 10:54:15PM -0500, Eric Sandeen wrote:
+> Currently, setting "type" to inode or dqblk does not
+> appropriately set the buffer type flags for these
+> types.  i.e.:
 > 
-> Alright this helps, but why does *having* the RCU grace period prevent
-> such type of race ? I can see it helping but removing completely such
-> a race as a possibility ?
+> xfs_db> inode 128
+> 
+> sets ino_buf, but
+> 
+> xfs_db> convert inode 128 fsblock
+> 0x10 (16)
+> xfs_db> fsblock 16
+> xfs_db> type inode
+> 
+> does not.  This is apparent if we try to use "type" to
+> switch to an inode or dqblk, then try to use "write -d"
+> which tests these flags.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/db/io.c b/db/io.c
+> index 9918a51..d78fc66 100644
+> --- a/db/io.c
+> +++ b/db/io.c
+> @@ -617,6 +617,13 @@ set_iocur_type(
+>  	struct xfs_buf	*bp = iocur_top->bp;
+>  
+>  	iocur_top->typ = t;
+> +	iocur_top->ino_buf = 0;
+> +	iocur_top->dquot_buf  = 0;
 
-Well, if the inode is freed only after RCU period expires and we are doing
-xfs_reclaim_inode_grab() under rcu_read_lock - which we are - then this
-surely prevents us from seeing inode reallocated. What are you missing?
+Extra spaces.
 
-> Also, just so I understand I am following, this then implicates our
-> reclaim rate is directly linked to the RCU grace period ?
+> +
+> +	if (t->typnm == TYP_INODE)
+> +		iocur_top->ino_buf = 1;
+> +	else if (t->typnm == TYP_DQBLK)
+> +		iocur_top->dquot_buf = 1;
 
-Yes, as for any RCU-freed object...
+iocur_top->dquot_buf = (t->typnm == TYP_DQBLK); ?
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+--D
+
+>  
+>  	/* verify the buffer if the type has one. */
+>  	if (!bp)
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
