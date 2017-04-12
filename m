@@ -1,154 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35998 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752069AbdDLC6p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Apr 2017 22:58:45 -0400
-Subject: Re: [PATCH] xfs_db: allow write -d to inodes
-References: <20170411225334.GE8502@birch.djwong.org>
- <0bdbeabb-f632-b5d3-4400-a8aedf590013@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5a8a9a91-cf57-5077-3f86-ca5830e52ebd@sandeen.net>
-Date: Tue, 11 Apr 2017 21:58:44 -0500
-MIME-Version: 1.0
-In-Reply-To: <0bdbeabb-f632-b5d3-4400-a8aedf590013@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Received: from bombadil.infradead.org ([65.50.211.133]:35984 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751921AbdDLKad (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 06:30:33 -0400
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1cyFXk-0004kA-7X
+        for linux-xfs@vger.kernel.org; Wed, 12 Apr 2017 10:30:32 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 6/6] xfs: remove bmap block allocation retries
+Date: Wed, 12 Apr 2017 12:30:13 +0200
+Message-Id: <20170412103013.9355-7-hch@lst.de>
+In-Reply-To: <20170412103013.9355-1-hch@lst.de>
+References: <20170412103013.9355-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On 4/11/17 9:09 PM, Eric Sandeen wrote:
-> On 4/11/17 5:53 PM, Darrick J. Wong wrote:
->> From: Darrick J. Wong <darrick.wong@oracle.com>
->>
->> Add a helper function to xfs_db so that we can recalculate the CRC of an
->> inode whose field we just wrote.  This enables us to write arbitrary
->> values with a good CRC for the purpose of checking the read verifiers on
->> a v5 filesystem.  Mention this newfound ability in the manpage.
-> 
-> -d isn't new, so I'd really rather have a patch to document the existing
-> behavior, followed by a patch to extend it to inodes.
-> 
-> There are actually several structures for which -d still won't work, so
-> it would be good if that fact were documented - reading "including
-> inodes" may leave some heads scratching.
-> 
-> Let me ruminate on the inode crc writing, I have this nagging feeling
-> that there's an easier generic way to handle these structures,
-> ...but I'm probably wrong.
+Now that reflink operations don't set the firstblock value we don't
+need the workarounds for non-NULL firstblock values without a prior
+allocation.
 
-I don't know where I was going with that idea.  :/
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c       | 29 -----------------------------
+ fs/xfs/libxfs/xfs_bmap_btree.c | 17 -----------------
+ 2 files changed, 46 deletions(-)
 
-I can split this up into a manpage patch and an inode crc patch on
-the way in if you'd like.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 9f55e5185d56..7f42f6067eb5 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -764,7 +764,6 @@ xfs_bmap_extents_to_btree(
+ 		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
+ 	} else if (dfops->dop_low) {
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
+-try_another_ag:
+ 		args.fsbno = *firstblock;
+ 	} else {
+ 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+@@ -779,20 +778,6 @@ xfs_bmap_extents_to_btree(
+ 		return error;
+ 	}
+ 
+-	/*
+-	 * During a CoW operation, the allocation and bmbt updates occur in
+-	 * different transactions.  The mapping code tries to put new bmbt
+-	 * blocks near extents being mapped, but the only way to guarantee this
+-	 * is if the alloc and the mapping happen in a single transaction that
+-	 * has a block reservation.  That isn't the case here, so if we run out
+-	 * of space we'll try again with another AG.
+-	 */
+-	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
+-	    args.fsbno == NULLFSBLOCK &&
+-	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
+-		args.type = XFS_ALLOCTYPE_FIRST_AG;
+-		goto try_another_ag;
+-	}
+ 	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
+ 		xfs_iroot_realloc(ip, -1, whichfork);
+ 		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+@@ -925,7 +910,6 @@ xfs_bmap_local_to_extents(
+ 	 * file currently fits in an inode.
+ 	 */
+ 	if (*firstblock == NULLFSBLOCK) {
+-try_another_ag:
+ 		args.fsbno = XFS_INO_TO_FSB(args.mp, ip->i_ino);
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
+ 	} else {
+@@ -938,19 +922,6 @@ xfs_bmap_local_to_extents(
+ 	if (error)
+ 		goto done;
+ 
+-	/*
+-	 * During a CoW operation, the allocation and bmbt updates occur in
+-	 * different transactions.  The mapping code tries to put new bmbt
+-	 * blocks near extents being mapped, but the only way to guarantee this
+-	 * is if the alloc and the mapping happen in a single transaction that
+-	 * has a block reservation.  That isn't the case here, so if we run out
+-	 * of space we'll try again with another AG.
+-	 */
+-	if (xfs_sb_version_hasreflink(&ip->i_mount->m_sb) &&
+-	    args.fsbno == NULLFSBLOCK &&
+-	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
+-		goto try_another_ag;
+-	}
+ 	/* Can't fail, the space was reserved. */
+ 	ASSERT(args.fsbno != NULLFSBLOCK);
+ 	ASSERT(args.len == 1);
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index fd55db479385..3e17ceda038c 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -448,7 +448,6 @@ xfs_bmbt_alloc_block(
+ 	if (args.fsbno == NULLFSBLOCK) {
+ 		args.fsbno = be64_to_cpu(start->l);
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
+-try_another_ag:
+ 		/*
+ 		 * Make sure there is sufficient room left in the AG to
+ 		 * complete a full tree split for an extent insert.  If
+@@ -477,22 +476,6 @@ xfs_bmbt_alloc_block(
+ 	if (error)
+ 		goto error0;
+ 
+-	/*
+-	 * During a CoW operation, the allocation and bmbt updates occur in
+-	 * different transactions.  The mapping code tries to put new bmbt
+-	 * blocks near extents being mapped, but the only way to guarantee this
+-	 * is if the alloc and the mapping happen in a single transaction that
+-	 * has a block reservation.  That isn't the case here, so if we run out
+-	 * of space we'll try again with another AG.
+-	 */
+-	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
+-	    args.fsbno == NULLFSBLOCK &&
+-	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
+-		args.fsbno = cur->bc_private.b.firstblock;
+-		args.type = XFS_ALLOCTYPE_FIRST_AG;
+-		goto try_another_ag;
+-	}
+-
+ 	if (args.fsbno == NULLFSBLOCK && args.minleft) {
+ 		/*
+ 		 * Could not find an AG with enough free space to satisfy
+-- 
+2.11.0
 
-For the content as-is, 
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
--Eric
-
-> Thanks,
-> -Eric
-> 
->> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->> ---
->>  db/io.c           |   11 +++++++++++
->>  db/io.h           |    1 +
->>  db/write.c        |    7 ++++++-
->>  man/man8/xfs_db.8 |    7 ++++++-
->>  4 files changed, 24 insertions(+), 2 deletions(-)
->>
->> diff --git a/db/io.c b/db/io.c
->> index f398195..67ed5f9 100644
->> --- a/db/io.c
->> +++ b/db/io.c
->> @@ -465,6 +465,17 @@ xfs_dummy_verify(
->>  }
->>  
->>  void
->> +xfs_verify_recalc_inode_crc(
->> +	struct xfs_buf *bp)
->> +{
->> +	ASSERT(iocur_top->ino_buf);
->> +	ASSERT(iocur_top->bp == bp);
->> +
->> +	libxfs_dinode_calc_crc(mp, iocur_top->data);
->> +	iocur_top->ino_crc_ok = 1;
->> +}
->> +
->> +void
->>  xfs_verify_recalc_crc(
->>  	struct xfs_buf *bp)
->>  {
->> diff --git a/db/io.h b/db/io.h
->> index c69e9ce..12d96c2 100644
->> --- a/db/io.h
->> +++ b/db/io.h
->> @@ -64,6 +64,7 @@ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
->>  extern void     ring_add(void);
->>  extern void	set_iocur_type(const struct typ *t);
->>  extern void	xfs_dummy_verify(struct xfs_buf *bp);
->> +extern void	xfs_verify_recalc_inode_crc(struct xfs_buf *bp);
->>  extern void	xfs_verify_recalc_crc(struct xfs_buf *bp);
->>  
->>  /*
->> diff --git a/db/write.c b/db/write.c
->> index 5c83874..70c9865 100644
->> --- a/db/write.c
->> +++ b/db/write.c
->> @@ -137,7 +137,9 @@ write_f(
->>  		return 0;
->>  	}
->>  
->> -	if (invalid_data && iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF) {
->> +	if (invalid_data &&
->> +	    iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF &&
->> +	    !iocur_top->ino_buf) {
->>  		dbprintf(_("Cannot recalculate CRCs on this type of object\n"));
->>  		return 0;
->>  	}
->> @@ -164,6 +166,9 @@ write_f(
->>  	if (corrupt) {
->>  		local_ops.verify_write = xfs_dummy_verify;
->>  		dbprintf(_("Allowing write of corrupted data and bad CRC\n"));
->> +	} else if (iocur_top->ino_buf) {
->> +		local_ops.verify_write = xfs_verify_recalc_inode_crc;
->> +		dbprintf(_("Allowing write of corrupted inode with good CRC\n"));
->>  	} else { /* invalid data */
->>  		local_ops.verify_write = xfs_verify_recalc_crc;
->>  		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
->> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
->> index 460d89d..b1c341d 100644
->> --- a/man/man8/xfs_db.8
->> +++ b/man/man8/xfs_db.8
->> @@ -755,7 +755,7 @@ and
->>  bits respectively, and their string equivalent reported
->>  (but no modifications are made).
->>  .TP
->> -.BI "write [\-c] [" "field value" "] ..."
->> +.BI "write [\-c] [\-d] [" "field value" "] ..."
->>  Write a value to disk.
->>  Specific fields can be set in structures (struct mode),
->>  or a block can be set to data values (data mode),
->> @@ -778,6 +778,11 @@ with no arguments gives more information on the allowed commands.
->>  .B \-c
->>  Skip write verifiers and CRC recalculation; allows invalid data to be written
->>  to disk.
->> +.TP 0.4i
->> +.B \-d
->> +Skip write verifiers but perform CRC recalculation.
->> +This allows invalid data, including inodes, to be written to disk to
->> +test detection of invalid data.
->>  .RE
->>  .SH TYPES
->>  This section gives the fields in each structure type and their meanings.
->>
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
