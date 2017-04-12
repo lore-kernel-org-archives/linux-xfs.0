@@ -1,131 +1,199 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51149 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:31381 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752206AbdDMWMY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2017 18:12:24 -0400
-Date: Thu, 13 Apr 2017 15:12:19 -0700
+        with ESMTP id S1751647AbdDLWJs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 18:09:48 -0400
+Date: Wed, 12 Apr 2017 15:09:40 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: handle array index overrun in
- xfs_dir2_leaf_readbuf()
-Message-ID: <20170413221219.GA8502@birch.djwong.org>
-References: <9d5a5529-894d-bacd-501e-e0d9ece473b8@redhat.com>
+Subject: Re: Question about large file fragmentation.
+Message-ID: <20170412220940.GC5109@birch.djwong.org>
+References: <CALRRBv8169Y7r9BCX8Hsye9YAZVQGFHX2yoiYw5-=XLBKMN9nA@mail.gmail.com>
+ <20170407162917.GH4864@birch.djwong.org>
+ <CALRRBv_WD=tVCq4o0At43ZBP+JQnLNTYeGBy3R3Z5_RX84G3iQ@mail.gmail.com>
+ <20170410222305.GQ4874@birch.djwong.org>
+ <CALRRBv8hYTL7DJMqv4stwZHirSb=9cKYn8DEW0UOQbY4YMNj=g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9d5a5529-894d-bacd-501e-e0d9ece473b8@redhat.com>
+In-Reply-To: <CALRRBv8hYTL7DJMqv4stwZHirSb=9cKYn8DEW0UOQbY4YMNj=g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Carlos Maiolino <cmaiolin@redhat.com>
+To: Arkadiusz <arek2407066@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Apr 13, 2017 at 01:45:43PM -0500, Eric Sandeen wrote:
-> Carlos had a case where "find" seemed to start spinning
-> forever and never return.
-> 
-> This was on a filesystem with non-default multi-fsb (8k)
-> directory blocks, and a fragmented directory with extents
-> like this:
-> 
-> 0:[0,133646,2,0]
-> 1:[2,195888,1,0]
-> 2:[3,195890,1,0]
-> 3:[4,195892,1,0]
-> 4:[5,195894,1,0]
-> 5:[6,195896,1,0]
-> 6:[7,195898,1,0]
-> 7:[8,195900,1,0]
-> 8:[9,195902,1,0]
-> 9:[10,195908,1,0]
-> 10:[11,195910,1,0]
-> 11:[12,195912,1,0]
-> 12:[13,195914,1,0]
-> ...
-> 
-> i.e. the first extent is a contiguous 2-fsb dir block, but
-> after that it is fragmented into 1 block extents.
-> 
-> At the top of the readdir path, we allocate a mapping array
-> which (for this filesystem geometry) can hold 10 extents; see
-> the assignment to map_info->map_size.  During readdir, we are
-> therefore able to map extents 0 through 9 above into the array
-> for readahead purposes.  If we count by 2, we see that the last
-> mapped index (9) is the first block of a 2-fsb directory block.
-> 
-> At the end of xfs_dir2_leaf_readbuf() we have 2 loops to fill
-> more readahead; the outer loop assumes one full dir block is
-> processed each loop iteration, and an inner loop that ensures
-> that this is so by advancing to the next extent until a full
-> directory block is mapped.
-> 
-> The problem is that this inner loop may step past the last
-> extent in the mapping array as it tries to reach the end of
-> the directory block.  This will read garbage for the extent
-> length, and as a result the loop control variable 'j' may
-> become corrupted and never fail the loop conditional.
-> 
-> The number of valid mappings we have in our array is stored
-> in map->map_valid, so stop this inner loop based on that limit.
-> 
-> There is an ASSERT at the top of the outer loop for this
-> same condition, but we never made it out of the inner loop,
-> so the ASSERT never fired.
-> 
-> Huge appreciation for Carlos for debugging and isolating
-> the problem.
-> 
-> Debugged-and-analyzed-by: Carlos Maiolino <cmaiolin@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> 
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index ad9396e..c45de72 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -394,6 +394,7 @@ struct xfs_dir2_leaf_map_info {
->  
->  	/*
->  	 * Do we need more readahead?
-> +	 * Each loop tries to process 1 full dir blk; last may be partial.
->  	 */
->  	blk_start_plug(&plug);
->  	for (mip->ra_index = mip->ra_offset = i = 0;
-> @@ -425,9 +426,14 @@ struct xfs_dir2_leaf_map_info {
->  		}
->  
->  		/*
-> -		 * Advance offset through the mapping table.
-> +		 * Advance offset through the mapping table, processing a full
-> +		 * dir block even if it is fragmented into several extents.
-> +		 * But stop if we have consumed all valid mappings, even if
-> +		 * it's not yet a full directory block.
->  		 */
-> -		for (j = 0; j < geo->fsbcount; j += length ) {
-> +		for (j = 0;
-> +		     j < geo->fsbcount && mip->ra_index < mip->map_valid;
-> +		     j += length ) {
+On Tue, Apr 11, 2017 at 05:54:40AM +0200, Arkadiusz wrote:
+> Thank you for explanation. I though that it is possible to write only
+> extents since I don't care about the data. As I understand correctly
+> currently there is no possibility to do that?
 
-Seems ok for a bug fix, but /me wonders if it's worth all the loopy
-effort if ultimately _dabuf_map can sort through compound (i.e. non
-contiguous) directory blocks, which means that we could just
-_dir3_data_readahead(dabno + i, -1) until we've scheduled readahead on
-32k worth of da blocks.  We've already got the extents loaded, so it
-ought to be safe to bmapi_read...
-
-<shrug>  Well now that there's a test I have something to keep the CPUs
-warm for a while...
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Correct.
 
 --D
 
->  			/*
->  			 * The rest of this extent but not more than a dir
->  			 * block.
 > 
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> On Tue, Apr 11, 2017 at 12:23 AM, Darrick J. Wong
+> <darrick.wong@oracle.com> wrote:
+> > On Mon, Apr 10, 2017 at 08:12:19AM +0200, Arkadiusz wrote:
+> >> I know that the flag means "0010000 Unwritten preallocated extent" but
+> >> is there any way to allocate extents fast without filling whole file
+> >> with data?
+> >
+> > Nope.  I wonder if fallocate(ZERO_RANGE) could be taught to issue a
+> > zeroing discard before ensuring that all the extents are marked as
+> > written?
+> >
+> > (Ask the list, see what people say.)
+> >
+> > --D
+> >
+> >>
+> >> On Fri, Apr 7, 2017 at 6:29 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >> > On Fri, Apr 07, 2017 at 02:52:01PM +0200, Arkadiusz wrote:
+> >> >> Dear maintainers,
+> >> >> I have a question about large file fragmentation.
+> >> >>
+> >> >> When I create large file (20G) on XFS by filling it with zeros. For example:
+> >> >> dd if=/dev/zero of=lun bs=512 count=41873408
+> >> >>
+> >> >> The bitmap looks as follows:
+> >> >>
+> >> >> xfs_bmap -vp lun
+> >> >> lun:
+> >> >>  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
+> >> >>   TOTAL FLAGS
+> >> >>    0: [0..8388479]:         112..8388591        0 (112..8388591)
+> >> >> 8388480 00000
+> >> >>    1: [8388480..16777087]:  10485824..18874431  1 (64..8388671)
+> >> >> 8388608 00000
+> >> >>    2: [16777088..25165695]: 20992064..29380671  2 (20544..8409151)
+> >> >> 8388608 00000
+> >> >>    3: [25165696..35651383]: 31457344..41943031  3 (64..10485751)
+> >> >> 10485688 00000
+> >> >>    4: [35651384..37748551]: 8388592..10485759   0 (8388592..10485759)
+> >> >> 2097168 00000
+> >> >>    5: [37748552..39845631]: 18874432..20971511  1 (8388672..10485751)
+> >> >> 2097080 00000
+> >> >>    6: [39845632..41873407]: 29380672..31408447  2 (8409152..10436927)
+> >> >> 2027776 00000
+> >> >>
+> >> >> When I use this file for iSCSI file I/O and then I fill whole volume
+> >> >> from the initiator side with random data. The bitmap doesn't change.
+> >> >>
+> >> >> However, when I create file of the same size using fallocate:
+> >> >> fallocate -l 21439184896 lun
+> >> >> the bitmap at the beginning looks as follows:
+> >> >> xfs_bmap -vp lun
+> >> >> lun:
+> >> >>  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
+> >> >> TOTAL FLAGS
+> >> >>    0: [0..10485647]:        112..10485759       0 (112..10485759)
+> >> >> 10485648 10000
+> >> >>    1: [10485648..10485655]: 104..111            0 (104..111)
+> >> >>     8 10000
+> >> >>    2: [10485656..20971351]: 10485824..20971519  1 (64..10485759)
+> >> >> 10485696 10000
+> >> >>    3: [20971352..31436559]: 20992064..31457271  2 (20544..10485751)
+> >> >> 10465208 10000
+> >> >>    4: [31436560..41873407]: 31457344..41894191  3 (64..10436911)
+> >> >> 10436848 10000
+> >> >>
+> >> >> but when I write some data from the initiator side the extents count grows:
+> >> >> xfs_bmap -vp lun
+> >> >> lun:
+> >> >>  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
+> >> >>    TOTAL FLAGS
+> >> >>    0: [0..7]:               112..119            0 (112..119)
+> >> >>        8 00000
+> >> >>    1: [8..2047]:            120..2159           0 (120..2159)
+> >> >>     2040 10000
+> >> >
+> >> > Have a look at "xfs_bmap -vvp lun" for the flags output. ;)
+> >> >
+> >> > --D
+> >> >
+> >> >>    2: [2048..365807]:       2160..365919        0 (2160..365919)
+> >> >>   363760 00000
+> >> >>    3: [365808..406727]:     365920..406839      0 (365920..406839)
+> >> >>    40920 10000
+> >> >>    4: [406728..506487]:     406840..506599      0 (406840..506599)
+> >> >>    99760 00000
+> >> >>    5: [506488..514071]:     506600..514183      0 (506600..514183)
+> >> >>     7584 10000
+> >> >>    6: [514072..514079]:     514184..514191      0 (514184..514191)
+> >> >>        8 00000
+> >> >>    7: [514080..524495]:     514192..524607      0 (514192..524607)
+> >> >>    10416 10000
+> >> >>    8: [524496..524503]:     524608..524615      0 (524608..524615)
+> >> >>        8 00000
+> >> >>    9: [524504..524543]:     524616..524655      0 (524616..524655)
+> >> >>       40 10000
+> >> >>   10: [524544..524551]:     524656..524663      0 (524656..524663)
+> >> >>        8 00000
+> >> >>   11: [524552..529559]:     524664..529671      0 (524664..529671)
+> >> >>     5008 10000
+> >> >>   12: [529560..529567]:     529672..529679      0 (529672..529679)
+> >> >>        8 00000
+> >> >>   13: [529568..550255]:     529680..550367      0 (529680..550367)
+> >> >>    20688 10000
+> >> >>   14: [550256..550263]:     550368..550375      0 (550368..550375)
+> >> >>        8 00000
+> >> >>   15: [550264..552295]:     550376..552407      0 (550376..552407)
+> >> >>     2032 10000
+> >> >>   16: [552296..552303]:     552408..552415      0 (552408..552415)
+> >> >>        8 00000
+> >> >>   17: [552304..554279]:     552416..554391      0 (552416..554391)
+> >> >>     1976 10000
+> >> >>   18: [554280..554287]:     554392..554399      0 (554392..554399)
+> >> >>        8 00000
+> >> >>   19: [554288..570623]:     554400..570735      0 (554400..570735)
+> >> >>    16336 10000
+> >> >>   20: [570624..570631]:     570736..570743      0 (570736..570743)
+> >> >>        8 00000
+> >> >>   21: [570632..1330943]:    570744..1331055     0 (570744..1331055)
+> >> >>   760312 10000
+> >> >>   22: [1330944..1330951]:   1331056..1331063    0 (1331056..1331063)
+> >> >>        8 00000
+> >> >>   23: [1330952..6173167]:   1331064..6173279    0 (1331064..6173279)
+> >> >>  4842216 10000
+> >> >>   24: [6173168..6232727]:   6173280..6232839    0 (6173280..6232839)
+> >> >>    59560 00000
+> >> >>   25: [6232728..6249039]:   6232840..6249151    0 (6232840..6249151)
+> >> >>    16312 10000
+> >> >>   26: [6249040..6249111]:   6249152..6249223    0 (6249152..6249223)
+> >> >>       72 00000
+> >> >>   27: [6249112..6251087]:   6249224..6251199    0 (6249224..6251199)
+> >> >>     1976 10000
+> >> >>   28: [6251088..6251127]:   6251200..6251239    0 (6251200..6251239)
+> >> >>       40 00000
+> >> >>   29: [6251128..6251631]:   6251240..6251743    0 (6251240..6251743)
+> >> >>      504 10000
+> >> >>   30: [6251632..6296063]:   6251744..6296175    0 (6251744..6296175)
+> >> >>    44432 00000
+> >> >>   31: [6296064..10485647]:  6296176..10485759   0 (6296176..10485759)
+> >> >>  4189584 10000
+> >> >>   32: [10485648..10485655]: 104..111            0 (104..111)
+> >> >>        8 10000
+> >> >>   33: [10485656..20971351]: 10485824..20971519  1 (64..10485759)
+> >> >> 10485696 10000
+> >> >>   34: [20971352..31436559]: 20992064..31457271  2 (20544..10485751)
+> >> >> 10465208 10000
+> >> >>   35: [31436560..41869303]: 31457344..41890087  3 (64..10432807)
+> >> >> 10432744 10000
+> >> >>   36: [41869304..41869311]: 41890088..41890095  3 (10432808..10432815)
+> >> >>        8 00000
+> >> >>   37: [41869312..41873407]: 41890096..41894191  3 (10432816..10436911)
+> >> >>     4096 10000
+> >> >>
+> >> >> I thought that fallocate allocates extents and fragmentation shouldn't increase.
+> >> >>
+> >> >> Is there any way to create large files resistant to fragmentation that
+> >> >> doesn't need to fill whole file with zeros?
+> >> >>
+> >> >> Thanks.
+> >> >> --
+> >> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> >> the body of a message to majordomo@vger.kernel.org
+> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
