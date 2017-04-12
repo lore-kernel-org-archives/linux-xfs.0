@@ -1,37 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45082 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:52956 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752246AbdDLIdJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 04:33:09 -0400
-Date: Wed, 12 Apr 2017 01:33:08 -0700
+        with ESMTP id S1751696AbdDLPph (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 11:45:37 -0400
+Date: Wed, 12 Apr 2017 08:45:34 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/9] Use RWF_* flags for AIO operations
-Message-ID: <20170412083308.GA22363@infradead.org>
-References: <20170411142619.27205-1-rgoldwyn@suse.de>
- <20170411142619.27205-2-rgoldwyn@suse.de>
+Subject: Re: filesystem dead, xfs_repair won't help
+Message-ID: <20170412154534.GA1145@infradead.org>
+References: <13452866-4e5e-371c-269b-cee60e0c6b59@scylladb.com>
+ <20170411140007.05af2bcd@harpe.intellique.com>
+ <9d2587d5-e1f1-e5bb-d276-bc6731b2fce8@scylladb.com>
+ <20170411144906.39323b30@harpe.intellique.com>
+ <68ab8fb6-1cfd-66de-d2f3-eab21796fb16@scylladb.com>
+ <20170411181355.59c1ee1f@harpe.intellique.com>
+ <02304e07-022e-0191-e62b-734b59a818fb@scylladb.com>
+ <25551c0a-90e1-0b2a-ad8d-2b1e814b3b0a@sandeen.net>
+ <20170412151520.GB6126@infradead.org>
+ <f1bbc038-a9d6-76c4-2f40-52797c5cf9d4@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170411142619.27205-2-rgoldwyn@suse.de>
+In-Reply-To: <f1bbc038-a9d6-76c4-2f40-52797c5cf9d4@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, Avi Kivity <avi@scylladb.com>, Emmanuel Florac <eflorac@intellique.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
->  
-> +	if (unlikely(iocb->aio_rw_flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC))) {
-> +		pr_debug("EINVAL: aio_rw_flags set with incompatible flags\n");
-> +		return -EINVAL;
-> +	}
+On Wed, Apr 12, 2017 at 10:34:47AM -0500, Eric Sandeen wrote:
+> Is it safe to do that on a device that /actually/ has only 512 sectors?
 
-> +	if (iocb->aio_rw_flags & RWF_HIPRI)
-> +		req->common.ki_flags |= IOCB_HIPRI;
-> +	if (iocb->aio_rw_flags & RWF_DSYNC)
-> +		req->common.ki_flags |= IOCB_DSYNC;
-> +	if (iocb->aio_rw_flags & RWF_SYNC)
-> +		req->common.ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
+Except for NVMe none of the storage standards actually guarantees
+sector atomicy, although the whole storage stack traditionally relies on
+it..
 
-Pleae introduce a common helper to share this code between the
-synchronous and the aio path
-
+Maybe we should claim a 4k physical block size for NVMe devices that
+hab 512 byte LBAs and a "Atomic Write Unit Power Fail" setting of at
+least 8 so that the mkfs sector size logic triggers..
