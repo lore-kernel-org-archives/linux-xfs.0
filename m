@@ -1,142 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30640 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751861AbdDCQ7i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 12:59:38 -0400
-Date: Mon, 3 Apr 2017 09:59:06 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/4] xfstests: Add an auxiliary program to create an
- AF_UNIX socket [ver #3]
-Message-ID: <20170403165906.GF10881@birch.djwong.org>
-References: <149122078093.24821.17192375733082382807.stgit@warthog.procyon.org.uk>
+Received: from sandeen.net ([63.231.237.45]:40768 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751992AbdDLDyQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Apr 2017 23:54:16 -0400
+Subject: [PATCH] xfs_db: set buf flag for inode or dqblk with "type"
+References: <20170411225334.GE8502@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d7c0fbec-5229-3d69-a435-a68e76ada593@sandeen.net>
+Date: Tue, 11 Apr 2017 22:54:15 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <149122078093.24821.17192375733082382807.stgit@warthog.procyon.org.uk>
+In-Reply-To: <20170411225334.GE8502@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Apr 03, 2017 at 12:59:40PM +0100, David Howells wrote:
-> Add an auxiliary program to create an AF_UNIX socket at the specified
-> location so that tests can do things with it.
-> 
-> Signed-off-by: David Howells <dhowells@redhat.com>
-> ---
-> 
->  .gitignore    |    1 +
->  src/Makefile  |    2 +-
->  src/af_unix.c |   66 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 68 insertions(+), 1 deletion(-)
->  create mode 100644 src/af_unix.c
-> 
-> diff --git a/.gitignore b/.gitignore
-> index 1ed2a92..8a7c052 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -35,6 +35,7 @@
->  /ltp/iogen
->  
->  # src/ binaries
-> +/src/af_unix
->  /src/alloc
->  /src/append_reader
->  /src/append_writer
-> diff --git a/src/Makefile b/src/Makefile
-> index a7f27f0..716c178 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -12,7 +12,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
->  	godown resvtest writemod makeextents itrash rename \
->  	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
->  	t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
-> -	holetest t_truncate_self t_mmap_dio
-> +	holetest t_truncate_self t_mmap_dio af_unix
->  
->  LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-> diff --git a/src/af_unix.c b/src/af_unix.c
-> new file mode 100644
-> index 0000000..dc2368e
-> --- /dev/null
-> +++ b/src/af_unix.c
-> @@ -0,0 +1,66 @@
-> +/* Create an AF_UNIX socket.
-> + *
-> + * Copyright (C) 2017 Red Hat, Inc. All Rights Reserved.
-> + * Written by David Howells (dhowells@redhat.com)
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public Licence
-> + * as published by the Free Software Foundation; either version
-> + * 2 of the Licence, or (at your option) any later version.
-> + */
-> +
-> +#include <stdarg.h>
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <stdbool.h>
-> +#include <string.h>
-> +#include <unistd.h>
-> +#include <errno.h>
-> +#include <fcntl.h>
-> +#include <sys/types.h>
-> +#include <sys/stat.h>
-> +#include <sys/socket.h>
-> +#include <sys/un.h>
-> +
-> +#define offsetof(TYPE, MEMBER)	((size_t)&((TYPE *)0)->MEMBER)
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +	struct sockaddr_un sun;
-> +	struct stat st;
-> +	size_t len, max;
-> +	int fd;
-> +
-> +	if (argc != 2) {
-> +		fprintf(stderr, "Format: %s <socketpath>\n", argv[0]);
-> +		exit(2);
-> +	}
-> +
-> +	max = sizeof(sun.sun_path);
-> +	len = strlen(argv[1]);
-> +	if (len >= max) {
-> +		fprintf(stderr, "Filename too long (max %zu)\n", max);
-> +		exit(2);
-> +	}
-> +
-> +	fd = socket(AF_UNIX, SOCK_DGRAM, 0);
-> +	if (fd < 0) {
-> +		perror("socket");
-> +		exit(1);
-> +	}
-> +
-> +	memset(&sun, 0, sizeof(sun));
-> +	sun.sun_family = AF_UNIX;
-> +	strcpy(sun.sun_path, argv[1]);
-> +	if (bind(fd, (struct sockaddr *)&sun, sizeof(sun)) == -1) {
-> +		perror("bind");
-> +		exit(1);
-> +	}
-> +
-> +	if (stat(argv[1], &st)) {
-> +		fprintf(stderr, "Couldn't stat socket after creation: %m\n");
-> +		exit(1);
-> +	}
+Currently, setting "type" to inode or dqblk does not
+appropriately set the buffer type flags for these
+types.  i.e.:
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+xfs_db> inode 128
 
---D
+sets ino_buf, but
 
-> +
-> +	exit(0);
-> +}
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+xfs_db> convert inode 128 fsblock
+0x10 (16)
+xfs_db> fsblock 16
+xfs_db> type inode
+
+does not.  This is apparent if we try to use "type" to
+switch to an inode or dqblk, then try to use "write -d"
+which tests these flags.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/db/io.c b/db/io.c
+index 9918a51..d78fc66 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -617,6 +617,13 @@ set_iocur_type(
+ 	struct xfs_buf	*bp = iocur_top->bp;
+ 
+ 	iocur_top->typ = t;
++	iocur_top->ino_buf = 0;
++	iocur_top->dquot_buf  = 0;
++
++	if (t->typnm == TYP_INODE)
++		iocur_top->ino_buf = 1;
++	else if (t->typnm == TYP_DQBLK)
++		iocur_top->dquot_buf = 1;
+ 
+ 	/* verify the buffer if the type has one. */
+ 	if (!bp)
+
+
