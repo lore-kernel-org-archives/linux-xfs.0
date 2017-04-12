@@ -1,127 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51246 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753064AbdDKO0l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Apr 2017 10:26:41 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 3/9] nowait aio: return if direct write will trigger writeback
-Date: Tue, 11 Apr 2017 09:26:13 -0500
-Message-Id: <20170411142619.27205-4-rgoldwyn@suse.de>
-In-Reply-To: <20170411142619.27205-1-rgoldwyn@suse.de>
-References: <20170411142619.27205-1-rgoldwyn@suse.de>
+Received: from bombadil.infradead.org ([65.50.211.133]:49242 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751921AbdDLKaa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 06:30:30 -0400
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1cyFXh-0004jz-Ix
+        for linux-xfs@vger.kernel.org; Wed, 12 Apr 2017 10:30:29 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 5/6] xfs: remove xfs_bmap_remap_alloc
+Date: Wed, 12 Apr 2017 12:30:12 +0200
+Message-Id: <20170412103013.9355-6-hch@lst.de>
+In-Reply-To: <20170412103013.9355-1-hch@lst.de>
+References: <20170412103013.9355-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: linux-xfs@vger.kernel.org
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+The main thing that xfs_bmap_remap_alloc does is fixing the AGFL, similar
+to what we do in the space allocator.  But the reflink code doesn't touch
+the allocation btree unlike the normal space allocator, so we couldn't
+care less about the state of the AGFL.
 
-Find out if the write will trigger a wait due to writeback. If yes,
-return -EAGAIN.
+So remove xfs_bmap_remap_alloc and just handle the di_nblocks update in
+the caller.
 
-This introduces a new function filemap_range_has_page() which
-returns true if the file's mapping has a page within the range
-mentioned.
-
-Return -EINVAL for buffered AIO: there are multiple causes of
-delay such as page locks, dirty throttling logic, page loading
-from disk etc. which cannot be taken care of.
-
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/linux/fs.h |  2 ++
- mm/filemap.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 49 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 60 ++----------------------------------------------
+ fs/xfs/xfs_trace.h       | 25 --------------------
+ 2 files changed, 2 insertions(+), 83 deletions(-)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index e8d93462529c..4a30e8f3ce11 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2514,6 +2514,8 @@ extern int filemap_fdatawait(struct address_space *);
- extern void filemap_fdatawait_keep_errors(struct address_space *);
- extern int filemap_fdatawait_range(struct address_space *, loff_t lstart,
- 				   loff_t lend);
-+extern int filemap_range_has_page(struct address_space *, loff_t lstart,
-+				   loff_t lend);
- extern int filemap_write_and_wait(struct address_space *mapping);
- extern int filemap_write_and_wait_range(struct address_space *mapping,
- 				        loff_t lstart, loff_t lend);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 1694623a6289..46e01b8f6880 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -376,6 +376,39 @@ int filemap_flush(struct address_space *mapping)
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index a1d9086ac737..9f55e5185d56 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3856,61 +3856,6 @@ xfs_bmap_btalloc(
  }
- EXPORT_SYMBOL(filemap_flush);
  
-+/**
-+ * filemap_range_has_page - check if a page exists in range.
-+ * @mapping:		address space structure to wait for
-+ * @start_byte:		offset in bytes where the range starts
-+ * @end_byte:		offset in bytes where the range ends (inclusive)
-+ *
-+ * Find at least one page in the range supplied, usually used to check if
-+ * direct writing in this range will trigger a writeback.
-+ */
-+int filemap_range_has_page(struct address_space *mapping,
-+				loff_t start_byte, loff_t end_byte)
-+{
-+	pgoff_t index = start_byte >> PAGE_SHIFT;
-+	pgoff_t end = end_byte >> PAGE_SHIFT;
-+	struct pagevec pvec;
-+	int ret;
-+
-+	if (end_byte < start_byte)
-+		return 0;
-+
-+	if (mapping->nrpages == 0)
-+		return 0;
-+
-+	pagevec_init(&pvec, 0);
-+	ret = pagevec_lookup(&pvec, mapping, index, 1);
-+	if (!ret)
-+		return 0;
-+	ret = (pvec.pages[0]->index <= end);
-+	pagevec_release(&pvec);
-+	return ret;
-+}
-+EXPORT_SYMBOL(filemap_range_has_page);
-+
- static int __filemap_fdatawait_range(struct address_space *mapping,
- 				     loff_t start_byte, loff_t end_byte)
- {
-@@ -2640,6 +2673,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+ /*
+- * For a remap operation, just "allocate" an extent at the address that the
+- * caller passed in, and ensure that the AGFL is the right size.  The caller
+- * will then map the "allocated" extent into the file somewhere.
+- */
+-STATIC int
+-xfs_bmap_remap_alloc(
+-	struct xfs_trans	*tp,
+-	struct xfs_inode	*ip,
+-	xfs_fsblock_t		startblock,
+-	xfs_extlen_t		length)
+-{
+-	struct xfs_mount	*mp = tp->t_mountp;
+-	struct xfs_alloc_arg	args;
+-	int			error;
+-
+-	/*
+-	 * validate that the block number is legal - the enables us to detect
+-	 * and handle a silent filesystem corruption rather than crashing.
+-	 */
+-	memset(&args, 0, sizeof(struct xfs_alloc_arg));
+-	args.tp = tp;
+-	args.mp = mp;
+-	args.agno = XFS_FSB_TO_AGNO(mp, startblock);
+-	args.agbno = XFS_FSB_TO_AGBNO(mp, startblock);
+-
+-	if (args.agno >= mp->m_sb.sb_agcount ||
+-	    args.agbno >= mp->m_sb.sb_agblocks)
+-		return -EFSCORRUPTED;
+-
+-	/* "Allocate" the extent from the range we passed in. */
+-	trace_xfs_bmap_remap_alloc(ip, startblock, length);
+-
+-	ip->i_d.di_nblocks += length;
+-	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-
+-	/* Fix the freelist, like a real allocator does. */
+-	args.datatype = XFS_ALLOC_USERDATA | XFS_ALLOC_NOBUSY;
+-	args.pag = xfs_perag_get(mp, args.agno);
+-	ASSERT(args.pag);
+-
+-	/*
+-	 * The freelist fixing code will decline the allocation if
+-	 * the size and shape of the free space doesn't allow for
+-	 * allocating the extent and updating all the metadata that
+-	 * happens during an allocation.  We're remapping, not
+-	 * allocating, so skip that check by pretending to be freeing.
+-	 */
+-	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
+-	xfs_perag_put(args.pag);
+-	if (error)
+-		trace_xfs_bmap_remap_alloc_error(ip, error, _RET_IP_);
+-	return error;
+-}
+-
+-/*
+  * xfs_bmap_alloc is called by xfs_bmapi to allocate an extent for a file.
+  * It figures out where to ask the underlying allocator to put the new extent.
+  */
+@@ -4811,9 +4756,8 @@ xfs_bmapi_remap(
+ 		ASSERT(got.br_startoff - bno >= len);
+ 	}
  
- 	pos = iocb->ki_pos;
+-	error = xfs_bmap_remap_alloc(tp, ip, startblock, len);
+-	if (error)
+-		goto error0;
++	ip->i_d.di_nblocks += len;
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
  
-+	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
-+		return -EINVAL;
-+
- 	if (limit != RLIM_INFINITY) {
- 		if (iocb->ki_pos >= limit) {
- 			send_sig(SIGXFSZ, current, 0);
-@@ -2709,9 +2745,17 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
- 	write_len = iov_iter_count(from);
- 	end = (pos + write_len - 1) >> PAGE_SHIFT;
+ 	if (ifp->if_flags & XFS_IFBROOT) {
+ 		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 4f96dc953fbe..cba10daf8391 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3003,31 +3003,6 @@ DEFINE_EVENT(xfs_inode_error_class, name, \
+ 		 unsigned long caller_ip), \
+ 	TP_ARGS(ip, error, caller_ip))
  
--	written = filemap_write_and_wait_range(mapping, pos, pos + write_len - 1);
--	if (written)
--		goto out;
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		/* If there are pages to writeback, return */
-+		if (filemap_range_has_page(inode->i_mapping, pos,
-+					   pos + iov_iter_count(from)))
-+			return -EAGAIN;
-+	} else {
-+		written = filemap_write_and_wait_range(mapping, pos,
-+							pos + write_len - 1);
-+		if (written)
-+			goto out;
-+	}
+-/* reflink allocator */
+-TRACE_EVENT(xfs_bmap_remap_alloc,
+-	TP_PROTO(struct xfs_inode *ip, xfs_fsblock_t fsbno,
+-		 xfs_extlen_t len),
+-	TP_ARGS(ip, fsbno, len),
+-	TP_STRUCT__entry(
+-		__field(dev_t, dev)
+-		__field(xfs_ino_t, ino)
+-		__field(xfs_fsblock_t, fsbno)
+-		__field(xfs_extlen_t, len)
+-	),
+-	TP_fast_assign(
+-		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+-		__entry->ino = ip->i_ino;
+-		__entry->fsbno = fsbno;
+-		__entry->len = len;
+-	),
+-	TP_printk("dev %d:%d ino 0x%llx fsbno 0x%llx len %x",
+-		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __entry->ino,
+-		  __entry->fsbno,
+-		  __entry->len)
+-);
+-DEFINE_INODE_ERROR_EVENT(xfs_bmap_remap_alloc_error);
+-
+ /* reflink tracepoint classes */
  
- 	/*
- 	 * After a write we want buffered reads to be sure to go to disk to get
+ /* two-file io tracepoint class */
 -- 
-2.12.0
+2.11.0
 
