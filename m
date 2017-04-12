@@ -1,83 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58046 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755308AbdDMSaJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Apr 2017 14:30:09 -0400
-Date: Thu, 13 Apr 2017 14:30:06 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 04/10] xfs: remove an unsafe retry in xfs_bmbt_alloc_block
-Message-ID: <20170413183006.GD25915@bfoster.bfoster>
-References: <20170413080517.12564-1-hch@lst.de>
- <20170413080517.12564-5-hch@lst.de>
+Received: from bombadil.infradead.org ([65.50.211.133]:55068 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753458AbdDLQKS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 12:10:18 -0400
+Date: Wed, 12 Apr 2017 09:10:17 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Deadlock between block allocation and block truncation
+Message-ID: <20170412161017.GA16590@infradead.org>
+References: <800468eb-3ded-9166-20a4-047de8018582@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170413080517.12564-5-hch@lst.de>
+In-Reply-To: <800468eb-3ded-9166-20a4-047de8018582@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: Nikolay Borisov <n.borisov.lkml@gmail.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Apr 13, 2017 at 10:05:11AM +0200, Christoph Hellwig wrote:
-> We've already reserved all possible required blocks and checked
-> they are avaible in the same AG.
-> 
+Hi Nikolay,
 
-I'm not quite following why this retry is unsafe as noted in the patch
-title.. do you mean "unnecessary?" AFAICT, the firstblock == NULLFSBLOCK
-case means we can issue this first allocation from any AG. If no AG can
-allocate a block while satisfying minleft, then we can still safely
-allocate from any AG provided any subsequent allocations occur in
-increasing AG order (i.e., by setting dop_low), right?
+I guess the culprit is that truncate can free up to two extents in
+the same transaction and thus try to lock two different AGs without
+requiring them to be in increasing order.
 
-Also, if this is unnecessary, what exactly verifies that all of the
-reserved blocks are available within the same AG?
+Does the one liner below fix the problem for you?
 
-This patch may ultimately be fine, but at minimum I think a bit more
-context/explanation is needed in the commit log. A couple things that
-give me pause are 1.) this is a context highly sensitive to allocation
-failure and 2.) the minleft used in the initial allocation is based on
-the transaction block reservation, which isn't exactly deterministic (so
-can some future transaction now increase the likelihood of bmbt block
-allocation failure because it decided to reserve too many extra
-blocks?).
-
-Brian
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap_btree.c | 13 -------------
->  1 file changed, 13 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-> index 3e17ceda038c..ce41dd5fbb34 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-> @@ -476,19 +476,6 @@ xfs_bmbt_alloc_block(
->  	if (error)
->  		goto error0;
->  
-> -	if (args.fsbno == NULLFSBLOCK && args.minleft) {
-> -		/*
-> -		 * Could not find an AG with enough free space to satisfy
-> -		 * a full btree split.  Try again and if
-> -		 * successful activate the lowspace algorithm.
-> -		 */
-> -		args.fsbno = 0;
-> -		args.type = XFS_ALLOCTYPE_FIRST_AG;
-> -		error = xfs_alloc_vextent(&args);
-> -		if (error)
-> -			goto error0;
-> -		cur->bc_private.b.dfops->dop_low = true;
-> -	}
->  	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
->  		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
->  		*stat = 0;
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 7605d8396596..29f2cd5afb04 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -58,7 +58,7 @@ kmem_zone_t *xfs_inode_zone;
+  * Used in xfs_itruncate_extents().  This is the maximum number of extents
+  * freed from a file in a single transaction.
+  */
+-#define	XFS_ITRUNC_MAX_EXTENTS	2
++#define	XFS_ITRUNC_MAX_EXTENTS	1
+ 
+ STATIC int xfs_iflush_int(struct xfs_inode *, struct xfs_buf *);
+ STATIC int xfs_iunlink(struct xfs_trans *, struct xfs_inode *);
