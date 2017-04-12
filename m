@@ -1,94 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51303 "EHLO mx2.suse.de"
+Received: from sandeen.net ([63.231.237.45]:35998 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753725AbdDKO07 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Apr 2017 10:26:59 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 8/9] nowait aio: btrfs
-Date: Tue, 11 Apr 2017 09:26:18 -0500
-Message-Id: <20170411142619.27205-9-rgoldwyn@suse.de>
-In-Reply-To: <20170411142619.27205-1-rgoldwyn@suse.de>
-References: <20170411142619.27205-1-rgoldwyn@suse.de>
+        id S1752069AbdDLC6p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Apr 2017 22:58:45 -0400
+Subject: Re: [PATCH] xfs_db: allow write -d to inodes
+References: <20170411225334.GE8502@birch.djwong.org>
+ <0bdbeabb-f632-b5d3-4400-a8aedf590013@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5a8a9a91-cf57-5077-3f86-ca5830e52ebd@sandeen.net>
+Date: Tue, 11 Apr 2017 21:58:44 -0500
+MIME-Version: 1.0
+In-Reply-To: <0bdbeabb-f632-b5d3-4400-a8aedf590013@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Eric Sandeen <sandeen@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On 4/11/17 9:09 PM, Eric Sandeen wrote:
+> On 4/11/17 5:53 PM, Darrick J. Wong wrote:
+>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>
+>> Add a helper function to xfs_db so that we can recalculate the CRC of an
+>> inode whose field we just wrote.  This enables us to write arbitrary
+>> values with a good CRC for the purpose of checking the read verifiers on
+>> a v5 filesystem.  Mention this newfound ability in the manpage.
+> 
+> -d isn't new, so I'd really rather have a patch to document the existing
+> behavior, followed by a patch to extend it to inodes.
+> 
+> There are actually several structures for which -d still won't work, so
+> it would be good if that fact were documented - reading "including
+> inodes" may leave some heads scratching.
+> 
+> Let me ruminate on the inode crc writing, I have this nagging feeling
+> that there's an easier generic way to handle these structures,
+> ...but I'm probably wrong.
 
-Return EAGAIN if any of the following checks fail
- + i_rwsem is not lockable
- + NODATACOW or PREALLOC is not set
- + Cannot nocow at the desired location
- + Writing beyond end of file which is not allocated
+I don't know where I was going with that idea.  :/
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- fs/btrfs/file.c  | 25 ++++++++++++++++++++-----
- fs/btrfs/inode.c |  3 +++
- 2 files changed, 23 insertions(+), 5 deletions(-)
+I can split this up into a manpage patch and an inode crc patch on
+the way in if you'd like.
 
-diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-index 520cb7230b2d..a870e5dd2b4d 100644
---- a/fs/btrfs/file.c
-+++ b/fs/btrfs/file.c
-@@ -1823,12 +1823,29 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
- 	ssize_t num_written = 0;
- 	bool sync = (file->f_flags & O_DSYNC) || IS_SYNC(file->f_mapping->host);
- 	ssize_t err;
--	loff_t pos;
--	size_t count;
-+	loff_t pos = iocb->ki_pos;
-+	size_t count = iov_iter_count(from);
- 	loff_t oldsize;
- 	int clean_page = 0;
- 
--	inode_lock(inode);
-+	if ((iocb->ki_flags & IOCB_NOWAIT) &&
-+			(iocb->ki_flags & IOCB_DIRECT)) {
-+		/* Don't sleep on inode rwsem */
-+		if (!inode_trylock(inode))
-+			return -EAGAIN;
-+		/*
-+		 * We will allocate space in case nodatacow is not set,
-+		 * so bail
-+		 */
-+		if (!(BTRFS_I(inode)->flags & (BTRFS_INODE_NODATACOW |
-+					      BTRFS_INODE_PREALLOC)) ||
-+		    check_can_nocow(BTRFS_I(inode), pos, &count) <= 0) {
-+			inode_unlock(inode);
-+			return -EAGAIN;
-+		}
-+	} else
-+		inode_lock(inode);
-+
- 	err = generic_write_checks(iocb, from);
- 	if (err <= 0) {
- 		inode_unlock(inode);
-@@ -1862,8 +1879,6 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
- 	 */
- 	update_time_for_write(inode);
- 
--	pos = iocb->ki_pos;
--	count = iov_iter_count(from);
- 	start_pos = round_down(pos, fs_info->sectorsize);
- 	oldsize = i_size_read(inode);
- 	if (start_pos > oldsize) {
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index a18510be76c1..d91b21a76d6d 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -8627,6 +8627,9 @@ static ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- 			dio_data.overwrite = 1;
- 			inode_unlock(inode);
- 			relock = true;
-+		} else if (iocb->ki_flags & IOCB_NOWAIT) {
-+			ret = -EAGAIN;
-+			goto out;
- 		}
- 		ret = btrfs_delalloc_reserve_space(inode, offset, count);
- 		if (ret)
--- 
-2.12.0
+For the content as-is, 
 
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+-Eric
+
+> Thanks,
+> -Eric
+> 
+>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>> ---
+>>  db/io.c           |   11 +++++++++++
+>>  db/io.h           |    1 +
+>>  db/write.c        |    7 ++++++-
+>>  man/man8/xfs_db.8 |    7 ++++++-
+>>  4 files changed, 24 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/db/io.c b/db/io.c
+>> index f398195..67ed5f9 100644
+>> --- a/db/io.c
+>> +++ b/db/io.c
+>> @@ -465,6 +465,17 @@ xfs_dummy_verify(
+>>  }
+>>  
+>>  void
+>> +xfs_verify_recalc_inode_crc(
+>> +	struct xfs_buf *bp)
+>> +{
+>> +	ASSERT(iocur_top->ino_buf);
+>> +	ASSERT(iocur_top->bp == bp);
+>> +
+>> +	libxfs_dinode_calc_crc(mp, iocur_top->data);
+>> +	iocur_top->ino_crc_ok = 1;
+>> +}
+>> +
+>> +void
+>>  xfs_verify_recalc_crc(
+>>  	struct xfs_buf *bp)
+>>  {
+>> diff --git a/db/io.h b/db/io.h
+>> index c69e9ce..12d96c2 100644
+>> --- a/db/io.h
+>> +++ b/db/io.h
+>> @@ -64,6 +64,7 @@ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
+>>  extern void     ring_add(void);
+>>  extern void	set_iocur_type(const struct typ *t);
+>>  extern void	xfs_dummy_verify(struct xfs_buf *bp);
+>> +extern void	xfs_verify_recalc_inode_crc(struct xfs_buf *bp);
+>>  extern void	xfs_verify_recalc_crc(struct xfs_buf *bp);
+>>  
+>>  /*
+>> diff --git a/db/write.c b/db/write.c
+>> index 5c83874..70c9865 100644
+>> --- a/db/write.c
+>> +++ b/db/write.c
+>> @@ -137,7 +137,9 @@ write_f(
+>>  		return 0;
+>>  	}
+>>  
+>> -	if (invalid_data && iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF) {
+>> +	if (invalid_data &&
+>> +	    iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF &&
+>> +	    !iocur_top->ino_buf) {
+>>  		dbprintf(_("Cannot recalculate CRCs on this type of object\n"));
+>>  		return 0;
+>>  	}
+>> @@ -164,6 +166,9 @@ write_f(
+>>  	if (corrupt) {
+>>  		local_ops.verify_write = xfs_dummy_verify;
+>>  		dbprintf(_("Allowing write of corrupted data and bad CRC\n"));
+>> +	} else if (iocur_top->ino_buf) {
+>> +		local_ops.verify_write = xfs_verify_recalc_inode_crc;
+>> +		dbprintf(_("Allowing write of corrupted inode with good CRC\n"));
+>>  	} else { /* invalid data */
+>>  		local_ops.verify_write = xfs_verify_recalc_crc;
+>>  		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
+>> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+>> index 460d89d..b1c341d 100644
+>> --- a/man/man8/xfs_db.8
+>> +++ b/man/man8/xfs_db.8
+>> @@ -755,7 +755,7 @@ and
+>>  bits respectively, and their string equivalent reported
+>>  (but no modifications are made).
+>>  .TP
+>> -.BI "write [\-c] [" "field value" "] ..."
+>> +.BI "write [\-c] [\-d] [" "field value" "] ..."
+>>  Write a value to disk.
+>>  Specific fields can be set in structures (struct mode),
+>>  or a block can be set to data values (data mode),
+>> @@ -778,6 +778,11 @@ with no arguments gives more information on the allowed commands.
+>>  .B \-c
+>>  Skip write verifiers and CRC recalculation; allows invalid data to be written
+>>  to disk.
+>> +.TP 0.4i
+>> +.B \-d
+>> +Skip write verifiers but perform CRC recalculation.
+>> +This allows invalid data, including inodes, to be written to disk to
+>> +test detection of invalid data.
+>>  .RE
+>>  .SH TYPES
+>>  This section gives the fields in each structure type and their meanings.
+>>
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
