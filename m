@@ -1,273 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38988 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752428AbdDKW7D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2017 18:59:03 -0400
-Date: Tue, 11 Apr 2017 15:58:55 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/6] xfs: introduce xfs_bmapi_remap
-Message-ID: <20170411225855.GF8502@birch.djwong.org>
-References: <20170411111011.9437-1-hch@lst.de>
- <20170411111011.9437-5-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:37496 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753262AbdDLLGp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Apr 2017 07:06:45 -0400
+Date: Wed, 12 Apr 2017 07:06:33 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] mdrestore: warn about corruption if log is dirty
+Message-ID: <20170412110633.GC6834@bfoster.bfoster>
+References: <20170411141237.9274-1-jtulak@redhat.com>
+ <20170411141237.9274-3-jtulak@redhat.com>
+ <20170411223405.GC12369@dastard>
+ <20170411234326.GA5109@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170411111011.9437-5-hch@lst.de>
+In-Reply-To: <20170411234326.GA5109@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-On Tue, Apr 11, 2017 at 01:10:09PM +0200, Christoph Hellwig wrote:
-> Add a new helper to be used for reflink extent list additions instead of
-> funneling them through xfs_bmapi_write and overloading the firstblock
-> member in struct xfs_bmalloca and struct xfs_alloc_args.
+On Tue, Apr 11, 2017 at 04:43:26PM -0700, Darrick J. Wong wrote:
+> On Wed, Apr 12, 2017 at 08:34:05AM +1000, Dave Chinner wrote:
+> > On Tue, Apr 11, 2017 at 04:12:37PM +0200, Jan Tulak wrote:
+> > > A dirty log in an obfuscated dump means that a corruption can happen
+> > > when replaying the log (which contains unobfuscated data). Warn the user
+> > > about this possibility.
+> >
+> > > The xlog workaround is copy&paste solution from repair/phase2.c and
+> > > other tools, because the function is not implemented in libxlog.
+> > > 
+> > > Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> > 
+> > I think this is overkill. mdrestore is not the place
+> > to be interpreting the state of the dumped image - it is a basic
+> > "restore the image" program, not a "check the validity of the image"
+> > program.
+> >
+> > Secondly, if people are having problems with running log recovery on
+> > a restored obfuscated image and getting corruption and not knowing
+> > why or what to do, then that is a /documentation and training/
+> > problem, not a code problem.
+> >
+> > i.e. the problem is that people who aren't developers are trying to
+> > use tools that were written for developers to do forensic analysis
+> > of failures. Don't dumb down the tool for clueless users - point the
+> > users at the documentation that the tool requires to use correctly...
 > 
-> With some small changes to xfs_bmap_remap_alloc this also means we do
-> not need a xfs_bmalloca structure for this case at all.
+> Looking at the patch, that's a lot of code to add to mdrestore that has
+> nothing to do with metadump restoration.  For that matter, who's to say
+> that the metadump'd image is even an XFS filesystem, and not just some
+> garbage with the just the right superblock values to pass the
+> perform_restore() checks?  (Ok, ok, that was a little over the top.)
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Agreed wrt to the mdrestore bits...
 
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 152 +++++++++++++++++++++++++++++++++--------------
->  1 file changed, 107 insertions(+), 45 deletions(-)
+> The key change we're trying to make is to prevent people incorrectly
+> replaying an XFS with a dirty log when the fs image has been restored
+> from an obfuscated metadump.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index f32b2dab16a4..faf7cb0a28f9 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3862,11 +3862,12 @@ xfs_bmap_btalloc(
->   */
->  STATIC int
->  xfs_bmap_remap_alloc(
-> -	struct xfs_bmalloca	*ap)
-> +	struct xfs_trans	*tp,
-> +	struct xfs_inode	*ip,
-> +	xfs_fsblock_t		startblock,
-> +	xfs_extlen_t		length)
->  {
-> -	struct xfs_trans	*tp = ap->tp;
->  	struct xfs_mount	*mp = tp->t_mountp;
-> -	xfs_fsblock_t		bno;
->  	struct xfs_alloc_arg	args;
->  	int			error;
->  
-> @@ -3875,24 +3876,24 @@ xfs_bmap_remap_alloc(
->  	 * and handle a silent filesystem corruption rather than crashing.
->  	 */
->  	memset(&args, 0, sizeof(struct xfs_alloc_arg));
-> -	args.tp = ap->tp;
-> -	args.mp = ap->tp->t_mountp;
-> -	bno = *ap->firstblock;
-> -	args.agno = XFS_FSB_TO_AGNO(mp, bno);
-> -	args.agbno = XFS_FSB_TO_AGBNO(mp, bno);
-> +	args.tp = tp;
-> +	args.mp = mp;
-> +	args.agno = XFS_FSB_TO_AGNO(mp, startblock);
-> +	args.agbno = XFS_FSB_TO_AGBNO(mp, startblock);
-> +
->  	if (args.agno >= mp->m_sb.sb_agcount ||
->  	    args.agbno >= mp->m_sb.sb_agblocks)
->  		return -EFSCORRUPTED;
->  
->  	/* "Allocate" the extent from the range we passed in. */
-> -	trace_xfs_bmap_remap_alloc(ap->ip, *ap->firstblock, ap->length);
-> -	ap->blkno = bno;
-> -	ap->ip->i_d.di_nblocks += ap->length;
-> -	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
-> +	trace_xfs_bmap_remap_alloc(ip, startblock, length);
-> +
-> +	ip->i_d.di_nblocks += length;
-> +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->  
->  	/* Fix the freelist, like a real allocator does. */
-> -	args.datatype = ap->datatype;
-> -	args.pag = xfs_perag_get(args.mp, args.agno);
-> +	args.datatype = XFS_ALLOC_USERDATA | XFS_ALLOC_NOBUSY;
-> +	args.pag = xfs_perag_get(mp, args.agno);
->  	ASSERT(args.pag);
->  
->  	/*
-> @@ -3905,7 +3906,7 @@ xfs_bmap_remap_alloc(
->  	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
->  	xfs_perag_put(args.pag);
->  	if (error)
-> -		trace_xfs_bmap_remap_alloc_error(ap->ip, error, _RET_IP_);
-> +		trace_xfs_bmap_remap_alloc_error(ip, error, _RET_IP_);
->  	return error;
->  }
->  
-> @@ -3917,8 +3918,6 @@ STATIC int
->  xfs_bmap_alloc(
->  	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
->  {
-> -	if (ap->flags & XFS_BMAPI_REMAP)
-> -		return xfs_bmap_remap_alloc(ap);
->  	if (XFS_IS_REALTIME_INODE(ap->ip) &&
->  	    xfs_alloc_is_userdata(ap->datatype))
->  		return xfs_bmap_rtalloc(ap);
-> @@ -4554,9 +4553,7 @@ xfs_bmapi_write(
->  	ASSERT(len > 0);
->  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> -	ASSERT(!(flags & XFS_BMAPI_REMAP) || whichfork == XFS_DATA_FORK);
-> -	ASSERT(!(flags & XFS_BMAPI_PREALLOC) || !(flags & XFS_BMAPI_REMAP));
-> -	ASSERT(!(flags & XFS_BMAPI_CONVERT) || !(flags & XFS_BMAPI_REMAP));
-> +	ASSERT(!(flags & XFS_BMAPI_REMAP));
->  
->  	/* zeroing is for currently only for data extents, not metadata */
->  	ASSERT((flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ZERO)) !=
-> @@ -4640,13 +4637,8 @@ xfs_bmapi_write(
->  			} else {
->  				need_alloc = true;
->  			}
-> -		} else {
-> -			/*
-> -			 * Make sure we only reflink into a hole.
-> -			 */
-> -			ASSERT(!(flags & XFS_BMAPI_REMAP));
-> -			if (isnullstartblock(bma.got.br_startblock))
-> -				wasdelay = true;
-> +		} else if (isnullstartblock(bma.got.br_startblock)) {
-> +			wasdelay = true;
->  		}
->  
->  		/*
-> @@ -4775,6 +4767,89 @@ xfs_bmapi_write(
->  	return error;
->  }
->  
-> +static int
-> +xfs_bmapi_remap(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_inode	*ip,
-> +	xfs_fileoff_t		bno,
-> +	xfs_filblks_t		len,
-> +	xfs_fsblock_t		startblock,
-> +	struct xfs_defer_ops	*dfops)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> +	struct xfs_btree_cur	*cur = NULL;
-> +	xfs_fsblock_t		firstblock = NULLFSBLOCK;
-> +	struct xfs_bmbt_irec	got;
-> +	xfs_extnum_t		idx;
-> +	int			logflags = 0, error;
-> +
-> +	ASSERT(len > 0);
-> +	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
-> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> +	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
-> +
-> +	if (unlikely(XFS_TEST_ERROR(
-> +	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
-> +	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
-> +	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
-> +		XFS_ERROR_REPORT("xfs_bmapi_remap", XFS_ERRLEVEL_LOW, mp);
-> +		return -EFSCORRUPTED;
-> +	}
-> +
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		return -EIO;
-> +
-> +	if (xfs_iext_lookup_extent(ip, ifp, bno, &idx, &got)) {
-> +		/* make sure we only reflink into a hole. */
-> +		ASSERT(got.br_startoff > bno);
-> +		ASSERT(got.br_startoff - bno >= len);
-> +	}
-> +
-> +	error = xfs_bmap_remap_alloc(tp, ip, startblock, len);
-> +	if (error)
-> +		goto error0;
-> +
-> +	if (ifp->if_flags & XFS_IFBROOT) {
-> +		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
-> +		cur->bc_private.b.firstblock = firstblock;
-> +		cur->bc_private.b.dfops = dfops;
-> +		cur->bc_private.b.flags = 0;
-> +	}
-> +
-> +	got.br_startoff = bno;
-> +	got.br_startblock = startblock;
-> +	got.br_blockcount = len;
-> +	got.br_state = XFS_EXT_NORM;
-> +
-> +	error = xfs_bmap_add_extent_hole_real(tp, ip, XFS_DATA_FORK, &idx, &cur,
-> +			&got, &firstblock, dfops, &logflags);
-> +	if (error)
-> +		goto error0;
-> +
-> +	if (xfs_bmap_wants_extents(ip, XFS_DATA_FORK)) {
-> +		int		tmp_logflags = 0;
-> +
-> +		error = xfs_bmap_btree_to_extents(tp, ip, cur,
-> +			&tmp_logflags, XFS_DATA_FORK);
-> +		logflags |= tmp_logflags;
-> +	}
-> +
-> +error0:
-> +	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS)
-> +		logflags &= ~XFS_ILOG_DEXT;
-> +	else if (ip->i_d.di_format != XFS_DINODE_FMT_BTREE)
-> +		logflags &= ~XFS_ILOG_DBROOT;
-> +
-> +	if (logflags)
-> +		xfs_trans_log_inode(tp, ip, logflags);
-> +	if (cur) {
-> +		xfs_btree_del_cursor(cur,
-> +				error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-> +	}
-> +	return error;
-> +}
-> +
->  /*
->   * When a delalloc extent is split (e.g., due to a hole punch), the original
->   * indlen reservation must be shared across the two new extents that are left
-> @@ -6493,16 +6568,7 @@ xfs_bmap_finish_one(
->  	xfs_filblks_t			blockcount,
->  	xfs_exntst_t			state)
->  {
-> -	struct xfs_bmbt_irec		bmap;
-> -	int				nimaps = 1;
-> -	xfs_fsblock_t			firstfsb;
-> -	int				done;
-> -	int				error = 0;
-> -
-> -	bmap.br_startblock = startblock;
-> -	bmap.br_startoff = startoff;
-> -	bmap.br_blockcount = blockcount;
-> -	bmap.br_state = state;
-> +	int				error = 0, done;
->  
->  	trace_xfs_bmap_deferred(tp->t_mountp,
->  			XFS_FSB_TO_AGNO(tp->t_mountp, startblock), type,
-> @@ -6519,16 +6585,12 @@ xfs_bmap_finish_one(
->  
->  	switch (type) {
->  	case XFS_BMAP_MAP:
-> -		firstfsb = bmap.br_startblock;
-> -		error = xfs_bmapi_write(tp, ip, bmap.br_startoff,
-> -					bmap.br_blockcount, XFS_BMAPI_REMAP, &firstfsb,
-> -					bmap.br_blockcount, &bmap, &nimaps,
-> -					dfops);
-> +		error = xfs_bmapi_remap(tp, ip, startoff, blockcount,
-> +				startblock, dfops);
->  		break;
->  	case XFS_BMAP_UNMAP:
-> -		error = xfs_bunmapi(tp, ip, bmap.br_startoff,
-> -				bmap.br_blockcount, XFS_BMAPI_REMAP, 1, &firstfsb,
-> -				dfops, &done);
-> +		error = xfs_bunmapi(tp, ip, startoff, blockcount,
-> +				XFS_BMAPI_REMAP, 1, &startblock, dfops, &done);
->  		ASSERT(done);
->  		break;
->  	default:
-> -- 
-> 2.11.0
+> So in my mind this brings up two questions:  First, how do we prevent
+> log replay in such situations?  Second, how do we teach people not to
+> attempt log replay?  As you point out, it's better that we educate
+> people as what problems each tool tries to solve and where the sharp
+> edges might be on the debugging tools, but the answer to the first
+> question ensures that us fallible developers can't do something stupid
+> even though we theoretically know better.
 > 
+> Frankly, if the goal is to nudge n00b members of support teams away from
+> a behavior that won't help them towards starting their failure analysis,
+> then then I think we ought to patch the log recovery code to detect an
+> obfuscated fs image, complain to dmesg about someone making an illogical
+> move, and then refuse to mount the log.
+> 
+
+I don't think this is really appropriate. Some users may very well have
+no other option but to create a dirty log + obfuscated metadump for
+whatever security/privacy reasons they have. The purpose of warning in
+that case is to notify the user to either verify the resulting image
+shows whatever problems are exhibited by the original fs and no others,
+or to notify the developer that other corruption might exist and to
+ignore it as a side effect of the metadump process itself (provided it
+doesn't interfere with rca of the original problem). Refusing to run log
+recovery in such cases just gets in the way.
+
+I'm not tied to having an mdrestore warning at all, but I'd much prefer
+to see it there rather than include obfuscation logic in the kernel just
+to facilitate a userspace tool to continue on silently corrupting
+filesystem images.
+
+Brian
+
+> I'd rather push back on the incorrect behavior at the time it is done,
+> instead of training people to ignore a priori warning messages.
+> 
+> --D
+> 
+> > Cheers,
+> > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
