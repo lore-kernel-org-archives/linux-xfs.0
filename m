@@ -1,127 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57878 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751976AbdDNMDJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 14 Apr 2017 08:03:09 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 1/8] Use RWF_* flags for AIO operations
-Date: Fri, 14 Apr 2017 07:02:50 -0500
-Message-Id: <20170414120257.8932-2-rgoldwyn@suse.de>
-In-Reply-To: <20170414120257.8932-1-rgoldwyn@suse.de>
-References: <20170414120257.8932-1-rgoldwyn@suse.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:50951 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752870AbdDLXGV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 19:06:21 -0400
+Date: Wed, 12 Apr 2017 16:06:12 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: transaction reservations for deleting of shared extents
+Message-ID: <20170412230612.GS8502@birch.djwong.org>
+References: <20170220072945.GA17608@lst.de>
+ <20170221014356.GA5844@birch.djwong.org>
+ <20170412135231.GA3891@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170412135231.GA3891@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Wed, Apr 12, 2017 at 03:52:31PM +0200, Christoph Hellwig wrote:
+> I think the problem is that t_log_res just contains the log reservation
+> when the transaction was created.  But each item processed by
+> xfs_defer_finish uses up some of it, but in some cases these might
+> be different operations and not just more refcount updates, e.g. for
+> xfs_itruncate_extents which I see the issues with we mix EFI/EFD
+> items with refcount updates.
 
-RWF_* flags is used for preadv2/pwritev2 calls. Port to use
-it for aio operations as well. For this, aio_rw_flags is
-introduced in struct iocb (using aio_reserved1) which will
-carry these flags.
+Hmmm... I suppose you could end up with a heavy load of deferred updates
+stemming from the removal of a single extent:
 
-This is a precursor to the nowait AIO calls.
+1) Start with one huge extent mapped into a file.
+2) Reflink every other block into another file.
+3) Delete the first file.  This results in:
+   a) Unmap the huge extent.
+   b) Schedule removal of the rmap, if applicable.
+   c) Schedule a refcount decrease for the huge extent.
+   d) Perform the deferred rmap removal.  If we push blocks off the
+      AGFL as part of removing rmapbt blocks, queue an EFI.
+   e) Perform the deferred refcount decrease:
+      For each (singly-)shared block, set the refcount=1 by deleting the
+      refcount record.  Every ~150 deletions we free a refcount block
+      and queue an EFI.  (If rmap, queue a deferred rmap update too.)
+   f) Perform the deferred rmap removals.  If we push blocks off the
+      AGFL as part of removing rmapbt blocks, queue an EFI.
+   g) Free each shared block by queueing an EFI.
+   h) For each EFI, free the extent.
 
-Note, the only place RWF_HIPRI comes in effect is dio_await_one().
-All the rest of the locations, aio code return -EIOCBQUEUED before the
-checks for RWF_HIPRI.
+So I think the problem you're seeing here is that just prior to (3g) we
+have the most deferred items (EFIs, specifically) attached to this
+transaction at any point in the whole operation.  There can be so many
+EFIs that we use up the log reservation and blow the ASSERT.
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- fs/aio.c                     | 10 +++++++++-
- fs/read_write.c              |  7 +------
- include/linux/fs.h           | 12 ++++++++++++
- include/uapi/linux/aio_abi.h |  2 +-
- 4 files changed, 23 insertions(+), 8 deletions(-)
+One way to fix this is to unmap a smaller range in (1) so that we don't
+blow up at (3g).  Unfortunately, it is hard to guess at (1) just how
+many EFIs we might end up queueing, but I think reducing the amount of
+file mapping we free in a given step might be the only sane solution.
+One could calculate the number of blocks we can free, given the
+remaining transaction reservation and assuming the worst case number of
+EFIs that could get filed to unmap those blocks, and only __bunmapi that
+many blocks, thereby forcing the caller to come back with a fresh
+defer_ops for another try.
 
-diff --git a/fs/aio.c b/fs/aio.c
-index f52d925ee259..b8a33f5beef5 100644
---- a/fs/aio.c
-+++ b/fs/aio.c
-@@ -1541,11 +1541,17 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
- 	ssize_t ret;
- 
- 	/* enforce forwards compatibility on users */
--	if (unlikely(iocb->aio_reserved1 || iocb->aio_reserved2)) {
-+	if (unlikely(iocb->aio_reserved2)) {
- 		pr_debug("EINVAL: reserve field set\n");
- 		return -EINVAL;
- 	}
- 
-+	if (unlikely(iocb->aio_rw_flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC))) {
-+		pr_debug("EINVAL: aio_rw_flags set with incompatible flags\n");
-+		return -EINVAL;
-+	}
-+
-+
- 	/* prevent overflows */
- 	if (unlikely(
- 	    (iocb->aio_buf != (unsigned long)iocb->aio_buf) ||
-@@ -1586,6 +1592,8 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
- 		req->common.ki_flags |= IOCB_EVENTFD;
- 	}
- 
-+	req->common.ki_flags |= iocb_rw_flags(iocb->aio_rw_flags);
-+
- 	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
- 	if (unlikely(ret)) {
- 		pr_debug("EFAULT: aio_key\n");
-diff --git a/fs/read_write.c b/fs/read_write.c
-index c4f88afbc67f..9aa557bb471c 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -682,12 +682,7 @@ static ssize_t do_iter_readv_writev(struct file *filp, struct iov_iter *iter,
- 		return -EOPNOTSUPP;
- 
- 	init_sync_kiocb(&kiocb, filp);
--	if (flags & RWF_HIPRI)
--		kiocb.ki_flags |= IOCB_HIPRI;
--	if (flags & RWF_DSYNC)
--		kiocb.ki_flags |= IOCB_DSYNC;
--	if (flags & RWF_SYNC)
--		kiocb.ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
-+	kiocb.ki_flags |= iocb_rw_flags(flags);
- 	kiocb.ki_pos = *ppos;
- 
- 	if (type == READ)
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 7251f7bb45e8..35cfb08ceb9d 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -3049,6 +3049,18 @@ static inline int iocb_flags(struct file *file)
- 	return res;
- }
- 
-+static inline int iocb_rw_flags(int flags)
-+{
-+	int res = 0;
-+	if (flags & RWF_HIPRI)
-+		res |= IOCB_HIPRI;
-+	if (flags & RWF_DSYNC)
-+		res |= IOCB_DSYNC;
-+	if (flags & RWF_SYNC)
-+		res |= (IOCB_DSYNC | IOCB_SYNC);
-+	return res;
-+}
-+
- static inline ino_t parent_ino(struct dentry *dentry)
- {
- 	ino_t res;
-diff --git a/include/uapi/linux/aio_abi.h b/include/uapi/linux/aio_abi.h
-index bb2554f7fbd1..a2d4a8ac94ca 100644
---- a/include/uapi/linux/aio_abi.h
-+++ b/include/uapi/linux/aio_abi.h
-@@ -79,7 +79,7 @@ struct io_event {
- struct iocb {
- 	/* these are internal to the kernel/libc. */
- 	__u64	aio_data;	/* data to be returned in event's data */
--	__u32	PADDED(aio_key, aio_reserved1);
-+	__u32	PADDED(aio_key, aio_rw_flags);
- 				/* the kernel sets aio_key to the req # */
- 
- 	/* common fields */
--- 
-2.12.0
+> I still don't have a good idea how to fix this, though.  One idea
+> would be to prevent mixing different items, but I think being able
+> to mix them was one of your goals with the defer infrastructure rewrite.
 
+Yes, we have to be able to perform several different types of updates
+in one defer_ops so that we can execute CoW remappings atomically.
+
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
