@@ -1,157 +1,208 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45962 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755193AbdDMS22 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Apr 2017 14:28:28 -0400
-Date: Thu, 13 Apr 2017 14:28:25 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 02/10] xfs: rewrite xfs_da_grow_inode_int
-Message-ID: <20170413182825.GB25915@bfoster.bfoster>
-References: <20170413080517.12564-1-hch@lst.de>
- <20170413080517.12564-3-hch@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:45235 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752695AbdDLQOm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 12:14:42 -0400
+Date: Wed, 12 Apr 2017 09:14:34 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2] fstests/xfs: xfs_repair should junk empty attribute
+ leaf blocks
+Message-ID: <20170412161434.GM8502@birch.djwong.org>
+References: <1492011577-13436-1-git-send-email-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170413080517.12564-3-hch@lst.de>
+In-Reply-To: <1492011577-13436-1-git-send-email-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu, Apr 13, 2017 at 10:05:09AM +0200, Christoph Hellwig wrote:
-> Use one xfs_bmapi_write loop that just iterates if it didn't manage to
-> allocate enough blocks.  Get rid of the separate contig call that just
-> makes us call the allocator twice, and also get rid of the memory
-> allocation for the map array that we don't actually need.
+On Wed, Apr 12, 2017 at 11:39:37PM +0800, Zorro Lang wrote:
+> There was a bug during log replay, the attr/attr3 leaf verifier
+> reported corruption when encountering a leaf attribute with a
+> count of 0 in the header, as below:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Metadata corruption detected at xfs_attr3_leaf block 0x480988/0x1000
+> 
+> commit f714016 from xfsprogs has fixed this bug. This test case
+> will emulate this corruption by xfs_db and use xfs_repair to fix
+> it.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_da_btree.c | 94 +++++++++++++-------------------------------
->  1 file changed, 28 insertions(+), 66 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index 1bdf2888295b..00853d332bcd 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -2007,84 +2007,46 @@ xfs_da_grow_inode_int(
->  	xfs_fileoff_t		*bno,
->  	int			count)
->  {
-> -	struct xfs_trans	*tp = args->trans;
-> -	struct xfs_inode	*dp = args->dp;
->  	int			w = args->whichfork;
-> -	xfs_rfsblock_t		nblks = dp->i_d.di_nblocks;
-> -	struct xfs_bmbt_irec	map, *mapp;
-> -	int			nmap, error, got, i, mapi;
-> +	xfs_fileoff_t		b;
-> +	int			error;
->  
->  	/*
->  	 * Find a spot in the file space to put the new block.
->  	 */
-> -	error = xfs_bmap_first_unused(tp, dp, count, bno, w);
-> +	error = xfs_bmap_first_unused(args->trans, args->dp, count, bno, w);
->  	if (error)
->  		return error;
->  
-> -	/*
-> -	 * Try mapping it in one filesystem block.
-> -	 */
-> -	nmap = 1;
-> -	ASSERT(args->firstblock != NULL);
-> -	error = xfs_bmapi_write(tp, dp, *bno, count,
-> -			xfs_bmapi_aflag(w)|XFS_BMAPI_METADATA|XFS_BMAPI_CONTIG,
-> -			args->firstblock, args->total, &map, &nmap,
-> -			args->dfops);
-> -	if (error)
-> -		return error;
-> +	b = *bno;
-> +	do {
-> +		xfs_rfsblock_t nblks = args->dp->i_d.di_nblocks;
-> +		struct xfs_bmbt_irec imap;
-> +		xfs_extlen_t len;
-> +		int nmap = 1;
+> Hi,
+> 
+> V2 did below changes:
+> 1) remove the requirement for xfs_db's write and addr commands
+> 2) check if xfs_db support write -d option
+> 3) turn to get filesystem block size from _filter_mkfs output
+> 4) add more comments
+> 
+> Thanks,
+> Zorro
+> 
+>  tests/xfs/288     | 110 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/288.out |   2 +
+>  tests/xfs/group   |   1 +
+>  3 files changed, 113 insertions(+)
+>  create mode 100755 tests/xfs/288
+>  create mode 100644 tests/xfs/288.out
+> 
+> diff --git a/tests/xfs/288 b/tests/xfs/288
+> new file mode 100755
+> index 0000000..81e7b50
+> --- /dev/null
+> +++ b/tests/xfs/288
+> @@ -0,0 +1,110 @@
+> +#! /bin/bash
+> +# FS QA Test 288
+> +#
+> +# When an attribute leaf block count is 0, xfs_repair should junk
+> +# that leaf directly (as xfsprogs commit f714016).
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2017 Red Hat Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
 > +
-> +		error = xfs_bmapi_write(args->trans, args->dp, b, count,
-> +				xfs_bmapi_aflag(w) | XFS_BMAPI_METADATA,
-> +				args->firstblock, args->total, &imap, &nmap,
-> +				args->dfops);
-> +		if (error)
-> +			return error;
-> +		if (!nmap)
-> +			return -ENOSPC;
->  
-> -	ASSERT(nmap <= 1);
-> -	if (nmap == 1) {
-> -		mapp = &map;
-> -		mapi = 1;
-> -	} else if (nmap == 0 && count > 1) {
-> -		xfs_fileoff_t		b;
-> -		int			c;
-> +		len = imap.br_startoff + imap.br_blockcount - b;
-> +		ASSERT(imap.br_startoff <= b);
-> +		ASSERT(len > 0);
-> +		ASSERT(len <= count);
->  
-> -		/*
-> -		 * If we didn't get it and the block might work if fragmented,
-> -		 * try without the CONTIG flag.  Loop until we get it all.
-> -		 */
-> -		mapp = kmem_alloc(sizeof(*mapp) * count, KM_SLEEP);
-> -		for (b = *bno, mapi = 0; b < *bno + count; ) {
-> -			nmap = MIN(XFS_BMAP_MAX_NMAP, count);
-> -			c = (int)(*bno + count - b);
-> -			error = xfs_bmapi_write(tp, dp, b, c,
-> -					xfs_bmapi_aflag(w)|XFS_BMAPI_METADATA,
-> -					args->firstblock, args->total,
-> -					&mapp[mapi], &nmap, args->dfops);
-> -			if (error)
-> -				goto out_free_map;
-> -			if (nmap < 1)
-> -				break;
-> -			mapi += nmap;
-> -			b = mapp[mapi - 1].br_startoff +
-> -			    mapp[mapi - 1].br_blockcount;
-> -		}
-> -	} else {
-> -		mapi = 0;
-> -		mapp = NULL;
-> -	}
-> -
-> -	/*
-> -	 * Count the blocks we got, make sure it matches the total.
-> -	 */
-> -	for (i = 0, got = 0; i < mapi; i++)
-> -		got += mapp[i].br_blockcount;
-> -	if (got != count || mapp[0].br_startoff != *bno ||
-> -	    mapp[mapi - 1].br_startoff + mapp[mapi - 1].br_blockcount !=
-> -	    *bno + count) {
-> -		error = -ENOSPC;
-> -		goto out_free_map;
-> -	}
-> +		/* account for newly allocated blocks in reserved blocks total */
-> +		args->total -= (args->dp->i_d.di_nblocks - nblks);
->  
-> -	/* account for newly allocated blocks in reserved blocks total */
-> -	args->total -= dp->i_d.di_nblocks - nblks;
-> +		b += len;
-> +		count -= len;
-> +	} while (count > 0);
->  
-> -out_free_map:
-> -	if (mapp != &map)
-> -		kmem_free(mapp);
-> -	return error;
-> +	return 0;
->  }
->  
->  /*
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/attr
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# V4 XFS attr type is 'attr'
+> +write_cmd="write"
+> +
+> +# Modify as appropriate.
+> +_supported_fs xfs
+> +_supported_os Linux
+> +_require_scratch
+> +_require_attrs
+> +
+> +_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
+> +. $tmp.mkfs
+> +
+> +# If test on XFS with CRC enabled, after change attr's hdr.count we need
+> +# to recalculate crc by use write -d option
+> +if [ $_fs_has_crcs -eq 1 ]; then
+> +	# check if xfs_db support write -d option
+> +	_scratch_xfs_db -x -c "sb" -c "write -d" 2>&1 | \
+> +		grep -q "invalid option"
+> +	if [ $? -eq 0 ];then
+> +		_notrun "xfs_db doesn't support write -d option"
+> +	fi
+> +	# This's a trick to check if xfs_db support recalculating
+> +	# CRCs of attr3
+> +	_scratch_xfs_db -x -c "daddr 0" \
+> +			   -c "type attr3" \
+> +			   -c "write -d" 2>/dev/null | \
+> +		grep -q "Cannot recalculate CRCs on this type of object"
+> +	if [ $? -eq 0 ];then
+> +		_notrun "xfs_db can't recalculate CRCs of attr3"
+> +	fi
+> +	# V5 XFS attr type is 'attr3'
+> +	write_cmd="write -d"
+> +fi
+> +
+> +_scratch_mount
+> +
+> +touch $SCRATCH_MNT/$seq.attrfile
+> +inum=$(stat -c '%i' $SCRATCH_MNT/$seq.attrfile)
+> +
+> +# To get an attr block leaf, we need to extend attr format to extent
+> +# format at least, and the max inode size is half of filesystem
+> +# block size, so write half of block size attr to make sure attr
+> +# out of local format.
+> +maxisize=$((dbsize/2))
+> +$SETFATTR_PROG -n "user.testattr${seq}" \
+> +	       -v `python -c "print ($maxisize * 'a')"` \
+
+Need to check for the existence of python, or use xfs_io to write
+$maxisize bytes to a file and backtick-cat it into the command line.
+
+> +	       $SCRATCH_MNT/$seq.attrfile
+> +
+> +_scratch_unmount
+> +# manually corrupt the XFS, by set the header count of attr to 0
+> +_scratch_xfs_db -x -c "inode $inum" \
+> +		   -c "addr a.bmx[0].startblock" \
+
+"ablock 0" ?
+
+> +		   -c "$write_cmd hdr.count 0" >> $seqres.full
+> +
+
+Uh... we need an xfs_repair -n run here to validate that repair actually
+finds a broken xattr block.  Only then should we fix the fs.  Remember
+that xfs_repair only tells us if it thinks the fs is still broken.
+
+--D
+
+> +# This repair should junk above leaf attribute and fix this XFS, then
+> +# SCRATCH_DEV shouldn't be corrupted after this case done.
+> +_repair_scratch_fs >> $seqres.full
+> +
+> +echo "Silence is golden"
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/288.out b/tests/xfs/288.out
+> new file mode 100644
+> index 0000000..2958a5c
+> --- /dev/null
+> +++ b/tests/xfs/288.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 288
+> +Silence is golden
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index 75769f9..f27a7b6 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -285,6 +285,7 @@
+>  285 dangerous_fuzzers dangerous_scrub
+>  286 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+>  287 auto dump quota quick
+> +288 auto quick repair fuzzers
+>  290 auto rw prealloc quick ioctl zero
+>  291 auto repair
+>  292 auto mkfs quick
 > -- 
-> 2.11.0
+> 2.7.4
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
