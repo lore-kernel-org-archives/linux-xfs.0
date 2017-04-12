@@ -1,135 +1,186 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14520 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:45456 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755193AbdDMS2f (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Apr 2017 14:28:35 -0400
-Date: Thu, 13 Apr 2017 14:28:33 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 03/10] xfs: remove the XFS_BMAPI_CONTIG flag
-Message-ID: <20170413182832.GC25915@bfoster.bfoster>
-References: <20170413080517.12564-1-hch@lst.de>
- <20170413080517.12564-4-hch@lst.de>
+        id S1752497AbdDLQUY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Apr 2017 12:20:24 -0400
+Subject: Re: [PATCH v2] fstests/xfs: xfs_repair should junk empty attribute
+ leaf blocks
+References: <1492011577-13436-1-git-send-email-zlang@redhat.com>
+ <20170412161434.GM8502@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1541ef50-2145-d4b8-e6fd-1597a651e8ca@sandeen.net>
+Date: Wed, 12 Apr 2017 11:20:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170413080517.12564-4-hch@lst.de>
+In-Reply-To: <20170412161434.GM8502@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu, Apr 13, 2017 at 10:05:10AM +0200, Christoph Hellwig wrote:
-> The only user just went away, so we can remove the flag and the minlen
-> parameter in struct xfs_bmalloca now.
+On 4/12/17 11:14 AM, Darrick J. Wong wrote:
+> On Wed, Apr 12, 2017 at 11:39:37PM +0800, Zorro Lang wrote:
+>> There was a bug during log replay, the attr/attr3 leaf verifier
+>> reported corruption when encountering a leaf attribute with a
+>> count of 0 in the header, as below:
+>>
+>> Metadata corruption detected at xfs_attr3_leaf block 0x480988/0x1000
+>>
+>> commit f714016 from xfsprogs has fixed this bug. This test case
+>> will emulate this corruption by xfs_db and use xfs_repair to fix
+>> it.
+>>
+>> Signed-off-by: Zorro Lang <zlang@redhat.com>
+>> ---
+>>
+>> Hi,
+>>
+>> V2 did below changes:
+>> 1) remove the requirement for xfs_db's write and addr commands
+>> 2) check if xfs_db support write -d option
+>> 3) turn to get filesystem block size from _filter_mkfs output
+>> 4) add more comments
+>>
+>> Thanks,
+>> Zorro
+>>
+>>  tests/xfs/288     | 110 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/xfs/288.out |   2 +
+>>  tests/xfs/group   |   1 +
+>>  3 files changed, 113 insertions(+)
+>>  create mode 100755 tests/xfs/288
+>>  create mode 100644 tests/xfs/288.out
+>>
+>> diff --git a/tests/xfs/288 b/tests/xfs/288
+>> new file mode 100755
+>> index 0000000..81e7b50
+>> --- /dev/null
+>> +++ b/tests/xfs/288
+>> @@ -0,0 +1,110 @@
+>> +#! /bin/bash
+>> +# FS QA Test 288
+>> +#
+>> +# When an attribute leaf block count is 0, xfs_repair should junk
+>> +# that leaf directly (as xfsprogs commit f714016).
+>> +#
+>> +#-----------------------------------------------------------------------
+>> +# Copyright (c) 2017 Red Hat Inc.  All Rights Reserved.
+>> +#
+>> +# This program is free software; you can redistribute it and/or
+>> +# modify it under the terms of the GNU General Public License as
+>> +# published by the Free Software Foundation.
+>> +#
+>> +# This program is distributed in the hope that it would be useful,
+>> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> +# GNU General Public License for more details.
+>> +#
+>> +# You should have received a copy of the GNU General Public License
+>> +# along with this program; if not, write the Free Software Foundation,
+>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>> +#-----------------------------------------------------------------------
+>> +#
+>> +
+>> +seq=`basename $0`
+>> +seqres=$RESULT_DIR/$seq
+>> +echo "QA output created by $seq"
+>> +
+>> +here=`pwd`
+>> +tmp=/tmp/$$
+>> +status=1	# failure is the default!
+>> +trap "_cleanup; exit \$status" 0 1 2 3 15
+>> +
+>> +_cleanup()
+>> +{
+>> +	cd /
+>> +	rm -f $tmp.*
+>> +}
+>> +
+>> +# get standard environment, filters and checks
+>> +. ./common/rc
+>> +. ./common/filter
+>> +. ./common/attr
+>> +
+>> +# remove previous $seqres.full before test
+>> +rm -f $seqres.full
+>> +
+>> +# V4 XFS attr type is 'attr'
+>> +write_cmd="write"
+>> +
+>> +# Modify as appropriate.
+>> +_supported_fs xfs
+>> +_supported_os Linux
+>> +_require_scratch
+>> +_require_attrs
+>> +
+>> +_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
+>> +. $tmp.mkfs
+>> +
+>> +# If test on XFS with CRC enabled, after change attr's hdr.count we need
+>> +# to recalculate crc by use write -d option
+>> +if [ $_fs_has_crcs -eq 1 ]; then
+>> +	# check if xfs_db support write -d option
+>> +	_scratch_xfs_db -x -c "sb" -c "write -d" 2>&1 | \
+>> +		grep -q "invalid option"
+>> +	if [ $? -eq 0 ];then
+>> +		_notrun "xfs_db doesn't support write -d option"
+>> +	fi
+>> +	# This's a trick to check if xfs_db support recalculating
+>> +	# CRCs of attr3
+>> +	_scratch_xfs_db -x -c "daddr 0" \
+>> +			   -c "type attr3" \
+>> +			   -c "write -d" 2>/dev/null | \
+>> +		grep -q "Cannot recalculate CRCs on this type of object"
+>> +	if [ $? -eq 0 ];then
+>> +		_notrun "xfs_db can't recalculate CRCs of attr3"
+>> +	fi
+>> +	# V5 XFS attr type is 'attr3'
+>> +	write_cmd="write -d"
+>> +fi
+
+Also, I think it might be a lot easier to just create the fs w/o CRCs,
+I don't think we need CRCs to validate the xfs_repair fix.
+
+>> +
+>> +_scratch_mount
+>> +
+>> +touch $SCRATCH_MNT/$seq.attrfile
+>> +inum=$(stat -c '%i' $SCRATCH_MNT/$seq.attrfile)
+>> +
+>> +# To get an attr block leaf, we need to extend attr format to extent
+>> +# format at least, and the max inode size is half of filesystem
+>> +# block size, so write half of block size attr to make sure attr
+>> +# out of local format.
+>> +maxisize=$((dbsize/2))
+>> +$SETFATTR_PROG -n "user.testattr${seq}" \
+>> +	       -v `python -c "print ($maxisize * 'a')"` \
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 17 +++++++----------
->  fs/xfs/libxfs/xfs_bmap.h |  3 ---
->  2 files changed, 7 insertions(+), 13 deletions(-)
+> Need to check for the existence of python, or use xfs_io to write
+> $maxisize bytes to a file and backtick-cat it into the command line.
+
+or don't depend on python at all, do something like:
+
+dd if=/dev/zero bs=$maxsize count=1 | attr -s testattr${seq} $SCRATCH_MNT/$seq.attrfile
+
+or /anything/ else that doesn't depend on python, please :) 
+
+>> +	       $SCRATCH_MNT/$seq.attrfile
+>> +
+>> +_scratch_unmount
+>> +# manually corrupt the XFS, by set the header count of attr to 0
+>> +_scratch_xfs_db -x -c "inode $inum" \
+>> +		   -c "addr a.bmx[0].startblock" \
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 7f42f6067eb5..aec4907056ba 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3473,12 +3473,12 @@ xfs_bmap_select_minlen(
->  	xfs_extlen_t		*blen,
->  	int			notinit)
->  {
-> -	if (notinit || *blen < ap->minlen) {
-> +	if (notinit) {
->  		/*
->  		 * Since we did a BUF_TRYLOCK above, it is possible that
->  		 * there is space for this request.
->  		 */
-> -		args->minlen = ap->minlen;
-> +		args->minlen = 1;
-
-The ap param is no longer used in this function. Otherwise looks Ok to
-me:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  	} else if (*blen < args->maxlen) {
->  		/*
->  		 * If the best seen length is less than the request length,
-> @@ -3670,11 +3670,11 @@ xfs_bmap_btalloc(
->  			args.type = XFS_ALLOCTYPE_FIRST_AG;
->  		else
->  			args.type = XFS_ALLOCTYPE_START_BNO;
-> -		args.total = args.minlen = ap->minlen;
-> +		args.total = args.minlen = 1;
->  	} else {
->  		args.type = XFS_ALLOCTYPE_NEAR_BNO;
->  		args.total = ap->total;
-> -		args.minlen = ap->minlen;
-> +		args.minlen = 1;
->  	}
->  	/* apply extent size hints if obtained earlier */
->  	if (align) {
-> @@ -3776,9 +3776,8 @@ xfs_bmap_btalloc(
->  		if ((error = xfs_alloc_vextent(&args)))
->  			return error;
->  	}
-> -	if (args.fsbno == NULLFSBLOCK && nullfb &&
-> -	    args.minlen > ap->minlen) {
-> -		args.minlen = ap->minlen;
-> +	if (args.fsbno == NULLFSBLOCK && nullfb && args.minlen > 1) {
-> +		args.minlen = 1;
->  		args.type = XFS_ALLOCTYPE_START_BNO;
->  		args.fsbno = ap->blkno;
->  		if ((error = xfs_alloc_vextent(&args)))
-> @@ -3787,7 +3786,7 @@ xfs_bmap_btalloc(
->  	if (args.fsbno == NULLFSBLOCK && nullfb) {
->  		args.fsbno = 0;
->  		args.type = XFS_ALLOCTYPE_FIRST_AG;
-> -		args.total = ap->minlen;
-> +		args.total = 1;
->  		if ((error = xfs_alloc_vextent(&args)))
->  			return error;
->  		ap->dfops->dop_low = true;
-> @@ -4246,8 +4245,6 @@ xfs_bmapi_allocate(
->  			bma->datatype |= XFS_ALLOC_USERDATA_ZERO;
->  	}
->  
-> -	bma->minlen = (bma->flags & XFS_BMAPI_CONTIG) ? bma->length : 1;
-> -
->  	/*
->  	 * Only want to do the alignment at the eof if it is userdata and
->  	 * allocation length is larger than a stripe unit.
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index a6e612cabe15..d9e0b1db4cdb 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -48,7 +48,6 @@ struct xfs_bmalloca {
->  	int			logflags;/* flags for transaction logging */
->  
->  	xfs_extlen_t		total;	/* total blocks needed for xaction */
-> -	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
->  	xfs_extlen_t		minleft; /* amount must be left after alloc */
->  	bool			eof;	/* set if allocating past last extent */
->  	bool			wasdel;	/* replacing a delayed allocation */
-> @@ -81,7 +80,6 @@ struct xfs_extent_free_item
->  #define XFS_BMAPI_PREALLOC	0x008	/* preallocation op: unwritten space */
->  #define XFS_BMAPI_IGSTATE	0x010	/* Ignore state - */
->  					/* combine contig. space */
-> -#define XFS_BMAPI_CONTIG	0x020	/* must allocate only one extent */
->  /*
->   * unwritten extent conversion - this needs write cache flushing and no additional
->   * allocation alignments. When specified with XFS_BMAPI_PREALLOC it converts
-> @@ -119,7 +117,6 @@ struct xfs_extent_free_item
->  	{ XFS_BMAPI_ATTRFORK,	"ATTRFORK" }, \
->  	{ XFS_BMAPI_PREALLOC,	"PREALLOC" }, \
->  	{ XFS_BMAPI_IGSTATE,	"IGSTATE" }, \
-> -	{ XFS_BMAPI_CONTIG,	"CONTIG" }, \
->  	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
->  	{ XFS_BMAPI_ZERO,	"ZERO" }, \
->  	{ XFS_BMAPI_REMAP,	"REMAP" }, \
-> -- 
-> 2.11.0
+> "ablock 0" ?
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> +		   -c "$write_cmd hdr.count 0" >> $seqres.full
+>> +
+> 
+> Uh... we need an xfs_repair -n run here to validate that repair actually
+> finds a broken xattr block.  Only then should we fix the fs.  Remember
+> that xfs_repair only tells us if it thinks the fs is still broken.
+> 
+> --D
+
