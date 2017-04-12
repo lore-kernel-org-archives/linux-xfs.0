@@ -1,47 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41592 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752239AbdDNHq7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 14 Apr 2017 03:46:59 -0400
-Date: Fri, 14 Apr 2017 09:46:58 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 04/10] xfs: remove an unsafe retry in
-        xfs_bmbt_alloc_block
-Message-ID: <20170414074658.GA24766@lst.de>
-References: <20170413080517.12564-1-hch@lst.de> <20170413080517.12564-5-hch@lst.de> <20170413183006.GD25915@bfoster.bfoster>
+Received: from bombadil.infradead.org ([65.50.211.133]:34462 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752095AbdDLR5p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 13:57:45 -0400
+Date: Wed, 12 Apr 2017 10:57:44 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Deadlock between block allocation and block truncation
+Message-ID: <20170412175744.GA20546@infradead.org>
+References: <800468eb-3ded-9166-20a4-047de8018582@gmail.com>
+ <20170412161017.GA16590@infradead.org>
+ <3e0d4184-9d7a-9ca8-330c-727b183975a6@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170413183006.GD25915@bfoster.bfoster>
+In-Reply-To: <3e0d4184-9d7a-9ca8-330c-727b183975a6@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Nikolay Borisov <n.borisov.lkml@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Thu, Apr 13, 2017 at 02:30:06PM -0400, Brian Foster wrote:
-> I'm not quite following why this retry is unsafe as noted in the patch
-> title.. do you mean "unnecessary?" AFAICT, the firstblock == NULLFSBLOCK
-> case means we can issue this first allocation from any AG.
+On Wed, Apr 12, 2017 at 08:44:32PM +0300, Nikolay Borisov wrote:
+> "
+> djwong: either agf1 is clean and it needs to release that before going
+> for agf0, or agf1 is dirty and thus it cannot go for agf0
+> "
 
-Yes.
+Yes.  Older kernels had some bugs in this area due to busy extent
+tracking, where xfs_alloc_ag_vextent would fail despite
+xfs_alloc_fix_freelist picking an AG and possibly dirtying the AGF.
+My busy extent tracking changes for the asynchronous discard code in
+4.11-rc should have fixed that.
 
-> If no AG can
-> allocate a block while satisfying minleft, then we can still safely
-> allocate from any AG provided any subsequent allocations occur in
-> increasing AG order (i.e., by setting dop_low), right?
-
-Yes.  But minleft is set exactly because we require this number of
-blocks to be left after the current allocation.  If we could only
-allocate the current allocation, but not satisfy minleft we risk
-shutting the file system during subsequent allocations instead of
-just returning ENOSPC now.
-
-> Also, if this is unnecessary, what exactly verifies that all of the
-> reserved blocks are available within the same AG?
-
-xfs_alloc_space_available verifies that ->total blocks are available
-in the current AG.  Callers of the allocator need to set it to the
-correct value currently, although I have more xfs_bmapi changes in
-the pipe to get this right automatically - but those aren't 4.12
-material.
+But even with that in place I think that locking two AGFs in any
+order in the truncate path is wrong.
