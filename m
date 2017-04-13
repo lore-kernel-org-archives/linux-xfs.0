@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38703 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:55034 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753957AbdDMIFv (ORCPT
+        with ESMTP id S1753534AbdDMIFv (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2017 04:05:51 -0400
 Received: from 212095007060.public.telering.at ([212.95.7.60] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cyZlB-0007dK-Mm
-        for linux-xfs@vger.kernel.org; Thu, 13 Apr 2017 08:05:46 +0000
+        id 1cyZlF-0007eO-Vz
+        for linux-xfs@vger.kernel.org; Thu, 13 Apr 2017 08:05:50 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/10] xfs: fix bmap minleft calculation
-Date: Thu, 13 Apr 2017 10:05:13 +0200
-Message-Id: <20170413080517.12564-7-hch@lst.de>
+Subject: [PATCH 07/10] xfs: fix space reservation in xfs_bmbt_alloc_block
+Date: Thu, 13 Apr 2017 10:05:14 +0200
+Message-Id: <20170413080517.12564-8-hch@lst.de>
 In-Reply-To: <20170413080517.12564-1-hch@lst.de>
 References: <20170413080517.12564-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,80 +18,46 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-We need to set a proper minleft value even if we didn't do a previous
-allocation in the transaction, as we can't switch to a different AG
-after allocating the data extent.
+minleft counts the number of blocks that need to be available after the
+current allocation has been completed.  As the total allocation should not
+be more than the transaction reservation we need to subtract the
+allocation length.  In addition we need to subtract the already used
+transaction reservation, for that use the new xfs_trans_blk_res helper.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 27 +++++++++++++++++----------
- fs/xfs/libxfs/xfs_bmap.h |  1 -
- 2 files changed, 17 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_bmap_btree.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 53f1386b1868..6faefa342748 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3570,6 +3570,22 @@ xfs_bmap_btalloc_filestreams(
- 	return 0;
- }
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index ce41dd5fbb34..153c969febd4 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -442,6 +442,7 @@ xfs_bmbt_alloc_block(
+ 	args.mp = cur->bc_mp;
+ 	args.fsbno = cur->bc_private.b.firstblock;
+ 	args.firstblock = args.fsbno;
++	args.minlen = args.maxlen = args.prod = 1;
+ 	xfs_rmap_ino_bmbt_owner(&args.oinfo, cur->bc_private.b.ip->i_ino,
+ 			cur->bc_private.b.whichfork);
  
-+/*
-+ * Return the minimum number of blocks required for the bmap btree manipulation
-+ * after adding a single extent.
-+ */
-+static xfs_extlen_t
-+xfs_bmap_minleft(
-+	struct xfs_bmalloca	*ap)
-+{
-+	int			whichfork = xfs_bmapi_whichfork(ap->flags);
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ap->ip, whichfork);
-+
-+	if (XFS_IFORK_FORMAT(ap->ip, whichfork) == XFS_DINODE_FMT_BTREE)
-+		return be16_to_cpu(ifp->if_broot->bb_level) + 1;
-+	return 1;
-+}
-+
- STATIC int
- xfs_bmap_btalloc(
- 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
-@@ -3738,7 +3754,7 @@ xfs_bmap_btalloc(
- 		args.alignment = 1;
- 		args.minalignslop = 0;
+@@ -459,14 +460,14 @@ xfs_bmbt_alloc_block(
+ 		 * reservation amount is insufficient then we may fail a
+ 		 * block allocation here and corrupt the filesystem.
+ 		 */
+-		args.minleft = args.tp->t_blk_res;
++		if (xfs_trans_blk_res(args.tp))
++			args.minleft = xfs_trans_blk_res(args.tp) - args.maxlen;
+ 	} else if (cur->bc_private.b.dfops->dop_low) {
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
+ 	} else {
+ 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
  	}
--	args.minleft = ap->minleft;
-+	args.minleft = xfs_bmap_minleft(ap);
- 	args.wasdel = ap->wasdel;
- 	args.resv = XFS_AG_RESV_NONE;
- 	args.datatype = ap->datatype;
-@@ -4493,15 +4509,6 @@ xfs_bmapi_write(
  
- 	XFS_STATS_INC(mp, xs_blk_mapw);
- 
--	if (*firstblock == NULLFSBLOCK) {
--		if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
--			bma.minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
--		else
--			bma.minleft = 1;
--	} else {
--		bma.minleft = 0;
--	}
--
- 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
- 		error = xfs_iread_extents(tp, ip, whichfork);
- 		if (error)
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index d9e0b1db4cdb..36a7f36f5f38 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -48,7 +48,6 @@ struct xfs_bmalloca {
- 	int			logflags;/* flags for transaction logging */
- 
- 	xfs_extlen_t		total;	/* total blocks needed for xaction */
--	xfs_extlen_t		minleft; /* amount must be left after alloc */
- 	bool			eof;	/* set if allocating past last extent */
- 	bool			wasdel;	/* replacing a delayed allocation */
- 	bool			aeof;	/* allocated space at eof */
+-	args.minlen = args.maxlen = args.prod = 1;
+ 	args.wasdel = cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL;
+ 	if (!args.wasdel && args.tp->t_blk_res == 0) {
+ 		error = -ENOSPC;
 -- 
 2.11.0
 
