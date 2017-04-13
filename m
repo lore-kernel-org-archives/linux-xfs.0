@@ -1,79 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38738 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50960 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752250AbdDMMCG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Apr 2017 08:02:06 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E224AC0467E5
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2017 12:02:05 +0000 (UTC)
-Date: Thu, 13 Apr 2017 08:01:55 -0400
+        id S1752963AbdDMNKV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Apr 2017 09:10:21 -0400
+Date: Thu, 13 Apr 2017 09:10:19 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfsprogs: update man for metadump about dirty
- log/obfuscation issue
-Message-ID: <20170413120152.GB24893@bfoster.bfoster>
-References: <20170413081354.22170-1-jtulak@redhat.com>
- <20170413081354.22170-3-jtulak@redhat.com>
+Subject: Re: [PATCH 2/2] mdrestore: warn about corruption if log is dirty
+Message-ID: <20170413131018.GD24893@bfoster.bfoster>
+References: <20170411141237.9274-1-jtulak@redhat.com>
+ <20170411141237.9274-3-jtulak@redhat.com>
+ <20170411223405.GC12369@dastard>
+ <20170412110403.GB6834@bfoster.bfoster>
+ <20170413025105.GD12369@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170413081354.22170-3-jtulak@redhat.com>
+In-Reply-To: <20170413025105.GD12369@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-On Thu, Apr 13, 2017 at 10:13:54AM +0200, Jan Tulak wrote:
-> This is something that should be documented, as it is not obvious to
-> everyone.
+On Thu, Apr 13, 2017 at 12:51:05PM +1000, Dave Chinner wrote:
+> On Wed, Apr 12, 2017 at 07:04:04AM -0400, Brian Foster wrote:
+> > On Wed, Apr 12, 2017 at 08:34:05AM +1000, Dave Chinner wrote:
+> > > On Tue, Apr 11, 2017 at 04:12:37PM +0200, Jan Tulak wrote:
+> > > > A dirty log in an obfuscated dump means that a corruption can happen
+> > > > when replaying the log (which contains unobfuscated data). Warn the user
+> > > > about this possibility.
+> > > > 
+> > > > The xlog workaround is copy&paste solution from repair/phase2.c and
+> > > > other tools, because the function is not implemented in libxlog.
+> > > > 
+> > > > Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> > > 
+> > > I think this is overkill. mdrestore is not the place
+> > > to be interpreting the state of the dumped image - it is a basic
+> > > "restore the image" program, not a "check the validity of the image"
+> > > program.
+> > > 
+> > 
+> > I think that's a reasonable argument for the mdrestore side. I'm less
+> > interested in seeing a warning on the restore side in general,
+> > personally. I was initially thinking it would have required less code
+> > and the whole obfuscation detection thing is getting into hackish
+> > territory, to be fair.
+> > 
+> > > Secondly, if people are having problems with running log recovery on
+> > > a restored obfuscated image and getting corruption and not knowing
+> > > why or what to do, then that is a /documentation and training/
+> > > problem, not a code problem.
+> > > 
+> > > i.e. the problem is that people who aren't developers are trying to
+> > > use tools that were written for developers to do forensic analysis
+> > > of failures. Don't dumb down the tool for clueless users - point the
+> > > users at the documentation that the tool requires to use correctly...
+> > > 
+> > 
+> > Put me in the clueless users bucket, then. This started with a customer
+> > with a corrupted filesystem that provided a metadump that exhibited
+> > filesystem corruption. A support person began the process of diagnosing
+> > the problem and it eventually got to me, who had to spend a nontrivial
+> > amount of time trying to identify what the problem was, see if I could
+> > reproduce it on my own to verify it was actually specific to the
+> > metadump, etc.
+> > 
+> > This is not an obvious "your metadump is broken" log recovery failure.
+> > It's a latent directory corruption that doesn't obviously have anything
+> > to do with log recovery in the first place. I'm sure I'll be able to
+> > spot it going forward for some time while it's fresh in my mind, but I
+> > expect to lose track of that eventually given the rarity (of debugging
+> > log recovery issues). It's not reasonable at all to expect regular users
+> > or support people to understand this enough to filter out bad images or
+> > know when to use or not use a certain combination of metadump options,
+> > because it otherwise requires a detailed understanding of XFS logging
+> > and directory internals.
 > 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> ---
->  man/man8/xfs_metadump.8 | 6 ++++++
->  1 file changed, 6 insertions(+)
+> Log recovery on an obfuscated directory is, to me, a known obvious
+> vector for directory corruption because we replay unobfuscated
+> dirents over obfuscated on-disk data. Buffer logging is done in
+> aligned 128 byte chunks, so it /should/ be obvious that the recovery
+> of directory data buffers will partially overwrite dirents on disk
+> even when they were not directly modified by the user.  And because
+> this causes an obfuscated/clear text mismatch in the dirent name,
+> the hash will not calculate to teh same as what the directory stored
+> for that dirent. Hence the corruption reports that repair will now
+> spew...
 > 
-> diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
-> index 3731d6a..1b40fb8 100644
-> --- a/man/man8/xfs_metadump.8
-> +++ b/man/man8/xfs_metadump.8
-> @@ -59,6 +59,12 @@ options where
->  are not obfuscated. Names between 5 and 8 characters in length inclusively
->  are partially obfuscated.
->  .PP
-> +Log recovery of an obfuscated metadata image can leak
-> +unobfuscated metadata and/or cause image corruption. Please mount
-> +the source filesystem to clean the log or disable obfuscation, if possible.
-> +If you have to obfuscate an image with a dirty log, tell about it to whoever
-> +you are sending the image to.
-> +.PP
+> This was always considered a known problem for obfuscated metadump
+> restorations - the unobfuscated log will result in recovery issues
+> and name/data corruptions for dirs and xattrs.  In hindsight, this
+> should have been documented long ago so you didn't have to waste the
+> time to "rediscover" it like you did. It wasn't documented because
+> both developers and users were far more concerned about the data
+> exposure issues than they were about whether the log unobfuscated
+> log replayed correctly or not.
+> 
 
-We might want the man page content to be a bit more descriptive than
-what xfs_metadump actually emits for a warning. For example:
+What might be obvious to a design architect from a code standpoint isn't
+necessarily obvious to others nor obvious in practice. With such an
+image in hand, it's not obvious (enough, IMO) that the corruption is
+even a result of log recovery.
 
-"xfs_metadump does not obfuscate data in the filesystem log. Log
-recovery of an obfuscated metadump image may expose unobfuscated
-metadata and/or cause filesystem corruption. It is recommended to
-disable obfuscation for filesystems that must be captured with a dirty
-log."
+Rather, that is something that has to be worked out, distinguished from
+any other potentially similar corruption of the source image and
+isolated to the metadump image itself. This is a waste of time for
+everybody involved.
 
-... but that's just my .02. Feel free to reword that and solicit more
-feedback from others too. Another thought here could be to intimate that
-if an obfuscated+dirty log metadump image is truly required, it is the
-user responsibility to verify that the resulting image has not been
-corrupted by the metadump process and does not contain sensitive
-metadata (as opposed to telling the user to simply tell the recipient of
-the image about it).
+> IMO - and as I said to Eric on IRC - we should not be trying to work
+> around institutional problems (i.e. inability to train or impart the
+> necessary knowledge on support engineers) with code changes.
+> Training support engineers properly requires documentation and
+> knowledge distribution processes; the code implementing the tools
+> they are being taught about is not the right instrument to perform
+> this knowledge transfer....
+> 
+
+Documentation is good. Jan's latest series updates the man page on the
+issue.
+
+That aside, this does not reduce to solely a documentation problem.
+xfs_metadump is simply broken for particular source filesystems in that
+it may corrupt the resulting fs image (by default, no less). The
+fundamentally correct approach is to fix metadump obfuscation to not
+corrupt the output image (then we wouldn't need to document the fact
+that it does ;).
+
+Fixing xfs_metadump to obfuscate the log correctly is not a trivial
+matter, however, so that isn't a realistic solution atm. The next
+available option is to disallow obfuscation of such filesystems, but
+that limits the use of a valuable support tool to avoid a
+rare/particular case. The next available option after that is the
+approach implemented by these patches: to warn about the situation to
+hopefully avoid the effects of the problem in the field.
+
+So while I'm actually fine with dropping the mdrestore side bits here
+for practical reasons (it's more code than I anticipated for the purpose
+of emitting a warning), and I agree that we should update documentation,
+the hightest priority here should be to provide a usable tool that
+functions correctly.
+
+IOW, this documentation problem exists because the tool is broken. The
+tool will remain broken despite the fact that the problem is documented.
+Therefore, we are not just working around a documentation issue by
+attempting to improve the tool.
 
 Brian
 
->  .B xfs_metadump
->  should not be used for any purposes other than for debugging and reporting
->  filesystem problems. The most common usage scenario for this tool is when
-> -- 
-> 2.1.4
+> Cheers,
 > 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
