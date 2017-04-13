@@ -1,85 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f51.google.com ([209.85.213.51]:34531 "EHLO
-        mail-vk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750765AbdDMM3z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2017 08:29:55 -0400
-Received: by mail-vk0-f51.google.com with SMTP id z204so27231198vkd.1
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2017 05:29:55 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:33572 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751808AbdDMSpo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Apr 2017 14:45:44 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 6B3268E3D8
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2017 18:45:44 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: handle array index overrun in xfs_dir2_leaf_readbuf()
+Message-ID: <9d5a5529-894d-bacd-501e-e0d9ece473b8@redhat.com>
+Date: Thu, 13 Apr 2017 13:45:43 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170413120152.GB24893@bfoster.bfoster>
-References: <20170413081354.22170-1-jtulak@redhat.com> <20170413081354.22170-3-jtulak@redhat.com>
- <20170413120152.GB24893@bfoster.bfoster>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Thu, 13 Apr 2017 14:29:34 +0200
-Message-ID: <CACj3i70UdyecqPjxNG9c=7gWdi1sjigFAPQX+TWYP0omj_2WvQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] xfsprogs: update man for metadump about dirty
- log/obfuscation issue
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>, Carlos Maiolino <cmaiolin@redhat.com>
 
-On Thu, Apr 13, 2017 at 2:01 PM, Brian Foster <bfoster@redhat.com> wrote:
-> On Thu, Apr 13, 2017 at 10:13:54AM +0200, Jan Tulak wrote:
->> This is something that should be documented, as it is not obvious to
->> everyone.
->>
->> Signed-off-by: Jan Tulak <jtulak@redhat.com>
->> ---
->>  man/man8/xfs_metadump.8 | 6 ++++++
->>  1 file changed, 6 insertions(+)
->>
->> diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
->> index 3731d6a..1b40fb8 100644
->> --- a/man/man8/xfs_metadump.8
->> +++ b/man/man8/xfs_metadump.8
->> @@ -59,6 +59,12 @@ options where
->>  are not obfuscated. Names between 5 and 8 characters in length inclusively
->>  are partially obfuscated.
->>  .PP
->> +Log recovery of an obfuscated metadata image can leak
->> +unobfuscated metadata and/or cause image corruption. Please mount
->> +the source filesystem to clean the log or disable obfuscation, if possible.
->> +If you have to obfuscate an image with a dirty log, tell about it to whoever
->> +you are sending the image to.
->> +.PP
->
-> We might want the man page content to be a bit more descriptive than
-> what xfs_metadump actually emits for a warning. For example:
->
-> "xfs_metadump does not obfuscate data in the filesystem log. Log
-> recovery of an obfuscated metadump image may expose unobfuscated
-> metadata and/or cause filesystem corruption. It is recommended to
-> disable obfuscation for filesystems that must be captured with a dirty
-> log."
->
-> ... but that's just my .02. Feel free to reword that and solicit more
-> feedback from others too. Another thought here could be to intimate that
-> if an obfuscated+dirty log metadump image is truly required, it is the
-> user responsibility to verify that the resulting image has not been
-> corrupted by the metadump process and does not contain sensitive
-> metadata (as opposed to telling the user to simply tell the recipient of
-> the image about it).
->
+Carlos had a case where "find" seemed to start spinning
+forever and never return.
 
-Sounds reasonable, so how about these two paragraphs?
+This was on a filesystem with non-default multi-fsb (8k)
+directory blocks, and a fragmented directory with extents
+like this:
 
-> "xfs_metadump does not obfuscate data in the filesystem log. Log
-> recovery of an obfuscated metadump image may expose unobfuscated
-> metadata and/or cause filesystem corruption. It is recommended to
-> disable obfuscation for filesystems that must be captured with a dirty
-> log.
+0:[0,133646,2,0]
+1:[2,195888,1,0]
+2:[3,195890,1,0]
+3:[4,195892,1,0]
+4:[5,195894,1,0]
+5:[6,195896,1,0]
+6:[7,195898,1,0]
+7:[8,195900,1,0]
+8:[9,195902,1,0]
+9:[10,195908,1,0]
+10:[11,195910,1,0]
+11:[12,195912,1,0]
+12:[13,195914,1,0]
+...
 
-If it is necessary to use obfuscation for any reason and the source fileystem
-can't be mounted to clean the log, the resulting image should be tested for
-any corruption caused by metadump process and any sensitive information
-in the log and the recipient of the image informed about the result."
+i.e. the first extent is a contiguous 2-fsb dir block, but
+after that it is fragmented into 1 block extents.
 
-Cheers,
-Jan
+At the top of the readdir path, we allocate a mapping array
+which (for this filesystem geometry) can hold 10 extents; see
+the assignment to map_info->map_size.  During readdir, we are
+therefore able to map extents 0 through 9 above into the array
+for readahead purposes.  If we count by 2, we see that the last
+mapped index (9) is the first block of a 2-fsb directory block.
 
--- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+At the end of xfs_dir2_leaf_readbuf() we have 2 loops to fill
+more readahead; the outer loop assumes one full dir block is
+processed each loop iteration, and an inner loop that ensures
+that this is so by advancing to the next extent until a full
+directory block is mapped.
+
+The problem is that this inner loop may step past the last
+extent in the mapping array as it tries to reach the end of
+the directory block.  This will read garbage for the extent
+length, and as a result the loop control variable 'j' may
+become corrupted and never fail the loop conditional.
+
+The number of valid mappings we have in our array is stored
+in map->map_valid, so stop this inner loop based on that limit.
+
+There is an ASSERT at the top of the outer loop for this
+same condition, but we never made it out of the inner loop,
+so the ASSERT never fired.
+
+Huge appreciation for Carlos for debugging and isolating
+the problem.
+
+Debugged-and-analyzed-by: Carlos Maiolino <cmaiolin@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index ad9396e..c45de72 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -394,6 +394,7 @@ struct xfs_dir2_leaf_map_info {
+ 
+ 	/*
+ 	 * Do we need more readahead?
++	 * Each loop tries to process 1 full dir blk; last may be partial.
+ 	 */
+ 	blk_start_plug(&plug);
+ 	for (mip->ra_index = mip->ra_offset = i = 0;
+@@ -425,9 +426,14 @@ struct xfs_dir2_leaf_map_info {
+ 		}
+ 
+ 		/*
+-		 * Advance offset through the mapping table.
++		 * Advance offset through the mapping table, processing a full
++		 * dir block even if it is fragmented into several extents.
++		 * But stop if we have consumed all valid mappings, even if
++		 * it's not yet a full directory block.
+ 		 */
+-		for (j = 0; j < geo->fsbcount; j += length ) {
++		for (j = 0;
++		     j < geo->fsbcount && mip->ra_index < mip->map_valid;
++		     j += length ) {
+ 			/*
+ 			 * The rest of this extent but not more than a dir
+ 			 * block.
+
+
