@@ -1,70 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62941 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:42670 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753550AbdDMS2W (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Apr 2017 14:28:22 -0400
-Date: Thu, 13 Apr 2017 14:28:20 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 01/10] xfs: introduce xfs_trans_blk_res
-Message-ID: <20170413182820.GA25915@bfoster.bfoster>
-References: <20170413080517.12564-1-hch@lst.de>
- <20170413080517.12564-2-hch@lst.de>
+        id S1750745AbdDMO2C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Apr 2017 10:28:02 -0400
+Subject: Re: [PATCH] mkfs: remove leftover blkid include
+References: <20170413135122.16730-1-hch@lst.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <4669c4ed-dd3c-0ebe-8871-fc18004cb4e8@sandeen.net>
+Date: Thu, 13 Apr 2017 09:28:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170413080517.12564-2-hch@lst.de>
+In-Reply-To: <20170413135122.16730-1-hch@lst.de>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Thu, Apr 13, 2017 at 10:05:08AM +0200, Christoph Hellwig wrote:
-> This is a smaller helper to check the remaining block reservation in a
-> transaction.
+On 4/13/17 8:51 AM, Christoph Hellwig wrote:
+> All topology handling moved to libxcmd a while ago.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Seems fine, thanks.
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_trans.c | 2 +-
->  fs/xfs/xfs_trans.h | 5 +++++
->  2 files changed, 6 insertions(+), 1 deletion(-)
+>  mkfs/xfs_mkfs.c | 3 ---
+>  1 file changed, 3 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index a280e126491f..3a83927a5334 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -97,7 +97,7 @@ xfs_trans_dup(
->  	/* We gave our writer reference to the new transaction */
->  	tp->t_flags |= XFS_TRANS_NO_WRITECOUNT;
->  	ntp->t_ticket = xfs_log_ticket_get(tp->t_ticket);
-> -	ntp->t_blk_res = tp->t_blk_res - tp->t_blk_res_used;
-> +	ntp->t_blk_res = xfs_trans_blk_res(tp);
->  	tp->t_blk_res = tp->t_blk_res_used;
->  	ntp->t_rtx_res = tp->t_rtx_res - tp->t_rtx_res_used;
->  	tp->t_rtx_res = tp->t_rtx_res_used;
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 2a9292df6640..e4f041c89846 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -152,6 +152,11 @@ typedef struct xfs_trans {
->  #define	xfs_trans_agbtree_delta(tp, d)
->  #endif
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 6fedc05c..23e3e330 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -18,9 +18,6 @@
 >  
-> +static inline unsigned int xfs_trans_blk_res(struct xfs_trans *tp)
-> +{
-> +	return tp->t_blk_res - tp->t_blk_res_used;
-> +}
-> +
->  /*
->   * XFS transaction mechanism exported interfaces.
->   */
-> -- 
-> 2.11.0
+>  #include "libxfs.h"
+>  #include <ctype.h>
+> -#ifdef ENABLE_BLKID
+> -#  include <blkid/blkid.h>
+> -#endif /* ENABLE_BLKID */
+>  #include "xfs_multidisk.h"
+>  #include "libxcmd.h"
+>  
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
