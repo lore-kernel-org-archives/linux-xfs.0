@@ -1,76 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51205 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:44042 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753017AbdDKO0Z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Apr 2017 10:26:25 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 0/9 v5] No wait AIO
-Date: Tue, 11 Apr 2017 09:26:10 -0500
-Message-Id: <20170411142619.27205-1-rgoldwyn@suse.de>
+        id S1751488AbdDMIOA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Apr 2017 04:14:00 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 9EFC581F07
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2017 08:13:59 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 2/2] xfsprogs: update man for metadump about dirty log/obfuscation issue
+Date: Thu, 13 Apr 2017 10:13:54 +0200
+Message-Id: <20170413081354.22170-3-jtulak@redhat.com>
+In-Reply-To: <20170413081354.22170-1-jtulak@redhat.com>
+References: <20170413081354.22170-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-Formerly known as non-blocking AIO.
+This is something that should be documented, as it is not obvious to
+everyone.
 
-This series adds nonblocking feature to asynchronous I/O writes.
-io_submit() can be delayed because of a number of reason:
- - Block allocation for files
- - Data writebacks for direct I/O
- - Sleeping because of waiting to acquire i_rwsem
- - Congested block device
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ man/man8/xfs_metadump.8 | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-The goal of the patch series is to return -EAGAIN/-EWOULDBLOCK if
-any of these conditions are met. This way userspace can push most
-of the write()s to the kernel to the best of its ability to complete
-and if it returns -EAGAIN, can defer it to another thread.
-
-In order to enable this, IOCB_RW_FLAG_NOWAIT is introduced in
-uapi/linux/aio_abi.h. If set for aio_rw_flags, it translates to
-IOCB_NOWAIT for struct iocb, BIO_NOWAIT for bio and IOMAP_NOWAIT for
-iomap. aio_rw_flags is a new flag replacing aio_reserved1. We could
-not use aio_flags because it is not currently checked for invalidity
-in the kernel.
-
-This feature is provided for direct I/O of asynchronous I/O only. I have
-tested it against xfs, ext4, and btrfs while I intend to add more filesystems.
-Same with QUEUE_FLAG_NOWAIT, which is currently set for sd and virtio devices.
-This is primarily to block md/dm devices which may wait in places such as
-recovery/sync/suspend. In the future, I intend to add support to
-these devices as well. Applications will have to check supportability
-by sending a async direct write and any other error besides -EAGAIN
-would mean it is not supported.
-
-Changes since v1:
- + changed name from _NONBLOCKING to *_NOWAIT
- + filemap_range_has_page call moved to closer to (just before) calling filemap_write_and_wait_range().
- + BIO_NOWAIT limited to get_request()
- + XFS fixes 
-	- included reflink 
-	- use of xfs_ilock_nowait() instead of a XFS_IOLOCK_NONBLOCKING flag
-	- Translate the flag through IOMAP_NOWAIT (iomap) to check for
-	  block allocation for the file.
- + ext4 coding style
-
-Changes since v2:
- + Using aio_reserved1 as aio_rw_flags instead of aio_flags
- + blk-mq support
- + xfs uptodate with kernel and reflink changes
-
- Changes since v3:
-  + Added FS_NOWAIT, which is set if the filesystem supports NOWAIT feature.
-  + Checks in generic_make_request() to make sure BIO_NOWAIT comes in
-    for async direct writes only.
-  + Added QUEUE_FLAG_NOWAIT, which is set if the device supports BIO_NOWAIT.
-    This is added (rather not set) to block devices such as dm/md currently.
- Changes since v4:
-  + Ported AIO code to use RWF_* flags. Check for RWF_* flags in
-    generic_file_write_iter().
-  + Changed IOCB_RW_FLAGS_NOWAIT to RWF_NOWAIT.
-
+diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
+index 3731d6a..1b40fb8 100644
+--- a/man/man8/xfs_metadump.8
++++ b/man/man8/xfs_metadump.8
+@@ -59,6 +59,12 @@ options where
+ are not obfuscated. Names between 5 and 8 characters in length inclusively
+ are partially obfuscated.
+ .PP
++Log recovery of an obfuscated metadata image can leak
++unobfuscated metadata and/or cause image corruption. Please mount
++the source filesystem to clean the log or disable obfuscation, if possible.
++If you have to obfuscate an image with a dirty log, tell about it to whoever
++you are sending the image to.
++.PP
+ .B xfs_metadump
+ should not be used for any purposes other than for debugging and reporting
+ filesystem problems. The most common usage scenario for this tool is when
 -- 
-Goldwyn
-
+2.1.4
 
