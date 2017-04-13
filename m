@@ -1,128 +1,158 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39371 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754881AbdDLRpY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 13:45:24 -0400
-Date: Wed, 12 Apr 2017 10:45:15 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] mdrestore: warn about corruption if log is dirty
-Message-ID: <20170412174515.GO8502@birch.djwong.org>
-References: <20170411141237.9274-1-jtulak@redhat.com>
- <20170411141237.9274-3-jtulak@redhat.com>
- <20170411223405.GC12369@dastard>
- <20170411234326.GA5109@birch.djwong.org>
- <20170412110633.GC6834@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:45962 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755193AbdDMS22 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Apr 2017 14:28:28 -0400
+Date: Thu, 13 Apr 2017 14:28:25 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 02/10] xfs: rewrite xfs_da_grow_inode_int
+Message-ID: <20170413182825.GB25915@bfoster.bfoster>
+References: <20170413080517.12564-1-hch@lst.de>
+ <20170413080517.12564-3-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170412110633.GC6834@bfoster.bfoster>
+In-Reply-To: <20170413080517.12564-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Apr 12, 2017 at 07:06:33AM -0400, Brian Foster wrote:
-> On Tue, Apr 11, 2017 at 04:43:26PM -0700, Darrick J. Wong wrote:
-> > On Wed, Apr 12, 2017 at 08:34:05AM +1000, Dave Chinner wrote:
-> > > On Tue, Apr 11, 2017 at 04:12:37PM +0200, Jan Tulak wrote:
-> > > > A dirty log in an obfuscated dump means that a corruption can happen
-> > > > when replaying the log (which contains unobfuscated data). Warn the user
-> > > > about this possibility.
-> > >
-> > > > The xlog workaround is copy&paste solution from repair/phase2.c and
-> > > > other tools, because the function is not implemented in libxlog.
-> > > > 
-> > > > Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> > > 
-> > > I think this is overkill. mdrestore is not the place
-> > > to be interpreting the state of the dumped image - it is a basic
-> > > "restore the image" program, not a "check the validity of the image"
-> > > program.
-> > >
-> > > Secondly, if people are having problems with running log recovery on
-> > > a restored obfuscated image and getting corruption and not knowing
-> > > why or what to do, then that is a /documentation and training/
-> > > problem, not a code problem.
-> > >
-> > > i.e. the problem is that people who aren't developers are trying to
-> > > use tools that were written for developers to do forensic analysis
-> > > of failures. Don't dumb down the tool for clueless users - point the
-> > > users at the documentation that the tool requires to use correctly...
-> > 
-> > Looking at the patch, that's a lot of code to add to mdrestore that has
-> > nothing to do with metadump restoration.  For that matter, who's to say
-> > that the metadump'd image is even an XFS filesystem, and not just some
-> > garbage with the just the right superblock values to pass the
-> > perform_restore() checks?  (Ok, ok, that was a little over the top.)
-> > 
+On Thu, Apr 13, 2017 at 10:05:09AM +0200, Christoph Hellwig wrote:
+> Use one xfs_bmapi_write loop that just iterates if it didn't manage to
+> allocate enough blocks.  Get rid of the separate contig call that just
+> makes us call the allocator twice, and also get rid of the memory
+> allocation for the map array that we don't actually need.
 > 
-> Agreed wrt to the mdrestore bits...
-> 
-> > The key change we're trying to make is to prevent people incorrectly
-> > replaying an XFS with a dirty log when the fs image has been restored
-> > from an obfuscated metadump.
-> > 
-> > So in my mind this brings up two questions:  First, how do we prevent
-> > log replay in such situations?  Second, how do we teach people not to
-> > attempt log replay?  As you point out, it's better that we educate
-> > people as what problems each tool tries to solve and where the sharp
-> > edges might be on the debugging tools, but the answer to the first
-> > question ensures that us fallible developers can't do something stupid
-> > even though we theoretically know better.
-> > 
-> > Frankly, if the goal is to nudge n00b members of support teams away from
-> > a behavior that won't help them towards starting their failure analysis,
-> > then then I think we ought to patch the log recovery code to detect an
-> > obfuscated fs image, complain to dmesg about someone making an illogical
-> > move, and then refuse to mount the log.
-> > 
-> 
-> I don't think this is really appropriate. Some users may very well have
-> no other option but to create a dirty log + obfuscated metadump for
-> whatever security/privacy reasons they have. The purpose of warning in
-> that case is to notify the user to either verify the resulting image
-> shows whatever problems are exhibited by the original fs and no others,
-> or to notify the developer that other corruption might exist and to
-> ignore it as a side effect of the metadump process itself (provided it
-> doesn't interfere with rca of the original problem). Refusing to run log
-> recovery in such cases just gets in the way.
-> 
-> I'm not tied to having an mdrestore warning at all, but I'd much prefer
-> to see it there rather than include obfuscation logic in the kernel just
-> to facilitate a userspace tool to continue on silently corrupting
-> filesystem images.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-<nod> I've changed my mind overnight.  Now I agree that we could put a
-message in at metadump time, because it's not too late to ask the user
-to try to send us a metadump w/ clean log.  Eric also convinced me that
-it's not so trivial to detect an obfuscated image, so that simply won't
-work without a bunch of hackery.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
---D
-
+>  fs/xfs/libxfs/xfs_da_btree.c | 94 +++++++++++++-------------------------------
+>  1 file changed, 28 insertions(+), 66 deletions(-)
 > 
-> Brian
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index 1bdf2888295b..00853d332bcd 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -2007,84 +2007,46 @@ xfs_da_grow_inode_int(
+>  	xfs_fileoff_t		*bno,
+>  	int			count)
+>  {
+> -	struct xfs_trans	*tp = args->trans;
+> -	struct xfs_inode	*dp = args->dp;
+>  	int			w = args->whichfork;
+> -	xfs_rfsblock_t		nblks = dp->i_d.di_nblocks;
+> -	struct xfs_bmbt_irec	map, *mapp;
+> -	int			nmap, error, got, i, mapi;
+> +	xfs_fileoff_t		b;
+> +	int			error;
+>  
+>  	/*
+>  	 * Find a spot in the file space to put the new block.
+>  	 */
+> -	error = xfs_bmap_first_unused(tp, dp, count, bno, w);
+> +	error = xfs_bmap_first_unused(args->trans, args->dp, count, bno, w);
+>  	if (error)
+>  		return error;
+>  
+> -	/*
+> -	 * Try mapping it in one filesystem block.
+> -	 */
+> -	nmap = 1;
+> -	ASSERT(args->firstblock != NULL);
+> -	error = xfs_bmapi_write(tp, dp, *bno, count,
+> -			xfs_bmapi_aflag(w)|XFS_BMAPI_METADATA|XFS_BMAPI_CONTIG,
+> -			args->firstblock, args->total, &map, &nmap,
+> -			args->dfops);
+> -	if (error)
+> -		return error;
+> +	b = *bno;
+> +	do {
+> +		xfs_rfsblock_t nblks = args->dp->i_d.di_nblocks;
+> +		struct xfs_bmbt_irec imap;
+> +		xfs_extlen_t len;
+> +		int nmap = 1;
+> +
+> +		error = xfs_bmapi_write(args->trans, args->dp, b, count,
+> +				xfs_bmapi_aflag(w) | XFS_BMAPI_METADATA,
+> +				args->firstblock, args->total, &imap, &nmap,
+> +				args->dfops);
+> +		if (error)
+> +			return error;
+> +		if (!nmap)
+> +			return -ENOSPC;
+>  
+> -	ASSERT(nmap <= 1);
+> -	if (nmap == 1) {
+> -		mapp = &map;
+> -		mapi = 1;
+> -	} else if (nmap == 0 && count > 1) {
+> -		xfs_fileoff_t		b;
+> -		int			c;
+> +		len = imap.br_startoff + imap.br_blockcount - b;
+> +		ASSERT(imap.br_startoff <= b);
+> +		ASSERT(len > 0);
+> +		ASSERT(len <= count);
+>  
+> -		/*
+> -		 * If we didn't get it and the block might work if fragmented,
+> -		 * try without the CONTIG flag.  Loop until we get it all.
+> -		 */
+> -		mapp = kmem_alloc(sizeof(*mapp) * count, KM_SLEEP);
+> -		for (b = *bno, mapi = 0; b < *bno + count; ) {
+> -			nmap = MIN(XFS_BMAP_MAX_NMAP, count);
+> -			c = (int)(*bno + count - b);
+> -			error = xfs_bmapi_write(tp, dp, b, c,
+> -					xfs_bmapi_aflag(w)|XFS_BMAPI_METADATA,
+> -					args->firstblock, args->total,
+> -					&mapp[mapi], &nmap, args->dfops);
+> -			if (error)
+> -				goto out_free_map;
+> -			if (nmap < 1)
+> -				break;
+> -			mapi += nmap;
+> -			b = mapp[mapi - 1].br_startoff +
+> -			    mapp[mapi - 1].br_blockcount;
+> -		}
+> -	} else {
+> -		mapi = 0;
+> -		mapp = NULL;
+> -	}
+> -
+> -	/*
+> -	 * Count the blocks we got, make sure it matches the total.
+> -	 */
+> -	for (i = 0, got = 0; i < mapi; i++)
+> -		got += mapp[i].br_blockcount;
+> -	if (got != count || mapp[0].br_startoff != *bno ||
+> -	    mapp[mapi - 1].br_startoff + mapp[mapi - 1].br_blockcount !=
+> -	    *bno + count) {
+> -		error = -ENOSPC;
+> -		goto out_free_map;
+> -	}
+> +		/* account for newly allocated blocks in reserved blocks total */
+> +		args->total -= (args->dp->i_d.di_nblocks - nblks);
+>  
+> -	/* account for newly allocated blocks in reserved blocks total */
+> -	args->total -= dp->i_d.di_nblocks - nblks;
+> +		b += len;
+> +		count -= len;
+> +	} while (count > 0);
+>  
+> -out_free_map:
+> -	if (mapp != &map)
+> -		kmem_free(mapp);
+> -	return error;
+> +	return 0;
+>  }
+>  
+>  /*
+> -- 
+> 2.11.0
 > 
-> > I'd rather push back on the incorrect behavior at the time it is done,
-> > instead of training people to ignore a priori warning messages.
-> > 
-> > --D
-> > 
-> > > Cheers,
-> > > 
-> > > Dave.
-> > > -- 
-> > > Dave Chinner
-> > > david@fromorbit.com
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
