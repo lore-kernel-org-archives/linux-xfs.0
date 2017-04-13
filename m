@@ -1,47 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49125 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751368AbdDMJxM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2017 05:53:12 -0400
-Date: Thu, 13 Apr 2017 02:53:11 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: reserve enough blocks to handle btree splits when
- remapping
-Message-ID: <20170413095311.GA21980@infradead.org>
-References: <20170412214852.GR8502@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58046 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755308AbdDMSaJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Apr 2017 14:30:09 -0400
+Date: Thu, 13 Apr 2017 14:30:06 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 04/10] xfs: remove an unsafe retry in xfs_bmbt_alloc_block
+Message-ID: <20170413183006.GD25915@bfoster.bfoster>
+References: <20170413080517.12564-1-hch@lst.de>
+ <20170413080517.12564-5-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170412214852.GR8502@birch.djwong.org>
+In-Reply-To: <20170413080517.12564-5-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-> +static inline unsigned int
-> +XFS_RMAPADD_SPACE_RES(
-> +	struct xfs_mount	*mp)
-> +{
-> +	return xfs_sb_version_hasrmapbt(&mp->m_sb) ? mp->m_rmap_maxlevels : 0;
-> +}
+On Thu, Apr 13, 2017 at 10:05:11AM +0200, Christoph Hellwig wrote:
+> We've already reserved all possible required blocks and checked
+> they are avaible in the same AG.
+> 
 
-All the other helpers are macros.  While I much prefer inlines it might
-be a good idea to do it in one go and also convert them to lower case
-instead of screaming..
+I'm not quite following why this retry is unsafe as noted in the patch
+title.. do you mean "unnecessary?" AFAICT, the firstblock == NULLFSBLOCK
+case means we can issue this first allocation from any AG. If no AG can
+allocate a block while satisfying minleft, then we can still safely
+allocate from any AG provided any subsequent allocations occur in
+increasing AG order (i.e., by setting dop_low), right?
 
-> +#define XFS_NRMAPADD_SPACE_RES(mp,b,w)\
-> +	(((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
-> +	  XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) * \
-> +	  XFS_RMAPADD_SPACE_RES(mp))
+Also, if this is unnecessary, what exactly verifies that all of the
+reserved blocks are available within the same AG?
 
-But then again the above is so much more readable than this, so maybe
-it's a good idea after all and this one should be an inline as well.
+This patch may ultimately be fine, but at minimum I think a bit more
+context/explanation is needed in the commit log. A couple things that
+give me pause are 1.) this is a context highly sensitive to allocation
+failure and 2.) the minleft used in the initial allocation is based on
+the transaction block reservation, which isn't exactly deterministic (so
+can some future transaction now increase the likelihood of bmbt block
+allocation failure because it decided to reserve too many extra
+blocks?).
 
-Also I think future developers will really appreciate comments
-explaining what we add up here.
+Brian
 
-Otherwise this looks fine and test fine for me:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Tested-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap_btree.c | 13 -------------
+>  1 file changed, 13 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+> index 3e17ceda038c..ce41dd5fbb34 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+> @@ -476,19 +476,6 @@ xfs_bmbt_alloc_block(
+>  	if (error)
+>  		goto error0;
+>  
+> -	if (args.fsbno == NULLFSBLOCK && args.minleft) {
+> -		/*
+> -		 * Could not find an AG with enough free space to satisfy
+> -		 * a full btree split.  Try again and if
+> -		 * successful activate the lowspace algorithm.
+> -		 */
+> -		args.fsbno = 0;
+> -		args.type = XFS_ALLOCTYPE_FIRST_AG;
+> -		error = xfs_alloc_vextent(&args);
+> -		if (error)
+> -			goto error0;
+> -		cur->bc_private.b.dfops->dop_low = true;
+> -	}
+>  	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
+>  		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+>  		*stat = 0;
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
