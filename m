@@ -1,91 +1,175 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52584 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:37655 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751541AbdDNCyW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Apr 2017 22:54:22 -0400
-Date: Thu, 13 Apr 2017 22:54:18 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] mdrestore: warn about corruption if log is dirty
-Message-ID: <20170414025416.GA28822@bfoster.bfoster>
-References: <20170411141237.9274-1-jtulak@redhat.com>
- <20170411141237.9274-3-jtulak@redhat.com>
- <20170411223405.GC12369@dastard>
- <20170412110403.GB6834@bfoster.bfoster>
- <20170413025105.GD12369@dastard>
- <20170413131018.GD24893@bfoster.bfoster>
- <20170414002930.GE12369@dastard>
+        id S1752908AbdDMMN1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Apr 2017 08:13:27 -0400
+Date: Thu, 13 Apr 2017 14:13:25 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: transaction reservations for deleting of shared extents
+Message-ID: <20170413121325.GA31322@lst.de>
+References: <20170220072945.GA17608@lst.de> <20170221014356.GA5844@birch.djwong.org> <20170412135231.GA3891@lst.de> <20170412230612.GS8502@birch.djwong.org> <20170413035250.GT8502@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170414002930.GE12369@dastard>
+In-Reply-To: <20170413035250.GT8502@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Fri, Apr 14, 2017 at 10:29:30AM +1000, Dave Chinner wrote:
-> On Thu, Apr 13, 2017 at 09:10:19AM -0400, Brian Foster wrote:
-> > IOW, this documentation problem exists because the tool is broken. The
-> > tool will remain broken despite the fact that the problem is documented.
-> > Therefore, we are not just working around a documentation issue by
-> > attempting to improve the tool.
-> 
-> I'm not sure that you understood my point. That is, if a developer
-> tool is considered broken, then adding warnings to tell the /user/
-> the developer tool is broken is not solving the "tool is broken"
-> problem any better than documenting in the man page. The underlying
-> problem is that the log is unobfuscated and so the tool will, by
-> your definition, remain "broken" until that problem is fixed.
-> 
+On Wed, Apr 12, 2017 at 08:52:50PM -0700, Darrick J. Wong wrote:
+> Hmm... can you try out the attached RFC(RAP) xfstests testcase to see if
+> it can reproduce the problem you're seeing, and then apply the (equally
+> RFCRAP) patch to see if it fixes the problem?
 
-If xfs_metadump spits out something that doesn't resemble the source fs
-from a filesystem coherency perspective, then yes, I consider that a bug
-(or "broken"). And yes, I agree that the tool warning about that fact
-does not fix the bug. That doesn't mean the usability of the tool cannot
-be improved.
+Yeah. limiting at the caller seems much better than second guessing
+later.  Below is a version of your patch with a couple random edits.
+I wonder if we could now get rid of xfs_refcount_still_have_space
+or at least turn it into warnings only..
 
-What I'm saying is that if xfs_metadump issued a warning about using
-obfuscation with a dirty log, then it's much more likely this user would
-have disabled obfuscation (as the original problem report was a log
-recovery issue), sent a valid metadump and we wouldn't have lost a
-valuable metadata image (that I believe had since been repaired) in the
-process. Further, if that didn't work, but xfs_mdrestore issued a
-similar warning, the support person probably wouldn't have filed a bug
-(or even with a bug filed, I wouldn't have wasted time root causing a
-spurious filesystem corruption).
+---
+>From 9b25b1bdba8fb93650710444a6bab7b10f74680d Mon Sep 17 00:00:00 2001
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 13 Apr 2017 13:35:00 +0200
+Subject: xfs: try to avoid blowing out the transaction reservation when
+ bunmaping a shared extent
 
-In contrast... I can't speak for others with certainty, but I highly
-doubt anybody involved in this exchange had a need to refer to the
-xfs_metadump manpage. Both xfs_metadump and xfs_mdrestore worked fine
-with default parameters from the customer and support personnel
-perspective. The user reported a post-log recovery corruption and that's
-what the support person observed. I certainly didn't have any impetus to
-'man xfs_metadump,' as I generally don't refer to the manpage in
-response to encountering runtime filesystem corruption errors.
+In a pathological scenario where we are trying to bunmapi a single
+extent in which every other block is shared, it's possible that trying
+to unmap the entire large extent in a single transaction can generate so
+many EFIs that we overflow the transaction reservation.
 
-> And, IMO, "broken" is an incorrect classification of the issue. We
-> *chose* not to obfuscate the log because the effort required to
-> implement it falls far, far to the wrong side of the cost-benefit
-> analysis line. Months of work for something that may be relevant
-> only to a developer once or twice a year?  Further, bfuscating the
-> log may actually be an unsolvable problem due to the way we do
-> relogging and reuse freed blocks - the obfuscation of log entries
-> has to exactly match the obfuscation that is done on disk, and we
-> may have multiple overwrites of the same directory blocks to
-> obfuscate and all need to be correct. It's a damn hard problem that
-> I'll still strongly suggest we should never attempt to solve.
-> 
+Therefore, use a heuristic to guess at the number of blocks we can
+safely unmap from a reflink file's data fork in an single transaction.
+This should prevent problems such as the log head slamming into the tail
+and ASSERTs that trigger because we've exceeded the transaction
+reservation.
 
-I'm pretty sure I stated in my last email that obfuscating the log was
-not a realistic solution, so I'm not sure what point you're arguing with
-here...
+Signed-off-by: Darrick J. Wong <djwong@djwong.org>
+[hch: random edits, all bugs are my fault]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c     | 23 ++++++++++++++++++++++-
+ fs/xfs/libxfs/xfs_refcount.c | 10 +---------
+ fs/xfs/libxfs/xfs_refcount.h | 16 ++++++++++++++++
+ 3 files changed, 39 insertions(+), 10 deletions(-)
 
-...
-> ... they should have rough edges, ...
-
-Then why the fuss about a warning that is otherwise technically
-accurate?
-
-Brian
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 8e94030bcb8f..04dac8954425 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5442,6 +5442,7 @@ __xfs_bunmapi(
+ 	int			whichfork;	/* data or attribute fork */
+ 	xfs_fsblock_t		sum;
+ 	xfs_filblks_t		len = *rlen;	/* length to unmap in file */
++	xfs_fileoff_t		max_len;
+ 
+ 	trace_xfs_bunmap(ip, bno, len, flags, _RET_IP_);
+ 
+@@ -5463,6 +5464,16 @@ __xfs_bunmapi(
+ 	ASSERT(len > 0);
+ 	ASSERT(nexts >= 0);
+ 
++	/*
++	 * Guesstimate how many blocks we can unmap without running the risk of
++	 * blowing out the transaction with a mix of EFIs and reflink
++	 * adjustments.
++	 */
++	if (xfs_is_reflink_inode(ip) && whichfork == XFS_DATA_FORK)
++		max_len = min(len, xfs_refcount_max_unmap(tp->t_log_res));
++	else
++		max_len = len;
++
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS) &&
+ 	    (error = xfs_iread_extents(tp, ip, whichfork)))
+ 		return error;
+@@ -5507,7 +5518,7 @@ __xfs_bunmapi(
+ 
+ 	extno = 0;
+ 	while (bno != (xfs_fileoff_t)-1 && bno >= start && lastx >= 0 &&
+-	       (nexts == 0 || extno < nexts)) {
++	       (nexts == 0 || extno < nexts) && max_len > 0) {
+ 		/*
+ 		 * Is the found extent after a hole in which bno lives?
+ 		 * Just back up to the previous extent, if so.
+@@ -5539,6 +5550,15 @@ __xfs_bunmapi(
+ 		}
+ 		if (del.br_startoff + del.br_blockcount > bno + 1)
+ 			del.br_blockcount = bno + 1 - del.br_startoff;
++
++		/* How much can we safely unmap? */
++		if (max_len < del.br_blockcount) {
++			del.br_startoff += del.br_blockcount - max_len;
++			if (!wasdel)
++				del.br_startblock += del.br_blockcount - max_len;
++			del.br_blockcount = max_len;
++		}
++
+ 		sum = del.br_startblock + del.br_blockcount;
+ 		if (isrt &&
+ 		    (mod = do_mod(sum, mp->m_sb.sb_rextsize))) {
+@@ -5715,6 +5735,7 @@ __xfs_bunmapi(
+ 		if (!isrt && wasdel)
+ 			xfs_mod_fdblocks(mp, (int64_t)del.br_blockcount, false);
+ 
++		max_len -= del.br_blockcount;
+ 		bno = del.br_startoff - 1;
+ nodelete:
+ 		/*
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index b177ef33cd4c..29dcde381505 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -784,14 +784,6 @@ xfs_refcount_merge_extents(
+ }
+ 
+ /*
+- * While we're adjusting the refcounts records of an extent, we have
+- * to keep an eye on the number of extents we're dirtying -- run too
+- * many in a single transaction and we'll exceed the transaction's
+- * reservation and crash the fs.  Each record adds 12 bytes to the
+- * log (plus any key updates) so we'll conservatively assume 24 bytes
+- * per record.  We must also leave space for btree splits on both ends
+- * of the range and space for the CUD and a new CUI.
+- *
+  * XXX: This is a pretty hand-wavy estimate.  The penalty for guessing
+  * true incorrectly is a shutdown FS; the penalty for guessing false
+  * incorrectly is more transaction rolls than might be necessary.
+@@ -822,7 +814,7 @@ xfs_refcount_still_have_space(
+ 	else if (overhead > cur->bc_tp->t_log_res)
+ 		return false;
+ 	return  cur->bc_tp->t_log_res - overhead >
+-		cur->bc_private.a.priv.refc.nr_ops * 32;
++		cur->bc_private.a.priv.refc.nr_ops * XFS_REFCOUNT_ITEM_OVERHEAD;
+ }
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
+index 098dc668ab2c..eafb9d1f3b37 100644
+--- a/fs/xfs/libxfs/xfs_refcount.h
++++ b/fs/xfs/libxfs/xfs_refcount.h
+@@ -67,4 +67,20 @@ extern int xfs_refcount_free_cow_extent(struct xfs_mount *mp,
+ extern int xfs_refcount_recover_cow_leftovers(struct xfs_mount *mp,
+ 		xfs_agnumber_t agno);
+ 
++/*
++ * While we're adjusting the refcounts records of an extent, we have
++ * to keep an eye on the number of extents we're dirtying -- run too
++ * many in a single transaction and we'll exceed the transaction's
++ * reservation and crash the fs.  Each record adds 12 bytes to the
++ * log (plus any key updates) so we'll conservatively assume 32 bytes
++ * per record.  We must also leave space for btree splits on both ends
++ * of the range and space for the CUD and a new CUI.
++ */
++#define XFS_REFCOUNT_ITEM_OVERHEAD	32
++
++static inline xfs_fileoff_t xfs_refcount_max_unmap(int log_res)
++{
++	return (log_res * 3 / 4) / XFS_REFCOUNT_ITEM_OVERHEAD;
++}
++
+ #endif	/* __XFS_REFCOUNT_H__ */
+-- 
+2.11.0
 
