@@ -1,199 +1,195 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31381 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751647AbdDLWJs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 18:09:48 -0400
-Date: Wed, 12 Apr 2017 15:09:40 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Question about large file fragmentation.
-Message-ID: <20170412220940.GC5109@birch.djwong.org>
-References: <CALRRBv8169Y7r9BCX8Hsye9YAZVQGFHX2yoiYw5-=XLBKMN9nA@mail.gmail.com>
- <20170407162917.GH4864@birch.djwong.org>
- <CALRRBv_WD=tVCq4o0At43ZBP+JQnLNTYeGBy3R3Z5_RX84G3iQ@mail.gmail.com>
- <20170410222305.GQ4874@birch.djwong.org>
- <CALRRBv8hYTL7DJMqv4stwZHirSb=9cKYn8DEW0UOQbY4YMNj=g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CALRRBv8hYTL7DJMqv4stwZHirSb=9cKYn8DEW0UOQbY4YMNj=g@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:55206 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753286AbdDMHbP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Apr 2017 03:31:15 -0400
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH v4] fstests/xfs: xfs_repair should junk empty attribute leaf blocks
+Date: Thu, 13 Apr 2017 15:31:09 +0800
+Message-Id: <1492068669-16730-1-git-send-email-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Arkadiusz <arek2407066@gmail.com>
+To: fstests@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Apr 11, 2017 at 05:54:40AM +0200, Arkadiusz wrote:
-> Thank you for explanation. I though that it is possible to write only
-> extents since I don't care about the data. As I understand correctly
-> currently there is no possibility to do that?
+There was a bug during log replay, the attr/attr3 leaf verifier
+reported corruption when encountering a leaf attribute with a
+count of 0 in the header, as below:
 
-Correct.
+Metadata corruption detected at xfs_attr3_leaf block 0x480988/0x1000
 
---D
+commit f714016 from xfsprogs has fixed this bug. This test case
+will emulate this corruption by xfs_db and use xfs_repair to fix
+it.
 
-> 
-> 
-> 
-> On Tue, Apr 11, 2017 at 12:23 AM, Darrick J. Wong
-> <darrick.wong@oracle.com> wrote:
-> > On Mon, Apr 10, 2017 at 08:12:19AM +0200, Arkadiusz wrote:
-> >> I know that the flag means "0010000 Unwritten preallocated extent" but
-> >> is there any way to allocate extents fast without filling whole file
-> >> with data?
-> >
-> > Nope.  I wonder if fallocate(ZERO_RANGE) could be taught to issue a
-> > zeroing discard before ensuring that all the extents are marked as
-> > written?
-> >
-> > (Ask the list, see what people say.)
-> >
-> > --D
-> >
-> >>
-> >> On Fri, Apr 7, 2017 at 6:29 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >> > On Fri, Apr 07, 2017 at 02:52:01PM +0200, Arkadiusz wrote:
-> >> >> Dear maintainers,
-> >> >> I have a question about large file fragmentation.
-> >> >>
-> >> >> When I create large file (20G) on XFS by filling it with zeros. For example:
-> >> >> dd if=/dev/zero of=lun bs=512 count=41873408
-> >> >>
-> >> >> The bitmap looks as follows:
-> >> >>
-> >> >> xfs_bmap -vp lun
-> >> >> lun:
-> >> >>  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
-> >> >>   TOTAL FLAGS
-> >> >>    0: [0..8388479]:         112..8388591        0 (112..8388591)
-> >> >> 8388480 00000
-> >> >>    1: [8388480..16777087]:  10485824..18874431  1 (64..8388671)
-> >> >> 8388608 00000
-> >> >>    2: [16777088..25165695]: 20992064..29380671  2 (20544..8409151)
-> >> >> 8388608 00000
-> >> >>    3: [25165696..35651383]: 31457344..41943031  3 (64..10485751)
-> >> >> 10485688 00000
-> >> >>    4: [35651384..37748551]: 8388592..10485759   0 (8388592..10485759)
-> >> >> 2097168 00000
-> >> >>    5: [37748552..39845631]: 18874432..20971511  1 (8388672..10485751)
-> >> >> 2097080 00000
-> >> >>    6: [39845632..41873407]: 29380672..31408447  2 (8409152..10436927)
-> >> >> 2027776 00000
-> >> >>
-> >> >> When I use this file for iSCSI file I/O and then I fill whole volume
-> >> >> from the initiator side with random data. The bitmap doesn't change.
-> >> >>
-> >> >> However, when I create file of the same size using fallocate:
-> >> >> fallocate -l 21439184896 lun
-> >> >> the bitmap at the beginning looks as follows:
-> >> >> xfs_bmap -vp lun
-> >> >> lun:
-> >> >>  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
-> >> >> TOTAL FLAGS
-> >> >>    0: [0..10485647]:        112..10485759       0 (112..10485759)
-> >> >> 10485648 10000
-> >> >>    1: [10485648..10485655]: 104..111            0 (104..111)
-> >> >>     8 10000
-> >> >>    2: [10485656..20971351]: 10485824..20971519  1 (64..10485759)
-> >> >> 10485696 10000
-> >> >>    3: [20971352..31436559]: 20992064..31457271  2 (20544..10485751)
-> >> >> 10465208 10000
-> >> >>    4: [31436560..41873407]: 31457344..41894191  3 (64..10436911)
-> >> >> 10436848 10000
-> >> >>
-> >> >> but when I write some data from the initiator side the extents count grows:
-> >> >> xfs_bmap -vp lun
-> >> >> lun:
-> >> >>  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
-> >> >>    TOTAL FLAGS
-> >> >>    0: [0..7]:               112..119            0 (112..119)
-> >> >>        8 00000
-> >> >>    1: [8..2047]:            120..2159           0 (120..2159)
-> >> >>     2040 10000
-> >> >
-> >> > Have a look at "xfs_bmap -vvp lun" for the flags output. ;)
-> >> >
-> >> > --D
-> >> >
-> >> >>    2: [2048..365807]:       2160..365919        0 (2160..365919)
-> >> >>   363760 00000
-> >> >>    3: [365808..406727]:     365920..406839      0 (365920..406839)
-> >> >>    40920 10000
-> >> >>    4: [406728..506487]:     406840..506599      0 (406840..506599)
-> >> >>    99760 00000
-> >> >>    5: [506488..514071]:     506600..514183      0 (506600..514183)
-> >> >>     7584 10000
-> >> >>    6: [514072..514079]:     514184..514191      0 (514184..514191)
-> >> >>        8 00000
-> >> >>    7: [514080..524495]:     514192..524607      0 (514192..524607)
-> >> >>    10416 10000
-> >> >>    8: [524496..524503]:     524608..524615      0 (524608..524615)
-> >> >>        8 00000
-> >> >>    9: [524504..524543]:     524616..524655      0 (524616..524655)
-> >> >>       40 10000
-> >> >>   10: [524544..524551]:     524656..524663      0 (524656..524663)
-> >> >>        8 00000
-> >> >>   11: [524552..529559]:     524664..529671      0 (524664..529671)
-> >> >>     5008 10000
-> >> >>   12: [529560..529567]:     529672..529679      0 (529672..529679)
-> >> >>        8 00000
-> >> >>   13: [529568..550255]:     529680..550367      0 (529680..550367)
-> >> >>    20688 10000
-> >> >>   14: [550256..550263]:     550368..550375      0 (550368..550375)
-> >> >>        8 00000
-> >> >>   15: [550264..552295]:     550376..552407      0 (550376..552407)
-> >> >>     2032 10000
-> >> >>   16: [552296..552303]:     552408..552415      0 (552408..552415)
-> >> >>        8 00000
-> >> >>   17: [552304..554279]:     552416..554391      0 (552416..554391)
-> >> >>     1976 10000
-> >> >>   18: [554280..554287]:     554392..554399      0 (554392..554399)
-> >> >>        8 00000
-> >> >>   19: [554288..570623]:     554400..570735      0 (554400..570735)
-> >> >>    16336 10000
-> >> >>   20: [570624..570631]:     570736..570743      0 (570736..570743)
-> >> >>        8 00000
-> >> >>   21: [570632..1330943]:    570744..1331055     0 (570744..1331055)
-> >> >>   760312 10000
-> >> >>   22: [1330944..1330951]:   1331056..1331063    0 (1331056..1331063)
-> >> >>        8 00000
-> >> >>   23: [1330952..6173167]:   1331064..6173279    0 (1331064..6173279)
-> >> >>  4842216 10000
-> >> >>   24: [6173168..6232727]:   6173280..6232839    0 (6173280..6232839)
-> >> >>    59560 00000
-> >> >>   25: [6232728..6249039]:   6232840..6249151    0 (6232840..6249151)
-> >> >>    16312 10000
-> >> >>   26: [6249040..6249111]:   6249152..6249223    0 (6249152..6249223)
-> >> >>       72 00000
-> >> >>   27: [6249112..6251087]:   6249224..6251199    0 (6249224..6251199)
-> >> >>     1976 10000
-> >> >>   28: [6251088..6251127]:   6251200..6251239    0 (6251200..6251239)
-> >> >>       40 00000
-> >> >>   29: [6251128..6251631]:   6251240..6251743    0 (6251240..6251743)
-> >> >>      504 10000
-> >> >>   30: [6251632..6296063]:   6251744..6296175    0 (6251744..6296175)
-> >> >>    44432 00000
-> >> >>   31: [6296064..10485647]:  6296176..10485759   0 (6296176..10485759)
-> >> >>  4189584 10000
-> >> >>   32: [10485648..10485655]: 104..111            0 (104..111)
-> >> >>        8 10000
-> >> >>   33: [10485656..20971351]: 10485824..20971519  1 (64..10485759)
-> >> >> 10485696 10000
-> >> >>   34: [20971352..31436559]: 20992064..31457271  2 (20544..10485751)
-> >> >> 10465208 10000
-> >> >>   35: [31436560..41869303]: 31457344..41890087  3 (64..10432807)
-> >> >> 10432744 10000
-> >> >>   36: [41869304..41869311]: 41890088..41890095  3 (10432808..10432815)
-> >> >>        8 00000
-> >> >>   37: [41869312..41873407]: 41890096..41894191  3 (10432816..10436911)
-> >> >>     4096 10000
-> >> >>
-> >> >> I thought that fallocate allocates extents and fragmentation shouldn't increase.
-> >> >>
-> >> >> Is there any way to create large files resistant to fragmentation that
-> >> >> doesn't need to fill whole file with zeros?
-> >> >>
-> >> >> Thanks.
-> >> >> --
-> >> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> >> the body of a message to majordomo@vger.kernel.org
-> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
+
+Hi,
+
+V3 did below changes:
+1) Only test on V4 XFS.
+2) Use 'ablock 0' to instead of "a.bmx[0].startblock"
+3) Use "dd ... | attr -s ..." to instead of that python command in
+   "setfattr ..."
+4) Do "xfs_repair -n" to check if xfs_repair can find the corruption
+   we made.
+5) Use xfs_db to check if xfs_repair has fixed the corruption properly.
+   I check it by trying to locate 'ablock 0' again. Should I turn to
+   check if core.naextents == 0?
+
+V4 did below changes:
+1) Remove useless $write_cmd
+2) Use _scratch_mkfs_xfs
+3) Use setfattr, and use $(perl -e "print 'v' x ${maxisize};") to generate
+   attribute content.
+
+Thanks,
+Zorro
+
+ tests/xfs/288     | 109 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/288.out |   2 +
+ tests/xfs/group   |   1 +
+ 3 files changed, 112 insertions(+)
+ create mode 100755 tests/xfs/288
+ create mode 100644 tests/xfs/288.out
+
+diff --git a/tests/xfs/288 b/tests/xfs/288
+new file mode 100755
+index 0000000..6266dd8
+--- /dev/null
++++ b/tests/xfs/288
+@@ -0,0 +1,109 @@
++#! /bin/bash
++# FS QA Test 288
++#
++# When an attribute leaf block count is 0, xfs_repair should junk
++# that leaf directly (as xfsprogs commit f714016).
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Red Hat Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_scratch
++_require_attrs
++
++# Due to xfs_db's write -d option is still not stable, and there's no
++# plan to support attr3. So only run this case on V4 XFS.
++# Please update this if xfs_db get enough improvement in one day.
++if [ -z "$XFS_MKFS_HAS_NO_META_SUPPORT" ]; then
++	mkfs_opts="-m crc=0"
++fi
++# get block size ($dbsize) from the mkfs output
++_scratch_mkfs_xfs $mkfs_opts | _filter_mkfs 2>$tmp.mkfs >/dev/null
++. $tmp.mkfs
++
++_scratch_mount
++
++touch $SCRATCH_MNT/$seq.attrfile
++inum=$(stat -c '%i' $SCRATCH_MNT/$seq.attrfile)
++
++# To get an attr block leaf, we need to extend attr format to extent
++# or btree format at least, and the max inode size is half of filesystem
++# block size, so write half of block size attr to make sure attr
++# out of local format.
++maxisize=$((dbsize/2))
++$SETFATTR_PROG -n "user.testattr${seq}" \
++	       -v "$(perl -e "print 'v' x ${maxisize};")" \
++	       $SCRATCH_MNT/$seq.attrfile
++
++_scratch_unmount
++# manually corrupt the XFS, by set the header count of attr to 0
++_scratch_xfs_db -x -c "inode $inum" \
++		   -c "ablock 0" \
++		   -c "write hdr.count 0" >> $seqres.full
++
++# make sure xfs_repair can find above corruption. If it can't, that
++# means we need to fix this bug on current xfs_repair
++_scratch_xfs_repair -n >> $seqres.full 2>&1
++if [ $? -eq 0 ];then
++	_fail "xfs_repair can't find the corruption"
++else
++	# If xfs_repair can find this corruption, then this repair
++	# should junk above leaf attribute and fix this XFS.
++	_scratch_xfs_repair >> $seqres.full 2>&1
++
++	# Old xfs_repair maybe find and fix this corruption by
++	# reset the first used heap value and the usedbytes cnt
++	# in ablock 0. That's not what we want. So check if
++	# xfs_repair has junked the whole ablock 0 by xfs_db.
++	_scratch_xfs_db -x -c "inode $inum" -c "ablock 0" | \
++		grep -q "no attribute data"
++	if [ $? -ne 0 ]; then
++		_fail "xfs_repair didn't junk the empty attr leaf"
++	fi
++fi
++
++echo "Silence is golden"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/288.out b/tests/xfs/288.out
+new file mode 100644
+index 0000000..2958a5c
+--- /dev/null
++++ b/tests/xfs/288.out
+@@ -0,0 +1,2 @@
++QA output created by 288
++Silence is golden
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 75769f9..f27a7b6 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -285,6 +285,7 @@
+ 285 dangerous_fuzzers dangerous_scrub
+ 286 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 287 auto dump quota quick
++288 auto quick repair fuzzers
+ 290 auto rw prealloc quick ioctl zero
+ 291 auto repair
+ 292 auto mkfs quick
+-- 
+2.7.4
+
