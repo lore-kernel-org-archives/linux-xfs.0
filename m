@@ -1,48 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49446 "EHLO mx2.suse.de"
+Received: from sandeen.net ([63.231.237.45]:39428 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752401AbdDLSbw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Apr 2017 14:31:52 -0400
-Subject: Re: [PATCH 5/9] nowait aio: return on congested block device
-References: <20170411142619.27205-1-rgoldwyn@suse.de>
- <20170411142619.27205-6-rgoldwyn@suse.de>
- <20170412083625.GB22363@infradead.org>
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Message-ID: <7fba3538-8c91-20e5-63f1-6e063caaaffb@suse.de>
-Date: Wed, 12 Apr 2017 13:31:43 -0500
+        id S1752465AbdDMNtx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Apr 2017 09:49:53 -0400
+Subject: Re: [PATCH 2/2] xfsprogs: update man for metadump about dirty
+ log/obfuscation issue
+References: <20170413081354.22170-1-jtulak@redhat.com>
+ <20170413081354.22170-3-jtulak@redhat.com>
+ <20170413120152.GB24893@bfoster.bfoster>
+ <CACj3i70UdyecqPjxNG9c=7gWdi1sjigFAPQX+TWYP0omj_2WvQ@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <324004e7-6809-bca0-8c39-ac7d846d7238@sandeen.net>
+Date: Thu, 13 Apr 2017 08:49:52 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170412083625.GB22363@infradead.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CACj3i70UdyecqPjxNG9c=7gWdi1sjigFAPQX+TWYP0omj_2WvQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Jan Tulak <jtulak@redhat.com>, Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-
-
-On 04/12/2017 03:36 AM, Christoph Hellwig wrote:
-> As mentioned last time around, this should be a REQ_NOWAIT flag so
-> that it can be easily passed dow? n to the request layer.
+On 4/13/17 7:29 AM, Jan Tulak wrote:
+> On Thu, Apr 13, 2017 at 2:01 PM, Brian Foster <bfoster@redhat.com> wrote:
+>> On Thu, Apr 13, 2017 at 10:13:54AM +0200, Jan Tulak wrote:
+>>> This is something that should be documented, as it is not obvious to
+>>> everyone.
+>>>
+>>> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+>>> ---
+>>>  man/man8/xfs_metadump.8 | 6 ++++++
+>>>  1 file changed, 6 insertions(+)
+>>>
+>>> diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
+>>> index 3731d6a..1b40fb8 100644
+>>> --- a/man/man8/xfs_metadump.8
+>>> +++ b/man/man8/xfs_metadump.8
+>>> @@ -59,6 +59,12 @@ options where
+>>>  are not obfuscated. Names between 5 and 8 characters in length inclusively
+>>>  are partially obfuscated.
+>>>  .PP
+>>> +Log recovery of an obfuscated metadata image can leak
+>>> +unobfuscated metadata and/or cause image corruption. Please mount
+>>> +the source filesystem to clean the log or disable obfuscation, if possible.
+>>> +If you have to obfuscate an image with a dirty log, tell about it to whoever
+>>> +you are sending the image to.
+>>> +.PP
+>>
+>> We might want the man page content to be a bit more descriptive than
+>> what xfs_metadump actually emits for a warning. For example:
+>>
+>> "xfs_metadump does not obfuscate data in the filesystem log. Log
+>> recovery of an obfuscated metadump image may expose unobfuscated
+>> metadata and/or cause filesystem corruption. It is recommended to
+>> disable obfuscation for filesystems that must be captured with a dirty
+>> log."
+>>
+>> ... but that's just my .02. Feel free to reword that and solicit more
+>> feedback from others too. Another thought here could be to intimate that
+>> if an obfuscated+dirty log metadump image is truly required, it is the
+>> user responsibility to verify that the resulting image has not been
+>> corrupted by the metadump process and does not contain sensitive
+>> metadata (as opposed to telling the user to simply tell the recipient of
+>> the image about it).
+>>
 > 
->> +static inline void bio_wouldblock_error(struct bio *bio)
->> +{
->> +	bio->bi_error = -EAGAIN;
->> +	bio_endio(bio);
->> +}
+> Sounds reasonable, so how about these two paragraphs?
 > 
-> Please skip this helper..
+>> "xfs_metadump does not obfuscate data
 
-Why? It is being called three times?
-I am incorporating all the rest of the comments, besides this one. Thanks.
+metadata
 
-> 
->> +#define QUEUE_FLAG_NOWAIT      28	/* queue supports BIO_NOWAIT */
-> 
-> Please make the flag name a little more descriptive, this sounds like
-> it will never wait.
-> 
+>> in the filesystem log. Log
+>> recovery of an obfuscated metadump image may expose unobfuscated
+>> metadata and/or cause filesystem corruption.
 
--- 
-Goldwyn
+I would add "in the restored image." so that it does not sound like
+damage to the original filesystem could result.
+
+> It is recommended to
+>> disable obfuscation for filesystems that must be captured with a dirty
+>> log.
+> 
+> If it is necessary to use obfuscation for any reason
+
+drop "for any reason" - just makes this long text longer...
+
+> and the source fileystem
+> can't be mounted to clean the log, the resulting image should be tested for
+> any corruption caused by metadump process and any sensitive information
+> in the log and the recipient of the image informed about the result."
+
+The end-user running metadump may not have the expertise to "test the resulting
+image for any corruption ..."  - they're probably just following some support
+person's instructions to "run this command..."  How about this:
+
+---
+
+xfs_metadump cannot obfuscate metadata in the filesystem log.  Log
+recovery of an obfuscated metadump image may expose clear-text
+metadata and/or cause filesystem corruption in the restored image.
+It is recommended that the source filesystem be mounted and unmounted
+first if possible, to produce a metadump with a clean log.
+
+If a metadump must be produced from a filesystem with a dirty log,
+it is recommended that obfuscation be turned off with -o option, if
+metadata such as filenames is not considered sensitive.  If obfuscation
+is required on a metadump with a dirty log, please inform the recipient
+of the metadump image about this situation.
+---
+
+-Eric
