@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57913 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:57935 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752257AbdDNMDN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 14 Apr 2017 08:03:13 -0400
+        id S1752788AbdDNMDV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 Apr 2017 08:03:21 -0400
 From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 3/8] nowait aio: return if direct write will trigger writeback
-Date: Fri, 14 Apr 2017 07:02:52 -0500
-Message-Id: <20170414120257.8932-4-rgoldwyn@suse.de>
+Subject: [PATCH 7/8] nowait aio: xfs
+Date: Fri, 14 Apr 2017 07:02:56 -0500
+Message-Id: <20170414120257.8932-8-rgoldwyn@suse.de>
 In-Reply-To: <20170414120257.8932-1-rgoldwyn@suse.de>
 References: <20170414120257.8932-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,111 +17,91 @@ Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@v
 
 From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Find out if the write will trigger a wait due to writeback. If yes,
-return -EAGAIN.
+If IOCB_NOWAIT is set, bail if the i_rwsem is not lockable
+immediately.
 
-This introduces a new function filemap_range_has_page() which
-returns true if the file's mapping has a page within the range
-mentioned.
-
-Return -EINVAL for buffered AIO: there are multiple causes of
-delay such as page locks, dirty throttling logic, page loading
-from disk etc. which cannot be taken care of.
+IF IOMAP_NOWAIT is set, return EAGAIN in xfs_file_iomap_begin
+if it needs allocation either due to file extension, writing to a hole,
+or COW or waiting for other DIOs to finish.
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- include/linux/fs.h |  2 ++
- mm/filemap.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 49 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_file.c  | 19 ++++++++++++++-----
+ fs/xfs/xfs_iomap.c | 17 +++++++++++++++++
+ 2 files changed, 31 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index e44de1c981a0..b14eab5daeb2 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2514,6 +2514,8 @@ extern int filemap_fdatawait(struct address_space *);
- extern void filemap_fdatawait_keep_errors(struct address_space *);
- extern int filemap_fdatawait_range(struct address_space *, loff_t lstart,
- 				   loff_t lend);
-+extern int filemap_range_has_page(struct address_space *, loff_t lstart,
-+				   loff_t lend);
- extern int filemap_write_and_wait(struct address_space *mapping);
- extern int filemap_write_and_wait_range(struct address_space *mapping,
- 				        loff_t lstart, loff_t lend);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index d51670b7fe6b..48b83d1d4a30 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -376,6 +376,39 @@ int filemap_flush(struct address_space *mapping)
- }
- EXPORT_SYMBOL(filemap_flush);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 35703a801372..b307940e7d56 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -541,8 +541,11 @@ xfs_file_dio_aio_write(
+ 		iolock = XFS_IOLOCK_SHARED;
+ 	}
  
-+/**
-+ * filemap_range_has_page - check if a page exists in range.
-+ * @mapping:		address space structure to wait for
-+ * @start_byte:		offset in bytes where the range starts
-+ * @end_byte:		offset in bytes where the range ends (inclusive)
-+ *
-+ * Find at least one page in the range supplied, usually used to check if
-+ * direct writing in this range will trigger a writeback.
-+ */
-+int filemap_range_has_page(struct address_space *mapping,
-+				loff_t start_byte, loff_t end_byte)
-+{
-+	pgoff_t index = start_byte >> PAGE_SHIFT;
-+	pgoff_t end = end_byte >> PAGE_SHIFT;
-+	struct pagevec pvec;
-+	int ret;
-+
-+	if (end_byte < start_byte)
-+		return 0;
-+
-+	if (mapping->nrpages == 0)
-+		return 0;
-+
-+	pagevec_init(&pvec, 0);
-+	ret = pagevec_lookup(&pvec, mapping, index, 1);
-+	if (!ret)
-+		return 0;
-+	ret = (pvec.pages[0]->index <= end);
-+	pagevec_release(&pvec);
-+	return ret;
-+}
-+EXPORT_SYMBOL(filemap_range_has_page);
-+
- static int __filemap_fdatawait_range(struct address_space *mapping,
- 				     loff_t start_byte, loff_t end_byte)
- {
-@@ -2640,6 +2673,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
- 
- 	pos = iocb->ki_pos;
- 
-+	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
-+		return -EINVAL;
-+
- 	if (limit != RLIM_INFINITY) {
- 		if (iocb->ki_pos >= limit) {
- 			send_sig(SIGXFSZ, current, 0);
-@@ -2709,9 +2745,17 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
- 	write_len = iov_iter_count(from);
- 	end = (pos + write_len - 1) >> PAGE_SHIFT;
- 
--	written = filemap_write_and_wait_range(mapping, pos, pos + write_len - 1);
--	if (written)
--		goto out;
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		/* If there are pages to writeback, return */
-+		if (filemap_range_has_page(inode->i_mapping, pos,
-+					   pos + iov_iter_count(from)))
+-	xfs_ilock(ip, iolock);
+-
++	if (!xfs_ilock_nowait(ip, iolock)) {
++		if (iocb->ki_flags & IOCB_NOWAIT)
 +			return -EAGAIN;
-+	} else {
-+		written = filemap_write_and_wait_range(mapping, pos,
-+							pos + write_len - 1);
-+		if (written)
-+			goto out;
++		xfs_ilock(ip, iolock);
 +	}
+ 	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
+ 	if (ret)
+ 		goto out;
+@@ -553,9 +556,15 @@ xfs_file_dio_aio_write(
+ 	 * otherwise demote the lock if we had to take the exclusive lock
+ 	 * for other reasons in xfs_file_aio_write_checks.
+ 	 */
+-	if (unaligned_io)
+-		inode_dio_wait(inode);
+-	else if (iolock == XFS_IOLOCK_EXCL) {
++	if (unaligned_io) {
++		/* If we are going to wait for other DIO to finish, bail */
++		if (iocb->ki_flags & IOCB_NOWAIT) {
++			if (atomic_read(&inode->i_dio_count))
++				return -EAGAIN;
++		} else {
++			inode_dio_wait(inode);
++		}
++	} else if (iolock == XFS_IOLOCK_EXCL) {
+ 		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+ 		iolock = XFS_IOLOCK_SHARED;
+ 	}
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 288ee5b840d7..9baa65eeae9e 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1015,6 +1015,15 @@ xfs_file_iomap_begin(
  
- 	/*
- 	 * After a write we want buffered reads to be sure to go to disk to get
+ 	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
+ 		if (flags & IOMAP_DIRECT) {
++			/*
++			 * A reflinked inode will result in CoW alloc.
++			 * FIXME: It could still overwrite on unshared extents
++			 * and not need allocation.
++			 */
++			if (flags & IOMAP_NOWAIT) {
++				error = -EAGAIN;
++				goto out_unlock;
++			}
+ 			/* may drop and re-acquire the ilock */
+ 			error = xfs_reflink_allocate_cow(ip, &imap, &shared,
+ 					&lockmode);
+@@ -1032,6 +1041,14 @@ xfs_file_iomap_begin(
+ 
+ 	if ((flags & IOMAP_WRITE) && imap_needs_alloc(inode, &imap, nimaps)) {
+ 		/*
++		 * If nowait is set bail since we are going to make
++		 * allocations.
++		 */
++		if (flags & IOMAP_NOWAIT) {
++			error = -EAGAIN;
++			goto out_unlock;
++		}
++		/*
+ 		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
+ 		 * pages to keep the chunks of work done where somewhat symmetric
+ 		 * with the work writeback does. This is a completely arbitrary
 -- 
 2.12.0
 
