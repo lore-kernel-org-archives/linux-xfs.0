@@ -1,43 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from firestarter.dermichi.com ([194.177.153.153]:50742 "EHLO
-        firestarter.dermichi.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938108AbdDSQgE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 12:36:04 -0400
-Received: from noclinksys.net4you.net ([194.177.153.180] helo=[192.168.34.111])
-        by firestarter.dermichi.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
-        (Exim)
-        (envelope-from <mw@dermichi.com>)
-        id 1d0saH-0006AK-96
-        for linux-xfs@vger.kernel.org; Wed, 19 Apr 2017 18:36:01 +0200
-Subject: Re: xfsaild in D state seems to be blocking all other i/o
- sporadically
-References: <e5f2ccc2-7923-934c-e655-59983903ca11@dermichi.com>
- <20170419121202.2m3pi4ffojpnqyxc@eorzea.usersys.redhat.com>
- <ced08a44-d736-6250-c682-0f495a882bea@dermichi.com>
- <82e1fa48-909c-97a4-6bf9-5b84cf0af986@dermichi.com>
- <20170419140446.3rl2pruz2dlcr5cg@eorzea.usersys.redhat.com>
-From: Michael Weissenbacher <mw@dermichi.com>
-Message-ID: <d6f598d1-7e7e-ac85-3cdc-e4f4bfdba94e@dermichi.com>
-Date: Wed, 19 Apr 2017 18:36:00 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170419140446.3rl2pruz2dlcr5cg@eorzea.usersys.redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Received: from mx2.suse.de ([195.135.220.15]:57923 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752269AbdDNMDP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 Apr 2017 08:03:15 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 4/8] nowait-aio: Introduce IOMAP_NOWAIT
+Date: Fri, 14 Apr 2017 07:02:53 -0500
+Message-Id: <20170414120257.8932-5-rgoldwyn@suse.de>
+In-Reply-To: <20170414120257.8932-1-rgoldwyn@suse.de>
+References: <20170414120257.8932-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On 19.04.2017 16:04, Carlos Maiolino wrote:
-> If I am not blind, the task currently owning the cpu isn't listed there, which I
-> suppose to be already running.
-Correct, the only process utilizing the CPU is xfsaild. It is also the
-only process doing I/O, and it looks like it's doing only reads. It
-(xfsaild) never shows up in dmesg as blocked.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-> Next time you hit it, could you please paste the stack trace of the task owning
-> the cpu? Which I suppose to be xfsaild according to your report.
-> 
-> A simple `cat /proc/<pid>/stack` is probably enough
-Sure, will do.
+IOCB_NOWAIT translates to IOMAP_NOWAIT for iomaps.
+This is used by XFS in the XFS patch.
+---
+ fs/iomap.c            | 2 ++
+ include/linux/iomap.h | 1 +
+ 2 files changed, 3 insertions(+)
+
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 141c3cd55a8b..d1c81753d411 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -885,6 +885,8 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	} else {
+ 		dio->flags |= IOMAP_DIO_WRITE;
+ 		flags |= IOMAP_WRITE;
++		if (iocb->ki_flags & IOCB_NOWAIT)
++			flags |= IOMAP_NOWAIT;
+ 	}
+ 
+ 	if (mapping->nrpages) {
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 7291810067eb..53f6af89c625 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -51,6 +51,7 @@ struct iomap {
+ #define IOMAP_REPORT		(1 << 2) /* report extent status, e.g. FIEMAP */
+ #define IOMAP_FAULT		(1 << 3) /* mapping for page fault */
+ #define IOMAP_DIRECT		(1 << 4) /* direct I/O */
++#define IOMAP_NOWAIT		(1 << 5) /* Don't wait for writeback */
+ 
+ struct iomap_ops {
+ 	/*
+-- 
+2.12.0
 
