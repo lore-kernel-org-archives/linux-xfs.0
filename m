@@ -1,36 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:34462 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752095AbdDLR5p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2017 13:57:45 -0400
-Date: Wed, 12 Apr 2017 10:57:44 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Deadlock between block allocation and block truncation
-Message-ID: <20170412175744.GA20546@infradead.org>
-References: <800468eb-3ded-9166-20a4-047de8018582@gmail.com>
- <20170412161017.GA16590@infradead.org>
- <3e0d4184-9d7a-9ca8-330c-727b183975a6@gmail.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:15384 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753294AbdDNAcZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2017 20:32:25 -0400
+Date: Fri, 14 Apr 2017 10:29:30 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] mdrestore: warn about corruption if log is dirty
+Message-ID: <20170414002930.GE12369@dastard>
+References: <20170411141237.9274-1-jtulak@redhat.com>
+ <20170411141237.9274-3-jtulak@redhat.com>
+ <20170411223405.GC12369@dastard>
+ <20170412110403.GB6834@bfoster.bfoster>
+ <20170413025105.GD12369@dastard>
+ <20170413131018.GD24893@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3e0d4184-9d7a-9ca8-330c-727b183975a6@gmail.com>
+In-Reply-To: <20170413131018.GD24893@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <n.borisov.lkml@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-On Wed, Apr 12, 2017 at 08:44:32PM +0300, Nikolay Borisov wrote:
-> "
-> djwong: either agf1 is clean and it needs to release that before going
-> for agf0, or agf1 is dirty and thus it cannot go for agf0
-> "
+On Thu, Apr 13, 2017 at 09:10:19AM -0400, Brian Foster wrote:
+> IOW, this documentation problem exists because the tool is broken. The
+> tool will remain broken despite the fact that the problem is documented.
+> Therefore, we are not just working around a documentation issue by
+> attempting to improve the tool.
 
-Yes.  Older kernels had some bugs in this area due to busy extent
-tracking, where xfs_alloc_ag_vextent would fail despite
-xfs_alloc_fix_freelist picking an AG and possibly dirtying the AGF.
-My busy extent tracking changes for the asynchronous discard code in
-4.11-rc should have fixed that.
+I'm not sure that you understood my point. That is, if a developer
+tool is considered broken, then adding warnings to tell the /user/
+the developer tool is broken is not solving the "tool is broken"
+problem any better than documenting in the man page. The underlying
+problem is that the log is unobfuscated and so the tool will, by
+your definition, remain "broken" until that problem is fixed.
 
-But even with that in place I think that locking two AGFs in any
-order in the truncate path is wrong.
+And, IMO, "broken" is an incorrect classification of the issue. We
+*chose* not to obfuscate the log because the effort required to
+implement it falls far, far to the wrong side of the cost-benefit
+analysis line. Months of work for something that may be relevant
+only to a developer once or twice a year?  Further, bfuscating the
+log may actually be an unsolvable problem due to the way we do
+relogging and reuse freed blocks - the obfuscation of log entries
+has to exactly match the obfuscation that is done on disk, and we
+may have multiple overwrites of the same directory blocks to
+obfuscate and all need to be correct. It's a damn hard problem that
+I'll still strongly suggest we should never attempt to solve.
+
+Part of playing the maintainer game is knowing how many resources
+you have available, the relative complexity of the problems that
+need to be solved and guiding the use of your limited resources
+appropriately.  Debug tools that are rarely used are at the low end
+of the priority list - they should have rough edges, because that
+indicates we spend more time caring about making the production code
+reliable than we do about polishing tools that are only used when
+the production code has failed....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
