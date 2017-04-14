@@ -1,160 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50960 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752963AbdDMNKV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Apr 2017 09:10:21 -0400
-Date: Thu, 13 Apr 2017 09:10:19 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] mdrestore: warn about corruption if log is dirty
-Message-ID: <20170413131018.GD24893@bfoster.bfoster>
-References: <20170411141237.9274-1-jtulak@redhat.com>
- <20170411141237.9274-3-jtulak@redhat.com>
- <20170411223405.GC12369@dastard>
- <20170412110403.GB6834@bfoster.bfoster>
- <20170413025105.GD12369@dastard>
+Received: from bombadil.infradead.org ([65.50.211.133]:49799 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751521AbdDNHmu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Apr 2017 03:42:50 -0400
+Date: Fri, 14 Apr 2017 00:42:44 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Deadlock between block allocation and block truncation
+Message-ID: <20170414074244.GA18519@infradead.org>
+References: <800468eb-3ded-9166-20a4-047de8018582@gmail.com>
+ <20170412161017.GA16590@infradead.org>
+ <af73ca2f-5840-1399-9902-8f7482e29e49@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170413025105.GD12369@dastard>
+In-Reply-To: <af73ca2f-5840-1399-9902-8f7482e29e49@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: Nikolay Borisov <n.borisov.lkml@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Thu, Apr 13, 2017 at 12:51:05PM +1000, Dave Chinner wrote:
-> On Wed, Apr 12, 2017 at 07:04:04AM -0400, Brian Foster wrote:
-> > On Wed, Apr 12, 2017 at 08:34:05AM +1000, Dave Chinner wrote:
-> > > On Tue, Apr 11, 2017 at 04:12:37PM +0200, Jan Tulak wrote:
-> > > > A dirty log in an obfuscated dump means that a corruption can happen
-> > > > when replaying the log (which contains unobfuscated data). Warn the user
-> > > > about this possibility.
-> > > > 
-> > > > The xlog workaround is copy&paste solution from repair/phase2.c and
-> > > > other tools, because the function is not implemented in libxlog.
-> > > > 
-> > > > Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> > > 
-> > > I think this is overkill. mdrestore is not the place
-> > > to be interpreting the state of the dumped image - it is a basic
-> > > "restore the image" program, not a "check the validity of the image"
-> > > program.
-> > > 
-> > 
-> > I think that's a reasonable argument for the mdrestore side. I'm less
-> > interested in seeing a warning on the restore side in general,
-> > personally. I was initially thinking it would have required less code
-> > and the whole obfuscation detection thing is getting into hackish
-> > territory, to be fair.
-> > 
-> > > Secondly, if people are having problems with running log recovery on
-> > > a restored obfuscated image and getting corruption and not knowing
-> > > why or what to do, then that is a /documentation and training/
-> > > problem, not a code problem.
-> > > 
-> > > i.e. the problem is that people who aren't developers are trying to
-> > > use tools that were written for developers to do forensic analysis
-> > > of failures. Don't dumb down the tool for clueless users - point the
-> > > users at the documentation that the tool requires to use correctly...
-> > > 
-> > 
-> > Put me in the clueless users bucket, then. This started with a customer
-> > with a corrupted filesystem that provided a metadump that exhibited
-> > filesystem corruption. A support person began the process of diagnosing
-> > the problem and it eventually got to me, who had to spend a nontrivial
-> > amount of time trying to identify what the problem was, see if I could
-> > reproduce it on my own to verify it was actually specific to the
-> > metadump, etc.
-> > 
-> > This is not an obvious "your metadump is broken" log recovery failure.
-> > It's a latent directory corruption that doesn't obviously have anything
-> > to do with log recovery in the first place. I'm sure I'll be able to
-> > spot it going forward for some time while it's fresh in my mind, but I
-> > expect to lose track of that eventually given the rarity (of debugging
-> > log recovery issues). It's not reasonable at all to expect regular users
-> > or support people to understand this enough to filter out bad images or
-> > know when to use or not use a certain combination of metadump options,
-> > because it otherwise requires a detailed understanding of XFS logging
-> > and directory internals.
-> 
-> Log recovery on an obfuscated directory is, to me, a known obvious
-> vector for directory corruption because we replay unobfuscated
-> dirents over obfuscated on-disk data. Buffer logging is done in
-> aligned 128 byte chunks, so it /should/ be obvious that the recovery
-> of directory data buffers will partially overwrite dirents on disk
-> even when they were not directly modified by the user.  And because
-> this causes an obfuscated/clear text mismatch in the dirent name,
-> the hash will not calculate to teh same as what the directory stored
-> for that dirent. Hence the corruption reports that repair will now
-> spew...
-> 
-> This was always considered a known problem for obfuscated metadump
-> restorations - the unobfuscated log will result in recovery issues
-> and name/data corruptions for dirs and xattrs.  In hindsight, this
-> should have been documented long ago so you didn't have to waste the
-> time to "rediscover" it like you did. It wasn't documented because
-> both developers and users were far more concerned about the data
-> exposure issues than they were about whether the log unobfuscated
-> log replayed correctly or not.
-> 
+On Thu, Apr 13, 2017 at 04:52:03PM +0300, Nikolay Borisov wrote:
+> On a different note - do you think that reducing the unmapped extents
+> from 2 to 1 would introduce any performance degradation during
+> truncation?
 
-What might be obvious to a design architect from a code standpoint isn't
-necessarily obvious to others nor obvious in practice. With such an
-image in hand, it's not obvious (enough, IMO) that the corruption is
-even a result of log recovery.
+There will be some.  But now that we have the CIL it will just
+additional in-kernel overhead instead of overhead in the on-disk
+log.
 
-Rather, that is something that has to be worked out, distinguished from
-any other potentially similar corruption of the source image and
-isolated to the metadump image itself. This is a waste of time for
-everybody involved.
+> Looking around the code this define is only used when doing
+> truncation, so perhaps a better thing to do would be to turn this
+> xfs_bunmapi arg to a boolean which signal whether we are doing
+> truncation or not. And if it is set to true have xfs_bunmapi unmap all
+> possible extents from only a single AG? I'm going to sift through the
+> git history to figure out where this requirement of maximum 2 extent
+> came to truncate, came.
 
-> IMO - and as I said to Eric on IRC - we should not be trying to work
-> around institutional problems (i.e. inability to train or impart the
-> necessary knowledge on support engineers) with code changes.
-> Training support engineers properly requires documentation and
-> knowledge distribution processes; the code implementing the tools
-> they are being taught about is not the right instrument to perform
-> this knowledge transfer....
-> 
+We have the problem with all transactions that could lock multiple AGF
+headers, so that's not going to cut it.
 
-Documentation is good. Jan's latest series updates the man page on the
-issue.
-
-That aside, this does not reduce to solely a documentation problem.
-xfs_metadump is simply broken for particular source filesystems in that
-it may corrupt the resulting fs image (by default, no less). The
-fundamentally correct approach is to fix metadump obfuscation to not
-corrupt the output image (then we wouldn't need to document the fact
-that it does ;).
-
-Fixing xfs_metadump to obfuscate the log correctly is not a trivial
-matter, however, so that isn't a realistic solution atm. The next
-available option is to disallow obfuscation of such filesystems, but
-that limits the use of a valuable support tool to avoid a
-rare/particular case. The next available option after that is the
-approach implemented by these patches: to warn about the situation to
-hopefully avoid the effects of the problem in the field.
-
-So while I'm actually fine with dropping the mdrestore side bits here
-for practical reasons (it's more code than I anticipated for the purpose
-of emitting a warning), and I agree that we should update documentation,
-the hightest priority here should be to provide a usable tool that
-functions correctly.
-
-IOW, this documentation problem exists because the tool is broken. The
-tool will remain broken despite the fact that the problem is documented.
-Therefore, we are not just working around a documentation issue by
-attempting to improve the tool.
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I think we could do multiple transactions IFF in the same AG.  I'll
+need to check if that's worth it.  And on top of that I have started
+entirely reworking what is currently xfs_bunmapi, but that will have
+to wait until after a fix for your issue.
