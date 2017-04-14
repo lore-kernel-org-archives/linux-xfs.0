@@ -1,94 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51434 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753927AbdDDURR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Apr 2017 16:17:17 -0400
-Subject: Re: [xfsprogs] Do we need so many data types for user input?
-References: <CACj3i738tUsYyRvQmr3NfPQ=P2FNruh2xsr1TAuLMJ69AV0a0w@mail.gmail.com>
- <20170404194825.GX28800@wotan.suse.de>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5784453e-dc91-1e26-451d-3afea138adbf@sandeen.net>
-Date: Tue, 4 Apr 2017 15:17:15 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:24925 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752008AbdDNSnl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Apr 2017 14:43:41 -0400
+Date: Fri, 14 Apr 2017 11:43:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: remove the trailing newline used in the fmt
+ parameter of TP_printk
+Message-ID: <20170414184309.GB8502@birch.djwong.org>
+References: <1492139578-5261-1-git-send-email-houtao1@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20170404194825.GX28800@wotan.suse.de>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1492139578-5261-1-git-send-email-houtao1@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>, Jan Tulak <jtulak@redhat.com>
+To: Hou Tao <houtao1@huawei.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 4/4/17 2:48 PM, Luis R. Rodriguez wrote:
-> On Tue, Apr 04, 2017 at 10:54:09AM +0200, Jan Tulak wrote:
->> Simply stated, signed values seem to be useless here. And at the end
->> of the day, we are converting all numbers into unsigned in one part of
->> the parsing anyway, so I don't see how such a change could change any
->> behaviour.
->>
->> So what do you think, can I remove the other types in user-input part
->> of the code and save all numbers as uint64?
+On Fri, Apr 14, 2017 at 11:12:58AM +0800, Hou Tao wrote:
+> The trailing newlines wil lead to extra newlines in the trace file
+> which looks like the following output, so remove them.
+> >kworker/4:1H-1508  [004] .... 47879.101608: xfs_discard_extent: dev 8:0
+> >
+> >kworker/u16:2-238  [004] .... 47879.101725: xfs_extent_busy_clear: dev 8:0
 > 
-> This seems reasonable to me, I could not find any valid use for negative values,
-> yet we have int all over. No bueno.
-> 
-> That seems like a small pedantic correction we can make, but to be clear I think it
-> something we can fix not by changing struct subopt_param but rather just the
-> data types for the specific values, for instance:
-> 
->         int                     inodelog;                                       
->         int                     isize;                                          
->         int                     ilflag;
-> 
-> My point about struct subopt_param is that the usage of long long is there from
-> a practical point of view of the tradition to give us the ability to later
-> convert any value to any data type in between. So while I agree that negative
-> values are not used right now, and we should use a correct unsigned data type,
-> I think keeping long long on struct subopt_param makes sense.
-> 
-> From what I can tell we only need generally for all input values 0 - UINT_MAX,
-> and  if we were to use for instance uint64_t we would still generally cap to
-> UINT_MAX on mkfs.xfs for now and if we want later we bump to ULLONG_MAX without
-> much changes.
-> 
-> Perhaps the two exceptions worth reviewing in light of whether or not to generally
-> max out to UINT_MAX or ULONG_MAX right now seem to be possibly be:
-> 
->         __uint64_t              agcount;                                        
->         __uint64_t              agsize; 
-> 
-> agcount has a boundary limit though: XFS_MAX_AGNUMBER :
-> 
-> mkfs/xfs_mkfs.c:                  .maxval = XFS_MAX_AGNUMBER,
-> include/xfs_multidisk.h:#define XFS_MAX_AGNUMBER        ((xfs_agnumber_t)(NULLAGNUMBER - 1))
-> libxfs/xfs_types.h:#define      NULLAGNUMBER    ((xfs_agnumber_t)-1)
-> typedef __uint32_t      xfs_agnumber_t; /* allocation group number */           
-> 
-> Sicne this is u32 UINT_MAX should suffice.
+> Signed-off-by: Hou Tao <houtao1@huawei.com>
 
-yep.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+--D
+
+> ---
+>  fs/xfs/xfs_trace.h | 25 +++++++++++++------------
+>  1 file changed, 13 insertions(+), 12 deletions(-)
 > 
-> And then agsize is capped artificially later via validate_ag_geometry():
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 383ac22..3ee5ecc 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -2190,7 +2190,7 @@ DECLARE_EVENT_CLASS(xfs_discard_class,
+>  		__entry->agbno = agbno;
+>  		__entry->len = len;
+>  	),
+> -	TP_printk("dev %d:%d agno %u agbno %u len %u\n",
+> +	TP_printk("dev %d:%d agno %u agbno %u len %u",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->agno,
+>  		  __entry->agbno,
+> @@ -2262,7 +2262,7 @@ DECLARE_EVENT_CLASS(xfs_defer_class,
+>  		__entry->committed = dop->dop_committed;
+>  		__entry->low = dop->dop_low;
+>  	),
+> -	TP_printk("dev %d:%d ops %p committed %d low %d\n",
+> +	TP_printk("dev %d:%d ops %p committed %d low %d",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->dop,
+>  		  __entry->committed,
+> @@ -2290,7 +2290,7 @@ DECLARE_EVENT_CLASS(xfs_defer_error_class,
+>  		__entry->low = dop->dop_low;
+>  		__entry->error = error;
+>  	),
+> -	TP_printk("dev %d:%d ops %p committed %d low %d err %d\n",
+> +	TP_printk("dev %d:%d ops %p committed %d low %d err %d",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->dop,
+>  		  __entry->committed,
+> @@ -2319,7 +2319,7 @@ DECLARE_EVENT_CLASS(xfs_defer_pending_class,
+>  		__entry->committed = dfp->dfp_done != NULL;
+>  		__entry->nr = dfp->dfp_count;
+>  	),
+> -	TP_printk("dev %d:%d optype %d intent %p committed %d nr %d\n",
+> +	TP_printk("dev %d:%d optype %d intent %p committed %d nr %d",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->type,
+>  		  __entry->intent,
+> @@ -2614,7 +2614,8 @@ DECLARE_EVENT_CLASS(xfs_ag_resv_class,
+>  		__entry->asked = r ? r->ar_asked : 0;
+>  		__entry->len = len;
+>  	),
+> -	TP_printk("dev %d:%d agno %u resv %d freeblks %u flcount %u resv %u ask %u len %u\n",
+> +	TP_printk("dev %d:%d agno %u resv %d freeblks %u flcount %u "
+> +		  "resv %u ask %u len %u",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->agno,
+>  		  __entry->resv,
+> @@ -2667,7 +2668,7 @@ DECLARE_EVENT_CLASS(xfs_ag_btree_lookup_class,
+>  		__entry->agbno = agbno;
+>  		__entry->dir = dir;
+>  	),
+> -	TP_printk("dev %d:%d agno %u agbno %u cmp %s(%d)\n",
+> +	TP_printk("dev %d:%d agno %u agbno %u cmp %s(%d)",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->agno,
+>  		  __entry->agbno,
+> @@ -2700,7 +2701,7 @@ DECLARE_EVENT_CLASS(xfs_refcount_extent_class,
+>  		__entry->blockcount = irec->rc_blockcount;
+>  		__entry->refcount = irec->rc_refcount;
+>  	),
+> -	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u\n",
+> +	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->agno,
+>  		  __entry->startblock,
+> @@ -2735,7 +2736,7 @@ DECLARE_EVENT_CLASS(xfs_refcount_extent_at_class,
+>  		__entry->refcount = irec->rc_refcount;
+>  		__entry->agbno = agbno;
+>  	),
+> -	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u @ agbno %u\n",
+> +	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u @ agbno %u",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->agno,
+>  		  __entry->startblock,
+> @@ -2776,7 +2777,7 @@ DECLARE_EVENT_CLASS(xfs_refcount_double_extent_class,
+>  		__entry->i2_refcount = i2->rc_refcount;
+>  	),
+>  	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u -- "
+> -		  "agbno %u len %u refcount %u\n",
+> +		  "agbno %u len %u refcount %u",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->agno,
+>  		  __entry->i1_startblock,
+> @@ -2822,7 +2823,7 @@ DECLARE_EVENT_CLASS(xfs_refcount_double_extent_at_class,
+>  		__entry->agbno = agbno;
+>  	),
+>  	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u -- "
+> -		  "agbno %u len %u refcount %u @ agbno %u\n",
+> +		  "agbno %u len %u refcount %u @ agbno %u",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->agno,
+>  		  __entry->i1_startblock,
+> @@ -2875,7 +2876,7 @@ DECLARE_EVENT_CLASS(xfs_refcount_triple_extent_class,
+>  	),
+>  	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u -- "
+>  		  "agbno %u len %u refcount %u -- "
+> -		  "agbno %u len %u refcount %u\n",
+> +		  "agbno %u len %u refcount %u",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->agno,
+>  		  __entry->i1_startblock,
+> @@ -3227,7 +3228,7 @@ TRACE_EVENT(xfs_ioctl_clone,
+>  	),
+>  	TP_printk("dev %d:%d "
+>  		  "ino 0x%lx isize 0x%llx -> "
+> -		  "ino 0x%lx isize 0x%llx\n",
+> +		  "ino 0x%lx isize 0x%llx",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->src_ino,
+>  		  __entry->src_isize,
+> -- 
+> 2.5.0
 > 
->         if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
-> 		...
-> 	if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
-> 		...
-> 	if (agsize > dblocks) {
-> 		...
-> 	if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
-> 		...
-> 
-> Its not clear if this is capped at UINT_MAX or if we need ULLONG_MAX here.
-
-.maxval = XFS_AG_MAX_BYTES,
-
-#define XFS_AG_MAX_BYTES        ((XFS_AG_BYTES(31)))    /* 1 TB */
-#define XFS_AG_BYTES(bblog)     ((long long)BBSIZE << (bblog))
-
-so the maximum is (long long)(512) << 31
-
-so, no - agsize won't fit in a 32 bit var, if that's the question...
-
--Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
