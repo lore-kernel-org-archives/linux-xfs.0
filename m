@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57898 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:57913 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751998AbdDNMDL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 14 Apr 2017 08:03:11 -0400
+        id S1752257AbdDNMDN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 Apr 2017 08:03:13 -0400
 From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 2/8] nowait aio: Introduce RWF_NOWAIT
-Date: Fri, 14 Apr 2017 07:02:51 -0500
-Message-Id: <20170414120257.8932-3-rgoldwyn@suse.de>
+Subject: [PATCH 3/8] nowait aio: return if direct write will trigger writeback
+Date: Fri, 14 Apr 2017 07:02:52 -0500
+Message-Id: <20170414120257.8932-4-rgoldwyn@suse.de>
 In-Reply-To: <20170414120257.8932-1-rgoldwyn@suse.de>
 References: <20170414120257.8932-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,214 +17,111 @@ Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@v
 
 From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-This flag informs kernel to bail out if an AIO request will block
-for reasons such as file allocations, or a writeback triggered,
-or would block while allocating requests while performing
-direct I/O.
+Find out if the write will trigger a wait due to writeback. If yes,
+return -EAGAIN.
 
-Unfortunately, aio_flags is not checked for validity, which would
-break existing applications which have it set to anything besides zero
-or IOCB_FLAG_RESFD. So, we are using aio_reserved1 and renaming it
-to aio_rw_flags.
+This introduces a new function filemap_range_has_page() which
+returns true if the file's mapping has a page within the range
+mentioned.
 
-RWF_NOWAIT is translated to IOCB_NOWAIT for iocb->ki_flags.
-
-The check for -EOPNOTSUPP is placed in generic_file_write_iter(). This
-is called by most filesystems, either through fsops.write_iter() or through
-the function defined by write_iter(). If not, we perform the check defined
-by .write_iter() which is called for direct IO specifically.
-
-Filesystems xfs, btrfs and ext4 would be supported in the following patches.
+Return -EINVAL for buffered AIO: there are multiple causes of
+delay such as page locks, dirty throttling logic, page loading
+from disk etc. which cannot be taken care of.
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- fs/9p/vfs_file.c        | 3 +++
- fs/aio.c                | 9 +++++++--
- fs/ceph/file.c          | 3 +++
- fs/cifs/file.c          | 3 +++
- fs/fuse/file.c          | 3 +++
- fs/nfs/direct.c         | 3 +++
- fs/ocfs2/file.c         | 3 +++
- fs/read_write.c         | 2 +-
- include/linux/fs.h      | 3 +++
- include/uapi/linux/fs.h | 1 +
- mm/filemap.c            | 3 +++
- 11 files changed, 33 insertions(+), 3 deletions(-)
+ include/linux/fs.h |  2 ++
+ mm/filemap.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 49 insertions(+), 3 deletions(-)
 
-diff --git a/fs/9p/vfs_file.c b/fs/9p/vfs_file.c
-index 3de3b4a89d89..403681db7723 100644
---- a/fs/9p/vfs_file.c
-+++ b/fs/9p/vfs_file.c
-@@ -411,6 +411,9 @@ v9fs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	loff_t origin;
- 	int err = 0;
- 
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
-+
- 	retval = generic_write_checks(iocb, from);
- 	if (retval <= 0)
- 		return retval;
-diff --git a/fs/aio.c b/fs/aio.c
-index b8a33f5beef5..d3b5c8dc6549 100644
---- a/fs/aio.c
-+++ b/fs/aio.c
-@@ -1546,12 +1546,12 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
- 		return -EINVAL;
- 	}
- 
--	if (unlikely(iocb->aio_rw_flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC))) {
-+	if (unlikely(iocb->aio_rw_flags &
-+		     ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC | RWF_NOWAIT))) {
- 		pr_debug("EINVAL: aio_rw_flags set with incompatible flags\n");
- 		return -EINVAL;
- 	}
- 
--
- 	/* prevent overflows */
- 	if (unlikely(
- 	    (iocb->aio_buf != (unsigned long)iocb->aio_buf) ||
-@@ -1593,6 +1593,11 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
- 	}
- 
- 	req->common.ki_flags |= iocb_rw_flags(iocb->aio_rw_flags);
-+	if ((req->common.ki_flags & IOCB_NOWAIT) &&
-+	    !(req->common.ki_flags & IOCB_DIRECT)) {
-+			ret = -EINVAL;
-+			goto out_put_req;
-+		}
- 
- 	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
- 	if (unlikely(ret)) {
-diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-index 26cc95421cca..af28419b1731 100644
---- a/fs/ceph/file.c
-+++ b/fs/ceph/file.c
-@@ -1267,6 +1267,9 @@ static ssize_t ceph_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	int err, want, got;
- 	loff_t pos;
- 
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
-+
- 	if (ceph_snap(inode) != CEPH_NOSNAP)
- 		return -EROFS;
- 
-diff --git a/fs/cifs/file.c b/fs/cifs/file.c
-index aa3debbba826..a828ab3e7775 100644
---- a/fs/cifs/file.c
-+++ b/fs/cifs/file.c
-@@ -2638,6 +2638,9 @@ ssize_t cifs_user_writev(struct kiocb *iocb, struct iov_iter *from)
- 	 * write request.
- 	 */
- 
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
-+
- 	rc = generic_write_checks(iocb, from);
- 	if (rc <= 0)
- 		return rc;
-diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-index ec238fb5a584..72786e798319 100644
---- a/fs/fuse/file.c
-+++ b/fs/fuse/file.c
-@@ -1425,6 +1425,9 @@ static ssize_t fuse_direct_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	struct fuse_io_priv io = FUSE_IO_PRIV_SYNC(file);
- 	ssize_t res;
- 
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
-+
- 	if (is_bad_inode(inode))
- 		return -EIO;
- 
-diff --git a/fs/nfs/direct.c b/fs/nfs/direct.c
-index aab32fc3d6a8..ab419caebd5f 100644
---- a/fs/nfs/direct.c
-+++ b/fs/nfs/direct.c
-@@ -991,6 +991,9 @@ ssize_t nfs_file_direct_write(struct kiocb *iocb, struct iov_iter *iter)
- 	dfprintk(FILE, "NFS: direct write(%pD2, %zd@%Ld)\n",
- 		file, iov_iter_count(iter), (long long) iocb->ki_pos);
- 
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
-+
- 	result = generic_write_checks(iocb, iter);
- 	if (result <= 0)
- 		return result;
-diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
-index bfeb647459d9..e7f8ba890305 100644
---- a/fs/ocfs2/file.c
-+++ b/fs/ocfs2/file.c
-@@ -2235,6 +2235,9 @@ static ssize_t ocfs2_file_write_iter(struct kiocb *iocb,
- 	if (count == 0)
- 		return 0;
- 
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
-+
- 	direct_io = iocb->ki_flags & IOCB_DIRECT ? 1 : 0;
- 
- 	inode_lock(inode);
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 9aa557bb471c..97f3d6d444b8 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -678,7 +678,7 @@ static ssize_t do_iter_readv_writev(struct file *filp, struct iov_iter *iter,
- 	struct kiocb kiocb;
- 	ssize_t ret;
- 
--	if (flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC))
-+	if (flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC | RWF_NOWAIT))
- 		return -EOPNOTSUPP;
- 
- 	init_sync_kiocb(&kiocb, filp);
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 35cfb08ceb9d..e44de1c981a0 100644
+index e44de1c981a0..b14eab5daeb2 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -270,6 +270,7 @@ struct writeback_control;
- #define IOCB_DSYNC		(1 << 4)
- #define IOCB_SYNC		(1 << 5)
- #define IOCB_WRITE		(1 << 6)
-+#define IOCB_NOWAIT		(1 << 7)
- 
- struct kiocb {
- 	struct file		*ki_filp;
-@@ -3058,6 +3059,8 @@ static inline int iocb_rw_flags(int flags)
- 		res |= IOCB_DSYNC;
- 	if (flags & RWF_SYNC)
- 		res |= (IOCB_DSYNC | IOCB_SYNC);
-+	if (flags & RWF_NOWAIT)
-+		res |= IOCB_NOWAIT;
- 	return res;
- }
- 
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index 048a85e9f017..7bcaef101876 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -347,5 +347,6 @@ struct fscrypt_policy {
- #define RWF_HIPRI			0x00000001 /* high priority request, poll if possible */
- #define RWF_DSYNC			0x00000002 /* per-IO O_DSYNC */
- #define RWF_SYNC			0x00000004 /* per-IO O_SYNC */
-+#define RWF_NOWAIT			0x00000008 /* per-IO, return -EAGAIN if operation would block */
- 
- #endif /* _UAPI_LINUX_FS_H */
+@@ -2514,6 +2514,8 @@ extern int filemap_fdatawait(struct address_space *);
+ extern void filemap_fdatawait_keep_errors(struct address_space *);
+ extern int filemap_fdatawait_range(struct address_space *, loff_t lstart,
+ 				   loff_t lend);
++extern int filemap_range_has_page(struct address_space *, loff_t lstart,
++				   loff_t lend);
+ extern int filemap_write_and_wait(struct address_space *mapping);
+ extern int filemap_write_and_wait_range(struct address_space *mapping,
+ 				        loff_t lstart, loff_t lend);
 diff --git a/mm/filemap.c b/mm/filemap.c
-index 1694623a6289..d51670b7fe6b 100644
+index d51670b7fe6b..48b83d1d4a30 100644
 --- a/mm/filemap.c
 +++ b/mm/filemap.c
-@@ -2982,6 +2982,9 @@ ssize_t generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	struct inode *inode = file->f_mapping->host;
- 	ssize_t ret;
+@@ -376,6 +376,39 @@ int filemap_flush(struct address_space *mapping)
+ }
+ EXPORT_SYMBOL(filemap_flush);
  
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
++/**
++ * filemap_range_has_page - check if a page exists in range.
++ * @mapping:		address space structure to wait for
++ * @start_byte:		offset in bytes where the range starts
++ * @end_byte:		offset in bytes where the range ends (inclusive)
++ *
++ * Find at least one page in the range supplied, usually used to check if
++ * direct writing in this range will trigger a writeback.
++ */
++int filemap_range_has_page(struct address_space *mapping,
++				loff_t start_byte, loff_t end_byte)
++{
++	pgoff_t index = start_byte >> PAGE_SHIFT;
++	pgoff_t end = end_byte >> PAGE_SHIFT;
++	struct pagevec pvec;
++	int ret;
 +
- 	inode_lock(inode);
- 	ret = generic_write_checks(iocb, from);
- 	if (ret > 0)
++	if (end_byte < start_byte)
++		return 0;
++
++	if (mapping->nrpages == 0)
++		return 0;
++
++	pagevec_init(&pvec, 0);
++	ret = pagevec_lookup(&pvec, mapping, index, 1);
++	if (!ret)
++		return 0;
++	ret = (pvec.pages[0]->index <= end);
++	pagevec_release(&pvec);
++	return ret;
++}
++EXPORT_SYMBOL(filemap_range_has_page);
++
+ static int __filemap_fdatawait_range(struct address_space *mapping,
+ 				     loff_t start_byte, loff_t end_byte)
+ {
+@@ -2640,6 +2673,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+ 
+ 	pos = iocb->ki_pos;
+ 
++	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
++		return -EINVAL;
++
+ 	if (limit != RLIM_INFINITY) {
+ 		if (iocb->ki_pos >= limit) {
+ 			send_sig(SIGXFSZ, current, 0);
+@@ -2709,9 +2745,17 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
+ 	write_len = iov_iter_count(from);
+ 	end = (pos + write_len - 1) >> PAGE_SHIFT;
+ 
+-	written = filemap_write_and_wait_range(mapping, pos, pos + write_len - 1);
+-	if (written)
+-		goto out;
++	if (iocb->ki_flags & IOCB_NOWAIT) {
++		/* If there are pages to writeback, return */
++		if (filemap_range_has_page(inode->i_mapping, pos,
++					   pos + iov_iter_count(from)))
++			return -EAGAIN;
++	} else {
++		written = filemap_write_and_wait_range(mapping, pos,
++							pos + write_len - 1);
++		if (written)
++			goto out;
++	}
+ 
+ 	/*
+ 	 * After a write we want buffered reads to be sure to go to disk to get
 -- 
 2.12.0
 
