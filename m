@@ -1,61 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39506 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:57851 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1434222AbdDZBKk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Apr 2017 21:10:40 -0400
-Date: Wed, 26 Apr 2017 03:10:38 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 05/12] mkfs: extend opt_params with a value field
-Message-ID: <20170426011038.GR28800@wotan.suse.de>
-References: <20170423185503.31415-1-jtulak@redhat.com>
- <20170423185503.31415-6-jtulak@redhat.com>
- <20170425031326.GI28800@wotan.suse.de>
- <CACj3i70LFrv9HbMRYg7M8qutCfmhFHC8oCUtrkf3vP8kvKUw4Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACj3i70LFrv9HbMRYg7M8qutCfmhFHC8oCUtrkf3vP8kvKUw4Q@mail.gmail.com>
+        id S1750784AbdDNMDC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 Apr 2017 08:03:02 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 0/8 v6] No wait AIO
+Date: Fri, 14 Apr 2017 07:02:49 -0500
+Message-Id: <20170414120257.8932-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com
 
-On Tue, Apr 25, 2017 at 10:04:39AM +0200, Jan Tulak wrote:
-> On Tue, Apr 25, 2017 at 5:13 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> > On Sun, Apr 23, 2017 at 08:54:56PM +0200, Jan Tulak wrote:
-> >
-> >> and anything you write here now is
-> >> + *     overwritten if user specifies the subopt. (If the user input is a string
-> >> + *     and not a number, this value is set to a positive non-zero number.)
-> >> + *
-> >>   * !!! NOTE ==================================================================
-> >>   *
-> >>   * If you are adding a new option, or changing an existing one,
-> >> @@ -152,6 +158,7 @@ struct opt_params {
-> >>               uint64_t        maxval;
-> >>               uint64_t        flagval;
-> >>               const char      *raw_input;
-> >> +             uint64_t        value;
-> >>       }               subopt_params[MAX_SUBOPTS];
-> >>  } opts[MAX_OPTS] = {
-> >>  #define OPT_B        0
-> >
-> > It would seem rather unfair to define this this but not use it in the patch ?
-> 
-> I'm still trying to find out when exactly should I make something two
-> patches and when one, and it seems to shift case by case... I tried to
-> separate the adding of new things and rewriting of the existing code,
-> but do you think, in this case, the new thing is too trivial to have a
-> standalone patch?
+Formerly known as non-blocking AIO.
 
-Ah, I see, this was split out to be separate given a slew of subopts in turn
-later use it. The nasty alternative for review would be to have all subopts
-converted in one shot. I suppose a middle ground would be to have this patch
-squashed with just one of the subopt users, and then each other subopt ported
-atomically. That would make the addition of the value and definition in effect
-as soon as its added.
+This series adds nonblocking feature to asynchronous I/O writes.
+io_submit() can be delayed because of a number of reason:
+ - Block allocation for files
+ - Data writebacks for direct I/O
+ - Sleeping because of waiting to acquire i_rwsem
+ - Congested block device
 
-Just my 0.02 CRC but its up to Eric as this is rather subjective and tree dependent.
+The goal of the patch series is to return -EAGAIN/-EWOULDBLOCK if
+any of these conditions are met. This way userspace can push most
+of the write()s to the kernel to the best of its ability to complete
+and if it returns -EAGAIN, can defer it to another thread.
 
-  Luis
+In order to enable this, IOCB_RW_FLAG_NOWAIT is introduced in
+uapi/linux/aio_abi.h. If set for aio_rw_flags, it translates to
+IOCB_NOWAIT for struct iocb, BIO_NOWAIT for bio and IOMAP_NOWAIT for
+iomap. aio_rw_flags is a new flag replacing aio_reserved1. We could
+not use aio_flags because it is not currently checked for invalidity
+in the kernel.
+
+This feature is provided for direct I/O of asynchronous I/O only. I have
+tested it against xfs, ext4, and btrfs while I intend to add more filesystems.
+Same with QUEUE_FLAG_NOWAIT, which is currently set for sd and virtio devices.
+This is primarily to block md/dm devices which may wait in places such as
+recovery/sync/suspend. In the future, I intend to add support to
+these devices as well. Applications will have to check supportability
+by sending a async direct write and any other error besides -EAGAIN
+would mean it is not supported.
+
+Changes since v1:
+ + changed name from _NONBLOCKING to *_NOWAIT
+ + filemap_range_has_page call moved to closer to (just before) calling filemap_write_and_wait_range().
+ + BIO_NOWAIT limited to get_request()
+ + XFS fixes 
+	- included reflink 
+	- use of xfs_ilock_nowait() instead of a XFS_IOLOCK_NONBLOCKING flag
+	- Translate the flag through IOMAP_NOWAIT (iomap) to check for
+	  block allocation for the file.
+ + ext4 coding style
+
+Changes since v2:
+ + Using aio_reserved1 as aio_rw_flags instead of aio_flags
+ + blk-mq support
+ + xfs uptodate with kernel and reflink changes
+
+ Changes since v3:
+  + Added FS_NOWAIT, which is set if the filesystem supports NOWAIT feature.
+  + Checks in generic_make_request() to make sure BIO_NOWAIT comes in
+    for async direct writes only.
+  + Added QUEUE_FLAG_NOWAIT, which is set if the device supports BIO_NOWAIT.
+    This is added (rather not set) to block devices such as dm/md currently.
+
+ Changes since v4:
+  + Ported AIO code to use RWF_* flags. Check for RWF_* flags in
+    generic_file_write_iter().
+  + Changed IOCB_RW_FLAGS_NOWAIT to RWF_NOWAIT.
+
+ Changes since v5:
+  + BIO_NOWAIT to REQ_NOWAIT
+  + Common helper for RWF flags.
+
+-- 
+Goldwyn
+
+
