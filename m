@@ -1,249 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39314 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47840 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753246AbdDRNzd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Apr 2017 09:55:33 -0400
-Date: Tue, 18 Apr 2017 09:55:31 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/3] xfs: push buffer of flush locked dquot to avoid
- quotacheck deadlock
-Message-ID: <20170418135529.GA46764@bfoster.bfoster>
-References: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
- <1487966001-63263-3-git-send-email-bfoster@redhat.com>
- <20170410050001.GI23007@dastard>
- <20170410141521.GB3991@bfoster.bfoster>
- <20170410235525.GA12369@dastard>
- <20170411145300.GA12111@bfoster.bfoster>
- <20170418023548.GX17542@dastard>
+        id S1752990AbdDOOqL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 15 Apr 2017 10:46:11 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8FA16A2021
+        for <linux-xfs@vger.kernel.org>; Sat, 15 Apr 2017 14:46:10 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6697C60461
+        for <linux-xfs@vger.kernel.org>; Sat, 15 Apr 2017 14:46:10 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: remove use of do_div with 32-bit dividend in quota debug
+ code
+Message-ID: <e6022a70-8f09-633d-e99a-30186ea8c3d2@redhat.com>
+Date: Sat, 15 Apr 2017 09:46:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170418023548.GX17542@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, Martin Svec <martin.svec@zoner.cz>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Apr 18, 2017 at 12:35:48PM +1000, Dave Chinner wrote:
-> On Tue, Apr 11, 2017 at 10:53:03AM -0400, Brian Foster wrote:
-> > On Tue, Apr 11, 2017 at 09:55:25AM +1000, Dave Chinner wrote:
-> > > We hold the buffer locked, the dquot is locked and the dquot is
-> > > flush locked already, right? We know the IO has not been submitted
-> > > because we have the buffer lock and the dquot is still flush locked,
-> > > which means /some/ dirty dquot data is already in the buffer.
-> > > 
-> > 
-> > Essentially. The buffer is queued and the dquot flush locked by reclaim.
-> > By the time we get to the problematic scenario, we acquire the dquot
-> > lock and can acquire the buffer lock in response to flush lock failure.
-> > The buffer cannot be under I/O because we hold it on the local delwri
-> > queue.
-> 
-> Seems to me that you've missed the fundamental reason that the
-> buffer can't be under IO. It's not because it's on some local
-> private queue, it can't be under IO because /we hold the buffer
-> lock/.
-> 
+The kbuild test robot caught this; in debug code we have another
+caller of do_div with a 32-bit dividend (j) which is caught now
+that we are using the kernel-supplied do_div.
 
-Yes, I'm aware that the buffer lock protects I/O submission. Poor
-wording above, perhaps.
+None of the values used here are 64-bit; just use simple division.
 
-> > > So why can't we just modify the dquot in the buffer?  We already
-> > > hold all the locks needed to guarantee exclusive access to the dquot
-> > > and buffer, and they are all we hold when we do the initial flush to
-> > > the buffer. So why do we need to do IO to unlock the dquot flush
-> > > lock when we could just rewrite before we submit the buffer for IO?
-> > > 
-> > 
-> > Are you suggesting to essentially ignore the flush lock? I suppose we
-> > could get away with this in dq_flush_one() since it is only called from
-> > quotacheck, but we may have to kill off any assertions that expect the
-> > flush lock in xfs_dqflush(), and perhaps refactor that code to accept a
-> > locked buffer as a param.
-> 
-> No, I'm not suggesting we ignore the flush lock. What the flush
-> "lock" does is prevent higher layer attempts to flush the dquot to
-> the backing buffer whilst IO may be in progress. It's higher level
-> function is to allows async log item state updates to be done
-> correctly w.r.t. relogging and flushing, as we allow transactional
-> modifications to inodes and dquots while they are under IO.
-> 
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Ok. What I was trying to recall previously was some discussion around
-the flush lock retry problem where it was noted that we can't unlock the
-flush lock until the currently flushed state makes it to disk[1]. Is the
-conceptual difference here that we are not proposing to unlock the flush
-lock, but rather co-opt it to perform another flush?
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index b669b12..dedeb7f 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -851,8 +851,7 @@ struct xfs_qm_isolate {
+ 	 * started afresh by xfs_qm_quotacheck.
+ 	 */
+ #ifdef DEBUG
+-	j = XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
+-	do_div(j, sizeof(xfs_dqblk_t));
++	j = XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB) / sizeof(xfs_dqblk_t);
+ 	ASSERT(mp->m_quotainfo->qi_dqperchunk == j);
+ #endif
+ 	dqb = bp->b_addr;
 
-[1] http://www.spinics.net/lists/linux-xfs/msg01248.html
-
-> But to flush an object, we have to own the object lock, the flush
-> lock and the underlying buffer lock. To flush a dquot (or inode) we
-> need to, in order:
-> 
-> 	a) lock the dquot (inode)
-> 	b) obtain the flush lock
-> 	c) obtain the buffer lock
-> 	d) flush the dquot to the buffer
-> 	e) update log item state
-> 	f) unlock the buffer
-> 
-> IO is then effectively:
-> 
-> 	a) lock buffer
-> 	b) submit IO
-> 	<IO completes>
-> 	b) dquot callback unlocks flush lock
-> 	a) buffer is unlocked
-> 
-> IOWs, the flush "lock" does not work on it's own. It's really a
-> completion notifier, not a lock, and it's actually implemented that
-> way now. The name is historical because it used a semaphore when
-> that was all Irix or Linux had to implement an async non-owner
-> object release. That is, when we lock and flush the object, we
-> effective hand the "flush lock" to the buffer, as it is the buffer
-> that is responsible for "unlocking" it on IO completion.
-> 
-> The "lock" function prevents the higher layers from trying to update
-> the buffer until the buffer says "it's OK to modify me", but it does
-> not mean we cannot modify the buffer contents if we hold all the
-> correct context - the "modify the buffer" action is the inner most.
-> 
-> IOWs, if we lock the buffer and the buffer owns the flush lock state
-> for the object, then if we are able to lock the object, we have now
-> have exclusive access to both the logical object, the log item
-> associated with it, the backing buffer and the flush context lock.
-> And with all that context held, it is safe to flush the logical
-> object state to the backing buffer....
-> 
-> i.e. rather than locking from the top down to get to the state where
-> we can flush an object, we can lock objects from the bottom up and
-> end up in the same place...
-> 
-
-I didn't claim the locking or overall proposal wouldn't work, so this
-all makes sense to me from a serialization perspective. I think the
-implementation would be more hackish than the current and previous
-proposals, however. That is a subjective argument, of course. To be
-fair, the current/previous proposals are also hackish, but what makes
-this approach so much better that it is worth starting over on this
-problem yet again?
-
-IOWs, if the argument here is more substantive than "look, we can do
-this differently," I'm not seeing it. In the meantime, this patch has
-been reviewed, tested against quotacheck under various low memory
-conditions and verified by users in the field who actually reproduce the
-problem. It also has the benefit of historical precedent in that it is
-effectively a partial revert of the patch that introduced the regression
-in the first place.
-
-> > I don't see anything that would break off hand, but my first reaction is
-> > it sounds more hackish than this patch or the previous patch that just
-> > disabled reclaim during quotacheck.
-> 
-> I thought we'd done that discussion. i.e. we can't disable reclaim
-> in quotacheck because that can set off the OOM killer...
-> 
-
-Huh? The only reason disabling of dquot reclaim during quotacheck was
-proposed in the first place is because it is 100% superfluous.
-Quotacheck, by design, does not allow reclaim to free memory. Therefore
-reclaim does not and afaict never has prevented or even mitigated OOM
-during quotacheck.
-
-Is OOM possible due to quotacheck? You bet. Could quotacheck be improved
-to be more memory efficient? Most likely, but that's beyond the scope of
-this deadlock regression. However unless I'm missing something, we can
-disable reclaim during quotacheck to no ill side effect.
-
-Brian
-
-P.S., To be completely clear of my position on this issue at this
-point... given the amount of time I've already spent responding to
-handwavy arguments (ultimately resulting in discussing trailing off
-until a repost occurs), or experimenting with a known bogus quotacheck
-rework (which is still left without feedback, I believe), etc.,
-clarification on the correctness of this alternate approach (while
-interesting) is not nearly convincing enough for me to start over on
-this bug. I don't mind handwavy questions if the "caller" is receptive
-to or attempting to process (or debate) clarification, but I don't get
-the impression that is the case here.
-
-If you feel strongly enough about a certain approach, feel free to just
-send a patch. At this point, I'm happy to help review anything from the
-sole perspective of technical correctness (regardless of whether the I
-think the approach is ugly), but I'm not personally wasting any more
-time than I already have to implement and test such an approach without
-a more logical and convincing argument. IMO, the feedback to this patch
-doesn't fairly or reasonably justify the level of pushback.
-
-> > In fact, if we're going to hack
-> > around avoiding the flush lock, why not just hack up xfs_buf_submit() to
-> > allow submission of a buffer while it remains on a delwri queue? AFAICT,
-> > that would only require removing an assert and not clearing the flag on
-> > I/O completion. I'm not convinced I'd post something for either
-> > approach, but I'd have to think about it some more.
-> > 
-> > > Indeed, let's go look at inodes for an example of this, 
-> > > xfs_ifree_cluster() to be precise:
-> > > 
-> > >                 /*                                                               
-> > >                  * We obtain and lock the backing buffer first in the process    
-> > >                  * here, as we have to ensure that any dirty inode that we       
-> > >                  * can't get the flush lock on is attached to the buffer.        
-> > >                  * If we scan the in-memory inodes first, then buffer IO can     
-> > >                  * complete before we get a lock on it, and hence we may fail    
-> > >                  * to mark all the active inodes on the buffer stale.            
-> > >                  */                                                              
-> > >  .....
-> > >                 /*                                                               
-> > >                  * Walk the inodes already attached to the buffer and mark them  
-> > >                  * stale. These will all have the flush locks held, so an        
-> > >                  * in-memory inode walk can't lock them. By marking them all     
-> > >                  * stale first, we will not attempt to lock them in the loop     
-> > >                  * below as the XFS_ISTALE flag will be set.                     
-> > >                  */                                                              
-> > > .....
-> > >                 /*                                                               
-> > >                  * For each inode in memory attempt to add it to the inode       
-> > >                  * buffer and set it up for being staled on buffer IO            
-> > >                  * completion.  This is safe as we've locked out tail pushing    
-> > >                  * and flushing by locking the buffer.                           
-> > >                  *                                                               
-> > >                  * We have already marked every inode that was part of a         
-> > >                  * transaction stale above, which means there is no point in     
-> > >                  * even trying to lock them.                                     
-> > >                  */                                                              
-> > > 
-> > > IOWs, what we have here is precendence for modifying the flush
-> > > locked objects attached to a buffer after first locking the buffer.
-> > > dquots have the same transaction/flush model as inodes, so I'm
-> > > pretty sure this will lead to the simplest, cleanest way to avoid
-> > > this deadlock....
-> > > 
-> > 
-> > The simplest approach to avoid the deadlock is to disable dquot reclaim
-> > during quotacheck. ;)
-> > 
-> > On a quick scan through the inode code, it seems the above refer to
-> > using the buffer lock to serialize invalidation of higher level objects
-> > based on the buffer. IOW, to ensure that we don't leave "valid" in-core
-> > inode objects referring to an inode metadata buffer that is about to be
-> > invalidated.
-> 
-> Yes, we lock from the bottom up until we have exclusive access to
-> the objects. Invalidation is the /purpose/ of that code, not the
-> architectural mechanism used to lock the objects into a state where
-> we can then invalidate them.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
