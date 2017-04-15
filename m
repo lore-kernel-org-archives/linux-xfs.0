@@ -1,126 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38234 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:45442 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933840AbdDGSiR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Apr 2017 14:38:17 -0400
-Date: Fri, 7 Apr 2017 14:38:08 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: fix up quotacheck buffer list error handling
-Message-ID: <20170407183806.GE55851@bfoster.bfoster>
-References: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
- <1487966001-63263-2-git-send-email-bfoster@redhat.com>
- <20170406223921.GB4864@birch.djwong.org>
- <20170407120229.GA54992@bfoster.bfoster>
- <20170407182042.GM4864@birch.djwong.org>
+        id S1751657AbdDORVR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 15 Apr 2017 13:21:17 -0400
+Subject: Re: [PATCH] xfs: remove custom do_div implementations
+References: <0c0a6e24-f5c9-7610-fa38-b61be6d7439a@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <009c2908-e023-4a62-2466-6fc6c59c49ab@sandeen.net>
+Date: Sat, 15 Apr 2017 12:21:16 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170407182042.GM4864@birch.djwong.org>
+In-Reply-To: <0c0a6e24-f5c9-7610-fa38-b61be6d7439a@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Martin Svec <martin.svec@zoner.cz>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Apr 07, 2017 at 11:20:42AM -0700, Darrick J. Wong wrote:
-> On Fri, Apr 07, 2017 at 08:02:30AM -0400, Brian Foster wrote:
-> > On Thu, Apr 06, 2017 at 03:39:21PM -0700, Darrick J. Wong wrote:
-> > > On Fri, Feb 24, 2017 at 02:53:19PM -0500, Brian Foster wrote:
-> > > > The quotacheck error handling of the delwri buffer list assumes the
-> > > > resident buffers are locked and doesn't clear the _XBF_DELWRI_Q flag
-> > > > on the buffers that are dequeued. This can lead to assert failures
-> > > > on buffer release and possibly other locking problems.
-> > > > 
-> > > > Update the error handling code to lock each buffer as it is removed
-> > > > from the buffer list and clear the delwri queue flag.
-> > > > 
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > ---
-> > > >  fs/xfs/xfs_buf.c | 2 ++
-> > > >  fs/xfs/xfs_qm.c  | 2 ++
-> > > >  2 files changed, 4 insertions(+)
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > > index ac3b4db..e566510 100644
-> > > > --- a/fs/xfs/xfs_buf.c
-> > > > +++ b/fs/xfs/xfs_buf.c
-> > > > @@ -1078,6 +1078,8 @@ void
-> > > >  xfs_buf_unlock(
-> > > >  	struct xfs_buf		*bp)
-> > > >  {
-> > > > +	ASSERT(xfs_buf_islocked(bp));
-> > > > +
-> > > >  	XB_CLEAR_OWNER(bp);
-> > > >  	up(&bp->b_sema);
-> > > >  
-> > > > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> > > > index b669b12..4ff993c 100644
-> > > > --- a/fs/xfs/xfs_qm.c
-> > > > +++ b/fs/xfs/xfs_qm.c
-> > > > @@ -1387,6 +1387,8 @@ xfs_qm_quotacheck(
-> > > >  	while (!list_empty(&buffer_list)) {
-> > > >  		struct xfs_buf *bp =
-> > > >  			list_first_entry(&buffer_list, struct xfs_buf, b_list);
-> > > > +		xfs_buf_lock(bp);
-> > > > +		bp->b_flags &= ~_XBF_DELWRI_Q;
-> > > >  		list_del_init(&bp->b_list);
-> > > >  		xfs_buf_relse(bp);
-> > > 
-> > > Hmm, was this the only place we ever _buf_unlock'd an unlocked buffer?
-> > > 
-> > 
-> > I'm not aware of any other places (otherwise I would try to fix them :).
-> > Or perhaps I'm not following the question...
-> > 
-> > I do recall a similar problem with flush locks fixed in commit 98efe8a
-> > ("xfs: fix unbalanced inode reclaim flush locking").
+On 4/7/17 4:42 PM, Eric Sandeen wrote:
+> Long ago, all this gunk was added with a lament about problems
+> with gcc's do_div, and a fun recommendation in the changelog:
 > 
-> So... the previous quotacheck code reads the buffer, fiddles with it,
-> and _buf_relse's the buffer, which unlocks it.  When we end up in this
-> error path, we've previously been unlocking an already unlocked buffer,
-> right?  So have we just been screwing up the semaphore all this time and
-> just never noticed because quotacheck probably doesn't fail all that
-> often?  I think it's a good idea (in general) to check for unlocking
-> buffers that are already unlocked, but I worry about the side effects.
+>  egcs-2.91.66 is the recommended compiler version for building XFS.
 > 
-
-Pretty much...
-
-> Granted, if there /are/ other places in the regular code path where we
-> screw up the buffer locking I imagine we'd have noticed; and if there
-> are bugs lurking, better to ASSERT them into the light.  I ran the
-> auto group and didn't see anything, so perhaps we're ok enough?
+> All this special stuff was needed to work around an old gcc bug,
+> apparently, and it's been there ever since.
 > 
-
-IME, we don't get very far after screwing up mechanisms critical to core
-functionality such as a buffer lock or flush lock, at least with asserts
-enabled. The new assert just makes the problem more obvious rather than
-having to backtrack from a more vague error or crash and locate an
-unbalanced locking pattern. This and the other example mentioned above
-both occur in rare error/shutdown cases.
-
-Brian
-
-> --D
+> There should be no need for this anymore, so remove it.
 > 
-> > 
-> > Brian
-> > 
-> > > --D
-> > > 
-> > > >  	}
-> > > > -- 
-> > > > 2.7.4
-> > > > 
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Remove the special 32-bit xfs_do_mod as well; just let the
+> kernel's do_div() handle all this.
+
+Sooo this makes parisc unhappy, but I don't know why:
+
+  CC [M]  fs/xfs/libxfs/xfs_bmap_btree.o
+In file included from ./arch/parisc/include/generated/asm/div64.h:1:0,
+                 from ./include/linux/kernel.h:147,
+                 from ./arch/parisc/include/asm/bug.h:4,
+                 from ./include/linux/bug.h:4,
+                 from ./include/linux/mmdebug.h:4,
+                 from ./include/linux/gfp.h:4,
+                 from ./include/linux/slab.h:14,
+                 from fs/xfs/kmem.h:21,
+                 from fs/xfs/xfs_linux.h:43,
+                 from fs/xfs/xfs.h:32,
+                 from fs/xfs/xfs_trace.c:18:
+fs/xfs/xfs_mount.h: In function 'xfs_daddr_to_agno':
+./include/asm-generic/div64.h:207:28: warning: comparison of distinct pointer types lacks a cast
+  (void)(((typeof((n)) *)0) == ((uint64_t *)0)); \
+                            ^
+fs/xfs/xfs_mount.h:315:2: note: in expansion of macro 'do_div'
+  do_div(ld, mp->m_sb.sb_agblocks);
+  ^
+fs/xfs/xfs_mount.h: In function 'xfs_daddr_to_agbno':
+./include/asm-generic/div64.h:207:28: warning: comparison of distinct pointer types lacks a cast
+  (void)(((typeof((n)) *)0) == ((uint64_t *)0)); \
+                            ^
+fs/xfs/xfs_mount.h:323:25: note: in expansion of macro 'do_div'
+  return (xfs_agblock_t) do_div(ld, mp->m_sb.sb_agblocks);
+                         ^
+
+ld is an xfs_daddr_t in this call.
+
+so passing an xfs_daddr_t (__s64) to do_div triggers the type check
+warning above.  On parisc, we typedef things like this:
+
+typedef __s64 xfs_daddr_t;
+__extension__ typedef __signed__ long long __s64;
+
+if # make.cross ARCH=parisc fs/xfs/xfs_bmap_util.i
+is to be believed.
+
+On x86_64 the typedefs are the same:
+
+typedef __s64 xfs_daddr_t;
+__extension__ typedef __signed__ long long __s64;
+
+so I can't figure out why this is triggering...
+
+-Eric
