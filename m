@@ -1,39 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53301 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753835AbdDSGjb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 02:39:31 -0400
-Date: Tue, 18 Apr 2017 23:39:30 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/8] nowait aio: Introduce RWF_NOWAIT
-Message-ID: <20170419063930.GB20053@infradead.org>
-References: <20170414120257.8932-1-rgoldwyn@suse.de>
- <20170414120257.8932-3-rgoldwyn@suse.de>
+Received: from sandeen.net ([63.231.237.45]:40018 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751254AbdDQMVA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Apr 2017 08:21:00 -0400
+Subject: Re: XFS crashes with xfs_iunlink_remove: xfs_imap returned error -22
+References: <f94b7ddd-a5a0-b376-6d70-fd9472bd20e8@profihost.ag>
+ <bc5aafb9-37a3-9c02-50b7-421633dbd606@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <e65df01e-509b-348e-1fd4-b8c7eafe2f44@sandeen.net>
+Date: Mon, 17 Apr 2017 07:20:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170414120257.8932-3-rgoldwyn@suse.de>
+In-Reply-To: <bc5aafb9-37a3-9c02-50b7-421633dbd606@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Stefan Priebe <s.priebe@profihost.ag>, linux-xfs@vger.kernel.org
 
->  	}
->  
-> -
->  	/* prevent overflows */
+On 4/17/17 7:19 AM, Eric Sandeen wrote:
+> 
+> 
+> On 4/17/17 2:54 AM, Stefan Priebe wrote:
+>> Hello list,
+>>
+>> one of my servers is crashing every night with the following errors:
+>>
+>> XFS (sda3): xfs_iunlink_remove: xfs_imap returned error -22.
+>> XFS (sda3): xfs_inactive_ifree: xfs_ifree returned error -22 XFS
+> 
+> 
+> -EINVAL
+> 
+>> (sda3): xfs_do_force_shutdown(0x1) called from line 1872 of file
+>> fs/xfs/xfs_inode.c. Return address = 0xffffffff9e33cf53 XFS (sda3):
+>> I/O Error Detected. Shutting down filesystem
+>>
+>> I ran xfs_repair v4.9.0 but it seems unable to recover / fix this
+>> error. I'm running an OpenSUSE 42.2 kernel based von v4.4. Is there
+>> anything i can do to fix this?
+> 
+> # echo 11 > /proc/sys/fs/xfs/error_level
+> 
+> to get a full backtrace from the shutdown (if you didn't already)
+> so we can at least see what process is encountering the errors.
+> 
+> I have a hunch, though - are you running xfs_fsr overnight?
 
-Weird whitespace change.
+(or maybe more likely, xfsdump?)
 
-> @@ -1593,6 +1593,11 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
->  	}
->  
->  	req->common.ki_flags |= iocb_rw_flags(iocb->aio_rw_flags);
-> +	if ((req->common.ki_flags & IOCB_NOWAIT) &&
-> +	    !(req->common.ki_flags & IOCB_DIRECT)) {
-> +			ret = -EINVAL;
-> +			goto out_put_req;
-> +		}
-
-Wrong indentation.  Also I think this should be EOPNOTSUPP here.
+-Eric
