@@ -1,77 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49424 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S978955AbdDYFTP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Apr 2017 01:19:15 -0400
-Date: Tue, 25 Apr 2017 07:19:13 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 07/12] mkfs: save user input values into opts
-Message-ID: <20170425051913.GK28800@wotan.suse.de>
-References: <20170423185503.31415-1-jtulak@redhat.com>
- <20170423185503.31415-8-jtulak@redhat.com>
+Received: from cloud1-vm154.de-nserver.de ([178.250.10.56]:26954 "EHLO
+        cloud1-vm154.de-nserver.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753748AbdDQPEu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Apr 2017 11:04:50 -0400
+Subject: Re: XFS crashes with xfs_iunlink_remove: xfs_imap returned error -22
+References: <f94b7ddd-a5a0-b376-6d70-fd9472bd20e8@profihost.ag>
+ <bc5aafb9-37a3-9c02-50b7-421633dbd606@sandeen.net>
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Message-ID: <6d9593a4-e7b0-9f8f-676a-686014768150@profihost.ag>
+Date: Mon, 17 Apr 2017 17:04:45 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170423185503.31415-8-jtulak@redhat.com>
+In-Reply-To: <bc5aafb9-37a3-9c02-50b7-421633dbd606@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
 
-On Sun, Apr 23, 2017 at 08:54:58PM +0200, Jan Tulak wrote:
-> Save the parsed values from users into the opts table.
+Hi Eric,
+
+> On 4/17/17 2:54 AM, Stefan Priebe wrote:
+>> Hello list,
+>>
+>> one of my servers is crashing every night with the following errors:
+>>
+>> XFS (sda3): xfs_iunlink_remove: xfs_imap returned error -22.
+>> XFS (sda3): xfs_inactive_ifree: xfs_ifree returned error -22 XFS
 > 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> ---
->  mkfs/xfs_mkfs.c | 260 +++++++++++++++++++++++++++++++++++---------------------
->  1 file changed, 165 insertions(+), 95 deletions(-)
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 4caf93c..362c9b4 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -1636,16 +1636,19 @@ main(
->  
->  				switch (getsubopt(&p, subopts, &value)) {
->  				case B_LOG:
-> -					blocklog = getnum(value, &opts[OPT_B],
-> -								B_LOG);
-> +					blocklog = parse_conf_val(OPT_B, B_LOG,
-> +								  value);
->  					blocksize = 1 << blocklog;
->  					blflag = 1;
-> +					set_conf_val(OPT_B, B_SIZE, blocksize);
->  					break;
->  				case B_SIZE:
-> -					blocksize = getnum(value, &opts[OPT_B],
-> -							   B_SIZE);
-> +					blocksize = parse_conf_val(OPT_B,
-> +								   B_SIZE,
-> +								   value);
->  					blocklog = libxfs_highbit32(blocksize);
->  					bsflag = 1;
-> +					set_conf_val(OPT_B, B_LOG, blocklog);
->  					break;
->  				default:
->  					unknown('b', value);
+> -EINVAL
+> 
+>> (sda3): xfs_do_force_shutdown(0x1) called from line 1872 of file
+>> fs/xfs/xfs_inode.c. Return address = 0xffffffff9e33cf53 XFS (sda3):
+>> I/O Error Detected. Shutting down filesystem
+>>
+>> I ran xfs_repair v4.9.0 but it seems unable to recover / fix this
+>> error. I'm running an OpenSUSE 42.2 kernel based von v4.4. Is there
+>> anything i can do to fix this?
+> 
+> # echo 11 > /proc/sys/fs/xfs/error_level
+> 
+> to get a full backtrace from the shutdown (if you didn't already)
+> so we can at least see what process is encountering the errors.
 
-This still means that users of parse_conf_val() must copy the same code
-in each case in the above to handle collateral values: if blocklog was
-passed we update blocklog *and* blocksize *and* bsflag. Likewise if blocksize
-was passed we must update blocksize *and* blocklog *and* blflag. What I had
-done on the mkfs.xfs.conf series is put all this functionality into a helper,
-and to do this move all needed vars into a struct. You are moving all possible
-user params to a option specific table, however the collateral parameters are
-kept inside main().
+done.
 
-I'll need to do the same again: move the logic above to a helper and move
-collateral parameters to a struct, or this could be done in your series by
-having parse_conf_val() handle all the needed logic provided say an extra
-struct param is passed -- or though some other means.
+> I have a hunch, though - are you running xfs_fsr overnight?
 
-Duplicating the functionality I'm sure is not desirable, how we handle this
-subjective so I'll leave it up to you to advise how you'd like to proceed,
-but let me know if the above consideration is clear.
+No only rsync from dev/a to dev/b. But the reported device is a (source).
 
-  Luis
+I also have two empty folders in /lost+found which i cannot delete. Even
+after running xfs_repair.
+
+# rm -r /lost+found/
+rm: cannot remove ‘/lost+found/536874081’: Directory not empty
+rm: cannot remove ‘/lost+found/536874085’: Directory not empty
+
+Greets,
+Stefan
