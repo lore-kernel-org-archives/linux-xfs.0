@@ -1,217 +1,222 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51104 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43602 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752236AbdDMG5F (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Apr 2017 02:57:05 -0400
-Date: Thu, 13 Apr 2017 14:57:02 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v3] fstests/xfs: xfs_repair should junk empty attribute
- leaf blocks
-Message-ID: <20170413065702.GV22845@eguan.usersys.redhat.com>
-References: <1492064601-13298-1-git-send-email-zlang@redhat.com>
+        id S1752140AbdDQSIL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Apr 2017 14:08:11 -0400
+Date: Mon, 17 Apr 2017 14:08:08 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 08/10] xfs: introduce a XFS_BMAPI_BESTEFFORT flag
+Message-ID: <20170417180808.GA42232@bfoster.bfoster>
+References: <20170413080517.12564-1-hch@lst.de>
+ <20170413080517.12564-9-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1492064601-13298-1-git-send-email-zlang@redhat.com>
+In-Reply-To: <20170413080517.12564-9-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Apr 13, 2017 at 02:23:21PM +0800, Zorro Lang wrote:
-> There was a bug during log replay, the attr/attr3 leaf verifier
-> reported corruption when encountering a leaf attribute with a
-> count of 0 in the header, as below:
+On Thu, Apr 13, 2017 at 10:05:15AM +0200, Christoph Hellwig wrote:
+> We currently have two classes of xfs_bmapi_write callers that have
+> conflicting space reservation needs.  Many callers expect to be able
+> to reserve the number of total blocks passed in a single AG for
+> the use with the current allocation as well as future allocations
+> in the same transactions, or transactions chained off from it.
 > 
-> Metadata corruption detected at xfs_attr3_leaf block 0x480988/0x1000
+> Other callers want to allocate up to the number of blocks passed in,
+> although they are fine with a smaller number of blocks to make
+> forward progress.  For those we only need to leave a few blocks aside
+> for the bmap btree manipulations when doing the main space allocation.
 > 
-> commit f714016 from xfsprogs has fixed this bug. This test case
-> will emulate this corruption by xfs_db and use xfs_repair to fix
-> it.
+> This patch introduces a new XFS_BMAPI_BESTEFFORT flag for the second
+> kind of callers that ignores the total flag and just uses the minleft
+> parameter to leave space for bmap btree allocations and splits.
 > 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> With this we can remove the potentially dangerous fallback that
+> ignores the total reservation in xfs_bmap_btalloc.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
+>  fs/xfs/libxfs/xfs_attr_remote.c |  6 ++++--
+>  fs/xfs/libxfs/xfs_bmap.c        | 27 ++++++++++++++++++++-------
+>  fs/xfs/libxfs/xfs_bmap.h        |  3 +++
+>  fs/xfs/xfs_bmap_util.c          |  2 ++
+>  fs/xfs/xfs_iomap.c              |  4 ++--
+>  fs/xfs/xfs_reflink.c            |  3 ++-
+>  6 files changed, 33 insertions(+), 12 deletions(-)
 > 
-> Hi,
-> 
-> V3 did below changes:
-> 1) Only test on V4 XFS.
-> 2) Use 'ablock 0' to instead of "a.bmx[0].startblock"
-> 3) Use "dd ... | attr -s ..." to instead of that python command in
->    "setfattr ..."
-> 4) Do "xfs_repair -n" to check if xfs_repair can find the corruption
->    we made.
-> 5) Use xfs_db to check if xfs_repair has fixed the corruption properly.
->    I check it by trying to locate 'ablock 0' again. Should I turn to
->    check if core.naextents == 0?
-> 
-> Thanks,
-> Zorro
-> 
->  tests/xfs/288     | 109 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/288.out |   2 +
->  tests/xfs/group   |   1 +
->  3 files changed, 112 insertions(+)
->  create mode 100755 tests/xfs/288
->  create mode 100644 tests/xfs/288.out
-> 
-> diff --git a/tests/xfs/288 b/tests/xfs/288
-> new file mode 100755
-> index 0000000..5e6167f
-> --- /dev/null
-> +++ b/tests/xfs/288
-> @@ -0,0 +1,109 @@
-> +#! /bin/bash
-> +# FS QA Test 288
-> +#
-> +# When an attribute leaf block count is 0, xfs_repair should junk
-> +# that leaf directly (as xfsprogs commit f714016).
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 Red Hat Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> index d52f525f5b2d..35a99d15521c 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> @@ -464,8 +464,10 @@ xfs_attr_rmtval_set(
+>  		xfs_defer_init(args->dfops, args->firstblock);
+>  		nmap = 1;
+>  		error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)lblkno,
+> -				  blkcnt, XFS_BMAPI_ATTRFORK, args->firstblock,
+> -				  args->total, &map, &nmap, args->dfops);
+> +				  blkcnt,
+> +				  XFS_BMAPI_ATTRFORK | XFS_BMAPI_BESTEFFORT,
+> +				  args->firstblock, args->total, &map, &nmap,
+> +				  args->dfops);
+>  		if (!error)
+>  			error = xfs_defer_finish(&args->trans, args->dfops, dp);
+>  		if (error) {
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 6faefa342748..c06e7d500ed1 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -915,7 +915,7 @@ xfs_bmap_local_to_extents(
+>  		args.fsbno = *firstblock;
+>  		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+>  	}
+> -	args.total = args.minlen = args.maxlen = args.prod = 1;
+> +	args.minlen = args.maxlen = args.prod = 1;
+>  	error = xfs_alloc_vextent(&args);
+>  	if (error)
+>  		goto done;
+> @@ -3504,7 +3504,6 @@ xfs_bmap_btalloc_nullfb(
+>  	int			error;
+>  
+>  	args->type = XFS_ALLOCTYPE_START_BNO;
+> -	args->total = ap->total;
+>  
+>  	startag = ag = XFS_FSB_TO_AGNO(mp, args->fsbno);
+>  	if (startag == NULLAGNUMBER)
+> @@ -3538,7 +3537,6 @@ xfs_bmap_btalloc_filestreams(
+>  	int			error;
+>  
+>  	args->type = XFS_ALLOCTYPE_NEAR_BNO;
+> -	args->total = ap->total;
+>  
+>  	ag = XFS_FSB_TO_AGNO(mp, args->fsbno);
+>  	if (ag == NULLAGNUMBER)
+> @@ -3684,10 +3682,9 @@ xfs_bmap_btalloc(
+>  			args.type = XFS_ALLOCTYPE_FIRST_AG;
+>  		else
+>  			args.type = XFS_ALLOCTYPE_START_BNO;
+> -		args.total = args.minlen = 1;
+> +		args.minlen = 1;
+>  	} else {
+>  		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+> -		args.total = ap->total;
+>  		args.minlen = 1;
+>  	}
+>  	/* apply extent size hints if obtained earlier */
+> @@ -3754,7 +3751,24 @@ xfs_bmap_btalloc(
+>  		args.alignment = 1;
+>  		args.minalignslop = 0;
+>  	}
+> -	args.minleft = xfs_bmap_minleft(ap);
 > +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
+> +	/*
+> +	 * If the XFS_BMAPI_BESTEFFORT flag is set we try to allocate any
+> +	 * space that's available, even if it is less than requested.  We
+> +	 * still need to set a minleft value to guarantee that we can still
+> +	 * manipulate the bmap btree, though.  The total value is ignored in
+> +	 * this case.
+> +	 *
+> +	 * If the flag is not set the total value specifies the total space
+> +	 * that the transaction may use, and we must find an AG that has
+> +	 * enough space available for all of total, or this allocation request
+> +	 * will fail.
+> +	 */
+> +	if (ap->flags & XFS_BMAPI_BESTEFFORT)
+> +		args.minleft = xfs_bmap_minleft(ap);
+> +	else
+> +		args.total = ap->total;
 > +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/attr
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# V4 XFS attr type is 'attr'
-> +write_cmd="write"
 
-This variable is not used in this test.
+This seems Ok, but I don't think it's very elegant to have callers pass
+a total parameter along with a flag to ignore it. Couldn't we just set
+minleft when total is not used and pass zero from those particular
+callers, or do we actually need to support the !BESTEFFORT && total == 0
+case? (At the very least, we could assert that total == 0 when
+BESTEFFORT is set.)
 
-> +
-> +# Modify as appropriate.
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch
-> +_require_attrs
-> +
-> +# Due to xfs_db's write -d option is still not stable, and there's no
-> +# plan to support attr3. So only run this case on V4 XFS.
-> +# Please update this if xfs_db get enough improvement in one day.
-> +if [ -z "$XFS_MKFS_HAS_NO_META_SUPPORT" ]; then
-> +	mkfs_opts="-m crc=0"
-> +fi
-> +$MKFS_XFS_PROG -f $mkfs_opts $SCRATCH_DEV | _filter_mkfs 2>$tmp.mkfs >/dev/null
-> +. $tmp.mkfs
+Brian
 
-_scratch_mkfs "$mkfs_opts" | _filter_mkfs ...
-
-If there's mkfs option conflicts between $MKFS_OPTIONS and local
-$mkfs_opts, _scratch_mkfs will try mkfs again with user specified
-$mkfs_opts only.
-
+>  	args.wasdel = ap->wasdel;
+>  	args.resv = XFS_AG_RESV_NONE;
+>  	args.datatype = ap->datatype;
+> @@ -3800,7 +3814,6 @@ xfs_bmap_btalloc(
+>  	if (args.fsbno == NULLFSBLOCK && nullfb) {
+>  		args.fsbno = 0;
+>  		args.type = XFS_ALLOCTYPE_FIRST_AG;
+> -		args.total = 1;
+>  		if ((error = xfs_alloc_vextent(&args)))
+>  			return error;
+>  		ap->dfops->dop_low = true;
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index 36a7f36f5f38..f35a2b2c4f06 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -79,6 +79,9 @@ struct xfs_extent_free_item
+>  #define XFS_BMAPI_PREALLOC	0x008	/* preallocation op: unwritten space */
+>  #define XFS_BMAPI_IGSTATE	0x010	/* Ignore state - */
+>  					/* combine contig. space */
 > +
-> +_scratch_mount
+> +#define XFS_BMAPI_BESTEFFORT	0x020	/* may allocate less than requested */
 > +
-> +touch $SCRATCH_MNT/$seq.attrfile
-> +inum=$(stat -c '%i' $SCRATCH_MNT/$seq.attrfile)
+>  /*
+>   * unwritten extent conversion - this needs write cache flushing and no additional
+>   * allocation alignments. When specified with XFS_BMAPI_PREALLOC it converts
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 4d1920e594b0..f809ebc7a495 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1033,6 +1033,8 @@ xfs_alloc_file_space(
+>  	startoffset_fsb	= XFS_B_TO_FSBT(mp, offset);
+>  	allocatesize_fsb = XFS_B_TO_FSB(mp, count);
+>  
+> +	alloc_type |= XFS_BMAPI_BESTEFFORT;
 > +
-> +# To get an attr block leaf, we need to extend attr format to extent
-> +# or btree format at least, and the max inode size is half of filesystem
-> +# block size, so write half of block size attr to make sure attr
-> +# out of local format.
-> +dd if=/dev/zero bs=$((dbsize/2)) count=1 2>/dev/null | \
-> +	$ATTR_PROG -s testattr $SCRATCH_MNT/$seq.attrfile >/dev/null
-
-I think we can use perl here, as perl is widely used in fstests and no
-new dependency needed.
-
-Thanks,
-Eryu
-
-> +
-> +_scratch_unmount
-> +# manually corrupt the XFS, by set the header count of attr to 0
-> +_scratch_xfs_db -x -c "inode $inum" \
-> +		   -c "ablock 0" \
-> +		   -c "write hdr.count 0" >> $seqres.full
-> +
-> +# make sure xfs_repair can find above corruption. If it can't, that
-> +# means we need to fix this bug on current xfs_repair
-> +_scratch_xfs_repair -n >> $seqres.full 2>&1
-> +if [ $? -eq 0 ];then
-> +	_fail "xfs_repair can't find the corruption"
-> +else
-> +	# If xfs_repair can find this corruption, then this repair
-> +	# should junk above leaf attribute and fix this XFS.
-> +	_scratch_xfs_repair >> $seqres.full 2>&1
-> +
-> +	# Old xfs_repair maybe find and fix this corruption by
-> +	# reset the first used heap value and the usedbytes cnt
-> +	# in ablock 0. That's not what we want. So check if
-> +	# xfs_repair has junked the whole ablock 0 by xfs_db.
-> +	_scratch_xfs_db -x -c "inode $inum" -c "ablock 0" | \
-> +		grep -q "no attribute data"
-> +	if [ $? -ne 0 ]; then
-> +		_fail "xfs_repair didn't junk the empty attr leaf"
-> +	fi
-> +fi
-> +
-> +echo "Silence is golden"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/288.out b/tests/xfs/288.out
-> new file mode 100644
-> index 0000000..2958a5c
-> --- /dev/null
-> +++ b/tests/xfs/288.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 288
-> +Silence is golden
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 75769f9..f27a7b6 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -285,6 +285,7 @@
->  285 dangerous_fuzzers dangerous_scrub
->  286 dangerous_fuzzers dangerous_scrub dangerous_online_repair
->  287 auto dump quota quick
-> +288 auto quick repair fuzzers
->  290 auto rw prealloc quick ioctl zero
->  291 auto repair
->  292 auto mkfs quick
+>  	/*
+>  	 * Allocate file space until done or until there is an error
+>  	 */
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 009f8243dddc..1abed9b6d5c5 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -171,7 +171,7 @@ xfs_iomap_write_direct(
+>  	uint		qblocks, resblks, resrtextents;
+>  	int		error;
+>  	int		lockmode;
+> -	int		bmapi_flags = XFS_BMAPI_PREALLOC;
+> +	int		bmapi_flags = XFS_BMAPI_PREALLOC | XFS_BMAPI_BESTEFFORT;
+>  	uint		tflags = 0;
+>  
+>  	rt = XFS_IS_REALTIME_INODE(ip);
+> @@ -679,7 +679,7 @@ xfs_iomap_write_allocate(
+>  	xfs_trans_t	*tp;
+>  	int		nimaps;
+>  	int		error = 0;
+> -	int		flags = XFS_BMAPI_DELALLOC;
+> +	int		flags = XFS_BMAPI_DELALLOC | XFS_BMAPI_BESTEFFORT;
+>  	int		nres;
+>  
+>  	if (whichfork == XFS_COW_FORK)
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index c0f3754caca2..aad321c16d2f 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -455,7 +455,8 @@ xfs_reflink_allocate_cow(
+>  
+>  	/* Allocate the entire reservation as unwritten blocks. */
+>  	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
+> -			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC, &first_block,
+> +			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC |
+> +			XFS_BMAPI_BESTEFFORT, &first_block,
+>  			resblks, imap, &nimaps, &dfops);
+>  	if (error)
+>  		goto out_bmap_cancel;
 > -- 
-> 2.7.4
+> 2.11.0
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
