@@ -1,178 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20624 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935792AbdDSTz2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 15:55:28 -0400
-Date: Wed, 19 Apr 2017 12:55:19 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/3] xfs: push buffer of flush locked dquot to avoid
- quotacheck deadlock
-Message-ID: <20170419195519.GC5205@birch.djwong.org>
-References: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
- <1487966001-63263-3-git-send-email-bfoster@redhat.com>
- <20170410050001.GI23007@dastard>
- <20170410141521.GB3991@bfoster.bfoster>
- <20170410235525.GA12369@dastard>
- <20170411145300.GA12111@bfoster.bfoster>
- <20170418023548.GX17542@dastard>
- <20170418135529.GA46764@bfoster.bfoster>
- <20170419024649.GG12369@dastard>
+Received: from cloud1-vm154.de-nserver.de ([178.250.10.56]:27059 "EHLO
+        cloud1-vm154.de-nserver.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752026AbdDRHBY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Apr 2017 03:01:24 -0400
+Subject: Re: XFS crashes with xfs_iunlink_remove: xfs_imap returned error -22
+References: <f94b7ddd-a5a0-b376-6d70-fd9472bd20e8@profihost.ag>
+ <bc5aafb9-37a3-9c02-50b7-421633dbd606@sandeen.net>
+ <6d9593a4-e7b0-9f8f-676a-686014768150@profihost.ag>
+ <fb362f93-db4b-34e9-3902-e5a1e6ed84b6@profihost.ag>
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Message-ID: <76606275-5510-84bd-7f2a-c8a33826e53e@profihost.ag>
+Date: Tue, 18 Apr 2017 09:01:17 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170419024649.GG12369@dastard>
+In-Reply-To: <fb362f93-db4b-34e9-3902-e5a1e6ed84b6@profihost.ag>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, Martin Svec <martin.svec@zoner.cz>
+To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
 
-On Wed, Apr 19, 2017 at 12:46:49PM +1000, Dave Chinner wrote:
-> On Tue, Apr 18, 2017 at 09:55:31AM -0400, Brian Foster wrote:
-> > On Tue, Apr 18, 2017 at 12:35:48PM +1000, Dave Chinner wrote:
-> > > On Tue, Apr 11, 2017 at 10:53:03AM -0400, Brian Foster wrote:
-> > > > On Tue, Apr 11, 2017 at 09:55:25AM +1000, Dave Chinner wrote:
-> > > > > So why can't we just modify the dquot in the buffer?  We already
-> > > > > hold all the locks needed to guarantee exclusive access to the dquot
-> > > > > and buffer, and they are all we hold when we do the initial flush to
-> > > > > the buffer. So why do we need to do IO to unlock the dquot flush
-> > > > > lock when we could just rewrite before we submit the buffer for IO?
-> > > > > 
-> > > > 
-> > > > Are you suggesting to essentially ignore the flush lock? I suppose we
-> > > > could get away with this in dq_flush_one() since it is only called from
-> > > > quotacheck, but we may have to kill off any assertions that expect the
-> > > > flush lock in xfs_dqflush(), and perhaps refactor that code to accept a
-> > > > locked buffer as a param.
-> > > 
-> > > No, I'm not suggesting we ignore the flush lock. What the flush
-> > > "lock" does is prevent higher layer attempts to flush the dquot to
-> > > the backing buffer whilst IO may be in progress. It's higher level
-> > > function is to allows async log item state updates to be done
-> > > correctly w.r.t. relogging and flushing, as we allow transactional
-> > > modifications to inodes and dquots while they are under IO.
-> > > 
-> > 
-> > Ok. What I was trying to recall previously was some discussion around
-> > the flush lock retry problem where it was noted that we can't unlock the
-> > flush lock until the currently flushed state makes it to disk[1]. Is the
-> > conceptual difference here that we are not proposing to unlock the flush
-> > lock, but rather co-opt it to perform another flush?
-> 
-> I wouldn't use that wording, but you've got the idea.
-> 
-> [...]
-> 
-> > > > I don't see anything that would break off hand, but my first reaction is
-> > > > it sounds more hackish than this patch or the previous patch that just
-> > > > disabled reclaim during quotacheck.
-> > > 
-> > > I thought we'd done that discussion. i.e. we can't disable reclaim
-> > > in quotacheck because that can set off the OOM killer...
-> > > 
-> > 
-> > Huh? The only reason disabling of dquot reclaim during quotacheck was
-> > proposed in the first place is because it is 100% superfluous.
-> 
-> ISTR that we broke dquot reclaim during quotacheck by moving to
-> private delwri lists. I'm working under the impression that dquot
-> reclaim during quotacheck used to work just fine. maybe I'm wrong,
-> but ....
-> 
-> > Quotacheck, by design, does not allow reclaim to free memory. Therefore
-> > reclaim does not and afaict never has prevented or even mitigated OOM
-> > during quotacheck.
-> 
-> .... the intent has always been to allow dquot reclaim to run when
-> quotacheck is active because we've had our fair share of OOM
-> problems in quotacheck over the past 10 years. Bugs notwithstanding,
-> we really should be trying to ensure the code fulfils that intent
-> rather than sweep it under the carpet and tell users "too bad, so
-> sad" when quotacheck OOMs...
-> 
-> [...]
-> 
-> > P.S., To be completely clear of my position on this issue at this
-> > point... given the amount of time I've already spent responding to
-> > handwavy arguments (ultimately resulting in discussing trailing off
-> > until a repost occurs), or experimenting with a known bogus quotacheck
-> > rework (which is still left without feedback, I believe), etc.,
-> > clarification on the correctness of this alternate approach (while
-> > interesting) is not nearly convincing enough for me to start over on
-> > this bug. I don't mind handwavy questions if the "caller" is receptive
-> > to or attempting to process (or debate) clarification, but I don't get
-> > the impression that is the case here.
-> > 
-> > If you feel strongly enough about a certain approach, feel free to just
-> > send a patch. At this point, I'm happy to help review anything from the
-> > sole perspective of technical correctness (regardless of whether the I
-> > think the approach is ugly), but I'm not personally wasting any more
-> > time than I already have to implement and test such an approach without
-> > a more logical and convincing argument. IMO, the feedback to this patch
-> > doesn't fairly or reasonably justify the level of pushback.
-> 
-> I just responded to the code that was posted, pointing out a
-> list of things that concerned me and, I thought, we've been working
-> through that quite amicably.
-> 
-> Really, it is up to the maintainer whether to merge the code or not.
-> That's not me - I'm now just someone who knows the code and it's
-> history.  This is where the maintainer needs to step in and make a
-> decision one way or the other....
+System crashed again but output was the same.
 
-So I do have a few (more) comments:
+2017-04-18 07:30:18     XFS (sda3): xfs_iunlink_remove: xfs_imap
+returned error -22.
+2017-04-18 07:30:18     XFS (sda3): xfs_inactive_ifree: xfs_ifree
+returned error -22
+2017-04-18 07:30:18     XFS (sda3): xfs_do_force_shutdown(0x1) called
+from line 1872 of file fs/xfs/xfs_inode.c. Return address =
+0xffffffff9b33cf93
+2017-04-18 07:30:18     XFS (sda3): I/O Error Detected. Shutting down
+filesystem
+2017-04-18 07:30:18     XFS (sda3): Please umount the filesystem and
+rectify the problem(s)
+2017-04-18 07:30:18     XFS (sda3): xfs_log_force: error -5 returned.
+2017-04-18 07:30:28     XFS (sda3): xfs_log_force: error -5 returned.
+2017-04-18 07:30:58     XFS (sda3): xfs_log_force: error -5 returned.
+2017-04-18 07:31:28     XFS (sda3): xfs_log_force: error -5 returned.
 
-The first point I have to make is that the quotacheck OOM still seems to
-happen infrequently, so at the point that this thread started going, I
-was (and still am) fine with letting the discussion continue until we
-run out of questions. :)
-
-As far as the patch itself goes, it took me a while to figure out what's
-going on with the delwri buffer list shuffling.  The part where the
-buffer comes back from xfs_buf_delwri_submit_buffers during _pushbuf
-still attached to a delwri queue and yet we still have to re-add the
-DELWRI_Q flag raised my eyebrows.  I thought it was a little odd, but
-in those particular circumstances (quotacheck and reclaim) I didn't find
-anything that made me think it would fail, even if it probably wasn't
-what the designers had in mind.
-
-However, Dave's comments inspired me to take a second look.  Sorry if
-this has been covered already, but what if dquot_isolate noticed when
-xfs_buf_delwri_queue doesn't actually put the buffer on isol->buffers
-(i.e. something else already put it on another delwri queue, which
-afaict only happens during quotacheck?) and simply dqfunlock's the
-buffer?  Reclaim will have already formatted the in-core dquot into the
-on-disk buffer and can free the dquot, and quotacheck is still on the
-hook to issue the IO.  (FWIW even that doesn't quite smell right since
-it seems weird to push metadata to the buffer layer but someone else
-writes it to disk.)
-
-In any case, it would be helpful to document how the delwri queues work,
-whether or not the list is allowed to change, and what relation the
-_XBF_DELWRI_Q flag has to the value of b_list.  For example, I didn't
-know that one wasn't supposed to bounce buffers between lists.  Can that
-documentation be part of whatever patch series we end up committing,
-please?
-
-(It's hard for me to make decisions when I know I don't have enough info...)
-
-Also, I think Brian said that he'd post updated patches with at least a
-fix to a problem with dropped xfs_buf_delwri_pushbuf return codes, so
-I'd still like to see that.
-
-As far as testing goes I'm happ(ier) that /one/ of the original
-complainants says that he could move on with the patches applied.  I
-haven't observed any breakage w/ xfstests, though that doesn't prove it
-right.
-
---D
-
+Stefan
+Am 17.04.2017 um 17:06 schrieb Stefan Priebe - Profihost AG:
 > 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Am 17.04.2017 um 17:04 schrieb Stefan Priebe - Profihost AG:
+>> Hi Eric,
+>>
+>>> On 4/17/17 2:54 AM, Stefan Priebe wrote:
+>>>> Hello list,
+>>>>
+>>>> one of my servers is crashing every night with the following errors:
+>>>>
+>>>> XFS (sda3): xfs_iunlink_remove: xfs_imap returned error -22.
+>>>> XFS (sda3): xfs_inactive_ifree: xfs_ifree returned error -22 XFS
+>>>
+>>>
+>>> -EINVAL
+>>>
+>>>> (sda3): xfs_do_force_shutdown(0x1) called from line 1872 of file
+>>>> fs/xfs/xfs_inode.c. Return address = 0xffffffff9e33cf53 XFS (sda3):
+>>>> I/O Error Detected. Shutting down filesystem
+>>>>
+>>>> I ran xfs_repair v4.9.0 but it seems unable to recover / fix this
+>>>> error. I'm running an OpenSUSE 42.2 kernel based von v4.4. Is there
+>>>> anything i can do to fix this?
+>>>
+>>> # echo 11 > /proc/sys/fs/xfs/error_level
+>>>
+>>> to get a full backtrace from the shutdown (if you didn't already)
+>>> so we can at least see what process is encountering the errors.
+>>
+>> done.
+>>
+>>> I have a hunch, though - are you running xfs_fsr overnight?
+>>
+>> No only rsync from dev/a to dev/b. But the reported device is a (source).
+> 
+> verified: but that job is done 3-4 hours before crashing.
+> 
+>>
+>> I also have two empty folders in /lost+found which i cannot delete. Even
+>> after running xfs_repair.
+>>
+>> # rm -r /lost+found/
+>> rm: cannot remove ‘/lost+found/536874081’: Directory not empty
+>> rm: cannot remove ‘/lost+found/536874085’: Directory not empty
+>>
+>> Greets,
+>> Stefan
+>>
