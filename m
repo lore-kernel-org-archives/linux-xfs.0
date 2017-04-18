@@ -1,108 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58741 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760031AbdDSGpG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 02:45:06 -0400
-Date: Tue, 18 Apr 2017 23:45:05 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
-Message-ID: <20170419064505.GD20053@infradead.org>
-References: <20170414120257.8932-1-rgoldwyn@suse.de>
- <20170414120257.8932-6-rgoldwyn@suse.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42527 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751197AbdDRQ7P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Apr 2017 12:59:15 -0400
+Date: Tue, 18 Apr 2017 09:59:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: XFS crashes with xfs_iunlink_remove: xfs_imap returned error -22
+Message-ID: <20170418165900.GD5193@birch.djwong.org>
+References: <f94b7ddd-a5a0-b376-6d70-fd9472bd20e8@profihost.ag>
+ <bc5aafb9-37a3-9c02-50b7-421633dbd606@sandeen.net>
+ <6d9593a4-e7b0-9f8f-676a-686014768150@profihost.ag>
+ <fb362f93-db4b-34e9-3902-e5a1e6ed84b6@profihost.ag>
+ <76606275-5510-84bd-7f2a-c8a33826e53e@profihost.ag>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20170414120257.8932-6-rgoldwyn@suse.de>
+In-Reply-To: <76606275-5510-84bd-7f2a-c8a33826e53e@profihost.ag>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
 
-On Fri, Apr 14, 2017 at 07:02:54AM -0500, Goldwyn Rodrigues wrote:
-> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Tue, Apr 18, 2017 at 09:01:17AM +0200, Stefan Priebe - Profihost AG wrote:
+> System crashed again but output was the same.
 > 
-> A new bio operation flag REQ_NOWAIT is introduced to identify bio's
+> 2017-04-18 07:30:18     XFS (sda3): xfs_iunlink_remove: xfs_imap
+> returned error -22.
+> 2017-04-18 07:30:18     XFS (sda3): xfs_inactive_ifree: xfs_ifree
+> returned error -22
+> 2017-04-18 07:30:18     XFS (sda3): xfs_do_force_shutdown(0x1) called
+> from line 1872 of file fs/xfs/xfs_inode.c. Return address =
+> 0xffffffff9b33cf93
+> 2017-04-18 07:30:18     XFS (sda3): I/O Error Detected. Shutting down
+> filesystem
+> 2017-04-18 07:30:18     XFS (sda3): Please umount the filesystem and
+> rectify the problem(s)
+> 2017-04-18 07:30:18     XFS (sda3): xfs_log_force: error -5 returned.
+> 2017-04-18 07:30:28     XFS (sda3): xfs_log_force: error -5 returned.
+> 2017-04-18 07:30:58     XFS (sda3): xfs_log_force: error -5 returned.
+> 2017-04-18 07:31:28     XFS (sda3): xfs_log_force: error -5 returned.
 
-s/bio/block/
+That looks like some sort of problem with a garbage value in
+di_next_unlinked that we hit when removing inodes from the AGI unlinked
+inode list.
 
-> @@ -1232,6 +1232,11 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
->  	if (!IS_ERR(rq))
->  		return rq;
->  
-> +	if (bio && (bio->bi_opf & REQ_NOWAIT)) {
-> +		blk_put_rl(rl);
-> +		return ERR_PTR(-EAGAIN);
-> +	}
+Could you take a metadump and get it to us for further analysis?
+Eric might be interested. ;)
 
-Please check the op argument instead of touching bio.
+--D
 
-> +	if (bio->bi_opf & REQ_NOWAIT) {
-> +		if (!blk_queue_nowait(q)) {
-> +			err = -EOPNOTSUPP;
-> +			goto end_io;
-> +		}
-> +		if (!(bio->bi_opf & REQ_SYNC)) {
-
-I don't understand this check at all..
-
-> +			if (unlikely(!blk_queue_dying(q) && (bio->bi_opf & REQ_NOWAIT)))
-
-Please break lines after 80 characters.
-
-> @@ -119,6 +119,9 @@ struct request *blk_mq_sched_get_request(struct request_queue *q,
->  	if (likely(!data->hctx))
->  		data->hctx = blk_mq_map_queue(q, data->ctx->cpu);
->  
-> +	if (bio && (bio->bi_opf & REQ_NOWAIT))
-> +		data->flags |= BLK_MQ_REQ_NOWAIT;
-
-Check the op flag again here.
-
-> +++ b/block/blk-mq.c
-> @@ -1538,6 +1538,8 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
->  	rq = blk_mq_sched_get_request(q, bio, bio->bi_opf, &data);
->  	if (unlikely(!rq)) {
->  		__wbt_done(q->rq_wb, wb_acct);
-> +		if (bio && (bio->bi_opf & REQ_NOWAIT))
-> +			bio_wouldblock_error(bio);
-
-bio iѕ dereferences unconditionally above, so you can do the same.
-
-> @@ -1662,6 +1664,8 @@ static blk_qc_t blk_sq_make_request(struct request_queue *q, struct bio *bio)
->  	rq = blk_mq_sched_get_request(q, bio, bio->bi_opf, &data);
->  	if (unlikely(!rq)) {
->  		__wbt_done(q->rq_wb, wb_acct);
-> +		if (bio && (bio->bi_opf & REQ_NOWAIT))
-> +			bio_wouldblock_error(bio);
-
-Same here.  Although blk_sq_make_request is gone anyway in the current
-block tree..
-
-> +	/* Request queue supports BIO_NOWAIT */
-> +	queue_flag_set_unlocked(QUEUE_FLAG_NOWAIT, q);
-
-BIO_NOWAIT is gone.  And the comment would not be needed if the
-flag had a more descriptive name, e.g. QUEUE_FLAG_NOWAIT_SUPPORT.
-
-And I think all request based drivers should set the flag implicitly
-as ->queuecommand can't sleep, and ->queue_rq only when it's always
-offloaded to a workqueue when the BLK_MQ_F_BLOCKING flag is set.
-
-> --- a/fs/direct-io.c
-> +++ b/fs/direct-io.c
-> @@ -480,8 +480,12 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
->  	unsigned i;
->  	int err;
->  
-> -	if (bio->bi_error)
-> -		dio->io_error = -EIO;
-> +	if (bio->bi_error) {
-> +		if (bio->bi_opf & REQ_NOWAIT)
-> +			dio->io_error = -EAGAIN;
-> +		else
-> +			dio->io_error = -EIO;
-> +	}
-
-Huh?  Once REQ_NOWAIT is set all errors are -EAGAIN?
+> 
+> Stefan
+> Am 17.04.2017 um 17:06 schrieb Stefan Priebe - Profihost AG:
+> > 
+> > Am 17.04.2017 um 17:04 schrieb Stefan Priebe - Profihost AG:
+> >> Hi Eric,
+> >>
+> >>> On 4/17/17 2:54 AM, Stefan Priebe wrote:
+> >>>> Hello list,
+> >>>>
+> >>>> one of my servers is crashing every night with the following errors:
+> >>>>
+> >>>> XFS (sda3): xfs_iunlink_remove: xfs_imap returned error -22.
+> >>>> XFS (sda3): xfs_inactive_ifree: xfs_ifree returned error -22 XFS
+> >>>
+> >>>
+> >>> -EINVAL
+> >>>
+> >>>> (sda3): xfs_do_force_shutdown(0x1) called from line 1872 of file
+> >>>> fs/xfs/xfs_inode.c. Return address = 0xffffffff9e33cf53 XFS (sda3):
+> >>>> I/O Error Detected. Shutting down filesystem
+> >>>>
+> >>>> I ran xfs_repair v4.9.0 but it seems unable to recover / fix this
+> >>>> error. I'm running an OpenSUSE 42.2 kernel based von v4.4. Is there
+> >>>> anything i can do to fix this?
+> >>>
+> >>> # echo 11 > /proc/sys/fs/xfs/error_level
+> >>>
+> >>> to get a full backtrace from the shutdown (if you didn't already)
+> >>> so we can at least see what process is encountering the errors.
+> >>
+> >> done.
+> >>
+> >>> I have a hunch, though - are you running xfs_fsr overnight?
+> >>
+> >> No only rsync from dev/a to dev/b. But the reported device is a (source).
+> > 
+> > verified: but that job is done 3-4 hours before crashing.
+> > 
+> >>
+> >> I also have two empty folders in /lost+found which i cannot delete. Even
+> >> after running xfs_repair.
+> >>
+> >> # rm -r /lost+found/
+> >> rm: cannot remove ‘/lost+found/536874081’: Directory not empty
+> >> rm: cannot remove ‘/lost+found/536874085’: Directory not empty
+> >>
+> >> Greets,
+> >> Stefan
+> >>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
