@@ -1,44 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:57208 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:43138 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755209AbdDRH7j (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Apr 2017 03:59:39 -0400
-Date: Tue, 18 Apr 2017 09:59:37 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 06/10] xfs: fix bmap minleft calculation
-Message-ID: <20170418075937.GC23085@lst.de>
-References: <20170413080517.12564-1-hch@lst.de> <20170413080517.12564-7-hch@lst.de> <20170417141939.GD41659@bfoster.bfoster>
+        id S1752840AbdDRO03 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Apr 2017 10:26:29 -0400
+Date: Tue, 18 Apr 2017 10:18:30 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 08/10] xfs: introduce a XFS_BMAPI_BESTEFFORT flag
+Message-ID: <20170418141830.GC46764@bfoster.bfoster>
+References: <20170413080517.12564-1-hch@lst.de>
+ <20170413080517.12564-9-hch@lst.de>
+ <20170417180808.GA42232@bfoster.bfoster>
+ <20170418075800.GB23085@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170417141939.GD41659@bfoster.bfoster>
+In-Reply-To: <20170418075800.GB23085@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Apr 17, 2017 at 10:19:39AM -0400, Brian Foster wrote:
-> On Thu, Apr 13, 2017 at 10:05:13AM +0200, Christoph Hellwig wrote:
-> > We need to set a proper minleft value even if we didn't do a previous
-> > allocation in the transaction, as we can't switch to a different AG
-> > after allocating the data extent.
-> > 
+On Tue, Apr 18, 2017 at 09:58:01AM +0200, Christoph Hellwig wrote:
+> On Mon, Apr 17, 2017 at 02:08:08PM -0400, Brian Foster wrote:
+> > This seems Ok, but I don't think it's very elegant to have callers pass
+> > a total parameter along with a flag to ignore it. Couldn't we just set
+> > minleft when total is not used and pass zero from those particular
+> > callers, or do we actually need to support the !BESTEFFORT && total == 0
+> > case?
 > 
-> Hmm, the code currently does set minleft if we haven't done a previous
-> allocation (firstblock == NULLFSBLOCK). Do you mean "even if we have
-> done a previous allocation?"
+> We could do that, in in context of just this patch it would even seem
+> cleaner.  But for the next merge window I have changes queued up that
+> remove the total parameter and it's passing along the dir/da_btree
+> code entirely by looking at the transaction reservation for the
+> !BESTEFFORT case, which I thikn is even better as a grand scheme.
+> 
 
-Yeah.
+Ok, then there is probably justification for the flag. In which case, I
+think the tweak and assertion below at least helps clarify the semantics
+of the call.
 
-> The code seems Ok, but we also currently reserve enough blocks for a
-> full btree split in a write transaction and afaict only allocate a
-> single extent per-transaction. The current code expects to select an AG
-> with those additional blocks available and then not if a subsequent
-> allocation occurs (by setting minleft = 0), presumably because the check
-> was already made. So I'm wondering if this fixes a problem that has been
-> observed or is just cleaning up the code..?
+> > (At the very least, we could assert that total == 0 when
+> > BESTEFFORT is set.)
+> 
+> Sure.
 
-It's fixing a problem that is currently masked by the low space allocator.
-Once we remove that just try again without reservations for good luck
-mode we need to get all the reservations right.
+Thanks.
+
+Brian
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
