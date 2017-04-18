@@ -1,39 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:57193 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755538AbdDRHy5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Apr 2017 03:54:57 -0400
-Date: Tue, 18 Apr 2017 09:54:55 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 04/10] xfs: remove an unsafe retry in
-        xfs_bmbt_alloc_block
-Message-ID: <20170418075455.GA23085@lst.de>
-References: <20170413080517.12564-1-hch@lst.de> <20170413080517.12564-5-hch@lst.de> <20170413183006.GD25915@bfoster.bfoster> <20170414074658.GA24766@lst.de> <20170417141923.GB41659@bfoster.bfoster>
+Received: from mx2.suse.de ([195.135.220.15]:36878 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756543AbdDRLjI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Apr 2017 07:39:08 -0400
+Date: Tue, 18 Apr 2017 13:39:02 +0200
+From: David Sterba <dsterba@suse.cz>
+Subject: Re: [PATCH 8/8] nowait aio: btrfs
+Message-ID: <20170418113902.GS4781@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+References: <20170414120257.8932-1-rgoldwyn@suse.de>
+ <20170414120257.8932-9-rgoldwyn@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170417141923.GB41659@bfoster.bfoster>
+In-Reply-To: <20170414120257.8932-9-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Mon, Apr 17, 2017 at 10:19:23AM -0400, Brian Foster wrote:
-> I don't see anything about setting minleft here that says the allocation
-> is required to come from one AG as opposed to that simply being
-> preferred.
+On Fri, Apr 14, 2017 at 07:02:57AM -0500, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> 
+> Return EAGAIN if any of the following checks fail
+>  + i_rwsem is not lockable
+>  + NODATACOW or PREALLOC is not set
+>  + Cannot nocow at the desired location
+>  + Writing beyond end of file which is not allocated
+> 
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-minleft must be in the same AG because we can't allocate from another
-AG in the same transaction.  If we didn't respect this our whole allocator
-would break apart..
+Acked-by: David Sterba <dsterba@suse.com>
 
-> Not all bmbt block allocations are tied to extent allocations. This is
-> the firstblock == NULLFSBLOCK case after all, which I take it means an
-> allocation hasn't yet occurred. IOW, what about other potentially
-> record-inserting operations like hole punch, extent conversion, etc.?
+> +	if ((iocb->ki_flags & IOCB_NOWAIT) &&
+> +			(iocb->ki_flags & IOCB_DIRECT)) {
+> +		/* Don't sleep on inode rwsem */
+> +		if (!inode_trylock(inode))
+> +			return -EAGAIN;
+> +		/*
+> +		 * We will allocate space in case nodatacow is not set,
+> +		 * so bail
+> +		 */
+> +		if (!(BTRFS_I(inode)->flags & (BTRFS_INODE_NODATACOW |
+> +					      BTRFS_INODE_PREALLOC)) ||
+> +		    check_can_nocow(BTRFS_I(inode), pos, &count) <= 0) {
+> +			inode_unlock(inode);
+> +			return -EAGAIN;
+> +		}
+> +	} else
 
-Yes, for other ops we might not have allocated anything yet, but we
-might have to do more operations later and thus respect the minleft
-later.  This is especially bad for directory operations that do
-multiple calls to xfs_bmapi_write in the same transaction.
+	} else {
+
+> +		inode_lock(inode);
+
+	}
