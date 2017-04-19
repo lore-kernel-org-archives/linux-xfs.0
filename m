@@ -1,83 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f175.google.com ([209.85.223.175]:33492 "EHLO
-        mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966974AbdDTWTC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2017 18:19:02 -0400
-Received: by mail-io0-f175.google.com with SMTP id k87so89777739ioi.0
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Apr 2017 15:19:02 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:28527 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S967864AbdDSXsn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 19:48:43 -0400
+Date: Thu, 20 Apr 2017 09:48:38 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsaild in D state seems to be blocking all other i/o
+ sporadically
+Message-ID: <20170419234838.GH12369@dastard>
+References: <e5f2ccc2-7923-934c-e655-59983903ca11@dermichi.com>
+ <20170419121202.2m3pi4ffojpnqyxc@eorzea.usersys.redhat.com>
+ <ced08a44-d736-6250-c682-0f495a882bea@dermichi.com>
+ <82e1fa48-909c-97a4-6bf9-5b84cf0af986@dermichi.com>
+ <20170419140446.3rl2pruz2dlcr5cg@eorzea.usersys.redhat.com>
+ <d6f598d1-7e7e-ac85-3cdc-e4f4bfdba94e@dermichi.com>
+ <20170419180811.GB41631@bfoster.bfoster>
+ <268ce851-dad0-a777-526a-82ad967490cd@dermichi.com>
+ <20170419205525.GD5205@birch.djwong.org>
+ <86fbec25-f026-350b-ffe3-b0b182b768ac@dermichi.com>
 MIME-Version: 1.0
-In-Reply-To: <20170420220428.GG5205@birch.djwong.org>
-References: <1488963219-11709-1-git-send-email-elena.reshetova@intel.com>
- <2236FBA76BA1254E88B949DDB74E612B41C8D726@IRSMSX102.ger.corp.intel.com>
- <20170420172404.GE23371@birch.djwong.org> <20170420220428.GG5205@birch.djwong.org>
-From: Kees Cook <keescook@chromium.org>
-Date: Thu, 20 Apr 2017 15:18:59 -0700
-Message-ID: <CAGXu5jKDetasAbtQ0R_17NrTAGCqhftDOAryFCvBA87uHkfM6w@mail.gmail.com>
-Subject: Re: [PATCH 0/5] fs, xfs refcount conversions
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <86fbec25-f026-350b-ffe3-b0b182b768ac@dermichi.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "Reshetova, Elena" <elena.reshetova@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, David Windsor <dwindsor@gmail.com>, Hans Liljestrand <ishkamiel@gmail.com>
+To: Michael Weissenbacher <mw@dermichi.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Thu, Apr 20, 2017 at 3:04 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Thu, Apr 20, 2017 at 10:24:04AM -0700, Darrick J. Wong wrote:
->> On Thu, Apr 20, 2017 at 08:11:41AM +0000, Reshetova, Elena wrote:
->> >
->> >
->> > > v3:
->> > >  * fixed header file inclusion
->> >
->> > I don't think I have heard anything back on this v3 patch set.
->> > Is there still smth here to fix or could you take the changes in?
->>
->> Generally I think it looks ok; it's running through shakedown testing as
->> we speak.
->
-> Well, it survives the shakedown testing all right, but I can't shake the
-> feeling that this is overkill.  The xfs_{ef,bu,cu,ru}i_log_item
-> structures should only ever be referenced by the log itself and the
-> log-update-done log item: the refcount should only ever go 2 -> 1 -> 0.
-> We set the refcount to 2 and never increment it.
+On Wed, Apr 19, 2017 at 11:47:43PM +0200, Michael Weissenbacher wrote:
+> OK, do i understand you correctly that the xfsaild does all the actual
+> work of updating the inodes? And it's doing that single-threaded,
+> reading both the log and the indoes themselves?
 
-I haven't studied this code, but I think it'd likely be worth keeping
-it just to catch any future bug that might appear. If it doesn't
-create a problem, we should use refcount_t for anything that is being
-used as a reference counter.
+The problem is that the backing buffers that are used for flushing
+inodes have been reclaimed due to memory pressure, but the inodes in
+cache are still dirty. Hence to write the dirty inodes, we first
+have to read the inode buffer back into memory.
 
-> Given that I've seen occasional refcounting problems with the log intent
-> items, I think it would suffice to ASSERT in xfs_*i_release that the
-> refcount isn't already zero.  Using ASSERT is particularly useful
-> because ASSERT compiles out in release builds.
+Essentially, the log pins more dirty inodes than than writeback
+can keep up with given the memory pressure that is occurring.
 
-We _absolutely_ don't want to compile out these checks: the point is
-to catch flaws that are discovered and could be exploited in the wild
-before updates could be delivered to a system (if they ever are at
-all).
+> 
+> > ...500MB / 200 bytes per dirty inode record = ~2.5 million inodes.
+> > ~2.5m inodes / 10 minutes = ~4200 inodes per second...
+> Yes, these numbers sound plausible. When everything is running smoothly
+> (i.e. most of the time) i do see up to 4500 combined reads+writes per
+> second. But when the problem arises, all i see i xfsaild doing around
+> 120 reads/second, which is roughly the performance of a single 7200rpm
+> drive. Directly after this "read only phase" (which lasts for about 5-10
+> minutes most of the time) there is a short burst of up to 10000+
+> writes/sec (writing to the RAID controller cache I suppose).
 
-> As for the xlog_ticket, we increment its refcount as part of duplicating
-> a transaction as a part of committing one transaction (which decrements
-> the xlog_ticket's refcount) and reusing the log reservation to create a
-> new transaction.  In this case the refcounting already seems to have
-> sufficient non-zero checks, and since only one thread can hold a
-> transaction at any given time, I don't see how overflow protection helps
-> here.
->
-> In other words, I'm ok with better refcount checking but need convincing
-> that we need to do more than what a simple ASSERT would provide.
+Yes. Inode buffer reads from the xfsaild are sequential so block the
+aild and log tail pushing while they are on-going. It then queues
+the writes on a delayed write list and they are issued all in one
+go. Essentially, the system can dirty far more metadata in memory
+than it can effectively cache and flush to disk in a timely manner.
 
-If it doesn't get in your way, and it really is reference counting
-(which it sounds like it is), we should be using refcount_t. The kinds
-of bugs we've seen over the last decade continually prove that we'll
-see refcount issues where we least expect it, and we need to catch
-them.
+> And then
+> the system goes back to the "normal phase" where it is doing both reads
+> and writes and all those blocked D state processes continue working.
 
-Thanks!
+Yup, because the xfsaild has move the tail of the log, so there is
+now log space available and ongoing transactions can run at CPU
+speed again. The xfsaild will still be doing RMW inode writeback,
+but nothing is blocking waiting for it to reach it's target now...
 
--Kees
+I'd suggest that the only thing you can realistically do to mitigate
+this stall without changing the log size is change
+/proc/sys/fs/xfs/xfssyncd_centisecs down to one second so that the
+CIL is flushed to disk every second, and the AIL push target is
+updated immediately after the CIL flush is done. This will result in
+the xfsaild trying to push metadata almost as quickly as it is
+committed to the journal, hence it should be trying to flush inodes
+while th einode buffer is still cached in memory and hence avoid the
+read IO. This will help avoid AIL pushing from getting so far behind
+that inode buffers are reclaimed before the dirty inodes are
+written. It may not completely avoid the stalls, but it should make
+them less frequent...
 
+Cheers,
+
+Dave.
 -- 
-Kees Cook
-Pixel Security
+Dave Chinner
+david@fromorbit.com
