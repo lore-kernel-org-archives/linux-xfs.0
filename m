@@ -1,61 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cloud1-vm154.de-nserver.de ([178.250.10.56]:26954 "EHLO
-        cloud1-vm154.de-nserver.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753748AbdDQPEu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Apr 2017 11:04:50 -0400
-Subject: Re: XFS crashes with xfs_iunlink_remove: xfs_imap returned error -22
-References: <f94b7ddd-a5a0-b376-6d70-fd9472bd20e8@profihost.ag>
- <bc5aafb9-37a3-9c02-50b7-421633dbd606@sandeen.net>
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Message-ID: <6d9593a4-e7b0-9f8f-676a-686014768150@profihost.ag>
-Date: Mon, 17 Apr 2017 17:04:45 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:55756 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1764195AbdDSOUm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Apr 2017 10:20:42 -0400
+Date: Wed, 19 Apr 2017 16:20:38 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: xfsaild in D state seems to be blocking all other i/o
+ sporadically
+Message-ID: <20170419142038.n5qj5cxb67dvmifu@eorzea.usersys.redhat.com>
+References: <e5f2ccc2-7923-934c-e655-59983903ca11@dermichi.com>
+ <20170419121202.2m3pi4ffojpnqyxc@eorzea.usersys.redhat.com>
+ <ced08a44-d736-6250-c682-0f495a882bea@dermichi.com>
+ <82e1fa48-909c-97a4-6bf9-5b84cf0af986@dermichi.com>
+ <20170419140446.3rl2pruz2dlcr5cg@eorzea.usersys.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <bc5aafb9-37a3-9c02-50b7-421633dbd606@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170419140446.3rl2pruz2dlcr5cg@eorzea.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, mw@dermichi.com
 
-Hi Eric,
-
-> On 4/17/17 2:54 AM, Stefan Priebe wrote:
->> Hello list,
->>
->> one of my servers is crashing every night with the following errors:
->>
->> XFS (sda3): xfs_iunlink_remove: xfs_imap returned error -22.
->> XFS (sda3): xfs_inactive_ifree: xfs_ifree returned error -22 XFS
+On Wed, Apr 19, 2017 at 04:04:46PM +0200, Carlos Maiolino wrote:
+> If I am not blind, the task currently owning the cpu isn't listed there, which I
+> suppose to be already running.
 > 
+> Next time you hit it, could you please paste the stack trace of the task owning
+> the cpu? Which I suppose to be xfsaild according to your report.
 > 
-> -EINVAL
+> A simple `cat /proc/<pid>/stack` is probably enough
 > 
->> (sda3): xfs_do_force_shutdown(0x1) called from line 1872 of file
->> fs/xfs/xfs_inode.c. Return address = 0xffffffff9e33cf53 XFS (sda3):
->> I/O Error Detected. Shutting down filesystem
->>
->> I ran xfs_repair v4.9.0 but it seems unable to recover / fix this
->> error. I'm running an OpenSUSE 42.2 kernel based von v4.4. Is there
->> anything i can do to fix this?
+> thanks
 > 
-> # echo 11 > /proc/sys/fs/xfs/error_level
-> 
-> to get a full backtrace from the shutdown (if you didn't already)
-> so we can at least see what process is encountering the errors.
 
-done.
+Btw, I'm not very good at xfs journaling code, but I wonder by the stack traces
+you provided, if you don't have a too small journal, which, with your workload,
+it might be getting to flush the logs too many times, making the disk too busy
+and slowing down the rest of the IO.
 
-> I have a hunch, though - are you running xfs_fsr overnight?
+Another folks with more knowledge of the journaling code might be able to
+confirm or not this, but having too many tasks waiting in:
 
-No only rsync from dev/a to dev/b. But the reported device is a (source).
+xlog_grant_head_wait()
 
-I also have two empty folders in /lost+found which i cannot delete. Even
-after running xfs_repair.
+actually made me wonder if your journal isn't too small for the FS size and the
+current workload you have.
 
-# rm -r /lost+found/
-rm: cannot remove ‘/lost+found/536874081’: Directory not empty
-rm: cannot remove ‘/lost+found/536874085’: Directory not empty
+Again, this is just a guess, but maybe somebody else can put one more pair of
+eyes on it.
 
-Greets,
-Stefan
+cheers
+
+-- 
+Carlos
