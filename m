@@ -1,26 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22664 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935696AbdDST6D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 15:58:03 -0400
-Date: Wed, 19 Apr 2017 12:57:57 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from sandeen.net ([63.231.237.45]:42040 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S936125AbdDST6s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Apr 2017 15:58:48 -0400
 Subject: Re: [PATCH 1/3] xfs: remove the unused XFS_MAXLINK_1 define
-Message-ID: <20170419195757.GJ5193@birch.djwong.org>
 References: <20170419192904.22203-1-hch@lst.de>
  <20170419192904.22203-2-hch@lst.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <74f171c9-1f2a-f1f3-6473-95e284856349@sandeen.net>
+Date: Wed, 19 Apr 2017 14:58:46 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 In-Reply-To: <20170419192904.22203-2-hch@lst.de>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Wed, Apr 19, 2017 at 09:29:02PM +0200, Christoph Hellwig wrote:
+On 4/19/17 2:29 PM, Christoph Hellwig wrote:
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Tricky! ;)
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
 >  fs/xfs/libxfs/xfs_format.h | 2 --
 >  1 file changed, 2 deletions(-)
@@ -37,19 +41,7 @@ On Wed, Apr 19, 2017 at 09:29:02PM +0200, Christoph Hellwig wrote:
 >   */
 >  #define	XFS_MAXLINK		((1U << 31) - 1U)
 > -#define	XFS_MAXLINK_1		65535U
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
 >  
 >  /*
 >   * Values for di_format
-> -- 
-> 2.11.0
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
