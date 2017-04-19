@@ -1,484 +1,431 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19796 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:47138 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753141AbdDSUze (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 16:55:34 -0400
-Date: Wed, 19 Apr 2017 13:55:25 -0700
+        with ESMTP id S1758698AbdDSAOo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Apr 2017 20:14:44 -0400
+Date: Tue, 18 Apr 2017 17:14:34 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: xfsaild in D state seems to be blocking all other i/o
- sporadically
-Message-ID: <20170419205525.GD5205@birch.djwong.org>
-References: <e5f2ccc2-7923-934c-e655-59983903ca11@dermichi.com>
- <20170419121202.2m3pi4ffojpnqyxc@eorzea.usersys.redhat.com>
- <ced08a44-d736-6250-c682-0f495a882bea@dermichi.com>
- <82e1fa48-909c-97a4-6bf9-5b84cf0af986@dermichi.com>
- <20170419140446.3rl2pruz2dlcr5cg@eorzea.usersys.redhat.com>
- <d6f598d1-7e7e-ac85-3cdc-e4f4bfdba94e@dermichi.com>
- <20170419180811.GB41631@bfoster.bfoster>
- <268ce851-dad0-a777-526a-82ad967490cd@dermichi.com>
+Subject: [PATCH] xfs: refactor dir2 leaf readahead shadow buffer cleverness
+Message-ID: <20170419001434.GF5193@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <268ce851-dad0-a777-526a-82ad967490cd@dermichi.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michael Weissenbacher <mw@dermichi.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Carlos Maiolino <cmaiolin@redhat.com>, billodo@redhat.com, Dave Chinner <david@fromorbit.com>
 
-On Wed, Apr 19, 2017 at 10:10:55PM +0200, Michael Weissenbacher wrote:
-> Hi Brian!
-> 
-> On 2017-04-19 20:08, Brian Foster wrote:
-> > On Wed, Apr 19, 2017 at 06:36:00PM +0200, Michael Weissenbacher wrote:
-> >> On 19.04.2017 16:04, Carlos Maiolino wrote:
-> >>> If I am not blind, the task currently owning the cpu isn't listed there, which I
-> >>> suppose to be already running.
-> >> Correct, the only process utilizing the CPU is xfsaild. It is also the
-> >> only process doing I/O, and it looks like it's doing only reads. It
-> >> (xfsaild) never shows up in dmesg as blocked.
-> >>
-> > 
-> > A snippet of tracepoint output from the fs might also be interesting
-> > when you hit this state. E.g., 'trace-cmd start -e xfs:*' and save the
-> > output of /sys/kernel/debug/tracing/trace_pipe to a file for a few
-> > seconds or so.
-> > 
-> See:
-> https://we.tl/7AAyBZxt4R
-> 
-> > BTW, is the original /proc/meminfo output you posted from the system in
-> > a normal state or when the problem occurs? If the former, could you
-> > include it while the problem occurs as well?
-> It was from a normal state.
-> 
-> All the following was captured during the problem occurs.
-> 
-> *** snip ***
-> /proc/meminfo
-> 
-> Wed Apr 19 20:36:50 CEST 2017
-> MemTotal:       65886208 kB
-> MemFree:         2923552 kB
-> MemAvailable:   43018524 kB
-> Buffers:              52 kB
-> Cached:         32416864 kB
-> SwapCached:          580 kB
-> Active:         30685760 kB
-> Inactive:        2051532 kB
-> Active(anon):     165844 kB
-> Inactive(anon):   155516 kB
-> Active(file):   30519916 kB
-> Inactive(file):  1896016 kB
-> Unevictable:           0 kB
-> Mlocked:               0 kB
-> SwapTotal:      64511996 kB
-> SwapFree:       64506540 kB
-> Dirty:            202368 kB
-> Writeback:             0 kB
-> AnonPages:        319948 kB
-> Mapped:            18672 kB
-> Shmem:               868 kB
-> Slab:           22817492 kB
-> SReclaimable:   16332540 kB
-> SUnreclaim:      6484952 kB
-> KernelStack:        4048 kB
-> PageTables:        16516 kB
-> NFS_Unstable:          0 kB
-> Bounce:                0 kB
-> WritebackTmp:          0 kB
-> CommitLimit:    97455100 kB
-> Committed_AS:     516532 kB
-> VmallocTotal:   34359738367 kB
-> VmallocUsed:           0 kB
-> VmallocChunk:          0 kB
-> HardwareCorrupted:     0 kB
-> AnonHugePages:         0 kB
-> ShmemHugePages:        0 kB
-> ShmemPmdMapped:        0 kB
-> HugePages_Total:       0
-> HugePages_Free:        0
-> HugePages_Rsvd:        0
-> HugePages_Surp:        0
-> Hugepagesize:       2048 kB
-> DirectMap4k:       88820 kB
-> DirectMap2M:     7155712 kB
-> DirectMap1G:    61865984 kB
-> *** snip ***
-> 
-> *** snip ***
-> Wed Apr 19 20:36:51 CEST 2017
-> slabinfo - version: 2.1
-> # name            <active_objs> <num_objs> <objsize> <objperslab>
-> <pagesperslab> : tunables <limit> <batchcount> <sharedfactor> : slabdata
-> <active_slabs> <num_slabs> <sharedavail>
-> kcopyd_job             0      0   3240    2    2 : tunables   24   12
-> 8 : slabdata      0      0      0
-> dm_uevent              0      0   2632    3    2 : tunables   24   12
-> 8 : slabdata      0      0      0
-> t10_pr_reg_cache       0      0    704   11    2 : tunables   54   27
-> 8 : slabdata      0      0      0
-> ext4_groupinfo_4k      8     28    144   28    1 : tunables  120   60
-> 8 : slabdata      1      1      0
-> ext4_inode_cache     328    330   1072    3    1 : tunables   24   12
-> 8 : slabdata    110    110      0
-> ext4_allocation_context      0      0    128   32    1 : tunables  120
-> 60    8 : slabdata      0      0      0
-> ext4_io_end            0      0     64   64    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> ext4_extent_status     36    198     40   99    1 : tunables  120   60
->  8 : slabdata      2      2      0
-> jbd2_journal_head      0      0    112   36    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> jbd2_revoke_table_s      0      0     16  240    1 : tunables  120   60
->   8 : slabdata      0      0      0
-> jbd2_revoke_record_s      0      0     32  124    1 : tunables  120   60
->    8 : slabdata      0      0      0
-> fscrypt_info           0      0     24  163    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> fscrypt_ctx            0      0     48   83    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> mbcache                0      0     56   71    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> kvm_async_pf           0      0    136   30    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> kvm_vcpu               0      0  19136    1    8 : tunables    8    4
-> 0 : slabdata      0      0      0
-> kvm_mmu_page_header      0      0    168   24    1 : tunables  120   60
->   8 : slabdata      0      0      0
-> xfs_dqtrx             14     14    528    7    1 : tunables   54   27
-> 8 : slabdata      2      2      0
-> xfs_dquot            149    168    472    8    1 : tunables   54   27
-> 8 : slabdata     21     21      0
-> xfs_rui_item           0      0    664    6    1 : tunables   54   27
-> 8 : slabdata      0      0      0
-> xfs_rud_item           0      0    144   28    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> xfs_icr                0      0    152   26    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> xfs_inode         12898650 12907268    960    4    1 : tunables   54
-> 27    8 : slabdata 3226817 3226817      0
-> xfs_efd_item           0      0    408   10    1 : tunables   54   27
-> 8 : slabdata      0      0      0
-> xfs_da_state           0      0    480    8    1 : tunables   54   27
-> 8 : slabdata      0      0      0
-> xfs_btree_cur        105    153    232   17    1 : tunables  120   60
-> 8 : slabdata      9      9      0
-> bio-2                 52     96    320   12    1 : tunables   54   27
-> 8 : slabdata      8      8      0
-> ip6-frags              0      0    200   20    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> UDPv6                 18     28   1152    7    2 : tunables   24   12
-> 8 : slabdata      4      4      0
-> tw_sock_TCPv6          0      0    240   17    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> request_sock_TCPv6      0      0    304   13    1 : tunables   54   27
->  8 : slabdata      0      0      0
-> TCPv6                  7     12   2112    3    2 : tunables   24   12
-> 8 : slabdata      4      4      0
-> cfq_queue          99928  99977    240   17    1 : tunables  120   60
-> 8 : slabdata   5881   5881      0
-> mqueue_inode_cache      1      4    896    4    1 : tunables   54   27
->  8 : slabdata      1      1      0
-> userfaultfd_ctx_cache      0      0    128   32    1 : tunables  120
-> 60    8 : slabdata      0      0      0
-> dio                    0      0    640    6    1 : tunables   54   27
-> 8 : slabdata      0      0      0
-> pid_namespace          0      0   2232    3    2 : tunables   24   12
-> 8 : slabdata      0      0      0
-> posix_timers_cache      0      0    216   18    1 : tunables  120   60
->  8 : slabdata      0      0      0
-> ip4-frags             34    132    184   22    1 : tunables  120   60
-> 8 : slabdata      6      6      0
-> PING                   0      0    896    4    1 : tunables   54   27
-> 8 : slabdata      0      0      0
-> UDP                   44     44    960    4    1 : tunables   54   27
-> 8 : slabdata     11     11      0
-> tw_sock_TCP            1     17    240   17    1 : tunables  120   60
-> 8 : slabdata      1      1      0
-> request_sock_TCP       0      0    304   13    1 : tunables   54   27
-> 8 : slabdata      0      0      0
-> TCP                   18     22   1920    2    1 : tunables   24   12
-> 8 : slabdata     11     11      0
-> hugetlbfs_inode_cache      2      6    600    6    1 : tunables   54
-> 27    8 : slabdata      1      1      0
-> dquot                  0      0    256   16    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> request_queue          3     15   1488    5    2 : tunables   24   12
-> 8 : slabdata      3      3      0
-> blkdev_ioc           100    234    104   39    1 : tunables  120   60
-> 8 : slabdata      6      6      0
-> user_namespace         0      0    448    9    1 : tunables   54   27
-> 8 : slabdata      0      0      0
-> dmaengine-unmap-256      1      3   2112    3    2 : tunables   24   12
->   8 : slabdata      1      1      0
-> dmaengine-unmap-128      1      7   1088    7    2 : tunables   24   12
->   8 : slabdata      1      1      0
-> sock_inode_cache     179    204    640    6    1 : tunables   54   27
-> 8 : slabdata     34     34      0
-> file_lock_cache       83     95    208   19    1 : tunables  120   60
-> 8 : slabdata      5      5      0
-> net_namespace          0      0   5888    1    2 : tunables    8    4
-> 0 : slabdata      0      0      0
-> shmem_inode_cache    775    825    688   11    2 : tunables   54   27
-> 8 : slabdata     75     75      0
-> taskstats              2     12    328   12    1 : tunables   54   27
-> 8 : slabdata      1      1      0
-> proc_inode_cache    2024   2190    656    6    1 : tunables   54   27
-> 8 : slabdata    343    365    200
-> sigqueue          12104736 12110275    160   25    1 : tunables  120
-> 60    8 : slabdata 484411 484411      0
-> bdev_cache             8     20    832    4    1 : tunables   54   27
-> 8 : slabdata      5      5      0
-> kernfs_node_cache  29210  29240    120   34    1 : tunables  120   60
-> 8 : slabdata    860    860      0
-> mnt_cache         652927 827520    384   10    1 : tunables   54   27
-> 8 : slabdata  82752  82752      0
-> inode_cache        12968  12985    584    7    1 : tunables   54   27
-> 8 : slabdata   1854   1855      0
-> dentry            12741855 12742065    192   21    1 : tunables  120
-> 60    8 : slabdata 606757 606765    480
-> iint_cache             0      0     72   56    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> buffer_head       127140 127140    104   39    1 : tunables  120   60
-> 8 : slabdata   3260   3260      0
-> fs_cache             171    378     64   63    1 : tunables  120   60
-> 8 : slabdata      6      6      0
-> files_cache          158    220    704   11    2 : tunables   54   27
-> 8 : slabdata     20     20      0
-> signal_cache         425    508   1024    4    1 : tunables   54   27
-> 8 : slabdata    127    127      0
-> sighand_cache        261    294   2112    3    2 : tunables   24   12
-> 8 : slabdata     98     98      0
-> task_struct          278    295   3648    1    1 : tunables   24   12
-> 8 : slabdata    278    295      0
-> cred_jar           15411  17451    192   21    1 : tunables  120   60
-> 8 : slabdata    831    831     60
-> Acpi-Operand      147223 147504     72   56    1 : tunables  120   60
-> 8 : slabdata   2634   2634      0
-> Acpi-Parse            69    355     56   71    1 : tunables  120   60
-> 8 : slabdata      5      5      0
-> Acpi-State             0      0     80   51    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> Acpi-Namespace     13264  13365     40   99    1 : tunables  120   60
-> 8 : slabdata    135    135      0
-> anon_vma_chain     11212  14336     64   64    1 : tunables  120   60
-> 8 : slabdata    224    224     60
-> anon_vma            6167   7000     72   56    1 : tunables  120   60
-> 8 : slabdata    125    125      0
-> pid                  312    576    128   32    1 : tunables  120   60
-> 8 : slabdata     18     18      0
-> numa_policy            5    163     24  163    1 : tunables  120   60
-> 8 : slabdata      1      1      0
-> trace_event_file    2418   2530     88   46    1 : tunables  120   60
-> 8 : slabdata     55     55      0
-> ftrace_event_field   3691   3901     48   83    1 : tunables  120   60
->  8 : slabdata     47     47      0
-> pool_workqueue        26     96    256   16    1 : tunables  120   60
-> 8 : slabdata      6      6      0
-> radix_tree_node   1644760 1707538    576    7    1 : tunables   54   27
->   8 : slabdata 243934 243934      0
-> task_group            43     84    576    7    1 : tunables   54   27
-> 8 : slabdata     12     12      0
-> dma-kmalloc-4194304      0      0 4194304    1 1024 : tunables    1    1
->    0 : slabdata      0      0      0
-> dma-kmalloc-2097152      0      0 2097152    1  512 : tunables    1    1
->    0 : slabdata      0      0      0
-> dma-kmalloc-1048576      0      0 1048576    1  256 : tunables    1    1
->    0 : slabdata      0      0      0
-> dma-kmalloc-524288      0      0 524288    1  128 : tunables    1    1
->  0 : slabdata      0      0      0
-> dma-kmalloc-262144      0      0 262144    1   64 : tunables    1    1
->  0 : slabdata      0      0      0
-> dma-kmalloc-131072      0      0 131072    1   32 : tunables    8    4
->  0 : slabdata      0      0      0
-> dma-kmalloc-65536      0      0  65536    1   16 : tunables    8    4
-> 0 : slabdata      0      0      0
-> dma-kmalloc-32768      0      0  32768    1    8 : tunables    8    4
-> 0 : slabdata      0      0      0
-> dma-kmalloc-16384      0      0  16384    1    4 : tunables    8    4
-> 0 : slabdata      0      0      0
-> dma-kmalloc-8192       0      0   8192    1    2 : tunables    8    4
-> 0 : slabdata      0      0      0
-> dma-kmalloc-4096       0      0   4096    1    1 : tunables   24   12
-> 8 : slabdata      0      0      0
-> dma-kmalloc-2048       0      0   2048    2    1 : tunables   24   12
-> 8 : slabdata      0      0      0
-> dma-kmalloc-1024       0      0   1024    4    1 : tunables   54   27
-> 8 : slabdata      0      0      0
-> dma-kmalloc-512        4      8    512    8    1 : tunables   54   27
-> 8 : slabdata      1      1      0
-> dma-kmalloc-256        0      0    256   16    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> dma-kmalloc-128        0      0    128   32    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> dma-kmalloc-64         0      0     64   64    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> dma-kmalloc-32         4    124     32  124    1 : tunables  120   60
-> 8 : slabdata      1      1      0
-> dma-kmalloc-192        0      0    192   21    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> dma-kmalloc-96         0      0    128   32    1 : tunables  120   60
-> 8 : slabdata      0      0      0
-> kmalloc-4194304        0      0 4194304    1 1024 : tunables    1    1
->  0 : slabdata      0      0      0
-> kmalloc-2097152        0      0 2097152    1  512 : tunables    1    1
->  0 : slabdata      0      0      0
-> kmalloc-1048576        0      0 1048576    1  256 : tunables    1    1
->  0 : slabdata      0      0      0
-> kmalloc-524288         1      1 524288    1  128 : tunables    1    1
-> 0 : slabdata      1      1      0
-> kmalloc-262144         3      3 262144    1   64 : tunables    1    1
-> 0 : slabdata      3      3      0
-> kmalloc-131072         3      3 131072    1   32 : tunables    8    4
-> 0 : slabdata      3      3      0
-> kmalloc-65536         13     13  65536    1   16 : tunables    8    4
-> 0 : slabdata     13     13      0
-> kmalloc-32768          4      4  32768    1    8 : tunables    8    4
-> 0 : slabdata      4      4      0
-> kmalloc-16384         23     23  16384    1    4 : tunables    8    4
-> 0 : slabdata     23     23      0
-> kmalloc-8192       44121  44121   8192    1    2 : tunables    8    4
-> 0 : slabdata  44121  44121      0
-> kmalloc-4096       11850  11850   4096    1    1 : tunables   24   12
-> 8 : slabdata  11850  11850     24
-> kmalloc-2048       18655  18718   2048    2    1 : tunables   24   12
-> 8 : slabdata   9359   9359      0
-> kmalloc-1024      584913 603244   1024    4    1 : tunables   54   27
-> 8 : slabdata 150811 150811      0
-> kmalloc-512       856079 1020576    512    8    1 : tunables   54   27
->  8 : slabdata 127572 127572      0
-> kmalloc-256       114928 141968    256   16    1 : tunables  120   60
-> 8 : slabdata   8873   8873    480
-> kmalloc-192       244249 272643    192   21    1 : tunables  120   60
-> 8 : slabdata  12983  12983      0
-> kmalloc-96        3139278 3139328    128   32    1 : tunables  120   60
->   8 : slabdata  98104  98104      0
-> kmalloc-64        25714408 33297024     64   64    1 : tunables  120
-> 60    8 : slabdata 520266 520266      0
-> kmalloc-32        423132 631036     32  124    1 : tunables  120   60
-> 8 : slabdata   5089   5089      0
-> kmalloc-128       213657 269952    128   32    1 : tunables  120   60
-> 8 : slabdata   8436   8436      0
-> *** snip ***
-> 
-> *** snip ***
-> /proc/<pidof_xfsaild>/stack
-> Wed Apr 19 20:36:52 CEST 2017
-> [<ffffffff8ef3881e>] ring_buffer_unlock_commit+0x1e/0xa0
-> [<ffffffff8ef419a7>] trace_buffer_unlock_commit_regs+0x37/0x90
-> [<ffffffff8eea1e20>] wake_up_q+0x60/0x60
-> [<ffffffffc0719b5b>] xfs_buf_read_map+0x10b/0x180 [xfs]
-> [<ffffffffc0719888>] xfs_buf_submit_wait+0x78/0x210 [xfs]
-> [<ffffffffc074d2bd>] xfs_trans_read_buf_map+0xed/0x300 [xfs]
-> [<ffffffffc0719b5b>] xfs_buf_read_map+0x10b/0x180 [xfs]
-> [<ffffffffc074d2bd>] xfs_trans_read_buf_map+0xed/0x300 [xfs]
-> [<ffffffffc0702b77>] xfs_imap_to_bp+0x67/0xe0 [xfs]
-> [<ffffffffc072e84b>] xfs_iflush+0xdb/0x240 [xfs]
-> [<ffffffffc07437f9>] xfs_inode_item_push+0x69/0x140 [xfs]
-> [<ffffffffc0743886>] xfs_inode_item_push+0xf6/0x140 [xfs]
-> [<ffffffffc074bf25>] xfsaild+0x385/0x7e0 [xfs]
-> [<ffffffffc074bba0>] xfs_trans_ail_cursor_first+0x80/0x80 [xfs]
-> [<ffffffff8ee96d64>] kthread+0x104/0x140
-> [<ffffffff8ee96d64>] kthread+0x104/0x140
-> [<ffffffff8ee96c60>] kthread_park+0x80/0x80
-> [<ffffffff8ee7ba79>] do_group_exit+0x39/0xb0
-> [<ffffffff8f4370b6>] ret_from_fork+0x26/0x40
-> [<ffffffffffffffff>] 0xffffffffffffffff
+Currently, the dir2 leaf block getdents function uses a complex state
+tracking mechanism to create a shadow copy of the block mappings and
+then uses the shadow copy to schedule readahead.  Since the read and
+readahead functions are perfectly capable of reading the mappings
+themselves, we can tear all that out in favor of a simpler function that
+simply keeps pushing the readahead window further out.
 
-So... (speculating a bit here) you're running 20 different copies of
-rsnapshot and rsync, which are generating a lot of dirty data and dirty
-inodes.  Each of the threads reported by the hung task timeout are
-trying to reserve space in the log for metadata updates, and clearly
-those log reservation requests have poked the AIL to flush itself to
-clear space for new transactions.
+Inspired-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_dir2_readdir.c |  324 ++++++++++++---------------------------------
+ 1 file changed, 87 insertions(+), 237 deletions(-)
 
-The AIL thread is flushing inode updates to disk, which is a lot of RMW
-of dirty inodes, hence the high amounts of io reads you see.  The log is
-already 2GB in size on disk, so it cannot be made larger.  TBH, a
-/smaller/ log might help here since at least when we have to push the
-AIL to free up log space there'll be less of it that has to be freed up.
-
-OTOH I wouldn't expect the system to stall for 5-15 minutes ... but I
-guess a quarter of a 2GB log is 500MB, and if that's mostly dirty inode
-records, that's a /lot/ of inode updates that the AIL has to do (single
-threaded!) to clean out the space.  You /do/ seem to have 13 million
-inodes in slab, so it's not implausible...
-
-...500MB / 200 bytes per dirty inode record = ~2.5 million inodes.
-~2.5m inodes / 10 minutes = ~4200 inodes per second...
-
-That's probably within the ballpark of what 12 drives can handle.
-Considering that the inodes get allocated out in chunks of 64, we can
-take advantage of /some/ locality...
-
-IOWs, the xfs is flushing big chunks of log all at once.  You might look
-at the io stats of each drive, to see if they're all busy, and how many
-io operations they're managing per second.  (But since you know the
-exact model of drives, you'll have to take my ballpark figures and work
-out whether or not they map to what you'd expect iops-wise from each
-drive.)
-
---D
-
-> *** snip ***
-> 
-> *** snip ***
-> iotop --batch -o output
-> 
-> Total DISK READ :    1948.60 K/s | Total DISK WRITE :       0.00 B/s
-> Actual DISK READ:     974.30 K/s | Actual DISK WRITE:       0.00 B/s
->     TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
->    1609 be/4 root     1948.60 K/s    0.00 B/s  0.00 %  0.00 %
-> [xfsaild/md127]
-> Total DISK READ :    1924.56 K/s | Total DISK WRITE :       3.94 K/s
-> Actual DISK READ:    1956.11 K/s | Actual DISK WRITE:       0.00 B/s
->     TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
->    1609 be/4 root     1924.56 K/s    0.00 B/s  0.00 %  0.00 %
-> [xfsaild/md127]
-> Total DISK READ :       2.53 M/s | Total DISK WRITE :       0.00 B/s
-> Actual DISK READ:       2.51 M/s | Actual DISK WRITE:      63.77 K/s
->     TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
->    1609 be/4 root        2.53 M/s    0.00 B/s  0.00 %  0.00 %
-> [xfsaild/md127]
-> Total DISK READ :       2.09 M/s | Total DISK WRITE :       0.00 B/s
-> Actual DISK READ:       2.10 M/s | Actual DISK WRITE:       0.00 B/s
->     TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
->    1609 be/4 root        2.09 M/s    0.00 B/s  0.00 %  0.00 %
-> [xfsaild/md127]
-> Total DISK READ :      12.12 M/s | Total DISK WRITE :       0.00 B/s
-> Actual DISK READ:      12.10 M/s | Actual DISK WRITE:       0.00 B/s
->     TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
->    1609 be/4 root       12.12 M/s    0.00 B/s  0.00 %  0.00 %
-> [xfsaild/md127]
-> Total DISK READ :       2.30 M/s | Total DISK WRITE :       0.00 B/s
-> Actual DISK READ:       2.28 M/s | Actual DISK WRITE:       0.00 B/s
->     TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
->    1609 be/4 root        2.30 M/s    0.00 B/s  0.00 %  0.00 %
-> [xfsaild/md127]
-> Total DISK READ :       4.86 M/s | Total DISK WRITE :       0.00 B/s
-> Actual DISK READ:       4.88 M/s | Actual DISK WRITE:    2025.26 K/s
->     TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
->    1609 be/4 root        4.86 M/s    0.00 B/s  0.00 %  0.00 %
-> [xfsaild/md127]
-> Total DISK READ :       2.64 M/s | Total DISK WRITE :       0.00 B/s
-> Actual DISK READ:       2.62 M/s | Actual DISK WRITE:       0.00 B/s
->     TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
->    1609 be/4 root        2.64 M/s    0.00 B/s  0.00 %  0.00 %
-> [xfsaild/md127]
-> Total DISK READ :    1899.36 K/s | Total DISK WRITE :       0.00 B/s
-> Actual DISK READ:    1899.36 K/s | Actual DISK WRITE:       0.00 B/s
->     TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
->    1609 be/4 root     1899.36 K/s    0.00 B/s  0.00 %  0.00 %
-> [xfsaild/md127]
-> Total DISK READ :    1837.53 K/s | Total DISK WRITE :       0.00 B/s
-> Actual DISK READ:    1837.53 K/s | Actual DISK WRITE:       0.00 B/s
->     TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
->    1609 be/4 root     1837.53 K/s    0.00 B/s  0.00 %  0.00 %
-> [xfsaild/md127]
-> *** snip ***
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index 929e8b6..290c610 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -243,215 +243,109 @@ xfs_dir2_block_getdents(
+ 	return 0;
+ }
+ 
+-struct xfs_dir2_leaf_map_info {
+-	xfs_extlen_t	map_blocks;	/* number of fsbs in map */
+-	xfs_dablk_t	map_off;	/* last mapped file offset */
+-	int		map_size;	/* total entries in *map */
+-	int		map_valid;	/* valid entries in *map */
+-	int		nmap;		/* mappings to ask xfs_bmapi */
+-	xfs_dir2_db_t	curdb;		/* db for current block */
+-	int		ra_current;	/* number of read-ahead blks */
+-	int		ra_index;	/* *map index for read-ahead */
+-	int		ra_offset;	/* map entry offset for ra */
+-	int		ra_want;	/* readahead count wanted */
+-	struct xfs_bmbt_irec map[];	/* map vector for blocks */
+-};
+-
++/*
++ * Read a directory block and initiate readahead for blocks beyond that.
++ *
++ * Readahead does not store any state from block read to block read.
++ * There are no cached mappings between readahead calls - we simply read
++ * the requested directory block and issue readahead of subsequent block
++ * offsets immediately.  We don't bother trying to keep a sliding window
++ * or be smart - we simply pass back the last offset we issued readahead
++ * on and on the next readbuf call we simply extend out the readahead
++ * from that last offset.
++ */
+ STATIC int
+ xfs_dir2_leaf_readbuf(
+ 	struct xfs_da_args	*args,
+ 	size_t			bufsize,
+-	struct xfs_dir2_leaf_map_info *mip,
+-	xfs_dir2_off_t		*curoff,
+-	struct xfs_buf		**bpp,
+-	bool			trim_map)
++	xfs_dir2_off_t		*cur_off,
++	xfs_dablk_t		*ra_blk,
++	struct xfs_buf		**bpp)
+ {
+ 	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_buf		*bp = NULL;
+-	struct xfs_bmbt_irec	*map = mip->map;
++	struct xfs_da_geometry	*geo = args->geo;
++	struct xfs_bmbt_irec	map;
+ 	struct blk_plug		plug;
++	xfs_daddr_t		old_daddr = 0;
++	xfs_dir2_off_t		new_off;
++	xfs_dablk_t		next_ra;
++	xfs_dablk_t		map_off;
++	xfs_dablk_t		last_da;
++	int			nmap;
++	int			ra_want;
+ 	int			error = 0;
+-	int			length;
+-	int			i;
+-	int			j;
+-	struct xfs_da_geometry	*geo = args->geo;
+-
+-	/*
+-	 * If the caller just finished processing a buffer, it will tell us
+-	 * we need to trim that block out of the mapping now it is done.
+-	 */
+-	if (trim_map) {
+-		mip->map_blocks -= geo->fsbcount;
+-		/*
+-		 * Loop to get rid of the extents for the
+-		 * directory block.
+-		 */
+-		for (i = geo->fsbcount; i > 0; ) {
+-			j = min_t(int, map->br_blockcount, i);
+-			map->br_blockcount -= j;
+-			map->br_startblock += j;
+-			map->br_startoff += j;
+-			/*
+-			 * If mapping is done, pitch it from
+-			 * the table.
+-			 */
+-			if (!map->br_blockcount && --mip->map_valid)
+-				memmove(&map[0], &map[1],
+-					sizeof(map[0]) * mip->map_valid);
+-			i -= j;
+-		}
+-	}
+-
+-	/*
+-	 * Recalculate the readahead blocks wanted.
+-	 */
+-	mip->ra_want = howmany(bufsize + geo->blksize, (1 << geo->fsblog)) - 1;
+-	ASSERT(mip->ra_want >= 0);
+-
+-	/*
+-	 * If we don't have as many as we want, and we haven't
+-	 * run out of data blocks, get some more mappings.
+-	 */
+-	if (1 + mip->ra_want > mip->map_blocks &&
+-	    mip->map_off < xfs_dir2_byte_to_da(geo, XFS_DIR2_LEAF_OFFSET)) {
+-		/*
+-		 * Get more bmaps, fill in after the ones
+-		 * we already have in the table.
+-		 */
+-		mip->nmap = mip->map_size - mip->map_valid;
+-		error = xfs_bmapi_read(dp, mip->map_off,
+-				xfs_dir2_byte_to_da(geo, XFS_DIR2_LEAF_OFFSET) -
+-								mip->map_off,
+-				&map[mip->map_valid], &mip->nmap, 0);
+-
+-		/*
+-		 * Don't know if we should ignore this or try to return an
+-		 * error.  The trouble with returning errors is that readdir
+-		 * will just stop without actually passing the error through.
+-		 */
+-		if (error)
+-			goto out;	/* XXX */
+ 
+-		/*
+-		 * If we got all the mappings we asked for, set the final map
+-		 * offset based on the last bmap value received.  Otherwise,
+-		 * we've reached the end.
+-		 */
+-		if (mip->nmap == mip->map_size - mip->map_valid) {
+-			i = mip->map_valid + mip->nmap - 1;
+-			mip->map_off = map[i].br_startoff + map[i].br_blockcount;
+-		} else
+-			mip->map_off = xfs_dir2_byte_to_da(geo,
+-							XFS_DIR2_LEAF_OFFSET);
+-
+-		/*
+-		 * Look for holes in the mapping, and eliminate them.  Count up
+-		 * the valid blocks.
+-		 */
+-		for (i = mip->map_valid; i < mip->map_valid + mip->nmap; ) {
+-			if (map[i].br_startblock == HOLESTARTBLOCK) {
+-				mip->nmap--;
+-				length = mip->map_valid + mip->nmap - i;
+-				if (length)
+-					memmove(&map[i], &map[i + 1],
+-						sizeof(map[i]) * length);
+-			} else {
+-				mip->map_blocks += map[i].br_blockcount;
+-				i++;
+-			}
+-		}
+-		mip->map_valid += mip->nmap;
++	/* Flush old buf; remember its daddr for error detection. */
++	if (*bpp) {
++		old_daddr = (*bpp)->b_bn;
++		xfs_trans_brelse(args->trans, *bpp);
++		*bpp = NULL;
+ 	}
+ 
+ 	/*
+-	 * No valid mappings, so no more data blocks.
++	 * Look for mapped directory blocks at or above the current
++	 * offset.  We must truncate down to the nearest directory
++	 * block to start the scanning operation.
+ 	 */
+-	if (!mip->map_valid) {
+-		*curoff = xfs_dir2_da_to_byte(geo, mip->map_off);
++	last_da = xfs_dir2_byte_to_da(geo, XFS_DIR2_LEAF_OFFSET);
++	map_off = xfs_dir2_db_to_da(geo, xfs_dir2_byte_to_db(geo, *cur_off));
++	do {
++		nmap = 1;
++		error = xfs_bmapi_read(dp, map_off, last_da - map_off,
++				&map, &nmap, 0);
++		if (error || !nmap)
++			goto out;
++		map_off = map.br_startoff + map.br_blockcount;
++	} while (map_off < last_da && map.br_startblock == HOLESTARTBLOCK);
++
++	if (map.br_startblock == HOLESTARTBLOCK)
+ 		goto out;
+-	}
+ 
+-	/*
+-	 * Read the directory block starting at the first mapping.
+-	 */
+-	mip->curdb = xfs_dir2_da_to_db(geo, map->br_startoff);
+-	error = xfs_dir3_data_read(args->trans, dp, map->br_startoff,
+-			map->br_blockcount >= geo->fsbcount ?
+-			    XFS_FSB_TO_DADDR(dp->i_mount, map->br_startblock) :
+-			    -1, &bp);
+-	/*
+-	 * Should just skip over the data block instead of giving up.
+-	 */
++	/* Read the directory block of that first mapping. */
++	new_off = xfs_dir2_da_to_byte(geo, map.br_startoff);
++	if (new_off > *cur_off)
++		*cur_off = new_off;
++	error = xfs_dir3_data_read(args->trans, dp, map.br_startoff, -1, &bp);
+ 	if (error)
+-		goto out;	/* XXX */
++		goto out;
+ 
+ 	/*
+-	 * Adjust the current amount of read-ahead: we just read a block that
+-	 * was previously ra.
++	 * Make sure we don't just get the same old block back.
+ 	 */
+-	if (mip->ra_current)
+-		mip->ra_current -= geo->fsbcount;
++	if (!bp || bp->b_bn == old_daddr) {
++		ASSERT(0);
++		if (bp)
++			xfs_trans_brelse(args->trans, bp);
++		error = -EFSCORRUPTED;
++		goto out;
++	}
+ 
+ 	/*
+-	 * Do we need more readahead?
+-	 * Each loop tries to process 1 full dir blk; last may be partial.
++	 * Do we need more readahead for this call?  Issue ra against
++	 * bufsize's worth of dir blocks or until we hit the end of the
++	 * data section.
+ 	 */
++	ra_want = howmany(bufsize + geo->blksize, (1 << geo->fsblog)) - 1;
++	if (*ra_blk == 0)
++		*ra_blk = map.br_startoff;
++	next_ra = *ra_blk + geo->fsbcount;
+ 	blk_start_plug(&plug);
+-	for (mip->ra_index = mip->ra_offset = i = 0;
+-	     mip->ra_want > mip->ra_current && i < mip->map_blocks;
+-	     i += geo->fsbcount) {
+-		ASSERT(mip->ra_index < mip->map_valid);
+-		/*
+-		 * Read-ahead a contiguous directory block.
+-		 */
+-		if (i > mip->ra_current &&
+-		    (map[mip->ra_index].br_blockcount - mip->ra_offset) >=
+-		     geo->fsbcount) {
+-			xfs_dir3_data_readahead(dp,
+-				map[mip->ra_index].br_startoff + mip->ra_offset,
+-				XFS_FSB_TO_DADDR(dp->i_mount,
+-					map[mip->ra_index].br_startblock +
+-							mip->ra_offset));
+-			mip->ra_current = i;
+-		}
+-
+-		/*
+-		 * Read-ahead a non-contiguous directory block.  This doesn't
+-		 * use our mapping, but this is a very rare case.
+-		 */
+-		else if (i > mip->ra_current) {
+-			xfs_dir3_data_readahead(dp,
+-					map[mip->ra_index].br_startoff +
+-							mip->ra_offset, -1);
+-			mip->ra_current = i;
+-		}
+-
+-		/*
+-		 * Advance offset through the mapping table, processing a full
+-		 * dir block even if it is fragmented into several extents.
+-		 * But stop if we have consumed all valid mappings, even if
+-		 * it's not yet a full directory block.
+-		 */
+-		for (j = 0;
+-		     j < geo->fsbcount && mip->ra_index < mip->map_valid;
+-		     j += length ) {
+-			/*
+-			 * The rest of this extent but not more than a dir
+-			 * block.
+-			 */
+-			length = min_t(int, geo->fsbcount - j,
+-					map[mip->ra_index].br_blockcount -
+-							mip->ra_offset);
+-			mip->ra_offset += length;
+-
+-			/*
+-			 * Advance to the next mapping if this one is used up.
+-			 */
+-			if (mip->ra_offset == map[mip->ra_index].br_blockcount) {
+-				mip->ra_offset = 0;
+-				mip->ra_index++;
+-			}
++	while (ra_want > 0 && next_ra < last_da) {
++		nmap = 1;
++		error = xfs_bmapi_read(dp, next_ra, last_da - next_ra,
++				&map, &nmap, 0);
++		if (error || !nmap)
++			break;
++		next_ra = roundup((xfs_dablk_t)map.br_startoff, geo->fsbcount);
++		while (map.br_startblock != HOLESTARTBLOCK &&
++		       next_ra < map.br_startoff + map.br_blockcount) {
++			xfs_dir3_data_readahead(dp, next_ra, -2);
++			*ra_blk = next_ra;
++			ra_want -= geo->fsbcount;
++			next_ra += geo->fsbcount;
+ 		}
++		next_ra = map.br_startoff + map.br_blockcount;
+ 	}
+ 	blk_finish_plug(&plug);
+ 
+@@ -475,14 +369,14 @@ xfs_dir2_leaf_getdents(
+ 	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+ 	xfs_dir2_data_entry_t	*dep;		/* data entry */
+ 	xfs_dir2_data_unused_t	*dup;		/* unused entry */
+-	int			error = 0;	/* error return value */
+-	int			length;		/* temporary length value */
+-	int			byteoff;	/* offset in current block */
+-	xfs_dir2_off_t		curoff;		/* current overall offset */
+-	xfs_dir2_off_t		newoff;		/* new curoff after new blk */
+ 	char			*ptr = NULL;	/* pointer to current data */
+-	struct xfs_dir2_leaf_map_info *map_info;
+ 	struct xfs_da_geometry	*geo = args->geo;
++	xfs_dablk_t		rablk = 0;	/* current readahead block */
++	xfs_dir2_off_t		curoff;		/* current overall offset */
++	int			length;		/* temporary length value */
++	int			byteoff;	/* offset in current block */
++	int			lock_mode;
++	int			error = 0;	/* error return value */
+ 
+ 	/*
+ 	 * If the offset is at or past the largest allowed value,
+@@ -492,30 +386,12 @@ xfs_dir2_leaf_getdents(
+ 		return 0;
+ 
+ 	/*
+-	 * Set up to bmap a number of blocks based on the caller's
+-	 * buffer size, the directory block size, and the filesystem
+-	 * block size.
+-	 */
+-	length = howmany(bufsize + geo->blksize, (1 << geo->fsblog));
+-	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
+-				(length * sizeof(struct xfs_bmbt_irec)),
+-			       KM_SLEEP | KM_NOFS);
+-	map_info->map_size = length;
+-
+-	/*
+ 	 * Inside the loop we keep the main offset value as a byte offset
+ 	 * in the directory file.
+ 	 */
+ 	curoff = xfs_dir2_dataptr_to_byte(ctx->pos);
+ 
+ 	/*
+-	 * Force this conversion through db so we truncate the offset
+-	 * down to get the start of the data block.
+-	 */
+-	map_info->map_off = xfs_dir2_db_to_da(geo,
+-					      xfs_dir2_byte_to_db(geo, curoff));
+-
+-	/*
+ 	 * Loop over directory entries until we reach the end offset.
+ 	 * Get more blocks and readahead as necessary.
+ 	 */
+@@ -527,38 +403,13 @@ xfs_dir2_leaf_getdents(
+ 		 * current buffer, need to get another one.
+ 		 */
+ 		if (!bp || ptr >= (char *)bp->b_addr + geo->blksize) {
+-			int	lock_mode;
+-			bool	trim_map = false;
+-
+-			if (bp) {
+-				xfs_trans_brelse(args->trans, bp);
+-				bp = NULL;
+-				trim_map = true;
+-			}
+-
+ 			lock_mode = xfs_ilock_data_map_shared(dp);
+-			error = xfs_dir2_leaf_readbuf(args, bufsize, map_info,
+-						      &curoff, &bp, trim_map);
++			error = xfs_dir2_leaf_readbuf(args, bufsize, &curoff,
++					&rablk, &bp);
+ 			xfs_iunlock(dp, lock_mode);
+-			if (error || !map_info->map_valid)
++			if (error || !bp)
+ 				break;
+ 
+-			/*
+-			 * Having done a read, we need to set a new offset.
+-			 */
+-			newoff = xfs_dir2_db_off_to_byte(geo,
+-							 map_info->curdb, 0);
+-			/*
+-			 * Start of the current block.
+-			 */
+-			if (curoff < newoff)
+-				curoff = newoff;
+-			/*
+-			 * Make sure we're in the right block.
+-			 */
+-			else if (curoff > newoff)
+-				ASSERT(xfs_dir2_byte_to_db(geo, curoff) ==
+-				       map_info->curdb);
+ 			hdr = bp->b_addr;
+ 			xfs_dir3_data_check(dp, bp);
+ 			/*
+@@ -643,7 +494,6 @@ xfs_dir2_leaf_getdents(
+ 		ctx->pos = XFS_DIR2_MAX_DATAPTR & 0x7fffffff;
+ 	else
+ 		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
+-	kmem_free(map_info);
+ 	if (bp)
+ 		xfs_trans_brelse(args->trans, bp);
+ 	return error;
