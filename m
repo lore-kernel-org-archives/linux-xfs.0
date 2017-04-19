@@ -1,53 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:32856 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1762592AbdDSLDR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Apr 2017 07:03:17 -0400
-Date: Wed, 19 Apr 2017 13:03:13 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 2/8] nowait aio: Introduce RWF_NOWAIT
-Message-ID: <20170419110313.GA17342@quack2.suse.cz>
-References: <20170414120257.8932-1-rgoldwyn@suse.de>
- <20170414120257.8932-3-rgoldwyn@suse.de>
- <20170419063930.GB20053@infradead.org>
- <2d816e3e-3625-7ebd-8550-68a7cc9c1a2e@suse.de>
+Received: from firestarter.dermichi.com ([194.177.153.153]:50786 "EHLO
+        firestarter.dermichi.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966469AbdDSQkN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 12:40:13 -0400
+Received: from noclinksys.net4you.net ([194.177.153.180] helo=[192.168.34.111])
+        by firestarter.dermichi.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+        (Exim)
+        (envelope-from <mw@dermichi.com>)
+        id 1d0seJ-0006Le-Bi
+        for linux-xfs@vger.kernel.org; Wed, 19 Apr 2017 18:40:11 +0200
+Subject: Re: xfsaild in D state seems to be blocking all other i/o
+ sporadically
+References: <e5f2ccc2-7923-934c-e655-59983903ca11@dermichi.com>
+ <20170419121202.2m3pi4ffojpnqyxc@eorzea.usersys.redhat.com>
+ <ced08a44-d736-6250-c682-0f495a882bea@dermichi.com>
+ <82e1fa48-909c-97a4-6bf9-5b84cf0af986@dermichi.com>
+ <20170419140446.3rl2pruz2dlcr5cg@eorzea.usersys.redhat.com>
+ <20170419142038.n5qj5cxb67dvmifu@eorzea.usersys.redhat.com>
+From: Michael Weissenbacher <mw@dermichi.com>
+Message-ID: <4980d00b-1cc4-8e2e-d4bc-7dd7cabc2a7d@dermichi.com>
+Date: Wed, 19 Apr 2017 18:40:10 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2d816e3e-3625-7ebd-8550-68a7cc9c1a2e@suse.de>
+In-Reply-To: <20170419142038.n5qj5cxb67dvmifu@eorzea.usersys.redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com
+To: linux-xfs@vger.kernel.org
 
-On Wed 19-04-17 05:30:24, Goldwyn Rodrigues wrote:
 > 
+> Btw, I'm not very good at xfs journaling code, but I wonder by the stack traces
+> you provided, if you don't have a too small journal, which, with your workload,
+> it might be getting to flush the logs too many times, making the disk too busy
+> and slowing down the rest of the IO.
 > 
-> On 04/19/2017 01:39 AM, Christoph Hellwig wrote:
-> > 
-> >> @@ -1593,6 +1593,11 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
-> >>  	}
-> >>  
-> >>  	req->common.ki_flags |= iocb_rw_flags(iocb->aio_rw_flags);
-> >> +	if ((req->common.ki_flags & IOCB_NOWAIT) &&
-> >> +	    !(req->common.ki_flags & IOCB_DIRECT)) {
-> >> +			ret = -EINVAL;
-> >> +			goto out_put_req;
-> >> +		}
-> > 
-> > Wrong indentation.  Also I think this should be EOPNOTSUPP here.
-> > 
-> 
-> Do we plan to add support for nowait in buffered I/O in the future? It
-> is just too complicated. EINVAL suits best in this case.
-
-Well, it may be complicated in the current implementation but IMO it makes
-sense to ask for such functionality (see e.g. patches for non-blocking
-buffered reads that were flying around year or two ago). So I agree with
-Christoph that EOPNOTSUPP is more logical.
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+A good hint. Unfortunately, I don't think there is an option to increase
+the log size of an internal log post-mkfs?
