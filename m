@@ -1,97 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36774 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1762919AbdDSMho (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Apr 2017 08:37:44 -0400
-Date: Wed, 19 Apr 2017 08:37:40 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfsaild in D state seems to be blocking all other i/o
- sporadically
-Message-ID: <20170419123740.GC40497@bfoster.bfoster>
-References: <e5f2ccc2-7923-934c-e655-59983903ca11@dermichi.com>
- <20170419121202.2m3pi4ffojpnqyxc@eorzea.usersys.redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:52654 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760244AbdDSGhz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 02:37:55 -0400
+Date: Tue, 18 Apr 2017 23:37:54 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/8] Use RWF_* flags for AIO operations
+Message-ID: <20170419063754.GA20053@infradead.org>
+References: <20170414120257.8932-1-rgoldwyn@suse.de>
+ <20170414120257.8932-2-rgoldwyn@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170419121202.2m3pi4ffojpnqyxc@eorzea.usersys.redhat.com>
+In-Reply-To: <20170414120257.8932-2-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michael Weissenbacher <mw@dermichi.com>, linux-xfs@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Wed, Apr 19, 2017 at 02:12:02PM +0200, Carlos Maiolino wrote:
-> Hi,
+On Fri, Apr 14, 2017 at 07:02:50AM -0500, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > 
-> On Wed, Apr 19, 2017 at 12:58:05PM +0200, Michael Weissenbacher wrote:
-> > Hi List!
-> > I have a storage server which primarily does around 15-20 parallel
-> > rsync's, nothing special. Sometimes (3-4 times a day) i notice that all
-> > I/O on the file system suddenly comes to a halt and the only process
-> > that continues to do any I/O (according to iotop) is the process
-> > xfsaild/md127. When this happens, xfsaild only does reads (according to
-> > iotop) and consistently in D State (according to top).
-> > Unfortunately this can sometimes stay like this for 5-15 minutes. During
-> > this time even a simple "ls" our "touch" would block and be stuck in D
-> > state. All other running processes accessing the fs are of course also
-> > stuck in D state. It is a XFS V5 filesystem.
-> > Then again, as sudden as it began, everything goes back to normal and
-> > I/O continues. The problem is accompanied with several "process blocked
-> > for xxx seconds" in dmesg and also some dropped connections due to
-> > network timeouts.
-> > 
-> > I've tried several things to remedy the problem, including:
-> >   - changing I/O schedulers (tried noop, deadline and cfq). Deadline
-> > seems to be best (the block goes away in less time compared with the
-> > others).
-> >   - removing all mount options (defaults + usrquota, grpquota)
-> >   - upgrading to the latest 4.11.0-rc kernel (before that i was on 4.9.x)
-> > 
-> > Nothing of the above seemed to have made a significant change to the
-> > problem.
-> > 
-> > xfs_info output of the fs in question:
-> > meta-data=/dev/md127             isize=512    agcount=33,
-> > agsize=268435440 blks
-> >          =                       sectsz=4096  attr=2, projid32bit=1
-> >          =                       crc=1        finobt=1 spinodes=0 rmapbt=0
-> >          =                       reflink=0
-> > data     =                       bsize=4096   blocks=8789917696, imaxpct=10
-> >          =                       sunit=16     swidth=96 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> > log      =internal               bsize=4096   blocks=521728, version=2
-> >          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> >
+> RWF_* flags is used for preadv2/pwritev2 calls. Port to use
+> it for aio operations as well. For this, aio_rw_flags is
+> introduced in struct iocb (using aio_reserved1) which will
+> carry these flags.
 > 
-> This is really not enough to give any idea of what might be happening, although
-> this looks more like a slow storage while xfsaild is flushing the log, but we
-> really need more information to try to give a better idea of what is going on,
-> please look at:
+> This is a precursor to the nowait AIO calls.
 > 
-> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+> Note, the only place RWF_HIPRI comes in effect is dio_await_one().
+> All the rest of the locations, aio code return -EIOCBQUEUED before the
+> checks for RWF_HIPRI.
 > 
-> Specially for: storage layout (RAID arrays, LVMs, thin provisioning, etc), and
-> the dmesg output with the traces from the hang tasks.
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> ---
+>  fs/aio.c                     | 10 +++++++++-
+>  fs/read_write.c              |  7 +------
+>  include/linux/fs.h           | 12 ++++++++++++
+>  include/uapi/linux/aio_abi.h |  2 +-
+>  4 files changed, 23 insertions(+), 8 deletions(-)
 > 
+> diff --git a/fs/aio.c b/fs/aio.c
+> index f52d925ee259..b8a33f5beef5 100644
+> --- a/fs/aio.c
+> +++ b/fs/aio.c
+> @@ -1541,11 +1541,17 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
+>  	ssize_t ret;
+>  
+>  	/* enforce forwards compatibility on users */
+> -	if (unlikely(iocb->aio_reserved1 || iocb->aio_reserved2)) {
+> +	if (unlikely(iocb->aio_reserved2)) {
+>  		pr_debug("EINVAL: reserve field set\n");
+>  		return -EINVAL;
+>  	}
+>  
+> +	if (unlikely(iocb->aio_rw_flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC))) {
+> +		pr_debug("EINVAL: aio_rw_flags set with incompatible flags\n");
+> +		return -EINVAL;
+> +	}
+> +
 
-Information around memory usage might be particularly interesting here
-as well. E.g., /proc/meminfo and /proc/slabinfo..
+> +	req->common.ki_flags |= iocb_rw_flags(iocb->aio_rw_flags);
 
-Brian
+The flag validity checking also needs to go into what's currently
+iocb_rw_flags (which will need a new name and a return value).
 
-> Cheers.
-> 
-> > Storage Subsystem: Dell Perc H730P Controller 2GB NVCACHE, 12 6TB Disks,
-> > RAID-10, latest Firmware Updates
-> > 
-> > I would be happy to dig out more information if needed. How can i find
-> > out if the RAID Controller itself gets stuck? Nothing bad shows up in
-> > the hardware and SCSI controller logs.
-> > 
-> 
-> -- 
-> Carlos
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
