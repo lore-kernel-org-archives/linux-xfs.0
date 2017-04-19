@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23953 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1765235AbdDSUBX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 16:01:23 -0400
-Date: Wed, 19 Apr 2017 13:01:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46514 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S939362AbdDSUX5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Apr 2017 16:23:57 -0400
+Date: Wed, 19 Apr 2017 15:23:52 -0500
+From: Bill O'Donnell <billodo@redhat.com>
 Subject: Re: [PATCH V2] xfs: remove use of do_div with 32-bit dividend in
  quota debug code
-Message-ID: <20170419200116.GL5193@birch.djwong.org>
+Message-ID: <20170419202352.GB12343@redhat.com>
 References: <e6022a70-8f09-633d-e99a-30186ea8c3d2@redhat.com>
  <e54544bf-9662-fa91-40b6-69a284aa66e2@sandeen.net>
 MIME-Version: 1.0
@@ -29,12 +29,9 @@ On Wed, Apr 19, 2017 at 02:41:07PM -0500, Eric Sandeen wrote:
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Looks ok, will throw it on the testing pile...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+reviewed again, this time with proper email sig. ;)
 
-(Seems to build ok on i386 too.)
-
---D
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
 > ---
 > 
