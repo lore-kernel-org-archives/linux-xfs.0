@@ -1,385 +1,177 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38210 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935301AbdDSPag (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Apr 2017 11:30:36 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id CE8C67F40B
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Apr 2017 15:30:30 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 2/2] mkfs: remove long long type casts
-Date: Wed, 19 Apr 2017 17:30:25 +0200
-Message-Id: <20170419153025.10368-2-jtulak@redhat.com>
-In-Reply-To: <20170419153025.10368-1-jtulak@redhat.com>
-References: <20170419153025.10368-1-jtulak@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:17979 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965052AbdDSQJA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 12:09:00 -0400
+Date: Wed, 19 Apr 2017 09:08:54 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: handle array index overrun in
+ xfs_dir2_leaf_readbuf()
+Message-ID: <20170419160854.GH5193@birch.djwong.org>
+References: <9d5a5529-894d-bacd-501e-e0d9ece473b8@redhat.com>
+ <20170417205712.GA43090@bfoster.bfoster>
+ <026eb10c-2745-ad2b-a3f3-f0058f2b9024@redhat.com>
+ <20170418165543.GD46764@bfoster.bfoster>
+ <20170419000906.GE5193@birch.djwong.org>
+ <12d5c25d-7e59-0361-f5e6-ec8bfb8b1fff@redhat.com>
+ <20170419002927.GG5193@birch.djwong.org>
+ <20170419123254.GB40497@bfoster.bfoster>
+ <e6315a52-e8ee-c238-bf8f-66e76af9a68b@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e6315a52-e8ee-c238-bf8f-66e76af9a68b@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Carlos Maiolino <cmaiolin@redhat.com>
 
-We have uint64, why cast it to long long for prints? Just print it as
-it is.
+On Wed, Apr 19, 2017 at 09:40:20AM -0500, Eric Sandeen wrote:
+> On 4/19/17 7:32 AM, Brian Foster wrote:
+> > On Tue, Apr 18, 2017 at 05:29:27PM -0700, Darrick J. Wong wrote:
+> >> On Tue, Apr 18, 2017 at 07:14:03PM -0500, Eric Sandeen wrote:
+> >>> On 4/18/17 7:09 PM, Darrick J. Wong wrote:
+> >>>> On Tue, Apr 18, 2017 at 12:55:44PM -0400, Brian Foster wrote:
+> >>>>> On Mon, Apr 17, 2017 at 05:12:36PM -0500, Eric Sandeen wrote:
+> >>>>>> On 4/17/17 3:57 PM, Brian Foster wrote:
+> >>>>>>> On Thu, Apr 13, 2017 at 01:45:43PM -0500, Eric Sandeen wrote:
+> >>>>> ...
+> >>>>>>>
+> >>>>>>> This fix seems fine to me, but I'm wondering if this code may have
+> >>>>>>> issues with other kinds of misalignment between the directory blocks and
+> >>>>>>> underlying bmap extents as well. For example, what happens if we end up
+> >>>>>>> with something like the following on an 8k dir fsb fs?
+> >>>>>>>
+> >>>>>>>  0:[0,xxx,3,0]
+> >>>>>>>  1:[3,xxx,1,0]
+> >>>>>>>
+> >>>>>>> ... or ...
+> >>>>>>>
+> >>>>>>>  0:[0,xxx,3,0]
+> >>>>>>>  1:[3,xxx,3,0]
+> >>>>>>
+> >>>>>> Well, as far as that goes it won't be an issue; for 8k dir block sizes
+> >>>>>> we will allocate an extent map with room for 10 extents, and we'll go
+> >>>>>> well beyond the above extents which cross directory block boundaries.
+> >>>>>>
+> >>>>>>>  ...
+> >>>>>>>  N:[...]
+> >>>>>>>
+> >>>>>>> Am I following correctly that we may end up assuming the wrong mapping
+> >>>>>>> for the second dir fsb and/or possibly skipping blocks?
+> >>>>>>
+> >>>>>> As far as I can tell, this code is only managing the read-ahead state
+> >>>>>> by looking at these cached extents. We keep track of our position within
+> >>>>>> that allocated array of mappings - this bug just stepped off the end
+> >>>>>> while doing so.
+> >>>>>>
+> >>>>>> Stopping at the correct point should keep all of the state consistent
+> >>>>>> and correct.
+> >>>>>>
+> >>>>>> But yeah, it's kind of hairy & hard to read, IMHO.
+> >>>>>>
+> >>>>>> Also as far as I can tell, we handle such discontiguities correctly,
+> >>>>>> other than the bug I found.  If you see something that looks suspicious,
+> >>>>>> I'm sure I could tweak my test case to craft a specific situation if
+> >>>>>> there's something you'd like to see tested...
+> >>>>>>
+> >>>>>
+> >>>>> Background: Eric and I chatted a bit on irc to rectify that what I'm
+> >>>>> calling out above is a different issue from what is fixed by this patch.
+> >>>>>
+> >>>>> Eric,
+> >>>>>
+> >>>>> I managed to construct a directory that looks like this:
+> >>>>>
+> >>>>>  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
+> >>>>>    0: [0..7]:          88..95            0 (88..95)             8
+> >>>>>    1: [8..15]:         80..87            0 (80..87)             8
+> >>>>>    2: [16..39]:        168..191          0 (168..191)          24
+> >>>>>    3: [40..63]:        5242952..5242975  1 (72..95)            24
+> >>>>>
+> >>>>> The fs has 8k directory fsbs. Dir fsb offset 0 spans extents 0 and 1,
+> >>>>> offset 1 (which corresponds to the 512b range 16-31 above) is covered
+> >>>>> completely by extent 2 and dir offset 2 (range 32-47) spans extents 2
+> >>>>> and 3. An ls of this directory produces this:
+> >>>>>
+> >>>>>  XFS (dm-3): Metadata corruption detected at xfs_dir3_data_reada_verify+0x42/0x80 [xfs], xfs_dir3_data_reada block 0x500058
+> >>>>>  XFS (dm-3): Unmount and run xfs_repair
+> >>>>>  XFS (dm-3): First 64 bytes of corrupted metadata buffer:
+> >>>>>  ffffbcb901c44000: 00 00 00 00 00 00 00 64 0f 78 78 78 78 78 78 78  .......d.xxxxxxx
+> >>>>>  ffffbcb901c44010: 78 78 78 78 2e 38 38 36 01 00 00 00 00 00 10 00  xxxx.886........
+> >>>>>  ffffbcb901c44020: 00 00 00 00 00 00 00 64 0f 78 78 78 78 78 78 78  .......d.xxxxxxx
+> >>>>>  ffffbcb901c44030: 78 78 78 78 2e 38 38 37 01 00 00 00 00 00 10 20  xxxx.887....... 
+> >>>>>
+> >>>>> ... which is yelling about block 184 (dir fsb 2). The fs is otherwise
+> >>>>> clean according to xfs_repair. 
+> >>>>>
+> >>>>> I _think_ something like the appended diff deals with it, but this is
+> >>>>> lightly tested only and could definitely use more eyes.
+> >>>>>
+> >>>>> Brian
+> >>>>>
+> >>>>> --- 8< ---
+> >>>>>
+> >>>>> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+> >>>>> index ad9396e..9fa379d 100644
+> >>>>> --- a/fs/xfs/xfs_dir2_readdir.c
+> >>>>> +++ b/fs/xfs/xfs_dir2_readdir.c
+> >>>>> @@ -404,7 +404,8 @@ xfs_dir2_leaf_readbuf(
+> >>>>>  		 * Read-ahead a contiguous directory block.
+> >>>>>  		 */
+> >>>>>  		if (i > mip->ra_current &&
+> >>>>> -		    map[mip->ra_index].br_blockcount >= geo->fsbcount) {
+> >>>>> +		    (map[mip->ra_index].br_blockcount - mip->ra_offset) >=
+> >>>>> +		     geo->fsbcount) {
+> >>>>>  			xfs_dir3_data_readahead(dp,
+> >>>>>  				map[mip->ra_index].br_startoff + mip->ra_offset,
+> >>>>>  				XFS_FSB_TO_DADDR(dp->i_mount,
+> >>>>> @@ -432,7 +433,7 @@ xfs_dir2_leaf_readbuf(
+> >>>>>  			 * The rest of this extent but not more than a dir
+> >>>>>  			 * block.
+> >>>>>  			 */
+> >>>>> -			length = min_t(int, geo->fsbcount,
+> >>>>> +			length = min_t(int, geo->fsbcount - j,
+> >>>>
+> >>>> Looks ok to me to make Eric's bugfix complete.
+> >>>
+> >>> Brian, thanks for crafting the image to expose this.  :)
+> >>>
+> >>> I've been otherwise occupied today, sorry - technically this fixes a separate
+> >>> issue, yes? So 2 patches, 2 bugfixes AFAICT?
+> >>
+> >> Ok.  I don't mind taking two patches since you're right, the first patch
+> >> saves us from running off the end of the shadow bmap array, and the
+> >> second one fixes bookkeepping problems when a dir extent starts midway
+> >> through a large dirblock.
+> >>
+> > 
+> > Yeah, these are definitely separate issues and Eric's original patch
+> > here is probably higher priority on its own.
+> > 
+> > But I'm not clear on the plan here.. do we want this additional patch or
+> > are we planning just to rewrite the readahead bits (or do we want to do
+> > both)? I guess having a bugfix patch in the tree is useful from a stable
+> > perspective... hm?
+> > 
+> > Brian
+> 
+> Yeah.
+> 
+> There's 20 years of the old code in the field with these bugs - I think 2
+> straightforward fixes have value even if we might want to rewrite it in the
+> future.
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Assuming 4.11 is released on Sunday, I was figuring 4.12 for the two
+fixes + backporting to older kernels, and explore the rewrite for 4.13.
 
----
-EDIT:
-* convert %lu to PRIu64
----
- mkfs/xfs_mkfs.c | 144 ++++++++++++++++++++++++++++----------------------------
- 1 file changed, 72 insertions(+), 72 deletions(-)
+--D
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 1eb77fd..994bd68 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -916,9 +916,9 @@ fixup_log_stripe_unit(
- 			}
- 			*logblocks = tmp_logblocks;
- 		} else {
--			fprintf(stderr, _("log size %lld is not a multiple "
-+			fprintf(stderr, _("log size %"PRIu64" is not a multiple "
- 					  "of the log stripe unit %d\n"),
--				(long long) *logblocks, sunit);
-+				*logblocks, sunit);
- 			usage();
- 		}
- 	}
-@@ -945,7 +945,7 @@ fixup_internal_log_stripe(
- 	if (*logblocks > agsize - XFS_FSB_TO_AGBNO(mp, logstart)) {
- 		fprintf(stderr,
- 			_("Due to stripe alignment, the internal log size "
--			"(%lld) is too large.\n"), (long long) *logblocks);
-+			"(%"PRIu64") is too large.\n"), *logblocks);
- 		fprintf(stderr, _("Must fit within an allocation group.\n"));
- 		usage();
- 	}
-@@ -957,20 +957,20 @@ validate_log_size(__uint64_t logblocks, int blocklog, int min_logblocks)
- {
- 	if (logblocks < min_logblocks) {
- 		fprintf(stderr,
--	_("log size %lld blocks too small, minimum size is %d blocks\n"),
--			(long long)logblocks, min_logblocks);
-+	_("log size %"PRIu64" blocks too small, minimum size is %d blocks\n"),
-+			logblocks, min_logblocks);
- 		usage();
- 	}
- 	if (logblocks > XFS_MAX_LOG_BLOCKS) {
- 		fprintf(stderr,
--	_("log size %lld blocks too large, maximum size is %lld blocks\n"),
--			(long long)logblocks, XFS_MAX_LOG_BLOCKS);
-+	_("log size %"PRIu64" blocks too large, maximum size is %lld blocks\n"),
-+			logblocks, XFS_MAX_LOG_BLOCKS);
- 		usage();
- 	}
- 	if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
- 		fprintf(stderr,
--	_("log size %lld bytes too large, maximum size is %lld bytes\n"),
--			(long long)(logblocks << blocklog), XFS_MAX_LOG_BYTES);
-+	_("log size %"PRIu64" bytes too large, maximum size is %lld bytes\n"),
-+			(logblocks << blocklog), XFS_MAX_LOG_BYTES);
- 		usage();
- 	}
- }
-@@ -1006,43 +1006,43 @@ validate_ag_geometry(
- {
- 	if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
- 		fprintf(stderr,
--	_("agsize (%lld blocks) too small, need at least %lld blocks\n"),
--			(long long)agsize,
--			(long long)XFS_AG_MIN_BLOCKS(blocklog));
-+	_("agsize (%"PRIu64" blocks) too small, need at least %"PRIu64" blocks\n"),
-+			agsize,
-+			(__uint64_t)XFS_AG_MIN_BLOCKS(blocklog));
- 		usage();
- 	}
- 
- 	if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
- 		fprintf(stderr,
--	_("agsize (%lld blocks) too big, maximum is %lld blocks\n"),
--			(long long)agsize,
--			(long long)XFS_AG_MAX_BLOCKS(blocklog));
-+	_("agsize (%"PRIu64" blocks) too big, maximum is %"PRIu64" blocks\n"),
-+			agsize,
-+			(__uint64_t)XFS_AG_MAX_BLOCKS(blocklog));
- 		usage();
- 	}
- 
- 	if (agsize > dblocks) {
- 		fprintf(stderr,
--	_("agsize (%lld blocks) too big, data area is %lld blocks\n"),
--			(long long)agsize, (long long)dblocks);
-+	_("agsize (%"PRIu64" blocks) too big, data area is %"PRIu64" blocks\n"),
-+			agsize, dblocks);
- 			usage();
- 	}
- 
- 	if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
- 		fprintf(stderr,
--	_("too many allocation groups for size = %lld\n"),
--				(long long)agsize);
--		fprintf(stderr, _("need at most %lld allocation groups\n"),
--			(long long)(dblocks / XFS_AG_MIN_BLOCKS(blocklog) +
-+	_("too many allocation groups for size = %"PRIu64"\n"),
-+				agsize);
-+		fprintf(stderr, _("need at most %"PRIu64" allocation groups\n"),
-+			(__uint64_t) (dblocks / XFS_AG_MIN_BLOCKS(blocklog) +
- 				(dblocks % XFS_AG_MIN_BLOCKS(blocklog) != 0)));
- 		usage();
- 	}
- 
- 	if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
- 		fprintf(stderr,
--	_("too few allocation groups for size = %lld\n"), (long long)agsize);
-+	_("too few allocation groups for size = %"PRIu64"\n"), agsize);
- 		fprintf(stderr,
--	_("need at least %lld allocation groups\n"),
--		(long long)(dblocks / XFS_AG_MAX_BLOCKS(blocklog) +
-+	_("need at least %"PRIu64" allocation groups\n"),
-+		(__uint64_t)(dblocks / XFS_AG_MAX_BLOCKS(blocklog) +
- 			(dblocks % XFS_AG_MAX_BLOCKS(blocklog) != 0)));
- 		usage();
- 	}
-@@ -1054,9 +1054,9 @@ validate_ag_geometry(
- 	if ( dblocks % agsize != 0 &&
- 	     (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
- 		fprintf(stderr,
--	_("last AG size %lld blocks too small, minimum size is %lld blocks\n"),
--			(long long)(dblocks % agsize),
--			(long long)XFS_AG_MIN_BLOCKS(blocklog));
-+	_("last AG size %"PRIu64" blocks too small, minimum size is %"PRIu64" blocks\n"),
-+			(dblocks % agsize),
-+			(__uint64_t)XFS_AG_MIN_BLOCKS(blocklog));
- 		usage();
- 	}
- 
-@@ -1065,8 +1065,8 @@ validate_ag_geometry(
- 	 */
- 	if (agcount > XFS_MAX_AGNUMBER + 1) {
- 		fprintf(stderr,
--	_("%lld allocation groups is too many, maximum is %lld\n"),
--			(long long)agcount, (long long)XFS_MAX_AGNUMBER + 1);
-+	_("%"PRIu64" allocation groups is too many, maximum is %"PRIu64"\n"),
-+			agcount, (__uint64_t)XFS_MAX_AGNUMBER + 1);
- 		usage();
- 	}
- }
-@@ -2186,16 +2186,16 @@ _("rmapbt not supported with realtime devices\n"));
- 		dbytes = getnum(dsize, &dopts, D_SIZE);
- 		if (dbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
--			_("illegal data length %lld, not a multiple of %d\n"),
--				(long long)dbytes, XFS_MIN_BLOCKSIZE);
-+			_("illegal data length %"PRIu64", not a multiple of %d\n"),
-+				dbytes, XFS_MIN_BLOCKSIZE);
- 			usage();
- 		}
- 		dblocks = (xfs_rfsblock_t)(dbytes >> blocklog);
- 		if (dbytes % blocksize)
- 			fprintf(stderr, _("warning: "
--	"data length %lld not a multiple of %"PRIu64", truncated to %lld\n"),
--				(long long)dbytes, blocksize,
--				(long long)(dblocks << blocklog));
-+	"data length %"PRIu64" not a multiple of %"PRIu64", truncated to %"PRIu64"\n"),
-+				dbytes, blocksize,
-+				(__uint64_t)(dblocks << blocklog));
- 	}
- 	if (ipflag) {
- 		inodelog = blocklog - libxfs_highbit32(inopblock);
-@@ -2218,16 +2218,16 @@ _("rmapbt not supported with realtime devices\n"));
- 		logbytes = getnum(logsize, &lopts, L_SIZE);
- 		if (logbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
--			_("illegal log length %lld, not a multiple of %d\n"),
--				(long long)logbytes, XFS_MIN_BLOCKSIZE);
-+			_("illegal log length %"PRIu64", not a multiple of %d\n"),
-+				logbytes, XFS_MIN_BLOCKSIZE);
- 			usage();
- 		}
- 		logblocks = (xfs_rfsblock_t)(logbytes >> blocklog);
- 		if (logbytes % blocksize)
- 			fprintf(stderr,
--	_("warning: log length %lld not a multiple of %"PRIu64", truncated to %lld\n"),
--				(long long)logbytes, blocksize,
--				(long long)(logblocks << blocklog));
-+	_("warning: log length %"PRIu64" not a multiple of %"PRIu64", truncated to %"PRIu64"\n"),
-+				logbytes, blocksize,
-+				(__uint64_t)(logblocks << blocklog));
- 	}
- 	if (rtsize) {
- 		__uint64_t rtbytes;
-@@ -2235,16 +2235,16 @@ _("rmapbt not supported with realtime devices\n"));
- 		rtbytes = getnum(rtsize, &ropts, R_SIZE);
- 		if (rtbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
--			_("illegal rt length %lld, not a multiple of %d\n"),
--				(long long)rtbytes, XFS_MIN_BLOCKSIZE);
-+			_("illegal rt length %"PRIu64", not a multiple of %d\n"),
-+				rtbytes, XFS_MIN_BLOCKSIZE);
- 			usage();
- 		}
- 		rtblocks = (xfs_rfsblock_t)(rtbytes >> blocklog);
- 		if (rtbytes % blocksize)
- 			fprintf(stderr,
--	_("warning: rt length %lld not a multiple of %"PRIu64", truncated to %lld\n"),
--				(long long)rtbytes, blocksize,
--				(long long)(rtblocks << blocklog));
-+	_("warning: rt length %"PRIu64" not a multiple of %"PRIu64", truncated to %"PRIu64"\n"),
-+				rtbytes, blocksize,
-+				(__uint64_t)(rtblocks << blocklog));
- 	}
- 	/*
- 	 * If specified, check rt extent size against its constraints.
-@@ -2255,8 +2255,8 @@ _("rmapbt not supported with realtime devices\n"));
- 		rtextbytes = getnum(rtextsize, &ropts, R_EXTSIZE);
- 		if (rtextbytes % blocksize) {
- 			fprintf(stderr,
--		_("illegal rt extent size %lld, not a multiple of %"PRIu64"\n"),
--				(long long)rtextbytes, blocksize);
-+		_("illegal rt extent size %"PRIu64", not a multiple of %"PRIu64"\n"),
-+				rtextbytes, blocksize);
- 			usage();
- 		}
- 		rtextblocks = (xfs_extlen_t)(rtextbytes >> blocklog);
-@@ -2383,8 +2383,8 @@ _("rmapbt not supported with realtime devices\n"));
- 	if (dsize && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
- 		fprintf(stderr,
- 			_("size %s specified for data subvolume is too large, "
--			"maximum is %lld blocks\n"),
--			dsize, (long long)DTOBT(xi.dsize));
-+			"maximum is %"PRIu64" blocks\n"),
-+			dsize, (__uint64_t)DTOBT(xi.dsize));
- 		usage();
- 	} else if (!dsize && xi.dsize > 0)
- 		dblocks = DTOBT(xi.dsize);
-@@ -2394,8 +2394,8 @@ _("rmapbt not supported with realtime devices\n"));
- 	}
- 	if (dblocks < XFS_MIN_DATA_BLOCKS) {
- 		fprintf(stderr,
--	_("size %lld of data subvolume is too small, minimum %d blocks\n"),
--			(long long)dblocks, XFS_MIN_DATA_BLOCKS);
-+	_("size %"PRIu64" of data subvolume is too small, minimum %d blocks\n"),
-+			dblocks, XFS_MIN_DATA_BLOCKS);
- 		usage();
- 	}
- 
-@@ -2431,8 +2431,8 @@ reported by the device (%u).\n"),
- 	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
- 		fprintf(stderr,
- 			_("size %s specified for rt subvolume is too large, "
--			"maximum is %lld blocks\n"),
--			rtsize, (long long)DTOBT(xi.rtsize));
-+			"maximum is %"PRIu64" blocks\n"),
-+			rtsize, (__uint64_t)DTOBT(xi.rtsize));
- 		usage();
- 	} else if (!rtsize && xi.rtsize > 0)
- 		rtblocks = DTOBT(xi.rtsize);
-@@ -2478,8 +2478,8 @@ reported by the device (%u).\n"),
- 		 */
- 		if (agsize % blocksize) {
- 			fprintf(stderr,
--		_("agsize (%lld) not a multiple of fs blk size (%"PRIu64")\n"),
--				(long long)agsize, blocksize);
-+		_("agsize (%"PRIu64") not a multiple of fs blk size (%"PRIu64")\n"),
-+				agsize, blocksize);
- 			usage();
- 		}
- 		agsize /= blocksize;
-@@ -2528,8 +2528,8 @@ reported by the device (%u).\n"),
- 						(dblocks % agsize != 0);
- 				if (dasize)
- 					fprintf(stderr,
--				_("agsize rounded to %lld, swidth = %"PRIu64"\n"),
--						(long long)agsize, dswidth);
-+				_("agsize rounded to %"PRIu64", swidth = %"PRIu64"\n"),
-+						agsize, dswidth);
- 			} else {
- 				if (nodsflag) {
- 					dsunit = dswidth = 0;
-@@ -2645,8 +2645,8 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
- 	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
- 		fprintf(stderr,
--_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
--			logsize, (long long)DTOBT(xi.logBBsize));
-+_("size %s specified for log subvolume is too large, maximum is %"PRIu64" blocks\n"),
-+			logsize, (__uint64_t)DTOBT(xi.logBBsize));
- 		usage();
- 	} else if (!logsize && xi.logBBsize > 0) {
- 		logblocks = DTOBT(xi.logBBsize);
-@@ -2655,8 +2655,8 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 			_("size specified for non-existent log subvolume\n"));
- 		usage();
- 	} else if (loginternal && logsize && logblocks >= dblocks) {
--		fprintf(stderr, _("size %lld too large for internal log\n"),
--			(long long)logblocks);
-+		fprintf(stderr, _("size %"PRIu64" too large for internal log\n"),
-+			logblocks);
- 		usage();
- 	} else if (!loginternal && !xi.logdev) {
- 		logblocks = 0;
-@@ -2733,16 +2733,16 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		}
- 		if (logblocks > agsize - libxfs_prealloc_blocks(mp)) {
- 			fprintf(stderr,
--	_("internal log size %lld too large, must fit in allocation group\n"),
--				(long long)logblocks);
-+	_("internal log size %"PRIu64" too large, must fit in allocation group\n"),
-+				logblocks);
- 			usage();
- 		}
- 
- 		if (laflag) {
- 			if (logagno >= agcount) {
- 				fprintf(stderr,
--		_("log ag number %d too large, must be less than %lld\n"),
--					logagno, (long long)agcount);
-+		_("log ag number %d too large, must be less than %"PRIu64"\n"),
-+					logagno, agcount);
- 				usage();
- 			}
- 		} else
-@@ -2771,29 +2771,29 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 
- 	if (!qflag || Nflag) {
- 		printf(_(
--		   "meta-data=%-22s isize=%-6lu agcount=%lld, agsize=%lld blks\n"
-+		   "meta-data=%-22s isize=%-6lu agcount=%"PRIu64", agsize=%"PRIu64" blks\n"
- 		   "         =%-22s sectsz=%-5lu attr=%u, projid32bit=%u\n"
- 		   "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u, reflink=%u\n"
--		   "data     =%-22s bsize=%-6lu blocks=%llu, imaxpct=%"PRIu64"\n"
-+		   "data     =%-22s bsize=%-6lu blocks=%"PRIu64", imaxpct=%"PRIu64"\n"
- 		   "         =%-22s sunit=%-6lu swidth=%"PRIu64" blks\n"
- 		   "naming   =version %-14u bsize=%-6lu ascii-ci=%d ftype=%d\n"
--		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
-+		   "log      =%-22s bsize=%-6d blocks=%"PRIu64", version=%d\n"
- 		   "         =%-22s sectsz=%-5lu sunit=%"PRIu64" blks, lazy-count=%d\n"
--		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
--			dfile, isize, (long long)agcount, (long long)agsize,
-+		   "realtime =%-22s extsz=%-6d blocks=%"PRIu64", rtextents=%"PRIu64"\n"),
-+			dfile, isize, agcount, agsize,
- 			"", sectorsize, sb_feat.attr_version,
- 				    !sb_feat.projid16bit,
- 			"", sb_feat.crcs_enabled, sb_feat.finobt, sb_feat.spinodes,
- 			sb_feat.rmapbt, sb_feat.reflink,
--			"", blocksize, (long long)dblocks, imaxpct,
-+			"", blocksize, dblocks, imaxpct,
- 			"", dsunit, dswidth,
- 			sb_feat.dir_version, dirblocksize, sb_feat.nci,
- 				sb_feat.dirftype,
--			logfile, 1 << blocklog, (long long)logblocks,
-+			logfile, 1 << blocklog, logblocks,
- 			sb_feat.log_version, "", lsectorsize, lsunit,
- 				sb_feat.lazy_sb_counters,
- 			rtfile, rtextblocks << blocklog,
--			(long long)rtblocks, (long long)rtextents);
-+			rtblocks, rtextents);
- 		if (Nflag)
- 			exit(0);
- 	}
--- 
-2.1.4
-
+> 
+> -Eric
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
