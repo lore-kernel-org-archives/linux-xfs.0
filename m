@@ -1,165 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17927 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:25707 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757874AbdDSA3c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Apr 2017 20:29:32 -0400
-Date: Tue, 18 Apr 2017 17:29:27 -0700
+        with ESMTP id S1752309AbdDSBCB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Apr 2017 21:02:01 -0400
+Date: Tue, 18 Apr 2017 18:01:46 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: handle array index overrun in
- xfs_dir2_leaf_readbuf()
-Message-ID: <20170419002927.GG5193@birch.djwong.org>
-References: <9d5a5529-894d-bacd-501e-e0d9ece473b8@redhat.com>
- <20170417205712.GA43090@bfoster.bfoster>
- <026eb10c-2745-ad2b-a3f3-f0058f2b9024@redhat.com>
- <20170418165543.GD46764@bfoster.bfoster>
- <20170419000906.GE5193@birch.djwong.org>
- <12d5c25d-7e59-0361-f5e6-ec8bfb8b1fff@redhat.com>
+Subject: Re: XFS crashes with xfs_iunlink_remove: xfs_imap returned error -22
+Message-ID: <20170419010146.GB5205@birch.djwong.org>
+References: <f94b7ddd-a5a0-b376-6d70-fd9472bd20e8@profihost.ag>
+ <bc5aafb9-37a3-9c02-50b7-421633dbd606@sandeen.net>
+ <6d9593a4-e7b0-9f8f-676a-686014768150@profihost.ag>
+ <fb362f93-db4b-34e9-3902-e5a1e6ed84b6@profihost.ag>
+ <76606275-5510-84bd-7f2a-c8a33826e53e@profihost.ag>
+ <20170418165900.GD5193@birch.djwong.org>
+ <063805b8-3f3b-83e5-93cf-5b0c70daf39f@profihost.ag>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <12d5c25d-7e59-0361-f5e6-ec8bfb8b1fff@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <063805b8-3f3b-83e5-93cf-5b0c70daf39f@profihost.ag>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Carlos Maiolino <cmaiolin@redhat.com>
+To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
 
-On Tue, Apr 18, 2017 at 07:14:03PM -0500, Eric Sandeen wrote:
-> On 4/18/17 7:09 PM, Darrick J. Wong wrote:
-> > On Tue, Apr 18, 2017 at 12:55:44PM -0400, Brian Foster wrote:
-> >> On Mon, Apr 17, 2017 at 05:12:36PM -0500, Eric Sandeen wrote:
-> >>> On 4/17/17 3:57 PM, Brian Foster wrote:
-> >>>> On Thu, Apr 13, 2017 at 01:45:43PM -0500, Eric Sandeen wrote:
-> >> ...
-> >>>>
-> >>>> This fix seems fine to me, but I'm wondering if this code may have
-> >>>> issues with other kinds of misalignment between the directory blocks and
-> >>>> underlying bmap extents as well. For example, what happens if we end up
-> >>>> with something like the following on an 8k dir fsb fs?
-> >>>>
-> >>>>  0:[0,xxx,3,0]
-> >>>>  1:[3,xxx,1,0]
-> >>>>
-> >>>> ... or ...
-> >>>>
-> >>>>  0:[0,xxx,3,0]
-> >>>>  1:[3,xxx,3,0]
-> >>>
-> >>> Well, as far as that goes it won't be an issue; for 8k dir block sizes
-> >>> we will allocate an extent map with room for 10 extents, and we'll go
-> >>> well beyond the above extents which cross directory block boundaries.
-> >>>
-> >>>>  ...
-> >>>>  N:[...]
-> >>>>
-> >>>> Am I following correctly that we may end up assuming the wrong mapping
-> >>>> for the second dir fsb and/or possibly skipping blocks?
-> >>>
-> >>> As far as I can tell, this code is only managing the read-ahead state
-> >>> by looking at these cached extents. We keep track of our position within
-> >>> that allocated array of mappings - this bug just stepped off the end
-> >>> while doing so.
-> >>>
-> >>> Stopping at the correct point should keep all of the state consistent
-> >>> and correct.
-> >>>
-> >>> But yeah, it's kind of hairy & hard to read, IMHO.
-> >>>
-> >>> Also as far as I can tell, we handle such discontiguities correctly,
-> >>> other than the bug I found.  If you see something that looks suspicious,
-> >>> I'm sure I could tweak my test case to craft a specific situation if
-> >>> there's something you'd like to see tested...
-> >>>
-> >>
-> >> Background: Eric and I chatted a bit on irc to rectify that what I'm
-> >> calling out above is a different issue from what is fixed by this patch.
-> >>
-> >> Eric,
-> >>
-> >> I managed to construct a directory that looks like this:
-> >>
-> >>  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
-> >>    0: [0..7]:          88..95            0 (88..95)             8
-> >>    1: [8..15]:         80..87            0 (80..87)             8
-> >>    2: [16..39]:        168..191          0 (168..191)          24
-> >>    3: [40..63]:        5242952..5242975  1 (72..95)            24
-> >>
-> >> The fs has 8k directory fsbs. Dir fsb offset 0 spans extents 0 and 1,
-> >> offset 1 (which corresponds to the 512b range 16-31 above) is covered
-> >> completely by extent 2 and dir offset 2 (range 32-47) spans extents 2
-> >> and 3. An ls of this directory produces this:
-> >>
-> >>  XFS (dm-3): Metadata corruption detected at xfs_dir3_data_reada_verify+0x42/0x80 [xfs], xfs_dir3_data_reada block 0x500058
-> >>  XFS (dm-3): Unmount and run xfs_repair
-> >>  XFS (dm-3): First 64 bytes of corrupted metadata buffer:
-> >>  ffffbcb901c44000: 00 00 00 00 00 00 00 64 0f 78 78 78 78 78 78 78  .......d.xxxxxxx
-> >>  ffffbcb901c44010: 78 78 78 78 2e 38 38 36 01 00 00 00 00 00 10 00  xxxx.886........
-> >>  ffffbcb901c44020: 00 00 00 00 00 00 00 64 0f 78 78 78 78 78 78 78  .......d.xxxxxxx
-> >>  ffffbcb901c44030: 78 78 78 78 2e 38 38 37 01 00 00 00 00 00 10 20  xxxx.887....... 
-> >>
-> >> ... which is yelling about block 184 (dir fsb 2). The fs is otherwise
-> >> clean according to xfs_repair. 
-> >>
-> >> I _think_ something like the appended diff deals with it, but this is
-> >> lightly tested only and could definitely use more eyes.
-> >>
-> >> Brian
-> >>
-> >> --- 8< ---
-> >>
-> >> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> >> index ad9396e..9fa379d 100644
-> >> --- a/fs/xfs/xfs_dir2_readdir.c
-> >> +++ b/fs/xfs/xfs_dir2_readdir.c
-> >> @@ -404,7 +404,8 @@ xfs_dir2_leaf_readbuf(
-> >>  		 * Read-ahead a contiguous directory block.
-> >>  		 */
-> >>  		if (i > mip->ra_current &&
-> >> -		    map[mip->ra_index].br_blockcount >= geo->fsbcount) {
-> >> +		    (map[mip->ra_index].br_blockcount - mip->ra_offset) >=
-> >> +		     geo->fsbcount) {
-> >>  			xfs_dir3_data_readahead(dp,
-> >>  				map[mip->ra_index].br_startoff + mip->ra_offset,
-> >>  				XFS_FSB_TO_DADDR(dp->i_mount,
-> >> @@ -432,7 +433,7 @@ xfs_dir2_leaf_readbuf(
-> >>  			 * The rest of this extent but not more than a dir
-> >>  			 * block.
-> >>  			 */
-> >> -			length = min_t(int, geo->fsbcount,
-> >> +			length = min_t(int, geo->fsbcount - j,
-> > 
-> > Looks ok to me to make Eric's bugfix complete.
+On Tue, Apr 18, 2017 at 07:32:04PM +0200, Stefan Priebe - Profihost AG wrote:
+> Hi,
 > 
-> Brian, thanks for crafting the image to expose this.  :)
-> 
-> I've been otherwise occupied today, sorry - technically this fixes a separate
-> issue, yes? So 2 patches, 2 bugfixes AFAICT?
+> the FS is mounted and in production. I didn't know how to dump a running FS.
 
-Ok.  I don't mind taking two patches since you're right, the first patch
-saves us from running off the end of the shadow bmap array, and the
-second one fixes bookkeepping problems when a dir extent starts midway
-through a large dirblock.
+Since there's no lvm here, unmounting, metadumping, and mounting is
+probably the only reasonable option.
 
 --D
 
 > 
-> Thanks,
-> -Eric
+> Greets,
+> Stefan
 > 
-> > I will, however, post a cleanup patch to remove the persistent shadow
-> > bmap and have readahead issued directly off the inode fork contents.
+> Am 18.04.2017 um 18:59 schrieb Darrick J. Wong:
+> > On Tue, Apr 18, 2017 at 09:01:17AM +0200, Stefan Priebe - Profihost AG wrote:
+> >> System crashed again but output was the same.
+> >>
+> >> 2017-04-18 07:30:18     XFS (sda3): xfs_iunlink_remove: xfs_imap
+> >> returned error -22.
+> >> 2017-04-18 07:30:18     XFS (sda3): xfs_inactive_ifree: xfs_ifree
+> >> returned error -22
+> >> 2017-04-18 07:30:18     XFS (sda3): xfs_do_force_shutdown(0x1) called
+> >> from line 1872 of file fs/xfs/xfs_inode.c. Return address =
+> >> 0xffffffff9b33cf93
+> >> 2017-04-18 07:30:18     XFS (sda3): I/O Error Detected. Shutting down
+> >> filesystem
+> >> 2017-04-18 07:30:18     XFS (sda3): Please umount the filesystem and
+> >> rectify the problem(s)
+> >> 2017-04-18 07:30:18     XFS (sda3): xfs_log_force: error -5 returned.
+> >> 2017-04-18 07:30:28     XFS (sda3): xfs_log_force: error -5 returned.
+> >> 2017-04-18 07:30:58     XFS (sda3): xfs_log_force: error -5 returned.
+> >> 2017-04-18 07:31:28     XFS (sda3): xfs_log_force: error -5 returned.
+> > 
+> > That looks like some sort of problem with a garbage value in
+> > di_next_unlinked that we hit when removing inodes from the AGI unlinked
+> > inode list.
+> > 
+> > Could you take a metadump and get it to us for further analysis?
+> > Eric might be interested. ;)
 > > 
 > > --D
 > > 
-> >>  					map[mip->ra_index].br_blockcount -
-> >>  							mip->ra_offset);
-> >>  			mip->ra_offset += length;
+> >>
+> >> Stefan
+> >> Am 17.04.2017 um 17:06 schrieb Stefan Priebe - Profihost AG:
+> >>>
+> >>> Am 17.04.2017 um 17:04 schrieb Stefan Priebe - Profihost AG:
+> >>>> Hi Eric,
+> >>>>
+> >>>>> On 4/17/17 2:54 AM, Stefan Priebe wrote:
+> >>>>>> Hello list,
+> >>>>>>
+> >>>>>> one of my servers is crashing every night with the following errors:
+> >>>>>>
+> >>>>>> XFS (sda3): xfs_iunlink_remove: xfs_imap returned error -22.
+> >>>>>> XFS (sda3): xfs_inactive_ifree: xfs_ifree returned error -22 XFS
+> >>>>>
+> >>>>>
+> >>>>> -EINVAL
+> >>>>>
+> >>>>>> (sda3): xfs_do_force_shutdown(0x1) called from line 1872 of file
+> >>>>>> fs/xfs/xfs_inode.c. Return address = 0xffffffff9e33cf53 XFS (sda3):
+> >>>>>> I/O Error Detected. Shutting down filesystem
+> >>>>>>
+> >>>>>> I ran xfs_repair v4.9.0 but it seems unable to recover / fix this
+> >>>>>> error. I'm running an OpenSUSE 42.2 kernel based von v4.4. Is there
+> >>>>>> anything i can do to fix this?
+> >>>>>
+> >>>>> # echo 11 > /proc/sys/fs/xfs/error_level
+> >>>>>
+> >>>>> to get a full backtrace from the shutdown (if you didn't already)
+> >>>>> so we can at least see what process is encountering the errors.
+> >>>>
+> >>>> done.
+> >>>>
+> >>>>> I have a hunch, though - are you running xfs_fsr overnight?
+> >>>>
+> >>>> No only rsync from dev/a to dev/b. But the reported device is a (source).
+> >>>
+> >>> verified: but that job is done 3-4 hours before crashing.
+> >>>
+> >>>>
+> >>>> I also have two empty folders in /lost+found which i cannot delete. Even
+> >>>> after running xfs_repair.
+> >>>>
+> >>>> # rm -r /lost+found/
+> >>>> rm: cannot remove ‘/lost+found/536874081’: Directory not empty
+> >>>> rm: cannot remove ‘/lost+found/536874085’: Directory not empty
+> >>>>
+> >>>> Greets,
+> >>>> Stefan
+> >>>>
 > >> --
 > >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > >> the body of a message to majordomo@vger.kernel.org
 > >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
