@@ -1,135 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20816 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1423254AbdDUV2N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2017 17:28:13 -0400
-Date: Fri, 21 Apr 2017 14:28:00 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:23953 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1765235AbdDSUBX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 16:01:23 -0400
+Date: Wed, 19 Apr 2017 13:01:16 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 1/2] xfs: fix up quotacheck buffer list error handling
-Message-ID: <20170421212800.GM23371@birch.djwong.org>
-References: <1492777333-60156-1-git-send-email-bfoster@redhat.com>
- <1492777333-60156-2-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH V2] xfs: remove use of do_div with 32-bit dividend in
+ quota debug code
+Message-ID: <20170419200116.GL5193@birch.djwong.org>
+References: <e6022a70-8f09-633d-e99a-30186ea8c3d2@redhat.com>
+ <e54544bf-9662-fa91-40b6-69a284aa66e2@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1492777333-60156-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <e54544bf-9662-fa91-40b6-69a284aa66e2@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Apr 21, 2017 at 08:22:12AM -0400, Brian Foster wrote:
-> The quotacheck error handling of the delwri buffer list assumes the
-> resident buffers are locked and doesn't clear the _XBF_DELWRI_Q flag
-> on the buffers that are dequeued. This can lead to assert failures
-> on buffer release and possibly other locking problems.
+On Wed, Apr 19, 2017 at 02:41:07PM -0500, Eric Sandeen wrote:
+> The kbuild test robot caught this; in debug code we have another
+> caller of do_div with a 32-bit dividend (j) which is caught now
+> that we are using the kernel-supplied do_div.
 > 
-> Move this code to a delwri queue cancel helper function to
-> encapsulate the logic required to properly release buffers from a
-> delwri queue. Update the helper to clear the delwri queue flag and
-> call it from quotacheck.
+> None of the values used here are 64-bit; just use simple division.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-I /think/ this one is ok -- it's useful to assert that the buffer is
-actually locked before we try to unlock it, and the other parts refactor
-existing code.
-
-If we want to be super-pedantic, then yes, delwri_submit consumes the
-entire list and we don't need to touch buffer_list if we hit the final
-"goto error_return;" in quotacheck.  OTOH I feel like there's not much
-harm in the extra list_empty check and should we ever decide that
-delwri_submit shouldn't consume the whole list, then we're already
-covered.
-
-Regardless, if anyone /does/ want that change, it can be a separate
-patch.
-
+Looks ok, will throw it on the testing pile...
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+(Seems to build ok on i386 too.)
 
 --D
 
 > ---
->  fs/xfs/xfs_buf.c | 24 ++++++++++++++++++++++++
->  fs/xfs/xfs_buf.h |  1 +
->  fs/xfs/xfs_qm.c  |  7 +------
->  3 files changed, 26 insertions(+), 6 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index b620872..ba036c1 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1079,6 +1079,8 @@ void
->  xfs_buf_unlock(
->  	struct xfs_buf		*bp)
->  {
-> +	ASSERT(xfs_buf_islocked(bp));
-> +
->  	XB_CLEAR_OWNER(bp);
->  	up(&bp->b_sema);
->  
-> @@ -1815,6 +1817,28 @@ xfs_alloc_buftarg(
->  }
->  
->  /*
-> + * Cancel a delayed write list.
-> + *
-> + * Remove each buffer from the list, clear the delwri queue flag and drop the
-> + * associated buffer reference.
-> + */
-> +void
-> +xfs_buf_delwri_cancel(
-> +	struct list_head	*list)
-> +{
-> +	struct xfs_buf		*bp;
-> +
-> +	while (!list_empty(list)) {
-> +		bp = list_first_entry(list, struct xfs_buf, b_list);
-> +
-> +		xfs_buf_lock(bp);
-> +		bp->b_flags &= ~_XBF_DELWRI_Q;
-> +		list_del_init(&bp->b_list);
-> +		xfs_buf_relse(bp);
-> +	}
-> +}
-> +
-> +/*
->   * Add a buffer to the delayed write list.
->   *
->   * This queues a buffer for writeout if it hasn't already been.  Note that
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index e1bc1af..8d1d44f 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -329,6 +329,7 @@ extern void *xfs_buf_offset(struct xfs_buf *, size_t);
->  extern void xfs_buf_stale(struct xfs_buf *bp);
->  
->  /* Delayed Write Buffer Routines */
-> +extern void xfs_buf_delwri_cancel(struct list_head *);
->  extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
->  extern int xfs_buf_delwri_submit(struct list_head *);
->  extern int xfs_buf_delwri_submit_nowait(struct list_head *);
+> V2: now with less actual 64-bit division!
+> 
 > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index b669b12..8b9a9f1 100644
+> index b669b12..6b42db4 100644
 > --- a/fs/xfs/xfs_qm.c
 > +++ b/fs/xfs/xfs_qm.c
-> @@ -1384,12 +1384,7 @@ xfs_qm_quotacheck(
->  	mp->m_qflags |= flags;
->  
->   error_return:
-> -	while (!list_empty(&buffer_list)) {
-> -		struct xfs_buf *bp =
-> -			list_first_entry(&buffer_list, struct xfs_buf, b_list);
-> -		list_del_init(&bp->b_list);
-> -		xfs_buf_relse(bp);
-> -	}
-> +	xfs_buf_delwri_cancel(&buffer_list);
->  
->  	if (error) {
->  		xfs_warn(mp,
-> -- 
-> 2.7.4
+> @@ -851,8 +851,8 @@ struct xfs_qm_isolate {
+>  	 * started afresh by xfs_qm_quotacheck.
+>  	 */
+>  #ifdef DEBUG
+> -	j = XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
+> -	do_div(j, sizeof(xfs_dqblk_t));
+> +	j = (int)XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB) /
+> +		sizeof(xfs_dqblk_t);
+>  	ASSERT(mp->m_quotainfo->qi_dqperchunk == j);
+>  #endif
+>  	dqb = bp->b_addr;
+> 
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
