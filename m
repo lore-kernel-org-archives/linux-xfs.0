@@ -1,85 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52388 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:36952 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752385AbdDKTBn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Apr 2017 15:01:43 -0400
-Subject: Re: [PATCH 1/2] metadump: warn about corruption if log is dirty
-References: <20170411141237.9274-1-jtulak@redhat.com>
- <20170411141237.9274-2-jtulak@redhat.com>
- <20170411183036.GA3865@bfoster.bfoster>
- <272b1e64-96fe-ab9a-12f3-1fc73a0c85ea@sandeen.net>
- <20170411184350.GC3865@bfoster.bfoster>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <bbbb0472-7b6d-b3df-3ca7-8d8a574ff377@sandeen.net>
-Date: Tue, 11 Apr 2017 14:01:41 -0500
+        id S935995AbdDSWI3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Apr 2017 18:08:29 -0400
+Date: Wed, 19 Apr 2017 17:08:26 -0500
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH v2] xfsprogs: ensure growfs rejects non-existent mount
+ point
+Message-ID: <20170419220826.GA14334@redhat.com>
+References: <20170407175809.8540-1-billodo@redhat.com>
+ <20170411172235.9361-1-billodo@redhat.com>
+ <74fc8191-443b-394a-0dc8-47e947f4e9b7@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20170411184350.GC3865@bfoster.bfoster>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <74fc8191-443b-394a-0dc8-47e947f4e9b7@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On 4/11/17 1:43 PM, Brian Foster wrote:
-> On Tue, Apr 11, 2017 at 01:34:25PM -0500, Eric Sandeen wrote:
->> On 4/11/17 1:30 PM, Brian Foster wrote:
->>> On Tue, Apr 11, 2017 at 04:12:36PM +0200, Jan Tulak wrote:
->>>> Add a warning about possible corruption when exporting a dirty log, as
->>>> the log content does not agree with obfuscated metadata.
->>>>
->>>> Signed-off-by: Jan Tulak <jtulak@redhat.com>
->>>> ---
->>>
->>> Thanks for posting this...
->>>
->>>>  db/metadump.c | 3 ++-
->>>>  1 file changed, 2 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/db/metadump.c b/db/metadump.c
->>>> index 66952f6..74e24b2 100644
->>>> --- a/db/metadump.c
->>>> +++ b/db/metadump.c
->>>> @@ -2726,7 +2726,8 @@ copy_log(void)
->>>>  		/* keep the dirty log */
->>>>  		if (obfuscate)
->>>>  			print_warning(
->>>> -_("Filesystem log is dirty; image will contain unobfuscated metadata in log."));
->>>> +_("Filesystem log is dirty; image will contain unobfuscated metadata in log "
->>>> +  "and a log replay can cause a corruption."));
->>>
->>> I think a slightly more verbose message might be a good idea. For
->>> example, something like the following:
->>>
->>> "Filesystem log is dirty; image will contain unobfuscated metadata in
->>> the log. Log recovery of an obfuscated image can cause filesystem
->>> corruption. Please mount the source image to clean the log or disable
->>> metadump obfuscation."
->>>
->>> That could also say "... or verify that log recovery of the resulting
->>> image does not cause corruption," but that might be overkill. Thoughts?
->>> Eric?
->>
->> I think we do need a good explanation, but that will take a lot of workd.
->> We could also refer to the man page for more details - it's getting pretty
->> long for a warning from the tool.
->>
+On Wed, Apr 19, 2017 at 05:05:36PM -0500, Eric Sandeen wrote:
+> On 4/11/17 12:22 PM, Bill O'Donnell wrote:
+> > xfs_growfs manpage clearly states that the filesystem must
+> > be mounted to be grown. Current behavior allows xfs_growfs
+> > to proceed if the filesystem /containing/ the path
+> > of the desired target is mounted. This is not the specified
+> > behavior. Instead, also check the targeted fs argument against
+> > the entry found in the fstable lookup. Unless the targeted
+> > fs is actually mounted, reject the command.
+> > 
+> > In order to cover bind-mounts, create a new lookup function
+> > based on the mountpoints instead of just the device name.
+> > 
+> > Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> > ---
+> > 
+> > v2: in order to properly handle relative pathnames, symlinks,
+> > and bind-mounts, use realpath to establish canonical path name.
+> > This also requires the introduction of a lookup function based
+> > on the target mountpoint.
 > 
-> Hm, yeah. Maybe the existing warning can be condensed a bit more to
-> something like:
+> I still need to review this one carefully, but have you made any
+> progress towards an xfstest for this behavior?
+
+xfstest is still a work in progress. Hopefully will have one
+by end of this week.
+Thanks-
+Bill
+
+
 > 
-> "Warning: log recovery of an obfuscated metadata image can leak
-> unobfuscated metadata and/or cause filesystem corruption. Please mount
-> the source image to clean the log or disable obfuscation."
-
-s/filesystem corruption/image corruption/ - we don't want anyone to think
-that it damaged the original fs!
-
-> I suppose we could also just exit under such conditions unless the user
-> passes a force flag or something. Maybe that's overkill too, though..
-
-yeah, let's not overengineer - dumping a dirty, obfuscated log is quite
-typical I think.
-
--Eric
+> Thanks,
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
