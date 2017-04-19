@@ -1,151 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55338 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753376AbdDSAOF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Apr 2017 20:14:05 -0400
-Subject: Re: [PATCH] xfs: handle array index overrun in
- xfs_dir2_leaf_readbuf()
-References: <9d5a5529-894d-bacd-501e-e0d9ece473b8@redhat.com>
- <20170417205712.GA43090@bfoster.bfoster>
- <026eb10c-2745-ad2b-a3f3-f0058f2b9024@redhat.com>
- <20170418165543.GD46764@bfoster.bfoster>
- <20170419000906.GE5193@birch.djwong.org>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <12d5c25d-7e59-0361-f5e6-ec8bfb8b1fff@redhat.com>
-Date: Tue, 18 Apr 2017 19:14:03 -0500
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:28236 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754738AbdDSCqx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Apr 2017 22:46:53 -0400
+Date: Wed, 19 Apr 2017 12:46:49 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/3] xfs: push buffer of flush locked dquot to avoid
+ quotacheck deadlock
+Message-ID: <20170419024649.GG12369@dastard>
+References: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
+ <1487966001-63263-3-git-send-email-bfoster@redhat.com>
+ <20170410050001.GI23007@dastard>
+ <20170410141521.GB3991@bfoster.bfoster>
+ <20170410235525.GA12369@dastard>
+ <20170411145300.GA12111@bfoster.bfoster>
+ <20170418023548.GX17542@dastard>
+ <20170418135529.GA46764@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20170419000906.GE5193@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170418135529.GA46764@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Carlos Maiolino <cmaiolin@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Martin Svec <martin.svec@zoner.cz>
 
-On 4/18/17 7:09 PM, Darrick J. Wong wrote:
-> On Tue, Apr 18, 2017 at 12:55:44PM -0400, Brian Foster wrote:
->> On Mon, Apr 17, 2017 at 05:12:36PM -0500, Eric Sandeen wrote:
->>> On 4/17/17 3:57 PM, Brian Foster wrote:
->>>> On Thu, Apr 13, 2017 at 01:45:43PM -0500, Eric Sandeen wrote:
->> ...
->>>>
->>>> This fix seems fine to me, but I'm wondering if this code may have
->>>> issues with other kinds of misalignment between the directory blocks and
->>>> underlying bmap extents as well. For example, what happens if we end up
->>>> with something like the following on an 8k dir fsb fs?
->>>>
->>>>  0:[0,xxx,3,0]
->>>>  1:[3,xxx,1,0]
->>>>
->>>> ... or ...
->>>>
->>>>  0:[0,xxx,3,0]
->>>>  1:[3,xxx,3,0]
->>>
->>> Well, as far as that goes it won't be an issue; for 8k dir block sizes
->>> we will allocate an extent map with room for 10 extents, and we'll go
->>> well beyond the above extents which cross directory block boundaries.
->>>
->>>>  ...
->>>>  N:[...]
->>>>
->>>> Am I following correctly that we may end up assuming the wrong mapping
->>>> for the second dir fsb and/or possibly skipping blocks?
->>>
->>> As far as I can tell, this code is only managing the read-ahead state
->>> by looking at these cached extents. We keep track of our position within
->>> that allocated array of mappings - this bug just stepped off the end
->>> while doing so.
->>>
->>> Stopping at the correct point should keep all of the state consistent
->>> and correct.
->>>
->>> But yeah, it's kind of hairy & hard to read, IMHO.
->>>
->>> Also as far as I can tell, we handle such discontiguities correctly,
->>> other than the bug I found.  If you see something that looks suspicious,
->>> I'm sure I could tweak my test case to craft a specific situation if
->>> there's something you'd like to see tested...
->>>
->>
->> Background: Eric and I chatted a bit on irc to rectify that what I'm
->> calling out above is a different issue from what is fixed by this patch.
->>
->> Eric,
->>
->> I managed to construct a directory that looks like this:
->>
->>  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
->>    0: [0..7]:          88..95            0 (88..95)             8
->>    1: [8..15]:         80..87            0 (80..87)             8
->>    2: [16..39]:        168..191          0 (168..191)          24
->>    3: [40..63]:        5242952..5242975  1 (72..95)            24
->>
->> The fs has 8k directory fsbs. Dir fsb offset 0 spans extents 0 and 1,
->> offset 1 (which corresponds to the 512b range 16-31 above) is covered
->> completely by extent 2 and dir offset 2 (range 32-47) spans extents 2
->> and 3. An ls of this directory produces this:
->>
->>  XFS (dm-3): Metadata corruption detected at xfs_dir3_data_reada_verify+0x42/0x80 [xfs], xfs_dir3_data_reada block 0x500058
->>  XFS (dm-3): Unmount and run xfs_repair
->>  XFS (dm-3): First 64 bytes of corrupted metadata buffer:
->>  ffffbcb901c44000: 00 00 00 00 00 00 00 64 0f 78 78 78 78 78 78 78  .......d.xxxxxxx
->>  ffffbcb901c44010: 78 78 78 78 2e 38 38 36 01 00 00 00 00 00 10 00  xxxx.886........
->>  ffffbcb901c44020: 00 00 00 00 00 00 00 64 0f 78 78 78 78 78 78 78  .......d.xxxxxxx
->>  ffffbcb901c44030: 78 78 78 78 2e 38 38 37 01 00 00 00 00 00 10 20  xxxx.887....... 
->>
->> ... which is yelling about block 184 (dir fsb 2). The fs is otherwise
->> clean according to xfs_repair. 
->>
->> I _think_ something like the appended diff deals with it, but this is
->> lightly tested only and could definitely use more eyes.
->>
->> Brian
->>
->> --- 8< ---
->>
->> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
->> index ad9396e..9fa379d 100644
->> --- a/fs/xfs/xfs_dir2_readdir.c
->> +++ b/fs/xfs/xfs_dir2_readdir.c
->> @@ -404,7 +404,8 @@ xfs_dir2_leaf_readbuf(
->>  		 * Read-ahead a contiguous directory block.
->>  		 */
->>  		if (i > mip->ra_current &&
->> -		    map[mip->ra_index].br_blockcount >= geo->fsbcount) {
->> +		    (map[mip->ra_index].br_blockcount - mip->ra_offset) >=
->> +		     geo->fsbcount) {
->>  			xfs_dir3_data_readahead(dp,
->>  				map[mip->ra_index].br_startoff + mip->ra_offset,
->>  				XFS_FSB_TO_DADDR(dp->i_mount,
->> @@ -432,7 +433,7 @@ xfs_dir2_leaf_readbuf(
->>  			 * The rest of this extent but not more than a dir
->>  			 * block.
->>  			 */
->> -			length = min_t(int, geo->fsbcount,
->> +			length = min_t(int, geo->fsbcount - j,
+On Tue, Apr 18, 2017 at 09:55:31AM -0400, Brian Foster wrote:
+> On Tue, Apr 18, 2017 at 12:35:48PM +1000, Dave Chinner wrote:
+> > On Tue, Apr 11, 2017 at 10:53:03AM -0400, Brian Foster wrote:
+> > > On Tue, Apr 11, 2017 at 09:55:25AM +1000, Dave Chinner wrote:
+> > > > So why can't we just modify the dquot in the buffer?  We already
+> > > > hold all the locks needed to guarantee exclusive access to the dquot
+> > > > and buffer, and they are all we hold when we do the initial flush to
+> > > > the buffer. So why do we need to do IO to unlock the dquot flush
+> > > > lock when we could just rewrite before we submit the buffer for IO?
+> > > > 
+> > > 
+> > > Are you suggesting to essentially ignore the flush lock? I suppose we
+> > > could get away with this in dq_flush_one() since it is only called from
+> > > quotacheck, but we may have to kill off any assertions that expect the
+> > > flush lock in xfs_dqflush(), and perhaps refactor that code to accept a
+> > > locked buffer as a param.
+> > 
+> > No, I'm not suggesting we ignore the flush lock. What the flush
+> > "lock" does is prevent higher layer attempts to flush the dquot to
+> > the backing buffer whilst IO may be in progress. It's higher level
+> > function is to allows async log item state updates to be done
+> > correctly w.r.t. relogging and flushing, as we allow transactional
+> > modifications to inodes and dquots while they are under IO.
+> > 
 > 
-> Looks ok to me to make Eric's bugfix complete.
+> Ok. What I was trying to recall previously was some discussion around
+> the flush lock retry problem where it was noted that we can't unlock the
+> flush lock until the currently flushed state makes it to disk[1]. Is the
+> conceptual difference here that we are not proposing to unlock the flush
+> lock, but rather co-opt it to perform another flush?
 
-Brian, thanks for crafting the image to expose this.  :)
+I wouldn't use that wording, but you've got the idea.
 
-I've been otherwise occupied today, sorry - technically this fixes a separate
-issue, yes? So 2 patches, 2 bugfixes AFAICT?
+[...]
 
-Thanks,
--Eric
-
-> I will, however, post a cleanup patch to remove the persistent shadow
-> bmap and have readahead issued directly off the inode fork contents.
+> > > I don't see anything that would break off hand, but my first reaction is
+> > > it sounds more hackish than this patch or the previous patch that just
+> > > disabled reclaim during quotacheck.
+> > 
+> > I thought we'd done that discussion. i.e. we can't disable reclaim
+> > in quotacheck because that can set off the OOM killer...
+> > 
 > 
-> --D
-> 
->>  					map[mip->ra_index].br_blockcount -
->>  							mip->ra_offset);
->>  			mip->ra_offset += length;
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Huh? The only reason disabling of dquot reclaim during quotacheck was
+> proposed in the first place is because it is 100% superfluous.
 
+ISTR that we broke dquot reclaim during quotacheck by moving to
+private delwri lists. I'm working under the impression that dquot
+reclaim during quotacheck used to work just fine. maybe I'm wrong,
+but ....
+
+> Quotacheck, by design, does not allow reclaim to free memory. Therefore
+> reclaim does not and afaict never has prevented or even mitigated OOM
+> during quotacheck.
+
+.... the intent has always been to allow dquot reclaim to run when
+quotacheck is active because we've had our fair share of OOM
+problems in quotacheck over the past 10 years. Bugs notwithstanding,
+we really should be trying to ensure the code fulfils that intent
+rather than sweep it under the carpet and tell users "too bad, so
+sad" when quotacheck OOMs...
+
+[...]
+
+> P.S., To be completely clear of my position on this issue at this
+> point... given the amount of time I've already spent responding to
+> handwavy arguments (ultimately resulting in discussing trailing off
+> until a repost occurs), or experimenting with a known bogus quotacheck
+> rework (which is still left without feedback, I believe), etc.,
+> clarification on the correctness of this alternate approach (while
+> interesting) is not nearly convincing enough for me to start over on
+> this bug. I don't mind handwavy questions if the "caller" is receptive
+> to or attempting to process (or debate) clarification, but I don't get
+> the impression that is the case here.
+> 
+> If you feel strongly enough about a certain approach, feel free to just
+> send a patch. At this point, I'm happy to help review anything from the
+> sole perspective of technical correctness (regardless of whether the I
+> think the approach is ugly), but I'm not personally wasting any more
+> time than I already have to implement and test such an approach without
+> a more logical and convincing argument. IMO, the feedback to this patch
+> doesn't fairly or reasonably justify the level of pushback.
+
+I just responded to the code that was posted, pointing out a
+list of things that concerned me and, I thought, we've been working
+through that quite amicably.
+
+Really, it is up to the maintainer whether to merge the code or not.
+That's not me - I'm now just someone who knows the code and it's
+history.  This is where the maintainer needs to step in and make a
+decision one way or the other....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
