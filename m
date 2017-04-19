@@ -1,107 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42527 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751197AbdDRQ7P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Apr 2017 12:59:15 -0400
-Date: Tue, 18 Apr 2017 09:59:00 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: XFS crashes with xfs_iunlink_remove: xfs_imap returned error -22
-Message-ID: <20170418165900.GD5193@birch.djwong.org>
-References: <f94b7ddd-a5a0-b376-6d70-fd9472bd20e8@profihost.ag>
- <bc5aafb9-37a3-9c02-50b7-421633dbd606@sandeen.net>
- <6d9593a4-e7b0-9f8f-676a-686014768150@profihost.ag>
- <fb362f93-db4b-34e9-3902-e5a1e6ed84b6@profihost.ag>
- <76606275-5510-84bd-7f2a-c8a33826e53e@profihost.ag>
+Received: from verein.lst.de ([213.95.11.211]:36766 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1030594AbdDSSH7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Apr 2017 14:07:59 -0400
+Date: Wed, 19 Apr 2017 20:07:57 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 4/6] xfs: introduce xfs_bmapi_remap
+Message-ID: <20170419180757.GA26319@lst.de>
+References: <20170412103013.9355-1-hch@lst.de> <20170412103013.9355-5-hch@lst.de> <20170412192827.GQ8502@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <76606275-5510-84bd-7f2a-c8a33826e53e@profihost.ag>
+In-Reply-To: <20170412192827.GQ8502@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Tue, Apr 18, 2017 at 09:01:17AM +0200, Stefan Priebe - Profihost AG wrote:
-> System crashed again but output was the same.
+On Wed, Apr 12, 2017 at 12:28:27PM -0700, Darrick J. Wong wrote:
+> On Wed, Apr 12, 2017 at 12:30:11PM +0200, Christoph Hellwig wrote:
+> > Add a new helper to be used for reflink extent list additions instead of
+> > funneling them through xfs_bmapi_write and overloading the firstblock
+> > member in struct xfs_bmalloca and struct xfs_alloc_args.
+> > 
+> > With some small changes to xfs_bmap_remap_alloc this also means we do
+> > not need a xfs_bmalloca structure for this case at all.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> 2017-04-18 07:30:18     XFS (sda3): xfs_iunlink_remove: xfs_imap
-> returned error -22.
-> 2017-04-18 07:30:18     XFS (sda3): xfs_inactive_ifree: xfs_ifree
-> returned error -22
-> 2017-04-18 07:30:18     XFS (sda3): xfs_do_force_shutdown(0x1) called
-> from line 1872 of file fs/xfs/xfs_inode.c. Return address =
-> 0xffffffff9b33cf93
-> 2017-04-18 07:30:18     XFS (sda3): I/O Error Detected. Shutting down
-> filesystem
-> 2017-04-18 07:30:18     XFS (sda3): Please umount the filesystem and
-> rectify the problem(s)
-> 2017-04-18 07:30:18     XFS (sda3): xfs_log_force: error -5 returned.
-> 2017-04-18 07:30:28     XFS (sda3): xfs_log_force: error -5 returned.
-> 2017-04-18 07:30:58     XFS (sda3): xfs_log_force: error -5 returned.
-> 2017-04-18 07:31:28     XFS (sda3): xfs_log_force: error -5 returned.
+> Looks ok, will test...
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-That looks like some sort of problem with a garbage value in
-di_next_unlinked that we hit when removing inodes from the AGI unlinked
-inode list.
-
-Could you take a metadump and get it to us for further analysis?
-Eric might be interested. ;)
-
---D
-
-> 
-> Stefan
-> Am 17.04.2017 um 17:06 schrieb Stefan Priebe - Profihost AG:
-> > 
-> > Am 17.04.2017 um 17:04 schrieb Stefan Priebe - Profihost AG:
-> >> Hi Eric,
-> >>
-> >>> On 4/17/17 2:54 AM, Stefan Priebe wrote:
-> >>>> Hello list,
-> >>>>
-> >>>> one of my servers is crashing every night with the following errors:
-> >>>>
-> >>>> XFS (sda3): xfs_iunlink_remove: xfs_imap returned error -22.
-> >>>> XFS (sda3): xfs_inactive_ifree: xfs_ifree returned error -22 XFS
-> >>>
-> >>>
-> >>> -EINVAL
-> >>>
-> >>>> (sda3): xfs_do_force_shutdown(0x1) called from line 1872 of file
-> >>>> fs/xfs/xfs_inode.c. Return address = 0xffffffff9e33cf53 XFS (sda3):
-> >>>> I/O Error Detected. Shutting down filesystem
-> >>>>
-> >>>> I ran xfs_repair v4.9.0 but it seems unable to recover / fix this
-> >>>> error. I'm running an OpenSUSE 42.2 kernel based von v4.4. Is there
-> >>>> anything i can do to fix this?
-> >>>
-> >>> # echo 11 > /proc/sys/fs/xfs/error_level
-> >>>
-> >>> to get a full backtrace from the shutdown (if you didn't already)
-> >>> so we can at least see what process is encountering the errors.
-> >>
-> >> done.
-> >>
-> >>> I have a hunch, though - are you running xfs_fsr overnight?
-> >>
-> >> No only rsync from dev/a to dev/b. But the reported device is a (source).
-> > 
-> > verified: but that job is done 3-4 hours before crashing.
-> > 
-> >>
-> >> I also have two empty folders in /lost+found which i cannot delete. Even
-> >> after running xfs_repair.
-> >>
-> >> # rm -r /lost+found/
-> >> rm: cannot remove ‘/lost+found/536874081’: Directory not empty
-> >> rm: cannot remove ‘/lost+found/536874085’: Directory not empty
-> >>
-> >> Greets,
-> >> Stefan
-> >>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+What's the status of this series?
