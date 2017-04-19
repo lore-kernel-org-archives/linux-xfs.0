@@ -1,54 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19881 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751983AbdDJWrz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 18:47:55 -0400
-Subject: [PATCH 1/4] xfs_db: don't print arrays off the end of a buffer
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 10 Apr 2017 15:47:47 -0700
-Message-ID: <149186446737.32572.10101366339282682603.stgit@birch.djwong.org>
-In-Reply-To: <149186446125.32572.5134583964816531229.stgit@birch.djwong.org>
-References: <149186446125.32572.5134583964816531229.stgit@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:53982 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S940031AbdDSWFe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Apr 2017 18:05:34 -0400
+Subject: Re: [PATCH v2] xfsprogs: ensure growfs rejects non-existent mount
+ point
+References: <20170407175809.8540-1-billodo@redhat.com>
+ <20170411172235.9361-1-billodo@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <74fc8191-443b-394a-0dc8-47e947f4e9b7@sandeen.net>
+Date: Wed, 19 Apr 2017 17:05:36 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20170411172235.9361-1-billodo@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 4/11/17 12:22 PM, Bill O'Donnell wrote:
+> xfs_growfs manpage clearly states that the filesystem must
+> be mounted to be grown. Current behavior allows xfs_growfs
+> to proceed if the filesystem /containing/ the path
+> of the desired target is mounted. This is not the specified
+> behavior. Instead, also check the targeted fs argument against
+> the entry found in the fstable lookup. Unless the targeted
+> fs is actually mounted, reject the command.
+> 
+> In order to cover bind-mounts, create a new lookup function
+> based on the mountpoints instead of just the device name.
+> 
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+> 
+> v2: in order to properly handle relative pathnames, symlinks,
+> and bind-mounts, use realpath to establish canonical path name.
+> This also requires the introduction of a lookup function based
+> on the target mountpoint.
 
-Before printing an array, clamp the array count against the size of the
-buffer so that we don't print random heap contents.
+I still need to review this one carefully, but have you made any
+progress towards an xfstest for this behavior?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- db/print.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-
-diff --git a/db/print.c b/db/print.c
-index e31372f..0caad8f 100644
---- a/db/print.c
-+++ b/db/print.c
-@@ -144,6 +144,17 @@ print_flist_1(
- 			if (fl->flags & FL_OKHIGH)
- 				count = min(count, fl->high - low + 1);
- 			if (fa->prfunc) {
-+				int	fsz;
-+				int	bitlen;
-+
-+				/* Don't read an array off the end of the buffer */
-+				fsz = fsize(f, iocur_top->data, parentoff, 0);
-+				bitlen = iocur_top->len * NBBY;
-+				if ((f->flags & FLD_ARRAY) &&
-+				    fl->offset + (count * fsz) > bitlen) {
-+					count = (bitlen - fl->offset) / fsz;
-+				}
-+
- 				neednl = fa->prfunc(iocur_top->data, fl->offset,
- 					count, fa->fmtstr,
- 					fsize(f, iocur_top->data, parentoff, 0),
-
+Thanks,
+-Eric
