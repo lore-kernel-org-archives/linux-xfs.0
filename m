@@ -1,124 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25707 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752309AbdDSBCB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Apr 2017 21:02:01 -0400
-Date: Tue, 18 Apr 2017 18:01:46 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: XFS crashes with xfs_iunlink_remove: xfs_imap returned error -22
-Message-ID: <20170419010146.GB5205@birch.djwong.org>
-References: <f94b7ddd-a5a0-b376-6d70-fd9472bd20e8@profihost.ag>
- <bc5aafb9-37a3-9c02-50b7-421633dbd606@sandeen.net>
- <6d9593a4-e7b0-9f8f-676a-686014768150@profihost.ag>
- <fb362f93-db4b-34e9-3902-e5a1e6ed84b6@profihost.ag>
- <76606275-5510-84bd-7f2a-c8a33826e53e@profihost.ag>
- <20170418165900.GD5193@birch.djwong.org>
- <063805b8-3f3b-83e5-93cf-5b0c70daf39f@profihost.ag>
+Received: from mx1.redhat.com ([209.132.183.28]:50066 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1764004AbdDSOEu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Apr 2017 10:04:50 -0400
+Date: Wed, 19 Apr 2017 16:04:46 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: xfsaild in D state seems to be blocking all other i/o
+ sporadically
+Message-ID: <20170419140446.3rl2pruz2dlcr5cg@eorzea.usersys.redhat.com>
+References: <e5f2ccc2-7923-934c-e655-59983903ca11@dermichi.com>
+ <20170419121202.2m3pi4ffojpnqyxc@eorzea.usersys.redhat.com>
+ <ced08a44-d736-6250-c682-0f495a882bea@dermichi.com>
+ <82e1fa48-909c-97a4-6bf9-5b84cf0af986@dermichi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <063805b8-3f3b-83e5-93cf-5b0c70daf39f@profihost.ag>
+In-Reply-To: <82e1fa48-909c-97a4-6bf9-5b84cf0af986@dermichi.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: mw@dermichi.com
 
-On Tue, Apr 18, 2017 at 07:32:04PM +0200, Stefan Priebe - Profihost AG wrote:
-> Hi,
+If I am not blind, the task currently owning the cpu isn't listed there, which I
+suppose to be already running.
+
+Next time you hit it, could you please paste the stack trace of the task owning
+the cpu? Which I suppose to be xfsaild according to your report.
+
+A simple `cat /proc/<pid>/stack` is probably enough
+
+thanks
+
+> > * dmesg output from hung tasks
+> [25012.200938] INFO: task kworker/u12:0:39771 blocked for more than 120
+> seconds.
+> [25012.201036]       Tainted: G            E   4.11.0-rc5-mw #1
+> [25012.201125] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [25012.201220] kworker/u12:0   D    0 39771      2 0x00000000
+> [25012.201229] Workqueue: writeback wb_workfn (flush-9:127)
+> [25012.201231] Call Trace:
+> [25012.201241]  ? __schedule+0x2e0/0x910
+> [25012.201295]  ? xfs_buf_rele+0x5b/0x390 [xfs]
+> [25012.201300]  ? schedule+0x32/0x80
+> [25012.201344]  ? xlog_grant_head_wait+0xca/0x200 [xfs]
+> [25012.201385]  ? xlog_grant_head_check+0x9a/0x110 [xfs]
+
+> [25012.201777] INFO: task rm:44141 blocked for more than 120 seconds.
+> [25012.201868]       Tainted: G            E   4.11.0-rc5-mw #1
+> [25012.201957] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [25012.202051] rm              D    0 44141  43912 0x00000000
+> [25012.202054] Call Trace:
+> [25012.202059]  ? __schedule+0x2e0/0x910
+> [25012.202097]  ? xfs_dir_open+0x59/0x70 [xfs]
+> [25012.202102]  ? schedule+0x32/0x80
+
+> [25012.202392] INFO: task rm:44149 blocked for more than 120 seconds.
+> [25012.202483]       Tainted: G            E   4.11.0-rc5-mw #1
+> [25012.202571] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [25012.202665] rm              D    0 44149  43923 0x00000000
+> [25012.202668] Call Trace:
+> [25012.202672]  ? __schedule+0x2e0/0x910
+> [25012.202676]  ? schedule+0x32/0x80
+
+> [25012.202958] INFO: task rsync:44358 blocked for more than 120 seconds.
+> [25012.203050]       Tainted: G            E   4.11.0-rc5-mw #1
+> [25012.203138] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [25012.203233] rsync           D    0 44358  44355 0x00000000
+> [25012.203235] Call Trace:
+> [25012.203239]  ? __schedule+0x2e0/0x910
+> [25012.203242]  ? walk_component+0x4b/0x630
+> [25012.203245]  ? schedule+0x32/0x80
+> [25012.203284]  ? xlog_grant_head_wait+0xca/0x200 [xfs]
+
+> [25012.203530] INFO: task rsync:44370 blocked for more than 120 seconds.
+> [25012.203622]       Tainted: G            E   4.11.0-rc5-mw #1
+> [25012.203710] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [25012.203804] rsync           D    0 44370  44365 0x00000000
+> [25012.203806] Call Trace:
+> [25012.203811]  ? __schedule+0x2e0/0x910
+> [25012.203814]  ? schedule+0x32/0x80
+> [25012.203852]  ? xlog_grant_head_wait+0xca/0x200 [xfs]
+> [25012.203889]  ? xlog_grant_head_check+0x9a/0x110 [xfs]
+
+> [25012.204171] INFO: task rsync:44480 blocked for more than 120 seconds.
+> [25012.204283]       Tainted: G            E   4.11.0-rc5-mw #1
+> [25012.204393] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [25012.204529] rsync           D    0 44480  44477 0x00000000
+> [25012.204531] Call Trace:
+> [25012.204536]  ? __schedule+0x2e0/0x910
+> [25012.204539]  ? walk_component+0x4b/0x630
+> [25012.204542]  ? schedule+0x32/0x80
+
+> [25012.204827] INFO: task rsync:44581 blocked for more than 120 seconds.
+> [25012.204951]       Tainted: G            E   4.11.0-rc5-mw #1
+> [25012.205062] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [25012.205200] rsync           D    0 44581  44580 0x00000000
+> [25012.205202] Call Trace:
+> [25012.205207]  ? __schedule+0x2e0/0x910
+> [25012.205245]  ? xfs_trans_free_items+0x75/0xa0 [xfs]
+> [25012.205249]  ? schedule+0x32/0x80
+> [25012.205286]  ? xlog_grant_head_wait+0xca/0x200 [xfs]
+
+> [25133.028169] INFO: task kworker/1:0:24106 blocked for more than 120
+> seconds.
+> [25133.028288]       Tainted: G            E   4.11.0-rc5-mw #1
+> [25133.028397] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [25133.028535] kworker/1:0     D    0 24106      2 0x00000000
+> [25133.028595] Workqueue: xfs-eofblocks/md127 xfs_eofblocks_worker [xfs]
+> [25133.028598] Call Trace:
+> [25133.028606]  ? __schedule+0x2e0/0x910
+> [25133.028609]  ? schedule+0x32/0x80
+> [25133.028655]  ? xlog_grant_head_wait+0xca/0x200 [xfs]
+
+> [25133.029188] INFO: task kworker/u12:0:39771 blocked for more than 120
+> seconds.
+> [25133.029303]       Tainted: G            E   4.11.0-rc5-mw #1
+> [25133.029412] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [25133.029549] kworker/u12:0   D    0 39771      2 0x00000000
+> [25133.029556] Workqueue: writeback wb_workfn (flush-9:127)
+> [25133.029558] Call Trace:
+> [25133.029563]  ? __schedule+0x2e0/0x910
+> [25133.029600]  ? xfs_buf_rele+0x5b/0x390 [xfs]
+> [25133.029605]  ? schedule+0x32/0x80
+> [25133.029647]  ? xlog_grant_head_wait+0xca/0x200 [xfs]
+
+> [25133.030070] INFO: task rm:44141 blocked for more than 120 seconds.
+> [25133.030182]       Tainted: G            E   4.11.0-rc5-mw #1
+> [25133.030291] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [25133.030428] rm              D    0 44141  43912 0x00000000
+> [25133.030430] Call Trace:
+> [25133.030435]  ? __schedule+0x2e0/0x910
+> [25133.030472]  ? xfs_dir_open+0x59/0x70 [xfs]
+> [25133.030477]  ? schedule+0x32/0x80
 > 
-> the FS is mounted and in production. I didn't know how to dump a running FS.
 
-Since there's no lvm here, unmounting, metadumping, and mounting is
-probably the only reasonable option.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---D
-
-> 
-> Greets,
-> Stefan
-> 
-> Am 18.04.2017 um 18:59 schrieb Darrick J. Wong:
-> > On Tue, Apr 18, 2017 at 09:01:17AM +0200, Stefan Priebe - Profihost AG wrote:
-> >> System crashed again but output was the same.
-> >>
-> >> 2017-04-18 07:30:18     XFS (sda3): xfs_iunlink_remove: xfs_imap
-> >> returned error -22.
-> >> 2017-04-18 07:30:18     XFS (sda3): xfs_inactive_ifree: xfs_ifree
-> >> returned error -22
-> >> 2017-04-18 07:30:18     XFS (sda3): xfs_do_force_shutdown(0x1) called
-> >> from line 1872 of file fs/xfs/xfs_inode.c. Return address =
-> >> 0xffffffff9b33cf93
-> >> 2017-04-18 07:30:18     XFS (sda3): I/O Error Detected. Shutting down
-> >> filesystem
-> >> 2017-04-18 07:30:18     XFS (sda3): Please umount the filesystem and
-> >> rectify the problem(s)
-> >> 2017-04-18 07:30:18     XFS (sda3): xfs_log_force: error -5 returned.
-> >> 2017-04-18 07:30:28     XFS (sda3): xfs_log_force: error -5 returned.
-> >> 2017-04-18 07:30:58     XFS (sda3): xfs_log_force: error -5 returned.
-> >> 2017-04-18 07:31:28     XFS (sda3): xfs_log_force: error -5 returned.
-> > 
-> > That looks like some sort of problem with a garbage value in
-> > di_next_unlinked that we hit when removing inodes from the AGI unlinked
-> > inode list.
-> > 
-> > Could you take a metadump and get it to us for further analysis?
-> > Eric might be interested. ;)
-> > 
-> > --D
-> > 
-> >>
-> >> Stefan
-> >> Am 17.04.2017 um 17:06 schrieb Stefan Priebe - Profihost AG:
-> >>>
-> >>> Am 17.04.2017 um 17:04 schrieb Stefan Priebe - Profihost AG:
-> >>>> Hi Eric,
-> >>>>
-> >>>>> On 4/17/17 2:54 AM, Stefan Priebe wrote:
-> >>>>>> Hello list,
-> >>>>>>
-> >>>>>> one of my servers is crashing every night with the following errors:
-> >>>>>>
-> >>>>>> XFS (sda3): xfs_iunlink_remove: xfs_imap returned error -22.
-> >>>>>> XFS (sda3): xfs_inactive_ifree: xfs_ifree returned error -22 XFS
-> >>>>>
-> >>>>>
-> >>>>> -EINVAL
-> >>>>>
-> >>>>>> (sda3): xfs_do_force_shutdown(0x1) called from line 1872 of file
-> >>>>>> fs/xfs/xfs_inode.c. Return address = 0xffffffff9e33cf53 XFS (sda3):
-> >>>>>> I/O Error Detected. Shutting down filesystem
-> >>>>>>
-> >>>>>> I ran xfs_repair v4.9.0 but it seems unable to recover / fix this
-> >>>>>> error. I'm running an OpenSUSE 42.2 kernel based von v4.4. Is there
-> >>>>>> anything i can do to fix this?
-> >>>>>
-> >>>>> # echo 11 > /proc/sys/fs/xfs/error_level
-> >>>>>
-> >>>>> to get a full backtrace from the shutdown (if you didn't already)
-> >>>>> so we can at least see what process is encountering the errors.
-> >>>>
-> >>>> done.
-> >>>>
-> >>>>> I have a hunch, though - are you running xfs_fsr overnight?
-> >>>>
-> >>>> No only rsync from dev/a to dev/b. But the reported device is a (source).
-> >>>
-> >>> verified: but that job is done 3-4 hours before crashing.
-> >>>
-> >>>>
-> >>>> I also have two empty folders in /lost+found which i cannot delete. Even
-> >>>> after running xfs_repair.
-> >>>>
-> >>>> # rm -r /lost+found/
-> >>>> rm: cannot remove ‘/lost+found/536874081’: Directory not empty
-> >>>> rm: cannot remove ‘/lost+found/536874085’: Directory not empty
-> >>>>
-> >>>> Greets,
-> >>>> Stefan
-> >>>>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Carlos
