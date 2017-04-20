@@ -1,60 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45262 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936820AbdDSUVh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Apr 2017 16:21:37 -0400
-Date: Wed, 19 Apr 2017 15:21:31 -0500
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH V2] xfs: remove use of do_div with 32-bit dividend in
- quota debug code
-Message-ID: <20170419202131.GA12343@redhat.com>
-References: <e6022a70-8f09-633d-e99a-30186ea8c3d2@redhat.com>
- <e54544bf-9662-fa91-40b6-69a284aa66e2@sandeen.net>
+Received: from userp1040.oracle.com ([156.151.31.81]:38513 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S947906AbdDTWMp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2017 18:12:45 -0400
+Date: Thu, 20 Apr 2017 15:12:41 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: inconsistent lock state in kernel 4.11 rc6
+Message-ID: <20170420221241.GH5205@birch.djwong.org>
+References: <CABXGCsOUaRMg8ztgeqgN_BbQvPtaSxmyKJZ6hqMnKhO1VA4vmg@mail.gmail.com>
+ <20170413200009.GZ8502@birch.djwong.org>
+ <CABXGCsMzKE_dVGqf_NnARnkyHR8iGXSiVAek4FsEmFs4-TuDEw@mail.gmail.com>
+ <CABXGCsMD_k7exKP0sUSm6oeDPWWouxzOrqY9R=_oc5v4wxtW8A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <e54544bf-9662-fa91-40b6-69a284aa66e2@sandeen.net>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CABXGCsMD_k7exKP0sUSm6oeDPWWouxzOrqY9R=_oc5v4wxtW8A@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Apr 19, 2017 at 02:41:07PM -0500, Eric Sandeen wrote:
-> The kbuild test robot caught this; in debug code we have another
-> caller of do_div with a 32-bit dividend (j) which is caught now
-> that we are using the kernel-supplied do_div.
+On Thu, Apr 20, 2017 at 09:28:58AM +0500, Михаил Гаврилов wrote:
+> On 17 April 2017 at 22:18, Михаил Гаврилов <mikhail.v.gavrilov@gmail.com> wrote:
+> > In which mainline kernel version would be merged patch "xfs: drop
+> > iolock from reclaim context to appease lockdep" ?
 > 
-> None of the values used here are 64-bit; just use simple division.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Today I updated kernel to rc7 and see that patch still not merged
+> (messages with "inconsistent lock state" was returned)
 
-looks even better now ;)
+It's not a critical bug fix, so please look for it in 4.12-rc1.
 
-Reviewed-by: Bill O'Donnell
+--D
 
-> ---
 > 
-> V2: now with less actual 64-bit division!
-> 
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index b669b12..6b42db4 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -851,8 +851,8 @@ struct xfs_qm_isolate {
->  	 * started afresh by xfs_qm_quotacheck.
->  	 */
->  #ifdef DEBUG
-> -	j = XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
-> -	do_div(j, sizeof(xfs_dqblk_t));
-> +	j = (int)XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB) /
-> +		sizeof(xfs_dqblk_t);
->  	ASSERT(mp->m_quotainfo->qi_dqperchunk == j);
->  #endif
->  	dqb = bp->b_addr;
 > 
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Best Regards,
+> Mike Gavrilov.
