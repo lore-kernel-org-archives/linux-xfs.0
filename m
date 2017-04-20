@@ -1,43 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38513 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S947906AbdDTWMp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2017 18:12:45 -0400
-Date: Thu, 20 Apr 2017 15:12:41 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: inconsistent lock state in kernel 4.11 rc6
-Message-ID: <20170420221241.GH5205@birch.djwong.org>
-References: <CABXGCsOUaRMg8ztgeqgN_BbQvPtaSxmyKJZ6hqMnKhO1VA4vmg@mail.gmail.com>
- <20170413200009.GZ8502@birch.djwong.org>
- <CABXGCsMzKE_dVGqf_NnARnkyHR8iGXSiVAek4FsEmFs4-TuDEw@mail.gmail.com>
- <CABXGCsMD_k7exKP0sUSm6oeDPWWouxzOrqY9R=_oc5v4wxtW8A@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:46854 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1032623AbdDTWnh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Apr 2017 18:43:37 -0400
+Subject: Re: [PATCH v2] xfsprogs: ensure growfs rejects non-existent mount
+ point
+References: <20170407175809.8540-1-billodo@redhat.com>
+ <20170411172235.9361-1-billodo@redhat.com>
+ <8ffd0451-3455-dbe5-8905-a3c028a6932f@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ccbe5b6d-5040-388e-88f1-18ef7bd673d1@sandeen.net>
+Date: Thu, 20 Apr 2017 17:43:36 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CABXGCsMD_k7exKP0sUSm6oeDPWWouxzOrqY9R=_oc5v4wxtW8A@mail.gmail.com>
+In-Reply-To: <8ffd0451-3455-dbe5-8905-a3c028a6932f@sandeen.net>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
 
-On Thu, Apr 20, 2017 at 09:28:58AM +0500, Михаил Гаврилов wrote:
-> On 17 April 2017 at 22:18, Михаил Гаврилов <mikhail.v.gavrilov@gmail.com> wrote:
-> > In which mainline kernel version would be merged patch "xfs: drop
-> > iolock from reclaim context to appease lockdep" ?
-> 
-> 
-> Today I updated kernel to rc7 and see that patch still not merged
-> (messages with "inconsistent lock state" was returned)
 
-It's not a critical bug fix, so please look for it in 4.12-rc1.
+On 4/20/17 5:22 PM, Eric Sandeen wrote:
+> On 4/11/17 12:22 PM, Bill O'Donnell wrote:
 
---D
 
-> 
-> 
-> 
+>> +/*
+>> + * Find the FS table entry for the given path. Compare
+>> + * the path to mountpoint entries in the table.
+>> + */
+>> +struct fs_path *
+>> +fs_table_lookup_mount(
+>> +	const char *dir)
+>> +{
+>> +	uint		i;
+>> +	dev_t		dev = 0;
+>> +
+>> +	if (fs_device_number(dir, &dev))
+>> +		return NULL;
+>> +
+>> +	for (i = 0; i < fs_count; i++) {
+>> +		if (strcmp(fs_table[i].fs_dir, dir) == 0)
+>> +			return &fs_table[i];
+
+Oh, and I think we need to test the flags on the
+entry to be sure that it is a FS_MOUNT_POINT as well,
+and not a project path.
+
+-Eric
+
+>> +	}
+>> +	return NULL;
+>> +}
+>> +
+>>  static int
+>>  fs_table_insert(
+>>  	char		*dir,
+>>
 > --
-> Best Regards,
-> Mike Gavrilov.
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
