@@ -1,63 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51712 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S945408AbdDTRHH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Apr 2017 13:07:07 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 638E3C04B92C
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Apr 2017 17:07:06 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-8-37.pek2.redhat.com [10.72.8.37])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 647C751DE7
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Apr 2017 17:07:05 +0000 (UTC)
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] xfs_io: add missed inode command into man page
-Date: Fri, 21 Apr 2017 01:06:57 +0800
-Message-Id: <1492708017-14163-1-git-send-email-zlang@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25572 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S937151AbdDTRYO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2017 13:24:14 -0400
+Date: Thu, 20 Apr 2017 10:24:04 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 0/5] fs, xfs refcount conversions
+Message-ID: <20170420172404.GE23371@birch.djwong.org>
+References: <1488963219-11709-1-git-send-email-elena.reshetova@intel.com>
+ <2236FBA76BA1254E88B949DDB74E612B41C8D726@IRSMSX102.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C8D726@IRSMSX102.ger.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Reshetova, Elena" <elena.reshetova@intel.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>, Hans Liljestrand <ishkamiel@gmail.com>
 
-There's an "inode" command in xfs_io, it's used to query physical
-information about an inode. But there's not any information about
-it in xfs_io and other related man pages. So document this command
-in the xfs_io man page now.
+On Thu, Apr 20, 2017 at 08:11:41AM +0000, Reshetova, Elena wrote:
+> 
+>  
+> > v3:
+> >  * fixed header file inclusion
+> 
+> I don't think I have heard anything back on this v3 patch set. 
+> Is there still smth here to fix or could you take the changes in?
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
- man/man8/xfs_io.8 | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+Generally I think it looks ok; it's running through shakedown testing as
+we speak.
 
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 19e1ae4..ceb6cf4 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -650,6 +650,23 @@ sec uses UNIX timestamp notation and is the seconds elapsed since
- nsec is the nanoseconds since the sec. This value needs to be in
- the range 0-999999999 with UTIME_NOW and UTIME_OMIT being exceptions.
- Each (sec, nsec) pair constitutes a single timestamp value.
-+.RE
-+.PD
-+.TP
-+.BI " inode [ [ -n ] " number " ] [ -v ]"
-+The inode command querys physical information about an inode, it
-+returns 1 if any inode number greater than 32 bits exists in the
-+filesystem, or 0 if none exist by default. The
-+.I number
-+is used to specify an inode number, then inode command returns this
-+inode number if it's in use, or 0 if not. But if use
-+.B \-n
-+with
-+.I number
-+, the next used inode number after this number will be returned, or 0
-+if can't find the next one.
-+.B \-v
-+for verbose mode, the inode number's size in bits will be displayed.
- 
- .SH MEMORY MAPPED I/O COMMANDS
- .TP
--- 
-2.7.4
+--D
 
+> 
+> Best Regards,
+> Elena.
+> 
+> > 
+> > Now when new refcount_t type and API are finally merged
+> > (see include/linux/refcount.h), the following
+> > patches convert various refcounters in the xfs susystem from atomic_t
+> > to refcount_t. By doing this we prevent intentional or accidental
+> > underflows or overflows that can led to use-after-free vulnerabilities.
+> > 
+> > 
+> > Elena Reshetova (5):
+> >   fs, xfs: convert xfs_bui_log_item.bui_refcount from atomic_t to
+> >     refcount_t
+> >   fs, xfs: convert xfs_efi_log_item.efi_refcount from atomic_t to
+> >     refcount_t
+> >   fs, xfs: convert xlog_ticket.t_ref from atomic_t to refcount_t
+> >   fs, xfs: convert xfs_cui_log_item.cui_refcount from atomic_t to
+> >     refcount_t
+> >   fs, xfs: convert xfs_rui_log_item.rui_refcount from atomic_t to
+> >     refcount_t
+> > 
+> >  fs/xfs/xfs_bmap_item.c     |  4 ++--
+> >  fs/xfs/xfs_bmap_item.h     |  2 +-
+> >  fs/xfs/xfs_extfree_item.c  |  4 ++--
+> >  fs/xfs/xfs_extfree_item.h  |  2 +-
+> >  fs/xfs/xfs_linux.h         |  1 +
+> >  fs/xfs/xfs_log.c           | 10 +++++-----
+> >  fs/xfs/xfs_log_priv.h      |  2 +-
+> >  fs/xfs/xfs_refcount_item.c |  4 ++--
+> >  fs/xfs/xfs_refcount_item.h |  2 +-
+> >  fs/xfs/xfs_rmap_item.c     |  4 ++--
+> >  fs/xfs/xfs_rmap_item.h     |  2 +-
+> >  11 files changed, 19 insertions(+), 18 deletions(-)
+> > 
+> > --
+> > 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
