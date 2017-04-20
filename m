@@ -1,78 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60734 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1429617AbdDYRi3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Apr 2017 13:38:29 -0400
-Subject: Re: [PATCH 01/12] mkfs: Save raw user input field to the opts struct
-References: <20170423185503.31415-1-jtulak@redhat.com>
- <20170423185503.31415-2-jtulak@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <07ca1359-e5f5-9788-cdd7-5d1c72f60a0f@sandeen.net>
-Date: Tue, 25 Apr 2017 12:38:22 -0500
+Received: from mail-ua0-f174.google.com ([209.85.217.174]:35342 "EHLO
+        mail-ua0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S939150AbdDTIG2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2017 04:06:28 -0400
+Received: by mail-ua0-f174.google.com with SMTP id f10so41982741uaa.2
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Apr 2017 01:06:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170423185503.31415-2-jtulak@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20170420000909.GI12369@dastard>
+References: <20170419153025.10368-1-jtulak@redhat.com> <20170420000909.GI12369@dastard>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Thu, 20 Apr 2017 10:06:07 +0200
+Message-ID: <CACj3i704EAv7OJTw_0apUofjLk_TwJ=r0HYaJj5nxotedRSZqA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] mkfs: unify numeric types of main variables in main()
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 4/23/17 1:54 PM, Jan Tulak wrote:
-> Save exactly what the user gave us for every option.  This way, we will
-> never lose the information if we need it to print back an issue.
-> 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+On Thu, Apr 20, 2017 at 2:09 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Wed, Apr 19, 2017 at 05:30:24PM +0200, Jan Tulak wrote:
+>> Followup of my "[xfsprogs] Do we need so many data types for user input?" email.
+>> This version has bool for flags and uses PRIu64 for printing 64bit values.
+>>
+>> Other issues from RFC, that I didn't get a satisfactory feedback to:
+>>  * __uint64_t is used because it is declared in xfsprogs, so unless there is a
+>>    reason to not use it (e.g. the declared type is just for some special use,
+>>    or is obsolete), I'm sticking to it.
+>
+> uint64_t is a standard C99 type. Please use it over an internal
+> type that we plan to get rid of.  i.e.
+>
+> http://oss.sgi.com/archives/xfs/2016-01/msg00386.html
+>
+> These patches were never finalised/finished because of conflicts
+> with all the COW work that was pending at the time. This type
+> conversion still needs to be picked up and finished...
+>
 
-Hm but no users yet?  I suppose that's ok.  Just adding the infrastructure
-here.
+Thanks, Dave. I will turn it to the standard type.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Jan
 
-> ---
->  mkfs/xfs_mkfs.c | 17 +++++++++++++++++
->  1 file changed, 17 insertions(+)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 83a04fc..84674d5 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -119,6 +119,10 @@ uint64_t		sectorsize;
->   *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
->   *     value in any case.
->   *
-> + *   raw_input INTERNAL
-> + *     Filled raw string from the user, so we never lose that information e.g.
-> + *     to print it back in case of an issue.
-> + *
->   * !!! NOTE ==================================================================
->   *
->   * If you are adding a new option, or changing an existing one,
-> @@ -141,6 +145,7 @@ struct opt_params {
->  		uint64_t	minval;
->  		uint64_t	maxval;
->  		uint64_t	defaultval;
-> +		const char	*raw_input;
->  	}		subopt_params[MAX_SUBOPTS];
->  };
->  
-> @@ -748,6 +753,18 @@ struct opt_params mopts = {
->   */
->  #define WHACK_SIZE (128 * 1024)
->  
-> +static inline void
-> +set_conf_raw(struct opt_params *opt, int subopt, const char *value)
-> +{
-> +	opt->subopt_params[subopt].raw_input = value;
-> +}
-> +
-> +static inline const char *
-> +get_conf_raw(const struct opt_params *opt, int subopt)
-> +{
-> +	return opt->subopt_params[subopt].raw_input;
-> +}
-> +
->  /*
->   * Convert lsu to lsunit for 512 bytes blocks and check validity of the values.
->   */
-> 
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+
+
+
+-- 
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
