@@ -1,72 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f177.google.com ([209.85.217.177]:32823 "EHLO
-        mail-ua0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031840AbdDTN56 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2017 09:57:58 -0400
-Received: by mail-ua0-f177.google.com with SMTP id j59so7514993uad.0
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Apr 2017 06:57:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170420132859.GU28800@wotan.suse.de>
-References: <20170419153025.10368-1-jtulak@redhat.com> <20170420083323.12524-1-jtulak@redhat.com>
- <20170420132859.GU28800@wotan.suse.de>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Thu, 20 Apr 2017 15:57:37 +0200
-Message-ID: <CACj3i73gDo2ozGP+75kutnttnRxAaeU=20FJAU5rk9BMryGs9g@mail.gmail.com>
-Subject: Re: [PATCH 1/2 v2] mkfs: unify numeric types of main variables in main()
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:49362 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S944818AbdDTN3G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Apr 2017 09:29:06 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C29A89D0CB
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Apr 2017 13:29:05 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A524F827B1
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Apr 2017 13:29:05 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: prevent multi-fsb dir readahead from reading random blocks
+Date: Thu, 20 Apr 2017 09:29:04 -0400
+Message-Id: <1492694944-46582-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Apr 20, 2017 at 3:28 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> On Thu, Apr 20, 2017 at 10:33:23AM +0200, Jan Tulak wrote:
->> Thus, uint64_t is the best candidate as the target
->> type for numeric values. The existing uses of __uint64_t in mkfs change to the
->> standard uint64_t type.
->
-> <-- snip -->
->
->> CHANGES:
->> * __uint64_t -> uint64_t
->
-> <-- snip -->
->
->> diff --git a/include/xfs_multidisk.h b/include/xfs_multidisk.h
->> index ce9bbce..ab74536 100644
->> --- a/include/xfs_multidisk.h
->> +++ b/include/xfs_multidisk.h
->> @@ -57,7 +57,7 @@
->>  #define XFS_NOMULTIDISK_AGLOG                2       /* 4 AGs */
->>  #define XFS_MULTIDISK_AGCOUNT                (1 << XFS_MULTIDISK_AGLOG)
->>
->> -extern long long cvtnum(unsigned int blksize, unsigned int sectsize,
->> +extern __uint64_t cvtnum(unsigned int blksize, unsigned int sectsize,
->
-> I thought uint64_t was desired ?
->
->> -long long
->> +uint64_t
->>  cvtnum(
->>       unsigned int    blksize,
->>       unsigned int    sectsize,
->>       const char      *s)
->>  {
->
->
-> Indeed. Probably just a missed case?
->
+Directory block readahead uses a complex iteration mechanism to map
+between high-level directory blocks and underlying physical extents.
+This mechanism attempts to traverse the higher-level dir blocks in a
+manner that handles multi-fsb directory blocks and simultaneously
+maintains a reference to the corresponding physical blocks.
 
-Yes, sorry for missing that.
+This logic doesn't handle certain (discontiguous) physical extent
+layouts correctly with multi-fsb directory blocks. For example,
+consider the case of a 4k FSB filesystem with a 2 FSB (8k) directory
+block size and a directory with the following extent layout:
 
-Thanks,
-Jan
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
+   0: [0..7]:          88..95            0 (88..95)             8
+   1: [8..15]:         80..87            0 (80..87)             8
+   2: [16..39]:        168..191          0 (168..191)          24
+   3: [40..63]:        5242952..5242975  1 (72..95)            24
 
->   Luis
+Directory block 0 spans physical extents 0 and 1, dirblk 1 lies
+entirely within extent 2 and dirblk 2 spans extents 2 and 3. Because
+extent 2 is larger than the directory block size, the readahead code
+erroneously assumes the block is contiguous and issues a readahead
+based on the physical mapping of the first fsb of the dirblk. This
+results in read verifier failure and a spurious corruption or crc
+failure, depending on the filesystem format.
 
+Further, the subsequent readahead code responsible for walking
+through the physical table doesn't correctly advance the physical
+block reference for dirblk 2. Instead of advancing two physical
+filesystem blocks, the first iteration of the loop advances 1 block
+(correctly), but the subsequent iteration advances 2 more physical
+blocks because the next physical extent (extent 3, above) happens to
+cover more than dirblk 2. At this point, the higher-level directory
+block walking is completely off the rails of the actual physical
+layout of the directory for the respective mapping table.
 
+Update the contiguous dirblock logic to consider the current offset
+in the physical extent to avoid issuing directory readahead to
+unrelated blocks. Also, update the mapping table advancing code to
+consider the current offset within the current dirblock to avoid
+advancing the mapping reference too far beyond the dirblock.
 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+This so far survives a couple xfstests runs with default and 2xfsb
+directory block sizes. I have another run in progress with max sized
+directory blocks. This applies on top of Eric's original overrun fix.
+
+Brian
+
+ fs/xfs/xfs_dir2_readdir.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index c45de72..20b7a5c 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -405,7 +405,8 @@ xfs_dir2_leaf_readbuf(
+ 		 * Read-ahead a contiguous directory block.
+ 		 */
+ 		if (i > mip->ra_current &&
+-		    map[mip->ra_index].br_blockcount >= geo->fsbcount) {
++		    (map[mip->ra_index].br_blockcount - mip->ra_offset) >=
++		    geo->fsbcount) {
+ 			xfs_dir3_data_readahead(dp,
+ 				map[mip->ra_index].br_startoff + mip->ra_offset,
+ 				XFS_FSB_TO_DADDR(dp->i_mount,
+@@ -438,7 +439,7 @@ xfs_dir2_leaf_readbuf(
+ 			 * The rest of this extent but not more than a dir
+ 			 * block.
+ 			 */
+-			length = min_t(int, geo->fsbcount,
++			length = min_t(int, geo->fsbcount - j,
+ 					map[mip->ra_index].br_blockcount -
+ 							mip->ra_offset);
+ 			mip->ra_offset += length;
 -- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+2.7.4
+
