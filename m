@@ -1,143 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58732 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1163251AbdDWSzU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 23 Apr 2017 14:55:20 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 298EA64DA8
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Apr 2017 18:55:20 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 11/12] mkfs: replace variables with opts table: -n options
-Date: Sun, 23 Apr 2017 20:55:02 +0200
-Message-Id: <20170423185503.31415-12-jtulak@redhat.com>
-In-Reply-To: <20170423185503.31415-1-jtulak@redhat.com>
-References: <20170423185503.31415-1-jtulak@redhat.com>
+Received: from mail-io0-f175.google.com ([209.85.223.175]:33492 "EHLO
+        mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966974AbdDTWTC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2017 18:19:02 -0400
+Received: by mail-io0-f175.google.com with SMTP id k87so89777739ioi.0
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Apr 2017 15:19:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20170420220428.GG5205@birch.djwong.org>
+References: <1488963219-11709-1-git-send-email-elena.reshetova@intel.com>
+ <2236FBA76BA1254E88B949DDB74E612B41C8D726@IRSMSX102.ger.corp.intel.com>
+ <20170420172404.GE23371@birch.djwong.org> <20170420220428.GG5205@birch.djwong.org>
+From: Kees Cook <keescook@chromium.org>
+Date: Thu, 20 Apr 2017 15:18:59 -0700
+Message-ID: <CAGXu5jKDetasAbtQ0R_17NrTAGCqhftDOAryFCvBA87uHkfM6w@mail.gmail.com>
+Subject: Re: [PATCH 0/5] fs, xfs refcount conversions
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: "Reshetova, Elena" <elena.reshetova@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, David Windsor <dwindsor@gmail.com>, Hans Liljestrand <ishkamiel@gmail.com>
 
-Remove variables that can be replaced with a direct access to the opts table,
-so we have it all in a single place, acessible from anywhere.
+On Thu, Apr 20, 2017 at 3:04 PM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Thu, Apr 20, 2017 at 10:24:04AM -0700, Darrick J. Wong wrote:
+>> On Thu, Apr 20, 2017 at 08:11:41AM +0000, Reshetova, Elena wrote:
+>> >
+>> >
+>> > > v3:
+>> > >  * fixed header file inclusion
+>> >
+>> > I don't think I have heard anything back on this v3 patch set.
+>> > Is there still smth here to fix or could you take the changes in?
+>>
+>> Generally I think it looks ok; it's running through shakedown testing as
+>> we speak.
+>
+> Well, it survives the shakedown testing all right, but I can't shake the
+> feeling that this is overkill.  The xfs_{ef,bu,cu,ru}i_log_item
+> structures should only ever be referenced by the log itself and the
+> log-update-done log item: the refcount should only ever go 2 -> 1 -> 0.
+> We set the refcount to 2 and never increment it.
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
----
- mkfs/xfs_mkfs.c | 40 +++++++++++++++++++---------------------
- 1 file changed, 19 insertions(+), 21 deletions(-)
+I haven't studied this code, but I think it'd likely be worth keeping
+it just to catch any future bug that might appear. If it doesn't
+create a problem, we should use refcount_t for anything that is being
+used as a reference counter.
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 7d85471..52591b9 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1496,8 +1496,6 @@ main(
- 	uint64_t		dasize;
- 	xfs_rfsblock_t		dblocks;
- 	char			*dfile;
--	uint64_t		dirblocklog;
--	uint64_t		dirblocksize;
- 	bool			force_overwrite;
- 	struct fsxattr		fsx;
- 	bool			ilflag;
-@@ -1577,7 +1575,6 @@ main(
- 	liflag = laflag = lsflag = lsuflag = lsunitflag = ldflag = lvflag = false;
- 	logblocks = rtblocks = rtextblocks = 0;
- 	Nflag = nlflag = nsflag = nvflag = false;
--	dirblocklog = dirblocksize = 0;
- 	qflag = false;
- 	dfile = logfile = rtfile = NULL;
- 	protofile = NULL;
-@@ -1943,26 +1940,23 @@ main(
- 				char	**subopts =
- 						(char **)opts[OPT_N].subopts;
- 				char	*value;
-+				uint64_t tmp;
- 
- 				switch (getsubopt(&p, subopts, &value)) {
- 				case N_LOG:
--					dirblocklog = parse_conf_val(OPT_N,
-+					tmp = parse_conf_val(OPT_N,
- 								     N_LOG,
- 								     value);
--					dirblocksize = 1 << dirblocklog;
-+					set_conf_val(OPT_N, N_SIZE, 1 << tmp);
- 					nlflag = 1;
--					set_conf_val(OPT_N, N_SIZE,
--						     dirblocksize);
- 					break;
- 				case N_SIZE:
--					dirblocksize = parse_conf_val(OPT_N,
-+					tmp = parse_conf_val(OPT_N,
- 								      N_SIZE,
- 								      value);
--					dirblocklog =
--						libxfs_highbit32(dirblocksize);
--					nsflag = 1;
- 					set_conf_val(OPT_N, N_LOG,
--						     dirblocklog);
-+						     libxfs_highbit32(tmp));
-+					nsflag = 1;
- 					break;
- 				case N_VERSION:
- 					value = getstr(value, &opts[OPT_N],
-@@ -2360,18 +2354,19 @@ _("rmapbt not supported with realtime devices\n"));
- 	}
- 
- 	if (nsflag || nlflag) {
--		if (dirblocksize < get_conf_val(OPT_B, B_SIZE) ||
--					dirblocksize > XFS_MAX_BLOCKSIZE) {
-+		if (get_conf_val(OPT_N, N_SIZE) <
-+		    get_conf_val(OPT_B, B_SIZE) ||
-+		    get_conf_val(OPT_N, N_SIZE) > XFS_MAX_BLOCKSIZE) {
- 			fprintf(stderr, _("illegal directory block size %"PRIu64"\n"),
--				dirblocksize);
-+				get_conf_val(OPT_N, N_SIZE));
- 			usage();
- 		}
- 	} else {
- 		if (get_conf_val(OPT_B, B_SIZE) < (1 << XFS_MIN_REC_DIRSIZE))
--			dirblocklog = XFS_MIN_REC_DIRSIZE;
-+			set_conf_val(OPT_N, N_LOG, XFS_MIN_REC_DIRSIZE);
- 		else
--			dirblocklog = get_conf_val(OPT_B, B_LOG);
--		dirblocksize = 1 << dirblocklog;
-+			set_conf_val(OPT_N, N_LOG, get_conf_val(OPT_B, B_LOG));
-+		set_conf_val(OPT_N, N_SIZE, 1 << get_conf_val(OPT_N, N_LOG));
- 	}
- 
- 
-@@ -2949,7 +2944,8 @@ an AG size that is one stripe unit smaller, for example %"PRIu64".\n"),
- 				   sb_feat.crcs_enabled, sb_feat.dir_version,
- 				   get_conf_val(OPT_D, D_SECTLOG),
- 				   get_conf_val(OPT_B, B_LOG),
--				   get_conf_val(OPT_I, I_LOG), dirblocklog,
-+				   get_conf_val(OPT_I, I_LOG),
-+				   get_conf_val(OPT_N, N_LOG),
- 				   sb_feat.log_version,
- 				   get_conf_val(OPT_L, L_SUNIT),
- 				   sb_feat.finobt,
-@@ -3139,7 +3135,8 @@ _("size %s specified for log subvolume is too large, maximum is %"PRIu64" blocks
- 			get_conf_val(OPT_I, I_MAXPCT),
- 			"", get_conf_val(OPT_D, D_SUNIT),
- 			get_conf_val(OPT_D, D_SWIDTH),
--			sb_feat.dir_version, dirblocksize, sb_feat.nci,
-+			sb_feat.dir_version,
-+			get_conf_val(OPT_N, N_SIZE), sb_feat.nci,
- 				sb_feat.dirftype,
- 			logfile, 1 << get_conf_val(OPT_B, B_LOG), logblocks,
- 			sb_feat.log_version, "",
-@@ -3191,7 +3188,8 @@ _("size %s specified for log subvolume is too large, maximum is %"PRIu64" blocks
- 	sbp->sb_qflags = 0;
- 	sbp->sb_unit = get_conf_val(OPT_D, D_SUNIT);
- 	sbp->sb_width = get_conf_val(OPT_D, D_SWIDTH);
--	sbp->sb_dirblklog = dirblocklog - get_conf_val(OPT_B, B_LOG);
-+	sbp->sb_dirblklog = get_conf_val(OPT_N, N_LOG) -
-+		get_conf_val(OPT_B, B_LOG);
- 	if (sb_feat.log_version == 2) {	/* This is stored in bytes */
- 		set_conf_val(OPT_L, L_SUNIT,
- 			     (get_conf_val(OPT_L, L_SUNIT) == 0) ?
+> Given that I've seen occasional refcounting problems with the log intent
+> items, I think it would suffice to ASSERT in xfs_*i_release that the
+> refcount isn't already zero.  Using ASSERT is particularly useful
+> because ASSERT compiles out in release builds.
+
+We _absolutely_ don't want to compile out these checks: the point is
+to catch flaws that are discovered and could be exploited in the wild
+before updates could be delivered to a system (if they ever are at
+all).
+
+> As for the xlog_ticket, we increment its refcount as part of duplicating
+> a transaction as a part of committing one transaction (which decrements
+> the xlog_ticket's refcount) and reusing the log reservation to create a
+> new transaction.  In this case the refcounting already seems to have
+> sufficient non-zero checks, and since only one thread can hold a
+> transaction at any given time, I don't see how overflow protection helps
+> here.
+>
+> In other words, I'm ok with better refcount checking but need convincing
+> that we need to do more than what a simple ASSERT would provide.
+
+If it doesn't get in your way, and it really is reference counting
+(which it sounds like it is), we should be using refcount_t. The kinds
+of bugs we've seen over the last decade continually prove that we'll
+see refcount issues where we least expect it, and we need to catch
+them.
+
+Thanks!
+
+-Kees
+
 -- 
-2.1.4
-
+Kees Cook
+Pixel Security
