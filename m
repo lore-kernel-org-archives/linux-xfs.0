@@ -1,105 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:48350 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1434583AbdDZCAm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Apr 2017 22:00:42 -0400
-Subject: Re: [PATCH 04/12] mkfs: merge tables for opts parsing into one table
-References: <20170423185503.31415-1-jtulak@redhat.com>
- <20170423185503.31415-5-jtulak@redhat.com>
- <20170425030421.GH28800@wotan.suse.de>
- <CACj3i71jEx7aKBp4_bTk3KbHo1ne_Zj1r6y-=8iGLOkM2PujEQ@mail.gmail.com>
- <175c1e19-12df-2993-811d-b5de631ac00f@sandeen.net>
- <20170426013815.GS28800@wotan.suse.de>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ef444d22-6251-c611-9c1e-106f7bbe4e0f@sandeen.net>
-Date: Tue, 25 Apr 2017 21:00:40 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:34539 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1033352AbdDTQmf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2017 12:42:35 -0400
+Date: Thu, 20 Apr 2017 09:41:44 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: kill __uint*_t and __int*_t
+Message-ID: <20170420164144.GB23371@birch.djwong.org>
+References: <20160807173835.GA20839@nyan>
+ <20160809083332.GA1489@infradead.org>
+ <20160823223500.GZ19025@dastard>
+ <20160823232640.GG8268@birch.djwong.org>
+ <20160824210749.GB25162@nyan>
 MIME-Version: 1.0
-In-Reply-To: <20170426013815.GS28800@wotan.suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160824210749.GB25162@nyan>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+To: Felix Janda <felix.janda@posteo.de>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
 
-On 4/25/17 8:38 PM, Luis R. Rodriguez wrote:
-> On Tue, Apr 25, 2017 at 08:28:23AM -0500, Eric Sandeen wrote:
->> On 4/25/17 2:45 AM, Jan Tulak wrote:
->>> On Tue, Apr 25, 2017 at 5:04 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
->>>> On Sun, Apr 23, 2017 at 08:54:55PM +0200, Jan Tulak wrote:
->>>>> Merge separate instances of opt_params into one indexable table. Git
->>>>> makes this patch looks a bit more complicated, but it does not change
->>>>> values or structure of anything else. It only moves all the "struct
->>>>> opt_params dopts = {...}", changes indentation for these substructures
->>>>> and replaces their usage (dopts -> opts[OPT_D]).
->>>>>
->>>>> Signed-off-by: Jan Tulak <jtulak@redhat.com>
->>>>> ---
->>>>>  mkfs/xfs_mkfs.c | 1316 +++++++++++++++++++++++++++++--------------------------
->>>>>  1 file changed, 683 insertions(+), 633 deletions(-)
->>>>>
->>>>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
->>>>> index 7a72b11..513e106 100644
->>>>> --- a/mkfs/xfs_mkfs.c
->>>>> +++ b/mkfs/xfs_mkfs.c
->>>>> @@ -42,6 +42,7 @@ static int  ispow2(unsigned int i);
->>>>>  uint64_t             blocksize;
->>>>>  uint64_t             sectorsize;
->>>>>
->>>>> +#define MAX_OPTS     16
->>>>
->>>> This is fragile, every time a new opt is added this needs to be updated
->>
->> <pedantic>There are only 8 now, so there are still 8 free slots</pedantic>
->>
->>>> and so is the index, and we should be pedantic over not going out of bounds.
->>>> We could instead use a flexible array and compute the max opts at run time
->>>> as a global. This way the max opts is always updated automatically.
->>
->> I don't think it's all that fragile;
+[change to new linux-xfs list]
+
+On Wed, Aug 24, 2016 at 11:07:49PM +0200, Felix Janda wrote:
+> Darrick J. Wong wrote:
+> > On Wed, Aug 24, 2016 at 08:35:00AM +1000, Dave Chinner wrote:
+> > > On Tue, Aug 09, 2016 at 01:33:32AM -0700, Christoph Hellwig wrote:
+> > > > On Sun, Aug 07, 2016 at 07:38:35PM +0200, Felix Janda wrote:
+> > > > > Replace them by the more widely used uint*_t and int*_t.
+> > > > > 
+> > > > > Signed-off-by: Felix Janda <felix.janda@posteo.de>
+> > > > > ---
+> > > > > This patch is essentially a global
+> > > > > 'sed -i "s/__\(u*\)int\([0-9]*\)_t/\1int\2_t/"'. The only other changes
+> > > > > are whitespace changes and removing the now unecessary type definitions.
+> > > > > 
+> > > > > Running 'sed "s/^.//"' on the patch might be useful for checking that
+> > > > > I didn't mess up the indentation.
+> > > > 
+> > > > If everyone is fine using (u)int*_t over s*/u* this looks good.  I'd
+> > > > have a slight preference for s*/u* as in the rest of the kernel, but
+> > > > either way getting rid of our crazy __ types is a good thing.
+> > > 
+> > > Don't really care that much. I'd prefer (marginally) to go with the
+> > > (u)int*_t types as userspace then doesn't need a set of typedefs in
+> > > the platform headers to support the kernel specific types in libxfs
+> > > code....
+> > 
+> > I don't mind moving from __uintXX_t to uintXX_t so long as the changes
+> > land in the kernel and xfsprogs at the same time.
 > 
-> We can avoid such compilation warnings.
+> When everyone is ok with the changes, I'll prepare patches for both of
+> them.
 
-Well, post the proposed patch when appropriate, and it can go through review.
+Hmm... perhaps it is time to revisit this, now that reflink has landed?
 
-...
+--D
 
->> In any case, any changes around this behavior would certainly
->> be part of a different patch, because you'd want to be consistent with all
->> the other structure initializers, and it would be a functionally separate
->> change if it is warranted at all.
 > 
-> The opt_params are separate today though, this patch folds them in together,
-> what I propose is just to use a flexible array to avoid an explicit size
-> from the start. Not sure how much more functional of a change that is ?
-
-Because it'd be inconsistent with the other array declarations.
-
-Prior to this patch we had 2 #defines to declare sizes of global
-arrays:
-
-#define MAX_SUBOPTS	16
-	const char	*subopts[MAX_SUBOPTS];
-	}		subopt_params[MAX_SUBOPTS];
-
-#define MAX_CONFLICTS	8
-		int		conflicts[MAX_CONFLICTS];
-
-now we add a third:
-
-#define MAX_OPTS	16
-} opts[MAX_OPTS] = {
-
-If you're not a fan of #defines to size global arrays that's ok, but
-let's be consistent and change them all at once, and not change one
-of the 3 as a side-effect of collapsing the separate opts structures
-into one.
-
-For now, let's follow the pattern of the existing code, and submit a 
-comprehensive functional patch to address this separate change.
-
-Small, reviewable, distinct, functional changes.
-
-Thanks,
--Eric
+> --Felix
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
