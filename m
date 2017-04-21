@@ -1,110 +1,218 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21472 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S946027AbdDTRRg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2017 13:17:36 -0400
-Date: Thu, 20 Apr 2017 10:17:29 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:41889 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1425273AbdDUTfV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2017 15:35:21 -0400
+Date: Fri, 21 Apr 2017 12:35:14 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: prevent multi-fsb dir readahead from reading random
- blocks
-Message-ID: <20170420171729.GC23371@birch.djwong.org>
-References: <1492694944-46582-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH 6/6] xfs: remove xfs_trans_ail_delete_bulk
+Message-ID: <20170421193514.GK23371@birch.djwong.org>
+References: <20170421152123.11316-1-hch@lst.de>
+ <20170421152123.11316-7-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1492694944-46582-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20170421152123.11316-7-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Apr 20, 2017 at 09:29:04AM -0400, Brian Foster wrote:
-> Directory block readahead uses a complex iteration mechanism to map
-> between high-level directory blocks and underlying physical extents.
-> This mechanism attempts to traverse the higher-level dir blocks in a
-> manner that handles multi-fsb directory blocks and simultaneously
-> maintains a reference to the corresponding physical blocks.
+On Fri, Apr 21, 2017 at 05:21:23PM +0200, Christoph Hellwig wrote:
+> xfs_iflush_done uses an on-stack variable length array to pass the log
+> items to be deleted to xfs_trans_ail_delete_bulk.  On-stack VLAs are a
+> nasty gcc extension that can lead to unbounded stack allocations, but
+> fortunately we can easily avoid them by simply open coding
+> xfs_trans_ail_delete_bulk in xfs_iflush_done, which is the only caller
+> of it except for the single-item xfs_trans_ail_delete.
 > 
-> This logic doesn't handle certain (discontiguous) physical extent
-> layouts correctly with multi-fsb directory blocks. For example,
-> consider the case of a 4k FSB filesystem with a 2 FSB (8k) directory
-> block size and a directory with the following extent layout:
-> 
->  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
->    0: [0..7]:          88..95            0 (88..95)             8
->    1: [8..15]:         80..87            0 (80..87)             8
->    2: [16..39]:        168..191          0 (168..191)          24
->    3: [40..63]:        5242952..5242975  1 (72..95)            24
-> 
-> Directory block 0 spans physical extents 0 and 1, dirblk 1 lies
-> entirely within extent 2 and dirblk 2 spans extents 2 and 3. Because
-> extent 2 is larger than the directory block size, the readahead code
-> erroneously assumes the block is contiguous and issues a readahead
-> based on the physical mapping of the first fsb of the dirblk. This
-> results in read verifier failure and a spurious corruption or crc
-> failure, depending on the filesystem format.
-> 
-> Further, the subsequent readahead code responsible for walking
-> through the physical table doesn't correctly advance the physical
-> block reference for dirblk 2. Instead of advancing two physical
-> filesystem blocks, the first iteration of the loop advances 1 block
-> (correctly), but the subsequent iteration advances 2 more physical
-> blocks because the next physical extent (extent 3, above) happens to
-> cover more than dirblk 2. At this point, the higher-level directory
-> block walking is completely off the rails of the actual physical
-> layout of the directory for the respective mapping table.
-> 
-> Update the contiguous dirblock logic to consider the current offset
-> in the physical extent to avoid issuing directory readahead to
-> unrelated blocks. Also, update the mapping table advancing code to
-> consider the current offset within the current dirblock to avoid
-> advancing the mapping reference too far beyond the dirblock.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> This so far survives a couple xfstests runs with default and 2xfsb
-> directory block sizes. I have another run in progress with max sized
-> directory blocks. This applies on top of Eric's original overrun fix.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks ok, will test...
-
+Looks ok, will throw it on the testing pile...
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
+> ---
+>  fs/xfs/xfs_inode_item.c | 29 +++++++++++---------
+>  fs/xfs/xfs_trans_ail.c  | 71 ++++++++++++++++++++++++-------------------------
+>  fs/xfs/xfs_trans_priv.h | 15 +++--------
+>  3 files changed, 55 insertions(+), 60 deletions(-)
 > 
-> Brian
-> 
->  fs/xfs/xfs_dir2_readdir.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index c45de72..20b7a5c 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -405,7 +405,8 @@ xfs_dir2_leaf_readbuf(
->  		 * Read-ahead a contiguous directory block.
->  		 */
->  		if (i > mip->ra_current &&
-> -		    map[mip->ra_index].br_blockcount >= geo->fsbcount) {
-> +		    (map[mip->ra_index].br_blockcount - mip->ra_offset) >=
-> +		    geo->fsbcount) {
->  			xfs_dir3_data_readahead(dp,
->  				map[mip->ra_index].br_startoff + mip->ra_offset,
->  				XFS_FSB_TO_DADDR(dp->i_mount,
-> @@ -438,7 +439,7 @@ xfs_dir2_leaf_readbuf(
->  			 * The rest of this extent but not more than a dir
->  			 * block.
->  			 */
-> -			length = min_t(int, geo->fsbcount,
-> +			length = min_t(int, geo->fsbcount - j,
->  					map[mip->ra_index].br_blockcount -
->  							mip->ra_offset);
->  			mip->ra_offset += length;
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index d90e7811ccdd..08cb7d1a4a3a 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -731,22 +731,27 @@ xfs_iflush_done(
+>  	 * holding the lock before removing the inode from the AIL.
+>  	 */
+>  	if (need_ail) {
+> -		struct xfs_log_item *log_items[need_ail];
+> -		int i = 0;
+> +		bool			mlip_changed = false;
+> +
+> +		/* this is an opencoded batch version of xfs_trans_ail_delete */
+>  		spin_lock(&ailp->xa_lock);
+>  		for (blip = lip; blip; blip = blip->li_bio_list) {
+> -			iip = INODE_ITEM(blip);
+> -			if (iip->ili_logged &&
+> -			    blip->li_lsn == iip->ili_flush_lsn) {
+> -				log_items[i++] = blip;
+> -			}
+> -			ASSERT(i <= need_ail);
+> +			if (INODE_ITEM(blip)->ili_logged &&
+> +			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
+> +				mlip_changed |= xfs_ail_delete_one(ailp, blip);
+>  		}
+> -		/* xfs_trans_ail_delete_bulk() drops the AIL lock. */
+> -		xfs_trans_ail_delete_bulk(ailp, log_items, i,
+> -					  SHUTDOWN_CORRUPT_INCORE);
+> -	}
+>  
+> +		if (mlip_changed) {
+> +			if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
+> +				xlog_assign_tail_lsn_locked(ailp->xa_mount);
+> +			if (list_empty(&ailp->xa_ail))
+> +				wake_up_all(&ailp->xa_empty);
+> +		}
+> +		spin_unlock(&ailp->xa_lock);
+> +
+> +		if (mlip_changed)
+> +			xfs_log_space_wake(ailp->xa_mount);
+> +	}
+>  
+>  	/*
+>  	 * clean up and unlock the flush lock now we are done. We can clear the
+> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> index d6c9c3e9e02b..9056c0f34a3c 100644
+> --- a/fs/xfs/xfs_trans_ail.c
+> +++ b/fs/xfs/xfs_trans_ail.c
+> @@ -684,8 +684,23 @@ xfs_trans_ail_update_bulk(
+>  	}
+>  }
+>  
+> -/*
+> - * xfs_trans_ail_delete_bulk - remove multiple log items from the AIL
+> +bool
+> +xfs_ail_delete_one(
+> +	struct xfs_ail		*ailp,
+> +	struct xfs_log_item 	*lip)
+> +{
+> +	struct xfs_log_item	*mlip = xfs_ail_min(ailp);
+> +
+> +	trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
+> +	xfs_ail_delete(ailp, lip);
+> +	lip->li_flags &= ~XFS_LI_IN_AIL;
+> +	lip->li_lsn = 0;
+> +
+> +	return mlip == lip;
+> +}
+> +
+> +/**
+> + * Remove a log items from the AIL
+>   *
+>   * @xfs_trans_ail_delete_bulk takes an array of log items that all need to
+>   * removed from the AIL. The caller is already holding the AIL lock, and done
+> @@ -706,52 +721,36 @@ xfs_trans_ail_update_bulk(
+>   * before returning.
+>   */
+>  void
+> -xfs_trans_ail_delete_bulk(
+> +xfs_trans_ail_delete(
+>  	struct xfs_ail		*ailp,
+> -	struct xfs_log_item	**log_items,
+> -	int			nr_items,
+> +	struct xfs_log_item	*lip,
+>  	int			shutdown_type) __releases(ailp->xa_lock)
+>  {
+> -	xfs_log_item_t		*mlip;
+> -	int			mlip_changed = 0;
+> -	int			i;
+> +	struct xfs_mount	*mp = ailp->xa_mount;
+> +	bool			mlip_changed;
+>  
+> -	mlip = xfs_ail_min(ailp);
+> -
+> -	for (i = 0; i < nr_items; i++) {
+> -		struct xfs_log_item *lip = log_items[i];
+> -		if (!(lip->li_flags & XFS_LI_IN_AIL)) {
+> -			struct xfs_mount	*mp = ailp->xa_mount;
+> -
+> -			spin_unlock(&ailp->xa_lock);
+> -			if (!XFS_FORCED_SHUTDOWN(mp)) {
+> -				xfs_alert_tag(mp, XFS_PTAG_AILDELETE,
+> -		"%s: attempting to delete a log item that is not in the AIL",
+> -						__func__);
+> -				xfs_force_shutdown(mp, shutdown_type);
+> -			}
+> -			return;
+> +	if (!(lip->li_flags & XFS_LI_IN_AIL)) {
+> +		spin_unlock(&ailp->xa_lock);
+> +		if (!XFS_FORCED_SHUTDOWN(mp)) {
+> +			xfs_alert_tag(mp, XFS_PTAG_AILDELETE,
+> +	"%s: attempting to delete a log item that is not in the AIL",
+> +					__func__);
+> +			xfs_force_shutdown(mp, shutdown_type);
+>  		}
+> -
+> -		trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
+> -		xfs_ail_delete(ailp, lip);
+> -		lip->li_flags &= ~XFS_LI_IN_AIL;
+> -		lip->li_lsn = 0;
+> -		if (mlip == lip)
+> -			mlip_changed = 1;
+> +		return;
+>  	}
+>  
+> +	mlip_changed = xfs_ail_delete_one(ailp, lip);
+>  	if (mlip_changed) {
+> -		if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
+> -			xlog_assign_tail_lsn_locked(ailp->xa_mount);
+> +		if (!XFS_FORCED_SHUTDOWN(mp))
+> +			xlog_assign_tail_lsn_locked(mp);
+>  		if (list_empty(&ailp->xa_ail))
+>  			wake_up_all(&ailp->xa_empty);
+> -		spin_unlock(&ailp->xa_lock);
+> +	}
+>  
+> +	spin_unlock(&ailp->xa_lock);
+> +	if (mlip_changed)
+>  		xfs_log_space_wake(ailp->xa_mount);
+> -	} else {
+> -		spin_unlock(&ailp->xa_lock);
+> -	}
+>  }
+>  
+>  int
+> diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+> index 49931b72da8a..d91706c56c63 100644
+> --- a/fs/xfs/xfs_trans_priv.h
+> +++ b/fs/xfs/xfs_trans_priv.h
+> @@ -106,18 +106,9 @@ xfs_trans_ail_update(
+>  	xfs_trans_ail_update_bulk(ailp, NULL, &lip, 1, lsn);
+>  }
+>  
+> -void	xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
+> -				struct xfs_log_item **log_items, int nr_items,
+> -				int shutdown_type)
+> -				__releases(ailp->xa_lock);
+> -static inline void
+> -xfs_trans_ail_delete(
+> -	struct xfs_ail	*ailp,
+> -	xfs_log_item_t	*lip,
+> -	int		shutdown_type) __releases(ailp->xa_lock)
+> -{
+> -	xfs_trans_ail_delete_bulk(ailp, &lip, 1, shutdown_type);
+> -}
+> +bool xfs_ail_delete_one(struct xfs_ail *ailp, struct xfs_log_item *lip);
+> +void xfs_trans_ail_delete(struct xfs_ail *ailp, struct xfs_log_item *lip,
+> +		int shutdown_type) __releases(ailp->xa_lock);
+>  
+>  static inline void
+>  xfs_trans_ail_remove(
 > -- 
-> 2.7.4
+> 2.11.0
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
