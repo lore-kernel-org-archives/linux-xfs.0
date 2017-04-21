@@ -1,116 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59748 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1161123AbdDUMWO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Apr 2017 08:22:14 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 229F267EDC
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2017 12:22:14 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0551890EE9
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2017 12:22:14 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 1/2] xfs: fix up quotacheck buffer list error handling
-Date: Fri, 21 Apr 2017 08:22:12 -0400
-Message-Id: <1492777333-60156-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1492777333-60156-1-git-send-email-bfoster@redhat.com>
-References: <1492777333-60156-1-git-send-email-bfoster@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:43665 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1162229AbdDURGt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2017 13:06:49 -0400
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1d1aNK-0005V0-RJ
+        for linux-xfs@vger.kernel.org; Fri, 21 Apr 2017 15:21:35 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/6] xfs: use NULL instead of 0 to initialize a pointer in xfs_ioc_getfsmap
+Date: Fri, 21 Apr 2017 17:21:19 +0200
+Message-Id: <20170421152123.11316-3-hch@lst.de>
+In-Reply-To: <20170421152123.11316-1-hch@lst.de>
+References: <20170421152123.11316-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-The quotacheck error handling of the delwri buffer list assumes the
-resident buffers are locked and doesn't clear the _XBF_DELWRI_Q flag
-on the buffers that are dequeued. This can lead to assert failures
-on buffer release and possibly other locking problems.
+Found by sparse.
 
-Move this code to a delwri queue cancel helper function to
-encapsulate the logic required to properly release buffers from a
-delwri queue. Update the helper to clear the delwri queue flag and
-call it from quotacheck.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_buf.c | 24 ++++++++++++++++++++++++
- fs/xfs/xfs_buf.h |  1 +
- fs/xfs/xfs_qm.c  |  7 +------
- 3 files changed, 26 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_ioctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index b620872..ba036c1 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1079,6 +1079,8 @@ void
- xfs_buf_unlock(
- 	struct xfs_buf		*bp)
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index fee6b4a3a83d..0f8bed9a7e4c 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1640,7 +1640,7 @@ xfs_ioc_getfsmap(
+ 	struct xfs_inode	*ip,
+ 	void			__user *arg)
  {
-+	ASSERT(xfs_buf_islocked(bp));
-+
- 	XB_CLEAR_OWNER(bp);
- 	up(&bp->b_sema);
- 
-@@ -1815,6 +1817,28 @@ xfs_alloc_buftarg(
- }
- 
- /*
-+ * Cancel a delayed write list.
-+ *
-+ * Remove each buffer from the list, clear the delwri queue flag and drop the
-+ * associated buffer reference.
-+ */
-+void
-+xfs_buf_delwri_cancel(
-+	struct list_head	*list)
-+{
-+	struct xfs_buf		*bp;
-+
-+	while (!list_empty(list)) {
-+		bp = list_first_entry(list, struct xfs_buf, b_list);
-+
-+		xfs_buf_lock(bp);
-+		bp->b_flags &= ~_XBF_DELWRI_Q;
-+		list_del_init(&bp->b_list);
-+		xfs_buf_relse(bp);
-+	}
-+}
-+
-+/*
-  * Add a buffer to the delayed write list.
-  *
-  * This queues a buffer for writeout if it hasn't already been.  Note that
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index e1bc1af..8d1d44f 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -329,6 +329,7 @@ extern void *xfs_buf_offset(struct xfs_buf *, size_t);
- extern void xfs_buf_stale(struct xfs_buf *bp);
- 
- /* Delayed Write Buffer Routines */
-+extern void xfs_buf_delwri_cancel(struct list_head *);
- extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
- extern int xfs_buf_delwri_submit(struct list_head *);
- extern int xfs_buf_delwri_submit_nowait(struct list_head *);
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index b669b12..8b9a9f1 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1384,12 +1384,7 @@ xfs_qm_quotacheck(
- 	mp->m_qflags |= flags;
- 
-  error_return:
--	while (!list_empty(&buffer_list)) {
--		struct xfs_buf *bp =
--			list_first_entry(&buffer_list, struct xfs_buf, b_list);
--		list_del_init(&bp->b_list);
--		xfs_buf_relse(bp);
--	}
-+	xfs_buf_delwri_cancel(&buffer_list);
- 
- 	if (error) {
- 		xfs_warn(mp,
+-	struct getfsmap_info	info = {0};
++	struct getfsmap_info	info = { NULL };
+ 	struct xfs_fsmap_head	xhead = {0};
+ 	struct fsmap_head	head;
+ 	bool			aborted = false;
 -- 
-2.7.4
+2.11.0
 
