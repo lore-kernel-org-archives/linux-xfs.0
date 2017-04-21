@@ -1,108 +1,208 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27162 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935493AbdDSW07 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2017 18:26:59 -0400
-Date: Wed, 19 Apr 2017 15:26:54 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: more do_div cleanups
-Message-ID: <20170419222654.GA23371@birch.djwong.org>
-References: <a366521f-769b-7453-2f47-8dbaa69eab7b@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a366521f-769b-7453-2f47-8dbaa69eab7b@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:43665 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1162240AbdDURGv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2017 13:06:51 -0400
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1d1aNV-0005VR-FB
+        for linux-xfs@vger.kernel.org; Fri, 21 Apr 2017 15:21:45 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 6/6] xfs: remove xfs_trans_ail_delete_bulk
+Date: Fri, 21 Apr 2017 17:21:23 +0200
+Message-Id: <20170421152123.11316-7-hch@lst.de>
+In-Reply-To: <20170421152123.11316-1-hch@lst.de>
+References: <20170421152123.11316-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Wed, Apr 19, 2017 at 03:55:49PM -0500, Eric Sandeen wrote:
-> On some architectures do_div does the pointer compare
-> trick to make sure that we've sent it an unsigned 64-bit
-> number.  (Why unsigned?  I don't know.)
-> 
-> Fix up the few places that squawk about this; in 
-> xfs_bmap_wants_extents() we just used a bare int64_t so change
-> that to unsigned.
-> 
-> In xfs_adjust_extent_unmap_boundaries() all we wanted was the
-> mod, and we have an xfs-specific function to handle that w/o
-> side effects, which includes proper casting for do_div.
-> 
-> In xfs_daddr_to_ag[b]no, we were using the wrong type anyway;
-> XFS_BB_TO_FSBT returns a block in the filesystem, so use
-> xfs_rfsblock_t not xfs_daddr_t, and gain the unsignedness
-> from that type as a bonus.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+xfs_iflush_done uses an on-stack variable length array to pass the log
+items to be deleted to xfs_trans_ail_delete_bulk.  On-stack VLAs are a
+nasty gcc extension that can lead to unbounded stack allocations, but
+fortunately we can easily avoid them by simply open coding
+xfs_trans_ail_delete_bulk in xfs_iflush_done, which is the only caller
+of it except for the single-item xfs_trans_ail_delete.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_inode_item.c | 29 +++++++++++---------
+ fs/xfs/xfs_trans_ail.c  | 71 ++++++++++++++++++++++++-------------------------
+ fs/xfs/xfs_trans_priv.h | 15 +++--------
+ 3 files changed, 55 insertions(+), 60 deletions(-)
 
---D
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index d90e7811ccdd..08cb7d1a4a3a 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -731,22 +731,27 @@ xfs_iflush_done(
+ 	 * holding the lock before removing the inode from the AIL.
+ 	 */
+ 	if (need_ail) {
+-		struct xfs_log_item *log_items[need_ail];
+-		int i = 0;
++		bool			mlip_changed = false;
++
++		/* this is an opencoded batch version of xfs_trans_ail_delete */
+ 		spin_lock(&ailp->xa_lock);
+ 		for (blip = lip; blip; blip = blip->li_bio_list) {
+-			iip = INODE_ITEM(blip);
+-			if (iip->ili_logged &&
+-			    blip->li_lsn == iip->ili_flush_lsn) {
+-				log_items[i++] = blip;
+-			}
+-			ASSERT(i <= need_ail);
++			if (INODE_ITEM(blip)->ili_logged &&
++			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
++				mlip_changed |= xfs_ail_delete_one(ailp, blip);
+ 		}
+-		/* xfs_trans_ail_delete_bulk() drops the AIL lock. */
+-		xfs_trans_ail_delete_bulk(ailp, log_items, i,
+-					  SHUTDOWN_CORRUPT_INCORE);
+-	}
+ 
++		if (mlip_changed) {
++			if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
++				xlog_assign_tail_lsn_locked(ailp->xa_mount);
++			if (list_empty(&ailp->xa_ail))
++				wake_up_all(&ailp->xa_empty);
++		}
++		spin_unlock(&ailp->xa_lock);
++
++		if (mlip_changed)
++			xfs_log_space_wake(ailp->xa_mount);
++	}
+ 
+ 	/*
+ 	 * clean up and unlock the flush lock now we are done. We can clear the
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index d6c9c3e9e02b..9056c0f34a3c 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -684,8 +684,23 @@ xfs_trans_ail_update_bulk(
+ 	}
+ }
+ 
+-/*
+- * xfs_trans_ail_delete_bulk - remove multiple log items from the AIL
++bool
++xfs_ail_delete_one(
++	struct xfs_ail		*ailp,
++	struct xfs_log_item 	*lip)
++{
++	struct xfs_log_item	*mlip = xfs_ail_min(ailp);
++
++	trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
++	xfs_ail_delete(ailp, lip);
++	lip->li_flags &= ~XFS_LI_IN_AIL;
++	lip->li_lsn = 0;
++
++	return mlip == lip;
++}
++
++/**
++ * Remove a log items from the AIL
+  *
+  * @xfs_trans_ail_delete_bulk takes an array of log items that all need to
+  * removed from the AIL. The caller is already holding the AIL lock, and done
+@@ -706,52 +721,36 @@ xfs_trans_ail_update_bulk(
+  * before returning.
+  */
+ void
+-xfs_trans_ail_delete_bulk(
++xfs_trans_ail_delete(
+ 	struct xfs_ail		*ailp,
+-	struct xfs_log_item	**log_items,
+-	int			nr_items,
++	struct xfs_log_item	*lip,
+ 	int			shutdown_type) __releases(ailp->xa_lock)
+ {
+-	xfs_log_item_t		*mlip;
+-	int			mlip_changed = 0;
+-	int			i;
++	struct xfs_mount	*mp = ailp->xa_mount;
++	bool			mlip_changed;
+ 
+-	mlip = xfs_ail_min(ailp);
+-
+-	for (i = 0; i < nr_items; i++) {
+-		struct xfs_log_item *lip = log_items[i];
+-		if (!(lip->li_flags & XFS_LI_IN_AIL)) {
+-			struct xfs_mount	*mp = ailp->xa_mount;
+-
+-			spin_unlock(&ailp->xa_lock);
+-			if (!XFS_FORCED_SHUTDOWN(mp)) {
+-				xfs_alert_tag(mp, XFS_PTAG_AILDELETE,
+-		"%s: attempting to delete a log item that is not in the AIL",
+-						__func__);
+-				xfs_force_shutdown(mp, shutdown_type);
+-			}
+-			return;
++	if (!(lip->li_flags & XFS_LI_IN_AIL)) {
++		spin_unlock(&ailp->xa_lock);
++		if (!XFS_FORCED_SHUTDOWN(mp)) {
++			xfs_alert_tag(mp, XFS_PTAG_AILDELETE,
++	"%s: attempting to delete a log item that is not in the AIL",
++					__func__);
++			xfs_force_shutdown(mp, shutdown_type);
+ 		}
+-
+-		trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
+-		xfs_ail_delete(ailp, lip);
+-		lip->li_flags &= ~XFS_LI_IN_AIL;
+-		lip->li_lsn = 0;
+-		if (mlip == lip)
+-			mlip_changed = 1;
++		return;
+ 	}
+ 
++	mlip_changed = xfs_ail_delete_one(ailp, lip);
+ 	if (mlip_changed) {
+-		if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
+-			xlog_assign_tail_lsn_locked(ailp->xa_mount);
++		if (!XFS_FORCED_SHUTDOWN(mp))
++			xlog_assign_tail_lsn_locked(mp);
+ 		if (list_empty(&ailp->xa_ail))
+ 			wake_up_all(&ailp->xa_empty);
+-		spin_unlock(&ailp->xa_lock);
++	}
+ 
++	spin_unlock(&ailp->xa_lock);
++	if (mlip_changed)
+ 		xfs_log_space_wake(ailp->xa_mount);
+-	} else {
+-		spin_unlock(&ailp->xa_lock);
+-	}
+ }
+ 
+ int
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 49931b72da8a..d91706c56c63 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -106,18 +106,9 @@ xfs_trans_ail_update(
+ 	xfs_trans_ail_update_bulk(ailp, NULL, &lip, 1, lsn);
+ }
+ 
+-void	xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
+-				struct xfs_log_item **log_items, int nr_items,
+-				int shutdown_type)
+-				__releases(ailp->xa_lock);
+-static inline void
+-xfs_trans_ail_delete(
+-	struct xfs_ail	*ailp,
+-	xfs_log_item_t	*lip,
+-	int		shutdown_type) __releases(ailp->xa_lock)
+-{
+-	xfs_trans_ail_delete_bulk(ailp, &lip, 1, shutdown_type);
+-}
++bool xfs_ail_delete_one(struct xfs_ail *ailp, struct xfs_log_item *lip);
++void xfs_trans_ail_delete(struct xfs_ail *ailp, struct xfs_log_item *lip,
++		int shutdown_type) __releases(ailp->xa_lock);
+ 
+ static inline void
+ xfs_trans_ail_remove(
+-- 
+2.11.0
 
-> ---
-> 
-> Lightly tested via cross-compile to parisc as well as
-> (incomplete) xfstests testing.
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index bfc00de..fce43fb 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4856,7 +4856,7 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
->  	ASSERT(got_endoff >= del_endoff);
->  
->  	if (isrt) {
-> -		int64_t rtexts = XFS_FSB_TO_B(mp, del->br_blockcount);
-> +		uint64_t rtexts = XFS_FSB_TO_B(mp, del->br_blockcount);
->  
->  		do_div(rtexts, mp->m_sb.sb_rextsize);
->  		xfs_mod_frextents(mp, rtexts);
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index c141791..5c9e3d6 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1222,11 +1222,8 @@
->  		return error;
->  
->  	if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
-> -		xfs_daddr_t	block;
-> -
->  		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
-> -		block = imap.br_startblock;
-> -		mod = do_div(block, mp->m_sb.sb_rextsize);
-> +		mod = do_mod(imap.br_startblock, mp->m_sb.sb_rextsize);
->  		if (mod)
->  			*startoffset_fsb += mp->m_sb.sb_rextsize - mod;
->  	}
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 7f351f7..dea4e2b 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -311,7 +311,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
->  static inline xfs_agnumber_t
->  xfs_daddr_to_agno(struct xfs_mount *mp, xfs_daddr_t d)
->  {
-> -	xfs_daddr_t ld = XFS_BB_TO_FSBT(mp, d);
-> +	xfs_rfsblock_t ld = XFS_BB_TO_FSBT(mp, d);
->  	do_div(ld, mp->m_sb.sb_agblocks);
->  	return (xfs_agnumber_t) ld;
->  }
-> @@ -319,7 +319,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
->  static inline xfs_agblock_t
->  xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
->  {
-> -	xfs_daddr_t ld = XFS_BB_TO_FSBT(mp, d);
-> +	xfs_rfsblock_t ld = XFS_BB_TO_FSBT(mp, d);
->  	return (xfs_agblock_t) do_div(ld, mp->m_sb.sb_agblocks);
->  }
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
