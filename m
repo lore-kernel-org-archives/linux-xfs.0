@@ -1,54 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41473 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1032952AbdDTOru (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Apr 2017 10:47:50 -0400
-Date: Thu, 20 Apr 2017 15:43:56 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
-Message-ID: <20170420134356.GD22135@quack2.suse.cz>
-References: <20170414120257.8932-1-rgoldwyn@suse.de>
- <20170414120257.8932-6-rgoldwyn@suse.de>
- <20170419064505.GD20053@infradead.org>
- <d3467259-675a-2723-7cf9-d4f2f067d634@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d3467259-675a-2723-7cf9-d4f2f067d634@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:59748 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1161123AbdDUMWO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Apr 2017 08:22:14 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 229F267EDC
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2017 12:22:14 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0551890EE9
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2017 12:22:14 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3 1/2] xfs: fix up quotacheck buffer list error handling
+Date: Fri, 21 Apr 2017 08:22:12 -0400
+Message-Id: <1492777333-60156-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1492777333-60156-1-git-send-email-bfoster@redhat.com>
+References: <1492777333-60156-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: linux-xfs@vger.kernel.org
 
-On Wed 19-04-17 10:21:39, Goldwyn Rodrigues wrote:
-> 
-> 
-> On 04/19/2017 01:45 AM, Christoph Hellwig wrote:
-> > 
-> >> +	if (bio->bi_opf & REQ_NOWAIT) {
-> >> +		if (!blk_queue_nowait(q)) {
-> >> +			err = -EOPNOTSUPP;
-> >> +			goto end_io;
-> >> +		}
-> >> +		if (!(bio->bi_opf & REQ_SYNC)) {
-> > 
-> > I don't understand this check at all..
-> 
-> It is to ensure at the block layer that NOWAIT comes only for DIRECT
-> calls only. I should probably change it to REQ_SYNC | REQ_IDLE.
+The quotacheck error handling of the delwri buffer list assumes the
+resident buffers are locked and doesn't clear the _XBF_DELWRI_Q flag
+on the buffers that are dequeued. This can lead to assert failures
+on buffer release and possibly other locking problems.
 
-Ouch. Checking 'REQ_SYNC' for this is
+Move this code to a delwri queue cancel helper function to
+encapsulate the logic required to properly release buffers from a
+delwri queue. Update the helper to clear the delwri queue flag and
+call it from quotacheck.
 
-a) unreliable hack
-b) layering violation
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_buf.c | 24 ++++++++++++++++++++++++
+ fs/xfs/xfs_buf.h |  1 +
+ fs/xfs/xfs_qm.c  |  7 +------
+ 3 files changed, 26 insertions(+), 6 deletions(-)
 
-You just don't care why someone marked bio with REQ_NOWAIT at this place.
-Just obey the request if you can, return error if you cannot, but advisory
-REQ_SYNC or REQ_IDLE flags have nothing to do with the ability of the block
-layer to submit the bio without blocking...
-
-								Honza
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index b620872..ba036c1 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1079,6 +1079,8 @@ void
+ xfs_buf_unlock(
+ 	struct xfs_buf		*bp)
+ {
++	ASSERT(xfs_buf_islocked(bp));
++
+ 	XB_CLEAR_OWNER(bp);
+ 	up(&bp->b_sema);
+ 
+@@ -1815,6 +1817,28 @@ xfs_alloc_buftarg(
+ }
+ 
+ /*
++ * Cancel a delayed write list.
++ *
++ * Remove each buffer from the list, clear the delwri queue flag and drop the
++ * associated buffer reference.
++ */
++void
++xfs_buf_delwri_cancel(
++	struct list_head	*list)
++{
++	struct xfs_buf		*bp;
++
++	while (!list_empty(list)) {
++		bp = list_first_entry(list, struct xfs_buf, b_list);
++
++		xfs_buf_lock(bp);
++		bp->b_flags &= ~_XBF_DELWRI_Q;
++		list_del_init(&bp->b_list);
++		xfs_buf_relse(bp);
++	}
++}
++
++/*
+  * Add a buffer to the delayed write list.
+  *
+  * This queues a buffer for writeout if it hasn't already been.  Note that
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index e1bc1af..8d1d44f 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -329,6 +329,7 @@ extern void *xfs_buf_offset(struct xfs_buf *, size_t);
+ extern void xfs_buf_stale(struct xfs_buf *bp);
+ 
+ /* Delayed Write Buffer Routines */
++extern void xfs_buf_delwri_cancel(struct list_head *);
+ extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
+ extern int xfs_buf_delwri_submit(struct list_head *);
+ extern int xfs_buf_delwri_submit_nowait(struct list_head *);
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index b669b12..8b9a9f1 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1384,12 +1384,7 @@ xfs_qm_quotacheck(
+ 	mp->m_qflags |= flags;
+ 
+  error_return:
+-	while (!list_empty(&buffer_list)) {
+-		struct xfs_buf *bp =
+-			list_first_entry(&buffer_list, struct xfs_buf, b_list);
+-		list_del_init(&bp->b_list);
+-		xfs_buf_relse(bp);
+-	}
++	xfs_buf_delwri_cancel(&buffer_list);
+ 
+ 	if (error) {
+ 		xfs_warn(mp,
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.7.4
+
