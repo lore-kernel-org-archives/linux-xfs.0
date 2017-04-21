@@ -1,96 +1,219 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from firestarter.dermichi.com ([194.177.153.153]:57714 "EHLO
-        firestarter.dermichi.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941665AbdDTHL1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2017 03:11:27 -0400
-Subject: Re: xfsaild in D state seems to be blocking all other i/o
- sporadically
-References: <e5f2ccc2-7923-934c-e655-59983903ca11@dermichi.com>
- <20170419121202.2m3pi4ffojpnqyxc@eorzea.usersys.redhat.com>
- <ced08a44-d736-6250-c682-0f495a882bea@dermichi.com>
- <82e1fa48-909c-97a4-6bf9-5b84cf0af986@dermichi.com>
- <20170419140446.3rl2pruz2dlcr5cg@eorzea.usersys.redhat.com>
- <d6f598d1-7e7e-ac85-3cdc-e4f4bfdba94e@dermichi.com>
- <20170419180811.GB41631@bfoster.bfoster>
- <268ce851-dad0-a777-526a-82ad967490cd@dermichi.com>
- <20170419205525.GD5205@birch.djwong.org>
- <86fbec25-f026-350b-ffe3-b0b182b768ac@dermichi.com>
- <20170419234838.GH12369@dastard>
-From: Michael Weissenbacher <mw@dermichi.com>
-Message-ID: <f3e222a4-bcdb-6c61-79b0-1450c12e054f@dermichi.com>
-Date: Thu, 20 Apr 2017 09:11:22 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170419234838.GH12369@dastard>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:60061 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1161121AbdDUMWO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Apr 2017 08:22:14 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 45066C04B326
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2017 12:22:14 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0F1358311A
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2017 12:22:14 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3 2/2] xfs: push buffer of flush locked dquot to avoid quotacheck deadlock
+Date: Fri, 21 Apr 2017 08:22:13 -0400
+Message-Id: <1492777333-60156-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1492777333-60156-1-git-send-email-bfoster@redhat.com>
+References: <1492777333-60156-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 20.04.2017 01:48, Dave Chinner wrote:
-> On Wed, Apr 19, 2017 at 11:47:43PM +0200, Michael Weissenbacher wrote:
->> OK, do i understand you correctly that the xfsaild does all the actual
->> work of updating the inodes? And it's doing that single-threaded,
->> reading both the log and the indoes themselves?
-> 
-> The problem is that the backing buffers that are used for flushing
-> inodes have been reclaimed due to memory pressure, but the inodes in
-> cache are still dirty. Hence to write the dirty inodes, we first
-> have to read the inode buffer back into memory.
-> 
-Interesting find. Is there a way to prevent those buffers from getting
-reclaimed? Would adjusting vfs_cache_pressure help? Or adding more
-memory to the system? In fact the best thing would be to disable file
-content caching completely. Because of the use-case (backup server) it's
-worthless to cache file content.
-My primary objective is to avoid those stalls and reduce latency, at the
-expense of throughput.
+Reclaim during quotacheck can lead to deadlocks on the dquot flush
+lock:
 
-> Essentially, the log pins more dirty inodes than than writeback
-> can keep up with given the memory pressure that is occurring.
-> 
->>
->>> ...500MB / 200 bytes per dirty inode record = ~2.5 million inodes.
->>> ~2.5m inodes / 10 minutes = ~4200 inodes per second...
->> Yes, these numbers sound plausible. When everything is running smoothly
->> (i.e. most of the time) i do see up to 4500 combined reads+writes per
->> second. But when the problem arises, all i see i xfsaild doing around
->> 120 reads/second, which is roughly the performance of a single 7200rpm
->> drive. Directly after this "read only phase" (which lasts for about 5-10
->> minutes most of the time) there is a short burst of up to 10000+
->> writes/sec (writing to the RAID controller cache I suppose).
-> 
-> Yes. Inode buffer reads from the xfsaild are sequential so block the
-> aild and log tail pushing while they are on-going. It then queues
-> the writes on a delayed write list and they are issued all in one
-> go. Essentially, the system can dirty far more metadata in memory
-> than it can effectively cache and flush to disk in a timely manner.
-> 
->> And then
->> the system goes back to the "normal phase" where it is doing both reads
->> and writes and all those blocked D state processes continue working.
-> 
-> Yup, because the xfsaild has move the tail of the log, so there is
-> now log space available and ongoing transactions can run at CPU
-> speed again. The xfsaild will still be doing RMW inode writeback,
-> but nothing is blocking waiting for it to reach it's target now...
-> 
-> I'd suggest that the only thing you can realistically do to mitigate
-> this stall without changing the log size is change
-> /proc/sys/fs/xfs/xfssyncd_centisecs down to one second so that the
-> CIL is flushed to disk every second, and the AIL push target is
-> updated immediately after the CIL flush is done. This will result in
-> the xfsaild trying to push metadata almost as quickly as it is
-> committed to the journal, hence it should be trying to flush inodes
-> while th einode buffer is still cached in memory and hence avoid the
-> read IO. This will help avoid AIL pushing from getting so far behind
-> that inode buffers are reclaimed before the dirty inodes are
-> written. It may not completely avoid the stalls, but it should make
-> them less frequent...
-> 
-Ok, i just did that (set xfssyncd_centisecs=100). Will see if it helps.
+ - Quotacheck populates a local delwri queue with the physical dquot
+   buffers.
+ - Quotacheck performs the xfs_qm_dqusage_adjust() bulkstat and
+   dirties all of the dquots.
+ - Reclaim kicks in and attempts to flush a dquot whose buffer is
+   already queud on the quotacheck queue. The flush succeeds but
+   queueing to the reclaim delwri queue fails as the backing buffer is
+   already queued. The flush unlock is now deferred to I/O completion
+   of the buffer from the quotacheck queue.
+ - The dqadjust bulkstat continues and dirties the recently flushed
+   dquot once again.
+ - Quotacheck proceeds to the xfs_qm_flush_one() walk which requires
+   the flush lock to update the backing buffers with the in-core
+   recalculated values. It deadlocks on the redirtied dquot as the
+   flush lock was already acquired by reclaim, but the buffer resides
+   on the local delwri queue which isn't submitted until the end of
+   quotacheck.
 
-thanks,
-Michael
+This is reproduced by running quotacheck on a filesystem with a
+couple million inodes in low memory (512MB-1GB) situations. This is
+a regression as of commit 43ff2122e6 ("xfs: on-stack delayed write
+buffer lists"), which removed a trylock and buffer I/O submission
+from the quotacheck dquot flush sequence.
+
+Quotacheck first resets and collects the physical dquot buffers in a
+delwri queue. Then, it traverses the filesystem inodes via bulkstat,
+updates the in-core dquots, flushes the corrected dquots to the
+backing buffers and finally submits the delwri queue for I/O. Since
+the backing buffers are queued across the entire quotacheck
+operation, dquot reclaim cannot possibly complete a dquot flush
+before quotacheck completes.
+
+Therefore, quotacheck must submit the buffer for I/O in order to
+cycle the flush lock and flush the dirty in-core dquot to the
+buffer. Add a delwri queue buffer push mechanism to submit an
+individual buffer for I/O without losing the delwri queue status and
+use it from quotacheck to avoid the deadlock. This restores
+quotacheck behavior to as before the regression was introduced.
+
+Reported-by: Martin Svec <martin.svec@zoner.cz>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_buf.c   | 60 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_buf.h   |  1 +
+ fs/xfs/xfs_qm.c    | 28 ++++++++++++++++++++++++-
+ fs/xfs/xfs_trace.h |  1 +
+ 4 files changed, 89 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index ba036c1..667fc13 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -2033,6 +2033,66 @@ xfs_buf_delwri_submit(
+ 	return error;
+ }
+ 
++/*
++ * Push a single buffer on a delwri queue.
++ *
++ * The purpose of this function is to submit a single buffer of a delwri queue
++ * and return with the buffer still on the original queue. The waiting delwri
++ * buffer submission infrastructure guarantees transfer of the delwri queue
++ * buffer reference to a temporary wait list. We reuse this infrastructure to
++ * transfer the buffer back to the original queue.
++ *
++ * Note the buffer transitions from the queued state, to the submitted and wait
++ * listed state and back to the queued state during this call. The buffer
++ * locking and queue management logic between _delwri_pushbuf() and
++ * _delwri_queue() guarantee that the buffer cannot be queued to another list
++ * before returning.
++ */
++int
++xfs_buf_delwri_pushbuf(
++	struct xfs_buf		*bp,
++	struct list_head	*buffer_list)
++{
++	LIST_HEAD		(submit_list);
++	int			error;
++
++	ASSERT(bp->b_flags & _XBF_DELWRI_Q);
++
++	trace_xfs_buf_delwri_pushbuf(bp, _RET_IP_);
++
++	/*
++	 * Isolate the buffer to a new local list so we can submit it for I/O
++	 * independently from the rest of the original list.
++	 */
++	xfs_buf_lock(bp);
++	list_move(&bp->b_list, &submit_list);
++	xfs_buf_unlock(bp);
++
++	/*
++	 * Delwri submission clears the DELWRI_Q buffer flag and returns with
++	 * the buffer on the wait list with an associated reference. Rather than
++	 * bounce the buffer from a local wait list back to the original list
++	 * after I/O completion, reuse the original list as the wait list.
++	 */
++	xfs_buf_delwri_submit_buffers(&submit_list, buffer_list);
++
++	/*
++	 * The buffer is now under I/O and wait listed as during typical delwri
++	 * submission. Lock the buffer to wait for I/O completion. Rather than
++	 * remove the buffer from the wait list and release the reference, we
++	 * want to return with the buffer queued to the original list. The
++	 * buffer already sits on the original list with a wait list reference,
++	 * however. If we let the queue inherit that wait list reference, all we
++	 * need to do is reset the DELWRI_Q flag.
++	 */
++	xfs_buf_lock(bp);
++	error = bp->b_error;
++	bp->b_flags |= _XBF_DELWRI_Q;
++	xfs_buf_unlock(bp);
++
++	return error;
++}
++
+ int __init
+ xfs_buf_init(void)
+ {
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 8d1d44f..ca06eb0 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -333,6 +333,7 @@ extern void xfs_buf_delwri_cancel(struct list_head *);
+ extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
+ extern int xfs_buf_delwri_submit(struct list_head *);
+ extern int xfs_buf_delwri_submit_nowait(struct list_head *);
++extern int xfs_buf_delwri_pushbuf(struct xfs_buf *, struct list_head *);
+ 
+ /* Buffer Daemon Setup Routines */
+ extern int xfs_buf_init(void);
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 8b9a9f1..8068867 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1247,6 +1247,7 @@ xfs_qm_flush_one(
+ 	struct xfs_dquot	*dqp,
+ 	void			*data)
+ {
++	struct xfs_mount	*mp = dqp->q_mount;
+ 	struct list_head	*buffer_list = data;
+ 	struct xfs_buf		*bp = NULL;
+ 	int			error = 0;
+@@ -1257,7 +1258,32 @@ xfs_qm_flush_one(
+ 	if (!XFS_DQ_IS_DIRTY(dqp))
+ 		goto out_unlock;
+ 
+-	xfs_dqflock(dqp);
++	/*
++	 * The only way the dquot is already flush locked by the time quotacheck
++	 * gets here is if reclaim flushed it before the dqadjust walk dirtied
++	 * it for the final time. Quotacheck collects all dquot bufs in the
++	 * local delwri queue before dquots are dirtied, so reclaim can't have
++	 * possibly queued it for I/O. The only way out is to push the buffer to
++	 * cycle the flush lock.
++	 */
++	if (!xfs_dqflock_nowait(dqp)) {
++		/* buf is pinned in-core by delwri list */
++		DEFINE_SINGLE_BUF_MAP(map, dqp->q_blkno,
++				      mp->m_quotainfo->qi_dqchunklen);
++		bp = _xfs_buf_find(mp->m_ddev_targp, &map, 1, 0, NULL);
++		if (!bp) {
++			error = -EINVAL;
++			goto out_unlock;
++		}
++		xfs_buf_unlock(bp);
++
++		xfs_buf_delwri_pushbuf(bp, buffer_list);
++		xfs_buf_rele(bp);
++
++		error = -EAGAIN;
++		goto out_unlock;
++	}
++
+ 	error = xfs_qm_dqflush(dqp, &bp);
+ 	if (error)
+ 		goto out_unlock;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 4f96dc9..f73fb33 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -367,6 +367,7 @@ DEFINE_BUF_EVENT(xfs_buf_iowait_done);
+ DEFINE_BUF_EVENT(xfs_buf_delwri_queue);
+ DEFINE_BUF_EVENT(xfs_buf_delwri_queued);
+ DEFINE_BUF_EVENT(xfs_buf_delwri_split);
++DEFINE_BUF_EVENT(xfs_buf_delwri_pushbuf);
+ DEFINE_BUF_EVENT(xfs_buf_get_uncached);
+ DEFINE_BUF_EVENT(xfs_buf_item_relse);
+ DEFINE_BUF_EVENT(xfs_buf_item_iodone_async);
+-- 
+2.7.4
+
