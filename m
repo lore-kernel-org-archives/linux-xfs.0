@@ -1,64 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36300 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1170987AbdDXNXe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Apr 2017 09:23:34 -0400
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v3 04/20] fs: check for writeback errors after syncing out buffers in generic_file_fsync
-Date: Mon, 24 Apr 2017 09:22:43 -0400
-Message-Id: <20170424132259.8680-5-jlayton@redhat.com>
-In-Reply-To: <20170424132259.8680-1-jlayton@redhat.com>
-References: <20170424132259.8680-1-jlayton@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:20816 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1423254AbdDUV2N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2017 17:28:13 -0400
+Date: Fri, 21 Apr 2017 14:28:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 1/2] xfs: fix up quotacheck buffer list error handling
+Message-ID: <20170421212800.GM23371@birch.djwong.org>
+References: <1492777333-60156-1-git-send-email-bfoster@redhat.com>
+ <1492777333-60156-2-git-send-email-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1492777333-60156-2-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, osd-dev@open-osd.org, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org
-Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-ext2 currently does a test+clear of the AS_EIO flag, which is
-is problematic for some coming changes.
+On Fri, Apr 21, 2017 at 08:22:12AM -0400, Brian Foster wrote:
+> The quotacheck error handling of the delwri buffer list assumes the
+> resident buffers are locked and doesn't clear the _XBF_DELWRI_Q flag
+> on the buffers that are dequeued. This can lead to assert failures
+> on buffer release and possibly other locking problems.
+> 
+> Move this code to a delwri queue cancel helper function to
+> encapsulate the logic required to properly release buffers from a
+> delwri queue. Update the helper to clear the delwri queue flag and
+> call it from quotacheck.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-What we really need to do instead is call filemap_check_errors
-in __generic_file_fsync after syncing out the buffers. That
-will be sufficient for this case, and help other callers detect
-these errors properly as well.
+I /think/ this one is ok -- it's useful to assert that the buffer is
+actually locked before we try to unlock it, and the other parts refactor
+existing code.
 
-With that, we don't need to twiddle it in ext2.
+If we want to be super-pedantic, then yes, delwri_submit consumes the
+entire list and we don't need to touch buffer_list if we hit the final
+"goto error_return;" in quotacheck.  OTOH I feel like there's not much
+harm in the extra list_empty check and should we ever decide that
+delwri_submit shouldn't consume the whole list, then we're already
+covered.
 
-Suggested-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- fs/ext2/file.c | 2 +-
- fs/libfs.c     | 3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+Regardless, if anyone /does/ want that change, it can be a separate
+patch.
 
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index b21891a6bfca..ed00e7ae0ef3 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -177,7 +177,7 @@ int ext2_fsync(struct file *file, loff_t start, loff_t end, int datasync)
- 	struct address_space *mapping = sb->s_bdev->bd_inode->i_mapping;
- 
- 	ret = generic_file_fsync(file, start, end, datasync);
--	if (ret == -EIO || test_and_clear_bit(AS_EIO, &mapping->flags)) {
-+	if (ret == -EIO) {
- 		/* We don't really know where the IO error happened... */
- 		ext2_error(sb, __func__,
- 			   "detected IO error when writing metadata buffers");
-diff --git a/fs/libfs.c b/fs/libfs.c
-index a8b62e5d43a9..12a48ee442d3 100644
---- a/fs/libfs.c
-+++ b/fs/libfs.c
-@@ -991,7 +991,8 @@ int __generic_file_fsync(struct file *file, loff_t start, loff_t end,
- 
- out:
- 	inode_unlock(inode);
--	return ret;
-+	err = filemap_check_errors(inode->i_mapping);
-+	return ret ? : err;
- }
- EXPORT_SYMBOL(__generic_file_fsync);
- 
--- 
-2.9.3
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+--D
+
+> ---
+>  fs/xfs/xfs_buf.c | 24 ++++++++++++++++++++++++
+>  fs/xfs/xfs_buf.h |  1 +
+>  fs/xfs/xfs_qm.c  |  7 +------
+>  3 files changed, 26 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index b620872..ba036c1 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1079,6 +1079,8 @@ void
+>  xfs_buf_unlock(
+>  	struct xfs_buf		*bp)
+>  {
+> +	ASSERT(xfs_buf_islocked(bp));
+> +
+>  	XB_CLEAR_OWNER(bp);
+>  	up(&bp->b_sema);
+>  
+> @@ -1815,6 +1817,28 @@ xfs_alloc_buftarg(
+>  }
+>  
+>  /*
+> + * Cancel a delayed write list.
+> + *
+> + * Remove each buffer from the list, clear the delwri queue flag and drop the
+> + * associated buffer reference.
+> + */
+> +void
+> +xfs_buf_delwri_cancel(
+> +	struct list_head	*list)
+> +{
+> +	struct xfs_buf		*bp;
+> +
+> +	while (!list_empty(list)) {
+> +		bp = list_first_entry(list, struct xfs_buf, b_list);
+> +
+> +		xfs_buf_lock(bp);
+> +		bp->b_flags &= ~_XBF_DELWRI_Q;
+> +		list_del_init(&bp->b_list);
+> +		xfs_buf_relse(bp);
+> +	}
+> +}
+> +
+> +/*
+>   * Add a buffer to the delayed write list.
+>   *
+>   * This queues a buffer for writeout if it hasn't already been.  Note that
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index e1bc1af..8d1d44f 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -329,6 +329,7 @@ extern void *xfs_buf_offset(struct xfs_buf *, size_t);
+>  extern void xfs_buf_stale(struct xfs_buf *bp);
+>  
+>  /* Delayed Write Buffer Routines */
+> +extern void xfs_buf_delwri_cancel(struct list_head *);
+>  extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
+>  extern int xfs_buf_delwri_submit(struct list_head *);
+>  extern int xfs_buf_delwri_submit_nowait(struct list_head *);
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index b669b12..8b9a9f1 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -1384,12 +1384,7 @@ xfs_qm_quotacheck(
+>  	mp->m_qflags |= flags;
+>  
+>   error_return:
+> -	while (!list_empty(&buffer_list)) {
+> -		struct xfs_buf *bp =
+> -			list_first_entry(&buffer_list, struct xfs_buf, b_list);
+> -		list_del_init(&bp->b_list);
+> -		xfs_buf_relse(bp);
+> -	}
+> +	xfs_buf_delwri_cancel(&buffer_list);
+>  
+>  	if (error) {
+>  		xfs_warn(mp,
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
