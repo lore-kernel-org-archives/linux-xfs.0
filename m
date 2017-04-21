@@ -1,62 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55956 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1161119AbdDUMWO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Apr 2017 08:22:14 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 1B72AC00AFD5
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2017 12:22:14 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F07B690EE7
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2017 12:22:13 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 0/2] xfs: quotacheck vs. dquot reclaim deadlock
-Date: Fri, 21 Apr 2017 08:22:11 -0400
-Message-Id: <1492777333-60156-1-git-send-email-bfoster@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:58198 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161893AbdDUQnY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2017 12:43:24 -0400
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1d1aNN-0005V7-Fz
+        for linux-xfs@vger.kernel.org; Fri, 21 Apr 2017 15:21:37 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/6] xfs: corruption needs to respect endianess too!
+Date: Fri, 21 Apr 2017 17:21:20 +0200
+Message-Id: <20170421152123.11316-4-hch@lst.de>
+In-Reply-To: <20170421152123.11316-1-hch@lst.de>
+References: <20170421152123.11316-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Hi all,
+At least if we want to be able to recognize the pattern.  Add a missing
+byte swap to the corruption injection case in xlog_sync.
 
-This incorporates Dave's feedback from review of v2 with one exception:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_log.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-- After taking another look at xfs_qm_quotacheck(), it appears to
-  intentionally jump to the normal exit path of the function in various
-  error situations. I therefore opted to not to create a new error label
-  for post delwri submit errors, since we still do the cancellation in
-  the case of success as well. If desired, we can append a broader
-  refactoring patch for that function, separate from the patches that
-  fix bugs.
-
-Brian
-
-v3:
-- Dropped the rfc/experiment patch.
-- Created a _delwri_cancel() helper function.
-- Refactored _delwri_pushbuf() to expect an unlocked buffer.
-- Updated _delwri_pushbuf() with more detailed comments around delwri
-  queue logic and reference counting.
-v2: http://www.spinics.net/lists/linux-xfs/msg04483.html
-- Added quotacheck error handling fixup patch.
-- Push buffers with flush locked dquots for deadlock avoidance rather
-  than bypass dquot reclaim.
-- Added RFC patch for quotacheck early buffer list submission.
-v1: http://www.spinics.net/lists/linux-xfs/msg04304.html
-
-Brian Foster (2):
-  xfs: fix up quotacheck buffer list error handling
-  xfs: push buffer of flush locked dquot to avoid quotacheck deadlock
-
- fs/xfs/xfs_buf.c   | 84 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_buf.h   |  2 ++
- fs/xfs/xfs_qm.c    | 35 ++++++++++++++++++-----
- fs/xfs/xfs_trace.h |  1 +
- 4 files changed, 115 insertions(+), 7 deletions(-)
-
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index bb58cd1873c9..3731f13f63e9 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1852,7 +1852,7 @@ xlog_sync(
+ 	 */
+ 	if (log->l_badcrc_factor &&
+ 	    (prandom_u32() % log->l_badcrc_factor == 0)) {
+-		iclog->ic_header.h_crc &= 0xAAAAAAAA;
++		iclog->ic_header.h_crc &= cpu_to_le32(0xAAAAAAAA);
+ 		iclog->ic_state |= XLOG_STATE_IOABORT;
+ 		xfs_warn(log->l_mp,
+ 	"Intentionally corrupted log record at LSN 0x%llx. Shutdown imminent.",
 -- 
-2.7.4
+2.11.0
 
