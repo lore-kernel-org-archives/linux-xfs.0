@@ -1,57 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43729 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S971348AbdDTQ4Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2017 12:56:25 -0400
-Date: Thu, 20 Apr 2017 09:56:20 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/3] xfs: simplify validation of the unwritten extent bit
-Message-ID: <20170420165620.GF5205@birch.djwong.org>
-References: <20170419192904.22203-1-hch@lst.de>
- <20170419192904.22203-4-hch@lst.de>
- <20170419201751.GM5193@birch.djwong.org>
- <20170420143857.GB22644@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170420143857.GB22644@lst.de>
+Received: from bombadil.infradead.org ([65.50.211.133]:43665 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1162276AbdDURHc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2017 13:07:32 -0400
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1d1aNQ-0005VE-4q
+        for linux-xfs@vger.kernel.org; Fri, 21 Apr 2017 15:21:40 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 4/6] xfs: fix __user annotations for xfs_ioc_getfsmap
+Date: Fri, 21 Apr 2017 17:21:21 +0200
+Message-Id: <20170421152123.11316-5-hch@lst.de>
+In-Reply-To: <20170421152123.11316-1-hch@lst.de>
+References: <20170421152123.11316-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Apr 20, 2017 at 04:38:57PM +0200, Christoph Hellwig wrote:
-> [can you trim the quote?  Makes reading it and properly quoting it
->  so much easier..]
-> 
-> > > +static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
-> > > +		struct xfs_bmbt_rec_host *ep)
-> > 
-> > Would be nice to have this function formatted the same way as most of
-> > the rest of the xfs functions, even if it is static inline...
-> 
-> It's actually the usual style for our inlines.  But if you prefer it
-> differently I can do that.
+By passing the whole fsmap_head structure and an index we can get the
+user point annotations right for the embedded variable sized array
+in struct fsmap_head.
 
-Nah, don't worry about it.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_ioctl.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Though I do wonder why static inlines get different treatment; it's
-rather nice to be able to search for ^xfs_function and find its
-definition.
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 0f8bed9a7e4c..b7db0b8f0657 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1614,7 +1614,8 @@ xfs_ioc_getbmapx(
+ 
+ struct getfsmap_info {
+ 	struct xfs_mount	*mp;
+-	struct fsmap __user	*data;
++	struct fsmap_head __user *data;
++	int			idx;
+ 	__u32			last_flags;
+ };
+ 
+@@ -1628,17 +1629,17 @@ xfs_getfsmap_format(struct xfs_fsmap *xfm, void *priv)
+ 
+ 	info->last_flags = xfm->fmr_flags;
+ 	xfs_fsmap_from_internal(&fm, xfm);
+-	if (copy_to_user(info->data, &fm, sizeof(struct fsmap)))
++	if (copy_to_user(&info->data->fmh_recs[info->idx++], &fm,
++			sizeof(struct fsmap)))
+ 		return -EFAULT;
+ 
+-	info->data++;
+ 	return 0;
+ }
+ 
+ STATIC int
+ xfs_ioc_getfsmap(
+ 	struct xfs_inode	*ip,
+-	void			__user *arg)
++	struct fsmap_head	__user *arg)
+ {
+ 	struct getfsmap_info	info = { NULL };
+ 	struct xfs_fsmap_head	xhead = {0};
+@@ -1664,7 +1665,7 @@ xfs_ioc_getfsmap(
+ 	trace_xfs_getfsmap_high_key(ip->i_mount, &xhead.fmh_keys[1]);
+ 
+ 	info.mp = ip->i_mount;
+-	info.data = ((__force struct fsmap_head *)arg)->fmh_recs;
++	info.data = arg;
+ 	error = xfs_getfsmap(ip->i_mount, &xhead, xfs_getfsmap_format, &info);
+ 	if (error == XFS_BTREE_QUERY_RANGE_ABORT) {
+ 		error = 0;
+@@ -1674,10 +1675,9 @@ xfs_ioc_getfsmap(
+ 
+ 	/* If we didn't abort, set the "last" flag in the last fmx */
+ 	if (!aborted && xhead.fmh_entries) {
+-		info.data--;
+ 		info.last_flags |= FMR_OF_LAST;
+-		if (copy_to_user(&info.data->fmr_flags, &info.last_flags,
+-				sizeof(info.last_flags)))
++		if (copy_to_user(&info.data->fmh_recs[info.idx - 1].fmr_flags,
++				&info.last_flags, sizeof(info.last_flags)))
+ 			return -EFAULT;
+ 	}
+ 
+-- 
+2.11.0
 
-> > Wouldn't this be better off in xfs_iflush_int (like the inline dir
-> > verifier) since we could prevent bad metadata from hitting the disk?
-> > Rather than this, which doesn't do anything on non-debug kernels.
-> 
-> xfs_iflush_int actually calls xfs_iflush_fork which calls
-> xfs_iextents_copy, so it's in the right spot already.  Converting it
-> from an assert to an error would have to go through these layers
-> that don't currently expect errors.  Note that we also call
-> xfs_iextents_copy from xfs_inode_item_format_data_fork /
-> xfs_inode_item_format_attr_fork, which are called earlier than
-> xfs_iflush_int, where error propagation is even worse.
-
-Fair enough.  The rest looks ok, so I'll go run it through testing.
-
---D
