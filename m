@@ -1,119 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:36626 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937942AbdD0QBU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2017 12:01:20 -0400
-Received: by mail-wm0-f42.google.com with SMTP id u65so20924182wmu.1
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2017 09:01:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170426203451.GA44531@bfoster.bfoster>
-References: <CAPeSaCC-Z+atujOq9+uj0tgdkWDNPadiQVDB+23tj=DBH-EKrw@mail.gmail.com>
- <20170426203451.GA44531@bfoster.bfoster>
-From: Gareth Clay <gclay@pivotal.io>
-Date: Thu, 27 Apr 2017 17:01:17 +0100
-Message-ID: <CAPeSaCAPKicLN=QF=gLHUeV5KPQP7f3DbT9QPGjzyECGqArzRQ@mail.gmail.com>
-Subject: Re: Many D state processes on XFS, kernel 4.4
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:58648 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1163244AbdDWSzP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 23 Apr 2017 14:55:15 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id A317166CBA
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Apr 2017 18:55:14 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 06/12] mkfs: create get/set functions for opts table
+Date: Sun, 23 Apr 2017 20:54:57 +0200
+Message-Id: <20170423185503.31415-7-jtulak@redhat.com>
+In-Reply-To: <20170423185503.31415-1-jtulak@redhat.com>
+References: <20170423185503.31415-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-Hi Brian,
+Add functions that can be used to get/set values to opts table.
 
-Thanks very much from the response. Unfortunately we don't have logs
-going back that far, so all I can say at the moment is that we're not
-seeing any 'metadata I/O error' lines in the logs that we have whilst
-the problem has been occurring. We're going to recreate the affected
-VM and see if the problem recurs - if it does then we'll be sure to
-grab the logs immediately and check.
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-What we can say is that this problem seems to have recurred 3 times
-already on fresh VMs and disks. We initially wondered if it could be
-due to a bad EBS volume or something similar, but this seems less
-likely given the recurrence.
+---
+ mkfs/xfs_mkfs.c | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
-In the case of the other possible cause you mentioned, of I/O never
-completing, is it possible that excessive load could call this, or
-would this be more indicative of a concurrency issue at the filesystem
-/ kernel level? One quirk of the workload on this machine is that we
-have a lot of XFS project quotas which we're frequently checking to
-report disk usage... Could it be that we're causing a starvation
-problem?
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index c2ffd91..4caf93c 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -786,6 +786,38 @@ get_conf_raw(int opt, int subopt)
+ 	return opts[opt].subopt_params[subopt].raw_input;
+ }
+ 
++static uint64_t getnum(const char *str, struct opt_params *opts, int index);
++
++/*
++ * Get and set values to the opts table.
++ */
++static inline uint64_t
++get_conf_val(int opt, int subopt)
++{
++	return opts[opt].subopt_params[subopt].value;
++}
++
++static void
++set_conf_val(int opt, int subopt, uint64_t val)
++{
++	struct subopt_param *sp = &opts[opt].subopt_params[subopt];
++
++	sp->value = val;
++}
++
++/*
++ * A wrapper for getnum and set_conf_val.
++ */
++static inline uint64_t
++parse_conf_val(int opt, int subopt, char *value)
++{
++	uint64_t num = getnum(value, &opts[opt], subopt);
++
++	set_conf_val(opt, subopt, num);
++	return num;
++}
++
++
+ /*
+  * Convert lsu to lsunit for 512 bytes blocks and check validity of the values.
+  */
+-- 
+2.1.4
 
-Thanks again,
-Gareth
-
-On Wed, Apr 26, 2017 at 9:34 PM Brian Foster <bfoster@redhat.com> wrote:
->
-> On Wed, Apr 26, 2017 at 05:47:15PM +0100, Gareth Clay wrote:
-> > Hi,
-> >
-> > We're trying to diagnose a problem on an AWS virtual machine with two
-> > XFS filesystems, each on loop devices. The loop files are sitting on
-> > an EXT4 filesystem on Amazon EBS. The VM is running lots of Linux
-> > containers - we're using Overlay FS on XFS to provide the root
-> > filesystems for these containers.
-> >
-> > The problem we're seeing is a lot of processes entering D state, stuck
-> > in the xlog_grant_head_wait function. We're also seeing xfsaild/loop0
-> > stuck in D state. We're not able to write to the filesystem at all on
-> > this device, it seems, without the process hitting D state. Once the
-> > processes enter D state they never recover, and the list of D state
-> > processes seems to be growing slowly over time.
-> >
-> > The filesystem on loop1 seems fine (we can run ls, touch etc)
-> >
-> > Would anyone be able to help us to diagnose the underlying problem please?
-> >
-> > Following the problem reporting FAQ we've collected the following
-> > details from the VM:
-> >
-> > uname -a:
-> > Linux 8dd9526f-00ba-4f7b-aa59-a62ec661c060 4.4.0-72-generic
-> > #93~14.04.1-Ubuntu SMP Fri Mar 31 15:05:15 UTC 2017 x86_64 x86_64
-> > x86_64 GNU/Linux
-> >
-> > xfs_repair version 3.1.9
-> >
-> > AWS VM with 8 CPU cores and EBS storage
-> >
-> > And we've also collected output from /proc, xfs_info, dmesg and the
-> > XFS trace tool in the following files:
-> >
-> > https://s3.amazonaws.com/grootfs-logs/dmesg
-> > https://s3.amazonaws.com/grootfs-logs/meminfo
-> > https://s3.amazonaws.com/grootfs-logs/mounts
-> > https://s3.amazonaws.com/grootfs-logs/partitions
-> > https://s3.amazonaws.com/grootfs-logs/trace_report.txt
-> > https://s3.amazonaws.com/grootfs-logs/xfs_info
-> >
->
-> It looks like everything is pretty much backed up on the log and the
-> tail of the log is pinned by some dquot items. The trace output shows
-> that xfsaild is spinning on flush locked dquots:
->
-> <...>-2737622 [001] 33449671.892834: xfs_ail_flushing:     dev 7:0 lip 0x0xffff88012e655e30 lsn 191/61681 type XFS_LI_DQUOT flags IN_AIL
-> <...>-2737622 [001] 33449671.892868: xfs_ail_flushing:     dev 7:0 lip 0x0xffff8800110d7bb0 lsn 191/61681 type XFS_LI_DQUOT flags IN_AIL
-> <...>-2737622 [001] 33449671.892869: xfs_ail_flushing:     dev 7:0 lip 0x0xffff88012e655a80 lsn 191/67083 type XFS_LI_DQUOT flags IN_AIL
-> <...>-2737622 [001] 33449671.892869: xfs_ail_flushing:     dev 7:0 lip 0x0xffff8800110d4810 lsn 191/67296 type XFS_LI_DQUOT flags IN_AIL
-> <...>-2737622 [001] 33449671.892869: xfs_ail_flushing:     dev 7:0 lip 0x0xffff880122210460 lsn 191/67310 type XFS_LI_DQUOT flags IN_AIL
->
-> The cause of that is not immediately clear. One possible reason is it
-> could be due to I/O failure. Do you have any I/O error messages (i.e.,
-> "metadata I/O error: block ...") in your logs from before you ended up
-> in this state?
->
-> If not, I'm wondering if another possibility is an I/O that just never
-> completes.. is this something you can reliably reproduce?
->
-> Brian
->
-> > Thanks for any help or advice you can offer!
-> >
-> > Claudia and Gareth
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
