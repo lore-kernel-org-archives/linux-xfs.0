@@ -1,17 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39174 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49174 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1163227AbdDWSzK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 23 Apr 2017 14:55:10 -0400
+        id S1163236AbdDWSzL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 23 Apr 2017 14:55:11 -0400
 Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 6BE6C46D09D
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Apr 2017 18:55:10 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 78F3D80E79
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Apr 2017 18:55:11 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 02/12] mkfs: rename defaultval to flagval in opts
-Date: Sun, 23 Apr 2017 20:54:53 +0200
-Message-Id: <20170423185503.31415-3-jtulak@redhat.com>
+Subject: [PATCH 03/12] mkfs: remove intermediate getstr followed by getnum
+Date: Sun, 23 Apr 2017 20:54:54 +0200
+Message-Id: <20170423185503.31415-4-jtulak@redhat.com>
 In-Reply-To: <20170423185503.31415-1-jtulak@redhat.com>
 References: <20170423185503.31415-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -20,490 +20,287 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Jan Tulak <jtulak@redhat.com>
 
-The old name 'defaultval' was misleading - it is not the default value,
-but the value the option has when used as a flag by an user.
+Some options loaded a number as a string with getstr and converted it to
+number with getnum later in the code, without any reason for this
+approach.  (They were probably forgotten in some past cleaning.)
+
+This patch changes them to skip the string and use getnum directly in
+the main option-parsing loop, as do all the other numerical options.
+
+And as we now have two variables of the same type for the same value,
+merge them together. (e.g. former string dsize and number dbytes).
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 120 ++++++++++++++++++++++++++++----------------------------
- 1 file changed, 60 insertions(+), 60 deletions(-)
+CHANGES:
+* The first patch now ensures that we still have the raw input and
+  we are not changing the form of user input (i.e. size stays in given
+  units...)
+
+ mkfs/xfs_mkfs.c | 88 ++++++++++++++++++++++++++-------------------------------
+ 1 file changed, 40 insertions(+), 48 deletions(-)
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 84674d5..0a795a6 100644
+index 0a795a6..7a72b11 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -112,7 +112,7 @@ uint64_t		sectorsize;
-  *     to zero. But if one value is different: minval=0 and maxval=1,
-  *     then it is OK.)
-  *
-- *   defaultval MANDATORY
-+ *   flagval MANDATORY
-  *     The value used if user specifies the subopt, but no value.
-  *     If the subopt accepts some values (-d file=[1|0]), then this
-  *     sets what is used with simple specifying the subopt (-d file).
-@@ -144,7 +144,7 @@ struct opt_params {
- 		int		conflicts[MAX_CONFLICTS];
- 		uint64_t	minval;
- 		uint64_t	maxval;
--		uint64_t	defaultval;
-+		uint64_t	flagval;
- 		const char	*raw_input;
- 	}		subopt_params[MAX_SUBOPTS];
- };
-@@ -164,7 +164,7 @@ struct opt_params bopts = {
- 				 LAST_CONFLICT },
- 		  .minval = XFS_MIN_BLOCKSIZE_LOG,
- 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = B_SIZE,
- 		  .convert = true,
-@@ -173,7 +173,7 @@ struct opt_params bopts = {
- 				 LAST_CONFLICT },
- 		  .minval = XFS_MIN_BLOCKSIZE,
- 		  .maxval = XFS_MAX_BLOCKSIZE,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 	},
- };
-@@ -219,24 +219,24 @@ struct opt_params dopts = {
- 				 LAST_CONFLICT },
- 		  .minval = 1,
- 		  .maxval = XFS_MAX_AGNUMBER,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_FILE,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		},
- 		{ .index = D_NAME,
- 		  .conflicts = { LAST_CONFLICT },
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SIZE,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .convert = true,
- 		  .minval = XFS_AG_MIN_BYTES,
- 		  .maxval = LLONG_MAX,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SUNIT,
- 		  .conflicts = { D_NOALIGN,
-@@ -245,7 +245,7 @@ struct opt_params dopts = {
- 				 LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SWIDTH,
- 		  .conflicts = { D_NOALIGN,
-@@ -254,7 +254,7 @@ struct opt_params dopts = {
- 				 LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_AGSIZE,
- 		  .conflicts = { D_AGCOUNT,
-@@ -262,7 +262,7 @@ struct opt_params dopts = {
- 		  .convert = true,
- 		  .minval = XFS_AG_MIN_BYTES,
- 		  .maxval = XFS_AG_MAX_BYTES,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SU,
- 		  .conflicts = { D_NOALIGN,
-@@ -272,7 +272,7 @@ struct opt_params dopts = {
- 		  .convert = true,
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SW,
- 		  .conflicts = { D_NOALIGN,
-@@ -281,14 +281,14 @@ struct opt_params dopts = {
- 				 LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SECTLOG,
- 		  .conflicts = { D_SECTSIZE,
- 				 LAST_CONFLICT },
- 		  .minval = XFS_MIN_SECTORSIZE_LOG,
- 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SECTSIZE,
- 		  .conflicts = { D_SECTLOG,
-@@ -297,7 +297,7 @@ struct opt_params dopts = {
- 		  .is_power_2 = true,
- 		  .minval = XFS_MIN_SECTORSIZE,
- 		  .maxval = XFS_MAX_SECTORSIZE,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_NOALIGN,
- 		  .conflicts = { D_SU,
-@@ -307,25 +307,25 @@ struct opt_params dopts = {
- 				 LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		},
- 		{ .index = D_RTINHERIT,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		},
- 		{ .index = D_PROJINHERIT,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_EXTSZINHERIT,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 	},
- };
-@@ -357,7 +357,7 @@ struct opt_params iopts = {
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		},
- 		{ .index = I_LOG,
- 		  .conflicts = { I_PERBLOCK,
-@@ -365,13 +365,13 @@ struct opt_params iopts = {
- 				 LAST_CONFLICT },
- 		  .minval = XFS_DINODE_MIN_LOG,
- 		  .maxval = XFS_DINODE_MAX_LOG,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = I_MAXPCT,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 100,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = I_PERBLOCK,
- 		  .conflicts = { I_LOG,
-@@ -380,7 +380,7 @@ struct opt_params iopts = {
- 		  .is_power_2 = true,
- 		  .minval = XFS_MIN_INODE_PERBLOCK,
- 		  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = I_SIZE,
- 		  .conflicts = { I_PERBLOCK,
-@@ -389,25 +389,25 @@ struct opt_params iopts = {
- 		  .is_power_2 = true,
- 		  .minval = XFS_DINODE_MIN_SIZE,
- 		  .maxval = XFS_DINODE_MAX_SIZE,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = I_ATTR,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 2,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = I_PROJID32BIT,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		},
- 		{ .index = I_SPINODES,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		},
- 	},
- };
-@@ -447,7 +447,7 @@ struct opt_params lopts = {
- 				 LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_INTERNAL,
- 		  .conflicts = { L_FILE,
-@@ -455,27 +455,27 @@ struct opt_params lopts = {
- 				 LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		},
- 		{ .index = L_SIZE,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .convert = true,
- 		  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
- 		  .maxval = XFS_MAX_LOG_BYTES,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_VERSION,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 1,
- 		  .maxval = 2,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_SUNIT,
- 		  .conflicts = { L_SU,
- 				 LAST_CONFLICT },
- 		  .minval = 1,
- 		  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_SU,
- 		  .conflicts = { L_SUNIT,
-@@ -483,20 +483,20 @@ struct opt_params lopts = {
- 		  .convert = true,
- 		  .minval = BBTOB(1),
- 		  .maxval = XLOG_MAX_RECORD_BSIZE,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_DEV,
- 		  .conflicts = { L_AGNUM,
- 				 L_INTERNAL,
- 				 LAST_CONFLICT },
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_SECTLOG,
- 		  .conflicts = { L_SECTSIZE,
- 				 LAST_CONFLICT },
- 		  .minval = XFS_MIN_SECTORSIZE_LOG,
- 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_SECTSIZE,
- 		  .conflicts = { L_SECTLOG,
-@@ -505,26 +505,26 @@ struct opt_params lopts = {
- 		  .is_power_2 = true,
- 		  .minval = XFS_MIN_SECTORSIZE,
- 		  .maxval = XFS_MAX_SECTORSIZE,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_FILE,
- 		  .conflicts = { L_INTERNAL,
- 				 LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		},
- 		{ .index = L_NAME,
- 		  .conflicts = { L_AGNUM,
- 				 L_INTERNAL,
- 				 LAST_CONFLICT },
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_LAZYSBCNTR,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		},
- 	},
- };
-@@ -548,7 +548,7 @@ struct opt_params nopts = {
- 				 LAST_CONFLICT },
- 		  .minval = XFS_MIN_REC_DIRSIZE,
- 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = N_SIZE,
- 		  .conflicts = { N_LOG,
-@@ -557,19 +557,19 @@ struct opt_params nopts = {
- 		  .is_power_2 = true,
- 		  .minval = 1 << XFS_MIN_REC_DIRSIZE,
- 		  .maxval = XFS_MAX_BLOCKSIZE,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = N_VERSION,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 2,
- 		  .maxval = 2,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = N_FTYPE,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		},
- 	},
- };
-@@ -597,33 +597,33 @@ struct opt_params ropts = {
- 		  .convert = true,
- 		  .minval = XFS_MIN_RTEXTSIZE,
- 		  .maxval = XFS_MAX_RTEXTSIZE,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = R_SIZE,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .convert = true,
- 		  .minval = 0,
- 		  .maxval = LLONG_MAX,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = R_DEV,
- 		  .conflicts = { LAST_CONFLICT },
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = R_FILE,
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		  .conflicts = { LAST_CONFLICT },
- 		},
- 		{ .index = R_NAME,
- 		  .conflicts = { LAST_CONFLICT },
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = R_NOALIGN,
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		  .conflicts = { LAST_CONFLICT },
- 		},
- 	},
-@@ -649,7 +649,7 @@ struct opt_params sopts = {
- 				 LAST_CONFLICT },
- 		  .minval = XFS_MIN_SECTORSIZE_LOG,
- 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = S_SECTLOG,
- 		  .conflicts = { S_SIZE,
-@@ -657,7 +657,7 @@ struct opt_params sopts = {
- 				 LAST_CONFLICT },
- 		  .minval = XFS_MIN_SECTORSIZE_LOG,
- 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = S_SIZE,
- 		  .conflicts = { S_LOG,
-@@ -667,7 +667,7 @@ struct opt_params sopts = {
- 		  .is_power_2 = true,
- 		  .minval = XFS_MIN_SECTORSIZE,
- 		  .maxval = XFS_MAX_SECTORSIZE,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = S_SECTSIZE,
- 		  .conflicts = { S_LOG,
-@@ -677,7 +677,7 @@ struct opt_params sopts = {
- 		  .is_power_2 = true,
- 		  .minval = XFS_MIN_SECTORSIZE,
- 		  .maxval = XFS_MAX_SECTORSIZE,
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 	},
- };
-@@ -702,29 +702,29 @@ struct opt_params mopts = {
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		},
- 		{ .index = M_FINOBT,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 1,
-+		  .flagval = 1,
- 		},
- 		{ .index = M_UUID,
- 		  .conflicts = { LAST_CONFLICT },
--		  .defaultval = SUBOPT_NEEDS_VAL,
-+		  .flagval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = M_RMAPBT,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 0,
-+		  .flagval = 0,
- 		},
- 		{ .index = M_REFLINK,
- 		  .conflicts = { LAST_CONFLICT },
- 		  .minval = 0,
- 		  .maxval = 1,
--		  .defaultval = 0,
-+		  .flagval = 0,
- 		},
- 	},
- };
-@@ -1365,9 +1365,9 @@ getnum(
+@@ -1363,6 +1363,7 @@ getnum(
+ 	uint64_t		c;
+ 
  	check_opt(opts, index, false);
++	set_conf_raw(opts, index, str);
  	/* empty strings might just return a default value */
  	if (!str || *str == '\0') {
--		if (sp->defaultval == SUBOPT_NEEDS_VAL)
-+		if (sp->flagval == SUBOPT_NEEDS_VAL)
- 			reqval(opts->name, (char **)opts->subopts, index);
--		return sp->defaultval;
-+		return sp->flagval;
+ 		if (sp->flagval == SUBOPT_NEEDS_VAL)
+@@ -1450,7 +1451,7 @@ main(
+ 	char			*dfile;
+ 	uint64_t		dirblocklog;
+ 	uint64_t		dirblocksize;
+-	char			*dsize;
++	uint64_t		dbytes;
+ 	uint64_t		dsu;
+ 	uint64_t		dsw;
+ 	uint64_t		dsunit;
+@@ -1474,7 +1475,7 @@ main(
+ 	xfs_rfsblock_t		logblocks;
+ 	char			*logfile;
+ 	uint64_t		loginternal;
+-	char			*logsize;
++	uint64_t		logbytes;
+ 	xfs_fsblock_t		logstart;
+ 	bool			lvflag;
+ 	bool			lsflag;
+@@ -1503,11 +1504,11 @@ main(
+ 	char			*protostring;
+ 	bool			qflag;
+ 	xfs_rfsblock_t		rtblocks;
++	uint64_t		rtbytes;
+ 	xfs_extlen_t		rtextblocks;
+ 	xfs_rtblock_t		rtextents;
+-	char			*rtextsize;
++	uint64_t		rtextbytes;
+ 	char			*rtfile;
+-	char			*rtsize;
+ 	xfs_sb_t		*sbp;
+ 	uint64_t		sectorlog;
+ 	uint64_t		sector_mask;
+@@ -1555,7 +1556,8 @@ main(
+ 	qflag = false;
+ 	imaxpct = inodelog = inopblock = isize = 0;
+ 	dfile = logfile = rtfile = NULL;
+-	dsize = logsize = rtsize = rtextsize = protofile = NULL;
++	protofile = NULL;
++	rtbytes = rtextbytes = logbytes = dbytes = 0;
+ 	dsu = dsw = dsunit = dswidth = lalign = lsu = lsunit = 0;
+ 	nodsflag = norsflag = false;
+ 	force_overwrite = false;
+@@ -1619,7 +1621,7 @@ main(
+ 					xi.dname = getstr(value, &dopts, D_NAME);
+ 					break;
+ 				case D_SIZE:
+-					dsize = getstr(value, &dopts, D_SIZE);
++					dbytes = getnum(value, &dopts, D_SIZE);
+ 					break;
+ 				case D_SUNIT:
+ 					dsunit = getnum(value, &dopts, D_SUNIT);
+@@ -1764,7 +1766,7 @@ main(
+ 					lvflag = 1;
+ 					break;
+ 				case L_SIZE:
+-					logsize = getstr(value, &lopts, L_SIZE);
++					logbytes = getnum(value, &lopts, L_SIZE);
+ 					break;
+ 				case L_SECTLOG:
+ 					lsectorlog = getnum(value, &lopts,
+@@ -1893,8 +1895,7 @@ main(
+ 
+ 				switch (getsubopt(&p, subopts, &value)) {
+ 				case R_EXTSIZE:
+-					rtextsize = getstr(value, &ropts,
+-							   R_EXTSIZE);
++					rtextbytes = getnum(value, &ropts, R_EXTSIZE);
+ 					break;
+ 				case R_FILE:
+ 					xi.risfile = getnum(value, &ropts,
+@@ -1906,7 +1907,7 @@ main(
+ 							   R_NAME);
+ 					break;
+ 				case R_SIZE:
+-					rtsize = getstr(value, &ropts, R_SIZE);
++					rtbytes = getnum(value, &ropts, R_SIZE);
+ 					break;
+ 				case R_NOALIGN:
+ 					norsflag = getnum(value, &ropts,
+@@ -2009,14 +2010,14 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
+ 	 * sector size mismatches between the new filesystem and the underlying
+ 	 * host filesystem.
+ 	 */
+-	check_device_type(dfile, &xi.disfile, !dsize, !dfile,
++	check_device_type(dfile, &xi.disfile, !dbytes, !dfile,
+ 			  Nflag ? NULL : &xi.dcreat, force_overwrite, "d");
+ 	if (!loginternal)
+-		check_device_type(xi.logname, &xi.lisfile, !logsize, !xi.logname,
+-				  Nflag ? NULL : &xi.lcreat,
++		check_device_type(xi.logname, &xi.lisfile, !logbytes,
++				  !xi.logname, Nflag ? NULL : &xi.lcreat,
+ 				  force_overwrite, "l");
+ 	if (xi.rtname)
+-		check_device_type(xi.rtname, &xi.risfile, !rtsize, !xi.rtname,
++		check_device_type(xi.rtname, &xi.risfile, !rtbytes, !xi.rtname,
+ 				  Nflag ? NULL : &xi.rcreat,
+ 				  force_overwrite, "r");
+ 	if (xi.disfile || xi.lisfile || xi.risfile)
+@@ -2197,10 +2198,7 @@ _("rmapbt not supported with realtime devices\n"));
  	}
  
- 	if (sp->minval == 0 && sp->maxval == 0) {
+ 
+-	if (dsize) {
+-		uint64_t dbytes;
+-
+-		dbytes = getnum(dsize, &dopts, D_SIZE);
++	if (dbytes) {
+ 		if (dbytes % XFS_MIN_BLOCKSIZE) {
+ 			fprintf(stderr,
+ 			_("illegal data length %"PRIu64", not a multiple of %d\n"),
+@@ -2229,10 +2227,7 @@ _("rmapbt not supported with realtime devices\n"));
+ 		usage();
+ 	}
+ 
+-	if (logsize) {
+-		uint64_t logbytes;
+-
+-		logbytes = getnum(logsize, &lopts, L_SIZE);
++	if (logbytes) {
+ 		if (logbytes % XFS_MIN_BLOCKSIZE) {
+ 			fprintf(stderr,
+ 			_("illegal log length %"PRIu64", not a multiple of %d\n"),
+@@ -2246,10 +2241,7 @@ _("rmapbt not supported with realtime devices\n"));
+ 				logbytes, blocksize,
+ 				(uint64_t)(logblocks << blocklog));
+ 	}
+-	if (rtsize) {
+-		uint64_t rtbytes;
+-
+-		rtbytes = getnum(rtsize, &ropts, R_SIZE);
++	if (rtbytes) {
+ 		if (rtbytes % XFS_MIN_BLOCKSIZE) {
+ 			fprintf(stderr,
+ 			_("illegal rt length %"PRIu64", not a multiple of %d\n"),
+@@ -2266,10 +2258,7 @@ _("rmapbt not supported with realtime devices\n"));
+ 	/*
+ 	 * If specified, check rt extent size against its constraints.
+ 	 */
+-	if (rtextsize) {
+-		uint64_t rtextbytes;
+-
+-		rtextbytes = getnum(rtextsize, &ropts, R_EXTSIZE);
++	if (rtextbytes) {
+ 		if (rtextbytes % blocksize) {
+ 			fprintf(stderr,
+ 		_("illegal rt extent size %"PRIu64", not a multiple of %"PRIu64"\n"),
+@@ -2286,7 +2275,7 @@ _("rmapbt not supported with realtime devices\n"));
+ 		uint64_t	rswidth;
+ 		uint64_t	rtextbytes;
+ 
+-		if (!norsflag && !xi.risfile && !(!rtsize && xi.disfile))
++		if (!norsflag && !xi.risfile && !(!rtbytes && xi.disfile))
+ 			rswidth = ft.rtswidth;
+ 		else
+ 			rswidth = 0;
+@@ -2397,15 +2386,16 @@ _("rmapbt not supported with realtime devices\n"));
+ 		rtfile = _("volume rt");
+ 	else if (!xi.rtdev)
+ 		rtfile = _("none");
+-	if (dsize && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
++	if (dbytes && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
+ 		fprintf(stderr,
+ 			_("size %s specified for data subvolume is too large, "
+ 			"maximum is %"PRIu64" blocks\n"),
+-			dsize, (uint64_t)DTOBT(xi.dsize));
++			get_conf_raw(&dopts, D_SIZE),
++			(uint64_t)DTOBT(xi.dsize));
+ 		usage();
+-	} else if (!dsize && xi.dsize > 0)
++	} else if (!dbytes && xi.dsize > 0)
+ 		dblocks = DTOBT(xi.dsize);
+-	else if (!dsize) {
++	else if (!dbytes) {
+ 		fprintf(stderr, _("can't get size of data subvolume\n"));
+ 		usage();
+ 	}
+@@ -2438,22 +2428,23 @@ reported by the device (%u).\n"),
+ reported by the device (%u).\n"),
+ 			lsectorsize, xi.lbsize);
+ 	}
+-	if (rtsize && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
++	if (rtbytes && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
+ 		fprintf(stderr, _(
+ "Warning: the realtime subvolume sector size %"PRIu64" is less than the sector size\n\
+ reported by the device (%u).\n"),
+ 			sectorsize, xi.rtbsize);
+ 	}
+ 
+-	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
++	if (rtbytes && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
+ 		fprintf(stderr,
+ 			_("size %s specified for rt subvolume is too large, "
+ 			"maximum is %"PRIu64" blocks\n"),
+-			rtsize, (uint64_t)DTOBT(xi.rtsize));
++			get_conf_raw(&ropts, R_SIZE),
++			(uint64_t)DTOBT(xi.rtsize));
+ 		usage();
+-	} else if (!rtsize && xi.rtsize > 0)
++	} else if (!rtbytes && xi.rtsize > 0)
+ 		rtblocks = DTOBT(xi.rtsize);
+-	else if (rtsize && !xi.rtdev) {
++	else if (rtbytes && !xi.rtdev) {
+ 		fprintf(stderr,
+ 			_("size specified for non-existent rt subvolume\n"));
+ 		usage();
+@@ -2658,26 +2649,27 @@ an AG size that is one stripe unit smaller, for example %"PRIu64".\n"),
+ 				   sb_feat.rmapbt, sb_feat.reflink);
+ 	ASSERT(min_logblocks);
+ 	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
+-	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
++	if (!logbytes && dblocks >= (1024*1024*1024) >> blocklog)
+ 		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
+-	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
++	if (logbytes && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
+ 		fprintf(stderr,
+ _("size %s specified for log subvolume is too large, maximum is %"PRIu64" blocks\n"),
+-			logsize, (uint64_t)DTOBT(xi.logBBsize));
++			get_conf_raw(&lopts, L_SIZE),
++			(uint64_t)DTOBT(xi.logBBsize));
+ 		usage();
+-	} else if (!logsize && xi.logBBsize > 0) {
++	} else if (!logbytes && xi.logBBsize > 0) {
+ 		logblocks = DTOBT(xi.logBBsize);
+-	} else if (logsize && !xi.logdev && !loginternal) {
++	} else if (logbytes && !xi.logdev && !loginternal) {
+ 		fprintf(stderr,
+ 			_("size specified for non-existent log subvolume\n"));
+ 		usage();
+-	} else if (loginternal && logsize && logblocks >= dblocks) {
++	} else if (loginternal && logbytes && logblocks >= dblocks) {
+ 		fprintf(stderr, _("size %"PRIu64" too large for internal log\n"),
+ 			logblocks);
+ 		usage();
+ 	} else if (!loginternal && !xi.logdev) {
+ 		logblocks = 0;
+-	} else if (loginternal && !logsize) {
++	} else if (loginternal && !logbytes) {
+ 
+ 		if (dblocks < GIGABYTES(1, blocklog)) {
+ 			/* tiny filesystems get minimum sized logs. */
+@@ -2741,7 +2733,7 @@ _("size %s specified for log subvolume is too large, maximum is %"PRIu64" blocks
+ 		 * Readjust the log size to fit within an AG if it was sized
+ 		 * automatically.
+ 		 */
+-		if (!logsize) {
++		if (!logbytes) {
+ 			logblocks = MIN(logblocks,
+ 					libxfs_alloc_ag_max_usable(mp));
+ 
 -- 
 2.1.4
 
