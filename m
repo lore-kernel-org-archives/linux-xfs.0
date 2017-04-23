@@ -1,143 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44217 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S980084AbdDYDEW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Apr 2017 23:04:22 -0400
-Date: Tue, 25 Apr 2017 05:04:21 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 04/12] mkfs: merge tables for opts parsing into one table
-Message-ID: <20170425030421.GH28800@wotan.suse.de>
-References: <20170423185503.31415-1-jtulak@redhat.com>
- <20170423185503.31415-5-jtulak@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170423185503.31415-5-jtulak@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:47302 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1163227AbdDWSzG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 23 Apr 2017 14:55:06 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 35CA780F9A
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Apr 2017 18:55:05 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 00/12] mkfs: save user input into opts table
+Date: Sun, 23 Apr 2017 20:54:51 +0200
+Message-Id: <20170423185503.31415-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Sun, Apr 23, 2017 at 08:54:55PM +0200, Jan Tulak wrote:
-> Merge separate instances of opt_params into one indexable table. Git
-> makes this patch looks a bit more complicated, but it does not change
-> values or structure of anything else. It only moves all the "struct
-> opt_params dopts = {...}", changes indentation for these substructures
-> and replaces their usage (dopts -> opts[OPT_D]).
-> 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> ---
->  mkfs/xfs_mkfs.c | 1316 +++++++++++++++++++++++++++++--------------------------
->  1 file changed, 683 insertions(+), 633 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 7a72b11..513e106 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -42,6 +42,7 @@ static int  ispow2(unsigned int i);
->  uint64_t		blocksize;
->  uint64_t		sectorsize;
->  
-> +#define MAX_OPTS	16
+Hi guys,
 
-This is fragile, every time a new opt is added this needs to be updated
-and so is the index, and we should be pedantic over not going out of bounds.
-We could instead use a flexible array and compute the max opts at run time
-as a global. This way the max opts is always updated automatically.
-
->  #define MAX_SUBOPTS	16
->  #define SUBOPT_NEEDS_VAL	(-1LL)
->  #define MAX_CONFLICTS	8
-> @@ -60,6 +61,10 @@ uint64_t		sectorsize;
->   *
->   * Description of the structure members follows:
->   *
-> + * index MANDATORY
-> + *   An integer denoting the position of the specific option in opts array,
-> + *   counting from 0 up to MAX_OPTS.
-> + *
->   * name MANDATORY
->   *   Name is a single char, e.g., for '-d file', name is 'd'.
->   *
-> @@ -132,6 +137,7 @@ uint64_t		sectorsize;
->   * !!! END OF NOTE ===========================================================
->   */
->  struct opt_params {
-> +	int		index;
+I decided to split my big patchset into more smaller ones. So, this is the
+first set. It adds set/get functions similar to Dave's suggestion, to save and
+retrieve user values to and from the big opts table and prepares the ground for
+future patches.
 
 
->  	const char	name;
->  	const char	*subopts[MAX_SUBOPTS];
->  
-> @@ -147,584 +153,592 @@ struct opt_params {
->  		uint64_t	flagval;
->  		const char	*raw_input;
->  	}		subopt_params[MAX_SUBOPTS];
-> -};
-> -
-> -struct opt_params bopts = {
-> -	.name = 'b',
-> -	.subopts = {
-> +} 
+It is a mix of patches I already submitted and new ones:
+Patches 2, 3, 4, 5 are just slightly modified to fix their issues.
+Other patches are new.
 
-Do we really need to mesh the struct with the opts below ? I think it would
-make your patch easier to read if we kept the old tradition of splitting it,
-its not clear to me what the advantage is.
+The last few patches could be merged into one, because it should only
+substitute variables for get/set calls, but because there are so many
+places where the changes occurs, I split them into smaller chunks,
+making it (hopefully) easier for you to review.
 
-> opts[MAX_OPTS] = {
-> +#define OPT_B	0
+This patchset requires my two previous uint patches.
+Git tree: https://github.com/jtulak/xfsprogs-dev/tree/setters
 
-I find these defines blinding on reading the struct declaration, we could
-instead just stuff them into an enum, which would also enable us to shift all
-the documentation into the header of the enum using whatever doc format we use.
+Cheers,
+Jan
 
-Below is a simple demo using a basic limited opt just to be clear about what I
-am suggesting, modulo, I think we want max_opts to be a global.
+P.S.:
+As a side note, I thought about adding a verification mechanism to
+the set_conf_val() function, which would guarantee that we never have
+an invalid number even later in the code -- an attempt to catch for
+bugs. However, it seems that in some cases, we convert the number
+e.g. from number of 512 byte blocks to fs blocks in situ (L_SUNIT),
+which means that in some occasions, we are getting out of the range
+of allowed values on the input side. So, I'm not adding these checks now,
+but it is an option that could give us a cheap way how to catch some bugs.
+Another question though is, how useful it would be...
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
 
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+Jan Tulak (12):
+  mkfs: Save raw user input field to the opts struct
+  mkfs: rename defaultval to flagval in opts
+  mkfs: remove intermediate getstr followed by getnum
+  mkfs: merge tables for opts parsing into one table
+  mkfs: extend opt_params with a value field
+  mkfs: create get/set functions for opts table
+  mkfs: save user input values into opts
+  mkfs: replace variables with opts table: -b,d,s options
+  mkfs: replace variables with opts table: -i options
+  mkfs: replace variables with opts table: -l options
+  mkfs: replace variables with opts table: -n options
+  mkfs: replace variables with opts table: -r options
 
-enum opt_idx {
-	OPT_ZERO = 0,
-	OPT_ONE,
-	OPT_TWO,
-};
+ mkfs/xfs_mkfs.c | 2457 ++++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 1420 insertions(+), 1037 deletions(-)
 
-struct opt {
-	unsigned int idx;
-	unsigned int val;
-};
+-- 
+2.1.4
 
-struct opt opts[] = {
-	{
-		.idx = OPT_ZERO,
-		.val = 0,
-	},
-	{
-		.idx = OPT_ONE,
-		.val = 1,
-	},
-	{
-		.idx = OPT_TWO,
-		.val = 2,
-	},
-};
-
-int main(int argc, char *argv[])
-{
-	unsigned int max_opts = ARRAY_SIZE(opts);
-	unsigned int i;
-
-	printf("Max size: %lu\n", max_opts);
-
-	for (i = 0; i < max_opts; i++) {
-		printf("Val: %lu\n", opts[i].val);
-	}
-
-	return 0;
-}
