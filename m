@@ -1,103 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:29038 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1424508AbdDUTJA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2017 15:09:00 -0400
-Date: Fri, 21 Apr 2017 12:08:55 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/6] xfs: fix __user annotations for xfs_ioc_getfsmap
-Message-ID: <20170421190854.GI23371@birch.djwong.org>
-References: <20170421152123.11316-1-hch@lst.de>
- <20170421152123.11316-5-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170421152123.11316-5-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:41094 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1163227AbdDWSzK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 23 Apr 2017 14:55:10 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 614283D96A
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Apr 2017 18:55:09 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 01/12] mkfs: Save raw user input field to the opts struct
+Date: Sun, 23 Apr 2017 20:54:52 +0200
+Message-Id: <20170423185503.31415-2-jtulak@redhat.com>
+In-Reply-To: <20170423185503.31415-1-jtulak@redhat.com>
+References: <20170423185503.31415-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Fri, Apr 21, 2017 at 05:21:21PM +0200, Christoph Hellwig wrote:
-> By passing the whole fsmap_head structure and an index we can get the
-> user point annotations right for the embedded variable sized array
-> in struct fsmap_head.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_ioctl.c | 16 ++++++++--------
->  1 file changed, 8 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 0f8bed9a7e4c..b7db0b8f0657 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1614,7 +1614,8 @@ xfs_ioc_getbmapx(
->  
->  struct getfsmap_info {
->  	struct xfs_mount	*mp;
-> -	struct fsmap __user	*data;
-> +	struct fsmap_head __user *data;
-> +	int			idx;
+Save exactly what the user gave us for every option.  This way, we will
+never lose the information if we need it to print back an issue.
 
-This ought to be unsigned int since fmh_entries is u32.  I'll fix
-it when I commit the patch.
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 83a04fc..84674d5 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -119,6 +119,10 @@ uint64_t		sectorsize;
+  *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
+  *     value in any case.
+  *
++ *   raw_input INTERNAL
++ *     Filled raw string from the user, so we never lose that information e.g.
++ *     to print it back in case of an issue.
++ *
+  * !!! NOTE ==================================================================
+  *
+  * If you are adding a new option, or changing an existing one,
+@@ -141,6 +145,7 @@ struct opt_params {
+ 		uint64_t	minval;
+ 		uint64_t	maxval;
+ 		uint64_t	defaultval;
++		const char	*raw_input;
+ 	}		subopt_params[MAX_SUBOPTS];
+ };
+ 
+@@ -748,6 +753,18 @@ struct opt_params mopts = {
+  */
+ #define WHACK_SIZE (128 * 1024)
+ 
++static inline void
++set_conf_raw(struct opt_params *opt, int subopt, const char *value)
++{
++	opt->subopt_params[subopt].raw_input = value;
++}
++
++static inline const char *
++get_conf_raw(const struct opt_params *opt, int subopt)
++{
++	return opt->subopt_params[subopt].raw_input;
++}
++
+ /*
+  * Convert lsu to lsunit for 512 bytes blocks and check validity of the values.
+  */
+-- 
+2.1.4
 
---D
-
->  	__u32			last_flags;
->  };
->  
-> @@ -1628,17 +1629,17 @@ xfs_getfsmap_format(struct xfs_fsmap *xfm, void *priv)
->  
->  	info->last_flags = xfm->fmr_flags;
->  	xfs_fsmap_from_internal(&fm, xfm);
-> -	if (copy_to_user(info->data, &fm, sizeof(struct fsmap)))
-> +	if (copy_to_user(&info->data->fmh_recs[info->idx++], &fm,
-> +			sizeof(struct fsmap)))
->  		return -EFAULT;
->  
-> -	info->data++;
->  	return 0;
->  }
->  
->  STATIC int
->  xfs_ioc_getfsmap(
->  	struct xfs_inode	*ip,
-> -	void			__user *arg)
-> +	struct fsmap_head	__user *arg)
->  {
->  	struct getfsmap_info	info = { NULL };
->  	struct xfs_fsmap_head	xhead = {0};
-> @@ -1664,7 +1665,7 @@ xfs_ioc_getfsmap(
->  	trace_xfs_getfsmap_high_key(ip->i_mount, &xhead.fmh_keys[1]);
->  
->  	info.mp = ip->i_mount;
-> -	info.data = ((__force struct fsmap_head *)arg)->fmh_recs;
-> +	info.data = arg;
->  	error = xfs_getfsmap(ip->i_mount, &xhead, xfs_getfsmap_format, &info);
->  	if (error == XFS_BTREE_QUERY_RANGE_ABORT) {
->  		error = 0;
-> @@ -1674,10 +1675,9 @@ xfs_ioc_getfsmap(
->  
->  	/* If we didn't abort, set the "last" flag in the last fmx */
->  	if (!aborted && xhead.fmh_entries) {
-> -		info.data--;
->  		info.last_flags |= FMR_OF_LAST;
-> -		if (copy_to_user(&info.data->fmr_flags, &info.last_flags,
-> -				sizeof(info.last_flags)))
-> +		if (copy_to_user(&info.data->fmh_recs[info.idx - 1].fmr_flags,
-> +				&info.last_flags, sizeof(info.last_flags)))
->  			return -EFAULT;
->  	}
->  
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
