@@ -1,34 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50344 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S974967AbdDYFaT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Apr 2017 01:30:19 -0400
-Date: Tue, 25 Apr 2017 07:30:17 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 08/12] mkfs: replace variables with opts table: -b,d,s
- options
-Message-ID: <20170425053017.GM28800@wotan.suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:49202 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1163236AbdDWSzO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 23 Apr 2017 14:55:14 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 991F48124F
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Apr 2017 18:55:13 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 05/12] mkfs: extend opt_params with a value field
+Date: Sun, 23 Apr 2017 20:54:56 +0200
+Message-Id: <20170423185503.31415-6-jtulak@redhat.com>
+In-Reply-To: <20170423185503.31415-1-jtulak@redhat.com>
 References: <20170423185503.31415-1-jtulak@redhat.com>
- <20170423185503.31415-9-jtulak@redhat.com>
- <20170425052721.GL28800@wotan.suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170425052721.GL28800@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Tue, Apr 25, 2017 at 07:27:21AM +0200, Luis R. Rodriguez wrote:
-> On Sun, Apr 23, 2017 at 08:54:59PM +0200, Jan Tulak wrote:
-> > Remove variables that can be replaced with a direct access to the opts table,
-> > so we have it all in a single place, acessible from anywhere.
-> > 
-> > In future, we can remove some passing of values forth and back, but now limit
-> > the changes to simple replacement without a change in the logic.
+Add a new field int opt_params - value, which is filled with user input.
 
-FWIW, patches 9-12 go reviewed with the same topical concern as in this patch.
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-  Luis
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 513e106..c2ffd91 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -128,6 +128,12 @@ uint64_t		sectorsize;
+  *     Filled raw string from the user, so we never lose that information e.g.
+  *     to print it back in case of an issue.
+  *
++ *   value OPTIONAL
++ *     The value that is to be used if the given subopt is not specified at all.
++ *     This is filled with user input and anything you write here now is
++ *     overwritten if user specifies the subopt. (If the user input is a string
++ *     and not a number, this value is set to a positive non-zero number.)
++ *
+  * !!! NOTE ==================================================================
+  *
+  * If you are adding a new option, or changing an existing one,
+@@ -152,6 +158,7 @@ struct opt_params {
+ 		uint64_t	maxval;
+ 		uint64_t	flagval;
+ 		const char	*raw_input;
++		uint64_t	value;
+ 	}		subopt_params[MAX_SUBOPTS];
+ } opts[MAX_OPTS] = {
+ #define OPT_B	0
+-- 
+2.1.4
+
