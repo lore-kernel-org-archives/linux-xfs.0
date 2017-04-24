@@ -1,57 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49202 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44926 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1163236AbdDWSzO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 23 Apr 2017 14:55:14 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 991F48124F
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Apr 2017 18:55:13 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 05/12] mkfs: extend opt_params with a value field
-Date: Sun, 23 Apr 2017 20:54:56 +0200
-Message-Id: <20170423185503.31415-6-jtulak@redhat.com>
-In-Reply-To: <20170423185503.31415-1-jtulak@redhat.com>
-References: <20170423185503.31415-1-jtulak@redhat.com>
+        id S968818AbdDXU3r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Apr 2017 16:29:47 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_io: fix statx definition for non-x86 architecture
+Message-ID: <52721b67-60e0-0570-0e90-282e4d525797@redhat.com>
+Date: Mon, 24 Apr 2017 15:29:45 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Gwendal Grignou <gwendal@chromium.org>
 
-Add a new field int opt_params - value, which is filled with user input.
+Apply the same fix to xfs_io as Gwendal did for fstests:
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Fix a compilation error for ARM:
+__ILP32__ is defined but not __X32_SYSCALL_BIT.
+
+The check should only apply for x86_64 architecture, statx for other
+architectures is not implemented yet - see commit 7acc839c9e57
+"statx: Add a system call to make enhanced file info available".
+
+Signed-off-by: Gwendal Grignou <gwendal@chromium.org>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 7 +++++++
- 1 file changed, 7 insertions(+)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 513e106..c2ffd91 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -128,6 +128,12 @@ uint64_t		sectorsize;
-  *     Filled raw string from the user, so we never lose that information e.g.
-  *     to print it back in case of an issue.
-  *
-+ *   value OPTIONAL
-+ *     The value that is to be used if the given subopt is not specified at all.
-+ *     This is filled with user input and anything you write here now is
-+ *     overwritten if user specifies the subopt. (If the user input is a string
-+ *     and not a number, this value is set to a positive non-zero number.)
-+ *
-  * !!! NOTE ==================================================================
-  *
-  * If you are adding a new option, or changing an existing one,
-@@ -152,6 +158,7 @@ struct opt_params {
- 		uint64_t	maxval;
- 		uint64_t	flagval;
- 		const char	*raw_input;
-+		uint64_t	value;
- 	}		subopt_params[MAX_SUBOPTS];
- } opts[MAX_OPTS] = {
- #define OPT_B	0
--- 
-2.1.4
+diff --git a/io/statx.h b/io/statx.h
+index ff08e27..eea7944 100644
+--- a/io/statx.h
++++ b/io/statx.h
+@@ -18,10 +18,12 @@
+ #ifndef __NR_statx
+ # ifdef __i386__
+ #  define __NR_statx 383
+-# elif defined (__ILP32__)
+-#  define __NR_statx (__X32_SYSCALL_BIT + 332)
+ # elif defined (__x86_64__)
+-#  define __NR_statx 332
++#  if defined (__ILP32__)
++#   define __NR_statx (__X32_SYSCALL_BIT + 332)
++#  else
++#   define __NR_statx 332
++#  endif
+ # endif
+ #endif
+ 
 
