@@ -1,89 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cloud1-vm154.de-nserver.de ([178.250.10.56]:27059 "EHLO
-        cloud1-vm154.de-nserver.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752026AbdDRHBY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Apr 2017 03:01:24 -0400
-Subject: Re: XFS crashes with xfs_iunlink_remove: xfs_imap returned error -22
-References: <f94b7ddd-a5a0-b376-6d70-fd9472bd20e8@profihost.ag>
- <bc5aafb9-37a3-9c02-50b7-421633dbd606@sandeen.net>
- <6d9593a4-e7b0-9f8f-676a-686014768150@profihost.ag>
- <fb362f93-db4b-34e9-3902-e5a1e6ed84b6@profihost.ag>
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Message-ID: <76606275-5510-84bd-7f2a-c8a33826e53e@profihost.ag>
-Date: Tue, 18 Apr 2017 09:01:17 +0200
+Received: from mga01.intel.com ([192.55.52.88]:9136 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1173091AbdDXTQG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Apr 2017 15:16:06 -0400
+Date: Mon, 24 Apr 2017 13:16:04 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v3 06/20] dax: set errors in mapping when writeback fails
+Message-ID: <20170424191604.GA2884@linux.intel.com>
+References: <20170424132259.8680-1-jlayton@redhat.com>
+ <20170424132259.8680-7-jlayton@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <fb362f93-db4b-34e9-3902-e5a1e6ed84b6@profihost.ag>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170424132259.8680-7-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: Jeff Layton <jlayton@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, osd-dev@open-osd.org, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk
 
-System crashed again but output was the same.
+On Mon, Apr 24, 2017 at 09:22:45AM -0400, Jeff Layton wrote:
+> In order to get proper error codes from fsync, we must set an error in
+> the mapping range when writeback fails.
+> 
+> Signed-off-by: Jeff Layton <jlayton@redhat.com>
 
-2017-04-18 07:30:18     XFS (sda3): xfs_iunlink_remove: xfs_imap
-returned error -22.
-2017-04-18 07:30:18     XFS (sda3): xfs_inactive_ifree: xfs_ifree
-returned error -22
-2017-04-18 07:30:18     XFS (sda3): xfs_do_force_shutdown(0x1) called
-from line 1872 of file fs/xfs/xfs_inode.c. Return address =
-0xffffffff9b33cf93
-2017-04-18 07:30:18     XFS (sda3): I/O Error Detected. Shutting down
-filesystem
-2017-04-18 07:30:18     XFS (sda3): Please umount the filesystem and
-rectify the problem(s)
-2017-04-18 07:30:18     XFS (sda3): xfs_log_force: error -5 returned.
-2017-04-18 07:30:28     XFS (sda3): xfs_log_force: error -5 returned.
-2017-04-18 07:30:58     XFS (sda3): xfs_log_force: error -5 returned.
-2017-04-18 07:31:28     XFS (sda3): xfs_log_force: error -5 returned.
+Works fine in some error injection testing.
 
-Stefan
-Am 17.04.2017 um 17:06 schrieb Stefan Priebe - Profihost AG:
+Tested-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+
+> ---
+>  fs/dax.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> Am 17.04.2017 um 17:04 schrieb Stefan Priebe - Profihost AG:
->> Hi Eric,
->>
->>> On 4/17/17 2:54 AM, Stefan Priebe wrote:
->>>> Hello list,
->>>>
->>>> one of my servers is crashing every night with the following errors:
->>>>
->>>> XFS (sda3): xfs_iunlink_remove: xfs_imap returned error -22.
->>>> XFS (sda3): xfs_inactive_ifree: xfs_ifree returned error -22 XFS
->>>
->>>
->>> -EINVAL
->>>
->>>> (sda3): xfs_do_force_shutdown(0x1) called from line 1872 of file
->>>> fs/xfs/xfs_inode.c. Return address = 0xffffffff9e33cf53 XFS (sda3):
->>>> I/O Error Detected. Shutting down filesystem
->>>>
->>>> I ran xfs_repair v4.9.0 but it seems unable to recover / fix this
->>>> error. I'm running an OpenSUSE 42.2 kernel based von v4.4. Is there
->>>> anything i can do to fix this?
->>>
->>> # echo 11 > /proc/sys/fs/xfs/error_level
->>>
->>> to get a full backtrace from the shutdown (if you didn't already)
->>> so we can at least see what process is encountering the errors.
->>
->> done.
->>
->>> I have a hunch, though - are you running xfs_fsr overnight?
->>
->> No only rsync from dev/a to dev/b. But the reported device is a (source).
+> diff --git a/fs/dax.c b/fs/dax.c
+> index 85abd741253d..9b6b04030c3f 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -901,8 +901,10 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+>  
+>  			ret = dax_writeback_one(bdev, mapping, indices[i],
+>  					pvec.pages[i]);
+> -			if (ret < 0)
+> +			if (ret < 0) {
+> +				mapping_set_error(mapping, ret);
+>  				return ret;
+> +			}
+>  		}
+>  	}
+>  	return 0;
+> -- 
+> 2.9.3
 > 
-> verified: but that job is done 3-4 hours before crashing.
-> 
->>
->> I also have two empty folders in /lost+found which i cannot delete. Even
->> after running xfs_repair.
->>
->> # rm -r /lost+found/
->> rm: cannot remove ‘/lost+found/536874081’: Directory not empty
->> rm: cannot remove ‘/lost+found/536874085’: Directory not empty
->>
->> Greets,
->> Stefan
->>
