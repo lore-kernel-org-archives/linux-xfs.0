@@ -1,89 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f179.google.com ([209.85.216.179]:34177 "EHLO
-        mail-qt0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1428284AbdDXQ7G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2017 12:59:06 -0400
-Received: by mail-qt0-f179.google.com with SMTP id c45so118916585qtb.1
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2017 09:59:06 -0700 (PDT)
-Message-ID: <1493053143.2895.15.camel@redhat.com>
-Subject: Re: [PATCH v3 20/20] gfs2: clean up some filemap_* calls
+Received: from mail-qt0-f176.google.com ([209.85.216.176]:36806 "EHLO
+        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S975744AbdDXRQa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2017 13:16:30 -0400
+Received: by mail-qt0-f176.google.com with SMTP id g60so119735410qtd.3
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2017 10:16:30 -0700 (PDT)
+Message-ID: <1493054187.2895.18.camel@redhat.com>
+Subject: Re: [PATCH v3 11/20] cifs: set mapping error when page writeback
+ fails in writepage or launder_pages
 From: Jeff Layton <jlayton@redhat.com>
-Date: Mon, 24 Apr 2017 12:59:03 -0400
-In-Reply-To: <2139341349.405174.1493043175630.JavaMail.zimbra@redhat.com>
+Date: Mon, 24 Apr 2017 13:16:27 -0400
+In-Reply-To: <20170424152708.GK9112@infradead.org>
 References: <20170424132259.8680-1-jlayton@redhat.com>
-         <20170424132259.8680-21-jlayton@redhat.com>
-         <2139341349.405174.1493043175630.JavaMail.zimbra@redhat.com>
+         <20170424132259.8680-12-jlayton@redhat.com>
+         <20170424152708.GK9112@infradead.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bob Peterson <rpeterso@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, osd-dev@open-osd.org, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross zwisler <ross.zwisler@linux.intel.com>, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, osd-dev@open-osd.org, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk
 
-On Mon, 2017-04-24 at 10:12 -0400, Bob Peterson wrote:
-> ----- Original Message -----
-> > In some places, it's trying to reset the mapping error after calling
-> > filemap_fdatawait. That's no longer required. Also, turn several
-> > filemap_fdatawrite+filemap_fdatawait calls into filemap_write_and_wait.
-> > That will at least return writeback errors that occur during the write
-> > phase.
-> > 
+On Mon, 2017-04-24 at 08:27 -0700, Christoph Hellwig wrote:
+> On Mon, Apr 24, 2017 at 09:22:50AM -0400, Jeff Layton wrote:
 > > Signed-off-by: Jeff Layton <jlayton@redhat.com>
 > > ---
-> >  fs/gfs2/glops.c | 12 ++++--------
-> >  fs/gfs2/lops.c  |  4 +---
-> >  fs/gfs2/super.c |  6 ++----
-> >  3 files changed, 7 insertions(+), 15 deletions(-)
+> >  fs/cifs/file.c | 10 ++++++----
+> >  1 file changed, 6 insertions(+), 4 deletions(-)
 > > 
-> > diff --git a/fs/gfs2/glops.c b/fs/gfs2/glops.c
-> > index 5db59d444838..7362d19fdc4c 100644
-> > --- a/fs/gfs2/glops.c
-> > +++ b/fs/gfs2/glops.c
-> > @@ -158,9 +158,7 @@ static void rgrp_go_sync(struct gfs2_glock *gl)
-> >  	GLOCK_BUG_ON(gl, gl->gl_state != LM_ST_EXCLUSIVE);
-> >  
-> >  	gfs2_log_flush(sdp, gl, NORMAL_FLUSH);
-> > -	filemap_fdatawrite_range(mapping, gl->gl_vm.start, gl->gl_vm.end);
-> > -	error = filemap_fdatawait_range(mapping, gl->gl_vm.start, gl->gl_vm.end);
-> > -	mapping_set_error(mapping, error);
-> > +	filemap_write_and_wait_range(mapping, gl->gl_vm.start, gl->gl_vm.end);
-> 
-> This should probably have "error = ", no?
-> 
-
-This error is discarded in the current code after resetting the error in
-the mapping. With the earlier patches in this set we don't need to reset
-the error like this anymore.
-
-Now, if this code should doing something else with those errors, then
-that's a separate problem.
-
-> >  	gfs2_ail_empty_gl(gl);
-> >  
-> >  	spin_lock(&gl->gl_lockref.lock);
-> > @@ -225,12 +223,10 @@ static void inode_go_sync(struct gfs2_glock *gl)
-> >  	filemap_fdatawrite(metamapping);
-> >  	if (ip) {
-> >  		struct address_space *mapping = ip->i_inode.i_mapping;
-> > -		filemap_fdatawrite(mapping);
-> > -		error = filemap_fdatawait(mapping);
-> > -		mapping_set_error(mapping, error);
-> > +		filemap_write_and_wait(mapping);
+> > diff --git a/fs/cifs/file.c b/fs/cifs/file.c
+> > index 21d404535739..4b696a23b0b1 100644
+> > --- a/fs/cifs/file.c
+> > +++ b/fs/cifs/file.c
+> > @@ -2234,14 +2234,16 @@ cifs_writepage_locked(struct page *page, struct writeback_control *wbc)
+> >  	set_page_writeback(page);
+> >  retry_write:
+> >  	rc = cifs_partialpagewrite(page, 0, PAGE_SIZE);
+> > +	if (rc == -EAGAIN && wbc->sync_mode == WB_SYNC_ALL) {
+> >  		goto retry_write;
+> > +	} else if (rc == -EAGAIN) {
+> >  		redirty_page_for_writepage(wbc, page);
+> > +	} else if (rc != 0) {
+> >  		SetPageError(page);
+> > +		mapping_set_error(page->mapping, rc);
 > > +	} else {
-> > +		filemap_fdatawait(metamapping);
-> >  	}
-> > -	error = filemap_fdatawait(metamapping);
-> > -	mapping_set_error(metamapping, error);
+> >  		SetPageUptodate(page);
+> > +	}
 > 
-> This part doesn't look right at all. There's a big difference in gfs2 between
-> mapping and metamapping. We need to wait for metamapping regardless.
+> Hmmm.  I might be a little too nitpicky, but I hate having the same
+> partial condition duplicated if possible.  Why not:
 > 
+> 	if (rc == -EAGAIN) {
+> 		if (wbc->sync_mode == WB_SYNC_ALL)
+> 			goto retry_write;
+> 		redirty_page_for_writepage(wbc, page);
+> 	} else if (rc) {
+> 		SetPageError(page);
+> 		mapping_set_error(page->mapping, rc);
+> 	} else {
+> 		SetPageUptodate(page);
+> 	}
+> 
+> Otherwise this looks fine to me:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-...and this should wait. Basically, filemap_write_and_wait does
-filemap_fdatawrite and then filemap_fdatawait. This is mostly just
-replacing the existing code with a more concise helper.
+No, you're absolutely right. I merged that change into the patch.
 
+Thanks for the review so far!
 -- 
 Jeff Layton <jlayton@redhat.com>
