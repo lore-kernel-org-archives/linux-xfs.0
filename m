@@ -1,104 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44224 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1171158AbdDXNYh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Apr 2017 09:24:37 -0400
+Received: from mail-qt0-f179.google.com ([209.85.216.179]:34177 "EHLO
+        mail-qt0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1428284AbdDXQ7G (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2017 12:59:06 -0400
+Received: by mail-qt0-f179.google.com with SMTP id c45so118916585qtb.1
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2017 09:59:06 -0700 (PDT)
+Message-ID: <1493053143.2895.15.camel@redhat.com>
+Subject: Re: [PATCH v3 20/20] gfs2: clean up some filemap_* calls
 From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v3 16/20] mm: don't TestClearPageError in __filemap_fdatawait_range
-Date: Mon, 24 Apr 2017 09:22:55 -0400
-Message-Id: <20170424132259.8680-17-jlayton@redhat.com>
-In-Reply-To: <20170424132259.8680-1-jlayton@redhat.com>
+Date: Mon, 24 Apr 2017 12:59:03 -0400
+In-Reply-To: <2139341349.405174.1493043175630.JavaMail.zimbra@redhat.com>
 References: <20170424132259.8680-1-jlayton@redhat.com>
+         <20170424132259.8680-21-jlayton@redhat.com>
+         <2139341349.405174.1493043175630.JavaMail.zimbra@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, osd-dev@open-osd.org, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org
-Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk
+To: Bob Peterson <rpeterso@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, osd-dev@open-osd.org, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross zwisler <ross.zwisler@linux.intel.com>, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk
 
-The -EIO returned here can end up overriding whatever error is marked in
-the address space, and be returned at fsync time, even when there is a
-more appropriate error stored in the mapping.
+On Mon, 2017-04-24 at 10:12 -0400, Bob Peterson wrote:
+> ----- Original Message -----
+> > In some places, it's trying to reset the mapping error after calling
+> > filemap_fdatawait. That's no longer required. Also, turn several
+> > filemap_fdatawrite+filemap_fdatawait calls into filemap_write_and_wait.
+> > That will at least return writeback errors that occur during the write
+> > phase.
+> > 
+> > Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> > ---
+> >  fs/gfs2/glops.c | 12 ++++--------
+> >  fs/gfs2/lops.c  |  4 +---
+> >  fs/gfs2/super.c |  6 ++----
+> >  3 files changed, 7 insertions(+), 15 deletions(-)
+> > 
+> > diff --git a/fs/gfs2/glops.c b/fs/gfs2/glops.c
+> > index 5db59d444838..7362d19fdc4c 100644
+> > --- a/fs/gfs2/glops.c
+> > +++ b/fs/gfs2/glops.c
+> > @@ -158,9 +158,7 @@ static void rgrp_go_sync(struct gfs2_glock *gl)
+> >  	GLOCK_BUG_ON(gl, gl->gl_state != LM_ST_EXCLUSIVE);
+> >  
+> >  	gfs2_log_flush(sdp, gl, NORMAL_FLUSH);
+> > -	filemap_fdatawrite_range(mapping, gl->gl_vm.start, gl->gl_vm.end);
+> > -	error = filemap_fdatawait_range(mapping, gl->gl_vm.start, gl->gl_vm.end);
+> > -	mapping_set_error(mapping, error);
+> > +	filemap_write_and_wait_range(mapping, gl->gl_vm.start, gl->gl_vm.end);
+> 
+> This should probably have "error = ", no?
+> 
 
-Read errors are also sometimes tracked on a per-page level using
-PG_error. Suppose we have a read error on a page, and then that page is
-subsequently dirtied by overwriting the whole page. Writeback doesn't
-clear PG_error, so we can then end up successfully writing back that
-page and still return -EIO on fsync.
+This error is discarded in the current code after resetting the error in
+the mapping. With the earlier patches in this set we don't need to reset
+the error like this anymore.
 
-Worse yet, PG_error is cleared during a sync() syscall, but the -EIO
-return from that is silently discarded. Any subsystem that is relying on
-PG_error to report errors during fsync can easily lose writeback errors
-due to this. All you need is a stray sync() call on the box at the wrong
-time and you've lost the error.
+Now, if this code should doing something else with those errors, then
+that's a separate problem.
 
-Since the handling of the PG_error flag is somewhat inconsistent across
-subsystems, let's just rely on marking the address space when there are
-writeback errors. Change the TestClearPageError call to ClearPageError,
-and make __filemap_fdatawait_range a void return function.
+> >  	gfs2_ail_empty_gl(gl);
+> >  
+> >  	spin_lock(&gl->gl_lockref.lock);
+> > @@ -225,12 +223,10 @@ static void inode_go_sync(struct gfs2_glock *gl)
+> >  	filemap_fdatawrite(metamapping);
+> >  	if (ip) {
+> >  		struct address_space *mapping = ip->i_inode.i_mapping;
+> > -		filemap_fdatawrite(mapping);
+> > -		error = filemap_fdatawait(mapping);
+> > -		mapping_set_error(mapping, error);
+> > +		filemap_write_and_wait(mapping);
+> > +	} else {
+> > +		filemap_fdatawait(metamapping);
+> >  	}
+> > -	error = filemap_fdatawait(metamapping);
+> > -	mapping_set_error(metamapping, error);
+> 
+> This part doesn't look right at all. There's a big difference in gfs2 between
+> mapping and metamapping. We need to wait for metamapping regardless.
+> 
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- mm/filemap.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
+...and this should wait. Basically, filemap_write_and_wait does
+filemap_fdatawrite and then filemap_fdatawait. This is mostly just
+replacing the existing code with a more concise helper.
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index d94a76d4e023..47e7f50fb830 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -363,17 +363,16 @@ int filemap_flush(struct address_space *mapping)
- }
- EXPORT_SYMBOL(filemap_flush);
- 
--static int __filemap_fdatawait_range(struct address_space *mapping,
-+static void __filemap_fdatawait_range(struct address_space *mapping,
- 				     loff_t start_byte, loff_t end_byte)
- {
- 	pgoff_t index = start_byte >> PAGE_SHIFT;
- 	pgoff_t end = end_byte >> PAGE_SHIFT;
- 	struct pagevec pvec;
- 	int nr_pages;
--	int ret = 0;
- 
- 	if (end_byte < start_byte)
--		goto out;
-+		return;
- 
- 	pagevec_init(&pvec, 0);
- 	while ((index <= end) &&
-@@ -390,14 +389,11 @@ static int __filemap_fdatawait_range(struct address_space *mapping,
- 				continue;
- 
- 			wait_on_page_writeback(page);
--			if (TestClearPageError(page))
--				ret = -EIO;
-+			ClearPageError(page);
- 		}
- 		pagevec_release(&pvec);
- 		cond_resched();
- 	}
--out:
--	return ret;
- }
- 
- /**
-@@ -417,15 +413,10 @@ static int __filemap_fdatawait_range(struct address_space *mapping,
- int filemap_fdatawait_range(struct address_space *mapping, loff_t start_byte,
- 			    loff_t end_byte)
- {
--	int ret, ret2;
- 	errseq_t since = filemap_sample_wb_error(mapping);
- 
--	ret = __filemap_fdatawait_range(mapping, start_byte, end_byte);
--	ret2 = filemap_check_wb_error(mapping, since);
--	if (!ret)
--		ret = ret2;
--
--	return ret;
-+	__filemap_fdatawait_range(mapping, start_byte, end_byte);
-+	return filemap_check_wb_error(mapping, since);
- }
- EXPORT_SYMBOL(filemap_fdatawait_range);
- 
 -- 
-2.9.3
-
+Jeff Layton <jlayton@redhat.com>
