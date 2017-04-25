@@ -1,145 +1,554 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46882 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:56802 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1172656AbdDXO3d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Apr 2017 10:29:33 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 6B75C7F4BE
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2017 14:29:32 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-121-64.rdu2.redhat.com [10.10.121.64])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 159E17F278
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2017 14:29:31 +0000 (UTC)
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: [PATCH v3] xfsprogs: ensure growfs rejects non-existent mount point
-Date: Mon, 24 Apr 2017 09:29:26 -0500
-Message-Id: <20170424142926.25934-1-billodo@redhat.com>
-In-Reply-To: <20170407175809.8540-1-billodo@redhat.com>
-References: <20170407175809.8540-1-billodo@redhat.com>
+        id S1432264AbdDYQwc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Apr 2017 12:52:32 -0400
+Subject: Re: [PATCH 02/12] mkfs: rename defaultval to flagval in opts
+References: <20170423185503.31415-1-jtulak@redhat.com>
+ <20170423185503.31415-3-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <cbd1b9d4-9675-6cd8-7c39-e60758c63a06@sandeen.net>
+Date: Tue, 25 Apr 2017 11:52:31 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170423185503.31415-3-jtulak@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
 
-xfs_growfs manpage clearly states that the filesystem must
-be mounted to be grown. Current behavior allows xfs_growfs
-to proceed if the filesystem /containing/ the path
-of the desired target is mounted. This is not the specified
-behavior. Instead, also check the targeted fs argument against
-the entry found in the fstable lookup. Unless the targeted
-fs is actually mounted, reject the command.
+On 4/23/17 1:54 PM, Jan Tulak wrote:
+> The old name 'defaultval' was misleading - it is not the default value,
+> but the value the option has when used as a flag by an user.
 
-In order to cover bind-mounts, create a new lookup function
-based on the mountpoints instead of just the device name.
+The value should only ever be 0 or 1, correct?
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
+Ok, so I see something interesting here:
 
-v3: improve error message for realpath failure. Add comments
-to better document the differences between fs_table_lookup()
-and fs_table_lookup_mount(). Use realpath() in fs_table_lookup_mount()
-prior to directory comparison.
+# grep "flagval = " mkfs/xfs_mkfs.c | sort | uniq -c
+      1 			  .flagval = 0,
+      1 			.flagval = 0,
+     14 			  .flagval = 1,
+     40 			  .flagval = SUBOPT_NEEDS_VAL,
 
-v2: in order to properly handle relative pathnames, symlinks,
-and bind-mounts, use realpath to establish canonical path name.
-This also requires the introduction of a lookup function based
-on the target mountpoint.
+of the 56 subopts, only 16 are treated as a flag, and only 2 default
+to 0, while the rest default to 1.
 
- growfs/xfs_growfs.c | 10 +++++++++-
- include/path.h      |  1 +
- libxcmd/paths.c     | 31 +++++++++++++++++++++++++++++++
- 3 files changed, 41 insertions(+), 1 deletion(-)
+Those 2 seem like outliers: -m rmapbt and -m reflink.  What's
+going on there?
 
-diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-index a294e14..c3344d0 100644
---- a/growfs/xfs_growfs.c
-+++ b/growfs/xfs_growfs.c
-@@ -133,6 +133,7 @@ main(int argc, char **argv)
- 	int			spinodes;
- 	int			rmapbt_enabled;
- 	int			reflink_enabled;
-+	char			rpath[PATH_MAX];
- 
- 	progname = basename(argv[0]);
- 	setlocale(LC_ALL, "");
-@@ -202,7 +203,14 @@ main(int argc, char **argv)
- 		aflag = 1;
- 
- 	fs_table_initialise(0, NULL, 0, NULL);
--	fs = fs_table_lookup(argv[optind], FS_MOUNT_POINT);
-+
-+	if (!realpath(argv[optind], rpath)) {
-+		fprintf(stderr, _("Path resolution failed for %s: %s\n"),
-+			progname, argv[optind]);
-+		return 1;
-+	}
-+
-+	fs = fs_table_lookup_mount(rpath);
- 	if (!fs) {
- 		fprintf(stderr, _("%s: %s is not a mounted XFS filesystem\n"),
- 			progname, argv[optind]);
-diff --git a/include/path.h b/include/path.h
-index d077bac..1d3a902 100644
---- a/include/path.h
-+++ b/include/path.h
-@@ -56,6 +56,7 @@ extern void fs_table_insert_project_path(char *__dir, uint __projid);
- 
- 
- extern fs_path_t *fs_table_lookup(const char *__dir, uint __flags);
-+extern fs_path_t *fs_table_lookup_mount(const char *__dir);
- 
- typedef struct fs_cursor {
- 	uint		count;		/* total count of mount entries	*/
-diff --git a/libxcmd/paths.c b/libxcmd/paths.c
-index 816acc2..b767e9d 100644
---- a/libxcmd/paths.c
-+++ b/libxcmd/paths.c
-@@ -65,6 +65,9 @@ fs_device_number(
-  * Find the FS table entry for the given path.  The "flags" argument
-  * is a mask containing FS_MOUNT_POINT or FS_PROJECT_PATH (or both)
-  * to indicate the type of table entry sought.
-+ * fs_table_lookup() finds the fs table entry for the filesystem hosting
-+ * the file represented in the "dir" argument. To compare against actual
-+ * mount point entries, use fs_table_lookup_mount() instead.
-  */
- struct fs_path *
- fs_table_lookup(
-@@ -86,6 +89,34 @@ fs_table_lookup(
- 	return NULL;
- }
- 
-+/*
-+ * Find the FS table entry describing an actual mount for the given path.
-+ * Unlike fs_table_lookup(), fs_table_lookup_mount() compares the "dir"
-+ * argument to actual mount point entries in the table. Accordingly, it
-+ * will find matches only if the "dir" argument is indeed mounted.
-+ */
-+struct fs_path *
-+fs_table_lookup_mount(
-+	const char	*dir)
-+{
-+	uint		i;
-+	dev_t		dev = 0;
-+	char		rpath[PATH_MAX];
-+
-+	if (fs_device_number(dir, &dev))
-+		return NULL;
-+
-+	for (i = 0; i < fs_count; i++) {
-+		if (fs_table[i].fs_flags != FS_MOUNT_POINT)
-+			continue;
-+		if (!realpath(fs_table[i].fs_dir, rpath))
-+			continue;
-+		if (strcmp(rpath, dir) == 0)
-+			return &fs_table[i];
-+	}
-+	return NULL;
-+}
-+
- static int
- fs_table_insert(
- 	char		*dir,
--- 
-2.9.3
+In every other case where there is a subopt which is actually a
+boolean flag, a bare specification without a value means "enable
+the feature."
 
+It seems very unintuitive to have:
+
+-X THING1 -> THING1 is enabled 14 times, but
+-X THING12 - THING2 is still /disabled/ in only 2 cases
+
+I'd argue that "-m rmapbt" and "-m reflink" leaving those features
+/disabled/ is a bug, due to misunderstanding of what "defaultval"
+means, and that they should be fixed to behave like the other 14
+boolean flags.
+
+i.e. I'd argue that a bare boolean flag specification should /always/
+enable the feature.  At that point, you can say within your code 
+"if min = 0 and max = 1, this is a boolean, and the flag may be specified
+without a value, in which case the value is set to 1, and the feature
+is enabled."
+
+At that point you don't need this extra structure member, and you won't
+have to re-state it 56 times, thus simplifying the code.
+
+What do you think?  I'd happily review and merge 2 patches, which:
+
+1) Makes rmapbt and reflink behave like every other boolean flag, and
+
+2) Removes "defaultval" altogether, and uses min=0/max=1 as a sign that
+   the option is a boolean, with a bare flag name allowed to enable it.
+
+-Eric
+
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> ---
+>  mkfs/xfs_mkfs.c | 120 ++++++++++++++++++++++++++++----------------------------
+>  1 file changed, 60 insertions(+), 60 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 84674d5..0a795a6 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -112,7 +112,7 @@ uint64_t		sectorsize;
+>   *     to zero. But if one value is different: minval=0 and maxval=1,
+>   *     then it is OK.)
+>   *
+> - *   defaultval MANDATORY
+> + *   flagval MANDATORY
+>   *     The value used if user specifies the subopt, but no value.
+>   *     If the subopt accepts some values (-d file=[1|0]), then this
+>   *     sets what is used with simple specifying the subopt (-d file).
+> @@ -144,7 +144,7 @@ struct opt_params {
+>  		int		conflicts[MAX_CONFLICTS];
+>  		uint64_t	minval;
+>  		uint64_t	maxval;
+> -		uint64_t	defaultval;
+> +		uint64_t	flagval;
+>  		const char	*raw_input;
+>  	}		subopt_params[MAX_SUBOPTS];
+>  };
+> @@ -164,7 +164,7 @@ struct opt_params bopts = {
+>  				 LAST_CONFLICT },
+>  		  .minval = XFS_MIN_BLOCKSIZE_LOG,
+>  		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = B_SIZE,
+>  		  .convert = true,
+> @@ -173,7 +173,7 @@ struct opt_params bopts = {
+>  				 LAST_CONFLICT },
+>  		  .minval = XFS_MIN_BLOCKSIZE,
+>  		  .maxval = XFS_MAX_BLOCKSIZE,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  	},
+>  };
+> @@ -219,24 +219,24 @@ struct opt_params dopts = {
+>  				 LAST_CONFLICT },
+>  		  .minval = 1,
+>  		  .maxval = XFS_MAX_AGNUMBER,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = D_FILE,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		},
+>  		{ .index = D_NAME,
+>  		  .conflicts = { LAST_CONFLICT },
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = D_SIZE,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .convert = true,
+>  		  .minval = XFS_AG_MIN_BYTES,
+>  		  .maxval = LLONG_MAX,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = D_SUNIT,
+>  		  .conflicts = { D_NOALIGN,
+> @@ -245,7 +245,7 @@ struct opt_params dopts = {
+>  				 LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = UINT_MAX,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = D_SWIDTH,
+>  		  .conflicts = { D_NOALIGN,
+> @@ -254,7 +254,7 @@ struct opt_params dopts = {
+>  				 LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = UINT_MAX,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = D_AGSIZE,
+>  		  .conflicts = { D_AGCOUNT,
+> @@ -262,7 +262,7 @@ struct opt_params dopts = {
+>  		  .convert = true,
+>  		  .minval = XFS_AG_MIN_BYTES,
+>  		  .maxval = XFS_AG_MAX_BYTES,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = D_SU,
+>  		  .conflicts = { D_NOALIGN,
+> @@ -272,7 +272,7 @@ struct opt_params dopts = {
+>  		  .convert = true,
+>  		  .minval = 0,
+>  		  .maxval = UINT_MAX,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = D_SW,
+>  		  .conflicts = { D_NOALIGN,
+> @@ -281,14 +281,14 @@ struct opt_params dopts = {
+>  				 LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = UINT_MAX,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = D_SECTLOG,
+>  		  .conflicts = { D_SECTSIZE,
+>  				 LAST_CONFLICT },
+>  		  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = D_SECTSIZE,
+>  		  .conflicts = { D_SECTLOG,
+> @@ -297,7 +297,7 @@ struct opt_params dopts = {
+>  		  .is_power_2 = true,
+>  		  .minval = XFS_MIN_SECTORSIZE,
+>  		  .maxval = XFS_MAX_SECTORSIZE,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = D_NOALIGN,
+>  		  .conflicts = { D_SU,
+> @@ -307,25 +307,25 @@ struct opt_params dopts = {
+>  				 LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		},
+>  		{ .index = D_RTINHERIT,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		},
+>  		{ .index = D_PROJINHERIT,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = UINT_MAX,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = D_EXTSZINHERIT,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = UINT_MAX,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  	},
+>  };
+> @@ -357,7 +357,7 @@ struct opt_params iopts = {
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		},
+>  		{ .index = I_LOG,
+>  		  .conflicts = { I_PERBLOCK,
+> @@ -365,13 +365,13 @@ struct opt_params iopts = {
+>  				 LAST_CONFLICT },
+>  		  .minval = XFS_DINODE_MIN_LOG,
+>  		  .maxval = XFS_DINODE_MAX_LOG,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = I_MAXPCT,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 100,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = I_PERBLOCK,
+>  		  .conflicts = { I_LOG,
+> @@ -380,7 +380,7 @@ struct opt_params iopts = {
+>  		  .is_power_2 = true,
+>  		  .minval = XFS_MIN_INODE_PERBLOCK,
+>  		  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = I_SIZE,
+>  		  .conflicts = { I_PERBLOCK,
+> @@ -389,25 +389,25 @@ struct opt_params iopts = {
+>  		  .is_power_2 = true,
+>  		  .minval = XFS_DINODE_MIN_SIZE,
+>  		  .maxval = XFS_DINODE_MAX_SIZE,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = I_ATTR,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 2,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = I_PROJID32BIT,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		},
+>  		{ .index = I_SPINODES,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		},
+>  	},
+>  };
+> @@ -447,7 +447,7 @@ struct opt_params lopts = {
+>  				 LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = UINT_MAX,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = L_INTERNAL,
+>  		  .conflicts = { L_FILE,
+> @@ -455,27 +455,27 @@ struct opt_params lopts = {
+>  				 LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		},
+>  		{ .index = L_SIZE,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .convert = true,
+>  		  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
+>  		  .maxval = XFS_MAX_LOG_BYTES,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = L_VERSION,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 1,
+>  		  .maxval = 2,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = L_SUNIT,
+>  		  .conflicts = { L_SU,
+>  				 LAST_CONFLICT },
+>  		  .minval = 1,
+>  		  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = L_SU,
+>  		  .conflicts = { L_SUNIT,
+> @@ -483,20 +483,20 @@ struct opt_params lopts = {
+>  		  .convert = true,
+>  		  .minval = BBTOB(1),
+>  		  .maxval = XLOG_MAX_RECORD_BSIZE,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = L_DEV,
+>  		  .conflicts = { L_AGNUM,
+>  				 L_INTERNAL,
+>  				 LAST_CONFLICT },
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = L_SECTLOG,
+>  		  .conflicts = { L_SECTSIZE,
+>  				 LAST_CONFLICT },
+>  		  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = L_SECTSIZE,
+>  		  .conflicts = { L_SECTLOG,
+> @@ -505,26 +505,26 @@ struct opt_params lopts = {
+>  		  .is_power_2 = true,
+>  		  .minval = XFS_MIN_SECTORSIZE,
+>  		  .maxval = XFS_MAX_SECTORSIZE,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = L_FILE,
+>  		  .conflicts = { L_INTERNAL,
+>  				 LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		},
+>  		{ .index = L_NAME,
+>  		  .conflicts = { L_AGNUM,
+>  				 L_INTERNAL,
+>  				 LAST_CONFLICT },
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = L_LAZYSBCNTR,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		},
+>  	},
+>  };
+> @@ -548,7 +548,7 @@ struct opt_params nopts = {
+>  				 LAST_CONFLICT },
+>  		  .minval = XFS_MIN_REC_DIRSIZE,
+>  		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = N_SIZE,
+>  		  .conflicts = { N_LOG,
+> @@ -557,19 +557,19 @@ struct opt_params nopts = {
+>  		  .is_power_2 = true,
+>  		  .minval = 1 << XFS_MIN_REC_DIRSIZE,
+>  		  .maxval = XFS_MAX_BLOCKSIZE,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = N_VERSION,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 2,
+>  		  .maxval = 2,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = N_FTYPE,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		},
+>  	},
+>  };
+> @@ -597,33 +597,33 @@ struct opt_params ropts = {
+>  		  .convert = true,
+>  		  .minval = XFS_MIN_RTEXTSIZE,
+>  		  .maxval = XFS_MAX_RTEXTSIZE,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = R_SIZE,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .convert = true,
+>  		  .minval = 0,
+>  		  .maxval = LLONG_MAX,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = R_DEV,
+>  		  .conflicts = { LAST_CONFLICT },
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = R_FILE,
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		},
+>  		{ .index = R_NAME,
+>  		  .conflicts = { LAST_CONFLICT },
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = R_NOALIGN,
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		},
+>  	},
+> @@ -649,7 +649,7 @@ struct opt_params sopts = {
+>  				 LAST_CONFLICT },
+>  		  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = S_SECTLOG,
+>  		  .conflicts = { S_SIZE,
+> @@ -657,7 +657,7 @@ struct opt_params sopts = {
+>  				 LAST_CONFLICT },
+>  		  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = S_SIZE,
+>  		  .conflicts = { S_LOG,
+> @@ -667,7 +667,7 @@ struct opt_params sopts = {
+>  		  .is_power_2 = true,
+>  		  .minval = XFS_MIN_SECTORSIZE,
+>  		  .maxval = XFS_MAX_SECTORSIZE,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = S_SECTSIZE,
+>  		  .conflicts = { S_LOG,
+> @@ -677,7 +677,7 @@ struct opt_params sopts = {
+>  		  .is_power_2 = true,
+>  		  .minval = XFS_MIN_SECTORSIZE,
+>  		  .maxval = XFS_MAX_SECTORSIZE,
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  	},
+>  };
+> @@ -702,29 +702,29 @@ struct opt_params mopts = {
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		},
+>  		{ .index = M_FINOBT,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 1,
+> +		  .flagval = 1,
+>  		},
+>  		{ .index = M_UUID,
+>  		  .conflicts = { LAST_CONFLICT },
+> -		  .defaultval = SUBOPT_NEEDS_VAL,
+> +		  .flagval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = M_RMAPBT,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 0,
+> +		  .flagval = 0,
+>  		},
+>  		{ .index = M_REFLINK,
+>  		  .conflicts = { LAST_CONFLICT },
+>  		  .minval = 0,
+>  		  .maxval = 1,
+> -		  .defaultval = 0,
+> +		  .flagval = 0,
+>  		},
+>  	},
+>  };
+> @@ -1365,9 +1365,9 @@ getnum(
+>  	check_opt(opts, index, false);
+>  	/* empty strings might just return a default value */
+>  	if (!str || *str == '\0') {
+> -		if (sp->defaultval == SUBOPT_NEEDS_VAL)
+> +		if (sp->flagval == SUBOPT_NEEDS_VAL)
+>  			reqval(opts->name, (char **)opts->subopts, index);
+> -		return sp->defaultval;
+> +		return sp->flagval;
+>  	}
+>  
+>  	if (sp->minval == 0 && sp->maxval == 0) {
+> 
