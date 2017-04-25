@@ -1,101 +1,213 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49362 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S944818AbdDTN3G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Apr 2017 09:29:06 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C29A89D0CB
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Apr 2017 13:29:05 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A524F827B1
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Apr 2017 13:29:05 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: prevent multi-fsb dir readahead from reading random blocks
-Date: Thu, 20 Apr 2017 09:29:04 -0400
-Message-Id: <1492694944-46582-1-git-send-email-bfoster@redhat.com>
+Received: from mail-vk0-f51.google.com ([209.85.213.51]:33233 "EHLO
+        mail-vk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1171284AbdDYMHY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Apr 2017 08:07:24 -0400
+Received: by mail-vk0-f51.google.com with SMTP id j127so53413364vkh.0
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Apr 2017 05:07:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20170425013721.GE28800@wotan.suse.de>
+References: <20170419153025.10368-1-jtulak@redhat.com> <20170420135839.22102-1-jtulak@redhat.com>
+ <20170425013721.GE28800@wotan.suse.de>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Tue, 25 Apr 2017 14:07:02 +0200
+Message-ID: <CACj3i70Niht-0FJSyVp2iOpKssTnz=LmryJMLQKiX=hHm6d+-A@mail.gmail.com>
+Subject: Re: [PATCH 1/2 v3] mkfs: unify numeric types of main variables in main()
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: linux-xfs@vger.kernel.org
 
-Directory block readahead uses a complex iteration mechanism to map
-between high-level directory blocks and underlying physical extents.
-This mechanism attempts to traverse the higher-level dir blocks in a
-manner that handles multi-fsb directory blocks and simultaneously
-maintains a reference to the corresponding physical blocks.
+On Tue, Apr 25, 2017 at 3:37 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+> On Thu, Apr 20, 2017 at 03:58:39PM +0200, Jan Tulak wrote:
+>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>> index 7a5c49f..40a32be 100644
+>> --- a/mkfs/xfs_mkfs.c
+>> +++ b/mkfs/xfs_mkfs.c
+>> @@ -3431,17 +3431,17 @@ unknown(
+>>       usage();
+>>  }
+>>
+>> -long long
+>> +uint64_t
+>>  cvtnum(
+>>       unsigned int    blksize,
+>>       unsigned int    sectsize,
+>>       const char      *s)
+>>  {
+>> -     long long       i;
+>> +     uint64_t        i;
+>>       char            *sp;
+>>       int             c;
+>>
+>> -     i = strtoll(s, &sp, 0);
+>> +     i = strtoull(s, &sp, 0);
+>>       if (i == 0 && sp == s)
+>>               return -1LL;
+>>       if (*sp == '\0')
+>
+> I'm afraid this will not cut it, you see before we accepted negative values
+> and used it as mechanism to catch errors, see the above return -1LL; with this
+> change we'd only catch an error in parsing if the subopt's maxval happens to be
+> smaller than -1LL which in turn will be returned as a positive value.
+>
+> Two more issues I spotted:
+>
+> a) the else condition on getnum() to use for when !sp->convert was left in your
+> patch with strtoll() and I think you meant to convert that as well to
+> strtoull()?
+>
+> b) I noted the existing cvtnum() code does not check for wrap arounds in its
+> extra conversions.
+>
+> At first glance it may seem the best option is to modify the prototype of
+> cvtnum() to return int to interpret errors, and have it set the uint64_t
+> through a parameter pointer. The wrap around issue is orthogonal and would
+> be an old issue, but such a change would help treat these as follows but
+> as I will explain below this is perhaps not best for now.
+>
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index ef40c9a36e40..5995245e471d 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -1410,6 +1410,7 @@ getnum(
+>  {
+>         struct subopt_param     *sp = &opts->subopt_params[index];
+>         uint64_t                c;
+> +       int ret;
+>
+>         check_opt(opts, index, false);
+>         set_conf_raw(opts->index, index, str);
+> @@ -1434,13 +1435,16 @@ getnum(
+>          * convert it ourselves to guarantee there is no trailing garbage in the
+>          * number.
+>          */
+> -       if (sp->convert)
+> -               c = cvtnum(get_conf_val(OPT_B, B_SIZE),
+> -                          get_conf_val(OPT_D, D_SECTSIZE), str);
+> -       else {
+> +       if (sp->convert) {
+> +               ret = cvtnum(get_conf_val(OPT_B, B_SIZE),
+> +                            get_conf_val(OPT_D, D_SECTSIZE), str, &c);
+> +               if (ret)
+> +                       illegal_option(str, opts, index,
+> +                                      _("Parse error, ret: %d", ret));
 
-This logic doesn't handle certain (discontiguous) physical extent
-layouts correctly with multi-fsb directory blocks. For example,
-consider the case of a 4k FSB filesystem with a 2 FSB (8k) directory
-block size and a directory with the following extent layout:
+This printing won't work - we would have to use a sprintf, with all
+the prealocation for the new string and so on. Or as I'm modifying it,
+replace the if (ret) with a switch(ret) a print directly EINVAL/ERANGE
+as part of the string.
 
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
-   0: [0..7]:          88..95            0 (88..95)             8
-   1: [8..15]:         80..87            0 (80..87)             8
-   2: [16..39]:        168..191          0 (168..191)          24
-   3: [40..63]:        5242952..5242975  1 (72..95)            24
+> +       } else {
+>                 char            *str_end;
+>
+> -               c = strtoll(str, &str_end, 0);
+> +               c = strtoull(str, &str_end, 0);
+>                 if (c == 0 && str_end == str)
+>                         illegal_option(str, opts, index, NULL);
+>                 if (*str_end != '\0')
+> @@ -3814,24 +3818,25 @@ unknown(
+>         usage();
+>  }
+>
+> -uint64_t
+> +int
+>  cvtnum(
+>         unsigned int    blksize,
+>         unsigned int    sectsize,
+> -       const char      *s)
+> +       const char      *s,
+> +       uint64_t *val)
+>  {
+>         uint64_t        i;
+>         char            *sp;
+>         int             c;
+> +       uint64_t        orig_val;
+>
+>         i = strtoull(s, &sp, 0);
+>         if (i == 0 && sp == s)
+> -               return -1LL;
+> +               return -EINVAL;
+>         if (*sp == '\0')
+> -               return i;
+> -
+> +               return -EINVAL;
+This has to be *val = i; return 0;
+Otherwise, we would report numbers without any suffix as an error. ;-)
 
-Directory block 0 spans physical extents 0 and 1, dirblk 1 lies
-entirely within extent 2 and dirblk 2 spans extents 2 and 3. Because
-extent 2 is larger than the directory block size, the readahead code
-erroneously assumes the block is contiguous and issues a readahead
-based on the physical mapping of the first fsb of the dirblk. This
-results in read verifier failure and a spurious corruption or crc
-failure, depending on the filesystem format.
+>         if (sp[1] != '\0')
+> -               return -1LL;
+> +               return -EINVAL;
+>
+>         if (*sp == 'b') {
+>                 if (!blksize) {
+> @@ -3839,7 +3844,10 @@ cvtnum(
+>  _("Blocksize must be provided prior to using 'b' suffix.\n"));
+>                         usage();
+>                 } else {
+> -                       return i * blksize;
+> +                       *val = i * blksize;
+> +                       if (*val < i || *val < blksize)
+> +                               return -ERANGE;
+> +                       return 0;
+>                 }
+>         }
+>         if (*sp == 's') {
+> @@ -3848,11 +3856,15 @@ _("Blocksize must be provided prior to using 'b' suffix.\n"));
+>  _("Sectorsize must be specified prior to using 's' suffix.\n"));
+>                         usage();
+>                 } else {
+> -                       return i * sectsize;
+> +                       *val = i * sectsize;
+> +                       if (*val < i || *val < sectsize)
+> +                               return -ERANGE;
+> +                       return 0;
+>                 }
+>         }
+>
+>         c = tolower(*sp);
+> +       orig_val = i;
+>         switch (c) {
+>         case 'e':
+>                 i *= 1024LL;
+> @@ -3870,11 +3882,14 @@ _("Sectorsize must be specified prior to using 's' suffix.\n"));
+>                 i *= 1024LL;
+>                 /* fall through */
+>         case 'k':
+> -               return i * 1024LL;
+> +               *val = i * 1024LL;
+> +               if (*val < orig_val)
+> +                       return -ERANGE;
+> +               return 0;
+>         default:
+>                 break;
+>         }
+> -       return -1LL;
+> +       return -EINVAL;
+>  }
+>
+>  static void __attribute__((noreturn))
+>
+> The issue with this of course is everyone and their mom calls cvtnum() and the
+> amount of collateral for such type of change is significant for your patch series.
+> One option may just be to bail on error within cvtnum() with a usage() call on
+> error, as a temporary compromise, this way we only chug on *iff* the value was
+> accepted and proper, and non-wrap-around, up to you.
+>
+>   Luis
 
-Further, the subsequent readahead code responsible for walking
-through the physical table doesn't correctly advance the physical
-block reference for dirblk 2. Instead of advancing two physical
-filesystem blocks, the first iteration of the loop advances 1 block
-(correctly), but the subsequent iteration advances 2 more physical
-blocks because the next physical extent (extent 3, above) happens to
-cover more than dirblk 2. At this point, the higher-level directory
-block walking is completely off the rails of the actual physical
-layout of the directory for the respective mapping table.
+Ehh, it is not really an issue.. cvtnum is called only on two places
+in the whole xfsprogs. Changing mkfs/proto.c is just few lines added
+to this patch and the changes in xfs_mkfs.c do cause few conflicts,
+but it is nothing terrific, I rebased all my further changes in about
+three minutes. I pushed it into the git tree, check it now...
 
-Update the contiguous dirblock logic to consider the current offset
-in the physical extent to avoid issuing directory readahead to
-unrelated blocks. Also, update the mapping table advancing code to
-consider the current offset within the current dirblock to avoid
-advancing the mapping reference too far beyond the dirblock.
+And thanks for this patch for the patch. :-)
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+Jan
 
-This so far survives a couple xfstests runs with default and 2xfsb
-directory block sizes. I have another run in progress with max sized
-directory blocks. This applies on top of Eric's original overrun fix.
-
-Brian
-
- fs/xfs/xfs_dir2_readdir.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index c45de72..20b7a5c 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -405,7 +405,8 @@ xfs_dir2_leaf_readbuf(
- 		 * Read-ahead a contiguous directory block.
- 		 */
- 		if (i > mip->ra_current &&
--		    map[mip->ra_index].br_blockcount >= geo->fsbcount) {
-+		    (map[mip->ra_index].br_blockcount - mip->ra_offset) >=
-+		    geo->fsbcount) {
- 			xfs_dir3_data_readahead(dp,
- 				map[mip->ra_index].br_startoff + mip->ra_offset,
- 				XFS_FSB_TO_DADDR(dp->i_mount,
-@@ -438,7 +439,7 @@ xfs_dir2_leaf_readbuf(
- 			 * The rest of this extent but not more than a dir
- 			 * block.
- 			 */
--			length = min_t(int, geo->fsbcount,
-+			length = min_t(int, geo->fsbcount - j,
- 					map[mip->ra_index].br_blockcount -
- 							mip->ra_offset);
- 			mip->ra_offset += length;
 -- 
-2.7.4
-
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
