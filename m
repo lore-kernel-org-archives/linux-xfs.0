@@ -1,63 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f175.google.com ([209.85.223.175]:34188 "EHLO
-        mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S980036AbdDYC2l (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2017 22:28:41 -0400
-Received: by mail-io0-f175.google.com with SMTP id a103so206145420ioj.1
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2017 19:28:41 -0700 (PDT)
-Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
-References: <20170414120257.8932-1-rgoldwyn@suse.de>
- <20170414120257.8932-6-rgoldwyn@suse.de>
- <20170419064505.GD20053@infradead.org>
- <3485e23c-3a4d-23a5-50d5-69c824353d1a@suse.de>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <b1a0b06c-603b-e765-e3a3-2c91562549bc@kernel.dk>
-Date: Mon, 24 Apr 2017 20:28:37 -0600
+Received: from mail-vk0-f53.google.com ([209.85.213.53]:34785 "EHLO
+        mail-vk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938509AbdDYJjW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Apr 2017 05:39:22 -0400
+Received: by mail-vk0-f53.google.com with SMTP id k4so49524132vki.1
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Apr 2017 02:39:21 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <3485e23c-3a4d-23a5-50d5-69c824353d1a@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CACj3i70LFrv9HbMRYg7M8qutCfmhFHC8oCUtrkf3vP8kvKUw4Q@mail.gmail.com>
+References: <20170423185503.31415-1-jtulak@redhat.com> <20170423185503.31415-6-jtulak@redhat.com>
+ <20170425031326.GI28800@wotan.suse.de> <CACj3i70LFrv9HbMRYg7M8qutCfmhFHC8oCUtrkf3vP8kvKUw4Q@mail.gmail.com>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Tue, 25 Apr 2017 11:39:00 +0200
+Message-ID: <CACj3i71JaxqjZ_qUvZSOu6gTeZhjm86VfA2asNZNppV2t6_wDA@mail.gmail.com>
+Subject: Re: [PATCH 05/12] mkfs: extend opt_params with a value field
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>, Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: linux-xfs@vger.kernel.org
 
-On 04/24/2017 03:10 PM, Goldwyn Rodrigues wrote:
-> 
-> 
-> On 04/19/2017 01:45 AM, Christoph Hellwig wrote:
->> On Fri, Apr 14, 2017 at 07:02:54AM -0500, Goldwyn Rodrigues wrote:
->>> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+v
+
+On Tue, Apr 25, 2017 at 10:04 AM, Jan Tulak <jtulak@redhat.com> wrote:
+> On Tue, Apr 25, 2017 at 5:13 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+>> On Sun, Apr 23, 2017 at 08:54:56PM +0200, Jan Tulak wrote:
+>>> Add a new field int opt_params - value,
+>>
+>> Agreed.
+>>
+>>> which is filled with user input.
+>>
+>> It sounds to me its more than that, its the default value which will be used should
+>> not user input for the option be specified, and if user input value is provided it
+>> will be the passed user input value. If the final value for the respective option.
+>>
+>> ?
+>
+> Yes. I see I should make the description better, both here in commit
+> message and in the code too. It is the same logic as it was for the
+> old variables like agcount in main(). Initialize it with whatever you
+> want as the default for pure "mkfs.xfs /some/dev", but if the users
+> give us the specific option, we are going to overwrite it with their
+> value.
+>
+> I don't see any use for remembering the defaults once it is clear that
+> user wants to use custom values instead. And copying the defaults from
+> some other field "if the user said nothing" sounds like a recipe for
+> bugs...
+>
+
+And rather than submitting repeatedly new versions of the whole
+patch... how about this?
+
+ *
+ *   value OPTIONAL
+ *     The actual value used in computations and for creating the filesystem.
+ *     It is filled with user input and anything you write here now is
+ *     overwritten if the user specifies the subopt. But he does not,
+then whatever
+ *     you put there is used as the default. Can be omitted if the default
+ *     is 0.
+ *     (If the field is a string and not a number, this value is set to
+ *     a positive non-zero number on an user input.)
+
+And for the commit message, a bit shortened version:
+
+Add a new field int opt_params - value - which is the actual value
+used in computations and for creating the filesystem. It is filled
+with user input if the user specifies the subopt. But he does not,
+then whatever you put there is used as the default.
+
+Sounds better?
+
+>>
+>>> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+>>> ---
+>>>  mkfs/xfs_mkfs.c | 7 +++++++
+>>>  1 file changed, 7 insertions(+)
 >>>
+>>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>>> index 513e106..c2ffd91 100644
+>>> --- a/mkfs/xfs_mkfs.c
+>>> +++ b/mkfs/xfs_mkfs.c
+>>> @@ -128,6 +128,12 @@ uint64_t         sectorsize;
+>>>   *     Filled raw string from the user, so we never lose that information e.g.
+>>>   *     to print it back in case of an issue.
+>>>   *
+>>> + *   value OPTIONAL
+>>> + *     The value that is to be used if the given subopt is not specified at all.
 >>
->>> +	/* Request queue supports BIO_NOWAIT */
->>> +	queue_flag_set_unlocked(QUEUE_FLAG_NOWAIT, q);
+>> It seems to be more than that ?
 >>
->> BIO_NOWAIT is gone.  And the comment would not be needed if the
->> flag had a more descriptive name, e.g. QUEUE_FLAG_NOWAIT_SUPPORT.
+>>> + *     This is filled with user input
 >>
->> And I think all request based drivers should set the flag implicitly
->> as ->queuecommand can't sleep, and ->queue_rq only when it's always
->> offloaded to a workqueue when the BLK_MQ_F_BLOCKING flag is set.
+>> This is a bit confusing, isn't it first the default value should no user input
+>> value be passed ? And finally if user input value is passed only then will this
+>> be that value ?
 >>
-> 
-> We introduced QUEUE_FLAG_NOWAIT for devices which would not wait for
-> request completions. The ones which wait are MD devices because of sync
-> or suspend operations.
-> 
-> The only user of BLK_MQ_F_NONBLOCKING seems to be nbd. As you mentioned,
-> it uses the flag to offload it to a workqueue.
-> 
-> The other way to do it implicitly is to change the flag to
-> BLK_MAY_BLOCK_REQS and use it for devices which do wait such as md/dm.
-> Is that what you are hinting at? Or do you have something else in mind?
+>>> and anything you write here now is
+>>> + *     overwritten if user specifies the subopt. (If the user input is a string
+>>> + *     and not a number, this value is set to a positive non-zero number.)
+>>> + *
+>>>   * !!! NOTE ==================================================================
+>>>   *
+>>>   * If you are adding a new option, or changing an existing one,
+>>> @@ -152,6 +158,7 @@ struct opt_params {
+>>>               uint64_t        maxval;
+>>>               uint64_t        flagval;
+>>>               const char      *raw_input;
+>>> +             uint64_t        value;
+>>>       }               subopt_params[MAX_SUBOPTS];
+>>>  } opts[MAX_OPTS] = {
+>>>  #define OPT_B        0
+>>
+>> It would seem rather unfair to define this this but not use it in the patch ?
+>
+> I'm still trying to find out when exactly should I make something two
+> patches and when one, and it seems to shift case by case... I tried to
+> separate the adding of new things and rewriting of the existing code,
+> but do you think, in this case, the new thing is too trivial to have a
+> standalone patch?
+>
+> Jan
+>
+>>
+>>   Luis
+>
+>
+>
+> --
+> Jan Tulak
+> jtulak@redhat.com / jan@tulak.me
 
-You are misunderstanding. What Christoph (correctly) says is that request
-based drivers do not block, so all of those are fine. What you need to
-worry about is drivers that are NOT request based. In other words, drivers
-that hook into make_request_fn and process bio's.
+
 
 -- 
-Jens Axboe
-
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
