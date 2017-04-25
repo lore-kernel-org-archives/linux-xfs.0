@@ -1,59 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr003msb.fastweb.it ([85.18.95.87]:56432 "EHLO
-        mr003msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756096AbdD1UUp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Apr 2017 16:20:45 -0400
-Subject: Re: Slow file stat/deletion
+Received: from aserp1040.oracle.com ([141.146.126.69]:36869 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S979850AbdDYB7J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2017 21:59:09 -0400
+Date: Mon, 24 Apr 2017 18:58:37 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v3] xfs: reserve enough blocks to handle btree splits when
+ remapping
+Message-ID: <20170425015837.GS23371@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date: Fri, 28 Apr 2017 22:14:54 +0200
-From: Gionatan Danti <g.danti@assyoma.it>
-In-Reply-To: <a37b6669-4ec1-074e-de51-ae15aee5a7d9@assyoma.it>
-References: <bef58272-f791-52bf-cc4c-1cb1b7c9efec@assyoma.it>
- <20161127221433.GV28177@dastard>
- <a5774248-db44-bdfe-2310-bb1a327756fb@assyoma.it>
- <20161128215308.GD28177@dastard>
- <a37b6669-4ec1-074e-de51-ae15aee5a7d9@assyoma.it>
-Message-ID: <a3e391cf2ce08858aef806d5f052f73e@assyoma.it>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@infradead.org>
 
-Hi all,
-this is a note which can be useful to someone searching for the same 
-thing: using "ftype=1" at mkfs time (which is, by the way, the default 
-for CRC-enabled filesystem) greatly speed-up stat/find operations.
+In xfs_reflink_end_cow, we erroneously reserve only enough blocks to
+handle adding 1 extent.  This is problematic if we fragment free space,
+have to do CoW, and then have to perform multiple bmap btree expansions.
+Furthermore, the BUI recovery routine doesn't reserve /any/ blocks to
+handle btree splits, so log recovery fails after our first error causes
+the filesystem to go down.
 
-On a test case with 1.000.000 files and 1000 total directories, "find 
-/mnt/xfs" time has fallen from ~70 to ~20 seconds.
+Therefore, refactor the transaction block reservation macros until we
+have a macro that works for our deferred (re)mapping activities, and fix
+both problems by using that macro.
 
-As a side question: there is no method/possibility to enable ftype=1 to 
-an already existing filesystem, right?
-Thanks.
+With 1k blocks we can hit this fairly often in g/187 if the scratch fs
+is big enough.
 
-Il 29-11-2016 08:53 Gionatan Danti ha scritto:
-> On 28/11/2016 22:53, Dave Chinner wrote:
->> 
->> Nope. There's always going to be a penalty for subverting the
->> filesystem's physical layout optimisations on storage subsystems
->> that require physical layout optimisation for performance.
->> 
->> Cheers,
->> 
->> Dave.
->> 
-> 
-> Ok, very clear.
-> 
-> Thank you for taking the time to explain, Dave.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v3: don't use the swap-extents-with-rmap block reservation for cow
+remapping; we should already have sufficient per-ag reservation
+v2: avoid 64-bit division when calculating block reservation
+---
+ fs/xfs/libxfs/xfs_trans_space.h |   13 +++++++------
+ fs/xfs/xfs_bmap_item.c          |    7 ++++++-
+ fs/xfs/xfs_reflink.c            |   12 ++++++++++--
+ 3 files changed, 23 insertions(+), 9 deletions(-)
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
+index 7917f6e..0044e14 100644
+--- a/fs/xfs/libxfs/xfs_trans_space.h
++++ b/fs/xfs/libxfs/xfs_trans_space.h
+@@ -23,6 +23,11 @@
+  */
+ #define XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)    \
+ 		(((mp)->m_rmap_mxr[0]) - ((mp)->m_rmap_mnr[0]))
++#define XFS_RMAPADD_SPACE_RES(mp) ((mp)->m_rmap_maxlevels)
++#define XFS_NRMAPADD_SPACE_RES(mp,b,w)\
++	(((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
++	  XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) * \
++	  XFS_RMAPADD_SPACE_RES(mp))
+ #define XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)    \
+ 		(((mp)->m_alloc_mxr[0]) - ((mp)->m_alloc_mnr[0]))
+ #define	XFS_EXTENTADD_SPACE_RES(mp,w)	(XFS_BM_MAXLEVELS(mp,w) - 1)
+@@ -31,12 +36,8 @@
+ 	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
+ 	  XFS_EXTENTADD_SPACE_RES(mp,w))
+ #define XFS_SWAP_RMAP_SPACE_RES(mp,b,w)\
+-	(((b + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) / \
+-	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
+-	  XFS_EXTENTADD_SPACE_RES(mp,w) + \
+-	 ((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
+-	  XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) * \
+-	  (mp)->m_rmap_maxlevels)
++	(XFS_NEXTENTADD_SPACE_RES((mp), (b), (w)) + \
++	 XFS_NRMAPADD_SPACE_RES((mp), (b), (w)))
+ #define	XFS_DAENTER_1B(mp,w)	\
+ 	((w) == XFS_DATA_FORK ? (mp)->m_dir_geo->fsbcount : 1)
+ #define	XFS_DAENTER_DBS(mp,w)	\
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 2d70173..378f144 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -34,6 +34,8 @@
+ #include "xfs_bmap.h"
+ #include "xfs_icache.h"
+ #include "xfs_trace.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_trans_space.h"
+ 
+ 
+ kmem_zone_t	*xfs_bui_zone;
+@@ -403,6 +405,7 @@ xfs_bui_recover(
+ 	struct xfs_inode		*ip = NULL;
+ 	struct xfs_defer_ops		dfops;
+ 	xfs_fsblock_t			firstfsb;
++	unsigned int			resblks;
+ 
+ 	ASSERT(!test_bit(XFS_BUI_RECOVERED, &buip->bui_flags));
+ 
+@@ -447,7 +450,9 @@ xfs_bui_recover(
+ 		return -EIO;
+ 	}
+ 
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
++	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, resblks, 0,
++			0, &tp);
+ 	if (error)
+ 		return error;
+ 	budp = xfs_trans_get_bud(tp, buip);
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index c0f3754..aab156a 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -705,8 +705,16 @@ xfs_reflink_end_cow(
+ 	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+ 	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
+ 
+-	/* Start a rolling transaction to switch the mappings */
+-	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
++	/*
++	 * Start a rolling transaction to switch the mappings.  We're
++	 * unlikely ever to have to remap 16T worth of single-block
++	 * extents, so just cap the worst case extent count to 2^32-1.
++	 * Stick a warning in just in case, and avoid 64-bit division.
++	 */
++	WARN_ON(end_fsb - offset_fsb + 1 > UINT_MAX);
++	resblks = min_t(xfs_fileoff_t, UINT_MAX, end_fsb - offset_fsb + 1);
++	resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount, resblks,
++			XFS_DATA_FORK);
+ 	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
+ 			resblks, 0, 0, &tp);
+ 	if (error)
