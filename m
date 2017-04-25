@@ -1,189 +1,184 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41022 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S979719AbdDYBhX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Apr 2017 21:37:23 -0400
-Date: Tue, 25 Apr 2017 03:37:21 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 1/2 v3] mkfs: unify numeric types of main variables in
- main()
-Message-ID: <20170425013721.GE28800@wotan.suse.de>
-References: <20170419153025.10368-1-jtulak@redhat.com>
- <20170420135839.22102-1-jtulak@redhat.com>
+Received: from mail-ua0-f172.google.com ([209.85.217.172]:33009 "EHLO
+        mail-ua0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1176055AbdDYHqO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Apr 2017 03:46:14 -0400
+Received: by mail-ua0-f172.google.com with SMTP id j59so82518943uad.0
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Apr 2017 00:46:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170420135839.22102-1-jtulak@redhat.com>
+In-Reply-To: <20170425030421.GH28800@wotan.suse.de>
+References: <20170423185503.31415-1-jtulak@redhat.com> <20170423185503.31415-5-jtulak@redhat.com>
+ <20170425030421.GH28800@wotan.suse.de>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Tue, 25 Apr 2017 09:45:53 +0200
+Message-ID: <CACj3i71jEx7aKBp4_bTk3KbHo1ne_Zj1r6y-=8iGLOkM2PujEQ@mail.gmail.com>
+Subject: Re: [PATCH 04/12] mkfs: merge tables for opts parsing into one table
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Apr 20, 2017 at 03:58:39PM +0200, Jan Tulak wrote:
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 7a5c49f..40a32be 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -3431,17 +3431,17 @@ unknown(
->  	usage();
->  }
->  
-> -long long
-> +uint64_t
->  cvtnum(
->  	unsigned int	blksize,
->  	unsigned int	sectsize,
->  	const char	*s)
->  {
-> -	long long	i;
-> +	uint64_t	i;
->  	char		*sp;
->  	int		c;
->  
-> -	i = strtoll(s, &sp, 0);
-> +	i = strtoull(s, &sp, 0);
->  	if (i == 0 && sp == s)
->  		return -1LL;
->  	if (*sp == '\0')
+On Tue, Apr 25, 2017 at 5:04 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+> On Sun, Apr 23, 2017 at 08:54:55PM +0200, Jan Tulak wrote:
+>> Merge separate instances of opt_params into one indexable table. Git
+>> makes this patch looks a bit more complicated, but it does not change
+>> values or structure of anything else. It only moves all the "struct
+>> opt_params dopts = {...}", changes indentation for these substructures
+>> and replaces their usage (dopts -> opts[OPT_D]).
+>>
+>> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+>> ---
+>>  mkfs/xfs_mkfs.c | 1316 +++++++++++++++++++++++++++++--------------------------
+>>  1 file changed, 683 insertions(+), 633 deletions(-)
+>>
+>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>> index 7a72b11..513e106 100644
+>> --- a/mkfs/xfs_mkfs.c
+>> +++ b/mkfs/xfs_mkfs.c
+>> @@ -42,6 +42,7 @@ static int  ispow2(unsigned int i);
+>>  uint64_t             blocksize;
+>>  uint64_t             sectorsize;
+>>
+>> +#define MAX_OPTS     16
+>
+> This is fragile, every time a new opt is added this needs to be updated
+> and so is the index, and we should be pedantic over not going out of bounds.
+> We could instead use a flexible array and compute the max opts at run time
+> as a global. This way the max opts is always updated automatically.
 
-I'm afraid this will not cut it, you see before we accepted negative values
-and used it as mechanism to catch errors, see the above return -1LL; with this
-change we'd only catch an error in parsing if the subopt's maxval happens to be
-smaller than -1LL which in turn will be returned as a positive value.
 
-Two more issues I spotted:
+Mmm, that is a good idea and I see no issue with it. But I'm not sure
+if it is worth of rewriting this patch as we already use MAX_SUBOPTS
+anyway. Rather I see it as a standalone patch in the next set. What do
+you think?
 
-a) the else condition on getnum() to use for when !sp->convert was left in your
-patch with strtoll() and I think you meant to convert that as well to
-strtoull()?
+>
+>>  #define MAX_SUBOPTS  16
+>>  #define SUBOPT_NEEDS_VAL     (-1LL)
+>>  #define MAX_CONFLICTS        8
+>> @@ -60,6 +61,10 @@ uint64_t           sectorsize;
+>>   *
+>>   * Description of the structure members follows:
+>>   *
+>> + * index MANDATORY
+>> + *   An integer denoting the position of the specific option in opts array,
+>> + *   counting from 0 up to MAX_OPTS.
+>> + *
+>>   * name MANDATORY
+>>   *   Name is a single char, e.g., for '-d file', name is 'd'.
+>>   *
+>> @@ -132,6 +137,7 @@ uint64_t          sectorsize;
+>>   * !!! END OF NOTE ===========================================================
+>>   */
+>>  struct opt_params {
+>> +     int             index;
+>
+>
+>>       const char      name;
+>>       const char      *subopts[MAX_SUBOPTS];
+>>
+>> @@ -147,584 +153,592 @@ struct opt_params {
+>>               uint64_t        flagval;
+>>               const char      *raw_input;
+>>       }               subopt_params[MAX_SUBOPTS];
+>> -};
+>> -
+>> -struct opt_params bopts = {
+>> -     .name = 'b',
+>> -     .subopts = {
+>> +}
+>
+> Do we really need to mesh the struct with the opts below ? I think it would
+> make your patch easier to read if we kept the old tradition of splitting it,
+> its not clear to me what the advantage is.
+>
+>> opts[MAX_OPTS] = {
+>> +#define OPT_B        0
+>
+> I find these defines blinding on reading the struct declaration, we could
+> instead just stuff them into an enum, which would also enable us to shift all
+> the documentation into the header of the enum using whatever doc format we use.
 
-b) I noted the existing cvtnum() code does not check for wrap arounds in its
-extra conversions.
+The grouping is here to keep the style as it is with suboptions
+index/string. However, all these defines (OPT_X and X_FOO) are
+separated and moved into a single place later on in one patch anyway.
+I just didn't include that patch in this set as I had to make the line
+somewhere if I want to make multiple smaller and easier to review and
+merge sets rather than the one big monster as before.
 
-At first glance it may seem the best option is to modify the prototype of
-cvtnum() to return int to interpret errors, and have it set the uint64_t
-through a parameter pointer. The wrap around issue is orthogonal and would
-be an old issue, but such a change would help treat these as follows but
-as I will explain below this is perhaps not best for now.
+There is one point I'm not sure about, though. We have to restart the
+counting for suboptions, like this:
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index ef40c9a36e40..5995245e471d 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1410,6 +1410,7 @@ getnum(
- {
- 	struct subopt_param	*sp = &opts->subopt_params[index];
- 	uint64_t		c;
-+	int ret;
- 
- 	check_opt(opts, index, false);
- 	set_conf_raw(opts->index, index, str);
-@@ -1434,13 +1435,16 @@ getnum(
- 	 * convert it ourselves to guarantee there is no trailing garbage in the
- 	 * number.
- 	 */
--	if (sp->convert)
--		c = cvtnum(get_conf_val(OPT_B, B_SIZE),
--			   get_conf_val(OPT_D, D_SECTSIZE), str);
--	else {
-+	if (sp->convert) {
-+		ret = cvtnum(get_conf_val(OPT_B, B_SIZE),
-+			     get_conf_val(OPT_D, D_SECTSIZE), str, &c);
-+		if (ret)
-+			illegal_option(str, opts, index,
-+				       _("Parse error, ret: %d", ret));
-+	} else {
- 		char		*str_end;
- 
--		c = strtoll(str, &str_end, 0);
-+		c = strtoull(str, &str_end, 0);
- 		if (c == 0 && str_end == str)
- 			illegal_option(str, opts, index, NULL);
- 		if (*str_end != '\0')
-@@ -3814,24 +3818,25 @@ unknown(
- 	usage();
- }
- 
--uint64_t
-+int
- cvtnum(
- 	unsigned int	blksize,
- 	unsigned int	sectsize,
--	const char	*s)
-+	const char	*s,
-+	uint64_t *val)
- {
- 	uint64_t	i;
- 	char		*sp;
- 	int		c;
-+	uint64_t	orig_val;
- 
- 	i = strtoull(s, &sp, 0);
- 	if (i == 0 && sp == s)
--		return -1LL;
-+		return -EINVAL;
- 	if (*sp == '\0')
--		return i;
--
-+		return -EINVAL;
- 	if (sp[1] != '\0')
--		return -1LL;
-+		return -EINVAL;
- 
- 	if (*sp == 'b') {
- 		if (!blksize) {
-@@ -3839,7 +3844,10 @@ cvtnum(
- _("Blocksize must be provided prior to using 'b' suffix.\n"));
- 			usage();
- 		} else {
--			return i * blksize;
-+			*val = i * blksize;
-+			if (*val < i || *val < blksize)
-+				return -ERANGE;
-+			return 0;
- 		}
- 	}
- 	if (*sp == 's') {
-@@ -3848,11 +3856,15 @@ _("Blocksize must be provided prior to using 'b' suffix.\n"));
- _("Sectorsize must be specified prior to using 's' suffix.\n"));
- 			usage();
- 		} else {
--			return i * sectsize;
-+			*val = i * sectsize;
-+			if (*val < i || *val < sectsize)
-+				return -ERANGE;
-+			return 0;
- 		}
- 	}
- 
- 	c = tolower(*sp);
-+	orig_val = i;
- 	switch (c) {
- 	case 'e':
- 		i *= 1024LL;
-@@ -3870,11 +3882,14 @@ _("Sectorsize must be specified prior to using 's' suffix.\n"));
- 		i *= 1024LL;
- 		/* fall through */
- 	case 'k':
--		return i * 1024LL;
-+		*val = i * 1024LL;
-+		if (*val < orig_val)
-+			return -ERANGE;
-+		return 0;
- 	default:
- 		break;
- 	}
--	return -1LL;
-+	return -EINVAL;
- }
- 
- static void __attribute__((noreturn))
+enum subopts {
+  B_size = 0,
+  B_LOG,
+  D_AGCOUNT = 0,
+  D_...,
+  L_xxx = 0,
+  L_...,
+}
 
-The issue with this of course is everyone and their mom calls cvtnum() and the
-amount of collateral for such type of change is significant for your patch series.
-One option may just be to bail on error within cvtnum() with a usage() call on
-error, as a temporary compromise, this way we only chug on *iff* the value was
-accepted and proper, and non-wrap-around, up to you.
+I didn't found anywhere if it is a good practice or not. But again, I
+just submitted it as it was with a note in my TODOs to find out more
+out it and update the patch changing it later on.
 
-  Luis
+Jan
+
+>
+> Below is a simple demo using a basic limited opt just to be clear about what I
+> am suggesting, modulo, I think we want max_opts to be a global.
+>
+> #include <stdio.h>
+> #include <stdlib.h>
+> #include <string.h>
+> #include <errno.h>
+>
+> #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+>
+> enum opt_idx {
+>         OPT_ZERO = 0,
+>         OPT_ONE,
+>         OPT_TWO,
+> };
+>
+> struct opt {
+>         unsigned int idx;
+>         unsigned int val;
+> };
+>
+> struct opt opts[] = {
+>         {
+>                 .idx = OPT_ZERO,
+>                 .val = 0,
+>         },
+>         {
+>                 .idx = OPT_ONE,
+>                 .val = 1,
+>         },
+>         {
+>                 .idx = OPT_TWO,
+>                 .val = 2,
+>         },
+> };
+>
+> int main(int argc, char *argv[])
+> {
+>         unsigned int max_opts = ARRAY_SIZE(opts);
+>         unsigned int i;
+>
+>         printf("Max size: %lu\n", max_opts);
+>
+>         for (i = 0; i < max_opts; i++) {
+>                 printf("Val: %lu\n", opts[i].val);
+>         }
+>
+>         return 0;
+> }
+
+
+
+-- 
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
