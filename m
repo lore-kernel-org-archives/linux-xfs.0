@@ -1,50 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47840 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752990AbdDOOqL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 15 Apr 2017 10:46:11 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8FA16A2021
-        for <linux-xfs@vger.kernel.org>; Sat, 15 Apr 2017 14:46:10 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6697C60461
-        for <linux-xfs@vger.kernel.org>; Sat, 15 Apr 2017 14:46:10 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: remove use of do_div with 32-bit dividend in quota debug
- code
-Message-ID: <e6022a70-8f09-633d-e99a-30186ea8c3d2@redhat.com>
-Date: Sat, 15 Apr 2017 09:46:09 -0500
+Received: from mx2.suse.de ([195.135.220.15]:49424 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S978955AbdDYFTP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Apr 2017 01:19:15 -0400
+Date: Tue, 25 Apr 2017 07:19:13 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 07/12] mkfs: save user input values into opts
+Message-ID: <20170425051913.GK28800@wotan.suse.de>
+References: <20170423185503.31415-1-jtulak@redhat.com>
+ <20170423185503.31415-8-jtulak@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170423185503.31415-8-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-The kbuild test robot caught this; in debug code we have another
-caller of do_div with a 32-bit dividend (j) which is caught now
-that we are using the kernel-supplied do_div.
+On Sun, Apr 23, 2017 at 08:54:58PM +0200, Jan Tulak wrote:
+> Save the parsed values from users into the opts table.
+> 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> ---
+>  mkfs/xfs_mkfs.c | 260 +++++++++++++++++++++++++++++++++++---------------------
+>  1 file changed, 165 insertions(+), 95 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 4caf93c..362c9b4 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -1636,16 +1636,19 @@ main(
+>  
+>  				switch (getsubopt(&p, subopts, &value)) {
+>  				case B_LOG:
+> -					blocklog = getnum(value, &opts[OPT_B],
+> -								B_LOG);
+> +					blocklog = parse_conf_val(OPT_B, B_LOG,
+> +								  value);
+>  					blocksize = 1 << blocklog;
+>  					blflag = 1;
+> +					set_conf_val(OPT_B, B_SIZE, blocksize);
+>  					break;
+>  				case B_SIZE:
+> -					blocksize = getnum(value, &opts[OPT_B],
+> -							   B_SIZE);
+> +					blocksize = parse_conf_val(OPT_B,
+> +								   B_SIZE,
+> +								   value);
+>  					blocklog = libxfs_highbit32(blocksize);
+>  					bsflag = 1;
+> +					set_conf_val(OPT_B, B_LOG, blocklog);
+>  					break;
+>  				default:
+>  					unknown('b', value);
 
-None of the values used here are 64-bit; just use simple division.
+This still means that users of parse_conf_val() must copy the same code
+in each case in the above to handle collateral values: if blocklog was
+passed we update blocklog *and* blocksize *and* bsflag. Likewise if blocksize
+was passed we must update blocksize *and* blocklog *and* blflag. What I had
+done on the mkfs.xfs.conf series is put all this functionality into a helper,
+and to do this move all needed vars into a struct. You are moving all possible
+user params to a option specific table, however the collateral parameters are
+kept inside main().
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+I'll need to do the same again: move the logic above to a helper and move
+collateral parameters to a struct, or this could be done in your series by
+having parse_conf_val() handle all the needed logic provided say an extra
+struct param is passed -- or though some other means.
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index b669b12..dedeb7f 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -851,8 +851,7 @@ struct xfs_qm_isolate {
- 	 * started afresh by xfs_qm_quotacheck.
- 	 */
- #ifdef DEBUG
--	j = XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
--	do_div(j, sizeof(xfs_dqblk_t));
-+	j = XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB) / sizeof(xfs_dqblk_t);
- 	ASSERT(mp->m_quotainfo->qi_dqperchunk == j);
- #endif
- 	dqb = bp->b_addr;
+Duplicating the functionality I'm sure is not desirable, how we handle this
+subjective so I'll leave it up to you to advise how you'd like to proceed,
+but let me know if the above consideration is clear.
 
+  Luis
