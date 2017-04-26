@@ -1,41 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:32794 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1437292AbdDZJMI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 Apr 2017 05:12:08 -0400
-Date: Wed, 26 Apr 2017 11:12:06 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: Reviewing determinism of xfs_reclaim_inodes_ag()
-Message-ID: <20170426091206.GA28800@wotan.suse.de>
-References: <20170425082503.GN28800@wotan.suse.de>
- <20170426000426.GK12369@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170426000426.GK12369@dastard>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:44626 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1956143AbdDZGj2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Apr 2017 02:39:28 -0400
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v3Q6cmbb049960
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Apr 2017 02:39:27 -0400
+Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2a2ebu1jrt-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Apr 2017 02:39:27 -0400
+Received: from localhost
+        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Wed, 26 Apr 2017 02:39:26 -0400
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH] xfs_io: Add statx support for PowerPC architecture
+Date: Wed, 26 Apr 2017 12:09:18 +0530
+Message-Id: <1493188758-3173-1-git-send-email-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, Nikolay Borisov <nborisov@suse.com>, Jan Kara <jack@suse.cz>, Michal Hocko <mhocko@suse.com>
+To: linux-xfs@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, sandeen@redhat.com
 
-On Wed, Apr 26, 2017 at 10:04:26AM +1000, Dave Chinner wrote:
-> On Tue, Apr 25, 2017 at 10:25:03AM +0200, Luis R. Rodriguez wrote:
-> > I checked with Jan Kara and he believes the current code is correct but that
-> > its the comment that that may be misleading. As per Jan the race is between
-> > getting an inode reclaimed and grabbing it. Ie, XFS frees the inodes by RCU.
-> > However it doesn't actually *reuse* the inode until RCU period passes
-> > (unlike inodes allocated from slab with SLAB_RCU can be). So it can happen
-> 
-> ..... I initially tried using SLAB_DESTROY_BY_RCU which meant the
-> RCU grace period did not prevent reallocation of inodes that had
-> been freed. Hence this check was (once) necessary to prevent the
-> reclaim index going whacky on a reallocated inode.
+Linux kernel commit f717629c7f834ab2efa05c7dbf0826f1d7c32ade (powerpc:
+Wire up statx() syscall) added support for statx syscall for PowerPC
+architecture. This commit enables using 'statx' sub-command of xfs_io to
+be used on PowerPC.
 
-Alright this helps, but why does *having* the RCU grace period prevent
-such type of race ? I can see it helping but removing completely such
-a race as a possibility ? Also, just so I understand I am following, this
-then implicates our reclaim rate is directly linked to the RCU grace
-period ?
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+This patch is based on Eric's "xfs_io: fix statx definition for non-x86
+architecture" patch.
 
-  Luis
+ io/statx.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/io/statx.h b/io/statx.h
+index eea7944..14361a8 100644
+--- a/io/statx.h
++++ b/io/statx.h
+@@ -16,7 +16,7 @@
+ #endif
+ 
+ #ifndef __NR_statx
+-# ifdef __i386__
++# if defined(__i386__) || defined(__powerpc__)
+ #  define __NR_statx 383
+ # elif defined (__x86_64__)
+ #  if defined (__ILP32__)
+-- 
+2.5.5
+
