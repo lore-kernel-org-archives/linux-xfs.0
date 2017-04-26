@@ -1,171 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37532 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1433753AbdDZApy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Apr 2017 20:45:54 -0400
-Date: Wed, 26 Apr 2017 02:45:28 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 08/12] mkfs: replace variables with opts table: -b,d,s
- options
-Message-ID: <20170426004528.GP28800@wotan.suse.de>
-References: <20170423185503.31415-1-jtulak@redhat.com>
- <20170423185503.31415-9-jtulak@redhat.com>
- <20170425052721.GL28800@wotan.suse.de>
- <CACj3i73PnrUGRL+1zQtj=vgdih5ne3AZ8rnmNCn-zTmmnrV8EA@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:58914 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1434861AbdDZD6T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Apr 2017 23:58:19 -0400
+Subject: Re: [PATCH 1/2 v2] mkfs: unify numeric types of main variables in
+ main()
+References: <20170419153025.10368-1-jtulak@redhat.com>
+ <20170420083323.12524-1-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <62f04d88-9475-b1a4-dd91-871fd091b0e1@sandeen.net>
+Date: Tue, 25 Apr 2017 22:58:17 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACj3i73PnrUGRL+1zQtj=vgdih5ne3AZ8rnmNCn-zTmmnrV8EA@mail.gmail.com>
+In-Reply-To: <20170420083323.12524-1-jtulak@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
 
-On Tue, Apr 25, 2017 at 10:37:57AM +0200, Jan Tulak wrote:
-> On Tue, Apr 25, 2017 at 7:27 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> > On Sun, Apr 23, 2017 at 08:54:59PM +0200, Jan Tulak wrote:
-> >> Remove variables that can be replaced with a direct access to the opts table,
-> >> so we have it all in a single place, acessible from anywhere.
-> >>
-> >> In future, we can remove some passing of values forth and back, but now limit
-> >> the changes to simple replacement without a change in the logic.
-> >
-> > What do you mean passing of values here, as an example with bopts ?
+On 4/20/17 3:33 AM, Jan Tulak wrote:
+> In the past, when mkfs was first written, it used atoi and
+> similar calls, so the variables were ints. However, the situation moved
+> since then and in course of the time, mkfs began to use other types too.
 > 
-> Passing it to a function and then retrieving with pointers, e.g. change this
+> Clean and unify it. We don't need negative values anywhere in the code and
+> some numbers has to be 64bit. Thus, uint64_t is the best candidate as the target
+> type for numeric values. The existing uses of __uint64_t in mkfs change to the
+> standard uint64_t type. For flag values let's use boolean.
 > 
-> static void
-> calc_stripe_factors(
->         int             dsu,
->         int             dsw,
->         int             dsectsz,
->         int             lsu,
->         int             lsectsz,
->         uint64_t        *dsunit,
->         uint64_t        *dswidth,
->         uint64_t        *lsunit)
+> This patch changes variables declared at the beginning of main() +
+> block/sectorsize, making only minimal changes. The following patch
+> cleans some now-unnecessary type casts.
 > 
-> 
-> to this
-> 
-> static void
-> calc_stripe_factors(struct opt_params * opts) // or no argument at all...
+> It would be nice to change types in some of the structures too, but
+> this might lead to changes outside of mkfs, so I'm skipping them for
+> this moment to keep it simple.
 
-Ah, great, but note that not all options have a respective struct subopt_param,
-that is -- we don't allow for them to be specified in the command line, but they
-are rather collateral values, which depend on other struct subopt_param's. The
-lsunit is one example. Its why I ended up just stuffing all of the needed parameters
-into one data struct: struct mkfs_xfs_opts. Your patches round up direct
-parameters associated with struct subopt_param on the struct opt_params.
+This introduces quite a few new warnings on i386, first of all.
+(they persist with patch 2/2), so please sort that out.
 
-Where would things like lsunit be stuffed into ?
+Also, almost all of the existing use of PRIu64 in the codebase
+puts spaces around it, i.e.
+	("The value is %" PRIu64 "\n")
+not
+	("The value is %"PRIu64"\n")
 
-> Which btw needs to be updated anyway because it is still using int...
+so I'd prefer that you follow that convention whenever you
+need to use it.
 
-Right I see.
+On a respin, it would be nice to separate the boolean changes
+into a separate patch from the 64-bit changes, to produce
+shorter individual patches to aid review.  In fact, splitting out
+another patch to first convert existing __uint64_t to uint64_t would
+make it even nicer.  Small, self-contained, functional patches.
+Change one thing at a time, especially for long patches.
 
-> >> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> >> index 362c9b4..6857c30 100644
-> >> --- a/mkfs/xfs_mkfs.c
-> >> +++ b/mkfs/xfs_mkfs.c
-> >> @@ -1485,15 +1480,12 @@ main(
-> >>       int                     argc,
-> >>       char                    **argv)
-> >>  {
-> >> -     uint64_t                agcount;
-> >>       xfs_agf_t               *agf;
-> >>       xfs_agi_t               *agi;
-> >>       xfs_agnumber_t          agno;
-> >> -     uint64_t                agsize;
-> >>       xfs_alloc_rec_t         *arec;
-> >>       struct xfs_btree_block  *block;
-> >>       bool                    blflag;
-> >
-> > Note: blflag
-> >
-> >> -     uint64_t                blocklog;
-> >>       bool                    bsflag;
-> >
-> > Note: bsflag
-> >
-> >>       memset(&fsx, 0, sizeof(fsx));
-> >> @@ -1629,6 +1613,7 @@ main(
-> >>                       break;
-> >>               case 'b':
-> >>                       p = optarg;
-> >> +                     uint64_t tmp;
-> >>                       while (*p != '\0') {
-> >>                               char    **subopts =
-> >>                                               (char **)opts[OPT_B].subopts;
-> >> @@ -1636,19 +1621,17 @@ main(
-> >>
-> >>                               switch (getsubopt(&p, subopts, &value)) {
-> >>                               case B_LOG:
-> >> -                                     blocklog = parse_conf_val(OPT_B, B_LOG,
-> >> -                                                               value);
-> >> -                                     blocksize = 1 << blocklog;
-> >> +                                     tmp = parse_conf_val(OPT_B, B_LOG,
-> >> +                                                          value);
-> >> +                                     set_conf_val(OPT_B, B_SIZE, 1 << tmp);
-> >>                                       blflag = 1;
-> >
-> > This is a collateral variable set when blog is set. If we have to parse the
-> > blog again, it means similar code would be needed.
-> >
-> >> -                                     set_conf_val(OPT_B, B_SIZE, blocksize);
-> >>                                       break;
-> >>                               case B_SIZE:
-> >> -                                     blocksize = parse_conf_val(OPT_B,
-> >> -                                                                B_SIZE,
-> >> -                                                                value);
-> >> -                                     blocklog = libxfs_highbit32(blocksize);
-> >> +                                     tmp = parse_conf_val(OPT_B, B_SIZE,
-> >> +                                                          value);
-> >> +                                     set_conf_val(OPT_B, B_LOG,
-> >> +                                             libxfs_highbit32(tmp));
-> >>                                       bsflag = 1;
-> >
-> > Likewise for bsflag.
-> >
-> >> -                                     set_conf_val(OPT_B, B_LOG, blocklog);
-> >>                                       break;
-> >>                               default:
-> >>                                       unknown('b', value);
-> >
-> > What I'm questioning is whether or not it makes sense instead for parse_conf_val()
-> > to return void and do all this meddling for us, this would require stuffing any
-> > collateral variables into a struct and passing that to parse_conf_val and using
-> > it on main() as well.
-> 
-> Again, this (both logic and flags) is something I want to do later.
+(Splitting out the bools would make it more obvious that "discard" and
+"lalign" really should be converted to bools below, not uint64_t
+as they are now; there might be others.)
 
-Ah great.
+However, as Dave said earlier:
 
-> And in fact, I think that perhaps the whole manual loop in main() can
-> be removed in the future once the case logic is moved elsewhere.
-> Because then we can extract specific cases from the opts table with
-> the help of some helper functions...
+> we need to work
+> towards removing all the variables, not try to make them pretty....
 
-Nice yes that would be good.
+and indeed, your later patches do remove a lot of the variables that
+you're converting here, i.e.:
 
-OK, understood, just so its clear, only once all the direct subopts and collateral
-values for subopts for the following main opts are stuffed into a data structure
-somehow (and perhaps the logic of processing them are stuffed into a routine) can
-the mkfs.xfs.conf blend in well, given the same logic would be used:
+[PATCH 08/12] mkfs: replace variables with opts table: -b,d,s options
 
-                case 'b':                                                       
-                case 'd':                                                       
-                case 'i':                                                       
-                case 'l':                                                       
-                case 'm':                                                       
-                case 'n':                                                       
-                case 'r':                                                       
-                case 's':                                                       
-                        p = optarg;                                             
-                        parse_subopts(c, p, &params); 
+does:
 
-So I'll have to hold off my patches until something like this is available, but
-knowing its an end goal helps in the review process.
+-uint64_t		blocksize;
+-uint64_t		sectorsize;
+...
+-	uint64_t		agcount;
+-	uint64_t		agsize;
+-	uint64_t		blocklog;
+...
+-	uint64_t		dbytes;
+-	uint64_t		dsu;
+-	uint64_t		dsw;
+-	uint64_t		dsunit;
+-	uint64_t		dswidth;
+...
+-	uint64_t		sectorlog;
 
-  Luis
+and [PATCH 09/12] mkfs: replace variables with opts table: -i options
+does:
+
+-	uint64_t		imaxpct;
+-	uint64_t		inodelog;
+-	uint64_t		inopblock;
+-	uint64_t		isize;
+
+etc ...
+
+so is there any real advantage to converting all of these, only to remove
+most of them a few patches later?  (If there is, just help me understand
+why...)
+
+Thanks,
+-Eric
+
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> ---
