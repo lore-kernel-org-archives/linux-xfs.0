@@ -1,46 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49799 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751521AbdDNHmu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Apr 2017 03:42:50 -0400
-Date: Fri, 14 Apr 2017 00:42:44 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Deadlock between block allocation and block truncation
-Message-ID: <20170414074244.GA18519@infradead.org>
-References: <800468eb-3ded-9166-20a4-047de8018582@gmail.com>
- <20170412161017.GA16590@infradead.org>
- <af73ca2f-5840-1399-9902-8f7482e29e49@gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:39506 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1434222AbdDZBKk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Apr 2017 21:10:40 -0400
+Date: Wed, 26 Apr 2017 03:10:38 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 05/12] mkfs: extend opt_params with a value field
+Message-ID: <20170426011038.GR28800@wotan.suse.de>
+References: <20170423185503.31415-1-jtulak@redhat.com>
+ <20170423185503.31415-6-jtulak@redhat.com>
+ <20170425031326.GI28800@wotan.suse.de>
+ <CACj3i70LFrv9HbMRYg7M8qutCfmhFHC8oCUtrkf3vP8kvKUw4Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <af73ca2f-5840-1399-9902-8f7482e29e49@gmail.com>
+In-Reply-To: <CACj3i70LFrv9HbMRYg7M8qutCfmhFHC8oCUtrkf3vP8kvKUw4Q@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <n.borisov.lkml@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
 
-On Thu, Apr 13, 2017 at 04:52:03PM +0300, Nikolay Borisov wrote:
-> On a different note - do you think that reducing the unmapped extents
-> from 2 to 1 would introduce any performance degradation during
-> truncation?
+On Tue, Apr 25, 2017 at 10:04:39AM +0200, Jan Tulak wrote:
+> On Tue, Apr 25, 2017 at 5:13 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+> > On Sun, Apr 23, 2017 at 08:54:56PM +0200, Jan Tulak wrote:
+> >
+> >> and anything you write here now is
+> >> + *     overwritten if user specifies the subopt. (If the user input is a string
+> >> + *     and not a number, this value is set to a positive non-zero number.)
+> >> + *
+> >>   * !!! NOTE ==================================================================
+> >>   *
+> >>   * If you are adding a new option, or changing an existing one,
+> >> @@ -152,6 +158,7 @@ struct opt_params {
+> >>               uint64_t        maxval;
+> >>               uint64_t        flagval;
+> >>               const char      *raw_input;
+> >> +             uint64_t        value;
+> >>       }               subopt_params[MAX_SUBOPTS];
+> >>  } opts[MAX_OPTS] = {
+> >>  #define OPT_B        0
+> >
+> > It would seem rather unfair to define this this but not use it in the patch ?
+> 
+> I'm still trying to find out when exactly should I make something two
+> patches and when one, and it seems to shift case by case... I tried to
+> separate the adding of new things and rewriting of the existing code,
+> but do you think, in this case, the new thing is too trivial to have a
+> standalone patch?
 
-There will be some.  But now that we have the CIL it will just
-additional in-kernel overhead instead of overhead in the on-disk
-log.
+Ah, I see, this was split out to be separate given a slew of subopts in turn
+later use it. The nasty alternative for review would be to have all subopts
+converted in one shot. I suppose a middle ground would be to have this patch
+squashed with just one of the subopt users, and then each other subopt ported
+atomically. That would make the addition of the value and definition in effect
+as soon as its added.
 
-> Looking around the code this define is only used when doing
-> truncation, so perhaps a better thing to do would be to turn this
-> xfs_bunmapi arg to a boolean which signal whether we are doing
-> truncation or not. And if it is set to true have xfs_bunmapi unmap all
-> possible extents from only a single AG? I'm going to sift through the
-> git history to figure out where this requirement of maximum 2 extent
-> came to truncate, came.
+Just my 0.02 CRC but its up to Eric as this is rather subjective and tree dependent.
 
-We have the problem with all transactions that could lock multiple AGF
-headers, so that's not going to cut it.
-
-I think we could do multiple transactions IFF in the same AG.  I'll
-need to check if that's worth it.  And on top of that I have started
-entirely reworking what is currently xfs_bunmapi, but that will have
-to wait until after a fix for your issue.
+  Luis
