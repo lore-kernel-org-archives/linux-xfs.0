@@ -1,140 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30794 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2999490AbdDZLhl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 Apr 2017 07:37:41 -0400
-Date: Wed, 26 Apr 2017 07:37:39 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v3] xfs: reserve enough blocks to handle btree splits
- when remapping
-Message-ID: <20170426113739.GB10392@bfoster.bfoster>
-References: <20170425015837.GS23371@birch.djwong.org>
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:32986 "EHLO
+        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1957236AbdDZIxN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Apr 2017 04:53:13 -0400
+Received: by mail-oi0-f48.google.com with SMTP id y11so168910440oie.0
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Apr 2017 01:53:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170425015837.GS23371@birch.djwong.org>
+In-Reply-To: <dbdfd755-93df-5d61-ab6b-534a00b365d8@sandeen.net>
+References: <20170423185503.31415-1-jtulak@redhat.com> <20170423185503.31415-6-jtulak@redhat.com>
+ <20170425031326.GI28800@wotan.suse.de> <CACj3i70LFrv9HbMRYg7M8qutCfmhFHC8oCUtrkf3vP8kvKUw4Q@mail.gmail.com>
+ <20170426011038.GR28800@wotan.suse.de> <dbdfd755-93df-5d61-ab6b-534a00b365d8@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Wed, 26 Apr 2017 10:52:52 +0200
+Message-ID: <CACj3i70RCEt2hf_CLQFwQmS1epymg=xgVxjZ20AwAxw_n2OjNA@mail.gmail.com>
+Subject: Re: [PATCH 05/12] mkfs: extend opt_params with a value field
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
 
-On Mon, Apr 24, 2017 at 06:58:37PM -0700, Darrick J. Wong wrote:
-> In xfs_reflink_end_cow, we erroneously reserve only enough blocks to
-> handle adding 1 extent.  This is problematic if we fragment free space,
-> have to do CoW, and then have to perform multiple bmap btree expansions.
-> Furthermore, the BUI recovery routine doesn't reserve /any/ blocks to
-> handle btree splits, so log recovery fails after our first error causes
-> the filesystem to go down.
-> 
-> Therefore, refactor the transaction block reservation macros until we
-> have a macro that works for our deferred (re)mapping activities, and fix
-> both problems by using that macro.
-> 
-> With 1k blocks we can hit this fairly often in g/187 if the scratch fs
-> is big enough.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+On Wed, Apr 26, 2017 at 4:50 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 4/25/17 8:10 PM, Luis R. Rodriguez wrote:
+>> On Tue, Apr 25, 2017 at 10:04:39AM +0200, Jan Tulak wrote:
+>>> On Tue, Apr 25, 2017 at 5:13 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+>>>> On Sun, Apr 23, 2017 at 08:54:56PM +0200, Jan Tulak wrote:
+>>>>
+>>>>> and anything you write here now is
+>>>>> + *     overwritten if user specifies the subopt. (If the user input is a string
+>>>>> + *     and not a number, this value is set to a positive non-zero number.)
+>>>>> + *
+>>>>>   * !!! NOTE ==================================================================
+>>>>>   *
+>>>>>   * If you are adding a new option, or changing an existing one,
+>>>>> @@ -152,6 +158,7 @@ struct opt_params {
+>>>>>               uint64_t        maxval;
+>>>>>               uint64_t        flagval;
+>>>>>               const char      *raw_input;
+>>>>> +             uint64_t        value;
+>>>>>       }               subopt_params[MAX_SUBOPTS];
+>>>>>  } opts[MAX_OPTS] = {
+>>>>>  #define OPT_B        0
+>>>>
+>>>> It would seem rather unfair to define this this but not use it in the patch ?
+>>>
+>>> I'm still trying to find out when exactly should I make something two
+>>> patches and when one, and it seems to shift case by case... I tried to
+>>> separate the adding of new things and rewriting of the existing code,
+>>> but do you think, in this case, the new thing is too trivial to have a
+>>> standalone patch?
+>>
+>> Ah, I see, this was split out to be separate given a slew of subopts in turn
+>> later use it. The nasty alternative for review would be to have all subopts
+>> converted in one shot. I suppose a middle ground would be to have this patch
+>> squashed with just one of the subopt users, and then each other subopt ported
+>> atomically. That would make the addition of the value and definition in effect
+>> as soon as its added.
+>>
+>> Just my 0.02 CRC but its up to Eric as this is rather subjective and tree dependent.
+>
+> I think the way Jan did this is fine.  Ideally the commit would explain a bit more,
+> i.e. "This patch simply adds the value field.  Subsequent patches will utilize
+> this new field."
+>
+> Then the reviewers know what to expect from the start, and we avoid the back and
+> forth of figuring out why it was done as it was done.  ;)
+>
+> However, I think 5 & 6 could easily be combined - add the field and the routines
+> to manipulate it, /then/ start adding users of that new infrastructure.
+>
+> I haven't really reviewed from here on out yet, but from a "how should I break
+> up patches" point of view, that's my ... $0.02.  :)
+>
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Yeah, that sounds reasonable, I'm squashing it for the next version
+(and adding the notice).
 
-> v3: don't use the swap-extents-with-rmap block reservation for cow
-> remapping; we should already have sufficient per-ag reservation
-> v2: avoid 64-bit division when calculating block reservation
-> ---
->  fs/xfs/libxfs/xfs_trans_space.h |   13 +++++++------
->  fs/xfs/xfs_bmap_item.c          |    7 ++++++-
->  fs/xfs/xfs_reflink.c            |   12 ++++++++++--
->  3 files changed, 23 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
-> index 7917f6e..0044e14 100644
-> --- a/fs/xfs/libxfs/xfs_trans_space.h
-> +++ b/fs/xfs/libxfs/xfs_trans_space.h
-> @@ -23,6 +23,11 @@
->   */
->  #define XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)    \
->  		(((mp)->m_rmap_mxr[0]) - ((mp)->m_rmap_mnr[0]))
-> +#define XFS_RMAPADD_SPACE_RES(mp) ((mp)->m_rmap_maxlevels)
-> +#define XFS_NRMAPADD_SPACE_RES(mp,b,w)\
-> +	(((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
-> +	  XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) * \
-> +	  XFS_RMAPADD_SPACE_RES(mp))
->  #define XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)    \
->  		(((mp)->m_alloc_mxr[0]) - ((mp)->m_alloc_mnr[0]))
->  #define	XFS_EXTENTADD_SPACE_RES(mp,w)	(XFS_BM_MAXLEVELS(mp,w) - 1)
-> @@ -31,12 +36,8 @@
->  	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
->  	  XFS_EXTENTADD_SPACE_RES(mp,w))
->  #define XFS_SWAP_RMAP_SPACE_RES(mp,b,w)\
-> -	(((b + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) / \
-> -	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
-> -	  XFS_EXTENTADD_SPACE_RES(mp,w) + \
-> -	 ((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
-> -	  XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) * \
-> -	  (mp)->m_rmap_maxlevels)
-> +	(XFS_NEXTENTADD_SPACE_RES((mp), (b), (w)) + \
-> +	 XFS_NRMAPADD_SPACE_RES((mp), (b), (w)))
->  #define	XFS_DAENTER_1B(mp,w)	\
->  	((w) == XFS_DATA_FORK ? (mp)->m_dir_geo->fsbcount : 1)
->  #define	XFS_DAENTER_DBS(mp,w)	\
-> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> index 2d70173..378f144 100644
-> --- a/fs/xfs/xfs_bmap_item.c
-> +++ b/fs/xfs/xfs_bmap_item.c
-> @@ -34,6 +34,8 @@
->  #include "xfs_bmap.h"
->  #include "xfs_icache.h"
->  #include "xfs_trace.h"
-> +#include "xfs_bmap_btree.h"
-> +#include "xfs_trans_space.h"
->  
->  
->  kmem_zone_t	*xfs_bui_zone;
-> @@ -403,6 +405,7 @@ xfs_bui_recover(
->  	struct xfs_inode		*ip = NULL;
->  	struct xfs_defer_ops		dfops;
->  	xfs_fsblock_t			firstfsb;
-> +	unsigned int			resblks;
->  
->  	ASSERT(!test_bit(XFS_BUI_RECOVERED, &buip->bui_flags));
->  
-> @@ -447,7 +450,9 @@ xfs_bui_recover(
->  		return -EIO;
->  	}
->  
-> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
-> +	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
-> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, resblks, 0,
-> +			0, &tp);
->  	if (error)
->  		return error;
->  	budp = xfs_trans_get_bud(tp, buip);
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index c0f3754..aab156a 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -705,8 +705,16 @@ xfs_reflink_end_cow(
->  	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
->  	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
->  
-> -	/* Start a rolling transaction to switch the mappings */
-> -	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
-> +	/*
-> +	 * Start a rolling transaction to switch the mappings.  We're
-> +	 * unlikely ever to have to remap 16T worth of single-block
-> +	 * extents, so just cap the worst case extent count to 2^32-1.
-> +	 * Stick a warning in just in case, and avoid 64-bit division.
-> +	 */
-> +	WARN_ON(end_fsb - offset_fsb + 1 > UINT_MAX);
-> +	resblks = min_t(xfs_fileoff_t, UINT_MAX, end_fsb - offset_fsb + 1);
-> +	resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount, resblks,
-> +			XFS_DATA_FORK);
->  	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
->  			resblks, 0, 0, &tp);
->  	if (error)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Jan
+
+
+-- 
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
