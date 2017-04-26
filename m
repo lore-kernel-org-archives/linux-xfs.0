@@ -1,523 +1,492 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38184 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752752AbdDSPaa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Apr 2017 11:30:30 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id BD0767F3EB
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Apr 2017 15:30:29 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 1/2] mkfs: unify numeric types of main variables in main()
-Date: Wed, 19 Apr 2017 17:30:24 +0200
-Message-Id: <20170419153025.10368-1-jtulak@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21027 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754276AbdDZU1V (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Apr 2017 16:27:21 -0400
+Date: Wed, 26 Apr 2017 13:27:13 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/4] xfs_db: dump metadata btrees via 'btdump'
+Message-ID: <20170426202713.GZ23371@birch.djwong.org>
+References: <149186446125.32572.5134583964816531229.stgit@birch.djwong.org>
+ <149186448580.32572.11952289934147703634.stgit@birch.djwong.org>
+ <751a55aa-a698-0464-9ac1-b962b38381d8@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <751a55aa-a698-0464-9ac1-b962b38381d8@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-Followup of my "[xfsprogs] Do we need so many data types for user input?" email.
-This version has bool for flags and uses PRIu64 for printing 64bit values.
+On Wed, Apr 26, 2017 at 02:50:45PM -0500, Eric Sandeen wrote:
+> On 4/10/17 5:48 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Introduce a new 'btdump' command that can print the contents of all
+> > blocks of any metadata subtree in the filesystem.  This enables
+> > developers and forensic analyst to view a metadata structure without
+> > having to navigate the btree manually.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> > v2: put the btdump_init declaration in command.h to avoid lots of silly
+> > little header files
+> > ---
+> >  db/Makefile  |    2 
+> >  db/btdump.c  |  271 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  db/command.c |    1 
+> >  db/command.h |    2 
+> 
+> man/man8/xfs_db.8 ?
 
-Other issues from RFC, that I didn't get a satisfactory feedback to:
- * __uint64_t is used because it is declared in xfsprogs, so unless there is a
-   reason to not use it (e.g. the declared type is just for some special use,
-   or is obsolete), I'm sticking to it.
- * For variables that has more than 0/1 valid values, I'm still using uint64.
-   Mostly because I work on patches that changes all access to these variables
-   to get/set functions, wrapping the opts table. Possibly with validity checks
-   implemented for every set attempt, and then we will have to work with uint64
-   anyway.
+Oops, forgot that.
 
-Based against 07a3e79 for-next
-https://github.com/jtulak/xfsprogs-dev/tree/uint
---
+> >  4 files changed, 275 insertions(+), 1 deletion(-)
+> >  create mode 100644 db/btdump.c
+> > 
+> > 
+> > diff --git a/db/Makefile b/db/Makefile
+> > index cdc0b99..2c7679c 100644
+> > --- a/db/Makefile
+> > +++ b/db/Makefile
+> > @@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+> >  LTCOMMAND = xfs_db
+> >  
+> >  HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+> > -	btblock.h bmroot.h check.h command.h convert.h crc.h debug.h \
+> > +	btblock.h btdump.c bmroot.h check.h command.h convert.h crc.h debug.h \
+>                   ^^^^^^^^
+> 
+> That's ... not an HFILE :)
+> 
+> >  	dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
+> >  	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
+> >  	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
+> 
+> ...
+> 
+> CFILES = $(HFILES:.h=.c)
+> 
+> Oh.  Urgh.  Yuk.  o_O  /o\
+> 
+> How about:
+> 
+> CFILES = btdump.c $(HFILES:.h=.c)
+> 
+> maybe?
 
-In the past, when mkfs was first written, it used atoi and
-similar calls, so the variables were ints. However, the situation moved
-since then and in course of the time, mkfs began to use other types too.
+Ok, ok. :)
 
-Clean and unify it. We don't need negative values anywhere in the code and
-some numbers has to be 64bit. Thus, uint64 is the best candidate as the target
-type for numeric values. For flag values let's use boolean.
+> (I have another patch to remove all the other silly little headers, so maybe
+> we can start going in that direction for new functions)
+> 
+> 
+> > diff --git a/db/btdump.c b/db/btdump.c
+> > new file mode 100644
+> > index 0000000..9b9fc2c
+> > --- /dev/null
+> > +++ b/db/btdump.c
+> > @@ -0,0 +1,271 @@
+> > +/*
+> > + * Copyright (C) 2017 Oracle.  All Rights Reserved.
+> > + *
+> > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License
+> > + * as published by the Free Software Foundation; either version 2
+> > + * of the License, or (at your option) any later version.
+> > + *
+> > + * This program is distributed in the hope that it would be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, write the Free Software Foundation,
+> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> > + */
+> > +#include "libxfs.h"
+> > +#include "command.h"
+> > +#include "output.h"
+> > +#include "init.h"
+> > +#include "io.h"
+> > +#include "type.h"
+> > +#include "input.h"
+> > +
+> > +static void
+> > +btdump_help(void)
+> > +{
+> > +	dbprintf(_(
+> > +"\n"
+> > +" 'btdump' dumps the btree rooted at the current io cursor location.\n"
+> 
+> Note that the current type must be set to the proper btree?
+> (I know a guy who forgot to do that) Or could/should it be automagic?
+> 
+> > +" In the case of an inode, the data fork bmbt is displayed.\n"
+> 
+> "In the case of an inode, the data fork btree root is automatically
+> selected, unless the attribute btree root is selected with -a."
+> 
+> > +" Options:\n"
+> > +"   -a -- Display the extended attribute bmbt.\n"
+> 
+> -a -- Display an inode's extended attribute btree.
 
-This patch changes variables declared at the beginning of main() +
-block/sectorsize, making only minimal changes. The following patch
-cleans some now-unnecessary type casts.
+"...extended attribute fork btree.", because the xattr key/value store
+is itself a btree.
 
-It would be nice to change types in some of the structures too, but
-this might lead to changes outside of mkfs, so I'm skipping them for
-this moment to keep it simple.
+"If the cursor points to a btree block, 'btdump' dumps the btree
+downward from that block.  If the cursor points to an inode, the data
+fork btree root is selected by default.
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Options:
+  -a -- Display an inode's extended attribute fork btree.
+  -i -- Print internal btree nodes."
 
----
-CHANGES:
-* Flags as bool
-* %lu as PRIu64
+(Note that if the cursor points at an intermediate node, btdump prints
+the subtree rooted at that node.)
 
----
- mkfs/xfs_mkfs.c | 200 ++++++++++++++++++++++++++++----------------------------
- 1 file changed, 100 insertions(+), 100 deletions(-)
+> > +"   -i -- Print internal btree nodes.\n"
+> > +"\n"
+> > +));
+> > +
+> > +}
+> > +
+> > +static int
+> > +eval(
+> > +	const char	*fmt, ...)
+> > +{
+> > +	va_list		ap;
+> > +	char		buf[PATH_MAX];
+> > +	char		**v;
+> > +	int		c;
+> > +	int		ret;
+> > +
+> > +	va_start(ap, fmt);
+> > +	vsnprintf(buf, sizeof(buf), fmt, ap);
+> > +	va_end(ap);
+> > +
+> > +	v = breakline(buf, &c);
+> > +	ret = command(c, v);
+> > +	free(v);
+> > +	return ret;
+> > +}
+> 
+> w00t
+> 
+> > +
+> > +static bool
+> > +btblock_has_rightsib(
+> > +	struct xfs_btree_block	*block,
+> > +	bool			long_format)
+> > +{
+> > +	if (long_format)
+> > +		return block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK);
+> > +	return block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK);
+> > +}
+> > +
+> > +static int
+> > +dump_btlevel(
+> > +	int			level,
+> > +	bool			long_format)
+> > +{
+> > +	xfs_daddr_t		orig_daddr = iocur_top->bb;
+> > +	xfs_daddr_t		last_daddr;
+> > +	unsigned int		nr;
+> > +	int			ret;
+> > +
+> > +	ret = eval("push");
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	nr = 1;
+> > +	do {
+> > +		last_daddr = iocur_top->bb;
+> > +		dbprintf(_("%s level %u block %u daddr %llu\n"),
+> > +			 iocur_top->typ->name, level, nr, last_daddr);
+> > +		if (level > 0) {
+> > +			ret = eval("print keys");
+> > +			if (ret)
+> > +				goto err;
+> > +			ret = eval("print ptrs");
+> > +		} else {
+> > +			ret = eval("print recs");
+> > +		}
+> > +		if (ret)
+> > +			goto err;
+> > +		if (btblock_has_rightsib(iocur_top->data, long_format)) {
+> > +			ret = eval("addr rightsib");
+> > +			if (ret)
+> > +				goto err;
+> > +		}
+> > +		nr++;
+> > +	} while (iocur_top->bb != orig_daddr && iocur_top->bb != last_daddr);
+> > +
+> > +	ret = eval("pop");
+> > +	return ret;
+> > +err:
+> > +	eval("pop");
+> > +	return ret;
+> > +}
+> > +
+> > +static int
+> > +dump_btree(
+> > +	bool		dump_node_blocks,
+> > +	bool		long_format)
+> > +{
+> > +	xfs_daddr_t	orig_daddr = iocur_top->bb;
+> > +	xfs_daddr_t	last_daddr;
+> > +	int		level;
+> > +	int		ret;
+> > +
+> > +	ret = eval("push");
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	cur_agno = XFS_FSB_TO_AGNO(mp, XFS_DADDR_TO_FSB(mp, iocur_top->bb));
+> > +	level = xfs_btree_get_level(iocur_top->data);
+> > +	do {
+> > +		last_daddr = iocur_top->bb;
+> > +		if (level > 0) {
+> > +			if (dump_node_blocks) {
+> > +				ret = dump_btlevel(level, long_format);
+> > +				if (ret)
+> > +					goto err;
+> > +			}
+> > +			ret = eval("addr ptrs[1]");
+> > +		} else {
+> > +			ret = dump_btlevel(level, long_format);
+> > +		}
+> > +		if (ret)
+> > +			goto err;
+> > +		level--;
+> > +	} while (level >= 0 &&
+> > +		 iocur_top->bb != orig_daddr &&
+> > +		 iocur_top->bb != last_daddr);
+> > +
+> > +	ret = eval("pop");
+> > +	return ret;
+> > +err:
+> > +	eval("pop");
+> > +	return ret;
+> > +}
+> > +
+> > +static int
+> > +dump_inode(
+> > +	bool			dump_node_blocks,
+> > +	bool			attrfork)
+> > +{
+> > +	char			*prefix;
+> > +	struct xfs_dinode	*dip;
+> > +	int			ret;
+> > +
+> > +	if (attrfork)
+> > +		prefix = "a.bmbt";
+> > +	else if (xfs_sb_version_hascrc(&mp->m_sb))
+> > +		prefix = "u3.bmbt";
+> > +	else
+> > +		prefix = "u.bmbt";
+> > +
+> > +	dip = iocur_top->data;
+> > +	if (attrfork) {
+> > +		if (!dip->di_anextents ||
+> > +		    dip->di_aformat != XFS_DINODE_FMT_BTREE)
+> 
+> 			dbprintf(_("attr fork not in btree format\n"));
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 7a5c49f..1eb77fd 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -39,8 +39,8 @@ static int  ispow2(unsigned int i);
-  * The configured block and sector sizes are defined as global variables so
-  * that they don't need to be passed to functions that require them.
-  */
--unsigned int		blocksize;
--unsigned int		sectorsize;
-+__uint64_t		blocksize;
-+__uint64_t		sectorsize;
- 
- #define MAX_SUBOPTS	16
- #define SUBOPT_NEEDS_VAL	(-1LL)
-@@ -758,9 +758,9 @@ calc_stripe_factors(
- 	int		dsectsz,
- 	int		lsu,
- 	int		lsectsz,
--	int		*dsunit,
--	int		*dswidth,
--	int		*lsunit)
-+	__uint64_t	*dsunit,
-+	__uint64_t	*dswidth,
-+	__uint64_t	*lsunit)
- {
- 	/* Handle data sunit/swidth options */
- 	if ((*dsunit && !*dswidth) || (!*dsunit && *dswidth)) {
-@@ -785,32 +785,32 @@ calc_stripe_factors(
- 			usage();
- 		}
- 
--		*dsunit  = (int)BTOBBT(dsu);
-+		*dsunit  = BTOBBT(dsu);
- 		*dswidth = *dsunit * dsw;
- 	}
- 
- 	if (*dsunit && (*dswidth % *dsunit != 0)) {
- 		fprintf(stderr,
--			_("data stripe width (%d) must be a multiple of the "
--			"data stripe unit (%d)\n"), *dswidth, *dsunit);
-+			_("data stripe width (%"PRIu64") must be a multiple of the "
-+			"data stripe unit (%"PRIu64")\n"), *dswidth, *dsunit);
- 		usage();
- 	}
- 
- 	/* Handle log sunit options */
- 
- 	if (lsu)
--		*lsunit = (int)BTOBBT(lsu);
-+		*lsunit = BTOBBT(lsu);
- 
- 	/* verify if lsu/lsunit is a multiple block size */
- 	if (lsu % blocksize != 0) {
- 		fprintf(stderr,
--_("log stripe unit (%d) must be a multiple of the block size (%d)\n"),
-+_("log stripe unit (%d) must be a multiple of the block size (%"PRIu64")\n"),
- 		lsu, blocksize);
- 		exit(1);
- 	}
- 	if ((BBTOB(*lsunit) % blocksize != 0)) {
- 		fprintf(stderr,
--_("log stripe unit (%d) must be a multiple of the block size (%d)\n"),
-+_("log stripe unit (%"PRIu64") must be a multiple of the block size (%"PRIu64")\n"),
- 		BBTOB(*lsunit), blocksize);
- 		exit(1);
- 	}
-@@ -933,7 +933,7 @@ fixup_internal_log_stripe(
- 	int		sunit,
- 	xfs_rfsblock_t	*logblocks,
- 	int		blocklog,
--	int		*lalign)
-+	__uint64_t	*lalign)
- {
- 	if ((logstart % sunit) != 0) {
- 		logstart = ((logstart + (sunit - 1))/sunit) * sunit;
-@@ -1421,70 +1421,70 @@ main(
- 	__uint64_t		agsize;
- 	xfs_alloc_rec_t		*arec;
- 	struct xfs_btree_block	*block;
--	int			blflag;
--	int			blocklog;
--	int			bsflag;
--	int			bsize;
-+	bool			blflag;
-+	__uint64_t		blocklog;
-+	bool			bsflag;
-+	__uint64_t		bsize;
- 	xfs_buf_t		*buf;
--	int			c;
--	int			daflag;
--	int			dasize;
-+	__uint64_t		c;
-+	bool			daflag;
-+	__uint64_t		dasize;
- 	xfs_rfsblock_t		dblocks;
- 	char			*dfile;
--	int			dirblocklog;
--	int			dirblocksize;
-+	__uint64_t		dirblocklog;
-+	__uint64_t		dirblocksize;
- 	char			*dsize;
--	int			dsu;
--	int			dsw;
--	int			dsunit;
--	int			dswidth;
--	int			force_overwrite;
-+	__uint64_t		dsu;
-+	__uint64_t		dsw;
-+	__uint64_t		dsunit;
-+	__uint64_t		dswidth;
-+	bool			force_overwrite;
- 	struct fsxattr		fsx;
--	int			ilflag;
--	int			imaxpct;
--	int			imflag;
--	int			inodelog;
--	int			inopblock;
--	int			ipflag;
--	int			isflag;
--	int			isize;
-+	bool			ilflag;
-+	__uint64_t		imaxpct;
-+	bool			imflag;
-+	__uint64_t		inodelog;
-+	__uint64_t		inopblock;
-+	bool			ipflag;
-+	bool			isflag;
-+	__uint64_t		isize;
- 	char			*label = NULL;
--	int			laflag;
--	int			lalign;
--	int			ldflag;
--	int			liflag;
-+	bool			laflag;
-+	__uint64_t		lalign;
-+	bool			ldflag;
-+	bool			liflag;
- 	xfs_agnumber_t		logagno;
- 	xfs_rfsblock_t		logblocks;
- 	char			*logfile;
--	int			loginternal;
-+	__uint64_t		loginternal;
- 	char			*logsize;
- 	xfs_fsblock_t		logstart;
--	int			lvflag;
--	int			lsflag;
--	int			lsuflag;
--	int			lsunitflag;
--	int			lsectorlog;
--	int			lsectorsize;
--	int			lslflag;
--	int			lssflag;
--	int			lsu;
--	int			lsunit;
--	int			min_logblocks;
-+	bool			lvflag;
-+	bool			lsflag;
-+	bool			lsuflag;
-+	bool			lsunitflag;
-+	__uint64_t		lsectorlog;
-+	__uint64_t		lsectorsize;
-+	bool			lslflag;
-+	bool			lssflag;
-+	__uint64_t		lsu;
-+	__uint64_t		lsunit;
-+	__uint64_t		min_logblocks;
- 	xfs_mount_t		*mp;
- 	xfs_mount_t		mbuf;
- 	xfs_extlen_t		nbmblocks;
--	int			nlflag;
--	int			nodsflag;
--	int			norsflag;
-+	bool			nlflag;
-+	bool			nodsflag;
-+	bool			norsflag;
- 	xfs_alloc_rec_t		*nrec;
--	int			nsflag;
--	int			nvflag;
--	int			Nflag;
--	int			discard = 1;
-+	bool			nsflag;
-+	bool			nvflag;
-+	bool			Nflag;
-+	__uint64_t		discard = 1;
- 	char			*p;
- 	char			*protofile;
- 	char			*protostring;
--	int			qflag;
-+	bool			qflag;
- 	xfs_rfsblock_t		rtblocks;
- 	xfs_extlen_t		rtextblocks;
- 	xfs_rtblock_t		rtextents;
-@@ -1492,13 +1492,13 @@ main(
- 	char			*rtfile;
- 	char			*rtsize;
- 	xfs_sb_t		*sbp;
--	int			sectorlog;
-+	__uint64_t		sectorlog;
- 	__uint64_t		sector_mask;
--	int			slflag;
--	int			ssflag;
-+	bool			slflag;
-+	bool			ssflag;
- 	__uint64_t		tmp_agsize;
- 	uuid_t			uuid;
--	int			worst_freelist;
-+	__uint64_t		worst_freelist;
- 	libxfs_init_t		xi;
- 	struct fs_topology	ft;
- 	struct sb_feat_args	sb_feat = {
-@@ -1528,20 +1528,20 @@ main(
- 	blocklog = blocksize = 0;
- 	sectorlog = lsectorlog = 0;
- 	sectorsize = lsectorsize = 0;
--	agsize = daflag = dasize = dblocks = 0;
--	ilflag = imflag = ipflag = isflag = 0;
--	liflag = laflag = lsflag = lsuflag = lsunitflag = ldflag = lvflag = 0;
-+	agsize = dasize = dblocks = 0;
-+	daflag = ilflag = imflag = ipflag = isflag = false;
-+	liflag = laflag = lsflag = lsuflag = lsunitflag = ldflag = lvflag = false;
- 	loginternal = 1;
- 	logagno = logblocks = rtblocks = rtextblocks = 0;
--	Nflag = nlflag = nsflag = nvflag = 0;
-+	Nflag = nlflag = nsflag = nvflag = false;
- 	dirblocklog = dirblocksize = 0;
--	qflag = 0;
-+	qflag = false;
- 	imaxpct = inodelog = inopblock = isize = 0;
- 	dfile = logfile = rtfile = NULL;
- 	dsize = logsize = rtsize = rtextsize = protofile = NULL;
- 	dsu = dsw = dsunit = dswidth = lalign = lsu = lsunit = 0;
--	nodsflag = norsflag = 0;
--	force_overwrite = 0;
-+	nodsflag = norsflag = false;
-+	force_overwrite = false;
- 	worst_freelist = 0;
- 	memset(&fsx, 0, sizeof(fsx));
- 
-@@ -1553,7 +1553,7 @@ main(
- 		switch (c) {
- 		case 'C':
- 		case 'f':
--			force_overwrite = 1;
-+			force_overwrite = true;
- 			break;
- 		case 'b':
- 			p = optarg;
-@@ -1962,7 +1962,7 @@ main(
- 		blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG;
- 	}
- 	if (blocksize < XFS_MIN_BLOCKSIZE || blocksize > XFS_MAX_BLOCKSIZE) {
--		fprintf(stderr, _("illegal block size %d\n"), blocksize);
-+		fprintf(stderr, _("illegal block size %"PRIu64"\n"), blocksize);
- 		usage();
- 	}
- 	if (sb_feat.crcs_enabled && blocksize < XFS_MIN_CRC_BLOCKSIZE) {
-@@ -2026,7 +2026,7 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
- 
- 		if ((blocksize < sectorsize) && (blocksize >= ft.lsectorsize)) {
- 			fprintf(stderr,
--_("specified blocksize %d is less than device physical sector size %d\n"),
-+_("specified blocksize %"PRIu64" is less than device physical sector size %d\n"),
- 				blocksize, ft.psectorsize);
- 			fprintf(stderr,
- _("switching to logical sector size %d\n"),
-@@ -2047,21 +2047,21 @@ _("switching to logical sector size %d\n"),
- 	if (sectorsize < XFS_MIN_SECTORSIZE ||
- 	    sectorsize > XFS_MAX_SECTORSIZE || sectorsize > blocksize) {
- 		if (ssflag)
--			fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
-+			fprintf(stderr, _("illegal sector size %"PRIu64"\n"), sectorsize);
- 		else
- 			fprintf(stderr,
--_("block size %d cannot be smaller than logical sector size %d\n"),
-+_("block size %"PRIu64" cannot be smaller than logical sector size %d\n"),
- 				blocksize, ft.lsectorsize);
- 		usage();
- 	}
- 	if (sectorsize < ft.lsectorsize) {
--		fprintf(stderr, _("illegal sector size %d; hw sector is %d\n"),
-+		fprintf(stderr, _("illegal sector size %"PRIu64"; hw sector is %d\n"),
- 			sectorsize, ft.lsectorsize);
- 		usage();
- 	}
- 	if (lsectorsize < XFS_MIN_SECTORSIZE ||
- 	    lsectorsize > XFS_MAX_SECTORSIZE || lsectorsize > blocksize) {
--		fprintf(stderr, _("illegal log sector size %d\n"), lsectorsize);
-+		fprintf(stderr, _("illegal log sector size %"PRIu64"\n"), lsectorsize);
- 		usage();
- 	} else if (lsectorsize > XFS_MIN_SECTORSIZE && !lsu && !lsunit) {
- 		lsu = blocksize;
-@@ -2167,7 +2167,7 @@ _("rmapbt not supported with realtime devices\n"));
- 	if (nsflag || nlflag) {
- 		if (dirblocksize < blocksize ||
- 					dirblocksize > XFS_MAX_BLOCKSIZE) {
--			fprintf(stderr, _("illegal directory block size %d\n"),
-+			fprintf(stderr, _("illegal directory block size %"PRIu64"\n"),
- 				dirblocksize);
- 			usage();
- 		}
-@@ -2193,7 +2193,7 @@ _("rmapbt not supported with realtime devices\n"));
- 		dblocks = (xfs_rfsblock_t)(dbytes >> blocklog);
- 		if (dbytes % blocksize)
- 			fprintf(stderr, _("warning: "
--	"data length %lld not a multiple of %d, truncated to %lld\n"),
-+	"data length %lld not a multiple of %"PRIu64", truncated to %lld\n"),
- 				(long long)dbytes, blocksize,
- 				(long long)(dblocks << blocklog));
- 	}
-@@ -2225,7 +2225,7 @@ _("rmapbt not supported with realtime devices\n"));
- 		logblocks = (xfs_rfsblock_t)(logbytes >> blocklog);
- 		if (logbytes % blocksize)
- 			fprintf(stderr,
--	_("warning: log length %lld not a multiple of %d, truncated to %lld\n"),
-+	_("warning: log length %lld not a multiple of %"PRIu64", truncated to %lld\n"),
- 				(long long)logbytes, blocksize,
- 				(long long)(logblocks << blocklog));
- 	}
-@@ -2242,7 +2242,7 @@ _("rmapbt not supported with realtime devices\n"));
- 		rtblocks = (xfs_rfsblock_t)(rtbytes >> blocklog);
- 		if (rtbytes % blocksize)
- 			fprintf(stderr,
--	_("warning: rt length %lld not a multiple of %d, truncated to %lld\n"),
-+	_("warning: rt length %lld not a multiple of %"PRIu64", truncated to %lld\n"),
- 				(long long)rtbytes, blocksize,
- 				(long long)(rtblocks << blocklog));
- 	}
-@@ -2255,7 +2255,7 @@ _("rmapbt not supported with realtime devices\n"));
- 		rtextbytes = getnum(rtextsize, &ropts, R_EXTSIZE);
- 		if (rtextbytes % blocksize) {
- 			fprintf(stderr,
--		_("illegal rt extent size %lld, not a multiple of %d\n"),
-+		_("illegal rt extent size %lld, not a multiple of %"PRIu64"\n"),
- 				(long long)rtextbytes, blocksize);
- 			usage();
- 		}
-@@ -2298,16 +2298,16 @@ _("rmapbt not supported with realtime devices\n"));
- 	    isize > XFS_DINODE_MAX_SIZE) {
- 		int	maxsz;
- 
--		fprintf(stderr, _("illegal inode size %d\n"), isize);
-+		fprintf(stderr, _("illegal inode size %"PRIu64"\n"), isize);
- 		maxsz = MIN(blocksize / XFS_MIN_INODE_PERBLOCK,
- 			    XFS_DINODE_MAX_SIZE);
- 		if (XFS_DINODE_MIN_SIZE == maxsz)
- 			fprintf(stderr,
--			_("allowable inode size with %d byte blocks is %d\n"),
-+			_("allowable inode size with %"PRIu64" byte blocks is %d\n"),
- 				blocksize, XFS_DINODE_MIN_SIZE);
- 		else
- 			fprintf(stderr,
--	_("allowable inode size with %d byte blocks is between %d and %d\n"),
-+	_("allowable inode size with %"PRIu64" byte blocks is between %d and %d\n"),
- 				blocksize, XFS_DINODE_MIN_SIZE, maxsz);
- 		exit(1);
- 	}
-@@ -2411,19 +2411,19 @@ _("rmapbt not supported with realtime devices\n"));
- 
- 	if (xi.dbsize > sectorsize) {
- 		fprintf(stderr, _(
--"Warning: the data subvolume sector size %u is less than the sector size \n\
-+"Warning: the data subvolume sector size %"PRIu64" is less than the sector size \n\
- reported by the device (%u).\n"),
- 			sectorsize, xi.dbsize);
- 	}
- 	if (!loginternal && xi.lbsize > lsectorsize) {
- 		fprintf(stderr, _(
--"Warning: the log subvolume sector size %u is less than the sector size\n\
-+"Warning: the log subvolume sector size %"PRIu64" is less than the sector size\n\
- reported by the device (%u).\n"),
- 			lsectorsize, xi.lbsize);
- 	}
- 	if (rtsize && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
- 		fprintf(stderr, _(
--"Warning: the realtime subvolume sector size %u is less than the sector size\n\
-+"Warning: the realtime subvolume sector size %"PRIu64" is less than the sector size\n\
- reported by the device (%u).\n"),
- 			sectorsize, xi.rtbsize);
- 	}
-@@ -2453,14 +2453,14 @@ reported by the device (%u).\n"),
- 		if (dsunit) {
- 			if (ft.dsunit && ft.dsunit != dsunit) {
- 				fprintf(stderr,
--					_("%s: Specified data stripe unit %d "
-+					_("%s: Specified data stripe unit %"PRIu64" "
- 					"is not the same as the volume stripe "
- 					"unit %d\n"),
- 					progname, dsunit, ft.dsunit);
- 			}
- 			if (ft.dswidth && ft.dswidth != dswidth) {
- 				fprintf(stderr,
--					_("%s: Specified data stripe width %d "
-+					_("%s: Specified data stripe width %"PRIu64" "
- 					"is not the same as the volume stripe "
- 					"width %d\n"),
- 					progname, dswidth, ft.dswidth);
-@@ -2478,7 +2478,7 @@ reported by the device (%u).\n"),
- 		 */
- 		if (agsize % blocksize) {
- 			fprintf(stderr,
--		_("agsize (%lld) not a multiple of fs blk size (%d)\n"),
-+		_("agsize (%lld) not a multiple of fs blk size (%"PRIu64")\n"),
- 				(long long)agsize, blocksize);
- 			usage();
- 		}
-@@ -2528,7 +2528,7 @@ reported by the device (%u).\n"),
- 						(dblocks % agsize != 0);
- 				if (dasize)
- 					fprintf(stderr,
--				_("agsize rounded to %lld, swidth = %d\n"),
-+				_("agsize rounded to %lld, swidth = %"PRIu64"\n"),
- 						(long long)agsize, dswidth);
- 			} else {
- 				if (nodsflag) {
-@@ -2585,8 +2585,8 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 			dsunit = dswidth = 0;
- 		else {
- 			fprintf(stderr,
--				_("%s: Stripe unit(%d) or stripe width(%d) is "
--				"not a multiple of the block size(%d)\n"),
-+				_("%s: Stripe unit(%"PRIu64") or stripe width(%"PRIu64") is "
-+				"not a multiple of the block size(%"PRIu64")\n"),
- 				progname, BBTOB(dsunit), BBTOB(dswidth),
- 				blocksize);
- 			exit(1);
-@@ -2626,7 +2626,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 		/* Warn only if specified on commandline */
- 		if (lsuflag || lsunitflag) {
- 			fprintf(stderr,
--	_("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"),
-+	_("log stripe unit (%"PRIu64" bytes) is too large (maximum is 256KiB)\n"),
- 				(lsunit * blocksize));
- 			fprintf(stderr,
- 	_("log stripe unit adjusted to 32KiB\n"));
-@@ -2771,14 +2771,14 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 
- 	if (!qflag || Nflag) {
- 		printf(_(
--		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
--		   "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
-+		   "meta-data=%-22s isize=%-6lu agcount=%lld, agsize=%lld blks\n"
-+		   "         =%-22s sectsz=%-5lu attr=%u, projid32bit=%u\n"
- 		   "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u, reflink=%u\n"
--		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
--		   "         =%-22s sunit=%-6u swidth=%u blks\n"
--		   "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
-+		   "data     =%-22s bsize=%-6lu blocks=%llu, imaxpct=%"PRIu64"\n"
-+		   "         =%-22s sunit=%-6lu swidth=%"PRIu64" blks\n"
-+		   "naming   =version %-14u bsize=%-6lu ascii-ci=%d ftype=%d\n"
- 		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
--		   "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
-+		   "         =%-22s sectsz=%-5lu sunit=%"PRIu64" blks, lazy-count=%d\n"
- 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
- 			dfile, isize, (long long)agcount, (long long)agsize,
- 			"", sectorsize, sb_feat.attr_version,
--- 
-2.1.4
+OK.
 
+> > +			return 0;
+> > +	} else {
+> > +		if (!dip->di_nextents ||
+> > +		    dip->di_format != XFS_DINODE_FMT_BTREE)
+> 
+> 			dbprintf(_("data fork not in btree format\n"));
+
+Ok.
+
+> > +			return 0;
+> > +	}
+> > +
+> > +	ret = eval("push");
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	if (dump_node_blocks) {
+> > +		ret = eval("print %s.keys", prefix);
+> > +		if (ret)
+> > +			goto err;
+> > +		ret = eval("print %s.ptrs", prefix);
+> > +		if (ret)
+> > +			goto err;
+> > +	}
+> > +
+> > +	ret = eval("addr %s.ptrs[1]", prefix);
+> > +	if (ret)
+> > +		goto err;
+> > +
+> > +	ret = dump_btree(dump_node_blocks, true);
+> 
+> not a huge fan of the magic "true / false" options in callers for
+> dump_btree, though it's not a dealbreaker.
+
+So long as I'm reworking it I might as well just introduce
+dump_btree_{short,long} so it's clearer what we're doing.
+
+> 
+> > +	if (ret)
+> > +		goto err;
+> > +
+> > +	ret = eval("pop");
+> > +	return ret;
+> > +err:
+> > +	eval("pop");
+> > +	return ret;
+> > +}
+> > +
+> > +static int
+> > +btdump_f(
+> > +	int		argc,
+> > +	char		**argv)
+> > +{
+> > +	bool		aflag = false;
+> > +	bool		iflag = false;
+> > +	int		c;
+> > +
+> > +	if (cur_typ == NULL) {
+> > +		dbprintf(_("no current type\n"));
+> > +		return 0;
+> > +	}
+> > +	while ((c = getopt(argc, argv, "ai")) != EOF) {
+> > +		switch (c) {
+> > +		case 'a':
+> > +			aflag = true;
+> > +			break;
+> > +		case 'i':
+> > +			iflag = true;
+> > +			break;
+> > +		default:
+> > +			dbprintf(_("bad option for btdump command\n"));
+> > +			return 0;
+> > +		}
+> > +	}
+> 
+> 		if (optind != argc) {
+> 			dbprintf(_("bad options for btdump command\n"));
+> 			return 0;
+> 		}
+> 
+> (this catches "btdump foo")
+
+Ok.
+
+> 
+> > +	if (aflag && cur_typ->typnm != TYP_INODE) {
+> > +		dbprintf(_("attrfork flag doesn't apply here\n"));
+> > +		return 0;
+> > +	}
+> > +	switch (cur_typ->typnm) {
+> > +	case TYP_BNOBT:
+> > +	case TYP_CNTBT:
+> > +	case TYP_INOBT:
+> > +	case TYP_FINOBT:
+> > +	case TYP_RMAPBT:
+> > +	case TYP_REFCBT:
+> > +		return dump_btree(iflag, false);
+> > +	case TYP_BMAPBTA:
+> > +	case TYP_BMAPBTD:
+> > +		return dump_btree(iflag, true);
+> > +	case TYP_INODE:
+> > +		return dump_inode(iflag, aflag);
+> > +	default:
+> > +		dbprintf(_("Not a btree.\n"));
+> 
+> dbprintf(_("Type \"%s\" is not a btree type.\n"), cur_typ->name);
+
+"...not a btree type or inode"
+
+> 
+> ?
+> 
+> > +		return 0;
+> > +	}
+> > +}
+> > +
+> > +static const cmdinfo_t btdump_cmd =
+> > +	{ "btdump", "b", btdump_f, 0, 1, 0, "",
+> > +	  N_("dump btree"), btdump_help };
+> 
+> args (not "") here please, so that bare "xfs_db> help" gives you the
+> proper synopsis as do other commands:
+> 
+> xfs_db> help
+> ...
+> blockuse [-n] [-c blockcount] -- print usage for current block(s)
+> bmap [-ad] [block [len]] -- show block map for current file
+> btdump  -- dump btree
+
+Ok, fixed.
+
+> ...
+> 
+> and arg max is wrong, so we can't:
+> 
+> xfs_db> btdump -i -a
+> bad argument count 2 to btdump, expected between 0 and 1 arguments
+
+Fixed.
+
+> but we can:
+> 
+> xfs_db> btdump -ia
+> xfs_db> 
+> 
+> (named structure members ala db/logformat.c would be nice, but
+> I guess most other db commands don't use that today...)
+
+Yep.
+
+--D
+> 
+> > +
+> > +void
+> > +btdump_init(void)
+> > +{
+> > +	add_command(&btdump_cmd);
+> > +}
+> > diff --git a/db/command.c b/db/command.c
+> > index 3d7cfd7..c90c85c 100644
+> > --- a/db/command.c
+> > +++ b/db/command.c
+> > @@ -124,6 +124,7 @@ init_commands(void)
+> >  	attrset_init();
+> >  	block_init();
+> >  	bmap_init();
+> > +	btdump_init();
+> >  	check_init();
+> >  	convert_init();
+> >  	crc_init();
+> > diff --git a/db/command.h b/db/command.h
+> > index 4d4807d..9b4ed2d 100644
+> > --- a/db/command.h
+> > +++ b/db/command.h
+> > @@ -39,3 +39,5 @@ extern void		add_command(const cmdinfo_t *ci);
+> >  extern int		command(int argc, char **argv);
+> >  extern const cmdinfo_t	*find_command(const char *cmd);
+> >  extern void		init_commands(void);
+> > +
+> > +extern void		btdump_init(void);
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
