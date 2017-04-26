@@ -1,50 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50220 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:42236 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1037590AbdDZNNU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 Apr 2017 09:13:20 -0400
-Subject: Re: [PATCH 03/12] mkfs: remove intermediate getstr followed by getnum
-References: <20170423185503.31415-1-jtulak@redhat.com>
- <20170423185503.31415-4-jtulak@redhat.com>
- <4d7d62da-6402-0fee-29f3-9c8755c35fba@sandeen.net>
- <CACj3i736V2XdRfE_wNLD7sHZOC7++1LMhoZWB7GXCkTP-=tsjg@mail.gmail.com>
+        id S1751634AbdDZRMk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 Apr 2017 13:12:40 -0400
+Subject: Re: [PATCH 1/4] xfs_db: don't print arrays off the end of a buffer
+References: <149186446125.32572.5134583964816531229.stgit@birch.djwong.org>
+ <149186446737.32572.10101366339282682603.stgit@birch.djwong.org>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <33a3adb7-c33b-9a62-50ce-87ef52db86c3@sandeen.net>
-Date: Wed, 26 Apr 2017 08:13:19 -0500
+Message-ID: <a7b683c8-54a1-a12b-5f49-35fc743b1d73@sandeen.net>
+Date: Wed, 26 Apr 2017 12:12:38 -0500
 MIME-Version: 1.0
-In-Reply-To: <CACj3i736V2XdRfE_wNLD7sHZOC7++1LMhoZWB7GXCkTP-=tsjg@mail.gmail.com>
+In-Reply-To: <149186446737.32572.10101366339282682603.stgit@birch.djwong.org>
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-On 4/26/17 2:40 AM, Jan Tulak wrote:
-> On Tue, Apr 25, 2017 at 7:37 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->> On 4/23/17 1:54 PM, Jan Tulak wrote:
+On 4/10/17 5:47 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Before printing an array, clamp the array count against the size of the
+> buffer so that we don't print random heap contents.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  db/print.c |   11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> 
+> diff --git a/db/print.c b/db/print.c
+> index e31372f..0caad8f 100644
+> --- a/db/print.c
+> +++ b/db/print.c
+> @@ -144,6 +144,17 @@ print_flist_1(
+>  			if (fl->flags & FL_OKHIGH)
+>  				count = min(count, fl->high - low + 1);
+>  			if (fa->prfunc) {
+> +				int	fsz;
+> +				int	bitlen;
+> +
+> +				/* Don't read an array off the end of the buffer */
+> +				fsz = fsize(f, iocur_top->data, parentoff, 0);
+> +				bitlen = iocur_top->len * NBBY;
+> +				if ((f->flags & FLD_ARRAY) &&
+> +				    fl->offset + (count * fsz) > bitlen) {
+> +					count = (bitlen - fl->offset) / fsz;
+> +				}
+> +
+>  				neednl = fa->prfunc(iocur_top->data, fl->offset,
+>  					count, fa->fmtstr,
+>  					fsize(f, iocur_top->data, parentoff, 0),
 
-...
+can we just re-use fsz here in the prfunc call?
 
->>> +     set_conf_raw(opts, index, str);
->> So this is really an unrelated functional change here; ideally, this
->> patch would come before the "raw option" patch.  Once every option goes
->> through getnum, /then/ you can add the raw storage to getnum().
->>
->> Not a huge deal, but if you resend the series, you might consider that
->> ordering.  Otherwise I think this one looks ok :)
-> Well, we are saving the raw here ... and then reading it in printfs.
-> So if we want to avoid the situation from the previous set, where
-> input error prints changed the values (printing "1024" instead of
-> user-given "1k"), we have to use raw before we remove the getstr(),
-> not later. But then we might try to print something that didn't go
-> through getnum yet, so we don't have the string saved... which is why
-> I made it as one patch.
+Otherwise seems fine, and I could do that on commit.
 
-Oh, I see.  Ok, thanks - sorry for missing that.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
--Eric
-
-> Jan
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
