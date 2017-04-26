@@ -1,144 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:3303 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751110AbdDHX70 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Apr 2017 19:59:26 -0400
-Date: Sun, 9 Apr 2017 09:59:22 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 1/2] mkfs: unify numeric types of main variables in
- main()
-Message-ID: <20170408235922.GG23007@dastard>
-References: <20170406144139.20284-1-jtulak@redhat.com>
- <20170407014959.GT17542@dastard>
- <CACj3i71f3aDPYrMe1qN4YUxj2OmvcrC9OoNS3=u1tiHew9s0Fg@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:28063 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932108AbdDZRpP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Apr 2017 13:45:15 -0400
+Date: Wed, 26 Apr 2017 10:45:10 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/4] xfs_db: don't print arrays off the end of a buffer
+Message-ID: <20170426174510.GO5205@birch.djwong.org>
+References: <149186446125.32572.5134583964816531229.stgit@birch.djwong.org>
+ <149186446737.32572.10101366339282682603.stgit@birch.djwong.org>
+ <a7b683c8-54a1-a12b-5f49-35fc743b1d73@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CACj3i71f3aDPYrMe1qN4YUxj2OmvcrC9OoNS3=u1tiHew9s0Fg@mail.gmail.com>
+In-Reply-To: <a7b683c8-54a1-a12b-5f49-35fc743b1d73@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Fri, Apr 07, 2017 at 03:17:20PM +0200, Jan Tulak wrote:
-> On Fri, Apr 7, 2017 at 3:50 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Thu, Apr 06, 2017 at 04:41:38PM +0200, Jan Tulak wrote:
-> >> Followup of my "[xfsprogs] Do we need so many data types for user input?" email.
-> >>
-> >> In the past, when mkfs was first written, it used atoi and
-> >> similar calls, so the variables were ints. However, the situation moved
-> >> since then and in course of the time, mkfs began to use other types too.
-> >>
-> >> Clean and unify it. We don't need negative values anywhere in the code and
-> >> some numbers has to be 64bit. Thus, uint64 is the best candidate as the target
-> >> type.
-> >
-> > I'm with Darrick and Eric on this - it's not the right conversion to
-> > make for all the reasons they've pointed out. Further, I think it's
-> > the wrong direction to be working in.
-> >
-> > What I originally intended the config option table to be used for
-> > was to /replace all these config variables/ with config option table
-> > lookups. We don't need tens of variables to say we certain options
-> > set - once option parsing is complete we can just lookup the config
-> > table and use the option value directly. i.e.  we need to work
-> > towards removing all the variables, not try to make them pretty....
-> >
+On Wed, Apr 26, 2017 at 12:12:38PM -0500, Eric Sandeen wrote:
+> On 4/10/17 5:47 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Before printing an array, clamp the array count against the size of the
+> > buffer so that we don't print random heap contents.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  db/print.c |   11 +++++++++++
+> >  1 file changed, 11 insertions(+)
+> > 
+> > 
+> > diff --git a/db/print.c b/db/print.c
+> > index e31372f..0caad8f 100644
+> > --- a/db/print.c
+> > +++ b/db/print.c
+> > @@ -144,6 +144,17 @@ print_flist_1(
+> >  			if (fl->flags & FL_OKHIGH)
+> >  				count = min(count, fl->high - low + 1);
+> >  			if (fa->prfunc) {
+> > +				int	fsz;
+> > +				int	bitlen;
+> > +
+> > +				/* Don't read an array off the end of the buffer */
+> > +				fsz = fsize(f, iocur_top->data, parentoff, 0);
+> > +				bitlen = iocur_top->len * NBBY;
+> > +				if ((f->flags & FLD_ARRAY) &&
+> > +				    fl->offset + (count * fsz) > bitlen) {
+> > +					count = (bitlen - fl->offset) / fsz;
+> > +				}
+> > +
+> >  				neednl = fa->prfunc(iocur_top->data, fl->offset,
+> >  					count, fa->fmtstr,
+> >  					fsize(f, iocur_top->data, parentoff, 0),
 > 
-> Removing them entirely is not as easy... Right now, there is this
-> thing in "[PATCH 17/22] mkfs: use old variables as pointers to the new
-> opts struct values" in the main:
+> can we just re-use fsz here in the prfunc call?
+
+Yeah, we could reuse it.
+
+--D
+
 > 
-> (Link to the patch: https://www.spinics.net/lists/linux-xfs/msg04977.html)
+> Otherwise seems fine, and I could do that on commit.
 > 
-> -       __uint64_t              agcount;
-> +       __uint64_t              *agcount;
-> ...
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 > 
-> +       /*
-> +        * Set up pointers, so we can use shorter names and to let gcc
-> +        * check the correct type. We don't want to inadvertently use an int as
-> +        * unsigned int and so on...
-> +        */
-> +       agcount = &opts[OPT_D].subopt_params[D_AGCOUNT].value.uint64;
-
-That's .... an interesting interpretation....
-
-What I intended was replacing all the uses of the agcount variable
-with calls like:
-
-	get_config_val(OPT_D, D_AGCOUNT)
-
-[....]
-
-> transformed the variables into pointers in the patchset). But at least
-> it could be possible to catch an incorrect type use easily, something
-> we couldn't do in the macro:
-> 
-> int get_opt_int(opt, sub)
-> {
->   if (opts[opt].subopt_params[sub].type != INT)
->        print an error and exit();
->   return opts[opt].subopt_params[sub].value.int;
-> }
-
-Yes, but why do we need to add type checking like this? It seems to
-me that you're trying to over-engineer a simple thing that does not
-need to be complex. For options with integer/flag values:
-
-/* return default value if nothing specified on the CLI */
-static inline uint64_t
-get_config_val(int opt, int subopt)
-{
-	if (!opts[opt].subopt_params[subopt].seen)
-		return opts[opt].subopt_params[subopt].defaultval;
-	return opts[opt].subopt_params[subopt].value;
-}
-
-And for options that are strings (e.g. device names):
-
-static inline char *
-get_config_str(int opt, int subopt)
-{
-	if (!opts[opt].subopt_params[subopt].str_seen)
-		return NULL;
-	return opts[opt].subopt_params[subopt].string;
-}
-
-That's all that is necessary. The config table is guaranteed to
-contain valid default values, and by the time we get to checking
-options we've done all the conflict/validity checking so we can
-trust the config settings to be valid and just use them directly
-like this.
-
-> >> +     __uint64_t      *dswidth,
-> >> +     __uint64_t      *lsunit)
-> >
-> > My, what big raid stripes you have! ;)
-> 
-> Well, yes, 64 bits is not necessary here, but I would say that having
-> just one size of uint removes some (even if small) ambiguity, while
-> performance-wise, it won't do anything noticeable.
-
-However, it makes me cringe when I read code written like this. You
-say it removes ambiguity but to me, after more than 20 years of C
-coding using appropriate types for variable contents, using uint64_t
-for all variables (especially those that don't require 64 bit types)
-introduces ambiguity and raises questions about the code quality.
-
-e.g.  declaring a flag as boolean means the author intended it to
-only have two values (i.e. it's self documenting then intent of a
-flag value!) whereas declaring them all as uint64_t makes me wonder
-why the author of this code didn't know what the valid value range
-for this variable is, why none of the reviewers cared either, what
-happens if I put a really large value into the field instead of 0 or
-1, if that was tested, etc. Using the right type removes all this
-potential ambiguity in the use/value of the variables.....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
