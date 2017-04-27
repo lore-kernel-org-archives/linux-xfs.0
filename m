@@ -1,67 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:32822 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S969314AbdD3FB6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Apr 2017 01:01:58 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:48242 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S937414AbdD0V2X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2017 17:28:23 -0400
+Date: Thu, 27 Apr 2017 14:27:47 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v4] xfs: reserve enough blocks to handle btree splits when
+ remapping
+Message-ID: <20170427212747.GB29149@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170429230159.GM12369@dastard>
-References: <1493283574-1497-1-git-send-email-amir73il@gmail.com> <20170429230159.GM12369@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Sun, 30 Apr 2017 08:01:56 +0300
-Message-ID: <CAOQ4uxhObqqK0FSni8nc3k5RGaRv1miPNDhf460FSuV3LZ0zkg@mail.gmail.com>
-Subject: Re: [PATCH 0/5] VFS API for getting filesystem's UUID
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mark Fasheh <mfasheh@versity.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs <linux-xfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@infradead.org>
 
-On Sun, Apr 30, 2017 at 2:01 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Apr 27, 2017 at 11:59:29AM +0300, Amir Goldstein wrote:
->> Miklos,
->>
->> As you observed, the sb->s_uuid field is not always filled by filesystems.
->>
->> Consumers, like overlayfs, that wish to use this field can check if is
->> zeroed out as an indication for valid value.
->>
->> Christoph suggested to make the test more explicit and require the
->> filesystems that fill the s_uuid field to set a super block flag.
->>
->> Do you agree with the proposed API?
->>
->> The first patch in the series defines the flag.
->> If you push this patch through your tree to Al or Linus, then filesystem
->> maintainers could later pick the individual patches to their trees.
->>
->> The xfs patch is based on a patch I already sent to Darrick for filling
->> out the s_uuid field.
->>
->> Thanks,
->> Amir.
->>
->> Amir Goldstein (5):
->>   vfs: define a flag to indicate sb->s_uuid is available
->>   ext4: set the super block SB_I_HAVE_UUID flag
->>   f2fs: set the super block SB_I_HAVE_UUID flag
->>   ocfs2: set the super block SB_I_HAVE_UUID flag
->>   xfs: set the super block SB_I_HAVE_UUID flag
->>
->>  fs/ext4/super.c    | 1 +
->>  fs/f2fs/super.c    | 1 +
->>  fs/ocfs2/super.c   | 1 +
->>  fs/xfs/xfs_mount.c | 1 +
->>  include/linux/fs.h | 3 +++
->>  5 files changed, 7 insertions(+)
->
-> Doesn't this make the struct export_opierations .get_uuid method
-> somewhat redundant?  Shouldn't that now be replaced with generic
-> functions that looks at SB_I_HAVE_UUID before allowing PNFS export
-> is allowed and then just use s_uuid directly in the PNFS code?
->
+In xfs_reflink_end_cow, we erroneously reserve only enough blocks to
+handle adding 1 extent.  This is problematic if we fragment free space,
+have to do CoW, and then have to perform multiple bmap btree expansions.
+Furthermore, the BUI recovery routine doesn't reserve /any/ blocks to
+handle btree splits, so log recovery fails after our first error causes
+the filesystem to go down.
 
-There's the tiny issue that get_uuid also returns the offset of the uuid
-on disk. Not sure how much that really matters for PNFS?
+Therefore, refactor the transaction block reservation macros until we
+have a macro that works for our deferred (re)mapping activities, and fix
+both problems by using that macro.
 
-Amir.
+With 1k blocks we can hit this fairly often in g/187 if the scratch fs
+is big enough.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v4: improve resblks macro comments, strengthen checking that we never
+try to cow-remap more than we can handle, and fix an off-by-one bug
+v3: don't use the swap-extents-with-rmap block reservation for cow
+remapping; we should already have sufficient per-ag reservation
+v2: avoid 64-bit division when calculating block reservation
+---
+ fs/xfs/libxfs/xfs_trans_space.h |   23 +++++++++++++++++------
+ fs/xfs/xfs_bmap_item.c          |    5 ++++-
+ fs/xfs/xfs_reflink.c            |   18 ++++++++++++++++--
+ 3 files changed, 37 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
+index 7917f6e..d787c67 100644
+--- a/fs/xfs/libxfs/xfs_trans_space.h
++++ b/fs/xfs/libxfs/xfs_trans_space.h
+@@ -21,8 +21,20 @@
+ /*
+  * Components of space reservations.
+  */
++
++/* Worst case number of rmaps that can be held in a block. */
+ #define XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)    \
+ 		(((mp)->m_rmap_mxr[0]) - ((mp)->m_rmap_mnr[0]))
++
++/* Adding one rmap could split every level up to the top of the tree. */
++#define XFS_RMAPADD_SPACE_RES(mp) ((mp)->m_rmap_maxlevels)
++
++/* Blocks we might need to add "b" rmaps to a tree. */
++#define XFS_NRMAPADD_SPACE_RES(mp, b)\
++	(((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
++	  XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) * \
++	  XFS_RMAPADD_SPACE_RES(mp))
++
+ #define XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)    \
+ 		(((mp)->m_alloc_mxr[0]) - ((mp)->m_alloc_mnr[0]))
+ #define	XFS_EXTENTADD_SPACE_RES(mp,w)	(XFS_BM_MAXLEVELS(mp,w) - 1)
+@@ -30,13 +42,12 @@
+ 	(((b + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) / \
+ 	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
+ 	  XFS_EXTENTADD_SPACE_RES(mp,w))
++
++/* Blocks we might need to add "b" mappings & rmappings to a file. */
+ #define XFS_SWAP_RMAP_SPACE_RES(mp,b,w)\
+-	(((b + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) / \
+-	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
+-	  XFS_EXTENTADD_SPACE_RES(mp,w) + \
+-	 ((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
+-	  XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) * \
+-	  (mp)->m_rmap_maxlevels)
++	(XFS_NEXTENTADD_SPACE_RES((mp), (b), (w)) + \
++	 XFS_NRMAPADD_SPACE_RES((mp), (b)))
++
+ #define	XFS_DAENTER_1B(mp,w)	\
+ 	((w) == XFS_DATA_FORK ? (mp)->m_dir_geo->fsbcount : 1)
+ #define	XFS_DAENTER_DBS(mp,w)	\
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 2d70173..d419d23 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -34,6 +34,8 @@
+ #include "xfs_bmap.h"
+ #include "xfs_icache.h"
+ #include "xfs_trace.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_trans_space.h"
+ 
+ 
+ kmem_zone_t	*xfs_bui_zone;
+@@ -447,7 +449,8 @@ xfs_bui_recover(
+ 		return -EIO;
+ 	}
+ 
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
++			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
+ 	if (error)
+ 		return error;
+ 	budp = xfs_trans_get_bud(tp, buip);
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index c0f3754..ffe6fe7 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -705,8 +705,22 @@ xfs_reflink_end_cow(
+ 	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+ 	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
+ 
+-	/* Start a rolling transaction to switch the mappings */
+-	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
++	/*
++	 * Start a rolling transaction to switch the mappings.  We're
++	 * unlikely ever to have to remap 16T worth of single-block
++	 * extents, so just cap the worst case extent count to 2^32-1.
++	 * Stick a warning in just in case, and avoid 64-bit division.
++	 */
++	BUILD_BUG_ON(MAX_RW_COUNT > UINT_MAX);
++	if (end_fsb - offset_fsb > UINT_MAX) {
++		error = -EFSCORRUPTED;
++		xfs_force_shutdown(ip->i_mount, SHUTDOWN_CORRUPT_INCORE);
++		ASSERT(0);
++		goto out;
++	}
++	resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount,
++			(unsigned int)(end_fsb - offset_fsb),
++			XFS_DATA_FORK);
+ 	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
+ 			resblks, 0, 0, &tp);
+ 	if (error)
