@@ -1,104 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35704 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1033635AbdD0P6w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2017 11:58:52 -0400
-Date: Thu, 27 Apr 2017 08:58:09 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:35312 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S968285AbdD0Q4y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2017 12:56:54 -0400
+Date: Thu, 27 Apr 2017 09:56:22 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH] xfs: try to avoid blowing out the transaction
- reservation when bunmaping a shared extent
-Message-ID: <20170427155809.GF23371@birch.djwong.org>
-References: <20170425020954.GV23371@birch.djwong.org>
- <20170427074042.GB18392@infradead.org>
+Subject: Re: [PATCH v3] xfs: reserve enough blocks to handle btree splits
+ when remapping
+Message-ID: <20170427165622.GG23371@birch.djwong.org>
+References: <20170425015837.GS23371@birch.djwong.org>
+ <20170427072303.GA29468@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170427074042.GB18392@infradead.org>
+In-Reply-To: <20170427072303.GA29468@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs <linux-xfs@vger.kernel.org>
+Cc: xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
 
-On Thu, Apr 27, 2017 at 12:40:42AM -0700, Christoph Hellwig wrote:
-> > @@ -483,13 +485,24 @@ xfs_bui_recover(
+On Thu, Apr 27, 2017 at 12:23:03AM -0700, Christoph Hellwig wrote:
+> On Mon, Apr 24, 2017 at 06:58:37PM -0700, Darrick J. Wong wrote:
+> > In xfs_reflink_end_cow, we erroneously reserve only enough blocks to
+> > handle adding 1 extent.  This is problematic if we fragment free space,
+> > have to do CoW, and then have to perform multiple bmap btree expansions.
+> > Furthermore, the BUI recovery routine doesn't reserve /any/ blocks to
+> > handle btree splits, so log recovery fails after our first error causes
+> > the filesystem to go down.
+> > 
+> > Therefore, refactor the transaction block reservation macros until we
+> > have a macro that works for our deferred (re)mapping activities, and fix
+> > both problems by using that macro.
+> > 
+> > With 1k blocks we can hit this fairly often in g/187 if the scratch fs
+> > is big enough.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> > v3: don't use the swap-extents-with-rmap block reservation for cow
+> > remapping; we should already have sufficient per-ag reservation
+> > v2: avoid 64-bit division when calculating block reservation
+> > ---
+> >  fs/xfs/libxfs/xfs_trans_space.h |   13 +++++++------
+> >  fs/xfs/xfs_bmap_item.c          |    7 ++++++-
+> >  fs/xfs/xfs_reflink.c            |   12 ++++++++++--
+> >  3 files changed, 23 insertions(+), 9 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
+> > index 7917f6e..0044e14 100644
+> > --- a/fs/xfs/libxfs/xfs_trans_space.h
+> > +++ b/fs/xfs/libxfs/xfs_trans_space.h
+> > @@ -23,6 +23,11 @@
+> >   */
+> >  #define XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)    \
+> >  		(((mp)->m_rmap_mxr[0]) - ((mp)->m_rmap_mnr[0]))
+> > +#define XFS_RMAPADD_SPACE_RES(mp) ((mp)->m_rmap_maxlevels)
+> > +#define XFS_NRMAPADD_SPACE_RES(mp,b,w)\
+> > +	(((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
+> > +	  XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) * \
+> > +	  XFS_RMAPADD_SPACE_RES(mp))
+> 
+> Comments, please!  (I know the existing defintions don't have any,
+> but that's bad enough to start with..)
+
+Ok.
+
+> >  	xfs_fsblock_t			firstfsb;
+> > +	unsigned int			resblks;
+> >  
+> >  	ASSERT(!test_bit(XFS_BUI_RECOVERED, &buip->bui_flags));
+> >  
+> > @@ -447,7 +450,9 @@ xfs_bui_recover(
+> >  		return -EIO;
 > >  	}
-> >  	xfs_trans_ijoin(tp, ip, 0);
 > >  
-> > +	count = bmap->me_len;
-> >  	error = xfs_trans_log_finish_bmap_update(tp, budp, &dfops, type,
-> >  			ip, whichfork, bmap->me_startoff,
-> > -			bmap->me_startblock, bmap->me_len,
-> > -			state);
-> > +			bmap->me_startblock, &count, state);
+> > -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
+> > +	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
+> > +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, resblks, 0,
+> > +			0, &tp);
+> 
+> Do we really need that resblks variable?
+
+No.
+
 > >  	if (error)
-> >  		goto err_dfops;
+> >  		return error;
+> >  	budp = xfs_trans_get_bud(tp, buip);
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index c0f3754..aab156a 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -705,8 +705,16 @@ xfs_reflink_end_cow(
+> >  	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+> >  	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
 > >  
-> > +	if (count > 0) {
-> > +		ASSERT(type == XFS_BMAP_UNMAP);
-> > +		irec.br_startblock = bmap->me_startblock;
-> > +		irec.br_blockcount = count;
-> > +		irec.br_startoff = bmap->me_startoff;
-> > +		irec.br_state = state;
-> > +		error = xfs_bmap_unmap_extent(tp->t_mountp, &dfops, ip, &irec);
-> > +		if (error)
-> > +			goto err_dfops;
-> > +	}
+> > -	/* Start a rolling transaction to switch the mappings */
+> > -	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
+> > +	/*
+> > +	 * Start a rolling transaction to switch the mappings.  We're
+> > +	 * unlikely ever to have to remap 16T worth of single-block
+> > +	 * extents, so just cap the worst case extent count to 2^32-1.
+> > +	 * Stick a warning in just in case, and avoid 64-bit division.
+> > +	 */
+> > +	WARN_ON(end_fsb - offset_fsb + 1 > UINT_MAX);
+> > +	resblks = min_t(xfs_fileoff_t, UINT_MAX, end_fsb - offset_fsb + 1);
 > 
-> Aren't we always returning -EAGAIN from xfs_trans_log_finish_bmap_update
-> if count is non-zero?  Seems like this path isn't currently hit by
-> testing.
+> I don't like unlikely statements.  What prevents us from doing so?
+> I think the way Linux limits writes to 32-bits using MAX_RW_COUNT
+> does, but then the language should be more assertive here.  I think
+> we should also shut down the fs here if the assert fails - otherwise
+> we'll leave a partially converted region around.
 
-I hit it on generic/187 with a 1k block size.
+In the long run, I should just rewrite this to loop around if we are
+asked to do too much at once.
 
-> 
-> > +
-> >  	/* Finish transaction, free inodes. */
-> >  	error = xfs_defer_finish(&tp, &dfops, NULL);
-> >  	if (error)
-> 
-> > diff --git a/fs/xfs/xfs_trans_bmap.c b/fs/xfs/xfs_trans_bmap.c
-> > index 6408e7d..14543d9 100644
-> > --- a/fs/xfs/xfs_trans_bmap.c
-> > +++ b/fs/xfs/xfs_trans_bmap.c
-> > @@ -63,7 +63,7 @@ xfs_trans_log_finish_bmap_update(
-> >  	int				whichfork,
-> >  	xfs_fileoff_t			startoff,
-> >  	xfs_fsblock_t			startblock,
-> > -	xfs_filblks_t			blockcount,
-> > +	xfs_filblks_t			*blockcount,
-> >  	xfs_exntst_t			state)
-> >  {
-> >  	int				error;
-> > @@ -196,16 +196,23 @@ xfs_bmap_update_finish_item(
-> >  	void				**state)
-> >  {
-> >  	struct xfs_bmap_intent		*bmap;
-> > +	xfs_filblks_t			count;
-> >  	int				error;
-> >  
-> >  	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
-> > +	count = bmap->bi_bmap.br_blockcount;
-> >  	error = xfs_trans_log_finish_bmap_update(tp, done_item, dop,
-> >  			bmap->bi_type,
-> >  			bmap->bi_owner, bmap->bi_whichfork,
-> >  			bmap->bi_bmap.br_startoff,
-> >  			bmap->bi_bmap.br_startblock,
-> > -			bmap->bi_bmap.br_blockcount,
-> > +			&count,
-> >  			bmap->bi_bmap.br_state);
-> > +	if (!error && count > 0) {
-> > +		ASSERT(bmap->bi_type == XFS_BMAP_UNMAP);
-> > +		bmap->bi_bmap.br_blockcount = count;
-> > +		return -EAGAIN;
-> > +	}
-> 
-> Can we just kill off xfs_trans_log_finish_bmap_update, move the
-> code here and avoid the weird calling conventions?
+> A BUILD_BUG_ON on MAX_RW_COUNT might also be useful to make the whole
+> scheme even safer.
 
-I guess we could open-code all the stuff that it does in
-xfs_bmap_update_finish_item and xfs_bui_recover, but I'd hate to have to
-remember to update both copies.
+Yeah, we could do that too.
 
 --D
 
