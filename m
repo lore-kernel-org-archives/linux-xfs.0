@@ -1,38 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33231 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750972AbdD0OIN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2017 10:08:13 -0400
-MIME-Version: 1.0
-In-Reply-To: <13614.1493301655@warthog.procyon.org.uk>
-References: <CAOQ4uxgzd35J8ii8WWifrjHowkKwTZh7=zmN5Q3Qx4ADEKtqXQ@mail.gmail.com>
- <1493279911-2936-1-git-send-email-amir73il@gmail.com> <20170427075946.GA22284@lst.de>
- <5818.1493297821@warthog.procyon.org.uk> <12937.1493299325@warthog.procyon.org.uk>
- <9958b109-8b83-c39c-b6f3-249ffe3f812c@sandeen.net> <13614.1493301655@warthog.procyon.org.uk>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 27 Apr 2017 17:08:09 +0300
-Message-ID: <CAOQ4uxgGz9P1aA9LbGZ+NtU3sfqOUqxk6=UuF1haOTSbmgLUnA@mail.gmail.com>
-Subject: Re: [PATCH] xfs: publish UUID in struct super_block
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:57782 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1030692AbdD0Ijy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Apr 2017 04:39:54 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id AA664A08F3
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2017 08:39:53 +0000 (UTC)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH] xfs: Allow user to kill fstrim process
+Date: Thu, 27 Apr 2017 10:39:28 +0200
+Message-Id: <1493282368-32422-1-git-send-email-lczerner@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>, "Darrick J . Wong" <darrick.wong@oracle.com>, Miklos Szeredi <miklos@szeredi.hu>, Vivek Goyal <vgoyal@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs <linux-xfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Lukas Czerner <lczerner@redhat.com>
 
-On Thu, Apr 27, 2017 at 5:00 PM, David Howells <dhowells@redhat.com> wrote:
-> Eric Sandeen <sandeen@sandeen.net> wrote:
->
->> but s_uuid in the vfs superblock isn't a pointer:
->>
->>         u8 s_uuid[16];                          /* UUID */
->>
->> (or am I missing your point?)
->
-> No, I'm getting it wrong.  For some reason I'm thinking it's a pointer.  I
-> should probably know better.  I wonder if it should be a struct uuid_v1...
->
+fstrim can take really long time on big, slow device or on file system
+with a lots of allocation groups. Currently there is no way for the user
+to cancell the operation. This patch makes it possible for the user to
+kill fstrim pocess by adding the check for fatal_signal_pending() in
+xfs_trim_extents().
 
-If anything, I think we should hoist uuid_t from fs/xfs/uuid.h.
-Or arbitrarily use uuid_le, just so it is easy to do
- uuid_le_cmp(sb->s_uuid, NULL_UUID_LE)
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+Reported-by: Zdenek Kabelac <zkabelac@redhat.com>
+---
+ fs/xfs/xfs_discard.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index d796ffa..6a05d27 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -132,6 +132,11 @@ xfs_trim_extents(
+ 		error = xfs_btree_decrement(cur, 0, &i);
+ 		if (error)
+ 			goto out_del_cursor;
++
++		if (fatal_signal_pending(current)) {
++			error = -ERESTARTSYS;
++			goto out_del_cursor;
++		}
+ 	}
+ 
+ out_del_cursor:
+@@ -196,8 +201,11 @@ xfs_ioc_trim(
+ 	for (agno = start_agno; agno <= end_agno; agno++) {
+ 		error = xfs_trim_extents(mp, agno, start, end, minlen,
+ 					  &blocks_trimmed);
+-		if (error)
++		if (error) {
+ 			last_error = error;
++			if (error == -ERESTARTSYS)
++				break;
++		}
+ 	}
+ 
+ 	if (last_error)
+-- 
+2.7.4
+
