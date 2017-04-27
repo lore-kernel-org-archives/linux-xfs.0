@@ -1,32 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53354 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935007AbdD0OBC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Apr 2017 10:01:02 -0400
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <9958b109-8b83-c39c-b6f3-249ffe3f812c@sandeen.net>
-References: <9958b109-8b83-c39c-b6f3-249ffe3f812c@sandeen.net> <CAOQ4uxgzd35J8ii8WWifrjHowkKwTZh7=zmN5Q3Qx4ADEKtqXQ@mail.gmail.com> <1493279911-2936-1-git-send-email-amir73il@gmail.com> <20170427075946.GA22284@lst.de> <5818.1493297821@warthog.procyon.org.uk> <12937.1493299325@warthog.procyon.org.uk>
-Subject: Re: [PATCH] xfs: publish UUID in struct super_block
+Received: from aserp1040.oracle.com ([141.146.126.69]:35710 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966071AbdD0VEv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2017 17:04:51 -0400
+Date: Thu, 27 Apr 2017 14:04:45 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: Allow user to kill fstrim process
+Message-ID: <20170427210445.GJ23371@birch.djwong.org>
+References: <1493282368-32422-1-git-send-email-lczerner@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <13613.1493301655.1@warthog.procyon.org.uk>
-Date: Thu, 27 Apr 2017 15:00:55 +0100
-Message-ID: <13614.1493301655@warthog.procyon.org.uk>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1493282368-32422-1-git-send-email-lczerner@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: dhowells@redhat.com, Amir Goldstein <amir73il@gmail.com>, Christoph Hellwig <hch@lst.de>, "Darrick J . Wong" <darrick.wong@oracle.com>, Miklos Szeredi <miklos@szeredi.hu>, Vivek Goyal <vgoyal@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs <linux-xfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Eric Sandeen <sandeen@sandeen.net> wrote:
-
-> but s_uuid in the vfs superblock isn't a pointer:
+On Thu, Apr 27, 2017 at 10:39:28AM +0200, Lukas Czerner wrote:
+> fstrim can take really long time on big, slow device or on file system
+> with a lots of allocation groups. Currently there is no way for the user
+> to cancell the operation. This patch makes it possible for the user to
+> kill fstrim pocess by adding the check for fatal_signal_pending() in
+> xfs_trim_extents().
 > 
->         u8 s_uuid[16];                          /* UUID */
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> Reported-by: Zdenek Kabelac <zkabelac@redhat.com>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_discard.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
 > 
-> (or am I missing your point?)
-
-No, I'm getting it wrong.  For some reason I'm thinking it's a pointer.  I
-should probably know better.  I wonder if it should be a struct uuid_v1...
-
-David
+> diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+> index d796ffa..6a05d27 100644
+> --- a/fs/xfs/xfs_discard.c
+> +++ b/fs/xfs/xfs_discard.c
+> @@ -132,6 +132,11 @@ xfs_trim_extents(
+>  		error = xfs_btree_decrement(cur, 0, &i);
+>  		if (error)
+>  			goto out_del_cursor;
+> +
+> +		if (fatal_signal_pending(current)) {
+> +			error = -ERESTARTSYS;
+> +			goto out_del_cursor;
+> +		}
+>  	}
+>  
+>  out_del_cursor:
+> @@ -196,8 +201,11 @@ xfs_ioc_trim(
+>  	for (agno = start_agno; agno <= end_agno; agno++) {
+>  		error = xfs_trim_extents(mp, agno, start, end, minlen,
+>  					  &blocks_trimmed);
+> -		if (error)
+> +		if (error) {
+>  			last_error = error;
+> +			if (error == -ERESTARTSYS)
+> +				break;
+> +		}
+>  	}
+>  
+>  	if (last_error)
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
