@@ -1,109 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51686 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1031192AbdD1U4g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 28 Apr 2017 16:56:36 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAF1ivSbjdixqDo663wvAEkzRk-ctOX+y5UYxq4UdPA-=JVufyw@mail.gmail.com>
-References: <CAF1ivSZeYhnzh6CPZViYUNFXdm33hhTA_CzP7V745QociEEnKg@mail.gmail.com>
- <CAF1ivSbjdixqDo663wvAEkzRk-ctOX+y5UYxq4UdPA-=JVufyw@mail.gmail.com>
-From: Ming Lin <mlin@kernel.org>
-Date: Fri, 28 Apr 2017 13:56:30 -0700
-Message-ID: <CAF1ivSbEfhTYxcBx1dafK9TD3VdeXbJrNMzWJmXY8kyU0ibkUw@mail.gmail.com>
-Subject: Re: xlog_write: reservation ran out
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:36745 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S968301AbdD0I7c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2017 04:59:32 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH 3/5] f2fs: set the super block SB_I_HAVE_UUID flag
+Date: Thu, 27 Apr 2017 11:59:32 +0300
+Message-Id: <1493283574-1497-4-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1493283574-1497-1-git-send-email-amir73il@gmail.com>
+References: <1493283574-1497-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Ceph Development <ceph-devel@vger.kernel.org>, "LIU, Fei" <james.liu@alibaba-inc.com>, xiongwei.jiang@alibaba-inc.com, boqian.zy@alibaba-inc.com, sheng.qiu@alibaba-inc.com, Sage Weil <sweil@redhat.com>
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mark Fasheh <mfasheh@versity.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Fri, Apr 28, 2017 at 1:24 PM, Ming Lin <mlin@kernel.org> wrote:
-> -  xfs@oss.sgi.com
-> + linux-xfs@vger.kernel.org
->
-> On Fri, Apr 28, 2017 at 1:15 PM, Ming Lin <mlin@kernel.org> wrote:
->> Hi Dave & Christoph,
->>
->> I run into below error during a pre-production ceph cluster test with
->> xfs backend.
->> Kernel version: CentOS 7.2 3.10.0-327.el7.x86_64
->>
->> [146702.392840] XFS (nvme9n1p1): xlog_write: reservation summary:
->>   trans type  = INACTIVE (3)
->>   unit res    = 83812 bytes
->>   current res = -9380 bytes
->>   total reg   = 0 bytes (o/flow = 0 bytes)
->>   ophdrs      = 0 (ophdr space = 0 bytes)
->>   ophdr + reg = 0 bytes
->>   num regions = 0
->> [146702.428729] XFS (nvme9n1p1): xlog_write: reservation ran out. Need
->> to up reservation
->> [146702.436917] XFS (nvme9n1p1): xfs_do_force_shutdown(0x2) called
->> from line 2070 of file fs/xfs/xfs_log.c.  Return address =
->> 0xffffffffa0651738
->> [146702.449969] XFS (nvme9n1p1): Log I/O Error Detected.  Shutting
->> down filesystem
->> [146702.457590] XFS (nvme9n1p1): Please umount the filesystem and
->> rectify the problem(s)
->> [146702.467903] XFS (nvme9n1p1): xfs_log_force: error -5 returned.
->> [146732.324308] XFS (nvme9n1p1): xfs_log_force: error -5 returned.
->> [146762.436923] XFS (nvme9n1p1): xfs_log_force: error -5 returned.
->> [146792.549545] XFS (nvme9n1p1): xfs_log_force: error -5 returned.
->>
->> Each XFS fs is 1.7T.
->> The cluster was written about 80% full then we delete the ceph rbd
->> image, which actually delete a lot of files in the backend xfs.
->>
->> I'm going to have a try below quick hack and see if it helps.
->>
->> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
->> index 1b754cb..b2702f5 100644
->> --- a/fs/xfs/libxfs/xfs_trans_resv.c
->> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
->> @@ -800,7 +800,7 @@ xfs_trans_resv_calc(
->>         resp->tr_link.tr_logcount = XFS_LINK_LOG_COUNT;
->>         resp->tr_link.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>
->> -       resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp);
->> +       resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp) * 2;
->>         resp->tr_remove.tr_logcount = XFS_REMOVE_LOG_COUNT;
->>         resp->tr_remove.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>
+Let consumers (i.e. overlayfs) know that the content of the field
+sb->s_uuid is valid.
 
-+ Sage
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/f2fs/super.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I'm new to xfs code.
+diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
+index 96fe8ed..9dca352 100644
+--- a/fs/f2fs/super.c
++++ b/fs/f2fs/super.c
+@@ -1911,6 +1911,7 @@ static int f2fs_fill_super(struct super_block *sb, void *data, int silent)
+ 	sb->s_flags = (sb->s_flags & ~MS_POSIXACL) |
+ 		(test_opt(sbi, POSIX_ACL) ? MS_POSIXACL : 0);
+ 	memcpy(sb->s_uuid, raw_super->uuid, sizeof(raw_super->uuid));
++	sb->s_iflags |= SB_I_HAVE_UUID;
+ 
+ 	/* init f2fs-specific super block info */
+ 	sbi->valid_super_block = valid_super_block;
+-- 
+2.7.4
 
-Search  XFS_TRANS_INACTIVE and the usage is like below,
-
-xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
-xfs_trans_reserve(tp, &M_RES(mp)->tr_itruncate, 0, 0);
-
-xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
-xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, XFS_IFREE_SPACE_RES(mp), 0);
-
-seems tr_remove is not related.
-I'll just try to enlarge the reservation for tr_itruncate and tr_ifree.
-
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 1b754cb..4087c39 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -788,7 +788,7 @@ xfs_trans_resv_calc(
-        resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
-        resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-
--       resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
-+       resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp) * 2;
-        resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
-        resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-
-@@ -821,7 +821,7 @@ xfs_trans_resv_calc(
-        resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
-        resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-
--       resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
-+       resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp) * 2;
-        resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
-        resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
