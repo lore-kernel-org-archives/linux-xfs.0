@@ -1,147 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58188 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965785AbdD0SYF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Apr 2017 14:24:05 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 5730DC04BD44
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2017 18:24:05 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-122-194.rdu2.redhat.com [10.10.122.194])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 09793176A6
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2017 18:24:04 +0000 (UTC)
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: [PATCH v4] xfs_growfs: ensure target path is an active xfs mountpoint
-Date: Thu, 27 Apr 2017 13:23:59 -0500
-Message-Id: <20170427182359.24314-1-billodo@redhat.com>
-In-Reply-To: <20170407175809.8540-1-billodo@redhat.com>
-References: <20170407175809.8540-1-billodo@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:22538 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967434AbdD0Tbd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2017 15:31:33 -0400
+Date: Thu, 27 Apr 2017 12:31:18 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: publish UUID in struct super_block
+Message-ID: <20170427193118.GH23371@birch.djwong.org>
+References: <1493279911-2936-1-git-send-email-amir73il@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1493279911-2936-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Miklos Szeredi <miklos@szeredi.hu>, Vivek Goyal <vgoyal@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-xfs_growfs manpage clearly states that the target path must be
-an active xfs mountpoint.
+On Thu, Apr 27, 2017 at 10:58:31AM +0300, Amir Goldstein wrote:
+> Unless mounted with nouuid, copy the uuid of the filesystem to
+> struct super block s_uuid field, as several other filesystems do.
+> 
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  fs/xfs/xfs_mount.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> Darrick,
+> 
+> The VFS sb->s_uuid field is needed for a new overlay feature
+> 'constant inode numbers' [1].
+> 
+> We store the filesystem uuid along with encoded file handles, so that
+> we can verify later that we are encoding file handles from the same
+> filesystem from which the handles were encoded.
+>
+> At least the following filesystems set sb->s_uuid: ext4, f2fs, jfs, ocfs2.
 
-Current behavior allows xfs_growfs to proceed if the target path
-resides anywhere on a mounted xfs filesystem. This could lead to
-unexpected results. Unless the target path is an active xfs
-mountpoint, reject it. Create a new fs table lookup function which
-matches only active xfs mount points, not any file residing within
-those mountpoints.
+I dug into the history of s_uuid and discovered that originally it was a
+way to export the fs uuid via mountinfo in /proc, but that usage went
+away quickly, so now the only users are cleancache, evm, and ima.  The
+last two will use s_uuid if the administrator (I think?) tells it to,
+and it doesn't seem to care about the uniqueness.
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
+To me that sounds like the semantics of s_uuid are to fill it in if the
+fs wants to, but that the fs doesn't make any guarantees about the
+contents.
 
-v4: improve commit message and subject line. Further improvement
-of error message for realpath() prior to table lookup in xfs_growfs.
+> Specifically, btrfs does not set sb->s_uuid, I think because it has many
+> uuid's per super_block struct.
+> 
+> I see no obvious reason for xfs not to set sb->s_uuid so here goes.
+> 
+> I made a choice not to set sb->s_uuid in case xfs was mounted with nouuid,
+> to maintain a self inflicted rule that sb->s_uuid is unique in a system
+> for an xfs super_block.  This is an arbitrary decision so others may not
+> agree with it.
+>
+> My reasoning in the context of verifying file handles is this -
+> If a file handle was exported from one copy of an xfs filesystem, I rather
+> it was not decoded from another copy of the filesystem (i.e. LVM snapshot),
+> at least not while both copies are mounted on the same system.
 
-v3: improve error message for realpath failure. Add comments
-to better document the differences between fs_table_lookup()
-and fs_table_lookup_mount(). Use realpath() in fs_table_lookup_mount()
-prior to directory comparison.
+I disagree.  ext4, f2fs, gfs2, ocfs2, and ubifs all set s_uuid
+unconditionally, even if that means there are multiple struct
+superblocks floating around with the same s_uuid.  Now, I surmise that
+for overlayfs copy-up you want to be able to store (sb_uuid, fh) as an
+xattr to keep track of the original inode, and for that you really /do/
+want sb_uuid to be unique.
 
-v2: in order to properly handle relative pathnames, symlinks,
-and bind-mounts, use realpath to establish canonical path name.
-This also requires the introduction of a lookup function based
-on the target mountpoint.
+But therein lies a problem -- if another ext4 fs shows up with the same
+uuid and the overlayfs accidentally gets paired with the second ext4,
+your stored xattr is toast because you can't tell that this is the wrong
+filesystem... unless you already detect this situation?
 
- growfs/xfs_growfs.c | 10 +++++++++-
- include/path.h      |  1 +
- libxcmd/paths.c     | 31 +++++++++++++++++++++++++++++++
- 3 files changed, 41 insertions(+), 1 deletion(-)
+I suppose since this xattr thing is an optimization(?) you /could/
+actually keep track of whether or not there are mounted fses with the
+same s_uuid and therefore know whether or not it's safe to use it.
 
-diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-index a294e14..366176b 100644
---- a/growfs/xfs_growfs.c
-+++ b/growfs/xfs_growfs.c
-@@ -133,6 +133,7 @@ main(int argc, char **argv)
- 	int			spinodes;
- 	int			rmapbt_enabled;
- 	int			reflink_enabled;
-+	char			rpath[PATH_MAX];
- 
- 	progname = basename(argv[0]);
- 	setlocale(LC_ALL, "");
-@@ -202,7 +203,14 @@ main(int argc, char **argv)
- 		aflag = 1;
- 
- 	fs_table_initialise(0, NULL, 0, NULL);
--	fs = fs_table_lookup(argv[optind], FS_MOUNT_POINT);
-+
-+	if (!realpath(argv[optind], rpath)) {
-+		fprintf(stderr, _("%s: path resolution failed for %s: %s\n"),
-+			progname, argv[optind], strerror(errno));
-+		return 1;
-+	}
-+
-+	fs = fs_table_lookup_mount(rpath);
- 	if (!fs) {
- 		fprintf(stderr, _("%s: %s is not a mounted XFS filesystem\n"),
- 			progname, argv[optind]);
-diff --git a/include/path.h b/include/path.h
-index d077bac..1d3a902 100644
---- a/include/path.h
-+++ b/include/path.h
-@@ -56,6 +56,7 @@ extern void fs_table_insert_project_path(char *__dir, uint __projid);
- 
- 
- extern fs_path_t *fs_table_lookup(const char *__dir, uint __flags);
-+extern fs_path_t *fs_table_lookup_mount(const char *__dir);
- 
- typedef struct fs_cursor {
- 	uint		count;		/* total count of mount entries	*/
-diff --git a/libxcmd/paths.c b/libxcmd/paths.c
-index 816acc2..b767e9d 100644
---- a/libxcmd/paths.c
-+++ b/libxcmd/paths.c
-@@ -65,6 +65,9 @@ fs_device_number(
-  * Find the FS table entry for the given path.  The "flags" argument
-  * is a mask containing FS_MOUNT_POINT or FS_PROJECT_PATH (or both)
-  * to indicate the type of table entry sought.
-+ * fs_table_lookup() finds the fs table entry for the filesystem hosting
-+ * the file represented in the "dir" argument. To compare against actual
-+ * mount point entries, use fs_table_lookup_mount() instead.
-  */
- struct fs_path *
- fs_table_lookup(
-@@ -86,6 +89,34 @@ fs_table_lookup(
- 	return NULL;
- }
- 
-+/*
-+ * Find the FS table entry describing an actual mount for the given path.
-+ * Unlike fs_table_lookup(), fs_table_lookup_mount() compares the "dir"
-+ * argument to actual mount point entries in the table. Accordingly, it
-+ * will find matches only if the "dir" argument is indeed mounted.
-+ */
-+struct fs_path *
-+fs_table_lookup_mount(
-+	const char	*dir)
-+{
-+	uint		i;
-+	dev_t		dev = 0;
-+	char		rpath[PATH_MAX];
-+
-+	if (fs_device_number(dir, &dev))
-+		return NULL;
-+
-+	for (i = 0; i < fs_count; i++) {
-+		if (fs_table[i].fs_flags != FS_MOUNT_POINT)
-+			continue;
-+		if (!realpath(fs_table[i].fs_dir, rpath))
-+			continue;
-+		if (strcmp(rpath, dir) == 0)
-+			return &fs_table[i];
-+	}
-+	return NULL;
-+}
-+
- static int
- fs_table_insert(
- 	char		*dir,
--- 
-2.9.3
+I don't have an objection to XFS filling out s_uuid unconditionally like
+the other filesystems do.  If we want to change the meaning of that
+field, let's change all of the fses at once.
 
+> I tested the patch is working correctly with and without nouuid with my
+> overlayfs constant inode tests. I do have xfstests that check overlay
+> constant inodes, but they are of little use to you without the overlayfs
+> patches.
+> 
+> Here is what it looks like when running constant inode verification test
+> for overlayfs above xfs mounted with nouuid:
+> ~/unionmount-testsuite# ./run --ov=0 --samefs hard-link
+> ...
+> XFS (vdf): Ending clean mount
+> overlayfs: lower fs needs to report s_uuid.
+>  ./run --link /mnt/a/foo100 /mnt/a/no_foo100
+> sh (2748): drop_caches: 3
+> overlayfs: lower fs needs to report s_uuid.
+> /mnt/a/no_foo100: inode number wrong (got 442, want 137)
+> 
+> The same test passes with overlayfs over ext4 and with overlay over xfs
+
+What happens if you create two ext4 filesystems with the same uuid,
+mount an overlay with one ext4, make some changes, then unmount the
+overlay and mount it with the other ext4?
+
+--D
+
+> mounted without nouuid (and with this patch applied naturally).
+> 
+> I'd appreciate if you could queue this simple patch for v4.12.
+> 
+> Thanks,
+> Amir.
+> 
+> [1] https://marc.info/?l=linux-unionfs&m=149324252301397&w=2
+> 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 450bde6..29e45a0 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -100,6 +100,9 @@ xfs_uuid_mount(
+>  	xfs_uuid_table[hole] = *uuid;
+>  	mutex_unlock(&xfs_uuid_table_mutex);
+>  
+> +	/* Publish UUID in struct super_block */
+> +	BUILD_BUG_ON(sizeof(mp->m_super->s_uuid) != sizeof(uuid_t));
+> +	memcpy(&mp->m_super->s_uuid, uuid, sizeof(uuid_t));
+>  	return 0;
+>  
+>   out_duplicate:
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
