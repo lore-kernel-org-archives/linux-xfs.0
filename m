@@ -1,55 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:33049 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1163951AbdD1GSq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Apr 2017 02:18:46 -0400
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34494 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1033571AbdD0NzN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2017 09:55:13 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170428055658.GD22884@birch.djwong.org>
-References: <1493279911-2936-1-git-send-email-amir73il@gmail.com>
- <20170427193118.GH23371@birch.djwong.org> <984c6ee4-9ece-7424-420f-1fc26faca378@sandeen.net>
- <20170428054945.rg54cm5yftfuqfsf@brain> <20170428055658.GD22884@birch.djwong.org>
+In-Reply-To: <9958b109-8b83-c39c-b6f3-249ffe3f812c@sandeen.net>
+References: <CAOQ4uxgzd35J8ii8WWifrjHowkKwTZh7=zmN5Q3Qx4ADEKtqXQ@mail.gmail.com>
+ <1493279911-2936-1-git-send-email-amir73il@gmail.com> <20170427075946.GA22284@lst.de>
+ <5818.1493297821@warthog.procyon.org.uk> <12937.1493299325@warthog.procyon.org.uk>
+ <9958b109-8b83-c39c-b6f3-249ffe3f812c@sandeen.net>
 From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 28 Apr 2017 09:18:39 +0300
-Message-ID: <CAOQ4uxjuo=jnifmDDc2yT_A9tDGxaX56=HCg+7aaCpzVFCuMNg@mail.gmail.com>
+Date: Thu, 27 Apr 2017 16:55:12 +0300
+Message-ID: <CAOQ4uxjNBqHWHB7hJUKbh5hBqCY6Y2z8JpzWxmfsW40-6qjtvw@mail.gmail.com>
 Subject: Re: [PATCH] xfs: publish UUID in struct super_block
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Andy Whitcroft <apw@canonical.com>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>, Miklos Szeredi <miklos@szeredi.hu>, Vivek Goyal <vgoyal@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs <linux-xfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@lst.de>, "Darrick J . Wong" <darrick.wong@oracle.com>, Miklos Szeredi <miklos@szeredi.hu>, Vivek Goyal <vgoyal@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs <linux-xfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Fri, Apr 28, 2017 at 8:56 AM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Fri, Apr 28, 2017 at 06:49:45AM +0100, Andy Whitcroft wrote:
->> On Thu, Apr 27, 2017 at 03:30:35PM -0500, Eric Sandeen wrote:
+On Thu, Apr 27, 2017 at 4:50 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>
+>
+> On 4/27/17 8:22 AM, David Howells wrote:
+>> Amir Goldstein <amir73il@gmail.com> wrote:
 >>
->> > It'd be trivial to make that a vfs function and set a flag on the vfs super
->> > if the UUID is not unique.  Would that be worthwhile?  I can send a patch
->> > if so.
+>>> You mean if it is NULL_UUID_LE? Yes, that is what I do now.
+>>> Christoph suggested that this is not robust enough.
+>>> I'm rather indifferent about the need of a flag.
 >>
->> This only tells you that the UUID it has is unique now.  As you are
->> contemplating storing them in the FS they have to be unique in space
->> _and_ time.  No check you can do now can tell you if the UUID is unique
->> for all time.  Right ?
+>> I was thinking more that s_uuid would be a NULL pointer if the fs doesn't have
+>> a uuid.
 >
-> Well, since we're talking about all time: "probably" :P
+> but s_uuid in the vfs superblock isn't a pointer:
 >
-> That said, Eric was talking about a refactoring of one of XFS's mount
-> time checks that errors out if there's already a mounted fs with the
-> same uuid.  We use it to avoid catastrophic mounting of the same fs from
-> multiple (misconfigured) multipaths/snapshots/volumes/whatever on the
-> same machine.  Not sure if that's useful for Amir's case.
+>         u8 s_uuid[16];                          /* UUID */
+>
+> (or am I missing your point?)
+>
+> -Eric
 >
 
-As far as I can tell, we don't mind that sb->s_uuid is not unique.
-All we care about is to verify that the file handle we are holding was encoded
-from the same file system instance OR from one of its derivative (LVM
-snapshot etc), just as a sanity that we won't get a completely different
-object (from a different fs type even) by mistake.
-
-If admin zygotes all his ext4 fs with the same uuid and fill them with
-different content and copies overlay layers between them....
-Let me know if you think there is a real use case for this so I can sympathize.
+IMO, its just too simple to compare to NULL_UUID_LE and/or
+the set/check a flag.
+I don't think we should bother with any other option.
 
 Amir.
