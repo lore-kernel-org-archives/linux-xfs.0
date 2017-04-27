@@ -1,280 +1,260 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51196 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39956 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965661AbdD0MDa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Apr 2017 08:03:30 -0400
-Date: Thu, 27 Apr 2017 08:03:27 -0400
+        id S1754650AbdD0NFD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Apr 2017 09:05:03 -0400
+Date: Thu, 27 Apr 2017 09:04:52 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/5] xfs: allocate quotaoff transactions up front to
- avoid log deadlock
-Message-ID: <20170427120324.GA46981@bfoster.bfoster>
-References: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
- <1487173247-5965-3-git-send-email-bfoster@redhat.com>
- <20170426212333.GB23371@birch.djwong.org>
+Subject: Re: [RFC PATCH] xfs: refactor dir2 leaf readahead shadow buffer
+ cleverness
+Message-ID: <20170427130450.GB46981@bfoster.bfoster>
+References: <20170425020353.GT23371@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170426212333.GB23371@birch.djwong.org>
+In-Reply-To: <20170425020353.GT23371@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Carlos Maiolino <cmaiolin@redhat.com>, billodo@redhat.com, Dave Chinner <david@fromorbit.com>
 
-On Wed, Apr 26, 2017 at 02:23:33PM -0700, Darrick J. Wong wrote:
-> On Wed, Feb 15, 2017 at 10:40:44AM -0500, Brian Foster wrote:
-> > The quotaoff operation commits two explicitly synchronous
-> > transactions to correctly handle log recovery of dquots being
-> > modified at the time the quotaoff occurs. The first quotaoff
-> > transaction pins the tail of the log with a qoff logitem in the AIL
-> > to ensure further logged dquots stay ahead of the quotaoff operation
-> > in the log. The second quotaoff_end transaction is committed after
-> > the quotaoff operation completes, releases the original log item and
-> > thus unpins the log.
-> > 
-> > Since the first transaction pins the tail of the log, this means a
-> > finite amount of space in the log is available between the time a
-> > quotaoff starts and completes before transaction reservations have
-> > to block on the log. While the quotaoff operation itself consumes no
-> > further log space, it is possible for other operations in the
-> > filesystem to consume the remaining log space before the quotaoff
-> > completes. If this occurs, the quotaoff_end transaction also blocks
-> > on the log which prevents the release of the log item and the
-> > filesystem deadlocks. This has been reproduced via repeated xfs/305
-> > iterations on a vm with fairly limited resources.
-> > 
-> > To avoid a deadlock due to a particularly slow quotaoff operation,
-> > allocate the quotaoff_end transaction immediately after the initial
-> > quotaoff transaction is committed. Carry a reference to the
-> > transaction through xfs_qm_scall_quotaoff() rather than the qoff log
-> > item and commit it once the quotaoff completes.
+On Mon, Apr 24, 2017 at 07:03:53PM -0700, Darrick J. Wong wrote:
+> Currently, the dir2 leaf block getdents function uses a complex state
+> tracking mechanism to create a shadow copy of the block mappings and
+> then uses the shadow copy to schedule readahead.  Since the read and
+> readahead functions are perfectly capable of reading the mappings
+> themselves, we can tear all that out in favor of a simpler function that
+> simply keeps pushing the readahead window further out.
 > 
-> Hmm... so instead of holding a pinned log item for however long it takes
-> to finish quotaoff, we instead hold a transaction.  That does fix the
-> problem where we pin the log tail and the head crashes into it, but also
-> comes with its own problems, doesn't it?
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: fix readahead of more than ra_want
+> ---
+>  fs/xfs/xfs_dir2_readdir.c |  325 ++++++++++++---------------------------------
+>  1 file changed, 88 insertions(+), 237 deletions(-)
 > 
-> In xfs_qm_scall_quotaoff, we call xfs_qm_dqrele_all_inodes, which
-> calls xfs_dqrele_inode to call xfs_qm_dqrele on all the inodes in the
-> system.  However, if any of those inodes are unlinked and inactive, the
-> iput -> xfs_fs_destroy_inode -> xfs_inactive path truncates the inode,
-> which itself requires a transaction, so now we're running with nested
-> transactions.
-> 
-> I'm not sure that's necessarily a problem because the outer transaction
-> contains only a single qoffend item.  AFAICT I haven't encountered any
-> other places in XFS where a single thread runs nested transactions, but
-> it still seems suspect to me.
-> 
+> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+> index 20b7a5c..70a4a38 100644
+> --- a/fs/xfs/xfs_dir2_readdir.c
+> +++ b/fs/xfs/xfs_dir2_readdir.c
+> @@ -243,215 +243,110 @@ xfs_dir2_block_getdents(
+...
+>  STATIC int
+>  xfs_dir2_leaf_readbuf(
+>  	struct xfs_da_args	*args,
+>  	size_t			bufsize,
+> -	struct xfs_dir2_leaf_map_info *mip,
+> -	xfs_dir2_off_t		*curoff,
+> -	struct xfs_buf		**bpp,
+> -	bool			trim_map)
+> +	xfs_dir2_off_t		*cur_off,
+> +	xfs_dablk_t		*ra_blk,
+> +	struct xfs_buf		**bpp)
+>  {
+...
+> +	/* Flush old buf; remember its daddr for error detection. */
+> +	if (*bpp) {
+> +		old_daddr = (*bpp)->b_bn;
+> +		xfs_trans_brelse(args->trans, *bpp);
+> +		*bpp = NULL;
+>  	}
 
-Yeah, good spot. I wasn't expecting to be logging anything else in this
-window of time, but it looks like that is possible. We definitely don't
-want to be doing nested transactions. I'll have to think about this one
-some more.
+This seems kind of misplaced to me. IMO, it makes more sense for the
+caller to handle any such tracking across buffers..
 
-Note that this was a one off fix for something I reproduced when trying
-to reproduce the livelock addressed by the subsequent patches in the
-series. It's not a dependency for the subsequent 3 patches.
+>  
+...
+> +	if (!bp || bp->b_bn == old_daddr) {
+> +		ASSERT(0);
+> +		if (bp)
+> +			xfs_trans_brelse(args->trans, bp);
+> +		error = -EFSCORRUPTED;
+> +		goto out;
+> +	}
 
-> Heh, lockdep just spat this at me:
-> 
+... because it's not clear how passing an unexpected buffer parameter to
+a readbuf() helper constitutes corruption.
 
-I'm guessing I just didn't have lockdep enabled when I tested this. To
-be sure... what is the reproducer for this? Thanks.
+Similar to hch's question, is this a scenario that is somehow introduced
+by the refactoring here? If not, this kind of seems like it should be
+ultimately split out into a separate patch.
+
+>  
+>  	/*
+> -	 * Do we need more readahead?
+> -	 * Each loop tries to process 1 full dir blk; last may be partial.
+> +	 * Do we need more readahead for this call?  Issue ra against
+> +	 * bufsize's worth of dir blocks or until we hit the end of the
+> +	 * data section.
+>  	 */
+> +	ra_want = howmany(bufsize + geo->blksize, (1 << geo->fsblog)) - 1;
+> +	if (*ra_blk == 0)
+> +		*ra_blk = map.br_startoff;
+> +	next_ra = *ra_blk + geo->fsbcount;
+...
+> +	while (ra_want > 0 && next_ra < last_da) {
+> +		nmap = 1;
+> +		error = xfs_bmapi_read(dp, next_ra, last_da - next_ra,
+> +				&map, &nmap, 0);
+> +		if (error || !nmap)
+> +			break;
+> +		next_ra = roundup((xfs_dablk_t)map.br_startoff, geo->fsbcount);
+> +		while (ra_want > 0 &&
+> +		       map.br_startblock != HOLESTARTBLOCK &&
+> +		       next_ra < map.br_startoff + map.br_blockcount) {
+> +			xfs_dir3_data_readahead(dp, next_ra, -2);
+> +			*ra_blk = next_ra;
+> +			ra_want -= geo->fsbcount;
+> +			next_ra += geo->fsbcount;
+>  		}
+> +		next_ra = map.br_startoff + map.br_blockcount;
+>  	}
+
+So if I'm following the new logic correctly, we'll get here on the first
+readbuf() of the dir and basically issue readahead of the subsequent 32k
+or so of physical blocks. We set ra_blk to the last offset I/O was
+issued to and return. The next time around, we may only be 4k into the
+buffer, but the readahead mechanism rolls forward another 32k based on
+where readahead last left off.
+
+This strikes me as particularly aggressive. At the very least, it seems
+a notable enough departure from the existing logic for a patch that
+(IIUC) has an objective of refactoring/simplification moreso than
+performance to warrant performance testing. Am I missing something here,
+or otherwise is this behavior intended? (BTW, I do think this at least
+warrants a performance regression test against a known fragmented
+directory or some such to ensure we don't break performance.)
+
+FWIW, and if I follow the existing (more complicated) logic correctly,
+it looks like the current code maintains more of a sliding window of the
+associated buffer size. So the first readdir->readbuf call occurs and we
+still issue the first 32k of readahead. As each buffer is processed,
+however, we only issue enough readahead to fill up the slot in the
+window left by the data that was just processed.
+
+In effect (assuming the 32k buffer size guess is accurate), it seems to
+me that we basically issue buffer size amount of readahead at the onset
+of each readdir call and by the end of the call, we've issued enough
+readahead to anticipate the next readdir call. Of course the next call
+loses the mapping context, so we reconstruct the mapping table and
+repeat the readahead cycle for the current buffer into the next.
+
+Given that, I'm wondering if we can achieve the simplification we're
+after while still maintaining close to the current behavior by doing
+something like splitting out the readahead logic entirely from the
+readbuf() call, form it into a helper that just issues the next N amount
+of readahead from a particular offset, and call that helper at the start
+and end of every readdir() call (and perhaps every once and a while
+during the call to cover the case of larger buffers, since 32k appears
+to be a guess). Thoughts?
 
 Brian
 
-> [19767.048839] =============================================
-> [19767.049699] [ INFO: possible recursive locking detected ]
-> [19767.050511] 4.11.0-rc4-djw #3 Not tainted
-> [19767.051122] ---------------------------------------------
-> [19767.051907] xfs_quota/4152 is trying to acquire lock:
-> [19767.052617]  (sb_internal){.+.+.+}, at: [<ffffffffa015ee13>] xfs_trans_alloc+0xe3/0x130 [xfs]
-> [19767.054151] 
-> [19767.054151] but task is already holding lock:
-> [19767.055246]  (sb_internal){.+.+.+}, at: [<ffffffffa015ee13>] xfs_trans_alloc+0xe3/0x130 [xfs]
-> [19767.056897] 
-> [19767.056897] other info that might help us debug this:
-> [19767.057980]  Possible unsafe locking scenario:
-> [19767.057980] 
-> [19767.058967]        CPU0
-> [19767.059385]        ----
-> [19767.060339]   lock(sb_internal);
-> [19767.061187]   lock(sb_internal);
-> [19767.061771] 
-> [19767.061771]  *** DEADLOCK ***
-> [19767.061771] 
-> [19767.062818]  May be due to missing lock nesting notation
-> [19767.062818] 
-> [19767.063967] 3 locks held by xfs_quota/4152:
-> [19767.064521]  #0:  (&type->s_umount_key#34){++++++}, at: [<ffffffff812287f0>] __get_super.part.18+0xc0/0xe0
-> [19767.065805]  #1:  (&qinf->qi_quotaofflock){+.+.+.}, at: [<ffffffffa0182a53>] xfs_qm_scall_quotaoff+0x53/0x6c0 [xfs]
-> [19767.067226]  #2:  (sb_internal){.+.+.+}, at: [<ffffffffa015ee13>] xfs_trans_alloc+0xe3/0x130 [xfs]
-> [19767.068543] 
-> [19767.068543] stack backtrace:
-> [19767.069191] CPU: 2 PID: 4152 Comm: xfs_quota Not tainted 4.11.0-rc4-djw #3
-> [19767.070124] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
-> [19767.071405] Call Trace:
-> [19767.071798]  dump_stack+0x85/0xc2
-> [19767.072298]  __lock_acquire+0x164e/0x16a0
-> [19767.072866]  ? kvm_sched_clock_read+0x9/0x20
-> [19767.073460]  ? sched_clock+0x9/0x10
-> [19767.073979]  lock_acquire+0xbf/0x210
-> [19767.074532]  ? xfs_trans_alloc+0xe3/0x130 [xfs]
-> [19767.075166]  __sb_start_write+0xc0/0x220
-> [19767.075782]  ? xfs_trans_alloc+0xe3/0x130 [xfs]
-> [19767.076475]  xfs_trans_alloc+0xe3/0x130 [xfs]
-> [19767.077138]  xfs_inactive_truncate+0x31/0x130 [xfs]
-> [19767.077862]  ? xfs_qm_dqattach+0x16/0x50 [xfs]
-> [19767.078524]  xfs_inactive+0x17d/0x270 [xfs]
-> [19767.079141]  xfs_fs_destroy_inode+0xb3/0x350 [xfs]
-> [19767.079964]  destroy_inode+0x3b/0x60
-> [19767.080679]  evict+0x132/0x190
-> [19767.081301]  iput+0x243/0x320
-> [19767.081961]  xfs_inode_ag_walk+0x2a8/0x690 [xfs]
-> [19767.082757]  ? xfs_inode_ag_walk+0x92/0x690 [xfs]
-> [19767.083545]  ? xfs_trans_free_dqinfo+0x30/0x30 [xfs]
-> [19767.084279]  ? xfs_perag_get+0xa8/0x2b0 [xfs]
-> [19767.084753]  ? xfs_perag_get+0xa8/0x2b0 [xfs]
-> [19767.085234]  xfs_inode_ag_iterator_flags+0x69/0xa0 [xfs]
-> [19767.086251]  ? xfs_trans_free_dqinfo+0x30/0x30 [xfs]
-> [19767.087219]  xfs_qm_dqrele_all_inodes+0x36/0x60 [xfs]
-> [19767.088431]  xfs_qm_scall_quotaoff+0x100/0x6c0 [xfs]
-> [19767.089285]  xfs_quota_disable+0x3d/0x50 [xfs]
-> [19767.090138]  SyS_quotactl+0x3ff/0x820
-> [19767.090853]  ? SYSC_newstat+0x3b/0x50
-> [19767.091501]  ? trace_hardirqs_on_caller+0x129/0x1b0
-> [19767.092398]  ? trace_hardirqs_on_thunk+0x1a/0x1c
-> [19767.093238]  entry_SYSCALL_64_fastpath+0x1f/0xc2
-> [19767.094150] RIP: 0033:0x7f43530a70ca
-> [19767.094851] RSP: 002b:00007ffe7570fbe8 EFLAGS: 00000206 ORIG_RAX: 00000000000000b3
-> [19767.096078] RAX: ffffffffffffffda RBX: 00007ffe7570fde8 RCX: 00007f43530a70ca
-> [19767.097242] RDX: 0000000000000000 RSI: 00000000012d26f0 RDI: 0000000000580202
-> [19767.098402] RBP: 0000000000000005 R08: 00007ffe7570fbfc R09: 0000000000005802
-> [19767.099645] R10: 00007ffe7570fbfc R11: 0000000000000206 R12: 0000000000401e50
-> [19767.100841] R13: 00007ffe7570fde0 R14: 0000000000000000 R15: 0000000000000000
-> 
-> --D
-> 
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_qm_syscalls.c | 42 ++++++++++++++++++++++++------------------
-> >  1 file changed, 24 insertions(+), 18 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> > index 475a388..dbb6802 100644
-> > --- a/fs/xfs/xfs_qm_syscalls.c
-> > +++ b/fs/xfs/xfs_qm_syscalls.c
-> > @@ -35,9 +35,11 @@
-> >  #include "xfs_trace.h"
-> >  #include "xfs_icache.h"
-> >  
-> > -STATIC int	xfs_qm_log_quotaoff(xfs_mount_t *, xfs_qoff_logitem_t **, uint);
-> > -STATIC int	xfs_qm_log_quotaoff_end(xfs_mount_t *, xfs_qoff_logitem_t *,
-> > -					uint);
-> > +STATIC int	xfs_qm_log_quotaoff(struct xfs_mount *, struct xfs_trans **,
-> > +				    uint);
-> > +STATIC int	xfs_qm_log_quotaoff_end(struct xfs_mount *,
-> > +					struct xfs_qoff_logitem *,
-> > +					struct xfs_trans **, uint);
-> >  
-> >  /*
-> >   * Turn off quota accounting and/or enforcement for all udquots and/or
-> > @@ -56,7 +58,7 @@ xfs_qm_scall_quotaoff(
-> >  	uint			dqtype;
-> >  	int			error;
-> >  	uint			inactivate_flags;
-> > -	xfs_qoff_logitem_t	*qoffstart;
-> > +	struct xfs_trans	*qend_tp;
-> >  
-> >  	/*
-> >  	 * No file system can have quotas enabled on disk but not in core.
-> > @@ -128,7 +130,7 @@ xfs_qm_scall_quotaoff(
-> >  	 * and synchronously. If we fail to write, we should abort the
-> >  	 * operation as it cannot be recovered safely if we crash.
-> >  	 */
-> > -	error = xfs_qm_log_quotaoff(mp, &qoffstart, flags);
-> > +	error = xfs_qm_log_quotaoff(mp, &qend_tp, flags);
-> >  	if (error)
-> >  		goto out_unlock;
-> >  
-> > @@ -181,7 +183,7 @@ xfs_qm_scall_quotaoff(
-> >  	 * So, we have QUOTAOFF start and end logitems; the start
-> >  	 * logitem won't get overwritten until the end logitem appears...
-> >  	 */
-> > -	error = xfs_qm_log_quotaoff_end(mp, qoffstart, flags);
-> > +	error = xfs_trans_commit(qend_tp);
-> >  	if (error) {
-> >  		/* We're screwed now. Shutdown is the only option. */
-> >  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> > @@ -556,13 +558,14 @@ xfs_qm_scall_setqlim(
-> >  
-> >  STATIC int
-> >  xfs_qm_log_quotaoff_end(
-> > -	xfs_mount_t		*mp,
-> > -	xfs_qoff_logitem_t	*startqoff,
-> > +	struct xfs_mount	*mp,
-> > +	struct xfs_qoff_logitem	*startqoff,
-> > +	struct xfs_trans	**tpp,
-> >  	uint			flags)
-> >  {
-> > -	xfs_trans_t		*tp;
-> > +	struct xfs_trans	*tp;
-> >  	int			error;
-> > -	xfs_qoff_logitem_t	*qoffi;
-> > +	struct xfs_qoff_logitem	*qoffi;
-> >  
-> >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_equotaoff, 0, 0, 0, &tp);
-> >  	if (error)
-> > @@ -578,21 +581,22 @@ xfs_qm_log_quotaoff_end(
-> >  	 * We don't care about quotoff's performance.
-> >  	 */
-> >  	xfs_trans_set_sync(tp);
-> > -	return xfs_trans_commit(tp);
-> > +	*tpp = tp;
-> > +	return 0;
-> >  }
-> >  
-> >  
-> >  STATIC int
-> >  xfs_qm_log_quotaoff(
-> > -	xfs_mount_t	       *mp,
-> > -	xfs_qoff_logitem_t     **qoffstartp,
-> > -	uint		       flags)
-> > +	struct xfs_mount	*mp,
-> > +	struct xfs_trans	**end_tp,
-> > +	uint			flags)
-> >  {
-> > -	xfs_trans_t	       *tp;
-> > +	struct xfs_trans	*tp;
-> >  	int			error;
-> > -	xfs_qoff_logitem_t     *qoffi;
-> > +	struct xfs_qoff_logitem	*qoffi;
-> >  
-> > -	*qoffstartp = NULL;
-> > +	*end_tp = NULL;
-> >  
-> >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0, 0, &tp);
-> >  	if (error)
-> > @@ -617,7 +621,9 @@ xfs_qm_log_quotaoff(
-> >  	if (error)
-> >  		goto out;
-> >  
-> > -	*qoffstartp = qoffi;
-> > +	error = xfs_qm_log_quotaoff_end(mp, qoffi, end_tp, flags);
-> > +	if (error)
-> > +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> >  out:
-> >  	return error;
-> >  }
-> > -- 
-> > 2.7.4
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  	blk_finish_plug(&plug);
+>  
+> @@ -475,14 +370,14 @@ xfs_dir2_leaf_getdents(
+>  	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+>  	xfs_dir2_data_entry_t	*dep;		/* data entry */
+>  	xfs_dir2_data_unused_t	*dup;		/* unused entry */
+> -	int			error = 0;	/* error return value */
+> -	int			length;		/* temporary length value */
+> -	int			byteoff;	/* offset in current block */
+> -	xfs_dir2_off_t		curoff;		/* current overall offset */
+> -	xfs_dir2_off_t		newoff;		/* new curoff after new blk */
+>  	char			*ptr = NULL;	/* pointer to current data */
+> -	struct xfs_dir2_leaf_map_info *map_info;
+>  	struct xfs_da_geometry	*geo = args->geo;
+> +	xfs_dablk_t		rablk = 0;	/* current readahead block */
+> +	xfs_dir2_off_t		curoff;		/* current overall offset */
+> +	int			length;		/* temporary length value */
+> +	int			byteoff;	/* offset in current block */
+> +	int			lock_mode;
+> +	int			error = 0;	/* error return value */
+>  
+>  	/*
+>  	 * If the offset is at or past the largest allowed value,
+> @@ -492,30 +387,12 @@ xfs_dir2_leaf_getdents(
+>  		return 0;
+>  
+>  	/*
+> -	 * Set up to bmap a number of blocks based on the caller's
+> -	 * buffer size, the directory block size, and the filesystem
+> -	 * block size.
+> -	 */
+> -	length = howmany(bufsize + geo->blksize, (1 << geo->fsblog));
+> -	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
+> -				(length * sizeof(struct xfs_bmbt_irec)),
+> -			       KM_SLEEP | KM_NOFS);
+> -	map_info->map_size = length;
+> -
+> -	/*
+>  	 * Inside the loop we keep the main offset value as a byte offset
+>  	 * in the directory file.
+>  	 */
+>  	curoff = xfs_dir2_dataptr_to_byte(ctx->pos);
+>  
+>  	/*
+> -	 * Force this conversion through db so we truncate the offset
+> -	 * down to get the start of the data block.
+> -	 */
+> -	map_info->map_off = xfs_dir2_db_to_da(geo,
+> -					      xfs_dir2_byte_to_db(geo, curoff));
+> -
+> -	/*
+>  	 * Loop over directory entries until we reach the end offset.
+>  	 * Get more blocks and readahead as necessary.
+>  	 */
+> @@ -527,38 +404,13 @@ xfs_dir2_leaf_getdents(
+>  		 * current buffer, need to get another one.
+>  		 */
+>  		if (!bp || ptr >= (char *)bp->b_addr + geo->blksize) {
+> -			int	lock_mode;
+> -			bool	trim_map = false;
+> -
+> -			if (bp) {
+> -				xfs_trans_brelse(NULL, bp);
+> -				bp = NULL;
+> -				trim_map = true;
+> -			}
+> -
+>  			lock_mode = xfs_ilock_data_map_shared(dp);
+> -			error = xfs_dir2_leaf_readbuf(args, bufsize, map_info,
+> -						      &curoff, &bp, trim_map);
+> +			error = xfs_dir2_leaf_readbuf(args, bufsize, &curoff,
+> +					&rablk, &bp);
+>  			xfs_iunlock(dp, lock_mode);
+> -			if (error || !map_info->map_valid)
+> +			if (error || !bp)
+>  				break;
+>  
+> -			/*
+> -			 * Having done a read, we need to set a new offset.
+> -			 */
+> -			newoff = xfs_dir2_db_off_to_byte(geo,
+> -							 map_info->curdb, 0);
+> -			/*
+> -			 * Start of the current block.
+> -			 */
+> -			if (curoff < newoff)
+> -				curoff = newoff;
+> -			/*
+> -			 * Make sure we're in the right block.
+> -			 */
+> -			else if (curoff > newoff)
+> -				ASSERT(xfs_dir2_byte_to_db(geo, curoff) ==
+> -				       map_info->curdb);
+>  			hdr = bp->b_addr;
+>  			xfs_dir3_data_check(dp, bp);
+>  			/*
+> @@ -643,7 +495,6 @@ xfs_dir2_leaf_getdents(
+>  		ctx->pos = XFS_DIR2_MAX_DATAPTR & 0x7fffffff;
+>  	else
+>  		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
+> -	kmem_free(map_info);
+>  	if (bp)
+>  		xfs_trans_brelse(NULL, bp);
+>  	return error;
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
