@@ -1,92 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54773 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S968071AbdD0Hks (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2017 03:40:48 -0400
-Date: Thu, 27 Apr 2017 00:40:42 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH] xfs: try to avoid blowing out the transaction
- reservation when bunmaping a shared extent
-Message-ID: <20170427074042.GB18392@infradead.org>
-References: <20170425020954.GV23371@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:55310 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1034743AbdD1IW6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 28 Apr 2017 04:22:58 -0400
+Date: Fri, 28 Apr 2017 10:22:53 +0200
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: Re: [PATCH] xfs: Allow user to kill fstrim process
+Message-ID: <20170428082253.n3kemqg2frw5zdco@localhost.localdomain>
+References: <1493282368-32422-1-git-send-email-lczerner@redhat.com>
+ <c9a4476c-51d7-b945-4f03-7e5485f3bcb4@sandeen.net>
+ <20170427153841.GD23371@birch.djwong.org>
+ <6e38c12b-6af9-1613-87dd-0c35df976338@sandeen.net>
+ <d9463c18-025e-0b7d-502f-3da43e822938@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170425020954.GV23371@birch.djwong.org>
+In-Reply-To: <d9463c18-025e-0b7d-502f-3da43e822938@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-> @@ -483,13 +485,24 @@ xfs_bui_recover(
->  	}
->  	xfs_trans_ijoin(tp, ip, 0);
->  
-> +	count = bmap->me_len;
->  	error = xfs_trans_log_finish_bmap_update(tp, budp, &dfops, type,
->  			ip, whichfork, bmap->me_startoff,
-> -			bmap->me_startblock, bmap->me_len,
-> -			state);
-> +			bmap->me_startblock, &count, state);
->  	if (error)
->  		goto err_dfops;
->  
-> +	if (count > 0) {
-> +		ASSERT(type == XFS_BMAP_UNMAP);
-> +		irec.br_startblock = bmap->me_startblock;
-> +		irec.br_blockcount = count;
-> +		irec.br_startoff = bmap->me_startoff;
-> +		irec.br_state = state;
-> +		error = xfs_bmap_unmap_extent(tp->t_mountp, &dfops, ip, &irec);
-> +		if (error)
-> +			goto err_dfops;
-> +	}
+On Thu, Apr 27, 2017 at 10:50:02AM -0500, Eric Sandeen wrote:
+> On 4/27/17 10:46 AM, Eric Sandeen wrote:
+> > On 4/27/17 10:38 AM, Darrick J. Wong wrote:
+> >> On Thu, Apr 27, 2017 at 09:34:04AM -0500, Eric Sandeen wrote:
+> >>> On 4/27/17 3:39 AM, Lukas Czerner wrote:
+> >>>> fstrim can take really long time on big, slow device or on file system
+> >>>> with a lots of allocation groups. Currently there is no way for the user
+> >>>> to cancell the operation. This patch makes it possible for the user to
+> >>>> kill fstrim pocess by adding the check for fatal_signal_pending() in
+> >>>> xfs_trim_extents().
+> >>>
+> >>> With this patch, it seems that if it is killed, then nothing is copied
+> >>> back to the user about the number of blocks trimmed before the kill.
+> >>>
+> >>> Is that intentional?
+> >>>
+> >>> I think it could be done in a way that the progress until the kill
+> >>> does get reported, and that might be more useful?
+> >>
+> >> AFAICT ext4 doesn't report anything if somoene ERESTARTSYS's it...
+> > 
+> > Well we aren't ext4, are we?  ;)
+> > 
+> > actually, it seems that it may report "count" as ERESTARTSYS in:
+> > 
+> >         ext4_debug("trimmed %d blocks in the group %d\n",
+> >                 count, group);
+> > 
+> > But yeah, although it does update the &range values, they don't
+> > get copied out on any error.
+> > 
+> > Anyway, ok, ext4 doesn't.  Is there a reason that we shouldn't?
+> 
+> Ok I am probably misunderstanding how things work, maybe it's
+> not actually possible (he says after a little experimentation.)
+> Feel free to ignore me on this one.  :)
+> 
+> -Eric
 
-Aren't we always returning -EAGAIN from xfs_trans_log_finish_bmap_update
-if count is non-zero?  Seems like this path isn't currently hit by
-testing.
+Hi Eric,
 
-> +
->  	/* Finish transaction, free inodes. */
->  	error = xfs_defer_finish(&tp, &dfops, NULL);
->  	if (error)
+I agree with Darrick, at the moment fstrim is not sticikng around to
+care, I am not even sure if it can stick around to care.
 
-> diff --git a/fs/xfs/xfs_trans_bmap.c b/fs/xfs/xfs_trans_bmap.c
-> index 6408e7d..14543d9 100644
-> --- a/fs/xfs/xfs_trans_bmap.c
-> +++ b/fs/xfs/xfs_trans_bmap.c
-> @@ -63,7 +63,7 @@ xfs_trans_log_finish_bmap_update(
->  	int				whichfork,
->  	xfs_fileoff_t			startoff,
->  	xfs_fsblock_t			startblock,
-> -	xfs_filblks_t			blockcount,
-> +	xfs_filblks_t			*blockcount,
->  	xfs_exntst_t			state)
->  {
->  	int				error;
-> @@ -196,16 +196,23 @@ xfs_bmap_update_finish_item(
->  	void				**state)
->  {
->  	struct xfs_bmap_intent		*bmap;
-> +	xfs_filblks_t			count;
->  	int				error;
->  
->  	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
-> +	count = bmap->bi_bmap.br_blockcount;
->  	error = xfs_trans_log_finish_bmap_update(tp, done_item, dop,
->  			bmap->bi_type,
->  			bmap->bi_owner, bmap->bi_whichfork,
->  			bmap->bi_bmap.br_startoff,
->  			bmap->bi_bmap.br_startblock,
-> -			bmap->bi_bmap.br_blockcount,
-> +			&count,
->  			bmap->bi_bmap.br_state);
-> +	if (!error && count > 0) {
-> +		ASSERT(bmap->bi_type == XFS_BMAP_UNMAP);
-> +		bmap->bi_bmap.br_blockcount = count;
-> +		return -EAGAIN;
-> +	}
-
-Can we just kill off xfs_trans_log_finish_bmap_update, move the
-code here and avoid the weird calling conventions?
+Thanks!
+-Lukas
