@@ -1,122 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:36463 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161851AbdD1GLX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Apr 2017 02:11:23 -0400
+Received: from mail.kernel.org ([198.145.29.136]:51686 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1031192AbdD1U4g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 28 Apr 2017 16:56:36 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170427193118.GH23371@birch.djwong.org>
-References: <1493279911-2936-1-git-send-email-amir73il@gmail.com> <20170427193118.GH23371@birch.djwong.org>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 28 Apr 2017 09:11:22 +0300
-Message-ID: <CAOQ4uxiOj9N7iMmxjBm-=n_B7pbuH3SuKNFOce7T3txz+r23aA@mail.gmail.com>
-Subject: Re: [PATCH] xfs: publish UUID in struct super_block
+In-Reply-To: <CAF1ivSbjdixqDo663wvAEkzRk-ctOX+y5UYxq4UdPA-=JVufyw@mail.gmail.com>
+References: <CAF1ivSZeYhnzh6CPZViYUNFXdm33hhTA_CzP7V745QociEEnKg@mail.gmail.com>
+ <CAF1ivSbjdixqDo663wvAEkzRk-ctOX+y5UYxq4UdPA-=JVufyw@mail.gmail.com>
+From: Ming Lin <mlin@kernel.org>
+Date: Fri, 28 Apr 2017 13:56:30 -0700
+Message-ID: <CAF1ivSbEfhTYxcBx1dafK9TD3VdeXbJrNMzWJmXY8kyU0ibkUw@mail.gmail.com>
+Subject: Re: xlog_write: reservation ran out
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Miklos Szeredi <miklos@szeredi.hu>, Vivek Goyal <vgoyal@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs <linux-xfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, Ceph Development <ceph-devel@vger.kernel.org>, "LIU, Fei" <james.liu@alibaba-inc.com>, xiongwei.jiang@alibaba-inc.com, boqian.zy@alibaba-inc.com, sheng.qiu@alibaba-inc.com, Sage Weil <sweil@redhat.com>
 
-On Thu, Apr 27, 2017 at 10:31 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Thu, Apr 27, 2017 at 10:58:31AM +0300, Amir Goldstein wrote:
->> Unless mounted with nouuid, copy the uuid of the filesystem to
->> struct super block s_uuid field, as several other filesystems do.
->>
->> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->> ---
->>  fs/xfs/xfs_mount.c | 3 +++
->>  1 file changed, 3 insertions(+)
->>
->> Darrick,
->>
->> The VFS sb->s_uuid field is needed for a new overlay feature
->> 'constant inode numbers' [1].
->>
->> We store the filesystem uuid along with encoded file handles, so that
->> we can verify later that we are encoding file handles from the same
->> filesystem from which the handles were encoded.
->>
-[...]
-
->>
->> I made a choice not to set sb->s_uuid in case xfs was mounted with nouuid,
->> to maintain a self inflicted rule that sb->s_uuid is unique in a system
->> for an xfs super_block.  This is an arbitrary decision so others may not
->> agree with it.
->>
->> My reasoning in the context of verifying file handles is this -
->> If a file handle was exported from one copy of an xfs filesystem, I rather
->> it was not decoded from another copy of the filesystem (i.e. LVM snapshot),
->> at least not while both copies are mounted on the same system.
+On Fri, Apr 28, 2017 at 1:24 PM, Ming Lin <mlin@kernel.org> wrote:
+> -  xfs@oss.sgi.com
+> + linux-xfs@vger.kernel.org
 >
-> I disagree.  ext4, f2fs, gfs2, ocfs2, and ubifs all set s_uuid
-> unconditionally, even if that means there are multiple struct
-> superblocks floating around with the same s_uuid.  Now, I surmise that
-> for overlayfs copy-up you want to be able to store (sb_uuid, fh) as an
-> xattr to keep track of the original inode, and for that you really /do/
-> want sb_uuid to be unique.
->
+> On Fri, Apr 28, 2017 at 1:15 PM, Ming Lin <mlin@kernel.org> wrote:
+>> Hi Dave & Christoph,
+>>
+>> I run into below error during a pre-production ceph cluster test with
+>> xfs backend.
+>> Kernel version: CentOS 7.2 3.10.0-327.el7.x86_64
+>>
+>> [146702.392840] XFS (nvme9n1p1): xlog_write: reservation summary:
+>>   trans type  = INACTIVE (3)
+>>   unit res    = 83812 bytes
+>>   current res = -9380 bytes
+>>   total reg   = 0 bytes (o/flow = 0 bytes)
+>>   ophdrs      = 0 (ophdr space = 0 bytes)
+>>   ophdr + reg = 0 bytes
+>>   num regions = 0
+>> [146702.428729] XFS (nvme9n1p1): xlog_write: reservation ran out. Need
+>> to up reservation
+>> [146702.436917] XFS (nvme9n1p1): xfs_do_force_shutdown(0x2) called
+>> from line 2070 of file fs/xfs/xfs_log.c.  Return address =
+>> 0xffffffffa0651738
+>> [146702.449969] XFS (nvme9n1p1): Log I/O Error Detected.  Shutting
+>> down filesystem
+>> [146702.457590] XFS (nvme9n1p1): Please umount the filesystem and
+>> rectify the problem(s)
+>> [146702.467903] XFS (nvme9n1p1): xfs_log_force: error -5 returned.
+>> [146732.324308] XFS (nvme9n1p1): xfs_log_force: error -5 returned.
+>> [146762.436923] XFS (nvme9n1p1): xfs_log_force: error -5 returned.
+>> [146792.549545] XFS (nvme9n1p1): xfs_log_force: error -5 returned.
+>>
+>> Each XFS fs is 1.7T.
+>> The cluster was written about 80% full then we delete the ceph rbd
+>> image, which actually delete a lot of files in the backend xfs.
+>>
+>> I'm going to have a try below quick hack and see if it helps.
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+>> index 1b754cb..b2702f5 100644
+>> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+>> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+>> @@ -800,7 +800,7 @@ xfs_trans_resv_calc(
+>>         resp->tr_link.tr_logcount = XFS_LINK_LOG_COUNT;
+>>         resp->tr_link.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>
+>> -       resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp);
+>> +       resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp) * 2;
+>>         resp->tr_remove.tr_logcount = XFS_REMOVE_LOG_COUNT;
+>>         resp->tr_remove.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>
 
-No. I don't care about sb_uuid being unique.
-As I wrote I am indifferent to the choice of exporting with -o nouuid.
-Your reasoning works for me (do what everyone else does),
-so I'll change the patch and re-post.
++ Sage
 
-> But therein lies a problem -- if another ext4 fs shows up with the same
-> uuid and the overlayfs accidentally gets paired with the second ext4,
-> your stored xattr is toast because you can't tell that this is the wrong
-> filesystem... unless you already detect this situation?
->
+I'm new to xfs code.
 
-No. I don't bother.
+Search  XFS_TRANS_INACTIVE and the usage is like below,
 
-> I suppose since this xattr thing is an optimization(?) you /could/
-> actually keep track of whether or not there are mounted fses with the
-> same s_uuid and therefore know whether or not it's safe to use it.
->
+xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+xfs_trans_reserve(tp, &M_RES(mp)->tr_itruncate, 0, 0);
 
-It is not only an optimization. It's partly a sanity check to prevent
-admin from making mistakes, partly a way to automatically detect
-that overlay layers were copied over so file handles should not be
-trusted.
+xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, XFS_IFREE_SPACE_RES(mp), 0);
 
-It is certainly not going to prevent an admin that wants to shoot
-himself in the leg carry out his plans.
+seems tr_remove is not related.
+I'll just try to enlarge the reservation for tr_itruncate and tr_ifree.
 
-> I don't have an objection to XFS filling out s_uuid unconditionally like
-> the other filesystems do.  If we want to change the meaning of that
-> field, let's change all of the fses at once.
->
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 1b754cb..4087c39 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -788,7 +788,7 @@ xfs_trans_resv_calc(
+        resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+        resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
 
-I am happy with the way things are...
+-       resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
++       resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp) * 2;
+        resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+        resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
 
-[...]
->
-> What happens if you create two ext4 filesystems with the same uuid,
-> mount an overlay with one ext4, make some changes, then unmount the
-> overlay and mount it with the other ext4?
->
+@@ -821,7 +821,7 @@ xfs_trans_resv_calc(
+        resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+        resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
 
-As I wrote, if admin wants to shoot himself in the leg, he is free to do so
-just as he is with NFS export.
-In the example you gave, admin could re-export the same NFS share from
-the other ext4 fs (and nfsd doesn't even check UUID AFAIK), so NFS client
-coming with old file handles could be served with completely different files
-from the new fs.
-
-I do want to protect admin from things that could go wrong with normal
-behavior:
-- copying layers on the same fs and mounting overlay - verify file handles (*)
-- copying layers to a different fs and mounting overlay - verify uuid
-- copying an entire fs (or LVM snapshot) and mount an 'overlay clone' -
-  it's ok to use the handles in the clone even if they point to files that
-  diverged from the original fs. It's just as if the overlay mount content
-  itself was cloned and diverged from its original copy.
-
-(*) on the samefs case, file handles could still be decoded and point to
-     a different lower layer, but that is a calculated risk we are willing to
-     live with, because the file handles are just used to find a unique inode
-     number and pin the inode while this inode number is exposed
-
-Amir.
+-       resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
++       resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp) * 2;
+        resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
+        resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
