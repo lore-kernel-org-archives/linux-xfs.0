@@ -1,82 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56454 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964792AbdD0Hc3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2017 03:32:29 -0400
-Date: Thu, 27 Apr 2017 00:32:28 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH] xfs: refactor dir2 leaf readahead shadow buffer
- cleverness
-Message-ID: <20170427073228.GB29468@infradead.org>
-References: <20170425020353.GT23371@birch.djwong.org>
+Received: from mail-io0-f193.google.com ([209.85.223.193]:33049 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1163951AbdD1GSq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Apr 2017 02:18:46 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170425020353.GT23371@birch.djwong.org>
+In-Reply-To: <20170428055658.GD22884@birch.djwong.org>
+References: <1493279911-2936-1-git-send-email-amir73il@gmail.com>
+ <20170427193118.GH23371@birch.djwong.org> <984c6ee4-9ece-7424-420f-1fc26faca378@sandeen.net>
+ <20170428054945.rg54cm5yftfuqfsf@brain> <20170428055658.GD22884@birch.djwong.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 28 Apr 2017 09:18:39 +0300
+Message-ID: <CAOQ4uxjuo=jnifmDDc2yT_A9tDGxaX56=HCg+7aaCpzVFCuMNg@mail.gmail.com>
+Subject: Re: [PATCH] xfs: publish UUID in struct super_block
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>, Carlos Maiolino <cmaiolin@redhat.com>, billodo@redhat.com, Dave Chinner <david@fromorbit.com>
+Cc: Andy Whitcroft <apw@canonical.com>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>, Miklos Szeredi <miklos@szeredi.hu>, Vivek Goyal <vgoyal@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs <linux-xfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Mon, Apr 24, 2017 at 07:03:53PM -0700, Darrick J. Wong wrote:
-> Currently, the dir2 leaf block getdents function uses a complex state
-> tracking mechanism to create a shadow copy of the block mappings and
-> then uses the shadow copy to schedule readahead.  Since the read and
-> readahead functions are perfectly capable of reading the mappings
-> themselves, we can tear all that out in favor of a simpler function that
-> simply keeps pushing the readahead window further out.
+On Fri, Apr 28, 2017 at 8:56 AM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Fri, Apr 28, 2017 at 06:49:45AM +0100, Andy Whitcroft wrote:
+>> On Thu, Apr 27, 2017 at 03:30:35PM -0500, Eric Sandeen wrote:
+>>
+>> > It'd be trivial to make that a vfs function and set a flag on the vfs super
+>> > if the UUID is not unique.  Would that be worthwhile?  I can send a patch
+>> > if so.
+>>
+>> This only tells you that the UUID it has is unique now.  As you are
+>> contemplating storing them in the FS they have to be unique in space
+>> _and_ time.  No check you can do now can tell you if the UUID is unique
+>> for all time.  Right ?
+>
+> Well, since we're talking about all time: "probably" :P
+>
+> That said, Eric was talking about a refactoring of one of XFS's mount
+> time checks that errors out if there's already a mounted fs with the
+> same uuid.  We use it to avoid catastrophic mounting of the same fs from
+> multiple (misconfigured) multipaths/snapshots/volumes/whatever on the
+> same machine.  Not sure if that's useful for Amir's case.
+>
 
-I like where this goes a lot.  A few more comments below:
+As far as I can tell, we don't mind that sb->s_uuid is not unique.
+All we care about is to verify that the file handle we are holding was encoded
+from the same file system instance OR from one of its derivative (LVM
+snapshot etc), just as a sanity that we won't get a completely different
+object (from a different fs type even) by mistake.
 
-> +	/* Flush old buf; remember its daddr for error detection. */
-> +	if (*bpp) {
-> +		old_daddr = (*bpp)->b_bn;
-> +		xfs_trans_brelse(args->trans, *bpp);
+If admin zygotes all his ext4 fs with the same uuid and fill them with
+different content and copies overlay layers between them....
+Let me know if you think there is a real use case for this so I can sympathize.
 
-I don't really understand the whole old_daddr logic.  How could we
-go backwards in the logic block space?
-
-> +	 * Look for mapped directory blocks at or above the current
-> +	 * offset.  We must truncate down to the nearest directory
-> +	 * block to start the scanning operation.
-
-Use all 80 chars available on the terminal for comments, please :)
-
-> +	last_da = xfs_dir2_byte_to_da(geo, XFS_DIR2_LEAF_OFFSET);
-> +	map_off = xfs_dir2_db_to_da(geo, xfs_dir2_byte_to_db(geo, *cur_off));
-> +	do {
-> +		nmap = 1;
-> +		error = xfs_bmapi_read(dp, map_off, last_da - map_off,
-> +				&map, &nmap, 0);
-> +		if (error || !nmap)
-> +			goto out;
-> +		map_off = map.br_startoff + map.br_blockcount;
-> +	} while (map_off < last_da && map.br_startblock == HOLESTARTBLOCK);
-> +
-> +	if (map.br_startblock == HOLESTARTBLOCK)
->  		goto out;
-
-This shows that xfs_bmapi_read really is the wrong interface for the
-calles.  Raw calls to xfs_iext_lookup_extent / xfs_iext_get_extent would
-make this loop easier to understand, and also more efficient by not
-doing the full lookup.
-
-> +	while (ra_want > 0 && next_ra < last_da) {
-> +		nmap = 1;
-> +		error = xfs_bmapi_read(dp, next_ra, last_da - next_ra,
-> +				&map, &nmap, 0);
-> +		if (error || !nmap)
-> +			break;
-> +		next_ra = roundup((xfs_dablk_t)map.br_startoff, geo->fsbcount);
-> +		while (ra_want > 0 &&
-> +		       map.br_startblock != HOLESTARTBLOCK &&
-> +		       next_ra < map.br_startoff + map.br_blockcount) {
-> +			xfs_dir3_data_readahead(dp, next_ra, -2);
-> +			*ra_blk = next_ra;
-> +			ra_want -= geo->fsbcount;
-> +			next_ra += geo->fsbcount;
->  		}
-> +		next_ra = map.br_startoff + map.br_blockcount;
-
-Same here..
+Amir.
