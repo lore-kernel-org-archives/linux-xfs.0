@@ -1,261 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39956 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754650AbdD0NFD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Apr 2017 09:05:03 -0400
-Date: Thu, 27 Apr 2017 09:04:52 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH] xfs: refactor dir2 leaf readahead shadow buffer
- cleverness
-Message-ID: <20170427130450.GB46981@bfoster.bfoster>
-References: <20170425020353.GT23371@birch.djwong.org>
+Received: from mr003msb.fastweb.it ([85.18.95.87]:56432 "EHLO
+        mr003msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756096AbdD1UUp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Apr 2017 16:20:45 -0400
+Subject: Re: Slow file stat/deletion
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170425020353.GT23371@birch.djwong.org>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date: Fri, 28 Apr 2017 22:14:54 +0200
+From: Gionatan Danti <g.danti@assyoma.it>
+In-Reply-To: <a37b6669-4ec1-074e-de51-ae15aee5a7d9@assyoma.it>
+References: <bef58272-f791-52bf-cc4c-1cb1b7c9efec@assyoma.it>
+ <20161127221433.GV28177@dastard>
+ <a5774248-db44-bdfe-2310-bb1a327756fb@assyoma.it>
+ <20161128215308.GD28177@dastard>
+ <a37b6669-4ec1-074e-de51-ae15aee5a7d9@assyoma.it>
+Message-ID: <a3e391cf2ce08858aef806d5f052f73e@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Carlos Maiolino <cmaiolin@redhat.com>, billodo@redhat.com, Dave Chinner <david@fromorbit.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Apr 24, 2017 at 07:03:53PM -0700, Darrick J. Wong wrote:
-> Currently, the dir2 leaf block getdents function uses a complex state
-> tracking mechanism to create a shadow copy of the block mappings and
-> then uses the shadow copy to schedule readahead.  Since the read and
-> readahead functions are perfectly capable of reading the mappings
-> themselves, we can tear all that out in favor of a simpler function that
-> simply keeps pushing the readahead window further out.
+Hi all,
+this is a note which can be useful to someone searching for the same 
+thing: using "ftype=1" at mkfs time (which is, by the way, the default 
+for CRC-enabled filesystem) greatly speed-up stat/find operations.
+
+On a test case with 1.000.000 files and 1000 total directories, "find 
+/mnt/xfs" time has fallen from ~70 to ~20 seconds.
+
+As a side question: there is no method/possibility to enable ftype=1 to 
+an already existing filesystem, right?
+Thanks.
+
+Il 29-11-2016 08:53 Gionatan Danti ha scritto:
+> On 28/11/2016 22:53, Dave Chinner wrote:
+>> 
+>> Nope. There's always going to be a penalty for subverting the
+>> filesystem's physical layout optimisations on storage subsystems
+>> that require physical layout optimisation for performance.
+>> 
+>> Cheers,
+>> 
+>> Dave.
+>> 
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: fix readahead of more than ra_want
-> ---
->  fs/xfs/xfs_dir2_readdir.c |  325 ++++++++++++---------------------------------
->  1 file changed, 88 insertions(+), 237 deletions(-)
+> Ok, very clear.
 > 
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index 20b7a5c..70a4a38 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -243,215 +243,110 @@ xfs_dir2_block_getdents(
-...
->  STATIC int
->  xfs_dir2_leaf_readbuf(
->  	struct xfs_da_args	*args,
->  	size_t			bufsize,
-> -	struct xfs_dir2_leaf_map_info *mip,
-> -	xfs_dir2_off_t		*curoff,
-> -	struct xfs_buf		**bpp,
-> -	bool			trim_map)
-> +	xfs_dir2_off_t		*cur_off,
-> +	xfs_dablk_t		*ra_blk,
-> +	struct xfs_buf		**bpp)
->  {
-...
-> +	/* Flush old buf; remember its daddr for error detection. */
-> +	if (*bpp) {
-> +		old_daddr = (*bpp)->b_bn;
-> +		xfs_trans_brelse(args->trans, *bpp);
-> +		*bpp = NULL;
->  	}
+> Thank you for taking the time to explain, Dave.
 
-This seems kind of misplaced to me. IMO, it makes more sense for the
-caller to handle any such tracking across buffers..
-
->  
-...
-> +	if (!bp || bp->b_bn == old_daddr) {
-> +		ASSERT(0);
-> +		if (bp)
-> +			xfs_trans_brelse(args->trans, bp);
-> +		error = -EFSCORRUPTED;
-> +		goto out;
-> +	}
-
-... because it's not clear how passing an unexpected buffer parameter to
-a readbuf() helper constitutes corruption.
-
-Similar to hch's question, is this a scenario that is somehow introduced
-by the refactoring here? If not, this kind of seems like it should be
-ultimately split out into a separate patch.
-
->  
->  	/*
-> -	 * Do we need more readahead?
-> -	 * Each loop tries to process 1 full dir blk; last may be partial.
-> +	 * Do we need more readahead for this call?  Issue ra against
-> +	 * bufsize's worth of dir blocks or until we hit the end of the
-> +	 * data section.
->  	 */
-> +	ra_want = howmany(bufsize + geo->blksize, (1 << geo->fsblog)) - 1;
-> +	if (*ra_blk == 0)
-> +		*ra_blk = map.br_startoff;
-> +	next_ra = *ra_blk + geo->fsbcount;
-...
-> +	while (ra_want > 0 && next_ra < last_da) {
-> +		nmap = 1;
-> +		error = xfs_bmapi_read(dp, next_ra, last_da - next_ra,
-> +				&map, &nmap, 0);
-> +		if (error || !nmap)
-> +			break;
-> +		next_ra = roundup((xfs_dablk_t)map.br_startoff, geo->fsbcount);
-> +		while (ra_want > 0 &&
-> +		       map.br_startblock != HOLESTARTBLOCK &&
-> +		       next_ra < map.br_startoff + map.br_blockcount) {
-> +			xfs_dir3_data_readahead(dp, next_ra, -2);
-> +			*ra_blk = next_ra;
-> +			ra_want -= geo->fsbcount;
-> +			next_ra += geo->fsbcount;
->  		}
-> +		next_ra = map.br_startoff + map.br_blockcount;
->  	}
-
-So if I'm following the new logic correctly, we'll get here on the first
-readbuf() of the dir and basically issue readahead of the subsequent 32k
-or so of physical blocks. We set ra_blk to the last offset I/O was
-issued to and return. The next time around, we may only be 4k into the
-buffer, but the readahead mechanism rolls forward another 32k based on
-where readahead last left off.
-
-This strikes me as particularly aggressive. At the very least, it seems
-a notable enough departure from the existing logic for a patch that
-(IIUC) has an objective of refactoring/simplification moreso than
-performance to warrant performance testing. Am I missing something here,
-or otherwise is this behavior intended? (BTW, I do think this at least
-warrants a performance regression test against a known fragmented
-directory or some such to ensure we don't break performance.)
-
-FWIW, and if I follow the existing (more complicated) logic correctly,
-it looks like the current code maintains more of a sliding window of the
-associated buffer size. So the first readdir->readbuf call occurs and we
-still issue the first 32k of readahead. As each buffer is processed,
-however, we only issue enough readahead to fill up the slot in the
-window left by the data that was just processed.
-
-In effect (assuming the 32k buffer size guess is accurate), it seems to
-me that we basically issue buffer size amount of readahead at the onset
-of each readdir call and by the end of the call, we've issued enough
-readahead to anticipate the next readdir call. Of course the next call
-loses the mapping context, so we reconstruct the mapping table and
-repeat the readahead cycle for the current buffer into the next.
-
-Given that, I'm wondering if we can achieve the simplification we're
-after while still maintaining close to the current behavior by doing
-something like splitting out the readahead logic entirely from the
-readbuf() call, form it into a helper that just issues the next N amount
-of readahead from a particular offset, and call that helper at the start
-and end of every readdir() call (and perhaps every once and a while
-during the call to cover the case of larger buffers, since 32k appears
-to be a guess). Thoughts?
-
-Brian
-
->  	blk_finish_plug(&plug);
->  
-> @@ -475,14 +370,14 @@ xfs_dir2_leaf_getdents(
->  	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
->  	xfs_dir2_data_entry_t	*dep;		/* data entry */
->  	xfs_dir2_data_unused_t	*dup;		/* unused entry */
-> -	int			error = 0;	/* error return value */
-> -	int			length;		/* temporary length value */
-> -	int			byteoff;	/* offset in current block */
-> -	xfs_dir2_off_t		curoff;		/* current overall offset */
-> -	xfs_dir2_off_t		newoff;		/* new curoff after new blk */
->  	char			*ptr = NULL;	/* pointer to current data */
-> -	struct xfs_dir2_leaf_map_info *map_info;
->  	struct xfs_da_geometry	*geo = args->geo;
-> +	xfs_dablk_t		rablk = 0;	/* current readahead block */
-> +	xfs_dir2_off_t		curoff;		/* current overall offset */
-> +	int			length;		/* temporary length value */
-> +	int			byteoff;	/* offset in current block */
-> +	int			lock_mode;
-> +	int			error = 0;	/* error return value */
->  
->  	/*
->  	 * If the offset is at or past the largest allowed value,
-> @@ -492,30 +387,12 @@ xfs_dir2_leaf_getdents(
->  		return 0;
->  
->  	/*
-> -	 * Set up to bmap a number of blocks based on the caller's
-> -	 * buffer size, the directory block size, and the filesystem
-> -	 * block size.
-> -	 */
-> -	length = howmany(bufsize + geo->blksize, (1 << geo->fsblog));
-> -	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
-> -				(length * sizeof(struct xfs_bmbt_irec)),
-> -			       KM_SLEEP | KM_NOFS);
-> -	map_info->map_size = length;
-> -
-> -	/*
->  	 * Inside the loop we keep the main offset value as a byte offset
->  	 * in the directory file.
->  	 */
->  	curoff = xfs_dir2_dataptr_to_byte(ctx->pos);
->  
->  	/*
-> -	 * Force this conversion through db so we truncate the offset
-> -	 * down to get the start of the data block.
-> -	 */
-> -	map_info->map_off = xfs_dir2_db_to_da(geo,
-> -					      xfs_dir2_byte_to_db(geo, curoff));
-> -
-> -	/*
->  	 * Loop over directory entries until we reach the end offset.
->  	 * Get more blocks and readahead as necessary.
->  	 */
-> @@ -527,38 +404,13 @@ xfs_dir2_leaf_getdents(
->  		 * current buffer, need to get another one.
->  		 */
->  		if (!bp || ptr >= (char *)bp->b_addr + geo->blksize) {
-> -			int	lock_mode;
-> -			bool	trim_map = false;
-> -
-> -			if (bp) {
-> -				xfs_trans_brelse(NULL, bp);
-> -				bp = NULL;
-> -				trim_map = true;
-> -			}
-> -
->  			lock_mode = xfs_ilock_data_map_shared(dp);
-> -			error = xfs_dir2_leaf_readbuf(args, bufsize, map_info,
-> -						      &curoff, &bp, trim_map);
-> +			error = xfs_dir2_leaf_readbuf(args, bufsize, &curoff,
-> +					&rablk, &bp);
->  			xfs_iunlock(dp, lock_mode);
-> -			if (error || !map_info->map_valid)
-> +			if (error || !bp)
->  				break;
->  
-> -			/*
-> -			 * Having done a read, we need to set a new offset.
-> -			 */
-> -			newoff = xfs_dir2_db_off_to_byte(geo,
-> -							 map_info->curdb, 0);
-> -			/*
-> -			 * Start of the current block.
-> -			 */
-> -			if (curoff < newoff)
-> -				curoff = newoff;
-> -			/*
-> -			 * Make sure we're in the right block.
-> -			 */
-> -			else if (curoff > newoff)
-> -				ASSERT(xfs_dir2_byte_to_db(geo, curoff) ==
-> -				       map_info->curdb);
->  			hdr = bp->b_addr;
->  			xfs_dir3_data_check(dp, bp);
->  			/*
-> @@ -643,7 +495,6 @@ xfs_dir2_leaf_getdents(
->  		ctx->pos = XFS_DIR2_MAX_DATAPTR & 0x7fffffff;
->  	else
->  		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
-> -	kmem_free(map_info);
->  	if (bp)
->  		xfs_trans_brelse(NULL, bp);
->  	return error;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
