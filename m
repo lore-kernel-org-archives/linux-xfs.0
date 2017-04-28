@@ -1,79 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33102 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59866 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1164445AbdDXFCQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Apr 2017 01:02:16 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        id S1754628AbdD1R3D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 28 Apr 2017 13:29:03 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8A80680465
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2017 05:02:15 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-8-80.pek2.redhat.com [10.72.8.80])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A1B907BAEC
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2017 05:02:14 +0000 (UTC)
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH v2 1/2] xfs_io: add missed inode command into man page
-Date: Mon, 24 Apr 2017 13:02:07 +0800
-Message-Id: <1493010128-8153-1-git-send-email-zlang@redhat.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id 517C446D080
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Apr 2017 17:29:03 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3293D96511
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Apr 2017 17:29:03 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH RFC] xfs: support debug mode with assert warnings
+Date: Fri, 28 Apr 2017 13:29:01 -0400
+Message-Id: <1493400541-56113-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-There's an "inode" command in xfs_io, it's used to query physical
-information about an inode. But there's not any information about
-it in xfs_io and other related man pages. So document this command
-in the xfs_io man page now.
-
-Signed-off-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
 
-Hi,
+Hi all,
 
-This V2 follow Eric's suggestion, changed some description, and moved
-the inode command from "FILE I/O" section to "OTHER COMMANDS" section.
+Every now and then I find myself wanting to enable DEBUG mode code
+without having to BUG the kernel every time an assert fails. Currently,
+I end up just commenting out the BUG() call from assfail(). Any thoughts
+on something like the below to update our configuration to support the
+ability to enable debug mode with assert warnings?
 
-Thanks,
-Zorro
+While this appears as a new option in Kconfig, it just reuses the
+existing XFS_WARN definition to convert asserts into warnings regardless
+of whether debug mode is enabled or not. There are probably multiple
+other ways to do something like this (e.g., a Kconfig 'choice' selection
+for various XFS debug modes, dropping the BUG() entirely, etc.).
+Thoughts?
 
- man/man8/xfs_io.8 | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+Brian
 
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 19e1ae4..a7c2a1e 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -923,6 +923,30 @@ verbose output will be printed.
- .RE
- .IP
- .B [NOTE: Not currently operational on Linux.]
-+.RE
-+.PD
-+.TP
-+.BI "inode  [ [ -n ] " number " ] [ -v ]"
-+The inode command queries physical information about an inode. With
-+no arguments, it will return 1 or 0, indicating whether or not if any
-+inode numbers greater than 32 bits are currently in use in the filesystem.
-+If given an inode
-+.I number
-+as an argument, then inode command will return this inode
-+.I number
-+if it's in use, or 0 if not. With
-+.BI \-n " number"
-+, the next used inode number after this
-+.I number
-+will be returned, or 0 if can't find the next one. With
-+.B \-v
-+the command will also report the number of bits (32 or 64) used by the
-+inode
-+.I number
-+printed in the result; if no inode
-+.I number
-+was specified on the commandline, the maximum possible inode number in
-+the system will be printed along with its size.
- .PD
- .TP
- .BI "set_encpolicy [ \-c " mode " ] [ \-n " mode " ] [ \-f " flags " ] [ \-v " version " ] [ " keydesc " ]
+ fs/xfs/Kconfig     |  9 +++++++++
+ fs/xfs/xfs_linux.h | 32 +++++++++++++++++++-------------
+ 2 files changed, 28 insertions(+), 13 deletions(-)
+
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index 35faf12..db6d830 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -96,3 +96,12 @@ config XFS_DEBUG
+ 	  not useful unless you are debugging a particular problem.
+ 
+ 	  Say N unless you are an XFS developer, or you play one on TV.
++
++config XFS_WARN
++	bool "Non-fatal Asserts"
++	default n
++	depends on XFS_FS && XFS_DEBUG
++	help
++	  Say Y here to convert DEBUG mode ASSERT failures into warnings.
++	  Otherwise, ASSERT failures are considered fatal errors and BUG the
++	  kernel.
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 044fb0e..3432863 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -245,37 +245,43 @@ static inline __uint64_t howmany_64(__uint64_t x, __uint32_t y)
+ 	return x;
+ }
+ 
++/*
++ * ASSERT() definitions
++ */
+ #define ASSERT_ALWAYS(expr)	\
+ 	(likely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
+ 
+-#ifdef DEBUG
++#if defined(DEBUG) && !defined(XFS_WARN)
++
+ #define ASSERT(expr)	\
+ 	(likely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
+ 
+-#ifndef STATIC
+-# define STATIC noinline
+-#endif
+-
+-#else	/* !DEBUG */
+-
+-#ifdef XFS_WARN
++#elif defined(XFS_WARN)
+ 
+ #define ASSERT(expr)	\
+ 	(likely(expr) ? (void)0 : asswarn(#expr, __FILE__, __LINE__))
+ 
+-#ifndef STATIC
+-# define STATIC static noinline
++#else
++
++#define ASSERT(expr)	((void)0)
++
+ #endif
+ 
+-#else	/* !DEBUG && !XFS_WARN */
++/*
++ * STATIC definitions
++ */
++#ifdef DEBUG
++
++#ifndef STATIC
++# define STATIC noinline
++#endif
+ 
+-#define ASSERT(expr)	((void)0)
++#else	/* !DEBUG */
+ 
+ #ifndef STATIC
+ # define STATIC static noinline
+ #endif
+ 
+-#endif /* XFS_WARN */
+ #endif /* DEBUG */
+ 
+ #ifdef CONFIG_XFS_RT
 -- 
 2.7.4
 
