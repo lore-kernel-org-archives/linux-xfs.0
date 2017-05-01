@@ -1,166 +1,276 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:35985 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1165128AbdEAMh0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 May 2017 08:37:26 -0400
-Received: by mail-wm0-f52.google.com with SMTP id u65so86989024wmu.1
-        for <linux-xfs@vger.kernel.org>; Mon, 01 May 2017 05:37:26 -0700 (PDT)
-Received: from alyakaslap ([82.166.81.77])
-        by smtp.gmail.com with ESMTPSA id u145sm8737844wmu.1.2017.05.01.05.37.23
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 01 May 2017 05:37:24 -0700 (PDT)
-Message-ID: <49A20782FA8B4C82B0393E5BEF8A8754@alyakaslap>
-From: "Alex Lyakas" <alex@zadarastorage.com>
-Subject: xfs_alloc_ag_vextent_near() takes minutes to complete
-Date: Mon, 1 May 2017 15:37:23 +0300
+Received: from mx1.redhat.com ([209.132.183.28]:35396 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750748AbdEAScq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 May 2017 14:32:46 -0400
+Date: Mon, 1 May 2017 14:32:43 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: refactor dir2 leaf readahead shadow buffer
+ cleverness
+Message-ID: <20170501183240.GA3775@bfoster.bfoster>
+References: <20170428194652.GG22884@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        format=flowed;
-        charset="iso-8859-1";
-        reply-type=response
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170428194652.GG22884@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-[resending to proper list]
+On Fri, Apr 28, 2017 at 12:46:52PM -0700, Darrick J. Wong wrote:
+> Currently, the dir2 leaf block getdents function uses a complex state
+> tracking mechanism to create a shadow copy of the block mappings and
+> then uses the shadow copy to schedule readahead.  Since the read and
+> readahead functions are perfectly capable of reading the mappings
+> themselves, we can tear all that out in favor of a simpler function that
+> simply keeps pushing the readahead window further out.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v3: use sliding window to constrain the amount of readahead
+> v2: fix readahead of more than ra_want
+> ---
 
-Greetings XFS community,
+Thanks for the updates. This looks much more simple and seems true to
+the current readahead behavior. The code also looks fine to me (one bit
+of whitespace damage noted below).
 
-We have an XFS instance mounted as "sync"
-(rw,sync,noatime,wsync,attr2,discard,inode64,prjquota 0 0). This instance is
-exposed via nfsd. Size is about 50TB.
+That aside, have you happened to test this against a huge/ugly directory
+to verify it works as expected? Note that I don't think in depth
+performance analysis is required. Verification of any kind of dir that
+is known to benefit from readahead is probably sufficient IMO. Perhaps
+dm-delay with a small enough latency to allow us to measure the effect
+of readahead could help us here.
 
-root@0000000f:/home/alex # xfs_info /export/share1
-meta-data=/dev/dm-64             isize=256    agcount=49, agsize=268435455
-blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=13107200000, imaxpct=5
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=521728, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+>  fs/xfs/xfs_dir2_readdir.c |  316 ++++++++++++---------------------------------
+>  1 file changed, 82 insertions(+), 234 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+> index 20b7a5c..d05c1ec 100644
+> --- a/fs/xfs/xfs_dir2_readdir.c
+> +++ b/fs/xfs/xfs_dir2_readdir.c
+> @@ -243,214 +243,98 @@ xfs_dir2_block_getdents(
+>  	return 0;
+>  }
+>  
+...
+>  	/*
+> -	 * Do we need more readahead?
+> -	 * Each loop tries to process 1 full dir blk; last may be partial.
+> +	 * Start readahead for the next bufsize's worth of dir data blocks.
+> +	 * We may have already issued readahead for some of that range;
+> +	 * ra_blk tracks the last block we tried to read(ahead).
+>  	 */
+> +	ra_want = howmany(bufsize + geo->blksize, (1 << geo->fsblog));
+> +	if (*ra_blk >= last_da)
+> +		goto out;
+> +	else if (*ra_blk == 0)
+> +		*ra_blk = map.br_startoff;
+> +	next_ra = map.br_startoff + geo->fsbcount;
+> +	if (next_ra >= last_da)
+> +		goto out_no_ra;
+> +	found = xfs_iext_lookup_extent(dp, ifp, next_ra, &idx, &map);
+> +	if (!found || map.br_startoff >= last_da)
+> +		goto out_no_ra;
+> +	xfs_trim_extent(&map, next_ra, last_da - next_ra);
+> + 
 
-We observe the following issue:
+^ trailing space.
 
-nfsd thread comes into xfs_file_write_iter()=>xfs_file_buffered_aio_write(),
-which copies the data into page cache. Then xfs_file_write_iter() calls
-generic_write_sync(), which ends up working for minutes in stack like [1].
-It seems to be scanning the free space btrees, calling xfs_btree_increment()
-and sometimes xfs_btree_decrement().
+Brian
 
-This whole operation is performed while i_lock is exclusively locked by
-xfs_iomap_write_allocate(), before calling xfs_bmapi_write(). So i_lock is
-being held for minutes.
-
-Meanwhile, another nfsd thread calls into the same inode, and  reaches
-xfs_file_buffered_aio_write(), and calls xfs_rw_ilock(XFS_IOLOCK_EXCL),
-which locks both i_mutex and i_iolock. Now this thread calls
-xfs_file_aio_write_checks() which wants to grab the i_lock in stack like
-[2]. So now all three locks (i_mutex, i_lock and i_iolock) are taken.
-
-Now another nfsd thread calling into xfs_file_buffered_aio_write() will get
-stuck waiting for i_mutex. Or any other thread that needs one of these locks
-will get stuck. This in some cases triggers hung-task panic.
-
-After allocation completes, I look at the inode in question via xfs_db, and
-I see that this file is not heavily fragmented. It has few 10s of extents
-only. So file fragmentation is not an issue.
-
-Questions:
-1) The thread in [1] does not seem to be waiting for IO. It wants to lock a
-metadata buffer, which is done before spawning a IO on it (to my
-understanding). What is it waiting for?
-
-2) Any recommendations what to do in such situation? Will running xfs_fsr
-help? (although the files in question are not heavily fragmented)
-
-Kernel version is 3.18.19.
-
-BTW, in the code I see the following comment:
-/*
-* Locking primitives for read and write IO paths to ensure we consistently
-use
-* and order the inode->i_mutex, ip->i_lock and ip->i_iolock.
-*/
-
-But the above analysis clearly shows that this locking order is violated.
-xfs_file_buffered_aio_write()  grabs the i_mutex and the i_iolock. And only
-then it wants to grab the i_lock (indirectly). Is the comment wrong or is
-the code wrong? I looked at kernel 4.10, and it seems to have the same
-discrepancy between the comment and the code.
-
-Thanks,
-Alex.
-
-
-
-
-[1]
-[<ffffffff810b90f1>] down+0x41/0x50
-[<ffffffffc0d79090>] xfs_buf_lock+0x40/0x120 [xfs]
-[<ffffffffc0d792cd>] _xfs_buf_find+0x15d/0x2e0 [xfs]
-[<ffffffffc0d7947a>] xfs_buf_get_map+0x2a/0x210 [xfs]
-[<ffffffffc0d7a1dc>] xfs_buf_read_map+0x2c/0x190 [xfs]
-[<ffffffffc0dac621>] xfs_trans_read_buf_map+0x261/0x490 [xfs]
-[<ffffffffc0d50a89>] xfs_btree_read_buf_block.constprop.28+0x69/0xa0 [xfs]
-[<ffffffffc0d5340e>] xfs_btree_increment+0x1ee/0x2e0 [xfs]
-[<ffffffffc0d384ea>] xfs_alloc_ag_vextent_near+0x58a/0x1e20 [xfs]
-[<ffffffffc0d39ea5>] xfs_alloc_ag_vextent+0xd5/0x120 [xfs]
-[<ffffffffc0d3b65f>] xfs_alloc_vextent+0x48f/0x690 [xfs]
-[<ffffffffc0d4c4ff>] xfs_bmap_btalloc+0x39f/0x700 [xfs]
-[<ffffffffc0d4c884>] xfs_bmap_alloc+0x24/0x40 [xfs]
-[<ffffffffc0d4d601>] xfs_bmapi_write+0x811/0xe00 [xfs]
-[<ffffffffc0d8b0c5>] xfs_iomap_write_allocate+0x155/0x4f0 [xfs]
-[<ffffffffc0d7159e>] xfs_map_blocks+0x1de/0x250 [xfs]
-[<ffffffffc0d72e15>] xfs_vm_writepage+0x1a5/0x630 [xfs]
-[<ffffffff8117c377>] __writepage+0x17/0x50
-[<ffffffff8117ccb8>] write_cache_pages+0x238/0x4c0
-[<ffffffff8117cf80>] generic_writepages+0x40/0x60
-[<ffffffffc0d71c93>] xfs_vm_writepages+0x43/0x50 [xfs]
-[<ffffffff8117e7ae>] do_writepages+0x1e/0x40
-[<ffffffff81173429>] __filemap_fdatawrite_range+0x59/0x60
-[<ffffffff8117352a>] filemap_write_and_wait_range+0x2a/0x70
-[<ffffffffc0d80af7>] xfs_file_fsync+0x57/0x220 [xfs]
-[<ffffffff8121823b>] vfs_fsync_range+0x1b/0x30
-[<ffffffffc0d8238b>] xfs_file_write_iter+0xeb/0x130 [xfs]
-[<ffffffff811e7545>] do_iter_readv_writev+0x65/0xa0
-[<ffffffff811e8bf9>] do_readv_writev+0xc9/0x280
-[<ffffffff811e8e39>] vfs_writev+0x39/0x50
-[<ffffffffc0306fb7>] nfsd_vfs_write.isra.14+0x97/0x350 [nfsd]
-[<ffffffffc030a8ce>] nfsd_write+0x8e/0x100 [nfsd]
-[<ffffffffc0315411>] nfsd4_write+0x1c1/0x220 [nfsd]
-[<ffffffffc0316edc>] nfsd4_proc_compound+0x50c/0x850 [nfsd]
-[<ffffffffc0302ed3>] nfsd_dispatch+0xd3/0x240 [nfsd]
-[<ffffffffc0263dc0>] svc_process_common+0x440/0x6d0 [sunrpc]
-[<ffffffffc0264157>] svc_process+0x107/0x170 [sunrpc]
-[<ffffffffc0302837>] nfsd+0x127/0x1a0 [nfsd]
-[<ffffffff810911b9>] kthread+0xc9/0xe0
-[<ffffffff81717918>] ret_from_fork+0x58/0x90
-[<ffffffffffffffff>] 0xffffffffffffffff
-
-[2]
-[<ffffffffc0c80db1>] xfs_ilock+0x321/0x330 [xfs]
-[<ffffffffc0c7e5dd>] xfs_vn_update_time+0x6d/0x1b0 [xfs]
-[<ffffffff81202c15>] update_time+0x25/0xc0
-[<ffffffff810d7c76>] ? current_fs_time+0x16/0x60
-[<ffffffff81202e70>] file_update_time+0x80/0xd0
-[<ffffffffc0c74e60>] xfs_file_aio_write_checks+0x140/0x1a0 [xfs]
-[<ffffffffc0c74fac>] xfs_file_buffered_aio_write.isra.11+0xec/0x390 [xfs]
-[<ffffffff811e7430>] ? new_sync_read+0xb0/0xb0
-[<ffffffffc0c752d3>] xfs_file_write_iter+0x83/0x130 [xfs]
-[<ffffffff811e7545>] do_iter_readv_writev+0x65/0xa0
-[<ffffffff811e8bf9>] do_readv_writev+0xc9/0x280
-[<ffffffffc0c75250>] ? xfs_file_buffered_aio_write.isra.11+0x390/0x390 [xfs]
-[<ffffffffc0c75250>] ? xfs_file_buffered_aio_write.isra.11+0x390/0x390 [xfs]
-[<ffffffff81341e43>] ? apparmor_cred_prepare+0x33/0x50
-[<ffffffff811e8e39>] vfs_writev+0x39/0x50
-[<ffffffffc0306fb7>] nfsd_vfs_write.isra.14+0x97/0x350 [nfsd]
-[<ffffffffc030a8ce>] nfsd_write+0x8e/0x100 [nfsd]
-[<ffffffffc0315411>] nfsd4_write+0x1c1/0x220 [nfsd]
-[<ffffffffc0316edc>] nfsd4_proc_compound+0x50c/0x850 [nfsd]
-[<ffffffffc0302ed3>] nfsd_dispatch+0xd3/0x240 [nfsd]
-
+> +	/* Start ra for each dir (not fs) block that has a mapping. */
+>  	blk_start_plug(&plug);
+> -	for (mip->ra_index = mip->ra_offset = i = 0;
+> -	     mip->ra_want > mip->ra_current && i < mip->map_blocks;
+> -	     i += geo->fsbcount) {
+> -		ASSERT(mip->ra_index < mip->map_valid);
+> -		/*
+> -		 * Read-ahead a contiguous directory block.
+> -		 */
+> -		if (i > mip->ra_current &&
+> -		    (map[mip->ra_index].br_blockcount - mip->ra_offset) >=
+> -		    geo->fsbcount) {
+> -			xfs_dir3_data_readahead(dp,
+> -				map[mip->ra_index].br_startoff + mip->ra_offset,
+> -				XFS_FSB_TO_DADDR(dp->i_mount,
+> -					map[mip->ra_index].br_startblock +
+> -							mip->ra_offset));
+> -			mip->ra_current = i;
+> -		}
+> -
+> -		/*
+> -		 * Read-ahead a non-contiguous directory block.  This doesn't
+> -		 * use our mapping, but this is a very rare case.
+> -		 */
+> -		else if (i > mip->ra_current) {
+> -			xfs_dir3_data_readahead(dp,
+> -					map[mip->ra_index].br_startoff +
+> -							mip->ra_offset, -1);
+> -			mip->ra_current = i;
+> -		}
+> -
+> -		/*
+> -		 * Advance offset through the mapping table, processing a full
+> -		 * dir block even if it is fragmented into several extents.
+> -		 * But stop if we have consumed all valid mappings, even if
+> -		 * it's not yet a full directory block.
+> -		 */
+> -		for (j = 0;
+> -		     j < geo->fsbcount && mip->ra_index < mip->map_valid;
+> -		     j += length ) {
+> -			/*
+> -			 * The rest of this extent but not more than a dir
+> -			 * block.
+> -			 */
+> -			length = min_t(int, geo->fsbcount - j,
+> -					map[mip->ra_index].br_blockcount -
+> -							mip->ra_offset);
+> -			mip->ra_offset += length;
+> -
+> -			/*
+> -			 * Advance to the next mapping if this one is used up.
+> -			 */
+> -			if (mip->ra_offset == map[mip->ra_index].br_blockcount) {
+> -				mip->ra_offset = 0;
+> -				mip->ra_index++;
+> +	while (ra_want > 0) {
+> +		next_ra = roundup((xfs_dablk_t)map.br_startoff, geo->fsbcount);
+> +		while (ra_want > 0 &&
+> +		       next_ra < map.br_startoff + map.br_blockcount) {
+> +			if (next_ra >= last_da) {
+> +				*ra_blk = last_da;
+> +				break;
+> +			} else if (next_ra > *ra_blk) {
+> +				xfs_dir3_data_readahead(dp, next_ra, -2);
+> +				*ra_blk = next_ra;
+>  			}
+> +			ra_want -= geo->fsbcount;
+> +			next_ra += geo->fsbcount;
+> +		}
+> +		found = xfs_iext_get_extent(ifp, ++idx, &map);
+> +		if (!found) {
+> +			*ra_blk = last_da;
+> +			break;
+>  		}
+>  	}
+>  	blk_finish_plug(&plug);
+> @@ -458,6 +342,9 @@ xfs_dir2_leaf_readbuf(
+>  out:
+>  	*bpp = bp;
+>  	return error;
+> +out_no_ra:
+> +	*ra_blk = last_da;
+> +	goto out;
+>  }
+>  
+>  /*
+> @@ -475,14 +362,14 @@ xfs_dir2_leaf_getdents(
+>  	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+>  	xfs_dir2_data_entry_t	*dep;		/* data entry */
+>  	xfs_dir2_data_unused_t	*dup;		/* unused entry */
+> -	int			error = 0;	/* error return value */
+> -	int			length;		/* temporary length value */
+> -	int			byteoff;	/* offset in current block */
+> -	xfs_dir2_off_t		curoff;		/* current overall offset */
+> -	xfs_dir2_off_t		newoff;		/* new curoff after new blk */
+>  	char			*ptr = NULL;	/* pointer to current data */
+> -	struct xfs_dir2_leaf_map_info *map_info;
+>  	struct xfs_da_geometry	*geo = args->geo;
+> +	xfs_dablk_t		rablk = 0;	/* current readahead block */
+> +	xfs_dir2_off_t		curoff;		/* current overall offset */
+> +	int			length;		/* temporary length value */
+> +	int			byteoff;	/* offset in current block */
+> +	int			lock_mode;
+> +	int			error = 0;	/* error return value */
+>  
+>  	/*
+>  	 * If the offset is at or past the largest allowed value,
+> @@ -492,30 +379,12 @@ xfs_dir2_leaf_getdents(
+>  		return 0;
+>  
+>  	/*
+> -	 * Set up to bmap a number of blocks based on the caller's
+> -	 * buffer size, the directory block size, and the filesystem
+> -	 * block size.
+> -	 */
+> -	length = howmany(bufsize + geo->blksize, (1 << geo->fsblog));
+> -	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
+> -				(length * sizeof(struct xfs_bmbt_irec)),
+> -			       KM_SLEEP | KM_NOFS);
+> -	map_info->map_size = length;
+> -
+> -	/*
+>  	 * Inside the loop we keep the main offset value as a byte offset
+>  	 * in the directory file.
+>  	 */
+>  	curoff = xfs_dir2_dataptr_to_byte(ctx->pos);
+>  
+>  	/*
+> -	 * Force this conversion through db so we truncate the offset
+> -	 * down to get the start of the data block.
+> -	 */
+> -	map_info->map_off = xfs_dir2_db_to_da(geo,
+> -					      xfs_dir2_byte_to_db(geo, curoff));
+> -
+> -	/*
+>  	 * Loop over directory entries until we reach the end offset.
+>  	 * Get more blocks and readahead as necessary.
+>  	 */
+> @@ -527,38 +396,18 @@ xfs_dir2_leaf_getdents(
+>  		 * current buffer, need to get another one.
+>  		 */
+>  		if (!bp || ptr >= (char *)bp->b_addr + geo->blksize) {
+> -			int	lock_mode;
+> -			bool	trim_map = false;
+> -
+>  			if (bp) {
+> -				xfs_trans_brelse(NULL, bp);
+> +				xfs_trans_brelse(args->trans, bp);
+>  				bp = NULL;
+> -				trim_map = true;
+>  			}
+>  
+>  			lock_mode = xfs_ilock_data_map_shared(dp);
+> -			error = xfs_dir2_leaf_readbuf(args, bufsize, map_info,
+> -						      &curoff, &bp, trim_map);
+> +			error = xfs_dir2_leaf_readbuf(args, bufsize, &curoff,
+> +					&rablk, &bp);
+>  			xfs_iunlock(dp, lock_mode);
+> -			if (error || !map_info->map_valid)
+> +			if (error || !bp)
+>  				break;
+>  
+> -			/*
+> -			 * Having done a read, we need to set a new offset.
+> -			 */
+> -			newoff = xfs_dir2_db_off_to_byte(geo,
+> -							 map_info->curdb, 0);
+> -			/*
+> -			 * Start of the current block.
+> -			 */
+> -			if (curoff < newoff)
+> -				curoff = newoff;
+> -			/*
+> -			 * Make sure we're in the right block.
+> -			 */
+> -			else if (curoff > newoff)
+> -				ASSERT(xfs_dir2_byte_to_db(geo, curoff) ==
+> -				       map_info->curdb);
+>  			hdr = bp->b_addr;
+>  			xfs_dir3_data_check(dp, bp);
+>  			/*
+> @@ -643,7 +492,6 @@ xfs_dir2_leaf_getdents(
+>  		ctx->pos = XFS_DIR2_MAX_DATAPTR & 0x7fffffff;
+>  	else
+>  		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
+> -	kmem_free(map_info);
+>  	if (bp)
+>  		xfs_trans_brelse(NULL, bp);
+>  	return error;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
