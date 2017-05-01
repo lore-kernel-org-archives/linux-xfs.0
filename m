@@ -1,288 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41836 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753124AbdEAVvF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 May 2017 17:51:05 -0400
-Date: Mon, 1 May 2017 14:50:18 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: refactor dir2 leaf readahead shadow buffer
- cleverness
-Message-ID: <20170501215018.GA5975@birch.djwong.org>
-References: <20170428194652.GG22884@birch.djwong.org>
- <20170501183240.GA3775@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:54706 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752777AbdEANM3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 May 2017 09:12:29 -0400
+Date: Mon, 1 May 2017 09:12:25 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: xlog_write: reservation ran out
+Message-ID: <20170501131222.GA2109@bfoster.bfoster>
+References: <CAF1ivSZeYhnzh6CPZViYUNFXdm33hhTA_CzP7V745QociEEnKg@mail.gmail.com>
+ <CAF1ivSbjdixqDo663wvAEkzRk-ctOX+y5UYxq4UdPA-=JVufyw@mail.gmail.com>
+ <CAF1ivSbEfhTYxcBx1dafK9TD3VdeXbJrNMzWJmXY8kyU0ibkUw@mail.gmail.com>
+ <8accf9d5-b2e4-c82e-fa47-3c5bc2ea35b1@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170501183240.GA3775@bfoster.bfoster>
+In-Reply-To: <8accf9d5-b2e4-c82e-fa47-3c5bc2ea35b1@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Ming Lin <mlin@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Ceph Development <ceph-devel@vger.kernel.org>, "LIU, Fei" <james.liu@alibaba-inc.com>, xiongwei.jiang@alibaba-inc.com, boqian.zy@alibaba-inc.com, sheng.qiu@alibaba-inc.com, Sage Weil <sweil@redhat.com>
 
-On Mon, May 01, 2017 at 02:32:43PM -0400, Brian Foster wrote:
-> On Fri, Apr 28, 2017 at 12:46:52PM -0700, Darrick J. Wong wrote:
-> > Currently, the dir2 leaf block getdents function uses a complex state
-> > tracking mechanism to create a shadow copy of the block mappings and
-> > then uses the shadow copy to schedule readahead.  Since the read and
-> > readahead functions are perfectly capable of reading the mappings
-> > themselves, we can tear all that out in favor of a simpler function that
-> > simply keeps pushing the readahead window further out.
+On Sun, Apr 30, 2017 at 11:10:15PM -0700, Ming Lin wrote:
+> 
+> On 4/28/2017 1:56 PM, Ming Lin wrote:
+> > I'm new to xfs code.
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> > v3: use sliding window to constrain the amount of readahead
-> > v2: fix readahead of more than ra_want
-> > ---
-> 
-> Thanks for the updates. This looks much more simple and seems true to
-> the current readahead behavior. The code also looks fine to me (one bit
-> of whitespace damage noted below).
-> 
-> That aside, have you happened to test this against a huge/ugly directory
-> to verify it works as expected? Note that I don't think in depth
-> performance analysis is required. Verification of any kind of dir that
-> is known to benefit from readahead is probably sufficient IMO. Perhaps
-> dm-delay with a small enough latency to allow us to measure the effect
-> of readahead could help us here.
-
-Yeah, I used xfs/349 to generate a filesystem containing a directory
-with a freeindex block, then ls'd the entire directory to see how long
-the getdents calls took.  The readhead calls were nearly identical with
-similar runtimes.
-
-> >  fs/xfs/xfs_dir2_readdir.c |  316 ++++++++++++---------------------------------
-> >  1 file changed, 82 insertions(+), 234 deletions(-)
+> > Search  XFS_TRANS_INACTIVE and the usage is like below,
 > > 
-> > diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> > index 20b7a5c..d05c1ec 100644
-> > --- a/fs/xfs/xfs_dir2_readdir.c
-> > +++ b/fs/xfs/xfs_dir2_readdir.c
-> > @@ -243,214 +243,98 @@ xfs_dir2_block_getdents(
-> >  	return 0;
-> >  }
-> >  
-> ...
-> >  	/*
-> > -	 * Do we need more readahead?
-> > -	 * Each loop tries to process 1 full dir blk; last may be partial.
-> > +	 * Start readahead for the next bufsize's worth of dir data blocks.
-> > +	 * We may have already issued readahead for some of that range;
-> > +	 * ra_blk tracks the last block we tried to read(ahead).
-> >  	 */
-> > +	ra_want = howmany(bufsize + geo->blksize, (1 << geo->fsblog));
-> > +	if (*ra_blk >= last_da)
-> > +		goto out;
-> > +	else if (*ra_blk == 0)
-> > +		*ra_blk = map.br_startoff;
-> > +	next_ra = map.br_startoff + geo->fsbcount;
-> > +	if (next_ra >= last_da)
-> > +		goto out_no_ra;
-> > +	found = xfs_iext_lookup_extent(dp, ifp, next_ra, &idx, &map);
-> > +	if (!found || map.br_startoff >= last_da)
-> > +		goto out_no_ra;
-> > +	xfs_trim_extent(&map, next_ra, last_da - next_ra);
-> > + 
+> > xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+> > xfs_trans_reserve(tp, &M_RES(mp)->tr_itruncate, 0, 0);
+> > 
+> > xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+> > xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, XFS_IFREE_SPACE_RES(mp), 0);
+> > 
+> > seems tr_remove is not related.
+> > I'll just try to enlarge the reservation for tr_itruncate and tr_ifree.
 > 
-> ^ trailing space.
-
-(I don't see it...?)
-
---D
-
+> Now things are a little bit more clear. I tried below debug patch.
+> The t_decrease[] array was used to track where the space was used.
 > 
-> Brian
+>  fs/xfs/libxfs/xfs_trans_resv.c |  4 ++--
+>  fs/xfs/xfs_log.c               | 23 ++++++++++++++++++++---
+>  fs/xfs/xfs_log_cil.c           |  8 ++++++++
+>  fs/xfs/xfs_log_priv.h          |  3 +++
+>  fs/xfs/xfs_super.c             |  1 +
+>  5 files changed, 34 insertions(+), 5 deletions(-)
 > 
-> > +	/* Start ra for each dir (not fs) block that has a mapping. */
-> >  	blk_start_plug(&plug);
-> > -	for (mip->ra_index = mip->ra_offset = i = 0;
-> > -	     mip->ra_want > mip->ra_current && i < mip->map_blocks;
-> > -	     i += geo->fsbcount) {
-> > -		ASSERT(mip->ra_index < mip->map_valid);
-> > -		/*
-> > -		 * Read-ahead a contiguous directory block.
-> > -		 */
-> > -		if (i > mip->ra_current &&
-> > -		    (map[mip->ra_index].br_blockcount - mip->ra_offset) >=
-> > -		    geo->fsbcount) {
-> > -			xfs_dir3_data_readahead(dp,
-> > -				map[mip->ra_index].br_startoff + mip->ra_offset,
-> > -				XFS_FSB_TO_DADDR(dp->i_mount,
-> > -					map[mip->ra_index].br_startblock +
-> > -							mip->ra_offset));
-> > -			mip->ra_current = i;
-> > -		}
-> > -
-> > -		/*
-> > -		 * Read-ahead a non-contiguous directory block.  This doesn't
-> > -		 * use our mapping, but this is a very rare case.
-> > -		 */
-> > -		else if (i > mip->ra_current) {
-> > -			xfs_dir3_data_readahead(dp,
-> > -					map[mip->ra_index].br_startoff +
-> > -							mip->ra_offset, -1);
-> > -			mip->ra_current = i;
-> > -		}
-> > -
-> > -		/*
-> > -		 * Advance offset through the mapping table, processing a full
-> > -		 * dir block even if it is fragmented into several extents.
-> > -		 * But stop if we have consumed all valid mappings, even if
-> > -		 * it's not yet a full directory block.
-> > -		 */
-> > -		for (j = 0;
-> > -		     j < geo->fsbcount && mip->ra_index < mip->map_valid;
-> > -		     j += length ) {
-> > -			/*
-> > -			 * The rest of this extent but not more than a dir
-> > -			 * block.
-> > -			 */
-> > -			length = min_t(int, geo->fsbcount - j,
-> > -					map[mip->ra_index].br_blockcount -
-> > -							mip->ra_offset);
-> > -			mip->ra_offset += length;
-> > -
-> > -			/*
-> > -			 * Advance to the next mapping if this one is used up.
-> > -			 */
-> > -			if (mip->ra_offset == map[mip->ra_index].br_blockcount) {
-> > -				mip->ra_offset = 0;
-> > -				mip->ra_index++;
-> > +	while (ra_want > 0) {
-> > +		next_ra = roundup((xfs_dablk_t)map.br_startoff, geo->fsbcount);
-> > +		while (ra_want > 0 &&
-> > +		       next_ra < map.br_startoff + map.br_blockcount) {
-> > +			if (next_ra >= last_da) {
-> > +				*ra_blk = last_da;
-> > +				break;
-> > +			} else if (next_ra > *ra_blk) {
-> > +				xfs_dir3_data_readahead(dp, next_ra, -2);
-> > +				*ra_blk = next_ra;
-> >  			}
-> > +			ra_want -= geo->fsbcount;
-> > +			next_ra += geo->fsbcount;
-> > +		}
-> > +		found = xfs_iext_get_extent(ifp, ++idx, &map);
-> > +		if (!found) {
-> > +			*ra_blk = last_da;
-> > +			break;
-> >  		}
-> >  	}
-> >  	blk_finish_plug(&plug);
-> > @@ -458,6 +342,9 @@ xfs_dir2_leaf_readbuf(
-> >  out:
-> >  	*bpp = bp;
-> >  	return error;
-> > +out_no_ra:
-> > +	*ra_blk = last_da;
-> > +	goto out;
-> >  }
-> >  
-> >  /*
-> > @@ -475,14 +362,14 @@ xfs_dir2_leaf_getdents(
-> >  	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
-> >  	xfs_dir2_data_entry_t	*dep;		/* data entry */
-> >  	xfs_dir2_data_unused_t	*dup;		/* unused entry */
-> > -	int			error = 0;	/* error return value */
-> > -	int			length;		/* temporary length value */
-> > -	int			byteoff;	/* offset in current block */
-> > -	xfs_dir2_off_t		curoff;		/* current overall offset */
-> > -	xfs_dir2_off_t		newoff;		/* new curoff after new blk */
-> >  	char			*ptr = NULL;	/* pointer to current data */
-> > -	struct xfs_dir2_leaf_map_info *map_info;
-> >  	struct xfs_da_geometry	*geo = args->geo;
-> > +	xfs_dablk_t		rablk = 0;	/* current readahead block */
-> > +	xfs_dir2_off_t		curoff;		/* current overall offset */
-> > +	int			length;		/* temporary length value */
-> > +	int			byteoff;	/* offset in current block */
-> > +	int			lock_mode;
-> > +	int			error = 0;	/* error return value */
-> >  
-> >  	/*
-> >  	 * If the offset is at or past the largest allowed value,
-> > @@ -492,30 +379,12 @@ xfs_dir2_leaf_getdents(
-> >  		return 0;
-> >  
-> >  	/*
-> > -	 * Set up to bmap a number of blocks based on the caller's
-> > -	 * buffer size, the directory block size, and the filesystem
-> > -	 * block size.
-> > -	 */
-> > -	length = howmany(bufsize + geo->blksize, (1 << geo->fsblog));
-> > -	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
-> > -				(length * sizeof(struct xfs_bmbt_irec)),
-> > -			       KM_SLEEP | KM_NOFS);
-> > -	map_info->map_size = length;
-> > -
-> > -	/*
-> >  	 * Inside the loop we keep the main offset value as a byte offset
-> >  	 * in the directory file.
-> >  	 */
-> >  	curoff = xfs_dir2_dataptr_to_byte(ctx->pos);
-> >  
-> >  	/*
-> > -	 * Force this conversion through db so we truncate the offset
-> > -	 * down to get the start of the data block.
-> > -	 */
-> > -	map_info->map_off = xfs_dir2_db_to_da(geo,
-> > -					      xfs_dir2_byte_to_db(geo, curoff));
-> > -
-> > -	/*
-> >  	 * Loop over directory entries until we reach the end offset.
-> >  	 * Get more blocks and readahead as necessary.
-> >  	 */
-> > @@ -527,38 +396,18 @@ xfs_dir2_leaf_getdents(
-> >  		 * current buffer, need to get another one.
-> >  		 */
-> >  		if (!bp || ptr >= (char *)bp->b_addr + geo->blksize) {
-> > -			int	lock_mode;
-> > -			bool	trim_map = false;
-> > -
-> >  			if (bp) {
-> > -				xfs_trans_brelse(NULL, bp);
-> > +				xfs_trans_brelse(args->trans, bp);
-> >  				bp = NULL;
-> > -				trim_map = true;
-> >  			}
-> >  
-> >  			lock_mode = xfs_ilock_data_map_shared(dp);
-> > -			error = xfs_dir2_leaf_readbuf(args, bufsize, map_info,
-> > -						      &curoff, &bp, trim_map);
-> > +			error = xfs_dir2_leaf_readbuf(args, bufsize, &curoff,
-> > +					&rablk, &bp);
-> >  			xfs_iunlock(dp, lock_mode);
-> > -			if (error || !map_info->map_valid)
-> > +			if (error || !bp)
-> >  				break;
-> >  
-> > -			/*
-> > -			 * Having done a read, we need to set a new offset.
-> > -			 */
-> > -			newoff = xfs_dir2_db_off_to_byte(geo,
-> > -							 map_info->curdb, 0);
-> > -			/*
-> > -			 * Start of the current block.
-> > -			 */
-> > -			if (curoff < newoff)
-> > -				curoff = newoff;
-> > -			/*
-> > -			 * Make sure we're in the right block.
-> > -			 */
-> > -			else if (curoff > newoff)
-> > -				ASSERT(xfs_dir2_byte_to_db(geo, curoff) ==
-> > -				       map_info->curdb);
-> >  			hdr = bp->b_addr;
-> >  			xfs_dir3_data_check(dp, bp);
-> >  			/*
-> > @@ -643,7 +492,6 @@ xfs_dir2_leaf_getdents(
-> >  		ctx->pos = XFS_DIR2_MAX_DATAPTR & 0x7fffffff;
-> >  	else
-> >  		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
-> > -	kmem_free(map_info);
-> >  	if (bp)
-> >  		xfs_trans_brelse(NULL, bp);
-> >  	return error;
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+...
+>  277 static void
+>  278 xlog_cil_insert_items(
+>  279         struct xlog             *log,
+>  280         struct xfs_trans        *tp)
+>  281 {
+> 
+> ....
+> 
+>  340         /* do we need space for more log record headers? */
+>  341         iclog_space = log->l_iclog_size - log->l_iclog_hsize;
+>  342         if (len > 0 && (ctx->space_used / iclog_space !=
+>  343                                 (ctx->space_used + len) / iclog_space)) {
+>  344                 int hdrs;
+>  345
+>  346                 hdrs = (len + iclog_space - 1) / iclog_space;
+>  347                 /* need to take into account split region headers, too */
+>  348                 hdrs *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
+>  349                 ctx->ticket->t_unit_res += hdrs;
+>  350                 ctx->ticket->t_curr_res += hdrs;
+>  351                 tp->t_ticket->t_curr_res -= hdrs;
+>  352                 tp->t_ticket->t_decrease[6] = hdrs;
+>  353                 ASSERT(tp->t_ticket->t_curr_res >= len);
+>  354         }
+>  355         tp->t_ticket->t_curr_res -= len;
+>  356         tp->t_ticket->t_decrease[7] = len;
+>  357         ctx->space_used += len;
+>  358
+>  359         spin_unlock(&cil->xc_cil_lock);
+>  360 }
+> 
+> Any idea why it used so many reservation space here?
+> 
+
+Nothing really rings a bell for me atm. Perhaps others might have ideas.
+That does appear to be a sizable overrun, as opposed to a few bytes that
+could more likely be attributed to rounding, header accounting issues or
+something of that nature.
+
+The debug code doesn't really tell us much beyond that the transaction
+required logging more data than it had reserved. In the snippet above,
+len essentially refers to a byte total of what is logged across all of
+the various items (inode, buffers, etc.) in the transaction.
+
+I'm assuming you can reproduce this often enough if you can capture
+debug information. Have you tried to reproduce the actual transaction
+overrun without using Ceph (i.e., create the fs using ceph as normal,
+but run the object removal directly)? If you can do that, you could
+create an xfs_metadump of the populated fs, run a more simple reproducer
+on that and that might make it easier to 1.) try newer distro and/or
+upstream kernels to try and isolate where the problem exists and/or 2.)
+share it so we can try to reproduce and narrow down where the overrun
+seems to occur (particularly if this hasn't already been fixed
+somewhere).
+
+Brian
+
+> Thanks,
+> Ming
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
