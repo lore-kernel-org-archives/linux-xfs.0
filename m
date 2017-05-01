@@ -1,299 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51786 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2999562AbdEAGKu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 May 2017 02:10:50 -0400
-Subject: Re: xlog_write: reservation ran out
-From: Ming Lin <mlin@kernel.org>
-References: <CAF1ivSZeYhnzh6CPZViYUNFXdm33hhTA_CzP7V745QociEEnKg@mail.gmail.com>
- <CAF1ivSbjdixqDo663wvAEkzRk-ctOX+y5UYxq4UdPA-=JVufyw@mail.gmail.com>
- <CAF1ivSbEfhTYxcBx1dafK9TD3VdeXbJrNMzWJmXY8kyU0ibkUw@mail.gmail.com>
-Message-ID: <8accf9d5-b2e4-c82e-fa47-3c5bc2ea35b1@kernel.org>
-Date: Sun, 30 Apr 2017 23:10:15 -0700
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:35985 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1165128AbdEAMh0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 May 2017 08:37:26 -0400
+Received: by mail-wm0-f52.google.com with SMTP id u65so86989024wmu.1
+        for <linux-xfs@vger.kernel.org>; Mon, 01 May 2017 05:37:26 -0700 (PDT)
+Received: from alyakaslap ([82.166.81.77])
+        by smtp.gmail.com with ESMTPSA id u145sm8737844wmu.1.2017.05.01.05.37.23
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 01 May 2017 05:37:24 -0700 (PDT)
+Message-ID: <49A20782FA8B4C82B0393E5BEF8A8754@alyakaslap>
+From: "Alex Lyakas" <alex@zadarastorage.com>
+Subject: xfs_alloc_ag_vextent_near() takes minutes to complete
+Date: Mon, 1 May 2017 15:37:23 +0300
 MIME-Version: 1.0
-In-Reply-To: <CAF1ivSbEfhTYxcBx1dafK9TD3VdeXbJrNMzWJmXY8kyU0ibkUw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain;
+        format=flowed;
+        charset="iso-8859-1";
+        reply-type=response
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Ceph Development <ceph-devel@vger.kernel.org>, "LIU, Fei" <james.liu@alibaba-inc.com>, xiongwei.jiang@alibaba-inc.com, boqian.zy@alibaba-inc.com, sheng.qiu@alibaba-inc.com, Sage Weil <sweil@redhat.com>
+To: linux-xfs@vger.kernel.org
 
+[resending to proper list]
 
-On 4/28/2017 1:56 PM, Ming Lin wrote:
-> I'm new to xfs code.
-> 
-> Search  XFS_TRANS_INACTIVE and the usage is like below,
-> 
-> xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
-> xfs_trans_reserve(tp, &M_RES(mp)->tr_itruncate, 0, 0);
-> 
-> xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
-> xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, XFS_IFREE_SPACE_RES(mp), 0);
-> 
-> seems tr_remove is not related.
-> I'll just try to enlarge the reservation for tr_itruncate and tr_ifree.
+Greetings XFS community,
 
-Now things are a little bit more clear. I tried below debug patch.
-The t_decrease[] array was used to track where the space was used.
+We have an XFS instance mounted as "sync"
+(rw,sync,noatime,wsync,attr2,discard,inode64,prjquota 0 0). This instance is
+exposed via nfsd. Size is about 50TB.
 
- fs/xfs/libxfs/xfs_trans_resv.c |  4 ++--
- fs/xfs/xfs_log.c               | 23 ++++++++++++++++++++---
- fs/xfs/xfs_log_cil.c           |  8 ++++++++
- fs/xfs/xfs_log_priv.h          |  3 +++
- fs/xfs/xfs_super.c             |  1 +
- 5 files changed, 34 insertions(+), 5 deletions(-)
+root@0000000f:/home/alex # xfs_info /export/share1
+meta-data=/dev/dm-64             isize=256    agcount=49, agsize=268435455
+blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=13107200000, imaxpct=5
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=521728, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 1b754cb..4087c39 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -788,7 +788,7 @@ xfs_trans_resv_calc(
- 	resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
- 	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+We observe the following issue:
 
--	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
-+	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp) * 2;
- 	resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
- 	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+nfsd thread comes into xfs_file_write_iter()=>xfs_file_buffered_aio_write(),
+which copies the data into page cache. Then xfs_file_write_iter() calls
+generic_write_sync(), which ends up working for minutes in stack like [1].
+It seems to be scanning the free space btrees, calling xfs_btree_increment()
+and sometimes xfs_btree_decrement().
 
-@@ -821,7 +821,7 @@ xfs_trans_resv_calc(
- 	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
- 	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+This whole operation is performed while i_lock is exclusively locked by
+xfs_iomap_write_allocate(), before calling xfs_bmapi_write(). So i_lock is
+being held for minutes.
 
--	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
-+	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp) * 2;
- 	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
- 	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+Meanwhile, another nfsd thread calls into the same inode, and  reaches
+xfs_file_buffered_aio_write(), and calls xfs_rw_ilock(XFS_IOLOCK_EXCL),
+which locks both i_mutex and i_iolock. Now this thread calls
+xfs_file_aio_write_checks() which wants to grab the i_lock in stack like
+[2]. So now all three locks (i_mutex, i_lock and i_iolock) are taken.
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 3dfa2db..d2da8a7 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -832,6 +832,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- 			/* remove inited flag, and account for space used */
- 			tic->t_flags = 0;
- 			tic->t_curr_res -= sizeof(magic);
-+			tic->t_decrease[0] = sizeof(magic);
- 			error = xlog_write(log, &vec, tic, &lsn,
- 					   NULL, XLOG_UNMOUNT_TRANS);
- 			/*
-@@ -2067,7 +2068,13 @@ xlog_print_tic_res(
+Now another nfsd thread calling into xfs_file_buffered_aio_write() will get
+stuck waiting for i_mutex. Or any other thread that needs one of these locks
+will get stuck. This in some cases triggers hung-task panic.
 
- 	xfs_alert_tag(mp, XFS_PTAG_LOGRES,
- 		"xlog_write: reservation ran out. Need to up reservation");
--	xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
-+	for (i = 0; i < RES_DECREASE_NUM; i++) {
-+		xfs_warn(mp, "t_decrease[%d] = %d\n", i, ticket->t_decrease[i]);
-+	}
-+	dump_stack();
-+
-+	if (ticket->t_curr_res < 0)
-+		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
- }
+After allocation completes, I look at the inode in question via xfs_db, and
+I see that this file is not heavily fragmented. It has few 10s of extents
+only. So file fragmentation is not an issue.
 
- /*
-@@ -2210,6 +2217,7 @@ xlog_write_setup_copy(
+Questions:
+1) The thread in [1] does not seem to be waiting for IO. It wants to lock a
+metadata buffer, which is done before spawning a IO on it (to my
+understanding). What is it waiting for?
 
- 	/* account for new log op header */
- 	ticket->t_curr_res -= sizeof(struct xlog_op_header);
-+	ticket->t_decrease[1] = sizeof(struct xlog_op_header);
- 	ticket->t_res_num_ophdrs++;
+2) Any recommendations what to do in such situation? Will running xfs_fsr
+help? (although the files in question are not heavily fragmented)
 
- 	return sizeof(struct xlog_op_header);
-@@ -2330,19 +2338,27 @@ xlog_write(
- 	 * We only need to take into account start records and
- 	 * split regions in this function.
- 	 */
--	if (ticket->t_flags & XLOG_TIC_INITED)
-+	if (ticket->t_flags & XLOG_TIC_INITED) {
- 		ticket->t_curr_res -= sizeof(xlog_op_header_t);
-+		ticket->t_decrease[2] = sizeof(xlog_op_header_t);
-+	}
+Kernel version is 3.18.19.
 
- 	/*
- 	 * Commit record headers need to be accounted for. These
- 	 * come in as separate writes so are easy to detect.
- 	 */
--	if (flags & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS))
-+	if (flags & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS)) {
- 		ticket->t_curr_res -= sizeof(xlog_op_header_t);
-+		ticket->t_decrease[3] = sizeof(xlog_op_header_t);
-+	}
+BTW, in the code I see the following comment:
+/*
+* Locking primitives for read and write IO paths to ensure we consistently
+use
+* and order the inode->i_mutex, ip->i_lock and ip->i_iolock.
+*/
 
- 	if (ticket->t_curr_res < 0)
- 		xlog_print_tic_res(log->l_mp, ticket);
-
-+	if (ticket->t_trans_type == XFS_TRANS_INACTIVE &&
-+			(ticket->t_unit_res - ticket->t_curr_res > ticket->t_unit_res / 2))
-+		xlog_print_tic_res(log->l_mp, ticket);
-+
- 	index = 0;
- 	lv = log_vector;
- 	vecp = lv->lv_iovecp;
-@@ -2917,6 +2933,7 @@ restart:
- 	 */
- 	if (log_offset == 0) {
- 		ticket->t_curr_res -= log->l_iclog_hsize;
-+		ticket->t_decrease[4] = log->l_iclog_hsize;
- 		xlog_tic_add_region(ticket,
- 				    log->l_iclog_hsize,
- 				    XLOG_REG_TYPE_LRHEADER);
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 23014f9..9d965d6 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -334,6 +334,7 @@ xlog_cil_insert_items(
- 	if (ctx->ticket->t_curr_res == 0) {
- 		ctx->ticket->t_curr_res = ctx->ticket->t_unit_res;
- 		tp->t_ticket->t_curr_res -= ctx->ticket->t_unit_res;
-+		tp->t_ticket->t_decrease[5] = ctx->ticket->t_unit_res;
- 	}
-
- 	/* do we need space for more log record headers? */
-@@ -348,9 +349,11 @@ xlog_cil_insert_items(
- 		ctx->ticket->t_unit_res += hdrs;
- 		ctx->ticket->t_curr_res += hdrs;
- 		tp->t_ticket->t_curr_res -= hdrs;
-+		tp->t_ticket->t_decrease[6] = hdrs;
- 		ASSERT(tp->t_ticket->t_curr_res >= len);
- 	}
- 	tp->t_ticket->t_curr_res -= len;
-+	tp->t_ticket->t_decrease[7] = len;
- 	ctx->space_used += len;
-
- 	spin_unlock(&cil->xc_cil_lock);
-@@ -586,6 +589,7 @@ xlog_cil_push(
- 	lhdr.i_len = sizeof(xfs_trans_header_t);
- 	lhdr.i_type = XLOG_REG_TYPE_TRANSHDR;
- 	tic->t_curr_res -= lhdr.i_len + sizeof(xlog_op_header_t);
-+	tic->t_decrease[8] = lhdr.i_len + sizeof(xlog_op_header_t);
-
- 	lvhdr.lv_niovecs = 1;
- 	lvhdr.lv_iovecp = &lhdr;
-@@ -797,6 +801,10 @@ xfs_log_commit_cil(
- 	if (tp->t_ticket->t_curr_res < 0)
- 		xlog_print_tic_res(mp, tp->t_ticket);
-
-+	if (tp->t_ticket->t_trans_type == XFS_TRANS_INACTIVE &&
-+			(tp->t_ticket->t_unit_res - tp->t_ticket->t_curr_res > tp->t_ticket->t_unit_res / 2))
-+		xlog_print_tic_res(mp, tp->t_ticket);
-+
- 	tp->t_commit_lsn = cil->xc_ctx->sequence;
- 	if (commit_lsn)
- 		*commit_lsn = tp->t_commit_lsn;
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index db7cbde..359ebdb 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -163,6 +163,8 @@ typedef struct xlog_res {
- 	uint	r_type;	/* region's transaction type	:4 */
- } xlog_res_t;
-
-+#define RES_DECREASE_NUM 10
-+
- typedef struct xlog_ticket {
- 	struct list_head   t_queue;	 /* reserve/write queue */
- 	struct task_struct *t_task;	 /* task that owns this ticket */
-@@ -170,6 +172,7 @@ typedef struct xlog_ticket {
- 	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
- 	int		   t_curr_res;	 /* current reservation in bytes : 4  */
- 	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
-+	int		   t_decrease[RES_DECREASE_NUM];
- 	char		   t_ocnt;	 /* original count		 : 1  */
- 	char		   t_cnt;	 /* current count		 : 1  */
- 	char		   t_clientid;	 /* who does this belong to;	 : 1  */
-
-
-And then I got below debug info,
-
-[42497.026294] XFS (nvme7n1p1): xlog_write: reservation summary:
-  trans type  = INACTIVE (3)
-  unit res    = 166048 bytes
-  current res = 53444 bytes
-  total reg   = 0 bytes (o/flow = 0 bytes)
-  ophdrs      = 0 (ophdr space = 0 bytes)
-  ophdr + reg = 0 bytes
-  num regions = 0
-[42497.061742] XFS (nvme7n1p1): xlog_write: reservation ran out. Need to up reservation
-[42497.069865] XFS (nvme7n1p1): t_decrease[0] = 0
-
-[42497.076160] XFS (nvme7n1p1): t_decrease[1] = 0
-
-[42497.082450] XFS (nvme7n1p1): t_decrease[2] = 0
-
-[42497.088734] XFS (nvme7n1p1): t_decrease[3] = 0
-
-[42497.095003] XFS (nvme7n1p1): t_decrease[4] = 0
-
-[42497.101341] XFS (nvme7n1p1): t_decrease[5] = 0
-
-[42497.107626] XFS (nvme7n1p1): t_decrease[6] = 2096
-
-[42497.114187] XFS (nvme7n1p1): t_decrease[7] = 110508
-
-[42497.120915] XFS (nvme7n1p1): t_decrease[8] = 0
-
-[42497.127220] XFS (nvme7n1p1): t_decrease[9] = 0
-
-[42497.133518] CPU: 25 PID: 28408 Comm: tp_fstore_op Tainted: G
-[42497.145703] Hardware name: Huawei RH2288H V3/BC11HGSA0, BIOS 3.50 11/23/2016
-[42497.152987]  000000000000000a 00000000ca382f91 ffff881ef681bc48 ffffffff816372cc
-[42497.160876]  ffff881ef681bca8 ffffffffa06a474f ffff880300000000 ffff880900000000
-[42497.168711]  ffff880700000000 0000000000000000 ffff880900000000 ffff881f00000000
-[42497.176568] Call Trace:
-[42497.179210]  [<ffffffff816372cc>] dump_stack+0x19/0x1b
-[42497.184578]  [<ffffffffa06a474f>] xlog_print_tic_res+0x11f/0x160 [xfs]
-[42497.191356]  [<ffffffffa06a6d72>] xfs_log_commit_cil+0x4d2/0x530 [xfs]
-[42497.198116]  [<ffffffffa06a0f24>] xfs_trans_commit+0x134/0x270 [xfs]
-[42497.204682]  [<ffffffffa0696e7b>] xfs_inactive_ifree+0x1eb/0x250 [xfs]
-[42497.211435]  [<ffffffffa0696f6d>] xfs_inactive+0x8d/0x130 [xfs]
-[42497.217570]  [<ffffffffa069c2c6>] xfs_fs_evict_inode+0xa6/0xe0 [xfs]
-[42497.224097]  [<ffffffff811fc0c7>] evict+0xa7/0x170
-[42497.229080]  [<ffffffff811fc9ab>] iput+0x18b/0x1f0
-[42497.234081]  [<ffffffff811f12de>] do_unlinkat+0x1ae/0x2b0
-[42497.239679]  [<ffffffff811e5a5e>] ? SYSC_newstat+0x3e/0x60
-[42497.245370]  [<ffffffff811f22e6>] SyS_unlink+0x16/0x20
-[42497.250738]  [<ffffffff816479c9>] system_call_fastpath+0x16/0x1b
-
-
-As you saw from above log, it is related to the "ifree" transaction.
-And most reservation space was used in "t_decrease[7] = 110508", which was recorded
-in line 356 below.
-
- 277 static void
- 278 xlog_cil_insert_items(
- 279         struct xlog             *log,
- 280         struct xfs_trans        *tp)
- 281 {
-
-....
-
- 340         /* do we need space for more log record headers? */
- 341         iclog_space = log->l_iclog_size - log->l_iclog_hsize;
- 342         if (len > 0 && (ctx->space_used / iclog_space !=
- 343                                 (ctx->space_used + len) / iclog_space)) {
- 344                 int hdrs;
- 345
- 346                 hdrs = (len + iclog_space - 1) / iclog_space;
- 347                 /* need to take into account split region headers, too */
- 348                 hdrs *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
- 349                 ctx->ticket->t_unit_res += hdrs;
- 350                 ctx->ticket->t_curr_res += hdrs;
- 351                 tp->t_ticket->t_curr_res -= hdrs;
- 352                 tp->t_ticket->t_decrease[6] = hdrs;
- 353                 ASSERT(tp->t_ticket->t_curr_res >= len);
- 354         }
- 355         tp->t_ticket->t_curr_res -= len;
- 356         tp->t_ticket->t_decrease[7] = len;
- 357         ctx->space_used += len;
- 358
- 359         spin_unlock(&cil->xc_cil_lock);
- 360 }
-
-Any idea why it used so many reservation space here?
+But the above analysis clearly shows that this locking order is violated.
+xfs_file_buffered_aio_write()  grabs the i_mutex and the i_iolock. And only
+then it wants to grab the i_lock (indirectly). Is the comment wrong or is
+the code wrong? I looked at kernel 4.10, and it seems to have the same
+discrepancy between the comment and the code.
 
 Thanks,
-Ming
+Alex.
+
+
+
+
+[1]
+[<ffffffff810b90f1>] down+0x41/0x50
+[<ffffffffc0d79090>] xfs_buf_lock+0x40/0x120 [xfs]
+[<ffffffffc0d792cd>] _xfs_buf_find+0x15d/0x2e0 [xfs]
+[<ffffffffc0d7947a>] xfs_buf_get_map+0x2a/0x210 [xfs]
+[<ffffffffc0d7a1dc>] xfs_buf_read_map+0x2c/0x190 [xfs]
+[<ffffffffc0dac621>] xfs_trans_read_buf_map+0x261/0x490 [xfs]
+[<ffffffffc0d50a89>] xfs_btree_read_buf_block.constprop.28+0x69/0xa0 [xfs]
+[<ffffffffc0d5340e>] xfs_btree_increment+0x1ee/0x2e0 [xfs]
+[<ffffffffc0d384ea>] xfs_alloc_ag_vextent_near+0x58a/0x1e20 [xfs]
+[<ffffffffc0d39ea5>] xfs_alloc_ag_vextent+0xd5/0x120 [xfs]
+[<ffffffffc0d3b65f>] xfs_alloc_vextent+0x48f/0x690 [xfs]
+[<ffffffffc0d4c4ff>] xfs_bmap_btalloc+0x39f/0x700 [xfs]
+[<ffffffffc0d4c884>] xfs_bmap_alloc+0x24/0x40 [xfs]
+[<ffffffffc0d4d601>] xfs_bmapi_write+0x811/0xe00 [xfs]
+[<ffffffffc0d8b0c5>] xfs_iomap_write_allocate+0x155/0x4f0 [xfs]
+[<ffffffffc0d7159e>] xfs_map_blocks+0x1de/0x250 [xfs]
+[<ffffffffc0d72e15>] xfs_vm_writepage+0x1a5/0x630 [xfs]
+[<ffffffff8117c377>] __writepage+0x17/0x50
+[<ffffffff8117ccb8>] write_cache_pages+0x238/0x4c0
+[<ffffffff8117cf80>] generic_writepages+0x40/0x60
+[<ffffffffc0d71c93>] xfs_vm_writepages+0x43/0x50 [xfs]
+[<ffffffff8117e7ae>] do_writepages+0x1e/0x40
+[<ffffffff81173429>] __filemap_fdatawrite_range+0x59/0x60
+[<ffffffff8117352a>] filemap_write_and_wait_range+0x2a/0x70
+[<ffffffffc0d80af7>] xfs_file_fsync+0x57/0x220 [xfs]
+[<ffffffff8121823b>] vfs_fsync_range+0x1b/0x30
+[<ffffffffc0d8238b>] xfs_file_write_iter+0xeb/0x130 [xfs]
+[<ffffffff811e7545>] do_iter_readv_writev+0x65/0xa0
+[<ffffffff811e8bf9>] do_readv_writev+0xc9/0x280
+[<ffffffff811e8e39>] vfs_writev+0x39/0x50
+[<ffffffffc0306fb7>] nfsd_vfs_write.isra.14+0x97/0x350 [nfsd]
+[<ffffffffc030a8ce>] nfsd_write+0x8e/0x100 [nfsd]
+[<ffffffffc0315411>] nfsd4_write+0x1c1/0x220 [nfsd]
+[<ffffffffc0316edc>] nfsd4_proc_compound+0x50c/0x850 [nfsd]
+[<ffffffffc0302ed3>] nfsd_dispatch+0xd3/0x240 [nfsd]
+[<ffffffffc0263dc0>] svc_process_common+0x440/0x6d0 [sunrpc]
+[<ffffffffc0264157>] svc_process+0x107/0x170 [sunrpc]
+[<ffffffffc0302837>] nfsd+0x127/0x1a0 [nfsd]
+[<ffffffff810911b9>] kthread+0xc9/0xe0
+[<ffffffff81717918>] ret_from_fork+0x58/0x90
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+[2]
+[<ffffffffc0c80db1>] xfs_ilock+0x321/0x330 [xfs]
+[<ffffffffc0c7e5dd>] xfs_vn_update_time+0x6d/0x1b0 [xfs]
+[<ffffffff81202c15>] update_time+0x25/0xc0
+[<ffffffff810d7c76>] ? current_fs_time+0x16/0x60
+[<ffffffff81202e70>] file_update_time+0x80/0xd0
+[<ffffffffc0c74e60>] xfs_file_aio_write_checks+0x140/0x1a0 [xfs]
+[<ffffffffc0c74fac>] xfs_file_buffered_aio_write.isra.11+0xec/0x390 [xfs]
+[<ffffffff811e7430>] ? new_sync_read+0xb0/0xb0
+[<ffffffffc0c752d3>] xfs_file_write_iter+0x83/0x130 [xfs]
+[<ffffffff811e7545>] do_iter_readv_writev+0x65/0xa0
+[<ffffffff811e8bf9>] do_readv_writev+0xc9/0x280
+[<ffffffffc0c75250>] ? xfs_file_buffered_aio_write.isra.11+0x390/0x390 [xfs]
+[<ffffffffc0c75250>] ? xfs_file_buffered_aio_write.isra.11+0x390/0x390 [xfs]
+[<ffffffff81341e43>] ? apparmor_cred_prepare+0x33/0x50
+[<ffffffff811e8e39>] vfs_writev+0x39/0x50
+[<ffffffffc0306fb7>] nfsd_vfs_write.isra.14+0x97/0x350 [nfsd]
+[<ffffffffc030a8ce>] nfsd_write+0x8e/0x100 [nfsd]
+[<ffffffffc0315411>] nfsd4_write+0x1c1/0x220 [nfsd]
+[<ffffffffc0316edc>] nfsd4_proc_compound+0x50c/0x850 [nfsd]
+[<ffffffffc0302ed3>] nfsd_dispatch+0xd3/0x240 [nfsd]
+
