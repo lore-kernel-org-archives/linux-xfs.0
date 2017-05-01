@@ -1,193 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57774 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55720 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750816AbdEASs1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 May 2017 14:48:27 -0400
-Date: Mon, 1 May 2017 14:48:24 -0400
+        id S935993AbdEAPg5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 May 2017 11:36:57 -0400
+Date: Mon, 1 May 2017 10:58:41 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xlog_write: reservation ran out
-Message-ID: <20170501184822.GB3775@bfoster.bfoster>
-References: <CAF1ivSZeYhnzh6CPZViYUNFXdm33hhTA_CzP7V745QociEEnKg@mail.gmail.com>
- <CAF1ivSbjdixqDo663wvAEkzRk-ctOX+y5UYxq4UdPA-=JVufyw@mail.gmail.com>
- <CAF1ivSbEfhTYxcBx1dafK9TD3VdeXbJrNMzWJmXY8kyU0ibkUw@mail.gmail.com>
- <8accf9d5-b2e4-c82e-fa47-3c5bc2ea35b1@kernel.org>
- <20170501131222.GA2109@bfoster.bfoster>
- <70def595-91a9-970a-d227-547055da5bb5@kernel.org>
+Subject: Re: [RFC PATCH] xfs: try to avoid blowing out the transaction
+ reservation when bunmaping a shared extent
+Message-ID: <20170501145839.GB2109@bfoster.bfoster>
+References: <20170425020954.GV23371@birch.djwong.org>
+ <20170426135912.GB42456@bfoster.bfoster>
+ <20170426213731.GC23371@birch.djwong.org>
+ <20170427073519.GA18392@infradead.org>
+ <20170428194032.GF22884@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <70def595-91a9-970a-d227-547055da5bb5@kernel.org>
+In-Reply-To: <20170428194032.GF22884@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lin <mlin@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Ceph Development <ceph-devel@vger.kernel.org>, "LIU, Fei" <james.liu@alibaba-inc.com>, xiongwei.jiang@alibaba-inc.com, boqian.zy@alibaba-inc.com, sheng.qiu@alibaba-inc.com, Sage Weil <sweil@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, May 01, 2017 at 10:41:06AM -0700, Ming Lin wrote:
-> On 5/1/2017 6:12 AM, Brian Foster wrote:
-> > On Sun, Apr 30, 2017 at 11:10:15PM -0700, Ming Lin wrote:
-> >>
-> >> On 4/28/2017 1:56 PM, Ming Lin wrote:
-> >>> I'm new to xfs code.
-> >>>
-> >>> Search  XFS_TRANS_INACTIVE and the usage is like below,
-> >>>
-> >>> xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
-> >>> xfs_trans_reserve(tp, &M_RES(mp)->tr_itruncate, 0, 0);
-> >>>
-> >>> xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
-> >>> xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, XFS_IFREE_SPACE_RES(mp), 0);
-> >>>
-> >>> seems tr_remove is not related.
-> >>> I'll just try to enlarge the reservation for tr_itruncate and tr_ifree.
-> >>
-> >> Now things are a little bit more clear. I tried below debug patch.
-> >> The t_decrease[] array was used to track where the space was used.
-> >>
-> >>  fs/xfs/libxfs/xfs_trans_resv.c |  4 ++--
-> >>  fs/xfs/xfs_log.c               | 23 ++++++++++++++++++++---
-> >>  fs/xfs/xfs_log_cil.c           |  8 ++++++++
-> >>  fs/xfs/xfs_log_priv.h          |  3 +++
-> >>  fs/xfs/xfs_super.c             |  1 +
-> >>  5 files changed, 34 insertions(+), 5 deletions(-)
-> >>
-> > ...
-> >>  277 static void
-> >>  278 xlog_cil_insert_items(
-> >>  279         struct xlog             *log,
-> >>  280         struct xfs_trans        *tp)
-> >>  281 {
-> >>
-> >> ....
-> >>
-> >>  340         /* do we need space for more log record headers? */
-> >>  341         iclog_space = log->l_iclog_size - log->l_iclog_hsize;
-> >>  342         if (len > 0 && (ctx->space_used / iclog_space !=
-> >>  343                                 (ctx->space_used + len) / iclog_space)) {
-> >>  344                 int hdrs;
-> >>  345
-> >>  346                 hdrs = (len + iclog_space - 1) / iclog_space;
-> >>  347                 /* need to take into account split region headers, too */
-> >>  348                 hdrs *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
-> >>  349                 ctx->ticket->t_unit_res += hdrs;
-> >>  350                 ctx->ticket->t_curr_res += hdrs;
-> >>  351                 tp->t_ticket->t_curr_res -= hdrs;
-> >>  352                 tp->t_ticket->t_decrease[6] = hdrs;
-> >>  353                 ASSERT(tp->t_ticket->t_curr_res >= len);
-> >>  354         }
-> >>  355         tp->t_ticket->t_curr_res -= len;
-> >>  356         tp->t_ticket->t_decrease[7] = len;
-> >>  357         ctx->space_used += len;
-> >>  358
-> >>  359         spin_unlock(&cil->xc_cil_lock);
-> >>  360 }
-> >>
-> >> Any idea why it used so many reservation space here?
-> >>
-> > 
-> > Nothing really rings a bell for me atm. Perhaps others might have ideas.
-> > That does appear to be a sizable overrun, as opposed to a few bytes that
-> > could more likely be attributed to rounding, header accounting issues or
-> > something of that nature.
+On Fri, Apr 28, 2017 at 12:40:32PM -0700, Darrick J. Wong wrote:
+> On Thu, Apr 27, 2017 at 12:35:19AM -0700, Christoph Hellwig wrote:
+> > On Wed, Apr 26, 2017 at 02:37:31PM -0700, Darrick J. Wong wrote:
+> > > That's so shockingly obvious I don't know why it didn't occur to me.
+> > > Uh, I'll go give that a try with that horrid generic/931 testcase that
+> > > I sent to the list a couple of weeks ago. :)
 > 
-> FYI, here are some numbers.
+> ...and now I've realized why I never thought of it -- it's unfortunately
+> racy.  We want to constrain the number of blocks that we unmap from the
+> file based on the refcount, but because the transaction rolling unlocks
+> the AGF in between the unmap and decrement-refcount transactions,
+> another process can swoop in and make changes to the sharedness that
+> screw us over.  Let's say files A and B both share the same 1000 blocks,
+> and threads A and B are modifying files A and B, respectively.
 > 
-> The original "unit res" is 83024. I made it x2 larger, so now it's 166048
-> "unit res" - "current res" = the reservation space already used
-> 
-> XFS (nvme10n1p1): xlog_write: reservation summary:
->   trans type  = INACTIVE (3)
->   unit res    = 166048 bytes
->   current res = 77088 bytes
->   total reg   = 0 bytes (o/flow = 0 bytes)
->   ophdrs      = 0 (ophdr space = 0 bytes)
->   ophdr + reg = 0 bytes
->   num regions = 0
-> 
-> "already used" = 166048 - 77088 = 88960
-> overrun = 88960 - 83024 = 5936
-> 
-> 
-> XFS (nvme7n1p1): xlog_write: reservation summary:
->   trans type  = INACTIVE (3)
->   unit res    = 166048 bytes
->   current res = 53444 bytes
->   total reg   = 0 bytes (o/flow = 0 bytes)
->   ophdrs      = 0 (ophdr space = 0 bytes)
->   ophdr + reg = 0 bytes
->   num regions = 0
-> 
-> "already used" = 166048 - 53444 = 112604
-> overrun = 112604 - 83024 = 29580
-> 
-> The overrun bytes seems a lot to me.
+> Thread A:                            Thread B:
+> 1. punch blocks backed by (0-1000)   1. punch blocks backed by (500-600)
+> 2. grab agf to read refcbt  
+> 3. unmap blocks 0-1000; no
+>    refcount edges so we can
+>    unmap everything at once
+> 4. roll transaction, unlock agf
+>                                      2. grab agf to read refcbt
+>                                      3. unmap blocks 500-600; no refcount
+>                                         edges so we can unmap everything in
+>                                         a single operation
+>                                      4. roll transaction, unlock agf
+>                                      5. grab agf again. lucky!
+>                                      6. split refcbt record because 500-600
+>                                         is now only owned by file A.
+>                                      7. complete transaction, unlock agf
+> 5. grab agf to read refcbt
+> 6. whoah!  why are there two
+>    edges in the refcount tree at
+>    500 and 600???
 > 
 
-Yes.
+Ugh, ok. So we basically can't make any assumptions about shared extent
+state across the transactions, because that can change as soon as we
+start processing deferred actions. This is presumably why we have high
+level refcount inc/dec deferred ops such that the specific shared state
+of a range of blocks isn't really assessed until the deferred op runs.
 
-> > 
-> > The debug code doesn't really tell us much beyond that the transaction
-> > required logging more data than it had reserved. In the snippet above,
-> > len essentially refers to a byte total of what is logged across all of
-> > the various items (inode, buffers, etc.) in the transaction.
-> > 
-> > I'm assuming you can reproduce this often enough if you can capture
-> 
-> It takes about 10 hours to reproduce the problem.
-> 
+Therefore, this patch limits the high level unmap operation based on a
+worst case assumption that every other block is shared..? If we do end
+up going with this approach, I think the comment where we calc the max
+unmap block count could be slightly improved to point out the specifics
+of the issue here. E.g., each individual block of a contiguous extent
+could result in an independent EFI or reflink adjustment, therefore we
+need to convert available log reservation into a block based unmap
+limit.
 
-Out of curiosity, is that 10 hours of removing files or 10 hours of
-repopulating and removing until the problem happens to occur? If the
-latter, roughly how many fill/remove cycles does that entail (tens,
-hundreds, thousands)?
-
-> > debug information. Have you tried to reproduce the actual transaction
-> > overrun without using Ceph (i.e., create the fs using ceph as normal,
-> > but run the object removal directly)? If you can do that, you could
-> 
-> Not exactly same.
-> But I did try just write the xfs fs with fio(64 threads) to 80% full,
-> then remove the files, but can't reproduce it.
+> So either we have to keep the AGF buffer locked and attached across
+> all the transaction rolls until we around to processing the refcount
+> decrement deferred op, or figure out something else clever...?
 > 
 
-You could try to populate the fs using Ceph as with your current
-reproducer, particularly since it may use patterns or features that
-could affect this problem (xattrs?) that fio may not induce, and then
-try to directly reproduce the overrun via manual file removals. This
-would be sufficient for debugging because if you can share a metadump
-image of the original fs and appropriate steps to reproduce, we don't
-particularly need to care about how the fs was constructed in the first
-place.
+Keeping the AGF locked still sounds like the most preferable approach to
+me, provided there are no other dragons lurking around locking or
+whatnot and we can do so cleanly. Perhaps we could plumb in a mechanism
+to xfs_trans_bhold() a buffer across a dop list and then
+_bhold_release() it for the last transaction returned by
+xfs_defer_finish()..?
 
-For example, if you have a test that currently populates and depopulates
-the fs through Ceph, something I might try is to update the test to
-generate a metadump image of the fs every time your test cycles from
-populating to depopulating. Once the problem reproduces, you now have a
-metadump image of the original fs that you can restore and use to try to
-reproduce the overrun manually (repeatedly, if nec.).
-
-> > create an xfs_metadump of the populated fs, run a more simple reproducer
-> > on that and that might make it easier to 1.) try newer distro and/or
-> > upstream kernels to try and isolate where the problem exists and/or 2.)
-> > share it so we can try to reproduce and narrow down where the overrun
-> > seems to occur (particularly if this hasn't already been fixed
-> > somewhere).
-> 
-> I'll try to find a more simple reproducer.
-> 
-
-Thanks.
+Otherwise, another question I had more related to the approach of the
+current patch... could we use a deterministic unmap length baked into
+the transaction rather than a dynamic assumption that a certain
+percentage of the transaction is designated for reflink adjustments?
+E.g., use a transaction that is explicitly designed for a max extent
+modification count or a max block adjustment (based on the worst link
+reflink requirements) and fix xfs_bunmapi() to use that max count. What
+concerns me about the dynamic approach is that if we ever had to
+increase or modify this transaction res for something else that happens
+to also affect unmap (*handwave*), we'd have to also know to go and
+possibly reverse engineer/adjust this reflink heuristic appropriately
+(or more likely, not do so and set a landmine).
 
 Brian
 
-> Thanks,
-> Ming
+> --D
 > 
-> > 
-> > Brian
-> > 
-> >> Thanks,
-> >> Ming
+> > I like the idea too.  But once thing to remember is that freeing
+> > blocks from two AG in the same transaction is deadlock prone as the
+> > other thread shows.  I've been doing some work to mitigate that, but
+> > I guess I'll just wait for your new patch and will rebase on top of
+> > that.
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
