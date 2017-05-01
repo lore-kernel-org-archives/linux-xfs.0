@@ -1,327 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40704 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750810AbdEAXbY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 May 2017 19:31:24 -0400
-Date: Mon, 1 May 2017 16:30:49 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: refactor dir2 leaf readahead shadow buffer
- cleverness
-Message-ID: <20170501233049.GB5975@birch.djwong.org>
-References: <20170428194652.GG22884@birch.djwong.org>
- <20170501183240.GA3775@bfoster.bfoster>
- <20170501215018.GA5975@birch.djwong.org>
- <20170501231323.GA5040@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170501231323.GA5040@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:54230 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752185AbdEARni (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 May 2017 13:43:38 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1FD52307082
+        for <linux-xfs@vger.kernel.org>; Mon,  1 May 2017 17:43:38 +0000 (UTC)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfs: fix use-after-free in xfs_finish_page_writeback
+Date: Tue,  2 May 2017 01:36:33 +0800
+Message-Id: <20170501173633.6639-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: linux-xfs@vger.kernel.org
+Cc: Eryu Guan <eguan@redhat.com>
 
-On Mon, May 01, 2017 at 07:13:24PM -0400, Brian Foster wrote:
-> On Mon, May 01, 2017 at 02:50:18PM -0700, Darrick J. Wong wrote:
-> > On Mon, May 01, 2017 at 02:32:43PM -0400, Brian Foster wrote:
-> > > On Fri, Apr 28, 2017 at 12:46:52PM -0700, Darrick J. Wong wrote:
-> > > > Currently, the dir2 leaf block getdents function uses a complex state
-> > > > tracking mechanism to create a shadow copy of the block mappings and
-> > > > then uses the shadow copy to schedule readahead.  Since the read and
-> > > > readahead functions are perfectly capable of reading the mappings
-> > > > themselves, we can tear all that out in favor of a simpler function that
-> > > > simply keeps pushing the readahead window further out.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > > v3: use sliding window to constrain the amount of readahead
-> > > > v2: fix readahead of more than ra_want
-> > > > ---
-> > > 
-> > > Thanks for the updates. This looks much more simple and seems true to
-> > > the current readahead behavior. The code also looks fine to me (one bit
-> > > of whitespace damage noted below).
-> > > 
-> > > That aside, have you happened to test this against a huge/ugly directory
-> > > to verify it works as expected? Note that I don't think in depth
-> > > performance analysis is required. Verification of any kind of dir that
-> > > is known to benefit from readahead is probably sufficient IMO. Perhaps
-> > > dm-delay with a small enough latency to allow us to measure the effect
-> > > of readahead could help us here.
-> > 
-> > Yeah, I used xfs/349 to generate a filesystem containing a directory
-> > with a freeindex block, then ls'd the entire directory to see how long
-> > the getdents calls took.  The readhead calls were nearly identical with
-> > similar runtimes.
-> > 
-> 
-> Ok..
-> 
-> > > >  fs/xfs/xfs_dir2_readdir.c |  316 ++++++++++++---------------------------------
-> > > >  1 file changed, 82 insertions(+), 234 deletions(-)
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> > > > index 20b7a5c..d05c1ec 100644
-> > > > --- a/fs/xfs/xfs_dir2_readdir.c
-> > > > +++ b/fs/xfs/xfs_dir2_readdir.c
-> > > > @@ -243,214 +243,98 @@ xfs_dir2_block_getdents(
-> > > >  	return 0;
-> > > >  }
-> > > >  
-> > > ...
-> > > >  	/*
-> > > > -	 * Do we need more readahead?
-> > > > -	 * Each loop tries to process 1 full dir blk; last may be partial.
-> > > > +	 * Start readahead for the next bufsize's worth of dir data blocks.
-> > > > +	 * We may have already issued readahead for some of that range;
-> > > > +	 * ra_blk tracks the last block we tried to read(ahead).
-> > > >  	 */
-> > > > +	ra_want = howmany(bufsize + geo->blksize, (1 << geo->fsblog));
-> > > > +	if (*ra_blk >= last_da)
-> > > > +		goto out;
-> > > > +	else if (*ra_blk == 0)
-> > > > +		*ra_blk = map.br_startoff;
-> > > > +	next_ra = map.br_startoff + geo->fsbcount;
-> > > > +	if (next_ra >= last_da)
-> > > > +		goto out_no_ra;
-> > > > +	found = xfs_iext_lookup_extent(dp, ifp, next_ra, &idx, &map);
-> > > > +	if (!found || map.br_startoff >= last_da)
-> > > > +		goto out_no_ra;
-> > > > +	xfs_trim_extent(&map, next_ra, last_da - next_ra);
-> > > > + 
-> > > 
-> > > ^ trailing space.
-> > 
-> > (I don't see it...?)
-> > 
-> 
-> checkpatch catches it:
-> 
-> $ ./scripts/checkpatch.pl /tmp/patch 
-> ERROR: trailing whitespace
-> #227: FILE: fs/xfs/xfs_dir2_readdir.c:317:
-> + $
-> 
-> WARNING: please, no spaces at the start of a line
-> #227: FILE: fs/xfs/xfs_dir2_readdir.c:317:
-> + $
+Commit 28b783e47ad7 ("xfs: bufferhead chains are invalid after
+end_page_writeback") fixed one use-after-free issue by
+pre-calculating the loop conditionals before calling bh->b_end_io()
+in the end_io processing loop, but it assigned 'next' pointer before
+checking end offset boundary & breaking the loop, at which point the
+bh might be freed already, and caused use-after-free.
 
-<sigh> vi was lying to me, like always.
+This is caught by KASAN when running fstests generic/127 on sub-page
+block size XFS.
 
-Reload buffer and *poof* the trailing whitespace appears... <grumble>
+[ 2517.244502] run fstests generic/127 at 2017-04-27 07:30:50
+[ 2747.868840] ==================================================================
+[ 2747.876949] BUG: KASAN: use-after-free in xfs_destroy_ioend+0x3d3/0x4e0 [xfs] at addr ffff8801395ae698
+...
+[ 2747.918245] Call Trace:
+[ 2747.920975]  dump_stack+0x63/0x84
+[ 2747.924673]  kasan_object_err+0x21/0x70
+[ 2747.928950]  kasan_report+0x271/0x530
+[ 2747.933064]  ? xfs_destroy_ioend+0x3d3/0x4e0 [xfs]
+[ 2747.938409]  ? end_page_writeback+0xce/0x110
+[ 2747.943171]  __asan_report_load8_noabort+0x19/0x20
+[ 2747.948545]  xfs_destroy_ioend+0x3d3/0x4e0 [xfs]
+[ 2747.953724]  xfs_end_io+0x1af/0x2b0 [xfs]
+[ 2747.958197]  process_one_work+0x5ff/0x1000
+[ 2747.962766]  worker_thread+0xe4/0x10e0
+[ 2747.966946]  kthread+0x2d3/0x3d0
+[ 2747.970546]  ? process_one_work+0x1000/0x1000
+[ 2747.975405]  ? kthread_create_on_node+0xc0/0xc0
+[ 2747.980457]  ? syscall_return_slowpath+0xe6/0x140
+[ 2747.985706]  ? do_page_fault+0x30/0x80
+[ 2747.989887]  ret_from_fork+0x2c/0x40
+[ 2747.993874] Object at ffff8801395ae690, in cache buffer_head size: 104
+[ 2748.001155] Allocated:
+[ 2748.003782] PID = 8327
+[ 2748.006411]  save_stack_trace+0x1b/0x20
+[ 2748.010688]  save_stack+0x46/0xd0
+[ 2748.014383]  kasan_kmalloc+0xad/0xe0
+[ 2748.018370]  kasan_slab_alloc+0x12/0x20
+[ 2748.022648]  kmem_cache_alloc+0xb8/0x1b0
+[ 2748.027024]  alloc_buffer_head+0x22/0xc0
+[ 2748.031399]  alloc_page_buffers+0xd1/0x250
+[ 2748.035968]  create_empty_buffers+0x30/0x410
+[ 2748.040730]  create_page_buffers+0x120/0x1b0
+[ 2748.045493]  __block_write_begin_int+0x17a/0x1800
+[ 2748.050740]  iomap_write_begin+0x100/0x2f0
+[ 2748.055308]  iomap_zero_range_actor+0x253/0x5c0
+[ 2748.060362]  iomap_apply+0x157/0x270
+[ 2748.064347]  iomap_zero_range+0x5a/0x80
+[ 2748.068624]  iomap_truncate_page+0x6b/0xa0
+[ 2748.073227]  xfs_setattr_size+0x1f7/0xa10 [xfs]
+[ 2748.078312]  xfs_vn_setattr_size+0x68/0x140 [xfs]
+[ 2748.083589]  xfs_file_fallocate+0x4ac/0x820 [xfs]
+[ 2748.088838]  vfs_fallocate+0x2cf/0x780
+[ 2748.093021]  SyS_fallocate+0x48/0x80
+[ 2748.097006]  do_syscall_64+0x18a/0x430
+[ 2748.101186]  return_from_SYSCALL_64+0x0/0x6a
+[ 2748.105948] Freed:
+[ 2748.108189] PID = 8327
+[ 2748.110816]  save_stack_trace+0x1b/0x20
+[ 2748.115093]  save_stack+0x46/0xd0
+[ 2748.118788]  kasan_slab_free+0x73/0xc0
+[ 2748.122969]  kmem_cache_free+0x7a/0x200
+[ 2748.127247]  free_buffer_head+0x41/0x80
+[ 2748.131524]  try_to_free_buffers+0x178/0x250
+[ 2748.136316]  xfs_vm_releasepage+0x2e9/0x3d0 [xfs]
+[ 2748.141563]  try_to_release_page+0x100/0x180
+[ 2748.146325]  invalidate_inode_pages2_range+0x7da/0xcf0
+[ 2748.152087]  xfs_shift_file_space+0x37d/0x6e0 [xfs]
+[ 2748.157557]  xfs_collapse_file_space+0x49/0x120 [xfs]
+[ 2748.163223]  xfs_file_fallocate+0x2a7/0x820 [xfs]
+[ 2748.168462]  vfs_fallocate+0x2cf/0x780
+[ 2748.172642]  SyS_fallocate+0x48/0x80
+[ 2748.176629]  do_syscall_64+0x18a/0x430
+[ 2748.180810]  return_from_SYSCALL_64+0x0/0x6a
 
-Thanks for the review,
+Fixed it by checking on offset against end & breaking out first,
+dereference bh only if there're still bufferheads to process.
 
---D
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ fs/xfs/xfs_aops.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> 
-> total: 1 errors, 1 warnings, 391 lines checked
-> ...
-> 
-> With that fixed:
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> > --D
-> > 
-> > > 
-> > > Brian
-> > > 
-> > > > +	/* Start ra for each dir (not fs) block that has a mapping. */
-> > > >  	blk_start_plug(&plug);
-> > > > -	for (mip->ra_index = mip->ra_offset = i = 0;
-> > > > -	     mip->ra_want > mip->ra_current && i < mip->map_blocks;
-> > > > -	     i += geo->fsbcount) {
-> > > > -		ASSERT(mip->ra_index < mip->map_valid);
-> > > > -		/*
-> > > > -		 * Read-ahead a contiguous directory block.
-> > > > -		 */
-> > > > -		if (i > mip->ra_current &&
-> > > > -		    (map[mip->ra_index].br_blockcount - mip->ra_offset) >=
-> > > > -		    geo->fsbcount) {
-> > > > -			xfs_dir3_data_readahead(dp,
-> > > > -				map[mip->ra_index].br_startoff + mip->ra_offset,
-> > > > -				XFS_FSB_TO_DADDR(dp->i_mount,
-> > > > -					map[mip->ra_index].br_startblock +
-> > > > -							mip->ra_offset));
-> > > > -			mip->ra_current = i;
-> > > > -		}
-> > > > -
-> > > > -		/*
-> > > > -		 * Read-ahead a non-contiguous directory block.  This doesn't
-> > > > -		 * use our mapping, but this is a very rare case.
-> > > > -		 */
-> > > > -		else if (i > mip->ra_current) {
-> > > > -			xfs_dir3_data_readahead(dp,
-> > > > -					map[mip->ra_index].br_startoff +
-> > > > -							mip->ra_offset, -1);
-> > > > -			mip->ra_current = i;
-> > > > -		}
-> > > > -
-> > > > -		/*
-> > > > -		 * Advance offset through the mapping table, processing a full
-> > > > -		 * dir block even if it is fragmented into several extents.
-> > > > -		 * But stop if we have consumed all valid mappings, even if
-> > > > -		 * it's not yet a full directory block.
-> > > > -		 */
-> > > > -		for (j = 0;
-> > > > -		     j < geo->fsbcount && mip->ra_index < mip->map_valid;
-> > > > -		     j += length ) {
-> > > > -			/*
-> > > > -			 * The rest of this extent but not more than a dir
-> > > > -			 * block.
-> > > > -			 */
-> > > > -			length = min_t(int, geo->fsbcount - j,
-> > > > -					map[mip->ra_index].br_blockcount -
-> > > > -							mip->ra_offset);
-> > > > -			mip->ra_offset += length;
-> > > > -
-> > > > -			/*
-> > > > -			 * Advance to the next mapping if this one is used up.
-> > > > -			 */
-> > > > -			if (mip->ra_offset == map[mip->ra_index].br_blockcount) {
-> > > > -				mip->ra_offset = 0;
-> > > > -				mip->ra_index++;
-> > > > +	while (ra_want > 0) {
-> > > > +		next_ra = roundup((xfs_dablk_t)map.br_startoff, geo->fsbcount);
-> > > > +		while (ra_want > 0 &&
-> > > > +		       next_ra < map.br_startoff + map.br_blockcount) {
-> > > > +			if (next_ra >= last_da) {
-> > > > +				*ra_blk = last_da;
-> > > > +				break;
-> > > > +			} else if (next_ra > *ra_blk) {
-> > > > +				xfs_dir3_data_readahead(dp, next_ra, -2);
-> > > > +				*ra_blk = next_ra;
-> > > >  			}
-> > > > +			ra_want -= geo->fsbcount;
-> > > > +			next_ra += geo->fsbcount;
-> > > > +		}
-> > > > +		found = xfs_iext_get_extent(ifp, ++idx, &map);
-> > > > +		if (!found) {
-> > > > +			*ra_blk = last_da;
-> > > > +			break;
-> > > >  		}
-> > > >  	}
-> > > >  	blk_finish_plug(&plug);
-> > > > @@ -458,6 +342,9 @@ xfs_dir2_leaf_readbuf(
-> > > >  out:
-> > > >  	*bpp = bp;
-> > > >  	return error;
-> > > > +out_no_ra:
-> > > > +	*ra_blk = last_da;
-> > > > +	goto out;
-> > > >  }
-> > > >  
-> > > >  /*
-> > > > @@ -475,14 +362,14 @@ xfs_dir2_leaf_getdents(
-> > > >  	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
-> > > >  	xfs_dir2_data_entry_t	*dep;		/* data entry */
-> > > >  	xfs_dir2_data_unused_t	*dup;		/* unused entry */
-> > > > -	int			error = 0;	/* error return value */
-> > > > -	int			length;		/* temporary length value */
-> > > > -	int			byteoff;	/* offset in current block */
-> > > > -	xfs_dir2_off_t		curoff;		/* current overall offset */
-> > > > -	xfs_dir2_off_t		newoff;		/* new curoff after new blk */
-> > > >  	char			*ptr = NULL;	/* pointer to current data */
-> > > > -	struct xfs_dir2_leaf_map_info *map_info;
-> > > >  	struct xfs_da_geometry	*geo = args->geo;
-> > > > +	xfs_dablk_t		rablk = 0;	/* current readahead block */
-> > > > +	xfs_dir2_off_t		curoff;		/* current overall offset */
-> > > > +	int			length;		/* temporary length value */
-> > > > +	int			byteoff;	/* offset in current block */
-> > > > +	int			lock_mode;
-> > > > +	int			error = 0;	/* error return value */
-> > > >  
-> > > >  	/*
-> > > >  	 * If the offset is at or past the largest allowed value,
-> > > > @@ -492,30 +379,12 @@ xfs_dir2_leaf_getdents(
-> > > >  		return 0;
-> > > >  
-> > > >  	/*
-> > > > -	 * Set up to bmap a number of blocks based on the caller's
-> > > > -	 * buffer size, the directory block size, and the filesystem
-> > > > -	 * block size.
-> > > > -	 */
-> > > > -	length = howmany(bufsize + geo->blksize, (1 << geo->fsblog));
-> > > > -	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
-> > > > -				(length * sizeof(struct xfs_bmbt_irec)),
-> > > > -			       KM_SLEEP | KM_NOFS);
-> > > > -	map_info->map_size = length;
-> > > > -
-> > > > -	/*
-> > > >  	 * Inside the loop we keep the main offset value as a byte offset
-> > > >  	 * in the directory file.
-> > > >  	 */
-> > > >  	curoff = xfs_dir2_dataptr_to_byte(ctx->pos);
-> > > >  
-> > > >  	/*
-> > > > -	 * Force this conversion through db so we truncate the offset
-> > > > -	 * down to get the start of the data block.
-> > > > -	 */
-> > > > -	map_info->map_off = xfs_dir2_db_to_da(geo,
-> > > > -					      xfs_dir2_byte_to_db(geo, curoff));
-> > > > -
-> > > > -	/*
-> > > >  	 * Loop over directory entries until we reach the end offset.
-> > > >  	 * Get more blocks and readahead as necessary.
-> > > >  	 */
-> > > > @@ -527,38 +396,18 @@ xfs_dir2_leaf_getdents(
-> > > >  		 * current buffer, need to get another one.
-> > > >  		 */
-> > > >  		if (!bp || ptr >= (char *)bp->b_addr + geo->blksize) {
-> > > > -			int	lock_mode;
-> > > > -			bool	trim_map = false;
-> > > > -
-> > > >  			if (bp) {
-> > > > -				xfs_trans_brelse(NULL, bp);
-> > > > +				xfs_trans_brelse(args->trans, bp);
-> > > >  				bp = NULL;
-> > > > -				trim_map = true;
-> > > >  			}
-> > > >  
-> > > >  			lock_mode = xfs_ilock_data_map_shared(dp);
-> > > > -			error = xfs_dir2_leaf_readbuf(args, bufsize, map_info,
-> > > > -						      &curoff, &bp, trim_map);
-> > > > +			error = xfs_dir2_leaf_readbuf(args, bufsize, &curoff,
-> > > > +					&rablk, &bp);
-> > > >  			xfs_iunlock(dp, lock_mode);
-> > > > -			if (error || !map_info->map_valid)
-> > > > +			if (error || !bp)
-> > > >  				break;
-> > > >  
-> > > > -			/*
-> > > > -			 * Having done a read, we need to set a new offset.
-> > > > -			 */
-> > > > -			newoff = xfs_dir2_db_off_to_byte(geo,
-> > > > -							 map_info->curdb, 0);
-> > > > -			/*
-> > > > -			 * Start of the current block.
-> > > > -			 */
-> > > > -			if (curoff < newoff)
-> > > > -				curoff = newoff;
-> > > > -			/*
-> > > > -			 * Make sure we're in the right block.
-> > > > -			 */
-> > > > -			else if (curoff > newoff)
-> > > > -				ASSERT(xfs_dir2_byte_to_db(geo, curoff) ==
-> > > > -				       map_info->curdb);
-> > > >  			hdr = bp->b_addr;
-> > > >  			xfs_dir3_data_check(dp, bp);
-> > > >  			/*
-> > > > @@ -643,7 +492,6 @@ xfs_dir2_leaf_getdents(
-> > > >  		ctx->pos = XFS_DIR2_MAX_DATAPTR & 0x7fffffff;
-> > > >  	else
-> > > >  		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
-> > > > -	kmem_free(map_info);
-> > > >  	if (bp)
-> > > >  		xfs_trans_brelse(NULL, bp);
-> > > >  	return error;
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 6149429..a7645be 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -111,11 +111,11 @@ xfs_finish_page_writeback(
+ 
+ 	bsize = bh->b_size;
+ 	do {
++		if (off > end)
++			break;
+ 		next = bh->b_this_page;
+ 		if (off < bvec->bv_offset)
+ 			goto next_bh;
+-		if (off > end)
+-			break;
+ 		bh->b_end_io(bh, !error);
+ next_bh:
+ 		off += bsize;
+-- 
+2.9.3
+
