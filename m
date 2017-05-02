@@ -1,45 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:33717 "EHLO
-        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752512AbdEIPdH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 May 2017 11:33:07 -0400
-Received: by mail-qk0-f178.google.com with SMTP id y201so4219644qka.0
-        for <linux-xfs@vger.kernel.org>; Tue, 09 May 2017 08:33:07 -0700 (PDT)
-Message-ID: <1494343983.2659.7.camel@redhat.com>
-Subject: Re: [RFC xfstests PATCH] xfstests: add a writeback error handling
- test
-From: Jeff Layton <jlayton@redhat.com>
-Date: Tue, 09 May 2017 11:33:03 -0400
-In-Reply-To: <20170424150019.GA3288@infradead.org>
-References: <20170424134551.10301-1-jlayton@redhat.com>
-         <20170424150019.GA3288@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from userp1040.oracle.com ([156.151.31.81]:23260 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750758AbdEBXQ1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2017 19:16:27 -0400
+Date: Tue, 2 May 2017 16:16:19 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 2/2] xfs_io: add missed quotation marks in man page
+Message-ID: <20170502231619.GE5973@birch.djwong.org>
+References: <1493012000-9454-1-git-send-email-zlang@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1493012000-9454-1-git-send-email-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, osd-dev@open-osd.org, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, 2017-04-24 at 08:00 -0700, Christoph Hellwig wrote:
-> On Mon, Apr 24, 2017 at 09:45:51AM -0400, Jeff Layton wrote:
-> > With the patch series above, ext4 now passes. xfs and btrfs end up in
-> > r/o mode after the test. xfs returns -EIO at that point though, and
-> > btrfs returns -EROFS. What behavior we actually want there, I'm not
-> > certain. We might be able to mitigate that by putting the journals on a
-> > separate device?
+On Mon, Apr 24, 2017 at 01:33:20PM +0800, Zorro Lang wrote:
+> The description about set_encpolicy command in xfs_io man page missed
+> some quotation marks. It's a little picky, but it really causes the
+> quotation marks can't match each other.
 > 
-> This looks like XFS shut down because of a permanent write error from
-> dm-error.  Which seems like the expected behavior.
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> Hi,
+> 
+> Actually this's the first version for this patch, I hit this problem
+> when I tried to add "inode" command under "set_encpolicy" command.
+> 
+> That missed quotation marks always break the format which I used to
+> describe the "inode" command, so I have to do this change with that
+> inode command patch together.
 
-Oops, didn't see this message earlier...
+/me hates looking at nroff, but I think this looks ok....
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yeah, that's entirely reasonable when there is a write error to the
-journal. The latest version of this uses $SCRATCH_LOGDEV to put the
-journal on a different device, and with that I get the expected behavior
-from xfs.
 
-Thanks,
--- 
-Jeff Layton <jlayton@redhat.com>
+--D
+
+> 
+> Thanks,
+> Zorro
+> 
+>  man/man8/xfs_io.8 | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index a7c2a1e..a686ef5 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -949,7 +949,7 @@ was specified on the commandline, the maximum possible inode number in
+>  the system will be printed along with its size.
+>  .PD
+>  .TP
+> -.BI "set_encpolicy [ \-c " mode " ] [ \-n " mode " ] [ \-f " flags " ] [ \-v " version " ] [ " keydesc " ]
+> +.BI "set_encpolicy [ \-c " mode " ] [ \-n " mode " ] [ \-f " flags " ] [ \-v " version " ] [ " keydesc " ]"
+>  On filesystems that support encryption, assign an encryption policy to the
+>  current file.
+>  .I keydesc
+> @@ -958,16 +958,16 @@ If not specified, a "default" key descriptor of all 0's will be used.
+>  .RS 1.0i
+>  .PD 0
+>  .TP 0.4i
+> -.BI \-c " mode
+> +.BI \-c " mode"
+>  contents encryption mode (e.g. AES-256-XTS)
+>  .TP
+> -.BI \-n " mode
+> +.BI \-n " mode"
+>  filenames encryption mode (e.g. AES-256-CTS)
+>  .TP
+> -.BI \-f " flags
+> +.BI \-f " flags"
+>  policy flags (numeric)
+>  .TP
+> -.BI \-v " version
+> +.BI \-v " version"
+>  version of policy structure (numeric)
+>  .RE
+>  .PD
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
