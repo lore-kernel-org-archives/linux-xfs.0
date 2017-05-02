@@ -1,135 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39299 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751404AbdEBUyO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2017 16:54:14 -0400
-Date: Tue, 2 May 2017 13:54:09 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix use-after-free in xfs_finish_page_writeback
-Message-ID: <20170502205409.GC5973@birch.djwong.org>
-References: <20170501173633.6639-1-eguan@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:44481 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750987AbdEBHha (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2017 03:37:30 -0400
+Date: Tue, 2 May 2017 00:37:30 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH RFC] xfs: support debug mode with assert warnings
+Message-ID: <20170502073730.GA19021@infradead.org>
+References: <1493400541-56113-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170501173633.6639-1-eguan@redhat.com>
+In-Reply-To: <1493400541-56113-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 02, 2017 at 01:36:33AM +0800, Eryu Guan wrote:
-> Commit 28b783e47ad7 ("xfs: bufferhead chains are invalid after
-> end_page_writeback") fixed one use-after-free issue by
-> pre-calculating the loop conditionals before calling bh->b_end_io()
-> in the end_io processing loop, but it assigned 'next' pointer before
-> checking end offset boundary & breaking the loop, at which point the
-> bh might be freed already, and caused use-after-free.
-> 
-> This is caught by KASAN when running fstests generic/127 on sub-page
-> block size XFS.
-> 
-> [ 2517.244502] run fstests generic/127 at 2017-04-27 07:30:50
-> [ 2747.868840] ==================================================================
-> [ 2747.876949] BUG: KASAN: use-after-free in xfs_destroy_ioend+0x3d3/0x4e0 [xfs] at addr ffff8801395ae698
-> ...
-> [ 2747.918245] Call Trace:
-> [ 2747.920975]  dump_stack+0x63/0x84
-> [ 2747.924673]  kasan_object_err+0x21/0x70
-> [ 2747.928950]  kasan_report+0x271/0x530
-> [ 2747.933064]  ? xfs_destroy_ioend+0x3d3/0x4e0 [xfs]
-> [ 2747.938409]  ? end_page_writeback+0xce/0x110
-> [ 2747.943171]  __asan_report_load8_noabort+0x19/0x20
-> [ 2747.948545]  xfs_destroy_ioend+0x3d3/0x4e0 [xfs]
-> [ 2747.953724]  xfs_end_io+0x1af/0x2b0 [xfs]
-> [ 2747.958197]  process_one_work+0x5ff/0x1000
-> [ 2747.962766]  worker_thread+0xe4/0x10e0
-> [ 2747.966946]  kthread+0x2d3/0x3d0
-> [ 2747.970546]  ? process_one_work+0x1000/0x1000
-> [ 2747.975405]  ? kthread_create_on_node+0xc0/0xc0
-> [ 2747.980457]  ? syscall_return_slowpath+0xe6/0x140
-> [ 2747.985706]  ? do_page_fault+0x30/0x80
-> [ 2747.989887]  ret_from_fork+0x2c/0x40
-> [ 2747.993874] Object at ffff8801395ae690, in cache buffer_head size: 104
-> [ 2748.001155] Allocated:
-> [ 2748.003782] PID = 8327
-> [ 2748.006411]  save_stack_trace+0x1b/0x20
-> [ 2748.010688]  save_stack+0x46/0xd0
-> [ 2748.014383]  kasan_kmalloc+0xad/0xe0
-> [ 2748.018370]  kasan_slab_alloc+0x12/0x20
-> [ 2748.022648]  kmem_cache_alloc+0xb8/0x1b0
-> [ 2748.027024]  alloc_buffer_head+0x22/0xc0
-> [ 2748.031399]  alloc_page_buffers+0xd1/0x250
-> [ 2748.035968]  create_empty_buffers+0x30/0x410
-> [ 2748.040730]  create_page_buffers+0x120/0x1b0
-> [ 2748.045493]  __block_write_begin_int+0x17a/0x1800
-> [ 2748.050740]  iomap_write_begin+0x100/0x2f0
-> [ 2748.055308]  iomap_zero_range_actor+0x253/0x5c0
-> [ 2748.060362]  iomap_apply+0x157/0x270
-> [ 2748.064347]  iomap_zero_range+0x5a/0x80
-> [ 2748.068624]  iomap_truncate_page+0x6b/0xa0
-> [ 2748.073227]  xfs_setattr_size+0x1f7/0xa10 [xfs]
-> [ 2748.078312]  xfs_vn_setattr_size+0x68/0x140 [xfs]
-> [ 2748.083589]  xfs_file_fallocate+0x4ac/0x820 [xfs]
-> [ 2748.088838]  vfs_fallocate+0x2cf/0x780
-> [ 2748.093021]  SyS_fallocate+0x48/0x80
-> [ 2748.097006]  do_syscall_64+0x18a/0x430
-> [ 2748.101186]  return_from_SYSCALL_64+0x0/0x6a
-> [ 2748.105948] Freed:
-> [ 2748.108189] PID = 8327
-> [ 2748.110816]  save_stack_trace+0x1b/0x20
-> [ 2748.115093]  save_stack+0x46/0xd0
-> [ 2748.118788]  kasan_slab_free+0x73/0xc0
-> [ 2748.122969]  kmem_cache_free+0x7a/0x200
-> [ 2748.127247]  free_buffer_head+0x41/0x80
-> [ 2748.131524]  try_to_free_buffers+0x178/0x250
-> [ 2748.136316]  xfs_vm_releasepage+0x2e9/0x3d0 [xfs]
-> [ 2748.141563]  try_to_release_page+0x100/0x180
-> [ 2748.146325]  invalidate_inode_pages2_range+0x7da/0xcf0
-> [ 2748.152087]  xfs_shift_file_space+0x37d/0x6e0 [xfs]
-> [ 2748.157557]  xfs_collapse_file_space+0x49/0x120 [xfs]
-> [ 2748.163223]  xfs_file_fallocate+0x2a7/0x820 [xfs]
-> [ 2748.168462]  vfs_fallocate+0x2cf/0x780
-> [ 2748.172642]  SyS_fallocate+0x48/0x80
-> [ 2748.176629]  do_syscall_64+0x18a/0x430
-> [ 2748.180810]  return_from_SYSCALL_64+0x0/0x6a
-> 
-> Fixed it by checking on offset against end & breaking out first,
-> dereference bh only if there're still bufferheads to process.
-> 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
-
-Looks ok, will test;
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
+On Fri, Apr 28, 2017 at 01:29:01PM -0400, Brian Foster wrote:
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
->  fs/xfs/xfs_aops.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 6149429..a7645be 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -111,11 +111,11 @@ xfs_finish_page_writeback(
+> Hi all,
+> 
+> Every now and then I find myself wanting to enable DEBUG mode code
+> without having to BUG the kernel every time an assert fails. Currently,
+> I end up just commenting out the BUG() call from assfail(). Any thoughts
+> on something like the below to update our configuration to support the
+> ability to enable debug mode with assert warnings?
+> 
+> While this appears as a new option in Kconfig, it just reuses the
+> existing XFS_WARN definition to convert asserts into warnings regardless
+> of whether debug mode is enabled or not. There are probably multiple
+> other ways to do something like this (e.g., a Kconfig 'choice' selection
+> for various XFS debug modes, dropping the BUG() entirely, etc.).
+> Thoughts?
+> 
+> Brian
+> 
+>  fs/xfs/Kconfig     |  9 +++++++++
+>  fs/xfs/xfs_linux.h | 32 +++++++++++++++++++-------------
+>  2 files changed, 28 insertions(+), 13 deletions(-)
+> 
+> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+> index 35faf12..db6d830 100644
+> --- a/fs/xfs/Kconfig
+> +++ b/fs/xfs/Kconfig
+> @@ -96,3 +96,12 @@ config XFS_DEBUG
+>  	  not useful unless you are debugging a particular problem.
 >  
->  	bsize = bh->b_size;
->  	do {
-> +		if (off > end)
-> +			break;
->  		next = bh->b_this_page;
->  		if (off < bvec->bv_offset)
->  			goto next_bh;
-> -		if (off > end)
-> -			break;
->  		bh->b_end_io(bh, !error);
->  next_bh:
->  		off += bsize;
-> -- 
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  	  Say N unless you are an XFS developer, or you play one on TV.
+> +
+> +config XFS_WARN
+> +	bool "Non-fatal Asserts"
+> +	default n
+> +	depends on XFS_FS && XFS_DEBUG
+> +	help
+> +	  Say Y here to convert DEBUG mode ASSERT failures into warnings.
+> +	  Otherwise, ASSERT failures are considered fatal errors and BUG the
+> +	  kernel.
+
+I'm very confused by this patch.  At least my fs/xfs/Kconfig already
+has a "config XFS_WARN" line.  What am I missing?
