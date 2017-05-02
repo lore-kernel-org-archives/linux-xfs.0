@@ -1,57 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54032 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751432AbdEAUTl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 May 2017 16:19:41 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:39299 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751404AbdEBUyO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2017 16:54:14 -0400
+Date: Tue, 2 May 2017 13:54:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix use-after-free in xfs_finish_page_writeback
+Message-ID: <20170502205409.GC5973@birch.djwong.org>
+References: <20170501173633.6639-1-eguan@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20170501184822.GB3775@bfoster.bfoster>
-References: <CAF1ivSZeYhnzh6CPZViYUNFXdm33hhTA_CzP7V745QociEEnKg@mail.gmail.com>
- <CAF1ivSbjdixqDo663wvAEkzRk-ctOX+y5UYxq4UdPA-=JVufyw@mail.gmail.com>
- <CAF1ivSbEfhTYxcBx1dafK9TD3VdeXbJrNMzWJmXY8kyU0ibkUw@mail.gmail.com>
- <8accf9d5-b2e4-c82e-fa47-3c5bc2ea35b1@kernel.org> <20170501131222.GA2109@bfoster.bfoster>
- <70def595-91a9-970a-d227-547055da5bb5@kernel.org> <20170501184822.GB3775@bfoster.bfoster>
-From: Ming Lin <mlin@kernel.org>
-Date: Mon, 1 May 2017 13:18:58 -0700
-Message-ID: <CAF1ivSZgh-v1=LqeFwKZWuzcARwy9w37Qg_J3r_Hm-jnbmaH6g@mail.gmail.com>
-Subject: Re: xlog_write: reservation ran out
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170501173633.6639-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Ceph Development <ceph-devel@vger.kernel.org>, "LIU, Fei" <james.liu@alibaba-inc.com>, xiongwei.jiang@alibaba-inc.com, boqian.zy@alibaba-inc.com, sheng.qiu@alibaba-inc.com, Sage Weil <sweil@redhat.com>
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 1, 2017 at 11:48 AM, Brian Foster <bfoster@redhat.com> wrote:
->>
->> It takes about 10 hours to reproduce the problem.
->>
->
-> Out of curiosity, is that 10 hours of removing files or 10 hours of
-> repopulating and removing until the problem happens to occur? If the
-> latter, roughly how many fill/remove cycles does that entail (tens,
-> hundreds, thousands)?
+On Tue, May 02, 2017 at 01:36:33AM +0800, Eryu Guan wrote:
+> Commit 28b783e47ad7 ("xfs: bufferhead chains are invalid after
+> end_page_writeback") fixed one use-after-free issue by
+> pre-calculating the loop conditionals before calling bh->b_end_io()
+> in the end_io processing loop, but it assigned 'next' pointer before
+> checking end offset boundary & breaking the loop, at which point the
+> bh might be freed already, and caused use-after-free.
+> 
+> This is caught by KASAN when running fstests generic/127 on sub-page
+> block size XFS.
+> 
+> [ 2517.244502] run fstests generic/127 at 2017-04-27 07:30:50
+> [ 2747.868840] ==================================================================
+> [ 2747.876949] BUG: KASAN: use-after-free in xfs_destroy_ioend+0x3d3/0x4e0 [xfs] at addr ffff8801395ae698
+> ...
+> [ 2747.918245] Call Trace:
+> [ 2747.920975]  dump_stack+0x63/0x84
+> [ 2747.924673]  kasan_object_err+0x21/0x70
+> [ 2747.928950]  kasan_report+0x271/0x530
+> [ 2747.933064]  ? xfs_destroy_ioend+0x3d3/0x4e0 [xfs]
+> [ 2747.938409]  ? end_page_writeback+0xce/0x110
+> [ 2747.943171]  __asan_report_load8_noabort+0x19/0x20
+> [ 2747.948545]  xfs_destroy_ioend+0x3d3/0x4e0 [xfs]
+> [ 2747.953724]  xfs_end_io+0x1af/0x2b0 [xfs]
+> [ 2747.958197]  process_one_work+0x5ff/0x1000
+> [ 2747.962766]  worker_thread+0xe4/0x10e0
+> [ 2747.966946]  kthread+0x2d3/0x3d0
+> [ 2747.970546]  ? process_one_work+0x1000/0x1000
+> [ 2747.975405]  ? kthread_create_on_node+0xc0/0xc0
+> [ 2747.980457]  ? syscall_return_slowpath+0xe6/0x140
+> [ 2747.985706]  ? do_page_fault+0x30/0x80
+> [ 2747.989887]  ret_from_fork+0x2c/0x40
+> [ 2747.993874] Object at ffff8801395ae690, in cache buffer_head size: 104
+> [ 2748.001155] Allocated:
+> [ 2748.003782] PID = 8327
+> [ 2748.006411]  save_stack_trace+0x1b/0x20
+> [ 2748.010688]  save_stack+0x46/0xd0
+> [ 2748.014383]  kasan_kmalloc+0xad/0xe0
+> [ 2748.018370]  kasan_slab_alloc+0x12/0x20
+> [ 2748.022648]  kmem_cache_alloc+0xb8/0x1b0
+> [ 2748.027024]  alloc_buffer_head+0x22/0xc0
+> [ 2748.031399]  alloc_page_buffers+0xd1/0x250
+> [ 2748.035968]  create_empty_buffers+0x30/0x410
+> [ 2748.040730]  create_page_buffers+0x120/0x1b0
+> [ 2748.045493]  __block_write_begin_int+0x17a/0x1800
+> [ 2748.050740]  iomap_write_begin+0x100/0x2f0
+> [ 2748.055308]  iomap_zero_range_actor+0x253/0x5c0
+> [ 2748.060362]  iomap_apply+0x157/0x270
+> [ 2748.064347]  iomap_zero_range+0x5a/0x80
+> [ 2748.068624]  iomap_truncate_page+0x6b/0xa0
+> [ 2748.073227]  xfs_setattr_size+0x1f7/0xa10 [xfs]
+> [ 2748.078312]  xfs_vn_setattr_size+0x68/0x140 [xfs]
+> [ 2748.083589]  xfs_file_fallocate+0x4ac/0x820 [xfs]
+> [ 2748.088838]  vfs_fallocate+0x2cf/0x780
+> [ 2748.093021]  SyS_fallocate+0x48/0x80
+> [ 2748.097006]  do_syscall_64+0x18a/0x430
+> [ 2748.101186]  return_from_SYSCALL_64+0x0/0x6a
+> [ 2748.105948] Freed:
+> [ 2748.108189] PID = 8327
+> [ 2748.110816]  save_stack_trace+0x1b/0x20
+> [ 2748.115093]  save_stack+0x46/0xd0
+> [ 2748.118788]  kasan_slab_free+0x73/0xc0
+> [ 2748.122969]  kmem_cache_free+0x7a/0x200
+> [ 2748.127247]  free_buffer_head+0x41/0x80
+> [ 2748.131524]  try_to_free_buffers+0x178/0x250
+> [ 2748.136316]  xfs_vm_releasepage+0x2e9/0x3d0 [xfs]
+> [ 2748.141563]  try_to_release_page+0x100/0x180
+> [ 2748.146325]  invalidate_inode_pages2_range+0x7da/0xcf0
+> [ 2748.152087]  xfs_shift_file_space+0x37d/0x6e0 [xfs]
+> [ 2748.157557]  xfs_collapse_file_space+0x49/0x120 [xfs]
+> [ 2748.163223]  xfs_file_fallocate+0x2a7/0x820 [xfs]
+> [ 2748.168462]  vfs_fallocate+0x2cf/0x780
+> [ 2748.172642]  SyS_fallocate+0x48/0x80
+> [ 2748.176629]  do_syscall_64+0x18a/0x430
+> [ 2748.180810]  return_from_SYSCALL_64+0x0/0x6a
+> 
+> Fixed it by checking on offset against end & breaking out first,
+> dereference bh only if there're still bufferheads to process.
+> 
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
 
-10 hours of repopulating the cluster. Then remove all rbd images with
-"rbd rm xxx"
-Just 1 cycle: fill then remove.
+Looks ok, will test;
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> You could try to populate the fs using Ceph as with your current
-> reproducer, particularly since it may use patterns or features that
-> could affect this problem (xattrs?) that fio may not induce, and then
-> try to directly reproduce the overrun via manual file removals. This
-> would be sufficient for debugging because if you can share a metadump
-> image of the original fs and appropriate steps to reproduce, we don't
-> particularly need to care about how the fs was constructed in the first
-> place.
->
-> For example, if you have a test that currently populates and depopulates
-> the fs through Ceph, something I might try is to update the test to
-> generate a metadump image of the fs every time your test cycles from
-> populating to depopulating. Once the problem reproduces, you now have a
-> metadump image of the original fs that you can restore and use to try to
-> reproduce the overrun manually (repeatedly, if nec.).
+--D
 
-That's a nice idea to debug it.
-I'll try.
-
-Thanks.
+> ---
+>  fs/xfs/xfs_aops.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 6149429..a7645be 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -111,11 +111,11 @@ xfs_finish_page_writeback(
+>  
+>  	bsize = bh->b_size;
+>  	do {
+> +		if (off > end)
+> +			break;
+>  		next = bh->b_this_page;
+>  		if (off < bvec->bv_offset)
+>  			goto next_bh;
+> -		if (off > end)
+> -			break;
+>  		bh->b_end_io(bh, !error);
+>  next_bh:
+>  		off += bsize;
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
