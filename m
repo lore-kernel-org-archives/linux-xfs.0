@@ -1,61 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36414 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751028AbdEETBk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 May 2017 15:01:40 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 2DEF17AE043
-        for <linux-xfs@vger.kernel.org>; Fri,  5 May 2017 14:01:40 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs: v4.11.0 released!
-Message-ID: <65f0bef0-b632-14e2-98ce-e1735f68758c@sandeen.net>
-Date: Fri, 5 May 2017 14:01:39 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:43575 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750912AbdEBSCz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2017 14:02:55 -0400
+Date: Tue, 2 May 2017 11:02:20 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: handle large CoW remapping requests
+Message-ID: <20170502180220.GA5973@birch.djwong.org>
+References: <20170427212754.GB19158@birch.djwong.org>
+ <20170502075021.GA7916@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170502075021.GA7916@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
 
-Hi Folks,
+On Tue, May 02, 2017 at 12:50:21AM -0700, Christoph Hellwig wrote:
+> On Thu, Apr 27, 2017 at 02:27:54PM -0700, Darrick J. Wong wrote:
+> > XFS transactions are constrained both by space and block reservation
+> > limits and the fact that we have to avoid doing 64-bit divisions.  This
+> > means that we can't remap more than 2^32 blocks at a time.  However,
+> > file logical blocks are 64-bit in size, so if we encounter a huge remap
+> > request we have to break it up into smaller pieces.
+> 
+> But where would we get that huge remap request from?
 
-The xfsprogs repositories have just been updated and tagged with the
-v4.11.0 release tag. It can be found here:
+Nowhere, at the moment.  I had O_ATOMIC in mind for this though, since
+it'll call end_cow on the entire file at fsync time.  What if you've
+written 8GB to a file that you've opened with ATOMIC and then fsync it?
+That would trigger a remap longer than MAX_RW_COUNT which will blow the
+assert, right?
 
-git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git v4.11.0
+> We already did the BUILD_BUG_ON for the max read/write size at least.
+> Also the remaps would now not be atomic, which would be a problem for
+> my O_ATOMIC implementation at least.
 
-Release tarballs are hosted on kernel.org, and can be found here:
+Hm... you're right, if we crash midway through the remap then ideally
+we'd recover by finishing whatever remapping steps we didn't get to.
 
-https://kernel.org/pub/linux/utils/fs/xfs/xfsprogs/
+The current remapping mechanism only guarantees that whatever little
+part of the data fork we've bunmapi'd for each cow fork extent will also
+get remapped.  There isn't anything in there that guarantees a remap of
+the parts we haven't touched yet.  If one CoW fork extent maps to 2000
+data fork extents, we'll atomically remap each of the 2000 extents.  If
+we fail at extent 900, the remaining 1100 extents are fed to the CoW
+cleanup at the next mount time.  This patch doesn't try to change that
+behavior.
 
-Many thanks go to all the contributors to this release. The summary
-of changes since v4.7.0 can be found listed in doc/CHANGES, or below.
+For O_ATOMIC I think we'll have to put in some extra log intent items
+to help us track all the extents we intend to remap so that we can
+pick up where we left off during recovery.  Hm.  It would be difficult
+to avoid running into log space problems if there are a lot of extents.
 
-Onward to 4.12!  ;)
+Second half-baked idea: play games with a shadow inode -- allocate an
+unlinked inode, persist all the written CoW fork extents to the shadow
+inode, and reflink the extents from the shadow to the original inode.
+If we crash then we can just re-reflink everything in the shadow inode.
 
-Cheers,
+--D
 
-Eric.
-
-----
-
-xfsprogs-4.11.0 (5 May 2017)
-        - xfs_io: man page fixups (Zorro Lang)
-
-xfsprogs-4.11.0-rc2 (2 May 2017)
-        - xfs_db: add btree dumping command (Darrick Wong)
-        - mkfs.xfs: change bare -m rmapbt,reflink to enable (Eric Sandeen)
-        - xfs_io: document -d option, enable for dqblks & inodes (Darrick Wong)
-        - xfs_io: minor statx fixes, updates (Chandan Rajendra, Gwendal Grignou)
-
-xfsprogs-4.11.0-rc1 (4 Apr 2017)
-        - xfs_io: add statx support (David Howells, Eric Sandeen)
-        - xfs_io: fix "falloc -p" to pass KEEP_SIZE (Calvin Owens)
-        - xfs_io: support shutdown on foreign filesystems (Darrick Wong)
-        - xfs_repair: repair zero-sized symlinks (Brian Foster)
-        - xfs_repair: warn about dirty log with -n option (Eric Sandeen)
-        - xfs.5: document barrier mount option deprecation (Eric Sandeen)
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
