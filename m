@@ -1,34 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f52.google.com ([209.85.214.52]:35411 "EHLO
-        mail-it0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755240AbdEDOAf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 May 2017 10:00:35 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:25463 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750967AbdEBXNK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2017 19:13:10 -0400
+Date: Tue, 2 May 2017 16:13:02 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 1/2] xfs_io: add missed inode command into man page\
+Message-ID: <20170502231302.GD5973@birch.djwong.org>
+References: <1493010128-8153-1-git-send-email-zlang@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20170504135913.GA17831@lst.de>
-References: <1493904383-2187-1-git-send-email-amir73il@gmail.com>
- <1493904383-2187-3-git-send-email-amir73il@gmail.com> <20170504133417.GD17222@lst.de>
- <CAOQ4uxjxyEGZOAm2rCR+PcdFqfmJxgBBO7_SexPkPRy+0eePOA@mail.gmail.com> <20170504135913.GA17831@lst.de>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 4 May 2017 17:00:34 +0300
-Message-ID: <CAOQ4uxh0_68r7Ycf877RGHhA9rfUJtyN=q4V2_FohvD1gmBAig@mail.gmail.com>
-Subject: Re: [PATCH v2 2/8] xfs: re-define uuid_t as common struct uuid_v1
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1493010128-8153-1-git-send-email-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Miklos Szeredi <miklos@szeredi.hu>, Theodore Tso <tytso@mit.edu>, Richard Weinberger <richard@nod.at>, Mark Fasheh <mfasheh@versity.com>, Dan Williams <dan.j.williams@intel.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs <linux-xfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, May 4, 2017 at 4:59 PM, Christoph Hellwig <hch@lst.de> wrote:
-> On Thu, May 04, 2017 at 04:57:51PM +0300, Amir Goldstein wrote:
->> I did consider defining uuid_t as uuid_be.
->> most of the patch set would have remained the same and
->> xfs_uuid_getnodeuniq() would use struct uuid_v1 explicitly
->> instead of implicitly.
->
-> At least don't add new users of uuid_v1.  Moving that stuff into
-> uuid.[ch] was a major mistake, and I wish review would have caught
-> it back then.
+On Mon, Apr 24, 2017 at 01:02:07PM +0800, Zorro Lang wrote:
+> There's an "inode" command in xfs_io, it's used to query physical
+> information about an inode. But there's not any information about
+> it in xfs_io and other related man pages. So document this command
+> in the xfs_io man page now.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> Hi,
+> 
+> This V2 follow Eric's suggestion, changed some description, and moved
+> the inode command from "FILE I/O" section to "OTHER COMMANDS" section.
+> 
+> Thanks,
+> Zorro
+> 
+>  man/man8/xfs_io.8 | 24 ++++++++++++++++++++++++
+>  1 file changed, 24 insertions(+)
+> 
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 19e1ae4..a7c2a1e 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -923,6 +923,30 @@ verbose output will be printed.
+>  .RE
+>  .IP
+>  .B [NOTE: Not currently operational on Linux.]
+> +.RE
+> +.PD
+> +.TP
+> +.BI "inode  [ [ -n ] " number " ] [ -v ]"
+> +The inode command queries physical information about an inode. With
+> +no arguments, it will return 1 or 0, indicating whether or not if any
 
-Fine. I can keep xfs_uu_t for now.
-It's not really a part of the effort to move the generic helpers to uuid.h.
+"...whether or not any..."
+
+> +inode numbers greater than 32 bits are currently in use in the filesystem.
+> +If given an inode
+> +.I number
+> +as an argument, then inode command will return this inode
+
+"..as an argument, the command will return the same inode number..."
+
+> +.I number
+> +if it's in use, or 0 if not. With
+
+"..if it is in use..."
+
+> +.BI \-n " number"
+> +, the next used inode number after this
+> +.I number
+> +will be returned, or 0 if can't find the next one. With
+
+"...or zero if the supplied inode number is the highest one in use."
+
+> +.B \-v
+> +the command will also report the number of bits (32 or 64) used by the
+> +inode
+> +.I number
+> +printed in the result; if no inode
+> +.I number
+> +was specified on the commandline, the maximum possible inode number in
+
+"..command line..."
+
+> +the system will be printed along with its size.
+
+/me also grumbles about not starting each sentence on a separate line.
+Not enough to go fix all the manpages, though. :P
+
+Otherwise,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+(FWIW if Eric wants to massage the patch on the way in rather than
+waiting for another send-review cycle that's fine with me.)
+
+--D
+
+>  .PD
+>  .TP
+>  .BI "set_encpolicy [ \-c " mode " ] [ \-n " mode " ] [ \-f " flags " ] [ \-v " version " ] [ " keydesc " ]
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
