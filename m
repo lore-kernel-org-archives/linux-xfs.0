@@ -1,35 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:36859 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750864AbdEBHaV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 May 2017 03:30:21 -0400
-Date: Tue, 2 May 2017 09:30:19 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2] xfs: publish UUID in struct super_block
-Message-ID: <20170502073019.GD11582@lst.de>
-References: <1493388001-15879-1-git-send-email-amir73il@gmail.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:51971 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbdEBHu1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2017 03:50:27 -0400
+Date: Tue, 2 May 2017 00:50:21 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: handle large CoW remapping requests
+Message-ID: <20170502075021.GA7916@infradead.org>
+References: <20170427212754.GB19158@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1493388001-15879-1-git-send-email-amir73il@gmail.com>
+In-Reply-To: <20170427212754.GB19158@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Miklos Szeredi <miklos@szeredi.hu>, Vivek Goyal <vgoyal@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@infradead.org>
 
-On Fri, Apr 28, 2017 at 05:00:01PM +0300, Amir Goldstein wrote:
-> Copy the uuid of the filesystem to struct super_block s_uuid field,
-> as several other filesystems already do.  Copy regardless of the nouuid
-> mount option, because other filesystems also do not guaranty uniqueness
-> of the s_uuid field in super_block struct.
+On Thu, Apr 27, 2017 at 02:27:54PM -0700, Darrick J. Wong wrote:
+> XFS transactions are constrained both by space and block reservation
+> limits and the fact that we have to avoid doing 64-bit divisions.  This
+> means that we can't remap more than 2^32 blocks at a time.  However,
+> file logical blocks are 64-bit in size, so if we encounter a huge remap
+> request we have to break it up into smaller pieces.
 
-No guaranteeing uniqueness will create problems, don't do that.
-
-Other file system didn't use to do the uuid table check that XFS did
-either, and that's a fatal bug.  In the long run we'll need to move
-this check to the VFS now that we have s_uuid.
-
-Also while checking for a nul uuid is probably ok we need to formalize
-that at least that the check is needed.  Preferably by adding a little
-inline helper for it, and documenting it.
+But where would we get that huge remap request from?  We already did the
+BUILD_BUG_ON for the max read/write size at least.  Also the remaps
+would now not be atomic, which would be a problem for my O_ATOMIC
+implementation at least.
