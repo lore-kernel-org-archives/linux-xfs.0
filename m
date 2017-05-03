@@ -1,56 +1,210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:42080 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751565AbdEEH5f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 May 2017 03:57:35 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/3] xfs: use uuid_copy() helper to abstract uuid_t
-Date: Fri,  5 May 2017 09:57:23 +0200
-Message-Id: <20170505075725.19597-2-hch@lst.de>
-In-Reply-To: <20170505075725.19597-1-hch@lst.de>
-References: <20170505075725.19597-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:33110 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751262AbdECOYw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 May 2017 10:24:52 -0400
+Date: Wed, 3 May 2017 10:24:50 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Many D state processes on XFS, kernel 4.4
+Message-ID: <20170503142449.GB11549@bfoster.bfoster>
+References: <CAPeSaCC-Z+atujOq9+uj0tgdkWDNPadiQVDB+23tj=DBH-EKrw@mail.gmail.com>
+ <20170426203451.GA44531@bfoster.bfoster>
+ <CAPeSaCAPKicLN=QF=gLHUeV5KPQP7f3DbT9QPGjzyECGqArzRQ@mail.gmail.com>
+ <20170427175714.GA47842@bfoster.bfoster>
+ <CAPeSaCB85nnEc9FQ5KoSQy59kV7X1pLgGnPLx3-H3V4-rLFTew@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPeSaCB85nnEc9FQ5KoSQy59kV7X1pLgGnPLx3-H3V4-rLFTew@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: amir73il@gmail.com
+To: Gareth Clay <gclay@pivotal.io>
+Cc: linux-xfs@vger.kernel.org
 
-From: Amir Goldstein <amir73il@gmail.com>
+On Wed, May 03, 2017 at 01:07:05PM +0100, Gareth Clay wrote:
+> Hi Brian,
+> 
 
-uuid_t definition is about to change.
+Please avoid top-posting.. it makes the thread increasingly difficult to
+follow.
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_inode_item.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+> Thanks again for your thoughts - it's much appreciated. Unfortunately
+> we can't reproduce this problem on demand yet - we've only seen it on
+> a very small subset of VMs so far - so we're focusing our efforts on
+> trying to recreate it in a lab environment. If we get to the point
+> where we can recreate it reliably, then we can hopefully capture some
+> traces at the time the issue occurs.
+> 
+> The only new information I have since last time is that we were able
+> to check the logs since boot of two new VMs which began to exhibit the
+> issue - there was no occurrence of the 'metadata I/O error' message in
+> the kernel logs. The first error we saw in the logs - on both machines
+> - was a JVM instance running inside a container being shot by the
+> kernel OOM killer, since it hit its cgroup memory limit. This was
+> followed minutes later by the first process (another JVM instance)
+> entering D state. At the moment we're not sure if this is coincidental
+> or not, but we'll investigate that in a test environment.
+> 
 
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 08cb7d1a4a3a..013cc78d7daf 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -834,9 +834,7 @@ xfs_inode_item_format_convert(
- 		in_f->ilf_dsize = in_f32->ilf_dsize;
- 		in_f->ilf_ino = in_f32->ilf_ino;
- 		/* copy biggest field of ilf_u */
--		memcpy(in_f->ilf_u.ilfu_uuid.__u_bits,
--		       in_f32->ilf_u.ilfu_uuid.__u_bits,
--		       sizeof(uuid_t));
-+		uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f32->ilf_u.ilfu_uuid);
- 		in_f->ilf_blkno = in_f32->ilf_blkno;
- 		in_f->ilf_len = in_f32->ilf_len;
- 		in_f->ilf_boffset = in_f32->ilf_boffset;
-@@ -851,9 +849,7 @@ xfs_inode_item_format_convert(
- 		in_f->ilf_dsize = in_f64->ilf_dsize;
- 		in_f->ilf_ino = in_f64->ilf_ino;
- 		/* copy biggest field of ilf_u */
--		memcpy(in_f->ilf_u.ilfu_uuid.__u_bits,
--		       in_f64->ilf_u.ilfu_uuid.__u_bits,
--		       sizeof(uuid_t));
-+		uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f64->ilf_u.ilfu_uuid);
- 		in_f->ilf_blkno = in_f64->ilf_blkno;
- 		in_f->ilf_len = in_f64->ilf_len;
- 		in_f->ilf_boffset = in_f64->ilf_boffset;
--- 
-2.11.0
+That is certainly suspicious. If you have an environment where you can
+safely test, it might be interesting to see if you can induce the OOM
+kill behavior of your application (perhaps restrict the cgroup memory to
+a more dangerous level), let some OOM kills and restarts occur, and see
+if that happens to trigger the problem.
 
+Brian
+
+> As far as the kernel version goes, our main environments are set up
+> using pre-packaged machine images which makes kernel experimentation a
+> bit difficult, but again if we can reproduce this reliably then we can
+> certainly investigate rolling custom kernels to see if that improves
+> things. If it does then we can look at patching our machine images.
+> 
+> If we're able to collect any more useful information, and hopefully
+> some traces, I'll post it back to the list.
+> 
+> Thanks again,
+> Gareth
+> 
+> On Thu, Apr 27, 2017 at 6:57 PM, Brian Foster <bfoster@redhat.com> wrote:
+> > On Thu, Apr 27, 2017 at 05:01:17PM +0100, Gareth Clay wrote:
+> >> Hi Brian,
+> >>
+> >> Thanks very much from the response. Unfortunately we don't have logs
+> >> going back that far, so all I can say at the moment is that we're not
+> >> seeing any 'metadata I/O error' lines in the logs that we have whilst
+> >> the problem has been occurring. We're going to recreate the affected
+> >> VM and see if the problem recurs - if it does then we'll be sure to
+> >> grab the logs immediately and check.
+> >>
+> >> What we can say is that this problem seems to have recurred 3 times
+> >> already on fresh VMs and disks. We initially wondered if it could be
+> >> due to a bad EBS volume or something similar, but this seems less
+> >> likely given the recurrence.
+> >>
+> >
+> > How frequently do you reproduce this problem? Can you reproduce
+> > on-demand and/or does it take a while to occur? Is it common across
+> > multiple systems with a similar xfs->loopback->ext4 configuration and
+> > workload or only a subset?
+> >
+> > When the problem occurs, can you verify whether the underlying ext4 fs
+> > and storage is still functioning properly?
+> >
+> >> In the case of the other possible cause you mentioned, of I/O never
+> >> completing, is it possible that excessive load could call this, or
+> >> would this be more indicative of a concurrency issue at the filesystem
+> >> / kernel level? One quirk of the workload on this machine is that we
+> >> have a lot of XFS project quotas which we're frequently checking to
+> >> report disk usage... Could it be that we're causing a starvation
+> >> problem?
+> >>
+> >
+> > Do you have other I/O going to the underlying fs/device at the time this
+> > state occurs? If so, I suppose you could try to wind that down and see
+> > if anything unclogs.
+> >
+> > That aside, it's not really clear to me whether this is a filesystem
+> > issue, a non-fs kernel problem due to the somewhat unique storage
+> > configuration (e.g., loop doing something strange or getting stuck), or
+> > something entirely external. I'm just trying to think of and possibly
+> > rule out any obvious/known causes for this situation. It is known, for
+> > example, that we get into this state if metadata writeback happens to
+> > fail for inode or dquot objects.
+> >
+> > Beyond that, this most likely is related to quota usage one way or
+> > another because those are the metadata objects that have pinned the log.
+> > The question is what has caused those objects to be sitting in the log
+> > flush locked (which implies the underlying buffers should have been
+> > submitted for I/O) without completing. I suppose we may be able to glean
+> > a bit more state if we had a vmcore dump, but then again, you are on a
+> > distro kernel. Have you considered testing a more recent/upstream
+> > kernel? A full tracepoint dump may also be interesting if you can induce
+> > the problem in a reasonable amount of time.
+> >
+> > Brian
+> >
+> >> Thanks again,
+> >> Gareth
+> >>
+> >> On Wed, Apr 26, 2017 at 9:34 PM Brian Foster <bfoster@redhat.com> wrote:
+> >> >
+> >> > On Wed, Apr 26, 2017 at 05:47:15PM +0100, Gareth Clay wrote:
+> >> > > Hi,
+> >> > >
+> >> > > We're trying to diagnose a problem on an AWS virtual machine with two
+> >> > > XFS filesystems, each on loop devices. The loop files are sitting on
+> >> > > an EXT4 filesystem on Amazon EBS. The VM is running lots of Linux
+> >> > > containers - we're using Overlay FS on XFS to provide the root
+> >> > > filesystems for these containers.
+> >> > >
+> >> > > The problem we're seeing is a lot of processes entering D state, stuck
+> >> > > in the xlog_grant_head_wait function. We're also seeing xfsaild/loop0
+> >> > > stuck in D state. We're not able to write to the filesystem at all on
+> >> > > this device, it seems, without the process hitting D state. Once the
+> >> > > processes enter D state they never recover, and the list of D state
+> >> > > processes seems to be growing slowly over time.
+> >> > >
+> >> > > The filesystem on loop1 seems fine (we can run ls, touch etc)
+> >> > >
+> >> > > Would anyone be able to help us to diagnose the underlying problem please?
+> >> > >
+> >> > > Following the problem reporting FAQ we've collected the following
+> >> > > details from the VM:
+> >> > >
+> >> > > uname -a:
+> >> > > Linux 8dd9526f-00ba-4f7b-aa59-a62ec661c060 4.4.0-72-generic
+> >> > > #93~14.04.1-Ubuntu SMP Fri Mar 31 15:05:15 UTC 2017 x86_64 x86_64
+> >> > > x86_64 GNU/Linux
+> >> > >
+> >> > > xfs_repair version 3.1.9
+> >> > >
+> >> > > AWS VM with 8 CPU cores and EBS storage
+> >> > >
+> >> > > And we've also collected output from /proc, xfs_info, dmesg and the
+> >> > > XFS trace tool in the following files:
+> >> > >
+> >> > > https://s3.amazonaws.com/grootfs-logs/dmesg
+> >> > > https://s3.amazonaws.com/grootfs-logs/meminfo
+> >> > > https://s3.amazonaws.com/grootfs-logs/mounts
+> >> > > https://s3.amazonaws.com/grootfs-logs/partitions
+> >> > > https://s3.amazonaws.com/grootfs-logs/trace_report.txt
+> >> > > https://s3.amazonaws.com/grootfs-logs/xfs_info
+> >> > >
+> >> >
+> >> > It looks like everything is pretty much backed up on the log and the
+> >> > tail of the log is pinned by some dquot items. The trace output shows
+> >> > that xfsaild is spinning on flush locked dquots:
+> >> >
+> >> > <...>-2737622 [001] 33449671.892834: xfs_ail_flushing:     dev 7:0 lip 0x0xffff88012e655e30 lsn 191/61681 type XFS_LI_DQUOT flags IN_AIL
+> >> > <...>-2737622 [001] 33449671.892868: xfs_ail_flushing:     dev 7:0 lip 0x0xffff8800110d7bb0 lsn 191/61681 type XFS_LI_DQUOT flags IN_AIL
+> >> > <...>-2737622 [001] 33449671.892869: xfs_ail_flushing:     dev 7:0 lip 0x0xffff88012e655a80 lsn 191/67083 type XFS_LI_DQUOT flags IN_AIL
+> >> > <...>-2737622 [001] 33449671.892869: xfs_ail_flushing:     dev 7:0 lip 0x0xffff8800110d4810 lsn 191/67296 type XFS_LI_DQUOT flags IN_AIL
+> >> > <...>-2737622 [001] 33449671.892869: xfs_ail_flushing:     dev 7:0 lip 0x0xffff880122210460 lsn 191/67310 type XFS_LI_DQUOT flags IN_AIL
+> >> >
+> >> > The cause of that is not immediately clear. One possible reason is it
+> >> > could be due to I/O failure. Do you have any I/O error messages (i.e.,
+> >> > "metadata I/O error: block ...") in your logs from before you ended up
+> >> > in this state?
+> >> >
+> >> > If not, I'm wondering if another possibility is an I/O that just never
+> >> > completes.. is this something you can reliably reproduce?
+> >> >
+> >> > Brian
+> >> >
+> >> > > Thanks for any help or advice you can offer!
+> >> > >
+> >> > > Claudia and Gareth
+> >> > > --
+> >> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> > > the body of a message to majordomo@vger.kernel.org
+> >> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
