@@ -1,38 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:32852 "EHLO
-        mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751618AbdECSey (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 May 2017 14:34:54 -0400
-MIME-Version: 1.0
-In-Reply-To: <1493831747.30052.10.camel@linux.intel.com>
-References: <1493756363-5113-1-git-send-email-amir73il@gmail.com>
- <1493802823.4154.3.camel@linux.intel.com> <CAOQ4uxh4Ysg9Q_K2sK9zefvid3hvzswDKxSa-QTN9_D0fAWvyQ@mail.gmail.com>
- <1493809233.30052.1.camel@linux.intel.com> <CAOQ4uxj3ppxm4LC6xr54n6GUF1T=yhQ4-5YJfbjXcBJugVENZQ@mail.gmail.com>
- <1493829352.30052.6.camel@linux.intel.com> <1493831747.30052.10.camel@linux.intel.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 3 May 2017 21:34:51 +0300
-Message-ID: <CAOQ4uxg6=X8GVfWBBYwYLHyNcx7E856kEFM339abLsVEbWzi_Q@mail.gmail.com>
-Subject: Re: [RFC][PATCH] linux/uuid.h: hoist uuid_is_null() helper from libnvdimm
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:40798 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753632AbdECSq3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 May 2017 14:46:29 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id AA5C67704
+        for <linux-xfs@vger.kernel.org>; Wed,  3 May 2017 18:46:28 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8C18E17976
+        for <linux-xfs@vger.kernel.org>; Wed,  3 May 2017 18:46:28 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: fix indlen accounting error on partial delalloc conversion
+Date: Wed,  3 May 2017 14:46:26 -0400
+Message-Id: <1493837186-14148-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Miklos Szeredi <miklos@szeredi.hu>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Richard Weinberger <richard@nod.at>, "Darrick J . Wong" <darrick.wong@oracle.com>, Mark Fasheh <mfasheh@versity.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs <linux-xfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Theodore Tso <tytso@mit.edu>
+To: linux-xfs@vger.kernel.org
 
-On Wed, May 3, 2017 at 8:15 PM, Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
+The delalloc -> real block conversion path uses an incorrect
+calculation in the case where the middle part of a delalloc extent
+is being converted. This is documented as a rare situation because
+XFS generally attempts to maximize contiguity by converting as much
+of a delalloc extent as possible.
 
->
-> By the way, notice that uuid_v1 type (which had been moved to uuid.h
-> already) is the same what xfs uses as uuid_t.
->
-> So, helpers against it we can prefix with uuid_v1_[foo_bar()].
->
+If this situation does occur, the indlen reservation for the two new
+delalloc extents left behind by the conversion of the middle range
+is calculated and compared with the original reservation. If more
+blocks are required, the delta is allocated from the global block
+pool. This delta value can be characterized as the difference
+between the new total requirement (temp + temp2) and the currently
+available reservation minus those blocks that have already been
+allocated (startblockval(PREV.br_startblock) - allocated).
 
-I really don't see why we can't use the exact same helpers
-found in fs/xfs/uuid.c and uuid_t as well for that matter.
+The problem is that the current code does not account for previously
+allocated blocks correctly. It subtracts the current allocation
+count from the (new - old) delta rather than the old indlen
+reservation. This means that more indlen blocks than have been
+allocated end up stashed in the remaining extents and free space
+accounting is broken as a result.
 
-They are mostly similar to the libuuid API that filesystems
-tools use in userspace and they don't collide with your
-uuid_{le|be} helpers.
+Fix up the calculation to subtract the allocated block count from
+the original extent indlen and thus correctly allocate the
+reservation delta based on the difference between the new total
+requirement and the unused blocks from the original reservation.
+Also remove a bogus assert that contradicts the fact that the new
+indlen reservation can be larger than the original indlen
+reservation.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+Hi all,
+
+So while I fortunately was able to reproduce this problem and verify the
+patch, I'm not able to do so in any way that facilitates a generic test
+case. To reproduce, I had to hack up the allocation path to always do
+single physical block allocations and otherwise not attempt to convert
+whole delalloc extents, hack up an ioctl to do a
+filemap_write_and_wait_range(), and run a test that repeatedly does 1M
+buffered writes followed by fragmented, page-sized writebacks of that 1M
+extent. This forces partial (middle) extent conversions until the extent
+tree grows enough to require a bmbt block allocation. When that occurs,
+I always end up with the following free space accounting inconsistency
+reported via xfs_repair:
+
+Phase 1 - find and verify superblock...     
+Phase 2 - using internal log
+        - zero log...               
+        - scan filesystem freespace and inode maps...
+sb_fdblocks 3929316, counted 3929314             
+...
+
+With this patch applied, the same test no longer reproduces the
+corruption. This otherwise survives my xfstests testing (without the
+aforementioned hacks). Thoughts, reviews, flames appreciated.
+
+Brian
+
+ fs/xfs/libxfs/xfs_bmap.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index f02eb76..8adb91b 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2065,8 +2065,10 @@ xfs_bmap_add_extent_delay_real(
+ 		}
+ 		temp = xfs_bmap_worst_indlen(bma->ip, temp);
+ 		temp2 = xfs_bmap_worst_indlen(bma->ip, temp2);
+-		diff = (int)(temp + temp2 - startblockval(PREV.br_startblock) -
+-			(bma->cur ? bma->cur->bc_private.b.allocated : 0));
++		diff = (int)(temp + temp2 -
++			     (startblockval(PREV.br_startblock) -
++			      (bma->cur ?
++			       bma->cur->bc_private.b.allocated : 0)));
+ 		if (diff > 0) {
+ 			error = xfs_mod_fdblocks(bma->ip->i_mount,
+ 						 -((int64_t)diff), false);
+@@ -2123,7 +2125,6 @@ xfs_bmap_add_extent_delay_real(
+ 		temp = da_new;
+ 		if (bma->cur)
+ 			temp += bma->cur->bc_private.b.allocated;
+-		ASSERT(temp <= da_old);
+ 		if (temp < da_old)
+ 			xfs_mod_fdblocks(bma->ip->i_mount,
+ 					(int64_t)(da_old - temp), false);
+-- 
+2.7.4
+
