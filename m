@@ -1,43 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:48786 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752493AbdEDL7p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 May 2017 07:59:45 -0400
-Date: Thu, 4 May 2017 04:59:43 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH] xfs: try to avoid blowing out the transaction
- reservation when bunmaping a shared extent
-Message-ID: <20170504115943.GC22052@infradead.org>
-References: <20170425020954.GV23371@birch.djwong.org>
- <20170426135912.GB42456@bfoster.bfoster>
- <20170426213731.GC23371@birch.djwong.org>
- <20170427073519.GA18392@infradead.org>
- <20170428194032.GF22884@birch.djwong.org>
- <20170502080023.GA17675@infradead.org>
- <20170502120523.GA6975@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170502120523.GA6975@bfoster.bfoster>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:33569 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751391AbdEDN0Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 May 2017 09:26:16 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v2 0/8] hoist uuid helpers from xfs to linux/uuid.h
+Date: Thu,  4 May 2017 16:26:15 +0300
+Message-Id: <1493904383-2187-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Miklos Szeredi <miklos@szeredi.hu>, Theodore Tso <tytso@mit.edu>, Richard Weinberger <richard@nod.at>, Mark Fasheh <mfasheh@versity.com>, Dan Williams <dan.j.williams@intel.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Tue, May 02, 2017 at 08:05:25AM -0400, Brian Foster wrote:
-> But doesn't that mean this wouldn't be a new problem introduced by such
-> a change?
+Darick,
 
-It would make the existing problem at lot easier to hit I think.
+I moved some code around to be able to hoist all the generic
+xfs uuid helpers to linux/uuid.h, so that other filesystems
+and uuid related code in the kernel can use them.
 
-> transaction. That being said, I'm not following your thought wrt to this
-> particular situation. Are you suggesting that we not defer the reflink
-> adjustment in particular unmap cases, or that we just limit the number
-> of extent unmaps per-tp based on crossing an AG boundary, or something
-> else entirely?
+Let me know what you think of the outcome.
 
-To me it seems like we should try to do the extent count adjustments
-in the current transaction for a given extent if we can, but give me
-a little more time to think how to best do that.  I'm travelling at the
-moment and don't have much quiet time to actually engage my brain.
+I did not find any uuid related regressions with xfs.
+Specifically, the following xfstests exercise these changes:
+xfs/045 xfs/073 xfs/077 (multi uuid mount)
+generic/079 xfs/238 xfs/269 xfs/062 (fshandle)
+
+Some of these helpers are quite similar to thier uuid_{le|be}
+variants in linux/uuid.h, but at the moment I don't see xfs
+or any filesystem starting to use the uuid_{le|be} helpers,
+so we probably have to live with this duplicity for a while
+longer.
+
+Amir.
+
+Amir Goldstein (8):
+  xfs: use uuid_copy() helper to abstract uuid_t
+  xfs: re-define uuid_t as common struct uuid_v1
+  xfs: dismiss xfs_uu_t
+  xfs: namespace the helper uuid_getnodeuniq()
+  md: namespace private helper names
+  linux/uuid.h: hoist helpers uuid_equal() and uuid_copy() from xfs
+  linux/uuid.h: hoist uuid_is_null() helper from libnvdimm
+  xfs: use the common helper uuid_is_null()
+
+ drivers/md/md.c           |  8 ++++----
+ drivers/nvdimm/btt_devs.c | 10 ++--------
+ fs/xfs/uuid.c             | 42 ++++++------------------------------------
+ fs/xfs/uuid.h             | 14 ++------------
+ fs/xfs/xfs_inode_item.c   |  8 ++------
+ fs/xfs/xfs_log_recover.c  |  6 +++---
+ fs/xfs/xfs_mount.c        | 10 +++++-----
+ include/linux/uuid.h      | 21 +++++++++++++++++++--
+ lib/uuid.c                |  3 +++
+ 9 files changed, 46 insertions(+), 76 deletions(-)
+
+-- 
+2.7.4
+
