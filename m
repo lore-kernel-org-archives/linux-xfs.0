@@ -1,45 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38054 "EHLO mx1.redhat.com"
+Received: from mga07.intel.com ([134.134.136.100]:33095 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755103AbdEDOQO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 May 2017 10:16:14 -0400
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20170504133417.GD17222@lst.de>
-References: <20170504133417.GD17222@lst.de> <1493904383-2187-1-git-send-email-amir73il@gmail.com> <1493904383-2187-3-git-send-email-amir73il@gmail.com>
-Subject: Re: [PATCH v2 2/8] xfs: re-define uuid_t as common struct uuid_v1
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <23807.1493907370.1@warthog.procyon.org.uk>
-Date: Thu, 04 May 2017 15:16:10 +0100
-Message-ID: <23808.1493907370@warthog.procyon.org.uk>
+        id S1750786AbdEDI0C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 May 2017 04:26:02 -0400
+Message-ID: <1493886085.30052.14.camel@linux.intel.com>
+Subject: Re: [RFC][PATCH] linux/uuid.h: hoist uuid_is_null() helper from
+ libnvdimm
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Date: Thu, 04 May 2017 11:21:25 +0300
+In-Reply-To: <CAOQ4uxg6=X8GVfWBBYwYLHyNcx7E856kEFM339abLsVEbWzi_Q@mail.gmail.com>
+References: <1493756363-5113-1-git-send-email-amir73il@gmail.com>
+         <1493802823.4154.3.camel@linux.intel.com>
+         <CAOQ4uxh4Ysg9Q_K2sK9zefvid3hvzswDKxSa-QTN9_D0fAWvyQ@mail.gmail.com>
+         <1493809233.30052.1.camel@linux.intel.com>
+         <CAOQ4uxj3ppxm4LC6xr54n6GUF1T=yhQ4-5YJfbjXcBJugVENZQ@mail.gmail.com>
+         <1493829352.30052.6.camel@linux.intel.com>
+         <1493831747.30052.10.camel@linux.intel.com>
+         <CAOQ4uxg6=X8GVfWBBYwYLHyNcx7E856kEFM339abLsVEbWzi_Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: dhowells@redhat.com, Amir Goldstein <amir73il@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Miklos Szeredi <miklos@szeredi.hu>, Theodore Tso <tytso@mit.edu>, Richard Weinberger <richard@nod.at>, Mark Fasheh <mfasheh@versity.com>, Dan Williams <dan.j.williams@intel.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Shaohua Li <shli@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Miklos Szeredi <miklos@szeredi.hu>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Richard Weinberger <richard@nod.at>, "Darrick J . Wong" <darrick.wong@oracle.com>, Mark Fasheh <mfasheh@versity.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs <linux-xfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Theodore Tso <tytso@mit.edu>
 
-Christoph Hellwig <hch@lst.de> wrote:
+On Wed, 2017-05-03 at 21:34 +0300, Amir Goldstein wrote:
+> On Wed, May 3, 2017 at 8:15 PM, Andy Shevchenko
+> <andriy.shevchenko@linux.intel.com> wrote:
+> 
+> > 
+> > By the way, notice that uuid_v1 type (which had been moved to uuid.h
+> > already) is the same what xfs uses as uuid_t.
+> > 
+> > So, helpers against it we can prefix with uuid_v1_[foo_bar()].
+> > 
+> 
+> I really don't see why we can't use the exact same helpers
+> found in fs/xfs/uuid.c and uuid_t as well for that matter.
 
-> I'm not sure this really is a good idea.  uuid_v1 currently is only
-> used by afs.  I'd much rather switch both afs and xfs to use the
-> uuid_be type (which might as well grow the standard uuid_t name while
-> we're at it), and use accessors that do the byte-array access for
-> the very few places that care about the interpretation.
+Does it make sense to have two types that defines the same?
 
-Leave struct uuid_v1 as is please.  The AFS protocol XDR encodes the fields as
-delineated in the struct:
+> They are mostly similar to the libuuid API that filesystems
+> tools use in userspace and they don't collide with your
+> uuid_{le|be} helpers.
 
-		r->time_low			= b[0];
-		r->time_mid			= htons(ntohl(b[1]));
-		r->time_hi_and_version		= htons(ntohl(b[2]));
-		r->clock_seq_hi_and_reserved 	= ntohl(b[3]);
-		r->clock_seq_low		= ntohl(b[4]);
+Okay, if you are insisting just move them to the header, we may simplify
+it later, though I think that there is no makes sense to do any effort
+that will be neglected in the future (so, just movement is fine, but
+using it elsewhere I prefer to have 1 type and const for parameters).
 
-		for (loop = 0; loop < 6; loop++)
-			r->node[loop] = ntohl(b[loop + 5]);
-
-Yeah, I know it's crazy to do it like this on the wire rather than just encode
-it as a 16-byte blob, but that's what someone defined it as...  Trying to use
-the uuid_be struct instead just makes things more messy.
-
-David
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
