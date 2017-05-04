@@ -1,99 +1,165 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33603 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753246AbdEDQm6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 May 2017 12:42:58 -0400
-Date: Thu, 4 May 2017 09:41:55 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH RFC] xfs: support debug mode with assert warnings
-Message-ID: <20170504164155.GH5973@birch.djwong.org>
-References: <1493400541-56113-1-git-send-email-bfoster@redhat.com>
- <20170502073730.GA19021@infradead.org>
- <20170502121423.GB6975@bfoster.bfoster>
- <20170504115725.GB22052@infradead.org>
- <20170504124419.GD3248@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170504124419.GD3248@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:32804 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754701AbdEDS30 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 May 2017 14:29:26 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 0E462804EF
+        for <linux-xfs@vger.kernel.org>; Thu,  4 May 2017 18:29:26 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E51285C54F
+        for <linux-xfs@vger.kernel.org>; Thu,  4 May 2017 18:29:25 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: make fatal assert failures conditional in debug mode
+Date: Thu,  4 May 2017 14:29:24 -0400
+Message-Id: <1493922564-14273-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, May 04, 2017 at 08:44:26AM -0400, Brian Foster wrote:
-> On Thu, May 04, 2017 at 04:57:25AM -0700, Christoph Hellwig wrote:
-> > On Tue, May 02, 2017 at 08:14:25AM -0400, Brian Foster wrote:
-> > > As noted above, this is just a reuse of the flag. XFS_WARN and XFS_DEBUG
-> > > are currently mutually exclusive. The former enables warnings on assert
-> > > failures. The latter enables BUG()'s on assert failures and the
-> > > additional, typical debug mode code. The Kconfig hack above simply pops
-> > > up a conditional option when debug mode is enabled that effectively
-> > > allows setting both XFS_WARN and XFS_DEBUG at the same time. The header
-> > > files interpret this as debug mode enabled with an override for the
-> > > assert failures to warn rather than BUG().
-> > 
-> > Oh, I didn't know Kconfig allows the same symbol to be define twice.
-> > But even if that's ok I'd say it's rather odd.
-> > 
-> 
-> Yes, I just slapped it together quickly to float the idea.
-> 
-> > > Note that this is just a hack and we can organize the Kconfig options
-> > > however we want. For example, we could call this XFS_DEBUG_WARN and
-> > > continue to consider it a debug mode sub-flag, or we could turn the
-> > > debug mode option into a multi-mode selector (i.e., Debug modes: "None,"
-> > > "Warn only," "Debug mode," "Debug mode w/ non-fatal asserts"). I played
-> > > around a bit with the latter but it seems like a bit of overkill to me.
-> > 
-> > Maybe we need something like:
-> > 
-> >  XFS_WARN (as-is)
-> >  XFS_WARN_BUG (XFS_WARN + BUG_ON on assert)
-> >  XFS_DEBUG (everyhing under XFS_DEBUG currently that's not related to
-> > 	ASSERT)
-> 
-> That allows asserts to BUG() on an XFS_WARN kernel, which is not quite
-> what I want to accomplish here (and I don't think that's really needed
-> for an XFS_WARN kernel). I'm not quite following if/how that allows to
-> disable assert BUG()s on an XFS_DEBUG kernel. Would XFS_DEBUG now never
-> BUG() unless XFS_WARN_BUG is defined as well?
-> 
-> If so, that sounds reasonable to me. I may just suggest tweaking it to
-> something like this:
-> 
-> XFS_WARN (as-is)
-> XFS_DEBUG (DEBUG code modified to warn on assert failure by default)
-> XFS_ASSERT_BUG (depends on XFS_DEBUG, enables BUG() on assert failure)
-> 
-> WARN and DEBUG remain mutually exclusive, the default assert behavior
-> for DEBUG changes to a warning rather than BUG(), and the latter is
-> enabled by a new conditional XFS_ASSERT_BUG config option. My only
-> slight concern is that changes default behavior for distros that might
-> create debug builds/packages, but I can see whether we can mitigate that
-> by setting 'default y' for XFS_ASSERT_BUG so long as it is only
-> available in XFS_DEBUG mode. Thoughts?
+XFS currently supports two debug modes: XFS_WARN enables assert
+failure warnings and XFS_DEBUG converts assert failures to fatal
+errors (via BUG()) and enables additional runtime debug code.
 
-Sounds reasonable.  For years I've been banging around a silly patch
-that removes the BUG() call so that I can perform more forensic analysis
-after something goes wrong.
+While the behavior to BUG the kernel on assert failure is useful in
+certain test scenarios, it is also useful for development/debug to
+enable debug mode code without having to crash the kernel on an
+assert failure.
 
-(Granted it helps immensely that BUG reports now dump the ftrace
-buffer though sometimes that just leads to a flood of out of date
-crap coming over the serial line...)
+To provide this additional flexibility, update XFS debug mode to not
+BUG() the kernel by default and create a new XFS kernel
+configuration option to enable fatal assert failures when debug mode
+is enabled. To provide backwards compatibility with current
+behavior, enable the fatal asserts option by default when debug mode
+is enabled.
 
---D
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-> 
-> Brian
-> 
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hi all,
+
+This tweaks the rfc version based on feedback from Christoph and
+Darrick. The config option is renamed to minimize confusion and the
+logic is basically flipped to disable BUG() behavior by default in
+XFS_DEBUG mode and have the new config option turn it on. This option is
+dependent on DEBUG mode because I don't believe there is a compelling
+use case for XFS_WARN mode with fatal asserts and I'd rather not
+unnecessarily increase the configuration matrix.
+
+Note that the new config option is set 'default y' simply to provide
+backwards compatibility with current behavior (so users expecting DEBUG
+mode kernels to BUG() will continue to see that behavior without
+requiring further config modifications). Thoughts, reviews, flames
+appreciated.
+
+Brian
+
+v1:
+- Use a new config option rather than reuse XFS_WARN.
+- Disable BUG() in DEBUG mode by default and flip the logic of the new
+  config option.
+rfc: http://www.spinics.net/lists/linux-xfs/msg06390.html
+
+ fs/xfs/Kconfig     |  8 ++++++++
+ fs/xfs/xfs.h       |  4 ++++
+ fs/xfs/xfs_linux.h | 32 +++++++++++++++++++-------------
+ 3 files changed, 31 insertions(+), 13 deletions(-)
+
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index 35faf12..ded25f8 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -96,3 +96,11 @@ config XFS_DEBUG
+ 	  not useful unless you are debugging a particular problem.
+ 
+ 	  Say N unless you are an XFS developer, or you play one on TV.
++
++config XFS_ASSERT_FATAL
++	bool "XFS fatal asserts"
++	default y
++	depends on XFS_FS && XFS_DEBUG
++	help
++	  Say Y here to convert DEBUG mode ASSERT failures into fatal errors
++	  that BUG() the kernel. Otherwise, ASSERT failures result in warnings.
+diff --git a/fs/xfs/xfs.h b/fs/xfs/xfs.h
+index a742c47..80cd0fd 100644
+--- a/fs/xfs/xfs.h
++++ b/fs/xfs/xfs.h
+@@ -24,6 +24,10 @@
+ #define XFS_BUF_LOCK_TRACKING 1
+ #endif
+ 
++#ifdef CONFIG_XFS_ASSERT_FATAL
++#define XFS_ASSERT_FATAL 1
++#endif
++
+ #ifdef CONFIG_XFS_WARN
+ #define XFS_WARN 1
+ #endif
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 044fb0e..36c3eab 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -245,37 +245,43 @@ static inline __uint64_t howmany_64(__uint64_t x, __uint32_t y)
+ 	return x;
+ }
+ 
++/*
++ * ASSERT() definitions
++ */
+ #define ASSERT_ALWAYS(expr)	\
+ 	(likely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
+ 
+-#ifdef DEBUG
++#if defined(DEBUG) && defined(XFS_ASSERT_FATAL)
++
+ #define ASSERT(expr)	\
+ 	(likely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
+ 
+-#ifndef STATIC
+-# define STATIC noinline
+-#endif
+-
+-#else	/* !DEBUG */
+-
+-#ifdef XFS_WARN
++#elif defined(DEBUG) || defined(XFS_WARN)
+ 
+ #define ASSERT(expr)	\
+ 	(likely(expr) ? (void)0 : asswarn(#expr, __FILE__, __LINE__))
+ 
+-#ifndef STATIC
+-# define STATIC static noinline
++#else
++
++#define ASSERT(expr)	((void)0)
++
+ #endif
+ 
+-#else	/* !DEBUG && !XFS_WARN */
++/*
++ * STATIC definitions
++ */
++#ifdef DEBUG
++
++#ifndef STATIC
++# define STATIC noinline
++#endif
+ 
+-#define ASSERT(expr)	((void)0)
++#else	/* !DEBUG */
+ 
+ #ifndef STATIC
+ # define STATIC static noinline
+ #endif
+ 
+-#endif /* XFS_WARN */
+ #endif /* DEBUG */
+ 
+ #ifdef CONFIG_XFS_RT
+-- 
+2.7.4
+
