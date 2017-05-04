@@ -1,180 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54904 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751515AbdEDS6e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 May 2017 14:58:34 -0400
-Subject: Re: [PATCH] xfs: make fatal assert failures conditional in debug mode
-References: <1493922564-14273-1-git-send-email-bfoster@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7b09b8c0-53dc-37e4-a6c0-88835515345b@sandeen.net>
-Date: Thu, 4 May 2017 13:58:32 -0500
-MIME-Version: 1.0
-In-Reply-To: <1493922564-14273-1-git-send-email-bfoster@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34708 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753594AbdEDN0d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 May 2017 09:26:33 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v2 8/8] xfs: use the common helper uuid_is_null()
+Date: Thu,  4 May 2017 16:26:23 +0300
+Message-Id: <1493904383-2187-9-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1493904383-2187-1-git-send-email-amir73il@gmail.com>
+References: <1493904383-2187-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Miklos Szeredi <miklos@szeredi.hu>, Theodore Tso <tytso@mit.edu>, Richard Weinberger <richard@nod.at>, Mark Fasheh <mfasheh@versity.com>, Dan Williams <dan.j.williams@intel.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On 5/4/17 1:29 PM, Brian Foster wrote:
-> XFS currently supports two debug modes: XFS_WARN enables assert
-> failure warnings and XFS_DEBUG converts assert failures to fatal
-> errors (via BUG()) and enables additional runtime debug code.
-> 
-> While the behavior to BUG the kernel on assert failure is useful in
-> certain test scenarios, it is also useful for development/debug to
-> enable debug mode code without having to crash the kernel on an
-> assert failure.
-> 
-> To provide this additional flexibility, update XFS debug mode to not
-> BUG() the kernel by default and create a new XFS kernel
-> configuration option to enable fatal assert failures when debug mode
-> is enabled. To provide backwards compatibility with current
-> behavior, enable the fatal asserts option by default when debug mode
-> is enabled.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> Hi all,
-> 
-> This tweaks the rfc version based on feedback from Christoph and
-> Darrick. The config option is renamed to minimize confusion and the
-> logic is basically flipped to disable BUG() behavior by default in
-> XFS_DEBUG mode and have the new config option turn it on. This option is
-> dependent on DEBUG mode because I don't believe there is a compelling
-> use case for XFS_WARN mode with fatal asserts and I'd rather not
-> unnecessarily increase the configuration matrix.
-> 
-> Note that the new config option is set 'default y' simply to provide
-> backwards compatibility with current behavior (so users expecting DEBUG
-> mode kernels to BUG() will continue to see that behavior without
-> requiring further config modifications). Thoughts, reviews, flames
-> appreciated.
-> 
-> Brian
-> 
-> v1:
-> - Use a new config option rather than reuse XFS_WARN.
-> - Disable BUG() in DEBUG mode by default and flip the logic of the new
->   config option.
-> rfc: http://www.spinics.net/lists/linux-xfs/msg06390.html
-> 
->  fs/xfs/Kconfig     |  8 ++++++++
->  fs/xfs/xfs.h       |  4 ++++
->  fs/xfs/xfs_linux.h | 32 +++++++++++++++++++-------------
->  3 files changed, 31 insertions(+), 13 deletions(-)
-> 
-> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-> index 35faf12..ded25f8 100644
-> --- a/fs/xfs/Kconfig
-> +++ b/fs/xfs/Kconfig
-> @@ -96,3 +96,11 @@ config XFS_DEBUG
->  	  not useful unless you are debugging a particular problem.
->  
->  	  Say N unless you are an XFS developer, or you play one on TV.
-> +
-> +config XFS_ASSERT_FATAL
-> +	bool "XFS fatal asserts"
-> +	default y
-> +	depends on XFS_FS && XFS_DEBUG
-> +	help
-> +	  Say Y here to convert DEBUG mode ASSERT failures into fatal errors
-> +	  that BUG() the kernel. Otherwise, ASSERT failures result in warnings.
+Use the common helper uuid_is_null() and remove the xfs specific
+helper uuid_is_nil().
 
-nitpick, and don't care much either way, but since Y is the default, it's
-a little odd to restate "say Y."  The "Otherwise" isn't crystal clear IMHO.
+The common helper does not check for the NULL pointer value as
+xfs helper did, but xfs code never calls the helper with a pointer
+that can be NULL.
 
-Maybe:
+Conform comments and warning strings to use the term 'null uuid'
+instead of 'nil uuid', because this is the terminology used by
+lib/uuid.c and its users. It is also the terminology used in
+userspace by libuuid and xfsprogs.
 
-"The default XFS_DEBUG mode is to BUG() on ASSERT failures.
- If you say N here, ASSERT failures result in warnings.
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/xfs/uuid.c            | 14 --------------
+ fs/xfs/uuid.h            |  1 -
+ fs/xfs/xfs_log_recover.c |  6 +++---
+ fs/xfs/xfs_mount.c       |  8 ++++----
+ 4 files changed, 7 insertions(+), 22 deletions(-)
 
-Or:
+diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
+index d41fa68..a516805 100644
+--- a/fs/xfs/uuid.c
++++ b/fs/xfs/uuid.c
+@@ -31,17 +31,3 @@ xfs_uuid_getnodeuniq(uuid_t *uuid, int fsid[2])
+ 		  be16_to_cpu(uuid->time_mid);
+ 	fsid[1] = be32_to_cpu(uuid->time_low);
+ }
+-
+-int
+-uuid_is_nil(uuid_t *uuid)
+-{
+-	int	i;
+-	char	*cp = (char *)uuid;
+-
+-	if (uuid == NULL)
+-		return 0;
+-	/* implied check of version number here... */
+-	for (i = 0; i < sizeof *uuid; i++)
+-		if (*cp++) return 0;	/* not nil */
+-	return 1;	/* is nil */
+-}
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+index 4911905..12f15d1 100644
+--- a/fs/xfs/uuid.h
++++ b/fs/xfs/uuid.h
+@@ -20,7 +20,6 @@
+ 
+ #include <linux/uuid.h>
+ 
+-extern int uuid_is_nil(uuid_t *uuid);
+ extern void xfs_uuid_getnodeuniq(uuid_t *uuid, int fsid[2]);
+ 
+ #endif	/* __XFS_SUPPORT_UUID_H__ */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 4a98762..004d0a9 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -352,13 +352,13 @@ xlog_header_check_mount(
+ {
+ 	ASSERT(head->h_magicno == cpu_to_be32(XLOG_HEADER_MAGIC_NUM));
+ 
+-	if (uuid_is_nil(&head->h_fs_uuid)) {
++	if (uuid_is_null(&head->h_fs_uuid)) {
+ 		/*
+ 		 * IRIX doesn't write the h_fs_uuid or h_fmt fields. If
+-		 * h_fs_uuid is nil, we assume this log was last mounted
++		 * h_fs_uuid is null, we assume this log was last mounted
+ 		 * by IRIX and continue.
+ 		 */
+-		xfs_warn(mp, "nil uuid in log - IRIX style log");
++		xfs_warn(mp, "null uuid in log - IRIX style log");
+ 	} else if (unlikely(!uuid_equal(&mp->m_sb.sb_uuid, &head->h_fs_uuid))) {
+ 		xfs_warn(mp, "log has mismatched uuid - can't recover");
+ 		xlog_header_check_dump(mp, head);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index f4fdce7..9096948 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -80,14 +80,14 @@ xfs_uuid_mount(
+ 	if (mp->m_flags & XFS_MOUNT_NOUUID)
+ 		return 0;
+ 
+-	if (uuid_is_nil(uuid)) {
+-		xfs_warn(mp, "Filesystem has nil UUID - can't mount");
++	if (uuid_is_null(uuid)) {
++		xfs_warn(mp, "Filesystem has null UUID - can't mount");
+ 		return -EINVAL;
+ 	}
+ 
+ 	mutex_lock(&xfs_uuid_table_mutex);
+ 	for (i = 0, hole = -1; i < xfs_uuid_table_size; i++) {
+-		if (uuid_is_nil(&xfs_uuid_table[i])) {
++		if (uuid_is_null(&xfs_uuid_table[i])) {
+ 			hole = i;
+ 			continue;
+ 		}
+@@ -124,7 +124,7 @@ xfs_uuid_unmount(
+ 
+ 	mutex_lock(&xfs_uuid_table_mutex);
+ 	for (i = 0; i < xfs_uuid_table_size; i++) {
+-		if (uuid_is_nil(&xfs_uuid_table[i]))
++		if (uuid_is_null(&xfs_uuid_table[i]))
+ 			continue;
+ 		if (!uuid_equal(uuid, &xfs_uuid_table[i]))
+ 			continue;
+-- 
+2.7.4
 
-"Say Y here to convert DEBUG mode ASSERT failures into fatal errors
- that BUG() the kernel.
- If you say N, these ASSERTs will be converted into warnings."
-
-I'd just like to see "N" behavior /explicitly/ stated (with the text "N") :)
-
--Eric
-
-> diff --git a/fs/xfs/xfs.h b/fs/xfs/xfs.h
-> index a742c47..80cd0fd 100644
-> --- a/fs/xfs/xfs.h
-> +++ b/fs/xfs/xfs.h
-> @@ -24,6 +24,10 @@
->  #define XFS_BUF_LOCK_TRACKING 1
->  #endif
->  
-> +#ifdef CONFIG_XFS_ASSERT_FATAL
-> +#define XFS_ASSERT_FATAL 1
-> +#endif
-> +
->  #ifdef CONFIG_XFS_WARN
->  #define XFS_WARN 1
->  #endif
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index 044fb0e..36c3eab 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -245,37 +245,43 @@ static inline __uint64_t howmany_64(__uint64_t x, __uint32_t y)
->  	return x;
->  }
->  
-> +/*
-> + * ASSERT() definitions
-> + */
->  #define ASSERT_ALWAYS(expr)	\
->  	(likely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
->  
-> -#ifdef DEBUG
-> +#if defined(DEBUG) && defined(XFS_ASSERT_FATAL)
-> +
->  #define ASSERT(expr)	\
->  	(likely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
->  
-> -#ifndef STATIC
-> -# define STATIC noinline
-> -#endif
-> -
-> -#else	/* !DEBUG */
-> -
-> -#ifdef XFS_WARN
-> +#elif defined(DEBUG) || defined(XFS_WARN)
->  
->  #define ASSERT(expr)	\
->  	(likely(expr) ? (void)0 : asswarn(#expr, __FILE__, __LINE__))
->  
-> -#ifndef STATIC
-> -# define STATIC static noinline
-> +#else
-> +
-> +#define ASSERT(expr)	((void)0)
-> +
->  #endif
->  
-> -#else	/* !DEBUG && !XFS_WARN */
-> +/*
-> + * STATIC definitions
-> + */
-> +#ifdef DEBUG
-> +
-> +#ifndef STATIC
-> +# define STATIC noinline
-> +#endif
->  
-> -#define ASSERT(expr)	((void)0)
-> +#else	/* !DEBUG */
->  
->  #ifndef STATIC
->  # define STATIC static noinline
->  #endif
->  
-> -#endif /* XFS_WARN */
->  #endif /* DEBUG */
->  
->  #ifdef CONFIG_XFS_RT
-> 
