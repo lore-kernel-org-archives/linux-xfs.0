@@ -1,36 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49890 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755164AbdEDOBT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 May 2017 10:01:19 -0400
-Date: Thu, 4 May 2017 16:01:17 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 2/8] xfs: re-define uuid_t as common struct uuid_v1
-Message-ID: <20170504140117.GA17991@lst.de>
-References: <1493904383-2187-1-git-send-email-amir73il@gmail.com> <1493904383-2187-3-git-send-email-amir73il@gmail.com> <20170504133417.GD17222@lst.de> <CAOQ4uxjxyEGZOAm2rCR+PcdFqfmJxgBBO7_SexPkPRy+0eePOA@mail.gmail.com> <20170504135913.GA17831@lst.de> <CAOQ4uxh0_68r7Ycf877RGHhA9rfUJtyN=q4V2_FohvD1gmBAig@mail.gmail.com>
+Received: from mail-vk0-f49.google.com ([209.85.213.49]:36027 "EHLO
+        mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751567AbdEDLNl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 May 2017 07:13:41 -0400
+Received: by mail-vk0-f49.google.com with SMTP id q78so5164440vke.3
+        for <linux-xfs@vger.kernel.org>; Thu, 04 May 2017 04:13:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxh0_68r7Ycf877RGHhA9rfUJtyN=q4V2_FohvD1gmBAig@mail.gmail.com>
+In-Reply-To: <DDDCF9D44B6A4D1493F62FCA5AC73CF6@alyakaslap>
+References: <49A20782FA8B4C82B0393E5BEF8A8754@alyakaslap> <20170502073501.GB6679@infradead.org>
+ <DDDCF9D44B6A4D1493F62FCA5AC73CF6@alyakaslap>
+From: Alex Lyakas <alex@zadarastorage.com>
+Date: Thu, 4 May 2017 14:13:40 +0300
+Message-ID: <CAOcd+r0zJQ=5PtJ4KofEbxiZPbS3xo8x_14tCtvdxcp6mhN8yQ@mail.gmail.com>
+Subject: Re: xfs_alloc_ag_vextent_near() takes minutes to complete
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J . Wong" <darrick.wong@oracle.com>, Miklos Szeredi <miklos@szeredi.hu>, Theodore Tso <tytso@mit.edu>, Richard Weinberger <richard@nod.at>, Mark Fasheh <mfasheh@versity.com>, Dan Williams <dan.j.williams@intel.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs <linux-xfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, May 04, 2017 at 05:00:34PM +0300, Amir Goldstein wrote:
-> On Thu, May 4, 2017 at 4:59 PM, Christoph Hellwig <hch@lst.de> wrote:
-> > On Thu, May 04, 2017 at 04:57:51PM +0300, Amir Goldstein wrote:
-> >> I did consider defining uuid_t as uuid_be.
-> >> most of the patch set would have remained the same and
-> >> xfs_uuid_getnodeuniq() would use struct uuid_v1 explicitly
-> >> instead of implicitly.
-> >
-> > At least don't add new users of uuid_v1.  Moving that stuff into
-> > uuid.[ch] was a major mistake, and I wish review would have caught
-> > it back then.
-> 
-> Fine. I can keep xfs_uu_t for now.
+Hello,
 
-Please kill it, but instead of using uuid_v1 just use get_unaligned_be*
-access to uuid_be.
+> # it is still not clear who is holding the lock
+Further analysis shows that the xfs_buf lock is being held, because
+the buffer is currently being read from disk. The stack that unlocks
+the buffer is [1]. The size of each buffer being read is 4Kb.
+
+So bottom line is that sometimes XFS needs to search through thousands
+of metadata blocks of 4Kb, and needs to wait while they are being read
+from disk. This causes very slow allocation in some cases, further
+causing other threads to wait on i_lock/i_mutex, in some cases
+triggering hung-task panics.
+
+Anything can be done to remedy this?
+
+Thanks,
+Alex.
+
+
+
+[1]
+Call Trace:
+ [<ffffffff81710c85>] dump_stack+0x4e/0x71
+ [<ffffffffc0fade1b>] xfs_buf_ioend+0x22b/0x230 [xfs]
+ [<ffffffffc0fade35>] xfs_buf_ioend_work+0x15/0x20 [xfs]
+ [<ffffffff8108bd56>] process_one_work+0x146/0x410
+ [<ffffffff8108c141>] worker_thread+0x121/0x450
+ [<ffffffff8108c020>] ? process_one_work+0x410/0x410
+ [<ffffffff810911b9>] kthread+0xc9/0xe0
+ [<ffffffff810910f0>] ? kthread_create_on_node+0x180/0x180
+ [<ffffffff81717918>] ret_from_fork+0x58/0x90
+ [<ffffffff810910f0>] ? kthread_create_on_node+0x180/0x180
