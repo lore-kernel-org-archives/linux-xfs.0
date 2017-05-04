@@ -1,165 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32804 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754701AbdEDS30 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 May 2017 14:29:26 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 0E462804EF
-        for <linux-xfs@vger.kernel.org>; Thu,  4 May 2017 18:29:26 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E51285C54F
-        for <linux-xfs@vger.kernel.org>; Thu,  4 May 2017 18:29:25 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: make fatal assert failures conditional in debug mode
-Date: Thu,  4 May 2017 14:29:24 -0400
-Message-Id: <1493922564-14273-1-git-send-email-bfoster@redhat.com>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:35868 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751904AbdEDN0W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 May 2017 09:26:22 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v2 3/8] xfs: dismiss xfs_uu_t
+Date: Thu,  4 May 2017 16:26:18 +0300
+Message-Id: <1493904383-2187-4-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1493904383-2187-1-git-send-email-amir73il@gmail.com>
+References: <1493904383-2187-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Miklos Szeredi <miklos@szeredi.hu>, Theodore Tso <tytso@mit.edu>, Richard Weinberger <richard@nod.at>, Mark Fasheh <mfasheh@versity.com>, Dan Williams <dan.j.williams@intel.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-XFS currently supports two debug modes: XFS_WARN enables assert
-failure warnings and XFS_DEBUG converts assert failures to fatal
-errors (via BUG()) and enables additional runtime debug code.
+uuid_t (a.k.a struct uuid_v1) already provides the fields
+needed by uuid_getnodeuniq(), so use them directly.
 
-While the behavior to BUG the kernel on assert failure is useful in
-certain test scenarios, it is also useful for development/debug to
-enable debug mode code without having to crash the kernel on an
-assert failure.
-
-To provide this additional flexibility, update XFS debug mode to not
-BUG() the kernel by default and create a new XFS kernel
-configuration option to enable fatal assert failures when debug mode
-is enabled. To provide backwards compatibility with current
-behavior, enable the fatal asserts option by default when debug mode
-is enabled.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
+ fs/xfs/uuid.c | 18 ++++--------------
+ 1 file changed, 4 insertions(+), 14 deletions(-)
 
-Hi all,
-
-This tweaks the rfc version based on feedback from Christoph and
-Darrick. The config option is renamed to minimize confusion and the
-logic is basically flipped to disable BUG() behavior by default in
-XFS_DEBUG mode and have the new config option turn it on. This option is
-dependent on DEBUG mode because I don't believe there is a compelling
-use case for XFS_WARN mode with fatal asserts and I'd rather not
-unnecessarily increase the configuration matrix.
-
-Note that the new config option is set 'default y' simply to provide
-backwards compatibility with current behavior (so users expecting DEBUG
-mode kernels to BUG() will continue to see that behavior without
-requiring further config modifications). Thoughts, reviews, flames
-appreciated.
-
-Brian
-
-v1:
-- Use a new config option rather than reuse XFS_WARN.
-- Disable BUG() in DEBUG mode by default and flip the logic of the new
-  config option.
-rfc: http://www.spinics.net/lists/linux-xfs/msg06390.html
-
- fs/xfs/Kconfig     |  8 ++++++++
- fs/xfs/xfs.h       |  4 ++++
- fs/xfs/xfs_linux.h | 32 +++++++++++++++++++-------------
- 3 files changed, 31 insertions(+), 13 deletions(-)
-
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index 35faf12..ded25f8 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -96,3 +96,11 @@ config XFS_DEBUG
- 	  not useful unless you are debugging a particular problem.
+diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
+index b83f76b..7bb4fb8 100644
+--- a/fs/xfs/uuid.c
++++ b/fs/xfs/uuid.c
+@@ -17,15 +17,6 @@
+  */
+ #include <xfs.h>
  
- 	  Say N unless you are an XFS developer, or you play one on TV.
-+
-+config XFS_ASSERT_FATAL
-+	bool "XFS fatal asserts"
-+	default y
-+	depends on XFS_FS && XFS_DEBUG
-+	help
-+	  Say Y here to convert DEBUG mode ASSERT failures into fatal errors
-+	  that BUG() the kernel. Otherwise, ASSERT failures result in warnings.
-diff --git a/fs/xfs/xfs.h b/fs/xfs/xfs.h
-index a742c47..80cd0fd 100644
---- a/fs/xfs/xfs.h
-+++ b/fs/xfs/xfs.h
-@@ -24,6 +24,10 @@
- #define XFS_BUF_LOCK_TRACKING 1
- #endif
- 
-+#ifdef CONFIG_XFS_ASSERT_FATAL
-+#define XFS_ASSERT_FATAL 1
-+#endif
-+
- #ifdef CONFIG_XFS_WARN
- #define XFS_WARN 1
- #endif
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 044fb0e..36c3eab 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -245,37 +245,43 @@ static inline __uint64_t howmany_64(__uint64_t x, __uint32_t y)
- 	return x;
+-/* IRIX interpretation of an uuid_t */
+-typedef struct {
+-	__be32	uu_timelow;
+-	__be16	uu_timemid;
+-	__be16	uu_timehi;
+-	__be16	uu_clockseq;
+-	__be16	uu_node[3];
+-} xfs_uu_t;
+-
+ /*
+  * uuid_getnodeuniq - obtain the node unique fields of a UUID.
+  *
+@@ -35,11 +26,10 @@ typedef struct {
+ void
+ uuid_getnodeuniq(uuid_t *uuid, int fsid [2])
+ {
+-	xfs_uu_t *uup = (xfs_uu_t *)uuid;
+-
+-	fsid[0] = (be16_to_cpu(uup->uu_clockseq) << 16) |
+-		   be16_to_cpu(uup->uu_timemid);
+-	fsid[1] = be32_to_cpu(uup->uu_timelow);
++	fsid[0] = (uuid->clock_seq_hi_and_reserved << 24) |
++		  (uuid->clock_seq_low << 16) |
++		  be16_to_cpu(uuid->time_mid);
++	fsid[1] = be32_to_cpu(uuid->time_low);
  }
  
-+/*
-+ * ASSERT() definitions
-+ */
- #define ASSERT_ALWAYS(expr)	\
- 	(likely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
- 
--#ifdef DEBUG
-+#if defined(DEBUG) && defined(XFS_ASSERT_FATAL)
-+
- #define ASSERT(expr)	\
- 	(likely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
- 
--#ifndef STATIC
--# define STATIC noinline
--#endif
--
--#else	/* !DEBUG */
--
--#ifdef XFS_WARN
-+#elif defined(DEBUG) || defined(XFS_WARN)
- 
- #define ASSERT(expr)	\
- 	(likely(expr) ? (void)0 : asswarn(#expr, __FILE__, __LINE__))
- 
--#ifndef STATIC
--# define STATIC static noinline
-+#else
-+
-+#define ASSERT(expr)	((void)0)
-+
- #endif
- 
--#else	/* !DEBUG && !XFS_WARN */
-+/*
-+ * STATIC definitions
-+ */
-+#ifdef DEBUG
-+
-+#ifndef STATIC
-+# define STATIC noinline
-+#endif
- 
--#define ASSERT(expr)	((void)0)
-+#else	/* !DEBUG */
- 
- #ifndef STATIC
- # define STATIC static noinline
- #endif
- 
--#endif /* XFS_WARN */
- #endif /* DEBUG */
- 
- #ifdef CONFIG_XFS_RT
+ int
 -- 
 2.7.4
 
