@@ -1,240 +1,202 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39442 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:33786 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752127AbdEHNSs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 May 2017 09:18:48 -0400
-Date: Mon, 8 May 2017 09:18:46 -0400
+        id S1751645AbdEEMUk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 May 2017 08:20:40 -0400
+Date: Fri, 5 May 2017 08:20:33 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Locking problems with Linux 4.9 with NFSD and `fs/iomap.c`
-Message-ID: <20170508131843.GB29840@bfoster.bfoster>
-References: <de171adc29600902515d1424fd800678@molgen.mpg.de>
+Subject: Re: [PATCH] xfs: make fatal assert failures conditional in debug mode
+Message-ID: <20170505122030.GA17318@bfoster.bfoster>
+References: <1493922564-14273-1-git-send-email-bfoster@redhat.com>
+ <7b09b8c0-53dc-37e4-a6c0-88835515345b@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <de171adc29600902515d1424fd800678@molgen.mpg.de>
+In-Reply-To: <7b09b8c0-53dc-37e4-a6c0-88835515345b@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Paul Menzel <pmenzel@molgen.mpg.de>
-Cc: linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org, it+linux-nfs@molgen.mpg.de, Christoph Hellwig <hch@lst.de>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-cc Christoph, who's more familiar with nfs and wrote the iomap bits.
-
-On Sun, May 07, 2017 at 09:09:49PM +0200, Paul Menzel wrote:
-> Dear Linux folks,
+On Thu, May 04, 2017 at 01:58:32PM -0500, Eric Sandeen wrote:
+> On 5/4/17 1:29 PM, Brian Foster wrote:
+> > XFS currently supports two debug modes: XFS_WARN enables assert
+> > failure warnings and XFS_DEBUG converts assert failures to fatal
+> > errors (via BUG()) and enables additional runtime debug code.
+> > 
+> > While the behavior to BUG the kernel on assert failure is useful in
+> > certain test scenarios, it is also useful for development/debug to
+> > enable debug mode code without having to crash the kernel on an
+> > assert failure.
+> > 
+> > To provide this additional flexibility, update XFS debug mode to not
+> > BUG() the kernel by default and create a new XFS kernel
+> > configuration option to enable fatal assert failures when debug mode
+> > is enabled. To provide backwards compatibility with current
+> > behavior, enable the fatal asserts option by default when debug mode
+> > is enabled.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > Hi all,
+> > 
+> > This tweaks the rfc version based on feedback from Christoph and
+> > Darrick. The config option is renamed to minimize confusion and the
+> > logic is basically flipped to disable BUG() behavior by default in
+> > XFS_DEBUG mode and have the new config option turn it on. This option is
+> > dependent on DEBUG mode because I don't believe there is a compelling
+> > use case for XFS_WARN mode with fatal asserts and I'd rather not
+> > unnecessarily increase the configuration matrix.
+> > 
+> > Note that the new config option is set 'default y' simply to provide
+> > backwards compatibility with current behavior (so users expecting DEBUG
+> > mode kernels to BUG() will continue to see that behavior without
+> > requiring further config modifications). Thoughts, reviews, flames
+> > appreciated.
+> > 
+> > Brian
+> > 
+> > v1:
+> > - Use a new config option rather than reuse XFS_WARN.
+> > - Disable BUG() in DEBUG mode by default and flip the logic of the new
+> >   config option.
+> > rfc: http://www.spinics.net/lists/linux-xfs/msg06390.html
+> > 
+> >  fs/xfs/Kconfig     |  8 ++++++++
+> >  fs/xfs/xfs.h       |  4 ++++
+> >  fs/xfs/xfs_linux.h | 32 +++++++++++++++++++-------------
+> >  3 files changed, 31 insertions(+), 13 deletions(-)
+> > 
+> > diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+> > index 35faf12..ded25f8 100644
+> > --- a/fs/xfs/Kconfig
+> > +++ b/fs/xfs/Kconfig
+> > @@ -96,3 +96,11 @@ config XFS_DEBUG
+> >  	  not useful unless you are debugging a particular problem.
+> >  
+> >  	  Say N unless you are an XFS developer, or you play one on TV.
+> > +
+> > +config XFS_ASSERT_FATAL
+> > +	bool "XFS fatal asserts"
+> > +	default y
+> > +	depends on XFS_FS && XFS_DEBUG
+> > +	help
+> > +	  Say Y here to convert DEBUG mode ASSERT failures into fatal errors
+> > +	  that BUG() the kernel. Otherwise, ASSERT failures result in warnings.
 > 
-> 
-> There seems to be a regression in Linux 4.9 compared to 4.4. Maybe you have
-> an idea.
-> 
-> The system used 4.4.38 without issues, and was updated to 4.9.23 on April
-> 24th. Since Friday, the NFS exports where not accessible anymore. Rebooting
-> the system into 4.9.24, 4.9.24, and 4.9.25 didn’t change anything, and the
-> system went into the some lock right away. Booting 4.4.38 fixed the issue
-> though.
+> nitpick, and don't care much either way, but since Y is the default, it's
+> a little odd to restate "say Y."  The "Otherwise" isn't crystal clear IMHO.
 > 
 
-The buffered write path was rewritten with the iomap mechanism around
-4.7 or so, so there's a pretty big functionality gap between 4.4 and
-4.9.
+I think the help text should be independent from the default setting. At
+least a couple Kconfig options under fs/Kconfig have "Say Y .... Say N
+... If unsure, say ..." with a default of y. (I don't think we really
+need "If unsure ..." here...).
 
-> Here is more information.
+> Maybe:
 > 
-> NFS doesn’t respond to a null call.
+> "The default XFS_DEBUG mode is to BUG() on ASSERT failures.
+>  If you say N here, ASSERT failures result in warnings.
+> 
+> Or:
+> 
+> "Say Y here to convert DEBUG mode ASSERT failures into fatal errors
+>  that BUG() the kernel.
+>  If you say N, these ASSERTs will be converted into warnings."
+> 
+> I'd just like to see "N" behavior /explicitly/ stated (with the text "N") :)
 > 
 
-What exactly is a NULL call? Can this be reproduced easily?
+That sounds reasonable. After catching up on some of the chat on irc,
+how about the following to avoid using "convert?"
 
-Otherwise, it's not clear to me whether you've hit a deadlock or some
-kind of livelock. Have you checked syslog for any crash or hung task
-messages? Please also provide the hung task output (echo w >
-/proc/sysrq-trigger) once you've hit this state. It would be
-particularly interesting to see whether the iomap_zero_range() path is
-included in that output.
-
-It may also be interesting to enable the xfs_zero_eof() tracepoint
-(trace-cmd start -e 'xfs:xfs_zero_eof') and see what the last few
-entries are from /sys/kernel/debug/tracing/trace_pipe.
+"Say Y here to cause DEBUG mode assert failures to result in fatal
+errors that BUG() the kernel. If you say N, assert failures result in
+warnings."
 
 Brian
 
-> ```
-> # tshark -r x.x
->   1   0.000000 141.14.16.23 -> 141.14.26.2  TCP 74 1005 → 2049 [SYN] Seq=0
-> Win=29200 Len=0 MSS=1460 SACK_PERM=1 TSval=327954228 TSecr=0 WS=512
->   2   0.000245  141.14.26.2 -> 141.14.16.23 TCP 74 2049 → 1005 [SYN, ACK]
-> Seq=0 Ack=1 Win=28960 Len=0 MSS=1460 SACK_PERM=1 TSval=1126765132
-> TSecr=327954228 WS=512
->   3   0.000269 141.14.16.23 -> 141.14.26.2  TCP 66 1005 → 2049 [ACK] Seq=1
-> Ack=1 Win=29696 Len=0 TSval=327954229 TSecr=1126765132
->   4   0.000300 141.14.16.23 -> 141.14.26.2  NFS 110 V4 NULL Call
->   5   0.202652 141.14.16.23 -> 141.14.26.2  TCP 110 [TCP Retransmission]
-> 1005 → 2049 [PSH, ACK] Seq=1 Ack=1 Win=29696 Len=44 TSval=327954432
-> TSecr=1126765132
->   6   0.410651 141.14.16.23 -> 141.14.26.2  TCP 110 [TCP Retransmission]
-> 1005 → 2049 [PSH, ACK] Seq=1 Ack=1 Win=29696 Len=44 TSval=327954640
-> TSecr=1126765132
->   7   0.818649 141.14.16.23 -> 141.14.26.2  TCP 110 [TCP Retransmission]
-> 1005 → 2049 [PSH, ACK] Seq=1 Ack=1 Win=29696 Len=44 TSval=327955048
-> TSecr=1126765132
->   8   1.012429  141.14.26.2 -> 141.14.16.23 TCP 74 [TCP Spurious
-> Retransmission] 2049 → 1005 [SYN, ACK] Seq=0 Ack=1 Win=28960 Len=0 MSS=1460
-> SACK_PERM=1 TSval=1126766144 TSecr=327955048 WS=512
->   9   1.012448 141.14.16.23 -> 141.14.26.2  TCP 66 [TCP Dup ACK 3#1] 1005 →
-> 2049 [ACK] Seq=45 Ack=1 Win=29696 Len=0 TSval=327955241 TSecr=1126765132
->  10   1.674650 141.14.16.23 -> 141.14.26.2  TCP 110 [TCP Retransmission]
-> 1005 → 2049 [PSH, ACK] Seq=1 Ack=1 Win=29696 Len=44 TSval=327955904
-> TSecr=1126765132
->  11   3.060502  141.14.26.2 -> 141.14.16.23 TCP 74 [TCP Spurious
-> Retransmission] 2049 → 1005 [SYN, ACK] Seq=0 Ack=1 Win=28960 Len=0 MSS=1460
-> SACK_PERM=1 TSval=1126768193 TSecr=327955904 WS=512
->  12   3.060521 141.14.16.23 -> 141.14.26.2  TCP 66 [TCP Dup ACK 3#2] 1005 →
-> 2049 [ACK] Seq=45 Ack=1 Win=29696 Len=0 TSval=327957289 TSecr=1126765132
->  13   3.338653 141.14.16.23 -> 141.14.26.2  TCP 110 [TCP Retransmission]
-> 1005 → 2049 [PSH, ACK] Seq=1 Ack=1 Win=29696 Len=44 TSval=327957568
-> TSecr=1126765132
-> ```
+> -Eric
 > 
-> ``
-> # tshark -r x.x
->   1   0.000000 141.14.16.23 -> 141.14.26.2  TCP 74 690 → 2049 [SYN] Seq=0
-> Win=29200 Len=0 MSS=1460 SACK_PERM=1 TSval=328229577 TSecr=0 WS=512
->   2   0.000039  141.14.26.2 -> 141.14.16.23 TCP 74 2049 → 690 [SYN, ACK]
-> Seq=0 Ack=1 Win=28960 Len=0 MSS=1460 SACK_PERM=1 TSval=1127040480
-> TSecr=328229577 WS=512
->   3   0.000155 141.14.16.23 -> 141.14.26.2  TCP 66 690 → 2049 [ACK] Seq=1
-> Ack=1 Win=29696 Len=0 TSval=328229577 TSecr=1127040480
->   4   0.000180 141.14.16.23 -> 141.14.26.2  NFS 110 V4 NULL Call
->   5   0.206937 141.14.16.23 -> 141.14.26.2  TCP 110 [TCP Retransmission] 690
-> → 2049 [PSH, ACK] Seq=1 Ack=1 Win=29696 Len=44 TSval=328229784
-> TSecr=1127040480
->   6   0.414925 141.14.16.23 -> 141.14.26.2  TCP 110 [TCP Retransmission] 690
-> → 2049 [PSH, ACK] Seq=1 Ack=1 Win=29696 Len=44 TSval=328229992
-> TSecr=1127040480
->   7   0.822928 141.14.16.23 -> 141.14.26.2  TCP 110 [TCP Retransmission] 690
-> → 2049 [PSH, ACK] Seq=1 Ack=1 Win=29696 Len=44 TSval=328230400
-> TSecr=1127040480
->   8   1.056498  141.14.26.2 -> 141.14.16.23 TCP 74 [TCP Spurious
-> Retransmission] 2049 → 690 [SYN, ACK] Seq=0 Ack=1 Win=28960 Len=0 MSS=1460
-> SACK_PERM=1 TSval=1127041536 TSecr=328230400 WS=512
-> ```
-> 
-> Looking at the stack traces of the nfsd process with
-> 
-> ```
-> for p in $(pgrep 'nfsd$'); do echo $p; cat /proc/$p/stack; done
-> ```
-> 
-> all but one have the trace below.
-> 
-> 
-> ```
-> [<ffffffff813eded7>] call_rwsem_down_write_failed+0x17/0x30
-> [<ffffffff8133aa1c>] xfs_file_buffered_aio_write+0x5c/0x2d0
-> [<ffffffff8133ad2e>] xfs_file_write_iter+0x9e/0x150
-> [<ffffffff81196b50>] do_iter_readv_writev+0xa0/0xf0
-> [<ffffffff81197d4a>] do_readv_writev+0x18a/0x230
-> [<ffffffff8119803c>] vfs_writev+0x3c/0x50
-> [<ffffffffa02826b5>] nfsd_vfs_write+0xc5/0x280 [nfsd]
-> [<ffffffffa028e48a>] nfsd4_write+0x17a/0x1d0 [nfsd]
-> [<ffffffffa02902f9>] nfsd4_proc_compound+0x369/0x5e0 [nfsd]
-> [<ffffffffa027e218>] nfsd_dispatch+0xa8/0x180 [nfsd]
-> [<ffffffffa01a66af>] svc_process_common+0x3ff/0x580 [sunrpc]
-> [<ffffffffa01a696b>] svc_process+0x13b/0x1b0 [sunrpc]
-> [<ffffffffa027dc7d>] nfsd+0xed/0x160 [nfsd]
-> [<ffffffff8107b0ba>] kthread+0xca/0xe0
-> [<ffffffff81a97092>] ret_from_fork+0x22/0x30
-> [<ffffffffffffffff>] 0xffffffffffffffff
-> ```
-> 
-> The one problematic one has the stack trace below.
-> 
-> ```
-> [<ffffffff811f6f6c>] iomap_write_begin+0x8c/0x120
-> [<ffffffff811f758b>] iomap_zero_range_actor+0xeb/0x210     # oder
-> iomap_zero_range_actor+0x90/0x210
-> [<ffffffff811f77e2>] iomap_apply+0xa2/0x110
-> [<ffffffff811f79b8>] iomap_zero_range+0x58/0x80
-> [<ffffffff8133a38e>] xfs_zero_eof+0x4e/0xb0
-> [<ffffffff8133a58d>] xfs_file_aio_write_checks+0x19d/0x1c0
-> [<ffffffff8133aa39>] xfs_file_buffered_aio_write+0x79/0x2d0
-> [<ffffffff8133ad2e>] xfs_file_write_iter+0x9e/0x150
-> [<ffffffff81196b50>] do_iter_readv_writev+0xa0/0xf0
-> [<ffffffff81197d4a>] do_readv_writev+0x18a/0x230
-> [<ffffffff8119803c>] vfs_writev+0x3c/0x50
-> [<ffffffffa02826b5>] nfsd_vfs_write+0xc5/0x280 [nfsd]
-> [<ffffffffa028e48a>] nfsd4_write+0x17a/0x1d0 [nfsd]
-> [<ffffffffa02902f9>] nfsd4_proc_compound+0x369/0x5e0 [nfsd]
-> [<ffffffffa027e218>] nfsd_dispatch+0xa8/0x180 [nfsd]
-> [<ffffffffa01a66af>] svc_process_common+0x3ff/0x580 [sunrpc]
-> [<ffffffffa01a696b>] svc_process+0x13b/0x1b0 [sunrpc]
-> [<ffffffffa027dc7d>] nfsd+0xed/0x160 [nfsd]
-> [<ffffffff8107b0ba>] kthread+0xca/0xe0
-> [<ffffffff81a97092>] ret_from_fork+0x22/0x30
-> [<ffffffffffffffff>] 0xffffffffffffffff
-> ```
-> 
-> Here is the corresponding lines in the source code.
-> 
-> ```
-> info line *0xffffffff811f6f6c Line 124 of "fs/iomap.c" starts at address
-> 0xffffffff811f6f6c <iomap_write_begin+140> and ends at 0xffffffff811f6f70
-> <iomap_write_begin+144>.
-> info line *0xffffffff811f758b Line 345 of "fs/iomap.c" starts at address
-> 0xffffffff811f758b <iomap_zero_range_actor+235> and ends at
-> 0xffffffff811f758f <iomap_zero_range_actor+239>.
-> info line *0xffffffff811f7530 Line 385 of "fs/iomap.c" starts at address
-> 0xffffffff811f7530 <iomap_zero_range_actor+144> and ends at
-> 0xffffffff811f7538 <iomap_zero_range_actor+152>.
-> ```
-> 
-> Here is the code.
-> 
-> ```
-> […]
-> 109 static int
-> 110 iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
-> unsigned flags,
-> 111                 struct page **pagep, struct iomap *iomap)
-> 112 {
-> 113         pgoff_t index = pos >> PAGE_SHIFT;
-> 114         struct page *page;
-> 115         int status = 0;
-> 116
-> 117         BUG_ON(pos + len > iomap->offset + iomap->length);
-> 118
-> 119         if (fatal_signal_pending(current))
-> 120                 return -EINTR;
-> 121
-> 122         page = grab_cache_page_write_begin(inode->i_mapping, index,
-> flags);
-> 123         if (!page)
-> 124                 return -ENOMEM;
-> 125
-> 126         status = __block_write_begin_int(page, pos, len, NULL, iomap);
-> 127         if (unlikely(status)) {
-> 128                 unlock_page(page);
-> 129                 put_page(page);
-> 130                 page = NULL;
-> 131
-> 132                 iomap_write_failed(inode, pos, len);
-> 133         }
-> 134
-> 135         *pagep = page;
-> 136         return status;
-> 137 }
-> […]
-> ```
-> 
-> So it looks like insufficent memory? But the machine has 1 TB of RAM, and I
-> didn’t see any suspicious running `htop`. Also it should have returned from
-> with that error, shouldn’t it have?
-> 
-> 
-> Kind regards,
-> 
-> Paul
+> > diff --git a/fs/xfs/xfs.h b/fs/xfs/xfs.h
+> > index a742c47..80cd0fd 100644
+> > --- a/fs/xfs/xfs.h
+> > +++ b/fs/xfs/xfs.h
+> > @@ -24,6 +24,10 @@
+> >  #define XFS_BUF_LOCK_TRACKING 1
+> >  #endif
+> >  
+> > +#ifdef CONFIG_XFS_ASSERT_FATAL
+> > +#define XFS_ASSERT_FATAL 1
+> > +#endif
+> > +
+> >  #ifdef CONFIG_XFS_WARN
+> >  #define XFS_WARN 1
+> >  #endif
+> > diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+> > index 044fb0e..36c3eab 100644
+> > --- a/fs/xfs/xfs_linux.h
+> > +++ b/fs/xfs/xfs_linux.h
+> > @@ -245,37 +245,43 @@ static inline __uint64_t howmany_64(__uint64_t x, __uint32_t y)
+> >  	return x;
+> >  }
+> >  
+> > +/*
+> > + * ASSERT() definitions
+> > + */
+> >  #define ASSERT_ALWAYS(expr)	\
+> >  	(likely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
+> >  
+> > -#ifdef DEBUG
+> > +#if defined(DEBUG) && defined(XFS_ASSERT_FATAL)
+> > +
+> >  #define ASSERT(expr)	\
+> >  	(likely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
+> >  
+> > -#ifndef STATIC
+> > -# define STATIC noinline
+> > -#endif
+> > -
+> > -#else	/* !DEBUG */
+> > -
+> > -#ifdef XFS_WARN
+> > +#elif defined(DEBUG) || defined(XFS_WARN)
+> >  
+> >  #define ASSERT(expr)	\
+> >  	(likely(expr) ? (void)0 : asswarn(#expr, __FILE__, __LINE__))
+> >  
+> > -#ifndef STATIC
+> > -# define STATIC static noinline
+> > +#else
+> > +
+> > +#define ASSERT(expr)	((void)0)
+> > +
+> >  #endif
+> >  
+> > -#else	/* !DEBUG && !XFS_WARN */
+> > +/*
+> > + * STATIC definitions
+> > + */
+> > +#ifdef DEBUG
+> > +
+> > +#ifndef STATIC
+> > +# define STATIC noinline
+> > +#endif
+> >  
+> > -#define ASSERT(expr)	((void)0)
+> > +#else	/* !DEBUG */
+> >  
+> >  #ifndef STATIC
+> >  # define STATIC static noinline
+> >  #endif
+> >  
+> > -#endif /* XFS_WARN */
+> >  #endif /* DEBUG */
+> >  
+> >  #ifdef CONFIG_XFS_RT
+> > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
