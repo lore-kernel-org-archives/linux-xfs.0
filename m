@@ -1,44 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38222 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751052AbdEETUh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 May 2017 15:20:37 -0400
-Subject: Re: XFS and multiple mounts protection (aka preventing multiple
- mounts)
-References: <3cf2f8cd-d18f-2a65-c540-5527a366d2fb@assyoma.it>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <63a045ae-0c12-e1b7-a7e0-df251dd88a4f@sandeen.net>
-Date: Fri, 5 May 2017 14:20:36 -0500
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:38806 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751159AbdEEDQe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 May 2017 23:16:34 -0400
+Date: Fri, 5 May 2017 13:16:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xlog_write: reservation ran out
+Message-ID: <20170505031629.GE17542@dastard>
+References: <CAF1ivSZeYhnzh6CPZViYUNFXdm33hhTA_CzP7V745QociEEnKg@mail.gmail.com>
+ <CAF1ivSbjdixqDo663wvAEkzRk-ctOX+y5UYxq4UdPA-=JVufyw@mail.gmail.com>
+ <CAF1ivSbEfhTYxcBx1dafK9TD3VdeXbJrNMzWJmXY8kyU0ibkUw@mail.gmail.com>
+ <8accf9d5-b2e4-c82e-fa47-3c5bc2ea35b1@kernel.org>
+ <20170501131222.GA2109@bfoster.bfoster>
+ <70def595-91a9-970a-d227-547055da5bb5@kernel.org>
+ <20170502235152.GN12369@dastard>
+ <20170503141030.GA11549@bfoster.bfoster>
+ <20170504003435.GC17542@dastard>
+ <20170504115102.GA3248@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <3cf2f8cd-d18f-2a65-c540-5527a366d2fb@assyoma.it>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170504115102.GA3248@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Ming Lin <mlin@kernel.org>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Ceph Development <ceph-devel@vger.kernel.org>, "LIU, Fei" <james.liu@alibaba-inc.com>, xiongwei.jiang@alibaba-inc.com, boqian.zy@alibaba-inc.com, sheng.qiu@alibaba-inc.com, Sage Weil <sweil@redhat.com>
 
-On 5/5/17 5:29 AM, Gionatan Danti wrote:
-> Hi all, I have a question about multiple mounts protection in XFS.
+On Thu, May 04, 2017 at 07:51:02AM -0400, Brian Foster wrote:
+> Seems reasonable. I suppose if we do the check at this level rather than
+> in the caller, we could move the CIL insert code to the last step before
+> we drop ->xc_cil_lock and have an accurate account of the reservation
+> pulled off the transaction. E.g.:
 > 
-> On the iSCSI list, discussing how to avoid accidental multiple
-> mounts, I received the following advise: "Use XFS. XFS won't let you
-> mount it several time on different machines without various "force"
-> options."
+> {
+> 	...
+> 	tp->t_ticket->t_curr_res -= len;
+> 	ctx->space_used += len;
 > 
-> I just tried mounting an exported iSCSI disk formatted with XFS and I
-> *can* mount it concurrently on two different Linux boxes (both CentOS
-> 7.3 x86-64).
+> 	/* dump tp on overrun prior to item removal */
+> 	if (tp->t_ticket->t_curr_res < 0)
+> 		xlog_print_tic(tp)
 > 
-> I am missing something? Thanks.
+> 	/* reposition to CIL ... */
+> 	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
+> 		...
+> 		list_move_tail(...);
+> 	}
+> 	spin_unlock(&cil->xc_cil_lock);
+> }
+> 
+> ... where xlog_print_tic() can call xlog_print_tic_res() and then dump
+> the t_items list as above.
 
-I guess this has been covered, but: no.  There is no cross-machine
-multi-mount protection in XFS.  Nothing like ext4's MMP.
+We shouldn't call xlog_print_tic_res() while holding a spinlock
+because it calls xfs_force_shutdown().  So I think all the overrun
+checks and prints need to be outside the xc_cil_lock.
 
-There is a unique UUID test at mount time, so you can't i.e. mount
-the same path twice /on the same box/, but there is no mechanism in
-XFS to prevent the same disk from being mounted by 2 /separate/ machines
-on a SAN.
+Cheers,
 
--Eric
- 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
