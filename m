@@ -1,53 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:16866 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750951AbdEEXKS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 May 2017 19:10:18 -0400
-Date: Sat, 6 May 2017 09:09:43 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: make fatal assert failures conditional in debug
- mode
-Message-ID: <20170505230943.GG17542@dastard>
-References: <1493991086-18817-1-git-send-email-bfoster@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1493991086-18817-1-git-send-email-bfoster@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:35571 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755120AbdEEH5p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 May 2017 03:57:45 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/3] xfs: remove uuid_getnodeuniq and xfs_uu_t
+Date: Fri,  5 May 2017 09:57:25 +0200
+Message-Id: <20170505075725.19597-4-hch@lst.de>
+In-Reply-To: <20170505075725.19597-1-hch@lst.de>
+References: <20170505075725.19597-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: amir73il@gmail.com
 
-On Fri, May 05, 2017 at 09:31:26AM -0400, Brian Foster wrote:
-> XFS currently supports two debug modes: XFS_WARN enables assert
-> failure warnings and XFS_DEBUG converts assert failures to fatal
-> errors (via BUG()) and enables additional runtime debug code.
-> 
-> While the behavior to BUG the kernel on assert failure is useful in
-> certain test scenarios, it is also useful for development/debug to
-> enable debug mode code without having to crash the kernel on an
-> assert failure.
-> 
-> To provide this additional flexibility, update XFS debug mode to not
-> BUG() the kernel by default and create a new XFS kernel
-> configuration option to enable fatal assert failures when debug mode
-> is enabled. To provide backwards compatibility with current
-> behavior, enable the fatal asserts option by default when debug mode
-> is enabled.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+And just opencode retreiving the UUID v1 information in the only caller
+using get_unaligned_be*.
 
-Just a suggestion, but why make this a compile time option? Why not
-a sysfs variable under /sys/fs/xfs/debug? That would be far more
-useful to me - a single kernel that can be configure to just warn or
-bug() dynamically. That will save us from having to rebuild a kernel
-just to enable this functionality, then rebuild again to turn it
-off..
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/uuid.c      | 25 -------------------------
+ fs/xfs/uuid.h      |  1 -
+ fs/xfs/xfs_mount.c |  5 ++++-
+ 3 files changed, 4 insertions(+), 27 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
+index b83f76b6d410..937deaf2128d 100644
+--- a/fs/xfs/uuid.c
++++ b/fs/xfs/uuid.c
+@@ -17,31 +17,6 @@
+  */
+ #include <xfs.h>
+ 
+-/* IRIX interpretation of an uuid_t */
+-typedef struct {
+-	__be32	uu_timelow;
+-	__be16	uu_timemid;
+-	__be16	uu_timehi;
+-	__be16	uu_clockseq;
+-	__be16	uu_node[3];
+-} xfs_uu_t;
+-
+-/*
+- * uuid_getnodeuniq - obtain the node unique fields of a UUID.
+- *
+- * This is not in any way a standard or condoned UUID function;
+- * it just something that's needed for user-level file handles.
+- */
+-void
+-uuid_getnodeuniq(uuid_t *uuid, int fsid [2])
+-{
+-	xfs_uu_t *uup = (xfs_uu_t *)uuid;
+-
+-	fsid[0] = (be16_to_cpu(uup->uu_clockseq) << 16) |
+-		   be16_to_cpu(uup->uu_timemid);
+-	fsid[1] = be32_to_cpu(uup->uu_timelow);
+-}
+-
+ int
+ uuid_is_nil(uuid_t *uuid)
+ {
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+index 4f1441ba4fa5..65b5cebf2f99 100644
+--- a/fs/xfs/uuid.h
++++ b/fs/xfs/uuid.h
+@@ -20,7 +20,6 @@
+ 
+ extern int uuid_is_nil(uuid_t *uuid);
+ extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
+-extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
+ 
+ static inline void
+ uuid_copy(uuid_t *dst, uuid_t *src)
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 688ebff1f663..5bf1edb0986d 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -789,7 +789,10 @@ xfs_mountfs(
+ 	 *  Copies the low order bits of the timestamp and the randomly
+ 	 *  set "sequence" number out of a UUID.
+ 	 */
+-	uuid_getnodeuniq(&sbp->sb_uuid, mp->m_fixedfsid);
++	mp->m_fixedfsid[0] =
++		(get_unaligned_be16(&sbp->sb_uuid.b[8]) << 16) |
++		 get_unaligned_be16(&sbp->sb_uuid.b[4]);
++	mp->m_fixedfsid[1] = get_unaligned_be32(&sbp->sb_uuid.b[0]);
+ 
+ 	mp->m_dmevmask = 0;	/* not persistent; set after each mount */
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.11.0
+
