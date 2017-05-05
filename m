@@ -1,32 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:58762 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1948756AbdEZVr6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 May 2017 17:47:58 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: RFC: removing non-linux platform support from xfsprogs
-Message-ID: <7d962368-5376-0fca-dbc6-3d3f6fdf50e8@sandeen.net>
-Date: Fri, 26 May 2017 16:47:57 -0500
+Received: from mail-io0-f195.google.com ([209.85.223.195]:34661 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750864AbdEEI1I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 May 2017 04:27:08 -0400
+Received: by mail-io0-f195.google.com with SMTP id 12so2964845iol.1
+        for <linux-xfs@vger.kernel.org>; Fri, 05 May 2017 01:27:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20170505075725.19597-4-hch@lst.de>
+References: <20170505075725.19597-1-hch@lst.de> <20170505075725.19597-4-hch@lst.de>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 5 May 2017 11:27:07 +0300
+Message-ID: <CAOQ4uxh+U+p=dUvrUE3QyXgehn5pffRRrmpVOGi5c6sbSOEG-A@mail.gmail.com>
+Subject: Re: [PATCH 3/3] xfs: remove uuid_getnodeuniq and xfs_uu_t
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Jan Tulak <jtulak@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-There's a bunch of mucking about to try to build xfsprogs on non-linux
-platforms.  Is anyone using that, or care about it?  If not, I propose
-removing it all in a cruft-reducing effort.
+On Fri, May 5, 2017 at 10:57 AM, Christoph Hellwig <hch@lst.de> wrote:
+> And just opencode retreiving the UUID v1 information in the only caller
+> using get_unaligned_be*.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-If I'm missing some good reason for it to be there, please educate me,
-and I'll leave it alone.
+Nice.
 
-In particular, Jan - I know you did a lot of this work - do you still
-use it?
-
-Thanks,
--Eric
-
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
