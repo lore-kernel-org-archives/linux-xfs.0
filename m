@@ -1,150 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41176 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753044AbdEHUpJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 May 2017 16:45:09 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 399C3C0567A1
-        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2017 20:45:09 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 090CA7CE17
-        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2017 20:45:09 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/3] xfs: refactor xlog_cil_insert_items() to facilitate transaction dump
-Date: Mon,  8 May 2017 16:45:06 -0400
-Message-Id: <1494276307-36887-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1494276307-36887-1-git-send-email-bfoster@redhat.com>
-References: <1494276307-36887-1-git-send-email-bfoster@redhat.com>
+Received: from aserp1050.oracle.com ([141.146.126.70]:50440 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751554AbdEGVhc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 May 2017 17:37:32 -0400
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v47FuXSU008868
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 7 May 2017 15:56:33 GMT
+Subject: [PATCH 2/9] xfs_repair: replace rmap_compare with libxfs version
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 07 May 2017 08:56:29 -0700
+Message-ID: <149417258914.24656.9049411771758934739.stgit@birch.djwong.org>
+In-Reply-To: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Transaction reservation overrun detection currently occurs too late
-to print useful information about the offending transaction.
-Ideally, the transaction data is printed before the associated log
-items are moved from the transaction to the CIL, which occurs in
-xlog_cil_insert_items(), such that details of the items logged by
-the transaction are available for analysis.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor xlog_cil_insert_items() to facilitate moving tx overrun
-detection to this function. Update the function to track each bit of
-extra log reservation stolen from the transaction (i.e., such as for
-the CIL context ticket) and perform the log item migration as the
-last operation before the CIL lock is released. This creates a
-context where the transaction reservation consumption has been fully
-calculated when the log items are moved to the CIL. This patch makes
-no functional changes.
+Now that libxfs has a function to compare rmaps, replace xfs_repair's
+helper function with that.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_log_cil.c | 62 +++++++++++++++++++++++++++-------------------------
- 1 file changed, 32 insertions(+), 30 deletions(-)
+ libxfs/libxfs_api_defs.h |    1 +
+ repair/rmap.c            |   32 ++------------------------------
+ 2 files changed, 3 insertions(+), 30 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 52fe042..8de3baa 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -410,6 +410,7 @@ xlog_cil_insert_items(
- 	int			len = 0;
- 	int			diff_iovecs = 0;
- 	int			iclog_space;
-+	int			iovhdr_res = 0, split_res = 0, ctx_res = 0;
+
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 31239ca..2d8d9c8 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -144,5 +144,6 @@
+ #define xfs_refcount_get_rec		libxfs_refcount_get_rec
+ #define xfs_rmap_lookup_le_range	libxfs_rmap_lookup_le_range
+ #define xfs_refc_block			libxfs_refc_block
++#define xfs_rmap_compare		libxfs_rmap_compare
  
- 	ASSERT(tp);
+ #endif /* __LIBXFS_API_DEFS_H__ */
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 7508973..ab6e583 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -49,37 +49,9 @@ static struct xfs_ag_rmap *ag_rmaps;
+ static bool rmapbt_suspect;
+ static bool refcbt_suspect;
  
-@@ -419,30 +420,11 @@ xlog_cil_insert_items(
- 	 */
- 	xlog_cil_insert_format_items(log, tp, &len, &diff_iovecs);
- 
--	/*
--	 * Now (re-)position everything modified at the tail of the CIL.
--	 * We do this here so we only need to take the CIL lock once during
--	 * the transaction commit.
--	 */
- 	spin_lock(&cil->xc_cil_lock);
--	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
--		struct xfs_log_item	*lip = lidp->lid_item;
+-/*
+- * Compare rmap observations for array sorting.
+- */
+-static int
+-rmap_compare(
+-	const void		*a,
+-	const void		*b)
++static inline int rmap_compare(const void *a, const void *b)
+ {
+-	const struct xfs_rmap_irec	*pa;
+-	const struct xfs_rmap_irec	*pb;
+-	__u64			oa;
+-	__u64			ob;
 -
--		/* Skip items which aren't dirty in this transaction. */
--		if (!(lidp->lid_flags & XFS_LID_DIRTY))
--			continue;
+-	pa = a; pb = b;
+-	oa = libxfs_rmap_irec_offset_pack(pa);
+-	ob = libxfs_rmap_irec_offset_pack(pb);
 -
--		/*
--		 * Only move the item if it isn't already at the tail. This is
--		 * to prevent a transient list_empty() state when reinserting
--		 * an item that is already the only item in the CIL.
--		 */
--		if (!list_is_last(&lip->li_cil, &cil->xc_cil))
--			list_move_tail(&lip->li_cil, &cil->xc_cil);
--	}
- 
- 	/* account for space used by new iovec headers  */
--	len += diff_iovecs * sizeof(xlog_op_header_t);
-+	iovhdr_res = diff_iovecs * sizeof(xlog_op_header_t);
-+	len += iovhdr_res;
- 	ctx->nvecs += diff_iovecs;
- 
- 	/* attach the transaction to the CIL if it has any busy extents */
-@@ -457,27 +439,47 @@ xlog_cil_insert_items(
- 	 * during the transaction commit.
- 	 */
- 	if (ctx->ticket->t_curr_res == 0) {
--		ctx->ticket->t_curr_res = ctx->ticket->t_unit_res;
--		tp->t_ticket->t_curr_res -= ctx->ticket->t_unit_res;
-+		ctx_res = ctx->ticket->t_unit_res;
-+		ctx->ticket->t_curr_res = ctx_res;
-+		tp->t_ticket->t_curr_res -= ctx_res;
- 	}
- 
- 	/* do we need space for more log record headers? */
- 	iclog_space = log->l_iclog_size - log->l_iclog_hsize;
- 	if (len > 0 && (ctx->space_used / iclog_space !=
- 				(ctx->space_used + len) / iclog_space)) {
--		int hdrs;
--
--		hdrs = (len + iclog_space - 1) / iclog_space;
-+		split_res = (len + iclog_space - 1) / iclog_space;
- 		/* need to take into account split region headers, too */
--		hdrs *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
--		ctx->ticket->t_unit_res += hdrs;
--		ctx->ticket->t_curr_res += hdrs;
--		tp->t_ticket->t_curr_res -= hdrs;
-+		split_res *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
-+		ctx->ticket->t_unit_res += split_res;
-+		ctx->ticket->t_curr_res += split_res;
-+		tp->t_ticket->t_curr_res -= split_res;
- 		ASSERT(tp->t_ticket->t_curr_res >= len);
- 	}
- 	tp->t_ticket->t_curr_res -= len;
- 	ctx->space_used += len;
- 
-+	/*
-+	 * Now (re-)position everything modified at the tail of the CIL.
-+	 * We do this here so we only need to take the CIL lock once during
-+	 * the transaction commit.
-+	 */
-+	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
-+		struct xfs_log_item	*lip = lidp->lid_item;
-+
-+		/* Skip items which aren't dirty in this transaction. */
-+		if (!(lidp->lid_flags & XFS_LID_DIRTY))
-+			continue;
-+
-+		/*
-+		 * Only move the item if it isn't already at the tail. This is
-+		 * to prevent a transient list_empty() state when reinserting
-+		 * an item that is already the only item in the CIL.
-+		 */
-+		if (!list_is_last(&lip->li_cil, &cil->xc_cil))
-+			list_move_tail(&lip->li_cil, &cil->xc_cil);
-+	}
-+
- 	spin_unlock(&cil->xc_cil_lock);
+-	if (pa->rm_startblock < pb->rm_startblock)
+-		return -1;
+-	else if (pa->rm_startblock > pb->rm_startblock)
+-		return 1;
+-	else if (pa->rm_owner < pb->rm_owner)
+-		return -1;
+-	else if (pa->rm_owner > pb->rm_owner)
+-		return 1;
+-	else if (oa < ob)
+-		return -1;
+-	else if (oa > ob)
+-		return 1;
+-	else
+-		return 0;
++	return libxfs_rmap_compare(a, b);
  }
  
--- 
-2.7.4
+ /*
 
