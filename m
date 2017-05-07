@@ -1,40 +1,282 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37184 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1948823AbdEZXGs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 May 2017 19:06:48 -0400
-Subject: Re: [PATCH 6/9] xfs_spaceman: AG state control
+Received: from aserp1050.oracle.com ([141.146.126.70]:50593 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755277AbdEGVkk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 May 2017 17:40:40 -0400
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v47Fuvcs008971
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 7 May 2017 15:56:58 GMT
+Subject: [PATCH 6/9] xfs_spaceman: AG state control
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 07 May 2017 08:56:54 -0700
+Message-ID: <149417261413.24656.8374342916847767840.stgit@birch.djwong.org>
+In-Reply-To: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
 References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
- <149417261413.24656.8374342916847767840.stgit@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <2b192db0-ebda-e42e-a326-66bf61b3c6ca@sandeen.net>
-Date: Fri, 26 May 2017 18:06:46 -0500
 MIME-Version: 1.0
-In-Reply-To: <149417261413.24656.8374342916847767840.stgit@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On 5/7/17 10:56 AM, Darrick J. Wong wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Add support for a new allocation group state control ioctl. This
-> allows control of various AG parameters, such as whether inode
-> allocation is allowed in the AG, metadata preference, whether new
-> allocations are allowed, etc. This requires a new ioctl.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> [darrick: change xfsctl to ioctl]
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Sounds like a great patch to send if this ever gets implemented in
-the kernel; for now, I think, I'll not merge it.  :)
+Add support for a new allocation group state control ioctl. This
+allows control of various AG parameters, such as whether inode
+allocation is allowed in the AG, metadata preference, whether new
+allocations are allowed, etc. This requires a new ioctl.
 
--Eric
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[darrick: change xfsctl to ioctl]
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ spaceman/Makefile |    2 
+ spaceman/ag.c     |  221 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 222 insertions(+), 1 deletion(-)
+ create mode 100644 spaceman/ag.c
 
+
+diff --git a/spaceman/Makefile b/spaceman/Makefile
+index b1f1136..08709b3 100644
+--- a/spaceman/Makefile
++++ b/spaceman/Makefile
+@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+ LTCOMMAND = xfs_spaceman
+ HFILES = init.h space.h
+ CFILES = init.c \
+-	file.c prealloc.c trim.c
++	ag.c file.c prealloc.c trim.c
+ 
+ LLDLIBS = $(LIBXCMD)
+ LTDEPENDENCIES = $(LIBXCMD)
+diff --git a/spaceman/ag.c b/spaceman/ag.c
+new file mode 100644
+index 0000000..1eb8aa0
+--- /dev/null
++++ b/spaceman/ag.c
+@@ -0,0 +1,221 @@
++/*
++ * Copyright (c) 2012 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include "libxfs.h"
++#include <linux/dqblk_xfs.h>
++#include "command.h"
++#include "input.h"
++#include "init.h"
++#include "space.h"
++
++#ifndef XFS_IOC_AGCONTROL
++#define XFS_IOC_AGCONTROL _IOWR ('X', 60, struct xfs_agcontrol)
++
++#define XFS_AGCONTROL_VERSION		1
++struct xfs_agcontrol {
++	__u32		version;
++	__u32		flags;
++	__u32		agno;
++	__u32		state;
++	__u64		pad[8];
++};
++
++/* control flags */
++#define XFS_AGCONTROL_GETAGFSTATE	(1 << 0)	/* get AGF state */
++#define XFS_AGCONTROL_SETAGFSTATE	(1 << 1)	/* set AGF state */
++#define XFS_AGCONTROL_GETAGISTATE	(1 << 2)	/* get AGI state */
++#define XFS_AGCONTROL_SETAGISTATE	(1 << 3)	/* set AGI state */
++
++/* state flags */
++
++/*
++ * inode and allocation states are split. AGF and AGI online state will move in
++ * sync as it is really a whole AG state. No allocation flags imply no new
++ * allocations, but inodes and extents can be removed. Readonly means no
++ * modification (alloc or free) is allowed. This is to allow different
++ * operations to be performed. e.g. emptying an AG in preparation for a shrink
++ * require NOALLOC state, but an AG that has a corrupted freespace btree might
++ * be switched to READONLY until the freespace tree is rebuilt. An AGF/AGI in
++ * this corrupt/ro state will set the relevant corruption flag in the state
++ * field....
++ */
++#define XFS_AGFSTATE_ONLINE		(1 << 0)	/* AGF online */
++#define XFS_AGFSTATE_NOALLOC		(1 << 1)	/* No new allocation */
++#define XFS_AGFSTATE_READONLY		(1 << 2)	/* AGF is immutable */
++#define XFS_AGFSTATE_METADATA		(1 << 3)	/* metadata preferred */
++#define XFS_AGFSTATE_CORRUPT_BNO	(1 << 4)	/* bno freespace corrupt */
++#define XFS_AGFSTATE_CORRUPT_CNT	(1 << 5)	/* cnt freespace corrupt */
++#define XFS_AGFSTATE_CORRUPT_AGFL	(1 << 6)	/* AGFL freespace corrupt */
++
++#define XFS_AGISTATE_ONLINE		(1 << 0)	/* AGI online */
++#define XFS_AGISTATE_NOALLOC		(1 << 1)	/* No new allocation */
++#define XFS_AGISTATE_READONLY		(1 << 2)	/* AGI is immutable */
++#define XFS_AGISTATE_CORRUPT_TREE	(1 << 2)	/* AGI btree corrupt */
++
++#endif
++
++static cmdinfo_t agfctl_cmd;
++static cmdinfo_t agictl_cmd;
++
++static int
++agfctl_f(
++	int		argc,
++	char		**argv)
++{
++	struct xfs_agcontrol agctl = {0};
++	xfs_agnumber_t	agno;
++	int		gflag = 0;
++	int		c;
++
++	while ((c = getopt(argc, argv, "gs")) != EOF) {
++		switch (c) {
++		case 'g':
++			gflag = 1;
++			break;
++		default:
++			return command_usage(&agfctl_cmd);
++		}
++	}
++	if (optind != argc - 1)
++		return command_usage(&agfctl_cmd);
++
++	agno = atoi(argv[optind]);
++	if (agno >= file->geom.agcount) {
++		fprintf(stderr, _("%s: agno %d out of range (max %d)\n"),
++			progname, agno, file->geom.agcount);
++		exitcode = 1;
++		return 0;
++	}
++
++	agctl.version = XFS_AGCONTROL_VERSION;
++	agctl.agno = agno;
++	if (gflag)
++		agctl.flags = XFS_AGCONTROL_GETAGFSTATE;
++
++	if (ioctl(file->fd, XFS_IOC_AGCONTROL, &agctl) < 0) {
++		fprintf(stderr, _("%s: XFS_IOC_AGCONTROL on %s: %s\n"),
++			progname, file->name, strerror(errno));
++	}
++	return 0;
++}
++
++static void
++agfctl_help(void)
++{
++	printf(_(
++"\n"
++"AGF state control\n"
++"\n"
++"Options: [-g] agno\n"
++"\n"
++" -g -- get state\n"
++" agno -- AG to operate on\n"
++"\n"));
++
++}
++
++void
++agfctl_init(void)
++{
++	agfctl_cmd.name = "agfctl";
++	agfctl_cmd.altname = "agfctl";
++	agfctl_cmd.cfunc = agfctl_f;
++	agfctl_cmd.argmin = 2;
++	agfctl_cmd.argmax = -1;
++	agfctl_cmd.args = "agno\n";
++	agfctl_cmd.flags = CMD_FLAG_ONESHOT;
++	agfctl_cmd.oneline = _("AGF state control");
++	agfctl_cmd.help = agfctl_help;
++
++	add_command(&agfctl_cmd);
++}
++
++static int
++agictl_f(
++	int		argc,
++	char		**argv)
++{
++	struct xfs_agcontrol agctl = {0};
++	xfs_agnumber_t	agno;
++	int		gflag = 0;
++	int		c;
++
++	while ((c = getopt(argc, argv, "gs")) != EOF) {
++		switch (c) {
++		case 'g':
++			gflag = 1;
++			break;
++		default:
++			return command_usage(&agictl_cmd);
++		}
++	}
++	if (optind != argc - 1)
++		return command_usage(&agictl_cmd);
++
++	agno = atoi(argv[optind]);
++	if (agno >= file->geom.agcount) {
++		fprintf(stderr, _("%s: agno %d out of range (max %d)\n"),
++			progname, agno, file->geom.agcount);
++		exitcode = 1;
++		return 0;
++	}
++
++	agctl.version = XFS_AGCONTROL_VERSION;
++	agctl.agno = agno;
++	if (gflag)
++		agctl.flags = XFS_AGCONTROL_GETAGISTATE;
++
++	if (ioctl(file->fd, XFS_IOC_AGCONTROL, &agctl) < 0) {
++		fprintf(stderr, _("%s: XFS_IOC_AGCONTROL on %s: %s\n"),
++			progname, file->name, strerror(errno));
++		exitcode = 1;
++		return 0;
++	}
++	return 0;
++}
++
++static void
++agictl_help(void)
++{
++	printf(_(
++"\n"
++"AGI state control\n"
++"\n"
++"Options: [-g] agno\n"
++"\n"
++" -g -- get state\n"
++" agno -- AG to operate on\n"
++"\n"));
++
++}
++
++void
++agictl_init(void)
++{
++	agictl_cmd.name = "agictl";
++	agictl_cmd.altname = "agictl";
++	agictl_cmd.cfunc = agictl_f;
++	agictl_cmd.argmin = 2;
++	agictl_cmd.argmax = -1;
++	agictl_cmd.args = "agno\n";
++	agictl_cmd.flags = CMD_FLAG_ONESHOT;
++	agictl_cmd.oneline = _("AGI state control");
++	agictl_cmd.help = agictl_help;
++
++	add_command(&agictl_cmd);
++}
 
