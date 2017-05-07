@@ -1,69 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57893 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752228AbdEJLOu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 May 2017 07:14:50 -0400
-Date: Wed, 10 May 2017 13:14:46 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v4 12/27] cifs: set mapping error when page writeback
- fails in writepage or launder_pages
-Message-ID: <20170510111446.GD25137@quack2.suse.cz>
-References: <20170509154930.29524-1-jlayton@redhat.com>
- <20170509154930.29524-13-jlayton@redhat.com>
+Received: from aserp1050.oracle.com ([141.146.126.70]:50418 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751545AbdEGVh3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 May 2017 17:37:29 -0400
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v47FvF1O009245
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 7 May 2017 15:57:16 GMT
+Subject: [PATCH 8/9] xfs_spaceman: add a man page
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 07 May 2017 08:57:06 -0700
+Message-ID: <149417262663.24656.8692128796429145917.stgit@birch.djwong.org>
+In-Reply-To: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170509154930.29524-13-jlayton@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue 09-05-17 11:49:15, Jeff Layton wrote:
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks good to me. You can add:
+Add a manual page describing xfs_spaceman's behavior.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ man/man8/xfs_spaceman.8 |  102 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 102 insertions(+)
+ create mode 100644 man/man8/xfs_spaceman.8
 
-								Honza
 
-> ---
->  fs/cifs/file.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/cifs/file.c b/fs/cifs/file.c
-> index 21d404535739..0bee7f8d91ad 100644
-> --- a/fs/cifs/file.c
-> +++ b/fs/cifs/file.c
-> @@ -2234,14 +2234,16 @@ cifs_writepage_locked(struct page *page, struct writeback_control *wbc)
->  	set_page_writeback(page);
->  retry_write:
->  	rc = cifs_partialpagewrite(page, 0, PAGE_SIZE);
-> -	if (rc == -EAGAIN && wbc->sync_mode == WB_SYNC_ALL)
-> -		goto retry_write;
-> -	else if (rc == -EAGAIN)
-> +	if (rc == -EAGAIN) {
-> +		if (wbc->sync_mode == WB_SYNC_ALL)
-> +			goto retry_write;
->  		redirty_page_for_writepage(wbc, page);
-> -	else if (rc != 0)
-> +	} else if (rc != 0) {
->  		SetPageError(page);
-> -	else
-> +		mapping_set_error(page->mapping, rc);
-> +	} else {
->  		SetPageUptodate(page);
-> +	}
->  	end_page_writeback(page);
->  	put_page(page);
->  	free_xid(xid);
-> -- 
-> 2.9.3
-> 
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
+new file mode 100644
+index 0000000..c1d19c0
+--- /dev/null
++++ b/man/man8/xfs_spaceman.8
+@@ -0,0 +1,102 @@
++.TH xfs_spaceman 8
++.SH NAME
++xfs_spaceman \- show free space information about an XFS filesystem
++.SH SYNOPSIS
++.B xfs_spaceman
++[
++.B \-c
++.I cmd
++]
++.I file
++.br
++.B xfs_spaceman \-V
++.SH DESCRIPTION
++.B xfs_spaceman
++reports and controls free space usage in an XFS filesystem.
++.SH OPTIONS
++.TP 1.0i
++.BI \-c " cmd"
++.B xfs_spaceman
++commands may be run interactively (the default) or as arguments on
++the command line. Multiple
++.B \-c
++arguments may be given. The commands are run in the sequence given,
++then the program exits.
++
++.SH COMMANDS
++.TP
++.BI "freesp [ \-sr ] [ \-b | \-e bsize | \-h h1 [ \-m bmult ]] [-a agno]"
++With no arguments,
++.B freesp
++shows a histogram of all free space extents in the filesystem.
++The
++.B -b
++argument establishes that the histogram bins are successive powers of two.
++This is the default.
++The
++.BR -h " and " -m
++options can be used to specify a custom histogram bin size as well as a
++multiplication factor for subsequent bin sizes.
++The
++.BR -e
++option fixes the histogram size to a particular value.
++The
++.BR -a " and " -r
++options constrain the free space information report to a particular AG
++or the realtime device, respectively.  The
++.B -a
++option may be specified multiple times.
++A summary of free space information will be printed if the
++.B -s
++option is given.
++.TP
++.BR "help [ " command " ]"
++Display a brief description of one or all commands.
++.TP
++.BI "prealloc [ \-ugp id ] [ \-m minlen ] [ \-s ]"
++Controls speculative preallocation.  The
++.BR -u ","
++.BR -g ","
++and
++.B -p
++options will clear all speculative preallocations for a given user,
++group, or project ID, respectively.
++The
++.B -m
++option causes the operation to ignore any file with a size smaller than
++.BR minlen "."
++The
++.B -s
++option will flush all dirty data and metadata to disk.
++.TP
++.B print
++Display a list of all open files.
++.TP
++.B quit
++Exit
++.BR xfs_spaceman .
++.TP
++.BI "trim [ \-f ] [ \-a agno ] [ \-m minlen ] [" " offset length " ]
++Instructs the underlying storage device to release all storage that may
++be backing free space in the filesystem.
++The
++.B -f
++option trims all free space in the entire filesystem.
++The
++.B -a
++option trims only the free space in a given AG.
++The
++.B -m
++option only trims free space extents that are longer than
++.IR minlen "."
++The
++.IR offset " and " length
++arguments trim all free space between
++.I offset
++and
++.IR "offset+length" "."
++The
++.BR -a " and " -f
++options are mutually exclusive with each other as well as with the
++.IR offset " and " length
++arguments.
+
