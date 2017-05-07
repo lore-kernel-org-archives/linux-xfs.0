@@ -1,41 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41974 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754570AbdEIPtv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 May 2017 11:49:51 -0400
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v4 04/27] buffer: use mapping_set_error instead of setting the flag
-Date: Tue,  9 May 2017 11:49:07 -0400
-Message-Id: <20170509154930.29524-5-jlayton@redhat.com>
-In-Reply-To: <20170509154930.29524-1-jlayton@redhat.com>
-References: <20170509154930.29524-1-jlayton@redhat.com>
+Received: from aserp1050.oracle.com ([141.146.126.70]:50629 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752424AbdEGVlt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 May 2017 17:41:49 -0400
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v47FuPFt008819
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 7 May 2017 15:56:25 GMT
+Subject: [PATCH v7 0/9] xfsprogs 4.12: GETFSMAP support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 07 May 2017 08:56:12 -0700
+Message-ID: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org
-Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Matthew Wilcox <mawilcox@microsoft.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/buffer.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi all,
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 9196f2a270da..70638941066d 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -483,7 +483,7 @@ static void __remove_assoc_queue(struct buffer_head *bh)
- 	list_del_init(&bh->b_assoc_buffers);
- 	WARN_ON(!bh->b_assoc_map);
- 	if (buffer_write_io_error(bh))
--		set_bit(AS_EIO, &bh->b_assoc_map->flags);
-+		mapping_set_error(bh->b_assoc_map, -EIO);
- 	bh->b_assoc_map = NULL;
- }
- 
--- 
-2.9.3
+This patchset implements the userspace components of the new GETFSMAP
+ioctl that is now in upstream for 4.12.  In order to reduce the amount
+of redundant xfs/libxfs patches hitting the list, this patchset only
+includes the relevant tool changes; you will need to pull the
+djwong-devel tree[1] if you actually want to give the code a try.
 
+The first patch introduce a 'fsmap' command to xfs_io so that users can
+query the raw reverse mapping data that is exported by fsmap.  If the
+experimental rmapbt feature is enabled, the returned results will be
+straight out of the rmapbt; otherwise, the extent information is
+synthesized out of the free space btres.
+
+The second patch delegates xfs_repair's rmap comparison function to the
+new libxfs version that was introduced as a part of the getfsmap kernel
+patches.
+
+The remainder of the patch set introduces xfs_spaceman, which is a new
+tool to manage disk space on a mounted XFS filesystem.  The new tool can
+call FITRIM, manage space reservations, and display summary information
+about the free space on the filesystem.  This information is probably
+most useful for developers and people surveying free space
+fragmentation.
+
+Note: The primary user of the GETFSMAP information will be the media
+scan phase of the upcoming xfs_scrub tool, which will be posted later.
+
+Questions?  Comments?
+
+--D
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
