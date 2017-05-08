@@ -1,203 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33786 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54084 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751645AbdEEMUk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 May 2017 08:20:40 -0400
-Date: Fri, 5 May 2017 08:20:33 -0400
+        id S1752402AbdEHUpJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 May 2017 16:45:09 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1F1ED7F4B8
+        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2017 20:45:09 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id F134F171C9
+        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2017 20:45:08 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: make fatal assert failures conditional in debug mode
-Message-ID: <20170505122030.GA17318@bfoster.bfoster>
-References: <1493922564-14273-1-git-send-email-bfoster@redhat.com>
- <7b09b8c0-53dc-37e4-a6c0-88835515345b@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7b09b8c0-53dc-37e4-a6c0-88835515345b@sandeen.net>
+Subject: [PATCH 1/3] xfs: separate shutdown from ticket reservation print helper
+Date: Mon,  8 May 2017 16:45:05 -0400
+Message-Id: <1494276307-36887-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1494276307-36887-1-git-send-email-bfoster@redhat.com>
+References: <1494276307-36887-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, May 04, 2017 at 01:58:32PM -0500, Eric Sandeen wrote:
-> On 5/4/17 1:29 PM, Brian Foster wrote:
-> > XFS currently supports two debug modes: XFS_WARN enables assert
-> > failure warnings and XFS_DEBUG converts assert failures to fatal
-> > errors (via BUG()) and enables additional runtime debug code.
-> > 
-> > While the behavior to BUG the kernel on assert failure is useful in
-> > certain test scenarios, it is also useful for development/debug to
-> > enable debug mode code without having to crash the kernel on an
-> > assert failure.
-> > 
-> > To provide this additional flexibility, update XFS debug mode to not
-> > BUG() the kernel by default and create a new XFS kernel
-> > configuration option to enable fatal assert failures when debug mode
-> > is enabled. To provide backwards compatibility with current
-> > behavior, enable the fatal asserts option by default when debug mode
-> > is enabled.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > Hi all,
-> > 
-> > This tweaks the rfc version based on feedback from Christoph and
-> > Darrick. The config option is renamed to minimize confusion and the
-> > logic is basically flipped to disable BUG() behavior by default in
-> > XFS_DEBUG mode and have the new config option turn it on. This option is
-> > dependent on DEBUG mode because I don't believe there is a compelling
-> > use case for XFS_WARN mode with fatal asserts and I'd rather not
-> > unnecessarily increase the configuration matrix.
-> > 
-> > Note that the new config option is set 'default y' simply to provide
-> > backwards compatibility with current behavior (so users expecting DEBUG
-> > mode kernels to BUG() will continue to see that behavior without
-> > requiring further config modifications). Thoughts, reviews, flames
-> > appreciated.
-> > 
-> > Brian
-> > 
-> > v1:
-> > - Use a new config option rather than reuse XFS_WARN.
-> > - Disable BUG() in DEBUG mode by default and flip the logic of the new
-> >   config option.
-> > rfc: http://www.spinics.net/lists/linux-xfs/msg06390.html
-> > 
-> >  fs/xfs/Kconfig     |  8 ++++++++
-> >  fs/xfs/xfs.h       |  4 ++++
-> >  fs/xfs/xfs_linux.h | 32 +++++++++++++++++++-------------
-> >  3 files changed, 31 insertions(+), 13 deletions(-)
-> > 
-> > diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-> > index 35faf12..ded25f8 100644
-> > --- a/fs/xfs/Kconfig
-> > +++ b/fs/xfs/Kconfig
-> > @@ -96,3 +96,11 @@ config XFS_DEBUG
-> >  	  not useful unless you are debugging a particular problem.
-> >  
-> >  	  Say N unless you are an XFS developer, or you play one on TV.
-> > +
-> > +config XFS_ASSERT_FATAL
-> > +	bool "XFS fatal asserts"
-> > +	default y
-> > +	depends on XFS_FS && XFS_DEBUG
-> > +	help
-> > +	  Say Y here to convert DEBUG mode ASSERT failures into fatal errors
-> > +	  that BUG() the kernel. Otherwise, ASSERT failures result in warnings.
-> 
-> nitpick, and don't care much either way, but since Y is the default, it's
-> a little odd to restate "say Y."  The "Otherwise" isn't crystal clear IMHO.
-> 
+xlog_print_tic_res() pre-dates delayed logging and the committed
+items list (CIL) and thus retains some factoring warts, such as hard
+coded function names in the output and the fact that it induces a
+shutdown.
 
-I think the help text should be independent from the default setting. At
-least a couple Kconfig options under fs/Kconfig have "Say Y .... Say N
-... If unsure, say ..." with a default of y. (I don't think we really
-need "If unsure ..." here...).
+In preparation for more detailed logging of regular transaction
+overrun situations, refactor xlog_print_tic_res() to be slightly
+more generic. Reword some of the warning messages and pull the
+shutdown into the callers.
 
-> Maybe:
-> 
-> "The default XFS_DEBUG mode is to BUG() on ASSERT failures.
->  If you say N here, ASSERT failures result in warnings.
-> 
-> Or:
-> 
-> "Say Y here to convert DEBUG mode ASSERT failures into fatal errors
->  that BUG() the kernel.
->  If you say N, these ASSERTs will be converted into warnings."
-> 
-> I'd just like to see "N" behavior /explicitly/ stated (with the text "N") :)
-> 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_log.c     | 12 ++++++------
+ fs/xfs/xfs_log_cil.c |  4 +++-
+ 2 files changed, 9 insertions(+), 7 deletions(-)
 
-That sounds reasonable. After catching up on some of the chat on irc,
-how about the following to avoid using "convert?"
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 3731f13..8b283f7 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -2024,7 +2024,7 @@ xlog_print_tic_res(
+ 	};
+ #undef REG_TYPE_STR
+ 
+-	xfs_warn(mp, "xlog_write: reservation summary:");
++	xfs_warn(mp, "ticket reservation summary:");
+ 	xfs_warn(mp, "  unit res    = %d bytes",
+ 		 ticket->t_unit_res);
+ 	xfs_warn(mp, "  current res = %d bytes",
+@@ -2045,10 +2045,6 @@ xlog_print_tic_res(
+ 			    "bad-rtype" : res_type_str[r_type]),
+ 			    ticket->t_res_arr[i].r_len);
+ 	}
+-
+-	xfs_alert_tag(mp, XFS_PTAG_LOGRES,
+-		"xlog_write: reservation ran out. Need to up reservation");
+-	xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
+ }
+ 
+ /*
+@@ -2321,8 +2317,12 @@ xlog_write(
+ 	if (flags & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS))
+ 		ticket->t_curr_res -= sizeof(xlog_op_header_t);
+ 
+-	if (ticket->t_curr_res < 0)
++	if (ticket->t_curr_res < 0) {
++		xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
++		     "ctx ticket reservation ran out. Need to up reservation");
+ 		xlog_print_tic_res(log->l_mp, ticket);
++		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
++	}
+ 
+ 	index = 0;
+ 	lv = log_vector;
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 82f1cbc..52fe042 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -987,8 +987,10 @@ xfs_log_commit_cil(
+ 	xlog_cil_insert_items(log, tp);
+ 
+ 	/* check we didn't blow the reservation */
+-	if (tp->t_ticket->t_curr_res < 0)
++	if (tp->t_ticket->t_curr_res < 0) {
+ 		xlog_print_tic_res(mp, tp->t_ticket);
++		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
++	}
+ 
+ 	tp->t_commit_lsn = cil->xc_ctx->sequence;
+ 	if (commit_lsn)
+-- 
+2.7.4
 
-"Say Y here to cause DEBUG mode assert failures to result in fatal
-errors that BUG() the kernel. If you say N, assert failures result in
-warnings."
-
-Brian
-
-> -Eric
-> 
-> > diff --git a/fs/xfs/xfs.h b/fs/xfs/xfs.h
-> > index a742c47..80cd0fd 100644
-> > --- a/fs/xfs/xfs.h
-> > +++ b/fs/xfs/xfs.h
-> > @@ -24,6 +24,10 @@
-> >  #define XFS_BUF_LOCK_TRACKING 1
-> >  #endif
-> >  
-> > +#ifdef CONFIG_XFS_ASSERT_FATAL
-> > +#define XFS_ASSERT_FATAL 1
-> > +#endif
-> > +
-> >  #ifdef CONFIG_XFS_WARN
-> >  #define XFS_WARN 1
-> >  #endif
-> > diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> > index 044fb0e..36c3eab 100644
-> > --- a/fs/xfs/xfs_linux.h
-> > +++ b/fs/xfs/xfs_linux.h
-> > @@ -245,37 +245,43 @@ static inline __uint64_t howmany_64(__uint64_t x, __uint32_t y)
-> >  	return x;
-> >  }
-> >  
-> > +/*
-> > + * ASSERT() definitions
-> > + */
-> >  #define ASSERT_ALWAYS(expr)	\
-> >  	(likely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
-> >  
-> > -#ifdef DEBUG
-> > +#if defined(DEBUG) && defined(XFS_ASSERT_FATAL)
-> > +
-> >  #define ASSERT(expr)	\
-> >  	(likely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
-> >  
-> > -#ifndef STATIC
-> > -# define STATIC noinline
-> > -#endif
-> > -
-> > -#else	/* !DEBUG */
-> > -
-> > -#ifdef XFS_WARN
-> > +#elif defined(DEBUG) || defined(XFS_WARN)
-> >  
-> >  #define ASSERT(expr)	\
-> >  	(likely(expr) ? (void)0 : asswarn(#expr, __FILE__, __LINE__))
-> >  
-> > -#ifndef STATIC
-> > -# define STATIC static noinline
-> > +#else
-> > +
-> > +#define ASSERT(expr)	((void)0)
-> > +
-> >  #endif
-> >  
-> > -#else	/* !DEBUG && !XFS_WARN */
-> > +/*
-> > + * STATIC definitions
-> > + */
-> > +#ifdef DEBUG
-> > +
-> > +#ifndef STATIC
-> > +# define STATIC noinline
-> > +#endif
-> >  
-> > -#define ASSERT(expr)	((void)0)
-> > +#else	/* !DEBUG */
-> >  
-> >  #ifndef STATIC
-> >  # define STATIC static noinline
-> >  #endif
-> >  
-> > -#endif /* XFS_WARN */
-> >  #endif /* DEBUG */
-> >  
-> >  #ifdef CONFIG_XFS_RT
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
