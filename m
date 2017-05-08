@@ -1,35 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56371 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750767AbdEBHfC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2017 03:35:02 -0400
-Date: Tue, 2 May 2017 00:35:01 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs_alloc_ag_vextent_near() takes minutes to complete
-Message-ID: <20170502073501.GB6679@infradead.org>
-References: <49A20782FA8B4C82B0393E5BEF8A8754@alyakaslap>
+Received: from mr001msb.fastweb.it ([85.18.95.85]:33843 "EHLO
+        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753737AbdEHJfC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2017 05:35:02 -0400
+Subject: Re: XFS and multiple mounts protection (aka preventing multiple
+ mounts)
+References: <3cf2f8cd-d18f-2a65-c540-5527a366d2fb@assyoma.it>
+ <63a045ae-0c12-e1b7-a7e0-df251dd88a4f@sandeen.net>
+From: Gionatan Danti <g.danti@assyoma.it>
+Message-ID: <473d24bc-bab5-8f1e-efe6-f60e099f636d@assyoma.it>
+Date: Mon, 8 May 2017 11:34:53 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <49A20782FA8B4C82B0393E5BEF8A8754@alyakaslap>
+In-Reply-To: <63a045ae-0c12-e1b7-a7e0-df251dd88a4f@sandeen.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alex Lyakas <alex@zadarastorage.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+Cc: g.danti@assyoma.it
 
-On Mon, May 01, 2017 at 03:37:23PM +0300, Alex Lyakas wrote:
-> [resending to proper list]
-> 
-> Greetings XFS community,
-> 
-> We have an XFS instance mounted as "sync"
-> (rw,sync,noatime,wsync,attr2,discard,inode64,prjquota 0 0). This instance is
-> exposed via nfsd. Size is about 50TB.
+On 05/05/2017 21:20, Eric Sandeen wrote:
+> I guess this has been covered, but: no.  There is no cross-machine
+> multi-mount protection in XFS.  Nothing like ext4's MMP.
+>
+> There is a unique UUID test at mount time, so you can't i.e. mount
+> the same path twice /on the same box/, but there is no mechanism in
+> XFS to prevent the same disk from being mounted by 2 /separate/ machines
+> on a SAN.
+>
+> -Eric
 
-Don't use the sync option ever.  In fact we probably should remove it.
+Thanks Eric. Just out of curiosity, there are some specific technical 
+motivations to avoid this check?
 
-> Kernel version is 3.18.19.
+One more pragmatic question: what kind of corruption can be expected 
+from shot-lived (ie some seconds) double mount? For example, in raiserfs 
+I remember an immediate catastrophic faileres when a double mount 
+happened. On XFS it *seems* that filesystem remain more or less 
+consistent (even an xfs_repair does not find nothing wrong).
 
-Which is extremely outdate.  Please try latest mainline, or at least
-4.9-stable which is long term supported.
+Thanks again.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
