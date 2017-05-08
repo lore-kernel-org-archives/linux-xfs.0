@@ -1,56 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37664 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751519AbdEHNkk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 May 2017 09:40:40 -0400
-Date: Mon, 8 May 2017 09:40:38 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs: blocked task in xfs_buf_lock
-Message-ID: <20170508134037.GC29840@bfoster.bfoster>
-References: <000201d2c548$68fc5450$3af4fcf0$@alibaba-inc.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:42256 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751855AbdEHSlS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2017 14:41:18 -0400
+Date: Mon, 8 May 2017 11:41:12 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] ioctl_getfsmap.2: document the GETFSMAP ioctl
+Message-ID: <20170508184112.GJ5973@birch.djwong.org>
+References: <20170507155855.GD5970@birch.djwong.org>
+ <CAG48ez1AWewJRg8gySgihn0y15jRhC6C+5DNwGsDpAhtokB=Lw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <000201d2c548$68fc5450$3af4fcf0$@alibaba-inc.com>
+In-Reply-To: <CAG48ez1AWewJRg8gySgihn0y15jRhC6C+5DNwGsDpAhtokB=Lw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?utf-8?B?6JKL6ZuE5LyfKOiSi+WGsik=?= <xiongwei.jiang@alibaba-inc.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jann Horn <jannh@google.com>
+Cc: Michael Kerrisk-manpages <mtk.manpages@gmail.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, linux-man@vger.kernel.org
 
-On Fri, May 05, 2017 at 10:36:33AM +0800, 蒋雄伟(蒋冲) wrote:
->  
+On Mon, May 08, 2017 at 12:17:53AM +0200, Jann Horn wrote:
+> On Sun, May 7, 2017 at 5:58 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > Document the new GETFSMAP ioctl that returns the physical layout of a
+> > (disk-based) filesystem.
+> [...]
+> > +.B EPERM
+> > +This query is not allowed.
 > 
-> While testing ceph cluster and using XFS as the underlying filesystem, I've
-> seen xfs blocking tasks several times. 
-> 
-> Just as https://www.mail-archive.com/search?l=stable@vger.kernel.org
-> <https://www.mail-archive.com/search?l=stable@vger.kernel.org&q=subject:%22x
-> fs%3A+blocked+task+in+xfs_buf_lock%22&o=newest&f=1>
-> &q=subject:%22xfs%3A+blocked+task+in+xfs_buf_lock%22&o=newest&f=1
-> 
-> And there is also another similar case
-> http://oss.sgi.com/archives/xfs/2012-05/msg00307.html
-> 
->  
-> 
-> These two cases was reported long time ago. Is it resolved  or is there any
-> solution ?
-> 
+> Please document the circumstances under which a query is allowed.
 
-The above looks like a very old report without any resolution. I would
-suggest to report your issue based on current observations rather than
-rely on it looking similar to an old report. See the following for what
-information is relevant to include when reporting a problem:
+For the two current implementations, queries are always allowed.
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+(The doc could be more explicit about this decision being left to the
+implementation.)
 
-Note that the syslog and hung task output is particularly relevant here.
+> Also: From a quick glance at the XFS implementation, I don't see any
+> privilege checks. Am I missing something, or does this API permit an
+> unprivileged user to determine the number of physical blocks allocated
+> for any inode, even for inodes the user can't ordinarily see in any
+> way?
 
-Brian
+Correct.
 
->  
-> 
-> Xiongwei Jiang
-> 
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
