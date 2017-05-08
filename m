@@ -1,115 +1,314 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f179.google.com ([209.85.216.179]:33468 "EHLO
-        mail-qt0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751561AbdEJMTy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 08:19:54 -0400
-Received: by mail-qt0-f179.google.com with SMTP id t26so26591982qtg.0
-        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2017 05:19:54 -0700 (PDT)
-Message-ID: <1494418790.2688.7.camel@redhat.com>
-Subject: Re: [PATCH v4 14/27] fs: new infrastructure for writeback error
- handling and reporting
-From: Jeff Layton <jlayton@redhat.com>
-Date: Wed, 10 May 2017 08:19:50 -0400
-In-Reply-To: <20170510114840.GF25137@quack2.suse.cz>
-References: <20170509154930.29524-1-jlayton@redhat.com>
-         <20170509154930.29524-15-jlayton@redhat.com>
-         <20170510114840.GF25137@quack2.suse.cz>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from userp1040.oracle.com ([156.151.31.81]:45173 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755234AbdEHTsE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2017 15:48:04 -0400
+Date: Mon, 8 May 2017 12:47:55 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 0.9/9] xfs: introduce the XFS_IOC_GETFSMAP ioctl
+Message-ID: <20170508194755.GK5973@birch.djwong.org>
+References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, 2017-05-10 at 13:48 +0200, Jan Kara wrote:
-> On Tue 09-05-17 11:49:17, Jeff Layton wrote:
-> > Most filesystems currently use mapping_set_error and
-> > filemap_check_errors for setting and reporting/clearing writeback errors
-> > at the mapping level. filemap_check_errors is indirectly called from
-> > most of the filemap_fdatawait_* functions and from
-> > filemap_write_and_wait*. These functions are called from all sorts of
-> > contexts to wait on writeback to finish -- e.g. mostly in fsync, but
-> > also in truncate calls, getattr, etc.
-> > 
-> > The non-fsync callers are problematic. We should be reporting writeback
-> > errors during fsync, but many places spread over the tree clear out
-> > errors before they can be properly reported, or report errors at
-> > nonsensical times.
-> > 
-> > If I get -EIO on a stat() call, there is no reason for me to assume that
-> > it is because some previous writeback failed. The fact that it also
-> > clears out the error such that a subsequent fsync returns 0 is a bug,
-> > and a nasty one since that's potentially silent data corruption.
-> > 
-> > This patch adds a small bit of new infrastructure for setting and
-> > reporting errors during address_space writeback. While the above was my
-> > original impetus for adding this, I think it's also the case that
-> > current fsync semantics are just problematic for userland. Most
-> > applications that call fsync do so to ensure that the data they wrote
-> > has hit the backing store.
-> > 
-> > In the case where there are multiple writers to the file at the same
-> > time, this is really hard to determine. The first one to call fsync will
-> > see any stored error, and the rest get back 0. The processes with open
-> > fds may not be associated with one another in any way. They could even
-> > be in different containers, so ensuring coordination between all fsync
-> > callers is not really an option.
-> > 
-> > One way to remedy this would be to track what file descriptor was used
-> > to dirty the file, but that's rather cumbersome and would likely be
-> > slow. However, there is a simpler way to improve the semantics here
-> > without incurring too much overhead.
-> > 
-> > This set adds an errseq_t to struct address_space, and a corresponding
-> > one is added to struct file. Writeback errors are recorded in the
-> > mapping's errseq_t, and the one in struct file is used as the "since"
-> > value.
-> > 
-> > This changes the semantics of the Linux fsync implementation such that
-> > applications can now use it to determine whether there were any
-> > writeback errors since fsync(fd) was last called (or since the file was
-> > opened in the case of fsync having never been called).
-> > 
-> > Note that those writeback errors may have occurred when writing data
-> > that was dirtied via an entirely different fd, but that's the case now
-> > with the current mapping_set_error/filemap_check_error infrastructure.
-> > This will at least prevent you from getting a false report of success.
-> > 
-> > The new behavior is still consistent with the POSIX spec, and is more
-> > reliable for application developers. This patch just adds some basic
-> > infrastructure for doing this. Later patches will change the existing
-> > code to use this new infrastructure.
-> > 
-> > Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> 
-> Just one nit below. Otherwise the patch looks good to me. You can add:
-> 
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> 
-> > diff --git a/fs/file_table.c b/fs/file_table.c
-> > index 954d510b765a..d6138b6411ff 100644
-> > --- a/fs/file_table.c
-> > +++ b/fs/file_table.c
-> > @@ -168,6 +168,7 @@ struct file *alloc_file(const struct path *path, fmode_t mode,
-> >  	file->f_path = *path;
-> >  	file->f_inode = path->dentry->d_inode;
-> >  	file->f_mapping = path->dentry->d_inode->i_mapping;
-> > +	file->f_wb_err = filemap_sample_wb_error(file->f_mapping);
-> 
-> Why do you sample here when you also sample in do_dentry_open()? I didn't
-> find any alloc_file() callers that would possibly care about writeback
-> errors... 
-> 
-> 								Honza
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I basically used the setting of f_mapping as a guideline as to where to
-sample it for initialization. My thinking was that if f_mapping ever
-ended up different then you'd probably also want f_wb_err to be
-resampled anyway.
+Introduce a new ioctl that uses the reverse mapping btree to return
+information about the physical layout of the filesystem.
 
-I can drop this hunk if you think we don't need it.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ configure.ac          |    1 
+ include/builddefs.in  |    7 +++
+ include/linux.h       |  109 +++++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_fs.h       |   13 ++++++
+ libxfs/xfs_rmap.c     |   28 +++++++++++++
+ libxfs/xfs_rmap.h     |    2 +
+ m4/package_libcdev.m4 |   19 +++++++++
+ 7 files changed, 178 insertions(+), 1 deletion(-)
 
--- 
-Jeff Layton <jlayton@redhat.com>
+diff --git a/configure.ac b/configure.ac
+index aa102e4..794a804 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -142,6 +142,7 @@ AC_HAVE_READDIR
+ AC_HAVE_FSETXATTR
+ AC_HAVE_MREMAP
+ AC_NEED_INTERNAL_FSXATTR
++AC_HAVE_SYS_GETFSMAP
+ 
+ if test "$enable_blkid" = yes; then
+ AC_HAVE_BLKID_TOPO
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 4d6bb2d..e285731 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -112,16 +112,18 @@ HAVE_FLS = @have_fls@
+ HAVE_FSETXATTR = @have_fsetxattr@
+ HAVE_MREMAP = @have_mremap@
+ NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
++HAVE_SYS_GETFSMAP = @have_sys_getfsmap@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+ 
+ ifeq ($(PKG_PLATFORM),linux)
+-PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS)
++PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS) -DHAVE_GETFSMAP
+ ifeq ($(HAVE_UMODE_T),yes)
+ PCFLAGS += -DHAVE_UMODE_T
+ endif
+ DEPENDFLAGS = -D__linux__
++HAVE_GETFSMAP = yes
+ endif
+ ifeq ($(PKG_PLATFORM),gnukfreebsd)
+ PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS)
+@@ -150,6 +152,9 @@ endif
+ ifeq ($(NEED_INTERNAL_FSXATTR),yes)
+ PCFLAGS+= -DOVERRIDE_SYSTEM_FSXATTR
+ endif
++ifeq ($(PKG_PLATFORM)_$(HAVE_SYS_GETFSMAP),linux_)
++PCFLAGS+= -DOVERRIDE_GETFSMAP
++endif
+ 
+ 
+ GCFLAGS = $(DEBUG) \
+diff --git a/include/linux.h b/include/linux.h
+index 6a676ca..181d25c 100644
+--- a/include/linux.h
++++ b/include/linux.h
+@@ -35,7 +35,15 @@
+ #ifdef OVERRIDE_SYSTEM_FSXATTR
+ # define fsxattr sys_fsxattr
+ #endif
++#ifdef OVERRIDE_GETFSMAP
++# define fsmap sys_fsmap
++# define fsmap_head sys_fsmap_head
++#endif
+ #include <linux/fs.h> /* fsxattr defintion for new kernels */
++#ifdef OVERRIDE_GETFSMAP
++# undef fsmap
++# undef fsmap_head
++#endif
+ #ifdef OVERRIDE_SYSTEM_FSXATTR
+ # undef fsxattr
+ #endif
+@@ -222,4 +230,105 @@ struct fsxattr {
+ #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
+ #endif
+ 
++#ifdef OVERRIDE_GETFSMAP
++/*
++ *	Structure for FS_IOC_GETFSMAP.
++ *
++ *	The memory layout for this call are the scalar values defined in
++ *	struct fsmap_head, followed by two struct fsmap that describe
++ *	the lower and upper bound of mappings to return, followed by an
++ *	array of struct fsmap mappings.
++ *
++ *	fmh_iflags control the output of the call, whereas fmh_oflags report
++ *	on the overall record output.  fmh_count should be set to the
++ *	length of the fmh_recs array, and fmh_entries will be set to the
++ *	number of entries filled out during each call.  If fmh_count is
++ *	zero, the number of reverse mappings will be returned in
++ *	fmh_entries, though no mappings will be returned.  fmh_reserved
++ *	must be set to zero.
++ *
++ *	The two elements in the fmh_keys array are used to constrain the
++ *	output.  The first element in the array should represent the
++ *	lowest disk mapping ("low key") that the user wants to learn
++ *	about.  If this value is all zeroes, the filesystem will return
++ *	the first entry it knows about.  For a subsequent call, the
++ *	contents of fsmap_head.fmh_recs[fsmap_head.fmh_count - 1] should be
++ *	copied into fmh_keys[0] to have the kernel start where it left off.
++ *
++ *	The second element in the fmh_keys array should represent the
++ *	highest disk mapping ("high key") that the user wants to learn
++ *	about.  If this value is all ones, the filesystem will not stop
++ *	until it runs out of mapping to return or runs out of space in
++ *	fmh_recs.
++ *
++ *	fmr_device can be either a 32-bit cookie representing a device, or
++ *	a 32-bit dev_t if the FMH_OF_DEV_T flag is set.  fmr_physical,
++ *	fmr_offset, and fmr_length are expressed in units of bytes.
++ *	fmr_owner is either an inode number, or a special value if
++ *	FMR_OF_SPECIAL_OWNER is set in fmr_flags.
++ */
++struct fsmap {
++	__u32		fmr_device;	/* device id */
++	__u32		fmr_flags;	/* mapping flags */
++	__u64		fmr_physical;	/* device offset of segment */
++	__u64		fmr_owner;	/* owner id */
++	__u64		fmr_offset;	/* file offset of segment */
++	__u64		fmr_length;	/* length of segment */
++	__u64		fmr_reserved[3];	/* must be zero */
++};
++
++struct fsmap_head {
++	__u32		fmh_iflags;	/* control flags */
++	__u32		fmh_oflags;	/* output flags */
++	__u32		fmh_count;	/* # of entries in array incl. input */
++	__u32		fmh_entries;	/* # of entries filled in (output). */
++	__u64		fmh_reserved[6];	/* must be zero */
++
++	struct fsmap	fmh_keys[2];	/* low and high keys for the mapping search */
++	struct fsmap	fmh_recs[];	/* returned records */
++};
++
++/* Size of an fsmap_head with room for nr records. */
++static inline size_t
++fsmap_sizeof(
++	unsigned int	nr)
++{
++	return sizeof(struct fsmap_head) + nr * sizeof(struct fsmap);
++}
++
++/* Start the next fsmap query at the end of the current query results. */
++static inline void
++fsmap_advance(
++	struct fsmap_head	*head)
++{
++	head->fmh_keys[0] = head->fmh_recs[head->fmh_entries - 1];
++}
++
++/*	fmh_iflags values - set by XFS_IOC_GETFSMAP caller in the header. */
++/* no flags defined yet */
++#define FMH_IF_VALID		0
++
++/*	fmh_oflags values - returned in the header segment only. */
++#define FMH_OF_DEV_T		0x1	/* fmr_device values will be dev_t */
++
++/*	fmr_flags values - returned for each non-header segment */
++#define FMR_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
++#define FMR_OF_ATTR_FORK	0x2	/* segment = attribute fork */
++#define FMR_OF_EXTENT_MAP	0x4	/* segment = extent map */
++#define FMR_OF_SHARED		0x8	/* segment = shared with another file */
++#define FMR_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
++#define FMR_OF_LAST		0x20	/* segment is the last in the FS */
++
++/* Each FS gets to define its own special owner codes. */
++#define FMR_OWNER(type, code)	(((__u64)type << 32) | \
++				 ((__u64)code & 0xFFFFFFFFULL))
++#define FMR_OWNER_TYPE(owner)	((__u32)((__u64)owner >> 32))
++#define FMR_OWNER_CODE(owner)	((__u32)(((__u64)owner & 0xFFFFFFFFULL)))
++#define FMR_OWN_FREE		FMR_OWNER(0, 1) /* free space */
++#define FMR_OWN_UNKNOWN		FMR_OWNER(0, 2) /* unknown owner */
++#define FMR_OWN_METADATA	FMR_OWNER(0, 3) /* metadata */
++
++#define FS_IOC_GETFSMAP		_IOWR('X', 59, struct fsmap_head)
++#endif /* OVERRIDE_GETFSMAP */
++
+ #endif	/* __XFS_LINUX_H__ */
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index 11fe42a..1831cff 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -113,6 +113,18 @@ struct getbmapx {
+ #define BMV_OF_LAST		0x4	/* segment is the last in the file */
+ #define BMV_OF_SHARED		0x8	/* segment shared with another file */
+ 
++/*	fmr_owner special values for FS_IOC_GETFSMAP */
++#define XFS_FMR_OWN_FREE	FMR_OWN_FREE      /* free space */
++#define XFS_FMR_OWN_UNKNOWN	FMR_OWN_UNKNOWN   /* unknown owner */
++#define XFS_FMR_OWN_FS		FMR_OWNER('X', 1) /* static fs metadata */
++#define XFS_FMR_OWN_LOG		FMR_OWNER('X', 2) /* journalling log */
++#define XFS_FMR_OWN_AG		FMR_OWNER('X', 3) /* per-AG metadata */
++#define XFS_FMR_OWN_INOBT	FMR_OWNER('X', 4) /* inode btree blocks */
++#define XFS_FMR_OWN_INODES	FMR_OWNER('X', 5) /* inodes */
++#define XFS_FMR_OWN_REFC	FMR_OWNER('X', 6) /* refcount tree */
++#define XFS_FMR_OWN_COW		FMR_OWNER('X', 7) /* cow staging */
++#define XFS_FMR_OWN_DEFECTIVE	FMR_OWNER('X', 8) /* bad blocks */
++
+ /*
+  * Structure for XFS_IOC_FSSETDM.
+  * For use by backup and restore programs to set the XFS on-disk inode
+@@ -522,6 +534,7 @@ typedef struct xfs_swapext
+ #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
+ #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
+ #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
++/*	XFS_IOC_GETFSMAP ------ hoisted 59         */
+ 
+ /*
+  * ioctl commands that replace IRIX syssgi()'s
+diff --git a/libxfs/xfs_rmap.c b/libxfs/xfs_rmap.c
+index 7738f50..f78771d 100644
+--- a/libxfs/xfs_rmap.c
++++ b/libxfs/xfs_rmap.c
+@@ -2303,3 +2303,31 @@ xfs_rmap_free_extent(
+ 	return __xfs_rmap_add(mp, dfops, XFS_RMAP_FREE, owner,
+ 			XFS_DATA_FORK, &bmap);
+ }
++
++/* Compare rmap records.  Returns -1 if a < b, 1 if a > b, and 0 if equal. */
++int
++xfs_rmap_compare(
++	const struct xfs_rmap_irec	*a,
++	const struct xfs_rmap_irec	*b)
++{
++	__u64				oa;
++	__u64				ob;
++
++	oa = xfs_rmap_irec_offset_pack(a);
++	ob = xfs_rmap_irec_offset_pack(b);
++
++	if (a->rm_startblock < b->rm_startblock)
++		return -1;
++	else if (a->rm_startblock > b->rm_startblock)
++		return 1;
++	else if (a->rm_owner < b->rm_owner)
++		return -1;
++	else if (a->rm_owner > b->rm_owner)
++		return 1;
++	else if (oa < ob)
++		return -1;
++	else if (oa > ob)
++		return 1;
++	else
++		return 0;
++}
+diff --git a/libxfs/xfs_rmap.h b/libxfs/xfs_rmap.h
+index faf2c1a..98f908f 100644
+--- a/libxfs/xfs_rmap.h
++++ b/libxfs/xfs_rmap.h
+@@ -214,5 +214,7 @@ int xfs_rmap_find_left_neighbor(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ int xfs_rmap_lookup_le_range(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ 		uint64_t owner, uint64_t offset, unsigned int flags,
+ 		struct xfs_rmap_irec *irec, int	*stat);
++int xfs_rmap_compare(const struct xfs_rmap_irec *a,
++		const struct xfs_rmap_irec *b);
+ 
+ #endif	/* __XFS_RMAP_H__ */
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index bc3b4ce..f9b0945 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -277,3 +277,22 @@ AC_DEFUN([AC_NEED_INTERNAL_FSXATTR],
+     )
+     AC_SUBST(need_internal_fsxattr)
+   ])
++
++#
++# Check if we have a FS_IOC_GETFSMAP ioctl (Linux)
++#
++AC_DEFUN([AC_HAVE_SYS_GETFSMAP],
++  [ AC_MSG_CHECKING([for GETFSMAP])
++    AC_TRY_LINK([
++#define _GNU_SOURCE
++#include <sys/syscall.h>
++#include <unistd.h>
++#include <linux/fsmap.h>
++    ], [
++         unsigned long x = FS_IOC_GETFSMAP;
++         struct fsmap_head fh;
++    ], have_sys_getfsmap=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_sys_getfsmap)
++  ])
