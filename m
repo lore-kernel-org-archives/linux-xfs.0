@@ -1,39 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f182.google.com ([209.85.217.182]:33957 "EHLO
-        mail-ua0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757131AbdEGWb1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 May 2017 18:31:27 -0400
-Received: by mail-ua0-f182.google.com with SMTP id g49so31647209uaa.1
-        for <linux-xfs@vger.kernel.org>; Sun, 07 May 2017 15:31:27 -0700 (PDT)
+Received: from mr003msb.fastweb.it ([85.18.95.87]:37371 "EHLO
+        mr003msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751242AbdEHNgu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2017 09:36:50 -0400
+Subject: Re: XFS and multiple mounts protection (aka preventing multiple
+ mounts)
+References: <3cf2f8cd-d18f-2a65-c540-5527a366d2fb@assyoma.it>
+ <63a045ae-0c12-e1b7-a7e0-df251dd88a4f@sandeen.net>
+ <473d24bc-bab5-8f1e-efe6-f60e099f636d@assyoma.it>
+ <680a24f3-6523-acf4-5019-8a0dc4f46224@sandeen.net>
+From: Gionatan Danti <g.danti@assyoma.it>
+Message-ID: <061f5629-208a-05c9-a500-5b15ddc484b3@assyoma.it>
+Date: Mon, 8 May 2017 15:36:43 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170502073501.GB6679@infradead.org>
-References: <49A20782FA8B4C82B0393E5BEF8A8754@alyakaslap> <20170502073501.GB6679@infradead.org>
-From: Alex Lyakas <alex@zadarastorage.com>
-Date: Sun, 7 May 2017 11:00:40 +0300
-Message-ID: <CAOcd+r3VYuLaCq6g3YH_ue_7AhPfjfVUHJVmn1S=vFOtEMuZag@mail.gmail.com>
-Subject: Re: xfs_alloc_ag_vextent_near() takes minutes to complete
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <680a24f3-6523-acf4-5019-8a0dc4f46224@sandeen.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+Cc: g.danti@assyoma.it
 
-Hi Christoph,
+On 08/05/2017 15:26, Eric Sandeen wrote:
+> It also delays each mount by that amount of time, which
+> may not be desirable in a production environment.
 
->> We have an XFS instance mounted as "sync"
->> (rw,sync,noatime,wsync,attr2,discard,inode64,prjquota 0 0). This instance is
->> exposed via nfsd. Size is about 50TB.
+True. With the default mmp interval (5 sec), during my testing I saw >15 
+secs delay mounting the filesystem.
+
+> I'm sure it depends on what happens during that mount.  Damage could
+> range from none to minimal to catastrophic.  If you've escaped without
+> corruption, it's partly luck.  If the 2nd node did no IO, and unmounted
+> quickly, you'd get an unmount record written to the log which, depending
+> on the location, may or may not matter if a subsequent log replay was
+> required, for example.
 >
-> Don't use the sync option ever.  In fact we probably should remove it.
-We are using the sync mount option, because the XFS instances that we
-have are exposed via nfsd. Without the "sync" mount option, data from
-NFS write command would end up sitting in page cache, and the nfs
-client would not know when it has been finally persisted on disk.
-Is the any other way that you can recommend to provide data integrity
-guarantee for nfs clients? Even if it requires some development, like
-placing the data in a short-term persistent space, this is something
-we will look at.
+> -Eric
+>
 
-Thanks,
-Alex.
+Very interesting. Thank you so much.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
