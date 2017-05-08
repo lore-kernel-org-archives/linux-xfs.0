@@ -1,61 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:58004 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750853AbdEHN01 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 May 2017 09:26:27 -0400
-Subject: Re: XFS and multiple mounts protection (aka preventing multiple
- mounts)
-References: <3cf2f8cd-d18f-2a65-c540-5527a366d2fb@assyoma.it>
- <63a045ae-0c12-e1b7-a7e0-df251dd88a4f@sandeen.net>
- <473d24bc-bab5-8f1e-efe6-f60e099f636d@assyoma.it>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <680a24f3-6523-acf4-5019-8a0dc4f46224@sandeen.net>
-Date: Mon, 8 May 2017 08:26:26 -0500
+Received: from mail-it0-f49.google.com ([209.85.214.49]:37538 "EHLO
+        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751509AbdEHSsS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2017 14:48:18 -0400
+Received: by mail-it0-f49.google.com with SMTP id x188so43154231itb.0
+        for <linux-xfs@vger.kernel.org>; Mon, 08 May 2017 11:48:17 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <473d24bc-bab5-8f1e-efe6-f60e099f636d@assyoma.it>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170508184112.GJ5973@birch.djwong.org>
+References: <20170507155855.GD5970@birch.djwong.org> <CAG48ez1AWewJRg8gySgihn0y15jRhC6C+5DNwGsDpAhtokB=Lw@mail.gmail.com>
+ <20170508184112.GJ5973@birch.djwong.org>
+From: Jann Horn <jannh@google.com>
+Date: Mon, 8 May 2017 20:47:56 +0200
+Message-ID: <CAG48ez3e+2VuvjtEfJuMujEo6PWBO3z8oM-otN2juq96jKdjCw@mail.gmail.com>
+Subject: Re: [PATCH] ioctl_getfsmap.2: document the GETFSMAP ioctl
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Michael Kerrisk-manpages <mtk.manpages@gmail.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, linux-man@vger.kernel.org
 
-On 5/8/17 4:34 AM, Gionatan Danti wrote:
-> On 05/05/2017 21:20, Eric Sandeen wrote:
->> I guess this has been covered, but: no.  There is no cross-machine 
->> multi-mount protection in XFS.  Nothing like ext4's MMP.
->> 
->> There is a unique UUID test at mount time, so you can't i.e. mount 
->> the same path twice /on the same box/, but there is no mechanism
->> in XFS to prevent the same disk from being mounted by 2 /separate/
->> machines on a SAN.
->> 
->> -Eric
-> 
-> Thanks Eric. Just out of curiosity, there are some specific technical
-> motivations to avoid this check?
+On Mon, May 8, 2017 at 8:41 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> On Mon, May 08, 2017 at 12:17:53AM +0200, Jann Horn wrote:
+>> On Sun, May 7, 2017 at 5:58 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>> > Document the new GETFSMAP ioctl that returns the physical layout of a
+>> > (disk-based) filesystem.
+[...]
+>> Also: From a quick glance at the XFS implementation, I don't see any
+>> privilege checks. Am I missing something, or does this API permit an
+>> unprivileged user to determine the number of physical blocks allocated
+>> for any inode, even for inodes the user can't ordinarily see in any
+>> way?
+>
+> Correct.
 
-Partly it's just never been written, but also, mechanisms like MPP aren't
-foolproof.  MPP picks a timeout, and if nothing changes during that
-timeout it's assumed safe to mount.  If for some reason the other machine
-was busy or hung for that mount of time, the check would pass and allow
-a double mount.  It also delays each mount by that amount of time, which
-may not be desirable in a production environment.
- 
-> One more pragmatic question: what kind of corruption can be expected
-> from shot-lived (ie some seconds) double mount? For example, in
-> raiserfs I remember an immediate catastrophic faileres when a double
-> mount happened. On XFS it *seems* that filesystem remain more or less
-> consistent (even an xfs_repair does not find nothing wrong).
-
-I'm sure it depends on what happens during that mount.  Damage could
-range from none to minimal to catastrophic.  If you've escaped without
-corruption, it's partly luck.  If the 2nd node did no IO, and unmounted
-quickly, you'd get an unmount record written to the log which, depending
-on the location, may or may not matter if a subsequent log replay was
-required, for example.
-
--Eric
- 
-> Thanks again.
-> 
+What's your reasoning for why this doesn't create any new potential
+security issues? For example, as far as I can tell, this would permit
+an unprivileged user to determine with high probability whether a set
+of large files with known sizes is stored anywhere in the filesystem, even
+across containers or so.
