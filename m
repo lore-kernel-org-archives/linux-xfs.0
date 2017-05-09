@@ -1,50 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37756 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:39584 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754861AbdEIPuB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 May 2017 11:50:01 -0400
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v4 07/27] orangefs: don't call filemap_write_and_wait from fsync
-Date: Tue,  9 May 2017 11:49:10 -0400
-Message-Id: <20170509154930.29524-8-jlayton@redhat.com>
-In-Reply-To: <20170509154930.29524-1-jlayton@redhat.com>
-References: <20170509154930.29524-1-jlayton@redhat.com>
+        id S1754886AbdEIPuE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 May 2017 11:50:04 -0400
+Subject: Re: [PATCH 1/2 v2] mkfs: unify numeric types of main variables in
+ main()
+References: <20170419153025.10368-1-jtulak@redhat.com>
+ <20170420083323.12524-1-jtulak@redhat.com>
+ <62f04d88-9475-b1a4-dd91-871fd091b0e1@sandeen.net>
+ <CACj3i72zQBEd18rXi3718xodVfUrRX54Fc9Z0VaJNx8Rn_Eiyw@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ca3590ba-a8dc-8c45-03dd-45117fa3bb9c@sandeen.net>
+Date: Tue, 9 May 2017 10:49:57 -0500
+MIME-Version: 1.0
+In-Reply-To: <CACj3i72zQBEd18rXi3718xodVfUrRX54Fc9Z0VaJNx8Rn_Eiyw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org
-Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Orangefs doesn't do buffered writes yet, so there's no point in
-initiating and waiting for writeback.
+On 4/26/17 2:58 AM, Jan Tulak wrote:
+>> so is there any real advantage to converting all of these, only to remove
+>> most of them a few patches later?  (If there is, just help me understand
+>> why...)
+>>
+> I wanted to avoid type changes in patches that replace variables in main
+> with opts use. Without this, I need to have the opts members in long
+> long, but I still get some changes int -> long long and even one or two
+> uint -> long long. So I wanted to have all the replaced variables already in a
+> single type, without the need to change format strings and knowing
+> that the type change is not causing any side effect.
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Mike Marshall <hubcap@omnibond.com>
----
- fs/orangefs/file.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+OK, fair enough.
 
-diff --git a/fs/orangefs/file.c b/fs/orangefs/file.c
-index e6bbc8083d77..17ab42c4db52 100644
---- a/fs/orangefs/file.c
-+++ b/fs/orangefs/file.c
-@@ -646,14 +646,11 @@ static int orangefs_fsync(struct file *file,
- 		       loff_t end,
- 		       int datasync)
- {
--	int ret = -EINVAL;
-+	int ret;
- 	struct orangefs_inode_s *orangefs_inode =
- 		ORANGEFS_I(file_inode(file));
- 	struct orangefs_kernel_op_s *new_op = NULL;
+> But I think this shouldn't be a big issue (it doesn't seem that type
+> changes broke anything), so I'm rebasing the set without these uint
+> changes and the type transition can happen later on.
+
+Your argument above was reasonable, if you want to change them all for
+consistency before re-organization, that's ok too.  Either way.
+
+-Eric
  
--	/* required call */
--	filemap_write_and_wait_range(file->f_mapping, start, end);
--
- 	new_op = op_alloc(ORANGEFS_VFS_OP_FSYNC);
- 	if (!new_op)
- 		return -ENOMEM;
--- 
-2.9.3
-
+> Cheers,
+> Jan
+> 
+>> Thanks,
+>> -Eric
