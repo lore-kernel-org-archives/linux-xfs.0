@@ -1,113 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47706 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752924AbdEHUrr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2017 16:47:47 -0400
-Date: Mon, 8 May 2017 13:47:38 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] ioctl_getfsmap.2: document the GETFSMAP ioctl
-Message-ID: <20170508204738.GL5973@birch.djwong.org>
-References: <20170507155855.GD5970@birch.djwong.org>
- <CAG48ez1AWewJRg8gySgihn0y15jRhC6C+5DNwGsDpAhtokB=Lw@mail.gmail.com>
- <20170508184112.GJ5973@birch.djwong.org>
- <CAG48ez3e+2VuvjtEfJuMujEo6PWBO3z8oM-otN2juq96jKdjCw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAG48ez3e+2VuvjtEfJuMujEo6PWBO3z8oM-otN2juq96jKdjCw@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:40433 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753770AbdEIMWq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 May 2017 08:22:46 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 8/8] nowait aio: btrfs
+Date: Tue,  9 May 2017 07:22:19 -0500
+Message-Id: <20170509122219.31756-9-rgoldwyn@suse.de>
+In-Reply-To: <20170509122219.31756-1-rgoldwyn@suse.de>
+References: <20170509122219.31756-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jann Horn <jannh@google.com>
-Cc: Michael Kerrisk-manpages <mtk.manpages@gmail.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, linux-man@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Mon, May 08, 2017 at 08:47:56PM +0200, Jann Horn wrote:
-> On Mon, May 8, 2017 at 8:41 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > On Mon, May 08, 2017 at 12:17:53AM +0200, Jann Horn wrote:
-> >> On Sun, May 7, 2017 at 5:58 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >> > Document the new GETFSMAP ioctl that returns the physical layout of a
-> >> > (disk-based) filesystem.
-> [...]
-> >> Also: From a quick glance at the XFS implementation, I don't see any
-> >> privilege checks. Am I missing something, or does this API permit an
-> >> unprivileged user to determine the number of physical blocks allocated
-> >> for any inode, even for inodes the user can't ordinarily see in any
-> >> way?
-> >
-> > Correct.
-> 
-> What's your reasoning for why this doesn't create any new potential
-> security issues? For example, as far as I can tell, this would permit
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-/Any/ ?  That is a huge request to be dropping on me after the vfs patch
-gets merged, after a year-long review cycle, etc.  AFAIK there aren't
-any problems, but then that's part of why I let this thing hang out to
-dry for such a long time.  Even posessing the inode number, an
-unprivileged process still cannot open files they wouldn't otherwise
-have access, since that requires the generation number, and only
-bulkstat provides that (if you have CAP_SYS_ADMIN).
+Return EAGAIN if any of the following checks fail
+ + i_rwsem is not lockable
+ + NODATACOW or PREALLOC is not set
+ + Cannot nocow at the desired location
+ + Writing beyond end of file which is not allocated
 
-The whole reason for dropping the CAP_SYS_ADMIN check from GETFSMAP was
-(a) so that unpriviledged users could compute free space information and
-(b) to allow dedupe tools to make better decisions about which file
-donates blocks and which file accepts blocks.
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Acked-by: David Sterba <dsterba@suse.com>
+---
+ fs/btrfs/file.c  | 25 ++++++++++++++++++++-----
+ fs/btrfs/inode.c |  3 +++
+ 2 files changed, 23 insertions(+), 5 deletions(-)
 
-If you have specific complaints, then let's hear and address them.  I'm
-not going to try to prove a broad negative theoretical statement.
+diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+index 520cb7230b2d..a870e5dd2b4d 100644
+--- a/fs/btrfs/file.c
++++ b/fs/btrfs/file.c
+@@ -1823,12 +1823,29 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
+ 	ssize_t num_written = 0;
+ 	bool sync = (file->f_flags & O_DSYNC) || IS_SYNC(file->f_mapping->host);
+ 	ssize_t err;
+-	loff_t pos;
+-	size_t count;
++	loff_t pos = iocb->ki_pos;
++	size_t count = iov_iter_count(from);
+ 	loff_t oldsize;
+ 	int clean_page = 0;
+ 
+-	inode_lock(inode);
++	if ((iocb->ki_flags & IOCB_NOWAIT) &&
++			(iocb->ki_flags & IOCB_DIRECT)) {
++		/* Don't sleep on inode rwsem */
++		if (!inode_trylock(inode))
++			return -EAGAIN;
++		/*
++		 * We will allocate space in case nodatacow is not set,
++		 * so bail
++		 */
++		if (!(BTRFS_I(inode)->flags & (BTRFS_INODE_NODATACOW |
++					      BTRFS_INODE_PREALLOC)) ||
++		    check_can_nocow(BTRFS_I(inode), pos, &count) <= 0) {
++			inode_unlock(inode);
++			return -EAGAIN;
++		}
++	} else
++		inode_lock(inode);
++
+ 	err = generic_write_checks(iocb, from);
+ 	if (err <= 0) {
+ 		inode_unlock(inode);
+@@ -1862,8 +1879,6 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
+ 	 */
+ 	update_time_for_write(inode);
+ 
+-	pos = iocb->ki_pos;
+-	count = iov_iter_count(from);
+ 	start_pos = round_down(pos, fs_info->sectorsize);
+ 	oldsize = i_size_read(inode);
+ 	if (start_pos > oldsize) {
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 5e71f1ea3391..47d3fcd86979 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -8625,6 +8625,9 @@ static ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 			dio_data.overwrite = 1;
+ 			inode_unlock(inode);
+ 			relock = true;
++		} else if (iocb->ki_flags & IOCB_NOWAIT) {
++			ret = -EAGAIN;
++			goto out;
+ 		}
+ 		ret = btrfs_delalloc_reserve_space(inode, offset, count);
+ 		if (ret)
+-- 
+2.12.0
 
-Moving on...
-
-> an unprivileged user to determine with high probability whether a set
-> of large files with known sizes is stored anywhere in the filesystem, even
-> across containers or so.
-
-How large?  How high?
-
-Do you have a tool that analyzes a set of st_blocks values and compares
-the set to known profiles in order to guess what's on the filesystem?
-With what accuracy can it do that, especially without explicit path or
-stat data?  The maximum resolution provided by the ioctl is fs block
-size, so it's not like you can guess that this 1268432 byte file is
-libclangAnalysis.a; all you know is that there are four 310-block files
-on this filesystem -- on this system that's the desktop wallpaper, a
-file from each of libclang and libgimp, and libc6 from my aarch64 guest.
-The logical block map data could be more helpful for fingerprinting, but
-only if there are sparse files.
-
-Say our multi-tenant container hosts all the containers on the same fs.
-We now have a set of (inode, blockcount) data and a logical block map
-for every inode stored on that fs.  We have no path or stat data, so how
-do you tell what a 340-block file with a hole at offset 17 is?  You
-could try to infer path structure use the (XFS) heuristic that file
-inodes are usually created in the same AG as the directory inode they're
-created in, but GETFSMAP doesn't distinguish file extents from directory
-extents and AGs can host many different directories, so I don't think
-this will help much.  Even if you have a reasonably good idea which
-inodes are directories, you still don't know which other inodes have an
-entry in a particular directory.
-
-Then again once we throw reflink and dedupe between containers into the
-mix the extent maps become far more interesting, because dirs could
-potentially be identified by the lack of any shared blocks at all, and
-other containers with the same library files will tend to share the same
-blocks at the same offsets.  But that's still somewhat imprecise --
-btrfs directories can share blocks between snapshots, whereas xfs can't,
-and the existence of small unshared files with the same block count
-introduces a certain amount of noise into the directory inference
-process.  So maybe you'd be able to search for a reflinked .so file that
-you /can/ stat to infer that there are X containers running the same
-software as your container, though you still have to find them to mount
-an attack.
-
-FWIW I don't oppose having a CAP_SYS_ADMIN check again (patches gladly
-accepted for review!), but I'm not yet convinced that this is a big
-enough threat to forbid the use case.
-
-Sure would be nice if we had finer-grained capabilities...
-
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
