@@ -1,195 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26454 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753496AbdEFQ33 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 May 2017 12:29:29 -0400
-Date: Sat, 6 May 2017 09:28:09 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [GIT PULL] xfs: updates for 4.12
-Message-ID: <20170506162809.GI5973@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from mx2.suse.de ([195.135.220.15]:40425 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753121AbdEIMWo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 May 2017 08:22:44 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 7/8] nowait aio: xfs
+Date: Tue,  9 May 2017 07:22:18 -0500
+Message-Id: <20170509122219.31756-8-rgoldwyn@suse.de>
+In-Reply-To: <20170509122219.31756-1-rgoldwyn@suse.de>
+References: <20170509122219.31756-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, Brian Foster <bfoster@redhat.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Hi Linus,
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Here are the XFS changes for 4.12.  The big new feature for this release
-is the new space mapping ioctl that we've been discussing since LSF2016,
-but other than that most of the patches are larger bug fixes, memory
-corruption prevention, and other cleanups.  I tried a test merge against
-HEAD about 15 minutes ago and it committed cleanly, so I don't
-anticipate any problems.  Let me know if you encounter any problems.
+If IOCB_NOWAIT is set, bail if the i_rwsem is not lockable
+immediately.
 
---Darrick
+IF IOMAP_NOWAIT is set, return EAGAIN in xfs_file_iomap_begin
+if it needs allocation either due to file extension, writing to a hole,
+or COW or waiting for other DIOs to finish.
 
-The following changes since commit c02ed2e75ef4c74e41e421acb4ef1494671585e8:
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_file.c  | 19 ++++++++++++++-----
+ fs/xfs/xfs_iomap.c | 17 +++++++++++++++++
+ 2 files changed, 31 insertions(+), 5 deletions(-)
 
-  Linux 4.11-rc4 (2017-03-26 14:15:16 -0700)
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 35703a801372..b307940e7d56 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -541,8 +541,11 @@ xfs_file_dio_aio_write(
+ 		iolock = XFS_IOLOCK_SHARED;
+ 	}
+ 
+-	xfs_ilock(ip, iolock);
+-
++	if (!xfs_ilock_nowait(ip, iolock)) {
++		if (iocb->ki_flags & IOCB_NOWAIT)
++			return -EAGAIN;
++		xfs_ilock(ip, iolock);
++	}
+ 	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
+ 	if (ret)
+ 		goto out;
+@@ -553,9 +556,15 @@ xfs_file_dio_aio_write(
+ 	 * otherwise demote the lock if we had to take the exclusive lock
+ 	 * for other reasons in xfs_file_aio_write_checks.
+ 	 */
+-	if (unaligned_io)
+-		inode_dio_wait(inode);
+-	else if (iolock == XFS_IOLOCK_EXCL) {
++	if (unaligned_io) {
++		/* If we are going to wait for other DIO to finish, bail */
++		if (iocb->ki_flags & IOCB_NOWAIT) {
++			if (atomic_read(&inode->i_dio_count))
++				return -EAGAIN;
++		} else {
++			inode_dio_wait(inode);
++		}
++	} else if (iolock == XFS_IOLOCK_EXCL) {
+ 		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+ 		iolock = XFS_IOLOCK_SHARED;
+ 	}
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 288ee5b840d7..9baa65eeae9e 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1015,6 +1015,15 @@ xfs_file_iomap_begin(
+ 
+ 	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
+ 		if (flags & IOMAP_DIRECT) {
++			/*
++			 * A reflinked inode will result in CoW alloc.
++			 * FIXME: It could still overwrite on unshared extents
++			 * and not need allocation.
++			 */
++			if (flags & IOMAP_NOWAIT) {
++				error = -EAGAIN;
++				goto out_unlock;
++			}
+ 			/* may drop and re-acquire the ilock */
+ 			error = xfs_reflink_allocate_cow(ip, &imap, &shared,
+ 					&lockmode);
+@@ -1032,6 +1041,14 @@ xfs_file_iomap_begin(
+ 
+ 	if ((flags & IOMAP_WRITE) && imap_needs_alloc(inode, &imap, nimaps)) {
+ 		/*
++		 * If nowait is set bail since we are going to make
++		 * allocations.
++		 */
++		if (flags & IOMAP_NOWAIT) {
++			error = -EAGAIN;
++			goto out_unlock;
++		}
++		/*
+ 		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
+ 		 * pages to keep the chunks of work done where somewhat symmetric
+ 		 * with the work writeback does. This is a completely arbitrary
+-- 
+2.12.0
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.12-merge-7
-
-for you to fetch changes up to 161f55efba5ddccc690139fae9373cafc3447a97:
-
-  xfs: fix use-after-free in xfs_finish_page_writeback (2017-05-05 12:16:48 -0700)
-
-----------------------------------------------------------------
-Changes for 4.12:
-- various code cleanups
-- introduce GETFSMAP ioctl
-- various refactoring
-- avoid dio reads past eof
-- fix memory corruption and other errors with fragmented directory blocks
-- fix accidental userspace memory corruptions
-- publish fs uuid in superblock
-- make fstrim terminatable
-- fix race between quotaoff and in-core inode creation
-- Avoid use-after-free when finishing up w/ buffer heads
-- Reserve enough space to handle bmap tree resizing during cow remap
-
-----------------------------------------------------------------
-Amir Goldstein (1):
-      xfs: publish UUID in struct super_block
-
-Brian Foster (7):
-      xfs: use dedicated log worker wq to avoid deadlock with cil wq
-      xfs: drop iolock from reclaim context to appease lockdep
-      xfs: prevent multi-fsb dir readahead from reading random blocks
-      xfs: fix up quotacheck buffer list error handling
-      xfs: support ability to wait on new inodes
-      xfs: update ag iterator to support wait on new inodes
-      xfs: wait on new inodes during quotaoff dquot release
-
-Calvin Owens (1):
-      xfs: Honor FALLOC_FL_KEEP_SIZE when punching ends of files
-
-Chandan Rajendra (1):
-      iomap_dio_rw: Prevent reading file data beyond iomap_dio->i_size
-
-Christoph Hellwig (18):
-      xfs: factor out a xfs_bmap_is_real_extent helper
-      xfs: remove the ISUNWRITTEN macro
-      xfs: fold __xfs_trans_roll into xfs_trans_roll
-      xfs: fix integer truncation in xfs_bmap_remap_alloc
-      xfs: remove attr fork handling in xfs_bmap_finish_one
-      xfs: pass individual arguments to xfs_bmap_add_extent_hole_real
-      xfs: introduce xfs_bmapi_remap
-      xfs: remove xfs_bmap_remap_alloc
-      xfs: remove bmap block allocation retries
-      xfs: remove the unused XFS_MAXLINK_1 define
-      xfs: remove unused values from xfs_exntst_t
-      xfs: simplify validation of the unwritten extent bit
-      xfs: use NULL instead of 0 to initialize a pointer in xfs_getfsmap
-      xfs: use NULL instead of 0 to initialize a pointer in xfs_ioc_getfsmap
-      xfs: corruption needs to respect endianess too!
-      xfs: fix __user annotations for xfs_ioc_getfsmap
-      xfs: don't use bool values in trace buffers
-      xfs: remove xfs_trans_ail_delete_bulk
-
-Darrick J. Wong (15):
-      xfs: rework the inline directory verifiers
-      xfs: fix kernel memory exposure problems
-      xfs: fix over-copying of getbmap parameters from userspace
-      vfs: add common GETFSMAP ioctl definitions
-      xfs: plumb in needed functions for range querying of the freespace btrees
-      xfs: provide a query_range function for freespace btrees
-      xfs: create a function to query all records in a btree
-      xfs: add a couple of queries to iterate free extents in the rtbitmap
-      xfs: implement the GETFSMAP ioctl
-      xfs: have getfsmap fall back to the freesp btrees when rmap is not present
-      xfs: report realtime space information via the rtbitmap
-      xfs: actually report xattr extents via iomap
-      xfs: fix getfsmap userspace memory corruption while setting OF_LAST
-      xfs: better log intent item refcount checking
-      xfs: reserve enough blocks to handle btree splits when remapping
-
-Eric Sandeen (6):
-      xfs: fix up inode validation failure message
-      xfs: simplify xfs_calc_dquots_per_chunk
-      xfs: remove custom do_div implementations
-      xfs: handle array index overrun in xfs_dir2_leaf_readbuf()
-      xfs: remove use of do_div with 32-bit dividend in quota
-      xfs: more do_div cleanups
-
-Eryu Guan (1):
-      xfs: fix use-after-free in xfs_finish_page_writeback
-
-Hou Tao (1):
-      xfs: remove the trailing newline used in the fmt parameter of TP_printk
-
-Lukas Czerner (1):
-      xfs: Allow user to kill fstrim process
-
-Nikolay Borisov (1):
-      xfs: Remove obsolete declaration of xfs_buf_get_empty
-
- fs/iomap.c                      |   3 +
- fs/xfs/Makefile                 |   1 +
- fs/xfs/libxfs/xfs_alloc.c       |  57 +++
- fs/xfs/libxfs/xfs_alloc.h       |  12 +
- fs/xfs/libxfs/xfs_alloc_btree.c | 172 ++++++--
- fs/xfs/libxfs/xfs_bmap.c        | 354 +++++++--------
- fs/xfs/libxfs/xfs_bmap.h        |  14 +-
- fs/xfs/libxfs/xfs_bmap_btree.c  |  43 --
- fs/xfs/libxfs/xfs_bmap_btree.h  |  22 +-
- fs/xfs/libxfs/xfs_btree.c       |  15 +
- fs/xfs/libxfs/xfs_btree.h       |   2 +
- fs/xfs/libxfs/xfs_dir2_priv.h   |   3 +-
- fs/xfs/libxfs/xfs_dir2_sf.c     |  63 ++-
- fs/xfs/libxfs/xfs_dquot_buf.c   |   7 +-
- fs/xfs/libxfs/xfs_format.h      |  11 -
- fs/xfs/libxfs/xfs_fs.h          |  13 +
- fs/xfs/libxfs/xfs_inode_buf.c   |   2 +-
- fs/xfs/libxfs/xfs_inode_fork.c  | 125 ++----
- fs/xfs/libxfs/xfs_inode_fork.h  |   2 +-
- fs/xfs/libxfs/xfs_rmap.c        |  56 ++-
- fs/xfs/libxfs/xfs_rmap.h        |   4 +
- fs/xfs/libxfs/xfs_rtbitmap.c    |  70 +++
- fs/xfs/libxfs/xfs_trans_space.h |  23 +-
- fs/xfs/xfs_aops.c               |  12 +-
- fs/xfs/xfs_bmap_item.c          |   6 +-
- fs/xfs/xfs_bmap_util.c          |  30 +-
- fs/xfs/xfs_buf.c                |  24 +
- fs/xfs/xfs_buf.h                |   2 +-
- fs/xfs/xfs_dir2_readdir.c       |  15 +-
- fs/xfs/xfs_discard.c            |  10 +-
- fs/xfs/xfs_extfree_item.c       |   1 +
- fs/xfs/xfs_fsmap.c              | 940 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_fsmap.h              |  53 +++
- fs/xfs/xfs_icache.c             |  58 ++-
- fs/xfs/xfs_icache.h             |   8 +
- fs/xfs/xfs_inode.c              |  28 +-
- fs/xfs/xfs_inode.h              |   4 +-
- fs/xfs/xfs_inode_item.c         |  29 +-
- fs/xfs/xfs_ioctl.c              |  89 +++-
- fs/xfs/xfs_ioctl32.c            |   2 +
- fs/xfs/xfs_iomap.c              |   8 +-
- fs/xfs/xfs_itable.c             |   2 +-
- fs/xfs/xfs_linux.h              |  85 ----
- fs/xfs/xfs_log.c                |   4 +-
- fs/xfs/xfs_mount.c              |   4 +
- fs/xfs/xfs_mount.h              |   5 +-
- fs/xfs/xfs_qm.c                 |  11 +-
- fs/xfs/xfs_qm_syscalls.c        |   3 +-
- fs/xfs/xfs_refcount_item.c      |   1 +
- fs/xfs/xfs_reflink.c            |  39 +-
- fs/xfs/xfs_rmap_item.c          |   1 +
- fs/xfs/xfs_rtalloc.h            |  22 +-
- fs/xfs/xfs_super.c              |   8 +
- fs/xfs/xfs_trace.c              |   1 +
- fs/xfs/xfs_trace.h              | 144 ++++--
- fs/xfs/xfs_trans.c              |  39 +-
- fs/xfs/xfs_trans.h              |   3 +-
- fs/xfs/xfs_trans_ail.c          |  71 ++-
- fs/xfs/xfs_trans_priv.h         |  15 +-
- include/uapi/linux/fsmap.h      | 112 +++++
- 60 files changed, 2238 insertions(+), 725 deletions(-)
- create mode 100644 fs/xfs/xfs_fsmap.c
- create mode 100644 fs/xfs/xfs_fsmap.h
- create mode 100644 include/uapi/linux/fsmap.h
