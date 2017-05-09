@@ -1,114 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44172 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755424AbdEIPux (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 May 2017 11:50:53 -0400
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v4 23/27] gfs2: clean up some filemap_* calls
-Date: Tue,  9 May 2017 11:49:26 -0400
-Message-Id: <20170509154930.29524-24-jlayton@redhat.com>
-In-Reply-To: <20170509154930.29524-1-jlayton@redhat.com>
-References: <20170509154930.29524-1-jlayton@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:40398 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753662AbdEIMWh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 May 2017 08:22:37 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 4/8] nowait-aio: Introduce IOMAP_NOWAIT
+Date: Tue,  9 May 2017 07:22:15 -0500
+Message-Id: <20170509122219.31756-5-rgoldwyn@suse.de>
+In-Reply-To: <20170509122219.31756-1-rgoldwyn@suse.de>
+References: <20170509122219.31756-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org
-Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-In some places, it's trying to reset the mapping error after calling
-filemap_fdatawait. That's no longer required. Also, turn several
-filemap_fdatawrite+filemap_fdatawait calls into filemap_write_and_wait.
-That will at least return writeback errors that occur during the write
-phase.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
+IOCB_NOWAIT translates to IOMAP_NOWAIT for iomaps.
+This is used by XFS in the XFS patch.
+
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/gfs2/glops.c | 17 ++++-------------
- fs/gfs2/lops.c  |  4 +---
- fs/gfs2/super.c |  6 ++----
- 3 files changed, 7 insertions(+), 20 deletions(-)
+ fs/iomap.c            | 2 ++
+ include/linux/iomap.h | 1 +
+ 2 files changed, 3 insertions(+)
 
-diff --git a/fs/gfs2/glops.c b/fs/gfs2/glops.c
-index 5db59d444838..18ab54e351d6 100644
---- a/fs/gfs2/glops.c
-+++ b/fs/gfs2/glops.c
-@@ -145,7 +145,6 @@ static void rgrp_go_sync(struct gfs2_glock *gl)
- 	struct gfs2_sbd *sdp = gl->gl_name.ln_sbd;
- 	struct address_space *mapping = &sdp->sd_aspace;
- 	struct gfs2_rgrpd *rgd;
--	int error;
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 141c3cd55a8b..d1c81753d411 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -885,6 +885,8 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	} else {
+ 		dio->flags |= IOMAP_DIO_WRITE;
+ 		flags |= IOMAP_WRITE;
++		if (iocb->ki_flags & IOCB_NOWAIT)
++			flags |= IOMAP_NOWAIT;
+ 	}
  
- 	spin_lock(&gl->gl_lockref.lock);
- 	rgd = gl->gl_object;
-@@ -158,9 +157,7 @@ static void rgrp_go_sync(struct gfs2_glock *gl)
- 	GLOCK_BUG_ON(gl, gl->gl_state != LM_ST_EXCLUSIVE);
+ 	if (mapping->nrpages) {
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 7291810067eb..53f6af89c625 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -51,6 +51,7 @@ struct iomap {
+ #define IOMAP_REPORT		(1 << 2) /* report extent status, e.g. FIEMAP */
+ #define IOMAP_FAULT		(1 << 3) /* mapping for page fault */
+ #define IOMAP_DIRECT		(1 << 4) /* direct I/O */
++#define IOMAP_NOWAIT		(1 << 5) /* Don't wait for writeback */
  
- 	gfs2_log_flush(sdp, gl, NORMAL_FLUSH);
--	filemap_fdatawrite_range(mapping, gl->gl_vm.start, gl->gl_vm.end);
--	error = filemap_fdatawait_range(mapping, gl->gl_vm.start, gl->gl_vm.end);
--	mapping_set_error(mapping, error);
-+	filemap_write_and_wait_range(mapping, gl->gl_vm.start, gl->gl_vm.end);
- 	gfs2_ail_empty_gl(gl);
- 
- 	spin_lock(&gl->gl_lockref.lock);
-@@ -207,7 +204,6 @@ static void inode_go_sync(struct gfs2_glock *gl)
- {
- 	struct gfs2_inode *ip = gl->gl_object;
- 	struct address_space *metamapping = gfs2_glock2aspace(gl);
--	int error;
- 
- 	if (ip && !S_ISREG(ip->i_inode.i_mode))
- 		ip = NULL;
-@@ -223,14 +219,9 @@ static void inode_go_sync(struct gfs2_glock *gl)
- 
- 	gfs2_log_flush(gl->gl_name.ln_sbd, gl, NORMAL_FLUSH);
- 	filemap_fdatawrite(metamapping);
--	if (ip) {
--		struct address_space *mapping = ip->i_inode.i_mapping;
--		filemap_fdatawrite(mapping);
--		error = filemap_fdatawait(mapping);
--		mapping_set_error(mapping, error);
--	}
--	error = filemap_fdatawait(metamapping);
--	mapping_set_error(metamapping, error);
-+	if (ip)
-+		filemap_write_and_wait(ip->i_inode.i_mapping);
-+	filemap_fdatawait(metamapping);
- 	gfs2_ail_empty_gl(gl);
+ struct iomap_ops {
  	/*
- 	 * Writeback of the data mapping may cause the dirty flag to be set
-diff --git a/fs/gfs2/lops.c b/fs/gfs2/lops.c
-index cd7857ab1a6a..614bb974b927 100644
---- a/fs/gfs2/lops.c
-+++ b/fs/gfs2/lops.c
-@@ -586,9 +586,7 @@ static void gfs2_meta_sync(struct gfs2_glock *gl)
- 	if (mapping == NULL)
- 		mapping = &sdp->sd_aspace;
- 
--	filemap_fdatawrite(mapping);
--	error = filemap_fdatawait(mapping);
--
-+	error = filemap_write_and_wait(mapping);
- 	if (error)
- 		gfs2_io_error(gl->gl_name.ln_sbd);
- }
-diff --git a/fs/gfs2/super.c b/fs/gfs2/super.c
-index 361796a84fce..675c39566ea1 100644
---- a/fs/gfs2/super.c
-+++ b/fs/gfs2/super.c
-@@ -1593,10 +1593,8 @@ static void gfs2_evict_inode(struct inode *inode)
- out_truncate:
- 	gfs2_log_flush(sdp, ip->i_gl, NORMAL_FLUSH);
- 	metamapping = gfs2_glock2aspace(ip->i_gl);
--	if (test_bit(GLF_DIRTY, &ip->i_gl->gl_flags)) {
--		filemap_fdatawrite(metamapping);
--		filemap_fdatawait(metamapping);
--	}
-+	if (test_bit(GLF_DIRTY, &ip->i_gl->gl_flags))
-+		filemap_write_and_wait(metamapping);
- 	write_inode_now(inode, 1);
- 	gfs2_ail_flush(ip->i_gl, 0);
- 
 -- 
-2.9.3
+2.12.0
 
