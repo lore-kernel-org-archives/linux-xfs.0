@@ -1,97 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54084 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752402AbdEHUpJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 May 2017 16:45:09 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 1F1ED7F4B8
-        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2017 20:45:09 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F134F171C9
-        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2017 20:45:08 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/3] xfs: separate shutdown from ticket reservation print helper
-Date: Mon,  8 May 2017 16:45:05 -0400
-Message-Id: <1494276307-36887-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1494276307-36887-1-git-send-email-bfoster@redhat.com>
-References: <1494276307-36887-1-git-send-email-bfoster@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:40360 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753665AbdEIMWa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 May 2017 08:22:30 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 1/8] Use RWF_* flags for AIO operations
+Date: Tue,  9 May 2017 07:22:12 -0500
+Message-Id: <20170509122219.31756-2-rgoldwyn@suse.de>
+In-Reply-To: <20170509122219.31756-1-rgoldwyn@suse.de>
+References: <20170509122219.31756-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-xlog_print_tic_res() pre-dates delayed logging and the committed
-items list (CIL) and thus retains some factoring warts, such as hard
-coded function names in the output and the fact that it induces a
-shutdown.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-In preparation for more detailed logging of regular transaction
-overrun situations, refactor xlog_print_tic_res() to be slightly
-more generic. Reword some of the warning messages and pull the
-shutdown into the callers.
+RWF_* flags is used for preadv2/pwritev2 calls. Port to use
+it for aio operations as well. For this, aio_rw_flags is
+introduced in struct iocb (using aio_reserved1) which will
+carry these flags.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+This is a precursor to the nowait AIO calls.
+
+Note, the only place RWF_HIPRI comes in effect is dio_await_one().
+All the rest of the locations, aio code return -EIOCBQUEUED before the
+checks for RWF_HIPRI.
+
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- fs/xfs/xfs_log.c     | 12 ++++++------
- fs/xfs/xfs_log_cil.c |  4 +++-
- 2 files changed, 9 insertions(+), 7 deletions(-)
+ fs/aio.c                     |  8 +++++++-
+ fs/read_write.c              | 12 +++---------
+ include/linux/fs.h           | 14 ++++++++++++++
+ include/uapi/linux/aio_abi.h |  2 +-
+ 4 files changed, 25 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 3731f13..8b283f7 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -2024,7 +2024,7 @@ xlog_print_tic_res(
- 	};
- #undef REG_TYPE_STR
+diff --git a/fs/aio.c b/fs/aio.c
+index f52d925ee259..020fa0045e3c 100644
+--- a/fs/aio.c
++++ b/fs/aio.c
+@@ -1541,7 +1541,7 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
+ 	ssize_t ret;
  
--	xfs_warn(mp, "xlog_write: reservation summary:");
-+	xfs_warn(mp, "ticket reservation summary:");
- 	xfs_warn(mp, "  unit res    = %d bytes",
- 		 ticket->t_unit_res);
- 	xfs_warn(mp, "  current res = %d bytes",
-@@ -2045,10 +2045,6 @@ xlog_print_tic_res(
- 			    "bad-rtype" : res_type_str[r_type]),
- 			    ticket->t_res_arr[i].r_len);
+ 	/* enforce forwards compatibility on users */
+-	if (unlikely(iocb->aio_reserved1 || iocb->aio_reserved2)) {
++	if (unlikely(iocb->aio_reserved2)) {
+ 		pr_debug("EINVAL: reserve field set\n");
+ 		return -EINVAL;
  	}
+@@ -1586,6 +1586,12 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
+ 		req->common.ki_flags |= IOCB_EVENTFD;
+ 	}
+ 
++	ret = kiocb_set_rw_flags(&req->common, iocb->aio_rw_flags);
++	if (unlikely(ret)) {
++		pr_debug("EINVAL: aio_rw_flags\n");
++		goto out_put_req;
++	}
++
+ 	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
+ 	if (unlikely(ret)) {
+ 		pr_debug("EFAULT: aio_key\n");
+diff --git a/fs/read_write.c b/fs/read_write.c
+index c4f88afbc67f..362f91cd8d66 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -678,16 +678,10 @@ static ssize_t do_iter_readv_writev(struct file *filp, struct iov_iter *iter,
+ 	struct kiocb kiocb;
+ 	ssize_t ret;
+ 
+-	if (flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC))
+-		return -EOPNOTSUPP;
 -
--	xfs_alert_tag(mp, XFS_PTAG_LOGRES,
--		"xlog_write: reservation ran out. Need to up reservation");
--	xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
+ 	init_sync_kiocb(&kiocb, filp);
+-	if (flags & RWF_HIPRI)
+-		kiocb.ki_flags |= IOCB_HIPRI;
+-	if (flags & RWF_DSYNC)
+-		kiocb.ki_flags |= IOCB_DSYNC;
+-	if (flags & RWF_SYNC)
+-		kiocb.ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
++	ret = kiocb_set_rw_flags(&kiocb, flags);
++	if (ret)
++		return ret;
+ 	kiocb.ki_pos = *ppos;
+ 
+ 	if (type == READ)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 7251f7bb45e8..869c9a6fe58d 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -3049,6 +3049,20 @@ static inline int iocb_flags(struct file *file)
+ 	return res;
  }
  
- /*
-@@ -2321,8 +2317,12 @@ xlog_write(
- 	if (flags & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS))
- 		ticket->t_curr_res -= sizeof(xlog_op_header_t);
++static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
++{
++	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC)))
++		return -EOPNOTSUPP;
++
++	if (flags & RWF_HIPRI)
++		ki->ki_flags |= IOCB_HIPRI;
++	if (flags & RWF_DSYNC)
++		ki->ki_flags |= IOCB_DSYNC;
++	if (flags & RWF_SYNC)
++		ki->ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
++	return 0;
++}
++
+ static inline ino_t parent_ino(struct dentry *dentry)
+ {
+ 	ino_t res;
+diff --git a/include/uapi/linux/aio_abi.h b/include/uapi/linux/aio_abi.h
+index bb2554f7fbd1..a2d4a8ac94ca 100644
+--- a/include/uapi/linux/aio_abi.h
++++ b/include/uapi/linux/aio_abi.h
+@@ -79,7 +79,7 @@ struct io_event {
+ struct iocb {
+ 	/* these are internal to the kernel/libc. */
+ 	__u64	aio_data;	/* data to be returned in event's data */
+-	__u32	PADDED(aio_key, aio_reserved1);
++	__u32	PADDED(aio_key, aio_rw_flags);
+ 				/* the kernel sets aio_key to the req # */
  
--	if (ticket->t_curr_res < 0)
-+	if (ticket->t_curr_res < 0) {
-+		xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
-+		     "ctx ticket reservation ran out. Need to up reservation");
- 		xlog_print_tic_res(log->l_mp, ticket);
-+		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
-+	}
- 
- 	index = 0;
- 	lv = log_vector;
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 82f1cbc..52fe042 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -987,8 +987,10 @@ xfs_log_commit_cil(
- 	xlog_cil_insert_items(log, tp);
- 
- 	/* check we didn't blow the reservation */
--	if (tp->t_ticket->t_curr_res < 0)
-+	if (tp->t_ticket->t_curr_res < 0) {
- 		xlog_print_tic_res(mp, tp->t_ticket);
-+		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
-+	}
- 
- 	tp->t_commit_lsn = cil->xc_ctx->sequence;
- 	if (commit_lsn)
+ 	/* common fields */
 -- 
-2.7.4
+2.12.0
 
