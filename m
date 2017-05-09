@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42342 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44674 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754179AbdEIPt7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 May 2017 11:49:59 -0400
+        id S1753437AbdEIPt6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 May 2017 11:49:58 -0400
 From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v4 08/27] dax: set errors in mapping when writeback fails
-Date: Tue,  9 May 2017 11:49:11 -0400
-Message-Id: <20170509154930.29524-9-jlayton@redhat.com>
+Subject: [PATCH v4 05/27] btrfs: btrfs_wait_tree_block_writeback can be void return
+Date: Tue,  9 May 2017 11:49:08 -0400
+Message-Id: <20170509154930.29524-6-jlayton@redhat.com>
 In-Reply-To: <20170509154930.29524-1-jlayton@redhat.com>
 References: <20170509154930.29524-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,43 +15,45 @@ List-Id: xfs
 To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org
 Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
 
-Jan's description for this patch is much better than mine, so I'm
-quoting it verbatim here:
-
-DAX currently doesn't set errors in the mapping when cache flushing
-fails in dax_writeback_mapping_range(). Since this function can get
-called only from fsync(2) or sync(2), this is actually as good as it can
-currently get since we correctly propagate the error up from
-dax_writeback_mapping_range() to filemap_fdatawrite(). However in the
-future better writeback error handling will enable us to properly report
-these errors on fsync(2) even if there are multiple file descriptors
-open against the file or if sync(2) gets called before fsync(2). So
-convert DAX to using standard error reporting through the mapping.
+Nothing checks its return value.
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-and-Tested-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 ---
- fs/dax.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ fs/btrfs/disk-io.c | 6 +++---
+ fs/btrfs/disk-io.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 85abd741253d..9b6b04030c3f 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -901,8 +901,10 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
+index eb1ee7b6f532..8c479bd5534a 100644
+--- a/fs/btrfs/disk-io.c
++++ b/fs/btrfs/disk-io.c
+@@ -1222,10 +1222,10 @@ int btrfs_write_tree_block(struct extent_buffer *buf)
+ 					buf->start + buf->len - 1);
+ }
  
- 			ret = dax_writeback_one(bdev, mapping, indices[i],
- 					pvec.pages[i]);
--			if (ret < 0)
-+			if (ret < 0) {
-+				mapping_set_error(mapping, ret);
- 				return ret;
-+			}
- 		}
- 	}
- 	return 0;
+-int btrfs_wait_tree_block_writeback(struct extent_buffer *buf)
++void btrfs_wait_tree_block_writeback(struct extent_buffer *buf)
+ {
+-	return filemap_fdatawait_range(buf->pages[0]->mapping,
+-				       buf->start, buf->start + buf->len - 1);
++	filemap_fdatawait_range(buf->pages[0]->mapping,
++			        buf->start, buf->start + buf->len - 1);
+ }
+ 
+ struct extent_buffer *read_tree_block(struct btrfs_fs_info *fs_info, u64 bytenr,
+diff --git a/fs/btrfs/disk-io.h b/fs/btrfs/disk-io.h
+index 2e0ec29bfd69..9cc87835abb5 100644
+--- a/fs/btrfs/disk-io.h
++++ b/fs/btrfs/disk-io.h
+@@ -127,7 +127,7 @@ int btrfs_wq_submit_bio(struct btrfs_fs_info *fs_info, struct inode *inode,
+ 			extent_submit_bio_hook_t *submit_bio_done);
+ unsigned long btrfs_async_submit_limit(struct btrfs_fs_info *info);
+ int btrfs_write_tree_block(struct extent_buffer *buf);
+-int btrfs_wait_tree_block_writeback(struct extent_buffer *buf);
++void btrfs_wait_tree_block_writeback(struct extent_buffer *buf);
+ int btrfs_init_log_root_tree(struct btrfs_trans_handle *trans,
+ 			     struct btrfs_fs_info *fs_info);
+ int btrfs_add_log_tree(struct btrfs_trans_handle *trans,
 -- 
 2.9.3
 
