@@ -1,45 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:42077 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750750AbdEHBL6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 May 2017 21:11:58 -0400
-Date: Sun, 7 May 2017 02:12:09 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs_alloc_ag_vextent_near() takes minutes to complete
-Message-ID: <20170507091209.GA6102@infradead.org>
-References: <49A20782FA8B4C82B0393E5BEF8A8754@alyakaslap>
- <20170502073501.GB6679@infradead.org>
- <CAOcd+r3VYuLaCq6g3YH_ue_7AhPfjfVUHJVmn1S=vFOtEMuZag@mail.gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:44686 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753824AbdEIPkF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 May 2017 11:40:05 -0400
+Date: Tue, 9 May 2017 08:40:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: remove XFS_HSIZE
+Message-ID: <20170509154000.GO5973@birch.djwong.org>
+References: <20170509090018.30094-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOcd+r3VYuLaCq6g3YH_ue_7AhPfjfVUHJVmn1S=vFOtEMuZag@mail.gmail.com>
+In-Reply-To: <20170509090018.30094-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alex Lyakas <alex@zadarastorage.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Sun, May 07, 2017 at 11:00:40AM +0300, Alex Lyakas wrote:
-> We are using the sync mount option, because the XFS instances that we
-> have are exposed via nfsd. Without the "sync" mount option, data from
-> NFS write command would end up sitting in page cache, and the nfs
-> client would not know when it has been finally persisted on disk.
-> Is the any other way that you can recommend to provide data integrity
-> guarantee for nfs clients? Even if it requires some development, like
-> placing the data in a short-term persistent space, this is something
-> we will look at.
-
-You don't need any mount option for NFS exports.  Only NFSv2 requires
-symchronous writes, while NFS3+ have the concept of unstable writes
-that the client needs to explicitly committ using the COMMIT on the
-write operation.  Both the NFSv2 synchronous and the NFSv3+ unstable
-semantics are managed by NFSD.
-
-(I'll speak here as a XFS and NFSD developer, and someone involved in
-NFS protocol development, just in case you're doubting)
-
+On Tue, May 09, 2017 at 11:00:18AM +0200, Christoph Hellwig wrote:
+> XFS_HSIZE is an extremly confusing way to calculate the size of handle_t.
+> Given that handle_t always only had two sizes, and one of them isn't
+> even covered by XFS_HSIZE to start with just remove the macro and use
+> a constant sizeof expression.
 > 
-> Thanks,
-> Alex.
----end quoted text---
+> Note that XFS_HSIZE isn't used in xfsprogs, xfsdump or xfstests either.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+> ---
+>  fs/xfs/libxfs/xfs_fs.h | 4 ----
+>  fs/xfs/xfs_ioctl.c     | 3 +--
+>  2 files changed, 1 insertion(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 095bdf049a3f..a9aa13e66046 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -446,10 +446,6 @@ typedef struct xfs_handle {
+>  } xfs_handle_t;
+>  #define ha_fsid ha_u._ha_fsid
+>  
+> -#define XFS_HSIZE(handle)	(((char *) &(handle).ha_fid.fid_pad	 \
+> -				 - (char *) &(handle))			  \
+> -				 + (handle).ha_fid.fid_len)
+> -
+>  /*
+>   * Structure passed to XFS_IOC_SWAPEXT
+>   */
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 6190697603c9..f6af76975bc8 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -120,8 +120,7 @@ xfs_find_handle(
+>  		handle.ha_fid.fid_pad = 0;
+>  		handle.ha_fid.fid_gen = inode->i_generation;
+>  		handle.ha_fid.fid_ino = ip->i_ino;
+> -
+> -		hsize = XFS_HSIZE(handle);
+> +		hsize = sizeof(xfs_handle_t);
+>  	}
+>  
+>  	error = -EFAULT;
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
