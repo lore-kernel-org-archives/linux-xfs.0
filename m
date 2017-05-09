@@ -1,81 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33842 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:53530 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750855AbdE3SSO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 30 May 2017 14:18:14 -0400
-Subject: Re: [PATCH 3/9] xfs_spaceman: space management tool
-References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
- <149417259522.24656.15381603363219279304.stgit@birch.djwong.org>
- <afec66aa-4c12-30e3-ff8d-896c5f3505d5@sandeen.net>
- <20170530173742.GW4519@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <48b4d991-4c77-4860-8a05-ba71bdda4056@sandeen.net>
-Date: Tue, 30 May 2017 13:17:56 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170530173742.GW4519@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1753554AbdEIQMx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 May 2017 12:12:53 -0400
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [xfstests PATCH v2 0/3] xfstest for updated writeback error handling
+Date: Tue,  9 May 2017 12:12:42 -0400
+Message-Id: <20170509161245.29908-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, fstests@vger.kernel.org
+Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
 
-On 5/30/17 12:37 PM, Darrick J. Wong wrote:
-> On Fri, May 26, 2017 at 08:34:18PM -0500, Eric Sandeen wrote:
->> On 5/7/17 10:56 AM, Darrick J. Wong wrote:
->>> From: Dave Chinner <dchinner@redhat.com>
->>>
->>> xfs_spaceman is intended as a diagnostic and control tool for space
->>> management operations within XFS. Operations like examining free
->>> space, managing allocation policies, issuing block discards on free
->>> space, etc.
->>>
->>> The tool is modelled on the xfs_io interface, allowing both
->>> interactive and command line control of the tool, enabling it to be
->>> used in scripts and automated management tools.
->> This may be a result of the xfs_io ancestry, but:
->>
->> # xfs_spaceman /mnt/test2 /mnt/test
->>
->> Cool, we can open 2 files(ystems)
->>
->> xfs_spaceman> print
->>  000  /mnt/test2     (non-sync,non-direct,read-write)
->> [001] /mnt/test      (non-sync,non-direct,read-write)
->>
->> (what does non-direct mean for a mountpoint?)
->> (actually where do these flags come from ... hm.)
->>
->> Yep there we are!  Now how do we switch to the other?
->>
->> xfs_spaceman> help
->> help [command] -- help for one or all commands
->> print -- list current open files
->> quit -- exit the program
->>
->> Use 'help commandname' for extended help.
->>
->> hmmm... I guess we can't switch.  Should we be able to?
->>
->> Is the intent to open files or filesystems...  both?  Is there ever
->> a reason to be opening a file not a filesystem?
-> <shrug> I mostly just passed on Dave's original patches from whenever
-> ago, but TBH I'm not 100% sure about the usecases for multiple
-> arguments.  The commands that spaceman has now are all fs-oriented, not
-> file-oriented... but maybe people want to be able to issue one command
-> against multiple fses?  OTOH all the commands provided so far are
-> oneshot, so they only act upon one open file.
-> 
-> So, I'm inclined to ditch the 'list' command and disallow multiple open
-> files, like Eric suggests, unless anyone really wants it?
+I've numbered the new test as 999 for the moment so as not to collide with
+tests being added while I've been working on this. I can change that and
+resend if this should go in.
 
-Either way is fine: multiple (fs) targets with the ability to switch,
-or restrict to just one, but allowing one to open multiple and only
-use one makes little sense.
+I'm working on a set of kernel patches to change how writeback errors
+are handled and reported in the kernel. Instead of reporting a
+writeback error to only the first fsync caller on the file, I aim
+to make the kernel report them once on every file description:
 
--Eric
+   http://www.spinics.net/lists/kernel/msg2504453.html
 
-> --D
-> 
+This patch adds a test for the new behavior, on local filesystems that
+can handle journalling to a separate device. Basically, open many fds to
+the same file, turn on dm_error, write to each of the fds, and then
+fsync them all to ensure that they all get an error back. Then, flip the
+device back to working, reopen the files and ensure that no error is
+reported.
+
+With the kernel patch series in place, ext4 and xfs now pass. btrfs still
+clears the error after the first fsync, so it seems like it still needs a
+bit of work.
+
+Jeff Layton (3):
+  generic: add a writeback error handling test
+  ext4: allow ext4 to use $SCRATCH_LOGDEV
+  btrfs: allow it to use $SCRATCH_LOGDEV
+
+ common/dmerror        |  13 +++--
+ common/rc             |   5 ++
+ src/Makefile          |   2 +-
+ src/fsync-err.c       | 138 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/999     |  75 +++++++++++++++++++++++++++
+ tests/generic/999.out |   3 ++
+ tests/generic/group   |   1 +
+ tools/dmerror         |  47 +++++++++++++++++
+ 8 files changed, 278 insertions(+), 6 deletions(-)
+ create mode 100644 src/fsync-err.c
+ create mode 100755 tests/generic/999
+ create mode 100644 tests/generic/999.out
+ create mode 100755 tools/dmerror
+
+-- 
+2.9.3
+
