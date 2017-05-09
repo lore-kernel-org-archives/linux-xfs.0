@@ -1,249 +1,178 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60102 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932193AbdEJSDM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 14:03:12 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/16] fs: switch ->s_uuid to uuid_t
-Date: Wed, 10 May 2017 20:02:14 +0200
-Message-Id: <20170510180214.16852-17-hch@lst.de>
-In-Reply-To: <20170510180214.16852-1-hch@lst.de>
-References: <20170510180214.16852-1-hch@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:33949 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754123AbdEIQJ7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 May 2017 12:09:59 -0400
+Date: Tue, 9 May 2017 09:09:48 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix indlen accounting error on partial delalloc
+ conversion
+Message-ID: <20170509160948.GP5973@birch.djwong.org>
+References: <1493837186-14148-1-git-send-email-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1493837186-14148-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-For some file systems we still memcpy into it, but in various places this
-already allows us to use the proper uuid helpers.  More to come..
+On Wed, May 03, 2017 at 02:46:26PM -0400, Brian Foster wrote:
+> The delalloc -> real block conversion path uses an incorrect
+> calculation in the case where the middle part of a delalloc extent
+> is being converted. This is documented as a rare situation because
+> XFS generally attempts to maximize contiguity by converting as much
+> of a delalloc extent as possible.
+> 
+> If this situation does occur, the indlen reservation for the two new
+> delalloc extents left behind by the conversion of the middle range
+> is calculated and compared with the original reservation. If more
+> blocks are required, the delta is allocated from the global block
+> pool. This delta value can be characterized as the difference
+> between the new total requirement (temp + temp2) and the currently
+> available reservation minus those blocks that have already been
+> allocated (startblockval(PREV.br_startblock) - allocated).
+> 
+> The problem is that the current code does not account for previously
+> allocated blocks correctly. It subtracts the current allocation
+> count from the (new - old) delta rather than the old indlen
+> reservation. This means that more indlen blocks than have been
+> allocated end up stashed in the remaining extents and free space
+> accounting is broken as a result.
+> 
+> Fix up the calculation to subtract the allocated block count from
+> the original extent indlen and thus correctly allocate the
+> reservation delta based on the difference between the new total
+> requirement and the unused blocks from the original reservation.
+> Also remove a bogus assert that contradicts the fact that the new
+> indlen reservation can be larger than the original indlen
+> reservation.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> Hi all,
+> 
+> So while I fortunately was able to reproduce this problem and verify the
+> patch, I'm not able to do so in any way that facilitates a generic test
+> case. To reproduce, I had to hack up the allocation path to always do
+> single physical block allocations and otherwise not attempt to convert
+> whole delalloc extents, hack up an ioctl to do a
+> filemap_write_and_wait_range(), and run a test that repeatedly does 1M
+> buffered writes followed by fragmented, page-sized writebacks of that 1M
+> extent. This forces partial (middle) extent conversions until the extent
+> tree grows enough to require a bmbt block allocation. When that occurs,
+> I always end up with the following free space accounting inconsistency
+> reported via xfs_repair:
+> 
+> Phase 1 - find and verify superblock...     
+> Phase 2 - using internal log
+>         - zero log...               
+>         - scan filesystem freespace and inode maps...
+> sb_fdblocks 3929316, counted 3929314             
+> ...
+> 
+> With this patch applied, the same test no longer reproduces the
+> corruption. This otherwise survives my xfstests testing (without the
+> aforementioned hacks). Thoughts, reviews, flames appreciated.
+> 
+> Brian
+> 
+>  fs/xfs/libxfs/xfs_bmap.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index f02eb76..8adb91b 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -2065,8 +2065,10 @@ xfs_bmap_add_extent_delay_real(
+>  		}
+>  		temp = xfs_bmap_worst_indlen(bma->ip, temp);
+>  		temp2 = xfs_bmap_worst_indlen(bma->ip, temp2);
+> -		diff = (int)(temp + temp2 - startblockval(PREV.br_startblock) -
+> -			(bma->cur ? bma->cur->bc_private.b.allocated : 0));
+> +		diff = (int)(temp + temp2 -
+> +			     (startblockval(PREV.br_startblock) -
+> +			      (bma->cur ?
+> +			       bma->cur->bc_private.b.allocated : 0)));
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/xen/tmem.c                  |  6 +++---
- fs/ext4/super.c                     |  2 +-
- fs/f2fs/super.c                     |  2 +-
- fs/gfs2/ops_fstype.c                |  2 +-
- fs/gfs2/sys.c                       | 22 +++++-----------------
- fs/ocfs2/super.c                    |  2 +-
- fs/xfs/xfs_mount.c                  |  2 +-
- include/linux/cleancache.h          |  2 +-
- include/linux/fs.h                  |  5 +++--
- mm/cleancache.c                     |  2 +-
- security/integrity/evm/evm_crypto.c |  2 +-
- security/integrity/ima/ima_policy.c |  2 +-
- 12 files changed, 20 insertions(+), 31 deletions(-)
+<thinking aloud again>
 
-diff --git a/drivers/xen/tmem.c b/drivers/xen/tmem.c
-index 4ac2ca8a7656..bf13d1ec51f3 100644
---- a/drivers/xen/tmem.c
-+++ b/drivers/xen/tmem.c
-@@ -233,12 +233,12 @@ static int tmem_cleancache_init_fs(size_t pagesize)
- 	return xen_tmem_new_pool(uuid_private, 0, pagesize);
- }
- 
--static int tmem_cleancache_init_shared_fs(char *uuid, size_t pagesize)
-+static int tmem_cleancache_init_shared_fs(uuid_t *uuid, size_t pagesize)
- {
- 	struct tmem_pool_uuid shared_uuid;
- 
--	shared_uuid.uuid_lo = *(u64 *)uuid;
--	shared_uuid.uuid_hi = *(u64 *)(&uuid[8]);
-+	shared_uuid.uuid_lo = *(u64 *)&uuid->b[0];
-+	shared_uuid.uuid_hi = *(u64 *)&uuid->b[8];
- 	return xen_tmem_new_pool(shared_uuid, TMEM_POOL_SHARED, pagesize);
- }
- 
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index c90edf09b0c3..b53e8b3082c0 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -3951,7 +3951,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- 		sb->s_qcop = &ext4_qctl_operations;
- 	sb->s_quota_types = QTYPE_MASK_USR | QTYPE_MASK_GRP | QTYPE_MASK_PRJ;
- #endif
--	memcpy(sb->s_uuid, es->s_uuid, sizeof(es->s_uuid));
-+	memcpy(&sb->s_uuid, es->s_uuid, sizeof(es->s_uuid));
- 
- 	INIT_LIST_HEAD(&sbi->s_orphan); /* unlinked but open files */
- 	mutex_init(&sbi->s_orphan_lock);
-diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
-index 83355ec4a92c..0b89b0b7b9f7 100644
---- a/fs/f2fs/super.c
-+++ b/fs/f2fs/super.c
-@@ -1937,7 +1937,7 @@ static int f2fs_fill_super(struct super_block *sb, void *data, int silent)
- 	sb->s_time_gran = 1;
- 	sb->s_flags = (sb->s_flags & ~MS_POSIXACL) |
- 		(test_opt(sbi, POSIX_ACL) ? MS_POSIXACL : 0);
--	memcpy(sb->s_uuid, raw_super->uuid, sizeof(raw_super->uuid));
-+	memcpy(&sb->s_uuid, raw_super->uuid, sizeof(raw_super->uuid));
- 
- 	/* init f2fs-specific super block info */
- 	sbi->valid_super_block = valid_super_block;
-diff --git a/fs/gfs2/ops_fstype.c b/fs/gfs2/ops_fstype.c
-index ed67548b286c..b92135c202c2 100644
---- a/fs/gfs2/ops_fstype.c
-+++ b/fs/gfs2/ops_fstype.c
-@@ -203,7 +203,7 @@ static void gfs2_sb_in(struct gfs2_sbd *sdp, const void *buf)
- 
- 	memcpy(sb->sb_lockproto, str->sb_lockproto, GFS2_LOCKNAME_LEN);
- 	memcpy(sb->sb_locktable, str->sb_locktable, GFS2_LOCKNAME_LEN);
--	memcpy(s->s_uuid, str->sb_uuid, 16);
-+	memcpy(&s->s_uuid, str->sb_uuid, 16);
- }
- 
- /**
-diff --git a/fs/gfs2/sys.c b/fs/gfs2/sys.c
-index 7a515345610c..e77bc52b468f 100644
---- a/fs/gfs2/sys.c
-+++ b/fs/gfs2/sys.c
-@@ -71,25 +71,14 @@ static ssize_t fsname_show(struct gfs2_sbd *sdp, char *buf)
- 	return snprintf(buf, PAGE_SIZE, "%s\n", sdp->sd_fsname);
- }
- 
--static int gfs2_uuid_valid(const u8 *uuid)
--{
--	int i;
--
--	for (i = 0; i < 16; i++) {
--		if (uuid[i])
--			return 1;
--	}
--	return 0;
--}
--
- static ssize_t uuid_show(struct gfs2_sbd *sdp, char *buf)
- {
- 	struct super_block *s = sdp->sd_vfs;
--	const u8 *uuid = s->s_uuid;
-+
- 	buf[0] = '\0';
--	if (!gfs2_uuid_valid(uuid))
-+	if (uuid_is_null(&s->s_uuid))
- 		return 0;
--	return snprintf(buf, PAGE_SIZE, "%pUB\n", uuid);
-+	return snprintf(buf, PAGE_SIZE, "%pUB\n", &s->s_uuid);
- }
- 
- static ssize_t freeze_show(struct gfs2_sbd *sdp, char *buf)
-@@ -712,14 +701,13 @@ static int gfs2_uevent(struct kset *kset, struct kobject *kobj,
- {
- 	struct gfs2_sbd *sdp = container_of(kobj, struct gfs2_sbd, sd_kobj);
- 	struct super_block *s = sdp->sd_vfs;
--	const u8 *uuid = s->s_uuid;
- 
- 	add_uevent_var(env, "LOCKTABLE=%s", sdp->sd_table_name);
- 	add_uevent_var(env, "LOCKPROTO=%s", sdp->sd_proto_name);
- 	if (!test_bit(SDF_NOJOURNALID, &sdp->sd_flags))
- 		add_uevent_var(env, "JOURNALID=%d", sdp->sd_lockstruct.ls_jid);
--	if (gfs2_uuid_valid(uuid))
--		add_uevent_var(env, "UUID=%pUB", uuid);
-+	if (!uuid_is_null(&s->s_uuid))
-+		add_uevent_var(env, "UUID=%pUB", &s->s_uuid);
- 	return 0;
- }
- 
-diff --git a/fs/ocfs2/super.c b/fs/ocfs2/super.c
-index ca1646fbcaef..83005f486451 100644
---- a/fs/ocfs2/super.c
-+++ b/fs/ocfs2/super.c
-@@ -2062,7 +2062,7 @@ static int ocfs2_initialize_super(struct super_block *sb,
- 	cbits = le32_to_cpu(di->id2.i_super.s_clustersize_bits);
- 	bbits = le32_to_cpu(di->id2.i_super.s_blocksize_bits);
- 	sb->s_maxbytes = ocfs2_max_file_offset(bbits, cbits);
--	memcpy(sb->s_uuid, di->id2.i_super.s_uuid,
-+	memcpy(&sb->s_uuid, di->id2.i_super.s_uuid,
- 	       sizeof(di->id2.i_super.s_uuid));
- 
- 	osb->osb_dx_mask = (1 << (cbits - bbits)) - 1;
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 682b336a7a6a..93a420160964 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -75,7 +75,7 @@ xfs_uuid_mount(
- 
- 	/* Publish UUID in struct super_block */
- 	BUILD_BUG_ON(sizeof(mp->m_super->s_uuid) != sizeof(uuid_t));
--	memcpy(&mp->m_super->s_uuid, uuid, sizeof(uuid_t));
-+	uuid_copy(&mp->m_super->s_uuid, uuid);
- 
- 	if (mp->m_flags & XFS_MOUNT_NOUUID)
- 		return 0;
-diff --git a/include/linux/cleancache.h b/include/linux/cleancache.h
-index fccf7f44139d..bbb3712dd892 100644
---- a/include/linux/cleancache.h
-+++ b/include/linux/cleancache.h
-@@ -27,7 +27,7 @@ struct cleancache_filekey {
- 
- struct cleancache_ops {
- 	int (*init_fs)(size_t);
--	int (*init_shared_fs)(char *uuid, size_t);
-+	int (*init_shared_fs)(uuid_t *uuid, size_t);
- 	int (*get_page)(int, struct cleancache_filekey,
- 			pgoff_t, struct page *);
- 	void (*put_page)(int, struct cleancache_filekey,
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 26488b419965..cdffd2f86aa0 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -30,6 +30,7 @@
- #include <linux/percpu-rwsem.h>
- #include <linux/workqueue.h>
- #include <linux/delayed_call.h>
-+#include <linux/uuid.h>
- 
- #include <asm/byteorder.h>
- #include <uapi/linux/fs.h>
-@@ -1326,8 +1327,8 @@ struct super_block {
- 
- 	struct sb_writers	s_writers;
- 
--	char s_id[32];				/* Informational name */
--	u8 s_uuid[16];				/* UUID */
-+	char			s_id[32];	/* Informational name */
-+	uuid_t			s_uuid;		/* UUID */
- 
- 	void 			*s_fs_info;	/* Filesystem private info */
- 	unsigned int		s_max_links;
-diff --git a/mm/cleancache.c b/mm/cleancache.c
-index ba5d8f3e6d68..f7b9fdc79d97 100644
---- a/mm/cleancache.c
-+++ b/mm/cleancache.c
-@@ -130,7 +130,7 @@ void __cleancache_init_shared_fs(struct super_block *sb)
- 	int pool_id = CLEANCACHE_NO_BACKEND_SHARED;
- 
- 	if (cleancache_ops) {
--		pool_id = cleancache_ops->init_shared_fs(sb->s_uuid, PAGE_SIZE);
-+		pool_id = cleancache_ops->init_shared_fs(&sb->s_uuid, PAGE_SIZE);
- 		if (pool_id < 0)
- 			pool_id = CLEANCACHE_NO_POOL;
- 	}
-diff --git a/security/integrity/evm/evm_crypto.c b/security/integrity/evm/evm_crypto.c
-index d7f282d75cc1..1d32cd20009a 100644
---- a/security/integrity/evm/evm_crypto.c
-+++ b/security/integrity/evm/evm_crypto.c
-@@ -164,7 +164,7 @@ static void hmac_add_misc(struct shash_desc *desc, struct inode *inode,
- 	hmac_misc.mode = inode->i_mode;
- 	crypto_shash_update(desc, (const u8 *)&hmac_misc, sizeof(hmac_misc));
- 	if (evm_hmac_attrs & EVM_ATTR_FSUUID)
--		crypto_shash_update(desc, inode->i_sb->s_uuid,
-+		crypto_shash_update(desc, &inode->i_sb->s_uuid.b[0],
- 				    sizeof(inode->i_sb->s_uuid));
- 	crypto_shash_final(desc, digest);
- }
-diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
-index da3e7d50e0d7..659dbcc83d2f 100644
---- a/security/integrity/ima/ima_policy.c
-+++ b/security/integrity/ima/ima_policy.c
-@@ -244,7 +244,7 @@ static bool ima_match_rules(struct ima_rule_entry *rule, struct inode *inode,
- 	    && rule->fsmagic != inode->i_sb->s_magic)
- 		return false;
- 	if ((rule->flags & IMA_FSUUID) &&
--	    memcmp(&rule->fsuuid, inode->i_sb->s_uuid, sizeof(rule->fsuuid)))
-+	    !uuid_equal(&rule->fsuuid, &inode->i_sb->s_uuid))
- 		return false;
- 	if ((rule->flags & IMA_UID) && !rule->uid_op(cred->uid, rule->uid))
- 		return false;
--- 
-2.11.0
+Prior to this operation we made a delalloc reservation in which we
+reserved a number of blocks for bmbt expansion by subtracting that
+quantity from incore fdblocks; that is startblockval(PREV.br_startblock).
+Then we did some bmbt magic which used up cur->bc_private.b.allocated
+blocks from the reservation.  Since those blocks were already subtracted
+from the incore fdblocks, we don't need to do that now.  After the magic
+was over, we now have two smaller delalloc reservations (with a real
+extent in the middle), each with their own reservations for bmbt shape
+changing expansion.
 
+Now we aim to make the accounting of incore fdblocks square again by
+checking if we are now hanging on to more blocks than we were before and
+subtracting the difference from fdblocks if so.  (We deal separately with
+the possibility of hanging onto /fewer/ blocks than before.)
+
+Ok, so first we reserved startblockval(PREV.br_startblock).
+
+After splitting the da extent in the middle we now have two da extents;
+the effective indlen reservation of the whole range we just touched is:
+xfs_bmap_worst_indlen(bma->ip, temp) + xfs_bmap_worst_indlen(bma->ip, temp2);
+
+Then we (may have) fed bma->cur->bc_private.b.allocated blocks to the bmbt.
+The number of blocks we now know about is:
+
+xfs_bmap_worst_indlen(bma->ip, temp) +
+xfs_bmap_worst_indlen(bma->ip, temp2) +
+bma->cur->bc_private.b.allocated
+
+Therefore, the number of blocks we are over (if at all) is:
+
+xfs_bmap_worst_indlen(bma->ip, temp) +
+xfs_bmap_worst_indlen(bma->ip, temp2) +
+bma->cur->bc_private.b.allocated -
+startblockval(PREV.br_startblock)
+
+Or, put another way:
+
+(xfs_bmap_worst_indlen(bma->ip, temp) +
+ xfs_bmap_worst_indlen(bma->ip, temp2)) -
+(startblockval(PREV.br_startblock) -
+ bma->cur->bc_private.b.allocated)
+
+(Exactly what Brian wrote above.)
+
+If that quantity is positive, we're now hanging on to more blocks than
+we were before, so we subtract that many from fdblocks.  That part looks
+ok, though I have one question -- why is diff an int?  temp/temp2 are
+both xfs_filblks_t (__uint64_t), so the whole expression is promoted to
+a 64-bit operation, then the results are squashed down into a 32-bit
+int, which is then cast back to int64_t.  With our short MAXEXTLEN I
+think it's impossible ever to have diff > 2^32, but the casting back and
+forth caught my eye.
+
+Aside from that, it looks ok...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+>  		if (diff > 0) {
+>  			error = xfs_mod_fdblocks(bma->ip->i_mount,
+>  						 -((int64_t)diff), false);
+> @@ -2123,7 +2125,6 @@ xfs_bmap_add_extent_delay_real(
+>  		temp = da_new;
+>  		if (bma->cur)
+>  			temp += bma->cur->bc_private.b.allocated;
+> -		ASSERT(temp <= da_old);
+>  		if (temp < da_old)
+>  			xfs_mod_fdblocks(bma->ip->i_mount,
+>  					(int64_t)(da_old - temp), false);
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
