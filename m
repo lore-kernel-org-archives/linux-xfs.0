@@ -1,84 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50653 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932957AbdELQXt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 May 2017 12:23:49 -0400
-Date: Fri, 12 May 2017 09:23:43 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: Fix missed holes in SEEK_HOLE implementation
-Message-ID: <20170512162343.GH4519@birch.djwong.org>
-References: <20170511165023.29887-1-jack@suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170511165023.29887-1-jack@suse.cz>
+Received: from mx1.redhat.com ([209.132.183.28]:56106 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754261AbdEIQNC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 May 2017 12:13:02 -0400
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [xfstests PATCH v2 3/3] btrfs: allow it to use $SCRATCH_LOGDEV
+Date: Tue,  9 May 2017 12:12:45 -0400
+Message-Id: <20170509161245.29908-4-jlayton@redhat.com>
+In-Reply-To: <20170509161245.29908-1-jlayton@redhat.com>
+References: <20170509161245.29908-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-xfs@vger.kernel.org, stable@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, fstests@vger.kernel.org
+Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
 
-On Thu, May 11, 2017 at 06:50:22PM +0200, Jan Kara wrote:
-> XFS SEEK_HOLE implementation could miss a hole in an unwritten extent as
-> can be seen by the following command:
-> 
-> xfs_io -c "falloc 0 256k" -c "pwrite 0 56k" -c "pwrite 128k 8k"
->        -c "seek -h 0" file
-> wrote 57344/57344 bytes at offset 0
-> 56 KiB, 14 ops; 0.0000 sec (49.312 MiB/sec and 12623.9856 ops/sec)
-> wrote 8192/8192 bytes at offset 131072
-> 8 KiB, 2 ops; 0.0000 sec (70.383 MiB/sec and 18018.0180 ops/sec)
-> Whence	Result
-> HOLE	139264
-> 
-> Where we can see that hole at offset 56k was just ignored by SEEK_HOLE
-> implementation. The bug is in xfs_find_get_desired_pgoff() which does
-> not properly detect the case when a first page in the pagevec has larger
-> index than expected (and even if the condition was right, we would fail
-> to update the returned offset).
-> 
-> Fix the problem by properly detecting when found page has larger offset
-> than expected.
-> 
-> CC: stable@vger.kernel.org
-> Fixes: d126d43f631f996daeee5006714fed914be32368
-> Signed-off-by: Jan Kara <jack@suse.cz>
+With btrfs, we can't really put the log on a separate device. What we
+can do however is mirror the metadata across two devices and put the
+data on a single device. When we turn on dmerror then the metadata can
+fall back to using the other mirror while the data errors out.
 
-Looks ok, will test...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ common/rc | 2 ++
+ 1 file changed, 2 insertions(+)
 
---D
+diff --git a/common/rc b/common/rc
+index 8b815d9c8c33..2084c1f24f30 100644
+--- a/common/rc
++++ b/common/rc
+@@ -829,6 +829,8 @@ _scratch_mkfs()
+ 		;;
+ 	btrfs)
+ 		mkfs_cmd="$MKFS_BTRFS_PROG"
++		[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
++			mkfs_cmd="$mkfs_cmd -d single -m raid1 $SCRATCH_LOGDEV"
+ 		mkfs_filter="cat"
+ 		;;
+ 	ext2|ext3)
+-- 
+2.9.3
 
-> ---
->  fs/xfs/xfs_file.c | 9 ++++-----
->  1 file changed, 4 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 35703a801372..df51c025adfe 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1077,13 +1077,12 @@ xfs_find_get_desired_pgoff(
->  		}
->  
->  		/*
-> -		 * At lease we found one page.  If this is the first time we
-> -		 * step into the loop, and if the first page index offset is
-> -		 * greater than the given search offset, a hole was found.
-> +		 * At least we found one page. If the current offset is smaller
-> +		 * than the first page offset, a hole was found.
->  		 */
-> -		if (type == HOLE_OFF && lastoff == startoff &&
-> -		    lastoff < page_offset(pvec.pages[0])) {
-> +		if (type == HOLE_OFF && lastoff < page_offset(pvec.pages[0])) {
->  			found = true;
-> +			*offset = lastoff;
->  			break;
->  		}
->  
-> -- 
-> 2.12.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
