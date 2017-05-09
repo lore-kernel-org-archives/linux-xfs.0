@@ -1,91 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23260 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750758AbdEBXQ1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2017 19:16:27 -0400
-Date: Tue, 2 May 2017 16:16:19 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 2/2] xfs_io: add missed quotation marks in man page
-Message-ID: <20170502231619.GE5973@birch.djwong.org>
-References: <1493012000-9454-1-git-send-email-zlang@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:38658 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753824AbdEIPkc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 May 2017 11:40:32 -0400
+Subject: Re: [PATCH] xfs: remove XFS_HSIZE
+References: <20170509090018.30094-1-hch@lst.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ba048d82-a8b9-863f-121e-a1319fdef0f3@sandeen.net>
+Date: Tue, 9 May 2017 10:40:31 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1493012000-9454-1-git-send-email-zlang@redhat.com>
+In-Reply-To: <20170509090018.30094-1-hch@lst.de>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Mon, Apr 24, 2017 at 01:33:20PM +0800, Zorro Lang wrote:
-> The description about set_encpolicy command in xfs_io man page missed
-> some quotation marks. It's a little picky, but it really causes the
-> quotation marks can't match each other.
+On 5/9/17 4:00 AM, Christoph Hellwig wrote:
+> XFS_HSIZE is an extremly confusing way to calculate the size of handle_t.
+> Given that handle_t always only had two sizes, and one of them isn't
+> even covered by XFS_HSIZE to start with just remove the macro and use
+> a constant sizeof expression.
 > 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> Note that XFS_HSIZE isn't used in xfsprogs, xfsdump or xfstests either.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Ok, so with this assignment a few lines before:
+
+handle.ha_fid.fid_len = sizeof(xfs_fid_t) - sizeof(handle.ha_fid.fid_len);
+
+(so: fid_len == size of (fid_pad + fid_gen + fid_ino))
+
+and:
+
+(((char *) &(handle).ha_fid.fid_pad - (char *) &(handle)) + (handle).ha_fid.fid_len)
+|< --        size of ha_u + sizeof fid_len         -->  |  |<-sizeof(pad+gen+ino)->|
+
+this does indeed seem to come out to sizeof(xfs_handle_t).
+
+Looks winning, minor comment below
+
 > ---
+>  fs/xfs/libxfs/xfs_fs.h | 4 ----
+>  fs/xfs/xfs_ioctl.c     | 3 +--
+>  2 files changed, 1 insertion(+), 6 deletions(-)
 > 
-> Hi,
-> 
-> Actually this's the first version for this patch, I hit this problem
-> when I tried to add "inode" command under "set_encpolicy" command.
-> 
-> That missed quotation marks always break the format which I used to
-> describe the "inode" command, so I have to do this change with that
-> inode command patch together.
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 095bdf049a3f..a9aa13e66046 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -446,10 +446,6 @@ typedef struct xfs_handle {
+>  } xfs_handle_t;
+>  #define ha_fsid ha_u._ha_fsid
+>  
+> -#define XFS_HSIZE(handle)	(((char *) &(handle).ha_fid.fid_pad	 \
+> -				 - (char *) &(handle))			  \
+> -				 + (handle).ha_fid.fid_len)
+> -
+>  /*
+>   * Structure passed to XFS_IOC_SWAPEXT
+>   */
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 6190697603c9..f6af76975bc8 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -120,8 +120,7 @@ xfs_find_handle(
+>  		handle.ha_fid.fid_pad = 0;
+>  		handle.ha_fid.fid_gen = inode->i_generation;
+>  		handle.ha_fid.fid_ino = ip->i_ino;
+> -
+> -		hsize = XFS_HSIZE(handle);
+> +		hsize = sizeof(xfs_handle_t);
 
-/me hates looking at nroff, but I think this looks ok....
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+at this point, no need to have the hsize assignment in if { } as well as else { }, right?
 
+-Eric
 
---D
-
+>  	}
+>  
+>  	error = -EFAULT;
 > 
-> Thanks,
-> Zorro
-> 
->  man/man8/xfs_io.8 | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index a7c2a1e..a686ef5 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -949,7 +949,7 @@ was specified on the commandline, the maximum possible inode number in
->  the system will be printed along with its size.
->  .PD
->  .TP
-> -.BI "set_encpolicy [ \-c " mode " ] [ \-n " mode " ] [ \-f " flags " ] [ \-v " version " ] [ " keydesc " ]
-> +.BI "set_encpolicy [ \-c " mode " ] [ \-n " mode " ] [ \-f " flags " ] [ \-v " version " ] [ " keydesc " ]"
->  On filesystems that support encryption, assign an encryption policy to the
->  current file.
->  .I keydesc
-> @@ -958,16 +958,16 @@ If not specified, a "default" key descriptor of all 0's will be used.
->  .RS 1.0i
->  .PD 0
->  .TP 0.4i
-> -.BI \-c " mode
-> +.BI \-c " mode"
->  contents encryption mode (e.g. AES-256-XTS)
->  .TP
-> -.BI \-n " mode
-> +.BI \-n " mode"
->  filenames encryption mode (e.g. AES-256-CTS)
->  .TP
-> -.BI \-f " flags
-> +.BI \-f " flags"
->  policy flags (numeric)
->  .TP
-> -.BI \-v " version
-> +.BI \-v " version"
->  version of policy structure (numeric)
->  .RE
->  .PD
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
