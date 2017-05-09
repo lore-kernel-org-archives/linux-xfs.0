@@ -1,392 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46084 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754864AbdEIQMz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 May 2017 12:12:55 -0400
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:36807 "EHLO
+        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753554AbdEIQYU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 May 2017 12:24:20 -0400
+Received: by mail-qk0-f170.google.com with SMTP id u75so5414136qka.3
+        for <linux-xfs@vger.kernel.org>; Tue, 09 May 2017 09:24:20 -0700 (PDT)
+Message-ID: <1494347057.2659.10.camel@redhat.com>
+Subject: Re: [PATCH v4 25/27] Documentation: flesh out the section in
+ vfs.txt on storing and reporting writeback errors
 From: Jeff Layton <jlayton@redhat.com>
-Subject: [xfstests PATCH v2 1/3] generic: add a writeback error handling test
-Date: Tue,  9 May 2017 12:12:43 -0400
-Message-Id: <20170509161245.29908-2-jlayton@redhat.com>
-In-Reply-To: <20170509161245.29908-1-jlayton@redhat.com>
-References: <20170509161245.29908-1-jlayton@redhat.com>
+Date: Tue, 09 May 2017 12:24:17 -0400
+In-Reply-To: <20170509154930.29524-26-jlayton@redhat.com>
+References: <20170509154930.29524-1-jlayton@redhat.com>
+         <20170509154930.29524-26-jlayton@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, fstests@vger.kernel.org
-Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org
+Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com, Michael Kerrisk <mtk.manpages@gmail.com>
 
-I'm working on a set of kernel patches to change how writeback errors
-are handled and reported in the kernel. Instead of reporting a
-writeback error to only the first fsync caller on the file, I aim
-to make the kernel report them once on every file description.
+On Tue, 2017-05-09 at 11:49 -0400, Jeff Layton wrote:
+> I waxed a little loquacious here, but I figured that more detail was
+> better, and writeback error handling is so hard to get right.
+> 
+> Cc: Jan Kara <jack@suse.cz>
+> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> ---
+>  Documentation/filesystems/vfs.txt | 54 ++++++++++++++++++++++++++++++++-------
+>  1 file changed, 45 insertions(+), 9 deletions(-)
+> 
+> diff --git a/Documentation/filesystems/vfs.txt b/Documentation/filesystems/vfs.txt
+> index f201a77873f7..382190a872e5 100644
+> --- a/Documentation/filesystems/vfs.txt
+> +++ b/Documentation/filesystems/vfs.txt
+> @@ -576,12 +576,46 @@ should clear PG_Dirty and set PG_Writeback.  It can be actually
+>  written at any point after PG_Dirty is clear.  Once it is known to be
+>  safe, PG_Writeback is cleared.
+>  
+> -If there is an error during writeback, then the address_space should be
+> -marked with an error (typically using mapping_set_error), in order to
+> -ensure that the error can later be reported to the application when an
+> -fsync is issued.
+> -
+> -Writeback makes use of a writeback_control structure...
+> +Writeback makes use of a writeback_control structure to direct the
+> +operations.  This gives the the writepage and writepages operations some
+> +information about the nature of and reason for the writeback request,
+> +and the constraints under which it is being done.  It is also used to
+> +return information back to the caller about the result of a writepage or
+> +writepages request.
+> +
+> +Handling errors during writeback
+> +--------------------------------
+> +Most applications that utilize the pagecache will periodically call
+> +fsync to ensure that data written has made it to the backing store.
+> +When there is an error during writeback, that error should be reported
+> +when fsync is called.  After an error has been reported to fsync,
+> +subsequent fsync calls on the same file descriptor should return 0,
+> +unless further writeback errors have occurred since the previous fsync.
+> +
+> +Ideally, the kernel would report it only on file descriptions on which
+> +writes were done that subsequently failed to be written back.  The
+> +generic pagecache infrastructure does not track the file descriptions
+> +that have dirtied each individual page however, so determining which
+> +file descriptors should get back an error is not possible.
+> +
+> +Instead, the generic writeback error tracking infrastructure in the
+> +kernel settles for reporting errors to fsync on all file descriptions
+> +that were open at the time that the error occurred.  In a situation with
+> +multiple writers, all of them will get back an error on a subsequent fsync,
+> +even if all of the writes done through that particular file descriptor
+> +succeeded (or even if there were no writes on that file descriptor at all).
+> +
 
-This patch adds a test for the new behavior. Basically, open many fds
-to the same file, turn on dm_error, write to each of the fds, and then
-fsync them all to ensure that they all get an error back.
+(cc'ing Michael Kerrisk)
 
-To do that, I'm adding a new tools/dmerror script that the C program
-can use to load the error table. For now, that's all it can do, but
-we can fill it out with other commands as necessary.
+Once this is closer to merge, I think we'll also want to update the
+fsync(2) manpage with something similar to the 3 paragraphs above, and
+also with an explanation of the behavior that applications can expect
+from earlier kernels.
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- common/dmerror        |  13 +++--
- src/Makefile          |   2 +-
- src/fsync-err.c       | 138 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/999     |  75 +++++++++++++++++++++++++++
- tests/generic/999.out |   3 ++
- tests/generic/group   |   1 +
- tools/dmerror         |  47 +++++++++++++++++
- 7 files changed, 273 insertions(+), 6 deletions(-)
- create mode 100644 src/fsync-err.c
- create mode 100755 tests/generic/999
- create mode 100644 tests/generic/999.out
- create mode 100755 tools/dmerror
+> +Filesystems that wish to use this infrastructure should call
+> +mapping_set_error to record the error in the address_space when it
+> +occurs.  The generic vfs code will then handle reporting the error when
+> +fsync is called, even if the fsync file operation returned 0.
+> +
+> +Filesystems are free to track errors internally if they choose (i.e. if
+> +they do keep track of how the pages were dirtied), but they should aim
+> +to provide the same (or better) error reporting semantics for when there
+> +are multiple writers.  Those filesystems should avoid calling
+> +mapping_set_error in order to ensure that errors stored in the mapping
+> +aren't improperly reported by the generic filesystem code.
+>  
+>  struct address_space_operations
+>  -------------------------------
+> @@ -810,7 +844,8 @@ struct address_space_operations {
+>  The File Object
+>  ===============
+>  
+> -A file object represents a file opened by a process.
+> +A file object represents a file opened by a process. This is also known
+> +as an "open file description" in POSIX parlance.
+>  
+>  
+>  struct file_operations
+> @@ -893,9 +928,10 @@ otherwise noted.
+>  
+>    release: called when the last reference to an open file is closed
+>  
+> -  fsync: called by the fsync(2) system call. Errors that were previously
+> +  fsync: called by the fsync(2) system call.  Errors that were previously
+>  	 recorded using mapping_set_error will automatically be returned to
+> -	 the application and the file's error sequence advanced.
+> +	 the application and the struct file's error sequence advanced.
+> +	 See the section above on handling writeback errors.
+>  
+>    fasync: called by the fcntl(2) system call when asynchronous
+>  	(non-blocking) mode is enabled for a file
 
-diff --git a/common/dmerror b/common/dmerror
-index d46c5d0b7266..238baa213b1f 100644
---- a/common/dmerror
-+++ b/common/dmerror
-@@ -23,22 +23,25 @@ if [ $? -eq 0 ]; then
- 	_notrun "Cannot run tests with DAX on dmerror devices"
- fi
- 
--_dmerror_init()
-+_dmerror_setup()
- {
- 	local dm_backing_dev=$SCRATCH_DEV
- 
--	$DMSETUP_PROG remove error-test > /dev/null 2>&1
--
- 	local blk_dev_size=`blockdev --getsz $dm_backing_dev`
- 
- 	DMERROR_DEV='/dev/mapper/error-test'
- 
- 	DMLINEAR_TABLE="0 $blk_dev_size linear $dm_backing_dev 0"
- 
-+	DMERROR_TABLE="0 $blk_dev_size error $dm_backing_dev 0"
-+}
-+
-+_dmerror_init()
-+{
-+	_dmerror_setup
-+	$DMSETUP_PROG remove error-test > /dev/null 2>&1
- 	$DMSETUP_PROG create error-test --table "$DMLINEAR_TABLE" || \
- 		_fatal "failed to create dm linear device"
--
--	DMERROR_TABLE="0 $blk_dev_size error $dm_backing_dev 0"
- }
- 
- _dmerror_mount()
-diff --git a/src/Makefile b/src/Makefile
-index e5042c9b7d8e..eb8ff6c4a344 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -12,7 +12,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
- 	godown resvtest writemod makeextents itrash rename \
- 	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
- 	t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
--	holetest t_truncate_self t_mmap_dio af_unix t_mmap_stale_pmd
-+	holetest t_truncate_self t_mmap_dio af_unix t_mmap_stale_pmd fsync-err
- 
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-diff --git a/src/fsync-err.c b/src/fsync-err.c
-new file mode 100644
-index 000000000000..8ad27b3da3e7
---- /dev/null
-+++ b/src/fsync-err.c
-@@ -0,0 +1,138 @@
-+/*
-+ * fsync-err.c: test whether writeback errors are reported to all open fds
-+ * Copyright (c) 2017: Jeff Layton <jlayton@redhat.com>
-+ *
-+ * Open a file several times, write to it and then fsync. Flip dm_error over
-+ * to make the backing device stop working. Overwrite the same section and
-+ * call fsync on all fds and verify that we get errors on all of them. Then,
-+ * fsync one more time on all of them and verify that they return 0.
-+ */
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <stdlib.h>
-+#include <stdio.h>
-+#include <string.h>
-+#include <unistd.h>
-+
-+#define NUM_FDS	10
-+
-+static void usage() {
-+	fprintf(stderr, "Usage: fsync-err <filename>\n");
-+}
-+
-+int main(int argc, char **argv)
-+{
-+	int fd[NUM_FDS], ret, i;
-+	char *fname, *buf;
-+
-+	if (argc < 1) {
-+		usage();
-+		return 1;
-+	}
-+
-+	/* First argument is filename */
-+	fname = argv[1];
-+
-+	for (i = 0; i < NUM_FDS; ++i) {
-+		fd[i] = open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-+		if (fd[i] < 0) {
-+			printf("open of fd[%d] failed: %m\n", i);
-+			return 1;
-+		}
-+	}
-+
-+	buf = "foobar";
-+	for (i = 0; i < NUM_FDS; ++i) {
-+		ret = write(fd[i], buf, strlen(buf) + 1);
-+		if (ret < 0) {
-+			printf("First write on fd[%d] failed: %m\n", i);
-+			return 1;
-+		}
-+	}
-+
-+	for (i = 0; i < NUM_FDS; ++i) {
-+		ret = fsync(fd[i]);
-+		if (ret < 0) {
-+			printf("First fsync on fd[%d] failed: %m\n", i);
-+			return 1;
-+		}
-+	}
-+
-+	/* flip the device to non-working mode */
-+	ret = system("./tools/dmerror load_error_table");
-+	if (ret) {
-+		if (WIFEXITED(ret))
-+			printf("system: program exited: %d\n",
-+					WEXITSTATUS(ret));
-+		else
-+			printf("system: 0x%x\n", (int)ret);
-+
-+		return 1;
-+	}
-+
-+	for (i = 0; i < NUM_FDS; ++i) {
-+		ret = write(fd[i], buf, strlen(buf) + 1);
-+		if (ret < 0) {
-+			printf("Second write on fd[%d] failed: %m\n", i);
-+			return 1;
-+		}
-+	}
-+
-+	for (i = 0; i < NUM_FDS; ++i) {
-+		ret = fsync(fd[i]);
-+		/* Now, we EXPECT the error! */
-+		if (ret >= 0) {
-+			printf("Success on second fsync on fd[%d]!\n", i);
-+			return 1;
-+		}
-+	}
-+
-+	/* flip the device to working mode */
-+	ret = system("./tools/dmerror load_working_table");
-+	if (ret) {
-+		if (WIFEXITED(ret))
-+			printf("system: program exited: %d\n",
-+					WEXITSTATUS(ret));
-+		else
-+			printf("system: 0x%x\n", (int)ret);
-+
-+		return 1;
-+	}
-+
-+	for (i = 0; i < NUM_FDS; ++i) {
-+		ret = fsync(fd[i]);
-+		if (ret < 0) {
-+			/* Now the error should be clear */
-+			printf("Third fsync on fd[%d] failed: %m\n", i);
-+			return 1;
-+		}
-+	}
-+
-+	/*
-+	 * reopen each file to guarantee the same one stays in core. fsync
-+	 * each one to make sure we see no errors.
-+	 */
-+	for (i = 0; i < NUM_FDS; ++i) {
-+		ret = close(fd[i]);
-+		if (ret < 0) {
-+			printf("Close of fd[%d] returned unexpected error: %m\n", i);
-+			return 1;
-+		}
-+		fd[i] = open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-+		if (fd[i] < 0) {
-+			printf("Second open of fd[%d] failed: %m\n", i);
-+			return 1;
-+		}
-+		ret = fsync(fd[i]);
-+		if (ret < 0) {
-+			/* New opens should not return an error */
-+			printf("First fsync after reopen of fd[%d] failed: %m\n", i);
-+			return 1;
-+		}
-+	}
-+
-+	printf("Test passed!\n");
-+	return 0;
-+}
-diff --git a/tests/generic/999 b/tests/generic/999
-new file mode 100755
-index 000000000000..57e093b43416
---- /dev/null
-+++ b/tests/generic/999
-@@ -0,0 +1,75 @@
-+#! /bin/bash
-+# FS QA Test No. 999
-+#
-+# Open a file several times, write to it, fsync on all fds and make sure that
-+# they all return 0. Change the device to start throwing errors. Write again
-+# on all fds and fsync on all fds. Ensure that we get errors on all of them.
-+# Then fsync on all one last time and verify that all return 0.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017, Jeff Layton <jlayton@redhat.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.* $testdir
-+    _dmerror_cleanup
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmerror
-+
-+# real QA test starts here
-+_supported_os Linux
-+_require_scratch
-+_require_logdev
-+_require_dm_target error
-+
-+rm -f $seqres.full
-+
-+echo "Format and mount"
-+$XFS_IO_PROG -d -c "pwrite -S 0x7c -b 1048576 0 $((64 * 1048576))" $SCRATCH_DEV >> $seqres.full
-+_scratch_mkfs > $seqres.full 2>&1
-+_dmerror_init
-+_dmerror_mount >> $seqres.full 2>&1
-+_dmerror_unmount
-+_dmerror_mount
-+
-+_require_fs_space $SCRATCH_MNT 8192
-+
-+testfile=$SCRATCH_MNT/fsync-err-test
-+
-+$here/src/fsync-err $testfile
-+
-+# success, all done
-+_dmerror_load_working_table
-+_dmerror_unmount
-+_dmerror_cleanup
-+_repair_scratch_fs >> $seqres.full
-+status=0
-+exit
-diff --git a/tests/generic/999.out b/tests/generic/999.out
-new file mode 100644
-index 000000000000..2e48492ff6d1
---- /dev/null
-+++ b/tests/generic/999.out
-@@ -0,0 +1,3 @@
-+QA output created by 999
-+Format and mount
-+Test passed!
-diff --git a/tests/generic/group b/tests/generic/group
-index 9fc7f9d419a8..854c39277dd5 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -432,3 +432,4 @@
- 427 auto quick aio rw
- 428 auto quick
- 429 auto encrypt
-+999 auto quick
-diff --git a/tools/dmerror b/tools/dmerror
-new file mode 100755
-index 000000000000..fc0de295e778
---- /dev/null
-+++ b/tools/dmerror
-@@ -0,0 +1,47 @@
-+#!/bin/bash
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017, Jeff Layton <jlayton@redhat.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+. ./common/rc
-+. ./common/dmerror
-+
-+_dmerror_setup
-+
-+case $1 in
-+cleanup)
-+	_dmerror_cleanup
-+	;;
-+init)
-+	_dmerror_init
-+	;;
-+load_error_table)
-+	_dmerror_load_error_table
-+	;;
-+load_working_table)
-+	_dmerror_load_working_table
-+	;;
-+mount)
-+	_dmerror_mount
-+	;;
-+*)
-+	echo "Usage: $0 {init|cleanup|load_error_table|load_working_table|mount}"
-+	exit 1
-+	;;
-+esac
-+
-+status=0
-+exit
+
 -- 
-2.9.3
-
+Jeff Layton <jlayton@redhat.com>
