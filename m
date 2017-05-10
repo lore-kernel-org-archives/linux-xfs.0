@@ -1,99 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:37253 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:40411 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751430AbdEJOSX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 10:18:23 -0400
-Date: Wed, 10 May 2017 07:18:21 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v4 13/27] lib: add errseq_t type and infrastructure for
- handling it
-Message-ID: <20170510141821.GB1590@bombadil.infradead.org>
-References: <20170509154930.29524-1-jlayton@redhat.com>
- <20170509154930.29524-14-jlayton@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170509154930.29524-14-jlayton@redhat.com>
+        with ESMTP id S1754206AbdEJSCp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 14:02:45 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 06/16] afs: switch to use uuid_t and uuid_gen
+Date: Wed, 10 May 2017 20:02:04 +0200
+Message-Id: <20170510180214.16852-7-hch@lst.de>
+In-Reply-To: <20170510180214.16852-1-hch@lst.de>
+References: <20170510180214.16852-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Tue, May 09, 2017 at 11:49:16AM -0400, Jeff Layton wrote:
-> +++ b/lib/errseq.c
-> @@ -0,0 +1,199 @@
-> +#include <linux/err.h>
-> +#include <linux/bug.h>
-> +#include <linux/atomic.h>
-> +#include <linux/errseq.h>
-> +
-> +/*
-> + * An errseq_t is a way of recording errors in one place, and allowing any
-> + * number of "subscribers" to tell whether it has changed since an arbitrary
-> + * time of their choosing.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/afs/cmservice.c | 46 +++++++++++++++++++++++-----------------------
+ fs/afs/internal.h  |  2 +-
+ fs/afs/main.c      |  4 ++--
+ 3 files changed, 26 insertions(+), 26 deletions(-)
 
-You use the word "time" in several places in the documentation, but I think
-it's clearer to say "sampling point" or "sample", since you're not using jiffies
-or nanoseconds.  For example, I'd phrase this paragraph this way:
+diff --git a/fs/afs/cmservice.c b/fs/afs/cmservice.c
+index 3062cceb5c2a..d4e77d12570c 100644
+--- a/fs/afs/cmservice.c
++++ b/fs/afs/cmservice.c
+@@ -350,7 +350,7 @@ static int afs_deliver_cb_init_call_back_state3(struct afs_call *call)
+ {
+ 	struct sockaddr_rxrpc srx;
+ 	struct afs_server *server;
+-	struct uuid_v1 *r;
++	uuid_t *r;
+ 	unsigned loop;
+ 	__be32 *b;
+ 	int ret;
+@@ -380,20 +380,20 @@ static int afs_deliver_cb_init_call_back_state3(struct afs_call *call)
+ 		}
+ 
+ 		_debug("unmarshall UUID");
+-		call->request = kmalloc(sizeof(struct uuid_v1), GFP_KERNEL);
++		call->request = kmalloc(sizeof(uuid_t), GFP_KERNEL);
+ 		if (!call->request)
+ 			return -ENOMEM;
+ 
+ 		b = call->buffer;
+ 		r = call->request;
+-		r->time_low			= b[0];
+-		r->time_mid			= htons(ntohl(b[1]));
+-		r->time_hi_and_version		= htons(ntohl(b[2]));
+-		r->clock_seq_hi_and_reserved 	= ntohl(b[3]);
+-		r->clock_seq_low		= ntohl(b[4]);
++		r->v1.time_low			= b[0];
++		r->v1.time_mid			= htons(ntohl(b[1]));
++		r->v1.time_hi_and_version	= htons(ntohl(b[2]));
++		r->v1.clock_seq_hi_and_reserved = ntohl(b[3]);
++		r->v1.clock_seq_low		= ntohl(b[4]);
+ 
+ 		for (loop = 0; loop < 6; loop++)
+-			r->node[loop] = ntohl(b[loop + 5]);
++			r->v1.node[loop] = ntohl(b[loop + 5]);
+ 
+ 		call->offset = 0;
+ 		call->unmarshall++;
+@@ -453,7 +453,7 @@ static int afs_deliver_cb_probe(struct afs_call *call)
+ static void SRXAFSCB_ProbeUuid(struct work_struct *work)
+ {
+ 	struct afs_call *call = container_of(work, struct afs_call, work);
+-	struct uuid_v1 *r = call->request;
++	uuid_t *r = call->request;
+ 
+ 	struct {
+ 		__be32	match;
+@@ -476,7 +476,7 @@ static void SRXAFSCB_ProbeUuid(struct work_struct *work)
+  */
+ static int afs_deliver_cb_probe_uuid(struct afs_call *call)
+ {
+-	struct uuid_v1 *r;
++	uuid_t *r;
+ 	unsigned loop;
+ 	__be32 *b;
+ 	int ret;
+@@ -502,20 +502,20 @@ static int afs_deliver_cb_probe_uuid(struct afs_call *call)
+ 		}
+ 
+ 		_debug("unmarshall UUID");
+-		call->request = kmalloc(sizeof(struct uuid_v1), GFP_KERNEL);
++		call->request = kmalloc(sizeof(uuid_t), GFP_KERNEL);
+ 		if (!call->request)
+ 			return -ENOMEM;
+ 
+ 		b = call->buffer;
+ 		r = call->request;
+-		r->time_low			= b[0];
+-		r->time_mid			= htons(ntohl(b[1]));
+-		r->time_hi_and_version		= htons(ntohl(b[2]));
+-		r->clock_seq_hi_and_reserved 	= ntohl(b[3]);
+-		r->clock_seq_low		= ntohl(b[4]);
++		r->v1.time_low			= b[0];
++		r->v1.time_mid			= htons(ntohl(b[1]));
++		r->v1.time_hi_and_version	= htons(ntohl(b[2]));
++		r->v1.clock_seq_hi_and_reserved = ntohl(b[3]);
++		r->v1.clock_seq_low		= ntohl(b[4]);
+ 
+ 		for (loop = 0; loop < 6; loop++)
+-			r->node[loop] = ntohl(b[loop + 5]);
++			r->v1.node[loop] = ntohl(b[loop + 5]);
+ 
+ 		call->offset = 0;
+ 		call->unmarshall++;
+@@ -568,13 +568,13 @@ static void SRXAFSCB_TellMeAboutYourself(struct work_struct *work)
+ 	memset(&reply, 0, sizeof(reply));
+ 	reply.ia.nifs = htonl(nifs);
+ 
+-	reply.ia.uuid[0] = afs_uuid.time_low;
+-	reply.ia.uuid[1] = htonl(ntohs(afs_uuid.time_mid));
+-	reply.ia.uuid[2] = htonl(ntohs(afs_uuid.time_hi_and_version));
+-	reply.ia.uuid[3] = htonl((s8) afs_uuid.clock_seq_hi_and_reserved);
+-	reply.ia.uuid[4] = htonl((s8) afs_uuid.clock_seq_low);
++	reply.ia.uuid[0] = afs_uuid.v1.time_low;
++	reply.ia.uuid[1] = htonl(ntohs(afs_uuid.v1.time_mid));
++	reply.ia.uuid[2] = htonl(ntohs(afs_uuid.v1.time_hi_and_version));
++	reply.ia.uuid[3] = htonl((s8) afs_uuid.v1.clock_seq_hi_and_reserved);
++	reply.ia.uuid[4] = htonl((s8) afs_uuid.v1.clock_seq_low);
+ 	for (loop = 0; loop < 6; loop++)
+-		reply.ia.uuid[loop + 5] = htonl((s8) afs_uuid.node[loop]);
++		reply.ia.uuid[loop + 5] = htonl((s8) afs_uuid.v1.node[loop]);
+ 
+ 	if (ifs) {
+ 		for (loop = 0; loop < nifs; loop++) {
+diff --git a/fs/afs/internal.h b/fs/afs/internal.h
+index 393672997cc2..7de45c8686a2 100644
+--- a/fs/afs/internal.h
++++ b/fs/afs/internal.h
+@@ -544,7 +544,7 @@ extern int afs_drop_inode(struct inode *);
+  * main.c
+  */
+ extern struct workqueue_struct *afs_wq;
+-extern struct uuid_v1 afs_uuid;
++extern uuid_t afs_uuid;
+ 
+ /*
+  * misc.c
+diff --git a/fs/afs/main.c b/fs/afs/main.c
+index 51d7d17bca57..75b3d3a8b1ba 100644
+--- a/fs/afs/main.c
++++ b/fs/afs/main.c
+@@ -31,7 +31,7 @@ static char *rootcell;
+ module_param(rootcell, charp, 0);
+ MODULE_PARM_DESC(rootcell, "root AFS cell name and VL server IP addr list");
+ 
+-struct uuid_v1 afs_uuid;
++uuid_t afs_uuid;
+ struct workqueue_struct *afs_wq;
+ 
+ /*
+@@ -43,7 +43,7 @@ static int __init afs_init(void)
+ 
+ 	printk(KERN_INFO "kAFS: Red Hat AFS client v0.1 registering.\n");
+ 
+-	generate_random_uuid((unsigned char *)&afs_uuid);
++	uuid_gen(&afs_uuid);
+ 
+ 	/* create workqueue */
+ 	ret = -ENOMEM;
+-- 
+2.11.0
 
- * An errseq_t is a way of recording errors in one place, and allowing any
- * number of "subscribers" to tell whether it has changed since they last
- * sampled it.
-
-> + * The general idea is for consumers to sample an errseq_t value at a
-> + * particular point in time. Later, that value can be used to tell whether any
-> + * new errors have occurred since that time.
-
- * The general idea is for consumers to sample an errseq_t value.  That
- * value can be used to tell whether any new errors have occurred since
- * the last time it was sampled.
-
-> +/* The "ones" bit for the counter */
-
-Maybe "The lowest bit of the counter"?
-
-> +/**
-> + * errseq_check - has an error occurred since a particular point in time?
-
-"has an error occurred since the last time it was sampled"
-
-> +/**
-> + * errseq_check_and_advance - check an errseq_t and advance it to the current value
-> + * @eseq: pointer to value being checked reported
-
-"value being checked reported"?
-
-> +int errseq_check_and_advance(errseq_t *eseq, errseq_t *since)
-> +{
-> +	int err = 0;
-> +	errseq_t old, new;
-> +
-> +	/*
-> +	 * Most callers will want to use the inline wrapper to check this,
-> +	 * so that the common case of no error is handled without needing
-> +	 * to lock.
-> +	 */
-> +	old = READ_ONCE(*eseq);
-> +	if (old != *since) {
-> +		/*
-> +		 * Set the flag and try to swap it into place if it has
-> +		 * changed.
-> +		 *
-> +		 * We don't care about the outcome of the swap here. If the
-> +		 * swap doesn't occur, then it has either been updated by a
-> +		 * writer who is bumping the seq count anyway, or another
-> +		 * reader who is just setting the "seen" flag. Either outcome
-> +		 * is OK, and we can advance "since" and return an error based
-> +		 * on what we have.
-> +		 */
-> +		new = old | ERRSEQ_SEEN;
-> +		if (new != old)
-> +			cmpxchg(eseq, old, new);
-> +		*since = new;
-> +		err = -(new & MAX_ERRNO);
-> +	}
-
-I probably need to read through the patchset some more to understand this.
-Naively, surely "since" should be updated to the current value of 'eseq'
-if we failed the cmpxchg()?
