@@ -1,46 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43972 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751741AbdEJIMk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 May 2017 04:12:40 -0400
-Date: Wed, 10 May 2017 10:12:35 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: XFS and multiple mounts protection (aka preventing multiple
-  mounts)
-Message-ID: <20170510081235.qjez42rvpdkzspf5@eorzea.usersys.redhat.com>
-References: <3cf2f8cd-d18f-2a65-c540-5527a366d2fb@assyoma.it>
- <20170505113219.dovbzhbmt6e3ooem@eorzea.usersys.redhat.com>
- <2e45f5c8-0b8f-ef99-a8a5-cd3ebb89911e@assyoma.it>
- <20170505122547.6gvqmdoxfaqxh3mi@eorzea.usersys.redhat.com>
- <c5e42df06ff981bfd6a72cbc12f10d43@assyoma.it>
+Received: from bombadil.infradead.org ([65.50.211.133]:37253 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751430AbdEJOSX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 10:18:23 -0400
+Date: Wed, 10 May 2017 07:18:21 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v4 13/27] lib: add errseq_t type and infrastructure for
+ handling it
+Message-ID: <20170510141821.GB1590@bombadil.infradead.org>
+References: <20170509154930.29524-1-jlayton@redhat.com>
+ <20170509154930.29524-14-jlayton@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c5e42df06ff981bfd6a72cbc12f10d43@assyoma.it>
+In-Reply-To: <20170509154930.29524-14-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: linux-xfs@vger.kernel.org
+To: Jeff Layton <jlayton@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
 
-On Fri, May 05, 2017 at 03:19:45PM +0200, Gionatan Danti wrote:
-> Il 05-05-2017 14:25 Carlos Maiolino ha scritto:
-> > 
-> > As far as I know, don't, I can always be wrong, but, I re-checked xfs
-> > superblock, and could not find anything that actually protects it.
-> > 
-> 
-> So, how do you protect iSCSI targets from erroneous multiple mount? Do you
-> protect them only at the target/lun level (eg: access list on the
-> target/lun)?
+On Tue, May 09, 2017 at 11:49:16AM -0400, Jeff Layton wrote:
+> +++ b/lib/errseq.c
+> @@ -0,0 +1,199 @@
+> +#include <linux/err.h>
+> +#include <linux/bug.h>
+> +#include <linux/atomic.h>
+> +#include <linux/errseq.h>
+> +
+> +/*
+> + * An errseq_t is a way of recording errors in one place, and allowing any
+> + * number of "subscribers" to tell whether it has changed since an arbitrary
+> + * time of their choosing.
 
-Well, having a planned infra-structure is a way, and using UUIDs for mounting
-the filesystems are two good ways to avoid mistakes with multiple mounts. UUIDs
-are unique for each filesystem, so even if the device name changes between
-boots, you can still be sure to mount the correct filesystem on the correct
-system by using their UUIDs
+You use the word "time" in several places in the documentation, but I think
+it's clearer to say "sampling point" or "sample", since you're not using jiffies
+or nanoseconds.  For example, I'd phrase this paragraph this way:
 
-Cheers
+ * An errseq_t is a way of recording errors in one place, and allowing any
+ * number of "subscribers" to tell whether it has changed since they last
+ * sampled it.
 
--- 
-Carlos
+> + * The general idea is for consumers to sample an errseq_t value at a
+> + * particular point in time. Later, that value can be used to tell whether any
+> + * new errors have occurred since that time.
+
+ * The general idea is for consumers to sample an errseq_t value.  That
+ * value can be used to tell whether any new errors have occurred since
+ * the last time it was sampled.
+
+> +/* The "ones" bit for the counter */
+
+Maybe "The lowest bit of the counter"?
+
+> +/**
+> + * errseq_check - has an error occurred since a particular point in time?
+
+"has an error occurred since the last time it was sampled"
+
+> +/**
+> + * errseq_check_and_advance - check an errseq_t and advance it to the current value
+> + * @eseq: pointer to value being checked reported
+
+"value being checked reported"?
+
+> +int errseq_check_and_advance(errseq_t *eseq, errseq_t *since)
+> +{
+> +	int err = 0;
+> +	errseq_t old, new;
+> +
+> +	/*
+> +	 * Most callers will want to use the inline wrapper to check this,
+> +	 * so that the common case of no error is handled without needing
+> +	 * to lock.
+> +	 */
+> +	old = READ_ONCE(*eseq);
+> +	if (old != *since) {
+> +		/*
+> +		 * Set the flag and try to swap it into place if it has
+> +		 * changed.
+> +		 *
+> +		 * We don't care about the outcome of the swap here. If the
+> +		 * swap doesn't occur, then it has either been updated by a
+> +		 * writer who is bumping the seq count anyway, or another
+> +		 * reader who is just setting the "seen" flag. Either outcome
+> +		 * is OK, and we can advance "since" and return an error based
+> +		 * on what we have.
+> +		 */
+> +		new = old | ERRSEQ_SEEN;
+> +		if (new != old)
+> +			cmpxchg(eseq, old, new);
+> +		*since = new;
+> +		err = -(new & MAX_ERRNO);
+> +	}
+
+I probably need to read through the patchset some more to understand this.
+Naively, surely "since" should be updated to the current value of 'eseq'
+if we failed the cmpxchg()?
