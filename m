@@ -1,126 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:36807 "EHLO
-        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753554AbdEIQYU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 May 2017 12:24:20 -0400
-Received: by mail-qk0-f170.google.com with SMTP id u75so5414136qka.3
-        for <linux-xfs@vger.kernel.org>; Tue, 09 May 2017 09:24:20 -0700 (PDT)
-Message-ID: <1494347057.2659.10.camel@redhat.com>
-Subject: Re: [PATCH v4 25/27] Documentation: flesh out the section in
- vfs.txt on storing and reporting writeback errors
-From: Jeff Layton <jlayton@redhat.com>
-Date: Tue, 09 May 2017 12:24:17 -0400
-In-Reply-To: <20170509154930.29524-26-jlayton@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:57893 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752228AbdEJLOu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 May 2017 07:14:50 -0400
+Date: Wed, 10 May 2017 13:14:46 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v4 12/27] cifs: set mapping error when page writeback
+ fails in writepage or launder_pages
+Message-ID: <20170510111446.GD25137@quack2.suse.cz>
 References: <20170509154930.29524-1-jlayton@redhat.com>
-         <20170509154930.29524-26-jlayton@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+ <20170509154930.29524-13-jlayton@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170509154930.29524-13-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org
-Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com, Michael Kerrisk <mtk.manpages@gmail.com>
+To: Jeff Layton <jlayton@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
 
-On Tue, 2017-05-09 at 11:49 -0400, Jeff Layton wrote:
-> I waxed a little loquacious here, but I figured that more detail was
-> better, and writeback error handling is so hard to get right.
-> 
-> Cc: Jan Kara <jack@suse.cz>
+On Tue 09-05-17 11:49:15, Jeff Layton wrote:
 > Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Looks good to me. You can add:
+
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
 > ---
->  Documentation/filesystems/vfs.txt | 54 ++++++++++++++++++++++++++++++++-------
->  1 file changed, 45 insertions(+), 9 deletions(-)
+>  fs/cifs/file.c | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
 > 
-> diff --git a/Documentation/filesystems/vfs.txt b/Documentation/filesystems/vfs.txt
-> index f201a77873f7..382190a872e5 100644
-> --- a/Documentation/filesystems/vfs.txt
-> +++ b/Documentation/filesystems/vfs.txt
-> @@ -576,12 +576,46 @@ should clear PG_Dirty and set PG_Writeback.  It can be actually
->  written at any point after PG_Dirty is clear.  Once it is known to be
->  safe, PG_Writeback is cleared.
->  
-> -If there is an error during writeback, then the address_space should be
-> -marked with an error (typically using mapping_set_error), in order to
-> -ensure that the error can later be reported to the application when an
-> -fsync is issued.
-> -
-> -Writeback makes use of a writeback_control structure...
-> +Writeback makes use of a writeback_control structure to direct the
-> +operations.  This gives the the writepage and writepages operations some
-> +information about the nature of and reason for the writeback request,
-> +and the constraints under which it is being done.  It is also used to
-> +return information back to the caller about the result of a writepage or
-> +writepages request.
-> +
-> +Handling errors during writeback
-> +--------------------------------
-> +Most applications that utilize the pagecache will periodically call
-> +fsync to ensure that data written has made it to the backing store.
-> +When there is an error during writeback, that error should be reported
-> +when fsync is called.  After an error has been reported to fsync,
-> +subsequent fsync calls on the same file descriptor should return 0,
-> +unless further writeback errors have occurred since the previous fsync.
-> +
-> +Ideally, the kernel would report it only on file descriptions on which
-> +writes were done that subsequently failed to be written back.  The
-> +generic pagecache infrastructure does not track the file descriptions
-> +that have dirtied each individual page however, so determining which
-> +file descriptors should get back an error is not possible.
-> +
-> +Instead, the generic writeback error tracking infrastructure in the
-> +kernel settles for reporting errors to fsync on all file descriptions
-> +that were open at the time that the error occurred.  In a situation with
-> +multiple writers, all of them will get back an error on a subsequent fsync,
-> +even if all of the writes done through that particular file descriptor
-> +succeeded (or even if there were no writes on that file descriptor at all).
-> +
-
-(cc'ing Michael Kerrisk)
-
-Once this is closer to merge, I think we'll also want to update the
-fsync(2) manpage with something similar to the 3 paragraphs above, and
-also with an explanation of the behavior that applications can expect
-from earlier kernels.
-
-> +Filesystems that wish to use this infrastructure should call
-> +mapping_set_error to record the error in the address_space when it
-> +occurs.  The generic vfs code will then handle reporting the error when
-> +fsync is called, even if the fsync file operation returned 0.
-> +
-> +Filesystems are free to track errors internally if they choose (i.e. if
-> +they do keep track of how the pages were dirtied), but they should aim
-> +to provide the same (or better) error reporting semantics for when there
-> +are multiple writers.  Those filesystems should avoid calling
-> +mapping_set_error in order to ensure that errors stored in the mapping
-> +aren't improperly reported by the generic filesystem code.
->  
->  struct address_space_operations
->  -------------------------------
-> @@ -810,7 +844,8 @@ struct address_space_operations {
->  The File Object
->  ===============
->  
-> -A file object represents a file opened by a process.
-> +A file object represents a file opened by a process. This is also known
-> +as an "open file description" in POSIX parlance.
->  
->  
->  struct file_operations
-> @@ -893,9 +928,10 @@ otherwise noted.
->  
->    release: called when the last reference to an open file is closed
->  
-> -  fsync: called by the fsync(2) system call. Errors that were previously
-> +  fsync: called by the fsync(2) system call.  Errors that were previously
->  	 recorded using mapping_set_error will automatically be returned to
-> -	 the application and the file's error sequence advanced.
-> +	 the application and the struct file's error sequence advanced.
-> +	 See the section above on handling writeback errors.
->  
->    fasync: called by the fcntl(2) system call when asynchronous
->  	(non-blocking) mode is enabled for a file
-
-
+> diff --git a/fs/cifs/file.c b/fs/cifs/file.c
+> index 21d404535739..0bee7f8d91ad 100644
+> --- a/fs/cifs/file.c
+> +++ b/fs/cifs/file.c
+> @@ -2234,14 +2234,16 @@ cifs_writepage_locked(struct page *page, struct writeback_control *wbc)
+>  	set_page_writeback(page);
+>  retry_write:
+>  	rc = cifs_partialpagewrite(page, 0, PAGE_SIZE);
+> -	if (rc == -EAGAIN && wbc->sync_mode == WB_SYNC_ALL)
+> -		goto retry_write;
+> -	else if (rc == -EAGAIN)
+> +	if (rc == -EAGAIN) {
+> +		if (wbc->sync_mode == WB_SYNC_ALL)
+> +			goto retry_write;
+>  		redirty_page_for_writepage(wbc, page);
+> -	else if (rc != 0)
+> +	} else if (rc != 0) {
+>  		SetPageError(page);
+> -	else
+> +		mapping_set_error(page->mapping, rc);
+> +	} else {
+>  		SetPageUptodate(page);
+> +	}
+>  	end_page_writeback(page);
+>  	put_page(page);
+>  	free_xid(xid);
+> -- 
+> 2.9.3
+> 
+> 
 -- 
-Jeff Layton <jlayton@redhat.com>
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
