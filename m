@@ -1,42 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:60800 "EHLO fieldses.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753151AbdEJRXX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 May 2017 13:23:23 -0400
-Date: Wed, 10 May 2017 13:23:22 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: Locking problems with Linux 4.9 with NFSD and `fs/iomap.c`
-Message-ID: <20170510172322.GA8470@fieldses.org>
-References: <de171adc29600902515d1424fd800678@molgen.mpg.de>
- <20170508131843.GB29840@bfoster.bfoster>
- <90423117-4c49-5f61-2dcf-abf6d77c7ba3@molgen.mpg.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <90423117-4c49-5f61-2dcf-abf6d77c7ba3@molgen.mpg.de>
+Received: from bombadil.infradead.org ([65.50.211.133]:38528 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754295AbdEJSCx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 14:02:53 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 13/16] block: remove blk_part_pack_uuid
+Date: Wed, 10 May 2017 20:02:11 +0200
+Message-Id: <20170510180214.16852-14-hch@lst.de>
+In-Reply-To: <20170510180214.16852-1-hch@lst.de>
+References: <20170510180214.16852-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Paul Menzel <pmenzel@molgen.mpg.de>
-Cc: Brian Foster <bfoster@redhat.com>, linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org, it+linux-nfs@molgen.mpg.de, Christoph Hellwig <hch@lst.de>, Jeff Layton <jlayton@poochiereds.net>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Wed, May 10, 2017 at 11:08:52AM +0200, Paul Menzel wrote:
-> On 05/08/17 15:18, Brian Foster wrote:
-> >>NFS doesn’t respond to a null call.
-> >
-> >What exactly is a NULL call?
-> 
-> Sorry for not making that clear for non-NFS people. From *NFS
-> Version 3 Protocol Specification* [1]:
-> 
-> >Procedure NULL does not do any work. It is made available to
-> >allow server response testing and timing.
+This helper was only used by IMA of all things, which would get spurious
+errors if CONFIG_BLOCK is disabled.  Just opencode the call there.
 
-NFSD has a fixed number of threads for processing requests, so if one of
-them hangs in the filesystem while holding a lock, all of them are
-likely to eventually end up waiting for that lock, and there will be
-none left even to answer NULL requests.  So this is a pretty normal
-symptom of a deadlock or similar problem.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ include/linux/genhd.h               | 11 -----------
+ security/integrity/ima/ima_policy.c |  6 ++----
+ 2 files changed, 2 insertions(+), 15 deletions(-)
 
---b.
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index acff9437e5c3..e619fae2f037 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -219,12 +219,6 @@ static inline struct gendisk *part_to_disk(struct hd_struct *part)
+ 	return NULL;
+ }
+ 
+-static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
+-{
+-	uuid_be_to_bin(uuid_str, (uuid_be *)to);
+-	return 0;
+-}
+-
+ static inline int disk_max_parts(struct gendisk *disk)
+ {
+ 	if (disk->flags & GENHD_FL_EXT_DEVT)
+@@ -736,11 +730,6 @@ static inline dev_t blk_lookup_devt(const char *name, int partno)
+ 	dev_t devt = MKDEV(0, 0);
+ 	return devt;
+ }
+-
+-static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
+-{
+-	return -EINVAL;
+-}
+ #endif /* CONFIG_BLOCK */
+ 
+ #endif /* _LINUX_GENHD_H */
+diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
+index 3ab1067db624..4d1178610145 100644
+--- a/security/integrity/ima/ima_policy.c
++++ b/security/integrity/ima/ima_policy.c
+@@ -717,10 +717,8 @@ static int ima_parse_rule(char *rule, struct ima_rule_entry *entry)
+ 				break;
+ 			}
+ 
+-			result = blk_part_pack_uuid(args[0].from,
+-						    entry->fsuuid);
+-			if (!result)
+-				entry->flags |= IMA_FSUUID;
++			uuid_to_bin(args[0].from, (uuid_t *)entry->fsuuid);
++			entry->flags |= IMA_FSUUID;
+ 			break;
+ 		case Opt_uid_gt:
+ 		case Opt_euid_gt:
+-- 
+2.11.0
+
