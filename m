@@ -1,39 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53686 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751123AbdEJMsj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 08:48:39 -0400
-Date: Wed, 10 May 2017 05:48:36 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v4 06/27] fs: check for writeback errors after syncing
- out buffers in generic_file_fsync
-Message-ID: <20170510124836.GA1590@bombadil.infradead.org>
-References: <20170509154930.29524-1-jlayton@redhat.com>
- <20170509154930.29524-7-jlayton@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170509154930.29524-7-jlayton@redhat.com>
+Received: from mga06.intel.com ([134.134.136.31]:25019 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753860AbdEJP4R (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 May 2017 11:56:17 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 3/3] (to be folded into): block: remove blk_part_pack_uuid
+Date: Wed, 10 May 2017 18:56:12 +0300
+Message-Id: <20170510155612.55870-3-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20170510155612.55870-1-andriy.shevchenko@linux.intel.com>
+References: <20170510155612.55870-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-On Tue, May 09, 2017 at 11:49:09AM -0400, Jeff Layton wrote:
-> ext2 currently does a test+clear of the AS_EIO flag, which is
-> is problematic for some coming changes.
-> 
-> What we really need to do instead is call filemap_check_errors
-> in __generic_file_fsync after syncing out the buffers. That
-> will be sufficient for this case, and help other callers detect
-> these errors properly as well.
-> 
-> With that, we don't need to twiddle it in ext2.
-> 
-> Suggested-by: Jan Kara <jack@suse.cz>
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ security/integrity/ima/ima_policy.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Reviewed-by: Matthew Wilcox <mawilcox@microsoft.com>
+diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
+index 626a26d98ffd..659dbcc83d2f 100644
+--- a/security/integrity/ima/ima_policy.c
++++ b/security/integrity/ima/ima_policy.c
+@@ -716,8 +716,9 @@ static int ima_parse_rule(char *rule, struct ima_rule_entry *entry)
+ 				break;
+ 			}
+ 
+-			uuid_to_bin(args[0].from, &entry->fsuuid);
+-			entry->flags |= IMA_FSUUID;
++			result = uuid_to_bin(args[0].from, &entry->fsuuid);
++			if (!result)
++				entry->flags |= IMA_FSUUID;
+ 			break;
+ 		case Opt_uid_gt:
+ 		case Opt_euid_gt:
+-- 
+2.11.0
+
