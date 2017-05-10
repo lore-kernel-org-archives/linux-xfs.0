@@ -1,65 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f176.google.com ([209.85.216.176]:35731 "EHLO
-        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752527AbdEJL3W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 07:29:22 -0400
-Received: by mail-qt0-f176.google.com with SMTP id n4so24929166qte.2
-        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2017 04:29:22 -0700 (PDT)
-Message-ID: <1494415759.2688.3.camel@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:59374 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752648AbdEJLek (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 May 2017 07:34:40 -0400
+Date: Wed, 10 May 2017 13:34:30 +0200
+From: Jan Kara <jack@suse.cz>
 Subject: Re: [PATCH v4 13/27] lib: add errseq_t type and infrastructure for
  handling it
-From: Jeff Layton <jlayton@redhat.com>
-Date: Wed, 10 May 2017 07:29:19 -0400
-In-Reply-To: <87inl9n0wu.fsf@notabene.neil.brown.name>
+Message-ID: <20170510113430.GE25137@quack2.suse.cz>
 References: <20170509154930.29524-1-jlayton@redhat.com>
-         <20170509154930.29524-14-jlayton@redhat.com>
-         <87inl9n0wu.fsf@notabene.neil.brown.name>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+ <20170509154930.29524-14-jlayton@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170509154930.29524-14-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: NeilBrown <neil@brown.name>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org
-Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: Jeff Layton <jlayton@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
 
-On Wed, 2017-05-10 at 08:03 +1000, NeilBrown wrote:
-> On Tue, May 09 2017, Jeff Layton wrote:
+On Tue 09-05-17 11:49:16, Jeff Layton wrote:
+> An errseq_t is a way of recording errors in one place, and allowing any
+> number of "subscribers" to tell whether an error has been set again
+> since a previous time.
 > 
-> > An errseq_t is a way of recording errors in one place, and allowing any
-> > number of "subscribers" to tell whether an error has been set again
-> > since a previous time.
-> > 
-> > It's implemented as an unsigned 32-bit value that is managed with atomic
-> > operations. The low order bits are designated to hold an error code
-> > (max size of MAX_ERRNO). The upper bits are used as a counter.
-> > 
-> > The API works with consumers sampling an errseq_t value at a particular
-> > point in time. Later, that value can be used to tell whether new errors
-> > have been set since that time.
-> > 
-> > Note that there is a 1 in 512k risk of collisions here if new errors
-> > are being recorded frequently, since we have so few bits to use as a
-> > counter. To mitigate this, one bit is used as a flag to tell whether the
-> > value has been sampled since a new value was recorded. That allows
-> > us to avoid bumping the counter if no one has sampled it since it
-> > was last bumped.
-> > 
-> > Later patches will build on this infrastructure to change how writeback
-> > errors are tracked in the kernel.
-> > 
-> > Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> It's implemented as an unsigned 32-bit value that is managed with atomic
+> operations. The low order bits are designated to hold an error code
+> (max size of MAX_ERRNO). The upper bits are used as a counter.
 > 
-> I like that this is a separate lib/*.c - nicely structured too.
+> The API works with consumers sampling an errseq_t value at a particular
+> point in time. Later, that value can be used to tell whether new errors
+> have been set since that time.
 > 
-> Reviewed-by: NeilBrown <neilb@suse.com>
+> Note that there is a 1 in 512k risk of collisions here if new errors
+> are being recorded frequently, since we have so few bits to use as a
+> counter. To mitigate this, one bit is used as a flag to tell whether the
+> value has been sampled since a new value was recorded. That allows
+> us to avoid bumping the counter if no one has sampled it since it
+> was last bumped.
 > 
+> Later patches will build on this infrastructure to change how writeback
+> errors are tracked in the kernel.
 > 
+> Signed-off-by: Jeff Layton <jlayton@redhat.com>
 
-Thanks, yeah...it occurred to me that this scheme is not really specific
-to writeback errors. While I can't think of another use-case for
-errseq_t's right offhand, I think this makes for cleaner layering and
-should make it easy to use in other ways should they arise.
+The patch looks good to me. Feel free to add:
 
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+Just two nits below:
+...
+> +int errseq_check_and_advance(errseq_t *eseq, errseq_t *since)
+> +{
+> +	int err = 0;
+> +	errseq_t old, new;
+> +
+> +	/*
+> +	 * Most callers will want to use the inline wrapper to check this,
+> +	 * so that the common case of no error is handled without needing
+> +	 * to lock.
+> +	 */
+
+I'm not sure which locking you are speaking about here. Is the comment
+stale?
+
+> +	old = READ_ONCE(*eseq);
+> +	if (old != *since) {
+> +		/*
+> +		 * Set the flag and try to swap it into place if it has
+> +		 * changed.
+> +		 *
+> +		 * We don't care about the outcome of the swap here. If the
+> +		 * swap doesn't occur, then it has either been updated by a
+> +		 * writer who is bumping the seq count anyway, or another
+
+"bumping the seq count anyway" part is not quite true. Writer may see
+ERRSEQ_SEEN not set and so just update the error code and leave seq count
+as is. But since you compare full errseq_t for equality, this works out as
+designed...
+
+> +		 * reader who is just setting the "seen" flag. Either outcome
+> +		 * is OK, and we can advance "since" and return an error based
+> +		 * on what we have.
+> +		 */
+> +		new = old | ERRSEQ_SEEN;
+> +		if (new != old)
+> +			cmpxchg(eseq, old, new);
+> +		*since = new;
+> +		err = -(new & MAX_ERRNO);
+> +	}
+> +	return err;
+> +}
+> +EXPORT_SYMBOL(errseq_check_and_advance);
+
+								Honza
 -- 
-Jeff Layton <jlayton@redhat.com>
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
