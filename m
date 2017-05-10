@@ -1,148 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51060 "EHLO mx1.suse.de"
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:46815 "EHLO mx1.molgen.mpg.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755382AbdEKWqH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 May 2017 18:46:07 -0400
-Date: Fri, 12 May 2017 00:46:03 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 0/9] mkfs.xfs: add mkfs.xfs.conf support
-Message-ID: <20170511224603.GA28800@wotan.suse.de>
-References: <20170303231316.12716-1-mcgrof@kernel.org>
- <83a0df73-be0e-e3f9-df47-9b5c4a226498@sandeen.net>
- <20170309005130.GC14437@wotan.suse.de>
- <ac91cbba-83b7-31d4-0fc9-cdb52286acdf@sandeen.net>
- <20170309175750.GE14437@wotan.suse.de>
- <20170309223435.GT17542@dastard>
- <20170424050010.GD28800@wotan.suse.de>
- <CACj3i70n4RctOrBVY4Jh8+p7=8NzfPDMp0o4+05nE76AV7ofSA@mail.gmail.com>
- <CAB=NE6XoEoRo-iBP8vgC7shNQoK9j=unM6_YpDs1p26+i+wQ7A@mail.gmail.com>
+        id S1752294AbdEJJIy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 May 2017 05:08:54 -0400
+Subject: Re: Locking problems with Linux 4.9 with NFSD and `fs/iomap.c`
+References: <de171adc29600902515d1424fd800678@molgen.mpg.de>
+ <20170508131843.GB29840@bfoster.bfoster>
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Message-ID: <90423117-4c49-5f61-2dcf-abf6d77c7ba3@molgen.mpg.de>
+Date: Wed, 10 May 2017 11:08:52 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAB=NE6XoEoRo-iBP8vgC7shNQoK9j=unM6_YpDs1p26+i+wQ7A@mail.gmail.com>
+In-Reply-To: <20170508131843.GB29840@bfoster.bfoster>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Jan Tulak <jtulak@redhat.com>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, jack@suse.com, Jeff Mahoney <jeffm@suse.com>, okurz@suse.com, Libor Pechacek <lpechacek@suse.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org, it+linux-nfs@molgen.mpg.de, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>
 
-On Mon, Apr 24, 2017 at 01:25:03AM -0700, Luis R. Rodriguez wrote:
-> On Mon, Apr 24, 2017 at 12:26 AM, Jan Tulak <jtulak@redhat.com> wrote:
-> > On Mon, Apr 24, 2017 at 7:00 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> >> On Fri, Mar 10, 2017 at 09:34:35AM +1100, Dave Chinner wrote:
-> >>> On Thu, Mar 09, 2017 at 06:57:51PM +0100, Luis R. Rodriguez wrote:
-> >>> > I used reset_opt() and went with "last entry specified wins". From my
-> >>> > review the goal of the respecification was to ensure each opt param
-> >>> > parsed would not reset a prior set param, a paranoid measure, however
-> >>> > this clearly does not work well if we want to allow for "last entry
-> >>> > specified wins", or re-use the validators for a config file parsing
-> >>> > for a first shot a parsing entries.
-> >>>
-> >>> Which is essentially broken, because doing something like:
-> >>>
-> >>> -m crc =1 -m reflink=1 -m crc=0
-> >>>
-> >>> leaves you with an /invalid config/ because of the respecification
-> >>> of -m crc=0 and the order in which options are parsed and verified.
-> >>>
-> >>> Indeed, things like block and sector sizes are particularly nasty in
-> >>> this respect, because other options can be specified in block or
-> >>> sector units. SO things like:
-> >>>
-> >>> -s size=4k -b size=1s -s size=512 -d size=1000000s
-> >>>
-> >>> were considered valid. respecification of options like this is just
-> >>> borken, and even if we take "last specification wins" it still means
-> >>> that the block size specification is ambiguous and potentially
-> >>> incorrect depending on other options. Hence respecification of
-> >>> options is simply not allowed and post-processing of the options
-> >>> doesn't change that.
-> >>
-> >> We have to pick an approach and stick with, the above seems sensible.
-> >>
-> >>> i.e., the biggest issue with reusing the existing parsing code for
-> >>> the "default config" is that is doesn't just set default values - it
-> >>> prevents other options from being used.
-> >>
-> >> Right as per original design.
-> >>
-> >>> IOWs, the config file should
-> >>> set the default values in the option table, not set the options
-> >>> directly as happens on the command line....
-> >>
-> >> As I respin my patches addressing concerns an issue I see with this is current
-> >> semantics for "defaultval" is not that they will be the defaults, but rather
-> >> they will be the defaults *iff* the user did specify the option on the command
-> >> line but did not provide an explicit value. This for example would not allow
-> >
-> > Yes, a confusing name. I'm aware of it and have a fix to rename it to .flagval.
-> > It was part of my big set before and now I moved it into the smaller
-> > set I submitted
-> > on this Sunday. The same set adds a new field .value, which can be used to
-> > specify default as in "if the user does not specify this option at all".
+Dear Brian,
+
+
+On 05/08/17 15:18, Brian Foster wrote:
+> cc Christoph, who's more familiar with nfs and wrote the iomap bits.
+
+Thank you.
+
+> On Sun, May 07, 2017 at 09:09:49PM +0200, Paul Menzel wrote:
+
+>> There seems to be a regression in Linux 4.9 compared to 4.4. Maybe you have
+>> an idea.
+>>
+>> The system used 4.4.38 without issues, and was updated to 4.9.23 on April
+>> 24th. Since Friday, the NFS exports where not accessible anymore. Rebooting
+>> the system into 4.9.24, 4.9.24, and 4.9.25 didn’t change anything, and the
+>> system went into the some lock right away. Booting 4.4.38 fixed the issue
+>> though.
 > 
-> Terrific, thanks will use that.
+> The buffered write path was rewritten with the iomap mechanism around
+> 4.7 or so, so there's a pretty big functionality gap between 4.4 and
+> 4.9.
+> 
+>> Here is more information.
+>>
+>> NFS doesn’t respond to a null call.
+> 
+> What exactly is a NULL call?
 
-FWIW, I've looked at ways to address this without your future work Jan, ie
-backporting this feature, and ultimately have decided to *not* allow any
-command line overwrite for options specified in the configuration file. So
-for the backported versions of this feature a user will only be able to
-overwrite if the config file is commented out or removed.
+Sorry for not making that clear for non-NFS people. From *NFS Version 3 
+Protocol Specification* [1]:
 
-How we end up doing this upstream may differ given we may have a way to
-properly do sanity checks overall and treat "defaults" as real "defaults".
-But without such mechanisms implementing a sensible way to overwrite things
-in a compatible way was just crap.
+> Procedure NULL does not do any work. It is made available to
+> allow server response testing and timing.
 
-As such for the backported versions of this feature I'll make this big note
-on the man page:
+> Can this be reproduced easily?
 
-"""
-One  of  the uses of the configuration file is to enable distributions
-to provide mkfs.xfs(8) updates from a base distribution release and enable to
-create filesystems which are sure to remain supported and compatible. As such
-systems with a mkfs.xfs.conf(5) file present have very likely been well thought
-out, and  overriding configuration  file  defaults is discouraged unless you
-know what you are doing and are familiar with the associated risks.  If you
-know what you are doing, wish to waive compatibility, and wish to overwrite the
-configuration file provided the best option is to either remove or uncomment
-the  configuration  file  completely  as options cannot be overwritten on the
-command line.
-"""
+Unfortunately, we don’t know how to reproduce it. It seems to happen 
+after heavy input/output operations though.
 
-Also FWIW, I've been thinking more about the option checks and I think its
-worth clarifying we currently do things one way and if we really wish to
-enable command line overwrites (I'm not sure now its worth it) then we
-should reconsider how we do checks a bit differently.
+```
+$ sudo nfsstat -s
+Server rpc stats:
+calls      badcalls   badclnt    badauth    xdrcall
+15644232   0          0          0          0
 
-I. We currently have a set of options possible, list conflicts to check for
-if this option is set, and set min / max values for it. We also only
-allow setting an option once (respecification check).
+Server nfs v4:
+null         compound
+1071      0% 15643006 99%
 
-II. As we parse the command line we do sanity checks for respecification,
-conflicts, max/min, in that order.
+Server nfs v4 operations:
+op0-unused   op1-unused   op2-future   access       close        commit 
 
-III. Once we are done parsing all options we do our own internal checks
-within main() which are beyond the options checks.
+0         0% 0         0% 0         0% 87846     0% 42798     0% 50658 
+   0%
+create       delegpurge   delegreturn  getattr      getfh        link 
 
-Without considering Jan's work, if we wanted to allow overwrites, one example
-issue is that if you wanted to keep the respecification check is you'd only
-enable overwrites by enabling to disable a feature using the same option.  This
-sort of makes sense as otherwise things may be implicit but from a documentation
-and user experience perspective this seems very odd.
+2805      0% 0         0% 16866     0% 8271204  21% 82924     0% 0 
+   0%
+lock         lockt        locku        lookup       lookup_root  nverify 
 
-It seems more sensible for us to:
+0         0% 0         0% 0         0% 64424     0% 0         0% 0 
+   0%
+open         openattr     open_conf    open_dgrd    putfh 
+putpubfh
+53848     0% 0         0% 1081      0% 20        0% 15569041 39% 0 
+   0%
+putrootfh    read         readdir      readlink     remove       rename 
 
-I. Use the same options, but extracting system defaults and checking these
-defaults against conflicts checks, min/max checks (It seems Jan's work is
-moving in this direction).
+1072      0% 7187366  18% 2045      0% 73        0% 9116      0% 5836 
+   0%
+renew        restorefh    savefh       secinfo      setattr 
+setcltid
+72534     0% 0         0% 5836      0% 0         0% 21817     0% 1854 
+   0%
+setcltidconf verify       write        rellockowner bc_ctl 
+bind_conn
+1854      0% 0         0% 7794634  19% 0         0% 0         0% 0 
+   0%
+exchange_id  create_ses   destroy_ses  free_stateid getdirdeleg 
+getdevinfo
+0         0% 0         0% 0         0% 0         0% 0         0% 0 
+   0%
+getdevlist   layoutcommit layoutget    layoutreturn secinfononam 
+sequence
+0         0% 0         0% 0         0% 0         0% 0         0% 0 
+   0%
+set_ssv      test_stateid want_deleg   destroy_clid reclaim_comp
+0         0% 0         0% 0         0% 0         0% 0         0%
+```
 
-II. Do a full sanity check to ensure all mix of options makes sense, have
-this as a helper we can re-suse, verify_all_opts() or whatever. This would
-move a lot of checks we have after main() into a helper.
+> Otherwise, it's not clear to me whether you've hit a deadlock or some
+> kind of livelock. Have you checked syslog for any crash or hung task
+> messages? Please also provide the hung task output (echo w >
+> /proc/sysrq-trigger) once you've hit this state. It would be
+> particularly interesting to see whether the iomap_zero_range() path is
+> included in that output.
 
-III. Parse config file and after all options are parsed also verify_all_opts()
+Please see the Linux messages in my reply to Christoph’s message.
 
-IV. Parse cmd line options and after all options are parsed also verify_all_opts()
+> It may also be interesting to enable the xfs_zero_eof() tracepoint
+> (trace-cmd start -e 'xfs:xfs_zero_eof') and see what the last few
+> entries are from /sys/kernel/debug/tracing/trace_pipe.
 
-  Luis
+I built `trace-cmd`, and did what you asked, but there are no messages.
+
+```
+$ sudo strace ~/src/trace-cmd/trace-cmd start -e 'xfs:xfs_zero_eof'
+$ sudo cat /sys/kernel/tracing/events/xfs/xfs_zero_eof/enable
+1
+$ sudo cat /sys/kernel/debug/tracing/tracing_on
+1
+$ sudo cat /sys/kernel/debug/tracing/trace_pipe
+
+```
+
+
+Kind regards,
+
+Paul
+
+
+[1] https://www.ietf.org/rfc/rfc1813.txt
