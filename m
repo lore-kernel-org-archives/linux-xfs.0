@@ -1,100 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59374 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752648AbdEJLek (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 May 2017 07:34:40 -0400
-Date: Wed, 10 May 2017 13:34:30 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v4 13/27] lib: add errseq_t type and infrastructure for
- handling it
-Message-ID: <20170510113430.GE25137@quack2.suse.cz>
-References: <20170509154930.29524-1-jlayton@redhat.com>
- <20170509154930.29524-14-jlayton@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38744 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751593AbdEJLot (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 May 2017 07:44:49 -0400
+Date: Wed, 10 May 2017 07:44:47 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: make fatal assert failures conditional in debug
+ mode
+Message-ID: <20170510114445.GA2867@bfoster.bfoster>
+References: <1493991086-18817-1-git-send-email-bfoster@redhat.com>
+ <20170505230943.GG17542@dastard>
+ <20170508125530.GA29840@bfoster.bfoster>
+ <20170508231448.GH17542@dastard>
+ <20170509131129.GA3241@bfoster.bfoster>
+ <20170509153704.GN5973@birch.djwong.org>
+ <20170509170047.GC3241@bfoster.bfoster>
+ <20170510105431.GK17542@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170509154930.29524-14-jlayton@redhat.com>
+In-Reply-To: <20170510105431.GK17542@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Tue 09-05-17 11:49:16, Jeff Layton wrote:
-> An errseq_t is a way of recording errors in one place, and allowing any
-> number of "subscribers" to tell whether an error has been set again
-> since a previous time.
+On Wed, May 10, 2017 at 08:54:32PM +1000, Dave Chinner wrote:
+> On Tue, May 09, 2017 at 01:00:50PM -0400, Brian Foster wrote:
+> > I rarely, if ever, have a need for assert failures to bug the kernel.
 > 
-> It's implemented as an unsigned 32-bit value that is managed with atomic
-> operations. The low order bits are designated to hold an error code
-> (max size of MAX_ERRNO). The upper bits are used as a counter.
+> I absolutely rely on it to debug problems with the system in the
+> state that the problem was detected.
 > 
-> The API works with consumers sampling an errseq_t value at a particular
-> point in time. Later, that value can be used to tell whether new errors
-> have been set since that time.
+> IOWs, what works for one person does not work for everyone.
 > 
-> Note that there is a 1 in 512k risk of collisions here if new errors
-> are being recorded frequently, since we have so few bits to use as a
-> counter. To mitigate this, one bit is used as a flag to tell whether the
-> value has been sampled since a new value was recorded. That allows
-> us to avoid bumping the counter if no one has sampled it since it
-> was last bumped.
+
+That's been the premise from the start. The current default assert
+behavior does not change.
+
+> > I'd like to be able to just turn it off in my default configs (without
+> > disrupting the cases where it is useful).
 > 
-> Later patches will build on this infrastructure to change how writeback
-> errors are tracked in the kernel.
+> So, as Darrick suggested, make the sysctl value kconfig selectable.
+> you get what you want and it's runtime selectable...
 > 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
 
-The patch looks good to me. Feel free to add:
+v3 will probably do something like define a
+/sys/fs/xfs/debug/bug_on_assert flag that is used to toggle assert
+behavior from a combined variant of ass[warn|fail](). The FATAL_ASSERT
+config option basically just controls the default value of the flag.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Brian
 
-Just two nits below:
-...
-> +int errseq_check_and_advance(errseq_t *eseq, errseq_t *since)
-> +{
-> +	int err = 0;
-> +	errseq_t old, new;
-> +
-> +	/*
-> +	 * Most callers will want to use the inline wrapper to check this,
-> +	 * so that the common case of no error is handled without needing
-> +	 * to lock.
-> +	 */
-
-I'm not sure which locking you are speaking about here. Is the comment
-stale?
-
-> +	old = READ_ONCE(*eseq);
-> +	if (old != *since) {
-> +		/*
-> +		 * Set the flag and try to swap it into place if it has
-> +		 * changed.
-> +		 *
-> +		 * We don't care about the outcome of the swap here. If the
-> +		 * swap doesn't occur, then it has either been updated by a
-> +		 * writer who is bumping the seq count anyway, or another
-
-"bumping the seq count anyway" part is not quite true. Writer may see
-ERRSEQ_SEEN not set and so just update the error code and leave seq count
-as is. But since you compare full errseq_t for equality, this works out as
-designed...
-
-> +		 * reader who is just setting the "seen" flag. Either outcome
-> +		 * is OK, and we can advance "since" and return an error based
-> +		 * on what we have.
-> +		 */
-> +		new = old | ERRSEQ_SEEN;
-> +		if (new != old)
-> +			cmpxchg(eseq, old, new);
-> +		*since = new;
-> +		err = -(new & MAX_ERRNO);
-> +	}
-> +	return err;
-> +}
-> +EXPORT_SYMBOL(errseq_check_and_advance);
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> > > > As mentioned previously, we can be more granular than the current binary
+> > > > toggle for debug mode. E.g., we could separate diagnostic mechanisms
+> > > > from test coverage mechanisms and enable the latter at a higher debug
+> > > > level or with a separate option entirely, if desired. IOW, I don't think
+> > > > that's a difficult problem to solve.
+> > > 
+> > > Agreed.
+> 
+> Please don't. It took us years to get rid of all the stale special
+> snowflake conditional debug code we inherited from Irix that
+> bitrotted and broke because nobody ever set, say, XFS_TRANS_DEBUG in
+> their build, let alone tried to run a kernel with it.  We took what
+> was useful and put it under XFS_DEBUG so that it was always run, and
+> the XFS code has been so much better for it....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
