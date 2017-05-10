@@ -1,80 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38744 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:5961 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751593AbdEJLot (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 May 2017 07:44:49 -0400
-Date: Wed, 10 May 2017 07:44:47 -0400
+        id S1752825AbdEJObx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 May 2017 10:31:53 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C738C7AE84
+        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2017 14:31:52 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A6A3417962
+        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2017 14:31:52 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: make fatal assert failures conditional in debug
- mode
-Message-ID: <20170510114445.GA2867@bfoster.bfoster>
-References: <1493991086-18817-1-git-send-email-bfoster@redhat.com>
- <20170505230943.GG17542@dastard>
- <20170508125530.GA29840@bfoster.bfoster>
- <20170508231448.GH17542@dastard>
- <20170509131129.GA3241@bfoster.bfoster>
- <20170509153704.GN5973@birch.djwong.org>
- <20170509170047.GC3241@bfoster.bfoster>
- <20170510105431.GK17542@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170510105431.GK17542@dastard>
+Subject: [PATCH v3 2/2] xfs: define fatal assert build time tunable
+Date: Wed, 10 May 2017 10:31:51 -0400
+Message-Id: <1494426711-6934-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1494426711-6934-1-git-send-email-bfoster@redhat.com>
+References: <1494426711-6934-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, May 10, 2017 at 08:54:32PM +1000, Dave Chinner wrote:
-> On Tue, May 09, 2017 at 01:00:50PM -0400, Brian Foster wrote:
-> > I rarely, if ever, have a need for assert failures to bug the kernel.
-> 
-> I absolutely rely on it to debug problems with the system in the
-> state that the problem was detected.
-> 
-> IOWs, what works for one person does not work for everyone.
-> 
+While configurable at runtime, the DEBUG mode assert failure
+behavior is usually either desired or not for a particular
+situation. For example, developers using kernel modules may prefer
+for fatal asserts to remain disabled across module reloads while QE
+engineers doing broad regression testing may prefer to have fatal
+asserts enabled on boot to facilitate data collection for bug
+reports.
 
-That's been the premise from the start. The current default assert
-behavior does not change.
+To provide a compromise/convenience for developers, create a Kconfig
+option that sets the default value of the DEBUG mode 'bug_on_assert'
+sysfs tunable. The default behavior remains to trigger kernel BUGs
+on assert failures to preserve existing behavior across kernel
+configuration updates with DEBUG mode enabled.
 
-> > I'd like to be able to just turn it off in my default configs (without
-> > disrupting the cases where it is useful).
-> 
-> So, as Darrick suggested, make the sysctl value kconfig selectable.
-> you get what you want and it's runtime selectable...
-> 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/Kconfig       | 13 +++++++++++++
+ fs/xfs/xfs.h         |  4 ++++
+ fs/xfs/xfs_globals.c |  7 +++++--
+ 3 files changed, 22 insertions(+), 2 deletions(-)
 
-v3 will probably do something like define a
-/sys/fs/xfs/debug/bug_on_assert flag that is used to toggle assert
-behavior from a combined variant of ass[warn|fail](). The FATAL_ASSERT
-config option basically just controls the default value of the flag.
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index 35faf12..1b98cfa 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -96,3 +96,16 @@ config XFS_DEBUG
+ 	  not useful unless you are debugging a particular problem.
+ 
+ 	  Say N unless you are an XFS developer, or you play one on TV.
++
++config XFS_ASSERT_FATAL
++	bool "XFS fatal asserts"
++	default y
++	depends on XFS_FS && XFS_DEBUG
++	help
++	  Set the default DEBUG mode ASSERT failure behavior.
++
++	  Say Y here to cause DEBUG mode ASSERT failures to result in fatal
++	  errors that BUG() the kernel by default. If you say N, ASSERT failures
++	  result in warnings.
++
++	  This behavior can be modified at runtime via sysfs.
+diff --git a/fs/xfs/xfs.h b/fs/xfs/xfs.h
+index a742c47..80cd0fd 100644
+--- a/fs/xfs/xfs.h
++++ b/fs/xfs/xfs.h
+@@ -24,6 +24,10 @@
+ #define XFS_BUF_LOCK_TRACKING 1
+ #endif
+ 
++#ifdef CONFIG_XFS_ASSERT_FATAL
++#define XFS_ASSERT_FATAL 1
++#endif
++
+ #ifdef CONFIG_XFS_WARN
+ #define XFS_WARN 1
+ #endif
+diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
+index 673adf0..3e1cc30 100644
+--- a/fs/xfs/xfs_globals.c
++++ b/fs/xfs/xfs_globals.c
+@@ -47,6 +47,9 @@ xfs_param_t xfs_params = {
+ 
+ struct xfs_globals xfs_globals = {
+ 	.log_recovery_delay	=	0,	/* no delay by default */
+-	.bug_on_assert		=	true,	/* historical default in DEBUG
+-						 * mode */
++#ifdef XFS_ASSERT_FATAL
++	.bug_on_assert		=	true,	/* assert failures BUG() */
++#else
++	.bug_on_assert		=	false,	/* assert failures WARN() */
++#endif
+ };
+-- 
+2.7.4
 
-Brian
-
-> > > > As mentioned previously, we can be more granular than the current binary
-> > > > toggle for debug mode. E.g., we could separate diagnostic mechanisms
-> > > > from test coverage mechanisms and enable the latter at a higher debug
-> > > > level or with a separate option entirely, if desired. IOW, I don't think
-> > > > that's a difficult problem to solve.
-> > > 
-> > > Agreed.
-> 
-> Please don't. It took us years to get rid of all the stale special
-> snowflake conditional debug code we inherited from Irix that
-> bitrotted and broke because nobody ever set, say, XFS_TRANS_DEBUG in
-> their build, let alone tried to run a kernel with it.  We took what
-> was useful and put it under XFS_DEBUG so that it was always run, and
-> the XFS code has been so much better for it....
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
