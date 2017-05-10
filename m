@@ -1,29 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:46902 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750751AbdEIVS7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 May 2017 17:18:59 -0400
-Date: Tue, 9 May 2017 23:18:57 +0200
+Received: from bombadil.infradead.org ([65.50.211.133]:46075 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754277AbdEJSC4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 14:02:56 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] xfs: remove XFS_HSIZE
-Message-ID: <20170509211857.GA2295@lst.de>
-References: <20170509090018.30094-1-hch@lst.de> <ba048d82-a8b9-863f-121e-a1319fdef0f3@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ba048d82-a8b9-863f-121e-a1319fdef0f3@sandeen.net>
+Subject: [PATCH 14/16] block: remove blk_part_pack_uuid
+Date: Wed, 10 May 2017 20:02:12 +0200
+Message-Id: <20170510180214.16852-15-hch@lst.de>
+In-Reply-To: <20170510180214.16852-1-hch@lst.de>
+References: <20170510180214.16852-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Tue, May 09, 2017 at 10:40:31AM -0500, Eric Sandeen wrote:
-> > -
-> > -		hsize = XFS_HSIZE(handle);
-> > +		hsize = sizeof(xfs_handle_t);
-> 
-> at this point, no need to have the hsize assignment in if { } as well as else { }, right?
-> 
+This helper was only used by IMA of all things, which would get spurious
+errors if CONFIG_BLOCK is disabled.  Just opencode the call there.
 
-In the other branch hsize is smaller, it only covers the fsid.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+[andy: correctly handle error returns from uuid_to_bin]
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ security/integrity/ima/ima_policy.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
+index 4d1178610145..49fbc3e8f012 100644
+--- a/security/integrity/ima/ima_policy.c
++++ b/security/integrity/ima/ima_policy.c
+@@ -717,8 +717,9 @@ static int ima_parse_rule(char *rule, struct ima_rule_entry *entry)
+ 				break;
+ 			}
+ 
+-			uuid_to_bin(args[0].from, (uuid_t *)entry->fsuuid);
+-			entry->flags |= IMA_FSUUID;
++			result = uuid_to_bin(args[0].from, (uuid_t *)&entry->fsuuid);
++			if (!result)
++				entry->flags |= IMA_FSUUID;
+ 			break;
+ 		case Opt_uid_gt:
+ 		case Opt_euid_gt:
+-- 
+2.11.0
+
