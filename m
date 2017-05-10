@@ -1,91 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41790 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933002AbdEKTRa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 May 2017 15:17:30 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 02/10] fs: Introduce filemap_range_has_page()
-Date: Thu, 11 May 2017 14:17:02 -0500
-Message-Id: <20170511191710.31959-3-rgoldwyn@suse.de>
-In-Reply-To: <20170511191710.31959-1-rgoldwyn@suse.de>
-References: <20170511191710.31959-1-rgoldwyn@suse.de>
+Received: from bombadil.infradead.org ([65.50.211.133]:51873 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932113AbdEJSCh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 14:02:37 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 07/16] uuid: remove struct uuid_v1
+Date: Wed, 10 May 2017 20:02:05 +0200
+Message-Id: <20170510180214.16852-8-hch@lst.de>
+In-Reply-To: <20170510180214.16852-1-hch@lst.de>
+References: <20170510180214.16852-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Unused now.
 
-filemap_range_has_page() return true if the file's mapping has
-a page within the range mentioned. This function will be used
-to check if a write() call will cause a writeback of previous
-writes.
-
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/fs.h |  2 ++
- mm/filemap.c       | 33 +++++++++++++++++++++++++++++++++
- 2 files changed, 35 insertions(+)
+ include/linux/uuid.h | 24 ------------------------
+ 1 file changed, 24 deletions(-)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 869c9a6fe58d..2e6fc6a23f91 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2513,6 +2513,8 @@ extern int filemap_fdatawait(struct address_space *);
- extern void filemap_fdatawait_keep_errors(struct address_space *);
- extern int filemap_fdatawait_range(struct address_space *, loff_t lstart,
- 				   loff_t lend);
-+extern int filemap_range_has_page(struct address_space *, loff_t lstart,
-+				  loff_t lend);
- extern int filemap_write_and_wait(struct address_space *mapping);
- extern int filemap_write_and_wait_range(struct address_space *mapping,
- 				        loff_t lstart, loff_t lend);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 1694623a6289..fae5a361befb 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -376,6 +376,39 @@ int filemap_flush(struct address_space *mapping)
- }
- EXPORT_SYMBOL(filemap_flush);
+diff --git a/include/linux/uuid.h b/include/linux/uuid.h
+index af669f317780..28a5a894b926 100644
+--- a/include/linux/uuid.h
++++ b/include/linux/uuid.h
+@@ -19,30 +19,6 @@
+ #include <uapi/linux/uuid.h>
  
-+/**
-+ * filemap_range_has_page - check if a page exists in range.
-+ * @mapping:           address space structure to wait for
-+ * @start_byte:        offset in bytes where the range starts
-+ * @end_byte:          offset in bytes where the range ends (inclusive)
-+ *
-+ * Find at least one page in the range supplied, usually used to check if
-+ * direct writing in this range will trigger a writeback.
-+ */
-+int filemap_range_has_page(struct address_space *mapping,
-+			   loff_t start_byte, loff_t end_byte)
-+{
-+	pgoff_t index = start_byte >> PAGE_SHIFT;
-+	pgoff_t end = end_byte >> PAGE_SHIFT;
-+	struct pagevec pvec;
-+	int ret;
-+
-+	if (end_byte < start_byte)
-+		return 0;
-+
-+	if (mapping->nrpages == 0)
-+		return 0;
-+
-+	pagevec_init(&pvec, 0);
-+	ret = pagevec_lookup(&pvec, mapping, index, 1);
-+	if (!ret)
-+		return 0;
-+	ret = (pvec.pages[0]->index <= end);
-+	pagevec_release(&pvec);
-+	return ret;
-+}
-+EXPORT_SYMBOL(filemap_range_has_page);
-+
- static int __filemap_fdatawait_range(struct address_space *mapping,
- 				     loff_t start_byte, loff_t end_byte)
- {
+ /*
+- * V1 (time-based) UUID definition [RFC 4122].
+- * - the timestamp is a 60-bit value, split 32/16/12, and goes in 100ns
+- *   increments since midnight 15th October 1582
+- *   - add AFS_UUID_TO_UNIX_TIME to convert unix time in 100ns units to UUID
+- *     time
+- * - the clock sequence is a 14-bit counter to avoid duplicate times
+- */
+-struct uuid_v1 {
+-	__be32		time_low;			/* low part of timestamp */
+-	__be16		time_mid;			/* mid part of timestamp */
+-	__be16		time_hi_and_version;		/* high part of timestamp and version  */
+-#define UUID_TO_UNIX_TIME	0x01b21dd213814000ULL
+-#define UUID_TIMEHI_MASK	0x0fff
+-#define UUID_VERSION_TIME	0x1000	/* time-based UUID */
+-#define UUID_VERSION_NAME	0x3000	/* name-based UUID */
+-#define UUID_VERSION_RANDOM	0x4000	/* (pseudo-)random generated UUID */
+-	u8		clock_seq_hi_and_reserved;	/* clock seq hi and variant */
+-#define UUID_CLOCKHI_MASK	0x3f
+-#define UUID_VARIANT_STD	0x80
+-	u8		clock_seq_low;			/* clock seq low */
+-	u8		node[6];			/* spatially unique node ID (MAC addr) */
+-};
+-
+-/*
+  * The length of a UUID string ("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+  * not including trailing NUL.
+  */
 -- 
-2.12.0
+2.11.0
 
