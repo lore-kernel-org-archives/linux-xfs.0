@@ -1,75 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57493 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752113AbdEJLJ2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 May 2017 07:09:28 -0400
-Date: Wed, 10 May 2017 13:09:24 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v4 05/27] btrfs: btrfs_wait_tree_block_writeback can be
- void return
-Message-ID: <20170510110924.GB25137@quack2.suse.cz>
+Received: from mail-qt0-f176.google.com ([209.85.216.176]:35731 "EHLO
+        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752527AbdEJL3W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 07:29:22 -0400
+Received: by mail-qt0-f176.google.com with SMTP id n4so24929166qte.2
+        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2017 04:29:22 -0700 (PDT)
+Message-ID: <1494415759.2688.3.camel@redhat.com>
+Subject: Re: [PATCH v4 13/27] lib: add errseq_t type and infrastructure for
+ handling it
+From: Jeff Layton <jlayton@redhat.com>
+Date: Wed, 10 May 2017 07:29:19 -0400
+In-Reply-To: <87inl9n0wu.fsf@notabene.neil.brown.name>
 References: <20170509154930.29524-1-jlayton@redhat.com>
- <20170509154930.29524-6-jlayton@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170509154930.29524-6-jlayton@redhat.com>
+         <20170509154930.29524-14-jlayton@redhat.com>
+         <87inl9n0wu.fsf@notabene.neil.brown.name>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: NeilBrown <neil@brown.name>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org
+Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
 
-On Tue 09-05-17 11:49:08, Jeff Layton wrote:
-> Nothing checks its return value.
+On Wed, 2017-05-10 at 08:03 +1000, NeilBrown wrote:
+> On Tue, May 09 2017, Jeff Layton wrote:
 > 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
-
-Looks good to me. You can add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-> ---
->  fs/btrfs/disk-io.c | 6 +++---
->  fs/btrfs/disk-io.h | 2 +-
->  2 files changed, 4 insertions(+), 4 deletions(-)
+> > An errseq_t is a way of recording errors in one place, and allowing any
+> > number of "subscribers" to tell whether an error has been set again
+> > since a previous time.
+> > 
+> > It's implemented as an unsigned 32-bit value that is managed with atomic
+> > operations. The low order bits are designated to hold an error code
+> > (max size of MAX_ERRNO). The upper bits are used as a counter.
+> > 
+> > The API works with consumers sampling an errseq_t value at a particular
+> > point in time. Later, that value can be used to tell whether new errors
+> > have been set since that time.
+> > 
+> > Note that there is a 1 in 512k risk of collisions here if new errors
+> > are being recorded frequently, since we have so few bits to use as a
+> > counter. To mitigate this, one bit is used as a flag to tell whether the
+> > value has been sampled since a new value was recorded. That allows
+> > us to avoid bumping the counter if no one has sampled it since it
+> > was last bumped.
+> > 
+> > Later patches will build on this infrastructure to change how writeback
+> > errors are tracked in the kernel.
+> > 
+> > Signed-off-by: Jeff Layton <jlayton@redhat.com>
 > 
-> diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
-> index eb1ee7b6f532..8c479bd5534a 100644
-> --- a/fs/btrfs/disk-io.c
-> +++ b/fs/btrfs/disk-io.c
-> @@ -1222,10 +1222,10 @@ int btrfs_write_tree_block(struct extent_buffer *buf)
->  					buf->start + buf->len - 1);
->  }
->  
-> -int btrfs_wait_tree_block_writeback(struct extent_buffer *buf)
-> +void btrfs_wait_tree_block_writeback(struct extent_buffer *buf)
->  {
-> -	return filemap_fdatawait_range(buf->pages[0]->mapping,
-> -				       buf->start, buf->start + buf->len - 1);
-> +	filemap_fdatawait_range(buf->pages[0]->mapping,
-> +			        buf->start, buf->start + buf->len - 1);
->  }
->  
->  struct extent_buffer *read_tree_block(struct btrfs_fs_info *fs_info, u64 bytenr,
-> diff --git a/fs/btrfs/disk-io.h b/fs/btrfs/disk-io.h
-> index 2e0ec29bfd69..9cc87835abb5 100644
-> --- a/fs/btrfs/disk-io.h
-> +++ b/fs/btrfs/disk-io.h
-> @@ -127,7 +127,7 @@ int btrfs_wq_submit_bio(struct btrfs_fs_info *fs_info, struct inode *inode,
->  			extent_submit_bio_hook_t *submit_bio_done);
->  unsigned long btrfs_async_submit_limit(struct btrfs_fs_info *info);
->  int btrfs_write_tree_block(struct extent_buffer *buf);
-> -int btrfs_wait_tree_block_writeback(struct extent_buffer *buf);
-> +void btrfs_wait_tree_block_writeback(struct extent_buffer *buf);
->  int btrfs_init_log_root_tree(struct btrfs_trans_handle *trans,
->  			     struct btrfs_fs_info *fs_info);
->  int btrfs_add_log_tree(struct btrfs_trans_handle *trans,
-> -- 
-> 2.9.3
+> I like that this is a separate lib/*.c - nicely structured too.
+> 
+> Reviewed-by: NeilBrown <neilb@suse.com>
 > 
 > 
+
+Thanks, yeah...it occurred to me that this scheme is not really specific
+to writeback errors. While I can't think of another use-case for
+errseq_t's right offhand, I think this makes for cleaner layering and
+should make it easy to use in other ways should they arise.
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Jeff Layton <jlayton@redhat.com>
