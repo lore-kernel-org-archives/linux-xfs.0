@@ -1,52 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39584 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:49240 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754886AbdEIPuE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 May 2017 11:50:04 -0400
-Subject: Re: [PATCH 1/2 v2] mkfs: unify numeric types of main variables in
- main()
-References: <20170419153025.10368-1-jtulak@redhat.com>
- <20170420083323.12524-1-jtulak@redhat.com>
- <62f04d88-9475-b1a4-dd91-871fd091b0e1@sandeen.net>
- <CACj3i72zQBEd18rXi3718xodVfUrRX54Fc9Z0VaJNx8Rn_Eiyw@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ca3590ba-a8dc-8c45-03dd-45117fa3bb9c@sandeen.net>
-Date: Tue, 9 May 2017 10:49:57 -0500
-MIME-Version: 1.0
-In-Reply-To: <CACj3i72zQBEd18rXi3718xodVfUrRX54Fc9Z0VaJNx8Rn_Eiyw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+        id S1752602AbdEJObx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 May 2017 10:31:53 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id B2B924E34D
+        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2017 14:31:52 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 95EBC7E842
+        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2017 14:31:52 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3 0/2] xfs: make fatal assert failures conditional in debug mode
+Date: Wed, 10 May 2017 10:31:49 -0400
+Message-Id: <1494426711-6934-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 4/26/17 2:58 AM, Jan Tulak wrote:
->> so is there any real advantage to converting all of these, only to remove
->> most of them a few patches later?  (If there is, just help me understand
->> why...)
->>
-> I wanted to avoid type changes in patches that replace variables in main
-> with opts use. Without this, I need to have the opts members in long
-> long, but I still get some changes int -> long long and even one or two
-> uint -> long long. So I wanted to have all the replaced variables already in a
-> single type, without the need to change format strings and knowing
-> that the type change is not causing any side effect.
+Hi all,
 
-OK, fair enough.
+This version makes fatal asserts runtime and build time configurable.
+Patch 1 creates the runtime tunable and patch 2 creates a Kconfig option
+to control the default value of the runtime tunable. As before, default
+DEBUG mode behavior is preserved (i.e., assert failures BUG() the
+kernel).
 
-> But I think this shouldn't be a big issue (it doesn't seem that type
-> changes broke anything), so I'm rebasing the set without these uint
-> changes and the type transition can happen later on.
+Brian
 
-Your argument above was reasonable, if you want to change them all for
-consistency before re-organization, that's ok too.  Either way.
+v3:
+- Add DEBUG mode sysfs tunable for runtime configuration.
+- Refactor compile time flag to set default value of runtime flag.
+v2: http://www.spinics.net/lists/linux-xfs/msg06520.html
+- Clean up the Kconfig option help text.
+v1: http://www.spinics.net/lists/linux-xfs/msg06498.html
+- Use a new config option rather than reuse XFS_WARN.
+- Disable BUG() in DEBUG mode by default and flip the logic of the new
+  config option.
+rfc: http://www.spinics.net/lists/linux-xfs/msg06390.html
 
--Eric
- 
-> Cheers,
-> Jan
-> 
->> Thanks,
->> -Eric
+Brian Foster (2):
+  xfs: define bug_on_assert debug mode sysfs tunable
+  xfs: define fatal assert build time tunable
+
+ fs/xfs/Kconfig       | 13 +++++++++++++
+ fs/xfs/xfs.h         |  4 ++++
+ fs/xfs/xfs_globals.c |  5 +++++
+ fs/xfs/xfs_message.c |  5 ++++-
+ fs/xfs/xfs_sysctl.h  |  1 +
+ fs/xfs/xfs_sysfs.c   | 33 +++++++++++++++++++++++++++++++++
+ 6 files changed, 60 insertions(+), 1 deletion(-)
+
+-- 
+2.7.4
+
