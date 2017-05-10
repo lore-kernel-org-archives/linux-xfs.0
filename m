@@ -1,57 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41824 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S934503AbdEKTRn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 May 2017 15:17:43 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 06/10] fs: Introduce IOMAP_NOWAIT
-Date: Thu, 11 May 2017 14:17:06 -0500
-Message-Id: <20170511191710.31959-7-rgoldwyn@suse.de>
-In-Reply-To: <20170511191710.31959-1-rgoldwyn@suse.de>
-References: <20170511191710.31959-1-rgoldwyn@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:48193 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753897AbdEJTlr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 May 2017 15:41:47 -0400
+Date: Wed, 10 May 2017 15:41:45 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: BMAPX shouldn't barf on inline-format directories
+Message-ID: <20170510194145.GA8787@bfoster.bfoster>
+References: <20170510182325.GC5639@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170510182325.GC5639@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Wed, May 10, 2017 at 11:23:25AM -0700, Darrick J. Wong wrote:
+> When we're fulfilling a BMAPX request, jump out early if the data fork
+> is in local format.  This prevents us from hitting a debugging check in
+> bmapi_read and barfing errors back to userspace.  The on-disk extent
+> count check later isn't sufficient for IF_DELALLOC mode because da
+> extents are in memory and not on disk.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-IOCB_NOWAIT translates to IOMAP_NOWAIT for iomaps.
-This is used by XFS in the XFS patch.
+Looks good:
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap.c            | 2 ++
- include/linux/iomap.h | 1 +
- 2 files changed, 3 insertions(+)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 141c3cd55a8b..d1c81753d411 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -885,6 +885,8 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	} else {
- 		dio->flags |= IOMAP_DIO_WRITE;
- 		flags |= IOMAP_WRITE;
-+		if (iocb->ki_flags & IOCB_NOWAIT)
-+			flags |= IOMAP_NOWAIT;
- 	}
- 
- 	if (mapping->nrpages) {
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 7291810067eb..53f6af89c625 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -51,6 +51,7 @@ struct iomap {
- #define IOMAP_REPORT		(1 << 2) /* report extent status, e.g. FIEMAP */
- #define IOMAP_FAULT		(1 << 3) /* mapping for page fault */
- #define IOMAP_DIRECT		(1 << 4) /* direct I/O */
-+#define IOMAP_NOWAIT		(1 << 5) /* Don't wait for writeback */
- 
- struct iomap_ops {
- 	/*
--- 
-2.12.0
-
+> v2: move the check earlier in the function
+> ---
+>  fs/xfs/xfs_bmap_util.c |    8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 7ac80a1..3aefcf2 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -582,9 +582,13 @@ xfs_getbmap(
+>  		}
+>  		break;
+>  	default:
+> +		/* Local format data forks report no extents. */
+> +		if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
+> +			bmv->bmv_entries = 0;
+> +			return 0;
+> +		}
+>  		if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
+> -		    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
+> -		    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
+> +		    ip->i_d.di_format != XFS_DINODE_FMT_BTREE)
+>  			return -EINVAL;
+>  
+>  		if (xfs_get_extsz_hint(ip) ||
