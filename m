@@ -1,104 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:32961 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752216AbdEJL55 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 May 2017 07:57:57 -0400
-Date: Wed, 10 May 2017 13:48:40 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v4 14/27] fs: new infrastructure for writeback error
- handling and reporting
-Message-ID: <20170510114840.GF25137@quack2.suse.cz>
+Received: from mail-qt0-f169.google.com ([209.85.216.169]:34041 "EHLO
+        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752602AbdEJO4U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 10:56:20 -0400
+Received: by mail-qt0-f169.google.com with SMTP id j29so31680723qtj.1
+        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2017 07:56:19 -0700 (PDT)
+Message-ID: <1494428176.2688.25.camel@redhat.com>
+Subject: Re: [PATCH v4 13/27] lib: add errseq_t type and infrastructure for
+ handling it
+From: Jeff Layton <jlayton@redhat.com>
+Date: Wed, 10 May 2017 10:56:16 -0400
+In-Reply-To: <20170510141821.GB1590@bombadil.infradead.org>
 References: <20170509154930.29524-1-jlayton@redhat.com>
- <20170509154930.29524-15-jlayton@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170509154930.29524-15-jlayton@redhat.com>
+         <20170509154930.29524-14-jlayton@redhat.com>
+         <20170510141821.GB1590@bombadil.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
+To: Matthew Wilcox <willy@infradead.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
 
-On Tue 09-05-17 11:49:17, Jeff Layton wrote:
-> Most filesystems currently use mapping_set_error and
-> filemap_check_errors for setting and reporting/clearing writeback errors
-> at the mapping level. filemap_check_errors is indirectly called from
-> most of the filemap_fdatawait_* functions and from
-> filemap_write_and_wait*. These functions are called from all sorts of
-> contexts to wait on writeback to finish -- e.g. mostly in fsync, but
-> also in truncate calls, getattr, etc.
+On Wed, 2017-05-10 at 07:18 -0700, Matthew Wilcox wrote:
+> On Tue, May 09, 2017 at 11:49:16AM -0400, Jeff Layton wrote:
+> > +++ b/lib/errseq.c
+> > @@ -0,0 +1,199 @@
+> > +#include <linux/err.h>
+> > +#include <linux/bug.h>
+> > +#include <linux/atomic.h>
+> > +#include <linux/errseq.h>
+> > +
+> > +/*
+> > + * An errseq_t is a way of recording errors in one place, and allowing any
+> > + * number of "subscribers" to tell whether it has changed since an arbitrary
+> > + * time of their choosing.
 > 
-> The non-fsync callers are problematic. We should be reporting writeback
-> errors during fsync, but many places spread over the tree clear out
-> errors before they can be properly reported, or report errors at
-> nonsensical times.
+> You use the word "time" in several places in the documentation, but I think
+> it's clearer to say "sampling point" or "sample", since you're not using jiffies
+> or nanoseconds.  For example, I'd phrase this paragraph this way:
 > 
-> If I get -EIO on a stat() call, there is no reason for me to assume that
-> it is because some previous writeback failed. The fact that it also
-> clears out the error such that a subsequent fsync returns 0 is a bug,
-> and a nasty one since that's potentially silent data corruption.
+>  * An errseq_t is a way of recording errors in one place, and allowing any
+>  * number of "subscribers" to tell whether it has changed since they last
+>  * sampled it.
 > 
-> This patch adds a small bit of new infrastructure for setting and
-> reporting errors during address_space writeback. While the above was my
-> original impetus for adding this, I think it's also the case that
-> current fsync semantics are just problematic for userland. Most
-> applications that call fsync do so to ensure that the data they wrote
-> has hit the backing store.
+> > + * The general idea is for consumers to sample an errseq_t value at a
+> > + * particular point in time. Later, that value can be used to tell whether any
+> > + * new errors have occurred since that time.
 > 
-> In the case where there are multiple writers to the file at the same
-> time, this is really hard to determine. The first one to call fsync will
-> see any stored error, and the rest get back 0. The processes with open
-> fds may not be associated with one another in any way. They could even
-> be in different containers, so ensuring coordination between all fsync
-> callers is not really an option.
+>  * The general idea is for consumers to sample an errseq_t value.  That
+>  * value can be used to tell whether any new errors have occurred since
+>  * the last time it was sampled.
 > 
-> One way to remedy this would be to track what file descriptor was used
-> to dirty the file, but that's rather cumbersome and would likely be
-> slow. However, there is a simpler way to improve the semantics here
-> without incurring too much overhead.
+> > +/* The "ones" bit for the counter */
 > 
-> This set adds an errseq_t to struct address_space, and a corresponding
-> one is added to struct file. Writeback errors are recorded in the
-> mapping's errseq_t, and the one in struct file is used as the "since"
-> value.
+> Maybe "The lowest bit of the counter"?
 > 
-> This changes the semantics of the Linux fsync implementation such that
-> applications can now use it to determine whether there were any
-> writeback errors since fsync(fd) was last called (or since the file was
-> opened in the case of fsync having never been called).
+> > +/**
+> > + * errseq_check - has an error occurred since a particular point in time?
 > 
-> Note that those writeback errors may have occurred when writing data
-> that was dirtied via an entirely different fd, but that's the case now
-> with the current mapping_set_error/filemap_check_error infrastructure.
-> This will at least prevent you from getting a false report of success.
+> "has an error occurred since the last time it was sampled"
 > 
-> The new behavior is still consistent with the POSIX spec, and is more
-> reliable for application developers. This patch just adds some basic
-> infrastructure for doing this. Later patches will change the existing
-> code to use this new infrastructure.
+> > +/**
+> > + * errseq_check_and_advance - check an errseq_t and advance it to the current value
+> > + * @eseq: pointer to value being checked reported
 > 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> "value being checked reported"?
+> 
 
-Just one nit below. Otherwise the patch looks good to me. You can add:
+Thanks. I'm cleaning up the comments like you suggest.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+> > +int errseq_check_and_advance(errseq_t *eseq, errseq_t *since)
+> > +{
+> > +	int err = 0;
+> > +	errseq_t old, new;
+> > +
+> > +	/*
+> > +	 * Most callers will want to use the inline wrapper to check this,
+> > +	 * so that the common case of no error is handled without needing
+> > +	 * to lock.
+> > +	 */
+> > +	old = READ_ONCE(*eseq);
+> > +	if (old != *since) {
+> > +		/*
+> > +		 * Set the flag and try to swap it into place if it has
+> > +		 * changed.
+> > +		 *
+> > +		 * We don't care about the outcome of the swap here. If the
+> > +		 * swap doesn't occur, then it has either been updated by a
+> > +		 * writer who is bumping the seq count anyway, or another
+> > +		 * reader who is just setting the "seen" flag. Either outcome
+> > +		 * is OK, and we can advance "since" and return an error based
+> > +		 * on what we have.
+> > +		 */
+> > +		new = old | ERRSEQ_SEEN;
+> > +		if (new != old)
+> > +			cmpxchg(eseq, old, new);
+> > +		*since = new;
+> > +		err = -(new & MAX_ERRNO);
+> > +	}
+> 
+> I probably need to read through the patchset some more to understand this.
+> Naively, surely "since" should be updated to the current value of 'eseq'
+> if we failed the cmpxchg()?
 
-> diff --git a/fs/file_table.c b/fs/file_table.c
-> index 954d510b765a..d6138b6411ff 100644
-> --- a/fs/file_table.c
-> +++ b/fs/file_table.c
-> @@ -168,6 +168,7 @@ struct file *alloc_file(const struct path *path, fmode_t mode,
->  	file->f_path = *path;
->  	file->f_inode = path->dentry->d_inode;
->  	file->f_mapping = path->dentry->d_inode->i_mapping;
-> +	file->f_wb_err = filemap_sample_wb_error(file->f_mapping);
+I don't think so. If we want to do that, then we'll need to redrive the
+cmpxchg to set the SEEN flag if it's now clear. Storing the value in
+"since" is effectively sampling it, so you do have to mark it seen.
 
-Why do you sample here when you also sample in do_dentry_open()? I didn't
-find any alloc_file() callers that would possibly care about writeback
-errors... 
+The good news is that I think that "new" is just as valid a value to
+store here as *eseq would be. It ends up representing an errseq_t value
+that never actually got stored in eseq, but that's OK with the way this
+works.
 
-								Honza
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Jeff Layton <jlayton@redhat.com>
