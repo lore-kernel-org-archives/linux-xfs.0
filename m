@@ -1,98 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:12391 "EHLO mga06.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:55412 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751123AbdEJM6E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 May 2017 08:58:04 -0400
-Message-ID: <1494420895.16411.4.camel@linux.intel.com>
-Subject: Re: [PATCH 2/3] xfs: use uuid_be to implement the uuid_t type
+        id S1753988AbdEJP4S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 May 2017 11:56:18 -0400
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Date: Wed, 10 May 2017 15:54:55 +0300
-In-Reply-To: <20170510120119.GA20271@lst.de>
-References: <20170505075725.19597-1-hch@lst.de>
-         <20170505075725.19597-3-hch@lst.de>
-         <CAOQ4uxg=wLW9d195W_Ro71iNZEt8jVFyVwXysd-WnuDx7ELKDw@mail.gmail.com>
-         <20170505084813.GA4805@lst.de> <1493977343.30052.23.camel@linux.intel.com>
-         <20170505095617.GA6762@lst.de> <1493978788.30052.29.camel@linux.intel.com>
-         <20170505101052.GB7095@lst.de>
-         <CAOQ4uxh_gAUDiCY6yHcTiXRTBzKZv7R7PquAXRzztxRE0yb0wQ@mail.gmail.com>
-         <20170510120119.GA20271@lst.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH v1 2/3] (to be folded into): uuid: hoist uuid_is_null() helper from libnvdimm
+Date: Wed, 10 May 2017 18:56:11 +0300
+Message-Id: <20170510155612.55870-2-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20170510155612.55870-1-andriy.shevchenko@linux.intel.com>
+References: <20170510155612.55870-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-On Wed, 2017-05-10 at 14:01 +0200, Christoph Hellwig wrote:
-> On Wed, May 10, 2017 at 11:39:27AM +0300, Amir Goldstein wrote:
-> > To avoid stepping over each other toes, I propose the following work
-> > sequence:
-> 
-> I agree on the list, but I've started a tree that has a slightly
-> different
-> sequence:
-> 
-> (1) renamed uuid_be to uuid_t and uuid_le to guid_t, but keep the old
->     name for compat for now.
->     Including these items from your list:
-> > - Create helper variants uuid_cmp()/uuid_gen()/uuid_to_bin()
-> 
-> (2): kill uuid_v1 by adding a union to uuid_t that has the v1 meaning
->      (and maybe more in the future)
-> 
-> (3) > This patch set by Christoph:
-> > - re-define xfs's  uuid_t as uuid_be (this patch)
-> > - more xfs uuid cleanups
-> 
-> 
-> (4): > V3 of 'hoist xfs uuid helpers' by me:
-> > - hoist uuid_t typedef to uuid.h
-> > - hoist helpers uuid_equal()/uuid_copy() to uuid.h
-> > - create helper uuid_is_null()
-> > - convert xfs to use the new uuid_is_null()
-> 
-> (but now moved over the to plain uuid_t type)
-> 
-> (5) > Promote uuid_t to VFS and filesystems (I can do it):
-> > - Convert sb->s_uuid to uuid_t
-> > - Convert some sample fs (tmpfs, ext2, ext4, ..) to uuid_t
-> > - Use uuid_copy() and uuid_gen() where due
-> 
-> And the rest for latter
-> 
-> > Kill off uuid_be (I can do it):
-> > - Convery uuid_be users to uuid_t and uuid_ helpers
-> > - Kill off uuid_be and uuid_be_ helpers
-> > 
-> > Kill off generate_random_uuid (Christoph?):
-> > - Not sure what you're intentions are wrt to all users that use
-> >   this helper to initialize a char[16] var?
-> 
-> They really should be converted to either uuid_t or guid_t, or
-> just use prandom_bytes if they really aren't either a UUID or GUID
-> 
-> > Maybe repeat the uuid_be->uuid_t process with uuid_le->guid_t
-> > (Andy?):
-> > - I don't think any of the above interferes with your work to
-> > convert
-> > ACPI to uuid_le?
-> > - You can actually start this work in parallel to uuid_be->uuid_t,
-> > because
-> >   it will create trivial merge conflicts that we can easily sort out
-> > on the common
-> >   development branch
-> 
-> With my work I'm right now at item (5) of my list, I'll send it out
-> later this afternoon.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ include/linux/uuid.h | 7 ++-----
+ lib/uuid.c           | 5 -----
+ 2 files changed, 2 insertions(+), 10 deletions(-)
 
-
-I'm fine with above and it looks like I could rebase my current work
-whenever (1) has been done.
-
-Looking forward to repository with changes I can rebase on top of.
-
+diff --git a/include/linux/uuid.h b/include/linux/uuid.h
+index 2f9bdc88079e..5dcaabc1e28b 100644
+--- a/include/linux/uuid.h
++++ b/include/linux/uuid.h
+@@ -24,9 +24,6 @@
+  */
+ #define	UUID_STRING_LEN		36
+ 
+-extern const guid_t guid_null;
+-extern const uuid_t uuid_null;
+-
+ static inline int guid_cmp(const guid_t u1, const guid_t u2)
+ {
+ 	return memcmp(&u1, &u2, sizeof(guid_t));
+@@ -44,7 +41,7 @@ static inline void guid_copy(guid_t *dst, const guid_t *src)
+ 
+ static inline bool guid_is_null(guid_t *guid)
+ {
+-	return guid_equal(guid, &guid_null);
++	return guid_equal(guid, &NULL_GUID);
+ }
+ 
+ static inline int uuid_cmp(const uuid_t u1, const uuid_t u2)
+@@ -64,7 +61,7 @@ static inline void uuid_copy(uuid_t *dst, const uuid_t *src)
+ 
+ static inline bool uuid_is_null(uuid_t *uuid)
+ {
+-	return uuid_equal(uuid, &uuid_null);
++	return uuid_equal(uuid, &NULL_UUID);
+ }
+ 
+ void generate_random_uuid(unsigned char uuid[16]);
+diff --git a/lib/uuid.c b/lib/uuid.c
+index 25145bfb0eaa..003bf6823003 100644
+--- a/lib/uuid.c
++++ b/lib/uuid.c
+@@ -21,11 +21,6 @@
+ #include <linux/uuid.h>
+ #include <linux/random.h>
+ 
+-const guid_t guid_null;
+-EXPORT_SYMBOL(guid_null);
+-const uuid_t uuid_null;
+-EXPORT_SYMBOL(uuid_null);
+-
+ const u8 guid_index[16] = {3,2,1,0,5,4,7,6,8,9,10,11,12,13,14,15};
+ const u8 uuid_index[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+ 
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.11.0
+
