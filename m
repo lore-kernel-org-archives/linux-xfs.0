@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57412 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:48914 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753839AbdEJSCc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 14:02:32 -0400
+        with ESMTP id S1754075AbdEJSCY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 14:02:24 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/16] uuid: add the v1 layout to uuid_t
-Date: Wed, 10 May 2017 20:02:03 +0200
-Message-Id: <20170510180214.16852-6-hch@lst.de>
+Subject: [PATCH 02/16] xfs: use uuid_be to implement the uuid_t type
+Date: Wed, 10 May 2017 20:02:00 +0200
+Message-Id: <20170510180214.16852-3-hch@lst.de>
 In-Reply-To: <20170510180214.16852-1-hch@lst.de>
 References: <20170510180214.16852-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,54 +15,51 @@ List-Id: xfs
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
 Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-Turn the content of uuid_t into a union and add the fields for the v1
-interpretation to it.
+Use the generic Linux definition to implement our UUID type, this will
+allow using more generic infrastructure in the future.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/uapi/linux/uuid.h | 29 ++++++++++++++++++++++++++++-
- 1 file changed, 28 insertions(+), 1 deletion(-)
+ fs/xfs/uuid.h      | 4 ----
+ fs/xfs/xfs_linux.h | 3 +++
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/include/uapi/linux/uuid.h b/include/uapi/linux/uuid.h
-index 1a2914d8b225..1039d2f3e114 100644
---- a/include/uapi/linux/uuid.h
-+++ b/include/uapi/linux/uuid.h
-@@ -25,7 +25,34 @@ typedef struct {
- } guid_t;
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+index 104db0f3bed6..4f1441ba4fa5 100644
+--- a/fs/xfs/uuid.h
++++ b/fs/xfs/uuid.h
+@@ -18,10 +18,6 @@
+ #ifndef __XFS_SUPPORT_UUID_H__
+ #define __XFS_SUPPORT_UUID_H__
  
- typedef struct {
--	__u8 b[16];
-+	union {
-+		__u8			b[16];
+-typedef struct {
+-	unsigned char	__u_bits[16];
+-} uuid_t;
+-
+ extern int uuid_is_nil(uuid_t *uuid);
+ extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
+ extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 044fb0e15390..89ee5ec66837 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -19,6 +19,7 @@
+ #define __XFS_LINUX__
+ 
+ #include <linux/types.h>
++#include <linux/uuid.h>
+ 
+ /*
+  * Kernel specific type declarations for XFS
+@@ -38,6 +39,8 @@ typedef __s64			xfs_daddr_t;	/* <disk address> type */
+ typedef __u32			xfs_dev_t;
+ typedef __u32			xfs_nlink_t;
+ 
++typedef uuid_be			uuid_t;
 +
-+		/*
-+		 * V1 (time-based) UUID definition [RFC 4122]:
-+		 * - the timestamp is a 60-bit value, split 32/16/12, and goes
-+		 *   in 100ns increments since midnight 15th October 1582
-+		 *   - add UUID_TO_UNIX_TIME to convert unix time in 100ns
-+		 *     units to UUID time
-+		 * - the clock sequence is a 14-bit counter to avoid duplicate
-+		 *   times
-+		 */
-+		struct {
-+			__be32		time_low;
-+			__be16		time_mid;
-+			__be16		time_hi_and_version;
-+#define UUID_TO_UNIX_TIME	0x01b21dd213814000ULL
-+#define UUID_TIMEHI_MASK	0x0fff
-+#define UUID_VERSION_TIME	0x1000	/* time-based UUID */
-+#define UUID_VERSION_NAME	0x3000	/* name-based UUID */
-+#define UUID_VERSION_RANDOM	0x4000	/* (pseudo-)random generated UUID */
-+			u8		clock_seq_hi_and_reserved;
-+#define UUID_CLOCKHI_MASK	0x3f
-+#define UUID_VARIANT_STD	0x80
-+			u8		clock_seq_low;
-+			u8		node[6];
-+		} v1;
-+	};
- } uuid_t;
+ #include "xfs_types.h"
  
- #define GUID(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)			\
+ #include "kmem.h"
 -- 
 2.11.0
 
