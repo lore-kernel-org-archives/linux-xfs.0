@@ -1,38 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38940 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755273AbdEKSRF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 May 2017 14:17:05 -0400
-Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
-References: <20170509122219.31756-1-rgoldwyn@suse.de>
- <20170509122219.31756-6-rgoldwyn@suse.de>
- <20170511074451.GD15626@infradead.org>
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Message-ID: <7653c93d-df5c-fc87-cfdd-051dd33c11fb@suse.de>
-Date: Thu, 11 May 2017 13:16:57 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170511074451.GD15626@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([65.50.211.133]:60002 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754327AbdEJSCz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 14:02:55 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 10/16] uuid: hoist helpers uuid_equal() and uuid_copy() from xfs
+Date: Wed, 10 May 2017 20:02:08 +0200
+Message-Id: <20170510180214.16852-11-hch@lst.de>
+In-Reply-To: <20170510180214.16852-1-hch@lst.de>
+References: <20170510180214.16852-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
+From: Amir Goldstein <amir73il@gmail.com>
 
+These helper are used to compare and copy two uuid_t type objects.
 
-On 05/11/2017 02:44 AM, Christoph Hellwig wrote:
-> Looks fine,
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> Although lifting the make_request limit is something a lot of users
-> would appreciate in the near future..
-> 
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+[hch: also provide the respective guid_ versions]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/uuid.c        |  6 ------
+ fs/xfs/uuid.h        |  7 -------
+ include/linux/uuid.h | 20 ++++++++++++++++++++
+ 3 files changed, 20 insertions(+), 13 deletions(-)
 
-Yes, I understand. That will be on my todo list next on priority.
-
+diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
+index 937deaf2128d..737c186ea98b 100644
+--- a/fs/xfs/uuid.c
++++ b/fs/xfs/uuid.c
+@@ -30,9 +30,3 @@ uuid_is_nil(uuid_t *uuid)
+ 		if (*cp++) return 0;	/* not nil */
+ 	return 1;	/* is nil */
+ }
+-
+-int
+-uuid_equal(uuid_t *uuid1, uuid_t *uuid2)
+-{
+-	return memcmp(uuid1, uuid2, sizeof(uuid_t)) ? 0 : 1;
+-}
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+index 65b5cebf2f99..5aea49bf0963 100644
+--- a/fs/xfs/uuid.h
++++ b/fs/xfs/uuid.h
+@@ -19,12 +19,5 @@
+ #define __XFS_SUPPORT_UUID_H__
+ 
+ extern int uuid_is_nil(uuid_t *uuid);
+-extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
+-
+-static inline void
+-uuid_copy(uuid_t *dst, uuid_t *src)
+-{
+-	memcpy(dst, src, sizeof(uuid_t));
+-}
+ 
+ #endif	/* __XFS_SUPPORT_UUID_H__ */
+diff --git a/include/linux/uuid.h b/include/linux/uuid.h
+index 28a5a894b926..b7fec8b266eb 100644
+--- a/include/linux/uuid.h
++++ b/include/linux/uuid.h
+@@ -29,11 +29,31 @@ static inline int guid_cmp(const guid_t u1, const guid_t u2)
+ 	return memcmp(&u1, &u2, sizeof(guid_t));
+ }
+ 
++static inline bool guid_equal(const guid_t *u1, const guid_t *u2)
++{
++	return memcmp(u1, u2, sizeof(guid_t)) == 0;
++}
++
++static inline void guid_copy(guid_t *dst, const guid_t *src)
++{
++	memcpy(dst, src, sizeof(guid_t));
++}
++
+ static inline int uuid_cmp(const uuid_t u1, const uuid_t u2)
+ {
+ 	return memcmp(&u1, &u2, sizeof(uuid_t));
+ }
+ 
++static inline bool uuid_equal(const uuid_t *u1, const uuid_t *u2)
++{
++	return memcmp(u1, u2, sizeof(uuid_t)) == 0;
++}
++
++static inline void uuid_copy(uuid_t *dst, const uuid_t *src)
++{
++	memcpy(dst, src, sizeof(uuid_t));
++}
++
+ void generate_random_uuid(unsigned char uuid[16]);
+ 
+ extern void guid_gen(guid_t *u);
 -- 
-Goldwyn
+2.11.0
+
