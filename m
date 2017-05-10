@@ -1,125 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:34304 "EHLO fieldses.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755575AbdEKS7p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 May 2017 14:59:45 -0400
-Date: Thu, 11 May 2017 14:59:43 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
-Message-ID: <20170511185942.GD25434@fieldses.org>
-References: <20170329111507.GA18467@quack2.suse.cz>
- <1490810071.2678.6.camel@redhat.com>
- <20170330064724.GA21542@quack2.suse.cz>
- <1490872308.2694.1.camel@redhat.com>
- <20170330161231.GA9824@fieldses.org>
- <1490898932.2667.1.camel@redhat.com>
- <20170404183138.GC14303@fieldses.org>
- <878tnfiq7v.fsf@notabene.neil.brown.name>
- <20170405080551.GC8899@quack2.suse.cz>
- <20170405181409.GC28681@fieldses.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170405181409.GC28681@fieldses.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:37601 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932113AbdEJSCm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 14:02:42 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 09/16] md: namespace private helper names
+Date: Wed, 10 May 2017 20:02:07 +0200
+Message-Id: <20170510180214.16852-10-hch@lst.de>
+In-Reply-To: <20170510180214.16852-1-hch@lst.de>
+References: <20170510180214.16852-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: NeilBrown <neil@brown.name>, Jeff Layton <jlayton@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Wed, Apr 05, 2017 at 02:14:09PM -0400, J. Bruce Fields wrote:
-> On Wed, Apr 05, 2017 at 10:05:51AM +0200, Jan Kara wrote:
-> > 1) Keep i_version as is, make clients also check for i_ctime.
-> 
-> That would be a protocol revision, which we'd definitely rather avoid.
-> 
-> But can't we accomplish the same by using something like
-> 
-> 	ctime * (some constant) + i_version
-> 
-> ?
-> 
-> >    Pro: No on-disk format changes.
-> >    Cons: After a crash, i_version can go backwards (but when file changes
-> >    i_version, i_ctime pair should be still different) or not, data can be
-> >    old or not.
-> 
-> This is probably good enough for NFS purposes: typically on an NFS
-> filesystem, results of a read in the face of a concurrent write open are
-> undefined.  And writers sync before close.
-> 
-> So after a crash with a dirty inode, we're in a situation where an NFS
-> client still needs to resend some writes, sync, and close.  I'm OK with
-> things being inconsistent during this window.
-> 
-> I do expect things to return to normal once that client's has resent its
-> writes--hence the worry about actually resuing old values after boot
-> (such as if i_version regresses on boot and then increments back to the
-> same value after further writes).  Factoring in ctime fixes that.
+From: Amir Goldstein <amir73il@gmail.com>
 
-So for now I'm thinking of just doing something like the following.
+The md private helper uuid_equal() collides with a generic helper
+of the same name.
 
-Only nfsd needs it for now, but it could be moved to a vfs helper for
-statx, or for individual filesystems that want to do something
-different.  (The NFSv4 client will want to use the server's change
-attribute instead, I think.  And other filesystems might want to try
-something more ambitious like Neil's proposal.)
+Rename the md private helper to md_uuid_equal() and do the same for
+md_sb_equal().
 
---b.
+Cc: Shaohua Li <shli@kernel.org>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/md/md.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/fs/nfsd/nfs3xdr.c b/fs/nfsd/nfs3xdr.c
-index 12feac6ee2fd..9636c9a60aba 100644
-diff --git a/fs/nfsd/nfsfh.h b/fs/nfsd/nfsfh.h
-index f84fe6bf9aee..14f09f1ef605 100644
---- a/fs/nfsd/nfsfh.h
-+++ b/fs/nfsd/nfsfh.h
-@@ -240,6 +240,16 @@ fh_clear_wcc(struct svc_fh *fhp)
- 	fhp->fh_pre_saved = false;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 82f798be964f..65795cc4cb7d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -825,7 +825,7 @@ static int read_disk_sb(struct md_rdev *rdev, int size)
+ 	return -EINVAL;
  }
  
-+static inline u64 nfsd4_change_attribute(struct inode *inode)
-+{
-+	u64 chattr;
-+
-+	chattr = inode->i_ctime.tv_sec << 30;
-+	chattr += inode->i_ctime.tv_nsec;
-+	chattr += inode->i_version;
-+	return chattr;
-+}
-+
- /*
-  * Fill in the pre_op attr for the wcc data
-  */
-@@ -253,7 +263,7 @@ fill_pre_wcc(struct svc_fh *fhp)
- 		fhp->fh_pre_mtime = inode->i_mtime;
- 		fhp->fh_pre_ctime = inode->i_ctime;
- 		fhp->fh_pre_size  = inode->i_size;
--		fhp->fh_pre_change = inode->i_version;
-+		fhp->fh_pre_change = nfsd4_change_attribute(inode);
- 		fhp->fh_pre_saved = true;
- 	}
+-static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
++static int md_uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+ {
+ 	return	sb1->set_uuid0 == sb2->set_uuid0 &&
+ 		sb1->set_uuid1 == sb2->set_uuid1 &&
+@@ -833,7 +833,7 @@ static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+ 		sb1->set_uuid3 == sb2->set_uuid3;
  }
---- a/fs/nfsd/nfs3xdr.c
-+++ b/fs/nfsd/nfs3xdr.c
-@@ -260,7 +260,7 @@ void fill_post_wcc(struct svc_fh *fhp)
- 		printk("nfsd: inode locked twice during operation.\n");
  
- 	err = fh_getattr(fhp, &fhp->fh_post_attr);
--	fhp->fh_post_change = d_inode(fhp->fh_dentry)->i_version;
-+	fhp->fh_post_change = nfsd4_change_attribute(d_inode(fhp->fh_dentry));
- 	if (err) {
- 		fhp->fh_post_saved = false;
- 		/* Grab the ctime anyway - set_change_info might use it */
-diff --git a/fs/nfsd/nfs4xdr.c b/fs/nfsd/nfs4xdr.c
-index 26780d53a6f9..a09532d4a383 100644
---- a/fs/nfsd/nfs4xdr.c
-+++ b/fs/nfsd/nfs4xdr.c
-@@ -1973,7 +1973,7 @@ static __be32 *encode_change(__be32 *p, struct kstat *stat, struct inode *inode,
- 		*p++ = cpu_to_be32(convert_to_wallclock(exp->cd->flush_time));
- 		*p++ = 0;
- 	} else if (IS_I_VERSION(inode)) {
--		p = xdr_encode_hyper(p, inode->i_version);
-+		p = xdr_encode_hyper(p, nfsd4_change_attribute(inode));
+-static int sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
++static int md_sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+ {
+ 	int ret;
+ 	mdp_super_t *tmp1, *tmp2;
+@@ -1025,12 +1025,12 @@ static int super_90_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor
  	} else {
- 		*p++ = cpu_to_be32(stat->ctime.tv_sec);
- 		*p++ = cpu_to_be32(stat->ctime.tv_nsec);
+ 		__u64 ev1, ev2;
+ 		mdp_super_t *refsb = page_address(refdev->sb_page);
+-		if (!uuid_equal(refsb, sb)) {
++		if (!md_uuid_equal(refsb, sb)) {
+ 			pr_warn("md: %s has different UUID to %s\n",
+ 				b, bdevname(refdev->bdev,b2));
+ 			goto abort;
+ 		}
+-		if (!sb_equal(refsb, sb)) {
++		if (!md_sb_equal(refsb, sb)) {
+ 			pr_warn("md: %s has same UUID but different superblock to %s\n",
+ 				b, bdevname(refdev->bdev, b2));
+ 			goto abort;
+-- 
+2.11.0
+
