@@ -1,71 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41842 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933056AbdEKTRr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 May 2017 15:17:47 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 08/10] ext4: nowait aio support
-Date: Thu, 11 May 2017 14:17:08 -0500
-Message-Id: <20170511191710.31959-9-rgoldwyn@suse.de>
-In-Reply-To: <20170511191710.31959-1-rgoldwyn@suse.de>
-References: <20170511191710.31959-1-rgoldwyn@suse.de>
+Received: from bombadil.infradead.org ([65.50.211.133]:35778 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753761AbdEJSCV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 14:02:21 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/16] xfs: use uuid_copy() helper to abstract uuid_t
+Date: Wed, 10 May 2017 20:01:59 +0200
+Message-Id: <20170510180214.16852-2-hch@lst.de>
+In-Reply-To: <20170510180214.16852-1-hch@lst.de>
+References: <20170510180214.16852-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+From: Amir Goldstein <amir73il@gmail.com>
 
-Return EAGAIN if any of the following checks fail for direct I/O:
-  + i_rwsem is lockable
-  + Writing beyond end of file (will trigger allocation)
-  + Blocks are not allocated at the write location
+uuid_t definition is about to change.
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/ext4/file.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_inode_item.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index cefa9835f275..2efdc6d4d3e8 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -216,7 +216,13 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		return ext4_dax_write_iter(iocb, from);
- #endif
- 
--	inode_lock(inode);
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		if (!inode_trylock(inode))
-+			return -EAGAIN;
-+	} else {
-+		inode_lock(inode);
-+	}
-+
- 	ret = ext4_write_checks(iocb, from);
- 	if (ret <= 0)
- 		goto out;
-@@ -235,9 +241,15 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 
- 	iocb->private = &overwrite;
- 	/* Check whether we do a DIO overwrite or not */
--	if (o_direct && ext4_should_dioread_nolock(inode) && !unaligned_aio &&
--	    ext4_overwrite_io(inode, iocb->ki_pos, iov_iter_count(from)))
--		overwrite = 1;
-+	if (o_direct && !unaligned_aio) {
-+		if (ext4_overwrite_io(inode, iocb->ki_pos, iov_iter_count(from))) {
-+			if (ext4_should_dioread_nolock(inode))
-+				overwrite = 1;
-+		} else if (iocb->ki_flags & IOCB_NOWAIT) {
-+			ret = -EAGAIN;
-+			goto out;
-+		}
-+	}
- 
- 	ret = __generic_file_write_iter(iocb, from);
- 	inode_unlock(inode);
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 08cb7d1a4a3a..013cc78d7daf 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -834,9 +834,7 @@ xfs_inode_item_format_convert(
+ 		in_f->ilf_dsize = in_f32->ilf_dsize;
+ 		in_f->ilf_ino = in_f32->ilf_ino;
+ 		/* copy biggest field of ilf_u */
+-		memcpy(in_f->ilf_u.ilfu_uuid.__u_bits,
+-		       in_f32->ilf_u.ilfu_uuid.__u_bits,
+-		       sizeof(uuid_t));
++		uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f32->ilf_u.ilfu_uuid);
+ 		in_f->ilf_blkno = in_f32->ilf_blkno;
+ 		in_f->ilf_len = in_f32->ilf_len;
+ 		in_f->ilf_boffset = in_f32->ilf_boffset;
+@@ -851,9 +849,7 @@ xfs_inode_item_format_convert(
+ 		in_f->ilf_dsize = in_f64->ilf_dsize;
+ 		in_f->ilf_ino = in_f64->ilf_ino;
+ 		/* copy biggest field of ilf_u */
+-		memcpy(in_f->ilf_u.ilfu_uuid.__u_bits,
+-		       in_f64->ilf_u.ilfu_uuid.__u_bits,
+-		       sizeof(uuid_t));
++		uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f64->ilf_u.ilfu_uuid);
+ 		in_f->ilf_blkno = in_f64->ilf_blkno;
+ 		in_f->ilf_len = in_f64->ilf_len;
+ 		in_f->ilf_boffset = in_f64->ilf_boffset;
 -- 
-2.12.0
+2.11.0
 
