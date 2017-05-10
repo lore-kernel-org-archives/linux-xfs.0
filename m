@@ -1,109 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60196 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:49785 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755557AbdEIPvE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 May 2017 11:51:04 -0400
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v4 25/27] Documentation: flesh out the section in vfs.txt on storing and reporting writeback errors
-Date: Tue,  9 May 2017 11:49:28 -0400
-Message-Id: <20170509154930.29524-26-jlayton@redhat.com>
-In-Reply-To: <20170509154930.29524-1-jlayton@redhat.com>
-References: <20170509154930.29524-1-jlayton@redhat.com>
+        id S1751593AbdEJMBV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 May 2017 08:01:21 -0400
+Date: Wed, 10 May 2017 14:01:19 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/3] xfs: use uuid_be to implement the uuid_t type
+Message-ID: <20170510120119.GA20271@lst.de>
+References: <20170505075725.19597-1-hch@lst.de> <20170505075725.19597-3-hch@lst.de> <CAOQ4uxg=wLW9d195W_Ro71iNZEt8jVFyVwXysd-WnuDx7ELKDw@mail.gmail.com> <20170505084813.GA4805@lst.de> <1493977343.30052.23.camel@linux.intel.com> <20170505095617.GA6762@lst.de> <1493978788.30052.29.camel@linux.intel.com> <20170505101052.GB7095@lst.de> <CAOQ4uxh_gAUDiCY6yHcTiXRTBzKZv7R7PquAXRzztxRE0yb0wQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxh_gAUDiCY6yHcTiXRTBzKZv7R7PquAXRzztxRE0yb0wQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org
-Cc: dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, linux-xfs <linux-xfs@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-I waxed a little loquacious here, but I figured that more detail was
-better, and writeback error handling is so hard to get right.
+On Wed, May 10, 2017 at 11:39:27AM +0300, Amir Goldstein wrote:
+> To avoid stepping over each other toes, I propose the following work sequence:
 
-Cc: Jan Kara <jack@suse.cz>
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- Documentation/filesystems/vfs.txt | 54 ++++++++++++++++++++++++++++++++-------
- 1 file changed, 45 insertions(+), 9 deletions(-)
+I agree on the list, but I've started a tree that has a slightly different
+sequence:
 
-diff --git a/Documentation/filesystems/vfs.txt b/Documentation/filesystems/vfs.txt
-index f201a77873f7..382190a872e5 100644
---- a/Documentation/filesystems/vfs.txt
-+++ b/Documentation/filesystems/vfs.txt
-@@ -576,12 +576,46 @@ should clear PG_Dirty and set PG_Writeback.  It can be actually
- written at any point after PG_Dirty is clear.  Once it is known to be
- safe, PG_Writeback is cleared.
- 
--If there is an error during writeback, then the address_space should be
--marked with an error (typically using mapping_set_error), in order to
--ensure that the error can later be reported to the application when an
--fsync is issued.
--
--Writeback makes use of a writeback_control structure...
-+Writeback makes use of a writeback_control structure to direct the
-+operations.  This gives the the writepage and writepages operations some
-+information about the nature of and reason for the writeback request,
-+and the constraints under which it is being done.  It is also used to
-+return information back to the caller about the result of a writepage or
-+writepages request.
-+
-+Handling errors during writeback
-+--------------------------------
-+Most applications that utilize the pagecache will periodically call
-+fsync to ensure that data written has made it to the backing store.
-+When there is an error during writeback, that error should be reported
-+when fsync is called.  After an error has been reported to fsync,
-+subsequent fsync calls on the same file descriptor should return 0,
-+unless further writeback errors have occurred since the previous fsync.
-+
-+Ideally, the kernel would report it only on file descriptions on which
-+writes were done that subsequently failed to be written back.  The
-+generic pagecache infrastructure does not track the file descriptions
-+that have dirtied each individual page however, so determining which
-+file descriptors should get back an error is not possible.
-+
-+Instead, the generic writeback error tracking infrastructure in the
-+kernel settles for reporting errors to fsync on all file descriptions
-+that were open at the time that the error occurred.  In a situation with
-+multiple writers, all of them will get back an error on a subsequent fsync,
-+even if all of the writes done through that particular file descriptor
-+succeeded (or even if there were no writes on that file descriptor at all).
-+
-+Filesystems that wish to use this infrastructure should call
-+mapping_set_error to record the error in the address_space when it
-+occurs.  The generic vfs code will then handle reporting the error when
-+fsync is called, even if the fsync file operation returned 0.
-+
-+Filesystems are free to track errors internally if they choose (i.e. if
-+they do keep track of how the pages were dirtied), but they should aim
-+to provide the same (or better) error reporting semantics for when there
-+are multiple writers.  Those filesystems should avoid calling
-+mapping_set_error in order to ensure that errors stored in the mapping
-+aren't improperly reported by the generic filesystem code.
- 
- struct address_space_operations
- -------------------------------
-@@ -810,7 +844,8 @@ struct address_space_operations {
- The File Object
- ===============
- 
--A file object represents a file opened by a process.
-+A file object represents a file opened by a process. This is also known
-+as an "open file description" in POSIX parlance.
- 
- 
- struct file_operations
-@@ -893,9 +928,10 @@ otherwise noted.
- 
-   release: called when the last reference to an open file is closed
- 
--  fsync: called by the fsync(2) system call. Errors that were previously
-+  fsync: called by the fsync(2) system call.  Errors that were previously
- 	 recorded using mapping_set_error will automatically be returned to
--	 the application and the file's error sequence advanced.
-+	 the application and the struct file's error sequence advanced.
-+	 See the section above on handling writeback errors.
- 
-   fasync: called by the fcntl(2) system call when asynchronous
- 	(non-blocking) mode is enabled for a file
--- 
-2.9.3
+(1) renamed uuid_be to uuid_t and uuid_le to guid_t, but keep the old
+    name for compat for now.
+    Including these items from your list:
+> - Create helper variants uuid_cmp()/uuid_gen()/uuid_to_bin()
 
+(2): kill uuid_v1 by adding a union to uuid_t that has the v1 meaning
+     (and maybe more in the future)
+
+(3) > This patch set by Christoph:
+> - re-define xfs's  uuid_t as uuid_be (this patch)
+> - more xfs uuid cleanups
+
+
+(4): > V3 of 'hoist xfs uuid helpers' by me:
+> - hoist uuid_t typedef to uuid.h
+> - hoist helpers uuid_equal()/uuid_copy() to uuid.h
+> - create helper uuid_is_null()
+> - convert xfs to use the new uuid_is_null()
+
+(but now moved over the to plain uuid_t type)
+
+(5) > Promote uuid_t to VFS and filesystems (I can do it):
+> - Convert sb->s_uuid to uuid_t
+> - Convert some sample fs (tmpfs, ext2, ext4, ..) to uuid_t
+> - Use uuid_copy() and uuid_gen() where due
+
+And the rest for latter
+
+> Kill off uuid_be (I can do it):
+> - Convery uuid_be users to uuid_t and uuid_ helpers
+> - Kill off uuid_be and uuid_be_ helpers
+> 
+> Kill off generate_random_uuid (Christoph?):
+> - Not sure what you're intentions are wrt to all users that use
+>   this helper to initialize a char[16] var?
+
+They really should be converted to either uuid_t or guid_t, or
+just use prandom_bytes if they really aren't either a UUID or GUID
+
+> Maybe repeat the uuid_be->uuid_t process with uuid_le->guid_t (Andy?):
+> - I don't think any of the above interferes with your work to convert
+> ACPI to uuid_le?
+> - You can actually start this work in parallel to uuid_be->uuid_t, because
+>   it will create trivial merge conflicts that we can easily sort out
+> on the common
+>   development branch
+
+With my work I'm right now at item (5) of my list, I'll send it out
+later this afternoon.
