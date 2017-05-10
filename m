@@ -1,50 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42256 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751855AbdEHSlS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2017 14:41:18 -0400
-Date: Mon, 8 May 2017 11:41:12 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] ioctl_getfsmap.2: document the GETFSMAP ioctl
-Message-ID: <20170508184112.GJ5973@birch.djwong.org>
-References: <20170507155855.GD5970@birch.djwong.org>
- <CAG48ez1AWewJRg8gySgihn0y15jRhC6C+5DNwGsDpAhtokB=Lw@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:48202 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751267AbdEJOqD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 May 2017 10:46:03 -0400
+Subject: Re: [PATCH 0.9/9] xfs: introduce the XFS_IOC_GETFSMAP ioctl
+References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+ <20170508194755.GK5973@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <43c6b64f-cd5f-3cac-8270-7a292ed308dd@sandeen.net>
+Date: Wed, 10 May 2017 09:46:01 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAG48ez1AWewJRg8gySgihn0y15jRhC6C+5DNwGsDpAhtokB=Lw@mail.gmail.com>
+In-Reply-To: <20170508194755.GK5973@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jann Horn <jannh@google.com>
-Cc: Michael Kerrisk-manpages <mtk.manpages@gmail.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, linux-man@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 08, 2017 at 12:17:53AM +0200, Jann Horn wrote:
-> On Sun, May 7, 2017 at 5:58 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > Document the new GETFSMAP ioctl that returns the physical layout of a
-> > (disk-based) filesystem.
-> [...]
-> > +.B EPERM
-> > +This query is not allowed.
+On 5/8/17 2:47 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Please document the circumstances under which a query is allowed.
+> Introduce a new ioctl that uses the reverse mapping btree to return
+> information about the physical layout of the filesystem.
 
-For the two current implementations, queries are always allowed.
+Thanks, I think it makes sense to pull in most of this via the normal
+libxfs-sync method, then fix up the build infra for userspace
+separately.  Sound ok?
 
-(The doc could be more explicit about this decision being left to the
-implementation.)
-
-> Also: From a quick glance at the XFS implementation, I don't see any
-> privilege checks. Am I missing something, or does this API permit an
-> unprivileged user to determine the number of physical blocks allocated
-> for any inode, even for inodes the user can't ordinarily see in any
-> way?
-
-Correct.
-
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Eric
+ 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  configure.ac          |    1 
+>  include/builddefs.in  |    7 +++
+>  include/linux.h       |  109 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  libxfs/xfs_fs.h       |   13 ++++++
+>  libxfs/xfs_rmap.c     |   28 +++++++++++++
+>  libxfs/xfs_rmap.h     |    2 +
+>  m4/package_libcdev.m4 |   19 +++++++++
+>  7 files changed, 178 insertions(+), 1 deletion(-)
+> 
