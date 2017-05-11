@@ -1,64 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:34532 "EHLO
-        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751985AbdEJTPw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 15:15:52 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170510180214.16852-4-hch@lst.de>
-References: <20170510180214.16852-1-hch@lst.de> <20170510180214.16852-4-hch@lst.de>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 10 May 2017 22:15:51 +0300
-Message-ID: <CAOQ4uxjSpCgM=RK5jXkuY5HmseQT2EKh_huntvK2ADKBuNqi4A@mail.gmail.com>
-Subject: Re: [PATCH 03/16] uuid: rename uuid types
-Content-Type: text/plain; charset=UTF-8
+Received: from mx2.suse.de ([195.135.220.15]:34418 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1757894AbdEKQsU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 May 2017 12:48:20 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH] generic/285: Add more SEEK_HOLE tests
+Date: Thu, 11 May 2017 18:48:09 +0200
+Message-Id: <20170511164809.29739-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: fstests@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>
 
-On Wed, May 10, 2017 at 9:02 PM, Christoph Hellwig <hch@lst.de> wrote:
-> Our "little endian" UUID really is a Wintel GUID, so rename it and its
-> helpers such (guid_t).  The big endian UUID is the only true one, so
-> give it the name uuid_t.  The uuid_le and uuid_be names are retained for,
-> but will hopefully go away soon.
->
-> Also remove the existing typedef in XFS that's now been superceeded by
-> the generic type name.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> [andy: also updated the UUID_LE/UUID_BE macros including fallout]
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
-[...]
+Add tests for bugs found in ext4 & xfs SEEK_HOLE implementations
+fixed by following patches:
 
->
-> -static inline int uuid_le_cmp(const uuid_le u1, const uuid_le u2)
-> +static inline int guid_cmp(const guid_t u1, const guid_t u2)
->  {
-> -       return memcmp(&u1, &u2, sizeof(uuid_le));
-> +       return memcmp(&u1, &u2, sizeof(guid_t));
->  }
->
-> -static inline int uuid_be_cmp(const uuid_be u1, const uuid_be u2)
-> +static inline int uuid_cmp(const uuid_t u1, const uuid_t u2)
->  {
-> -       return memcmp(&u1, &u2, sizeof(uuid_be));
-> +       return memcmp(&u1, &u2, sizeof(uuid_t));
->  }
->
+xfs: Fix missed holes in SEEK_HOLE implementation
+ext4: Fix SEEK_HOLE
 
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ src/seek_sanity_test.c | 96 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 96 insertions(+)
 
-I think we should use this opportunity to change these to (uuid_t *, uuid_t *)
-which is more in line with the rest of the helpers including the new helpers
-hoisted from xfs.
+diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
+index a6dd48cc257b..86a9397fa7e9 100644
+--- a/src/seek_sanity_test.c
++++ b/src/seek_sanity_test.c
+@@ -246,6 +246,100 @@ out:
+ }
+ 
+ /*
++ * test file with unwritten extents, only have pagevec worth of dirty pages
++ * in page cache, a hole and then another page.
++ */
++static int test14(int fd, int testnum)
++{
++	int ret = 0;
++	char *buf = NULL;
++	int bufsz = sysconf(_SC_PAGE_SIZE) * 14;
++	int filsz = 4 << 20;
++
++	/* HOLE - unwritten DATA in dirty page */
++	/* Each unit is bufsz */
++	buf = do_malloc(bufsz);
++	if (!buf)
++		goto out;
++	memset(buf, 'a', bufsz);
++
++	/* preallocate 4M space to file */
++	ret = do_fallocate(fd, 0, filsz, 0);
++	if (ret < 0) {
++		/* Report success if fs doesn't support fallocate */
++		if (errno == EOPNOTSUPP) {
++			fprintf(stdout, "Test skipped as fs doesn't support fallocate.\n");
++			ret = 0;
++		}
++		goto out;
++	}
++
++	ret = do_pwrite(fd, buf, bufsz, 0);
++	if (ret)
++		goto out;
++
++	ret = do_pwrite(fd, buf, bufsz, 3 * bufsz);
++	if (ret)
++		goto out;
++
++	/* offset at the beginning */
++	ret += do_lseek(testnum,  1, fd, filsz, SEEK_HOLE, 0, bufsz);
++	ret += do_lseek(testnum,  2, fd, filsz, SEEK_HOLE, 1, bufsz);
++	ret += do_lseek(testnum,  2, fd, filsz, SEEK_HOLE, 3 * bufsz, 4 * bufsz);
++	ret += do_lseek(testnum,  3, fd, filsz, SEEK_DATA, 0, 0);
++	ret += do_lseek(testnum,  4, fd, filsz, SEEK_DATA, 1, 1);
++	ret += do_lseek(testnum,  3, fd, filsz, SEEK_DATA, bufsz, 3 * bufsz);
++
++out:
++	do_free(buf);
++	return ret;
++}
++
++/*
++ * test file with unwritten extents, only have pagevec worth of dirty pages
++ * in page cache.
++ */
++static int test13(int fd, int testnum)
++{
++	int ret = 0;
++	char *buf = NULL;
++	int bufsz = sysconf(_SC_PAGE_SIZE) * 14;
++	int filsz = 4 << 20;
++
++	/* HOLE - unwritten DATA in dirty page */
++	/* Each unit is bufsz */
++	buf = do_malloc(bufsz);
++	if (!buf)
++		goto out;
++	memset(buf, 'a', bufsz);
++
++	/* preallocate 4M space to file */
++	ret = do_fallocate(fd, 0, filsz, 0);
++	if (ret < 0) {
++		/* Report success if fs doesn't support fallocate */
++		if (errno == EOPNOTSUPP) {
++			fprintf(stdout, "Test skipped as fs doesn't support fallocate.\n");
++			ret = 0;
++		}
++		goto out;
++	}
++
++	ret = do_pwrite(fd, buf, bufsz, 0);
++	if (ret)
++		goto out;
++
++	/* offset at the beginning */
++	ret += do_lseek(testnum,  1, fd, filsz, SEEK_HOLE, 0, bufsz);
++	ret += do_lseek(testnum,  2, fd, filsz, SEEK_HOLE, 1, bufsz);
++	ret += do_lseek(testnum,  3, fd, filsz, SEEK_DATA, 0, 0);
++	ret += do_lseek(testnum,  4, fd, filsz, SEEK_DATA, 1, 1);
++
++out:
++	do_free(buf);
++	return ret;
++}
++
++/*
+  * Test huge file to check for overflows of block counts due to usage of
+  * 32-bit types.
+  */
+@@ -678,6 +772,8 @@ struct testrec seek_tests[] = {
+        { 10, test10, "Test a huge file for offset overflow" },
+        { 11, test11, "Test a huge file for block number signed" },
+        { 12, test12, "Test a huge file for block number overflow" },
++       { 13, test13, "Test file with unwritten extents, only have pagevec dirty pages" },
++       { 14, test14, "Test file with unwritten extents, small hole after pagevec dirty pages" },
+ };
+ 
+ static int run_test(struct testrec *tr)
+-- 
+2.12.0
 
-[...]
-
-> +/* backwards compatibility, don't use in new code */
-> +#define uuid_le_cmp(u1, u2)    guid_cmp(u1, u2)
-> +#define uuid_be_cmp(u1, u2)    uuid_cmp(u1, u2)
-
-Therefore:
-#define uuid_le_cmp(u1, u2)    guid_cmp(&(u1), &(u2))
-#define uuid_be_cmp(u1, u2)    uuid_cmp(&(u1), &(u2))
