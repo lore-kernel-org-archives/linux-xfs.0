@@ -1,111 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33758 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751208AbdEKGkV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2017 02:40:21 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v4B6eJGZ021711
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 06:40:20 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v4B6eICR002545
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 06:40:19 GMT
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v4B6eG5Y025725
-        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 06:40:17 GMT
-From: Shan Hai <shan.hai@oracle.com>
-Subject: [PATCH 1/1] xfs: remove lsn relevant fields from xfs_trans structure and its users
-Date: Thu, 11 May 2017 14:40:09 +0800
-Message-Id: <1494484809-10217-1-git-send-email-shan.hai@oracle.com>
+Received: from mx2.suse.de ([195.135.220.15]:34511 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756542AbdEKQud (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 May 2017 12:50:33 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 2/2] xfs: Move handling of missing page into one place in xfs_find_get_desired_pgoff()
+Date: Thu, 11 May 2017 18:50:23 +0200
+Message-Id: <20170511165023.29887-2-jack@suse.cz>
+In-Reply-To: <20170511165023.29887-1-jack@suse.cz>
+References: <20170511165023.29887-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>
 
-The t_lsn is not used anymore and the t_commit_lsn is used as a tmp
-storage for the checkpoint sequence number only in the current code.
+Currently several places in xfs_find_get_desired_pgoff() handle the case
+of a missing page. Make them all handled in one place after the loop has
+terminated.
 
-And the start/commit lsn are tracked as a transaction group tag in
-the xfs_cil_ctx instead of a single transaction, so remove them from
-the xfs_trans structure and their users to match with the design.
-
-Signed-off-by: Shan Hai <shan.hai@oracle.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/xfs_log_cil.c |  5 ++---
- fs/xfs/xfs_trace.h   | 19 -------------------
- fs/xfs/xfs_trans.h   |  4 ----
- 3 files changed, 2 insertions(+), 26 deletions(-)
+ fs/xfs/xfs_file.c | 24 ++++++++----------------
+ 1 file changed, 8 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 82f1cbc..373f5e8 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -990,9 +990,8 @@
- 	if (tp->t_ticket->t_curr_res < 0)
- 		xlog_print_tic_res(mp, tp->t_ticket);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index df51c025adfe..719923b99ba1 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1069,10 +1069,6 @@ xfs_find_get_desired_pgoff(
+ 				break;
  
--	tp->t_commit_lsn = cil->xc_ctx->sequence;
- 	if (commit_lsn)
--		*commit_lsn = tp->t_commit_lsn;
-+		*commit_lsn = cil->xc_ctx->sequence;
+ 			ASSERT(type == HOLE_OFF);
+-			if (lastoff == startoff || lastoff < endoff) {
+-				found = true;
+-				*offset = lastoff;
+-			}
+ 			break;
+ 		}
  
- 	xfs_log_done(mp, tp->t_ticket, NULL, regrant);
- 	xfs_trans_unreserve_and_mod_sb(tp);
-@@ -1008,7 +1007,7 @@
- 	 * the log items. This affects (at least) processing of stale buffers,
- 	 * inodes and EFIs.
- 	 */
--	xfs_trans_free_items(tp, tp->t_commit_lsn, false);
-+	xfs_trans_free_items(tp, cil->xc_ctx->sequence, false);
+@@ -1080,11 +1076,8 @@ xfs_find_get_desired_pgoff(
+ 		 * At least we found one page. If the current offset is smaller
+ 		 * than the first page offset, a hole was found.
+ 		 */
+-		if (type == HOLE_OFF && lastoff < page_offset(pvec.pages[0])) {
+-			found = true;
+-			*offset = lastoff;
++		if (type == HOLE_OFF && lastoff < page_offset(pvec.pages[0]))
+ 			break;
+-		}
  
- 	xlog_cil_push_background(log);
+ 		for (i = 0; i < nr_pages; i++) {
+ 			struct page	*page = pvec.pages[i];
+@@ -1150,21 +1143,20 @@ xfs_find_get_desired_pgoff(
  
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 7c5a165..0712eb7 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1490,25 +1490,6 @@
- 		  __entry->tlen)
- );
+ 		/*
+ 		 * The number of returned pages less than our desired, search
+-		 * done.  In this case, nothing was found for searching data,
+-		 * but we found a hole behind the last offset.
++		 * done.
+ 		 */
+-		if (nr_pages < want) {
+-			if (type == HOLE_OFF) {
+-				*offset = lastoff;
+-				found = true;
+-			}
++		if (nr_pages < want)
+ 			break;
+-		}
  
--TRACE_EVENT(xfs_trans_commit_lsn,
--	TP_PROTO(struct xfs_trans *trans),
--	TP_ARGS(trans),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(struct xfs_trans *, tp)
--		__field(xfs_lsn_t, lsn)
--	),
--	TP_fast_assign(
--		__entry->dev = trans->t_mountp->m_super->s_dev;
--		__entry->tp = trans;
--		__entry->lsn = trans->t_commit_lsn;
--	),
--	TP_printk("dev %d:%d trans 0x%p commit_lsn 0x%llx",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->tp,
--		  __entry->lsn)
--);
--
- TRACE_EVENT(xfs_agf,
- 	TP_PROTO(struct xfs_mount *mp, struct xfs_agf *agf, int flags,
- 		 unsigned long caller_ip),
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index a07acbf..80b3ed5 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -105,10 +105,6 @@ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
- 	unsigned int		t_rtx_res;	/* # of rt extents resvd */
- 	unsigned int		t_rtx_res_used;	/* # of resvd rt extents used */
- 	struct xlog_ticket	*t_ticket;	/* log mgr ticket */
--	xfs_lsn_t		t_lsn;		/* log seq num of start of
--						 * transaction. */
--	xfs_lsn_t		t_commit_lsn;	/* log seq num of end of
--						 * transaction. */
- 	struct xfs_mount	*t_mountp;	/* ptr to fs mount struct */
- 	struct xfs_dquot_acct   *t_dqinfo;	/* acctg info for dquots */
- 	unsigned int		t_flags;	/* misc flags */
+ 		index = pvec.pages[i - 1]->index + 1;
+ 		pagevec_release(&pvec);
+ 	} while (index <= end);
+ 
++	/* No page at lastoff and we are not done - we found a hole. */
++	if (type == HOLE_OFF && lastoff < endoff) {
++		*offset = lastoff;
++		found = true;
++	}
+ out:
+ 	pagevec_release(&pvec);
+ 	return found;
 -- 
-1.8.3.1
+2.12.0
 
