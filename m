@@ -1,62 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:51873 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932113AbdEJSCh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 14:02:37 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/16] uuid: remove struct uuid_v1
-Date: Wed, 10 May 2017 20:02:05 +0200
-Message-Id: <20170510180214.16852-8-hch@lst.de>
-In-Reply-To: <20170510180214.16852-1-hch@lst.de>
-References: <20170510180214.16852-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:41801 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S934503AbdEKTRg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 May 2017 15:17:36 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 03/10] fs: Use RWF_* flags for AIO operations
+Date: Thu, 11 May 2017 14:17:03 -0500
+Message-Id: <20170511191710.31959-4-rgoldwyn@suse.de>
+In-Reply-To: <20170511191710.31959-1-rgoldwyn@suse.de>
+References: <20170511191710.31959-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Unused now.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+aio_rw_flags is introduced in struct iocb (using aio_reserved1) which will
+carry the RWF_* flags. We cannot use aio_flags because they are not
+checked for validity which may break existing applications.
+
+Note, the only place RWF_HIPRI comes in effect is dio_await_one().
+All the rest of the locations, aio code return -EIOCBQUEUED before the
+checks for RWF_HIPRI.
+
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/uuid.h | 24 ------------------------
- 1 file changed, 24 deletions(-)
+ fs/aio.c                     | 8 +++++++-
+ include/uapi/linux/aio_abi.h | 2 +-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/uuid.h b/include/linux/uuid.h
-index af669f317780..28a5a894b926 100644
---- a/include/linux/uuid.h
-+++ b/include/linux/uuid.h
-@@ -19,30 +19,6 @@
- #include <uapi/linux/uuid.h>
+diff --git a/fs/aio.c b/fs/aio.c
+index f52d925ee259..020fa0045e3c 100644
+--- a/fs/aio.c
++++ b/fs/aio.c
+@@ -1541,7 +1541,7 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
+ 	ssize_t ret;
  
- /*
-- * V1 (time-based) UUID definition [RFC 4122].
-- * - the timestamp is a 60-bit value, split 32/16/12, and goes in 100ns
-- *   increments since midnight 15th October 1582
-- *   - add AFS_UUID_TO_UNIX_TIME to convert unix time in 100ns units to UUID
-- *     time
-- * - the clock sequence is a 14-bit counter to avoid duplicate times
-- */
--struct uuid_v1 {
--	__be32		time_low;			/* low part of timestamp */
--	__be16		time_mid;			/* mid part of timestamp */
--	__be16		time_hi_and_version;		/* high part of timestamp and version  */
--#define UUID_TO_UNIX_TIME	0x01b21dd213814000ULL
--#define UUID_TIMEHI_MASK	0x0fff
--#define UUID_VERSION_TIME	0x1000	/* time-based UUID */
--#define UUID_VERSION_NAME	0x3000	/* name-based UUID */
--#define UUID_VERSION_RANDOM	0x4000	/* (pseudo-)random generated UUID */
--	u8		clock_seq_hi_and_reserved;	/* clock seq hi and variant */
--#define UUID_CLOCKHI_MASK	0x3f
--#define UUID_VARIANT_STD	0x80
--	u8		clock_seq_low;			/* clock seq low */
--	u8		node[6];			/* spatially unique node ID (MAC addr) */
--};
--
--/*
-  * The length of a UUID string ("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
-  * not including trailing NUL.
-  */
+ 	/* enforce forwards compatibility on users */
+-	if (unlikely(iocb->aio_reserved1 || iocb->aio_reserved2)) {
++	if (unlikely(iocb->aio_reserved2)) {
+ 		pr_debug("EINVAL: reserve field set\n");
+ 		return -EINVAL;
+ 	}
+@@ -1586,6 +1586,12 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
+ 		req->common.ki_flags |= IOCB_EVENTFD;
+ 	}
+ 
++	ret = kiocb_set_rw_flags(&req->common, iocb->aio_rw_flags);
++	if (unlikely(ret)) {
++		pr_debug("EINVAL: aio_rw_flags\n");
++		goto out_put_req;
++	}
++
+ 	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
+ 	if (unlikely(ret)) {
+ 		pr_debug("EFAULT: aio_key\n");
+diff --git a/include/uapi/linux/aio_abi.h b/include/uapi/linux/aio_abi.h
+index bb2554f7fbd1..a2d4a8ac94ca 100644
+--- a/include/uapi/linux/aio_abi.h
++++ b/include/uapi/linux/aio_abi.h
+@@ -79,7 +79,7 @@ struct io_event {
+ struct iocb {
+ 	/* these are internal to the kernel/libc. */
+ 	__u64	aio_data;	/* data to be returned in event's data */
+-	__u32	PADDED(aio_key, aio_reserved1);
++	__u32	PADDED(aio_key, aio_rw_flags);
+ 				/* the kernel sets aio_key to the req # */
+ 
+ 	/* common fields */
 -- 
-2.11.0
+2.12.0
 
