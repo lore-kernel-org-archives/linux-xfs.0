@@ -1,155 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from prv-mh.provo.novell.com ([137.65.248.74]:52532 "EHLO
-        prv-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933569AbdEKOkK (ORCPT
-        <rfc822;groupwise-linux-xfs@vger.kernel.org:1:1>);
-        Thu, 11 May 2017 10:40:10 -0400
-Message-Id: <591493D00200007800158EA3@prv-mh.provo.novell.com>
-Date: Thu, 11 May 2017 08:39:44 -0600
-From: "Jan Beulich" <JBeulich@suse.com>
-Subject: permanent XFS volume corruption
-References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=__PartF2CAB2A0.0__="
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34204 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932514AbdEKO4s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2017 10:56:48 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170511140223.GA16241@infradead.org>
+References: <20170511124932.226016-1-arnd@arndb.de> <20170511140223.GA16241@infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 11 May 2017 16:56:41 +0200
+Message-ID: <CAK8P3a31impdu8_i6TNjfnPwj-Pv=dy2P=-LW=4xt6-8Aw+4Ag@mail.gmail.com>
+Subject: Re: [PATCH] xfs: avoid harmless gcc-7 warnings
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>, Calvin Owens <calvinowens@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-This is a MIME message. If you are reading this text, you may want to 
-consider changing to a mail reader or gateway that understands how to 
-properly handle MIME multipart messages.
+On Thu, May 11, 2017 at 4:02 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Thu, May 11, 2017 at 02:49:21PM +0200, Arnd Bergmann wrote:
+>> gcc-7 flags the use of integer math inside of a condition
+>> as a potential bug:
+>>
+>> fs/xfs/xfs_bmap_util.c: In function 'xfs_swap_extents_check_format':
+>> fs/xfs/xfs_bmap_util.c:1619:8: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
+>> fs/xfs/xfs_bmap_util.c:1629:8: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
+>>
+>> This one is clearly fine, and we can add a comparison to zero
+>> to shut up the warning.
+>>
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> ---
+>>  fs/xfs/xfs_bmap_util.c | 4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+>> index 2b954308a1d6..cbd3ffe42f39 100644
+>> --- a/fs/xfs/xfs_bmap_util.c
+>> +++ b/fs/xfs/xfs_bmap_util.c
+>> @@ -1613,7 +1613,7 @@ xfs_swap_extents_check_format(
+>>        * extent format...
+>>        */
+>>       if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+>> -             if (XFS_IFORK_BOFF(ip) &&
+>> +             if ((XFS_IFORK_BOFF(ip) != 0) &&
+>
+> Even if we were fine with fixing this odd warning the additional braces
+> are simply bogus.
 
---=__PartF2CAB2A0.0__=
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+The warning seems generally useful and is enabled by default in gcc-7.
+An example of a real bug it found is
+https://patchwork.kernel.org/patch/9431813/, so I'd prefer to leave it
+enabled and fix the few instances in the kernel.
 
-Hello,
+I found a better way to rework the code to avoid the warning, sending
+out v2 now.
 
-It is now on two systems that I'm getting
-
-XFS (sda1): corrupt dinode 576254627, has realtime flag set.
-ffff88042ea63300: 49 4e 81 a4 02 02 00 00 00 00 03 e8 00 00 00 64  =
-IN.............d
-ffff88042ea63310: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  =
-................
-ffff88042ea63320: 59 14 0e 9f 0f a7 7c 2f 59 14 0e 9f 18 f3 db 2f  =
-Y.....|/Y....../
-ffff88042ea63330: 59 14 0e 9f 18 f3 db 2f 00 00 00 00 00 00 80 80  =
-Y....../........
-XFS (sda1): Internal error xfs_iformat(realtime) at line 133 of file =
-.../fs/xfs/xfs_inode_fork.c.  Caller xfs_iread+0xea/0x2e0 [xfs]
-CPU: 10 PID: 4418 Comm: smbd Not tainted 3.12.73-sp1-2017-04-26-jb #2
-Hardware name: AMD Dinar/Dinar, BIOS RDN1506A 08/31/2014
- 0000000000000001 ffffffff81354083 ffffffffa03ea40a ffffffffa03a0952
- 0000000000000000 0000000000000075 ffff88042ea63300 ffff88042f508000
- ffff88022efe7000 ffff88042f508028 0000000000000000 ffffffffa03e9b06
-Call Trace:
- [<ffffffff81004e3b>] dump_trace+0x7b/0x310
- [<ffffffff81004ad6>] show_stack_log_lvl+0xe6/0x150
- [<ffffffff81005ddc>] show_stack+0x1c/0x50
- [<ffffffff81354083>] dump_stack+0x6f/0x84
- [<ffffffffa03a0952>] xfs_corruption_error+0x62/0xa0 [xfs]
- [<ffffffffa03e9b06>] xfs_iformat_fork+0x3b6/0x530 [xfs]
- [<ffffffffa03ea40a>] xfs_iread+0xea/0x2e0 [xfs]
- [<ffffffffa03a6538>] xfs_iget_cache_miss+0x58/0x1d0 [xfs]
- [<ffffffffa03a67c3>] xfs_iget+0x113/0x190 [xfs]
- [<ffffffffa03e5be8>] xfs_lookup+0xb8/0xd0 [xfs]
- [<ffffffffa03aaddd>] xfs_vn_lookup+0x4d/0x90 [xfs]
- [<ffffffff8110539d>] lookup_real+0x1d/0x60
- [<ffffffff811064d2>] __lookup_hash+0x32/0x50
- [<ffffffff8110a2a4>] path_lookupat+0x7f4/0x8b0
- [<ffffffff8110a38e>] filename_lookup+0x2e/0x90
- [<ffffffff8110abef>] user_path_at_empty+0x9f/0xd0
- [<ffffffff81100678>] vfs_fstatat+0x48/0xa0
- [<ffffffff8110081f>] SyS_newstat+0x1f/0x50
- [<ffffffff81358d42>] system_call_fastpath+0x16/0x1b
- [<00007f141f4f0d35>] 0x7f141f4f0d34
-XFS (sda1): Corruption detected. Unmount and run xfs_repair
-
-after a crash with a 4.11-based kernel. I didn't try xfs_repair-ing
-the volume in this second instance, as the result from doing so in
-the first instance was only permanent re-occurrence (and
-apparently spreading) of the problem. It may be interesting that
-xfs_check finds only this one corrupted inode, while the kernel
-also finds at least one more:
-
-XFS (sda1): corrupt dinode 104812066, has realtime flag set.
-ffff88042e88f200: 49 4e 41 ed 02 01 00 00 00 00 03 e8 00 00 00 64  =
-INA............d
-ffff88042e88f210: 00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 00  =
-................
-ffff88042e88f220: 59 01 c7 96 00 16 1e 50 59 14 0e a2 15 60 54 2f  =
-Y......PY....`T/
-ffff88042e88f230: 59 14 0e a2 15 60 54 2f 00 00 00 00 00 00 00 8e  =
-Y....`T/........
-XFS (sda1): Internal error xfs_iformat(realtime) at line 133 of file =
-.../fs/xfs/xfs_inode_fork.c.  Caller xfs_iread+0xea/0x2e0 [xfs]
-
-The kernel used after the crash doesn't appear to matter, all report
-the same issues, but I've experienced similar crashes in the past
-without ever having seen such corruption before.
-
-In any event I think there are two problems: The corruption itself
-(possibly an issue with recent enough upstream kernels only) and
-the fact that running xfs_repair doesn't help in these cases. I'm
-attaching xfs_check and xfs_metadump warning output for both
-affected volumes in this second instance. The full files
-xfs_metadump -agow produced can be provided upon request
-(500Mb and 80Mb uncompressed respectively).
-
-Thanks for any advice / fix,
-Jan
-
-
---=__PartF2CAB2A0.0__=
-Content-Type: application/octet-stream; name="sda1.chk"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="sda1.chk"
-
-aW5vZGUgNTc2MjU0NjI3IGJhZCBydCBibG9jayBudW1iZXIgMzYwMTk0MjksIG9mZnNldCAwCmJh
-ZCBuYmxvY2tzIDkgZm9yIGlub2RlIDU3NjI1NDYyNywgY291bnRlZCAwCmJsb2NrIDIvMjQ2NDk5
-NyB0eXBlIHVua25vd24gbm90IGV4cGVjdGVkCmJsb2NrIDIvMjQ2NDk5OCB0eXBlIHVua25vd24g
-bm90IGV4cGVjdGVkCmJsb2NrIDIvMjQ2NDk5OSB0eXBlIHVua25vd24gbm90IGV4cGVjdGVkCmJs
-b2NrIDIvMjQ2NTAwMCB0eXBlIHVua25vd24gbm90IGV4cGVjdGVkCmJsb2NrIDIvMjQ2NTAwMSB0
-eXBlIHVua25vd24gbm90IGV4cGVjdGVkCmJsb2NrIDIvMjQ2NTAwMiB0eXBlIHVua25vd24gbm90
-IGV4cGVjdGVkCmJsb2NrIDIvMjQ2NTAwMyB0eXBlIHVua25vd24gbm90IGV4cGVjdGVkCmJsb2Nr
-IDIvMjQ2NTAwNCB0eXBlIHVua25vd24gbm90IGV4cGVjdGVkCmJsb2NrIDIvMjQ2NTAwNSB0eXBl
-IHVua25vd24gbm90IGV4cGVjdGVkCg==
-
---=__PartF2CAB2A0.0__=
-Content-Type: application/octet-stream; name="sda1.warn"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="sda1.warn"
-
-Cnhmc19tZXRhZHVtcDogaW52YWxpZCBkcWJsayBpbm9kZSBudW1iZXIgKC0xKQp4ZnNfbWV0YWR1
-bXA6IGludmFsaWQgZHFibGsgaW5vZGUgbnVtYmVyICgtMSkK
-
---=__PartF2CAB2A0.0__=
-Content-Type: application/octet-stream; name="sdb8.chk"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="sdb8.chk"
-
-aW5vZGUgNzY0IGJhZCBydCBibG9jayBudW1iZXIgNjgzLCBvZmZzZXQgMApiYWQgbmJsb2NrcyAx
-MiBmb3IgaW5vZGUgNzY0LCBjb3VudGVkIDAKaW5vZGUgMjY4NDQ4Njc0IGJhZCBydCBibG9jayBu
-dW1iZXIgMTY3NzkwMDUsIG9mZnNldCAwCmJhZCBuYmxvY2tzIDEgZm9yIGlub2RlIDI2ODQ0ODY3
-NCwgY291bnRlZCAwCmJsb2NrIDAvNjgzIHR5cGUgdW5rbm93biBub3QgZXhwZWN0ZWQKYmxvY2sg
-MC82ODQgdHlwZSB1bmtub3duIG5vdCBleHBlY3RlZApibG9jayAwLzY4NSB0eXBlIHVua25vd24g
-bm90IGV4cGVjdGVkCmJsb2NrIDAvNjg2IHR5cGUgdW5rbm93biBub3QgZXhwZWN0ZWQKYmxvY2sg
-MC82ODcgdHlwZSB1bmtub3duIG5vdCBleHBlY3RlZApibG9jayAwLzY4OCB0eXBlIHVua25vd24g
-bm90IGV4cGVjdGVkCmJsb2NrIDAvNjg5IHR5cGUgdW5rbm93biBub3QgZXhwZWN0ZWQKYmxvY2sg
-MC82OTAgdHlwZSB1bmtub3duIG5vdCBleHBlY3RlZApibG9jayAwLzY5MSB0eXBlIHVua25vd24g
-bm90IGV4cGVjdGVkCmJsb2NrIDAvNjkyIHR5cGUgdW5rbm93biBub3QgZXhwZWN0ZWQKYmxvY2sg
-MC82OTMgdHlwZSB1bmtub3duIG5vdCBleHBlY3RlZApibG9jayAwLzY5NCB0eXBlIHVua25vd24g
-bm90IGV4cGVjdGVkCmJsb2NrIDEvMTc4OSB0eXBlIHVua25vd24gbm90IGV4cGVjdGVkCg==
-
---=__PartF2CAB2A0.0__=
-Content-Type: application/octet-stream; name="sdb8.warn"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="sdb8.warn"
-
-Cnhmc19tZXRhZHVtcDogaW52YWxpZCBkcWJsayBpbm9kZSBudW1iZXIgKC0xKQp4ZnNfbWV0YWR1
-bXA6IGludmFsaWQgZHFibGsgaW5vZGUgbnVtYmVyICgtMSkK
-
---=__PartF2CAB2A0.0__=--
+    Arnd
