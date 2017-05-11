@@ -1,145 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:46815 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752294AbdEJJIy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 May 2017 05:08:54 -0400
-Subject: Re: Locking problems with Linux 4.9 with NFSD and `fs/iomap.c`
-References: <de171adc29600902515d1424fd800678@molgen.mpg.de>
- <20170508131843.GB29840@bfoster.bfoster>
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-Message-ID: <90423117-4c49-5f61-2dcf-abf6d77c7ba3@molgen.mpg.de>
-Date: Wed, 10 May 2017 11:08:52 +0200
+Received: from sandeen.net ([63.231.237.45]:52666 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754244AbdEKPQr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 May 2017 11:16:47 -0400
+Subject: Re: permanent XFS volume corruption
+References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
+ <591493D00200007800158EA3@prv-mh.provo.novell.com>
+ <208b91b4-9f5e-b204-52d7-4b7706bdc8fe@sandeen.net>
+ <59149B810200007800158EE1@prv-mh.provo.novell.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3ccd7176-21b0-22a7-0dca-345ae7d41e5d@sandeen.net>
+Date: Thu, 11 May 2017 10:16:35 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170508131843.GB29840@bfoster.bfoster>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+In-Reply-To: <59149B810200007800158EE1@prv-mh.provo.novell.com>
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org, it+linux-nfs@molgen.mpg.de, Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>
+To: Jan Beulich <JBeulich@suse.com>
+Cc: linux-xfs@vger.kernel.org
 
-Dear Brian,
-
-
-On 05/08/17 15:18, Brian Foster wrote:
-> cc Christoph, who's more familiar with nfs and wrote the iomap bits.
-
-Thank you.
-
-> On Sun, May 07, 2017 at 09:09:49PM +0200, Paul Menzel wrote:
-
->> There seems to be a regression in Linux 4.9 compared to 4.4. Maybe you have
->> an idea.
+On 5/11/17 10:12 AM, Jan Beulich wrote:
+>>>> On 11.05.17 at 16:58, <sandeen@sandeen.net> wrote:
+>> On 5/11/17 9:39 AM, Jan Beulich wrote:
+>>> It is now on two systems that I'm getting
+>>>
+>>> XFS (sda1): corrupt dinode 576254627, has realtime flag set.
+>>> ffff88042ea63300: 49 4e 81 a4 02 02 00 00 00 00 03 e8 00 00 00 64  IN.............d
+>>> ffff88042ea63310: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>>> ffff88042ea63320: 59 14 0e 9f 0f a7 7c 2f 59 14 0e 9f 18 f3 db 2f  Y.....|/Y....../
+>>> ffff88042ea63330: 59 14 0e 9f 18 f3 db 2f 00 00 00 00 00 00 80 80  Y....../........
+>>> XFS (sda1): Internal error xfs_iformat(realtime) at line 133 of file 
+>> .../fs/xfs/xfs_inode_fork.c.  Caller xfs_iread+0xea/0x2e0 [xfs]
+>>> CPU: 10 PID: 4418 Comm: smbd Not tainted 3.12.73-sp1-2017-04-26-jb #2
 >>
->> The system used 4.4.38 without issues, and was updated to 4.9.23 on April
->> 24th. Since Friday, the NFS exports where not accessible anymore. Rebooting
->> the system into 4.9.24, 4.9.24, and 4.9.25 didn’t change anything, and the
->> system went into the some lock right away. Booting 4.4.38 fixed the issue
->> though.
+>> Well, pretty old... oh, ok but you think it came about after a
+>> 4.11 crash?
 > 
-> The buffered write path was rewritten with the iomap mechanism around
-> 4.7 or so, so there's a pretty big functionality gap between 4.4 and
-> 4.9.
+> As said elsewhere, similar messages appear with 4.11 or other kernel
+> versions I have installed on that box.
 > 
->> Here is more information.
+>>> Hardware name: AMD Dinar/Dinar, BIOS RDN1506A 08/31/2014
+>>>  0000000000000001 ffffffff81354083 ffffffffa03ea40a ffffffffa03a0952
+>>>  0000000000000000 0000000000000075 ffff88042ea63300 ffff88042f508000
+>>>  ffff88022efe7000 ffff88042f508028 0000000000000000 ffffffffa03e9b06
+>>> Call Trace:
+>>>  [<ffffffff81004e3b>] dump_trace+0x7b/0x310
+>>>  [<ffffffff81004ad6>] show_stack_log_lvl+0xe6/0x150
+>>>  [<ffffffff81005ddc>] show_stack+0x1c/0x50
+>>>  [<ffffffff81354083>] dump_stack+0x6f/0x84
+>>>  [<ffffffffa03a0952>] xfs_corruption_error+0x62/0xa0 [xfs]
+>>>  [<ffffffffa03e9b06>] xfs_iformat_fork+0x3b6/0x530 [xfs]
+>>>  [<ffffffffa03ea40a>] xfs_iread+0xea/0x2e0 [xfs]
+>>>  [<ffffffffa03a6538>] xfs_iget_cache_miss+0x58/0x1d0 [xfs]
+>>>  [<ffffffffa03a67c3>] xfs_iget+0x113/0x190 [xfs]
+>>>  [<ffffffffa03e5be8>] xfs_lookup+0xb8/0xd0 [xfs]
+>>>  [<ffffffffa03aaddd>] xfs_vn_lookup+0x4d/0x90 [xfs]
+>>>  [<ffffffff8110539d>] lookup_real+0x1d/0x60
+>>>  [<ffffffff811064d2>] __lookup_hash+0x32/0x50
+>>>  [<ffffffff8110a2a4>] path_lookupat+0x7f4/0x8b0
+>>>  [<ffffffff8110a38e>] filename_lookup+0x2e/0x90
+>>>  [<ffffffff8110abef>] user_path_at_empty+0x9f/0xd0
+>>>  [<ffffffff81100678>] vfs_fstatat+0x48/0xa0
+>>>  [<ffffffff8110081f>] SyS_newstat+0x1f/0x50
+>>>  [<ffffffff81358d42>] system_call_fastpath+0x16/0x1b
+>>>  [<00007f141f4f0d35>] 0x7f141f4f0d34
+>>> XFS (sda1): Corruption detected. Unmount and run xfs_repair
+>>>
+>>> after a crash with a 4.11-based kernel.
 >>
->> NFS doesn’t respond to a null call.
+>> Oh, hm.  What caused that crash, do you have logs prior to it?
 > 
-> What exactly is a NULL call?
+> Nothing at all in the logs; the crashes were hypervisor ones in
+> both instances.
 
-Sorry for not making that clear for non-NFS people. From *NFS Version 3 
-Protocol Specification* [1]:
+ok, so this guest was fine, other than getting taken out by the
+hypervisor?
 
-> Procedure NULL does not do any work. It is made available to
-> allow server response testing and timing.
+>>> I didn't try xfs_repair-ing
+>>> the volume in this second instance, as the result from doing so in
+>>> the first instance was only permanent re-occurrence (and
+>>> apparently spreading) of the problem. It may be interesting that
+>>> xfs_check finds only this one corrupted inode, while the kernel
+>>> also finds at least one more:
+>>
+>> xfs_repair -n would be safe, what does it say?  (mount/unmount
+>> first, to clear the log)
+> 
+> So are you saying "xfs_repair -n" is not the same as "xfs_check"?
 
-> Can this be reproduced easily?
+Different body of code, even though they perform similar functions.
 
-Unfortunately, we don’t know how to reproduce it. It seems to happen 
-after heavy input/output operations though.
+>>> In any event I think there are two problems: The corruption itself
+>>> (possibly an issue with recent enough upstream kernels only) and
+>>> the fact that running xfs_repair doesn't help in these cases. I'm
+>>> attaching xfs_check and xfs_metadump warning output for both
+>>> affected volumes in this second instance. The full files
+>>> xfs_metadump -agow produced can be provided upon request
+>>> (500Mb and 80Mb uncompressed respectively).
+>>
+>> can you provide one or both compressed xfs_metadumps offline?
+>> (No need to post URL to the list)
+> 
+> Well, I have no idea where to upload it to, all the sites I know of
+> only accept text kind of data, and I don't think that would be
+> suitable here. (I'm sorry for my ignorance, but that's not something
+> I ever had a need to do.)
 
-```
-$ sudo nfsstat -s
-Server rpc stats:
-calls      badcalls   badclnt    badauth    xdrcall
-15644232   0          0          0          0
+How small does the 80mb one compress with xz?  You may be able to just
+mail it my way.  If not I'll find another option.
 
-Server nfs v4:
-null         compound
-1071      0% 15643006 99%
+-Eric
 
-Server nfs v4 operations:
-op0-unused   op1-unused   op2-future   access       close        commit 
-
-0         0% 0         0% 0         0% 87846     0% 42798     0% 50658 
-   0%
-create       delegpurge   delegreturn  getattr      getfh        link 
-
-2805      0% 0         0% 16866     0% 8271204  21% 82924     0% 0 
-   0%
-lock         lockt        locku        lookup       lookup_root  nverify 
-
-0         0% 0         0% 0         0% 64424     0% 0         0% 0 
-   0%
-open         openattr     open_conf    open_dgrd    putfh 
-putpubfh
-53848     0% 0         0% 1081      0% 20        0% 15569041 39% 0 
-   0%
-putrootfh    read         readdir      readlink     remove       rename 
-
-1072      0% 7187366  18% 2045      0% 73        0% 9116      0% 5836 
-   0%
-renew        restorefh    savefh       secinfo      setattr 
-setcltid
-72534     0% 0         0% 5836      0% 0         0% 21817     0% 1854 
-   0%
-setcltidconf verify       write        rellockowner bc_ctl 
-bind_conn
-1854      0% 0         0% 7794634  19% 0         0% 0         0% 0 
-   0%
-exchange_id  create_ses   destroy_ses  free_stateid getdirdeleg 
-getdevinfo
-0         0% 0         0% 0         0% 0         0% 0         0% 0 
-   0%
-getdevlist   layoutcommit layoutget    layoutreturn secinfononam 
-sequence
-0         0% 0         0% 0         0% 0         0% 0         0% 0 
-   0%
-set_ssv      test_stateid want_deleg   destroy_clid reclaim_comp
-0         0% 0         0% 0         0% 0         0% 0         0%
-```
-
-> Otherwise, it's not clear to me whether you've hit a deadlock or some
-> kind of livelock. Have you checked syslog for any crash or hung task
-> messages? Please also provide the hung task output (echo w >
-> /proc/sysrq-trigger) once you've hit this state. It would be
-> particularly interesting to see whether the iomap_zero_range() path is
-> included in that output.
-
-Please see the Linux messages in my reply to Christoph’s message.
-
-> It may also be interesting to enable the xfs_zero_eof() tracepoint
-> (trace-cmd start -e 'xfs:xfs_zero_eof') and see what the last few
-> entries are from /sys/kernel/debug/tracing/trace_pipe.
-
-I built `trace-cmd`, and did what you asked, but there are no messages.
-
-```
-$ sudo strace ~/src/trace-cmd/trace-cmd start -e 'xfs:xfs_zero_eof'
-$ sudo cat /sys/kernel/tracing/events/xfs/xfs_zero_eof/enable
-1
-$ sudo cat /sys/kernel/debug/tracing/tracing_on
-1
-$ sudo cat /sys/kernel/debug/tracing/trace_pipe
-
-```
-
-
-Kind regards,
-
-Paul
-
-
-[1] https://www.ietf.org/rfc/rfc1813.txt
