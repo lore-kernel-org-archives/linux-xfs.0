@@ -1,192 +1,207 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from prv-mh.provo.novell.com ([137.65.248.74]:34136 "EHLO
-        prv-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756398AbdEKPku (ORCPT
-        <rfc822;groupwise-linux-xfs@vger.kernel.org:2:1>);
-        Thu, 11 May 2017 11:40:50 -0400
-Message-Id: <5914A2220200007800158F08@prv-mh.provo.novell.com>
-Date: Thu, 11 May 2017 09:40:50 -0600
-From: "Jan Beulich" <JBeulich@suse.com>
-Subject: Re: permanent XFS volume corruption
-References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <208b91b4-9f5e-b204-52d7-4b7706bdc8fe@sandeen.net>
- <59149B810200007800158EE1@prv-mh.provo.novell.com>
- <3ccd7176-21b0-22a7-0dca-345ae7d41e5d@sandeen.net>
-In-Reply-To: <3ccd7176-21b0-22a7-0dca-345ae7d41e5d@sandeen.net>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=__PartB189F112.1__="
+Received: from mx2.suse.de ([195.135.220.15]:41808 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932652AbdEKTRd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 May 2017 15:17:33 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 04/10] fs: Introduce RWF_NOWAIT
+Date: Thu, 11 May 2017 14:17:04 -0500
+Message-Id: <20170511191710.31959-5-rgoldwyn@suse.de>
+In-Reply-To: <20170511191710.31959-1-rgoldwyn@suse.de>
+References: <20170511191710.31959-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-This is a MIME message. If you are reading this text, you may want to 
-consider changing to a mail reader or gateway that understands how to 
-properly handle MIME multipart messages.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
---=__PartB189F112.1__=
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+RWF_NOWAIT informs kernel to bail out if an AIO request will block
+for reasons such as file allocations, or a writeback triggered,
+or would block while allocating requests while performing
+direct I/O.
 
->>> On 11.05.17 at 17:16, <sandeen@sandeen.net> wrote:
-> On 5/11/17 10:12 AM, Jan Beulich wrote:
->>>>> On 11.05.17 at 16:58, <sandeen@sandeen.net> wrote:
->>> Oh, hm.  What caused that crash, do you have logs prior to it?
->>=20
->> Nothing at all in the logs; the crashes were hypervisor ones in
->> both instances.
->=20
-> ok, so this guest was fine, other than getting taken out by the
-> hypervisor?
+RWF_NOWAIT is translated to IOCB_NOWAIT for iocb->ki_flags.
 
-Well, it was the host (Xen Dom0) actually. But yes, the Dom0 part
-of the system was entirely fine.
+The check for -EOPNOTSUPP is placed in generic_file_write_iter(). This
+is called by most filesystems, either through fsops.write_iter() or through
+the function defined by write_iter(). If not, we perform the check defined
+by .write_iter() which is called for direct IO specifically.
 
->>>> I didn't try xfs_repair-ing
->>>> the volume in this second instance, as the result from doing so in
->>>> the first instance was only permanent re-occurrence (and
->>>> apparently spreading) of the problem. It may be interesting that
->>>> xfs_check finds only this one corrupted inode, while the kernel
->>>> also finds at least one more:
->>>
->>> xfs_repair -n would be safe, what does it say?  (mount/unmount
->>> first, to clear the log)
->>=20
->> So are you saying "xfs_repair -n" is not the same as "xfs_check"?
->=20
-> Different body of code, even though they perform similar functions.
+Filesystems xfs, btrfs and ext4 would be supported in the following patches.
 
-Output for both volumes attached.
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/9p/vfs_file.c        | 3 +++
+ fs/aio.c                | 6 ++++++
+ fs/ceph/file.c          | 3 +++
+ fs/cifs/file.c          | 3 +++
+ fs/fuse/file.c          | 3 +++
+ fs/nfs/direct.c         | 3 +++
+ fs/ocfs2/file.c         | 3 +++
+ include/linux/fs.h      | 5 ++++-
+ include/uapi/linux/fs.h | 1 +
+ mm/filemap.c            | 3 +++
+ 10 files changed, 32 insertions(+), 1 deletion(-)
 
->>>> In any event I think there are two problems: The corruption itself
->>>> (possibly an issue with recent enough upstream kernels only) and
->>>> the fact that running xfs_repair doesn't help in these cases. I'm
->>>> attaching xfs_check and xfs_metadump warning output for both
->>>> affected volumes in this second instance. The full files
->>>> xfs_metadump -agow produced can be provided upon request
->>>> (500Mb and 80Mb uncompressed respectively).
->>>
->>> can you provide one or both compressed xfs_metadumps offline?
->>> (No need to post URL to the list)
->>=20
->> Well, I have no idea where to upload it to, all the sites I know of
->> only accept text kind of data, and I don't think that would be
->> suitable here. (I'm sorry for my ignorance, but that's not something
->> I ever had a need to do.)
->=20
-> How small does the 80mb one compress with xz?  You may be able to just
-> mail it my way.  If not I'll find another option.
+diff --git a/fs/9p/vfs_file.c b/fs/9p/vfs_file.c
+index 3de3b4a89d89..403681db7723 100644
+--- a/fs/9p/vfs_file.c
++++ b/fs/9p/vfs_file.c
+@@ -411,6 +411,9 @@ v9fs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 	loff_t origin;
+ 	int err = 0;
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	retval = generic_write_checks(iocb, from);
+ 	if (retval <= 0)
+ 		return retval;
+diff --git a/fs/aio.c b/fs/aio.c
+index 020fa0045e3c..34027b67e2f4 100644
+--- a/fs/aio.c
++++ b/fs/aio.c
+@@ -1592,6 +1592,12 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
+ 		goto out_put_req;
+ 	}
+ 
++	if ((req->common.ki_flags & IOCB_NOWAIT) &&
++			!(req->common.ki_flags & IOCB_DIRECT)) {
++		ret = -EOPNOTSUPP;
++		goto out_put_req;
++	}
++
+ 	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
+ 	if (unlikely(ret)) {
+ 		pr_debug("EFAULT: aio_key\n");
+diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+index 26cc95421cca..af28419b1731 100644
+--- a/fs/ceph/file.c
++++ b/fs/ceph/file.c
+@@ -1267,6 +1267,9 @@ static ssize_t ceph_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 	int err, want, got;
+ 	loff_t pos;
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	if (ceph_snap(inode) != CEPH_NOSNAP)
+ 		return -EROFS;
+ 
+diff --git a/fs/cifs/file.c b/fs/cifs/file.c
+index 21d404535739..f8858a06e119 100644
+--- a/fs/cifs/file.c
++++ b/fs/cifs/file.c
+@@ -2638,6 +2638,9 @@ ssize_t cifs_user_writev(struct kiocb *iocb, struct iov_iter *from)
+ 	 * write request.
+ 	 */
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	rc = generic_write_checks(iocb, from);
+ 	if (rc <= 0)
+ 		return rc;
+diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+index ec238fb5a584..72786e798319 100644
+--- a/fs/fuse/file.c
++++ b/fs/fuse/file.c
+@@ -1425,6 +1425,9 @@ static ssize_t fuse_direct_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 	struct fuse_io_priv io = FUSE_IO_PRIV_SYNC(file);
+ 	ssize_t res;
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	if (is_bad_inode(inode))
+ 		return -EIO;
+ 
+diff --git a/fs/nfs/direct.c b/fs/nfs/direct.c
+index c1b5fed7c863..dcea0caa5cb5 100644
+--- a/fs/nfs/direct.c
++++ b/fs/nfs/direct.c
+@@ -996,6 +996,9 @@ ssize_t nfs_file_direct_write(struct kiocb *iocb, struct iov_iter *iter)
+ 	dfprintk(FILE, "NFS: direct write(%pD2, %zd@%Ld)\n",
+ 		file, iov_iter_count(iter), (long long) iocb->ki_pos);
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	result = generic_write_checks(iocb, iter);
+ 	if (result <= 0)
+ 		return result;
+diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
+index bfeb647459d9..e7f8ba890305 100644
+--- a/fs/ocfs2/file.c
++++ b/fs/ocfs2/file.c
+@@ -2235,6 +2235,9 @@ static ssize_t ocfs2_file_write_iter(struct kiocb *iocb,
+ 	if (count == 0)
+ 		return 0;
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	direct_io = iocb->ki_flags & IOCB_DIRECT ? 1 : 0;
+ 
+ 	inode_lock(inode);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 2e6fc6a23f91..7e39b510b7a4 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -270,6 +270,7 @@ struct writeback_control;
+ #define IOCB_DSYNC		(1 << 4)
+ #define IOCB_SYNC		(1 << 5)
+ #define IOCB_WRITE		(1 << 6)
++#define IOCB_NOWAIT		(1 << 7)
+ 
+ struct kiocb {
+ 	struct file		*ki_filp;
+@@ -3053,7 +3054,7 @@ static inline int iocb_flags(struct file *file)
+ 
+ static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
+ {
+-	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC)))
++	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC | RWF_NOWAIT)))
+ 		return -EOPNOTSUPP;
+ 
+ 	if (flags & RWF_HIPRI)
+@@ -3062,6 +3063,8 @@ static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
+ 		ki->ki_flags |= IOCB_DSYNC;
+ 	if (flags & RWF_SYNC)
+ 		ki->ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
++	if (flags & RWF_NOWAIT)
++		ki->ki_flags |= IOCB_NOWAIT;
+ 	return 0;
+ }
+ 
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index 048a85e9f017..7bcaef101876 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -347,5 +347,6 @@ struct fscrypt_policy {
+ #define RWF_HIPRI			0x00000001 /* high priority request, poll if possible */
+ #define RWF_DSYNC			0x00000002 /* per-IO O_DSYNC */
+ #define RWF_SYNC			0x00000004 /* per-IO O_SYNC */
++#define RWF_NOWAIT			0x00000008 /* per-IO, return -EAGAIN if operation would block */
+ 
+ #endif /* _UAPI_LINUX_FS_H */
+diff --git a/mm/filemap.c b/mm/filemap.c
+index fae5a361befb..ca3031f505f2 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -3015,6 +3015,9 @@ ssize_t generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 	struct inode *inode = file->f_mapping->host;
+ 	ssize_t ret;
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	inode_lock(inode);
+ 	ret = generic_write_checks(iocb, from);
+ 	if (ret > 0)
+-- 
+2.12.0
 
-4.6 Mb. Is that small enough for your mailbox?
-
-Jan
-
-
---=__PartB189F112.1__=
-Content-Type: application/octet-stream; name="sda1.dry"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="sda1.dry"
-
-UGhhc2UgMSAtIGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2NrLi4uClBoYXNlIDIgLSB1c2luZyBp
-bnRlcm5hbCBsb2cKICAgICAgICAtIHNjYW4gZmlsZXN5c3RlbSBmcmVlc3BhY2UgYW5kIGlub2Rl
-IG1hcHMuLi4KICAgICAgICAtIGZvdW5kIHJvb3QgaW5vZGUgY2h1bmsKUGhhc2UgMyAtIGZvciBl
-YWNoIEFHLi4uCiAgICAgICAgLSBzY2FuIChidXQgZG9uJ3QgY2xlYXIpIGFnaSB1bmxpbmtlZCBs
-aXN0cy4uLgogICAgICAgIC0gcHJvY2VzcyBrbm93biBpbm9kZXMgYW5kIHBlcmZvcm0gaW5vZGUg
-ZGlzY292ZXJ5Li4uCiAgICAgICAgLSBhZ25vID0gMAppbm9kZSAxMDQ4MTIwNjYgaGFzIFJUIGZs
-YWcgc2V0IGJ1dCB0aGVyZSBpcyBubyBSVCBkZXZpY2UKaW5vZGUgMTA0ODEyMDY2IGhhcyBSVCBm
-bGFnIHNldCBidXQgdGhlcmUgaXMgbm8gUlQgZGV2aWNlCiwgd291bGQgZml4IGJhZCBmbGFncy4K
-ICAgICAgICAtIGFnbm8gPSAxCiAgICAgICAgLSBhZ25vID0gMgpCYWQgZmxhZ3Mgc2V0IGluIGlu
-b2RlIDU3NjI1NDYyNwpCYWQgZmxhZ3Mgc2V0IGluIGlub2RlIDU3NjI1NDYzNgpCYWQgZmxhZ3Mg
-c2V0IGluIGlub2RlIDU3NjI1NDYyNwosIHdvdWxkIGZpeCBiYWQgZmxhZ3MuCmZvdW5kIGlub2Rl
-IDU3NjI1NDYyNyBjbGFpbWluZyB0byBiZSBhIHJlYWwtdGltZSBmaWxlCndvdWxkIGhhdmUgY2xl
-YXJlZCBpbm9kZSA1NzYyNTQ2MjcKQmFkIGZsYWdzIHNldCBpbiBpbm9kZSA1NzYyNTQ2MzYKLCB3
-b3VsZCBmaXggYmFkIGZsYWdzLgogICAgICAgIC0gYWdubyA9IDMKICAgICAgICAtIHByb2Nlc3Mg
-bmV3bHkgZGlzY292ZXJlZCBpbm9kZXMuLi4KUGhhc2UgNCAtIGNoZWNrIGZvciBkdXBsaWNhdGUg
-YmxvY2tzLi4uCiAgICAgICAgLSBzZXR0aW5nIHVwIGR1cGxpY2F0ZSBleHRlbnQgbGlzdC4uLgog
-ICAgICAgIC0gY2hlY2sgZm9yIGlub2RlcyBjbGFpbWluZyBkdXBsaWNhdGUgYmxvY2tzLi4uCiAg
-ICAgICAgLSBhZ25vID0gMAogICAgICAgIC0gYWdubyA9IDIKICAgICAgICAtIGFnbm8gPSAxCiAg
-ICAgICAgLSBhZ25vID0gMwpCYWQgZmxhZ3Mgc2V0IGluIGlub2RlIDU3NjI1NDYyNwosIHdvdWxk
-IGZpeCBiYWQgZmxhZ3MuCmZvdW5kIGlub2RlIDU3NjI1NDYyNyBjbGFpbWluZyB0byBiZSBhIHJl
-YWwtdGltZSBmaWxlCndvdWxkIGhhdmUgY2xlYXJlZCBpbm9kZSA1NzYyNTQ2MjcKQmFkIGZsYWdz
-IHNldCBpbiBpbm9kZSA1NzYyNTQ2MzYKLCB3b3VsZCBmaXggYmFkIGZsYWdzLgplbnRyeSAibWFp
-bi1odm02NC5vIiBhdCBibG9jayAwIG9mZnNldCAxNDAwIGluIGRpcmVjdG9yeSBpbm9kZSA1OTg0
-NDg5MTcgcmVmZXJlbmNlcyBmcmVlIGlub2RlIDU3NjI1NDYyNwoJd291bGQgY2xlYXIgaW5vZGUg
-bnVtYmVyIGluIGVudHJ5IGF0IG9mZnNldCAxNDAwLi4uCmlub2RlIDEwNDgxMjA2NiBoYXMgUlQg
-ZmxhZyBzZXQgYnV0IHRoZXJlIGlzIG5vIFJUIGRldmljZQosIHdvdWxkIGZpeCBiYWQgZmxhZ3Mu
-Ck5vIG1vZGlmeSBmbGFnIHNldCwgc2tpcHBpbmcgcGhhc2UgNQpQaGFzZSA2IC0gY2hlY2sgaW5v
-ZGUgY29ubmVjdGl2aXR5Li4uCiAgICAgICAgLSB0cmF2ZXJzaW5nIGZpbGVzeXN0ZW0gLi4uCmNv
-cnJ1cHQgZGlub2RlIDEwNDgxMjA2NiwgaGFzIHJlYWx0aW1lIGZsYWcgc2V0LiAgVGhpcyBpcyBh
-IGJ1Zy4KUGxlYXNlIGNhcHR1cmUgdGhlIGZpbGVzeXN0ZW0gbWV0YWRhdGEgd2l0aCB4ZnNfbWV0
-YWR1bXAgYW5kCnJlcG9ydCBpdCB0byB4ZnNAb3NzLnNnaS5jb20uCmNhY2hlX25vZGVfcHVyZ2U6
-IHJlZmNvdW50IHdhcyAxLCBub3QgemVybyAobm9kZT0weDdmOTA0MGQyMGU0MCkKY291bGRuJ3Qg
-bWFwIGlub2RlIDEwNDgxMjA2NiwgZXJyID0gMTE3CmVudHJ5ICJtYWluLWh2bTY0Lm8iIGluIGRp
-cmVjdG9yeSBpbm9kZSA1OTg0NDg5MTcgcG9pbnRzIHRvIGZyZWUgaW5vZGUgNTc2MjU0NjI3LCB3
-b3VsZCBqdW5rIGVudHJ5CmJhZCBoYXNoIHRhYmxlIGZvciBkaXJlY3RvcnkgaW5vZGUgNTk4NDQ4
-OTE3IChubyBkYXRhIGVudHJ5KTogd291bGQgcmVidWlsZAogICAgICAgIC0gdHJhdmVyc2FsIGZp
-bmlzaGVkIC4uLgogICAgICAgIC0gbW92aW5nIGRpc2Nvbm5lY3RlZCBpbm9kZXMgdG8gbG9zdCtm
-b3VuZCAuLi4KZGlzY29ubmVjdGVkIGlub2RlIDkzMjAxMTcsIHdvdWxkIG1vdmUgdG8gbG9zdCtm
-b3VuZApkaXNjb25uZWN0ZWQgaW5vZGUgOTMyMDExOSwgd291bGQgbW92ZSB0byBsb3N0K2ZvdW5k
-CmRpc2Nvbm5lY3RlZCBpbm9kZSA5MzIwMTIwLCB3b3VsZCBtb3ZlIHRvIGxvc3QrZm91bmQKZGlz
-Y29ubmVjdGVkIGlub2RlIDkzMjAxMjEsIHdvdWxkIG1vdmUgdG8gbG9zdCtmb3VuZApkaXNjb25u
-ZWN0ZWQgaW5vZGUgOTMyMDEyMywgd291bGQgbW92ZSB0byBsb3N0K2ZvdW5kCmRpc2Nvbm5lY3Rl
-ZCBpbm9kZSAxMDQ4MTIwNjcsIHdvdWxkIG1vdmUgdG8gbG9zdCtmb3VuZApkaXNjb25uZWN0ZWQg
-aW5vZGUgMTA0ODEyMDY4LCB3b3VsZCBtb3ZlIHRvIGxvc3QrZm91bmQKUGhhc2UgNyAtIHZlcmlm
-eSBsaW5rIGNvdW50cy4uLgp3b3VsZCBoYXZlIHJlc2V0IGlub2RlIDEwNDgxMjA2NiBubGlua3Mg
-ZnJvbSAyIHRvIDEKTm8gbW9kaWZ5IGZsYWcgc2V0LCBza2lwcGluZyBmaWxlc3lzdGVtIGZsdXNo
-IGFuZCBleGl0aW5nLgo=
-
---=__PartB189F112.1__=
-Content-Type: application/octet-stream; name="sdb8.dry"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="sdb8.dry"
-
-UGhhc2UgMSAtIGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2NrLi4uClBoYXNlIDIgLSB1c2luZyBp
-bnRlcm5hbCBsb2cKICAgICAgICAtIHNjYW4gZmlsZXN5c3RlbSBmcmVlc3BhY2UgYW5kIGlub2Rl
-IG1hcHMuLi4KICAgICAgICAtIGZvdW5kIHJvb3QgaW5vZGUgY2h1bmsKUGhhc2UgMyAtIGZvciBl
-YWNoIEFHLi4uCiAgICAgICAgLSBzY2FuIChidXQgZG9uJ3QgY2xlYXIpIGFnaSB1bmxpbmtlZCBs
-aXN0cy4uLgogICAgICAgIC0gcHJvY2VzcyBrbm93biBpbm9kZXMgYW5kIHBlcmZvcm0gaW5vZGUg
-ZGlzY292ZXJ5Li4uCiAgICAgICAgLSBhZ25vID0gMApCYWQgZmxhZ3Mgc2V0IGluIGlub2RlIDc2
-NApCYWQgZmxhZ3Mgc2V0IGluIGlub2RlIDc2NAosIHdvdWxkIGZpeCBiYWQgZmxhZ3MuCmZvdW5k
-IGlub2RlIDc2NCBjbGFpbWluZyB0byBiZSBhIHJlYWwtdGltZSBmaWxlCndvdWxkIGhhdmUgY2xl
-YXJlZCBpbm9kZSA3NjQKaW5vZGUgMjA2OCBoYXMgUlQgZmxhZyBzZXQgYnV0IHRoZXJlIGlzIG5v
-IFJUIGRldmljZQpkaXJlY3RvcnkgZmxhZ3Mgc2V0IG9uIG5vbi1kaXJlY3RvcnkgaW5vZGUgMjA2
-OAppbm9kZSAyMDY4IGhhcyBSVCBmbGFnIHNldCBidXQgdGhlcmUgaXMgbm8gUlQgZGV2aWNlCmRp
-cmVjdG9yeSBmbGFncyBzZXQgb24gbm9uLWRpcmVjdG9yeSBpbm9kZSAyMDY4Ciwgd291bGQgZml4
-IGJhZCBmbGFncy4KICAgICAgICAtIGFnbm8gPSAxCmlub2RlIDI2ODQ0ODY3NCBoYXMgUlQgZmxh
-ZyBzZXQgYnV0IHRoZXJlIGlzIG5vIFJUIGRldmljZQpkaXJlY3RvcnkgZmxhZ3Mgc2V0IG9uIG5v
-bi1kaXJlY3RvcnkgaW5vZGUgMjY4NDQ4Njc0Cmlub2RlIDI2ODQ0ODY3NCBoYXMgUlQgZmxhZyBz
-ZXQgYnV0IHRoZXJlIGlzIG5vIFJUIGRldmljZQpkaXJlY3RvcnkgZmxhZ3Mgc2V0IG9uIG5vbi1k
-aXJlY3RvcnkgaW5vZGUgMjY4NDQ4Njc0Ciwgd291bGQgZml4IGJhZCBmbGFncy4KZm91bmQgaW5v
-ZGUgMjY4NDQ4Njc0IGNsYWltaW5nIHRvIGJlIGEgcmVhbC10aW1lIGZpbGUKd291bGQgaGF2ZSBj
-bGVhcmVkIGlub2RlIDI2ODQ0ODY3NAogICAgICAgIC0gYWdubyA9IDIKICAgICAgICAtIGFnbm8g
-PSAzCiAgICAgICAgLSBwcm9jZXNzIG5ld2x5IGRpc2NvdmVyZWQgaW5vZGVzLi4uClBoYXNlIDQg
-LSBjaGVjayBmb3IgZHVwbGljYXRlIGJsb2Nrcy4uLgogICAgICAgIC0gc2V0dGluZyB1cCBkdXBs
-aWNhdGUgZXh0ZW50IGxpc3QuLi4KICAgICAgICAtIGNoZWNrIGZvciBpbm9kZXMgY2xhaW1pbmcg
-ZHVwbGljYXRlIGJsb2Nrcy4uLgogICAgICAgIC0gYWdubyA9IDAKICAgICAgICAtIGFnbm8gPSAx
-CiAgICAgICAgLSBhZ25vID0gMgogICAgICAgIC0gYWdubyA9IDMKQmFkIGZsYWdzIHNldCBpbiBp
-bm9kZSA3NjQKLCB3b3VsZCBmaXggYmFkIGZsYWdzLgpmb3VuZCBpbm9kZSA3NjQgY2xhaW1pbmcg
-dG8gYmUgYSByZWFsLXRpbWUgZmlsZQp3b3VsZCBoYXZlIGNsZWFyZWQgaW5vZGUgNzY0CmVudHJ5
-ICJ0ZGIiIGluIHNob3J0Zm9ybSBkaXJlY3RvcnkgNzc5IHJlZmVyZW5jZXMgZnJlZSBpbm9kZSA3
-NjQKd291bGQgaGF2ZSBqdW5rZWQgZW50cnkgInRkYiIgaW4gZGlyZWN0b3J5IGlub2RlIDc3OQpp
-bm9kZSAyNjg0NDg2NzQgaGFzIFJUIGZsYWcgc2V0IGJ1dCB0aGVyZSBpcyBubyBSVCBkZXZpY2UK
-ZGlyZWN0b3J5IGZsYWdzIHNldCBvbiBub24tZGlyZWN0b3J5IGlub2RlIDI2ODQ0ODY3NAosIHdv
-dWxkIGZpeCBiYWQgZmxhZ3MuCmZvdW5kIGlub2RlIDI2ODQ0ODY3NCBjbGFpbWluZyB0byBiZSBh
-IHJlYWwtdGltZSBmaWxlCndvdWxkIGhhdmUgY2xlYXJlZCBpbm9kZSAyNjg0NDg2NzQKZW50cnkg
-IjAiIGluIHNob3J0Zm9ybSBkaXJlY3RvcnkgMjY4NDQ4Njc2IHJlZmVyZW5jZXMgZnJlZSBpbm9k
-ZSAyNjg0NDg2NzQKd291bGQgaGF2ZSBqdW5rZWQgZW50cnkgIjAiIGluIGRpcmVjdG9yeSBpbm9k
-ZSAyNjg0NDg2NzYKaW5vZGUgMjA2OCBoYXMgUlQgZmxhZyBzZXQgYnV0IHRoZXJlIGlzIG5vIFJU
-IGRldmljZQpkaXJlY3RvcnkgZmxhZ3Mgc2V0IG9uIG5vbi1kaXJlY3RvcnkgaW5vZGUgMjA2OAos
-IHdvdWxkIGZpeCBiYWQgZmxhZ3MuCk5vIG1vZGlmeSBmbGFnIHNldCwgc2tpcHBpbmcgcGhhc2Ug
-NQpQaGFzZSA2IC0gY2hlY2sgaW5vZGUgY29ubmVjdGl2aXR5Li4uCiAgICAgICAgLSB0cmF2ZXJz
-aW5nIGZpbGVzeXN0ZW0gLi4uCmVudHJ5ICJ0ZGIiIGluIHNob3J0Zm9ybSBkaXJlY3RvcnkgaW5v
-ZGUgNzc5IHBvaW50cyB0byBmcmVlIGlub2RlIDc2NAp3b3VsZCBqdW5rIGVudHJ5CmVudHJ5ICIw
-IiBpbiBzaG9ydGZvcm0gZGlyZWN0b3J5IGlub2RlIDI2ODQ0ODY3NiBwb2ludHMgdG8gZnJlZSBp
-bm9kZSAyNjg0NDg2NzQKd291bGQganVuayBlbnRyeQogICAgICAgIC0gdHJhdmVyc2FsIGZpbmlz
-aGVkIC4uLgogICAgICAgIC0gbW92aW5nIGRpc2Nvbm5lY3RlZCBpbm9kZXMgdG8gbG9zdCtmb3Vu
-ZCAuLi4KUGhhc2UgNyAtIHZlcmlmeSBsaW5rIGNvdW50cy4uLgpObyBtb2RpZnkgZmxhZyBzZXQs
-IHNraXBwaW5nIGZpbGVzeXN0ZW0gZmx1c2ggYW5kIGV4aXRpbmcuCg==
-
---=__PartB189F112.1__=--
