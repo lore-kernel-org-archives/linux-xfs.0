@@ -1,96 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41193 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753655AbdEJXS7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 19:18:59 -0400
-Date: Wed, 10 May 2017 16:18:52 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Null pointer dereference in xfs_da3_node_read
-Message-ID: <20170510231852.GA22718@birch.djwong.org>
-References: <6AC5B066-4C60-4D73-9343-C405D4E787FB@jabberwocky.com>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:33203 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754028AbdEKFKy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2017 01:10:54 -0400
+Date: Wed, 10 May 2017 22:10:51 -0700
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: [PATCH] ioctl_getfsmap.2: document the GETFSMAP ioctl
+Message-ID: <20170511051051.GA7533@zzz>
+References: <CAG48ez1AWewJRg8gySgihn0y15jRhC6C+5DNwGsDpAhtokB=Lw@mail.gmail.com>
+ <20170508184112.GJ5973@birch.djwong.org>
+ <CAG48ez3e+2VuvjtEfJuMujEo6PWBO3z8oM-otN2juq96jKdjCw@mail.gmail.com>
+ <20170508204738.GL5973@birch.djwong.org>
+ <CAG48ez0iLRazKvXty9CG8ENXvkG6b1xjO0Q75p+16HKNptFnow@mail.gmail.com>
+ <20170509015324.GM5973@birch.djwong.org>
+ <20170509211746.GA87747@gmail.com>
+ <20170510163818.7bleiykxgnx3pkds@thunk.org>
+ <87mvakpl5m.fsf@xmission.com>
+ <20170510201437.GA9854@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <6AC5B066-4C60-4D73-9343-C405D4E787FB@jabberwocky.com>
+In-Reply-To: <20170510201437.GA9854@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Shaw <dshaw@jabberwocky.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Theodore Ts'o <tytso@mit.edu>, Jann Horn <jannh@google.com>, Michael Kerrisk-manpages <mtk.manpages@gmail.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, linux-man@vger.kernel.org, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On Wed, May 10, 2017 at 06:59:57PM -0400, David Shaw wrote:
-> Hello,
+On Wed, May 10, 2017 at 01:14:37PM -0700, Darrick J. Wong wrote:
+> [cc btrfs, since afaict that's where most of the dedupe tool authors hang out]
 > 
-> I've been getting many examples of this failure.  The kernel is
-> 3.10.0-514.2.2 and xfsprogs is 4.5.0-9 (Centos 7.3).  It's always the same
-> backtrace, and always triggered by the same process, though it's intermittent
-> and I can run for a while without seeing it, and then get a cluster of 3
-> panics in a day.  This process (webread) doesn't do very much beyond request
-> files from a web server and write them to an XFS v5 filesystem.  One thing
-> that may be relevant here is that the files the process is writing have quite
-> large extended attributes - in the 10k and up range.
+> On Wed, May 10, 2017 at 02:27:33PM -0500, Eric W. Biederman wrote:
+> > Theodore Ts'o <tytso@mit.edu> writes:
+> > 
+> > > On Tue, May 09, 2017 at 02:17:46PM -0700, Eric Biggers wrote:
+> > >> 1.) Privacy implications.  Say the filesystem is being shared between multiple
+> > >>     users, and one user unpacks foo.tar.gz into their home directory, which
+> > >>     they've set to mode 700 to hide from other users.  Because of this new
+> > >>     ioctl, all users will be able to see every (inode number, size in blocks)
+> > >>     pair that was added to the filesystem, as well as the exact layout of the
+> > >>     physical block allocations which might hint at how the files were created.
+> > >>     If there is a known "fingerprint" for the unpacked foo.tar.gz in this
+> > >>     regard, its presence on the filesystem will be revealed to all users.  And
+> > >>     if any filesystems happen to prefer allocating blocks near the containing
+> > >>     directory, the directory the files are in would likely be revealed too.
 > 
-> Unfortunately, I do not have a reproduction case beyond waiting for it to
-> happen again.  Any advice would be very welcomed.
+> Frankly, why are container users even allowed to make unrestricted ioctl
+> calls?  I thought we had a bunch of security infrastructure to constrain
+> what userspace can do to a system, so why don't ioctls fall under these
+> same protections?  If your containers are really that adversarial, you
+> ought to be blacklisting as much as you can.
+> 
 
-Could you capture a metadump of the filesystem, please?  I have a
-sneaking suspicion that there's a file with a hole in the xattr block
-map that xfs_attr3_node_inactive is stumbling over.  Callers of
-xfs_da_read_buf don't seem to check that they actually got a buffer
-back...
+Personally I don't find the presence of sandboxing features to be a very good
+excuse for introducing random insecure ioctls.  Not everyone has everything
+perfectly "sandboxed" all the time, for obvious reasons.  It's easy to forget
+about the filesystem ioctls, too, since they can be executed on any regular
+file, without having to open some device node in /dev.
 
---D
+(And this actually does happen; the SELinux policy in Android, for example,
+still allows apps to call any ioctl on their data files, despite all the effort
+that has gone into whitelisting other types of ioctls.  Which should be fixed,
+of course, but it shows that this kind of mistake is very easy to make.)
+
+> > > Unix/Linux has historically not been terribly concerned about trying
+> > > to protect this kind of privacy between users.  So for example, in
+> > > order to do this, you would have to call GETFSMAP continously to track
+> > > this sort of thing.  Someone who wanted to do this could probably get
+> > > this information (and much, much more) by continuously running "ps" to
+> > > see what processes are running.
+> > >
+> > > (I will note. wryly, that in the bad old days, when dozens of users
+> > > were sharing a one MIPS Vax/780, it was considered a *good* thing
+> > > that social pressure could be applied when it was found that someone
+> > > was running a CPU or memory hogger on a time sharing system.  The
+> > > privacy right of someone running "xtrek" to be able to hide this from
+> > > other users on the system was never considered important at all.  :-)
+> 
+> Not to mention someone running GETFSMAP in a loop will be pretty obvious
+> both from the high kernel cpu usage and the huge number of metadata
+> operations.
+
+Well, only if that someone running GETFSMAP actually wants to watch things in
+real-time (it's not necessary for all scenarios that have been mentioned), *and*
+there is monitoring in place which actually detects it and can do something
+about it.
+
+Yes, PIDs have traditionally been global, but today we have PID namespaces, and
+many other isolation features such as mount namespaces.  Nothing is perfect, of
+course, and containers are a lot worse than VMs, but it seems weird to use that
+as an excuse to knowingly make things worse...
 
 > 
-> David
+> > > Fortunately, the days of timesharing seem to well behind us.  For
+> > > those people who think that containers are as secure as VM's (hah,
+> > > hah, hah), it might be that best way to handle this is to have a mount
+> > > option that requires root access to this functionality.  For those
+> > > people who really care about this, they can disable access.
 > 
-> [97688.563958] BUG: unable to handle kernel NULL pointer dereference at 00000000000000a0
-> [97688.564027] IP: [<ffffffffa03b7320>] xfs_da3_node_read+0x30/0xd0 [xfs]
-> [97688.564095] PGD 85af5e067 PUD 846ba2067 PMD 0 
-> [97688.564134] Oops: 0000 [#1] SMP 
-> [97688.564159] Modules linked in: dm_snapshot dm_bufio iptable_nat nf_nat_ipv4 nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 ipt_REJECT nf_reject_ipv4 xt_comment xt_recent xt_conntrack nf_conntrack fuse(OE) bonding iptable_filter ifb intel_powerclamp coretemp intel_rapl iosf_mbi iTCO_wdt kvm_intel iTCO_vendor_support kvm sg irqbypass crc32_pclmul ghash_clmulni_intel mei_me mei aesni_intel lrw gf128mul glue_helper ablk_helper cryptd sb_edac lpc_ich mxm_wmi edac_core pcspkr shpchp wmi acpi_power_meter nfsd(OE) auth_rpcgss nfs_acl lockd grace sunrpc ip_tables xfs sd_mod crc_t10dif crct10dif_generic ipmi_devintf crct10dif_pclmul crct10dif_common crc32c_intel mgag200 i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops ttm ahci tg3 uas drm libahci bnx2x usb_storage libata i2c_core mdio ptp
-> [97688.564906]  megaraid_sas pps_core ipmi_si libcrc32c ipmi_msghandler fjes dm_mirror dm_region_hash dm_log dm_mod
-> [97688.565005] CPU: 7 PID: 94655 Comm: webread Tainted: G        W  OE  ------------   3.10.0-514.2.2.el7.x86_64 #1
-> [97688.565064] Hardware name: Dell Inc. PowerEdge R730xd, BIOS 2.3.4 11/08/2016
-> [97688.565106] task: ffff88090852de20 ti: ffff880985fe0000 task.ti: ffff880985fe0000
-> [97688.565150] RIP: 0010:[<ffffffffa03b7320>]  [<ffffffffa03b7320>] xfs_da3_node_read+0x30/0xd0 [xfs]
-> [97688.565223] RSP: 0018:ffff880985fe3c98  EFLAGS: 00010286
-> [97688.565255] RAX: 0000000000000000 RBX: ffff8808a3a07748 RCX: 0000000000000001
-> [97688.565297] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff880985fe3c48
-> [97688.565339] RBP: ffff880985fe3cb8 R08: 0000000000000001 R09: ffff880985fe3b20
-> [97688.565380] R10: fffffffffffffffe R11: 0000000000000001 R12: ffff880985fe3ce8
-> [97688.565421] R13: 0000000000000001 R14: 0000000000000001 R15: 0000000010420e08
-> [97688.565463] FS:  00007f5732ffd700(0000) GS:ffff88105dec0000(0000) knlGS:0000000000000000
-> [97688.565507] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [97688.565542] CR2: 00000000000000a0 CR3: 000000084cf5e000 CR4: 00000000001407e0
-> [97688.565582] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> [97688.565623] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> [97688.565664] Stack:
-> [97688.565681]  ffffffffa041bab0 ffffffffa03f780c ffff880985fe3d80 ffff880125d26a40
-> [97688.565737]  ffff880985fe3d30 ffffffffa03d2b2b 0000000200000008 ffff880956123040
-> [97688.565792]  00000000d0622a88 ffff880985423180 0000000000000000 0000000000000000
-> [97688.565847] Call Trace:
-> [97688.565890]  [<ffffffffa03f780c>] ? xfs_trans_roll+0x2c/0x50 [xfs]
-> [97688.565942]  [<ffffffffa03d2b2b>] xfs_attr3_node_inactive+0x18b/0x230 [xfs]
-> [97688.565999]  [<ffffffffa03d2c86>] xfs_attr3_root_inactive+0xb6/0x120 [xfs]
-> [97688.566054]  [<ffffffffa03d2e37>] xfs_attr_inactive+0x147/0x1b0 [xfs]
-> [97688.566111]  [<ffffffffa03eccc1>] xfs_inactive+0x81/0x130 [xfs]
-> [97688.566164]  [<ffffffffa03f2346>] xfs_fs_evict_inode+0xa6/0xe0 [xfs]
-> [97688.567468]  [<ffffffff8121a247>] evict+0xa7/0x170
-> [97688.568419]  [<ffffffff8121aae5>] iput+0xf5/0x180
-> [97688.569234]  [<ffffffff812155c8>] dentry_kill+0x168/0x1b0
-> [97688.570047]  [<ffffffff8121566c>] dput+0x5c/0xd0
-> [97688.570859]  [<ffffffff812000fb>] __fput+0x17b/0x260
-> [97688.571665]  [<ffffffff8120031e>] ____fput+0xe/0x10
-> [97688.572464]  [<ffffffff810acde7>] task_work_run+0xa7/0xe0
-> [97688.573261]  [<ffffffff8102ab22>] do_notify_resume+0x92/0xb0
-> [97688.574043]  [<ffffffff81696a7d>] int_signal+0x12/0x17
-> [97688.574853] Code: 55 48 89 e5 41 54 4d 89 c4 53 48 89 fb 48 83 ec 10 48 c7 04 24 b0 ba 41 a0 e8 dd fe ff ff 85 c0 75 49 48 85 db 74 44 49 8b 34 24 <48> 8b 96 a0 00 00 00 0f b7 52 08 66 c1 c2 08 66 81 fa be 3e 74 
-> [97688.576495] RIP  [<ffffffffa03b7320>] xfs_da3_node_read+0x30/0xd0 [xfs]
-> [97688.577256]  RSP <ffff880985fe3c98>
-> [97688.578007] CR2: 00000000000000a0
+> Or use separate filesystems for each container so that exploitable bugs
+> that shut down the filesystem can't be used to kill the other
+> containers.  You could use a torrent of metadata-heavy operations
+> (fallocate a huge file, punch every block, truncate file, repeat) to DoS
+> the other containers.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > What would be the reason for not putting this behind
+> > capable(CAP_SYS_ADMIN)?
+> > 
+> > What possible legitimate function could this functionality serve to
+> > users who don't own your filesystem?
+> 
+> As I've said before, it's to enable dedupe tools to decide, given a set
+> of files with shareable blocks, roughly how many other times each of
+> those shareable blocks are shared so that they can make better decisions
+> about which file keeps its shareable blocks, and which file gets
+> remapped.  Dedupe is not a privileged operation, nor are any of the
+> tools.
+> 
+
+So why does the ioctl need to return all extent mappings for the entire
+filesystem, instead of just the share count of each block in the file that the
+ioctl is called on?
+
+- Eric
