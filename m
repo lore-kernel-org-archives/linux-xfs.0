@@ -1,105 +1,165 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51150 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:34718 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753820AbdEKO6u (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 May 2017 10:58:50 -0400
-Subject: Re: permanent XFS volume corruption
-References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <591493D00200007800158EA3@prv-mh.provo.novell.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <208b91b4-9f5e-b204-52d7-4b7706bdc8fe@sandeen.net>
-Date: Thu, 11 May 2017 09:58:49 -0500
+        id S932311AbdEKRIK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 May 2017 13:08:10 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id F3B4D80484
+        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 17:08:09 +0000 (UTC)
+Date: Thu, 11 May 2017 13:08:05 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
+ error during buffer writeback
+Message-ID: <20170511170805.GB14148@localhost.localdomain>
+References: <20170511135733.21765-1-cmaiolino@redhat.com>
+ <20170511135733.21765-3-cmaiolino@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <591493D00200007800158EA3@prv-mh.provo.novell.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170511135733.21765-3-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Beulich <JBeulich@suse.com>, linux-xfs@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 5/11/17 9:39 AM, Jan Beulich wrote:
-> Hello,
+On Thu, May 11, 2017 at 03:57:33PM +0200, Carlos Maiolino wrote:
+> When a buffer has been failed during writeback, the inode items into it
+> are kept flush locked, and are never resubmitted due the flush lock, so,
+> if any buffer fails to be written, the items in AIL are never written to
+> disk and never unlocked.
 > 
-> It is now on two systems that I'm getting
+> This causes a filesystem to be unmountable due these items flush locked
+> in AIL, but this also causes the items in AIL to never be written back,
+> even when the IO device comes back to normal.
 > 
-> XFS (sda1): corrupt dinode 576254627, has realtime flag set.
-> ffff88042ea63300: 49 4e 81 a4 02 02 00 00 00 00 03 e8 00 00 00 64  IN.............d
-> ffff88042ea63310: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> ffff88042ea63320: 59 14 0e 9f 0f a7 7c 2f 59 14 0e 9f 18 f3 db 2f  Y.....|/Y....../
-> ffff88042ea63330: 59 14 0e 9f 18 f3 db 2f 00 00 00 00 00 00 80 80  Y....../........
-> XFS (sda1): Internal error xfs_iformat(realtime) at line 133 of file .../fs/xfs/xfs_inode_fork.c.  Caller xfs_iread+0xea/0x2e0 [xfs]
-> CPU: 10 PID: 4418 Comm: smbd Not tainted 3.12.73-sp1-2017-04-26-jb #2
-
-Well, pretty old... oh, ok but you think it came about after a
-4.11 crash?
-
-> Hardware name: AMD Dinar/Dinar, BIOS RDN1506A 08/31/2014
->  0000000000000001 ffffffff81354083 ffffffffa03ea40a ffffffffa03a0952
->  0000000000000000 0000000000000075 ffff88042ea63300 ffff88042f508000
->  ffff88022efe7000 ffff88042f508028 0000000000000000 ffffffffa03e9b06
-> Call Trace:
->  [<ffffffff81004e3b>] dump_trace+0x7b/0x310
->  [<ffffffff81004ad6>] show_stack_log_lvl+0xe6/0x150
->  [<ffffffff81005ddc>] show_stack+0x1c/0x50
->  [<ffffffff81354083>] dump_stack+0x6f/0x84
->  [<ffffffffa03a0952>] xfs_corruption_error+0x62/0xa0 [xfs]
->  [<ffffffffa03e9b06>] xfs_iformat_fork+0x3b6/0x530 [xfs]
->  [<ffffffffa03ea40a>] xfs_iread+0xea/0x2e0 [xfs]
->  [<ffffffffa03a6538>] xfs_iget_cache_miss+0x58/0x1d0 [xfs]
->  [<ffffffffa03a67c3>] xfs_iget+0x113/0x190 [xfs]
->  [<ffffffffa03e5be8>] xfs_lookup+0xb8/0xd0 [xfs]
->  [<ffffffffa03aaddd>] xfs_vn_lookup+0x4d/0x90 [xfs]
->  [<ffffffff8110539d>] lookup_real+0x1d/0x60
->  [<ffffffff811064d2>] __lookup_hash+0x32/0x50
->  [<ffffffff8110a2a4>] path_lookupat+0x7f4/0x8b0
->  [<ffffffff8110a38e>] filename_lookup+0x2e/0x90
->  [<ffffffff8110abef>] user_path_at_empty+0x9f/0xd0
->  [<ffffffff81100678>] vfs_fstatat+0x48/0xa0
->  [<ffffffff8110081f>] SyS_newstat+0x1f/0x50
->  [<ffffffff81358d42>] system_call_fastpath+0x16/0x1b
->  [<00007f141f4f0d35>] 0x7f141f4f0d34
-> XFS (sda1): Corruption detected. Unmount and run xfs_repair
+> I've been testing this patch with a DM-thin device, creating a
+> filesystem larger than the real device.
 > 
-> after a crash with a 4.11-based kernel.
-
-Oh, hm.  What caused that crash, do you have logs prior to it?
-
-> I didn't try xfs_repair-ing
-> the volume in this second instance, as the result from doing so in
-> the first instance was only permanent re-occurrence (and
-> apparently spreading) of the problem. It may be interesting that
-> xfs_check finds only this one corrupted inode, while the kernel
-> also finds at least one more:
-
-xfs_repair -n would be safe, what does it say?  (mount/unmount
-first, to clear the log)
-
-> XFS (sda1): corrupt dinode 104812066, has realtime flag set.
-> ffff88042e88f200: 49 4e 41 ed 02 01 00 00 00 00 03 e8 00 00 00 64  INA............d
-> ffff88042e88f210: 00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> ffff88042e88f220: 59 01 c7 96 00 16 1e 50 59 14 0e a2 15 60 54 2f  Y......PY....`T/
-> ffff88042e88f230: 59 14 0e a2 15 60 54 2f 00 00 00 00 00 00 00 8e  Y....`T/........
-> XFS (sda1): Internal error xfs_iformat(realtime) at line 133 of file .../fs/xfs/xfs_inode_fork.c.  Caller xfs_iread+0xea/0x2e0 [xfs]
+> When writing enough data to fill the DM-thin device, XFS receives ENOSPC
+> errors from the device, and keep spinning on xfsaild (when 'retry
+> forever' configuration is set).
 > 
-> The kernel used after the crash doesn't appear to matter, all report
-> the same issues, but I've experienced similar crashes in the past
-> without ever having seen such corruption before.
+> At this point, the filesystem is unmountable because of the flush locked
+> items in AIL, but worse, the items in AIL are never retried at all
+> (once xfs_inode_item_push() will skip the items that are flush locked),
+> even if the underlying DM-thin device is expanded to the proper size.
 > 
-> In any event I think there are two problems: The corruption itself
-> (possibly an issue with recent enough upstream kernels only) and
-> the fact that running xfs_repair doesn't help in these cases. I'm
-> attaching xfs_check and xfs_metadump warning output for both
-> affected volumes in this second instance. The full files
-> xfs_metadump -agow produced can be provided upon request
-> (500Mb and 80Mb uncompressed respectively).
-
-can you provide one or both compressed xfs_metadumps offline?
-(No need to post URL to the list)
-
-Thanks,
--Eric
-
-> Thanks for any advice / fix,
-> Jan
+> This patch fixes both cases, retrying any item that has been failed
+> previously, using the infra-structure provided by the previous patch.
 > 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+> 
+> This same problem is also possible in dquot code, but the fix is almost
+> identical.
+> 
+> I am not submitting a fix for dquot yet to avoid the need to create VX for both
+> patches, once we agree with the solution, I'll submit a fix to dquot.
+> 
+>  fs/xfs/xfs_inode_item.c | 54 ++++++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 53 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 08cb7d1..583fa9e 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -475,6 +475,21 @@ xfs_inode_item_unpin(
+>  		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
+>  }
+>  
+> +STATIC void
+> +xfs_inode_item_error(
+> +	struct xfs_log_item	*lip,
+> +	unsigned int		bflags)
+> +{
+> +
+> +	/*
+> +	 * The buffer writeback containing this inode has been failed
+> +	 * mark it as failed and unlock the flush lock, so it can be retried
+> +	 * again
+> +	 */
+> +	if (bflags & XBF_WRITE_FAIL)
+> +		lip->li_flags |= XFS_LI_FAILED;
+> +}
+> +
+>  STATIC uint
+>  xfs_inode_item_push(
+>  	struct xfs_log_item	*lip,
+> @@ -517,8 +532,44 @@ xfs_inode_item_push(
+>  	 * the AIL.
+>  	 */
+>  	if (!xfs_iflock_nowait(ip)) {
+> +		if (lip->li_flags & XFS_LI_FAILED) {
+> +
+> +			struct xfs_dinode	*dip;
+> +			struct xfs_log_item	*next;
+> +			int			error;
+> +
+> +			error = xfs_imap_to_bp(ip->i_mount, NULL, &ip->i_imap,
+> +					       &dip, &bp, XBF_TRYLOCK, 0);
+> +
+> +			if (error) {
+> +				rval = XFS_ITEM_FLUSHING;
+> +				goto out_unlock;
+> +			}
+> +
+> +			if (!(bp->b_flags & XBF_WRITE_FAIL)) {
+> +				rval = XFS_ITEM_FLUSHING;
+> +				xfs_buf_relse(bp);
+> +				goto out_unlock;
+> +			}
+> +
+> +			while (lip != NULL) {
+> +				next = lip->li_bio_list;
+> +
+> +				if (lip->li_flags & XFS_LI_FAILED)
+> +					lip->li_flags &= XFS_LI_FAILED;
+
+Eric already pointed out that you probably intend to clear the flag
+here..?
+
+> +				lip = next;
+> +			}
+
+This whole hunk might be better off in a helper function (with the
+comment Eric suggested as well).
+
+Those points and the ->iop_error() thing aside, this otherwise seems Ok
+to me.
+
+Brian
+
+> +
+> +			if (!xfs_buf_delwri_queue(bp, buffer_list))
+> +				rval = XFS_ITEM_FLUSHING;
+> +
+> +			xfs_buf_relse(bp);
+> +			goto out_unlock;
+> +		}
+> +
+>  		rval = XFS_ITEM_FLUSHING;
+>  		goto out_unlock;
+> +
+>  	}
+>  
+>  	ASSERT(iip->ili_fields != 0 || XFS_FORCED_SHUTDOWN(ip->i_mount));
+> @@ -622,7 +673,8 @@ static const struct xfs_item_ops xfs_inode_item_ops = {
+>  	.iop_unlock	= xfs_inode_item_unlock,
+>  	.iop_committed	= xfs_inode_item_committed,
+>  	.iop_push	= xfs_inode_item_push,
+> -	.iop_committing = xfs_inode_item_committing
+> +	.iop_committing = xfs_inode_item_committing,
+> +	.iop_error	= xfs_inode_item_error
+>  };
+>  
+>  
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
