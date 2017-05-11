@@ -1,71 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25739 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933190AbdEKRzO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2017 13:55:14 -0400
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v4BHtDVr001117
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 17:55:13 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v4BHtDmL032620
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 17:55:13 GMT
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v4BHtDL1009327
-        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 17:55:13 GMT
-Date: Thu, 11 May 2017 10:55:11 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: only return detailed fsmap info if the caller has
- CAP_SYS_ADMIN
-Message-ID: <20170511175511.GC4519@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from mx2.suse.de ([195.135.220.15]:41817 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933002AbdEKTRf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 May 2017 15:17:35 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 05/10] fs: return if direct write will trigger writeback
+Date: Thu, 11 May 2017 14:17:05 -0500
+Message-Id: <20170511191710.31959-6-rgoldwyn@suse.de>
+In-Reply-To: <20170511191710.31959-1-rgoldwyn@suse.de>
+References: <20170511191710.31959-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-There were a number of handwaving complaints that one could "possibly"
-use inode numbers and extent maps to fingerprint a filesystem hosting
-multiple containers and somehow use the information to guess at the
-contents of other containers and attack them.  Despite the total lack of
-any demonstration that this is actually possible, it's easier to
-restrict access now and broaden it later, so use the rmapbt fsmap
-backends only if the caller has CAP_SYS_ADMIN.  Unprivileged users will
-just have to make do with only getting the free space information.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Find out if the write will trigger a wait due to writeback. If yes,
+return -EAGAIN.
+
+Return -EINVAL for buffered AIO: there are multiple causes of
+delay such as page locks, dirty throttling logic, page loading
+from disk etc. which cannot be taken care of.
+
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_fsmap.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ mm/filemap.c | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 3683819..814ed729 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -828,6 +828,7 @@ xfs_getfsmap(
- 	struct xfs_fsmap		dkeys[2];	/* per-dev keys */
- 	struct xfs_getfsmap_dev		handlers[XFS_GETFSMAP_DEVS];
- 	struct xfs_getfsmap_info	info = { NULL };
-+	bool				use_rmap;
- 	int				i;
- 	int				error = 0;
+diff --git a/mm/filemap.c b/mm/filemap.c
+index ca3031f505f2..fd7d175b3dee 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2673,6 +2673,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
  
-@@ -837,12 +838,14 @@ xfs_getfsmap(
- 	    !xfs_getfsmap_is_valid_device(mp, &head->fmh_keys[1]))
- 		return -EINVAL;
+ 	pos = iocb->ki_pos;
  
-+	use_rmap = capable(CAP_SYS_ADMIN) &&
-+		   xfs_sb_version_hasrmapbt(&mp->m_sb);
- 	head->fmh_entries = 0;
++	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
++		return -EINVAL;
++
+ 	if (limit != RLIM_INFINITY) {
+ 		if (iocb->ki_pos >= limit) {
+ 			send_sig(SIGXFSZ, current, 0);
+@@ -2742,9 +2745,17 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
+ 	write_len = iov_iter_count(from);
+ 	end = (pos + write_len - 1) >> PAGE_SHIFT;
  
- 	/* Set up our device handlers. */
- 	memset(handlers, 0, sizeof(handlers));
- 	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
--	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-+	if (use_rmap)
- 		handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
- 	else
- 		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
+-	written = filemap_write_and_wait_range(mapping, pos, pos + write_len - 1);
+-	if (written)
+-		goto out;
++	if (iocb->ki_flags & IOCB_NOWAIT) {
++		/* If there are pages to writeback, return */
++		if (filemap_range_has_page(inode->i_mapping, pos,
++					   pos + iov_iter_count(from)))
++			return -EAGAIN;
++	} else {
++		written = filemap_write_and_wait_range(mapping, pos,
++							pos + write_len - 1);
++		if (written)
++			goto out;
++	}
+ 
+ 	/*
+ 	 * After a write we want buffered reads to be sure to go to disk to get
+-- 
+2.12.0
+
