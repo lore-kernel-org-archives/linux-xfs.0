@@ -1,36 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:54543 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755210AbdEKMHV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 May 2017 08:07:21 -0400
-Date: Thu, 11 May 2017 14:07:18 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 05/16] uuid: add the v1 layout to uuid_t
-Message-ID: <20170511120718.GA27480@lst.de>
-References: <20170510180214.16852-1-hch@lst.de> <20170510180214.16852-6-hch@lst.de> <1494502838.6967.4.camel@linux.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:48898 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757114AbdEKPni (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2017 11:43:38 -0400
+Date: Thu, 11 May 2017 08:43:26 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: remove XFS_HSIZE
+Message-ID: <20170511154326.GB4519@birch.djwong.org>
+References: <20170509090018.30094-1-hch@lst.de>
+ <20170509154000.GO5973@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1494502838.6967.4.camel@linux.intel.com>
+In-Reply-To: <20170509154000.GO5973@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, May 11, 2017 at 02:40:38PM +0300, Andy Shevchenko wrote:
-> On Wed, 2017-05-10 at 20:02 +0200, Christoph Hellwig wrote:
-> > Turn the content of uuid_t into a union and add the fields for the v1
-> > interpretation to it.
+On Tue, May 09, 2017 at 08:40:00AM -0700, Darrick J. Wong wrote:
+> On Tue, May 09, 2017 at 11:00:18AM +0200, Christoph Hellwig wrote:
+> > XFS_HSIZE is an extremly confusing way to calculate the size of handle_t.
+> > Given that handle_t always only had two sizes, and one of them isn't
+> > even covered by XFS_HSIZE to start with just remove the macro and use
+> > a constant sizeof expression.
+> > 
+> > Note that XFS_HSIZE isn't used in xfsprogs, xfsdump or xfstests either.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> In the branch it has fix for UUID() wrt union change, but there missed
-> similar for GUID().
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Actually UUID needed this because uuid_t has a unіon inside, GUID
-should not need it because it doesn't.
+By the way, do you want me to try to slip this cleanup into 4.12, or
+should it wait for 4.13?
 
-> While here, can we indent \ to be the same as of the rest lines in
-> macro(s) ?
+--D
 
-Sure.
+> 
+> > ---
+> >  fs/xfs/libxfs/xfs_fs.h | 4 ----
+> >  fs/xfs/xfs_ioctl.c     | 3 +--
+> >  2 files changed, 1 insertion(+), 6 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> > index 095bdf049a3f..a9aa13e66046 100644
+> > --- a/fs/xfs/libxfs/xfs_fs.h
+> > +++ b/fs/xfs/libxfs/xfs_fs.h
+> > @@ -446,10 +446,6 @@ typedef struct xfs_handle {
+> >  } xfs_handle_t;
+> >  #define ha_fsid ha_u._ha_fsid
+> >  
+> > -#define XFS_HSIZE(handle)	(((char *) &(handle).ha_fid.fid_pad	 \
+> > -				 - (char *) &(handle))			  \
+> > -				 + (handle).ha_fid.fid_len)
+> > -
+> >  /*
+> >   * Structure passed to XFS_IOC_SWAPEXT
+> >   */
+> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > index 6190697603c9..f6af76975bc8 100644
+> > --- a/fs/xfs/xfs_ioctl.c
+> > +++ b/fs/xfs/xfs_ioctl.c
+> > @@ -120,8 +120,7 @@ xfs_find_handle(
+> >  		handle.ha_fid.fid_pad = 0;
+> >  		handle.ha_fid.fid_gen = inode->i_generation;
+> >  		handle.ha_fid.fid_ino = ip->i_ino;
+> > -
+> > -		hsize = XFS_HSIZE(handle);
+> > +		hsize = sizeof(xfs_handle_t);
+> >  	}
+> >  
+> >  	error = -EFAULT;
+> > -- 
+> > 2.11.0
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
