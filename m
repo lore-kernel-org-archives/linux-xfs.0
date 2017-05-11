@@ -1,55 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:60594 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932427AbdEKPFG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2017 11:05:06 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2] xfs: avoid harmless gcc-7 warnings
-Date: Thu, 11 May 2017 17:04:33 +0200
-Message-Id: <20170511150450.2573345-1-arnd@arndb.de>
+Received: from mx1.redhat.com ([209.132.183.28]:38266 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756046AbdEKTfo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 May 2017 15:35:44 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C68B461BA6
+        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 19:35:43 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9F6DD5C885
+        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 19:35:43 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfsprogs: new libxfs-apply option for Signed-off-by: tag
+Message-ID: <09b8530a-6b35-bc05-130e-6dfd35889f2b@redhat.com>
+Date: Thu, 11 May 2017 14:35:43 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>, linux-kernel@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-gcc-7 flags the use of integer math inside of a condition
-as a potential bug:
+Technically when a maintainer moves a patch from another project,
+they should add their Signed-off-by: tag.  Add an option to
+libxfs-apply to make that easy when cross-porting libxfs
+patches.
 
-fs/xfs/xfs_bmap_util.c: In function 'xfs_swap_extents_check_format':
-fs/xfs/xfs_bmap_util.c:1619:8: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
-fs/xfs/xfs_bmap_util.c:1629:8: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
-
-There is already a helper function for testing the di_forkoff
-field for zero, so let's use that instead to shut up the warning.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_bmap_util.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 2b954308a1d6..da4867567647 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1613,7 +1613,7 @@ xfs_swap_extents_check_format(
- 	 * extent format...
- 	 */
- 	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
--		if (XFS_IFORK_BOFF(ip) &&
-+		if (XFS_IFORK_Q(ip) &&
- 		    XFS_BMAP_BMDR_SPACE(tip->i_df.if_broot) > XFS_IFORK_BOFF(ip))
- 			return -EINVAL;
- 		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
-@@ -1623,7 +1623,7 @@ xfs_swap_extents_check_format(
+diff --git a/tools/libxfs-apply b/tools/libxfs-apply
+index e7d7e0a..b594ccb 100755
+--- a/tools/libxfs-apply
++++ b/tools/libxfs-apply
+@@ -8,7 +8,7 @@ usage()
+ 	echo $*
+ 	echo
+ 	echo "Usage:"
+-	echo "	libxfs-apply [--verbose] --source <repodir> --commit <commit_id>"
++	echo "	libxfs-apply [--verbose] --sob <name/email> --source <repodir> --commit <commit_id>"
+ 	echo "	libxfs-apply --patch <patchfile>"
+ 	echo
+ 	echo "libxfs-apply should be run in the destination git repository."
+@@ -73,6 +73,7 @@ while [ $# -gt 0 ]; do
+ 	--source)	REPO=$2 ; shift ;;
+ 	--patch)	PATCH=$2; shift ;;
+ 	--commit)	COMMIT_ID=$2 ; shift ;;
++	--sob)		SIGNED_OFF_BY=$2 ; shift ;;
+ 	--verbose)	VERBOSE=true ;;
+ 	*)		usage ;;
+ 	esac
+@@ -274,6 +275,14 @@ fixup_header_format()
+ 			print $0
+ 		}' > $_hdr.new
  
- 	/* Reciprocal target->temp btree format checks */
- 	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
--		if (XFS_IFORK_BOFF(tip) &&
-+		if (XFS_IFORK_Q(tip) &&
- 		    XFS_BMAP_BMDR_SPACE(ip->i_df.if_broot) > XFS_IFORK_BOFF(tip))
- 			return -EINVAL;
- 		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
--- 
-2.9.0
++	# Remove the last line if it contains only whitespace
++	sed -i '${/^ *$/d;}' $_hdr.new
++
++	# Add Signed-off-by: header if specified
++	if [ ! -z ${SIGNED_OFF_BY+x} ]; then 
++		echo "Signed-off-by: $SIGNED_OFF_BY" >> $_hdr.new
++	fi
++
+ 	# now output the new patch
+ 	cat $_hdr.new $_diff
+ 
 
