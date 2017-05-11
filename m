@@ -1,127 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18588 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757439AbdELQ3r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 May 2017 12:29:47 -0400
-Date: Fri, 12 May 2017 09:29:14 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [V2 PATCH 1/1] xfs: remove lsn relevant fields from xfs_trans
- structure and its users
-Message-ID: <20170512162914.GI4519@birch.djwong.org>
-References: <1494555015-6039-1-git-send-email-shan.hai@oracle.com>
+Received: from mail.kernel.org ([198.145.29.99]:34214 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756628AbdEKXPU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 May 2017 19:15:20 -0400
+Received: from mail-yw0-f177.google.com (mail-yw0-f177.google.com [209.85.161.177])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id BD11F23998
+        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 23:09:20 +0000 (UTC)
+Received: by mail-yw0-f177.google.com with SMTP id l14so3680037ywk.1
+        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 16:09:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1494555015-6039-1-git-send-email-shan.hai@oracle.com>
+In-Reply-To: <646aa740-a9fc-98df-df9f-6b89bbed7261@sandeen.net>
+References: <20170303231316.12716-1-mcgrof@kernel.org> <83a0df73-be0e-e3f9-df47-9b5c4a226498@sandeen.net>
+ <20170309005130.GC14437@wotan.suse.de> <ac91cbba-83b7-31d4-0fc9-cdb52286acdf@sandeen.net>
+ <20170309175750.GE14437@wotan.suse.de> <20170309223435.GT17542@dastard>
+ <20170424050010.GD28800@wotan.suse.de> <CACj3i70n4RctOrBVY4Jh8+p7=8NzfPDMp0o4+05nE76AV7ofSA@mail.gmail.com>
+ <CAB=NE6XoEoRo-iBP8vgC7shNQoK9j=unM6_YpDs1p26+i+wQ7A@mail.gmail.com>
+ <20170511224603.GA28800@wotan.suse.de> <646aa740-a9fc-98df-df9f-6b89bbed7261@sandeen.net>
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Date: Thu, 11 May 2017 16:08:59 -0700
+Message-ID: <CAB=NE6VDPunttSgH9qEhcPSHDdCvzUTskBbzPyhwnJ8Y9Jny2w@mail.gmail.com>
+Subject: Re: [PATCH 0/9] mkfs.xfs: add mkfs.xfs.conf support
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Shan Hai <shan.hai@oracle.com>
-Cc: linux-xfs@vger.kernel.org, hch@infradead.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Jan Tulak <jtulak@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, jack@suse.com, Jeff Mahoney <jeffm@suse.com>, okurz@suse.com, Libor Pechacek <lpechacek@suse.com>
 
-On Fri, May 12, 2017 at 10:10:15AM +0800, Shan Hai wrote:
-> The t_lsn is not used anymore and the t_commit_lsn is used as a tmp
-> storage for the checkpoint sequence number only in the current code.
-> 
-> And the start/commit lsn are tracked as a transaction group tag in
-> the xfs_cil_ctx instead of a single transaction, so remove them from
-> the xfs_trans structure and their users to match with the design.
-> 
-> Signed-off-by: Shan Hai <shan.hai@oracle.com>
+On Thu, May 11, 2017 at 3:57 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 5/11/17 5:46 PM, Luis R. Rodriguez wrote:
+>
+>> FWIW, I've looked at ways to address this without your future work Jan, ie
+>> backporting this feature, and ultimately have decided to *not* allow any
+>> command line overwrite for options specified in the configuration file. So
+>> for the backported versions of this feature a user will only be able to
+>> overwrite if the config file is commented out or removed.
+>>
+>> How we end up doing this upstream may differ given we may have a way to
+>> properly do sanity checks overall and treat "defaults" as real "defaults".
+>> But without such mechanisms implementing a sensible way to overwrite things
+>> in a compatible way was just crap.
+>>
+>> As such for the backported versions of this feature I'll make this big note
+>> on the man page:
+>
+> I'm a little confused - backported from where to where?  I'm not sure what
+> a "backport" means in this context, when there is no upstream solution at this
+> time.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Since we're still waiting for a bit of delta before I can push this
+work then from my development tree to a stable older release.
 
---D
+>> """
+>> One  of  the uses of the configuration file is to enable distributions
+>> to provide mkfs.xfs(8) updates from a base distribution release and enable to
+>> create filesystems which are sure to remain supported and compatible. As such
+>> systems with a mkfs.xfs.conf(5) file present have very likely been well thought
+>> out, and  overriding configuration  file  defaults is discouraged unless you
+>> know what you are doing and are familiar with the associated risks.  If you
+>> know what you are doing, wish to waive compatibility, and wish to overwrite the
+>> configuration file provided the best option is to either remove or uncomment
+>> the  configuration  file  completely  as options cannot be overwritten on the
+>> command line.
+>> """
+>
+> So are you planning a forked, non-upstream behavior for your distro?
 
-> ---
->  fs/xfs/xfs_log_cil.c |  7 ++++---
->  fs/xfs/xfs_trace.h   | 19 -------------------
->  fs/xfs/xfs_trans.h   |  4 ----
->  3 files changed, 4 insertions(+), 26 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 82f1cbc..10309cf 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -973,6 +973,7 @@
->  {
->  	struct xlog		*log = mp->m_log;
->  	struct xfs_cil		*cil = log->l_cilp;
-> +	xfs_lsn_t		xc_commit_lsn;
->  
->  	/*
->  	 * Do all necessary memory allocation before we lock the CIL.
-> @@ -990,9 +991,9 @@
->  	if (tp->t_ticket->t_curr_res < 0)
->  		xlog_print_tic_res(mp, tp->t_ticket);
->  
-> -	tp->t_commit_lsn = cil->xc_ctx->sequence;
-> +	xc_commit_lsn = cil->xc_ctx->sequence;
->  	if (commit_lsn)
-> -		*commit_lsn = tp->t_commit_lsn;
-> +		*commit_lsn = xc_commit_lsn;
->  
->  	xfs_log_done(mp, tp->t_ticket, NULL, regrant);
->  	xfs_trans_unreserve_and_mod_sb(tp);
-> @@ -1008,7 +1009,7 @@
->  	 * the log items. This affects (at least) processing of stale buffers,
->  	 * inodes and EFIs.
->  	 */
-> -	xfs_trans_free_items(tp, tp->t_commit_lsn, false);
-> +	xfs_trans_free_items(tp, xc_commit_lsn, false);
->  
->  	xlog_cil_push_background(log);
->  
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 7c5a165..0712eb7 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -1490,25 +1490,6 @@
->  		  __entry->tlen)
->  );
->  
-> -TRACE_EVENT(xfs_trans_commit_lsn,
-> -	TP_PROTO(struct xfs_trans *trans),
-> -	TP_ARGS(trans),
-> -	TP_STRUCT__entry(
-> -		__field(dev_t, dev)
-> -		__field(struct xfs_trans *, tp)
-> -		__field(xfs_lsn_t, lsn)
-> -	),
-> -	TP_fast_assign(
-> -		__entry->dev = trans->t_mountp->m_super->s_dev;
-> -		__entry->tp = trans;
-> -		__entry->lsn = trans->t_commit_lsn;
-> -	),
-> -	TP_printk("dev %d:%d trans 0x%p commit_lsn 0x%llx",
-> -		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> -		  __entry->tp,
-> -		  __entry->lsn)
-> -);
-> -
->  TRACE_EVENT(xfs_agf,
->  	TP_PROTO(struct xfs_mount *mp, struct xfs_agf *agf, int flags,
->  		 unsigned long caller_ip),
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index a07acbf..80b3ed5 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -105,10 +105,6 @@ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
->  	unsigned int		t_rtx_res;	/* # of rt extents resvd */
->  	unsigned int		t_rtx_res_used;	/* # of resvd rt extents used */
->  	struct xlog_ticket	*t_ticket;	/* log mgr ticket */
-> -	xfs_lsn_t		t_lsn;		/* log seq num of start of
-> -						 * transaction. */
-> -	xfs_lsn_t		t_commit_lsn;	/* log seq num of end of
-> -						 * transaction. */
->  	struct xfs_mount	*t_mountp;	/* ptr to fs mount struct */
->  	struct xfs_dquot_acct   *t_dqinfo;	/* acctg info for dquots */
->  	unsigned int		t_flags;	/* misc flags */
-> -- 
-> 1.8.3.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Right.
+
+> I think that disallowing commandline overrides of configfile settings is a
+> mistake, and not what we'd want upstream.
+
+For upstream I agree. Its how config files typically work after all.
+
+> If you do it as a fork, mkfs should fail if conflicting options are specified, IMHO.
+
+Sure, conflict check will be retained given the same command line
+option mechanism would be used to set whatever is in the config file.
+
+> The worst of all possible
+> worlds is an admin typing an otherwise valid mkfs command, and getting a
+> "successful" result which is /not/ what was specified by the user.
+
+Right.
+
+> Honestly, until an upstream solution is found, simply patching in new defaults
+> seems safest (and least-element-of-surprise) for a distro.
+
+Thing is we have no such easy "default" mechanism today. In the future
+it sounds like this will change so what you describe should be much
+easier. Sure, today a few options are set to 0 on main(), but trying
+to see when an option actually gets set to a default value if no other
+options are set is non trivial.
+
+As for the backported approach, I don't expect the config file to
+retain many options after all, only what is necessary to retain
+compatibility with a base distro release.
+
+  Luis
