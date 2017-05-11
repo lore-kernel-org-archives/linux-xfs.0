@@ -1,86 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34511 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41772 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756542AbdEKQud (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 May 2017 12:50:33 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 2/2] xfs: Move handling of missing page into one place in xfs_find_get_desired_pgoff()
-Date: Thu, 11 May 2017 18:50:23 +0200
-Message-Id: <20170511165023.29887-2-jack@suse.cz>
-In-Reply-To: <20170511165023.29887-1-jack@suse.cz>
-References: <20170511165023.29887-1-jack@suse.cz>
+        id S1751985AbdEKTRR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 May 2017 15:17:17 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 0/10 v8] No wait AIO
+Date: Thu, 11 May 2017 14:17:00 -0500
+Message-Id: <20170511191710.31959-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org
 
-Currently several places in xfs_find_get_desired_pgoff() handle the case
-of a missing page. Make them all handled in one place after the loop has
-terminated.
+Formerly known as non-blocking AIO.
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_file.c | 24 ++++++++----------------
- 1 file changed, 8 insertions(+), 16 deletions(-)
+This series adds nonblocking feature to asynchronous I/O writes.
+io_submit() can be delayed because of a number of reason:
+ - Block allocation for files
+ - Data writebacks for direct I/O
+ - Sleeping because of waiting to acquire i_rwsem
+ - Congested block device
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index df51c025adfe..719923b99ba1 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1069,10 +1069,6 @@ xfs_find_get_desired_pgoff(
- 				break;
- 
- 			ASSERT(type == HOLE_OFF);
--			if (lastoff == startoff || lastoff < endoff) {
--				found = true;
--				*offset = lastoff;
--			}
- 			break;
- 		}
- 
-@@ -1080,11 +1076,8 @@ xfs_find_get_desired_pgoff(
- 		 * At least we found one page. If the current offset is smaller
- 		 * than the first page offset, a hole was found.
- 		 */
--		if (type == HOLE_OFF && lastoff < page_offset(pvec.pages[0])) {
--			found = true;
--			*offset = lastoff;
-+		if (type == HOLE_OFF && lastoff < page_offset(pvec.pages[0]))
- 			break;
--		}
- 
- 		for (i = 0; i < nr_pages; i++) {
- 			struct page	*page = pvec.pages[i];
-@@ -1150,21 +1143,20 @@ xfs_find_get_desired_pgoff(
- 
- 		/*
- 		 * The number of returned pages less than our desired, search
--		 * done.  In this case, nothing was found for searching data,
--		 * but we found a hole behind the last offset.
-+		 * done.
- 		 */
--		if (nr_pages < want) {
--			if (type == HOLE_OFF) {
--				*offset = lastoff;
--				found = true;
--			}
-+		if (nr_pages < want)
- 			break;
--		}
- 
- 		index = pvec.pages[i - 1]->index + 1;
- 		pagevec_release(&pvec);
- 	} while (index <= end);
- 
-+	/* No page at lastoff and we are not done - we found a hole. */
-+	if (type == HOLE_OFF && lastoff < endoff) {
-+		*offset = lastoff;
-+		found = true;
-+	}
- out:
- 	pagevec_release(&pvec);
- 	return found;
+The goal of the patch series is to return -EAGAIN/-EWOULDBLOCK if
+any of these conditions are met. This way userspace can push most
+of the write()s to the kernel to the best of its ability to complete
+and if it returns -EAGAIN, can defer it to another thread.
+
+In order to enable this, IOCB_RW_FLAG_NOWAIT is introduced in
+uapi/linux/aio_abi.h. If set for aio_rw_flags, it translates to
+IOCB_NOWAIT for struct iocb, REQ_NOWAIT for bio.bi_opf and IOMAP_NOWAIT for
+iomap. aio_rw_flags is a new flag replacing aio_reserved1. We could
+not use aio_flags because it is not currently checked for invalidity
+in the kernel.
+
+This feature is provided for direct I/O of asynchronous I/O only. I have
+tested it against xfs, ext4, and btrfs while I intend to add more filesystems.
+The nowait feature is for request based devices. In the future, I intend to
+add support to stacked devices such as md.
+
+Applications will have to check supportability
+by sending a async direct write and any other error besides -EAGAIN
+would mean it is not supported.
+
+First two patches are prep patches into nowait I/O.
+
+Changes since v1:
+ + changed name from _NONBLOCKING to *_NOWAIT
+ + filemap_range_has_page call moved to closer to (just before) calling filemap_write_and_wait_range().
+ + BIO_NOWAIT limited to get_request()
+ + XFS fixes 
+	- included reflink 
+	- use of xfs_ilock_nowait() instead of a XFS_IOLOCK_NONBLOCKING flag
+	- Translate the flag through IOMAP_NOWAIT (iomap) to check for
+	  block allocation for the file.
+ + ext4 coding style
+
+Changes since v2:
+ + Using aio_reserved1 as aio_rw_flags instead of aio_flags
+ + blk-mq support
+ + xfs uptodate with kernel and reflink changes
+
+ Changes since v3:
+  + Added FS_NOWAIT, which is set if the filesystem supports NOWAIT feature.
+  + Checks in generic_make_request() to make sure BIO_NOWAIT comes in
+    for async direct writes only.
+  + Added QUEUE_FLAG_NOWAIT, which is set if the device supports BIO_NOWAIT.
+    This is added (rather not set) to block devices such as dm/md currently.
+
+ Changes since v4:
+  + Ported AIO code to use RWF_* flags. Check for RWF_* flags in
+    generic_file_write_iter().
+  + Changed IOCB_RW_FLAGS_NOWAIT to RWF_NOWAIT.
+
+ Changes since v5:
+  + BIO_NOWAIT to REQ_NOWAIT
+  + Common helper for RWF flags.
+
+ Changes since v6:
+  + REQ_NOWAIT will be ignored for request based devices since they
+    cannot block. So, removed QUEUE_FLAG_NOWAIT since it is not
+    required in the current implementation. It will be resurrected
+    when we program for stacked devices.
+  + changed kiocb_rw_flags() to kiocb_set_rw_flags() in order to accomodate
+    for errors. Moved checks in the function.
+
+ Changes since v7:
+  + split patches into prep so the main patches are smaller and easier
+    to understand
+  + All patches are reviewed or acked!
+
 -- 
-2.12.0
+Goldwyn
+
 
