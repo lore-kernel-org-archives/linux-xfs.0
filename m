@@ -1,55 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:60666 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932212AbdEKMtt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2017 08:49:49 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] xfs: avoid harmless gcc-7 warnings
-Date: Thu, 11 May 2017 14:49:21 +0200
-Message-Id: <20170511124932.226016-1-arnd@arndb.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:25739 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933190AbdEKRzO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2017 13:55:14 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v4BHtDVr001117
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 17:55:13 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v4BHtDmL032620
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 17:55:13 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v4BHtDL1009327
+        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2017 17:55:13 GMT
+Date: Thu, 11 May 2017 10:55:11 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: only return detailed fsmap info if the caller has
+ CAP_SYS_ADMIN
+Message-ID: <20170511175511.GC4519@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Dave Chinner <dchinner@redhat.com>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>, Calvin Owens <calvinowens@fb.com>, linux-kernel@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-gcc-7 flags the use of integer math inside of a condition
-as a potential bug:
+There were a number of handwaving complaints that one could "possibly"
+use inode numbers and extent maps to fingerprint a filesystem hosting
+multiple containers and somehow use the information to guess at the
+contents of other containers and attack them.  Despite the total lack of
+any demonstration that this is actually possible, it's easier to
+restrict access now and broaden it later, so use the rmapbt fsmap
+backends only if the caller has CAP_SYS_ADMIN.  Unprivileged users will
+just have to make do with only getting the free space information.
 
-fs/xfs/xfs_bmap_util.c: In function 'xfs_swap_extents_check_format':
-fs/xfs/xfs_bmap_util.c:1619:8: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
-fs/xfs/xfs_bmap_util.c:1629:8: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
-
-This one is clearly fine, and we can add a comparison to zero
-to shut up the warning.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_fsmap.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 2b954308a1d6..cbd3ffe42f39 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1613,7 +1613,7 @@ xfs_swap_extents_check_format(
- 	 * extent format...
- 	 */
- 	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
--		if (XFS_IFORK_BOFF(ip) &&
-+		if ((XFS_IFORK_BOFF(ip) != 0) &&
- 		    XFS_BMAP_BMDR_SPACE(tip->i_df.if_broot) > XFS_IFORK_BOFF(ip))
- 			return -EINVAL;
- 		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
-@@ -1623,7 +1623,7 @@ xfs_swap_extents_check_format(
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 3683819..814ed729 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -828,6 +828,7 @@ xfs_getfsmap(
+ 	struct xfs_fsmap		dkeys[2];	/* per-dev keys */
+ 	struct xfs_getfsmap_dev		handlers[XFS_GETFSMAP_DEVS];
+ 	struct xfs_getfsmap_info	info = { NULL };
++	bool				use_rmap;
+ 	int				i;
+ 	int				error = 0;
  
- 	/* Reciprocal target->temp btree format checks */
- 	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
--		if (XFS_IFORK_BOFF(tip) &&
-+		if ((XFS_IFORK_BOFF(tip) != 0) &&
- 		    XFS_BMAP_BMDR_SPACE(ip->i_df.if_broot) > XFS_IFORK_BOFF(tip))
- 			return -EINVAL;
- 		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
--- 
-2.9.0
-
+@@ -837,12 +838,14 @@ xfs_getfsmap(
+ 	    !xfs_getfsmap_is_valid_device(mp, &head->fmh_keys[1]))
+ 		return -EINVAL;
+ 
++	use_rmap = capable(CAP_SYS_ADMIN) &&
++		   xfs_sb_version_hasrmapbt(&mp->m_sb);
+ 	head->fmh_entries = 0;
+ 
+ 	/* Set up our device handlers. */
+ 	memset(handlers, 0, sizeof(handlers));
+ 	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
+-	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++	if (use_rmap)
+ 		handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
+ 	else
+ 		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
