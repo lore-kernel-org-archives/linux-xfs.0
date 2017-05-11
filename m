@@ -1,70 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25993 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756737AbdEKPSQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2017 11:18:16 -0400
-Date: Thu, 11 May 2017 08:17:57 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: avoid harmless gcc-7 warnings
-Message-ID: <20170511151757.GA4519@birch.djwong.org>
-References: <20170511150450.2573345-1-arnd@arndb.de>
+Received: from bombadil.infradead.org ([65.50.211.133]:59869 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755137AbdEKMLb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2017 08:11:31 -0400
+Date: Thu, 11 May 2017 05:11:30 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/1] xfs: remove lsn relevant fields from xfs_trans
+ structure and its users
+Message-ID: <20170511121130.GA8659@infradead.org>
+References: <1494484809-10217-1-git-send-email-shan.hai@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170511150450.2573345-1-arnd@arndb.de>
+In-Reply-To: <1494484809-10217-1-git-send-email-shan.hai@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>, linux-kernel@vger.kernel.org
+To: Shan Hai <shan.hai@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, May 11, 2017 at 05:04:33PM +0200, Arnd Bergmann wrote:
-> gcc-7 flags the use of integer math inside of a condition
-> as a potential bug:
+On Thu, May 11, 2017 at 02:40:09PM +0800, Shan Hai wrote:
+> The t_lsn is not used anymore and the t_commit_lsn is used as a tmp
+> storage for the checkpoint sequence number only in the current code.
 > 
-> fs/xfs/xfs_bmap_util.c: In function 'xfs_swap_extents_check_format':
-> fs/xfs/xfs_bmap_util.c:1619:8: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
-> fs/xfs/xfs_bmap_util.c:1629:8: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
+> And the start/commit lsn are tracked as a transaction group tag in
+> the xfs_cil_ctx instead of a single transaction, so remove them from
+> the xfs_trans structure and their users to match with the design.
 > 
-> There is already a helper function for testing the di_forkoff
-> field for zero, so let's use that instead to shut up the warning.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
+> Signed-off-by: Shan Hai <shan.hai@oracle.com>
 > ---
->  fs/xfs/xfs_bmap_util.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_log_cil.c |  5 ++---
+>  fs/xfs/xfs_trace.h   | 19 -------------------
+>  fs/xfs/xfs_trans.h   |  4 ----
+>  3 files changed, 2 insertions(+), 26 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 2b954308a1d6..da4867567647 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1613,7 +1613,7 @@ xfs_swap_extents_check_format(
->  	 * extent format...
->  	 */
->  	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
-> -		if (XFS_IFORK_BOFF(ip) &&
-> +		if (XFS_IFORK_Q(ip) &&
->  		    XFS_BMAP_BMDR_SPACE(tip->i_df.if_broot) > XFS_IFORK_BOFF(ip))
->  			return -EINVAL;
->  		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
-> @@ -1623,7 +1623,7 @@ xfs_swap_extents_check_format(
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 82f1cbc..373f5e8 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -990,9 +990,8 @@
+>  	if (tp->t_ticket->t_curr_res < 0)
+>  		xlog_print_tic_res(mp, tp->t_ticket);
 >  
->  	/* Reciprocal target->temp btree format checks */
->  	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
-> -		if (XFS_IFORK_BOFF(tip) &&
-> +		if (XFS_IFORK_Q(tip) &&
->  		    XFS_BMAP_BMDR_SPACE(ip->i_df.if_broot) > XFS_IFORK_BOFF(tip))
->  			return -EINVAL;
->  		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
-> -- 
-> 2.9.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -	tp->t_commit_lsn = cil->xc_ctx->sequence;
+>  	if (commit_lsn)
+> -		*commit_lsn = tp->t_commit_lsn;
+> +		*commit_lsn = cil->xc_ctx->sequence;
+>  
+>  	xfs_log_done(mp, tp->t_ticket, NULL, regrant);
+>  	xfs_trans_unreserve_and_mod_sb(tp);
+> @@ -1008,7 +1007,7 @@
+>  	 * the log items. This affects (at least) processing of stale buffers,
+>  	 * inodes and EFIs.
+>  	 */
+> -	xfs_trans_free_items(tp, tp->t_commit_lsn, false);
+> +	xfs_trans_free_items(tp, cil->xc_ctx->sequence, false);
+
+Can we add a local variable to store cil->xc_ctx->sequence to make
+this a little more clear?
+
+Otherwise this looks fine to me.
