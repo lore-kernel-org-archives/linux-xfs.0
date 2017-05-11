@@ -1,125 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:33203 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754028AbdEKFKy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2017 01:10:54 -0400
-Date: Wed, 10 May 2017 22:10:51 -0700
-From: Eric Biggers <ebiggers3@gmail.com>
-Subject: Re: [PATCH] ioctl_getfsmap.2: document the GETFSMAP ioctl
-Message-ID: <20170511051051.GA7533@zzz>
-References: <CAG48ez1AWewJRg8gySgihn0y15jRhC6C+5DNwGsDpAhtokB=Lw@mail.gmail.com>
- <20170508184112.GJ5973@birch.djwong.org>
- <CAG48ez3e+2VuvjtEfJuMujEo6PWBO3z8oM-otN2juq96jKdjCw@mail.gmail.com>
- <20170508204738.GL5973@birch.djwong.org>
- <CAG48ez0iLRazKvXty9CG8ENXvkG6b1xjO0Q75p+16HKNptFnow@mail.gmail.com>
- <20170509015324.GM5973@birch.djwong.org>
- <20170509211746.GA87747@gmail.com>
- <20170510163818.7bleiykxgnx3pkds@thunk.org>
- <87mvakpl5m.fsf@xmission.com>
- <20170510201437.GA9854@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170510201437.GA9854@birch.djwong.org>
+Received: from mx2.suse.de ([195.135.220.15]:41781 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933002AbdEKTR0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 May 2017 15:17:26 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 01/10] fs: Separate out kiocb flags setup based on RWF_* flags
+Date: Thu, 11 May 2017 14:17:01 -0500
+Message-Id: <20170511191710.31959-2-rgoldwyn@suse.de>
+In-Reply-To: <20170511191710.31959-1-rgoldwyn@suse.de>
+References: <20170511191710.31959-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Theodore Ts'o <tytso@mit.edu>, Jann Horn <jannh@google.com>, Michael Kerrisk-manpages <mtk.manpages@gmail.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, linux-man@vger.kernel.org, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Wed, May 10, 2017 at 01:14:37PM -0700, Darrick J. Wong wrote:
-> [cc btrfs, since afaict that's where most of the dedupe tool authors hang out]
-> 
-> On Wed, May 10, 2017 at 02:27:33PM -0500, Eric W. Biederman wrote:
-> > Theodore Ts'o <tytso@mit.edu> writes:
-> > 
-> > > On Tue, May 09, 2017 at 02:17:46PM -0700, Eric Biggers wrote:
-> > >> 1.) Privacy implications.  Say the filesystem is being shared between multiple
-> > >>     users, and one user unpacks foo.tar.gz into their home directory, which
-> > >>     they've set to mode 700 to hide from other users.  Because of this new
-> > >>     ioctl, all users will be able to see every (inode number, size in blocks)
-> > >>     pair that was added to the filesystem, as well as the exact layout of the
-> > >>     physical block allocations which might hint at how the files were created.
-> > >>     If there is a known "fingerprint" for the unpacked foo.tar.gz in this
-> > >>     regard, its presence on the filesystem will be revealed to all users.  And
-> > >>     if any filesystems happen to prefer allocating blocks near the containing
-> > >>     directory, the directory the files are in would likely be revealed too.
-> 
-> Frankly, why are container users even allowed to make unrestricted ioctl
-> calls?  I thought we had a bunch of security infrastructure to constrain
-> what userspace can do to a system, so why don't ioctls fall under these
-> same protections?  If your containers are really that adversarial, you
-> ought to be blacklisting as much as you can.
-> 
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Personally I don't find the presence of sandboxing features to be a very good
-excuse for introducing random insecure ioctls.  Not everyone has everything
-perfectly "sandboxed" all the time, for obvious reasons.  It's easy to forget
-about the filesystem ioctls, too, since they can be executed on any regular
-file, without having to open some device node in /dev.
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/read_write.c    | 12 +++---------
+ include/linux/fs.h | 14 ++++++++++++++
+ 2 files changed, 17 insertions(+), 9 deletions(-)
 
-(And this actually does happen; the SELinux policy in Android, for example,
-still allows apps to call any ioctl on their data files, despite all the effort
-that has gone into whitelisting other types of ioctls.  Which should be fixed,
-of course, but it shows that this kind of mistake is very easy to make.)
+diff --git a/fs/read_write.c b/fs/read_write.c
+index c4f88afbc67f..362f91cd8d66 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -678,16 +678,10 @@ static ssize_t do_iter_readv_writev(struct file *filp, struct iov_iter *iter,
+ 	struct kiocb kiocb;
+ 	ssize_t ret;
+ 
+-	if (flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC))
+-		return -EOPNOTSUPP;
+-
+ 	init_sync_kiocb(&kiocb, filp);
+-	if (flags & RWF_HIPRI)
+-		kiocb.ki_flags |= IOCB_HIPRI;
+-	if (flags & RWF_DSYNC)
+-		kiocb.ki_flags |= IOCB_DSYNC;
+-	if (flags & RWF_SYNC)
+-		kiocb.ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
++	ret = kiocb_set_rw_flags(&kiocb, flags);
++	if (ret)
++		return ret;
+ 	kiocb.ki_pos = *ppos;
+ 
+ 	if (type == READ)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 7251f7bb45e8..869c9a6fe58d 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -3049,6 +3049,20 @@ static inline int iocb_flags(struct file *file)
+ 	return res;
+ }
+ 
++static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
++{
++	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC)))
++		return -EOPNOTSUPP;
++
++	if (flags & RWF_HIPRI)
++		ki->ki_flags |= IOCB_HIPRI;
++	if (flags & RWF_DSYNC)
++		ki->ki_flags |= IOCB_DSYNC;
++	if (flags & RWF_SYNC)
++		ki->ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
++	return 0;
++}
++
+ static inline ino_t parent_ino(struct dentry *dentry)
+ {
+ 	ino_t res;
+-- 
+2.12.0
 
-> > > Unix/Linux has historically not been terribly concerned about trying
-> > > to protect this kind of privacy between users.  So for example, in
-> > > order to do this, you would have to call GETFSMAP continously to track
-> > > this sort of thing.  Someone who wanted to do this could probably get
-> > > this information (and much, much more) by continuously running "ps" to
-> > > see what processes are running.
-> > >
-> > > (I will note. wryly, that in the bad old days, when dozens of users
-> > > were sharing a one MIPS Vax/780, it was considered a *good* thing
-> > > that social pressure could be applied when it was found that someone
-> > > was running a CPU or memory hogger on a time sharing system.  The
-> > > privacy right of someone running "xtrek" to be able to hide this from
-> > > other users on the system was never considered important at all.  :-)
-> 
-> Not to mention someone running GETFSMAP in a loop will be pretty obvious
-> both from the high kernel cpu usage and the huge number of metadata
-> operations.
-
-Well, only if that someone running GETFSMAP actually wants to watch things in
-real-time (it's not necessary for all scenarios that have been mentioned), *and*
-there is monitoring in place which actually detects it and can do something
-about it.
-
-Yes, PIDs have traditionally been global, but today we have PID namespaces, and
-many other isolation features such as mount namespaces.  Nothing is perfect, of
-course, and containers are a lot worse than VMs, but it seems weird to use that
-as an excuse to knowingly make things worse...
-
-> 
-> > > Fortunately, the days of timesharing seem to well behind us.  For
-> > > those people who think that containers are as secure as VM's (hah,
-> > > hah, hah), it might be that best way to handle this is to have a mount
-> > > option that requires root access to this functionality.  For those
-> > > people who really care about this, they can disable access.
-> 
-> Or use separate filesystems for each container so that exploitable bugs
-> that shut down the filesystem can't be used to kill the other
-> containers.  You could use a torrent of metadata-heavy operations
-> (fallocate a huge file, punch every block, truncate file, repeat) to DoS
-> the other containers.
-> 
-> > What would be the reason for not putting this behind
-> > capable(CAP_SYS_ADMIN)?
-> > 
-> > What possible legitimate function could this functionality serve to
-> > users who don't own your filesystem?
-> 
-> As I've said before, it's to enable dedupe tools to decide, given a set
-> of files with shareable blocks, roughly how many other times each of
-> those shareable blocks are shared so that they can make better decisions
-> about which file keeps its shareable blocks, and which file gets
-> remapped.  Dedupe is not a privileged operation, nor are any of the
-> tools.
-> 
-
-So why does the ioctl need to return all extent mappings for the entire
-filesystem, instead of just the share count of each block in the file that the
-ioctl is called on?
-
-- Eric
