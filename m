@@ -1,54 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtprelay0225.hostedemail.com ([216.40.44.225]:46801 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750796AbdELO1r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 May 2017 10:27:47 -0400
-Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
-        by smtpgrave05.hostedemail.com (Postfix) with ESMTP id CE1BF18440C
-        for <linux-xfs@vger.kernel.org>; Fri, 12 May 2017 14:18:52 +0000 (UTC)
-Message-ID: <1494598724.2028.19.camel@perches.com>
-Subject: Re: [PATCH] xfs: avoid harmless gcc-7 warnings
-From: Joe Perches <joe@perches.com>
-Date: Fri, 12 May 2017 07:18:44 -0700
-In-Reply-To: <20170511124932.226016-1-arnd@arndb.de>
-References: <20170511124932.226016-1-arnd@arndb.de>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from prv-mh.provo.novell.com ([137.65.248.74]:46666 "EHLO
+        prv-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755567AbdELOJn (ORCPT
+        <rfc822;groupwise-linux-xfs@vger.kernel.org:2:1>);
+        Fri, 12 May 2017 10:09:43 -0400
+Message-Id: <5915DE47020000780015946C@prv-mh.provo.novell.com>
+Date: Fri, 12 May 2017 08:09:43 -0600
+From: "Jan Beulich" <JBeulich@suse.com>
+Subject: Re: permanent XFS volume corruption
+References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
+ <591493D00200007800158EA3@prv-mh.provo.novell.com>
+ <a185194a-af56-cd53-cfb9-653e3b5f81b7@sandeen.net>
+ <591571BC0200007800159165@prv-mh.provo.novell.com>
+ <30296667-47d7-8b94-472a-1d4b96120c09@sandeen.net>
+In-Reply-To: <30296667-47d7-8b94-472a-1d4b96120c09@sandeen.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
-Cc: Dave Chinner <dchinner@redhat.com>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>, Calvin Owens <calvinowens@fb.com>, linux-kernel@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, 2017-05-11 at 14:49 +0200, Arnd Bergmann wrote:
-> gcc-7 flags the use of integer math inside of a condition
-> as a potential bug:
+>>> On 12.05.17 at 15:56, <sandeen@sandeen.net> wrote:
+> On 5/12/17 1:26 AM, Jan Beulich wrote:
+>> So on the earlier instance, where I did run actual repairs (and
+>> indeed multiple of them), the problem re-surfaces every time
+>> I mount the volume again.
 > 
-> fs/xfs/xfs_bmap_util.c: In function 'xfs_swap_extents_check_format':
-> fs/xfs/xfs_bmap_util.c:1619:8: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
-> fs/xfs/xfs_bmap_util.c:1629:8: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
+> Ok, what is the exact sequence there, from repair to re-corruption?
+
+Simply mount the volume after repairing (with or without an
+intermediate reboot) and access respective pieces of the fs
+again. As said, with /var/run affected on that first occasion,
+I couldn't even cleanly boot again without seeing the
+corruption re-surface.
+
+>> Iirc the inode numbers didn't change,
+>> but in some cases the associated files did (namely when these
+>> weren't ones created very soon after mount, i.e. when the
+>> order of things is less predictable - it was in particular /var/run/
+>> which was affected there). That's the reason I've refrained
+>> from trying to xfs_repair the issues in this second instance.
+>> 
+>> Now one question obviously is whether the repair strategy
+>> changed between the xfs_repair versions I use (3.1.8 on the
 > 
-> This one is clearly fine, and we can add a comparison to zero
-> to shut up the warning.
-[]
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-[]
-> @@ -1613,7 +1613,7 @@ xfs_swap_extents_check_format(
->  	 * extent format...
->  	 */
->  	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
-> -		if (XFS_IFORK_BOFF(ip) &&
-> +		if ((XFS_IFORK_BOFF(ip) != 0) &&
+> That's extremely old - Mar 2012, FWIW.
+> 
+>> system that I sent you the meta data dump from, likely the
+>> same on the other one): Mine clears the inodes with the bad
+>> RT flag, while - namely considering the subsequent "block ...
+>> type unknown" reported by xfs_check - it might instead be
+>> possible to reconstruct the files and clear the RT flag. But of
+>> course I know nothing about XFS internals...
+> 
+> That is what xfs_repair did here - it cleared the bad flags and left
+> the rest intact.
 
-As far as I can tell, this suggestion makes no sense.
+For all of the cases? According to my run, "Bad flags set in inode..."
+would lead to the flags being corrected, but "found inode ... claiming
+to be a real-time file" would lead to the inode being cleared. But of
+course I can imagine this being dealt with differently in newer
+versions of the tool...
 
-$ git grep -E "define\s+XFS_IFORK_BOFF"
-fs/xfs/libxfs/xfs_inode_fork.h:#define XFS_IFORK_BOFF(ip)               ((int)((ip)->i_d.di_forkoff << 3))
+>>> *Each of the 3 problematic inodes has an odd assortment of flags
+>>> set (think chattr type flags) - some have immutable, some have
+>>> noatime, some have nodump, etc.  These are what cause xfs_repair
+>>> t ocomplain.  It seems unlikely that any of these were actually set
+>>> on your filesystem, as these are the only ones with any flags set.
+>>> After repair, they're showing:
+>>>
+>>> --S---dA----------- mnt/log/messages
+>>> --S-i--A----------- mnt/lib/sudo/jbeulich/0
+>>> --S----A----------- mnt/lib/xenstored/tdb
+>>>
+>>> Did you happen to set chattr flags on these files intentionally?
+>> 
+>> I certainly didn't. As I don't know how to produce this form of
+>> flags display, I can't (for now) compare with what a healthy
+>> system has there.
+> 
+> The above is from the lsattr display.  (I suppose it's plausible that
+> i.e. messages would have "append-only" set by something ...)
 
-$ git grep -w di_forkoff|grep -P "\w+\s+di_forkoff\s*;"
-fs/xfs/libxfs/xfs_format.h:	__u8		di_forkoff;	/* attr fork offs, <<3 for 64b align */
-fs/xfs/libxfs/xfs_inode_buf.h:	__uint8_t	di_forkoff;	/* attr fork offs, <<3 for 64b align */
-fs/xfs/libxfs/xfs_log_format.h:	__uint8_t	di_forkoff;	/* attr fork offs, <<3 for 64b align */
+On a healthy system all three of them have no flags set at all.
 
+Jan
 
