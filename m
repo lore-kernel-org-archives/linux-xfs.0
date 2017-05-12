@@ -1,55 +1,203 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42741 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1757005AbdELIMo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 May 2017 04:12:44 -0400
-Date: Fri, 12 May 2017 10:12:42 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] generic/285: Add more SEEK_HOLE tests
-Message-ID: <20170512081242.GA31470@quack2.suse.cz>
-References: <20170511164809.29739-1-jack@suse.cz>
- <20170512080443.GN7250@eguan.usersys.redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:40606 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750713AbdELITw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 12 May 2017 04:19:52 -0400
+Date: Fri, 12 May 2017 10:19:47 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
+ error during buffer writeback
+Message-ID: <20170512081947.rxo7krbgzj3oxrk6@eorzea.usersys.redhat.com>
+References: <20170511135733.21765-1-cmaiolino@redhat.com>
+ <20170511135733.21765-3-cmaiolino@redhat.com>
+ <588425aa-420d-67a8-76cb-3974fc600455@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170512080443.GN7250@eguan.usersys.redhat.com>
+In-Reply-To: <588425aa-420d-67a8-76cb-3974fc600455@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, fstests@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri 12-05-17 16:04:43, Eryu Guan wrote:
-> On Thu, May 11, 2017 at 06:48:09PM +0200, Jan Kara wrote:
-> > Add tests for bugs found in ext4 & xfs SEEK_HOLE implementations
-> > fixed by following patches:
+Ahoj!
+
+On Thu, May 11, 2017 at 10:32:16AM -0500, Eric Sandeen wrote:
+> On 5/11/17 8:57 AM, Carlos Maiolino wrote:
+> > When a buffer has been failed during writeback, the inode items into it
+> > are kept flush locked, and are never resubmitted due the flush lock, so,
+> > if any buffer fails to be written, the items in AIL are never written to
+> > disk and never unlocked.
 > > 
-> > xfs: Fix missed holes in SEEK_HOLE implementation
-> > ext4: Fix SEEK_HOLE
+> > This causes a filesystem to be unmountable due these items flush locked
+> 
+> I think you mean "not unmountable?"
+> 
+Yeah, my bad, fast typing slow thinking :)
+
+> > in AIL, but this also causes the items in AIL to never be written back,
+> > even when the IO device comes back to normal.
 > > 
-> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > I've been testing this patch with a DM-thin device, creating a
+> > filesystem larger than the real device.
+> > 
+> > When writing enough data to fill the DM-thin device, XFS receives ENOSPC
+> > errors from the device, and keep spinning on xfsaild (when 'retry
+> > forever' configuration is set).
+> > 
+> > At this point, the filesystem is unmountable because of the flush locked
 > 
-> This will cause ext4 and xfs start to fail with current linus tree and
-> appear as a new regression. So we usually don't add new tests to
-> existing cases.
+> (or cannot be unmounted ...)
 > 
-> But seek_sanity_test.c deals with different SEEK_DATA/HOLE implentations
-> nicely, which would be a bit tricky to do in a new test by shell, and it
-> has all the infrastructures for new tests like this. So I think I'd
-> prefer merging this patch as is, and document the false regression alert
-> in release announce email.
 
-Yeah, I agree regressing a test is not ideal but at least from the full
-output it would be visible that the new testcases are those that failed and
-at that point it is same as if a new test was failing.
+*nod*
 
-> I'm including this patch in release testing now, please shout if ext4
-> and/or xfs developers have different thoughts, there'll be around two
-> days before new release :)
+> > items in AIL, but worse, the items in AIL are never retried at all
+> > (once xfs_inode_item_push() will skip the items that are flush locked),
+> > even if the underlying DM-thin device is expanded to the proper size.
+> 
+> Can you turn that into an xfstest?
+>
 
-Thanks!
+Yeah, I am planing to do that, this is really not that hard to move into an
+xfstests case, although, it will be going into dangerous sub-set, once it will
+lockup the filesystem.
+ 
+> > This patch fixes both cases, retrying any item that has been failed
+> > previously, using the infra-structure provided by the previous patch.
+> > 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> > 
+> > This same problem is also possible in dquot code, but the fix is almost
+> > identical.
+> > 
+> > I am not submitting a fix for dquot yet to avoid the need to create VX for both
+> > patches, once we agree with the solution, I'll submit a fix to dquot.
+> > 
+> >  fs/xfs/xfs_inode_item.c | 54 ++++++++++++++++++++++++++++++++++++++++++++++++-
+> >  1 file changed, 53 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> > index 08cb7d1..583fa9e 100644
+> > --- a/fs/xfs/xfs_inode_item.c
+> > +++ b/fs/xfs/xfs_inode_item.c
+> > @@ -475,6 +475,21 @@ xfs_inode_item_unpin(
+> >  		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
+> >  }
+> >  
+> > +STATIC void
+> > +xfs_inode_item_error(
+> > +	struct xfs_log_item	*lip,
+> > +	unsigned int		bflags)
+> > +{
+> > +
+> > +	/*
+> > +	 * The buffer writeback containing this inode has been failed
+> > +	 * mark it as failed and unlock the flush lock, so it can be retried
+> > +	 * again
+> > +	 */
+> > +	if (bflags & XBF_WRITE_FAIL)
+> > +		lip->li_flags |= XFS_LI_FAILED;
+> > +}
+> > +
+> >  STATIC uint
+> >  xfs_inode_item_push(
+> >  	struct xfs_log_item	*lip,
+> > @@ -517,8 +532,44 @@ xfs_inode_item_push(
+> >  	 * the AIL.
+> >  	 */
+> >  	if (!xfs_iflock_nowait(ip)) {
+> 
+> Some comments about what this new block is for would be helpful, I think.
+> 
 
-								Honza
+/me replies on Brian's comment
+
+> > +		if (lip->li_flags & XFS_LI_FAILED) {
+> > +
+> > +			struct xfs_dinode	*dip;
+> > +			struct xfs_log_item	*next;
+> > +			int			error;
+> > +
+> > +			error = xfs_imap_to_bp(ip->i_mount, NULL, &ip->i_imap,
+> > +					       &dip, &bp, XBF_TRYLOCK, 0);
+> > +
+> > +			if (error) {
+> > +				rval = XFS_ITEM_FLUSHING;
+> > +				goto out_unlock;
+> > +			}
+> > +
+> > +			if (!(bp->b_flags & XBF_WRITE_FAIL)) {
+> > +				rval = XFS_ITEM_FLUSHING;
+> > +				xfs_buf_relse(bp);
+> > +				goto out_unlock;
+> > +			}
+> > +
+> > +			while (lip != NULL) {
+> > +				next = lip->li_bio_list;
+> > +
+> > +				if (lip->li_flags & XFS_LI_FAILED)
+> > +					lip->li_flags &= XFS_LI_FAILED;
+> 
+> This confuses me.  If XFS_LI_FAILED is set, set XFS_LI_FAILED?
+> I assume you meant to clear it?
+>
+
+*nod* fix going to V2
+ 
+> > +				lip = next;
+> > +			}
+> > +
+> 
+> 			/* Add this buffer back to the delayed write list */
+> 
+> > +			if (!xfs_buf_delwri_queue(bp, buffer_list))
+> > +				rval = XFS_ITEM_FLUSHING;
+> 
+> > +			xfs_buf_relse(bp);
+> 
+> So by here we have an implicit rval = XFS_ITEM_SUCCESS, I guess?
+> 
+
+AFAIK this is the current behavior of xfs_inode_item_push() without my patch, at
+a first glance it looked weird to me too, but then I just decided to leave it
+as-is.
+
+> (I wonder about setting FLUSHING at the top, and setting SUCCESS
+> only if everything in here works out - but maybe that would be
+> more confusing)
+> 
+> Anyway that's my first drive-by review, I'm not sure I have all the state & 
+> locking clear in my head for this stuff.
+> 
+
+I really appreciate the review, thanks for your time :)
+
+> Thanks,
+> -Eric
+> 
+> > +			goto out_unlock;
+> > +		}
+> > +
+> >  		rval = XFS_ITEM_FLUSHING;
+> >  		goto out_unlock;
+> > +
+> >  	}
+> >  
+> >  	ASSERT(iip->ili_fields != 0 || XFS_FORCED_SHUTDOWN(ip->i_mount));
+> > @@ -622,7 +673,8 @@ static const struct xfs_item_ops xfs_inode_item_ops = {
+> >  	.iop_unlock	= xfs_inode_item_unlock,
+> >  	.iop_committed	= xfs_inode_item_committed,
+> >  	.iop_push	= xfs_inode_item_push,
+> > -	.iop_committing = xfs_inode_item_committing
+> > +	.iop_committing = xfs_inode_item_committing,
+> > +	.iop_error	= xfs_inode_item_error
+> >  };
+> >  
+> >  
+> > 
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Carlos
