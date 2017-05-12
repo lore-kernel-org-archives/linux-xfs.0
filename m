@@ -1,41 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40606 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40232 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750713AbdELITw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 May 2017 04:19:52 -0400
-Date: Fri, 12 May 2017 10:19:47 +0200
+        id S1755606AbdELIVj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 12 May 2017 04:21:39 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 6A6ABC05973E
+        for <linux-xfs@vger.kernel.org>; Fri, 12 May 2017 08:21:39 +0000 (UTC)
+Date: Fri, 12 May 2017 10:21:35 +0200
 From: Carlos Maiolino <cmaiolino@redhat.com>
 Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
  error during buffer writeback
-Message-ID: <20170512081947.rxo7krbgzj3oxrk6@eorzea.usersys.redhat.com>
+Message-ID: <20170512082135.g6vd4vvxlctmtptq@eorzea.usersys.redhat.com>
 References: <20170511135733.21765-1-cmaiolino@redhat.com>
  <20170511135733.21765-3-cmaiolino@redhat.com>
- <588425aa-420d-67a8-76cb-3974fc600455@sandeen.net>
+ <20170511170805.GB14148@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <588425aa-420d-67a8-76cb-3974fc600455@sandeen.net>
+In-Reply-To: <20170511170805.GB14148@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-Ahoj!
-
-On Thu, May 11, 2017 at 10:32:16AM -0500, Eric Sandeen wrote:
-> On 5/11/17 8:57 AM, Carlos Maiolino wrote:
+On Thu, May 11, 2017 at 01:08:05PM -0400, Brian Foster wrote:
+> On Thu, May 11, 2017 at 03:57:33PM +0200, Carlos Maiolino wrote:
 > > When a buffer has been failed during writeback, the inode items into it
 > > are kept flush locked, and are never resubmitted due the flush lock, so,
 > > if any buffer fails to be written, the items in AIL are never written to
 > > disk and never unlocked.
 > > 
 > > This causes a filesystem to be unmountable due these items flush locked
-> 
-> I think you mean "not unmountable?"
-> 
-Yeah, my bad, fast typing slow thinking :)
-
 > > in AIL, but this also causes the items in AIL to never be written back,
 > > even when the IO device comes back to normal.
 > > 
@@ -47,23 +45,10 @@ Yeah, my bad, fast typing slow thinking :)
 > > forever' configuration is set).
 > > 
 > > At this point, the filesystem is unmountable because of the flush locked
-> 
-> (or cannot be unmounted ...)
-> 
-
-*nod*
-
 > > items in AIL, but worse, the items in AIL are never retried at all
 > > (once xfs_inode_item_push() will skip the items that are flush locked),
 > > even if the underlying DM-thin device is expanded to the proper size.
-> 
-> Can you turn that into an xfstest?
->
-
-Yeah, I am planing to do that, this is really not that hard to move into an
-xfstests case, although, it will be going into dangerous sub-set, once it will
-lockup the filesystem.
- 
+> > 
 > > This patch fixes both cases, retrying any item that has been failed
 > > previously, using the infra-structure provided by the previous patch.
 > > 
@@ -109,12 +94,6 @@ lockup the filesystem.
 > >  	 * the AIL.
 > >  	 */
 > >  	if (!xfs_iflock_nowait(ip)) {
-> 
-> Some comments about what this new block is for would be helpful, I think.
-> 
-
-/me replies on Brian's comment
-
 > > +		if (lip->li_flags & XFS_LI_FAILED) {
 > > +
 > > +			struct xfs_dinode	*dip;
@@ -141,43 +120,35 @@ lockup the filesystem.
 > > +				if (lip->li_flags & XFS_LI_FAILED)
 > > +					lip->li_flags &= XFS_LI_FAILED;
 > 
-> This confuses me.  If XFS_LI_FAILED is set, set XFS_LI_FAILED?
-> I assume you meant to clear it?
->
+> Eric already pointed out that you probably intend to clear the flag
+> here..?
+> 
 
-*nod* fix going to V2
- 
+Yup, my bad.
+
 > > +				lip = next;
 > > +			}
+> 
+> This whole hunk might be better off in a helper function (with the
+> comment Eric suggested as well).
+>
+
+Agreed, a helper function can be used here and in dquot code as well, so I agree
+that a helper function can be useful, I'll try to make it a common code for both
+dquot and inode items.
+ 
+> Those points and the ->iop_error() thing aside, this otherwise seems Ok
+> to me.
+>
+
+ 
+> Brian
+> 
 > > +
-> 
-> 			/* Add this buffer back to the delayed write list */
-> 
 > > +			if (!xfs_buf_delwri_queue(bp, buffer_list))
 > > +				rval = XFS_ITEM_FLUSHING;
-> 
+> > +
 > > +			xfs_buf_relse(bp);
-> 
-> So by here we have an implicit rval = XFS_ITEM_SUCCESS, I guess?
-> 
-
-AFAIK this is the current behavior of xfs_inode_item_push() without my patch, at
-a first glance it looked weird to me too, but then I just decided to leave it
-as-is.
-
-> (I wonder about setting FLUSHING at the top, and setting SUCCESS
-> only if everything in here works out - but maybe that would be
-> more confusing)
-> 
-> Anyway that's my first drive-by review, I'm not sure I have all the state & 
-> locking clear in my head for this stuff.
-> 
-
-I really appreciate the review, thanks for your time :)
-
-> Thanks,
-> -Eric
-> 
 > > +			goto out_unlock;
 > > +		}
 > > +
@@ -197,7 +168,17 @@ I really appreciate the review, thanks for your time :)
 > >  };
 > >  
 > >  
+> > -- 
+> > 2.9.3
 > > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
 Carlos
