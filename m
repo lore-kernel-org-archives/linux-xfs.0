@@ -1,109 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:36398 "EHLO fieldses.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932968AbdELQVQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 May 2017 12:21:16 -0400
-Date: Fri, 12 May 2017 12:21:15 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
-Message-ID: <20170512162115.GH7704@fieldses.org>
-References: <20170330064724.GA21542@quack2.suse.cz>
- <1490872308.2694.1.camel@redhat.com>
- <20170330161231.GA9824@fieldses.org>
- <1490898932.2667.1.camel@redhat.com>
- <20170404183138.GC14303@fieldses.org>
- <878tnfiq7v.fsf@notabene.neil.brown.name>
- <20170405080551.GC8899@quack2.suse.cz>
- <20170405181409.GC28681@fieldses.org>
- <20170511185942.GD25434@fieldses.org>
- <87r2zvkp9c.fsf@notabene.neil.brown.name>
+Received: from aserp1040.oracle.com ([141.146.126.69]:50296 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932443AbdELQXK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 May 2017 12:23:10 -0400
+Date: Fri, 12 May 2017 09:23:02 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] xfs: Move handling of missing page into one place in
+ xfs_find_get_desired_pgoff()
+Message-ID: <20170512162302.GG4519@birch.djwong.org>
+References: <20170511165023.29887-1-jack@suse.cz>
+ <20170511165023.29887-2-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87r2zvkp9c.fsf@notabene.neil.brown.name>
+In-Reply-To: <20170511165023.29887-2-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: NeilBrown <neil@brown.name>
-Cc: Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, May 12, 2017 at 08:22:23AM +1000, NeilBrown wrote:
-> On Thu, May 11 2017, J. Bruce Fields wrote:
-> > +static inline u64 nfsd4_change_attribute(struct inode *inode)
-> > +{
-> > +	u64 chattr;
-> > +
-> > +	chattr = inode->i_ctime.tv_sec << 30;
-> > +	chattr += inode->i_ctime.tv_nsec;
-> > +	chattr += inode->i_version;
-> > +	return chattr;
+On Thu, May 11, 2017 at 06:50:23PM +0200, Jan Kara wrote:
+> Currently several places in xfs_find_get_desired_pgoff() handle the case
+> of a missing page. Make them all handled in one place after the loop has
+> terminated.
 > 
-> So if I chmod a file, all clients will need to flush the content from their cache?
-> Maybe they already do?  Maybe it is a boring corner case?
-
-Yeah, that's the assumption, maybe it's wrong.  I can't recall
-complaints about anyone bitten by that case.
-
-> >  /*
-> >   * Fill in the pre_op attr for the wcc data
-> >   */
-> > @@ -253,7 +263,7 @@ fill_pre_wcc(struct svc_fh *fhp)
-> >  		fhp->fh_pre_mtime = inode->i_mtime;
-> >  		fhp->fh_pre_ctime = inode->i_ctime;
-> >  		fhp->fh_pre_size  = inode->i_size;
-> > -		fhp->fh_pre_change = inode->i_version;
-> > +		fhp->fh_pre_change = nfsd4_change_attribute(inode);
-> >  		fhp->fh_pre_saved = true;
-> >  	}
-> >  }
-> > --- a/fs/nfsd/nfs3xdr.c
-> > +++ b/fs/nfsd/nfs3xdr.c
-> > @@ -260,7 +260,7 @@ void fill_post_wcc(struct svc_fh *fhp)
-> >  		printk("nfsd: inode locked twice during operation.\n");
-> >  
-> >  	err = fh_getattr(fhp, &fhp->fh_post_attr);
-> > -	fhp->fh_post_change = d_inode(fhp->fh_dentry)->i_version;
-> > +	fhp->fh_post_change = nfsd4_change_attribute(d_inode(fhp->fh_dentry));
-> >  	if (err) {
-> >  		fhp->fh_post_saved = false;
-> >  		/* Grab the ctime anyway - set_change_info might use it */
-> > diff --git a/fs/nfsd/nfs4xdr.c b/fs/nfsd/nfs4xdr.c
-> > index 26780d53a6f9..a09532d4a383 100644
-> > --- a/fs/nfsd/nfs4xdr.c
-> > +++ b/fs/nfsd/nfs4xdr.c
-> > @@ -1973,7 +1973,7 @@ static __be32 *encode_change(__be32 *p, struct kstat *stat, struct inode *inode,
-> >  		*p++ = cpu_to_be32(convert_to_wallclock(exp->cd->flush_time));
-> >  		*p++ = 0;
-> >  	} else if (IS_I_VERSION(inode)) {
-> > -		p = xdr_encode_hyper(p, inode->i_version);
-> > +		p = xdr_encode_hyper(p, nfsd4_change_attribute(inode));
-> >  	} else {
-> >  		*p++ = cpu_to_be32(stat->ctime.tv_sec);
-> >  		*p++ = cpu_to_be32(stat->ctime.tv_nsec);
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/xfs/xfs_file.c | 24 ++++++++----------------
+>  1 file changed, 8 insertions(+), 16 deletions(-)
 > 
-> It is *really* confusing to find that fh_post_change is only set in nfs3
-> code, and only used in nfs4 code.
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index df51c025adfe..719923b99ba1 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1069,10 +1069,6 @@ xfs_find_get_desired_pgoff(
+>  				break;
+>  
+>  			ASSERT(type == HOLE_OFF);
+> -			if (lastoff == startoff || lastoff < endoff) {
+> -				found = true;
+> -				*offset = lastoff;
+> -			}
+>  			break;
+>  		}
 
-Yup.
+Hm.  This leaves the following weird looking hunk:
 
-> It is probably time to get a 'version' field in 'struct kstat'.
+if (nr_pages == 0) {
+	/* Data search found nothing */
+	if (type == DATA_OFF)
+		break;
 
-The pre/post_wcc code doesn't seem to be doing an explicit stat, I
-wonder if that matters?
+	ASSERT(type == HOLE_OFF);
+	break;
+}
 
---b.
+Which could be simplified to:
 
-> That would allow this code to get a little cleaner.
+if (nr_pages == 0) {
+	ASSERT(type == HOLE_OFF || type == DATA_OFF);
+	break;
+}
+
+Right?  Maybe a better cleanup would be to name the enum defining
+{HOLE,DATA}_OFF and change the xfs_find_get_desired_pgoff prototype to
+use that enum, and then we also get compiler type checking.
+
+The rest of this looks ok I think.
+
+--D
+
+> @@ -1080,11 +1076,8 @@ xfs_find_get_desired_pgoff(
+>  		 * At least we found one page. If the current offset is smaller
+>  		 * than the first page offset, a hole was found.
+>  		 */
+> -		if (type == HOLE_OFF && lastoff < page_offset(pvec.pages[0])) {
+> -			found = true;
+> -			*offset = lastoff;
+> +		if (type == HOLE_OFF && lastoff < page_offset(pvec.pages[0]))
+>  			break;
+> -		}
+>  
+>  		for (i = 0; i < nr_pages; i++) {
+>  			struct page	*page = pvec.pages[i];
+> @@ -1150,21 +1143,20 @@ xfs_find_get_desired_pgoff(
+>  
+>  		/*
+>  		 * The number of returned pages less than our desired, search
+> -		 * done.  In this case, nothing was found for searching data,
+> -		 * but we found a hole behind the last offset.
+> +		 * done.
+>  		 */
+> -		if (nr_pages < want) {
+> -			if (type == HOLE_OFF) {
+> -				*offset = lastoff;
+> -				found = true;
+> -			}
+> +		if (nr_pages < want)
+>  			break;
+> -		}
+>  
+>  		index = pvec.pages[i - 1]->index + 1;
+>  		pagevec_release(&pvec);
+>  	} while (index <= end);
+>  
+> +	/* No page at lastoff and we are not done - we found a hole. */
+> +	if (type == HOLE_OFF && lastoff < endoff) {
+> +		*offset = lastoff;
+> +		found = true;
+> +	}
+>  out:
+>  	pagevec_release(&pvec);
+>  	return found;
+> -- 
+> 2.12.0
 > 
-> (to me, this exercise is just a reminder that the NFSv4 change attribute
-> is poorly designed ... so it just makes me grumpy).
-> 
-> NeilBrown
-> 
-> 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
