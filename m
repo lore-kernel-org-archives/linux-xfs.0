@@ -1,53 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:51264 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932922AbdELQZC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 May 2017 12:25:02 -0400
-From: Hans-Peter Jansen <hpj@urpla.net>
-Subject: Re: permanent XFS volume corruption
-Date: Fri, 12 May 2017 18:23:48 +0200
-Message-ID: <1734059.x4Ie82qtds@xrated>
-In-Reply-To: <5915EEA7020000780015958E@prv-mh.provo.novell.com>
-References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <23c75521-a65b-d105-f274-3d1aba09e6ae@sandeen.net>
- <5915EEA7020000780015958E@prv-mh.provo.novell.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:18588 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757439AbdELQ3r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 May 2017 12:29:47 -0400
+Date: Fri, 12 May 2017 09:29:14 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [V2 PATCH 1/1] xfs: remove lsn relevant fields from xfs_trans
+ structure and its users
+Message-ID: <20170512162914.GI4519@birch.djwong.org>
+References: <1494555015-6039-1-git-send-email-shan.hai@oracle.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1494555015-6039-1-git-send-email-shan.hai@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Beulich <JBeulich@suse.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: Shan Hai <shan.hai@oracle.com>
+Cc: linux-xfs@vger.kernel.org, hch@infradead.org
 
-On Freitag, 12. Mai 2017 09:19:35 Jan Beulich wrote:
-> >>> On 12.05.17 at 17:04, <sandeen@sandeen.net> wrote:
-> > However:
-> > 
-> > With further testing I see that xfs_repair v3.1.8 /does not/
-> > entirely fix the fs; if I run 3.1.8 and then run upstream repair, it
-> > finds and fixes more bad flags on inode 764 (lib/xenstored/tdb) that 3.1.8
-> > didn't touch.  The verifiers in an upstream kernel may keep tripping
-> > over that until newer repair fixes it...
+On Fri, May 12, 2017 at 10:10:15AM +0800, Shan Hai wrote:
+> The t_lsn is not used anymore and the t_commit_lsn is used as a tmp
+> storage for the checkpoint sequence number only in the current code.
 > 
-> Well, I can see if I can build those newer tools for myself (would
-> largely depend on how easy/difficult they are to configure/make,
-> and whether there's a testsuite that I can run them over before
-> allowing them to touch live data); I don't expect newer tools to
-> be available for the distro I'm running.
+> And the start/commit lsn are tracked as a transaction group tag in
+> the xfs_cil_ctx instead of a single transaction, so remove them from
+> the xfs_trans structure and their users to match with the design.
+> 
+> Signed-off-by: Shan Hai <shan.hai@oracle.com>
 
-Pretty sure, you're running some SuSE derivative. Building the xfstools 
-usually is pretty simple with OBS, I do that all the time for unsupported 
-distros:
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-	https://build.opensuse.org/project/show/home:frispete:tools
+--D
 
-If BS wouldn't be down at the moment, I could look, if xfstests run as well, 
-but since you have a backup of course, the risk of damaging your system with  
-newer xfstools is pretty low. It saved my ass a couple of times...
-
-Good luck,
-Pete
-
-who notoriously runs outphased SuSE versions (e.g. 9.3 on my PBX)
-
+> ---
+>  fs/xfs/xfs_log_cil.c |  7 ++++---
+>  fs/xfs/xfs_trace.h   | 19 -------------------
+>  fs/xfs/xfs_trans.h   |  4 ----
+>  3 files changed, 4 insertions(+), 26 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 82f1cbc..10309cf 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -973,6 +973,7 @@
+>  {
+>  	struct xlog		*log = mp->m_log;
+>  	struct xfs_cil		*cil = log->l_cilp;
+> +	xfs_lsn_t		xc_commit_lsn;
+>  
+>  	/*
+>  	 * Do all necessary memory allocation before we lock the CIL.
+> @@ -990,9 +991,9 @@
+>  	if (tp->t_ticket->t_curr_res < 0)
+>  		xlog_print_tic_res(mp, tp->t_ticket);
+>  
+> -	tp->t_commit_lsn = cil->xc_ctx->sequence;
+> +	xc_commit_lsn = cil->xc_ctx->sequence;
+>  	if (commit_lsn)
+> -		*commit_lsn = tp->t_commit_lsn;
+> +		*commit_lsn = xc_commit_lsn;
+>  
+>  	xfs_log_done(mp, tp->t_ticket, NULL, regrant);
+>  	xfs_trans_unreserve_and_mod_sb(tp);
+> @@ -1008,7 +1009,7 @@
+>  	 * the log items. This affects (at least) processing of stale buffers,
+>  	 * inodes and EFIs.
+>  	 */
+> -	xfs_trans_free_items(tp, tp->t_commit_lsn, false);
+> +	xfs_trans_free_items(tp, xc_commit_lsn, false);
+>  
+>  	xlog_cil_push_background(log);
+>  
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 7c5a165..0712eb7 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -1490,25 +1490,6 @@
+>  		  __entry->tlen)
+>  );
+>  
+> -TRACE_EVENT(xfs_trans_commit_lsn,
+> -	TP_PROTO(struct xfs_trans *trans),
+> -	TP_ARGS(trans),
+> -	TP_STRUCT__entry(
+> -		__field(dev_t, dev)
+> -		__field(struct xfs_trans *, tp)
+> -		__field(xfs_lsn_t, lsn)
+> -	),
+> -	TP_fast_assign(
+> -		__entry->dev = trans->t_mountp->m_super->s_dev;
+> -		__entry->tp = trans;
+> -		__entry->lsn = trans->t_commit_lsn;
+> -	),
+> -	TP_printk("dev %d:%d trans 0x%p commit_lsn 0x%llx",
+> -		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> -		  __entry->tp,
+> -		  __entry->lsn)
+> -);
+> -
+>  TRACE_EVENT(xfs_agf,
+>  	TP_PROTO(struct xfs_mount *mp, struct xfs_agf *agf, int flags,
+>  		 unsigned long caller_ip),
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index a07acbf..80b3ed5 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -105,10 +105,6 @@ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
+>  	unsigned int		t_rtx_res;	/* # of rt extents resvd */
+>  	unsigned int		t_rtx_res_used;	/* # of resvd rt extents used */
+>  	struct xlog_ticket	*t_ticket;	/* log mgr ticket */
+> -	xfs_lsn_t		t_lsn;		/* log seq num of start of
+> -						 * transaction. */
+> -	xfs_lsn_t		t_commit_lsn;	/* log seq num of end of
+> -						 * transaction. */
+>  	struct xfs_mount	*t_mountp;	/* ptr to fs mount struct */
+>  	struct xfs_dquot_acct   *t_dqinfo;	/* acctg info for dquots */
+>  	unsigned int		t_flags;	/* misc flags */
+> -- 
+> 1.8.3.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
