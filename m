@@ -1,82 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54856 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934821AbdEOPne (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:43:34 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/17] uuid: add the v1 layout to uuid_t
-Date: Mon, 15 May 2017 17:42:56 +0200
-Message-Id: <20170515154308.26739-6-hch@lst.de>
-In-Reply-To: <20170515154308.26739-1-hch@lst.de>
-References: <20170515154308.26739-1-hch@lst.de>
+Received: from fieldses.org ([173.255.197.46]:36156 "EHLO fieldses.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754244AbdELP4C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 12 May 2017 11:56:02 -0400
+Date: Fri, 12 May 2017 11:56:01 -0400
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
+Message-ID: <20170512155601.GE7704@fieldses.org>
+References: <20170330064724.GA21542@quack2.suse.cz>
+ <1490872308.2694.1.camel@redhat.com>
+ <20170330161231.GA9824@fieldses.org>
+ <1490898932.2667.1.camel@redhat.com>
+ <20170404183138.GC14303@fieldses.org>
+ <878tnfiq7v.fsf@notabene.neil.brown.name>
+ <20170405080551.GC8899@quack2.suse.cz>
+ <20170405181409.GC28681@fieldses.org>
+ <20170511185942.GD25434@fieldses.org>
+ <20170512082754.GB31470@quack2.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170512082754.GB31470@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: NeilBrown <neil@brown.name>, Jeff Layton <jlayton@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Turn the content of uuid_t into a union and add the fields for the v1
-interpretation to it.
+On Fri, May 12, 2017 at 10:27:54AM +0200, Jan Kara wrote:
+> On Thu 11-05-17 14:59:43, J. Bruce Fields wrote:
+> > On Wed, Apr 05, 2017 at 02:14:09PM -0400, J. Bruce Fields wrote:
+> > > On Wed, Apr 05, 2017 at 10:05:51AM +0200, Jan Kara wrote:
+> > > > 1) Keep i_version as is, make clients also check for i_ctime.
+> > > 
+> > > That would be a protocol revision, which we'd definitely rather avoid.
+> > > 
+> > > But can't we accomplish the same by using something like
+> > > 
+> > > 	ctime * (some constant) + i_version
+> > > 
+> > > ?
+> > > 
+> > > >    Pro: No on-disk format changes.
+> > > >    Cons: After a crash, i_version can go backwards (but when file changes
+> > > >    i_version, i_ctime pair should be still different) or not, data can be
+> > > >    old or not.
+> > > 
+> > > This is probably good enough for NFS purposes: typically on an NFS
+> > > filesystem, results of a read in the face of a concurrent write open are
+> > > undefined.  And writers sync before close.
+> > > 
+> > > So after a crash with a dirty inode, we're in a situation where an NFS
+> > > client still needs to resend some writes, sync, and close.  I'm OK with
+> > > things being inconsistent during this window.
+> > > 
+> > > I do expect things to return to normal once that client's has resent its
+> > > writes--hence the worry about actually resuing old values after boot
+> > > (such as if i_version regresses on boot and then increments back to the
+> > > same value after further writes).  Factoring in ctime fixes that.
+> > 
+> > So for now I'm thinking of just doing something like the following.
+> > 
+> > Only nfsd needs it for now, but it could be moved to a vfs helper for
+> > statx, or for individual filesystems that want to do something
+> > different.  (The NFSv4 client will want to use the server's change
+> > attribute instead, I think.  And other filesystems might want to try
+> > something more ambitious like Neil's proposal.)
+> > 
+> > --b.
+> > 
+> > diff --git a/fs/nfsd/nfs3xdr.c b/fs/nfsd/nfs3xdr.c
+> > index 12feac6ee2fd..9636c9a60aba 100644
+> > diff --git a/fs/nfsd/nfsfh.h b/fs/nfsd/nfsfh.h
+> > index f84fe6bf9aee..14f09f1ef605 100644
+> > --- a/fs/nfsd/nfsfh.h
+> > +++ b/fs/nfsd/nfsfh.h
+> > @@ -240,6 +240,16 @@ fh_clear_wcc(struct svc_fh *fhp)
+> >  	fhp->fh_pre_saved = false;
+> >  }
+> >  
+> > +static inline u64 nfsd4_change_attribute(struct inode *inode)
+> > +{
+> > +	u64 chattr;
+> > +
+> > +	chattr = inode->i_ctime.tv_sec << 30;
+> 
+> Won't this overflow on 32-bit archs? tv_sec seems to be defined as long?
+> Probably you need explicit (u64) cast... Otherwise I'm fine with this.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: David Howells <dhowells@redhat.com>
----
- include/uapi/linux/uuid.h | 39 +++++++++++++++++++++++++++++++++------
- 1 file changed, 33 insertions(+), 6 deletions(-)
+Whoops, yes.  Or just assign to chattr as a separate step.  I'll fix
+that.
 
-diff --git a/include/uapi/linux/uuid.h b/include/uapi/linux/uuid.h
-index c31fc94695b9..6b6a583ec1fe 100644
---- a/include/uapi/linux/uuid.h
-+++ b/include/uapi/linux/uuid.h
-@@ -32,15 +32,42 @@ typedef struct {
-    (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
- 
- typedef struct {
--	__u8 b[16];
-+	union {
-+		__u8			b[16];
-+
-+		/*
-+		 * V1 (time-based) UUID definition [RFC 4122]:
-+		 * - the timestamp is a 60-bit value, split 32/16/12, and goes
-+		 *   in 100ns increments since midnight 15th October 1582
-+		 *   - add UUID_TO_UNIX_TIME to convert unix time in 100ns
-+		 *     units to UUID time
-+		 * - the clock sequence is a 14-bit counter to avoid duplicate
-+		 *   times
-+		 */
-+		struct {
-+			__be32		time_low;
-+			__be16		time_mid;
-+			__be16		time_hi_and_version;
-+#define UUID_TO_UNIX_TIME	0x01b21dd213814000ULL
-+#define UUID_TIMEHI_MASK	0x0fff
-+#define UUID_VERSION_TIME	0x1000	/* time-based UUID */
-+#define UUID_VERSION_NAME	0x3000	/* name-based UUID */
-+#define UUID_VERSION_RANDOM	0x4000	/* (pseudo-)random generated UUID */
-+			u8		clock_seq_hi_and_reserved;
-+#define UUID_CLOCKHI_MASK	0x3f
-+#define UUID_VARIANT_STD	0x80
-+			u8		clock_seq_low;
-+			u8		node[6];
-+		} v1;
-+	};
- } uuid_t;
- 
--#define UUID(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)			\
--((uuid_t)								\
--{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
--   ((b) >> 8) & 0xff, (b) & 0xff,					\
-+#define UUID(a, _b, c, d0, d1, d2, d3, d4, d5, d6, d7)			\
-+{ .b = {								\
-+   ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
-+   ((_b) >> 8) & 0xff, (_b) & 0xff,					\
-    ((c) >> 8) & 0xff, (c) & 0xff,					\
--   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
-+   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }}
- 
- /* backwards compatibility, don't use in new code */
- typedef guid_t uuid_le;
--- 
-2.11.0
+--b.
 
+> > +	chattr += inode->i_ctime.tv_nsec;
+> > +	chattr += inode->i_version;
+> > +	return chattr;
+> > +}
+> > +
+> >  /*
+> >   * Fill in the pre_op attr for the wcc data
+> >   */
+> > @@ -253,7 +263,7 @@ fill_pre_wcc(struct svc_fh *fhp)
+> >  		fhp->fh_pre_mtime = inode->i_mtime;
+> >  		fhp->fh_pre_ctime = inode->i_ctime;
+> >  		fhp->fh_pre_size  = inode->i_size;
+> > -		fhp->fh_pre_change = inode->i_version;
+> > +		fhp->fh_pre_change = nfsd4_change_attribute(inode);
+> >  		fhp->fh_pre_saved = true;
+> >  	}
+> >  }
+> > --- a/fs/nfsd/nfs3xdr.c
+> > +++ b/fs/nfsd/nfs3xdr.c
+> > @@ -260,7 +260,7 @@ void fill_post_wcc(struct svc_fh *fhp)
+> >  		printk("nfsd: inode locked twice during operation.\n");
+> >  
+> >  	err = fh_getattr(fhp, &fhp->fh_post_attr);
+> > -	fhp->fh_post_change = d_inode(fhp->fh_dentry)->i_version;
+> > +	fhp->fh_post_change = nfsd4_change_attribute(d_inode(fhp->fh_dentry));
+> >  	if (err) {
+> >  		fhp->fh_post_saved = false;
+> >  		/* Grab the ctime anyway - set_change_info might use it */
+> > diff --git a/fs/nfsd/nfs4xdr.c b/fs/nfsd/nfs4xdr.c
+> > index 26780d53a6f9..a09532d4a383 100644
+> > --- a/fs/nfsd/nfs4xdr.c
+> > +++ b/fs/nfsd/nfs4xdr.c
+> > @@ -1973,7 +1973,7 @@ static __be32 *encode_change(__be32 *p, struct kstat *stat, struct inode *inode,
+> >  		*p++ = cpu_to_be32(convert_to_wallclock(exp->cd->flush_time));
+> >  		*p++ = 0;
+> >  	} else if (IS_I_VERSION(inode)) {
+> > -		p = xdr_encode_hyper(p, inode->i_version);
+> > +		p = xdr_encode_hyper(p, nfsd4_change_attribute(inode));
+> >  	} else {
+> >  		*p++ = cpu_to_be32(stat->ctime.tv_sec);
+> >  		*p++ = cpu_to_be32(stat->ctime.tv_nsec);
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
