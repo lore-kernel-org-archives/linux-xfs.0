@@ -1,72 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49298 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966209AbdEOPnw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:43:52 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/17] block: remove blk_part_pack_uuid
-Date: Mon, 15 May 2017 17:43:06 +0200
-Message-Id: <20170515154308.26739-16-hch@lst.de>
-In-Reply-To: <20170515154308.26739-1-hch@lst.de>
-References: <20170515154308.26739-1-hch@lst.de>
+Received: from smtprelay0225.hostedemail.com ([216.40.44.225]:46801 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750796AbdELO1r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 May 2017 10:27:47 -0400
+Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
+        by smtpgrave05.hostedemail.com (Postfix) with ESMTP id CE1BF18440C
+        for <linux-xfs@vger.kernel.org>; Fri, 12 May 2017 14:18:52 +0000 (UTC)
+Message-ID: <1494598724.2028.19.camel@perches.com>
+Subject: Re: [PATCH] xfs: avoid harmless gcc-7 warnings
+From: Joe Perches <joe@perches.com>
+Date: Fri, 12 May 2017 07:18:44 -0700
+In-Reply-To: <20170511124932.226016-1-arnd@arndb.de>
+References: <20170511124932.226016-1-arnd@arndb.de>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+Cc: Dave Chinner <dchinner@redhat.com>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>, Calvin Owens <calvinowens@fb.com>, linux-kernel@vger.kernel.org
 
-This helper was only used by IMA of all things, which would get spurious
-errors if CONFIG_BLOCK is disabled.  Just opencode the call there.
+On Thu, 2017-05-11 at 14:49 +0200, Arnd Bergmann wrote:
+> gcc-7 flags the use of integer math inside of a condition
+> as a potential bug:
+> 
+> fs/xfs/xfs_bmap_util.c: In function 'xfs_swap_extents_check_format':
+> fs/xfs/xfs_bmap_util.c:1619:8: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
+> fs/xfs/xfs_bmap_util.c:1629:8: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
+> 
+> This one is clearly fine, and we can add a comparison to zero
+> to shut up the warning.
+[]
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+[]
+> @@ -1613,7 +1613,7 @@ xfs_swap_extents_check_format(
+>  	 * extent format...
+>  	 */
+>  	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+> -		if (XFS_IFORK_BOFF(ip) &&
+> +		if ((XFS_IFORK_BOFF(ip) != 0) &&
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- include/linux/genhd.h               | 11 -----------
- security/integrity/ima/ima_policy.c |  3 +--
- 2 files changed, 1 insertion(+), 13 deletions(-)
+As far as I can tell, this suggestion makes no sense.
 
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index acff9437e5c3..e619fae2f037 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -219,12 +219,6 @@ static inline struct gendisk *part_to_disk(struct hd_struct *part)
- 	return NULL;
- }
- 
--static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
--{
--	uuid_be_to_bin(uuid_str, (uuid_be *)to);
--	return 0;
--}
--
- static inline int disk_max_parts(struct gendisk *disk)
- {
- 	if (disk->flags & GENHD_FL_EXT_DEVT)
-@@ -736,11 +730,6 @@ static inline dev_t blk_lookup_devt(const char *name, int partno)
- 	dev_t devt = MKDEV(0, 0);
- 	return devt;
- }
--
--static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
--{
--	return -EINVAL;
--}
- #endif /* CONFIG_BLOCK */
- 
- #endif /* _LINUX_GENHD_H */
-diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
-index 3ab1067db624..49fbc3e8f012 100644
---- a/security/integrity/ima/ima_policy.c
-+++ b/security/integrity/ima/ima_policy.c
-@@ -717,8 +717,7 @@ static int ima_parse_rule(char *rule, struct ima_rule_entry *entry)
- 				break;
- 			}
- 
--			result = blk_part_pack_uuid(args[0].from,
--						    entry->fsuuid);
-+			result = uuid_to_bin(args[0].from, (uuid_t *)&entry->fsuuid);
- 			if (!result)
- 				entry->flags |= IMA_FSUUID;
- 			break;
--- 
-2.11.0
+$ git grep -E "define\s+XFS_IFORK_BOFF"
+fs/xfs/libxfs/xfs_inode_fork.h:#define XFS_IFORK_BOFF(ip)               ((int)((ip)->i_d.di_forkoff << 3))
+
+$ git grep -w di_forkoff|grep -P "\w+\s+di_forkoff\s*;"
+fs/xfs/libxfs/xfs_format.h:	__u8		di_forkoff;	/* attr fork offs, <<3 for 64b align */
+fs/xfs/libxfs/xfs_inode_buf.h:	__uint8_t	di_forkoff;	/* attr fork offs, <<3 for 64b align */
+fs/xfs/libxfs/xfs_log_format.h:	__uint8_t	di_forkoff;	/* attr fork offs, <<3 for 64b align */
+
 
