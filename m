@@ -1,38 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38471 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933342AbdEOPoI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:44:08 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/17] s390/sysinfo: use uuid_is_null instead of opencoding it
-Date: Mon, 15 May 2017 17:43:00 +0200
-Message-Id: <20170515154308.26739-10-hch@lst.de>
-In-Reply-To: <20170515154308.26739-1-hch@lst.de>
-References: <20170515154308.26739-1-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:18644 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756954AbdELAyY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2017 20:54:24 -0400
+Date: Thu, 11 May 2017 17:53:52 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: fix warnings about unused stack variables
+Message-ID: <20170512005352.GF4519@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reduce stack usage and get rid of compiler warnings by eliminating
+unused variables.  The variables were eliminated during one of
+Christoph's cleanups for 4.12.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- arch/s390/kernel/sysinfo.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_bmap.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/arch/s390/kernel/sysinfo.c b/arch/s390/kernel/sysinfo.c
-index eefcb54872a5..fb869b103825 100644
---- a/arch/s390/kernel/sysinfo.c
-+++ b/arch/s390/kernel/sysinfo.c
-@@ -242,7 +242,7 @@ static void print_ext_name(struct seq_file *m, int lvl,
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 8adb91b..a7048eaf 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1280,7 +1280,6 @@ xfs_bmap_read_extents(
+ 		xfs_bmbt_rec_t	*frp;
+ 		xfs_fsblock_t	nextbno;
+ 		xfs_extnum_t	num_recs;
+-		xfs_extnum_t	start;
  
- static void print_uuid(struct seq_file *m, int i, struct sysinfo_3_2_2 *info)
- {
--	if (!memcmp(&info->vm[i].uuid, &NULL_UUID_BE, sizeof(uuid_be)))
-+	if (uuid_is_null(&info->vm[i].uuid))
- 		return;
- 	seq_printf(m, "VM%02d UUID:            %pUb\n", i, &info->vm[i].uuid);
- }
--- 
-2.11.0
-
+ 		num_recs = xfs_btree_get_numrecs(block);
+ 		if (unlikely(i + num_recs > room)) {
+@@ -1303,7 +1302,6 @@ xfs_bmap_read_extents(
+ 		 * Copy records into the extent records.
+ 		 */
+ 		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
+-		start = i;
+ 		for (j = 0; j < num_recs; j++, i++, frp++) {
+ 			xfs_bmbt_rec_host_t *trp = xfs_iext_get_ext(ifp, i);
+ 			trp->l0 = be64_to_cpu(frp->l0);
