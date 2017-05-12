@@ -1,62 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57469 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966119AbdEOPnv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:43:51 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/17] uuid: remove struct uuid_v1
-Date: Mon, 15 May 2017 17:43:02 +0200
-Message-Id: <20170515154308.26739-12-hch@lst.de>
-In-Reply-To: <20170515154308.26739-1-hch@lst.de>
-References: <20170515154308.26739-1-hch@lst.de>
+Received: from prv-mh.provo.novell.com ([137.65.248.74]:43567 "EHLO
+        prv-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752456AbdELG0f (ORCPT
+        <rfc822;groupwise-linux-xfs@vger.kernel.org:2:1>);
+        Fri, 12 May 2017 02:26:35 -0400
+Message-Id: <591571BC0200007800159165@prv-mh.provo.novell.com>
+Date: Fri, 12 May 2017 00:26:36 -0600
+From: "Jan Beulich" <JBeulich@suse.com>
+Subject: Re: permanent XFS volume corruption
+References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
+ <591493D00200007800158EA3@prv-mh.provo.novell.com>
+ <a185194a-af56-cd53-cfb9-653e3b5f81b7@sandeen.net>
+In-Reply-To: <a185194a-af56-cd53-cfb9-653e3b5f81b7@sandeen.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-Unused now.
+>>> On 11.05.17 at 18:39, <sandeen@sandeen.net> wrote:
+> On 5/11/17 9:39 AM, Jan Beulich wrote:
+>> In any event I think there are two problems: The corruption itself
+>> (possibly an issue with recent enough upstream kernels only) and
+>> the fact that running xfs_repair doesn't help in these cases.
+> 
+> FWIW, recent xfs_repair (v4.11.0) finds several bad inodes on the
+> sdb8 metadump you sent, and apparently fixes* them without problems.
+> 
+> inode 764 has RT flag set but there is no RT device
+> directory flags set on non-directory inode 764
+> inode 2068 has RT flag set but there is no RT device
+> directory flags set on non-directory inode 2068
+> inode 268448674 has RT flag set but there is no RT device
+> directory flags set on non-directory inode 268448674
+> 
+> these are:
+> 
+> 764: lib/xenstored/tdb
+> 2068: log/messages
+> 268448674: lib/sudo/jbeulich/0
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- include/linux/uuid.h | 24 ------------------------
- 1 file changed, 24 deletions(-)
+This matches then was xfs_repair -n has found here.
 
-diff --git a/include/linux/uuid.h b/include/linux/uuid.h
-index f0e2a645e2bb..3980d5579338 100644
---- a/include/linux/uuid.h
-+++ b/include/linux/uuid.h
-@@ -19,30 +19,6 @@
- #include <uapi/linux/uuid.h>
- 
- /*
-- * V1 (time-based) UUID definition [RFC 4122].
-- * - the timestamp is a 60-bit value, split 32/16/12, and goes in 100ns
-- *   increments since midnight 15th October 1582
-- *   - add AFS_UUID_TO_UNIX_TIME to convert unix time in 100ns units to UUID
-- *     time
-- * - the clock sequence is a 14-bit counter to avoid duplicate times
-- */
--struct uuid_v1 {
--	__be32		time_low;			/* low part of timestamp */
--	__be16		time_mid;			/* mid part of timestamp */
--	__be16		time_hi_and_version;		/* high part of timestamp and version  */
--#define UUID_TO_UNIX_TIME	0x01b21dd213814000ULL
--#define UUID_TIMEHI_MASK	0x0fff
--#define UUID_VERSION_TIME	0x1000	/* time-based UUID */
--#define UUID_VERSION_NAME	0x3000	/* name-based UUID */
--#define UUID_VERSION_RANDOM	0x4000	/* (pseudo-)random generated UUID */
--	u8		clock_seq_hi_and_reserved;	/* clock seq hi and variant */
--#define UUID_CLOCKHI_MASK	0x3f
--#define UUID_VARIANT_STD	0x80
--	u8		clock_seq_low;			/* clock seq low */
--	u8		node[6];			/* spatially unique node ID (MAC addr) */
--};
--
--/*
-  * The length of a UUID string ("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
-  * not including trailing NUL.
-  */
--- 
-2.11.0
+I'm surprised log/messages is among them, as I didn't have to do
+anything to it to at least avoid the kernel warnings (for the other
+two I've simply renamed the containing directories, creating fresh
+ones instead). What I did get kernel warnings for were one or
+two files under log/xen/, which I've then similarly renamed and
+re-created.
+
+> and after repair, I can read all the inodes on the device w/o
+> further errors (upstream linus kernel)
+
+So on the earlier instance, where I did run actual repairs (and
+indeed multiple of them), the problem re-surfaces every time
+I mount the volume again. Iirc the inode numbers didn't change,
+but in some cases the associated files did (namely when these
+weren't ones created very soon after mount, i.e. when the
+order of things is less predictable - it was in particular /var/run/
+which was affected there). That's the reason I've refrained
+from trying to xfs_repair the issues in this second instance.
+
+Now one question obviously is whether the repair strategy
+changed between the xfs_repair versions I use (3.1.8 on the
+system that I sent you the meta data dump from, likely the
+same on the other one): Mine clears the inodes with the bad
+RT flag, while - namely considering the subsequent "block ...
+type unknown" reported by xfs_check - it might instead be
+possible to reconstruct the files and clear the RT flag. But of
+course I know nothing about XFS internals...
+
+> *Each of the 3 problematic inodes has an odd assortment of flags
+> set (think chattr type flags) - some have immutable, some have
+> noatime, some have nodump, etc.  These are what cause xfs_repair
+> t ocomplain.  It seems unlikely that any of these were actually set
+> on your filesystem, as these are the only ones with any flags set.
+> After repair, they're showing:
+> 
+> --S---dA----------- mnt/log/messages
+> --S-i--A----------- mnt/lib/sudo/jbeulich/0
+> --S----A----------- mnt/lib/xenstored/tdb
+> 
+> Did you happen to set chattr flags on these files intentionally?
+
+I certainly didn't. As I don't know how to produce this form of
+flags display, I can't (for now) compare with what a healthy
+system has there.
+
+Jan
 
