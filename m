@@ -1,184 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40232 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755606AbdELIVj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 May 2017 04:21:39 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 6A6ABC05973E
-        for <linux-xfs@vger.kernel.org>; Fri, 12 May 2017 08:21:39 +0000 (UTC)
-Date: Fri, 12 May 2017 10:21:35 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
- error during buffer writeback
-Message-ID: <20170512082135.g6vd4vvxlctmtptq@eorzea.usersys.redhat.com>
-References: <20170511135733.21765-1-cmaiolino@redhat.com>
- <20170511135733.21765-3-cmaiolino@redhat.com>
- <20170511170805.GB14148@localhost.localdomain>
+Received: from mx2.suse.de ([195.135.220.15]:43472 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754931AbdELI15 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 12 May 2017 04:27:57 -0400
+Date: Fri, 12 May 2017 10:27:54 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
+Message-ID: <20170512082754.GB31470@quack2.suse.cz>
+References: <1490810071.2678.6.camel@redhat.com>
+ <20170330064724.GA21542@quack2.suse.cz>
+ <1490872308.2694.1.camel@redhat.com>
+ <20170330161231.GA9824@fieldses.org>
+ <1490898932.2667.1.camel@redhat.com>
+ <20170404183138.GC14303@fieldses.org>
+ <878tnfiq7v.fsf@notabene.neil.brown.name>
+ <20170405080551.GC8899@quack2.suse.cz>
+ <20170405181409.GC28681@fieldses.org>
+ <20170511185942.GD25434@fieldses.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170511170805.GB14148@localhost.localdomain>
+In-Reply-To: <20170511185942.GD25434@fieldses.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: Jan Kara <jack@suse.cz>, NeilBrown <neil@brown.name>, Jeff Layton <jlayton@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu, May 11, 2017 at 01:08:05PM -0400, Brian Foster wrote:
-> On Thu, May 11, 2017 at 03:57:33PM +0200, Carlos Maiolino wrote:
-> > When a buffer has been failed during writeback, the inode items into it
-> > are kept flush locked, and are never resubmitted due the flush lock, so,
-> > if any buffer fails to be written, the items in AIL are never written to
-> > disk and never unlocked.
+On Thu 11-05-17 14:59:43, J. Bruce Fields wrote:
+> On Wed, Apr 05, 2017 at 02:14:09PM -0400, J. Bruce Fields wrote:
+> > On Wed, Apr 05, 2017 at 10:05:51AM +0200, Jan Kara wrote:
+> > > 1) Keep i_version as is, make clients also check for i_ctime.
 > > 
-> > This causes a filesystem to be unmountable due these items flush locked
-> > in AIL, but this also causes the items in AIL to never be written back,
-> > even when the IO device comes back to normal.
+> > That would be a protocol revision, which we'd definitely rather avoid.
 > > 
-> > I've been testing this patch with a DM-thin device, creating a
-> > filesystem larger than the real device.
+> > But can't we accomplish the same by using something like
 > > 
-> > When writing enough data to fill the DM-thin device, XFS receives ENOSPC
-> > errors from the device, and keep spinning on xfsaild (when 'retry
-> > forever' configuration is set).
+> > 	ctime * (some constant) + i_version
 > > 
-> > At this point, the filesystem is unmountable because of the flush locked
-> > items in AIL, but worse, the items in AIL are never retried at all
-> > (once xfs_inode_item_push() will skip the items that are flush locked),
-> > even if the underlying DM-thin device is expanded to the proper size.
+> > ?
 > > 
-> > This patch fixes both cases, retrying any item that has been failed
-> > previously, using the infra-structure provided by the previous patch.
+> > >    Pro: No on-disk format changes.
+> > >    Cons: After a crash, i_version can go backwards (but when file changes
+> > >    i_version, i_ctime pair should be still different) or not, data can be
+> > >    old or not.
 > > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
+> > This is probably good enough for NFS purposes: typically on an NFS
+> > filesystem, results of a read in the face of a concurrent write open are
+> > undefined.  And writers sync before close.
 > > 
-> > This same problem is also possible in dquot code, but the fix is almost
-> > identical.
+> > So after a crash with a dirty inode, we're in a situation where an NFS
+> > client still needs to resend some writes, sync, and close.  I'm OK with
+> > things being inconsistent during this window.
 > > 
-> > I am not submitting a fix for dquot yet to avoid the need to create VX for both
-> > patches, once we agree with the solution, I'll submit a fix to dquot.
-> > 
-> >  fs/xfs/xfs_inode_item.c | 54 ++++++++++++++++++++++++++++++++++++++++++++++++-
-> >  1 file changed, 53 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> > index 08cb7d1..583fa9e 100644
-> > --- a/fs/xfs/xfs_inode_item.c
-> > +++ b/fs/xfs/xfs_inode_item.c
-> > @@ -475,6 +475,21 @@ xfs_inode_item_unpin(
-> >  		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
-> >  }
-> >  
-> > +STATIC void
-> > +xfs_inode_item_error(
-> > +	struct xfs_log_item	*lip,
-> > +	unsigned int		bflags)
-> > +{
-> > +
-> > +	/*
-> > +	 * The buffer writeback containing this inode has been failed
-> > +	 * mark it as failed and unlock the flush lock, so it can be retried
-> > +	 * again
-> > +	 */
-> > +	if (bflags & XBF_WRITE_FAIL)
-> > +		lip->li_flags |= XFS_LI_FAILED;
-> > +}
-> > +
-> >  STATIC uint
-> >  xfs_inode_item_push(
-> >  	struct xfs_log_item	*lip,
-> > @@ -517,8 +532,44 @@ xfs_inode_item_push(
-> >  	 * the AIL.
-> >  	 */
-> >  	if (!xfs_iflock_nowait(ip)) {
-> > +		if (lip->li_flags & XFS_LI_FAILED) {
-> > +
-> > +			struct xfs_dinode	*dip;
-> > +			struct xfs_log_item	*next;
-> > +			int			error;
-> > +
-> > +			error = xfs_imap_to_bp(ip->i_mount, NULL, &ip->i_imap,
-> > +					       &dip, &bp, XBF_TRYLOCK, 0);
-> > +
-> > +			if (error) {
-> > +				rval = XFS_ITEM_FLUSHING;
-> > +				goto out_unlock;
-> > +			}
-> > +
-> > +			if (!(bp->b_flags & XBF_WRITE_FAIL)) {
-> > +				rval = XFS_ITEM_FLUSHING;
-> > +				xfs_buf_relse(bp);
-> > +				goto out_unlock;
-> > +			}
-> > +
-> > +			while (lip != NULL) {
-> > +				next = lip->li_bio_list;
-> > +
-> > +				if (lip->li_flags & XFS_LI_FAILED)
-> > +					lip->li_flags &= XFS_LI_FAILED;
+> > I do expect things to return to normal once that client's has resent its
+> > writes--hence the worry about actually resuing old values after boot
+> > (such as if i_version regresses on boot and then increments back to the
+> > same value after further writes).  Factoring in ctime fixes that.
 > 
-> Eric already pointed out that you probably intend to clear the flag
-> here..?
+> So for now I'm thinking of just doing something like the following.
 > 
-
-Yup, my bad.
-
-> > +				lip = next;
-> > +			}
+> Only nfsd needs it for now, but it could be moved to a vfs helper for
+> statx, or for individual filesystems that want to do something
+> different.  (The NFSv4 client will want to use the server's change
+> attribute instead, I think.  And other filesystems might want to try
+> something more ambitious like Neil's proposal.)
 > 
-> This whole hunk might be better off in a helper function (with the
-> comment Eric suggested as well).
->
-
-Agreed, a helper function can be used here and in dquot code as well, so I agree
-that a helper function can be useful, I'll try to make it a common code for both
-dquot and inode items.
- 
-> Those points and the ->iop_error() thing aside, this otherwise seems Ok
-> to me.
->
-
- 
-> Brian
+> --b.
 > 
-> > +
-> > +			if (!xfs_buf_delwri_queue(bp, buffer_list))
-> > +				rval = XFS_ITEM_FLUSHING;
-> > +
-> > +			xfs_buf_relse(bp);
-> > +			goto out_unlock;
-> > +		}
-> > +
-> >  		rval = XFS_ITEM_FLUSHING;
-> >  		goto out_unlock;
-> > +
-> >  	}
-> >  
-> >  	ASSERT(iip->ili_fields != 0 || XFS_FORCED_SHUTDOWN(ip->i_mount));
-> > @@ -622,7 +673,8 @@ static const struct xfs_item_ops xfs_inode_item_ops = {
-> >  	.iop_unlock	= xfs_inode_item_unlock,
-> >  	.iop_committed	= xfs_inode_item_committed,
-> >  	.iop_push	= xfs_inode_item_push,
-> > -	.iop_committing = xfs_inode_item_committing
-> > +	.iop_committing = xfs_inode_item_committing,
-> > +	.iop_error	= xfs_inode_item_error
-> >  };
-> >  
-> >  
-> > -- 
-> > 2.9.3
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/fs/nfsd/nfs3xdr.c b/fs/nfsd/nfs3xdr.c
+> index 12feac6ee2fd..9636c9a60aba 100644
+> diff --git a/fs/nfsd/nfsfh.h b/fs/nfsd/nfsfh.h
+> index f84fe6bf9aee..14f09f1ef605 100644
+> --- a/fs/nfsd/nfsfh.h
+> +++ b/fs/nfsd/nfsfh.h
+> @@ -240,6 +240,16 @@ fh_clear_wcc(struct svc_fh *fhp)
+>  	fhp->fh_pre_saved = false;
+>  }
+>  
+> +static inline u64 nfsd4_change_attribute(struct inode *inode)
+> +{
+> +	u64 chattr;
+> +
+> +	chattr = inode->i_ctime.tv_sec << 30;
 
+Won't this overflow on 32-bit archs? tv_sec seems to be defined as long?
+Probably you need explicit (u64) cast... Otherwise I'm fine with this.
+
+								Honza
+
+> +	chattr += inode->i_ctime.tv_nsec;
+> +	chattr += inode->i_version;
+> +	return chattr;
+> +}
+> +
+>  /*
+>   * Fill in the pre_op attr for the wcc data
+>   */
+> @@ -253,7 +263,7 @@ fill_pre_wcc(struct svc_fh *fhp)
+>  		fhp->fh_pre_mtime = inode->i_mtime;
+>  		fhp->fh_pre_ctime = inode->i_ctime;
+>  		fhp->fh_pre_size  = inode->i_size;
+> -		fhp->fh_pre_change = inode->i_version;
+> +		fhp->fh_pre_change = nfsd4_change_attribute(inode);
+>  		fhp->fh_pre_saved = true;
+>  	}
+>  }
+> --- a/fs/nfsd/nfs3xdr.c
+> +++ b/fs/nfsd/nfs3xdr.c
+> @@ -260,7 +260,7 @@ void fill_post_wcc(struct svc_fh *fhp)
+>  		printk("nfsd: inode locked twice during operation.\n");
+>  
+>  	err = fh_getattr(fhp, &fhp->fh_post_attr);
+> -	fhp->fh_post_change = d_inode(fhp->fh_dentry)->i_version;
+> +	fhp->fh_post_change = nfsd4_change_attribute(d_inode(fhp->fh_dentry));
+>  	if (err) {
+>  		fhp->fh_post_saved = false;
+>  		/* Grab the ctime anyway - set_change_info might use it */
+> diff --git a/fs/nfsd/nfs4xdr.c b/fs/nfsd/nfs4xdr.c
+> index 26780d53a6f9..a09532d4a383 100644
+> --- a/fs/nfsd/nfs4xdr.c
+> +++ b/fs/nfsd/nfs4xdr.c
+> @@ -1973,7 +1973,7 @@ static __be32 *encode_change(__be32 *p, struct kstat *stat, struct inode *inode,
+>  		*p++ = cpu_to_be32(convert_to_wallclock(exp->cd->flush_time));
+>  		*p++ = 0;
+>  	} else if (IS_I_VERSION(inode)) {
+> -		p = xdr_encode_hyper(p, inode->i_version);
+> +		p = xdr_encode_hyper(p, nfsd4_change_attribute(inode));
+>  	} else {
+>  		*p++ = cpu_to_be32(stat->ctime.tv_sec);
+>  		*p++ = cpu_to_be32(stat->ctime.tv_nsec);
 -- 
-Carlos
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
