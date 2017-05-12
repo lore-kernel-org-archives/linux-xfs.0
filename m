@@ -1,52 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34346 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753673AbdERH5Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 03:57:25 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:53800 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756978AbdELIyB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 12 May 2017 04:54:01 -0400
+Date: Fri, 12 May 2017 10:53:57 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs: only return detailed fsmap info if the caller has
+ CAP_SYS_ADMIN
+Message-ID: <20170512085357.wmq7xclw3zfrnswh@eorzea.usersys.redhat.com>
+References: <20170511175511.GC4519@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170518062705.25902-24-hch@lst.de>
-References: <20170518062705.25902-1-hch@lst.de> <20170518062705.25902-24-hch@lst.de>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 18 May 2017 10:57:24 +0300
-Message-ID: <CAOQ4uxj+TH5vS5HoEFPJXUpneBqr+YwbVES0bsHzw9qmS8HzKg@mail.gmail.com>
-Subject: Re: [PATCH 23/23] uuid: remove uuid_be
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170511175511.GC4519@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel <linux-kernel@vger.kernel.org>, Hugh Dickins <hughd@google.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Thu, May 18, 2017 at 9:27 AM, Christoph Hellwig <hch@lst.de> wrote:
-> Everything uses uuid_t now.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Hi,
+
+> There were a number of handwaving complaints that one could "possibly"
+> use inode numbers and extent maps to fingerprint a filesystem hosting
+> multiple containers and somehow use the information to guess at the
+> contents of other containers and attack them.  Despite the total lack of
+> any demonstration that this is actually possible, it's easier to
+> restrict access now and broaden it later, so use the rmapbt fsmap
+> backends only if the caller has CAP_SYS_ADMIN.  Unprivileged users will
+> just have to make do with only getting the free space information.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
+>  fs/xfs/xfs_fsmap.c |    5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> index 3683819..814ed729 100644
+> --- a/fs/xfs/xfs_fsmap.c
+> +++ b/fs/xfs/xfs_fsmap.c
+> @@ -828,6 +828,7 @@ xfs_getfsmap(
+>  	struct xfs_fsmap		dkeys[2];	/* per-dev keys */
+>  	struct xfs_getfsmap_dev		handlers[XFS_GETFSMAP_DEVS];
+>  	struct xfs_getfsmap_info	info = { NULL };
+> +	bool				use_rmap;
+>  	int				i;
+>  	int				error = 0;
+>  
+> @@ -837,12 +838,14 @@ xfs_getfsmap(
+>  	    !xfs_getfsmap_is_valid_device(mp, &head->fmh_keys[1]))
+>  		return -EINVAL;
+>  
+> +	use_rmap = capable(CAP_SYS_ADMIN) &&
+> +		   xfs_sb_version_hasrmapbt(&mp->m_sb);
+>  	head->fmh_entries = 0;
+>  
+>  	/* Set up our device handlers. */
+>  	memset(handlers, 0, sizeof(handlers));
+>  	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
+> -	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+> +	if (use_rmap)
+>  		handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
+>  	else
+>  		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
+>
 
-Excellent!
-I reviewed the entire series. You may add
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+I've followed the discussion too, and alhtough it just look as a very remote
+theoretical problem, restricting this is simple.
 
-to any of the patches as you see fit.
+Overall this looks fine to me, but, I just wonder if somebody in the future will
+complain to be getting freespace only, instead of the fsmap itself, without
+actually getting a permission denied error, or something like that.
 
-Now let's talk about how this is going to be merged.
-Do you intend to send Linus a pull request?
-Get those patches merged via someone else's tree?
-Is this branch listed for linux-next build?
+This is a minor concern from my side though, so, unless somebody agrees with my
+point here, you can add:
 
-The reason I am asking is because this last removal patch should probably
-be applied near the end of the merge window (?).
-Because maintainers cannot apply patches with code that uses the new
-uuid_t to linux-next branches and we don't want linux-next build to fail
-with new code that uses uuid_be...
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-More to the point, I would like to re-post the patch
-("tmpfs: generate random sb->s_uuid") using uuid_gen()
-instead of generate_random_uuid() as you proposed.
-Hugh has already acked the intent "once fs is agreed on the way to go"
-When and how would I have this patch applied?
-Obvious solution.. can you apply this patch to your branch?
-Do you need me to re-post it?
+Cheers.
 
-Thanks for working on this!
-Amir.
+ --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
