@@ -1,95 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from prv-mh.provo.novell.com ([137.65.248.74]:43567 "EHLO
-        prv-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752456AbdELG0f (ORCPT
-        <rfc822;groupwise-linux-xfs@vger.kernel.org:2:1>);
-        Fri, 12 May 2017 02:26:35 -0400
-Message-Id: <591571BC0200007800159165@prv-mh.provo.novell.com>
-Date: Fri, 12 May 2017 00:26:36 -0600
-From: "Jan Beulich" <JBeulich@suse.com>
-Subject: Re: permanent XFS volume corruption
-References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <a185194a-af56-cd53-cfb9-653e3b5f81b7@sandeen.net>
-In-Reply-To: <a185194a-af56-cd53-cfb9-653e3b5f81b7@sandeen.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
-Content-Disposition: inline
+Received: from sandeen.net ([63.231.237.45]:47100 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751729AbdELXL5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 12 May 2017 19:11:57 -0400
+Subject: Re: [PATCH 0.9/9] xfs: introduce the XFS_IOC_GETFSMAP ioctl
+References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+ <20170508194755.GK5973@birch.djwong.org>
+ <041fd06c-a3bc-e743-91b6-8ed6a33c78a5@sandeen.net>
+ <20170512230509.GJ4519@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ffa4fc3e-d447-e46c-1861-1f5255ed2139@sandeen.net>
+Date: Fri, 12 May 2017 18:11:56 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170512230509.GJ4519@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
->>> On 11.05.17 at 18:39, <sandeen@sandeen.net> wrote:
-> On 5/11/17 9:39 AM, Jan Beulich wrote:
->> In any event I think there are two problems: The corruption itself
->> (possibly an issue with recent enough upstream kernels only) and
->> the fact that running xfs_repair doesn't help in these cases.
+On 5/12/17 6:05 PM, Darrick J. Wong wrote:
+> On Fri, May 12, 2017 at 05:29:32PM -0500, Eric Sandeen wrote:
+>> On 5/8/17 2:47 PM, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>
+>>> Introduce a new ioctl that uses the reverse mapping btree to return
+>>> information about the physical layout of the filesystem.
+>>>
+>>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>> ---
+>>>  configure.ac          |    1 
+>>>  include/builddefs.in  |    7 +++
+>>>  include/linux.h       |  109 +++++++++++++++++++++++++++++++++++++++++++++++++
+>>
+>> So, I'm torn about whether we should be adding all the fsmap definitions
+>> into xfsprogs.  (I know... I did it for statx; I'm wondering if that was a
+>> bad precedent, and/or if it being a syscall makes it a different situation...).
+>>
+>> I don't know when we ever deprecate or remove this stuff.
+>>
+>> If you use packaged kernels, you'll get updated headers pretty quickly, right,
+>> or on a devel box you might install your own?
+>>
+>> Not trying to be difficult, just trying to make sure we have a consistent
+>> plan for new interfaces like this...
 > 
-> FWIW, recent xfs_repair (v4.11.0) finds several bad inodes on the
-> sdb8 metadump you sent, and apparently fixes* them without problems.
+> I was under the impression that we employ this evil hackery so that
+> developers (at least) can build binaries for testing until the kernel
+> headers in their build environments catch up.
+
+Well, like I said, yeah I did it for statx.  So, that's probably enough
+for you to say "stop whining and merge it!"
+
+But do we have it for anything else?
+
+Ok, we do override fsxattr - that was also your doing.  ;)
+
+I guess we did the same for the FS_IOC_SET_ENCRYPTION_POLICY stuff,
+though /that/ is all self-contained in io/encrypt.c.
+
+hohum.
+
+Ok, let's merge it, but maybe we need a policy of "nuke it after a year"
+
+-eric
+
+> ...unfortunately, that sort of implies that the sunset horizon is
+> quite a ways out since I've never seen this stuff get removed.
 > 
-> inode 764 has RT flag set but there is no RT device
-> directory flags set on non-directory inode 764
-> inode 2068 has RT flag set but there is no RT device
-> directory flags set on non-directory inode 2068
-> inode 268448674 has RT flag set but there is no RT device
-> directory flags set on non-directory inode 268448674
+> --D
 > 
-> these are:
+>>
+>> Thanks,
+>> -Eric
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> 764: lib/xenstored/tdb
-> 2068: log/messages
-> 268448674: lib/sudo/jbeulich/0
-
-This matches then was xfs_repair -n has found here.
-
-I'm surprised log/messages is among them, as I didn't have to do
-anything to it to at least avoid the kernel warnings (for the other
-two I've simply renamed the containing directories, creating fresh
-ones instead). What I did get kernel warnings for were one or
-two files under log/xen/, which I've then similarly renamed and
-re-created.
-
-> and after repair, I can read all the inodes on the device w/o
-> further errors (upstream linus kernel)
-
-So on the earlier instance, where I did run actual repairs (and
-indeed multiple of them), the problem re-surfaces every time
-I mount the volume again. Iirc the inode numbers didn't change,
-but in some cases the associated files did (namely when these
-weren't ones created very soon after mount, i.e. when the
-order of things is less predictable - it was in particular /var/run/
-which was affected there). That's the reason I've refrained
-from trying to xfs_repair the issues in this second instance.
-
-Now one question obviously is whether the repair strategy
-changed between the xfs_repair versions I use (3.1.8 on the
-system that I sent you the meta data dump from, likely the
-same on the other one): Mine clears the inodes with the bad
-RT flag, while - namely considering the subsequent "block ...
-type unknown" reported by xfs_check - it might instead be
-possible to reconstruct the files and clear the RT flag. But of
-course I know nothing about XFS internals...
-
-> *Each of the 3 problematic inodes has an odd assortment of flags
-> set (think chattr type flags) - some have immutable, some have
-> noatime, some have nodump, etc.  These are what cause xfs_repair
-> t ocomplain.  It seems unlikely that any of these were actually set
-> on your filesystem, as these are the only ones with any flags set.
-> After repair, they're showing:
-> 
-> --S---dA----------- mnt/log/messages
-> --S-i--A----------- mnt/lib/sudo/jbeulich/0
-> --S----A----------- mnt/lib/xenstored/tdb
-> 
-> Did you happen to set chattr flags on these files intentionally?
-
-I certainly didn't. As I don't know how to produce this form of
-flags display, I can't (for now) compare with what a healthy
-system has there.
-
-Jan
-
