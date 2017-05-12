@@ -1,117 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43596 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934808AbdEOPn2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:43:28 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/17] uuid: hoist helpers uuid_equal() and uuid_copy() from xfs
-Date: Mon, 15 May 2017 17:42:57 +0200
-Message-Id: <20170515154308.26739-7-hch@lst.de>
-In-Reply-To: <20170515154308.26739-1-hch@lst.de>
-References: <20170515154308.26739-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:32958 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757425AbdELPED (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 12 May 2017 11:04:03 -0400
+Subject: Re: permanent XFS volume corruption
+References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
+ <591493D00200007800158EA3@prv-mh.provo.novell.com>
+ <a185194a-af56-cd53-cfb9-653e3b5f81b7@sandeen.net>
+ <591571BC0200007800159165@prv-mh.provo.novell.com>
+ <30296667-47d7-8b94-472a-1d4b96120c09@sandeen.net>
+ <5915DE47020000780015946C@prv-mh.provo.novell.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <23c75521-a65b-d105-f274-3d1aba09e6ae@sandeen.net>
+Date: Fri, 12 May 2017 10:04:01 -0500
+MIME-Version: 1.0
+In-Reply-To: <5915DE47020000780015946C@prv-mh.provo.novell.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: Jan Beulich <JBeulich@suse.com>
+Cc: linux-xfs@vger.kernel.org
 
-These helper are used to compare and copy two uuid_t type objects.
+On 5/12/17 9:09 AM, Jan Beulich wrote:
+>>>> On 12.05.17 at 15:56, <sandeen@sandeen.net> wrote:
+>> On 5/12/17 1:26 AM, Jan Beulich wrote:
+>>> So on the earlier instance, where I did run actual repairs (and
+>>> indeed multiple of them), the problem re-surfaces every time
+>>> I mount the volume again.
+>> Ok, what is the exact sequence there, from repair to re-corruption?
+> Simply mount the volume after repairing (with or without an
+> intermediate reboot) and access respective pieces of the fs
+> again. As said, with /var/run affected on that first occasion,
+> I couldn't even cleanly boot again without seeing the
+> corruption re-surface.
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-[hch: also provide the respective guid_ versions]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/uuid.c        |  6 ------
- fs/xfs/uuid.h        |  7 -------
- include/linux/uuid.h | 20 ++++++++++++++++++++
- lib/test_uuid.c      |  4 ++--
- 4 files changed, 22 insertions(+), 15 deletions(-)
+Mount under what kernel, and access in what way?  I'm looking for a
+recipe to reproduce what you've seen using the metadump you've provided.
 
-diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
-index b83f76b6d410..29ed78c8637b 100644
---- a/fs/xfs/uuid.c
-+++ b/fs/xfs/uuid.c
-@@ -55,9 +55,3 @@ uuid_is_nil(uuid_t *uuid)
- 		if (*cp++) return 0;	/* not nil */
- 	return 1;	/* is nil */
- }
--
--int
--uuid_equal(uuid_t *uuid1, uuid_t *uuid2)
--{
--	return memcmp(uuid1, uuid2, sizeof(uuid_t)) ? 0 : 1;
--}
-diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
-index 4f1441ba4fa5..86bbed071e79 100644
---- a/fs/xfs/uuid.h
-+++ b/fs/xfs/uuid.h
-@@ -19,13 +19,6 @@
- #define __XFS_SUPPORT_UUID_H__
- 
- extern int uuid_is_nil(uuid_t *uuid);
--extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
- extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
- 
--static inline void
--uuid_copy(uuid_t *dst, uuid_t *src)
--{
--	memcpy(dst, src, sizeof(uuid_t));
--}
--
- #endif	/* __XFS_SUPPORT_UUID_H__ */
-diff --git a/include/linux/uuid.h b/include/linux/uuid.h
-index a0c32f364b09..aef21b580b17 100644
---- a/include/linux/uuid.h
-+++ b/include/linux/uuid.h
-@@ -48,6 +48,26 @@ struct uuid_v1 {
-  */
- #define	UUID_STRING_LEN		36
- 
-+static inline bool guid_equal(const guid_t *u1, const guid_t *u2)
-+{
-+	return memcmp(u1, u2, sizeof(guid_t)) == 0;
-+}
-+
-+static inline void guid_copy(guid_t *dst, const guid_t *src)
-+{
-+	memcpy(dst, src, sizeof(guid_t));
-+}
-+
-+static inline bool uuid_equal(const uuid_t *u1, const uuid_t *u2)
-+{
-+	return memcmp(u1, u2, sizeof(uuid_t)) == 0;
-+}
-+
-+static inline void uuid_copy(uuid_t *dst, const uuid_t *src)
-+{
-+	memcpy(dst, src, sizeof(uuid_t));
-+}
-+
- void generate_random_uuid(unsigned char uuid[16]);
- 
- extern void guid_gen(guid_t *u);
-diff --git a/lib/test_uuid.c b/lib/test_uuid.c
-index 9cad846fd805..4d05189e5f87 100644
---- a/lib/test_uuid.c
-+++ b/lib/test_uuid.c
-@@ -71,7 +71,7 @@ static void __init test_uuid_test(const struct test_uuid_data *data)
- 		test_uuid_failed("conversion", false, false, data->uuid, NULL);
- 
- 	total_tests++;
--	if (uuid_le_cmp(data->le, le)) {
-+	if (!guid_equal(&data->le, &le)) {
- 		sprintf(buf, "%pUl", &le);
- 		test_uuid_failed("cmp", false, false, data->uuid, buf);
- 	}
-@@ -82,7 +82,7 @@ static void __init test_uuid_test(const struct test_uuid_data *data)
- 		test_uuid_failed("conversion", false, true, data->uuid, NULL);
- 
- 	total_tests++;
--	if (uuid_be_cmp(data->be, be)) {
-+	if (uuid_equal(&data->be, &be)) {
- 		sprintf(buf, "%pUb", &be);
- 		test_uuid_failed("cmp", false, true, data->uuid, buf);
- 	}
--- 
-2.11.0
+However:
+
+With further testing I see that xfs_repair v3.1.8 /does not/
+entirely fix the fs; if I run 3.1.8 and then run upstream repair, it
+finds and fixes more bad flags on inode 764 (lib/xenstored/tdb) that 3.1.8
+didn't touch.  The verifiers in an upstream kernel may keep tripping
+over that until newer repair fixes it...
+
+Thanks,
+-Eric
 
