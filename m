@@ -1,193 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50323 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966219AbdEOPny (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:43:54 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/17] xfs: use the common helper uuid_is_null()
-Date: Mon, 15 May 2017 17:43:05 +0200
-Message-Id: <20170515154308.26739-15-hch@lst.de>
-In-Reply-To: <20170515154308.26739-1-hch@lst.de>
-References: <20170515154308.26739-1-hch@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:41497 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754593AbdEMTdu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 May 2017 15:33:50 -0400
+Date: Sat, 13 May 2017 12:33:44 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] libxfs: use crc32c slice-by-8 variant by default
+Message-ID: <20170513193344.GK4519@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-From: Amir Goldstein <amir73il@gmail.com>
+The crc32c code used in xfsprogs was copied directly from the Linux
+kernel.  However, that code selects slice-by-4 by default, which isn't
+the fastest -- that's slice-by-8, which trades table size for speed.
+Fix some makefile dependency problems and explicitly select the
+algorithm we want.  With this patch applied, I see about a 10% drop in
+CPU time running xfs_repair.
 
-Use the common helper uuid_is_null() and remove the xfs specific
-helper uuid_is_nil().
-
-The common helper does not check for the NULL pointer value as
-xfs helper did, but xfs code never calls the helper with a pointer
-that can be NULL.
-
-Conform comments and warning strings to use the term 'null uuid'
-instead of 'nil uuid', because this is the terminology used by
-lib/uuid.c and its users. It is also the terminology used in
-userspace by libuuid and xfsprogs.
-
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-[hch: remove now unused uuid.[ch]]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile          |  3 +--
- fs/xfs/uuid.c            | 32 --------------------------------
- fs/xfs/uuid.h            | 23 -----------------------
- fs/xfs/xfs_linux.h       |  1 -
- fs/xfs/xfs_log_recover.c |  6 +++---
- fs/xfs/xfs_mount.c       |  8 ++++----
- 6 files changed, 8 insertions(+), 65 deletions(-)
- delete mode 100644 fs/xfs/uuid.c
- delete mode 100644 fs/xfs/uuid.h
+ libxfs/Makefile    |    4 ++--
+ libxfs/crc32defs.h |    3 +++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 5c90f82b8f6b..a6e955bfead8 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -98,8 +98,7 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_sysfs.o \
- 				   xfs_trans.o \
- 				   xfs_xattr.o \
--				   kmem.o \
--				   uuid.o
-+				   kmem.o
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index 0f3759e..c5dc382 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -124,7 +124,7 @@ LDIRT = gen_crc32table crc32table.h crc32selftest
  
- # low-level transaction/log code
- xfs-y				+= xfs_log.o \
-diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
-deleted file mode 100644
-index 737c186ea98b..000000000000
---- a/fs/xfs/uuid.c
-+++ /dev/null
-@@ -1,32 +0,0 @@
--/*
-- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#include <xfs.h>
--
--int
--uuid_is_nil(uuid_t *uuid)
--{
--	int	i;
--	char	*cp = (char *)uuid;
--
--	if (uuid == NULL)
--		return 0;
--	/* implied check of version number here... */
--	for (i = 0; i < sizeof *uuid; i++)
--		if (*cp++) return 0;	/* not nil */
--	return 1;	/* is nil */
--}
-diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
-deleted file mode 100644
-index 5aea49bf0963..000000000000
---- a/fs/xfs/uuid.h
-+++ /dev/null
-@@ -1,23 +0,0 @@
--/*
-- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_SUPPORT_UUID_H__
--#define __XFS_SUPPORT_UUID_H__
--
--extern int uuid_is_nil(uuid_t *uuid);
--
--#endif	/* __XFS_SUPPORT_UUID_H__ */
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 2c33d915e550..2d167fe643ec 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -43,7 +43,6 @@ typedef __u32			xfs_nlink_t;
+ default: crc32selftest ltdepend $(LTLIBRARY)
  
- #include "kmem.h"
- #include "mrlock.h"
--#include "uuid.h"
- 
- #include <linux/semaphore.h>
- #include <linux/mm.h>
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index cd0b077deb35..8cec1e5505a4 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -352,13 +352,13 @@ xlog_header_check_mount(
- {
- 	ASSERT(head->h_magicno == cpu_to_be32(XLOG_HEADER_MAGIC_NUM));
- 
--	if (uuid_is_nil(&head->h_fs_uuid)) {
-+	if (uuid_is_null(&head->h_fs_uuid)) {
- 		/*
- 		 * IRIX doesn't write the h_fs_uuid or h_fmt fields. If
--		 * h_fs_uuid is nil, we assume this log was last mounted
-+		 * h_fs_uuid is null, we assume this log was last mounted
- 		 * by IRIX and continue.
- 		 */
--		xfs_warn(mp, "nil uuid in log - IRIX style log");
-+		xfs_warn(mp, "null uuid in log - IRIX style log");
- 	} else if (unlikely(!uuid_equal(&mp->m_sb.sb_uuid, &head->h_fs_uuid))) {
- 		xfs_warn(mp, "log has mismatched uuid - can't recover");
- 		xlog_header_check_dump(mp, head);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 742e4a61c0bc..682b336a7a6a 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -80,14 +80,14 @@ xfs_uuid_mount(
- 	if (mp->m_flags & XFS_MOUNT_NOUUID)
- 		return 0;
- 
--	if (uuid_is_nil(uuid)) {
--		xfs_warn(mp, "Filesystem has nil UUID - can't mount");
-+	if (uuid_is_null(uuid)) {
-+		xfs_warn(mp, "Filesystem has null UUID - can't mount");
- 		return -EINVAL;
- 	}
- 
- 	mutex_lock(&xfs_uuid_table_mutex);
- 	for (i = 0, hole = -1; i < xfs_uuid_table_size; i++) {
--		if (uuid_is_nil(&xfs_uuid_table[i])) {
-+		if (uuid_is_null(&xfs_uuid_table[i])) {
- 			hole = i;
- 			continue;
- 		}
-@@ -124,7 +124,7 @@ xfs_uuid_unmount(
- 
- 	mutex_lock(&xfs_uuid_table_mutex);
- 	for (i = 0; i < xfs_uuid_table_size; i++) {
--		if (uuid_is_nil(&xfs_uuid_table[i]))
-+		if (uuid_is_null(&xfs_uuid_table[i]))
- 			continue;
- 		if (!uuid_equal(uuid, &xfs_uuid_table[i]))
- 			continue;
--- 
-2.11.0
-
+-crc32table.h: gen_crc32table.c
++crc32table.h: gen_crc32table.c crc32defs.h
+ 	@echo "    [CC]     gen_crc32table"
+ 	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
+ 	@echo "    [GENERATE] $@"
+@@ -135,7 +135,7 @@ crc32table.h: gen_crc32table.c
+ # systems/architectures. Hence we make sure that xfsprogs will never use a
+ # busted CRC calculation at build time and hence avoid putting bad CRCs down on
+ # disk.
+-crc32selftest: gen_crc32table.c crc32table.h crc32.c
++crc32selftest: gen_crc32table.c crc32table.h crc32.c crc32defs.h
+ 	@echo "    [TEST]    CRC32"
+ 	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
+ 	$(Q) ./$@
+diff --git a/libxfs/crc32defs.h b/libxfs/crc32defs.h
+index 64cba2c..153f44c 100644
+--- a/libxfs/crc32defs.h
++++ b/libxfs/crc32defs.h
+@@ -1,3 +1,6 @@
++/* Use slice-by-8, which is the fastest variant. */
++# define CRC_LE_BITS 64
++
+ /*
+  * There are multiple 16-bit CRC polynomials in common use, but this is
+  * *the* standard CRC-32 polynomial, first popularized by Ethernet.
