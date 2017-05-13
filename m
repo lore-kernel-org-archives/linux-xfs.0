@@ -1,63 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32914 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751407AbdELXFT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 May 2017 19:05:19 -0400
-Date: Fri, 12 May 2017 16:05:09 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0.9/9] xfs: introduce the XFS_IOC_GETFSMAP ioctl
-Message-ID: <20170512230509.GJ4519@birch.djwong.org>
-References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
- <20170508194755.GK5973@birch.djwong.org>
- <041fd06c-a3bc-e743-91b6-8ed6a33c78a5@sandeen.net>
-MIME-Version: 1.0
+Received: from www262.sakura.ne.jp ([202.181.97.72]:15037 "EHLO
+        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750822AbdEMLYD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 May 2017 07:24:03 -0400
+Subject: [pre-linux-4.12-rc1] undefined reference to `put_dax' `dax_get_by_host'
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Message-Id: <201705132023.CEI64165.FtQJFOMFOHOSVL@I-love.SAKURA.ne.jp>
+Date: Sat, 13 May 2017 20:23:58 +0900
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <041fd06c-a3bc-e743-91b6-8ed6a33c78a5@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: dan.j.williams@intel.com
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, May 12, 2017 at 05:29:32PM -0500, Eric Sandeen wrote:
-> On 5/8/17 2:47 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Introduce a new ioctl that uses the reverse mapping btree to return
-> > information about the physical layout of the filesystem.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  configure.ac          |    1 
-> >  include/builddefs.in  |    7 +++
-> >  include/linux.h       |  109 +++++++++++++++++++++++++++++++++++++++++++++++++
-> 
-> So, I'm torn about whether we should be adding all the fsmap definitions
-> into xfsprogs.  (I know... I did it for statx; I'm wondering if that was a
-> bad precedent, and/or if it being a syscall makes it a different situation...).
-> 
-> I don't know when we ever deprecate or remove this stuff.
-> 
-> If you use packaged kernels, you'll get updated headers pretty quickly, right,
-> or on a devel box you might install your own?
-> 
-> Not trying to be difficult, just trying to make sure we have a consistent
-> plan for new interfaces like this...
+Hello.
 
-I was under the impression that we employ this evil hackery so that
-developers (at least) can build binaries for testing until the kernel
-headers in their build environments catch up.
+I got build failures as of commit 0fcc3ab23d7395f5 ("Merge branch 'libnvdimm-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/nvdimm/nvdimm").
 
-...unfortunately, that sort of implies that the sunset horizon is
-quite a ways out since I've never seen this stuff get removed.
-
---D
-
-> 
-> Thanks,
-> -Eric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+$ make
+fs/built-in.o: In function `xfs_file_iomap_end':
+xfs_iomap.c:(.text+0xe0ef9): undefined reference to `put_dax'
+fs/built-in.o: In function `xfs_file_iomap_begin':
+xfs_iomap.c:(.text+0xe1a7f): undefined reference to `dax_get_by_host'
+make: *** [vmlinux] Error 1
+$ grep DAX .config
+CONFIG_DAX=m
+# CONFIG_DEV_DAX is not set
+# CONFIG_FS_DAX is not set
