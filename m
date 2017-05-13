@@ -1,62 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56696 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933811AbdEOJDR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 May 2017 05:03:17 -0400
-Date: Mon, 15 May 2017 11:03:08 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs: fix warnings about unused stack variables
-Message-ID: <20170515090308.cyrkuoyy5mm3snma@eorzea.usersys.redhat.com>
-References: <20170512005352.GF4519@birch.djwong.org>
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:34287 "EHLO
+        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752948AbdEMXcQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 May 2017 19:32:16 -0400
+Received: by mail-oi0-f46.google.com with SMTP id b204so98969547oii.1
+        for <linux-xfs@vger.kernel.org>; Sat, 13 May 2017 16:32:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170512005352.GF4519@birch.djwong.org>
+In-Reply-To: <201705132023.CEI64165.FtQJFOMFOHOSVL@I-love.SAKURA.ne.jp>
+References: <201705132023.CEI64165.FtQJFOMFOHOSVL@I-love.SAKURA.ne.jp>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Sat, 13 May 2017 16:32:15 -0700
+Message-ID: <CAPcyv4gc9Ab3TBTs-QULw=DRboe7+PjkrVMP5hvp=2gjYn3M0A@mail.gmail.com>
+Subject: Re: [pre-linux-4.12-rc1] undefined reference to `put_dax' `dax_get_by_host'
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, May 11, 2017 at 05:53:52PM -0700, Darrick J. Wong wrote:
-> Reduce stack usage and get rid of compiler warnings by eliminating
-> unused variables.  The variables were eliminated during one of
-> Christoph's cleanups for 4.12.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c |    2 --
->  1 file changed, 2 deletions(-)
+On Sat, May 13, 2017 at 4:23 AM, Tetsuo Handa
+<penguin-kernel@i-love.sakura.ne.jp> wrote:
+> Hello.
+>
+> I got build failures as of commit 0fcc3ab23d7395f5 ("Merge branch 'libnvdimm-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/nvdimm/nvdimm").
+>
+> $ make
+> fs/built-in.o: In function `xfs_file_iomap_end':
+> xfs_iomap.c:(.text+0xe0ef9): undefined reference to `put_dax'
+> fs/built-in.o: In function `xfs_file_iomap_begin':
+> xfs_iomap.c:(.text+0xe1a7f): undefined reference to `dax_get_by_host'
+> make: *** [vmlinux] Error 1
+> $ grep DAX .config
+> CONFIG_DAX=m
+> # CONFIG_DEV_DAX is not set
+> # CONFIG_FS_DAX is not set
 
-Looks fine
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 8adb91b..a7048eaf 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1280,7 +1280,6 @@ xfs_bmap_read_extents(
->  		xfs_bmbt_rec_t	*frp;
->  		xfs_fsblock_t	nextbno;
->  		xfs_extnum_t	num_recs;
-> -		xfs_extnum_t	start;
->  
->  		num_recs = xfs_btree_get_numrecs(block);
->  		if (unlikely(i + num_recs > room)) {
-> @@ -1303,7 +1302,6 @@ xfs_bmap_read_extents(
->  		 * Copy records into the extent records.
->  		 */
->  		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
-> -		start = i;
->  		for (j = 0; j < num_recs; j++, i++, frp++) {
->  			xfs_bmbt_rec_host_t *trp = xfs_iext_get_ext(ifp, i);
->  			trp->l0 = be64_to_cpu(frp->l0);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Carlos
+Yes, sorry about that. I think we need fs_dax_get_by_host() that
+always fails in the FS_DAX=n case so the compiler knows to throw away
+that code.
