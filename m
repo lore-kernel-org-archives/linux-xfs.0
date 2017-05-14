@@ -1,164 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22638 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751089AbdENEZM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 May 2017 00:25:12 -0400
-Date: Sat, 13 May 2017 21:25:01 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] ioctl_getfsmap.2: document the GETFSMAP ioctl
-Message-ID: <20170514042500.GA4510@birch.djwong.org>
-References: <CAG48ez3e+2VuvjtEfJuMujEo6PWBO3z8oM-otN2juq96jKdjCw@mail.gmail.com>
- <20170508204738.GL5973@birch.djwong.org>
- <CAG48ez0iLRazKvXty9CG8ENXvkG6b1xjO0Q75p+16HKNptFnow@mail.gmail.com>
- <20170509015324.GM5973@birch.djwong.org>
- <20170509211746.GA87747@gmail.com>
- <20170510163818.7bleiykxgnx3pkds@thunk.org>
- <87mvakpl5m.fsf@xmission.com>
- <20170510201437.GA9854@birch.djwong.org>
- <20170511051051.GA7533@zzz>
- <38F56772-7836-4902-929C-80908BFBEA7B@dilger.ca>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:21804 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751123AbdENW0U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 May 2017 18:26:20 -0400
+Date: Mon, 15 May 2017 08:26:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] libxfs: use crc32c slice-by-8 variant by default
+Message-ID: <20170514222616.GM17542@dastard>
+References: <20170513193344.GK4519@birch.djwong.org>
+ <20170513234545.GL17542@dastard>
+ <20170514012522.GL4519@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <38F56772-7836-4902-929C-80908BFBEA7B@dilger.ca>
+In-Reply-To: <20170514012522.GL4519@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: Eric Biggers <ebiggers3@gmail.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Theodore Ts'o <tytso@mit.edu>, Jann Horn <jannh@google.com>, Michael Kerrisk-manpages <mtk.manpages@gmail.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, linux-man@vger.kernel.org, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Sat, May 13, 2017 at 07:41:24PM -0600, Andreas Dilger wrote:
-> On May 10, 2017, at 11:10 PM, Eric Biggers <ebiggers3@gmail.com> wrote:
+On Sat, May 13, 2017 at 06:25:22PM -0700, Darrick J. Wong wrote:
+> On Sun, May 14, 2017 at 09:45:45AM +1000, Dave Chinner wrote:
+> > On Sat, May 13, 2017 at 12:33:44PM -0700, Darrick J. Wong wrote:
+> > > The crc32c code used in xfsprogs was copied directly from the Linux
+> > > kernel.  However, that code selects slice-by-4 by default, which isn't
+> > > the fastest -- that's slice-by-8, which trades table size for speed.
+> > > Fix some makefile dependency problems and explicitly select the
+> > > algorithm we want.  With this patch applied, I see about a 10% drop in
+> > > CPU time running xfs_repair.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  libxfs/Makefile    |    4 ++--
+> > >  libxfs/crc32defs.h |    3 +++
+> > >  2 files changed, 5 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/libxfs/Makefile b/libxfs/Makefile
+> > > index 0f3759e..c5dc382 100644
+> > > --- a/libxfs/Makefile
+> > > +++ b/libxfs/Makefile
+> > > @@ -124,7 +124,7 @@ LDIRT = gen_crc32table crc32table.h crc32selftest
+> > >  
+> > >  default: crc32selftest ltdepend $(LTLIBRARY)
+> > >  
+> > > -crc32table.h: gen_crc32table.c
+> > > +crc32table.h: gen_crc32table.c crc32defs.h
+> > >  	@echo "    [CC]     gen_crc32table"
+> > >  	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
+> > >  	@echo "    [GENERATE] $@"
+> > > @@ -135,7 +135,7 @@ crc32table.h: gen_crc32table.c
+> > >  # systems/architectures. Hence we make sure that xfsprogs will never use a
+> > >  # busted CRC calculation at build time and hence avoid putting bad CRCs down on
+> > >  # disk.
+> > > -crc32selftest: gen_crc32table.c crc32table.h crc32.c
+> > > +crc32selftest: gen_crc32table.c crc32table.h crc32.c crc32defs.h
+> > >  	@echo "    [TEST]    CRC32"
+> > >  	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
+> > >  	$(Q) ./$@
+> > > diff --git a/libxfs/crc32defs.h b/libxfs/crc32defs.h
+> > > index 64cba2c..153f44c 100644
+> > > --- a/libxfs/crc32defs.h
+> > > +++ b/libxfs/crc32defs.h
+> > > @@ -1,3 +1,6 @@
+> > > +/* Use slice-by-8, which is the fastest variant. */
+> > > +# define CRC_LE_BITS 64
 > > 
-> > On Wed, May 10, 2017 at 01:14:37PM -0700, Darrick J. Wong wrote:
-> >> [cc btrfs, since afaict that's where most of the dedupe tool authors hang out]
-> >> 
-> >> On Wed, May 10, 2017 at 02:27:33PM -0500, Eric W. Biederman wrote:
-> >>> Theodore Ts'o <tytso@mit.edu> writes:
-> >>> 
-> >>>> On Tue, May 09, 2017 at 02:17:46PM -0700, Eric Biggers wrote:
-> >>>>> 1.) Privacy implications.  Say the filesystem is being shared between multiple
-> >>>>>    users, and one user unpacks foo.tar.gz into their home directory, which
-> >>>>>    they've set to mode 700 to hide from other users.  Because of this new
-> >>>>>    ioctl, all users will be able to see every (inode number, size in blocks)
-> >>>>>    pair that was added to the filesystem, as well as the exact layout of the
-> >>>>>    physical block allocations which might hint at how the files were created.
-> >>>>>    If there is a known "fingerprint" for the unpacked foo.tar.gz in this
-> >>>>>    regard, its presence on the filesystem will be revealed to all users.  And
-> >>>>>    if any filesystems happen to prefer allocating blocks near the containing
-> >>>>>    directory, the directory the files are in would likely be revealed too.
-> >> 
-> >> Frankly, why are container users even allowed to make unrestricted ioctl
-> >> calls?  I thought we had a bunch of security infrastructure to constrain
-> >> what userspace can do to a system, so why don't ioctls fall under these
-> >> same protections?  If your containers are really that adversarial, you
-> >> ought to be blacklisting as much as you can.
-> >> 
-> > 
-> > Personally I don't find the presence of sandboxing features to be a very good
-> > excuse for introducing random insecure ioctls.  Not everyone has everything
-> > perfectly "sandboxed" all the time, for obvious reasons.  It's easy to forget
-> > about the filesystem ioctls, too, since they can be executed on any regular
-> > file, without having to open some device node in /dev.
-> > 
-> > (And this actually does happen; the SELinux policy in Android, for example,
-> > still allows apps to call any ioctl on their data files, despite all the effort
-> > that has gone into whitelisting other types of ioctls.  Which should be fixed,
-> > of course, but it shows that this kind of mistake is very easy to make.)
-> > 
-> >>>> Unix/Linux has historically not been terribly concerned about trying
-> >>>> to protect this kind of privacy between users.  So for example, in
-> >>>> order to do this, you would have to call GETFSMAP continously to track
-> >>>> this sort of thing.  Someone who wanted to do this could probably get
-> >>>> this information (and much, much more) by continuously running "ps" to
-> >>>> see what processes are running.
-> >>>> 
-> >>>> (I will note. wryly, that in the bad old days, when dozens of users
-> >>>> were sharing a one MIPS Vax/780, it was considered a *good* thing
-> >>>> that social pressure could be applied when it was found that someone
-> >>>> was running a CPU or memory hogger on a time sharing system.  The
-> >>>> privacy right of someone running "xtrek" to be able to hide this from
-> >>>> other users on the system was never considered important at all.  :-)
-> >> 
-> >> Not to mention someone running GETFSMAP in a loop will be pretty obvious
-> >> both from the high kernel cpu usage and the huge number of metadata
-> >> operations.
-> > 
-> > Well, only if that someone running GETFSMAP actually wants to watch things in
-> > real-time (it's not necessary for all scenarios that have been mentioned), *and*
-> > there is monitoring in place which actually detects it and can do something
-> > about it.
-> > 
-> > Yes, PIDs have traditionally been global, but today we have PID namespaces, and
-> > many other isolation features such as mount namespaces.  Nothing is perfect, of
-> > course, and containers are a lot worse than VMs, but it seems weird to use that
-> > as an excuse to knowingly make things worse...
-> > 
-> >> 
-> >>>> Fortunately, the days of timesharing seem to well behind us.  For
-> >>>> those people who think that containers are as secure as VM's (hah,
-> >>>> hah, hah), it might be that best way to handle this is to have a mount
-> >>>> option that requires root access to this functionality.  For those
-> >>>> people who really care about this, they can disable access.
-> >> 
-> >> Or use separate filesystems for each container so that exploitable bugs
-> >> that shut down the filesystem can't be used to kill the other
-> >> containers.  You could use a torrent of metadata-heavy operations
-> >> (fallocate a huge file, punch every block, truncate file, repeat) to DoS
-> >> the other containers.
-> >> 
-> >>> What would be the reason for not putting this behind
-> >>> capable(CAP_SYS_ADMIN)?
-> >>> 
-> >>> What possible legitimate function could this functionality serve to
-> >>> users who don't own your filesystem?
-> >> 
-> >> As I've said before, it's to enable dedupe tools to decide, given a set
-> >> of files with shareable blocks, roughly how many other times each of
-> >> those shareable blocks are shared so that they can make better decisions
-> >> about which file keeps its shareable blocks, and which file gets
-> >> remapped.  Dedupe is not a privileged operation, nor are any of the
-> >> tools.
-> >> 
-> > 
-> > So why does the ioctl need to return all extent mappings for the entire
-> > filesystem, instead of just the share count of each block in the file that the
-> > ioctl is called on?
+> > I'm not sure this works on all platforms and builds, whereas the
+> > existing slice-by-4 default should work for them all
 > 
-> One possibility is that the ioctl() can return the mapping for all inodes
-> owned by the calling PID (or others if CAP_SYS_ADMIN, CAP_DAC_OVERRIDE,
-> or CAP_FOWNER is set), and return an "filesystem aggregate inode" (or more
-> than one if there is a reason to do so) with all the other allocated blocks
-> for inodes the user doesn't have permission to access?
+> That's why we have a selftest to ensure that the implementation isn't
+> busted no matter which method we pick.
 
-Hmm, CAP_DAC_OVERRIDE/CAP_FOWNER?  That might be a reasonable set of
-capabilities to grant access...
+<snip long explanation>
 
-> IMHO, this would allow a non-root user the main benefit of GETFSMAP,  which
-> is trying to determine how fragmented their files are and/or how fragmented
-> the free space is, without leaking any information about file sizes, location,
-> or other information the user can't already get today in a less efficient
-> manner.
-> 
-> I don't know how hard this is to implement, but seems not impossible.
+> For nearly all of XFS' perceived
+> userbase (which I assume are 32 and 64-bit machines with sufficiently
+> large CPU cache and largeish storage devices) I think slice by 8 is the
+> right choice.
 
-It's already implemented in both XFS and ext4. <cough>
+If it takes you that much text to explain why it's a) safe and b)
+desirable for all xfsprogs users, then short commit message that
+effectively only says "slice-by-8 is 10% faster" is not
+sufficient....
 
-File extents are marked as "owned" by "unknown".
+Cheers,
 
-Now, I suppose one could devise a scheme such that files that the caller
-can open actually do get inode numbers returned, but ... that's more
-engineering work, let's see if anyone asks for that (vs. asks for any of
-the magic capability bits).
-
---D
-
-> 
-> Cheers, Andreas
-> 
-> 
-> 
-> 
-> 
-
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
