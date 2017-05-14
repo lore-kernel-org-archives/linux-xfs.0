@@ -1,62 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24923 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751749AbdEOPu0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:50:26 -0400
-Date: Mon, 15 May 2017 08:50:12 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] dax: hide block device code in #ifdef
-Message-ID: <20170515155012.GM4519@birch.djwong.org>
-References: <20170515134508.2713243-1-arnd@arndb.de>
- <CAPcyv4jxondHhtMZbr01XE+w1Q0mxy+mR=4ypwsHpA0AtJuj2g@mail.gmail.com>
- <CAK8P3a1XU32oVTeV5=TeV8C+66rKKoRJnebQTAzqUr1BcSH69w@mail.gmail.com>
+Received: from smtp-out-no.shaw.ca ([64.59.134.9]:37585 "EHLO
+        smtp-out-no.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751131AbdENAIK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 May 2017 20:08:10 -0400
+From: Andrew Ryder <tireman@shaw.ca>
+Subject: xfsprogs 4.5 vs 4.10
+Message-ID: <5997f5f5-372d-7ab6-429f-d690cf642f47@shaw.ca>
+Date: Sat, 13 May 2017 20:04:42 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAK8P3a1XU32oVTeV5=TeV8C+66rKKoRJnebQTAzqUr1BcSH69w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-xfs@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, May 15, 2017 at 04:20:09PM +0200, Arnd Bergmann wrote:
-> On Mon, May 15, 2017 at 4:11 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> > On Mon, May 15, 2017 at 6:44 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> >> We allow configurations with CONFIG_BLOCK=n and CONFIG_DAX=y, which now
-> >> results in a link error:
-> >>
-> >> drivers/dax/super.c: In function 'bdev_dax_pgoff':
-> >> drivers/dax/super.c:50:26: error: implicit declaration of function 'get_start_sect'; did you mean 'get_task_cred'? [-Werror=implicit-function-declaration]
-> >>
-> >> The two obvious ways to avoid the link error are to either add an #ifdef
-> >> around the code that was moved from fs/block_dev.c, or to disallow the
-> >> configuration. I could not see if there is or is not a reason to support
-> >> this combination of options, but in case there is, the #ifdef is the
-> >> safer choice.
-> >>
-> >> Fixes: ef51042472f5 ("block, dax: move "select DAX" from BLOCK to FS_DAX")
-> >> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> >
-> > Yup, the same one I came up with:
-> >
-> > https://patchwork.kernel.org/patch/9725513/
-> >
-> > If you have a a pull request coming up soon you can add my Acked-by to
-> > both of these patches, otherwise I'll send what I have along at the
-> > end of the week.
-> 
-> I didn't plan to send a pull request, please use whatever you have.
+Hello,
 
-I don't mind pulling the (second) patch in via the xfs tree.
+I went through a corruption issue on a v5 filesystem I have and the v4.5 
+of the tools fixed the log but 4.10 would only complain about not being 
+able to fix it?
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+I can provide some background on the issue if that helps but I though it 
+might be worthwhile to mention the above..?
 
---D
-
-> 
->       Arnd
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Andrew
