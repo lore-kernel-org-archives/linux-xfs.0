@@ -1,115 +1,185 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55228 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932749AbdELN40 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 May 2017 09:56:26 -0400
-Subject: Re: permanent XFS volume corruption
-References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <a185194a-af56-cd53-cfb9-653e3b5f81b7@sandeen.net>
- <591571BC0200007800159165@prv-mh.provo.novell.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <30296667-47d7-8b94-472a-1d4b96120c09@sandeen.net>
-Date: Fri, 12 May 2017 08:56:25 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:49185 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752948AbdENBZh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 May 2017 21:25:37 -0400
+Date: Sat, 13 May 2017 18:25:22 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] libxfs: use crc32c slice-by-8 variant by default
+Message-ID: <20170514012522.GL4519@birch.djwong.org>
+References: <20170513193344.GK4519@birch.djwong.org>
+ <20170513234545.GL17542@dastard>
 MIME-Version: 1.0
-In-Reply-To: <591571BC0200007800159165@prv-mh.provo.novell.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170513234545.GL17542@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Beulich <JBeulich@suse.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On 5/12/17 1:26 AM, Jan Beulich wrote:
->>>> On 11.05.17 at 18:39, <sandeen@sandeen.net> wrote:
->> On 5/11/17 9:39 AM, Jan Beulich wrote:
->>> In any event I think there are two problems: The corruption itself
->>> (possibly an issue with recent enough upstream kernels only) and
->>> the fact that running xfs_repair doesn't help in these cases.
->>
->> FWIW, recent xfs_repair (v4.11.0) finds several bad inodes on the
->> sdb8 metadump you sent, and apparently fixes* them without problems.
->>
->> inode 764 has RT flag set but there is no RT device
->> directory flags set on non-directory inode 764
->> inode 2068 has RT flag set but there is no RT device
->> directory flags set on non-directory inode 2068
->> inode 268448674 has RT flag set but there is no RT device
->> directory flags set on non-directory inode 268448674
->>
->> these are:
->>
->> 764: lib/xenstored/tdb
->> 2068: log/messages
->> 268448674: lib/sudo/jbeulich/0
+On Sun, May 14, 2017 at 09:45:45AM +1000, Dave Chinner wrote:
+> On Sat, May 13, 2017 at 12:33:44PM -0700, Darrick J. Wong wrote:
+> > The crc32c code used in xfsprogs was copied directly from the Linux
+> > kernel.  However, that code selects slice-by-4 by default, which isn't
+> > the fastest -- that's slice-by-8, which trades table size for speed.
+> > Fix some makefile dependency problems and explicitly select the
+> > algorithm we want.  With this patch applied, I see about a 10% drop in
+> > CPU time running xfs_repair.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  libxfs/Makefile    |    4 ++--
+> >  libxfs/crc32defs.h |    3 +++
+> >  2 files changed, 5 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/libxfs/Makefile b/libxfs/Makefile
+> > index 0f3759e..c5dc382 100644
+> > --- a/libxfs/Makefile
+> > +++ b/libxfs/Makefile
+> > @@ -124,7 +124,7 @@ LDIRT = gen_crc32table crc32table.h crc32selftest
+> >  
+> >  default: crc32selftest ltdepend $(LTLIBRARY)
+> >  
+> > -crc32table.h: gen_crc32table.c
+> > +crc32table.h: gen_crc32table.c crc32defs.h
+> >  	@echo "    [CC]     gen_crc32table"
+> >  	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
+> >  	@echo "    [GENERATE] $@"
+> > @@ -135,7 +135,7 @@ crc32table.h: gen_crc32table.c
+> >  # systems/architectures. Hence we make sure that xfsprogs will never use a
+> >  # busted CRC calculation at build time and hence avoid putting bad CRCs down on
+> >  # disk.
+> > -crc32selftest: gen_crc32table.c crc32table.h crc32.c
+> > +crc32selftest: gen_crc32table.c crc32table.h crc32.c crc32defs.h
+> >  	@echo "    [TEST]    CRC32"
+> >  	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
+> >  	$(Q) ./$@
+> > diff --git a/libxfs/crc32defs.h b/libxfs/crc32defs.h
+> > index 64cba2c..153f44c 100644
+> > --- a/libxfs/crc32defs.h
+> > +++ b/libxfs/crc32defs.h
+> > @@ -1,3 +1,6 @@
+> > +/* Use slice-by-8, which is the fastest variant. */
+> > +# define CRC_LE_BITS 64
 > 
-> This matches then was xfs_repair -n has found here.
+> I'm not sure this works on all platforms and builds, whereas the
+> existing slice-by-4 default should work for them all
+
+That's why we have a selftest to ensure that the implementation isn't
+busted no matter which method we pick.
+
+> but may not be the fastest.
 > 
-> I'm surprised log/messages is among them, as I didn't have to do
-> anything to it to at least avoid the kernel warnings (for the other
-> two I've simply renamed the containing directories, creating fresh
-> ones instead). What I did get kernel warnings for were one or
-> two files under log/xen/, which I've then similarly renamed and
-> re-created.
+> This code in the crc32defs.h:
 > 
->> and after repair, I can read all the inodes on the device w/o
->> further errors (upstream linus kernel)
+> #ifndef CRC_LE_BITS
+> #  ifdef CONFIG_64BIT
+> #  define CRC_LE_BITS 64
+> #  else
+> #  define CRC_LE_BITS 32
+> #  endif
+> #endif
 > 
-> So on the earlier instance, where I did run actual repairs (and
-> indeed multiple of them), the problem re-surfaces every time
-> I mount the volume again.
+> kinda tells us what the "optimal" default should be.
 
-Ok, what is the exact sequence there, from repair to re-corruption?
+I know what the code says, I was the person who pushed all that code to
+Linus back in 2012 in preparation to add checksums to ext4. :)
 
-> Iirc the inode numbers didn't change,
-> but in some cases the associated files did (namely when these
-> weren't ones created very soon after mount, i.e. when the
-> order of things is less predictable - it was in particular /var/run/
-> which was affected there). That's the reason I've refrained
-> from trying to xfs_repair the issues in this second instance.
+That particular hunk is a remnant of the pre-Kconfig method of picking a
+variant (and probably should have been ripped out long ago).  Note that the
+kernel picks SLICEBY8 by default (I will address the nine exceptions you
+pointed out later):
+
+config CRC32_SLICEBY8
+	bool "Slice by 8 bytes"
+	help
+	  Calculate checksum 8 bytes at a time with a clever slicing algorithm.
+	  This is the fastest algorithm, but comes with a 8KiB lookup table.
+	  Most modern processors have enough cache to hold this table without
+	  thrashing the cache.
+
+	  This is the default implementation choice.  Choose this one unless
+	  you have a good reason not to.
+
+config CRC32_SLICEBY4
+	bool "Slice by 4 bytes"
+	help
+	  Calculate checksum 4 bytes at a time with a clever slicing algorithm.
+	  This is a bit slower than slice by 8, but has a smaller 4KiB lookup
+	  table.
+
+	  Only choose this option if you know what you are doing.
+
+config CRC32_SARWATE
+	bool "Sarwate's Algorithm (one byte at a time)"
+	help
+	  Calculate checksum a byte at a time using Sarwate's algorithm.  This
+	  is not particularly fast, but has a small 256 byte lookup table.
+
+	  Only choose this option if you know what you are doing.
+
+config CRC32_BIT
+	bool "Classic Algorithm (one bit at a time)"
+	help
+	  Calculate checksum one bit at a time.  This is VERY slow, but has
+	  no lookup table.  This is provided as a debugging option.
+
+	  Only choose this option if you are debugging crc32.
+
+Notice how all of the non-SLICEBY8 options tell you to not to choose
+that option unless you know what you're doing?  The reason why Kconfig
+urges you to pick SLICEBY8 is because people challenged my assertion
+that we should use slice by 8 by default, so I wrote a little crc
+microbenchmark utility and ran it on as many machines as I could get my
+hands on to show that slice by 8 was the fastest.
+
+Every 64-bit machine (and most of the 32-bit ones too) saw the best
+results with sb8.  Any machine with more than 4K of cache saw better
+results.  The spreadsheet still exists today[1]; note that
+'crc32-kern-le' corresponds to the sliceby4 algorithm.
+
+Of course there were questions about "What if my particular board
+actually does better with something else?", so after a number of rounds
+of bikeshedding we ended up with the Kconfig system that's still there
+today.  Hence:
+
+> And keep in mind that the kernel has arch-specific settings:
 > 
-> Now one question obviously is whether the repair strategy
-> changed between the xfs_repair versions I use (3.1.8 on the
-
-That's extremely old - Mar 2012, FWIW.
-
-> system that I sent you the meta data dump from, likely the
-> same on the other one): Mine clears the inodes with the bad
-> RT flag, while - namely considering the subsequent "block ...
-> type unknown" reported by xfs_check - it might instead be
-> possible to reconstruct the files and clear the RT flag. But of
-> course I know nothing about XFS internals...
-
-That is what xfs_repair did here - it cleared the bad flags and left
-the rest intact.
-
->> *Each of the 3 problematic inodes has an odd assortment of flags
->> set (think chattr type flags) - some have immutable, some have
->> noatime, some have nodump, etc.  These are what cause xfs_repair
->> t ocomplain.  It seems unlikely that any of these were actually set
->> on your filesystem, as these are the only ones with any flags set.
->> After repair, they're showing:
->>
->> --S---dA----------- mnt/log/messages
->> --S-i--A----------- mnt/lib/sudo/jbeulich/0
->> --S----A----------- mnt/lib/xenstored/tdb
->>
->> Did you happen to set chattr flags on these files intentionally?
+> $ git grep CONFIG_CRC32_S
+> arch/mips/configs/bcm47xx_defconfig:CONFIG_CRC32_SARWATE=y
+> arch/mips/configs/db1xxx_defconfig:CONFIG_CRC32_SLICEBY4=y
+> arch/mips/configs/rt305x_defconfig:CONFIG_CRC32_SARWATE=y
+> arch/mips/configs/xway_defconfig:CONFIG_CRC32_SARWATE=y
+> arch/powerpc/configs/adder875_defconfig:CONFIG_CRC32_SLICEBY4=y
+> arch/powerpc/configs/ep88xc_defconfig:CONFIG_CRC32_SLICEBY4=y
+> arch/powerpc/configs/mpc866_ads_defconfig:CONFIG_CRC32_SLICEBY4=y
+> arch/powerpc/configs/mpc885_ads_defconfig:CONFIG_CRC32_SLICEBY4=y
+> arch/powerpc/configs/tqm8xx_defconfig:CONFIG_CRC32_SLICEBY4=y
+> ....
 > 
-> I certainly didn't. As I don't know how to produce this form of
-> flags display, I can't (for now) compare with what a healthy
-> system has there.
+> Which says that certain mips and powerpc CPUs should be using
+> slice-by-4 or sarwate algorithms, not slice-by-8....
 
-The above is from the lsattr display.  (I suppose it's plausible that
-i.e. messages would have "append-only" set by something ...)
+All nine of those systems are embedded 32-bit mips/ppc systems with very
+small cache sizes which experience cache thrashing with the slice-by-8
+algorithm, and therefore chose to pick defaults that are saner for their
+particular board configuration.  For nearly all of XFS' perceived
+userbase (which I assume are 32 and 64-bit machines with sufficiently
+large CPU cache and largeish storage devices) I think slice by 8 is the
+right choice.
 
--Eric
+--D
 
-> Jan
 > 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
