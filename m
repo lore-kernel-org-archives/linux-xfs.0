@@ -1,123 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:40863 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933771AbdEOPnc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:43:32 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/17] uuid: hoist uuid_is_null() helper from libnvdimm
-Date: Mon, 15 May 2017 17:42:59 +0200
-Message-Id: <20170515154308.26739-9-hch@lst.de>
-In-Reply-To: <20170515154308.26739-1-hch@lst.de>
-References: <20170515154308.26739-1-hch@lst.de>
+Received: from mail-ua0-f175.google.com ([209.85.217.175]:33868 "EHLO
+        mail-ua0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751934AbdENN4c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 May 2017 09:56:32 -0400
+Received: by mail-ua0-f175.google.com with SMTP id g49so66612989uaa.1
+        for <linux-xfs@vger.kernel.org>; Sun, 14 May 2017 06:56:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <38F56772-7836-4902-929C-80908BFBEA7B@dilger.ca>
+References: <CAG48ez1AWewJRg8gySgihn0y15jRhC6C+5DNwGsDpAhtokB=Lw@mail.gmail.com>
+ <20170508184112.GJ5973@birch.djwong.org> <CAG48ez3e+2VuvjtEfJuMujEo6PWBO3z8oM-otN2juq96jKdjCw@mail.gmail.com>
+ <20170508204738.GL5973@birch.djwong.org> <CAG48ez0iLRazKvXty9CG8ENXvkG6b1xjO0Q75p+16HKNptFnow@mail.gmail.com>
+ <20170509015324.GM5973@birch.djwong.org> <20170509211746.GA87747@gmail.com>
+ <20170510163818.7bleiykxgnx3pkds@thunk.org> <87mvakpl5m.fsf@xmission.com>
+ <20170510201437.GA9854@birch.djwong.org> <20170511051051.GA7533@zzz> <38F56772-7836-4902-929C-80908BFBEA7B@dilger.ca>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Sun, 14 May 2017 06:56:10 -0700
+Message-ID: <CALCETrX0=w8tDQbAysZH3AHvvaGvPb54Jj7=Eiuk0uoB+fRfzQ@mail.gmail.com>
+Subject: Re: [PATCH] ioctl_getfsmap.2: document the GETFSMAP ioctl
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: Eric Biggers <ebiggers3@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Theodore Ts'o <tytso@mit.edu>, Jann Horn <jannh@google.com>, Michael Kerrisk-manpages <mtk.manpages@gmail.com>, linux-xfs@vger.kernel.org, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, linux-man <linux-man@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-Hoist the libnvdimm helper as an inline helper to linux/uuid.h
-using an auxiliary const variable uuid_null in lib/uuid.c.
+On Sat, May 13, 2017 at 6:41 PM, Andreas Dilger <adilger@dilger.ca> wrote:
+> On May 10, 2017, at 11:10 PM, Eric Biggers <ebiggers3@gmail.com> wrote:
+>>
+>> On Wed, May 10, 2017 at 01:14:37PM -0700, Darrick J. Wong wrote:
+>>> [cc btrfs, since afaict that's where most of the dedupe tool authors hang out]
 
-[hch: also add the guid variant.  Both do the same but I'd like
-to keep casts to a minimum]
+>> Yes, PIDs have traditionally been global, but today we have PID namespaces, and
+>> many other isolation features such as mount namespaces.  Nothing is perfect, of
+>> course, and containers are a lot worse than VMs, but it seems weird to use that
+>> as an excuse to knowingly make things worse...
+>>
 
-The common helper uses the new abstract type uuid_t * instead of
-u8 *.
+Indeed.  Not only PID namespaces -- we have hidepid and we can simply
+unmount /proc.  "There are other info leaks" is a poor excuse.
 
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: David Howells <dhowells@redhat.com>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-[hch: added guid_is_null]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/nvdimm/btt_devs.c |  9 +--------
- include/linux/uuid.h      | 13 +++++++++++++
- lib/uuid.c                |  5 +++++
- 3 files changed, 19 insertions(+), 8 deletions(-)
+>>>
+>>>>> Fortunately, the days of timesharing seem to well behind us.  For
+>>>>> those people who think that containers are as secure as VM's (hah,
+>>>>> hah, hah), it might be that best way to handle this is to have a mount
+>>>>> option that requires root access to this functionality.  For those
+>>>>> people who really care about this, they can disable access.
+>>>
+>>> Or use separate filesystems for each container so that exploitable bugs
+>>> that shut down the filesystem can't be used to kill the other
+>>> containers.  You could use a torrent of metadata-heavy operations
+>>> (fallocate a huge file, punch every block, truncate file, repeat) to DoS
+>>> the other containers.
+>>>
+>>>> What would be the reason for not putting this behind
+>>>> capable(CAP_SYS_ADMIN)?
+>>>>
+>>>> What possible legitimate function could this functionality serve to
+>>>> users who don't own your filesystem?
+>>>
+>>> As I've said before, it's to enable dedupe tools to decide, given a set
+>>> of files with shareable blocks, roughly how many other times each of
+>>> those shareable blocks are shared so that they can make better decisions
+>>> about which file keeps its shareable blocks, and which file gets
+>>> remapped.  Dedupe is not a privileged operation, nor are any of the
+>>> tools.
+>>>
+>>
+>> So why does the ioctl need to return all extent mappings for the entire
+>> filesystem, instead of just the share count of each block in the file that the
+>> ioctl is called on?
+>
+> One possibility is that the ioctl() can return the mapping for all inodes
+> owned by the calling PID (or others if CAP_SYS_ADMIN, CAP_DAC_OVERRIDE,
+> or CAP_FOWNER is set), and return an "filesystem aggregate inode" (or more
+> than one if there is a reason to do so) with all the other allocated blocks
+> for inodes the user doesn't have permission to access?
 
-diff --git a/drivers/nvdimm/btt_devs.c b/drivers/nvdimm/btt_devs.c
-index ae00dc0d9791..4c989bb9a8a0 100644
---- a/drivers/nvdimm/btt_devs.c
-+++ b/drivers/nvdimm/btt_devs.c
-@@ -222,13 +222,6 @@ struct device *nd_btt_create(struct nd_region *nd_region)
- 	return dev;
- }
- 
--static bool uuid_is_null(u8 *uuid)
--{
--	static const u8 null_uuid[16];
--
--	return (memcmp(uuid, null_uuid, 16) == 0);
--}
--
- /**
-  * nd_btt_arena_is_valid - check if the metadata layout is valid
-  * @nd_btt:	device with BTT geometry and backing device info
-@@ -249,7 +242,7 @@ bool nd_btt_arena_is_valid(struct nd_btt *nd_btt, struct btt_sb *super)
- 	if (memcmp(super->signature, BTT_SIG, BTT_SIG_LEN) != 0)
- 		return false;
- 
--	if (!uuid_is_null(super->parent_uuid))
-+	if (!guid_is_null((guid_t *)&super->parent_uuid))
- 		if (memcmp(super->parent_uuid, parent_uuid, 16) != 0)
- 			return false;
- 
-diff --git a/include/linux/uuid.h b/include/linux/uuid.h
-index 21218351ae26..f0e2a645e2bb 100644
---- a/include/linux/uuid.h
-+++ b/include/linux/uuid.h
-@@ -48,6 +48,9 @@ struct uuid_v1 {
-  */
- #define	UUID_STRING_LEN		36
- 
-+extern const guid_t guid_null;
-+extern const uuid_t uuid_null;
-+
- static inline bool guid_equal(const guid_t *u1, const guid_t *u2)
- {
- 	return memcmp(u1, u2, sizeof(guid_t)) == 0;
-@@ -58,6 +61,11 @@ static inline void guid_copy(guid_t *dst, const guid_t *src)
- 	memcpy(dst, src, sizeof(guid_t));
- }
- 
-+static inline bool guid_is_null(guid_t *guid)
-+{
-+	return guid_equal(guid, &guid_null);
-+}
-+
- static inline bool uuid_equal(const uuid_t *u1, const uuid_t *u2)
- {
- 	return memcmp(u1, u2, sizeof(uuid_t)) == 0;
-@@ -68,6 +76,11 @@ static inline void uuid_copy(uuid_t *dst, const uuid_t *src)
- 	memcpy(dst, src, sizeof(uuid_t));
- }
- 
-+static inline bool uuid_is_null(uuid_t *uuid)
-+{
-+	return uuid_equal(uuid, &uuid_null);
-+}
-+
- void generate_random_uuid(unsigned char uuid[16]);
- 
- extern void guid_gen(guid_t *u);
-diff --git a/lib/uuid.c b/lib/uuid.c
-index 003bf6823003..25145bfb0eaa 100644
---- a/lib/uuid.c
-+++ b/lib/uuid.c
-@@ -21,6 +21,11 @@
- #include <linux/uuid.h>
- #include <linux/random.h>
- 
-+const guid_t guid_null;
-+EXPORT_SYMBOL(guid_null);
-+const uuid_t uuid_null;
-+EXPORT_SYMBOL(uuid_null);
-+
- const u8 guid_index[16] = {3,2,1,0,5,4,7,6,8,9,10,11,12,13,14,15};
- const u8 uuid_index[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
- 
--- 
-2.11.0
-
+Sounds like it could be reasonable.  But you don't want "owned by the
+calling PID" precisely -- you also need to check
+kgid_has_mapping(current_user_ns(), inode->i_gid), I think.
