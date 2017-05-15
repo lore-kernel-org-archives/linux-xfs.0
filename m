@@ -1,40 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39212 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757556AbdEOL7y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 May 2017 07:59:54 -0400
-Date: Mon, 15 May 2017 07:59:52 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfsprogs 4.5 vs 4.10
-Message-ID: <20170515115952.GA27809@bfoster.bfoster>
-References: <5997f5f5-372d-7ab6-429f-d690cf642f47@shaw.ca>
+Received: from mx2.suse.de ([195.135.220.15]:60984 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756610AbdEOL6n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 15 May 2017 07:58:43 -0400
+Date: Mon, 15 May 2017 13:58:38 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v4 22/27] jbd2: don't reset error in
+ journal_finish_inode_data_buffers
+Message-ID: <20170515115838.GE16182@quack2.suse.cz>
+References: <20170509154930.29524-1-jlayton@redhat.com>
+ <20170509154930.29524-23-jlayton@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5997f5f5-372d-7ab6-429f-d690cf642f47@shaw.ca>
+In-Reply-To: <20170509154930.29524-23-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Ryder <tireman@shaw.ca>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Jeff Layton <jlayton@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
 
-On Sat, May 13, 2017 at 08:04:42PM -0400, Andrew Ryder wrote:
-> Hello,
+On Tue 09-05-17 11:49:25, Jeff Layton wrote:
+> Now that we don't clear writeback errors after fetching them, there is
+> no need to reset them. This is also potentially racy.
 > 
-> I went through a corruption issue on a v5 filesystem I have and the v4.5 of
-> the tools fixed the log but 4.10 would only complain about not being able to
-> fix it?
+> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+
+Looks good. You can add:
+
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
+> ---
+>  fs/jbd2/commit.c | 13 ++-----------
+>  1 file changed, 2 insertions(+), 11 deletions(-)
 > 
-
-Can you provide details please?
-
-Brian
-
-> I can provide some background on the issue if that helps but I though it
-> might be worthwhile to mention the above..?
+> diff --git a/fs/jbd2/commit.c b/fs/jbd2/commit.c
+> index b6b194ec1b4f..4c6262652028 100644
+> --- a/fs/jbd2/commit.c
+> +++ b/fs/jbd2/commit.c
+> @@ -264,17 +264,8 @@ static int journal_finish_inode_data_buffers(journal_t *journal,
+>  		jinode->i_flags |= JI_COMMIT_RUNNING;
+>  		spin_unlock(&journal->j_list_lock);
+>  		err = filemap_fdatawait(jinode->i_vfs_inode->i_mapping);
+> -		if (err) {
+> -			/*
+> -			 * Because AS_EIO is cleared by
+> -			 * filemap_fdatawait_range(), set it again so
+> -			 * that user process can get -EIO from fsync().
+> -			 */
+> -			mapping_set_error(jinode->i_vfs_inode->i_mapping, -EIO);
+> -
+> -			if (!ret)
+> -				ret = err;
+> -		}
+> +		if (err && !ret)
+> +			ret = err;
+>  		spin_lock(&journal->j_list_lock);
+>  		jinode->i_flags &= ~JI_COMMIT_RUNNING;
+>  		smp_mb();
+> -- 
+> 2.9.3
 > 
-> Andrew
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
