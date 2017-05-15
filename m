@@ -1,80 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from prv-mh.provo.novell.com ([137.65.248.74]:50504 "EHLO
-        prv-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751442AbdELPTe (ORCPT
-        <rfc822;groupwise-linux-xfs@vger.kernel.org:2:1>);
-        Fri, 12 May 2017 11:19:34 -0400
-Message-Id: <5915EEA7020000780015958E@prv-mh.provo.novell.com>
-Date: Fri, 12 May 2017 09:19:35 -0600
-From: "Jan Beulich" <JBeulich@suse.com>
-Subject: Re: permanent XFS volume corruption
-References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <a185194a-af56-cd53-cfb9-653e3b5f81b7@sandeen.net>
- <591571BC0200007800159165@prv-mh.provo.novell.com>
- <30296667-47d7-8b94-472a-1d4b96120c09@sandeen.net>
- <5915DE47020000780015946C@prv-mh.provo.novell.com>
- <23c75521-a65b-d105-f274-3d1aba09e6ae@sandeen.net>
-In-Reply-To: <23c75521-a65b-d105-f274-3d1aba09e6ae@sandeen.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
-Content-Disposition: inline
+Received: from mout.kundenserver.de ([212.227.126.133]:60694 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933582AbdEONqo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 09:46:44 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 1/2] dax: hide block device code in #ifdef
+Date: Mon, 15 May 2017 15:44:00 +0200
+Message-Id: <20170515134508.2713243-1-arnd@arndb.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org
 
->>> On 12.05.17 at 17:04, <sandeen@sandeen.net> wrote:
-> On 5/12/17 9:09 AM, Jan Beulich wrote:
->>>>> On 12.05.17 at 15:56, <sandeen@sandeen.net> wrote:
->>> On 5/12/17 1:26 AM, Jan Beulich wrote:
->>>> So on the earlier instance, where I did run actual repairs (and
->>>> indeed multiple of them), the problem re-surfaces every time
->>>> I mount the volume again.
->>> Ok, what is the exact sequence there, from repair to re-corruption?
->> Simply mount the volume after repairing (with or without an
->> intermediate reboot) and access respective pieces of the fs
->> again. As said, with /var/run affected on that first occasion,
->> I couldn't even cleanly boot again without seeing the
->> corruption re-surface.
-> 
-> Mount under what kernel, and access in what way?  I'm looking for a
-> recipe to reproduce what you've seen using the metadump you've provided.
+We allow configurations with CONFIG_BLOCK=n and CONFIG_DAX=y, which now
+results in a link error:
 
-So that's where the problem is: As said, on this occasion I didn't
-try to run xfs_repair at all. What I'm describing is the situation
-I've ended in on the earlier occasion, which I didn't send you
-any data on (if you think it's worth it despite the several rounds
-of repairs I've run there, I could certainly do so, as I didn't
-decide yet what to do with that system in order to get it back
-into working state).
+drivers/dax/super.c: In function 'bdev_dax_pgoff':
+drivers/dax/super.c:50:26: error: implicit declaration of function 'get_start_sect'; did you mean 'get_task_cred'? [-Werror=implicit-function-declaration]
 
-In any event, the same re-occurrence of the problem was
-observed with 3.0, 3.12, 4.4, and 4.11 based kernels. And the
-accesses were whatever the system does during boot (from
-the names I presume mostly creating /var/run/*.pid files). But
-simple directory listings suffice to trigger the kernel warnings
-(can't tell whether they also suffice to re-introduce the issues).
-I've even tried mounting the volume ro after repairing, but -
-not entirely unexpected - the system didn't really like /var
-being read-only, so I couldn't check whether the corruption in
-that case would not have been flagged again.
+The two obvious ways to avoid the link error are to either add an #ifdef
+around the code that was moved from fs/block_dev.c, or to disallow the
+configuration. I could not see if there is or is not a reason to support
+this combination of options, but in case there is, the #ifdef is the
+safer choice.
 
-> However:
-> 
-> With further testing I see that xfs_repair v3.1.8 /does not/
-> entirely fix the fs; if I run 3.1.8 and then run upstream repair, it
-> finds and fixes more bad flags on inode 764 (lib/xenstored/tdb) that 3.1.8
-> didn't touch.  The verifiers in an upstream kernel may keep tripping
-> over that until newer repair fixes it...
+Fixes: ef51042472f5 ("block, dax: move "select DAX" from BLOCK to FS_DAX")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/dax/super.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Well, I can see if I can build those newer tools for myself (would
-largely depend on how easy/difficult they are to configure/make,
-and whether there's a testsuite that I can run them over before
-allowing them to touch live data); I don't expect newer tools to
-be available for the distro I'm running.
-
-Jan
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index ebf43f531ada..6ed32aac8bbe 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -44,6 +44,7 @@ void dax_read_unlock(int id)
+ }
+ EXPORT_SYMBOL_GPL(dax_read_unlock);
+ 
++#ifdef CONFIG_BLOCK
+ int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
+ 		pgoff_t *pgoff)
+ {
+@@ -112,6 +113,7 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(__bdev_dax_supported);
++#endif
+ 
+ /**
+  * struct dax_device - anchor object for dax services
+-- 
+2.9.0
 
