@@ -1,63 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35191 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755038AbdEOMbj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 May 2017 08:31:39 -0400
-Date: Mon, 15 May 2017 14:31:26 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] generic/285: Add more SEEK_HOLE tests
-Message-ID: <20170515123126.GG16182@quack2.suse.cz>
-References: <20170511164809.29739-1-jack@suse.cz>
- <20170512080443.GN7250@eguan.usersys.redhat.com>
- <20170512230657.GP12369@dastard>
- <20170513172620.GR7250@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170513172620.GR7250@eguan.usersys.redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:49298 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966209AbdEOPnw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:43:52 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 15/17] block: remove blk_part_pack_uuid
+Date: Mon, 15 May 2017 17:43:06 +0200
+Message-Id: <20170515154308.26739-16-hch@lst.de>
+In-Reply-To: <20170515154308.26739-1-hch@lst.de>
+References: <20170515154308.26739-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, fstests@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Sun 14-05-17 01:26:21, Eryu Guan wrote:
-> On Sat, May 13, 2017 at 09:06:57AM +1000, Dave Chinner wrote:
-> > On Fri, May 12, 2017 at 04:04:43PM +0800, Eryu Guan wrote:
-> > > On Thu, May 11, 2017 at 06:48:09PM +0200, Jan Kara wrote:
-> > > > Add tests for bugs found in ext4 & xfs SEEK_HOLE implementations
-> > > > fixed by following patches:
-> > > > 
-> > > > xfs: Fix missed holes in SEEK_HOLE implementation
-> > > > ext4: Fix SEEK_HOLE
-> > > > 
-> > > > Signed-off-by: Jan Kara <jack@suse.cz>
-> > > 
-> > > This will cause ext4 and xfs start to fail with current linus tree and
-> > > appear as a new regression. So we usually don't add new tests to
-> > > existing cases.
-> > > 
-> > > But seek_sanity_test.c deals with different SEEK_DATA/HOLE implentations
-> > > nicely, which would be a bit tricky to do in a new test by shell, and it
-> > > has all the infrastructures for new tests like this. So I think I'd
-> > > prefer merging this patch as is, and document the false regression alert
-> > > in release announce email.
-> > 
-> > Make the new tests optional (i.e. on a cli switch) and add a new
-> > xfstest that runs them? Old test remains unchanged, doesn't fail,
-> > new test covers the new tests, will fail on old kernels (which is ok
-> > for new tests).
-> 
-> Yeah, this should work and looks a better solution to me. This avoids
-> regressing generic/285 again when adding another new test in future,
-> future tests could just follow this path too. Thanks for the suggestion!
-> 
-> Jan, could you please update the patch and, as suggested by Dave, make
-> it a new test? I can do it too if you like.
+This helper was only used by IMA of all things, which would get spurious
+errors if CONFIG_BLOCK is disabled.  Just opencode the call there.
 
-Yeah, Dave's idea looks good. I'll work on it and send an updated version.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ include/linux/genhd.h               | 11 -----------
+ security/integrity/ima/ima_policy.c |  3 +--
+ 2 files changed, 1 insertion(+), 13 deletions(-)
 
-								Honza
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index acff9437e5c3..e619fae2f037 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -219,12 +219,6 @@ static inline struct gendisk *part_to_disk(struct hd_struct *part)
+ 	return NULL;
+ }
+ 
+-static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
+-{
+-	uuid_be_to_bin(uuid_str, (uuid_be *)to);
+-	return 0;
+-}
+-
+ static inline int disk_max_parts(struct gendisk *disk)
+ {
+ 	if (disk->flags & GENHD_FL_EXT_DEVT)
+@@ -736,11 +730,6 @@ static inline dev_t blk_lookup_devt(const char *name, int partno)
+ 	dev_t devt = MKDEV(0, 0);
+ 	return devt;
+ }
+-
+-static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
+-{
+-	return -EINVAL;
+-}
+ #endif /* CONFIG_BLOCK */
+ 
+ #endif /* _LINUX_GENHD_H */
+diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
+index 3ab1067db624..49fbc3e8f012 100644
+--- a/security/integrity/ima/ima_policy.c
++++ b/security/integrity/ima/ima_policy.c
+@@ -717,8 +717,7 @@ static int ima_parse_rule(char *rule, struct ima_rule_entry *entry)
+ 				break;
+ 			}
+ 
+-			result = blk_part_pack_uuid(args[0].from,
+-						    entry->fsuuid);
++			result = uuid_to_bin(args[0].from, (uuid_t *)&entry->fsuuid);
+ 			if (!result)
+ 				entry->flags |= IMA_FSUUID;
+ 			break;
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.11.0
+
