@@ -1,156 +1,362 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f181.google.com ([209.85.216.181]:34300 "EHLO
-        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934456AbdEOR7F (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 13:59:05 -0400
-Received: by mail-qt0-f181.google.com with SMTP id c13so42124346qtc.1
-        for <linux-xfs@vger.kernel.org>; Mon, 15 May 2017 10:59:04 -0700 (PDT)
-Message-ID: <1494871139.4080.3.camel@redhat.com>
-Subject: Re: [PATCH v4 15/27] fs: retrofit old error reporting API onto new
- infrastructure
-From: Jeff Layton <jlayton@redhat.com>
-Date: Mon, 15 May 2017 13:58:59 -0400
-In-Reply-To: <20170515104246.GC16182@quack2.suse.cz>
-References: <20170509154930.29524-1-jlayton@redhat.com>
-         <20170509154930.29524-16-jlayton@redhat.com>
-         <20170515104246.GC16182@quack2.suse.cz>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from userp1040.oracle.com ([156.151.31.81]:47948 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966433AbdEOTSs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 15:18:48 -0400
+Date: Mon, 15 May 2017 12:18:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/9] xfs_io: support the new getfsmap ioctl
+Message-ID: <20170515191809.GO4519@birch.djwong.org>
+References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+ <149417258268.24656.3441330396895207773.stgit@birch.djwong.org>
+ <212fe5da-d589-1614-0980-ab583db1df5d@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <212fe5da-d589-1614-0980-ab583db1df5d@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Mon, 2017-05-15 at 12:42 +0200, Jan Kara wrote:
-> On Tue 09-05-17 11:49:18, Jeff Layton wrote:
-> > Now that we have a better way to store and report errors that occur
-> > during writeback, we need to convert the existing codebase to use it. We
-> > could just adapt all of the filesystem code and related infrastructure
-> > to the new API, but that's a lot of churn.
+On Mon, May 08, 2017 at 04:01:11PM -0500, Eric Sandeen wrote:
+> On 5/7/17 10:56 AM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > When it comes to setting errors in the mapping, filemap_set_wb_error is
-> > a drop-in replacement for mapping_set_error. Turn that function into a
-> > simple wrapper around the new one.
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  io/Makefile          |    4 
+> >  io/copy_file_range.c |    2 
+> >  io/encrypt.c         |    1 
+> >  io/fsmap.c           |  559 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  io/init.c            |    8 +
+> >  io/io.h              |   14 +
+> >  io/open.c            |   21 ++
+> >  io/pwrite.c          |    2 
+> >  io/reflink.c         |    4 
+> >  io/sendfile.c        |    2 
+> >  man/man8/xfs_io.8    |   47 ++++
+> >  11 files changed, 651 insertions(+), 13 deletions(-)
+> >  create mode 100644 io/fsmap.c
 > > 
-> > Because we want to ensure that writeback errors are always reported at
-> > fsync time, inject filemap_report_wb_error calls much closer to the
-> > syscall boundary, in call_fsync.
 > > 
-> > For fsync calls (and things like the nfsd equivalent), we either return
-> > the error that the fsync operation returns, or the one returned by
-> > filemap_report_wb_error. In both cases, we advance the file->f_wb_err to
-> > the latest value. This allows us to provide new fsync semantics that
-> > will return errors that may have occurred previously and been viewed
-> > via other file descriptors.
-> > 
-> > The final piece of the puzzle is what to do about filemap_check_errors
-> > calls that are being called directly or via filemap_* functions. Here,
-> > we must take a little "creative license".
-> > 
-> > Since we now handle advancing the file->f_wb_err value at the generic
-> > filesystem layer, we no longer need those callers to clear errors out
-> > of the mapping or advance an errseq_t.
-> > 
-> > A lot of the existing codebase relies on being getting an error back
-> > from those functions when there is a writeback problem, so we do still
-> > want to have them report writeback errors somehow.
-> > 
-> > When reporting writeback errors, we will always report errors that have
-> > occurred since a particular point in time. With the old writeback error
-> > reporting, the time we used was "since it was last tested/cleared" which
-> > is entirely arbitrary and potentially racy. Now, we can at least report
-> > the latest error that has occurred since an arbitrary point in time
-> > (represented as a sampled errseq_t value).
-> > 
-> > In the case where we don't have a struct file to work with, this patch
-> > just has the wrappers sample the current mapping->wb_err value, and use
-> > that as an arbitrary point from which to check for errors.
-> 
-> I think this is really dangerous and we shouldn't do this. You are quite
-> likely to lose IO errors in such calls because you will ignore all errors
-> that happened during previous background writeback or even for IO that
-> managed to complete before we called filemap_fdatawait(). Maybe we need to
-> keep the original set-clear-bit IO error reporting for these cases, until
-> we can convert them to fdatawait_range_since()?
-> 
-
-Yes that is a danger.
-
-In fact, late last week I was finally able to make my xfstest work with
-btrfs, and started hitting oopses with it because of the way the error
-reporting changed. I rolled up a patch to fix that (and it simplifies
-the code some, IMO), but other callers of filemap_fdatawait may have
-similar problems here.
-
-I'll pick up working on this again in a more piecemeal way. I had
-originally looked at doing that, but there are some problematic places
-(e.g. buffer.c), where the code is shared by a bunch of different
-filesystems that makes it difficult.
-
-We may end up needing some sort of FS_WB_ERRSEQ flag to do this
-correctly, at least until the transition to errseq_t is done.
-
-> > That's probably not "correct" in all cases, particularly in the case of
-> > something like filemap_fdatawait, but I'm not sure it's any worse than
-> > what we already have, and this gives us a basis from which to work.
-> > 
-> > A lot of those callers will likely want to change to a model where they
-> > sample the errseq_t much earlier (perhaps when starting a transaction),
-> > store it in an appropriate place and then use that value later when
-> > checking to see if an error occurred.
-> > 
-> > That will almost certainly take some involvement from other subsystem
-> > maintainers. I'm quite open to adding new API functions to help enable
-> > this if that would be helpful, but I don't really want to do that until
-> > I better understand what's needed.
-> > 
-> > Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> 
-> ...
-> 
-> > diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-> > index 5f7317875a67..7ce13281925f 100644
-> > --- a/fs/f2fs/file.c
-> > +++ b/fs/f2fs/file.c
-> > @@ -187,6 +187,7 @@ static int f2fs_do_sync_file(struct file *file, loff_t start, loff_t end,
-> >  		.nr_to_write = LONG_MAX,
-> >  		.for_reclaim = 0,
-> >  	};
-> > +	errseq_t since = READ_ONCE(file->f_wb_err);
+> > diff --git a/io/Makefile b/io/Makefile
+> > index 435ccff..8d3a30e 100644
+> > --- a/io/Makefile
+> > +++ b/io/Makefile
+> > @@ -99,6 +99,10 @@ ifeq ($(HAVE_MREMAP),yes)
+> >  LCFLAGS += -DHAVE_MREMAP
+> >  endif
 > >  
-> >  	if (unlikely(f2fs_readonly(inode->i_sb)))
+> > +ifeq ($(HAVE_GETFSMAP),yes)
+> > +CFILES += fsmap.c
+> > +endif
+> > +
+> >  default: depend $(LTCOMMAND)
+> >  
+> >  include $(BUILDRULES)
+> > diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> > index 249c649..d1dfc5a 100644
+> > --- a/io/copy_file_range.c
+> > +++ b/io/copy_file_range.c
+> > @@ -121,7 +121,7 @@ copy_range_f(int argc, char **argv)
+> >  	if (optind != argc - 1)
+> >  		return command_usage(&copy_range_cmd);
+> >  
+> > -	fd = openfile(argv[optind], NULL, IO_READONLY, 0);
+> > +	fd = openfile(argv[optind], NULL, IO_READONLY, 0, NULL);
+> >  	if (fd < 0)
 > >  		return 0;
-> > @@ -265,6 +266,8 @@ static int f2fs_do_sync_file(struct file *file, loff_t start, loff_t end,
-> >  	}
 > >  
-> >  	ret = wait_on_node_pages_writeback(sbi, ino);
-> > +	if (ret == 0)
-> > +		ret = filemap_check_wb_error(NODE_MAPPING(sbi), since);
-> >  	if (ret)
-> >  		goto out;
+> > diff --git a/io/encrypt.c b/io/encrypt.c
+> > index d844c5e..26ab97c 100644
+> > --- a/io/encrypt.c
+> > +++ b/io/encrypt.c
+> > @@ -20,6 +20,7 @@
+> >  #include "platform_defs.h"
+> >  #include "command.h"
+> >  #include "init.h"
+> > +#include "path.h"
+> >  #include "io.h"
+> >  
+> >  #ifndef ARRAY_SIZE
+> > diff --git a/io/fsmap.c b/io/fsmap.c
+> > new file mode 100644
+> > index 0000000..4128fae
+> > --- /dev/null
+> > +++ b/io/fsmap.c
+> > @@ -0,0 +1,559 @@
+> > +/*
+> > + * Copyright (C) 2017 Oracle.  All Rights Reserved.
+> > + *
+> > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License
+> > + * as published by the Free Software Foundation; either version 2
+> > + * of the License, or (at your option) any later version.
+> > + *
+> > + * This program is distributed in the hope that it would be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, write the Free Software Foundation,
+> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> > + */
+> > +#include "platform_defs.h"
+> > +#include "command.h"
+> > +#include "init.h"
+> > +#include "path.h"
+> > +#include "io.h"
+> > +#include "input.h"
+> > +
+> > +static cmdinfo_t	fsmap_cmd;
+> > +static dev_t		xfs_data_dev;
+> > +
+> > +static void
+> > +fsmap_help(void)
+> > +{
+> > +	printf(_(
+> > +"\n"
+> > +" prints the block mapping for an XFS filesystem"
 > 
-> So this conversion looks wrong and actually points to a larger issue with
-> the scheme. The problem is there are two mappings that come into play here
-> - file_inode(file)->i_mapping which is the data mapping and
-> NODE_MAPPING(sbi) which is the metadata mapping (and this is not a problem
-> specific to f2fs. For example ext2 also uses this scheme where block
-> devices' mapping is the metadata mapping). And we need to merge error
-> information from these two mappings so for the stamping scheme to work,
-> we'd need two stamps stored in struct file. One for data mapping and one
-> for metadata mapping. Or maybe there's some more clever scheme but for now
-> I don't see one...
+> Did you want an \n" on the above line too?  Seems a bit odd to have it only on the next line.
+> (one \n is fine too, but not like this) :)
 > 
+> > +"\n"
+> > +" Example:\n"
+> > +" 'fsmap -dlrv [-n nr] [startoff] [endoff]' - tabular format verbose map, including unwritten extents\n"
+> 
+> This doesn't match the short help:
+> 
+> +	fsmap_cmd.args = _("[-v] [-n nx] [start] [end]");
+> 
+> or the manpage:
+> 
+> +.BI "fsmap [ \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
+> 
+> but getopt sez:
+> 
+> > +	while ((c = getopt(argc, argv, "dln:rv")) != EOF) {
+> 
+> so I guess the short help & manpage need updates.
+> 
+> Also, I don't think the "Example:" above is valid:
+> 
+>         if (dflag + lflag + rflag > 1)
+>                 return command_usage(&fsmap_cmd);
+> 
+> so the help needs to indicate that exactly 1 of -d, -l, or -r is required.
+> 
+> > +"\n"
+> > +" fsmap prints the map of disk blocks used by the whole filesystem.\n"
+> > +" The map lists each extent used by the file
+> 
+> <newbie>
+> 
+> "the file?"  what file?
+> 
+>                                                , as well as regions in the\n"
+> > +" filesystem that do not have any corresponding blocks (free space).\n"
+> > +" By default, each line of the listing takes the following form:\n"
+> > +"     extent: [startoffset..endoffset] owner startblock..endblock\n"
+> 
+> say what "owner" means in this case?  </newbie>
+> 
+> > +" All the file offsets and disk blocks are in units of 512-byte blocks.\n"
+> > +" -d -- query only the data device.\n"
+> > +" -l -- query only the log device.\n"
+> > +" -r -- query only the realtime device.\n"
+> > +" -n -- query n extents.\n"
+> > +" -v -- Verbose information, specify ag info.  Show flags legend on 2nd -v\n"
+> > +"\n"));
+> > +}
+> > +
+> > +static int
+> > +numlen(
+> > +	off64_t	val)
+> > +{
+> > +	off64_t	tmp;
+> > +	int	len;
+> > +
+> > +	for (len = 0, tmp = val; tmp > 0; tmp = tmp/10)
+> > +		len++;
+> > +	return (len == 0 ? 1 : len);
+> > +}
+> 
+> Hm, copy #3, do we still not have anywhere to put common stuff like this?
+> 
+> > +
+> > +#define OWNER_BUF_SZ	32
+> > +static const char *
+> > +special_owner(
+> > +	__int64_t	owner,
+> > +	char		*buf)
+> > +{
+> > +	switch (owner) {
+> > +	case XFS_FMR_OWN_FREE:
+> > +		return _("free space");
+> > +	case XFS_FMR_OWN_UNKNOWN:
+> > +		return _("unknown");
+> > +	case XFS_FMR_OWN_FS:
+> > +		return _("static fs metadata");
+> > +	case XFS_FMR_OWN_LOG:
+> > +		return _("journalling log");
+> > +	case XFS_FMR_OWN_AG:
+> > +		return _("per-AG metadata");
+> > +	case XFS_FMR_OWN_INOBT:
+> > +		return _("inode btree");
+> > +	case XFS_FMR_OWN_INODES:
+> > +		return _("inodes");
+> > +	case XFS_FMR_OWN_REFC:
+> > +		return _("refcount btree");
+> > +	case XFS_FMR_OWN_COW:
+> > +		return _("cow reservation");
+> > +	case XFS_FMR_OWN_DEFECTIVE:
+> > +		return _("defective");
+> > +	default:
+> > +		snprintf(buf, OWNER_BUF_SZ, _("special %u:%u"),
+> > +				FMR_OWNER_TYPE(owner), FMR_OWNER_CODE(owner));
+> > +		return buf;
+> > +	}
+> > +}
+> > +
+> > +static void
+> > +dump_map(
+> > +	unsigned long long	*nr,
+> > +	struct fsmap_head	*head)
+> > +{
+> > +	unsigned long long	i;
+> > +	struct fsmap		*p;
+> > +	char			owner[OWNER_BUF_SZ];
+> > +
+> > +	for (i = 0, p = head->fmh_recs; i < head->fmh_entries; i++, p++) {
+> > +		printf("\t%llu: %u:%u [%lld..%lld]: ", i + (*nr),
+> > +			major(p->fmr_device), minor(p->fmr_device),
+> > +			(long long)BTOBBT(p->fmr_physical),
+> > +			(long long)BTOBBT(p->fmr_physical + p->fmr_length - 1));
+> > +		if (p->fmr_flags & FMR_OF_SPECIAL_OWNER)
+> > +			printf("%s", special_owner(p->fmr_owner, owner));
+> > +		else if (p->fmr_flags & FMR_OF_EXTENT_MAP)
+> > +			printf(_("inode %lld extent map"),
+> > +				(long long) p->fmr_owner);
+> > +		else
+> > +			printf(_("inode %lld %lld..%lld"),
+> > +				(long long)p->fmr_owner,
+> > +				(long long)BTOBBT(p->fmr_offset),
+> > +				(long long)BTOBBT(p->fmr_offset + p->fmr_length - 1));
+> > +		printf(_(" %lld blocks\n"),
+> > +			(long long)BTOBBT(p->fmr_length));
+> > +	}
+> > +
+> > +	(*nr) += head->fmh_entries;
+> > +}
+> > +
+> > +/*
+> > + * Verbose mode displays:
+> > + *   extent: major:minor [startblock..endblock]: startoffset..endoffset \
+> > + *	ag# (agoffset..agendoffset) totalbbs flags
+> > + */
+> > +#define MINRANGE_WIDTH	16
+> > +#define MINAG_WIDTH	2
+> > +#define MINTOT_WIDTH	5
+> > +#define NFLG		7		/* count of flags */
+> > +#define	FLG_NULL	00000000	/* Null flag */
+> > +#define	FLG_SHARED	01000000	/* shared extent */
+> > +#define	FLG_ATTR_FORK	00100000	/* attribute fork */
+> > +#define	FLG_PRE		00010000	/* Unwritten extent */
+> > +#define	FLG_BSU		00001000	/* Not on begin of stripe unit  */
+> > +#define	FLG_ESU		00000100	/* Not on end   of stripe unit  */
+> > +#define	FLG_BSW		00000010	/* Not on begin of stripe width */
+> > +#define	FLG_ESW		00000001	/* Not on end   of stripe width */
+> 
+> These really couldn't share w/ io/bmap.c?  :(
+> (could FLG_ATTR_FORK go to the end so that it matches bmap until then?)
 
-Got it -- since there are two mappings, there are two errseq_t's and
-you'd need a since cursor for each. I don't really like having to add a
-second 32-bit word to struct file, but I also don't see a real
-alternative right offhand. May be able to stash it in file->private_data 
-for some of these filesystems.
+Well yes, we could flip them (I already did); afaict the only change
+that needs to happen is an update to xfs/274.
 
-In any case, I'll ponder how to do this in a more piecemeal way.
+> speakinawhich, I wonder how much of this is copied from bmap, and what could
+> be shared?
+> 
+> I'm going to go off & look at that a bit, may have further comments.  :)
 
-Thanks for all of the review so far!
--- 
-Jeff Layton <jlayton@redhat.com>
+Do you have further comments?
+
+--D
+
+> 
+> 
+> > diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> > index 29a036c..2c956b8 100644
+> > --- a/man/man8/xfs_io.8
+> > +++ b/man/man8/xfs_io.8
+> > @@ -301,6 +301,53 @@ ioctl.  Options behave as described in the
+> >  .BR xfs_bmap (8)
+> >  manual page.
+> >  .TP
+> > +.BI "fsmap [ \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
+> > +Prints the mapping of disk blocks used by an XFS filesystem.
+> 
+> FOREIGN_OK too right?
+> 
+> -Eric
+> 
+> >  The map
+> > +lists each extent used by files, allocation group metadata,
+> > +journalling logs, and static filesystem metadata, as well as any
+> > +regions that are unused.  Each line of the listings takes the
+> > +following form:
+> > +.PP
+> > +.RS
+> > +.IR extent ": " major ":" minor " [" startblock .. endblock "]: " owner " " startoffset .. endoffset " " length
+> > +.PP
+> > +Static filesystem metadata, allocation group metadata, btrees,
+> > +journalling logs, and free space are marked by replacing the
+> > +.IR startoffset .. endoffset
+> > +with the appropriate marker.  All blocks, offsets, and lengths are specified
+> > +in units of 512-byte blocks, no matter what the filesystem's block size is.
+> > +.BI "The optional " start " and " end " arguments can be used to constrain
+> > +the output to a particular range of disk blocks.
+> > +.RE
+> > +.RS 1.0i
+> > +.PD 0
+> > +.TP
+> > +.BI \-n " num_extents"
+> > +If this option is given,
+> > +.B xfs_fsmap
+> > +obtains the extent list of the file in groups of
+> > +.I num_extents
+> > +extents. In the absence of
+> > +.BR \-n ", " xfs_fsmap
+> > +queries the system for the number of extents in the filesystem and uses that
+> > +value to compute the group size.
+> > +.TP
+> > +.B \-v
+> > +Shows verbose information. When this flag is specified, additional AG
+> > +specific information is appended to each line in the following form:
+> > +.IP
+> > +.RS 1.2i
+> > +.IR agno " (" startagblock .. endagblock ") " nblocks " " flags
+> > +.RE
+> > +.IP
+> > +A second
+> > +.B \-v
+> > +option will print out the
+> > +.I flags
+> > +legend.
+> > +.RE
+> > +.PD
+> > +.TP
+> >  .BI "extsize [ \-R | \-D ] [ " value " ]"
+> >  Display and/or modify the preferred extent size used when allocating
+> >  space for the currently open file. If the
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
