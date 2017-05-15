@@ -1,56 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:60694 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933582AbdEONqo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 09:46:44 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 1/2] dax: hide block device code in #ifdef
-Date: Mon, 15 May 2017 15:44:00 +0200
-Message-Id: <20170515134508.2713243-1-arnd@arndb.de>
+Received: from bombadil.infradead.org ([65.50.211.133]:54856 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934821AbdEOPne (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:43:34 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 05/17] uuid: add the v1 layout to uuid_t
+Date: Mon, 15 May 2017 17:42:56 +0200
+Message-Id: <20170515154308.26739-6-hch@lst.de>
+In-Reply-To: <20170515154308.26739-1-hch@lst.de>
+References: <20170515154308.26739-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jan Kara <jack@suse.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-We allow configurations with CONFIG_BLOCK=n and CONFIG_DAX=y, which now
-results in a link error:
+Turn the content of uuid_t into a union and add the fields for the v1
+interpretation to it.
 
-drivers/dax/super.c: In function 'bdev_dax_pgoff':
-drivers/dax/super.c:50:26: error: implicit declaration of function 'get_start_sect'; did you mean 'get_task_cred'? [-Werror=implicit-function-declaration]
-
-The two obvious ways to avoid the link error are to either add an #ifdef
-around the code that was moved from fs/block_dev.c, or to disallow the
-configuration. I could not see if there is or is not a reason to support
-this combination of options, but in case there is, the #ifdef is the
-safer choice.
-
-Fixes: ef51042472f5 ("block, dax: move "select DAX" from BLOCK to FS_DAX")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: David Howells <dhowells@redhat.com>
 ---
- drivers/dax/super.c | 2 ++
- 1 file changed, 2 insertions(+)
+ include/uapi/linux/uuid.h | 39 +++++++++++++++++++++++++++++++++------
+ 1 file changed, 33 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index ebf43f531ada..6ed32aac8bbe 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -44,6 +44,7 @@ void dax_read_unlock(int id)
- }
- EXPORT_SYMBOL_GPL(dax_read_unlock);
+diff --git a/include/uapi/linux/uuid.h b/include/uapi/linux/uuid.h
+index c31fc94695b9..6b6a583ec1fe 100644
+--- a/include/uapi/linux/uuid.h
++++ b/include/uapi/linux/uuid.h
+@@ -32,15 +32,42 @@ typedef struct {
+    (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
  
-+#ifdef CONFIG_BLOCK
- int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
- 		pgoff_t *pgoff)
- {
-@@ -112,6 +113,7 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(__bdev_dax_supported);
-+#endif
+ typedef struct {
+-	__u8 b[16];
++	union {
++		__u8			b[16];
++
++		/*
++		 * V1 (time-based) UUID definition [RFC 4122]:
++		 * - the timestamp is a 60-bit value, split 32/16/12, and goes
++		 *   in 100ns increments since midnight 15th October 1582
++		 *   - add UUID_TO_UNIX_TIME to convert unix time in 100ns
++		 *     units to UUID time
++		 * - the clock sequence is a 14-bit counter to avoid duplicate
++		 *   times
++		 */
++		struct {
++			__be32		time_low;
++			__be16		time_mid;
++			__be16		time_hi_and_version;
++#define UUID_TO_UNIX_TIME	0x01b21dd213814000ULL
++#define UUID_TIMEHI_MASK	0x0fff
++#define UUID_VERSION_TIME	0x1000	/* time-based UUID */
++#define UUID_VERSION_NAME	0x3000	/* name-based UUID */
++#define UUID_VERSION_RANDOM	0x4000	/* (pseudo-)random generated UUID */
++			u8		clock_seq_hi_and_reserved;
++#define UUID_CLOCKHI_MASK	0x3f
++#define UUID_VARIANT_STD	0x80
++			u8		clock_seq_low;
++			u8		node[6];
++		} v1;
++	};
+ } uuid_t;
  
- /**
-  * struct dax_device - anchor object for dax services
+-#define UUID(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)			\
+-((uuid_t)								\
+-{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
+-   ((b) >> 8) & 0xff, (b) & 0xff,					\
++#define UUID(a, _b, c, d0, d1, d2, d3, d4, d5, d6, d7)			\
++{ .b = {								\
++   ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
++   ((_b) >> 8) & 0xff, (_b) & 0xff,					\
+    ((c) >> 8) & 0xff, (c) & 0xff,					\
+-   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
++   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }}
+ 
+ /* backwards compatibility, don't use in new code */
+ typedef guid_t uuid_le;
 -- 
-2.9.0
+2.11.0
 
