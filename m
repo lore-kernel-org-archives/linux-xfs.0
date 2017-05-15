@@ -1,57 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45392 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751519AbdEMR0X (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 13 May 2017 13:26:23 -0400
-Date: Sun, 14 May 2017 01:26:21 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] generic/285: Add more SEEK_HOLE tests
-Message-ID: <20170513172620.GR7250@eguan.usersys.redhat.com>
-References: <20170511164809.29739-1-jack@suse.cz>
- <20170512080443.GN7250@eguan.usersys.redhat.com>
- <20170512230657.GP12369@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170512230657.GP12369@dastard>
+Received: from bombadil.infradead.org ([65.50.211.133]:54225 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933342AbdEOPoA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:44:00 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 16/17] ima/policy: switch to use uuid_t
+Date: Mon, 15 May 2017 17:43:07 +0200
+Message-Id: <20170515154308.26739-17-hch@lst.de>
+In-Reply-To: <20170515154308.26739-1-hch@lst.de>
+References: <20170515154308.26739-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Sat, May 13, 2017 at 09:06:57AM +1000, Dave Chinner wrote:
-> On Fri, May 12, 2017 at 04:04:43PM +0800, Eryu Guan wrote:
-> > On Thu, May 11, 2017 at 06:48:09PM +0200, Jan Kara wrote:
-> > > Add tests for bugs found in ext4 & xfs SEEK_HOLE implementations
-> > > fixed by following patches:
-> > > 
-> > > xfs: Fix missed holes in SEEK_HOLE implementation
-> > > ext4: Fix SEEK_HOLE
-> > > 
-> > > Signed-off-by: Jan Kara <jack@suse.cz>
-> > 
-> > This will cause ext4 and xfs start to fail with current linus tree and
-> > appear as a new regression. So we usually don't add new tests to
-> > existing cases.
-> > 
-> > But seek_sanity_test.c deals with different SEEK_DATA/HOLE implentations
-> > nicely, which would be a bit tricky to do in a new test by shell, and it
-> > has all the infrastructures for new tests like this. So I think I'd
-> > prefer merging this patch as is, and document the false regression alert
-> > in release announce email.
-> 
-> Make the new tests optional (i.e. on a cli switch) and add a new
-> xfstest that runs them? Old test remains unchanged, doesn't fail,
-> new test covers the new tests, will fail on old kernels (which is ok
-> for new tests).
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ security/integrity/ima/ima_policy.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-Yeah, this should work and looks a better solution to me. This avoids
-regressing generic/285 again when adding another new test in future,
-future tests could just follow this path too. Thanks for the suggestion!
+diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
+index 49fbc3e8f012..da3e7d50e0d7 100644
+--- a/security/integrity/ima/ima_policy.c
++++ b/security/integrity/ima/ima_policy.c
+@@ -61,7 +61,7 @@ struct ima_rule_entry {
+ 	enum ima_hooks func;
+ 	int mask;
+ 	unsigned long fsmagic;
+-	u8 fsuuid[16];
++	uuid_t fsuuid;
+ 	kuid_t uid;
+ 	kuid_t fowner;
+ 	bool (*uid_op)(kuid_t, kuid_t);    /* Handlers for operators       */
+@@ -244,7 +244,7 @@ static bool ima_match_rules(struct ima_rule_entry *rule, struct inode *inode,
+ 	    && rule->fsmagic != inode->i_sb->s_magic)
+ 		return false;
+ 	if ((rule->flags & IMA_FSUUID) &&
+-	    memcmp(rule->fsuuid, inode->i_sb->s_uuid, sizeof(rule->fsuuid)))
++	    memcmp(&rule->fsuuid, inode->i_sb->s_uuid, sizeof(rule->fsuuid)))
+ 		return false;
+ 	if ((rule->flags & IMA_UID) && !rule->uid_op(cred->uid, rule->uid))
+ 		return false;
+@@ -711,13 +711,12 @@ static int ima_parse_rule(char *rule, struct ima_rule_entry *entry)
+ 		case Opt_fsuuid:
+ 			ima_log_string(ab, "fsuuid", args[0].from);
+ 
+-			if (memchr_inv(entry->fsuuid, 0x00,
+-				       sizeof(entry->fsuuid))) {
++			if (uuid_is_null(&entry->fsuuid)) {
+ 				result = -EINVAL;
+ 				break;
+ 			}
+ 
+-			result = uuid_to_bin(args[0].from, (uuid_t *)&entry->fsuuid);
++			result = uuid_to_bin(args[0].from, &entry->fsuuid);
+ 			if (!result)
+ 				entry->flags |= IMA_FSUUID;
+ 			break;
+@@ -1086,7 +1085,7 @@ int ima_policy_show(struct seq_file *m, void *v)
+ 	}
+ 
+ 	if (entry->flags & IMA_FSUUID) {
+-		seq_printf(m, "fsuuid=%pU", entry->fsuuid);
++		seq_printf(m, "fsuuid=%pU", &entry->fsuuid);
+ 		seq_puts(m, " ");
+ 	}
+ 
+-- 
+2.11.0
 
-Jan, could you please update the patch and, as suggested by Dave, make
-it a new test? I can do it too if you like.
-
-Thanks,
-Eryu
