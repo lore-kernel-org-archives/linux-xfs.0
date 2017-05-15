@@ -1,85 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33080 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753875AbdEOMBU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 May 2017 08:01:20 -0400
-Date: Mon, 15 May 2017 14:01:14 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v4 21/27] mm: clean up error handling in write_one_page
-Message-ID: <20170515120114.GF16182@quack2.suse.cz>
-References: <20170509154930.29524-1-jlayton@redhat.com>
- <20170509154930.29524-22-jlayton@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170509154930.29524-22-jlayton@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:38471 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933342AbdEOPoI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:44:08 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 09/17] s390/sysinfo: use uuid_is_null instead of opencoding it
+Date: Mon, 15 May 2017 17:43:00 +0200
+Message-Id: <20170515154308.26739-10-hch@lst.de>
+In-Reply-To: <20170515154308.26739-1-hch@lst.de>
+References: <20170515154308.26739-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Tue 09-05-17 11:49:24, Jeff Layton wrote:
-> Don't try to check PageError since that's potentially racy and not
-> necessarily going to be set after writepage errors out.
-> 
-> Instead, sample the mapping error early on, and use that value to tell
-> us whether we got a writeback error since then.
-> 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ arch/s390/kernel/sysinfo.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Looks good to me. You can add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
-> ---
->  mm/page-writeback.c | 11 +++++------
->  1 file changed, 5 insertions(+), 6 deletions(-)
-> 
-> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> index de0dbf12e2c1..1643456881b4 100644
-> --- a/mm/page-writeback.c
-> +++ b/mm/page-writeback.c
-> @@ -2373,11 +2373,12 @@ int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
->  int write_one_page(struct page *page)
->  {
->  	struct address_space *mapping = page->mapping;
-> -	int ret = 0;
-> +	int ret = 0, ret2;
->  	struct writeback_control wbc = {
->  		.sync_mode = WB_SYNC_ALL,
->  		.nr_to_write = 1,
->  	};
-> +	errseq_t since = filemap_sample_wb_error(mapping);
->  
->  	BUG_ON(!PageLocked(page));
->  
-> @@ -2386,16 +2387,14 @@ int write_one_page(struct page *page)
->  	if (clear_page_dirty_for_io(page)) {
->  		get_page(page);
->  		ret = mapping->a_ops->writepage(page, &wbc);
-> -		if (ret == 0) {
-> +		if (ret == 0)
->  			wait_on_page_writeback(page);
-> -			if (PageError(page))
-> -				ret = -EIO;
-> -		}
->  		put_page(page);
->  	} else {
->  		unlock_page(page);
->  	}
-> -	return ret;
-> +	ret2 = filemap_check_wb_error(mapping, since);
-> +	return ret ? : ret2;
->  }
->  EXPORT_SYMBOL(write_one_page);
->  
-> -- 
-> 2.9.3
-> 
-> 
+diff --git a/arch/s390/kernel/sysinfo.c b/arch/s390/kernel/sysinfo.c
+index eefcb54872a5..fb869b103825 100644
+--- a/arch/s390/kernel/sysinfo.c
++++ b/arch/s390/kernel/sysinfo.c
+@@ -242,7 +242,7 @@ static void print_ext_name(struct seq_file *m, int lvl,
+ 
+ static void print_uuid(struct seq_file *m, int i, struct sysinfo_3_2_2 *info)
+ {
+-	if (!memcmp(&info->vm[i].uuid, &NULL_UUID_BE, sizeof(uuid_be)))
++	if (uuid_is_null(&info->vm[i].uuid))
+ 		return;
+ 	seq_printf(m, "VM%02d UUID:            %pUb\n", i, &info->vm[i].uuid);
+ }
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.11.0
+
