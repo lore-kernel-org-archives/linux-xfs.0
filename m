@@ -1,117 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17519 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757262AbdELAsX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2017 20:48:23 -0400
-Date: Thu, 11 May 2017 17:48:06 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/9] mkfs.xfs: add mkfs.xfs.conf support
-Message-ID: <20170512004806.GE4519@birch.djwong.org>
-References: <20170309005130.GC14437@wotan.suse.de>
- <ac91cbba-83b7-31d4-0fc9-cdb52286acdf@sandeen.net>
- <20170309175750.GE14437@wotan.suse.de>
- <20170309223435.GT17542@dastard>
- <20170424050010.GD28800@wotan.suse.de>
- <CACj3i70n4RctOrBVY4Jh8+p7=8NzfPDMp0o4+05nE76AV7ofSA@mail.gmail.com>
- <CAB=NE6XoEoRo-iBP8vgC7shNQoK9j=unM6_YpDs1p26+i+wQ7A@mail.gmail.com>
- <20170511224603.GA28800@wotan.suse.de>
- <646aa740-a9fc-98df-df9f-6b89bbed7261@sandeen.net>
- <CAB=NE6VDPunttSgH9qEhcPSHDdCvzUTskBbzPyhwnJ8Y9Jny2w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAB=NE6VDPunttSgH9qEhcPSHDdCvzUTskBbzPyhwnJ8Y9Jny2w@mail.gmail.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:40863 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933771AbdEOPnc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:43:32 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 08/17] uuid: hoist uuid_is_null() helper from libnvdimm
+Date: Mon, 15 May 2017 17:42:59 +0200
+Message-Id: <20170515154308.26739-9-hch@lst.de>
+In-Reply-To: <20170515154308.26739-1-hch@lst.de>
+References: <20170515154308.26739-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Jan Tulak <jtulak@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, jack@suse.com, Jeff Mahoney <jeffm@suse.com>, okurz@suse.com, Libor Pechacek <lpechacek@suse.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Thu, May 11, 2017 at 04:08:59PM -0700, Luis R. Rodriguez wrote:
-> On Thu, May 11, 2017 at 3:57 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> > On 5/11/17 5:46 PM, Luis R. Rodriguez wrote:
-> >
-> >> FWIW, I've looked at ways to address this without your future work Jan, ie
-> >> backporting this feature, and ultimately have decided to *not* allow any
-> >> command line overwrite for options specified in the configuration file. So
-> >> for the backported versions of this feature a user will only be able to
-> >> overwrite if the config file is commented out or removed.
-> >>
-> >> How we end up doing this upstream may differ given we may have a way to
-> >> properly do sanity checks overall and treat "defaults" as real "defaults".
-> >> But without such mechanisms implementing a sensible way to overwrite things
-> >> in a compatible way was just crap.
-> >>
-> >> As such for the backported versions of this feature I'll make this big note
-> >> on the man page:
-> >
-> > I'm a little confused - backported from where to where?  I'm not sure what
-> > a "backport" means in this context, when there is no upstream solution at this
-> > time.
-> 
-> Since we're still waiting for a bit of delta before I can push this
-> work then from my development tree to a stable older release.
-> 
-> >> """
-> >> One  of  the uses of the configuration file is to enable distributions
-> >> to provide mkfs.xfs(8) updates from a base distribution release and enable to
-> >> create filesystems which are sure to remain supported and compatible. As such
-> >> systems with a mkfs.xfs.conf(5) file present have very likely been well thought
-> >> out, and  overriding configuration  file  defaults is discouraged unless you
-> >> know what you are doing and are familiar with the associated risks.  If you
-> >> know what you are doing, wish to waive compatibility, and wish to overwrite the
-> >> configuration file provided the best option is to either remove or uncomment
-> >> the  configuration  file  completely  as options cannot be overwritten on the
-> >> command line.
-> >> """
-> >
-> > So are you planning a forked, non-upstream behavior for your distro?
-> 
-> Right.
+Hoist the libnvdimm helper as an inline helper to linux/uuid.h
+using an auxiliary const variable uuid_null in lib/uuid.c.
 
-Correct me if I'm wrong, but with this proposal we end up with the SuSE
-mkfs.xfs where if I write "rmapbt=0" in /etc/xfs.conf then I cannot
-later run `mkfs.xfs -m rmapbt=1` and have rmapbt turned on; whereas
-with the upstream mkfs.xfs if I write "rmapbt=0" in /etc/xfs.conf I
-/can/ later run `mkfs.fs -m rmapbt=1` and rmapbt gets turned on?
+[hch: also add the guid variant.  Both do the same but I'd like
+to keep casts to a minimum]
 
-That will create a lot of user script pain when command line options
-cause mkfs to fail in SuSE but they work fine everywhere else, right?
+The common helper uses the new abstract type uuid_t * instead of
+u8 *.
 
---D
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: David Howells <dhowells@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+[hch: added guid_is_null]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/nvdimm/btt_devs.c |  9 +--------
+ include/linux/uuid.h      | 13 +++++++++++++
+ lib/uuid.c                |  5 +++++
+ 3 files changed, 19 insertions(+), 8 deletions(-)
 
-> 
-> > I think that disallowing commandline overrides of configfile settings is a
-> > mistake, and not what we'd want upstream.
-> 
-> For upstream I agree. Its how config files typically work after all.
-> 
-> > If you do it as a fork, mkfs should fail if conflicting options are specified, IMHO.
-> 
-> Sure, conflict check will be retained given the same command line
-> option mechanism would be used to set whatever is in the config file.
-> 
-> > The worst of all possible
-> > worlds is an admin typing an otherwise valid mkfs command, and getting a
-> > "successful" result which is /not/ what was specified by the user.
-> 
-> Right.
-> 
-> > Honestly, until an upstream solution is found, simply patching in new defaults
-> > seems safest (and least-element-of-surprise) for a distro.
-> 
-> Thing is we have no such easy "default" mechanism today. In the future
-> it sounds like this will change so what you describe should be much
-> easier. Sure, today a few options are set to 0 on main(), but trying
-> to see when an option actually gets set to a default value if no other
-> options are set is non trivial.
-> 
-> As for the backported approach, I don't expect the config file to
-> retain many options after all, only what is necessary to retain
-> compatibility with a base distro release.
-> 
->   Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/nvdimm/btt_devs.c b/drivers/nvdimm/btt_devs.c
+index ae00dc0d9791..4c989bb9a8a0 100644
+--- a/drivers/nvdimm/btt_devs.c
++++ b/drivers/nvdimm/btt_devs.c
+@@ -222,13 +222,6 @@ struct device *nd_btt_create(struct nd_region *nd_region)
+ 	return dev;
+ }
+ 
+-static bool uuid_is_null(u8 *uuid)
+-{
+-	static const u8 null_uuid[16];
+-
+-	return (memcmp(uuid, null_uuid, 16) == 0);
+-}
+-
+ /**
+  * nd_btt_arena_is_valid - check if the metadata layout is valid
+  * @nd_btt:	device with BTT geometry and backing device info
+@@ -249,7 +242,7 @@ bool nd_btt_arena_is_valid(struct nd_btt *nd_btt, struct btt_sb *super)
+ 	if (memcmp(super->signature, BTT_SIG, BTT_SIG_LEN) != 0)
+ 		return false;
+ 
+-	if (!uuid_is_null(super->parent_uuid))
++	if (!guid_is_null((guid_t *)&super->parent_uuid))
+ 		if (memcmp(super->parent_uuid, parent_uuid, 16) != 0)
+ 			return false;
+ 
+diff --git a/include/linux/uuid.h b/include/linux/uuid.h
+index 21218351ae26..f0e2a645e2bb 100644
+--- a/include/linux/uuid.h
++++ b/include/linux/uuid.h
+@@ -48,6 +48,9 @@ struct uuid_v1 {
+  */
+ #define	UUID_STRING_LEN		36
+ 
++extern const guid_t guid_null;
++extern const uuid_t uuid_null;
++
+ static inline bool guid_equal(const guid_t *u1, const guid_t *u2)
+ {
+ 	return memcmp(u1, u2, sizeof(guid_t)) == 0;
+@@ -58,6 +61,11 @@ static inline void guid_copy(guid_t *dst, const guid_t *src)
+ 	memcpy(dst, src, sizeof(guid_t));
+ }
+ 
++static inline bool guid_is_null(guid_t *guid)
++{
++	return guid_equal(guid, &guid_null);
++}
++
+ static inline bool uuid_equal(const uuid_t *u1, const uuid_t *u2)
+ {
+ 	return memcmp(u1, u2, sizeof(uuid_t)) == 0;
+@@ -68,6 +76,11 @@ static inline void uuid_copy(uuid_t *dst, const uuid_t *src)
+ 	memcpy(dst, src, sizeof(uuid_t));
+ }
+ 
++static inline bool uuid_is_null(uuid_t *uuid)
++{
++	return uuid_equal(uuid, &uuid_null);
++}
++
+ void generate_random_uuid(unsigned char uuid[16]);
+ 
+ extern void guid_gen(guid_t *u);
+diff --git a/lib/uuid.c b/lib/uuid.c
+index 003bf6823003..25145bfb0eaa 100644
+--- a/lib/uuid.c
++++ b/lib/uuid.c
+@@ -21,6 +21,11 @@
+ #include <linux/uuid.h>
+ #include <linux/random.h>
+ 
++const guid_t guid_null;
++EXPORT_SYMBOL(guid_null);
++const uuid_t uuid_null;
++EXPORT_SYMBOL(uuid_null);
++
+ const u8 guid_index[16] = {3,2,1,0,5,4,7,6,8,9,10,11,12,13,14,15};
+ const u8 uuid_index[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+ 
+-- 
+2.11.0
+
