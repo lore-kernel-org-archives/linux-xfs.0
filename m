@@ -1,92 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:21804 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751123AbdENW0U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 May 2017 18:26:20 -0400
-Date: Mon, 15 May 2017 08:26:16 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] libxfs: use crc32c slice-by-8 variant by default
-Message-ID: <20170514222616.GM17542@dastard>
-References: <20170513193344.GK4519@birch.djwong.org>
- <20170513234545.GL17542@dastard>
- <20170514012522.GL4519@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:57374 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964908AbdEONfw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 15 May 2017 09:35:52 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 6051F3D960
+        for <linux-xfs@vger.kernel.org>; Mon, 15 May 2017 13:35:52 +0000 (UTC)
+Date: Mon, 15 May 2017 09:35:50 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: bad assertion for delalloc an extent that start at
+ i_size
+Message-ID: <20170515133550.GC27809@bfoster.bfoster>
+References: <1494843710-15350-1-git-send-email-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170514012522.GL4519@birch.djwong.org>
+In-Reply-To: <1494843710-15350-1-git-send-email-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Sat, May 13, 2017 at 06:25:22PM -0700, Darrick J. Wong wrote:
-> On Sun, May 14, 2017 at 09:45:45AM +1000, Dave Chinner wrote:
-> > On Sat, May 13, 2017 at 12:33:44PM -0700, Darrick J. Wong wrote:
-> > > The crc32c code used in xfsprogs was copied directly from the Linux
-> > > kernel.  However, that code selects slice-by-4 by default, which isn't
-> > > the fastest -- that's slice-by-8, which trades table size for speed.
-> > > Fix some makefile dependency problems and explicitly select the
-> > > algorithm we want.  With this patch applied, I see about a 10% drop in
-> > > CPU time running xfs_repair.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  libxfs/Makefile    |    4 ++--
-> > >  libxfs/crc32defs.h |    3 +++
-> > >  2 files changed, 5 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/libxfs/Makefile b/libxfs/Makefile
-> > > index 0f3759e..c5dc382 100644
-> > > --- a/libxfs/Makefile
-> > > +++ b/libxfs/Makefile
-> > > @@ -124,7 +124,7 @@ LDIRT = gen_crc32table crc32table.h crc32selftest
-> > >  
-> > >  default: crc32selftest ltdepend $(LTLIBRARY)
-> > >  
-> > > -crc32table.h: gen_crc32table.c
-> > > +crc32table.h: gen_crc32table.c crc32defs.h
-> > >  	@echo "    [CC]     gen_crc32table"
-> > >  	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
-> > >  	@echo "    [GENERATE] $@"
-> > > @@ -135,7 +135,7 @@ crc32table.h: gen_crc32table.c
-> > >  # systems/architectures. Hence we make sure that xfsprogs will never use a
-> > >  # busted CRC calculation at build time and hence avoid putting bad CRCs down on
-> > >  # disk.
-> > > -crc32selftest: gen_crc32table.c crc32table.h crc32.c
-> > > +crc32selftest: gen_crc32table.c crc32table.h crc32.c crc32defs.h
-> > >  	@echo "    [TEST]    CRC32"
-> > >  	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
-> > >  	$(Q) ./$@
-> > > diff --git a/libxfs/crc32defs.h b/libxfs/crc32defs.h
-> > > index 64cba2c..153f44c 100644
-> > > --- a/libxfs/crc32defs.h
-> > > +++ b/libxfs/crc32defs.h
-> > > @@ -1,3 +1,6 @@
-> > > +/* Use slice-by-8, which is the fastest variant. */
-> > > +# define CRC_LE_BITS 64
-> > 
-> > I'm not sure this works on all platforms and builds, whereas the
-> > existing slice-by-4 default should work for them all
+On Mon, May 15, 2017 at 06:21:50PM +0800, Zorro Lang wrote:
+> By run fsstress long enough time enough in RHEL-7, I find an
+> assertion failure (harder to reproduce on linux-4.11, but problem
+> is still there):
 > 
-> That's why we have a selftest to ensure that the implementation isn't
-> busted no matter which method we pick.
+>   XFS: Assertion failed: (iflags & BMV_IF_DELALLOC) != 0, file: fs/xfs/xfs_bmap_util.c
+> 
+> The assertion is in xfs_getbmap() funciton:
+> 
+>   if (map[i].br_startblock == DELAYSTARTBLOCK &&
+> -->   map[i].br_startoff <= XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
+>           ASSERT((iflags & BMV_IF_DELALLOC) != 0);
+> 
+> When map[i].br_startoff == XFS_B_TO_FSB(mp, XFS_ISIZE(ip)), the
+> startoff is just at EOF. But we only need to make sure delalloc
+> extents that are within EOF, not include EOF.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
 
-<snip long explanation>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> For nearly all of XFS' perceived
-> userbase (which I assume are 32 and 64-bit machines with sufficiently
-> large CPU cache and largeish storage devices) I think slice by 8 is the
-> right choice.
-
-If it takes you that much text to explain why it's a) safe and b)
-desirable for all xfsprogs users, then short commit message that
-effectively only says "slice-by-8 is 10% faster" is not
-sufficient....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  fs/xfs/xfs_bmap_util.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 8795e9c..a6d83ea 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -713,7 +713,7 @@ xfs_getbmap(
+>  			 * extents.
+>  			 */
+>  			if (map[i].br_startblock == DELAYSTARTBLOCK &&
+> -			    map[i].br_startoff <= XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
+> +			    map[i].br_startoff < XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
+>  				ASSERT((iflags & BMV_IF_DELALLOC) != 0);
+>  
+>                          if (map[i].br_startblock == HOLESTARTBLOCK &&
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
