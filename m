@@ -1,180 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:47995 "EHLO mga14.intel.com"
+Received: from sandeen.net ([63.231.237.45]:40636 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758272AbdENA65 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 13 May 2017 20:58:57 -0400
-Subject: [PATCH] dax, xfs,
- ext4: compile out iomap-dax paths in the FS_DAX=n case
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 13 May 2017 17:53:04 -0700
-Message-ID: <149472318419.18012.5702423859819830972.stgit@dwillia2-desk3.amr.corp.intel.com>
+        id S935224AbdEOQwt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 15 May 2017 12:52:49 -0400
+Subject: Re: permanent XFS volume corruption
+References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
+ <591493D00200007800158EA3@prv-mh.provo.novell.com>
+ <a185194a-af56-cd53-cfb9-653e3b5f81b7@sandeen.net>
+ <591571BC0200007800159165@prv-mh.provo.novell.com>
+ <30296667-47d7-8b94-472a-1d4b96120c09@sandeen.net>
+ <5915DE47020000780015946C@prv-mh.provo.novell.com>
+ <23c75521-a65b-d105-f274-3d1aba09e6ae@sandeen.net>
+ <574ee8c5-71f9-eba5-b779-49be4086b6c8@sandeen.net>
+ <59198F810200007800159B81@prv-mh.provo.novell.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <4dd8c329-2e38-263c-35d4-0756c6cf9e65@sandeen.net>
+Date: Mon, 15 May 2017 11:52:37 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <59198F810200007800159B81@prv-mh.provo.novell.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Theodore Ts'o <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org
+To: Jan Beulich <JBeulich@suse.com>
+Cc: linux-xfs@vger.kernel.org
 
-Tetsuo reports:
+On 5/15/17 4:22 AM, Jan Beulich wrote:
+>>>> On 12.05.17 at 17:11, <sandeen@sandeen.net> wrote:
+> 
+>>
+>> On 5/12/17 10:04 AM, Eric Sandeen wrote:
+>>> On 5/12/17 9:09 AM, Jan Beulich wrote:
+>>>>>>> On 12.05.17 at 15:56, <sandeen@sandeen.net> wrote:
+>>>>> On 5/12/17 1:26 AM, Jan Beulich wrote:
+>>>>>> So on the earlier instance, where I did run actual repairs (and
+>>>>>> indeed multiple of them), the problem re-surfaces every time
+>>>>>> I mount the volume again.
+>>>>> Ok, what is the exact sequence there, from repair to re-corruption?
+>>>> Simply mount the volume after repairing (with or without an
+>>>> intermediate reboot) and access respective pieces of the fs
+>>>> again. As said, with /var/run affected on that first occasion,
+>>>> I couldn't even cleanly boot again without seeing the
+>>>> corruption re-surface.
+>>>
+>>> Mount under what kernel, and access in what way?  I'm looking for a
+>>> recipe to reproduce what you've seen using the metadump you've provided.
+>>>
+>>> However:
+>>>
+>>> With further testing I see that xfs_repair v3.1.8 /does not/
+>>> entirely fix the fs; if I run 3.1.8 and then run upstream repair, it
+>>> finds and fixes more bad flags on inode 764 (lib/xenstored/tdb) that 3.1.8
+>>> didn't touch.  The verifiers in an upstream kernel may keep tripping
+>>> over that until newer repair fixes it...
+>>
+>> (Indeed just running xfs_repair 3.1.8 finds the same corruption over and 
+>> over)
+>>
+>> Please try a newer xfs_repair, and see if it resolves your problem.
+> 
+> It seems to have improved the situation (on the first system I had
+> the issue on), but leaves me with at least "Operation not permitted"
+> upon init scripts (or me manually) rm-ing (or mv-ing) /var/run/*.pid
+> (or mv-ing even /var/run itself). I'm not sure how worried I need to
+> be, but this surely doesn't look overly healthy yet. The kernel
+> warnings are all gone, though.
 
-  fs/built-in.o: In function `xfs_file_iomap_end':
-  xfs_iomap.c:(.text+0xe0ef9): undefined reference to `put_dax'
-  fs/built-in.o: In function `xfs_file_iomap_begin':
-  xfs_iomap.c:(.text+0xe1a7f): undefined reference to `dax_get_by_host'
-  make: *** [vmlinux] Error 1
-  $ grep DAX .config
-  CONFIG_DAX=m
-  # CONFIG_DEV_DAX is not set
-  # CONFIG_FS_DAX is not set
+xfs_repair simply makes the filesystem consistent, it doesn't perform
+any other magic.  :)  The corruption we saw was related to incorrect
+flags set on an inode - in some cases flags like immutable which can
+affect access to the file.
 
-When FS_DAX=n we can/must throw away the dax code in filesystems.
-Implement 'fs_' versions of dax_get_by_host() and put_dax() that are
-nops in the FS_DAX=n case.
+I'm not sure we've made much progress on the root cause of whatever set
+those extra flags*, but all repair will do is make them sane from a
+filesystem consistency POV, not from an OS operation POV.
 
-Cc: <linux-xfs@vger.kernel.org>
-Cc: <linux-ext4@vger.kernel.org>
-Cc: Jan Kara <jack@suse.com>
-Cc: "Theodore Ts'o" <tytso@mit.edu>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Fixes: ef51042472f5 ("block, dax: move 'select DAX' from BLOCK to FS_DAX")
-Reported-by: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/ext2/inode.c     |    4 ++--
- fs/ext4/inode.c     |    4 ++--
- fs/xfs/xfs_iomap.c  |    4 ++--
- include/linux/dax.h |   34 +++++++++++++++++++++++++++-------
- 4 files changed, 33 insertions(+), 13 deletions(-)
+Check the files in question with lsattr, and see if there are unexpected
+flags still set.
 
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 26d77f9f8c12..2dcbd5698884 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -817,7 +817,7 @@ static int ext2_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 	iomap->bdev = bdev;
- 	iomap->offset = (u64)first_block << blkbits;
- 	if (blk_queue_dax(bdev->bd_queue))
--		iomap->dax_dev = dax_get_by_host(bdev->bd_disk->disk_name);
-+		iomap->dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
- 	else
- 		iomap->dax_dev = NULL;
- 
-@@ -841,7 +841,7 @@ static int
- ext2_iomap_end(struct inode *inode, loff_t offset, loff_t length,
- 		ssize_t written, unsigned flags, struct iomap *iomap)
- {
--	put_dax(iomap->dax_dev);
-+	fs_put_dax(iomap->dax_dev);
- 	if (iomap->type == IOMAP_MAPPED &&
- 	    written < length &&
- 	    (flags & IOMAP_WRITE))
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 5834c4d76be8..1bd0bfa547f6 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3412,7 +3412,7 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 	bdev = inode->i_sb->s_bdev;
- 	iomap->bdev = bdev;
- 	if (blk_queue_dax(bdev->bd_queue))
--		iomap->dax_dev = dax_get_by_host(bdev->bd_disk->disk_name);
-+		iomap->dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
- 	else
- 		iomap->dax_dev = NULL;
- 	iomap->offset = first_block << blkbits;
-@@ -3447,7 +3447,7 @@ static int ext4_iomap_end(struct inode *inode, loff_t offset, loff_t length,
- 	int blkbits = inode->i_blkbits;
- 	bool truncate = false;
- 
--	put_dax(iomap->dax_dev);
-+	fs_put_dax(iomap->dax_dev);
- 	if (!(flags & IOMAP_WRITE) || (flags & IOMAP_FAULT))
- 		return 0;
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index a63f61c256bd..94e5bdf7304c 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1068,7 +1068,7 @@ xfs_file_iomap_begin(
- 	/* optionally associate a dax device with the iomap bdev */
- 	bdev = iomap->bdev;
- 	if (blk_queue_dax(bdev->bd_queue))
--		iomap->dax_dev = dax_get_by_host(bdev->bd_disk->disk_name);
-+		iomap->dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
- 	else
- 		iomap->dax_dev = NULL;
- 
-@@ -1149,7 +1149,7 @@ xfs_file_iomap_end(
- 	unsigned		flags,
- 	struct iomap		*iomap)
- {
--	put_dax(iomap->dax_dev);
-+	fs_put_dax(iomap->dax_dev);
- 	if ((flags & IOMAP_WRITE) && iomap->type == IOMAP_DELALLOC)
- 		return xfs_file_iomap_end_delalloc(XFS_I(inode), offset,
- 				length, written, iomap);
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 00ebac854bb7..5ec1f6c47716 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -18,6 +18,20 @@ struct dax_operations {
- 			void **, pfn_t *);
- };
- 
-+#if IS_ENABLED(CONFIG_DAX)
-+struct dax_device *dax_get_by_host(const char *host);
-+void put_dax(struct dax_device *dax_dev);
-+#else
-+static inline struct dax_device *dax_get_by_host(const char *host)
-+{
-+	return NULL;
-+}
-+
-+static inline void put_dax(struct dax_device *dax_dev)
-+{
-+}
-+#endif
-+
- int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
- #if IS_ENABLED(CONFIG_FS_DAX)
- int __bdev_dax_supported(struct super_block *sb, int blocksize);
-@@ -25,23 +39,29 @@ static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
- {
- 	return __bdev_dax_supported(sb, blocksize);
- }
-+
-+static inline struct dax_device *fs_dax_get_by_host(const char *host)
-+{
-+	return dax_get_by_host(host);
-+}
-+
-+static inline void fs_put_dax(struct dax_device *dax_dev)
-+{
-+	put_dax(dax_dev);
-+}
-+
- #else
- static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
- {
- 	return -EOPNOTSUPP;
- }
--#endif
- 
--#if IS_ENABLED(CONFIG_DAX)
--struct dax_device *dax_get_by_host(const char *host);
--void put_dax(struct dax_device *dax_dev);
--#else
--static inline struct dax_device *dax_get_by_host(const char *host)
-+static inline struct dax_device *fs_dax_get_by_host(const char *host)
- {
- 	return NULL;
- }
- 
--static inline void put_dax(struct dax_device *dax_dev)
-+static inline void fs_put_dax(struct dax_device *dax_dev)
- {
- }
- #endif
+-Eric
+
+* but backing up towards root cause, you said this all started when a 4.11
+kernel crashed, and the log replayed?  What kind of crash, what caused it,
+what were the messages?
+
+> Jan
 
