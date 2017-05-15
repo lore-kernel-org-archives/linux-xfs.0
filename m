@@ -1,161 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37432 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750821AbdE3S4m (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 30 May 2017 14:56:42 -0400
-Subject: Re: [PATCH 7/9] xfs_spaceman: Free space mapping command
-References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
- <149417262028.24656.18212282685789184986.stgit@birch.djwong.org>
- <183c279a-61c8-f0bd-64da-d7d0e99f2a6d@sandeen.net>
- <20170530184041.GA4519@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d2defe9d-643e-109c-e070-c25c79f5d6fe@sandeen.net>
-Date: Tue, 30 May 2017 13:56:39 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:47506 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751314AbdEOQXP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 12:23:15 -0400
+Date: Mon, 15 May 2017 09:23:08 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] libxfs: use crc32c slice-by-8 variant by default
+Message-ID: <20170515162308.GN4519@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170530184041.GA4519@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
 
-On 5/30/17 1:40 PM, Darrick J. Wong wrote:
-> On Fri, May 26, 2017 at 08:57:14PM -0500, Eric Sandeen wrote:
->>
->>
->> On 5/7/17 10:57 AM, Darrick J. Wong wrote:
->>> From: Dave Chinner <dchinner@redhat.com>
->>>
->>> Add freespace mapping tool modelled on the xfs_db freesp command.
->>> The advantage of this command over xfs_db is that it can be done
->>> online and is coherent with concurrent modifications to the
->>> filesystem.
->>>
->>> This requires the kernel to support the XFS_IOC_GETFSMAP ioctl to map
->>> free space indexes.
->>>
->>> Signed-off-by: Dave Chinner <dchinner@redhat.com>
->>> [darrick: port from FIEMAPFS to GETFSMAP]
->>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->>> ---
->>>  spaceman/Makefile   |   12 +-
->>>  spaceman/ag.c       |    1 
->>>  spaceman/file.c     |   18 ++-
->>>  spaceman/freesp.c   |  367 +++++++++++++++++++++++++++++++++++++++++++++++++++
->>>  spaceman/init.c     |    9 +
->>>  spaceman/prealloc.c |    1 
->>>  spaceman/space.h    |   12 +-
->>>  spaceman/trim.c     |    1 
->>>  8 files changed, 413 insertions(+), 8 deletions(-)
->>>  create mode 100644 spaceman/freesp.c
->>>
->>>
->>> diff --git a/spaceman/Makefile b/spaceman/Makefile
->>> index 08709b3..3b059ca 100644
->>> --- a/spaceman/Makefile
->>> +++ b/spaceman/Makefile
->>> @@ -7,8 +7,12 @@ include $(TOPDIR)/include/builddefs
->>>  
->>>  LTCOMMAND = xfs_spaceman
->>>  HFILES = init.h space.h
->>> -CFILES = init.c \
->>> -	ag.c file.c prealloc.c trim.c
->>> +CFILES = ag.c \
->>> +	 file.c \
->>> +	 init.c \
->>> +	 prealloc.c \
->>> +	 trim.c
->>> +
->>>  
->>>  LLDLIBS = $(LIBXCMD)
->>>  LTDEPENDENCIES = $(LIBXCMD)
->>> @@ -22,6 +26,10 @@ ifeq ($(ENABLE_EDITLINE),yes)
->>>  LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
->>>  endif
->>>  
->>> +ifeq ($(HAVE_GETFSMAP),yes)
->>> +CFILES += freesp.c
->>> +endif
->>> +
->>>  default: depend $(LTCOMMAND)
->>>  
->>>  include $(BUILDRULES)
->>> diff --git a/spaceman/ag.c b/spaceman/ag.c
->>> index 1eb8aa0..0f1c869 100644
->>> --- a/spaceman/ag.c
->>> +++ b/spaceman/ag.c
->>> @@ -21,6 +21,7 @@
->>>  #include "command.h"
->>>  #include "input.h"
->>>  #include "init.h"
->>> +#include "path.h"
->>>  #include "space.h"
->>>  
->>>  #ifndef XFS_IOC_AGCONTROL
->>> diff --git a/spaceman/file.c b/spaceman/file.c
->>> index 9356066..7c5ea0e 100644
->>> --- a/spaceman/file.c
->>> +++ b/spaceman/file.c
->>> @@ -22,6 +22,7 @@
->>>  #include "command.h"
->>>  #include "input.h"
->>>  #include "init.h"
->>> +#include "path.h"
->>>  #include "space.h"
->>>  
->>>  static cmdinfo_t print_cmd;
->>> @@ -69,8 +70,10 @@ openfile(
->>>  	char		*path,
->>>  	xfs_fsop_geom_t	*geom,
->>>  	int		flags,
->>> -	mode_t		mode)
->>> +	mode_t		mode,
->>> +	struct fs_path	*fs_path)
->>>  {
->>> +	struct fs_path	*fsp;
->>>  	int		fd;
->>>  
->>>  	fd = open(path, flags, mode);
->>> @@ -95,6 +98,15 @@ openfile(
->>>  		close(fd);
->>>  		return -1;
->>>  	}
->>> +
->>> +	if (fs_path) {
->>> +		fsp = fs_table_lookup(path, FS_MOUNT_POINT);
->>> +		if (!fsp) {
->>> +			fprintf(stderr, _("Unable to find XFS information."));
->>
->> If I got that error I wouldn't know what it meant...
-> 
-> "Unable to find mount information." ?
+The crc32c code used in xfsprogs was copied directly from the Linux
+kernel.  However, that code selects slice-by-4 by default, which isn't
+the fastest -- that's slice-by-8, which trades table size for speed.
+Fix some makefile dependency problems and explicitly select the
+algorithm we want.  With this patch applied, I see about a 10% drop in
+CPU time running xfs_repair.
 
-I think that if the path isn't found in the table, that means it wasn't
-populated on startup, which means it's not [on] an XFS filesystem:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/Makefile    |    4 ++--
+ libxfs/crc32defs.h |   34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 2 deletions(-)
 
-        fs = fs_table_lookup(argv[optind], FS_MOUNT_POINT);
-        if (!fs) {
-                fprintf(stderr, _("%s: %s is not a mounted XFS filesystem\n"),
-                        progname, argv[optind]);
-                return 1;
-        }
-
-or
-
-                fprintf(stderr, _("file argument, \"%s\", is not in a mounted XFS filesystem\n"),
-                        file->name);
-
-is what other tools do (although quota does:
-
-                fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
-or
-                fprintf(stderr, "%s: cannot find mount point %s\n",)
-
-
-Anyway: I think the failure means that the path is not [on] an xfs filesystem,
-so that's probably the best information to convey.
-
--Eric
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index 0f3759e..c5dc382 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -124,7 +124,7 @@ LDIRT = gen_crc32table crc32table.h crc32selftest
+ 
+ default: crc32selftest ltdepend $(LTLIBRARY)
+ 
+-crc32table.h: gen_crc32table.c
++crc32table.h: gen_crc32table.c crc32defs.h
+ 	@echo "    [CC]     gen_crc32table"
+ 	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
+ 	@echo "    [GENERATE] $@"
+@@ -135,7 +135,7 @@ crc32table.h: gen_crc32table.c
+ # systems/architectures. Hence we make sure that xfsprogs will never use a
+ # busted CRC calculation at build time and hence avoid putting bad CRCs down on
+ # disk.
+-crc32selftest: gen_crc32table.c crc32table.h crc32.c
++crc32selftest: gen_crc32table.c crc32table.h crc32.c crc32defs.h
+ 	@echo "    [TEST]    CRC32"
+ 	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
+ 	$(Q) ./$@
+diff --git a/libxfs/crc32defs.h b/libxfs/crc32defs.h
+index 64cba2c..2999782 100644
+--- a/libxfs/crc32defs.h
++++ b/libxfs/crc32defs.h
+@@ -1,4 +1,38 @@
+ /*
++ * Use slice-by-8, which is the fastest variant.
++ *
++ * Calculate checksum 8 bytes at a time with a clever slicing algorithm.
++ * This is the fastest algorithm, but comes with a 8KiB lookup table.
++ * Most modern processors have enough cache to hold this table without
++ * thrashing the cache.
++ *
++ * The Linux kernel uses this as the default implementation "unless you
++ * have a good reason not to".  The reason why Kconfig urges you to pick
++ * SLICEBY8 is because people challenged the assertion that we should
++ * always use slice by 8, so Darrick wrote a crc microbenchmark utility
++ * and ran it on as many machines as he could get his hands on to show
++ * that sb8 was the fastest.
++ *
++ * Every 64-bit machine (and most of the 32-bit ones too) saw the best
++ * results with sb8.  Any machine with more than 4K of cache saw better
++ * results.  The spreadsheet still exists today[1]; note that
++ * 'crc32-kern-le' corresponds to the slice by 4 algorithm which is the
++ * default unless CRC_LE_BITS is defined explicitly.
++ *
++ * FWIW, there are a handful of board defconfigs in the kernel that
++ * don't pick sliceby8.  These are all embedded 32-bit mips/ppc systems
++ * with very small cache sizes which experience cache thrashing with the
++ * slice by 8 algorithm, and therefore chose to pick defaults that are
++ * saner for their particular board configuration.  For nearly all of
++ * XFS' perceived userbase (which we assume are 32 and 64-bit machines
++ * with sufficiently large CPU cache and largeish storage devices) slice
++ * by 8 is the right choice.
++ *
++ * [1] https://goo.gl/0LSzsG ("crc32c_bench")
++ */
++#define CRC_LE_BITS 64
++
++/*
+  * There are multiple 16-bit CRC polynomials in common use, but this is
+  * *the* standard CRC-32 polynomial, first popularized by Ethernet.
+  * x^32+x^26+x^23+x^22+x^16+x^12+x^11+x^10+x^8+x^7+x^5+x^4+x^2+x^1+x^0
