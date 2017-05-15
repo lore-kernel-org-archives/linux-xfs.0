@@ -1,82 +1,193 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47100 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751729AbdELXL5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 May 2017 19:11:57 -0400
-Subject: Re: [PATCH 0.9/9] xfs: introduce the XFS_IOC_GETFSMAP ioctl
-References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
- <20170508194755.GK5973@birch.djwong.org>
- <041fd06c-a3bc-e743-91b6-8ed6a33c78a5@sandeen.net>
- <20170512230509.GJ4519@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ffa4fc3e-d447-e46c-1861-1f5255ed2139@sandeen.net>
-Date: Fri, 12 May 2017 18:11:56 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170512230509.GJ4519@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Received: from bombadil.infradead.org ([65.50.211.133]:50323 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966219AbdEOPny (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:43:54 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 14/17] xfs: use the common helper uuid_is_null()
+Date: Mon, 15 May 2017 17:43:05 +0200
+Message-Id: <20170515154308.26739-15-hch@lst.de>
+In-Reply-To: <20170515154308.26739-1-hch@lst.de>
+References: <20170515154308.26739-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On 5/12/17 6:05 PM, Darrick J. Wong wrote:
-> On Fri, May 12, 2017 at 05:29:32PM -0500, Eric Sandeen wrote:
->> On 5/8/17 2:47 PM, Darrick J. Wong wrote:
->>> From: Darrick J. Wong <darrick.wong@oracle.com>
->>>
->>> Introduce a new ioctl that uses the reverse mapping btree to return
->>> information about the physical layout of the filesystem.
->>>
->>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->>> ---
->>>  configure.ac          |    1 
->>>  include/builddefs.in  |    7 +++
->>>  include/linux.h       |  109 +++++++++++++++++++++++++++++++++++++++++++++++++
->>
->> So, I'm torn about whether we should be adding all the fsmap definitions
->> into xfsprogs.  (I know... I did it for statx; I'm wondering if that was a
->> bad precedent, and/or if it being a syscall makes it a different situation...).
->>
->> I don't know when we ever deprecate or remove this stuff.
->>
->> If you use packaged kernels, you'll get updated headers pretty quickly, right,
->> or on a devel box you might install your own?
->>
->> Not trying to be difficult, just trying to make sure we have a consistent
->> plan for new interfaces like this...
-> 
-> I was under the impression that we employ this evil hackery so that
-> developers (at least) can build binaries for testing until the kernel
-> headers in their build environments catch up.
+From: Amir Goldstein <amir73il@gmail.com>
 
-Well, like I said, yeah I did it for statx.  So, that's probably enough
-for you to say "stop whining and merge it!"
+Use the common helper uuid_is_null() and remove the xfs specific
+helper uuid_is_nil().
 
-But do we have it for anything else?
+The common helper does not check for the NULL pointer value as
+xfs helper did, but xfs code never calls the helper with a pointer
+that can be NULL.
 
-Ok, we do override fsxattr - that was also your doing.  ;)
+Conform comments and warning strings to use the term 'null uuid'
+instead of 'nil uuid', because this is the terminology used by
+lib/uuid.c and its users. It is also the terminology used in
+userspace by libuuid and xfsprogs.
 
-I guess we did the same for the FS_IOC_SET_ENCRYPTION_POLICY stuff,
-though /that/ is all self-contained in io/encrypt.c.
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+[hch: remove now unused uuid.[ch]]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/Makefile          |  3 +--
+ fs/xfs/uuid.c            | 32 --------------------------------
+ fs/xfs/uuid.h            | 23 -----------------------
+ fs/xfs/xfs_linux.h       |  1 -
+ fs/xfs/xfs_log_recover.c |  6 +++---
+ fs/xfs/xfs_mount.c       |  8 ++++----
+ 6 files changed, 8 insertions(+), 65 deletions(-)
+ delete mode 100644 fs/xfs/uuid.c
+ delete mode 100644 fs/xfs/uuid.h
 
-hohum.
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 5c90f82b8f6b..a6e955bfead8 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -98,8 +98,7 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_sysfs.o \
+ 				   xfs_trans.o \
+ 				   xfs_xattr.o \
+-				   kmem.o \
+-				   uuid.o
++				   kmem.o
+ 
+ # low-level transaction/log code
+ xfs-y				+= xfs_log.o \
+diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
+deleted file mode 100644
+index 737c186ea98b..000000000000
+--- a/fs/xfs/uuid.c
++++ /dev/null
+@@ -1,32 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#include <xfs.h>
+-
+-int
+-uuid_is_nil(uuid_t *uuid)
+-{
+-	int	i;
+-	char	*cp = (char *)uuid;
+-
+-	if (uuid == NULL)
+-		return 0;
+-	/* implied check of version number here... */
+-	for (i = 0; i < sizeof *uuid; i++)
+-		if (*cp++) return 0;	/* not nil */
+-	return 1;	/* is nil */
+-}
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+deleted file mode 100644
+index 5aea49bf0963..000000000000
+--- a/fs/xfs/uuid.h
++++ /dev/null
+@@ -1,23 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_SUPPORT_UUID_H__
+-#define __XFS_SUPPORT_UUID_H__
+-
+-extern int uuid_is_nil(uuid_t *uuid);
+-
+-#endif	/* __XFS_SUPPORT_UUID_H__ */
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 2c33d915e550..2d167fe643ec 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -43,7 +43,6 @@ typedef __u32			xfs_nlink_t;
+ 
+ #include "kmem.h"
+ #include "mrlock.h"
+-#include "uuid.h"
+ 
+ #include <linux/semaphore.h>
+ #include <linux/mm.h>
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index cd0b077deb35..8cec1e5505a4 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -352,13 +352,13 @@ xlog_header_check_mount(
+ {
+ 	ASSERT(head->h_magicno == cpu_to_be32(XLOG_HEADER_MAGIC_NUM));
+ 
+-	if (uuid_is_nil(&head->h_fs_uuid)) {
++	if (uuid_is_null(&head->h_fs_uuid)) {
+ 		/*
+ 		 * IRIX doesn't write the h_fs_uuid or h_fmt fields. If
+-		 * h_fs_uuid is nil, we assume this log was last mounted
++		 * h_fs_uuid is null, we assume this log was last mounted
+ 		 * by IRIX and continue.
+ 		 */
+-		xfs_warn(mp, "nil uuid in log - IRIX style log");
++		xfs_warn(mp, "null uuid in log - IRIX style log");
+ 	} else if (unlikely(!uuid_equal(&mp->m_sb.sb_uuid, &head->h_fs_uuid))) {
+ 		xfs_warn(mp, "log has mismatched uuid - can't recover");
+ 		xlog_header_check_dump(mp, head);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 742e4a61c0bc..682b336a7a6a 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -80,14 +80,14 @@ xfs_uuid_mount(
+ 	if (mp->m_flags & XFS_MOUNT_NOUUID)
+ 		return 0;
+ 
+-	if (uuid_is_nil(uuid)) {
+-		xfs_warn(mp, "Filesystem has nil UUID - can't mount");
++	if (uuid_is_null(uuid)) {
++		xfs_warn(mp, "Filesystem has null UUID - can't mount");
+ 		return -EINVAL;
+ 	}
+ 
+ 	mutex_lock(&xfs_uuid_table_mutex);
+ 	for (i = 0, hole = -1; i < xfs_uuid_table_size; i++) {
+-		if (uuid_is_nil(&xfs_uuid_table[i])) {
++		if (uuid_is_null(&xfs_uuid_table[i])) {
+ 			hole = i;
+ 			continue;
+ 		}
+@@ -124,7 +124,7 @@ xfs_uuid_unmount(
+ 
+ 	mutex_lock(&xfs_uuid_table_mutex);
+ 	for (i = 0; i < xfs_uuid_table_size; i++) {
+-		if (uuid_is_nil(&xfs_uuid_table[i]))
++		if (uuid_is_null(&xfs_uuid_table[i]))
+ 			continue;
+ 		if (!uuid_equal(uuid, &xfs_uuid_table[i]))
+ 			continue;
+-- 
+2.11.0
 
-Ok, let's merge it, but maybe we need a policy of "nuke it after a year"
-
--eric
-
-> ...unfortunately, that sort of implies that the sunset horizon is
-> quite a ways out since I've never seen this stuff get removed.
-> 
-> --D
-> 
->>
->> Thanks,
->> -Eric
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
