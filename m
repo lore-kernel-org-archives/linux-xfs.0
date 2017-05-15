@@ -1,71 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from prv-mh.provo.novell.com ([137.65.248.74]:46880 "EHLO
-        prv-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934048AbdEOJWp (ORCPT
-        <rfc822;groupwise-linux-xfs@vger.kernel.org:2:1>);
-        Mon, 15 May 2017 05:22:45 -0400
-Message-Id: <59198F810200007800159B81@prv-mh.provo.novell.com>
-Date: Mon, 15 May 2017 03:22:41 -0600
-From: "Jan Beulich" <JBeulich@suse.com>
-Subject: Re: permanent XFS volume corruption
-References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <a185194a-af56-cd53-cfb9-653e3b5f81b7@sandeen.net>
- <591571BC0200007800159165@prv-mh.provo.novell.com>
- <30296667-47d7-8b94-472a-1d4b96120c09@sandeen.net>
- <5915DE47020000780015946C@prv-mh.provo.novell.com>
- <23c75521-a65b-d105-f274-3d1aba09e6ae@sandeen.net>
- <574ee8c5-71f9-eba5-b779-49be4086b6c8@sandeen.net>
-In-Reply-To: <574ee8c5-71f9-eba5-b779-49be4086b6c8@sandeen.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Received: from mx2.suse.de ([195.135.220.15]:33729 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752200AbdEOMIg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 15 May 2017 08:08:36 -0400
+Date: Mon, 15 May 2017 11:47:09 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 04/10] fs: Introduce RWF_NOWAIT
+Message-ID: <20170515094709.GA16182@quack2.suse.cz>
+References: <20170511191710.31959-1-rgoldwyn@suse.de>
+ <20170511191710.31959-5-rgoldwyn@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20170511191710.31959-5-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
->>> On 12.05.17 at 17:11, <sandeen@sandeen.net> wrote:
-
+On Thu 11-05-17 14:17:04, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > 
-> On 5/12/17 10:04 AM, Eric Sandeen wrote:
->> On 5/12/17 9:09 AM, Jan Beulich wrote:
->>>>>> On 12.05.17 at 15:56, <sandeen@sandeen.net> wrote:
->>>> On 5/12/17 1:26 AM, Jan Beulich wrote:
->>>>> So on the earlier instance, where I did run actual repairs (and
->>>>> indeed multiple of them), the problem re-surfaces every time
->>>>> I mount the volume again.
->>>> Ok, what is the exact sequence there, from repair to re-corruption?
->>> Simply mount the volume after repairing (with or without an
->>> intermediate reboot) and access respective pieces of the fs
->>> again. As said, with /var/run affected on that first occasion,
->>> I couldn't even cleanly boot again without seeing the
->>> corruption re-surface.
->> 
->> Mount under what kernel, and access in what way?  I'm looking for a
->> recipe to reproduce what you've seen using the metadump you've provided.
->> 
->> However:
->> 
->> With further testing I see that xfs_repair v3.1.8 /does not/
->> entirely fix the fs; if I run 3.1.8 and then run upstream repair, it
->> finds and fixes more bad flags on inode 764 (lib/xenstored/tdb) that 3.1.8
->> didn't touch.  The verifiers in an upstream kernel may keep tripping
->> over that until newer repair fixes it...
+> RWF_NOWAIT informs kernel to bail out if an AIO request will block
+> for reasons such as file allocations, or a writeback triggered,
+> or would block while allocating requests while performing
+> direct I/O.
 > 
-> (Indeed just running xfs_repair 3.1.8 finds the same corruption over and 
-> over)
+> RWF_NOWAIT is translated to IOCB_NOWAIT for iocb->ki_flags.
 > 
-> Please try a newer xfs_repair, and see if it resolves your problem.
+> The check for -EOPNOTSUPP is placed in generic_file_write_iter(). This
+> is called by most filesystems, either through fsops.write_iter() or through
+> the function defined by write_iter(). If not, we perform the check defined
+> by .write_iter() which is called for direct IO specifically.
+> 
+> Filesystems xfs, btrfs and ext4 would be supported in the following patches.
+...
+> diff --git a/fs/aio.c b/fs/aio.c
+> index 020fa0045e3c..34027b67e2f4 100644
+> --- a/fs/aio.c
+> +++ b/fs/aio.c
+> @@ -1592,6 +1592,12 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
+>  		goto out_put_req;
+>  	}
+>  
+> +	if ((req->common.ki_flags & IOCB_NOWAIT) &&
+> +			!(req->common.ki_flags & IOCB_DIRECT)) {
+> +		ret = -EOPNOTSUPP;
+> +		goto out_put_req;
+> +	}
+> +
+>  	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
+>  	if (unlikely(ret)) {
+>  		pr_debug("EFAULT: aio_key\n");
 
-It seems to have improved the situation (on the first system I had
-the issue on), but leaves me with at least "Operation not permitted"
-upon init scripts (or me manually) rm-ing (or mv-ing) /var/run/*.pid
-(or mv-ing even /var/run itself). I'm not sure how worried I need to
-be, but this surely doesn't look overly healthy yet. The kernel
-warnings are all gone, though.
+I think you need to also check here that the IO is write. So that NOWAIT
+reads don't silently pass.
 
-Jan
-
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
