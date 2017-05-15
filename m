@@ -1,44 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:34129 "EHLO
-        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933126AbdEOOLX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 10:11:23 -0400
-Received: by mail-oi0-f45.google.com with SMTP id b204so132036543oii.1
-        for <linux-xfs@vger.kernel.org>; Mon, 15 May 2017 07:11:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170515134508.2713243-1-arnd@arndb.de>
-References: <20170515134508.2713243-1-arnd@arndb.de>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 15 May 2017 07:11:22 -0700
-Message-ID: <CAPcyv4jxondHhtMZbr01XE+w1Q0mxy+mR=4ypwsHpA0AtJuj2g@mail.gmail.com>
-Subject: Re: [PATCH 1/2] dax: hide block device code in #ifdef
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([65.50.211.133]:40166 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933174AbdEOPnM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 11:43:12 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: cleanup UUID types V2
+Date: Mon, 15 May 2017 17:42:51 +0200
+Message-Id: <20170515154308.26739-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jan Kara <jack@suse.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Mon, May 15, 2017 at 6:44 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> We allow configurations with CONFIG_BLOCK=n and CONFIG_DAX=y, which now
-> results in a link error:
->
-> drivers/dax/super.c: In function 'bdev_dax_pgoff':
-> drivers/dax/super.c:50:26: error: implicit declaration of function 'get_start_sect'; did you mean 'get_task_cred'? [-Werror=implicit-function-declaration]
->
-> The two obvious ways to avoid the link error are to either add an #ifdef
-> around the code that was moved from fs/block_dev.c, or to disallow the
-> configuration. I could not see if there is or is not a reason to support
-> this combination of options, but in case there is, the #ifdef is the
-> safer choice.
->
-> Fixes: ef51042472f5 ("block, dax: move "select DAX" from BLOCK to FS_DAX")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Hi all,
 
-Yup, the same one I came up with:
+this series, which is a combined effort from Amir, Andy and me introduces
+new uuid_t and guid_t type names that are less confusing than the existing
+types, adds new helpers for them and starts switching the fs code over to
+it.  Andy has additional patches on top to convert many of the users
+that use char arrays for UUIDs and GUIDs to these (or rather a predecessor
+for now until updated).
 
-https://patchwork.kernel.org/patch/9725513/
-
-If you have a a pull request coming up soon you can add my Acked-by to
-both of these patches, otherwise I'll send what I have along at the
-end of the week.
+Changes since V2:
+ - various cleanups
