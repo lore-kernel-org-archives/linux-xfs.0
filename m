@@ -1,85 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60666 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751204AbdEOLxY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 May 2017 07:53:24 -0400
-Date: Mon, 15 May 2017 13:53:19 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v4 19/27] buffer: set errors in mapping at the time that
- the error occurs
-Message-ID: <20170515115319.GD16182@quack2.suse.cz>
-References: <20170509154930.29524-1-jlayton@redhat.com>
- <20170509154930.29524-20-jlayton@redhat.com>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36630 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934565AbdEOOUQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 10:20:16 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170509154930.29524-20-jlayton@redhat.com>
+In-Reply-To: <CAPcyv4jxondHhtMZbr01XE+w1Q0mxy+mR=4ypwsHpA0AtJuj2g@mail.gmail.com>
+References: <20170515134508.2713243-1-arnd@arndb.de> <CAPcyv4jxondHhtMZbr01XE+w1Q0mxy+mR=4ypwsHpA0AtJuj2g@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Mon, 15 May 2017 16:20:09 +0200
+Message-ID: <CAK8P3a1XU32oVTeV5=TeV8C+66rKKoRJnebQTAzqUr1BcSH69w@mail.gmail.com>
+Subject: Re: [PATCH 1/2] dax: hide block device code in #ifdef
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, jfs-discussion@lists.sourceforge.net, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, linux-f2fs-devel@lists.sourceforge.net, v9fs-developer@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-block@vger.kernel.org, dhowells@redhat.com, akpm@linux-foundation.org, hch@infradead.org, ross.zwisler@linux.intel.com, mawilcox@microsoft.com, jack@suse.com, viro@zeniv.linux.org.uk, corbet@lwn.net, neilb@suse.de, clm@fb.com, tytso@mit.edu, axboe@kernel.dk, josef@toxicpanda.com, hubcap@omnibond.com, rpeterso@redhat.com, bo.li.liu@oracle.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Tue 09-05-17 11:49:22, Jeff Layton wrote:
-> I noticed on xfs that I could still sometimes get back an error on fsync
-> on a fd that was opened after the error condition had been cleared.
-> 
-> The problem is that the buffer code sets the write_io_error flag and
-> then later checks that flag to set the error in the mapping. That flag
-> perisists for quite a while however. If the file is later opened with
-> O_TRUNC, the buffers will then be invalidated and the mapping's error
-> set such that a subsequent fsync will return error. I think this is
-> incorrect, as there was no writeback between the open and fsync.
-> 
-> Add a new mark_buffer_write_io_error operation that sets the flag and
-> the error in the mapping at the same time. Replace all calls to
-> set_buffer_write_io_error with mark_buffer_write_io_error, and remove
-> the places that check this flag in order to set the error in the
-> mapping.
-> 
-> This sets the error in the mapping earlier, at the time that it's first
-> detected.
-> 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+On Mon, May 15, 2017 at 4:11 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> On Mon, May 15, 2017 at 6:44 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> We allow configurations with CONFIG_BLOCK=n and CONFIG_DAX=y, which now
+>> results in a link error:
+>>
+>> drivers/dax/super.c: In function 'bdev_dax_pgoff':
+>> drivers/dax/super.c:50:26: error: implicit declaration of function 'get_start_sect'; did you mean 'get_task_cred'? [-Werror=implicit-function-declaration]
+>>
+>> The two obvious ways to avoid the link error are to either add an #ifdef
+>> around the code that was moved from fs/block_dev.c, or to disallow the
+>> configuration. I could not see if there is or is not a reason to support
+>> this combination of options, but in case there is, the #ifdef is the
+>> safer choice.
+>>
+>> Fixes: ef51042472f5 ("block, dax: move "select DAX" from BLOCK to FS_DAX")
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>
+> Yup, the same one I came up with:
+>
+> https://patchwork.kernel.org/patch/9725513/
+>
+> If you have a a pull request coming up soon you can add my Acked-by to
+> both of these patches, otherwise I'll send what I have along at the
+> end of the week.
 
-Looks good to me. You can add:
+I didn't plan to send a pull request, please use whatever you have.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-Small nits below.
-
-> @@ -354,7 +354,7 @@ void end_buffer_async_write(struct buffer_head *bh, int uptodate)
->  	} else {
->  		buffer_io_error(bh, ", lost async page write");
->  		mapping_set_error(page->mapping, -EIO);
-> -		set_buffer_write_io_error(bh);
-> +		mark_buffer_write_io_error(bh);
-
-No need to call mapping_set_error() here when it gets called in
-mark_buffer_write_io_error() again?
-
-> @@ -1182,6 +1180,17 @@ void mark_buffer_dirty(struct buffer_head *bh)
->  }
->  EXPORT_SYMBOL(mark_buffer_dirty);
->  
-> +void mark_buffer_write_io_error(struct buffer_head *bh)
-> +{
-> +	set_buffer_write_io_error(bh);
-> +	/* FIXME: do we need to set this in both places? */
-> +	if (bh->b_page && bh->b_page->mapping)
-> +		mapping_set_error(bh->b_page->mapping, -EIO);
-> +	if (bh->b_assoc_map)
-> +		mapping_set_error(bh->b_assoc_map, -EIO);
-> +}
-> +EXPORT_SYMBOL(mark_buffer_write_io_error);
-
-So buffers that are shared by several inodes cannot have bh->b_assoc_map
-set. So for filesystems that have metadata like this setting in
-bh->b_assoc_map doesn't really help and they have to check blockdevice's
-mapping anyway. OTOH if filesystem doesn't have such type of metadata
-relevant for fsync, this could help it. So maybe it is worth it.
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+      Arnd
