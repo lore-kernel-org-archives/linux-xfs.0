@@ -1,88 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53800 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756978AbdELIyB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 May 2017 04:54:01 -0400
-Date: Fri, 12 May 2017 10:53:57 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs: only return detailed fsmap info if the caller has
- CAP_SYS_ADMIN
-Message-ID: <20170512085357.wmq7xclw3zfrnswh@eorzea.usersys.redhat.com>
-References: <20170511175511.GC4519@birch.djwong.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:41249 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750784AbdEPT1w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 May 2017 15:27:52 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v4GJRpJ5031317
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2017 19:27:51 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v4GJRpJn026393
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2017 19:27:51 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v4GJRnfu022319
+        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2017 19:27:50 GMT
+Date: Tue, 16 May 2017 12:27:48 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: avoid mount-time deadlock in CoW extent recovery
+Message-ID: <20170516192748.GQ4519@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170511175511.GC4519@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>
 
-Hi,
+If a malicious user corrupts the refcount btree to cause a cycle between
+different levels of the tree, the next mount attempt will deadlock in
+the CoW recovery routine while grabbing buffer locks.  We can use the
+ability to re-grab a buffer that was previous locked to a transaction to
+avoid deadlocks, so do that here.
 
-> There were a number of handwaving complaints that one could "possibly"
-> use inode numbers and extent maps to fingerprint a filesystem hosting
-> multiple containers and somehow use the information to guess at the
-> contents of other containers and attack them.  Despite the total lack of
-> any demonstration that this is actually possible, it's easier to
-> restrict access now and broaden it later, so use the rmapbt fsmap
-> backends only if the caller has CAP_SYS_ADMIN.  Unprivileged users will
-> just have to make do with only getting the free space information.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_fsmap.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> index 3683819..814ed729 100644
-> --- a/fs/xfs/xfs_fsmap.c
-> +++ b/fs/xfs/xfs_fsmap.c
-> @@ -828,6 +828,7 @@ xfs_getfsmap(
->  	struct xfs_fsmap		dkeys[2];	/* per-dev keys */
->  	struct xfs_getfsmap_dev		handlers[XFS_GETFSMAP_DEVS];
->  	struct xfs_getfsmap_info	info = { NULL };
-> +	bool				use_rmap;
->  	int				i;
->  	int				error = 0;
->  
-> @@ -837,12 +838,14 @@ xfs_getfsmap(
->  	    !xfs_getfsmap_is_valid_device(mp, &head->fmh_keys[1]))
->  		return -EINVAL;
->  
-> +	use_rmap = capable(CAP_SYS_ADMIN) &&
-> +		   xfs_sb_version_hasrmapbt(&mp->m_sb);
->  	head->fmh_entries = 0;
->  
->  	/* Set up our device handlers. */
->  	memset(handlers, 0, sizeof(handlers));
->  	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
-> -	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> +	if (use_rmap)
->  		handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
->  	else
->  		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
->
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_refcount.c |   29 +++++++++++++++++++----------
+ 1 file changed, 19 insertions(+), 10 deletions(-)
 
-I've followed the discussion too, and alhtough it just look as a very remote
-theoretical problem, restricting this is simple.
-
-Overall this looks fine to me, but, I just wonder if somebody in the future will
-complain to be getting freespace only, instead of the fsmap itself, without
-actually getting a permission denied error, or something like that.
-
-This is a minor concern from my side though, so, unless somebody agrees with my
-point here, you can add:
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-Cheers.
-
- --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Carlos
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index b177ef3..6fd337c 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1629,10 +1629,14 @@ xfs_refcount_recover_cow_leftovers(
+ 	if (mp->m_sb.sb_agblocks >= XFS_REFC_COW_START)
+ 		return -EOPNOTSUPP;
+ 
+-	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
++	error = xfs_trans_alloc_empty(mp, &tp);
+ 	if (error)
+ 		return error;
+-	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
++
++	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
++	if (error)
++		goto out_trans;
++	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
+ 
+ 	/* Find all the leftover CoW staging extents. */
+ 	INIT_LIST_HEAD(&debris);
+@@ -1645,10 +1649,11 @@ xfs_refcount_recover_cow_leftovers(
+ 	if (error)
+ 		goto out_cursor;
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+-	xfs_buf_relse(agbp);
++	xfs_trans_brelse(tp, agbp);
++	xfs_trans_cancel(tp);
+ 
+ 	/* Now iterate the list to free the leftovers */
+-	list_for_each_entry(rr, &debris, rr_list) {
++	list_for_each_entry_safe(rr, n, &debris, rr_list) {
+ 		/* Set up transaction. */
+ 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0, &tp);
+ 		if (error)
+@@ -1676,8 +1681,15 @@ xfs_refcount_recover_cow_leftovers(
+ 		error = xfs_trans_commit(tp);
+ 		if (error)
+ 			goto out_free;
++
++		list_del(&rr->rr_list);
++		kmem_free(rr);
+ 	}
+ 
++	return error;
++out_defer:
++	xfs_defer_cancel(&dfops);
++	xfs_trans_cancel(tp);
+ out_free:
+ 	/* Free the leftover list */
+ 	list_for_each_entry_safe(rr, n, &debris, rr_list) {
+@@ -1688,11 +1700,8 @@ xfs_refcount_recover_cow_leftovers(
+ 
+ out_cursor:
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+-	xfs_buf_relse(agbp);
+-	goto out_free;
+-
+-out_defer:
+-	xfs_defer_cancel(&dfops);
++	xfs_trans_brelse(tp, agbp);
++out_trans:
+ 	xfs_trans_cancel(tp);
+-	goto out_free;
++	return error;
+ }
