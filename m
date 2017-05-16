@@ -1,211 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37036 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757506AbdELIlV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 May 2017 04:41:21 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4A2203D941
-        for <linux-xfs@vger.kernel.org>; Fri, 12 May 2017 08:41:20 +0000 (UTC)
-Date: Fri, 12 May 2017 10:41:15 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: Add infrastructure needed for error propagation
- during buffer IO failure
-Message-ID: <20170512084115.rs3ufqbagffevivc@eorzea.usersys.redhat.com>
-References: <20170511135733.21765-1-cmaiolino@redhat.com>
- <20170511135733.21765-2-cmaiolino@redhat.com>
- <20170511165124.GA14148@localhost.localdomain>
+Received: from userp1040.oracle.com ([156.151.31.81]:35901 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751045AbdEPRyw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 May 2017 13:54:52 -0400
+Date: Tue, 16 May 2017 10:54:39 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: only return detailed fsmap info if the caller has
+ CAP_SYS_ADMIN
+Message-ID: <20170516175439.GP4519@birch.djwong.org>
+References: <20170511175511.GC4519@birch.djwong.org>
+ <20170512085357.wmq7xclw3zfrnswh@eorzea.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170511165124.GA14148@localhost.localdomain>
+In-Reply-To: <20170512085357.wmq7xclw3zfrnswh@eorzea.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: cmaiolino@redhat.com
 
-Howdy!
-
-On Thu, May 11, 2017 at 12:51:24PM -0400, Brian Foster wrote:
-> On Thu, May 11, 2017 at 03:57:32PM +0200, Carlos Maiolino wrote:
-> > To be able to resubmit an log item for IO, we need a way to mark an item
-> > as failed, if, for any reason the buffer which the item belonged to
-> > failed during writeback.
-> > 
-> > Add a new log item callback to be used after an IO completion failure
-> > and make the needed clean ups.
-> > 
+On Fri, May 12, 2017 at 10:53:57AM +0200, Carlos Maiolino wrote:
+> Hi,
 > 
-> I think the commit log description should call out the problem with
-> flush locked items (i.e., that we will currently never resubmit their
-> buffers) as the motiviation for the patch.
->
-
-I believe this patch is more a generic way to handle failed writebacks than
-related to the never re-submitted buffers, although, I agree that the main
-reason for this patch is the failed buffer resubmission, I don't think this
-patch deals with it directly, that's why I didn't comment it in this patch,
-but in patch two.
-
-I have no objection in mentioning it here though if required.
-
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > There were a number of handwaving complaints that one could "possibly"
+> > use inode numbers and extent maps to fingerprint a filesystem hosting
+> > multiple containers and somehow use the information to guess at the
+> > contents of other containers and attack them.  Despite the total lack of
+> > any demonstration that this is actually possible, it's easier to
+> > restrict access now and broaden it later, so use the rmapbt fsmap
+> > backends only if the caller has CAP_SYS_ADMIN.  Unprivileged users will
+> > just have to make do with only getting the free space information.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  fs/xfs/xfs_buf_item.c | 27 ++++++++++++++++++++++++++-
-> >  fs/xfs/xfs_trans.h    |  5 ++++-
-> >  2 files changed, 30 insertions(+), 2 deletions(-)
+> >  fs/xfs/xfs_fsmap.c |    5 ++++-
+> >  1 file changed, 4 insertions(+), 1 deletion(-)
 > > 
-> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> > index 0306168..026aed4 100644
-> > --- a/fs/xfs/xfs_buf_item.c
-> > +++ b/fs/xfs/xfs_buf_item.c
-> > @@ -1051,6 +1051,24 @@ xfs_buf_do_callbacks(
-> >  	}
-> >  }
+> > diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> > index 3683819..814ed729 100644
+> > --- a/fs/xfs/xfs_fsmap.c
+> > +++ b/fs/xfs/xfs_fsmap.c
+> > @@ -828,6 +828,7 @@ xfs_getfsmap(
+> >  	struct xfs_fsmap		dkeys[2];	/* per-dev keys */
+> >  	struct xfs_getfsmap_dev		handlers[XFS_GETFSMAP_DEVS];
+> >  	struct xfs_getfsmap_info	info = { NULL };
+> > +	bool				use_rmap;
+> >  	int				i;
+> >  	int				error = 0;
 > >  
-> > +STATIC void
-> > +xfs_buf_do_callbacks_fail(
-> > +	struct xfs_buf		*bp)
-> > +{
-> > +	struct xfs_log_item	*lip, *next;
-> > +	unsigned int		bflags = bp->b_flags;
-> > +
-> > +	lip = bp->b_fspriv;
-> > +	while (lip != NULL) {
-> > +		next = lip->li_bio_list;
-> > +
-> > +		if (lip->li_ops->iop_error)
-> > +			lip->li_ops->iop_error(lip, bflags);
-> 
-> I still don't see why we need the iop callback here. This type of
-> callback is typically required when an operation requires some action on
-> the specific subtype (e.g., _inode_item_error() does one particular
-> thing to an inode, buf_item_error() might do something different to an
-> xfs_buf, etc.), but that doesn't appear to be the case here. Indeed, the
-> next patch shows that the inode item error handler does:
-> 
-> 	lip->li_flags |= XFS_LI_FAILED;
-> 
-> ... which doesn't even require to dereference the inode_log_item type.
-> 
-> So can we just set the flag directly from xfs_buf_do_callbacks_fail()
-> and kill of ->iop_error() until/unless we come to a point where it is
-> actually needed?
-
-Well, I really have no preference here, this could also be handled directly into
-xfs_inode_callback_error(), but seems like the idea is to keep those changes
-into item-type specific callbacks, but I won't oppose to any approach, at this
-point in time, I just want to have his fixed :)
-
-Although, after giving it some thought, I tend to agree that leaving it into
-their all callback error handler looks more correct, and more convenient, but,
-that's just my opinion.
-
-> 
-> > +
-> > +		lip = next;
-> > +	}
-> > +}
-> > +
-> >  static bool
-> >  xfs_buf_iodone_callback_error(
-> >  	struct xfs_buf		*bp)
-> > @@ -1153,8 +1171,15 @@ xfs_buf_iodone_callbacks(
-> >  	 * to run callbacks after failure processing is done so we
-> >  	 * detect that and take appropriate action.
-> >  	 */
-> > -	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
-> > +	if (bp->b_error && xfs_buf_iodone_callback_error(bp)) {
-> > +
-> > +		/*
-> > +		 * We've got an error during buffer writeback, we need to notify
-> > +		 * the items in the buffer
-> > +		 */
-> > +		xfs_buf_do_callbacks_fail(bp);
-> 
-> xfs_buf_iodone_callback_error() returns true when the I/O has failed. It
-> also returns true when it has submitted the internal retry[1], however,
-> so I don't think this is quite correct. We should only mark items as
-> failed once this internal sequence has completed and the buffer is no
-> longer under I/O. As it is, this looks like it would mark the items as
-> failed while they are still under the internal retry I/O (and possibly
-> leave them marked as such if this retry actually succeeds..?).
-> 
-
-> Side note: I really dislike the semantics of
-> xfs_buf_iodone_callback_error() in that I have to read it and the only
-> call site to re-understand what the return value means every time I look
-> at it. Could we add a comment above that function that explains the
-> return value dictates whether to run callbacks while we're working in
-> this area?
-> 
-> Brian
-> 
-> [1] Recall that every buffer submitted through xfsaild() is quietly
-> retried one time in the event of I/O error (via XBF_WRITE_FAIL) before
-> the buffer is unlocked and effectively released back to the AIL. This is
-> presumably to help deal with transient errors. It is only when this
-> second I/O fails that the buffer is unlocked and it is up to the AIL to
-> resubmit the buffer on a subsequent push.
-> 
-Yeah, I agree here, I wonder if wouldn't be a good approach to change the
-xfs_buf_iodone_callback_error to return something other than a bool, so we can
-properly check what happened, i.e. internal retry, retry based on configuration,
-or whatever. I will write some POC for this, I just wonder though, if, after
-having the configuration handlers available, do we really need to do this first
-forced retry.
-
-
-Thanks, for the review, I'll wait Dave's comments before sending a V2 though
-once the callbacks idea came from him, in the meantime I'll take a look how can
-I improve the callback_error stuff.
-
-Cheers
-
-> >  		return;
-> > +	}
+> > @@ -837,12 +838,14 @@ xfs_getfsmap(
+> >  	    !xfs_getfsmap_is_valid_device(mp, &head->fmh_keys[1]))
+> >  		return -EINVAL;
 > >  
-> >  	/*
-> >  	 * Successful IO or permanent error. Either way, we can clear the
-> > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> > index a07acbf..c57181a 100644
-> > --- a/fs/xfs/xfs_trans.h
-> > +++ b/fs/xfs/xfs_trans.h
-> > @@ -65,10 +65,12 @@ typedef struct xfs_log_item {
+> > +	use_rmap = capable(CAP_SYS_ADMIN) &&
+> > +		   xfs_sb_version_hasrmapbt(&mp->m_sb);
+> >  	head->fmh_entries = 0;
 > >  
-> >  #define	XFS_LI_IN_AIL	0x1
-> >  #define XFS_LI_ABORTED	0x2
-> > +#define XFS_LI_FAILED	0x3
-> >  
-> >  #define XFS_LI_FLAGS \
-> >  	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
-> > -	{ XFS_LI_ABORTED,	"ABORTED" }
-> > +	{ XFS_LI_ABORTED,	"ABORTED" }, \
-> > +	{ XFS_LI_FAILED,	"FAILED" }
-> >  
-> >  struct xfs_item_ops {
-> >  	void (*iop_size)(xfs_log_item_t *, int *, int *);
-> > @@ -79,6 +81,7 @@ struct xfs_item_ops {
-> >  	void (*iop_unlock)(xfs_log_item_t *);
-> >  	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
-> >  	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
-> > +	void (*iop_error)(xfs_log_item_t *, unsigned int bflags);
-> >  };
-> >  
-> >  void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
-> > -- 
-> > 2.9.3
-> > 
-> > --
+> >  	/* Set up our device handlers. */
+> >  	memset(handlers, 0, sizeof(handlers));
+> >  	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
+> > -	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+> > +	if (use_rmap)
+> >  		handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
+> >  	else
+> >  		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
+> >
+> 
+> I've followed the discussion too, and alhtough it just look as a very remote
+> theoretical problem, restricting this is simple.
+> 
+> Overall this looks fine to me, but, I just wonder if somebody in the future will
+> complain to be getting freespace only, instead of the fsmap itself, without
+> actually getting a permission denied error, or something like that.
+> 
+> This is a minor concern from my side though, so, unless somebody agrees with my
+> point here, you can add:
+
+I think I'll just add a blurb to the manpage explicitly stating that
+filesystems have discretion to reveal as much or as little detail as
+they like.  Therefore, it's perfectly fine not to reveal inode numbers,
+which is what you'd get with a pre-rmap xfs (or ext4) today.
+
+--D
+
+> 
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> Cheers.
+> 
+>  --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > the body of a message to majordomo@vger.kernel.org
 > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> -- 
+> Carlos
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Carlos
