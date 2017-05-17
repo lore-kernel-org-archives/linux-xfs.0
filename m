@@ -1,96 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34183 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34533 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753070AbdEQMK4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 17 May 2017 08:10:56 -0400
+        id S1751531AbdEQMPW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 17 May 2017 08:15:22 -0400
+Date: Wed, 17 May 2017 14:15:19 +0200
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 1/3] xfs: Fix missed holes in SEEK_HOLE implementation
-Date: Wed, 17 May 2017 14:10:44 +0200
-Message-Id: <20170517121046.2632-2-jack@suse.cz>
-In-Reply-To: <20170517121046.2632-1-jack@suse.cz>
-References: <20170517121046.2632-1-jack@suse.cz>
+Subject: Re: [PATCH 2/2] xfs: Move handling of missing page into one place in
+ xfs_find_get_desired_pgoff()
+Message-ID: <20170517121519.GA2630@quack2.suse.cz>
+References: <20170511165023.29887-1-jack@suse.cz>
+ <20170511165023.29887-2-jack@suse.cz>
+ <20170512162302.GG4519@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170512162302.GG4519@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Jan Kara <jack@suse.cz>, stable@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org
 
-XFS SEEK_HOLE implementation could miss a hole in an unwritten extent as
-can be seen by the following command:
+On Fri 12-05-17 09:23:02, Darrick J. Wong wrote:
+> On Thu, May 11, 2017 at 06:50:23PM +0200, Jan Kara wrote:
+> > Currently several places in xfs_find_get_desired_pgoff() handle the case
+> > of a missing page. Make them all handled in one place after the loop has
+> > terminated.
+> > 
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> >  fs/xfs/xfs_file.c | 24 ++++++++----------------
+> >  1 file changed, 8 insertions(+), 16 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index df51c025adfe..719923b99ba1 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -1069,10 +1069,6 @@ xfs_find_get_desired_pgoff(
+> >  				break;
+> >  
+> >  			ASSERT(type == HOLE_OFF);
+> > -			if (lastoff == startoff || lastoff < endoff) {
+> > -				found = true;
+> > -				*offset = lastoff;
+> > -			}
+> >  			break;
+> >  		}
+> 
+> Hm.  This leaves the following weird looking hunk:
+> 
+> if (nr_pages == 0) {
+> 	/* Data search found nothing */
+> 	if (type == DATA_OFF)
+> 		break;
+> 
+> 	ASSERT(type == HOLE_OFF);
+> 	break;
+> }
+> 
+> Which could be simplified to:
+> 
+> if (nr_pages == 0) {
+> 	ASSERT(type == HOLE_OFF || type == DATA_OFF);
+> 	break;
+> }
+> 
+> Right?  Maybe a better cleanup would be to name the enum defining
+> {HOLE,DATA}_OFF and change the xfs_find_get_desired_pgoff prototype to
+> use that enum, and then we also get compiler type checking.
 
-xfs_io -c "falloc 0 256k" -c "pwrite 0 56k" -c "pwrite 128k 8k"
-       -c "seek -h 0" file
-wrote 57344/57344 bytes at offset 0
-56 KiB, 14 ops; 0.0000 sec (49.312 MiB/sec and 12623.9856 ops/sec)
-wrote 8192/8192 bytes at offset 131072
-8 KiB, 2 ops; 0.0000 sec (70.383 MiB/sec and 18018.0180 ops/sec)
-Whence	Result
-HOLE	139264
+Well, given this function is called only from one place, enum looks like an
+overkill and even the assert is weird. I've just simplified the condition
+to:
 
-Where we can see that hole at offset 56k was just ignored by SEEK_HOLE
-implementation. The bug is in xfs_find_get_desired_pgoff() which does
-not properly detect the case when pages are not contiguous.
+if (nr_pages == 0)
+	break;
 
-Fix the problem by properly detecting when found page has larger offset
-than expected.
-
-CC: stable@vger.kernel.org
-Fixes: d126d43f631f996daeee5006714fed914be32368
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_file.c | 29 +++++++++--------------------
- 1 file changed, 9 insertions(+), 20 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 35703a801372..f371812e20c6 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1076,17 +1076,6 @@ xfs_find_get_desired_pgoff(
- 			break;
- 		}
- 
--		/*
--		 * At lease we found one page.  If this is the first time we
--		 * step into the loop, and if the first page index offset is
--		 * greater than the given search offset, a hole was found.
--		 */
--		if (type == HOLE_OFF && lastoff == startoff &&
--		    lastoff < page_offset(pvec.pages[0])) {
--			found = true;
--			break;
--		}
--
- 		for (i = 0; i < nr_pages; i++) {
- 			struct page	*page = pvec.pages[i];
- 			loff_t		b_offset;
-@@ -1098,18 +1087,18 @@ xfs_find_get_desired_pgoff(
- 			 * file mapping. However, page->index will not change
- 			 * because we have a reference on the page.
- 			 *
--			 * Searching done if the page index is out of range.
--			 * If the current offset is not reaches the end of
--			 * the specified search range, there should be a hole
--			 * between them.
-+			 * If current page offset is beyond where we've ended,
-+			 * we've found a hole.
- 			 */
--			if (page->index > end) {
--				if (type == HOLE_OFF && lastoff < endoff) {
--					*offset = lastoff;
--					found = true;
--				}
-+			if (type == HOLE_OFF && lastoff < endoff &&
-+			    lastoff < page_offset(pvec.pages[i])) {
-+				found = true;
-+				*offset = lastoff;
- 				goto out;
- 			}
-+			/* Searching done if the page index is out of range. */
-+			if (page->index > end)
-+				goto out;
- 
- 			lock_page(page);
- 			/*
+								Honza
 -- 
-2.12.0
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
