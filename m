@@ -1,71 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:33728 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1754951AbdERJdX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 05:33:23 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v4I98Z3J162677
-        for <linux-xfs@vger.kernel.org>; Thu, 18 May 2017 05:33:22 -0400
-Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2agyfkwxtf-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 18 May 2017 05:33:22 -0400
-Received: from localhost
-        by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <abdhalee@linux.vnet.ibm.com>;
-        Thu, 18 May 2017 19:33:19 +1000
-Subject: Re: Mainline build brakes on powerpc with error :
- fs/xfs/xfs_iomap.c:1152: undefined reference to `.put_dax
-From: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-Date: Thu, 18 May 2017 15:02:24 +0530
-In-Reply-To: <CAK8P3a1e+Rgv2emmTgewm-YJ6j2H7xJzM_+Mz8J3OKWCpbsD6g@mail.gmail.com>
-References: <1494932559.3971.18.camel@abdul.in.ibm.com>
-         <CAK8P3a1e+Rgv2emmTgewm-YJ6j2H7xJzM_+Mz8J3OKWCpbsD6g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Message-Id: <1495099944.22101.6.camel@abdul>
+Received: from mx2.suse.de ([195.135.220.15]:48924 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754387AbdEQO5t (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 17 May 2017 10:57:49 -0400
+Date: Wed, 17 May 2017 16:57:46 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 0/3 v2] xfs: Fix SEEK_HOLE implementation
+Message-ID: <20170517145746.GC5632@quack2.suse.cz>
+References: <20170517121046.2632-1-jack@suse.cz>
+ <20170517123115.GG7250@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170517123115.GG7250@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Arnd Bergmann <arnd@arndb.de>, dan.j.williams@intel.com
-Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-xfs <linux-xfs@vger.kernel.org>, sachinp <sachinp@linux.vnet.ibm.com>, linux-kernel <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Eryu Guan <eguan@redhat.com>
+Cc: Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Tue, 2017-05-16 at 13:17 +0200, Arnd Bergmann wrote:
-> On Tue, May 16, 2017 at 1:02 PM, Abdul Haleem
-> <abdhalee@linux.vnet.ibm.com> wrote:
-> > Hi,
-> >
-> > Today's mainline 4.12-rc1 fails to build for the attached configuration
-> > file on Power7 box with below errors.
-> >
-> > $ make
-> > fs/built-in.o: In function `xfs_file_iomap_end':
-> > fs/xfs/xfs_iomap.c:1152: undefined reference to `.put_dax'
-> > fs/built-in.o: In function `xfs_file_iomap_begin':
-> > fs/xfs/xfs_iomap.c:1071: undefined reference to `.dax_get_by_host'
-> >
-> > Also reproducible on latest linux-next, and the last successful build
-> > was at next-20170510.
+On Wed 17-05-17 20:31:15, Eryu Guan wrote:
+> Hi Jan,
 > 
-> This should be fixed by https://patchwork.kernel.org/patch/9725515/
+> On Wed, May 17, 2017 at 02:10:43PM +0200, Jan Kara wrote:
+> > Hello,
+> > 
+> > this is the second revision of the patches to fix bugs in XFS's SEEK_HOLE
+> > implementation and cleanup the code a bit.
+> > 
+> > Changes since v1:
+> > * Fixed some more buggy cases
+> > * Simplified code a bit as suggested by Darrick
+> > * Fixed range check as spotted by Brian
 > 
->   Arnd
+> I applied this patchset on top of 4.12-rc1 kernel to test your v4 test
+> case, your new test passed all my tests, but I found generic/285
+> regressed with sub-page block size XFS, 285.full showed that failure was
+> from subtest 7
 > 
+> 07. Test file with unwritten extents, only have dirty pages
+> 07.01 SEEK_HOLE expected 0 or 11264, got 0.                       succ
+> 07.02 SEEK_HOLE expected 1 or 11264, got 1.                       succ
+> 07.03 SEEK_DATA expected 10240 or 10240, got -1.                  FAIL
+> 07.04 SEEK_DATA expected 10240 or 10240, got -1.                  FAIL
+> 
+> And manual test showed subtest 8 failed too
+> 
+> # ./src/seek_sanity_test -s 8 -e 8 /mnt/xfs/testfile
+> File system magic#: 0x58465342
+> Allocation size: 4096
+> 
+> 08. Test file with unwritten extents, only have unwritten pages
+> 08.01 SEEK_HOLE expected 0 or 5632, got 0.                        succ
+> 08.02 SEEK_HOLE expected 1 or 5632, got 1.                        succ
+> 08.03 SEEK_DATA expected 5120 or 5120, got -1.                    FAIL
+> 08.04 SEEK_DATA expected 5120 or 5120, got -1.                    FAIL
+> 
+> Other subtests all passed with sub-page block size XFS.
 
-Arnd,
+Strange. It doesn't fail for me this way even with 1k blocksize. I'll
+investigate more tomorrow.
 
-With the given patch, kernel build and boot is fine on ppc.
-
-Thanks Dan, for the patch!
-
-Tested-by : Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-
+								Honza
 -- 
-Regard's
-
-Abdul Haleem
-IBM Linux Technology Centre
-
-
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
