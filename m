@@ -1,82 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34533 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751531AbdEQMPW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 17 May 2017 08:15:22 -0400
-Date: Wed, 17 May 2017 14:15:19 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 2/2] xfs: Move handling of missing page into one place in
- xfs_find_get_desired_pgoff()
-Message-ID: <20170517121519.GA2630@quack2.suse.cz>
-References: <20170511165023.29887-1-jack@suse.cz>
- <20170511165023.29887-2-jack@suse.cz>
- <20170512162302.GG4519@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:55154 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753296AbdEQMb3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 17 May 2017 08:31:29 -0400
+Date: Wed, 17 May 2017 20:31:15 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 0/3 v2] xfs: Fix SEEK_HOLE implementation
+Message-ID: <20170517123115.GG7250@eguan.usersys.redhat.com>
+References: <20170517121046.2632-1-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170512162302.GG4519@birch.djwong.org>
+In-Reply-To: <20170517121046.2632-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Fri 12-05-17 09:23:02, Darrick J. Wong wrote:
-> On Thu, May 11, 2017 at 06:50:23PM +0200, Jan Kara wrote:
-> > Currently several places in xfs_find_get_desired_pgoff() handle the case
-> > of a missing page. Make them all handled in one place after the loop has
-> > terminated.
-> > 
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-> > ---
-> >  fs/xfs/xfs_file.c | 24 ++++++++----------------
-> >  1 file changed, 8 insertions(+), 16 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > index df51c025adfe..719923b99ba1 100644
-> > --- a/fs/xfs/xfs_file.c
-> > +++ b/fs/xfs/xfs_file.c
-> > @@ -1069,10 +1069,6 @@ xfs_find_get_desired_pgoff(
-> >  				break;
-> >  
-> >  			ASSERT(type == HOLE_OFF);
-> > -			if (lastoff == startoff || lastoff < endoff) {
-> > -				found = true;
-> > -				*offset = lastoff;
-> > -			}
-> >  			break;
-> >  		}
-> 
-> Hm.  This leaves the following weird looking hunk:
-> 
-> if (nr_pages == 0) {
-> 	/* Data search found nothing */
-> 	if (type == DATA_OFF)
-> 		break;
-> 
-> 	ASSERT(type == HOLE_OFF);
-> 	break;
-> }
-> 
-> Which could be simplified to:
-> 
-> if (nr_pages == 0) {
-> 	ASSERT(type == HOLE_OFF || type == DATA_OFF);
-> 	break;
-> }
-> 
-> Right?  Maybe a better cleanup would be to name the enum defining
-> {HOLE,DATA}_OFF and change the xfs_find_get_desired_pgoff prototype to
-> use that enum, and then we also get compiler type checking.
+Hi Jan,
 
-Well, given this function is called only from one place, enum looks like an
-overkill and even the assert is weird. I've just simplified the condition
-to:
+On Wed, May 17, 2017 at 02:10:43PM +0200, Jan Kara wrote:
+> Hello,
+> 
+> this is the second revision of the patches to fix bugs in XFS's SEEK_HOLE
+> implementation and cleanup the code a bit.
+> 
+> Changes since v1:
+> * Fixed some more buggy cases
+> * Simplified code a bit as suggested by Darrick
+> * Fixed range check as spotted by Brian
 
-if (nr_pages == 0)
-	break;
+I applied this patchset on top of 4.12-rc1 kernel to test your v4 test
+case, your new test passed all my tests, but I found generic/285
+regressed with sub-page block size XFS, 285.full showed that failure was
+from subtest 7
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+07. Test file with unwritten extents, only have dirty pages
+07.01 SEEK_HOLE expected 0 or 11264, got 0.                       succ
+07.02 SEEK_HOLE expected 1 or 11264, got 1.                       succ
+07.03 SEEK_DATA expected 10240 or 10240, got -1.                  FAIL
+07.04 SEEK_DATA expected 10240 or 10240, got -1.                  FAIL
+
+And manual test showed subtest 8 failed too
+
+# ./src/seek_sanity_test -s 8 -e 8 /mnt/xfs/testfile
+File system magic#: 0x58465342
+Allocation size: 4096
+
+08. Test file with unwritten extents, only have unwritten pages
+08.01 SEEK_HOLE expected 0 or 5632, got 0.                        succ
+08.02 SEEK_HOLE expected 1 or 5632, got 1.                        succ
+08.03 SEEK_DATA expected 5120 or 5120, got -1.                    FAIL
+08.04 SEEK_DATA expected 5120 or 5120, got -1.                    FAIL
+
+Other subtests all passed with sub-page block size XFS.
+
+Thanks,
+Eryu
