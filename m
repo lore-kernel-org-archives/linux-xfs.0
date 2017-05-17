@@ -1,65 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42264 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:46820 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932273AbdEWCYZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 May 2017 22:24:25 -0400
-Subject: Re: [PATCH 2/3] xfsprogs: remove double-underscore integer types
-References: <20170518012618.GT4519@birch.djwong.org>
- <20170518013138.GV4519@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ab8666d6-7a39-2447-97d3-4c9ed8ce1291@sandeen.net>
-Date: Mon, 22 May 2017 21:24:23 -0500
+        id S1751637AbdEQLrH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 17 May 2017 07:47:07 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 48A0D8047C
+        for <linux-xfs@vger.kernel.org>; Wed, 17 May 2017 11:47:06 +0000 (UTC)
+Date: Wed, 17 May 2017 13:47:02 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
+ error during buffer writeback
+Message-ID: <20170517114702.gpp2rsk3e5giofbm@eorzea.usersys.redhat.com>
+References: <20170511135733.21765-1-cmaiolino@redhat.com>
+ <20170511135733.21765-3-cmaiolino@redhat.com>
+ <20170511170805.GB14148@localhost.localdomain>
+ <20170512082135.g6vd4vvxlctmtptq@eorzea.usersys.redhat.com>
+ <20170512113727.GB15623@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20170518013138.GV4519@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170512113727.GB15623@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
-Cc: Eric Sandeen <sandeen@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-
-
-On 5/17/17 8:31 PM, Darrick J. Wong wrote:
-> This is a purely mechanical patch that removes the private
-> __{u,}int{8,16,32,64}_t typedefs in favor of using the system
-> {u,}int{8,16,32,64}_t typedefs.  This is the sed script used to perform
-> the transformation and fix the resulting whitespace and indentation
-> errors:
+> > > > +			}
+> > > > +
+> > > > +			if (!(bp->b_flags & XBF_WRITE_FAIL)) {
+> > > > +				rval = XFS_ITEM_FLUSHING;
+> > > > +				xfs_buf_relse(bp);
+> > > > +				goto out_unlock;
+> > > > +			}
 > 
-> s/typedef\t__uint8_t/typedef __uint8_t\t/g
-> s/typedef\t__uint/typedef __uint/g
-> s/typedef\t__int\([0-9]*\)_t/typedef int\1_t\t/g
-> s/__uint8_t\t/__uint8_t\t\t/g
-> s/__uint/uint/g
-> s/__int\([0-9]*\)_t\t/__int\1_t\t\t/g
-> s/__int/int/g
-> /^typedef.*int[0-9]*_t;$/d
+> I think I glossed over this on my first pass, but I don't think we need
+> to (or should) check XBF_WRITE_FAIL here or in the error handler. It's a
+> flag used to control the internal retry and that is kind of irrelevant
+> to this mechanism. Unless I'm missing something.. I don't think this
+> state can occur..?
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I built this in the Fedora buildsystem for a bunch of arches, 
+Yup, right, it is not required, I'll remove it for the next version,
 
-buildArch (xfsprogs-4.11.0-1.fc25.double.src.rpm, x86_64)
-buildArch (xfsprogs-4.11.0-1.fc25.double.src.rpm, ppc64le)
-buildArch (xfsprogs-4.11.0-1.fc25.double.src.rpm, aarch64)
-buildArch (xfsprogs-4.11.0-1.fc25.double.src.rpm, ppc64)
-buildArch (xfsprogs-4.11.0-1.fc25.double.src.rpm, i686)
-buildArch (xfsprogs-4.11.0-1.fc25.double.src.rpm, s390x)
-buildArch (xfsprogs-4.11.0-1.fc25.double.src.rpm, armv7hl) 
+thanks for the review
 
-and it all completed, for whatever that's worth.  ;)
+> Brian
+> 
+> > > > +
+> > > > +			while (lip != NULL) {
+> > > > +				next = lip->li_bio_list;
+> > > > +
+> > > > +				if (lip->li_flags & XFS_LI_FAILED)
+> > > > +					lip->li_flags &= XFS_LI_FAILED;
+> > > 
+> > > Eric already pointed out that you probably intend to clear the flag
+> > > here..?
+> > > 
+> > 
+> > Yup, my bad.
+> > 
+> > > > +				lip = next;
+> > > > +			}
+> > > 
+> > > This whole hunk might be better off in a helper function (with the
+> > > comment Eric suggested as well).
+> > >
+> > 
+> > Agreed, a helper function can be used here and in dquot code as well, so I agree
+> > that a helper function can be useful, I'll try to make it a common code for both
+> > dquot and inode items.
+> >  
+> > > Those points and the ->iop_error() thing aside, this otherwise seems Ok
+> > > to me.
+> > >
+> > 
+> >  
+> > > Brian
+> > > 
+> > > > +
+> > > > +			if (!xfs_buf_delwri_queue(bp, buffer_list))
+> > > > +				rval = XFS_ITEM_FLUSHING;
+> > > > +
+> > > > +			xfs_buf_relse(bp);
+> > > > +			goto out_unlock;
+> > > > +		}
+> > > > +
+> > > >  		rval = XFS_ITEM_FLUSHING;
+> > > >  		goto out_unlock;
+> > > > +
+> > > >  	}
+> > > >  
+> > > >  	ASSERT(iip->ili_fields != 0 || XFS_FORCED_SHUTDOWN(ip->i_mount));
+> > > > @@ -622,7 +673,8 @@ static const struct xfs_item_ops xfs_inode_item_ops = {
+> > > >  	.iop_unlock	= xfs_inode_item_unlock,
+> > > >  	.iop_committed	= xfs_inode_item_committed,
+> > > >  	.iop_push	= xfs_inode_item_push,
+> > > > -	.iop_committing = xfs_inode_item_committing
+> > > > +	.iop_committing = xfs_inode_item_committing,
+> > > > +	.iop_error	= xfs_inode_item_error
+> > > >  };
+> > > >  
+> > > >  
+> > > > -- 
+> > > > 2.9.3
+> > > > 
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > -- 
+> > Carlos
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-https://koji.fedoraproject.org/koji/taskinfo?taskID=19698440
-
-I'm fine with this change, too.
-
-I guess that warrants a:
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-Though "reviewed" might be a bit strong ... :)
-
--Eric
+-- 
+Carlos
