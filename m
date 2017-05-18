@@ -1,91 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38604 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932136AbdERG1V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:27:21 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/23] uuid: remove uuid_be defintions from the uapi header
-Date: Thu, 18 May 2017 08:26:45 +0200
-Message-Id: <20170518062705.25902-4-hch@lst.de>
-In-Reply-To: <20170518062705.25902-1-hch@lst.de>
-References: <20170518062705.25902-1-hch@lst.de>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:64354 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752075AbdERIeI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 04:34:08 -0400
+Date: Thu, 18 May 2017 18:34:05 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfs: freeze rw filesystems just prior to reboot
+Message-ID: <20170518083405.GQ17542@dastard>
+References: <20170518012618.GT4519@birch.djwong.org>
+ <20170518013242.GW4519@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170518013242.GW4519@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-We don't use uuid_be and the UUID_BE constants in any uapi headers, so make
-them private to the kernel.
+On Wed, May 17, 2017 at 06:32:42PM -0700, Darrick J. Wong wrote:
+> Apparently there are certain system software configurations that do odd
+> things like update the kernel and reboot without umounting the /boot fs
+> or remounting it readonly, either of which would push all the AIL items
+> out to disk.  As a result, a subsequent invocation of something like
+> grub (which has a frightening willingness to read a fs with a dirty log)
+> can read stale disk contents and/or miss files the metadata for which
+> have been written to the log but not checkpointed into the filesystem.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- include/linux/uuid.h      | 15 +++++++++++++++
- include/uapi/linux/uuid.h | 16 ----------------
- 2 files changed, 15 insertions(+), 16 deletions(-)
+> Granted, most of the time /boot is a separate partition and
+> systemd/sysvinit/whatever actually /do/ unmount /boot before rebooting.
+> This "fix" is only needed for people who have one giant filesystem.
 
-diff --git a/include/linux/uuid.h b/include/linux/uuid.h
-index 4dff73a89758..de3aea206562 100644
---- a/include/linux/uuid.h
-+++ b/include/linux/uuid.h
-@@ -18,6 +18,21 @@
- 
- #include <uapi/linux/uuid.h>
- 
-+typedef struct {
-+	__u8 b[16];
-+} uuid_be;
-+
-+#define UUID_BE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
-+((uuid_be)								\
-+{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
-+   ((b) >> 8) & 0xff, (b) & 0xff,					\
-+   ((c) >> 8) & 0xff, (c) & 0xff,					\
-+   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
-+
-+#define NULL_UUID_BE							\
-+	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
-+		0x00, 0x00, 0x00, 0x00)
-+
- /*
-  * V1 (time-based) UUID definition [RFC 4122].
-  * - the timestamp is a 60-bit value, split 32/16/12, and goes in 100ns
-diff --git a/include/uapi/linux/uuid.h b/include/uapi/linux/uuid.h
-index 3738e5fb6a4d..0099756c4bac 100644
---- a/include/uapi/linux/uuid.h
-+++ b/include/uapi/linux/uuid.h
-@@ -24,10 +24,6 @@ typedef struct {
- 	__u8 b[16];
- } uuid_le;
- 
--typedef struct {
--	__u8 b[16];
--} uuid_be;
--
- #define UUID_LE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
- ((uuid_le)								\
- {{ (a) & 0xff, ((a) >> 8) & 0xff, ((a) >> 16) & 0xff, ((a) >> 24) & 0xff, \
-@@ -35,20 +31,8 @@ typedef struct {
-    (c) & 0xff, ((c) >> 8) & 0xff,					\
-    (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
- 
--#define UUID_BE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
--((uuid_be)								\
--{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
--   ((b) >> 8) & 0xff, (b) & 0xff,					\
--   ((c) >> 8) & 0xff, (c) & 0xff,					\
--   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
--
- #define NULL_UUID_LE							\
- 	UUID_LE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
- 		0x00, 0x00, 0x00, 0x00)
- 
--#define NULL_UUID_BE							\
--	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
--		0x00, 0x00, 0x00, 0x00)
--
--
- #endif /* _UAPI_LINUX_UUID_H_ */
+Let me guess the series of events: grub calls "sync" and says "I'm
+done", then user runs an immediate reboot/shutdown and something
+still running after init has killed everything but PID 1 has an open
+writeable file descriptor causing the remount-ro of / to return
+EBUSY and so it just shuts down/restarts with an unflushed log?
+
+> Therefore, add a reboot hook to freeze the rw filesystems (which
+> checkpoints the log) just prior to reboot.  This is an unfortunate and
+> insufficient workaround for multiple layers of inadequate external
+> software, but at least it will reduce boot time surprises for the "OS
+> updater failed to disengage the filesystem before rebooting" case.
+> 
+> Seeing as grub is unlikely ever to learn to replay the XFS log (and we
+> probably don't want it doing that),
+
+If anything other than XFS code modifies the filesystem (log,
+metadata or data) then we have a tainted, unsuportable filesystem
+image.....
+
+> *LILO has been discontinued for at least 18 months,
+
+Yet Lilo still works just fine.
+
+> and we're not quite to the point of putting kernel
+> files directly on the EFI System Partition,
+
+Really? How have we not got there yet - we were doing this almost
+15 years ago with ia64 and elilo via mounting the EFI partition on
+/boot....
+
+> this seems like the least
+> crappy solution to this problem.
+> 
+> Yes, you're still screwed in grub if the system crashes. :)
+
+This really sounds like the perennial "grub doesn't ensure the
+information it requires to boot is safely on stable storage before
+reboot" problem combined with some sub-optimal init behaviour to
+expose the grub issue....
+
+Cheers,
+
+Dave.
 -- 
-2.11.0
-
+Dave Chinner
+david@fromorbit.com
