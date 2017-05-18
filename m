@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:55568 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:55387 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754961AbdERG2n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:28:43 -0400
+        with ESMTP id S932209AbdERG1v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:27:51 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 21/23] nvme: switch to uuid_t
-Date: Thu, 18 May 2017 08:27:03 +0200
-Message-Id: <20170518062705.25902-22-hch@lst.de>
+Subject: [PATCH 10/23] afs: switch to use uuid_t and uuid_gen
+Date: Thu, 18 May 2017 08:26:52 +0200
+Message-Id: <20170518062705.25902-11-hch@lst.de>
 In-Reply-To: <20170518062705.25902-1-hch@lst.de>
 References: <20170518062705.25902-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -16,128 +16,155 @@ To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73i
 Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: David Howells <dhowells@redhat.com>
 ---
- drivers/nvme/host/fabrics.c | 8 ++++----
- drivers/nvme/host/fabrics.h | 2 +-
- drivers/nvme/host/fc.c      | 3 +--
- drivers/nvme/target/nvmet.h | 1 +
- include/linux/nvme-fc.h     | 3 +--
- include/linux/nvme.h        | 2 +-
- 6 files changed, 9 insertions(+), 10 deletions(-)
+ fs/afs/cmservice.c | 46 +++++++++++++++++++++++-----------------------
+ fs/afs/internal.h  |  2 +-
+ fs/afs/main.c      |  4 ++--
+ 3 files changed, 26 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/nvme/host/fabrics.c b/drivers/nvme/host/fabrics.c
-index 990e6fb32a63..c190d7e36900 100644
---- a/drivers/nvme/host/fabrics.c
-+++ b/drivers/nvme/host/fabrics.c
-@@ -58,7 +58,7 @@ static struct nvmf_host *nvmf_host_add(const char *hostnqn)
+diff --git a/fs/afs/cmservice.c b/fs/afs/cmservice.c
+index 3062cceb5c2a..d4e77d12570c 100644
+--- a/fs/afs/cmservice.c
++++ b/fs/afs/cmservice.c
+@@ -350,7 +350,7 @@ static int afs_deliver_cb_init_call_back_state3(struct afs_call *call)
+ {
+ 	struct sockaddr_rxrpc srx;
+ 	struct afs_server *server;
+-	struct uuid_v1 *r;
++	uuid_t *r;
+ 	unsigned loop;
+ 	__be32 *b;
+ 	int ret;
+@@ -380,20 +380,20 @@ static int afs_deliver_cb_init_call_back_state3(struct afs_call *call)
+ 		}
  
- 	kref_init(&host->ref);
- 	memcpy(host->nqn, hostnqn, NVMF_NQN_SIZE);
--	uuid_be_gen(&host->id);
-+	uuid_gen(&host->id);
+ 		_debug("unmarshall UUID");
+-		call->request = kmalloc(sizeof(struct uuid_v1), GFP_KERNEL);
++		call->request = kmalloc(sizeof(uuid_t), GFP_KERNEL);
+ 		if (!call->request)
+ 			return -ENOMEM;
  
- 	list_add_tail(&host->list, &nvmf_hosts);
- out_unlock:
-@@ -75,7 +75,7 @@ static struct nvmf_host *nvmf_host_default(void)
- 		return NULL;
+ 		b = call->buffer;
+ 		r = call->request;
+-		r->time_low			= b[0];
+-		r->time_mid			= htons(ntohl(b[1]));
+-		r->time_hi_and_version		= htons(ntohl(b[2]));
+-		r->clock_seq_hi_and_reserved 	= ntohl(b[3]);
+-		r->clock_seq_low		= ntohl(b[4]);
++		r->v1.time_low			= b[0];
++		r->v1.time_mid			= htons(ntohl(b[1]));
++		r->v1.time_hi_and_version	= htons(ntohl(b[2]));
++		r->v1.clock_seq_hi_and_reserved = ntohl(b[3]);
++		r->v1.clock_seq_low		= ntohl(b[4]);
  
- 	kref_init(&host->ref);
--	uuid_be_gen(&host->id);
-+	uuid_gen(&host->id);
- 	snprintf(host->nqn, NVMF_NQN_SIZE,
- 		"nqn.2014-08.org.nvmexpress:NVMf:uuid:%pUb", &host->id);
+ 		for (loop = 0; loop < 6; loop++)
+-			r->node[loop] = ntohl(b[loop + 5]);
++			r->v1.node[loop] = ntohl(b[loop + 5]);
  
-@@ -395,7 +395,7 @@ int nvmf_connect_admin_queue(struct nvme_ctrl *ctrl)
- 	if (!data)
- 		return -ENOMEM;
+ 		call->offset = 0;
+ 		call->unmarshall++;
+@@ -453,7 +453,7 @@ static int afs_deliver_cb_probe(struct afs_call *call)
+ static void SRXAFSCB_ProbeUuid(struct work_struct *work)
+ {
+ 	struct afs_call *call = container_of(work, struct afs_call, work);
+-	struct uuid_v1 *r = call->request;
++	uuid_t *r = call->request;
  
--	memcpy(&data->hostid, &ctrl->opts->host->id, sizeof(uuid_be));
-+	uuid_copy(&data->hostid, &ctrl->opts->host->id);
- 	data->cntlid = cpu_to_le16(0xffff);
- 	strncpy(data->subsysnqn, ctrl->opts->subsysnqn, NVMF_NQN_SIZE);
- 	strncpy(data->hostnqn, ctrl->opts->host->nqn, NVMF_NQN_SIZE);
-@@ -454,7 +454,7 @@ int nvmf_connect_io_queue(struct nvme_ctrl *ctrl, u16 qid)
- 	if (!data)
- 		return -ENOMEM;
+ 	struct {
+ 		__be32	match;
+@@ -476,7 +476,7 @@ static void SRXAFSCB_ProbeUuid(struct work_struct *work)
+  */
+ static int afs_deliver_cb_probe_uuid(struct afs_call *call)
+ {
+-	struct uuid_v1 *r;
++	uuid_t *r;
+ 	unsigned loop;
+ 	__be32 *b;
+ 	int ret;
+@@ -502,20 +502,20 @@ static int afs_deliver_cb_probe_uuid(struct afs_call *call)
+ 		}
  
--	memcpy(&data->hostid, &ctrl->opts->host->id, sizeof(uuid_be));
-+	uuid_copy(&data->hostid, &ctrl->opts->host->id);
- 	data->cntlid = cpu_to_le16(ctrl->cntlid);
- 	strncpy(data->subsysnqn, ctrl->opts->subsysnqn, NVMF_NQN_SIZE);
- 	strncpy(data->hostnqn, ctrl->opts->host->nqn, NVMF_NQN_SIZE);
-diff --git a/drivers/nvme/host/fabrics.h b/drivers/nvme/host/fabrics.h
-index f5a9c1fb186f..29be7600689d 100644
---- a/drivers/nvme/host/fabrics.h
-+++ b/drivers/nvme/host/fabrics.h
-@@ -36,7 +36,7 @@ struct nvmf_host {
- 	struct kref		ref;
- 	struct list_head	list;
- 	char			nqn[NVMF_NQN_SIZE];
--	uuid_be			id;
-+	uuid_t			id;
- };
+ 		_debug("unmarshall UUID");
+-		call->request = kmalloc(sizeof(struct uuid_v1), GFP_KERNEL);
++		call->request = kmalloc(sizeof(uuid_t), GFP_KERNEL);
+ 		if (!call->request)
+ 			return -ENOMEM;
  
- /**
-diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
-index 70e689bf1cad..da95e85cadec 100644
---- a/drivers/nvme/host/fc.c
-+++ b/drivers/nvme/host/fc.c
-@@ -882,8 +882,7 @@ nvme_fc_connect_admin_queue(struct nvme_fc_ctrl *ctrl,
- 	assoc_rqst->assoc_cmd.sqsize = cpu_to_be16(qsize);
- 	/* Linux supports only Dynamic controllers */
- 	assoc_rqst->assoc_cmd.cntlid = cpu_to_be16(0xffff);
--	memcpy(&assoc_rqst->assoc_cmd.hostid, &ctrl->ctrl.opts->host->id,
--		min_t(size_t, FCNVME_ASSOC_HOSTID_LEN, sizeof(uuid_be)));
-+	uuid_copy(&assoc_rqst->assoc_cmd.hostid, &ctrl->ctrl.opts->host->id);
- 	strncpy(assoc_rqst->assoc_cmd.hostnqn, ctrl->ctrl.opts->host->nqn,
- 		min(FCNVME_ASSOC_HOSTNQN_LEN, NVMF_NQN_SIZE));
- 	strncpy(assoc_rqst->assoc_cmd.subnqn, ctrl->ctrl.opts->subsysnqn,
-diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index 7cb77ba5993b..204f4066c971 100644
---- a/drivers/nvme/target/nvmet.h
-+++ b/drivers/nvme/target/nvmet.h
-@@ -21,6 +21,7 @@
- #include <linux/percpu-refcount.h>
- #include <linux/list.h>
- #include <linux/mutex.h>
-+#include <linux/uuid.h>
- #include <linux/nvme.h>
- #include <linux/configfs.h>
- #include <linux/rcupdate.h>
-diff --git a/include/linux/nvme-fc.h b/include/linux/nvme-fc.h
-index e997c4a49a88..bc711a10be05 100644
---- a/include/linux/nvme-fc.h
-+++ b/include/linux/nvme-fc.h
-@@ -177,7 +177,6 @@ struct fcnvme_lsdesc_rjt {
- };
+ 		b = call->buffer;
+ 		r = call->request;
+-		r->time_low			= b[0];
+-		r->time_mid			= htons(ntohl(b[1]));
+-		r->time_hi_and_version		= htons(ntohl(b[2]));
+-		r->clock_seq_hi_and_reserved 	= ntohl(b[3]);
+-		r->clock_seq_low		= ntohl(b[4]);
++		r->v1.time_low			= b[0];
++		r->v1.time_mid			= htons(ntohl(b[1]));
++		r->v1.time_hi_and_version	= htons(ntohl(b[2]));
++		r->v1.clock_seq_hi_and_reserved = ntohl(b[3]);
++		r->v1.clock_seq_low		= ntohl(b[4]);
  
+ 		for (loop = 0; loop < 6; loop++)
+-			r->node[loop] = ntohl(b[loop + 5]);
++			r->v1.node[loop] = ntohl(b[loop + 5]);
  
--#define FCNVME_ASSOC_HOSTID_LEN		16
- #define FCNVME_ASSOC_HOSTNQN_LEN	256
- #define FCNVME_ASSOC_SUBNQN_LEN		256
+ 		call->offset = 0;
+ 		call->unmarshall++;
+@@ -568,13 +568,13 @@ static void SRXAFSCB_TellMeAboutYourself(struct work_struct *work)
+ 	memset(&reply, 0, sizeof(reply));
+ 	reply.ia.nifs = htonl(nifs);
  
-@@ -191,7 +190,7 @@ struct fcnvme_lsdesc_cr_assoc_cmd {
- 	__be16	cntlid;
- 	__be16	sqsize;
- 	__be32	rsvd52;
--	u8	hostid[FCNVME_ASSOC_HOSTID_LEN];
-+	uuid_t	hostid;
- 	u8	hostnqn[FCNVME_ASSOC_HOSTNQN_LEN];
- 	u8	subnqn[FCNVME_ASSOC_SUBNQN_LEN];
- 	u8	rsvd632[384];
-diff --git a/include/linux/nvme.h b/include/linux/nvme.h
-index b625bacf37ef..d88e925f82ce 100644
---- a/include/linux/nvme.h
-+++ b/include/linux/nvme.h
-@@ -843,7 +843,7 @@ struct nvmf_connect_command {
- };
+-	reply.ia.uuid[0] = afs_uuid.time_low;
+-	reply.ia.uuid[1] = htonl(ntohs(afs_uuid.time_mid));
+-	reply.ia.uuid[2] = htonl(ntohs(afs_uuid.time_hi_and_version));
+-	reply.ia.uuid[3] = htonl((s8) afs_uuid.clock_seq_hi_and_reserved);
+-	reply.ia.uuid[4] = htonl((s8) afs_uuid.clock_seq_low);
++	reply.ia.uuid[0] = afs_uuid.v1.time_low;
++	reply.ia.uuid[1] = htonl(ntohs(afs_uuid.v1.time_mid));
++	reply.ia.uuid[2] = htonl(ntohs(afs_uuid.v1.time_hi_and_version));
++	reply.ia.uuid[3] = htonl((s8) afs_uuid.v1.clock_seq_hi_and_reserved);
++	reply.ia.uuid[4] = htonl((s8) afs_uuid.v1.clock_seq_low);
+ 	for (loop = 0; loop < 6; loop++)
+-		reply.ia.uuid[loop + 5] = htonl((s8) afs_uuid.node[loop]);
++		reply.ia.uuid[loop + 5] = htonl((s8) afs_uuid.v1.node[loop]);
  
- struct nvmf_connect_data {
--	__u8		hostid[16];
-+	uuid_t		hostid;
- 	__le16		cntlid;
- 	char		resv4[238];
- 	char		subsysnqn[NVMF_NQN_FIELD_LEN];
+ 	if (ifs) {
+ 		for (loop = 0; loop < nifs; loop++) {
+diff --git a/fs/afs/internal.h b/fs/afs/internal.h
+index 393672997cc2..7de45c8686a2 100644
+--- a/fs/afs/internal.h
++++ b/fs/afs/internal.h
+@@ -544,7 +544,7 @@ extern int afs_drop_inode(struct inode *);
+  * main.c
+  */
+ extern struct workqueue_struct *afs_wq;
+-extern struct uuid_v1 afs_uuid;
++extern uuid_t afs_uuid;
+ 
+ /*
+  * misc.c
+diff --git a/fs/afs/main.c b/fs/afs/main.c
+index 51d7d17bca57..75b3d3a8b1ba 100644
+--- a/fs/afs/main.c
++++ b/fs/afs/main.c
+@@ -31,7 +31,7 @@ static char *rootcell;
+ module_param(rootcell, charp, 0);
+ MODULE_PARM_DESC(rootcell, "root AFS cell name and VL server IP addr list");
+ 
+-struct uuid_v1 afs_uuid;
++uuid_t afs_uuid;
+ struct workqueue_struct *afs_wq;
+ 
+ /*
+@@ -43,7 +43,7 @@ static int __init afs_init(void)
+ 
+ 	printk(KERN_INFO "kAFS: Red Hat AFS client v0.1 registering.\n");
+ 
+-	generate_random_uuid((unsigned char *)&afs_uuid);
++	uuid_gen(&afs_uuid);
+ 
+ 	/* create workqueue */
+ 	ret = -ENOMEM;
 -- 
 2.11.0
 
