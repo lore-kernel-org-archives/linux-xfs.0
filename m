@@ -1,30 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:36277 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:55568 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753107AbdERG1L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:27:11 -0400
+        with ESMTP id S1754961AbdERG2n (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:28:43 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: cleanup UUID types V3
-Date: Thu, 18 May 2017 08:26:42 +0200
-Message-Id: <20170518062705.25902-1-hch@lst.de>
+Subject: [PATCH 21/23] nvme: switch to uuid_t
+Date: Thu, 18 May 2017 08:27:03 +0200
+Message-Id: <20170518062705.25902-22-hch@lst.de>
+In-Reply-To: <20170518062705.25902-1-hch@lst.de>
+References: <20170518062705.25902-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
 Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-Hi all,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/nvme/host/fabrics.c | 8 ++++----
+ drivers/nvme/host/fabrics.h | 2 +-
+ drivers/nvme/host/fc.c      | 3 +--
+ drivers/nvme/target/nvmet.h | 1 +
+ include/linux/nvme-fc.h     | 3 +--
+ include/linux/nvme.h        | 2 +-
+ 6 files changed, 9 insertions(+), 10 deletions(-)
 
-this series, which is a combined effort from Amir, Andy and me introduces
-new uuid_t and guid_t type names that are less confusing than the existing
-types, adds new helpers for them and starts switching the fs code over to
-it.  Andy has additional patches on top to convert many of the users
-that use char arrays for UUIDs and GUIDs to these (or rather a predecessor
-for now until updated).
+diff --git a/drivers/nvme/host/fabrics.c b/drivers/nvme/host/fabrics.c
+index 990e6fb32a63..c190d7e36900 100644
+--- a/drivers/nvme/host/fabrics.c
++++ b/drivers/nvme/host/fabrics.c
+@@ -58,7 +58,7 @@ static struct nvmf_host *nvmf_host_add(const char *hostnqn)
+ 
+ 	kref_init(&host->ref);
+ 	memcpy(host->nqn, hostnqn, NVMF_NQN_SIZE);
+-	uuid_be_gen(&host->id);
++	uuid_gen(&host->id);
+ 
+ 	list_add_tail(&host->list, &nvmf_hosts);
+ out_unlock:
+@@ -75,7 +75,7 @@ static struct nvmf_host *nvmf_host_default(void)
+ 		return NULL;
+ 
+ 	kref_init(&host->ref);
+-	uuid_be_gen(&host->id);
++	uuid_gen(&host->id);
+ 	snprintf(host->nqn, NVMF_NQN_SIZE,
+ 		"nqn.2014-08.org.nvmexpress:NVMf:uuid:%pUb", &host->id);
+ 
+@@ -395,7 +395,7 @@ int nvmf_connect_admin_queue(struct nvme_ctrl *ctrl)
+ 	if (!data)
+ 		return -ENOMEM;
+ 
+-	memcpy(&data->hostid, &ctrl->opts->host->id, sizeof(uuid_be));
++	uuid_copy(&data->hostid, &ctrl->opts->host->id);
+ 	data->cntlid = cpu_to_le16(0xffff);
+ 	strncpy(data->subsysnqn, ctrl->opts->subsysnqn, NVMF_NQN_SIZE);
+ 	strncpy(data->hostnqn, ctrl->opts->host->nqn, NVMF_NQN_SIZE);
+@@ -454,7 +454,7 @@ int nvmf_connect_io_queue(struct nvme_ctrl *ctrl, u16 qid)
+ 	if (!data)
+ 		return -ENOMEM;
+ 
+-	memcpy(&data->hostid, &ctrl->opts->host->id, sizeof(uuid_be));
++	uuid_copy(&data->hostid, &ctrl->opts->host->id);
+ 	data->cntlid = cpu_to_le16(ctrl->cntlid);
+ 	strncpy(data->subsysnqn, ctrl->opts->subsysnqn, NVMF_NQN_SIZE);
+ 	strncpy(data->hostnqn, ctrl->opts->host->nqn, NVMF_NQN_SIZE);
+diff --git a/drivers/nvme/host/fabrics.h b/drivers/nvme/host/fabrics.h
+index f5a9c1fb186f..29be7600689d 100644
+--- a/drivers/nvme/host/fabrics.h
++++ b/drivers/nvme/host/fabrics.h
+@@ -36,7 +36,7 @@ struct nvmf_host {
+ 	struct kref		ref;
+ 	struct list_head	list;
+ 	char			nqn[NVMF_NQN_SIZE];
+-	uuid_be			id;
++	uuid_t			id;
+ };
+ 
+ /**
+diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
+index 70e689bf1cad..da95e85cadec 100644
+--- a/drivers/nvme/host/fc.c
++++ b/drivers/nvme/host/fc.c
+@@ -882,8 +882,7 @@ nvme_fc_connect_admin_queue(struct nvme_fc_ctrl *ctrl,
+ 	assoc_rqst->assoc_cmd.sqsize = cpu_to_be16(qsize);
+ 	/* Linux supports only Dynamic controllers */
+ 	assoc_rqst->assoc_cmd.cntlid = cpu_to_be16(0xffff);
+-	memcpy(&assoc_rqst->assoc_cmd.hostid, &ctrl->ctrl.opts->host->id,
+-		min_t(size_t, FCNVME_ASSOC_HOSTID_LEN, sizeof(uuid_be)));
++	uuid_copy(&assoc_rqst->assoc_cmd.hostid, &ctrl->ctrl.opts->host->id);
+ 	strncpy(assoc_rqst->assoc_cmd.hostnqn, ctrl->ctrl.opts->host->nqn,
+ 		min(FCNVME_ASSOC_HOSTNQN_LEN, NVMF_NQN_SIZE));
+ 	strncpy(assoc_rqst->assoc_cmd.subnqn, ctrl->ctrl.opts->subsysnqn,
+diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
+index 7cb77ba5993b..204f4066c971 100644
+--- a/drivers/nvme/target/nvmet.h
++++ b/drivers/nvme/target/nvmet.h
+@@ -21,6 +21,7 @@
+ #include <linux/percpu-refcount.h>
+ #include <linux/list.h>
+ #include <linux/mutex.h>
++#include <linux/uuid.h>
+ #include <linux/nvme.h>
+ #include <linux/configfs.h>
+ #include <linux/rcupdate.h>
+diff --git a/include/linux/nvme-fc.h b/include/linux/nvme-fc.h
+index e997c4a49a88..bc711a10be05 100644
+--- a/include/linux/nvme-fc.h
++++ b/include/linux/nvme-fc.h
+@@ -177,7 +177,6 @@ struct fcnvme_lsdesc_rjt {
+ };
+ 
+ 
+-#define FCNVME_ASSOC_HOSTID_LEN		16
+ #define FCNVME_ASSOC_HOSTNQN_LEN	256
+ #define FCNVME_ASSOC_SUBNQN_LEN		256
+ 
+@@ -191,7 +190,7 @@ struct fcnvme_lsdesc_cr_assoc_cmd {
+ 	__be16	cntlid;
+ 	__be16	sqsize;
+ 	__be32	rsvd52;
+-	u8	hostid[FCNVME_ASSOC_HOSTID_LEN];
++	uuid_t	hostid;
+ 	u8	hostnqn[FCNVME_ASSOC_HOSTNQN_LEN];
+ 	u8	subnqn[FCNVME_ASSOC_SUBNQN_LEN];
+ 	u8	rsvd632[384];
+diff --git a/include/linux/nvme.h b/include/linux/nvme.h
+index b625bacf37ef..d88e925f82ce 100644
+--- a/include/linux/nvme.h
++++ b/include/linux/nvme.h
+@@ -843,7 +843,7 @@ struct nvmf_connect_command {
+ };
+ 
+ struct nvmf_connect_data {
+-	__u8		hostid[16];
++	uuid_t		hostid;
+ 	__le16		cntlid;
+ 	char		resv4[238];
+ 	char		subsysnqn[NVMF_NQN_FIELD_LEN];
+-- 
+2.11.0
 
-Changes since V3:
- - stop exposing uuid_be/uuid_t to userspace
- - remove uuid_be entirely
-
-Changes since V2:
- - various cleanups
