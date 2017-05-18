@@ -1,80 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:64354 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752075AbdERIeI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 04:34:08 -0400
-Date: Thu, 18 May 2017 18:34:05 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] xfs: freeze rw filesystems just prior to reboot
-Message-ID: <20170518083405.GQ17542@dastard>
-References: <20170518012618.GT4519@birch.djwong.org>
- <20170518013242.GW4519@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170518013242.GW4519@birch.djwong.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:37840 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932162AbdERG1s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:27:48 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 08/23] uuid: hoist uuid_is_null() helper from libnvdimm
+Date: Thu, 18 May 2017 08:26:50 +0200
+Message-Id: <20170518062705.25902-9-hch@lst.de>
+In-Reply-To: <20170518062705.25902-1-hch@lst.de>
+References: <20170518062705.25902-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Wed, May 17, 2017 at 06:32:42PM -0700, Darrick J. Wong wrote:
-> Apparently there are certain system software configurations that do odd
-> things like update the kernel and reboot without umounting the /boot fs
-> or remounting it readonly, either of which would push all the AIL items
-> out to disk.  As a result, a subsequent invocation of something like
-> grub (which has a frightening willingness to read a fs with a dirty log)
-> can read stale disk contents and/or miss files the metadata for which
-> have been written to the log but not checkpointed into the filesystem.
+Hoist the libnvdimm helper as an inline helper to linux/uuid.h
+using an auxiliary const variable uuid_null in lib/uuid.c.
 
-> Granted, most of the time /boot is a separate partition and
-> systemd/sysvinit/whatever actually /do/ unmount /boot before rebooting.
-> This "fix" is only needed for people who have one giant filesystem.
+[hch: also add the guid variant.  Both do the same but I'd like
+to keep casts to a minimum]
 
-Let me guess the series of events: grub calls "sync" and says "I'm
-done", then user runs an immediate reboot/shutdown and something
-still running after init has killed everything but PID 1 has an open
-writeable file descriptor causing the remount-ro of / to return
-EBUSY and so it just shuts down/restarts with an unflushed log?
+The common helper uses the new abstract type uuid_t * instead of
+u8 *.
 
-> Therefore, add a reboot hook to freeze the rw filesystems (which
-> checkpoints the log) just prior to reboot.  This is an unfortunate and
-> insufficient workaround for multiple layers of inadequate external
-> software, but at least it will reduce boot time surprises for the "OS
-> updater failed to disengage the filesystem before rebooting" case.
-> 
-> Seeing as grub is unlikely ever to learn to replay the XFS log (and we
-> probably don't want it doing that),
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: David Howells <dhowells@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+[hch: added guid_is_null]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/nvdimm/btt_devs.c |  9 +--------
+ include/linux/uuid.h      | 13 +++++++++++++
+ lib/uuid.c                |  5 +++++
+ 3 files changed, 19 insertions(+), 8 deletions(-)
 
-If anything other than XFS code modifies the filesystem (log,
-metadata or data) then we have a tainted, unsuportable filesystem
-image.....
-
-> *LILO has been discontinued for at least 18 months,
-
-Yet Lilo still works just fine.
-
-> and we're not quite to the point of putting kernel
-> files directly on the EFI System Partition,
-
-Really? How have we not got there yet - we were doing this almost
-15 years ago with ia64 and elilo via mounting the EFI partition on
-/boot....
-
-> this seems like the least
-> crappy solution to this problem.
-> 
-> Yes, you're still screwed in grub if the system crashes. :)
-
-This really sounds like the perennial "grub doesn't ensure the
-information it requires to boot is safely on stable storage before
-reboot" problem combined with some sub-optimal init behaviour to
-expose the grub issue....
-
-Cheers,
-
-Dave.
+diff --git a/drivers/nvdimm/btt_devs.c b/drivers/nvdimm/btt_devs.c
+index ae00dc0d9791..4c989bb9a8a0 100644
+--- a/drivers/nvdimm/btt_devs.c
++++ b/drivers/nvdimm/btt_devs.c
+@@ -222,13 +222,6 @@ struct device *nd_btt_create(struct nd_region *nd_region)
+ 	return dev;
+ }
+ 
+-static bool uuid_is_null(u8 *uuid)
+-{
+-	static const u8 null_uuid[16];
+-
+-	return (memcmp(uuid, null_uuid, 16) == 0);
+-}
+-
+ /**
+  * nd_btt_arena_is_valid - check if the metadata layout is valid
+  * @nd_btt:	device with BTT geometry and backing device info
+@@ -249,7 +242,7 @@ bool nd_btt_arena_is_valid(struct nd_btt *nd_btt, struct btt_sb *super)
+ 	if (memcmp(super->signature, BTT_SIG, BTT_SIG_LEN) != 0)
+ 		return false;
+ 
+-	if (!uuid_is_null(super->parent_uuid))
++	if (!guid_is_null((guid_t *)&super->parent_uuid))
+ 		if (memcmp(super->parent_uuid, parent_uuid, 16) != 0)
+ 			return false;
+ 
+diff --git a/include/linux/uuid.h b/include/linux/uuid.h
+index 7aff929007dd..47ca06d846d4 100644
+--- a/include/linux/uuid.h
++++ b/include/linux/uuid.h
+@@ -64,6 +64,9 @@ typedef struct {
+  */
+ #define	UUID_STRING_LEN		36
+ 
++extern const guid_t guid_null;
++extern const uuid_t uuid_null;
++
+ static inline bool guid_equal(const guid_t *u1, const guid_t *u2)
+ {
+ 	return memcmp(u1, u2, sizeof(guid_t)) == 0;
+@@ -74,6 +77,11 @@ static inline void guid_copy(guid_t *dst, const guid_t *src)
+ 	memcpy(dst, src, sizeof(guid_t));
+ }
+ 
++static inline bool guid_is_null(guid_t *guid)
++{
++	return guid_equal(guid, &guid_null);
++}
++
+ static inline bool uuid_equal(const uuid_t *u1, const uuid_t *u2)
+ {
+ 	return memcmp(u1, u2, sizeof(uuid_t)) == 0;
+@@ -84,6 +92,11 @@ static inline void uuid_copy(uuid_t *dst, const uuid_t *src)
+ 	memcpy(dst, src, sizeof(uuid_t));
+ }
+ 
++static inline bool uuid_is_null(uuid_t *uuid)
++{
++	return uuid_equal(uuid, &uuid_null);
++}
++
+ void generate_random_uuid(unsigned char uuid[16]);
+ 
+ extern void guid_gen(guid_t *u);
+diff --git a/lib/uuid.c b/lib/uuid.c
+index 003bf6823003..25145bfb0eaa 100644
+--- a/lib/uuid.c
++++ b/lib/uuid.c
+@@ -21,6 +21,11 @@
+ #include <linux/uuid.h>
+ #include <linux/random.h>
+ 
++const guid_t guid_null;
++EXPORT_SYMBOL(guid_null);
++const uuid_t uuid_null;
++EXPORT_SYMBOL(uuid_null);
++
+ const u8 guid_index[16] = {3,2,1,0,5,4,7,6,8,9,10,11,12,13,14,15};
+ const u8 uuid_index[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.11.0
+
