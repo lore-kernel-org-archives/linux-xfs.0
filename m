@@ -1,78 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48478 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753168AbdERGV3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:21:29 -0400
-Date: Wed, 17 May 2017 23:21:20 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] xfs: remove double-underscore integer types
-Message-ID: <20170518062120.GX4519@birch.djwong.org>
-References: <20170518012618.GT4519@birch.djwong.org>
- <20170518013043.GU4519@birch.djwong.org>
- <20170518060158.GP17542@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170518060158.GP17542@dastard>
+Received: from bombadil.infradead.org ([65.50.211.133]:59561 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754930AbdERG2h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:28:37 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 22/23] scsi_debug: switch to uuid_t
+Date: Thu, 18 May 2017 08:27:04 +0200
+Message-Id: <20170518062705.25902-23-hch@lst.de>
+In-Reply-To: <20170518062705.25902-1-hch@lst.de>
+References: <20170518062705.25902-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Thu, May 18, 2017 at 04:01:58PM +1000, Dave Chinner wrote:
-> On Wed, May 17, 2017 at 06:30:43PM -0700, Darrick J. Wong wrote:
-> > This is a purely mechanical patch that removes the private
-> > __{u,}int{8,16,32,64}_t typedefs in favor of using the system
-> > {u,}int{8,16,32,64}_t typedefs.  This is the sed script used to perform
-> > the transformation and fix the resulting whitespace and indentation
-> > errors:
-> > 
-> > s/typedef\t__uint8_t/typedef __uint8_t\t/g
-> > s/typedef\t__uint/typedef __uint/g
-> > s/typedef\t__int\([0-9]*\)_t/typedef int\1_t\t/g
-> > s/__uint8_t\t/__uint8_t\t\t/g
-> > s/__uint/uint/g
-> > s/__int\([0-9]*\)_t\t/__int\1_t\t\t/g
-> > s/__int/int/g
-> > /^typedef.*int[0-9]*_t;$/d
-> 
-> I'm not sure that this is entirely correct when it comes to sparse
-> endian notations or the way the __ types were intended to be used.
-> ISTR we used the __ types were originally for the in-memory endian
-> converted variable definitions that shadowed the on-disk structures.
-> The cleanup plan I was planning to do was to convert these all to
-> the linux kernel definitions of __[s,u][8,16,32,64] so it was clear
-> they shadow on disk structures of specific sizes.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/scsi_debug.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-<nod> I do see the appeal of __be/__le -> __u in source code, though I
-also see that include/linux/types.h typedefs them together (uint16_t is
-__u16), though in my head the signedness and size are encode in the name
-so they're interchangeable. :)
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 17249c3650fe..35ee09644cfb 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -245,7 +245,7 @@ struct sdebug_dev_info {
+ 	unsigned int channel;
+ 	unsigned int target;
+ 	u64 lun;
+-	uuid_be lu_name;
++	uuid_t lu_name;
+ 	struct sdebug_host_info *sdbg_host;
+ 	unsigned long uas_bm[1];
+ 	atomic_t num_in_q;
+@@ -965,7 +965,7 @@ static const u64 naa3_comp_c = 0x3111111000000000ULL;
+ static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
+ 			  int target_dev_id, int dev_id_num,
+ 			  const char *dev_id_str, int dev_id_str_len,
+-			  const uuid_be *lu_name)
++			  const uuid_t *lu_name)
+ {
+ 	int num, port_a;
+ 	char b[32];
+@@ -3568,7 +3568,7 @@ static void sdebug_q_cmd_wq_complete(struct work_struct *work)
+ }
+ 
+ static bool got_shared_uuid;
+-static uuid_be shared_uuid;
++static uuid_t shared_uuid;
+ 
+ static struct sdebug_dev_info *sdebug_device_create(
+ 			struct sdebug_host_info *sdbg_host, gfp_t flags)
+@@ -3578,12 +3578,12 @@ static struct sdebug_dev_info *sdebug_device_create(
+ 	devip = kzalloc(sizeof(*devip), flags);
+ 	if (devip) {
+ 		if (sdebug_uuid_ctl == 1)
+-			uuid_be_gen(&devip->lu_name);
++			uuid_gen(&devip->lu_name);
+ 		else if (sdebug_uuid_ctl == 2) {
+ 			if (got_shared_uuid)
+ 				devip->lu_name = shared_uuid;
+ 			else {
+-				uuid_be_gen(&shared_uuid);
++				uuid_gen(&shared_uuid);
+ 				got_shared_uuid = true;
+ 				devip->lu_name = shared_uuid;
+ 			}
+-- 
+2.11.0
 
-> Once that was done, everything else could be converted to c99 types
-> (like you've done above) and then we'd be free of all the old
-> __[u]int*_t types....
-
-Well I /did/ leave the existing __[ui]{8,16,32,64} declarations alone
-since /most/ of them looked like incore versions of ondisk structures.
-Though truth be told there was a lot of code to look at!
-
-(Though I also wonder why you'd want to have mixed __u32 and
-uint32_t...)
-
-Anyway, let's see if anyone else bites. :)
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
