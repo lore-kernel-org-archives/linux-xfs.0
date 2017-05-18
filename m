@@ -1,43 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47585 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754929AbdERKtH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 May 2017 06:49:07 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 2/3] xfs: Fix off-by-in in loop termination in xfs_find_get_desired_pgoff()
-Date: Thu, 18 May 2017 12:48:49 +0200
-Message-Id: <20170518104850.14508-3-jack@suse.cz>
-In-Reply-To: <20170518104850.14508-1-jack@suse.cz>
-References: <20170518104850.14508-1-jack@suse.cz>
+Received: from mx1.redhat.com ([209.132.183.28]:60932 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932517AbdERLxJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 May 2017 07:53:09 -0400
+Date: Thu, 18 May 2017 07:53:06 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: avoid mount-time deadlock in CoW extent recovery
+Message-ID: <20170518115306.GA18240@bfoster.bfoster>
+References: <20170517010728.GS4519@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170517010728.GS4519@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Eryu Guan <eguan@redhat.com>, Jan Kara <jack@suse.cz>
+Cc: xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
 
-There is an off-by-one error in loop termination conditions in
-xfs_find_get_desired_pgoff() since 'end' may index a page beyond end of
-desired range if 'endoff' is page aligned. It doesn't have any visible
-effects but still it is good to fix it.
+On Tue, May 16, 2017 at 06:07:28PM -0700, Darrick J. Wong wrote:
+> If a malicious user corrupts the refcount btree to cause a cycle between
+> different levels of the tree, the next mount attempt will deadlock in
+> the CoW recovery routine while grabbing buffer locks.  We can use the
+> ability to re-grab a buffer that was previous locked to a transaction to
+> avoid deadlocks, so do that here.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: leave a comment discussing why we use an empty transaction
+> ---
+>  fs/xfs/libxfs/xfs_refcount.c |   39 +++++++++++++++++++++++++++++----------
+>  1 file changed, 29 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+> index b177ef3..3d2b29b 100644
+> --- a/fs/xfs/libxfs/xfs_refcount.c
+> +++ b/fs/xfs/libxfs/xfs_refcount.c
+...
+> @@ -1676,8 +1691,15 @@ xfs_refcount_recover_cow_leftovers(
+>  		error = xfs_trans_commit(tp);
+>  		if (error)
+>  			goto out_free;
+> +
+> +		list_del(&rr->rr_list);
+> +		kmem_free(rr);
+>  	}
+>  
+> +	return error;
+> +out_defer:
+> +	xfs_defer_cancel(&dfops);
+> +	xfs_trans_cancel(tp);
+>  out_free:
+>  	/* Free the leftover list */
+>  	list_for_each_entry_safe(rr, n, &debris, rr_list) {
+> @@ -1688,11 +1710,8 @@ xfs_refcount_recover_cow_leftovers(
+>  
+>  out_cursor:
+>  	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> -	xfs_buf_relse(agbp);
+> -	goto out_free;
+> -
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_file.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Previously we had this jump to out_free here which presumably would
+handle the case of a query range error with a populated list. Now it
+looks like we just break down the cursor/transaction and return. Is that
+case not possible?
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index f371812e20c6..3714b5736fd3 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1043,7 +1043,7 @@ xfs_find_get_desired_pgoff(
- 
- 	index = startoff >> PAGE_SHIFT;
- 	endoff = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount);
--	end = endoff >> PAGE_SHIFT;
-+	end = (endoff - 1) >> PAGE_SHIFT;
- 	do {
- 		int		want;
- 		unsigned	nr_pages;
--- 
-2.12.0
+Brian
 
+> -out_defer:
+> -	xfs_defer_cancel(&dfops);
+> +	xfs_trans_brelse(tp, agbp);
+> +out_trans:
+>  	xfs_trans_cancel(tp);
+> -	goto out_free;
+> +	return error;
+>  }
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
