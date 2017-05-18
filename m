@@ -1,100 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43653 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754913AbdERCEa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 May 2017 22:04:30 -0400
-Date: Wed, 17 May 2017 19:04:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] ioctl_getfsmap.2: document the GETFSMAP ioctl
-Message-ID: <20170518020416.GF4514@birch.djwong.org>
-References: <20170508204738.GL5973@birch.djwong.org>
- <CAG48ez0iLRazKvXty9CG8ENXvkG6b1xjO0Q75p+16HKNptFnow@mail.gmail.com>
- <20170509015324.GM5973@birch.djwong.org>
- <20170509211746.GA87747@gmail.com>
- <20170510163818.7bleiykxgnx3pkds@thunk.org>
- <87mvakpl5m.fsf@xmission.com>
- <20170510201437.GA9854@birch.djwong.org>
- <20170511051051.GA7533@zzz>
- <38F56772-7836-4902-929C-80908BFBEA7B@dilger.ca>
- <CALCETrX0=w8tDQbAysZH3AHvvaGvPb54Jj7=Eiuk0uoB+fRfzQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CALCETrX0=w8tDQbAysZH3AHvvaGvPb54Jj7=Eiuk0uoB+fRfzQ@mail.gmail.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:38604 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932136AbdERG1V (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:27:21 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/23] uuid: remove uuid_be defintions from the uapi header
+Date: Thu, 18 May 2017 08:26:45 +0200
+Message-Id: <20170518062705.25902-4-hch@lst.de>
+In-Reply-To: <20170518062705.25902-1-hch@lst.de>
+References: <20170518062705.25902-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Andreas Dilger <adilger@dilger.ca>, Eric Biggers <ebiggers3@gmail.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Theodore Ts'o <tytso@mit.edu>, Jann Horn <jannh@google.com>, Michael Kerrisk-manpages <mtk.manpages@gmail.com>, linux-xfs@vger.kernel.org, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, linux-man <linux-man@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Sun, May 14, 2017 at 06:56:10AM -0700, Andy Lutomirski wrote:
-> On Sat, May 13, 2017 at 6:41 PM, Andreas Dilger <adilger@dilger.ca> wrote:
-> > On May 10, 2017, at 11:10 PM, Eric Biggers <ebiggers3@gmail.com> wrote:
-> >>
-> >> On Wed, May 10, 2017 at 01:14:37PM -0700, Darrick J. Wong wrote:
-> >>> [cc btrfs, since afaict that's where most of the dedupe tool authors hang out]
-> 
-> >> Yes, PIDs have traditionally been global, but today we have PID namespaces, and
-> >> many other isolation features such as mount namespaces.  Nothing is perfect, of
-> >> course, and containers are a lot worse than VMs, but it seems weird to use that
-> >> as an excuse to knowingly make things worse...
-> >>
-> 
-> Indeed.  Not only PID namespaces -- we have hidepid and we can simply
-> unmount /proc.  "There are other info leaks" is a poor excuse.
+We don't use uuid_be and the UUID_BE constants in any uapi headers, so make
+them private to the kernel.
 
-Eh.  From the sounds of it I'm not all that impressed at the isolation
-and leakproofness of any of these schemes.  Regardless, I will rephrase
-the manpage to emphasize more strongly that filesystems are under no
-obligation to share inode numbers, privileged callers or otherwise.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ include/linux/uuid.h      | 15 +++++++++++++++
+ include/uapi/linux/uuid.h | 16 ----------------
+ 2 files changed, 15 insertions(+), 16 deletions(-)
 
-> >>>
-> >>>>> Fortunately, the days of timesharing seem to well behind us.  For
-> >>>>> those people who think that containers are as secure as VM's (hah,
-> >>>>> hah, hah), it might be that best way to handle this is to have a mount
-> >>>>> option that requires root access to this functionality.  For those
-> >>>>> people who really care about this, they can disable access.
-> >>>
-> >>> Or use separate filesystems for each container so that exploitable bugs
-> >>> that shut down the filesystem can't be used to kill the other
-> >>> containers.  You could use a torrent of metadata-heavy operations
-> >>> (fallocate a huge file, punch every block, truncate file, repeat) to DoS
-> >>> the other containers.
-> >>>
-> >>>> What would be the reason for not putting this behind
-> >>>> capable(CAP_SYS_ADMIN)?
-> >>>>
-> >>>> What possible legitimate function could this functionality serve to
-> >>>> users who don't own your filesystem?
-> >>>
-> >>> As I've said before, it's to enable dedupe tools to decide, given a set
-> >>> of files with shareable blocks, roughly how many other times each of
-> >>> those shareable blocks are shared so that they can make better decisions
-> >>> about which file keeps its shareable blocks, and which file gets
-> >>> remapped.  Dedupe is not a privileged operation, nor are any of the
-> >>> tools.
-> >>>
-> >>
-> >> So why does the ioctl need to return all extent mappings for the entire
-> >> filesystem, instead of just the share count of each block in the file that the
-> >> ioctl is called on?
-> >
-> > One possibility is that the ioctl() can return the mapping for all inodes
-> > owned by the calling PID (or others if CAP_SYS_ADMIN, CAP_DAC_OVERRIDE,
-> > or CAP_FOWNER is set), and return an "filesystem aggregate inode" (or more
-> > than one if there is a reason to do so) with all the other allocated blocks
-> > for inodes the user doesn't have permission to access?
-> 
-> Sounds like it could be reasonable.  But you don't want "owned by the
-> calling PID" precisely -- you also need to check
-> kgid_has_mapping(current_user_ns(), inode->i_gid), I think.
+diff --git a/include/linux/uuid.h b/include/linux/uuid.h
+index 4dff73a89758..de3aea206562 100644
+--- a/include/linux/uuid.h
++++ b/include/linux/uuid.h
+@@ -18,6 +18,21 @@
+ 
+ #include <uapi/linux/uuid.h>
+ 
++typedef struct {
++	__u8 b[16];
++} uuid_be;
++
++#define UUID_BE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
++((uuid_be)								\
++{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
++   ((b) >> 8) & 0xff, (b) & 0xff,					\
++   ((c) >> 8) & 0xff, (c) & 0xff,					\
++   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
++
++#define NULL_UUID_BE							\
++	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
++		0x00, 0x00, 0x00, 0x00)
++
+ /*
+  * V1 (time-based) UUID definition [RFC 4122].
+  * - the timestamp is a 60-bit value, split 32/16/12, and goes in 100ns
+diff --git a/include/uapi/linux/uuid.h b/include/uapi/linux/uuid.h
+index 3738e5fb6a4d..0099756c4bac 100644
+--- a/include/uapi/linux/uuid.h
++++ b/include/uapi/linux/uuid.h
+@@ -24,10 +24,6 @@ typedef struct {
+ 	__u8 b[16];
+ } uuid_le;
+ 
+-typedef struct {
+-	__u8 b[16];
+-} uuid_be;
+-
+ #define UUID_LE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
+ ((uuid_le)								\
+ {{ (a) & 0xff, ((a) >> 8) & 0xff, ((a) >> 16) & 0xff, ((a) >> 24) & 0xff, \
+@@ -35,20 +31,8 @@ typedef struct {
+    (c) & 0xff, ((c) >> 8) & 0xff,					\
+    (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
+ 
+-#define UUID_BE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
+-((uuid_be)								\
+-{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
+-   ((b) >> 8) & 0xff, (b) & 0xff,					\
+-   ((c) >> 8) & 0xff, (c) & 0xff,					\
+-   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
+-
+ #define NULL_UUID_LE							\
+ 	UUID_LE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+ 		0x00, 0x00, 0x00, 0x00)
+ 
+-#define NULL_UUID_BE							\
+-	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+-		0x00, 0x00, 0x00, 0x00)
+-
+-
+ #endif /* _UAPI_LINUX_UUID_H_ */
+-- 
+2.11.0
 
-Not to mention that I don't want to go xfs_igetting every inode across
-the entire filesystem... :)
-
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-api" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
