@@ -1,116 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46014 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751319AbdEQJfc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 17 May 2017 05:35:32 -0400
-Date: Wed, 17 May 2017 11:35:28 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs: only return detailed fsmap info if the caller has
- CAP_SYS_ADMIN
-Message-ID: <20170517093528.sdkomgr7xdroard4@eorzea.usersys.redhat.com>
-References: <20170511175511.GC4519@birch.djwong.org>
- <20170512085357.wmq7xclw3zfrnswh@eorzea.usersys.redhat.com>
- <20170516175439.GP4519@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170516175439.GP4519@birch.djwong.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:33728 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754951AbdERJdX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 05:33:23 -0400
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v4I98Z3J162677
+        for <linux-xfs@vger.kernel.org>; Thu, 18 May 2017 05:33:22 -0400
+Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2agyfkwxtf-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 18 May 2017 05:33:22 -0400
+Received: from localhost
+        by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <abdhalee@linux.vnet.ibm.com>;
+        Thu, 18 May 2017 19:33:19 +1000
+Subject: Re: Mainline build brakes on powerpc with error :
+ fs/xfs/xfs_iomap.c:1152: undefined reference to `.put_dax
+From: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
+Date: Thu, 18 May 2017 15:02:24 +0530
+In-Reply-To: <CAK8P3a1e+Rgv2emmTgewm-YJ6j2H7xJzM_+Mz8J3OKWCpbsD6g@mail.gmail.com>
+References: <1494932559.3971.18.camel@abdul.in.ibm.com>
+         <CAK8P3a1e+Rgv2emmTgewm-YJ6j2H7xJzM_+Mz8J3OKWCpbsD6g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Message-Id: <1495099944.22101.6.camel@abdul>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>, dan.j.williams@intel.com
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-xfs <linux-xfs@vger.kernel.org>, sachinp <sachinp@linux.vnet.ibm.com>, linux-kernel <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Tue, May 16, 2017 at 10:54:39AM -0700, Darrick J. Wong wrote:
-> On Fri, May 12, 2017 at 10:53:57AM +0200, Carlos Maiolino wrote:
+On Tue, 2017-05-16 at 13:17 +0200, Arnd Bergmann wrote:
+> On Tue, May 16, 2017 at 1:02 PM, Abdul Haleem
+> <abdhalee@linux.vnet.ibm.com> wrote:
 > > Hi,
-> > 
-> > > There were a number of handwaving complaints that one could "possibly"
-> > > use inode numbers and extent maps to fingerprint a filesystem hosting
-> > > multiple containers and somehow use the information to guess at the
-> > > contents of other containers and attack them.  Despite the total lack of
-> > > any demonstration that this is actually possible, it's easier to
-> > > restrict access now and broaden it later, so use the rmapbt fsmap
-> > > backends only if the caller has CAP_SYS_ADMIN.  Unprivileged users will
-> > > just have to make do with only getting the free space information.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/xfs_fsmap.c |    5 ++++-
-> > >  1 file changed, 4 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> > > index 3683819..814ed729 100644
-> > > --- a/fs/xfs/xfs_fsmap.c
-> > > +++ b/fs/xfs/xfs_fsmap.c
-> > > @@ -828,6 +828,7 @@ xfs_getfsmap(
-> > >  	struct xfs_fsmap		dkeys[2];	/* per-dev keys */
-> > >  	struct xfs_getfsmap_dev		handlers[XFS_GETFSMAP_DEVS];
-> > >  	struct xfs_getfsmap_info	info = { NULL };
-> > > +	bool				use_rmap;
-> > >  	int				i;
-> > >  	int				error = 0;
-> > >  
-> > > @@ -837,12 +838,14 @@ xfs_getfsmap(
-> > >  	    !xfs_getfsmap_is_valid_device(mp, &head->fmh_keys[1]))
-> > >  		return -EINVAL;
-> > >  
-> > > +	use_rmap = capable(CAP_SYS_ADMIN) &&
-> > > +		   xfs_sb_version_hasrmapbt(&mp->m_sb);
-> > >  	head->fmh_entries = 0;
-> > >  
-> > >  	/* Set up our device handlers. */
-> > >  	memset(handlers, 0, sizeof(handlers));
-> > >  	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
-> > > -	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> > > +	if (use_rmap)
-> > >  		handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
-> > >  	else
-> > >  		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
-> > >
-> > 
-> > I've followed the discussion too, and alhtough it just look as a very remote
-> > theoretical problem, restricting this is simple.
-> > 
-> > Overall this looks fine to me, but, I just wonder if somebody in the future will
-> > complain to be getting freespace only, instead of the fsmap itself, without
-> > actually getting a permission denied error, or something like that.
-> > 
-> > This is a minor concern from my side though, so, unless somebody agrees with my
-> > point here, you can add:
+> >
+> > Today's mainline 4.12-rc1 fails to build for the attached configuration
+> > file on Power7 box with below errors.
+> >
+> > $ make
+> > fs/built-in.o: In function `xfs_file_iomap_end':
+> > fs/xfs/xfs_iomap.c:1152: undefined reference to `.put_dax'
+> > fs/built-in.o: In function `xfs_file_iomap_begin':
+> > fs/xfs/xfs_iomap.c:1071: undefined reference to `.dax_get_by_host'
+> >
+> > Also reproducible on latest linux-next, and the last successful build
+> > was at next-20170510.
 > 
-> I think I'll just add a blurb to the manpage explicitly stating that
-> filesystems have discretion to reveal as much or as little detail as
-> they like.  Therefore, it's perfectly fine not to reveal inode numbers,
-> which is what you'd get with a pre-rmap xfs (or ext4) today.
+> This should be fixed by https://patchwork.kernel.org/patch/9725515/
+> 
+>   Arnd
 > 
 
-This sounds perfectly fine to me, you can keep my review tag.
+Arnd,
 
-Cheers
+With the given patch, kernel build and boot is fine on ppc.
 
-> --D
-> 
-> > 
-> > Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > 
-> > Cheers.
-> > 
-> >  --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> > -- 
-> > Carlos
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks Dan, for the patch!
+
+Tested-by : Abdul Haleem <abdhalee@linux.vnet.ibm.com>
 
 -- 
-Carlos
+Regard's
+
+Abdul Haleem
+IBM Linux Technology Centre
+
+
+
