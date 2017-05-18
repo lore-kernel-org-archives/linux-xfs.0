@@ -1,63 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51727 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:16754 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752823AbdERP5e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 11:57:34 -0400
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v4IFvWbc023573
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 18 May 2017 15:57:33 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v4IFvWnZ032216
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 18 May 2017 15:57:32 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v4IFvV7H018276
-        for <linux-xfs@vger.kernel.org>; Thu, 18 May 2017 15:57:32 GMT
-Date: Thu, 18 May 2017 08:57:30 -0700
+        with ESMTP id S932635AbdERQyF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 12:54:05 -0400
+Date: Thu, 18 May 2017 09:53:59 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Do we need a way to force xfsaild to run?
-Message-ID: <20170518155730.GY4519@birch.djwong.org>
-References: <20170518142159.gkr6be4dralc6xiq@eorzea.usersys.redhat.com>
+Subject: Re: [PATCH v2] xfs: avoid mount-time deadlock in CoW extent recovery
+Message-ID: <20170518165358.GZ4519@birch.djwong.org>
+References: <20170517010728.GS4519@birch.djwong.org>
+ <20170518115306.GA18240@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170518142159.gkr6be4dralc6xiq@eorzea.usersys.redhat.com>
+In-Reply-To: <20170518115306.GA18240@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
 
-On Thu, May 18, 2017 at 04:21:59PM +0200, Carlos Maiolino wrote:
-> Hi,
+On Thu, May 18, 2017 at 07:53:06AM -0400, Brian Foster wrote:
+> On Tue, May 16, 2017 at 06:07:28PM -0700, Darrick J. Wong wrote:
+> > If a malicious user corrupts the refcount btree to cause a cycle between
+> > different levels of the tree, the next mount attempt will deadlock in
+> > the CoW recovery routine while grabbing buffer locks.  We can use the
+> > ability to re-grab a buffer that was previous locked to a transaction to
+> > avoid deadlocks, so do that here.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> > v2: leave a comment discussing why we use an empty transaction
+> > ---
+> >  fs/xfs/libxfs/xfs_refcount.c |   39 +++++++++++++++++++++++++++++----------
+> >  1 file changed, 29 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+> > index b177ef3..3d2b29b 100644
+> > --- a/fs/xfs/libxfs/xfs_refcount.c
+> > +++ b/fs/xfs/libxfs/xfs_refcount.c
+> ...
+> > @@ -1676,8 +1691,15 @@ xfs_refcount_recover_cow_leftovers(
+> >  		error = xfs_trans_commit(tp);
+> >  		if (error)
+> >  			goto out_free;
+> > +
+> > +		list_del(&rr->rr_list);
+> > +		kmem_free(rr);
+> >  	}
+> >  
+> > +	return error;
+> > +out_defer:
+> > +	xfs_defer_cancel(&dfops);
+> > +	xfs_trans_cancel(tp);
+> >  out_free:
+> >  	/* Free the leftover list */
+> >  	list_for_each_entry_safe(rr, n, &debris, rr_list) {
+> > @@ -1688,11 +1710,8 @@ xfs_refcount_recover_cow_leftovers(
+> >  
+> >  out_cursor:
+> >  	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> > -	xfs_buf_relse(agbp);
+> > -	goto out_free;
+> > -
 > 
-> This is something I was thinking while working on that buffer retry stuff.
-> 
-> Currently, we have no way to force xfsaild to run, and I was wondering if
-> somebody has any opinion if it would be useful to create a new xfsctl, to start
-> xfsaild for debugging purposes, using xfs_io to trigger it.
-> 
-> My specific use case is while testing the code I've been working on for the
-> buffer retry stuff, where, I need to wait xfsaild to run to trigger the bug,
-> adding a way to force it, in this case at least, would be useful for me, I could
-> work on that, but only if somebody else can actually think this to be
-> interesting, adding a new xfsctl just for 'me' does not sound worth the time :)
-> 
-> Anybody else might have interest on it or maybe this is just a waste of time?
+> Previously we had this jump to out_free here which presumably would
+> handle the case of a query range error with a populated list. Now it
+> looks like we just break down the cursor/transaction and return. Is that
+> case not possible?
 
-"Run" the xfsaild as in 'push all the AIL items out to disk'?
-
-I think xfs_freeze -f (followed immediately by xfs_freeze -u) will push
-the AIL as part of the freezing process... though that might be more
-work than you're looking for...?
+Oops, yeah, I'll go refactor the exit paths again.  Thanks for catching this.
 
 --D
 
 > 
-> Cheers
+> Brian
 > 
-> -- 
-> Carlos
+> > -out_defer:
+> > -	xfs_defer_cancel(&dfops);
+> > +	xfs_trans_brelse(tp, agbp);
+> > +out_trans:
+> >  	xfs_trans_cancel(tp);
+> > -	goto out_free;
+> > +	return error;
+> >  }
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
