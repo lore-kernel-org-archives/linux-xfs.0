@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33238 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:33931 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932317AbdERG2N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:28:13 -0400
+        with ESMTP id S1754607AbdERG1e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:27:34 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/23] block: remove blk_part_pack_uuid
-Date: Thu, 18 May 2017 08:26:57 +0200
-Message-Id: <20170518062705.25902-16-hch@lst.de>
+Subject: [PATCH 06/23] uuid: add the v1 layout to uuid_t
+Date: Thu, 18 May 2017 08:26:48 +0200
+Message-Id: <20170518062705.25902-7-hch@lst.de>
 In-Reply-To: <20170518062705.25902-1-hch@lst.de>
 References: <20170518062705.25902-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,58 +15,92 @@ List-Id: xfs
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
 Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-This helper was only used by IMA of all things, which would get spurious
-errors if CONFIG_BLOCK is disabled.  Just opencode the call there.
+Turn the content of uuid_t into a union and add the fields for the v1
+interpretation to it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: David Howells <dhowells@redhat.com>
 ---
- include/linux/genhd.h               | 11 -----------
- security/integrity/ima/ima_policy.c |  3 +--
- 2 files changed, 1 insertion(+), 13 deletions(-)
+ include/linux/uuid.h | 59 ++++++++++++++++++++++++++++------------------------
+ 1 file changed, 32 insertions(+), 27 deletions(-)
 
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index acff9437e5c3..e619fae2f037 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -219,12 +219,6 @@ static inline struct gendisk *part_to_disk(struct hd_struct *part)
- 	return NULL;
- }
+diff --git a/include/linux/uuid.h b/include/linux/uuid.h
+index 0410cd002282..8bd1da4ec95d 100644
+--- a/include/linux/uuid.h
++++ b/include/linux/uuid.h
+@@ -18,40 +18,45 @@
  
--static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
--{
--	uuid_be_to_bin(uuid_str, (uuid_be *)to);
--	return 0;
--}
+ #include <uapi/linux/uuid.h>
+ 
+-typedef struct {
+-	__u8 b[16];
+-} uuid_t;
 -
- static inline int disk_max_parts(struct gendisk *disk)
- {
- 	if (disk->flags & GENHD_FL_EXT_DEVT)
-@@ -736,11 +730,6 @@ static inline dev_t blk_lookup_devt(const char *name, int partno)
- 	dev_t devt = MKDEV(0, 0);
- 	return devt;
- }
+-#define UUID(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)			\
+-((uuid_t)								\
+-{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
+-   ((b) >> 8) & 0xff, (b) & 0xff,					\
+-   ((c) >> 8) & 0xff, (c) & 0xff,					\
+-   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
 -
--static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
--{
--	return -EINVAL;
--}
- #endif /* CONFIG_BLOCK */
+-/*
+- * V1 (time-based) UUID definition [RFC 4122].
+- * - the timestamp is a 60-bit value, split 32/16/12, and goes in 100ns
+- *   increments since midnight 15th October 1582
+- *   - add AFS_UUID_TO_UNIX_TIME to convert unix time in 100ns units to UUID
+- *     time
+- * - the clock sequence is a 14-bit counter to avoid duplicate times
+- */
+-struct uuid_v1 {
+-	__be32		time_low;			/* low part of timestamp */
+-	__be16		time_mid;			/* mid part of timestamp */
+-	__be16		time_hi_and_version;		/* high part of timestamp and version  */
++/* v1 UUID defintions: */
+ #define UUID_TO_UNIX_TIME	0x01b21dd213814000ULL
+ #define UUID_TIMEHI_MASK	0x0fff
+ #define UUID_VERSION_TIME	0x1000	/* time-based UUID */
+ #define UUID_VERSION_NAME	0x3000	/* name-based UUID */
+ #define UUID_VERSION_RANDOM	0x4000	/* (pseudo-)random generated UUID */
+-	u8		clock_seq_hi_and_reserved;	/* clock seq hi and variant */
+ #define UUID_CLOCKHI_MASK	0x3f
+ #define UUID_VARIANT_STD	0x80
+-	u8		clock_seq_low;			/* clock seq low */
+-	u8		node[6];			/* spatially unique node ID (MAC addr) */
+-};
++
++typedef struct {
++	union {
++		__u8			b[16];
++
++		/*
++		 * V1 (time-based) UUID definition [RFC 4122]:
++		 * - the timestamp is a 60-bit value, split 32/16/12, and goes
++		 *   in 100ns increments since midnight 15th October 1582
++		 *   - add UUID_TO_UNIX_TIME to convert unix time in 100ns
++		 *     units to UUID time
++		 * - the clock sequence is a 14-bit counter to avoid duplicate
++		 *   times
++		 */
++		struct uuid_v1 {
++			__be32		time_low;
++			__be16		time_mid;
++			__be16		time_hi_and_version;
++			u8		clock_seq_hi_and_reserved;
++			u8		clock_seq_low;
++			u8		node[6];
++		} v1;
++	};
++} uuid_t;
++
++#define UUID(a, _b, c, d0, d1, d2, d3, d4, d5, d6, d7)			\
++{.b = {									\
++   ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
++   ((_b) >> 8) & 0xff, (_b) & 0xff,					\
++   ((c) >> 8) & 0xff, (c) & 0xff,					\
++   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }}
  
- #endif /* _LINUX_GENHD_H */
-diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
-index 3ab1067db624..49fbc3e8f012 100644
---- a/security/integrity/ima/ima_policy.c
-+++ b/security/integrity/ima/ima_policy.c
-@@ -717,8 +717,7 @@ static int ima_parse_rule(char *rule, struct ima_rule_entry *entry)
- 				break;
- 			}
- 
--			result = blk_part_pack_uuid(args[0].from,
--						    entry->fsuuid);
-+			result = uuid_to_bin(args[0].from, (uuid_t *)&entry->fsuuid);
- 			if (!result)
- 				entry->flags |= IMA_FSUUID;
- 			break;
+ /*
+  * The length of a UUID string ("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
 -- 
 2.11.0
 
