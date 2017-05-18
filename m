@@ -1,50 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:52775 "EHLO mout.web.de"
+Received: from mail.kernel.org ([198.145.29.99]:36006 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933279AbdERRxi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 May 2017 13:53:38 -0400
-Date: Thu, 18 May 2017 19:53:29 +0200
-From: Julian Wollrath <jwollrath@web.de>
-Subject: Re: v4.12-rc1 does not compile: xfs_file_iomap_begin/end undefined
- reference
-Message-ID: <20170518195329.44b9656a@saldaea>
-In-Reply-To: <20170518172701.GB4519@birch.djwong.org>
-References: <20170518191605.33635584@saldaea>
-        <20170518172701.GB4519@birch.djwong.org>
+        id S1756102AbdERScH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 May 2017 14:32:07 -0400
+Date: Thu, 18 May 2017 11:32:04 -0700
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 13/23] md: namespace private helper names
+Message-ID: <20170518183204.adade5y4dcwpeslz@kernel.org>
+References: <20170518062705.25902-1-hch@lst.de>
+ <20170518062705.25902-14-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170518062705.25902-14-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-Hi Darrick,
-
-Am Thu, 18 May 2017 10:27:01 -0700
-schrieb "Darrick J. Wong" <darrick.wong@oracle.com>:
-
-> On Thu, May 18, 2017 at 07:16:05PM +0200, Julian Wollrath wrote:
-> > Hi,
-> > 
-> > v4.12-rc1 does not compile with the attached config. I get the
-> > following:
-> > fs/built-in.o: In function `xfs_file_iomap_end':
-> > xfs_iomap.c:(.text+0xb7f75): undefined reference to `put_dax'
-> > fs/built-in.o: In function `xfs_file_iomap_begin':
-> > xfs_iomap.c:(.text+0xb8802): undefined reference to
-> > `dax_get_by_host  
+On Thu, May 18, 2017 at 08:26:55AM +0200, Christoph Hellwig wrote:
+> From: Amir Goldstein <amir73il@gmail.com>
 > 
-> Does the patch referenced in
-> https://marc.info/?l=linux-xfs&m=149493347832378&w=2
-> fix this too?
+> The md private helper uuid_equal() collides with a generic helper
+> of the same name.
+> 
+> Rename the md private helper to md_uuid_equal() and do the same for
+> md_sb_equal().
+> 
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-yes, that patch fixes it too. Thank you.
-
-Cheers,
-Julian
-
--- 
- ()  ascii ribbon campaign - against html e-mail 
- /\                        - against proprietary attachments
+Reviewed-by: Shaohua Li <shli@kernel.org>
