@@ -1,77 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56790 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36168 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756471AbdERN1T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 May 2017 09:27:19 -0400
-Date: Thu, 18 May 2017 09:27:09 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 02/23] xfs: use uuid_be to implement the uuid_t type
-Message-ID: <20170518132709.GD18240@bfoster.bfoster>
-References: <20170518062705.25902-1-hch@lst.de>
- <20170518062705.25902-3-hch@lst.de>
+        id S1754347AbdEROWC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 May 2017 10:22:02 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 6788D3D962
+        for <linux-xfs@vger.kernel.org>; Thu, 18 May 2017 14:22:02 +0000 (UTC)
+Received: from eorzea.usersys.redhat.com (ovpn-204-238.brq.redhat.com [10.40.204.238])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id CC5C2187BA
+        for <linux-xfs@vger.kernel.org>; Thu, 18 May 2017 14:22:01 +0000 (UTC)
+Date: Thu, 18 May 2017 16:21:59 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Do we need a way to force xfsaild to run?
+Message-ID: <20170518142159.gkr6be4dralc6xiq@eorzea.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170518062705.25902-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, May 18, 2017 at 08:26:44AM +0200, Christoph Hellwig wrote:
-> Use the generic Linux definition to implement our UUID type, this will
-> allow using more generic infrastructure in the future.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+Hi,
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+This is something I was thinking while working on that buffer retry stuff.
 
->  fs/xfs/uuid.h      | 4 ----
->  fs/xfs/xfs_linux.h | 3 +++
->  2 files changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
-> index 104db0f3bed6..4f1441ba4fa5 100644
-> --- a/fs/xfs/uuid.h
-> +++ b/fs/xfs/uuid.h
-> @@ -18,10 +18,6 @@
->  #ifndef __XFS_SUPPORT_UUID_H__
->  #define __XFS_SUPPORT_UUID_H__
->  
-> -typedef struct {
-> -	unsigned char	__u_bits[16];
-> -} uuid_t;
-> -
->  extern int uuid_is_nil(uuid_t *uuid);
->  extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
->  extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index 044fb0e15390..89ee5ec66837 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -19,6 +19,7 @@
->  #define __XFS_LINUX__
->  
->  #include <linux/types.h>
-> +#include <linux/uuid.h>
->  
->  /*
->   * Kernel specific type declarations for XFS
-> @@ -38,6 +39,8 @@ typedef __s64			xfs_daddr_t;	/* <disk address> type */
->  typedef __u32			xfs_dev_t;
->  typedef __u32			xfs_nlink_t;
->  
-> +typedef uuid_be			uuid_t;
-> +
->  #include "xfs_types.h"
->  
->  #include "kmem.h"
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Currently, we have no way to force xfsaild to run, and I was wondering if
+somebody has any opinion if it would be useful to create a new xfsctl, to start
+xfsaild for debugging purposes, using xfs_io to trigger it.
+
+My specific use case is while testing the code I've been working on for the
+buffer retry stuff, where, I need to wait xfsaild to run to trigger the bug,
+adding a way to force it, in this case at least, would be useful for me, I could
+work on that, but only if somebody else can actually think this to be
+interesting, adding a new xfsctl just for 'me' does not sound worth the time :)
+
+Anybody else might have interest on it or maybe this is just a waste of time?
+
+Cheers
+
+-- 
+Carlos
