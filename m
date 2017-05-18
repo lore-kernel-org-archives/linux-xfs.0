@@ -1,34 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36006 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756102AbdERScH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 May 2017 14:32:07 -0400
-Date: Thu, 18 May 2017 11:32:04 -0700
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 13/23] md: namespace private helper names
-Message-ID: <20170518183204.adade5y4dcwpeslz@kernel.org>
-References: <20170518062705.25902-1-hch@lst.de>
- <20170518062705.25902-14-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:23160 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754894AbdERWC7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 18:02:59 -0400
+Date: Thu, 18 May 2017 15:02:49 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v3] xfs: avoid mount-time deadlock in CoW extent recovery
+Message-ID: <20170518220249.GI4514@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170518062705.25902-14-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-On Thu, May 18, 2017 at 08:26:55AM +0200, Christoph Hellwig wrote:
-> From: Amir Goldstein <amir73il@gmail.com>
-> 
-> The md private helper uuid_equal() collides with a generic helper
-> of the same name.
-> 
-> Rename the md private helper to md_uuid_equal() and do the same for
-> md_sb_equal().
-> 
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+If a malicious user corrupts the refcount btree to cause a cycle between
+different levels of the tree, the next mount attempt will deadlock in
+the CoW recovery routine while grabbing buffer locks.  We can use the
+ability to re-grab a buffer that was previous locked to a transaction to
+avoid deadlocks, so do that here.
 
-Reviewed-by: Shaohua Li <shli@kernel.org>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v3: fix the error exit paths always to free the list
+v2: leave a comment discussing why we use an empty transaction
+---
+ fs/xfs/libxfs/xfs_refcount.c |   43 ++++++++++++++++++++++++++++++------------
+ 1 file changed, 31 insertions(+), 12 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index b177ef3..82a38d8 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1629,13 +1629,28 @@ xfs_refcount_recover_cow_leftovers(
+ 	if (mp->m_sb.sb_agblocks >= XFS_REFC_COW_START)
+ 		return -EOPNOTSUPP;
+ 
+-	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
++	INIT_LIST_HEAD(&debris);
++
++	/*
++	 * In this first part, we use an empty transaction to gather up
++	 * all the leftover CoW extents so that we can subsequently
++	 * delete them.  The empty transaction is used to avoid
++	 * a buffer lock deadlock if there happens to be a loop in the
++	 * refcountbt because we're allowed to re-grab a buffer that is
++	 * already attached to our transaction.  When we're done
++	 * recording the CoW debris we cancel the (empty) transaction
++	 * and everything goes away cleanly.
++	 */
++	error = xfs_trans_alloc_empty(mp, &tp);
+ 	if (error)
+ 		return error;
+-	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
++
++	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
++	if (error)
++		goto out_trans;
++	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
+ 
+ 	/* Find all the leftover CoW staging extents. */
+-	INIT_LIST_HEAD(&debris);
+ 	memset(&low, 0, sizeof(low));
+ 	memset(&high, 0, sizeof(high));
+ 	low.rc.rc_startblock = XFS_REFC_COW_START;
+@@ -1645,10 +1660,11 @@ xfs_refcount_recover_cow_leftovers(
+ 	if (error)
+ 		goto out_cursor;
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+-	xfs_buf_relse(agbp);
++	xfs_trans_brelse(tp, agbp);
++	xfs_trans_cancel(tp);
+ 
+ 	/* Now iterate the list to free the leftovers */
+-	list_for_each_entry(rr, &debris, rr_list) {
++	list_for_each_entry_safe(rr, n, &debris, rr_list) {
+ 		/* Set up transaction. */
+ 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0, &tp);
+ 		if (error)
+@@ -1676,8 +1692,16 @@ xfs_refcount_recover_cow_leftovers(
+ 		error = xfs_trans_commit(tp);
+ 		if (error)
+ 			goto out_free;
++
++		list_del(&rr->rr_list);
++		kmem_free(rr);
+ 	}
+ 
++	return error;
++out_defer:
++	xfs_defer_cancel(&dfops);
++out_trans:
++	xfs_trans_cancel(tp);
+ out_free:
+ 	/* Free the leftover list */
+ 	list_for_each_entry_safe(rr, n, &debris, rr_list) {
+@@ -1688,11 +1712,6 @@ xfs_refcount_recover_cow_leftovers(
+ 
+ out_cursor:
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+-	xfs_buf_relse(agbp);
+-	goto out_free;
+-
+-out_defer:
+-	xfs_defer_cancel(&dfops);
+-	xfs_trans_cancel(tp);
+-	goto out_free;
++	xfs_trans_brelse(tp, agbp);
++	goto out_trans;
+ }
+
+----- End forwarded message -----
