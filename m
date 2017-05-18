@@ -1,105 +1,410 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59628 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757142AbdEKQjI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 May 2017 12:39:08 -0400
-Subject: Re: permanent XFS volume corruption
-References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <591493D00200007800158EA3@prv-mh.provo.novell.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a185194a-af56-cd53-cfb9-653e3b5f81b7@sandeen.net>
-Date: Thu, 11 May 2017 11:39:01 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:44424 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754073AbdERCHr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 May 2017 22:07:47 -0400
+Date: Wed, 17 May 2017 19:07:33 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] ioctl_getfsmap.2: document the GETFSMAP ioctl
+Message-ID: <20170518020733.GG4514@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <591493D00200007800158EA3@prv-mh.provo.novell.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Beulich <JBeulich@suse.com>, linux-xfs@vger.kernel.org
+To: Michael Kerrisk-manpages <mtk.manpages@gmail.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, Eric Biggers <ebiggers3@gmail.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Theodore Ts'o <tytso@mit.edu>, Jann Horn <jannh@google.com>, Andy Lutomirski <luto@amacapital.net>, linux-xfs@vger.kernel.org, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, linux-man <linux-man@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On 5/11/17 9:39 AM, Jan Beulich wrote:
-> Hello,
-> 
-> It is now on two systems that I'm getting
-> 
-> XFS (sda1): corrupt dinode 576254627, has realtime flag set.
-> ffff88042ea63300: 49 4e 81 a4 02 02 00 00 00 00 03 e8 00 00 00 64  IN.............d
-> ffff88042ea63310: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> ffff88042ea63320: 59 14 0e 9f 0f a7 7c 2f 59 14 0e 9f 18 f3 db 2f  Y.....|/Y....../
-> ffff88042ea63330: 59 14 0e 9f 18 f3 db 2f 00 00 00 00 00 00 80 80  Y....../........
+Document the new GETFSMAP ioctl that returns the physical layout of a
+(disk-based) filesystem.
 
-...
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: emphasize that filesystems are not obligated to return inode numbers
+---
+ man2/ioctl_getfsmap.2 |  375 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 375 insertions(+)
+ create mode 100644 man2/ioctl_getfsmap.2
 
-> XFS (sda1): Corruption detected. Unmount and run xfs_repair
-> 
-> after a crash with a 4.11-based kernel. I didn't try xfs_repair-ing
-> the volume in this second instance, as the result from doing so in
-> the first instance was only permanent re-occurrence (and
-> apparently spreading) of the problem. It may be interesting that
-> xfs_check finds only this one corrupted inode, while the kernel
-> also finds at least one more:
-> 
-> XFS (sda1): corrupt dinode 104812066, has realtime flag set.
-> ffff88042e88f200: 49 4e 41 ed 02 01 00 00 00 00 03 e8 00 00 00 64  INA............d
-> ffff88042e88f210: 00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> ffff88042e88f220: 59 01 c7 96 00 16 1e 50 59 14 0e a2 15 60 54 2f  Y......PY....`T/
-> ffff88042e88f230: 59 14 0e a2 15 60 54 2f 00 00 00 00 00 00 00 8e  Y....`T/........
-> XFS (sda1): Internal error xfs_iformat(realtime) at line 133 of file .../fs/xfs/xfs_inode_fork.c.  Caller xfs_iread+0xea/0x2e0 [xfs]
-> 
-> The kernel used after the crash doesn't appear to matter, all report
-> the same issues, but I've experienced similar crashes in the past
-> without ever having seen such corruption before.
-> 
-> In any event I think there are two problems: The corruption itself
-> (possibly an issue with recent enough upstream kernels only) and
-> the fact that running xfs_repair doesn't help in these cases.
-
-FWIW, recent xfs_repair (v4.11.0) finds several bad inodes on the
-sdb8 metadump you sent, and apparently fixes* them without problems.
-
-inode 764 has RT flag set but there is no RT device
-directory flags set on non-directory inode 764
-inode 2068 has RT flag set but there is no RT device
-directory flags set on non-directory inode 2068
-inode 268448674 has RT flag set but there is no RT device
-directory flags set on non-directory inode 268448674
-
-these are:
-
-764: lib/xenstored/tdb
-2068: log/messages
-268448674: lib/sudo/jbeulich/0
-
-and after repair, I can read all the inodes on the device w/o
-further errors (upstream linus kernel)
-
-As for the original corruption problem, I'm not sure.
-
-*Each of the 3 problematic inodes has an odd assortment of flags
-set (think chattr type flags) - some have immutable, some have
-noatime, some have nodump, etc.  These are what cause xfs_repair
-t ocomplain.  It seems unlikely that any of these were actually set
-on your filesystem, as these are the only ones with any flags set.
-After repair, they're showing:
-
---S---dA----------- mnt/log/messages
---S-i--A----------- mnt/lib/sudo/jbeulich/0
---S----A----------- mnt/lib/xenstored/tdb
-
-Did you happen to set chattr flags on these files intentionally?
-
-Two if the problematic inodes also have a generation number
-of 0, which also seems a bit odd.
-
--Eric
-
-> I'm
-> attaching xfs_check and xfs_metadump warning output for both
-> affected volumes in this second instance. The full files
-> xfs_metadump -agow produced can be provided upon request
-> (500Mb and 80Mb uncompressed respectively).
-> 
-> Thanks for any advice / fix,
-> Jan
-> 
+diff --git a/man2/ioctl_getfsmap.2 b/man2/ioctl_getfsmap.2
+new file mode 100644
+index 0000000..b451950
+--- /dev/null
++++ b/man2/ioctl_getfsmap.2
+@@ -0,0 +1,375 @@
++.\" Copyright (c) 2017, Oracle.  All rights reserved.
++.\"
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" This is free documentation; you can redistribute it and/or
++.\" modify it under the terms of the GNU General Public License as
++.\" published by the Free Software Foundation; either version 2 of
++.\" the License, or (at your option) any later version.
++.\"
++.\" The GNU General Public License's references to "object code"
++.\" and "executables" are to be interpreted as the output of any
++.\" document formatting or typesetting system, including
++.\" intermediate and printed output.
++.\"
++.\" This manual is distributed in the hope that it will be useful,
++.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
++.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++.\" GNU General Public License for more details.
++.\"
++.\" You should have received a copy of the GNU General Public
++.\" License along with this manual; if not, see
++.\" <http://www.gnu.org/licenses/>.
++.\" %%%LICENSE_END
++.TH IOCTL-GETFSMAP 2 2017-02-10 "Linux" "Linux Programmer's Manual"
++.SH NAME
++ioctl_getfsmap \- retrieve the physical layout of the filesystem
++.SH SYNOPSIS
++.br
++.B #include <sys/ioctl.h>
++.br
++.B #include <linux/fs.h>
++.br
++.B #include <linux/fsmap.h>
++.sp
++.BI "int ioctl(int " fd ", FS_IOC_GETFSMAP, struct fsmap_head * " arg );
++.SH DESCRIPTION
++This
++.BR ioctl (2)
++retrieves physical extent mappings for a filesystem.
++This information can be used to discover which files are mapped to a physical
++block, examine free space, or find known bad blocks, among other things.
++
++The sole argument to this ioctl should be a pointer to a single
++.BR "struct fsmap_head" ":"
++.in +4n
++.nf
++
++struct fsmap {
++	__u32		fmr_device;	/* device id */
++	__u32		fmr_flags;	/* mapping flags */
++	__u64		fmr_physical;	/* device offset of segment */
++	__u64		fmr_owner;	/* owner id */
++	__u64		fmr_offset;	/* file offset of segment */
++	__u64		fmr_length;	/* length of segment */
++	__u64		fmr_reserved[3];	/* must be zero */
++};
++
++struct fsmap_head {
++	__u32		fmh_iflags;	/* control flags */
++	__u32		fmh_oflags;	/* output flags */
++	__u32		fmh_count;	/* # of entries in array incl. input */
++	__u32		fmh_entries;	/* # of entries filled in (output). */
++	__u64		fmh_reserved[6];	/* must be zero */
++
++	struct fsmap	fmh_keys[2];	/* low and high keys for the mapping search */
++	struct fsmap	fmh_recs[];	/* returned records */
++};
++
++.fi
++.in
++The two
++.I fmh_keys
++array elements specify the lowest and highest reverse-mapping
++keys, respectively, for which userspace would like physical mapping
++information.
++A reverse mapping key consists of the tuple (device, block, owner, offset).
++The owner and offset fields are part of the key because some filesystems
++support sharing physical blocks between multiple files and
++therefore may return multiple mappings for a given physical block.
++.PP
++Filesystem mappings are copied into the
++.I fmh_recs
++array, which immediately follows the header data.
++.SS Fields of struct fsmap_head
++.PP
++The
++.I fmh_iflags
++field is a bitmask passed to the kernel to alter the output.
++There are no flags defined, so callers must set this value to zero.
++
++.PP
++The
++.I fmh_oflags
++field is a bitmask of flags set by the kernel concerning the returned mappings.
++If
++.B FMH_OF_DEV_T
++is set, then the
++.I fmr_device
++field represents a
++.B dev_t
++structure containing the major and minor numbers of the block device.
++
++.PP
++The
++.I fmh_count
++field contains the number of elements in the array being passed to the
++kernel.
++If this value is 0,
++.I fmh_entries
++will be set to the number of records that would have been returned had
++the array been large enough;
++no mapping information will be returned.
++
++.PP
++The
++.I fmh_entries
++field contains the number of elements in the
++.I fmh_recs
++array that contain useful information.
++
++.PP
++The
++.I fmh_reserved
++fields must be set to zero.
++
++.SS Keys
++.PP
++The two key records in
++.B fsmap_head.fmh_keys
++specify the lowest and highest extent records in the keyspace that the caller
++wants returned.
++A filesystem that can share blocks between files likely requires the tuple
++.RI "(" "device" ", " "physical" ", " "owner" ", " "offset" ", " "flags" ")"
++to uniquely index any filesystem mapping record.
++Classic non-sharing filesystems might be able to identify any record with only
++.RI "(" "device" ", " "physical" ", " "flags" ")."
++For example, if the low key is set to (8:0, 36864, 0, 0, 0), the filesystem will
++only return records for extents starting at or above 36KiB on disk.
++If the high key is set to (8:0, 1048576, 0, 0, 0), only records below 1MiB will
++be returned.
++The format of
++.B fmr_device
++in the keys must match the format of the same field in the output records,
++as defined below.
++By convention, the field
++.B fsmap_head.fmh_keys[0]
++must contain the low key and
++.B fsmap_head.fmh_keys[1]
++must contain the high key for the request.
++.PP
++For convenience, if
++.B fmr_length
++is set in the low key, it will be added to
++.IR fmr_block " or " fmr_offset
++as appropriate.
++The caller can take advantage of this subtlety to set up subsequent calls
++by copying
++.B fsmap_head.fmh_recs[fsmap_head.fmh_entries - 1]
++into the low key.
++The function
++.B fsmap_advance
++provides this functionality.
++
++.SS Fields of struct fsmap
++.PP
++The
++.I fmr_device
++field uniquely identifies the underlying storage device.
++If the
++.B FMH_OF_DEV_T
++flag is set in the header's
++.I fmh_oflags
++field, this field contains a
++.B dev_t
++from which major and minor numbers can be extracted.
++If the flag is not set, this field contains a value that must be unique
++for each unique storage device.
++
++.PP
++The
++.I fmr_physical
++field contains the disk address of the extent in bytes.
++
++.PP
++The
++.I fmr_owner
++field contains the owner of the extent.
++This is an inode number unless
++.B FMR_OF_SPECIAL_OWNER
++is set in the
++.I fmr_flags
++field, in which case the value is determined by the filesystem.
++See the section below about owner values for more details.
++
++.PP
++The
++.I fmr_offset
++field contains the logical address in the mapping record in bytes.
++This field has no meaning if the
++.BR FMR_OF_SPECIAL_OWNER " or " FMR_OF_EXTENT_MAP
++flags are set in
++.IR fmr_flags "."
++
++.PP
++The
++.I fmr_length
++field contains the length of the extent in bytes.
++
++.PP
++The
++.I fmr_flags
++field is a bitmask of extent state flags.
++The bits are:
++.RS 0.4i
++.TP
++.B FMR_OF_PREALLOC
++The extent is allocated but not yet written.
++.TP
++.B FMR_OF_ATTR_FORK
++This extent contains extended attribute data.
++.TP
++.B FMR_OF_EXTENT_MAP
++This extent contains extent map information for the owner.
++.TP
++.B FMR_OF_SHARED
++Parts of this extent may be shared.
++.TP
++.B FMR_OF_SPECIAL_OWNER
++The
++.I fmr_owner
++field contains a special value instead of an inode number.
++.TP
++.B FMR_OF_LAST
++This is the last record in the filesystem.
++.RE
++
++.PP
++The
++.I fmr_reserved
++field will be set to zero.
++
++.SS Owner Values
++Generally, the value of the
++.I fmr_owner
++field for non-metadata extents should be an inode number.
++However, filesystems are under no obligation to report inode numbers;
++they may instead report
++.B FMR_OWN_UNKNOWN
++if the inode number cannot easily be retrieved, if the caller lacks
++sufficient privilege, if the filesystem does not support stable
++inode numbers, or for any other reason.
++If a filesystem wishes to condition the reporting of inode numbers based
++on process capabilities, it is strongly urged that the
++.B CAP_SYS_ADMIN
++capability be used for this purpose.
++.TP
++The following special owner values are generic to all filesystems:
++.RS 0.4i
++.TP
++.B FMR_OWN_FREE
++Free space.
++.TP
++.B FMR_OWN_UNKNOWN
++This extent is in use but its owner is not known or not easily retrieved.
++.TP
++.B FMR_OWN_METADATA
++This extent is filesystem metadata.
++.RE
++
++XFS can return the following special owner values:
++.RS 0.4i
++.TP
++.B XFS_FMR_OWN_FREE
++Free space.
++.TP
++.B XFS_FMR_OWN_UNKNOWN
++This extent is in use but its owner is not known or not easily retrieved.
++.TP
++.B XFS_FMR_OWN_FS
++Static filesystem metadata which exists at a fixed address.
++These are the AG superblock, the AGF, the AGFL, and the AGI headers.
++.TP
++.B XFS_FMR_OWN_LOG
++The filesystem journal.
++.TP
++.B XFS_FMR_OWN_AG
++Allocation group metadata, such as the free space btrees and the
++reverse mapping btrees.
++.TP
++.B XFS_FMR_OWN_INOBT
++The inode and free inode btrees.
++.TP
++.B XFS_FMR_OWN_INODES
++Inode records.
++.TP
++.B XFS_FMR_OWN_REFC
++Reference count information.
++.TP
++.B XFS_FMR_OWN_COW
++This extent is being used to stage a copy-on-write.
++.TP
++.B XFS_FMR_OWN_DEFECTIVE:
++This extent has been marked defective either by the filesystem or the
++underlying device.
++.RE
++
++ext4 can return the following special owner values:
++.RS 0.4i
++.TP
++.B EXT4_FMR_OWN_FREE
++Free space.
++.TP
++.B EXT4_FMR_OWN_UNKNOWN
++This extent is in use but its owner is not known or not easily retrieved.
++.TP
++.B EXT4_FMR_OWN_FS
++Static filesystem metadata which exists at a fixed address.
++This is the superblock and the group descriptors.
++.TP
++.B EXT4_FMR_OWN_LOG
++The filesystem journal.
++.TP
++.B EXT4_FMR_OWN_INODES
++Inode records.
++.TP
++.B EXT4_FMR_OWN_BLKBM
++Block bitmap.
++.TP
++.B EXT4_FMR_OWN_INOBM
++Inode bitmap.
++.RE
++
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++.PP
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B EINVAL
++The array is not long enough, the keys do not point to a valid part of
++the filesystem, the low key points to a higher point in the filesystem's
++physical storage address space than the high key, or a non-zero value
++was passed in one of the fields that must be zero.
++.TP
++.B EFAULT
++The pointer passed in was not mapped to a valid memory address.
++.TP
++.B EBADF
++.IR fd
++is not open for reading.
++.TP
++.B EOPNOTSUPP
++The filesystem does not support this command.
++.TP
++.B EUCLEAN
++The filesystem metadata is corrupt and needs repair.
++.TP
++.B EBADMSG
++The filesystem has detected a checksum error in the metadata.
++.TP
++.B ENOMEM
++Insufficient memory to process the request.
++
++.SH EXAMPLE
++.TP
++Please see io/fsmap.c in the xfsprogs distribution for a sample program.
++
++.SH CONFORMING TO
++This API is Linux-specific.
++Not all filesystems support it.
++.fi
++.in
++.SH SEE ALSO
++.BR ioctl (2)
