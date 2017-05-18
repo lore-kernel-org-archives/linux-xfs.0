@@ -1,39 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:48861 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750950AbdEPPxJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 16 May 2017 11:53:09 -0400
-Date: Tue, 16 May 2017 17:53:07 +0200
+Received: from bombadil.infradead.org ([65.50.211.133]:59632 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932291AbdERG2C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:28:02 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 17/17] fs: switch ->s_uuid to uuid_t
-Message-ID: <20170516155307.GA2086@lst.de>
-References: <20170515154308.26739-1-hch@lst.de> <20170515154308.26739-18-hch@lst.de> <CAOQ4uxgyetFTbtuE3H2Msv9Zg1LEdoxr0YqZJ6yv0cFgiTAmAw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgyetFTbtuE3H2Msv9Zg1LEdoxr0YqZJ6yv0cFgiTAmAw@mail.gmail.com>
+Subject: [PATCH 13/23] md: namespace private helper names
+Date: Thu, 18 May 2017 08:26:55 +0200
+Message-Id: <20170518062705.25902-14-hch@lst.de>
+In-Reply-To: <20170518062705.25902-1-hch@lst.de>
+References: <20170518062705.25902-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Mon, May 15, 2017 at 10:38:18PM +0300, Amir Goldstein wrote:
-> On Mon, May 15, 2017 at 6:43 PM, Christoph Hellwig <hch@lst.de> wrote:
-> > For some file systems we still memcpy into it, but in various places this
-> > already allows us to use the proper uuid helpers.  More to come..
-> >
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> 
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -75,7 +75,7 @@ xfs_uuid_mount(
-> >
-> >         /* Publish UUID in struct super_block */
-> >         BUILD_BUG_ON(sizeof(mp->m_super->s_uuid) != sizeof(uuid_t));
-> 
-> BUILD_BUG_ON not needed anymore now that s_uuid is uuid_t
+From: Amir Goldstein <amir73il@gmail.com>
 
-Yeah, you mentioned that last time and I forgot about it.  Fixed up
-in the git tree and for the next repost.
+The md private helper uuid_equal() collides with a generic helper
+of the same name.
+
+Rename the md private helper to md_uuid_equal() and do the same for
+md_sb_equal().
+
+Cc: Shaohua Li <shli@kernel.org>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/md/md.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 82f798be964f..65795cc4cb7d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -825,7 +825,7 @@ static int read_disk_sb(struct md_rdev *rdev, int size)
+ 	return -EINVAL;
+ }
+ 
+-static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
++static int md_uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+ {
+ 	return	sb1->set_uuid0 == sb2->set_uuid0 &&
+ 		sb1->set_uuid1 == sb2->set_uuid1 &&
+@@ -833,7 +833,7 @@ static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+ 		sb1->set_uuid3 == sb2->set_uuid3;
+ }
+ 
+-static int sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
++static int md_sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+ {
+ 	int ret;
+ 	mdp_super_t *tmp1, *tmp2;
+@@ -1025,12 +1025,12 @@ static int super_90_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor
+ 	} else {
+ 		__u64 ev1, ev2;
+ 		mdp_super_t *refsb = page_address(refdev->sb_page);
+-		if (!uuid_equal(refsb, sb)) {
++		if (!md_uuid_equal(refsb, sb)) {
+ 			pr_warn("md: %s has different UUID to %s\n",
+ 				b, bdevname(refdev->bdev,b2));
+ 			goto abort;
+ 		}
+-		if (!sb_equal(refsb, sb)) {
++		if (!md_sb_equal(refsb, sb)) {
+ 			pr_warn("md: %s has same UUID but different superblock to %s\n",
+ 				b, bdevname(refdev->bdev, b2));
+ 			goto abort;
+-- 
+2.11.0
+
