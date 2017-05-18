@@ -1,93 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34181 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753247AbdEQMK4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 17 May 2017 08:10:56 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 3/3] xfs: Move handling of missing page into one place in xfs_find_get_desired_pgoff()
-Date: Wed, 17 May 2017 14:10:46 +0200
-Message-Id: <20170517121046.2632-4-jack@suse.cz>
-In-Reply-To: <20170517121046.2632-1-jack@suse.cz>
-References: <20170517121046.2632-1-jack@suse.cz>
+Received: from aserp1040.oracle.com ([141.146.126.69]:35296 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752852AbdERB00 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 May 2017 21:26:26 -0400
+Date: Wed, 17 May 2017 18:26:18 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [RFCRAP 0/3?] xfs: OH GOD MY EYES!
+Message-ID: <20170518012618.GT4519@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Jan Kara <jack@suse.cz>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Eric Sandeen <sandeen@redhat.com>
 
-Currently several places in xfs_find_get_desired_pgoff() handle the case
-of a missing page. Make them all handled in one place after the loop has
-terminated.
+Hi all,
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_file.c | 38 ++++++++------------------------------
- 1 file changed, 8 insertions(+), 30 deletions(-)
+This is a series of three eyewateringly awful patches.  The first two
+are semantic patches that perform the long-delayed conversion of double
+underscore integer types (e.g. __uint64_t) into the standard C99 types
+(e.g. uint64_t) that are available in userspace and the kernel.  They
+are both huge, terrifying, and might just piss off vger enough that they
+don't come through, but that's fine because if it ever gets approved
+I'll simply rerun the sed script:
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 8acb8ab79267..ff599ab45e2e 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1052,29 +1052,8 @@ xfs_find_get_desired_pgoff(
- 		want = min_t(pgoff_t, end - index, PAGEVEC_SIZE);
- 		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
- 					  want);
--		/*
--		 * No page mapped into given range.  If we are searching holes
--		 * and if this is the first time we got into the loop, it means
--		 * that the given offset is landed in a hole, return it.
--		 *
--		 * If we have already stepped through some block buffers to find
--		 * holes but they all contains data.  In this case, the last
--		 * offset is already updated and pointed to the end of the last
--		 * mapped page, if it does not reach the endpoint to search,
--		 * that means there should be a hole between them.
--		 */
--		if (nr_pages == 0) {
--			/* Data search found nothing */
--			if (type == DATA_OFF)
--				break;
--
--			ASSERT(type == HOLE_OFF);
--			if (lastoff == startoff || lastoff < endoff) {
--				found = true;
--				*offset = lastoff;
--			}
-+		if (nr_pages == 0)
- 			break;
--		}
- 
- 		for (i = 0; i < nr_pages; i++) {
- 			struct page	*page = pvec.pages[i];
-@@ -1140,21 +1119,20 @@ xfs_find_get_desired_pgoff(
- 
- 		/*
- 		 * The number of returned pages less than our desired, search
--		 * done.  In this case, nothing was found for searching data,
--		 * but we found a hole behind the last offset.
-+		 * done.
- 		 */
--		if (nr_pages < want) {
--			if (type == HOLE_OFF) {
--				*offset = lastoff;
--				found = true;
--			}
-+		if (nr_pages < want)
- 			break;
--		}
- 
- 		index = pvec.pages[i - 1]->index + 1;
- 		pagevec_release(&pvec);
- 	} while (index < end);
- 
-+	/* No page at lastoff and we are not done - we found a hole. */
-+	if (type == HOLE_OFF && lastoff < endoff) {
-+		*offset = lastoff;
-+		found = true;
-+	}
- out:
- 	pagevec_release(&pvec);
- 	return found;
--- 
-2.12.0
+s/typedef\t__uint8_t/typedef __uint8_t\t/g
+s/typedef\t__uint/typedef __uint/g
+s/typedef\t__int\([0-9]*\)_t/typedef int\1_t\t/g
+s/__uint8_t\t/__uint8_t\t\t/g
+s/__uint/uint/g
+s/__int\([0-9]*\)_t\t/__int\1_t\t\t/g
+s/__int/int/g
+/^typedef.*int[0-9]*_t;$/d
 
+against whatever's current in git.  Lines 1-4 and 6 fix whitespace and
+indentation problems; lines 5 and 7 perform the actual transformation,
+and line 8 removes the old typedefs.
+
+The third patch in this series adds a reboot notifier that freezes any
+rw xfs filesystems prior to a soft reboot to reduce the likelihood that
+grub (and other deficient xfs drivers) go stumbling through a dirty
+filesystem and make our users crazy.
+
+Flame away! :)
+
+--Darrick
