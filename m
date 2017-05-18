@@ -1,52 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54844 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750847AbdEPRiK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 16 May 2017 13:38:10 -0400
-Subject: Re: permanent XFS volume corruption
-References: <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <591493D00200007800158EA3@prv-mh.provo.novell.com>
- <a185194a-af56-cd53-cfb9-653e3b5f81b7@sandeen.net>
- <591571BC0200007800159165@prv-mh.provo.novell.com>
- <30296667-47d7-8b94-472a-1d4b96120c09@sandeen.net>
- <5915DE47020000780015946C@prv-mh.provo.novell.com>
- <23c75521-a65b-d105-f274-3d1aba09e6ae@sandeen.net>
- <574ee8c5-71f9-eba5-b779-49be4086b6c8@sandeen.net>
- <59198F810200007800159B81@prv-mh.provo.novell.com>
- <4dd8c329-2e38-263c-35d4-0756c6cf9e65@sandeen.net>
- <591AEB51020000780015A128@prv-mh.provo.novell.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <423e3471-747a-fa44-e313-9e6b8219e9a5@sandeen.net>
-Date: Tue, 16 May 2017 12:38:08 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:48478 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753168AbdERGV3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:21:29 -0400
+Date: Wed, 17 May 2017 23:21:20 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/3] xfs: remove double-underscore integer types
+Message-ID: <20170518062120.GX4519@birch.djwong.org>
+References: <20170518012618.GT4519@birch.djwong.org>
+ <20170518013043.GU4519@birch.djwong.org>
+ <20170518060158.GP17542@dastard>
 MIME-Version: 1.0
-In-Reply-To: <591AEB51020000780015A128@prv-mh.provo.novell.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170518060158.GP17542@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Beulich <JBeulich@suse.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-On 5/16/17 5:06 AM, Jan Beulich wrote:
->> I'm not sure we've made much progress on the root cause of whatever set
->> those extra flags*,
+On Thu, May 18, 2017 at 04:01:58PM +1000, Dave Chinner wrote:
+> On Wed, May 17, 2017 at 06:30:43PM -0700, Darrick J. Wong wrote:
+> > This is a purely mechanical patch that removes the private
+> > __{u,}int{8,16,32,64}_t typedefs in favor of using the system
+> > {u,}int{8,16,32,64}_t typedefs.  This is the sed script used to perform
+> > the transformation and fix the resulting whitespace and indentation
+> > errors:
+> > 
+> > s/typedef\t__uint8_t/typedef __uint8_t\t/g
+> > s/typedef\t__uint/typedef __uint/g
+> > s/typedef\t__int\([0-9]*\)_t/typedef int\1_t\t/g
+> > s/__uint8_t\t/__uint8_t\t\t/g
+> > s/__uint/uint/g
+> > s/__int\([0-9]*\)_t\t/__int\1_t\t\t/g
+> > s/__int/int/g
+> > /^typedef.*int[0-9]*_t;$/d
+> 
+> I'm not sure that this is entirely correct when it comes to sparse
+> endian notations or the way the __ types were intended to be used.
+> ISTR we used the __ types were originally for the in-memory endian
+> converted variable definitions that shadowed the on-disk structures.
+> The cleanup plan I was planning to do was to convert these all to
+> the linux kernel definitions of __[s,u][8,16,32,64] so it was clear
+> they shadow on disk structures of specific sizes.
 
-> Indeed, and that's the primary aspect that worries me, since with
-> working on the hypervisor or kernel it is going to be unavoidable for
-> a crash to happen now and then. While I realize chances are low to
-> find out any useful information for the two past cases of corruption,
-> do you have any advice on how to collect / preserve necessary
-> information on a sooner or later to be expected next instance? Isn't
-> the most likely explanation that the log replay upon next mount has
-> gone wrong (or the data in the log itself was bogus)?
+<nod> I do see the appeal of __be/__le -> __u in source code, though I
+also see that include/linux/types.h typedefs them together (uint16_t is
+__u16), though in my head the signedness and size are encode in the name
+so they're interchangeable. :)
 
-About all I can suggest is to get an xfs_metadump as soon as any new
-problem shows up, if it does.
+> Once that was done, everything else could be converted to c99 types
+> (like you've done above) and then we'd be free of all the old
+> __[u]int*_t types....
 
+Well I /did/ leave the existing __[ui]{8,16,32,64} declarations alone
+since /most/ of them looked like incore versions of ondisk structures.
+Though truth be told there was a lot of code to look at!
 
-Your first report seems to indicate that a 4.11 kernel crashed, and the
-resulting dirty log was replayed by a 3.12-era distro kernel.  Is that
-the correct sequence of events?
+(Though I also wonder why you'd want to have mixed __u32 and
+uint32_t...)
 
--Eric
+Anyway, let's see if anyone else bites. :)
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
