@@ -1,60 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33644 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750765AbdEPLQS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 May 2017 07:16:18 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170515155012.GM4519@birch.djwong.org>
-References: <20170515134508.2713243-1-arnd@arndb.de> <CAPcyv4jxondHhtMZbr01XE+w1Q0mxy+mR=4ypwsHpA0AtJuj2g@mail.gmail.com>
- <CAK8P3a1XU32oVTeV5=TeV8C+66rKKoRJnebQTAzqUr1BcSH69w@mail.gmail.com> <20170515155012.GM4519@birch.djwong.org>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Tue, 16 May 2017 13:16:16 +0200
-Message-ID: <CAK8P3a1Vb9orUWcEzDb3mkSXXUFq3cQBrBmUMWo7Z6KsJFiqLQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] dax: hide block device code in #ifdef
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([65.50.211.133]:37288 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752354AbdERG1c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:27:32 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 02/23] xfs: use uuid_be to implement the uuid_t type
+Date: Thu, 18 May 2017 08:26:44 +0200
+Message-Id: <20170518062705.25902-3-hch@lst.de>
+In-Reply-To: <20170518062705.25902-1-hch@lst.de>
+References: <20170518062705.25902-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-xfs@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Mon, May 15, 2017 at 5:50 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Mon, May 15, 2017 at 04:20:09PM +0200, Arnd Bergmann wrote:
->> On Mon, May 15, 2017 at 4:11 PM, Dan Williams <dan.j.williams@intel.com> wrote:
->> > On Mon, May 15, 2017 at 6:44 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->> >> We allow configurations with CONFIG_BLOCK=n and CONFIG_DAX=y, which now
->> >> results in a link error:
->> >>
->> >> drivers/dax/super.c: In function 'bdev_dax_pgoff':
->> >> drivers/dax/super.c:50:26: error: implicit declaration of function 'get_start_sect'; did you mean 'get_task_cred'? [-Werror=implicit-function-declaration]
->> >>
->> >> The two obvious ways to avoid the link error are to either add an #ifdef
->> >> around the code that was moved from fs/block_dev.c, or to disallow the
->> >> configuration. I could not see if there is or is not a reason to support
->> >> this combination of options, but in case there is, the #ifdef is the
->> >> safer choice.
->> >>
->> >> Fixes: ef51042472f5 ("block, dax: move "select DAX" from BLOCK to FS_DAX")
->> >> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->> >
->> > Yup, the same one I came up with:
->> >
->> > https://patchwork.kernel.org/patch/9725513/
->> >
->> > If you have a a pull request coming up soon you can add my Acked-by to
->> > both of these patches, otherwise I'll send what I have along at the
->> > end of the week.
->>
->> I didn't plan to send a pull request, please use whatever you have.
->
-> I don't mind pulling the (second) patch in via the xfs tree.
->
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
->
+Use the generic Linux definition to implement our UUID type, this will
+allow using more generic infrastructure in the future.
 
-I think Dan's "dax, xfs, ext4: compile out iomap-dax paths in the
-FS_DAX=n case" handles this in a nicer way, so my patch 2/2 is not
-needed any more.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/uuid.h      | 4 ----
+ fs/xfs/xfs_linux.h | 3 +++
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-      Arnd
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+index 104db0f3bed6..4f1441ba4fa5 100644
+--- a/fs/xfs/uuid.h
++++ b/fs/xfs/uuid.h
+@@ -18,10 +18,6 @@
+ #ifndef __XFS_SUPPORT_UUID_H__
+ #define __XFS_SUPPORT_UUID_H__
+ 
+-typedef struct {
+-	unsigned char	__u_bits[16];
+-} uuid_t;
+-
+ extern int uuid_is_nil(uuid_t *uuid);
+ extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
+ extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 044fb0e15390..89ee5ec66837 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -19,6 +19,7 @@
+ #define __XFS_LINUX__
+ 
+ #include <linux/types.h>
++#include <linux/uuid.h>
+ 
+ /*
+  * Kernel specific type declarations for XFS
+@@ -38,6 +39,8 @@ typedef __s64			xfs_daddr_t;	/* <disk address> type */
+ typedef __u32			xfs_dev_t;
+ typedef __u32			xfs_nlink_t;
+ 
++typedef uuid_be			uuid_t;
++
+ #include "xfs_types.h"
+ 
+ #include "kmem.h"
+-- 
+2.11.0
+
