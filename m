@@ -1,72 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59632 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932291AbdERG2C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:28:02 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 13/23] md: namespace private helper names
-Date: Thu, 18 May 2017 08:26:55 +0200
-Message-Id: <20170518062705.25902-14-hch@lst.de>
-In-Reply-To: <20170518062705.25902-1-hch@lst.de>
-References: <20170518062705.25902-1-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:32821 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932489AbdERWbJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 18:31:09 -0400
+Date: Thu, 18 May 2017 15:30:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/3] xfs: freeze rw filesystems just prior to reboot
+Message-ID: <20170518223053.GD4519@birch.djwong.org>
+References: <20170518012618.GT4519@birch.djwong.org>
+ <20170518013242.GW4519@birch.djwong.org>
+ <20170518083405.GQ17542@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170518083405.GQ17542@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-From: Amir Goldstein <amir73il@gmail.com>
+On Thu, May 18, 2017 at 06:34:05PM +1000, Dave Chinner wrote:
+> On Wed, May 17, 2017 at 06:32:42PM -0700, Darrick J. Wong wrote:
+> > Apparently there are certain system software configurations that do odd
+> > things like update the kernel and reboot without umounting the /boot fs
+> > or remounting it readonly, either of which would push all the AIL items
+> > out to disk.  As a result, a subsequent invocation of something like
+> > grub (which has a frightening willingness to read a fs with a dirty log)
+> > can read stale disk contents and/or miss files the metadata for which
+> > have been written to the log but not checkpointed into the filesystem.
+> 
+> > Granted, most of the time /boot is a separate partition and
+> > systemd/sysvinit/whatever actually /do/ unmount /boot before rebooting.
+> > This "fix" is only needed for people who have one giant filesystem.
+> 
+> Let me guess the series of events: grub calls "sync" and says "I'm
 
-The md private helper uuid_equal() collides with a generic helper
-of the same name.
+dpkg/rpm/systemd/CABEXTRACT.EXE/whatever, but yes :)
 
-Rename the md private helper to md_uuid_equal() and do the same for
-md_sb_equal().
+> done", then user runs an immediate reboot/shutdown and something
+> still running after init has killed everything but PID 1 has an open
 
-Cc: Shaohua Li <shli@kernel.org>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/md/md.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Worse than that, actually -- it was plymouthd, aka the splash screen.
+If plymouthd isn't running, then the ro remount succeeds (not that
+systemd actually checks) and grub is fine afterwards.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 82f798be964f..65795cc4cb7d 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -825,7 +825,7 @@ static int read_disk_sb(struct md_rdev *rdev, int size)
- 	return -EINVAL;
- }
- 
--static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
-+static int md_uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
- {
- 	return	sb1->set_uuid0 == sb2->set_uuid0 &&
- 		sb1->set_uuid1 == sb2->set_uuid1 &&
-@@ -833,7 +833,7 @@ static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
- 		sb1->set_uuid3 == sb2->set_uuid3;
- }
- 
--static int sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
-+static int md_sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
- {
- 	int ret;
- 	mdp_super_t *tmp1, *tmp2;
-@@ -1025,12 +1025,12 @@ static int super_90_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor
- 	} else {
- 		__u64 ev1, ev2;
- 		mdp_super_t *refsb = page_address(refdev->sb_page);
--		if (!uuid_equal(refsb, sb)) {
-+		if (!md_uuid_equal(refsb, sb)) {
- 			pr_warn("md: %s has different UUID to %s\n",
- 				b, bdevname(refdev->bdev,b2));
- 			goto abort;
- 		}
--		if (!sb_equal(refsb, sb)) {
-+		if (!md_sb_equal(refsb, sb)) {
- 			pr_warn("md: %s has same UUID but different superblock to %s\n",
- 				b, bdevname(refdev->bdev, b2));
- 			goto abort;
--- 
-2.11.0
+> writeable file descriptor causing the remount-ro of / to return
+> EBUSY and so it just shuts down/restarts with an unflushed log?
 
+Yes, it's /that/ problem again, that you and I were going 'round and
+'round about a month or two ago.  I decided that I could at least try to
+get something merged to reduce the user pain, even if the real problem
+is herpy derpy userspace.
+
+> > Therefore, add a reboot hook to freeze the rw filesystems (which
+> > checkpoints the log) just prior to reboot.  This is an unfortunate and
+> > insufficient workaround for multiple layers of inadequate external
+> > software, but at least it will reduce boot time surprises for the "OS
+> > updater failed to disengage the filesystem before rebooting" case.
+> > 
+> > Seeing as grub is unlikely ever to learn to replay the XFS log (and we
+> > probably don't want it doing that),
+> 
+> If anything other than XFS code modifies the filesystem (log,
+> metadata or data) then we have a tainted, unsuportable filesystem
+> image.....
+
+Indeed.
+
+> > *LILO has been discontinued for at least 18 months,
+> 
+> Yet Lilo still works just fine.
+
+Ok fine it's been /totally stable/ for 18 months. ;)
+https://lilo.alioth.debian.org/
+
+FWIW lilo isn't compatible with reflinked inodes (admittedly unlikely on
+/boot) but 
+
+> > and we're not quite to the point of putting kernel
+> > files directly on the EFI System Partition,
+> 
+> Really? How have we not got there yet - we were doing this almost
+> 15 years ago with ia64 and elilo via mounting the EFI partition on
+> /boot....
+
+elilo also seems dead, according to its SF page.
+https://sourceforge.net/projects/elilo/
+
+I'm not sure why we don't just drop kernel+initrd into the ESP and
+create a bootloader entry via efibootmgr, other than the ages ago
+reports about EFI firmwares bricking if the nvram fills up with data:
+https://mjg59.dreamwidth.org/22855.html
+
+Though I imagine certain distros don't want to have to get their kernels
+signed by Microsoft so that Secure Boot works or whatever, etc. etc.
+I guess elilo was a nice shim for that.
+
+> > this seems like the least
+> > crappy solution to this problem.
+> > 
+> > Yes, you're still screwed in grub if the system crashes. :)
+> 
+> This really sounds like the perennial "grub doesn't ensure the
+> information it requires to boot is safely on stable storage before
+> reboot" problem combined with some sub-optimal init behaviour to
+> expose the grub issue....
+
+Yep!  Anyway Christoph is right, this isn't something that plagues only
+XFS; Ted was also musing that ext4 likely needs the same workaround, so
+I'll go move this to fsdevel. :)
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
