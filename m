@@ -1,49 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:43690 "EHLO imap.thunk.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754778AbdESSVD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 19 May 2017 14:21:03 -0400
-Date: Fri, 19 May 2017 14:20:57 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH] vfs: freeze filesystems just prior to reboot
-Message-ID: <20170519182057.qyx3sevm4vatff6a@thunk.org>
-References: <20170519002032.GA21202@birch.djwong.org>
- <1495202431.1896310.982081664.066926F8@webmail.messagingengine.com>
- <20170519152734.qd4lf32e7wst4jdh@thunk.org>
- <1495211669.1931975.982263184.0F641F32@webmail.messagingengine.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:53337 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751673AbdERGbK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:31:10 -0400
+Date: Wed, 17 May 2017 23:31:09 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] xfs: remove double-underscore integer types
+Message-ID: <20170518063109.GB722@infradead.org>
+References: <20170518012618.GT4519@birch.djwong.org>
+ <20170518013043.GU4519@birch.djwong.org>
+ <20170518060158.GP17542@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1495211669.1931975.982263184.0F641F32@webmail.messagingengine.com>
+In-Reply-To: <20170518060158.GP17542@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Colin Walters <walters@verbum.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-On Fri, May 19, 2017 at 12:34:29PM -0400, Colin Walters wrote:
-> > One of the things that came up when Darrick and I discussed this on
-> > the weekly ext4 developer's conference call was our mutual wonderment
-> > that none of the userspace tools implemented a reboot by created a
-> > tmpfs chroot, pivoting into the chroot, and then unmounting all of the
-> > remaining file systems.
+> I'm not sure that this is entirely correct when it comes to sparse
+> endian notations or the way the __ types were intended to be used.
+> ISTR we used the __ types were originally for the in-memory endian
+> converted variable definitions that shadowed the on-disk structures.
+> The cleanup plan I was planning to do was to convert these all to
+> the linux kernel definitions of __[s,u][8,16,32,64] so it was clear
+> they shadow on disk structures of specific sizes.
 > 
-> On general purpose systems we have a tmpfs chroot already: the initramfs.
+> Once that was done, everything else could be converted to c99 types
+> (like you've done above) and then we'd be free of all the old
+> __[u]int*_t types....
 
-Aren't we discarding the initramfs after we've pivoted away from it,
-to save on memory?  Keeping the tmpfs chroot around forever would be a
-waste of memory, and in some cases, especially if you are using a
-distribution kernel, the initramfs chroot can be rather large.
+Sparse doesn't care - what matters there are the __be* and __le*
+types.
 
-Creating an tmpfs chroot that was only good enough to manage the
-shutdown would be pretty easy, though; the number of files you would
-need would be quite very few in number.
+Otherwise it's just a decision if we want to use C99 or Linux types,
+and if we want to use Linux types if we want to use the __-prefixed
+ones to avoid name collisions in userspace.
 
-> That narrows the problem down to keeping `/boot` consistent at
-> shutdown time.  AIUI, a problem here is that XFS doesn't flush the
-> journal on `syncfs`, only on unmount?  And from what I can tell,
-> even the `XFS_IOC_FREEZE` ioctl won't do that either.
+I'm fine either way - I'm used to typing uXX so that'd be my first
+preference, but the uintX_t is a close second, so I'd be perfectly
+fine with this patch:
 
-I believe the log *is* checkpointed on an XFS_IOC_FREEZE.
-
-  	      	       		       	  - Ted
+Reviewed-by: Christoph Hellwig <hch@lst.de>
