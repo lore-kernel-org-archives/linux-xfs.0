@@ -1,82 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19384 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759362AbdEWDMH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2017 23:12:07 -0400
-Date: Mon, 22 May 2017 20:11:34 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: use atomic to provide buffer I/O accounting
- serialization
-Message-ID: <20170523031134.GO4519@birch.djwong.org>
-References: <1495477751-3742-1-git-send-email-bfoster@redhat.com>
- <20170522190510.GA17100@infradead.org>
- <20170522220424.GA4456@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170522220424.GA4456@bfoster.bfoster>
+Received: from bombadil.infradead.org ([65.50.211.133]:36277 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753107AbdERG1L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:27:11 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: cleanup UUID types V3
+Date: Thu, 18 May 2017 08:26:42 +0200
+Message-Id: <20170518062705.25902-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Mon, May 22, 2017 at 06:04:24PM -0400, Brian Foster wrote:
-> On Mon, May 22, 2017 at 12:05:10PM -0700, Christoph Hellwig wrote:
-> > On Mon, May 22, 2017 at 02:29:11PM -0400, Brian Foster wrote:
-> > > We've had user reports of unmount hangs in xfs_wait_buftarg() that
-> > > analysis shows is due to btp->bt_io_count == -1. bt_io_count
-> > > represents the count of in-flight asynchronous buffers and thus
-> > > should always be >= 0. xfs_wait_buftarg() waits for this value to
-> > > stabilize to zero in order to ensure that all untracked (with
-> > > respect to the lru) buffers have completed I/O processing before
-> > > unmount proceeds to tear down in-core data structures.
-> > > 
-> > > The value of -1 implies an I/O accounting decrement race. Indeed,
-> > > the fact that xfs_buf_ioacct_dec() is called from xfs_buf_rele()
-> > > (where the buffer lock is no longer held) means that bp->b_flags can
-> > > be updated from an unsafe context. While a user-level reproducer is
-> > > currently not available, some intrusive hacks to run racing buffer
-> > > lookups/ioacct/releases from multiple threads was used to
-> > > successfully manufacture this problem.
-> > > 
-> > > Existing callers do not expect to acquire the buffer lock from
-> > > xfs_buf_rele(). Therefore, we can not safely update ->b_flags from
-> > > this context. To close the race, replace the in-flight buffer flag
-> > > with a per-buffer atomic for tracking accounting against the
-> > > buftarg. This field resides in a hole in the existing data structure
-> > > and thus does not increase the size of xfs_buf.
+Hi all,
 
-There's only a hole on 64-bit systems, btw.
+this series, which is a combined effort from Amir, Andy and me introduces
+new uuid_t and guid_t type names that are less confusing than the existing
+types, adds new helpers for them and starts switching the fs code over to
+it.  Andy has additional patches on top to convert many of the users
+that use char arrays for UUIDs and GUIDs to these (or rather a predecessor
+for now until updated).
 
-> > I hate these uses of atomic_t as binary flags.  Can you use
-> > test_and_set_bit and friends wit a bitop?  This would require
-> > an unsigned long which an actually be larger than an atomic_t,
-> > but it's both cleaner and provides headroom for additional atomic flags
-> > in the future.
-> 
-> I thought it may be a little confusing to have multiple sets of flags
-> for a buffer, hence the counter (even though it is logically a flag).
+Changes since V3:
+ - stop exposing uuid_be/uuid_t to userspace
+ - remove uuid_be entirely
 
-It /is/ confusing.  If you stick with a flags variable of some sort, I
-think at a bare minimum there ought to be a comment explaining what this
-unlocked flags field is for, and why we didn't just make b_flags an
-atomicly updated flags field.  (TBH I'm wondering why not do that?  Is
-it to avoid making a larger change?)
-
-> But I'm fine with it for now if we don't mind wasting the extra space.
-> 
-> Though I suppose we could also add a smaller field and use cmpxchg() to
-> set and clear it... thoughts?
-
-None in particular.  I don't know that we're adding flag bits all that
-quickly, and we can always change to unsigned long if we have to.
-
---D
-
-> 
-> Brian
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Changes since V2:
+ - various cleanups
