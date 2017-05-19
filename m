@@ -1,39 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:3385 "EHLO
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:33723 "EHLO
         ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753561AbdESAeh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 20:34:37 -0400
+        by vger.kernel.org with ESMTP id S1755062AbdESAiA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 20:38:00 -0400
 Received: from dave by dastard with local (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1dBVas-0004or-4O
-        for linux-xfs@vger.kernel.org; Fri, 19 May 2017 10:16:34 +1000
-Date: Fri, 19 May 2017 10:16:34 +1000
+        id 1dBVgZ-0004pI-Dd
+        for linux-xfs@vger.kernel.org; Fri, 19 May 2017 10:22:27 +1000
+Date: Fri, 19 May 2017 10:22:27 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Do we need a way to force xfsaild to run?
-Message-ID: <20170519001634.GR17542@dastard>
-References: <20170518142159.gkr6be4dralc6xiq@eorzea.usersys.redhat.com>
+Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
+ error during buffer writeback
+Message-ID: <20170519002227.GS17542@dastard>
+References: <20170511135733.21765-1-cmaiolino@redhat.com>
+ <20170511135733.21765-3-cmaiolino@redhat.com>
+ <20170517005749.GO17542@dastard>
+ <20170517104111.aziwbvqpfcbgxnxa@eorzea.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170518142159.gkr6be4dralc6xiq@eorzea.usersys.redhat.com>
+In-Reply-To: <20170517104111.aziwbvqpfcbgxnxa@eorzea.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-On Thu, May 18, 2017 at 04:21:59PM +0200, Carlos Maiolino wrote:
-> Hi,
+On Wed, May 17, 2017 at 12:41:11PM +0200, Carlos Maiolino wrote:
+> Hi Dave,
 > 
-> This is something I was thinking while working on that buffer retry stuff.
+> On Wed, May 17, 2017 at 10:57:49AM +1000, Dave Chinner wrote:
+> > On Thu, May 11, 2017 at 03:57:33PM +0200, Carlos Maiolino wrote:
+> > > +xfs_inode_item_error(
+> > > +	struct xfs_log_item	*lip,
+> > > +	unsigned int		bflags)
+> > > +{
+> > > +
+> > > +	/*
+> > > +	 * The buffer writeback containing this inode has been failed
+> > > +	 * mark it as failed and unlock the flush lock, so it can be retried
+> > > +	 * again
+> > > +	 */
+> > > +	if (bflags & XBF_WRITE_FAIL)
+> > > +		lip->li_flags |= XFS_LI_FAILED;
+> > > +}
+> > 
+> > I'm pretty sure we can't modify the log item state like this in
+> > IO context because the parent object is not locked by this context.
+> > We can modify the state during IO submission because we hold the
+> > parent object lock, but we don't hold it here.
+> > 
+> > i.e. we can race with other log item state changes done during a
+> > concurrent transaction (e.g. marking the log item dirty in
+> > xfs_trans_log_inode()).
+> > 
+> > > +
+> > > +				if (lip->li_flags & XFS_LI_FAILED)
+> > > +					lip->li_flags &= XFS_LI_FAILED;
+> > > +				lip = next;
+> > > +			}
+> > 
+> > Same race here - we hold the lock for this inode, but not all the
+> > other inodes linked to the buffer.
+> > 
+> > This implies that lip->li_flags needs to use atomic bit updates so
+> > there are no RMW update races like this.
+> > 
 > 
-> Currently, we have no way to force xfsaild to run, and I was wondering if
-> somebody has any opinion if it would be useful to create a new xfsctl, to start
-> xfsaild for debugging purposes, using xfs_io to trigger it.
+> I believe refers to both cases above, while setting and removing the flag?
+> 
+> I can simply use set_bit() and clear_bit() here, if this is enough, although, to
+> use them I'll need to change lip->li_flags size to `unsigned long` if people are
+> ok with that.
 
-THere's lots of ways to trigger it to run. You can do it on demand
-via a freeze or remount-ro or by filling up the log, or get it to
-run every second automatically iso there's no wait time at all by
-turning /proc/sys/fs/xfs/xfssyncd_centiseconds down to the minimum.
+Yup, and you need to change every other flag in li_flags to use
+atomic bitops, too. That also means using test_bit() for value
+checks, test_and_clear_bit() instead of "if (bit) {clear bit}" and
+so on.
+
+i.e. it's no good just making one flag atomic and all the other
+updates using RMW accesses to change the state because that doesn't
+close the update race conditions.
 
 Cheers,
 
