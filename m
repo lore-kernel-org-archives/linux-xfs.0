@@ -1,106 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29868 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754810AbdERXfc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 19:35:32 -0400
-Date: Thu, 18 May 2017 16:35:17 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:25086 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754169AbdESAG1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 20:06:27 -0400
+Date: Thu, 18 May 2017 17:06:17 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 12/23] xfs: remove uuid_getnodeuniq and xfs_uu_t
-Message-ID: <20170518233517.GG4519@birch.djwong.org>
-References: <20170518062705.25902-1-hch@lst.de>
- <20170518062705.25902-13-hch@lst.de>
+Subject: Re: [PATCH 0/3 v3] xfs: Fix SEEK_HOLE implementation
+Message-ID: <20170519000617.GH4519@birch.djwong.org>
+References: <20170518104850.14508-1-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170518062705.25902-13-hch@lst.de>
+In-Reply-To: <20170518104850.14508-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@ml01.01.org, linux-kernel@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Eryu Guan <eguan@redhat.com>
 
-On Thu, May 18, 2017 at 08:26:54AM +0200, Christoph Hellwig wrote:
-> Directly use the v1 intepretation of uuid_t instead.
+On Thu, May 18, 2017 at 12:48:47PM +0200, Jan Kara wrote:
+> Hello,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> this is the second revision of the patches to fix bugs in XFS's SEEK_HOLE
+> implementation and cleanup the code a bit.
 
+Looks ok, will give it a test; for now,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> ---
->  fs/xfs/uuid.c      | 25 -------------------------
->  fs/xfs/uuid.h      |  1 -
->  fs/xfs/xfs_mount.c |  6 +++++-
->  3 files changed, 5 insertions(+), 27 deletions(-)
 > 
-> diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
-> index 29ed78c8637b..737c186ea98b 100644
-> --- a/fs/xfs/uuid.c
-> +++ b/fs/xfs/uuid.c
-> @@ -17,31 +17,6 @@
->   */
->  #include <xfs.h>
->  
-> -/* IRIX interpretation of an uuid_t */
-> -typedef struct {
-> -	__be32	uu_timelow;
-> -	__be16	uu_timemid;
-> -	__be16	uu_timehi;
-> -	__be16	uu_clockseq;
-> -	__be16	uu_node[3];
-> -} xfs_uu_t;
-> -
-> -/*
-> - * uuid_getnodeuniq - obtain the node unique fields of a UUID.
-> - *
-> - * This is not in any way a standard or condoned UUID function;
-> - * it just something that's needed for user-level file handles.
-> - */
-> -void
-> -uuid_getnodeuniq(uuid_t *uuid, int fsid [2])
-> -{
-> -	xfs_uu_t *uup = (xfs_uu_t *)uuid;
-> -
-> -	fsid[0] = (be16_to_cpu(uup->uu_clockseq) << 16) |
-> -		   be16_to_cpu(uup->uu_timemid);
-> -	fsid[1] = be32_to_cpu(uup->uu_timelow);
-> -}
-> -
->  int
->  uuid_is_nil(uuid_t *uuid)
->  {
-> diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
-> index 86bbed071e79..5aea49bf0963 100644
-> --- a/fs/xfs/uuid.h
-> +++ b/fs/xfs/uuid.h
-> @@ -19,6 +19,5 @@
->  #define __XFS_SUPPORT_UUID_H__
->  
->  extern int uuid_is_nil(uuid_t *uuid);
-> -extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
->  
->  #endif	/* __XFS_SUPPORT_UUID_H__ */
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 2eaf81859166..742e4a61c0bc 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -793,7 +793,11 @@ xfs_mountfs(
->  	 *  Copies the low order bits of the timestamp and the randomly
->  	 *  set "sequence" number out of a UUID.
->  	 */
-> -	uuid_getnodeuniq(&sbp->sb_uuid, mp->m_fixedfsid);
-> +	mp->m_fixedfsid[0] =
-> +		((u32)sbp->sb_uuid.v1.clock_seq_hi_and_reserved << 24) |
-> +		((u32)sbp->sb_uuid.v1.clock_seq_low << 16) |
-> +		 be16_to_cpu(sbp->sb_uuid.v1.time_mid);
-> +	mp->m_fixedfsid[1] = be32_to_cpu(sbp->sb_uuid.v1.time_low);
->  
->  	mp->m_dmevmask = 0;	/* not persistent; set after each mount */
->  
-> -- 
-> 2.11.0
+> Changes since v2:
+> * Fixed rounding error in patch 2 spotted by Eryu
 > 
+> Changes since v1:
+> * Fixed some more buggy cases
+> * Simplified code a bit as suggested by Darrick
+> * Fixed range check as spotted by Brian
+> 
+> 								Honza
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
