@@ -1,61 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from klunky.co.uk ([88.198.95.13]:54211 "EHLO klunky.co.uk"
+Received: from imap.thunk.org ([74.207.234.97]:43056 "EHLO imap.thunk.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750793AbdESLqf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 19 May 2017 07:46:35 -0400
-Subject: Re: xfs delayed logging
+        id S1751055AbdESP1i (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 19 May 2017 11:27:38 -0400
+Date: Fri, 19 May 2017 11:27:34 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH] vfs: freeze filesystems just prior to reboot
+Message-ID: <20170519152734.qd4lf32e7wst4jdh@thunk.org>
+References: <20170519002032.GA21202@birch.djwong.org>
+ <1495202431.1896310.982081664.066926F8@webmail.messagingengine.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date: Fri, 19 May 2017 13:46:33 +0200
-From: Sophie Loewenthal <sophie@klunky.co.uk>
-In-Reply-To: <20170519111204.GA64091@bfoster.bfoster>
-References: <b11cf7a2175672631380d44321d77169@klunky.co.uk>
- <20170519111204.GA64091@bfoster.bfoster>
-Message-ID: <fe9fb9cc985ad9538e63eecee041583a@klunky.co.uk>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1495202431.1896310.982081664.066926F8@webmail.messagingengine.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, linux-xfs-owner@vger.kernel.org
+To: Colin Walters <walters@verbum.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-Thank-you Brian.
+On Fri, May 19, 2017 at 10:00:31AM -0400, Colin Walters wrote:
+> As a maintainer of one of those userspace tools (https://github.com/ostreedev/ostree),
+> which I don't think is the one in question here, but likely has the same
+> issue - I'd like to have some sort of API to fix this - maybe flush the journal *without*
+> remounting r/o?
+> 
+> Unlike the case you're talking about with rebooting into a special
+> update mode, libostree constructs a new root with hardlinks while
+> the system is running.  Hence, system downtime is just reboot, like
+> dual-partition update systems, except we're more flexible.
+> 
+> Although hm...I guess an API to flush the journal would only narrow
+> the race.
+> 
+> Is the single partition case really just doomed?
 
----
- http://blogs.ec.europa.eu/ECintheUK/
+One of the things that came up when Darrick and I discussed this on
+the weekly ext4 developer's conference call was our mutual wonderment
+that none of the userspace tools implemented a reboot by created a
+tmpfs chroot, pivoting into the chroot, and then unmounting all of the
+remaining file systems.
 
-On 2017-05-19 13:12, Brian Foster wrote:
-> On Fri, May 19, 2017 at 11:43:23AM +0200, Sophie Loewenthal wrote:
->> 
->> Hi,
->> 
->> Is this mount option implemented and what is the syntax?
->> 
->> Reference:
->> https://www.kernel.org/doc/Documentation/filesystems/xfs-delayed-logging-design.txt
->> 
-> 
-> Delayed logging is core infrastructure and thus has been enabled by
-> default for quite some time now. The associated mount options had been
-> deprecated and ultimately removed in the following patch:
-> 
-> commit 93b8a5854f247138e401471a9c3b82ccb62ff608
-> Author: Christoph Hellwig <hch@infradead.org>
-> Date:   Tue Dec 6 21:58:07 2011 +0000
-> 
->     xfs: remove the deprecated nodelaylog option
-> ...
-> 
-> Brian
-> 
->> Kind regards, Sophie
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" 
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This would also allow update schemes who want to enable various new
+file system features, or upgrade the root file system somehow, to be
+able to do so while the root file system is completely and cleanly
+unmounted.
+
+The other thing that would be useful is if grub2 would actually be
+able to replay the file system journal --- but given that grub2 is
+GPLv3, and both ext4 and xfs are GPLv2-only, and given that past
+attempts of teams attempting to do clean room reimplementations of
+complex code bases for licensing reasons only (cough, make_ext4fs,
+*cough*) have not necessarily turned out well, I'm at least not going
+to hold my breath.
+
+   	   			- Ted
