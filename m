@@ -1,44 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38096 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1762023AbdEVUGr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 May 2017 16:06:47 -0400
-Subject: [PATCH V2] xfs: fix unaligned access in xfs_btree_visit_blocks
-References: <105ed603-971a-e7db-6040-b85e5eecd928@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <1ad226af-4b1b-18ca-274c-20a030ca4768@sandeen.net>
-Date: Mon, 22 May 2017 15:06:40 -0500
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:55527 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753553AbdESOAd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2017 10:00:33 -0400
+Message-Id: <1495202431.1896310.982081664.066926F8@webmail.messagingengine.com>
+From: Colin Walters <walters@verbum.org>
 MIME-Version: 1.0
-In-Reply-To: <105ed603-971a-e7db-6040-b85e5eecd928@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Date: Fri, 19 May 2017 10:00:31 -0400
+In-Reply-To: <20170519002032.GA21202@birch.djwong.org>
+Subject: Re: [PATCH] vfs: freeze filesystems just prior to reboot
+References: <20170519002032.GA21202@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-This structure copy was throwing unaligned access warnings on sparc64:
+On Thu, May 18, 2017, at 08:20 PM, Darrick J. Wong wrote:
 
-Kernel unaligned access at TPC[1043c088] xfs_btree_visit_blocks+0x88/0xe0 [xfs]
+> Therefore, add a reboot hook to freeze all filesystems (which in general
+> will induce ext4/xfs/btrfs to checkpoint the log) just prior to reboot.
+> This is an unfortunate and insufficient workaround for multiple layers
+> of inadequate external software, but at least it will reduce boot time
+> surprises for the "OS updater failed to disengage the filesystem before
+> rebooting" case.
 
-xfs_btree_copy_ptrs does a memcpy, which avoids it.
+As a maintainer of one of those userspace tools (https://github.com/ostreedev/ostree),
+which I don't think is the one in question here, but likely has the same
+issue - I'd like to have some sort of API to fix this - maybe flush the journal *without*
+remounting r/o?
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Unlike the case you're talking about with rebooting into a special
+update mode, libostree constructs a new root with hardlinks while
+the system is running.  Hence, system downtime is just reboot, like
+dual-partition update systems, except we're more flexible.
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 5392674..3a673ba 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4395,7 +4395,7 @@ struct xfs_btree_split_args {
- 			xfs_btree_readahead_ptr(cur, ptr, 1);
- 
- 			/* save for the next iteration of the loop */
--			lptr = *ptr;
-+			xfs_btree_copy_ptrs(cur, &lptr, ptr, 1);
- 		}
- 
- 		/* for each buffer in the level */
+Although hm...I guess an API to flush the journal would only narrow
+the race.
 
+Is the single partition case really just doomed?  
