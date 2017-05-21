@@ -1,88 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52616 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47986 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751670AbdEVXJv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 May 2017 19:09:51 -0400
-Date: Tue, 23 May 2017 01:09:46 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: Shutdown filesystem when a thin pool become full
-Message-ID: <20170522230946.s3sdg4gd73oj7r5u@eorzea.usersys.redhat.com>
-References: <c25a8ccc-f143-989d-3d49-3fe8753aa6f7@assyoma.it>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c25a8ccc-f143-989d-3d49-3fe8753aa6f7@assyoma.it>
+        id S1750860AbdEUH7l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 21 May 2017 03:59:41 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 9D7A65AFC6
+        for <linux-xfs@vger.kernel.org>; Sun, 21 May 2017 07:59:40 +0000 (UTC)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfs: fix off-by-one on max nr_pages in xfs_find_get_desired_pgoff()
+Date: Sun, 21 May 2017 15:59:39 +0800
+Message-Id: <20170521075939.18071-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Eryu Guan <eguan@redhat.com>
 
-Hi,
+xfs_find_get_desired_pgoff() is used to search for offset of hole or
+data in page range [index, end] (both inclusive), and the max number
+of pages to search should be at least one, if end == index.
+Otherwise the only page is missed and no hole or data is found,
+which is not correct.
 
-On Mon, May 22, 2017 at 04:25:37PM +0200, Gionatan Danti wrote:
-> Hi all,
-> I have a question regarding how to automatically shutdown (or put in
-> read-only mode) an XFS filesystem which reside on a full thin pool.
-> 
+When block size is smaller than page size, this can be demonstrated
+by preallocating a file with size smaller than page size and writing
+data to the last block. E.g. run this xfs_io command on a 1k block
+size XFS on x86_64 host.
 
-If you want that XFS shut down when it hits an error, you can configure it
-through sysfs in:
+  # xfs_io -fc "falloc 0 3k" -c "pwrite 2k 1k" \
+  	    -c "seek -d 0" /mnt/xfs/testfile
+  wrote 1024/1024 bytes at offset 2048
+  1 KiB, 1 ops; 0.0000 sec (33.675 MiB/sec and 34482.7586 ops/sec)
+  Whence  Result
+  DATA    EOF
 
-/sys/fs/xfs/<dev>/error/
+Data at offset 2k was missed, and lseek(2) returned ENXIO.
 
-directory.
+This is unconvered by generic/285 subtest 07 and 08 on ppc64 host,
+where pagesize is 64k. Because a recent change to generic/285
+reduced the preallocated file size to smaller than 64k.
 
-You can find detailed info in Documentation/filesystems/xfs.txt (from linux
-source).
+Cc: stable@vger.kernel.org # v3.7+
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ fs/xfs/xfs_file.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Although, I should say this is a bad idea. A full thin pool will return an
-ENOSPC error to the filesystem, and, the filesystem should act accordingly.
-
-Would you want the filesystem to shut down because it hit an ENOSPC, or report
-to the user and let him/her to take the appropriate action, like freeing space
-or increasing the dm-thin pool size?
-
-> Background info: when a thin pool become full, it will deny any new
-> unallocated writes, but will continue to allow writes to already-allocated
-> storage chunks. So, it behave as a badly damaged disk, where some places can
-> be written, but others throw an error.
-> 
-
-The behavior really depends on several configurations, including how dm-thin
-will deal with ENOSPC situations, dm-thin can be configured to queue new
-incoming IOs, fail the IO, etc, but, even in a full disk situation, you can
-still rewrite data, so this behavior doesn't change much from what would happen
-if you fill up a regular block device, XFS will try to allocate a new block, the
-block device returns an ENOSPC and XFS acts accordingly.
-
-> Playing with dmsetup table it is possible to deny *all* I/O to the volume,
-> but it require careful monitor and a sensible script to do the right thing
-> (tm).
-> 
-> From my testing, it happear that XFS will shutdown itself when a metadata
-> write fails, however, failed *data* update will continue without triggering
-> any filesystem response. Is this by design? Can I do something about that?
-> 
-
-What exactly do you mean by failed data update? As long as you don't need to
-allocate any new block either for data of metadata, you should be able to rewrite
-data normally if the device is full.
-
-How dm-thin and XFS will work together, really depends on how you configure both
-of them. XFS has a configuration system that you can use to set how it will
-behave in some error situations according to your preferences, it can be set to
-retry the writes for a specific amount of time, or simply fail immediately and
-shut down the filesystem.
-
-
-Worth to mention though, there is a bug that might be triggered when you
-overcommit the space (creates a virtual device larger than the real physical
-space), it's not too easy to trigger it though, and the fix is already WIP.
-
-
-
-Cheers.
-
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 35703a8..aefa213 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1049,7 +1049,7 @@ xfs_find_get_desired_pgoff(
+ 		unsigned	nr_pages;
+ 		unsigned int	i;
+ 
+-		want = min_t(pgoff_t, end - index, PAGEVEC_SIZE);
++		want = min_t(pgoff_t, end - index, PAGEVEC_SIZE - 1) + 1;
+ 		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
+ 					  want);
+ 		/*
 -- 
-Carlos
+2.9.4
+
