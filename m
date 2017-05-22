@@ -1,51 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34180 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752796AbdEQMK4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 17 May 2017 08:10:56 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 2/3] xfs: Fix off-by-in in loop termination in xfs_find_get_desired_pgoff()
-Date: Wed, 17 May 2017 14:10:45 +0200
-Message-Id: <20170517121046.2632-3-jack@suse.cz>
-In-Reply-To: <20170517121046.2632-1-jack@suse.cz>
-References: <20170517121046.2632-1-jack@suse.cz>
+Received: from userp1040.oracle.com ([156.151.31.81]:45522 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933464AbdEVUoM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2017 16:44:12 -0400
+Date: Mon, 22 May 2017 13:43:35 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH V2] xfs: fix unaligned access in xfs_btree_visit_blocks
+Message-ID: <20170522204335.GM4519@birch.djwong.org>
+References: <105ed603-971a-e7db-6040-b85e5eecd928@redhat.com>
+ <1ad226af-4b1b-18ca-274c-20a030ca4768@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1ad226af-4b1b-18ca-274c-20a030ca4768@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Jan Kara <jack@suse.cz>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-There is an off-by-one error in loop termination conditions in
-xfs_find_get_desired_pgoff(). It doesn't have any visible effects but
-still it is good to fix it.
+On Mon, May 22, 2017 at 03:06:40PM -0500, Eric Sandeen wrote:
+> This structure copy was throwing unaligned access warnings on sparc64:
+> 
+> Kernel unaligned access at TPC[1043c088] xfs_btree_visit_blocks+0x88/0xe0 [xfs]
+> 
+> xfs_btree_copy_ptrs does a memcpy, which avoids it.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_file.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Heh. :(
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index f371812e20c6..8acb8ab79267 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1097,7 +1097,7 @@ xfs_find_get_desired_pgoff(
- 				goto out;
- 			}
- 			/* Searching done if the page index is out of range. */
--			if (page->index > end)
-+			if (page->index >= end)
- 				goto out;
- 
- 			lock_page(page);
-@@ -1153,7 +1153,7 @@ xfs_find_get_desired_pgoff(
- 
- 		index = pvec.pages[i - 1]->index + 1;
- 		pagevec_release(&pvec);
--	} while (index <= end);
-+	} while (index < end);
- 
- out:
- 	pagevec_release(&pvec);
--- 
-2.12.0
+Looks ok to me...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+--D
+
+> ---
+> 
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 5392674..3a673ba 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -4395,7 +4395,7 @@ struct xfs_btree_split_args {
+>  			xfs_btree_readahead_ptr(cur, ptr, 1);
+>  
+>  			/* save for the next iteration of the loop */
+> -			lptr = *ptr;
+> +			xfs_btree_copy_ptrs(cur, &lptr, ptr, 1);
+>  		}
+>  
+>  		/* for each buffer in the level */
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
