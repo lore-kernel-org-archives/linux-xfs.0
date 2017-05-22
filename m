@@ -1,51 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45296 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:40476 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758088AbdEVQCV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 May 2017 12:02:21 -0400
-Subject: Re: [PATCH] xfs: fix unaligned access in xfs_btree_visit_blocks
-References: <105ed603-971a-e7db-6040-b85e5eecd928@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <391768ae-059c-d915-c0fb-d4e6a18c4fd4@sandeen.net>
-Date: Mon, 22 May 2017 11:02:19 -0500
+        id S934403AbdEVWE1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 May 2017 18:04:27 -0400
+Date: Mon, 22 May 2017 18:04:24 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: use atomic to provide buffer I/O accounting
+ serialization
+Message-ID: <20170522220424.GA4456@bfoster.bfoster>
+References: <1495477751-3742-1-git-send-email-bfoster@redhat.com>
+ <20170522190510.GA17100@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <105ed603-971a-e7db-6040-b85e5eecd928@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170522190510.GA17100@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-On 5/22/17 10:48 AM, Eric Sandeen wrote:
-> This was throwing unaligned access warnings on sparc64:
+On Mon, May 22, 2017 at 12:05:10PM -0700, Christoph Hellwig wrote:
+> On Mon, May 22, 2017 at 02:29:11PM -0400, Brian Foster wrote:
+> > We've had user reports of unmount hangs in xfs_wait_buftarg() that
+> > analysis shows is due to btp->bt_io_count == -1. bt_io_count
+> > represents the count of in-flight asynchronous buffers and thus
+> > should always be >= 0. xfs_wait_buftarg() waits for this value to
+> > stabilize to zero in order to ensure that all untracked (with
+> > respect to the lru) buffers have completed I/O processing before
+> > unmount proceeds to tear down in-core data structures.
+> > 
+> > The value of -1 implies an I/O accounting decrement race. Indeed,
+> > the fact that xfs_buf_ioacct_dec() is called from xfs_buf_rele()
+> > (where the buffer lock is no longer held) means that bp->b_flags can
+> > be updated from an unsafe context. While a user-level reproducer is
+> > currently not available, some intrusive hacks to run racing buffer
+> > lookups/ioacct/releases from multiple threads was used to
+> > successfully manufacture this problem.
+> > 
+> > Existing callers do not expect to acquire the buffer lock from
+> > xfs_buf_rele(). Therefore, we can not safely update ->b_flags from
+> > this context. To close the race, replace the in-flight buffer flag
+> > with a per-buffer atomic for tracking accounting against the
+> > buftarg. This field resides in a hole in the existing data structure
+> > and thus does not increase the size of xfs_buf.
 > 
-> Kernel unaligned access at TPC[1043c088] xfs_btree_visit_blocks+0x88/0xe0 [xfs]
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> I hate these uses of atomic_t as binary flags.  Can you use
+> test_and_set_bit and friends wit a bitop?  This would require
+> an unsigned long which an actually be larger than an atomic_t,
+> but it's both cleaner and provides headroom for additional atomic flags
+> in the future.
 
-(FYI lightly tested only - did a mount & fs traversal of the fs in
-question with this patch)
+I thought it may be a little confusing to have multiple sets of flags
+for a buffer, hence the counter (even though it is logically a flag).
+But I'm fine with it for now if we don't mind wasting the extra space.
 
--Eric
- 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index 5392674..84089f8 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -4395,7 +4395,7 @@ struct xfs_btree_split_args {
->  			xfs_btree_readahead_ptr(cur, ptr, 1);
->  
->  			/* save for the next iteration of the loop */
-> -			lptr = *ptr;
-> +			lptr = get_unaligned(ptr);
->  		}
->  
->  		/* for each buffer in the level */
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Though I suppose we could also add a smaller field and use cmpxchg() to
+set and clear it... thoughts?
+
+Brian
