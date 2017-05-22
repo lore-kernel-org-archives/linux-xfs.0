@@ -1,169 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54514 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:30199 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752424AbdETLq6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 20 May 2017 07:46:58 -0400
-Date: Sat, 20 May 2017 07:46:56 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
- error during buffer writeback
-Message-ID: <20170520114654.GA3888@bfoster.bfoster>
-References: <20170511135733.21765-1-cmaiolino@redhat.com>
- <20170511135733.21765-3-cmaiolino@redhat.com>
- <20170517005749.GO17542@dastard>
- <20170517104111.aziwbvqpfcbgxnxa@eorzea.usersys.redhat.com>
- <20170519002227.GS17542@dastard>
- <20170519112659.GB64091@bfoster.bfoster>
- <20170519233900.GT17542@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170519233900.GT17542@dastard>
+        id S1761033AbdEVSwc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 May 2017 14:52:32 -0400
+Message-ID: <1495479147.6967.70.camel@linux.intel.com>
+Subject: Re: [PATCH 13/23] md: namespace private helper names
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Date: Mon, 22 May 2017 21:52:27 +0300
+In-Reply-To: <20170518062705.25902-14-hch@lst.de>
+References: <20170518062705.25902-1-hch@lst.de>
+         <20170518062705.25902-14-hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Sat, May 20, 2017 at 09:39:00AM +1000, Dave Chinner wrote:
-> On Fri, May 19, 2017 at 07:27:01AM -0400, Brian Foster wrote:
-> > On Fri, May 19, 2017 at 10:22:27AM +1000, Dave Chinner wrote:
-> > > On Wed, May 17, 2017 at 12:41:11PM +0200, Carlos Maiolino wrote:
-> > > > Hi Dave,
-> > > > 
-> > > > On Wed, May 17, 2017 at 10:57:49AM +1000, Dave Chinner wrote:
-> > > > > On Thu, May 11, 2017 at 03:57:33PM +0200, Carlos Maiolino wrote:
-> > > > > > +xfs_inode_item_error(
-> > > > > > +	struct xfs_log_item	*lip,
-> > > > > > +	unsigned int		bflags)
-> > > > > > +{
-> > > > > > +
-> > > > > > +	/*
-> > > > > > +	 * The buffer writeback containing this inode has been failed
-> > > > > > +	 * mark it as failed and unlock the flush lock, so it can be retried
-> > > > > > +	 * again
-> > > > > > +	 */
-> > > > > > +	if (bflags & XBF_WRITE_FAIL)
-> > > > > > +		lip->li_flags |= XFS_LI_FAILED;
-> > > > > > +}
-> > > > > 
-> > > > > I'm pretty sure we can't modify the log item state like this in
-> > > > > IO context because the parent object is not locked by this context.
-> > > > > We can modify the state during IO submission because we hold the
-> > > > > parent object lock, but we don't hold it here.
-> > > > > 
-> > > > > i.e. we can race with other log item state changes done during a
-> > > > > concurrent transaction (e.g. marking the log item dirty in
-> > > > > xfs_trans_log_inode()).
-> > > > > 
-> > > > > > +
-> > > > > > +				if (lip->li_flags & XFS_LI_FAILED)
-> > > > > > +					lip->li_flags &= XFS_LI_FAILED;
-> > > > > > +				lip = next;
-> > > > > > +			}
-> > > > > 
-> > > > > Same race here - we hold the lock for this inode, but not all the
-> > > > > other inodes linked to the buffer.
-> > > > > 
-> > > > > This implies that lip->li_flags needs to use atomic bit updates so
-> > > > > there are no RMW update races like this.
-> > > > > 
-> > > > 
-> > > > I believe refers to both cases above, while setting and removing the flag?
-> > > > 
-> > > > I can simply use set_bit() and clear_bit() here, if this is enough, although, to
-> > > > use them I'll need to change lip->li_flags size to `unsigned long` if people are
-> > > > ok with that.
-> > > 
-> > > Yup, and you need to change every other flag in li_flags to use
-> > > atomic bitops, too. That also means using test_bit() for value
-> > > checks, test_and_clear_bit() instead of "if (bit) {clear bit}" and
-> > > so on.
-> > > 
-> > > i.e. it's no good just making one flag atomic and all the other
-> > > updates using RMW accesses to change the state because that doesn't
-> > > close the update race conditions.
-> > > 
-> > 
-> > Am I following this correctly that the only potential race here looks
-> > like it is with XFS_LI_ABORTED (the dirty transaction cancel case,
-> > specifically)?
+On Thu, 2017-05-18 at 08:26 +0200, Christoph Hellwig wrote:
+> From: Amir Goldstein <amir73il@gmail.com>
 > 
-> XFS_LI_ABORTED is used during a shutdown (dirty trans cancel causes
-> a shutdown) so races don't really matter here.
+> The md private helper uuid_equal() collides with a generic helper
+> of the same name.
+> 
+> Rename the md private helper to md_uuid_equal() and do the same for
+> md_sb_equal().
 > 
 
-Right.. though I don't think we should dismiss this case because in
-theory, if a race causes loss of a flag or some such that happens to
-affect the ability to tear down in-core structures, we could still end
-up with things like memory leaks or unmount hangs on a shutdown fs.
+While patch is good, shouldn't it go before we introduce those helpers?
 
-> However, the XFS_LI_IN_AIL flag is the problem because of it's
-> serialisation requirements. That is, log IO completion can be
-> running asynchronously to metadata object IO completion and the
-> manipulation of the XFS_LI_IN_AIL flag and state is protected by the
-> ailp->xa_lock.
+> Cc: Shaohua Li <shli@kernel.org>
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/md/md.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 82f798be964f..65795cc4cb7d 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -825,7 +825,7 @@ static int read_disk_sb(struct md_rdev *rdev, int
+> size)
+>  	return -EINVAL;
+>  }
+>  
+> -static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+> +static int md_uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+>  {
+>  	return	sb1->set_uuid0 == sb2->set_uuid0 &&
+>  		sb1->set_uuid1 == sb2->set_uuid1 &&
+> @@ -833,7 +833,7 @@ static int uuid_equal(mdp_super_t *sb1,
+> mdp_super_t *sb2)
+>  		sb1->set_uuid3 == sb2->set_uuid3;
+>  }
+>  
+> -static int sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+> +static int md_sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+>  {
+>  	int ret;
+>  	mdp_super_t *tmp1, *tmp2;
+> @@ -1025,12 +1025,12 @@ static int super_90_load(struct md_rdev *rdev,
+> struct md_rdev *refdev, int minor
+>  	} else {
+>  		__u64 ev1, ev2;
+>  		mdp_super_t *refsb = page_address(refdev->sb_page);
+> -		if (!uuid_equal(refsb, sb)) {
+> +		if (!md_uuid_equal(refsb, sb)) {
+>  			pr_warn("md: %s has different UUID to %s\n",
+>  				b, bdevname(refdev->bdev,b2));
+>  			goto abort;
+>  		}
+> -		if (!sb_equal(refsb, sb)) {
+> +		if (!md_sb_equal(refsb, sb)) {
+>  			pr_warn("md: %s has same UUID but different
+> superblock to %s\n",
+>  				b, bdevname(refdev->bdev, b2));
+>  			goto abort;
 
-Indeed..
-
-> Adding new flags to the same field that can be asynchronously
-> updated by RMW operations outside the ailp->xa_lock will cause
-> problems in future. There *may not* be a problem right now, but it
-> is poor programming practice to have different coherency processes
-> for the same variable that is updated via RMW operations. In these
-> situations, the only safe way to update the variable is to use an
-> atomic operation.
-> 
-
-So is there a reason why we couldn't acquire ->xa_lock to fail the log
-items as we would have done anyways if the metadata writeback had
-succeeded and we were removing the log items from the AIL.. (e.g., why
-introduce new serialization rules if we don't need to)?
-
-> i.e. I'm not looking for a specific bug in the code - I'm pointing
-> out a concurrent programming error that is being made.
-> 
-
-Ok. That's not what was described above, but sounds reasonable enough to
-me regardless so long as the patch description is clear on what it is
-doing. I don't think we're closing any race outside of the aborted thing
-above because IN_AIL has to be set for metadata writeback to occur (and
-potentially fail).
-
-> > But otherwise given the above, that this is primarily I/O error path
-> > code, and that we presumably already have serialization mechanisms in
-> > place in the form of parent object locks, why not just grab the inode
-> > lock in the appropriate places?
-> 
-> Because we can't guarantee that we can lock the parent object in IO
-> completion. Deadlock is trivial: process A grabs parent object,
-> blocks on flush lock. IO completion holds flush lock, blocks trying
-> to get parent object lock.
-> 
-
-Ah, right. So once we acquire the flush lock and drop the ilock, we
-can no longer block on the ilock from a context responsible for
-releasing the flush lock.
-
-That makes sense, but raises a larger question... if "process A" can
-cause this kind of locking problem in I/O completion context, what
-prevents it from interfering with (re)submission context just the same?
-For example, the AIL pushes an inode, locks, flushes and submits the
-underlying buffer. The buffer I/O fails and is ultimately released back
-to the AIL. Process A comes in, locks the inode and blocks on the flush
-lock. Subsequent AIL pushes and retry attempts fail to lock the inode,
-never even get to the point of checking for LI_FAILED and thus we're
-back to the same problem we have today.
-
-IOW, doesn't this mean we need to check and handle LI_FAILED first off
-in ->iop_push() and not just in response to flush lock failure?
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
