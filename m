@@ -1,46 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29929 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:55080 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752210AbdEVPsP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 May 2017 11:48:15 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 77D23624AB
-        for <linux-xfs@vger.kernel.org>; Mon, 22 May 2017 15:48:15 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4F5E35DD6A
-        for <linux-xfs@vger.kernel.org>; Mon, 22 May 2017 15:48:15 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: fix unaligned access in xfs_btree_visit_blocks
-Message-ID: <105ed603-971a-e7db-6040-b85e5eecd928@redhat.com>
-Date: Mon, 22 May 2017 10:48:14 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1751897AbdEVStX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 May 2017 14:49:23 -0400
+Message-ID: <1495478957.6967.69.camel@linux.intel.com>
+Subject: Re: [PATCH 10/23] afs: switch to use uuid_t and uuid_gen
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Date: Mon, 22 May 2017 21:49:17 +0300
+In-Reply-To: <20170518062705.25902-11-hch@lst.de>
+References: <20170518062705.25902-1-hch@lst.de>
+         <20170518062705.25902-11-hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-This was throwing unaligned access warnings on sparc64:
+On Thu, 2017-05-18 at 08:26 +0200, Christoph Hellwig wrote:
 
-Kernel unaligned access at TPC[1043c088] xfs_btree_visit_blocks+0x88/0xe0 [xfs]
+Changelog?
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: David Howells <dhowells@redhat.com>
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 5392674..84089f8 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4395,7 +4395,7 @@ struct xfs_btree_split_args {
- 			xfs_btree_readahead_ptr(cur, ptr, 1);
- 
- 			/* save for the next iteration of the loop */
--			lptr = *ptr;
-+			lptr = get_unaligned(ptr);
- 		}
- 
- 		/* for each buffer in the level */
+> @@ -453,7 +453,7 @@ static int afs_deliver_cb_probe(struct afs_call
+> *call)
+>  static void SRXAFSCB_ProbeUuid(struct work_struct *work)
+>  {
+>  	struct afs_call *call = container_of(work, struct afs_call,
+> work);
+> -	struct uuid_v1 *r = call->request;
+> +	uuid_t *r = call->request;
+>  
+>  	struct {
+>  		__be32	match;
+> 
+
+Just to double check that this doesn't create a union aliasing.
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
