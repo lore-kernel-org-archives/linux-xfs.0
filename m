@@ -1,44 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:38331 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755157AbdESQsm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2017 12:48:42 -0400
-Message-Id: <1495212521.1935005.982278280.1453433F@webmail.messagingengine.com>
-From: Colin Walters <walters@verbum.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:56115 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753032AbdEVTLM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2017 15:11:12 -0400
+Date: Mon, 22 May 2017 12:11:11 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] xfs: use atomic operations to handle xfs_log_item
+ flags
+Message-ID: <20170522191111.GC17100@infradead.org>
+References: <20170522153220.25072-1-cmaiolino@redhat.com>
+ <20170522153220.25072-2-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-References: <20170519002032.GA21202@birch.djwong.org>
- <1495202431.1896310.982081664.066926F8@webmail.messagingengine.com>
- <20170519152734.qd4lf32e7wst4jdh@thunk.org>
- <1495211669.1931975.982263184.0F641F32@webmail.messagingengine.com>
-Subject: Re: [PATCH] vfs: freeze filesystems just prior to reboot
-In-Reply-To: <1495211669.1931975.982263184.0F641F32@webmail.messagingengine.com>
-Date: Fri, 19 May 2017 12:48:41 -0400
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170522153220.25072-2-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Colin Walters <walters@verbum.org>, Theodore Ts'o <tytso@mit.edu>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, May 19, 2017, at 12:34 PM, Colin Walters wrote:
->
-> So as far as I can see, a userspace API to ensure the journal is
-> flushed on a mounted filesystem is going to be necessary for
-> the general case.  I don't have a strong opinion on whether or not
-> that's `syncfs()` - if it's e.g. a `XFS_IOC_FREEZE` `_THAW` pair
-> that seems OK to me too.
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -587,7 +587,7 @@ xfs_buf_item_unlock(
+>  	 * (cancelled) buffers at unpin time, but we'll never go through the
+>  	 * pin/unpin cycle if we abort inside commit.
+>  	 */
+> -	aborted = (lip->li_flags & XFS_LI_ABORTED) ? true : false;
+> +	aborted = (test_bit(XFS_LI_ABORTED, &lip->li_flags)) ? true : false;
 
-Or (thinking about this more) maybe we indeed could implement that today by pivoting back to
-the initramfs, and using umount()+mount() as our "syncfs() + journal flush" implementation.
+	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags);
 
-Basically when we have to update /boot, we unmount, then remount again and add
-new kernel+initramfs, unmount, remount and mv(/boot/grub2.conf.new,/boot/grub2.conf),
-then finally unmount again.
+does the same job in a slightly simpler way.
 
-In current design this would require keeping the initramfs resident in memory
-just for this purpose, or to re-synthesize it on shutdown.
+> +	ASSERT(!(test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags)));
 
-Not impossible, but it'd sure be simpler if say syncfs() had a flags argument
-and there were a special "flush the journal" argument for this.
+no need for the inner braces.
 
+> +		ASSERT(!(test_bit(XFS_LI_IN_AIL, &ip->i_itemp->ili_item.li_flags)));
+
+Same here.  Also please don't break lines after 80 characters.
+
+> +	       !(test_bit(XFS_LI_IN_AIL, &dqp->q_logitem.qli_item.li_flags)));
+
+Also no need for the braces around test_bit here.
+
+> +	if (!(test_bit(XFS_LI_IN_AIL, &lip->li_flags))) {
+
+.. again
+
+> +		ASSERT(!(test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags)));
+
+.. again
+
+Also last but not least the arguments to the *_bit functions are
+bit indices, so they should be renumber to 0 and 1 (and the tracing
+helpers will need some updates as well).
