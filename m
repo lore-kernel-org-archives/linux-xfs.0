@@ -1,108 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53848 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:38096 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754354AbdESL1D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 19 May 2017 07:27:03 -0400
-Date: Fri, 19 May 2017 07:27:01 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
- error during buffer writeback
-Message-ID: <20170519112659.GB64091@bfoster.bfoster>
-References: <20170511135733.21765-1-cmaiolino@redhat.com>
- <20170511135733.21765-3-cmaiolino@redhat.com>
- <20170517005749.GO17542@dastard>
- <20170517104111.aziwbvqpfcbgxnxa@eorzea.usersys.redhat.com>
- <20170519002227.GS17542@dastard>
+        id S1762023AbdEVUGr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 May 2017 16:06:47 -0400
+Subject: [PATCH V2] xfs: fix unaligned access in xfs_btree_visit_blocks
+References: <105ed603-971a-e7db-6040-b85e5eecd928@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1ad226af-4b1b-18ca-274c-20a030ca4768@sandeen.net>
+Date: Mon, 22 May 2017 15:06:40 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170519002227.GS17542@dastard>
+In-Reply-To: <105ed603-971a-e7db-6040-b85e5eecd928@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>
 
-On Fri, May 19, 2017 at 10:22:27AM +1000, Dave Chinner wrote:
-> On Wed, May 17, 2017 at 12:41:11PM +0200, Carlos Maiolino wrote:
-> > Hi Dave,
-> > 
-> > On Wed, May 17, 2017 at 10:57:49AM +1000, Dave Chinner wrote:
-> > > On Thu, May 11, 2017 at 03:57:33PM +0200, Carlos Maiolino wrote:
-> > > > +xfs_inode_item_error(
-> > > > +	struct xfs_log_item	*lip,
-> > > > +	unsigned int		bflags)
-> > > > +{
-> > > > +
-> > > > +	/*
-> > > > +	 * The buffer writeback containing this inode has been failed
-> > > > +	 * mark it as failed and unlock the flush lock, so it can be retried
-> > > > +	 * again
-> > > > +	 */
-> > > > +	if (bflags & XBF_WRITE_FAIL)
-> > > > +		lip->li_flags |= XFS_LI_FAILED;
-> > > > +}
-> > > 
-> > > I'm pretty sure we can't modify the log item state like this in
-> > > IO context because the parent object is not locked by this context.
-> > > We can modify the state during IO submission because we hold the
-> > > parent object lock, but we don't hold it here.
-> > > 
-> > > i.e. we can race with other log item state changes done during a
-> > > concurrent transaction (e.g. marking the log item dirty in
-> > > xfs_trans_log_inode()).
-> > > 
-> > > > +
-> > > > +				if (lip->li_flags & XFS_LI_FAILED)
-> > > > +					lip->li_flags &= XFS_LI_FAILED;
-> > > > +				lip = next;
-> > > > +			}
-> > > 
-> > > Same race here - we hold the lock for this inode, but not all the
-> > > other inodes linked to the buffer.
-> > > 
-> > > This implies that lip->li_flags needs to use atomic bit updates so
-> > > there are no RMW update races like this.
-> > > 
-> > 
-> > I believe refers to both cases above, while setting and removing the flag?
-> > 
-> > I can simply use set_bit() and clear_bit() here, if this is enough, although, to
-> > use them I'll need to change lip->li_flags size to `unsigned long` if people are
-> > ok with that.
-> 
-> Yup, and you need to change every other flag in li_flags to use
-> atomic bitops, too. That also means using test_bit() for value
-> checks, test_and_clear_bit() instead of "if (bit) {clear bit}" and
-> so on.
-> 
-> i.e. it's no good just making one flag atomic and all the other
-> updates using RMW accesses to change the state because that doesn't
-> close the update race conditions.
-> 
+This structure copy was throwing unaligned access warnings on sparc64:
 
-Am I following this correctly that the only potential race here looks
-like it is with XFS_LI_ABORTED (the dirty transaction cancel case,
-specifically)? Note that functions like xfs_trans_log_inode() set dirty
-state on the log item descriptor, which is associated with the
-transaction, not the log item itself. The only other log item flag is
-LI_IN_AIL and that is going to remain set during the lifetime of
-LI_FAILED by design. Maybe I'm missing something else going on here..
+Kernel unaligned access at TPC[1043c088] xfs_btree_visit_blocks+0x88/0xe0 [xfs]
 
-But otherwise given the above, that this is primarily I/O error path
-code, and that we presumably already have serialization mechanisms in
-place in the form of parent object locks, why not just grab the inode
-lock in the appropriate places?
+xfs_btree_copy_ptrs does a memcpy, which avoids it.
 
-Brian
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 5392674..3a673ba 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4395,7 +4395,7 @@ struct xfs_btree_split_args {
+ 			xfs_btree_readahead_ptr(cur, ptr, 1);
+ 
+ 			/* save for the next iteration of the loop */
+-			lptr = *ptr;
++			xfs_btree_copy_ptrs(cur, &lptr, ptr, 1);
+ 		}
+ 
+ 		/* for each buffer in the level */
+
