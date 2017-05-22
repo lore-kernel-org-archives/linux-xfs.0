@@ -1,50 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35113 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751030AbdEVTFL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2017 15:05:11 -0400
-Date: Mon, 22 May 2017 12:05:10 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: use atomic to provide buffer I/O accounting
- serialization
-Message-ID: <20170522190510.GA17100@infradead.org>
-References: <1495477751-3742-1-git-send-email-bfoster@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1495477751-3742-1-git-send-email-bfoster@redhat.com>
+Received: from mga09.intel.com ([134.134.136.24]:51761 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1760421AbdEVS7b (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 May 2017 14:59:31 -0400
+Message-ID: <1495479565.6967.72.camel@linux.intel.com>
+Subject: Re: [PATCH 23/23] uuid: remove uuid_be
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Date: Mon, 22 May 2017 21:59:25 +0300
+In-Reply-To: <20170518085629.GA6149@lst.de>
+References: <20170518062705.25902-1-hch@lst.de>
+         <20170518062705.25902-24-hch@lst.de>
+         <CAOQ4uxj+TH5vS5HoEFPJXUpneBqr+YwbVES0bsHzw9qmS8HzKg@mail.gmail.com>
+         <20170518085629.GA6149@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel <linux-kernel@vger.kernel.org>, Hugh Dickins <hughd@google.com>
 
-On Mon, May 22, 2017 at 02:29:11PM -0400, Brian Foster wrote:
-> We've had user reports of unmount hangs in xfs_wait_buftarg() that
-> analysis shows is due to btp->bt_io_count == -1. bt_io_count
-> represents the count of in-flight asynchronous buffers and thus
-> should always be >= 0. xfs_wait_buftarg() waits for this value to
-> stabilize to zero in order to ensure that all untracked (with
-> respect to the lru) buffers have completed I/O processing before
-> unmount proceeds to tear down in-core data structures.
+On Thu, 2017-05-18 at 10:56 +0200, Christoph Hellwig wrote:
+> On Thu, May 18, 2017 at 10:57:24AM +0300, Amir Goldstein wrote:
+> > I reviewed the entire series. You may add
+> > Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+> > 
+> > to any of the patches as you see fit.
 > 
-> The value of -1 implies an I/O accounting decrement race. Indeed,
-> the fact that xfs_buf_ioacct_dec() is called from xfs_buf_rele()
-> (where the buffer lock is no longer held) means that bp->b_flags can
-> be updated from an unsafe context. While a user-level reproducer is
-> currently not available, some intrusive hacks to run racing buffer
-> lookups/ioacct/releases from multiple threads was used to
-> successfully manufacture this problem.
-> 
-> Existing callers do not expect to acquire the buffer lock from
-> xfs_buf_rele(). Therefore, we can not safely update ->b_flags from
-> this context. To close the race, replace the in-flight buffer flag
-> with a per-buffer atomic for tracking accounting against the
-> buftarg. This field resides in a hole in the existing data structure
-> and thus does not increase the size of xfs_buf.
+> Thanks, done!
 
-I hate these uses of atomic_t as binary flags.  Can you use
-test_and_set_bit and friends wit a bitop?  This would require
-an unsigned long which an actually be larger than an atomic_t,
-but it's both cleaner and provides headroom for additional atomic flags
-in the future.
+Similar from my side, FWIW:
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+
+> 
+> > Now let's talk about how this is going to be merged.
+> > Do you intend to send Linus a pull request?
+> 
+> Yes, that might be the best idea.  I'm also contemplating listing
+> me plus anyone volunteering (you?, Andy) as maintaines for the uuid
+> code.
+
+I would agree to be a designated reviewer for now (too many stuff to
+follow as a (co-)maintainer).
+
+> > The reason I am asking is because this last removal patch should
+> > probably
+> > be applied near the end of the merge window (?).
+> > Because maintainers cannot apply patches with code that uses the new
+> > uuid_t to linux-next branches and we don't want linux-next build to
+> > fail
+> > with new code that uses uuid_be...
+> 
+> Yeah, we can probably defer that one for now.
+
+I would also like to append some of patches from my side, though they
+are WIP.
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
