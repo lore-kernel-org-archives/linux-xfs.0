@@ -1,196 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29592 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934276AbdEWQRK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2017 12:17:10 -0400
-Date: Tue, 23 May 2017 09:17:03 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/3] xfs: improve transaction log res. overrun reporting
-Message-ID: <20170523161703.GS4519@birch.djwong.org>
-References: <1494276307-36887-1-git-send-email-bfoster@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:43088 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752359AbdEWQWG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 May 2017 12:22:06 -0400
+Date: Tue, 23 May 2017 12:22:04 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
+ error during buffer writeback
+Message-ID: <20170523162202.GB7632@bfoster.bfoster>
+References: <20170511135733.21765-3-cmaiolino@redhat.com>
+ <20170517005749.GO17542@dastard>
+ <20170517104111.aziwbvqpfcbgxnxa@eorzea.usersys.redhat.com>
+ <20170519002227.GS17542@dastard>
+ <20170519112659.GB64091@bfoster.bfoster>
+ <20170519233900.GT17542@dastard>
+ <20170520114654.GA3888@bfoster.bfoster>
+ <20170521231906.GU17542@dastard>
+ <20170522125110.GA11578@bfoster.bfoster>
+ <20170523112318.GX17542@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1494276307-36887-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20170523112318.GX17542@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 08, 2017 at 04:45:04PM -0400, Brian Foster wrote:
-> Hi all,
+On Tue, May 23, 2017 at 09:23:18PM +1000, Dave Chinner wrote:
+> On Mon, May 22, 2017 at 08:51:13AM -0400, Brian Foster wrote:
+> > On Mon, May 22, 2017 at 09:19:06AM +1000, Dave Chinner wrote:
+> > > On Sat, May 20, 2017 at 07:46:56AM -0400, Brian Foster wrote:
+> > > > On Sat, May 20, 2017 at 09:39:00AM +1000, Dave Chinner wrote:
+> > > > > Adding new flags to the same field that can be asynchronously
+> > > > > updated by RMW operations outside the ailp->xa_lock will cause
+> > > > > problems in future. There *may not* be a problem right now, but it
+> > > > > is poor programming practice to have different coherency processes
+> > > > > for the same variable that is updated via RMW operations. In these
+> > > > > situations, the only safe way to update the variable is to use an
+> > > > > atomic operation.
+> > > > > 
+> > > > 
+> > > > So is there a reason why we couldn't acquire ->xa_lock to fail the log
+> > > > items as we would have done anyways if the metadata writeback had
+> > > > succeeded and we were removing the log items from the AIL..
+> > > 
+> > > Yes. the alip->xa_lock protects AIL state is a highly contended
+> > > lock. It should not be used for things that aren't AIL related
+> > > because that will have performance and scalability implications.
+> > > 
+> > 
+> > The purpose of this flag is to control AIL retry processing, how is this
+> > not AIL related?
 > 
-> This is a first pass at improved transaction log reservation overrun
-> reporting based on Dave's suggestion[1]. This essentially creates a new
-> helper to dump transaction info (i.e., logged items) along with ticket
-> data in the event of an overrun and refactors things a bit to be able to
-> call it from a context where an accurate calculation of the reservation
-> requirement is available but the log items have not been removed from
-> the transaction.
+> It's IO state, not AIL state. IO submission occurs from more places
+> than and AIL push (e.g. inode reclaim, inode clustering, etc) and
+> there's no way we should be exposing the internal AIL state lock in
+> places like that.
 > 
-> Note that this increases the amount of output on a tx overrun quite a
-> bit, particularly if the transaction includes multiple log
-> items/vectors, but I opted for verbosity and to retain the current
-> format for the first iteration. I'm curious if anybody has thoughts on
-> formatting, what data to include or not, whether to tie certain things
-> (i.e., raw buffer data?) to the current log level, general level of
-> detail, etc. Sample output from a fabricated overrun is shown below[2].
-> 
-> Lightly tested so far. Thoughts, reviews, flames appreciated.
 
-Offhand this looks ok; will add it to my dev tree and go run something
-that exhausts a transaction reservation to see it in action.  For now,
+That's reasonable, though it suggests different code from what this
+patchset currently does. This would be far more useful if we could focus
+on correctness of the code first and foremost. If the code we commit
+actually warrants this kind of change, then this becomes a much easier
+(i.e., pointless :P) discussion from my end.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+As it is, this patch only ever clears the flag on AIL resubmission. ISTM
+you are indirectly suggesting that should occur in other contexts as
+well (e.g., consider a reclaim and flush of another inode backed by a
+buffer that is already failed, and has other inodes sitting in the AIL
+flush locked). If that is the case, please elaborate, because otherwise
+it is kind of impossible to evaluate and discuss without specifics.
 
---D
+> > All that said, the bitops change is harmless and there are only a few
+> > flags to deal with, so I don't think it really matters much. I just
+> > think it would be nice to avoid an artificial backport dependency. IOW,
+> > I think this patch should use ->xa_lock as is and can be immediately
+> > followed by a patch to convert the li_flags to bit ops and remove the
+> > ->xa_lock from contexts where it is no longer necessary (with documented
+> > justification).
+> 
+> Then it needs to be done as a single patch set with the fix you want
+> to backport as the first patch, otherwise the bitop change not get
+> done until someone does scalability tests and trips over it and then
+> we've got more shit to backport to fix performance regressions.
+> 
 
+The point is that the atomic bitmask change doesn't need to be
+backported at all. Notwithstanding potential changes to the patches as
+they currently stand (as noted above), it doesn't actually fix anything,
+performance or otherwise.
+
+As it is, this patch would only add an acquisition of ->xa_lock in
+completion context on I/O failure. Exactly what workload would you
+expect to be affected by changes to I/O error handling? How would it be
+any different than what we already do on normal I/O completion?
+
+> > > > IOW, doesn't this mean we need to check and handle LI_FAILED first off
+> > > > in ->iop_push() and not just in response to flush lock failure?
+> > > 
+> > > It's entirely possible that we need to do that. This whole "don't
+> > > endlessly retry failed buffer writes" thing is a substantial change
+> > > in behaviour, so there's bound to be interactions that we don't get
+> > > right the first time...
+> > > 
+> > 
+> > I'm not sure if you're referring to this patch or the broader error
+> > configuration stuff here... Note that this patch doesn't change the
+> > fundamental behavior that the AIL retries failed buffers (subject to the
+> > error config). I tend to get this mixed up, but IIUC this has been
+> > traditional behavior for things like buffers, for example, for quite
+> > some time.
 > 
-> Brian
+> Yes, but the change is that now we rely on the AIL push to trigger
+> cleanup of failed buffers on unmount, whereas previously the unmount
+> just hung endlessly retrying the failed buffers. i.e. we used to
+> accept this hang as "expected behaviour" but now it's considered a
+> bug we have to fix. Hence we now have to handle retries and failures
+> and untangle the locking issues we've not had to care about for 20
+> years.
 > 
-> [1] http://www.spinics.net/lists/linux-xfs/msg06446.html
-> [2] Output from an fallocate request after the write transaction
-> reservation is erroneously reduced to 32 bytes:
+
+This completely mischaracterizes the problem. If this problem occurs,
+log deadlock is the most likely outcome. An unmount is simply part of
+the most common test method to immediately observe a hang that is
+otherwise already imminent based on previous events. This is not a pure
+unmount problem and afaict not associated with any recent behavior
+changes with regard to buffer I/O error handling.
+
+> As it is, the "only check failure if flush lock fails" idea was
+> designed to prevent having to lookup the backing buffer to check for
+> failure for every inode we wanted to flush as those lookups are too
+> expensive to do on every inode we need to flush. However, if we are
+> propagating the failure state to the log item on IO completion,
+> checking this state is not expensive any more, so there's no need to
+> hide it until we detect a state that may indicate an IO failure....
 > 
->  ------------[ cut here ]------------
->  WARNING: CPU: 1 PID: 1621 at fs/xfs//xfs_log_cil.c:466 xfs_log_commit_cil+0x6d5/0x790 [xfs]
->  ...
->  Call Trace:
->   dump_stack+0x86/0xc3
->   __warn+0xcb/0xf0
->   warn_slowpath_null+0x1d/0x20
->   xfs_log_commit_cil+0x6d5/0x790 [xfs]
->   __xfs_trans_commit+0x82/0x280 [xfs]
->   xfs_trans_commit+0x10/0x20 [xfs]
->   xfs_alloc_file_space+0x22a/0x4c0 [xfs]
->   xfs_file_fallocate+0x230/0x3b0 [xfs]
->   ? rcu_read_lock_sched_held+0x4a/0x80
->   ? rcu_sync_lockdep_assert+0x2f/0x60
->   ? __sb_start_write+0xe9/0x210
->   ? vfs_fallocate+0x214/0x280
->   vfs_fallocate+0x159/0x280
->   SyS_fallocate+0x48/0x80
->   entry_SYSCALL_64_fastpath+0x1f/0xc2
->  ...
->  ---[ end trace e928d52baa488ea3 ]---
->  XFS (dm-3): Transaction log reservation overrun:
->  XFS (dm-3):   log items: 876 bytes (iov hdrs: 120 bytes)
->  XFS (dm-3):   split region headers: 0 bytes
->  XFS (dm-3):   ctx ticket: 2100 bytes
->  XFS (dm-3): transaction summary:
->  XFS (dm-3):   flags	= 0x5
->  XFS (dm-3): ticket reservation summary:
->  XFS (dm-3):   unit res    = 2132 bytes
->  XFS (dm-3):   current res = -844 bytes
->  XFS (dm-3):   total reg   = 0 bytes (o/flow = 0 bytes)
->  XFS (dm-3):   ophdrs      = 0 (ophdr space = 0 bytes)
->  XFS (dm-3):   ophdr + reg = 0 bytes
->  XFS (dm-3):   num regions = 0
->  XFS (dm-3): log item: 
->  XFS (dm-3):   type	= 0x123b
->  XFS (dm-3):   flags	= 0x1
->  XFS (dm-3):   niovecs	= 4
->  XFS (dm-3):   size	= 720
->  XFS (dm-3):   bytes	= 300
->  XFS (dm-3):   buf len	= 304
->  XFS (dm-3):   iovec[0]
->  XFS (dm-3):     type	= 0x5
->  XFS (dm-3):     len	= 56
->  XFS (dm-3):     first 32 bytes of iovec[0]:
->  ffff984954ea2c78: 3b 12 04 00 45 00 00 00 34 00 10 00 49 98 ff ff  ;...E...4...I...
->  ffff984954ea2c88: 63 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  c...............
->  XFS (dm-3):   iovec[1]
->  XFS (dm-3):     type	= 0x6
->  XFS (dm-3):     len	= 176
->  XFS (dm-3):     first 32 bytes of iovec[1]:
->  ffff984954ea2cb0: 4e 49 a4 81 03 02 00 00 00 00 00 00 00 00 00 00  NI..............
->  ffff984954ea2cc0: 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->  XFS (dm-3):   iovec[2]
->  XFS (dm-3):     type	= 0x7
->  XFS (dm-3):     len	= 16
->  XFS (dm-3):     first 16 bytes of iovec[2]:
->  ffff984954ea2d60: 80 00 00 00 00 00 00 00 00 00 00 00 02 80 01 00  ................
->  XFS (dm-3):   iovec[3]
->  XFS (dm-3):     type	= 0xc
->  XFS (dm-3):     len	= 52
->  XFS (dm-3):     first 32 bytes of iovec[3]:
->  ffff984954ea2d70: 00 33 01 00 07 25 04 73 65 6c 69 6e 75 78 75 6e  .3...%.selinuxun
->  ffff984954ea2d80: 63 6f 6e 66 69 6e 65 64 5f 75 3a 6f 62 6a 65 63  confined_u:objec
->  XFS (dm-3): log item: 
->  XFS (dm-3):   type	= 0x123c
->  XFS (dm-3):   flags	= 0x0
->  XFS (dm-3):   niovecs	= 2
->  XFS (dm-3):   size	= 256
->  XFS (dm-3):   bytes	= 152
->  XFS (dm-3):   buf len	= 152
->  XFS (dm-3):   iovec[0]
->  XFS (dm-3):     type	= 0x1
->  XFS (dm-3):     len	= 24
->  XFS (dm-3):     first 24 bytes of iovec[0]:
->  ffff9849532d1258: 3c 12 02 00 00 28 01 00 01 00 00 00 00 00 00 00  <....(..........
->  ffff9849532d1268: 01 00 00 00 01 00 00 00                          ........
->  XFS (dm-3):   iovec[1]
->  XFS (dm-3):     type	= 0x2
->  XFS (dm-3):     len	= 128
->  XFS (dm-3):     first 32 bytes of iovec[1]:
->  ffff9849532d1270: 58 41 47 46 00 00 00 01 00 00 00 00 00 0f 00 00  XAGF............
->  ffff9849532d1280: 00 00 00 01 00 00 00 02 00 00 00 00 00 00 00 01  ................
->  XFS (dm-3): log item: 
->  XFS (dm-3):   type	= 0x123c
->  XFS (dm-3):   flags	= 0x0
->  XFS (dm-3):   niovecs	= 2
->  XFS (dm-3):   size	= 256
->  XFS (dm-3):   bytes	= 152
->  XFS (dm-3):   buf len	= 152
->  XFS (dm-3):   iovec[0]
->  XFS (dm-3):     type	= 0x1
->  XFS (dm-3):     len	= 24
->  XFS (dm-3):     first 24 bytes of iovec[0]:
->  ffff9849532d1358: 3c 12 02 00 00 20 08 00 10 00 00 00 00 00 00 00  <.... ..........
->  ffff9849532d1368: 01 00 00 00 01 00 00 00                          ........
->  XFS (dm-3):   iovec[1]
->  XFS (dm-3):     type	= 0x2
->  XFS (dm-3):     len	= 128
->  XFS (dm-3):     first 32 bytes of iovec[1]:
->  ffff9849532d1370: 41 42 33 43 00 00 00 02 ff ff ff ff ff ff ff ff  AB3C............
->  ffff9849532d1380: 00 00 00 00 00 00 00 10 00 00 00 01 00 00 00 54  ...............T
->  XFS (dm-3): log item: 
->  XFS (dm-3):   type	= 0x123c
->  XFS (dm-3):   flags	= 0x0
->  XFS (dm-3):   niovecs	= 2
->  XFS (dm-3):   size	= 256
->  XFS (dm-3):   bytes	= 152
->  XFS (dm-3):   buf len	= 152
->  XFS (dm-3):   iovec[0]
->  XFS (dm-3):     type	= 0x1
->  XFS (dm-3):     len	= 24
->  XFS (dm-3):     first 24 bytes of iovec[0]:
->  ffff9849532d1558: 3c 12 02 00 00 20 08 00 08 00 00 00 00 00 00 00  <.... ..........
->  ffff9849532d1568: 01 00 00 00 01 00 00 00                          ........
->  XFS (dm-3):   iovec[1]
->  XFS (dm-3):     type	= 0x2
->  XFS (dm-3):     len	= 128
->  XFS (dm-3):     first 32 bytes of iovec[1]:
->  ffff9849532d1570: 41 42 33 42 00 00 00 02 ff ff ff ff ff ff ff ff  AB3B............
->  ffff9849532d1580: 00 00 00 00 00 00 00 08 00 00 00 01 00 00 00 54  ...............T
->  XFS (dm-3): xfs_do_force_shutdown(0x2) called from line 501 of file fs/xfs//xfs_log_cil.c.  Return address = 0xffffffffc041e56b
->  XFS (dm-3): Log I/O Error Detected.  Shutting down filesystem
->  XFS (dm-3): Please umount the filesystem and rectify the problem(s)
+
+Indeed.
+
+Brian
+
+> Cheers,
 > 
-> Brian Foster (3):
->   xfs: separate shutdown from ticket reservation print helper
->   xfs: refactor xlog_cil_insert_items() to facilitate transaction dump
->   xfs: dump transaction usage details on log reservation overrun
-> 
->  fs/xfs/xfs_log.c      | 59 +++++++++++++++++++++++++++++++++---
->  fs/xfs/xfs_log_cil.c  | 84 ++++++++++++++++++++++++++++++---------------------
->  fs/xfs/xfs_log_priv.h |  1 +
->  3 files changed, 105 insertions(+), 39 deletions(-)
-> 
+> Dave.
 > -- 
-> 2.7.4
-> 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
