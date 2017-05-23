@@ -1,193 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47602 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1035629AbdEXQmP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 May 2017 12:42:15 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 07/10] fs: return on congested block device
-Date: Wed, 24 May 2017 11:41:47 -0500
-Message-Id: <20170524164150.9492-8-rgoldwyn@suse.de>
-In-Reply-To: <20170524164150.9492-1-rgoldwyn@suse.de>
-References: <20170524164150.9492-1-rgoldwyn@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:49418 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751897AbdEWDV0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 May 2017 23:21:26 -0400
+Date: Tue, 23 May 2017 11:21:23 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 2/3] xfs: Fix off-by-in in loop termination in
+ xfs_find_get_desired_pgoff()
+Message-ID: <20170523032123.GW7250@eguan.usersys.redhat.com>
+References: <20170518104850.14508-1-jack@suse.cz>
+ <20170518104850.14508-3-jack@suse.cz>
+ <20170522175045.GB1473@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170522175045.GB1473@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Mon, May 22, 2017 at 01:50:47PM -0400, Brian Foster wrote:
+> On Thu, May 18, 2017 at 12:48:49PM +0200, Jan Kara wrote:
+> > There is an off-by-one error in loop termination conditions in
+> > xfs_find_get_desired_pgoff() since 'end' may index a page beyond end of
+> > desired range if 'endoff' is page aligned. It doesn't have any visible
+> > effects but still it is good to fix it.
+> > 
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> >  fs/xfs/xfs_file.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index f371812e20c6..3714b5736fd3 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -1043,7 +1043,7 @@ xfs_find_get_desired_pgoff(
+> >  
+> >  	index = startoff >> PAGE_SHIFT;
+> >  	endoff = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount);
+> > -	end = endoff >> PAGE_SHIFT;
+> > +	end = (endoff - 1) >> PAGE_SHIFT;
+> 
+> Hmm.. I think this messes with the want count for the pagevec_lookup().
+> E.g.:
+> 
+> # xfs_io -fc "truncate 0" -c "falloc 0 16k" -c "pwrite 0 16k" -c "seek -h 0" /mnt/file 
+> wrote 16384/16384 bytes at offset 0
+> 16 KiB, 4 ops; 0.0000 sec (200.321 MiB/sec and 51282.0513 ops/sec)
+> Whence  Result
+> HOLE    12288
 
-A new bio operation flag REQ_NOWAIT is introduced to identify bio's
-orignating from iocb with IOCB_NOWAIT. This flag indicates
-to return immediately if a request cannot be made instead
-of retrying.
+I think the root cause is that the calculation for 'want' is wrong, it
+has an off-by-one bug too. I sent a patch[1] to fix it, with my patch
+applied on top of Jan's patchset, your test case passed (report HOLE at
+16k). Can you please take a look if it's a correct fix? Thanks!
 
-Stacked devices such as md (the ones with make_request_fn hooks)
-currently are not supported because it may block for housekeeping.
-For example, an md can have a part of the device suspended.
-For this reason, only request based devices are supported.
-In the future, this feature will be expanded to stacked devices
-by teaching them how to handle the REQ_NOWAIT flags.
+Eryu
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- block/blk-core.c          | 24 ++++++++++++++++++++++--
- block/blk-mq-sched.c      |  3 +++
- block/blk-mq.c            |  2 ++
- fs/direct-io.c            | 10 ++++++++--
- include/linux/bio.h       |  6 ++++++
- include/linux/blk_types.h |  2 ++
- 6 files changed, 43 insertions(+), 4 deletions(-)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index c7068520794b..04d15fa2646c 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1250,6 +1250,11 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
- 	if (!IS_ERR(rq))
- 		return rq;
- 
-+	if (op & REQ_NOWAIT) {
-+		blk_put_rl(rl);
-+		return ERR_PTR(-EAGAIN);
-+	}
-+
- 	if (!gfpflags_allow_blocking(gfp_mask) || unlikely(blk_queue_dying(q))) {
- 		blk_put_rl(rl);
- 		return rq;
-@@ -1894,6 +1899,17 @@ generic_make_request_checks(struct bio *bio)
- 		goto end_io;
- 	}
- 
-+	/*
-+	 * For a REQ_NOWAIT based request, return -EOPNOTSUPP
-+	 * if queue does not have QUEUE_FLAG_NOWAIT_SUPPORT set
-+	 * and if it is not a request based queue.
-+	 */
-+
-+	if ((bio->bi_opf & REQ_NOWAIT) && !queue_is_rq_based(q)) {
-+		err = -EOPNOTSUPP;
-+		goto end_io;
-+	}
-+
- 	part = bio->bi_bdev->bd_part;
- 	if (should_fail_request(part, bio->bi_iter.bi_size) ||
- 	    should_fail_request(&part_to_disk(part)->part0,
-@@ -2051,7 +2067,7 @@ blk_qc_t generic_make_request(struct bio *bio)
- 	do {
- 		struct request_queue *q = bdev_get_queue(bio->bi_bdev);
- 
--		if (likely(blk_queue_enter(q, false) == 0)) {
-+		if (likely(blk_queue_enter(q, bio->bi_opf & REQ_NOWAIT) == 0)) {
- 			struct bio_list lower, same;
- 
- 			/* Create a fresh bio_list for all subordinate requests */
-@@ -2076,7 +2092,11 @@ blk_qc_t generic_make_request(struct bio *bio)
- 			bio_list_merge(&bio_list_on_stack[0], &same);
- 			bio_list_merge(&bio_list_on_stack[0], &bio_list_on_stack[1]);
- 		} else {
--			bio_io_error(bio);
-+			if (unlikely(!blk_queue_dying(q) &&
-+					(bio->bi_opf & REQ_NOWAIT)))
-+				bio_wouldblock_error(bio);
-+			else
-+				bio_io_error(bio);
- 		}
- 		bio = bio_list_pop(&bio_list_on_stack[0]);
- 	} while (bio);
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 1f5b692526ae..9a1dea8b964e 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -83,6 +83,9 @@ struct request *blk_mq_sched_get_request(struct request_queue *q,
- 	if (likely(!data->hctx))
- 		data->hctx = blk_mq_map_queue(q, data->ctx->cpu);
- 
-+	if (op & REQ_NOWAIT)
-+		data->flags |= BLK_MQ_REQ_NOWAIT;
-+
- 	if (e) {
- 		data->flags |= BLK_MQ_REQ_INTERNAL;
- 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index a69ad122ed66..c6932067c9e5 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1575,6 +1575,8 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
- 	rq = blk_mq_sched_get_request(q, bio, bio->bi_opf, &data);
- 	if (unlikely(!rq)) {
- 		__wbt_done(q->rq_wb, wb_acct);
-+		if (bio->bi_opf & REQ_NOWAIT)
-+			bio_wouldblock_error(bio);
- 		return BLK_QC_T_NONE;
- 	}
- 
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index a04ebea77de8..139ebd5ae1c7 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -480,8 +480,12 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
- 	unsigned i;
- 	int err;
- 
--	if (bio->bi_error)
--		dio->io_error = -EIO;
-+	if (bio->bi_error) {
-+		if (bio->bi_error == -EAGAIN && (bio->bi_opf & REQ_NOWAIT))
-+			dio->io_error = -EAGAIN;
-+		else
-+			dio->io_error = -EIO;
-+	}
- 
- 	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty) {
- 		err = bio->bi_error;
-@@ -1197,6 +1201,8 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
- 	if (iov_iter_rw(iter) == WRITE) {
- 		dio->op = REQ_OP_WRITE;
- 		dio->op_flags = REQ_SYNC | REQ_IDLE;
-+		if (iocb->ki_flags & IOCB_NOWAIT)
-+			dio->op_flags |= REQ_NOWAIT;
- 	} else {
- 		dio->op = REQ_OP_READ;
- 	}
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index d1b04b0e99cf..cc0aa4315383 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -418,6 +418,12 @@ static inline void bio_io_error(struct bio *bio)
- 	bio_endio(bio);
- }
- 
-+static inline void bio_wouldblock_error(struct bio *bio)
-+{
-+	bio->bi_error = -EAGAIN;
-+	bio_endio(bio);
-+}
-+
- struct request_queue;
- extern int bio_phys_segments(struct request_queue *, struct bio *);
- 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 61339bc44400..c87990aec66e 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -205,6 +205,7 @@ enum req_flag_bits {
- 	/* command specific flags for REQ_OP_WRITE_ZEROES: */
- 	__REQ_NOUNMAP,		/* do not free blocks when zeroing */
- 
-+	__REQ_NOWAIT,           /* Don't wait if request will block */
- 	__REQ_NR_BITS,		/* stops here */
- };
- 
-@@ -223,6 +224,7 @@ enum req_flag_bits {
- #define REQ_BACKGROUND		(1ULL << __REQ_BACKGROUND)
- 
- #define REQ_NOUNMAP		(1ULL << __REQ_NOUNMAP)
-+#define REQ_NOWAIT		(1ULL << __REQ_NOWAIT)
- 
- #define REQ_FAILFAST_MASK \
- 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
--- 
-2.12.0
-
+[1] [PATCH] xfs: fix off-by-one on max nr_pages in xfs_find_get_desired_pgoff()
+    https://www.spinics.net/lists/linux-xfs/msg06980.html
+> 
+> Brian
+> 
+> >  	do {
+> >  		int		want;
+> >  		unsigned	nr_pages;
+> > -- 
+> > 2.12.0
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
