@@ -1,71 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42606 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1762366AbdEWIur (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 May 2017 04:50:47 -0400
-Date: Tue, 23 May 2017 10:50:44 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 2/3] xfs: Fix off-by-in in loop termination in
- xfs_find_get_desired_pgoff()
-Message-ID: <20170523085044.GA1119@quack2.suse.cz>
-References: <20170518104850.14508-1-jack@suse.cz>
- <20170518104850.14508-3-jack@suse.cz>
- <20170522175045.GB1473@bfoster.bfoster>
- <20170523032123.GW7250@eguan.usersys.redhat.com>
+Received: from verein.lst.de ([213.95.11.211]:52744 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752231AbdEWIuE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 May 2017 04:50:04 -0400
+Date: Tue, 23 May 2017 10:49:56 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 10/23] afs: switch to use uuid_t and uuid_gen
+Message-ID: <20170523084956.GB20121@lst.de>
+References: <20170518062705.25902-1-hch@lst.de> <20170518062705.25902-11-hch@lst.de> <1495478957.6967.69.camel@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20170523032123.GW7250@eguan.usersys.redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1495478957.6967.69.camel@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Brian Foster <bfoster@redhat.com>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Tue 23-05-17 11:21:23, Eryu Guan wrote:
-> On Mon, May 22, 2017 at 01:50:47PM -0400, Brian Foster wrote:
-> > On Thu, May 18, 2017 at 12:48:49PM +0200, Jan Kara wrote:
-> > > There is an off-by-one error in loop termination conditions in
-> > > xfs_find_get_desired_pgoff() since 'end' may index a page beyond end of
-> > > desired range if 'endoff' is page aligned. It doesn't have any visible
-> > > effects but still it is good to fix it.
-> > > 
-> > > Signed-off-by: Jan Kara <jack@suse.cz>
-> > > ---
-> > >  fs/xfs/xfs_file.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > > index f371812e20c6..3714b5736fd3 100644
-> > > --- a/fs/xfs/xfs_file.c
-> > > +++ b/fs/xfs/xfs_file.c
-> > > @@ -1043,7 +1043,7 @@ xfs_find_get_desired_pgoff(
-> > >  
-> > >  	index = startoff >> PAGE_SHIFT;
-> > >  	endoff = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount);
-> > > -	end = endoff >> PAGE_SHIFT;
-> > > +	end = (endoff - 1) >> PAGE_SHIFT;
+On Mon, May 22, 2017 at 09:49:17PM +0300, Andy Shevchenko wrote:
+> >  	struct afs_call *call = container_of(work, struct afs_call,
+> > work);
+> > -	struct uuid_v1 *r = call->request;
+> > +	uuid_t *r = call->request;
+> >  
+> >  	struct {
+> >  		__be32	match;
 > > 
-> > Hmm.. I think this messes with the want count for the pagevec_lookup().
-> > E.g.:
-> > 
-> > # xfs_io -fc "truncate 0" -c "falloc 0 16k" -c "pwrite 0 16k" -c "seek -h 0" /mnt/file 
-> > wrote 16384/16384 bytes at offset 0
-> > 16 KiB, 4 ops; 0.0000 sec (200.321 MiB/sec and 51282.0513 ops/sec)
-> > Whence  Result
-> > HOLE    12288
 > 
-> I think the root cause is that the calculation for 'want' is wrong, it
-> has an off-by-one bug too. I sent a patch[1] to fix it, with my patch
-> applied on top of Jan's patchset, your test case passed (report HOLE at
-> 16k). Can you please take a look if it's a correct fix? Thanks!
+> Just to double check that this doesn't create a union aliasing.
 
-Yes, I've messed that up. It is a bug introduced by my series as Brian
-properly noticed. Thanks guys for noticing and fixing it! Darrick, should I
-fold in Eryu's fix and send v4 of the series or will you just pick up
-Eryu's fix?
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+What do you mean with that?
