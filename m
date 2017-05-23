@@ -1,230 +1,177 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54266 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753063AbdEYIaW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 May 2017 04:30:22 -0400
-Date: Thu, 25 May 2017 10:30:18 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 04/10] fs: Introduce RWF_NOWAIT
-Message-ID: <20170525083018.GE28950@quack2.suse.cz>
-References: <20170524164150.9492-1-rgoldwyn@suse.de>
- <20170524164150.9492-5-rgoldwyn@suse.de>
+Received: from sandeen.net ([63.231.237.45]:54402 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757843AbdEWPrv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 May 2017 11:47:51 -0400
+Subject: Re: [PATCH] xfs_metadump: tag metadump image with attribute flags
+References: <402504cb-1632-85b6-a745-1334ccf0ee8f@redhat.com>
+ <20170523154603.GR4519@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <41c04794-5aef-5e2e-17ad-9ccf8aac488c@sandeen.net>
+Date: Tue, 23 May 2017 10:47:50 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170524164150.9492-5-rgoldwyn@suse.de>
+In-Reply-To: <20170523154603.GR4519@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed 24-05-17 11:41:44, Goldwyn Rodrigues wrote:
-> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> 
-> RWF_NOWAIT informs kernel to bail out if an AIO request will block
-> for reasons such as file allocations, or a writeback triggered,
-> or would block while allocating requests while performing
-> direct I/O.
-> 
-> RWF_NOWAIT is translated to IOCB_NOWAIT for iocb->ki_flags.
-> 
-> The check for -EOPNOTSUPP is placed in generic_file_write_iter(). This
-> is called by most filesystems, either through fsops.write_iter() or through
-> the function defined by write_iter(). If not, we perform the check defined
-> by .write_iter() which is called for direct IO specifically.
-> 
-> Filesystems xfs, btrfs and ext4 would be supported in the following patches.
-> 
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Looks good now. You can add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
+On 5/23/17 10:46 AM, Darrick J. Wong wrote:
+> On Mon, May 22, 2017 at 07:33:35PM -0500, Eric Sandeen wrote:
+>> After the long discussion about warning the user and/or consumer
+>> of xfs_metadumps about dirty logs, it crossed my mind that we
+>> could use the reserved slot in the metadump header to tag the
+>> file with attributes, so the consumer of the metadump knows how
+>> it was created.
+>>
+>> This patch adds 3 flags to describe the metadump: dirty log,
+>> obfuscated, and full blocks (unused portions of metadata blocks
+>> are not zeroed out).
+>>
+>> It then adds a new option to xfs_mdrestore, "-i" to show info,
+>> which can be used with or without a target file:
 
 
-> ---
->  fs/9p/vfs_file.c        |  3 +++
->  fs/aio.c                | 13 +++++++++++++
->  fs/ceph/file.c          |  3 +++
->  fs/cifs/file.c          |  3 +++
->  fs/fuse/file.c          |  3 +++
->  fs/nfs/direct.c         |  3 +++
->  fs/ocfs2/file.c         |  3 +++
->  include/linux/fs.h      |  5 ++++-
->  include/uapi/linux/fs.h |  1 +
->  mm/filemap.c            |  3 +++
->  10 files changed, 39 insertions(+), 1 deletion(-)
+>> +/* mb_flags */
+>> +#define XFS_METADUMP_OBFUSCATED	(1 << 0)
+>> +#define XFS_METADUMP_FULLBLOCKS	(1 << 1)
+>> +#define XFS_METADUMP_DIRTYLOG	(1 << 2)
 > 
-> diff --git a/fs/9p/vfs_file.c b/fs/9p/vfs_file.c
-> index 3de3b4a89d89..403681db7723 100644
-> --- a/fs/9p/vfs_file.c
-> +++ b/fs/9p/vfs_file.c
-> @@ -411,6 +411,9 @@ v9fs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  	loff_t origin;
->  	int err = 0;
->  
-> +	if (iocb->ki_flags & IOCB_NOWAIT)
-> +		return -EOPNOTSUPP;
-> +
->  	retval = generic_write_checks(iocb, from);
->  	if (retval <= 0)
->  		return retval;
-> diff --git a/fs/aio.c b/fs/aio.c
-> index 020fa0045e3c..9616dc733103 100644
-> --- a/fs/aio.c
-> +++ b/fs/aio.c
-> @@ -1592,6 +1592,19 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
->  		goto out_put_req;
->  	}
->  
-> +	if (req->common.ki_flags & IOCB_NOWAIT) {
-> +		if (!(req->common.ki_flags & IOCB_DIRECT)) {
-> +			ret = -EOPNOTSUPP;
-> +			goto out_put_req;
-> +		}
-> +
-> +		if ((iocb->aio_lio_opcode != IOCB_CMD_PWRITE) &&
-> +		    (iocb->aio_lio_opcode != IOCB_CMD_PWRITEV)) {
-> +			ret = -EINVAL;
-> +			goto out_put_req;
-> +		}
-> +	}
-> +
->  	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
->  	if (unlikely(ret)) {
->  		pr_debug("EFAULT: aio_key\n");
-> diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-> index 3fdde0b283c9..a53fd2675b1b 100644
-> --- a/fs/ceph/file.c
-> +++ b/fs/ceph/file.c
-> @@ -1300,6 +1300,9 @@ static ssize_t ceph_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  	int err, want, got;
->  	loff_t pos;
->  
-> +	if (iocb->ki_flags & IOCB_NOWAIT)
-> +		return -EOPNOTSUPP;
-> +
->  	if (ceph_snap(inode) != CEPH_NOSNAP)
->  		return -EROFS;
->  
-> diff --git a/fs/cifs/file.c b/fs/cifs/file.c
-> index 0fd081bd2a2f..ff84fa9ddb6c 100644
-> --- a/fs/cifs/file.c
-> +++ b/fs/cifs/file.c
-> @@ -2725,6 +2725,9 @@ ssize_t cifs_user_writev(struct kiocb *iocb, struct iov_iter *from)
->  	 * write request.
->  	 */
->  
-> +	if (iocb->ki_flags & IOCB_NOWAIT)
-> +		return -EOPNOTSUPP;
-> +
->  	rc = generic_write_checks(iocb, from);
->  	if (rc <= 0)
->  		return rc;
-> diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-> index 3ee4fdc3da9e..812c7bd0c290 100644
-> --- a/fs/fuse/file.c
-> +++ b/fs/fuse/file.c
-> @@ -1425,6 +1425,9 @@ static ssize_t fuse_direct_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  	struct fuse_io_priv io = FUSE_IO_PRIV_SYNC(file);
->  	ssize_t res;
->  
-> +	if (iocb->ki_flags & IOCB_NOWAIT)
-> +		return -EOPNOTSUPP;
-> +
->  	if (is_bad_inode(inode))
->  		return -EIO;
->  
-> diff --git a/fs/nfs/direct.c b/fs/nfs/direct.c
-> index 6fb9fad2d1e6..c8e7dd76126c 100644
-> --- a/fs/nfs/direct.c
-> +++ b/fs/nfs/direct.c
-> @@ -979,6 +979,9 @@ ssize_t nfs_file_direct_write(struct kiocb *iocb, struct iov_iter *iter)
->  	dfprintk(FILE, "NFS: direct write(%pD2, %zd@%Ld)\n",
->  		file, iov_iter_count(iter), (long long) iocb->ki_pos);
->  
-> +	if (iocb->ki_flags & IOCB_NOWAIT)
-> +		return -EOPNOTSUPP;
-> +
->  	result = generic_write_checks(iocb, iter);
->  	if (result <= 0)
->  		return result;
-> diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
-> index bfeb647459d9..e7f8ba890305 100644
-> --- a/fs/ocfs2/file.c
-> +++ b/fs/ocfs2/file.c
-> @@ -2235,6 +2235,9 @@ static ssize_t ocfs2_file_write_iter(struct kiocb *iocb,
->  	if (count == 0)
->  		return 0;
->  
-> +	if (iocb->ki_flags & IOCB_NOWAIT)
-> +		return -EOPNOTSUPP;
-> +
->  	direct_io = iocb->ki_flags & IOCB_DIRECT ? 1 : 0;
->  
->  	inode_lock(inode);
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index dc0ab585cd56..2a7d14af6d12 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -268,6 +268,7 @@ struct writeback_control;
->  #define IOCB_DSYNC		(1 << 4)
->  #define IOCB_SYNC		(1 << 5)
->  #define IOCB_WRITE		(1 << 6)
-> +#define IOCB_NOWAIT		(1 << 7)
->  
->  struct kiocb {
->  	struct file		*ki_filp;
-> @@ -3060,7 +3061,7 @@ static inline int iocb_flags(struct file *file)
->  
->  static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
->  {
-> -	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC)))
-> +	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC | RWF_NOWAIT)))
->  		return -EOPNOTSUPP;
->  
->  	if (flags & RWF_HIPRI)
-> @@ -3069,6 +3070,8 @@ static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
->  		ki->ki_flags |= IOCB_DSYNC;
->  	if (flags & RWF_SYNC)
->  		ki->ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
-> +	if (flags & RWF_NOWAIT)
-> +		ki->ki_flags |= IOCB_NOWAIT;
->  	return 0;
->  }
->  
-> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-> index 24e61a54feaa..29969fb7f9a7 100644
-> --- a/include/uapi/linux/fs.h
-> +++ b/include/uapi/linux/fs.h
-> @@ -360,5 +360,6 @@ struct fscrypt_key {
->  #define RWF_HIPRI			0x00000001 /* high priority request, poll if possible */
->  #define RWF_DSYNC			0x00000002 /* per-IO O_DSYNC */
->  #define RWF_SYNC			0x00000004 /* per-IO O_SYNC */
-> +#define RWF_NOWAIT			0x00000008 /* per-IO, return -EAGAIN if operation would block */
->  
->  #endif /* _UAPI_LINUX_FS_H */
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 87aba7698584..097213275461 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -3006,6 +3006,9 @@ ssize_t generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  	struct inode *inode = file->f_mapping->host;
->  	ssize_t ret;
->  
-> +	if (iocb->ki_flags & IOCB_NOWAIT)
-> +		return -EOPNOTSUPP;
-> +
->  	inode_lock(inode);
->  	ret = generic_write_checks(iocb, from);
->  	if (ret > 0)
-> -- 
-> 2.12.0
+> If we always wrote zero for mb_reserved previously, how do we
+> distinguish between a non-obfuscated partial-block clean-log metadump
+> and an old metadump?  Do we care?
+
+Oh right.  ;)
+
+> I imagine metadumps are fairly transitory in nature, so it might not be
+> a big deal, and probably not worth burning 1/8 of our flag-space over
+> since AFAICT we don't use the(se) flags for any serious behavioral
+> changes.
+
+OTOH, how many flags would we possibly have?  I'm ok with adding a
+"we have flags" flag, too.
+
+-Eric
+
+> --D
 > 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+>> +
+>>  #endif /* _XFS_METADUMP_H_ */
+>> diff --git a/man/man8/xfs_mdrestore.8 b/man/man8/xfs_mdrestore.8
+>> index 2095f15..10c00b2 100644
+>> --- a/man/man8/xfs_mdrestore.8
+>> +++ b/man/man8/xfs_mdrestore.8
+>> @@ -4,11 +4,15 @@ xfs_mdrestore \- restores an XFS metadump image to a filesystem image
+>>  .SH SYNOPSIS
+>>  .B xfs_mdrestore
+>>  [
+>> -.B \-g
+>> +.B \-gi
+>>  ]
+>>  .I source
+>>  .I target
+>>  .br
+>> +.B xfs_mdrestore
+>> +.B \-i
+>> +.I source
+>> +.br
+>>  .B xfs_mdrestore \-V
+>>  .SH DESCRIPTION
+>>  .B xfs_mdrestore
+>> @@ -39,6 +43,11 @@ can be destroyed.
+>>  .B \-g
+>>  Shows restore progress on stdout.
+>>  .TP
+>> +.B \-i
+>> +Shows metadump information on stdout.  If no
+>> +.I target
+>> +is specified, exits after displaying information.
+>> +.TP
+>>  .B \-V
+>>  Prints the version number and exits.
+>>  .SH DIAGNOSTICS
+>> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+>> index 0d399f1..1fbb1e6 100644
+>> --- a/mdrestore/xfs_mdrestore.c
+>> +++ b/mdrestore/xfs_mdrestore.c
+>> @@ -21,6 +21,7 @@
+>>  
+>>  char 		*progname;
+>>  int		show_progress = 0;
+>> +int		show_info = 0;
+>>  int		progress_since_warning = 0;
+>>  
+>>  static void
+>> @@ -213,11 +214,14 @@ main(
+>>  
+>>  	progname = basename(argv[0]);
+>>  
+>> -	while ((c = getopt(argc, argv, "gV")) != EOF) {
+>> +	while ((c = getopt(argc, argv, "giV")) != EOF) {
+>>  		switch (c) {
+>>  			case 'g':
+>>  				show_progress = 1;
+>>  				break;
+>> +			case 'i':
+>> +				show_info = 1;
+>> +				break;
+>>  			case 'V':
+>>  				printf("%s version %s\n", progname, VERSION);
+>>  				exit(0);
+>> @@ -226,7 +230,11 @@ main(
+>>  		}
+>>  	}
+>>  
+>> -	if (argc - optind != 2)
+>> +	if (argc - optind < 1 || argc - optind > 2)
+>> +		usage();
+>> +
+>> +	/* show_info without a target is ok */
+>> +	if (!show_info && argc - optind != 2)
+>>  		usage();
+>>  
+>>  	/* open source */
+>> @@ -239,6 +247,29 @@ main(
+>>  		if (src_f == NULL)
+>>  			fatal("cannot open source dump file\n");
+>>  	}
+>> +
+>> +	if (show_info) {
+>> +		xfs_metablock_t		mb;
+>> +
+>> +		if (fread(&mb, sizeof(mb), 1, src_f) != 1)
+>> +			fatal("error reading from file: %s\n", strerror(errno));
+>> +
+>> +		if (be32_to_cpu(mb.mb_magic) != XFS_MD_MAGIC)
+>> +			fatal("specified file is not a metadata dump\n");
+>> +
+>> +		printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
+>> +			argv[optind],
+>> +			mb.mb_flags & XFS_METADUMP_OBFUSCATED ? "" : "not ",
+>> +			mb.mb_flags & XFS_METADUMP_DIRTYLOG ? "dirty" : "clean",
+>> +			mb.mb_flags & XFS_METADUMP_FULLBLOCKS ? "full" : "zeroed");
+>> +
+>> +		if (argc - optind == 1)
+>> +			exit(0);
+>> +
+>> +		/* Go back to the beginning for the restore function */
+>> +		fseek(src_f, 0L, SEEK_SET);
+>> +	}
+>> +
+>>  	optind++;
+>>  
+>>  	/* check and open target */
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
