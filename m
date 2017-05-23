@@ -1,106 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52767 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756472AbdEYIZg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 May 2017 04:25:36 -0400
-Date: Thu, 25 May 2017 10:25:32 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 02/10] fs: Introduce filemap_range_has_page()
-Message-ID: <20170525082532.GC28950@quack2.suse.cz>
-References: <20170524164150.9492-1-rgoldwyn@suse.de>
- <20170524164150.9492-3-rgoldwyn@suse.de>
+Received: from mr002msb.fastweb.it ([85.18.95.86]:42880 "EHLO
+        mr002msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753376AbdEWK4f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2017 06:56:35 -0400
+Received: from ceres.assyoma.it (93.63.55.57) by mr002msb.fastweb.it (8.5.140.05)
+        id 58E21DDC020E2783 for linux-xfs@vger.kernel.org; Tue, 23 May 2017 12:56:33 +0200
+Subject: Re: Shutdown filesystem when a thin pool become full
+References: <c25a8ccc-f143-989d-3d49-3fe8753aa6f7@assyoma.it>
+ <20170522230946.s3sdg4gd73oj7r5u@eorzea.usersys.redhat.com>
+From: Gionatan Danti <g.danti@assyoma.it>
+Message-ID: <940c3b13-dea2-1887-d4ae-89555d1c2a4f@assyoma.it>
+Date: Tue, 23 May 2017 12:56:32 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170524164150.9492-3-rgoldwyn@suse.de>
+In-Reply-To: <20170522230946.s3sdg4gd73oj7r5u@eorzea.usersys.redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: it-IT
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: linux-xfs@vger.kernel.org
+Cc: g.danti@assyoma.it
 
-On Wed 24-05-17 11:41:42, Goldwyn Rodrigues wrote:
-> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On 23/05/2017 01:09, Carlos Maiolino wrote:
 > 
-> filemap_range_has_page() return true if the file's mapping has
-> a page within the range mentioned. This function will be used
-> to check if a write() call will cause a writeback of previous
-> writes.
+> If you want that XFS shut down when it hits an error, you can configure it
+> through sysfs in:
 > 
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Looks good. You can add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
-> ---
->  include/linux/fs.h |  2 ++
->  mm/filemap.c       | 33 +++++++++++++++++++++++++++++++++
->  2 files changed, 35 insertions(+)
+> /sys/fs/xfs/<dev>/error/
 > 
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index f53867140f43..dc0ab585cd56 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -2517,6 +2517,8 @@ extern int filemap_fdatawait(struct address_space *);
->  extern void filemap_fdatawait_keep_errors(struct address_space *);
->  extern int filemap_fdatawait_range(struct address_space *, loff_t lstart,
->  				   loff_t lend);
-> +extern int filemap_range_has_page(struct address_space *, loff_t lstart,
-> +				  loff_t lend);
->  extern int filemap_write_and_wait(struct address_space *mapping);
->  extern int filemap_write_and_wait_range(struct address_space *mapping,
->  				        loff_t lstart, loff_t lend);
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 6f1be573a5e6..87aba7698584 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -376,6 +376,39 @@ int filemap_flush(struct address_space *mapping)
->  }
->  EXPORT_SYMBOL(filemap_flush);
->  
-> +/**
-> + * filemap_range_has_page - check if a page exists in range.
-> + * @mapping:           address space structure to wait for
-> + * @start_byte:        offset in bytes where the range starts
-> + * @end_byte:          offset in bytes where the range ends (inclusive)
-> + *
-> + * Find at least one page in the range supplied, usually used to check if
-> + * direct writing in this range will trigger a writeback.
-> + */
-> +int filemap_range_has_page(struct address_space *mapping,
-> +			   loff_t start_byte, loff_t end_byte)
-> +{
-> +	pgoff_t index = start_byte >> PAGE_SHIFT;
-> +	pgoff_t end = end_byte >> PAGE_SHIFT;
-> +	struct pagevec pvec;
-> +	int ret;
-> +
-> +	if (end_byte < start_byte)
-> +		return 0;
-> +
-> +	if (mapping->nrpages == 0)
-> +		return 0;
-> +
-> +	pagevec_init(&pvec, 0);
-> +	ret = pagevec_lookup(&pvec, mapping, index, 1);
-> +	if (!ret)
-> +		return 0;
-> +	ret = (pvec.pages[0]->index <= end);
-> +	pagevec_release(&pvec);
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL(filemap_range_has_page);
-> +
->  static int __filemap_fdatawait_range(struct address_space *mapping,
->  				     loff_t start_byte, loff_t end_byte)
->  {
-> -- 
-> 2.12.0
+> directory.
 > 
+> You can find detailed info in Documentation/filesystems/xfs.txt (from linux
+> source).
+
+Very useful documentation, thank you.
+
+> 
+> Although, I should say this is a bad idea. A full thin pool will return an
+> ENOSPC error to the filesystem, and, the filesystem should act accordingly.
+> 
+> Would you want the filesystem to shut down because it hit an ENOSPC, or report
+> to the user and let him/her to take the appropriate action, like freeing space
+> or increasing the dm-thin pool size?
+
+Does a full thin pool *really* report a ENOSPC? On all my tests, I 
+simply see "buffer i/o error on dev" on dmesg output (see below). How 
+can I see if a ENOSPC was returned?
+> The behavior really depends on several configurations, including how dm-thin
+> will deal with ENOSPC situations, dm-thin can be configured to queue new
+> incoming IOs, fail the IO, etc, but, even in a full disk situation, you can
+> still rewrite data, so this behavior doesn't change much from what would happen
+> if you fill up a regular block device, XFS will try to allocate a new block, the
+> block device returns an ENOSPC and XFS acts accordingly.
+
+I am testing with "errorwhenfull=y" when thin pool fills.
+
+> What exactly do you mean by failed data update? As long as you don't need to
+> allocate any new block either for data of metadata, you should be able to rewrite
+> data normally if the device is full.
+
+I refer to update for which the metadata write completes successfully 
+(ie: they are writen to already-allocated space), but the data writeout 
+does *not* (ie: new data require a new allocation, which it fails).
+
+> How dm-thin and XFS will work together, really depends on how you configure both
+> of them. XFS has a configuration system that you can use to set how it will
+> behave in some error situations according to your preferences, it can be set to
+> retry the writes for a specific amount of time, or simply fail immediately and
+> shut down the filesystem.
+
+Ok, I need some some testing ;)
+
+> Worth to mention though, there is a bug that might be triggered when you
+> overcommit the space (creates a virtual device larger than the real physical
+> space), it's not too easy to trigger it though, and the fix is already WIP.
+
+Can you link to the bug?
+
+Thanks a lot.
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
