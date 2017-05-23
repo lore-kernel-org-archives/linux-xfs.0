@@ -1,34 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:52744 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:33550 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752231AbdEWIuE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 May 2017 04:50:04 -0400
-Date: Tue, 23 May 2017 10:49:56 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 10/23] afs: switch to use uuid_t and uuid_gen
-Message-ID: <20170523084956.GB20121@lst.de>
-References: <20170518062705.25902-1-hch@lst.de> <20170518062705.25902-11-hch@lst.de> <1495478957.6967.69.camel@linux.intel.com>
+        id S1752590AbdEWKfj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 May 2017 06:35:39 -0400
+Date: Tue, 23 May 2017 12:35:35 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 1/3] xfs: use atomic operations to handle xfs_log_item
+ flags
+Message-ID: <20170523103535.6fmghatkarvblqbu@eorzea.usersys.redhat.com>
+References: <20170522153220.25072-1-cmaiolino@redhat.com>
+ <20170522153220.25072-2-cmaiolino@redhat.com>
+ <20170522191111.GC17100@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1495478957.6967.69.camel@linux.intel.com>
+In-Reply-To: <20170522191111.GC17100@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 22, 2017 at 09:49:17PM +0300, Andy Shevchenko wrote:
-> >  	struct afs_call *call = container_of(work, struct afs_call,
-> > work);
-> > -	struct uuid_v1 *r = call->request;
-> > +	uuid_t *r = call->request;
-> >  
-> >  	struct {
-> >  		__be32	match;
-> > 
+Hi,
+
+On Mon, May 22, 2017 at 12:11:11PM -0700, Christoph Hellwig wrote:
+> > --- a/fs/xfs/xfs_buf_item.c
+> > +++ b/fs/xfs/xfs_buf_item.c
+> > @@ -587,7 +587,7 @@ xfs_buf_item_unlock(
+> >  	 * (cancelled) buffers at unpin time, but we'll never go through the
+> >  	 * pin/unpin cycle if we abort inside commit.
+> >  	 */
+> > -	aborted = (lip->li_flags & XFS_LI_ABORTED) ? true : false;
+> > +	aborted = (test_bit(XFS_LI_ABORTED, &lip->li_flags)) ? true : false;
 > 
-> Just to double check that this doesn't create a union aliasing.
+> 	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags);
+> 
+> does the same job in a slightly simpler way.
+> 
+> > +	ASSERT(!(test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags)));
+> 
+> no need for the inner braces.
+> 
+> > +		ASSERT(!(test_bit(XFS_LI_IN_AIL, &ip->i_itemp->ili_item.li_flags)));
+> 
+> Same here.  Also please don't break lines after 80 characters.
+> 
+> > +	       !(test_bit(XFS_LI_IN_AIL, &dqp->q_logitem.qli_item.li_flags)));
+> 
+> Also no need for the braces around test_bit here.
+> 
+> > +	if (!(test_bit(XFS_LI_IN_AIL, &lip->li_flags))) {
+> 
+> .. again
+> 
+> > +		ASSERT(!(test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags)));
+> 
+> .. again
+> 
+> Also last but not least the arguments to the *_bit functions are
+> bit indices, so they should be renumber to 0 and 1 (and the tracing
+> helpers will need some updates as well).
 
-What do you mean with that?
+Thanks for the review of this series, I'll queue these changes for V3.
+
+
+-- 
+Carlos
