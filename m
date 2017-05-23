@@ -1,70 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47602 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1035636AbdEXQmL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 May 2017 12:42:11 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 05/10] fs: return if direct write will trigger writeback
-Date: Wed, 24 May 2017 11:41:45 -0500
-Message-Id: <20170524164150.9492-6-rgoldwyn@suse.de>
-In-Reply-To: <20170524164150.9492-1-rgoldwyn@suse.de>
-References: <20170524164150.9492-1-rgoldwyn@suse.de>
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:33676 "EHLO
+        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760765AbdEWD4r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2017 23:56:47 -0400
+Received: by mail-yw0-f193.google.com with SMTP id y64so8744272ywe.0
+        for <linux-xfs@vger.kernel.org>; Mon, 22 May 2017 20:56:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAJCQCtTj4it6o-Fop6vm3s_HFbRemF5o_H9w-tvS6wmFfVwKBA@mail.gmail.com>
+References: <20170518012618.GT4519@birch.djwong.org> <20170518013242.GW4519@birch.djwong.org>
+ <20170518083405.GQ17542@dastard> <20170518223053.GD4519@birch.djwong.org>
+ <CAJCQCtTj-7BovZbXyZu9=Dhh4ROR-AJ6Dpsw1GKbM-a2fr+uVw@mail.gmail.com>
+ <20170519210040.GL4519@birch.djwong.org> <20170522020112.GV17542@dastard> <CAJCQCtTj4it6o-Fop6vm3s_HFbRemF5o_H9w-tvS6wmFfVwKBA@mail.gmail.com>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Mon, 22 May 2017 21:56:45 -0600
+Message-ID: <CAJCQCtT5riGri5d3cin9BipUso9mfQ-PBqoPzMZEEYm8RezJdA@mail.gmail.com>
+Subject: Re: [PATCH 3/3] xfs: freeze rw filesystems just prior to reboot
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Mon, May 22, 2017 at 2:46 PM, Chris Murphy <lists@colorremedies.com> wrote:
 
-Find out if the write will trigger a wait due to writeback. If yes,
-return -EAGAIN.
+> Second, I have only been able to reproduce this problem with grubby +
+> XFS.
 
-Return -EINVAL for buffered AIO: there are multiple causes of
-delay such as page locks, dirty throttling logic, page loading
-from disk etc. which cannot be taken care of.
+OK so this is just on Fedora/RH systems, which is the example case I
+have. The kernel RPM is running a script called new-kernel-pkg which
+is part of grubby. It's found here:
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- mm/filemap.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+https://github.com/rhinstaller/grubby/blob/master/new-kernel-pkg
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 097213275461..bc146efa6815 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -2675,6 +2675,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
- 
- 	pos = iocb->ki_pos;
- 
-+	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
-+		return -EINVAL;
-+
- 	if (limit != RLIM_INFINITY) {
- 		if (iocb->ki_pos >= limit) {
- 			send_sig(SIGXFSZ, current, 0);
-@@ -2743,9 +2746,17 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
- 	write_len = iov_iter_count(from);
- 	end = (pos + write_len - 1) >> PAGE_SHIFT;
- 
--	written = filemap_write_and_wait_range(mapping, pos, pos + write_len - 1);
--	if (written)
--		goto out;
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		/* If there are pages to writeback, return */
-+		if (filemap_range_has_page(inode->i_mapping, pos,
-+					   pos + iov_iter_count(from)))
-+			return -EAGAIN;
-+	} else {
-+		written = filemap_write_and_wait_range(mapping, pos,
-+							pos + write_len - 1);
-+		if (written)
-+			goto out;
-+	}
- 
- 	/*
- 	 * After a write we want buffered reads to be sure to go to disk to get
+# make sure changes make it to the disk.
+# if /boot is a mountpoint, force the meta data on disk
+# to by-pass writeback delay.
+# PPC64LE-only to deal with Petitboot issues
+if [ "$ARCH" = "ppc64le" ]; then
+    sync && mountpoint -q /boot && fsfreeze -f /boot && fsfreeze -u /boot
+fi
+
+
+So why only Petitboot on ppc64 is considered to need this?
+
+Also I put zipl in the bootloader category that doesn't need to be totally
+reinstalled, which is incorrect it's more like lilo. I guess I was thinking of
+yaboot. In any case the main point remains that the common
+bootloaders being used these days depend only on modification of a
+bootloader configuration file via the file system that file is located
+on.
+
+
 -- 
-2.12.0
-
+Chris Murphy
