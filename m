@@ -1,186 +1,138 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55952 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754664AbdEHUpJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 May 2017 16:45:09 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 28A9A8046E
-        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2017 20:45:09 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id EA3A9C6785
-        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2017 20:45:08 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 0/3] xfs: improve transaction log res. overrun reporting
-Date: Mon,  8 May 2017 16:45:04 -0400
-Message-Id: <1494276307-36887-1-git-send-email-bfoster@redhat.com>
+Received: from mr001msb.fastweb.it ([85.18.95.85]:36324 "EHLO
+        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753027AbdEWUFm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2017 16:05:42 -0400
+Received: from ceres.assyoma.it (93.63.55.57) by mr001msb.fastweb.it (8.5.140.05)
+        id 58FDB0C30137830F for linux-xfs@vger.kernel.org; Tue, 23 May 2017 22:05:34 +0200
+Subject: Re: Shutdown filesystem when a thin pool become full
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date: Tue, 23 May 2017 22:05:34 +0200
+From: Gionatan Danti <g.danti@assyoma.it>
+In-Reply-To: <20170523122753.k7plzg3musc4up73@eorzea.usersys.redhat.com>
+References: <c25a8ccc-f143-989d-3d49-3fe8753aa6f7@assyoma.it>
+ <20170522230946.s3sdg4gd73oj7r5u@eorzea.usersys.redhat.com>
+ <940c3b13-dea2-1887-d4ae-89555d1c2a4f@assyoma.it>
+ <5f98a296-6023-f200-4c60-bcfdf0288d34@assyoma.it>
+ <20170523122753.k7plzg3musc4up73@eorzea.usersys.redhat.com>
+Message-ID: <24daa89a452496d2cdffa5512a64ed2e@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: g.danti@assyoma.it
 
-Hi all,
+Il 23-05-2017 14:27 Carlos Maiolino ha scritto:
+> 
+> Aha, you are using sync flag, that's why you are getting IO errors 
+> instead of
+> ENOSPC, I don't remember from the top of my mind why exactly, it's been 
+> a while
+> since I started to work on this XFS and dm-thin integration, but IIRC, 
+> the
+> problem is that XFS reserves the data required, and don't expect to get 
+> an
+> ENOSPC once the device "have space", and when the sync occurs, kaboom. 
+> I should
+> take a look again on it.
 
-This is a first pass at improved transaction log reservation overrun
-reporting based on Dave's suggestion[1]. This essentially creates a new
-helper to dump transaction info (i.e., logged items) along with ticket
-data in the event of an overrun and refactors things a bit to be able to
-call it from a context where an accurate calculation of the reservation
-requirement is available but the log items have not been removed from
-the transaction.
+Ok, I tried with a more typical non-sync write and it seems to report 
+ENOSPC:
 
-Note that this increases the amount of output on a tx overrun quite a
-bit, particularly if the transaction includes multiple log
-items/vectors, but I opted for verbosity and to retain the current
-format for the first iteration. I'm curious if anybody has thoughts on
-formatting, what data to include or not, whether to tie certain things
-(i.e., raw buffer data?) to the current log level, general level of
-detail, etc. Sample output from a fabricated overrun is shown below[2].
+[root@blackhole ~]# dd if=/dev/zero of=/mnt/storage/disk.img bs=1M 
+count=2048
+dd: error writing ‘/mnt/storage/disk.img’: No space left on device
+2002+0 records in
+2001+0 records out
+2098917376 bytes (2.1 GB) copied, 7.88216 s, 266 MB/s
 
-Lightly tested so far. Thoughts, reviews, flames appreciated.
+With /sys/fs/xfs/dm-6/error/metadata/ENOSPC/max_retries = -1 (default), 
+I have the following dmesg output:
 
-Brian
+[root@blackhole ~]# dmesg
+[23152.667198] XFS (dm-6): Mounting V5 Filesystem
+[23152.762711] XFS (dm-6): Ending clean mount
+[23192.704672] device-mapper: thin: 253:4: reached low water mark for 
+data device: sending event.
+[23192.988356] device-mapper: thin: 253:4: switching pool to 
+out-of-data-space (error IO) mode
+[23193.046288] Buffer I/O error on dev dm-6, logical block 385299, lost 
+async page write
+[23193.046299] Buffer I/O error on dev dm-6, logical block 385300, lost 
+async page write
+[23193.046302] Buffer I/O error on dev dm-6, logical block 385301, lost 
+async page write
+[23193.046304] Buffer I/O error on dev dm-6, logical block 385302, lost 
+async page write
+[23193.046307] Buffer I/O error on dev dm-6, logical block 385303, lost 
+async page write
+[23193.046309] Buffer I/O error on dev dm-6, logical block 385304, lost 
+async page write
+[23193.046312] Buffer I/O error on dev dm-6, logical block 385305, lost 
+async page write
+[23193.046314] Buffer I/O error on dev dm-6, logical block 385306, lost 
+async page write
+[23193.046316] Buffer I/O error on dev dm-6, logical block 385307, lost 
+async page write
+[23193.046319] Buffer I/O error on dev dm-6, logical block 385308, lost 
+async page write
 
-[1] http://www.spinics.net/lists/linux-xfs/msg06446.html
-[2] Output from an fallocate request after the write transaction
-reservation is erroneously reduced to 32 bytes:
+With /sys/fs/xfs/dm-6/error/metadata/ENOSPC/max_retries = 0, dmesg 
+output is slightly different:
 
- ------------[ cut here ]------------
- WARNING: CPU: 1 PID: 1621 at fs/xfs//xfs_log_cil.c:466 xfs_log_commit_cil+0x6d5/0x790 [xfs]
- ...
- Call Trace:
-  dump_stack+0x86/0xc3
-  __warn+0xcb/0xf0
-  warn_slowpath_null+0x1d/0x20
-  xfs_log_commit_cil+0x6d5/0x790 [xfs]
-  __xfs_trans_commit+0x82/0x280 [xfs]
-  xfs_trans_commit+0x10/0x20 [xfs]
-  xfs_alloc_file_space+0x22a/0x4c0 [xfs]
-  xfs_file_fallocate+0x230/0x3b0 [xfs]
-  ? rcu_read_lock_sched_held+0x4a/0x80
-  ? rcu_sync_lockdep_assert+0x2f/0x60
-  ? __sb_start_write+0xe9/0x210
-  ? vfs_fallocate+0x214/0x280
-  vfs_fallocate+0x159/0x280
-  SyS_fallocate+0x48/0x80
-  entry_SYSCALL_64_fastpath+0x1f/0xc2
- ...
- ---[ end trace e928d52baa488ea3 ]---
- XFS (dm-3): Transaction log reservation overrun:
- XFS (dm-3):   log items: 876 bytes (iov hdrs: 120 bytes)
- XFS (dm-3):   split region headers: 0 bytes
- XFS (dm-3):   ctx ticket: 2100 bytes
- XFS (dm-3): transaction summary:
- XFS (dm-3):   flags	= 0x5
- XFS (dm-3): ticket reservation summary:
- XFS (dm-3):   unit res    = 2132 bytes
- XFS (dm-3):   current res = -844 bytes
- XFS (dm-3):   total reg   = 0 bytes (o/flow = 0 bytes)
- XFS (dm-3):   ophdrs      = 0 (ophdr space = 0 bytes)
- XFS (dm-3):   ophdr + reg = 0 bytes
- XFS (dm-3):   num regions = 0
- XFS (dm-3): log item: 
- XFS (dm-3):   type	= 0x123b
- XFS (dm-3):   flags	= 0x1
- XFS (dm-3):   niovecs	= 4
- XFS (dm-3):   size	= 720
- XFS (dm-3):   bytes	= 300
- XFS (dm-3):   buf len	= 304
- XFS (dm-3):   iovec[0]
- XFS (dm-3):     type	= 0x5
- XFS (dm-3):     len	= 56
- XFS (dm-3):     first 32 bytes of iovec[0]:
- ffff984954ea2c78: 3b 12 04 00 45 00 00 00 34 00 10 00 49 98 ff ff  ;...E...4...I...
- ffff984954ea2c88: 63 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  c...............
- XFS (dm-3):   iovec[1]
- XFS (dm-3):     type	= 0x6
- XFS (dm-3):     len	= 176
- XFS (dm-3):     first 32 bytes of iovec[1]:
- ffff984954ea2cb0: 4e 49 a4 81 03 02 00 00 00 00 00 00 00 00 00 00  NI..............
- ffff984954ea2cc0: 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
- XFS (dm-3):   iovec[2]
- XFS (dm-3):     type	= 0x7
- XFS (dm-3):     len	= 16
- XFS (dm-3):     first 16 bytes of iovec[2]:
- ffff984954ea2d60: 80 00 00 00 00 00 00 00 00 00 00 00 02 80 01 00  ................
- XFS (dm-3):   iovec[3]
- XFS (dm-3):     type	= 0xc
- XFS (dm-3):     len	= 52
- XFS (dm-3):     first 32 bytes of iovec[3]:
- ffff984954ea2d70: 00 33 01 00 07 25 04 73 65 6c 69 6e 75 78 75 6e  .3...%.selinuxun
- ffff984954ea2d80: 63 6f 6e 66 69 6e 65 64 5f 75 3a 6f 62 6a 65 63  confined_u:objec
- XFS (dm-3): log item: 
- XFS (dm-3):   type	= 0x123c
- XFS (dm-3):   flags	= 0x0
- XFS (dm-3):   niovecs	= 2
- XFS (dm-3):   size	= 256
- XFS (dm-3):   bytes	= 152
- XFS (dm-3):   buf len	= 152
- XFS (dm-3):   iovec[0]
- XFS (dm-3):     type	= 0x1
- XFS (dm-3):     len	= 24
- XFS (dm-3):     first 24 bytes of iovec[0]:
- ffff9849532d1258: 3c 12 02 00 00 28 01 00 01 00 00 00 00 00 00 00  <....(..........
- ffff9849532d1268: 01 00 00 00 01 00 00 00                          ........
- XFS (dm-3):   iovec[1]
- XFS (dm-3):     type	= 0x2
- XFS (dm-3):     len	= 128
- XFS (dm-3):     first 32 bytes of iovec[1]:
- ffff9849532d1270: 58 41 47 46 00 00 00 01 00 00 00 00 00 0f 00 00  XAGF............
- ffff9849532d1280: 00 00 00 01 00 00 00 02 00 00 00 00 00 00 00 01  ................
- XFS (dm-3): log item: 
- XFS (dm-3):   type	= 0x123c
- XFS (dm-3):   flags	= 0x0
- XFS (dm-3):   niovecs	= 2
- XFS (dm-3):   size	= 256
- XFS (dm-3):   bytes	= 152
- XFS (dm-3):   buf len	= 152
- XFS (dm-3):   iovec[0]
- XFS (dm-3):     type	= 0x1
- XFS (dm-3):     len	= 24
- XFS (dm-3):     first 24 bytes of iovec[0]:
- ffff9849532d1358: 3c 12 02 00 00 20 08 00 10 00 00 00 00 00 00 00  <.... ..........
- ffff9849532d1368: 01 00 00 00 01 00 00 00                          ........
- XFS (dm-3):   iovec[1]
- XFS (dm-3):     type	= 0x2
- XFS (dm-3):     len	= 128
- XFS (dm-3):     first 32 bytes of iovec[1]:
- ffff9849532d1370: 41 42 33 43 00 00 00 02 ff ff ff ff ff ff ff ff  AB3C............
- ffff9849532d1380: 00 00 00 00 00 00 00 10 00 00 00 01 00 00 00 54  ...............T
- XFS (dm-3): log item: 
- XFS (dm-3):   type	= 0x123c
- XFS (dm-3):   flags	= 0x0
- XFS (dm-3):   niovecs	= 2
- XFS (dm-3):   size	= 256
- XFS (dm-3):   bytes	= 152
- XFS (dm-3):   buf len	= 152
- XFS (dm-3):   iovec[0]
- XFS (dm-3):     type	= 0x1
- XFS (dm-3):     len	= 24
- XFS (dm-3):     first 24 bytes of iovec[0]:
- ffff9849532d1558: 3c 12 02 00 00 20 08 00 08 00 00 00 00 00 00 00  <.... ..........
- ffff9849532d1568: 01 00 00 00 01 00 00 00                          ........
- XFS (dm-3):   iovec[1]
- XFS (dm-3):     type	= 0x2
- XFS (dm-3):     len	= 128
- XFS (dm-3):     first 32 bytes of iovec[1]:
- ffff9849532d1570: 41 42 33 42 00 00 00 02 ff ff ff ff ff ff ff ff  AB3B............
- ffff9849532d1580: 00 00 00 00 00 00 00 08 00 00 00 01 00 00 00 54  ...............T
- XFS (dm-3): xfs_do_force_shutdown(0x2) called from line 501 of file fs/xfs//xfs_log_cil.c.  Return address = 0xffffffffc041e56b
- XFS (dm-3): Log I/O Error Detected.  Shutting down filesystem
- XFS (dm-3): Please umount the filesystem and rectify the problem(s)
+[root@blackhole default]# dmesg
+[23557.594502] device-mapper: thin: 253:4: switching pool to 
+out-of-data-space (error IO) mode
+[23557.649772] buffer_io_error: 257430 callbacks suppressed
+[23557.649784] Buffer I/O error on dev dm-6, logical block 381193, lost 
+async page write
+[23557.649805] Buffer I/O error on dev dm-6, logical block 381194, lost 
+async page write
+[23557.649811] Buffer I/O error on dev dm-6, logical block 381195, lost 
+async page write
+[23557.649818] Buffer I/O error on dev dm-6, logical block 381196, lost 
+async page write
+[23557.649862] Buffer I/O error on dev dm-6, logical block 381197, lost 
+async page write
+[23557.649871] Buffer I/O error on dev dm-6, logical block 381198, lost 
+async page write
+[23557.649880] Buffer I/O error on dev dm-6, logical block 381199, lost 
+async page write
+[23557.649888] Buffer I/O error on dev dm-6, logical block 381200, lost 
+async page write
+[23557.649897] Buffer I/O error on dev dm-6, logical block 381201, lost 
+async page write
+[23557.649903] Buffer I/O error on dev dm-6, logical block 381202, lost 
+async page write
 
-Brian Foster (3):
-  xfs: separate shutdown from ticket reservation print helper
-  xfs: refactor xlog_cil_insert_items() to facilitate transaction dump
-  xfs: dump transaction usage details on log reservation overrun
+Notice the suppressed buffer_io_error entries: are they related to the 
+bug you linked before?
+Anyway, in *no* cases I had a filesystem shutdown on these errors.
 
- fs/xfs/xfs_log.c      | 59 +++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_log_cil.c  | 84 ++++++++++++++++++++++++++++++---------------------
- fs/xfs/xfs_log_priv.h |  1 +
- 3 files changed, 105 insertions(+), 39 deletions(-)
+Trying to be pragmatic, my main concern is to avoid extended filesystem 
+and/or data corruption in the case a thin pool become inadvertently 
+full. For example, with ext4 I can mount the filesystem with 
+"errors=remount-ro,data=journaled" and *any* filesystem error (due to 
+thinpool or other problems) will put the filesystem in a read-only 
+state, avoiding significan damages.
+
+If, and how, I can replicate this behavior with XFS? From my 
+understanding, XFS does not have a "remount read-only" mode. Moreover, 
+until its metadata can be safely stored on disk (ie: they hit already 
+allocated space), it seems to happily continue to run, disregarding data 
+writeout problem/error. As a note, ext4 without "data=jornaled" bahave 
+quite similarly, whit a read-only remount happening on metadata errors 
+only.
+
+Surely I am missing something... right?
+Thanks.
 
 -- 
-2.7.4
-
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
