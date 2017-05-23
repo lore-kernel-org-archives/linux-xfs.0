@@ -1,52 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52621 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1758616AbdEWLKM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 May 2017 07:10:12 -0400
-Date: Tue, 23 May 2017 13:10:07 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] vfs: freeze filesystems just prior to reboot
-Message-ID: <20170523111007.GH1230@quack2.suse.cz>
-References: <20170519002032.GA21202@birch.djwong.org>
- <1495202431.1896310.982081664.066926F8@webmail.messagingengine.com>
- <20170519152734.qd4lf32e7wst4jdh@thunk.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41110 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752975AbdEWLVd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 May 2017 07:21:33 -0400
+Date: Tue, 23 May 2017 13:21:29 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 2/3 V2] xfs: Add infrastructure needed for error
+ propagation during buffer IO failure
+Message-ID: <20170523112129.5u36jympx7opw3g4@eorzea.usersys.redhat.com>
+References: <20170522153220.25072-1-cmaiolino@redhat.com>
+ <20170522153220.25072-3-cmaiolino@redhat.com>
+ <20170522191322.GD17100@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170519152734.qd4lf32e7wst4jdh@thunk.org>
+In-Reply-To: <20170522191322.GD17100@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Colin Walters <walters@verbum.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri 19-05-17 11:27:34, Ted Tso wrote:
-> The other thing that would be useful is if grub2 would actually be
-> able to replay the file system journal --- but given that grub2 is
-> GPLv3, and both ext4 and xfs are GPLv2-only, and given that past
-> attempts of teams attempting to do clean room reimplementations of
-> complex code bases for licensing reasons only (cough, make_ext4fs,
-> *cough*) have not necessarily turned out well, I'm at least not going
-> to hold my breath.
+On Mon, May 22, 2017 at 12:13:22PM -0700, Christoph Hellwig wrote:
+> Need to read up on the history and background a bit more, but some
+> cosmetic comments below:
+> 
+> > +	lip = bp->b_fspriv;
+> > +	while (lip != NULL) {
+> > +		next = lip->li_bio_list;
+> > +
+> > +		if (lip->li_ops->iop_error)
+> > +			lip->li_ops->iop_error(lip, bflags);
+> > +
+> > +		lip = next;
+> > +	}
+> 
+> 	for (lip = bp->b_fspriv; lip; lip = next) {
+> 		next = lip->li_bio_list;
+> 		if (lip->li_ops->iop_error)
+> 			lip->li_ops->iop_error(lip, bflags);
+> 	}
+> 
+> ?
 
-Boot loader really should *not* write to the filesystem. Firstly, it would
-have to be completely separate codebase running under very different
-constraints (real mode, no real memory management, etc) so there's no easy
-way to share the code with any other userspace libraries and thus the code
-will be inherently buggy. Secondly, think of stuff like suspend to disk -
-if someone touches the filesystem in any way under the hands of suspended
-kernel, file system corruption is very likely to follow sooner or later.
-Just last year, I've spent couple of interesting days hunting down ext4
-corruption on s390 only to find out that the boot procedure(*) there ended
-up replaying the journal under suspended kernel...
+Agree, looks much better.
 
-(*) Just for the ones interested in mainframe woes: s390 in SLES doesn't
-use grub to parse the filesystem (as it is too difficult to access some
-storage types from the boot loader AFAIU) so it uses "first-stage" Linux
-kernel to mount the root filesystem, finds proper kernel image there and
-then kexecs into it...
+> 
+> > @@ -1101,6 +1119,7 @@ xfs_buf_iodone_callback_error(
+> >  
+> >  		xfs_buf_ioerror(bp, 0);
+> >  		xfs_buf_submit(bp);
+> > +
+> >  		return true;
+> >  	}
+> 
+> whitespace noise.
 
-								Honza
+
+Fixed and queued for V3, thanks
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Carlos
