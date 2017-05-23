@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33550 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59116 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752590AbdEWKfj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 May 2017 06:35:39 -0400
-Date: Tue, 23 May 2017 12:35:35 +0200
+        id S1757457AbdEWKnB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 May 2017 06:43:01 -0400
+Date: Tue, 23 May 2017 12:42:57 +0200
 From: Carlos Maiolino <cmaiolino@redhat.com>
 Subject: Re: [PATCH 1/3] xfs: use atomic operations to handle xfs_log_item
  flags
-Message-ID: <20170523103535.6fmghatkarvblqbu@eorzea.usersys.redhat.com>
+Message-ID: <20170523104257.pj337a66fpr7hhmm@eorzea.usersys.redhat.com>
 References: <20170522153220.25072-1-cmaiolino@redhat.com>
  <20170522153220.25072-2-cmaiolino@redhat.com>
  <20170522191111.GC17100@infradead.org>
@@ -20,8 +20,6 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
-
-Hi,
 
 On Mon, May 22, 2017 at 12:11:11PM -0700, Christoph Hellwig wrote:
 > > --- a/fs/xfs/xfs_buf_item.c
@@ -44,6 +42,12 @@ On Mon, May 22, 2017 at 12:11:11PM -0700, Christoph Hellwig wrote:
 > > +		ASSERT(!(test_bit(XFS_LI_IN_AIL, &ip->i_itemp->ili_item.li_flags)));
 > 
 > Same here.  Also please don't break lines after 80 characters.
+
+Btw, I believe you meant I didn't break the line here? Removing the inner braces
+will leave it with 82 chars, I wonder if it's worth to break the line here in
+this case? Just looks harder to read with the line broken for just 2 chars.
+
+
 > 
 > > +	       !(test_bit(XFS_LI_IN_AIL, &dqp->q_logitem.qli_item.li_flags)));
 > 
@@ -60,9 +64,6 @@ On Mon, May 22, 2017 at 12:11:11PM -0700, Christoph Hellwig wrote:
 > Also last but not least the arguments to the *_bit functions are
 > bit indices, so they should be renumber to 0 and 1 (and the tracing
 > helpers will need some updates as well).
-
-Thanks for the review of this series, I'll queue these changes for V3.
-
 
 -- 
 Carlos
