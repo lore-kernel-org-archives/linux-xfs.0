@@ -1,83 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30630 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:33072 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759067AbdEWPah (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2017 11:30:37 -0400
-Date: Tue, 23 May 2017 08:30:18 -0700
+        with ESMTP id S1752602AbdEWPdy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2017 11:33:54 -0400
+Date: Tue, 23 May 2017 08:33:49 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/3] xfs: Fix off-by-in in loop termination in
+Subject: Re: [PATCH] xfs: fix off-by-one on max nr_pages in
  xfs_find_get_desired_pgoff()
-Message-ID: <20170523153018.GP4519@birch.djwong.org>
-References: <20170518104850.14508-1-jack@suse.cz>
- <20170518104850.14508-3-jack@suse.cz>
- <20170522175045.GB1473@bfoster.bfoster>
- <20170523032123.GW7250@eguan.usersys.redhat.com>
- <20170523085044.GA1119@quack2.suse.cz>
+Message-ID: <20170523153349.GQ4519@birch.djwong.org>
+References: <20170521075939.18071-1-eguan@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170523085044.GA1119@quack2.suse.cz>
+In-Reply-To: <20170521075939.18071-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Eryu Guan <eguan@redhat.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 23, 2017 at 10:50:44AM +0200, Jan Kara wrote:
-> On Tue 23-05-17 11:21:23, Eryu Guan wrote:
-> > On Mon, May 22, 2017 at 01:50:47PM -0400, Brian Foster wrote:
-> > > On Thu, May 18, 2017 at 12:48:49PM +0200, Jan Kara wrote:
-> > > > There is an off-by-one error in loop termination conditions in
-> > > > xfs_find_get_desired_pgoff() since 'end' may index a page beyond end of
-> > > > desired range if 'endoff' is page aligned. It doesn't have any visible
-> > > > effects but still it is good to fix it.
-> > > > 
-> > > > Signed-off-by: Jan Kara <jack@suse.cz>
-> > > > ---
-> > > >  fs/xfs/xfs_file.c | 2 +-
-> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > > > index f371812e20c6..3714b5736fd3 100644
-> > > > --- a/fs/xfs/xfs_file.c
-> > > > +++ b/fs/xfs/xfs_file.c
-> > > > @@ -1043,7 +1043,7 @@ xfs_find_get_desired_pgoff(
-> > > >  
-> > > >  	index = startoff >> PAGE_SHIFT;
-> > > >  	endoff = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount);
-> > > > -	end = endoff >> PAGE_SHIFT;
-> > > > +	end = (endoff - 1) >> PAGE_SHIFT;
-> > > 
-> > > Hmm.. I think this messes with the want count for the pagevec_lookup().
-> > > E.g.:
-> > > 
-> > > # xfs_io -fc "truncate 0" -c "falloc 0 16k" -c "pwrite 0 16k" -c "seek -h 0" /mnt/file 
-> > > wrote 16384/16384 bytes at offset 0
-> > > 16 KiB, 4 ops; 0.0000 sec (200.321 MiB/sec and 51282.0513 ops/sec)
-> > > Whence  Result
-> > > HOLE    12288
-> > 
-> > I think the root cause is that the calculation for 'want' is wrong, it
-> > has an off-by-one bug too. I sent a patch[1] to fix it, with my patch
-> > applied on top of Jan's patchset, your test case passed (report HOLE at
-> > 16k). Can you please take a look if it's a correct fix? Thanks!
+On Sun, May 21, 2017 at 03:59:39PM +0800, Eryu Guan wrote:
+> xfs_find_get_desired_pgoff() is used to search for offset of hole or
+> data in page range [index, end] (both inclusive), and the max number
+> of pages to search should be at least one, if end == index.
+> Otherwise the only page is missed and no hole or data is found,
+> which is not correct.
 > 
-> Yes, I've messed that up. It is a bug introduced by my series as Brian
-> properly noticed. Thanks guys for noticing and fixing it! Darrick, should I
-> fold in Eryu's fix and send v4 of the series or will you just pick up
-> Eryu's fix?
-
-FWIW it looked like a separate problem to me as well.  It appears to me
-that I could merge Eryu's patch immediately prior to Jan's series; is
-that ok with everyone?
-
---D
-
+> When block size is smaller than page size, this can be demonstrated
+> by preallocating a file with size smaller than page size and writing
+> data to the last block. E.g. run this xfs_io command on a 1k block
+> size XFS on x86_64 host.
 > 
-> 								Honza
+>   # xfs_io -fc "falloc 0 3k" -c "pwrite 2k 1k" \
+>   	    -c "seek -d 0" /mnt/xfs/testfile
+>   wrote 1024/1024 bytes at offset 2048
+>   1 KiB, 1 ops; 0.0000 sec (33.675 MiB/sec and 34482.7586 ops/sec)
+>   Whence  Result
+>   DATA    EOF
+> 
+> Data at offset 2k was missed, and lseek(2) returned ENXIO.
+> 
+> This is unconvered by generic/285 subtest 07 and 08 on ppc64 host,
+
+"uncovered", will fix it when I commit and push to testbox.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+> where pagesize is 64k. Because a recent change to generic/285
+> reduced the preallocated file size to smaller than 64k.
+> 
+> Cc: stable@vger.kernel.org # v3.7+
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> ---
+>  fs/xfs/xfs_file.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 35703a8..aefa213 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1049,7 +1049,7 @@ xfs_find_get_desired_pgoff(
+>  		unsigned	nr_pages;
+>  		unsigned int	i;
+>  
+> -		want = min_t(pgoff_t, end - index, PAGEVEC_SIZE);
+> +		want = min_t(pgoff_t, end - index, PAGEVEC_SIZE - 1) + 1;
+>  		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
+>  					  want);
+>  		/*
 > -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+> 2.9.4
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
