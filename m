@@ -1,67 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48924 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754387AbdEQO5t (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 17 May 2017 10:57:49 -0400
-Date: Wed, 17 May 2017 16:57:46 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 0/3 v2] xfs: Fix SEEK_HOLE implementation
-Message-ID: <20170517145746.GC5632@quack2.suse.cz>
-References: <20170517121046.2632-1-jack@suse.cz>
- <20170517123115.GG7250@eguan.usersys.redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:19384 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759362AbdEWDMH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2017 23:12:07 -0400
+Date: Mon, 22 May 2017 20:11:34 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: use atomic to provide buffer I/O accounting
+ serialization
+Message-ID: <20170523031134.GO4519@birch.djwong.org>
+References: <1495477751-3742-1-git-send-email-bfoster@redhat.com>
+ <20170522190510.GA17100@infradead.org>
+ <20170522220424.GA4456@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170517123115.GG7250@eguan.usersys.redhat.com>
+In-Reply-To: <20170522220424.GA4456@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Wed 17-05-17 20:31:15, Eryu Guan wrote:
-> Hi Jan,
-> 
-> On Wed, May 17, 2017 at 02:10:43PM +0200, Jan Kara wrote:
-> > Hello,
-> > 
-> > this is the second revision of the patches to fix bugs in XFS's SEEK_HOLE
-> > implementation and cleanup the code a bit.
-> > 
-> > Changes since v1:
-> > * Fixed some more buggy cases
-> > * Simplified code a bit as suggested by Darrick
-> > * Fixed range check as spotted by Brian
-> 
-> I applied this patchset on top of 4.12-rc1 kernel to test your v4 test
-> case, your new test passed all my tests, but I found generic/285
-> regressed with sub-page block size XFS, 285.full showed that failure was
-> from subtest 7
-> 
-> 07. Test file with unwritten extents, only have dirty pages
-> 07.01 SEEK_HOLE expected 0 or 11264, got 0.                       succ
-> 07.02 SEEK_HOLE expected 1 or 11264, got 1.                       succ
-> 07.03 SEEK_DATA expected 10240 or 10240, got -1.                  FAIL
-> 07.04 SEEK_DATA expected 10240 or 10240, got -1.                  FAIL
-> 
-> And manual test showed subtest 8 failed too
-> 
-> # ./src/seek_sanity_test -s 8 -e 8 /mnt/xfs/testfile
-> File system magic#: 0x58465342
-> Allocation size: 4096
-> 
-> 08. Test file with unwritten extents, only have unwritten pages
-> 08.01 SEEK_HOLE expected 0 or 5632, got 0.                        succ
-> 08.02 SEEK_HOLE expected 1 or 5632, got 1.                        succ
-> 08.03 SEEK_DATA expected 5120 or 5120, got -1.                    FAIL
-> 08.04 SEEK_DATA expected 5120 or 5120, got -1.                    FAIL
-> 
-> Other subtests all passed with sub-page block size XFS.
+On Mon, May 22, 2017 at 06:04:24PM -0400, Brian Foster wrote:
+> On Mon, May 22, 2017 at 12:05:10PM -0700, Christoph Hellwig wrote:
+> > On Mon, May 22, 2017 at 02:29:11PM -0400, Brian Foster wrote:
+> > > We've had user reports of unmount hangs in xfs_wait_buftarg() that
+> > > analysis shows is due to btp->bt_io_count == -1. bt_io_count
+> > > represents the count of in-flight asynchronous buffers and thus
+> > > should always be >= 0. xfs_wait_buftarg() waits for this value to
+> > > stabilize to zero in order to ensure that all untracked (with
+> > > respect to the lru) buffers have completed I/O processing before
+> > > unmount proceeds to tear down in-core data structures.
+> > > 
+> > > The value of -1 implies an I/O accounting decrement race. Indeed,
+> > > the fact that xfs_buf_ioacct_dec() is called from xfs_buf_rele()
+> > > (where the buffer lock is no longer held) means that bp->b_flags can
+> > > be updated from an unsafe context. While a user-level reproducer is
+> > > currently not available, some intrusive hacks to run racing buffer
+> > > lookups/ioacct/releases from multiple threads was used to
+> > > successfully manufacture this problem.
+> > > 
+> > > Existing callers do not expect to acquire the buffer lock from
+> > > xfs_buf_rele(). Therefore, we can not safely update ->b_flags from
+> > > this context. To close the race, replace the in-flight buffer flag
+> > > with a per-buffer atomic for tracking accounting against the
+> > > buftarg. This field resides in a hole in the existing data structure
+> > > and thus does not increase the size of xfs_buf.
 
-Strange. It doesn't fail for me this way even with 1k blocksize. I'll
-investigate more tomorrow.
+There's only a hole on 64-bit systems, btw.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> > I hate these uses of atomic_t as binary flags.  Can you use
+> > test_and_set_bit and friends wit a bitop?  This would require
+> > an unsigned long which an actually be larger than an atomic_t,
+> > but it's both cleaner and provides headroom for additional atomic flags
+> > in the future.
+> 
+> I thought it may be a little confusing to have multiple sets of flags
+> for a buffer, hence the counter (even though it is logically a flag).
+
+It /is/ confusing.  If you stick with a flags variable of some sort, I
+think at a bare minimum there ought to be a comment explaining what this
+unlocked flags field is for, and why we didn't just make b_flags an
+atomicly updated flags field.  (TBH I'm wondering why not do that?  Is
+it to avoid making a larger change?)
+
+> But I'm fine with it for now if we don't mind wasting the extra space.
+> 
+> Though I suppose we could also add a smaller field and use cmpxchg() to
+> set and clear it... thoughts?
+
+None in particular.  I don't know that we're adding flag bits all that
+quickly, and we can always change to unsigned long if we have to.
+
+--D
+
+> 
+> Brian
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
