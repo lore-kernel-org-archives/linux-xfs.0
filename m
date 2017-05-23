@@ -1,78 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47571 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S934945AbdEXQmE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 May 2017 12:42:04 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 01/10] fs: Separate out kiocb flags setup based on RWF_* flags
-Date: Wed, 24 May 2017 11:41:41 -0500
-Message-Id: <20170524164150.9492-2-rgoldwyn@suse.de>
-In-Reply-To: <20170524164150.9492-1-rgoldwyn@suse.de>
-References: <20170524164150.9492-1-rgoldwyn@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:53528 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933820AbdEWMRW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 May 2017 08:17:22 -0400
+Date: Tue, 23 May 2017 08:17:20 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/3] xfs: Fix off-by-in in loop termination in
+ xfs_find_get_desired_pgoff()
+Message-ID: <20170523121718.GB6543@bfoster.bfoster>
+References: <20170518104850.14508-1-jack@suse.cz>
+ <20170518104850.14508-3-jack@suse.cz>
+ <20170522175045.GB1473@bfoster.bfoster>
+ <20170523032123.GW7250@eguan.usersys.redhat.com>
+ <20170523085044.GA1119@quack2.suse.cz>
+ <20170523110832.GY7250@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170523110832.GY7250@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Eryu Guan <eguan@redhat.com>
+Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Tue, May 23, 2017 at 07:08:32PM +0800, Eryu Guan wrote:
+> On Tue, May 23, 2017 at 10:50:44AM +0200, Jan Kara wrote:
+> > On Tue 23-05-17 11:21:23, Eryu Guan wrote:
+> > > On Mon, May 22, 2017 at 01:50:47PM -0400, Brian Foster wrote:
+> > > > On Thu, May 18, 2017 at 12:48:49PM +0200, Jan Kara wrote:
+> > > > > There is an off-by-one error in loop termination conditions in
+> > > > > xfs_find_get_desired_pgoff() since 'end' may index a page beyond end of
+> > > > > desired range if 'endoff' is page aligned. It doesn't have any visible
+> > > > > effects but still it is good to fix it.
+> > > > > 
+> > > > > Signed-off-by: Jan Kara <jack@suse.cz>
+> > > > > ---
+> > > > >  fs/xfs/xfs_file.c | 2 +-
+> > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > > 
+> > > > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > > > > index f371812e20c6..3714b5736fd3 100644
+> > > > > --- a/fs/xfs/xfs_file.c
+> > > > > +++ b/fs/xfs/xfs_file.c
+> > > > > @@ -1043,7 +1043,7 @@ xfs_find_get_desired_pgoff(
+> > > > >  
+> > > > >  	index = startoff >> PAGE_SHIFT;
+> > > > >  	endoff = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount);
+> > > > > -	end = endoff >> PAGE_SHIFT;
+> > > > > +	end = (endoff - 1) >> PAGE_SHIFT;
+> > > > 
+> > > > Hmm.. I think this messes with the want count for the pagevec_lookup().
+> > > > E.g.:
+> > > > 
+> > > > # xfs_io -fc "truncate 0" -c "falloc 0 16k" -c "pwrite 0 16k" -c "seek -h 0" /mnt/file 
+> > > > wrote 16384/16384 bytes at offset 0
+> > > > 16 KiB, 4 ops; 0.0000 sec (200.321 MiB/sec and 51282.0513 ops/sec)
+> > > > Whence  Result
+> > > > HOLE    12288
+> > > 
+> > > I think the root cause is that the calculation for 'want' is wrong, it
+> > > has an off-by-one bug too. I sent a patch[1] to fix it, with my patch
+> > > applied on top of Jan's patchset, your test case passed (report HOLE at
+> > > 16k). Can you please take a look if it's a correct fix? Thanks!
+> > 
+> > Yes, I've messed that up. It is a bug introduced by my series as Brian
+> > properly noticed. Thanks guys for noticing and fixing it! Darrick, should I
+> > fold in Eryu's fix and send v4 of the series or will you just pick up
+> > Eryu's fix?
+> 
+> I think it's a separate bug, the issue described in my patch can be
+> reproduced on stock 4.12-rc1 kernel, without your patchset. The
+> situation for ext4 is similar to XFS, it seems not a bug introduced by
+> your patches.
+> 
+> Thanks for the review!
+> 
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/read_write.c    | 12 +++---------
- include/linux/fs.h | 14 ++++++++++++++
- 2 files changed, 17 insertions(+), 9 deletions(-)
+I think there's the possiblity of multiple things going on here. The
+problem noted above didn't occur without this series applied. Of course,
+that doesn't mean that there isn't some other problem with the current
+code that Eryu has reproduced and fixed.
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 47c1d4484df9..53c816c61122 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -678,16 +678,10 @@ static ssize_t do_iter_readv_writev(struct file *filp, struct iov_iter *iter,
- 	struct kiocb kiocb;
- 	ssize_t ret;
- 
--	if (flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC))
--		return -EOPNOTSUPP;
--
- 	init_sync_kiocb(&kiocb, filp);
--	if (flags & RWF_HIPRI)
--		kiocb.ki_flags |= IOCB_HIPRI;
--	if (flags & RWF_DSYNC)
--		kiocb.ki_flags |= IOCB_DSYNC;
--	if (flags & RWF_SYNC)
--		kiocb.ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
-+	ret = kiocb_set_rw_flags(&kiocb, flags);
-+	if (ret)
-+		return ret;
- 	kiocb.ki_pos = *ppos;
- 
- 	if (type == READ)
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 803e5a9b2654..f53867140f43 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -3056,6 +3056,20 @@ static inline int iocb_flags(struct file *file)
- 	return res;
- }
- 
-+static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
-+{
-+	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC)))
-+		return -EOPNOTSUPP;
-+
-+	if (flags & RWF_HIPRI)
-+		ki->ki_flags |= IOCB_HIPRI;
-+	if (flags & RWF_DSYNC)
-+		ki->ki_flags |= IOCB_DSYNC;
-+	if (flags & RWF_SYNC)
-+		ki->ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
-+	return 0;
-+}
-+
- static inline ino_t parent_ino(struct dentry *dentry)
- {
- 	ino_t res;
--- 
-2.12.0
+In any event, I don't think we should knowingly apply patches with
+regressions, even if they are fixed up in the same patch series. Could
+we get this fixed up/combined somehow or another so we at least do not
+introduce a transient regression (it doesn't matter to me if the
+independent problem is addressed in a separate patch or at the same
+time)?
 
+Also, Eryu, could you Tested-by this series before it goes in? It seems
+you have some tests that stress it quite thoroughly. :)
+
+Brian
+
+> Eryu
+> 
+> > 
+> > 								Honza
+> > -- 
+> > Jan Kara <jack@suse.com>
+> > SUSE Labs, CR
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
