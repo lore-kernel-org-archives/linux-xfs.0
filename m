@@ -1,55 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:49173 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752354AbdERGCs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2017 02:02:48 -0400
-Date: Thu, 18 May 2017 16:01:58 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3] xfs: remove double-underscore integer types
-Message-ID: <20170518060158.GP17542@dastard>
-References: <20170518012618.GT4519@birch.djwong.org>
- <20170518013043.GU4519@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170518013043.GU4519@birch.djwong.org>
+Received: from mx2.suse.de ([195.135.220.15]:47602 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1035622AbdEXQmH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 May 2017 12:42:07 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 03/10] fs: Use RWF_* flags for AIO operations
+Date: Wed, 24 May 2017 11:41:43 -0500
+Message-Id: <20170524164150.9492-4-rgoldwyn@suse.de>
+In-Reply-To: <20170524164150.9492-1-rgoldwyn@suse.de>
+References: <20170524164150.9492-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Wed, May 17, 2017 at 06:30:43PM -0700, Darrick J. Wong wrote:
-> This is a purely mechanical patch that removes the private
-> __{u,}int{8,16,32,64}_t typedefs in favor of using the system
-> {u,}int{8,16,32,64}_t typedefs.  This is the sed script used to perform
-> the transformation and fix the resulting whitespace and indentation
-> errors:
-> 
-> s/typedef\t__uint8_t/typedef __uint8_t\t/g
-> s/typedef\t__uint/typedef __uint/g
-> s/typedef\t__int\([0-9]*\)_t/typedef int\1_t\t/g
-> s/__uint8_t\t/__uint8_t\t\t/g
-> s/__uint/uint/g
-> s/__int\([0-9]*\)_t\t/__int\1_t\t\t/g
-> s/__int/int/g
-> /^typedef.*int[0-9]*_t;$/d
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-I'm not sure that this is entirely correct when it comes to sparse
-endian notations or the way the __ types were intended to be used.
-ISTR we used the __ types were originally for the in-memory endian
-converted variable definitions that shadowed the on-disk structures.
-The cleanup plan I was planning to do was to convert these all to
-the linux kernel definitions of __[s,u][8,16,32,64] so it was clear
-they shadow on disk structures of specific sizes.
+aio_rw_flags is introduced in struct iocb (using aio_reserved1) which will
+carry the RWF_* flags. We cannot use aio_flags because they are not
+checked for validity which may break existing applications.
 
-Once that was done, everything else could be converted to c99 types
-(like you've done above) and then we'd be free of all the old
-__[u]int*_t types....
+Note, the only place RWF_HIPRI comes in effect is dio_await_one().
+All the rest of the locations, aio code return -EIOCBQUEUED before the
+checks for RWF_HIPRI.
 
-Cheers,
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/aio.c                     | 8 +++++++-
+ include/uapi/linux/aio_abi.h | 2 +-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-Dave.
+diff --git a/fs/aio.c b/fs/aio.c
+index f52d925ee259..020fa0045e3c 100644
+--- a/fs/aio.c
++++ b/fs/aio.c
+@@ -1541,7 +1541,7 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
+ 	ssize_t ret;
+ 
+ 	/* enforce forwards compatibility on users */
+-	if (unlikely(iocb->aio_reserved1 || iocb->aio_reserved2)) {
++	if (unlikely(iocb->aio_reserved2)) {
+ 		pr_debug("EINVAL: reserve field set\n");
+ 		return -EINVAL;
+ 	}
+@@ -1586,6 +1586,12 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
+ 		req->common.ki_flags |= IOCB_EVENTFD;
+ 	}
+ 
++	ret = kiocb_set_rw_flags(&req->common, iocb->aio_rw_flags);
++	if (unlikely(ret)) {
++		pr_debug("EINVAL: aio_rw_flags\n");
++		goto out_put_req;
++	}
++
+ 	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
+ 	if (unlikely(ret)) {
+ 		pr_debug("EFAULT: aio_key\n");
+diff --git a/include/uapi/linux/aio_abi.h b/include/uapi/linux/aio_abi.h
+index bb2554f7fbd1..a2d4a8ac94ca 100644
+--- a/include/uapi/linux/aio_abi.h
++++ b/include/uapi/linux/aio_abi.h
+@@ -79,7 +79,7 @@ struct io_event {
+ struct iocb {
+ 	/* these are internal to the kernel/libc. */
+ 	__u64	aio_data;	/* data to be returned in event's data */
+-	__u32	PADDED(aio_key, aio_reserved1);
++	__u32	PADDED(aio_key, aio_rw_flags);
+ 				/* the kernel sets aio_key to the req # */
+ 
+ 	/* common fields */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.12.0
+
