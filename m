@@ -1,99 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47514 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S934945AbdEXQlz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 May 2017 12:41:55 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 0/10 v9] No wait AIO
-Date: Wed, 24 May 2017 11:41:40 -0500
-Message-Id: <20170524164150.9492-1-rgoldwyn@suse.de>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:39486 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1031593AbdEXXPN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 May 2017 19:15:13 -0400
+Date: Thu, 25 May 2017 09:13:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfs: freeze rw filesystems just prior to reboot
+Message-ID: <20170524231355.GC17542@dastard>
+References: <20170518012618.GT4519@birch.djwong.org>
+ <20170518013242.GW4519@birch.djwong.org>
+ <20170518083405.GQ17542@dastard>
+ <20170518223053.GD4519@birch.djwong.org>
+ <CAJCQCtTj-7BovZbXyZu9=Dhh4ROR-AJ6Dpsw1GKbM-a2fr+uVw@mail.gmail.com>
+ <20170519210040.GL4519@birch.djwong.org>
+ <20170522020112.GV17542@dastard>
+ <CAJCQCtTj4it6o-Fop6vm3s_HFbRemF5o_H9w-tvS6wmFfVwKBA@mail.gmail.com>
+ <CAJCQCtTgtMPCdZA3SOV7UFmQ3Y83op2JHPh-0iSkm7-2SvMCXg@mail.gmail.com>
+ <CAJCQCtQGygHty6zmfKUqJq+R3CRFy-3CtoQOe8okSzYykOLxTA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJCQCtQGygHty6zmfKUqJq+R3CRFy-3CtoQOe8okSzYykOLxTA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk
+To: Chris Murphy <lists@colorremedies.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-Formerly known as non-blocking AIO.
+On Wed, May 24, 2017 at 12:25:10AM -0600, Chris Murphy wrote:
+> On Wed, May 24, 2017 at 12:22 AM, Chris Murphy <lists@colorremedies.com> wrote:
+> > Here's an example from an updated system that
+> > fails to boot due to zero length grub.cfg;
+> >
+> > -rw-------. 1 root root 59650987 May 23 18:16
+> > initramfs-0-rescue-a0269ef67a5f4c1ca97e0817ac1c4a6d.img
+> > -rw-------. 1 root root 19764807 May 23 18:16 initramfs-4.11.0-2.fc26.x86_64.img
+> > -rw-r--r--. 1 root root   182704 Feb 10 22:58 memtest86+-5.01
+> > -rw-------. 1 root root  3548950 May  9 09:42 System.map-4.11.0-2.fc26.x86_64
+> > -rw-------. 1 root root        0 May 15 13:46 System.map-4.11.1-300.fc26.x86_64
+> > -rwxr-xr-x. 1 root root  7282776 May 23 18:16
+> > vmlinuz-0-rescue-a0269ef67a5f4c1ca97e0817ac1c4a6d
+> > -rwxr-xr-x. 1 root root  7282776 May  9 09:43 vmlinuz-4.11.0-2.fc26.x86_64
+> > -rwxr-xr-x. 1 root root        0 May 15 13:46 vmlinuz-4.11.1-300.fc26.x86_64
+> >
+> > -rw-rw-r--. 1 root root    0 May 23 18:44 grub.cfg
+> 
+> FWIW this was mounted with -o ro,norecovery following an update that
+> resulted in the problem of hitting the grub prompt instead of a boot
+> menu.
 
-This series adds nonblocking feature to asynchronous I/O writes.
-io_submit() can be delayed because of a number of reason:
- - Block allocation for files
- - Data writebacks for direct I/O
- - Sleeping because of waiting to acquire i_rwsem
- - Congested block device
+Yup, if the files were sync()d then the file size updates are still
+in the journal which has not been replayed. This is what we've been
+saying is the problem all along and that a post-update freeze will
+work around. If won't fix the fact that the updates are not
+fail-safe (crash before freeze will still leave the config file
+update in this state), but it will avoid the failure in the "update
+successful, reboot without unmounting" scenario being used here.
 
-The goal of the patch series is to return -EAGAIN/-EWOULDBLOCK if
-any of these conditions are met. This way userspace can push most
-of the write()s to the kernel to the best of its ability to complete
-and if it returns -EAGAIN, can defer it to another thread.
+Cheers,
 
-In order to enable this, IOCB_RW_FLAG_NOWAIT is introduced in
-uapi/linux/aio_abi.h. If set for aio_rw_flags, it translates to
-IOCB_NOWAIT for struct iocb, REQ_NOWAIT for bio.bi_opf and IOMAP_NOWAIT for
-iomap. aio_rw_flags is a new flag replacing aio_reserved1. We could
-not use aio_flags because it is not currently checked for invalidity
-in the kernel.
-
-This feature is provided for direct I/O of asynchronous I/O only. I have
-tested it against xfs, ext4, and btrfs while I intend to add more filesystems.
-The nowait feature is for request based devices. In the future, I intend to
-add support to stacked devices such as md.
-
-Applications will have to check supportability
-by sending a async direct write and any other error besides -EAGAIN
-would mean it is not supported.
-
-First two patches are prep patches into nowait I/O.
-
-Changes since v1:
- + changed name from _NONBLOCKING to *_NOWAIT
- + filemap_range_has_page call moved to closer to (just before) calling filemap_write_and_wait_range().
- + BIO_NOWAIT limited to get_request()
- + XFS fixes 
-	- included reflink 
-	- use of xfs_ilock_nowait() instead of a XFS_IOLOCK_NONBLOCKING flag
-	- Translate the flag through IOMAP_NOWAIT (iomap) to check for
-	  block allocation for the file.
- + ext4 coding style
-
-Changes since v2:
- + Using aio_reserved1 as aio_rw_flags instead of aio_flags
- + blk-mq support
- + xfs uptodate with kernel and reflink changes
-
- Changes since v3:
-  + Added FS_NOWAIT, which is set if the filesystem supports NOWAIT feature.
-  + Checks in generic_make_request() to make sure BIO_NOWAIT comes in
-    for async direct writes only.
-  + Added QUEUE_FLAG_NOWAIT, which is set if the device supports BIO_NOWAIT.
-    This is added (rather not set) to block devices such as dm/md currently.
-
- Changes since v4:
-  + Ported AIO code to use RWF_* flags. Check for RWF_* flags in
-    generic_file_write_iter().
-  + Changed IOCB_RW_FLAGS_NOWAIT to RWF_NOWAIT.
-
- Changes since v5:
-  + BIO_NOWAIT to REQ_NOWAIT
-  + Common helper for RWF flags.
-
- Changes since v6:
-  + REQ_NOWAIT will be ignored for request based devices since they
-    cannot block. So, removed QUEUE_FLAG_NOWAIT since it is not
-    required in the current implementation. It will be resurrected
-    when we program for stacked devices.
-  + changed kiocb_rw_flags() to kiocb_set_rw_flags() in order to accomodate
-    for errors. Moved checks in the function.
-
- Changes since v7:
-  + split patches into prep so the main patches are smaller and easier
-    to understand
-  + All patches are reviewed or acked!
- 
- Changes since v8:
- + Err out AIO reads with -EINVAL flagged as RWF_NOWAIT
-
+Dave.
 -- 
-Goldwyn
-
-
+Dave Chinner
+david@fromorbit.com
