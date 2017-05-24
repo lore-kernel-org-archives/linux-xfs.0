@@ -1,154 +1,287 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-db5eur01on0130.outbound.protection.outlook.com ([104.47.2.130]:40256
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933027AbdEXLSw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 May 2017 07:18:52 -0400
-From: =?iso-8859-2?Q?Libor_Klep=E1=E8?= <libor.klepac@bcom.cz>
-Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
-Date: Wed, 24 May 2017 11:18:47 +0000
-Message-ID: <4648960.1DrcVCcZxK@libor-nb>
-References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com>
- <2727630.ZS8FFPfE3C@libor-nb>
- <b6492357-4bf3-c570-be33-90010e3b1967@sandeen.net>
-In-Reply-To: <b6492357-4bf3-c570-be33-90010e3b1967@sandeen.net>
-Content-Language: en-US
-Content-Type: text/plain; charset="iso-8859-2"
-Content-ID: <D177E154DF79CC4DAE338672B3AE6368@eurprd03.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+Received: from mx1.redhat.com ([209.132.183.28]:49506 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751891AbdEXMmt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 May 2017 08:42:49 -0400
+Date: Wed, 24 May 2017 08:42:47 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
+ error during buffer writeback
+Message-ID: <20170524124244.GA11089@bfoster.bfoster>
+References: <20170517104111.aziwbvqpfcbgxnxa@eorzea.usersys.redhat.com>
+ <20170519002227.GS17542@dastard>
+ <20170519112659.GB64091@bfoster.bfoster>
+ <20170519233900.GT17542@dastard>
+ <20170520114654.GA3888@bfoster.bfoster>
+ <20170521231906.GU17542@dastard>
+ <20170522125110.GA11578@bfoster.bfoster>
+ <20170523112318.GX17542@dastard>
+ <20170523162202.GB7632@bfoster.bfoster>
+ <20170524010601.GX12369@dastard>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170524010601.GX12369@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi,=0A=
-after quiet two months , another crash, trace is same as before.=0A=
-There are no XFS lines before this, kern.log goes back to 23. april.=0A=
-=0A=
-May 24 12:05:12 vps2 kernel: [3729926.243353] XFS (dm-2): Metadata corrupti=
-on detected at xfs_attr3_leaf_write_verify+0xe8/0x100 [xfs], xfs_attr3_leaf=
- block 0x171c60c0=0A=
-May 24 12:05:12 vps2 kernel: [3729926.247586] XFS (dm-2): Unmount and run x=
-fs_repair=0A=
-May 24 12:05:12 vps2 kernel: [3729926.249022] XFS (dm-2): First 64 bytes of=
- corrupted metadata buffer:=0A=
-May 24 12:05:12 vps2 kernel: [3729926.250424] ffff9fbb1d73a000: 00 00 00 00=
- 00 00 00 00 fb ee 00 00 00 00 00 00  ................=0A=
-May 24 12:05:12 vps2 kernel: [3729926.251870] ffff9fbb1d73a010: 10 00 00 00=
- 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........=0A=
-May 24 12:05:12 vps2 kernel: [3729926.253412] ffff9fbb1d73a020: 00 00 00 00=
- 00 00 00 00 00 00 00 00 00 00 00 00  ................=0A=
-May 24 12:05:12 vps2 kernel: [3729926.254941] ffff9fbb1d73a030: 00 00 00 00=
- 00 00 00 00 00 00 00 00 00 00 00 00  ................=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256478] CPU: 1 PID: 454 Comm: xfsaild=
-/dm-2 Tainted: G            E   4.9.0-0.bpo.2-amd64 #1 Debian 4.9.13-1~bpo8=
-+1=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256480] Hardware name: VMware, Inc. V=
-Mware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 04/14/20=
-14=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256483]  0000000000000000 ffffffffb13=
-29cd5 ffff9fba7f543ac0 ffff9fb9cb6ca5a0=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256488]  ffffffffc06b4a58 00000000000=
-00000 0000000004772296 0000000000000000=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256492]  ffffab7701f7bd40 ffffffffc06=
-ff997 ffff9fbb830dbac0 ffffffffc06fdcc4=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256495] Call Trace:=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256505]  [<ffffffffb1329cd5>] ? dump_=
-stack+0x5c/0x77=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256585]  [<ffffffffc06b4a58>] ? xfs_a=
-ttr3_leaf_write_verify+0xe8/0x100 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256645]  [<ffffffffc06ff997>] ? xfs_b=
-uf_delwri_submit_buffers+0x137/0x260 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256712]  [<ffffffffc06fdcc4>] ? _xfs_=
-buf_ioapply+0x84/0x450 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256719]  [<ffffffffb10a2b30>] ? wake_=
-up_q+0x60/0x60=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256781]  [<ffffffffc06ff997>] ? xfs_b=
-uf_delwri_submit_buffers+0x137/0x260 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256845]  [<ffffffffc06ff6d7>] ? xfs_b=
-uf_submit+0x67/0x1f0 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256911]  [<ffffffffc06ff997>] ? xfs_b=
-uf_delwri_submit_buffers+0x137/0x260 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.256975]  [<ffffffffc073177b>] ? xfsai=
-ld+0x2cb/0x7b0 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.257038]  [<ffffffffc06ff365>] ? xfs_b=
-uf_unlock+0x15/0x70 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.257105]  [<ffffffffc073177b>] ? xfsai=
-ld+0x2cb/0x7b0 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.257174]  [<ffffffffc07314b0>] ? xfs_t=
-rans_ail_cursor_first+0x80/0x80 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.257182]  [<ffffffffb10974c0>] ? kthre=
-ad+0xe0/0x100=0A=
-May 24 12:05:12 vps2 kernel: [3729926.257186]  [<ffffffffb102476b>] ? __swi=
-tch_to+0x2bb/0x700=0A=
-May 24 12:05:12 vps2 kernel: [3729926.257189]  [<ffffffffb10973e0>] ? kthre=
-ad_park+0x60/0x60=0A=
-May 24 12:05:12 vps2 kernel: [3729926.257194]  [<ffffffffb15fb675>] ? ret_f=
-rom_fork+0x25/0x30=0A=
-May 24 12:05:12 vps2 kernel: [3729926.257201] XFS (dm-2): xfs_do_force_shut=
-down(0x8) called from line 1323 of file /home/zumbi/linux-4.9.13/fs/xfs/xfs=
-_buf.c.  Return address =3D 0xffffffffc06fe084=0A=
-May 24 12:05:12 vps2 kernel: [3729926.260093] XFS (dm-2): Corruption of in-=
-memory data detected.  Shutting down filesystem=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262115] CPU: 1 PID: 454 Comm: xfsaild=
-/dm-2 Tainted: G            E   4.9.0-0.bpo.2-amd64 #1 Debian 4.9.13-1~bpo8=
-+1=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262117] Hardware name: VMware, Inc. V=
-Mware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 04/14/20=
-14=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262120]  0000000000000000 ffffffffb13=
-29cd5 0000000000000008 ffff9fbc275f3000=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262125]  ffffffffc07061fa ffffffffc06=
-fe084 0000000000000000 ffffab7701f7bd40=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262129]  ffffffffc06ff997 ffff9fbb830=
-dbac0 ffffffffc06fe084 ffff9fb934f86080=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262133] Call Trace:=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262141]  [<ffffffffb1329cd5>] ? dump_=
-stack+0x5c/0x77=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262228]  [<ffffffffc07061fa>] ? xfs_d=
-o_force_shutdown+0x13a/0x140 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262294]  [<ffffffffc06fe084>] ? _xfs_=
-buf_ioapply+0x444/0x450 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262361]  [<ffffffffc06ff997>] ? xfs_b=
-uf_delwri_submit_buffers+0x137/0x260 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262427]  [<ffffffffc06fe084>] ? _xfs_=
-buf_ioapply+0x444/0x450 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262433]  [<ffffffffb10a2b30>] ? wake_=
-up_q+0x60/0x60=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262503]  [<ffffffffc06ff997>] ? xfs_b=
-uf_delwri_submit_buffers+0x137/0x260 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262573]  [<ffffffffc06ff6d7>] ? xfs_b=
-uf_submit+0x67/0x1f0 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262643]  [<ffffffffc06ff997>] ? xfs_b=
-uf_delwri_submit_buffers+0x137/0x260 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262717]  [<ffffffffc073177b>] ? xfsai=
-ld+0x2cb/0x7b0 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262789]  [<ffffffffc06ff365>] ? xfs_b=
-uf_unlock+0x15/0x70 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262864]  [<ffffffffc073177b>] ? xfsai=
-ld+0x2cb/0x7b0 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262939]  [<ffffffffc07314b0>] ? xfs_t=
-rans_ail_cursor_first+0x80/0x80 [xfs]=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262944]  [<ffffffffb10974c0>] ? kthre=
-ad+0xe0/0x100=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262948]  [<ffffffffb102476b>] ? __swi=
-tch_to+0x2bb/0x700=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262950]  [<ffffffffb10973e0>] ? kthre=
-ad_park+0x60/0x60=0A=
-May 24 12:05:12 vps2 kernel: [3729926.262955]  [<ffffffffb15fb675>] ? ret_f=
-rom_fork+0x25/0x30=0A=
-May 24 12:05:12 vps2 kernel: [3729926.263078] XFS (dm-2): Please umount the=
- filesystem and rectify the problem(s)=0A=
-=0A=
-=0A=
-After filesystem shutdown, before reboot i have upgraded kernel to 4.9.25-1=
-~bpo8+1=0A=
-=0A=
-Customer was calling us, just when nagios alerted us on host problem, that =
-he was copying some files between accounts (which means changing acls), i h=
-ave asked him for more information.=0A=
-=0A=
-Libor=0A=
-=0A=
+On Wed, May 24, 2017 at 11:06:01AM +1000, Dave Chinner wrote:
+> On Tue, May 23, 2017 at 12:22:04PM -0400, Brian Foster wrote:
+> > On Tue, May 23, 2017 at 09:23:18PM +1000, Dave Chinner wrote:
+> > > On Mon, May 22, 2017 at 08:51:13AM -0400, Brian Foster wrote:
+> > > > On Mon, May 22, 2017 at 09:19:06AM +1000, Dave Chinner wrote:
+> > > > > On Sat, May 20, 2017 at 07:46:56AM -0400, Brian Foster wrote:
+> > > > > > On Sat, May 20, 2017 at 09:39:00AM +1000, Dave Chinner wrote:
+> > > > > > > Adding new flags to the same field that can be asynchronously
+> > > > > > > updated by RMW operations outside the ailp->xa_lock will cause
+> > > > > > > problems in future. There *may not* be a problem right now, but it
+> > > > > > > is poor programming practice to have different coherency processes
+> > > > > > > for the same variable that is updated via RMW operations. In these
+> > > > > > > situations, the only safe way to update the variable is to use an
+> > > > > > > atomic operation.
+> > > > > > > 
+> > > > > > 
+> > > > > > So is there a reason why we couldn't acquire ->xa_lock to fail the log
+> > > > > > items as we would have done anyways if the metadata writeback had
+> > > > > > succeeded and we were removing the log items from the AIL..
+> > > > > 
+> > > > > Yes. the alip->xa_lock protects AIL state is a highly contended
+> > > > > lock. It should not be used for things that aren't AIL related
+> > > > > because that will have performance and scalability implications.
+> > > > > 
+> > > > 
+> > > > The purpose of this flag is to control AIL retry processing, how is this
+> > > > not AIL related?
+> > > 
+> > > It's IO state, not AIL state. IO submission occurs from more places
+> > > than and AIL push (e.g. inode reclaim, inode clustering, etc) and
+> > > there's no way we should be exposing the internal AIL state lock in
+> > > places like that.
+> > > 
+> > 
+> > That's reasonable, though it suggests different code from what this
+> > patchset currently does. This would be far more useful if we could focus
+> > on correctness of the code first and foremost. If the code we commit
+> > actually warrants this kind of change, then this becomes a much easier
+> > (i.e., pointless :P) discussion from my end.
+> 
+> Hmmm - this is not the first time recently you've said something
+> similar in a review discussion where you didn't like this issues
+> have been pointed out. Last time is was "handwavey", now it's
+> "pointless". We haven't worked out a solution that solves all the
+> known problems, so these sorts of comments really don't help close
+> on one....
+> 
+
+You misinterpret what I wrote. What I am saying is that _my_ argument
+would become pointless if you could provide context around what locking
+specifically leads to your performance/scalability concern.
+
+I.e., just above you refer to taking the AIL lock in various places that
+are not modified by this patch. Since this patch does not touch those
+areas, I can only assume you see something wrong with the patch that
+would actually require locking or some additional changes in those
+areas. If that is the case, and you could explicitly point out where/why
+that extra locking is necessary, then that would clearly undermine my
+argument that there is no risk of performance degradation here. Instead,
+you are just asserting that there is additional lock contention and I'm
+kind of left guessing where these mysterious ->xa_lock acquisitions are,
+because I haven't suggested using it anywhere outside of I/O completion.
+
+Indeed, from this most recent mail, ISTM that your concern comes from
+the implication that AIL locking would be required in various other I/O
+submission contexts to clear the failed flags. More on that below...
+
+(And I don't see what any of this has to do with the quotacheck deadlock
+thing.)
+
+> > As it is, this patch only ever clears the flag on AIL resubmission. ISTM
+> > you are indirectly suggesting that should occur in other contexts as
+> > well (e.g., consider a reclaim and flush of another inode backed by a
+> > buffer that is already failed, and has other inodes sitting in the AIL
+> > flush locked). If that is the case, please elaborate, because otherwise
+> > it is kind of impossible to evaluate and discuss without specifics.
+> 
+> All I've done is take the deadlock scenario you pointed
+> out and applied to it other places we block on the flush lock.
+> 
+
+Ok...
+
+> Go look at inode reclaim - it can do blocking reclaim and so will
+> block on the flush lock. How is this code supposed to handle hitting
+> a failed, flush locked inode?  If it just blocks, then it's a likely
+> deadlock vector as you've already pointed out. Hence we'll need the
+> same failed write checks to trigger buffer resubmission before we
+> retry the inode reclaim process.
+> 
+
+I'm aware we take the flush lock there, but I'm not convinced that is a
+deadlock vector. AFAICT, nothing in that callpath blocks the subsequent
+AIL retries from occurring. If that AIL retry eventually succeeds, this
+all unwinds and we carry on as normal.
+
+If _blocking_ as such is a problem for the codepath in question, then
+that seems like more of a question of whether a trylock is more
+appropriate.
+
+> [....]
+> 
+> > As it is, this patch would only add an acquisition of ->xa_lock in
+> > completion context on I/O failure. Exactly what workload would you
+> > expect to be affected by changes to I/O error handling? How would it be
+> > any different than what we already do on normal I/O completion?
+> 
+> If you want to check and clear the failed flag in the log item in a
+> non-racy way  in IO submission (because we have to do this outside
+> the flush lock) then we'd have to hold the AIL lock. And that means
+> the AIL lock is then in the hot path of inode flushing in all
+> situations, not just in IO completion.
+> 
+
+Personally, I have no specific desire to clear the failed flags in I/O
+submission context as a general solution. The AIL retry originally did
+that as a sort of an optimization to avoid looking up the buffer for
+every flush locked inode (rightly and based on your suggestion).
+
+This appears to have clouded the fact that we still need to clear the
+failed flag on successful I/O completion (I thought I called that out on
+a previous iteration, but I've lost track so maybe not. I also haven't
+got to Carlos' latest version.).
+
+Conditionally relying on clearing the failed flag from submission
+context (as this patch does) is not sufficient because it is still
+possible to modify and flush an inode to an already failed buffer (and
+thus the buffer has pre-existing failed inodes). If an AIL push ended up
+resubmitting the buffer due to the newly flushed/notfailed inode, it
+never clears the failed flags on the other inodes attached to the
+buffer. I haven't combed through all of the codepaths there, but I
+wouldn't be surprised to see a data loss bug lurking in there. (Note
+again that this is based on the code in this patch.)
+
+This _could_ imply that all submission contexts need to unconditionally
+check for and clear failed items on the buffer or that the buffer needs
+a flag too, but it would be much more simple and straightforward to
+clear the flag after successful I/O completion (when ->xa_lock is
+already held). This avoids the need for extra flags or serialization
+requirements. To be fair, this _may_ require an additional ->xa_lock
+cycle on I/O completion to clear the flag from relogged items so they
+are flushed correctly again on a subsequent push (without having left
+the AIL), but again, that should only occur after an I/O error has
+occurred.
+
+[NOTE: After reading the rest of the email and coming back here, I see
+you suggested the same notion of clearing the flag after I/O success in
+your flush lock rework idea, so I suspect I'm not totally off the rails
+here. ;)]
+
+If that all works, there is no need to acquire the AIL lock in any
+context we don't already have it in general. Again, if I'm missing
+something there, please point it out.
+
+> We've known for a long time that the AIL lock is the second most
+> contended lock in the filesystem (behind the CIL context lock), and
+> that it is most heavily contended on inode IO completion because
+> completion runs on the CPU that the interrupt is delivered to and
+> so the AIL lock gets contended from multiple CPUs at once on
+> multi-disk filesystems (see xfs_iflush_done() for more info).
+> As such, we do not want to increase it's use anywhere in the inode
+> IO submission/completion path at all if we can possibly avoid it.
+> 
+
+Understood and agreed. But as mentioned previously, I've not suggested
+taking ->xa_lock anywhere else outside of when I/O errors occur and so
+performance in general is not affected.
+
+> So with all the problems that leaving failed inodes flush locked
+> presents, I'm starting to think that the inode failed callback
+> should remove the inode from the buffer and drop the flush lock
+> rather than leave it held and attached to the buffer. We can check
+> the LI_FAILED flag in xfs_iflush_int() and simply skip the inode
+> flush to the buffer to effectively "resubmit" the inode unchanged.
+> If we then clear the LI_FAILED flag in xfs_iflush_done() (i.e. only
+> when a successful write occurs), we don't need to jump through hoops
+> to clear the flag at IO submission time. We'd probably also need a
+> failed flag on the buffer (maybe with a hold ref, too) so that it
+> isn't reclaimed by memory pressure while we have inodes in the
+> failed state pending writeback.
+> 
+
+A couple thoughts... first on the idea itself and second on the
+trajectory of this particular patch series.
+
+1.) Interesting idea. Some of my initial questions/thoughts on the idea
+itself...
+
+It's not clear to me how we'd manage whether a failed (and
+flush-unlocked) inode has been subsequently modified and actually needs
+to be flushed again. I'm also not following how we'd propagate
+successful completion state back to the parent inodes if they had been
+previously removed from the buffer due to an I/O failure.
+
+It sounds like this _may_ conflict with providing a generic solution to
+this problem (i.e., we have to fix this problem for dquots as well, and
+hence this patch is focused on providing a generic solution). Is that
+not the case, or would we have to repeat this pattern for every flush
+locked item?
+
+Finally, I'm a bit skeptical that it's wise to provide such a
+fundamental shift in flush locking behavior based on the rare case of an
+I/O error. That means every case that currently acquires a flush lock
+has a new state to consider (IOW, we've effectively changed the meaning
+of the lock). My experience is that our error handling
+testing/regression capabilities are fairly poor as it is (which I don't
+think is something unique to us), and thus error path regressions are
+generally easier to introduce and tend to go undetected for quite some
+time (how long has AIL retry been broken? ;).
+
+Of course, this is just a first impression and could all be alleviated
+with further discussion and/or code.
+
+2.) Independent of whether we want to do something like the above, I
+disagree with the premise that this series causes any new problems with
+regard to flush locked metadata items (as explained above). It is
+focused on fixing a particular AIL retry bug in the uncommon I/O error
+case within the AIL retry framework that has been in place for quite
+some time. Once the kinks are worked out, I think this is now very close
+to fixing that bug succinctly, correctly and without any performance
+side effects.
+
+As such, I would very much prefer that we actually make progress on
+fixing this specific bug before moving on to the new shiny design that
+redefines flush locking. If there are still fundamental flush lock
+issues beyond what this patch is intended to fix, we can address those
+incrementally and rework flush locking along with LI_FAILED handling on
+top of a known working base provided by this patch. At the absolute very
+least, I'd prefer that we work out the remaining kinks in this patchset
+(even if it is not ultimately merged) to provide a common reference for
+a correct solution. If there is a hard technical impasse with this fix,
+then that would at least help Carlos and I understand where the actual
+problems lie.
+
+That's just my .02 and is ultimately contingent on Carlos' preferred
+approach, since he's the one doing the heavy lifting here (though I
+suspect he would also prefer the incremental approach).
+
+Brian
+
+> This leaves the rest of the submission code completely unchanged -
+> including the write clustering.  It also gets rid of all the flush
+> lock deadlock scenarios because we always unlock the flush lock on
+> IO completion, regardless of whether the buffer IO succeeded or not.
+> ANd we don't have to change any infrastructure, either - it all just
+> works as it is because the LI_FAILED flag is handled at the lowest
+> levels possible.
+> 
+> This, to me, seems like a far cleaner solution than anything we've
+> discussed so far....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
