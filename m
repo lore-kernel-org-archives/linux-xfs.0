@@ -1,111 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53528 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45506 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933820AbdEWMRW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 May 2017 08:17:22 -0400
-Date: Tue, 23 May 2017 08:17:20 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/3] xfs: Fix off-by-in in loop termination in
- xfs_find_get_desired_pgoff()
-Message-ID: <20170523121718.GB6543@bfoster.bfoster>
-References: <20170518104850.14508-1-jack@suse.cz>
- <20170518104850.14508-3-jack@suse.cz>
- <20170522175045.GB1473@bfoster.bfoster>
- <20170523032123.GW7250@eguan.usersys.redhat.com>
- <20170523085044.GA1119@quack2.suse.cz>
- <20170523110832.GY7250@eguan.usersys.redhat.com>
+        id S966711AbdEXHiR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 May 2017 03:38:17 -0400
+Date: Wed, 24 May 2017 09:38:12 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: Shutdown filesystem when a thin pool become full
+Message-ID: <20170524073812.h7fzmdyhdtzf7sew@eorzea.usersys.redhat.com>
+References: <c25a8ccc-f143-989d-3d49-3fe8753aa6f7@assyoma.it>
+ <8eb6b192-50fa-d283-3aa6-59bf75dde8b8@sandeen.net>
+ <d8ac124743a86de83e57a89f3f95b400@assyoma.it>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170523110832.GY7250@eguan.usersys.redhat.com>
+In-Reply-To: <d8ac124743a86de83e57a89f3f95b400@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
 
-On Tue, May 23, 2017 at 07:08:32PM +0800, Eryu Guan wrote:
-> On Tue, May 23, 2017 at 10:50:44AM +0200, Jan Kara wrote:
-> > On Tue 23-05-17 11:21:23, Eryu Guan wrote:
-> > > On Mon, May 22, 2017 at 01:50:47PM -0400, Brian Foster wrote:
-> > > > On Thu, May 18, 2017 at 12:48:49PM +0200, Jan Kara wrote:
-> > > > > There is an off-by-one error in loop termination conditions in
-> > > > > xfs_find_get_desired_pgoff() since 'end' may index a page beyond end of
-> > > > > desired range if 'endoff' is page aligned. It doesn't have any visible
-> > > > > effects but still it is good to fix it.
-> > > > > 
-> > > > > Signed-off-by: Jan Kara <jack@suse.cz>
-> > > > > ---
-> > > > >  fs/xfs/xfs_file.c | 2 +-
-> > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > > 
-> > > > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > > > > index f371812e20c6..3714b5736fd3 100644
-> > > > > --- a/fs/xfs/xfs_file.c
-> > > > > +++ b/fs/xfs/xfs_file.c
-> > > > > @@ -1043,7 +1043,7 @@ xfs_find_get_desired_pgoff(
-> > > > >  
-> > > > >  	index = startoff >> PAGE_SHIFT;
-> > > > >  	endoff = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount);
-> > > > > -	end = endoff >> PAGE_SHIFT;
-> > > > > +	end = (endoff - 1) >> PAGE_SHIFT;
-> > > > 
-> > > > Hmm.. I think this messes with the want count for the pagevec_lookup().
-> > > > E.g.:
-> > > > 
-> > > > # xfs_io -fc "truncate 0" -c "falloc 0 16k" -c "pwrite 0 16k" -c "seek -h 0" /mnt/file 
-> > > > wrote 16384/16384 bytes at offset 0
-> > > > 16 KiB, 4 ops; 0.0000 sec (200.321 MiB/sec and 51282.0513 ops/sec)
-> > > > Whence  Result
-> > > > HOLE    12288
-> > > 
-> > > I think the root cause is that the calculation for 'want' is wrong, it
-> > > has an off-by-one bug too. I sent a patch[1] to fix it, with my patch
-> > > applied on top of Jan's patchset, your test case passed (report HOLE at
-> > > 16k). Can you please take a look if it's a correct fix? Thanks!
+On Tue, May 23, 2017 at 10:23:55PM +0200, Gionatan Danti wrote:
+> Il 23-05-2017 15:24 Eric Sandeen ha scritto:
+> > It is pretty much by design - keeping in mind that XFS predates the
+> > general notion of thin storage by a decade or two.  ;)
 > > 
-> > Yes, I've messed that up. It is a bug introduced by my series as Brian
-> > properly noticed. Thanks guys for noticing and fixing it! Darrick, should I
-> > fold in Eryu's fix and send v4 of the series or will you just pick up
-> > Eryu's fix?
-> 
-> I think it's a separate bug, the issue described in my patch can be
-> reproduced on stock 4.12-rc1 kernel, without your patchset. The
-> situation for ext4 is similar to XFS, it seems not a bug introduced by
-> your patches.
-> 
-> Thanks for the review!
-> 
-
-I think there's the possiblity of multiple things going on here. The
-problem noted above didn't occur without this series applied. Of course,
-that doesn't mean that there isn't some other problem with the current
-code that Eryu has reproduced and fixed.
-
-In any event, I don't think we should knowingly apply patches with
-regressions, even if they are fixed up in the same patch series. Could
-we get this fixed up/combined somehow or another so we at least do not
-introduce a transient regression (it doesn't matter to me if the
-independent problem is addressed in a separate patch or at the same
-time)?
-
-Also, Eryu, could you Tested-by this series before it goes in? It seems
-you have some tests that stress it quite thoroughly. :)
-
-Brian
-
-> Eryu
-> 
+> > In the big picture, xfs's shutdown behavior is there to preserve the
+> > consistency of the filesystem - if metadata writes are failing,
+> > continuing would likely lead to corruption.
 > > 
-> > 								Honza
-> > -- 
-> > Jan Kara <jack@suse.com>
-> > SUSE Labs, CR
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > If /data/ writes are failing, that's for the application to deal with.
+> > 
+> > Shutting down the filesystem for an unwritable data block is probably
+> > not
+> > what people want to see, in general.
+> 
+> True.
+> 
+> But preparing for the worse (ie: a thin pool which inadvertently filled), I
+> think that a read-only/shutdown mode would be valuable for the (large) class
+> of application which don't really know how to deal with I/O errors.
+> Moreover, applications not issuing fsyncs will *never* know that an I/O
+> error happened on data writeout. On the other hand, sure, applications which
+> do non use fsyncs probably do not really care about their data...
+> 
+
+If the application don't deal with the I/O errors, and ensure its data is
+already written, what difference a RO fs will do? :) the application will send a
+write request, the filesystem will deny it (because it is in RO), and the
+application will not care :)
+
+> Eric: in general terms, how do you feel about XFS on thinly-provisioned
+> volumes? Is it a production-level setup or they have too many rough edges?
+> 
+
+Any application that don't ensure its data is stored, with fsync, and
+applications that don't check for IO errors, well, it's applications fault, the
+filesystem can't do much other than reporting the error to userspace.
+
+Thin provisioning is not a new thing, and XFS has been designed to work on such
+volumes from the beginning, so, yes, it is reliable to be used with thin
+provisioned volumes. But of course, it requires the thin provisioning system to
+be well administered, as any other filesystem will require.
+
+>From a historical point of view, XFS ever retried forever to submit any failed
+IO, once, most EIOs are considered temporary.
+
+Well, things change, and we implemented a way to configure for how long XFS
+should retry such IOs, and that's where the configuration system comes in.
+
+Regarding you don't seeing XFS to shutdown during your tests, XFS will shutdown
+if is there problems writing metadata to the disk, ensuring data is properly
+written is the application responsibility, the filesystem should guarantee
+consistency.
+
+
+Cheers
+
+> > As for your question about ENOSPC vs EIO, even though the storage may
+> > return ENOSPC, I believe that gets turned into an EIO when it passes
+> > through XFS to userspace.
+> > 
+> > Historically, ENOSPC meant that the filesystem itself has run out of
+> > blocks, and EIO meant that the underlying device could not complete the
+> > IO - so it's a matter of semantics, and I'm not sure anyone has
+> > really settled on a consistent story with thin devices.
+> > 
+> 
+> Yeah, I agree ;)
+> 
+> Thanks.
+> 
+> -- 
+> Danti Gionatan
+> Supporto Tecnico
+> Assyoma S.r.l. - www.assyoma.it
+> email: g.danti@assyoma.it - info@assyoma.it
+> GPG public key ID: FF5F32A8
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
