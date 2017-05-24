@@ -1,71 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47645 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1035652AbdEXQmS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 May 2017 12:42:18 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 08/10] ext4: nowait aio support
-Date: Wed, 24 May 2017 11:41:48 -0500
-Message-Id: <20170524164150.9492-9-rgoldwyn@suse.de>
-In-Reply-To: <20170524164150.9492-1-rgoldwyn@suse.de>
-References: <20170524164150.9492-1-rgoldwyn@suse.de>
+Received: from mr001msb.fastweb.it ([85.18.95.85]:49260 "EHLO
+        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932442AbdEXRut (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 May 2017 13:50:49 -0400
+Subject: Re: Shutdown filesystem when a thin pool become full
+References: <c25a8ccc-f143-989d-3d49-3fe8753aa6f7@assyoma.it>
+ <8eb6b192-50fa-d283-3aa6-59bf75dde8b8@sandeen.net>
+ <d8ac124743a86de83e57a89f3f95b400@assyoma.it>
+ <20170524073812.h7fzmdyhdtzf7sew@eorzea.usersys.redhat.com>
+From: Gionatan Danti <g.danti@assyoma.it>
+Message-ID: <572fee65-3530-e111-f991-4bdd42749da5@assyoma.it>
+Date: Wed, 24 May 2017 19:50:44 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170524073812.h7fzmdyhdtzf7sew@eorzea.usersys.redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+Cc: g.danti@assyoma.it
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Return EAGAIN if any of the following checks fail for direct I/O:
-  + i_rwsem is lockable
-  + Writing beyond end of file (will trigger allocation)
-  + Blocks are not allocated at the write location
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- fs/ext4/file.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+On 24/05/2017 09:38, Carlos Maiolino wrote:
+> 
+> If the application don't deal with the I/O errors, and ensure its data is
+> already written, what difference a RO fs will do? :) the application will send a
+> write request, the filesystem will deny it (because it is in RO), and the
+> application will not care :)
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 831fd6beebf0..07f08ff2c11b 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -216,7 +216,13 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		return ext4_dax_write_iter(iocb, from);
- #endif
- 
--	inode_lock(inode);
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		if (!inode_trylock(inode))
-+			return -EAGAIN;
-+	} else {
-+		inode_lock(inode);
-+	}
-+
- 	ret = ext4_write_checks(iocb, from);
- 	if (ret <= 0)
- 		goto out;
-@@ -235,9 +241,15 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 
- 	iocb->private = &overwrite;
- 	/* Check whether we do a DIO overwrite or not */
--	if (o_direct && ext4_should_dioread_nolock(inode) && !unaligned_aio &&
--	    ext4_overwrite_io(inode, iocb->ki_pos, iov_iter_count(from)))
--		overwrite = 1;
-+	if (o_direct && !unaligned_aio) {
-+		if (ext4_overwrite_io(inode, iocb->ki_pos, iov_iter_count(from))) {
-+			if (ext4_should_dioread_nolock(inode))
-+				overwrite = 1;
-+		} else if (iocb->ki_flags & IOCB_NOWAIT) {
-+			ret = -EAGAIN;
-+			goto out;
-+		}
-+	}
- 
- 	ret = __generic_file_write_iter(iocb, from);
- 	inode_unlock(inode);
+Maybe I am wrong, but a read only filesystem guarantee that *no other 
+data modifications* can be done, effectively freezing the volume.
+
+With a full thin pool, XFS will continue to serve writes for already 
+allocated chunks, but will reject writes for unallocated ones. I think 
+this can lead to some inconsistencies, for example:
+- this part of a file was updated, that one failed - but nobody noticed;
+- a file was copied, but its content was lost due to data writeout 
+failing and no fsyncs (and filemanagers often do *exactly* this);
+- having two files, this file was updated, that other failed;
+- writing to a file, its size is updated (not only apparent size, but 
+real/allocated one also) but data writeout fails. In this case, reading 
+the file over the unallocated space returns EIO, but you need to *read 
+all data* until EIO to realize that the file has some serious problem.
+
+In all these cases, I feel that a "shutdown the filesystem at the first 
+data writeout problem" command can save the day. Even better would be a 
+"put the filesystem in read only mode".
+
+True, a well bahaved application should issue fsync() and check the I/O 
+errors, but many applications don't do that. Hence I was asking if XFS 
+can be suspended/turned-off.
+
+Maybe I'm rising naive problems - after all, a full filesystem will 
+behave somewhat similarly in at least some cases. However, from 
+linux-lvm mailing list I understand that a full thin pool is *not* 
+comparable to a full filesystem, right?
+
+Thanks.
+
+
 -- 
-2.12.0
-
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
