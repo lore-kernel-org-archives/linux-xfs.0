@@ -1,69 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59116 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757457AbdEWKnB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 May 2017 06:43:01 -0400
-Date: Tue, 23 May 2017 12:42:57 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: use atomic operations to handle xfs_log_item
- flags
-Message-ID: <20170523104257.pj337a66fpr7hhmm@eorzea.usersys.redhat.com>
-References: <20170522153220.25072-1-cmaiolino@redhat.com>
- <20170522153220.25072-2-cmaiolino@redhat.com>
- <20170522191111.GC17100@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170522191111.GC17100@infradead.org>
+Received: from mx2.suse.de ([195.135.220.15]:47514 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S934945AbdEXQlz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 May 2017 12:41:55 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 0/10 v9] No wait AIO
+Date: Wed, 24 May 2017 11:41:40 -0500
+Message-Id: <20170524164150.9492-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk
 
-On Mon, May 22, 2017 at 12:11:11PM -0700, Christoph Hellwig wrote:
-> > --- a/fs/xfs/xfs_buf_item.c
-> > +++ b/fs/xfs/xfs_buf_item.c
-> > @@ -587,7 +587,7 @@ xfs_buf_item_unlock(
-> >  	 * (cancelled) buffers at unpin time, but we'll never go through the
-> >  	 * pin/unpin cycle if we abort inside commit.
-> >  	 */
-> > -	aborted = (lip->li_flags & XFS_LI_ABORTED) ? true : false;
-> > +	aborted = (test_bit(XFS_LI_ABORTED, &lip->li_flags)) ? true : false;
-> 
-> 	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags);
-> 
-> does the same job in a slightly simpler way.
-> 
-> > +	ASSERT(!(test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags)));
-> 
-> no need for the inner braces.
-> 
-> > +		ASSERT(!(test_bit(XFS_LI_IN_AIL, &ip->i_itemp->ili_item.li_flags)));
-> 
-> Same here.  Also please don't break lines after 80 characters.
+Formerly known as non-blocking AIO.
 
-Btw, I believe you meant I didn't break the line here? Removing the inner braces
-will leave it with 82 chars, I wonder if it's worth to break the line here in
-this case? Just looks harder to read with the line broken for just 2 chars.
+This series adds nonblocking feature to asynchronous I/O writes.
+io_submit() can be delayed because of a number of reason:
+ - Block allocation for files
+ - Data writebacks for direct I/O
+ - Sleeping because of waiting to acquire i_rwsem
+ - Congested block device
 
+The goal of the patch series is to return -EAGAIN/-EWOULDBLOCK if
+any of these conditions are met. This way userspace can push most
+of the write()s to the kernel to the best of its ability to complete
+and if it returns -EAGAIN, can defer it to another thread.
 
-> 
-> > +	       !(test_bit(XFS_LI_IN_AIL, &dqp->q_logitem.qli_item.li_flags)));
-> 
-> Also no need for the braces around test_bit here.
-> 
-> > +	if (!(test_bit(XFS_LI_IN_AIL, &lip->li_flags))) {
-> 
-> .. again
-> 
-> > +		ASSERT(!(test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags)));
-> 
-> .. again
-> 
-> Also last but not least the arguments to the *_bit functions are
-> bit indices, so they should be renumber to 0 and 1 (and the tracing
-> helpers will need some updates as well).
+In order to enable this, IOCB_RW_FLAG_NOWAIT is introduced in
+uapi/linux/aio_abi.h. If set for aio_rw_flags, it translates to
+IOCB_NOWAIT for struct iocb, REQ_NOWAIT for bio.bi_opf and IOMAP_NOWAIT for
+iomap. aio_rw_flags is a new flag replacing aio_reserved1. We could
+not use aio_flags because it is not currently checked for invalidity
+in the kernel.
+
+This feature is provided for direct I/O of asynchronous I/O only. I have
+tested it against xfs, ext4, and btrfs while I intend to add more filesystems.
+The nowait feature is for request based devices. In the future, I intend to
+add support to stacked devices such as md.
+
+Applications will have to check supportability
+by sending a async direct write and any other error besides -EAGAIN
+would mean it is not supported.
+
+First two patches are prep patches into nowait I/O.
+
+Changes since v1:
+ + changed name from _NONBLOCKING to *_NOWAIT
+ + filemap_range_has_page call moved to closer to (just before) calling filemap_write_and_wait_range().
+ + BIO_NOWAIT limited to get_request()
+ + XFS fixes 
+	- included reflink 
+	- use of xfs_ilock_nowait() instead of a XFS_IOLOCK_NONBLOCKING flag
+	- Translate the flag through IOMAP_NOWAIT (iomap) to check for
+	  block allocation for the file.
+ + ext4 coding style
+
+Changes since v2:
+ + Using aio_reserved1 as aio_rw_flags instead of aio_flags
+ + blk-mq support
+ + xfs uptodate with kernel and reflink changes
+
+ Changes since v3:
+  + Added FS_NOWAIT, which is set if the filesystem supports NOWAIT feature.
+  + Checks in generic_make_request() to make sure BIO_NOWAIT comes in
+    for async direct writes only.
+  + Added QUEUE_FLAG_NOWAIT, which is set if the device supports BIO_NOWAIT.
+    This is added (rather not set) to block devices such as dm/md currently.
+
+ Changes since v4:
+  + Ported AIO code to use RWF_* flags. Check for RWF_* flags in
+    generic_file_write_iter().
+  + Changed IOCB_RW_FLAGS_NOWAIT to RWF_NOWAIT.
+
+ Changes since v5:
+  + BIO_NOWAIT to REQ_NOWAIT
+  + Common helper for RWF flags.
+
+ Changes since v6:
+  + REQ_NOWAIT will be ignored for request based devices since they
+    cannot block. So, removed QUEUE_FLAG_NOWAIT since it is not
+    required in the current implementation. It will be resurrected
+    when we program for stacked devices.
+  + changed kiocb_rw_flags() to kiocb_set_rw_flags() in order to accomodate
+    for errors. Moved checks in the function.
+
+ Changes since v7:
+  + split patches into prep so the main patches are smaller and easier
+    to understand
+  + All patches are reviewed or acked!
+ 
+ Changes since v8:
+ + Err out AIO reads with -EINVAL flagged as RWF_NOWAIT
 
 -- 
-Carlos
+Goldwyn
+
+
