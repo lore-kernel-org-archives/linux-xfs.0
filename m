@@ -1,173 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36728 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759680AbdEXOpk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 May 2017 10:45:40 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id F389080072
-        for <linux-xfs@vger.kernel.org>; Wed, 24 May 2017 14:45:39 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F2B147D50E
-        for <linux-xfs@vger.kernel.org>; Wed, 24 May 2017 14:45:36 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2] xfs: use ->b_state to fix buffer I/O accounting release race
-Date: Wed, 24 May 2017 10:45:35 -0400
-Message-Id: <1495637135-13255-1-git-send-email-bfoster@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:47645 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1035652AbdEXQmS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 May 2017 12:42:18 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 08/10] ext4: nowait aio support
+Date: Wed, 24 May 2017 11:41:48 -0500
+Message-Id: <20170524164150.9492-9-rgoldwyn@suse.de>
+In-Reply-To: <20170524164150.9492-1-rgoldwyn@suse.de>
+References: <20170524164150.9492-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-We've had user reports of unmount hangs in xfs_wait_buftarg() that
-analysis shows is due to btp->bt_io_count == -1. bt_io_count
-represents the count of in-flight asynchronous buffers and thus
-should always be >= 0. xfs_wait_buftarg() waits for this value to
-stabilize to zero in order to ensure that all untracked (with
-respect to the lru) buffers have completed I/O processing before
-unmount proceeds to tear down in-core data structures.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-The value of -1 implies an I/O accounting decrement race. Indeed,
-the fact that xfs_buf_ioacct_dec() is called from xfs_buf_rele()
-(where the buffer lock is no longer held) means that bp->b_flags can
-be updated from an unsafe context. While a user-level reproducer is
-currently not available, some intrusive hacks to run racing buffer
-lookups/ioacct/releases from multiple threads was used to
-successfully manufacture this problem.
+Return EAGAIN if any of the following checks fail for direct I/O:
+  + i_rwsem is lockable
+  + Writing beyond end of file (will trigger allocation)
+  + Blocks are not allocated at the write location
 
-Existing callers do not expect to acquire the buffer lock from
-xfs_buf_rele(). Therefore, we can not safely update ->b_flags from
-this context. It turns out that we already have separate buffer
-state bits and associated serialization for dealing with buffer LRU
-state in the form of ->b_state and ->b_lock. Therefore, replace the
-_XBF_IN_FLIGHT flag with a ->b_state variant, update the I/O
-accounting wrappers appropriately and make sure they are used with
-the correct locking. This ensures that buffer in-flight state can be
-modified at buffer release time without racing with modifications
-from a buffer lock holder.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
 ---
+ fs/ext4/file.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-v2:
-- Use ->b_state and ->b_lock instead of custom atomic counter.
-v1: http://www.spinics.net/lists/linux-xfs/msg06995.html
-
- fs/xfs/xfs_buf.c | 38 ++++++++++++++++++++++++++------------
- fs/xfs/xfs_buf.h |  5 ++---
- 2 files changed, 28 insertions(+), 15 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index ba036c1..4e19fda 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -97,12 +97,16 @@ static inline void
- xfs_buf_ioacct_inc(
- 	struct xfs_buf	*bp)
- {
--	if (bp->b_flags & (XBF_NO_IOACCT|_XBF_IN_FLIGHT))
-+	if (bp->b_flags & XBF_NO_IOACCT)
- 		return;
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 831fd6beebf0..07f08ff2c11b 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -216,7 +216,13 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 		return ext4_dax_write_iter(iocb, from);
+ #endif
  
- 	ASSERT(bp->b_flags & XBF_ASYNC);
--	bp->b_flags |= _XBF_IN_FLIGHT;
--	percpu_counter_inc(&bp->b_target->bt_io_count);
-+	spin_lock(&bp->b_lock);
-+	if (!(bp->b_state & XFS_BSTATE_IN_FLIGHT)) {
-+		bp->b_state |= XFS_BSTATE_IN_FLIGHT;
-+		percpu_counter_inc(&bp->b_target->bt_io_count);
+-	inode_lock(inode);
++	if (iocb->ki_flags & IOCB_NOWAIT) {
++		if (!inode_trylock(inode))
++			return -EAGAIN;
++	} else {
++		inode_lock(inode);
 +	}
-+	spin_unlock(&bp->b_lock);
- }
++
+ 	ret = ext4_write_checks(iocb, from);
+ 	if (ret <= 0)
+ 		goto out;
+@@ -235,9 +241,15 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
  
- /*
-@@ -110,14 +114,24 @@ xfs_buf_ioacct_inc(
-  * freed and unaccount from the buftarg.
-  */
- static inline void
--xfs_buf_ioacct_dec(
-+__xfs_buf_ioacct_dec(
- 	struct xfs_buf	*bp)
- {
--	if (!(bp->b_flags & _XBF_IN_FLIGHT))
--		return;
-+	ASSERT(spin_is_locked(&bp->b_lock));
- 
--	bp->b_flags &= ~_XBF_IN_FLIGHT;
--	percpu_counter_dec(&bp->b_target->bt_io_count);
-+	if (bp->b_state & XFS_BSTATE_IN_FLIGHT) {
-+		bp->b_state &= ~XFS_BSTATE_IN_FLIGHT;
-+		percpu_counter_dec(&bp->b_target->bt_io_count);
+ 	iocb->private = &overwrite;
+ 	/* Check whether we do a DIO overwrite or not */
+-	if (o_direct && ext4_should_dioread_nolock(inode) && !unaligned_aio &&
+-	    ext4_overwrite_io(inode, iocb->ki_pos, iov_iter_count(from)))
+-		overwrite = 1;
++	if (o_direct && !unaligned_aio) {
++		if (ext4_overwrite_io(inode, iocb->ki_pos, iov_iter_count(from))) {
++			if (ext4_should_dioread_nolock(inode))
++				overwrite = 1;
++		} else if (iocb->ki_flags & IOCB_NOWAIT) {
++			ret = -EAGAIN;
++			goto out;
++		}
 +	}
-+}
-+
-+static inline void
-+xfs_buf_ioacct_dec(
-+	struct xfs_buf	*bp)
-+{
-+	spin_lock(&bp->b_lock);
-+	__xfs_buf_ioacct_dec(bp);
-+	spin_unlock(&bp->b_lock);
- }
  
- /*
-@@ -149,9 +163,9 @@ xfs_buf_stale(
- 	 * unaccounted (released to LRU) before that occurs. Drop in-flight
- 	 * status now to preserve accounting consistency.
- 	 */
--	xfs_buf_ioacct_dec(bp);
--
- 	spin_lock(&bp->b_lock);
-+	__xfs_buf_ioacct_dec(bp);
-+
- 	atomic_set(&bp->b_lru_ref, 0);
- 	if (!(bp->b_state & XFS_BSTATE_DISPOSE) &&
- 	    (list_lru_del(&bp->b_target->bt_lru, &bp->b_lru)))
-@@ -979,12 +993,12 @@ xfs_buf_rele(
- 		 * ensures the decrement occurs only once per-buf.
- 		 */
- 		if ((atomic_read(&bp->b_hold) == 1) && !list_empty(&bp->b_lru))
--			xfs_buf_ioacct_dec(bp);
-+			__xfs_buf_ioacct_dec(bp);
- 		goto out_unlock;
- 	}
- 
- 	/* the last reference has been dropped ... */
--	xfs_buf_ioacct_dec(bp);
-+	__xfs_buf_ioacct_dec(bp);
- 	if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
- 		/*
- 		 * If the buffer is added to the LRU take a new reference to the
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 8d1d44f..1508121 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -63,7 +63,6 @@ typedef enum {
- #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
- #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
- #define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
--#define _XBF_IN_FLIGHT	 (1 << 25) /* I/O in flight, for accounting purposes */
- 
- typedef unsigned int xfs_buf_flags_t;
- 
-@@ -84,14 +83,14 @@ typedef unsigned int xfs_buf_flags_t;
- 	{ _XBF_PAGES,		"PAGES" }, \
- 	{ _XBF_KMEM,		"KMEM" }, \
- 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
--	{ _XBF_COMPOUND,	"COMPOUND" }, \
--	{ _XBF_IN_FLIGHT,	"IN_FLIGHT" }
-+	{ _XBF_COMPOUND,	"COMPOUND" }
- 
- 
- /*
-  * Internal state flags.
-  */
- #define XFS_BSTATE_DISPOSE	 (1 << 0)	/* buffer being discarded */
-+#define XFS_BSTATE_IN_FLIGHT	 (1 << 1)	/* I/O in flight */
- 
- /*
-  * The xfs_buftarg contains 2 notions of "sector size" -
+ 	ret = __generic_file_write_iter(iocb, from);
+ 	inode_unlock(inode);
 -- 
-2.7.4
+2.12.0
 
