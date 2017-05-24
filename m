@@ -1,216 +1,214 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:35786 "EHLO
-        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966402AbdEXIGv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 May 2017 04:06:51 -0400
-Received: by mail-yw0-f196.google.com with SMTP id p144so12366101ywp.2
-        for <linux-xfs@vger.kernel.org>; Wed, 24 May 2017 01:06:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170524031935.GZ17542@dastard>
-References: <20170518012618.GT4519@birch.djwong.org> <20170518013242.GW4519@birch.djwong.org>
- <20170518083405.GQ17542@dastard> <20170518223053.GD4519@birch.djwong.org>
- <CAJCQCtTj-7BovZbXyZu9=Dhh4ROR-AJ6Dpsw1GKbM-a2fr+uVw@mail.gmail.com>
- <20170519210040.GL4519@birch.djwong.org> <20170522020112.GV17542@dastard>
- <CAJCQCtTj4it6o-Fop6vm3s_HFbRemF5o_H9w-tvS6wmFfVwKBA@mail.gmail.com> <20170524031935.GZ17542@dastard>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Wed, 24 May 2017 02:06:49 -0600
-Message-ID: <CAJCQCtQH5H15pEEdwx+pZkDHsYiU3FXqE-zWvm9eYUmDYzk=mg@mail.gmail.com>
-Subject: Re: [PATCH 3/3] xfs: freeze rw filesystems just prior to reboot
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx2.suse.de ([195.135.220.15]:47616 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1035629AbdEXQmK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 May 2017 12:42:10 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 04/10] fs: Introduce RWF_NOWAIT
+Date: Wed, 24 May 2017 11:41:44 -0500
+Message-Id: <20170524164150.9492-5-rgoldwyn@suse.de>
+In-Reply-To: <20170524164150.9492-1-rgoldwyn@suse.de>
+References: <20170524164150.9492-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Chris Murphy <lists@colorremedies.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Tue, May 23, 2017 at 9:19 PM, Dave Chinner <david@fromorbit.com> wrote:
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
+RWF_NOWAIT informs kernel to bail out if an AIO request will block
+for reasons such as file allocations, or a writeback triggered,
+or would block while allocating requests while performing
+direct I/O.
 
+RWF_NOWAIT is translated to IOCB_NOWAIT for iocb->ki_flags.
 
->
->> they don't write outside the file
->> system to the drive like lilo.
->
-> Hmmm - I demonstrated this assertion to be false in the email you
-> replied to.
+The check for -EOPNOTSUPP is placed in generic_file_write_iter(). This
+is called by most filesystems, either through fsops.write_iter() or through
+the function defined by write_iter(). If not, we perform the check defined
+by .write_iter() which is called for direct IO specifically.
 
-They = grubby, grub-mkconfig. They do not write a block list outside
-the file system like lilo does. All they do is modify the bootloader
-configuration file, via the file system, they do not write directly to
-the block device like lilo.
+Filesystems xfs, btrfs and ext4 would be supported in the following patches.
 
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/9p/vfs_file.c        |  3 +++
+ fs/aio.c                | 13 +++++++++++++
+ fs/ceph/file.c          |  3 +++
+ fs/cifs/file.c          |  3 +++
+ fs/fuse/file.c          |  3 +++
+ fs/nfs/direct.c         |  3 +++
+ fs/ocfs2/file.c         |  3 +++
+ include/linux/fs.h      |  5 ++++-
+ include/uapi/linux/fs.h |  1 +
+ mm/filemap.c            |  3 +++
+ 10 files changed, 39 insertions(+), 1 deletion(-)
 
->
-> The Lilo installer gets the physical location information from the
-> filesystem via the OS provided FIBMAP ioctl(), which it then writes
-> it into a file in the filesysetm (boot.map), which it then it maps
-> with FIBMAP and writes that map into the boot sector on the block
-> device.  At no point does it "go around the filesystem" to obtain or
-> write this information to stable storage for the bootloader
-> executable to use. The bootloader executable then just reads the
-> block map information directly from the block device to load the
-> kernel.
-
-
-Yes it's basically a block list and it has no idea what a file system
-is. i get that. When I say do an end run around the file system, I
-mean it writes that block list direct to the block device, not as a
-file in the file system. When the computer boots, it reads a sequence
-of blocks without any understanding of the file system, again it goes
-around the file system.
-
-
-> The grub installer writes a config file and that's about it.
-
- grub-install only writes out boot.img to LBA 0, and core.img to the
-MBR gap or bios-grub partition, and copies its additional support
-modules from /usr to /boot. That's it. No configuration file is
-created with grub-install.
-
-grub-mkconfig only writes a config file, it does not modify any binary data.
-
-LILO is combining these functions to make its blocklist, the whole
-thing is written out each time.
-
-
- On
-> boot, the stage 1 loader in the boot sector bootstraps
-> the larger stage 2 loader. That then loads all the modules needed to
-> probe the booting block device contents and load the modules needed
-> to traverse the metadata structure it contains to find the block
-> map/extent list of the config file.  Then it decodes the block map,
-> reads the config file direct from the block device and parses it. It
-> then repeats this metadata traversal and extent list decoding for
-> each file it needs to read to boot.
->
-> IOWs, the information they use is exactly the same, but LILO avoids
-> all the bootloader executable complexity by doing all the mapping
-> work n the installer through generic, filesystem agnostic OS
-> interfaces before reboot.
->
-> In contrast, the "parse the block device" architecture of grub and
-> similar bootloaders ensures that the bootloader executable is locked
-> into an endless game of whack-a-mole as filesystems, volume managers
-> and other storage management applications change formats and
-> behaviours.....
-
-
-Yes, I'm aware.
-
-Here is the difference. I'm accepting reality, and you keep
-complaining about reality while pining for the glory days of LILO and
-how everything else is Doing It Wrong (TM). It doesn't matter. We have
-what we have.
-
-
-
->> > However, IMO problem does indeed lie with the bootloader and not the
->> > distro packaging mechanism/scripts, and so we need to talk a bit out
->> > the architectural differences between bootloaders like lilo and
->> > grub/petitboot and why I consider update durability to be something
->> > the bootloader needs to provide, not thrid party packagers or the
->> > init system.
->>
->> Either the bootloader needs to learn how to read dirty logs,
->
-> I don't think anyone wants to expend the time and effort needed to
-> do this for each filesystem that the grub bootloader supports,
-> especially as it is not necessary.
->
->> or there
->> can be no dirty log entries related to three things: kernel,
->> initramfs, and bootloader configuration. If any of those three things
->> are not fully committed to the file system metadata,  the bootloader
->> will fail to find them.
->
-> Yup - I've been trying to tell you that these are the exact
-> guarantees that freezing the fs will provide the bootloader
-> installer....
-
-Except the bootloader can't do that. And yet you've been trying to pin
-the entire problem on grub, and even if that's a generic term, it
-isn't the bootloader generally that can do anything about this.
-
-As far as I know, only GRUB comes with a utility for updating its
-bootloader configuration file and it could be modified to do fsfreeze.
-Other bootloaders depend on the kernel package postinstall script (I
-assume) to modify the bootloader configuration. For sure extlinux
-doesn't come with such a utility.
-
-
-
-
->
->> If GRUB or grubby are not being used, then the bootloader
->> configuration file is most likely modified by a script in the kernel
->> package. How do you avoid burdening the kernel package from update
->> durability when it is responsible for writing the kernel, initramfs,
->> and the third most likely thing to modify the bootloader
->> configuration?
->
-> Solved problem via post-inst package scripts.
-
-Ergo it is not the problem of the bootloader and no solution can be
-found there like I've been saying this whole damn time.
-
-OK so you're saying that every kernel package post install script
-needs to do fsfreeze, rather than systemd doing it when remount-ro or
-umount fail? Really? You really think they're all going to do this? I
-would be shocked if it took systemd folks more than a month to
-implement this, and shocked if it took less than a year for either
-grubby or GRUB folks, let alone myriad kernel packaging teams to grok
-the reason for this. I can just hear it now: What? sync doesn't do it?
-Fuck!!! times every distro...
-
-Yeah solved problem. Hilarious.
-
-
-
-
-
-
->> Haha. Well it can't fuck it up because it's doing a total end run
->> around the file system.
->
-> FYI: the canonical example of "doing a total end run around the
-> filesystem" is to write your own filesystem parsers to directly walk
-> filesystem structures on a block device without going through the
-> supported OS filesystem channels for accessing that filesystem
-> information.
-
-Yeah well you're coming at it from a certain perspective and I'm
-coming at it from another. You see the code as the file system. When I
-say the file system, i mean the file system volume, the actual
-instance of a file system on a drive. That's what's being run around
-by writing directly to blocks, and directly reading blocks.
-
-
->
->> Actually GRUB has a functional equivalent, it's just that it's not the
->> upstream default, and no distro appears to want to use it by default:
->
-> IIRC, that's the "filesystem install" mode and there's good reason
-> it's not used: LBA 0 of the block device belongs to the filesystem
-> on that device, not the bootloader. Hence if you have a filesystem
-> that uses LBA 0 (e.g. XFS), using grub in this mode on that block
-> device will trash it and then you've got bigger problems....
-
-No, the baking in of the configuration file is available regardless of
-whether the installation happens to the whole block device or to a
-partition/volume. The file system install mode is basically block
-listing the core.img file rather than it being embedded in the MBR
-gap. I am not a fan of this complexity but it still has a bunch of
-fanboys from a bygone era...
-
-The first sector of the block device, and each partition, is really
-owned by the firmware on x86. It's the boot sector, has been since
-ancient times. It is the only sectors the firmware will blindly read
-at boot time. It's the original way multiboot worked, jump code in LBA
-0 plus an active bit on a partition told the firmware to read and
-execute the contents of the first sector at that partition's CHS
-address. To switch OS's, you only needed to change the active bit to a
-different partition.
-
-
+diff --git a/fs/9p/vfs_file.c b/fs/9p/vfs_file.c
+index 3de3b4a89d89..403681db7723 100644
+--- a/fs/9p/vfs_file.c
++++ b/fs/9p/vfs_file.c
+@@ -411,6 +411,9 @@ v9fs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 	loff_t origin;
+ 	int err = 0;
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	retval = generic_write_checks(iocb, from);
+ 	if (retval <= 0)
+ 		return retval;
+diff --git a/fs/aio.c b/fs/aio.c
+index 020fa0045e3c..9616dc733103 100644
+--- a/fs/aio.c
++++ b/fs/aio.c
+@@ -1592,6 +1592,19 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
+ 		goto out_put_req;
+ 	}
+ 
++	if (req->common.ki_flags & IOCB_NOWAIT) {
++		if (!(req->common.ki_flags & IOCB_DIRECT)) {
++			ret = -EOPNOTSUPP;
++			goto out_put_req;
++		}
++
++		if ((iocb->aio_lio_opcode != IOCB_CMD_PWRITE) &&
++		    (iocb->aio_lio_opcode != IOCB_CMD_PWRITEV)) {
++			ret = -EINVAL;
++			goto out_put_req;
++		}
++	}
++
+ 	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
+ 	if (unlikely(ret)) {
+ 		pr_debug("EFAULT: aio_key\n");
+diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+index 3fdde0b283c9..a53fd2675b1b 100644
+--- a/fs/ceph/file.c
++++ b/fs/ceph/file.c
+@@ -1300,6 +1300,9 @@ static ssize_t ceph_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 	int err, want, got;
+ 	loff_t pos;
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	if (ceph_snap(inode) != CEPH_NOSNAP)
+ 		return -EROFS;
+ 
+diff --git a/fs/cifs/file.c b/fs/cifs/file.c
+index 0fd081bd2a2f..ff84fa9ddb6c 100644
+--- a/fs/cifs/file.c
++++ b/fs/cifs/file.c
+@@ -2725,6 +2725,9 @@ ssize_t cifs_user_writev(struct kiocb *iocb, struct iov_iter *from)
+ 	 * write request.
+ 	 */
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	rc = generic_write_checks(iocb, from);
+ 	if (rc <= 0)
+ 		return rc;
+diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+index 3ee4fdc3da9e..812c7bd0c290 100644
+--- a/fs/fuse/file.c
++++ b/fs/fuse/file.c
+@@ -1425,6 +1425,9 @@ static ssize_t fuse_direct_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 	struct fuse_io_priv io = FUSE_IO_PRIV_SYNC(file);
+ 	ssize_t res;
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	if (is_bad_inode(inode))
+ 		return -EIO;
+ 
+diff --git a/fs/nfs/direct.c b/fs/nfs/direct.c
+index 6fb9fad2d1e6..c8e7dd76126c 100644
+--- a/fs/nfs/direct.c
++++ b/fs/nfs/direct.c
+@@ -979,6 +979,9 @@ ssize_t nfs_file_direct_write(struct kiocb *iocb, struct iov_iter *iter)
+ 	dfprintk(FILE, "NFS: direct write(%pD2, %zd@%Ld)\n",
+ 		file, iov_iter_count(iter), (long long) iocb->ki_pos);
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	result = generic_write_checks(iocb, iter);
+ 	if (result <= 0)
+ 		return result;
+diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
+index bfeb647459d9..e7f8ba890305 100644
+--- a/fs/ocfs2/file.c
++++ b/fs/ocfs2/file.c
+@@ -2235,6 +2235,9 @@ static ssize_t ocfs2_file_write_iter(struct kiocb *iocb,
+ 	if (count == 0)
+ 		return 0;
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	direct_io = iocb->ki_flags & IOCB_DIRECT ? 1 : 0;
+ 
+ 	inode_lock(inode);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index dc0ab585cd56..2a7d14af6d12 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -268,6 +268,7 @@ struct writeback_control;
+ #define IOCB_DSYNC		(1 << 4)
+ #define IOCB_SYNC		(1 << 5)
+ #define IOCB_WRITE		(1 << 6)
++#define IOCB_NOWAIT		(1 << 7)
+ 
+ struct kiocb {
+ 	struct file		*ki_filp;
+@@ -3060,7 +3061,7 @@ static inline int iocb_flags(struct file *file)
+ 
+ static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
+ {
+-	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC)))
++	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC | RWF_NOWAIT)))
+ 		return -EOPNOTSUPP;
+ 
+ 	if (flags & RWF_HIPRI)
+@@ -3069,6 +3070,8 @@ static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
+ 		ki->ki_flags |= IOCB_DSYNC;
+ 	if (flags & RWF_SYNC)
+ 		ki->ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
++	if (flags & RWF_NOWAIT)
++		ki->ki_flags |= IOCB_NOWAIT;
+ 	return 0;
+ }
+ 
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index 24e61a54feaa..29969fb7f9a7 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -360,5 +360,6 @@ struct fscrypt_key {
+ #define RWF_HIPRI			0x00000001 /* high priority request, poll if possible */
+ #define RWF_DSYNC			0x00000002 /* per-IO O_DSYNC */
+ #define RWF_SYNC			0x00000004 /* per-IO O_SYNC */
++#define RWF_NOWAIT			0x00000008 /* per-IO, return -EAGAIN if operation would block */
+ 
+ #endif /* _UAPI_LINUX_FS_H */
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 87aba7698584..097213275461 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -3006,6 +3006,9 @@ ssize_t generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 	struct inode *inode = file->f_mapping->host;
+ 	ssize_t ret;
+ 
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EOPNOTSUPP;
++
+ 	inode_lock(inode);
+ 	ret = generic_write_checks(iocb, from);
+ 	if (ret > 0)
 -- 
-Chris Murphy
+2.12.0
+
