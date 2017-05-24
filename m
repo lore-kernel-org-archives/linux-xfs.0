@@ -1,244 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:55051 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S935699AbdEXDTz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2017 23:19:55 -0400
-Date: Wed, 24 May 2017 13:19:35 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] xfs: freeze rw filesystems just prior to reboot
-Message-ID: <20170524031935.GZ17542@dastard>
-References: <20170518012618.GT4519@birch.djwong.org>
- <20170518013242.GW4519@birch.djwong.org>
- <20170518083405.GQ17542@dastard>
- <20170518223053.GD4519@birch.djwong.org>
- <CAJCQCtTj-7BovZbXyZu9=Dhh4ROR-AJ6Dpsw1GKbM-a2fr+uVw@mail.gmail.com>
- <20170519210040.GL4519@birch.djwong.org>
- <20170522020112.GV17542@dastard>
- <CAJCQCtTj4it6o-Fop6vm3s_HFbRemF5o_H9w-tvS6wmFfVwKBA@mail.gmail.com>
+Received: from mail-db5eur01on0130.outbound.protection.outlook.com ([104.47.2.130]:40256
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933027AbdEXLSw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 May 2017 07:18:52 -0400
+From: =?iso-8859-2?Q?Libor_Klep=E1=E8?= <libor.klepac@bcom.cz>
+Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
+Date: Wed, 24 May 2017 11:18:47 +0000
+Message-ID: <4648960.1DrcVCcZxK@libor-nb>
+References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com>
+ <2727630.ZS8FFPfE3C@libor-nb>
+ <b6492357-4bf3-c570-be33-90010e3b1967@sandeen.net>
+In-Reply-To: <b6492357-4bf3-c570-be33-90010e3b1967@sandeen.net>
+Content-Language: en-US
+Content-Type: text/plain; charset="iso-8859-2"
+Content-ID: <D177E154DF79CC4DAE338672B3AE6368@eurprd03.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJCQCtTj4it6o-Fop6vm3s_HFbRemF5o_H9w-tvS6wmFfVwKBA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, May 22, 2017 at 02:46:42PM -0600, Chris Murphy wrote:
-> On Sun, May 21, 2017 at 8:01 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Fri, May 19, 2017 at 02:00:40PM -0700, Darrick J. Wong wrote:
-> >> On Fri, May 19, 2017 at 01:09:31PM -0600, Chris Murphy wrote:
-> >> > On Thu, May 18, 2017 at 4:30 PM, Darrick J. Wong
-> >> > <darrick.wong@oracle.com> wrote:
-> >> > > On Thu, May 18, 2017 at 06:34:05PM +1000, Dave Chinner wrote:
-> >> > >> On Wed, May 17, 2017 at 06:32:42PM -0700, Darrick J. Wong wrote:
-> >> > >> > Apparently there are certain system software configurations that do odd
-> >> > >> > things like update the kernel and reboot without umounting the /boot fs
-> >> > >> > or remounting it readonly, either of which would push all the AIL items
-> >> > >> > out to disk.  As a result, a subsequent invocation of something like
-> >> > >> > grub (which has a frightening willingness to read a fs with a dirty log)
-> >> > >> > can read stale disk contents and/or miss files the metadata for which
-> >> > >> > have been written to the log but not checkpointed into the filesystem.
-> >> > >>
-> >> > >> > Granted, most of the time /boot is a separate partition and
-> >> > >> > systemd/sysvinit/whatever actually /do/ unmount /boot before rebooting.
-> >> > >> > This "fix" is only needed for people who have one giant filesystem.
-> >> > >>
-> >> > >> Let me guess the series of events: grub calls "sync" and says "I'm
-> >> > >
-> >> > > dpkg/rpm/systemd/CABEXTRACT.EXE/whatever, but yes :)
-> >> >
-> >> >
-> >> > It has nothing to do with GRUB. The exact same problem would happen
-> >> > regardless of bootloader because the thing writing out bootloader
-> >> > configuration prior to reboot is grubby, which is not at all in any
-> >> > way related to GRUB.
-> >
-> > Chris, I've told you previously this is wrong (it's incorrect for
-> > lilo) and too narrow (grubby is not the only update infrastructure
-> > around), but I'll repeat it again because we need to move past your
-> > single-distro focus on grubby and discuss the underlying problems.
-> 
-> 
-> And I'm trying to get you to move past your ancient legacy bootloader
-> focus and discuss things that matter in 2017.
-> 
-> First, nothing works like LILO, not even ELILO works like LILO.
-
-Yeah, Elilo just used the lilo config file format and parser and
-threw everyhting else away. I learnt how simple it is when I first
-started working on ia64 machines back in 2004. Or was it 2005? It's
-so long ago now I can't remember exactly.
-
-> Second, I have only been able to reproduce this problem with grubby +
-> XFS. If I manually do grub2-mkconfig + reboot -f instead, the problem
-> does not happen. It might be that I'm too slow, and the marginal
-> amount of extra time permits the new grub.cfg to fully commit, but I
-> don't know.
-
-Yup, those are typical writeback/reboot race symptoms.
-
-I think Darrick's traces also hinted at the possibility that
-grub2-mkconfig doesn't run sync at the correct time so the new
-config file may not have even made it to disk and so it may be that
-you are seeing it boot from the old config which was still valid...
-
-> Third, basic bootloader concepts:
-> 
-> The bootloader is the executable that's loaded by the firmware after POST.
-
-> The bootloader installer is not the bootloader. /sbin/lilo,
-
-Well, yes, it's usually obvious which bootloader part is being
-discussed from the context of the discussion. But seeing as you seem
-to have trouble with this sort of thing, I've taken the time to
-specify which one I'm talking about...
-
-> /sbin/extlinux, /sbin/grub-install are not bootloaders, they are
-> bootloader installers. Only lilo totally reinstalls the bootloader
-> binary when configurations change. GRUB, extlinux, uboot, zipl don't
-> do that. Their configuration files change and that's it, and they do
-> not depend on boot sectors for this,
-
-Sure, but they still all depend on writing their bootloader
-executable to the boot sector to be able to bootstrap the boot
-process.  They are no different to LILO in this respect - the only
-difference is that LILO also writes a pointer to the pre-processed
-boot config into the boot sector...
-
-> they don't write outside the file
-> system to the drive like lilo.
-
-Hmmm - I demonstrated this assertion to be false in the email you
-replied to. You've used this reasoning to repeatedly dismiss my
-comments with no other technical information, so I hope you just
-misread/misunderstood my reply. I'll try again to make it absolutely
-clear how lilo works below, because.....
-
-> They depend on the file system.
-
-.... all the bootloaders (except ELILO) depend on the filesystem to
-provide them with the physical block mapping information needed to
-read the kernel/initramfs to boot them.  The only real difference is
-how they get that physical location information. To recap:
-
-The Lilo installer gets the physical location information from the
-filesystem via the OS provided FIBMAP ioctl(), which it then writes
-it into a file in the filesysetm (boot.map), which it then it maps
-with FIBMAP and writes that map into the boot sector on the block
-device.  At no point does it "go around the filesystem" to obtain or
-write this information to stable storage for the bootloader
-executable to use. The bootloader executable then just reads the
-block map information directly from the block device to load the
-kernel.
-
-The grub installer writes a config file and that's about it. On
-boot, the stage 1 loader in the boot sector bootstraps
-the larger stage 2 loader. That then loads all the modules needed to
-probe the booting block device contents and load the modules needed
-to traverse the metadata structure it contains to find the block
-map/extent list of the config file.  Then it decodes the block map,
-reads the config file direct from the block device and parses it. It
-then repeats this metadata traversal and extent list decoding for
-each file it needs to read to boot.
-
-IOWs, the information they use is exactly the same, but LILO avoids
-all the bootloader executable complexity by doing all the mapping
-work n the installer through generic, filesystem agnostic OS
-interfaces before reboot. 
-
-In contrast, the "parse the block device" architecture of grub and
-similar bootloaders ensures that the bootloader executable is locked
-into an endless game of whack-a-mole as filesystems, volume managers
-and other storage management applications change formats and
-behaviours.....
-
-> > However, IMO problem does indeed lie with the bootloader and not the
-> > distro packaging mechanism/scripts, and so we need to talk a bit out
-> > the architectural differences between bootloaders like lilo and
-> > grub/petitboot and why I consider update durability to be something
-> > the bootloader needs to provide, not thrid party packagers or the
-> > init system.
-> 
-> Either the bootloader needs to learn how to read dirty logs,
-
-I don't think anyone wants to expend the time and effort needed to
-do this for each filesystem that the grub bootloader supports,
-especially as it is not necessary.
-
-> or there
-> can be no dirty log entries related to three things: kernel,
-> initramfs, and bootloader configuration. If any of those three things
-> are not fully committed to the file system metadata,  the bootloader
-> will fail to find them.
-
-Yup - I've been trying to tell you that these are the exact
-guarantees that freezing the fs will provide the bootloader
-installer....
-
-> If GRUB or grubby are not being used, then the bootloader
-> configuration file is most likely modified by a script in the kernel
-> package. How do you avoid burdening the kernel package from update
-> durability when it is responsible for writing the kernel, initramfs,
-> and the third most likely thing to modify the bootloader
-> configuration?
-
-Solved problem via post-inst package scripts.
-
-$ sudo apt-get install linux-image-amd64
-....
-Preparing to unpack .../linux-image-4.9.0-3-amd64_4.9.25-1_amd64.deb ...
-Unpacking linux-image-4.9.0-3-amd64 (4.9.25-1) ...
-Preparing to unpack .../linux-image-amd64_4.9+80_amd64.deb ...
-Unpacking linux-image-amd64 (4.9+80) over (4.9+78) ...
-Setting up linux-image-4.9.0-3-amd64 (4.9.25-1) ...
-I: /vmlinuz.old is now a symlink to boot/vmlinuz-4.9.0-1-amd64
-I: /initrd.img.old is now a symlink to boot/initrd.img-4.9.0-1-amd64
-I: /vmlinuz is now a symlink to boot/vmlinuz-4.9.0-3-amd64
-I: /initrd.img is now a symlink to boot/initrd.img-4.9.0-3-amd64
-/etc/kernel/postinst.d/initramfs-tools:
-update-initramfs: Generating /boot/initrd.img-4.9.0-3-amd64
-/etc/kernel/postinst.d/zz-runlilo:
-Added Linux  *
-Added Linux.old
-Setting up linux-image-amd64 (4.9+80) ...
-$
-
-> > As a result, you do *not* need to call sync or freeze the filesystem
-> > after running the lilo command because it has already guaranteed the
-> > updated bootloader information is on stable storage.  And because
-> > you have to run lilo to update the bootloader, distro package
-> > managers *can't fuck it up* because the bootloader has full control
-> > of the update process.
-> 
-> Haha. Well it can't fuck it up because it's doing a total end run
-> around the file system.
-
-FYI: the canonical example of "doing a total end run around the
-filesystem" is to write your own filesystem parsers to directly walk
-filesystem structures on a block device without going through the
-supported OS filesystem channels for accessing that filesystem
-information.
-
-> Actually GRUB has a functional equivalent, it's just that it's not the
-> upstream default, and no distro appears to want to use it by default:
-
-IIRC, that's the "filesystem install" mode and there's good reason
-it's not used: LBA 0 of the block device belongs to the filesystem
-on that device, not the bootloader. Hence if you have a filesystem
-that uses LBA 0 (e.g. XFS), using grub in this mode on that block
-device will trash it and then you've got bigger problems....
-
-The Lilo installer avoids this issue by asking the filesystem to map
-the mapping file and writing it's LBA to the boot sector, hence
-allowing the bootloader info to be placed anywhere in the block
-device rather than being fixed to a hard coded location as per the
-grub functionality...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Hi,=0A=
+after quiet two months , another crash, trace is same as before.=0A=
+There are no XFS lines before this, kern.log goes back to 23. april.=0A=
+=0A=
+May 24 12:05:12 vps2 kernel: [3729926.243353] XFS (dm-2): Metadata corrupti=
+on detected at xfs_attr3_leaf_write_verify+0xe8/0x100 [xfs], xfs_attr3_leaf=
+ block 0x171c60c0=0A=
+May 24 12:05:12 vps2 kernel: [3729926.247586] XFS (dm-2): Unmount and run x=
+fs_repair=0A=
+May 24 12:05:12 vps2 kernel: [3729926.249022] XFS (dm-2): First 64 bytes of=
+ corrupted metadata buffer:=0A=
+May 24 12:05:12 vps2 kernel: [3729926.250424] ffff9fbb1d73a000: 00 00 00 00=
+ 00 00 00 00 fb ee 00 00 00 00 00 00  ................=0A=
+May 24 12:05:12 vps2 kernel: [3729926.251870] ffff9fbb1d73a010: 10 00 00 00=
+ 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........=0A=
+May 24 12:05:12 vps2 kernel: [3729926.253412] ffff9fbb1d73a020: 00 00 00 00=
+ 00 00 00 00 00 00 00 00 00 00 00 00  ................=0A=
+May 24 12:05:12 vps2 kernel: [3729926.254941] ffff9fbb1d73a030: 00 00 00 00=
+ 00 00 00 00 00 00 00 00 00 00 00 00  ................=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256478] CPU: 1 PID: 454 Comm: xfsaild=
+/dm-2 Tainted: G            E   4.9.0-0.bpo.2-amd64 #1 Debian 4.9.13-1~bpo8=
++1=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256480] Hardware name: VMware, Inc. V=
+Mware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 04/14/20=
+14=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256483]  0000000000000000 ffffffffb13=
+29cd5 ffff9fba7f543ac0 ffff9fb9cb6ca5a0=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256488]  ffffffffc06b4a58 00000000000=
+00000 0000000004772296 0000000000000000=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256492]  ffffab7701f7bd40 ffffffffc06=
+ff997 ffff9fbb830dbac0 ffffffffc06fdcc4=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256495] Call Trace:=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256505]  [<ffffffffb1329cd5>] ? dump_=
+stack+0x5c/0x77=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256585]  [<ffffffffc06b4a58>] ? xfs_a=
+ttr3_leaf_write_verify+0xe8/0x100 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256645]  [<ffffffffc06ff997>] ? xfs_b=
+uf_delwri_submit_buffers+0x137/0x260 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256712]  [<ffffffffc06fdcc4>] ? _xfs_=
+buf_ioapply+0x84/0x450 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256719]  [<ffffffffb10a2b30>] ? wake_=
+up_q+0x60/0x60=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256781]  [<ffffffffc06ff997>] ? xfs_b=
+uf_delwri_submit_buffers+0x137/0x260 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256845]  [<ffffffffc06ff6d7>] ? xfs_b=
+uf_submit+0x67/0x1f0 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256911]  [<ffffffffc06ff997>] ? xfs_b=
+uf_delwri_submit_buffers+0x137/0x260 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.256975]  [<ffffffffc073177b>] ? xfsai=
+ld+0x2cb/0x7b0 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.257038]  [<ffffffffc06ff365>] ? xfs_b=
+uf_unlock+0x15/0x70 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.257105]  [<ffffffffc073177b>] ? xfsai=
+ld+0x2cb/0x7b0 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.257174]  [<ffffffffc07314b0>] ? xfs_t=
+rans_ail_cursor_first+0x80/0x80 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.257182]  [<ffffffffb10974c0>] ? kthre=
+ad+0xe0/0x100=0A=
+May 24 12:05:12 vps2 kernel: [3729926.257186]  [<ffffffffb102476b>] ? __swi=
+tch_to+0x2bb/0x700=0A=
+May 24 12:05:12 vps2 kernel: [3729926.257189]  [<ffffffffb10973e0>] ? kthre=
+ad_park+0x60/0x60=0A=
+May 24 12:05:12 vps2 kernel: [3729926.257194]  [<ffffffffb15fb675>] ? ret_f=
+rom_fork+0x25/0x30=0A=
+May 24 12:05:12 vps2 kernel: [3729926.257201] XFS (dm-2): xfs_do_force_shut=
+down(0x8) called from line 1323 of file /home/zumbi/linux-4.9.13/fs/xfs/xfs=
+_buf.c.  Return address =3D 0xffffffffc06fe084=0A=
+May 24 12:05:12 vps2 kernel: [3729926.260093] XFS (dm-2): Corruption of in-=
+memory data detected.  Shutting down filesystem=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262115] CPU: 1 PID: 454 Comm: xfsaild=
+/dm-2 Tainted: G            E   4.9.0-0.bpo.2-amd64 #1 Debian 4.9.13-1~bpo8=
++1=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262117] Hardware name: VMware, Inc. V=
+Mware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 04/14/20=
+14=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262120]  0000000000000000 ffffffffb13=
+29cd5 0000000000000008 ffff9fbc275f3000=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262125]  ffffffffc07061fa ffffffffc06=
+fe084 0000000000000000 ffffab7701f7bd40=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262129]  ffffffffc06ff997 ffff9fbb830=
+dbac0 ffffffffc06fe084 ffff9fb934f86080=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262133] Call Trace:=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262141]  [<ffffffffb1329cd5>] ? dump_=
+stack+0x5c/0x77=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262228]  [<ffffffffc07061fa>] ? xfs_d=
+o_force_shutdown+0x13a/0x140 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262294]  [<ffffffffc06fe084>] ? _xfs_=
+buf_ioapply+0x444/0x450 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262361]  [<ffffffffc06ff997>] ? xfs_b=
+uf_delwri_submit_buffers+0x137/0x260 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262427]  [<ffffffffc06fe084>] ? _xfs_=
+buf_ioapply+0x444/0x450 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262433]  [<ffffffffb10a2b30>] ? wake_=
+up_q+0x60/0x60=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262503]  [<ffffffffc06ff997>] ? xfs_b=
+uf_delwri_submit_buffers+0x137/0x260 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262573]  [<ffffffffc06ff6d7>] ? xfs_b=
+uf_submit+0x67/0x1f0 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262643]  [<ffffffffc06ff997>] ? xfs_b=
+uf_delwri_submit_buffers+0x137/0x260 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262717]  [<ffffffffc073177b>] ? xfsai=
+ld+0x2cb/0x7b0 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262789]  [<ffffffffc06ff365>] ? xfs_b=
+uf_unlock+0x15/0x70 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262864]  [<ffffffffc073177b>] ? xfsai=
+ld+0x2cb/0x7b0 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262939]  [<ffffffffc07314b0>] ? xfs_t=
+rans_ail_cursor_first+0x80/0x80 [xfs]=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262944]  [<ffffffffb10974c0>] ? kthre=
+ad+0xe0/0x100=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262948]  [<ffffffffb102476b>] ? __swi=
+tch_to+0x2bb/0x700=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262950]  [<ffffffffb10973e0>] ? kthre=
+ad_park+0x60/0x60=0A=
+May 24 12:05:12 vps2 kernel: [3729926.262955]  [<ffffffffb15fb675>] ? ret_f=
+rom_fork+0x25/0x30=0A=
+May 24 12:05:12 vps2 kernel: [3729926.263078] XFS (dm-2): Please umount the=
+ filesystem and rectify the problem(s)=0A=
+=0A=
+=0A=
+After filesystem shutdown, before reboot i have upgraded kernel to 4.9.25-1=
+~bpo8+1=0A=
+=0A=
+Customer was calling us, just when nagios alerted us on host problem, that =
+he was copying some files between accounts (which means changing acls), i h=
+ave asked him for more information.=0A=
+=0A=
+Libor=0A=
+=0A=
