@@ -1,138 +1,210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr001msb.fastweb.it ([85.18.95.85]:36324 "EHLO
-        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753027AbdEWUFm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2017 16:05:42 -0400
-Received: from ceres.assyoma.it (93.63.55.57) by mr001msb.fastweb.it (8.5.140.05)
-        id 58FDB0C30137830F for linux-xfs@vger.kernel.org; Tue, 23 May 2017 22:05:34 +0200
-Subject: Re: Shutdown filesystem when a thin pool become full
+Received: from mx1.redhat.com ([209.132.183.28]:52852 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750838AbdEXRIZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 May 2017 13:08:25 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 65BF072496
+        for <linux-xfs@vger.kernel.org>; Wed, 24 May 2017 17:08:24 +0000 (UTC)
+Date: Wed, 24 May 2017 13:08:21 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/3 V2] xfs: Properly retry failed inode items in case of
+ error during buffer writeback
+Message-ID: <20170524170820.GC13925@bfoster.bfoster>
+References: <20170522153220.25072-1-cmaiolino@redhat.com>
+ <20170522153220.25072-4-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date: Tue, 23 May 2017 22:05:34 +0200
-From: Gionatan Danti <g.danti@assyoma.it>
-In-Reply-To: <20170523122753.k7plzg3musc4up73@eorzea.usersys.redhat.com>
-References: <c25a8ccc-f143-989d-3d49-3fe8753aa6f7@assyoma.it>
- <20170522230946.s3sdg4gd73oj7r5u@eorzea.usersys.redhat.com>
- <940c3b13-dea2-1887-d4ae-89555d1c2a4f@assyoma.it>
- <5f98a296-6023-f200-4c60-bcfdf0288d34@assyoma.it>
- <20170523122753.k7plzg3musc4up73@eorzea.usersys.redhat.com>
-Message-ID: <24daa89a452496d2cdffa5512a64ed2e@assyoma.it>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170522153220.25072-4-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: g.danti@assyoma.it
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Il 23-05-2017 14:27 Carlos Maiolino ha scritto:
+On Mon, May 22, 2017 at 05:32:20PM +0200, Carlos Maiolino wrote:
+> When a buffer has been failed during writeback, the inode items into it
+> are kept flush locked, and are never resubmitted due the flush lock, so,
+> if any buffer fails to be written, the items in AIL are never written to
+> disk and never unlocked.
 > 
-> Aha, you are using sync flag, that's why you are getting IO errors 
-> instead of
-> ENOSPC, I don't remember from the top of my mind why exactly, it's been 
-> a while
-> since I started to work on this XFS and dm-thin integration, but IIRC, 
-> the
-> problem is that XFS reserves the data required, and don't expect to get 
-> an
-> ENOSPC once the device "have space", and when the sync occurs, kaboom. 
-> I should
-> take a look again on it.
+> This causes unmount operation to hang due these items flush locked in AIL,
+> but this also causes the items in AIL to never be written back, even when
+> the IO device comes back to normal.
+> 
+> I've been testing this patch with a DM-thin device, creating a
+> filesystem larger than the real device.
+> 
+> When writing enough data to fill the DM-thin device, XFS receives ENOSPC
+> errors from the device, and keep spinning on xfsaild (when 'retry
+> forever' configuration is set).
+> 
+> At this point, the filesystem can not be unmounted because of the flush locked
+> items in AIL, but worse, the items in AIL are never retried at all
+> (once xfs_inode_item_push() will skip the items that are flush locked),
+> even if the underlying DM-thin device is expanded to the proper size.
+> 
+> This patch fixes both cases, retrying any item that has been failed
+> previously, using the infra-structure provided by the previous patch.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+> V2:
+> 	- Fix XFS_LI_FAILED flag removal
+> 	- Use atomic operations to set and clear XFS_LI_FAILED flag
+> 	- Remove check for XBF_WRITE_FAIL in xfs_inode_item_push
+> 	- Add more comments to the code
+> 	- Add a helper function to resubmit the failed buffers, so this
+> 	  can be also used in dquot system without duplicating code
+> 
+>  fs/xfs/xfs_buf_item.c   | 42 ++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_buf_item.h   |  2 ++
+>  fs/xfs/xfs_inode_item.c | 36 +++++++++++++++++++++++++++++++++++-
+>  3 files changed, 79 insertions(+), 1 deletion(-)
+> 
+...
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index eeeadbb..97db299 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -27,6 +27,7 @@
+>  #include "xfs_error.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_trans_priv.h"
+> +#include "xfs_buf_item.h"
+>  #include "xfs_log.h"
+>  
+>  
+> @@ -475,6 +476,24 @@ xfs_inode_item_unpin(
+>  		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
+>  }
+>  
+> +STATIC void
+> +xfs_inode_item_error(
+> +	struct xfs_log_item	*lip,
+> +	unsigned int		bflags)
+> +{
+> +
+> +	/*
+> +	 * The buffer writeback containing this inode has been failed
+> +	 * mark it as failed and unlock the flush lock, so it can be retried
+> +	 * again.
+> +	 * It requires an atomic operation, once the parent object is not locked
+> +	 * in this context, and we need to avoid races with other log item state
+> +	 * changes.
+> +	 */
+> +	if (bflags & XBF_WRITE_FAIL)
+> +		set_bit(XFS_LI_FAILED, &lip->li_flags);
+> +}
 
-Ok, I tried with a more typical non-sync write and it seems to report 
-ENOSPC:
+With the change to patch 2 to set LI_FAILED on all log items, this can
+go away completely. We know that LI_FAILED will be set on any log item
+attached to a buffer that fails.
 
-[root@blackhole ~]# dd if=/dev/zero of=/mnt/storage/disk.img bs=1M 
-count=2048
-dd: error writing ‘/mnt/storage/disk.img’: No space left on device
-2002+0 records in
-2001+0 records out
-2098917376 bytes (2.1 GB) copied, 7.88216 s, 266 MB/s
+> +
+>  STATIC uint
+>  xfs_inode_item_push(
+>  	struct xfs_log_item	*lip,
+> @@ -517,8 +536,22 @@ xfs_inode_item_push(
+>  	 * the AIL.
+>  	 */
+>  	if (!xfs_iflock_nowait(ip)) {
+> +
+> +		/*
+> +		 * The buffer containing this item failed to be written back
+> +		 * previously. Resubmit the buffer for IO.
+> +		 */
+> +		if (lip->li_flags & XFS_LI_FAILED) {
+> +			if (!xfs_buf_resubmit_failed_buffers(ip, lip, bp,
+> +							     buffer_list))
+> +				rval = XFS_ITEM_FLUSHING;
+> +
+> +			goto out_unlock;
+> +		}
+> +
 
-With /sys/fs/xfs/dm-6/error/metadata/ENOSPC/max_retries = -1 (default), 
-I have the following dmesg output:
+I think we need to do the XFS_LI_FAILED check first thing in
+xfs_inode_item_push(). As part of the v1 discussion, Dave pointed out
+that there is the possibility that somebody else is holding the inode
+lock and blocking on the flush lock by the time xfs_inode_item_push() is
+called. That means we would never get past the xfs_ilock_nowait() call
+earlier in the function and thus never resubmit the buffer.
 
-[root@blackhole ~]# dmesg
-[23152.667198] XFS (dm-6): Mounting V5 Filesystem
-[23152.762711] XFS (dm-6): Ending clean mount
-[23192.704672] device-mapper: thin: 253:4: reached low water mark for 
-data device: sending event.
-[23192.988356] device-mapper: thin: 253:4: switching pool to 
-out-of-data-space (error IO) mode
-[23193.046288] Buffer I/O error on dev dm-6, logical block 385299, lost 
-async page write
-[23193.046299] Buffer I/O error on dev dm-6, logical block 385300, lost 
-async page write
-[23193.046302] Buffer I/O error on dev dm-6, logical block 385301, lost 
-async page write
-[23193.046304] Buffer I/O error on dev dm-6, logical block 385302, lost 
-async page write
-[23193.046307] Buffer I/O error on dev dm-6, logical block 385303, lost 
-async page write
-[23193.046309] Buffer I/O error on dev dm-6, logical block 385304, lost 
-async page write
-[23193.046312] Buffer I/O error on dev dm-6, logical block 385305, lost 
-async page write
-[23193.046314] Buffer I/O error on dev dm-6, logical block 385306, lost 
-async page write
-[23193.046316] Buffer I/O error on dev dm-6, logical block 385307, lost 
-async page write
-[23193.046319] Buffer I/O error on dev dm-6, logical block 385308, lost 
-async page write
+That aside, we're now modifying inode log item behavior based on
+LI_FAILED. Since we now skip an iflush when LI_FAILED is set, we need to
+handle the case in xfs_iflush_done() where the flush lock is unlocked
+but the log item is not removed from the AIL. I think this should be
+quite rare, but IIUC the scenario goes something like this:
 
-With /sys/fs/xfs/dm-6/error/metadata/ENOSPC/max_retries = 0, dmesg 
-output is slightly different:
+	- Inode 1 transaction is committed, AIL push flushes the inode,
+	  buffer I/O fails and the log item is set LI_FAILED. The inode
+	  log item is now sitting in the AIL waiting for a retry.
+	- Inode 1 is relogged and committed in another transaction. Its
+	  place in the AIL is moved. The changes to the xfs_inode in
+	  this tx have not been flushed to the buffer.
+	- Inode 2 transaction is committed and inserted to AIL. Inode 2
+	  is backed by the same buffer as inode 1.
+	- AIL pushes inode 2, flushes to the buffer and submits. It does
+	  not clear LI_FAILED of inode 1 because inode 2 has never
+	  failed.
+	- Buffer I/O succeeds, xfs_iflush_done() runs and removes inode
+	  2 from the AIL and flush unlocks. Inode 1 is flush unlocked
+	  but remains on the AIL because the flush from the second
+	  transaction above has not yet occurred.
+	- xfs_iflush_done() clears LI_FAILED so the subsequent AIL push
+	  of inode 1 actually flushes the latest in-core inode to the
+	  buffer.
 
-[root@blackhole default]# dmesg
-[23557.594502] device-mapper: thin: 253:4: switching pool to 
-out-of-data-space (error IO) mode
-[23557.649772] buffer_io_error: 257430 callbacks suppressed
-[23557.649784] Buffer I/O error on dev dm-6, logical block 381193, lost 
-async page write
-[23557.649805] Buffer I/O error on dev dm-6, logical block 381194, lost 
-async page write
-[23557.649811] Buffer I/O error on dev dm-6, logical block 381195, lost 
-async page write
-[23557.649818] Buffer I/O error on dev dm-6, logical block 381196, lost 
-async page write
-[23557.649862] Buffer I/O error on dev dm-6, logical block 381197, lost 
-async page write
-[23557.649871] Buffer I/O error on dev dm-6, logical block 381198, lost 
-async page write
-[23557.649880] Buffer I/O error on dev dm-6, logical block 381199, lost 
-async page write
-[23557.649888] Buffer I/O error on dev dm-6, logical block 381200, lost 
-async page write
-[23557.649897] Buffer I/O error on dev dm-6, logical block 381201, lost 
-async page write
-[23557.649903] Buffer I/O error on dev dm-6, logical block 381202, lost 
-async page write
+So IOW, I think we need to include something like the hunk appended
+below (untested) to this patch.
 
-Notice the suppressed buffer_io_error entries: are they related to the 
-bug you linked before?
-Anyway, in *no* cases I had a filesystem shutdown on these errors.
+Dave,
 
-Trying to be pragmatic, my main concern is to avoid extended filesystem 
-and/or data corruption in the case a thin pool become inadvertently 
-full. For example, with ext4 I can mount the filesystem with 
-"errors=remount-ro,data=journaled" and *any* filesystem error (due to 
-thinpool or other problems) will put the filesystem in a read-only 
-state, avoiding significan damages.
+Do you see anything wrong with this overall approach? I think this
+avoids the hard dependency on atomic flags because all li_flags updates
+remain under ->xa_lock. We've covered the I/O submission context concern
+because we incorporate the previously discussed idea of clearing the
+flag on successful I/O completion. Finally, normal running performance
+should not be affected because the ->xa_lock is not taken anywhere new
+unless I/O errors have occurred. Thoughts?
 
-If, and how, I can replicate this behavior with XFS? From my 
-understanding, XFS does not have a "remount read-only" mode. Moreover, 
-until its metadata can be safely stored on disk (ie: they hit already 
-allocated space), it seems to happily continue to run, disregarding data 
-writeout problem/error. As a note, ext4 without "data=jornaled" bahave 
-quite similarly, whit a read-only remount happening on metadata errors 
-only.
+Brian
 
-Surely I am missing something... right?
-Thanks.
+--- 8< ---
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 29ada12..5e1ecb1 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -722,7 +722,8 @@ xfs_iflush_done(
+ 		 * the AIL lock.
+ 		 */
+ 		iip = INODE_ITEM(blip);
+-		if (iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn)
++		if ((iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn) ||
++		    blip->li_flags & XFS_LI_FAILED)
+ 			need_ail++;
+ 
+ 		blip = next;
+@@ -730,7 +731,8 @@ xfs_iflush_done(
+ 
+ 	/* make sure we capture the state of the initial inode. */
+ 	iip = INODE_ITEM(lip);
+-	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn)
++	if ((iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn) ||
++	    lip->li_flags & XFS_LI_FAILED)
+ 		need_ail++;
+ 
+ 	/*
+@@ -751,6 +753,8 @@ xfs_iflush_done(
+ 			if (INODE_ITEM(blip)->ili_logged &&
+ 			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
+ 				mlip_changed |= xfs_ail_delete_one(ailp, blip);
++			else if (blip->li_flags & XFS_LI_FAILED)
++				blip->li_flags &= ~XFS_LI_FAILED;
+ 		}
+ 
+ 		if (mlip_changed) {
