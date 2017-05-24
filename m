@@ -1,350 +1,327 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f180.google.com ([209.85.161.180]:35434 "EHLO
-        mail-yw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933464AbdEVUqp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2017 16:46:45 -0400
-Received: by mail-yw0-f180.google.com with SMTP id l74so65699960ywe.2
-        for <linux-xfs@vger.kernel.org>; Mon, 22 May 2017 13:46:44 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:41948 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752804AbdEXN0J (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 May 2017 09:26:09 -0400
+Date: Wed, 24 May 2017 15:26:04 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
+ error during buffer writeback
+Message-ID: <20170524132604.bsti3quyepmbzjzv@eorzea.usersys.redhat.com>
+References: <20170519002227.GS17542@dastard>
+ <20170519112659.GB64091@bfoster.bfoster>
+ <20170519233900.GT17542@dastard>
+ <20170520114654.GA3888@bfoster.bfoster>
+ <20170521231906.GU17542@dastard>
+ <20170522125110.GA11578@bfoster.bfoster>
+ <20170523112318.GX17542@dastard>
+ <20170523162202.GB7632@bfoster.bfoster>
+ <20170524010601.GX12369@dastard>
+ <20170524124244.GA11089@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20170522020112.GV17542@dastard>
-References: <20170518012618.GT4519@birch.djwong.org> <20170518013242.GW4519@birch.djwong.org>
- <20170518083405.GQ17542@dastard> <20170518223053.GD4519@birch.djwong.org>
- <CAJCQCtTj-7BovZbXyZu9=Dhh4ROR-AJ6Dpsw1GKbM-a2fr+uVw@mail.gmail.com>
- <20170519210040.GL4519@birch.djwong.org> <20170522020112.GV17542@dastard>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Mon, 22 May 2017 14:46:42 -0600
-Message-ID: <CAJCQCtTj4it6o-Fop6vm3s_HFbRemF5o_H9w-tvS6wmFfVwKBA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] xfs: freeze rw filesystems just prior to reboot
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170524124244.GA11089@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Chris Murphy <lists@colorremedies.com>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Sun, May 21, 2017 at 8:01 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Fri, May 19, 2017 at 02:00:40PM -0700, Darrick J. Wong wrote:
->> On Fri, May 19, 2017 at 01:09:31PM -0600, Chris Murphy wrote:
->> > On Thu, May 18, 2017 at 4:30 PM, Darrick J. Wong
->> > <darrick.wong@oracle.com> wrote:
->> > > On Thu, May 18, 2017 at 06:34:05PM +1000, Dave Chinner wrote:
->> > >> On Wed, May 17, 2017 at 06:32:42PM -0700, Darrick J. Wong wrote:
->> > >> > Apparently there are certain system software configurations that do odd
->> > >> > things like update the kernel and reboot without umounting the /boot fs
->> > >> > or remounting it readonly, either of which would push all the AIL items
->> > >> > out to disk.  As a result, a subsequent invocation of something like
->> > >> > grub (which has a frightening willingness to read a fs with a dirty log)
->> > >> > can read stale disk contents and/or miss files the metadata for which
->> > >> > have been written to the log but not checkpointed into the filesystem.
->> > >>
->> > >> > Granted, most of the time /boot is a separate partition and
->> > >> > systemd/sysvinit/whatever actually /do/ unmount /boot before rebooting.
->> > >> > This "fix" is only needed for people who have one giant filesystem.
->> > >>
->> > >> Let me guess the series of events: grub calls "sync" and says "I'm
->> > >
->> > > dpkg/rpm/systemd/CABEXTRACT.EXE/whatever, but yes :)
->> >
->> >
->> > It has nothing to do with GRUB. The exact same problem would happen
->> > regardless of bootloader because the thing writing out bootloader
->> > configuration prior to reboot is grubby, which is not at all in any
->> > way related to GRUB.
->
-> Chris, I've told you previously this is wrong (it's incorrect for
-> lilo) and too narrow (grubby is not the only update infrastructure
-> around), but I'll repeat it again because we need to move past your
-> single-distro focus on grubby and discuss the underlying problems.
+On Wed, May 24, 2017 at 08:42:47AM -0400, Brian Foster wrote:
+> On Wed, May 24, 2017 at 11:06:01AM +1000, Dave Chinner wrote:
+> > On Tue, May 23, 2017 at 12:22:04PM -0400, Brian Foster wrote:
+> > > On Tue, May 23, 2017 at 09:23:18PM +1000, Dave Chinner wrote:
+> > > > On Mon, May 22, 2017 at 08:51:13AM -0400, Brian Foster wrote:
+> > > > > On Mon, May 22, 2017 at 09:19:06AM +1000, Dave Chinner wrote:
+> > > > > > On Sat, May 20, 2017 at 07:46:56AM -0400, Brian Foster wrote:
+> > > > > > > On Sat, May 20, 2017 at 09:39:00AM +1000, Dave Chinner wrote:
+> > > > > > > > Adding new flags to the same field that can be asynchronously
+> > > > > > > > updated by RMW operations outside the ailp->xa_lock will cause
+> > > > > > > > problems in future. There *may not* be a problem right now, but it
+> > > > > > > > is poor programming practice to have different coherency processes
+> > > > > > > > for the same variable that is updated via RMW operations. In these
+> > > > > > > > situations, the only safe way to update the variable is to use an
+> > > > > > > > atomic operation.
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > So is there a reason why we couldn't acquire ->xa_lock to fail the log
+> > > > > > > items as we would have done anyways if the metadata writeback had
+> > > > > > > succeeded and we were removing the log items from the AIL..
+> > > > > > 
+> > > > > > Yes. the alip->xa_lock protects AIL state is a highly contended
+> > > > > > lock. It should not be used for things that aren't AIL related
+> > > > > > because that will have performance and scalability implications.
+> > > > > > 
+> > > > > 
+> > > > > The purpose of this flag is to control AIL retry processing, how is this
+> > > > > not AIL related?
+> > > > 
+> > > > It's IO state, not AIL state. IO submission occurs from more places
+> > > > than and AIL push (e.g. inode reclaim, inode clustering, etc) and
+> > > > there's no way we should be exposing the internal AIL state lock in
+> > > > places like that.
+> > > > 
+> > > 
+> > > That's reasonable, though it suggests different code from what this
+> > > patchset currently does. This would be far more useful if we could focus
+> > > on correctness of the code first and foremost. If the code we commit
+> > > actually warrants this kind of change, then this becomes a much easier
+> > > (i.e., pointless :P) discussion from my end.
+> > 
+> > Hmmm - this is not the first time recently you've said something
+> > similar in a review discussion where you didn't like this issues
+> > have been pointed out. Last time is was "handwavey", now it's
+> > "pointless". We haven't worked out a solution that solves all the
+> > known problems, so these sorts of comments really don't help close
+> > on one....
+> > 
+> 
+> You misinterpret what I wrote. What I am saying is that _my_ argument
+> would become pointless if you could provide context around what locking
+> specifically leads to your performance/scalability concern.
+> 
+> I.e., just above you refer to taking the AIL lock in various places that
+> are not modified by this patch. Since this patch does not touch those
+> areas, I can only assume you see something wrong with the patch that
+> would actually require locking or some additional changes in those
+> areas. If that is the case, and you could explicitly point out where/why
+> that extra locking is necessary, then that would clearly undermine my
+> argument that there is no risk of performance degradation here. Instead,
+> you are just asserting that there is additional lock contention and I'm
+> kind of left guessing where these mysterious ->xa_lock acquisitions are,
+> because I haven't suggested using it anywhere outside of I/O completion.
+> 
+> Indeed, from this most recent mail, ISTM that your concern comes from
+> the implication that AIL locking would be required in various other I/O
+> submission contexts to clear the failed flags. More on that below...
+> 
+> (And I don't see what any of this has to do with the quotacheck deadlock
+> thing.)
+> 
+> > > As it is, this patch only ever clears the flag on AIL resubmission. ISTM
+> > > you are indirectly suggesting that should occur in other contexts as
+> > > well (e.g., consider a reclaim and flush of another inode backed by a
+> > > buffer that is already failed, and has other inodes sitting in the AIL
+> > > flush locked). If that is the case, please elaborate, because otherwise
+> > > it is kind of impossible to evaluate and discuss without specifics.
+> > 
+> > All I've done is take the deadlock scenario you pointed
+> > out and applied to it other places we block on the flush lock.
+> > 
+> 
+> Ok...
+> 
+> > Go look at inode reclaim - it can do blocking reclaim and so will
+> > block on the flush lock. How is this code supposed to handle hitting
+> > a failed, flush locked inode?  If it just blocks, then it's a likely
+> > deadlock vector as you've already pointed out. Hence we'll need the
+> > same failed write checks to trigger buffer resubmission before we
+> > retry the inode reclaim process.
+> > 
+> 
+> I'm aware we take the flush lock there, but I'm not convinced that is a
+> deadlock vector. AFAICT, nothing in that callpath blocks the subsequent
+> AIL retries from occurring. If that AIL retry eventually succeeds, this
+> all unwinds and we carry on as normal.
+> 
+> If _blocking_ as such is a problem for the codepath in question, then
+> that seems like more of a question of whether a trylock is more
+> appropriate.
+> 
+> > [....]
+> > 
+> > > As it is, this patch would only add an acquisition of ->xa_lock in
+> > > completion context on I/O failure. Exactly what workload would you
+> > > expect to be affected by changes to I/O error handling? How would it be
+> > > any different than what we already do on normal I/O completion?
+> > 
+> > If you want to check and clear the failed flag in the log item in a
+> > non-racy way  in IO submission (because we have to do this outside
+> > the flush lock) then we'd have to hold the AIL lock. And that means
+> > the AIL lock is then in the hot path of inode flushing in all
+> > situations, not just in IO completion.
+> > 
+> 
+> Personally, I have no specific desire to clear the failed flags in I/O
+> submission context as a general solution. The AIL retry originally did
+> that as a sort of an optimization to avoid looking up the buffer for
+> every flush locked inode (rightly and based on your suggestion).
+> 
+> This appears to have clouded the fact that we still need to clear the
+> failed flag on successful I/O completion (I thought I called that out on
+> a previous iteration, but I've lost track so maybe not. I also haven't
+> got to Carlos' latest version.).
+> 
+> Conditionally relying on clearing the failed flag from submission
+> context (as this patch does) is not sufficient because it is still
+> possible to modify and flush an inode to an already failed buffer (and
+> thus the buffer has pre-existing failed inodes). If an AIL push ended up
+> resubmitting the buffer due to the newly flushed/notfailed inode, it
+> never clears the failed flags on the other inodes attached to the
+> buffer. I haven't combed through all of the codepaths there, but I
+> wouldn't be surprised to see a data loss bug lurking in there. (Note
+> again that this is based on the code in this patch.)
+> 
+> This _could_ imply that all submission contexts need to unconditionally
+> check for and clear failed items on the buffer or that the buffer needs
+> a flag too, but it would be much more simple and straightforward to
+> clear the flag after successful I/O completion (when ->xa_lock is
+> already held). This avoids the need for extra flags or serialization
+> requirements. To be fair, this _may_ require an additional ->xa_lock
+> cycle on I/O completion to clear the flag from relogged items so they
+> are flushed correctly again on a subsequent push (without having left
+> the AIL), but again, that should only occur after an I/O error has
+> occurred.
+> 
+> [NOTE: After reading the rest of the email and coming back here, I see
+> you suggested the same notion of clearing the flag after I/O success in
+> your flush lock rework idea, so I suspect I'm not totally off the rails
+> here. ;)]
+> 
+> If that all works, there is no need to acquire the AIL lock in any
+> context we don't already have it in general. Again, if I'm missing
+> something there, please point it out.
+> 
+> > We've known for a long time that the AIL lock is the second most
+> > contended lock in the filesystem (behind the CIL context lock), and
+> > that it is most heavily contended on inode IO completion because
+> > completion runs on the CPU that the interrupt is delivered to and
+> > so the AIL lock gets contended from multiple CPUs at once on
+> > multi-disk filesystems (see xfs_iflush_done() for more info).
+> > As such, we do not want to increase it's use anywhere in the inode
+> > IO submission/completion path at all if we can possibly avoid it.
+> > 
+> 
+> Understood and agreed. But as mentioned previously, I've not suggested
+> taking ->xa_lock anywhere else outside of when I/O errors occur and so
+> performance in general is not affected.
+> 
+> > So with all the problems that leaving failed inodes flush locked
+> > presents, I'm starting to think that the inode failed callback
+> > should remove the inode from the buffer and drop the flush lock
+> > rather than leave it held and attached to the buffer. We can check
+> > the LI_FAILED flag in xfs_iflush_int() and simply skip the inode
+> > flush to the buffer to effectively "resubmit" the inode unchanged.
+> > If we then clear the LI_FAILED flag in xfs_iflush_done() (i.e. only
+> > when a successful write occurs), we don't need to jump through hoops
+> > to clear the flag at IO submission time. We'd probably also need a
+> > failed flag on the buffer (maybe with a hold ref, too) so that it
+> > isn't reclaimed by memory pressure while we have inodes in the
+> > failed state pending writeback.
+> > 
+> 
+> A couple thoughts... first on the idea itself and second on the
+> trajectory of this particular patch series.
+> 
+> 1.) Interesting idea. Some of my initial questions/thoughts on the idea
+> itself...
+> 
+> It's not clear to me how we'd manage whether a failed (and
+> flush-unlocked) inode has been subsequently modified and actually needs
+> to be flushed again. I'm also not following how we'd propagate
+> successful completion state back to the parent inodes if they had been
+> previously removed from the buffer due to an I/O failure.
+> 
+> It sounds like this _may_ conflict with providing a generic solution to
+> this problem (i.e., we have to fix this problem for dquots as well, and
+> hence this patch is focused on providing a generic solution). Is that
+> not the case, or would we have to repeat this pattern for every flush
+> locked item?
+> 
+> Finally, I'm a bit skeptical that it's wise to provide such a
+> fundamental shift in flush locking behavior based on the rare case of an
+> I/O error. That means every case that currently acquires a flush lock
+> has a new state to consider (IOW, we've effectively changed the meaning
+> of the lock). My experience is that our error handling
+> testing/regression capabilities are fairly poor as it is (which I don't
+> think is something unique to us), and thus error path regressions are
+> generally easier to introduce and tend to go undetected for quite some
+> time (how long has AIL retry been broken? ;).
+> 
+> Of course, this is just a first impression and could all be alleviated
+> with further discussion and/or code.
+> 
+> 2.) Independent of whether we want to do something like the above, I
+> disagree with the premise that this series causes any new problems with
+> regard to flush locked metadata items (as explained above). It is
+> focused on fixing a particular AIL retry bug in the uncommon I/O error
+> case within the AIL retry framework that has been in place for quite
+> some time. Once the kinks are worked out, I think this is now very close
+> to fixing that bug succinctly, correctly and without any performance
+> side effects.
+> 
+> As such, I would very much prefer that we actually make progress on
+> fixing this specific bug before moving on to the new shiny design that
+> redefines flush locking. If there are still fundamental flush lock
+> issues beyond what this patch is intended to fix, we can address those
+> incrementally and rework flush locking along with LI_FAILED handling on
+> top of a known working base provided by this patch. At the absolute very
+> least, I'd prefer that we work out the remaining kinks in this patchset
+> (even if it is not ultimately merged) to provide a common reference for
+> a correct solution. If there is a hard technical impasse with this fix,
+> then that would at least help Carlos and I understand where the actual
+> problems lie.
+> 
+> That's just my .02 and is ultimately contingent on Carlos' preferred
+> approach, since he's the one doing the heavy lifting here (though I
+> suspect he would also prefer the incremental approach).
+> 
+> Brian
 
+I need to give some more thinking about Dave's suggestion on this new flush
+locking design Dave suggested. This really looks a nice idea that needs some
+polish before the implementation, and I can certainly work on that, but, from my
+POV, I'll agree with Brian here.
 
-And I'm trying to get you to move past your ancient legacy bootloader
-focus and discuss things that matter in 2017.
+Reworking in the flush lock design will take time, more discussions, more
+patches, etc. In the mean time, we have an increasing number in users hitting
+this bug, with the increasing usage of DM-Thin, this tends to increase quick,
+once, the bug is easily triggered when using dm-thin.
 
-First, nothing works like LILO, not even ELILO works like LILO.
+The unmount hang is just one of the symptoms of the problem, but there are
+several other things that go wrong and might be unnoticed by the user. The
+unmount is the most noticeable symptom an user will see, and I believe we can
+just polish what needed to be polished on my patchset, fix the bug, then move on
+and I'll work on this design Dave suggested.
 
-Second, I have only been able to reproduce this problem with grubby +
-XFS. If I manually do grub2-mkconfig + reboot -f instead, the problem
-does not happen. It might be that I'm too slow, and the marginal
-amount of extra time permits the new grub.cfg to fully commit, but I
-don't know.
+My patchset shouldn't introduce any new bug or regression (saving it still needs
+that a successful IO completion clears the LI_FAILED flag), and fixes a bug that
+is appearing more and more often in a reasonable way.
 
-Third, basic bootloader concepts:
+Then I move on and look over the design Dave mentioned, instead of stick with
+this bug in the code for... who knows how longer.
 
-The bootloader is the executable that's loaded by the firmware after POST.
+Anyway, I'm not trying to 'sell my fish' here saying this patchset is the best
+solution, I'm far away from doing things like that, but this patchset uses the
+approach we took weeks to decide, then, why not use this now, fix the bug and
+improve it when at least users are not hitting the bug anymore?
 
-The bootloader installer is not the bootloader. /sbin/lilo,
-/sbin/extlinux, /sbin/grub-install are not bootloaders, they are
-bootloader installers. Only lilo totally reinstalls the bootloader
-binary when configurations change. GRUB, extlinux, uboot, zipl don't
-do that. Their configuration files change and that's it, and they do
-not depend on boot sectors for this, they don't write outside the file
-system to the drive like lilo. They depend on the file system.
-
-So what you are stuck with, what you have in 2017, are bootloaders
-that do not work the way you describe, and will not ever work like
-what you describe.
-
-
-
-> However, IMO problem does indeed lie with the bootloader and not the
-> distro packaging mechanism/scripts, and so we need to talk a bit out
-> the architectural differences between bootloaders like lilo and
-> grub/petitboot and why I consider update durability to be something
-> the bootloader needs to provide, not thrid party packagers or the
-> init system.
-
-Either the bootloader needs to learn how to read dirty logs, or there
-can be no dirty log entries related to three things: kernel,
-initramfs, and bootloader configuration. If any of those three things
-are not fully committed to the file system metadata,  the bootloader
-will fail to find them.
-
-GRUB, extlinux, uboot - they are reading the file system to find their
-configuration files, the kernel and the initramfs. That's not how LILO
-works. And putting it on some pedestal as if that's how these other
-bootloader ought to work in order to be fail safe, is ridiculous on
-its face. It's basically demanding they do a total architectural
-change and rewrite from scratch.
-
-If GRUB or grubby are not being used, then the bootloader
-configuration file is most likely modified by a script in the kernel
-package. How do you avoid burdening the kernel package from update
-durability when it is responsible for writing the kernel, initramfs,
-and the third most likely thing to modify the bootloader
-configuration?
-
-You're also saying that sync() is not sufficient, and also haven't
-answered the question if it's sane for the kernel package manager as
-well as the bootloader configuration modifier (be it the kernel
-package, grubby, or grub-mkconfig) to assume that something else is
-going to reliably remount-ro or umount or freeze the file system and
-thus fully commit these changes.
-
-If that is not sane, then you're burdening all of them with freeze
-because they aren't in a position to remount or umount.
-
-
->> > Now originally they were blaming the file systems, saying that sync()
->> > is supposed to guarantee everything, data and metadata is completely
->> > written to stable media. But I think that definition of sync()
->> > predates journaled file systems, so now there's broad understanding in
->> > fs circles that journaled file systems only guarantee the journal and
->> > data are committed to stable media, not the fs metadata itself.
->>
->> Right.  Everything's committed to stable media /somewhere/, but the
->> metadata isn't necessarily where an fs driver will find it if that
->> driver ignores the dirty log.
->
-> Right. ISTR that early FS journalling papers from the late 80s
-> talked about this in detail, and why they didn't need to write back
-> metadata to provide sync(1) guarantees.  All journalling filesystems
-> since then have simply written the data+journal on sync(1).  These
-> sorts of basic OS concepts should be known by *everyone* writing low
-> level OS infrastructure...
-
-
-
-*shrug* ok well there's evidence they do not in fact know this. So
-start imagining what other confusion exists from wrong assumptions
-about basic concepts, and how to go about mitigating this.
-
-
-
-
-
-
-
->> > This whole LILO thing is irritating. I don't know how many times I
->> > have to say it...
->> >
->> > grubby is the sole thing responsible for writing bootloader
->> > configuration changes, no matter the bootloader, on Red Hat and Fedora
->> > systems. There is absolutely no difference between LILO and GRUB
->> > bootloader configuration changes on these distros.
->>
->> I'm tired of getting beat over the head about this.  There's no grubby
->> on Debian!
->
-> I've told Chris that several times, too. He's still shouting at me
-> (and you!) about grubby, though...
->
->> (No *sync(), huh?)
-> ...
->> (we only fsync the grubenv file??)
->
-> Yikes! It's worse than I thought.
->
-> So, with that all out of the way, lets look at a lilo update.
-> My laptop (debian) running lilo:
->
-> $ sudo vi /etc/lilo.conf
-> <modify and save new config file to simulate dpkg installing a new
->  kernel package, updating /boot and various links and modifying the
->  /etc/lilo.conf file>
-> $ sudo strace -o t.t lilo
-> Added Linux  *
-> Added Linux.old
-> $ grep sync t.t
-> sync()                                  = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> fdatasync(6)                            = 0
-> sync()                                  = 0
-> sync()                                  = 0
-> $
->
-> The files decriptors of note are:
->
-> open("/dev/disk/by-id/ata-C400-MTFDDAK256MAM_000000001305036641EA", O_RDWR) = 5
-> open("/boot/map~", O_RDWR)              = 6
->
-> And here's the last ~10 operations done:
->
-> write(6, "\353N\0\0\0\0LILO\30\2\3360\"Y\2\3\0\0\266\0\0\0\0\0\225;\340V\2\0", 32) = 32
-> close(6)                                = 0
-> lseek(5, 0, SEEK_SET)                   = 0
-> sync()                                  = 0
-> write(5, "\372\353!\1\264\1LILO\30\2\3360\"Y\0\0\0\0\303\3049Q\224\236\7\0\241\0\200`"..., 512) = 512
-> close(5)                                = 0
-> rename("/boot/map~", "/boot/map")       = 0
-> sync()                                  = 0
-> close(4)                                = 0
-> exit_group(0)
->
-> This says that lilo uses a safe overwrite proceedure to do the
-> on-disk bootloader update. i.e. the initial sync ensures all the new
-> kernel updates and config file mods are written to disk. It then
-> maps all the files and writes the /boot/map~ file and syncs
-> everything. At this point, the new boot information is on the block
-> device. It then writes the new boot sector, renames /boot/map~ to it's
-> proper name, then runs sync. This atomic update of the boot sector
-> switches to the new boot map and makes the switch permanent.
->
-> Hence when the lilo binary exits, the information required by the
-> bootloader is *completely on stable storage*. At each stage, right
-> up to the atomic boot sector overwrite, a crash or failure leaves
-> the old boot map and boot sector intact. IOWs, lilo has a *fail-safe
-> update procedure*.
->
-> As a result, you do *not* need to call sync or freeze the filesystem
-> after running the lilo command because it has already guaranteed the
-> updated bootloader information is on stable storage.  And because
-> you have to run lilo to update the bootloader, distro package
-> managers *can't fuck it up* because the bootloader has full control
-> of the update process.
-
-Haha. Well it can't fuck it up because it's doing a total end run
-around the file system. Not even ELILO can do that. There is no such
-thing as boot sectors, and writing data outside the file system on a
-UEFI computer.
-
-
-
-
->
-> IOWs, Lilo updates are based on a fool-proof design.  It's also
-> fail-safe on many levels because not only is the update mechanism
-> fail-safe, config errors/failures will be caught during update
-> rather before the system is restarted rather than when the config
-> files are parsed during bootloader execution when it errors may be
-> difficult/impossible to fix.
->
-> Grub, unfortunately, does not have a fail-safe update procedure, and
-> it clearly does not have a fool-proof update architecture (as this
-> thread demonstrates). If we expect distro packaging tools to do
-> reliable boot loader updates, then the bootloader needs to provide
-> both fail-safe updates and do it via a fool-proof mechanism. It's no
-> good having a fail-safe update mechanism if it does not get used to
-> do updates. Grub currently fails on both accounts....
-
-
-Fool proof design because it doesn't trust the file system, at all, for writing.
-
-Actually GRUB has a functional equivalent, it's just that it's not the
-upstream default, and no distro appears to want to use it by default:
-create configuration file, create core image with that configuration
-file baked into it, and then install new core.img to MBR gap or
-bios-grub partition. And this can be done atomically and fail safe if
-the gap is big enough, with the last step being to write a new
-boot.img in the first 440 bytes of LBA 0 to point to the new core.img.
-
-That works and is fail safe why? Because it depends on the file system
-as much as lilo. Zero.
-
-
-
-
->
->> > So to be consistent you have to blame RPM for not ensuring its writes
->> > are safely on stable storage either, before reboot.
->> >
->> > Jesus Christ...
->> >
->> > I want Dave to write "this problem has nothing to do with GRUB" 50
->> > times on a chalkboard.
->>
->> Frankly, all you have to do is tweak the grub config file writer to
->> "fsfreeze -f /boot && fsfreeze -u /boot" after it writes the grub.cfg and
->> before it exits.  That's both grubby and grub-mkconfig.
->
-> Yup, that's the work-around I've previously suggested should be
-> added to grub and distro update mechanisms.  It doesn't fix the
-> underlying architectural issues grub has (e.g. updates are still
-> not fail-safe), but it provides the durability guarantee that is
-> required if the whole update process completes.
-
-It assumes that the kernel package executes grub-mkconfig or grubby
-only once the kernel and initramfs have finished writing. I've seen
-this happen in parallel with RPM and new-kernel-package, so you could
-conceivably get this scenario:
-
-1. kernel is written and sync()
-2. initramfs is opened and dracut is creating it
-3. grub-mkconfig runs and then fifreeze/fiunfreeze
-4. dracut continues to append to initramfs then completes
-5. reboot without remount-ro or umount
-
-And now you have a borked boot because the initramfs isn't fully
-committed, part of its writes are only in the journal which the
-bootloader will not see. So it'll end up loading only part of the
-initramfs into memory.
+Cheers.
 
 
->
->> Or systemd/sysvinit could always ensure that the fs containing the boot
->> files is unmounted no matter what.  Or systemd/sysvinit could freeze the
->> fs for us before asking for a reboot.  Or the kernel could freeze the fs
->> for us before actually doing the reboot.  Any one of those options is
->> sufficient, but not one of them is reliably performed by any of the
->> pieces.  systemd *almost* always succeed at unmounting /boot, which is
->> why few people see this problem.
->
-> Design principles of modularity and coupling say it's really up to
-> the bootloader to provide the durability mechanisms it needs.  IOWs,
-> the *bootloader update infrastructure* needs to provide the
-> durability guarantee/mechanism the bootloader infrastructure
-> requires (as per the lilo example) and not the init system.
+> 
+> > This leaves the rest of the submission code completely unchanged -
+> > including the write clustering.  It also gets rid of all the flush
+> > lock deadlock scenarios because we always unlock the flush lock on
+> > IO completion, regardless of whether the buffer IO succeeded or not.
+> > ANd we don't have to change any infrastructure, either - it all just
+> > works as it is because the LI_FAILED flag is handled at the lowest
+> > levels possible.
+> > 
+> > This, to me, seems like a far cleaner solution than anything we've
+> > discussed so far....
+> > 
+> > Cheers,
+> > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
-The lilo example needs to be banned from the discussion. Nothing else
-works like it does, nor will it. And it also ignores the fact that the
-kernel or initramfs could possibly only be in the dirty log, without
-being in fs metadata itself and thus not locatable by the bootloader.
-
-
-
-Chris Murphy
+-- 
+Carlos
