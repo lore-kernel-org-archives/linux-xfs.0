@@ -1,103 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44406 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:42654 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750987AbdEWNFh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 May 2017 09:05:37 -0400
-Date: Tue, 23 May 2017 21:05:34 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 2/3] xfs: Fix off-by-in in loop termination in
- xfs_find_get_desired_pgoff()
-Message-ID: <20170523130534.GB7250@eguan.usersys.redhat.com>
-References: <20170518104850.14508-1-jack@suse.cz>
- <20170518104850.14508-3-jack@suse.cz>
- <20170522175045.GB1473@bfoster.bfoster>
- <20170523032123.GW7250@eguan.usersys.redhat.com>
- <20170523085044.GA1119@quack2.suse.cz>
- <20170523110832.GY7250@eguan.usersys.redhat.com>
- <20170523121718.GB6543@bfoster.bfoster>
+        id S1031593AbdEXWeT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 May 2017 18:34:19 -0400
+Subject: Re: [PATCH] xfs_metadump: tag metadump image with attribute flags
+References: <402504cb-1632-85b6-a745-1334ccf0ee8f@redhat.com>
+ <20170523154603.GR4519@birch.djwong.org>
+ <41c04794-5aef-5e2e-17ad-9ccf8aac488c@sandeen.net>
+ <20170524032632.GA17542@dastard>
+ <7d6c4f1e-6977-f205-478f-a41f813ecdf1@sandeen.net>
+ <20170524222526.GB17542@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <68faddc1-36c2-2424-d31f-949585db8f95@sandeen.net>
+Date: Wed, 24 May 2017 17:34:17 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170523121718.GB6543@bfoster.bfoster>
+In-Reply-To: <20170524222526.GB17542@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, May 23, 2017 at 08:17:20AM -0400, Brian Foster wrote:
-> On Tue, May 23, 2017 at 07:08:32PM +0800, Eryu Guan wrote:
-> > On Tue, May 23, 2017 at 10:50:44AM +0200, Jan Kara wrote:
-> > > On Tue 23-05-17 11:21:23, Eryu Guan wrote:
-> > > > On Mon, May 22, 2017 at 01:50:47PM -0400, Brian Foster wrote:
-> > > > > On Thu, May 18, 2017 at 12:48:49PM +0200, Jan Kara wrote:
-> > > > > > There is an off-by-one error in loop termination conditions in
-> > > > > > xfs_find_get_desired_pgoff() since 'end' may index a page beyond end of
-> > > > > > desired range if 'endoff' is page aligned. It doesn't have any visible
-> > > > > > effects but still it is good to fix it.
-> > > > > > 
-> > > > > > Signed-off-by: Jan Kara <jack@suse.cz>
-> > > > > > ---
-> > > > > >  fs/xfs/xfs_file.c | 2 +-
-> > > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > > > 
-> > > > > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > > > > > index f371812e20c6..3714b5736fd3 100644
-> > > > > > --- a/fs/xfs/xfs_file.c
-> > > > > > +++ b/fs/xfs/xfs_file.c
-> > > > > > @@ -1043,7 +1043,7 @@ xfs_find_get_desired_pgoff(
-> > > > > >  
-> > > > > >  	index = startoff >> PAGE_SHIFT;
-> > > > > >  	endoff = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount);
-> > > > > > -	end = endoff >> PAGE_SHIFT;
-> > > > > > +	end = (endoff - 1) >> PAGE_SHIFT;
-> > > > > 
-> > > > > Hmm.. I think this messes with the want count for the pagevec_lookup().
-> > > > > E.g.:
-> > > > > 
-> > > > > # xfs_io -fc "truncate 0" -c "falloc 0 16k" -c "pwrite 0 16k" -c "seek -h 0" /mnt/file 
-> > > > > wrote 16384/16384 bytes at offset 0
-> > > > > 16 KiB, 4 ops; 0.0000 sec (200.321 MiB/sec and 51282.0513 ops/sec)
-> > > > > Whence  Result
-> > > > > HOLE    12288
-> > > > 
-> > > > I think the root cause is that the calculation for 'want' is wrong, it
-> > > > has an off-by-one bug too. I sent a patch[1] to fix it, with my patch
-> > > > applied on top of Jan's patchset, your test case passed (report HOLE at
-> > > > 16k). Can you please take a look if it's a correct fix? Thanks!
-> > > 
-> > > Yes, I've messed that up. It is a bug introduced by my series as Brian
-> > > properly noticed. Thanks guys for noticing and fixing it! Darrick, should I
-> > > fold in Eryu's fix and send v4 of the series or will you just pick up
-> > > Eryu's fix?
-> > 
-> > I think it's a separate bug, the issue described in my patch can be
-> > reproduced on stock 4.12-rc1 kernel, without your patchset. The
-> > situation for ext4 is similar to XFS, it seems not a bug introduced by
-> > your patches.
-> > 
-> > Thanks for the review!
-> > 
+On 5/24/17 5:25 PM, Dave Chinner wrote:
+> On Tue, May 23, 2017 at 10:29:33PM -0500, Eric Sandeen wrote:
+>> On 5/23/17 10:26 PM, Dave Chinner wrote:
+>>> On Tue, May 23, 2017 at 10:47:50AM -0500, Eric Sandeen wrote:
+>>>> On 5/23/17 10:46 AM, Darrick J. Wong wrote:
+>>>>> On Mon, May 22, 2017 at 07:33:35PM -0500, Eric Sandeen wrote:
+>>>>>> After the long discussion about warning the user and/or consumer
+>>>>>> of xfs_metadumps about dirty logs, it crossed my mind that we
+>>>>>> could use the reserved slot in the metadump header to tag the
+>>>>>> file with attributes, so the consumer of the metadump knows how
+>>>>>> it was created.
+>>>>>>
+>>>>>> This patch adds 3 flags to describe the metadump: dirty log,
+>>>>>> obfuscated, and full blocks (unused portions of metadata blocks
+>>>>>> are not zeroed out).
+>>>>>>
+>>>>>> It then adds a new option to xfs_mdrestore, "-i" to show info,
+>>>>>> which can be used with or without a target file:
+>>>>
+>>>>
+>>>>>> +/* mb_flags */
+>>>>>> +#define XFS_METADUMP_OBFUSCATED	(1 << 0)
+>>>>>> +#define XFS_METADUMP_FULLBLOCKS	(1 << 1)
+>>>>>> +#define XFS_METADUMP_DIRTYLOG	(1 << 2)
+>>>>>
+>>>>> If we always wrote zero for mb_reserved previously, how do we
+>>>>> distinguish between a non-obfuscated partial-block clean-log metadump
+>>>>> and an old metadump?  Do we care?
+>>>>
+>>>> Oh right.  ;)
+>>>>
+>>>>> I imagine metadumps are fairly transitory in nature, so it might not be
+>>>>> a big deal, and probably not worth burning 1/8 of our flag-space over
+>>>>> since AFAICT we don't use the(se) flags for any serious behavioral
+>>>>> changes.
+>>>>
+>>>> OTOH, how many flags would we possibly have?  I'm ok with adding a
+>>>> "we have flags" flag, too.
+>>>
+>>> We can't extend the metadump header in a backwards compatible way
+>>> unless mdrestore already rejects metadumps with non-zero mb_reserved
+>>> fields....
+>>
+>> There's no action taken based on the contents; it's information only,
+>> and essentially optional.  It doesn't affect the primary functionality of
+>> mdrestore in any way.
+>>
+>> The reserved field has always been zeroed before; if newer mdrestore finds
+>> all zeros, it can say "no info available."
+>>
+>> If newer mdrestore finds a "we have flags" flag, it can report information
+>> contained there.
+>>
+>> What hole am I missing?
 > 
-> I think there's the possiblity of multiple things going on here. The
-> problem noted above didn't occur without this series applied. Of course,
-> that doesn't mean that there isn't some other problem with the current
-> code that Eryu has reproduced and fixed.
-> 
-> In any event, I don't think we should knowingly apply patches with
-> regressions, even if they are fixed up in the same patch series. Could
-> we get this fixed up/combined somehow or another so we at least do not
-> introduce a transient regression (it doesn't matter to me if the
-> independent problem is addressed in a separate patch or at the same
-> time)?
-> 
-> Also, Eryu, could you Tested-by this series before it goes in? It seems
-> you have some tests that stress it quite thoroughly. :)
+> That I read "we have flags flag" as a "we have another flags field"
+> flag. Which can't be done because the block index is packed hard
+> against the struct xfs_metablock header.
 
-I have no tests more than generic/285 and generic/436, I just run them
-with different block size xfs/ext4 and on different architectures
-(x86_64 and ppc64) :) But sure, I'll give a Tested-by tag once we work
-out which patches should go in.
+Right, I'm not doing that.
+
+I'm suggesting that mb_reserved has been zeroed out from day 1, so
+the presence of /anything/ there indicates a newer format.
+
+As Darrick pointed out, the absence of anything there isn't helpful,
+unless we:
+
+#define XFS_METADUMP_INFO_FLAGS (1 << 0)
+
+and set that in newer metadump - then we'll know that the presence
+or absence of any other feature flags will tell us something
+about the dump.  If the INFO_FLAGS flag isn't set, it's an
+old dump, and we can't learn anything.
+
+<snip>
+
+> As such, even if we don't change the size of the header, the flags
+> can only be informational. They can't indicate a change in metadata
+> format or behaviour such feature flags requires older mdrestorei
+> binaries to reject flags they don't understand. In that case,
+> calling the field "mb_info" might be more appropriate....
+
+Right, that's why I made the option to read them "-i" (info),
+and nothing else.
+
+Certainly can't use them for format changes.
+
+Sure, I can change the field name to make it more clear.
 
 Thanks,
-Eryu
+-Eric
+ 
+> Cheers,
+> 
+> Dave.
+>>
+>> Thanks,
+>> -Eric
+>>
+> 
