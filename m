@@ -1,56 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f193.google.com ([209.85.161.193]:33676 "EHLO
-        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760765AbdEWD4r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2017 23:56:47 -0400
-Received: by mail-yw0-f193.google.com with SMTP id y64so8744272ywe.0
-        for <linux-xfs@vger.kernel.org>; Mon, 22 May 2017 20:56:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJCQCtTj4it6o-Fop6vm3s_HFbRemF5o_H9w-tvS6wmFfVwKBA@mail.gmail.com>
-References: <20170518012618.GT4519@birch.djwong.org> <20170518013242.GW4519@birch.djwong.org>
- <20170518083405.GQ17542@dastard> <20170518223053.GD4519@birch.djwong.org>
- <CAJCQCtTj-7BovZbXyZu9=Dhh4ROR-AJ6Dpsw1GKbM-a2fr+uVw@mail.gmail.com>
- <20170519210040.GL4519@birch.djwong.org> <20170522020112.GV17542@dastard> <CAJCQCtTj4it6o-Fop6vm3s_HFbRemF5o_H9w-tvS6wmFfVwKBA@mail.gmail.com>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Mon, 22 May 2017 21:56:45 -0600
-Message-ID: <CAJCQCtT5riGri5d3cin9BipUso9mfQ-PBqoPzMZEEYm8RezJdA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] xfs: freeze rw filesystems just prior to reboot
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx2.suse.de ([195.135.220.15]:47707 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1035665AbdEXQmW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 May 2017 12:42:22 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 10/10] btrfs: nowait aio support
+Date: Wed, 24 May 2017 11:41:50 -0500
+Message-Id: <20170524164150.9492-11-rgoldwyn@suse.de>
+In-Reply-To: <20170524164150.9492-1-rgoldwyn@suse.de>
+References: <20170524164150.9492-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Mon, May 22, 2017 at 2:46 PM, Chris Murphy <lists@colorremedies.com> wrote:
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-> Second, I have only been able to reproduce this problem with grubby +
-> XFS.
+Return EAGAIN if any of the following checks fail
+ + i_rwsem is not lockable
+ + NODATACOW or PREALLOC is not set
+ + Cannot nocow at the desired location
+ + Writing beyond end of file which is not allocated
 
-OK so this is just on Fedora/RH systems, which is the example case I
-have. The kernel RPM is running a script called new-kernel-pkg which
-is part of grubby. It's found here:
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Acked-by: David Sterba <dsterba@suse.com>
+---
+ fs/btrfs/file.c  | 25 ++++++++++++++++++++-----
+ fs/btrfs/inode.c |  3 +++
+ 2 files changed, 23 insertions(+), 5 deletions(-)
 
-https://github.com/rhinstaller/grubby/blob/master/new-kernel-pkg
-
-# make sure changes make it to the disk.
-# if /boot is a mountpoint, force the meta data on disk
-# to by-pass writeback delay.
-# PPC64LE-only to deal with Petitboot issues
-if [ "$ARCH" = "ppc64le" ]; then
-    sync && mountpoint -q /boot && fsfreeze -f /boot && fsfreeze -u /boot
-fi
-
-
-So why only Petitboot on ppc64 is considered to need this?
-
-Also I put zipl in the bootloader category that doesn't need to be totally
-reinstalled, which is incorrect it's more like lilo. I guess I was thinking of
-yaboot. In any case the main point remains that the common
-bootloaders being used these days depend only on modification of a
-bootloader configuration file via the file system that file is located
-on.
-
-
+diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+index da1096eb1a40..aae088e49915 100644
+--- a/fs/btrfs/file.c
++++ b/fs/btrfs/file.c
+@@ -1875,12 +1875,29 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
+ 	ssize_t num_written = 0;
+ 	bool sync = (file->f_flags & O_DSYNC) || IS_SYNC(file->f_mapping->host);
+ 	ssize_t err;
+-	loff_t pos;
+-	size_t count;
++	loff_t pos = iocb->ki_pos;
++	size_t count = iov_iter_count(from);
+ 	loff_t oldsize;
+ 	int clean_page = 0;
+ 
+-	inode_lock(inode);
++	if ((iocb->ki_flags & IOCB_NOWAIT) &&
++			(iocb->ki_flags & IOCB_DIRECT)) {
++		/* Don't sleep on inode rwsem */
++		if (!inode_trylock(inode))
++			return -EAGAIN;
++		/*
++		 * We will allocate space in case nodatacow is not set,
++		 * so bail
++		 */
++		if (!(BTRFS_I(inode)->flags & (BTRFS_INODE_NODATACOW |
++					      BTRFS_INODE_PREALLOC)) ||
++		    check_can_nocow(BTRFS_I(inode), pos, &count) <= 0) {
++			inode_unlock(inode);
++			return -EAGAIN;
++		}
++	} else
++		inode_lock(inode);
++
+ 	err = generic_write_checks(iocb, from);
+ 	if (err <= 0) {
+ 		inode_unlock(inode);
+@@ -1914,8 +1931,6 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
+ 	 */
+ 	update_time_for_write(inode);
+ 
+-	pos = iocb->ki_pos;
+-	count = iov_iter_count(from);
+ 	start_pos = round_down(pos, fs_info->sectorsize);
+ 	oldsize = i_size_read(inode);
+ 	if (start_pos > oldsize) {
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 17cbe9306faf..2ab71b946829 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -8755,6 +8755,9 @@ static ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 			dio_data.overwrite = 1;
+ 			inode_unlock(inode);
+ 			relock = true;
++		} else if (iocb->ki_flags & IOCB_NOWAIT) {
++			ret = -EAGAIN;
++			goto out;
+ 		}
+ 		ret = btrfs_delalloc_reserve_space(inode, offset, count);
+ 		if (ret)
 -- 
-Chris Murphy
+2.12.0
+
