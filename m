@@ -1,127 +1,193 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51454 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753397AbdERBcq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 May 2017 21:32:46 -0400
-Date: Wed, 17 May 2017 18:32:42 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 3/3] xfs: freeze rw filesystems just prior to reboot
-Message-ID: <20170518013242.GW4519@birch.djwong.org>
-References: <20170518012618.GT4519@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170518012618.GT4519@birch.djwong.org>
+Received: from mx2.suse.de ([195.135.220.15]:47602 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1035629AbdEXQmP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 May 2017 12:42:15 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 07/10] fs: return on congested block device
+Date: Wed, 24 May 2017 11:41:47 -0500
+Message-Id: <20170524164150.9492-8-rgoldwyn@suse.de>
+In-Reply-To: <20170524164150.9492-1-rgoldwyn@suse.de>
+References: <20170524164150.9492-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: Eric Sandeen <sandeen@redhat.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Apparently there are certain system software configurations that do odd
-things like update the kernel and reboot without umounting the /boot fs
-or remounting it readonly, either of which would push all the AIL items
-out to disk.  As a result, a subsequent invocation of something like
-grub (which has a frightening willingness to read a fs with a dirty log)
-can read stale disk contents and/or miss files the metadata for which
-have been written to the log but not checkpointed into the filesystem.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Granted, most of the time /boot is a separate partition and
-systemd/sysvinit/whatever actually /do/ unmount /boot before rebooting.
-This "fix" is only needed for people who have one giant filesystem.
+A new bio operation flag REQ_NOWAIT is introduced to identify bio's
+orignating from iocb with IOCB_NOWAIT. This flag indicates
+to return immediately if a request cannot be made instead
+of retrying.
 
-Therefore, add a reboot hook to freeze the rw filesystems (which
-checkpoints the log) just prior to reboot.  This is an unfortunate and
-insufficient workaround for multiple layers of inadequate external
-software, but at least it will reduce boot time surprises for the "OS
-updater failed to disengage the filesystem before rebooting" case.
+Stacked devices such as md (the ones with make_request_fn hooks)
+currently are not supported because it may block for housekeeping.
+For example, an md can have a part of the device suspended.
+For this reason, only request based devices are supported.
+In the future, this feature will be expanded to stacked devices
+by teaching them how to handle the REQ_NOWAIT flags.
 
-Seeing as grub is unlikely ever to learn to replay the XFS log (and we
-probably don't want it doing that), *LILO has been discontinued for at
-least 18 months, and we're not quite to the point of putting kernel
-files directly on the EFI System Partition, this seems like the least
-crappy solution to this problem.
-
-Yes, you're still screwed in grub if the system crashes. :)  I don't
-anticipate this patch will make it upstream, but the idea could get at
-least a single hearing.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- fs/xfs/xfs_super.c |   40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ block/blk-core.c          | 24 ++++++++++++++++++++++--
+ block/blk-mq-sched.c      |  3 +++
+ block/blk-mq.c            |  2 ++
+ fs/direct-io.c            | 10 ++++++++--
+ include/linux/bio.h       |  6 ++++++
+ include/linux/blk_types.h |  2 ++
+ 6 files changed, 43 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 455a575..415b1e8 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -61,6 +61,7 @@
- #include <linux/kthread.h>
- #include <linux/freezer.h>
- #include <linux/parser.h>
-+#include <linux/reboot.h>
+diff --git a/block/blk-core.c b/block/blk-core.c
+index c7068520794b..04d15fa2646c 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1250,6 +1250,11 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
+ 	if (!IS_ERR(rq))
+ 		return rq;
  
- static const struct super_operations xfs_super_operations;
- struct bio_set *xfs_ioend_bioset;
-@@ -1982,6 +1983,38 @@ xfs_destroy_workqueues(void)
- 	destroy_workqueue(xfs_alloc_wq);
++	if (op & REQ_NOWAIT) {
++		blk_put_rl(rl);
++		return ERR_PTR(-EAGAIN);
++	}
++
+ 	if (!gfpflags_allow_blocking(gfp_mask) || unlikely(blk_queue_dying(q))) {
+ 		blk_put_rl(rl);
+ 		return rq;
+@@ -1894,6 +1899,17 @@ generic_make_request_checks(struct bio *bio)
+ 		goto end_io;
+ 	}
+ 
++	/*
++	 * For a REQ_NOWAIT based request, return -EOPNOTSUPP
++	 * if queue does not have QUEUE_FLAG_NOWAIT_SUPPORT set
++	 * and if it is not a request based queue.
++	 */
++
++	if ((bio->bi_opf & REQ_NOWAIT) && !queue_is_rq_based(q)) {
++		err = -EOPNOTSUPP;
++		goto end_io;
++	}
++
+ 	part = bio->bi_bdev->bd_part;
+ 	if (should_fail_request(part, bio->bi_iter.bi_size) ||
+ 	    should_fail_request(&part_to_disk(part)->part0,
+@@ -2051,7 +2067,7 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 	do {
+ 		struct request_queue *q = bdev_get_queue(bio->bi_bdev);
+ 
+-		if (likely(blk_queue_enter(q, false) == 0)) {
++		if (likely(blk_queue_enter(q, bio->bi_opf & REQ_NOWAIT) == 0)) {
+ 			struct bio_list lower, same;
+ 
+ 			/* Create a fresh bio_list for all subordinate requests */
+@@ -2076,7 +2092,11 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 			bio_list_merge(&bio_list_on_stack[0], &same);
+ 			bio_list_merge(&bio_list_on_stack[0], &bio_list_on_stack[1]);
+ 		} else {
+-			bio_io_error(bio);
++			if (unlikely(!blk_queue_dying(q) &&
++					(bio->bi_opf & REQ_NOWAIT)))
++				bio_wouldblock_error(bio);
++			else
++				bio_io_error(bio);
+ 		}
+ 		bio = bio_list_pop(&bio_list_on_stack[0]);
+ 	} while (bio);
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index 1f5b692526ae..9a1dea8b964e 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -83,6 +83,9 @@ struct request *blk_mq_sched_get_request(struct request_queue *q,
+ 	if (likely(!data->hctx))
+ 		data->hctx = blk_mq_map_queue(q, data->ctx->cpu);
+ 
++	if (op & REQ_NOWAIT)
++		data->flags |= BLK_MQ_REQ_NOWAIT;
++
+ 	if (e) {
+ 		data->flags |= BLK_MQ_REQ_INTERNAL;
+ 
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index a69ad122ed66..c6932067c9e5 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1575,6 +1575,8 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ 	rq = blk_mq_sched_get_request(q, bio, bio->bi_opf, &data);
+ 	if (unlikely(!rq)) {
+ 		__wbt_done(q->rq_wb, wb_acct);
++		if (bio->bi_opf & REQ_NOWAIT)
++			bio_wouldblock_error(bio);
+ 		return BLK_QC_T_NONE;
+ 	}
+ 
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index a04ebea77de8..139ebd5ae1c7 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -480,8 +480,12 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
+ 	unsigned i;
+ 	int err;
+ 
+-	if (bio->bi_error)
+-		dio->io_error = -EIO;
++	if (bio->bi_error) {
++		if (bio->bi_error == -EAGAIN && (bio->bi_opf & REQ_NOWAIT))
++			dio->io_error = -EAGAIN;
++		else
++			dio->io_error = -EIO;
++	}
+ 
+ 	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty) {
+ 		err = bio->bi_error;
+@@ -1197,6 +1201,8 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+ 	if (iov_iter_rw(iter) == WRITE) {
+ 		dio->op = REQ_OP_WRITE;
+ 		dio->op_flags = REQ_SYNC | REQ_IDLE;
++		if (iocb->ki_flags & IOCB_NOWAIT)
++			dio->op_flags |= REQ_NOWAIT;
+ 	} else {
+ 		dio->op = REQ_OP_READ;
+ 	}
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index d1b04b0e99cf..cc0aa4315383 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -418,6 +418,12 @@ static inline void bio_io_error(struct bio *bio)
+ 	bio_endio(bio);
  }
  
-+STATIC void
-+xfs_reboot_fs(
-+	struct super_block	*sb,
-+	void			*priv)
++static inline void bio_wouldblock_error(struct bio *bio)
 +{
-+	int			error;
-+
-+	if (sb->s_flags & MS_RDONLY)
-+		return;
-+	xfs_info(XFS_M(sb), "Freezing prior to reboot.");
-+	up_read(&sb->s_umount);
-+	error = freeze_super(sb);
-+	down_read(&sb->s_umount);
-+	if (error && error != -EBUSY)
-+		xfs_info(XFS_M(sb), "Unable to freeze, error=%d", error);
++	bio->bi_error = -EAGAIN;
++	bio_endio(bio);
 +}
 +
-+STATIC int
-+xfs_reboot(
-+	struct notifier_block	*nb,
-+	ulong			event,
-+	void			*buf)
-+{
-+	iterate_supers_type(&xfs_fs_type, xfs_reboot_fs, NULL);
-+	return NOTIFY_DONE;
-+}
-+
-+static struct notifier_block xfs_reboot_notifier = {
-+	.notifier_call = xfs_reboot,
-+	.priority = INT_MAX,
-+};
-+
- STATIC int __init
- init_xfs_fs(void)
- {
-@@ -2056,8 +2089,14 @@ init_xfs_fs(void)
- 	error = register_filesystem(&xfs_fs_type);
- 	if (error)
- 		goto out_qm_exit;
-+
-+	error = register_reboot_notifier(&xfs_reboot_notifier);
-+	if (error)
-+		goto out_register_fs;
- 	return 0;
+ struct request_queue;
+ extern int bio_phys_segments(struct request_queue *, struct bio *);
  
-+ out_register_fs:
-+	unregister_filesystem(&xfs_fs_type);
-  out_qm_exit:
- 	xfs_qm_exit();
-  out_remove_dbg_kobj:
-@@ -2089,6 +2128,7 @@ init_xfs_fs(void)
- STATIC void __exit
- exit_xfs_fs(void)
- {
-+	unregister_reboot_notifier(&xfs_reboot_notifier);
- 	xfs_qm_exit();
- 	unregister_filesystem(&xfs_fs_type);
- #ifdef DEBUG
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 61339bc44400..c87990aec66e 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -205,6 +205,7 @@ enum req_flag_bits {
+ 	/* command specific flags for REQ_OP_WRITE_ZEROES: */
+ 	__REQ_NOUNMAP,		/* do not free blocks when zeroing */
+ 
++	__REQ_NOWAIT,           /* Don't wait if request will block */
+ 	__REQ_NR_BITS,		/* stops here */
+ };
+ 
+@@ -223,6 +224,7 @@ enum req_flag_bits {
+ #define REQ_BACKGROUND		(1ULL << __REQ_BACKGROUND)
+ 
+ #define REQ_NOUNMAP		(1ULL << __REQ_NOUNMAP)
++#define REQ_NOWAIT		(1ULL << __REQ_NOWAIT)
+ 
+ #define REQ_FAILFAST_MASK \
+ 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
+-- 
+2.12.0
+
