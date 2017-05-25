@@ -1,94 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50104 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S964907AbdEYIQW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 May 2017 04:16:22 -0400
-Date: Thu, 25 May 2017 10:16:14 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 01/10] fs: Separate out kiocb flags setup based on RWF_*
- flags
-Message-ID: <20170525081614.GB28950@quack2.suse.cz>
-References: <20170524164150.9492-1-rgoldwyn@suse.de>
- <20170524164150.9492-2-rgoldwyn@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170524164150.9492-2-rgoldwyn@suse.de>
+Received: from mga06.intel.com ([134.134.136.31]:63605 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1424225AbdEYNbL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 May 2017 09:31:11 -0400
+Message-ID: <1495718961.6967.117.camel@linux.intel.com>
+Subject: Re: [PATCH 10/23] afs: switch to use uuid_t and uuid_gen
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Date: Thu, 25 May 2017 16:29:21 +0300
+In-Reply-To: <20170525130027.GA30194@lst.de>
+References: <20170518062705.25902-1-hch@lst.de>
+         <20170518062705.25902-11-hch@lst.de>
+         <1495478957.6967.69.camel@linux.intel.com> <20170523084956.GB20121@lst.de>
+         <1495545099.6967.81.camel@linux.intel.com> <20170525130027.GA30194@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 
-On Wed 24-05-17 11:41:41, Goldwyn Rodrigues wrote:
-> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Thu, 2017-05-25 at 15:00 +0200, Christoph Hellwig wrote:
+> On Tue, May 23, 2017 at 04:11:39PM +0300, Andy Shevchenko wrote:
+> > Since we introduced a union it's possible that we might access the
+> > member which wasn't last modified one. So, my comment is to give an
+> > attention on such possibility and avoid if there is an aliasing
+> > happened.
 > 
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Looks good. You can add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
-> ---
->  fs/read_write.c    | 12 +++---------
->  include/linux/fs.h | 14 ++++++++++++++
->  2 files changed, 17 insertions(+), 9 deletions(-)
+> We do for AFS (and XFS for fs fsid).  My preference would be to
+> not have the v1 struct defintion but instead provide a few
+> helpers in uuid.h that use get_unaligned_be* if needed:
 > 
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index 47c1d4484df9..53c816c61122 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -678,16 +678,10 @@ static ssize_t do_iter_readv_writev(struct file *filp, struct iov_iter *iter,
->  	struct kiocb kiocb;
->  	ssize_t ret;
->  
-> -	if (flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC))
-> -		return -EOPNOTSUPP;
-> -
->  	init_sync_kiocb(&kiocb, filp);
-> -	if (flags & RWF_HIPRI)
-> -		kiocb.ki_flags |= IOCB_HIPRI;
-> -	if (flags & RWF_DSYNC)
-> -		kiocb.ki_flags |= IOCB_DSYNC;
-> -	if (flags & RWF_SYNC)
-> -		kiocb.ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
-> +	ret = kiocb_set_rw_flags(&kiocb, flags);
-> +	if (ret)
-> +		return ret;
->  	kiocb.ki_pos = *ppos;
->  
->  	if (type == READ)
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 803e5a9b2654..f53867140f43 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -3056,6 +3056,20 @@ static inline int iocb_flags(struct file *file)
->  	return res;
->  }
->  
-> +static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
-> +{
-> +	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC)))
-> +		return -EOPNOTSUPP;
-> +
-> +	if (flags & RWF_HIPRI)
-> +		ki->ki_flags |= IOCB_HIPRI;
-> +	if (flags & RWF_DSYNC)
-> +		ki->ki_flags |= IOCB_DSYNC;
-> +	if (flags & RWF_SYNC)
-> +		ki->ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
-> +	return 0;
-> +}
-> +
->  static inline ino_t parent_ino(struct dentry *dentry)
->  {
->  	ino_t res;
-> -- 
-> 2.12.0
+> 	uuid_v1_time_low()
+> 	uuid_v1_time_mid()
+> 	uuid_v1_time_time_hi_and_version()..
 > 
+> From his previously reply it seems like Dave doesn't like that idea
+> too much, in which case I suspect moving struct uuid_v1 back into
+> afs and living with cast in it is the way to go.
+
+Personally I don't like that union stuff, so, definitely my vote to get
+rid of AFS stuff in generic helpers.
+
+OTOH if there will be more users of such API then something like you
+proposed would be sufficient without introducing a union.
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
