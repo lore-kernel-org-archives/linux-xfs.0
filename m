@@ -1,177 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54402 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757843AbdEWPrv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 May 2017 11:47:51 -0400
-Subject: Re: [PATCH] xfs_metadump: tag metadump image with attribute flags
-References: <402504cb-1632-85b6-a745-1334ccf0ee8f@redhat.com>
- <20170523154603.GR4519@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <41c04794-5aef-5e2e-17ad-9ccf8aac488c@sandeen.net>
-Date: Tue, 23 May 2017 10:47:50 -0500
+Received: from mx2.suse.de ([195.135.220.15]:54875 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S937299AbdEYIch (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 May 2017 04:32:37 -0400
+Date: Thu, 25 May 2017 10:32:32 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 05/10] fs: return if direct write will trigger writeback
+Message-ID: <20170525083232.GF28950@quack2.suse.cz>
+References: <20170524164150.9492-1-rgoldwyn@suse.de>
+ <20170524164150.9492-6-rgoldwyn@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <20170523154603.GR4519@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170524164150.9492-6-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On 5/23/17 10:46 AM, Darrick J. Wong wrote:
-> On Mon, May 22, 2017 at 07:33:35PM -0500, Eric Sandeen wrote:
->> After the long discussion about warning the user and/or consumer
->> of xfs_metadumps about dirty logs, it crossed my mind that we
->> could use the reserved slot in the metadump header to tag the
->> file with attributes, so the consumer of the metadump knows how
->> it was created.
->>
->> This patch adds 3 flags to describe the metadump: dirty log,
->> obfuscated, and full blocks (unused portions of metadata blocks
->> are not zeroed out).
->>
->> It then adds a new option to xfs_mdrestore, "-i" to show info,
->> which can be used with or without a target file:
-
-
->> +/* mb_flags */
->> +#define XFS_METADUMP_OBFUSCATED	(1 << 0)
->> +#define XFS_METADUMP_FULLBLOCKS	(1 << 1)
->> +#define XFS_METADUMP_DIRTYLOG	(1 << 2)
+On Wed 24-05-17 11:41:45, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > 
-> If we always wrote zero for mb_reserved previously, how do we
-> distinguish between a non-obfuscated partial-block clean-log metadump
-> and an old metadump?  Do we care?
-
-Oh right.  ;)
-
-> I imagine metadumps are fairly transitory in nature, so it might not be
-> a big deal, and probably not worth burning 1/8 of our flag-space over
-> since AFAICT we don't use the(se) flags for any serious behavioral
-> changes.
-
-OTOH, how many flags would we possibly have?  I'm ok with adding a
-"we have flags" flag, too.
-
--Eric
-
-> --D
+> Find out if the write will trigger a wait due to writeback. If yes,
+> return -EAGAIN.
 > 
->> +
->>  #endif /* _XFS_METADUMP_H_ */
->> diff --git a/man/man8/xfs_mdrestore.8 b/man/man8/xfs_mdrestore.8
->> index 2095f15..10c00b2 100644
->> --- a/man/man8/xfs_mdrestore.8
->> +++ b/man/man8/xfs_mdrestore.8
->> @@ -4,11 +4,15 @@ xfs_mdrestore \- restores an XFS metadump image to a filesystem image
->>  .SH SYNOPSIS
->>  .B xfs_mdrestore
->>  [
->> -.B \-g
->> +.B \-gi
->>  ]
->>  .I source
->>  .I target
->>  .br
->> +.B xfs_mdrestore
->> +.B \-i
->> +.I source
->> +.br
->>  .B xfs_mdrestore \-V
->>  .SH DESCRIPTION
->>  .B xfs_mdrestore
->> @@ -39,6 +43,11 @@ can be destroyed.
->>  .B \-g
->>  Shows restore progress on stdout.
->>  .TP
->> +.B \-i
->> +Shows metadump information on stdout.  If no
->> +.I target
->> +is specified, exits after displaying information.
->> +.TP
->>  .B \-V
->>  Prints the version number and exits.
->>  .SH DIAGNOSTICS
->> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
->> index 0d399f1..1fbb1e6 100644
->> --- a/mdrestore/xfs_mdrestore.c
->> +++ b/mdrestore/xfs_mdrestore.c
->> @@ -21,6 +21,7 @@
->>  
->>  char 		*progname;
->>  int		show_progress = 0;
->> +int		show_info = 0;
->>  int		progress_since_warning = 0;
->>  
->>  static void
->> @@ -213,11 +214,14 @@ main(
->>  
->>  	progname = basename(argv[0]);
->>  
->> -	while ((c = getopt(argc, argv, "gV")) != EOF) {
->> +	while ((c = getopt(argc, argv, "giV")) != EOF) {
->>  		switch (c) {
->>  			case 'g':
->>  				show_progress = 1;
->>  				break;
->> +			case 'i':
->> +				show_info = 1;
->> +				break;
->>  			case 'V':
->>  				printf("%s version %s\n", progname, VERSION);
->>  				exit(0);
->> @@ -226,7 +230,11 @@ main(
->>  		}
->>  	}
->>  
->> -	if (argc - optind != 2)
->> +	if (argc - optind < 1 || argc - optind > 2)
->> +		usage();
->> +
->> +	/* show_info without a target is ok */
->> +	if (!show_info && argc - optind != 2)
->>  		usage();
->>  
->>  	/* open source */
->> @@ -239,6 +247,29 @@ main(
->>  		if (src_f == NULL)
->>  			fatal("cannot open source dump file\n");
->>  	}
->> +
->> +	if (show_info) {
->> +		xfs_metablock_t		mb;
->> +
->> +		if (fread(&mb, sizeof(mb), 1, src_f) != 1)
->> +			fatal("error reading from file: %s\n", strerror(errno));
->> +
->> +		if (be32_to_cpu(mb.mb_magic) != XFS_MD_MAGIC)
->> +			fatal("specified file is not a metadata dump\n");
->> +
->> +		printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
->> +			argv[optind],
->> +			mb.mb_flags & XFS_METADUMP_OBFUSCATED ? "" : "not ",
->> +			mb.mb_flags & XFS_METADUMP_DIRTYLOG ? "dirty" : "clean",
->> +			mb.mb_flags & XFS_METADUMP_FULLBLOCKS ? "full" : "zeroed");
->> +
->> +		if (argc - optind == 1)
->> +			exit(0);
->> +
->> +		/* Go back to the beginning for the restore function */
->> +		fseek(src_f, 0L, SEEK_SET);
->> +	}
->> +
->>  	optind++;
->>  
->>  	/* check and open target */
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Return -EINVAL for buffered AIO: there are multiple causes of
+> delay such as page locks, dirty throttling logic, page loading
+> from disk etc. which cannot be taken care of.
 > 
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Looks good. You can add:
+
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
+> ---
+>  mm/filemap.c | 17 ++++++++++++++---
+>  1 file changed, 14 insertions(+), 3 deletions(-)
+> 
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 097213275461..bc146efa6815 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -2675,6 +2675,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+>  
+>  	pos = iocb->ki_pos;
+>  
+> +	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
+> +		return -EINVAL;
+> +
+>  	if (limit != RLIM_INFINITY) {
+>  		if (iocb->ki_pos >= limit) {
+>  			send_sig(SIGXFSZ, current, 0);
+> @@ -2743,9 +2746,17 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
+>  	write_len = iov_iter_count(from);
+>  	end = (pos + write_len - 1) >> PAGE_SHIFT;
+>  
+> -	written = filemap_write_and_wait_range(mapping, pos, pos + write_len - 1);
+> -	if (written)
+> -		goto out;
+> +	if (iocb->ki_flags & IOCB_NOWAIT) {
+> +		/* If there are pages to writeback, return */
+> +		if (filemap_range_has_page(inode->i_mapping, pos,
+> +					   pos + iov_iter_count(from)))
+> +			return -EAGAIN;
+> +	} else {
+> +		written = filemap_write_and_wait_range(mapping, pos,
+> +							pos + write_len - 1);
+> +		if (written)
+> +			goto out;
+> +	}
+>  
+>  	/*
+>  	 * After a write we want buffered reads to be sure to go to disk to get
+> -- 
+> 2.12.0
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
