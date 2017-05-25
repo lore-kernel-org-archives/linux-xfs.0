@@ -1,80 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:64376 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1762551AbdEWLod (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2017 07:44:33 -0400
-Date: Tue, 23 May 2017 21:44:19 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] xfs: freeze rw filesystems just prior to reboot
-Message-ID: <20170523114419.GY17542@dastard>
-References: <20170518012618.GT4519@birch.djwong.org>
- <20170518013242.GW4519@birch.djwong.org>
- <20170518083405.GQ17542@dastard>
- <20170518223053.GD4519@birch.djwong.org>
- <CAJCQCtTj-7BovZbXyZu9=Dhh4ROR-AJ6Dpsw1GKbM-a2fr+uVw@mail.gmail.com>
- <20170519210040.GL4519@birch.djwong.org>
- <20170522020112.GV17542@dastard>
- <CAJCQCtTj4it6o-Fop6vm3s_HFbRemF5o_H9w-tvS6wmFfVwKBA@mail.gmail.com>
- <CAJCQCtT5riGri5d3cin9BipUso9mfQ-PBqoPzMZEEYm8RezJdA@mail.gmail.com>
- <4167af4e-edf2-9d08-94fa-5ec3fb38f32d@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:52767 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756472AbdEYIZg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 May 2017 04:25:36 -0400
+Date: Thu, 25 May 2017 10:25:32 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 02/10] fs: Introduce filemap_range_has_page()
+Message-ID: <20170525082532.GC28950@quack2.suse.cz>
+References: <20170524164150.9492-1-rgoldwyn@suse.de>
+ <20170524164150.9492-3-rgoldwyn@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4167af4e-edf2-9d08-94fa-5ec3fb38f32d@redhat.com>
+In-Reply-To: <20170524164150.9492-3-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Chris Murphy <lists@colorremedies.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Mon, May 22, 2017 at 11:04:54PM -0500, Eric Sandeen wrote:
-> On 5/22/17 10:56 PM, Chris Murphy wrote:
-> > On Mon, May 22, 2017 at 2:46 PM, Chris Murphy <lists@colorremedies.com> wrote:
-> > 
-> >> Second, I have only been able to reproduce this problem with grubby +
-> >> XFS.
-> > 
-> > OK so this is just on Fedora/RH systems, which is the example case I
-> > have. The kernel RPM is running a script called new-kernel-pkg which
-> > is part of grubby. It's found here:
-> > 
-> > https://github.com/rhinstaller/grubby/blob/master/new-kernel-pkg
-> > 
-> > # make sure changes make it to the disk.
-> > # if /boot is a mountpoint, force the meta data on disk
-> > # to by-pass writeback delay.
-> > # PPC64LE-only to deal with Petitboot issues
-> > if [ "$ARCH" = "ppc64le" ]; then
-> >     sync && mountpoint -q /boot && fsfreeze -f /boot && fsfreeze -u /boot
-> > fi
-> > 
-> > 
-> > So why only Petitboot on ppc64 is considered to need this?
+On Wed 24-05-17 11:41:42, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> 
+> filemap_range_has_page() return true if the file's mapping has
+> a page within the range mentioned. This function will be used
+> to check if a write() call will cause a writeback of previous
+> writes.
+> 
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-> because petitboot essentially a full kernel & userspace, and it is
-> (may be?) a different endianness than the os and the filesystem it's booting...
-> so normally it actually /could/ replay the log, but it can't due to the
-> different endianness.  So, freeze / unfreeze to quiesce, and then
-> petitboot does mount -o norecovery to ignore the unmount record we leave
-> lying around on a frozen fs.
+Looks good. You can add:
 
-Actually, IIUC what Stewart told me at LCA earlier this year, what
-petitboot does now is far more convoluted and whacky than mount -o
-norecovery. It overlays a write-capturing ram disk on top of the
-block device, mounts the filesystem and performs log recovery.  All
-writes from log recovery go into the ram disk so it never modifies
-the underlying block device. It then traverses the recovered
-filesystem to find the kernel images, and once they are found it
-boots from them, throwing away the ramdisk that contained the
-recovered changes from the log.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-> Hacks upon hacks.
+								Honza
 
-It's hacks all the way down....
-
-Cheers,
-
-Dave.
+> ---
+>  include/linux/fs.h |  2 ++
+>  mm/filemap.c       | 33 +++++++++++++++++++++++++++++++++
+>  2 files changed, 35 insertions(+)
+> 
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index f53867140f43..dc0ab585cd56 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -2517,6 +2517,8 @@ extern int filemap_fdatawait(struct address_space *);
+>  extern void filemap_fdatawait_keep_errors(struct address_space *);
+>  extern int filemap_fdatawait_range(struct address_space *, loff_t lstart,
+>  				   loff_t lend);
+> +extern int filemap_range_has_page(struct address_space *, loff_t lstart,
+> +				  loff_t lend);
+>  extern int filemap_write_and_wait(struct address_space *mapping);
+>  extern int filemap_write_and_wait_range(struct address_space *mapping,
+>  				        loff_t lstart, loff_t lend);
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 6f1be573a5e6..87aba7698584 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -376,6 +376,39 @@ int filemap_flush(struct address_space *mapping)
+>  }
+>  EXPORT_SYMBOL(filemap_flush);
+>  
+> +/**
+> + * filemap_range_has_page - check if a page exists in range.
+> + * @mapping:           address space structure to wait for
+> + * @start_byte:        offset in bytes where the range starts
+> + * @end_byte:          offset in bytes where the range ends (inclusive)
+> + *
+> + * Find at least one page in the range supplied, usually used to check if
+> + * direct writing in this range will trigger a writeback.
+> + */
+> +int filemap_range_has_page(struct address_space *mapping,
+> +			   loff_t start_byte, loff_t end_byte)
+> +{
+> +	pgoff_t index = start_byte >> PAGE_SHIFT;
+> +	pgoff_t end = end_byte >> PAGE_SHIFT;
+> +	struct pagevec pvec;
+> +	int ret;
+> +
+> +	if (end_byte < start_byte)
+> +		return 0;
+> +
+> +	if (mapping->nrpages == 0)
+> +		return 0;
+> +
+> +	pagevec_init(&pvec, 0);
+> +	ret = pagevec_lookup(&pvec, mapping, index, 1);
+> +	if (!ret)
+> +		return 0;
+> +	ret = (pvec.pages[0]->index <= end);
+> +	pagevec_release(&pvec);
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL(filemap_range_has_page);
+> +
+>  static int __filemap_fdatawait_range(struct address_space *mapping,
+>  				     loff_t start_byte, loff_t end_byte)
+>  {
+> -- 
+> 2.12.0
+> 
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
