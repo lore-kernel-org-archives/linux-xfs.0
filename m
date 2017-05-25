@@ -1,94 +1,230 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41202 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1763803AbdEWMfl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 May 2017 08:35:41 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 83E45C0467C7
-        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2017 12:35:40 +0000 (UTC)
-Date: Tue, 23 May 2017 08:35:39 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: fix off-by-one on max nr_pages in
- xfs_find_get_desired_pgoff()
-Message-ID: <20170523123536.GC6543@bfoster.bfoster>
-References: <20170521075939.18071-1-eguan@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:54266 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753063AbdEYIaW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 May 2017 04:30:22 -0400
+Date: Thu, 25 May 2017 10:30:18 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 04/10] fs: Introduce RWF_NOWAIT
+Message-ID: <20170525083018.GE28950@quack2.suse.cz>
+References: <20170524164150.9492-1-rgoldwyn@suse.de>
+ <20170524164150.9492-5-rgoldwyn@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170521075939.18071-1-eguan@redhat.com>
+In-Reply-To: <20170524164150.9492-5-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Sun, May 21, 2017 at 03:59:39PM +0800, Eryu Guan wrote:
-> xfs_find_get_desired_pgoff() is used to search for offset of hole or
-> data in page range [index, end] (both inclusive), and the max number
-> of pages to search should be at least one, if end == index.
-> Otherwise the only page is missed and no hole or data is found,
-> which is not correct.
+On Wed 24-05-17 11:41:44, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > 
-> When block size is smaller than page size, this can be demonstrated
-> by preallocating a file with size smaller than page size and writing
-> data to the last block. E.g. run this xfs_io command on a 1k block
-> size XFS on x86_64 host.
+> RWF_NOWAIT informs kernel to bail out if an AIO request will block
+> for reasons such as file allocations, or a writeback triggered,
+> or would block while allocating requests while performing
+> direct I/O.
 > 
->   # xfs_io -fc "falloc 0 3k" -c "pwrite 2k 1k" \
->   	    -c "seek -d 0" /mnt/xfs/testfile
->   wrote 1024/1024 bytes at offset 2048
->   1 KiB, 1 ops; 0.0000 sec (33.675 MiB/sec and 34482.7586 ops/sec)
->   Whence  Result
->   DATA    EOF
+> RWF_NOWAIT is translated to IOCB_NOWAIT for iocb->ki_flags.
 > 
+> The check for -EOPNOTSUPP is placed in generic_file_write_iter(). This
+> is called by most filesystems, either through fsops.write_iter() or through
+> the function defined by write_iter(). If not, we perform the check defined
+> by .write_iter() which is called for direct IO specifically.
+> 
+> Filesystems xfs, btrfs and ext4 would be supported in the following patches.
+> 
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Ok, so this does look like a different problem.
+Looks good now. You can add:
 
-> Data at offset 2k was missed, and lseek(2) returned ENXIO.
-> 
-> This is unconvered by generic/285 subtest 07 and 08 on ppc64 host,
-> where pagesize is 64k. Because a recent change to generic/285
-> reduced the preallocated file size to smaller than 64k.
-> 
-> Cc: stable@vger.kernel.org # v3.7+
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-Could we fold this patch into Jan's patch 2 or vice versa (retaining
-Eryu's commit log and credit)?
+								Honza
+
 
 > ---
->  fs/xfs/xfs_file.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  fs/9p/vfs_file.c        |  3 +++
+>  fs/aio.c                | 13 +++++++++++++
+>  fs/ceph/file.c          |  3 +++
+>  fs/cifs/file.c          |  3 +++
+>  fs/fuse/file.c          |  3 +++
+>  fs/nfs/direct.c         |  3 +++
+>  fs/ocfs2/file.c         |  3 +++
+>  include/linux/fs.h      |  5 ++++-
+>  include/uapi/linux/fs.h |  1 +
+>  mm/filemap.c            |  3 +++
+>  10 files changed, 39 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 35703a8..aefa213 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1049,7 +1049,7 @@ xfs_find_get_desired_pgoff(
->  		unsigned	nr_pages;
->  		unsigned int	i;
+> diff --git a/fs/9p/vfs_file.c b/fs/9p/vfs_file.c
+> index 3de3b4a89d89..403681db7723 100644
+> --- a/fs/9p/vfs_file.c
+> +++ b/fs/9p/vfs_file.c
+> @@ -411,6 +411,9 @@ v9fs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+>  	loff_t origin;
+>  	int err = 0;
 >  
-> -		want = min_t(pgoff_t, end - index, PAGEVEC_SIZE);
-> +		want = min_t(pgoff_t, end - index, PAGEVEC_SIZE - 1) + 1;
-
-Kind of a nit, but could we do the following?
-
-		want = min_t(pgoff_t, end - index + 1, PAGEVEC_SIZE);
-
-It seems more clear to me given that end would be inclusive after Jan's
-patch.
-
-Brian
-
->  		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
->  					  want);
->  		/*
+> +	if (iocb->ki_flags & IOCB_NOWAIT)
+> +		return -EOPNOTSUPP;
+> +
+>  	retval = generic_write_checks(iocb, from);
+>  	if (retval <= 0)
+>  		return retval;
+> diff --git a/fs/aio.c b/fs/aio.c
+> index 020fa0045e3c..9616dc733103 100644
+> --- a/fs/aio.c
+> +++ b/fs/aio.c
+> @@ -1592,6 +1592,19 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
+>  		goto out_put_req;
+>  	}
+>  
+> +	if (req->common.ki_flags & IOCB_NOWAIT) {
+> +		if (!(req->common.ki_flags & IOCB_DIRECT)) {
+> +			ret = -EOPNOTSUPP;
+> +			goto out_put_req;
+> +		}
+> +
+> +		if ((iocb->aio_lio_opcode != IOCB_CMD_PWRITE) &&
+> +		    (iocb->aio_lio_opcode != IOCB_CMD_PWRITEV)) {
+> +			ret = -EINVAL;
+> +			goto out_put_req;
+> +		}
+> +	}
+> +
+>  	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
+>  	if (unlikely(ret)) {
+>  		pr_debug("EFAULT: aio_key\n");
+> diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+> index 3fdde0b283c9..a53fd2675b1b 100644
+> --- a/fs/ceph/file.c
+> +++ b/fs/ceph/file.c
+> @@ -1300,6 +1300,9 @@ static ssize_t ceph_write_iter(struct kiocb *iocb, struct iov_iter *from)
+>  	int err, want, got;
+>  	loff_t pos;
+>  
+> +	if (iocb->ki_flags & IOCB_NOWAIT)
+> +		return -EOPNOTSUPP;
+> +
+>  	if (ceph_snap(inode) != CEPH_NOSNAP)
+>  		return -EROFS;
+>  
+> diff --git a/fs/cifs/file.c b/fs/cifs/file.c
+> index 0fd081bd2a2f..ff84fa9ddb6c 100644
+> --- a/fs/cifs/file.c
+> +++ b/fs/cifs/file.c
+> @@ -2725,6 +2725,9 @@ ssize_t cifs_user_writev(struct kiocb *iocb, struct iov_iter *from)
+>  	 * write request.
+>  	 */
+>  
+> +	if (iocb->ki_flags & IOCB_NOWAIT)
+> +		return -EOPNOTSUPP;
+> +
+>  	rc = generic_write_checks(iocb, from);
+>  	if (rc <= 0)
+>  		return rc;
+> diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+> index 3ee4fdc3da9e..812c7bd0c290 100644
+> --- a/fs/fuse/file.c
+> +++ b/fs/fuse/file.c
+> @@ -1425,6 +1425,9 @@ static ssize_t fuse_direct_write_iter(struct kiocb *iocb, struct iov_iter *from)
+>  	struct fuse_io_priv io = FUSE_IO_PRIV_SYNC(file);
+>  	ssize_t res;
+>  
+> +	if (iocb->ki_flags & IOCB_NOWAIT)
+> +		return -EOPNOTSUPP;
+> +
+>  	if (is_bad_inode(inode))
+>  		return -EIO;
+>  
+> diff --git a/fs/nfs/direct.c b/fs/nfs/direct.c
+> index 6fb9fad2d1e6..c8e7dd76126c 100644
+> --- a/fs/nfs/direct.c
+> +++ b/fs/nfs/direct.c
+> @@ -979,6 +979,9 @@ ssize_t nfs_file_direct_write(struct kiocb *iocb, struct iov_iter *iter)
+>  	dfprintk(FILE, "NFS: direct write(%pD2, %zd@%Ld)\n",
+>  		file, iov_iter_count(iter), (long long) iocb->ki_pos);
+>  
+> +	if (iocb->ki_flags & IOCB_NOWAIT)
+> +		return -EOPNOTSUPP;
+> +
+>  	result = generic_write_checks(iocb, iter);
+>  	if (result <= 0)
+>  		return result;
+> diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
+> index bfeb647459d9..e7f8ba890305 100644
+> --- a/fs/ocfs2/file.c
+> +++ b/fs/ocfs2/file.c
+> @@ -2235,6 +2235,9 @@ static ssize_t ocfs2_file_write_iter(struct kiocb *iocb,
+>  	if (count == 0)
+>  		return 0;
+>  
+> +	if (iocb->ki_flags & IOCB_NOWAIT)
+> +		return -EOPNOTSUPP;
+> +
+>  	direct_io = iocb->ki_flags & IOCB_DIRECT ? 1 : 0;
+>  
+>  	inode_lock(inode);
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index dc0ab585cd56..2a7d14af6d12 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -268,6 +268,7 @@ struct writeback_control;
+>  #define IOCB_DSYNC		(1 << 4)
+>  #define IOCB_SYNC		(1 << 5)
+>  #define IOCB_WRITE		(1 << 6)
+> +#define IOCB_NOWAIT		(1 << 7)
+>  
+>  struct kiocb {
+>  	struct file		*ki_filp;
+> @@ -3060,7 +3061,7 @@ static inline int iocb_flags(struct file *file)
+>  
+>  static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
+>  {
+> -	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC)))
+> +	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC | RWF_NOWAIT)))
+>  		return -EOPNOTSUPP;
+>  
+>  	if (flags & RWF_HIPRI)
+> @@ -3069,6 +3070,8 @@ static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
+>  		ki->ki_flags |= IOCB_DSYNC;
+>  	if (flags & RWF_SYNC)
+>  		ki->ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
+> +	if (flags & RWF_NOWAIT)
+> +		ki->ki_flags |= IOCB_NOWAIT;
+>  	return 0;
+>  }
+>  
+> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> index 24e61a54feaa..29969fb7f9a7 100644
+> --- a/include/uapi/linux/fs.h
+> +++ b/include/uapi/linux/fs.h
+> @@ -360,5 +360,6 @@ struct fscrypt_key {
+>  #define RWF_HIPRI			0x00000001 /* high priority request, poll if possible */
+>  #define RWF_DSYNC			0x00000002 /* per-IO O_DSYNC */
+>  #define RWF_SYNC			0x00000004 /* per-IO O_SYNC */
+> +#define RWF_NOWAIT			0x00000008 /* per-IO, return -EAGAIN if operation would block */
+>  
+>  #endif /* _UAPI_LINUX_FS_H */
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 87aba7698584..097213275461 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -3006,6 +3006,9 @@ ssize_t generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+>  	struct inode *inode = file->f_mapping->host;
+>  	ssize_t ret;
+>  
+> +	if (iocb->ki_flags & IOCB_NOWAIT)
+> +		return -EOPNOTSUPP;
+> +
+>  	inode_lock(inode);
+>  	ret = generic_write_checks(iocb, from);
+>  	if (ret > 0)
 > -- 
-> 2.9.4
+> 2.12.0
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
