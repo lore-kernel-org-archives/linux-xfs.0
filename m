@@ -1,115 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31451 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751095AbdEaPgo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 11:36:44 -0400
-Date: Wed, 31 May 2017 08:36:37 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 2/2] xfs: define fatal assert build time tunable
-Message-ID: <20170531153637.GF4519@birch.djwong.org>
-References: <1494426711-6934-1-git-send-email-bfoster@redhat.com>
- <1494426711-6934-3-git-send-email-bfoster@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:50104 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S964907AbdEYIQW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 May 2017 04:16:22 -0400
+Date: Thu, 25 May 2017 10:16:14 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 01/10] fs: Separate out kiocb flags setup based on RWF_*
+ flags
+Message-ID: <20170525081614.GB28950@quack2.suse.cz>
+References: <20170524164150.9492-1-rgoldwyn@suse.de>
+ <20170524164150.9492-2-rgoldwyn@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1494426711-6934-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20170524164150.9492-2-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Wed, May 10, 2017 at 10:31:51AM -0400, Brian Foster wrote:
-> While configurable at runtime, the DEBUG mode assert failure
-> behavior is usually either desired or not for a particular
-> situation. For example, developers using kernel modules may prefer
-> for fatal asserts to remain disabled across module reloads while QE
-> engineers doing broad regression testing may prefer to have fatal
-> asserts enabled on boot to facilitate data collection for bug
-> reports.
+On Wed 24-05-17 11:41:41, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > 
-> To provide a compromise/convenience for developers, create a Kconfig
-> option that sets the default value of the DEBUG mode 'bug_on_assert'
-> sysfs tunable. The default behavior remains to trigger kernel BUGs
-> on assert failures to preserve existing behavior across kernel
-> configuration updates with DEBUG mode enabled.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Looks good. You can add:
+
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
 > ---
->  fs/xfs/Kconfig       | 13 +++++++++++++
->  fs/xfs/xfs.h         |  4 ++++
->  fs/xfs/xfs_globals.c |  7 +++++--
->  3 files changed, 22 insertions(+), 2 deletions(-)
+>  fs/read_write.c    | 12 +++---------
+>  include/linux/fs.h | 14 ++++++++++++++
+>  2 files changed, 17 insertions(+), 9 deletions(-)
 > 
-> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-> index 35faf12..1b98cfa 100644
-> --- a/fs/xfs/Kconfig
-> +++ b/fs/xfs/Kconfig
-> @@ -96,3 +96,16 @@ config XFS_DEBUG
->  	  not useful unless you are debugging a particular problem.
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index 47c1d4484df9..53c816c61122 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -678,16 +678,10 @@ static ssize_t do_iter_readv_writev(struct file *filp, struct iov_iter *iter,
+>  	struct kiocb kiocb;
+>  	ssize_t ret;
 >  
->  	  Say N unless you are an XFS developer, or you play one on TV.
-> +
-> +config XFS_ASSERT_FATAL
-> +	bool "XFS fatal asserts"
-> +	default y
-> +	depends on XFS_FS && XFS_DEBUG
-> +	help
-> +	  Set the default DEBUG mode ASSERT failure behavior.
-> +
-> +	  Say Y here to cause DEBUG mode ASSERT failures to result in fatal
-> +	  errors that BUG() the kernel by default. If you say N, ASSERT failures
-> +	  result in warnings.
-> +
-> +	  This behavior can be modified at runtime via sysfs.
-> diff --git a/fs/xfs/xfs.h b/fs/xfs/xfs.h
-> index a742c47..80cd0fd 100644
-> --- a/fs/xfs/xfs.h
-> +++ b/fs/xfs/xfs.h
-> @@ -24,6 +24,10 @@
->  #define XFS_BUF_LOCK_TRACKING 1
->  #endif
+> -	if (flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC))
+> -		return -EOPNOTSUPP;
+> -
+>  	init_sync_kiocb(&kiocb, filp);
+> -	if (flags & RWF_HIPRI)
+> -		kiocb.ki_flags |= IOCB_HIPRI;
+> -	if (flags & RWF_DSYNC)
+> -		kiocb.ki_flags |= IOCB_DSYNC;
+> -	if (flags & RWF_SYNC)
+> -		kiocb.ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
+> +	ret = kiocb_set_rw_flags(&kiocb, flags);
+> +	if (ret)
+> +		return ret;
+>  	kiocb.ki_pos = *ppos;
 >  
-> +#ifdef CONFIG_XFS_ASSERT_FATAL
-> +#define XFS_ASSERT_FATAL 1
-> +#endif
-> +
->  #ifdef CONFIG_XFS_WARN
->  #define XFS_WARN 1
->  #endif
-> diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
-> index 673adf0..3e1cc30 100644
-> --- a/fs/xfs/xfs_globals.c
-> +++ b/fs/xfs/xfs_globals.c
-> @@ -47,6 +47,9 @@ xfs_param_t xfs_params = {
+>  	if (type == READ)
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 803e5a9b2654..f53867140f43 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -3056,6 +3056,20 @@ static inline int iocb_flags(struct file *file)
+>  	return res;
+>  }
 >  
->  struct xfs_globals xfs_globals = {
->  	.log_recovery_delay	=	0,	/* no delay by default */
-> -	.bug_on_assert		=	true,	/* historical default in DEBUG
-> -						 * mode */
-> +#ifdef XFS_ASSERT_FATAL
-
-Minor nit to pick, but if you're only testing that XFS_ASSERT_FATAL is
-defined, you could just '#define XFS_ASSERT_FATAL' without providing a
-value.... or '#if XFS_ASSERT_FATAL' here.
-
-OTOH XFS_WARN also does that, and we reach the same ends regardless of
-which way we do it.  I'm willing to pull this in for 4.13 as-is, if
-nobody objects.
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> +	.bug_on_assert		=	true,	/* assert failures BUG() */
-> +#else
-> +	.bug_on_assert		=	false,	/* assert failures WARN() */
-> +#endif
->  };
+> +static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
+> +{
+> +	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC)))
+> +		return -EOPNOTSUPP;
+> +
+> +	if (flags & RWF_HIPRI)
+> +		ki->ki_flags |= IOCB_HIPRI;
+> +	if (flags & RWF_DSYNC)
+> +		ki->ki_flags |= IOCB_DSYNC;
+> +	if (flags & RWF_SYNC)
+> +		ki->ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
+> +	return 0;
+> +}
+> +
+>  static inline ino_t parent_ino(struct dentry *dentry)
+>  {
+>  	ino_t res;
 > -- 
-> 2.7.4
+> 2.12.0
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
