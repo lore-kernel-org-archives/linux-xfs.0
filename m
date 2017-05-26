@@ -1,34 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:38759 "EHLO newverein.lst.de"
+Received: from mail.kernel.org ([198.145.29.99]:45190 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750912AbdEaJmA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 May 2017 05:42:00 -0400
-Date: Wed, 31 May 2017 11:41:57 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 01/22] Revert "afs: Move UUID struct to linux/uuid.h"
-Message-ID: <20170531094157.GA10511@lst.de>
-References: <20170528102008.30276-2-hch@lst.de> <20170528102008.30276-1-hch@lst.de> <9377.1496138404@warthog.procyon.org.uk>
+        id S1759944AbdEZTHL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 May 2017 15:07:11 -0400
+Date: Fri, 26 May 2017 12:07:09 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: updates for 4.12-rc3
+Message-ID: <20170526190709.GV4519@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9377.1496138404@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-On Tue, May 30, 2017 at 11:00:04AM +0100, David Howells wrote:
-> This isn't going to work.  You've effectively changed the types of the fields
-> in the UUID struct from BE to CPU-endian, but you're still calling
-> generate_random_uuid(), which produces a BE UUID.  You need to leave the
-> struct members as __beXX or stop using the core UUID routines.
-> 
-> Just move the struct uuid_v1 as-is to the afs headers and rename it to struct
-> afs_uuid.  You can then leave the (un)marshalling code alone.
+Hi Linus,
 
-That's one option.  The other option would be to revert
+I have a few miscellaneous bug fixes & cleanups for you for 4.12-rc3.
 
-"afs: Use core kernel UUID generation", as that also changed the
-v1 UUID to a v4 uuid.  Does the afs protocol require a v1 uuid
-or does it just use the formwat on the wire?
+--Darrick
+
+The following changes since commit 2ea659a9ef488125eb46da6eb571de5eae5c43f6:
+
+  Linux 4.12-rc1 (2017-05-13 13:19:49 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.12-fixes-2
+
+for you to fetch changes up to a54fba8f5a0dc36161cacdf2aa90f007f702ec1a:
+
+  xfs: Move handling of missing page into one place in xfs_find_get_desired_pgoff() (2017-05-25 09:42:25 -0700)
+
+----------------------------------------------------------------
+Changed since last update:
+- Fix indlen block reservation accounting bug when splitting delalloc extent
+- Fix warnings about unused variables that appeared in -rc1.
+- Don't spew errors when bmapping a local format directory
+- Fix an off-by-one error in a delalloc eof assertion
+- Make fsmap only return inode information for CAP_SYS_ADMIN
+- Fix a potential mount time deadlock recovering cow extents
+- Fix unaligned memory access in _btree_visit_blocks
+- Fix various SEEK_HOLE/SEEK_DATA bugs
+
+----------------------------------------------------------------
+Brian Foster (1):
+      xfs: fix indlen accounting error on partial delalloc conversion
+
+Darrick J. Wong (4):
+      xfs: BMAPX shouldn't barf on inline-format directories
+      xfs: fix warnings about unused stack variables
+      xfs: only return detailed fsmap info if the caller has CAP_SYS_ADMIN
+      xfs: avoid mount-time deadlock in CoW extent recovery
+
+Eric Sandeen (1):
+      xfs: fix unaligned access in xfs_btree_visit_blocks
+
+Eryu Guan (1):
+      xfs: fix off-by-one on max nr_pages in xfs_find_get_desired_pgoff()
+
+Jan Kara (3):
+      xfs: Fix missed holes in SEEK_HOLE implementation
+      xfs: Fix off-by-in in loop termination in xfs_find_get_desired_pgoff()
+      xfs: Move handling of missing page into one place in xfs_find_get_desired_pgoff()
+
+Zorro Lang (1):
+      xfs: bad assertion for delalloc an extent that start at i_size
+
+ fs/xfs/libxfs/xfs_bmap.c     |  9 +++---
+ fs/xfs/libxfs/xfs_btree.c    |  2 +-
+ fs/xfs/libxfs/xfs_refcount.c | 43 +++++++++++++++++++--------
+ fs/xfs/xfs_bmap_util.c       | 10 +++++--
+ fs/xfs/xfs_file.c            | 71 ++++++++++++--------------------------------
+ fs/xfs/xfs_fsmap.c           |  5 +++-
+ 6 files changed, 66 insertions(+), 74 deletions(-)
