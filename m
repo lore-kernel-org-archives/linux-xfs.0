@@ -1,182 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36219 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41086 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S940057AbdEZLFO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 May 2017 07:05:14 -0400
-Subject: Re: [PATCH v2] xfs: use ->b_state to fix buffer I/O accounting
- release race
-References: <1495637135-13255-1-git-send-email-bfoster@redhat.com>
+        id S1750994AbdEZLpf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 May 2017 07:45:35 -0400
+Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 6F5E5AC04
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2017 11:45:34 +0000 (UTC)
 From: Nikolay Borisov <nborisov@suse.com>
-Message-ID: <462bb65a-099d-04c6-e6b6-866070923fa6@suse.com>
-Date: Fri, 26 May 2017 14:05:10 +0300
+Subject: xfs/098 hits assertion failure on 4.12-rc2
+Message-ID: <3f9e935b-5203-d183-69e9-b548e81fb232@suse.com>
+Date: Fri, 26 May 2017 14:45:33 +0300
 MIME-Version: 1.0
-In-Reply-To: <1495637135-13255-1-git-send-email-bfoster@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+
+Running xfs/098 test on latest master I get the following: 
+
+[  314.719553] XFS: Assertion failed: 0, file: fs/xfs/xfs_log_recover.c, line: 552
+[  314.721397] kernel BUG at fs/xfs/xfs_message.c:113!
+[  314.722399] invalid opcode: 0000 [#1] SMP
+[  314.723091] Modules linked in:
+[  314.723622] CPU: 2 PID: 4424 Comm: mount Not tainted 4.12.0-rc2-nbor #187
+[  314.724386] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
+[  314.725423] task: ffff880128581c40 task.stack: ffffc90007d10000
+[  314.726089] RIP: 0010:assfail+0x20/0x30
+[  314.726520] RSP: 0018:ffffc90007d13ba8 EFLAGS: 00010286
+[  314.727097] RAX: 00000000ffffffea RBX: 0000000000004dff RCX: 0000000000000000
+[  314.727879] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff819ccf9a
+[  314.728656] RBP: ffffc90007d13ba8 R08: 0000000000000000 R09: 0000000000000000
+[  314.729433] R10: 0000000000000000 R11: f000000000000000 R12: ffff88012e460000
+[  314.730210] R13: ffff880127437000 R14: 0000000000000000 R15: 0000000000004e00
+[  314.730982] FS:  00007f2878919840(0000) GS:ffff88013fc80000(0000) knlGS:0000000000000000
+[  314.732068] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  314.732698] CR2: 00007f329ff66070 CR3: 000000012ea94000 CR4: 00000000000006a0
+[  314.733649] Call Trace:
+[  314.733901]  xlog_find_verify_log_record+0x1be/0x230
+[  314.734379]  xlog_find_head+0x244/0x4f0
+[  314.734774]  xlog_find_tail+0x34/0x360
+[  314.735345]  xlog_recover+0x1e/0x130
+[  314.735977]  xfs_log_mount+0xdb/0x2e0
+[  314.736717]  xfs_mountfs+0x57b/0xac0
+[  314.737441]  xfs_fs_fill_super+0x483/0x610
+[  314.738233]  mount_bdev+0x180/0x1b0
+[  314.738684]  ? xfs_finish_flags+0x150/0x150
+[  314.739153]  xfs_fs_mount+0x15/0x20
+[  314.739748]  mount_fs+0x14/0x80
+[  314.740133]  vfs_kern_mount+0x67/0x170
+[  314.740542]  do_mount+0x195/0xd40
+[  314.740912]  ? _copy_from_user+0x47/0x80
+[  314.741348]  ? memdup_user+0x53/0x80
+[  314.741741]  SyS_mount+0x95/0xe0
+[  314.742102]  entry_SYSCALL_64_fastpath+0x23/0xc2
+[  314.742602] RIP: 0033:0x7f28781f8faa
+[  314.742991] RSP: 002b:00007fff23471d48 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
+[  314.743801] RAX: ffffffffffffffda RBX: 0000000000000046 RCX: 00007f28781f8faa
+[  314.744560] RDX: 0000000002168240 RSI: 0000000002168280 RDI: 0000000002168260
+[  314.745306] RBP: 0000000002168120 R08: 0000000000000000 R09: 0000000000000012
+[  314.746225] R10: 00000000c0ed0000 R11: 0000000000000206 R12: 00007f287870183c
+[  314.747175] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000003
+[  314.748417] Code: 90 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 f1 41 89 d0 48 c7 c6 30 b0 a0 81 48 89 e5 48 89 fa 31 ff e8 70 fa ff ff <0f> 0b 0f 1f 40 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 
+[  314.750647] RIP: assfail+0x20/0x30 RSP: ffffc90007d13ba8
+[  314.751456] ---[ end trace 56977821d2418231 ]---
 
 
-
-On 24.05.2017 17:45, Brian Foster wrote:
-> We've had user reports of unmount hangs in xfs_wait_buftarg() that
-> analysis shows is due to btp->bt_io_count == -1. bt_io_count
-> represents the count of in-flight asynchronous buffers and thus
-> should always be >= 0. xfs_wait_buftarg() waits for this value to
-> stabilize to zero in order to ensure that all untracked (with
-> respect to the lru) buffers have completed I/O processing before
-> unmount proceeds to tear down in-core data structures.
-> 
-> The value of -1 implies an I/O accounting decrement race. Indeed,
-> the fact that xfs_buf_ioacct_dec() is called from xfs_buf_rele()
-> (where the buffer lock is no longer held) means that bp->b_flags can
-> be updated from an unsafe context. While a user-level reproducer is
-> currently not available, some intrusive hacks to run racing buffer
-> lookups/ioacct/releases from multiple threads was used to
-> successfully manufacture this problem.
-> 
-> Existing callers do not expect to acquire the buffer lock from
-> xfs_buf_rele(). Therefore, we can not safely update ->b_flags from
-> this context. It turns out that we already have separate buffer
-> state bits and associated serialization for dealing with buffer LRU
-> state in the form of ->b_state and ->b_lock. Therefore, replace the
-> _XBF_IN_FLIGHT flag with a ->b_state variant, update the I/O
-> accounting wrappers appropriately and make sure they are used with
-> the correct locking. This ensures that buffer in-flight state can be
-> modified at buffer release time without racing with modifications
-> from a buffer lock holder.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-
-Perhaps a Fixes: 9c7504aa72b6 ("xfs: track and serialize in-flight async
-buffers against unmount") tag is in order.
-
-Also I believe it warrants a CC: stable@vger.kernel.org #4.9
-
-
-> ---
-> 
-> v2:
-> - Use ->b_state and ->b_lock instead of custom atomic counter.
-> v1: http://www.spinics.net/lists/linux-xfs/msg06995.html
-> 
->  fs/xfs/xfs_buf.c | 38 ++++++++++++++++++++++++++------------
->  fs/xfs/xfs_buf.h |  5 ++---
->  2 files changed, 28 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index ba036c1..4e19fda 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -97,12 +97,16 @@ static inline void
->  xfs_buf_ioacct_inc(
->  	struct xfs_buf	*bp)
->  {
-> -	if (bp->b_flags & (XBF_NO_IOACCT|_XBF_IN_FLIGHT))
-> +	if (bp->b_flags & XBF_NO_IOACCT)
->  		return;
->  
->  	ASSERT(bp->b_flags & XBF_ASYNC);
-> -	bp->b_flags |= _XBF_IN_FLIGHT;
-> -	percpu_counter_inc(&bp->b_target->bt_io_count);
-> +	spin_lock(&bp->b_lock);
-> +	if (!(bp->b_state & XFS_BSTATE_IN_FLIGHT)) {
-> +		bp->b_state |= XFS_BSTATE_IN_FLIGHT;
-> +		percpu_counter_inc(&bp->b_target->bt_io_count);
-> +	}
-> +	spin_unlock(&bp->b_lock);
->  }
->  
->  /*
-> @@ -110,14 +114,24 @@ xfs_buf_ioacct_inc(
->   * freed and unaccount from the buftarg.
->   */
->  static inline void
-> -xfs_buf_ioacct_dec(
-> +__xfs_buf_ioacct_dec(
->  	struct xfs_buf	*bp)
->  {
-> -	if (!(bp->b_flags & _XBF_IN_FLIGHT))
-> -		return;
-> +	ASSERT(spin_is_locked(&bp->b_lock));
->  
-> -	bp->b_flags &= ~_XBF_IN_FLIGHT;
-> -	percpu_counter_dec(&bp->b_target->bt_io_count);
-> +	if (bp->b_state & XFS_BSTATE_IN_FLIGHT) {
-> +		bp->b_state &= ~XFS_BSTATE_IN_FLIGHT;
-> +		percpu_counter_dec(&bp->b_target->bt_io_count);
-> +	}
-> +}
-> +
-> +static inline void
-> +xfs_buf_ioacct_dec(
-> +	struct xfs_buf	*bp)
-> +{
-> +	spin_lock(&bp->b_lock);
-> +	__xfs_buf_ioacct_dec(bp);
-> +	spin_unlock(&bp->b_lock);
->  }
->  
->  /*
-> @@ -149,9 +163,9 @@ xfs_buf_stale(
->  	 * unaccounted (released to LRU) before that occurs. Drop in-flight
->  	 * status now to preserve accounting consistency.
->  	 */
-> -	xfs_buf_ioacct_dec(bp);
-> -
->  	spin_lock(&bp->b_lock);
-> +	__xfs_buf_ioacct_dec(bp);
-> +
->  	atomic_set(&bp->b_lru_ref, 0);
->  	if (!(bp->b_state & XFS_BSTATE_DISPOSE) &&
->  	    (list_lru_del(&bp->b_target->bt_lru, &bp->b_lru)))
-> @@ -979,12 +993,12 @@ xfs_buf_rele(
->  		 * ensures the decrement occurs only once per-buf.
->  		 */
->  		if ((atomic_read(&bp->b_hold) == 1) && !list_empty(&bp->b_lru))
-> -			xfs_buf_ioacct_dec(bp);
-> +			__xfs_buf_ioacct_dec(bp);
->  		goto out_unlock;
->  	}
->  
->  	/* the last reference has been dropped ... */
-> -	xfs_buf_ioacct_dec(bp);
-> +	__xfs_buf_ioacct_dec(bp);
->  	if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
->  		/*
->  		 * If the buffer is added to the LRU take a new reference to the
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 8d1d44f..1508121 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -63,7 +63,6 @@ typedef enum {
->  #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
->  #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
->  #define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
-> -#define _XBF_IN_FLIGHT	 (1 << 25) /* I/O in flight, for accounting purposes */
->  
->  typedef unsigned int xfs_buf_flags_t;
->  
-> @@ -84,14 +83,14 @@ typedef unsigned int xfs_buf_flags_t;
->  	{ _XBF_PAGES,		"PAGES" }, \
->  	{ _XBF_KMEM,		"KMEM" }, \
->  	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
-> -	{ _XBF_COMPOUND,	"COMPOUND" }, \
-> -	{ _XBF_IN_FLIGHT,	"IN_FLIGHT" }
-> +	{ _XBF_COMPOUND,	"COMPOUND" }
->  
->  
->  /*
->   * Internal state flags.
->   */
->  #define XFS_BSTATE_DISPOSE	 (1 << 0)	/* buffer being discarded */
-> +#define XFS_BSTATE_IN_FLIGHT	 (1 << 1)	/* I/O in flight */
->  
->  /*
->   * The xfs_buftarg contains 2 notions of "sector size" -
-> 
-
-Reviewed-by: Nikolay Borisov <nborisov@suse.com>
+Shouldn't the assertion there on xfs_Log_recover.c be removed, since -EIO can be 
+handled gracefully and ASSERT(0) seems rather brutal? 
