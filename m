@@ -1,72 +1,220 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41086 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750994AbdEZLpf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 May 2017 07:45:35 -0400
-Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 6F5E5AC04
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2017 11:45:34 +0000 (UTC)
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: xfs/098 hits assertion failure on 4.12-rc2
-Message-ID: <3f9e935b-5203-d183-69e9-b548e81fb232@suse.com>
-Date: Fri, 26 May 2017 14:45:33 +0300
+Received: from mx1.redhat.com ([209.132.183.28]:55448 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933567AbdEZLv0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 May 2017 07:51:26 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1C7654E03F
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2017 11:51:26 +0000 (UTC)
+Date: Fri, 26 May 2017 07:51:22 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/3 V2] xfs: Add infrastructure needed for error
+ propagation during buffer IO failure
+Message-ID: <20170526115122.GB36516@bfoster.bfoster>
+References: <20170522153220.25072-1-cmaiolino@redhat.com>
+ <20170522153220.25072-3-cmaiolino@redhat.com>
+ <20170524170709.GB13925@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170524170709.GB13925@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Running xfs/098 test on latest master I get the following: 
+On Wed, May 24, 2017 at 01:07:09PM -0400, Brian Foster wrote:
+> On Mon, May 22, 2017 at 05:32:19PM +0200, Carlos Maiolino wrote:
+> > With the current code, XFS never re-submit a failed buffer for IO,
+> > because the failed item in the buffer is kept in the flush locked state
+> > forever.
+> > 
+> > To be able to resubmit an log item for IO, we need a way to mark an item
+> > as failed, if, for any reason the buffer which the item belonged to
+> > failed during writeback.
+> > 
+> > Add a new log item callback to be used after an IO completion failure
+> > and make the needed clean ups.
+> > 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> > V2:
+> > 	- Update commit log to include a better description of why this
+> > 	  patch is needed and fix spelling mistakes
+> > 	- Move xfs_buf_do_callbacks_fail() call into
+> > 	  xfs_buf_iodone_callback_error, so the callbacks can be executed
+> > 	  before the buffer is released, and only after it has been
+> > 	  retried once
+> > 
+> >  fs/xfs/xfs_buf_item.c | 27 ++++++++++++++++++++++++++-
+> >  fs/xfs/xfs_trans.h    |  5 ++++-
+> >  2 files changed, 30 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> > index 6ac3816..8f128e3 100644
+> > --- a/fs/xfs/xfs_buf_item.c
+> > +++ b/fs/xfs/xfs_buf_item.c
+> > @@ -1051,6 +1051,24 @@ xfs_buf_do_callbacks(
+> >  	}
+> >  }
+> >  
+> > +STATIC void
+> > +xfs_buf_do_callbacks_fail(
+> > +	struct xfs_buf		*bp)
+> > +{
+> > +	struct xfs_log_item	*lip, *next;
+> > +	unsigned int		bflags = bp->b_flags;
+> > +
+> > +	lip = bp->b_fspriv;
+> > +	while (lip != NULL) {
+> > +		next = lip->li_bio_list;
+> > +
+> > +		if (lip->li_ops->iop_error)
+> > +			lip->li_ops->iop_error(lip, bflags);
+> > +
+> > +		lip = next;
+> > +	}
+> 
+> AFAICT, this could do something like the following:
+> 
+> 	spin_lock(&ailp->xa_lock);
+> 	while (lip != NULL) {
+> 		next = lip->li_bio_list;
+> 		lip->li_flags |= XFS_LI_FAILED;
+> 		lip = next;
+> 	}
+> 	spin_unlock(&ailp->xa_lock);
+> 
+> ... to generically and unconditionally flag the log item as failed and
+> avoid the need for ->iop_error(). We also need to clear XFS_LI_FAILED at
+> the same place we clear XFS_LI_IN_AIL (i.e., AIL removal) to ensure a
+> subsequent successful I/O completion updates the log item appropriately.
+> 
+> Then the result of this patch is that all log items are flagged as
+> failed on I/O error until they are ultimately removed from the AIL. We
+> otherwise have so far not changed behavior in any way.
+> 
 
-[  314.719553] XFS: Assertion failed: 0, file: fs/xfs/xfs_log_recover.c, line: 552
-[  314.721397] kernel BUG at fs/xfs/xfs_message.c:113!
-[  314.722399] invalid opcode: 0000 [#1] SMP
-[  314.723091] Modules linked in:
-[  314.723622] CPU: 2 PID: 4424 Comm: mount Not tainted 4.12.0-rc2-nbor #187
-[  314.724386] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
-[  314.725423] task: ffff880128581c40 task.stack: ffffc90007d10000
-[  314.726089] RIP: 0010:assfail+0x20/0x30
-[  314.726520] RSP: 0018:ffffc90007d13ba8 EFLAGS: 00010286
-[  314.727097] RAX: 00000000ffffffea RBX: 0000000000004dff RCX: 0000000000000000
-[  314.727879] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff819ccf9a
-[  314.728656] RBP: ffffc90007d13ba8 R08: 0000000000000000 R09: 0000000000000000
-[  314.729433] R10: 0000000000000000 R11: f000000000000000 R12: ffff88012e460000
-[  314.730210] R13: ffff880127437000 R14: 0000000000000000 R15: 0000000000004e00
-[  314.730982] FS:  00007f2878919840(0000) GS:ffff88013fc80000(0000) knlGS:0000000000000000
-[  314.732068] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  314.732698] CR2: 00007f329ff66070 CR3: 000000012ea94000 CR4: 00000000000006a0
-[  314.733649] Call Trace:
-[  314.733901]  xlog_find_verify_log_record+0x1be/0x230
-[  314.734379]  xlog_find_head+0x244/0x4f0
-[  314.734774]  xlog_find_tail+0x34/0x360
-[  314.735345]  xlog_recover+0x1e/0x130
-[  314.735977]  xfs_log_mount+0xdb/0x2e0
-[  314.736717]  xfs_mountfs+0x57b/0xac0
-[  314.737441]  xfs_fs_fill_super+0x483/0x610
-[  314.738233]  mount_bdev+0x180/0x1b0
-[  314.738684]  ? xfs_finish_flags+0x150/0x150
-[  314.739153]  xfs_fs_mount+0x15/0x20
-[  314.739748]  mount_fs+0x14/0x80
-[  314.740133]  vfs_kern_mount+0x67/0x170
-[  314.740542]  do_mount+0x195/0xd40
-[  314.740912]  ? _copy_from_user+0x47/0x80
-[  314.741348]  ? memdup_user+0x53/0x80
-[  314.741741]  SyS_mount+0x95/0xe0
-[  314.742102]  entry_SYSCALL_64_fastpath+0x23/0xc2
-[  314.742602] RIP: 0033:0x7f28781f8faa
-[  314.742991] RSP: 002b:00007fff23471d48 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
-[  314.743801] RAX: ffffffffffffffda RBX: 0000000000000046 RCX: 00007f28781f8faa
-[  314.744560] RDX: 0000000002168240 RSI: 0000000002168280 RDI: 0000000002168260
-[  314.745306] RBP: 0000000002168120 R08: 0000000000000000 R09: 0000000000000012
-[  314.746225] R10: 00000000c0ed0000 R11: 0000000000000206 R12: 00007f287870183c
-[  314.747175] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000003
-[  314.748417] Code: 90 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 f1 41 89 d0 48 c7 c6 30 b0 a0 81 48 89 e5 48 89 fa 31 ff e8 70 fa ff ff <0f> 0b 0f 1f 40 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 
-[  314.750647] RIP: assfail+0x20/0x30 RSP: ffffc90007d13ba8
-[  314.751456] ---[ end trace 56977821d2418231 ]---
+After poking around with this the past day or so, I think there is
+another problem that we have to deal with (two, actually) in this area.
 
+The first is not a problem introduced by these patches, but like the
+whole flush lock thing, is a flaw in the whole "rely on the AIL to
+retry" behavior that is already in place. The issue is that once we
+flush a non-buffer log item to the backing buffer and the buffer I/O
+happens to fail, we don't hold a reference on the buffer. This means
+that we could flush an inode, the backing buffer I/O could fail (we flag
+the log item as such), and the buffer could be reclaimed before the next
+push of the inode log item. The LI_FAILED inode log item has already
+been flushed, so we basically just read the buffer off disk and write it
+back, having lost the inode changes that were flushed in the first
+place. This is a data corruption vector, so I think needs to be fixed
+before we unwind the flush lock livelock.
 
-Shouldn't the assertion there on xfs_Log_recover.c be removed, since -EIO can be 
-handled gracefully and ASSERT(0) seems rather brutal? 
+This isn't a problem with buffer log items that fail because the
+xfs_buf_log_item holds a reference to the buffer. I think the solution
+for inode/dquot log items is therefore fairly straightforward: do
+something similar where the log item holds a reference to the buf and
+releases it at the appropriate point. This could be done generically to
+xfs_log_item, to the type-specific log item, and at push/flush time or
+only for LI_FAILED items that are going back to the AIL[1]. IMO, the
+latter seems like the least invasive approach to start with.
+
+The second problem here is somewhat of a side effect of the first. It's
+not sufficient to simply pin the buffer in-core (without further code
+changes, at least) because if the filesystem shuts down with failed
+items in the AIL, the buffer read path is short circuited to return
+error. This means that the xfs_imap_to_bp() call in the LI_FAILED
+handling path is simply not safe. If the filesystem has shut down due to
+unrelated reasons, it returns -EIO and we end up in a similar livelock
+as with the flush lock problem.
+
+I think this can also be addressed by the solution noted above by also
+holding a pointer to the underlying xfs_buf in the LI_FAILED log item
+(which is also something that xfs_buf_log_item has today). That
+basically means that any LI_FAILED log item should have an ->*li_buf
+pointer that can be directly referenced to requeue the buffer to the
+delwri queue. I think that should clean everything up properly in the
+shutdown case as the I/O submission sets an error on the buf, runs the
+ioend processing and the buf error handling invokes the callbacks now
+that the fs is shutdown. Thoughts..?
+
+Brian
+
+[1] Note that if we end up changing behavior on error and on the
+type-specific log item, this could reintroduce the need for
+->iop_error(). Sorry for being back and forth on that, I basically just
+think we should keep it if the implementation needs to access the
+xfs_inode_log_item from the xfs_log_item or kill it otherwise.
+
+> Brian
+> 
+> > +}
+> > +
+> >  static bool
+> >  xfs_buf_iodone_callback_error(
+> >  	struct xfs_buf		*bp)
+> > @@ -1101,6 +1119,7 @@ xfs_buf_iodone_callback_error(
+> >  
+> >  		xfs_buf_ioerror(bp, 0);
+> >  		xfs_buf_submit(bp);
+> > +
+> >  		return true;
+> >  	}
+> >  
+> > @@ -1120,8 +1139,14 @@ xfs_buf_iodone_callback_error(
+> >  	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
+> >  		goto permanent_error;
+> >  
+> > -	/* still a transient error, higher layers will retry */
+> > +	/*
+> > +	 * still a transient error, run IO completion failure callbacks and
+> > +	 * let the higher layers retry the buffer.
+> > +	 * */
+> >  	xfs_buf_ioerror(bp, 0);
+> > +
+> > +	/* run failure callbacks before releasing buffer */
+> > +	xfs_buf_do_callbacks_fail(bp);
+> >  	xfs_buf_relse(bp);
+> >  	return true;
+> >  
+> > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> > index 7ae04de..7fcf48d 100644
+> > --- a/fs/xfs/xfs_trans.h
+> > +++ b/fs/xfs/xfs_trans.h
+> > @@ -65,10 +65,12 @@ typedef struct xfs_log_item {
+> >  
+> >  #define	XFS_LI_IN_AIL	0x1
+> >  #define XFS_LI_ABORTED	0x2
+> > +#define XFS_LI_FAILED	0x3
+> >  
+> >  #define XFS_LI_FLAGS \
+> >  	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
+> > -	{ XFS_LI_ABORTED,	"ABORTED" }
+> > +	{ XFS_LI_ABORTED,	"ABORTED" }, \
+> > +	{ XFS_LI_FAILED,	"FAILED" }
+> >  
+> >  struct xfs_item_ops {
+> >  	void (*iop_size)(xfs_log_item_t *, int *, int *);
+> > @@ -79,6 +81,7 @@ struct xfs_item_ops {
+> >  	void (*iop_unlock)(xfs_log_item_t *);
+> >  	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
+> >  	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
+> > +	void (*iop_error)(xfs_log_item_t *, unsigned int bflags);
+> >  };
+> >  
+> >  void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
+> > -- 
+> > 2.9.3
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
