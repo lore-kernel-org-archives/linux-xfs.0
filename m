@@ -1,49 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34321 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750993AbdEaIvm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 May 2017 04:51:42 -0400
-Date: Wed, 31 May 2017 10:51:37 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 09/10] xfs: nowait aio support
-Message-ID: <20170531085137.GB14011@quack2.suse.cz>
-References: <20170524164150.9492-1-rgoldwyn@suse.de>
- <20170524164150.9492-10-rgoldwyn@suse.de>
- <20170528093113.GB14519@infradead.org>
- <cfc1e7ad-f74b-a14a-ac30-8472f7f684af@suse.de>
- <20170529083338.GC1899@infradead.org>
- <f105d585-e88c-b037-9905-d0c608c609d9@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:44170 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1948790AbdEZWM1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 May 2017 18:12:27 -0400
+Subject: Re: [PATCH 0.9/9] xfs: introduce the XFS_IOC_GETFSMAP ioctl
+References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+ <20170508194755.GK5973@birch.djwong.org>
+ <9d94c89f-f730-955c-bde3-eb9264737303@sandeen.net>
+ <20170526214142.GO4521@birch.djwong.org>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <0e27be7e-17b0-391f-bc80-512ad5523436@redhat.com>
+Date: Fri, 26 May 2017 17:12:25 -0500
 MIME-Version: 1.0
+In-Reply-To: <20170526214142.GO4521@birch.djwong.org>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <f105d585-e88c-b037-9905-d0c608c609d9@suse.de>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue 30-05-17 11:13:29, Goldwyn Rodrigues wrote:
-> > Btw, can you write a small blurb up for the man page to document these
-> > ѕemantics in man-page like language?
-> > 
+On 5/26/17 4:41 PM, Darrick J. Wong wrote:
+> On Fri, May 26, 2017 at 04:20:49PM -0500, Eric Sandeen wrote:
+>>
+>>
+>> On 5/8/17 2:47 PM, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>
+>>> Introduce a new ioctl that uses the reverse mapping btree to return
+>>> information about the physical layout of the filesystem.
+>>>
+>>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>
+>> Ok, howzabout this:
+>>
+>> Changes from your version:
+>>
+>> - remove libxfs stuff, I synced that separately already
+>> - rename sys_fsmap just fsmap (it's not a syscall)
+>> - change meaning of "have_fsmap" - it now means we have it on the
+>>   system, not that this platform (linux) might support it.*
 > 
-> Yes, but which man page would it belong to?
-> Should it be a subsection of errors in io_getevents/io_submit. We don't
-> want to add ERRORS to io_getevents() because it would be the return
-> value of the io_getevents call, and not the ones in the iocb structure.
-> Should it be a new man page, say for iocb(7/8)?
+> I'll have a look... though afaict this removes anything that would
+> prevent us from building the fsmap stuff on a non-linux platform.
+> Seeing as fsmap is linux-only, we might as well restrict it on the
+> platforms we still support.
 
-I think you should extend the manpage for io_submit(8). There you can add
-definition of struct iocb in 'DESCRIPTION' section explaining at least the
-most common fields. You can also explain there which flags can be passed
-and what are they intended to do.
+Right, so in this patch, either we define HAVE_GETFSMAP if we find
+it on the system, or we implement it in include/linux.h and define
+it then.  So HAVE_GETFSMAP won't get set on non-linux.
 
-You can also expand EAGAIN error description to specifically mention that
-in case of NOWAIT aio EAGAIN can be returned if io submission would block.
+But in the next patch that actually makes use of the fsmap ioctl,
+we'll need to conditionally include fsmap.c, and then all should
+be good, I think, right?  Something like:
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
++# On linux we get fsmap from the system or define it ourselves
++# so include this based on platform type.  If this reverts to only
++# the autoconf check w/o local definition, change to testing HAVE_GETFSMAP
++ifeq ($(PKG_PLATFORM),linux)
++CFILES += fsmap.c
++endif
+
+> Darwin?  (I think Jan Tulak added this, though OSX doen't do XFS...)
+> BSD?  (Wasn't XFS removed from their kernel a few years ago?)
+
+Jan, do you still use it? 
+
+-Eric
