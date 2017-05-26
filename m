@@ -1,217 +1,182 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37434 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751119AbdE3S7d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 30 May 2017 14:59:33 -0400
-Subject: Re: [PATCH 0.9/9] xfs: introduce the XFS_IOC_GETFSMAP ioctl
-References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
- <20170508194755.GK5973@birch.djwong.org>
- <9d94c89f-f730-955c-bde3-eb9264737303@sandeen.net>
- <20170526214142.GO4521@birch.djwong.org>
- <0e27be7e-17b0-391f-bc80-512ad5523436@redhat.com>
- <20170530184452.GB4519@birch.djwong.org>
- <7bb36e8f-84ae-f0e2-f645-316c28d3e550@sandeen.net>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <d8d55d6a-52f4-a394-5369-b3231a323fd3@redhat.com>
-Date: Tue, 30 May 2017 13:59:30 -0500
+Received: from mx2.suse.de ([195.135.220.15]:36219 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S940057AbdEZLFO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 May 2017 07:05:14 -0400
+Subject: Re: [PATCH v2] xfs: use ->b_state to fix buffer I/O accounting
+ release race
+References: <1495637135-13255-1-git-send-email-bfoster@redhat.com>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <462bb65a-099d-04c6-e6b6-866070923fa6@suse.com>
+Date: Fri, 26 May 2017 14:05:10 +0300
 MIME-Version: 1.0
-In-Reply-To: <7bb36e8f-84ae-f0e2-f645-316c28d3e550@sandeen.net>
+In-Reply-To: <1495637135-13255-1-git-send-email-bfoster@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
-
-Here's what I landed at, but giant grains of salt may apply.
-
-In particular this doesn't have the:
+To: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
 
-+# On linux we get fsmap from the system or define it ourselves
-+# so include this based on platform type.  If this reverts to only
-+# the autoconf check w/o local definition, change to testing HAVE_GETFSMAP
-+ifeq ($(PKG_PLATFORM),linux)
-+CFILES += fsmap.c
-+endif
 
-in the Makefile, which I tried in a throwaway vm I think.  Sorry
-for the disarray.
+On 24.05.2017 17:45, Brian Foster wrote:
+> We've had user reports of unmount hangs in xfs_wait_buftarg() that
+> analysis shows is due to btp->bt_io_count == -1. bt_io_count
+> represents the count of in-flight asynchronous buffers and thus
+> should always be >= 0. xfs_wait_buftarg() waits for this value to
+> stabilize to zero in order to ensure that all untracked (with
+> respect to the lru) buffers have completed I/O processing before
+> unmount proceeds to tear down in-core data structures.
+> 
+> The value of -1 implies an I/O accounting decrement race. Indeed,
+> the fact that xfs_buf_ioacct_dec() is called from xfs_buf_rele()
+> (where the buffer lock is no longer held) means that bp->b_flags can
+> be updated from an unsafe context. While a user-level reproducer is
+> currently not available, some intrusive hacks to run racing buffer
+> lookups/ioacct/releases from multiple threads was used to
+> successfully manufacture this problem.
+> 
+> Existing callers do not expect to acquire the buffer lock from
+> xfs_buf_rele(). Therefore, we can not safely update ->b_flags from
+> this context. It turns out that we already have separate buffer
+> state bits and associated serialization for dealing with buffer LRU
+> state in the form of ->b_state and ->b_lock. Therefore, replace the
+> _XBF_IN_FLIGHT flag with a ->b_state variant, update the I/O
+> accounting wrappers appropriately and make sure they are used with
+> the correct locking. This ensures that buffer in-flight state can be
+> modified at buffer release time without racing with modifications
+> from a buffer lock holder.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/configure.ac b/configure.ac
-index aa102e4..9534986 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -142,6 +142,7 @@ AC_HAVE_READDIR
- AC_HAVE_FSETXATTR
- AC_HAVE_MREMAP
- AC_NEED_INTERNAL_FSXATTR
-+AC_HAVE_GETFSMAP
- 
- if test "$enable_blkid" = yes; then
- AC_HAVE_BLKID_TOPO
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 4d6bb2d..ec630bd 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -112,6 +112,7 @@ HAVE_FLS = @have_fls@
- HAVE_FSETXATTR = @have_fsetxattr@
- HAVE_MREMAP = @have_mremap@
- NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
-+HAVE_GETFSMAP = @have_getfsmap@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-@@ -150,6 +151,9 @@ endif
- ifeq ($(NEED_INTERNAL_FSXATTR),yes)
- PCFLAGS+= -DOVERRIDE_SYSTEM_FSXATTR
- endif
-+ifeq ($(HAVE_GETFSMAP),yes)
-+PCFLAGS+= -DHAVE_GETFSMAP
-+endif
- 
- 
- GCFLAGS = $(DEBUG) \
-diff --git a/include/linux.h b/include/linux.h
-index 6a676ca..38969d1 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -222,4 +222,107 @@ struct fsxattr {
- #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
- #endif
- 
-+#ifndef HAVE_GETFSMAP
-+/*
-+ *	Structure for FS_IOC_GETFSMAP.
-+ *
-+ *	The memory layout for this call are the scalar values defined in
-+ *	struct fsmap_head, followed by two struct fsmap that describe
-+ *	the lower and upper bound of mappings to return, followed by an
-+ *	array of struct fsmap mappings.
-+ *
-+ *	fmh_iflags control the output of the call, whereas fmh_oflags report
-+ *	on the overall record output.  fmh_count should be set to the
-+ *	length of the fmh_recs array, and fmh_entries will be set to the
-+ *	number of entries filled out during each call.  If fmh_count is
-+ *	zero, the number of reverse mappings will be returned in
-+ *	fmh_entries, though no mappings will be returned.  fmh_reserved
-+ *	must be set to zero.
-+ *
-+ *	The two elements in the fmh_keys array are used to constrain the
-+ *	output.  The first element in the array should represent the
-+ *	lowest disk mapping ("low key") that the user wants to learn
-+ *	about.  If this value is all zeroes, the filesystem will return
-+ *	the first entry it knows about.  For a subsequent call, the
-+ *	contents of fsmap_head.fmh_recs[fsmap_head.fmh_count - 1] should be
-+ *	copied into fmh_keys[0] to have the kernel start where it left off.
-+ *
-+ *	The second element in the fmh_keys array should represent the
-+ *	highest disk mapping ("high key") that the user wants to learn
-+ *	about.  If this value is all ones, the filesystem will not stop
-+ *	until it runs out of mapping to return or runs out of space in
-+ *	fmh_recs.
-+ *
-+ *	fmr_device can be either a 32-bit cookie representing a device, or
-+ *	a 32-bit dev_t if the FMH_OF_DEV_T flag is set.  fmr_physical,
-+ *	fmr_offset, and fmr_length are expressed in units of bytes.
-+ *	fmr_owner is either an inode number, or a special value if
-+ *	FMR_OF_SPECIAL_OWNER is set in fmr_flags.
-+ */
-+struct fsmap {
-+	__u32		fmr_device;	/* device id */
-+	__u32		fmr_flags;	/* mapping flags */
-+	__u64		fmr_physical;	/* device offset of segment */
-+	__u64		fmr_owner;	/* owner id */
-+	__u64		fmr_offset;	/* file offset of segment */
-+	__u64		fmr_length;	/* length of segment */
-+	__u64		fmr_reserved[3];	/* must be zero */
-+};
-+
-+struct fsmap_head {
-+	__u32		fmh_iflags;	/* control flags */
-+	__u32		fmh_oflags;	/* output flags */
-+	__u32		fmh_count;	/* # of entries in array incl. input */
-+	__u32		fmh_entries;	/* # of entries filled in (output). */
-+	__u64		fmh_reserved[6];	/* must be zero */
-+
-+	struct fsmap	fmh_keys[2];	/* low and high keys for the mapping search */
-+	struct fsmap	fmh_recs[];	/* returned records */
-+};
-+
-+/* Size of an fsmap_head with room for nr records. */
-+static inline size_t
-+fsmap_sizeof(
-+	unsigned int	nr)
-+{
-+	return sizeof(struct fsmap_head) + nr * sizeof(struct fsmap);
-+}
-+
-+/* Start the next fsmap query at the end of the current query results. */
-+static inline void
-+fsmap_advance(
-+	struct fsmap_head	*head)
-+{
-+	head->fmh_keys[0] = head->fmh_recs[head->fmh_entries - 1];
-+}
-+
-+/*	fmh_iflags values - set by XFS_IOC_GETFSMAP caller in the header. */
-+/* no flags defined yet */
-+#define FMH_IF_VALID		0
-+
-+/*	fmh_oflags values - returned in the header segment only. */
-+#define FMH_OF_DEV_T		0x1	/* fmr_device values will be dev_t */
-+
-+/*	fmr_flags values - returned for each non-header segment */
-+#define FMR_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
-+#define FMR_OF_ATTR_FORK	0x2	/* segment = attribute fork */
-+#define FMR_OF_EXTENT_MAP	0x4	/* segment = extent map */
-+#define FMR_OF_SHARED		0x8	/* segment = shared with another file */
-+#define FMR_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
-+#define FMR_OF_LAST		0x20	/* segment is the last in the FS */
-+
-+/* Each FS gets to define its own special owner codes. */
-+#define FMR_OWNER(type, code)	(((__u64)type << 32) | \
-+				 ((__u64)code & 0xFFFFFFFFULL))
-+#define FMR_OWNER_TYPE(owner)	((__u32)((__u64)owner >> 32))
-+#define FMR_OWNER_CODE(owner)	((__u32)(((__u64)owner & 0xFFFFFFFFULL)))
-+#define FMR_OWN_FREE		FMR_OWNER(0, 1) /* free space */
-+#define FMR_OWN_UNKNOWN		FMR_OWNER(0, 2) /* unknown owner */
-+#define FMR_OWN_METADATA	FMR_OWNER(0, 3) /* metadata */
-+
-+#define FS_IOC_GETFSMAP		_IOWR('X', 59, struct fsmap_head)
-+
-+#define HAVE_GETFSMAP
-+#endif /* HAVE_GETFSMAP */
-+
- #endif	/* __XFS_LINUX_H__ */
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index bc3b4ce..fa5b639 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -277,3 +277,23 @@ AC_DEFUN([AC_NEED_INTERNAL_FSXATTR],
-     )
-     AC_SUBST(need_internal_fsxattr)
-   ])
-+
-+#
-+# Check if we have a FS_IOC_GETFSMAP ioctl (Linux)
-+#
-+AC_DEFUN([AC_HAVE_GETFSMAP],
-+  [ AC_MSG_CHECKING([for GETFSMAP])
-+    AC_TRY_LINK([
-+#define _GNU_SOURCE
-+#include <sys/syscall.h>
-+#include <unistd.h>
-+#include <linux/fs.h>
-+#include <linux/fsmap.h>
-+    ], [
-+         unsigned long x = FS_IOC_GETFSMAP;
-+         struct fsmap_head fh;
-+    ], have_getfsmap=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_getfsmap)
-+  ])
+Perhaps a Fixes: 9c7504aa72b6 ("xfs: track and serialize in-flight async
+buffers against unmount") tag is in order.
 
+Also I believe it warrants a CC: stable@vger.kernel.org #4.9
+
+
+> ---
+> 
+> v2:
+> - Use ->b_state and ->b_lock instead of custom atomic counter.
+> v1: http://www.spinics.net/lists/linux-xfs/msg06995.html
+> 
+>  fs/xfs/xfs_buf.c | 38 ++++++++++++++++++++++++++------------
+>  fs/xfs/xfs_buf.h |  5 ++---
+>  2 files changed, 28 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index ba036c1..4e19fda 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -97,12 +97,16 @@ static inline void
+>  xfs_buf_ioacct_inc(
+>  	struct xfs_buf	*bp)
+>  {
+> -	if (bp->b_flags & (XBF_NO_IOACCT|_XBF_IN_FLIGHT))
+> +	if (bp->b_flags & XBF_NO_IOACCT)
+>  		return;
+>  
+>  	ASSERT(bp->b_flags & XBF_ASYNC);
+> -	bp->b_flags |= _XBF_IN_FLIGHT;
+> -	percpu_counter_inc(&bp->b_target->bt_io_count);
+> +	spin_lock(&bp->b_lock);
+> +	if (!(bp->b_state & XFS_BSTATE_IN_FLIGHT)) {
+> +		bp->b_state |= XFS_BSTATE_IN_FLIGHT;
+> +		percpu_counter_inc(&bp->b_target->bt_io_count);
+> +	}
+> +	spin_unlock(&bp->b_lock);
+>  }
+>  
+>  /*
+> @@ -110,14 +114,24 @@ xfs_buf_ioacct_inc(
+>   * freed and unaccount from the buftarg.
+>   */
+>  static inline void
+> -xfs_buf_ioacct_dec(
+> +__xfs_buf_ioacct_dec(
+>  	struct xfs_buf	*bp)
+>  {
+> -	if (!(bp->b_flags & _XBF_IN_FLIGHT))
+> -		return;
+> +	ASSERT(spin_is_locked(&bp->b_lock));
+>  
+> -	bp->b_flags &= ~_XBF_IN_FLIGHT;
+> -	percpu_counter_dec(&bp->b_target->bt_io_count);
+> +	if (bp->b_state & XFS_BSTATE_IN_FLIGHT) {
+> +		bp->b_state &= ~XFS_BSTATE_IN_FLIGHT;
+> +		percpu_counter_dec(&bp->b_target->bt_io_count);
+> +	}
+> +}
+> +
+> +static inline void
+> +xfs_buf_ioacct_dec(
+> +	struct xfs_buf	*bp)
+> +{
+> +	spin_lock(&bp->b_lock);
+> +	__xfs_buf_ioacct_dec(bp);
+> +	spin_unlock(&bp->b_lock);
+>  }
+>  
+>  /*
+> @@ -149,9 +163,9 @@ xfs_buf_stale(
+>  	 * unaccounted (released to LRU) before that occurs. Drop in-flight
+>  	 * status now to preserve accounting consistency.
+>  	 */
+> -	xfs_buf_ioacct_dec(bp);
+> -
+>  	spin_lock(&bp->b_lock);
+> +	__xfs_buf_ioacct_dec(bp);
+> +
+>  	atomic_set(&bp->b_lru_ref, 0);
+>  	if (!(bp->b_state & XFS_BSTATE_DISPOSE) &&
+>  	    (list_lru_del(&bp->b_target->bt_lru, &bp->b_lru)))
+> @@ -979,12 +993,12 @@ xfs_buf_rele(
+>  		 * ensures the decrement occurs only once per-buf.
+>  		 */
+>  		if ((atomic_read(&bp->b_hold) == 1) && !list_empty(&bp->b_lru))
+> -			xfs_buf_ioacct_dec(bp);
+> +			__xfs_buf_ioacct_dec(bp);
+>  		goto out_unlock;
+>  	}
+>  
+>  	/* the last reference has been dropped ... */
+> -	xfs_buf_ioacct_dec(bp);
+> +	__xfs_buf_ioacct_dec(bp);
+>  	if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
+>  		/*
+>  		 * If the buffer is added to the LRU take a new reference to the
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index 8d1d44f..1508121 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -63,7 +63,6 @@ typedef enum {
+>  #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
+>  #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
+>  #define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
+> -#define _XBF_IN_FLIGHT	 (1 << 25) /* I/O in flight, for accounting purposes */
+>  
+>  typedef unsigned int xfs_buf_flags_t;
+>  
+> @@ -84,14 +83,14 @@ typedef unsigned int xfs_buf_flags_t;
+>  	{ _XBF_PAGES,		"PAGES" }, \
+>  	{ _XBF_KMEM,		"KMEM" }, \
+>  	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
+> -	{ _XBF_COMPOUND,	"COMPOUND" }, \
+> -	{ _XBF_IN_FLIGHT,	"IN_FLIGHT" }
+> +	{ _XBF_COMPOUND,	"COMPOUND" }
+>  
+>  
+>  /*
+>   * Internal state flags.
+>   */
+>  #define XFS_BSTATE_DISPOSE	 (1 << 0)	/* buffer being discarded */
+> +#define XFS_BSTATE_IN_FLIGHT	 (1 << 1)	/* I/O in flight */
+>  
+>  /*
+>   * The xfs_buftarg contains 2 notions of "sector size" -
+> 
+
+Reviewed-by: Nikolay Borisov <nborisov@suse.com>
