@@ -1,37 +1,279 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52606 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:44434 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750898AbdE3KAM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 30 May 2017 06:00:12 -0400
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20170528102008.30276-2-hch@lst.de>
-References: <20170528102008.30276-2-hch@lst.de> <20170528102008.30276-1-hch@lst.de>
-Subject: Re: [PATCH 01/22] Revert "afs: Move UUID struct to linux/uuid.h"
+        id S1948885AbdE0A1m (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 May 2017 20:27:42 -0400
+Subject: Re: [PATCH 4/9] xfs_spaceman: add FITRIM support
+References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+ <149417260155.24656.16174864340015004658.stgit@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ee86c948-9514-7a0f-1a0f-0c994c969030@sandeen.net>
+Date: Fri, 26 May 2017 19:27:40 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <9376.1496138404.1@warthog.procyon.org.uk>
-Date: Tue, 30 May 2017 11:00:04 +0100
-Message-ID: <9377.1496138404@warthog.procyon.org.uk>
+In-Reply-To: <149417260155.24656.16174864340015004658.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: dhowells@redhat.com, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-Christoph Hellwig <hch@lst.de> wrote:
-
-> This reverts commit ff548773106ec7f8031bc6172e0234bd2a02c19c.
+On 5/7/17 10:56 AM, Darrick J. Wong wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> The V1 uuid intrepreatation in struct form isn't really useful to the
-> rest of the kernel, and not really compatible to it either, so move it
-> back to AFS instead of polluting the global uuid.h.
+> Add support for discarding free space extents via the FITRIM
+> command. Make it easy to discard a single range, an entire AG or all
+> the freespace in the filesystem.
 
-This isn't going to work.  You've effectively changed the types of the fields
-in the UUID struct from BE to CPU-endian, but you're still calling
-generate_random_uuid(), which produces a BE UUID.  You need to leave the
-struct members as __beXX or stop using the core UUID routines.
+So we re-implemented fstrim?  Do we need that?
+Ok I guess it knows per-AG, so... that's a thing.
 
-Just move the struct uuid_v1 as-is to the afs headers and rename it to struct
-afs_uuid.  You can then leave the (un)marshalling code alone.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  spaceman/Makefile |    2 -
+>  spaceman/init.c   |    1 
+>  spaceman/space.h  |    1 
+>  spaceman/trim.c   |  139 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 142 insertions(+), 1 deletion(-)
+>  create mode 100644 spaceman/trim.c
+> 
+> 
+> diff --git a/spaceman/Makefile b/spaceman/Makefile
+> index ff8d23e..9fb9142 100644
+> --- a/spaceman/Makefile
+> +++ b/spaceman/Makefile
+> @@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+>  LTCOMMAND = xfs_spaceman
+>  HFILES = init.h space.h
+>  CFILES = init.c \
+> -	file.c
+> +	file.c trim.c
+>  
+>  LLDLIBS = $(LIBXCMD)
+>  LTDEPENDENCIES = $(LIBXCMD)
+> diff --git a/spaceman/init.c b/spaceman/init.c
+> index 404b183..ae5cfb5 100644
+> --- a/spaceman/init.c
+> +++ b/spaceman/init.c
+> @@ -40,6 +40,7 @@ init_commands(void)
+>  	file_init();
+>  	help_init();
+>  	quit_init();
+> +	trim_init();
+>  }
+>  
+>  static int
+> diff --git a/spaceman/space.h b/spaceman/space.h
+> index 6e1bc52..7b4f034 100644
+> --- a/spaceman/space.h
+> +++ b/spaceman/space.h
+> @@ -34,3 +34,4 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
+>  extern void	file_init(void);
+>  extern void	help_init(void);
+>  extern void	quit_init(void);
+> +extern void	trim_init(void);
+> diff --git a/spaceman/trim.c b/spaceman/trim.c
+> new file mode 100644
+> index 0000000..9bf6565
+> --- /dev/null
+> +++ b/spaceman/trim.c
+> @@ -0,0 +1,139 @@
+> +/*
+> + * Copyright (c) 2012 Red Hat, Inc.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +
+> +#include "libxfs.h"
+> +#include <linux/fs.h>
+> +#include "command.h"
+> +#include "init.h"
+> +#include "space.h"
+> +#include "input.h"
+> +
+> +#ifndef FITRIM
 
-David
+I wonder if we really still need this compat #ifndef...
+
+> +#define FITRIM          _IOWR('X', 121, struct fstrim_range)    /* Trim */
+> +
+> +struct fstrim_range {
+> +	__u64 start;
+> +	__u64 len;
+> +	__u64 minlen;
+> +};
+> +#endif
+> +
+> +static cmdinfo_t trim_cmd;
+> +
+> +/*
+> + * Report on trimace usage in xfs filesystem.
+
+"Report on trimace?"  (Is that like a grimace?)
+
+> + */
+> +static int
+> +trim_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	struct fstrim_range trim = {0};
+> +	xfs_agnumber_t	agno = 0;
+> +	off64_t		offset = 0;
+> +	ssize_t		length = 0;
+> +	ssize_t		minlen = 0;
+
+len & minlen in the trim command are 64-bit, is ssize_t
+sufficient?
+
+> +	int		aflag = 0;
+> +	int		fflag = 0;
+> +	int		ret;
+> +	int		c;
+> +
+> +	while ((c = getopt(argc, argv, "a:fm:")) != EOF) {
+> +		switch (c) {
+> +		case 'a':
+> +			if (fflag)
+> +				return command_usage(&trim_cmd);
+> +			aflag = 1;
+> +			agno = atoi(optarg);
+> +			break;
+> +		case 'f':
+> +			if (aflag)
+> +				return command_usage(&trim_cmd);
+> +			fflag = 1;
+> +			break;
+> +		case 'm':
+> +			minlen = cvtnum(file->geom.blocksize,
+> +					file->geom.sectsize, argv[optind]);
+> +			break;
+> +		default:
+> +			return command_usage(&trim_cmd);
+> +		}
+> +	}
+
+Not a huge deal, but maybe move the above command_usage stuff down here:
+
++	if (aflag && fflag)
++		return command_usage(&trim_cmd);
+
+so all the checking is in one spot.  Save Future-jtulak some grief ;)
+
+> +
+> +	if (optind != argc - 2 && !(aflag || fflag))
+> +		return command_usage(&trim_cmd);
+> +	if (optind != argc) {
+> +		offset = cvtnum(file->geom.blocksize, file->geom.sectsize,
+> +				argv[optind]);
+> +		length = cvtnum(file->geom.blocksize, file->geom.sectsize,
+> +				argv[optind + 1]);
+> +	} else if (agno) {
+> +		offset = agno * file->geom.agblocks * file->geom.blocksize;
+> +		length = file->geom.agblocks * file->geom.blocksize;
+> +	} else {
+> +		offset = 0;
+> +		length = file->geom.datablocks * file->geom.blocksize;
+> +	}
+> +
+> +	trim.start = offset;
+> +	trim.len = length;
+> +	trim.minlen = minlen;
+> +
+> +	ret = ioctl(file->fd, FITRIM, (unsigned long)&trim);
+> +	if (ret < 0) {
+> +		fprintf(stderr, "%s: ioctl(FITRIM) [\"%s\"]: "
+> +			"%s\n", progname, file->name, strerror(errno));
+
++	if (ret < 0) {
++		fprintf(stderr, "%s: ioctl(FITRIM) [\"%s\"]: %s\n",
++			progname, file->name, strerror(errno));
+
+> +		exitcode = 1;
+> +		return 0;
+
+maybe don't need that return here (but don't really care)
+
+> +	}
+> +	return 0;
+> +}
+> +
+> +static void
+> +trim_help(void)
+> +{
+> +	printf(_(
+> +"\n"
+> +"Discard filesystem free space\n"
+> +"\n"
+> +"Options: [-m minlen] [-f]|[-a agno]|[offset length]\n"
+> +"\n"
+> +" -m minlen -- skip freespace extents smaller than minlen\n"
+> +" -f -- trim all the freespace in the entire filesystem\n"
+> +" -a agno -- trim all the freespace in the given AG agno\n"
+> +" offset length -- trim the freespace in the range {offset, length}\n"
+
+xfs_io lines these things up (brute force whitespace) and looks nicer:
+
+ -S   -- use an alternate seed number for filling the write buffer
+ -i   -- input file, source of data to write (used when writing forward)
+ -d   -- open the input file for direct IO
+ -s   -- skip a number of bytes at the start of the input file
+ -w   -- call fdatasync(2) at the end (included in timing results)
+
+so:
+
++" -m minle      -- skip freespace extents smaller than minlen\n"
++" -f            -- trim all the freespace in the entire filesystem\n"
++" -a agno       -- trim all the freespace in the given AG agno\n"
++" offset length -- trim the freespace in the range {offset, length}\n"
+
+> +"\n"));
+> +
+> +}
+> +
+> +void
+> +trim_init(void)
+> +{
+> +	trim_cmd.name = "trim";
+> +	trim_cmd.altname = "tr";
+> +	trim_cmd.cfunc = trim_f;
+> +	trim_cmd.argmin = 1;
+> +	trim_cmd.argmax = 4;
+> +	trim_cmd.args = "[-m minlen] [-f]|[-a agno]|[offset length]\n";
+
+Not sure we want \n at the end:
+
+xfs_spaceman> help trim
+trim [-m minlen] [-f]|[-a agno]|[offset length]
+ -- Discard filesystem free space
+
+xfs_io tends to put that all on one line - or are we worried about 80cols?
+
+> +	trim_cmd.flags = CMD_FLAG_ONESHOT;
+> +	trim_cmd.oneline = _("Discard filesystem free space");
+> +	trim_cmd.help = trim_help;
+> +
+> +	add_command(&trim_cmd);
+> +}
+> +
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
