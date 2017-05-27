@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56540 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:51356 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1948729AbdEZVUv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 May 2017 17:20:51 -0400
-Subject: Re: [PATCH 0.9/9] xfs: introduce the XFS_IOC_GETFSMAP ioctl
+        id S1030425AbdE0BqA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 May 2017 21:46:00 -0400
+Subject: Re: [PATCH 5/9] xfs_spaceman: add new speculative prealloc control
 References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
- <20170508194755.GK5973@birch.djwong.org>
+ <149417260794.24656.14942047048435557523.stgit@birch.djwong.org>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9d94c89f-f730-955c-bde3-eb9264737303@sandeen.net>
-Date: Fri, 26 May 2017 16:20:49 -0500
+Message-ID: <c47eb93e-a177-2c47-185e-3224b60ae11f@sandeen.net>
+Date: Fri, 26 May 2017 20:45:58 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170508194755.GK5973@birch.djwong.org>
+In-Reply-To: <149417260794.24656.14942047048435557523.stgit@birch.djwong.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -18,211 +18,234 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
 
 
-On 5/8/17 2:47 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On 5/7/17 10:56 AM, Darrick J. Wong wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Introduce a new ioctl that uses the reverse mapping btree to return
-> information about the physical layout of the filesystem.
+> Add an control interface for purging speculative
+> preallocation via the new ioctls.
 > 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> [darrick: change xfsctl to ioctl]
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  spaceman/Makefile   |    2 -
+>  spaceman/init.c     |    1 
+>  spaceman/prealloc.c |  135 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  spaceman/space.h    |    1 
+>  4 files changed, 138 insertions(+), 1 deletion(-)
+>  create mode 100644 spaceman/prealloc.c
+> 
+> 
+> diff --git a/spaceman/Makefile b/spaceman/Makefile
+> index 9fb9142..b1f1136 100644
+> --- a/spaceman/Makefile
+> +++ b/spaceman/Makefile
+> @@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+>  LTCOMMAND = xfs_spaceman
+>  HFILES = init.h space.h
+>  CFILES = init.c \
+> -	file.c trim.c
+> +	file.c prealloc.c trim.c
+>  
+>  LLDLIBS = $(LIBXCMD)
+>  LTDEPENDENCIES = $(LIBXCMD)
+> diff --git a/spaceman/init.c b/spaceman/init.c
+> index ae5cfb5..08b5a33 100644
+> --- a/spaceman/init.c
+> +++ b/spaceman/init.c
+> @@ -39,6 +39,7 @@ init_commands(void)
+>  {
+>  	file_init();
+>  	help_init();
+> +	prealloc_init();
+>  	quit_init();
+>  	trim_init();
+>  }
+> diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
+> new file mode 100644
+> index 0000000..b93f909
+> --- /dev/null
+> +++ b/spaceman/prealloc.c
+> @@ -0,0 +1,135 @@
+> +/*
+> + * Copyright (c) 2012 Red Hat, Inc.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +
+> +#include "libxfs.h"
+> +#include "command.h"
+> +#include "input.h"
+> +#include "init.h"
+> +#include "space.h"
+> +
+> +#ifndef XFS_IOC_FREE_EOFBLOCKS
+> +#define XFS_IOC_FREE_EOFBLOCKS _IOR ('X', 58, struct xfs_eofblocks)
+> +
+> +#define XFS_EOFBLOCKS_VERSION           1
+> +struct xfs_fs_eofblocks {
+> +	__u32		eof_version;
+> +	__u32		eof_flags;
+> +	uid_t		eof_uid;
+> +	gid_t		eof_gid;
+> +	prid_t		eof_prid;
+> +	__u32		pad32;
+> +	__u64		eof_min_file_size;
+> +	__u64		pad64[12];
+> +};
+> +
+> +/* eof_flags values */
+> +#define XFS_EOF_FLAGS_SYNC		(1 << 0) /* sync/wait mode scan */
+> +#define XFS_EOF_FLAGS_UID		(1 << 1) /* filter by uid */
+> +#define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
+> +#define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
+> +#define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
+> +
+> +#endif
 
-Ok, howzabout this:
+I think including libxfs defines XFS_IOC_FREE_EOFBLOCKS, via xfs_fs.h
+and that whole hunk can go, no?
 
-Changes from your version:
+> +
+> +static cmdinfo_t prealloc_cmd;
+> +
+> +/*
+> + * Control preallocation amounts.
+> + */
+> +static int
+> +prealloc_f(
+> +	int	argc,
+> +	char	**argv)
+> +{
+> +	struct xfs_fs_eofblocks eofb = {0};
+> +	int	c;
+> +
+> +	eofb.eof_version = XFS_EOFBLOCKS_VERSION;
+> +
+> +	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
+> +		switch (c) {
+> +		case 'g':
+> +			eofb.eof_flags |= XFS_EOF_FLAGS_GID;
+> +			eofb.eof_gid = atoi(optarg);
+> +			break;
+> +		case 'u':
+> +			eofb.eof_flags |= XFS_EOF_FLAGS_UID;
+> +			eofb.eof_uid = atoi(optarg);
+> +			break;
+> +		case 'p':
+> +			eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
+> +			eofb.eof_prid = atoi(optarg);
+> +			break;
+> +		case 's':
+> +			eofb.eof_flags |= XFS_EOF_FLAGS_SYNC;
+> +			break;
+> +		case 'm':
+> +			eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
+> +			eofb.eof_min_file_size = cvtnum(file->geom.blocksize,
+> +							file->geom.sectsize,
+> +							optarg);
+> +			break;
+> +		case '?':
+> +		default:
+> +			return command_usage(&prealloc_cmd);
+> +		}
+> +	}
+> +	if (optind != argc)
+> +		return command_usage(&prealloc_cmd);
+> +
+> +	if (ioctl(file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
+> +		fprintf(stderr, _("%s: XFS_IOC_FREE_EOFBLOCKS on %s: %s\n"),
+> +			progname, file->name, strerror(errno));
+> +	}
+> +	return 0;
+> +}
+> +
+> +static void
+> +prealloc_help(void)
+> +{
+> +	printf(_(
+> +"\n"
+> +"Control speculative preallocation\n"
+> +"\n"
+> +"Options: [-s] [-ugp id] [-m minlen]\n"
+> +"\n"
+> +" -s -- synchronous flush - wait for flush to complete\n"
 
-- remove libxfs stuff, I synced that separately already
-- rename sys_fsmap just fsmap (it's not a syscall)
-- change meaning of "have_fsmap" - it now means we have it on the
-  system, not that this platform (linux) might support it.*
-- remove OVERRIDE_GETFSMAP - we aren't overriding anything now,
-  we are using our own definition only if the system doesn't have it
-- #include <linux/fs.h> before fsmap.h in autoconf or it'll /never/
-  build and be detected
+really flush?  (maybe removal? scan?)
 
-* we didn't bother with this for i.e. fiemap or anything else,
-  afaict, and I'd like to just kill off the other platforms anyway.
-  (I guess they didn't carry along their own copy, though, but meh,
-  I have no idea if they even build at this point)
+> +" -u uid -- remove prealloc on files matching user <uid>\n"
+> +" -g gid -- remove prealloc on files matching group <gid>\n"
+> +" -p prid -- remove prealloc on files matching project <prid>\n"
+> +" -m minlen -- only consider files larger than <minlen>\n"
+> +"\n"));
 
-See what you think?
++" -s        -- synchronous flush - wait for flush to complete\n"
++" -u uid    -- remove prealloc on files matching user <uid>\n"
++" -g gid    -- remove prealloc on files matching group <gid>\n"
++" -p prid   -- remove prealloc on files matching project <prid>\n"
++" -m minlen -- only consider files larger than <minlen>\n"
 
 
-diff --git a/configure.ac b/configure.ac
-index aa102e4..9534986 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -142,6 +142,7 @@ AC_HAVE_READDIR
- AC_HAVE_FSETXATTR
- AC_HAVE_MREMAP
- AC_NEED_INTERNAL_FSXATTR
-+AC_HAVE_GETFSMAP
- 
- if test "$enable_blkid" = yes; then
- AC_HAVE_BLKID_TOPO
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 4d6bb2d..675bedf 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -112,6 +112,7 @@ HAVE_FLS = @have_fls@
- HAVE_FSETXATTR = @have_fsetxattr@
- HAVE_MREMAP = @have_mremap@
- NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
-+HAVE_GETFSMAP = @have_getfsmap@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-@@ -150,6 +151,9 @@ endif
- ifeq ($(NEED_INTERNAL_FSXATTR),yes)
- PCFLAGS+= -DOVERRIDE_SYSTEM_FSXATTR
- endif
-+ifeq ($(HAVE_FSMAP),yes)
-+PCFLAGS+= -DHAVE_FSMAP
-+endif
- 
- 
- GCFLAGS = $(DEBUG) \
-diff --git a/include/linux.h b/include/linux.h
-index 6a676ca..38969d1 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -222,4 +222,107 @@ struct fsxattr {
- #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
- #endif
- 
-+#ifndef HAVE_GETFSMAP
-+/*
-+ *	Structure for FS_IOC_GETFSMAP.
-+ *
-+ *	The memory layout for this call are the scalar values defined in
-+ *	struct fsmap_head, followed by two struct fsmap that describe
-+ *	the lower and upper bound of mappings to return, followed by an
-+ *	array of struct fsmap mappings.
-+ *
-+ *	fmh_iflags control the output of the call, whereas fmh_oflags report
-+ *	on the overall record output.  fmh_count should be set to the
-+ *	length of the fmh_recs array, and fmh_entries will be set to the
-+ *	number of entries filled out during each call.  If fmh_count is
-+ *	zero, the number of reverse mappings will be returned in
-+ *	fmh_entries, though no mappings will be returned.  fmh_reserved
-+ *	must be set to zero.
-+ *
-+ *	The two elements in the fmh_keys array are used to constrain the
-+ *	output.  The first element in the array should represent the
-+ *	lowest disk mapping ("low key") that the user wants to learn
-+ *	about.  If this value is all zeroes, the filesystem will return
-+ *	the first entry it knows about.  For a subsequent call, the
-+ *	contents of fsmap_head.fmh_recs[fsmap_head.fmh_count - 1] should be
-+ *	copied into fmh_keys[0] to have the kernel start where it left off.
-+ *
-+ *	The second element in the fmh_keys array should represent the
-+ *	highest disk mapping ("high key") that the user wants to learn
-+ *	about.  If this value is all ones, the filesystem will not stop
-+ *	until it runs out of mapping to return or runs out of space in
-+ *	fmh_recs.
-+ *
-+ *	fmr_device can be either a 32-bit cookie representing a device, or
-+ *	a 32-bit dev_t if the FMH_OF_DEV_T flag is set.  fmr_physical,
-+ *	fmr_offset, and fmr_length are expressed in units of bytes.
-+ *	fmr_owner is either an inode number, or a special value if
-+ *	FMR_OF_SPECIAL_OWNER is set in fmr_flags.
-+ */
-+struct fsmap {
-+	__u32		fmr_device;	/* device id */
-+	__u32		fmr_flags;	/* mapping flags */
-+	__u64		fmr_physical;	/* device offset of segment */
-+	__u64		fmr_owner;	/* owner id */
-+	__u64		fmr_offset;	/* file offset of segment */
-+	__u64		fmr_length;	/* length of segment */
-+	__u64		fmr_reserved[3];	/* must be zero */
-+};
-+
-+struct fsmap_head {
-+	__u32		fmh_iflags;	/* control flags */
-+	__u32		fmh_oflags;	/* output flags */
-+	__u32		fmh_count;	/* # of entries in array incl. input */
-+	__u32		fmh_entries;	/* # of entries filled in (output). */
-+	__u64		fmh_reserved[6];	/* must be zero */
-+
-+	struct fsmap	fmh_keys[2];	/* low and high keys for the mapping search */
-+	struct fsmap	fmh_recs[];	/* returned records */
-+};
-+
-+/* Size of an fsmap_head with room for nr records. */
-+static inline size_t
-+fsmap_sizeof(
-+	unsigned int	nr)
-+{
-+	return sizeof(struct fsmap_head) + nr * sizeof(struct fsmap);
-+}
-+
-+/* Start the next fsmap query at the end of the current query results. */
-+static inline void
-+fsmap_advance(
-+	struct fsmap_head	*head)
-+{
-+	head->fmh_keys[0] = head->fmh_recs[head->fmh_entries - 1];
-+}
-+
-+/*	fmh_iflags values - set by XFS_IOC_GETFSMAP caller in the header. */
-+/* no flags defined yet */
-+#define FMH_IF_VALID		0
-+
-+/*	fmh_oflags values - returned in the header segment only. */
-+#define FMH_OF_DEV_T		0x1	/* fmr_device values will be dev_t */
-+
-+/*	fmr_flags values - returned for each non-header segment */
-+#define FMR_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
-+#define FMR_OF_ATTR_FORK	0x2	/* segment = attribute fork */
-+#define FMR_OF_EXTENT_MAP	0x4	/* segment = extent map */
-+#define FMR_OF_SHARED		0x8	/* segment = shared with another file */
-+#define FMR_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
-+#define FMR_OF_LAST		0x20	/* segment is the last in the FS */
-+
-+/* Each FS gets to define its own special owner codes. */
-+#define FMR_OWNER(type, code)	(((__u64)type << 32) | \
-+				 ((__u64)code & 0xFFFFFFFFULL))
-+#define FMR_OWNER_TYPE(owner)	((__u32)((__u64)owner >> 32))
-+#define FMR_OWNER_CODE(owner)	((__u32)(((__u64)owner & 0xFFFFFFFFULL)))
-+#define FMR_OWN_FREE		FMR_OWNER(0, 1) /* free space */
-+#define FMR_OWN_UNKNOWN		FMR_OWNER(0, 2) /* unknown owner */
-+#define FMR_OWN_METADATA	FMR_OWNER(0, 3) /* metadata */
-+
-+#define FS_IOC_GETFSMAP		_IOWR('X', 59, struct fsmap_head)
-+
-+#define HAVE_GETFSMAP
-+#endif /* HAVE_GETFSMAP */
-+
- #endif	/* __XFS_LINUX_H__ */
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index bc3b4ce..fa5b639 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -277,3 +277,23 @@ AC_DEFUN([AC_NEED_INTERNAL_FSXATTR],
-     )
-     AC_SUBST(need_internal_fsxattr)
-   ])
-+
-+#
-+# Check if we have a FS_IOC_GETFSMAP ioctl (Linux)
-+#
-+AC_DEFUN([AC_HAVE_GETFSMAP],
-+  [ AC_MSG_CHECKING([for GETFSMAP])
-+    AC_TRY_LINK([
-+#define _GNU_SOURCE
-+#include <sys/syscall.h>
-+#include <unistd.h>
-+#include <linux/fs.h>
-+#include <linux/fsmap.h>
-+    ], [
-+         unsigned long x = FS_IOC_GETFSMAP;
-+         struct fsmap_head fh;
-+    ], have_getfsmap=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_getfsmap)
-+  ])
+> +
+> +}
+> +
+> +void
+> +prealloc_init(void)
+> +{
+> +	prealloc_cmd.name = "prealloc";
+> +	prealloc_cmd.altname = "prealloc";
+> +	prealloc_cmd.cfunc = prealloc_f;
+> +	prealloc_cmd.argmin = 1;
+> +	prealloc_cmd.argmax = -1;
+> +	prealloc_cmd.args = "[-s] [-ugp id] [-m minlen]\n";
 
+no \n please:
+
+xfs_spaceman> help
+...
+
+prealloc [-s] [-ugp id] [-m minlen]
+ -- Control speculative preallocation
+
+should be on same line ala xfs_io IMHO
+
+> +	prealloc_cmd.flags = CMD_FLAG_ONESHOT;
+> +	prealloc_cmd.oneline = _("Control speculative preallocation");
+> +	prealloc_cmd.help = prealloc_help;
+> +
+> +	add_command(&prealloc_cmd);
+> +}
+> +
+> diff --git a/spaceman/space.h b/spaceman/space.h
+> index 7b4f034..0ae3116 100644
+> --- a/spaceman/space.h
+> +++ b/spaceman/space.h
+> @@ -33,5 +33,6 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
+>  
+>  extern void	file_init(void);
+>  extern void	help_init(void);
+> +extern void	prealloc_init(void);
+>  extern void	quit_init(void);
+>  extern void	trim_init(void);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
