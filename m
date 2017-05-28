@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:37500 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:60076 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751692AbdEaQUr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 12:20:47 -0400
+        with ESMTP id S1751676AbdE1KWB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 May 2017 06:22:01 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 24/24] MAINTAINERS: add uuid entry
-Date: Wed, 31 May 2017 18:18:26 +0200
-Message-Id: <20170531161826.23243-25-hch@lst.de>
-In-Reply-To: <20170531161826.23243-1-hch@lst.de>
-References: <20170531161826.23243-1-hch@lst.de>
+Subject: [PATCH 22/22] MAINTAINERS: add uuid entry
+Date: Sun, 28 May 2017 13:20:08 +0300
+Message-Id: <20170528102008.30276-23-hch@lst.de>
+In-Reply-To: <20170528102008.30276-1-hch@lst.de>
+References: <20170528102008.30276-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
