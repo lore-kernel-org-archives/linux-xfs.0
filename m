@@ -1,32 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56509 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:49956 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751229AbdE1JbY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 May 2017 05:31:24 -0400
-Date: Sun, 28 May 2017 02:31:13 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 09/10] xfs: nowait aio support
-Message-ID: <20170528093113.GB14519@infradead.org>
-References: <20170524164150.9492-1-rgoldwyn@suse.de>
- <20170524164150.9492-10-rgoldwyn@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170524164150.9492-10-rgoldwyn@suse.de>
+        with ESMTP id S1750981AbdE1KUj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 May 2017 06:20:39 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 05/22] uuid: remove uuid_be defintions from the uapi header
+Date: Sun, 28 May 2017 13:19:51 +0300
+Message-Id: <20170528102008.30276-6-hch@lst.de>
+In-Reply-To: <20170528102008.30276-1-hch@lst.de>
+References: <20170528102008.30276-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
 
-Despite my previous reviewed-by tag this will need another fix:
+We don't use uuid_be and the UUID_BE constants in any uapi headers, so make
+them private to the kernel.
 
-xfs_file_iomap_begin needs to return EAGAIN if we don't have the extent
-list in memoery already.  E.g. something like this:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ include/linux/uuid.h      | 15 +++++++++++++++
+ include/uapi/linux/uuid.h | 16 ----------------
+ 2 files changed, 15 insertions(+), 16 deletions(-)
 
-	if ((flags & IOMAP_NOWAIT) && !(ip->i_d.if_flags & XFS_IFEXTENTS)) {
-		error = -EAGAIN;
-		goto out_unlock;
-	}
+diff --git a/include/linux/uuid.h b/include/linux/uuid.h
+index 2d095fc60204..30fb13018e29 100644
+--- a/include/linux/uuid.h
++++ b/include/linux/uuid.h
+@@ -18,6 +18,21 @@
+ 
+ #include <uapi/linux/uuid.h>
+ 
++typedef struct {
++	__u8 b[16];
++} uuid_be;
++
++#define UUID_BE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
++((uuid_be)								\
++{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
++   ((b) >> 8) & 0xff, (b) & 0xff,					\
++   ((c) >> 8) & 0xff, (c) & 0xff,					\
++   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
++
++#define NULL_UUID_BE							\
++	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
++		0x00, 0x00, 0x00, 0x00)
++
+ /*
+  * The length of a UUID string ("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+  * not including trailing NUL.
+diff --git a/include/uapi/linux/uuid.h b/include/uapi/linux/uuid.h
+index 3738e5fb6a4d..0099756c4bac 100644
+--- a/include/uapi/linux/uuid.h
++++ b/include/uapi/linux/uuid.h
+@@ -24,10 +24,6 @@ typedef struct {
+ 	__u8 b[16];
+ } uuid_le;
+ 
+-typedef struct {
+-	__u8 b[16];
+-} uuid_be;
+-
+ #define UUID_LE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
+ ((uuid_le)								\
+ {{ (a) & 0xff, ((a) >> 8) & 0xff, ((a) >> 16) & 0xff, ((a) >> 24) & 0xff, \
+@@ -35,20 +31,8 @@ typedef struct {
+    (c) & 0xff, ((c) >> 8) & 0xff,					\
+    (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
+ 
+-#define UUID_BE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
+-((uuid_be)								\
+-{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
+-   ((b) >> 8) & 0xff, (b) & 0xff,					\
+-   ((c) >> 8) & 0xff, (c) & 0xff,					\
+-   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
+-
+ #define NULL_UUID_LE							\
+ 	UUID_LE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+ 		0x00, 0x00, 0x00, 0x00)
+ 
+-#define NULL_UUID_BE							\
+-	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+-		0x00, 0x00, 0x00, 0x00)
+-
+-
+ #endif /* _UAPI_LINUX_UUID_H_ */
+-- 
+2.11.0
 
-right after locking the ilock.
