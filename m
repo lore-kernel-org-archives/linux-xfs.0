@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52862 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:35821 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751491AbdE1KV0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 May 2017 06:21:26 -0400
+        with ESMTP id S1750979AbdE1KVJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 May 2017 06:21:09 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/22] ima/policy: switch to use uuid_t
-Date: Sun, 28 May 2017 13:20:00 +0300
-Message-Id: <20170528102008.30276-15-hch@lst.de>
+Subject: [PATCH 11/22] xfs: remove uuid_getnodeuniq and xfs_uu_t
+Date: Sun, 28 May 2017 13:19:57 +0300
+Message-Id: <20170528102008.30276-12-hch@lst.de>
 In-Reply-To: <20170528102008.30276-1-hch@lst.de>
 References: <20170528102008.30276-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,60 +15,78 @@ List-Id: xfs
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
 Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-Acked-by: Mimi Zohar <zohar@linux.vnet.ibm.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- security/integrity/ima/ima_policy.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+Opencode uuid_getnodeuniq in the only caller, and directly decode
+the uuid_t representation instead of using a structure cast for it.
 
-diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
-index 49fbc3e8f012..da3e7d50e0d7 100644
---- a/security/integrity/ima/ima_policy.c
-+++ b/security/integrity/ima/ima_policy.c
-@@ -61,7 +61,7 @@ struct ima_rule_entry {
- 	enum ima_hooks func;
- 	int mask;
- 	unsigned long fsmagic;
--	u8 fsuuid[16];
-+	uuid_t fsuuid;
- 	kuid_t uid;
- 	kuid_t fowner;
- 	bool (*uid_op)(kuid_t, kuid_t);    /* Handlers for operators       */
-@@ -244,7 +244,7 @@ static bool ima_match_rules(struct ima_rule_entry *rule, struct inode *inode,
- 	    && rule->fsmagic != inode->i_sb->s_magic)
- 		return false;
- 	if ((rule->flags & IMA_FSUUID) &&
--	    memcmp(rule->fsuuid, inode->i_sb->s_uuid, sizeof(rule->fsuuid)))
-+	    memcmp(&rule->fsuuid, inode->i_sb->s_uuid, sizeof(rule->fsuuid)))
- 		return false;
- 	if ((rule->flags & IMA_UID) && !rule->uid_op(cred->uid, rule->uid))
- 		return false;
-@@ -711,13 +711,12 @@ static int ima_parse_rule(char *rule, struct ima_rule_entry *entry)
- 		case Opt_fsuuid:
- 			ima_log_string(ab, "fsuuid", args[0].from);
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/uuid.c      | 25 -------------------------
+ fs/xfs/uuid.h      |  1 -
+ fs/xfs/xfs_mount.c |  5 ++++-
+ 3 files changed, 4 insertions(+), 27 deletions(-)
+
+diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
+index 29ed78c8637b..737c186ea98b 100644
+--- a/fs/xfs/uuid.c
++++ b/fs/xfs/uuid.c
+@@ -17,31 +17,6 @@
+  */
+ #include <xfs.h>
  
--			if (memchr_inv(entry->fsuuid, 0x00,
--				       sizeof(entry->fsuuid))) {
-+			if (uuid_is_null(&entry->fsuuid)) {
- 				result = -EINVAL;
- 				break;
- 			}
+-/* IRIX interpretation of an uuid_t */
+-typedef struct {
+-	__be32	uu_timelow;
+-	__be16	uu_timemid;
+-	__be16	uu_timehi;
+-	__be16	uu_clockseq;
+-	__be16	uu_node[3];
+-} xfs_uu_t;
+-
+-/*
+- * uuid_getnodeuniq - obtain the node unique fields of a UUID.
+- *
+- * This is not in any way a standard or condoned UUID function;
+- * it just something that's needed for user-level file handles.
+- */
+-void
+-uuid_getnodeuniq(uuid_t *uuid, int fsid [2])
+-{
+-	xfs_uu_t *uup = (xfs_uu_t *)uuid;
+-
+-	fsid[0] = (be16_to_cpu(uup->uu_clockseq) << 16) |
+-		   be16_to_cpu(uup->uu_timemid);
+-	fsid[1] = be32_to_cpu(uup->uu_timelow);
+-}
+-
+ int
+ uuid_is_nil(uuid_t *uuid)
+ {
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+index 86bbed071e79..5aea49bf0963 100644
+--- a/fs/xfs/uuid.h
++++ b/fs/xfs/uuid.h
+@@ -19,6 +19,5 @@
+ #define __XFS_SUPPORT_UUID_H__
  
--			result = uuid_to_bin(args[0].from, (uuid_t *)&entry->fsuuid);
-+			result = uuid_to_bin(args[0].from, &entry->fsuuid);
- 			if (!result)
- 				entry->flags |= IMA_FSUUID;
- 			break;
-@@ -1086,7 +1085,7 @@ int ima_policy_show(struct seq_file *m, void *v)
- 	}
+ extern int uuid_is_nil(uuid_t *uuid);
+-extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
  
- 	if (entry->flags & IMA_FSUUID) {
--		seq_printf(m, "fsuuid=%pU", entry->fsuuid);
-+		seq_printf(m, "fsuuid=%pU", &entry->fsuuid);
- 		seq_puts(m, " ");
- 	}
+ #endif	/* __XFS_SUPPORT_UUID_H__ */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 2eaf81859166..51f7d03ef86c 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -793,7 +793,10 @@ xfs_mountfs(
+ 	 *  Copies the low order bits of the timestamp and the randomly
+ 	 *  set "sequence" number out of a UUID.
+ 	 */
+-	uuid_getnodeuniq(&sbp->sb_uuid, mp->m_fixedfsid);
++	mp->m_fixedfsid[0] =
++		(get_unaligned_be16(&sbp->sb_uuid.b[8]) << 16) |
++		 get_unaligned_be16(&sbp->sb_uuid.b[4]);
++	mp->m_fixedfsid[1] = get_unaligned_be32(&sbp->sb_uuid.b[0]);
+ 
+ 	mp->m_dmevmask = 0;	/* not persistent; set after each mount */
  
 -- 
 2.11.0
