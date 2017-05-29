@@ -1,127 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40386 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:43734 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753770AbdEIMWf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 May 2017 08:22:35 -0400
+        id S1750898AbdE2Cid (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 28 May 2017 22:38:33 -0400
+Subject: Re: [PATCH 0/10 v9] No wait AIO
+References: <20170524164150.9492-1-rgoldwyn@suse.de>
+ <20170528092728.GA14519@infradead.org>
 From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 3/8] nowait aio: return if direct write will trigger writeback
-Date: Tue,  9 May 2017 07:22:14 -0500
-Message-Id: <20170509122219.31756-4-rgoldwyn@suse.de>
-In-Reply-To: <20170509122219.31756-1-rgoldwyn@suse.de>
-References: <20170509122219.31756-1-rgoldwyn@suse.de>
+Message-ID: <acb0fc57-5005-4422-9c42-3345e892ecb2@suse.de>
+Date: Sun, 28 May 2017 21:38:27 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170528092728.GA14519@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Find out if the write will trigger a wait due to writeback. If yes,
-return -EAGAIN.
 
-This introduces a new function filemap_range_has_page() which
-returns true if the file's mapping has a page within the range
-mentioned.
+On 05/28/2017 04:27 AM, Christoph Hellwig wrote:
+>>  Changes since v8:
+>>  + Err out AIO reads with -EINVAL flagged as RWF_NOWAIT
+> 
+> Ugg, why?  Reads aren't really treated any different than writes in
+> the direct I/O code.
 
-Return -EINVAL for buffered AIO: there are multiple causes of
-delay such as page locks, dirty throttling logic, page loading
-from disk etc. which cannot be taken care of.
+This effort focused on writes only.
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- include/linux/fs.h |  2 ++
- mm/filemap.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 49 insertions(+), 3 deletions(-)
+>From the point of view of the application/user, reads are usually
+required to complete with success. I don't see a scenario where reads()
+would need the nowait feature. If there is a use case, I'd be happy to
+add and support it.
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 4cb62e032b70..24d5c123788f 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2514,6 +2514,8 @@ extern int filemap_fdatawait(struct address_space *);
- extern void filemap_fdatawait_keep_errors(struct address_space *);
- extern int filemap_fdatawait_range(struct address_space *, loff_t lstart,
- 				   loff_t lend);
-+extern int filemap_range_has_page(struct address_space *, loff_t lstart,
-+				   loff_t lend);
- extern int filemap_write_and_wait(struct address_space *mapping);
- extern int filemap_write_and_wait_range(struct address_space *mapping,
- 				        loff_t lstart, loff_t lend);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index d51670b7fe6b..48b83d1d4a30 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -376,6 +376,39 @@ int filemap_flush(struct address_space *mapping)
- }
- EXPORT_SYMBOL(filemap_flush);
- 
-+/**
-+ * filemap_range_has_page - check if a page exists in range.
-+ * @mapping:		address space structure to wait for
-+ * @start_byte:		offset in bytes where the range starts
-+ * @end_byte:		offset in bytes where the range ends (inclusive)
-+ *
-+ * Find at least one page in the range supplied, usually used to check if
-+ * direct writing in this range will trigger a writeback.
-+ */
-+int filemap_range_has_page(struct address_space *mapping,
-+				loff_t start_byte, loff_t end_byte)
-+{
-+	pgoff_t index = start_byte >> PAGE_SHIFT;
-+	pgoff_t end = end_byte >> PAGE_SHIFT;
-+	struct pagevec pvec;
-+	int ret;
-+
-+	if (end_byte < start_byte)
-+		return 0;
-+
-+	if (mapping->nrpages == 0)
-+		return 0;
-+
-+	pagevec_init(&pvec, 0);
-+	ret = pagevec_lookup(&pvec, mapping, index, 1);
-+	if (!ret)
-+		return 0;
-+	ret = (pvec.pages[0]->index <= end);
-+	pagevec_release(&pvec);
-+	return ret;
-+}
-+EXPORT_SYMBOL(filemap_range_has_page);
-+
- static int __filemap_fdatawait_range(struct address_space *mapping,
- 				     loff_t start_byte, loff_t end_byte)
- {
-@@ -2640,6 +2673,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
- 
- 	pos = iocb->ki_pos;
- 
-+	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
-+		return -EINVAL;
-+
- 	if (limit != RLIM_INFINITY) {
- 		if (iocb->ki_pos >= limit) {
- 			send_sig(SIGXFSZ, current, 0);
-@@ -2709,9 +2745,17 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
- 	write_len = iov_iter_count(from);
- 	end = (pos + write_len - 1) >> PAGE_SHIFT;
- 
--	written = filemap_write_and_wait_range(mapping, pos, pos + write_len - 1);
--	if (written)
--		goto out;
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		/* If there are pages to writeback, return */
-+		if (filemap_range_has_page(inode->i_mapping, pos,
-+					   pos + iov_iter_count(from)))
-+			return -EAGAIN;
-+	} else {
-+		written = filemap_write_and_wait_range(mapping, pos,
-+							pos + write_len - 1);
-+		if (written)
-+			goto out;
-+	}
- 
- 	/*
- 	 * After a write we want buffered reads to be sure to go to disk to get
 -- 
-2.12.0
-
+Goldwyn
