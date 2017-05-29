@@ -1,93 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38527 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750898AbdEaQTR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 12:19:17 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/24] uuid: remove uuid_be defintions from the uapi header
-Date: Wed, 31 May 2017 18:18:07 +0200
-Message-Id: <20170531161826.23243-6-hch@lst.de>
-In-Reply-To: <20170531161826.23243-1-hch@lst.de>
-References: <20170531161826.23243-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:56023 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750844AbdE2IVS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 29 May 2017 04:21:18 -0400
+Date: Mon, 29 May 2017 10:21:14 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 09/10] xfs: nowait aio support
+Message-ID: <20170529082114.GC3608@quack2.suse.cz>
+References: <20170524164150.9492-1-rgoldwyn@suse.de>
+ <20170524164150.9492-10-rgoldwyn@suse.de>
+ <20170528093113.GB14519@infradead.org>
+ <cfc1e7ad-f74b-a14a-ac30-8472f7f684af@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cfc1e7ad-f74b-a14a-ac30-8472f7f684af@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-We don't use uuid_be and the UUID_BE constants in any uapi headers, so make
-them private to the kernel.
+On Sun 28-05-17 21:38:26, Goldwyn Rodrigues wrote:
+> On 05/28/2017 04:31 AM, Christoph Hellwig wrote:
+> > Despite my previous reviewed-by tag this will need another fix:
+> > 
+> > xfs_file_iomap_begin needs to return EAGAIN if we don't have the extent
+> > list in memoery already.  E.g. something like this:
+> > 
+> > 	if ((flags & IOMAP_NOWAIT) && !(ip->i_d.if_flags & XFS_IFEXTENTS)) {
+> > 		error = -EAGAIN;
+> > 		goto out_unlock;
+> > 	}
+> > 
+> > right after locking the ilock.
+> 
+> I am not sure if it is right to penalize the application to write to
+> file which has been freshly opened (and is the first one to open). It
+> basically means extent maps needs to be read from disk. Do you see a
+> reason it would have a non-deterministic wait if it is the only user? I
+> understand the block layer can block if it has too many requests though.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- include/linux/uuid.h      | 15 +++++++++++++++
- include/uapi/linux/uuid.h | 16 ----------------
- 2 files changed, 15 insertions(+), 16 deletions(-)
+Well, submitting such write will have to wait for read of metadata from
+disk. That is certainly considered blocking so Christoph is right that we
+must return EAGAIN in such case.
 
-diff --git a/include/linux/uuid.h b/include/linux/uuid.h
-index 2d095fc60204..30fb13018e29 100644
---- a/include/linux/uuid.h
-+++ b/include/linux/uuid.h
-@@ -18,6 +18,21 @@
- 
- #include <uapi/linux/uuid.h>
- 
-+typedef struct {
-+	__u8 b[16];
-+} uuid_be;
-+
-+#define UUID_BE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
-+((uuid_be)								\
-+{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
-+   ((b) >> 8) & 0xff, (b) & 0xff,					\
-+   ((c) >> 8) & 0xff, (c) & 0xff,					\
-+   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
-+
-+#define NULL_UUID_BE							\
-+	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
-+		0x00, 0x00, 0x00, 0x00)
-+
- /*
-  * The length of a UUID string ("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
-  * not including trailing NUL.
-diff --git a/include/uapi/linux/uuid.h b/include/uapi/linux/uuid.h
-index 3738e5fb6a4d..0099756c4bac 100644
---- a/include/uapi/linux/uuid.h
-+++ b/include/uapi/linux/uuid.h
-@@ -24,10 +24,6 @@ typedef struct {
- 	__u8 b[16];
- } uuid_le;
- 
--typedef struct {
--	__u8 b[16];
--} uuid_be;
--
- #define UUID_LE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
- ((uuid_le)								\
- {{ (a) & 0xff, ((a) >> 8) & 0xff, ((a) >> 16) & 0xff, ((a) >> 24) & 0xff, \
-@@ -35,20 +31,8 @@ typedef struct {
-    (c) & 0xff, ((c) >> 8) & 0xff,					\
-    (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
- 
--#define UUID_BE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
--((uuid_be)								\
--{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
--   ((b) >> 8) & 0xff, (b) & 0xff,					\
--   ((c) >> 8) & 0xff, (c) & 0xff,					\
--   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
--
- #define NULL_UUID_LE							\
- 	UUID_LE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
- 		0x00, 0x00, 0x00, 0x00)
- 
--#define NULL_UUID_BE							\
--	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
--		0x00, 0x00, 0x00, 0x00)
--
--
- #endif /* _UAPI_LINUX_UUID_H_ */
+								Honza
 -- 
-2.11.0
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
