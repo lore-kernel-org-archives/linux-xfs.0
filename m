@@ -1,37 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:37217 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965793AbdEYNA3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 May 2017 09:00:29 -0400
-Date: Thu, 25 May 2017 15:00:27 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 10/23] afs: switch to use uuid_t and uuid_gen
-Message-ID: <20170525130027.GA30194@lst.de>
-References: <20170518062705.25902-1-hch@lst.de> <20170518062705.25902-11-hch@lst.de> <1495478957.6967.69.camel@linux.intel.com> <20170523084956.GB20121@lst.de> <1495545099.6967.81.camel@linux.intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:28755 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750811AbdE3Srt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2017 14:47:49 -0400
+Date: Tue, 30 May 2017 11:47:39 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/9] xfs_spaceman: space management tool
+Message-ID: <20170530184739.GC4519@birch.djwong.org>
+References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+ <149417259522.24656.15381603363219279304.stgit@birch.djwong.org>
+ <afec66aa-4c12-30e3-ff8d-896c5f3505d5@sandeen.net>
+ <20170530173742.GW4519@birch.djwong.org>
+ <48b4d991-4c77-4860-8a05-ba71bdda4056@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1495545099.6967.81.camel@linux.intel.com>
+In-Reply-To: <48b4d991-4c77-4860-8a05-ba71bdda4056@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Tue, May 23, 2017 at 04:11:39PM +0300, Andy Shevchenko wrote:
-> Since we introduced a union it's possible that we might access the
-> member which wasn't last modified one. So, my comment is to give an
-> attention on such possibility and avoid if there is an aliasing
-> happened.
+On Tue, May 30, 2017 at 01:17:56PM -0500, Eric Sandeen wrote:
+> On 5/30/17 12:37 PM, Darrick J. Wong wrote:
+> > On Fri, May 26, 2017 at 08:34:18PM -0500, Eric Sandeen wrote:
+> >> On 5/7/17 10:56 AM, Darrick J. Wong wrote:
+> >>> From: Dave Chinner <dchinner@redhat.com>
+> >>>
+> >>> xfs_spaceman is intended as a diagnostic and control tool for space
+> >>> management operations within XFS. Operations like examining free
+> >>> space, managing allocation policies, issuing block discards on free
+> >>> space, etc.
+> >>>
+> >>> The tool is modelled on the xfs_io interface, allowing both
+> >>> interactive and command line control of the tool, enabling it to be
+> >>> used in scripts and automated management tools.
+> >> This may be a result of the xfs_io ancestry, but:
+> >>
+> >> # xfs_spaceman /mnt/test2 /mnt/test
+> >>
+> >> Cool, we can open 2 files(ystems)
+> >>
+> >> xfs_spaceman> print
+> >>  000  /mnt/test2     (non-sync,non-direct,read-write)
+> >> [001] /mnt/test      (non-sync,non-direct,read-write)
+> >>
+> >> (what does non-direct mean for a mountpoint?)
+> >> (actually where do these flags come from ... hm.)
+> >>
+> >> Yep there we are!  Now how do we switch to the other?
+> >>
+> >> xfs_spaceman> help
+> >> help [command] -- help for one or all commands
+> >> print -- list current open files
+> >> quit -- exit the program
+> >>
+> >> Use 'help commandname' for extended help.
+> >>
+> >> hmmm... I guess we can't switch.  Should we be able to?
+> >>
+> >> Is the intent to open files or filesystems...  both?  Is there ever
+> >> a reason to be opening a file not a filesystem?
+> > <shrug> I mostly just passed on Dave's original patches from whenever
+> > ago, but TBH I'm not 100% sure about the usecases for multiple
+> > arguments.  The commands that spaceman has now are all fs-oriented, not
+> > file-oriented... but maybe people want to be able to issue one command
+> > against multiple fses?  OTOH all the commands provided so far are
+> > oneshot, so they only act upon one open file.
+> > 
+> > So, I'm inclined to ditch the 'list' command and disallow multiple open
+> > files, like Eric suggests, unless anyone really wants it?
+> 
+> Either way is fine: multiple (fs) targets with the ability to switch,
+> or restrict to just one, but allowing one to open multiple and only
+> use one makes little sense.
 
-We do for AFS (and XFS for fs fsid).  My preference would be to
-not have the v1 struct defintion but instead provide a few
-helpers in uuid.h that use get_unaligned_be* if needed:
+I think of all the commands we have, only trim and prealloc seem geared
+towards being callable against all the paths specified in the command
+line.  OTOH I don't see a lot of harm in letting people run reports
+against multiple filesystems, though the output will be sort of messy.
 
-	uuid_v1_time_low()
-	uuid_v1_time_mid()
-	uuid_v1_time_time_hi_and_version()..
+I'll play around with removing the ONESHOT designation and see if that
+doesn't turn into a horrible mess.
 
->From his previously reply it seems like Dave doesn't like that idea
-too much, in which case I suspect moving struct uuid_v1 back into
-afs and living with cast in it is the way to go.
+--D
+
+> 
+> -Eric
+> 
+> > --D
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
