@@ -1,266 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20832 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750811AbdE3SeH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2017 14:34:07 -0400
-Date: Tue, 30 May 2017 11:34:00 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/9] xfs_spaceman: add new speculative prealloc control
-Message-ID: <20170530183400.GZ4519@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:33842 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750855AbdE3SSO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 30 May 2017 14:18:14 -0400
+Subject: Re: [PATCH 3/9] xfs_spaceman: space management tool
 References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
- <149417260794.24656.14942047048435557523.stgit@birch.djwong.org>
- <c47eb93e-a177-2c47-185e-3224b60ae11f@sandeen.net>
+ <149417259522.24656.15381603363219279304.stgit@birch.djwong.org>
+ <afec66aa-4c12-30e3-ff8d-896c5f3505d5@sandeen.net>
+ <20170530173742.GW4519@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <48b4d991-4c77-4860-8a05-ba71bdda4056@sandeen.net>
+Date: Tue, 30 May 2017 13:17:56 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c47eb93e-a177-2c47-185e-3224b60ae11f@sandeen.net>
+In-Reply-To: <20170530173742.GW4519@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Fri, May 26, 2017 at 08:45:58PM -0500, Eric Sandeen wrote:
+On 5/30/17 12:37 PM, Darrick J. Wong wrote:
+> On Fri, May 26, 2017 at 08:34:18PM -0500, Eric Sandeen wrote:
+>> On 5/7/17 10:56 AM, Darrick J. Wong wrote:
+>>> From: Dave Chinner <dchinner@redhat.com>
+>>>
+>>> xfs_spaceman is intended as a diagnostic and control tool for space
+>>> management operations within XFS. Operations like examining free
+>>> space, managing allocation policies, issuing block discards on free
+>>> space, etc.
+>>>
+>>> The tool is modelled on the xfs_io interface, allowing both
+>>> interactive and command line control of the tool, enabling it to be
+>>> used in scripts and automated management tools.
+>> This may be a result of the xfs_io ancestry, but:
+>>
+>> # xfs_spaceman /mnt/test2 /mnt/test
+>>
+>> Cool, we can open 2 files(ystems)
+>>
+>> xfs_spaceman> print
+>>  000  /mnt/test2     (non-sync,non-direct,read-write)
+>> [001] /mnt/test      (non-sync,non-direct,read-write)
+>>
+>> (what does non-direct mean for a mountpoint?)
+>> (actually where do these flags come from ... hm.)
+>>
+>> Yep there we are!  Now how do we switch to the other?
+>>
+>> xfs_spaceman> help
+>> help [command] -- help for one or all commands
+>> print -- list current open files
+>> quit -- exit the program
+>>
+>> Use 'help commandname' for extended help.
+>>
+>> hmmm... I guess we can't switch.  Should we be able to?
+>>
+>> Is the intent to open files or filesystems...  both?  Is there ever
+>> a reason to be opening a file not a filesystem?
+> <shrug> I mostly just passed on Dave's original patches from whenever
+> ago, but TBH I'm not 100% sure about the usecases for multiple
+> arguments.  The commands that spaceman has now are all fs-oriented, not
+> file-oriented... but maybe people want to be able to issue one command
+> against multiple fses?  OTOH all the commands provided so far are
+> oneshot, so they only act upon one open file.
 > 
-> 
-> On 5/7/17 10:56 AM, Darrick J. Wong wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Add an control interface for purging speculative
-> > preallocation via the new ioctls.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > [darrick: change xfsctl to ioctl]
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  spaceman/Makefile   |    2 -
-> >  spaceman/init.c     |    1 
-> >  spaceman/prealloc.c |  135 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  spaceman/space.h    |    1 
-> >  4 files changed, 138 insertions(+), 1 deletion(-)
-> >  create mode 100644 spaceman/prealloc.c
-> > 
-> > 
-> > diff --git a/spaceman/Makefile b/spaceman/Makefile
-> > index 9fb9142..b1f1136 100644
-> > --- a/spaceman/Makefile
-> > +++ b/spaceman/Makefile
-> > @@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
-> >  LTCOMMAND = xfs_spaceman
-> >  HFILES = init.h space.h
-> >  CFILES = init.c \
-> > -	file.c trim.c
-> > +	file.c prealloc.c trim.c
-> >  
-> >  LLDLIBS = $(LIBXCMD)
-> >  LTDEPENDENCIES = $(LIBXCMD)
-> > diff --git a/spaceman/init.c b/spaceman/init.c
-> > index ae5cfb5..08b5a33 100644
-> > --- a/spaceman/init.c
-> > +++ b/spaceman/init.c
-> > @@ -39,6 +39,7 @@ init_commands(void)
-> >  {
-> >  	file_init();
-> >  	help_init();
-> > +	prealloc_init();
-> >  	quit_init();
-> >  	trim_init();
-> >  }
-> > diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
-> > new file mode 100644
-> > index 0000000..b93f909
-> > --- /dev/null
-> > +++ b/spaceman/prealloc.c
-> > @@ -0,0 +1,135 @@
-> > +/*
-> > + * Copyright (c) 2012 Red Hat, Inc.
-> > + * All Rights Reserved.
-> > + *
-> > + * This program is free software; you can redistribute it and/or
-> > + * modify it under the terms of the GNU General Public License as
-> > + * published by the Free Software Foundation.
-> > + *
-> > + * This program is distributed in the hope that it would be useful,
-> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > + * GNU General Public License for more details.
-> > + *
-> > + * You should have received a copy of the GNU General Public License
-> > + * along with this program; if not, write the Free Software Foundation,
-> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > + */
-> > +
-> > +#include "libxfs.h"
-> > +#include "command.h"
-> > +#include "input.h"
-> > +#include "init.h"
-> > +#include "space.h"
-> > +
-> > +#ifndef XFS_IOC_FREE_EOFBLOCKS
-> > +#define XFS_IOC_FREE_EOFBLOCKS _IOR ('X', 58, struct xfs_eofblocks)
-> > +
-> > +#define XFS_EOFBLOCKS_VERSION           1
-> > +struct xfs_fs_eofblocks {
-> > +	__u32		eof_version;
-> > +	__u32		eof_flags;
-> > +	uid_t		eof_uid;
-> > +	gid_t		eof_gid;
-> > +	prid_t		eof_prid;
-> > +	__u32		pad32;
-> > +	__u64		eof_min_file_size;
-> > +	__u64		pad64[12];
-> > +};
-> > +
-> > +/* eof_flags values */
-> > +#define XFS_EOF_FLAGS_SYNC		(1 << 0) /* sync/wait mode scan */
-> > +#define XFS_EOF_FLAGS_UID		(1 << 1) /* filter by uid */
-> > +#define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
-> > +#define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
-> > +#define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
-> > +
-> > +#endif
-> 
-> I think including libxfs defines XFS_IOC_FREE_EOFBLOCKS, via xfs_fs.h
-> and that whole hunk can go, no?
+> So, I'm inclined to ditch the 'list' command and disallow multiple open
+> files, like Eric suggests, unless anyone really wants it?
 
-Yeah.
+Either way is fine: multiple (fs) targets with the ability to switch,
+or restrict to just one, but allowing one to open multiple and only
+use one makes little sense.
 
-> > +
-> > +static cmdinfo_t prealloc_cmd;
-> > +
-> > +/*
-> > + * Control preallocation amounts.
-> > + */
-> > +static int
-> > +prealloc_f(
-> > +	int	argc,
-> > +	char	**argv)
-> > +{
-> > +	struct xfs_fs_eofblocks eofb = {0};
-> > +	int	c;
-> > +
-> > +	eofb.eof_version = XFS_EOFBLOCKS_VERSION;
-> > +
-> > +	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
-> > +		switch (c) {
-> > +		case 'g':
-> > +			eofb.eof_flags |= XFS_EOF_FLAGS_GID;
-> > +			eofb.eof_gid = atoi(optarg);
-> > +			break;
-> > +		case 'u':
-> > +			eofb.eof_flags |= XFS_EOF_FLAGS_UID;
-> > +			eofb.eof_uid = atoi(optarg);
-> > +			break;
-> > +		case 'p':
-> > +			eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
-> > +			eofb.eof_prid = atoi(optarg);
-> > +			break;
-> > +		case 's':
-> > +			eofb.eof_flags |= XFS_EOF_FLAGS_SYNC;
-> > +			break;
-> > +		case 'm':
-> > +			eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
-> > +			eofb.eof_min_file_size = cvtnum(file->geom.blocksize,
-> > +							file->geom.sectsize,
-> > +							optarg);
-> > +			break;
-> > +		case '?':
-> > +		default:
-> > +			return command_usage(&prealloc_cmd);
-> > +		}
-> > +	}
-> > +	if (optind != argc)
-> > +		return command_usage(&prealloc_cmd);
-> > +
-> > +	if (ioctl(file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
-> > +		fprintf(stderr, _("%s: XFS_IOC_FREE_EOFBLOCKS on %s: %s\n"),
-> > +			progname, file->name, strerror(errno));
-> > +	}
-> > +	return 0;
-> > +}
-> > +
-> > +static void
-> > +prealloc_help(void)
-> > +{
-> > +	printf(_(
-> > +"\n"
-> > +"Control speculative preallocation\n"
-> > +"\n"
-> > +"Options: [-s] [-ugp id] [-m minlen]\n"
-> > +"\n"
-> > +" -s -- synchronous flush - wait for flush to complete\n"
-> 
-> really flush?  (maybe removal? scan?)
+-Eric
 
-"-s        -- wait for removal to complete\n"
-
+> --D
 > 
-> > +" -u uid -- remove prealloc on files matching user <uid>\n"
-> > +" -g gid -- remove prealloc on files matching group <gid>\n"
-> > +" -p prid -- remove prealloc on files matching project <prid>\n"
-> > +" -m minlen -- only consider files larger than <minlen>\n"
-> > +"\n"));
-> 
-> +" -s        -- synchronous flush - wait for flush to complete\n"
-> +" -u uid    -- remove prealloc on files matching user <uid>\n"
-> +" -g gid    -- remove prealloc on files matching group <gid>\n"
-> +" -p prid   -- remove prealloc on files matching project <prid>\n"
-> +" -m minlen -- only consider files larger than <minlen>\n"
-> 
-> 
-> > +
-> > +}
-> > +
-> > +void
-> > +prealloc_init(void)
-> > +{
-> > +	prealloc_cmd.name = "prealloc";
-> > +	prealloc_cmd.altname = "prealloc";
-> > +	prealloc_cmd.cfunc = prealloc_f;
-> > +	prealloc_cmd.argmin = 1;
-> > +	prealloc_cmd.argmax = -1;
-> > +	prealloc_cmd.args = "[-s] [-ugp id] [-m minlen]\n";
-> 
-> no \n please:
-> 
-> xfs_spaceman> help
-> ...
-> 
-> prealloc [-s] [-ugp id] [-m minlen]
->  -- Control speculative preallocation
-> 
-> should be on same line ala xfs_io IMHO
-
-Ok.
-
---D
-
-> 
-> > +	prealloc_cmd.flags = CMD_FLAG_ONESHOT;
-> > +	prealloc_cmd.oneline = _("Control speculative preallocation");
-> > +	prealloc_cmd.help = prealloc_help;
-> > +
-> > +	add_command(&prealloc_cmd);
-> > +}
-> > +
-> > diff --git a/spaceman/space.h b/spaceman/space.h
-> > index 7b4f034..0ae3116 100644
-> > --- a/spaceman/space.h
-> > +++ b/spaceman/space.h
-> > @@ -33,5 +33,6 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
-> >  
-> >  extern void	file_init(void);
-> >  extern void	help_init(void);
-> > +extern void	prealloc_init(void);
-> >  extern void	quit_init(void);
-> >  extern void	trim_init(void);
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
