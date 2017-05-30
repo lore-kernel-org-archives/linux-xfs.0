@@ -1,294 +1,540 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:44925 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751514AbdE1KVa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 May 2017 06:21:30 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/22] fs: switch ->s_uuid to uuid_t
-Date: Sun, 28 May 2017 13:20:01 +0300
-Message-Id: <20170528102008.30276-16-hch@lst.de>
-In-Reply-To: <20170528102008.30276-1-hch@lst.de>
-References: <20170528102008.30276-1-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:23793 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750938AbdE3Rhu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2017 13:37:50 -0400
+Date: Tue, 30 May 2017 10:37:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/9] xfs_spaceman: space management tool
+Message-ID: <20170530173742.GW4519@birch.djwong.org>
+References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+ <149417259522.24656.15381603363219279304.stgit@birch.djwong.org>
+ <afec66aa-4c12-30e3-ff8d-896c5f3505d5@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <afec66aa-4c12-30e3-ff8d-896c5f3505d5@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-For some file systems we still memcpy into it, but in various places this
-already allows us to use the proper uuid helpers.  More to come..
+On Fri, May 26, 2017 at 08:34:18PM -0500, Eric Sandeen wrote:
+> On 5/7/17 10:56 AM, Darrick J. Wong wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > xfs_spaceman is intended as a diagnostic and control tool for space
+> > management operations within XFS. Operations like examining free
+> > space, managing allocation policies, issuing block discards on free
+> > space, etc.
+> > 
+> > The tool is modelled on the xfs_io interface, allowing both
+> > interactive and command line control of the tool, enabling it to be
+> > used in scripts and automated management tools.
+> 
+> This may be a result of the xfs_io ancestry, but:
+> 
+> # xfs_spaceman /mnt/test2 /mnt/test
+> 
+> Cool, we can open 2 files(ystems)
+> 
+> xfs_spaceman> print
+>  000  /mnt/test2     (non-sync,non-direct,read-write)
+> [001] /mnt/test      (non-sync,non-direct,read-write)
+> 
+> (what does non-direct mean for a mountpoint?)
+> (actually where do these flags come from ... hm.)
+> 
+> Yep there we are!  Now how do we switch to the other?
+> 
+> xfs_spaceman> help
+> help [command] -- help for one or all commands
+> print -- list current open files
+> quit -- exit the program
+> 
+> Use 'help commandname' for extended help.
+> 
+> hmmm... I guess we can't switch.  Should we be able to?
+> 
+> Is the intent to open files or filesystems...  both?  Is there ever
+> a reason to be opening a file not a filesystem?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-Acked-by: Mimi Zohar <zohar@linux.vnet.ibm.com> (Changes to IMA/EVM)
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/xen/tmem.c                  |  6 +++---
- fs/ext4/super.c                     |  2 +-
- fs/f2fs/super.c                     |  2 +-
- fs/gfs2/ops_fstype.c                |  2 +-
- fs/gfs2/sys.c                       | 22 +++++-----------------
- fs/ocfs2/super.c                    |  2 +-
- fs/overlayfs/copy_up.c              |  5 ++---
- fs/overlayfs/namei.c                |  2 +-
- fs/xfs/xfs_mount.c                  |  3 +--
- include/linux/cleancache.h          |  2 +-
- include/linux/fs.h                  |  5 +++--
- mm/cleancache.c                     |  2 +-
- security/integrity/evm/evm_crypto.c |  2 +-
- security/integrity/ima/ima_policy.c |  2 +-
- 14 files changed, 23 insertions(+), 36 deletions(-)
+<shrug> I mostly just passed on Dave's original patches from whenever
+ago, but TBH I'm not 100% sure about the usecases for multiple
+arguments.  The commands that spaceman has now are all fs-oriented, not
+file-oriented... but maybe people want to be able to issue one command
+against multiple fses?  OTOH all the commands provided so far are
+oneshot, so they only act upon one open file.
 
-diff --git a/drivers/xen/tmem.c b/drivers/xen/tmem.c
-index 4ac2ca8a7656..bf13d1ec51f3 100644
---- a/drivers/xen/tmem.c
-+++ b/drivers/xen/tmem.c
-@@ -233,12 +233,12 @@ static int tmem_cleancache_init_fs(size_t pagesize)
- 	return xen_tmem_new_pool(uuid_private, 0, pagesize);
- }
- 
--static int tmem_cleancache_init_shared_fs(char *uuid, size_t pagesize)
-+static int tmem_cleancache_init_shared_fs(uuid_t *uuid, size_t pagesize)
- {
- 	struct tmem_pool_uuid shared_uuid;
- 
--	shared_uuid.uuid_lo = *(u64 *)uuid;
--	shared_uuid.uuid_hi = *(u64 *)(&uuid[8]);
-+	shared_uuid.uuid_lo = *(u64 *)&uuid->b[0];
-+	shared_uuid.uuid_hi = *(u64 *)&uuid->b[8];
- 	return xen_tmem_new_pool(shared_uuid, TMEM_POOL_SHARED, pagesize);
- }
- 
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 0b177da9ea82..6e3b4186a22f 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -3952,7 +3952,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- 		sb->s_qcop = &ext4_qctl_operations;
- 	sb->s_quota_types = QTYPE_MASK_USR | QTYPE_MASK_GRP | QTYPE_MASK_PRJ;
- #endif
--	memcpy(sb->s_uuid, es->s_uuid, sizeof(es->s_uuid));
-+	memcpy(&sb->s_uuid, es->s_uuid, sizeof(es->s_uuid));
- 
- 	INIT_LIST_HEAD(&sbi->s_orphan); /* unlinked but open files */
- 	mutex_init(&sbi->s_orphan_lock);
-diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
-index 83355ec4a92c..0b89b0b7b9f7 100644
---- a/fs/f2fs/super.c
-+++ b/fs/f2fs/super.c
-@@ -1937,7 +1937,7 @@ static int f2fs_fill_super(struct super_block *sb, void *data, int silent)
- 	sb->s_time_gran = 1;
- 	sb->s_flags = (sb->s_flags & ~MS_POSIXACL) |
- 		(test_opt(sbi, POSIX_ACL) ? MS_POSIXACL : 0);
--	memcpy(sb->s_uuid, raw_super->uuid, sizeof(raw_super->uuid));
-+	memcpy(&sb->s_uuid, raw_super->uuid, sizeof(raw_super->uuid));
- 
- 	/* init f2fs-specific super block info */
- 	sbi->valid_super_block = valid_super_block;
-diff --git a/fs/gfs2/ops_fstype.c b/fs/gfs2/ops_fstype.c
-index ed67548b286c..b92135c202c2 100644
---- a/fs/gfs2/ops_fstype.c
-+++ b/fs/gfs2/ops_fstype.c
-@@ -203,7 +203,7 @@ static void gfs2_sb_in(struct gfs2_sbd *sdp, const void *buf)
- 
- 	memcpy(sb->sb_lockproto, str->sb_lockproto, GFS2_LOCKNAME_LEN);
- 	memcpy(sb->sb_locktable, str->sb_locktable, GFS2_LOCKNAME_LEN);
--	memcpy(s->s_uuid, str->sb_uuid, 16);
-+	memcpy(&s->s_uuid, str->sb_uuid, 16);
- }
- 
- /**
-diff --git a/fs/gfs2/sys.c b/fs/gfs2/sys.c
-index 7a515345610c..e77bc52b468f 100644
---- a/fs/gfs2/sys.c
-+++ b/fs/gfs2/sys.c
-@@ -71,25 +71,14 @@ static ssize_t fsname_show(struct gfs2_sbd *sdp, char *buf)
- 	return snprintf(buf, PAGE_SIZE, "%s\n", sdp->sd_fsname);
- }
- 
--static int gfs2_uuid_valid(const u8 *uuid)
--{
--	int i;
--
--	for (i = 0; i < 16; i++) {
--		if (uuid[i])
--			return 1;
--	}
--	return 0;
--}
--
- static ssize_t uuid_show(struct gfs2_sbd *sdp, char *buf)
- {
- 	struct super_block *s = sdp->sd_vfs;
--	const u8 *uuid = s->s_uuid;
-+
- 	buf[0] = '\0';
--	if (!gfs2_uuid_valid(uuid))
-+	if (uuid_is_null(&s->s_uuid))
- 		return 0;
--	return snprintf(buf, PAGE_SIZE, "%pUB\n", uuid);
-+	return snprintf(buf, PAGE_SIZE, "%pUB\n", &s->s_uuid);
- }
- 
- static ssize_t freeze_show(struct gfs2_sbd *sdp, char *buf)
-@@ -712,14 +701,13 @@ static int gfs2_uevent(struct kset *kset, struct kobject *kobj,
- {
- 	struct gfs2_sbd *sdp = container_of(kobj, struct gfs2_sbd, sd_kobj);
- 	struct super_block *s = sdp->sd_vfs;
--	const u8 *uuid = s->s_uuid;
- 
- 	add_uevent_var(env, "LOCKTABLE=%s", sdp->sd_table_name);
- 	add_uevent_var(env, "LOCKPROTO=%s", sdp->sd_proto_name);
- 	if (!test_bit(SDF_NOJOURNALID, &sdp->sd_flags))
- 		add_uevent_var(env, "JOURNALID=%d", sdp->sd_lockstruct.ls_jid);
--	if (gfs2_uuid_valid(uuid))
--		add_uevent_var(env, "UUID=%pUB", uuid);
-+	if (!uuid_is_null(&s->s_uuid))
-+		add_uevent_var(env, "UUID=%pUB", &s->s_uuid);
- 	return 0;
- }
- 
-diff --git a/fs/ocfs2/super.c b/fs/ocfs2/super.c
-index ca1646fbcaef..83005f486451 100644
---- a/fs/ocfs2/super.c
-+++ b/fs/ocfs2/super.c
-@@ -2062,7 +2062,7 @@ static int ocfs2_initialize_super(struct super_block *sb,
- 	cbits = le32_to_cpu(di->id2.i_super.s_clustersize_bits);
- 	bbits = le32_to_cpu(di->id2.i_super.s_blocksize_bits);
- 	sb->s_maxbytes = ocfs2_max_file_offset(bbits, cbits);
--	memcpy(sb->s_uuid, di->id2.i_super.s_uuid,
-+	memcpy(&sb->s_uuid, di->id2.i_super.s_uuid,
- 	       sizeof(di->id2.i_super.s_uuid));
- 
- 	osb->osb_dx_mask = (1 << (cbits - bbits)) - 1;
-diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
-index 9008ab9fbd2e..5b795873f7fa 100644
---- a/fs/overlayfs/copy_up.c
-+++ b/fs/overlayfs/copy_up.c
-@@ -284,7 +284,6 @@ static int ovl_set_origin(struct dentry *dentry, struct dentry *lower,
- 			  struct dentry *upper)
- {
- 	struct super_block *sb = lower->d_sb;
--	uuid_be *uuid = (uuid_be *) &sb->s_uuid;
- 	const struct ovl_fh *fh = NULL;
- 	int err;
- 
-@@ -294,8 +293,8 @@ static int ovl_set_origin(struct dentry *dentry, struct dentry *lower,
- 	 * up and a pure upper inode.
- 	 */
- 	if (sb->s_export_op && sb->s_export_op->fh_to_dentry &&
--	    uuid_be_cmp(*uuid, NULL_UUID_BE)) {
--		fh = ovl_encode_fh(lower, uuid);
-+	    !uuid_is_null(&sb->s_uuid)) {
-+		fh = ovl_encode_fh(lower, &sb->s_uuid);
- 		if (IS_ERR(fh))
- 			return PTR_ERR(fh);
- 	}
-diff --git a/fs/overlayfs/namei.c b/fs/overlayfs/namei.c
-index bad0f665a635..6709f27c6876 100644
---- a/fs/overlayfs/namei.c
-+++ b/fs/overlayfs/namei.c
-@@ -135,7 +135,7 @@ static struct dentry *ovl_get_origin(struct dentry *dentry,
- 	 * Make sure that the stored uuid matches the uuid of the lower
- 	 * layer where file handle will be decoded.
- 	 */
--	if (uuid_be_cmp(fh->uuid, *(uuid_be *) &mnt->mnt_sb->s_uuid))
-+	if (!uuid_equal(&fh->uuid, &mnt->mnt_sb->s_uuid))
- 		goto out;
- 
- 	origin = exportfs_decode_fh(mnt, (struct fid *)fh->fid,
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 54452967e35e..d249546da15e 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -74,8 +74,7 @@ xfs_uuid_mount(
- 	int			hole, i;
- 
- 	/* Publish UUID in struct super_block */
--	BUILD_BUG_ON(sizeof(mp->m_super->s_uuid) != sizeof(uuid_t));
--	memcpy(&mp->m_super->s_uuid, uuid, sizeof(uuid_t));
-+	uuid_copy(&mp->m_super->s_uuid, uuid);
- 
- 	if (mp->m_flags & XFS_MOUNT_NOUUID)
- 		return 0;
-diff --git a/include/linux/cleancache.h b/include/linux/cleancache.h
-index fccf7f44139d..bbb3712dd892 100644
---- a/include/linux/cleancache.h
-+++ b/include/linux/cleancache.h
-@@ -27,7 +27,7 @@ struct cleancache_filekey {
- 
- struct cleancache_ops {
- 	int (*init_fs)(size_t);
--	int (*init_shared_fs)(char *uuid, size_t);
-+	int (*init_shared_fs)(uuid_t *uuid, size_t);
- 	int (*get_page)(int, struct cleancache_filekey,
- 			pgoff_t, struct page *);
- 	void (*put_page)(int, struct cleancache_filekey,
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 803e5a9b2654..3e68cabb8457 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -30,6 +30,7 @@
- #include <linux/percpu-rwsem.h>
- #include <linux/workqueue.h>
- #include <linux/delayed_call.h>
-+#include <linux/uuid.h>
- 
- #include <asm/byteorder.h>
- #include <uapi/linux/fs.h>
-@@ -1328,8 +1329,8 @@ struct super_block {
- 
- 	struct sb_writers	s_writers;
- 
--	char s_id[32];				/* Informational name */
--	u8 s_uuid[16];				/* UUID */
-+	char			s_id[32];	/* Informational name */
-+	uuid_t			s_uuid;		/* UUID */
- 
- 	void 			*s_fs_info;	/* Filesystem private info */
- 	unsigned int		s_max_links;
-diff --git a/mm/cleancache.c b/mm/cleancache.c
-index ba5d8f3e6d68..f7b9fdc79d97 100644
---- a/mm/cleancache.c
-+++ b/mm/cleancache.c
-@@ -130,7 +130,7 @@ void __cleancache_init_shared_fs(struct super_block *sb)
- 	int pool_id = CLEANCACHE_NO_BACKEND_SHARED;
- 
- 	if (cleancache_ops) {
--		pool_id = cleancache_ops->init_shared_fs(sb->s_uuid, PAGE_SIZE);
-+		pool_id = cleancache_ops->init_shared_fs(&sb->s_uuid, PAGE_SIZE);
- 		if (pool_id < 0)
- 			pool_id = CLEANCACHE_NO_POOL;
- 	}
-diff --git a/security/integrity/evm/evm_crypto.c b/security/integrity/evm/evm_crypto.c
-index d7f282d75cc1..1d32cd20009a 100644
---- a/security/integrity/evm/evm_crypto.c
-+++ b/security/integrity/evm/evm_crypto.c
-@@ -164,7 +164,7 @@ static void hmac_add_misc(struct shash_desc *desc, struct inode *inode,
- 	hmac_misc.mode = inode->i_mode;
- 	crypto_shash_update(desc, (const u8 *)&hmac_misc, sizeof(hmac_misc));
- 	if (evm_hmac_attrs & EVM_ATTR_FSUUID)
--		crypto_shash_update(desc, inode->i_sb->s_uuid,
-+		crypto_shash_update(desc, &inode->i_sb->s_uuid.b[0],
- 				    sizeof(inode->i_sb->s_uuid));
- 	crypto_shash_final(desc, digest);
- }
-diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
-index da3e7d50e0d7..659dbcc83d2f 100644
---- a/security/integrity/ima/ima_policy.c
-+++ b/security/integrity/ima/ima_policy.c
-@@ -244,7 +244,7 @@ static bool ima_match_rules(struct ima_rule_entry *rule, struct inode *inode,
- 	    && rule->fsmagic != inode->i_sb->s_magic)
- 		return false;
- 	if ((rule->flags & IMA_FSUUID) &&
--	    memcmp(&rule->fsuuid, inode->i_sb->s_uuid, sizeof(rule->fsuuid)))
-+	    !uuid_equal(&rule->fsuuid, &inode->i_sb->s_uuid))
- 		return false;
- 	if ((rule->flags & IMA_UID) && !rule->uid_op(cred->uid, rule->uid))
- 		return false;
--- 
-2.11.0
+So, I'm inclined to ditch the 'list' command and disallow multiple open
+files, like Eric suggests, unless anyone really wants it?
 
+--D
+
+> 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > [darrick: change xfsctl to ioctl]
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  Makefile          |    3 +
+> >  spaceman/Makefile |   34 ++++++++++++
+> >  spaceman/file.c   |  149 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  spaceman/init.c   |  117 ++++++++++++++++++++++++++++++++++++++++++
+> >  spaceman/init.h   |   23 ++++++++
+> >  spaceman/space.h  |   36 +++++++++++++
+> >  6 files changed, 361 insertions(+), 1 deletion(-)
+> >  create mode 100644 spaceman/Makefile
+> >  create mode 100644 spaceman/file.c
+> >  create mode 100644 spaceman/init.c
+> >  create mode 100644 spaceman/init.h
+> >  create mode 100644 spaceman/space.h
+> > 
+> > 
+> > diff --git a/Makefile b/Makefile
+> > index ba87327..72d0044 100644
+> > --- a/Makefile
+> > +++ b/Makefile
+> > @@ -47,7 +47,7 @@ HDR_SUBDIRS = include libxfs
+> >  DLIB_SUBDIRS = libxlog libxcmd libhandle
+> >  LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
+> >  TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
+> > -		mdrestore repair rtcp m4 man doc debian
+> > +		mdrestore repair rtcp m4 man doc debian spaceman
+> >  
+> >  ifneq ("$(PKG_PLATFORM)","darwin")
+> >  TOOL_SUBDIRS += fsr
+> > @@ -88,6 +88,7 @@ quota: libxcmd
+> >  repair: libxlog libxcmd
+> >  copy: libxlog
+> >  mkfs: libxcmd
+> > +spaceman: libxcmd
+> >  
+> >  ifeq ($(HAVE_BUILDDEFS), yes)
+> >  include $(BUILDRULES)
+> > diff --git a/spaceman/Makefile b/spaceman/Makefile
+> > new file mode 100644
+> > index 0000000..ff8d23e
+> > --- /dev/null
+> > +++ b/spaceman/Makefile
+> > @@ -0,0 +1,34 @@
+> > +#
+> > +# Copyright (c) 2012 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +
+> > +TOPDIR = ..
+> > +include $(TOPDIR)/include/builddefs
+> > +
+> > +LTCOMMAND = xfs_spaceman
+> > +HFILES = init.h space.h
+> > +CFILES = init.c \
+> > +	file.c
+> > +
+> > +LLDLIBS = $(LIBXCMD)
+> > +LTDEPENDENCIES = $(LIBXCMD)
+> > +LLDFLAGS = -static
+> > +
+> > +ifeq ($(ENABLE_READLINE),yes)
+> > +LLDLIBS += $(LIBREADLINE) $(LIBTERMCAP)
+> > +endif
+> > +
+> > +ifeq ($(ENABLE_EDITLINE),yes)
+> > +LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+> > +endif
+> > +
+> > +default: depend $(LTCOMMAND)
+> > +
+> > +include $(BUILDRULES)
+> > +
+> > +install: default
+> > +	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+> > +	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+> > +install-dev:
+> > +
+> > +-include .dep
+> > diff --git a/spaceman/file.c b/spaceman/file.c
+> > new file mode 100644
+> > index 0000000..9356066
+> > --- /dev/null
+> > +++ b/spaceman/file.c
+> > @@ -0,0 +1,149 @@
+> > +/*
+> > + * Copyright (c) 2004-2005 Silicon Graphics, Inc.
+> > + * Copyright (c) 2012 Red Hat, Inc.
+> > + * All Rights Reserved.
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License as
+> > + * published by the Free Software Foundation.
+> > + *
+> > + * This program is distributed in the hope that it would be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, write the Free Software Foundation,
+> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > + */
+> > +
+> > +#include "libxfs.h"
+> > +#include <sys/mman.h>
+> > +#include "command.h"
+> > +#include "input.h"
+> > +#include "init.h"
+> > +#include "space.h"
+> > +
+> > +static cmdinfo_t print_cmd;
+> > +
+> > +fileio_t	*filetable;
+> > +int		filecount;
+> > +fileio_t	*file;
+> > +
+> > +static void
+> > +print_fileio(
+> > +	fileio_t	*file,
+> > +	int		index,
+> > +	int		braces)
+> > +{
+> > +	printf(_("%c%03d%c %-14s (%s,%s,%s%s%s)\n"),
+> > +		braces? '[' : ' ', index, braces? ']' : ' ', file->name,
+> > +		file->flags & O_SYNC ? _("sync") : _("non-sync"),
+> > +		file->flags & O_DIRECT ? _("direct") : _("non-direct"),
+> > +		file->flags & O_RDONLY ? _("read-only") : _("read-write"),
+> > +		file->flags & O_APPEND ? _(",append-only") : "",
+> > +		file->flags & O_NONBLOCK ? _(",non-block") : "");
+> 
+> I don't think this is working:
+> 
+> # chattr +aS appendonly_sync 
+> 
+> # xfs_spaceman -c print appendonly_sync 
+> [000] appendonly_sync (non-sync,non-direct,read-write)
+> 
+> I don't see that file->flags ever gets set.
+> 
+> > +}
+> > +
+> > +int
+> > +filelist_f(void)
+> > +{
+> > +	int		i;
+> > +
+> > +	for (i = 0; i < filecount; i++)
+> > +		print_fileio(&filetable[i], i, &filetable[i] == file);
+> > +	return 0;
+> > +}
+> > +
+> > +static int
+> > +print_f(
+> > +	int		argc,
+> > +	char		**argv)
+> > +{
+> > +	filelist_f();
+> > +	return 0;
+> > +}
+> > +
+> > +int
+> > +openfile(
+> > +	char		*path,
+> > +	xfs_fsop_geom_t	*geom,
+> > +	int		flags,
+> > +	mode_t		mode)
+> > +{
+> > +	int		fd;
+> > +
+> > +	fd = open(path, flags, mode);
+> > +	if (fd < 0) {
+> > +		if ((errno == EISDIR) && (flags & O_RDWR)) {
+> 
+> can we even get here w/ flags != 0?
+> 
+> (but anyway, we can open a dir just fine ...)
+> 
+> > +			/* make it as if we asked for O_RDONLY & try again */
+> > +			flags &= ~O_RDWR;
+> > +			flags |= O_RDONLY;
+> > +			fd = open(path, flags, mode);
+> > +			if (fd < 0) {
+> > +				perror(path);
+> > +				return -1;
+> > +			}
+> > +		} else {
+> > +			perror(path);
+> > +			return -1;
+> > +		}
+> > +	}
+> > +
+> > +	if (ioctl(fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
+> > +		perror("XFS_IOC_FSGEOMETRY");
+> > +		close(fd);
+> > +		return -1;
+> > +	}
+> > +	return fd;
+> > +}
+> > +
+> > +int
+> > +addfile(
+> > +	char		*name,
+> > +	int		fd,
+> > +	xfs_fsop_geom_t	*geometry,
+> > +	int		flags)
+> > +{
+> > +	char		*filename;
+> > +
+> > +	filename = strdup(name);
+> > +	if (!filename) {
+> > +		perror("strdup");
+> > +		close(fd);
+> > +		return -1;
+> > +	}
+> > +
+> > +	/* Extend the table of currently open files */
+> > +	filetable = (fileio_t *)realloc(filetable,	/* growing */
+> > +					++filecount * sizeof(fileio_t));
+> > +	if (!filetable) {
+> > +		perror("realloc");
+> > +		filecount = 0;
+> > +		free(filename);
+> > +		close(fd);
+> > +		return -1;
+> > +	}
+> > +
+> > +	/* Finally, make this the new active open file */
+> > +	file = &filetable[filecount - 1];
+> > +	file->fd = fd;
+> > +	file->flags = flags;
+> > +	file->name = filename;
+> > +	file->geom = *geometry;
+> > +	return 0;
+> > +}
+> > +
+> > +void
+> > +file_init(void)
+> > +{
+> > +	print_cmd.name = "print";
+> > +	print_cmd.altname = "p";
+> > +	print_cmd.cfunc = print_f;
+> > +	print_cmd.argmin = 0;
+> > +	print_cmd.argmax = 0;
+> > +	print_cmd.flags = CMD_FLAG_ONESHOT;
+> > +	print_cmd.oneline = _("list current open files");
+> > +
+> > +	add_command(&print_cmd);
+> > +}
+> > diff --git a/spaceman/init.c b/spaceman/init.c
+> > new file mode 100644
+> > index 0000000..404b183
+> > --- /dev/null
+> > +++ b/spaceman/init.c
+> > @@ -0,0 +1,117 @@
+> > +/*
+> > + * Copyright (c) 2012 Red Hat, Inc
+> > + * All Rights Reserved.
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License as
+> > + * published by the Free Software Foundation.
+> > + *
+> > + * This program is distributed in the hope that it would be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, write the Free Software Foundation,
+> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > + */
+> > +
+> > +#include "libxfs.h"
+> > +#include "command.h"
+> > +#include "input.h"
+> > +#include "init.h"
+> > +#include "space.h"
+> > +
+> > +char	*progname;
+> > +int	exitcode;
+> > +
+> > +void
+> > +usage(void)
+> > +{
+> > +	fprintf(stderr,
+> > +		_("Usage: %s [-c cmd] file\n"),
+> > +		progname);
+> > +	exit(1);
+> > +}
+> > +
+> > +static void
+> > +init_commands(void)
+> > +{
+> > +	file_init();
+> > +	help_init();
+> > +	quit_init();
+> > +}
+> > +
+> > +static int
+> > +init_args_command(
+> > +	int	index)
+> > +{
+> > +	if (index >= filecount)
+> > +		return 0;
+> > +	file = &filetable[index++];
+> > +	return index;
+> > +}
+> > +
+> > +static int
+> > +init_check_command(
+> > +	const cmdinfo_t	*ct)
+> > +{
+> > +	if (!(ct->flags & CMD_FLAG_ONESHOT))
+> > +		return 0;
+> > +	return 1;
+> > +}
+> > +
+> > +void
+> > +init(
+> > +	int		argc,
+> > +	char		**argv)
+> > +{
+> > +	int		c, flags = 0;
+> 
+> flags is 0 ...
+> 
+> > +	mode_t		mode = 0600;
+> > +	xfs_fsop_geom_t	geometry = { 0 };
+> > +
+> > +	progname = basename(argv[0]);
+> > +	setlocale(LC_ALL, "");
+> > +	bindtextdomain(PACKAGE, LOCALEDIR);
+> > +	textdomain(PACKAGE);
+> > +
+> > +	while ((c = getopt(argc, argv, "c:V")) != EOF) {
+> > +		switch (c) {
+> > +		case 'c':
+> > +			add_user_command(optarg);
+> > +			break;
+> > +		case 'V':
+> > +			printf(_("%s version %s\n"), progname, VERSION);
+> > +			exit(0);
+> > +		default:
+> > +			usage();
+> > +		}
+> > +	}
+> > +
+> > +	if (optind == argc)
+> > +		usage();
+> > +
+> > +	while (optind < argc) {
+> > +		if ((c = openfile(argv[optind], &geometry, flags, mode)) < 0)
+> 
+> openfile with flags ...
+> 
+> > +			exit(1);
+> > +		if (!platform_test_xfs_fd(c))
+> > +			printf(_("Not an XFS filesystem!\n"));
+> 
+> file? filesystem?
+> 
+> > +		if (addfile(argv[optind], c, &geometry, flags) < 0)
+> 
+> addfile with flags ... what's flags for?  it's always 0.
+> 
+> > +			exit(1);
+> > +		optind++;
+> > +	}
+> > +
+> > +	init_commands();
+> > +	add_command_iterator(init_args_command);
+> > +	add_check_command(init_check_command);
+> > +}
+> > +
+> > +int
+> > +main(
+> > +	int	argc,
+> > +	char	**argv)
+> > +{
+> > +	init(argc, argv);
+> > +	command_loop();
+> > +	return exitcode;
+> > +}
+> > diff --git a/spaceman/init.h b/spaceman/init.h
+> > new file mode 100644
+> > index 0000000..165e4f5
+> > --- /dev/null
+> > +++ b/spaceman/init.h
+> > @@ -0,0 +1,23 @@
+> > +/*
+> > + * Copyright (c) 2012 Red Hat, Inc.
+> > + * All Rights Reserved.
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License as
+> > + * published by the Free Software Foundation.
+> > + *
+> > + * This program is distributed in the hope that it would be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, write the Free Software Foundation,
+> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > + */
+> > +
+> > +extern char	*progname;
+> > +extern int	exitcode;
+> > +
+> > +#define min(a,b)	(((a)<(b))?(a):(b))
+> > +#define max(a,b)	(((a)>(b))?(a):(b))
+> > diff --git a/spaceman/space.h b/spaceman/space.h
+> > new file mode 100644
+> > index 0000000..6e1bc52
+> > --- /dev/null
+> > +++ b/spaceman/space.h
+> > @@ -0,0 +1,36 @@
+> > +/*
+> > + * Copyright (c) 2012 Red Hat, Inc.
+> > + * All Rights Reserved.
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License as
+> > + * published by the Free Software Foundation.
+> > + *
+> > + * This program is distributed in the hope that it would be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, write the Free Software Foundation,
+> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > + */
+> > +
+> > +typedef struct fileio {
+> > +	int		fd;		/* open file descriptor */
+> > +	int		flags;		/* flags describing file state */
+> > +	char		*name;		/* file name at time of open */
+> > +	xfs_fsop_geom_t	geom;		/* XFS filesystem geometry */
+> > +} fileio_t;
+> > +
+> > +extern fileio_t		*filetable;	/* open file table */
+> > +extern int		filecount;	/* number of open files */
+> > +extern fileio_t		*file;		/* active file in file table */
+> > +extern int filelist_f(void);
+> > +
+> > +extern int	openfile(char *, xfs_fsop_geom_t *, int, mode_t);
+> > +extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
+> > +
+> > +extern void	file_init(void);
+> > +extern void	help_init(void);
+> > +extern void	quit_init(void);
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
