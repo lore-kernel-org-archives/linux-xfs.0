@@ -1,191 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40238 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967705AbdEZLyA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 May 2017 07:54:00 -0400
-Date: Fri, 26 May 2017 07:53:58 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: use ->b_state to fix buffer I/O accounting
- release race
-Message-ID: <20170526115357.GC36516@bfoster.bfoster>
-References: <1495637135-13255-1-git-send-email-bfoster@redhat.com>
- <462bb65a-099d-04c6-e6b6-866070923fa6@suse.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:33659 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751062AbdE3TTo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2017 15:19:44 -0400
+Date: Tue, 30 May 2017 12:19:35 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 7/9] xfs_spaceman: Free space mapping command
+Message-ID: <20170530191934.GD4519@birch.djwong.org>
+References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+ <149417262028.24656.18212282685789184986.stgit@birch.djwong.org>
+ <183c279a-61c8-f0bd-64da-d7d0e99f2a6d@sandeen.net>
+ <20170530184041.GA4519@birch.djwong.org>
+ <d2defe9d-643e-109c-e070-c25c79f5d6fe@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <462bb65a-099d-04c6-e6b6-866070923fa6@suse.com>
+In-Reply-To: <d2defe9d-643e-109c-e070-c25c79f5d6fe@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Fri, May 26, 2017 at 02:05:10PM +0300, Nikolay Borisov wrote:
-> 
-> 
-> On 24.05.2017 17:45, Brian Foster wrote:
-> > We've had user reports of unmount hangs in xfs_wait_buftarg() that
-> > analysis shows is due to btp->bt_io_count == -1. bt_io_count
-> > represents the count of in-flight asynchronous buffers and thus
-> > should always be >= 0. xfs_wait_buftarg() waits for this value to
-> > stabilize to zero in order to ensure that all untracked (with
-> > respect to the lru) buffers have completed I/O processing before
-> > unmount proceeds to tear down in-core data structures.
+On Tue, May 30, 2017 at 01:56:39PM -0500, Eric Sandeen wrote:
+> On 5/30/17 1:40 PM, Darrick J. Wong wrote:
+> > On Fri, May 26, 2017 at 08:57:14PM -0500, Eric Sandeen wrote:
+> >>
+> >>
+> >> On 5/7/17 10:57 AM, Darrick J. Wong wrote:
+> >>> From: Dave Chinner <dchinner@redhat.com>
+> >>>
+> >>> Add freespace mapping tool modelled on the xfs_db freesp command.
+> >>> The advantage of this command over xfs_db is that it can be done
+> >>> online and is coherent with concurrent modifications to the
+> >>> filesystem.
+> >>>
+> >>> This requires the kernel to support the XFS_IOC_GETFSMAP ioctl to map
+> >>> free space indexes.
+> >>>
+> >>> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> >>> [darrick: port from FIEMAPFS to GETFSMAP]
+> >>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> >>> ---
+> >>>  spaceman/Makefile   |   12 +-
+> >>>  spaceman/ag.c       |    1 
+> >>>  spaceman/file.c     |   18 ++-
+> >>>  spaceman/freesp.c   |  367 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> >>>  spaceman/init.c     |    9 +
+> >>>  spaceman/prealloc.c |    1 
+> >>>  spaceman/space.h    |   12 +-
+> >>>  spaceman/trim.c     |    1 
+> >>>  8 files changed, 413 insertions(+), 8 deletions(-)
+> >>>  create mode 100644 spaceman/freesp.c
+> >>>
+> >>>
+> >>> diff --git a/spaceman/Makefile b/spaceman/Makefile
+> >>> index 08709b3..3b059ca 100644
+> >>> --- a/spaceman/Makefile
+> >>> +++ b/spaceman/Makefile
+> >>> @@ -7,8 +7,12 @@ include $(TOPDIR)/include/builddefs
+> >>>  
+> >>>  LTCOMMAND = xfs_spaceman
+> >>>  HFILES = init.h space.h
+> >>> -CFILES = init.c \
+> >>> -	ag.c file.c prealloc.c trim.c
+> >>> +CFILES = ag.c \
+> >>> +	 file.c \
+> >>> +	 init.c \
+> >>> +	 prealloc.c \
+> >>> +	 trim.c
+> >>> +
+> >>>  
+> >>>  LLDLIBS = $(LIBXCMD)
+> >>>  LTDEPENDENCIES = $(LIBXCMD)
+> >>> @@ -22,6 +26,10 @@ ifeq ($(ENABLE_EDITLINE),yes)
+> >>>  LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+> >>>  endif
+> >>>  
+> >>> +ifeq ($(HAVE_GETFSMAP),yes)
+> >>> +CFILES += freesp.c
+> >>> +endif
+> >>> +
+> >>>  default: depend $(LTCOMMAND)
+> >>>  
+> >>>  include $(BUILDRULES)
+> >>> diff --git a/spaceman/ag.c b/spaceman/ag.c
+> >>> index 1eb8aa0..0f1c869 100644
+> >>> --- a/spaceman/ag.c
+> >>> +++ b/spaceman/ag.c
+> >>> @@ -21,6 +21,7 @@
+> >>>  #include "command.h"
+> >>>  #include "input.h"
+> >>>  #include "init.h"
+> >>> +#include "path.h"
+> >>>  #include "space.h"
+> >>>  
+> >>>  #ifndef XFS_IOC_AGCONTROL
+> >>> diff --git a/spaceman/file.c b/spaceman/file.c
+> >>> index 9356066..7c5ea0e 100644
+> >>> --- a/spaceman/file.c
+> >>> +++ b/spaceman/file.c
+> >>> @@ -22,6 +22,7 @@
+> >>>  #include "command.h"
+> >>>  #include "input.h"
+> >>>  #include "init.h"
+> >>> +#include "path.h"
+> >>>  #include "space.h"
+> >>>  
+> >>>  static cmdinfo_t print_cmd;
+> >>> @@ -69,8 +70,10 @@ openfile(
+> >>>  	char		*path,
+> >>>  	xfs_fsop_geom_t	*geom,
+> >>>  	int		flags,
+> >>> -	mode_t		mode)
+> >>> +	mode_t		mode,
+> >>> +	struct fs_path	*fs_path)
+> >>>  {
+> >>> +	struct fs_path	*fsp;
+> >>>  	int		fd;
+> >>>  
+> >>>  	fd = open(path, flags, mode);
+> >>> @@ -95,6 +98,15 @@ openfile(
+> >>>  		close(fd);
+> >>>  		return -1;
+> >>>  	}
+> >>> +
+> >>> +	if (fs_path) {
+> >>> +		fsp = fs_table_lookup(path, FS_MOUNT_POINT);
+> >>> +		if (!fsp) {
+> >>> +			fprintf(stderr, _("Unable to find XFS information."));
+> >>
+> >> If I got that error I wouldn't know what it meant...
 > > 
-> > The value of -1 implies an I/O accounting decrement race. Indeed,
-> > the fact that xfs_buf_ioacct_dec() is called from xfs_buf_rele()
-> > (where the buffer lock is no longer held) means that bp->b_flags can
-> > be updated from an unsafe context. While a user-level reproducer is
-> > currently not available, some intrusive hacks to run racing buffer
-> > lookups/ioacct/releases from multiple threads was used to
-> > successfully manufacture this problem.
-> > 
-> > Existing callers do not expect to acquire the buffer lock from
-> > xfs_buf_rele(). Therefore, we can not safely update ->b_flags from
-> > this context. It turns out that we already have separate buffer
-> > state bits and associated serialization for dealing with buffer LRU
-> > state in the form of ->b_state and ->b_lock. Therefore, replace the
-> > _XBF_IN_FLIGHT flag with a ->b_state variant, update the I/O
-> > accounting wrappers appropriately and make sure they are used with
-> > the correct locking. This ensures that buffer in-flight state can be
-> > modified at buffer release time without racing with modifications
-> > from a buffer lock holder.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > "Unable to find mount information." ?
 > 
-> Perhaps a Fixes: 9c7504aa72b6 ("xfs: track and serialize in-flight async
-> buffers against unmount") tag is in order.
+> I think that if the path isn't found in the table, that means it wasn't
+> populated on startup, which means it's not [on] an XFS filesystem:
 > 
-> Also I believe it warrants a CC: stable@vger.kernel.org #4.9
+>         fs = fs_table_lookup(argv[optind], FS_MOUNT_POINT);
+>         if (!fs) {
+>                 fprintf(stderr, _("%s: %s is not a mounted XFS filesystem\n"),
+>                         progname, argv[optind]);
+>                 return 1;
+>         }
 > 
+> or
+> 
+>                 fprintf(stderr, _("file argument, \"%s\", is not in a mounted XFS filesystem\n"),
+>                         file->name);
+> 
+> is what other tools do (although quota does:
+> 
+>                 fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
+> or
+>                 fprintf(stderr, "%s: cannot find mount point %s\n",)
+> 
+> 
+> Anyway: I think the failure means that the path is not [on] an xfs filesystem,
+> so that's probably the best information to convey.
 
-Indeed. I can send out a new version with those updates once this has
-some feedback from Christoph and Darrick, since they both had thoughts
-on the last version. Thanks for review.
+I like the second option better, so I'll change it to that.
 
-Brian
+--D
 
 > 
-> > ---
-> > 
-> > v2:
-> > - Use ->b_state and ->b_lock instead of custom atomic counter.
-> > v1: http://www.spinics.net/lists/linux-xfs/msg06995.html
-> > 
-> >  fs/xfs/xfs_buf.c | 38 ++++++++++++++++++++++++++------------
-> >  fs/xfs/xfs_buf.h |  5 ++---
-> >  2 files changed, 28 insertions(+), 15 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index ba036c1..4e19fda 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -97,12 +97,16 @@ static inline void
-> >  xfs_buf_ioacct_inc(
-> >  	struct xfs_buf	*bp)
-> >  {
-> > -	if (bp->b_flags & (XBF_NO_IOACCT|_XBF_IN_FLIGHT))
-> > +	if (bp->b_flags & XBF_NO_IOACCT)
-> >  		return;
-> >  
-> >  	ASSERT(bp->b_flags & XBF_ASYNC);
-> > -	bp->b_flags |= _XBF_IN_FLIGHT;
-> > -	percpu_counter_inc(&bp->b_target->bt_io_count);
-> > +	spin_lock(&bp->b_lock);
-> > +	if (!(bp->b_state & XFS_BSTATE_IN_FLIGHT)) {
-> > +		bp->b_state |= XFS_BSTATE_IN_FLIGHT;
-> > +		percpu_counter_inc(&bp->b_target->bt_io_count);
-> > +	}
-> > +	spin_unlock(&bp->b_lock);
-> >  }
-> >  
-> >  /*
-> > @@ -110,14 +114,24 @@ xfs_buf_ioacct_inc(
-> >   * freed and unaccount from the buftarg.
-> >   */
-> >  static inline void
-> > -xfs_buf_ioacct_dec(
-> > +__xfs_buf_ioacct_dec(
-> >  	struct xfs_buf	*bp)
-> >  {
-> > -	if (!(bp->b_flags & _XBF_IN_FLIGHT))
-> > -		return;
-> > +	ASSERT(spin_is_locked(&bp->b_lock));
-> >  
-> > -	bp->b_flags &= ~_XBF_IN_FLIGHT;
-> > -	percpu_counter_dec(&bp->b_target->bt_io_count);
-> > +	if (bp->b_state & XFS_BSTATE_IN_FLIGHT) {
-> > +		bp->b_state &= ~XFS_BSTATE_IN_FLIGHT;
-> > +		percpu_counter_dec(&bp->b_target->bt_io_count);
-> > +	}
-> > +}
-> > +
-> > +static inline void
-> > +xfs_buf_ioacct_dec(
-> > +	struct xfs_buf	*bp)
-> > +{
-> > +	spin_lock(&bp->b_lock);
-> > +	__xfs_buf_ioacct_dec(bp);
-> > +	spin_unlock(&bp->b_lock);
-> >  }
-> >  
-> >  /*
-> > @@ -149,9 +163,9 @@ xfs_buf_stale(
-> >  	 * unaccounted (released to LRU) before that occurs. Drop in-flight
-> >  	 * status now to preserve accounting consistency.
-> >  	 */
-> > -	xfs_buf_ioacct_dec(bp);
-> > -
-> >  	spin_lock(&bp->b_lock);
-> > +	__xfs_buf_ioacct_dec(bp);
-> > +
-> >  	atomic_set(&bp->b_lru_ref, 0);
-> >  	if (!(bp->b_state & XFS_BSTATE_DISPOSE) &&
-> >  	    (list_lru_del(&bp->b_target->bt_lru, &bp->b_lru)))
-> > @@ -979,12 +993,12 @@ xfs_buf_rele(
-> >  		 * ensures the decrement occurs only once per-buf.
-> >  		 */
-> >  		if ((atomic_read(&bp->b_hold) == 1) && !list_empty(&bp->b_lru))
-> > -			xfs_buf_ioacct_dec(bp);
-> > +			__xfs_buf_ioacct_dec(bp);
-> >  		goto out_unlock;
-> >  	}
-> >  
-> >  	/* the last reference has been dropped ... */
-> > -	xfs_buf_ioacct_dec(bp);
-> > +	__xfs_buf_ioacct_dec(bp);
-> >  	if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
-> >  		/*
-> >  		 * If the buffer is added to the LRU take a new reference to the
-> > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> > index 8d1d44f..1508121 100644
-> > --- a/fs/xfs/xfs_buf.h
-> > +++ b/fs/xfs/xfs_buf.h
-> > @@ -63,7 +63,6 @@ typedef enum {
-> >  #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
-> >  #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
-> >  #define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
-> > -#define _XBF_IN_FLIGHT	 (1 << 25) /* I/O in flight, for accounting purposes */
-> >  
-> >  typedef unsigned int xfs_buf_flags_t;
-> >  
-> > @@ -84,14 +83,14 @@ typedef unsigned int xfs_buf_flags_t;
-> >  	{ _XBF_PAGES,		"PAGES" }, \
-> >  	{ _XBF_KMEM,		"KMEM" }, \
-> >  	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
-> > -	{ _XBF_COMPOUND,	"COMPOUND" }, \
-> > -	{ _XBF_IN_FLIGHT,	"IN_FLIGHT" }
-> > +	{ _XBF_COMPOUND,	"COMPOUND" }
-> >  
-> >  
-> >  /*
-> >   * Internal state flags.
-> >   */
-> >  #define XFS_BSTATE_DISPOSE	 (1 << 0)	/* buffer being discarded */
-> > +#define XFS_BSTATE_IN_FLIGHT	 (1 << 1)	/* I/O in flight */
-> >  
-> >  /*
-> >   * The xfs_buftarg contains 2 notions of "sector size" -
-> > 
-> 
-> Reviewed-by: Nikolay Borisov <nborisov@suse.com>
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
