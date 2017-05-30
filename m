@@ -1,96 +1,266 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47506 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751314AbdEOQXP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2017 12:23:15 -0400
-Date: Mon, 15 May 2017 09:23:08 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:20832 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750811AbdE3SeH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2017 14:34:07 -0400
+Date: Tue, 30 May 2017 11:34:00 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] libxfs: use crc32c slice-by-8 variant by default
-Message-ID: <20170515162308.GN4519@birch.djwong.org>
+Subject: Re: [PATCH 5/9] xfs_spaceman: add new speculative prealloc control
+Message-ID: <20170530183400.GZ4519@birch.djwong.org>
+References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+ <149417260794.24656.14942047048435557523.stgit@birch.djwong.org>
+ <c47eb93e-a177-2c47-185e-3224b60ae11f@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <c47eb93e-a177-2c47-185e-3224b60ae11f@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-The crc32c code used in xfsprogs was copied directly from the Linux
-kernel.  However, that code selects slice-by-4 by default, which isn't
-the fastest -- that's slice-by-8, which trades table size for speed.
-Fix some makefile dependency problems and explicitly select the
-algorithm we want.  With this patch applied, I see about a 10% drop in
-CPU time running xfs_repair.
+On Fri, May 26, 2017 at 08:45:58PM -0500, Eric Sandeen wrote:
+> 
+> 
+> On 5/7/17 10:56 AM, Darrick J. Wong wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Add an control interface for purging speculative
+> > preallocation via the new ioctls.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > [darrick: change xfsctl to ioctl]
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  spaceman/Makefile   |    2 -
+> >  spaceman/init.c     |    1 
+> >  spaceman/prealloc.c |  135 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  spaceman/space.h    |    1 
+> >  4 files changed, 138 insertions(+), 1 deletion(-)
+> >  create mode 100644 spaceman/prealloc.c
+> > 
+> > 
+> > diff --git a/spaceman/Makefile b/spaceman/Makefile
+> > index 9fb9142..b1f1136 100644
+> > --- a/spaceman/Makefile
+> > +++ b/spaceman/Makefile
+> > @@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+> >  LTCOMMAND = xfs_spaceman
+> >  HFILES = init.h space.h
+> >  CFILES = init.c \
+> > -	file.c trim.c
+> > +	file.c prealloc.c trim.c
+> >  
+> >  LLDLIBS = $(LIBXCMD)
+> >  LTDEPENDENCIES = $(LIBXCMD)
+> > diff --git a/spaceman/init.c b/spaceman/init.c
+> > index ae5cfb5..08b5a33 100644
+> > --- a/spaceman/init.c
+> > +++ b/spaceman/init.c
+> > @@ -39,6 +39,7 @@ init_commands(void)
+> >  {
+> >  	file_init();
+> >  	help_init();
+> > +	prealloc_init();
+> >  	quit_init();
+> >  	trim_init();
+> >  }
+> > diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
+> > new file mode 100644
+> > index 0000000..b93f909
+> > --- /dev/null
+> > +++ b/spaceman/prealloc.c
+> > @@ -0,0 +1,135 @@
+> > +/*
+> > + * Copyright (c) 2012 Red Hat, Inc.
+> > + * All Rights Reserved.
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License as
+> > + * published by the Free Software Foundation.
+> > + *
+> > + * This program is distributed in the hope that it would be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, write the Free Software Foundation,
+> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > + */
+> > +
+> > +#include "libxfs.h"
+> > +#include "command.h"
+> > +#include "input.h"
+> > +#include "init.h"
+> > +#include "space.h"
+> > +
+> > +#ifndef XFS_IOC_FREE_EOFBLOCKS
+> > +#define XFS_IOC_FREE_EOFBLOCKS _IOR ('X', 58, struct xfs_eofblocks)
+> > +
+> > +#define XFS_EOFBLOCKS_VERSION           1
+> > +struct xfs_fs_eofblocks {
+> > +	__u32		eof_version;
+> > +	__u32		eof_flags;
+> > +	uid_t		eof_uid;
+> > +	gid_t		eof_gid;
+> > +	prid_t		eof_prid;
+> > +	__u32		pad32;
+> > +	__u64		eof_min_file_size;
+> > +	__u64		pad64[12];
+> > +};
+> > +
+> > +/* eof_flags values */
+> > +#define XFS_EOF_FLAGS_SYNC		(1 << 0) /* sync/wait mode scan */
+> > +#define XFS_EOF_FLAGS_UID		(1 << 1) /* filter by uid */
+> > +#define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
+> > +#define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
+> > +#define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
+> > +
+> > +#endif
+> 
+> I think including libxfs defines XFS_IOC_FREE_EOFBLOCKS, via xfs_fs.h
+> and that whole hunk can go, no?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/Makefile    |    4 ++--
- libxfs/crc32defs.h |   34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 36 insertions(+), 2 deletions(-)
+Yeah.
 
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 0f3759e..c5dc382 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -124,7 +124,7 @@ LDIRT = gen_crc32table crc32table.h crc32selftest
- 
- default: crc32selftest ltdepend $(LTLIBRARY)
- 
--crc32table.h: gen_crc32table.c
-+crc32table.h: gen_crc32table.c crc32defs.h
- 	@echo "    [CC]     gen_crc32table"
- 	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
- 	@echo "    [GENERATE] $@"
-@@ -135,7 +135,7 @@ crc32table.h: gen_crc32table.c
- # systems/architectures. Hence we make sure that xfsprogs will never use a
- # busted CRC calculation at build time and hence avoid putting bad CRCs down on
- # disk.
--crc32selftest: gen_crc32table.c crc32table.h crc32.c
-+crc32selftest: gen_crc32table.c crc32table.h crc32.c crc32defs.h
- 	@echo "    [TEST]    CRC32"
- 	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
- 	$(Q) ./$@
-diff --git a/libxfs/crc32defs.h b/libxfs/crc32defs.h
-index 64cba2c..2999782 100644
---- a/libxfs/crc32defs.h
-+++ b/libxfs/crc32defs.h
-@@ -1,4 +1,38 @@
- /*
-+ * Use slice-by-8, which is the fastest variant.
-+ *
-+ * Calculate checksum 8 bytes at a time with a clever slicing algorithm.
-+ * This is the fastest algorithm, but comes with a 8KiB lookup table.
-+ * Most modern processors have enough cache to hold this table without
-+ * thrashing the cache.
-+ *
-+ * The Linux kernel uses this as the default implementation "unless you
-+ * have a good reason not to".  The reason why Kconfig urges you to pick
-+ * SLICEBY8 is because people challenged the assertion that we should
-+ * always use slice by 8, so Darrick wrote a crc microbenchmark utility
-+ * and ran it on as many machines as he could get his hands on to show
-+ * that sb8 was the fastest.
-+ *
-+ * Every 64-bit machine (and most of the 32-bit ones too) saw the best
-+ * results with sb8.  Any machine with more than 4K of cache saw better
-+ * results.  The spreadsheet still exists today[1]; note that
-+ * 'crc32-kern-le' corresponds to the slice by 4 algorithm which is the
-+ * default unless CRC_LE_BITS is defined explicitly.
-+ *
-+ * FWIW, there are a handful of board defconfigs in the kernel that
-+ * don't pick sliceby8.  These are all embedded 32-bit mips/ppc systems
-+ * with very small cache sizes which experience cache thrashing with the
-+ * slice by 8 algorithm, and therefore chose to pick defaults that are
-+ * saner for their particular board configuration.  For nearly all of
-+ * XFS' perceived userbase (which we assume are 32 and 64-bit machines
-+ * with sufficiently large CPU cache and largeish storage devices) slice
-+ * by 8 is the right choice.
-+ *
-+ * [1] https://goo.gl/0LSzsG ("crc32c_bench")
-+ */
-+#define CRC_LE_BITS 64
-+
-+/*
-  * There are multiple 16-bit CRC polynomials in common use, but this is
-  * *the* standard CRC-32 polynomial, first popularized by Ethernet.
-  * x^32+x^26+x^23+x^22+x^16+x^12+x^11+x^10+x^8+x^7+x^5+x^4+x^2+x^1+x^0
+> > +
+> > +static cmdinfo_t prealloc_cmd;
+> > +
+> > +/*
+> > + * Control preallocation amounts.
+> > + */
+> > +static int
+> > +prealloc_f(
+> > +	int	argc,
+> > +	char	**argv)
+> > +{
+> > +	struct xfs_fs_eofblocks eofb = {0};
+> > +	int	c;
+> > +
+> > +	eofb.eof_version = XFS_EOFBLOCKS_VERSION;
+> > +
+> > +	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
+> > +		switch (c) {
+> > +		case 'g':
+> > +			eofb.eof_flags |= XFS_EOF_FLAGS_GID;
+> > +			eofb.eof_gid = atoi(optarg);
+> > +			break;
+> > +		case 'u':
+> > +			eofb.eof_flags |= XFS_EOF_FLAGS_UID;
+> > +			eofb.eof_uid = atoi(optarg);
+> > +			break;
+> > +		case 'p':
+> > +			eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
+> > +			eofb.eof_prid = atoi(optarg);
+> > +			break;
+> > +		case 's':
+> > +			eofb.eof_flags |= XFS_EOF_FLAGS_SYNC;
+> > +			break;
+> > +		case 'm':
+> > +			eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
+> > +			eofb.eof_min_file_size = cvtnum(file->geom.blocksize,
+> > +							file->geom.sectsize,
+> > +							optarg);
+> > +			break;
+> > +		case '?':
+> > +		default:
+> > +			return command_usage(&prealloc_cmd);
+> > +		}
+> > +	}
+> > +	if (optind != argc)
+> > +		return command_usage(&prealloc_cmd);
+> > +
+> > +	if (ioctl(file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
+> > +		fprintf(stderr, _("%s: XFS_IOC_FREE_EOFBLOCKS on %s: %s\n"),
+> > +			progname, file->name, strerror(errno));
+> > +	}
+> > +	return 0;
+> > +}
+> > +
+> > +static void
+> > +prealloc_help(void)
+> > +{
+> > +	printf(_(
+> > +"\n"
+> > +"Control speculative preallocation\n"
+> > +"\n"
+> > +"Options: [-s] [-ugp id] [-m minlen]\n"
+> > +"\n"
+> > +" -s -- synchronous flush - wait for flush to complete\n"
+> 
+> really flush?  (maybe removal? scan?)
+
+"-s        -- wait for removal to complete\n"
+
+> 
+> > +" -u uid -- remove prealloc on files matching user <uid>\n"
+> > +" -g gid -- remove prealloc on files matching group <gid>\n"
+> > +" -p prid -- remove prealloc on files matching project <prid>\n"
+> > +" -m minlen -- only consider files larger than <minlen>\n"
+> > +"\n"));
+> 
+> +" -s        -- synchronous flush - wait for flush to complete\n"
+> +" -u uid    -- remove prealloc on files matching user <uid>\n"
+> +" -g gid    -- remove prealloc on files matching group <gid>\n"
+> +" -p prid   -- remove prealloc on files matching project <prid>\n"
+> +" -m minlen -- only consider files larger than <minlen>\n"
+> 
+> 
+> > +
+> > +}
+> > +
+> > +void
+> > +prealloc_init(void)
+> > +{
+> > +	prealloc_cmd.name = "prealloc";
+> > +	prealloc_cmd.altname = "prealloc";
+> > +	prealloc_cmd.cfunc = prealloc_f;
+> > +	prealloc_cmd.argmin = 1;
+> > +	prealloc_cmd.argmax = -1;
+> > +	prealloc_cmd.args = "[-s] [-ugp id] [-m minlen]\n";
+> 
+> no \n please:
+> 
+> xfs_spaceman> help
+> ...
+> 
+> prealloc [-s] [-ugp id] [-m minlen]
+>  -- Control speculative preallocation
+> 
+> should be on same line ala xfs_io IMHO
+
+Ok.
+
+--D
+
+> 
+> > +	prealloc_cmd.flags = CMD_FLAG_ONESHOT;
+> > +	prealloc_cmd.oneline = _("Control speculative preallocation");
+> > +	prealloc_cmd.help = prealloc_help;
+> > +
+> > +	add_command(&prealloc_cmd);
+> > +}
+> > +
+> > diff --git a/spaceman/space.h b/spaceman/space.h
+> > index 7b4f034..0ae3116 100644
+> > --- a/spaceman/space.h
+> > +++ b/spaceman/space.h
+> > @@ -33,5 +33,6 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
+> >  
+> >  extern void	file_init(void);
+> >  extern void	help_init(void);
+> > +extern void	prealloc_init(void);
+> >  extern void	quit_init(void);
+> >  extern void	trim_init(void);
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
