@@ -1,522 +1,161 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50288 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:37432 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1031311AbdE0BeU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 May 2017 21:34:20 -0400
-Subject: Re: [PATCH 3/9] xfs_spaceman: space management tool
+        id S1750821AbdE3S4m (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 30 May 2017 14:56:42 -0400
+Subject: Re: [PATCH 7/9] xfs_spaceman: Free space mapping command
 References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
- <149417259522.24656.15381603363219279304.stgit@birch.djwong.org>
+ <149417262028.24656.18212282685789184986.stgit@birch.djwong.org>
+ <183c279a-61c8-f0bd-64da-d7d0e99f2a6d@sandeen.net>
+ <20170530184041.GA4519@birch.djwong.org>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <afec66aa-4c12-30e3-ff8d-896c5f3505d5@sandeen.net>
-Date: Fri, 26 May 2017 20:34:18 -0500
+Message-ID: <d2defe9d-643e-109c-e070-c25c79f5d6fe@sandeen.net>
+Date: Tue, 30 May 2017 13:56:39 -0500
 MIME-Version: 1.0
-In-Reply-To: <149417259522.24656.15381603363219279304.stgit@birch.djwong.org>
+In-Reply-To: <20170530184041.GA4519@birch.djwong.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On 5/7/17 10:56 AM, Darrick J. Wong wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 5/30/17 1:40 PM, Darrick J. Wong wrote:
+> On Fri, May 26, 2017 at 08:57:14PM -0500, Eric Sandeen wrote:
+>>
+>>
+>> On 5/7/17 10:57 AM, Darrick J. Wong wrote:
+>>> From: Dave Chinner <dchinner@redhat.com>
+>>>
+>>> Add freespace mapping tool modelled on the xfs_db freesp command.
+>>> The advantage of this command over xfs_db is that it can be done
+>>> online and is coherent with concurrent modifications to the
+>>> filesystem.
+>>>
+>>> This requires the kernel to support the XFS_IOC_GETFSMAP ioctl to map
+>>> free space indexes.
+>>>
+>>> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+>>> [darrick: port from FIEMAPFS to GETFSMAP]
+>>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>> ---
+>>>  spaceman/Makefile   |   12 +-
+>>>  spaceman/ag.c       |    1 
+>>>  spaceman/file.c     |   18 ++-
+>>>  spaceman/freesp.c   |  367 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>>>  spaceman/init.c     |    9 +
+>>>  spaceman/prealloc.c |    1 
+>>>  spaceman/space.h    |   12 +-
+>>>  spaceman/trim.c     |    1 
+>>>  8 files changed, 413 insertions(+), 8 deletions(-)
+>>>  create mode 100644 spaceman/freesp.c
+>>>
+>>>
+>>> diff --git a/spaceman/Makefile b/spaceman/Makefile
+>>> index 08709b3..3b059ca 100644
+>>> --- a/spaceman/Makefile
+>>> +++ b/spaceman/Makefile
+>>> @@ -7,8 +7,12 @@ include $(TOPDIR)/include/builddefs
+>>>  
+>>>  LTCOMMAND = xfs_spaceman
+>>>  HFILES = init.h space.h
+>>> -CFILES = init.c \
+>>> -	ag.c file.c prealloc.c trim.c
+>>> +CFILES = ag.c \
+>>> +	 file.c \
+>>> +	 init.c \
+>>> +	 prealloc.c \
+>>> +	 trim.c
+>>> +
+>>>  
+>>>  LLDLIBS = $(LIBXCMD)
+>>>  LTDEPENDENCIES = $(LIBXCMD)
+>>> @@ -22,6 +26,10 @@ ifeq ($(ENABLE_EDITLINE),yes)
+>>>  LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+>>>  endif
+>>>  
+>>> +ifeq ($(HAVE_GETFSMAP),yes)
+>>> +CFILES += freesp.c
+>>> +endif
+>>> +
+>>>  default: depend $(LTCOMMAND)
+>>>  
+>>>  include $(BUILDRULES)
+>>> diff --git a/spaceman/ag.c b/spaceman/ag.c
+>>> index 1eb8aa0..0f1c869 100644
+>>> --- a/spaceman/ag.c
+>>> +++ b/spaceman/ag.c
+>>> @@ -21,6 +21,7 @@
+>>>  #include "command.h"
+>>>  #include "input.h"
+>>>  #include "init.h"
+>>> +#include "path.h"
+>>>  #include "space.h"
+>>>  
+>>>  #ifndef XFS_IOC_AGCONTROL
+>>> diff --git a/spaceman/file.c b/spaceman/file.c
+>>> index 9356066..7c5ea0e 100644
+>>> --- a/spaceman/file.c
+>>> +++ b/spaceman/file.c
+>>> @@ -22,6 +22,7 @@
+>>>  #include "command.h"
+>>>  #include "input.h"
+>>>  #include "init.h"
+>>> +#include "path.h"
+>>>  #include "space.h"
+>>>  
+>>>  static cmdinfo_t print_cmd;
+>>> @@ -69,8 +70,10 @@ openfile(
+>>>  	char		*path,
+>>>  	xfs_fsop_geom_t	*geom,
+>>>  	int		flags,
+>>> -	mode_t		mode)
+>>> +	mode_t		mode,
+>>> +	struct fs_path	*fs_path)
+>>>  {
+>>> +	struct fs_path	*fsp;
+>>>  	int		fd;
+>>>  
+>>>  	fd = open(path, flags, mode);
+>>> @@ -95,6 +98,15 @@ openfile(
+>>>  		close(fd);
+>>>  		return -1;
+>>>  	}
+>>> +
+>>> +	if (fs_path) {
+>>> +		fsp = fs_table_lookup(path, FS_MOUNT_POINT);
+>>> +		if (!fsp) {
+>>> +			fprintf(stderr, _("Unable to find XFS information."));
+>>
+>> If I got that error I wouldn't know what it meant...
 > 
-> xfs_spaceman is intended as a diagnostic and control tool for space
-> management operations within XFS. Operations like examining free
-> space, managing allocation policies, issuing block discards on free
-> space, etc.
-> 
-> The tool is modelled on the xfs_io interface, allowing both
-> interactive and command line control of the tool, enabling it to be
-> used in scripts and automated management tools.
+> "Unable to find mount information." ?
 
-This may be a result of the xfs_io ancestry, but:
+I think that if the path isn't found in the table, that means it wasn't
+populated on startup, which means it's not [on] an XFS filesystem:
 
-# xfs_spaceman /mnt/test2 /mnt/test
+        fs = fs_table_lookup(argv[optind], FS_MOUNT_POINT);
+        if (!fs) {
+                fprintf(stderr, _("%s: %s is not a mounted XFS filesystem\n"),
+                        progname, argv[optind]);
+                return 1;
+        }
 
-Cool, we can open 2 files(ystems)
+or
 
-xfs_spaceman> print
- 000  /mnt/test2     (non-sync,non-direct,read-write)
-[001] /mnt/test      (non-sync,non-direct,read-write)
+                fprintf(stderr, _("file argument, \"%s\", is not in a mounted XFS filesystem\n"),
+                        file->name);
 
-(what does non-direct mean for a mountpoint?)
-(actually where do these flags come from ... hm.)
+is what other tools do (although quota does:
 
-Yep there we are!  Now how do we switch to the other?
+                fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
+or
+                fprintf(stderr, "%s: cannot find mount point %s\n",)
 
-xfs_spaceman> help
-help [command] -- help for one or all commands
-print -- list current open files
-quit -- exit the program
 
-Use 'help commandname' for extended help.
+Anyway: I think the failure means that the path is not [on] an xfs filesystem,
+so that's probably the best information to convey.
 
-hmmm... I guess we can't switch.  Should we be able to?
-
-Is the intent to open files or filesystems...  both?  Is there ever
-a reason to be opening a file not a filesystem?
-
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> [darrick: change xfsctl to ioctl]
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  Makefile          |    3 +
->  spaceman/Makefile |   34 ++++++++++++
->  spaceman/file.c   |  149 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  spaceman/init.c   |  117 ++++++++++++++++++++++++++++++++++++++++++
->  spaceman/init.h   |   23 ++++++++
->  spaceman/space.h  |   36 +++++++++++++
->  6 files changed, 361 insertions(+), 1 deletion(-)
->  create mode 100644 spaceman/Makefile
->  create mode 100644 spaceman/file.c
->  create mode 100644 spaceman/init.c
->  create mode 100644 spaceman/init.h
->  create mode 100644 spaceman/space.h
-> 
-> 
-> diff --git a/Makefile b/Makefile
-> index ba87327..72d0044 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -47,7 +47,7 @@ HDR_SUBDIRS = include libxfs
->  DLIB_SUBDIRS = libxlog libxcmd libhandle
->  LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
->  TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
-> -		mdrestore repair rtcp m4 man doc debian
-> +		mdrestore repair rtcp m4 man doc debian spaceman
->  
->  ifneq ("$(PKG_PLATFORM)","darwin")
->  TOOL_SUBDIRS += fsr
-> @@ -88,6 +88,7 @@ quota: libxcmd
->  repair: libxlog libxcmd
->  copy: libxlog
->  mkfs: libxcmd
-> +spaceman: libxcmd
->  
->  ifeq ($(HAVE_BUILDDEFS), yes)
->  include $(BUILDRULES)
-> diff --git a/spaceman/Makefile b/spaceman/Makefile
-> new file mode 100644
-> index 0000000..ff8d23e
-> --- /dev/null
-> +++ b/spaceman/Makefile
-> @@ -0,0 +1,34 @@
-> +#
-> +# Copyright (c) 2012 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +
-> +TOPDIR = ..
-> +include $(TOPDIR)/include/builddefs
-> +
-> +LTCOMMAND = xfs_spaceman
-> +HFILES = init.h space.h
-> +CFILES = init.c \
-> +	file.c
-> +
-> +LLDLIBS = $(LIBXCMD)
-> +LTDEPENDENCIES = $(LIBXCMD)
-> +LLDFLAGS = -static
-> +
-> +ifeq ($(ENABLE_READLINE),yes)
-> +LLDLIBS += $(LIBREADLINE) $(LIBTERMCAP)
-> +endif
-> +
-> +ifeq ($(ENABLE_EDITLINE),yes)
-> +LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
-> +endif
-> +
-> +default: depend $(LTCOMMAND)
-> +
-> +include $(BUILDRULES)
-> +
-> +install: default
-> +	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
-> +	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
-> +install-dev:
-> +
-> +-include .dep
-> diff --git a/spaceman/file.c b/spaceman/file.c
-> new file mode 100644
-> index 0000000..9356066
-> --- /dev/null
-> +++ b/spaceman/file.c
-> @@ -0,0 +1,149 @@
-> +/*
-> + * Copyright (c) 2004-2005 Silicon Graphics, Inc.
-> + * Copyright (c) 2012 Red Hat, Inc.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +
-> +#include "libxfs.h"
-> +#include <sys/mman.h>
-> +#include "command.h"
-> +#include "input.h"
-> +#include "init.h"
-> +#include "space.h"
-> +
-> +static cmdinfo_t print_cmd;
-> +
-> +fileio_t	*filetable;
-> +int		filecount;
-> +fileio_t	*file;
-> +
-> +static void
-> +print_fileio(
-> +	fileio_t	*file,
-> +	int		index,
-> +	int		braces)
-> +{
-> +	printf(_("%c%03d%c %-14s (%s,%s,%s%s%s)\n"),
-> +		braces? '[' : ' ', index, braces? ']' : ' ', file->name,
-> +		file->flags & O_SYNC ? _("sync") : _("non-sync"),
-> +		file->flags & O_DIRECT ? _("direct") : _("non-direct"),
-> +		file->flags & O_RDONLY ? _("read-only") : _("read-write"),
-> +		file->flags & O_APPEND ? _(",append-only") : "",
-> +		file->flags & O_NONBLOCK ? _(",non-block") : "");
-
-I don't think this is working:
-
-# chattr +aS appendonly_sync 
-
-# xfs_spaceman -c print appendonly_sync 
-[000] appendonly_sync (non-sync,non-direct,read-write)
-
-I don't see that file->flags ever gets set.
-
-> +}
-> +
-> +int
-> +filelist_f(void)
-> +{
-> +	int		i;
-> +
-> +	for (i = 0; i < filecount; i++)
-> +		print_fileio(&filetable[i], i, &filetable[i] == file);
-> +	return 0;
-> +}
-> +
-> +static int
-> +print_f(
-> +	int		argc,
-> +	char		**argv)
-> +{
-> +	filelist_f();
-> +	return 0;
-> +}
-> +
-> +int
-> +openfile(
-> +	char		*path,
-> +	xfs_fsop_geom_t	*geom,
-> +	int		flags,
-> +	mode_t		mode)
-> +{
-> +	int		fd;
-> +
-> +	fd = open(path, flags, mode);
-> +	if (fd < 0) {
-> +		if ((errno == EISDIR) && (flags & O_RDWR)) {
-
-can we even get here w/ flags != 0?
-
-(but anyway, we can open a dir just fine ...)
-
-> +			/* make it as if we asked for O_RDONLY & try again */
-> +			flags &= ~O_RDWR;
-> +			flags |= O_RDONLY;
-> +			fd = open(path, flags, mode);
-> +			if (fd < 0) {
-> +				perror(path);
-> +				return -1;
-> +			}
-> +		} else {
-> +			perror(path);
-> +			return -1;
-> +		}
-> +	}
-> +
-> +	if (ioctl(fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
-> +		perror("XFS_IOC_FSGEOMETRY");
-> +		close(fd);
-> +		return -1;
-> +	}
-> +	return fd;
-> +}
-> +
-> +int
-> +addfile(
-> +	char		*name,
-> +	int		fd,
-> +	xfs_fsop_geom_t	*geometry,
-> +	int		flags)
-> +{
-> +	char		*filename;
-> +
-> +	filename = strdup(name);
-> +	if (!filename) {
-> +		perror("strdup");
-> +		close(fd);
-> +		return -1;
-> +	}
-> +
-> +	/* Extend the table of currently open files */
-> +	filetable = (fileio_t *)realloc(filetable,	/* growing */
-> +					++filecount * sizeof(fileio_t));
-> +	if (!filetable) {
-> +		perror("realloc");
-> +		filecount = 0;
-> +		free(filename);
-> +		close(fd);
-> +		return -1;
-> +	}
-> +
-> +	/* Finally, make this the new active open file */
-> +	file = &filetable[filecount - 1];
-> +	file->fd = fd;
-> +	file->flags = flags;
-> +	file->name = filename;
-> +	file->geom = *geometry;
-> +	return 0;
-> +}
-> +
-> +void
-> +file_init(void)
-> +{
-> +	print_cmd.name = "print";
-> +	print_cmd.altname = "p";
-> +	print_cmd.cfunc = print_f;
-> +	print_cmd.argmin = 0;
-> +	print_cmd.argmax = 0;
-> +	print_cmd.flags = CMD_FLAG_ONESHOT;
-> +	print_cmd.oneline = _("list current open files");
-> +
-> +	add_command(&print_cmd);
-> +}
-> diff --git a/spaceman/init.c b/spaceman/init.c
-> new file mode 100644
-> index 0000000..404b183
-> --- /dev/null
-> +++ b/spaceman/init.c
-> @@ -0,0 +1,117 @@
-> +/*
-> + * Copyright (c) 2012 Red Hat, Inc
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +
-> +#include "libxfs.h"
-> +#include "command.h"
-> +#include "input.h"
-> +#include "init.h"
-> +#include "space.h"
-> +
-> +char	*progname;
-> +int	exitcode;
-> +
-> +void
-> +usage(void)
-> +{
-> +	fprintf(stderr,
-> +		_("Usage: %s [-c cmd] file\n"),
-> +		progname);
-> +	exit(1);
-> +}
-> +
-> +static void
-> +init_commands(void)
-> +{
-> +	file_init();
-> +	help_init();
-> +	quit_init();
-> +}
-> +
-> +static int
-> +init_args_command(
-> +	int	index)
-> +{
-> +	if (index >= filecount)
-> +		return 0;
-> +	file = &filetable[index++];
-> +	return index;
-> +}
-> +
-> +static int
-> +init_check_command(
-> +	const cmdinfo_t	*ct)
-> +{
-> +	if (!(ct->flags & CMD_FLAG_ONESHOT))
-> +		return 0;
-> +	return 1;
-> +}
-> +
-> +void
-> +init(
-> +	int		argc,
-> +	char		**argv)
-> +{
-> +	int		c, flags = 0;
-
-flags is 0 ...
-
-> +	mode_t		mode = 0600;
-> +	xfs_fsop_geom_t	geometry = { 0 };
-> +
-> +	progname = basename(argv[0]);
-> +	setlocale(LC_ALL, "");
-> +	bindtextdomain(PACKAGE, LOCALEDIR);
-> +	textdomain(PACKAGE);
-> +
-> +	while ((c = getopt(argc, argv, "c:V")) != EOF) {
-> +		switch (c) {
-> +		case 'c':
-> +			add_user_command(optarg);
-> +			break;
-> +		case 'V':
-> +			printf(_("%s version %s\n"), progname, VERSION);
-> +			exit(0);
-> +		default:
-> +			usage();
-> +		}
-> +	}
-> +
-> +	if (optind == argc)
-> +		usage();
-> +
-> +	while (optind < argc) {
-> +		if ((c = openfile(argv[optind], &geometry, flags, mode)) < 0)
-
-openfile with flags ...
-
-> +			exit(1);
-> +		if (!platform_test_xfs_fd(c))
-> +			printf(_("Not an XFS filesystem!\n"));
-
-file? filesystem?
-
-> +		if (addfile(argv[optind], c, &geometry, flags) < 0)
-
-addfile with flags ... what's flags for?  it's always 0.
-
-> +			exit(1);
-> +		optind++;
-> +	}
-> +
-> +	init_commands();
-> +	add_command_iterator(init_args_command);
-> +	add_check_command(init_check_command);
-> +}
-> +
-> +int
-> +main(
-> +	int	argc,
-> +	char	**argv)
-> +{
-> +	init(argc, argv);
-> +	command_loop();
-> +	return exitcode;
-> +}
-> diff --git a/spaceman/init.h b/spaceman/init.h
-> new file mode 100644
-> index 0000000..165e4f5
-> --- /dev/null
-> +++ b/spaceman/init.h
-> @@ -0,0 +1,23 @@
-> +/*
-> + * Copyright (c) 2012 Red Hat, Inc.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +
-> +extern char	*progname;
-> +extern int	exitcode;
-> +
-> +#define min(a,b)	(((a)<(b))?(a):(b))
-> +#define max(a,b)	(((a)>(b))?(a):(b))
-> diff --git a/spaceman/space.h b/spaceman/space.h
-> new file mode 100644
-> index 0000000..6e1bc52
-> --- /dev/null
-> +++ b/spaceman/space.h
-> @@ -0,0 +1,36 @@
-> +/*
-> + * Copyright (c) 2012 Red Hat, Inc.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +
-> +typedef struct fileio {
-> +	int		fd;		/* open file descriptor */
-> +	int		flags;		/* flags describing file state */
-> +	char		*name;		/* file name at time of open */
-> +	xfs_fsop_geom_t	geom;		/* XFS filesystem geometry */
-> +} fileio_t;
-> +
-> +extern fileio_t		*filetable;	/* open file table */
-> +extern int		filecount;	/* number of open files */
-> +extern fileio_t		*file;		/* active file in file table */
-> +extern int filelist_f(void);
-> +
-> +extern int	openfile(char *, xfs_fsop_geom_t *, int, mode_t);
-> +extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
-> +
-> +extern void	file_init(void);
-> +extern void	help_init(void);
-> +extern void	quit_init(void);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+-Eric
