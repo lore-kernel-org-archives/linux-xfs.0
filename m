@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:44815 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:44631 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751566AbdEaQUM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 12:20:12 -0400
+        with ESMTP id S1751357AbdEaQTu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 12:19:50 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/24] ima/policy: switch to use uuid_t
-Date: Wed, 31 May 2017 18:18:18 +0200
-Message-Id: <20170531161826.23243-17-hch@lst.de>
+Subject: [PATCH 12/24] S390/sysinfo: use uuid_is_null instead of opencoding it
+Date: Wed, 31 May 2017 18:18:14 +0200
+Message-Id: <20170531161826.23243-13-hch@lst.de>
 In-Reply-To: <20170531161826.23243-1-hch@lst.de>
 References: <20170531161826.23243-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,61 +15,51 @@ List-Id: xfs
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
 Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
 
+And switch to use uuid_t instead of the old uuid_be type.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-Acked-by: Mimi Zohar <zohar@linux.vnet.ibm.com>
 Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- security/integrity/ima/ima_policy.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ arch/s390/include/asm/sysinfo.h | 4 ++--
+ arch/s390/kernel/sysinfo.c      | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
-index 49fbc3e8f012..9a7c7cbdbe7c 100644
---- a/security/integrity/ima/ima_policy.c
-+++ b/security/integrity/ima/ima_policy.c
-@@ -61,7 +61,7 @@ struct ima_rule_entry {
- 	enum ima_hooks func;
- 	int mask;
- 	unsigned long fsmagic;
--	u8 fsuuid[16];
-+	uuid_t fsuuid;
- 	kuid_t uid;
- 	kuid_t fowner;
- 	bool (*uid_op)(kuid_t, kuid_t);    /* Handlers for operators       */
-@@ -244,7 +244,7 @@ static bool ima_match_rules(struct ima_rule_entry *rule, struct inode *inode,
- 	    && rule->fsmagic != inode->i_sb->s_magic)
- 		return false;
- 	if ((rule->flags & IMA_FSUUID) &&
--	    memcmp(rule->fsuuid, inode->i_sb->s_uuid, sizeof(rule->fsuuid)))
-+	    memcmp(&rule->fsuuid, inode->i_sb->s_uuid, sizeof(rule->fsuuid)))
- 		return false;
- 	if ((rule->flags & IMA_UID) && !rule->uid_op(cred->uid, rule->uid))
- 		return false;
-@@ -711,13 +711,12 @@ static int ima_parse_rule(char *rule, struct ima_rule_entry *entry)
- 		case Opt_fsuuid:
- 			ima_log_string(ab, "fsuuid", args[0].from);
+diff --git a/arch/s390/include/asm/sysinfo.h b/arch/s390/include/asm/sysinfo.h
+index e784bed6ed7f..2b498e58b914 100644
+--- a/arch/s390/include/asm/sysinfo.h
++++ b/arch/s390/include/asm/sysinfo.h
+@@ -109,7 +109,7 @@ struct sysinfo_2_2_2 {
+ 	unsigned short cpus_shared;
+ 	char reserved_4[3];
+ 	unsigned char vsne;
+-	uuid_be uuid;
++	uuid_t uuid;
+ 	char reserved_5[160];
+ 	char ext_name[256];
+ };
+@@ -134,7 +134,7 @@ struct sysinfo_3_2_2 {
+ 		char reserved_1[3];
+ 		unsigned char evmne;
+ 		unsigned int reserved_2;
+-		uuid_be uuid;
++		uuid_t uuid;
+ 	} vm[8];
+ 	char reserved_3[1504];
+ 	char ext_names[8][256];
+diff --git a/arch/s390/kernel/sysinfo.c b/arch/s390/kernel/sysinfo.c
+index eefcb54872a5..fb869b103825 100644
+--- a/arch/s390/kernel/sysinfo.c
++++ b/arch/s390/kernel/sysinfo.c
+@@ -242,7 +242,7 @@ static void print_ext_name(struct seq_file *m, int lvl,
  
--			if (memchr_inv(entry->fsuuid, 0x00,
--				       sizeof(entry->fsuuid))) {
-+			if (uuid_is_null(&entry->fsuuid)) {
- 				result = -EINVAL;
- 				break;
- 			}
- 
--			result = uuid_to_bin(args[0].from, (uuid_t *)&entry->fsuuid);
-+			result = uuid_parse(args[0].from, &entry->fsuuid);
- 			if (!result)
- 				entry->flags |= IMA_FSUUID;
- 			break;
-@@ -1086,7 +1085,7 @@ int ima_policy_show(struct seq_file *m, void *v)
- 	}
- 
- 	if (entry->flags & IMA_FSUUID) {
--		seq_printf(m, "fsuuid=%pU", entry->fsuuid);
-+		seq_printf(m, "fsuuid=%pU", &entry->fsuuid);
- 		seq_puts(m, " ");
- 	}
- 
+ static void print_uuid(struct seq_file *m, int i, struct sysinfo_3_2_2 *info)
+ {
+-	if (!memcmp(&info->vm[i].uuid, &NULL_UUID_BE, sizeof(uuid_be)))
++	if (uuid_is_null(&info->vm[i].uuid))
+ 		return;
+ 	seq_printf(m, "VM%02d UUID:            %pUb\n", i, &info->vm[i].uuid);
+ }
 -- 
 2.11.0
 
