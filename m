@@ -1,44 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:40352 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751015AbdEaQSe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 12:18:34 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: cleanup UUID types V6
-Date: Wed, 31 May 2017 18:18:02 +0200
-Message-Id: <20170531161826.23243-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:34946 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751188AbdEaQ01 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 31 May 2017 12:26:27 -0400
+Subject: Re: [sparc64] crc32c misbehave
+References: <CADxRZqzgaL4ew6PVek3WBsdwo6GcT0ORx=7h+6p0V3NAr8qF+w@mail.gmail.com>
+ <CADxRZqzNTB1n0g1r_2rLsjifHpJ+_x1WPxNOSqEcHbi74jHi5w@mail.gmail.com>
+ <20170531.115335.213691069712156732.davem@davemloft.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ccdf645b-e22f-ef71-53df-993cc45869c0@sandeen.net>
+Date: Wed, 31 May 2017 11:19:20 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170531.115335.213691069712156732.davem@davemloft.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
+To: David Miller <davem@davemloft.net>, matorola@gmail.com
+Cc: sparclinux@vger.kernel.org, linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi all,
+On 5/31/17 10:53 AM, David Miller wrote:
+> From: Anatoly Pugachev <matorola@gmail.com>
+> Date: Wed, 31 May 2017 14:56:52 +0300
+> 
+>> While debugging occasional crc32c checksum errors with xfs disk reads on
+>> sparc64 (T5 [sun4v] 3.6 GHz CPU ldom, debian unstable/sid), Eric have found
+>> that crc32c sometimes returns wrong checksum for data. Eric made a simple
+>> test kernel module (included), which produce the following results on my
+>> sparc64 machines:
 
-this series, which is a combined effort from Amir, Andy and me introduces
-new uuid_t and guid_t type names that are less confusing than the existing
-types, adds new helpers for them and starts switching the fs code over to
-it.  Andy has additional patches on top to convert many of the users
-that use char arrays for UUIDs and GUIDs to these (or rather a predecessor
-for now until updated).
+cc: linux-xfs, because this problem cropped up on xfs/sparc.
 
-Changes since V5:
- - fix the AFS revert to respect endianess
- - rename uuid_to_bin to uuid_parse
+-Eric
 
-Changes since V4:
- - removed the patch to remove uuid_be for now
- - move the md patch to the front of the queue
- - remove the union for V1 uuids and provide accessors instead
- - new patch to set s_uuid for tmpfs
- - revert the patch that moved struct uuid_v1 from afs to the core
- - implement the fsid generation differently in XFS due to the
-   change above
- - add a MAINTAINERS entry
-
-Changes since V3:
- - stop exposing uuid_be/uuid_t to userspace
- - remove uuid_be entirely
-
-Changes since V2:
- - various cleanups
+> I don't think that crc32c() is thread safe because of the way it is
+> implemented with a shared TFM crypto object allocated once at boot
+> time.
+> 
+> I think you are seeing the corruption any time an interrupt comes in
+> on the same cpu as your test module is running on and does a crc32c()
+> calculation, corrupting the context key value being used by your
+> invocation.
+> 
+> At least that's my guess, I could have misread how the key is stored
+> and managed around operations.
+> 
+> Can you try something like disabling cpu IRQs around the crc32c() function
+> in lib/libcrc32c.c?  Something like:
+> 
+> 	u32 retval;
+> 
+> 	local_irq_disable();
+> 
+> 	shash->tfm = tfm;
+> 	shash->flags = 0;
+> 	*ctx = crc;
+> 
+> 	err = crypto_shash_update(shash, address, length);
+> 	BUG_ON(err);
+> 
+> 	retval = *ctx;
+> 
+> 	local_irq_enable();
+> 
+> 	return retval;
+> 
+> Thanks.
+> 
