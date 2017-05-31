@@ -1,186 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43722 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750998AbdEaP1y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 11:27:54 -0400
-Date: Wed, 31 May 2017 08:27:47 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3] xfs: use ->b_state to fix buffer I/O accounting
- release race
-Message-ID: <20170531152747.GE4519@birch.djwong.org>
-References: <1496150573-6531-1-git-send-email-bfoster@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1496150573-6531-1-git-send-email-bfoster@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:44610 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751615AbdEaQUU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 12:20:20 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 19/24] partitions/ldm: switch to use uuid_t
+Date: Wed, 31 May 2017 18:18:21 +0200
+Message-Id: <20170531161826.23243-20-hch@lst.de>
+In-Reply-To: <20170531161826.23243-1-hch@lst.de>
+References: <20170531161826.23243-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, stable@vger.kernel.org#v4.8+
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
 
-On Tue, May 30, 2017 at 09:22:53AM -0400, Brian Foster wrote:
-> We've had user reports of unmount hangs in xfs_wait_buftarg() that
-> analysis shows is due to btp->bt_io_count == -1. bt_io_count
-> represents the count of in-flight asynchronous buffers and thus
-> should always be >= 0. xfs_wait_buftarg() waits for this value to
-> stabilize to zero in order to ensure that all untracked (with
-> respect to the lru) buffers have completed I/O processing before
-> unmount proceeds to tear down in-core data structures.
-> 
-> The value of -1 implies an I/O accounting decrement race. Indeed,
-> the fact that xfs_buf_ioacct_dec() is called from xfs_buf_rele()
-> (where the buffer lock is no longer held) means that bp->b_flags can
-> be updated from an unsafe context. While a user-level reproducer is
-> currently not available, some intrusive hacks to run racing buffer
-> lookups/ioacct/releases from multiple threads was used to
-> successfully manufacture this problem.
-> 
-> Existing callers do not expect to acquire the buffer lock from
-> xfs_buf_rele(). Therefore, we can not safely update ->b_flags from
-> this context. It turns out that we already have separate buffer
-> state bits and associated serialization for dealing with buffer LRU
-> state in the form of ->b_state and ->b_lock. Therefore, replace the
-> _XBF_IN_FLIGHT flag with a ->b_state variant, update the I/O
-> accounting wrappers appropriately and make sure they are used with
-> the correct locking. This ensures that buffer in-flight state can be
-> modified at buffer release time without racing with modifications
-> from a buffer lock holder.
-> 
-> Fixes: 9c7504aa72b6 ("xfs: track and serialize in-flight async buffers against unmount")
-> CC: stable@vger.kernel.org # v4.8+
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Nikolay Borisov <nborisov@suse.com>
+And the uuid helpers.
 
-Looks good enough to test,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ block/partitions/ldm.c | 10 +++++-----
+ block/partitions/ldm.h |  6 ++----
+ 2 files changed, 7 insertions(+), 9 deletions(-)
 
-> ---
-> 
-> v3:
-> - Added Fixes/Reviewed-by tags and CC stable.
-> v2: http://www.spinics.net/lists/linux-xfs/msg07062.html
-> - Use ->b_state and ->b_lock instead of custom atomic counter.
-> v1: http://www.spinics.net/lists/linux-xfs/msg06995.html
-> 
->  fs/xfs/xfs_buf.c | 38 ++++++++++++++++++++++++++------------
->  fs/xfs/xfs_buf.h |  5 ++---
->  2 files changed, 28 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index ba036c1..4e19fda 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -97,12 +97,16 @@ static inline void
->  xfs_buf_ioacct_inc(
->  	struct xfs_buf	*bp)
->  {
-> -	if (bp->b_flags & (XBF_NO_IOACCT|_XBF_IN_FLIGHT))
-> +	if (bp->b_flags & XBF_NO_IOACCT)
->  		return;
->  
->  	ASSERT(bp->b_flags & XBF_ASYNC);
-> -	bp->b_flags |= _XBF_IN_FLIGHT;
-> -	percpu_counter_inc(&bp->b_target->bt_io_count);
-> +	spin_lock(&bp->b_lock);
-> +	if (!(bp->b_state & XFS_BSTATE_IN_FLIGHT)) {
-> +		bp->b_state |= XFS_BSTATE_IN_FLIGHT;
-> +		percpu_counter_inc(&bp->b_target->bt_io_count);
-> +	}
-> +	spin_unlock(&bp->b_lock);
->  }
->  
->  /*
-> @@ -110,14 +114,24 @@ xfs_buf_ioacct_inc(
->   * freed and unaccount from the buftarg.
->   */
->  static inline void
-> -xfs_buf_ioacct_dec(
-> +__xfs_buf_ioacct_dec(
->  	struct xfs_buf	*bp)
->  {
-> -	if (!(bp->b_flags & _XBF_IN_FLIGHT))
-> -		return;
-> +	ASSERT(spin_is_locked(&bp->b_lock));
->  
-> -	bp->b_flags &= ~_XBF_IN_FLIGHT;
-> -	percpu_counter_dec(&bp->b_target->bt_io_count);
-> +	if (bp->b_state & XFS_BSTATE_IN_FLIGHT) {
-> +		bp->b_state &= ~XFS_BSTATE_IN_FLIGHT;
-> +		percpu_counter_dec(&bp->b_target->bt_io_count);
-> +	}
-> +}
-> +
-> +static inline void
-> +xfs_buf_ioacct_dec(
-> +	struct xfs_buf	*bp)
-> +{
-> +	spin_lock(&bp->b_lock);
-> +	__xfs_buf_ioacct_dec(bp);
-> +	spin_unlock(&bp->b_lock);
->  }
->  
->  /*
-> @@ -149,9 +163,9 @@ xfs_buf_stale(
->  	 * unaccounted (released to LRU) before that occurs. Drop in-flight
->  	 * status now to preserve accounting consistency.
->  	 */
-> -	xfs_buf_ioacct_dec(bp);
-> -
->  	spin_lock(&bp->b_lock);
-> +	__xfs_buf_ioacct_dec(bp);
-> +
->  	atomic_set(&bp->b_lru_ref, 0);
->  	if (!(bp->b_state & XFS_BSTATE_DISPOSE) &&
->  	    (list_lru_del(&bp->b_target->bt_lru, &bp->b_lru)))
-> @@ -979,12 +993,12 @@ xfs_buf_rele(
->  		 * ensures the decrement occurs only once per-buf.
->  		 */
->  		if ((atomic_read(&bp->b_hold) == 1) && !list_empty(&bp->b_lru))
-> -			xfs_buf_ioacct_dec(bp);
-> +			__xfs_buf_ioacct_dec(bp);
->  		goto out_unlock;
->  	}
->  
->  	/* the last reference has been dropped ... */
-> -	xfs_buf_ioacct_dec(bp);
-> +	__xfs_buf_ioacct_dec(bp);
->  	if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
->  		/*
->  		 * If the buffer is added to the LRU take a new reference to the
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 8d1d44f..1508121 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -63,7 +63,6 @@ typedef enum {
->  #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
->  #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
->  #define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
-> -#define _XBF_IN_FLIGHT	 (1 << 25) /* I/O in flight, for accounting purposes */
->  
->  typedef unsigned int xfs_buf_flags_t;
->  
-> @@ -84,14 +83,14 @@ typedef unsigned int xfs_buf_flags_t;
->  	{ _XBF_PAGES,		"PAGES" }, \
->  	{ _XBF_KMEM,		"KMEM" }, \
->  	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
-> -	{ _XBF_COMPOUND,	"COMPOUND" }, \
-> -	{ _XBF_IN_FLIGHT,	"IN_FLIGHT" }
-> +	{ _XBF_COMPOUND,	"COMPOUND" }
->  
->  
->  /*
->   * Internal state flags.
->   */
->  #define XFS_BSTATE_DISPOSE	 (1 << 0)	/* buffer being discarded */
-> +#define XFS_BSTATE_IN_FLIGHT	 (1 << 1)	/* I/O in flight */
->  
->  /*
->   * The xfs_buftarg contains 2 notions of "sector size" -
-> -- 
-> 2.7.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/block/partitions/ldm.c b/block/partitions/ldm.c
+index edcea70674c9..2a365c756648 100644
+--- a/block/partitions/ldm.c
++++ b/block/partitions/ldm.c
+@@ -115,7 +115,7 @@ static bool ldm_parse_privhead(const u8 *data, struct privhead *ph)
+ 		ldm_error("PRIVHEAD disk size doesn't match real disk size");
+ 		return false;
+ 	}
+-	if (uuid_be_to_bin(data + 0x0030, (uuid_be *)ph->disk_id)) {
++	if (uuid_parse(data + 0x0030, &ph->disk_id)) {
+ 		ldm_error("PRIVHEAD contains an invalid GUID.");
+ 		return false;
+ 	}
+@@ -234,7 +234,7 @@ static bool ldm_compare_privheads (const struct privhead *ph1,
+ 		(ph1->logical_disk_size  == ph2->logical_disk_size)	&&
+ 		(ph1->config_start       == ph2->config_start)		&&
+ 		(ph1->config_size        == ph2->config_size)		&&
+-		!memcmp (ph1->disk_id, ph2->disk_id, GUID_SIZE));
++		uuid_equal(&ph1->disk_id, &ph2->disk_id));
+ }
+ 
+ /**
+@@ -557,7 +557,7 @@ static struct vblk * ldm_get_disk_objid (const struct ldmdb *ldb)
+ 
+ 	list_for_each (item, &ldb->v_disk) {
+ 		struct vblk *v = list_entry (item, struct vblk, list);
+-		if (!memcmp (v->vblk.disk.disk_id, ldb->ph.disk_id, GUID_SIZE))
++		if (uuid_equal(&v->vblk.disk.disk_id, &ldb->ph.disk_id))
+ 			return v;
+ 	}
+ 
+@@ -892,7 +892,7 @@ static bool ldm_parse_dsk3 (const u8 *buffer, int buflen, struct vblk *vb)
+ 	disk = &vb->vblk.disk;
+ 	ldm_get_vstr (buffer + 0x18 + r_diskid, disk->alt_name,
+ 		sizeof (disk->alt_name));
+-	if (uuid_be_to_bin(buffer + 0x19 + r_name, (uuid_be *)disk->disk_id))
++	if (uuid_parse(buffer + 0x19 + r_name, &disk->disk_id))
+ 		return false;
+ 
+ 	return true;
+@@ -927,7 +927,7 @@ static bool ldm_parse_dsk4 (const u8 *buffer, int buflen, struct vblk *vb)
+ 		return false;
+ 
+ 	disk = &vb->vblk.disk;
+-	memcpy (disk->disk_id, buffer + 0x18 + r_name, GUID_SIZE);
++	uuid_copy(&disk->disk_id, (uuid_t *)(buffer + 0x18 + r_name));
+ 	return true;
+ }
+ 
+diff --git a/block/partitions/ldm.h b/block/partitions/ldm.h
+index 374242c0971a..f4c6055df956 100644
+--- a/block/partitions/ldm.h
++++ b/block/partitions/ldm.h
+@@ -112,8 +112,6 @@ struct frag {				/* VBLK Fragment handling */
+ 
+ /* In memory LDM database structures. */
+ 
+-#define GUID_SIZE		16
+-
+ struct privhead {			/* Offsets and sizes are in sectors. */
+ 	u16	ver_major;
+ 	u16	ver_minor;
+@@ -121,7 +119,7 @@ struct privhead {			/* Offsets and sizes are in sectors. */
+ 	u64	logical_disk_size;
+ 	u64	config_start;
+ 	u64	config_size;
+-	u8	disk_id[GUID_SIZE];
++	uuid_t	disk_id;
+ };
+ 
+ struct tocblock {			/* We have exactly two bitmaps. */
+@@ -154,7 +152,7 @@ struct vblk_dgrp {			/* VBLK Disk Group */
+ };
+ 
+ struct vblk_disk {			/* VBLK Disk */
+-	u8	disk_id[GUID_SIZE];
++	uuid_t	disk_id;
+ 	u8	alt_name[128];
+ };
+ 
+-- 
+2.11.0
+
