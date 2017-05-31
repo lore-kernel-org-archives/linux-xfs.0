@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54913 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:42557 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750912AbdEaQTL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 12:19:11 -0400
+        with ESMTP id S1750912AbdEaQTG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 12:19:06 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/24] xfs: use uuid_be to implement the uuid_t type
-Date: Wed, 31 May 2017 18:18:05 +0200
-Message-Id: <20170531161826.23243-4-hch@lst.de>
+Subject: [PATCH 04/24] md: namespace private helper names
+Date: Wed, 31 May 2017 18:18:06 +0200
+Message-Id: <20170531161826.23243-5-hch@lst.de>
 In-Reply-To: <20170531161826.23243-1-hch@lst.de>
 References: <20170531161826.23243-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,55 +15,59 @@ List-Id: xfs
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
 Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
 
-Use the generic Linux definition to implement our UUID type, this will
-allow using more generic infrastructure in the future.
+From: Amir Goldstein <amir73il@gmail.com>
 
+The md private helper uuid_equal() collides with a generic helper
+of the same name.
+
+Rename the md private helper to md_uuid_equal() and do the same for
+md_sb_equal().
+
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Shaohua Li <shli@kernel.org>
 Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/uuid.h      | 4 ----
- fs/xfs/xfs_linux.h | 3 +++
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/md/md.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
-index 104db0f3bed6..4f1441ba4fa5 100644
---- a/fs/xfs/uuid.h
-+++ b/fs/xfs/uuid.h
-@@ -18,10 +18,6 @@
- #ifndef __XFS_SUPPORT_UUID_H__
- #define __XFS_SUPPORT_UUID_H__
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 10367ffe92e3..b9ab268ba7f9 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -825,7 +825,7 @@ static int read_disk_sb(struct md_rdev *rdev, int size)
+ 	return -EINVAL;
+ }
  
--typedef struct {
--	unsigned char	__u_bits[16];
--} uuid_t;
--
- extern int uuid_is_nil(uuid_t *uuid);
- extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
- extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 044fb0e15390..89ee5ec66837 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -19,6 +19,7 @@
- #define __XFS_LINUX__
+-static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
++static int md_uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+ {
+ 	return	sb1->set_uuid0 == sb2->set_uuid0 &&
+ 		sb1->set_uuid1 == sb2->set_uuid1 &&
+@@ -833,7 +833,7 @@ static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+ 		sb1->set_uuid3 == sb2->set_uuid3;
+ }
  
- #include <linux/types.h>
-+#include <linux/uuid.h>
- 
- /*
-  * Kernel specific type declarations for XFS
-@@ -38,6 +39,8 @@ typedef __s64			xfs_daddr_t;	/* <disk address> type */
- typedef __u32			xfs_dev_t;
- typedef __u32			xfs_nlink_t;
- 
-+typedef uuid_be			uuid_t;
-+
- #include "xfs_types.h"
- 
- #include "kmem.h"
+-static int sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
++static int md_sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+ {
+ 	int ret;
+ 	mdp_super_t *tmp1, *tmp2;
+@@ -1025,12 +1025,12 @@ static int super_90_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor
+ 	} else {
+ 		__u64 ev1, ev2;
+ 		mdp_super_t *refsb = page_address(refdev->sb_page);
+-		if (!uuid_equal(refsb, sb)) {
++		if (!md_uuid_equal(refsb, sb)) {
+ 			pr_warn("md: %s has different UUID to %s\n",
+ 				b, bdevname(refdev->bdev,b2));
+ 			goto abort;
+ 		}
+-		if (!sb_equal(refsb, sb)) {
++		if (!md_sb_equal(refsb, sb)) {
+ 			pr_warn("md: %s has same UUID but different superblock to %s\n",
+ 				b, bdevname(refdev->bdev, b2));
+ 			goto abort;
 -- 
 2.11.0
 
