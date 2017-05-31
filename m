@@ -1,57 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32179 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753514AbdEJQDh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2017 12:03:37 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v4AG3ZCq004576
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2017 16:03:36 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v4AG3ZVG002571
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2017 16:03:35 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v4AG3ZbC022421
-        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2017 16:03:35 GMT
-Date: Wed, 10 May 2017 09:03:29 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: bmap shouldn't barf on inline-format directories
-Message-ID: <20170510160329.GS5973@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from shards.monkeyblade.net ([184.105.139.130]:40908 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750898AbdEaQtS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 12:49:18 -0400
+Date: Wed, 31 May 2017 12:49:16 -0400 (EDT)
+Message-Id: <20170531.124916.1406665885250072302.davem@davemloft.net>
+Subject: Re: [sparc64] crc32c misbehave
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <260a016f-0f17-e286-ceca-83b6977f2fc0@sandeen.net>
+References: <20170531.115335.213691069712156732.davem@davemloft.net>
+        <ccdf645b-e22f-ef71-53df-993cc45869c0@sandeen.net>
+        <260a016f-0f17-e286-ceca-83b6977f2fc0@sandeen.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: sandeen@sandeen.net
+Cc: matorola@gmail.com, sparclinux@vger.kernel.org, linux-xfs@vger.kernel.org
 
-When we're fulfilling a BMAPX request, check that the fork is still in
-extents or btree format just prior to calling bmapi.  This prevents us
-from hitting a debugging check in bmapi_read and barfing errors back
-to userspace.  The on-disk extent count check later isn't sufficient for
-IF_DELALLOC mode because da extents are in memory and not on disk.
+From: Eric Sandeen <sandeen@sandeen.net>
+Date: Wed, 31 May 2017 11:31:10 -0500
 
-To reproduce, run "xfs_io -c 'bmap -e'" on any inline directory.
+> On 5/31/17 11:19 AM, Eric Sandeen wrote:
+>> On 5/31/17 10:53 AM, David Miller wrote:
+>>> From: Anatoly Pugachev <matorola@gmail.com>
+>>> Date: Wed, 31 May 2017 14:56:52 +0300
+>>>
+>>>> While debugging occasional crc32c checksum errors with xfs disk reads on
+>>>> sparc64 (T5 [sun4v] 3.6 GHz CPU ldom, debian unstable/sid), Eric have found
+>>>> that crc32c sometimes returns wrong checksum for data. Eric made a simple
+>>>> test kernel module (included), which produce the following results on my
+>>>> sparc64 machines:
+>> 
+>> cc: linux-xfs, because this problem cropped up on xfs/sparc.
+> 
+> FWIW, the testcase (module which does
+> 
+> 	crc = crc32c(CRC_SEED, data, 512);
+> 
+> 1 million times in a loop on the same data, and printk's if
+> the result ever changes) does not fail on x86_64 or ARM
+> (well, not after a gcc bug was fixed on ARM ...)
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_bmap_util.c |    5 +++++
- 1 file changed, 5 insertions(+)
+Is the machine doing things that would cause crc32c() operations in
+interrupts (SCTP protocol traffic) or on other cpus?
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 7ac80a1..378f142 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -614,6 +614,11 @@ xfs_getbmap(
- 		return -EINVAL;
- 	bmvend = bmv->bmv_offset + bmv->bmv_length;
- 
-+	/* Local format inodes don't have any extents to report. */
-+	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
-+		bmv->bmv_entries = 0;
-+		return 0;
-+	}
- 
- 	if (bmv->bmv_count > ULONG_MAX / sizeof(struct getbmapx))
- 		return -ENOMEM;
+That's the danger in comparing other machines, the context and what's
+running on them is different.
