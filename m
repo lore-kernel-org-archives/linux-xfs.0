@@ -1,83 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46163 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750912AbdE3So6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2017 14:44:58 -0400
-Date: Tue, 30 May 2017 11:44:52 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0.9/9] xfs: introduce the XFS_IOC_GETFSMAP ioctl
-Message-ID: <20170530184452.GB4519@birch.djwong.org>
-References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
- <20170508194755.GK5973@birch.djwong.org>
- <9d94c89f-f730-955c-bde3-eb9264737303@sandeen.net>
- <20170526214142.GO4521@birch.djwong.org>
- <0e27be7e-17b0-391f-bc80-512ad5523436@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0e27be7e-17b0-391f-bc80-512ad5523436@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:38527 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750898AbdEaQTR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 12:19:17 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 05/24] uuid: remove uuid_be defintions from the uapi header
+Date: Wed, 31 May 2017 18:18:07 +0200
+Message-Id: <20170531161826.23243-6-hch@lst.de>
+In-Reply-To: <20170531161826.23243-1-hch@lst.de>
+References: <20170531161826.23243-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
 
-On Fri, May 26, 2017 at 05:12:25PM -0500, Eric Sandeen wrote:
-> On 5/26/17 4:41 PM, Darrick J. Wong wrote:
-> > On Fri, May 26, 2017 at 04:20:49PM -0500, Eric Sandeen wrote:
-> >>
-> >>
-> >> On 5/8/17 2:47 PM, Darrick J. Wong wrote:
-> >>> From: Darrick J. Wong <darrick.wong@oracle.com>
-> >>>
-> >>> Introduce a new ioctl that uses the reverse mapping btree to return
-> >>> information about the physical layout of the filesystem.
-> >>>
-> >>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> >>
-> >> Ok, howzabout this:
-> >>
-> >> Changes from your version:
-> >>
-> >> - remove libxfs stuff, I synced that separately already
-> >> - rename sys_fsmap just fsmap (it's not a syscall)
-> >> - change meaning of "have_fsmap" - it now means we have it on the
-> >>   system, not that this platform (linux) might support it.*
-> > 
-> > I'll have a look... though afaict this removes anything that would
-> > prevent us from building the fsmap stuff on a non-linux platform.
-> > Seeing as fsmap is linux-only, we might as well restrict it on the
-> > platforms we still support.
-> 
-> Right, so in this patch, either we define HAVE_GETFSMAP if we find
-> it on the system, or we implement it in include/linux.h and define
-> it then.  So HAVE_GETFSMAP won't get set on non-linux.
-> 
-> But in the next patch that actually makes use of the fsmap ioctl,
-> we'll need to conditionally include fsmap.c, and then all should
-> be good, I think, right?  Something like:
-> 
-> +# On linux we get fsmap from the system or define it ourselves
-> +# so include this based on platform type.  If this reverts to only
-> +# the autoconf check w/o local definition, change to testing HAVE_GETFSMAP
-> +ifeq ($(PKG_PLATFORM),linux)
-> +CFILES += fsmap.c
-> +endif
+We don't use uuid_be and the UUID_BE constants in any uapi headers, so make
+them private to the kernel.
 
-Yes, I think that will be fine.  Do you want me to respin the patches
-as they are now (having been fixed), or should I wait for a for-next
-rebase with whatever's in your tree?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ include/linux/uuid.h      | 15 +++++++++++++++
+ include/uapi/linux/uuid.h | 16 ----------------
+ 2 files changed, 15 insertions(+), 16 deletions(-)
 
---D
+diff --git a/include/linux/uuid.h b/include/linux/uuid.h
+index 2d095fc60204..30fb13018e29 100644
+--- a/include/linux/uuid.h
++++ b/include/linux/uuid.h
+@@ -18,6 +18,21 @@
+ 
+ #include <uapi/linux/uuid.h>
+ 
++typedef struct {
++	__u8 b[16];
++} uuid_be;
++
++#define UUID_BE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
++((uuid_be)								\
++{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
++   ((b) >> 8) & 0xff, (b) & 0xff,					\
++   ((c) >> 8) & 0xff, (c) & 0xff,					\
++   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
++
++#define NULL_UUID_BE							\
++	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
++		0x00, 0x00, 0x00, 0x00)
++
+ /*
+  * The length of a UUID string ("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+  * not including trailing NUL.
+diff --git a/include/uapi/linux/uuid.h b/include/uapi/linux/uuid.h
+index 3738e5fb6a4d..0099756c4bac 100644
+--- a/include/uapi/linux/uuid.h
++++ b/include/uapi/linux/uuid.h
+@@ -24,10 +24,6 @@ typedef struct {
+ 	__u8 b[16];
+ } uuid_le;
+ 
+-typedef struct {
+-	__u8 b[16];
+-} uuid_be;
+-
+ #define UUID_LE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
+ ((uuid_le)								\
+ {{ (a) & 0xff, ((a) >> 8) & 0xff, ((a) >> 16) & 0xff, ((a) >> 24) & 0xff, \
+@@ -35,20 +31,8 @@ typedef struct {
+    (c) & 0xff, ((c) >> 8) & 0xff,					\
+    (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
+ 
+-#define UUID_BE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
+-((uuid_be)								\
+-{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
+-   ((b) >> 8) & 0xff, (b) & 0xff,					\
+-   ((c) >> 8) & 0xff, (c) & 0xff,					\
+-   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
+-
+ #define NULL_UUID_LE							\
+ 	UUID_LE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+ 		0x00, 0x00, 0x00, 0x00)
+ 
+-#define NULL_UUID_BE							\
+-	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+-		0x00, 0x00, 0x00, 0x00)
+-
+-
+ #endif /* _UAPI_LINUX_UUID_H_ */
+-- 
+2.11.0
 
-> 
-> > Darwin?  (I think Jan Tulak added this, though OSX doen't do XFS...)
-> > BSD?  (Wasn't XFS removed from their kernel a few years ago?)
-> 
-> Jan, do you still use it? 
-> 
-> -Eric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
