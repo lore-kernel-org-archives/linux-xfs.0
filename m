@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:39705 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:54913 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751041AbdEaQT1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 12:19:27 -0400
+        with ESMTP id S1750912AbdEaQTL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 12:19:11 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/24] uuid: rename uuid_to_bin to uuid_parse
-Date: Wed, 31 May 2017 18:18:10 +0200
-Message-Id: <20170531161826.23243-9-hch@lst.de>
+Subject: [PATCH 03/24] xfs: use uuid_be to implement the uuid_t type
+Date: Wed, 31 May 2017 18:18:05 +0200
+Message-Id: <20170531161826.23243-4-hch@lst.de>
 In-Reply-To: <20170531161826.23243-1-hch@lst.de>
 References: <20170531161826.23243-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,113 +15,55 @@ List-Id: xfs
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
 Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
 
-This matches the userspace version of it, and describes the functionality
-much better.  Also do the same for the guid version.
+Use the generic Linux definition to implement our UUID type, this will
+allow using more generic infrastructure in the future.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/linux/uuid.h |  8 ++++----
- lib/test_uuid.c      |  8 ++++----
- lib/uuid.c           | 14 +++++++-------
- 3 files changed, 15 insertions(+), 15 deletions(-)
+ fs/xfs/uuid.h      | 4 ----
+ fs/xfs/xfs_linux.h | 3 +++
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/uuid.h b/include/linux/uuid.h
-index a9d0fdba5404..82b165b579f5 100644
---- a/include/linux/uuid.h
-+++ b/include/linux/uuid.h
-@@ -45,8 +45,8 @@ bool __must_check uuid_is_valid(const char *uuid);
- extern const u8 guid_index[16];
- extern const u8 uuid_index[16];
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+index 104db0f3bed6..4f1441ba4fa5 100644
+--- a/fs/xfs/uuid.h
++++ b/fs/xfs/uuid.h
+@@ -18,10 +18,6 @@
+ #ifndef __XFS_SUPPORT_UUID_H__
+ #define __XFS_SUPPORT_UUID_H__
  
--int guid_to_bin(const char *uuid, guid_t *u);
--int uuid_to_bin(const char *uuid, uuid_t *u);
-+int guid_parse(const char *uuid, guid_t *u);
-+int uuid_parse(const char *uuid, uuid_t *u);
+-typedef struct {
+-	unsigned char	__u_bits[16];
+-} uuid_t;
+-
+ extern int uuid_is_nil(uuid_t *uuid);
+ extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
+ extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 044fb0e15390..89ee5ec66837 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -19,6 +19,7 @@
+ #define __XFS_LINUX__
  
- /* backwards compatibility, don't use in new code */
- typedef uuid_t uuid_be;
-@@ -58,8 +58,8 @@ typedef uuid_t uuid_be;
+ #include <linux/types.h>
++#include <linux/uuid.h>
  
- #define uuid_le_gen(u)		guid_gen(u)
- #define uuid_be_gen(u)		uuid_gen(u)
--#define uuid_le_to_bin(guid, u)	guid_to_bin(guid, u)
--#define uuid_be_to_bin(uuid, u)	uuid_to_bin(uuid, u)
-+#define uuid_le_to_bin(guid, u)	guid_parse(guid, u)
-+#define uuid_be_to_bin(uuid, u)	uuid_parse(uuid, u)
+ /*
+  * Kernel specific type declarations for XFS
+@@ -38,6 +39,8 @@ typedef __s64			xfs_daddr_t;	/* <disk address> type */
+ typedef __u32			xfs_dev_t;
+ typedef __u32			xfs_nlink_t;
  
- static inline int uuid_le_cmp(const guid_t u1, const guid_t u2)
- {
-diff --git a/lib/test_uuid.c b/lib/test_uuid.c
-index 9cad846fd805..edda536a7b45 100644
---- a/lib/test_uuid.c
-+++ b/lib/test_uuid.c
-@@ -67,7 +67,7 @@ static void __init test_uuid_test(const struct test_uuid_data *data)
++typedef uuid_be			uuid_t;
++
+ #include "xfs_types.h"
  
- 	/* LE */
- 	total_tests++;
--	if (guid_to_bin(data->uuid, &le))
-+	if (guid_parse(data->uuid, &le))
- 		test_uuid_failed("conversion", false, false, data->uuid, NULL);
- 
- 	total_tests++;
-@@ -78,7 +78,7 @@ static void __init test_uuid_test(const struct test_uuid_data *data)
- 
- 	/* BE */
- 	total_tests++;
--	if (uuid_to_bin(data->uuid, &be))
-+	if (uuid_parse(data->uuid, &be))
- 		test_uuid_failed("conversion", false, true, data->uuid, NULL);
- 
- 	total_tests++;
-@@ -95,12 +95,12 @@ static void __init test_uuid_wrong(const char *data)
- 
- 	/* LE */
- 	total_tests++;
--	if (!guid_to_bin(data, &le))
-+	if (!guid_parse(data, &le))
- 		test_uuid_failed("negative", true, false, data, NULL);
- 
- 	/* BE */
- 	total_tests++;
--	if (!uuid_to_bin(data, &be))
-+	if (!uuid_parse(data, &be))
- 		test_uuid_failed("negative", true, true, data, NULL);
- }
- 
-diff --git a/lib/uuid.c b/lib/uuid.c
-index f80dc63f6ca8..90bee73f7bd7 100644
---- a/lib/uuid.c
-+++ b/lib/uuid.c
-@@ -97,7 +97,7 @@ bool uuid_is_valid(const char *uuid)
- }
- EXPORT_SYMBOL(uuid_is_valid);
- 
--static int __uuid_to_bin(const char *uuid, __u8 b[16], const u8 ei[16])
-+static int __uuid_parse(const char *uuid, __u8 b[16], const u8 ei[16])
- {
- 	static const u8 si[16] = {0,2,4,6,9,11,14,16,19,21,24,26,28,30,32,34};
- 	unsigned int i;
-@@ -115,14 +115,14 @@ static int __uuid_to_bin(const char *uuid, __u8 b[16], const u8 ei[16])
- 	return 0;
- }
- 
--int guid_to_bin(const char *uuid, guid_t *u)
-+int guid_parse(const char *uuid, guid_t *u)
- {
--	return __uuid_to_bin(uuid, u->b, guid_index);
-+	return __uuid_parse(uuid, u->b, guid_index);
- }
--EXPORT_SYMBOL(guid_to_bin);
-+EXPORT_SYMBOL(guid_parse);
- 
--int uuid_to_bin(const char *uuid, uuid_t *u)
-+int uuid_parse(const char *uuid, uuid_t *u)
- {
--	return __uuid_to_bin(uuid, u->b, uuid_index);
-+	return __uuid_parse(uuid, u->b, uuid_index);
- }
--EXPORT_SYMBOL(uuid_to_bin);
-+EXPORT_SYMBOL(uuid_parse);
+ #include "kmem.h"
 -- 
 2.11.0
 
