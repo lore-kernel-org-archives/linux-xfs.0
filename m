@@ -1,96 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28755 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:31451 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750811AbdE3Srt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2017 14:47:49 -0400
-Date: Tue, 30 May 2017 11:47:39 -0700
+        with ESMTP id S1751095AbdEaPgo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 11:36:44 -0400
+Date: Wed, 31 May 2017 08:36:37 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/9] xfs_spaceman: space management tool
-Message-ID: <20170530184739.GC4519@birch.djwong.org>
-References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
- <149417259522.24656.15381603363219279304.stgit@birch.djwong.org>
- <afec66aa-4c12-30e3-ff8d-896c5f3505d5@sandeen.net>
- <20170530173742.GW4519@birch.djwong.org>
- <48b4d991-4c77-4860-8a05-ba71bdda4056@sandeen.net>
+Subject: Re: [PATCH v3 2/2] xfs: define fatal assert build time tunable
+Message-ID: <20170531153637.GF4519@birch.djwong.org>
+References: <1494426711-6934-1-git-send-email-bfoster@redhat.com>
+ <1494426711-6934-3-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <48b4d991-4c77-4860-8a05-ba71bdda4056@sandeen.net>
+In-Reply-To: <1494426711-6934-3-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 30, 2017 at 01:17:56PM -0500, Eric Sandeen wrote:
-> On 5/30/17 12:37 PM, Darrick J. Wong wrote:
-> > On Fri, May 26, 2017 at 08:34:18PM -0500, Eric Sandeen wrote:
-> >> On 5/7/17 10:56 AM, Darrick J. Wong wrote:
-> >>> From: Dave Chinner <dchinner@redhat.com>
-> >>>
-> >>> xfs_spaceman is intended as a diagnostic and control tool for space
-> >>> management operations within XFS. Operations like examining free
-> >>> space, managing allocation policies, issuing block discards on free
-> >>> space, etc.
-> >>>
-> >>> The tool is modelled on the xfs_io interface, allowing both
-> >>> interactive and command line control of the tool, enabling it to be
-> >>> used in scripts and automated management tools.
-> >> This may be a result of the xfs_io ancestry, but:
-> >>
-> >> # xfs_spaceman /mnt/test2 /mnt/test
-> >>
-> >> Cool, we can open 2 files(ystems)
-> >>
-> >> xfs_spaceman> print
-> >>  000  /mnt/test2     (non-sync,non-direct,read-write)
-> >> [001] /mnt/test      (non-sync,non-direct,read-write)
-> >>
-> >> (what does non-direct mean for a mountpoint?)
-> >> (actually where do these flags come from ... hm.)
-> >>
-> >> Yep there we are!  Now how do we switch to the other?
-> >>
-> >> xfs_spaceman> help
-> >> help [command] -- help for one or all commands
-> >> print -- list current open files
-> >> quit -- exit the program
-> >>
-> >> Use 'help commandname' for extended help.
-> >>
-> >> hmmm... I guess we can't switch.  Should we be able to?
-> >>
-> >> Is the intent to open files or filesystems...  both?  Is there ever
-> >> a reason to be opening a file not a filesystem?
-> > <shrug> I mostly just passed on Dave's original patches from whenever
-> > ago, but TBH I'm not 100% sure about the usecases for multiple
-> > arguments.  The commands that spaceman has now are all fs-oriented, not
-> > file-oriented... but maybe people want to be able to issue one command
-> > against multiple fses?  OTOH all the commands provided so far are
-> > oneshot, so they only act upon one open file.
-> > 
-> > So, I'm inclined to ditch the 'list' command and disallow multiple open
-> > files, like Eric suggests, unless anyone really wants it?
+On Wed, May 10, 2017 at 10:31:51AM -0400, Brian Foster wrote:
+> While configurable at runtime, the DEBUG mode assert failure
+> behavior is usually either desired or not for a particular
+> situation. For example, developers using kernel modules may prefer
+> for fatal asserts to remain disabled across module reloads while QE
+> engineers doing broad regression testing may prefer to have fatal
+> asserts enabled on boot to facilitate data collection for bug
+> reports.
 > 
-> Either way is fine: multiple (fs) targets with the ability to switch,
-> or restrict to just one, but allowing one to open multiple and only
-> use one makes little sense.
+> To provide a compromise/convenience for developers, create a Kconfig
+> option that sets the default value of the DEBUG mode 'bug_on_assert'
+> sysfs tunable. The default behavior remains to trigger kernel BUGs
+> on assert failures to preserve existing behavior across kernel
+> configuration updates with DEBUG mode enabled.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/Kconfig       | 13 +++++++++++++
+>  fs/xfs/xfs.h         |  4 ++++
+>  fs/xfs/xfs_globals.c |  7 +++++--
+>  3 files changed, 22 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+> index 35faf12..1b98cfa 100644
+> --- a/fs/xfs/Kconfig
+> +++ b/fs/xfs/Kconfig
+> @@ -96,3 +96,16 @@ config XFS_DEBUG
+>  	  not useful unless you are debugging a particular problem.
+>  
+>  	  Say N unless you are an XFS developer, or you play one on TV.
+> +
+> +config XFS_ASSERT_FATAL
+> +	bool "XFS fatal asserts"
+> +	default y
+> +	depends on XFS_FS && XFS_DEBUG
+> +	help
+> +	  Set the default DEBUG mode ASSERT failure behavior.
+> +
+> +	  Say Y here to cause DEBUG mode ASSERT failures to result in fatal
+> +	  errors that BUG() the kernel by default. If you say N, ASSERT failures
+> +	  result in warnings.
+> +
+> +	  This behavior can be modified at runtime via sysfs.
+> diff --git a/fs/xfs/xfs.h b/fs/xfs/xfs.h
+> index a742c47..80cd0fd 100644
+> --- a/fs/xfs/xfs.h
+> +++ b/fs/xfs/xfs.h
+> @@ -24,6 +24,10 @@
+>  #define XFS_BUF_LOCK_TRACKING 1
+>  #endif
+>  
+> +#ifdef CONFIG_XFS_ASSERT_FATAL
+> +#define XFS_ASSERT_FATAL 1
+> +#endif
+> +
+>  #ifdef CONFIG_XFS_WARN
+>  #define XFS_WARN 1
+>  #endif
+> diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
+> index 673adf0..3e1cc30 100644
+> --- a/fs/xfs/xfs_globals.c
+> +++ b/fs/xfs/xfs_globals.c
+> @@ -47,6 +47,9 @@ xfs_param_t xfs_params = {
+>  
+>  struct xfs_globals xfs_globals = {
+>  	.log_recovery_delay	=	0,	/* no delay by default */
+> -	.bug_on_assert		=	true,	/* historical default in DEBUG
+> -						 * mode */
+> +#ifdef XFS_ASSERT_FATAL
 
-I think of all the commands we have, only trim and prealloc seem geared
-towards being callable against all the paths specified in the command
-line.  OTOH I don't see a lot of harm in letting people run reports
-against multiple filesystems, though the output will be sort of messy.
+Minor nit to pick, but if you're only testing that XFS_ASSERT_FATAL is
+defined, you could just '#define XFS_ASSERT_FATAL' without providing a
+value.... or '#if XFS_ASSERT_FATAL' here.
 
-I'll play around with removing the ONESHOT designation and see if that
-doesn't turn into a horrible mess.
+OTOH XFS_WARN also does that, and we reach the same ends regardless of
+which way we do it.  I'm willing to pull this in for 4.13 as-is, if
+nobody objects.
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
+> +	.bug_on_assert		=	true,	/* assert failures BUG() */
+> +#else
+> +	.bug_on_assert		=	false,	/* assert failures WARN() */
+> +#endif
+>  };
+> -- 
+> 2.7.4
 > 
-> -Eric
-> 
-> > --D
-> > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
