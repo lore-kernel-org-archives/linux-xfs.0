@@ -1,88 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35434 "EHLO sandeen.net"
+Received: from mga03.intel.com ([134.134.136.65]:37112 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750898AbdEaQbL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 May 2017 12:31:11 -0400
-Subject: Re: [sparc64] crc32c misbehave
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <CADxRZqzgaL4ew6PVek3WBsdwo6GcT0ORx=7h+6p0V3NAr8qF+w@mail.gmail.com>
- <CADxRZqzNTB1n0g1r_2rLsjifHpJ+_x1WPxNOSqEcHbi74jHi5w@mail.gmail.com>
- <20170531.115335.213691069712156732.davem@davemloft.net>
- <ccdf645b-e22f-ef71-53df-993cc45869c0@sandeen.net>
-Message-ID: <260a016f-0f17-e286-ceca-83b6977f2fc0@sandeen.net>
-Date: Wed, 31 May 2017 11:31:10 -0500
-MIME-Version: 1.0
-In-Reply-To: <ccdf645b-e22f-ef71-53df-993cc45869c0@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        id S1750898AbdEaSOm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 31 May 2017 14:14:42 -0400
+Message-ID: <1496254475.28981.36.camel@linux.intel.com>
+Subject: Re: [PATCH 08/24] uuid: rename uuid_to_bin to uuid_parse
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Date: Wed, 31 May 2017 21:14:35 +0300
+In-Reply-To: <20170531161826.23243-9-hch@lst.de>
+References: <20170531161826.23243-1-hch@lst.de>
+         <20170531161826.23243-9-hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Miller <davem@davemloft.net>, matorola@gmail.com
-Cc: sparclinux@vger.kernel.org, linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
 
-On 5/31/17 11:19 AM, Eric Sandeen wrote:
-> On 5/31/17 10:53 AM, David Miller wrote:
->> From: Anatoly Pugachev <matorola@gmail.com>
->> Date: Wed, 31 May 2017 14:56:52 +0300
->>
->>> While debugging occasional crc32c checksum errors with xfs disk reads on
->>> sparc64 (T5 [sun4v] 3.6 GHz CPU ldom, debian unstable/sid), Eric have found
->>> that crc32c sometimes returns wrong checksum for data. Eric made a simple
->>> test kernel module (included), which produce the following results on my
->>> sparc64 machines:
+On Wed, 2017-05-31 at 18:18 +0200, Christoph Hellwig wrote:
+> This matches the userspace version of it, and describes the
+> functionality
+> much better.  Also do the same for the guid version.
 > 
-> cc: linux-xfs, because this problem cropped up on xfs/sparc.
 
-FWIW, the testcase (module which does
+No objections for renaming, though I'm pretty sure it should be squashed
+to patch 6.
 
-	crc = crc32c(CRC_SEED, data, 512);
-
-1 million times in a loop on the same data, and printk's if
-the result ever changes) does not fail on x86_64 or ARM
-(well, not after a gcc bug was fixed on ARM ...)
-
--Eric
-
-> -Eric
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  include/linux/uuid.h |  8 ++++----
+>  lib/test_uuid.c      |  8 ++++----
+>  lib/uuid.c           | 14 +++++++-------
+>  3 files changed, 15 insertions(+), 15 deletions(-)
 > 
->> I don't think that crc32c() is thread safe because of the way it is
->> implemented with a shared TFM crypto object allocated once at boot
->> time.
->>
->> I think you are seeing the corruption any time an interrupt comes in
->> on the same cpu as your test module is running on and does a crc32c()
->> calculation, corrupting the context key value being used by your
->> invocation.
->>
->> At least that's my guess, I could have misread how the key is stored
->> and managed around operations.
->>
->> Can you try something like disabling cpu IRQs around the crc32c() function
->> in lib/libcrc32c.c?  Something like:
->>
->> 	u32 retval;
->>
->> 	local_irq_disable();
->>
->> 	shash->tfm = tfm;
->> 	shash->flags = 0;
->> 	*ctx = crc;
->>
->> 	err = crypto_shash_update(shash, address, length);
->> 	BUG_ON(err);
->>
->> 	retval = *ctx;
->>
->> 	local_irq_enable();
->>
->> 	return retval;
->>
->> Thanks.
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> diff --git a/include/linux/uuid.h b/include/linux/uuid.h
+> index a9d0fdba5404..82b165b579f5 100644
+> --- a/include/linux/uuid.h
+> +++ b/include/linux/uuid.h
+> @@ -45,8 +45,8 @@ bool __must_check uuid_is_valid(const char *uuid);
+>  extern const u8 guid_index[16];
+>  extern const u8 uuid_index[16];
+>  
+> -int guid_to_bin(const char *uuid, guid_t *u);
+> -int uuid_to_bin(const char *uuid, uuid_t *u);
+> +int guid_parse(const char *uuid, guid_t *u);
+> +int uuid_parse(const char *uuid, uuid_t *u);
+>  
+>  /* backwards compatibility, don't use in new code */
+>  typedef uuid_t uuid_be;
+> @@ -58,8 +58,8 @@ typedef uuid_t uuid_be;
+>  
+>  #define uuid_le_gen(u)		guid_gen(u)
+>  #define uuid_be_gen(u)		uuid_gen(u)
+> -#define uuid_le_to_bin(guid, u)	guid_to_bin(guid, u)
+> -#define uuid_be_to_bin(uuid, u)	uuid_to_bin(uuid, u)
+> +#define uuid_le_to_bin(guid, u)	guid_parse(guid, u)
+> +#define uuid_be_to_bin(uuid, u)	uuid_parse(uuid, u)
+>  
+>  static inline int uuid_le_cmp(const guid_t u1, const guid_t u2)
+>  {
+> diff --git a/lib/test_uuid.c b/lib/test_uuid.c
+> index 9cad846fd805..edda536a7b45 100644
+> --- a/lib/test_uuid.c
+> +++ b/lib/test_uuid.c
+> @@ -67,7 +67,7 @@ static void __init test_uuid_test(const struct
+> test_uuid_data *data)
+>  
+>  	/* LE */
+>  	total_tests++;
+> -	if (guid_to_bin(data->uuid, &le))
+> +	if (guid_parse(data->uuid, &le))
+>  		test_uuid_failed("conversion", false, false, data-
+> >uuid, NULL);
+>  
+>  	total_tests++;
+> @@ -78,7 +78,7 @@ static void __init test_uuid_test(const struct
+> test_uuid_data *data)
+>  
+>  	/* BE */
+>  	total_tests++;
+> -	if (uuid_to_bin(data->uuid, &be))
+> +	if (uuid_parse(data->uuid, &be))
+>  		test_uuid_failed("conversion", false, true, data-
+> >uuid, NULL);
+>  
+>  	total_tests++;
+> @@ -95,12 +95,12 @@ static void __init test_uuid_wrong(const char
+> *data)
+>  
+>  	/* LE */
+>  	total_tests++;
+> -	if (!guid_to_bin(data, &le))
+> +	if (!guid_parse(data, &le))
+>  		test_uuid_failed("negative", true, false, data,
+> NULL);
+>  
+>  	/* BE */
+>  	total_tests++;
+> -	if (!uuid_to_bin(data, &be))
+> +	if (!uuid_parse(data, &be))
+>  		test_uuid_failed("negative", true, true, data, NULL);
+>  }
+>  
+> diff --git a/lib/uuid.c b/lib/uuid.c
+> index f80dc63f6ca8..90bee73f7bd7 100644
+> --- a/lib/uuid.c
+> +++ b/lib/uuid.c
+> @@ -97,7 +97,7 @@ bool uuid_is_valid(const char *uuid)
+>  }
+>  EXPORT_SYMBOL(uuid_is_valid);
+>  
+> -static int __uuid_to_bin(const char *uuid, __u8 b[16], const u8
+> ei[16])
+> +static int __uuid_parse(const char *uuid, __u8 b[16], const u8
+> ei[16])
+>  {
+>  	static const u8 si[16] =
+> {0,2,4,6,9,11,14,16,19,21,24,26,28,30,32,34};
+>  	unsigned int i;
+> @@ -115,14 +115,14 @@ static int __uuid_to_bin(const char *uuid, __u8
+> b[16], const u8 ei[16])
+>  	return 0;
+>  }
+>  
+> -int guid_to_bin(const char *uuid, guid_t *u)
+> +int guid_parse(const char *uuid, guid_t *u)
+>  {
+> -	return __uuid_to_bin(uuid, u->b, guid_index);
+> +	return __uuid_parse(uuid, u->b, guid_index);
+>  }
+> -EXPORT_SYMBOL(guid_to_bin);
+> +EXPORT_SYMBOL(guid_parse);
+>  
+> -int uuid_to_bin(const char *uuid, uuid_t *u)
+> +int uuid_parse(const char *uuid, uuid_t *u)
+>  {
+> -	return __uuid_to_bin(uuid, u->b, uuid_index);
+> +	return __uuid_parse(uuid, u->b, uuid_index);
+>  }
+> -EXPORT_SYMBOL(uuid_to_bin);
+> +EXPORT_SYMBOL(uuid_parse);
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
