@@ -1,32 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:41548 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:37500 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750837AbdE2IcT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 May 2017 04:32:19 -0400
-Date: Mon, 29 May 2017 01:32:17 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/10 v9] No wait AIO
-Message-ID: <20170529083217.GB1899@infradead.org>
-References: <20170524164150.9492-1-rgoldwyn@suse.de>
- <20170528092728.GA14519@infradead.org>
- <acb0fc57-5005-4422-9c42-3345e892ecb2@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <acb0fc57-5005-4422-9c42-3345e892ecb2@suse.de>
+        with ESMTP id S1751692AbdEaQUr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2017 12:20:47 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 24/24] MAINTAINERS: add uuid entry
+Date: Wed, 31 May 2017 18:18:26 +0200
+Message-Id: <20170531161826.23243-25-hch@lst.de>
+In-Reply-To: <20170531161826.23243-1-hch@lst.de>
+References: <20170531161826.23243-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
 
-On Sun, May 28, 2017 at 09:38:27PM -0500, Goldwyn Rodrigues wrote:
-> This effort focused on writes only.
-> 
-> >From the point of view of the application/user, reads are usually
-> required to complete with success. I don't see a scenario where reads()
-> would need the nowait feature. If there is a use case, I'd be happy to
-> add and support it.
+I'll keep maintaining whatever little changed we need here, with Andy as
+my designated reviewer.
 
-Both of them usually have a point.  And if they would block the
-main thread we'll have to offload them to a thread pool.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ MAINTAINERS | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 053c3bdd1fe5..660c14729205 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13463,6 +13463,17 @@ W:	http://en.wikipedia.org/wiki/Util-linux
+ T:	git git://git.kernel.org/pub/scm/utils/util-linux/util-linux.git
+ S:	Maintained
+ 
++UUID HELPERS
++M:	Christoph Hellwig <hch@lst.de>
++R:	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
++L:	linux-kernel@vger.kernel.org
++T:	git git://git.infradead.org/users/hch/uuid.git
++F:	lib/uuid.c
++F:	lib/test_uuid.c
++F:	include/linux/uuid.h
++F:	include/uapi/linux/uuid.h
++S:	Maintained
++
+ UVESAFB DRIVER
+ M:	Michal Januszewski <spock@gentoo.org>
+ L:	linux-fbdev@vger.kernel.org
+-- 
+2.11.0
+
