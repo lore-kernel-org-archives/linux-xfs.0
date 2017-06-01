@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50697 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50479 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751568AbdFAJdS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Jun 2017 05:33:18 -0400
+        id S1751209AbdFAJdP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Jun 2017 05:33:15 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 05/35] mm: Fix THP handling in invalidate_mapping_pages()
-Date: Thu,  1 Jun 2017 11:32:15 +0200
-Message-Id: <20170601093245.29238-6-jack@suse.cz>
+Subject: [PATCH 03/35] ext4: Fix off-by-in in loop termination in ext4_find_unwritten_pgoff()
+Date: Thu,  1 Jun 2017 11:32:13 +0200
+Message-Id: <20170601093245.29238-4-jack@suse.cz>
 In-Reply-To: <20170601093245.29238-1-jack@suse.cz>
 References: <20170601093245.29238-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,46 +15,29 @@ List-Id: xfs
 To: linux-mm@kvack.org
 Cc: Hugh Dickins <hughd@google.com>, David Howells <dhowells@redhat.com>, linux-afs@lists.infradead.org, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, tytso@mit.edu, linux-ext4@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, "Yan, Zheng" <zyan@redhat.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Nadia Yvette Chambers <nyc@holomorphy.com>, Jan Kara <jack@suse.cz>
 
-The condition checking for THP straddling end of invalidated range is
-wrong - it checks 'index' against 'end' but 'index' has been already
-advanced to point to the end of THP and thus the condition can never be
-true. As a result THP straddling 'end' has been fully invalidated. Given
-the nature of invalidate_mapping_pages(), this could be only performance
-issue. In fact, we are lucky the condition is wrong because if it was
-ever true, we'd leave locked page behind.
-
-Fix the condition checking for THP straddling 'end' and also properly
-unlock the page. Also update the comment before the condition to explain
-why we decide not to invalidate the page as it was not clear to me and I
-had to ask Kirill.
+There is an off-by-one error in loop termination conditions in
+ext4_find_unwritten_pgoff() since 'end' may index a page beyond end of
+desired range if 'endoff' is page aligned. It doesn't have any visible
+effects but still it is good to fix it.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- mm/truncate.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ fs/ext4/file.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/mm/truncate.c b/mm/truncate.c
-index 6479ed2afc53..2330223841fb 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -530,9 +530,15 @@ unsigned long invalidate_mapping_pages(struct address_space *mapping,
- 			} else if (PageTransHuge(page)) {
- 				index += HPAGE_PMD_NR - 1;
- 				i += HPAGE_PMD_NR - 1;
--				/* 'end' is in the middle of THP */
--				if (index ==  round_down(end, HPAGE_PMD_NR))
-+				/*
-+				 * 'end' is in the middle of THP. Don't
-+				 * invalidate the page as the part outside of
-+				 * 'end' could be still useful.
-+				 */
-+				if (index > end) {
-+					unlock_page(page);
- 					continue;
-+				}
- 			}
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index bbea2dccd584..2b00bf84c05b 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -474,7 +474,7 @@ static int ext4_find_unwritten_pgoff(struct inode *inode,
+ 	endoff = (loff_t)end_blk << blkbits;
  
- 			ret = invalidate_inode_page(page);
+ 	index = startoff >> PAGE_SHIFT;
+-	end = endoff >> PAGE_SHIFT;
++	end = (endoff - 1) >> PAGE_SHIFT;
+ 
+ 	pagevec_init(&pvec, 0);
+ 	do {
 -- 
 2.12.3
 
