@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50780 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50762 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751626AbdFAJdS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1751605AbdFAJdS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 1 Jun 2017 05:33:18 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 10/35] ext4: Use pagevec_lookup_range() in writeback code
-Date: Thu,  1 Jun 2017 11:32:20 +0200
-Message-Id: <20170601093245.29238-11-jack@suse.cz>
+Subject: [PATCH 08/35] fs: Fix performance regression in clean_bdev_aliases()
+Date: Thu,  1 Jun 2017 11:32:18 +0200
+Message-Id: <20170601093245.29238-9-jack@suse.cz>
 In-Reply-To: <20170601093245.29238-1-jack@suse.cz>
 References: <20170601093245.29238-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,55 +15,69 @@ List-Id: xfs
 To: linux-mm@kvack.org
 Cc: Hugh Dickins <hughd@google.com>, David Howells <dhowells@redhat.com>, linux-afs@lists.infradead.org, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, tytso@mit.edu, linux-ext4@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, "Yan, Zheng" <zyan@redhat.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Nadia Yvette Chambers <nyc@holomorphy.com>, Jan Kara <jack@suse.cz>
 
-Both occurences of pagevec_lookup() actually want only pages from a
-given range. Use pagevec_lookup_range() for the lookup.
+Commit e64855c6cfaa "fs: Add helper to clean bdev aliases under a bh and
+use it" added a wrapper for clean_bdev_aliases() that invalidates bdev
+aliases underlying a single buffer head. However this has caused a
+performance regression for bonnie++ benchmark on ext4 filesystem when
+delayed allocation is turned off (ext3 mode) - average of 3 runs:
 
-CC: "Theodore Ts'o" <tytso@mit.edu>
-CC: linux-ext4@vger.kernel.org
+Hmean SeqOut Char  164787.55 (  0.00%) 107189.06 (-34.95%)
+Hmean SeqOut Block 219883.89 (  0.00%) 168870.32 (-23.20%)
+
+The reason for this regression is that clean_bdev_aliases() is slower
+when called for a single block because pagevec_lookup() it uses will end
+up iterating through the radix tree until it finds a page (which may
+take a while) but we are only interested whether there's a page at a
+particular index.
+
+Fix the problem by using pagevec_lookup_range() instead which avoids the
+needless iteration.
+
+Fixes: e64855c6cfaa0a80c1b71c5f647cb792dc436668
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/ext4/inode.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ fs/buffer.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 784f41328dc8..59d82530d269 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -1670,13 +1670,13 @@ static void mpage_release_unused_pages(struct mpage_da_data *mpd,
+diff --git a/fs/buffer.c b/fs/buffer.c
+index fe0ee01c5a44..d63b22e50f38 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -1632,19 +1632,18 @@ void clean_bdev_aliases(struct block_device *bdev, sector_t block, sector_t len)
+ 	struct pagevec pvec;
+ 	pgoff_t index = block >> (PAGE_SHIFT - bd_inode->i_blkbits);
+ 	pgoff_t end;
+-	int i;
++	int i, count;
+ 	struct buffer_head *bh;
+ 	struct buffer_head *head;
  
+ 	end = (block + len - 1) >> (PAGE_SHIFT - bd_inode->i_blkbits);
  	pagevec_init(&pvec, 0);
- 	while (index <= end) {
--		nr_pages = pagevec_lookup(&pvec, mapping, &index, PAGEVEC_SIZE);
-+		nr_pages = pagevec_lookup_range(&pvec, mapping, &index, end,
-+						PAGEVEC_SIZE);
- 		if (nr_pages == 0)
- 			break;
- 		for (i = 0; i < nr_pages; i++) {
- 			struct page *page = pvec.pages[i];
--			if (page->index > end)
--				break;
-+
- 			BUG_ON(!PageLocked(page));
- 			BUG_ON(PageWriteback(page));
- 			if (invalidate) {
-@@ -2283,15 +2283,13 @@ static int mpage_map_and_submit_buffers(struct mpage_da_data *mpd)
- 
- 	pagevec_init(&pvec, 0);
- 	while (start <= end) {
--		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, &start,
--					  PAGEVEC_SIZE);
-+		nr_pages = pagevec_lookup_range(&pvec, inode->i_mapping,
-+						&start, end, PAGEVEC_SIZE);
- 		if (nr_pages == 0)
- 			break;
- 		for (i = 0; i < nr_pages; i++) {
+-	while (index <= end && pagevec_lookup(&pvec, bd_mapping, &index,
+-			min(end - index, (pgoff_t)PAGEVEC_SIZE - 1) + 1)) {
+-		for (i = 0; i < pagevec_count(&pvec); i++) {
++	while (pagevec_lookup_range(&pvec, bd_mapping, &index, end,
++				    PAGEVEC_SIZE)) {
++		count = pagevec_count(&pvec);
++		for (i = 0; i < count; i++) {
  			struct page *page = pvec.pages[i];
  
 -			if (page->index > end)
 -				break;
- 			bh = head = page_buffers(page);
- 			do {
- 				if (lblk < mpd->map.m_lblk)
+ 			if (!page_has_buffers(page))
+ 				continue;
+ 			/*
+@@ -1674,6 +1673,9 @@ void clean_bdev_aliases(struct block_device *bdev, sector_t block, sector_t len)
+ 		}
+ 		pagevec_release(&pvec);
+ 		cond_resched();
++		/* End of range already reached? */
++		if (index > end || !index)
++			break;
+ 	}
+ }
+ EXPORT_SYMBOL(clean_bdev_aliases);
 -- 
 2.12.3
 
