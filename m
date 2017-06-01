@@ -1,33 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41804 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:39138 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751135AbdEaTkO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 May 2017 15:40:14 -0400
-Date: Wed, 31 May 2017 21:40:12 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 08/24] uuid: rename uuid_to_bin to uuid_parse
-Message-ID: <20170531194012.GC6906@lst.de>
-References: <20170531161826.23243-1-hch@lst.de> <20170531161826.23243-9-hch@lst.de> <1496254475.28981.36.camel@linux.intel.com>
+        id S1751054AbdFAEHf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Jun 2017 00:07:35 -0400
+Date: Thu, 1 Jun 2017 12:07:33 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: fix installation for extended output files
+Message-ID: <20170601040733.GW23805@eguan.usersys.redhat.com>
+References: <20170601025327.GU23805@eguan.usersys.redhat.com>
+ <1496286073-23298-1-git-send-email-yangx.jy@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1496254475.28981.36.camel@linux.intel.com>
+In-Reply-To: <1496286073-23298-1-git-send-email-yangx.jy@cn.fujitsu.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
+To: Xiao Yang <yangx.jy@cn.fujitsu.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Wed, May 31, 2017 at 09:14:35PM +0300, Andy Shevchenko wrote:
-> On Wed, 2017-05-31 at 18:18 +0200, Christoph Hellwig wrote:
-> > This matches the userspace version of it, and describes the
-> > functionality
-> > much better.  Also do the same for the guid version.
-> > 
+On Thu, Jun 01, 2017 at 11:01:13AM +0800, Xiao Yang wrote:
+> The installation of these extended output files are skipped
+> because they aren't matched by xfstests.  So we rename them
+> to adapt building rules.
 > 
-> No objections for renaming, though I'm pretty sure it should be squashed
-> to patch 6.
+> Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
 
-Fine with me, it just seemed like a unrelated enough change to justify
-keeping it separate.
+This patch is 2.4M in size, no wonder it didn't hit the list..
+
+(cc linux-xfs list for these xfs specific tests)
+
+> ---
+>  tests/xfs/018                         |    8 +-
+>  tests/xfs/018.op.irix                 | 5628 ---------------------------------
+>  tests/xfs/018.op.linux                | 4714 ---------------------------
+>  tests/xfs/018.out.irix                | 5628 +++++++++++++++++++++++++++++++++
+>  tests/xfs/018.out.linux               | 4714 +++++++++++++++++++++++++++
+>  tests/xfs/018.out.trans_buf           | 1821 +++++++++++
+>  tests/xfs/018.out.trans_inode         | 2609 +++++++++++++++
+>  tests/xfs/018.trans_buf               | 1821 -----------
+>  tests/xfs/018.trans_inode             | 2609 ---------------
+
+xfs/018 081 and 082 are all marked as 'deprecated', I'm wondering if we
+can just remove them.
+
+>  tests/xfs/040                         |    4 +-
+>  tests/xfs/040.good                    |   16 -
+>  tests/xfs/040.out.good                |   16 +
+
+xfs/040 is doing source code diff between userspace vs kernel space, I'm
+not sure if this is still needed. But xfs/040 requires KWORKAREA points
+to a directory that contains both userspace and kernel code, I suspect
+it's rarely run.
+
+>  tests/xfs/081                         |    2 +-
+>  tests/xfs/081.out.ugquota.trans_inode | 3091 ++++++++++++++++++
+>  tests/xfs/081.ugquota.trans_inode     | 3091 ------------------
+>  tests/xfs/082                         |    8 +-
+>  tests/xfs/082.op.irix                 | 5628 ---------------------------------
+>  tests/xfs/082.op.linux                | 4714 ---------------------------
+>  tests/xfs/082.out.irix                | 5628 +++++++++++++++++++++++++++++++++
+>  tests/xfs/082.out.linux               | 4714 +++++++++++++++++++++++++++
+>  tests/xfs/082.out.trans_buf           | 1821 +++++++++++
+>  tests/xfs/082.out.trans_inode         | 2609 +++++++++++++++
+>  tests/xfs/082.trans_buf               | 1821 -----------
+>  tests/xfs/082.trans_inode             | 2609 ---------------
+>  24 files changed, 32662 insertions(+), 32662 deletions(-)
+
+Thanks,
+Eryu
