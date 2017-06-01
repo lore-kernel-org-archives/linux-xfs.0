@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50762 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50695 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751655AbdFAJdV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Jun 2017 05:33:21 -0400
+        id S1751643AbdFAJdU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Jun 2017 05:33:20 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 23/35] mm: Use pagevec_lookup_range_tag() in __filemap_fdatawait_range()
-Date: Thu,  1 Jun 2017 11:32:33 +0200
-Message-Id: <20170601093245.29238-24-jack@suse.cz>
+Subject: [PATCH 15/35] btrfs: Use pagevec_lookup_range_tag()
+Date: Thu,  1 Jun 2017 11:32:25 +0200
+Message-Id: <20170601093245.29238-16-jack@suse.cz>
 In-Reply-To: <20170601093245.29238-1-jack@suse.cz>
 References: <20170601093245.29238-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,40 +15,68 @@ List-Id: xfs
 To: linux-mm@kvack.org
 Cc: Hugh Dickins <hughd@google.com>, David Howells <dhowells@redhat.com>, linux-afs@lists.infradead.org, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, tytso@mit.edu, linux-ext4@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, "Yan, Zheng" <zyan@redhat.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Nadia Yvette Chambers <nyc@holomorphy.com>, Jan Kara <jack@suse.cz>
 
-Use pagevec_lookup_range_tag() in __filemap_fdatawait_range() as it is
-interested only in pages from given range. Remove unnecessary code
-resulting from this.
+We want only pages from given range in btree_write_cache_pages() and
+extent_write_cache_pages(). Use pagevec_lookup_range_tag() instead of
+pagevec_lookup_tag() and remove unnecessary code.
 
+CC: linux-btrfs@vger.kernel.org
+CC: David Sterba <dsterba@suse.com>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- mm/filemap.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ fs/btrfs/extent_io.c | 19 ++++---------------
+ 1 file changed, 4 insertions(+), 15 deletions(-)
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 56af68f6a375..8039b6bb9c27 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -390,18 +390,13 @@ static int __filemap_fdatawait_range(struct address_space *mapping,
- 
- 	pagevec_init(&pvec, 0);
- 	while ((index <= end) &&
--			(nr_pages = pagevec_lookup_tag(&pvec, mapping, &index,
--			PAGECACHE_TAG_WRITEBACK,
--			min(end - index, (pgoff_t)PAGEVEC_SIZE-1) + 1)) != 0) {
-+			(nr_pages = pagevec_lookup_range_tag(&pvec, mapping,
-+			&index, end, PAGECACHE_TAG_WRITEBACK, PAGEVEC_SIZE))) {
+diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
+index d8da3edf2ac3..6287eaba30ac 100644
+--- a/fs/btrfs/extent_io.c
++++ b/fs/btrfs/extent_io.c
+@@ -3837,8 +3837,8 @@ int btree_write_cache_pages(struct address_space *mapping,
+ 	if (wbc->sync_mode == WB_SYNC_ALL)
+ 		tag_pages_for_writeback(mapping, index, end);
+ 	while (!done && !nr_to_write_done && (index <= end) &&
+-	       (nr_pages = pagevec_lookup_tag(&pvec, mapping, &index, tag,
+-			min(end - index, (pgoff_t)PAGEVEC_SIZE-1) + 1))) {
++	       (nr_pages = pagevec_lookup_range_tag(&pvec, mapping, &index, end,
++			tag, PAGEVEC_SIZE))) {
  		unsigned i;
  
- 		for (i = 0; i < nr_pages; i++) {
- 			struct page *page = pvec.pages[i];
+ 		scanned = 1;
+@@ -3848,11 +3848,6 @@ int btree_write_cache_pages(struct address_space *mapping,
+ 			if (!PagePrivate(page))
+ 				continue;
  
--			/* until radix tree lookup accepts end_index */
--			if (page->index > end)
--				continue;
+-			if (!wbc->range_cyclic && page->index > end) {
+-				done = 1;
+-				break;
+-			}
 -
- 			wait_on_page_writeback(page);
- 			if (TestClearPageError(page))
- 				ret = -EIO;
+ 			spin_lock(&mapping->private_lock);
+ 			if (!PagePrivate(page)) {
+ 				spin_unlock(&mapping->private_lock);
+@@ -3984,8 +3979,8 @@ static int extent_write_cache_pages(struct address_space *mapping,
+ 		tag_pages_for_writeback(mapping, index, end);
+ 	done_index = index;
+ 	while (!done && !nr_to_write_done && (index <= end) &&
+-	       (nr_pages = pagevec_lookup_tag(&pvec, mapping, &index, tag,
+-			min(end - index, (pgoff_t)PAGEVEC_SIZE-1) + 1))) {
++	       (nr_pages = pagevec_lookup_range_tag(&pvec, mapping, &index, end,
++			tag, PAGEVEC_SIZE))) {
+ 		unsigned i;
+ 
+ 		scanned = 1;
+@@ -4010,12 +4005,6 @@ static int extent_write_cache_pages(struct address_space *mapping,
+ 				continue;
+ 			}
+ 
+-			if (!wbc->range_cyclic && page->index > end) {
+-				done = 1;
+-				unlock_page(page);
+-				continue;
+-			}
+-
+ 			if (wbc->sync_mode != WB_SYNC_NONE) {
+ 				if (PageWriteback(page))
+ 					flush_fn(data);
 -- 
 2.12.3
 
