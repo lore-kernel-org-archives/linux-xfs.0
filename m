@@ -1,99 +1,158 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54690 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751203AbdFGNA5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Jun 2017 09:00:57 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C4097DC8F4
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Jun 2017 13:00:56 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A5DD917A90
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Jun 2017 13:00:56 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2] xfs: fix spurious spin_is_locked() assert failures on non-smp kernels
-Date: Wed,  7 Jun 2017 09:00:55 -0400
-Message-Id: <1496840455-65279-1-git-send-email-bfoster@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:50922 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751695AbdFAJdX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Jun 2017 05:33:23 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 35/35] mm: Implement find_get_entries_range_tag()
+Date: Thu,  1 Jun 2017 11:32:45 +0200
+Message-Id: <20170601093245.29238-36-jack@suse.cz>
+In-Reply-To: <20170601093245.29238-1-jack@suse.cz>
+References: <20170601093245.29238-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-mm@kvack.org
+Cc: Hugh Dickins <hughd@google.com>, David Howells <dhowells@redhat.com>, linux-afs@lists.infradead.org, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, tytso@mit.edu, linux-ext4@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, "Yan, Zheng" <zyan@redhat.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Nadia Yvette Chambers <nyc@holomorphy.com>, Jan Kara <jack@suse.cz>
 
-The 0-day kernel test robot reports assertion failures on
-!CONFIG_SMP kernels due to failed spin_is_locked() checks. As it
-turns out, spin_is_locked() is hardcoded to return zero on
-!CONFIG_SMP kernels and so this function cannot be relied on to
-verify spinlock state in this configuration.
+Implement find_get_entries_range_tag() (actually convert
+find_get_entries_tag() tag to it as the only user of
+find_get_entries_tag() needs a ranged lookup) and use it in DAX which is
+the only user of this interface. This is mostly for consistency with
+other page/entry iteration interfaces.
 
-To avoid this problem, replace the associated asserts with lockdep
-variants that do the right thing regardless of kernel configuration.
-Drop the one assert that checks for an unlocked lock as there is no
-suitable lockdep variant for that case. This moves the spinlock
-checks from XFS debug code to lockdep, but generally provides the
-same level of protection.
-
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
+ fs/dax.c                | 12 +++---------
+ include/linux/pagemap.h |  3 ++-
+ mm/filemap.c            | 36 ++++++++++++++++++++++++++----------
+ 3 files changed, 31 insertions(+), 20 deletions(-)
 
-Here's another version that uses lockdep calls as suggested by
-Christoph.
-
-Brian
-
-v2:
-- Use lockdep asserts instead of config check.
-- Drop !spin_is_locked() assert from inode initialization.
-v1: http://www.spinics.net/lists/linux-xfs/msg07463.html
-
- fs/xfs/xfs_buf.c    | 2 +-
- fs/xfs/xfs_icache.c | 5 ++---
- 2 files changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 07b77b7..16d6a57 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -117,7 +117,7 @@ static inline void
- __xfs_buf_ioacct_dec(
- 	struct xfs_buf	*bp)
+diff --git a/fs/dax.c b/fs/dax.c
+index 4b295c544fd4..acf17b55f76b 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -819,7 +819,6 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ 	pgoff_t indices[PAGEVEC_SIZE];
+ 	struct dax_device *dax_dev;
+ 	struct pagevec pvec;
+-	bool done = false;
+ 	int i, ret = 0;
+ 
+ 	if (WARN_ON_ONCE(inode->i_blkbits != PAGE_SHIFT))
+@@ -840,20 +839,15 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ 	tag_pages_for_writeback(mapping, start_index, end_index);
+ 
+ 	pagevec_init(&pvec, 0);
+-	while (!done) {
+-		pvec.nr = find_get_entries_tag(mapping, &start_index,
+-				PAGECACHE_TAG_TOWRITE, PAGEVEC_SIZE,
++	while (start_index <= end_index) {
++		pvec.nr = find_get_entries_range_tag(mapping, &start_index,
++				end_index, PAGECACHE_TAG_TOWRITE, PAGEVEC_SIZE,
+ 				pvec.pages, indices);
+ 
+ 		if (pvec.nr == 0)
+ 			break;
+ 
+ 		for (i = 0; i < pvec.nr; i++) {
+-			if (indices[i] > end_index) {
+-				done = true;
+-				break;
+-			}
+-
+ 			ret = dax_writeback_one(bdev, dax_dev, mapping,
+ 					indices[i], pvec.pages[i]);
+ 			if (ret < 0)
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 1dc7e54ec32a..38227e670a83 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -365,7 +365,8 @@ static inline unsigned find_get_pages_tag(struct address_space *mapping,
+ 	return find_get_pages_range_tag(mapping, index, (pgoff_t)-1, tag,
+ 					nr_pages, pages);
+ }
+-unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t *start,
++unsigned find_get_entries_range_tag(struct address_space *mapping,
++			pgoff_t *start, pgoff_t end,
+ 			int tag, unsigned int nr_entries,
+ 			struct page **entries, pgoff_t *indices);
+ 
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 3eb05c91c07a..06f82ed9096e 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -1720,9 +1720,10 @@ unsigned find_get_pages_range_tag(struct address_space *mapping, pgoff_t *index,
+ EXPORT_SYMBOL(find_get_pages_range_tag);
+ 
+ /**
+- * find_get_entries_tag - find and return entries that match @tag
++ * find_get_entries_range_tag - find and return entries that match @tag
+  * @mapping:	the address_space to search
+  * @start:	the starting page cache index
++ * @end:	the final page cache index (inclusive)
+  * @tag:	the tag index
+  * @nr_entries:	the maximum number of entries
+  * @entries:	where the resulting entries are placed
+@@ -1731,9 +1732,10 @@ EXPORT_SYMBOL(find_get_pages_range_tag);
+  * Like find_get_entries, except we only return entries which are tagged with
+  * @tag.
+  */
+-unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t *start,
+-			int tag, unsigned int nr_entries,
+-			struct page **entries, pgoff_t *indices)
++unsigned find_get_entries_range_tag(struct address_space *mapping,
++			pgoff_t *start, pgoff_t end, int tag,
++			unsigned int nr_entries, struct page **entries,
++			pgoff_t *indices)
  {
--	ASSERT(spin_is_locked(&bp->b_lock));
-+	lockdep_assert_held(&bp->b_lock);
+ 	void **slot;
+ 	unsigned int ret = 0;
+@@ -1746,6 +1748,9 @@ unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t *start,
+ 	radix_tree_for_each_tagged(slot, &mapping->page_tree,
+ 				   &iter, *start, tag) {
+ 		struct page *head, *page;
++
++		if (iter.index > end)
++			break;
+ repeat:
+ 		page = radix_tree_deref_slot(slot);
+ 		if (unlikely(!page))
+@@ -1782,17 +1787,28 @@ unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t *start,
+ export:
+ 		indices[ret] = iter.index;
+ 		entries[ret] = page;
+-		if (++ret == nr_entries)
+-			break;
++		if (++ret == nr_entries) {
++			*start = indices[ret - 1] + 1;
++			goto out;
++		}
+ 	}
+-	rcu_read_unlock();
  
- 	if (bp->b_state & XFS_BSTATE_IN_FLIGHT) {
- 		bp->b_state &= ~XFS_BSTATE_IN_FLIGHT;
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index f61c84f8..990210f 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -66,7 +66,6 @@ xfs_inode_alloc(
+-	if (ret)
+-		*start = indices[ret - 1] + 1;
++	/*
++	 * We come here when we got at @end. We take care to not overflow the
++	 * index @index as it confuses some of the callers. This breaks the
++	 * iteration when there is page at index -1 but that is already broken
++	 * anyway.
++	 */
++	if (end == (pgoff_t)-1)
++		*start = (pgoff_t)-1;
++	else
++		*start = end + 1;
++out:
++	rcu_read_unlock();
  
- 	XFS_STATS_INC(mp, vn_active);
- 	ASSERT(atomic_read(&ip->i_pincount) == 0);
--	ASSERT(!spin_is_locked(&ip->i_flags_lock));
- 	ASSERT(!xfs_isiflocked(ip));
- 	ASSERT(ip->i_ino == 0);
+ 	return ret;
+ }
+-EXPORT_SYMBOL(find_get_entries_tag);
++EXPORT_SYMBOL(find_get_entries_range_tag);
  
-@@ -190,7 +189,7 @@ xfs_perag_set_reclaim_tag(
- {
- 	struct xfs_mount	*mp = pag->pag_mount;
- 
--	ASSERT(spin_is_locked(&pag->pag_ici_lock));
-+	lockdep_assert_held(&pag->pag_ici_lock);
- 	if (pag->pag_ici_reclaimable++)
- 		return;
- 
-@@ -212,7 +211,7 @@ xfs_perag_clear_reclaim_tag(
- {
- 	struct xfs_mount	*mp = pag->pag_mount;
- 
--	ASSERT(spin_is_locked(&pag->pag_ici_lock));
-+	lockdep_assert_held(&pag->pag_ici_lock);
- 	if (--pag->pag_ici_reclaimable)
- 		return;
- 
+ /*
+  * CD/DVDs are error prone. When a medium error occurs, the driver may fail
 -- 
-2.7.5
+2.12.3
 
