@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50903 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50782 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751675AbdFAJdW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1751671AbdFAJdW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 1 Jun 2017 05:33:22 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 31/35] shmem: Convert to pagevec_lookup_entries_range()
-Date: Thu,  1 Jun 2017 11:32:41 +0200
-Message-Id: <20170601093245.29238-32-jack@suse.cz>
+Subject: [PATCH 27/35] shmem: Use pagevec_lookup() in shmem_unlock_mapping()
+Date: Thu,  1 Jun 2017 11:32:37 +0200
+Message-Id: <20170601093245.29238-28-jack@suse.cz>
 In-Reply-To: <20170601093245.29238-1-jack@suse.cz>
 References: <20170601093245.29238-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,83 +15,47 @@ List-Id: xfs
 To: linux-mm@kvack.org
 Cc: Hugh Dickins <hughd@google.com>, David Howells <dhowells@redhat.com>, linux-afs@lists.infradead.org, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, tytso@mit.edu, linux-ext4@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, "Yan, Zheng" <zyan@redhat.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Nadia Yvette Chambers <nyc@holomorphy.com>, Jan Kara <jack@suse.cz>
 
-Convert radix tree scanners to use pagevec_lookup_entries_range() and
-find_get_entries_range() since they all want only entries from given
-range.
+The comment about find_get_pages() returning if it finds a row of swap
+entries seems to be stale. Use pagevec_lookup() in
+shmem_unlock_mapping() to simplify the code.
 
 CC: Hugh Dickins <hughd@google.com>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- mm/shmem.c | 23 +++++++----------------
- 1 file changed, 7 insertions(+), 16 deletions(-)
+ mm/shmem.c | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
 
 diff --git a/mm/shmem.c b/mm/shmem.c
-index f9c4afbdd70c..e5ea044aae24 100644
+index e67d6ba4e98e..a614a9cfb58c 100644
 --- a/mm/shmem.c
 +++ b/mm/shmem.c
-@@ -768,16 +768,12 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
+@@ -729,24 +729,14 @@ unsigned long shmem_swap_usage(struct vm_area_struct *vma)
+ void shmem_unlock_mapping(struct address_space *mapping)
+ {
+ 	struct pagevec pvec;
+-	pgoff_t indices[PAGEVEC_SIZE];
+ 	pgoff_t index = 0;
+ 
  	pagevec_init(&pvec, 0);
- 	index = start;
- 	while (index < end) {
--		if (!pagevec_lookup_entries(&pvec, mapping, &index,
--				min(end - index, (pgoff_t)PAGEVEC_SIZE),
--				indices))
-+		if (!pagevec_lookup_entries_range(&pvec, mapping, &index,
-+				end - 1, PAGEVEC_SIZE, indices))
- 			break;
- 		for (i = 0; i < pagevec_count(&pvec); i++) {
- 			struct page *page = pvec.pages[i];
- 
--			if (indices[i] >= end)
--				break;
--
- 			if (radix_tree_exceptional_entry(page)) {
- 				if (unfalloc)
- 					continue;
-@@ -860,9 +856,8 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
- 
+ 	/*
+ 	 * Minor point, but we might as well stop if someone else SHM_LOCKs it.
+ 	 */
+-	while (!mapping_unevictable(mapping)) {
+-		/*
+-		 * Avoid pagevec_lookup(): find_get_pages() returns 0 as if it
+-		 * has finished, if it hits a row of PAGEVEC_SIZE swap entries.
+-		 */
+-		pvec.nr = find_get_entries(mapping, index,
+-					   PAGEVEC_SIZE, pvec.pages, indices);
+-		if (!pvec.nr)
+-			break;
+-		index = indices[pvec.nr - 1] + 1;
+-		pagevec_remove_exceptionals(&pvec);
++	while (!mapping_unevictable(mapping) &&
++			pagevec_lookup(&pvec, mapping, &index)) {
+ 		check_move_unevictable_pages(pvec.pages, pvec.nr);
+ 		pagevec_release(&pvec);
  		cond_resched();
- 
--		if (!pagevec_lookup_entries(&pvec, mapping, &index,
--				min(end - index, (pgoff_t)PAGEVEC_SIZE),
--				indices)) {
-+		if (!pagevec_lookup_entries_range(&pvec, mapping, &index,
-+				end - 1, PAGEVEC_SIZE, indices)) {
- 			/* If all gone or hole-punch or unfalloc, we're done */
- 			if (lookup_start == start || end != -1)
- 				break;
-@@ -873,9 +868,6 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
- 		for (i = 0; i < pagevec_count(&pvec); i++) {
- 			struct page *page = pvec.pages[i];
- 
--			if (indices[i] >= end)
--				break;
--
- 			if (radix_tree_exceptional_entry(page)) {
- 				if (unfalloc)
- 					continue;
-@@ -2494,9 +2486,9 @@ static pgoff_t shmem_seek_hole_data(struct address_space *mapping,
- 
- 	pagevec_init(&pvec, 0);
- 	pvec.nr = 1;		/* start small: we may be there already */
--	while (!done) {
-+	while (!done && index < end) {
- 		last = index;
--		pvec.nr = find_get_entries(mapping, &index,
-+		pvec.nr = find_get_entries_range(mapping, &index, end - 1,
- 					pvec.nr, pvec.pages, indices);
- 		if (!pvec.nr) {
- 			if (whence == SEEK_DATA)
-@@ -2516,8 +2508,7 @@ static pgoff_t shmem_seek_hole_data(struct address_space *mapping,
- 				if (!PageUptodate(page))
- 					page = NULL;
- 			}
--			if (last >= end ||
--			    (page && whence == SEEK_DATA) ||
-+			if ((page && whence == SEEK_DATA) ||
- 			    (!page && whence == SEEK_HOLE)) {
- 				done = true;
- 				break;
 -- 
 2.12.3
 
