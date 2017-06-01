@@ -1,58 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52816 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751047AbdFAH3E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Jun 2017 03:29:04 -0400
-Date: Thu, 1 Jun 2017 15:29:02 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 0/6] xfstests: remove most IRIX-specific code
-Message-ID: <20170601072902.GY23805@eguan.usersys.redhat.com>
-References: <20170531223655.130613-1-ebiggers3@gmail.com>
- <20170601031235.GV23805@eguan.usersys.redhat.com>
- <20170601032904.GA1083@zzz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170601032904.GA1083@zzz>
+Received: from mx2.suse.de ([195.135.220.15]:50851 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751673AbdFAJdW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Jun 2017 05:33:22 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 34/35] mm: Make find_get_entries_tag() update index
+Date: Thu,  1 Jun 2017 11:32:44 +0200
+Message-Id: <20170601093245.29238-35-jack@suse.cz>
+In-Reply-To: <20170601093245.29238-1-jack@suse.cz>
+References: <20170601093245.29238-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Biggers <ebiggers3@gmail.com>
-Cc: fstests@vger.kernel.org, Eric Biggers <ebiggers@google.com>, linux-xfs@vger.kernel.org
+To: linux-mm@kvack.org
+Cc: Hugh Dickins <hughd@google.com>, David Howells <dhowells@redhat.com>, linux-afs@lists.infradead.org, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, tytso@mit.edu, linux-ext4@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, "Yan, Zheng" <zyan@redhat.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Nadia Yvette Chambers <nyc@holomorphy.com>, Jan Kara <jack@suse.cz>
 
-On Wed, May 31, 2017 at 08:29:04PM -0700, Eric Biggers wrote:
-> On Thu, Jun 01, 2017 at 11:12:35AM +0800, Eryu Guan wrote:
-> > On Wed, May 31, 2017 at 03:36:49PM -0700, Eric Biggers wrote:
-> > > From: Eric Biggers <ebiggers@google.com>
-> > > 
-> > > For some time xfstests has de facto not supported IRIX anymore.  The
-> > > final release of IRIX was over 10 years ago and it seems no one has
-> > > been running the latest xfstests releases on any IRIX system, as at
-> > > the very least xfstests now assumes the existence of some util-linux
-> > > binaries.  There are probably other examples of this bitrot too.
-> > > 
-> > > Therefore, this patchset simplifies things removing IRIX support from
-> > > the xfstests tests, build system, and documentation.
-> > > 
-> > > It focuses on making larger, more obvious cleanups.  Of course,
-> > > there's more to do if people want to spend more time going through
-> > > some of the more intricate details, especially XFS-specific details.
-> > > But this should be a good start.
-> > 
-> > Thanks a lot for doing this!! I didn't see patch #2 and #3 hit the list
-> > (too big for the list?). Do you have a public git repo that I can pull
-> > from?
-> > 
-> 
-> Ick, I guess the size limit must be 100K.  I've pushed the series out to
-> repository https://github.com/ebiggers/xfstests, branch "remove_irix_support".
-> 
-> Note that the two biggest patches can be more easily reviewed with
-> 'git diff -D', since that abbreviates the file deletions.
+Make find_get_entries_tag() update 'start' to index the next page for
+iteration.
 
-Thanks!
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c                | 3 +--
+ include/linux/pagemap.h | 2 +-
+ mm/filemap.c            | 8 ++++++--
+ 3 files changed, 8 insertions(+), 5 deletions(-)
 
-I also cc'ed linux-xfs list for review, as IRIX support is mainly for
-XFS.
+diff --git a/fs/dax.c b/fs/dax.c
+index c204445a69b0..4b295c544fd4 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -841,7 +841,7 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ 
+ 	pagevec_init(&pvec, 0);
+ 	while (!done) {
+-		pvec.nr = find_get_entries_tag(mapping, start_index,
++		pvec.nr = find_get_entries_tag(mapping, &start_index,
+ 				PAGECACHE_TAG_TOWRITE, PAGEVEC_SIZE,
+ 				pvec.pages, indices);
+ 
+@@ -859,7 +859,6 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ 			if (ret < 0)
+ 				goto out;
+ 		}
+-		start_index = indices[pvec.nr - 1] + 1;
+ 	}
+ out:
+ 	put_dax(dax_dev);
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index df128a56f44b..1dc7e54ec32a 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -365,7 +365,7 @@ static inline unsigned find_get_pages_tag(struct address_space *mapping,
+ 	return find_get_pages_range_tag(mapping, index, (pgoff_t)-1, tag,
+ 					nr_pages, pages);
+ }
+-unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
++unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t *start,
+ 			int tag, unsigned int nr_entries,
+ 			struct page **entries, pgoff_t *indices);
+ 
+diff --git a/mm/filemap.c b/mm/filemap.c
+index e55100459710..3eb05c91c07a 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -1731,7 +1731,7 @@ EXPORT_SYMBOL(find_get_pages_range_tag);
+  * Like find_get_entries, except we only return entries which are tagged with
+  * @tag.
+  */
+-unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
++unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t *start,
+ 			int tag, unsigned int nr_entries,
+ 			struct page **entries, pgoff_t *indices)
+ {
+@@ -1744,7 +1744,7 @@ unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
+ 
+ 	rcu_read_lock();
+ 	radix_tree_for_each_tagged(slot, &mapping->page_tree,
+-				   &iter, start, tag) {
++				   &iter, *start, tag) {
+ 		struct page *head, *page;
+ repeat:
+ 		page = radix_tree_deref_slot(slot);
+@@ -1786,6 +1786,10 @@ unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
+ 			break;
+ 	}
+ 	rcu_read_unlock();
++
++	if (ret)
++		*start = indices[ret - 1] + 1;
++
+ 	return ret;
+ }
+ EXPORT_SYMBOL(find_get_entries_tag);
+-- 
+2.12.3
 
-Eryu
