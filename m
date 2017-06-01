@@ -1,97 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50851 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751673AbdFAJdW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Jun 2017 05:33:22 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 34/35] mm: Make find_get_entries_tag() update index
-Date: Thu,  1 Jun 2017 11:32:44 +0200
-Message-Id: <20170601093245.29238-35-jack@suse.cz>
-In-Reply-To: <20170601093245.29238-1-jack@suse.cz>
-References: <20170601093245.29238-1-jack@suse.cz>
+Received: from aserp1040.oracle.com ([141.146.126.69]:40445 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751646AbdFAPtD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2017 11:49:03 -0400
+Date: Thu, 1 Jun 2017 08:48:49 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] xfs: fix installation for extended output files
+Message-ID: <20170601154849.GH4519@birch.djwong.org>
+References: <20170601025327.GU23805@eguan.usersys.redhat.com>
+ <1496286073-23298-1-git-send-email-yangx.jy@cn.fujitsu.com>
+ <20170601040733.GW23805@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170601040733.GW23805@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-mm@kvack.org
-Cc: Hugh Dickins <hughd@google.com>, David Howells <dhowells@redhat.com>, linux-afs@lists.infradead.org, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, tytso@mit.edu, linux-ext4@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, "Yan, Zheng" <zyan@redhat.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Nadia Yvette Chambers <nyc@holomorphy.com>, Jan Kara <jack@suse.cz>
+To: Eryu Guan <eguan@redhat.com>
+Cc: Xiao Yang <yangx.jy@cn.fujitsu.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Make find_get_entries_tag() update 'start' to index the next page for
-iteration.
+On Thu, Jun 01, 2017 at 12:07:33PM +0800, Eryu Guan wrote:
+> On Thu, Jun 01, 2017 at 11:01:13AM +0800, Xiao Yang wrote:
+> > The installation of these extended output files are skipped
+> > because they aren't matched by xfstests.  So we rename them
+> > to adapt building rules.
+> > 
+> > Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+> 
+> This patch is 2.4M in size, no wonder it didn't hit the list..
+> 
+> (cc linux-xfs list for these xfs specific tests)
+> 
+> > ---
+> >  tests/xfs/018                         |    8 +-
+> >  tests/xfs/018.op.irix                 | 5628 ---------------------------------
+> >  tests/xfs/018.op.linux                | 4714 ---------------------------
+> >  tests/xfs/018.out.irix                | 5628 +++++++++++++++++++++++++++++++++
+> >  tests/xfs/018.out.linux               | 4714 +++++++++++++++++++++++++++
+> >  tests/xfs/018.out.trans_buf           | 1821 +++++++++++
+> >  tests/xfs/018.out.trans_inode         | 2609 +++++++++++++++
+> >  tests/xfs/018.trans_buf               | 1821 -----------
+> >  tests/xfs/018.trans_inode             | 2609 ---------------
+> 
+> xfs/018 081 and 082 are all marked as 'deprecated', I'm wondering if we
+> can just remove them.
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/dax.c                | 3 +--
- include/linux/pagemap.h | 2 +-
- mm/filemap.c            | 8 ++++++--
- 3 files changed, 8 insertions(+), 5 deletions(-)
+I have little good to say about these -- diffing logprint outputs will
+break every time we add new log item types (which we have) so these are
+brittle.
 
-diff --git a/fs/dax.c b/fs/dax.c
-index c204445a69b0..4b295c544fd4 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -841,7 +841,7 @@ int dax_writeback_mapping_range(struct address_space *mapping,
- 
- 	pagevec_init(&pvec, 0);
- 	while (!done) {
--		pvec.nr = find_get_entries_tag(mapping, start_index,
-+		pvec.nr = find_get_entries_tag(mapping, &start_index,
- 				PAGECACHE_TAG_TOWRITE, PAGEVEC_SIZE,
- 				pvec.pages, indices);
- 
-@@ -859,7 +859,6 @@ int dax_writeback_mapping_range(struct address_space *mapping,
- 			if (ret < 0)
- 				goto out;
- 		}
--		start_index = indices[pvec.nr - 1] + 1;
- 	}
- out:
- 	put_dax(dax_dev);
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index df128a56f44b..1dc7e54ec32a 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -365,7 +365,7 @@ static inline unsigned find_get_pages_tag(struct address_space *mapping,
- 	return find_get_pages_range_tag(mapping, index, (pgoff_t)-1, tag,
- 					nr_pages, pages);
- }
--unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
-+unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t *start,
- 			int tag, unsigned int nr_entries,
- 			struct page **entries, pgoff_t *indices);
- 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index e55100459710..3eb05c91c07a 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -1731,7 +1731,7 @@ EXPORT_SYMBOL(find_get_pages_range_tag);
-  * Like find_get_entries, except we only return entries which are tagged with
-  * @tag.
-  */
--unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
-+unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t *start,
- 			int tag, unsigned int nr_entries,
- 			struct page **entries, pgoff_t *indices)
- {
-@@ -1744,7 +1744,7 @@ unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
- 
- 	rcu_read_lock();
- 	radix_tree_for_each_tagged(slot, &mapping->page_tree,
--				   &iter, start, tag) {
-+				   &iter, *start, tag) {
- 		struct page *head, *page;
- repeat:
- 		page = radix_tree_deref_slot(slot);
-@@ -1786,6 +1786,10 @@ unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
- 			break;
- 	}
- 	rcu_read_unlock();
-+
-+	if (ret)
-+		*start = indices[ret - 1] + 1;
-+
- 	return ret;
- }
- EXPORT_SYMBOL(find_get_entries_tag);
--- 
-2.12.3
+> >  tests/xfs/040                         |    4 +-
+> >  tests/xfs/040.good                    |   16 -
+> >  tests/xfs/040.out.good                |   16 +
+> 
+> xfs/040 is doing source code diff between userspace vs kernel space, I'm
+> not sure if this is still needed. But xfs/040 requires KWORKAREA points
+> to a directory that contains both userspace and kernel code, I suspect
+> it's rarely run.
 
+It's /never/ run, because it requires dmapi.h, which doesn't exist on
+Linux, and it appears to assume the pre-libxfs-split directory layout.
+Seeing as xfsprogs ships its own "compare the libxfs code" tool now,
+I think it better to go fix it.  Patch for x/040 coming soon.
+
+> >  tests/xfs/081                         |    2 +-
+> >  tests/xfs/081.out.ugquota.trans_inode | 3091 ++++++++++++++++++
+> >  tests/xfs/081.ugquota.trans_inode     | 3091 ------------------
+> >  tests/xfs/082                         |    8 +-
+> >  tests/xfs/082.op.irix                 | 5628 ---------------------------------
+> >  tests/xfs/082.op.linux                | 4714 ---------------------------
+> >  tests/xfs/082.out.irix                | 5628 +++++++++++++++++++++++++++++++++
+> >  tests/xfs/082.out.linux               | 4714 +++++++++++++++++++++++++++
+> >  tests/xfs/082.out.trans_buf           | 1821 +++++++++++
+> >  tests/xfs/082.out.trans_inode         | 2609 +++++++++++++++
+> >  tests/xfs/082.trans_buf               | 1821 -----------
+> >  tests/xfs/082.trans_inode             | 2609 ---------------
+> >  24 files changed, 32662 insertions(+), 32662 deletions(-)
+
+Ye $deities!
+
+--D
+
+> 
+> Thanks,
+> Eryu
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
