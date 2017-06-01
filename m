@@ -1,43 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50479 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:51242 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751209AbdFAJdP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Jun 2017 05:33:15 -0400
+        id S1751054AbdFALeq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Jun 2017 07:34:46 -0400
+Date: Thu, 1 Jun 2017 13:34:34 +0200
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 03/35] ext4: Fix off-by-in in loop termination in ext4_find_unwritten_pgoff()
-Date: Thu,  1 Jun 2017 11:32:13 +0200
-Message-Id: <20170601093245.29238-4-jack@suse.cz>
-In-Reply-To: <20170601093245.29238-1-jack@suse.cz>
-References: <20170601093245.29238-1-jack@suse.cz>
+Subject: Re: [PATCH 01/35] fscache: Remove unused ->now_uncached callback
+Message-ID: <20170601113434.GC23077@quack2.suse.cz>
+References: <20170601093245.29238-2-jack@suse.cz>
+ <20170601093245.29238-1-jack@suse.cz>
+ <10376.1496312768@warthog.procyon.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <10376.1496312768@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-mm@kvack.org
-Cc: Hugh Dickins <hughd@google.com>, David Howells <dhowells@redhat.com>, linux-afs@lists.infradead.org, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, tytso@mit.edu, linux-ext4@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, "Yan, Zheng" <zyan@redhat.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Nadia Yvette Chambers <nyc@holomorphy.com>, Jan Kara <jack@suse.cz>
+To: David Howells <dhowells@redhat.com>
+Cc: Jan Kara <jack@suse.cz>, linux-mm@kvack.org, Hugh Dickins <hughd@google.com>, linux-afs@lists.infradead.org, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, tytso@mit.edu, linux-ext4@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, "Yan, Zheng" <zyan@redhat.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Nadia Yvette Chambers <nyc@holomorphy.com>
 
-There is an off-by-one error in loop termination conditions in
-ext4_find_unwritten_pgoff() since 'end' may index a page beyond end of
-desired range if 'endoff' is page aligned. It doesn't have any visible
-effects but still it is good to fix it.
+On Thu 01-06-17 11:26:08, David Howells wrote:
+> Jan Kara <jack@suse.cz> wrote:
+> 
+> > The callback doesn't ever get called. Remove it.
+> 
+> Hmmm...  I should perhaps be calling this.  I'm not sure why I never did.
+> 
+> At the moment, it doesn't strictly matter as ops on pages marked with
+> PG_fscache get ignored if the cache has suffered an I/O error or has been
+> withdrawn - but it will incur a performance penalty (the PG_fscache flag is
+> checked in the netfs before calling into fscache).
+> 
+> The downside of calling this is that when a cache is removed, fscache would go
+> through all the cookies for that cache and iterate over all the pages
+> associated with those cookies - which could cause a performance dip in the
+> system.
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/ext4/file.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+So I know nothing about fscache. If you decide these functions should stay
+in as you are going to use them soon, then I can just convert them to the
+new API as everything else. What just caught my eye and why I had a more
+detailed look is that I didn't understand that 'PAGEVEC_SIZE -
+pagevec_count(&pvec)' as a pagevec_lookup() argument since pagevec_count()
+should always return 0 at that point?
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index bbea2dccd584..2b00bf84c05b 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -474,7 +474,7 @@ static int ext4_find_unwritten_pgoff(struct inode *inode,
- 	endoff = (loff_t)end_blk << blkbits;
- 
- 	index = startoff >> PAGE_SHIFT;
--	end = endoff >> PAGE_SHIFT;
-+	end = (endoff - 1) >> PAGE_SHIFT;
- 
- 	pagevec_init(&pvec, 0);
- 	do {
+								Honza
 -- 
-2.12.3
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
