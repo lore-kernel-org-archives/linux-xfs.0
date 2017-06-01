@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50781 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50780 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751663AbdFAJdV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1751664AbdFAJdV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 1 Jun 2017 05:33:21 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 26/35] afs: Use find_get_pages_range_tag()
-Date: Thu,  1 Jun 2017 11:32:36 +0200
-Message-Id: <20170601093245.29238-27-jack@suse.cz>
+Subject: [PATCH 33/35] mm: Remove nr_entries argument from pagevec_lookup_entries{,_range}()
+Date: Thu,  1 Jun 2017 11:32:43 +0200
+Message-Id: <20170601093245.29238-34-jack@suse.cz>
 In-Reply-To: <20170601093245.29238-1-jack@suse.cz>
 References: <20170601093245.29238-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,44 +15,126 @@ List-Id: xfs
 To: linux-mm@kvack.org
 Cc: Hugh Dickins <hughd@google.com>, David Howells <dhowells@redhat.com>, linux-afs@lists.infradead.org, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, tytso@mit.edu, linux-ext4@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, "Yan, Zheng" <zyan@redhat.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Nadia Yvette Chambers <nyc@holomorphy.com>, Jan Kara <jack@suse.cz>
 
-Use find_get_pages_range_tag() in afs_writepages_region() as we are
-interested only in pages from given range. Remove unnecessary code after
-this conversion.
+All users pass PAGEVEC_SIZE as the number of entries now. Remove the
+argument.
 
-CC: David Howells <dhowells@redhat.com>
-CC: linux-afs@lists.infradead.org
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/afs/write.c | 11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+ include/linux/pagevec.h | 7 +++----
+ mm/shmem.c              | 4 ++--
+ mm/swap.c               | 6 ++----
+ mm/truncate.c           | 8 ++++----
+ 4 files changed, 11 insertions(+), 14 deletions(-)
 
-diff --git a/fs/afs/write.c b/fs/afs/write.c
-index 2d2fccd5044b..630f2a42fae7 100644
---- a/fs/afs/write.c
-+++ b/fs/afs/write.c
-@@ -497,20 +497,13 @@ static int afs_writepages_region(struct address_space *mapping,
- 	_enter(",,%lx,%lx,", index, end);
- 
- 	do {
--		n = find_get_pages_tag(mapping, &index, PAGECACHE_TAG_DIRTY,
--				       1, &page);
-+		n = find_get_pages_range_tag(mapping, &index, end,
-+					PAGECACHE_TAG_DIRTY, 1, &page);
- 		if (!n)
+diff --git a/include/linux/pagevec.h b/include/linux/pagevec.h
+index 93308689d6a7..f765fc5eca31 100644
+--- a/include/linux/pagevec.h
++++ b/include/linux/pagevec.h
+@@ -25,14 +25,13 @@ void __pagevec_lru_add(struct pagevec *pvec);
+ unsigned pagevec_lookup_entries_range(struct pagevec *pvec,
+ 				struct address_space *mapping,
+ 				pgoff_t *start, pgoff_t end,
+-				unsigned nr_entries, pgoff_t *indices);
++				pgoff_t *indices);
+ static inline unsigned pagevec_lookup_entries(struct pagevec *pvec,
+ 				struct address_space *mapping,
+-				pgoff_t *start, unsigned nr_entries,
+-				pgoff_t *indices)
++				pgoff_t *start, pgoff_t *indices)
+ {
+ 	return pagevec_lookup_entries_range(pvec, mapping, start, (pgoff_t)-1,
+-					    nr_entries, indices);
++					    indices);
+ }
+ void pagevec_remove_exceptionals(struct pagevec *pvec);
+ unsigned pagevec_lookup_range(struct pagevec *pvec,
+diff --git a/mm/shmem.c b/mm/shmem.c
+index e5ea044aae24..dd8144230ecf 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -769,7 +769,7 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
+ 	index = start;
+ 	while (index < end) {
+ 		if (!pagevec_lookup_entries_range(&pvec, mapping, &index,
+-				end - 1, PAGEVEC_SIZE, indices))
++				end - 1, indices))
  			break;
+ 		for (i = 0; i < pagevec_count(&pvec); i++) {
+ 			struct page *page = pvec.pages[i];
+@@ -857,7 +857,7 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
+ 		cond_resched();
  
- 		_debug("wback %lx", page->index);
+ 		if (!pagevec_lookup_entries_range(&pvec, mapping, &index,
+-				end - 1, PAGEVEC_SIZE, indices)) {
++				end - 1, indices)) {
+ 			/* If all gone or hole-punch or unfalloc, we're done */
+ 			if (lookup_start == start || end != -1)
+ 				break;
+diff --git a/mm/swap.c b/mm/swap.c
+index 88c7eb4e97db..1640bbb34e59 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -894,7 +894,6 @@ EXPORT_SYMBOL(__pagevec_lru_add);
+  * @mapping:	The address_space to search
+  * @start:	The starting entry index
+  * @end:	The final entry index (inclusive)
+- * @nr_entries:	The maximum number of entries
+  * @indices:	The cache indices corresponding to the entries in @pvec
+  *
+  * pagevec_lookup_entries() will search for and return a group of up
+@@ -911,10 +910,9 @@ EXPORT_SYMBOL(__pagevec_lru_add);
+  */
+ unsigned pagevec_lookup_entries_range(struct pagevec *pvec,
+ 				struct address_space *mapping,
+-				pgoff_t *start, pgoff_t end, unsigned nr_pages,
+-				pgoff_t *indices)
++				pgoff_t *start, pgoff_t end, pgoff_t *indices)
+ {
+-	pvec->nr = find_get_entries_range(mapping, start, end, nr_pages,
++	pvec->nr = find_get_entries_range(mapping, start, end, PAGEVEC_SIZE,
+ 					  pvec->pages, indices);
+ 	return pagevec_count(pvec);
+ }
+diff --git a/mm/truncate.c b/mm/truncate.c
+index 31d5c5f3da30..d35531d83cb3 100644
+--- a/mm/truncate.c
++++ b/mm/truncate.c
+@@ -290,7 +290,7 @@ void truncate_inode_pages_range(struct address_space *mapping,
+ 	pagevec_init(&pvec, 0);
+ 	index = start;
+ 	while (index < end && pagevec_lookup_entries_range(&pvec, mapping,
+-			&index, end - 1, PAGEVEC_SIZE, indices)) {
++			&index, end - 1, indices)) {
+ 		for (i = 0; i < pagevec_count(&pvec); i++) {
+ 			struct page *page = pvec.pages[i];
  
--		if (page->index > end) {
--			*_next = index;
--			put_page(page);
--			_leave(" = 0 [%lx]", *_next);
--			return 0;
--		}
--
- 		/* at this point we hold neither mapping->tree_lock nor lock on
- 		 * the page itself: the page may be truncated or invalidated
- 		 * (changing page->mapping to NULL), or even swizzled back from
+@@ -354,7 +354,7 @@ void truncate_inode_pages_range(struct address_space *mapping,
+ 
+ 		cond_resched();
+ 		if (!pagevec_lookup_entries_range(&pvec, mapping, &index,
+-					end - 1, PAGEVEC_SIZE, indices)) {
++					end - 1, indices)) {
+ 			/* If all gone from start onwards, we're done */
+ 			if (lookup_start == start)
+ 				break;
+@@ -476,7 +476,7 @@ unsigned long invalidate_mapping_pages(struct address_space *mapping,
+ 
+ 	pagevec_init(&pvec, 0);
+ 	while (index <= end && pagevec_lookup_entries_range(&pvec, mapping,
+-			&index, end, PAGEVEC_SIZE, indices)) {
++			&index, end, indices)) {
+ 		for (i = 0; i < pagevec_count(&pvec); i++) {
+ 			struct page *page = pvec.pages[i];
+ 
+@@ -601,7 +601,7 @@ int invalidate_inode_pages2_range(struct address_space *mapping,
+ 	pagevec_init(&pvec, 0);
+ 	index = start;
+ 	while (index <= end && pagevec_lookup_entries_range(&pvec, mapping,
+-			&index, end, PAGEVEC_SIZE, indices)) {
++			&index, end, indices)) {
+ 		for (i = 0; i < pagevec_count(&pvec); i++) {
+ 			struct page *page = pvec.pages[i];
+ 
 -- 
 2.12.3
 
