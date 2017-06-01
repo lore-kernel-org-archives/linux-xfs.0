@@ -1,107 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39660 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753400AbdFPSO6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 14:14:58 -0400
-Subject: Re: memory allocation deadlock
-References: <CAHeTc0YizqSC55utPpe+Rsupv+G1qd2Es2a-6V3PFtf8NxnfOQ@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d2778fc2-8363-187e-1ba2-ecdc8ced35b7@sandeen.net>
-Date: Fri, 16 Jun 2017 13:14:56 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAHeTc0YizqSC55utPpe+Rsupv+G1qd2Es2a-6V3PFtf8NxnfOQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from shards.monkeyblade.net ([184.105.139.130]:60662 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751050AbdFAVoV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2017 17:44:21 -0400
+Date: Thu, 01 Jun 2017 17:44:19 -0400 (EDT)
+Message-Id: <20170601.174419.2151404855471358626.davem@davemloft.net>
+Subject: Re: [sparc64] crc32c misbehave
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170531.124916.1406665885250072302.davem@davemloft.net>
+References: <ccdf645b-e22f-ef71-53df-993cc45869c0@sandeen.net>
+        <260a016f-0f17-e286-ceca-83b6977f2fc0@sandeen.net>
+        <20170531.124916.1406665885250072302.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Matheson <bmath@paperspace.com>, linux-xfs@vger.kernel.org
+To: sandeen@sandeen.net
+Cc: matorola@gmail.com, sparclinux@vger.kernel.org, linux-xfs@vger.kernel.org
 
+From: David Miller <davem@davemloft.net>
+Date: Wed, 31 May 2017 12:49:16 -0400 (EDT)
 
-On 6/16/17 12:10 PM, Brian Matheson wrote:
-> Hi all,
+> From: Eric Sandeen <sandeen@sandeen.net>
+> Date: Wed, 31 May 2017 11:31:10 -0500
 > 
-> I'm writing to get some information about a problem we're seeing on
-> our nfs servers.  We're using XFS on an LVM volume backed by an LSI
-> RAID card (raid 6, with 24 SSDs).  We're nfs exporting the volume to a
-> number of hypervisors.  We're seeing messages like the following:
+>> On 5/31/17 11:19 AM, Eric Sandeen wrote:
+>>> On 5/31/17 10:53 AM, David Miller wrote:
+>>>> From: Anatoly Pugachev <matorola@gmail.com>
+>>>> Date: Wed, 31 May 2017 14:56:52 +0300
+>>>>
+>>>>> While debugging occasional crc32c checksum errors with xfs disk reads on
+>>>>> sparc64 (T5 [sun4v] 3.6 GHz CPU ldom, debian unstable/sid), Eric have found
+>>>>> that crc32c sometimes returns wrong checksum for data. Eric made a simple
+>>>>> test kernel module (included), which produce the following results on my
+>>>>> sparc64 machines:
+>>> 
+>>> cc: linux-xfs, because this problem cropped up on xfs/sparc.
+>> 
+>> FWIW, the testcase (module which does
+>> 
+>> 	crc = crc32c(CRC_SEED, data, 512);
+>> 
+>> 1 million times in a loop on the same data, and printk's if
+>> the result ever changes) does not fail on x86_64 or ARM
+>> (well, not after a gcc bug was fixed on ARM ...)
 > 
-> Jun 16 09:22:30 ny2r3s1 kernel: [15259176.032579] XFS: nfsd(2301)
-> possible memory allocation deadlock size 68256 in kmem_alloc
-> (mode:0x2400240)
+> Is the machine doing things that would cause crc32c() operations in
+> interrupts (SCTP protocol traffic) or on other cpus?
 > 
-> These messages are followed by nfsd failures as indicated by log messages like:
-> 
-> Jun 16 09:22:39 ny2r3s1 kernel: [15259184.933311] nfsd: peername
-> failed (err 107)!
-> 
-> Dropping the caches on the box fixes the problem immediately.  Based
-> on a little research, we thought that the problem could be occurring
-> due to file fragmentation, so we're running xfs_fsr periodically to
-> defragment.  At the moment we're also periodically dropping the cache
-> in an attempt to prevent the problem from occurring.
+> That's the danger in comparing other machines, the context and what's
+> running on them is different.
 
-A better approach might be to set extent size hints on the fragmented
-files in question, to avoid the fragmentation in the first place.
-
-drop caches is a pretty big hammer, and xfs_fsr can have other side
-effects w.r.t. filesystem aging and freespace fragmentation.
-
-How badly fragmented were the files in question?
-
--Eric
-
-> Any help appreciated, and if this query belongs on a different mailing
-> list, please let me know.
-> 
-> 
-> The systems are running ubuntu 14.04 with a 4.4.0 kernel (Linux
-> ny2r3s1 4.4.0-53-generic #74~14.04.1-Ubuntu SMP Fri Dec 2 03:43:31 UTC
-> 2016 x86_64 x86_64 x86_64 GNU/Linux).  xfs_repair is version 3.1.9.
-> They have 64G of RAM, most of which is used by cache, and 12 cpu
-> cores.  As mentioned we're using ssds connected to an lsi raid card.
-> xfs_info reports:
-> 
-> meta-data=/dev/mapper/VMSTORAGE_SSD-XFS_VHD isize=256    agcount=62,
-> agsize=167772096 blks
->          =                       sectsz=512   attr=2
-> data     =                       bsize=4096   blocks=10311515136, imaxpct=5
->          =                       sunit=64     swidth=256 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=521728, version=2
->          =                       sectsz=512   sunit=64 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> At the moment, slabtop reports this:
->  Active / Total Objects (% used)    : 5543699 / 5668921 (97.8%)
->  Active / Total Slabs (% used)      : 157822 / 157822 (100.0%)
->  Active / Total Caches (% used)     : 77 / 144 (53.5%)
->  Active / Total Size (% used)       : 1110436.20K / 1259304.73K (88.2%)
->  Minimum / Average / Maximum Object : 0.01K / 0.22K / 18.50K
-> 
->   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
-> 4382508 4382508 100%    0.10K 112372       39    449488K buffer_head
-> 348152 348152 100%    0.57K  12434       28    198944K radix_tree_node
-> 116880  83796  71%    4.00K  14610        8    467520K kmalloc-4096
-> 114492  88855  77%    0.09K   2726       42     10904K kmalloc-96
-> 108640  86238  79%    0.12K   3395       32     13580K kmalloc-128
->  51680  51680 100%    0.12K   1520       34      6080K kernfs_node_cache
->  49536  29011  58%    0.06K    774       64      3096K kmalloc-64
->  46464  46214  99%    0.03K    363      128      1452K kmalloc-32
->  44394  34860  78%    0.19K   1057       42      8456K dentry
->  40188  38679  96%    0.04K    394      102      1576K ext4_extent_status
->  33150  31649  95%    0.05K    390       85      1560K ftrace_event_field
->  26207  25842  98%    0.05K    359       73      1436K Acpi-Parse
->  23142  20528  88%    0.38K    551       42      8816K mnt_cache
->  21756  21515  98%    0.19K    518       42      4144K kmalloc-192
->  20160  20160 100%    0.07K    360       56      1440K Acpi-Operand
->  19800  19800 100%    0.18K    450       44      3600K xfs_log_ticket
-> 
-> Thanks much,
-> Brian Matheson
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Ok, I can reproduce this bug on my systems.  I'll see if I can figure out
+what is going on.
