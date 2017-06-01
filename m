@@ -1,177 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50851 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50490 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751636AbdFAJdU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Jun 2017 05:33:20 -0400
+        id S1751380AbdFAJdQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Jun 2017 05:33:16 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 13/35] mm: Remove nr_pages argument from pagevec_lookup{,_range}()
-Date: Thu,  1 Jun 2017 11:32:23 +0200
-Message-Id: <20170601093245.29238-14-jack@suse.cz>
+Subject: [PATCH 02/35] ext4: Fix SEEK_HOLE
+Date: Thu,  1 Jun 2017 11:32:12 +0200
+Message-Id: <20170601093245.29238-3-jack@suse.cz>
 In-Reply-To: <20170601093245.29238-1-jack@suse.cz>
 References: <20170601093245.29238-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-mm@kvack.org
-Cc: Hugh Dickins <hughd@google.com>, David Howells <dhowells@redhat.com>, linux-afs@lists.infradead.org, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, tytso@mit.edu, linux-ext4@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, "Yan, Zheng" <zyan@redhat.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Nadia Yvette Chambers <nyc@holomorphy.com>, Jan Kara <jack@suse.cz>
+Cc: Hugh Dickins <hughd@google.com>, David Howells <dhowells@redhat.com>, linux-afs@lists.infradead.org, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, tytso@mit.edu, linux-ext4@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, "Yan, Zheng" <zyan@redhat.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Nadia Yvette Chambers <nyc@holomorphy.com>, Jan Kara <jack@suse.cz>, stable@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>
 
-All users of pagevec_lookup() and pagevec_lookup_range() now pass
-PAGEVEC_SIZE as a desired number of pages. Just drop the argument.
+Currently, SEEK_HOLE implementation in ext4 may both return that there's
+a hole at some offset although that offset already has data and skip
+some holes during a search for the next hole. The first problem is
+demostrated by:
 
+xfs_io -c "falloc 0 256k" -c "pwrite 0 56k" -c "seek -h 0" file
+wrote 57344/57344 bytes at offset 0
+56 KiB, 14 ops; 0.0000 sec (2.054 GiB/sec and 538461.5385 ops/sec)
+Whence	Result
+HOLE	0
+
+Where we can see that SEEK_HOLE wrongly returned offset 0 as containing
+a hole although we have written data there. The second problem can be
+demonstrated by:
+
+xfs_io -c "falloc 0 256k" -c "pwrite 0 56k" -c "pwrite 128k 8k"
+       -c "seek -h 0" file
+
+wrote 57344/57344 bytes at offset 0
+56 KiB, 14 ops; 0.0000 sec (1.978 GiB/sec and 518518.5185 ops/sec)
+wrote 8192/8192 bytes at offset 131072
+8 KiB, 2 ops; 0.0000 sec (2 GiB/sec and 500000.0000 ops/sec)
+Whence	Result
+HOLE	139264
+
+Where we can see that hole at offsets 56k..128k has been ignored by the
+SEEK_HOLE call.
+
+The underlying problem is in the ext4_find_unwritten_pgoff() which is
+just buggy. In some cases it fails to update returned offset when it
+finds a hole (when no pages are found or when the first found page has
+higher index than expected), in some cases conditions for detecting hole
+are just missing (we fail to detect a situation where indices of
+returned pages are not contiguous).
+
+Fix ext4_find_unwritten_pgoff() to properly detect non-contiguous page
+indices and also handle all cases where we got less pages then expected
+in one place and handle it properly there.
+
+CC: stable@vger.kernel.org
+Fixes: c8c0df241cc2719b1262e627f999638411934f60
+CC: Zheng Liu <wenqing.lz@taobao.com>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/buffer.c             | 3 +--
- fs/ext4/file.c          | 2 +-
- fs/ext4/inode.c         | 5 ++---
- fs/fscache/page.c       | 2 +-
- fs/hugetlbfs/inode.c    | 3 +--
- fs/nilfs2/page.c        | 2 +-
- fs/xfs/xfs_file.c       | 2 +-
- include/linux/pagevec.h | 7 +++----
- mm/swap.c               | 5 ++---
- 9 files changed, 13 insertions(+), 18 deletions(-)
+ fs/ext4/file.c | 50 ++++++++++++++------------------------------------
+ 1 file changed, 14 insertions(+), 36 deletions(-)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index d63b22e50f38..89605cb42a55 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -1638,8 +1638,7 @@ void clean_bdev_aliases(struct block_device *bdev, sector_t block, sector_t len)
- 
- 	end = (block + len - 1) >> (PAGE_SHIFT - bd_inode->i_blkbits);
- 	pagevec_init(&pvec, 0);
--	while (pagevec_lookup_range(&pvec, bd_mapping, &index, end,
--				    PAGEVEC_SIZE)) {
-+	while (pagevec_lookup_range(&pvec, bd_mapping, &index, end)) {
- 		count = pagevec_count(&pvec);
- 		for (i = 0; i < count; i++) {
- 			struct page *page = pvec.pages[i];
 diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 6821070a388b..2d9a198026e5 100644
+index 831fd6beebf0..bbea2dccd584 100644
 --- a/fs/ext4/file.c
 +++ b/fs/ext4/file.c
-@@ -482,7 +482,7 @@ static int ext4_find_unwritten_pgoff(struct inode *inode,
- 		unsigned long nr_pages;
- 
- 		nr_pages = pagevec_lookup_range(&pvec, inode->i_mapping,
--					&index, end, PAGEVEC_SIZE);
-+					&index, end);
- 		if (nr_pages == 0)
+@@ -484,47 +484,27 @@ static int ext4_find_unwritten_pgoff(struct inode *inode,
+ 		num = min_t(pgoff_t, end - index, PAGEVEC_SIZE);
+ 		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
+ 					  (pgoff_t)num);
+-		if (nr_pages == 0) {
+-			if (whence == SEEK_DATA)
+-				break;
+-
+-			BUG_ON(whence != SEEK_HOLE);
+-			/*
+-			 * If this is the first time to go into the loop and
+-			 * offset is not beyond the end offset, it will be a
+-			 * hole at this offset
+-			 */
+-			if (lastoff == startoff || lastoff < endoff)
+-				found = 1;
+-			break;
+-		}
+-
+-		/*
+-		 * If this is the first time to go into the loop and
+-		 * offset is smaller than the first page offset, it will be a
+-		 * hole at this offset.
+-		 */
+-		if (lastoff == startoff && whence == SEEK_HOLE &&
+-		    lastoff < page_offset(pvec.pages[0])) {
+-			found = 1;
++		if (nr_pages == 0)
  			break;
+-		}
  
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 59d82530d269..ace4bb9073d8 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -1670,8 +1670,7 @@ static void mpage_release_unused_pages(struct mpage_da_data *mpd,
- 
- 	pagevec_init(&pvec, 0);
- 	while (index <= end) {
--		nr_pages = pagevec_lookup_range(&pvec, mapping, &index, end,
--						PAGEVEC_SIZE);
-+		nr_pages = pagevec_lookup_range(&pvec, mapping, &index, end);
- 		if (nr_pages == 0)
- 			break;
  		for (i = 0; i < nr_pages; i++) {
-@@ -2284,7 +2283,7 @@ static int mpage_map_and_submit_buffers(struct mpage_da_data *mpd)
- 	pagevec_init(&pvec, 0);
- 	while (start <= end) {
- 		nr_pages = pagevec_lookup_range(&pvec, inode->i_mapping,
--						&start, end, PAGEVEC_SIZE);
-+						&start, end);
- 		if (nr_pages == 0)
- 			break;
- 		for (i = 0; i < nr_pages; i++) {
-diff --git a/fs/fscache/page.c b/fs/fscache/page.c
-index 83018861dcd2..0ad3fd3ad0b4 100644
---- a/fs/fscache/page.c
-+++ b/fs/fscache/page.c
-@@ -1178,7 +1178,7 @@ void __fscache_uncache_all_inode_pages(struct fscache_cookie *cookie,
- 	pagevec_init(&pvec, 0);
- 	next = 0;
- 	do {
--		if (!pagevec_lookup(&pvec, mapping, &next, PAGEVEC_SIZE))
-+		if (!pagevec_lookup(&pvec, mapping, &next))
- 			break;
- 		for (i = 0; i < pagevec_count(&pvec); i++) {
  			struct page *page = pvec.pages[i];
-diff --git a/fs/hugetlbfs/inode.c b/fs/hugetlbfs/inode.c
-index 99885f9b9d56..461e01500e60 100644
---- a/fs/hugetlbfs/inode.c
-+++ b/fs/hugetlbfs/inode.c
-@@ -413,8 +413,7 @@ static void remove_inode_hugepages(struct inode *inode, loff_t lstart,
- 		/*
- 		 * When no more pages are found, we are done.
- 		 */
--		if (!pagevec_lookup_range(&pvec, mapping, &next, end - 1,
--					  PAGEVEC_SIZE))
-+		if (!pagevec_lookup_range(&pvec, mapping, &next, end - 1))
+ 			struct buffer_head *bh, *head;
+ 
+ 			/*
+-			 * If the current offset is not beyond the end of given
+-			 * range, it will be a hole.
++			 * If current offset is smaller than the page offset,
++			 * there is a hole at this offset.
+ 			 */
+-			if (lastoff < endoff && whence == SEEK_HOLE &&
+-			    page->index > end) {
++			if (whence == SEEK_HOLE && lastoff < endoff &&
++			    lastoff < page_offset(pvec.pages[i])) {
+ 				found = 1;
+ 				*offset = lastoff;
+ 				goto out;
+ 			}
+ 
++			if (page->index > end)
++				goto out;
++
+ 			lock_page(page);
+ 
+ 			if (unlikely(page->mapping != inode->i_mapping)) {
+@@ -564,20 +544,18 @@ static int ext4_find_unwritten_pgoff(struct inode *inode,
+ 			unlock_page(page);
+ 		}
+ 
+-		/*
+-		 * The no. of pages is less than our desired, that would be a
+-		 * hole in there.
+-		 */
+-		if (nr_pages < num && whence == SEEK_HOLE) {
+-			found = 1;
+-			*offset = lastoff;
++		/* The no. of pages is less than our desired, we are done. */
++		if (nr_pages < num)
  			break;
+-		}
  
- 		for (i = 0; i < pagevec_count(&pvec); ++i) {
-diff --git a/fs/nilfs2/page.c b/fs/nilfs2/page.c
-index 382a36c72d72..8616c46d33da 100644
---- a/fs/nilfs2/page.c
-+++ b/fs/nilfs2/page.c
-@@ -312,7 +312,7 @@ void nilfs_copy_back_pages(struct address_space *dmap,
+ 		index = pvec.pages[i - 1]->index + 1;
+ 		pagevec_release(&pvec);
+ 	} while (index <= end);
  
- 	pagevec_init(&pvec, 0);
- repeat:
--	n = pagevec_lookup(&pvec, smap, &index, PAGEVEC_SIZE);
-+	n = pagevec_lookup(&pvec, smap, &index);
- 	if (!n)
- 		return;
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index f9343dac7ff9..a7abc981e4a9 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1049,7 +1049,7 @@ xfs_find_get_desired_pgoff(
- 		unsigned int	i;
- 
- 		nr_pages = pagevec_lookup_range(&pvec, inode->i_mapping,
--						&index, end, PAGEVEC_SIZE);
-+						&index, end);
- 		if (nr_pages == 0)
- 			break;
- 
-diff --git a/include/linux/pagevec.h b/include/linux/pagevec.h
-index 7df056910437..4dcd5506f1ed 100644
---- a/include/linux/pagevec.h
-+++ b/include/linux/pagevec.h
-@@ -29,13 +29,12 @@ unsigned pagevec_lookup_entries(struct pagevec *pvec,
- void pagevec_remove_exceptionals(struct pagevec *pvec);
- unsigned pagevec_lookup_range(struct pagevec *pvec,
- 			      struct address_space *mapping,
--			      pgoff_t *start, pgoff_t end, unsigned nr_pages);
-+			      pgoff_t *start, pgoff_t end);
- static inline unsigned pagevec_lookup(struct pagevec *pvec,
- 				      struct address_space *mapping,
--				      pgoff_t *start, unsigned nr_pages)
-+				      pgoff_t *start)
- {
--	return pagevec_lookup_range(pvec, mapping, start, (pgoff_t)-1,
--				    nr_pages);
-+	return pagevec_lookup_range(pvec, mapping, start, (pgoff_t)-1);
- }
- 
- unsigned pagevec_lookup_tag(struct pagevec *pvec,
-diff --git a/mm/swap.c b/mm/swap.c
-index 804c9867af96..a07a0105154b 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -961,10 +961,9 @@ void pagevec_remove_exceptionals(struct pagevec *pvec)
-  * reached.
-  */
- unsigned pagevec_lookup_range(struct pagevec *pvec,
--		struct address_space *mapping, pgoff_t *start, pgoff_t end,
--		unsigned nr_pages)
-+		struct address_space *mapping, pgoff_t *start, pgoff_t end)
- {
--	pvec->nr = find_get_pages_range(mapping, start, end, nr_pages,
-+	pvec->nr = find_get_pages_range(mapping, start, end, PAGEVEC_SIZE,
- 					pvec->pages);
- 	return pagevec_count(pvec);
- }
++	if (whence == SEEK_HOLE && lastoff < endoff) {
++		found = 1;
++		*offset = lastoff;
++	}
+ out:
+ 	pagevec_release(&pvec);
+ 	return found;
 -- 
 2.12.3
 
