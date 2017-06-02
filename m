@@ -1,24 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29610 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751147AbdFBVYl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 17:24:41 -0400
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52LOe6R009714
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:40 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v52LOe5F016930
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:40 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v52LOb8G030975
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:39 GMT
-Subject: [PATCH 06/13] xfs: export _inobt_btrec_to_irec and
- _ialloc_cluster_alignment for scrub
+Received: from aserp1040.oracle.com ([141.146.126.69]:42714 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751147AbdFBVYp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 17:24:45 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52LOiCK015335
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:44 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v52LOi21005383
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:44 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v52LOh74028405
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:44 GMT
+Subject: [PATCH 07/13] xfs: check if an inode is cached and allocated
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Jun 2017 14:24:36 -0700
-Message-ID: <149643867690.23065.2925885507896539128.stgit@birch.djwong.org>
+Date: Fri, 02 Jun 2017 14:24:43 -0700
+Message-ID: <149643868294.23065.8094890990886436794.stgit@birch.djwong.org>
 In-Reply-To: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
 References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,100 +31,123 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a function to extract an in-core inobt record from a generic
-btree_rec union so that scrub will be able to check inobt records
-and check inode block alignment.
+Check the inode cache for a particular inode number.  If it's in the
+cache, check that it's not currently being reclaimed.  If it's not being
+reclaimed, return zero if the inode is allocated.  This function will be
+used by various scrubbers to decide if the cache is more up to date
+than the disk in terms of checking if an inode is allocated.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c |   43 ++++++++++++++++++++++++++-----------------
- fs/xfs/libxfs/xfs_ialloc.h |    5 +++++
- 2 files changed, 31 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_icache.c |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_icache.h |    3 ++
+ 2 files changed, 86 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 1e5ed94..33626373 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -46,7 +46,7 @@
- /*
-  * Allocation group level functions.
-  */
--static inline int
-+int
- xfs_ialloc_cluster_alignment(
- 	struct xfs_mount	*mp)
- {
-@@ -98,24 +98,14 @@ xfs_inobt_update(
- 	return xfs_btree_update(cur, &rec);
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index f61c84f8..d610a7e 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -633,6 +633,89 @@ xfs_iget(
  }
  
--/*
-- * Get the data from the pointed-to record.
-- */
--int					/* error */
--xfs_inobt_get_rec(
--	struct xfs_btree_cur	*cur,	/* btree cursor */
--	xfs_inobt_rec_incore_t	*irec,	/* btree record */
--	int			*stat)	/* output: success/failure */
-+void
-+xfs_inobt_btrec_to_irec(
-+	struct xfs_mount		*mp,
-+	union xfs_btree_rec		*rec,
-+	struct xfs_inobt_rec_incore	*irec)
- {
--	union xfs_btree_rec	*rec;
--	int			error;
--
--	error = xfs_btree_get_rec(cur, &rec, stat);
--	if (error || *stat == 0)
--		return error;
--
- 	irec->ir_startino = be32_to_cpu(rec->inobt.ir_startino);
--	if (xfs_sb_version_hassparseinodes(&cur->bc_mp->m_sb)) {
-+	if (xfs_sb_version_hassparseinodes(&mp->m_sb)) {
- 		irec->ir_holemask = be16_to_cpu(rec->inobt.ir_u.sp.ir_holemask);
- 		irec->ir_count = rec->inobt.ir_u.sp.ir_count;
- 		irec->ir_freecount = rec->inobt.ir_u.sp.ir_freecount;
-@@ -130,6 +120,25 @@ xfs_inobt_get_rec(
- 				be32_to_cpu(rec->inobt.ir_u.f.ir_freecount);
- 	}
- 	irec->ir_free = be64_to_cpu(rec->inobt.ir_free);
+ /*
++ * "Is this a cached inode that's also allocated?"
++ *
++ * Look up an inode by number in the given file system.  If the inode is
++ * in cache and isn't in purgatory, return 1 if the inode is allocated
++ * and 0 if it is not.  For all other cases (not in cache, being torn
++ * down, etc.), return a negative error code.
++ *
++ * (The caller has to prevent inode allocation activity.)
++ */
++int
++xfs_icache_inode_is_allocated(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	xfs_ino_t		ino,
++	bool			*inuse)
++{
++	struct xfs_inode	*ip;
++	struct xfs_perag	*pag;
++	xfs_agino_t		agino;
++	int			ret = 0;
++
++	/* reject inode numbers outside existing AGs */
++	if (!ino || XFS_INO_TO_AGNO(mp, ino) >= mp->m_sb.sb_agcount)
++		return -EINVAL;
++
++	/* get the perag structure and ensure that it's inode capable */
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ino));
++	agino = XFS_INO_TO_AGINO(mp, ino);
++
++	rcu_read_lock();
++	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
++	if (!ip) {
++		ret = -ENOENT;
++		goto out;
++	}
++
++	/*
++	 * Is the inode being reused?  Is it new?  Is it being
++	 * reclaimed?  Is it being torn down?  For any of those cases,
++	 * fall back.
++	 */
++	spin_lock(&ip->i_flags_lock);
++	if (ip->i_ino != ino ||
++	    (ip->i_flags & (XFS_INEW | XFS_IRECLAIM | XFS_IRECLAIMABLE))) {
++		ret = -EAGAIN;
++		goto out_istate;
++	}
++
++	/*
++	 * If lookup is racing with unlink, jump out immediately.
++	 */
++	if (VFS_I(ip)->i_mode == 0) {
++		*inuse = false;
++		ret = 0;
++		goto out_istate;
++	}
++
++	/* If the VFS inode is being torn down, forget it. */
++	if (!igrab(VFS_I(ip))) {
++		ret = -EAGAIN;
++		goto out_istate;
++	}
++
++	/* We've got a live one. */
++	spin_unlock(&ip->i_flags_lock);
++	rcu_read_unlock();
++	xfs_perag_put(pag);
++
++	*inuse = !!(VFS_I(ip)->i_mode);
++	ret = 0;
++	IRELE(ip);
++
++	return ret;
++
++out_istate:
++	spin_unlock(&ip->i_flags_lock);
++out:
++	rcu_read_unlock();
++	xfs_perag_put(pag);
++	return ret;
 +}
 +
 +/*
-+ * Get the data from the pointed-to record.
-+ */
-+int					/* error */
-+xfs_inobt_get_rec(
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
-+	xfs_inobt_rec_incore_t	*irec,	/* btree record */
-+	int			*stat)	/* output: success/failure */
-+{
-+	union xfs_btree_rec	*rec;
-+	int			error;
-+
-+	error = xfs_btree_get_rec(cur, &rec, stat);
-+	if (error || *stat == 0)
-+		return error;
-+
-+	xfs_inobt_btrec_to_irec(cur->bc_mp, rec, irec);
- 
+  * The inode lookup is done in batches to keep the amount of lock traffic and
+  * radix tree lookups to a minimum. The batch size is a trade off between
+  * lookup reduction and stack usage. This is in the reclaim path, so we can't
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index 9183f77..eadf718 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -126,4 +126,7 @@ xfs_fs_eofblocks_from_user(
  	return 0;
  }
-diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
-index 0bb8966..b32cfb5 100644
---- a/fs/xfs/libxfs/xfs_ialloc.h
-+++ b/fs/xfs/libxfs/xfs_ialloc.h
-@@ -168,5 +168,10 @@ int xfs_ialloc_inode_init(struct xfs_mount *mp, struct xfs_trans *tp,
- int xfs_read_agi(struct xfs_mount *mp, struct xfs_trans *tp,
- 		xfs_agnumber_t agno, struct xfs_buf **bpp);
  
-+union xfs_btree_rec;
-+void xfs_inobt_btrec_to_irec(struct xfs_mount *mp, union xfs_btree_rec *rec,
-+		struct xfs_inobt_rec_incore *irec);
++int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
++				  xfs_ino_t ino, bool *inuse);
 +
-+int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
- 
- #endif	/* __XFS_IALLOC_H__ */
+ #endif
 
