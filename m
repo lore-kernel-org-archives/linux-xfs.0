@@ -1,155 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43787 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751159AbdFBTvr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 15:51:47 -0400
-Subject: [PATCH 02/10] xfs_io: refactor numlen into a library function
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Jun 2017 12:51:26 -0700
-Message-ID: <149643308671.15899.17508642888971207526.stgit@birch.djwong.org>
-In-Reply-To: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
-References: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from shards.monkeyblade.net ([184.105.139.130]:47500 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750966AbdFBTze (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 15:55:34 -0400
+Date: Fri, 02 Jun 2017 15:55:29 -0400 (EDT)
+Message-Id: <20170602.155529.599501370529389401.davem@davemloft.net>
+Subject: Re: crypto: Work around deallocated stack frame reference gcc bug
+ on sparc.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170602.143906.818489457650113258.davem@davemloft.net>
+References: <20170602.112854.571030442583332811.davem@davemloft.net>
+        <20170602180808.GB5636@birch.djwong.org>
+        <20170602.143906.818489457650113258.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: herbert@gondor.apana.org.au, linux-crypto@vger.kernel.org, sparclinux@vger.kernel.org, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, matorola@gmail.com, sandeen@sandeen.net, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: David Miller <davem@davemloft.net>
+Date: Fri, 02 Jun 2017 14:39:06 -0400 (EDT)
 
-Refactor the competing numlen implementations into a single library function.
+> From: "Darrick J. Wong" <darrick.wong@oracle.com>
+> Date: Fri, 2 Jun 2017 11:08:08 -0700
+> 
+>> ext4/jbd2's crc32c implementations will also need a fix like this for
+>> {ext4,jbd2}_chksum.  Note that both of these modules call the crypto api
+>> directly to avoid a static dependence on libcrc32c; this was done to
+>> reduce kernel footprint for applications that don't need it.  (ext2,
+>> ext3, and ext4 before the metadata_csum feature existed).
+> 
+> Good catch.  I even looked at that code the other day so should
+> have spotted it as well.
+> 
+> I'll integrate fixes for those into my patch when I get a chance,
+> thanks!
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- include/input.h |    1 +
- io/bmap.c       |   19 ++++---------------
- io/fiemap.c     |   14 +-------------
- libxcmd/input.c |   13 +++++++++++++
- 4 files changed, 19 insertions(+), 28 deletions(-)
+Actually, ext4 doesn't trigger the problem because the on-stack object
+used in ext4 is a fixed size at compile time.  Which is technically an
+ill-advised assumption to make.  Even the generic libcrc32c.c doesn't
+assume that the context area is 4 bytes for crc32c.
 
+Anyways, back to the main point, the gcc bug only triggers when
+alloca() like constructs are used.
 
-diff --git a/include/input.h b/include/input.h
-index 221678e..82cd2f4 100644
---- a/include/input.h
-+++ b/include/input.h
-@@ -28,6 +28,7 @@ extern char	**breakline(char *input, int *count);
- extern void	doneline(char *input, char **vec);
- extern char	*fetchline(void);
- 
-+extern size_t numlen(uint64_t val, size_t base);
- extern long long cvtnum(size_t blocksize, size_t sectorsize, char *s);
- extern void	cvtstr(double value, char *str, size_t sz);
- extern unsigned long cvttime(char *s);
-diff --git a/io/bmap.c b/io/bmap.c
-index 2333244..2e4ff7b 100644
---- a/io/bmap.c
-+++ b/io/bmap.c
-@@ -18,6 +18,7 @@
- 
- #include "platform_defs.h"
- #include "command.h"
-+#include "input.h"
- #include "init.h"
- #include "io.h"
- 
-@@ -53,18 +54,6 @@ bmap_help(void)
- "\n"));
- }
- 
--static int
--numlen(
--	off64_t	val)
--{
--	off64_t	tmp;
--	int	len;
--
--	for (len = 0, tmp = val; tmp > 0; tmp = tmp/10)
--		len++;
--	return (len == 0 ? 1 : len);
--}
--
- int
- bmap_f(
- 	int			argc,
-@@ -323,7 +312,7 @@ bmap_f(
- 			if (map[i + 1].bmv_block == -1) {
- 				foff_w = max(foff_w, strlen(rbuf));
- 				tot_w = max(tot_w,
--					numlen(map[i+1].bmv_length));
-+					numlen(map[i+1].bmv_length, 10));
- 			} else {
- 				snprintf(bbuf, sizeof(bbuf), "%lld..%lld",
- 					(long long) map[i + 1].bmv_block,
-@@ -344,10 +333,10 @@ bmap_f(
- 					aoff_w = 0;
- 				foff_w = max(foff_w, strlen(rbuf));
- 				tot_w = max(tot_w,
--					numlen(map[i+1].bmv_length));
-+					numlen(map[i+1].bmv_length, 10));
- 			}
- 		}
--		agno_w = is_rt ? 0 : max(MINAG_WIDTH, numlen(fsgeo.agcount));
-+		agno_w = is_rt ? 0 : max(MINAG_WIDTH, numlen(fsgeo.agcount, 10));
- 		printf("%4s: %-*s %-*s %*s %-*s %*s%s\n",
- 			_("EXT"),
- 			foff_w, _("FILE-OFFSET"),
-diff --git a/io/fiemap.c b/io/fiemap.c
-index bcbae49..75e8820 100644
---- a/io/fiemap.c
-+++ b/io/fiemap.c
-@@ -18,6 +18,7 @@
- 
- #include "platform_defs.h"
- #include "command.h"
-+#include "input.h"
- #include <linux/fiemap.h>
- #include "init.h"
- #include "io.h"
-@@ -48,19 +49,6 @@ fiemap_help(void)
- "\n"));
- }
- 
--static int
--numlen(
--	__u64	val,
--	int	base)
--{
--	__u64	tmp;
--	int	len;
--
--	for (len = 0, tmp = val; tmp > 0; tmp = tmp/base)
--		len++;
--	return (len == 0 ? 1 : len);
--}
--
- static void
- print_verbose(
- 	struct fiemap_extent	*extent,
-diff --git a/libxcmd/input.c b/libxcmd/input.c
-index 8aeb3b0..9437be3 100644
---- a/libxcmd/input.c
-+++ b/libxcmd/input.c
-@@ -136,6 +136,19 @@ doneline(
- 	free(vec);
- }
- 
-+size_t
-+numlen(
-+	uint64_t	val,
-+	size_t		base)
-+{
-+	uint64_t	tmp;
-+	size_t		len;
-+
-+	for (len = 0, tmp = val; tmp > 0; tmp = tmp / base)
-+		len++;
-+	return len == 0 ? 1 : len;
-+}
-+
- #define EXABYTES(x)	((long long)(x) << 60)
- #define PETABYTES(x)	((long long)(x) << 50)
- #define TERABYTES(x)	((long long)(x) << 40)
-
+That's why I scanned for SHASH_DESC_ON_STACK() to see exactly where
+the workaround is necessary.
