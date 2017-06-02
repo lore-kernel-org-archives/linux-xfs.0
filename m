@@ -1,23 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47484 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:47530 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750971AbdFBWcP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 18:32:15 -0400
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52MWEu8028314
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:32:14 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v52MWDig029788
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:32:14 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v52MWBG1022208
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:32:12 GMT
-Subject: [PATCH 13/19] xfs: scrub inode block mappings
+        with ESMTP id S1750971AbdFBWcW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 18:32:22 -0400
+Subject: [PATCH 14/19] xfs: scrub directory/attribute btrees
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Jun 2017 15:32:10 -0700
-Message-ID: <149644273047.19430.2646998093969156331.stgit@birch.djwong.org>
+Date: Fri, 02 Jun 2017 15:32:16 -0700
+Message-ID: <149644273687.19430.15483746827255585270.stgit@birch.djwong.org>
 In-Reply-To: <149644264601.19430.6064928774771048026.stgit@birch.djwong.org>
 References: <149644264601.19430.6064928774771048026.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -27,58 +16,44 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Scrub an individual inode's block mappings to make sure they make sense.
+Provide a way to check the shape and scrub the hashes and records
+in a directory or extended attribute btree.  These are helper functions
+for the directory & attribute scrubbers in subsequent patches.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[fengguang: remove unneeded variable to store return value]
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
 ---
  fs/xfs/Makefile        |    1 
- fs/xfs/libxfs/xfs_fs.h |    5 +
- fs/xfs/scrub/bmap.c    |  378 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.c  |   12 ++
- fs/xfs/scrub/common.h  |    5 +
- fs/xfs/xfs_trace.h     |    5 +
- 6 files changed, 404 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/scrub/bmap.c
+ fs/xfs/scrub/dabtree.c |  473 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/dabtree.h |   62 ++++++
+ 3 files changed, 536 insertions(+)
+ create mode 100644 fs/xfs/scrub/dabtree.c
+ create mode 100644 fs/xfs/scrub/dabtree.h
 
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 471fc27..73c7189 100644
+index 73c7189..2014a97 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -106,6 +106,7 @@ xfs-y				+= xfs_aops.o \
- xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
- 				   agheader.o \
- 				   alloc.o \
-+				   bmap.o \
+@@ -109,6 +109,7 @@ xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
+ 				   bmap.o \
  				   btree.o \
  				   common.o \
++				   dabtree.o \
  				   ialloc.o \
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 39e6441a..4984582 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -504,7 +504,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_RMAPBT	9	/* reverse mapping btree */
- #define XFS_SCRUB_TYPE_REFCNTBT	10	/* reference count btree */
- #define XFS_SCRUB_TYPE_INODE	11	/* inode record */
--#define XFS_SCRUB_TYPE_MAX	11
-+#define XFS_SCRUB_TYPE_BMBTD	12	/* data fork block mapping */
-+#define XFS_SCRUB_TYPE_BMBTA	13	/* attr fork block mapping */
-+#define XFS_SCRUB_TYPE_BMBTC	14	/* CoW fork block mapping */
-+#define XFS_SCRUB_TYPE_MAX	14
- 
- #define XFS_SCRUB_FLAG_REPAIR	0x01	/* i: repair this metadata */
- #define XFS_SCRUB_FLAG_CORRUPT	0x02	/* o: needs repair */
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+ 				   inode.o \
+ 				   refcount.o \
+diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
 new file mode 100644
-index 0000000..e148a49
+index 0000000..3f2f237
 --- /dev/null
-+++ b/fs/xfs/scrub/bmap.c
-@@ -0,0 +1,378 @@
++++ b/fs/xfs/scrub/dabtree.c
+@@ -0,0 +1,473 @@
 +/*
 + * Copyright (C) 2017 Oracle.  All Rights Reserved.
 + *
@@ -113,410 +88,511 @@ index 0000000..e148a49
 +#include "xfs_sb.h"
 +#include "xfs_inode.h"
 +#include "xfs_inode_fork.h"
-+#include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_rmap.h"
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_dir2.h"
++#include "xfs_dir2_priv.h"
++#include "xfs_attr_leaf.h"
 +#include "scrub/common.h"
-+#include "scrub/btree.h"
++#include "scrub/dabtree.h"
 +
-+/* Set us up with an inode's bmap. */
-+STATIC int
-+__xfs_scrub_setup_inode_bmap(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip,
-+	bool				flush_data)
++/* Directory/Attribute Btree */
++
++/* Find an entry at a certain level in a da btree. */
++STATIC void *
++xfs_scrub_da_btree_entry(
++	struct xfs_scrub_da_btree	*ds,
++	int				level,
++	int				rec)
 +{
-+	struct xfs_mount		*mp = sc->mp;
-+	int				error;
++	char				*ents;
++	void				*(*fn)(void *);
++	size_t				sz;
++	struct xfs_da_state_blk		*blk;
 +
-+	error = xfs_scrub_get_inode(sc, ip);
-+	if (error)
-+		return error;
-+
-+	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
-+	xfs_ilock(sc->ip, sc->ilock_flags);
-+
-+	/*
-+	 * We don't want any ephemeral data fork updates sitting around
-+	 * while we inspect block mappings, so wait for directio to finish
-+	 * and flush dirty data if we have delalloc reservations.
-+	 */
-+	if (S_ISREG(VFS_I(sc->ip)->i_mode) && flush_data) {
-+		inode_dio_wait(VFS_I(sc->ip));
-+		error = filemap_write_and_wait(VFS_I(sc->ip)->i_mapping);
-+		if (error)
-+			goto out_unlock;
-+		error = invalidate_inode_pages2(VFS_I(sc->ip)->i_mapping);
-+		if (error)
-+			goto out_unlock;
++	/* Dispatch the entry finding function. */
++	blk = &ds->state->path.blk[level];
++	switch (blk->magic) {
++	case XFS_ATTR_LEAF_MAGIC:
++	case XFS_ATTR3_LEAF_MAGIC:
++		fn = (xfs_da_leaf_ents_fn)xfs_attr3_leaf_entryp;
++		sz = sizeof(struct xfs_attr_leaf_entry);
++		break;
++	case XFS_DIR2_LEAFN_MAGIC:
++	case XFS_DIR3_LEAFN_MAGIC:
++		fn = (xfs_da_leaf_ents_fn)ds->dargs.dp->d_ops->leaf_ents_p;
++		sz = sizeof(struct xfs_dir2_leaf_entry);
++		break;
++	case XFS_DIR2_LEAF1_MAGIC:
++	case XFS_DIR3_LEAF1_MAGIC:
++		fn = (xfs_da_leaf_ents_fn)ds->dargs.dp->d_ops->leaf_ents_p;
++		sz = sizeof(struct xfs_dir2_leaf_entry);
++		break;
++	case XFS_DA_NODE_MAGIC:
++	case XFS_DA3_NODE_MAGIC:
++		fn = (xfs_da_leaf_ents_fn)ds->dargs.dp->d_ops->node_tree_p;
++		sz = sizeof(struct xfs_da_node_entry);
++		break;
++	default:
++		return NULL;
 +	}
 +
-+	/* Got the inode, lock it and we're ready to go. */
-+	error = xfs_scrub_trans_alloc(sc->sm, mp, &M_RES(mp)->tr_itruncate,
-+			0, 0, 0, &sc->tp);
-+	if (error)
-+		goto out_unlock;
-+	sc->ilock_flags |= XFS_ILOCK_EXCL;
-+	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
++	ents = fn(blk->bp->b_addr);
++	return ents + (sz * rec);
++}
++
++/* Scrub a da btree hash (key). */
++int
++xfs_scrub_da_btree_hash(
++	struct xfs_scrub_da_btree	*ds,
++	int				level,
++	__be32				*hashp)
++{
++	struct xfs_da_state_blk		*blks;
++	struct xfs_da_node_entry	*btree;
++	xfs_dahash_t			hash;
++	xfs_dahash_t			parent_hash;
++
++	/* Is this hash in order? */
++	hash = be32_to_cpu(*hashp);
++	XFS_SCRUB_DA_CHECK(ds, hash >= ds->hashes[level]);
++	ds->hashes[level] = hash;
++
++	if (level == 0)
++		return 0;
++
++	/* Is this hash no larger than the parent hash? */
++	blks = ds->state->path.blk;
++	btree = xfs_scrub_da_btree_entry(ds, level - 1, blks[level - 1].index);
++	parent_hash = be32_to_cpu(btree->hashval);
++	XFS_SCRUB_DA_CHECK(ds, hash <= parent_hash);
 +
 +	return 0;
-+out_unlock:
-+	xfs_iunlock(sc->ip, sc->ilock_flags);
-+	if (sc->ip != ip)
-+		IRELE(sc->ip);
-+	sc->ip = NULL;
-+	return error;
 +}
 +
-+/* Set us up to scrub the data fork. */
-+int
-+xfs_scrub_setup_inode_bmap_data(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip)
++/* Scrub a da btree pointer. */
++STATIC int
++xfs_scrub_da_btree_ptr(
++	struct xfs_scrub_da_btree	*ds,
++	int				level,
++	xfs_dablk_t			blkno)
 +{
-+	return __xfs_scrub_setup_inode_bmap(sc, ip, true);
-+}
++	XFS_SCRUB_DA_CHECK(ds, blkno >= ds->lowest);
++	XFS_SCRUB_DA_CHECK(ds, ds->highest == 0 || blkno < ds->highest);
 +
-+/* Set us up to scrub the attr or CoW fork. */
-+int
-+xfs_scrub_setup_inode_bmap(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip)
-+{
-+	return __xfs_scrub_setup_inode_bmap(sc, ip, false);
++	return 0;
 +}
 +
 +/*
-+ * Inode fork block mapping (BMBT) scrubber.
-+ * More complex than the others because we have to scrub
-+ * all the extents regardless of whether or not the fork
-+ * is in btree format.
++ * The da btree scrubber can handle leaf1 blocks as a degenerate
++ * form of da btree.  Since the regular da code doesn't handle
++ * leaf1, we must multiplex the verifiers.
 + */
++static void
++xfs_scrub_da_btree_read_verify(
++	struct xfs_buf		*bp)
++{
++	struct xfs_da_blkinfo	*info = bp->b_addr;
 +
-+struct xfs_scrub_bmap_info {
-+	struct xfs_scrub_context	*sc;
-+	const char			*type;
-+	xfs_daddr_t			eofs;
-+	xfs_fileoff_t			lastoff;
-+	bool				is_rt;
-+	bool				is_shared;
-+	int				whichfork;
++	switch (be16_to_cpu(info->magic)) {
++	case XFS_DIR2_LEAF1_MAGIC:
++	case XFS_DIR3_LEAF1_MAGIC:
++		bp->b_ops = &xfs_dir3_leaf1_buf_ops;
++		bp->b_ops->verify_read(bp);
++		return;
++	default:
++		bp->b_ops = &xfs_da3_node_buf_ops;
++		bp->b_ops->verify_read(bp);
++		return;
++	}
++}
++static void
++xfs_scrub_da_btree_write_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_da_blkinfo	*info = bp->b_addr;
++
++	switch (be16_to_cpu(info->magic)) {
++	case XFS_DIR2_LEAF1_MAGIC:
++	case XFS_DIR3_LEAF1_MAGIC:
++		bp->b_ops = &xfs_dir3_leaf1_buf_ops;
++		bp->b_ops->verify_write(bp);
++		return;
++	default:
++		bp->b_ops = &xfs_da3_node_buf_ops;
++		bp->b_ops->verify_write(bp);
++		return;
++	}
++}
++
++static const struct xfs_buf_ops xfs_scrub_da_btree_buf_ops = {
++	.name = "xfs_scrub_da_btree",
++	.verify_read = xfs_scrub_da_btree_read_verify,
++	.verify_write = xfs_scrub_da_btree_write_verify,
 +};
 +
-+#define XFS_SCRUB_BMAP_CHECK(fs_ok) \
-+	XFS_SCRUB_INO_CHECK(info->sc, info->sc->ip->i_ino, bp, info->type, fs_ok)
-+#define XFS_SCRUB_BMAP_GOTO(fs_ok, label) \
-+	XFS_SCRUB_INO_GOTO(info->sc, info->sc->ip->i_ino, bp, info->type, fs_ok, label)
-+#define XFS_SCRUB_BMAP_OP_ERROR_GOTO(label) \
-+	XFS_SCRUB_OP_ERROR_GOTO(info->sc, agno, 0, "bmap", &error, label)
-+/* Scrub a single extent record. */
++/* Check a block's sibling pointers. */
 +STATIC int
-+xfs_scrub_bmap_extent(
-+	struct xfs_inode		*ip,
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_scrub_bmap_info	*info,
-+	struct xfs_bmbt_irec		*irec)
++xfs_scrub_da_btree_block_check_siblings(
++	struct xfs_scrub_da_btree	*ds,
++	int				level,
++	struct xfs_da_blkinfo		*hdr)
 +{
-+	struct xfs_scrub_ag		sa = { 0 };
-+	struct xfs_mount		*mp = info->sc->mp;
-+	struct xfs_buf			*bp = NULL;
-+	xfs_daddr_t			daddr;
-+	xfs_daddr_t			dlen;
-+	xfs_fsblock_t			bno;
-+	xfs_agnumber_t			agno;
++	xfs_dablk_t			forw;
++	xfs_dablk_t			back;
++	int				retval;
 +	int				error = 0;
 +
-+	if (cur)
-+		xfs_btree_get_block(cur, 0, &bp);
++	forw = be32_to_cpu(hdr->forw);
++	back = be32_to_cpu(hdr->back);
 +
-+	XFS_SCRUB_BMAP_CHECK(irec->br_startoff >= info->lastoff);
-+	XFS_SCRUB_BMAP_CHECK(irec->br_startblock != HOLESTARTBLOCK);
-+	XFS_SCRUB_BMAP_CHECK(!isnullstartblock(irec->br_startblock));
-+
-+	/* Actual mapping, so check the block ranges. */
-+	if (info->is_rt) {
-+		daddr = XFS_FSB_TO_BB(mp, irec->br_startblock);
-+		agno = NULLAGNUMBER;
-+		bno = irec->br_startblock;
-+	} else {
-+		daddr = XFS_FSB_TO_DADDR(mp, irec->br_startblock);
-+		agno = XFS_FSB_TO_AGNO(mp, irec->br_startblock);
-+		XFS_SCRUB_BMAP_GOTO(agno < mp->m_sb.sb_agcount, out);
-+		bno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
-+		XFS_SCRUB_BMAP_CHECK(bno < mp->m_sb.sb_agblocks);
++	/* Top level blocks should not have sibling pointers. */
++	if (level == 0) {
++		XFS_SCRUB_DA_CHECK(ds, forw == 0);
++		XFS_SCRUB_DA_CHECK(ds, back == 0);
++		return error;
 +	}
-+	dlen = XFS_FSB_TO_BB(mp, irec->br_blockcount);
-+	XFS_SCRUB_BMAP_CHECK(irec->br_blockcount > 0);
-+	XFS_SCRUB_BMAP_CHECK(irec->br_blockcount <= MAXEXTLEN);
-+	XFS_SCRUB_BMAP_CHECK(daddr < info->eofs);
-+	XFS_SCRUB_BMAP_CHECK(daddr + dlen <= info->eofs);
-+	XFS_SCRUB_BMAP_CHECK(irec->br_state != XFS_EXT_UNWRITTEN ||
-+			xfs_sb_version_hasextflgbit(&mp->m_sb));
++
++	/* Check back (left) pointer. */
++	if (back != 0) {
++		/* Move the alternate cursor back one block. */
++		ds->state->altpath = ds->state->path;
++		error = xfs_da3_path_shift(ds->state, &ds->state->altpath,
++				0, false, &retval);
++		XFS_SCRUB_DA_OP_ERROR_GOTO(ds, &error, out);
++		XFS_SCRUB_DA_GOTO(ds, retval == 0, verify_forw);
++		XFS_SCRUB_DA_CHECK(ds,
++				ds->state->altpath.blk[level].blkno == back);
++		xfs_trans_brelse(ds->dargs.trans,
++				ds->state->altpath.blk[level].bp);
++	}
++
++verify_forw:
++	/* Check forw (right) pointer. */
++	if (!error && forw != 0) {
++		/* Move the alternate cursor forward one block. */
++		ds->state->altpath = ds->state->path;
++		error = xfs_da3_path_shift(ds->state, &ds->state->altpath,
++				1, false, &retval);
++		XFS_SCRUB_DA_OP_ERROR_GOTO(ds, &error, out);
++		XFS_SCRUB_DA_GOTO(ds, retval == 0, out);
++		XFS_SCRUB_DA_CHECK(ds,
++				ds->state->altpath.blk[level].blkno == forw);
++		xfs_trans_brelse(ds->dargs.trans,
++				ds->state->altpath.blk[level].bp);
++	}
++out:
++	memset(&ds->state->altpath, 0, sizeof(ds->state->altpath));
++	return error;
++}
++
++/* Load a dir/attribute block from a btree. */
++STATIC int
++xfs_scrub_da_btree_block(
++	struct xfs_scrub_da_btree	*ds,
++	int				level,
++	xfs_dablk_t			blkno)
++{
++	struct xfs_da_state_blk		*blk;
++	struct xfs_da_intnode		*node;
++	struct xfs_da_node_entry	*btree;
++	struct xfs_da3_blkinfo		*hdr3;
++	struct xfs_da_args		*dargs = &ds->dargs;
++	struct xfs_inode		*ip = ds->dargs.dp;
++	xfs_ino_t			owner;
++	int				*pmaxrecs;
++	struct xfs_da3_icnode_hdr	nodehdr;
++	int				error;
++
++	blk = &ds->state->path.blk[level];
++	ds->state->path.active = level + 1;
++
++	/* Release old block. */
++	if (blk->bp) {
++		xfs_trans_brelse(dargs->trans, blk->bp);
++		blk->bp = NULL;
++	}
++
++	/* Check the pointer. */
++	blk->blkno = blkno;
++	error = xfs_scrub_da_btree_ptr(ds, level, blkno);
++	if (error) {
++		blk->blkno = 0;
++		goto out;
++	}
++
++	/* Read the buffer. */
++	error = xfs_da_read_buf(dargs->trans, dargs->dp, blk->blkno, -2,
++			&blk->bp, dargs->whichfork,
++			&xfs_scrub_da_btree_buf_ops);
++	XFS_SCRUB_DA_OP_ERROR_GOTO(ds, &error, out_nobuf);
++
++	/* It's ok for a directory not to have a da btree in it. */
++	if (ds->dargs.whichfork == XFS_DATA_FORK && level == 0 &&
++			blk->bp == NULL)
++		goto out_nobuf;
++	XFS_SCRUB_DA_GOTO(ds, blk->bp != NULL, out_nobuf);
++
++	hdr3 = blk->bp->b_addr;
++	blk->magic = be16_to_cpu(hdr3->hdr.magic);
++	pmaxrecs = &ds->maxrecs[level];
++
++	/* Check the owner. */
++	if (xfs_sb_version_hascrc(&ip->i_mount->m_sb)) {
++		owner = be64_to_cpu(hdr3->owner);
++		error = -EFSCORRUPTED;
++		XFS_SCRUB_DA_GOTO(ds, owner == ip->i_ino, out);
++	}
++
++	/* Check the siblings. */
++	error = xfs_scrub_da_btree_block_check_siblings(ds, level, &hdr3->hdr);
 +	if (error)
 +		goto out;
 +
-+	/* Set ourselves up for cross-referencing later. */
-+	if (!info->is_rt) {
-+		error = xfs_scrub_ag_init(info->sc, agno, &sa);
-+		XFS_SCRUB_BMAP_OP_ERROR_GOTO(out);
-+	}
-+
-+	xfs_scrub_ag_free(info->sc, &sa);
-+out:
-+	info->lastoff = irec->br_startoff + irec->br_blockcount;
-+	return error;
-+}
-+#undef XFS_SCRUB_BMAP_OP_ERROR_GOTO
-+#undef XFS_SCRUB_BMAP_GOTO
-+
-+/* Scrub a bmbt record. */
-+STATIC int
-+xfs_scrub_bmapbt_helper(
-+	struct xfs_scrub_btree		*bs,
-+	union xfs_btree_rec		*rec)
-+{
-+	struct xfs_bmbt_rec_host	ihost;
-+	struct xfs_bmbt_irec		irec;
-+	struct xfs_scrub_bmap_info	*info = bs->private;
-+	struct xfs_inode		*ip = bs->cur->bc_private.b.ip;
-+	struct xfs_buf			*bp = NULL;
-+	struct xfs_btree_block		*block;
-+	uint64_t			owner;
-+	int				i;
-+
-+	/*
-+	 * Check the owners of the btree blocks up to the level below
-+	 * the root since the verifiers don't do that.
-+	 */
-+	if (xfs_sb_version_hascrc(&bs->cur->bc_mp->m_sb) &&
-+	    bs->cur->bc_ptrs[0] == 1) {
-+		for (i = 0; i < bs->cur->bc_nlevels - 1; i++) {
-+			block = xfs_btree_get_block(bs->cur, i, &bp);
-+			owner = be64_to_cpu(block->bb_u.l.bb_owner);
-+			XFS_SCRUB_BMAP_CHECK(owner == ip->i_ino);
-+		}
-+	}
-+
-+	/* Set up the in-core record and scrub it. */
-+	ihost.l0 = be64_to_cpu(rec->bmbt.l0);
-+	ihost.l1 = be64_to_cpu(rec->bmbt.l1);
-+	xfs_bmbt_get_all(&ihost, &irec);
-+	return xfs_scrub_bmap_extent(ip, bs->cur, info, &irec);
-+}
-+#undef XFS_SCRUB_BMAP_CHECK
-+
-+#define XFS_SCRUB_FORK_CHECK(fs_ok) \
-+	XFS_SCRUB_INO_CHECK(sc, ip->i_ino, NULL, info.type, fs_ok)
-+#define XFS_SCRUB_FORK_GOTO(fs_ok, label) \
-+	XFS_SCRUB_INO_GOTO(sc, ip->i_ino, NULL, info.type, fs_ok, label)
-+#define XFS_SCRUB_FORK_OP_ERROR_GOTO(label) \
-+	XFS_SCRUB_OP_ERROR_GOTO(sc, \
-+			XFS_INO_TO_AGNO(mp, ip->i_ino), \
-+			XFS_INO_TO_AGBNO(mp, ip->i_ino), \
-+			info.type, &error, label)
-+/* Scrub an inode fork's block mappings. */
-+STATIC int
-+xfs_scrub_bmap(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork)
-+{
-+	struct xfs_bmbt_irec		irec;
-+	struct xfs_scrub_bmap_info	info = {0};
-+	struct xfs_owner_info		oinfo;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_ifork		*ifp;
-+	struct xfs_btree_cur		*cur;
-+	xfs_fileoff_t			endoff;
-+	xfs_extnum_t			idx;
-+	bool				found;
-+	int				error = 0;
-+	int				err2 = 0;
-+
-+	switch (whichfork) {
-+	case XFS_DATA_FORK:
-+		info.type = "data fork";
++	/* Interpret the buffer. */
++	error = -EFSCORRUPTED;
++	switch (blk->magic) {
++	case XFS_ATTR_LEAF_MAGIC:
++	case XFS_ATTR3_LEAF_MAGIC:
++		xfs_trans_buf_set_type(dargs->trans, blk->bp,
++				XFS_BLFT_ATTR_LEAF_BUF);
++		blk->magic = XFS_ATTR_LEAF_MAGIC;
++		blk->hashval = xfs_attr_leaf_lasthash(blk->bp, pmaxrecs);
++		XFS_SCRUB_DA_CHECK(ds, ds->tree_level == 0);
 +		break;
-+	case XFS_ATTR_FORK:
-+		info.type = "attr fork";
++	case XFS_DIR2_LEAFN_MAGIC:
++	case XFS_DIR3_LEAFN_MAGIC:
++		xfs_trans_buf_set_type(dargs->trans, blk->bp,
++				XFS_BLFT_DIR_LEAFN_BUF);
++		blk->magic = XFS_DIR2_LEAFN_MAGIC;
++		blk->hashval = xfs_dir2_leafn_lasthash(ip, blk->bp, pmaxrecs);
++		XFS_SCRUB_DA_CHECK(ds, ds->tree_level == 0);
 +		break;
-+	case XFS_COW_FORK:
-+		info.type = "CoW fork";
++	case XFS_DIR2_LEAF1_MAGIC:
++	case XFS_DIR3_LEAF1_MAGIC:
++		xfs_trans_buf_set_type(dargs->trans, blk->bp,
++				XFS_BLFT_DIR_LEAF1_BUF);
++		blk->magic = XFS_DIR2_LEAF1_MAGIC;
++		blk->hashval = xfs_dir2_leaf1_lasthash(ip, blk->bp, pmaxrecs);
++		XFS_SCRUB_DA_CHECK(ds, ds->tree_level == 0);
 +		break;
-+	}
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
-+
-+	info.is_rt = whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip);
-+	info.eofs = XFS_FSB_TO_BB(mp, info.is_rt ? mp->m_sb.sb_rblocks :
-+					      mp->m_sb.sb_dblocks);
-+	info.whichfork = whichfork;
-+	info.is_shared = whichfork == XFS_DATA_FORK && xfs_is_reflink_inode(ip);
-+	info.sc = sc;
-+
-+	switch (whichfork) {
-+	case XFS_COW_FORK:
-+		/* Non-existent CoW forks are ignorable. */
-+		if (!ifp)
-+			goto out_unlock;
-+		/* No CoW forks on non-reflink inodes/filesystems. */
-+		XFS_SCRUB_FORK_GOTO(xfs_is_reflink_inode(ip), out_unlock);
-+		break;
-+	case XFS_ATTR_FORK:
-+		if (!ifp)
-+			goto out_unlock;
-+		XFS_SCRUB_FORK_CHECK(xfs_sb_version_hasattr(&mp->m_sb) ||
-+				     xfs_sb_version_hasattr2(&mp->m_sb));
-+		break;
-+	}
-+
-+	/* Check the fork values */
-+	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
-+	case XFS_DINODE_FMT_UUID:
-+	case XFS_DINODE_FMT_DEV:
-+	case XFS_DINODE_FMT_LOCAL:
-+		/* No mappings to check. */
-+		goto out_unlock;
-+	case XFS_DINODE_FMT_EXTENTS:
-+		XFS_SCRUB_FORK_GOTO(ifp->if_flags & XFS_IFEXTENTS, out_unlock);
-+		break;
-+	case XFS_DINODE_FMT_BTREE:
-+		XFS_SCRUB_FORK_CHECK(whichfork != XFS_COW_FORK);
-+		/* Scan the btree records. */
-+		cur = xfs_bmbt_init_cursor(mp, sc->tp, ip, whichfork);
-+		xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, whichfork);
-+		err2 = xfs_scrub_btree(sc, cur, xfs_scrub_bmapbt_helper,
-+				&oinfo, &info);
-+		xfs_btree_del_cursor(cur, err2 ? XFS_BTREE_ERROR :
-+						 XFS_BTREE_NOERROR);
-+		if (err2 == -EDEADLOCK)
-+			return err2;
-+		else if (err2)
-+			goto out_unlock;
++	case XFS_DA_NODE_MAGIC:
++	case XFS_DA3_NODE_MAGIC:
++		xfs_trans_buf_set_type(dargs->trans, blk->bp,
++				XFS_BLFT_DA_NODE_BUF);
++		blk->magic = XFS_DA_NODE_MAGIC;
++		node = blk->bp->b_addr;
++		ip->d_ops->node_hdr_from_disk(&nodehdr, node);
++		btree = ip->d_ops->node_tree_p(node);
++		*pmaxrecs = nodehdr.count;
++		blk->hashval = be32_to_cpu(btree[*pmaxrecs - 1].hashval);
++		if (level == 0) {
++			XFS_SCRUB_DA_GOTO(ds,
++					nodehdr.level < XFS_DA_NODE_MAXDEPTH,
++					out);
++			ds->tree_level = nodehdr.level;
++		} else
++			XFS_SCRUB_DA_GOTO(ds, ds->tree_level == nodehdr.level,
++					out);
 +		break;
 +	default:
-+		XFS_SCRUB_FORK_GOTO(false, out_unlock);
++		XFS_SCRUB_DA_CHECK(ds, false);
++		xfs_trans_brelse(dargs->trans, blk->bp);
++		blk->bp = NULL;
++		blk->blkno = 0;
 +		break;
 +	}
++	error = 0;
 +
-+	/* Extent data is in memory, so scrub that. */
-+
-+	/* Find the offset of the last extent in the mapping. */
-+	error = xfs_bmap_last_offset(ip, &endoff, whichfork);
-+	XFS_SCRUB_FORK_OP_ERROR_GOTO(out_unlock);
-+
-+	/* Scrub extent records. */
-+	info.lastoff = 0;
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
-+	found = xfs_iext_lookup_extent(ip, ifp, 0, &idx, &irec);
-+	while (found) {
-+		if (xfs_scrub_should_terminate(&error))
-+			break;
-+		if (isnullstartblock(irec.br_startblock))
-+			continue;
-+		XFS_SCRUB_FORK_CHECK(irec.br_startoff < endoff);
-+		err2 = xfs_scrub_bmap_extent(ip, NULL, &info, &irec);
-+		if (err2 == -EDEADLOCK)
-+			return err2;
-+		else if (!error && err2)
-+			error = err2;
-+		found = xfs_iext_get_extent(ifp, ++idx, &irec);
-+	}
-+
-+out_unlock:
-+	if (error == 0 && err2 != 0)
-+		error = err2;
++out:
++	return error;
++out_nobuf:
++	blk->blkno = 0;
 +	return error;
 +}
-+#undef XFS_SCRUB_FORK_CHECK
-+#undef XFS_SCRUB_FORK_GOTO
 +
-+/* Scrub an inode's data fork. */
++/* Visit all nodes and leaves of a da btree. */
 +int
-+xfs_scrub_bmap_data(
-+	struct xfs_scrub_context	*sc)
++xfs_scrub_da_btree(
++	struct xfs_scrub_context	*sc,
++	int				whichfork,
++	xfs_scrub_da_btree_rec_fn	scrub_fn)
 +{
-+	return xfs_scrub_bmap(sc, XFS_DATA_FORK);
-+}
++	struct xfs_scrub_da_btree	ds;
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_da_state_blk		*blks;
++	struct xfs_da_node_entry	*btree;
++	void				*rec;
++	xfs_dablk_t			blkno;
++	bool				is_attr;
++	int				level;
++	int				error;
 +
-+/* Scrub an inode's attr fork. */
-+int
-+xfs_scrub_bmap_attr(
-+	struct xfs_scrub_context	*sc)
-+{
-+	return xfs_scrub_bmap(sc, XFS_ATTR_FORK);
-+}
++	memset(&ds, 0, sizeof(ds));
++	/* Skip short format data structures; no btree to scan. */
++	if (XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
++	    XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_BTREE)
++		return 0;
 +
-+/* Scrub an inode's CoW fork. */
-+int
-+xfs_scrub_bmap_cow(
-+	struct xfs_scrub_context	*sc)
-+{
-+	if (!xfs_is_reflink_inode(sc->ip))
-+		return -ENOENT;
++	/* Set up initial da state. */
++	is_attr = whichfork == XFS_ATTR_FORK;
++	ds.dargs.geo = is_attr ? mp->m_attr_geo : mp->m_dir_geo;
++	ds.dargs.dp = sc->ip;
++	ds.dargs.whichfork = whichfork;
++	ds.dargs.trans = sc->tp;
++	ds.dargs.op_flags = XFS_DA_OP_OKNOENT;
++	ds.state = xfs_da_state_alloc();
++	ds.state->args = &ds.dargs;
++	ds.state->mp = mp;
++	ds.type = is_attr ? "attr" : "dir";
++	ds.sc = sc;
++	blkno = ds.lowest = is_attr ? 0 : ds.dargs.geo->leafblk;
++	ds.highest = is_attr ? 0 : ds.dargs.geo->freeblk;
++	level = 0;
 +
-+	return xfs_scrub_bmap(sc, XFS_COW_FORK);
++	/* Find the root of the da tree, if present. */
++	blks = ds.state->path.blk;
++	error = xfs_scrub_da_btree_block(&ds, level, blkno);
++	if (error)
++		goto out_state;
++	if (blks[level].bp == NULL)
++		goto out_state;
++
++	blks[level].index = 0;
++	while (level >= 0 && level < XFS_DA_NODE_MAXDEPTH) {
++		/* Handle leaf block. */
++		if (blks[level].magic != XFS_DA_NODE_MAGIC) {
++			/* End of leaf, pop back towards the root. */
++			if (blks[level].index >= ds.maxrecs[level]) {
++				if (level > 0)
++					blks[level - 1].index++;
++				ds.tree_level++;
++				level--;
++				continue;
++			}
++
++			/* Dispatch record scrubbing. */
++			rec = xfs_scrub_da_btree_entry(&ds, level,
++					blks[level].index);
++			error = scrub_fn(&ds, level, rec);
++			if (error < 0 ||
++			    error == XFS_BTREE_QUERY_RANGE_ABORT)
++				break;
++			if (xfs_scrub_should_terminate(&error))
++				break;
++
++			blks[level].index++;
++			continue;
++		}
++
++		btree = xfs_scrub_da_btree_entry(&ds, level, blks[level].index);
++
++		/* End of node, pop back towards the root. */
++		if (blks[level].index >= ds.maxrecs[level]) {
++			if (level > 0)
++				blks[level - 1].index++;
++			ds.tree_level++;
++			level--;
++			continue;
++		}
++
++		/* Hashes in order for scrub? */
++		error = xfs_scrub_da_btree_hash(&ds, level, &btree->hashval);
++		if (error)
++			goto out;
++
++		/* Drill another level deeper. */
++		blkno = be32_to_cpu(btree->before);
++		level++;
++		ds.tree_level--;
++		error = xfs_scrub_da_btree_block(&ds, level, blkno);
++		if (error)
++			goto out;
++		if (blks[level].bp == NULL)
++			goto out;
++
++		blks[level].index = 0;
++	}
++
++out:
++	/* Release all the buffers we're tracking. */
++	for (level = 0; level < XFS_DA_NODE_MAXDEPTH; level++) {
++		if (blks[level].bp == NULL)
++			continue;
++		xfs_trans_brelse(sc->tp, blks[level].bp);
++		blks[level].bp = NULL;
++	}
++
++out_state:
++	xfs_da_state_free(ds.state);
++	return error;
 +}
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 4414a29..dafc315 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -762,6 +762,18 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 		.setup	= xfs_scrub_setup_inode,
- 		.scrub	= xfs_scrub_inode,
- 	},
-+	{ /* inode data fork */
-+		.setup	= xfs_scrub_setup_inode_bmap_data,
-+		.scrub	= xfs_scrub_bmap_data,
-+	},
-+	{ /* inode attr fork */
-+		.setup	= xfs_scrub_setup_inode_bmap,
-+		.scrub	= xfs_scrub_bmap_attr,
-+	},
-+	{ /* inode CoW fork */
-+		.setup	= xfs_scrub_setup_inode_bmap,
-+		.scrub	= xfs_scrub_bmap_cow,
-+	},
- };
- 
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index b4aab69..da4a14b 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -207,6 +207,8 @@ SETUP_FN(xfs_scrub_setup_ag_iallocbt);
- SETUP_FN(xfs_scrub_setup_ag_rmapbt);
- SETUP_FN(xfs_scrub_setup_ag_refcountbt);
- SETUP_FN(xfs_scrub_setup_inode);
-+SETUP_FN(xfs_scrub_setup_inode_bmap_data);
-+SETUP_FN(xfs_scrub_setup_inode_bmap);
- #undef SETUP_FN
- 
- /* Metadata scrubbers */
-@@ -223,6 +225,9 @@ SCRUB_FN(xfs_scrub_finobt);
- SCRUB_FN(xfs_scrub_rmapbt);
- SCRUB_FN(xfs_scrub_refcountbt);
- SCRUB_FN(xfs_scrub_inode);
-+SCRUB_FN(xfs_scrub_bmap_data);
-+SCRUB_FN(xfs_scrub_bmap_attr);
-+SCRUB_FN(xfs_scrub_bmap_cow);
- #undef SCRUB_FN
- 
- #endif	/* __XFS_REPAIR_COMMON_H__ */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index ec11889..68a4c87 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3341,7 +3341,10 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 	{ XFS_SCRUB_TYPE_FINOBT,	"finobt" }, \
- 	{ XFS_SCRUB_TYPE_RMAPBT,	"rmapbt" }, \
- 	{ XFS_SCRUB_TYPE_REFCNTBT,	"refcountbt" }, \
--	{ XFS_SCRUB_TYPE_INODE,		"inode" }
-+	{ XFS_SCRUB_TYPE_INODE,		"inode" }, \
-+	{ XFS_SCRUB_TYPE_BMBTD,		"bmapbtd" }, \
-+	{ XFS_SCRUB_TYPE_BMBTA,		"bmapbta" }, \
-+	{ XFS_SCRUB_TYPE_BMBTC,		"bmapbtc" }
- DECLARE_EVENT_CLASS(xfs_scrub_class,
- 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
- 		 int error),
+diff --git a/fs/xfs/scrub/dabtree.h b/fs/xfs/scrub/dabtree.h
+new file mode 100644
+index 0000000..1302d67
+--- /dev/null
++++ b/fs/xfs/scrub/dabtree.h
+@@ -0,0 +1,62 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef __XFS_REPAIR_DABTREE_H__
++#define __XFS_REPAIR_DABTREE_H__
++
++/* dir/attr btree */
++
++struct xfs_scrub_da_btree {
++	struct xfs_da_args		dargs;
++	xfs_dahash_t			hashes[XFS_DA_NODE_MAXDEPTH];
++	int				maxrecs[XFS_DA_NODE_MAXDEPTH];
++	struct xfs_da_state		*state;
++	const char			*type;
++	struct xfs_scrub_context	*sc;
++	xfs_dablk_t			lowest;
++	xfs_dablk_t			highest;
++	int				tree_level;
++};
++
++typedef void *(*xfs_da_leaf_ents_fn)(void *);
++typedef int (*xfs_scrub_da_btree_rec_fn)(struct xfs_scrub_da_btree *ds,
++		int level, void *rec);
++
++#define XFS_SCRUB_DA_CHECK(ds, fs_ok) \
++	XFS_SCRUB_DATA_CHECK((ds)->sc, (ds)->dargs.whichfork, \
++			xfs_dir2_da_to_db((ds)->dargs.geo, \
++			(ds)->state->path.blk[level].blkno), (ds)->type, \
++			fs_ok)
++#define XFS_SCRUB_DA_GOTO(ds, fs_ok, label) \
++	XFS_SCRUB_DATA_GOTO((ds)->sc, (ds)->dargs.whichfork, \
++			xfs_dir2_da_to_db((ds)->dargs.geo, \
++			(ds)->state->path.blk[level].blkno), (ds)->type, \
++			fs_ok, label)
++#define XFS_SCRUB_DA_OP_ERROR_GOTO(ds, error, label) \
++	XFS_SCRUB_FILE_OP_ERROR_GOTO((ds)->sc, (ds)->dargs.whichfork, \
++			xfs_dir2_da_to_db((ds)->dargs.geo, \
++			(ds)->state->path.blk[level].blkno), (ds)->type, \
++			(error), label)
++
++int xfs_scrub_da_btree_hash(struct xfs_scrub_da_btree *ds, int level,
++			    __be32 *hashp);
++int xfs_scrub_da_btree(struct xfs_scrub_context *sc, int whichfork,
++		       xfs_scrub_da_btree_rec_fn scrub_fn);
++
++#endif /* __XFS_REPAIR_DABTREE_H__ */
 
