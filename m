@@ -1,23 +1,24 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29802 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:29845 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751147AbdFBVZL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 17:25:11 -0400
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52LPAVh010276
+        with ESMTP id S1751147AbdFBVZR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 17:25:17 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52LPGcR010339
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:25:10 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v52LPA8M010133
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:25:16 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v52LPFHt006508
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:25:10 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v52LP9CL026014
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:25:09 GMT
-Subject: [PATCH 11/13] xfs: return the hash value of a leaf1 directory block
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:25:16 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v52LPFK8028637
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:25:15 GMT
+Subject: [PATCH 12/13] xfs: pass along transaction context when reading
+ directory block buffers
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Jun 2017 14:25:08 -0700
-Message-ID: <149643870873.23065.5974641750134566189.stgit@birch.djwong.org>
+Date: Fri, 02 Jun 2017 14:25:14 -0700
+Message-ID: <149643871474.23065.12129624430660182688.stgit@birch.djwong.org>
 In-Reply-To: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
 References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,67 +32,105 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Provide a way to calculate the highest hash value of a leaf1 block.
-This will be used by the directory scrubbing code to check the sanity
-of hashes in leaf1 directory blocks.
+Teach the directory reading functions to pass along a transaction context
+if one was supplied.  The directory scrub code will use transactions to
+lock buffers and avoid deadlocking with itself in the case of loops.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_dir2_node.c |   28 ++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_dir2_priv.h |    2 ++
- 2 files changed, 30 insertions(+)
+ fs/xfs/libxfs/xfs_dir2_priv.h |    4 ++--
+ fs/xfs/xfs_dir2_readdir.c     |   15 +++++++++++----
+ fs/xfs/xfs_file.c             |    2 +-
+ 3 files changed, 14 insertions(+), 7 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index bbd1238..15c1881 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -524,6 +524,34 @@ xfs_dir2_free_hdr_check(
- #endif	/* DEBUG */
- 
- /*
-+ * Return the last hash value in the leaf1.
-+ * Stale entries are ok.
-+ */
-+xfs_dahash_t					/* hash value */
-+xfs_dir2_leaf1_lasthash(
-+	struct xfs_inode	*dp,
-+	struct xfs_buf		*bp,		/* leaf buffer */
-+	int			*count)		/* count of entries in leaf */
-+{
-+	struct xfs_dir2_leaf	*leaf = bp->b_addr;
-+	struct xfs_dir2_leaf_entry *ents;
-+	struct xfs_dir3_icleaf_hdr leafhdr;
-+
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
-+
-+	ASSERT(leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
-+	       leafhdr.magic == XFS_DIR3_LEAF1_MAGIC);
-+
-+	if (count)
-+		*count = leafhdr.count;
-+	if (!leafhdr.count)
-+		return 0;
-+
-+	ents = dp->d_ops->leaf_ents_p(leaf);
-+	return be32_to_cpu(ents[leafhdr.count - 1].hashval);
-+}
-+
-+/*
-  * Return the last hash value in the leaf.
-  * Stale entries are ok.
-  */
 diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-index 576f2d2..c09bca1 100644
+index c09bca1..cb679cf 100644
 --- a/fs/xfs/libxfs/xfs_dir2_priv.h
 +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-@@ -95,6 +95,8 @@ extern bool xfs_dir3_leaf_check_int(struct xfs_mount *mp, struct xfs_inode *dp,
- /* xfs_dir2_node.c */
- extern int xfs_dir2_leaf_to_node(struct xfs_da_args *args,
- 		struct xfs_buf *lbp);
-+extern xfs_dahash_t xfs_dir2_leaf1_lasthash(struct xfs_inode *dp,
-+		struct xfs_buf *bp, int *count);
- extern xfs_dahash_t xfs_dir2_leafn_lasthash(struct xfs_inode *dp,
- 		struct xfs_buf *bp, int *count);
- extern int xfs_dir2_leafn_lookup_int(struct xfs_buf *bp,
+@@ -132,7 +132,7 @@ extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
+ extern int xfs_dir2_sf_verify(struct xfs_inode *ip);
+ 
+ /* xfs_dir2_readdir.c */
+-extern int xfs_readdir(struct xfs_inode *dp, struct dir_context *ctx,
+-		       size_t bufsize);
++extern int xfs_readdir(struct xfs_trans *tp, struct xfs_inode *dp,
++		       struct dir_context *ctx, size_t bufsize);
+ 
+ #endif /* __XFS_DIR2_PRIV_H__ */
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index ede4790..ba2638d 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -170,7 +170,7 @@ xfs_dir2_block_getdents(
+ 		return 0;
+ 
+ 	lock_mode = xfs_ilock_data_map_shared(dp);
+-	error = xfs_dir3_block_read(NULL, dp, &bp);
++	error = xfs_dir3_block_read(args->trans, dp, &bp);
+ 	xfs_iunlock(dp, lock_mode);
+ 	if (error)
+ 		return error;
+@@ -228,7 +228,7 @@ xfs_dir2_block_getdents(
+ 		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
+ 			    be64_to_cpu(dep->inumber),
+ 			    xfs_dir3_get_dtype(dp->i_mount, filetype))) {
+-			xfs_trans_brelse(NULL, bp);
++			xfs_trans_brelse(args->trans, bp);
+ 			return 0;
+ 		}
+ 	}
+@@ -239,7 +239,7 @@ xfs_dir2_block_getdents(
+ 	 */
+ 	ctx->pos = xfs_dir2_db_off_to_dataptr(geo, geo->datablk + 1, 0) &
+ 								0x7fffffff;
+-	xfs_trans_brelse(NULL, bp);
++	xfs_trans_brelse(args->trans, bp);
+ 	return 0;
+ }
+ 
+@@ -495,15 +495,21 @@ xfs_dir2_leaf_getdents(
+ 	else
+ 		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
+ 	if (bp)
+-		xfs_trans_brelse(NULL, bp);
++		xfs_trans_brelse(args->trans, bp);
+ 	return error;
+ }
+ 
+ /*
+  * Read a directory.
++ *
++ * If supplied, the transaction collects locked dir buffers to avoid
++ * nested buffer deadlocks.  This function does not dirty the
++ * transaction.  The caller should ensure that the inode is locked
++ * before calling this function.
+  */
+ int
+ xfs_readdir(
++	struct xfs_trans	*tp,
+ 	struct xfs_inode	*dp,
+ 	struct dir_context	*ctx,
+ 	size_t			bufsize)
+@@ -522,6 +528,7 @@ xfs_readdir(
+ 
+ 	args.dp = dp;
+ 	args.geo = dp->i_mount->m_dir_geo;
++	args.trans = tp;
+ 
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+ 		rval = xfs_dir2_sf_getdents(&args, ctx);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 5fb5a09..36c1293 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -950,7 +950,7 @@ xfs_file_readdir(
+ 	 */
+ 	bufsize = (size_t)min_t(loff_t, 32768, ip->i_d.di_size);
+ 
+-	return xfs_readdir(ip, ctx, bufsize);
++	return xfs_readdir(NULL, ip, ctx, bufsize);
+ }
+ 
+ /*
 
