@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47280 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750971AbdFBWbl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 18:31:41 -0400
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52MVeEK027702
+Received: from aserp1040.oracle.com ([141.146.126.69]:24624 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750971AbdFBWbs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 18:31:48 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52MVkiF002774
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:31:40 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v52MVeLh013409
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:31:47 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v52MVjOH015099
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:31:40 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v52MVdn2019918
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:31:40 GMT
-Subject: [PATCH 08/19] xfs: scrub free space btrees
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:31:46 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v52MVjw1027332
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:31:45 GMT
+Subject: [PATCH 09/19] xfs: scrub inode btrees
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Jun 2017 15:31:37 -0700
-Message-ID: <149644269701.19430.5903185421462394518.stgit@birch.djwong.org>
+Date: Fri, 02 Jun 2017 15:31:44 -0700
+Message-ID: <149644270460.19430.8538339141430954578.stgit@birch.djwong.org>
 In-Reply-To: <149644264601.19430.6064928774771048026.stgit@birch.djwong.org>
 References: <149644264601.19430.6064928774771048026.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,54 +31,109 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Check the extent records free space btrees to ensure that the values
-look sane.
+Check the records of the inode btrees to make sure that the values
+make sense given the inode records themselves.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile        |    1 
- fs/xfs/libxfs/xfs_fs.h |    4 +-
- fs/xfs/scrub/alloc.c   |  105 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.c  |   24 +++++++++++
- fs/xfs/scrub/common.h  |    6 +++
- fs/xfs/xfs_trace.h     |    4 +-
- 6 files changed, 142 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/scrub/alloc.c
+ fs/xfs/Makefile            |    1 
+ fs/xfs/libxfs/xfs_format.h |    2 
+ fs/xfs/libxfs/xfs_fs.h     |    4 -
+ fs/xfs/scrub/common.c      |    9 +
+ fs/xfs/scrub/common.h      |    3 
+ fs/xfs/scrub/ialloc.c      |  347 ++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_trace.h         |    4 -
+ 7 files changed, 367 insertions(+), 3 deletions(-)
+ create mode 100644 fs/xfs/scrub/ialloc.c
 
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 4ddebb5..8f8dca5 100644
+index 8f8dca5..f4c68b4 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -105,6 +105,7 @@ xfs-y				+= xfs_aops.o \
- # online scrub/repair
- xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
- 				   agheader.o \
-+				   alloc.o \
+@@ -108,6 +108,7 @@ xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
+ 				   alloc.o \
  				   btree.o \
  				   common.o \
++				   ialloc.o \
  				   )
+ 
+ # low-level transaction/log code
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index e204a94..dc9b34a 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -518,7 +518,7 @@ static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
+ 		 (sbp->sb_features2 & XFS_SB_VERSION2_FTYPE));
+ }
+ 
+-static inline int xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
++static inline bool xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
+ {
+ 	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
+ 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index f509dcbf..21bc4ff 100644
+index 21bc4ff..8567574 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -497,7 +497,9 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_AGF	2	/* AG free header */
- #define XFS_SCRUB_TYPE_AGFL	3	/* AG free list */
+@@ -499,7 +499,9 @@ struct xfs_scrub_metadata {
  #define XFS_SCRUB_TYPE_AGI	4	/* AG inode header */
--#define XFS_SCRUB_TYPE_MAX	4
-+#define XFS_SCRUB_TYPE_BNOBT	5	/* freesp by block btree */
-+#define XFS_SCRUB_TYPE_CNTBT	6	/* freesp by length btree */
-+#define XFS_SCRUB_TYPE_MAX	6
+ #define XFS_SCRUB_TYPE_BNOBT	5	/* freesp by block btree */
+ #define XFS_SCRUB_TYPE_CNTBT	6	/* freesp by length btree */
+-#define XFS_SCRUB_TYPE_MAX	6
++#define XFS_SCRUB_TYPE_INOBT	7	/* inode btree */
++#define XFS_SCRUB_TYPE_FINOBT	8	/* free inode btree */
++#define XFS_SCRUB_TYPE_MAX	8
  
  #define XFS_SCRUB_FLAG_REPAIR	0x01	/* i: repair this metadata */
  #define XFS_SCRUB_FLAG_CORRUPT	0x02	/* o: needs repair */
-diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 2203574..0486c6d 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -685,6 +685,15 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
+ 		.setup	= xfs_scrub_setup_ag_allocbt,
+ 		.scrub	= xfs_scrub_cntbt,
+ 	},
++	{ /* inobt */
++		.setup	= xfs_scrub_setup_ag_iallocbt,
++		.scrub	= xfs_scrub_inobt,
++	},
++	{ /* finobt */
++		.setup	= xfs_scrub_setup_ag_iallocbt,
++		.scrub	= xfs_scrub_finobt,
++		.has	= xfs_sb_version_hasfinobt,
++	},
+ };
+ 
+ /* Dispatch metadata scrubbing. */
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index 508c986..4aae320 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -201,6 +201,7 @@ int xfs_scrub_setup_ag_btree(struct xfs_scrub_context *sc,
+ SETUP_FN(xfs_scrub_setup_fs);
+ SETUP_FN(xfs_scrub_setup_ag_header);
+ SETUP_FN(xfs_scrub_setup_ag_allocbt);
++SETUP_FN(xfs_scrub_setup_ag_iallocbt);
+ #undef SETUP_FN
+ 
+ /* Metadata scrubbers */
+@@ -212,6 +213,8 @@ SCRUB_FN(xfs_scrub_agfl);
+ SCRUB_FN(xfs_scrub_agi);
+ SCRUB_FN(xfs_scrub_bnobt);
+ SCRUB_FN(xfs_scrub_cntbt);
++SCRUB_FN(xfs_scrub_inobt);
++SCRUB_FN(xfs_scrub_finobt);
+ #undef SCRUB_FN
+ 
+ #endif	/* __XFS_REPAIR_COMMON_H__ */
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
 new file mode 100644
-index 0000000..1709ab2
+index 0000000..ecf1852
 --- /dev/null
-+++ b/fs/xfs/scrub/alloc.c
-@@ -0,0 +1,105 @@
++++ b/fs/xfs/scrub/ialloc.c
+@@ -0,0 +1,347 @@
 +/*
 + * Copyright (C) 2017 Oracle.  All Rights Reserved.
 + *
@@ -111,160 +166,333 @@ index 0000000..1709ab2
 +#include "xfs_trans.h"
 +#include "xfs_trace.h"
 +#include "xfs_sb.h"
++#include "xfs_inode.h"
++#include "xfs_ialloc.h"
++#include "xfs_ialloc_btree.h"
++#include "xfs_icache.h"
 +#include "xfs_rmap.h"
++#include "xfs_log.h"
++#include "xfs_trans_priv.h"
 +#include "scrub/common.h"
 +#include "scrub/btree.h"
 +
 +/*
-+ * Set us up to scrub free space btrees.
-+ * Push everything out of the log so that the busy extent list is empty.
++ * Set us up to scrub inode btrees.
++ * If we detect a discrepancy between the inobt and the inode,
++ * try again after forcing logged inode cores out to disk.
 + */
 +int
-+xfs_scrub_setup_ag_allocbt(
++xfs_scrub_setup_ag_iallocbt(
 +	struct xfs_scrub_context	*sc,
 +	struct xfs_inode		*ip)
 +{
 +	return xfs_scrub_setup_ag_btree(sc, ip, sc->try_harder);
 +}
 +
-+/* Free space btree scrubber. */
++/* Inode btree scrubber. */
 +
-+/* Scrub a bnobt/cntbt record. */
++/* Scrub a chunk of an inobt record. */
 +STATIC int
-+xfs_scrub_allocbt_helper(
++xfs_scrub_iallocbt_chunk(
 +	struct xfs_scrub_btree		*bs,
-+	union xfs_btree_rec		*rec)
++	struct xfs_inobt_rec_incore	*irec,
++	xfs_agino_t			agino,
++	xfs_extlen_t			len,
++	bool				*keep_scanning)
 +{
 +	struct xfs_mount		*mp = bs->cur->bc_mp;
 +	struct xfs_agf			*agf;
++	xfs_agblock_t			eoag;
 +	xfs_agblock_t			bno;
-+	xfs_extlen_t			len;
 +	int				error = 0;
 +
-+	bno = be32_to_cpu(rec->alloc.ar_startblock);
-+	len = be32_to_cpu(rec->alloc.ar_blockcount);
 +	agf = XFS_BUF_TO_AGF(bs->sc->sa.agf_bp);
++	eoag = be32_to_cpu(agf->agf_length);
++	bno = XFS_AGINO_TO_AGBNO(mp, agino);
 +
++	*keep_scanning = true;
 +	XFS_SCRUB_BTREC_CHECK(bs, bno < mp->m_sb.sb_agblocks);
-+	XFS_SCRUB_BTREC_CHECK(bs, bno < be32_to_cpu(agf->agf_length));
++	XFS_SCRUB_BTREC_CHECK(bs, bno < eoag);
 +	XFS_SCRUB_BTREC_CHECK(bs, bno < bno + len);
 +	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)bno + len <=
 +			mp->m_sb.sb_agblocks);
 +	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)bno + len <=
-+			be32_to_cpu(agf->agf_length));
++			eoag);
++	if (error) {
++		*keep_scanning = false;
++		goto out;
++	}
++
++out:
++	return error;
++}
++
++/* Count the number of free inodes. */
++static unsigned int
++xfs_scrub_iallocbt_freecount(
++	xfs_inofree_t			freemask)
++{
++	int				bits = XFS_INODES_PER_CHUNK;
++	unsigned int			ret = 0;
++
++	while (bits--) {
++		if (freemask & 1)
++			ret++;
++		freemask >>= 1;
++	}
++
++	return ret;
++}
++
++/* Check a particular inode with ir_free. */
++STATIC int
++xfs_scrub_iallocbt_check_cluster_freemask(
++	struct xfs_scrub_btree		*bs,
++	xfs_ino_t			fsino,
++	xfs_agino_t			chunkino,
++	xfs_agino_t			clusterino,
++	struct xfs_inobt_rec_incore	*irec,
++	struct xfs_buf			*bp)
++{
++	struct xfs_dinode		*dip;
++	struct xfs_mount		*mp = bs->cur->bc_mp;
++	bool				freemask_ok;
++	bool				inuse;
++	int				error;
++
++	dip = xfs_buf_offset(bp, clusterino * mp->m_sb.sb_inodesize);
++	XFS_SCRUB_BTREC_GOTO(bs,
++			be16_to_cpu(dip->di_magic) == XFS_DINODE_MAGIC,
++			out);
++	XFS_SCRUB_BTREC_GOTO(bs,
++			dip->di_version < 3 || be64_to_cpu(dip->di_ino) ==
++				fsino + clusterino,
++			out);
++	freemask_ok = !!(irec->ir_free & XFS_INOBT_MASK(chunkino + clusterino));
++	error = xfs_icache_inode_is_allocated(mp, bs->cur->bc_tp,
++			fsino + clusterino, &inuse);
++	if (error == -ENOENT) {
++		/* Not cached, just read the disk buffer */
++		freemask_ok ^= !!(dip->di_mode);
++		if (!bs->sc->try_harder && !freemask_ok)
++			return -EDEADLOCK;
++	} else if (error < 0) {
++		/* Inode is only half assembled, don't bother. */
++		freemask_ok = true;
++	} else {
++		/* Inode is all there. */
++		freemask_ok ^= inuse;
++	}
++	XFS_SCRUB_BTREC_CHECK(bs, freemask_ok);
++out:
++	return 0;
++}
++
++/* Make sure the free mask is consistent with what the inodes think. */
++STATIC int
++xfs_scrub_iallocbt_check_freemask(
++	struct xfs_scrub_btree		*bs,
++	struct xfs_inobt_rec_incore	*irec)
++{
++	struct xfs_owner_info		oinfo;
++	struct xfs_imap			imap;
++	struct xfs_mount		*mp = bs->cur->bc_mp;
++	struct xfs_dinode		*dip;
++	struct xfs_buf			*bp;
++	xfs_ino_t			fsino;
++	xfs_agino_t			nr_inodes;
++	xfs_agino_t			agino;
++	xfs_agino_t			chunkino;
++	xfs_agino_t			clusterino;
++	xfs_agblock_t			agbno;
++	int				blks_per_cluster;
++	uint16_t			holemask;
++	uint16_t			ir_holemask;
++	int				error = 0;
++
++	/* Make sure the freemask matches the inode records. */
++	blks_per_cluster = xfs_icluster_size_fsb(mp);
++	nr_inodes = XFS_OFFBNO_TO_AGINO(mp, blks_per_cluster, 0);
++	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INODES);
++
++	for (agino = irec->ir_startino;
++	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
++	     agino += blks_per_cluster * mp->m_sb.sb_inopblock) {
++		fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
++		chunkino = agino - irec->ir_startino;
++		agbno = XFS_AGINO_TO_AGBNO(mp, agino);
++
++		/* Compute the holemask mask for this cluster. */
++		for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
++		     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
++			holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
++					XFS_INODES_PER_HOLEMASK_BIT);
++
++		/* The whole cluster must be a hole or not a hole. */
++		ir_holemask = (irec->ir_holemask & holemask);
++		XFS_SCRUB_BTREC_CHECK(bs, ir_holemask == holemask ||
++				ir_holemask == 0);
++
++		/* If any part of this is a hole, skip it. */
++		if (ir_holemask)
++			continue;
++
++		/* Grab the inode cluster buffer. */
++		imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno,
++				agbno);
++		imap.im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
++		imap.im_boffset = 0;
++
++		error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap,
++				&dip, &bp, 0, 0);
++		XFS_SCRUB_BTREC_OP_ERROR_GOTO(bs, &error, next_cluster);
++
++		/* Which inodes are free? */
++		for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
++			error = xfs_scrub_iallocbt_check_cluster_freemask(bs,
++					fsino, chunkino, clusterino, irec, bp);
++			if (error) {
++				xfs_trans_brelse(bs->cur->bc_tp, bp);
++				return error;
++			}
++		}
++
++		xfs_trans_brelse(bs->cur->bc_tp, bp);
++next_cluster:
++		;
++	}
 +
 +	return error;
 +}
 +
-+/* Scrub the freespace btrees for some AG. */
++/* Scrub an inobt/finobt record. */
 +STATIC int
-+xfs_scrub_allocbt(
++xfs_scrub_iallocbt_helper(
++	struct xfs_scrub_btree		*bs,
++	union xfs_btree_rec		*rec)
++{
++	struct xfs_mount		*mp = bs->cur->bc_mp;
++	struct xfs_agi			*agi;
++	struct xfs_inobt_rec_incore	irec;
++	uint64_t			holes;
++	xfs_agino_t			agino;
++	xfs_agblock_t			agbno;
++	xfs_extlen_t			len;
++	bool				keep_scanning;
++	int				holecount;
++	int				i;
++	int				error = 0;
++	int				err2 = 0;
++	unsigned int			real_freecount;
++	uint16_t			holemask;
++
++	xfs_inobt_btrec_to_irec(mp, rec, &irec);
++
++	XFS_SCRUB_BTREC_CHECK(bs, irec.ir_count <= XFS_INODES_PER_CHUNK);
++	XFS_SCRUB_BTREC_CHECK(bs, irec.ir_freecount <= XFS_INODES_PER_CHUNK);
++	real_freecount = irec.ir_freecount +
++			(XFS_INODES_PER_CHUNK - irec.ir_count);
++	XFS_SCRUB_BTREC_CHECK(bs, real_freecount ==
++			xfs_scrub_iallocbt_freecount(irec.ir_free));
++	agi = XFS_BUF_TO_AGI(bs->sc->sa.agi_bp);
++	agino = irec.ir_startino;
++	agbno = XFS_AGINO_TO_AGBNO(mp, irec.ir_startino);
++	XFS_SCRUB_BTREC_GOTO(bs, agbno < be32_to_cpu(agi->agi_length), out);
++	XFS_SCRUB_BTREC_CHECK(bs,
++			!(agbno & (xfs_ialloc_cluster_alignment(mp) - 1)));
++	XFS_SCRUB_BTREC_CHECK(bs, !(agbno & (xfs_icluster_size_fsb(mp) - 1)));
++
++	/* Handle non-sparse inodes */
++	if (!xfs_inobt_issparse(irec.ir_holemask)) {
++		len = XFS_B_TO_FSB(mp,
++				XFS_INODES_PER_CHUNK * mp->m_sb.sb_inodesize);
++		XFS_SCRUB_BTREC_CHECK(bs,
++				irec.ir_count == XFS_INODES_PER_CHUNK);
++
++		error = xfs_scrub_iallocbt_chunk(bs, &irec, agino, len,
++				&keep_scanning);
++		if (error)
++			goto out;
++		goto check_freemask;
++	}
++
++	/* Check each chunk of a sparse inode cluster. */
++	holemask = irec.ir_holemask;
++	holecount = 0;
++	len = XFS_B_TO_FSB(mp,
++			XFS_INODES_PER_HOLEMASK_BIT * mp->m_sb.sb_inodesize);
++	holes = ~xfs_inobt_irec_to_allocmask(&irec);
++	XFS_SCRUB_BTREC_CHECK(bs, (holes & irec.ir_free) == holes);
++	XFS_SCRUB_BTREC_CHECK(bs, irec.ir_freecount <= irec.ir_count);
++
++	for (i = 0; i < XFS_INOBT_HOLEMASK_BITS; holemask >>= 1,
++			i++, agino += XFS_INODES_PER_HOLEMASK_BIT) {
++		if (holemask & 1) {
++			holecount += XFS_INODES_PER_HOLEMASK_BIT;
++			continue;
++		}
++
++		err2 = xfs_scrub_iallocbt_chunk(bs, &irec, agino, len,
++				&keep_scanning);
++		if (!error && err2)
++			error = err2;
++		if (!keep_scanning)
++			break;
++	}
++
++	XFS_SCRUB_BTREC_CHECK(bs, holecount <= XFS_INODES_PER_CHUNK);
++	XFS_SCRUB_BTREC_CHECK(bs, holecount + irec.ir_count ==
++			XFS_INODES_PER_CHUNK);
++
++check_freemask:
++	error = xfs_scrub_iallocbt_check_freemask(bs, &irec);
++	if (error)
++		goto out;
++
++out:
++	return error;
++}
++
++/* Scrub the inode btrees for some AG. */
++STATIC int
++xfs_scrub_iallocbt(
 +	struct xfs_scrub_context	*sc,
 +	xfs_btnum_t			which)
 +{
-+	struct xfs_owner_info		oinfo;
 +	struct xfs_btree_cur		*cur;
++	struct xfs_owner_info		oinfo;
 +
-+	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
-+	cur = which == XFS_BTNUM_BNO ? sc->sa.bno_cur : sc->sa.cnt_cur;
-+	return xfs_scrub_btree(sc, cur, xfs_scrub_allocbt_helper,
++	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INOBT);
++	cur = which == XFS_BTNUM_INO ? sc->sa.ino_cur : sc->sa.fino_cur;
++	return xfs_scrub_btree(sc, cur, xfs_scrub_iallocbt_helper,
 +			&oinfo, NULL);
 +}
 +
 +int
-+xfs_scrub_bnobt(
++xfs_scrub_inobt(
 +	struct xfs_scrub_context	*sc)
 +{
-+	return xfs_scrub_allocbt(sc, XFS_BTNUM_BNO);
++	return xfs_scrub_iallocbt(sc, XFS_BTNUM_INO);
 +}
 +
 +int
-+xfs_scrub_cntbt(
++xfs_scrub_finobt(
 +	struct xfs_scrub_context	*sc)
 +{
-+	return xfs_scrub_allocbt(sc, XFS_BTNUM_CNT);
++	return xfs_scrub_iallocbt(sc, XFS_BTNUM_FINO);
 +}
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index e47d795..2203574 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -529,6 +529,22 @@ xfs_scrub_dummy(
- 	return 0;
- }
- 
-+/* Set us up with AG headers and btree cursors. */
-+int
-+xfs_scrub_setup_ag_btree(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip,
-+	bool				force_log)
-+{
-+	int				error;
-+
-+	error = xfs_scrub_setup_ag_header(sc, ip);
-+	if (error)
-+		return error;
-+
-+	return xfs_scrub_ag_init(sc, sc->sm->sm_agno, &sc->sa);
-+}
-+
- /* Per-scrubber setup functions */
- 
- /* Set us up with a transaction and an empty context. */
-@@ -661,6 +677,14 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 		.setup	= xfs_scrub_setup_ag_header,
- 		.scrub	= xfs_scrub_agi,
- 	},
-+	{ /* bnobt */
-+		.setup	= xfs_scrub_setup_ag_allocbt,
-+		.scrub	= xfs_scrub_bnobt,
-+	},
-+	{ /* cntbt */
-+		.setup	= xfs_scrub_setup_ag_allocbt,
-+		.scrub	= xfs_scrub_cntbt,
-+	},
- };
- 
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 4decfef..508c986 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -194,9 +194,13 @@ int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
- 
- /* Setup functions */
- 
-+int xfs_scrub_setup_ag_btree(struct xfs_scrub_context *sc,
-+			     struct xfs_inode *ip, bool force_log);
-+
- #define SETUP_FN(name) int name(struct xfs_scrub_context *sc, struct xfs_inode *ip)
- SETUP_FN(xfs_scrub_setup_fs);
- SETUP_FN(xfs_scrub_setup_ag_header);
-+SETUP_FN(xfs_scrub_setup_ag_allocbt);
- #undef SETUP_FN
- 
- /* Metadata scrubbers */
-@@ -206,6 +210,8 @@ SCRUB_FN(xfs_scrub_superblock);
- SCRUB_FN(xfs_scrub_agf);
- SCRUB_FN(xfs_scrub_agfl);
- SCRUB_FN(xfs_scrub_agi);
-+SCRUB_FN(xfs_scrub_bnobt);
-+SCRUB_FN(xfs_scrub_cntbt);
- #undef SCRUB_FN
- 
- #endif	/* __XFS_REPAIR_COMMON_H__ */
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 23e0d56..d277093 100644
+index d277093..5bb5b8c 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -3334,7 +3334,9 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 	{ XFS_SCRUB_TYPE_SB,		"superblock" }, \
- 	{ XFS_SCRUB_TYPE_AGF,		"AGF" }, \
+@@ -3336,7 +3336,9 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
  	{ XFS_SCRUB_TYPE_AGFL,		"AGFL" }, \
--	{ XFS_SCRUB_TYPE_AGI,		"AGI" }
-+	{ XFS_SCRUB_TYPE_AGI,		"AGI" }, \
-+	{ XFS_SCRUB_TYPE_BNOBT,		"bnobt" }, \
-+	{ XFS_SCRUB_TYPE_CNTBT,		"cntbt" }
+ 	{ XFS_SCRUB_TYPE_AGI,		"AGI" }, \
+ 	{ XFS_SCRUB_TYPE_BNOBT,		"bnobt" }, \
+-	{ XFS_SCRUB_TYPE_CNTBT,		"cntbt" }
++	{ XFS_SCRUB_TYPE_CNTBT,		"cntbt" }, \
++	{ XFS_SCRUB_TYPE_INOBT,		"inobt" }, \
++	{ XFS_SCRUB_TYPE_FINOBT,	"finobt" }
  DECLARE_EVENT_CLASS(xfs_scrub_class,
  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
  		 int error),
