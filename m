@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47584 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750971AbdFBWci (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 18:32:38 -0400
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52MWbis028582
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:32:38 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v52MWbQt030230
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:32:37 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v52MWaB7001137
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:32:36 GMT
-Subject: [PATCH 17/19] xfs: scrub extended attributes
+Received: from aserp1040.oracle.com ([141.146.126.69]:24958 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750971AbdFBWcq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 18:32:46 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52MWjoh003620
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:32:45 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v52MWiAQ016727
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:32:45 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v52MWi1T027755
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:32:44 GMT
+Subject: [PATCH 18/19] xfs: scrub symbolic links
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Jun 2017 15:32:35 -0700
-Message-ID: <149644275538.19430.8666825199552156711.stgit@birch.djwong.org>
+Date: Fri, 02 Jun 2017 15:32:41 -0700
+Message-ID: <149644276157.19430.16747383439620667429.stgit@birch.djwong.org>
 In-Reply-To: <149644264601.19430.6064928774771048026.stgit@birch.djwong.org>
 References: <149644264601.19430.6064928774771048026.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,54 +31,87 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Scrub the hash tree, keys, and values in an extended attribute structure.
-Refactor the attribute code to use the transaction if the caller supplied
-one to avoid buffer deadocks.
+Create the infrastructure to scrub symbolic link data.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile        |    1 
- fs/xfs/libxfs/xfs_fs.h |    3 -
- fs/xfs/scrub/attr.c    |  212 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.c  |    8 ++
- fs/xfs/scrub/common.h  |    3 +
- fs/xfs/xfs_trace.h     |    3 -
- 6 files changed, 228 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/scrub/attr.c
+ fs/xfs/Makefile        |    1 +
+ fs/xfs/libxfs/xfs_fs.h |    3 +-
+ fs/xfs/scrub/common.c  |    4 ++
+ fs/xfs/scrub/common.h  |    2 +
+ fs/xfs/scrub/symlink.c |   94 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_trace.h     |    3 +-
+ 6 files changed, 105 insertions(+), 2 deletions(-)
+ create mode 100644 fs/xfs/scrub/symlink.c
 
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index e989065..39255f4 100644
+index 39255f4..88a2612 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -106,6 +106,7 @@ xfs-y				+= xfs_aops.o \
- xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
- 				   agheader.o \
- 				   alloc.o \
-+				   attr.o \
- 				   bmap.o \
- 				   btree.o \
- 				   common.o \
+@@ -116,6 +116,7 @@ xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
+ 				   inode.o \
+ 				   refcount.o \
+ 				   rmap.o \
++				   symlink.o \
+ 				   )
+ 
+ # low-level transaction/log code
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 7acd5d5..9390444 100644
+index 9390444..35c85c3 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -508,7 +508,8 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_BMBTA	13	/* attr fork block mapping */
+@@ -509,7 +509,8 @@ struct xfs_scrub_metadata {
  #define XFS_SCRUB_TYPE_BMBTC	14	/* CoW fork block mapping */
  #define XFS_SCRUB_TYPE_DIR	15	/* directory */
--#define XFS_SCRUB_TYPE_MAX	15
-+#define XFS_SCRUB_TYPE_XATTR	16	/* extended attribute */
-+#define XFS_SCRUB_TYPE_MAX	16
+ #define XFS_SCRUB_TYPE_XATTR	16	/* extended attribute */
+-#define XFS_SCRUB_TYPE_MAX	16
++#define XFS_SCRUB_TYPE_SYMLINK	17	/* symbolic link */
++#define XFS_SCRUB_TYPE_MAX	17
  
  #define XFS_SCRUB_FLAG_REPAIR	0x01	/* i: repair this metadata */
  #define XFS_SCRUB_FLAG_CORRUPT	0x02	/* o: needs repair */
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 7b6e2d8..4676e59 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -819,6 +819,10 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
+ 		.setup	= xfs_scrub_setup_xattr,
+ 		.scrub	= xfs_scrub_xattr,
+ 	},
++	{ /* symbolic link */
++		.setup	= xfs_scrub_setup_symlink,
++		.scrub	= xfs_scrub_symlink,
++	},
+ };
+ 
+ /* Dispatch metadata scrubbing. */
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index 7ec2081..f00c5f6c 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -214,6 +214,7 @@ SETUP_FN(xfs_scrub_setup_inode_bmap_data);
+ SETUP_FN(xfs_scrub_setup_inode_bmap);
+ SETUP_FN(xfs_scrub_setup_directory);
+ SETUP_FN(xfs_scrub_setup_xattr);
++SETUP_FN(xfs_scrub_setup_symlink);
+ #undef SETUP_FN
+ 
+ /* Metadata scrubbers */
+@@ -235,6 +236,7 @@ SCRUB_FN(xfs_scrub_bmap_attr);
+ SCRUB_FN(xfs_scrub_bmap_cow);
+ SCRUB_FN(xfs_scrub_directory);
+ SCRUB_FN(xfs_scrub_xattr);
++SCRUB_FN(xfs_scrub_symlink);
+ #undef SCRUB_FN
+ 
+ #endif	/* __XFS_REPAIR_COMMON_H__ */
+diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
 new file mode 100644
-index 0000000..f6a4b59
+index 0000000..bbb1aed
 --- /dev/null
-+++ b/fs/xfs/scrub/attr.c
-@@ -0,0 +1,212 @@
++++ b/fs/xfs/scrub/symlink.c
+@@ -0,0 +1,94 @@
 +/*
 + * Copyright (C) 2017 Oracle.  All Rights Reserved.
 + *
@@ -112,250 +145,78 @@ index 0000000..f6a4b59
 +#include "xfs_trace.h"
 +#include "xfs_sb.h"
 +#include "xfs_inode.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_dir2.h"
-+#include "xfs_attr.h"
-+#include "xfs_attr_leaf.h"
++#include "xfs_inode_fork.h"
++#include "xfs_symlink.h"
 +#include "scrub/common.h"
-+#include "scrub/dabtree.h"
 +
-+#include <linux/posix_acl_xattr.h>
-+#include <linux/xattr.h>
-+
-+/* Set us up to scrub an inode's extended attributes. */
++/* Set us up to scrub a symbolic link. */
 +int
-+xfs_scrub_setup_xattr(
++xfs_scrub_setup_symlink(
 +	struct xfs_scrub_context	*sc,
 +	struct xfs_inode		*ip)
 +{
 +	/* Allocate the buffer without the inode lock held. */
-+	sc->buf = kmem_zalloc_large(XATTR_SIZE_MAX, KM_SLEEP);
++	sc->buf = kmem_zalloc_large(MAXPATHLEN + 1, KM_SLEEP);
 +	if (!sc->buf)
 +		return -ENOMEM;
 +
 +	return xfs_scrub_setup_inode_contents(sc, ip, 0);
 +}
 +
-+/* Extended Attributes */
++/* Symbolic links. */
 +
-+struct xfs_scrub_xattr {
-+	struct xfs_attr_list_context	context;
-+	struct xfs_scrub_context	*sc;
-+};
-+
-+#define XFS_SCRUB_ATTR_CHECK(fs_ok) \
-+	XFS_SCRUB_DATA_CHECK(sx->sc, XFS_ATTR_FORK, args.blkno, "attr", fs_ok)
-+#define XFS_SCRUB_ATTR_OP_ERROR_GOTO(label) \
-+	XFS_SCRUB_FILE_OP_ERROR_GOTO(sx->sc, XFS_ATTR_FORK, args.blkno, "attr", &error, label)
-+/* Check that an extended attribute key can be looked up by hash. */
-+static void
-+xfs_scrub_xattr_listent(
-+	struct xfs_attr_list_context	*context,
-+	int				flags,
-+	unsigned char			*name,
-+	int				namelen,
-+	int				valuelen)
-+{
-+	struct xfs_scrub_xattr		*sx;
-+	struct xfs_da_args		args = {0};
-+	int				error = 0;
-+
-+	sx = container_of(context, struct xfs_scrub_xattr, context);
-+
-+	args.flags = ATTR_KERNOTIME;
-+	if (flags & XFS_ATTR_ROOT)
-+		args.flags |= ATTR_ROOT;
-+	else if (flags & XFS_ATTR_SECURE)
-+		args.flags |= ATTR_SECURE;
-+	args.geo = context->dp->i_mount->m_attr_geo;
-+	args.whichfork = XFS_ATTR_FORK;
-+	args.dp = context->dp;
-+	args.name = name;
-+	args.namelen = namelen;
-+	args.hashval = xfs_da_hashname(args.name, args.namelen);
-+	args.trans = context->tp;
-+	args.value = sx->sc->buf;
-+	args.valuelen = XATTR_SIZE_MAX;
-+
-+	error = xfs_attr_get_ilocked(context->dp, &args);
-+	if (error == -EEXIST)
-+		error = 0;
-+	XFS_SCRUB_ATTR_OP_ERROR_GOTO(fail_xref);
-+	XFS_SCRUB_ATTR_CHECK(args.valuelen == valuelen);
-+
-+fail_xref:
-+	return;
-+}
-+#undef XFS_SCRUB_ATTR_OP_ERROR_GOTO
-+#undef XFS_SCRUB_ATTR_CHECK
-+
-+/* Scrub a attribute btree record. */
-+STATIC int
-+xfs_scrub_xattr_rec(
-+	struct xfs_scrub_da_btree	*ds,
-+	int				level,
-+	void				*rec)
-+{
-+	struct xfs_mount		*mp = ds->state->mp;
-+	struct xfs_attr_leaf_entry	*ent = rec;
-+	struct xfs_da_state_blk		*blk;
-+	struct xfs_attr_leaf_name_local	*lentry;
-+	struct xfs_attr_leaf_name_remote	*rentry;
-+	struct xfs_buf			*bp;
-+	xfs_dahash_t			calc_hash;
-+	xfs_dahash_t			hash;
-+	int				nameidx;
-+	int				hdrsize;
-+	unsigned int			badflags;
-+	int				error;
-+
-+	blk = &ds->state->path.blk[level];
-+
-+	/* Check the hash of the entry. */
-+	error = xfs_scrub_da_btree_hash(ds, level, &ent->hashval);
-+	if (error)
-+		goto out;
-+
-+	/* Find the attr entry's location. */
-+	bp = blk->bp;
-+	hdrsize = xfs_attr3_leaf_hdr_size(bp->b_addr);
-+	nameidx = be16_to_cpu(ent->nameidx);
-+	XFS_SCRUB_DA_GOTO(ds, nameidx >= hdrsize, out);
-+	XFS_SCRUB_DA_GOTO(ds, nameidx < mp->m_attr_geo->blksize, out);
-+
-+	/* Retrieve the entry and check it. */
-+	hash = be32_to_cpu(ent->hashval);
-+	badflags = ~(XFS_ATTR_LOCAL | XFS_ATTR_ROOT | XFS_ATTR_SECURE |
-+			XFS_ATTR_INCOMPLETE);
-+	XFS_SCRUB_DA_CHECK(ds, (ent->flags & badflags) == 0);
-+	if (ent->flags & XFS_ATTR_LOCAL) {
-+		lentry = (struct xfs_attr_leaf_name_local *)
-+				(((char *)bp->b_addr) + nameidx);
-+		XFS_SCRUB_DA_GOTO(ds, lentry->namelen < MAXNAMELEN, out);
-+		calc_hash = xfs_da_hashname(lentry->nameval, lentry->namelen);
-+	} else {
-+		rentry = (struct xfs_attr_leaf_name_remote *)
-+				(((char *)bp->b_addr) + nameidx);
-+		XFS_SCRUB_DA_GOTO(ds, rentry->namelen < MAXNAMELEN, out);
-+		calc_hash = xfs_da_hashname(rentry->name, rentry->namelen);
-+	}
-+	XFS_SCRUB_DA_CHECK(ds, calc_hash == hash);
-+
-+out:
-+	return error;
-+}
-+
-+/* Scrub the extended attribute metadata. */
++#define XFS_SCRUB_SYMLINK_CHECK(fs_ok) \
++	XFS_SCRUB_INO_CHECK(sc, ip->i_ino, NULL, "symlink", fs_ok)
++#define XFS_SCRUB_SYMLINK_GOTO(fs_ok, label) \
++	XFS_SCRUB_INO_GOTO(sc, ip->i_ino, NULL, "symlink", fs_ok, label)
 +int
-+xfs_scrub_xattr(
++xfs_scrub_symlink(
 +	struct xfs_scrub_context	*sc)
 +{
-+	struct xfs_scrub_xattr		sx = { 0 };
-+	struct attrlist_cursor_kern	cursor = { 0 };
-+	struct xfs_mount		*mp = sc->mp;
++	struct xfs_inode		*ip = sc->ip;
++	struct xfs_ifork		*ifp;
++	loff_t				len;
 +	int				error = 0;
 +
-+	if (!xfs_inode_hasattr(sc->ip))
++	if (!S_ISLNK(VFS_I(ip)->i_mode))
 +		return -ENOENT;
++	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	len = ip->i_d.di_size;
 +
-+	memset(&sx, 0, sizeof(sx));
-+	/* Check attribute tree structure */
-+	error = xfs_scrub_da_btree(sc, XFS_ATTR_FORK, xfs_scrub_xattr_rec);
-+	if (error)
++	/* Plausible size? */
++	XFS_SCRUB_SYMLINK_GOTO(len <= MAXPATHLEN, out);
++	XFS_SCRUB_SYMLINK_GOTO(len > 0, out);
++
++	/* Inline symlink? */
++	if (ifp->if_flags & XFS_IFINLINE) {
++		XFS_SCRUB_SYMLINK_GOTO(len > 0, out);
++		XFS_SCRUB_SYMLINK_CHECK(len <= XFS_IFORK_DSIZE(ip));
++		XFS_SCRUB_SYMLINK_CHECK(len <= strnlen(ifp->if_u1.if_data,
++				XFS_IFORK_DSIZE(ip)));
 +		goto out;
++	}
 +
-+	/* Check that every attr key can also be looked up by hash. */
-+	sx.context.dp = sc->ip;
-+	sx.context.cursor = &cursor;
-+	sx.context.resynch = 1;
-+	sx.context.put_listent = xfs_scrub_xattr_listent;
-+	sx.context.tp = sc->tp;
-+	sx.sc = sc;
-+
-+	/*
-+	 * Look up every xattr in this file by name.
-+	 *
-+	 * The VFS only locks i_rwsem when modifying attrs, so keep all
-+	 * three locks held because that's the only way to ensure we're
-+	 * the only thread poking into the da btree.  We traverse the da
-+	 * btree while holding a leaf buffer locked for the xattr name
-+	 * iteration, which doesn't really follow the usual buffer
-+	 * locking order.
-+	 */
-+	error = xfs_attr_list_int_ilocked(&sx.context);
-+	XFS_SCRUB_OP_ERROR_GOTO(sc,
-+			XFS_INO_TO_AGNO(mp, sc->ip->i_ino),
-+			XFS_INO_TO_AGBNO(mp, sc->ip->i_ino),
-+			"inode", &error, out);
++	/* Remote symlink; must read the contents. */
++	error = xfs_readlink_bmap_ilocked(sc->ip, sc->buf);
++	XFS_SCRUB_FILE_OP_ERROR_GOTO(sc, XFS_DATA_FORK, 0, "symlink",
++			&error, out);
++	XFS_SCRUB_SYMLINK_CHECK(len <= strnlen(sc->buf, MAXPATHLEN));
 +out:
 +	return error;
 +}
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 250b32d..7b6e2d8 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -657,6 +657,10 @@ xfs_scrub_teardown(
- 			IRELE(sc->ip);
- 		sc->ip = NULL;
- 	}
-+	if (sc->buf) {
-+		kmem_free(sc->buf);
-+		sc->buf = NULL;
-+	}
- 	return error;
- }
- 
-@@ -811,6 +815,10 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 		.setup	= xfs_scrub_setup_directory,
- 		.scrub	= xfs_scrub_directory,
- 	},
-+	{ /* extended attributes */
-+		.setup	= xfs_scrub_setup_xattr,
-+		.scrub	= xfs_scrub_xattr,
-+	},
- };
- 
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 66f48a4..7ec2081 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -52,6 +52,7 @@ struct xfs_scrub_context {
- 	const struct xfs_scrub_meta_fns	*fns;
- 	struct xfs_trans		*tp;
- 	struct xfs_inode		*ip;
-+	void				*buf;
- 	uint				ilock_flags;
- 	bool				try_harder;
- 
-@@ -212,6 +213,7 @@ SETUP_FN(xfs_scrub_setup_inode);
- SETUP_FN(xfs_scrub_setup_inode_bmap_data);
- SETUP_FN(xfs_scrub_setup_inode_bmap);
- SETUP_FN(xfs_scrub_setup_directory);
-+SETUP_FN(xfs_scrub_setup_xattr);
- #undef SETUP_FN
- 
- /* Metadata scrubbers */
-@@ -232,6 +234,7 @@ SCRUB_FN(xfs_scrub_bmap_data);
- SCRUB_FN(xfs_scrub_bmap_attr);
- SCRUB_FN(xfs_scrub_bmap_cow);
- SCRUB_FN(xfs_scrub_directory);
-+SCRUB_FN(xfs_scrub_xattr);
- #undef SCRUB_FN
- 
- #endif	/* __XFS_REPAIR_COMMON_H__ */
++#undef XFS_SCRUB_SYMLINK_GOTO
++#undef XFS_SCRUB_SYMLINK_CHECK
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index e5aa83a..d479144 100644
+index d479144..57a40bb 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -3345,7 +3345,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 	{ XFS_SCRUB_TYPE_BMBTD,		"bmapbtd" }, \
+@@ -3346,7 +3346,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
  	{ XFS_SCRUB_TYPE_BMBTA,		"bmapbta" }, \
  	{ XFS_SCRUB_TYPE_BMBTC,		"bmapbtc" }, \
--	{ XFS_SCRUB_TYPE_DIR,		"dir" }
-+	{ XFS_SCRUB_TYPE_DIR,		"dir" }, \
-+	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }
+ 	{ XFS_SCRUB_TYPE_DIR,		"dir" }, \
+-	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }
++	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }, \
++	{ XFS_SCRUB_TYPE_SYMLINK,	"symlink" }
  DECLARE_EVENT_CLASS(xfs_scrub_class,
  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
  		 int error),
