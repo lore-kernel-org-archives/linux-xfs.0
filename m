@@ -1,91 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40445 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751646AbdFAPtD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2017 11:49:03 -0400
-Date: Thu, 1 Jun 2017 08:48:49 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: fix installation for extended output files
-Message-ID: <20170601154849.GH4519@birch.djwong.org>
-References: <20170601025327.GU23805@eguan.usersys.redhat.com>
- <1496286073-23298-1-git-send-email-yangx.jy@cn.fujitsu.com>
- <20170601040733.GW23805@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170601040733.GW23805@eguan.usersys.redhat.com>
+Received: from shards.monkeyblade.net ([184.105.139.130]:36084 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751120AbdFBDdd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2017 23:33:33 -0400
+Date: Thu, 01 Jun 2017 23:33:29 -0400 (EDT)
+Message-Id: <20170601.233329.698047529665811283.davem@davemloft.net>
+Subject: Re: [sparc64] crc32c misbehave
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <9902b59c-0f73-f306-28e0-fea7ee4a1169@sandeen.net>
+References: <20170601.174419.2151404855471358626.davem@davemloft.net>
+        <20170601.215711.1719799806113363582.davem@davemloft.net>
+        <9902b59c-0f73-f306-28e0-fea7ee4a1169@sandeen.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Xiao Yang <yangx.jy@cn.fujitsu.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: sandeen@sandeen.net
+Cc: matorola@gmail.com, sparclinux@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu, Jun 01, 2017 at 12:07:33PM +0800, Eryu Guan wrote:
-> On Thu, Jun 01, 2017 at 11:01:13AM +0800, Xiao Yang wrote:
-> > The installation of these extended output files are skipped
-> > because they aren't matched by xfstests.  So we rename them
-> > to adapt building rules.
-> > 
-> > Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Date: Thu, 1 Jun 2017 21:10:50 -0500
+
+> On ARM, there was a gcc bug causing similar results - I /think/
+> it was https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63293
 > 
-> This patch is 2.4M in size, no wonder it didn't hit the list..
+> "programs could fail sporadically with this if an interrupt happens at
+> the wrong instant in time and data was written onto the current stack."
 > 
-> (cc linux-xfs list for these xfs specific tests)
+> https://gcc.gnu.org/ml/gcc-patches/2014-09/msg02292.html
 > 
-> > ---
-> >  tests/xfs/018                         |    8 +-
-> >  tests/xfs/018.op.irix                 | 5628 ---------------------------------
-> >  tests/xfs/018.op.linux                | 4714 ---------------------------
-> >  tests/xfs/018.out.irix                | 5628 +++++++++++++++++++++++++++++++++
-> >  tests/xfs/018.out.linux               | 4714 +++++++++++++++++++++++++++
-> >  tests/xfs/018.out.trans_buf           | 1821 +++++++++++
-> >  tests/xfs/018.out.trans_inode         | 2609 +++++++++++++++
-> >  tests/xfs/018.trans_buf               | 1821 -----------
-> >  tests/xfs/018.trans_inode             | 2609 ---------------
-> 
-> xfs/018 081 and 082 are all marked as 'deprecated', I'm wondering if we
-> can just remove them.
+> Maybe totally unrelated; if not, hope it helps.  :)
 
-I have little good to say about these -- diffing logprint outputs will
-break every time we add new log item types (which we have) so these are
-brittle.
+Wow, that looks exactly like what the bug is:
 
-> >  tests/xfs/040                         |    4 +-
-> >  tests/xfs/040.good                    |   16 -
-> >  tests/xfs/040.out.good                |   16 +
-> 
-> xfs/040 is doing source code diff between userspace vs kernel space, I'm
-> not sure if this is still needed. But xfs/040 requires KWORKAREA points
-> to a directory that contains both userspace and kernel code, I suspect
-> it's rarely run.
+crc32c:
+        .register       %g2, #scratch
+        save    %sp, -176, %sp  !
+        sethi   %hi(tfm), %g1   !, tmp121
+        mov     %i2, %o2        ! length,
+        ldx     [%g1+%lo(tfm)], %g2     ! tfm, tfm.0_4
+        mov     %i1, %o1        ! address,
+        lduw    [%g2], %g1      ! tfm.0_4->descsize, tfm.0_4->descsize
+        add     %g1, 38, %g1    ! tfm.0_4->descsize,, tmp126
+        srlx    %g1, 4, %g1     ! tmp126,, tmp127
+        sllx    %g1, 4, %g1     ! tmp127,, tmp128
+        sub     %sp, %g1, %sp   !, tmp128,
+        add     %sp, 2230, %i5  !,, tmp130
 
-It's /never/ run, because it requires dmapi.h, which doesn't exist on
-Linux, and it appears to assume the pre-libxfs-split directory layout.
-Seeing as xfsprogs ships its own "compare the libxfs code" tool now,
-I think it better to go fix it.  Patch for x/040 coming soon.
+Ok, %i5 holds the stack address of the shash context:
 
-> >  tests/xfs/081                         |    2 +-
-> >  tests/xfs/081.out.ugquota.trans_inode | 3091 ++++++++++++++++++
-> >  tests/xfs/081.ugquota.trans_inode     | 3091 ------------------
-> >  tests/xfs/082                         |    8 +-
-> >  tests/xfs/082.op.irix                 | 5628 ---------------------------------
-> >  tests/xfs/082.op.linux                | 4714 ---------------------------
-> >  tests/xfs/082.out.irix                | 5628 +++++++++++++++++++++++++++++++++
-> >  tests/xfs/082.out.linux               | 4714 +++++++++++++++++++++++++++
-> >  tests/xfs/082.out.trans_buf           | 1821 +++++++++++
-> >  tests/xfs/082.out.trans_inode         | 2609 +++++++++++++++
-> >  tests/xfs/082.trans_buf               | 1821 -----------
-> >  tests/xfs/082.trans_inode             | 2609 ---------------
-> >  24 files changed, 32662 insertions(+), 32662 deletions(-)
+ ...
+        return  %i7+8
+         lduw   [%o5+16], %o0   ! MEM[(u32 *)__shash_desc.1_10 + 16B],
 
-Ye $deities!
+'return' deallocates the stack frame plus the register window, and at
+the same time does a delayed control transfer to "%i7 + 8".  So in the
+branch delay slot instruction %i5 becomes %o5.
 
---D
+And here we are accessing deallocated stack memory in the delay slot.
 
-> 
-> Thanks,
-> Eryu
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm using gcc-6.3.0 here.
+
+And indeed the following patch makes the problem go away:
+
+diff --git a/lib/libcrc32c.c b/lib/libcrc32c.c
+index 74a54b7..bf831e2 100644
+--- a/lib/libcrc32c.c
++++ b/lib/libcrc32c.c
+@@ -43,7 +43,7 @@ static struct crypto_shash *tfm;
+ u32 crc32c(u32 crc, const void *address, unsigned int length)
+ {
+ 	SHASH_DESC_ON_STACK(shash, tfm);
+-	u32 *ctx = (u32 *)shash_desc_ctx(shash);
++	u32 ret, *ctx = (u32 *)shash_desc_ctx(shash);
+ 	int err;
+ 
+ 	shash->tfm = tfm;
+@@ -53,7 +53,9 @@ u32 crc32c(u32 crc, const void *address, unsigned int length)
+ 	err = crypto_shash_update(shash, address, length);
+ 	BUG_ON(err);
+ 
+-	return *ctx;
++	ret = *ctx;
++	barrier();
++	return ret;
+ }
+ 
+ EXPORT_SYMBOL(crc32c);
