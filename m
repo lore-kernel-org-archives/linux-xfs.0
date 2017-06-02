@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47123 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:47152 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750971AbdFBWay (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 18:30:54 -0400
+        with ESMTP id S1750971AbdFBWbC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 18:31:02 -0400
 Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52MUsM6027155
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52MV10S027400
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:30:54 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v52MUrme013308
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:31:01 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v52MV1nF013494
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:30:54 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v52MUrNH019598
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:30:53 GMT
-Subject: [PATCH 01/19] xfs: query the per-AG reservation counters
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:31:01 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v52MV0Fi000517
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:31:01 GMT
+Subject: [PATCH 02/19] xfs: add scrub tracepoints
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Jun 2017 15:30:52 -0700
-Message-ID: <149644265249.19430.5387452175590551940.stgit@birch.djwong.org>
+Date: Fri, 02 Jun 2017 15:30:58 -0700
+Message-ID: <149644265888.19430.9774464143599634279.stgit@birch.djwong.org>
 In-Reply-To: <149644264601.19430.6064928774771048026.stgit@birch.djwong.org>
 References: <149644264601.19430.6064928774771048026.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,142 +31,410 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Establish an ioctl for userspace to query the original and current
-per-AG reservation counts.  This will be used by xfs_scrub to
-check that the vfs counters are at least somewhat sane.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h |   10 ++++++++++
- fs/xfs/xfs_fsops.c     |   29 +++++++++++++++++++++++++++++
- fs/xfs/xfs_fsops.h     |    2 ++
- fs/xfs/xfs_ioctl.c     |   16 ++++++++++++++++
- fs/xfs/xfs_ioctl32.c   |    1 +
- 5 files changed, 58 insertions(+)
+ fs/xfs/libxfs/xfs_types.h |    5 +
+ fs/xfs/xfs_trace.h        |  365 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 370 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index e895d32..b0d3099 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -473,6 +473,15 @@ typedef struct xfs_swapext
- #define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH		0x2	/* don't flush log nor data */
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index 0220159..3ee2dba 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -94,6 +94,11 @@ typedef int64_t		xfs_sfiloff_t;	/* signed block number in a file */
+ #define	XFS_ATTR_FORK	1
+ #define	XFS_COW_FORK	2
  
- /*
-+ * AG reserved block counters
-+ */
-+struct xfs_fsop_ag_resblks {
-+	__u64 resblks;		/* blocks reserved now */
-+	__u64 resblks_orig;	/* blocks reserved at mount time */
-+	__u64 reserved[2];
-+};
++#define XFS_FORK_DESC \
++	{ XFS_DATA_FORK,	"data" }, \
++	{ XFS_ATTR_FORK,	"attr" }, \
++	{ XFS_COW_FORK,		"CoW" }
 +
-+/*
-  * ioctl limits
+ /*
+  * Min numbers of data/attr fork btree root pointers.
   */
- #ifdef XATTR_LIST_MAX
-@@ -547,6 +556,7 @@ typedef struct xfs_swapext
- #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
- #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
- #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, uint32_t)
-+#define XFS_IOC_GET_AG_RESBLKS	     _IOR ('X', 126, struct xfs_fsop_ag_resblks)
- /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 1a63919..7ab1bd3 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -42,6 +42,7 @@ struct xfs_btree_cur;
+ struct xfs_refcount_irec;
+ struct xfs_fsmap;
+ struct xfs_rmap_irec;
++struct xfs_scrub_metadata;
  
+ DECLARE_EVENT_CLASS(xfs_attr_list_class,
+ 	TP_PROTO(struct xfs_attr_list_context *ctx),
+@@ -3327,6 +3328,370 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_low_key);
+ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_high_key);
+ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
  
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 8f22fc5..0920d59 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -44,6 +44,7 @@
- #include "xfs_filestream.h"
- #include "xfs_rmap.h"
- #include "xfs_ag_resv.h"
-+#include "xfs_fs.h"
++/* scrub */
++#define XFS_SCRUB_TYPE_DESC \
++	{ 0, NULL }
++DECLARE_EVENT_CLASS(xfs_scrub_class,
++	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
++		 int error),
++	TP_ARGS(ip, sm, error),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(int, type)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_ino_t, inum)
++		__field(unsigned int, gen)
++		__field(unsigned int, flags)
++		__field(int, error)
++	),
++	TP_fast_assign(
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->error = error;
++	),
++	TP_printk("dev %d:%d ino %llu type %s agno %u inum %llu gen %u flags 0x%x error %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __print_symbolic(__entry->type, XFS_SCRUB_TYPE_DESC),
++		  __entry->agno,
++		  __entry->inum,
++		  __entry->gen,
++		  __entry->flags,
++		  __entry->error)
++)
++#define DEFINE_SCRUB_EVENT(name) \
++DEFINE_EVENT(xfs_scrub_class, name, \
++	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm, \
++		 int error), \
++	TP_ARGS(ip, sm, error))
++
++DEFINE_SCRUB_EVENT(xfs_scrub);
++DEFINE_SCRUB_EVENT(xfs_scrub_done);
++DEFINE_SCRUB_EVENT(xfs_scrub_deadlock_retry);
++
++DECLARE_EVENT_CLASS(xfs_scrub_sbtree_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t bno,
++		 xfs_btnum_t btnum, int level, int nlevels, int ptr),
++	TP_ARGS(mp, agno, bno, btnum, level, nlevels, ptr),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_btnum_t, btnum)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bno)
++		__field(int, level)
++		__field(int, nlevels)
++		__field(int, ptr)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->btnum = btnum;
++		__entry->bno = bno;
++		__entry->level = level;
++		__entry->nlevels = nlevels;
++		__entry->ptr = ptr;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u btnum %d level %d nlevels %d ptr %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->bno,
++		  __entry->btnum,
++		  __entry->level,
++		  __entry->nlevels,
++		  __entry->ptr)
++)
++#define DEFINE_SCRUB_SBTREE_EVENT(name) \
++DEFINE_EVENT(xfs_scrub_sbtree_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t bno, \
++		 xfs_btnum_t btnum, int level, int nlevels, int ptr), \
++	TP_ARGS(mp, agno, bno, btnum, level, nlevels, ptr))
++
++DEFINE_SCRUB_SBTREE_EVENT(xfs_scrub_btree_rec);
++DEFINE_SCRUB_SBTREE_EVENT(xfs_scrub_btree_key);
++
++TRACE_EVENT(xfs_scrub_op_error,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t bno,
++		 const char *type, int error, const char *func,
++		 int line),
++	TP_ARGS(mp, agno, bno, type, error, func, line),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bno)
++		__string(type, type)
++		__field(int, error)
++		__string(func, func)
++		__field(int, line)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->bno = bno;
++		__assign_str(type, type);
++		__entry->error = error;
++		__assign_str(func, func);
++		__entry->line = line;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u type '%s' error %d fn %s:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->bno,
++		  __get_str(type),
++		  __entry->error,
++		  __get_str(func),
++		  __entry->line)
++);
++
++TRACE_EVENT(xfs_scrub_file_op_error,
++	TP_PROTO(struct xfs_inode *ip, int whichfork, xfs_fileoff_t offset,
++		 const char *type, int error, const char *func,
++		 int line),
++	TP_ARGS(ip, whichfork, offset, type, error, func, line),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(int, whichfork)
++		__field(xfs_fileoff_t, offset)
++		__string(type, type)
++		__field(int, error)
++		__string(func, func)
++		__field(int, line)
++	),
++	TP_fast_assign(
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->whichfork = whichfork;
++		__entry->offset = offset;
++		__assign_str(type, type);
++		__entry->error = error;
++		__assign_str(func, func);
++		__entry->line = line;
++	),
++	TP_printk("dev %d:%d ino %llu %s offset %llu type '%s' error %d fn %s:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __print_symbolic(__entry->whichfork, XFS_FORK_DESC),
++		  __entry->offset,
++		  __get_str(type),
++		  __entry->error,
++		  __get_str(func),
++		  __entry->line)
++);
++
++DECLARE_EVENT_CLASS(xfs_scrub_block_error_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t bno,
++		 const char *type, const char *check, const char *func,
++		 int line),
++	TP_ARGS(mp, agno, bno, type, check, func, line),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bno)
++		__string(type, type)
++		__string(check, check)
++		__string(func, func)
++		__field(int, line)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->bno = bno;
++		__assign_str(type, type);
++		__assign_str(check, check);
++		__assign_str(func, func);
++		__entry->line = line;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u type '%s' check '%s' fn %s:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->bno,
++		  __get_str(type),
++		  __get_str(check),
++		  __get_str(func),
++		  __entry->line)
++)
++
++#define DEFINE_SCRUB_BLOCK_ERROR_EVENT(name) \
++DEFINE_EVENT(xfs_scrub_block_error_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t bno, \
++		 const char *type, const char *check, const char *func, \
++		 int line), \
++	TP_ARGS(mp, agno, bno, type, check, func, line))
++
++DEFINE_SCRUB_BLOCK_ERROR_EVENT(xfs_scrub_block_error);
++DEFINE_SCRUB_BLOCK_ERROR_EVENT(xfs_scrub_block_preen);
++
++DECLARE_EVENT_CLASS(xfs_scrub_ino_error_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno, xfs_agblock_t bno,
++		 const char *type, const char *check, const char *func,
++		 int line),
++	TP_ARGS(mp, ino, agno, bno, type, check, func, line),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bno)
++		__string(type, type)
++		__string(check, check)
++		__string(func, func)
++		__field(int, line)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->ino = ino;
++		__entry->agno = agno;
++		__entry->bno = bno;
++		__assign_str(type, type);
++		__assign_str(check, check);
++		__assign_str(func, func);
++		__entry->line = line;
++	),
++	TP_printk("dev %d:%d ino %llu agno %u agbno %u type '%s' check '%s' fn %s:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->agno,
++		  __entry->bno,
++		  __get_str(type),
++		  __get_str(check),
++		  __get_str(func),
++		  __entry->line)
++)
++
++#define DEFINE_SCRUB_INO_ERROR_EVENT(name) \
++DEFINE_EVENT(xfs_scrub_ino_error_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno, xfs_agblock_t bno, \
++		 const char *type, const char *check, const char *func, \
++		 int line), \
++	TP_ARGS(mp, ino, agno, bno, type, check, func, line))
++
++DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_error);
++DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_preen);
++
++TRACE_EVENT(xfs_scrub_data_error,
++	TP_PROTO(struct xfs_inode *ip, int whichfork, xfs_fileoff_t offset,
++		 const char *type, const char *check, const char *func,
++		 int line),
++	TP_ARGS(ip, whichfork, offset, type, check, func, line),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(int, whichfork)
++		__field(xfs_fileoff_t, offset)
++		__string(type, type)
++		__string(check, check)
++		__string(func, func)
++		__field(int, line)
++	),
++	TP_fast_assign(
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->whichfork = whichfork;
++		__entry->offset = offset;
++		__assign_str(type, type);
++		__assign_str(check, check);
++		__assign_str(func, func);
++		__entry->line = line;
++	),
++	TP_printk("dev %d:%d ino %llu %s fork offset %llu type '%s' check '%s' fn %s:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __print_symbolic(__entry->whichfork, XFS_FORK_DESC),
++		  __entry->offset,
++		  __get_str(type),
++		  __get_str(check),
++		  __get_str(func),
++		  __entry->line)
++);
++
++TRACE_EVENT(xfs_scrub_xref_error,
++	TP_PROTO(struct xfs_mount *mp, const char *type, int error,
++		 const char *func, int line),
++	TP_ARGS(mp, type, error, func, line),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__string(type, type)
++		__field(int, error)
++		__string(func, func)
++		__field(int, line)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__assign_str(type, type);
++		__entry->error = error;
++		__assign_str(func, func);
++		__entry->line = line;
++	),
++	TP_printk("dev %d:%d btree %s xref error %d fn %s:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __get_str(type),
++		  __entry->error,
++		  __get_str(func),
++		  __entry->line)
++);
++
++TRACE_EVENT(xfs_scrub_btree_error,
++	TP_PROTO(struct xfs_mount *mp, const char *bt_type, const char *bt_ptr,
++		 xfs_agnumber_t agno, xfs_agblock_t bno, const char *check,
++		 const char *func, int line),
++	TP_ARGS(mp, bt_type, bt_ptr, agno, bno, check, func, line),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__string(bt_type, bt_type)
++		__string(bt_ptr, bt_ptr)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bno)
++		__string(check, check)
++		__string(func, func)
++		__field(int, line)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__assign_str(bt_type, bt_type);
++		__assign_str(bt_ptr, bt_ptr);
++		__entry->agno = agno;
++		__entry->bno = bno;
++		__assign_str(check, check);
++		__assign_str(func, func);
++		__entry->line = line;
++	),
++	TP_printk("dev %d:%d %s %s agno %u agbno %u check '%s' fn %s:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __get_str(bt_type),
++		  __get_str(bt_ptr),
++		  __entry->agno,
++		  __entry->bno,
++		  __get_str(check),
++		  __get_str(func),
++		  __entry->line)
++);
++
++TRACE_EVENT(xfs_scrub_incomplete,
++	TP_PROTO(struct xfs_mount *mp, const char *type, const char *check,
++		 const char *func, int line),
++	TP_ARGS(mp, type, check, func, line),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__string(type, type)
++		__string(check, check)
++		__string(func, func)
++		__field(int, line)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__assign_str(type, type);
++		__assign_str(check, check);
++		__assign_str(func, func);
++		__entry->line = line;
++	),
++	TP_printk("dev %d:%d %s check '%s' fn %s:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __get_str(type),
++		  __get_str(check),
++		  __get_str(func),
++		  __entry->line)
++);
++
+ #endif /* _TRACE_XFS_H */
  
- /*
-  * File system operations
-@@ -1046,3 +1047,31 @@ xfs_fs_unreserve_ag_blocks(
- 
- 	return error;
- }
-+
-+/* Query the per-AG reservations to see how many blocks we have reserved. */
-+int
-+xfs_fs_get_ag_reserve_blocks(
-+	struct xfs_mount		*mp,
-+	struct xfs_fsop_ag_resblks	*out)
-+{
-+	struct xfs_ag_resv		*r;
-+	struct xfs_perag		*pag;
-+	xfs_agnumber_t			agno;
-+
-+	out->resblks = 0;
-+	out->resblks_orig = 0;
-+	out->reserved[0] = out->reserved[1] = 0;
-+
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+		pag = xfs_perag_get(mp, agno);
-+		r = xfs_perag_resv(pag, XFS_AG_RESV_METADATA);
-+		out->resblks += r->ar_reserved;
-+		out->resblks_orig += r->ar_asked;
-+		r = xfs_perag_resv(pag, XFS_AG_RESV_AGFL);
-+		out->resblks += r->ar_reserved;
-+		out->resblks_orig += r->ar_asked;
-+		xfs_perag_put(pag);
-+	}
-+
-+	return 0;
-+}
-diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
-index 2954c13..c8f5e26 100644
---- a/fs/xfs/xfs_fsops.h
-+++ b/fs/xfs/xfs_fsops.h
-@@ -25,6 +25,8 @@ extern int xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
- extern int xfs_reserve_blocks(xfs_mount_t *mp, uint64_t *inval,
- 				xfs_fsop_resblks_t *outval);
- extern int xfs_fs_goingdown(xfs_mount_t *mp, uint32_t inflags);
-+extern int xfs_fs_get_ag_reserve_blocks(struct xfs_mount *mp,
-+		struct xfs_fsop_ag_resblks *out);
- 
- extern int xfs_fs_reserve_ag_blocks(struct xfs_mount *mp);
- extern int xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index c8d5523..f8e894b 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1975,6 +1975,22 @@ xfs_file_ioctl(
- 		return 0;
- 	}
- 
-+	case XFS_IOC_GET_AG_RESBLKS: {
-+		struct xfs_fsop_ag_resblks	out;
-+
-+		if (!capable(CAP_SYS_ADMIN))
-+			return -EPERM;
-+
-+		error = xfs_fs_get_ag_reserve_blocks(mp, &out);
-+		if (error)
-+			return error;
-+
-+		if (copy_to_user(arg, &out, sizeof(out)))
-+			return -EFAULT;
-+
-+		return 0;
-+	}
-+
- 	case XFS_IOC_FSGROWFSDATA: {
- 		xfs_growfs_data_t in;
- 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index fa0bc4d..e8b4de3 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -556,6 +556,7 @@ xfs_file_compat_ioctl(
- 	case XFS_IOC_ERROR_INJECTION:
- 	case XFS_IOC_ERROR_CLEARALL:
- 	case FS_IOC_GETFSMAP:
-+	case XFS_IOC_GET_AG_RESBLKS:
- 		return xfs_file_ioctl(filp, cmd, p);
- #ifndef BROKEN_X86_ALIGNMENT
- 	/* These are handled fine if no alignment issues */
+ #undef TRACE_INCLUDE_PATH
 
