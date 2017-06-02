@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20741 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:31502 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750830AbdFOUgj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 16:36:39 -0400
-Subject: [PATCH 07/12] xfs_spaceman: space management tool
+        with ESMTP id S1751240AbdFBTwZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 15:52:25 -0400
+Subject: [PATCH 10/10] xfs_spaceman: add group summary mode
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 15 Jun 2017 13:36:32 -0700
-Message-ID: <149755899206.3625.14837747293278221142.stgit@birch.djwong.org>
-In-Reply-To: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
-References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
+Date: Fri, 02 Jun 2017 12:52:17 -0700
+Message-ID: <149643313776.15899.17808639449781969033.stgit@birch.djwong.org>
+In-Reply-To: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
+References: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,416 +16,150 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-xfs_spaceman is intended as a diagnostic and control tool for space
-management operations within XFS. Operations like examining free
-space, managing allocation policies, issuing block discards on free
-space, etc.
+Add a -g switch to show only a per-group summary.
 
-The tool is modelled on the xfs_io interface, allowing both
-interactive and command line control of the tool, enabling it to be
-used in scripts and automated management tools.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-[darrick: change xfsctl to ioctl]
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- Makefile          |    3 +
- spaceman/Makefile |   33 ++++++++++++++
- spaceman/file.c   |  122 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- spaceman/init.c   |  113 +++++++++++++++++++++++++++++++++++++++++++++++++
- spaceman/init.h   |   24 ++++++++++
- spaceman/space.h  |   38 +++++++++++++++++
- 6 files changed, 332 insertions(+), 1 deletion(-)
- create mode 100644 spaceman/Makefile
- create mode 100644 spaceman/file.c
- create mode 100644 spaceman/init.c
- create mode 100644 spaceman/init.h
- create mode 100644 spaceman/space.h
+ man/man8/xfs_spaceman.8 |    8 +++++++-
+ spaceman/freesp.c       |   29 +++++++++++++++++++++++++----
+ 2 files changed, 32 insertions(+), 5 deletions(-)
 
 
-diff --git a/Makefile b/Makefile
-index ba87327..72d0044 100644
---- a/Makefile
-+++ b/Makefile
-@@ -47,7 +47,7 @@ HDR_SUBDIRS = include libxfs
- DLIB_SUBDIRS = libxlog libxcmd libhandle
- LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
- TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
--		mdrestore repair rtcp m4 man doc debian
-+		mdrestore repair rtcp m4 man doc debian spaceman
+diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
+index c1d19c0..a57a0c3 100644
+--- a/man/man8/xfs_spaceman.8
++++ b/man/man8/xfs_spaceman.8
+@@ -25,7 +25,7 @@ then the program exits.
  
- ifneq ("$(PKG_PLATFORM)","darwin")
- TOOL_SUBDIRS += fsr
-@@ -88,6 +88,7 @@ quota: libxcmd
- repair: libxlog libxcmd
- copy: libxlog
- mkfs: libxcmd
-+spaceman: libxcmd
+ .SH COMMANDS
+ .TP
+-.BI "freesp [ \-sr ] [ \-b | \-e bsize | \-h h1 [ \-m bmult ]] [-a agno]"
++.BI "freesp [ \-srg ] [ \-b | \-e bsize | \-h h1 [ \-m bmult ]] [-a agno]"
+ With no arguments,
+ .B freesp
+ shows a histogram of all free space extents in the filesystem.
+@@ -49,6 +49,12 @@ option may be specified multiple times.
+ A summary of free space information will be printed if the
+ .B -s
+ option is given.
++The
++.B -g
++option prints a brief per-AG summary of the free space found in that AG.
++If
++.B -r
++is specified it will also report on free space in the realtime device.
+ .TP
+ .BR "help [ " command " ]"
+ Display a brief description of one or all commands.
+diff --git a/spaceman/freesp.c b/spaceman/freesp.c
+index 2290a5e..351f0ce 100644
+--- a/spaceman/freesp.c
++++ b/spaceman/freesp.c
+@@ -42,6 +42,7 @@ static int		histcount;
+ static int		multsize;
+ static int		seen1;
+ static int		summaryflag;
++static int		gflag;
+ static bool		rtflag;
+ static long long	totblocks;
+ static long long	totexts;
+@@ -159,6 +160,8 @@ scan_ag(
+ 	off64_t			bperag;
+ 	off64_t			aglen;
+ 	xfs_agblock_t		agbno;
++	unsigned long long	freeblks = 0;
++	unsigned long long	freeexts = 0;
+ 	int			ret;
+ 	int			i;
  
- ifeq ($(HAVE_BUILDDEFS), yes)
- include $(BUILDRULES)
-diff --git a/spaceman/Makefile b/spaceman/Makefile
-new file mode 100644
-index 0000000..df59edf
---- /dev/null
-+++ b/spaceman/Makefile
-@@ -0,0 +1,33 @@
-+#
-+# Copyright (c) 2012 Red Hat, Inc.  All Rights Reserved.
-+#
+@@ -211,6 +214,8 @@ scan_ag(
+ 			agbno = (extent->fmr_physical - (bperag * agno)) /
+ 								blocksize;
+ 			aglen = extent->fmr_length / blocksize;
++			freeblks += aglen;
++			freeexts++;
+ 
+ 			addtohist(agno, agbno, aglen);
+ 		}
+@@ -220,6 +225,15 @@ scan_ag(
+ 			break;
+ 		fsmap_advance(fsmap);
+ 	}
 +
-+TOPDIR = ..
-+include $(TOPDIR)/include/builddefs
-+
-+LTCOMMAND = xfs_spaceman
-+HFILES = init.h space.h
-+CFILES = init.c file.c
-+
-+LLDLIBS = $(LIBXCMD)
-+LTDEPENDENCIES = $(LIBXCMD)
-+LLDFLAGS = -static
-+
-+ifeq ($(ENABLE_READLINE),yes)
-+LLDLIBS += $(LIBREADLINE) $(LIBTERMCAP)
-+endif
-+
-+ifeq ($(ENABLE_EDITLINE),yes)
-+LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
-+endif
-+
-+default: depend $(LTCOMMAND)
-+
-+include $(BUILDRULES)
-+
-+install: default
-+	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
-+	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
-+install-dev:
-+
-+-include .dep
-diff --git a/spaceman/file.c b/spaceman/file.c
-new file mode 100644
-index 0000000..beca5ba
---- /dev/null
-+++ b/spaceman/file.c
-@@ -0,0 +1,122 @@
-+/*
-+ * Copyright (c) 2004-2005 Silicon Graphics, Inc.
-+ * Copyright (c) 2012 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include "libxfs.h"
-+#include <sys/mman.h>
-+#include "command.h"
-+#include "input.h"
-+#include "init.h"
-+#include "space.h"
-+
-+static cmdinfo_t print_cmd;
-+
-+fileio_t	*filetable;
-+int		filecount;
-+fileio_t	*file;
-+
-+static void
-+print_fileio(
-+	fileio_t	*file,
-+	int		index,
-+	int		braces)
-+{
-+	printf(_("%c%03d%c %-14s\n"), braces? '[' : ' ', index,
-+			braces? ']' : ' ', file->name);
-+}
-+
-+static int
-+print_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	int		i;
-+
-+	for (i = 0; i < filecount; i++)
-+		print_fileio(&filetable[i], i, &filetable[i] == file);
-+	return 0;
-+}
-+
-+int
-+openfile(
-+	char		*path,
-+	xfs_fsop_geom_t	*geom)
-+{
-+	int		fd;
-+
-+	fd = open(path, 0);
-+	if (fd < 0) {
-+		perror(path);
-+		return -1;
++	if (gflag) {
++		if (agno == NULLAGNUMBER)
++			printf(_("     rtdev %10llu %10llu\n"), freeexts,
++					freeblks);
++		else
++			printf(_("%10u %10llu %10llu\n"), agno, freeexts,
++					freeblks);
 +	}
-+
-+	if (ioctl(fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
-+		perror("XFS_IOC_FSGEOMETRY");
-+		close(fd);
-+		return -1;
-+	}
-+	return fd;
-+}
-+
-+int
-+addfile(
-+	char		*name,
-+	int		fd,
-+	xfs_fsop_geom_t	*geometry)
-+{
-+	char		*filename;
-+
-+	filename = strdup(name);
-+	if (!filename) {
-+		perror("strdup");
-+		close(fd);
-+		return -1;
-+	}
-+
-+	/* Extend the table of currently open files */
-+	filetable = (fileio_t *)realloc(filetable,	/* growing */
-+					++filecount * sizeof(fileio_t));
-+	if (!filetable) {
-+		perror("realloc");
-+		filecount = 0;
-+		free(filename);
-+		close(fd);
-+		return -1;
-+	}
-+
-+	/* Finally, make this the new active open file */
-+	file = &filetable[filecount - 1];
-+	file->fd = fd;
-+	file->name = filename;
-+	file->geom = *geometry;
-+	return 0;
-+}
-+
-+void
-+print_init(void)
-+{
-+	print_cmd.name = "print";
-+	print_cmd.altname = "p";
-+	print_cmd.cfunc = print_f;
-+	print_cmd.argmin = 0;
-+	print_cmd.argmax = 0;
-+	print_cmd.flags = CMD_FLAG_ONESHOT;
-+	print_cmd.oneline = _("list current open files");
-+
-+	add_command(&print_cmd);
-+}
-diff --git a/spaceman/init.c b/spaceman/init.c
-new file mode 100644
-index 0000000..8cbfbda
---- /dev/null
-+++ b/spaceman/init.c
-@@ -0,0 +1,113 @@
-+/*
-+ * Copyright (c) 2012 Red Hat, Inc
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include "libxfs.h"
-+#include "command.h"
-+#include "input.h"
-+#include "init.h"
-+#include "space.h"
-+
-+char	*progname;
-+int	exitcode;
-+
-+void
-+usage(void)
-+{
-+	fprintf(stderr,
-+		_("Usage: %s [-c cmd] file\n"),
-+		progname);
-+	exit(1);
-+}
-+
-+static void
-+init_commands(void)
-+{
-+	print_init();
-+	help_init();
-+	quit_init();
-+}
-+
-+static int
-+init_args_command(
-+	int	index)
-+{
-+	if (index >= filecount)
-+		return 0;
-+	file = &filetable[index++];
-+	return index;
-+}
-+
-+static int
-+init_check_command(
-+	const cmdinfo_t	*ct)
-+{
-+	if (!(ct->flags & CMD_FLAG_ONESHOT))
-+		return 0;
-+	return 1;
-+}
-+
-+void
-+init(
-+	int		argc,
-+	char		**argv)
-+{
-+	int		c;
-+	xfs_fsop_geom_t	geometry = { 0 };
-+
-+	progname = basename(argv[0]);
-+	setlocale(LC_ALL, "");
-+	bindtextdomain(PACKAGE, LOCALEDIR);
-+	textdomain(PACKAGE);
-+
-+	while ((c = getopt(argc, argv, "c:V")) != EOF) {
-+		switch (c) {
-+		case 'c':
-+			add_user_command(optarg);
+ }
+ static void
+ aglistadd(
+@@ -244,7 +258,7 @@ init(
+ 	aglist = NULL;
+ 	hist = NULL;
+ 	rtflag = false;
+-	while ((c = getopt(argc, argv, "a:bde:h:m:rs")) != EOF) {
++	while ((c = getopt(argc, argv, "a:bde:gh:m:rs")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+ 			aglistadd(optarg);
+@@ -264,6 +278,10 @@ init(
+ 			equalsize = atoi(optarg);
+ 			speced = 1;
+ 			break;
++		case 'g':
++			histcount = 0;
++			gflag++;
 +			break;
-+		case 'V':
-+			printf(_("%s version %s\n"), progname, VERSION);
-+			exit(0);
-+		default:
-+			usage();
-+		}
-+	}
-+
-+	if (optind != argc - 1)
-+		usage();
-+
-+	if ((c = openfile(argv[optind], &geometry)) < 0)
-+		exit(1);
-+	if (!platform_test_xfs_fd(c))
-+		printf(_("Not an XFS filesystem!\n"));
-+	if (addfile(argv[optind], c, &geometry) < 0)
-+		exit(1);
-+
-+	init_commands();
-+	add_command_iterator(init_args_command);
-+	add_check_command(init_check_command);
-+}
-+
-+int
-+main(
-+	int	argc,
-+	char	**argv)
-+{
-+	init(argc, argv);
-+	command_loop();
-+	return exitcode;
-+}
-diff --git a/spaceman/init.h b/spaceman/init.h
-new file mode 100644
-index 0000000..e9c25be
---- /dev/null
-+++ b/spaceman/init.h
-@@ -0,0 +1,24 @@
-+/*
-+ * Copyright (c) 2012 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#ifndef XFS_SPACEMAN_INIT_H_
-+#define XFS_SPACEMAN_INIT_H_
-+
-+extern char	*progname;
-+extern int	exitcode;
-+
-+#endif /* XFS_SPACEMAN_INIT_H_ */
-diff --git a/spaceman/space.h b/spaceman/space.h
-new file mode 100644
-index 0000000..7bfe874
---- /dev/null
-+++ b/spaceman/space.h
-@@ -0,0 +1,38 @@
-+/*
-+ * Copyright (c) 2012 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#ifndef XFS_SPACEMAN_SPACE_H_
-+#define XFS_SPACEMAN_SPACE_H_
-+
-+typedef struct fileio {
-+	xfs_fsop_geom_t	geom;		/* XFS filesystem geometry */
-+	char		*name;		/* file name at time of open */
-+	int		fd;		/* open file descriptor */
-+} fileio_t;
-+
-+extern fileio_t		*filetable;	/* open file table */
-+extern int		filecount;	/* number of open files */
-+extern fileio_t		*file;		/* active file in file table */
-+
-+extern int	openfile(char *, xfs_fsop_geom_t *);
-+extern int	addfile(char *, int , xfs_fsop_geom_t *);
-+
-+extern void	print_init(void);
-+extern void	help_init(void);
-+extern void	quit_init(void);
-+
-+#endif /* XFS_SPACEMAN_SPACE_H_ */
+ 		case 'h':
+ 			if (speced && !histcount)
+ 				return 0;
+@@ -306,13 +324,15 @@ freesp_f(
+ 
+ 	if (!init(argc, argv))
+ 		return 0;
++	if (gflag)
++		printf(_("        AG    extents     blocks\n"));
+ 	if (rtflag)
+ 		scan_ag(NULLAGNUMBER);
+ 	for (agno = 0; !rtflag && agno < file->geom.agcount; agno++)  {
+ 		if (inaglist(agno))
+ 			scan_ag(agno);
+ 	}
+-	if (histcount)
++	if (histcount && !gflag)
+ 		printhist();
+ 	if (summaryflag) {
+ 		printf(_("total free extents %lld\n"), totexts);
+@@ -334,12 +354,13 @@ freesp_help(void)
+ "\n"
+ "Examine filesystem free space\n"
+ "\n"
+-"Options: [-bdsr] [-a agno] [-e bsize] [-h h1]... [-m bmult]\n"
++"Options: [-bdgsr] [-a agno] [-e bsize] [-h h1]... [-m bmult]\n"
+ "\n"
+ " -a agno  -- Scan only the given AG agno.\n"
+ " -b       -- binary histogram bin size\n"
+ " -d       -- debug output\n"
+ " -e bsize -- Use fixed histogram bin size of bsize\n"
++" -g       -- Print only a per-AG summary.\n"
+ " -h hbsz  -- Use custom histogram bin size of h1.\n"
+ "             Multiple specifications are allowed.\n"
+ " -m bmult -- Use histogram bin size multiplier of bmult.\n"
+@@ -357,7 +378,7 @@ freesp_init(void)
+ 	freesp_cmd.cfunc = freesp_f;
+ 	freesp_cmd.argmin = 0;
+ 	freesp_cmd.argmax = -1;
+-	freesp_cmd.args = "[-bdsr] [-a agno] [-e bsize] [-h h1]... [-m bmult]";
++	freesp_cmd.args = "[-bdgsr] [-a agno] [-e bsize] [-h h1]... [-m bmult]";
+ 	freesp_cmd.flags = CMD_FLAG_ONESHOT;
+ 	freesp_cmd.oneline = _("Examine filesystem free space");
+ 	freesp_cmd.help = freesp_help;
 
