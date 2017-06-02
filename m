@@ -1,138 +1,456 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40602 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751944AbdFLMXI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Jun 2017 08:23:08 -0400
-Date: Mon, 12 Jun 2017 08:23:06 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: free uncommitted transactions during log recovery
-Message-ID: <20170612122304.GA10244@bfoster.bfoster>
-References: <1497029889-12299-1-git-send-email-bfoster@redhat.com>
- <20170610211029.GM4530@birch.djwong.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43898 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750918AbdFBTvv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 15:51:51 -0400
+Subject: [PATCH 05/10] xfs_spaceman: space management tool
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 02 Jun 2017 12:51:45 -0700
+Message-ID: <149643310508.15899.8647641887998046926.stgit@birch.djwong.org>
+In-Reply-To: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
+References: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170610211029.GM4530@birch.djwong.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Sat, Jun 10, 2017 at 02:10:29PM -0700, Darrick J. Wong wrote:
-> On Fri, Jun 09, 2017 at 01:38:09PM -0400, Brian Foster wrote:
-> > Log recovery allocates in-core transaction and member item data
-> > structures on-demand as it processes the on-disk log. Transactions
-> > are allocated on first encounter on-disk and stored in a hash table
-> > structure where they are easily accessible for subsequent lookups.
-> > Transaction items are also allocated on demand and are attached to
-> > the associated transactions.
-> > 
-> > When a commit record is encountered in the log, the transaction is
-> > committed to the fs and the in-core structures are freed. If a
-> > filesystem crashes or shuts down before all in-core log buffers are
-> > flushed to the log, however, not all transactions may have commit
-> > records in the log. As expected, the modifications in such an
-> > incomplete transaction are not replayed to the fs. The in-core data
-> > structures for the partial transaction are never freed, however,
-> > resulting in a memory leak.
-> > 
-> > Update xlog_do_recovery_pass() to walk the hash table of transaction
-> > lists as the last step before it goes out of scope and free any
-> > transactions that may remain on the lists. This prevents a memory
-> > leak of partial transactions in the log.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> 
-> Looks ok, I think.
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Do the log intent items get freed properly too?  I /think/ the answer is
-> yes, but that yes could use another set of eyes. :)
-> 
+From: Dave Chinner <dchinner@redhat.com>
 
-Good question. Taking a quick look at the recovery lifecycle of an EFI,
-we can see it is created in xlog_recover_efi_pass2() with 2 references.
-This is called when we've hit a commit record for a transaction that
-contains the on-disk EFI (so there's no potential leak before this
-point). The first ref is immediately dropped after the EFI is inserted
-into the AIL. The common expectation is that the other reference is
-dropped when we process the commit record for the transaction that
-contains the corresponding EFD (i.e., the case where the extent free
-operation is captured by the log).
+xfs_spaceman is intended as a diagnostic and control tool for space
+management operations within XFS. Operations like examining free
+space, managing allocation policies, issuing block discards on free
+space, etc.
 
-The alternative case (no EFD in the log) is the case where it is the
-responsibility of the log recovery code to actually re-invoke the
-operation. This occurs down in xlog_recover_process_intents() -> ... ->
-xfs_efi_recover(), where we now allocate a corresponding EFD, perform
-the free and commit the transaction. The EFD now owns the EFI, so at
-this point I believe the same rules apply with respect to EFI/EFD memory
-management as if log recovery weren't running. E.g., the modifications
-eventually make it from the CIL to the on-disk log and ->iop_committed()
-of the EFD drops the corresponding EFI reference and frees the EFD.
+The tool is modelled on the xfs_io interface, allowing both
+interactive and command line control of the tool, enabling it to be
+used in scripts and automated management tools.
 
-I think this will probably look the same for other intent types, so the
-short of it is that I think the log intent items are not susceptible to
-this problem. They are intentionally designed to handle the case where
-the associated high-level transaction had not been completed by the time
-the fs died. FWIW, if there was a problem here, I think the problem may
-also be more obvious than a memory leak because the intent items sit in
-the AIL and potentially pin the tail of the log.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[darrick: change xfsctl to ioctl]
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ Makefile          |    3 +
+ spaceman/Makefile |   33 ++++++++++++
+ spaceman/file.c   |  149 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ spaceman/init.c   |  114 +++++++++++++++++++++++++++++++++++++++++
+ spaceman/init.h   |   23 ++++++++
+ spaceman/space.h  |   36 +++++++++++++
+ 6 files changed, 357 insertions(+), 1 deletion(-)
+ create mode 100644 spaceman/Makefile
+ create mode 100644 spaceman/file.c
+ create mode 100644 spaceman/init.c
+ create mode 100644 spaceman/init.h
+ create mode 100644 spaceman/space.h
 
-Brian
 
-> --D
-> 
-> > ---
-> > 
-> > FYI, I suspect this has been a problem for a while and and rare/harmless
-> > enough that this can target 4.13.
-> > 
-> > Brian
-> > 
-> >  fs/xfs/xfs_log_recover.c | 14 ++++++++++++++
-> >  1 file changed, 14 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > index 4a98762..37b34c5 100644
-> > --- a/fs/xfs/xfs_log_recover.c
-> > +++ b/fs/xfs/xfs_log_recover.c
-> > @@ -5224,6 +5224,7 @@ xlog_do_recovery_pass(
-> >  	int			error2 = 0;
-> >  	int			bblks, split_bblks;
-> >  	int			hblks, split_hblks, wrapped_hblks;
-> > +	int			i;
-> >  	struct hlist_head	rhash[XLOG_RHASH_SIZE];
-> >  	LIST_HEAD		(buffer_list);
-> >  
-> > @@ -5466,6 +5467,19 @@ xlog_do_recovery_pass(
-> >  	if (error && first_bad)
-> >  		*first_bad = rhead_blk;
-> >  
-> > +	/*
-> > +	 * Transactions are freed at commit time but transactions without commit
-> > +	 * records on disk are never committed. Free any that may be left in the
-> > +	 * hash table.
-> > +	 */
-> > +	for (i = 0; i < XLOG_RHASH_SIZE; i++) {
-> > +		struct hlist_node	*tmp;
-> > +		struct xlog_recover	*trans;
-> > +
-> > +		hlist_for_each_entry_safe(trans, tmp, &rhash[i], r_list)
-> > +			xlog_recover_free_trans(trans);
-> > +	}
-> > +
-> >  	return error ? error : error2;
-> >  }
-> >  
-> > -- 
-> > 2.7.5
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/Makefile b/Makefile
+index ba87327..72d0044 100644
+--- a/Makefile
++++ b/Makefile
+@@ -47,7 +47,7 @@ HDR_SUBDIRS = include libxfs
+ DLIB_SUBDIRS = libxlog libxcmd libhandle
+ LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
+ TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
+-		mdrestore repair rtcp m4 man doc debian
++		mdrestore repair rtcp m4 man doc debian spaceman
+ 
+ ifneq ("$(PKG_PLATFORM)","darwin")
+ TOOL_SUBDIRS += fsr
+@@ -88,6 +88,7 @@ quota: libxcmd
+ repair: libxlog libxcmd
+ copy: libxlog
+ mkfs: libxcmd
++spaceman: libxcmd
+ 
+ ifeq ($(HAVE_BUILDDEFS), yes)
+ include $(BUILDRULES)
+diff --git a/spaceman/Makefile b/spaceman/Makefile
+new file mode 100644
+index 0000000..df59edf
+--- /dev/null
++++ b/spaceman/Makefile
+@@ -0,0 +1,33 @@
++#
++# Copyright (c) 2012 Red Hat, Inc.  All Rights Reserved.
++#
++
++TOPDIR = ..
++include $(TOPDIR)/include/builddefs
++
++LTCOMMAND = xfs_spaceman
++HFILES = init.h space.h
++CFILES = init.c file.c
++
++LLDLIBS = $(LIBXCMD)
++LTDEPENDENCIES = $(LIBXCMD)
++LLDFLAGS = -static
++
++ifeq ($(ENABLE_READLINE),yes)
++LLDLIBS += $(LIBREADLINE) $(LIBTERMCAP)
++endif
++
++ifeq ($(ENABLE_EDITLINE),yes)
++LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
++endif
++
++default: depend $(LTCOMMAND)
++
++include $(BUILDRULES)
++
++install: default
++	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
++	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
++install-dev:
++
++-include .dep
+diff --git a/spaceman/file.c b/spaceman/file.c
+new file mode 100644
+index 0000000..9356066
+--- /dev/null
++++ b/spaceman/file.c
+@@ -0,0 +1,149 @@
++/*
++ * Copyright (c) 2004-2005 Silicon Graphics, Inc.
++ * Copyright (c) 2012 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include "libxfs.h"
++#include <sys/mman.h>
++#include "command.h"
++#include "input.h"
++#include "init.h"
++#include "space.h"
++
++static cmdinfo_t print_cmd;
++
++fileio_t	*filetable;
++int		filecount;
++fileio_t	*file;
++
++static void
++print_fileio(
++	fileio_t	*file,
++	int		index,
++	int		braces)
++{
++	printf(_("%c%03d%c %-14s (%s,%s,%s%s%s)\n"),
++		braces? '[' : ' ', index, braces? ']' : ' ', file->name,
++		file->flags & O_SYNC ? _("sync") : _("non-sync"),
++		file->flags & O_DIRECT ? _("direct") : _("non-direct"),
++		file->flags & O_RDONLY ? _("read-only") : _("read-write"),
++		file->flags & O_APPEND ? _(",append-only") : "",
++		file->flags & O_NONBLOCK ? _(",non-block") : "");
++}
++
++int
++filelist_f(void)
++{
++	int		i;
++
++	for (i = 0; i < filecount; i++)
++		print_fileio(&filetable[i], i, &filetable[i] == file);
++	return 0;
++}
++
++static int
++print_f(
++	int		argc,
++	char		**argv)
++{
++	filelist_f();
++	return 0;
++}
++
++int
++openfile(
++	char		*path,
++	xfs_fsop_geom_t	*geom,
++	int		flags,
++	mode_t		mode)
++{
++	int		fd;
++
++	fd = open(path, flags, mode);
++	if (fd < 0) {
++		if ((errno == EISDIR) && (flags & O_RDWR)) {
++			/* make it as if we asked for O_RDONLY & try again */
++			flags &= ~O_RDWR;
++			flags |= O_RDONLY;
++			fd = open(path, flags, mode);
++			if (fd < 0) {
++				perror(path);
++				return -1;
++			}
++		} else {
++			perror(path);
++			return -1;
++		}
++	}
++
++	if (ioctl(fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
++		perror("XFS_IOC_FSGEOMETRY");
++		close(fd);
++		return -1;
++	}
++	return fd;
++}
++
++int
++addfile(
++	char		*name,
++	int		fd,
++	xfs_fsop_geom_t	*geometry,
++	int		flags)
++{
++	char		*filename;
++
++	filename = strdup(name);
++	if (!filename) {
++		perror("strdup");
++		close(fd);
++		return -1;
++	}
++
++	/* Extend the table of currently open files */
++	filetable = (fileio_t *)realloc(filetable,	/* growing */
++					++filecount * sizeof(fileio_t));
++	if (!filetable) {
++		perror("realloc");
++		filecount = 0;
++		free(filename);
++		close(fd);
++		return -1;
++	}
++
++	/* Finally, make this the new active open file */
++	file = &filetable[filecount - 1];
++	file->fd = fd;
++	file->flags = flags;
++	file->name = filename;
++	file->geom = *geometry;
++	return 0;
++}
++
++void
++file_init(void)
++{
++	print_cmd.name = "print";
++	print_cmd.altname = "p";
++	print_cmd.cfunc = print_f;
++	print_cmd.argmin = 0;
++	print_cmd.argmax = 0;
++	print_cmd.flags = CMD_FLAG_ONESHOT;
++	print_cmd.oneline = _("list current open files");
++
++	add_command(&print_cmd);
++}
+diff --git a/spaceman/init.c b/spaceman/init.c
+new file mode 100644
+index 0000000..5dbaef2
+--- /dev/null
++++ b/spaceman/init.c
+@@ -0,0 +1,114 @@
++/*
++ * Copyright (c) 2012 Red Hat, Inc
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include "libxfs.h"
++#include "command.h"
++#include "input.h"
++#include "init.h"
++#include "space.h"
++
++char	*progname;
++int	exitcode;
++
++void
++usage(void)
++{
++	fprintf(stderr,
++		_("Usage: %s [-c cmd] file\n"),
++		progname);
++	exit(1);
++}
++
++static void
++init_commands(void)
++{
++	file_init();
++	help_init();
++	quit_init();
++}
++
++static int
++init_args_command(
++	int	index)
++{
++	if (index >= filecount)
++		return 0;
++	file = &filetable[index++];
++	return index;
++}
++
++static int
++init_check_command(
++	const cmdinfo_t	*ct)
++{
++	if (!(ct->flags & CMD_FLAG_ONESHOT))
++		return 0;
++	return 1;
++}
++
++void
++init(
++	int		argc,
++	char		**argv)
++{
++	int		c, flags = 0;
++	mode_t		mode = 0600;
++	xfs_fsop_geom_t	geometry = { 0 };
++
++	progname = basename(argv[0]);
++	setlocale(LC_ALL, "");
++	bindtextdomain(PACKAGE, LOCALEDIR);
++	textdomain(PACKAGE);
++
++	while ((c = getopt(argc, argv, "c:V")) != EOF) {
++		switch (c) {
++		case 'c':
++			add_user_command(optarg);
++			break;
++		case 'V':
++			printf(_("%s version %s\n"), progname, VERSION);
++			exit(0);
++		default:
++			usage();
++		}
++	}
++
++	if (optind != argc - 1)
++		usage();
++
++	if ((c = openfile(argv[optind], &geometry, flags, mode)) < 0)
++		exit(1);
++	if (!platform_test_xfs_fd(c))
++		printf(_("Not an XFS filesystem!\n"));
++	if (addfile(argv[optind], c, &geometry, flags) < 0)
++		exit(1);
++
++	init_commands();
++	add_command_iterator(init_args_command);
++	add_check_command(init_check_command);
++}
++
++int
++main(
++	int	argc,
++	char	**argv)
++{
++	init(argc, argv);
++	command_loop();
++	return exitcode;
++}
+diff --git a/spaceman/init.h b/spaceman/init.h
+new file mode 100644
+index 0000000..165e4f5
+--- /dev/null
++++ b/spaceman/init.h
+@@ -0,0 +1,23 @@
++/*
++ * Copyright (c) 2012 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++extern char	*progname;
++extern int	exitcode;
++
++#define min(a,b)	(((a)<(b))?(a):(b))
++#define max(a,b)	(((a)>(b))?(a):(b))
+diff --git a/spaceman/space.h b/spaceman/space.h
+new file mode 100644
+index 0000000..6e1bc52
+--- /dev/null
++++ b/spaceman/space.h
+@@ -0,0 +1,36 @@
++/*
++ * Copyright (c) 2012 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++typedef struct fileio {
++	int		fd;		/* open file descriptor */
++	int		flags;		/* flags describing file state */
++	char		*name;		/* file name at time of open */
++	xfs_fsop_geom_t	geom;		/* XFS filesystem geometry */
++} fileio_t;
++
++extern fileio_t		*filetable;	/* open file table */
++extern int		filecount;	/* number of open files */
++extern fileio_t		*file;		/* active file in file table */
++extern int filelist_f(void);
++
++extern int	openfile(char *, xfs_fsop_geom_t *, int, mode_t);
++extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
++
++extern void	file_init(void);
++extern void	help_init(void);
++extern void	quit_init(void);
+
