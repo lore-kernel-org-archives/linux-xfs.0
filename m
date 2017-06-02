@@ -1,73 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:32782 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751436AbdFFVwz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jun 2017 17:52:55 -0400
-Subject: Re: Polish translation update for xfsprogs 4.11.0
-References: <20170606143628.GA3227@stranger.qboosh.pl>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <201078fb-95d7-a1de-366b-97f26e456bdc@sandeen.net>
-Date: Tue, 6 Jun 2017 16:52:54 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:21557 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750971AbdFBWTq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 18:19:46 -0400
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52MJiYU026002
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:19:45 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v52MJiY0002077
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:19:44 GMT
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v52MJh2X028625
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:19:44 GMT
+Date: Fri, 2 Jun 2017 15:19:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 14/13] xfs: allow reading of already-locked remote symbolic
+ link
+Message-ID: <20170602221942.GE5636@birch.djwong.org>
+References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170606143628.GA3227@stranger.qboosh.pl>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jakub Bogusz <qboosh@pld-linux.org>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 6/6/17 9:36 AM, Jakub Bogusz wrote:
-> Hello,
-> 
-> As advised in e-mail correspondence, I'm sending an update this way
-> (complete file is ~480kB, diff is ~550kB long).
-> 
-> Updated pl.po is available at:
-> http://qboosh.pl/pl.po/xfsprogs-4.11.0.pl.po
-> 
-> Commit header:
-> 
-> From 9e8c80a3b212927604bf5e0e730025dbe2a30f44 Mon Sep 17 00:00:00 2001
-> From: Jakub Bogusz <qboosh@pld-linux.org>
-> Date: Tue, 6 Jun 2017 16:01:24 +0200
-> Subject: [PATCH] po/pl.po: update Polish translation for 4.11.0
-> 
-> Signed-off-by: Jakub Bogusz <qboosh@pld-linux.org>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Expose the readlink variant that doesn't take the inode lock so that
+the scrubber can inspect symlink contents.
 
-insofar as I can do such things.  :) thank you!
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_symlink.c |    6 +++---
+ fs/xfs/xfs_symlink.h |    1 +
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
--Eric
-
-> ---
->  po/pl.po | 8733 ++++++++++++++++++++++++++++++++++++++------------------------
->  1 file changed, 5400 insertions(+), 3333 deletions(-)
-> 
-> diff --git a/po/pl.po b/po/pl.po
-> index 49209f3d..dab8bcf0 100644
-> --- a/po/pl.po
-> +++ b/po/pl.po
-> @@ -1,13 +1,13 @@
->  # Polish translation for xfsprogs.
->  # This file is distributed under the same license as the xfsprogs package.
-> -# Jakub Bogusz <qboosh@pld-linux.org>, 2006-2014.
-> +# Jakub Bogusz <qboosh@pld-linux.org>, 2006-2017.
->  #
->  msgid ""
->  msgstr ""
-> -"Project-Id-Version: xfsprogs 3.2.0+git20140709\n"
-> +"Project-Id-Version: xfsprogs 4.11.0\n"
->  "Report-Msgid-Bugs-To: \n"
-> -"POT-Creation-Date: 2014-07-09 19:08+0200\n"
-> -"PO-Revision-Date: 2014-07-09 20:45+0200\n"
-> +"POT-Creation-Date: 2017-05-05 13:48-0500\n"
-> +"PO-Revision-Date: 2017-05-12 22:30+0200\n"
->  "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
->  "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
->  "Language: pl\n"
-> 
-> 
-> 
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index f2cb45e..49380485 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -43,8 +43,8 @@
+ #include "xfs_log.h"
+ 
+ /* ----- Kernel only functions below ----- */
+-STATIC int
+-xfs_readlink_bmap(
++int
++xfs_readlink_bmap_ilocked(
+ 	struct xfs_inode	*ip,
+ 	char			*link)
+ {
+@@ -153,7 +153,7 @@ xfs_readlink(
+ 	}
+ 
+ 
+-	error = xfs_readlink_bmap(ip, link);
++	error = xfs_readlink_bmap_ilocked(ip, link);
+ 
+  out:
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
+index e75245d..aeaee89 100644
+--- a/fs/xfs/xfs_symlink.h
++++ b/fs/xfs/xfs_symlink.h
+@@ -21,6 +21,7 @@
+ 
+ int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+ 		const char *target_path, umode_t mode, struct xfs_inode **ipp);
++int xfs_readlink_bmap_ilocked(struct xfs_inode *ip, char *link);
+ int xfs_readlink(struct xfs_inode *ip, char *link);
+ int xfs_inactive_symlink(struct xfs_inode *ip);
+ 
