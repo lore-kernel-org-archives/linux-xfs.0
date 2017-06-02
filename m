@@ -1,58 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39470 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750807AbdFBSUH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 2 Jun 2017 14:20:07 -0400
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 6C5AEABF2
-        for <linux-xfs@vger.kernel.org>; Fri,  2 Jun 2017 18:20:06 +0000 (UTC)
-From: Jeff Mahoney <jeffm@suse.com>
-Subject: [PATCH] fsr: fix uninitialized fs usage after timeout
-Message-ID: <b4921f6d-01c7-09eb-641f-47f1be998e61@suse.com>
-Date: Fri, 2 Jun 2017 14:20:04 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Received: from shards.monkeyblade.net ([184.105.139.130]:46598 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbdFBSjO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 14:39:14 -0400
+Date: Fri, 02 Jun 2017 14:39:06 -0400 (EDT)
+Message-Id: <20170602.143906.818489457650113258.davem@davemloft.net>
+Subject: Re: crypto: Work around deallocated stack frame reference gcc bug
+ on sparc.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170602180808.GB5636@birch.djwong.org>
+References: <20170602.112854.571030442583332811.davem@davemloft.net>
+        <20170602180808.GB5636@birch.djwong.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: herbert@gondor.apana.org.au, linux-crypto@vger.kernel.org, sparclinux@vger.kernel.org, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, matorola@gmail.com, sandeen@sandeen.net, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-In the main loop of fsrallfs, we exit when we've hit the timeout but
-we increment fs before we get there.  If we're operating on the last
-file system in the array, we'll hit an uninitialized fsdesc and
-crash in fsrall_cleanup.
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 2 Jun 2017 11:08:08 -0700
 
-Signed-off-by: Jeff Mahoney <jeffm@suse.com>
----
- fsr/xfs_fsr.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+> ext4/jbd2's crc32c implementations will also need a fix like this for
+> {ext4,jbd2}_chksum.  Note that both of these modules call the crypto api
+> directly to avoid a static dependence on libcrc32c; this was done to
+> reduce kernel footprint for applications that don't need it.  (ext2,
+> ext3, and ext4 before the metadata_csum feature existed).
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 517b75f0..e695c243 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -598,7 +598,7 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
- 	signal(SIGTERM, aborter);
+Good catch.  I even looked at that code the other day so should
+have spotted it as well.
 
- 	/* reorg for 'howlong' -- checked in 'fsrfs' */
--	while (endtime > time(0)) {
-+	for (; endtime > time(0); fs->npass++, fs++) {
- 		pid_t pid;
- 		if (fs == fsend)
- 			fs = fsbase;
-@@ -629,8 +629,6 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
- 			break;
- 		}
- 		startino = 0;  /* reset after the first time through */
--		fs->npass++;
--		fs++;
- 	}
- 	fsrall_cleanup(endtime <= time(0));
- }
+I'll integrate fixes for those into my patch when I get a chance,
+thanks!
 
-
--- 
-Jeff Mahoney
-SUSE Labs
