@@ -1,57 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:60662 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751050AbdFAVoV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2017 17:44:21 -0400
-Date: Thu, 01 Jun 2017 17:44:19 -0400 (EDT)
-Message-Id: <20170601.174419.2151404855471358626.davem@davemloft.net>
-Subject: Re: [sparc64] crc32c misbehave
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170531.124916.1406665885250072302.davem@davemloft.net>
-References: <ccdf645b-e22f-ef71-53df-993cc45869c0@sandeen.net>
-        <260a016f-0f17-e286-ceca-83b6977f2fc0@sandeen.net>
-        <20170531.124916.1406665885250072302.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:50624 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751120AbdFBDeJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Jun 2017 23:34:09 -0400
+Date: Fri, 2 Jun 2017 11:34:07 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 0/6] xfstests: remove most IRIX-specific code
+Message-ID: <20170602033407.GD23805@eguan.usersys.redhat.com>
+References: <20170531223655.130613-1-ebiggers3@gmail.com>
+ <20170601031235.GV23805@eguan.usersys.redhat.com>
+ <20170601032904.GA1083@zzz>
+ <20170601072902.GY23805@eguan.usersys.redhat.com>
+ <20170601153347.GG4519@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170601153347.GG4519@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net
-Cc: matorola@gmail.com, sparclinux@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Biggers <ebiggers3@gmail.com>, fstests@vger.kernel.org, Eric Biggers <ebiggers@google.com>, linux-xfs@vger.kernel.org
 
-From: David Miller <davem@davemloft.net>
-Date: Wed, 31 May 2017 12:49:16 -0400 (EDT)
+On Thu, Jun 01, 2017 at 08:33:47AM -0700, Darrick J. Wong wrote:
+> On Thu, Jun 01, 2017 at 03:29:02PM +0800, Eryu Guan wrote:
+> > On Wed, May 31, 2017 at 08:29:04PM -0700, Eric Biggers wrote:
+> > > On Thu, Jun 01, 2017 at 11:12:35AM +0800, Eryu Guan wrote:
+> > > > On Wed, May 31, 2017 at 03:36:49PM -0700, Eric Biggers wrote:
+> > > > > From: Eric Biggers <ebiggers@google.com>
+> > > > > 
+> > > > > For some time xfstests has de facto not supported IRIX anymore.  The
+> > > > > final release of IRIX was over 10 years ago and it seems no one has
+> > > > > been running the latest xfstests releases on any IRIX system, as at
+> > > > > the very least xfstests now assumes the existence of some util-linux
+> > > > > binaries.  There are probably other examples of this bitrot too.
+> > > > > 
+> > > > > Therefore, this patchset simplifies things removing IRIX support from
+> > > > > the xfstests tests, build system, and documentation.
+> > > > > 
+> > > > > It focuses on making larger, more obvious cleanups.  Of course,
+> > > > > there's more to do if people want to spend more time going through
+> > > > > some of the more intricate details, especially XFS-specific details.
+> > > > > But this should be a good start.
+> > > > 
+> > > > Thanks a lot for doing this!! I didn't see patch #2 and #3 hit the list
+> > > > (too big for the list?). Do you have a public git repo that I can pull
+> > > > from?
+> > > > 
+> > > 
+> > > Ick, I guess the size limit must be 100K.  I've pushed the series out to
+> > > repository https://github.com/ebiggers/xfstests, branch "remove_irix_support".
+> > > 
+> > > Note that the two biggest patches can be more easily reviewed with
+> > > 'git diff -D', since that abbreviates the file deletions.
+> > 
+> > Thanks!
+> > 
+> > I also cc'ed linux-xfs list for review, as IRIX support is mainly for
+> > XFS.
+> 
+> I think it's safe to drop IRIX support; xfsprogs dropped it in 4.10.
 
-> From: Eric Sandeen <sandeen@sandeen.net>
-> Date: Wed, 31 May 2017 11:31:10 -0500
-> 
->> On 5/31/17 11:19 AM, Eric Sandeen wrote:
->>> On 5/31/17 10:53 AM, David Miller wrote:
->>>> From: Anatoly Pugachev <matorola@gmail.com>
->>>> Date: Wed, 31 May 2017 14:56:52 +0300
->>>>
->>>>> While debugging occasional crc32c checksum errors with xfs disk reads on
->>>>> sparc64 (T5 [sun4v] 3.6 GHz CPU ldom, debian unstable/sid), Eric have found
->>>>> that crc32c sometimes returns wrong checksum for data. Eric made a simple
->>>>> test kernel module (included), which produce the following results on my
->>>>> sparc64 machines:
->>> 
->>> cc: linux-xfs, because this problem cropped up on xfs/sparc.
->> 
->> FWIW, the testcase (module which does
->> 
->> 	crc = crc32c(CRC_SEED, data, 512);
->> 
->> 1 million times in a loop on the same data, and printk's if
->> the result ever changes) does not fail on x86_64 or ARM
->> (well, not after a gcc bug was fixed on ARM ...)
-> 
-> Is the machine doing things that would cause crc32c() operations in
-> interrupts (SCTP protocol traffic) or on other cpus?
-> 
-> That's the danger in comparing other machines, the context and what's
-> running on them is different.
+Then all tests will have "_supported_os Linux", maybe we can drop
+_supported_os() all together, and remove it from 'new' template?
+Perhaps adding a os check in 'check' and exit if os is not Linux.
 
-Ok, I can reproduce this bug on my systems.  I'll see if I can figure out
-what is going on.
+(xfs/109 has '_supported_os Linux XFS', but I think that's a typo).
+
+Thanks,
+Eryu
+
+> 
+> That said, I also think "tests: remove IRIX-specific tests" removes too
+> many tests.  generic/097 looks like a fairly generic xattr usage test,
+> why not just fix it to work on Linux (and sort the attrs to stabilize
+> the output)?  Neither of the removed udf tests seem to test anything
+> Irix specific; either fix them to work with the Linux udf tools (or kill
+> udf/102).
+> 
+> I looked through the rest of the patches in the branch and they looked
+> ok to me.  Thanks for cleaning out that cruft.
+> 
+> --D
+> 
+> > 
+> > Eryu
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
