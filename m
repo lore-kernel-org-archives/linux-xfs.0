@@ -1,96 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([59.151.112.132]:52240 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751120AbdFBCrR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2017 22:47:17 -0400
-Message-ID: <5930D027.9050606@cn.fujitsu.com>
-Date: Fri, 2 Jun 2017 10:40:39 +0800
-From: Xiao Yang <yangx.jy@cn.fujitsu.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] xfs: fix installation for extended output files
-References: <20170601025327.GU23805@eguan.usersys.redhat.com> <1496286073-23298-1-git-send-email-yangx.jy@cn.fujitsu.com> <20170601040733.GW23805@eguan.usersys.redhat.com> <20170601154849.GH4519@birch.djwong.org>
-In-Reply-To: <20170601154849.GH4519@birch.djwong.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from shards.monkeyblade.net ([184.105.139.130]:35072 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751138AbdFBB5P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2017 21:57:15 -0400
+Date: Thu, 01 Jun 2017 21:57:11 -0400 (EDT)
+Message-Id: <20170601.215711.1719799806113363582.davem@davemloft.net>
+Subject: Re: [sparc64] crc32c misbehave
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170601.174419.2151404855471358626.davem@davemloft.net>
+References: <260a016f-0f17-e286-ceca-83b6977f2fc0@sandeen.net>
+        <20170531.124916.1406665885250072302.davem@davemloft.net>
+        <20170601.174419.2151404855471358626.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: sandeen@sandeen.net
+Cc: matorola@gmail.com, sparclinux@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On 2017/06/01 23:48, Darrick J. Wong wrote:
-> On Thu, Jun 01, 2017 at 12:07:33PM +0800, Eryu Guan wrote:
->> On Thu, Jun 01, 2017 at 11:01:13AM +0800, Xiao Yang wrote:
->>> The installation of these extended output files are skipped
->>> because they aren't matched by xfstests.  So we rename them
->>> to adapt building rules.
->>>
->>> Signed-off-by: Xiao Yang<yangx.jy@cn.fujitsu.com>
->> This patch is 2.4M in size, no wonder it didn't hit the list..
->>
->> (cc linux-xfs list for these xfs specific tests)
->>
->>> ---
->>>   tests/xfs/018                         |    8 +-
->>>   tests/xfs/018.op.irix                 | 5628 ---------------------------------
->>>   tests/xfs/018.op.linux                | 4714 ---------------------------
->>>   tests/xfs/018.out.irix                | 5628 +++++++++++++++++++++++++++++++++
->>>   tests/xfs/018.out.linux               | 4714 +++++++++++++++++++++++++++
->>>   tests/xfs/018.out.trans_buf           | 1821 +++++++++++
->>>   tests/xfs/018.out.trans_inode         | 2609 +++++++++++++++
->>>   tests/xfs/018.trans_buf               | 1821 -----------
->>>   tests/xfs/018.trans_inode             | 2609 ---------------
->> xfs/018 081 and 082 are all marked as 'deprecated', I'm wondering if we
->> can just remove them.
-> I have little good to say about these -- diffing logprint outputs will
-> break every time we add new log item types (which we have) so these are
-> brittle.
->
->>>   tests/xfs/040                         |    4 +-
->>>   tests/xfs/040.good                    |   16 -
->>>   tests/xfs/040.out.good                |   16 +
->> xfs/040 is doing source code diff between userspace vs kernel space, I'm
->> not sure if this is still needed. But xfs/040 requires KWORKAREA points
->> to a directory that contains both userspace and kernel code, I suspect
->> it's rarely run.
-> It's /never/ run, because it requires dmapi.h, which doesn't exist on
-> Linux, and it appears to assume the pre-libxfs-split directory layout.
-> Seeing as xfsprogs ships its own "compare the libxfs code" tool now,
-> I think it better to go fix it.  Patch for x/040 coming soon.
-Hi Darrick
+From: David Miller <davem@davemloft.net>
+Date: Thu, 01 Jun 2017 17:44:19 -0400 (EDT)
 
-The libxfs code is being updated regularly, so I think the difference is 
-not immutable.
-Is it necessary to run this case?
+> Ok, I can reproduce this bug on my systems.  I'll see if I can figure out
+> what is going on.
 
-Thanks,
-Xiao Yang
->>>   tests/xfs/081                         |    2 +-
->>>   tests/xfs/081.out.ugquota.trans_inode | 3091 ++++++++++++++++++
->>>   tests/xfs/081.ugquota.trans_inode     | 3091 ------------------
->>>   tests/xfs/082                         |    8 +-
->>>   tests/xfs/082.op.irix                 | 5628 ---------------------------------
->>>   tests/xfs/082.op.linux                | 4714 ---------------------------
->>>   tests/xfs/082.out.irix                | 5628 +++++++++++++++++++++++++++++++++
->>>   tests/xfs/082.out.linux               | 4714 +++++++++++++++++++++++++++
->>>   tests/xfs/082.out.trans_buf           | 1821 +++++++++++
->>>   tests/xfs/082.out.trans_inode         | 2609 +++++++++++++++
->>>   tests/xfs/082.trans_buf               | 1821 -----------
->>>   tests/xfs/082.trans_inode             | 2609 ---------------
->>>   24 files changed, 32662 insertions(+), 32662 deletions(-)
-> Ye $deities!
->
-> --D
->
->> Thanks,
->> Eryu
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> .
->
+So I've done several tests to try and narrow down the cause.
 
+First, I implemented crc32c() inside of the test module, doing
+exactly the same thing that lib/libcrc32c.c is doing.  So this
+make it use a separate tfm.
 
+This never fails.
 
+Then, I implemented a separate module "davem_crc32c.ko" that is
+identical to lib/libcrc32.c except it uses it's own 'tfm' and it
+exports the symbol davem_crc32c() instead of crc32c(). And finally I
+adjust the test case to call davem_crc32c() instead of crc32c().
+
+This also never fails.
+
+So it only fails if we use the lib/libcrc32.c shared with the rest of
+the kernel.
+
+I really can't figure out yet why this sharing can even matter.  The
+per-computation state is all in the on-stack 'shash':
+
+	SHASH_DESC_ON_STACK(shash, tfm);
+
+So invocations of crc32c() should not be able to corrupt the state of
+other parallel invocations.
+
+I'll keep digging, but that is where I am right now.
