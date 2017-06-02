@@ -1,100 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50818 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751802AbdFMWet (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Jun 2017 18:34:49 -0400
-Subject: Re: [PATCH 04/10] xfs_repair: replace rmap_compare with libxfs
- version
-References: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
- <149643309903.15899.5862825605175613525.stgit@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f4245387-e6bf-206e-101c-000a6a085f6f@sandeen.net>
-Date: Tue, 13 Jun 2017 17:34:47 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:28933 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750918AbdFBTpG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 15:45:06 -0400
+Date: Fri, 2 Jun 2017 12:44:58 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/9] xfs_spaceman: space management tool
+Message-ID: <20170602194458.GD5636@birch.djwong.org>
+References: <149417257252.24656.2629280196308754994.stgit@birch.djwong.org>
+ <149417259522.24656.15381603363219279304.stgit@birch.djwong.org>
+ <afec66aa-4c12-30e3-ff8d-896c5f3505d5@sandeen.net>
+ <20170530173742.GW4519@birch.djwong.org>
+ <48b4d991-4c77-4860-8a05-ba71bdda4056@sandeen.net>
+ <20170530184739.GC4519@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <149643309903.15899.5862825605175613525.stgit@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170530184739.GC4519@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On 6/2/17 2:51 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, May 30, 2017 at 11:47:39AM -0700, Darrick J. Wong wrote:
+> On Tue, May 30, 2017 at 01:17:56PM -0500, Eric Sandeen wrote:
+> > On 5/30/17 12:37 PM, Darrick J. Wong wrote:
+> > > On Fri, May 26, 2017 at 08:34:18PM -0500, Eric Sandeen wrote:
+> > >> On 5/7/17 10:56 AM, Darrick J. Wong wrote:
+> > >>> From: Dave Chinner <dchinner@redhat.com>
+> > >>>
+> > >>> xfs_spaceman is intended as a diagnostic and control tool for space
+> > >>> management operations within XFS. Operations like examining free
+> > >>> space, managing allocation policies, issuing block discards on free
+> > >>> space, etc.
+> > >>>
+> > >>> The tool is modelled on the xfs_io interface, allowing both
+> > >>> interactive and command line control of the tool, enabling it to be
+> > >>> used in scripts and automated management tools.
+> > >> This may be a result of the xfs_io ancestry, but:
+> > >>
+> > >> # xfs_spaceman /mnt/test2 /mnt/test
+> > >>
+> > >> Cool, we can open 2 files(ystems)
+> > >>
+> > >> xfs_spaceman> print
+> > >>  000  /mnt/test2     (non-sync,non-direct,read-write)
+> > >> [001] /mnt/test      (non-sync,non-direct,read-write)
+> > >>
+> > >> (what does non-direct mean for a mountpoint?)
+> > >> (actually where do these flags come from ... hm.)
+> > >>
+> > >> Yep there we are!  Now how do we switch to the other?
+> > >>
+> > >> xfs_spaceman> help
+> > >> help [command] -- help for one or all commands
+> > >> print -- list current open files
+> > >> quit -- exit the program
+> > >>
+> > >> Use 'help commandname' for extended help.
+> > >>
+> > >> hmmm... I guess we can't switch.  Should we be able to?
+> > >>
+> > >> Is the intent to open files or filesystems...  both?  Is there ever
+> > >> a reason to be opening a file not a filesystem?
+> > > <shrug> I mostly just passed on Dave's original patches from whenever
+> > > ago, but TBH I'm not 100% sure about the usecases for multiple
+> > > arguments.  The commands that spaceman has now are all fs-oriented, not
+> > > file-oriented... but maybe people want to be able to issue one command
+> > > against multiple fses?  OTOH all the commands provided so far are
+> > > oneshot, so they only act upon one open file.
+> > > 
+> > > So, I'm inclined to ditch the 'list' command and disallow multiple open
+> > > files, like Eric suggests, unless anyone really wants it?
+> > 
+> > Either way is fine: multiple (fs) targets with the ability to switch,
+> > or restrict to just one, but allowing one to open multiple and only
+> > use one makes little sense.
 > 
-> Now that libxfs has a function to compare rmaps, replace xfs_repair's
-> helper function with that.
+> I think of all the commands we have, only trim and prealloc seem geared
+> towards being callable against all the paths specified in the command
+> line.  OTOH I don't see a lot of harm in letting people run reports
+> against multiple filesystems, though the output will be sort of messy.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> I'll play around with removing the ONESHOT designation and see if that
+> doesn't turn into a horrible mess.
 
-reviewed-by: Eric Sandeen <sandeen@redhat.com>
+FWIW it worked, but ... watching report for multiple filesystems scroll
+seemed messy and so it was easier to restrict spaceman to take only one
+file argument.  I'm going to resend this series atop for-next, and we
+can move the discussion there.
 
-> ---
->  libxfs/libxfs_api_defs.h |    1 +
->  repair/rmap.c            |   32 ++------------------------------
->  2 files changed, 3 insertions(+), 30 deletions(-)
+--D
+
 > 
+> --D
 > 
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index 31239ca..2d8d9c8 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -144,5 +144,6 @@
->  #define xfs_refcount_get_rec		libxfs_refcount_get_rec
->  #define xfs_rmap_lookup_le_range	libxfs_rmap_lookup_le_range
->  #define xfs_refc_block			libxfs_refc_block
-> +#define xfs_rmap_compare		libxfs_rmap_compare
->  
->  #endif /* __LIBXFS_API_DEFS_H__ */
-> diff --git a/repair/rmap.c b/repair/rmap.c
-> index 7508973..ab6e583 100644
-> --- a/repair/rmap.c
-> +++ b/repair/rmap.c
-> @@ -49,37 +49,9 @@ static struct xfs_ag_rmap *ag_rmaps;
->  static bool rmapbt_suspect;
->  static bool refcbt_suspect;
->  
-> -/*
-> - * Compare rmap observations for array sorting.
-> - */
-> -static int
-> -rmap_compare(
-> -	const void		*a,
-> -	const void		*b)
-> +static inline int rmap_compare(const void *a, const void *b)
->  {
-> -	const struct xfs_rmap_irec	*pa;
-> -	const struct xfs_rmap_irec	*pb;
-> -	__u64			oa;
-> -	__u64			ob;
-> -
-> -	pa = a; pb = b;
-> -	oa = libxfs_rmap_irec_offset_pack(pa);
-> -	ob = libxfs_rmap_irec_offset_pack(pb);
-> -
-> -	if (pa->rm_startblock < pb->rm_startblock)
-> -		return -1;
-> -	else if (pa->rm_startblock > pb->rm_startblock)
-> -		return 1;
-> -	else if (pa->rm_owner < pb->rm_owner)
-> -		return -1;
-> -	else if (pa->rm_owner > pb->rm_owner)
-> -		return 1;
-> -	else if (oa < ob)
-> -		return -1;
-> -	else if (oa > ob)
-> -		return 1;
-> -	else
-> -		return 0;
-> +	return libxfs_rmap_compare(a, b);
->  }
->  
->  /*
-> 
+> > 
+> > -Eric
+> > 
+> > > --D
+> > > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
