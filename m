@@ -1,192 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41060 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751484AbdFFLUI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jun 2017 07:20:08 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 07/10] block: return on congested block device
-Date: Tue,  6 Jun 2017 06:19:36 -0500
-Message-Id: <20170606111939.27272-8-rgoldwyn@suse.de>
-In-Reply-To: <20170606111939.27272-1-rgoldwyn@suse.de>
-References: <20170606111939.27272-1-rgoldwyn@suse.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37790 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751269AbdFBSIf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 14:08:35 -0400
+Date: Fri, 2 Jun 2017 11:08:08 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: crypto: Work around deallocated stack frame reference gcc bug on
+ sparc.
+Message-ID: <20170602180808.GB5636@birch.djwong.org>
+References: <20170602.112854.571030442583332811.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170602.112854.571030442583332811.davem@davemloft.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: David Miller <davem@davemloft.net>
+Cc: herbert@gondor.apana.org.au, linux-crypto@vger.kernel.org, sparclinux@vger.kernel.org, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, matorola@gmail.com, sandeen@sandeen.net, linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+[add ext4 list to cc]
 
-A new bio operation flag REQ_NOWAIT is introduced to identify bio's
-orignating from iocb with IOCB_NOWAIT. This flag indicates
-to return immediately if a request cannot be made instead
-of retrying.
+On Fri, Jun 02, 2017 at 11:28:54AM -0400, David Miller wrote:
+> 
+> On sparc, if we have an alloca() like situation, as is the case with
+> SHASH_DESC_ON_STACK(), we can end up referencing deallocated stack
+> memory.  The result can be that the value is clobbered if a trap
+> or interrupt arrives at just the right instruction.
+> 
+> It only occurs if the function ends returning a value from that
+> alloca() area and that value can be placed into the return value
+> register using a single instruction.
+> 
+> For example, in lib/libcrc32c.c:crc32c() we end up with a return
+> sequence like:
+> 
+>         return  %i7+8
+>          lduw   [%o5+16], %o0   ! MEM[(u32 *)__shash_desc.1_10 + 16B],
+> 
+> %o5 holds the base of the on-stack area allocated for the shash
+> descriptor.  But the return released the stack frame and the
+> register window.
+> 
+> So if an intererupt arrives between 'return' and 'lduw', then
+> the value read at %o5+16 can be corrupted.
+> 
+> Add a data compiler barrier to work around this problem.  This is
+> exactly what the gcc fix will end up doing as well, and it absolutely
+> should not change the code generated for other cpus (unless gcc
+> on them has the same bug :-)
+> 
+> With crucial insight from Eric Sandeen.
+> 
+> Reported-by: Anatoly Pugachev <matorola@gmail.com>
+> Signed-off-by: David S. Miller <davem@davemloft.net>
+> ---
+> 
+> See the thread anchored at:
+> 
+> 	http://marc.info/?l=linux-sparc&m=149623182616944&w=2
+> 
+> for discussion, it has a reproducer module.  The problem was
+> first noticed as occaisional XFS checksum corruptions.
+> 
+> Herbert, I don't expect you to like this but it is the best we can do
+> I think.  It should not pessimize code on other architectures at all.
+> I will work on fixing the gcc bug but it's been around forever and all
+> versions are effected.
+> 
+> I noticed while working on this that at least btrfs duplicates the
+> facilities provided by lib/libcrc32c.c and therefore should probably
+> be converted over to straight crc32c() calls if possible.
 
-Stacked devices such as md (the ones with make_request_fn hooks)
-currently are not supported because it may block for housekeeping.
-For example, an md can have a part of the device suspended.
-For this reason, only request based devices are supported.
-In the future, this feature will be expanded to stacked devices
-by teaching them how to handle the REQ_NOWAIT flags.
+ext4/jbd2's crc32c implementations will also need a fix like this for
+{ext4,jbd2}_chksum.  Note that both of these modules call the crypto api
+directly to avoid a static dependence on libcrc32c; this was done to
+reduce kernel footprint for applications that don't need it.  (ext2,
+ext3, and ext4 before the metadata_csum feature existed).
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- block/blk-core.c          | 23 +++++++++++++++++++++--
- block/blk-mq-sched.c      |  3 +++
- block/blk-mq.c            |  2 ++
- fs/direct-io.c            | 10 ++++++++--
- include/linux/bio.h       |  6 ++++++
- include/linux/blk_types.h |  2 ++
- 6 files changed, 42 insertions(+), 4 deletions(-)
+--D
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index a7421b772d0e..972d6fdb1432 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1256,6 +1256,11 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
- 	if (!IS_ERR(rq))
- 		return rq;
- 
-+	if (op & REQ_NOWAIT) {
-+		blk_put_rl(rl);
-+		return ERR_PTR(-EAGAIN);
-+	}
-+
- 	if (!gfpflags_allow_blocking(gfp_mask) || unlikely(blk_queue_dying(q))) {
- 		blk_put_rl(rl);
- 		return rq;
-@@ -1900,6 +1905,16 @@ generic_make_request_checks(struct bio *bio)
- 		goto end_io;
- 	}
- 
-+	/*
-+	 * For a REQ_NOWAIT based request, return -EOPNOTSUPP
-+	 * if queue is not a request based queue.
-+	 */
-+
-+	if ((bio->bi_opf & REQ_NOWAIT) && !queue_is_rq_based(q)) {
-+		err = -EOPNOTSUPP;
-+		goto end_io;
-+	}
-+
- 	part = bio->bi_bdev->bd_part;
- 	if (should_fail_request(part, bio->bi_iter.bi_size) ||
- 	    should_fail_request(&part_to_disk(part)->part0,
-@@ -2057,7 +2072,7 @@ blk_qc_t generic_make_request(struct bio *bio)
- 	do {
- 		struct request_queue *q = bdev_get_queue(bio->bi_bdev);
- 
--		if (likely(blk_queue_enter(q, false) == 0)) {
-+		if (likely(blk_queue_enter(q, bio->bi_opf & REQ_NOWAIT) == 0)) {
- 			struct bio_list lower, same;
- 
- 			/* Create a fresh bio_list for all subordinate requests */
-@@ -2082,7 +2097,11 @@ blk_qc_t generic_make_request(struct bio *bio)
- 			bio_list_merge(&bio_list_on_stack[0], &same);
- 			bio_list_merge(&bio_list_on_stack[0], &bio_list_on_stack[1]);
- 		} else {
--			bio_io_error(bio);
-+			if (unlikely(!blk_queue_dying(q) &&
-+					(bio->bi_opf & REQ_NOWAIT)))
-+				bio_wouldblock_error(bio);
-+			else
-+				bio_io_error(bio);
- 		}
- 		bio = bio_list_pop(&bio_list_on_stack[0]);
- 	} while (bio);
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 1f5b692526ae..9a1dea8b964e 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -83,6 +83,9 @@ struct request *blk_mq_sched_get_request(struct request_queue *q,
- 	if (likely(!data->hctx))
- 		data->hctx = blk_mq_map_queue(q, data->ctx->cpu);
- 
-+	if (op & REQ_NOWAIT)
-+		data->flags |= BLK_MQ_REQ_NOWAIT;
-+
- 	if (e) {
- 		data->flags |= BLK_MQ_REQ_INTERNAL;
- 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 1bcccedcc74f..b0608f1955b2 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1556,6 +1556,8 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
- 	rq = blk_mq_sched_get_request(q, bio, bio->bi_opf, &data);
- 	if (unlikely(!rq)) {
- 		__wbt_done(q->rq_wb, wb_acct);
-+		if (bio->bi_opf & REQ_NOWAIT)
-+			bio_wouldblock_error(bio);
- 		return BLK_QC_T_NONE;
- 	}
- 
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index a04ebea77de8..139ebd5ae1c7 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -480,8 +480,12 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
- 	unsigned i;
- 	int err;
- 
--	if (bio->bi_error)
--		dio->io_error = -EIO;
-+	if (bio->bi_error) {
-+		if (bio->bi_error == -EAGAIN && (bio->bi_opf & REQ_NOWAIT))
-+			dio->io_error = -EAGAIN;
-+		else
-+			dio->io_error = -EIO;
-+	}
- 
- 	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty) {
- 		err = bio->bi_error;
-@@ -1197,6 +1201,8 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
- 	if (iov_iter_rw(iter) == WRITE) {
- 		dio->op = REQ_OP_WRITE;
- 		dio->op_flags = REQ_SYNC | REQ_IDLE;
-+		if (iocb->ki_flags & IOCB_NOWAIT)
-+			dio->op_flags |= REQ_NOWAIT;
- 	} else {
- 		dio->op = REQ_OP_READ;
- 	}
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index d1b04b0e99cf..cc0aa4315383 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -418,6 +418,12 @@ static inline void bio_io_error(struct bio *bio)
- 	bio_endio(bio);
- }
- 
-+static inline void bio_wouldblock_error(struct bio *bio)
-+{
-+	bio->bi_error = -EAGAIN;
-+	bio_endio(bio);
-+}
-+
- struct request_queue;
- extern int bio_phys_segments(struct request_queue *, struct bio *);
- 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 61339bc44400..c87990aec66e 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -205,6 +205,7 @@ enum req_flag_bits {
- 	/* command specific flags for REQ_OP_WRITE_ZEROES: */
- 	__REQ_NOUNMAP,		/* do not free blocks when zeroing */
- 
-+	__REQ_NOWAIT,           /* Don't wait if request will block */
- 	__REQ_NR_BITS,		/* stops here */
- };
- 
-@@ -223,6 +224,7 @@ enum req_flag_bits {
- #define REQ_BACKGROUND		(1ULL << __REQ_BACKGROUND)
- 
- #define REQ_NOUNMAP		(1ULL << __REQ_NOUNMAP)
-+#define REQ_NOWAIT		(1ULL << __REQ_NOWAIT)
- 
- #define REQ_FAILFAST_MASK \
- 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
--- 
-2.12.0
-
+> 
+> Thanks!
+> 
+> diff --git a/drivers/infiniband/sw/rxe/rxe.h b/drivers/infiniband/sw/rxe/rxe.h
+> index ecdba2f..1ac5b85 100644
+> --- a/drivers/infiniband/sw/rxe/rxe.h
+> +++ b/drivers/infiniband/sw/rxe/rxe.h
+> @@ -68,6 +68,7 @@
+>  static inline u32 rxe_crc32(struct rxe_dev *rxe,
+>  			    u32 crc, void *next, size_t len)
+>  {
+> +	u32 retval;
+>  	int err;
+>  
+>  	SHASH_DESC_ON_STACK(shash, rxe->tfm);
+> @@ -81,7 +82,9 @@ static inline u32 rxe_crc32(struct rxe_dev *rxe,
+>  		return crc32_le(crc, next, len);
+>  	}
+>  
+> -	return *(u32 *)shash_desc_ctx(shash);
+> +	retval = *(u32 *)shash_desc_ctx(shash);
+> +	barrier_data(shash_desc_ctx(shash));
+> +	return retval;
+>  }
+>  
+>  int rxe_set_mtu(struct rxe_dev *rxe, unsigned int dev_mtu);
+> diff --git a/fs/btrfs/hash.c b/fs/btrfs/hash.c
+> index a97fdc1..baacc18 100644
+> --- a/fs/btrfs/hash.c
+> +++ b/fs/btrfs/hash.c
+> @@ -38,6 +38,7 @@ u32 btrfs_crc32c(u32 crc, const void *address, unsigned int length)
+>  {
+>  	SHASH_DESC_ON_STACK(shash, tfm);
+>  	u32 *ctx = (u32 *)shash_desc_ctx(shash);
+> +	u32 retval;
+>  	int err;
+>  
+>  	shash->tfm = tfm;
+> @@ -47,5 +48,7 @@ u32 btrfs_crc32c(u32 crc, const void *address, unsigned int length)
+>  	err = crypto_shash_update(shash, address, length);
+>  	BUG_ON(err);
+>  
+> -	return *ctx;
+> +	retval = *ctx;
+> +	barrier_data(ctx);
+> +	return retval;
+>  }
+> diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+> index 2185c7a..fd2e651 100644
+> --- a/fs/f2fs/f2fs.h
+> +++ b/fs/f2fs/f2fs.h
+> @@ -1078,6 +1078,7 @@ static inline u32 f2fs_crc32(struct f2fs_sb_info *sbi, const void *address,
+>  {
+>  	SHASH_DESC_ON_STACK(shash, sbi->s_chksum_driver);
+>  	u32 *ctx = (u32 *)shash_desc_ctx(shash);
+> +	u32 retval;
+>  	int err;
+>  
+>  	shash->tfm = sbi->s_chksum_driver;
+> @@ -1087,7 +1088,9 @@ static inline u32 f2fs_crc32(struct f2fs_sb_info *sbi, const void *address,
+>  	err = crypto_shash_update(shash, address, length);
+>  	BUG_ON(err);
+>  
+> -	return *ctx;
+> +	retval = *ctx;
+> +	barrier_data(ctx);
+> +	return retval;
+>  }
+>  
+>  static inline bool f2fs_crc_valid(struct f2fs_sb_info *sbi, __u32 blk_crc,
+> diff --git a/lib/libcrc32c.c b/lib/libcrc32c.c
+> index 74a54b7..9f79547 100644
+> --- a/lib/libcrc32c.c
+> +++ b/lib/libcrc32c.c
+> @@ -43,7 +43,7 @@ static struct crypto_shash *tfm;
+>  u32 crc32c(u32 crc, const void *address, unsigned int length)
+>  {
+>  	SHASH_DESC_ON_STACK(shash, tfm);
+> -	u32 *ctx = (u32 *)shash_desc_ctx(shash);
+> +	u32 ret, *ctx = (u32 *)shash_desc_ctx(shash);
+>  	int err;
+>  
+>  	shash->tfm = tfm;
+> @@ -53,7 +53,9 @@ u32 crc32c(u32 crc, const void *address, unsigned int length)
+>  	err = crypto_shash_update(shash, address, length);
+>  	BUG_ON(err);
+>  
+> -	return *ctx;
+> +	ret = *ctx;
+> +	barrier_data(ctx);
+> +	return ret;
+>  }
+>  
+>  EXPORT_SYMBOL(crc32c);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
