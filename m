@@ -1,114 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19252 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751161AbdFBFpv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 01:45:51 -0400
-Date: Thu, 1 Jun 2017 22:45:39 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: fix installation for extended output files
-Message-ID: <20170602054539.GA5636@birch.djwong.org>
-References: <20170601025327.GU23805@eguan.usersys.redhat.com>
- <1496286073-23298-1-git-send-email-yangx.jy@cn.fujitsu.com>
- <20170601040733.GW23805@eguan.usersys.redhat.com>
- <20170601154849.GH4519@birch.djwong.org>
- <5930D027.9050606@cn.fujitsu.com>
+Received: from mx2.suse.de ([195.135.220.15]:39470 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750807AbdFBSUH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Jun 2017 14:20:07 -0400
+Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 6C5AEABF2
+        for <linux-xfs@vger.kernel.org>; Fri,  2 Jun 2017 18:20:06 +0000 (UTC)
+From: Jeff Mahoney <jeffm@suse.com>
+Subject: [PATCH] fsr: fix uninitialized fs usage after timeout
+Message-ID: <b4921f6d-01c7-09eb-641f-47f1be998e61@suse.com>
+Date: Fri, 2 Jun 2017 14:20:04 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5930D027.9050606@cn.fujitsu.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Xiao Yang <yangx.jy@cn.fujitsu.com>
-Cc: Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Jun 02, 2017 at 10:40:39AM +0800, Xiao Yang wrote:
-> On 2017/06/01 23:48, Darrick J. Wong wrote:
-> >On Thu, Jun 01, 2017 at 12:07:33PM +0800, Eryu Guan wrote:
-> >>On Thu, Jun 01, 2017 at 11:01:13AM +0800, Xiao Yang wrote:
-> >>>The installation of these extended output files are skipped
-> >>>because they aren't matched by xfstests.  So we rename them
-> >>>to adapt building rules.
-> >>>
-> >>>Signed-off-by: Xiao Yang<yangx.jy@cn.fujitsu.com>
-> >>This patch is 2.4M in size, no wonder it didn't hit the list..
-> >>
-> >>(cc linux-xfs list for these xfs specific tests)
-> >>
-> >>>---
-> >>>  tests/xfs/018                         |    8 +-
-> >>>  tests/xfs/018.op.irix                 | 5628 ---------------------------------
-> >>>  tests/xfs/018.op.linux                | 4714 ---------------------------
-> >>>  tests/xfs/018.out.irix                | 5628 +++++++++++++++++++++++++++++++++
-> >>>  tests/xfs/018.out.linux               | 4714 +++++++++++++++++++++++++++
-> >>>  tests/xfs/018.out.trans_buf           | 1821 +++++++++++
-> >>>  tests/xfs/018.out.trans_inode         | 2609 +++++++++++++++
-> >>>  tests/xfs/018.trans_buf               | 1821 -----------
-> >>>  tests/xfs/018.trans_inode             | 2609 ---------------
-> >>xfs/018 081 and 082 are all marked as 'deprecated', I'm wondering if we
-> >>can just remove them.
-> >I have little good to say about these -- diffing logprint outputs will
-> >break every time we add new log item types (which we have) so these are
-> >brittle.
-> >
-> >>>  tests/xfs/040                         |    4 +-
-> >>>  tests/xfs/040.good                    |   16 -
-> >>>  tests/xfs/040.out.good                |   16 +
-> >>xfs/040 is doing source code diff between userspace vs kernel space, I'm
-> >>not sure if this is still needed. But xfs/040 requires KWORKAREA points
-> >>to a directory that contains both userspace and kernel code, I suspect
-> >>it's rarely run.
-> >It's /never/ run, because it requires dmapi.h, which doesn't exist on
-> >Linux, and it appears to assume the pre-libxfs-split directory layout.
-> >Seeing as xfsprogs ships its own "compare the libxfs code" tool now,
-> >I think it better to go fix it.  Patch for x/040 coming soon.
-> Hi Darrick
-> 
-> The libxfs code is being updated regularly, so I think the difference is not
-> immutable.
-> Is it necessary to run this case?
+In the main loop of fsrallfs, we exit when we've hit the timeout but
+we increment fs before we get there.  If we're operating on the last
+file system in the array, we'll hit an uninitialized fsdesc and
+crash in fsrall_cleanup.
 
-For the upstream maintainers, yes, because we want to keep the libxfs/
-code synchronized between, say, Linux 4.12 and xfsprogs 4.12.  Right now
-we more or less just run it manually, but I think there's value in
-enabling everyone else to keep us honest by providing everyone a way to
-look for missing pieces in an automated fashion. :)
+Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+---
+ fsr/xfs_fsr.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
---D
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 517b75f0..e695c243 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -598,7 +598,7 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
+ 	signal(SIGTERM, aborter);
 
-> 
-> Thanks,
-> Xiao Yang
-> >>>  tests/xfs/081                         |    2 +-
-> >>>  tests/xfs/081.out.ugquota.trans_inode | 3091 ++++++++++++++++++
-> >>>  tests/xfs/081.ugquota.trans_inode     | 3091 ------------------
-> >>>  tests/xfs/082                         |    8 +-
-> >>>  tests/xfs/082.op.irix                 | 5628 ---------------------------------
-> >>>  tests/xfs/082.op.linux                | 4714 ---------------------------
-> >>>  tests/xfs/082.out.irix                | 5628 +++++++++++++++++++++++++++++++++
-> >>>  tests/xfs/082.out.linux               | 4714 +++++++++++++++++++++++++++
-> >>>  tests/xfs/082.out.trans_buf           | 1821 +++++++++++
-> >>>  tests/xfs/082.out.trans_inode         | 2609 +++++++++++++++
-> >>>  tests/xfs/082.trans_buf               | 1821 -----------
-> >>>  tests/xfs/082.trans_inode             | 2609 ---------------
-> >>>  24 files changed, 32662 insertions(+), 32662 deletions(-)
-> >Ye $deities!
-> >
-> >--D
-> >
-> >>Thanks,
-> >>Eryu
-> >>--
-> >>To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >>the body of a message to majordomo@vger.kernel.org
-> >>More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >.
-> >
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 	/* reorg for 'howlong' -- checked in 'fsrfs' */
+-	while (endtime > time(0)) {
++	for (; endtime > time(0); fs->npass++, fs++) {
+ 		pid_t pid;
+ 		if (fs == fsend)
+ 			fs = fsbase;
+@@ -629,8 +629,6 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
+ 			break;
+ 		}
+ 		startino = 0;  /* reset after the first time through */
+-		fs->npass++;
+-		fs++;
+ 	}
+ 	fsrall_cleanup(endtime <= time(0));
+ }
+
+
+-- 
+Jeff Mahoney
+SUSE Labs
