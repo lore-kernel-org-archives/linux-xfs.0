@@ -1,63 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42654 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751801AbdFMIiU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Jun 2017 04:38:20 -0400
-Date: Tue, 13 Jun 2017 16:38:17 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [xfstests PATCH v4 2/5] ext4: allow ext4 to use $SCRATCH_LOGDEV
-Message-ID: <20170613083817.GD4788@eguan.usersys.redhat.com>
-References: <20170612124213.14855-1-jlayton@redhat.com>
- <20170612124213.14855-3-jlayton@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:31196 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751135AbdFBTvn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 15:51:43 -0400
+Subject: [PATCH 04/10] xfs_repair: replace rmap_compare with libxfs version
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 02 Jun 2017 12:51:39 -0700
+Message-ID: <149643309903.15899.5862825605175613525.stgit@birch.djwong.org>
+In-Reply-To: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
+References: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170612124213.14855-3-jlayton@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, David Howells <dhowells@redhat.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jun 12, 2017 at 08:42:10AM -0400, Jeff Layton wrote:
-> The writeback error handling test requires that you put the journal on a
-> separate device. This allows us to use dmerror to simulate data
-> writeback failure, without affecting the journal.
-> 
-> xfs already has infrastructure for this (a'la $SCRATCH_LOGDEV), so wire
-> up the ext4 code so that it can do the same thing when _scratch_mkfs is
-> called.
-> 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  common/rc | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/common/rc b/common/rc
-> index 87e6ff08b18d..08807ac7c22a 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -676,6 +676,9 @@ _scratch_mkfs_ext4()
->  	local tmp=`mktemp`
->  	local mkfs_status
->  
-> +	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
-> +	    $mkfs_cmd -O journal_dev $SCRATCH_LOGDEV && \
-> +	    mkfs_cmd="$mkfs_cmd $MKFS_OPTIONS -J device=$SCRATCH_LOGDEV"
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This $MKFS_OPTIONS should be added to the first command when creating
-the journal device so that journal dev has the same block size as data
-dev, there's no need to update mkfs_cmd string.
+Now that libxfs has a function to compare rmaps, replace xfs_repair's
+helper function with that.
 
-The external log dev support for ext3 patch has similar issue.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/libxfs_api_defs.h |    1 +
+ repair/rmap.c            |   32 ++------------------------------
+ 2 files changed, 3 insertions(+), 30 deletions(-)
 
-Thanks,
-Eryu
 
->  
->  	_scratch_do_mkfs "$mkfs_cmd" "$mkfs_filter" $* 2>$tmp.mkfserr 1>$tmp.mkfsstd
->  	mkfs_status=$?
-> -- 
-> 2.13.0
-> 
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 31239ca..2d8d9c8 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -144,5 +144,6 @@
+ #define xfs_refcount_get_rec		libxfs_refcount_get_rec
+ #define xfs_rmap_lookup_le_range	libxfs_rmap_lookup_le_range
+ #define xfs_refc_block			libxfs_refc_block
++#define xfs_rmap_compare		libxfs_rmap_compare
+ 
+ #endif /* __LIBXFS_API_DEFS_H__ */
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 7508973..ab6e583 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -49,37 +49,9 @@ static struct xfs_ag_rmap *ag_rmaps;
+ static bool rmapbt_suspect;
+ static bool refcbt_suspect;
+ 
+-/*
+- * Compare rmap observations for array sorting.
+- */
+-static int
+-rmap_compare(
+-	const void		*a,
+-	const void		*b)
++static inline int rmap_compare(const void *a, const void *b)
+ {
+-	const struct xfs_rmap_irec	*pa;
+-	const struct xfs_rmap_irec	*pb;
+-	__u64			oa;
+-	__u64			ob;
+-
+-	pa = a; pb = b;
+-	oa = libxfs_rmap_irec_offset_pack(pa);
+-	ob = libxfs_rmap_irec_offset_pack(pb);
+-
+-	if (pa->rm_startblock < pb->rm_startblock)
+-		return -1;
+-	else if (pa->rm_startblock > pb->rm_startblock)
+-		return 1;
+-	else if (pa->rm_owner < pb->rm_owner)
+-		return -1;
+-	else if (pa->rm_owner > pb->rm_owner)
+-		return 1;
+-	else if (oa < ob)
+-		return -1;
+-	else if (oa > ob)
+-		return 1;
+-	else
+-		return 0;
++	return libxfs_rmap_compare(a, b);
+ }
+ 
+ /*
+
