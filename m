@@ -1,57 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:62115 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752643AbdFMWQv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jun 2017 18:16:51 -0400
-Date: Wed, 14 Jun 2017 08:16:47 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS journal write ordering constraints?
-Message-ID: <20170613221647.GG17542@dastard>
-References: <CALoZfD4-uqhRSfEh0Y+v8jjSDY2KkAh-hhwdLnRgZopHEETUXA@mail.gmail.com>
- <20170609234408.GE17542@dastard>
- <CALoZfD76r2ohmn=6CpPJ4DKrYVxNkP9LWmzDGm8dZRVZgBcgQA@mail.gmail.com>
- <20170612235002.GF17542@dastard>
- <CALoZfD4RXJUusr7-r8COsUY+8_D6z68LbCRkp+9VM1E2tUV1UA@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43725 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751135AbdFBTvT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 15:51:19 -0400
+Subject: [PATCH v8 00/10] xfsprogs 4.12: GETFSMAP support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 02 Jun 2017 12:51:14 -0700
+Message-ID: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CALoZfD4RXJUusr7-r8COsUY+8_D6z68LbCRkp+9VM1E2tUV1UA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sweet Tea Dorminy <sweettea@permabit.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 13, 2017 at 10:14:10AM -0400, Sweet Tea Dorminy wrote:
-> Thank you! I'm glad that we've established it's a mismatch between our
-> device's implementation and XFS expectations.
-> 
-> >.... XFS issues log writes with REQ_PREFLUSH|REQ_FUA. This means
-> >sequentially issued log writes have clearly specified ordering
-> >constraints. i.e. the preflush completion order requirements means
-> >that the block device must commit preflush+write+fua bios to stable
-> >storage in the exact order they were issued by the filesystem....
-> 
-> That is certainly what REQ_BARRIER did back in the day. But when
-> REQ_BARRIER was replaced with separate REQ_FUA and REQ_FLUSH
-> flags, and barrier.txt got replaced with writeback_cache_control.txt,
-> the documentation seemed to imply the ordering requirement on *issued*
-> IO had gone away (but maybe I'm missing something).
+Hi all,
 
-Yes, that's my understanding, too, but I also thought that multiple
-outstanding flushes are ordered by the block layer. i.e. flushes can
-be reordered against other operations, but not other flushes.  I
-could very well be wrong, but flush-to-flush ordering was what I
-thought the ordered pending flush list for PREFLUSH requests in
-blk_flush_complete_seq() did.
+This patchset implements the userspace components of the new GETFSMAP
+ioctl that is now in upstream for 4.12.  This release contains various
+cleanups that came up in the discussion of the v7 patchset; it should
+apply directly to for-next.
 
-Like I said, Christoph is the expert here - he'll correct me if I'm
-wrong.
+The first patch adds some autoconf magic so that client programs can
+detect a platform supporting FSMAP (currently Linux) and stuff in our
+own header if the system headers do not provide it.
 
-Cheers,
+The next two patches introduce a 'fsmap' command to xfs_io so that users
+can query the raw reverse mapping data that is exported by fsmap.  If
+the experimental rmapbt feature is enabled, the returned results will be
+straight out of the rmapbt; otherwise, the extent information is
+synthesized out of the free space btres.
 
-Dave.
+The fourth patch delegates xfs_repair's rmap comparison function to the
+new libxfs version that was introduced as a part of the getfsmap kernel
+patches.
 
--- 
-Dave Chinner
-david@fromorbit.com
+The remainder of the patch set introduces xfs_spaceman, which is a new
+tool to manage disk space on a mounted XFS filesystem.  The new tool can
+call FITRIM, manage space reservations, and display summary information
+about the free space on the filesystem.  This information is probably
+most useful for developers and people surveying free space
+fragmentation.
+
+Note: The primary user of the GETFSMAP information will be the media
+scan phase of the upcoming xfs_scrub tool, which will be posted later.
+
+Questions?  Comments?
+
+--D
