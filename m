@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29737 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751147AbdFBVY7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 17:24:59 -0400
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52LOxmb009990
+Received: from aserp1040.oracle.com ([141.146.126.69]:42854 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751147AbdFBVZF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 17:25:05 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52LP4Nl015834
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:59 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v52LOwZo009559
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:59 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v52LOus9031049
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:57 GMT
-Subject: [PATCH 09/13] xfs: separate function to check if reflink flag needed
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:25:05 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v52LP4ha006106
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:25:04 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v52LP3oA007740
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:25:04 GMT
+Subject: [PATCH 10/13] xfs: refactor the ifork block counting function
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Jun 2017 14:24:55 -0700
-Message-ID: <149643869528.23065.5474019120391564972.stgit@birch.djwong.org>
+Date: Fri, 02 Jun 2017 14:25:01 -0700
+Message-ID: <149643870157.23065.16428953914864164786.stgit@birch.djwong.org>
 In-Reply-To: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
 References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,143 +31,213 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Separate the "clear reflink flag" function into one function that checks
-if the flag is needed, and a second function that checks and clears the
-flag.  The inode scrub code will want to check the necessity of the flag
-without clearing it.
+Refactor the inode fork block counting function to count extents for us
+at the same time.  This will be used by the bmbt scrubber function.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_reflink.c |   88 ++++++++++++++++++++++++++++++--------------------
- fs/xfs/xfs_reflink.h |    2 +
- 2 files changed, 54 insertions(+), 36 deletions(-)
+ fs/xfs/xfs_bmap_util.c |  105 +++++++++++++++++++++++++++++-------------------
+ fs/xfs/xfs_bmap_util.h |    4 ++
+ 2 files changed, 67 insertions(+), 42 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index e25c995..133ee02 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1406,57 +1406,73 @@ xfs_reflink_dirty_extents(
- 	return error;
- }
- 
--/* Clear the inode reflink flag if there are no shared extents. */
-+/* Does this inode need the reflink flag? */
- int
--xfs_reflink_clear_inode_flag(
--	struct xfs_inode	*ip,
--	struct xfs_trans	**tpp)
-+xfs_reflink_needs_inode_flag(
-+	struct xfs_trans		*tp,
-+	struct xfs_inode		*ip,
-+	bool				*needs_flag)
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index fe83bbc..fc15305 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -226,7 +226,7 @@ xfs_bmap_count_leaves(
+ 	xfs_ifork_t		*ifp,
+ 	xfs_extnum_t		idx,
+ 	int			numrecs,
+-	int			*count)
++	unsigned long long	*count)
  {
--	struct xfs_mount	*mp = ip->i_mount;
--	xfs_fileoff_t		fbno;
--	xfs_filblks_t		end;
--	xfs_agnumber_t		agno;
--	xfs_agblock_t		agbno;
--	xfs_extlen_t		aglen;
--	xfs_agblock_t		rbno;
--	xfs_extlen_t		rlen;
--	struct xfs_bmbt_irec	map;
--	int			nmaps;
--	int			error = 0;
+ 	int		b;
+ 
+@@ -245,7 +245,7 @@ xfs_bmap_disk_count_leaves(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_btree_block	*block,
+ 	int			numrecs,
+-	int			*count)
++	unsigned long long	*count)
+ {
+ 	int		b;
+ 	xfs_bmbt_rec_t	*frp;
+@@ -260,17 +260,18 @@ xfs_bmap_disk_count_leaves(
+  * Recursively walks each level of a btree
+  * to count total fsblocks in use.
+  */
+-STATIC int                                     /* error */
++STATIC int
+ xfs_bmap_count_tree(
+-	xfs_mount_t     *mp,            /* file system mount point */
+-	xfs_trans_t     *tp,            /* transaction pointer */
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	xfs_fsblock_t   blockno,	/* file system block number */
+-	int             levelin,	/* level in btree */
+-	int		*count)		/* Count of blocks */
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	struct xfs_ifork	*ifp,
++	xfs_fsblock_t		blockno,
++	int			levelin,
++	unsigned int		*nextents,
++	unsigned long long	*count)
+ {
+ 	int			error;
+-	xfs_buf_t		*bp, *nbp;
++	struct xfs_buf		*bp, *nbp;
+ 	int			level = levelin;
+ 	__be64			*pp;
+ 	xfs_fsblock_t           bno = blockno;
+@@ -303,8 +304,9 @@ xfs_bmap_count_tree(
+ 		/* Dive to the next level */
+ 		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
+ 		bno = be64_to_cpu(*pp);
+-		if (unlikely((error =
+-		     xfs_bmap_count_tree(mp, tp, ifp, bno, level, count)) < 0)) {
++		error = xfs_bmap_count_tree(mp, tp, ifp, bno, level, nextents,
++				count);
++		if (error) {
+ 			xfs_trans_brelse(tp, bp);
+ 			XFS_ERROR_REPORT("xfs_bmap_count_tree(1)",
+ 					 XFS_ERRLEVEL_LOW, mp);
+@@ -316,6 +318,7 @@ xfs_bmap_count_tree(
+ 		for (;;) {
+ 			nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
+ 			numrecs = be16_to_cpu(block->bb_numrecs);
++			(*nextents) += numrecs;
+ 			xfs_bmap_disk_count_leaves(mp, block, numrecs, count);
+ 			xfs_trans_brelse(tp, bp);
+ 			if (nextbno == NULLFSBLOCK)
+@@ -336,44 +339,61 @@ xfs_bmap_count_tree(
+ /*
+  * Count fsblocks of the given fork.
+  */
+-static int					/* error */
++int
+ xfs_bmap_count_blocks(
+-	xfs_trans_t		*tp,		/* transaction pointer */
+-	xfs_inode_t		*ip,		/* incore inode */
+-	int			whichfork,	/* data or attr fork */
+-	int			*count)		/* out: count of blocks */
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	int			whichfork,
++	unsigned int		*nextents,
++	unsigned long long	*count)
+ {
+ 	struct xfs_btree_block	*block;	/* current btree block */
+ 	xfs_fsblock_t		bno;	/* block # of "block" */
+-	xfs_ifork_t		*ifp;	/* fork structure */
++	struct xfs_ifork	*ifp;	/* fork structure */
+ 	int			level;	/* btree level, for checking */
+-	xfs_mount_t		*mp;	/* file system mount structure */
++	struct xfs_mount	*mp;	/* file system mount structure */
+ 	__be64			*pp;	/* pointer to block address */
++	int			error;
+ 
+ 	bno = NULLFSBLOCK;
+ 	mp = ip->i_mount;
++	*nextents = 0;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	if ( XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ) {
+-		xfs_bmap_count_leaves(ifp, 0, xfs_iext_count(ifp), count);
++	if (!ifp)
+ 		return 0;
+-	}
+ 
+-	/*
+-	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
+-	 */
+-	block = ifp->if_broot;
+-	level = be16_to_cpu(block->bb_level);
+-	ASSERT(level > 0);
+-	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
+-	bno = be64_to_cpu(*pp);
+-	ASSERT(bno != NULLFSBLOCK);
+-	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
+-	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
 -
--	ASSERT(xfs_is_reflink_inode(ip));
-+	struct xfs_bmbt_irec		got;
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct xfs_ifork		*ifp;
-+	xfs_agnumber_t			agno;
-+	xfs_agblock_t			agbno;
-+	xfs_extlen_t			aglen;
-+	xfs_agblock_t			rbno;
-+	xfs_extlen_t			rlen;
-+	xfs_extnum_t			idx;
-+	bool				found;
-+	int				error;
- 
--	fbno = 0;
--	end = XFS_B_TO_FSB(mp, i_size_read(VFS_I(ip)));
--	while (end - fbno > 0) {
--		nmaps = 1;
--		/*
--		 * Look for extents in the file.  Skip holes, delalloc, or
--		 * unwritten extents; they can't be reflinked.
--		 */
--		error = xfs_bmapi_read(ip, fbno, end - fbno, &map, &nmaps, 0);
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-+		error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
- 		if (error)
- 			return error;
--		if (nmaps == 0)
--			break;
--		if (!xfs_bmap_is_real_extent(&map))
--			goto next;
-+	}
- 
--		agno = XFS_FSB_TO_AGNO(mp, map.br_startblock);
--		agbno = XFS_FSB_TO_AGBNO(mp, map.br_startblock);
--		aglen = map.br_blockcount;
-+	*needs_flag = false;
-+	found = xfs_iext_lookup_extent(ip, ifp, 0, &idx, &got);
-+	while (found) {
-+		if (isnullstartblock(got.br_startblock) ||
-+		    got.br_state != XFS_EXT_NORM)
-+			goto next;
-+		agno = XFS_FSB_TO_AGNO(mp, got.br_startblock);
-+		agbno = XFS_FSB_TO_AGBNO(mp, got.br_startblock);
-+		aglen = got.br_blockcount;
- 
--		error = xfs_reflink_find_shared(mp, *tpp, agno, agbno, aglen,
-+		error = xfs_reflink_find_shared(mp, tp, agno, agbno, aglen,
- 				&rbno, &rlen, false);
- 		if (error)
- 			return error;
- 		/* Is there still a shared block here? */
--		if (rbno != NULLAGBLOCK)
-+		if (rbno != NULLAGBLOCK) {
-+			*needs_flag = true;
- 			return 0;
+-	if (unlikely(xfs_bmap_count_tree(mp, tp, ifp, bno, level, count) < 0)) {
+-		XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)", XFS_ERRLEVEL_LOW,
+-				 mp);
+-		return -EFSCORRUPTED;
++	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
++	case XFS_DINODE_FMT_EXTENTS:
++		*nextents = xfs_iext_count(ifp);
++		xfs_bmap_count_leaves(ifp, 0, (*nextents), count);
++		return 0;
++	case XFS_DINODE_FMT_BTREE:
++		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
++			error = xfs_iread_extents(tp, ip, whichfork);
++			if (error)
++				return error;
 +		}
- next:
--		fbno = map.br_startoff + map.br_blockcount;
-+		found = xfs_iext_get_extent(ifp, ++idx, &got);
++
++		/*
++		 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
++		 */
++		block = ifp->if_broot;
++		level = be16_to_cpu(block->bb_level);
++		ASSERT(level > 0);
++		pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
++		bno = be64_to_cpu(*pp);
++		ASSERT(bno != NULLFSBLOCK);
++		ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
++		ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
++
++		error = xfs_bmap_count_tree(mp, tp, ifp, bno, level,
++				nextents, count);
++		if (error) {
++			XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)",
++					XFS_ERRLEVEL_LOW, mp);
++			return -EFSCORRUPTED;
++		}
++		return 0;
  	}
  
-+	return 0;
-+}
+ 	return 0;
+@@ -1789,8 +1809,9 @@ xfs_swap_extent_forks(
+ 	int			*target_log_flags)
+ {
+ 	struct xfs_ifork	tempifp, *ifp, *tifp;
+-	int			aforkblks = 0;
+-	int			taforkblks = 0;
++	unsigned long long	aforkblks = 0;
++	unsigned long long	taforkblks = 0;
++	unsigned int		junk;
+ 	xfs_extnum_t		nextents;
+ 	uint64_t		tmp;
+ 	int			error;
+@@ -1800,14 +1821,14 @@ xfs_swap_extent_forks(
+ 	 */
+ 	if ( ((XFS_IFORK_Q(ip) != 0) && (ip->i_d.di_anextents > 0)) &&
+ 	     (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
+-		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK,
++		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK, &junk,
+ 				&aforkblks);
+ 		if (error)
+ 			return error;
+ 	}
+ 	if ( ((XFS_IFORK_Q(tip) != 0) && (tip->i_d.di_anextents > 0)) &&
+ 	     (tip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
+-		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK,
++		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK, &junk,
+ 				&taforkblks);
+ 		if (error)
+ 			return error;
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index 135d826..993973c 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -70,4 +70,8 @@ int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
+ 
+ xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
+ 
++int xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
++			  int whichfork, unsigned int *nextents,
++			  unsigned long long *count);
 +
-+/* Clear the inode reflink flag if there are no shared extents. */
-+int
-+xfs_reflink_clear_inode_flag(
-+	struct xfs_inode	*ip,
-+	struct xfs_trans	**tpp)
-+{
-+	bool			needs;
-+	int			error = 0;
-+
-+	ASSERT(xfs_is_reflink_inode(ip));
-+
-+	error = xfs_reflink_needs_inode_flag(*tpp, ip, &needs);
-+	if (error || needs)
-+		return error;
-+
- 	/*
- 	 * We didn't find any shared blocks so turn off the reflink flag.
- 	 * First, get rid of any leftover CoW mappings.
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index b8cc5c3..a26d795 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -47,6 +47,8 @@ extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
- extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
- extern int xfs_reflink_remap_range(struct file *file_in, loff_t pos_in,
- 		struct file *file_out, loff_t pos_out, u64 len, bool is_dedupe);
-+extern int xfs_reflink_needs_inode_flag(struct xfs_trans *tp,
-+		struct xfs_inode *ip, bool *needs_flag);
- extern int xfs_reflink_clear_inode_flag(struct xfs_inode *ip,
- 		struct xfs_trans **tpp);
- extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
+ #endif	/* __XFS_BMAP_UTIL_H__ */
 
