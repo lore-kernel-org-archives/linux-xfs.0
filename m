@@ -1,162 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:43976 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751189AbdFBP26 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 11:28:58 -0400
-Date: Fri, 02 Jun 2017 11:28:54 -0400 (EDT)
-Message-Id: <20170602.112854.571030442583332811.davem@davemloft.net>
-Subject: crypto: Work around deallocated stack frame reference gcc bug on
- sparc.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Received: from aserp1040.oracle.com ([141.146.126.69]:19252 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751161AbdFBFpv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 01:45:51 -0400
+Date: Thu, 1 Jun 2017 22:45:39 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] xfs: fix installation for extended output files
+Message-ID: <20170602054539.GA5636@birch.djwong.org>
+References: <20170601025327.GU23805@eguan.usersys.redhat.com>
+ <1496286073-23298-1-git-send-email-yangx.jy@cn.fujitsu.com>
+ <20170601040733.GW23805@eguan.usersys.redhat.com>
+ <20170601154849.GH4519@birch.djwong.org>
+ <5930D027.9050606@cn.fujitsu.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5930D027.9050606@cn.fujitsu.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: herbert@gondor.apana.org.au
-Cc: linux-crypto@vger.kernel.org, sparclinux@vger.kernel.org, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, matorola@gmail.com, sandeen@sandeen.net, linux-xfs@vger.kernel.org
+To: Xiao Yang <yangx.jy@cn.fujitsu.com>
+Cc: Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
+On Fri, Jun 02, 2017 at 10:40:39AM +0800, Xiao Yang wrote:
+> On 2017/06/01 23:48, Darrick J. Wong wrote:
+> >On Thu, Jun 01, 2017 at 12:07:33PM +0800, Eryu Guan wrote:
+> >>On Thu, Jun 01, 2017 at 11:01:13AM +0800, Xiao Yang wrote:
+> >>>The installation of these extended output files are skipped
+> >>>because they aren't matched by xfstests.  So we rename them
+> >>>to adapt building rules.
+> >>>
+> >>>Signed-off-by: Xiao Yang<yangx.jy@cn.fujitsu.com>
+> >>This patch is 2.4M in size, no wonder it didn't hit the list..
+> >>
+> >>(cc linux-xfs list for these xfs specific tests)
+> >>
+> >>>---
+> >>>  tests/xfs/018                         |    8 +-
+> >>>  tests/xfs/018.op.irix                 | 5628 ---------------------------------
+> >>>  tests/xfs/018.op.linux                | 4714 ---------------------------
+> >>>  tests/xfs/018.out.irix                | 5628 +++++++++++++++++++++++++++++++++
+> >>>  tests/xfs/018.out.linux               | 4714 +++++++++++++++++++++++++++
+> >>>  tests/xfs/018.out.trans_buf           | 1821 +++++++++++
+> >>>  tests/xfs/018.out.trans_inode         | 2609 +++++++++++++++
+> >>>  tests/xfs/018.trans_buf               | 1821 -----------
+> >>>  tests/xfs/018.trans_inode             | 2609 ---------------
+> >>xfs/018 081 and 082 are all marked as 'deprecated', I'm wondering if we
+> >>can just remove them.
+> >I have little good to say about these -- diffing logprint outputs will
+> >break every time we add new log item types (which we have) so these are
+> >brittle.
+> >
+> >>>  tests/xfs/040                         |    4 +-
+> >>>  tests/xfs/040.good                    |   16 -
+> >>>  tests/xfs/040.out.good                |   16 +
+> >>xfs/040 is doing source code diff between userspace vs kernel space, I'm
+> >>not sure if this is still needed. But xfs/040 requires KWORKAREA points
+> >>to a directory that contains both userspace and kernel code, I suspect
+> >>it's rarely run.
+> >It's /never/ run, because it requires dmapi.h, which doesn't exist on
+> >Linux, and it appears to assume the pre-libxfs-split directory layout.
+> >Seeing as xfsprogs ships its own "compare the libxfs code" tool now,
+> >I think it better to go fix it.  Patch for x/040 coming soon.
+> Hi Darrick
+> 
+> The libxfs code is being updated regularly, so I think the difference is not
+> immutable.
+> Is it necessary to run this case?
 
-On sparc, if we have an alloca() like situation, as is the case with
-SHASH_DESC_ON_STACK(), we can end up referencing deallocated stack
-memory.  The result can be that the value is clobbered if a trap
-or interrupt arrives at just the right instruction.
+For the upstream maintainers, yes, because we want to keep the libxfs/
+code synchronized between, say, Linux 4.12 and xfsprogs 4.12.  Right now
+we more or less just run it manually, but I think there's value in
+enabling everyone else to keep us honest by providing everyone a way to
+look for missing pieces in an automated fashion. :)
 
-It only occurs if the function ends returning a value from that
-alloca() area and that value can be placed into the return value
-register using a single instruction.
+--D
 
-For example, in lib/libcrc32c.c:crc32c() we end up with a return
-sequence like:
-
-        return  %i7+8
-         lduw   [%o5+16], %o0   ! MEM[(u32 *)__shash_desc.1_10 + 16B],
-
-%o5 holds the base of the on-stack area allocated for the shash
-descriptor.  But the return released the stack frame and the
-register window.
-
-So if an intererupt arrives between 'return' and 'lduw', then
-the value read at %o5+16 can be corrupted.
-
-Add a data compiler barrier to work around this problem.  This is
-exactly what the gcc fix will end up doing as well, and it absolutely
-should not change the code generated for other cpus (unless gcc
-on them has the same bug :-)
-
-With crucial insight from Eric Sandeen.
-
-Reported-by: Anatoly Pugachev <matorola@gmail.com>
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
-
-See the thread anchored at:
-
-	http://marc.info/?l=linux-sparc&m=149623182616944&w=2
-
-for discussion, it has a reproducer module.  The problem was
-first noticed as occaisional XFS checksum corruptions.
-
-Herbert, I don't expect you to like this but it is the best we can do
-I think.  It should not pessimize code on other architectures at all.
-I will work on fixing the gcc bug but it's been around forever and all
-versions are effected.
-
-I noticed while working on this that at least btrfs duplicates the
-facilities provided by lib/libcrc32c.c and therefore should probably
-be converted over to straight crc32c() calls if possible.
-
-Thanks!
-
-diff --git a/drivers/infiniband/sw/rxe/rxe.h b/drivers/infiniband/sw/rxe/rxe.h
-index ecdba2f..1ac5b85 100644
---- a/drivers/infiniband/sw/rxe/rxe.h
-+++ b/drivers/infiniband/sw/rxe/rxe.h
-@@ -68,6 +68,7 @@
- static inline u32 rxe_crc32(struct rxe_dev *rxe,
- 			    u32 crc, void *next, size_t len)
- {
-+	u32 retval;
- 	int err;
- 
- 	SHASH_DESC_ON_STACK(shash, rxe->tfm);
-@@ -81,7 +82,9 @@ static inline u32 rxe_crc32(struct rxe_dev *rxe,
- 		return crc32_le(crc, next, len);
- 	}
- 
--	return *(u32 *)shash_desc_ctx(shash);
-+	retval = *(u32 *)shash_desc_ctx(shash);
-+	barrier_data(shash_desc_ctx(shash));
-+	return retval;
- }
- 
- int rxe_set_mtu(struct rxe_dev *rxe, unsigned int dev_mtu);
-diff --git a/fs/btrfs/hash.c b/fs/btrfs/hash.c
-index a97fdc1..baacc18 100644
---- a/fs/btrfs/hash.c
-+++ b/fs/btrfs/hash.c
-@@ -38,6 +38,7 @@ u32 btrfs_crc32c(u32 crc, const void *address, unsigned int length)
- {
- 	SHASH_DESC_ON_STACK(shash, tfm);
- 	u32 *ctx = (u32 *)shash_desc_ctx(shash);
-+	u32 retval;
- 	int err;
- 
- 	shash->tfm = tfm;
-@@ -47,5 +48,7 @@ u32 btrfs_crc32c(u32 crc, const void *address, unsigned int length)
- 	err = crypto_shash_update(shash, address, length);
- 	BUG_ON(err);
- 
--	return *ctx;
-+	retval = *ctx;
-+	barrier_data(ctx);
-+	return retval;
- }
-diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
-index 2185c7a..fd2e651 100644
---- a/fs/f2fs/f2fs.h
-+++ b/fs/f2fs/f2fs.h
-@@ -1078,6 +1078,7 @@ static inline u32 f2fs_crc32(struct f2fs_sb_info *sbi, const void *address,
- {
- 	SHASH_DESC_ON_STACK(shash, sbi->s_chksum_driver);
- 	u32 *ctx = (u32 *)shash_desc_ctx(shash);
-+	u32 retval;
- 	int err;
- 
- 	shash->tfm = sbi->s_chksum_driver;
-@@ -1087,7 +1088,9 @@ static inline u32 f2fs_crc32(struct f2fs_sb_info *sbi, const void *address,
- 	err = crypto_shash_update(shash, address, length);
- 	BUG_ON(err);
- 
--	return *ctx;
-+	retval = *ctx;
-+	barrier_data(ctx);
-+	return retval;
- }
- 
- static inline bool f2fs_crc_valid(struct f2fs_sb_info *sbi, __u32 blk_crc,
-diff --git a/lib/libcrc32c.c b/lib/libcrc32c.c
-index 74a54b7..9f79547 100644
---- a/lib/libcrc32c.c
-+++ b/lib/libcrc32c.c
-@@ -43,7 +43,7 @@ static struct crypto_shash *tfm;
- u32 crc32c(u32 crc, const void *address, unsigned int length)
- {
- 	SHASH_DESC_ON_STACK(shash, tfm);
--	u32 *ctx = (u32 *)shash_desc_ctx(shash);
-+	u32 ret, *ctx = (u32 *)shash_desc_ctx(shash);
- 	int err;
- 
- 	shash->tfm = tfm;
-@@ -53,7 +53,9 @@ u32 crc32c(u32 crc, const void *address, unsigned int length)
- 	err = crypto_shash_update(shash, address, length);
- 	BUG_ON(err);
- 
--	return *ctx;
-+	ret = *ctx;
-+	barrier_data(ctx);
-+	return ret;
- }
- 
- EXPORT_SYMBOL(crc32c);
+> 
+> Thanks,
+> Xiao Yang
+> >>>  tests/xfs/081                         |    2 +-
+> >>>  tests/xfs/081.out.ugquota.trans_inode | 3091 ++++++++++++++++++
+> >>>  tests/xfs/081.ugquota.trans_inode     | 3091 ------------------
+> >>>  tests/xfs/082                         |    8 +-
+> >>>  tests/xfs/082.op.irix                 | 5628 ---------------------------------
+> >>>  tests/xfs/082.op.linux                | 4714 ---------------------------
+> >>>  tests/xfs/082.out.irix                | 5628 +++++++++++++++++++++++++++++++++
+> >>>  tests/xfs/082.out.linux               | 4714 +++++++++++++++++++++++++++
+> >>>  tests/xfs/082.out.trans_buf           | 1821 +++++++++++
+> >>>  tests/xfs/082.out.trans_inode         | 2609 +++++++++++++++
+> >>>  tests/xfs/082.trans_buf               | 1821 -----------
+> >>>  tests/xfs/082.trans_inode             | 2609 ---------------
+> >>>  24 files changed, 32662 insertions(+), 32662 deletions(-)
+> >Ye $deities!
+> >
+> >--D
+> >
+> >>Thanks,
+> >>Eryu
+> >>--
+> >>To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >>the body of a message to majordomo@vger.kernel.org
+> >>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> >.
+> >
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
