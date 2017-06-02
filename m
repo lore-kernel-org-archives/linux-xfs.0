@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29554 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751147AbdFBVYY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 17:24:24 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:42627 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751147AbdFBVY2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 17:24:28 -0400
 Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52LON1b009624
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52LOQA5015153
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:23 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v52LOM0i008365
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:23 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v52LOKsu030888
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:21 GMT
-Subject: [PATCH 03/13] xfs: always compile the btree inorder check functions
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:27 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v52LOQ21008459
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:26 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v52LOPps028259
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 21:24:26 GMT
+Subject: [PATCH 04/13] xfs: export various function for the online scrubber
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Jun 2017 14:24:18 -0700
-Message-ID: <149643865870.23065.16385676974970966766.stgit@birch.djwong.org>
+Date: Fri, 02 Jun 2017 14:24:24 -0700
+Message-ID: <149643866478.23065.11454082095408197778.stgit@birch.djwong.org>
 In-Reply-To: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
 References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,215 +31,268 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The btree record and key inorder check functions will be used by the
-btree scrubber code, so make sure they're always built.
+Export various internal functions so that the online scrubber can use
+them to check the state of metadata.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc_btree.c    |    6 ------
- fs/xfs/libxfs/xfs_bmap_btree.c     |    4 ----
- fs/xfs/libxfs/xfs_btree.h          |    2 --
- fs/xfs/libxfs/xfs_ialloc_btree.c   |    6 ------
- fs/xfs/libxfs/xfs_refcount_btree.c |    4 ----
- fs/xfs/libxfs/xfs_rmap_btree.c     |    4 ----
- 6 files changed, 26 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c     |    2 +-
+ fs/xfs/libxfs/xfs_alloc.h     |    2 ++
+ fs/xfs/libxfs/xfs_btree.c     |   12 ++++++------
+ fs/xfs/libxfs/xfs_btree.h     |   13 +++++++++++++
+ fs/xfs/libxfs/xfs_dir2_leaf.c |    2 +-
+ fs/xfs/libxfs/xfs_dir2_priv.h |    2 ++
+ fs/xfs/libxfs/xfs_inode_buf.c |    2 +-
+ fs/xfs/libxfs/xfs_inode_buf.h |    3 +++
+ fs/xfs/libxfs/xfs_rmap.c      |    3 ++-
+ fs/xfs/libxfs/xfs_rmap.h      |    3 +++
+ fs/xfs/libxfs/xfs_rtbitmap.c  |    2 +-
+ fs/xfs/xfs_itable.c           |    2 +-
+ fs/xfs/xfs_itable.h           |    2 ++
+ fs/xfs/xfs_rtalloc.h          |    3 +++
+ 14 files changed, 41 insertions(+), 12 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 5020cbc..cfde0a0 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -395,7 +395,6 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
- };
- 
- 
--#if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
- xfs_bnobt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -442,7 +441,6 @@ xfs_cntbt_recs_inorder(
- 		 be32_to_cpu(r1->alloc.ar_startblock) <
- 		 be32_to_cpu(r2->alloc.ar_startblock));
- }
--#endif /* DEBUG */
- 
- static const struct xfs_btree_ops xfs_bnobt_ops = {
- 	.rec_len		= sizeof(xfs_alloc_rec_t),
-@@ -462,10 +460,8 @@ static const struct xfs_btree_ops xfs_bnobt_ops = {
- 	.key_diff		= xfs_bnobt_key_diff,
- 	.buf_ops		= &xfs_allocbt_buf_ops,
- 	.diff_two_keys		= xfs_bnobt_diff_two_keys,
--#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_bnobt_keys_inorder,
- 	.recs_inorder		= xfs_bnobt_recs_inorder,
--#endif
- };
- 
- static const struct xfs_btree_ops xfs_cntbt_ops = {
-@@ -486,10 +482,8 @@ static const struct xfs_btree_ops xfs_cntbt_ops = {
- 	.key_diff		= xfs_cntbt_key_diff,
- 	.buf_ops		= &xfs_allocbt_buf_ops,
- 	.diff_two_keys		= xfs_cntbt_diff_two_keys,
--#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_cntbt_keys_inorder,
- 	.recs_inorder		= xfs_cntbt_recs_inorder,
--#endif
- };
- 
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 7486401..fefa8da 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -606,7 +606,7 @@ const struct xfs_buf_ops xfs_agfl_buf_ops = {
  /*
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 5e2b3dc..e23495e 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -687,7 +687,6 @@ const struct xfs_buf_ops xfs_bmbt_buf_ops = {
- };
+  * Read in the allocation group free block array.
+  */
+-STATIC int				/* error */
++int					/* error */
+ xfs_alloc_read_agfl(
+ 	xfs_mount_t	*mp,		/* mount point structure */
+ 	xfs_trans_t	*tp,		/* transaction pointer */
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 77d9c27..ef26edc 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -213,6 +213,8 @@ xfs_alloc_get_rec(
  
- 
--#if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
- xfs_bmbt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -708,7 +707,6 @@ xfs_bmbt_recs_inorder(
- 		xfs_bmbt_disk_get_blockcount(&r1->bmbt) <=
- 		xfs_bmbt_disk_get_startoff(&r2->bmbt);
- }
--#endif	/* DEBUG */
- 
- static const struct xfs_btree_ops xfs_bmbt_ops = {
- 	.rec_len		= sizeof(xfs_bmbt_rec_t),
-@@ -726,10 +724,8 @@ static const struct xfs_btree_ops xfs_bmbt_ops = {
- 	.init_ptr_from_cur	= xfs_bmbt_init_ptr_from_cur,
- 	.key_diff		= xfs_bmbt_key_diff,
- 	.buf_ops		= &xfs_bmbt_buf_ops,
--#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_bmbt_keys_inorder,
- 	.recs_inorder		= xfs_bmbt_recs_inorder,
--#endif
- };
- 
+ int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
+ 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
++int xfs_alloc_read_agfl(struct xfs_mount *mp, struct xfs_trans *tp,
++			xfs_agnumber_t agno, struct xfs_buf **bpp);
+ int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
+ int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
+ 		struct xfs_buf **agbp);
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 302dd4c..302dac5 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -568,7 +568,7 @@ xfs_btree_ptr_offset(
  /*
+  * Return a pointer to the n-th record in the btree block.
+  */
+-STATIC union xfs_btree_rec *
++union xfs_btree_rec *
+ xfs_btree_rec_addr(
+ 	struct xfs_btree_cur	*cur,
+ 	int			n,
+@@ -581,7 +581,7 @@ xfs_btree_rec_addr(
+ /*
+  * Return a pointer to the n-th key in the btree block.
+  */
+-STATIC union xfs_btree_key *
++union xfs_btree_key *
+ xfs_btree_key_addr(
+ 	struct xfs_btree_cur	*cur,
+ 	int			n,
+@@ -594,7 +594,7 @@ xfs_btree_key_addr(
+ /*
+  * Return a pointer to the n-th high key in the btree block.
+  */
+-STATIC union xfs_btree_key *
++union xfs_btree_key *
+ xfs_btree_high_key_addr(
+ 	struct xfs_btree_cur	*cur,
+ 	int			n,
+@@ -607,7 +607,7 @@ xfs_btree_high_key_addr(
+ /*
+  * Return a pointer to the n-th block pointer in the btree block.
+  */
+-STATIC union xfs_btree_ptr *
++union xfs_btree_ptr *
+ xfs_btree_ptr_addr(
+ 	struct xfs_btree_cur	*cur,
+ 	int			n,
+@@ -641,7 +641,7 @@ xfs_btree_get_iroot(
+  * Retrieve the block pointer from the cursor at the given level.
+  * This may be an inode btree root or from a buffer.
+  */
+-STATIC struct xfs_btree_block *		/* generic btree block pointer */
++struct xfs_btree_block *		/* generic btree block pointer */
+ xfs_btree_get_block(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+ 	int			level,	/* level in btree */
+@@ -1756,7 +1756,7 @@ xfs_btree_decrement(
+ 	return error;
+ }
+ 
+-STATIC int
++int
+ xfs_btree_lookup_get_block(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+ 	int			level,	/* level in the btree */
 diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 0a931f6..177a364 100644
+index 177a364..9c95e96 100644
 --- a/fs/xfs/libxfs/xfs_btree.h
 +++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -163,7 +163,6 @@ struct xfs_btree_ops {
+@@ -504,4 +504,17 @@ int xfs_btree_visit_blocks(struct xfs_btree_cur *cur,
  
- 	const struct xfs_buf_ops	*buf_ops;
+ int xfs_btree_count_blocks(struct xfs_btree_cur *cur, xfs_extlen_t *blocks);
  
--#if defined(DEBUG) || defined(XFS_WARN)
- 	/* check that k1 is lower than k2 */
- 	int	(*keys_inorder)(struct xfs_btree_cur *cur,
- 				union xfs_btree_key *k1,
-@@ -173,7 +172,6 @@ struct xfs_btree_ops {
- 	int	(*recs_inorder)(struct xfs_btree_cur *cur,
- 				union xfs_btree_rec *r1,
- 				union xfs_btree_rec *r2);
--#endif
++union xfs_btree_rec *xfs_btree_rec_addr(struct xfs_btree_cur *cur, int n,
++		struct xfs_btree_block *block);
++union xfs_btree_key *xfs_btree_key_addr(struct xfs_btree_cur *cur, int n,
++		struct xfs_btree_block *block);
++union xfs_btree_key *xfs_btree_high_key_addr(struct xfs_btree_cur *cur, int n,
++		struct xfs_btree_block *block);
++union xfs_btree_ptr *xfs_btree_ptr_addr(struct xfs_btree_cur *cur, int n,
++		struct xfs_btree_block *block);
++int xfs_btree_lookup_get_block(struct xfs_btree_cur *cur, int level,
++		union xfs_btree_ptr *pp, struct xfs_btree_block **blkp);
++struct xfs_btree_block *xfs_btree_get_block(struct xfs_btree_cur *cur,
++		int level, struct xfs_buf **bpp);
++
+ #endif	/* __XFS_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index 68bf3e8..7002024 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -256,7 +256,7 @@ const struct xfs_buf_ops xfs_dir3_leafn_buf_ops = {
+ 	.verify_write = xfs_dir3_leafn_write_verify,
  };
  
- /*
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index ed52d99..6b1ddeb 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -302,7 +302,6 @@ const struct xfs_buf_ops xfs_inobt_buf_ops = {
- 	.verify_write = xfs_inobt_write_verify,
- };
+-static int
++int
+ xfs_dir3_leaf_read(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*dp,
+diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index 011df4d..576f2d2 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -58,6 +58,8 @@ extern int xfs_dir3_data_init(struct xfs_da_args *args, xfs_dir2_db_t blkno,
+ 		struct xfs_buf **bpp);
  
--#if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
- xfs_inobt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -322,7 +321,6 @@ xfs_inobt_recs_inorder(
- 	return be32_to_cpu(r1->inobt.ir_startino) + XFS_INODES_PER_CHUNK <=
- 		be32_to_cpu(r2->inobt.ir_startino);
+ /* xfs_dir2_leaf.c */
++extern int xfs_dir3_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
++		xfs_dablk_t fbno, xfs_daddr_t mappedbno, struct xfs_buf **bpp);
+ extern int xfs_dir3_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		xfs_dablk_t fbno, xfs_daddr_t mappedbno, struct xfs_buf **bpp);
+ extern int xfs_dir2_block_to_leaf(struct xfs_da_args *args,
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index d887af9..0c970cf 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -381,7 +381,7 @@ xfs_log_dinode_to_disk(
+ 	}
  }
--#endif	/* DEBUG */
  
- static const struct xfs_btree_ops xfs_inobt_ops = {
- 	.rec_len		= sizeof(xfs_inobt_rec_t),
-@@ -339,10 +337,8 @@ static const struct xfs_btree_ops xfs_inobt_ops = {
- 	.init_ptr_from_cur	= xfs_inobt_init_ptr_from_cur,
- 	.key_diff		= xfs_inobt_key_diff,
- 	.buf_ops		= &xfs_inobt_buf_ops,
--#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_inobt_keys_inorder,
- 	.recs_inorder		= xfs_inobt_recs_inorder,
--#endif
- };
+-static bool
++bool
+ xfs_dinode_verify(
+ 	struct xfs_mount	*mp,
+ 	xfs_ino_t		ino,
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+index 0827d7d..a9c97a3 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.h
++++ b/fs/xfs/libxfs/xfs_inode_buf.h
+@@ -82,4 +82,7 @@ void	xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
+ #define	xfs_inobp_check(mp, bp)
+ #endif /* DEBUG */
  
- static const struct xfs_btree_ops xfs_finobt_ops = {
-@@ -360,10 +356,8 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
- 	.init_ptr_from_cur	= xfs_finobt_init_ptr_from_cur,
- 	.key_diff		= xfs_inobt_key_diff,
- 	.buf_ops		= &xfs_inobt_buf_ops,
--#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_inobt_keys_inorder,
- 	.recs_inorder		= xfs_inobt_recs_inorder,
--#endif
- };
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index 65c222a..3c59dd3 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -285,7 +285,6 @@ const struct xfs_buf_ops xfs_refcountbt_buf_ops = {
- 	.verify_write		= xfs_refcountbt_write_verify,
- };
- 
--#if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
- xfs_refcountbt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -306,7 +305,6 @@ xfs_refcountbt_recs_inorder(
- 		be32_to_cpu(r1->refc.rc_blockcount) <=
- 		be32_to_cpu(r2->refc.rc_startblock);
++bool	xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
++			  struct xfs_dinode *dip);
++
+ #endif	/* __XFS_INODE_BUF_H__ */
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 1bcb41f..eda275b 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -179,7 +179,8 @@ xfs_rmap_delete(
+ 	return error;
  }
--#endif
  
- static const struct xfs_btree_ops xfs_refcountbt_ops = {
- 	.rec_len		= sizeof(struct xfs_refcount_rec),
-@@ -325,10 +323,8 @@ static const struct xfs_btree_ops xfs_refcountbt_ops = {
- 	.key_diff		= xfs_refcountbt_key_diff,
- 	.buf_ops		= &xfs_refcountbt_buf_ops,
- 	.diff_two_keys		= xfs_refcountbt_diff_two_keys,
--#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_refcountbt_keys_inorder,
- 	.recs_inorder		= xfs_refcountbt_recs_inorder,
--#endif
- };
+-static int
++/* Convert an internal btree record to an rmap record. */
++int
+ xfs_rmap_btrec_to_irec(
+ 	union xfs_btree_rec	*rec,
+ 	struct xfs_rmap_irec	*irec)
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 265116d..466ede6 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -216,5 +216,8 @@ int xfs_rmap_lookup_le_range(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ 		struct xfs_rmap_irec *irec, int	*stat);
+ int xfs_rmap_compare(const struct xfs_rmap_irec *a,
+ 		const struct xfs_rmap_irec *b);
++union xfs_btree_rec;
++int xfs_rmap_btrec_to_irec(union xfs_btree_rec *rec,
++		struct xfs_rmap_irec *irec);
  
+ #endif	/* __XFS_RMAP_H__ */
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index 26bba7f..5d4e43e 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -70,7 +70,7 @@ const struct xfs_buf_ops xfs_rtbuf_ops = {
+  * Get a buffer for the bitmap or summary file block specified.
+  * The buffer is returned read and locked.
+  */
+-static int
++int
+ xfs_rtbuf_get(
+ 	xfs_mount_t	*mp,		/* file system mount structure */
+ 	xfs_trans_t	*tp,		/* transaction pointer */
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 26d67ce..c393a2f 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -31,7 +31,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
+ 
+-STATIC int
++int
+ xfs_internal_inum(
+ 	xfs_mount_t	*mp,
+ 	xfs_ino_t	ino)
+diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
+index 6ea8b39..17e86e0 100644
+--- a/fs/xfs/xfs_itable.h
++++ b/fs/xfs/xfs_itable.h
+@@ -96,4 +96,6 @@ xfs_inumbers(
+ 	void			__user *buffer, /* buffer with inode info */
+ 	inumbers_fmt_pf		formatter);
+ 
++int xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
++
+ #endif	/* __XFS_ITABLE_H__ */
+diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
+index f13133e..79defa7 100644
+--- a/fs/xfs/xfs_rtalloc.h
++++ b/fs/xfs/xfs_rtalloc.h
+@@ -107,6 +107,8 @@ xfs_growfs_rt(
  /*
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index c5b4a1c8..9d9c919 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -377,7 +377,6 @@ const struct xfs_buf_ops xfs_rmapbt_buf_ops = {
- 	.verify_write		= xfs_rmapbt_write_verify,
- };
- 
--#if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
- xfs_rmapbt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -437,7 +436,6 @@ xfs_rmapbt_recs_inorder(
- 		return 1;
- 	return 0;
- }
--#endif	/* DEBUG */
- 
- static const struct xfs_btree_ops xfs_rmapbt_ops = {
- 	.rec_len		= sizeof(struct xfs_rmap_rec),
-@@ -456,10 +454,8 @@ static const struct xfs_btree_ops xfs_rmapbt_ops = {
- 	.key_diff		= xfs_rmapbt_key_diff,
- 	.buf_ops		= &xfs_rmapbt_buf_ops,
- 	.diff_two_keys		= xfs_rmapbt_diff_two_keys,
--#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_rmapbt_keys_inorder,
- 	.recs_inorder		= xfs_rmapbt_recs_inorder,
--#endif
- };
- 
- /*
+  * From xfs_rtbitmap.c
+  */
++int xfs_rtbuf_get(struct xfs_mount *mp, struct xfs_trans *tp,
++		  xfs_rtblock_t block, int issum, struct xfs_buf **bpp);
+ int xfs_rtcheck_range(struct xfs_mount *mp, struct xfs_trans *tp,
+ 		      xfs_rtblock_t start, xfs_extlen_t len, int val,
+ 		      xfs_rtblock_t *new, int *stat);
+@@ -143,6 +145,7 @@ int xfs_rtalloc_query_all(struct xfs_trans *tp,
+ # define xfs_growfs_rt(mp,in)                           (ENOSYS)
+ # define xfs_rtalloc_query_range(t,l,h,f,p)             (ENOSYS)
+ # define xfs_rtalloc_query_all(t,f,p)                   (ENOSYS)
++# define xfs_rtbuf_get(m,t,b,i,p)                       (ENOSYS)
+ static inline int		/* error */
+ xfs_rtmount_init(
+ 	xfs_mount_t	*mp)	/* file system mount structure */
 
