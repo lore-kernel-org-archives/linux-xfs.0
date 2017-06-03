@@ -1,81 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34868 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751453AbdFEI5F (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Jun 2017 04:57:05 -0400
-Date: Mon, 5 Jun 2017 10:57:01 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: My XFS volume died, please help!
-Message-ID: <20170605085701.kw6avwixxdlqcinc@eorzea.usersys.redhat.com>
-References: <CAG3eYYQMTdmCK9EdJA4hfYSSPStLSC=YBK+tvk67r6Vn4-UcxQ@mail.gmail.com>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:32822 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750707AbdFCEWK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 00:22:10 -0400
+Received: by mail-pf0-f194.google.com with SMTP id f27so14605578pfe.0
+        for <linux-xfs@vger.kernel.org>; Fri, 02 Jun 2017 21:22:10 -0700 (PDT)
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: [PATCH] xfs: avoid -Wint-in-bool-context warning in xfs_bmap_util.c
+Date: Fri,  2 Jun 2017 21:21:07 -0700
+Message-Id: <20170603042107.17469-1-ebiggers3@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAG3eYYQMTdmCK9EdJA4hfYSSPStLSC=YBK+tvk67r6Vn4-UcxQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?iso-8859-1?Q?P=E9ter_Andr=E1s_Felv=E9gi?= <petschy@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Eric Biggers <ebiggers@google.com>
 
-Hi,
+From: Eric Biggers <ebiggers@google.com>
 
-On Sat, Jun 03, 2017 at 01:21:31AM +0200, P�ter Andr�s Felv�gi wrote:
-> Hello,
-> 
-> after a power outage, the mount replayed the journal and no errors
-> were reported, but the mounted XFS volume had suspiciously little free
-> space. So I unmounted, and ran xfs_repair which crashed in phase 5
-> with a floating point exception. After that I was unable to mount
-> again, due to metadata corruption, so the repair made things worse.
-> Please help!
-> 
-> Linux 4.4.66 x86_64, Debian Jessie, xfsprogs 3.2.1
-> 
-> xps_repair output:
-> Phase 5 - rebuild AG headers and trees...
->         - agno = 0
-> traps: xfs_repair[4786] trap divide error ip:417fef sp:7ffe43770d60
-> error:0 in xfs_repair[400000+7a000]
-> Floating point exception
-> 
+XFS triggers gcc 7's -Wint-in-bool-context warning (on by default with
+-Wall), which warns about arithmetic in a boolean context that has no
+effect on the result:
 
-Hmmm, I've seen this before, but honestly don't remember neither when nor what
-happened with it.
+    In file included from fs/xfs/xfs_inode.h:22:0,
+                     from fs/xfs/xfs_bmap_util.c:29:
+    fs/xfs/xfs_bmap_util.c: In function ‘xfs_swap_extents_check_format’:
+    fs/xfs/libxfs/xfs_inode_fork.h:90:30: warning: ‘<<’ in boolean context, did you mean ‘<’ ? [-Wint-in-bool-context]
+     #define XFS_IFORK_BOFF(ip)  ((int)((ip)->i_d.di_forkoff << 3))
+                                 ~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    fs/xfs/xfs_bmap_util.c:1620:7: note: in expansion of macro ‘XFS_IFORK_BOFF’
+       if (XFS_IFORK_BOFF(ip) &&
+           ^~~~~~~~~~~~~~
+    fs/xfs/libxfs/xfs_inode_fork.h:90:30: warning: ‘<<’ in boolean context, did you mean ‘<’ ? [-Wint-in-bool-context]
+     #define XFS_IFORK_BOFF(ip)  ((int)((ip)->i_d.di_forkoff << 3))
+                                 ~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    fs/xfs/xfs_bmap_util.c:1630:7: note: in expansion of macro ‘XFS_IFORK_BOFF’
+       if (XFS_IFORK_BOFF(tip) &&
+           ^~~~~~~~~~~~~~
 
-> mount output:
-> XFS (dm-2): Mounting V5 Filesystem
-> XFS (dm-2): Corruption warning: Metadata has LSN (11:170112) ahead of
-> current LSN (1:64). Please unmount and run xfs_repair (>= v4.3) to
-> resolve.
-> XFS (dm-2): log mount/recovery failed: error -22
-> XFS (dm-2): log mount failed
-> mount: wrong fs type, bad option, bad superblock on /dev/mapper/storage-crypt,
->        missing codepage or helper program, or other error
-> 
->        In some cases useful info is found in syslog - try
->        dmesg | tail or so.
-> 
-> I dumped the whole volume with dd so that I can revert to the current
-> (hopefully not hopelessly screwed) state. Downloaded xfsprogs 4.11.0
-> and checked the changelog. There are fixes for xfs_repair phase 5,
-> though the FP exception is not mentioned. Is this bug already fixed?
-> Should I try xfs_repair from 4.11?
->
+This is more or less a false positive, because the useless arithmetic is
+just the left shift in XFS_IFORK_BOFF().  Use XFS_IFORK_Q() instead to
+make the warnings go away, while having the same behavior and being more
+consistent with other places in XFS which also use XFS_IFORK_Q().
 
-Yes, you might want to run latest xfs_repair on it. If you are afraid of making
-thins worse, you can actually take a metadump from your current broken fs, and
-run xfs_repair on it, to see what it finds, or run it with -n to see what it
-will find in your FS.
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ fs/xfs/xfs_bmap_util.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-cheers
-
-> Thanks & kind regards, Peter
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 7ac80a1facf2..05a6fdf5976d 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1613,7 +1613,7 @@ xfs_swap_extents_check_format(
+ 	 * extent format...
+ 	 */
+ 	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+-		if (XFS_IFORK_BOFF(ip) &&
++		if (XFS_IFORK_Q(ip) &&
+ 		    XFS_BMAP_BMDR_SPACE(tip->i_df.if_broot) > XFS_IFORK_BOFF(ip))
+ 			return -EINVAL;
+ 		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
+@@ -1623,7 +1623,7 @@ xfs_swap_extents_check_format(
+ 
+ 	/* Reciprocal target->temp btree format checks */
+ 	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+-		if (XFS_IFORK_BOFF(tip) &&
++		if (XFS_IFORK_Q(tip) &&
+ 		    XFS_BMAP_BMDR_SPACE(ip->i_df.if_broot) > XFS_IFORK_BOFF(tip))
+ 			return -EINVAL;
+ 		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
 -- 
-Carlos
+2.13.0
+
