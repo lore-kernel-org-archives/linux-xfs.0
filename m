@@ -1,142 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58571 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:39158 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751182AbdFCNLo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:11:44 -0400
+        with ESMTP id S1751182AbdFCNLr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:11:47 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/23] xfs: reserve enough blocks to handle btree splits when remapping
-Date: Sat,  3 Jun 2017 15:10:52 +0200
-Message-Id: <20170603131103.23712-13-hch@lst.de>
+Subject: [PATCH 13/23] xfs: fix use-after-free in xfs_finish_page_writeback
+Date: Sat,  3 Jun 2017 15:10:53 +0200
+Message-Id: <20170603131103.23712-14-hch@lst.de>
 In-Reply-To: <20170603131103.23712-1-hch@lst.de>
 References: <20170603131103.23712-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Eryu Guan <eguan@redhat.com>
 
-commit fe0be23e68200573de027de9b8cc2b27e7fce35e upstream.
+commit 161f55efba5ddccc690139fae9373cafc3447a97 upstream.
 
-In xfs_reflink_end_cow, we erroneously reserve only enough blocks to
-handle adding 1 extent.  This is problematic if we fragment free space,
-have to do CoW, and then have to perform multiple bmap btree expansions.
-Furthermore, the BUI recovery routine doesn't reserve /any/ blocks to
-handle btree splits, so log recovery fails after our first error causes
-the filesystem to go down.
+Commit 28b783e47ad7 ("xfs: bufferhead chains are invalid after
+end_page_writeback") fixed one use-after-free issue by
+pre-calculating the loop conditionals before calling bh->b_end_io()
+in the end_io processing loop, but it assigned 'next' pointer before
+checking end offset boundary & breaking the loop, at which point the
+bh might be freed already, and caused use-after-free.
 
-Therefore, refactor the transaction block reservation macros until we
-have a macro that works for our deferred (re)mapping activities, and fix
-both problems by using that macro.
+This is caught by KASAN when running fstests generic/127 on sub-page
+block size XFS.
 
-With 1k blocks we can hit this fairly often in g/187 if the scratch fs
-is big enough.
+[ 2517.244502] run fstests generic/127 at 2017-04-27 07:30:50
+[ 2747.868840] ==================================================================
+[ 2747.876949] BUG: KASAN: use-after-free in xfs_destroy_ioend+0x3d3/0x4e0 [xfs] at addr ffff8801395ae698
+...
+[ 2747.918245] Call Trace:
+[ 2747.920975]  dump_stack+0x63/0x84
+[ 2747.924673]  kasan_object_err+0x21/0x70
+[ 2747.928950]  kasan_report+0x271/0x530
+[ 2747.933064]  ? xfs_destroy_ioend+0x3d3/0x4e0 [xfs]
+[ 2747.938409]  ? end_page_writeback+0xce/0x110
+[ 2747.943171]  __asan_report_load8_noabort+0x19/0x20
+[ 2747.948545]  xfs_destroy_ioend+0x3d3/0x4e0 [xfs]
+[ 2747.953724]  xfs_end_io+0x1af/0x2b0 [xfs]
+[ 2747.958197]  process_one_work+0x5ff/0x1000
+[ 2747.962766]  worker_thread+0xe4/0x10e0
+[ 2747.966946]  kthread+0x2d3/0x3d0
+[ 2747.970546]  ? process_one_work+0x1000/0x1000
+[ 2747.975405]  ? kthread_create_on_node+0xc0/0xc0
+[ 2747.980457]  ? syscall_return_slowpath+0xe6/0x140
+[ 2747.985706]  ? do_page_fault+0x30/0x80
+[ 2747.989887]  ret_from_fork+0x2c/0x40
+[ 2747.993874] Object at ffff8801395ae690, in cache buffer_head size: 104
+[ 2748.001155] Allocated:
+[ 2748.003782] PID = 8327
+[ 2748.006411]  save_stack_trace+0x1b/0x20
+[ 2748.010688]  save_stack+0x46/0xd0
+[ 2748.014383]  kasan_kmalloc+0xad/0xe0
+[ 2748.018370]  kasan_slab_alloc+0x12/0x20
+[ 2748.022648]  kmem_cache_alloc+0xb8/0x1b0
+[ 2748.027024]  alloc_buffer_head+0x22/0xc0
+[ 2748.031399]  alloc_page_buffers+0xd1/0x250
+[ 2748.035968]  create_empty_buffers+0x30/0x410
+[ 2748.040730]  create_page_buffers+0x120/0x1b0
+[ 2748.045493]  __block_write_begin_int+0x17a/0x1800
+[ 2748.050740]  iomap_write_begin+0x100/0x2f0
+[ 2748.055308]  iomap_zero_range_actor+0x253/0x5c0
+[ 2748.060362]  iomap_apply+0x157/0x270
+[ 2748.064347]  iomap_zero_range+0x5a/0x80
+[ 2748.068624]  iomap_truncate_page+0x6b/0xa0
+[ 2748.073227]  xfs_setattr_size+0x1f7/0xa10 [xfs]
+[ 2748.078312]  xfs_vn_setattr_size+0x68/0x140 [xfs]
+[ 2748.083589]  xfs_file_fallocate+0x4ac/0x820 [xfs]
+[ 2748.088838]  vfs_fallocate+0x2cf/0x780
+[ 2748.093021]  SyS_fallocate+0x48/0x80
+[ 2748.097006]  do_syscall_64+0x18a/0x430
+[ 2748.101186]  return_from_SYSCALL_64+0x0/0x6a
+[ 2748.105948] Freed:
+[ 2748.108189] PID = 8327
+[ 2748.110816]  save_stack_trace+0x1b/0x20
+[ 2748.115093]  save_stack+0x46/0xd0
+[ 2748.118788]  kasan_slab_free+0x73/0xc0
+[ 2748.122969]  kmem_cache_free+0x7a/0x200
+[ 2748.127247]  free_buffer_head+0x41/0x80
+[ 2748.131524]  try_to_free_buffers+0x178/0x250
+[ 2748.136316]  xfs_vm_releasepage+0x2e9/0x3d0 [xfs]
+[ 2748.141563]  try_to_release_page+0x100/0x180
+[ 2748.146325]  invalidate_inode_pages2_range+0x7da/0xcf0
+[ 2748.152087]  xfs_shift_file_space+0x37d/0x6e0 [xfs]
+[ 2748.157557]  xfs_collapse_file_space+0x49/0x120 [xfs]
+[ 2748.163223]  xfs_file_fallocate+0x2a7/0x820 [xfs]
+[ 2748.168462]  vfs_fallocate+0x2cf/0x780
+[ 2748.172642]  SyS_fallocate+0x48/0x80
+[ 2748.176629]  do_syscall_64+0x18a/0x430
+[ 2748.180810]  return_from_SYSCALL_64+0x0/0x6a
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Fixed it by checking on offset against end & breaking out first,
+dereference bh only if there're still bufferheads to process.
+
+Signed-off-by: Eryu Guan <eguan@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_trans_space.h | 23 +++++++++++++++++------
- fs/xfs/xfs_bmap_item.c          |  5 ++++-
- fs/xfs/xfs_reflink.c            | 18 ++++++++++++++++--
- 3 files changed, 37 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_aops.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
-index 7917f6e44286..d787c677d2a3 100644
---- a/fs/xfs/libxfs/xfs_trans_space.h
-+++ b/fs/xfs/libxfs/xfs_trans_space.h
-@@ -21,8 +21,20 @@
- /*
-  * Components of space reservations.
-  */
-+
-+/* Worst case number of rmaps that can be held in a block. */
- #define XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)    \
- 		(((mp)->m_rmap_mxr[0]) - ((mp)->m_rmap_mnr[0]))
-+
-+/* Adding one rmap could split every level up to the top of the tree. */
-+#define XFS_RMAPADD_SPACE_RES(mp) ((mp)->m_rmap_maxlevels)
-+
-+/* Blocks we might need to add "b" rmaps to a tree. */
-+#define XFS_NRMAPADD_SPACE_RES(mp, b)\
-+	(((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
-+	  XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) * \
-+	  XFS_RMAPADD_SPACE_RES(mp))
-+
- #define XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)    \
- 		(((mp)->m_alloc_mxr[0]) - ((mp)->m_alloc_mnr[0]))
- #define	XFS_EXTENTADD_SPACE_RES(mp,w)	(XFS_BM_MAXLEVELS(mp,w) - 1)
-@@ -30,13 +42,12 @@
- 	(((b + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) / \
- 	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
- 	  XFS_EXTENTADD_SPACE_RES(mp,w))
-+
-+/* Blocks we might need to add "b" mappings & rmappings to a file. */
- #define XFS_SWAP_RMAP_SPACE_RES(mp,b,w)\
--	(((b + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) / \
--	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
--	  XFS_EXTENTADD_SPACE_RES(mp,w) + \
--	 ((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
--	  XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) * \
--	  (mp)->m_rmap_maxlevels)
-+	(XFS_NEXTENTADD_SPACE_RES((mp), (b), (w)) + \
-+	 XFS_NRMAPADD_SPACE_RES((mp), (b)))
-+
- #define	XFS_DAENTER_1B(mp,w)	\
- 	((w) == XFS_DATA_FORK ? (mp)->m_dir_geo->fsbcount : 1)
- #define	XFS_DAENTER_DBS(mp,w)	\
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 9bf57c76623b..c4b90e794e41 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -34,6 +34,8 @@
- #include "xfs_bmap.h"
- #include "xfs_icache.h"
- #include "xfs_trace.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_trans_space.h"
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 61494295d92f..a7645be51d87 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -111,11 +111,11 @@ xfs_finish_page_writeback(
  
- 
- kmem_zone_t	*xfs_bui_zone;
-@@ -446,7 +448,8 @@ xfs_bui_recover(
- 		return -EIO;
- 	}
- 
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-+			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
- 	if (error)
- 		return error;
- 	budp = xfs_trans_get_bud(tp, buip);
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 4a84c5ea266d..20c46d2ff4f5 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -709,8 +709,22 @@ xfs_reflink_end_cow(
- 	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
- 	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
- 
--	/* Start a rolling transaction to switch the mappings */
--	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
-+	/*
-+	 * Start a rolling transaction to switch the mappings.  We're
-+	 * unlikely ever to have to remap 16T worth of single-block
-+	 * extents, so just cap the worst case extent count to 2^32-1.
-+	 * Stick a warning in just in case, and avoid 64-bit division.
-+	 */
-+	BUILD_BUG_ON(MAX_RW_COUNT > UINT_MAX);
-+	if (end_fsb - offset_fsb > UINT_MAX) {
-+		error = -EFSCORRUPTED;
-+		xfs_force_shutdown(ip->i_mount, SHUTDOWN_CORRUPT_INCORE);
-+		ASSERT(0);
-+		goto out;
-+	}
-+	resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount,
-+			(unsigned int)(end_fsb - offset_fsb),
-+			XFS_DATA_FORK);
- 	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
- 			resblks, 0, 0, &tp);
- 	if (error)
+ 	bsize = bh->b_size;
+ 	do {
++		if (off > end)
++			break;
+ 		next = bh->b_this_page;
+ 		if (off < bvec->bv_offset)
+ 			goto next_bh;
+-		if (off > end)
+-			break;
+ 		bh->b_end_io(bh, !error);
+ next_bh:
+ 		off += bsize;
 -- 
 2.11.0
 
