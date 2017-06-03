@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57842 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:48147 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751149AbdFCNTM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:19:12 -0400
+        with ESMTP id S1751149AbdFCNTQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:19:16 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/25] xfs: fix up quotacheck buffer list error handling
-Date: Sat,  3 Jun 2017 15:18:22 +0200
-Message-Id: <20170603131836.26661-12-hch@lst.de>
+Subject: [PATCH 12/25] xfs: support ability to wait on new inodes
+Date: Sat,  3 Jun 2017 15:18:23 +0200
+Message-Id: <20170603131836.26661-13-hch@lst.de>
 In-Reply-To: <20170603131836.26661-1-hch@lst.de>
 References: <20170603131836.26661-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,99 +17,72 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . W
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit 20e8a063786050083fe05b4f45be338c60b49126 upstream.
+commit 756baca27fff3ecaeab9dbc7a5ee35a1d7bc0c7f upstream.
 
-The quotacheck error handling of the delwri buffer list assumes the
-resident buffers are locked and doesn't clear the _XBF_DELWRI_Q flag
-on the buffers that are dequeued. This can lead to assert failures
-on buffer release and possibly other locking problems.
+Inodes that are inserted into the perag tree but still under
+construction are flagged with the XFS_INEW bit. Most contexts either
+skip such inodes when they are encountered or have the ability to
+handle them.
 
-Move this code to a delwri queue cancel helper function to
-encapsulate the logic required to properly release buffers from a
-delwri queue. Update the helper to clear the delwri queue flag and
-call it from quotacheck.
+The runtime quotaoff sequence introduces a context that must wait
+for construction of such inodes to correctly ensure that all dquots
+in the fs are released. In anticipation of this, support the ability
+to wait on new inodes. Wake the appropriate bit when XFS_INEW is
+cleared.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_buf.c | 24 ++++++++++++++++++++++++
- fs/xfs/xfs_buf.h |  1 +
- fs/xfs/xfs_qm.c  |  7 +------
- 3 files changed, 26 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_icache.c | 5 ++++-
+ fs/xfs/xfs_inode.h  | 4 +++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index d7a67d7fbc7f..88f4086308c0 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1052,6 +1052,8 @@ void
- xfs_buf_unlock(
- 	struct xfs_buf		*bp)
- {
-+	ASSERT(xfs_buf_islocked(bp));
-+
- 	XB_CLEAR_OWNER(bp);
- 	up(&bp->b_sema);
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 3fb1f3fb8efe..027cf8ba2235 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -368,14 +368,17 @@ xfs_iget_cache_hit(
  
-@@ -1790,6 +1792,28 @@ xfs_alloc_buftarg(
+ 		error = xfs_reinit_inode(mp, inode);
+ 		if (error) {
++			bool wake;
+ 			/*
+ 			 * Re-initializing the inode failed, and we are in deep
+ 			 * trouble.  Try to re-add it to the reclaim list.
+ 			 */
+ 			rcu_read_lock();
+ 			spin_lock(&ip->i_flags_lock);
+-
++			wake = !!__xfs_iflags_test(ip, XFS_INEW);
+ 			ip->i_flags &= ~(XFS_INEW | XFS_IRECLAIM);
++			if (wake)
++				wake_up_bit(&ip->i_flags, __XFS_INEW_BIT);
+ 			ASSERT(ip->i_flags & XFS_IRECLAIMABLE);
+ 			trace_xfs_iget_reclaim_fail(ip);
+ 			goto out_error;
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 71e8a81c91a3..c038f6eecc28 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -217,7 +217,8 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+ #define XFS_IRECLAIM		(1 << 0) /* started reclaiming this inode */
+ #define XFS_ISTALE		(1 << 1) /* inode has been staled */
+ #define XFS_IRECLAIMABLE	(1 << 2) /* inode can be reclaimed */
+-#define XFS_INEW		(1 << 3) /* inode has just been allocated */
++#define __XFS_INEW_BIT		3	 /* inode has just been allocated */
++#define XFS_INEW		(1 << __XFS_INEW_BIT)
+ #define XFS_ITRUNCATED		(1 << 5) /* truncated down so flush-on-close */
+ #define XFS_IDIRTY_RELEASE	(1 << 6) /* dirty release already seen */
+ #define __XFS_IFLOCK_BIT	7	 /* inode is being flushed right now */
+@@ -467,6 +468,7 @@ static inline void xfs_finish_inode_setup(struct xfs_inode *ip)
+ 	xfs_iflags_clear(ip, XFS_INEW);
+ 	barrier();
+ 	unlock_new_inode(VFS_I(ip));
++	wake_up_bit(&ip->i_flags, __XFS_INEW_BIT);
  }
  
- /*
-+ * Cancel a delayed write list.
-+ *
-+ * Remove each buffer from the list, clear the delwri queue flag and drop the
-+ * associated buffer reference.
-+ */
-+void
-+xfs_buf_delwri_cancel(
-+	struct list_head	*list)
-+{
-+	struct xfs_buf		*bp;
-+
-+	while (!list_empty(list)) {
-+		bp = list_first_entry(list, struct xfs_buf, b_list);
-+
-+		xfs_buf_lock(bp);
-+		bp->b_flags &= ~_XBF_DELWRI_Q;
-+		list_del_init(&bp->b_list);
-+		xfs_buf_relse(bp);
-+	}
-+}
-+
-+/*
-  * Add a buffer to the delayed write list.
-  *
-  * This queues a buffer for writeout if it hasn't already been.  Note that
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 1c2e52b2d926..24da7ed1c787 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -330,6 +330,7 @@ extern void *xfs_buf_offset(struct xfs_buf *, size_t);
- extern void xfs_buf_stale(struct xfs_buf *bp);
- 
- /* Delayed Write Buffer Routines */
-+extern void xfs_buf_delwri_cancel(struct list_head *);
- extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
- extern int xfs_buf_delwri_submit(struct list_head *);
- extern int xfs_buf_delwri_submit_nowait(struct list_head *);
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index b669b123287b..8b9a9f15f022 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1384,12 +1384,7 @@ xfs_qm_quotacheck(
- 	mp->m_qflags |= flags;
- 
-  error_return:
--	while (!list_empty(&buffer_list)) {
--		struct xfs_buf *bp =
--			list_first_entry(&buffer_list, struct xfs_buf, b_list);
--		list_del_init(&bp->b_list);
--		xfs_buf_relse(bp);
--	}
-+	xfs_buf_delwri_cancel(&buffer_list);
- 
- 	if (error) {
- 		xfs_warn(mp,
+ static inline void xfs_setup_existing_inode(struct xfs_inode *ip)
 -- 
 2.11.0
 
