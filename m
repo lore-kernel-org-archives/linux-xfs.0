@@ -1,45 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49881 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:43671 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750991AbdFCNLX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:11:23 -0400
+        with ESMTP id S1750991AbdFCNL0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:11:26 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/23] xfs: fix integer truncation in xfs_bmap_remap_alloc
-Date: Sat,  3 Jun 2017 15:10:45 +0200
-Message-Id: <20170603131103.23712-6-hch@lst.de>
+Subject: [PATCH 06/23] xfs: handle array index overrun in xfs_dir2_leaf_readbuf()
+Date: Sat,  3 Jun 2017 15:10:46 +0200
+Message-Id: <20170603131103.23712-7-hch@lst.de>
 In-Reply-To: <20170603131103.23712-1-hch@lst.de>
 References: <20170603131103.23712-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit 52813fb13ff90bd9c39a93446cbf1103c290b6e9 upstream.
+From: Eric Sandeen <sandeen@redhat.com>
 
-bno should be a xfs_fsblock_t, which is 64-bit wides instead of a
-xfs_aglock_t, which truncates the value to 32 bits.
+commit 023cc840b40fad95c6fe26fff1d380a8c9d45939 upstream.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Carlos had a case where "find" seemed to start spinning
+forever and never return.
+
+This was on a filesystem with non-default multi-fsb (8k)
+directory blocks, and a fragmented directory with extents
+like this:
+
+0:[0,133646,2,0]
+1:[2,195888,1,0]
+2:[3,195890,1,0]
+3:[4,195892,1,0]
+4:[5,195894,1,0]
+5:[6,195896,1,0]
+6:[7,195898,1,0]
+7:[8,195900,1,0]
+8:[9,195902,1,0]
+9:[10,195908,1,0]
+10:[11,195910,1,0]
+11:[12,195912,1,0]
+12:[13,195914,1,0]
+...
+
+i.e. the first extent is a contiguous 2-fsb dir block, but
+after that it is fragmented into 1 block extents.
+
+At the top of the readdir path, we allocate a mapping array
+which (for this filesystem geometry) can hold 10 extents; see
+the assignment to map_info->map_size.  During readdir, we are
+therefore able to map extents 0 through 9 above into the array
+for readahead purposes.  If we count by 2, we see that the last
+mapped index (9) is the first block of a 2-fsb directory block.
+
+At the end of xfs_dir2_leaf_readbuf() we have 2 loops to fill
+more readahead; the outer loop assumes one full dir block is
+processed each loop iteration, and an inner loop that ensures
+that this is so by advancing to the next extent until a full
+directory block is mapped.
+
+The problem is that this inner loop may step past the last
+extent in the mapping array as it tries to reach the end of
+the directory block.  This will read garbage for the extent
+length, and as a result the loop control variable 'j' may
+become corrupted and never fail the loop conditional.
+
+The number of valid mappings we have in our array is stored
+in map->map_valid, so stop this inner loop based on that limit.
+
+There is an ASSERT at the top of the outer loop for this
+same condition, but we never made it out of the inner loop,
+so the ASSERT never fired.
+
+Huge appreciation for Carlos for debugging and isolating
+the problem.
+
+Debugged-and-analyzed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Tested-by: Carlos Maiolino <cmaiolino@redhat.com>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_dir2_readdir.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9bd104f32908..2a426d127e05 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3863,7 +3863,7 @@ xfs_bmap_remap_alloc(
- {
- 	struct xfs_trans	*tp = ap->tp;
- 	struct xfs_mount	*mp = tp->t_mountp;
--	xfs_agblock_t		bno;
-+	xfs_fsblock_t		bno;
- 	struct xfs_alloc_arg	args;
- 	int			error;
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index ad9396e516f6..c45de729c74e 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -394,6 +394,7 @@ xfs_dir2_leaf_readbuf(
  
+ 	/*
+ 	 * Do we need more readahead?
++	 * Each loop tries to process 1 full dir blk; last may be partial.
+ 	 */
+ 	blk_start_plug(&plug);
+ 	for (mip->ra_index = mip->ra_offset = i = 0;
+@@ -425,9 +426,14 @@ xfs_dir2_leaf_readbuf(
+ 		}
+ 
+ 		/*
+-		 * Advance offset through the mapping table.
++		 * Advance offset through the mapping table, processing a full
++		 * dir block even if it is fragmented into several extents.
++		 * But stop if we have consumed all valid mappings, even if
++		 * it's not yet a full directory block.
+ 		 */
+-		for (j = 0; j < geo->fsbcount; j += length ) {
++		for (j = 0;
++		     j < geo->fsbcount && mip->ra_index < mip->map_valid;
++		     j += length ) {
+ 			/*
+ 			 * The rest of this extent but not more than a dir
+ 			 * block.
 -- 
 2.11.0
 
