@@ -1,180 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37790 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751269AbdFBSIf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 14:08:35 -0400
-Date: Fri, 2 Jun 2017 11:08:08 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: crypto: Work around deallocated stack frame reference gcc bug on
- sparc.
-Message-ID: <20170602180808.GB5636@birch.djwong.org>
-References: <20170602.112854.571030442583332811.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170602.112854.571030442583332811.davem@davemloft.net>
+Received: from bombadil.infradead.org ([65.50.211.133]:57547 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750991AbdFCNPf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:15:35 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 07/23] xfs: prevent multi-fsb dir readahead from reading random blocks
+Date: Sat,  3 Jun 2017 15:14:55 +0200
+Message-Id: <20170603131511.25032-8-hch@lst.de>
+In-Reply-To: <20170603131511.25032-1-hch@lst.de>
+References: <20170603131511.25032-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Miller <davem@davemloft.net>
-Cc: herbert@gondor.apana.org.au, linux-crypto@vger.kernel.org, sparclinux@vger.kernel.org, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, matorola@gmail.com, sandeen@sandeen.net, linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
+To: stable@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-[add ext4 list to cc]
+From: Brian Foster <bfoster@redhat.com>
 
-On Fri, Jun 02, 2017 at 11:28:54AM -0400, David Miller wrote:
-> 
-> On sparc, if we have an alloca() like situation, as is the case with
-> SHASH_DESC_ON_STACK(), we can end up referencing deallocated stack
-> memory.  The result can be that the value is clobbered if a trap
-> or interrupt arrives at just the right instruction.
-> 
-> It only occurs if the function ends returning a value from that
-> alloca() area and that value can be placed into the return value
-> register using a single instruction.
-> 
-> For example, in lib/libcrc32c.c:crc32c() we end up with a return
-> sequence like:
-> 
->         return  %i7+8
->          lduw   [%o5+16], %o0   ! MEM[(u32 *)__shash_desc.1_10 + 16B],
-> 
-> %o5 holds the base of the on-stack area allocated for the shash
-> descriptor.  But the return released the stack frame and the
-> register window.
-> 
-> So if an intererupt arrives between 'return' and 'lduw', then
-> the value read at %o5+16 can be corrupted.
-> 
-> Add a data compiler barrier to work around this problem.  This is
-> exactly what the gcc fix will end up doing as well, and it absolutely
-> should not change the code generated for other cpus (unless gcc
-> on them has the same bug :-)
-> 
-> With crucial insight from Eric Sandeen.
-> 
-> Reported-by: Anatoly Pugachev <matorola@gmail.com>
-> Signed-off-by: David S. Miller <davem@davemloft.net>
-> ---
-> 
-> See the thread anchored at:
-> 
-> 	http://marc.info/?l=linux-sparc&m=149623182616944&w=2
-> 
-> for discussion, it has a reproducer module.  The problem was
-> first noticed as occaisional XFS checksum corruptions.
-> 
-> Herbert, I don't expect you to like this but it is the best we can do
-> I think.  It should not pessimize code on other architectures at all.
-> I will work on fixing the gcc bug but it's been around forever and all
-> versions are effected.
-> 
-> I noticed while working on this that at least btrfs duplicates the
-> facilities provided by lib/libcrc32c.c and therefore should probably
-> be converted over to straight crc32c() calls if possible.
+commit cb52ee334a45ae6c78a3999e4b473c43ddc528f4 upstream.
 
-ext4/jbd2's crc32c implementations will also need a fix like this for
-{ext4,jbd2}_chksum.  Note that both of these modules call the crypto api
-directly to avoid a static dependence on libcrc32c; this was done to
-reduce kernel footprint for applications that don't need it.  (ext2,
-ext3, and ext4 before the metadata_csum feature existed).
+Directory block readahead uses a complex iteration mechanism to map
+between high-level directory blocks and underlying physical extents.
+This mechanism attempts to traverse the higher-level dir blocks in a
+manner that handles multi-fsb directory blocks and simultaneously
+maintains a reference to the corresponding physical blocks.
 
---D
+This logic doesn't handle certain (discontiguous) physical extent
+layouts correctly with multi-fsb directory blocks. For example,
+consider the case of a 4k FSB filesystem with a 2 FSB (8k) directory
+block size and a directory with the following extent layout:
 
-> 
-> Thanks!
-> 
-> diff --git a/drivers/infiniband/sw/rxe/rxe.h b/drivers/infiniband/sw/rxe/rxe.h
-> index ecdba2f..1ac5b85 100644
-> --- a/drivers/infiniband/sw/rxe/rxe.h
-> +++ b/drivers/infiniband/sw/rxe/rxe.h
-> @@ -68,6 +68,7 @@
->  static inline u32 rxe_crc32(struct rxe_dev *rxe,
->  			    u32 crc, void *next, size_t len)
->  {
-> +	u32 retval;
->  	int err;
->  
->  	SHASH_DESC_ON_STACK(shash, rxe->tfm);
-> @@ -81,7 +82,9 @@ static inline u32 rxe_crc32(struct rxe_dev *rxe,
->  		return crc32_le(crc, next, len);
->  	}
->  
-> -	return *(u32 *)shash_desc_ctx(shash);
-> +	retval = *(u32 *)shash_desc_ctx(shash);
-> +	barrier_data(shash_desc_ctx(shash));
-> +	return retval;
->  }
->  
->  int rxe_set_mtu(struct rxe_dev *rxe, unsigned int dev_mtu);
-> diff --git a/fs/btrfs/hash.c b/fs/btrfs/hash.c
-> index a97fdc1..baacc18 100644
-> --- a/fs/btrfs/hash.c
-> +++ b/fs/btrfs/hash.c
-> @@ -38,6 +38,7 @@ u32 btrfs_crc32c(u32 crc, const void *address, unsigned int length)
->  {
->  	SHASH_DESC_ON_STACK(shash, tfm);
->  	u32 *ctx = (u32 *)shash_desc_ctx(shash);
-> +	u32 retval;
->  	int err;
->  
->  	shash->tfm = tfm;
-> @@ -47,5 +48,7 @@ u32 btrfs_crc32c(u32 crc, const void *address, unsigned int length)
->  	err = crypto_shash_update(shash, address, length);
->  	BUG_ON(err);
->  
-> -	return *ctx;
-> +	retval = *ctx;
-> +	barrier_data(ctx);
-> +	return retval;
->  }
-> diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
-> index 2185c7a..fd2e651 100644
-> --- a/fs/f2fs/f2fs.h
-> +++ b/fs/f2fs/f2fs.h
-> @@ -1078,6 +1078,7 @@ static inline u32 f2fs_crc32(struct f2fs_sb_info *sbi, const void *address,
->  {
->  	SHASH_DESC_ON_STACK(shash, sbi->s_chksum_driver);
->  	u32 *ctx = (u32 *)shash_desc_ctx(shash);
-> +	u32 retval;
->  	int err;
->  
->  	shash->tfm = sbi->s_chksum_driver;
-> @@ -1087,7 +1088,9 @@ static inline u32 f2fs_crc32(struct f2fs_sb_info *sbi, const void *address,
->  	err = crypto_shash_update(shash, address, length);
->  	BUG_ON(err);
->  
-> -	return *ctx;
-> +	retval = *ctx;
-> +	barrier_data(ctx);
-> +	return retval;
->  }
->  
->  static inline bool f2fs_crc_valid(struct f2fs_sb_info *sbi, __u32 blk_crc,
-> diff --git a/lib/libcrc32c.c b/lib/libcrc32c.c
-> index 74a54b7..9f79547 100644
-> --- a/lib/libcrc32c.c
-> +++ b/lib/libcrc32c.c
-> @@ -43,7 +43,7 @@ static struct crypto_shash *tfm;
->  u32 crc32c(u32 crc, const void *address, unsigned int length)
->  {
->  	SHASH_DESC_ON_STACK(shash, tfm);
-> -	u32 *ctx = (u32 *)shash_desc_ctx(shash);
-> +	u32 ret, *ctx = (u32 *)shash_desc_ctx(shash);
->  	int err;
->  
->  	shash->tfm = tfm;
-> @@ -53,7 +53,9 @@ u32 crc32c(u32 crc, const void *address, unsigned int length)
->  	err = crypto_shash_update(shash, address, length);
->  	BUG_ON(err);
->  
-> -	return *ctx;
-> +	ret = *ctx;
-> +	barrier_data(ctx);
-> +	return ret;
->  }
->  
->  EXPORT_SYMBOL(crc32c);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
+   0: [0..7]:          88..95            0 (88..95)             8
+   1: [8..15]:         80..87            0 (80..87)             8
+   2: [16..39]:        168..191          0 (168..191)          24
+   3: [40..63]:        5242952..5242975  1 (72..95)            24
+
+Directory block 0 spans physical extents 0 and 1, dirblk 1 lies
+entirely within extent 2 and dirblk 2 spans extents 2 and 3. Because
+extent 2 is larger than the directory block size, the readahead code
+erroneously assumes the block is contiguous and issues a readahead
+based on the physical mapping of the first fsb of the dirblk. This
+results in read verifier failure and a spurious corruption or crc
+failure, depending on the filesystem format.
+
+Further, the subsequent readahead code responsible for walking
+through the physical table doesn't correctly advance the physical
+block reference for dirblk 2. Instead of advancing two physical
+filesystem blocks, the first iteration of the loop advances 1 block
+(correctly), but the subsequent iteration advances 2 more physical
+blocks because the next physical extent (extent 3, above) happens to
+cover more than dirblk 2. At this point, the higher-level directory
+block walking is completely off the rails of the actual physical
+layout of the directory for the respective mapping table.
+
+Update the contiguous dirblock logic to consider the current offset
+in the physical extent to avoid issuing directory readahead to
+unrelated blocks. Also, update the mapping table advancing code to
+consider the current offset within the current dirblock to avoid
+advancing the mapping reference too far beyond the dirblock.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_dir2_readdir.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index c45de729c74e..20b7a5c6eb2f 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -405,7 +405,8 @@ xfs_dir2_leaf_readbuf(
+ 		 * Read-ahead a contiguous directory block.
+ 		 */
+ 		if (i > mip->ra_current &&
+-		    map[mip->ra_index].br_blockcount >= geo->fsbcount) {
++		    (map[mip->ra_index].br_blockcount - mip->ra_offset) >=
++		    geo->fsbcount) {
+ 			xfs_dir3_data_readahead(dp,
+ 				map[mip->ra_index].br_startoff + mip->ra_offset,
+ 				XFS_FSB_TO_DADDR(dp->i_mount,
+@@ -438,7 +439,7 @@ xfs_dir2_leaf_readbuf(
+ 			 * The rest of this extent but not more than a dir
+ 			 * block.
+ 			 */
+-			length = min_t(int, geo->fsbcount,
++			length = min_t(int, geo->fsbcount - j,
+ 					map[mip->ra_index].br_blockcount -
+ 							mip->ra_offset);
+ 			mip->ra_offset += length;
+-- 
+2.11.0
+
