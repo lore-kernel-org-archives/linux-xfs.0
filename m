@@ -1,69 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45408 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:38837 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751272AbdFCNTs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:19:48 -0400
+        with ESMTP id S1751272AbdFCNTw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:19:52 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 23/25] xfs: fix off-by-one on max nr_pages in xfs_find_get_desired_pgoff()
-Date: Sat,  3 Jun 2017 15:18:34 +0200
-Message-Id: <20170603131836.26661-24-hch@lst.de>
+Subject: [PATCH 24/25] xfs: Fix missed holes in SEEK_HOLE implementation
+Date: Sat,  3 Jun 2017 15:18:35 +0200
+Message-Id: <20170603131836.26661-25-hch@lst.de>
 In-Reply-To: <20170603131836.26661-1-hch@lst.de>
 References: <20170603131836.26661-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Eryu Guan <eguan@redhat.com>
+From: Jan Kara <jack@suse.cz>
 
-commit 8affebe16d79ebefb1d9d6d56a46dc89716f9453 upstream.
+commit 5375023ae1266553a7baa0845e82917d8803f48c upstream.
 
-xfs_find_get_desired_pgoff() is used to search for offset of hole or
-data in page range [index, end] (both inclusive), and the max number
-of pages to search should be at least one, if end == index.
-Otherwise the only page is missed and no hole or data is found,
-which is not correct.
+XFS SEEK_HOLE implementation could miss a hole in an unwritten extent as
+can be seen by the following command:
 
-When block size is smaller than page size, this can be demonstrated
-by preallocating a file with size smaller than page size and writing
-data to the last block. E.g. run this xfs_io command on a 1k block
-size XFS on x86_64 host.
+xfs_io -c "falloc 0 256k" -c "pwrite 0 56k" -c "pwrite 128k 8k"
+       -c "seek -h 0" file
+wrote 57344/57344 bytes at offset 0
+56 KiB, 14 ops; 0.0000 sec (49.312 MiB/sec and 12623.9856 ops/sec)
+wrote 8192/8192 bytes at offset 131072
+8 KiB, 2 ops; 0.0000 sec (70.383 MiB/sec and 18018.0180 ops/sec)
+Whence	Result
+HOLE	139264
 
-  # xfs_io -fc "falloc 0 3k" -c "pwrite 2k 1k" \
-  	    -c "seek -d 0" /mnt/xfs/testfile
-  wrote 1024/1024 bytes at offset 2048
-  1 KiB, 1 ops; 0.0000 sec (33.675 MiB/sec and 34482.7586 ops/sec)
-  Whence  Result
-  DATA    EOF
+Where we can see that hole at offset 56k was just ignored by SEEK_HOLE
+implementation. The bug is in xfs_find_get_desired_pgoff() which does
+not properly detect the case when pages are not contiguous.
 
-Data at offset 2k was missed, and lseek(2) returned ENXIO.
+Fix the problem by properly detecting when found page has larger offset
+than expected.
 
-This is uncovered by generic/285 subtest 07 and 08 on ppc64 host,
-where pagesize is 64k. Because a recent change to generic/285
-reduced the preallocated file size to smaller than 64k.
-
-Signed-off-by: Eryu Guan <eguan@redhat.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
+Fixes: d126d43f631f996daeee5006714fed914be32368
+Signed-off-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_file.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_file.c | 29 +++++++++--------------------
+ 1 file changed, 9 insertions(+), 20 deletions(-)
 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 1209ad29e902..a4efc61fa775 100644
+index a4efc61fa775..9292a59efbfa 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -1136,7 +1136,7 @@ xfs_find_get_desired_pgoff(
- 		unsigned	nr_pages;
- 		unsigned int	i;
+@@ -1163,17 +1163,6 @@ xfs_find_get_desired_pgoff(
+ 			break;
+ 		}
  
--		want = min_t(pgoff_t, end - index, PAGEVEC_SIZE);
-+		want = min_t(pgoff_t, end - index, PAGEVEC_SIZE - 1) + 1;
- 		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
- 					  want);
- 		/*
+-		/*
+-		 * At lease we found one page.  If this is the first time we
+-		 * step into the loop, and if the first page index offset is
+-		 * greater than the given search offset, a hole was found.
+-		 */
+-		if (type == HOLE_OFF && lastoff == startoff &&
+-		    lastoff < page_offset(pvec.pages[0])) {
+-			found = true;
+-			break;
+-		}
+-
+ 		for (i = 0; i < nr_pages; i++) {
+ 			struct page	*page = pvec.pages[i];
+ 			loff_t		b_offset;
+@@ -1185,18 +1174,18 @@ xfs_find_get_desired_pgoff(
+ 			 * file mapping. However, page->index will not change
+ 			 * because we have a reference on the page.
+ 			 *
+-			 * Searching done if the page index is out of range.
+-			 * If the current offset is not reaches the end of
+-			 * the specified search range, there should be a hole
+-			 * between them.
++			 * If current page offset is beyond where we've ended,
++			 * we've found a hole.
+ 			 */
+-			if (page->index > end) {
+-				if (type == HOLE_OFF && lastoff < endoff) {
+-					*offset = lastoff;
+-					found = true;
+-				}
++			if (type == HOLE_OFF && lastoff < endoff &&
++			    lastoff < page_offset(pvec.pages[i])) {
++				found = true;
++				*offset = lastoff;
+ 				goto out;
+ 			}
++			/* Searching done if the page index is out of range. */
++			if (page->index > end)
++				goto out;
+ 
+ 			lock_page(page);
+ 			/*
 -- 
 2.11.0
 
