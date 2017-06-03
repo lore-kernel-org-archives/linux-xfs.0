@@ -1,79 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:51064 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:41637 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751167AbdFCNL7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:11:59 -0400
+        with ESMTP id S1751167AbdFCNMC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:12:02 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 17/23] xfs: xfs_trans_alloc_empty
-Date: Sat,  3 Jun 2017 15:10:57 +0200
-Message-Id: <20170603131103.23712-18-hch@lst.de>
+Subject: [PATCH 18/23] xfs: avoid mount-time deadlock in CoW extent recovery
+Date: Sat,  3 Jun 2017 15:10:58 +0200
+Message-Id: <20170603131103.23712-19-hch@lst.de>
 In-Reply-To: <20170603131103.23712-1-hch@lst.de>
 References: <20170603131103.23712-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-This is a partial cherry-pick of commit e89c041338
-("xfs: implement the GETFSMAP ioctl"), which also adds this helper, and
-a great example of why feature patches should be properly split into
-their parts.
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+
+commit 3ecb3ac7b950ff8f6c6a61e8b7b0d6e3546429a0 upstream.
+
+If a malicious user corrupts the refcount btree to cause a cycle between
+different levels of the tree, the next mount attempt will deadlock in
+the CoW recovery routine while grabbing buffer locks.  We can use the
+ability to re-grab a buffer that was previous locked to a transaction to
+avoid deadlocks, so do that here.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-[hch: split from the larger patch for -stable]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_trans.c | 22 ++++++++++++++++++++++
- fs/xfs/xfs_trans.h |  2 ++
- 2 files changed, 24 insertions(+)
+ fs/xfs/libxfs/xfs_refcount.c | 43 +++++++++++++++++++++++++++++++------------
+ 1 file changed, 31 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 70f42ea86dfb..a280e126491f 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -263,6 +263,28 @@ xfs_trans_alloc(
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index b177ef33cd4c..82a38d86ebad 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1629,13 +1629,28 @@ xfs_refcount_recover_cow_leftovers(
+ 	if (mp->m_sb.sb_agblocks >= XFS_REFC_COW_START)
+ 		return -EOPNOTSUPP;
+ 
+-	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
++	INIT_LIST_HEAD(&debris);
++
++	/*
++	 * In this first part, we use an empty transaction to gather up
++	 * all the leftover CoW extents so that we can subsequently
++	 * delete them.  The empty transaction is used to avoid
++	 * a buffer lock deadlock if there happens to be a loop in the
++	 * refcountbt because we're allowed to re-grab a buffer that is
++	 * already attached to our transaction.  When we're done
++	 * recording the CoW debris we cancel the (empty) transaction
++	 * and everything goes away cleanly.
++	 */
++	error = xfs_trans_alloc_empty(mp, &tp);
+ 	if (error)
+ 		return error;
+-	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
++
++	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
++	if (error)
++		goto out_trans;
++	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
+ 
+ 	/* Find all the leftover CoW staging extents. */
+-	INIT_LIST_HEAD(&debris);
+ 	memset(&low, 0, sizeof(low));
+ 	memset(&high, 0, sizeof(high));
+ 	low.rc.rc_startblock = XFS_REFC_COW_START;
+@@ -1645,10 +1660,11 @@ xfs_refcount_recover_cow_leftovers(
+ 	if (error)
+ 		goto out_cursor;
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+-	xfs_buf_relse(agbp);
++	xfs_trans_brelse(tp, agbp);
++	xfs_trans_cancel(tp);
+ 
+ 	/* Now iterate the list to free the leftovers */
+-	list_for_each_entry(rr, &debris, rr_list) {
++	list_for_each_entry_safe(rr, n, &debris, rr_list) {
+ 		/* Set up transaction. */
+ 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0, &tp);
+ 		if (error)
+@@ -1676,8 +1692,16 @@ xfs_refcount_recover_cow_leftovers(
+ 		error = xfs_trans_commit(tp);
+ 		if (error)
+ 			goto out_free;
++
++		list_del(&rr->rr_list);
++		kmem_free(rr);
+ 	}
+ 
++	return error;
++out_defer:
++	xfs_defer_cancel(&dfops);
++out_trans:
++	xfs_trans_cancel(tp);
+ out_free:
+ 	/* Free the leftover list */
+ 	list_for_each_entry_safe(rr, n, &debris, rr_list) {
+@@ -1688,11 +1712,6 @@ xfs_refcount_recover_cow_leftovers(
+ 
+ out_cursor:
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+-	xfs_buf_relse(agbp);
+-	goto out_free;
+-
+-out_defer:
+-	xfs_defer_cancel(&dfops);
+-	xfs_trans_cancel(tp);
+-	goto out_free;
++	xfs_trans_brelse(tp, agbp);
++	goto out_trans;
  }
- 
- /*
-+ * Create an empty transaction with no reservation.  This is a defensive
-+ * mechanism for routines that query metadata without actually modifying
-+ * them -- if the metadata being queried is somehow cross-linked (think a
-+ * btree block pointer that points higher in the tree), we risk deadlock.
-+ * However, blocks grabbed as part of a transaction can be re-grabbed.
-+ * The verifiers will notice the corrupt block and the operation will fail
-+ * back to userspace without deadlocking.
-+ *
-+ * Note the zero-length reservation; this transaction MUST be cancelled
-+ * without any dirty data.
-+ */
-+int
-+xfs_trans_alloc_empty(
-+	struct xfs_mount		*mp,
-+	struct xfs_trans		**tpp)
-+{
-+	struct xfs_trans_res		resv = {0};
-+
-+	return xfs_trans_alloc(mp, &resv, 0, 0, XFS_TRANS_NO_WRITECOUNT, tpp);
-+}
-+
-+/*
-  * Record the indicated change to the given field for application
-  * to the file system's superblock when the transaction commits.
-  * For now, just store the change in the transaction structure.
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 1646f659b60f..2a9292df6640 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -158,6 +158,8 @@ typedef struct xfs_trans {
- int		xfs_trans_alloc(struct xfs_mount *mp, struct xfs_trans_res *resp,
- 			uint blocks, uint rtextents, uint flags,
- 			struct xfs_trans **tpp);
-+int		xfs_trans_alloc_empty(struct xfs_mount *mp,
-+			struct xfs_trans **tpp);
- void		xfs_trans_mod_sb(xfs_trans_t *, uint, int64_t);
- 
- struct xfs_buf	*xfs_trans_get_buf_map(struct xfs_trans *tp,
 -- 
 2.11.0
 
