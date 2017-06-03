@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:46666 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:57842 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751149AbdFCNTJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:19:09 -0400
+        with ESMTP id S1751149AbdFCNTM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:19:12 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/25] xfs: prevent multi-fsb dir readahead from reading random blocks
-Date: Sat,  3 Jun 2017 15:18:21 +0200
-Message-Id: <20170603131836.26661-11-hch@lst.de>
+Subject: [PATCH 11/25] xfs: fix up quotacheck buffer list error handling
+Date: Sat,  3 Jun 2017 15:18:22 +0200
+Message-Id: <20170603131836.26661-12-hch@lst.de>
 In-Reply-To: <20170603131836.26661-1-hch@lst.de>
 References: <20170603131836.26661-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,79 +17,99 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . W
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit cb52ee334a45ae6c78a3999e4b473c43ddc528f4 upstream.
+commit 20e8a063786050083fe05b4f45be338c60b49126 upstream.
 
-Directory block readahead uses a complex iteration mechanism to map
-between high-level directory blocks and underlying physical extents.
-This mechanism attempts to traverse the higher-level dir blocks in a
-manner that handles multi-fsb directory blocks and simultaneously
-maintains a reference to the corresponding physical blocks.
+The quotacheck error handling of the delwri buffer list assumes the
+resident buffers are locked and doesn't clear the _XBF_DELWRI_Q flag
+on the buffers that are dequeued. This can lead to assert failures
+on buffer release and possibly other locking problems.
 
-This logic doesn't handle certain (discontiguous) physical extent
-layouts correctly with multi-fsb directory blocks. For example,
-consider the case of a 4k FSB filesystem with a 2 FSB (8k) directory
-block size and a directory with the following extent layout:
-
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
-   0: [0..7]:          88..95            0 (88..95)             8
-   1: [8..15]:         80..87            0 (80..87)             8
-   2: [16..39]:        168..191          0 (168..191)          24
-   3: [40..63]:        5242952..5242975  1 (72..95)            24
-
-Directory block 0 spans physical extents 0 and 1, dirblk 1 lies
-entirely within extent 2 and dirblk 2 spans extents 2 and 3. Because
-extent 2 is larger than the directory block size, the readahead code
-erroneously assumes the block is contiguous and issues a readahead
-based on the physical mapping of the first fsb of the dirblk. This
-results in read verifier failure and a spurious corruption or crc
-failure, depending on the filesystem format.
-
-Further, the subsequent readahead code responsible for walking
-through the physical table doesn't correctly advance the physical
-block reference for dirblk 2. Instead of advancing two physical
-filesystem blocks, the first iteration of the loop advances 1 block
-(correctly), but the subsequent iteration advances 2 more physical
-blocks because the next physical extent (extent 3, above) happens to
-cover more than dirblk 2. At this point, the higher-level directory
-block walking is completely off the rails of the actual physical
-layout of the directory for the respective mapping table.
-
-Update the contiguous dirblock logic to consider the current offset
-in the physical extent to avoid issuing directory readahead to
-unrelated blocks. Also, update the mapping table advancing code to
-consider the current offset within the current dirblock to avoid
-advancing the mapping reference too far beyond the dirblock.
+Move this code to a delwri queue cancel helper function to
+encapsulate the logic required to properly release buffers from a
+delwri queue. Update the helper to clear the delwri queue flag and
+call it from quotacheck.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_dir2_readdir.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_buf.c | 24 ++++++++++++++++++++++++
+ fs/xfs/xfs_buf.h |  1 +
+ fs/xfs/xfs_qm.c  |  7 +------
+ 3 files changed, 26 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index ba95846f8f8a..eba63160be6c 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -405,7 +405,8 @@ xfs_dir2_leaf_readbuf(
- 		 * Read-ahead a contiguous directory block.
- 		 */
- 		if (i > mip->ra_current &&
--		    map[mip->ra_index].br_blockcount >= geo->fsbcount) {
-+		    (map[mip->ra_index].br_blockcount - mip->ra_offset) >=
-+		    geo->fsbcount) {
- 			xfs_dir3_data_readahead(dp,
- 				map[mip->ra_index].br_startoff + mip->ra_offset,
- 				XFS_FSB_TO_DADDR(dp->i_mount,
-@@ -438,7 +439,7 @@ xfs_dir2_leaf_readbuf(
- 			 * The rest of this extent but not more than a dir
- 			 * block.
- 			 */
--			length = min_t(int, geo->fsbcount,
-+			length = min_t(int, geo->fsbcount - j,
- 					map[mip->ra_index].br_blockcount -
- 							mip->ra_offset);
- 			mip->ra_offset += length;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index d7a67d7fbc7f..88f4086308c0 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1052,6 +1052,8 @@ void
+ xfs_buf_unlock(
+ 	struct xfs_buf		*bp)
+ {
++	ASSERT(xfs_buf_islocked(bp));
++
+ 	XB_CLEAR_OWNER(bp);
+ 	up(&bp->b_sema);
+ 
+@@ -1790,6 +1792,28 @@ xfs_alloc_buftarg(
+ }
+ 
+ /*
++ * Cancel a delayed write list.
++ *
++ * Remove each buffer from the list, clear the delwri queue flag and drop the
++ * associated buffer reference.
++ */
++void
++xfs_buf_delwri_cancel(
++	struct list_head	*list)
++{
++	struct xfs_buf		*bp;
++
++	while (!list_empty(list)) {
++		bp = list_first_entry(list, struct xfs_buf, b_list);
++
++		xfs_buf_lock(bp);
++		bp->b_flags &= ~_XBF_DELWRI_Q;
++		list_del_init(&bp->b_list);
++		xfs_buf_relse(bp);
++	}
++}
++
++/*
+  * Add a buffer to the delayed write list.
+  *
+  * This queues a buffer for writeout if it hasn't already been.  Note that
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 1c2e52b2d926..24da7ed1c787 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -330,6 +330,7 @@ extern void *xfs_buf_offset(struct xfs_buf *, size_t);
+ extern void xfs_buf_stale(struct xfs_buf *bp);
+ 
+ /* Delayed Write Buffer Routines */
++extern void xfs_buf_delwri_cancel(struct list_head *);
+ extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
+ extern int xfs_buf_delwri_submit(struct list_head *);
+ extern int xfs_buf_delwri_submit_nowait(struct list_head *);
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index b669b123287b..8b9a9f15f022 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1384,12 +1384,7 @@ xfs_qm_quotacheck(
+ 	mp->m_qflags |= flags;
+ 
+  error_return:
+-	while (!list_empty(&buffer_list)) {
+-		struct xfs_buf *bp =
+-			list_first_entry(&buffer_list, struct xfs_buf, b_list);
+-		list_del_init(&bp->b_list);
+-		xfs_buf_relse(bp);
+-	}
++	xfs_buf_delwri_cancel(&buffer_list);
+ 
+ 	if (error) {
+ 		xfs_warn(mp,
 -- 
 2.11.0
 
