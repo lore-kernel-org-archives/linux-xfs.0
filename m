@@ -1,118 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49796 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:51629 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750991AbdFCNPc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:15:32 -0400
+        with ESMTP id S1750997AbdFCNPv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:15:51 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/23] xfs: handle array index overrun in xfs_dir2_leaf_readbuf()
-Date: Sat,  3 Jun 2017 15:14:54 +0200
-Message-Id: <20170603131511.25032-7-hch@lst.de>
+Subject: [PATCH 12/23] xfs: reserve enough blocks to handle btree splits when remapping
+Date: Sat,  3 Jun 2017 15:15:00 +0200
+Message-Id: <20170603131511.25032-13-hch@lst.de>
 In-Reply-To: <20170603131511.25032-1-hch@lst.de>
 References: <20170603131511.25032-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: Eric Sandeen <sandeen@redhat.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 023cc840b40fad95c6fe26fff1d380a8c9d45939 upstream.
+commit fe0be23e68200573de027de9b8cc2b27e7fce35e upstream.
 
-Carlos had a case where "find" seemed to start spinning
-forever and never return.
+In xfs_reflink_end_cow, we erroneously reserve only enough blocks to
+handle adding 1 extent.  This is problematic if we fragment free space,
+have to do CoW, and then have to perform multiple bmap btree expansions.
+Furthermore, the BUI recovery routine doesn't reserve /any/ blocks to
+handle btree splits, so log recovery fails after our first error causes
+the filesystem to go down.
 
-This was on a filesystem with non-default multi-fsb (8k)
-directory blocks, and a fragmented directory with extents
-like this:
+Therefore, refactor the transaction block reservation macros until we
+have a macro that works for our deferred (re)mapping activities, and fix
+both problems by using that macro.
 
-0:[0,133646,2,0]
-1:[2,195888,1,0]
-2:[3,195890,1,0]
-3:[4,195892,1,0]
-4:[5,195894,1,0]
-5:[6,195896,1,0]
-6:[7,195898,1,0]
-7:[8,195900,1,0]
-8:[9,195902,1,0]
-9:[10,195908,1,0]
-10:[11,195910,1,0]
-11:[12,195912,1,0]
-12:[13,195914,1,0]
-...
+With 1k blocks we can hit this fairly often in g/187 if the scratch fs
+is big enough.
 
-i.e. the first extent is a contiguous 2-fsb dir block, but
-after that it is fragmented into 1 block extents.
-
-At the top of the readdir path, we allocate a mapping array
-which (for this filesystem geometry) can hold 10 extents; see
-the assignment to map_info->map_size.  During readdir, we are
-therefore able to map extents 0 through 9 above into the array
-for readahead purposes.  If we count by 2, we see that the last
-mapped index (9) is the first block of a 2-fsb directory block.
-
-At the end of xfs_dir2_leaf_readbuf() we have 2 loops to fill
-more readahead; the outer loop assumes one full dir block is
-processed each loop iteration, and an inner loop that ensures
-that this is so by advancing to the next extent until a full
-directory block is mapped.
-
-The problem is that this inner loop may step past the last
-extent in the mapping array as it tries to reach the end of
-the directory block.  This will read garbage for the extent
-length, and as a result the loop control variable 'j' may
-become corrupted and never fail the loop conditional.
-
-The number of valid mappings we have in our array is stored
-in map->map_valid, so stop this inner loop based on that limit.
-
-There is an ASSERT at the top of the outer loop for this
-same condition, but we never made it out of the inner loop,
-so the ASSERT never fired.
-
-Huge appreciation for Carlos for debugging and isolating
-the problem.
-
-Debugged-and-analyzed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Tested-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_dir2_readdir.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_trans_space.h | 23 +++++++++++++++++------
+ fs/xfs/xfs_bmap_item.c          |  5 ++++-
+ fs/xfs/xfs_reflink.c            | 18 ++++++++++++++++--
+ 3 files changed, 37 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index ad9396e516f6..c45de729c74e 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -394,6 +394,7 @@ xfs_dir2_leaf_readbuf(
+diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
+index 7917f6e44286..d787c677d2a3 100644
+--- a/fs/xfs/libxfs/xfs_trans_space.h
++++ b/fs/xfs/libxfs/xfs_trans_space.h
+@@ -21,8 +21,20 @@
+ /*
+  * Components of space reservations.
+  */
++
++/* Worst case number of rmaps that can be held in a block. */
+ #define XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)    \
+ 		(((mp)->m_rmap_mxr[0]) - ((mp)->m_rmap_mnr[0]))
++
++/* Adding one rmap could split every level up to the top of the tree. */
++#define XFS_RMAPADD_SPACE_RES(mp) ((mp)->m_rmap_maxlevels)
++
++/* Blocks we might need to add "b" rmaps to a tree. */
++#define XFS_NRMAPADD_SPACE_RES(mp, b)\
++	(((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
++	  XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) * \
++	  XFS_RMAPADD_SPACE_RES(mp))
++
+ #define XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)    \
+ 		(((mp)->m_alloc_mxr[0]) - ((mp)->m_alloc_mnr[0]))
+ #define	XFS_EXTENTADD_SPACE_RES(mp,w)	(XFS_BM_MAXLEVELS(mp,w) - 1)
+@@ -30,13 +42,12 @@
+ 	(((b + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) / \
+ 	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
+ 	  XFS_EXTENTADD_SPACE_RES(mp,w))
++
++/* Blocks we might need to add "b" mappings & rmappings to a file. */
+ #define XFS_SWAP_RMAP_SPACE_RES(mp,b,w)\
+-	(((b + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) / \
+-	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
+-	  XFS_EXTENTADD_SPACE_RES(mp,w) + \
+-	 ((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
+-	  XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) * \
+-	  (mp)->m_rmap_maxlevels)
++	(XFS_NEXTENTADD_SPACE_RES((mp), (b), (w)) + \
++	 XFS_NRMAPADD_SPACE_RES((mp), (b)))
++
+ #define	XFS_DAENTER_1B(mp,w)	\
+ 	((w) == XFS_DATA_FORK ? (mp)->m_dir_geo->fsbcount : 1)
+ #define	XFS_DAENTER_DBS(mp,w)	\
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 9bf57c76623b..c4b90e794e41 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -34,6 +34,8 @@
+ #include "xfs_bmap.h"
+ #include "xfs_icache.h"
+ #include "xfs_trace.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_trans_space.h"
  
- 	/*
- 	 * Do we need more readahead?
-+	 * Each loop tries to process 1 full dir blk; last may be partial.
- 	 */
- 	blk_start_plug(&plug);
- 	for (mip->ra_index = mip->ra_offset = i = 0;
-@@ -425,9 +426,14 @@ xfs_dir2_leaf_readbuf(
- 		}
  
- 		/*
--		 * Advance offset through the mapping table.
-+		 * Advance offset through the mapping table, processing a full
-+		 * dir block even if it is fragmented into several extents.
-+		 * But stop if we have consumed all valid mappings, even if
-+		 * it's not yet a full directory block.
- 		 */
--		for (j = 0; j < geo->fsbcount; j += length ) {
-+		for (j = 0;
-+		     j < geo->fsbcount && mip->ra_index < mip->map_valid;
-+		     j += length ) {
- 			/*
- 			 * The rest of this extent but not more than a dir
- 			 * block.
+ kmem_zone_t	*xfs_bui_zone;
+@@ -446,7 +448,8 @@ xfs_bui_recover(
+ 		return -EIO;
+ 	}
+ 
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
++			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
+ 	if (error)
+ 		return error;
+ 	budp = xfs_trans_get_bud(tp, buip);
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 4a84c5ea266d..20c46d2ff4f5 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -709,8 +709,22 @@ xfs_reflink_end_cow(
+ 	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+ 	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
+ 
+-	/* Start a rolling transaction to switch the mappings */
+-	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
++	/*
++	 * Start a rolling transaction to switch the mappings.  We're
++	 * unlikely ever to have to remap 16T worth of single-block
++	 * extents, so just cap the worst case extent count to 2^32-1.
++	 * Stick a warning in just in case, and avoid 64-bit division.
++	 */
++	BUILD_BUG_ON(MAX_RW_COUNT > UINT_MAX);
++	if (end_fsb - offset_fsb > UINT_MAX) {
++		error = -EFSCORRUPTED;
++		xfs_force_shutdown(ip->i_mount, SHUTDOWN_CORRUPT_INCORE);
++		ASSERT(0);
++		goto out;
++	}
++	resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount,
++			(unsigned int)(end_fsb - offset_fsb),
++			XFS_DATA_FORK);
+ 	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
+ 			resblks, 0, 0, &tp);
+ 	if (error)
 -- 
 2.11.0
 
