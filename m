@@ -1,50 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50683 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:41281 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751167AbdFCNMF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:12:05 -0400
+        with ESMTP id S1750775AbdFCNPP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:15:15 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/23] xfs: fix unaligned access in xfs_btree_visit_blocks
-Date: Sat,  3 Jun 2017 15:10:59 +0200
-Message-Id: <20170603131103.23712-20-hch@lst.de>
-In-Reply-To: <20170603131103.23712-1-hch@lst.de>
-References: <20170603131103.23712-1-hch@lst.de>
+Subject: 4.11-stable updates for XFS
+Date: Sat,  3 Jun 2017 15:14:48 +0200
+Message-Id: <20170603131511.25032-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Eric Sandeen <sandeen@sandeen.net>
+Hi all,
 
-commit a4d768e702de224cc85e0c8eac9311763403b368 upstream.
+below are backports up to (almost) 4.12-rc4 for XFS.  I've selected all
+clear bugfixes for reported bugs.  One patch is a little odd as it's a
+subset of a patch that went into mainline, which included a bit of
+infrastructure in addition to the new feature, and we only need the
+infrastructure for stable.  Also a fs/iomap.c fix for code only used
+by XFS is included.
 
-This structure copy was throwing unaligned access warnings on sparc64:
-
-Kernel unaligned access at TPC[1043c088] xfs_btree_visit_blocks+0x88/0xe0 [xfs]
-
-xfs_btree_copy_ptrs does a memcpy, which avoids it.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_btree.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index c3decedc9455..3d0f96d159ff 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4395,7 +4395,7 @@ xfs_btree_visit_blocks(
- 			xfs_btree_readahead_ptr(cur, ptr, 1);
- 
- 			/* save for the next iteration of the loop */
--			lptr = *ptr;
-+			xfs_btree_copy_ptrs(cur, &lptr, ptr, 1);
- 		}
- 
- 		/* for each buffer in the level */
--- 
-2.11.0
-
+[sorry for the resend, one commit contained an existing stable@ Cc
+ with a "#" sign in it that made the mail server throw up.  This also
+ means you might get these commits twice, but the whole set here is
+ one that passed xfstests testing]
