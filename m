@@ -1,118 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43671 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:49639 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750991AbdFCNL0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:11:26 -0400
+        with ESMTP id S1750991AbdFCNL3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:11:29 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/23] xfs: handle array index overrun in xfs_dir2_leaf_readbuf()
-Date: Sat,  3 Jun 2017 15:10:46 +0200
-Message-Id: <20170603131103.23712-7-hch@lst.de>
+Subject: [PATCH 07/23] xfs: prevent multi-fsb dir readahead from reading random blocks
+Date: Sat,  3 Jun 2017 15:10:47 +0200
+Message-Id: <20170603131103.23712-8-hch@lst.de>
 In-Reply-To: <20170603131103.23712-1-hch@lst.de>
 References: <20170603131103.23712-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Eric Sandeen <sandeen@redhat.com>
+From: Brian Foster <bfoster@redhat.com>
 
-commit 023cc840b40fad95c6fe26fff1d380a8c9d45939 upstream.
+commit cb52ee334a45ae6c78a3999e4b473c43ddc528f4 upstream.
 
-Carlos had a case where "find" seemed to start spinning
-forever and never return.
+Directory block readahead uses a complex iteration mechanism to map
+between high-level directory blocks and underlying physical extents.
+This mechanism attempts to traverse the higher-level dir blocks in a
+manner that handles multi-fsb directory blocks and simultaneously
+maintains a reference to the corresponding physical blocks.
 
-This was on a filesystem with non-default multi-fsb (8k)
-directory blocks, and a fragmented directory with extents
-like this:
+This logic doesn't handle certain (discontiguous) physical extent
+layouts correctly with multi-fsb directory blocks. For example,
+consider the case of a 4k FSB filesystem with a 2 FSB (8k) directory
+block size and a directory with the following extent layout:
 
-0:[0,133646,2,0]
-1:[2,195888,1,0]
-2:[3,195890,1,0]
-3:[4,195892,1,0]
-4:[5,195894,1,0]
-5:[6,195896,1,0]
-6:[7,195898,1,0]
-7:[8,195900,1,0]
-8:[9,195902,1,0]
-9:[10,195908,1,0]
-10:[11,195910,1,0]
-11:[12,195912,1,0]
-12:[13,195914,1,0]
-...
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
+   0: [0..7]:          88..95            0 (88..95)             8
+   1: [8..15]:         80..87            0 (80..87)             8
+   2: [16..39]:        168..191          0 (168..191)          24
+   3: [40..63]:        5242952..5242975  1 (72..95)            24
 
-i.e. the first extent is a contiguous 2-fsb dir block, but
-after that it is fragmented into 1 block extents.
+Directory block 0 spans physical extents 0 and 1, dirblk 1 lies
+entirely within extent 2 and dirblk 2 spans extents 2 and 3. Because
+extent 2 is larger than the directory block size, the readahead code
+erroneously assumes the block is contiguous and issues a readahead
+based on the physical mapping of the first fsb of the dirblk. This
+results in read verifier failure and a spurious corruption or crc
+failure, depending on the filesystem format.
 
-At the top of the readdir path, we allocate a mapping array
-which (for this filesystem geometry) can hold 10 extents; see
-the assignment to map_info->map_size.  During readdir, we are
-therefore able to map extents 0 through 9 above into the array
-for readahead purposes.  If we count by 2, we see that the last
-mapped index (9) is the first block of a 2-fsb directory block.
+Further, the subsequent readahead code responsible for walking
+through the physical table doesn't correctly advance the physical
+block reference for dirblk 2. Instead of advancing two physical
+filesystem blocks, the first iteration of the loop advances 1 block
+(correctly), but the subsequent iteration advances 2 more physical
+blocks because the next physical extent (extent 3, above) happens to
+cover more than dirblk 2. At this point, the higher-level directory
+block walking is completely off the rails of the actual physical
+layout of the directory for the respective mapping table.
 
-At the end of xfs_dir2_leaf_readbuf() we have 2 loops to fill
-more readahead; the outer loop assumes one full dir block is
-processed each loop iteration, and an inner loop that ensures
-that this is so by advancing to the next extent until a full
-directory block is mapped.
+Update the contiguous dirblock logic to consider the current offset
+in the physical extent to avoid issuing directory readahead to
+unrelated blocks. Also, update the mapping table advancing code to
+consider the current offset within the current dirblock to avoid
+advancing the mapping reference too far beyond the dirblock.
 
-The problem is that this inner loop may step past the last
-extent in the mapping array as it tries to reach the end of
-the directory block.  This will read garbage for the extent
-length, and as a result the loop control variable 'j' may
-become corrupted and never fail the loop conditional.
-
-The number of valid mappings we have in our array is stored
-in map->map_valid, so stop this inner loop based on that limit.
-
-There is an ASSERT at the top of the outer loop for this
-same condition, but we never made it out of the inner loop,
-so the ASSERT never fired.
-
-Huge appreciation for Carlos for debugging and isolating
-the problem.
-
-Debugged-and-analyzed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Tested-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_dir2_readdir.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_dir2_readdir.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index ad9396e516f6..c45de729c74e 100644
+index c45de729c74e..20b7a5c6eb2f 100644
 --- a/fs/xfs/xfs_dir2_readdir.c
 +++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -394,6 +394,7 @@ xfs_dir2_leaf_readbuf(
- 
- 	/*
- 	 * Do we need more readahead?
-+	 * Each loop tries to process 1 full dir blk; last may be partial.
- 	 */
- 	blk_start_plug(&plug);
- 	for (mip->ra_index = mip->ra_offset = i = 0;
-@@ -425,9 +426,14 @@ xfs_dir2_leaf_readbuf(
- 		}
- 
- 		/*
--		 * Advance offset through the mapping table.
-+		 * Advance offset through the mapping table, processing a full
-+		 * dir block even if it is fragmented into several extents.
-+		 * But stop if we have consumed all valid mappings, even if
-+		 * it's not yet a full directory block.
+@@ -405,7 +405,8 @@ xfs_dir2_leaf_readbuf(
+ 		 * Read-ahead a contiguous directory block.
  		 */
--		for (j = 0; j < geo->fsbcount; j += length ) {
-+		for (j = 0;
-+		     j < geo->fsbcount && mip->ra_index < mip->map_valid;
-+		     j += length ) {
- 			/*
+ 		if (i > mip->ra_current &&
+-		    map[mip->ra_index].br_blockcount >= geo->fsbcount) {
++		    (map[mip->ra_index].br_blockcount - mip->ra_offset) >=
++		    geo->fsbcount) {
+ 			xfs_dir3_data_readahead(dp,
+ 				map[mip->ra_index].br_startoff + mip->ra_offset,
+ 				XFS_FSB_TO_DADDR(dp->i_mount,
+@@ -438,7 +439,7 @@ xfs_dir2_leaf_readbuf(
  			 * The rest of this extent but not more than a dir
  			 * block.
+ 			 */
+-			length = min_t(int, geo->fsbcount,
++			length = min_t(int, geo->fsbcount - j,
+ 					map[mip->ra_index].br_blockcount -
+ 							mip->ra_offset);
+ 			mip->ra_offset += length;
 -- 
 2.11.0
 
