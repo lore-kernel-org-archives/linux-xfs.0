@@ -1,57 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:42872 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:33061 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751272AbdFCNTe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:19:34 -0400
+        with ESMTP id S1751272AbdFCNTg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:19:36 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 18/25] xfs: BMAPX shouldn't barf on inline-format directories
-Date: Sat,  3 Jun 2017 15:18:29 +0200
-Message-Id: <20170603131836.26661-19-hch@lst.de>
+Subject: [PATCH 19/25] xfs: bad assertion for delalloc an extent that start at i_size
+Date: Sat,  3 Jun 2017 15:18:30 +0200
+Message-Id: <20170603131836.26661-20-hch@lst.de>
 In-Reply-To: <20170603131836.26661-1-hch@lst.de>
 References: <20170603131836.26661-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Zorro Lang <zlang@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Zorro Lang <zlang@redhat.com>
 
-commit 6eadbf4c8ba816c10d1c97bed9aa861d9fd17809 upstream.
+commit 892d2a5f705723b2cb488bfb38bcbdcf83273184 upstream.
 
-When we're fulfilling a BMAPX request, jump out early if the data fork
-is in local format.  This prevents us from hitting a debugging check in
-bmapi_read and barfing errors back to userspace.  The on-disk extent
-count check later isn't sufficient for IF_DELALLOC mode because da
-extents are in memory and not on disk.
+By run fsstress long enough time enough in RHEL-7, I find an
+assertion failure (harder to reproduce on linux-4.11, but problem
+is still there):
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+  XFS: Assertion failed: (iflags & BMV_IF_DELALLOC) != 0, file: fs/xfs/xfs_bmap_util.c
+
+The assertion is in xfs_getbmap() funciton:
+
+  if (map[i].br_startblock == DELAYSTARTBLOCK &&
+-->   map[i].br_startoff <= XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
+          ASSERT((iflags & BMV_IF_DELALLOC) != 0);
+
+When map[i].br_startoff == XFS_B_TO_FSB(mp, XFS_ISIZE(ip)), the
+startoff is just at EOF. But we only need to make sure delalloc
+extents that are within EOF, not include EOF.
+
+Signed-off-by: Zorro Lang <zlang@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 8a1a62ee84ad..15be2c973c40 100644
+index 15be2c973c40..87b495e2f15a 100644
 --- a/fs/xfs/xfs_bmap_util.c
 +++ b/fs/xfs/xfs_bmap_util.c
-@@ -588,9 +588,13 @@ xfs_getbmap(
- 		}
- 		break;
- 	default:
-+		/* Local format data forks report no extents. */
-+		if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
-+			bmv->bmv_entries = 0;
-+			return 0;
-+		}
- 		if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
--		    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
--		    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
-+		    ip->i_d.di_format != XFS_DINODE_FMT_BTREE)
- 			return -EINVAL;
+@@ -722,7 +722,7 @@ xfs_getbmap(
+ 			 * extents.
+ 			 */
+ 			if (map[i].br_startblock == DELAYSTARTBLOCK &&
+-			    map[i].br_startoff <= XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
++			    map[i].br_startoff < XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
+ 				ASSERT((iflags & BMV_IF_DELALLOC) != 0);
  
- 		if (xfs_get_extsz_hint(ip) ||
+                         if (map[i].br_startblock == HOLESTARTBLOCK &&
 -- 
 2.11.0
 
