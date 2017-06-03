@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:42759 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:46747 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750997AbdFCNPo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:15:44 -0400
+        with ESMTP id S1750997AbdFCNPs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:15:48 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/23] xfs: update ag iterator to support wait on new inodes
-Date: Sat,  3 Jun 2017 15:14:58 +0200
-Message-Id: <20170603131511.25032-11-hch@lst.de>
+Subject: [PATCH 11/23] xfs: wait on new inodes during quotaoff dquot release
+Date: Sat,  3 Jun 2017 15:14:59 +0200
+Message-Id: <20170603131511.25032-12-hch@lst.de>
 In-Reply-To: <20170603131511.25032-1-hch@lst.de>
 References: <20170603131511.25032-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,189 +17,53 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . W
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit ae2c4ac2dd39b23a87ddb14ceddc3f2872c6aef5 upstream.
+commit e20c8a517f259cb4d258e10b0cd5d4b30d4167a0 upstream.
 
-The AG inode iterator currently skips new inodes as such inodes are
-inserted into the inode radix tree before they are fully
-constructed. Certain contexts require the ability to wait on the
-construction of new inodes, however. The fs-wide dquot release from
-the quotaoff sequence is an example of this.
+The quotaoff operation has a race with inode allocation that results
+in a livelock. An inode allocation that occurs before the quota
+status flags are updated acquires the appropriate dquots for the
+inode via xfs_qm_vop_dqalloc(). It then inserts the XFS_INEW inode
+into the perag radix tree, sometime later attaches the dquots to the
+inode and finally clears the XFS_INEW flag. Quotaoff expects to
+release the dquots from all inodes in the filesystem via
+xfs_qm_dqrele_all_inodes(). This invokes the AG inode iterator,
+which skips inodes in the XFS_INEW state because they are not fully
+constructed. If the scan occurs after dquots have been attached to
+an inode, but before XFS_INEW is cleared, the newly allocated inode
+will continue to hold a reference to the applicable dquots. When
+quotaoff invokes xfs_qm_dqpurge_all(), the reference count of those
+dquot(s) remain elevated and the dqpurge scan spins indefinitely.
 
-Update the AG inode iterator to support the ability to wait on
-inodes flagged with XFS_INEW upon request. Create a new
-xfs_inode_ag_iterator_flags() interface and support a set of
-iteration flags to modify the iteration behavior. When the
-XFS_AGITER_INEW_WAIT flag is set, include XFS_INEW flags in the
-radix tree inode lookup and wait on them before the callback is
-executed.
+To address this problem, update the xfs_qm_dqrele_all_inodes() scan
+to wait on inodes marked on the XFS_INEW state. We wait on the
+inodes explicitly rather than skip and retry to avoid continuous
+retry loops due to a parallel inode allocation workload. Since
+quotaoff updates the quota state flags and uses a synchronous
+transaction before the dqrele scan, and dquots are attached to
+inodes after radix tree insertion iff quota is enabled, one INEW
+waiting pass through the AG guarantees that the scan has processed
+all inodes that could possibly hold dquot references.
 
+Reported-by: Eryu Guan <eguan@redhat.com>
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_icache.c | 53 +++++++++++++++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_icache.h |  8 ++++++++
- 2 files changed, 53 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_qm_syscalls.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 25f4f4595821..f61c84f8e31a 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -262,6 +262,22 @@ xfs_inode_clear_reclaim_tag(
- 	xfs_perag_clear_reclaim_tag(pag);
- }
- 
-+static void
-+xfs_inew_wait(
-+	struct xfs_inode	*ip)
-+{
-+	wait_queue_head_t *wq = bit_waitqueue(&ip->i_flags, __XFS_INEW_BIT);
-+	DEFINE_WAIT_BIT(wait, &ip->i_flags, __XFS_INEW_BIT);
-+
-+	do {
-+		prepare_to_wait(wq, &wait.wait, TASK_UNINTERRUPTIBLE);
-+		if (!xfs_iflags_test(ip, XFS_INEW))
-+			break;
-+		schedule();
-+	} while (true);
-+	finish_wait(wq, &wait.wait);
-+}
-+
- /*
-  * When we recycle a reclaimable inode, we need to re-initialise the VFS inode
-  * part of the structure. This is made more complex by the fact we store
-@@ -626,9 +642,11 @@ xfs_iget(
- 
- STATIC int
- xfs_inode_ag_walk_grab(
--	struct xfs_inode	*ip)
-+	struct xfs_inode	*ip,
-+	int			flags)
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 475a3882a81f..9cb5c381b01c 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -759,5 +759,6 @@ xfs_qm_dqrele_all_inodes(
+ 	uint		 flags)
  {
- 	struct inode		*inode = VFS_I(ip);
-+	bool			newinos = !!(flags & XFS_AGITER_INEW_WAIT);
- 
- 	ASSERT(rcu_read_lock_held());
- 
-@@ -646,7 +664,8 @@ xfs_inode_ag_walk_grab(
- 		goto out_unlock_noent;
- 
- 	/* avoid new or reclaimable inodes. Leave for reclaim code to flush */
--	if (__xfs_iflags_test(ip, XFS_INEW | XFS_IRECLAIMABLE | XFS_IRECLAIM))
-+	if ((!newinos && __xfs_iflags_test(ip, XFS_INEW)) ||
-+	    __xfs_iflags_test(ip, XFS_IRECLAIMABLE | XFS_IRECLAIM))
- 		goto out_unlock_noent;
- 	spin_unlock(&ip->i_flags_lock);
- 
-@@ -674,7 +693,8 @@ xfs_inode_ag_walk(
- 					   void *args),
- 	int			flags,
- 	void			*args,
--	int			tag)
-+	int			tag,
-+	int			iter_flags)
- {
- 	uint32_t		first_index;
- 	int			last_error = 0;
-@@ -716,7 +736,7 @@ xfs_inode_ag_walk(
- 		for (i = 0; i < nr_found; i++) {
- 			struct xfs_inode *ip = batch[i];
- 
--			if (done || xfs_inode_ag_walk_grab(ip))
-+			if (done || xfs_inode_ag_walk_grab(ip, iter_flags))
- 				batch[i] = NULL;
- 
- 			/*
-@@ -744,6 +764,9 @@ xfs_inode_ag_walk(
- 		for (i = 0; i < nr_found; i++) {
- 			if (!batch[i])
- 				continue;
-+			if ((iter_flags & XFS_AGITER_INEW_WAIT) &&
-+			    xfs_iflags_test(batch[i], XFS_INEW))
-+				xfs_inew_wait(batch[i]);
- 			error = execute(batch[i], flags, args);
- 			IRELE(batch[i]);
- 			if (error == -EAGAIN) {
-@@ -823,12 +846,13 @@ xfs_cowblocks_worker(
+ 	ASSERT(mp->m_quotainfo);
+-	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags, NULL);
++	xfs_inode_ag_iterator_flags(mp, xfs_dqrele_inode, flags, NULL,
++				    XFS_AGITER_INEW_WAIT);
  }
- 
- int
--xfs_inode_ag_iterator(
-+xfs_inode_ag_iterator_flags(
- 	struct xfs_mount	*mp,
- 	int			(*execute)(struct xfs_inode *ip, int flags,
- 					   void *args),
- 	int			flags,
--	void			*args)
-+	void			*args,
-+	int			iter_flags)
- {
- 	struct xfs_perag	*pag;
- 	int			error = 0;
-@@ -838,7 +862,8 @@ xfs_inode_ag_iterator(
- 	ag = 0;
- 	while ((pag = xfs_perag_get(mp, ag))) {
- 		ag = pag->pag_agno + 1;
--		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, -1);
-+		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, -1,
-+					  iter_flags);
- 		xfs_perag_put(pag);
- 		if (error) {
- 			last_error = error;
-@@ -850,6 +875,17 @@ xfs_inode_ag_iterator(
- }
- 
- int
-+xfs_inode_ag_iterator(
-+	struct xfs_mount	*mp,
-+	int			(*execute)(struct xfs_inode *ip, int flags,
-+					   void *args),
-+	int			flags,
-+	void			*args)
-+{
-+	return xfs_inode_ag_iterator_flags(mp, execute, flags, args, 0);
-+}
-+
-+int
- xfs_inode_ag_iterator_tag(
- 	struct xfs_mount	*mp,
- 	int			(*execute)(struct xfs_inode *ip, int flags,
-@@ -866,7 +902,8 @@ xfs_inode_ag_iterator_tag(
- 	ag = 0;
- 	while ((pag = xfs_perag_get_tag(mp, ag, tag))) {
- 		ag = pag->pag_agno + 1;
--		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, tag);
-+		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, tag,
-+					  0);
- 		xfs_perag_put(pag);
- 		if (error) {
- 			last_error = error;
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index 8a7c849b4dea..9183f77958ef 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -48,6 +48,11 @@ struct xfs_eofblocks {
- #define XFS_IGET_UNTRUSTED	0x2
- #define XFS_IGET_DONTCACHE	0x4
- 
-+/*
-+ * flags for AG inode iterator
-+ */
-+#define XFS_AGITER_INEW_WAIT	0x1	/* wait on new inodes */
-+
- int xfs_iget(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t ino,
- 	     uint flags, uint lock_flags, xfs_inode_t **ipp);
- 
-@@ -79,6 +84,9 @@ void xfs_cowblocks_worker(struct work_struct *);
- int xfs_inode_ag_iterator(struct xfs_mount *mp,
- 	int (*execute)(struct xfs_inode *ip, int flags, void *args),
- 	int flags, void *args);
-+int xfs_inode_ag_iterator_flags(struct xfs_mount *mp,
-+	int (*execute)(struct xfs_inode *ip, int flags, void *args),
-+	int flags, void *args, int iter_flags);
- int xfs_inode_ag_iterator_tag(struct xfs_mount *mp,
- 	int (*execute)(struct xfs_inode *ip, int flags, void *args),
- 	int flags, void *args, int tag);
 -- 
 2.11.0
 
