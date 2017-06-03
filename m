@@ -1,128 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45617 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:36512 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750997AbdFCNPx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:15:53 -0400
+        with ESMTP id S1750997AbdFCNP5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:15:57 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 13/23] xfs: fix use-after-free in xfs_finish_page_writeback
-Date: Sat,  3 Jun 2017 15:15:01 +0200
-Message-Id: <20170603131511.25032-14-hch@lst.de>
+Subject: [PATCH 14/23] xfs: fix indlen accounting error on partial delalloc conversion
+Date: Sat,  3 Jun 2017 15:15:02 +0200
+Message-Id: <20170603131511.25032-15-hch@lst.de>
 In-Reply-To: <20170603131511.25032-1-hch@lst.de>
 References: <20170603131511.25032-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Eryu Guan <eguan@redhat.com>
+From: Brian Foster <bfoster@redhat.com>
 
-commit 161f55efba5ddccc690139fae9373cafc3447a97 upstream.
+commit 0daaecacb83bc6b656a56393ab77a31c28139bc7 upstream.
 
-Commit 28b783e47ad7 ("xfs: bufferhead chains are invalid after
-end_page_writeback") fixed one use-after-free issue by
-pre-calculating the loop conditionals before calling bh->b_end_io()
-in the end_io processing loop, but it assigned 'next' pointer before
-checking end offset boundary & breaking the loop, at which point the
-bh might be freed already, and caused use-after-free.
+The delalloc -> real block conversion path uses an incorrect
+calculation in the case where the middle part of a delalloc extent
+is being converted. This is documented as a rare situation because
+XFS generally attempts to maximize contiguity by converting as much
+of a delalloc extent as possible.
 
-This is caught by KASAN when running fstests generic/127 on sub-page
-block size XFS.
+If this situation does occur, the indlen reservation for the two new
+delalloc extents left behind by the conversion of the middle range
+is calculated and compared with the original reservation. If more
+blocks are required, the delta is allocated from the global block
+pool. This delta value can be characterized as the difference
+between the new total requirement (temp + temp2) and the currently
+available reservation minus those blocks that have already been
+allocated (startblockval(PREV.br_startblock) - allocated).
 
-[ 2517.244502] run fstests generic/127 at 2017-04-27 07:30:50
-[ 2747.868840] ==================================================================
-[ 2747.876949] BUG: KASAN: use-after-free in xfs_destroy_ioend+0x3d3/0x4e0 [xfs] at addr ffff8801395ae698
-...
-[ 2747.918245] Call Trace:
-[ 2747.920975]  dump_stack+0x63/0x84
-[ 2747.924673]  kasan_object_err+0x21/0x70
-[ 2747.928950]  kasan_report+0x271/0x530
-[ 2747.933064]  ? xfs_destroy_ioend+0x3d3/0x4e0 [xfs]
-[ 2747.938409]  ? end_page_writeback+0xce/0x110
-[ 2747.943171]  __asan_report_load8_noabort+0x19/0x20
-[ 2747.948545]  xfs_destroy_ioend+0x3d3/0x4e0 [xfs]
-[ 2747.953724]  xfs_end_io+0x1af/0x2b0 [xfs]
-[ 2747.958197]  process_one_work+0x5ff/0x1000
-[ 2747.962766]  worker_thread+0xe4/0x10e0
-[ 2747.966946]  kthread+0x2d3/0x3d0
-[ 2747.970546]  ? process_one_work+0x1000/0x1000
-[ 2747.975405]  ? kthread_create_on_node+0xc0/0xc0
-[ 2747.980457]  ? syscall_return_slowpath+0xe6/0x140
-[ 2747.985706]  ? do_page_fault+0x30/0x80
-[ 2747.989887]  ret_from_fork+0x2c/0x40
-[ 2747.993874] Object at ffff8801395ae690, in cache buffer_head size: 104
-[ 2748.001155] Allocated:
-[ 2748.003782] PID = 8327
-[ 2748.006411]  save_stack_trace+0x1b/0x20
-[ 2748.010688]  save_stack+0x46/0xd0
-[ 2748.014383]  kasan_kmalloc+0xad/0xe0
-[ 2748.018370]  kasan_slab_alloc+0x12/0x20
-[ 2748.022648]  kmem_cache_alloc+0xb8/0x1b0
-[ 2748.027024]  alloc_buffer_head+0x22/0xc0
-[ 2748.031399]  alloc_page_buffers+0xd1/0x250
-[ 2748.035968]  create_empty_buffers+0x30/0x410
-[ 2748.040730]  create_page_buffers+0x120/0x1b0
-[ 2748.045493]  __block_write_begin_int+0x17a/0x1800
-[ 2748.050740]  iomap_write_begin+0x100/0x2f0
-[ 2748.055308]  iomap_zero_range_actor+0x253/0x5c0
-[ 2748.060362]  iomap_apply+0x157/0x270
-[ 2748.064347]  iomap_zero_range+0x5a/0x80
-[ 2748.068624]  iomap_truncate_page+0x6b/0xa0
-[ 2748.073227]  xfs_setattr_size+0x1f7/0xa10 [xfs]
-[ 2748.078312]  xfs_vn_setattr_size+0x68/0x140 [xfs]
-[ 2748.083589]  xfs_file_fallocate+0x4ac/0x820 [xfs]
-[ 2748.088838]  vfs_fallocate+0x2cf/0x780
-[ 2748.093021]  SyS_fallocate+0x48/0x80
-[ 2748.097006]  do_syscall_64+0x18a/0x430
-[ 2748.101186]  return_from_SYSCALL_64+0x0/0x6a
-[ 2748.105948] Freed:
-[ 2748.108189] PID = 8327
-[ 2748.110816]  save_stack_trace+0x1b/0x20
-[ 2748.115093]  save_stack+0x46/0xd0
-[ 2748.118788]  kasan_slab_free+0x73/0xc0
-[ 2748.122969]  kmem_cache_free+0x7a/0x200
-[ 2748.127247]  free_buffer_head+0x41/0x80
-[ 2748.131524]  try_to_free_buffers+0x178/0x250
-[ 2748.136316]  xfs_vm_releasepage+0x2e9/0x3d0 [xfs]
-[ 2748.141563]  try_to_release_page+0x100/0x180
-[ 2748.146325]  invalidate_inode_pages2_range+0x7da/0xcf0
-[ 2748.152087]  xfs_shift_file_space+0x37d/0x6e0 [xfs]
-[ 2748.157557]  xfs_collapse_file_space+0x49/0x120 [xfs]
-[ 2748.163223]  xfs_file_fallocate+0x2a7/0x820 [xfs]
-[ 2748.168462]  vfs_fallocate+0x2cf/0x780
-[ 2748.172642]  SyS_fallocate+0x48/0x80
-[ 2748.176629]  do_syscall_64+0x18a/0x430
-[ 2748.180810]  return_from_SYSCALL_64+0x0/0x6a
+The problem is that the current code does not account for previously
+allocated blocks correctly. It subtracts the current allocation
+count from the (new - old) delta rather than the old indlen
+reservation. This means that more indlen blocks than have been
+allocated end up stashed in the remaining extents and free space
+accounting is broken as a result.
 
-Fixed it by checking on offset against end & breaking out first,
-dereference bh only if there're still bufferheads to process.
+Fix up the calculation to subtract the allocated block count from
+the original extent indlen and thus correctly allocate the
+reservation delta based on the difference between the new total
+requirement and the unused blocks from the original reservation.
+Also remove a bogus assert that contradicts the fact that the new
+indlen reservation can be larger than the original indlen
+reservation.
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 61494295d92f..a7645be51d87 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -111,11 +111,11 @@ xfs_finish_page_writeback(
- 
- 	bsize = bh->b_size;
- 	do {
-+		if (off > end)
-+			break;
- 		next = bh->b_this_page;
- 		if (off < bvec->bv_offset)
- 			goto next_bh;
--		if (off > end)
--			break;
- 		bh->b_end_io(bh, !error);
- next_bh:
- 		off += bsize;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 2a426d127e05..6c68f3b888b0 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2106,8 +2106,10 @@ xfs_bmap_add_extent_delay_real(
+ 		}
+ 		temp = xfs_bmap_worst_indlen(bma->ip, temp);
+ 		temp2 = xfs_bmap_worst_indlen(bma->ip, temp2);
+-		diff = (int)(temp + temp2 - startblockval(PREV.br_startblock) -
+-			(bma->cur ? bma->cur->bc_private.b.allocated : 0));
++		diff = (int)(temp + temp2 -
++			     (startblockval(PREV.br_startblock) -
++			      (bma->cur ?
++			       bma->cur->bc_private.b.allocated : 0)));
+ 		if (diff > 0) {
+ 			error = xfs_mod_fdblocks(bma->ip->i_mount,
+ 						 -((int64_t)diff), false);
+@@ -2164,7 +2166,6 @@ xfs_bmap_add_extent_delay_real(
+ 		temp = da_new;
+ 		if (bma->cur)
+ 			temp += bma->cur->bc_private.b.allocated;
+-		ASSERT(temp <= da_old);
+ 		if (temp < da_old)
+ 			xfs_mod_fdblocks(bma->ip->i_mount,
+ 					(int64_t)(da_old - temp), false);
 -- 
 2.11.0
 
