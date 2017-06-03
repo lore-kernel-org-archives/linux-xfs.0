@@ -1,121 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58689 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:36169 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751149AbdFCNSv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:18:51 -0400
+        with ESMTP id S1751149AbdFCNSy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:18:54 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/25] xfs: use dedicated log worker wq to avoid deadlock with cil wq
-Date: Sat,  3 Jun 2017 15:18:15 +0200
-Message-Id: <20170603131836.26661-5-hch@lst.de>
+Subject: [PATCH 05/25] xfs: fix over-copying of getbmap parameters from userspace
+Date: Sat,  3 Jun 2017 15:18:16 +0200
+Message-Id: <20170603131836.26661-6-hch@lst.de>
 In-Reply-To: <20170603131836.26661-1-hch@lst.de>
 References: <20170603131836.26661-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 696a562072e3c14bcd13ae5acc19cdf27679e865 upstream.
+commit be6324c00c4d1e0e665f03ed1fc18863a88da119 upstream.
 
-The log covering background task used to be part of the xfssyncd
-workqueue. That workqueue was removed as of commit 5889608df ("xfs:
-syncd workqueue is no more") and the associated work item scheduled
-to the xfs-log wq. The latter is used for log buffer I/O completion.
+In xfs_ioc_getbmap, we should only copy the fields of struct getbmap
+from userspace, or else we end up copying random stack contents into the
+kernel.  struct getbmap is a strict subset of getbmapx, so a partial
+structure copy should work fine.
 
-Since xfs_log_worker() can invoke a log flush, a deadlock is
-possible between the xfs-log and xfs-cil workqueues. Consider the
-following codepath from xfs_log_worker():
-
-xfs_log_worker()
-  xfs_log_force()
-    _xfs_log_force()
-      xlog_cil_force()
-        xlog_cil_force_lsn()
-          xlog_cil_push_now()
-            flush_work()
-
-The above is in xfs-log wq context and blocked waiting on the
-completion of an xfs-cil work item. Concurrently, the cil push in
-progress can end up blocked here:
-
-xlog_cil_push_work()
-  xlog_cil_push()
-    xlog_write()
-      xlog_state_get_iclog_space()
-        xlog_wait(&log->l_flush_wait, ...)
-
-The above is in xfs-cil context waiting on log buffer I/O
-completion, which executes in xfs-log wq context. In this scenario
-both workqueues are deadlocked waiting on eachother.
-
-Add a new workqueue specifically for the high level log covering and
-ail pushing worker, as was the case prior to commit 5889608df.
-
-Diagnosed-by: David Jeffery <djeffery@redhat.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log.c   | 2 +-
- fs/xfs/xfs_mount.h | 1 +
- fs/xfs/xfs_super.c | 8 ++++++++
- 3 files changed, 10 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_ioctl.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 4017aa967331..b57ab34fbf3c 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1293,7 +1293,7 @@ void
- xfs_log_work_queue(
- 	struct xfs_mount        *mp)
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index a39197501a7c..73cfc7179124 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1542,10 +1542,11 @@ xfs_ioc_getbmap(
+ 	unsigned int		cmd,
+ 	void			__user *arg)
  {
--	queue_delayed_work(mp->m_log_workqueue, &mp->m_log->l_work,
-+	queue_delayed_work(mp->m_sync_workqueue, &mp->m_log->l_work,
- 				msecs_to_jiffies(xfs_syncd_centisecs * 10));
- }
+-	struct getbmapx		bmx;
++	struct getbmapx		bmx = { 0 };
+ 	int			error;
  
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 1bf878b0492c..5415f9031ef8 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -183,6 +183,7 @@ typedef struct xfs_mount {
- 	struct workqueue_struct	*m_reclaim_workqueue;
- 	struct workqueue_struct	*m_log_workqueue;
- 	struct workqueue_struct *m_eofblocks_workqueue;
-+	struct workqueue_struct	*m_sync_workqueue;
+-	if (copy_from_user(&bmx, arg, sizeof(struct getbmapx)))
++	/* struct getbmap is a strict subset of struct getbmapx. */
++	if (copy_from_user(&bmx, arg, offsetof(struct getbmapx, bmv_iflags)))
+ 		return -EFAULT;
  
- 	/*
- 	 * Generation of the filesysyem layout.  This is incremented by each
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index dbbd3f1fd2b7..882fb8524fcb 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -872,8 +872,15 @@ xfs_init_mount_workqueues(
- 	if (!mp->m_eofblocks_workqueue)
- 		goto out_destroy_log;
- 
-+	mp->m_sync_workqueue = alloc_workqueue("xfs-sync/%s", WQ_FREEZABLE, 0,
-+					       mp->m_fsname);
-+	if (!mp->m_sync_workqueue)
-+		goto out_destroy_eofb;
-+
- 	return 0;
- 
-+out_destroy_eofb:
-+	destroy_workqueue(mp->m_eofblocks_workqueue);
- out_destroy_log:
- 	destroy_workqueue(mp->m_log_workqueue);
- out_destroy_reclaim:
-@@ -894,6 +901,7 @@ STATIC void
- xfs_destroy_mount_workqueues(
- 	struct xfs_mount	*mp)
- {
-+	destroy_workqueue(mp->m_sync_workqueue);
- 	destroy_workqueue(mp->m_eofblocks_workqueue);
- 	destroy_workqueue(mp->m_log_workqueue);
- 	destroy_workqueue(mp->m_reclaim_workqueue);
+ 	if (bmx.bmv_count < 2)
 -- 
 2.11.0
 
