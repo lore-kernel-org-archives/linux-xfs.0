@@ -1,61 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33061 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:56232 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751272AbdFCNTg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:19:36 -0400
+        with ESMTP id S1751272AbdFCNTj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2017 09:19:39 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/25] xfs: bad assertion for delalloc an extent that start at i_size
-Date: Sat,  3 Jun 2017 15:18:30 +0200
-Message-Id: <20170603131836.26661-20-hch@lst.de>
+Subject: [PATCH 20/25] xfs: xfs_trans_alloc_empty
+Date: Sat,  3 Jun 2017 15:18:31 +0200
+Message-Id: <20170603131836.26661-21-hch@lst.de>
 In-Reply-To: <20170603131836.26661-1-hch@lst.de>
 References: <20170603131836.26661-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Zorro Lang <zlang@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Zorro Lang <zlang@redhat.com>
+This is a partial cherry-pick of commit e89c041338
+("xfs: implement the GETFSMAP ioctl"), which also adds this helper, and
+a great example of why feature patches should be properly split into
+their parts.
 
-commit 892d2a5f705723b2cb488bfb38bcbdcf83273184 upstream.
-
-By run fsstress long enough time enough in RHEL-7, I find an
-assertion failure (harder to reproduce on linux-4.11, but problem
-is still there):
-
-  XFS: Assertion failed: (iflags & BMV_IF_DELALLOC) != 0, file: fs/xfs/xfs_bmap_util.c
-
-The assertion is in xfs_getbmap() funciton:
-
-  if (map[i].br_startblock == DELAYSTARTBLOCK &&
--->   map[i].br_startoff <= XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
-          ASSERT((iflags & BMV_IF_DELALLOC) != 0);
-
-When map[i].br_startoff == XFS_B_TO_FSB(mp, XFS_ISIZE(ip)), the
-startoff is just at EOF. But we only need to make sure delalloc
-extents that are within EOF, not include EOF.
-
-Signed-off-by: Zorro Lang <zlang@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[hch: split from the larger patch for -stable]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_bmap_util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_trans.c | 22 ++++++++++++++++++++++
+ fs/xfs/xfs_trans.h |  2 ++
+ 2 files changed, 24 insertions(+)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 15be2c973c40..87b495e2f15a 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -722,7 +722,7 @@ xfs_getbmap(
- 			 * extents.
- 			 */
- 			if (map[i].br_startblock == DELAYSTARTBLOCK &&
--			    map[i].br_startoff <= XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
-+			    map[i].br_startoff < XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
- 				ASSERT((iflags & BMV_IF_DELALLOC) != 0);
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 70f42ea86dfb..a280e126491f 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -263,6 +263,28 @@ xfs_trans_alloc(
+ }
  
-                         if (map[i].br_startblock == HOLESTARTBLOCK &&
+ /*
++ * Create an empty transaction with no reservation.  This is a defensive
++ * mechanism for routines that query metadata without actually modifying
++ * them -- if the metadata being queried is somehow cross-linked (think a
++ * btree block pointer that points higher in the tree), we risk deadlock.
++ * However, blocks grabbed as part of a transaction can be re-grabbed.
++ * The verifiers will notice the corrupt block and the operation will fail
++ * back to userspace without deadlocking.
++ *
++ * Note the zero-length reservation; this transaction MUST be cancelled
++ * without any dirty data.
++ */
++int
++xfs_trans_alloc_empty(
++	struct xfs_mount		*mp,
++	struct xfs_trans		**tpp)
++{
++	struct xfs_trans_res		resv = {0};
++
++	return xfs_trans_alloc(mp, &resv, 0, 0, XFS_TRANS_NO_WRITECOUNT, tpp);
++}
++
++/*
+  * Record the indicated change to the given field for application
+  * to the file system's superblock when the transaction commits.
+  * For now, just store the change in the transaction structure.
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 61b7fbdd3ebd..98024cb933ef 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -159,6 +159,8 @@ typedef struct xfs_trans {
+ int		xfs_trans_alloc(struct xfs_mount *mp, struct xfs_trans_res *resp,
+ 			uint blocks, uint rtextents, uint flags,
+ 			struct xfs_trans **tpp);
++int		xfs_trans_alloc_empty(struct xfs_mount *mp,
++			struct xfs_trans **tpp);
+ void		xfs_trans_mod_sb(xfs_trans_t *, uint, int64_t);
+ 
+ struct xfs_buf	*xfs_trans_get_buf_map(struct xfs_trans *tp,
 -- 
 2.11.0
 
