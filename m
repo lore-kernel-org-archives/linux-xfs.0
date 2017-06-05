@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:59542 "EHLO
+Received: from mail.linuxfoundation.org ([140.211.169.12]:32820 "EHLO
         mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753031AbdFEQ1m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2017 12:27:42 -0400
+        with ESMTP id S1753890AbdFEQdu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2017 12:33:50 -0400
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 91/94] xfs: xfs_trans_alloc_empty
-Date: Mon,  5 Jun 2017 18:18:07 +0200
-Message-Id: <20170605153106.907122494@linuxfoundation.org>
-In-Reply-To: <20170605153103.156843111@linuxfoundation.org>
-References: <20170605153103.156843111@linuxfoundation.org>
+Subject: [PATCH 4.11 112/115] xfs: xfs_trans_alloc_empty
+Date: Mon,  5 Jun 2017 18:18:25 +0200
+Message-Id: <20170605153102.219732457@linuxfoundation.org>
+In-Reply-To: <20170605153056.650217313@linuxfoundation.org>
+References: <20170605153056.650217313@linuxfoundation.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,7 +17,7 @@ List-Id: xfs
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
+4.11-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -69,7 +69,7 @@ Signed-off-by: Christoph Hellwig <hch@lst.de>
   * For now, just store the change in the transaction structure.
 --- a/fs/xfs/xfs_trans.h
 +++ b/fs/xfs/xfs_trans.h
-@@ -159,6 +159,8 @@ typedef struct xfs_trans {
+@@ -158,6 +158,8 @@ typedef struct xfs_trans {
  int		xfs_trans_alloc(struct xfs_mount *mp, struct xfs_trans_res *resp,
  			uint blocks, uint rtextents, uint flags,
  			struct xfs_trans **tpp);
