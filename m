@@ -1,95 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41085 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751652AbdFFLUJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jun 2017 07:20:09 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 10/10] btrfs: nowait aio support
-Date: Tue,  6 Jun 2017 06:19:39 -0500
-Message-Id: <20170606111939.27272-11-rgoldwyn@suse.de>
-In-Reply-To: <20170606111939.27272-1-rgoldwyn@suse.de>
-References: <20170606111939.27272-1-rgoldwyn@suse.de>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:59542 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753031AbdFEQ1m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2017 12:27:42 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 4.9 91/94] xfs: xfs_trans_alloc_empty
+Date: Mon,  5 Jun 2017 18:18:07 +0200
+Message-Id: <20170605153106.907122494@linuxfoundation.org>
+In-Reply-To: <20170605153103.156843111@linuxfoundation.org>
+References: <20170605153103.156843111@linuxfoundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+4.9-stable review patch.  If anyone has any objections, please let me know.
 
-Return EAGAIN if any of the following checks fail
- + i_rwsem is not lockable
- + NODATACOW or PREALLOC is not set
- + Cannot nocow at the desired location
- + Writing beyond end of file which is not allocated
+------------------
 
-Acked-by: David Sterba <dsterba@suse.com>
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+From: Christoph Hellwig <hch@lst.de>
+
+This is a partial cherry-pick of commit e89c041338
+("xfs: implement the GETFSMAP ioctl"), which also adds this helper, and
+a great example of why feature patches should be properly split into
+their parts.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[hch: split from the larger patch for -stable]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/btrfs/file.c  | 25 ++++++++++++++++++++-----
- fs/btrfs/inode.c |  3 +++
- 2 files changed, 23 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_trans.c |   22 ++++++++++++++++++++++
+ fs/xfs/xfs_trans.h |    2 ++
+ 2 files changed, 24 insertions(+)
 
-diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-index da1096eb1a40..aae088e49915 100644
---- a/fs/btrfs/file.c
-+++ b/fs/btrfs/file.c
-@@ -1875,12 +1875,29 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
- 	ssize_t num_written = 0;
- 	bool sync = (file->f_flags & O_DSYNC) || IS_SYNC(file->f_mapping->host);
- 	ssize_t err;
--	loff_t pos;
--	size_t count;
-+	loff_t pos = iocb->ki_pos;
-+	size_t count = iov_iter_count(from);
- 	loff_t oldsize;
- 	int clean_page = 0;
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -263,6 +263,28 @@ xfs_trans_alloc(
+ }
  
--	inode_lock(inode);
-+	if ((iocb->ki_flags & IOCB_NOWAIT) &&
-+			(iocb->ki_flags & IOCB_DIRECT)) {
-+		/* Don't sleep on inode rwsem */
-+		if (!inode_trylock(inode))
-+			return -EAGAIN;
-+		/*
-+		 * We will allocate space in case nodatacow is not set,
-+		 * so bail
-+		 */
-+		if (!(BTRFS_I(inode)->flags & (BTRFS_INODE_NODATACOW |
-+					      BTRFS_INODE_PREALLOC)) ||
-+		    check_can_nocow(BTRFS_I(inode), pos, &count) <= 0) {
-+			inode_unlock(inode);
-+			return -EAGAIN;
-+		}
-+	} else
-+		inode_lock(inode);
+ /*
++ * Create an empty transaction with no reservation.  This is a defensive
++ * mechanism for routines that query metadata without actually modifying
++ * them -- if the metadata being queried is somehow cross-linked (think a
++ * btree block pointer that points higher in the tree), we risk deadlock.
++ * However, blocks grabbed as part of a transaction can be re-grabbed.
++ * The verifiers will notice the corrupt block and the operation will fail
++ * back to userspace without deadlocking.
++ *
++ * Note the zero-length reservation; this transaction MUST be cancelled
++ * without any dirty data.
++ */
++int
++xfs_trans_alloc_empty(
++	struct xfs_mount		*mp,
++	struct xfs_trans		**tpp)
++{
++	struct xfs_trans_res		resv = {0};
 +
- 	err = generic_write_checks(iocb, from);
- 	if (err <= 0) {
- 		inode_unlock(inode);
-@@ -1914,8 +1931,6 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
- 	 */
- 	update_time_for_write(inode);
++	return xfs_trans_alloc(mp, &resv, 0, 0, XFS_TRANS_NO_WRITECOUNT, tpp);
++}
++
++/*
+  * Record the indicated change to the given field for application
+  * to the file system's superblock when the transaction commits.
+  * For now, just store the change in the transaction structure.
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -159,6 +159,8 @@ typedef struct xfs_trans {
+ int		xfs_trans_alloc(struct xfs_mount *mp, struct xfs_trans_res *resp,
+ 			uint blocks, uint rtextents, uint flags,
+ 			struct xfs_trans **tpp);
++int		xfs_trans_alloc_empty(struct xfs_mount *mp,
++			struct xfs_trans **tpp);
+ void		xfs_trans_mod_sb(xfs_trans_t *, uint, int64_t);
  
--	pos = iocb->ki_pos;
--	count = iov_iter_count(from);
- 	start_pos = round_down(pos, fs_info->sectorsize);
- 	oldsize = i_size_read(inode);
- 	if (start_pos > oldsize) {
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 17cbe9306faf..2ab71b946829 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -8755,6 +8755,9 @@ static ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- 			dio_data.overwrite = 1;
- 			inode_unlock(inode);
- 			relock = true;
-+		} else if (iocb->ki_flags & IOCB_NOWAIT) {
-+			ret = -EAGAIN;
-+			goto out;
- 		}
- 		ret = btrfs_delalloc_reserve_space(inode, offset, count);
- 		if (ret)
--- 
-2.12.0
+ struct xfs_buf	*xfs_trans_get_buf_map(struct xfs_trans *tp,
+
 
