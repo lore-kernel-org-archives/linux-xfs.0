@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42693 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42737 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751375AbdFEFgI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Jun 2017 01:36:08 -0400
+        id S1751394AbdFEFgM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Jun 2017 01:36:12 -0400
 From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 08/10] ext4: nowait aio support
-Date: Mon,  5 Jun 2017 00:35:38 -0500
-Message-Id: <20170605053540.19393-9-rgoldwyn@suse.de>
+Subject: [PATCH 10/10] btrfs: nowait aio support
+Date: Mon,  5 Jun 2017 00:35:40 -0500
+Message-Id: <20170605053540.19393-11-rgoldwyn@suse.de>
 In-Reply-To: <20170605053540.19393-1-rgoldwyn@suse.de>
 References: <20170605053540.19393-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,55 +17,79 @@ Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@v
 
 From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Return EAGAIN if any of the following checks fail for direct I/O:
-  + i_rwsem is lockable
-  + Writing beyond end of file (will trigger allocation)
-  + Blocks are not allocated at the write location
+Return EAGAIN if any of the following checks fail
+ + i_rwsem is not lockable
+ + NODATACOW or PREALLOC is not set
+ + Cannot nocow at the desired location
+ + Writing beyond end of file which is not allocated
 
+Acked-by: David Sterba <dsterba@suse.com>
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- fs/ext4/file.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+ fs/btrfs/file.c  | 25 ++++++++++++++++++++-----
+ fs/btrfs/inode.c |  3 +++
+ 2 files changed, 23 insertions(+), 5 deletions(-)
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 831fd6beebf0..07f08ff2c11b 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -216,7 +216,13 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		return ext4_dax_write_iter(iocb, from);
- #endif
+diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+index da1096eb1a40..aae088e49915 100644
+--- a/fs/btrfs/file.c
++++ b/fs/btrfs/file.c
+@@ -1875,12 +1875,29 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
+ 	ssize_t num_written = 0;
+ 	bool sync = (file->f_flags & O_DSYNC) || IS_SYNC(file->f_mapping->host);
+ 	ssize_t err;
+-	loff_t pos;
+-	size_t count;
++	loff_t pos = iocb->ki_pos;
++	size_t count = iov_iter_count(from);
+ 	loff_t oldsize;
+ 	int clean_page = 0;
  
 -	inode_lock(inode);
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
++	if ((iocb->ki_flags & IOCB_NOWAIT) &&
++			(iocb->ki_flags & IOCB_DIRECT)) {
++		/* Don't sleep on inode rwsem */
 +		if (!inode_trylock(inode))
 +			return -EAGAIN;
-+	} else {
++		/*
++		 * We will allocate space in case nodatacow is not set,
++		 * so bail
++		 */
++		if (!(BTRFS_I(inode)->flags & (BTRFS_INODE_NODATACOW |
++					      BTRFS_INODE_PREALLOC)) ||
++		    check_can_nocow(BTRFS_I(inode), pos, &count) <= 0) {
++			inode_unlock(inode);
++			return -EAGAIN;
++		}
++	} else
 +		inode_lock(inode);
-+	}
 +
- 	ret = ext4_write_checks(iocb, from);
- 	if (ret <= 0)
- 		goto out;
-@@ -235,9 +241,15 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 	err = generic_write_checks(iocb, from);
+ 	if (err <= 0) {
+ 		inode_unlock(inode);
+@@ -1914,8 +1931,6 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
+ 	 */
+ 	update_time_for_write(inode);
  
- 	iocb->private = &overwrite;
- 	/* Check whether we do a DIO overwrite or not */
--	if (o_direct && ext4_should_dioread_nolock(inode) && !unaligned_aio &&
--	    ext4_overwrite_io(inode, iocb->ki_pos, iov_iter_count(from)))
--		overwrite = 1;
-+	if (o_direct && !unaligned_aio) {
-+		if (ext4_overwrite_io(inode, iocb->ki_pos, iov_iter_count(from))) {
-+			if (ext4_should_dioread_nolock(inode))
-+				overwrite = 1;
+-	pos = iocb->ki_pos;
+-	count = iov_iter_count(from);
+ 	start_pos = round_down(pos, fs_info->sectorsize);
+ 	oldsize = i_size_read(inode);
+ 	if (start_pos > oldsize) {
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 17cbe9306faf..2ab71b946829 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -8755,6 +8755,9 @@ static ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 			dio_data.overwrite = 1;
+ 			inode_unlock(inode);
+ 			relock = true;
 +		} else if (iocb->ki_flags & IOCB_NOWAIT) {
 +			ret = -EAGAIN;
 +			goto out;
-+		}
-+	}
- 
- 	ret = __generic_file_write_iter(iocb, from);
- 	inode_unlock(inode);
+ 		}
+ 		ret = btrfs_delalloc_reserve_space(inode, offset, count);
+ 		if (ret)
 -- 
 2.12.0
 
