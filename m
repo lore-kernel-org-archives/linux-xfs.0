@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42610 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42656 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751340AbdFEFgA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Jun 2017 01:36:00 -0400
+        id S1751351AbdFEFgB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Jun 2017 01:36:01 -0400
 From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 04/10] fs: Introduce RWF_NOWAIT
-Date: Mon,  5 Jun 2017 00:35:34 -0500
-Message-Id: <20170605053540.19393-5-rgoldwyn@suse.de>
+Subject: [PATCH 07/10] fs: return on congested block device
+Date: Mon,  5 Jun 2017 00:35:37 -0500
+Message-Id: <20170605053540.19393-8-rgoldwyn@suse.de>
 In-Reply-To: <20170605053540.19393-1-rgoldwyn@suse.de>
 References: <20170605053540.19393-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,192 +17,177 @@ Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@v
 
 From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-RWF_NOWAIT informs kernel to bail out if an AIO request will block
-for reasons such as file allocations, or a writeback triggered,
-or would block while allocating requests while performing
-direct I/O.
+A new bio operation flag REQ_NOWAIT is introduced to identify bio's
+orignating from iocb with IOCB_NOWAIT. This flag indicates
+to return immediately if a request cannot be made instead
+of retrying.
 
-RWF_NOWAIT is translated to IOCB_NOWAIT for iocb->ki_flags.
-
-The check for -EOPNOTSUPP is placed in generic_file_write_iter(). This
-is called by most filesystems, either through fsops.write_iter() or through
-the function defined by write_iter(). If not, we perform the check defined
-by .write_iter() which is called for direct IO specifically.
-
-Filesystems xfs, btrfs and ext4 would be supported in the following patches.
+Stacked devices such as md (the ones with make_request_fn hooks)
+currently are not supported because it may block for housekeeping.
+For example, an md can have a part of the device suspended.
+For this reason, only request based devices are supported.
+In the future, this feature will be expanded to stacked devices
+by teaching them how to handle the REQ_NOWAIT flags.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- fs/9p/vfs_file.c        | 3 +++
- fs/aio.c                | 6 ++++++
- fs/ceph/file.c          | 3 +++
- fs/cifs/file.c          | 3 +++
- fs/fuse/file.c          | 3 +++
- fs/nfs/direct.c         | 3 +++
- fs/ocfs2/file.c         | 3 +++
- include/linux/fs.h      | 5 ++++-
- include/uapi/linux/fs.h | 1 +
- mm/filemap.c            | 3 +++
- 10 files changed, 32 insertions(+), 1 deletion(-)
+ block/blk-core.c          | 24 ++++++++++++++++++++++--
+ block/blk-mq-sched.c      |  3 +++
+ block/blk-mq.c            |  2 ++
+ fs/direct-io.c            | 10 ++++++++--
+ include/linux/bio.h       |  6 ++++++
+ include/linux/blk_types.h |  2 ++
+ 6 files changed, 43 insertions(+), 4 deletions(-)
 
-diff --git a/fs/9p/vfs_file.c b/fs/9p/vfs_file.c
-index 3de3b4a89d89..403681db7723 100644
---- a/fs/9p/vfs_file.c
-+++ b/fs/9p/vfs_file.c
-@@ -411,6 +411,9 @@ v9fs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	loff_t origin;
- 	int err = 0;
+diff --git a/block/blk-core.c b/block/blk-core.c
+index a7421b772d0e..a6ee659fd56b 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1256,6 +1256,11 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
+ 	if (!IS_ERR(rq))
+ 		return rq;
  
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
-+
- 	retval = generic_write_checks(iocb, from);
- 	if (retval <= 0)
- 		return retval;
-diff --git a/fs/aio.c b/fs/aio.c
-index 020fa0045e3c..34027b67e2f4 100644
---- a/fs/aio.c
-+++ b/fs/aio.c
-@@ -1592,6 +1592,12 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
- 		goto out_put_req;
- 	}
- 
-+	if ((req->common.ki_flags & IOCB_NOWAIT) &&
-+			!(req->common.ki_flags & IOCB_DIRECT)) {
-+		ret = -EOPNOTSUPP;
-+		goto out_put_req;
++	if (op & REQ_NOWAIT) {
++		blk_put_rl(rl);
++		return ERR_PTR(-EAGAIN);
 +	}
 +
- 	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
- 	if (unlikely(ret)) {
- 		pr_debug("EFAULT: aio_key\n");
-diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-index 29308a80d66f..366b0bb71f97 100644
---- a/fs/ceph/file.c
-+++ b/fs/ceph/file.c
-@@ -1300,6 +1300,9 @@ static ssize_t ceph_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	int err, want, got;
- 	loff_t pos;
+ 	if (!gfpflags_allow_blocking(gfp_mask) || unlikely(blk_queue_dying(q))) {
+ 		blk_put_rl(rl);
+ 		return rq;
+@@ -1900,6 +1905,17 @@ generic_make_request_checks(struct bio *bio)
+ 		goto end_io;
+ 	}
  
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
++	/*
++	 * For a REQ_NOWAIT based request, return -EOPNOTSUPP
++	 * if queue does not have QUEUE_FLAG_NOWAIT_SUPPORT set
++	 * and if it is not a request based queue.
++	 */
 +
- 	if (ceph_snap(inode) != CEPH_NOSNAP)
- 		return -EROFS;
- 
-diff --git a/fs/cifs/file.c b/fs/cifs/file.c
-index 0fd081bd2a2f..ff84fa9ddb6c 100644
---- a/fs/cifs/file.c
-+++ b/fs/cifs/file.c
-@@ -2725,6 +2725,9 @@ ssize_t cifs_user_writev(struct kiocb *iocb, struct iov_iter *from)
- 	 * write request.
- 	 */
- 
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
++	if ((bio->bi_opf & REQ_NOWAIT) && !queue_is_rq_based(q)) {
++		err = -EOPNOTSUPP;
++		goto end_io;
++	}
 +
- 	rc = generic_write_checks(iocb, from);
- 	if (rc <= 0)
- 		return rc;
-diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-index 3ee4fdc3da9e..812c7bd0c290 100644
---- a/fs/fuse/file.c
-+++ b/fs/fuse/file.c
-@@ -1425,6 +1425,9 @@ static ssize_t fuse_direct_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	struct fuse_io_priv io = FUSE_IO_PRIV_SYNC(file);
- 	ssize_t res;
+ 	part = bio->bi_bdev->bd_part;
+ 	if (should_fail_request(part, bio->bi_iter.bi_size) ||
+ 	    should_fail_request(&part_to_disk(part)->part0,
+@@ -2057,7 +2073,7 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 	do {
+ 		struct request_queue *q = bdev_get_queue(bio->bi_bdev);
  
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
+-		if (likely(blk_queue_enter(q, false) == 0)) {
++		if (likely(blk_queue_enter(q, bio->bi_opf & REQ_NOWAIT) == 0)) {
+ 			struct bio_list lower, same;
+ 
+ 			/* Create a fresh bio_list for all subordinate requests */
+@@ -2082,7 +2098,11 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 			bio_list_merge(&bio_list_on_stack[0], &same);
+ 			bio_list_merge(&bio_list_on_stack[0], &bio_list_on_stack[1]);
+ 		} else {
+-			bio_io_error(bio);
++			if (unlikely(!blk_queue_dying(q) &&
++					(bio->bi_opf & REQ_NOWAIT)))
++				bio_wouldblock_error(bio);
++			else
++				bio_io_error(bio);
+ 		}
+ 		bio = bio_list_pop(&bio_list_on_stack[0]);
+ 	} while (bio);
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index 1f5b692526ae..9a1dea8b964e 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -83,6 +83,9 @@ struct request *blk_mq_sched_get_request(struct request_queue *q,
+ 	if (likely(!data->hctx))
+ 		data->hctx = blk_mq_map_queue(q, data->ctx->cpu);
+ 
++	if (op & REQ_NOWAIT)
++		data->flags |= BLK_MQ_REQ_NOWAIT;
 +
- 	if (is_bad_inode(inode))
- 		return -EIO;
+ 	if (e) {
+ 		data->flags |= BLK_MQ_REQ_INTERNAL;
  
-diff --git a/fs/nfs/direct.c b/fs/nfs/direct.c
-index 6fb9fad2d1e6..c8e7dd76126c 100644
---- a/fs/nfs/direct.c
-+++ b/fs/nfs/direct.c
-@@ -979,6 +979,9 @@ ssize_t nfs_file_direct_write(struct kiocb *iocb, struct iov_iter *iter)
- 	dfprintk(FILE, "NFS: direct write(%pD2, %zd@%Ld)\n",
- 		file, iov_iter_count(iter), (long long) iocb->ki_pos);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 1bcccedcc74f..b0608f1955b2 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1556,6 +1556,8 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ 	rq = blk_mq_sched_get_request(q, bio, bio->bi_opf, &data);
+ 	if (unlikely(!rq)) {
+ 		__wbt_done(q->rq_wb, wb_acct);
++		if (bio->bi_opf & REQ_NOWAIT)
++			bio_wouldblock_error(bio);
+ 		return BLK_QC_T_NONE;
+ 	}
  
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
-+
- 	result = generic_write_checks(iocb, iter);
- 	if (result <= 0)
- 		return result;
-diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
-index bfeb647459d9..e7f8ba890305 100644
---- a/fs/ocfs2/file.c
-+++ b/fs/ocfs2/file.c
-@@ -2235,6 +2235,9 @@ static ssize_t ocfs2_file_write_iter(struct kiocb *iocb,
- 	if (count == 0)
- 		return 0;
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index a04ebea77de8..139ebd5ae1c7 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -480,8 +480,12 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
+ 	unsigned i;
+ 	int err;
  
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
-+
- 	direct_io = iocb->ki_flags & IOCB_DIRECT ? 1 : 0;
+-	if (bio->bi_error)
+-		dio->io_error = -EIO;
++	if (bio->bi_error) {
++		if (bio->bi_error == -EAGAIN && (bio->bi_opf & REQ_NOWAIT))
++			dio->io_error = -EAGAIN;
++		else
++			dio->io_error = -EIO;
++	}
  
- 	inode_lock(inode);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index dc0ab585cd56..2a7d14af6d12 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -268,6 +268,7 @@ struct writeback_control;
- #define IOCB_DSYNC		(1 << 4)
- #define IOCB_SYNC		(1 << 5)
- #define IOCB_WRITE		(1 << 6)
-+#define IOCB_NOWAIT		(1 << 7)
- 
- struct kiocb {
- 	struct file		*ki_filp;
-@@ -3060,7 +3061,7 @@ static inline int iocb_flags(struct file *file)
- 
- static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
- {
--	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC)))
-+	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC | RWF_NOWAIT)))
- 		return -EOPNOTSUPP;
- 
- 	if (flags & RWF_HIPRI)
-@@ -3069,6 +3070,8 @@ static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
- 		ki->ki_flags |= IOCB_DSYNC;
- 	if (flags & RWF_SYNC)
- 		ki->ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
-+	if (flags & RWF_NOWAIT)
-+		ki->ki_flags |= IOCB_NOWAIT;
- 	return 0;
+ 	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty) {
+ 		err = bio->bi_error;
+@@ -1197,6 +1201,8 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+ 	if (iov_iter_rw(iter) == WRITE) {
+ 		dio->op = REQ_OP_WRITE;
+ 		dio->op_flags = REQ_SYNC | REQ_IDLE;
++		if (iocb->ki_flags & IOCB_NOWAIT)
++			dio->op_flags |= REQ_NOWAIT;
+ 	} else {
+ 		dio->op = REQ_OP_READ;
+ 	}
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index d1b04b0e99cf..cc0aa4315383 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -418,6 +418,12 @@ static inline void bio_io_error(struct bio *bio)
+ 	bio_endio(bio);
  }
  
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index 24e61a54feaa..29969fb7f9a7 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -360,5 +360,6 @@ struct fscrypt_key {
- #define RWF_HIPRI			0x00000001 /* high priority request, poll if possible */
- #define RWF_DSYNC			0x00000002 /* per-IO O_DSYNC */
- #define RWF_SYNC			0x00000004 /* per-IO O_SYNC */
-+#define RWF_NOWAIT			0x00000008 /* per-IO, return -EAGAIN if operation would block */
- 
- #endif /* _UAPI_LINUX_FS_H */
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 87aba7698584..097213275461 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -3006,6 +3006,9 @@ ssize_t generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	struct inode *inode = file->f_mapping->host;
- 	ssize_t ret;
- 
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		return -EOPNOTSUPP;
++static inline void bio_wouldblock_error(struct bio *bio)
++{
++	bio->bi_error = -EAGAIN;
++	bio_endio(bio);
++}
 +
- 	inode_lock(inode);
- 	ret = generic_write_checks(iocb, from);
- 	if (ret > 0)
+ struct request_queue;
+ extern int bio_phys_segments(struct request_queue *, struct bio *);
+ 
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 61339bc44400..c87990aec66e 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -205,6 +205,7 @@ enum req_flag_bits {
+ 	/* command specific flags for REQ_OP_WRITE_ZEROES: */
+ 	__REQ_NOUNMAP,		/* do not free blocks when zeroing */
+ 
++	__REQ_NOWAIT,           /* Don't wait if request will block */
+ 	__REQ_NR_BITS,		/* stops here */
+ };
+ 
+@@ -223,6 +224,7 @@ enum req_flag_bits {
+ #define REQ_BACKGROUND		(1ULL << __REQ_BACKGROUND)
+ 
+ #define REQ_NOUNMAP		(1ULL << __REQ_NOUNMAP)
++#define REQ_NOWAIT		(1ULL << __REQ_NOWAIT)
+ 
+ #define REQ_FAILFAST_MASK \
+ 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
 -- 
 2.12.0
 
