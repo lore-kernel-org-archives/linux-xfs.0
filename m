@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42594 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42656 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751298AbdFEFgD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Jun 2017 01:36:03 -0400
+        id S1751340AbdFEFgF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Jun 2017 01:36:05 -0400
 From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 03/10] fs: Use RWF_* flags for AIO operations
-Date: Mon,  5 Jun 2017 00:35:33 -0500
-Message-Id: <20170605053540.19393-4-rgoldwyn@suse.de>
+Subject: [PATCH 09/10] xfs: nowait aio support
+Date: Mon,  5 Jun 2017 00:35:39 -0500
+Message-Id: <20170605053540.19393-10-rgoldwyn@suse.de>
 In-Reply-To: <20170605053540.19393-1-rgoldwyn@suse.de>
 References: <20170605053540.19393-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,61 +17,107 @@ Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@v
 
 From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-aio_rw_flags is introduced in struct iocb (using aio_reserved1) which will
-carry the RWF_* flags. We cannot use aio_flags because they are not
-checked for validity which may break existing applications.
+If IOCB_NOWAIT is set, bail if the i_rwsem is not lockable
+immediately.
 
-Note, the only place RWF_HIPRI comes in effect is dio_await_one().
-All the rest of the locations, aio code return -EIOCBQUEUED before the
-checks for RWF_HIPRI.
+IF IOMAP_NOWAIT is set, return EAGAIN in xfs_file_iomap_begin
+if it needs allocation either due to file extension, writing to a hole,
+or COW or waiting for other DIOs to finish.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
+Return -EAGAIN if we don't have extent list in memory.
+
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/aio.c                     | 8 +++++++-
- include/uapi/linux/aio_abi.h | 2 +-
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_file.c  | 19 ++++++++++++++-----
+ fs/xfs/xfs_iomap.c | 22 ++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 5 deletions(-)
 
-diff --git a/fs/aio.c b/fs/aio.c
-index f52d925ee259..020fa0045e3c 100644
---- a/fs/aio.c
-+++ b/fs/aio.c
-@@ -1541,7 +1541,7 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
- 	ssize_t ret;
- 
- 	/* enforce forwards compatibility on users */
--	if (unlikely(iocb->aio_reserved1 || iocb->aio_reserved2)) {
-+	if (unlikely(iocb->aio_reserved2)) {
- 		pr_debug("EINVAL: reserve field set\n");
- 		return -EINVAL;
- 	}
-@@ -1586,6 +1586,12 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
- 		req->common.ki_flags |= IOCB_EVENTFD;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 5fb5a0958a14..f87a8a66e6f7 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -541,8 +541,11 @@ xfs_file_dio_aio_write(
+ 		iolock = XFS_IOLOCK_SHARED;
  	}
  
-+	ret = kiocb_set_rw_flags(&req->common, iocb->aio_rw_flags);
-+	if (unlikely(ret)) {
-+		pr_debug("EINVAL: aio_rw_flags\n");
-+		goto out_put_req;
+-	xfs_ilock(ip, iolock);
+-
++	if (!xfs_ilock_nowait(ip, iolock)) {
++		if (iocb->ki_flags & IOCB_NOWAIT)
++			return -EAGAIN;
++		xfs_ilock(ip, iolock);
++	}
+ 	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
+ 	if (ret)
+ 		goto out;
+@@ -553,9 +556,15 @@ xfs_file_dio_aio_write(
+ 	 * otherwise demote the lock if we had to take the exclusive lock
+ 	 * for other reasons in xfs_file_aio_write_checks.
+ 	 */
+-	if (unaligned_io)
+-		inode_dio_wait(inode);
+-	else if (iolock == XFS_IOLOCK_EXCL) {
++	if (unaligned_io) {
++		/* If we are going to wait for other DIO to finish, bail */
++		if (iocb->ki_flags & IOCB_NOWAIT) {
++			if (atomic_read(&inode->i_dio_count))
++				return -EAGAIN;
++		} else {
++			inode_dio_wait(inode);
++		}
++	} else if (iolock == XFS_IOLOCK_EXCL) {
+ 		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+ 		iolock = XFS_IOLOCK_SHARED;
+ 	}
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 94e5bdf7304c..05dc87e8c1f5 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -995,6 +995,11 @@ xfs_file_iomap_begin(
+ 		lockmode = xfs_ilock_data_map_shared(ip);
+ 	}
+ 
++	if ((flags & IOMAP_NOWAIT) && !(ip->i_df.if_flags & XFS_IFEXTENTS)) {
++		error = -EAGAIN;
++		goto out_unlock;
 +	}
 +
- 	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
- 	if (unlikely(ret)) {
- 		pr_debug("EFAULT: aio_key\n");
-diff --git a/include/uapi/linux/aio_abi.h b/include/uapi/linux/aio_abi.h
-index bb2554f7fbd1..a2d4a8ac94ca 100644
---- a/include/uapi/linux/aio_abi.h
-+++ b/include/uapi/linux/aio_abi.h
-@@ -79,7 +79,7 @@ struct io_event {
- struct iocb {
- 	/* these are internal to the kernel/libc. */
- 	__u64	aio_data;	/* data to be returned in event's data */
--	__u32	PADDED(aio_key, aio_reserved1);
-+	__u32	PADDED(aio_key, aio_rw_flags);
- 				/* the kernel sets aio_key to the req # */
+ 	ASSERT(offset <= mp->m_super->s_maxbytes);
+ 	if ((xfs_fsize_t)offset + length > mp->m_super->s_maxbytes)
+ 		length = mp->m_super->s_maxbytes - offset;
+@@ -1016,6 +1021,15 @@ xfs_file_iomap_begin(
  
- 	/* common fields */
+ 	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
+ 		if (flags & IOMAP_DIRECT) {
++			/*
++			 * A reflinked inode will result in CoW alloc.
++			 * FIXME: It could still overwrite on unshared extents
++			 * and not need allocation.
++			 */
++			if (flags & IOMAP_NOWAIT) {
++				error = -EAGAIN;
++				goto out_unlock;
++			}
+ 			/* may drop and re-acquire the ilock */
+ 			error = xfs_reflink_allocate_cow(ip, &imap, &shared,
+ 					&lockmode);
+@@ -1033,6 +1047,14 @@ xfs_file_iomap_begin(
+ 
+ 	if ((flags & IOMAP_WRITE) && imap_needs_alloc(inode, &imap, nimaps)) {
+ 		/*
++		 * If nowait is set bail since we are going to make
++		 * allocations.
++		 */
++		if (flags & IOMAP_NOWAIT) {
++			error = -EAGAIN;
++			goto out_unlock;
++		}
++		/*
+ 		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
+ 		 * pages to keep the chunks of work done where somewhat symmetric
+ 		 * with the work writeback does. This is a completely arbitrary
 -- 
 2.12.0
 
