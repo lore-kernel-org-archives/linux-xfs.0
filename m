@@ -1,67 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from m12-12.163.com ([220.181.12.12]:33072 "EHLO m12-12.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751427AbdFEIyF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Jun 2017 04:54:05 -0400
-Message-ID: <59351CB4.1010100@163.com>
-Date: Mon, 05 Jun 2017 16:56:20 +0800
-From: Jia-Ju Bai <baijiaju1990@163.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] fs: xfs: Fix a lock-twice and sleep-in-atomic bug in
- xfs_iget
-References: <1496650649-2296-1-git-send-email-baijiaju1990@163.com> <43a9b80f-fd7d-2df3-f726-207742c7924f@oracle.com>
-In-Reply-To: <43a9b80f-fd7d-2df3-f726-207742c7924f@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Received: from mx2.suse.de ([195.135.220.15]:41079 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751668AbdFFLUN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jun 2017 07:20:13 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 09/10] xfs: nowait aio support
+Date: Tue,  6 Jun 2017 06:19:38 -0500
+Message-Id: <20170606111939.27272-10-rgoldwyn@suse.de>
+In-Reply-To: <20170606111939.27272-1-rgoldwyn@suse.de>
+References: <20170606111939.27272-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Shan Hai <shan.hai@oracle.com>
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On 06/05/2017 04:32 PM, Shan Hai wrote:
->
->
-> On 2017年06月05日 16:17, Jia-Ju Bai wrote:
->> The driver may sleep under a read rcu lock, and function call path is:
->> xfs_iget (acquire the lock by rcu_read_lock)
->>    "goto out_error_or_again" after xfs_iget_cache_hit
->>      delay
->>        schedule_timeout_uninterruptible --> may sleep
->> Meanwhile, the rcu_read_lock will be called twice in this situation.
->>
->> To fix it, the lock is released before "goto".
->>
->> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
->> ---
->>   fs/xfs/xfs_icache.c |    4 +++-
->>   1 file changed, 3 insertions(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
->> index f61c84f8..c2a4722 100644
->> --- a/fs/xfs/xfs_icache.c
->> +++ b/fs/xfs/xfs_icache.c
->> @@ -600,8 +600,10 @@ struct xfs_inode *
->>         if (ip) {
->>           error = xfs_iget_cache_hit(pag, ip, ino, flags, lock_flags);
->> -        if (error)
->> +        if (error) {
->> +            rcu_read_unlock();
->
-> Seems you are going to double unlock by doing this, since it is 
-> unlocked in the xfs_iget_cache_hit.
->
-> Thanks
-> Shan Hai
->
->>               goto out_error_or_again;
->> +        }
->>       } else {
->>           rcu_read_unlock();
->>           XFS_STATS_INC(mp, xs_ig_missed);
->
-I think you are right. Please ignore my patch.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Thanks,
-Jia-Ju Bai
+If IOCB_NOWAIT is set, bail if the i_rwsem is not lockable
+immediately.
+
+IF IOMAP_NOWAIT is set, return EAGAIN in xfs_file_iomap_begin
+if it needs allocation either due to file extension, writing to a hole,
+or COW or waiting for other DIOs to finish.
+
+Return -EAGAIN if we don't have extent list in memory.
+
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_file.c  | 19 ++++++++++++++-----
+ fs/xfs/xfs_iomap.c | 22 ++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 5 deletions(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 5fb5a0958a14..f87a8a66e6f7 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -541,8 +541,11 @@ xfs_file_dio_aio_write(
+ 		iolock = XFS_IOLOCK_SHARED;
+ 	}
+ 
+-	xfs_ilock(ip, iolock);
+-
++	if (!xfs_ilock_nowait(ip, iolock)) {
++		if (iocb->ki_flags & IOCB_NOWAIT)
++			return -EAGAIN;
++		xfs_ilock(ip, iolock);
++	}
+ 	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
+ 	if (ret)
+ 		goto out;
+@@ -553,9 +556,15 @@ xfs_file_dio_aio_write(
+ 	 * otherwise demote the lock if we had to take the exclusive lock
+ 	 * for other reasons in xfs_file_aio_write_checks.
+ 	 */
+-	if (unaligned_io)
+-		inode_dio_wait(inode);
+-	else if (iolock == XFS_IOLOCK_EXCL) {
++	if (unaligned_io) {
++		/* If we are going to wait for other DIO to finish, bail */
++		if (iocb->ki_flags & IOCB_NOWAIT) {
++			if (atomic_read(&inode->i_dio_count))
++				return -EAGAIN;
++		} else {
++			inode_dio_wait(inode);
++		}
++	} else if (iolock == XFS_IOLOCK_EXCL) {
+ 		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+ 		iolock = XFS_IOLOCK_SHARED;
+ 	}
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 94e5bdf7304c..05dc87e8c1f5 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -995,6 +995,11 @@ xfs_file_iomap_begin(
+ 		lockmode = xfs_ilock_data_map_shared(ip);
+ 	}
+ 
++	if ((flags & IOMAP_NOWAIT) && !(ip->i_df.if_flags & XFS_IFEXTENTS)) {
++		error = -EAGAIN;
++		goto out_unlock;
++	}
++
+ 	ASSERT(offset <= mp->m_super->s_maxbytes);
+ 	if ((xfs_fsize_t)offset + length > mp->m_super->s_maxbytes)
+ 		length = mp->m_super->s_maxbytes - offset;
+@@ -1016,6 +1021,15 @@ xfs_file_iomap_begin(
+ 
+ 	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
+ 		if (flags & IOMAP_DIRECT) {
++			/*
++			 * A reflinked inode will result in CoW alloc.
++			 * FIXME: It could still overwrite on unshared extents
++			 * and not need allocation.
++			 */
++			if (flags & IOMAP_NOWAIT) {
++				error = -EAGAIN;
++				goto out_unlock;
++			}
+ 			/* may drop and re-acquire the ilock */
+ 			error = xfs_reflink_allocate_cow(ip, &imap, &shared,
+ 					&lockmode);
+@@ -1033,6 +1047,14 @@ xfs_file_iomap_begin(
+ 
+ 	if ((flags & IOMAP_WRITE) && imap_needs_alloc(inode, &imap, nimaps)) {
+ 		/*
++		 * If nowait is set bail since we are going to make
++		 * allocations.
++		 */
++		if (flags & IOMAP_NOWAIT) {
++			error = -EAGAIN;
++			goto out_unlock;
++		}
++		/*
+ 		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
+ 		 * pages to keep the chunks of work done where somewhat symmetric
+ 		 * with the work writeback does. This is a completely arbitrary
+-- 
+2.12.0
 
