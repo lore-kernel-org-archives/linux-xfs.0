@@ -1,99 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44226 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751338AbdFERaE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Jun 2017 13:30:04 -0400
-Subject: Re: My XFS volume died, please help!
-References: <CAG3eYYQMTdmCK9EdJA4hfYSSPStLSC=YBK+tvk67r6Vn4-UcxQ@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f7faea7d-4258-9310-4fcd-c75ed7455181@sandeen.net>
-Date: Mon, 5 Jun 2017 12:29:58 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAG3eYYQMTdmCK9EdJA4hfYSSPStLSC=YBK+tvk67r6Vn4-UcxQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from mx2.suse.de ([195.135.220.15]:40996 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751668AbdFFLUT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jun 2017 07:20:19 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 01/10] fs: Separate out kiocb flags setup based on RWF_* flags
+Date: Tue,  6 Jun 2017 06:19:30 -0500
+Message-Id: <20170606111939.27272-2-rgoldwyn@suse.de>
+In-Reply-To: <20170606111939.27272-1-rgoldwyn@suse.de>
+References: <20170606111939.27272-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?UTF-8?B?UMOpdGVyIEFuZHLDoXMgRmVsdsOpZ2k=?= <petschy@gmail.com>, linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On 6/2/17 6:21 PM, Péter András Felvégi wrote:
-> Hello,
-> 
-> after a power outage, the mount replayed the journal and no errors
-> were reported, but the mounted XFS volume had suspiciously little free
-> space.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Did it happen to be your root filesystem, or some other?
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+---
+ fs/read_write.c    | 12 +++---------
+ include/linux/fs.h | 14 ++++++++++++++
+ 2 files changed, 17 insertions(+), 9 deletions(-)
 
-> So I unmounted, and ran xfs_repair which crashed in phase 5
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 47c1d4484df9..53c816c61122 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -678,16 +678,10 @@ static ssize_t do_iter_readv_writev(struct file *filp, struct iov_iter *iter,
+ 	struct kiocb kiocb;
+ 	ssize_t ret;
+ 
+-	if (flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC))
+-		return -EOPNOTSUPP;
+-
+ 	init_sync_kiocb(&kiocb, filp);
+-	if (flags & RWF_HIPRI)
+-		kiocb.ki_flags |= IOCB_HIPRI;
+-	if (flags & RWF_DSYNC)
+-		kiocb.ki_flags |= IOCB_DSYNC;
+-	if (flags & RWF_SYNC)
+-		kiocb.ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
++	ret = kiocb_set_rw_flags(&kiocb, flags);
++	if (ret)
++		return ret;
+ 	kiocb.ki_pos = *ppos;
+ 
+ 	if (type == READ)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 803e5a9b2654..f53867140f43 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -3056,6 +3056,20 @@ static inline int iocb_flags(struct file *file)
+ 	return res;
+ }
+ 
++static inline int kiocb_set_rw_flags(struct kiocb *ki, int flags)
++{
++	if (unlikely(flags & ~(RWF_HIPRI | RWF_DSYNC | RWF_SYNC)))
++		return -EOPNOTSUPP;
++
++	if (flags & RWF_HIPRI)
++		ki->ki_flags |= IOCB_HIPRI;
++	if (flags & RWF_DSYNC)
++		ki->ki_flags |= IOCB_DSYNC;
++	if (flags & RWF_SYNC)
++		ki->ki_flags |= (IOCB_DSYNC | IOCB_SYNC);
++	return 0;
++}
++
+ static inline ino_t parent_ino(struct dentry *dentry)
+ {
+ 	ino_t res;
+-- 
+2.12.0
 
-Did it happen to find corruption before that?
-
-> with a floating point exception. After that I was unable to mount
-> again, due to metadata corruption, so the repair made things worse.
-> Please help!
-> 
-> Linux 4.4.66 x86_64, Debian Jessie, xfsprogs 3.2.1
-
-3 years old :(
-
-> xps_repair output:
-> Phase 5 - rebuild AG headers and trees...
->         - agno = 0
-> traps: xfs_repair[4786] trap divide error ip:417fef sp:7ffe43770d60
-> error:0 in xfs_repair[400000+7a000]
-> Floating point exception
-
-> mount output:
-> XFS (dm-2): Mounting V5 Filesystem
-> XFS (dm-2): Corruption warning: Metadata has LSN (11:170112) ahead of
-> current LSN (1:64). Please unmount and run xfs_repair (>= v4.3) to
-> resolve.
-
-I'd follow the advice as printed, and you'll probably be fine.
-
-If you want a test run, do what Carlos suggested, after getting
-a modern xfsprogs package:
-
-# xfs_metadump -o /dev/dm-2 - | xfs_mdrestore - dm-2.img
-# xfs_repair dm-2.img
-# mkdir -p mnt/
-# mount -o loop dm-2.img mnt/
-
-and see how that looks (metadata only, the image created
-above will contain no file data)
-
-If current xfsprogs also segfaults, please provide a metadump
-image:
-
-# xfs_metadump /dev/dm-2 dm-2.metadump
-# bzip2 dm-2.metadump
-
-and provide the result to me or carlos (on a side channel, out
-of an abundance of caution for privacy).
-
--Eric
-
-> XFS (dm-2): log mount/recovery failed: error -22
-> XFS (dm-2): log mount failed
-> mount: wrong fs type, bad option, bad superblock on /dev/mapper/storage-crypt,
->        missing codepage or helper program, or other error
-> 
->        In some cases useful info is found in syslog - try
->        dmesg | tail or so.
-
-
-> I dumped the whole volume with dd so that I can revert to the current
-> (hopefully not hopelessly screwed) state. Downloaded xfsprogs 4.11.0
-> and checked the changelog. There are fixes for xfs_repair phase 5,
-> though the FP exception is not mentioned. Is this bug already fixed?
-> Should I try xfs_repair from 4.11?
-> 
-> Thanks & kind regards, Peter
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
