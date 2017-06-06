@@ -1,138 +1,176 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42482 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53996 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751458AbdFFQ2W (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jun 2017 12:28:22 -0400
-Date: Tue, 6 Jun 2017 12:28:20 -0400
+        id S1751458AbdFFQ2f (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jun 2017 12:28:35 -0400
+Date: Tue, 6 Jun 2017 12:28:33 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 08/13] xfs: reflink find shared should take a transaction
-Message-ID: <20170606162820.GC55166@bfoster.bfoster>
+Subject: Re: [PATCH 09/13] xfs: separate function to check if reflink flag
+ needed
+Message-ID: <20170606162833.GD55166@bfoster.bfoster>
 References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
- <149643868895.23065.15189624249509263530.stgit@birch.djwong.org>
+ <149643869528.23065.5474019120391564972.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <149643868895.23065.15189624249509263530.stgit@birch.djwong.org>
+In-Reply-To: <149643869528.23065.5474019120391564972.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jun 02, 2017 at 02:24:49PM -0700, Darrick J. Wong wrote:
+On Fri, Jun 02, 2017 at 02:24:55PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Adapt _reflink_find_shared to take an optional transaction pointer.  The
-> inode scrubber code will need to decide (within transaction context) if
-> a file has shared blocks.  To avoid buffer deadlocks, we must pass the
-> tp through to this function's utility calls.
+> Separate the "clear reflink flag" function into one function that checks
+> if the flag is needed, and a second function that checks and clears the
+> flag.  The inode scrub code will want to check the necessity of the flag
+> without clearing it.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_bmap_util.c |    4 ++--
->  fs/xfs/xfs_reflink.c   |   15 ++++++++-------
->  fs/xfs/xfs_reflink.h   |    6 +++---
->  3 files changed, 13 insertions(+), 12 deletions(-)
+>  fs/xfs/xfs_reflink.c |   88 ++++++++++++++++++++++++++++++--------------------
+>  fs/xfs/xfs_reflink.h |    2 +
+>  2 files changed, 54 insertions(+), 36 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 308428d..fe83bbc 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -455,8 +455,8 @@ xfs_getbmap_adjust_shared(
->  
->  	agno = XFS_FSB_TO_AGNO(mp, map->br_startblock);
->  	agbno = XFS_FSB_TO_AGBNO(mp, map->br_startblock);
-> -	error = xfs_reflink_find_shared(mp, agno, agbno, map->br_blockcount,
-> -			&ebno, &elen, true);
-> +	error = xfs_reflink_find_shared(mp, NULL, agno, agbno,
-> +			map->br_blockcount, &ebno, &elen, true);
->  	if (error)
->  		return error;
->  
 > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index ffe6fe7..e25c995 100644
+> index e25c995..133ee02 100644
 > --- a/fs/xfs/xfs_reflink.c
 > +++ b/fs/xfs/xfs_reflink.c
-> @@ -155,6 +155,7 @@
->  int
->  xfs_reflink_find_shared(
->  	struct xfs_mount	*mp,
-> +	struct xfs_trans	*tp,
->  	xfs_agnumber_t		agno,
->  	xfs_agblock_t		agbno,
->  	xfs_extlen_t		aglen,
-> @@ -166,18 +167,18 @@ xfs_reflink_find_shared(
->  	struct xfs_btree_cur	*cur;
->  	int			error;
->  
-> -	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-> +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
->  	if (error)
->  		return error;
->  
-> -	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
-> +	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
->  
->  	error = xfs_refcount_find_shared(cur, agbno, aglen, fbno, flen,
->  			find_end_of_shared);
->  
->  	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
->  
-> -	xfs_buf_relse(agbp);
-> +	xfs_trans_brelse(tp, agbp);
+> @@ -1406,57 +1406,73 @@ xfs_reflink_dirty_extents(
 >  	return error;
 >  }
 >  
-> @@ -217,7 +218,7 @@ xfs_reflink_trim_around_shared(
->  	agbno = XFS_FSB_TO_AGBNO(ip->i_mount, irec->br_startblock);
->  	aglen = irec->br_blockcount;
+> -/* Clear the inode reflink flag if there are no shared extents. */
+> +/* Does this inode need the reflink flag? */
+>  int
+> -xfs_reflink_clear_inode_flag(
+> -	struct xfs_inode	*ip,
+> -	struct xfs_trans	**tpp)
+> +xfs_reflink_needs_inode_flag(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_inode		*ip,
+> +	bool				*needs_flag)
+
+This looks Ok to me, but just a nit that the _needs_inode_flag() name
+sounds slightly confusing to me because any context around the flag is
+now isolated to the caller. Could we call this something more generic
+like _has_shared_extents() (and rename needs_flag appropriately as
+well)?
+
+Brian
+
+>  {
+> -	struct xfs_mount	*mp = ip->i_mount;
+> -	xfs_fileoff_t		fbno;
+> -	xfs_filblks_t		end;
+> -	xfs_agnumber_t		agno;
+> -	xfs_agblock_t		agbno;
+> -	xfs_extlen_t		aglen;
+> -	xfs_agblock_t		rbno;
+> -	xfs_extlen_t		rlen;
+> -	struct xfs_bmbt_irec	map;
+> -	int			nmaps;
+> -	int			error = 0;
+> -
+> -	ASSERT(xfs_is_reflink_inode(ip));
+> +	struct xfs_bmbt_irec		got;
+> +	struct xfs_mount		*mp = ip->i_mount;
+> +	struct xfs_ifork		*ifp;
+> +	xfs_agnumber_t			agno;
+> +	xfs_agblock_t			agbno;
+> +	xfs_extlen_t			aglen;
+> +	xfs_agblock_t			rbno;
+> +	xfs_extlen_t			rlen;
+> +	xfs_extnum_t			idx;
+> +	bool				found;
+> +	int				error;
 >  
-> -	error = xfs_reflink_find_shared(ip->i_mount, agno, agbno,
-> +	error = xfs_reflink_find_shared(ip->i_mount, NULL, agno, agbno,
->  			aglen, &fbno, &flen, true);
->  	if (error)
->  		return error;
-> @@ -1373,8 +1374,8 @@ xfs_reflink_dirty_extents(
->  			agbno = XFS_FSB_TO_AGBNO(mp, map[1].br_startblock);
->  			aglen = map[1].br_blockcount;
+> -	fbno = 0;
+> -	end = XFS_B_TO_FSB(mp, i_size_read(VFS_I(ip)));
+> -	while (end - fbno > 0) {
+> -		nmaps = 1;
+> -		/*
+> -		 * Look for extents in the file.  Skip holes, delalloc, or
+> -		 * unwritten extents; they can't be reflinked.
+> -		 */
+> -		error = xfs_bmapi_read(ip, fbno, end - fbno, &map, &nmaps, 0);
+> +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> +	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> +		error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
+>  		if (error)
+>  			return error;
+> -		if (nmaps == 0)
+> -			break;
+> -		if (!xfs_bmap_is_real_extent(&map))
+> -			goto next;
+> +	}
 >  
-> -			error = xfs_reflink_find_shared(mp, agno, agbno, aglen,
-> -					&rbno, &rlen, true);
-> +			error = xfs_reflink_find_shared(mp, NULL, agno, agbno,
-> +					aglen, &rbno, &rlen, true);
->  			if (error)
->  				goto out;
->  			if (rbno == NULLAGBLOCK)
-> @@ -1445,7 +1446,7 @@ xfs_reflink_clear_inode_flag(
->  		agbno = XFS_FSB_TO_AGBNO(mp, map.br_startblock);
->  		aglen = map.br_blockcount;
+> -		agno = XFS_FSB_TO_AGNO(mp, map.br_startblock);
+> -		agbno = XFS_FSB_TO_AGBNO(mp, map.br_startblock);
+> -		aglen = map.br_blockcount;
+> +	*needs_flag = false;
+> +	found = xfs_iext_lookup_extent(ip, ifp, 0, &idx, &got);
+> +	while (found) {
+> +		if (isnullstartblock(got.br_startblock) ||
+> +		    got.br_state != XFS_EXT_NORM)
+> +			goto next;
+> +		agno = XFS_FSB_TO_AGNO(mp, got.br_startblock);
+> +		agbno = XFS_FSB_TO_AGBNO(mp, got.br_startblock);
+> +		aglen = got.br_blockcount;
 >  
-> -		error = xfs_reflink_find_shared(mp, agno, agbno, aglen,
-> +		error = xfs_reflink_find_shared(mp, *tpp, agno, agbno, aglen,
+> -		error = xfs_reflink_find_shared(mp, *tpp, agno, agbno, aglen,
+> +		error = xfs_reflink_find_shared(mp, tp, agno, agbno, aglen,
 >  				&rbno, &rlen, false);
 >  		if (error)
 >  			return error;
+>  		/* Is there still a shared block here? */
+> -		if (rbno != NULLAGBLOCK)
+> +		if (rbno != NULLAGBLOCK) {
+> +			*needs_flag = true;
+>  			return 0;
+> +		}
+>  next:
+> -		fbno = map.br_startoff + map.br_blockcount;
+> +		found = xfs_iext_get_extent(ifp, ++idx, &got);
+>  	}
+>  
+> +	return 0;
+> +}
+> +
+> +/* Clear the inode reflink flag if there are no shared extents. */
+> +int
+> +xfs_reflink_clear_inode_flag(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_trans	**tpp)
+> +{
+> +	bool			needs;
+> +	int			error = 0;
+> +
+> +	ASSERT(xfs_is_reflink_inode(ip));
+> +
+> +	error = xfs_reflink_needs_inode_flag(*tpp, ip, &needs);
+> +	if (error || needs)
+> +		return error;
+> +
+>  	/*
+>  	 * We didn't find any shared blocks so turn off the reflink flag.
+>  	 * First, get rid of any leftover CoW mappings.
 > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> index d29a796..b8cc5c3 100644
+> index b8cc5c3..a26d795 100644
 > --- a/fs/xfs/xfs_reflink.h
 > +++ b/fs/xfs/xfs_reflink.h
-> @@ -20,9 +20,9 @@
->  #ifndef __XFS_REFLINK_H
->  #define __XFS_REFLINK_H 1
->  
-> -extern int xfs_reflink_find_shared(struct xfs_mount *mp, xfs_agnumber_t agno,
-> -		xfs_agblock_t agbno, xfs_extlen_t aglen, xfs_agblock_t *fbno,
-> -		xfs_extlen_t *flen, bool find_maximal);
-> +extern int xfs_reflink_find_shared(struct xfs_mount *mp, struct xfs_trans *tp,
-> +		xfs_agnumber_t agno, xfs_agblock_t agbno, xfs_extlen_t aglen,
-> +		xfs_agblock_t *fbno, xfs_extlen_t *flen, bool find_maximal);
->  extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
->  		struct xfs_bmbt_irec *irec, bool *shared, bool *trimmed);
->  
+> @@ -47,6 +47,8 @@ extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
+>  extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
+>  extern int xfs_reflink_remap_range(struct file *file_in, loff_t pos_in,
+>  		struct file *file_out, loff_t pos_out, u64 len, bool is_dedupe);
+> +extern int xfs_reflink_needs_inode_flag(struct xfs_trans *tp,
+> +		struct xfs_inode *ip, bool *needs_flag);
+>  extern int xfs_reflink_clear_inode_flag(struct xfs_inode *ip,
+>  		struct xfs_trans **tpp);
+>  extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
