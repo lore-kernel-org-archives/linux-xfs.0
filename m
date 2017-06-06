@@ -1,127 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19041 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751717AbdFHPyF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2017 11:54:05 -0400
-Date: Thu, 8 Jun 2017 08:53:59 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/13] xfs: return the hash value of a leaf1 directory
- block
-Message-ID: <20170608155359.GI4530@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44078 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751423AbdFFQ1n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jun 2017 12:27:43 -0400
+Date: Tue, 6 Jun 2017 12:27:41 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 06/13] xfs: export _inobt_btrec_to_irec and
+ _ialloc_cluster_alignment for scrub
+Message-ID: <20170606162741.GA55166@bfoster.bfoster>
 References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
- <149643870873.23065.5974641750134566189.stgit@birch.djwong.org>
- <20170608130224.GA5244@bfoster.bfoster>
+ <149643867690.23065.2925885507896539128.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170608130224.GA5244@bfoster.bfoster>
+In-Reply-To: <149643867690.23065.2925885507896539128.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 08, 2017 at 09:02:26AM -0400, Brian Foster wrote:
-> On Fri, Jun 02, 2017 at 02:25:08PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Provide a way to calculate the highest hash value of a leaf1 block.
-> > This will be used by the directory scrubbing code to check the sanity
-> > of hashes in leaf1 directory blocks.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_dir2_node.c |   28 ++++++++++++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_dir2_priv.h |    2 ++
-> >  2 files changed, 30 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> > index bbd1238..15c1881 100644
-> > --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> > @@ -524,6 +524,34 @@ xfs_dir2_free_hdr_check(
-> >  #endif	/* DEBUG */
-> >  
-> >  /*
-> > + * Return the last hash value in the leaf1.
-> > + * Stale entries are ok.
-> > + */
-> > +xfs_dahash_t					/* hash value */
-> > +xfs_dir2_leaf1_lasthash(
-> > +	struct xfs_inode	*dp,
-> > +	struct xfs_buf		*bp,		/* leaf buffer */
-> > +	int			*count)		/* count of entries in leaf */
-> > +{
-> > +	struct xfs_dir2_leaf	*leaf = bp->b_addr;
-> > +	struct xfs_dir2_leaf_entry *ents;
-> > +	struct xfs_dir3_icleaf_hdr leafhdr;
-> > +
-> > +	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
-> > +
-> > +	ASSERT(leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
-> > +	       leafhdr.magic == XFS_DIR3_LEAF1_MAGIC);
-> > +
+On Fri, Jun 02, 2017 at 02:24:36PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> It looks like the assert is the only difference between this function
-> and xfs_dir2_leafn_lasthash(). It seems like overkill to me to duplicate
-> just for that. How about we fix up the assert to cover the additional
-> magics (and maybe rename _leafn_lasthash() to _leaf_lasthash() if
-> appropriate)?
+> Create a function to extract an in-core inobt record from a generic
+> btree_rec union so that scrub will be able to check inobt records
+> and check inode block alignment.
 > 
-> Actually, taking a closer look, ->leaf_hdr_from_disk() already asserts
-> on the appropriate LEAF1/LEAFN magic based on the callback that is
-> specified. ISTM that we could also just kill the _lasthash() assert.
-
-The ASSERTs in the _lasthash functions and in leaf_hdr_from_disk aren't
-testing quite the same things.  The asserts in _dir2_leaf[1n]_lasthash
-check that we actually passed it a leaf1 or leafn block, respectively.
-The asserts in _dir[23]_leaf_hdr_from_disk check that we actually fed it
-a dir2 or dir3 leaf* block without caring whether it's leaf1 or leafn.
-That's why I didn't just get rid of the assert and rename the function
-xfs_dir2_leaf_lasthash().
-
-I suppose we could just make a single parent function that takes the two
-magics it wants to see and have _dir2_leaf[1n]_lasthash call the parent
-function with the magic numbers they want to check.  How does that
-sound?
-
---D
-
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c |   43 ++++++++++++++++++++++++++-----------------
+>  fs/xfs/libxfs/xfs_ialloc.h |    5 +++++
+>  2 files changed, 31 insertions(+), 17 deletions(-)
 > 
-> Brian
 > 
-> > +	if (count)
-> > +		*count = leafhdr.count;
-> > +	if (!leafhdr.count)
-> > +		return 0;
-> > +
-> > +	ents = dp->d_ops->leaf_ents_p(leaf);
-> > +	return be32_to_cpu(ents[leafhdr.count - 1].hashval);
-> > +}
-> > +
-> > +/*
-> >   * Return the last hash value in the leaf.
-> >   * Stale entries are ok.
-> >   */
-> > diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-> > index 576f2d2..c09bca1 100644
-> > --- a/fs/xfs/libxfs/xfs_dir2_priv.h
-> > +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-> > @@ -95,6 +95,8 @@ extern bool xfs_dir3_leaf_check_int(struct xfs_mount *mp, struct xfs_inode *dp,
-> >  /* xfs_dir2_node.c */
-> >  extern int xfs_dir2_leaf_to_node(struct xfs_da_args *args,
-> >  		struct xfs_buf *lbp);
-> > +extern xfs_dahash_t xfs_dir2_leaf1_lasthash(struct xfs_inode *dp,
-> > +		struct xfs_buf *bp, int *count);
-> >  extern xfs_dahash_t xfs_dir2_leafn_lasthash(struct xfs_inode *dp,
-> >  		struct xfs_buf *bp, int *count);
-> >  extern int xfs_dir2_leafn_lookup_int(struct xfs_buf *bp,
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 1e5ed94..33626373 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -46,7 +46,7 @@
+>  /*
+>   * Allocation group level functions.
+>   */
+> -static inline int
+> +int
+>  xfs_ialloc_cluster_alignment(
+>  	struct xfs_mount	*mp)
+>  {
+> @@ -98,24 +98,14 @@ xfs_inobt_update(
+>  	return xfs_btree_update(cur, &rec);
+>  }
+>  
+> -/*
+> - * Get the data from the pointed-to record.
+> - */
+> -int					/* error */
+> -xfs_inobt_get_rec(
+> -	struct xfs_btree_cur	*cur,	/* btree cursor */
+> -	xfs_inobt_rec_incore_t	*irec,	/* btree record */
+> -	int			*stat)	/* output: success/failure */
+> +void
+> +xfs_inobt_btrec_to_irec(
+> +	struct xfs_mount		*mp,
+> +	union xfs_btree_rec		*rec,
+> +	struct xfs_inobt_rec_incore	*irec)
+>  {
+> -	union xfs_btree_rec	*rec;
+> -	int			error;
+> -
+> -	error = xfs_btree_get_rec(cur, &rec, stat);
+> -	if (error || *stat == 0)
+> -		return error;
+> -
+>  	irec->ir_startino = be32_to_cpu(rec->inobt.ir_startino);
+> -	if (xfs_sb_version_hassparseinodes(&cur->bc_mp->m_sb)) {
+> +	if (xfs_sb_version_hassparseinodes(&mp->m_sb)) {
+>  		irec->ir_holemask = be16_to_cpu(rec->inobt.ir_u.sp.ir_holemask);
+>  		irec->ir_count = rec->inobt.ir_u.sp.ir_count;
+>  		irec->ir_freecount = rec->inobt.ir_u.sp.ir_freecount;
+> @@ -130,6 +120,25 @@ xfs_inobt_get_rec(
+>  				be32_to_cpu(rec->inobt.ir_u.f.ir_freecount);
+>  	}
+>  	irec->ir_free = be64_to_cpu(rec->inobt.ir_free);
+> +}
+> +
+> +/*
+> + * Get the data from the pointed-to record.
+> + */
+> +int					/* error */
+> +xfs_inobt_get_rec(
+> +	struct xfs_btree_cur	*cur,	/* btree cursor */
+> +	xfs_inobt_rec_incore_t	*irec,	/* btree record */
+
+Might as well kill the typedef usage while we're here. Otherwise looks
+good:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +	int			*stat)	/* output: success/failure */
+> +{
+> +	union xfs_btree_rec	*rec;
+> +	int			error;
+> +
+> +	error = xfs_btree_get_rec(cur, &rec, stat);
+> +	if (error || *stat == 0)
+> +		return error;
+> +
+> +	xfs_inobt_btrec_to_irec(cur->bc_mp, rec, irec);
+>  
+>  	return 0;
+>  }
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+> index 0bb8966..b32cfb5 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.h
+> +++ b/fs/xfs/libxfs/xfs_ialloc.h
+> @@ -168,5 +168,10 @@ int xfs_ialloc_inode_init(struct xfs_mount *mp, struct xfs_trans *tp,
+>  int xfs_read_agi(struct xfs_mount *mp, struct xfs_trans *tp,
+>  		xfs_agnumber_t agno, struct xfs_buf **bpp);
+>  
+> +union xfs_btree_rec;
+> +void xfs_inobt_btrec_to_irec(struct xfs_mount *mp, union xfs_btree_rec *rec,
+> +		struct xfs_inobt_rec_incore *irec);
+> +
+> +int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
+>  
+>  #endif	/* __XFS_IALLOC_H__ */
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
