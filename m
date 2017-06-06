@@ -1,67 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36938 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751754AbdFNUwP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Jun 2017 16:52:15 -0400
-Received: from Liberator-5.local (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id E28A87B9656
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2017 15:51:53 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs: for-next updated to f9a6d64
-Message-ID: <9c4f8412-c9af-4744-c3d4-e6a84017850d@sandeen.net>
-Date: Wed, 14 Jun 2017 15:52:13 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from mx2.suse.de ([195.135.220.15]:41073 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751604AbdFFLUF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jun 2017 07:20:05 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 08/10] ext4: nowait aio support
+Date: Tue,  6 Jun 2017 06:19:37 -0500
+Message-Id: <20170606111939.27272-9-rgoldwyn@suse.de>
+In-Reply-To: <20170606111939.27272-1-rgoldwyn@suse.de>
+References: <20170606111939.27272-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Hi folks,
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-The xfsprogs repository at:
+Return EAGAIN if any of the following checks fail for direct I/O:
+  + i_rwsem is lockable
+  + Writing beyond end of file (will trigger allocation)
+  + Blocks are not allocated at the write location
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/ext4/file.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-has just been updated.
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 831fd6beebf0..07f08ff2c11b 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -216,7 +216,13 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 		return ext4_dax_write_iter(iocb, from);
+ #endif
+ 
+-	inode_lock(inode);
++	if (iocb->ki_flags & IOCB_NOWAIT) {
++		if (!inode_trylock(inode))
++			return -EAGAIN;
++	} else {
++		inode_lock(inode);
++	}
++
+ 	ret = ext4_write_checks(iocb, from);
+ 	if (ret <= 0)
+ 		goto out;
+@@ -235,9 +241,15 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 
+ 	iocb->private = &overwrite;
+ 	/* Check whether we do a DIO overwrite or not */
+-	if (o_direct && ext4_should_dioread_nolock(inode) && !unaligned_aio &&
+-	    ext4_overwrite_io(inode, iocb->ki_pos, iov_iter_count(from)))
+-		overwrite = 1;
++	if (o_direct && !unaligned_aio) {
++		if (ext4_overwrite_io(inode, iocb->ki_pos, iov_iter_count(from))) {
++			if (ext4_should_dioread_nolock(inode))
++				overwrite = 1;
++		} else if (iocb->ki_flags & IOCB_NOWAIT) {
++			ret = -EAGAIN;
++			goto out;
++		}
++	}
+ 
+ 	ret = __generic_file_write_iter(iocb, from);
+ 	inode_unlock(inode);
+-- 
+2.12.0
 
-*** this is just a libxfs update ***
-
-I'm working on the patch backlog next. So hold tight, but if you
-don't see your patch in the next update:
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the for-next branch is commit:
-
-f9a6d64 xfs: fix unaligned access in xfs_btree_visit_blocks
-
-New Commits:
-
-Brian Foster (1):
-      [ad1c97f] xfs: fix indlen accounting error on partial delalloc conversion
-
-Darrick J. Wong (2):
-      [07f98c3] xfs: fix warnings about unused stack variables
-      [d4e8eb2] xfs: avoid mount-time deadlock in CoW extent recovery
-
-Eric Sandeen (1):
-      [f9a6d64] xfs: fix unaligned access in xfs_btree_visit_blocks
-
-
-Code Diffstat:
-
- include/xfs_trans.h      |  1 +
- libxfs/libxfs_api_defs.h |  1 +
- libxfs/trans.c           | 22 ++++++++++++++++++++++
- libxfs/xfs_bmap.c        |  9 ++++-----
- libxfs/xfs_btree.c       |  2 +-
- libxfs/xfs_refcount.c    | 43 +++++++++++++++++++++++++++++++------------
- 6 files changed, 60 insertions(+), 18 deletions(-)
