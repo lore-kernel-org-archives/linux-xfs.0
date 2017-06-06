@@ -1,53 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60364 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:33114 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751384AbdFFMI4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jun 2017 08:08:56 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        id S1751384AbdFFMJB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jun 2017 08:09:01 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 41D8880492
+        by mx1.redhat.com (Postfix) with ESMTPS id 4AB67334592
         for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2017 12:08:51 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2535417D82
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 2F00619F11
         for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2017 12:08:51 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 0/2] xfs: fix a couple xfs_buf_log_item shutdown problems
-Date: Tue,  6 Jun 2017 08:08:48 -0400
-Message-Id: <1496750930-53954-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 2/2] xfs: remove bli from AIL before release on transaction abort
+Date: Tue,  6 Jun 2017 08:08:50 -0400
+Message-Id: <1496750930-53954-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1496750930-53954-1-git-send-email-bfoster@redhat.com>
+References: <1496750930-53954-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Hi all,
+When a buffer is modified, logged and committed, it ultimately ends
+up sitting on the AIL with a dirty bli waiting for metadata
+writeback. If another transaction locks and invalidates the buffer
+(freeing an inode chunk, for example) in the meantime, the bli is
+flagged as stale, the dirty state is cleared and the bli remains in
+the AIL.
 
-This series fixes a couple filesystem shutdown corner cases related to
-dealing with the xfs_buf_log_item reference count. Patch 1 fixes a
-reference count leak that leads to an unmount hang due to a held buffer.
-Patch 2 fixes a premature free of the bli that leads to a panic due to
-use after free. Both of the above problems can be reproduced by running
-generic/388 in a loop (though it may require 100-200 iterations).
+If a shutdown occurs before the transaction that has invalidated the
+buffer is committed, the transaction is ultimately aborted. The log
+items are flagged as such and ->iop_unlock() handles the aborted
+items. Because the bli is clean (due to the invalidation),
+->iop_unlock() unconditionally releases it. The log item may still
+reside in the AIL, however, which means the I/O completion handler
+may still run and attempt to access it. This results in assert
+failure due to the release of the bli while still present in the AIL
+and a subsequent NULL dereference and panic in the buffer I/O
+completion handling. This can be reproduced by running generic/388
+in repetition.
 
-I was originally considering reworking the bli reference counting, but I
-don't have a clear idea on whether a cleaner solution is available atm.
-These isolated fixes are lower risk and resolve the associated problems,
-so should probably be considered independently regardless.
+To avoid this problem, update xfs_buf_item_unlock() to first check
+whether the bli is aborted and if so, remove it from the AIL before
+it is released. This ensures that the bli is no longer accessed
+during the shutdown sequence after it has been freed.
 
-With these patches applied, generic/388 survives several thousand
-iterations and otherwise no regressions are observed in my tests.
-Thoughts, reviews, flames appreciated.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_buf_item.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-Brian
-
-Brian Foster (2):
-  xfs: release bli from transaction properly on fs shutdown
-  xfs: remove bli from AIL before release on transaction abort
-
- fs/xfs/xfs_buf_item.c  | 21 ++++++++++++---------
- fs/xfs/xfs_trans_buf.c | 21 ++++++++++++++-------
- 2 files changed, 26 insertions(+), 16 deletions(-)
-
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 0306168..f6a8422 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -636,20 +636,23 @@ xfs_buf_item_unlock(
+ 
+ 	/*
+ 	 * Clean buffers, by definition, cannot be in the AIL. However, aborted
+-	 * buffers may be dirty and hence in the AIL. Therefore if we are
+-	 * aborting a buffer and we've just taken the last refernce away, we
+-	 * have to check if it is in the AIL before freeing it. We need to free
+-	 * it in this case, because an aborted transaction has already shut the
+-	 * filesystem down and this is the last chance we will have to do so.
++	 * buffers may be in the AIL regardless of dirty state. An aborted
++	 * transaction that invalidates a buffer already in the AIL may have
++	 * marked it stale and cleared the dirty state, for example.
++	 *
++	 * Therefore if we are aborting a buffer and we've just taken the last
++	 * reference away, we have to check if it is in the AIL before freeing
++	 * it. We need to free it in this case, because an aborted transaction
++	 * has already shut the filesystem down and this is the last chance we
++	 * will have to do so.
+ 	 */
+ 	if (atomic_dec_and_test(&bip->bli_refcount)) {
+-		if (clean)
+-			xfs_buf_item_relse(bp);
+-		else if (aborted) {
++		if (aborted) {
+ 			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
+ 			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
+ 			xfs_buf_item_relse(bp);
+-		}
++		} else if (clean)
++			xfs_buf_item_relse(bp);
+ 	}
+ 
+ 	if (!(flags & XFS_BLI_HOLD))
 -- 
 2.7.5
 
