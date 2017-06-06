@@ -1,66 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60834 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751545AbdF2WlW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Jun 2017 18:41:22 -0400
-Subject: Re: [PATCH] xfs: clear di_forkoff on ialloc
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <bb3e00eb-7334-1ac5-509f-89804583e9ff@suse.com>
- <8f8f3970-e087-7d85-001f-d5ed55846c77@sandeen.net>
-Message-ID: <2cc24402-72b5-17fa-03a6-e1b23734202f@sandeen.net>
-Date: Thu, 29 Jun 2017 17:41:15 -0500
-MIME-Version: 1.0
-In-Reply-To: <8f8f3970-e087-7d85-001f-d5ed55846c77@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from mx2.suse.de ([195.135.220.15]:41018 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751305AbdFFLT6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jun 2017 07:19:58 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 03/10] fs: Use RWF_* flags for AIO operations
+Date: Tue,  6 Jun 2017 06:19:32 -0500
+Message-Id: <20170606111939.27272-4-rgoldwyn@suse.de>
+In-Reply-To: <20170606111939.27272-1-rgoldwyn@suse.de>
+References: <20170606111939.27272-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Mahoney <jeffm@suse.com>, linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On 6/29/17 5:34 PM, Eric Sandeen wrote:
-> On 10/5/16 12:04 PM, Jeff Mahoney wrote:
->> Commit 6dfe5a049f2 (xfs: xfs_attr_inactive leaves inconsistent
->> attr fork state behind) fixed an issue where an inconsistent
->> attr fork count persisted on disk if there was concurrent inode
->> writeback happening after the inode was evicted from the VFS layer.
->>
->> If one of those inodes landed on disk and was reused, it may have
->> an invalid di_forkoff, which can cause problems when trying to add
->> new extended attributes.  Since we clear the rest of the attribute
->> fork values on ialloc, let's clear di_forkoff as well and ensure the
->> invalid value won't be encountered.
->>
->> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
-> 
-> This makes sense to me, but seems to have gotten lost.
-> 
-> It'd need to go to libxfs_ialloc as well if it makes the kernel.
-> 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Meh, I missed Dave's "it's fine but it shouldn't matter" reply,
-sorry.  Still, seems like it's not a bad idea to initialize this
-along with everything else.
+aio_rw_flags is introduced in struct iocb (using aio_reserved1) which will
+carry the RWF_* flags. We cannot use aio_flags because they are not
+checked for validity which may break existing applications.
 
->> ---
->>  fs/xfs/xfs_inode.c |    1 +
->>  1 file changed, 1 insertion(+)
->>
->> --- a/fs/xfs/xfs_inode.c
->> +++ b/fs/xfs/xfs_inode.c
->> @@ -835,6 +835,7 @@ xfs_ialloc(
->>  	 */
->>  	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
->>  	ip->i_d.di_anextents = 0;
->> +	ip->i_d.di_forkoff = 0;
->>  
->>  	/*
->>  	 * Log the new values stuffed into the inode.
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Note, the only place RWF_HIPRI comes in effect is dio_await_one().
+All the rest of the locations, aio code return -EIOCBQUEUED before the
+checks for RWF_HIPRI.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+---
+ fs/aio.c                     | 8 +++++++-
+ include/uapi/linux/aio_abi.h | 2 +-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/fs/aio.c b/fs/aio.c
+index f52d925ee259..020fa0045e3c 100644
+--- a/fs/aio.c
++++ b/fs/aio.c
+@@ -1541,7 +1541,7 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
+ 	ssize_t ret;
+ 
+ 	/* enforce forwards compatibility on users */
+-	if (unlikely(iocb->aio_reserved1 || iocb->aio_reserved2)) {
++	if (unlikely(iocb->aio_reserved2)) {
+ 		pr_debug("EINVAL: reserve field set\n");
+ 		return -EINVAL;
+ 	}
+@@ -1586,6 +1586,12 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
+ 		req->common.ki_flags |= IOCB_EVENTFD;
+ 	}
+ 
++	ret = kiocb_set_rw_flags(&req->common, iocb->aio_rw_flags);
++	if (unlikely(ret)) {
++		pr_debug("EINVAL: aio_rw_flags\n");
++		goto out_put_req;
++	}
++
+ 	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
+ 	if (unlikely(ret)) {
+ 		pr_debug("EFAULT: aio_key\n");
+diff --git a/include/uapi/linux/aio_abi.h b/include/uapi/linux/aio_abi.h
+index bb2554f7fbd1..a2d4a8ac94ca 100644
+--- a/include/uapi/linux/aio_abi.h
++++ b/include/uapi/linux/aio_abi.h
+@@ -79,7 +79,7 @@ struct io_event {
+ struct iocb {
+ 	/* these are internal to the kernel/libc. */
+ 	__u64	aio_data;	/* data to be returned in event's data */
+-	__u32	PADDED(aio_key, aio_reserved1);
++	__u32	PADDED(aio_key, aio_rw_flags);
+ 				/* the kernel sets aio_key to the req # */
+ 
+ 	/* common fields */
+-- 
+2.12.0
+
