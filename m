@@ -1,47 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f51.google.com ([209.85.214.51]:38609 "EHLO
-        mail-it0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751153AbdFEPf0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2017 11:35:26 -0400
-Received: by mail-it0-f51.google.com with SMTP id r63so80320283itc.1
-        for <linux-xfs@vger.kernel.org>; Mon, 05 Jun 2017 08:35:26 -0700 (PDT)
-Subject: Re: [PATCH 07/10] fs: return on congested block device
-References: <20170605053540.19393-1-rgoldwyn@suse.de>
- <20170605053540.19393-8-rgoldwyn@suse.de>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <dedfe92d-6452-4f29-044d-34837c4da825@kernel.dk>
-Date: Mon, 5 Jun 2017 09:35:24 -0600
-MIME-Version: 1.0
-In-Reply-To: <20170605053540.19393-8-rgoldwyn@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mx2.suse.de ([195.135.220.15]:41085 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751652AbdFFLUJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jun 2017 07:20:09 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 10/10] btrfs: nowait aio support
+Date: Tue,  6 Jun 2017 06:19:39 -0500
+Message-Id: <20170606111939.27272-11-rgoldwyn@suse.de>
+In-Reply-To: <20170606111939.27272-1-rgoldwyn@suse.de>
+References: <20170606111939.27272-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On 06/04/2017 11:35 PM, Goldwyn Rodrigues wrote:
-> @@ -1900,6 +1905,17 @@ generic_make_request_checks(struct bio *bio)
->  		goto end_io;
->  	}
->  
-> +	/*
-> +	 * For a REQ_NOWAIT based request, return -EOPNOTSUPP
-> +	 * if queue does not have QUEUE_FLAG_NOWAIT_SUPPORT set
-> +	 * and if it is not a request based queue.
-> +	 */
-> +
-> +	if ((bio->bi_opf & REQ_NOWAIT) && !queue_is_rq_based(q)) {
-> +		err = -EOPNOTSUPP;
-> +		goto end_io;
-> +	}
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-There is no QUEUE_FLAG_NOWAIT, this looks like a somewhat stale comment.
+Return EAGAIN if any of the following checks fail
+ + i_rwsem is not lockable
+ + NODATACOW or PREALLOC is not set
+ + Cannot nocow at the desired location
+ + Writing beyond end of file which is not allocated
 
-This patch should be prefixed with 'block', not 'fs'.
+Acked-by: David Sterba <dsterba@suse.com>
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+---
+ fs/btrfs/file.c  | 25 ++++++++++++++++++++-----
+ fs/btrfs/inode.c |  3 +++
+ 2 files changed, 23 insertions(+), 5 deletions(-)
 
+diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+index da1096eb1a40..aae088e49915 100644
+--- a/fs/btrfs/file.c
++++ b/fs/btrfs/file.c
+@@ -1875,12 +1875,29 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
+ 	ssize_t num_written = 0;
+ 	bool sync = (file->f_flags & O_DSYNC) || IS_SYNC(file->f_mapping->host);
+ 	ssize_t err;
+-	loff_t pos;
+-	size_t count;
++	loff_t pos = iocb->ki_pos;
++	size_t count = iov_iter_count(from);
+ 	loff_t oldsize;
+ 	int clean_page = 0;
+ 
+-	inode_lock(inode);
++	if ((iocb->ki_flags & IOCB_NOWAIT) &&
++			(iocb->ki_flags & IOCB_DIRECT)) {
++		/* Don't sleep on inode rwsem */
++		if (!inode_trylock(inode))
++			return -EAGAIN;
++		/*
++		 * We will allocate space in case nodatacow is not set,
++		 * so bail
++		 */
++		if (!(BTRFS_I(inode)->flags & (BTRFS_INODE_NODATACOW |
++					      BTRFS_INODE_PREALLOC)) ||
++		    check_can_nocow(BTRFS_I(inode), pos, &count) <= 0) {
++			inode_unlock(inode);
++			return -EAGAIN;
++		}
++	} else
++		inode_lock(inode);
++
+ 	err = generic_write_checks(iocb, from);
+ 	if (err <= 0) {
+ 		inode_unlock(inode);
+@@ -1914,8 +1931,6 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
+ 	 */
+ 	update_time_for_write(inode);
+ 
+-	pos = iocb->ki_pos;
+-	count = iov_iter_count(from);
+ 	start_pos = round_down(pos, fs_info->sectorsize);
+ 	oldsize = i_size_read(inode);
+ 	if (start_pos > oldsize) {
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 17cbe9306faf..2ab71b946829 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -8755,6 +8755,9 @@ static ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 			dio_data.overwrite = 1;
+ 			inode_unlock(inode);
+ 			relock = true;
++		} else if (iocb->ki_flags & IOCB_NOWAIT) {
++			ret = -EAGAIN;
++			goto out;
+ 		}
+ 		ret = btrfs_delalloc_reserve_space(inode, offset, count);
+ 		if (ret)
 -- 
-Jens Axboe
+2.12.0
 
