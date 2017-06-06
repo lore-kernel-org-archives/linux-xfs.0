@@ -1,157 +1,217 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55098 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750914AbdFHQnU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Jun 2017 12:43:20 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B61B4A0235
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2017 16:43:19 +0000 (UTC)
-Date: Thu, 8 Jun 2017 12:43:16 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2 V3] xfs: Add infrastructure needed for error
- propagation during buffer IO failure
-Message-ID: <20170608164315.GH5244@bfoster.bfoster>
-References: <20170608140014.25132-1-cmaiolino@redhat.com>
- <20170608140014.25132-2-cmaiolino@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38613 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751239AbdFFUfa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2017 16:35:30 -0400
+Date: Tue, 6 Jun 2017 13:35:22 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 10/13] xfs: refactor the ifork block counting function
+Message-ID: <20170606203522.GF5196@birch.djwong.org>
+References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
+ <149643870157.23065.16428953914864164786.stgit@birch.djwong.org>
+ <20170606162920.GE55166@bfoster.bfoster>
+ <20170606185112.GE5196@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170608140014.25132-2-cmaiolino@redhat.com>
+In-Reply-To: <20170606185112.GE5196@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 08, 2017 at 04:00:13PM +0200, Carlos Maiolino wrote:
-> With the current code, XFS never re-submit a failed buffer for IO,
-> because the failed item in the buffer is kept in the flush locked state
-> forever.
+On Tue, Jun 06, 2017 at 11:51:12AM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 06, 2017 at 12:29:21PM -0400, Brian Foster wrote:
+> > On Fri, Jun 02, 2017 at 02:25:01PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Refactor the inode fork block counting function to count extents for us
+> > > at the same time.  This will be used by the bmbt scrubber function.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/xfs_bmap_util.c |  105 +++++++++++++++++++++++++++++-------------------
+> > >  fs/xfs/xfs_bmap_util.h |    4 ++
+> > >  2 files changed, 67 insertions(+), 42 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > > index fe83bbc..fc15305 100644
+> > > --- a/fs/xfs/xfs_bmap_util.c
+> > > +++ b/fs/xfs/xfs_bmap_util.c
+> > ...
+> > > @@ -336,44 +339,61 @@ xfs_bmap_count_tree(
+> > >  /*
+> > >   * Count fsblocks of the given fork.
+> > >   */
+> > > -static int					/* error */
+> > > +int
+> > >  xfs_bmap_count_blocks(
+> > > -	xfs_trans_t		*tp,		/* transaction pointer */
+> > > -	xfs_inode_t		*ip,		/* incore inode */
+> > > -	int			whichfork,	/* data or attr fork */
+> > > -	int			*count)		/* out: count of blocks */
+> > > +	struct xfs_trans	*tp,
+> > > +	struct xfs_inode	*ip,
+> > > +	int			whichfork,
+> > > +	unsigned int		*nextents,
+> > > +	unsigned long long	*count)
+> > >  {
+> > >  	struct xfs_btree_block	*block;	/* current btree block */
+> > >  	xfs_fsblock_t		bno;	/* block # of "block" */
+> > > -	xfs_ifork_t		*ifp;	/* fork structure */
+> > > +	struct xfs_ifork	*ifp;	/* fork structure */
+> > >  	int			level;	/* btree level, for checking */
+> > > -	xfs_mount_t		*mp;	/* file system mount structure */
+> > > +	struct xfs_mount	*mp;	/* file system mount structure */
+> > >  	__be64			*pp;	/* pointer to block address */
+> > > +	int			error;
+> > >  
+> > >  	bno = NULLFSBLOCK;
+> > >  	mp = ip->i_mount;
+> > > +	*nextents = 0;
+> > 
+> > I think we should be consistent between how we initialize nextents and
+> > count, whether we initialize both here or expect the caller to do it.
 > 
-> To be able to resubmit an log item for IO, we need a way to mark an item
-> as failed, if, for any reason the buffer which the item belonged to
-> failed during writeback.
-> 
-> Add a new log item callback to be used after an IO completion failure
-> and make the needed clean ups.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
-> 
-> V2:
-> 	- Update commit log to include a better description of why this
-> 	  patch is needed and fix spelling mistakes
-> 	- Move xfs_buf_do_callbacks_fail() call into
-> 	  xfs_buf_iodone_callback_error, so the callbacks can be executed
-> 	  before the buffer is released, and only after it has been
-> 	  retried once
-> 
-> V3:
-> 	- fix some loops according to hch suggestion
-> 	- whitespace cleanup
-> 
->  fs/xfs/xfs_buf_item.c | 23 ++++++++++++++++++++++-
->  fs/xfs/xfs_trans.h    |  7 +++++--
->  2 files changed, 27 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 0306168..523b7a4 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -29,6 +29,7 @@
->  #include "xfs_error.h"
->  #include "xfs_trace.h"
->  #include "xfs_log.h"
-> +#include "xfs_inode.h"
->  
->  
->  kmem_zone_t	*xfs_buf_item_zone;
-> @@ -1051,6 +1052,20 @@ xfs_buf_do_callbacks(
->  	}
->  }
->  
-> +STATIC void
-> +xfs_buf_do_callbacks_fail(
-> +	struct xfs_buf		*bp)
-> +{
-> +	struct xfs_log_item	*lip, *next;
-> +	unsigned int		bflags = bp->b_flags;
-> +
-> +	for (lip = bp->b_fspriv; lip; lip = next) {
-> +		next = lip->li_bio_list;
-> +		if (lip->li_ops->iop_error)
-> +			lip->li_ops->iop_error(lip, bp, bflags);
+> I later take advantage of the "doesn't initialize count" behavior for
+> inode extent and i_nblocks checking, but yes, this needs to be
+> consistent.  AFAICT the other XFS functions either return errors or
+> initialize the parameters, so this function should do so too.  I'll
+> update the scrub code to reflect this.
 
-There's still no need to pass bflags here, particularly since we pass
-along the buffer already. (I'm still questioning the need for
-->iop_error(), but I'll leave that as a final review question once
-everything else is in order. :P)
+I found a discrepancy, too -- xfs_bmap_count_leaves counts all the
+blocks in the in-core inode fork, including delalloc reservations.
+However, xfs_bmap_count_tree iterates the on-disk bmap btree, which
+means that it does /not/ count delalloc reservations.  For the only
+caller so far (xfs_swap_extents) this isn't a problem because we've
+flushed the dirty data and locked the inode so there aren't any da
+reservations.  However, for scrub we don't necessarily flush the page
+cache, so the da reservations sometimes get counted and sometimes don't,
+which causes a cross-referencing error if scrub happens to hit a btree
+format file that has been written to.
 
-> +	}
-> +}
-> +
->  static bool
->  xfs_buf_iodone_callback_error(
->  	struct xfs_buf		*bp)
-> @@ -1120,8 +1135,14 @@ xfs_buf_iodone_callback_error(
->  	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
->  		goto permanent_error;
->  
-> -	/* still a transient error, higher layers will retry */
-> +	/*
-> +	 * still a transient error, run IO completion failure callbacks and
-> +	 * let the higher layers retry the buffer.
-> +	 * */
->  	xfs_buf_ioerror(bp, 0);
-> +
-> +	/* run failure callbacks before releasing buffer */
-> +	xfs_buf_do_callbacks_fail(bp);
+So.... one more patch to fix that. :(
 
-I think in principle it might be more appropriate to invoke the
-callbacks before we reset the I/O error. That way the failure callbacks
-see the buffer in the error state, then we reset the error and release
-it back to the AIL (so to speak).
+--D
 
-Otherwise the rest looks sane to me.
-
-Brian
-
->  	xfs_buf_relse(bp);
->  	return true;
->  
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index a07acbf..3486517 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -64,11 +64,13 @@ typedef struct xfs_log_item {
->  } xfs_log_item_t;
->  
->  #define	XFS_LI_IN_AIL	0x1
-> -#define XFS_LI_ABORTED	0x2
-> +#define	XFS_LI_ABORTED	0x2
-> +#define	XFS_LI_FAILED	0x4
->  
->  #define XFS_LI_FLAGS \
->  	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
-> -	{ XFS_LI_ABORTED,	"ABORTED" }
-> +	{ XFS_LI_ABORTED,	"ABORTED" }, \
-> +	{ XFS_LI_FAILED,	"FAILED" }
->  
->  struct xfs_item_ops {
->  	void (*iop_size)(xfs_log_item_t *, int *, int *);
-> @@ -79,6 +81,7 @@ struct xfs_item_ops {
->  	void (*iop_unlock)(xfs_log_item_t *);
->  	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
->  	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
-> +	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *, unsigned int bflags);
->  };
->  
->  void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
-> -- 
-> 2.9.3
 > 
+> --D
+> 
+> > That aside, the rest looks good to me:
+> > 
+> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > 
+> > >  	ifp = XFS_IFORK_PTR(ip, whichfork);
+> > > -	if ( XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ) {
+> > > -		xfs_bmap_count_leaves(ifp, 0, xfs_iext_count(ifp), count);
+> > > +	if (!ifp)
+> > >  		return 0;
+> > > -	}
+> > >  
+> > > -	/*
+> > > -	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
+> > > -	 */
+> > > -	block = ifp->if_broot;
+> > > -	level = be16_to_cpu(block->bb_level);
+> > > -	ASSERT(level > 0);
+> > > -	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
+> > > -	bno = be64_to_cpu(*pp);
+> > > -	ASSERT(bno != NULLFSBLOCK);
+> > > -	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
+> > > -	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
+> > > -
+> > > -	if (unlikely(xfs_bmap_count_tree(mp, tp, ifp, bno, level, count) < 0)) {
+> > > -		XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)", XFS_ERRLEVEL_LOW,
+> > > -				 mp);
+> > > -		return -EFSCORRUPTED;
+> > > +	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
+> > > +	case XFS_DINODE_FMT_EXTENTS:
+> > > +		*nextents = xfs_iext_count(ifp);
+> > > +		xfs_bmap_count_leaves(ifp, 0, (*nextents), count);
+> > > +		return 0;
+> > > +	case XFS_DINODE_FMT_BTREE:
+> > > +		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> > > +			error = xfs_iread_extents(tp, ip, whichfork);
+> > > +			if (error)
+> > > +				return error;
+> > > +		}
+> > > +
+> > > +		/*
+> > > +		 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
+> > > +		 */
+> > > +		block = ifp->if_broot;
+> > > +		level = be16_to_cpu(block->bb_level);
+> > > +		ASSERT(level > 0);
+> > > +		pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
+> > > +		bno = be64_to_cpu(*pp);
+> > > +		ASSERT(bno != NULLFSBLOCK);
+> > > +		ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
+> > > +		ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
+> > > +
+> > > +		error = xfs_bmap_count_tree(mp, tp, ifp, bno, level,
+> > > +				nextents, count);
+> > > +		if (error) {
+> > > +			XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)",
+> > > +					XFS_ERRLEVEL_LOW, mp);
+> > > +			return -EFSCORRUPTED;
+> > > +		}
+> > > +		return 0;
+> > >  	}
+> > >  
+> > >  	return 0;
+> > > @@ -1789,8 +1809,9 @@ xfs_swap_extent_forks(
+> > >  	int			*target_log_flags)
+> > >  {
+> > >  	struct xfs_ifork	tempifp, *ifp, *tifp;
+> > > -	int			aforkblks = 0;
+> > > -	int			taforkblks = 0;
+> > > +	unsigned long long	aforkblks = 0;
+> > > +	unsigned long long	taforkblks = 0;
+> > > +	unsigned int		junk;
+> > >  	xfs_extnum_t		nextents;
+> > >  	uint64_t		tmp;
+> > >  	int			error;
+> > > @@ -1800,14 +1821,14 @@ xfs_swap_extent_forks(
+> > >  	 */
+> > >  	if ( ((XFS_IFORK_Q(ip) != 0) && (ip->i_d.di_anextents > 0)) &&
+> > >  	     (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
+> > > -		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK,
+> > > +		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK, &junk,
+> > >  				&aforkblks);
+> > >  		if (error)
+> > >  			return error;
+> > >  	}
+> > >  	if ( ((XFS_IFORK_Q(tip) != 0) && (tip->i_d.di_anextents > 0)) &&
+> > >  	     (tip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
+> > > -		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK,
+> > > +		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK, &junk,
+> > >  				&taforkblks);
+> > >  		if (error)
+> > >  			return error;
+> > > diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+> > > index 135d826..993973c 100644
+> > > --- a/fs/xfs/xfs_bmap_util.h
+> > > +++ b/fs/xfs/xfs_bmap_util.h
+> > > @@ -70,4 +70,8 @@ int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
+> > >  
+> > >  xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
+> > >  
+> > > +int xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
+> > > +			  int whichfork, unsigned int *nextents,
+> > > +			  unsigned long long *count);
+> > > +
+> > >  #endif	/* __XFS_BMAP_UTIL_H__ */
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
