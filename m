@@ -1,56 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f179.google.com ([209.85.217.179]:35259 "EHLO
-        mail-ua0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750971AbdFBXVc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 19:21:32 -0400
-Received: by mail-ua0-f179.google.com with SMTP id y4so52701295uay.2
-        for <linux-xfs@vger.kernel.org>; Fri, 02 Jun 2017 16:21:32 -0700 (PDT)
-MIME-Version: 1.0
-From: =?UTF-8?B?UMOpdGVyIEFuZHLDoXMgRmVsdsOpZ2k=?= <petschy@gmail.com>
-Date: Sat, 3 Jun 2017 01:21:31 +0200
-Message-ID: <CAG3eYYQMTdmCK9EdJA4hfYSSPStLSC=YBK+tvk67r6Vn4-UcxQ@mail.gmail.com>
-Subject: My XFS volume died, please help!
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx2.suse.de ([195.135.220.15]:41046 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751659AbdFFLUL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jun 2017 07:20:11 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 06/10] fs: Introduce IOMAP_NOWAIT
+Date: Tue,  6 Jun 2017 06:19:35 -0500
+Message-Id: <20170606111939.27272-7-rgoldwyn@suse.de>
+In-Reply-To: <20170606111939.27272-1-rgoldwyn@suse.de>
+References: <20170606111939.27272-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Hello,
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-after a power outage, the mount replayed the journal and no errors
-were reported, but the mounted XFS volume had suspiciously little free
-space. So I unmounted, and ran xfs_repair which crashed in phase 5
-with a floating point exception. After that I was unable to mount
-again, due to metadata corruption, so the repair made things worse.
-Please help!
+IOCB_NOWAIT translates to IOMAP_NOWAIT for iomaps.
+This is used by XFS in the XFS patch.
 
-Linux 4.4.66 x86_64, Debian Jessie, xfsprogs 3.2.1
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+---
+ fs/iomap.c            | 2 ++
+ include/linux/iomap.h | 1 +
+ 2 files changed, 3 insertions(+)
 
-xps_repair output:
-Phase 5 - rebuild AG headers and trees...
-        - agno = 0
-traps: xfs_repair[4786] trap divide error ip:417fef sp:7ffe43770d60
-error:0 in xfs_repair[400000+7a000]
-Floating point exception
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 4b10892967a5..5d85ec6e7b20 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -879,6 +879,8 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	} else {
+ 		dio->flags |= IOMAP_DIO_WRITE;
+ 		flags |= IOMAP_WRITE;
++		if (iocb->ki_flags & IOCB_NOWAIT)
++			flags |= IOMAP_NOWAIT;
+ 	}
+ 
+ 	ret = filemap_write_and_wait_range(mapping, start, end);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index f753e788da31..69f4e9470084 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -52,6 +52,7 @@ struct iomap {
+ #define IOMAP_REPORT		(1 << 2) /* report extent status, e.g. FIEMAP */
+ #define IOMAP_FAULT		(1 << 3) /* mapping for page fault */
+ #define IOMAP_DIRECT		(1 << 4) /* direct I/O */
++#define IOMAP_NOWAIT		(1 << 5) /* Don't wait for writeback */
+ 
+ struct iomap_ops {
+ 	/*
+-- 
+2.12.0
 
-mount output:
-XFS (dm-2): Mounting V5 Filesystem
-XFS (dm-2): Corruption warning: Metadata has LSN (11:170112) ahead of
-current LSN (1:64). Please unmount and run xfs_repair (>= v4.3) to
-resolve.
-XFS (dm-2): log mount/recovery failed: error -22
-XFS (dm-2): log mount failed
-mount: wrong fs type, bad option, bad superblock on /dev/mapper/storage-crypt,
-       missing codepage or helper program, or other error
-
-       In some cases useful info is found in syslog - try
-       dmesg | tail or so.
-
-I dumped the whole volume with dd so that I can revert to the current
-(hopefully not hopelessly screwed) state. Downloaded xfsprogs 4.11.0
-and checked the changelog. There are fixes for xfs_repair phase 5,
-though the FP exception is not mentioned. Is this bug already fixed?
-Should I try xfs_repair from 4.11?
-
-Thanks & kind regards, Peter
