@@ -1,71 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41039 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751470AbdFFLT7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jun 2017 07:19:59 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 05/10] fs: return if direct write will trigger writeback
-Date: Tue,  6 Jun 2017 06:19:34 -0500
-Message-Id: <20170606111939.27272-6-rgoldwyn@suse.de>
-In-Reply-To: <20170606111939.27272-1-rgoldwyn@suse.de>
-References: <20170606111939.27272-1-rgoldwyn@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:35864 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751384AbdFFMIv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jun 2017 08:08:51 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 44D039D0CB
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2017 12:08:51 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 268F17EBE7
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2017 12:08:51 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 1/2] xfs: release bli from transaction properly on fs shutdown
+Date: Tue,  6 Jun 2017 08:08:49 -0400
+Message-Id: <1496750930-53954-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1496750930-53954-1-git-send-email-bfoster@redhat.com>
+References: <1496750930-53954-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: linux-xfs@vger.kernel.org
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+If a filesystem shutdown occurs with a buffer log item in the CIL
+and a log force occurs, the ->iop_unpin() handler is generally
+expected to tear down the bli properly. This entails freeing the bli
+memory and releasing the associated hold on the buffer so it can be
+released and the filesystem unmounted.
 
-Find out if the write will trigger a wait due to writeback. If yes,
-return -EAGAIN.
+If this sequence occurs while ->bli_refcount is elevated (i.e.,
+another transaction is open and attempting to modify the buffer),
+however, ->iop_unpin() may not be responsible for releasing the bli.
+Instead, the transaction may release the final ->bli_refcount
+reference and thus xfs_trans_brelse() is responsible for tearing
+down the bli.
 
-Return -EINVAL for buffered AIO: there are multiple causes of
-delay such as page locks, dirty throttling logic, page loading
-from disk etc. which cannot be taken care of.
+While xfs_trans_brelse() does drop the reference count, it only
+attempts to release the bli if it is clean (i.e., not in the
+CIL/AIL). If the filesystem is shutdown and the bli is sitting dirty
+in the CIL as noted above, this ends up skipping the last
+opportunity to release the bli. In turn, this leaves the hold on the
+buffer and causes an unmount hang. This can be reproduced by running
+generic/388 in repetition.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Update xfs_trans_brelse() to handle this shutdown corner case
+correctly. If the final bli reference is dropped and the filesystem
+is shutdown, remove the bli from the AIL (if necessary) and release
+the bli to drop the buffer hold and ensure an unmount does not hang.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- mm/filemap.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_trans_buf.c | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 097213275461..bc146efa6815 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -2675,6 +2675,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
- 
- 	pos = iocb->ki_pos;
- 
-+	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
-+		return -EINVAL;
-+
- 	if (limit != RLIM_INFINITY) {
- 		if (iocb->ki_pos >= limit) {
- 			send_sig(SIGXFSZ, current, 0);
-@@ -2743,9 +2746,17 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
- 	write_len = iov_iter_count(from);
- 	end = (pos + write_len - 1) >> PAGE_SHIFT;
- 
--	written = filemap_write_and_wait_range(mapping, pos, pos + write_len - 1);
--	if (written)
--		goto out;
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		/* If there are pages to writeback, return */
-+		if (filemap_range_has_page(inode->i_mapping, pos,
-+					   pos + iov_iter_count(from)))
-+			return -EAGAIN;
-+	} else {
-+		written = filemap_write_and_wait_range(mapping, pos,
-+							pos + write_len - 1);
-+		if (written)
-+			goto out;
-+	}
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 8ee29ca..86987d8 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -356,6 +356,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
+ 		 xfs_buf_t	*bp)
+ {
+ 	xfs_buf_log_item_t	*bip;
++	int			freed;
  
  	/*
- 	 * After a write we want buffered reads to be sure to go to disk to get
+ 	 * Default to a normal brelse() call if the tp is NULL.
+@@ -419,16 +420,22 @@ xfs_trans_brelse(xfs_trans_t	*tp,
+ 	/*
+ 	 * Drop our reference to the buf log item.
+ 	 */
+-	atomic_dec(&bip->bli_refcount);
++	freed = atomic_dec_and_test(&bip->bli_refcount);
+ 
+ 	/*
+-	 * If the buf item is not tracking data in the log, then
+-	 * we must free it before releasing the buffer back to the
+-	 * free pool.  Before releasing the buffer to the free pool,
+-	 * clear the transaction pointer in b_fsprivate2 to dissolve
+-	 * its relation to this transaction.
++	 * If the buf item is not tracking data in the log, then we must free it
++	 * before releasing the buffer back to the free pool.
++	 *
++	 * If the fs has shutdown and we dropped the last reference, it may fall
++	 * on us to release a (possibly dirty) bli if it never made it to the
++	 * AIL (e.g., the aborted unpin already happened and didn't release it
++	 * due to our reference). Since we're already shutdown and need xa_lock,
++	 * just force remove from the AIL and release the bli here.
+ 	 */
+-	if (!xfs_buf_item_dirty(bip)) {
++	if (XFS_FORCED_SHUTDOWN(tp->t_mountp) && freed) {
++		xfs_trans_ail_remove(&bip->bli_item, SHUTDOWN_LOG_IO_ERROR);
++		xfs_buf_item_relse(bp);
++	} else if (!xfs_buf_item_dirty(bip)) {
+ /***
+ 		ASSERT(bp->b_pincount == 0);
+ ***/
 -- 
-2.12.0
+2.7.5
 
