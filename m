@@ -1,44 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:49471 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751239AbdFEPKW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2017 11:10:22 -0400
-Date: Mon, 5 Jun 2017 17:09:37 +0200
-From: Greg KH <greg@kroah.com>
-Subject: Re: request for inclusion of 2 xfs patches
-Message-ID: <20170605150937.GB26743@kroah.com>
-References: <89781cfb-b826-8d01-d054-f70b0e2d8439@suse.com>
- <d4f07925-a558-cf4a-fd1f-b570d17ffd12@suse.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d4f07925-a558-cf4a-fd1f-b570d17ffd12@suse.com>
+Received: from mx2.suse.de ([195.135.220.15]:41011 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751305AbdFFLTx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jun 2017 07:19:53 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 02/10] fs: Introduce filemap_range_has_page()
+Date: Tue,  6 Jun 2017 06:19:31 -0500
+Message-Id: <20170606111939.27272-3-rgoldwyn@suse.de>
+In-Reply-To: <20170606111939.27272-1-rgoldwyn@suse.de>
+References: <20170606111939.27272-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: stable@vger.kernel.org, sandeen@sandeen.net, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Mon, May 29, 2017 at 12:28:19PM +0300, Nikolay Borisov wrote:
-> 
-> 
-> On 29.05.2017 12:27, Nikolay Borisov wrote:
-> > Hello, 
-> > 
-> > I'd like to request the following two patches to be 
-> > included in 4.4 stable: 
-> > 
-> > 0facef7fb053 ("xfs: in _attrlist_by_handle, copy the cursor back to userspace")
-> > 
-> > 2a6fba6d2311 ("xfs: only return -errno or success from attr ->put_listent")
-> > 
-> > The fix a failure in xfstest/269 and also enable the xfs' XFS_IOC_ATTRLIST_BY_HANDLE
-> > ioctl to function properly. The first commit applies cleanly, whereas the second has 
-> > a minor conflict due t spacing. Backport is attached. 
-> > 
-> 
-> Please omit my Acked-by tagged when applying the backport
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Heh, now done, both queue up, thanks.
+filemap_range_has_page() return true if the file's mapping has
+a page within the range mentioned. This function will be used
+to check if a write() call will cause a writeback of previous
+writes.
 
-greg k-h
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+---
+ include/linux/fs.h |  2 ++
+ mm/filemap.c       | 33 +++++++++++++++++++++++++++++++++
+ 2 files changed, 35 insertions(+)
+
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index f53867140f43..dc0ab585cd56 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2517,6 +2517,8 @@ extern int filemap_fdatawait(struct address_space *);
+ extern void filemap_fdatawait_keep_errors(struct address_space *);
+ extern int filemap_fdatawait_range(struct address_space *, loff_t lstart,
+ 				   loff_t lend);
++extern int filemap_range_has_page(struct address_space *, loff_t lstart,
++				  loff_t lend);
+ extern int filemap_write_and_wait(struct address_space *mapping);
+ extern int filemap_write_and_wait_range(struct address_space *mapping,
+ 				        loff_t lstart, loff_t lend);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 6f1be573a5e6..87aba7698584 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -376,6 +376,39 @@ int filemap_flush(struct address_space *mapping)
+ }
+ EXPORT_SYMBOL(filemap_flush);
+ 
++/**
++ * filemap_range_has_page - check if a page exists in range.
++ * @mapping:           address space structure to wait for
++ * @start_byte:        offset in bytes where the range starts
++ * @end_byte:          offset in bytes where the range ends (inclusive)
++ *
++ * Find at least one page in the range supplied, usually used to check if
++ * direct writing in this range will trigger a writeback.
++ */
++int filemap_range_has_page(struct address_space *mapping,
++			   loff_t start_byte, loff_t end_byte)
++{
++	pgoff_t index = start_byte >> PAGE_SHIFT;
++	pgoff_t end = end_byte >> PAGE_SHIFT;
++	struct pagevec pvec;
++	int ret;
++
++	if (end_byte < start_byte)
++		return 0;
++
++	if (mapping->nrpages == 0)
++		return 0;
++
++	pagevec_init(&pvec, 0);
++	ret = pagevec_lookup(&pvec, mapping, index, 1);
++	if (!ret)
++		return 0;
++	ret = (pvec.pages[0]->index <= end);
++	pagevec_release(&pvec);
++	return ret;
++}
++EXPORT_SYMBOL(filemap_range_has_page);
++
+ static int __filemap_fdatawait_range(struct address_space *mapping,
+ 				     loff_t start_byte, loff_t end_byte)
+ {
+-- 
+2.12.0
+
