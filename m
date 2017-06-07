@@ -1,120 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34453 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751382AbdFGQTy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2017 12:19:54 -0400
-Date: Wed, 7 Jun 2017 09:19:04 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 9.9/13] xfs: make _bmap_count_blocks consistent wrt
- delalloc extent behavior
-Message-ID: <20170607161904.GF4530@birch.djwong.org>
-References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
- <149643870157.23065.16428953914864164786.stgit@birch.djwong.org>
- <20170607012910.GD4530@birch.djwong.org>
- <20170607151126.GE64146@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170607151126.GE64146@bfoster.bfoster>
+Received: from mga14.intel.com ([192.55.52.115]:7651 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751566AbdFGUts (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 7 Jun 2017 16:49:48 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH 1/3] mm: add vm_insert_mixed_mkwrite()
+Date: Wed,  7 Jun 2017 14:48:57 -0600
+Message-Id: <20170607204859.13104-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Wed, Jun 07, 2017 at 11:11:27AM -0400, Brian Foster wrote:
-> On Tue, Jun 06, 2017 at 06:29:10PM -0700, Darrick J. Wong wrote:
-> > There is an inconsistency in the way that _bmap_count_blocks deals with
-> > delalloc reservations -- if the specified fork is in extents format,
-> > *count is set to the total number of blocks referenced by the in-core
-> > fork, including delalloc extents.  However, if the fork is in btree
-> > format, *count is set to the number of blocks referenced by the on-disk
-> > fork, which does /not/ include delalloc extents.
-> > 
-> > For the lone existing caller of _bmap_count_blocks this hasn't been an
-> > issue because the function is only used to count xattr fork blocks
-> > (where there aren't any delalloc reservations).  However, when scrub
-> > comes along it will use this same function to check di_nblocks against
-> > both on-disk extent maps, so we need this behavior to be consistent.
-> > 
-> > Therefore, fix _bmap_count_leaves not to include delalloc extents and
-> > remove unnecessary parameters.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_bmap_util.c |   17 +++++++++--------
-> >  1 file changed, 9 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > index fe83bbc..a34c3ce 100644
-> > --- a/fs/xfs/xfs_bmap_util.c
-> > +++ b/fs/xfs/xfs_bmap_util.c
-> > @@ -223,16 +223,17 @@ xfs_bmap_eof(
-> >   */
-> 
-> A quick update to the function comment would be nice just to point out
-> that we skip delalloc blocks to be consistent with the bmbt case.
-> Otherwise looks good to me:
+To be able to use the common 4k zero page in DAX we need to have our PTE
+fault path look more like our PMD fault path where a PTE entry can be
+marked as dirty and writeable as it is first inserted, rather than waiting
+for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
 
-Ok, done.  Thx for the re-review!  I'll update both _bmap_count_leaves and
-_bmap_count_blocks like so:
+Right now we can rely on having a dax_pfn_mkwrite() call because we can
+distinguish between these two cases in do_wp_page():
 
-/*
- * Count leaf blocks given a range of extent records.  Delayed allocation
- * extents are not counted towards the totals.
- */
-STATIC void
-xfs_bmap_count_leaves(...
+	case 1: 4k zero page => writable DAX storage
+	case 2: read-only DAX storage => writeable DAX storage
 
-/*
- * Count fsblocks of the given fork.  Delayed allocation extents are
- * not counted towards the totals.
- */
-static int					/* error */
-xfs_bmap_count_blocks(...
+This distinction is made by via vm_normal_page().  vm_normal_page() returns
+false for the common 4k zero page, though, just as it does for DAX ptes.
+Instead of special casing the DAX + 4k zero page case, we will simplify our
+DAX PTE page fault sequence so that it matches our DAX PMD sequence, and
+get rid of dax_pfn_mkwrite() completely.
 
---D
+This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
+and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set insert_pfn()
+will do the work that was previously done by wp_page_reuse() as part of the
+dax_pfn_mkwrite() call path.
 
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> >  STATIC void
-> >  xfs_bmap_count_leaves(
-> > -	xfs_ifork_t		*ifp,
-> > -	xfs_extnum_t		idx,
-> > -	int			numrecs,
-> > +	struct xfs_ifork	*ifp,
-> >  	int			*count)
-> >  {
-> > -	int		b;
-> > +	xfs_extnum_t		i;
-> > +	xfs_extnum_t		nr_exts = xfs_iext_count(ifp);
-> >  
-> > -	for (b = 0; b < numrecs; b++) {
-> > -		xfs_bmbt_rec_host_t *frp = xfs_iext_get_ext(ifp, idx + b);
-> > -		*count += xfs_bmbt_get_blockcount(frp);
-> > +	for (i = 0; i < nr_exts; i++) {
-> > +		xfs_bmbt_rec_host_t *frp = xfs_iext_get_ext(ifp, i);
-> > +		if (!isnullstartblock(xfs_bmbt_get_startblock(frp))) {
-> > +			*count += xfs_bmbt_get_blockcount(frp);
-> > +		}
-> >  	}
-> >  }
-> >  
-> > @@ -354,7 +355,7 @@ xfs_bmap_count_blocks(
-> >  	mp = ip->i_mount;
-> >  	ifp = XFS_IFORK_PTR(ip, whichfork);
-> >  	if ( XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ) {
-> > -		xfs_bmap_count_leaves(ifp, 0, xfs_iext_count(ifp), count);
-> > +		xfs_bmap_count_leaves(ifp, count);
-> >  		return 0;
-> >  	}
-> >  
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ include/linux/mm.h |  9 +++++++--
+ mm/memory.c        | 21 ++++++++++++++-------
+ 2 files changed, 21 insertions(+), 9 deletions(-)
+
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index b892e95..11e323a 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -2294,10 +2294,15 @@ int vm_insert_pfn(struct vm_area_struct *vma, unsigned long addr,
+ 			unsigned long pfn);
+ int vm_insert_pfn_prot(struct vm_area_struct *vma, unsigned long addr,
+ 			unsigned long pfn, pgprot_t pgprot);
+-int vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
+-			pfn_t pfn);
++int vm_insert_mixed_mkwrite(struct vm_area_struct *vma, unsigned long addr,
++			pfn_t pfn, bool mkwrite);
+ int vm_iomap_memory(struct vm_area_struct *vma, phys_addr_t start, unsigned long len);
+ 
++static inline int vm_insert_mixed(struct vm_area_struct *vma,
++		unsigned long addr, pfn_t pfn)
++{
++	return vm_insert_mixed_mkwrite(vma, addr, pfn, false);
++}
+ 
+ struct page *follow_page_mask(struct vm_area_struct *vma,
+ 			      unsigned long address, unsigned int foll_flags,
+diff --git a/mm/memory.c b/mm/memory.c
+index 2e65df1..8d0eef6 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -1646,7 +1646,7 @@ int vm_insert_page(struct vm_area_struct *vma, unsigned long addr,
+ EXPORT_SYMBOL(vm_insert_page);
+ 
+ static int insert_pfn(struct vm_area_struct *vma, unsigned long addr,
+-			pfn_t pfn, pgprot_t prot)
++			pfn_t pfn, pgprot_t prot, bool mkwrite)
+ {
+ 	struct mm_struct *mm = vma->vm_mm;
+ 	int retval;
+@@ -1658,7 +1658,7 @@ static int insert_pfn(struct vm_area_struct *vma, unsigned long addr,
+ 	if (!pte)
+ 		goto out;
+ 	retval = -EBUSY;
+-	if (!pte_none(*pte))
++	if (!pte_none(*pte) && !mkwrite)
+ 		goto out_unlock;
+ 
+ 	/* Ok, finally just insert the thing.. */
+@@ -1666,6 +1666,12 @@ static int insert_pfn(struct vm_area_struct *vma, unsigned long addr,
+ 		entry = pte_mkdevmap(pfn_t_pte(pfn, prot));
+ 	else
+ 		entry = pte_mkspecial(pfn_t_pte(pfn, prot));
++
++	if (mkwrite) {
++		entry = pte_mkyoung(entry);
++		entry = maybe_mkwrite(pte_mkdirty(entry), vma);
++	}
++
+ 	set_pte_at(mm, addr, pte, entry);
+ 	update_mmu_cache(vma, addr, pte); /* XXX: why not for insert_page? */
+ 
+@@ -1736,14 +1742,15 @@ int vm_insert_pfn_prot(struct vm_area_struct *vma, unsigned long addr,
+ 
+ 	track_pfn_insert(vma, &pgprot, __pfn_to_pfn_t(pfn, PFN_DEV));
+ 
+-	ret = insert_pfn(vma, addr, __pfn_to_pfn_t(pfn, PFN_DEV), pgprot);
++	ret = insert_pfn(vma, addr, __pfn_to_pfn_t(pfn, PFN_DEV), pgprot,
++			false);
+ 
+ 	return ret;
+ }
+ EXPORT_SYMBOL(vm_insert_pfn_prot);
+ 
+-int vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
+-			pfn_t pfn)
++int vm_insert_mixed_mkwrite(struct vm_area_struct *vma, unsigned long addr,
++			pfn_t pfn, bool mkwrite)
+ {
+ 	pgprot_t pgprot = vma->vm_page_prot;
+ 
+@@ -1772,9 +1779,9 @@ int vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
+ 		page = pfn_to_page(pfn_t_to_pfn(pfn));
+ 		return insert_page(vma, addr, page, pgprot);
+ 	}
+-	return insert_pfn(vma, addr, pfn, pgprot);
++	return insert_pfn(vma, addr, pfn, pgprot, mkwrite);
+ }
+-EXPORT_SYMBOL(vm_insert_mixed);
++EXPORT_SYMBOL(vm_insert_mixed_mkwrite);
+ 
+ /*
+  * maps a range of physical memory into the requested pages. the old
+-- 
+2.9.4
+
