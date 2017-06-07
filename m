@@ -1,13 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25393 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751436AbdFGB3P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2017 21:29:15 -0400
-Date: Tue, 6 Jun 2017 18:29:10 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:48465 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751436AbdFGB3T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2017 21:29:19 -0400
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v571THTZ027656
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 7 Jun 2017 01:29:18 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v571THRB010748
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 7 Jun 2017 01:29:17 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v571TH7C009035
+        for <linux-xfs@vger.kernel.org>; Wed, 7 Jun 2017 01:29:17 GMT
+Date: Tue, 6 Jun 2017 18:29:16 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 9.9/13] xfs: make _bmap_count_blocks consistent wrt
- delalloc extent behavior
-Message-ID: <20170607012910.GD4530@birch.djwong.org>
+Subject: [PATCH v2 10/13] xfs: refactor the ifork block counting function
+Message-ID: <20170607012916.GE4530@birch.djwong.org>
 References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
  <149643870157.23065.16428953914864164786.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,64 +28,222 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>
 
-There is an inconsistency in the way that _bmap_count_blocks deals with
-delalloc reservations -- if the specified fork is in extents format,
-*count is set to the total number of blocks referenced by the in-core
-fork, including delalloc extents.  However, if the fork is in btree
-format, *count is set to the number of blocks referenced by the on-disk
-fork, which does /not/ include delalloc extents.
-
-For the lone existing caller of _bmap_count_blocks this hasn't been an
-issue because the function is only used to count xattr fork blocks
-(where there aren't any delalloc reservations).  However, when scrub
-comes along it will use this same function to check di_nblocks against
-both on-disk extent maps, so we need this behavior to be consistent.
-
-Therefore, fix _bmap_count_leaves not to include delalloc extents and
-remove unnecessary parameters.
+Refactor the inode fork block counting function to count extents for us
+at the same time.  This will be used by the bmbt scrubber function.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c |   17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_bmap_util.c |  109 +++++++++++++++++++++++++++++-------------------
+ fs/xfs/xfs_bmap_util.h |    4 ++
+ 2 files changed, 70 insertions(+), 43 deletions(-)
 
 diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index fe83bbc..a34c3ce 100644
+index a34c3ce..4baaff1 100644
 --- a/fs/xfs/xfs_bmap_util.c
 +++ b/fs/xfs/xfs_bmap_util.c
-@@ -223,16 +223,17 @@ xfs_bmap_eof(
-  */
+@@ -224,7 +224,8 @@ xfs_bmap_eof(
  STATIC void
  xfs_bmap_count_leaves(
--	xfs_ifork_t		*ifp,
--	xfs_extnum_t		idx,
--	int			numrecs,
-+	struct xfs_ifork	*ifp,
- 	int			*count)
+ 	struct xfs_ifork	*ifp,
+-	int			*count)
++	xfs_extnum_t		*numrecs,
++	xfs_filblks_t		*count)
  {
--	int		b;
-+	xfs_extnum_t		i;
-+	xfs_extnum_t		nr_exts = xfs_iext_count(ifp);
- 
--	for (b = 0; b < numrecs; b++) {
--		xfs_bmbt_rec_host_t *frp = xfs_iext_get_ext(ifp, idx + b);
--		*count += xfs_bmbt_get_blockcount(frp);
-+	for (i = 0; i < nr_exts; i++) {
-+		xfs_bmbt_rec_host_t *frp = xfs_iext_get_ext(ifp, i);
-+		if (!isnullstartblock(xfs_bmbt_get_startblock(frp))) {
-+			*count += xfs_bmbt_get_blockcount(frp);
-+		}
+ 	xfs_extnum_t		i;
+ 	xfs_extnum_t		nr_exts = xfs_iext_count(ifp);
+@@ -232,6 +233,7 @@ xfs_bmap_count_leaves(
+ 	for (i = 0; i < nr_exts; i++) {
+ 		xfs_bmbt_rec_host_t *frp = xfs_iext_get_ext(ifp, i);
+ 		if (!isnullstartblock(xfs_bmbt_get_startblock(frp))) {
++			(*numrecs)++;
+ 			*count += xfs_bmbt_get_blockcount(frp);
+ 		}
  	}
- }
+@@ -246,7 +248,7 @@ xfs_bmap_disk_count_leaves(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_btree_block	*block,
+ 	int			numrecs,
+-	int			*count)
++	xfs_filblks_t		*count)
+ {
+ 	int		b;
+ 	xfs_bmbt_rec_t	*frp;
+@@ -261,17 +263,18 @@ xfs_bmap_disk_count_leaves(
+  * Recursively walks each level of a btree
+  * to count total fsblocks in use.
+  */
+-STATIC int                                     /* error */
++STATIC int
+ xfs_bmap_count_tree(
+-	xfs_mount_t     *mp,            /* file system mount point */
+-	xfs_trans_t     *tp,            /* transaction pointer */
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	xfs_fsblock_t   blockno,	/* file system block number */
+-	int             levelin,	/* level in btree */
+-	int		*count)		/* Count of blocks */
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	struct xfs_ifork	*ifp,
++	xfs_fsblock_t		blockno,
++	int			levelin,
++	xfs_extnum_t		*nextents,
++	xfs_filblks_t		*count)
+ {
+ 	int			error;
+-	xfs_buf_t		*bp, *nbp;
++	struct xfs_buf		*bp, *nbp;
+ 	int			level = levelin;
+ 	__be64			*pp;
+ 	xfs_fsblock_t           bno = blockno;
+@@ -304,8 +307,9 @@ xfs_bmap_count_tree(
+ 		/* Dive to the next level */
+ 		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
+ 		bno = be64_to_cpu(*pp);
+-		if (unlikely((error =
+-		     xfs_bmap_count_tree(mp, tp, ifp, bno, level, count)) < 0)) {
++		error = xfs_bmap_count_tree(mp, tp, ifp, bno, level, nextents,
++				count);
++		if (error) {
+ 			xfs_trans_brelse(tp, bp);
+ 			XFS_ERROR_REPORT("xfs_bmap_count_tree(1)",
+ 					 XFS_ERRLEVEL_LOW, mp);
+@@ -317,6 +321,7 @@ xfs_bmap_count_tree(
+ 		for (;;) {
+ 			nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
+ 			numrecs = be16_to_cpu(block->bb_numrecs);
++			(*nextents) += numrecs;
+ 			xfs_bmap_disk_count_leaves(mp, block, numrecs, count);
+ 			xfs_trans_brelse(tp, bp);
+ 			if (nextbno == NULLFSBLOCK)
+@@ -337,44 +342,61 @@ xfs_bmap_count_tree(
+ /*
+  * Count fsblocks of the given fork.
+  */
+-static int					/* error */
++int
+ xfs_bmap_count_blocks(
+-	xfs_trans_t		*tp,		/* transaction pointer */
+-	xfs_inode_t		*ip,		/* incore inode */
+-	int			whichfork,	/* data or attr fork */
+-	int			*count)		/* out: count of blocks */
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	int			whichfork,
++	xfs_extnum_t		*nextents,
++	xfs_filblks_t		*count)
+ {
++	struct xfs_mount	*mp;	/* file system mount structure */
++	__be64			*pp;	/* pointer to block address */
+ 	struct xfs_btree_block	*block;	/* current btree block */
++	struct xfs_ifork	*ifp;	/* fork structure */
+ 	xfs_fsblock_t		bno;	/* block # of "block" */
+-	xfs_ifork_t		*ifp;	/* fork structure */
+ 	int			level;	/* btree level, for checking */
+-	xfs_mount_t		*mp;	/* file system mount structure */
+-	__be64			*pp;	/* pointer to block address */
++	int			error;
  
-@@ -354,7 +355,7 @@ xfs_bmap_count_blocks(
+ 	bno = NULLFSBLOCK;
  	mp = ip->i_mount;
++	*nextents = 0;
++	*count = 0;
  	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	if ( XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ) {
--		xfs_bmap_count_leaves(ifp, 0, xfs_iext_count(ifp), count);
-+		xfs_bmap_count_leaves(ifp, count);
+-	if ( XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ) {
+-		xfs_bmap_count_leaves(ifp, count);
++	if (!ifp)
  		return 0;
+-	}
+ 
+-	/*
+-	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
+-	 */
+-	block = ifp->if_broot;
+-	level = be16_to_cpu(block->bb_level);
+-	ASSERT(level > 0);
+-	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
+-	bno = be64_to_cpu(*pp);
+-	ASSERT(bno != NULLFSBLOCK);
+-	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
+-	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
+-
+-	if (unlikely(xfs_bmap_count_tree(mp, tp, ifp, bno, level, count) < 0)) {
+-		XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)", XFS_ERRLEVEL_LOW,
+-				 mp);
+-		return -EFSCORRUPTED;
++	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
++	case XFS_DINODE_FMT_EXTENTS:
++		xfs_bmap_count_leaves(ifp, nextents, count);
++		return 0;
++	case XFS_DINODE_FMT_BTREE:
++		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
++			error = xfs_iread_extents(tp, ip, whichfork);
++			if (error)
++				return error;
++		}
++
++		/*
++		 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
++		 */
++		block = ifp->if_broot;
++		level = be16_to_cpu(block->bb_level);
++		ASSERT(level > 0);
++		pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
++		bno = be64_to_cpu(*pp);
++		ASSERT(bno != NULLFSBLOCK);
++		ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
++		ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
++
++		error = xfs_bmap_count_tree(mp, tp, ifp, bno, level,
++				nextents, count);
++		if (error) {
++			XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)",
++					XFS_ERRLEVEL_LOW, mp);
++			return -EFSCORRUPTED;
++		}
++		return 0;
  	}
  
+ 	return 0;
+@@ -1790,8 +1812,9 @@ xfs_swap_extent_forks(
+ 	int			*target_log_flags)
+ {
+ 	struct xfs_ifork	tempifp, *ifp, *tifp;
+-	int			aforkblks = 0;
+-	int			taforkblks = 0;
++	xfs_filblks_t		aforkblks;
++	xfs_filblks_t		taforkblks;
++	xfs_extnum_t		junk;
+ 	xfs_extnum_t		nextents;
+ 	uint64_t		tmp;
+ 	int			error;
+@@ -1801,14 +1824,14 @@ xfs_swap_extent_forks(
+ 	 */
+ 	if ( ((XFS_IFORK_Q(ip) != 0) && (ip->i_d.di_anextents > 0)) &&
+ 	     (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
+-		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK,
++		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK, &junk,
+ 				&aforkblks);
+ 		if (error)
+ 			return error;
+ 	}
+ 	if ( ((XFS_IFORK_Q(tip) != 0) && (tip->i_d.di_anextents > 0)) &&
+ 	     (tip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
+-		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK,
++		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK, &junk,
+ 				&taforkblks);
+ 		if (error)
+ 			return error;
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index 135d826..0cede10 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -70,4 +70,8 @@ int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
+ 
+ xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
+ 
++int xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
++			  int whichfork, xfs_extnum_t *nextents,
++			  xfs_filblks_t *count);
++
+ #endif	/* __XFS_BMAP_UTIL_H__ */
