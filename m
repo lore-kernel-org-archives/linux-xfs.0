@@ -1,195 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46404 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751426AbdFFSvT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2017 14:51:19 -0400
-Date: Tue, 6 Jun 2017 11:51:12 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:47825 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750914AbdFHQnM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2017 12:43:12 -0400
+Date: Thu, 8 Jun 2017 09:43:07 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/13] xfs: refactor the ifork block counting function
-Message-ID: <20170606185112.GE5196@birch.djwong.org>
+Subject: Re: [PATCH 11/13] xfs: return the hash value of a leaf1 directory
+ block
+Message-ID: <20170608164307.GK4530@birch.djwong.org>
 References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
- <149643870157.23065.16428953914864164786.stgit@birch.djwong.org>
- <20170606162920.GE55166@bfoster.bfoster>
+ <149643870873.23065.5974641750134566189.stgit@birch.djwong.org>
+ <20170608130224.GA5244@bfoster.bfoster>
+ <20170608155359.GI4530@birch.djwong.org>
+ <20170608163147.GG5244@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170606162920.GE55166@bfoster.bfoster>
+In-Reply-To: <20170608163147.GG5244@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 06, 2017 at 12:29:21PM -0400, Brian Foster wrote:
-> On Fri, Jun 02, 2017 at 02:25:01PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jun 08, 2017 at 12:31:50PM -0400, Brian Foster wrote:
+> On Thu, Jun 08, 2017 at 08:53:59AM -0700, Darrick J. Wong wrote:
+> > On Thu, Jun 08, 2017 at 09:02:26AM -0400, Brian Foster wrote:
+> > > On Fri, Jun 02, 2017 at 02:25:08PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Provide a way to calculate the highest hash value of a leaf1 block.
+> > > > This will be used by the directory scrubbing code to check the sanity
+> > > > of hashes in leaf1 directory blocks.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_dir2_node.c |   28 ++++++++++++++++++++++++++++
+> > > >  fs/xfs/libxfs/xfs_dir2_priv.h |    2 ++
+> > > >  2 files changed, 30 insertions(+)
+> > > > 
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> > > > index bbd1238..15c1881 100644
+> > > > --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> > > > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> > > > @@ -524,6 +524,34 @@ xfs_dir2_free_hdr_check(
+> > > >  #endif	/* DEBUG */
+> > > >  
+> > > >  /*
+> > > > + * Return the last hash value in the leaf1.
+> > > > + * Stale entries are ok.
+> > > > + */
+> > > > +xfs_dahash_t					/* hash value */
+> > > > +xfs_dir2_leaf1_lasthash(
+> > > > +	struct xfs_inode	*dp,
+> > > > +	struct xfs_buf		*bp,		/* leaf buffer */
+> > > > +	int			*count)		/* count of entries in leaf */
+> > > > +{
+> > > > +	struct xfs_dir2_leaf	*leaf = bp->b_addr;
+> > > > +	struct xfs_dir2_leaf_entry *ents;
+> > > > +	struct xfs_dir3_icleaf_hdr leafhdr;
+> > > > +
+> > > > +	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
+> > > > +
+> > > > +	ASSERT(leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
+> > > > +	       leafhdr.magic == XFS_DIR3_LEAF1_MAGIC);
+> > > > +
+> > > 
+> > > It looks like the assert is the only difference between this function
+> > > and xfs_dir2_leafn_lasthash(). It seems like overkill to me to duplicate
+> > > just for that. How about we fix up the assert to cover the additional
+> > > magics (and maybe rename _leafn_lasthash() to _leaf_lasthash() if
+> > > appropriate)?
+> > > 
+> > > Actually, taking a closer look, ->leaf_hdr_from_disk() already asserts
+> > > on the appropriate LEAF1/LEAFN magic based on the callback that is
+> > > specified. ISTM that we could also just kill the _lasthash() assert.
 > > 
-> > Refactor the inode fork block counting function to count extents for us
-> > at the same time.  This will be used by the bmbt scrubber function.
+> > The ASSERTs in the _lasthash functions and in leaf_hdr_from_disk aren't
+> > testing quite the same things.  The asserts in _dir2_leaf[1n]_lasthash
+> > check that we actually passed it a leaf1 or leafn block, respectively.
+> > The asserts in _dir[23]_leaf_hdr_from_disk check that we actually fed it
+> > a dir2 or dir3 leaf* block without caring whether it's leaf1 or leafn.
+> > That's why I didn't just get rid of the assert and rename the function
+> > xfs_dir2_leaf_lasthash().
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_bmap_util.c |  105 +++++++++++++++++++++++++++++-------------------
-> >  fs/xfs/xfs_bmap_util.h |    4 ++
-> >  2 files changed, 67 insertions(+), 42 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > index fe83bbc..fc15305 100644
-> > --- a/fs/xfs/xfs_bmap_util.c
-> > +++ b/fs/xfs/xfs_bmap_util.c
-> ...
-> > @@ -336,44 +339,61 @@ xfs_bmap_count_tree(
-> >  /*
-> >   * Count fsblocks of the given fork.
-> >   */
-> > -static int					/* error */
-> > +int
-> >  xfs_bmap_count_blocks(
-> > -	xfs_trans_t		*tp,		/* transaction pointer */
-> > -	xfs_inode_t		*ip,		/* incore inode */
-> > -	int			whichfork,	/* data or attr fork */
-> > -	int			*count)		/* out: count of blocks */
-> > +	struct xfs_trans	*tp,
-> > +	struct xfs_inode	*ip,
-> > +	int			whichfork,
-> > +	unsigned int		*nextents,
-> > +	unsigned long long	*count)
-> >  {
-> >  	struct xfs_btree_block	*block;	/* current btree block */
-> >  	xfs_fsblock_t		bno;	/* block # of "block" */
-> > -	xfs_ifork_t		*ifp;	/* fork structure */
-> > +	struct xfs_ifork	*ifp;	/* fork structure */
-> >  	int			level;	/* btree level, for checking */
-> > -	xfs_mount_t		*mp;	/* file system mount structure */
-> > +	struct xfs_mount	*mp;	/* file system mount structure */
-> >  	__be64			*pp;	/* pointer to block address */
-> > +	int			error;
-> >  
-> >  	bno = NULLFSBLOCK;
-> >  	mp = ip->i_mount;
-> > +	*nextents = 0;
 > 
-> I think we should be consistent between how we initialize nextents and
-> count, whether we initialize both here or expect the caller to do it.
+> Yeah, I'm aware they are not exactly equivalent. I was more thinking
+> that we still have some assert protection if something is blatantly
+> wrong (i.e., corruption, some non dir block, etc.). As it is, if the
+> _leaf1_lasthash() assert fails because we passed a leafn block to the
+> function, the solution presumably is to use the leafn function that
+> basically does the same thing (modulo the assert), right?
 
-I later take advantage of the "doesn't initialize count" behavior for
-inode extent and i_nblocks checking, but yes, this needs to be
-consistent.  AFAICT the other XFS functions either return errors or
-initialize the parameters, so this function should do so too.  I'll
-update the scrub code to reflect this.
+Certainly that seems like the correct caller code fix.
+
+> In other words, what's the value of asserting on the magics between two
+> functions that handle either format in the exact same way? If there is
+> value somewhere, it sounds like perhaps it's to the benefit of the
+> caller than for the helper itself (which is reasonable, I think, but
+> still doesn't justify the duplication IMO).
+
+I wanted to be cautious about removing ASSERTs from functions.  Having
+talked about this with you, I now feel emboldened enough to take your
+original suggestion to simply combine the two functions. :)
+
+> > I suppose we could just make a single parent function that takes the two
+> > magics it wants to see and have _dir2_leaf[1n]_lasthash call the parent
+> > function with the magic numbers they want to check.  How does that
+> > sound?
+> > 
+> 
+> Do I understand correctly that you mean an "internal" function that
+> receives the expected magic as a param (for the assert) and a couple
+> leaf[1|n]_lasthash() wrappers that pass the associated LEAF[1|N] magics?
+> If so, that sounds reasonable to me if you'd really prefer to keep the
+> isolated asserts. I'm more just trying to avoid the code duplication.
+
+<nod> Eh, I'll just collapse both of them into a single _lasthash
+function that doesn't care if it's passed a leaf1 or a leafn.
 
 --D
-
-> That aside, the rest looks good to me:
 > 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Brian
 > 
-> >  	ifp = XFS_IFORK_PTR(ip, whichfork);
-> > -	if ( XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ) {
-> > -		xfs_bmap_count_leaves(ifp, 0, xfs_iext_count(ifp), count);
-> > +	if (!ifp)
-> >  		return 0;
-> > -	}
-> >  
-> > -	/*
-> > -	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
-> > -	 */
-> > -	block = ifp->if_broot;
-> > -	level = be16_to_cpu(block->bb_level);
-> > -	ASSERT(level > 0);
-> > -	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
-> > -	bno = be64_to_cpu(*pp);
-> > -	ASSERT(bno != NULLFSBLOCK);
-> > -	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
-> > -	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
-> > -
-> > -	if (unlikely(xfs_bmap_count_tree(mp, tp, ifp, bno, level, count) < 0)) {
-> > -		XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)", XFS_ERRLEVEL_LOW,
-> > -				 mp);
-> > -		return -EFSCORRUPTED;
-> > +	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
-> > +	case XFS_DINODE_FMT_EXTENTS:
-> > +		*nextents = xfs_iext_count(ifp);
-> > +		xfs_bmap_count_leaves(ifp, 0, (*nextents), count);
-> > +		return 0;
-> > +	case XFS_DINODE_FMT_BTREE:
-> > +		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> > +			error = xfs_iread_extents(tp, ip, whichfork);
-> > +			if (error)
-> > +				return error;
-> > +		}
-> > +
-> > +		/*
-> > +		 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
-> > +		 */
-> > +		block = ifp->if_broot;
-> > +		level = be16_to_cpu(block->bb_level);
-> > +		ASSERT(level > 0);
-> > +		pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
-> > +		bno = be64_to_cpu(*pp);
-> > +		ASSERT(bno != NULLFSBLOCK);
-> > +		ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
-> > +		ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
-> > +
-> > +		error = xfs_bmap_count_tree(mp, tp, ifp, bno, level,
-> > +				nextents, count);
-> > +		if (error) {
-> > +			XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)",
-> > +					XFS_ERRLEVEL_LOW, mp);
-> > +			return -EFSCORRUPTED;
-> > +		}
-> > +		return 0;
-> >  	}
-> >  
-> >  	return 0;
-> > @@ -1789,8 +1809,9 @@ xfs_swap_extent_forks(
-> >  	int			*target_log_flags)
-> >  {
-> >  	struct xfs_ifork	tempifp, *ifp, *tifp;
-> > -	int			aforkblks = 0;
-> > -	int			taforkblks = 0;
-> > +	unsigned long long	aforkblks = 0;
-> > +	unsigned long long	taforkblks = 0;
-> > +	unsigned int		junk;
-> >  	xfs_extnum_t		nextents;
-> >  	uint64_t		tmp;
-> >  	int			error;
-> > @@ -1800,14 +1821,14 @@ xfs_swap_extent_forks(
-> >  	 */
-> >  	if ( ((XFS_IFORK_Q(ip) != 0) && (ip->i_d.di_anextents > 0)) &&
-> >  	     (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
-> > -		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK,
-> > +		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK, &junk,
-> >  				&aforkblks);
-> >  		if (error)
-> >  			return error;
-> >  	}
-> >  	if ( ((XFS_IFORK_Q(tip) != 0) && (tip->i_d.di_anextents > 0)) &&
-> >  	     (tip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
-> > -		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK,
-> > +		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK, &junk,
-> >  				&taforkblks);
-> >  		if (error)
-> >  			return error;
-> > diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-> > index 135d826..993973c 100644
-> > --- a/fs/xfs/xfs_bmap_util.h
-> > +++ b/fs/xfs/xfs_bmap_util.h
-> > @@ -70,4 +70,8 @@ int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
-> >  
-> >  xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
-> >  
-> > +int xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
-> > +			  int whichfork, unsigned int *nextents,
-> > +			  unsigned long long *count);
-> > +
-> >  #endif	/* __XFS_BMAP_UTIL_H__ */
+> > --D
 > > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > 
+> > > Brian
+> > > 
+> > > > +	if (count)
+> > > > +		*count = leafhdr.count;
+> > > > +	if (!leafhdr.count)
+> > > > +		return 0;
+> > > > +
+> > > > +	ents = dp->d_ops->leaf_ents_p(leaf);
+> > > > +	return be32_to_cpu(ents[leafhdr.count - 1].hashval);
+> > > > +}
+> > > > +
+> > > > +/*
+> > > >   * Return the last hash value in the leaf.
+> > > >   * Stale entries are ok.
+> > > >   */
+> > > > diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+> > > > index 576f2d2..c09bca1 100644
+> > > > --- a/fs/xfs/libxfs/xfs_dir2_priv.h
+> > > > +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+> > > > @@ -95,6 +95,8 @@ extern bool xfs_dir3_leaf_check_int(struct xfs_mount *mp, struct xfs_inode *dp,
+> > > >  /* xfs_dir2_node.c */
+> > > >  extern int xfs_dir2_leaf_to_node(struct xfs_da_args *args,
+> > > >  		struct xfs_buf *lbp);
+> > > > +extern xfs_dahash_t xfs_dir2_leaf1_lasthash(struct xfs_inode *dp,
+> > > > +		struct xfs_buf *bp, int *count);
+> > > >  extern xfs_dahash_t xfs_dir2_leafn_lasthash(struct xfs_inode *dp,
+> > > >  		struct xfs_buf *bp, int *count);
+> > > >  extern int xfs_dir2_leafn_lookup_int(struct xfs_buf *bp,
+> > > > 
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
