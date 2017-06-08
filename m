@@ -1,266 +1,179 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37866 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54560 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751528AbdFHOA1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Jun 2017 10:00:27 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 5A4CA7D4E3
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2017 14:00:22 +0000 (UTC)
-Received: from eorzea.usersys.redhat.com (ovpn-204-167.brq.redhat.com [10.40.204.167])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B00C997DC8
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2017 14:00:21 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 2/2 V3] xfs: Properly retry failed inode items in case of error during buffer writeback
-Date: Thu,  8 Jun 2017 16:00:14 +0200
-Message-Id: <20170608140014.25132-3-cmaiolino@redhat.com>
-In-Reply-To: <20170608140014.25132-1-cmaiolino@redhat.com>
-References: <20170608140014.25132-1-cmaiolino@redhat.com>
+        id S1751392AbdFHQwp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Jun 2017 12:52:45 -0400
+Date: Thu, 8 Jun 2017 12:52:43 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 11/13] xfs: return the hash value of a leaf1 directory
+ block
+Message-ID: <20170608165243.GJ5244@bfoster.bfoster>
+References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
+ <149643870873.23065.5974641750134566189.stgit@birch.djwong.org>
+ <20170608130224.GA5244@bfoster.bfoster>
+ <20170608155359.GI4530@birch.djwong.org>
+ <20170608163147.GG5244@bfoster.bfoster>
+ <20170608164307.GK4530@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170608164307.GK4530@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-When a buffer has been failed during writeback, the inode items into it
-are kept flush locked, and are never resubmitted due the flush lock, so,
-if any buffer fails to be written, the items in AIL are never written to
-disk and never unlocked.
+On Thu, Jun 08, 2017 at 09:43:07AM -0700, Darrick J. Wong wrote:
+> On Thu, Jun 08, 2017 at 12:31:50PM -0400, Brian Foster wrote:
+> > On Thu, Jun 08, 2017 at 08:53:59AM -0700, Darrick J. Wong wrote:
+> > > On Thu, Jun 08, 2017 at 09:02:26AM -0400, Brian Foster wrote:
+> > > > On Fri, Jun 02, 2017 at 02:25:08PM -0700, Darrick J. Wong wrote:
+> > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > 
+> > > > > Provide a way to calculate the highest hash value of a leaf1 block.
+> > > > > This will be used by the directory scrubbing code to check the sanity
+> > > > > of hashes in leaf1 directory blocks.
+> > > > > 
+> > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > ---
+> > > > >  fs/xfs/libxfs/xfs_dir2_node.c |   28 ++++++++++++++++++++++++++++
+> > > > >  fs/xfs/libxfs/xfs_dir2_priv.h |    2 ++
+> > > > >  2 files changed, 30 insertions(+)
+> > > > > 
+> > > > > 
+> > > > > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> > > > > index bbd1238..15c1881 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> > > > > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> > > > > @@ -524,6 +524,34 @@ xfs_dir2_free_hdr_check(
+> > > > >  #endif	/* DEBUG */
+> > > > >  
+> > > > >  /*
+> > > > > + * Return the last hash value in the leaf1.
+> > > > > + * Stale entries are ok.
+> > > > > + */
+> > > > > +xfs_dahash_t					/* hash value */
+> > > > > +xfs_dir2_leaf1_lasthash(
+> > > > > +	struct xfs_inode	*dp,
+> > > > > +	struct xfs_buf		*bp,		/* leaf buffer */
+> > > > > +	int			*count)		/* count of entries in leaf */
+> > > > > +{
+> > > > > +	struct xfs_dir2_leaf	*leaf = bp->b_addr;
+> > > > > +	struct xfs_dir2_leaf_entry *ents;
+> > > > > +	struct xfs_dir3_icleaf_hdr leafhdr;
+> > > > > +
+> > > > > +	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
+> > > > > +
+> > > > > +	ASSERT(leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
+> > > > > +	       leafhdr.magic == XFS_DIR3_LEAF1_MAGIC);
+> > > > > +
+> > > > 
+> > > > It looks like the assert is the only difference between this function
+> > > > and xfs_dir2_leafn_lasthash(). It seems like overkill to me to duplicate
+> > > > just for that. How about we fix up the assert to cover the additional
+> > > > magics (and maybe rename _leafn_lasthash() to _leaf_lasthash() if
+> > > > appropriate)?
+> > > > 
+> > > > Actually, taking a closer look, ->leaf_hdr_from_disk() already asserts
+> > > > on the appropriate LEAF1/LEAFN magic based on the callback that is
+> > > > specified. ISTM that we could also just kill the _lasthash() assert.
+> > > 
+> > > The ASSERTs in the _lasthash functions and in leaf_hdr_from_disk aren't
+> > > testing quite the same things.  The asserts in _dir2_leaf[1n]_lasthash
+> > > check that we actually passed it a leaf1 or leafn block, respectively.
+> > > The asserts in _dir[23]_leaf_hdr_from_disk check that we actually fed it
+> > > a dir2 or dir3 leaf* block without caring whether it's leaf1 or leafn.
+> > > That's why I didn't just get rid of the assert and rename the function
+> > > xfs_dir2_leaf_lasthash().
+> > > 
+> > 
+> > Yeah, I'm aware they are not exactly equivalent. I was more thinking
+> > that we still have some assert protection if something is blatantly
+> > wrong (i.e., corruption, some non dir block, etc.). As it is, if the
+> > _leaf1_lasthash() assert fails because we passed a leafn block to the
+> > function, the solution presumably is to use the leafn function that
+> > basically does the same thing (modulo the assert), right?
+> 
+> Certainly that seems like the correct caller code fix.
+> 
+> > In other words, what's the value of asserting on the magics between two
+> > functions that handle either format in the exact same way? If there is
+> > value somewhere, it sounds like perhaps it's to the benefit of the
+> > caller than for the helper itself (which is reasonable, I think, but
+> > still doesn't justify the duplication IMO).
+> 
+> I wanted to be cautious about removing ASSERTs from functions.  Having
+> talked about this with you, I now feel emboldened enough to take your
+> original suggestion to simply combine the two functions. :)
+> 
 
-This causes unmount operation to hang due these items flush locked in AIL,
-but this also causes the items in AIL to never be written back, even when
-the IO device comes back to normal.
+Heh, sounds good. Note that we can just update the assert to cover the
+additional magics rather than remove it entirely (if that isn't what you
+planned to do already).
 
-I've been testing this patch with a DM-thin device, creating a
-filesystem larger than the real device.
+Brian
 
-When writing enough data to fill the DM-thin device, XFS receives ENOSPC
-errors from the device, and keep spinning on xfsaild (when 'retry
-forever' configuration is set).
-
-At this point, the filesystem can not be unmounted because of the flush locked
-items in AIL, but worse, the items in AIL are never retried at all
-(once xfs_inode_item_push() will skip the items that are flush locked),
-even if the underlying DM-thin device is expanded to the proper size.
-
-This patch fixes both cases, retrying any item that has been failed
-previously, using the infra-structure provided by the previous patch.
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
-V2:
-	- Fix XFS_LI_FAILED flag removal
-	- Use atomic operations to set and clear XFS_LI_FAILED flag
-	- Remove check for XBF_WRITE_FAIL in xfs_inode_item_push
-	- Add more comments to the code
-	- Add a helper function to resubmit the failed buffers, so this
-	  can be also used in dquot system without duplicating code
-
-V3:
-	- drop xfs_imap_to_bp call using a pointer in the log item to
-	  hold the buffer address, fixing a possible infinite loop if
-	  xfs_map_to_bp returns -EIO
-	- use xa_lock instead of atomic operations to handle log item
-	  flags
-	- Add a hold to the buffer for each log item failed
-	- move buffer resubmission up in xfs_inode_item_push()
-
- fs/xfs/xfs_buf_item.c   | 39 +++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_buf_item.h   |  2 ++
- fs/xfs/xfs_inode_item.c | 44 +++++++++++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_trans.h      |  1 +
- fs/xfs/xfs_trans_ail.c  |  4 ++--
- 5 files changed, 85 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 523b7a4..9b7bd23 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1222,3 +1222,42 @@ xfs_buf_iodone(
- 	xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
- 	xfs_buf_item_free(BUF_ITEM(lip));
- }
-+
-+/*
-+ * Requeue a failed buffer for writeback
-+ *
-+ * Return true if the buffer has been re-queued properly, false otherwise
-+ */
-+bool
-+xfs_buf_resubmit_failed_buffers(
-+	struct xfs_inode	*ip,
-+	struct xfs_log_item	*lip,
-+	struct list_head	*buffer_list)
-+{
-+	struct xfs_log_item	*next;
-+	struct xfs_buf		*bp;
-+	bool			ret;
-+
-+	bp = lip->li_buf;
-+
-+	/* Clear XFS_LI_FAILED flag from all items before resubmit
-+	 *
-+	 * XFS_LI_FAILED set/clear is protected by xa_lock, caller  this
-+	 * function already have it acquired
-+	 */
-+	for (; lip; lip = next) {
-+		next = lip->li_bio_list;
-+		lip->li_flags &= ~XFS_LI_FAILED;
-+		xfs_buf_rele(bp);
-+	}
-+
-+	/* Add this buffer back to the delayed write list */
-+	xfs_buf_lock(bp);
-+	if (!xfs_buf_delwri_queue(bp, buffer_list))
-+		ret = false;
-+	else
-+		ret = true;
-+
-+	xfs_buf_unlock(bp);
-+	return ret;
-+}
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index f7eba99..32aceae 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -70,6 +70,8 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
- 			      xfs_log_item_t *);
- void	xfs_buf_iodone_callbacks(struct xfs_buf *);
- void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
-+bool	xfs_buf_resubmit_failed_buffers(struct xfs_inode *, struct xfs_log_item *,
-+					struct list_head *);
- 
- extern kmem_zone_t	*xfs_buf_item_zone;
- 
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 08cb7d1..2f5a49e 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -27,6 +27,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_trans_priv.h"
-+#include "xfs_buf_item.h"
- #include "xfs_log.h"
- 
- 
-@@ -475,6 +476,26 @@ xfs_inode_item_unpin(
- 		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
- }
- 
-+STATIC void
-+xfs_inode_item_error(
-+	struct xfs_log_item	*lip,
-+	struct xfs_buf		*bp,
-+	unsigned int		bflags)
-+{
-+
-+	/*
-+	 * The buffer writeback containing this inode has been failed
-+	 * mark it as failed and unlock the flush lock, so it can be retried
-+	 * again.
-+	 * Use xa_lock to avoid races with other log item state changes.
-+	 */
-+	spin_lock(&lip->li_ailp->xa_lock);
-+	xfs_buf_hold(bp);
-+	lip->li_flags |= XFS_LI_FAILED;
-+	lip->li_buf = bp;
-+	spin_unlock(&lip->li_ailp->xa_lock);
-+}
-+
- STATIC uint
- xfs_inode_item_push(
- 	struct xfs_log_item	*lip,
-@@ -504,6 +525,18 @@ xfs_inode_item_push(
- 	}
- 
- 	/*
-+	 * The buffer containing this item failed to be written back
-+	 * previously. Resubmit the buffer for IO.
-+	 */
-+	if (lip->li_flags & XFS_LI_FAILED) {
-+		if (!xfs_buf_resubmit_failed_buffers(ip, lip,
-+						     buffer_list))
-+			rval = XFS_ITEM_FLUSHING;
-+
-+		goto out_unlock;
-+	}
-+
-+	/*
- 	 * Stale inode items should force out the iclog.
- 	 */
- 	if (ip->i_flags & XFS_ISTALE) {
-@@ -622,7 +655,8 @@ static const struct xfs_item_ops xfs_inode_item_ops = {
- 	.iop_unlock	= xfs_inode_item_unlock,
- 	.iop_committed	= xfs_inode_item_committed,
- 	.iop_push	= xfs_inode_item_push,
--	.iop_committing = xfs_inode_item_committing
-+	.iop_committing = xfs_inode_item_committing,
-+	.iop_error	= xfs_inode_item_error
- };
- 
- 
-@@ -710,7 +744,8 @@ xfs_iflush_done(
- 		 * the AIL lock.
- 		 */
- 		iip = INODE_ITEM(blip);
--		if (iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn)
-+		if ((iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn) ||
-+		    lip->li_flags & XFS_LI_FAILED)
- 			need_ail++;
- 
- 		blip = next;
-@@ -718,7 +753,8 @@ xfs_iflush_done(
- 
- 	/* make sure we capture the state of the initial inode. */
- 	iip = INODE_ITEM(lip);
--	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn)
-+	if ((iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn) ||
-+	    lip->li_flags & XFS_LI_FAILED)
- 		need_ail++;
- 
- 	/*
-@@ -739,6 +775,8 @@ xfs_iflush_done(
- 			if (INODE_ITEM(blip)->ili_logged &&
- 			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
- 				mlip_changed |= xfs_ail_delete_one(ailp, blip);
-+			else if (blip->li_flags & XFS_LI_FAILED)
-+				blip->li_flags &= ~XFS_LI_FAILED;
- 		}
- 
- 		if (mlip_changed) {
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 3486517..86c3464 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -49,6 +49,7 @@ typedef struct xfs_log_item {
- 	struct xfs_ail			*li_ailp;	/* ptr to AIL */
- 	uint				li_type;	/* item type */
- 	uint				li_flags;	/* misc flags */
-+	struct xfs_buf			*li_buf;	/* real buffer pointer */
- 	struct xfs_log_item		*li_bio_list;	/* buffer item list */
- 	void				(*li_cb)(struct xfs_buf *,
- 						 struct xfs_log_item *);
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 9056c0f..36e08dd 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -687,13 +687,13 @@ xfs_trans_ail_update_bulk(
- bool
- xfs_ail_delete_one(
- 	struct xfs_ail		*ailp,
--	struct xfs_log_item 	*lip)
-+	struct xfs_log_item	*lip)
- {
- 	struct xfs_log_item	*mlip = xfs_ail_min(ailp);
- 
- 	trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
- 	xfs_ail_delete(ailp, lip);
--	lip->li_flags &= ~XFS_LI_IN_AIL;
-+	lip->li_flags &= ~(XFS_LI_IN_AIL | XFS_LI_FAILED);
- 	lip->li_lsn = 0;
- 
- 	return mlip == lip;
--- 
-2.9.3
-
+> > > I suppose we could just make a single parent function that takes the two
+> > > magics it wants to see and have _dir2_leaf[1n]_lasthash call the parent
+> > > function with the magic numbers they want to check.  How does that
+> > > sound?
+> > > 
+> > 
+> > Do I understand correctly that you mean an "internal" function that
+> > receives the expected magic as a param (for the assert) and a couple
+> > leaf[1|n]_lasthash() wrappers that pass the associated LEAF[1|N] magics?
+> > If so, that sounds reasonable to me if you'd really prefer to keep the
+> > isolated asserts. I'm more just trying to avoid the code duplication.
+> 
+> <nod> Eh, I'll just collapse both of them into a single _lasthash
+> function that doesn't care if it's passed a leaf1 or a leafn.
+> 
+> --D
+> > 
+> > Brian
+> > 
+> > > --D
+> > > 
+> > > > 
+> > > > Brian
+> > > > 
+> > > > > +	if (count)
+> > > > > +		*count = leafhdr.count;
+> > > > > +	if (!leafhdr.count)
+> > > > > +		return 0;
+> > > > > +
+> > > > > +	ents = dp->d_ops->leaf_ents_p(leaf);
+> > > > > +	return be32_to_cpu(ents[leafhdr.count - 1].hashval);
+> > > > > +}
+> > > > > +
+> > > > > +/*
+> > > > >   * Return the last hash value in the leaf.
+> > > > >   * Stale entries are ok.
+> > > > >   */
+> > > > > diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+> > > > > index 576f2d2..c09bca1 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_dir2_priv.h
+> > > > > +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+> > > > > @@ -95,6 +95,8 @@ extern bool xfs_dir3_leaf_check_int(struct xfs_mount *mp, struct xfs_inode *dp,
+> > > > >  /* xfs_dir2_node.c */
+> > > > >  extern int xfs_dir2_leaf_to_node(struct xfs_da_args *args,
+> > > > >  		struct xfs_buf *lbp);
+> > > > > +extern xfs_dahash_t xfs_dir2_leaf1_lasthash(struct xfs_inode *dp,
+> > > > > +		struct xfs_buf *bp, int *count);
+> > > > >  extern xfs_dahash_t xfs_dir2_leafn_lasthash(struct xfs_inode *dp,
+> > > > >  		struct xfs_buf *bp, int *count);
+> > > > >  extern int xfs_dir2_leafn_lookup_int(struct xfs_buf *bp,
+> > > > > 
+> > > > > --
+> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
