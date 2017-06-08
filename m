@@ -1,218 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38613 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751239AbdFFUfa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2017 16:35:30 -0400
-Date: Tue, 6 Jun 2017 13:35:22 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/13] xfs: refactor the ifork block counting function
-Message-ID: <20170606203522.GF5196@birch.djwong.org>
-References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
- <149643870157.23065.16428953914864164786.stgit@birch.djwong.org>
- <20170606162920.GE55166@bfoster.bfoster>
- <20170606185112.GE5196@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170606185112.GE5196@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53304 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751528AbdFHOAZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Jun 2017 10:00:25 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 31216793FC
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2017 14:00:20 +0000 (UTC)
+Received: from eorzea.usersys.redhat.com (ovpn-204-167.brq.redhat.com [10.40.204.167])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8AFDC97DCC
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2017 14:00:19 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 0/2 V3] Resubmit items failed during writeback
+Date: Thu,  8 Jun 2017 16:00:12 +0200
+Message-Id: <20170608140014.25132-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Jun 06, 2017 at 11:51:12AM -0700, Darrick J. Wong wrote:
-> On Tue, Jun 06, 2017 at 12:29:21PM -0400, Brian Foster wrote:
-> > On Fri, Jun 02, 2017 at 02:25:01PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Refactor the inode fork block counting function to count extents for us
-> > > at the same time.  This will be used by the bmbt scrubber function.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/xfs_bmap_util.c |  105 +++++++++++++++++++++++++++++-------------------
-> > >  fs/xfs/xfs_bmap_util.h |    4 ++
-> > >  2 files changed, 67 insertions(+), 42 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > > index fe83bbc..fc15305 100644
-> > > --- a/fs/xfs/xfs_bmap_util.c
-> > > +++ b/fs/xfs/xfs_bmap_util.c
-> > ...
-> > > @@ -336,44 +339,61 @@ xfs_bmap_count_tree(
-> > >  /*
-> > >   * Count fsblocks of the given fork.
-> > >   */
-> > > -static int					/* error */
-> > > +int
-> > >  xfs_bmap_count_blocks(
-> > > -	xfs_trans_t		*tp,		/* transaction pointer */
-> > > -	xfs_inode_t		*ip,		/* incore inode */
-> > > -	int			whichfork,	/* data or attr fork */
-> > > -	int			*count)		/* out: count of blocks */
-> > > +	struct xfs_trans	*tp,
-> > > +	struct xfs_inode	*ip,
-> > > +	int			whichfork,
-> > > +	unsigned int		*nextents,
-> > > +	unsigned long long	*count)
-> > >  {
-> > >  	struct xfs_btree_block	*block;	/* current btree block */
-> > >  	xfs_fsblock_t		bno;	/* block # of "block" */
-> > > -	xfs_ifork_t		*ifp;	/* fork structure */
-> > > +	struct xfs_ifork	*ifp;	/* fork structure */
-> > >  	int			level;	/* btree level, for checking */
-> > > -	xfs_mount_t		*mp;	/* file system mount structure */
-> > > +	struct xfs_mount	*mp;	/* file system mount structure */
-> > >  	__be64			*pp;	/* pointer to block address */
-> > > +	int			error;
-> > >  
-> > >  	bno = NULLFSBLOCK;
-> > >  	mp = ip->i_mount;
-> > > +	*nextents = 0;
-> > 
-> > I think we should be consistent between how we initialize nextents and
-> > count, whether we initialize both here or expect the caller to do it.
-> 
-> I later take advantage of the "doesn't initialize count" behavior for
-> inode extent and i_nblocks checking, but yes, this needs to be
-> consistent.  AFAICT the other XFS functions either return errors or
-> initialize the parameters, so this function should do so too.  I'll
-> update the scrub code to reflect this.
+Hi,
 
-I found a discrepancy, too -- xfs_bmap_count_leaves counts all the
-blocks in the in-core inode fork, including delalloc reservations.
-However, xfs_bmap_count_tree iterates the on-disk bmap btree, which
-means that it does /not/ count delalloc reservations.  For the only
-caller so far (xfs_swap_extents) this isn't a problem because we've
-flushed the dirty data and locked the inode so there aren't any da
-reservations.  However, for scrub we don't necessarily flush the page
-cache, so the da reservations sometimes get counted and sometimes don't,
-which causes a cross-referencing error if scrub happens to hit a btree
-format file that has been written to.
+this is the 3rd revision of this patchset, based on the discussion in the
+previous version, hoping to have fixed all the issues pointed there :)
 
-So.... one more patch to fix that. :(
+I've removed the atomic handling of the xfs_log_item flags once it has been
+decided to convert the usage to atomic handling after the patchset if accepted,
+so, I'll add it to another patchset together with the dquot fix for the items
+resubmission.
 
---D
+More details on each patch.
 
-> 
-> --D
-> 
-> > That aside, the rest looks good to me:
-> > 
-> > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> > 
-> > >  	ifp = XFS_IFORK_PTR(ip, whichfork);
-> > > -	if ( XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ) {
-> > > -		xfs_bmap_count_leaves(ifp, 0, xfs_iext_count(ifp), count);
-> > > +	if (!ifp)
-> > >  		return 0;
-> > > -	}
-> > >  
-> > > -	/*
-> > > -	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
-> > > -	 */
-> > > -	block = ifp->if_broot;
-> > > -	level = be16_to_cpu(block->bb_level);
-> > > -	ASSERT(level > 0);
-> > > -	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
-> > > -	bno = be64_to_cpu(*pp);
-> > > -	ASSERT(bno != NULLFSBLOCK);
-> > > -	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
-> > > -	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
-> > > -
-> > > -	if (unlikely(xfs_bmap_count_tree(mp, tp, ifp, bno, level, count) < 0)) {
-> > > -		XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)", XFS_ERRLEVEL_LOW,
-> > > -				 mp);
-> > > -		return -EFSCORRUPTED;
-> > > +	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
-> > > +	case XFS_DINODE_FMT_EXTENTS:
-> > > +		*nextents = xfs_iext_count(ifp);
-> > > +		xfs_bmap_count_leaves(ifp, 0, (*nextents), count);
-> > > +		return 0;
-> > > +	case XFS_DINODE_FMT_BTREE:
-> > > +		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> > > +			error = xfs_iread_extents(tp, ip, whichfork);
-> > > +			if (error)
-> > > +				return error;
-> > > +		}
-> > > +
-> > > +		/*
-> > > +		 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
-> > > +		 */
-> > > +		block = ifp->if_broot;
-> > > +		level = be16_to_cpu(block->bb_level);
-> > > +		ASSERT(level > 0);
-> > > +		pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
-> > > +		bno = be64_to_cpu(*pp);
-> > > +		ASSERT(bno != NULLFSBLOCK);
-> > > +		ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
-> > > +		ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
-> > > +
-> > > +		error = xfs_bmap_count_tree(mp, tp, ifp, bno, level,
-> > > +				nextents, count);
-> > > +		if (error) {
-> > > +			XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)",
-> > > +					XFS_ERRLEVEL_LOW, mp);
-> > > +			return -EFSCORRUPTED;
-> > > +		}
-> > > +		return 0;
-> > >  	}
-> > >  
-> > >  	return 0;
-> > > @@ -1789,8 +1809,9 @@ xfs_swap_extent_forks(
-> > >  	int			*target_log_flags)
-> > >  {
-> > >  	struct xfs_ifork	tempifp, *ifp, *tifp;
-> > > -	int			aforkblks = 0;
-> > > -	int			taforkblks = 0;
-> > > +	unsigned long long	aforkblks = 0;
-> > > +	unsigned long long	taforkblks = 0;
-> > > +	unsigned int		junk;
-> > >  	xfs_extnum_t		nextents;
-> > >  	uint64_t		tmp;
-> > >  	int			error;
-> > > @@ -1800,14 +1821,14 @@ xfs_swap_extent_forks(
-> > >  	 */
-> > >  	if ( ((XFS_IFORK_Q(ip) != 0) && (ip->i_d.di_anextents > 0)) &&
-> > >  	     (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
-> > > -		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK,
-> > > +		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK, &junk,
-> > >  				&aforkblks);
-> > >  		if (error)
-> > >  			return error;
-> > >  	}
-> > >  	if ( ((XFS_IFORK_Q(tip) != 0) && (tip->i_d.di_anextents > 0)) &&
-> > >  	     (tip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
-> > > -		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK,
-> > > +		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK, &junk,
-> > >  				&taforkblks);
-> > >  		if (error)
-> > >  			return error;
-> > > diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-> > > index 135d826..993973c 100644
-> > > --- a/fs/xfs/xfs_bmap_util.h
-> > > +++ b/fs/xfs/xfs_bmap_util.h
-> > > @@ -70,4 +70,8 @@ int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
-> > >  
-> > >  xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
-> > >  
-> > > +int xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
-> > > +			  int whichfork, unsigned int *nextents,
-> > > +			  unsigned long long *count);
-> > > +
-> > >  #endif	/* __XFS_BMAP_UTIL_H__ */
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers
+
+-- 
+2.9.3
+
