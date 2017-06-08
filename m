@@ -1,191 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36311 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751404AbdFFSFn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2017 14:05:43 -0400
-Date: Tue, 6 Jun 2017 11:05:38 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 09/13] xfs: separate function to check if reflink flag
- needed
-Message-ID: <20170606180538.GC5196@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46224 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751449AbdFHQbw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Jun 2017 12:31:52 -0400
+Date: Thu, 8 Jun 2017 12:31:50 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 11/13] xfs: return the hash value of a leaf1 directory
+ block
+Message-ID: <20170608163147.GG5244@bfoster.bfoster>
 References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
- <149643869528.23065.5474019120391564972.stgit@birch.djwong.org>
- <20170606162833.GD55166@bfoster.bfoster>
+ <149643870873.23065.5974641750134566189.stgit@birch.djwong.org>
+ <20170608130224.GA5244@bfoster.bfoster>
+ <20170608155359.GI4530@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170606162833.GD55166@bfoster.bfoster>
+In-Reply-To: <20170608155359.GI4530@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 06, 2017 at 12:28:33PM -0400, Brian Foster wrote:
-> On Fri, Jun 02, 2017 at 02:24:55PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jun 08, 2017 at 08:53:59AM -0700, Darrick J. Wong wrote:
+> On Thu, Jun 08, 2017 at 09:02:26AM -0400, Brian Foster wrote:
+> > On Fri, Jun 02, 2017 at 02:25:08PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Provide a way to calculate the highest hash value of a leaf1 block.
+> > > This will be used by the directory scrubbing code to check the sanity
+> > > of hashes in leaf1 directory blocks.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_dir2_node.c |   28 ++++++++++++++++++++++++++++
+> > >  fs/xfs/libxfs/xfs_dir2_priv.h |    2 ++
+> > >  2 files changed, 30 insertions(+)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> > > index bbd1238..15c1881 100644
+> > > --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> > > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> > > @@ -524,6 +524,34 @@ xfs_dir2_free_hdr_check(
+> > >  #endif	/* DEBUG */
+> > >  
+> > >  /*
+> > > + * Return the last hash value in the leaf1.
+> > > + * Stale entries are ok.
+> > > + */
+> > > +xfs_dahash_t					/* hash value */
+> > > +xfs_dir2_leaf1_lasthash(
+> > > +	struct xfs_inode	*dp,
+> > > +	struct xfs_buf		*bp,		/* leaf buffer */
+> > > +	int			*count)		/* count of entries in leaf */
+> > > +{
+> > > +	struct xfs_dir2_leaf	*leaf = bp->b_addr;
+> > > +	struct xfs_dir2_leaf_entry *ents;
+> > > +	struct xfs_dir3_icleaf_hdr leafhdr;
+> > > +
+> > > +	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
+> > > +
+> > > +	ASSERT(leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
+> > > +	       leafhdr.magic == XFS_DIR3_LEAF1_MAGIC);
+> > > +
 > > 
-> > Separate the "clear reflink flag" function into one function that checks
-> > if the flag is needed, and a second function that checks and clears the
-> > flag.  The inode scrub code will want to check the necessity of the flag
-> > without clearing it.
+> > It looks like the assert is the only difference between this function
+> > and xfs_dir2_leafn_lasthash(). It seems like overkill to me to duplicate
+> > just for that. How about we fix up the assert to cover the additional
+> > magics (and maybe rename _leafn_lasthash() to _leaf_lasthash() if
+> > appropriate)?
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_reflink.c |   88 ++++++++++++++++++++++++++++++--------------------
-> >  fs/xfs/xfs_reflink.h |    2 +
-> >  2 files changed, 54 insertions(+), 36 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index e25c995..133ee02 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -1406,57 +1406,73 @@ xfs_reflink_dirty_extents(
-> >  	return error;
-> >  }
-> >  
-> > -/* Clear the inode reflink flag if there are no shared extents. */
-> > +/* Does this inode need the reflink flag? */
-> >  int
-> > -xfs_reflink_clear_inode_flag(
-> > -	struct xfs_inode	*ip,
-> > -	struct xfs_trans	**tpp)
-> > +xfs_reflink_needs_inode_flag(
-> > +	struct xfs_trans		*tp,
-> > +	struct xfs_inode		*ip,
-> > +	bool				*needs_flag)
+> > Actually, taking a closer look, ->leaf_hdr_from_disk() already asserts
+> > on the appropriate LEAF1/LEAFN magic based on the callback that is
+> > specified. ISTM that we could also just kill the _lasthash() assert.
 > 
-> This looks Ok to me, but just a nit that the _needs_inode_flag() name
-> sounds slightly confusing to me because any context around the flag is
-> now isolated to the caller. Could we call this something more generic
-> like _has_shared_extents() (and rename needs_flag appropriately as
-> well)?
-
-Yes, that's a much better name. :)
-
-int xfs_reflink_inode_has_shared_extents(..., bool *has_shared);
-
---D
-
+> The ASSERTs in the _lasthash functions and in leaf_hdr_from_disk aren't
+> testing quite the same things.  The asserts in _dir2_leaf[1n]_lasthash
+> check that we actually passed it a leaf1 or leafn block, respectively.
+> The asserts in _dir[23]_leaf_hdr_from_disk check that we actually fed it
+> a dir2 or dir3 leaf* block without caring whether it's leaf1 or leafn.
+> That's why I didn't just get rid of the assert and rename the function
+> xfs_dir2_leaf_lasthash().
 > 
-> Brian
+
+Yeah, I'm aware they are not exactly equivalent. I was more thinking
+that we still have some assert protection if something is blatantly
+wrong (i.e., corruption, some non dir block, etc.). As it is, if the
+_leaf1_lasthash() assert fails because we passed a leafn block to the
+function, the solution presumably is to use the leafn function that
+basically does the same thing (modulo the assert), right?
+
+In other words, what's the value of asserting on the magics between two
+functions that handle either format in the exact same way? If there is
+value somewhere, it sounds like perhaps it's to the benefit of the
+caller than for the helper itself (which is reasonable, I think, but
+still doesn't justify the duplication IMO).
+
+> I suppose we could just make a single parent function that takes the two
+> magics it wants to see and have _dir2_leaf[1n]_lasthash call the parent
+> function with the magic numbers they want to check.  How does that
+> sound?
 > 
-> >  {
-> > -	struct xfs_mount	*mp = ip->i_mount;
-> > -	xfs_fileoff_t		fbno;
-> > -	xfs_filblks_t		end;
-> > -	xfs_agnumber_t		agno;
-> > -	xfs_agblock_t		agbno;
-> > -	xfs_extlen_t		aglen;
-> > -	xfs_agblock_t		rbno;
-> > -	xfs_extlen_t		rlen;
-> > -	struct xfs_bmbt_irec	map;
-> > -	int			nmaps;
-> > -	int			error = 0;
-> > -
-> > -	ASSERT(xfs_is_reflink_inode(ip));
-> > +	struct xfs_bmbt_irec		got;
-> > +	struct xfs_mount		*mp = ip->i_mount;
-> > +	struct xfs_ifork		*ifp;
-> > +	xfs_agnumber_t			agno;
-> > +	xfs_agblock_t			agbno;
-> > +	xfs_extlen_t			aglen;
-> > +	xfs_agblock_t			rbno;
-> > +	xfs_extlen_t			rlen;
-> > +	xfs_extnum_t			idx;
-> > +	bool				found;
-> > +	int				error;
-> >  
-> > -	fbno = 0;
-> > -	end = XFS_B_TO_FSB(mp, i_size_read(VFS_I(ip)));
-> > -	while (end - fbno > 0) {
-> > -		nmaps = 1;
-> > -		/*
-> > -		 * Look for extents in the file.  Skip holes, delalloc, or
-> > -		 * unwritten extents; they can't be reflinked.
-> > -		 */
-> > -		error = xfs_bmapi_read(ip, fbno, end - fbno, &map, &nmaps, 0);
-> > +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> > +	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> > +		error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
-> >  		if (error)
-> >  			return error;
-> > -		if (nmaps == 0)
-> > -			break;
-> > -		if (!xfs_bmap_is_real_extent(&map))
-> > -			goto next;
-> > +	}
-> >  
-> > -		agno = XFS_FSB_TO_AGNO(mp, map.br_startblock);
-> > -		agbno = XFS_FSB_TO_AGBNO(mp, map.br_startblock);
-> > -		aglen = map.br_blockcount;
-> > +	*needs_flag = false;
-> > +	found = xfs_iext_lookup_extent(ip, ifp, 0, &idx, &got);
-> > +	while (found) {
-> > +		if (isnullstartblock(got.br_startblock) ||
-> > +		    got.br_state != XFS_EXT_NORM)
-> > +			goto next;
-> > +		agno = XFS_FSB_TO_AGNO(mp, got.br_startblock);
-> > +		agbno = XFS_FSB_TO_AGBNO(mp, got.br_startblock);
-> > +		aglen = got.br_blockcount;
-> >  
-> > -		error = xfs_reflink_find_shared(mp, *tpp, agno, agbno, aglen,
-> > +		error = xfs_reflink_find_shared(mp, tp, agno, agbno, aglen,
-> >  				&rbno, &rlen, false);
-> >  		if (error)
-> >  			return error;
-> >  		/* Is there still a shared block here? */
-> > -		if (rbno != NULLAGBLOCK)
-> > +		if (rbno != NULLAGBLOCK) {
-> > +			*needs_flag = true;
-> >  			return 0;
-> > +		}
-> >  next:
-> > -		fbno = map.br_startoff + map.br_blockcount;
-> > +		found = xfs_iext_get_extent(ifp, ++idx, &got);
-> >  	}
-> >  
-> > +	return 0;
-> > +}
-> > +
-> > +/* Clear the inode reflink flag if there are no shared extents. */
-> > +int
-> > +xfs_reflink_clear_inode_flag(
-> > +	struct xfs_inode	*ip,
-> > +	struct xfs_trans	**tpp)
-> > +{
-> > +	bool			needs;
-> > +	int			error = 0;
-> > +
-> > +	ASSERT(xfs_is_reflink_inode(ip));
-> > +
-> > +	error = xfs_reflink_needs_inode_flag(*tpp, ip, &needs);
-> > +	if (error || needs)
-> > +		return error;
-> > +
-> >  	/*
-> >  	 * We didn't find any shared blocks so turn off the reflink flag.
-> >  	 * First, get rid of any leftover CoW mappings.
-> > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> > index b8cc5c3..a26d795 100644
-> > --- a/fs/xfs/xfs_reflink.h
-> > +++ b/fs/xfs/xfs_reflink.h
-> > @@ -47,6 +47,8 @@ extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
-> >  extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
-> >  extern int xfs_reflink_remap_range(struct file *file_in, loff_t pos_in,
-> >  		struct file *file_out, loff_t pos_out, u64 len, bool is_dedupe);
-> > +extern int xfs_reflink_needs_inode_flag(struct xfs_trans *tp,
-> > +		struct xfs_inode *ip, bool *needs_flag);
-> >  extern int xfs_reflink_clear_inode_flag(struct xfs_inode *ip,
-> >  		struct xfs_trans **tpp);
-> >  extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
+
+Do I understand correctly that you mean an "internal" function that
+receives the expected magic as a param (for the assert) and a couple
+leaf[1|n]_lasthash() wrappers that pass the associated LEAF[1|N] magics?
+If so, that sounds reasonable to me if you'd really prefer to keep the
+isolated asserts. I'm more just trying to avoid the code duplication.
+
+Brian
+
+> --D
+> 
 > > 
+> > Brian
+> > 
+> > > +	if (count)
+> > > +		*count = leafhdr.count;
+> > > +	if (!leafhdr.count)
+> > > +		return 0;
+> > > +
+> > > +	ents = dp->d_ops->leaf_ents_p(leaf);
+> > > +	return be32_to_cpu(ents[leafhdr.count - 1].hashval);
+> > > +}
+> > > +
+> > > +/*
+> > >   * Return the last hash value in the leaf.
+> > >   * Stale entries are ok.
+> > >   */
+> > > diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+> > > index 576f2d2..c09bca1 100644
+> > > --- a/fs/xfs/libxfs/xfs_dir2_priv.h
+> > > +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+> > > @@ -95,6 +95,8 @@ extern bool xfs_dir3_leaf_check_int(struct xfs_mount *mp, struct xfs_inode *dp,
+> > >  /* xfs_dir2_node.c */
+> > >  extern int xfs_dir2_leaf_to_node(struct xfs_da_args *args,
+> > >  		struct xfs_buf *lbp);
+> > > +extern xfs_dahash_t xfs_dir2_leaf1_lasthash(struct xfs_inode *dp,
+> > > +		struct xfs_buf *bp, int *count);
+> > >  extern xfs_dahash_t xfs_dir2_leafn_lasthash(struct xfs_inode *dp,
+> > >  		struct xfs_buf *bp, int *count);
+> > >  extern int xfs_dir2_leafn_lookup_int(struct xfs_buf *bp,
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > the body of a message to majordomo@vger.kernel.org
 > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
