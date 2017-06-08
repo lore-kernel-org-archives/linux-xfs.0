@@ -1,51 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:53766 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751757AbdFPB4M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Jun 2017 21:56:12 -0400
-Subject: Re: [PATCH] docs: fix mailing list
-References: <20170615234854.GA5421@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <dfc74ab6-c637-793b-c020-2f99fd5df1df@sandeen.net>
-Date: Thu, 15 Jun 2017 20:56:10 -0500
+Received: from mail-vk0-f54.google.com ([209.85.213.54]:32788 "EHLO
+        mail-vk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751597AbdFHPmM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2017 11:42:12 -0400
+Received: by mail-vk0-f54.google.com with SMTP id p62so18542456vkp.0
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Jun 2017 08:42:12 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170615234854.GA5421@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+From: Sweet Tea Dorminy <sweettea@permabit.com>
+Date: Thu, 8 Jun 2017 11:42:11 -0400
+Message-ID: <CALoZfD4-uqhRSfEh0Y+v8jjSDY2KkAh-hhwdLnRgZopHEETUXA@mail.gmail.com>
+Subject: XFS journal write ordering constraints?
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On 6/15/17 6:48 PM, Darrick J. Wong wrote:
-> Fix the mailing list since it's way out of date.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Greetings;
 
-I can handle this one! ;)
+When using XFS with a 1k block size atop our device, we regularly get
+"log record CRC mismatch"es when mounting XFS after a crash, and we
+are attempting to understand why. We are using RHEL7.3 with its kernel
+3.10.0-514.10.2.el7.x86_64, xfsprogs version 4.5.0.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Tracing indicates the following situation occurs:
+       Some pair of consecutive locations contains data A1 and B1, respectively.
+       The XFS journal issues new writes to those locations,
+containing data A2 and B2.
+       The write of B' finishes, but A' is still outstanding at the
+time of the crash.
+       Crash occurs. The data on disk is A1 and B2, respectively.
+       XFS fails to mount, complaining that the checksum mismatches.
 
-> ---
->  .../xfs_filesystem_structure.asciidoc              |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
-> index 5540fa0..4b0a054 100644
-> --- a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
-> +++ b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
-> @@ -34,7 +34,7 @@ design goals.
->  The information contained in this document derives from the XFS source code in
->  the Linux kernel as of v4.3.  This book's source code is available at
->  +git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git+.  Feedback should
-> -be sent to the XFS mailing list, currently at +xfs@oss.sgi.com+.
-> +be sent to the XFS mailing list, currently at +linux-xfs@vger.kernel.org+.
->  
->  [NOTE]
->  All fields in XFS metadata structures are in big-endian byte order except for
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Does XFS expect sequentially issued journal IO to be committed to disk
+in the order of issuance due to the use of FUA?
+
+Thanks!
+
+Sweet Tea Dorminy
+Permabit Technology Corporation
+Cambridge, MA
