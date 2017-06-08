@@ -1,93 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33114 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751384AbdFFMJB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jun 2017 08:09:01 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4AB67334592
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2017 12:08:51 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2F00619F11
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2017 12:08:51 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/2] xfs: remove bli from AIL before release on transaction abort
-Date: Tue,  6 Jun 2017 08:08:50 -0400
-Message-Id: <1496750930-53954-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1496750930-53954-1-git-send-email-bfoster@redhat.com>
-References: <1496750930-53954-1-git-send-email-bfoster@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:34893 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751763AbdFHPnN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2017 11:43:13 -0400
+Date: Thu, 8 Jun 2017 08:43:11 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] xfs: fix spurious spin_is_locked() assert failures on
+ non-smp kernels
+Message-ID: <20170608154311.GA6956@infradead.org>
+References: <1496840455-65279-1-git-send-email-bfoster@redhat.com>
+ <20170608152607.GH4530@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170608152607.GH4530@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-When a buffer is modified, logged and committed, it ultimately ends
-up sitting on the AIL with a dirty bli waiting for metadata
-writeback. If another transaction locks and invalidates the buffer
-(freeing an inode chunk, for example) in the meantime, the bli is
-flagged as stale, the dirty state is cleared and the bli remains in
-the AIL.
+On Thu, Jun 08, 2017 at 08:26:07AM -0700, Darrick J. Wong wrote:
+> Hmm.... do you want me to put this into 4.12?  It's sort of a regression
+> introduced in -rc4, but on the other hand this seems to have been broken
+> for quite a while for SMP=n && XFS_DEBUG=y and nobody complained...
 
-If a shutdown occurs before the transaction that has invalidated the
-buffer is committed, the transaction is ultimately aborted. The log
-items are flagged as such and ->iop_unlock() handles the aborted
-items. Because the bli is clean (due to the invalidation),
-->iop_unlock() unconditionally releases it. The log item may still
-reside in the AIL, however, which means the I/O completion handler
-may still run and attempt to access it. This results in assert
-failure due to the release of the bli while still present in the AIL
-and a subsequent NULL dereference and panic in the buffer I/O
-completion handling. This can be reproduced by running generic/388
-in repetition.
-
-To avoid this problem, update xfs_buf_item_unlock() to first check
-whether the bli is aborted and if so, remove it from the AIL before
-it is released. This ensures that the bli is no longer accessed
-during the shutdown sequence after it has been freed.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_buf_item.c | 21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 0306168..f6a8422 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -636,20 +636,23 @@ xfs_buf_item_unlock(
- 
- 	/*
- 	 * Clean buffers, by definition, cannot be in the AIL. However, aborted
--	 * buffers may be dirty and hence in the AIL. Therefore if we are
--	 * aborting a buffer and we've just taken the last refernce away, we
--	 * have to check if it is in the AIL before freeing it. We need to free
--	 * it in this case, because an aborted transaction has already shut the
--	 * filesystem down and this is the last chance we will have to do so.
-+	 * buffers may be in the AIL regardless of dirty state. An aborted
-+	 * transaction that invalidates a buffer already in the AIL may have
-+	 * marked it stale and cleared the dirty state, for example.
-+	 *
-+	 * Therefore if we are aborting a buffer and we've just taken the last
-+	 * reference away, we have to check if it is in the AIL before freeing
-+	 * it. We need to free it in this case, because an aborted transaction
-+	 * has already shut the filesystem down and this is the last chance we
-+	 * will have to do so.
- 	 */
- 	if (atomic_dec_and_test(&bip->bli_refcount)) {
--		if (clean)
--			xfs_buf_item_relse(bp);
--		else if (aborted) {
-+		if (aborted) {
- 			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
- 			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
- 			xfs_buf_item_relse(bp);
--		}
-+		} else if (clean)
-+			xfs_buf_item_relse(bp);
- 	}
- 
- 	if (!(flags & XFS_BLI_HOLD))
--- 
-2.7.5
-
+Please add it to 4.12.  It's harmless, and the thing that triggered it
+only was merged in 4.12-rc.
