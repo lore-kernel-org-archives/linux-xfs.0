@@ -1,105 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51914 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47772 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751092AbdFHNC2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Jun 2017 09:02:28 -0400
-Date: Thu, 8 Jun 2017 09:02:26 -0400
+        id S1751092AbdFHNCs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Jun 2017 09:02:48 -0400
+Date: Thu, 8 Jun 2017 09:02:46 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 11/13] xfs: return the hash value of a leaf1 directory
- block
-Message-ID: <20170608130224.GA5244@bfoster.bfoster>
+Subject: Re: [PATCH 14/13] xfs: allow reading of already-locked remote
+ symbolic link
+Message-ID: <20170608130244.GD5244@bfoster.bfoster>
 References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
- <149643870873.23065.5974641750134566189.stgit@birch.djwong.org>
+ <20170602221942.GE5636@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <149643870873.23065.5974641750134566189.stgit@birch.djwong.org>
+In-Reply-To: <20170602221942.GE5636@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jun 02, 2017 at 02:25:08PM -0700, Darrick J. Wong wrote:
+On Fri, Jun 02, 2017 at 03:19:42PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Provide a way to calculate the highest hash value of a leaf1 block.
-> This will be used by the directory scrubbing code to check the sanity
-> of hashes in leaf1 directory blocks.
+> Expose the readlink variant that doesn't take the inode lock so that
+> the scrubber can inspect symlink contents.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_dir2_node.c |   28 ++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_dir2_priv.h |    2 ++
->  2 files changed, 30 insertions(+)
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_symlink.c |    6 +++---
+>  fs/xfs/xfs_symlink.h |    1 +
+>  2 files changed, 4 insertions(+), 3 deletions(-)
 > 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> index bbd1238..15c1881 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> @@ -524,6 +524,34 @@ xfs_dir2_free_hdr_check(
->  #endif	/* DEBUG */
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index f2cb45e..49380485 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -43,8 +43,8 @@
+>  #include "xfs_log.h"
 >  
->  /*
-> + * Return the last hash value in the leaf1.
-> + * Stale entries are ok.
-> + */
-> +xfs_dahash_t					/* hash value */
-> +xfs_dir2_leaf1_lasthash(
-> +	struct xfs_inode	*dp,
-> +	struct xfs_buf		*bp,		/* leaf buffer */
-> +	int			*count)		/* count of entries in leaf */
-> +{
-> +	struct xfs_dir2_leaf	*leaf = bp->b_addr;
-> +	struct xfs_dir2_leaf_entry *ents;
-> +	struct xfs_dir3_icleaf_hdr leafhdr;
-> +
-> +	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
-> +
-> +	ASSERT(leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
-> +	       leafhdr.magic == XFS_DIR3_LEAF1_MAGIC);
-> +
-
-It looks like the assert is the only difference between this function
-and xfs_dir2_leafn_lasthash(). It seems like overkill to me to duplicate
-just for that. How about we fix up the assert to cover the additional
-magics (and maybe rename _leafn_lasthash() to _leaf_lasthash() if
-appropriate)?
-
-Actually, taking a closer look, ->leaf_hdr_from_disk() already asserts
-on the appropriate LEAF1/LEAFN magic based on the callback that is
-specified. ISTM that we could also just kill the _lasthash() assert.
-
-Brian
-
-> +	if (count)
-> +		*count = leafhdr.count;
-> +	if (!leafhdr.count)
-> +		return 0;
-> +
-> +	ents = dp->d_ops->leaf_ents_p(leaf);
-> +	return be32_to_cpu(ents[leafhdr.count - 1].hashval);
-> +}
-> +
-> +/*
->   * Return the last hash value in the leaf.
->   * Stale entries are ok.
->   */
-> diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-> index 576f2d2..c09bca1 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_priv.h
-> +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-> @@ -95,6 +95,8 @@ extern bool xfs_dir3_leaf_check_int(struct xfs_mount *mp, struct xfs_inode *dp,
->  /* xfs_dir2_node.c */
->  extern int xfs_dir2_leaf_to_node(struct xfs_da_args *args,
->  		struct xfs_buf *lbp);
-> +extern xfs_dahash_t xfs_dir2_leaf1_lasthash(struct xfs_inode *dp,
-> +		struct xfs_buf *bp, int *count);
->  extern xfs_dahash_t xfs_dir2_leafn_lasthash(struct xfs_inode *dp,
->  		struct xfs_buf *bp, int *count);
->  extern int xfs_dir2_leafn_lookup_int(struct xfs_buf *bp,
-> 
+>  /* ----- Kernel only functions below ----- */
+> -STATIC int
+> -xfs_readlink_bmap(
+> +int
+> +xfs_readlink_bmap_ilocked(
+>  	struct xfs_inode	*ip,
+>  	char			*link)
+>  {
+> @@ -153,7 +153,7 @@ xfs_readlink(
+>  	}
+>  
+>  
+> -	error = xfs_readlink_bmap(ip, link);
+> +	error = xfs_readlink_bmap_ilocked(ip, link);
+>  
+>   out:
+>  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
+> index e75245d..aeaee89 100644
+> --- a/fs/xfs/xfs_symlink.h
+> +++ b/fs/xfs/xfs_symlink.h
+> @@ -21,6 +21,7 @@
+>  
+>  int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+>  		const char *target_path, umode_t mode, struct xfs_inode **ipp);
+> +int xfs_readlink_bmap_ilocked(struct xfs_inode *ip, char *link);
+>  int xfs_readlink(struct xfs_inode *ip, char *link);
+>  int xfs_inactive_symlink(struct xfs_inode *ip);
+>  
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
