@@ -1,78 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21557 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:29178 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750971AbdFBWTq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 18:19:46 -0400
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v52MJiYU026002
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:19:45 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v52MJiY0002077
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:19:44 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v52MJh2X028625
-        for <linux-xfs@vger.kernel.org>; Fri, 2 Jun 2017 22:19:44 GMT
-Date: Fri, 2 Jun 2017 15:19:42 -0700
+        with ESMTP id S1751581AbdFHSWr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2017 14:22:47 -0400
+Date: Thu, 8 Jun 2017 11:22:36 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 14/13] xfs: allow reading of already-locked remote symbolic
- link
-Message-ID: <20170602221942.GE5636@birch.djwong.org>
+Subject: [PATCH v2 11/13] xfs: return the hash value of a leaf1 directory
+ block
+Message-ID: <20170608182236.GL4530@birch.djwong.org>
 References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
+ <149643870873.23065.5974641750134566189.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
+In-Reply-To: <149643870873.23065.5974641750134566189.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: Brian Foster <bfoster@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Expose the readlink variant that doesn't take the inode lock so that
-the scrubber can inspect symlink contents.
+Modify the existing dir leafn lasthash function to enable us to
+calculate the highest hash value of a leaf1 block.  This will be used by
+the directory scrubbing code to check the sanity of hashes in leaf1
+directory blocks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_symlink.c |    6 +++---
- fs/xfs/xfs_symlink.h |    1 +
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_da_btree.c  |   10 +++++-----
+ fs/xfs/libxfs/xfs_dir2_node.c |   10 ++++++----
+ fs/xfs/libxfs/xfs_dir2_priv.h |    2 +-
+ 3 files changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index f2cb45e..49380485 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -43,8 +43,8 @@
- #include "xfs_log.h"
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 48f1136..356f21d 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -1282,7 +1282,7 @@ xfs_da3_fixhashpath(
+ 			return;
+ 		break;
+ 	case XFS_DIR2_LEAFN_MAGIC:
+-		lasthash = xfs_dir2_leafn_lasthash(dp, blk->bp, &count);
++		lasthash = xfs_dir2_leaf_lasthash(dp, blk->bp, &count);
+ 		if (count == 0)
+ 			return;
+ 		break;
+@@ -1502,8 +1502,8 @@ xfs_da3_node_lookup_int(
+ 		if (blk->magic == XFS_DIR2_LEAFN_MAGIC ||
+ 		    blk->magic == XFS_DIR3_LEAFN_MAGIC) {
+ 			blk->magic = XFS_DIR2_LEAFN_MAGIC;
+-			blk->hashval = xfs_dir2_leafn_lasthash(args->dp,
+-							       blk->bp, NULL);
++			blk->hashval = xfs_dir2_leaf_lasthash(args->dp,
++							      blk->bp, NULL);
+ 			break;
+ 		}
  
- /* ----- Kernel only functions below ----- */
--STATIC int
--xfs_readlink_bmap(
-+int
-+xfs_readlink_bmap_ilocked(
- 	struct xfs_inode	*ip,
- 	char			*link)
- {
-@@ -153,7 +153,7 @@ xfs_readlink(
- 	}
+@@ -1929,8 +1929,8 @@ xfs_da3_path_shift(
+ 			blk->magic = XFS_DIR2_LEAFN_MAGIC;
+ 			ASSERT(level == path->active-1);
+ 			blk->index = 0;
+-			blk->hashval = xfs_dir2_leafn_lasthash(args->dp,
+-							       blk->bp, NULL);
++			blk->hashval = xfs_dir2_leaf_lasthash(args->dp,
++							      blk->bp, NULL);
+ 			break;
+ 		default:
+ 			ASSERT(0);
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index bbd1238..682e2bf 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -528,7 +528,7 @@ xfs_dir2_free_hdr_check(
+  * Stale entries are ok.
+  */
+ xfs_dahash_t					/* hash value */
+-xfs_dir2_leafn_lasthash(
++xfs_dir2_leaf_lasthash(
+ 	struct xfs_inode *dp,
+ 	struct xfs_buf	*bp,			/* leaf buffer */
+ 	int		*count)			/* count of entries in leaf */
+@@ -540,7 +540,9 @@ xfs_dir2_leafn_lasthash(
+ 	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
  
+ 	ASSERT(leafhdr.magic == XFS_DIR2_LEAFN_MAGIC ||
+-	       leafhdr.magic == XFS_DIR3_LEAFN_MAGIC);
++	       leafhdr.magic == XFS_DIR3_LEAFN_MAGIC ||
++	       leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
++	       leafhdr.magic == XFS_DIR3_LEAF1_MAGIC);
  
--	error = xfs_readlink_bmap(ip, link);
-+	error = xfs_readlink_bmap_ilocked(ip, link);
- 
-  out:
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
-index e75245d..aeaee89 100644
---- a/fs/xfs/xfs_symlink.h
-+++ b/fs/xfs/xfs_symlink.h
-@@ -21,6 +21,7 @@
- 
- int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
- 		const char *target_path, umode_t mode, struct xfs_inode **ipp);
-+int xfs_readlink_bmap_ilocked(struct xfs_inode *ip, char *link);
- int xfs_readlink(struct xfs_inode *ip, char *link);
- int xfs_inactive_symlink(struct xfs_inode *ip);
- 
+ 	if (count)
+ 		*count = leafhdr.count;
+@@ -1405,8 +1407,8 @@ xfs_dir2_leafn_split(
+ 	/*
+ 	 * Update last hashval in each block since we added the name.
+ 	 */
+-	oldblk->hashval = xfs_dir2_leafn_lasthash(dp, oldblk->bp, NULL);
+-	newblk->hashval = xfs_dir2_leafn_lasthash(dp, newblk->bp, NULL);
++	oldblk->hashval = xfs_dir2_leaf_lasthash(dp, oldblk->bp, NULL);
++	newblk->hashval = xfs_dir2_leaf_lasthash(dp, newblk->bp, NULL);
+ 	xfs_dir3_leaf_check(dp, oldblk->bp);
+ 	xfs_dir3_leaf_check(dp, newblk->bp);
+ 	return error;
+diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index 576f2d2..6d24209 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -95,7 +95,7 @@ extern bool xfs_dir3_leaf_check_int(struct xfs_mount *mp, struct xfs_inode *dp,
+ /* xfs_dir2_node.c */
+ extern int xfs_dir2_leaf_to_node(struct xfs_da_args *args,
+ 		struct xfs_buf *lbp);
+-extern xfs_dahash_t xfs_dir2_leafn_lasthash(struct xfs_inode *dp,
++extern xfs_dahash_t xfs_dir2_leaf_lasthash(struct xfs_inode *dp,
+ 		struct xfs_buf *bp, int *count);
+ extern int xfs_dir2_leafn_lookup_int(struct xfs_buf *bp,
+ 		struct xfs_da_args *args, int *indexp,
