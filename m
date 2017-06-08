@@ -1,285 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52702 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751092AbdFHNCm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Jun 2017 09:02:42 -0400
-Date: Thu, 8 Jun 2017 09:02:40 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 13/13] xfs: pass along transaction context when reading
- xattr block buffers
-Message-ID: <20170608130238.GC5244@bfoster.bfoster>
-References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
- <149643872077.23065.18432527054896718134.stgit@birch.djwong.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:36310 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751978AbdFHP0N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2017 11:26:13 -0400
+Date: Thu, 8 Jun 2017 08:26:07 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2] xfs: fix spurious spin_is_locked() assert failures on
+ non-smp kernels
+Message-ID: <20170608152607.GH4530@birch.djwong.org>
+References: <1496840455-65279-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <149643872077.23065.18432527054896718134.stgit@birch.djwong.org>
+In-Reply-To: <1496840455-65279-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jun 02, 2017 at 02:25:20PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jun 07, 2017 at 09:00:55AM -0400, Brian Foster wrote:
+> The 0-day kernel test robot reports assertion failures on
+> !CONFIG_SMP kernels due to failed spin_is_locked() checks. As it
+> turns out, spin_is_locked() is hardcoded to return zero on
+> !CONFIG_SMP kernels and so this function cannot be relied on to
+> verify spinlock state in this configuration.
 > 
-> Teach the extended attribute reading functions to pass along a
-> transaction context if one was supplied.  The extended attribute scrub
-> code will use transactions to lock buffers and avoid deadlocking with
-> itself in the case of loops; since it will already have the inode
-> locked, also create xattr get/list helpers that don't take locks.
+> To avoid this problem, replace the associated asserts with lockdep
+> variants that do the right thing regardless of kernel configuration.
+> Drop the one assert that checks for an unlocked lock as there is no
+> suitable lockdep variant for that case. This moves the spinlock
+> checks from XFS debug code to lockdep, but generally provides the
+> same level of protection.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_attr.c        |   26 ++++++++++++-----
->  fs/xfs/libxfs/xfs_attr_remote.c |    5 ++-
->  fs/xfs/xfs_attr.h               |    3 ++
->  fs/xfs/xfs_attr_list.c          |   59 ++++++++++++++++++++++-----------------
->  4 files changed, 57 insertions(+), 36 deletions(-)
 > 
+> Here's another version that uses lockdep calls as suggested by
+> Christoph.
+
+Looks ok, will test:
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Hmm.... do you want me to put this into 4.12?  It's sort of a regression
+introduced in -rc4, but on the other hand this seems to have been broken
+for quite a while for SMP=n && XFS_DEBUG=y and nobody complained...
+
+--D
+
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 6622d46..ef8a1c7 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -114,6 +114,23 @@ xfs_inode_hasattr(
->   * Overall external interface routines.
->   *========================================================================*/
->  
-> +/* Retrieve an extended attribute and its value.  Must have iolock. */
-> +int
-> +xfs_attr_get_ilocked(
-> +	struct xfs_inode	*ip,
-> +	struct xfs_da_args	*args)
-> +{
-> +	if (!xfs_inode_hasattr(ip))
-> +		return -ENOATTR;
-> +	else if (ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL)
-> +		return xfs_attr_shortform_getvalue(args);
-> +	else if (xfs_bmap_one_block(ip, XFS_ATTR_FORK))
-> +		return xfs_attr_leaf_get(args);
-> +	else
-> +		return xfs_attr_node_get(args);
-> +}
-> +
-> +/* Retrieve an extended attribute by name, and its value. */
->  int
->  xfs_attr_get(
->  	struct xfs_inode	*ip,
-> @@ -141,14 +158,7 @@ xfs_attr_get(
->  	args.op_flags = XFS_DA_OP_OKNOENT;
->  
->  	lock_mode = xfs_ilock_attr_map_shared(ip);
-> -	if (!xfs_inode_hasattr(ip))
-> -		error = -ENOATTR;
-> -	else if (ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL)
-> -		error = xfs_attr_shortform_getvalue(&args);
-> -	else if (xfs_bmap_one_block(ip, XFS_ATTR_FORK))
-> -		error = xfs_attr_leaf_get(&args);
-> -	else
-> -		error = xfs_attr_node_get(&args);
-> +	error = xfs_attr_get_ilocked(ip, &args);
->  	xfs_iunlock(ip, lock_mode);
->  
->  	*valuelenp = args.valuelen;
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index da72b16..5236d8e 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> @@ -386,7 +386,8 @@ xfs_attr_rmtval_get(
->  			       (map[i].br_startblock != HOLESTARTBLOCK));
->  			dblkno = XFS_FSB_TO_DADDR(mp, map[i].br_startblock);
->  			dblkcnt = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
-> -			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-> +			error = xfs_trans_read_buf(mp, args->trans,
-> +						   mp->m_ddev_targp,
->  						   dblkno, dblkcnt, 0, &bp,
->  						   &xfs_attr3_rmt_buf_ops);
->  			if (error)
-> @@ -395,7 +396,7 @@ xfs_attr_rmtval_get(
->  			error = xfs_attr_rmtval_copyout(mp, bp, args->dp->i_ino,
->  							&offset, &valuelen,
->  							&dst);
-> -			xfs_buf_relse(bp);
-> +			xfs_trans_brelse(args->trans, bp);
->  			if (error)
->  				return error;
->  
-> diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-> index d14691a..5d5a5e2 100644
-> --- a/fs/xfs/xfs_attr.h
-> +++ b/fs/xfs/xfs_attr.h
-> @@ -117,6 +117,7 @@ typedef void (*put_listent_func_t)(struct xfs_attr_list_context *, int,
->  			      unsigned char *, int, int);
->  
->  typedef struct xfs_attr_list_context {
-> +	struct xfs_trans		*tp;
->  	struct xfs_inode		*dp;		/* inode */
->  	struct attrlist_cursor_kern	*cursor;	/* position in list */
->  	char				*alist;		/* output buffer */
-> @@ -140,8 +141,10 @@ typedef struct xfs_attr_list_context {
->   * Overall external interface routines.
->   */
->  int xfs_attr_inactive(struct xfs_inode *dp);
-> +int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
->  int xfs_attr_list_int(struct xfs_attr_list_context *);
->  int xfs_inode_hasattr(struct xfs_inode *ip);
-> +int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
->  int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
->  		 unsigned char *value, int *valuelenp, int flags);
->  int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
-> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-> index 9bc1e12..545eca5 100644
-> --- a/fs/xfs/xfs_attr_list.c
-> +++ b/fs/xfs/xfs_attr_list.c
-> @@ -230,7 +230,7 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
->  	 */
->  	bp = NULL;
->  	if (cursor->blkno > 0) {
-> -		error = xfs_da3_node_read(NULL, dp, cursor->blkno, -1,
-> +		error = xfs_da3_node_read(context->tp, dp, cursor->blkno, -1,
->  					      &bp, XFS_ATTR_FORK);
->  		if ((error != 0) && (error != -EFSCORRUPTED))
->  			return error;
-> @@ -242,7 +242,7 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
->  			case XFS_DA_NODE_MAGIC:
->  			case XFS_DA3_NODE_MAGIC:
->  				trace_xfs_attr_list_wrong_blk(context);
-> -				xfs_trans_brelse(NULL, bp);
-> +				xfs_trans_brelse(context->tp, bp);
->  				bp = NULL;
->  				break;
->  			case XFS_ATTR_LEAF_MAGIC:
-> @@ -254,18 +254,18 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
->  				if (cursor->hashval > be32_to_cpu(
->  						entries[leafhdr.count - 1].hashval)) {
->  					trace_xfs_attr_list_wrong_blk(context);
-> -					xfs_trans_brelse(NULL, bp);
-> +					xfs_trans_brelse(context->tp, bp);
->  					bp = NULL;
->  				} else if (cursor->hashval <= be32_to_cpu(
->  						entries[0].hashval)) {
->  					trace_xfs_attr_list_wrong_blk(context);
-> -					xfs_trans_brelse(NULL, bp);
-> +					xfs_trans_brelse(context->tp, bp);
->  					bp = NULL;
->  				}
->  				break;
->  			default:
->  				trace_xfs_attr_list_wrong_blk(context);
-> -				xfs_trans_brelse(NULL, bp);
-> +				xfs_trans_brelse(context->tp, bp);
->  				bp = NULL;
->  			}
->  		}
-> @@ -281,7 +281,7 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
->  		for (;;) {
->  			uint16_t magic;
->  
-> -			error = xfs_da3_node_read(NULL, dp,
-> +			error = xfs_da3_node_read(context->tp, dp,
->  						      cursor->blkno, -1, &bp,
->  						      XFS_ATTR_FORK);
->  			if (error)
-> @@ -297,7 +297,7 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
->  						     XFS_ERRLEVEL_LOW,
->  						     context->dp->i_mount,
->  						     node);
-> -				xfs_trans_brelse(NULL, bp);
-> +				xfs_trans_brelse(context->tp, bp);
->  				return -EFSCORRUPTED;
->  			}
->  
-> @@ -313,10 +313,10 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
->  				}
->  			}
->  			if (i == nodehdr.count) {
-> -				xfs_trans_brelse(NULL, bp);
-> +				xfs_trans_brelse(context->tp, bp);
->  				return 0;
->  			}
-> -			xfs_trans_brelse(NULL, bp);
-> +			xfs_trans_brelse(context->tp, bp);
->  		}
->  	}
->  	ASSERT(bp != NULL);
-> @@ -333,12 +333,12 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
->  		if (context->seen_enough || leafhdr.forw == 0)
->  			break;
->  		cursor->blkno = leafhdr.forw;
-> -		xfs_trans_brelse(NULL, bp);
-> -		error = xfs_attr3_leaf_read(NULL, dp, cursor->blkno, -1, &bp);
-> +		xfs_trans_brelse(context->tp, bp);
-> +		error = xfs_attr3_leaf_read(context->tp, dp, cursor->blkno, -1, &bp);
->  		if (error)
->  			return error;
->  	}
-> -	xfs_trans_brelse(NULL, bp);
-> +	xfs_trans_brelse(context->tp, bp);
->  	return 0;
->  }
->  
-> @@ -448,16 +448,34 @@ xfs_attr_leaf_list(xfs_attr_list_context_t *context)
->  	trace_xfs_attr_leaf_list(context);
->  
->  	context->cursor->blkno = 0;
-> -	error = xfs_attr3_leaf_read(NULL, context->dp, 0, -1, &bp);
-> +	error = xfs_attr3_leaf_read(context->tp, context->dp, 0, -1, &bp);
->  	if (error)
->  		return error;
->  
->  	xfs_attr3_leaf_list_int(bp, context);
-> -	xfs_trans_brelse(NULL, bp);
-> +	xfs_trans_brelse(context->tp, bp);
->  	return 0;
->  }
->  
->  int
-> +xfs_attr_list_int_ilocked(
-> +	struct xfs_attr_list_context	*context)
-> +{
-> +	struct xfs_inode		*dp = context->dp;
-> +
-> +	/*
-> +	 * Decide on what work routines to call based on the inode size.
-> +	 */
-> +	if (!xfs_inode_hasattr(dp))
-> +		return 0;
-> +	else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL)
-> +		return xfs_attr_shortform_list(context);
-> +	else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-> +		return xfs_attr_leaf_list(context);
-> +	return xfs_attr_node_list(context);
-> +}
-> +
-> +int
->  xfs_attr_list_int(
->  	xfs_attr_list_context_t *context)
+> Brian
+> 
+> v2:
+> - Use lockdep asserts instead of config check.
+> - Drop !spin_is_locked() assert from inode initialization.
+> v1: http://www.spinics.net/lists/linux-xfs/msg07463.html
+> 
+>  fs/xfs/xfs_buf.c    | 2 +-
+>  fs/xfs/xfs_icache.c | 5 ++---
+>  2 files changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 07b77b7..16d6a57 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -117,7 +117,7 @@ static inline void
+>  __xfs_buf_ioacct_dec(
+>  	struct xfs_buf	*bp)
 >  {
-> @@ -470,19 +488,8 @@ xfs_attr_list_int(
->  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
->  		return -EIO;
+> -	ASSERT(spin_is_locked(&bp->b_lock));
+> +	lockdep_assert_held(&bp->b_lock);
 >  
-> -	/*
-> -	 * Decide on what work routines to call based on the inode size.
-> -	 */
->  	lock_mode = xfs_ilock_attr_map_shared(dp);
-> -	if (!xfs_inode_hasattr(dp)) {
-> -		error = 0;
-> -	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-> -		error = xfs_attr_shortform_list(context);
-> -	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-> -		error = xfs_attr_leaf_list(context);
-> -	} else {
-> -		error = xfs_attr_node_list(context);
-> -	}
-> +	error = xfs_attr_list_int_ilocked(context);
->  	xfs_iunlock(dp, lock_mode);
->  	return error;
->  }
+>  	if (bp->b_state & XFS_BSTATE_IN_FLIGHT) {
+>  		bp->b_state &= ~XFS_BSTATE_IN_FLIGHT;
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index f61c84f8..990210f 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -66,7 +66,6 @@ xfs_inode_alloc(
+>  
+>  	XFS_STATS_INC(mp, vn_active);
+>  	ASSERT(atomic_read(&ip->i_pincount) == 0);
+> -	ASSERT(!spin_is_locked(&ip->i_flags_lock));
+>  	ASSERT(!xfs_isiflocked(ip));
+>  	ASSERT(ip->i_ino == 0);
+>  
+> @@ -190,7 +189,7 @@ xfs_perag_set_reclaim_tag(
+>  {
+>  	struct xfs_mount	*mp = pag->pag_mount;
+>  
+> -	ASSERT(spin_is_locked(&pag->pag_ici_lock));
+> +	lockdep_assert_held(&pag->pag_ici_lock);
+>  	if (pag->pag_ici_reclaimable++)
+>  		return;
+>  
+> @@ -212,7 +211,7 @@ xfs_perag_clear_reclaim_tag(
+>  {
+>  	struct xfs_mount	*mp = pag->pag_mount;
+>  
+> -	ASSERT(spin_is_locked(&pag->pag_ici_lock));
+> +	lockdep_assert_held(&pag->pag_ici_lock);
+>  	if (--pag->pag_ici_reclaimable)
+>  		return;
+>  
+> -- 
+> 2.7.5
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
