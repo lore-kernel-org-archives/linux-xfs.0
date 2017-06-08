@@ -1,169 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47825 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750914AbdFHQnM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2017 12:43:12 -0400
-Date: Thu, 8 Jun 2017 09:43:07 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/13] xfs: return the hash value of a leaf1 directory
- block
-Message-ID: <20170608164307.GK4530@birch.djwong.org>
-References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
- <149643870873.23065.5974641750134566189.stgit@birch.djwong.org>
- <20170608130224.GA5244@bfoster.bfoster>
- <20170608155359.GI4530@birch.djwong.org>
- <20170608163147.GG5244@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:55098 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750914AbdFHQnU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Jun 2017 12:43:20 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id B61B4A0235
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2017 16:43:19 +0000 (UTC)
+Date: Thu, 8 Jun 2017 12:43:16 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2 V3] xfs: Add infrastructure needed for error
+ propagation during buffer IO failure
+Message-ID: <20170608164315.GH5244@bfoster.bfoster>
+References: <20170608140014.25132-1-cmaiolino@redhat.com>
+ <20170608140014.25132-2-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170608163147.GG5244@bfoster.bfoster>
+In-Reply-To: <20170608140014.25132-2-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Carlos Maiolino <cmaiolino@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 08, 2017 at 12:31:50PM -0400, Brian Foster wrote:
-> On Thu, Jun 08, 2017 at 08:53:59AM -0700, Darrick J. Wong wrote:
-> > On Thu, Jun 08, 2017 at 09:02:26AM -0400, Brian Foster wrote:
-> > > On Fri, Jun 02, 2017 at 02:25:08PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > Provide a way to calculate the highest hash value of a leaf1 block.
-> > > > This will be used by the directory scrubbing code to check the sanity
-> > > > of hashes in leaf1 directory blocks.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_dir2_node.c |   28 ++++++++++++++++++++++++++++
-> > > >  fs/xfs/libxfs/xfs_dir2_priv.h |    2 ++
-> > > >  2 files changed, 30 insertions(+)
-> > > > 
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> > > > index bbd1238..15c1881 100644
-> > > > --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> > > > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> > > > @@ -524,6 +524,34 @@ xfs_dir2_free_hdr_check(
-> > > >  #endif	/* DEBUG */
-> > > >  
-> > > >  /*
-> > > > + * Return the last hash value in the leaf1.
-> > > > + * Stale entries are ok.
-> > > > + */
-> > > > +xfs_dahash_t					/* hash value */
-> > > > +xfs_dir2_leaf1_lasthash(
-> > > > +	struct xfs_inode	*dp,
-> > > > +	struct xfs_buf		*bp,		/* leaf buffer */
-> > > > +	int			*count)		/* count of entries in leaf */
-> > > > +{
-> > > > +	struct xfs_dir2_leaf	*leaf = bp->b_addr;
-> > > > +	struct xfs_dir2_leaf_entry *ents;
-> > > > +	struct xfs_dir3_icleaf_hdr leafhdr;
-> > > > +
-> > > > +	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
-> > > > +
-> > > > +	ASSERT(leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
-> > > > +	       leafhdr.magic == XFS_DIR3_LEAF1_MAGIC);
-> > > > +
-> > > 
-> > > It looks like the assert is the only difference between this function
-> > > and xfs_dir2_leafn_lasthash(). It seems like overkill to me to duplicate
-> > > just for that. How about we fix up the assert to cover the additional
-> > > magics (and maybe rename _leafn_lasthash() to _leaf_lasthash() if
-> > > appropriate)?
-> > > 
-> > > Actually, taking a closer look, ->leaf_hdr_from_disk() already asserts
-> > > on the appropriate LEAF1/LEAFN magic based on the callback that is
-> > > specified. ISTM that we could also just kill the _lasthash() assert.
-> > 
-> > The ASSERTs in the _lasthash functions and in leaf_hdr_from_disk aren't
-> > testing quite the same things.  The asserts in _dir2_leaf[1n]_lasthash
-> > check that we actually passed it a leaf1 or leafn block, respectively.
-> > The asserts in _dir[23]_leaf_hdr_from_disk check that we actually fed it
-> > a dir2 or dir3 leaf* block without caring whether it's leaf1 or leafn.
-> > That's why I didn't just get rid of the assert and rename the function
-> > xfs_dir2_leaf_lasthash().
-> > 
+On Thu, Jun 08, 2017 at 04:00:13PM +0200, Carlos Maiolino wrote:
+> With the current code, XFS never re-submit a failed buffer for IO,
+> because the failed item in the buffer is kept in the flush locked state
+> forever.
 > 
-> Yeah, I'm aware they are not exactly equivalent. I was more thinking
-> that we still have some assert protection if something is blatantly
-> wrong (i.e., corruption, some non dir block, etc.). As it is, if the
-> _leaf1_lasthash() assert fails because we passed a leafn block to the
-> function, the solution presumably is to use the leafn function that
-> basically does the same thing (modulo the assert), right?
-
-Certainly that seems like the correct caller code fix.
-
-> In other words, what's the value of asserting on the magics between two
-> functions that handle either format in the exact same way? If there is
-> value somewhere, it sounds like perhaps it's to the benefit of the
-> caller than for the helper itself (which is reasonable, I think, but
-> still doesn't justify the duplication IMO).
-
-I wanted to be cautious about removing ASSERTs from functions.  Having
-talked about this with you, I now feel emboldened enough to take your
-original suggestion to simply combine the two functions. :)
-
-> > I suppose we could just make a single parent function that takes the two
-> > magics it wants to see and have _dir2_leaf[1n]_lasthash call the parent
-> > function with the magic numbers they want to check.  How does that
-> > sound?
-> > 
+> To be able to resubmit an log item for IO, we need a way to mark an item
+> as failed, if, for any reason the buffer which the item belonged to
+> failed during writeback.
 > 
-> Do I understand correctly that you mean an "internal" function that
-> receives the expected magic as a param (for the assert) and a couple
-> leaf[1|n]_lasthash() wrappers that pass the associated LEAF[1|N] magics?
-> If so, that sounds reasonable to me if you'd really prefer to keep the
-> isolated asserts. I'm more just trying to avoid the code duplication.
-
-<nod> Eh, I'll just collapse both of them into a single _lasthash
-function that doesn't care if it's passed a leaf1 or a leafn.
-
---D
+> Add a new log item callback to be used after an IO completion failure
+> and make the needed clean ups.
 > 
-> Brian
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
 > 
-> > --D
-> > 
-> > > 
-> > > Brian
-> > > 
-> > > > +	if (count)
-> > > > +		*count = leafhdr.count;
-> > > > +	if (!leafhdr.count)
-> > > > +		return 0;
-> > > > +
-> > > > +	ents = dp->d_ops->leaf_ents_p(leaf);
-> > > > +	return be32_to_cpu(ents[leafhdr.count - 1].hashval);
-> > > > +}
-> > > > +
-> > > > +/*
-> > > >   * Return the last hash value in the leaf.
-> > > >   * Stale entries are ok.
-> > > >   */
-> > > > diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-> > > > index 576f2d2..c09bca1 100644
-> > > > --- a/fs/xfs/libxfs/xfs_dir2_priv.h
-> > > > +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-> > > > @@ -95,6 +95,8 @@ extern bool xfs_dir3_leaf_check_int(struct xfs_mount *mp, struct xfs_inode *dp,
-> > > >  /* xfs_dir2_node.c */
-> > > >  extern int xfs_dir2_leaf_to_node(struct xfs_da_args *args,
-> > > >  		struct xfs_buf *lbp);
-> > > > +extern xfs_dahash_t xfs_dir2_leaf1_lasthash(struct xfs_inode *dp,
-> > > > +		struct xfs_buf *bp, int *count);
-> > > >  extern xfs_dahash_t xfs_dir2_leafn_lasthash(struct xfs_inode *dp,
-> > > >  		struct xfs_buf *bp, int *count);
-> > > >  extern int xfs_dir2_leafn_lookup_int(struct xfs_buf *bp,
-> > > > 
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> V2:
+> 	- Update commit log to include a better description of why this
+> 	  patch is needed and fix spelling mistakes
+> 	- Move xfs_buf_do_callbacks_fail() call into
+> 	  xfs_buf_iodone_callback_error, so the callbacks can be executed
+> 	  before the buffer is released, and only after it has been
+> 	  retried once
+> 
+> V3:
+> 	- fix some loops according to hch suggestion
+> 	- whitespace cleanup
+> 
+>  fs/xfs/xfs_buf_item.c | 23 ++++++++++++++++++++++-
+>  fs/xfs/xfs_trans.h    |  7 +++++--
+>  2 files changed, 27 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 0306168..523b7a4 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -29,6 +29,7 @@
+>  #include "xfs_error.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_log.h"
+> +#include "xfs_inode.h"
+>  
+>  
+>  kmem_zone_t	*xfs_buf_item_zone;
+> @@ -1051,6 +1052,20 @@ xfs_buf_do_callbacks(
+>  	}
+>  }
+>  
+> +STATIC void
+> +xfs_buf_do_callbacks_fail(
+> +	struct xfs_buf		*bp)
+> +{
+> +	struct xfs_log_item	*lip, *next;
+> +	unsigned int		bflags = bp->b_flags;
+> +
+> +	for (lip = bp->b_fspriv; lip; lip = next) {
+> +		next = lip->li_bio_list;
+> +		if (lip->li_ops->iop_error)
+> +			lip->li_ops->iop_error(lip, bp, bflags);
+
+There's still no need to pass bflags here, particularly since we pass
+along the buffer already. (I'm still questioning the need for
+->iop_error(), but I'll leave that as a final review question once
+everything else is in order. :P)
+
+> +	}
+> +}
+> +
+>  static bool
+>  xfs_buf_iodone_callback_error(
+>  	struct xfs_buf		*bp)
+> @@ -1120,8 +1135,14 @@ xfs_buf_iodone_callback_error(
+>  	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
+>  		goto permanent_error;
+>  
+> -	/* still a transient error, higher layers will retry */
+> +	/*
+> +	 * still a transient error, run IO completion failure callbacks and
+> +	 * let the higher layers retry the buffer.
+> +	 * */
+>  	xfs_buf_ioerror(bp, 0);
+> +
+> +	/* run failure callbacks before releasing buffer */
+> +	xfs_buf_do_callbacks_fail(bp);
+
+I think in principle it might be more appropriate to invoke the
+callbacks before we reset the I/O error. That way the failure callbacks
+see the buffer in the error state, then we reset the error and release
+it back to the AIL (so to speak).
+
+Otherwise the rest looks sane to me.
+
+Brian
+
+>  	xfs_buf_relse(bp);
+>  	return true;
+>  
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index a07acbf..3486517 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -64,11 +64,13 @@ typedef struct xfs_log_item {
+>  } xfs_log_item_t;
+>  
+>  #define	XFS_LI_IN_AIL	0x1
+> -#define XFS_LI_ABORTED	0x2
+> +#define	XFS_LI_ABORTED	0x2
+> +#define	XFS_LI_FAILED	0x4
+>  
+>  #define XFS_LI_FLAGS \
+>  	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
+> -	{ XFS_LI_ABORTED,	"ABORTED" }
+> +	{ XFS_LI_ABORTED,	"ABORTED" }, \
+> +	{ XFS_LI_FAILED,	"FAILED" }
+>  
+>  struct xfs_item_ops {
+>  	void (*iop_size)(xfs_log_item_t *, int *, int *);
+> @@ -79,6 +81,7 @@ struct xfs_item_ops {
+>  	void (*iop_unlock)(xfs_log_item_t *);
+>  	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
+>  	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
+> +	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *, unsigned int bflags);
+>  };
+>  
+>  void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
+> -- 
+> 2.9.3
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
