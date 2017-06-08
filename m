@@ -1,134 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56336 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:28650 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751092AbdFHNCe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Jun 2017 09:02:34 -0400
-Date: Thu, 8 Jun 2017 09:02:32 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 12/13] xfs: pass along transaction context when reading
- directory block buffers
-Message-ID: <20170608130230.GB5244@bfoster.bfoster>
-References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
- <149643871474.23065.12129624430660182688.stgit@birch.djwong.org>
+        id S1751905AbdFHOCR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Jun 2017 10:02:17 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 305CFC003409
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2017 14:02:17 +0000 (UTC)
+Date: Thu, 8 Jun 2017 16:02:12 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: release bli from transaction properly on fs
+ shutdown
+Message-ID: <20170608140212.4m6r2ek6gqbm6a7w@eorzea.usersys.redhat.com>
+References: <1496750930-53954-1-git-send-email-bfoster@redhat.com>
+ <1496750930-53954-2-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <149643871474.23065.12129624430660182688.stgit@birch.djwong.org>
+In-Reply-To: <1496750930-53954-2-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jun 02, 2017 at 02:25:14PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jun 06, 2017 at 08:08:49AM -0400, Brian Foster wrote:
+> If a filesystem shutdown occurs with a buffer log item in the CIL
+> and a log force occurs, the ->iop_unpin() handler is generally
+> expected to tear down the bli properly. This entails freeing the bli
+> memory and releasing the associated hold on the buffer so it can be
+> released and the filesystem unmounted.
 > 
-> Teach the directory reading functions to pass along a transaction context
-> if one was supplied.  The directory scrub code will use transactions to
-> lock buffers and avoid deadlocking with itself in the case of loops.
+
+Looks good,
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> If this sequence occurs while ->bli_refcount is elevated (i.e.,
+> another transaction is open and attempting to modify the buffer),
+> however, ->iop_unpin() may not be responsible for releasing the bli.
+> Instead, the transaction may release the final ->bli_refcount
+> reference and thus xfs_trans_brelse() is responsible for tearing
+> down the bli.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> While xfs_trans_brelse() does drop the reference count, it only
+> attempts to release the bli if it is clean (i.e., not in the
+> CIL/AIL). If the filesystem is shutdown and the bli is sitting dirty
+> in the CIL as noted above, this ends up skipping the last
+> opportunity to release the bli. In turn, this leaves the hold on the
+> buffer and causes an unmount hang. This can be reproduced by running
+> generic/388 in repetition.
+> 
+> Update xfs_trans_brelse() to handle this shutdown corner case
+> correctly. If the final bli reference is dropped and the filesystem
+> is shutdown, remove the bli from the AIL (if necessary) and release
+> the bli to drop the buffer hold and ensure an unmount does not hang.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_dir2_priv.h |    4 ++--
->  fs/xfs/xfs_dir2_readdir.c     |   15 +++++++++++----
->  fs/xfs/xfs_file.c             |    2 +-
->  3 files changed, 14 insertions(+), 7 deletions(-)
+>  fs/xfs/xfs_trans_buf.c | 21 ++++++++++++++-------
+>  1 file changed, 14 insertions(+), 7 deletions(-)
 > 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-> index c09bca1..cb679cf 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_priv.h
-> +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-> @@ -132,7 +132,7 @@ extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
->  extern int xfs_dir2_sf_verify(struct xfs_inode *ip);
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index 8ee29ca..86987d8 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -356,6 +356,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
+>  		 xfs_buf_t	*bp)
+>  {
+>  	xfs_buf_log_item_t	*bip;
+> +	int			freed;
 >  
->  /* xfs_dir2_readdir.c */
-> -extern int xfs_readdir(struct xfs_inode *dp, struct dir_context *ctx,
-> -		       size_t bufsize);
-> +extern int xfs_readdir(struct xfs_trans *tp, struct xfs_inode *dp,
-> +		       struct dir_context *ctx, size_t bufsize);
->  
->  #endif /* __XFS_DIR2_PRIV_H__ */
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index ede4790..ba2638d 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -170,7 +170,7 @@ xfs_dir2_block_getdents(
->  		return 0;
->  
->  	lock_mode = xfs_ilock_data_map_shared(dp);
-> -	error = xfs_dir3_block_read(NULL, dp, &bp);
-> +	error = xfs_dir3_block_read(args->trans, dp, &bp);
->  	xfs_iunlock(dp, lock_mode);
->  	if (error)
->  		return error;
-> @@ -228,7 +228,7 @@ xfs_dir2_block_getdents(
->  		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
->  			    be64_to_cpu(dep->inumber),
->  			    xfs_dir3_get_dtype(dp->i_mount, filetype))) {
-> -			xfs_trans_brelse(NULL, bp);
-> +			xfs_trans_brelse(args->trans, bp);
->  			return 0;
->  		}
->  	}
-> @@ -239,7 +239,7 @@ xfs_dir2_block_getdents(
+>  	/*
+>  	 * Default to a normal brelse() call if the tp is NULL.
+> @@ -419,16 +420,22 @@ xfs_trans_brelse(xfs_trans_t	*tp,
+>  	/*
+>  	 * Drop our reference to the buf log item.
 >  	 */
->  	ctx->pos = xfs_dir2_db_off_to_dataptr(geo, geo->datablk + 1, 0) &
->  								0x7fffffff;
-> -	xfs_trans_brelse(NULL, bp);
-> +	xfs_trans_brelse(args->trans, bp);
->  	return 0;
->  }
+> -	atomic_dec(&bip->bli_refcount);
+> +	freed = atomic_dec_and_test(&bip->bli_refcount);
 >  
-> @@ -495,15 +495,21 @@ xfs_dir2_leaf_getdents(
->  	else
->  		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
->  	if (bp)
-> -		xfs_trans_brelse(NULL, bp);
-> +		xfs_trans_brelse(args->trans, bp);
->  	return error;
->  }
->  
->  /*
->   * Read a directory.
-> + *
-> + * If supplied, the transaction collects locked dir buffers to avoid
-> + * nested buffer deadlocks.  This function does not dirty the
-> + * transaction.  The caller should ensure that the inode is locked
-> + * before calling this function.
->   */
->  int
->  xfs_readdir(
-> +	struct xfs_trans	*tp,
->  	struct xfs_inode	*dp,
->  	struct dir_context	*ctx,
->  	size_t			bufsize)
-> @@ -522,6 +528,7 @@ xfs_readdir(
->  
->  	args.dp = dp;
->  	args.geo = dp->i_mount->m_dir_geo;
-> +	args.trans = tp;
->  
->  	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
->  		rval = xfs_dir2_sf_getdents(&args, ctx);
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 5fb5a09..36c1293 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -950,7 +950,7 @@ xfs_file_readdir(
+>  	/*
+> -	 * If the buf item is not tracking data in the log, then
+> -	 * we must free it before releasing the buffer back to the
+> -	 * free pool.  Before releasing the buffer to the free pool,
+> -	 * clear the transaction pointer in b_fsprivate2 to dissolve
+> -	 * its relation to this transaction.
+> +	 * If the buf item is not tracking data in the log, then we must free it
+> +	 * before releasing the buffer back to the free pool.
+> +	 *
+> +	 * If the fs has shutdown and we dropped the last reference, it may fall
+> +	 * on us to release a (possibly dirty) bli if it never made it to the
+> +	 * AIL (e.g., the aborted unpin already happened and didn't release it
+> +	 * due to our reference). Since we're already shutdown and need xa_lock,
+> +	 * just force remove from the AIL and release the bli here.
 >  	 */
->  	bufsize = (size_t)min_t(loff_t, 32768, ip->i_d.di_size);
->  
-> -	return xfs_readdir(ip, ctx, bufsize);
-> +	return xfs_readdir(NULL, ip, ctx, bufsize);
->  }
->  
->  /*
+> -	if (!xfs_buf_item_dirty(bip)) {
+> +	if (XFS_FORCED_SHUTDOWN(tp->t_mountp) && freed) {
+> +		xfs_trans_ail_remove(&bip->bli_item, SHUTDOWN_LOG_IO_ERROR);
+> +		xfs_buf_item_relse(bp);
+> +	} else if (!xfs_buf_item_dirty(bip)) {
+>  /***
+>  		ASSERT(bp->b_pincount == 0);
+>  ***/
+> -- 
+> 2.7.5
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
