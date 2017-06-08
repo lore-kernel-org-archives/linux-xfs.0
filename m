@@ -1,69 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from [128.1.224.119] ([128.1.224.119]:58420 "EHLO deadmen.hmeau.com"
-        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751252AbdFGDiL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jun 2017 23:38:11 -0400
-Date: Wed, 7 Jun 2017 11:04:29 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: crypto: Work around deallocated stack frame reference gcc bug on
- sparc.
-Message-ID: <20170607030429.GA29532@gondor.apana.org.au>
-References: <20170602.112854.571030442583332811.davem@davemloft.net>
- <20170606.150408.1629203951871477326.davem@davemloft.net>
+Received: from bombadil.infradead.org ([65.50.211.133]:46330 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750725AbdFHHjO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2017 03:39:14 -0400
+Date: Thu, 8 Jun 2017 00:39:10 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/10 v11] No wait AIO
+Message-ID: <20170608073910.GB9292@infradead.org>
+References: <20170606111939.27272-1-rgoldwyn@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170606.150408.1629203951871477326.davem@davemloft.net>
+In-Reply-To: <20170606111939.27272-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Miller <davem@davemloft.net>
-Cc: linux-crypto@vger.kernel.org, sparclinux@vger.kernel.org, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, matorola@gmail.com, sandeen@sandeen.net, linux-xfs@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>, viro@zeniv.linux.org.uk, akpm@linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com
 
-On Tue, Jun 06, 2017 at 03:04:08PM -0400, David Miller wrote:
-> From: David Miller <davem@davemloft.net>
-> Date: Fri, 02 Jun 2017 11:28:54 -0400 (EDT)
+As already indicated this whole series looks fine to me.
+
+Al: are you going to pick this up?  Or Andrew?
+
+On Tue, Jun 06, 2017 at 06:19:29AM -0500, Goldwyn Rodrigues wrote:
+> This series adds nonblocking feature to asynchronous I/O writes.
+> io_submit() can be delayed because of a number of reason:
+>  - Block allocation for files
+>  - Data writebacks for direct I/O
+>  - Sleeping because of waiting to acquire i_rwsem
+>  - Congested block device
 > 
-> > 
-> > On sparc, if we have an alloca() like situation, as is the case with
-> > SHASH_DESC_ON_STACK(), we can end up referencing deallocated stack
-> > memory.  The result can be that the value is clobbered if a trap
-> > or interrupt arrives at just the right instruction.
-> > 
-> > It only occurs if the function ends returning a value from that
-> > alloca() area and that value can be placed into the return value
-> > register using a single instruction.
-> > 
-> > For example, in lib/libcrc32c.c:crc32c() we end up with a return
-> > sequence like:
-> > 
-> >         return  %i7+8
-> >          lduw   [%o5+16], %o0   ! MEM[(u32 *)__shash_desc.1_10 + 16B],
-> > 
-> > %o5 holds the base of the on-stack area allocated for the shash
-> > descriptor.  But the return released the stack frame and the
-> > register window.
-> > 
-> > So if an intererupt arrives between 'return' and 'lduw', then
-> > the value read at %o5+16 can be corrupted.
-> > 
-> > Add a data compiler barrier to work around this problem.  This is
-> > exactly what the gcc fix will end up doing as well, and it absolutely
-> > should not change the code generated for other cpus (unless gcc
-> > on them has the same bug :-)
-> > 
-> > With crucial insight from Eric Sandeen.
-> > 
-> > Reported-by: Anatoly Pugachev <matorola@gmail.com>
-> > Signed-off-by: David S. Miller <davem@davemloft.net>
+> The goal of the patch series is to return -EAGAIN/-EWOULDBLOCK if
+> any of these conditions are met. This way userspace can push most
+> of the write()s to the kernel to the best of its ability to complete
+> and if it returns -EAGAIN, can defer it to another thread.
 > 
-> Herbert, please take a look at this and push via your crypto tree
-> and submit to -stable if you don't have any objections.
-
-Sure I'll push it today.
-
-Cheers,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+> In order to enable this, IOCB_RW_FLAG_NOWAIT is introduced in
+> uapi/linux/aio_abi.h. If set for aio_rw_flags, it translates to
+> IOCB_NOWAIT for struct iocb, REQ_NOWAIT for bio.bi_opf and IOMAP_NOWAIT for
+> iomap. aio_rw_flags is a new flag replacing aio_reserved1. We could
+> not use aio_flags because it is not currently checked for invalidity
+> in the kernel.
+> 
+> This feature is provided for direct I/O of asynchronous I/O only. I have
+> tested it against xfs, ext4, and btrfs while I intend to add more filesystems.
+> The nowait feature is for request based devices. In the future, I intend to
+> add support to stacked devices such as md.
+> 
+> Applications will have to check supportability
+> by sending a async direct write and any other error besides -EAGAIN
+> would mean it is not supported.
+> 
+> First two patches are prep patches into nowait I/O.
+> 
+> Changes since v1:
+>  + changed name from _NONBLOCKING to *_NOWAIT
+>  + filemap_range_has_page call moved to closer to (just before) calling filemap_write_and_wait_range().
+>  + BIO_NOWAIT limited to get_request()
+>  + XFS fixes 
+> 	- included reflink 
+> 	- use of xfs_ilock_nowait() instead of a XFS_IOLOCK_NONBLOCKING flag
+> 	- Translate the flag through IOMAP_NOWAIT (iomap) to check for
+> 	  block allocation for the file.
+>  + ext4 coding style
+> 
+> Changes since v2:
+>  + Using aio_reserved1 as aio_rw_flags instead of aio_flags
+>  + blk-mq support
+>  + xfs uptodate with kernel and reflink changes
+> 
+>  Changes since v3:
+>   + Added FS_NOWAIT, which is set if the filesystem supports NOWAIT feature.
+>   + Checks in generic_make_request() to make sure BIO_NOWAIT comes in
+>     for async direct writes only.
+>   + Added QUEUE_FLAG_NOWAIT, which is set if the device supports BIO_NOWAIT.
+>     This is added (rather not set) to block devices such as dm/md currently.
+> 
+>  Changes since v4:
+>   + Ported AIO code to use RWF_* flags. Check for RWF_* flags in
+>     generic_file_write_iter().
+>   + Changed IOCB_RW_FLAGS_NOWAIT to RWF_NOWAIT.
+> 
+>  Changes since v5:
+>   + BIO_NOWAIT to REQ_NOWAIT
+>   + Common helper for RWF flags.
+> 
+>  Changes since v6:
+>   + REQ_NOWAIT will be ignored for request based devices since they
+>     cannot block. So, removed QUEUE_FLAG_NOWAIT since it is not
+>     required in the current implementation. It will be resurrected
+>     when we program for stacked devices.
+>   + changed kiocb_rw_flags() to kiocb_set_rw_flags() in order to accomodate
+>     for errors. Moved checks in the function.
+> 
+>  Changes since v7:
+>   + split patches into prep so the main patches are smaller and easier
+>     to understand
+>   + All patches are reviewed or acked!
+>  
+>  Changes since v8:
+>  + Err out AIO reads with -EINVAL flagged as RWF_NOWAIT
+> 
+>  Changes since v9:
+>  + Retract - Err out AIO reads with -EINVAL flagged as RWF_NOWAIT
+>  + XFS returns EAGAIN if extent list is not in memory
+>  + Man page updates to io_submit with iocb description and nowait features.
+> 
+>  Changes since v10:
+>  + Corrected comment and subject in "return on congested block device"
+> 
+> -- 
+> Goldwyn
+> 
+> 
+---end quoted text---
