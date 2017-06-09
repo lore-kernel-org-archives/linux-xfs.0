@@ -1,134 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43872 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46144 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752128AbdFHOAh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Jun 2017 10:00:37 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        id S1751527AbdFIRiL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Jun 2017 13:38:11 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 75A4297849
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2017 14:00:21 +0000 (UTC)
-Received: from eorzea.usersys.redhat.com (ovpn-204-167.brq.redhat.com [10.40.204.167])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A356197DCC
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2017 14:00:20 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 1/2 V3] xfs: Add infrastructure needed for error propagation during buffer IO failure
-Date: Thu,  8 Jun 2017 16:00:13 +0200
-Message-Id: <20170608140014.25132-2-cmaiolino@redhat.com>
-In-Reply-To: <20170608140014.25132-1-cmaiolino@redhat.com>
-References: <20170608140014.25132-1-cmaiolino@redhat.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id E57E680B52
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Jun 2017 17:38:10 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C712C1884D
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Jun 2017 17:38:10 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: free uncommitted transactions during log recovery
+Date: Fri,  9 Jun 2017 13:38:09 -0400
+Message-Id: <1497029889-12299-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-With the current code, XFS never re-submit a failed buffer for IO,
-because the failed item in the buffer is kept in the flush locked state
-forever.
+Log recovery allocates in-core transaction and member item data
+structures on-demand as it processes the on-disk log. Transactions
+are allocated on first encounter on-disk and stored in a hash table
+structure where they are easily accessible for subsequent lookups.
+Transaction items are also allocated on demand and are attached to
+the associated transactions.
 
-To be able to resubmit an log item for IO, we need a way to mark an item
-as failed, if, for any reason the buffer which the item belonged to
-failed during writeback.
+When a commit record is encountered in the log, the transaction is
+committed to the fs and the in-core structures are freed. If a
+filesystem crashes or shuts down before all in-core log buffers are
+flushed to the log, however, not all transactions may have commit
+records in the log. As expected, the modifications in such an
+incomplete transaction are not replayed to the fs. The in-core data
+structures for the partial transaction are never freed, however,
+resulting in a memory leak.
 
-Add a new log item callback to be used after an IO completion failure
-and make the needed clean ups.
+Update xlog_do_recovery_pass() to walk the hash table of transaction
+lists as the last step before it goes out of scope and free any
+transactions that may remain on the lists. This prevents a memory
+leak of partial transactions in the log.
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
 
-V2:
-	- Update commit log to include a better description of why this
-	  patch is needed and fix spelling mistakes
-	- Move xfs_buf_do_callbacks_fail() call into
-	  xfs_buf_iodone_callback_error, so the callbacks can be executed
-	  before the buffer is released, and only after it has been
-	  retried once
+FYI, I suspect this has been a problem for a while and and rare/harmless
+enough that this can target 4.13.
 
-V3:
-	- fix some loops according to hch suggestion
-	- whitespace cleanup
+Brian
 
- fs/xfs/xfs_buf_item.c | 23 ++++++++++++++++++++++-
- fs/xfs/xfs_trans.h    |  7 +++++--
- 2 files changed, 27 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_log_recover.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 0306168..523b7a4 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -29,6 +29,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_log.h"
-+#include "xfs_inode.h"
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 4a98762..37b34c5 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -5224,6 +5224,7 @@ xlog_do_recovery_pass(
+ 	int			error2 = 0;
+ 	int			bblks, split_bblks;
+ 	int			hblks, split_hblks, wrapped_hblks;
++	int			i;
+ 	struct hlist_head	rhash[XLOG_RHASH_SIZE];
+ 	LIST_HEAD		(buffer_list);
  
+@@ -5466,6 +5467,19 @@ xlog_do_recovery_pass(
+ 	if (error && first_bad)
+ 		*first_bad = rhead_blk;
  
- kmem_zone_t	*xfs_buf_item_zone;
-@@ -1051,6 +1052,20 @@ xfs_buf_do_callbacks(
- 	}
++	/*
++	 * Transactions are freed at commit time but transactions without commit
++	 * records on disk are never committed. Free any that may be left in the
++	 * hash table.
++	 */
++	for (i = 0; i < XLOG_RHASH_SIZE; i++) {
++		struct hlist_node	*tmp;
++		struct xlog_recover	*trans;
++
++		hlist_for_each_entry_safe(trans, tmp, &rhash[i], r_list)
++			xlog_recover_free_trans(trans);
++	}
++
+ 	return error ? error : error2;
  }
  
-+STATIC void
-+xfs_buf_do_callbacks_fail(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_log_item	*lip, *next;
-+	unsigned int		bflags = bp->b_flags;
-+
-+	for (lip = bp->b_fspriv; lip; lip = next) {
-+		next = lip->li_bio_list;
-+		if (lip->li_ops->iop_error)
-+			lip->li_ops->iop_error(lip, bp, bflags);
-+	}
-+}
-+
- static bool
- xfs_buf_iodone_callback_error(
- 	struct xfs_buf		*bp)
-@@ -1120,8 +1135,14 @@ xfs_buf_iodone_callback_error(
- 	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
- 		goto permanent_error;
- 
--	/* still a transient error, higher layers will retry */
-+	/*
-+	 * still a transient error, run IO completion failure callbacks and
-+	 * let the higher layers retry the buffer.
-+	 * */
- 	xfs_buf_ioerror(bp, 0);
-+
-+	/* run failure callbacks before releasing buffer */
-+	xfs_buf_do_callbacks_fail(bp);
- 	xfs_buf_relse(bp);
- 	return true;
- 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index a07acbf..3486517 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -64,11 +64,13 @@ typedef struct xfs_log_item {
- } xfs_log_item_t;
- 
- #define	XFS_LI_IN_AIL	0x1
--#define XFS_LI_ABORTED	0x2
-+#define	XFS_LI_ABORTED	0x2
-+#define	XFS_LI_FAILED	0x4
- 
- #define XFS_LI_FLAGS \
- 	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
--	{ XFS_LI_ABORTED,	"ABORTED" }
-+	{ XFS_LI_ABORTED,	"ABORTED" }, \
-+	{ XFS_LI_FAILED,	"FAILED" }
- 
- struct xfs_item_ops {
- 	void (*iop_size)(xfs_log_item_t *, int *, int *);
-@@ -79,6 +81,7 @@ struct xfs_item_ops {
- 	void (*iop_unlock)(xfs_log_item_t *);
- 	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
- 	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
-+	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *, unsigned int bflags);
- };
- 
- void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
 -- 
-2.9.3
+2.7.5
 
