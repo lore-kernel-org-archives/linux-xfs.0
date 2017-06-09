@@ -1,91 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50624 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:37294 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751120AbdFBDeJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Jun 2017 23:34:09 -0400
-Date: Fri, 2 Jun 2017 11:34:07 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 0/6] xfstests: remove most IRIX-specific code
-Message-ID: <20170602033407.GD23805@eguan.usersys.redhat.com>
-References: <20170531223655.130613-1-ebiggers3@gmail.com>
- <20170601031235.GV23805@eguan.usersys.redhat.com>
- <20170601032904.GA1083@zzz>
- <20170601072902.GY23805@eguan.usersys.redhat.com>
- <20170601153347.GG4519@birch.djwong.org>
+        id S1751479AbdFIDGA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Jun 2017 23:06:00 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 5A9E3C0587C8
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Jun 2017 03:06:00 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 34B118AE26
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Jun 2017 03:06:00 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfsdump: add AC_SYS_LARGEFILE
+Message-ID: <7120a48c-a832-ed92-411d-b97888f41e54@redhat.com>
+Date: Thu, 8 Jun 2017 22:05:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170601153347.GG4519@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Biggers <ebiggers3@gmail.com>, fstests@vger.kernel.org, Eric Biggers <ebiggers@google.com>, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Jun 01, 2017 at 08:33:47AM -0700, Darrick J. Wong wrote:
-> On Thu, Jun 01, 2017 at 03:29:02PM +0800, Eryu Guan wrote:
-> > On Wed, May 31, 2017 at 08:29:04PM -0700, Eric Biggers wrote:
-> > > On Thu, Jun 01, 2017 at 11:12:35AM +0800, Eryu Guan wrote:
-> > > > On Wed, May 31, 2017 at 03:36:49PM -0700, Eric Biggers wrote:
-> > > > > From: Eric Biggers <ebiggers@google.com>
-> > > > > 
-> > > > > For some time xfstests has de facto not supported IRIX anymore.  The
-> > > > > final release of IRIX was over 10 years ago and it seems no one has
-> > > > > been running the latest xfstests releases on any IRIX system, as at
-> > > > > the very least xfstests now assumes the existence of some util-linux
-> > > > > binaries.  There are probably other examples of this bitrot too.
-> > > > > 
-> > > > > Therefore, this patchset simplifies things removing IRIX support from
-> > > > > the xfstests tests, build system, and documentation.
-> > > > > 
-> > > > > It focuses on making larger, more obvious cleanups.  Of course,
-> > > > > there's more to do if people want to spend more time going through
-> > > > > some of the more intricate details, especially XFS-specific details.
-> > > > > But this should be a good start.
-> > > > 
-> > > > Thanks a lot for doing this!! I didn't see patch #2 and #3 hit the list
-> > > > (too big for the list?). Do you have a public git repo that I can pull
-> > > > from?
-> > > > 
-> > > 
-> > > Ick, I guess the size limit must be 100K.  I've pushed the series out to
-> > > repository https://github.com/ebiggers/xfstests, branch "remove_irix_support".
-> > > 
-> > > Note that the two biggest patches can be more easily reviewed with
-> > > 'git diff -D', since that abbreviates the file deletions.
-> > 
-> > Thanks!
-> > 
-> > I also cc'ed linux-xfs list for review, as IRIX support is mainly for
-> > XFS.
-> 
-> I think it's safe to drop IRIX support; xfsprogs dropped it in 4.10.
+After:
 
-Then all tests will have "_supported_os Linux", maybe we can drop
-_supported_os() all together, and remove it from 'new' template?
-Perhaps adding a os check in 'check' and exit if os is not Linux.
+7fda99a0 xfs.h: require transparent LFS for all users
 
-(xfs/109 has '_supported_os Linux XFS', but I think that's a typo).
+xfsdump stopped building against the xfs headers; add
+largefile support.
 
-Thanks,
-Eryu
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> 
-> That said, I also think "tests: remove IRIX-specific tests" removes too
-> many tests.  generic/097 looks like a fairly generic xattr usage test,
-> why not just fix it to work on Linux (and sort the attrs to stabilize
-> the output)?  Neither of the removed udf tests seem to test anything
-> Irix specific; either fix them to work with the Linux udf tools (or kill
-> udf/102).
-> 
-> I looked through the rest of the patches in the branch and they looked
-> ok to me.  Thanks for cleaning out that cruft.
-> 
-> --D
-> 
-> > 
-> > Eryu
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/configure.ac b/configure.ac
+index 7bb6f1d..8d78ed4 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -6,6 +6,8 @@ AC_CONFIG_SRCDIR([common/main.c])
+ AC_CONFIG_HEADER(include/config.h)
+ AC_PREFIX_DEFAULT(/usr)
+ 
++AC_SYS_LARGEFILE
++
+ AC_PROG_LIBTOOL
+ 
+ AC_ARG_ENABLE(shared,
+
