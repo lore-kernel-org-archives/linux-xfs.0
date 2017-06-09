@@ -1,80 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:56955 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752987AbdFLXus (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2017 19:50:48 -0400
-Date: Tue, 13 Jun 2017 09:50:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS journal write ordering constraints?
-Message-ID: <20170612235002.GF17542@dastard>
-References: <CALoZfD4-uqhRSfEh0Y+v8jjSDY2KkAh-hhwdLnRgZopHEETUXA@mail.gmail.com>
- <20170609234408.GE17542@dastard>
- <CALoZfD76r2ohmn=6CpPJ4DKrYVxNkP9LWmzDGm8dZRVZgBcgQA@mail.gmail.com>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36416 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751538AbdFIVXw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jun 2017 17:23:52 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CALoZfD76r2ohmn=6CpPJ4DKrYVxNkP9LWmzDGm8dZRVZgBcgQA@mail.gmail.com>
+In-Reply-To: <20170607204859.13104-1-ross.zwisler@linux.intel.com>
+References: <20170607204859.13104-1-ross.zwisler@linux.intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 9 Jun 2017 14:23:51 -0700
+Message-ID: <CAA9_cmcPsyZCB7-pd9djL0+bLamfL49SJVgkyoJ22G6tgOxyww@mail.gmail.com>
+Subject: Re: [PATCH 1/3] mm: add vm_insert_mixed_mkwrite()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sweet Tea Dorminy <sweettea@permabit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jonathan Corbet <corbet@lwn.net>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-mm <linux-mm@kvack.org>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, ext4 hackers <linux-ext4@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
 
-On Fri, Jun 09, 2017 at 10:06:26PM -0400, Sweet Tea Dorminy wrote:
-> >What is the xfs_info for this filesystem?
->        meta-data=/dev/mapper/tracer-vdo0 isize=256    agcount=4,
->        agsize=5242880 blks
->                 =                       sectsz=512   attr=2, projid32bit=0
->        data     =                       bsize=1024   blocks=20971520,
->        imaxpct=25
->                 =                       sunit=0      swidth=0 blks
->        naming   =version 2              bsize=4096   ascii-ci=0
->        log      =internal               bsize=1024   blocks=10240, version=2
->                 =                       sectsz=512   sunit=0 blks,
->        lazy-count=1
->        realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> > What granularity are these A and B regions (sectors or larger)?
-> A is 1k, B is 3k.
-> 
-> >Are you running on some kind of special block device that reproduces this?
-> It's a device we are developing,
-> asynchronous, which we believe obeys FLUSH and FUA correctly but may
-> have missed some case;
+On Wed, Jun 7, 2017 at 1:48 PM, Ross Zwisler
+<ross.zwisler@linux.intel.com> wrote:
+> To be able to use the common 4k zero page in DAX we need to have our PTE
+> fault path look more like our PMD fault path where a PTE entry can be
+> marked as dirty and writeable as it is first inserted, rather than waiting
+> for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
+>
+> Right now we can rely on having a dax_pfn_mkwrite() call because we can
+> distinguish between these two cases in do_wp_page():
+>
+>         case 1: 4k zero page => writable DAX storage
+>         case 2: read-only DAX storage => writeable DAX storage
+>
+> This distinction is made by via vm_normal_page().  vm_normal_page() returns
+> false for the common 4k zero page, though, just as it does for DAX ptes.
+> Instead of special casing the DAX + 4k zero page case, we will simplify our
+> DAX PTE page fault sequence so that it matches our DAX PMD sequence, and
+> get rid of dax_pfn_mkwrite() completely.
+>
+> This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
+> and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set insert_pfn()
+> will do the work that was previously done by wp_page_reuse() as part of the
+> dax_pfn_mkwrite() call path.
+>
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> ---
+>  include/linux/mm.h |  9 +++++++--
+>  mm/memory.c        | 21 ++++++++++++++-------
+>  2 files changed, 21 insertions(+), 9 deletions(-)
+>
+> diff --git a/include/linux/mm.h b/include/linux/mm.h
+> index b892e95..11e323a 100644
+> --- a/include/linux/mm.h
+> +++ b/include/linux/mm.h
+> @@ -2294,10 +2294,15 @@ int vm_insert_pfn(struct vm_area_struct *vma, unsigned long addr,
+>                         unsigned long pfn);
+>  int vm_insert_pfn_prot(struct vm_area_struct *vma, unsigned long addr,
+>                         unsigned long pfn, pgprot_t pgprot);
+> -int vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
+> -                       pfn_t pfn);
+> +int vm_insert_mixed_mkwrite(struct vm_area_struct *vma, unsigned long addr,
+> +                       pfn_t pfn, bool mkwrite);
 
-So Occam's Razor applies here....
+Are there any other planned public users of vm_insert_mixed_mkwrite()
+that would pass false? I think not.
 
-> we
-> encountered this issue when testing an XFS filesystem on it, and other
-> filesystems appear to work fine (although obviously we could have
-> merely gotten lucky).
+>  int vm_iomap_memory(struct vm_area_struct *vma, phys_addr_t start, unsigned long len);
+>
+> +static inline int vm_insert_mixed(struct vm_area_struct *vma,
+> +               unsigned long addr, pfn_t pfn)
+> +{
+> +       return vm_insert_mixed_mkwrite(vma, addr, pfn, false);
+> +}
 
-XFS has quite sophisticated async IO dispatch and ordering
-mechanisms compared to other filesystems and so frequently exposes
-problems in the underlying storage layers that other filesystems
-don't exercise.
+...in other words instead of making the distinction of
+vm_insert_mixed_mkwrite() and vm_insert_mixed() with extra flag
+argument just move the distinction into mm/memory.c directly.
 
-> Currently, when a flush returns from the device,
-> we guarantee the data from all bios completed before the flush was
-> issued is stably on disk;
+So, the prototype remains the same as vm_insert_mixed()
 
-Yup, that's according to
-Documentation/block/writeback_cache_control.txt, however....
+int vm_insert_mixed_mkwrite(struct vm_area_struct *vma, unsigned long
+addr, pfn_t pfn);
 
-> when a write+FUA bio returns from the
-> device, the data in that bio (only) is guaranteed to be stable on disk. The
-> device may, however, commit sequentially issued write+fua bios to disk in an
-> arbitrary order.
-
-.... XFS issues log writes with REQ_PREFLUSH|REQ_FUA. This means
-sequentially issued log writes have clearly specified ordering
-constraints. i.e. the preflush completion order requirements means
-that the block device must commit preflush+write+fua bios to stable
-storage in the exact order they were issued by the filesystem....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+...and only static insert_pfn(...) needs to change.
