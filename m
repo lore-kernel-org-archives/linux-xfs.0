@@ -1,116 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28650 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47088 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751905AbdFHOCR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Jun 2017 10:02:17 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 305CFC003409
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2017 14:02:17 +0000 (UTC)
-Date: Thu, 8 Jun 2017 16:02:12 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: release bli from transaction properly on fs
- shutdown
-Message-ID: <20170608140212.4m6r2ek6gqbm6a7w@eorzea.usersys.redhat.com>
-References: <1496750930-53954-1-git-send-email-bfoster@redhat.com>
- <1496750930-53954-2-git-send-email-bfoster@redhat.com>
+        id S1751578AbdFIMyR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Jun 2017 08:54:17 -0400
+Date: Fri, 9 Jun 2017 08:54:15 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 11/13] xfs: return the hash value of a leaf1 directory
+ block
+Message-ID: <20170609125414.GB10685@bfoster.bfoster>
+References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
+ <149643870873.23065.5974641750134566189.stgit@birch.djwong.org>
+ <20170608182236.GL4530@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1496750930-53954-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20170608182236.GL4530@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 06, 2017 at 08:08:49AM -0400, Brian Foster wrote:
-> If a filesystem shutdown occurs with a buffer log item in the CIL
-> and a log force occurs, the ->iop_unpin() handler is generally
-> expected to tear down the bli properly. This entails freeing the bli
-> memory and releasing the associated hold on the buffer so it can be
-> released and the filesystem unmounted.
+On Thu, Jun 08, 2017 at 11:22:36AM -0700, Darrick J. Wong wrote:
+> Modify the existing dir leafn lasthash function to enable us to
+> calculate the highest hash value of a leaf1 block.  This will be used by
+> the directory scrubbing code to check the sanity of hashes in leaf1
+> directory blocks.
 > 
-
-Looks good,
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-> If this sequence occurs while ->bli_refcount is elevated (i.e.,
-> another transaction is open and attempting to modify the buffer),
-> however, ->iop_unpin() may not be responsible for releasing the bli.
-> Instead, the transaction may release the final ->bli_refcount
-> reference and thus xfs_trans_brelse() is responsible for tearing
-> down the bli.
-> 
-> While xfs_trans_brelse() does drop the reference count, it only
-> attempts to release the bli if it is clean (i.e., not in the
-> CIL/AIL). If the filesystem is shutdown and the bli is sitting dirty
-> in the CIL as noted above, this ends up skipping the last
-> opportunity to release the bli. In turn, this leaves the hold on the
-> buffer and causes an unmount hang. This can be reproduced by running
-> generic/388 in repetition.
-> 
-> Update xfs_trans_brelse() to handle this shutdown corner case
-> correctly. If the final bli reference is dropped and the filesystem
-> is shutdown, remove the bli from the AIL (if necessary) and release
-> the bli to drop the buffer hold and ensure an unmount does not hang.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_trans_buf.c | 21 ++++++++++++++-------
->  1 file changed, 14 insertions(+), 7 deletions(-)
+
+Thanks for the update..
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/libxfs/xfs_da_btree.c  |   10 +++++-----
+>  fs/xfs/libxfs/xfs_dir2_node.c |   10 ++++++----
+>  fs/xfs/libxfs/xfs_dir2_priv.h |    2 +-
+>  3 files changed, 12 insertions(+), 10 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-> index 8ee29ca..86987d8 100644
-> --- a/fs/xfs/xfs_trans_buf.c
-> +++ b/fs/xfs/xfs_trans_buf.c
-> @@ -356,6 +356,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
->  		 xfs_buf_t	*bp)
->  {
->  	xfs_buf_log_item_t	*bip;
-> +	int			freed;
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index 48f1136..356f21d 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -1282,7 +1282,7 @@ xfs_da3_fixhashpath(
+>  			return;
+>  		break;
+>  	case XFS_DIR2_LEAFN_MAGIC:
+> -		lasthash = xfs_dir2_leafn_lasthash(dp, blk->bp, &count);
+> +		lasthash = xfs_dir2_leaf_lasthash(dp, blk->bp, &count);
+>  		if (count == 0)
+>  			return;
+>  		break;
+> @@ -1502,8 +1502,8 @@ xfs_da3_node_lookup_int(
+>  		if (blk->magic == XFS_DIR2_LEAFN_MAGIC ||
+>  		    blk->magic == XFS_DIR3_LEAFN_MAGIC) {
+>  			blk->magic = XFS_DIR2_LEAFN_MAGIC;
+> -			blk->hashval = xfs_dir2_leafn_lasthash(args->dp,
+> -							       blk->bp, NULL);
+> +			blk->hashval = xfs_dir2_leaf_lasthash(args->dp,
+> +							      blk->bp, NULL);
+>  			break;
+>  		}
 >  
->  	/*
->  	 * Default to a normal brelse() call if the tp is NULL.
-> @@ -419,16 +420,22 @@ xfs_trans_brelse(xfs_trans_t	*tp,
->  	/*
->  	 * Drop our reference to the buf log item.
->  	 */
-> -	atomic_dec(&bip->bli_refcount);
-> +	freed = atomic_dec_and_test(&bip->bli_refcount);
+> @@ -1929,8 +1929,8 @@ xfs_da3_path_shift(
+>  			blk->magic = XFS_DIR2_LEAFN_MAGIC;
+>  			ASSERT(level == path->active-1);
+>  			blk->index = 0;
+> -			blk->hashval = xfs_dir2_leafn_lasthash(args->dp,
+> -							       blk->bp, NULL);
+> +			blk->hashval = xfs_dir2_leaf_lasthash(args->dp,
+> +							      blk->bp, NULL);
+>  			break;
+>  		default:
+>  			ASSERT(0);
+> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> index bbd1238..682e2bf 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> @@ -528,7 +528,7 @@ xfs_dir2_free_hdr_check(
+>   * Stale entries are ok.
+>   */
+>  xfs_dahash_t					/* hash value */
+> -xfs_dir2_leafn_lasthash(
+> +xfs_dir2_leaf_lasthash(
+>  	struct xfs_inode *dp,
+>  	struct xfs_buf	*bp,			/* leaf buffer */
+>  	int		*count)			/* count of entries in leaf */
+> @@ -540,7 +540,9 @@ xfs_dir2_leafn_lasthash(
+>  	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
 >  
+>  	ASSERT(leafhdr.magic == XFS_DIR2_LEAFN_MAGIC ||
+> -	       leafhdr.magic == XFS_DIR3_LEAFN_MAGIC);
+> +	       leafhdr.magic == XFS_DIR3_LEAFN_MAGIC ||
+> +	       leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
+> +	       leafhdr.magic == XFS_DIR3_LEAF1_MAGIC);
+>  
+>  	if (count)
+>  		*count = leafhdr.count;
+> @@ -1405,8 +1407,8 @@ xfs_dir2_leafn_split(
 >  	/*
-> -	 * If the buf item is not tracking data in the log, then
-> -	 * we must free it before releasing the buffer back to the
-> -	 * free pool.  Before releasing the buffer to the free pool,
-> -	 * clear the transaction pointer in b_fsprivate2 to dissolve
-> -	 * its relation to this transaction.
-> +	 * If the buf item is not tracking data in the log, then we must free it
-> +	 * before releasing the buffer back to the free pool.
-> +	 *
-> +	 * If the fs has shutdown and we dropped the last reference, it may fall
-> +	 * on us to release a (possibly dirty) bli if it never made it to the
-> +	 * AIL (e.g., the aborted unpin already happened and didn't release it
-> +	 * due to our reference). Since we're already shutdown and need xa_lock,
-> +	 * just force remove from the AIL and release the bli here.
+>  	 * Update last hashval in each block since we added the name.
 >  	 */
-> -	if (!xfs_buf_item_dirty(bip)) {
-> +	if (XFS_FORCED_SHUTDOWN(tp->t_mountp) && freed) {
-> +		xfs_trans_ail_remove(&bip->bli_item, SHUTDOWN_LOG_IO_ERROR);
-> +		xfs_buf_item_relse(bp);
-> +	} else if (!xfs_buf_item_dirty(bip)) {
->  /***
->  		ASSERT(bp->b_pincount == 0);
->  ***/
-> -- 
-> 2.7.5
-> 
+> -	oldblk->hashval = xfs_dir2_leafn_lasthash(dp, oldblk->bp, NULL);
+> -	newblk->hashval = xfs_dir2_leafn_lasthash(dp, newblk->bp, NULL);
+> +	oldblk->hashval = xfs_dir2_leaf_lasthash(dp, oldblk->bp, NULL);
+> +	newblk->hashval = xfs_dir2_leaf_lasthash(dp, newblk->bp, NULL);
+>  	xfs_dir3_leaf_check(dp, oldblk->bp);
+>  	xfs_dir3_leaf_check(dp, newblk->bp);
+>  	return error;
+> diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+> index 576f2d2..6d24209 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_priv.h
+> +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+> @@ -95,7 +95,7 @@ extern bool xfs_dir3_leaf_check_int(struct xfs_mount *mp, struct xfs_inode *dp,
+>  /* xfs_dir2_node.c */
+>  extern int xfs_dir2_leaf_to_node(struct xfs_da_args *args,
+>  		struct xfs_buf *lbp);
+> -extern xfs_dahash_t xfs_dir2_leafn_lasthash(struct xfs_inode *dp,
+> +extern xfs_dahash_t xfs_dir2_leaf_lasthash(struct xfs_inode *dp,
+>  		struct xfs_buf *bp, int *count);
+>  extern int xfs_dir2_leafn_lookup_int(struct xfs_buf *bp,
+>  		struct xfs_da_args *args, int *indexp,
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Carlos
