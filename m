@@ -1,100 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31710 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:32992 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751675AbdFJVKl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Jun 2017 17:10:41 -0400
-Date: Sat, 10 Jun 2017 14:10:29 -0700
+        with ESMTP id S1751601AbdFJVSe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Jun 2017 17:18:34 -0400
+Date: Sat, 10 Jun 2017 14:18:22 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: free uncommitted transactions during log recovery
-Message-ID: <20170610211029.GM4530@birch.djwong.org>
-References: <1497029889-12299-1-git-send-email-bfoster@redhat.com>
+Subject: Re: It is safe to execute a fallocate on a opened and in-use  file?
+Message-ID: <20170610211822.GN4530@birch.djwong.org>
+References: <85e83dbc8f31ecd79e018d595aa2e491@assyoma.it>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1497029889-12299-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <85e83dbc8f31ecd79e018d595aa2e491@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Gionatan Danti <g.danti@assyoma.it>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jun 09, 2017 at 01:38:09PM -0400, Brian Foster wrote:
-> Log recovery allocates in-core transaction and member item data
-> structures on-demand as it processes the on-disk log. Transactions
-> are allocated on first encounter on-disk and stored in a hash table
-> structure where they are easily accessible for subsequent lookups.
-> Transaction items are also allocated on demand and are attached to
-> the associated transactions.
+On Sat, Jun 10, 2017 at 08:09:40PM +0200, Gionatan Danti wrote:
+> Hi all,
+> I would like to understand if it is safe, or not, to execute a fallocate on
+> a opened an possibly in-use file.
 > 
-> When a commit record is encountered in the log, the transaction is
-> committed to the fs and the in-core structures are freed. If a
-> filesystem crashes or shuts down before all in-core log buffers are
-> flushed to the log, however, not all transactions may have commit
-> records in the log. As expected, the modifications in such an
-> incomplete transaction are not replayed to the fs. The in-core data
-> structures for the partial transaction are never freed, however,
-> resulting in a memory leak.
+> Scenario: a running Qemu/KVM virtual machine that need its RAW-image vdisk
+> to be expanded.
 > 
-> Update xlog_do_recovery_pass() to walk the hash table of transaction
-> lists as the last step before it goes out of scope and free any
-> transactions that may remain on the lists. This prevents a memory
-> leak of partial transactions in the log.
+> I normally stop the virtual machine and issue "fallocate -l <newsize>
+> <filename>", then I restart it. I wonder if I can skip the stop/start
+> phases, going directly for the fallocate.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reasoning on the question, I naively think that fallocating when the VM is
+> writing on the file has the potential to cause corruption, due to this
+> racing condition:
+> - I execute fallocate;
+> - the filesystem begins searching for to-be-allocated chunks, and finds one;
+> - the VM suddenly writes to the very same block found on the previous step;
+> - the filesystem continue allocating the previos block, accidentally
+> discarding the just-written data.
+> 
+> This scenario can be avoided if the relevant critical path are protected
+> with mutex (or equivalent structures). Is it the case?
 
-Looks ok, I think.
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Yes, writes and fallocates are serialized with each other to avoid corruption.
 
-Do the log intent items get freed properly too?  I /think/ the answer is
-yes, but that yes could use another set of eyes. :)
+How do you get qemu to announce the disk size change the guest?
 
 --D
 
-> ---
+> In general, how to consider concurrent metadata updates for the same
+> file/block? Should I expect file corruption, similar to concurrently writing
+> data to the same file/block?
 > 
-> FYI, I suspect this has been a problem for a while and and rare/harmless
-> enough that this can target 4.13.
+> Thanks.
 > 
-> Brian
-> 
->  fs/xfs/xfs_log_recover.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 4a98762..37b34c5 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -5224,6 +5224,7 @@ xlog_do_recovery_pass(
->  	int			error2 = 0;
->  	int			bblks, split_bblks;
->  	int			hblks, split_hblks, wrapped_hblks;
-> +	int			i;
->  	struct hlist_head	rhash[XLOG_RHASH_SIZE];
->  	LIST_HEAD		(buffer_list);
->  
-> @@ -5466,6 +5467,19 @@ xlog_do_recovery_pass(
->  	if (error && first_bad)
->  		*first_bad = rhead_blk;
->  
-> +	/*
-> +	 * Transactions are freed at commit time but transactions without commit
-> +	 * records on disk are never committed. Free any that may be left in the
-> +	 * hash table.
-> +	 */
-> +	for (i = 0; i < XLOG_RHASH_SIZE; i++) {
-> +		struct hlist_node	*tmp;
-> +		struct xlog_recover	*trans;
-> +
-> +		hlist_for_each_entry_safe(trans, tmp, &rhash[i], r_list)
-> +			xlog_recover_free_trans(trans);
-> +	}
-> +
->  	return error ? error : error2;
->  }
->  
 > -- 
-> 2.7.5
-> 
+> Danti Gionatan
+> Supporto Tecnico
+> Assyoma S.r.l. - www.assyoma.it
+> email: g.danti@assyoma.it - info@assyoma.it
+> GPG public key ID: FF5F32A8
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
