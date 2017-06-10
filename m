@@ -1,32 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:36036 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750945AbdFJFep (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Jun 2017 01:34:45 -0400
-Date: Sat, 10 Jun 2017 06:34:41 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH 0/10 v11] No wait AIO
-Message-ID: <20170610053441.GD6365@ZenIV.linux.org.uk>
-References: <20170606111939.27272-1-rgoldwyn@suse.de>
- <20170608073910.GB9292@infradead.org>
+Received: from mr003msb.fastweb.it ([85.18.95.87]:40537 "EHLO
+        mr003msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751137AbdFJSJn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Jun 2017 14:09:43 -0400
+Received: from ceres.assyoma.it (93.63.55.57) by mr003msb.fastweb.it (8.5.140.05)
+        id 58BF8D440400F061 for linux-xfs@vger.kernel.org; Sat, 10 Jun 2017 20:09:41 +0200
+Subject: It is safe to execute a fallocate on a opened and in-use  =?UTF-8?Q?file=3F?=
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170608073910.GB9292@infradead.org>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date: Sat, 10 Jun 2017 20:09:40 +0200
+From: Gionatan Danti <g.danti@assyoma.it>
+Message-ID: <85e83dbc8f31ecd79e018d595aa2e491@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com
+To: linux-xfs@vger.kernel.org
+Cc: g.danti@assyoma.it
 
-On Thu, Jun 08, 2017 at 12:39:10AM -0700, Christoph Hellwig wrote:
-> As already indicated this whole series looks fine to me.
-> 
-> Al: are you going to pick this up?  Or Andrew?
+Hi all,
+I would like to understand if it is safe, or not, to execute a fallocate 
+on a opened an possibly in-use file.
 
-The main issue here is "let's bail out from ->write_iter() instances"
-patch.  It very obviously has holes in coverage.
+Scenario: a running Qemu/KVM virtual machine that need its RAW-image 
+vdisk to be expanded.
 
-Could we have FMODE_AIO_NOWAIT and make those who claim to support it
-set that in ->open()?  And make aio check that and bail out if asked
-for nowait on a file without that flag...
+I normally stop the virtual machine and issue "fallocate -l <newsize> 
+<filename>", then I restart it. I wonder if I can skip the stop/start 
+phases, going directly for the fallocate.
+
+Reasoning on the question, I naively think that fallocating when the VM 
+is writing on the file has the potential to cause corruption, due to 
+this racing condition:
+- I execute fallocate;
+- the filesystem begins searching for to-be-allocated chunks, and finds 
+one;
+- the VM suddenly writes to the very same block found on the previous 
+step;
+- the filesystem continue allocating the previos block, accidentally 
+discarding the just-written data.
+
+This scenario can be avoided if the relevant critical path are protected 
+with mutex (or equivalent structures). Is it the case?
+
+In general, how to consider concurrent metadata updates for the same 
+file/block? Should I expect file corruption, similar to concurrently 
+writing data to the same file/block?
+
+Thanks.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
