@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53668 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58594 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752358AbdFLMXm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Jun 2017 08:23:42 -0400
+        id S1752228AbdFLMXi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Jun 2017 08:23:38 -0400
 From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v6 11/20] mm: set both AS_EIO/AS_ENOSPC and errseq_t in mapping_set_error
-Date: Mon, 12 Jun 2017 08:23:05 -0400
-Message-Id: <20170612122316.13244-14-jlayton@redhat.com>
+Subject: [PATCH v6 12/20] fs: add a new fstype flag to indicate how writeback errors are tracked
+Date: Mon, 12 Jun 2017 08:23:06 -0400
+Message-Id: <20170612122316.13244-15-jlayton@redhat.com>
 In-Reply-To: <20170612122316.13244-1-jlayton@redhat.com>
 References: <20170612122316.13244-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,66 +15,44 @@ List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-When a writeback error occurs, we want later callers to be able to pick
-up that fact when they go to wait on that writeback to complete.
-Traditionally, we've used AS_EIO/AS_ENOSPC flags to track that, but
-that's problematic since only one "checker" will be informed when an
-error occurs.
+Now that we have new infrastructure for handling writeback errors using
+errseq_t, we need to convert the existing code to use it. We could
+attempt to retrofit the old interfaces on top of the new, but there is
+a conceptual disconnect here in the case of internal callers that
+invoke filemap_fdatawait and the like.
 
-In later patches, we're going to want to convert many of these callers
-to check for errors since a well-defined point in time. For now, ensure
-that we can handle both sorts of checks by both setting errors in both
-places when there is a writeback failure.
+When reporting writeback errors, we will always report errors that have
+occurred since a particular point in time. With the old writeback error
+reporting, the time we used was "since it was last tested/cleared" which
+is entirely arbitrary and potentially racy. Now, we can report the
+latest error that has occurred since an arbitrary point in time
+(represented as a sampled errseq_t value).
+
+This means that we need to touch each filesystem that calls
+filemap_check_errors in some fashion and ensure that we establish sane
+"since" values for those callers. But...some code is shared between
+filesystems and needs to be able to handle both error tracking schemes.
+
+Add a new FS_WB_ERRSEQ flag to the fstype. Later patches will set and
+key off of that to decide what behavior should be used.
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- include/linux/pagemap.h | 31 +++++++++++++++++++++++++------
- 1 file changed, 25 insertions(+), 6 deletions(-)
+ include/linux/fs.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 316a19f6b635..28acc94e0f81 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -28,14 +28,33 @@ enum mapping_flags {
- 	AS_NO_WRITEBACK_TAGS = 5,
- };
- 
-+/**
-+ * mapping_set_error - record a writeback error in the address_space
-+ * @mapping - the mapping in which an error should be set
-+ * @error - the error to set in the mapping
-+ *
-+ * When writeback fails in some way, we must record that error so that
-+ * userspace can be informed when fsync and the like are called.  We endeavor
-+ * to report errors on any file that was open at the time of the error.  Some
-+ * internal callers also need to know when writeback errors have occurred.
-+ *
-+ * When a writeback error occurs, most filesystems will want to call
-+ * mapping_set_error to record the error in the mapping so that it can be
-+ * reported when the application calls fsync(2).
-+ */
- static inline void mapping_set_error(struct address_space *mapping, int error)
- {
--	if (unlikely(error)) {
--		if (error == -ENOSPC)
--			set_bit(AS_ENOSPC, &mapping->flags);
--		else
--			set_bit(AS_EIO, &mapping->flags);
--	}
-+	if (likely(!error))
-+		return;
-+
-+	/* Record in wb_err for checkers using errseq_t based tracking */
-+	filemap_set_wb_err(mapping, error);
-+
-+	/* Record it in flags for now, for legacy callers */
-+	if (error == -ENOSPC)
-+		set_bit(AS_ENOSPC, &mapping->flags);
-+	else
-+		set_bit(AS_EIO, &mapping->flags);
- }
- 
- static inline void mapping_set_unevictable(struct address_space *mapping)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 6cd87887430b..17ba6284ab14 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2023,6 +2023,7 @@ struct file_system_type {
+ #define FS_BINARY_MOUNTDATA	2
+ #define FS_HAS_SUBTYPE		4
+ #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
++#define FS_WB_ERRSEQ		16	/* errseq_t writeback err tracking */
+ #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
+ 	struct dentry *(*mount) (struct file_system_type *, int,
+ 		       const char *, void *);
 -- 
 2.13.0
 
