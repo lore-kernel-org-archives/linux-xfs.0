@@ -1,39 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33280 "EHLO sandeen.net"
+Received: from mga04.intel.com ([192.55.52.120]:45894 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751715AbdFIPp2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Jun 2017 11:45:28 -0400
-Subject: Re: [PATCH] xfsdump: add AC_SYS_LARGEFILE
-References: <7120a48c-a832-ed92-411d-b97888f41e54@redhat.com>
- <20170609055130.GA28518@infradead.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <711cf691-0048-28ae-651e-61eaef3a87ef@sandeen.net>
-Date: Fri, 9 Jun 2017 10:45:27 -0500
+        id S1751841AbdFLECj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Jun 2017 00:02:39 -0400
+Date: Sun, 11 Jun 2017 22:02:36 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 1/3] mm: add vm_insert_mixed_mkwrite()
+Message-ID: <20170612040236.GA7352@linux.intel.com>
+References: <20170607204859.13104-1-ross.zwisler@linux.intel.com>
+ <CAA9_cmcPsyZCB7-pd9djL0+bLamfL49SJVgkyoJ22G6tgOxyww@mail.gmail.com>
+ <20170610030346.GA3575@linux.intel.com>
+ <CAPcyv4jsgUfL5Cr5a342aVNKXBrtXzpuar_1U3w3auHoT2E08A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170609055130.GA28518@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4jsgUfL5Cr5a342aVNKXBrtXzpuar_1U3w3auHoT2E08A@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jonathan Corbet <corbet@lwn.net>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-mm <linux-mm@kvack.org>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, ext4 hackers <linux-ext4@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
 
-On 6/9/17 12:51 AM, Christoph Hellwig wrote:
-> I'm pretty sure I saw a patch like this posted to the list a while
-> ago.  But either way it looks fine to me:
-
-Sigh, you sure did.  From me.  I suck.  Sorry about that!
-
-I'd better get a release pushed out, I guess, after I investigate one
-more bug.
-
--Eric
-
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Fri, Jun 09, 2017 at 08:35:08PM -0700, Dan Williams wrote:
+> On Fri, Jun 9, 2017 at 8:03 PM, Ross Zwisler
+> <ross.zwisler@linux.intel.com> wrote:
+> > And vm_insert_mixed_mkwrite() and vm_insert_mixed() are redundant with only
+> > the insert_pfn() line differing?  This doesn't seem better...unless I'm
+> > missing something?
+> >
+> > The way it is, vm_insert_mixed_mkwrite() also closely matches
+> > insert_pfn_pmd(), which we use in the PMD case and which also takes a 'write'
+> > boolean which works the same as our newly added 'mkwrite'.
 > 
+> Hmm, but now the pfn and pmd cases are inconsistent, if you put the
+> flag name in the function then don't add an argument, or make it like
+> the pmd case and add an argument to vm_insert_mixed(). I prefer the
+> former.
+
+Okay, I'll fix this for v2.  Thanks for the review.
