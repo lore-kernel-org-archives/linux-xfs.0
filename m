@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35114 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35040 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752076AbdFLMX1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Jun 2017 08:23:27 -0400
+        id S1752048AbdFLMXY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Jun 2017 08:23:24 -0400
 From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v6 06/20] mm: drop "wait" parameter from write_one_page
-Date: Mon, 12 Jun 2017 08:22:58 -0400
-Message-Id: <20170612122316.13244-7-jlayton@redhat.com>
+Subject: [PATCH v6 04/20] buffer: set errors in mapping at the time that the error occurs
+Date: Mon, 12 Jun 2017 08:22:56 -0400
+Message-Id: <20170612122316.13244-5-jlayton@redhat.com>
 In-Reply-To: <20170612122316.13244-1-jlayton@redhat.com>
 References: <20170612122316.13244-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,172 +15,117 @@ List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-The callers all set it to 1.
+I noticed on xfs that I could still sometimes get back an error on fsync
+on a fd that was opened after the error condition had been cleared.
 
-Also, make it clear that this function will not set any sort of AS_*
-error, and that the caller must do so if necessary. No existing caller
-uses this on normal files, so none of them need it.
+The problem is that the buffer code sets the write_io_error flag and
+then later checks that flag to set the error in the mapping. That flag
+perisists for quite a while however. If the file is later opened with
+O_TRUNC, the buffers will then be invalidated and the mapping's error
+set such that a subsequent fsync will return error. I think this is
+incorrect, as there was no writeback between the open and fsync.
 
-Also, add __must_check here since, in general, the callers need to
-handle an error here in some fashion.
+Add a new mark_buffer_write_io_error operation that sets the flag and
+the error in the mapping at the same time. Replace all calls to
+set_buffer_write_io_error with mark_buffer_write_io_error, and remove
+the places that check this flag in order to set the error in the
+mapping.
+
+This sets the error in the mapping earlier, at the time that it's first
+detected.
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Matthew Wilcox <mawilcox@microsoft.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/exofs/dir.c        |  2 +-
- fs/ext2/dir.c         |  2 +-
- fs/jfs/jfs_metapage.c |  4 ++--
- fs/minix/dir.c        |  2 +-
- fs/sysv/dir.c         |  2 +-
- fs/ufs/dir.c          |  2 +-
- include/linux/mm.h    |  2 +-
- mm/page-writeback.c   | 14 +++++++-------
- 8 files changed, 15 insertions(+), 15 deletions(-)
+ fs/buffer.c                 | 20 +++++++++++++-------
+ fs/gfs2/lops.c              |  2 +-
+ include/linux/buffer_head.h |  1 +
+ 3 files changed, 15 insertions(+), 8 deletions(-)
 
-diff --git a/fs/exofs/dir.c b/fs/exofs/dir.c
-index 8eeb694332fe..98233a97b7b8 100644
---- a/fs/exofs/dir.c
-+++ b/fs/exofs/dir.c
-@@ -72,7 +72,7 @@ static int exofs_commit_chunk(struct page *page, loff_t pos, unsigned len)
- 	set_page_dirty(page);
- 
- 	if (IS_DIRSYNC(dir))
--		err = write_one_page(page, 1);
-+		err = write_one_page(page);
- 	else
- 		unlock_page(page);
- 
-diff --git a/fs/ext2/dir.c b/fs/ext2/dir.c
-index d9650c9508e4..e2709695b177 100644
---- a/fs/ext2/dir.c
-+++ b/fs/ext2/dir.c
-@@ -100,7 +100,7 @@ static int ext2_commit_chunk(struct page *page, loff_t pos, unsigned len)
- 	}
- 
- 	if (IS_DIRSYNC(dir)) {
--		err = write_one_page(page, 1);
-+		err = write_one_page(page);
- 		if (!err)
- 			err = sync_inode_metadata(dir, 1);
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 4be8b914a222..b946149e8214 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -178,7 +178,7 @@ void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
+ 		set_buffer_uptodate(bh);
  	} else {
-diff --git a/fs/jfs/jfs_metapage.c b/fs/jfs/jfs_metapage.c
-index 489aaa1403e5..744fa3c079e6 100644
---- a/fs/jfs/jfs_metapage.c
-+++ b/fs/jfs/jfs_metapage.c
-@@ -711,7 +711,7 @@ void force_metapage(struct metapage *mp)
- 	get_page(page);
- 	lock_page(page);
- 	set_page_dirty(page);
--	write_one_page(page, 1);
-+	write_one_page(page);
- 	clear_bit(META_forcewrite, &mp->flag);
- 	put_page(page);
- }
-@@ -756,7 +756,7 @@ void release_metapage(struct metapage * mp)
- 		set_page_dirty(page);
- 		if (test_bit(META_sync, &mp->flag)) {
- 			clear_bit(META_sync, &mp->flag);
--			write_one_page(page, 1);
-+			write_one_page(page);
- 			lock_page(page); /* write_one_page unlocks the page */
- 		}
- 	} else if (mp->lsn)	/* discard_metapage doesn't remove it */
-diff --git a/fs/minix/dir.c b/fs/minix/dir.c
-index 7edc9b395700..baa9721f1299 100644
---- a/fs/minix/dir.c
-+++ b/fs/minix/dir.c
-@@ -57,7 +57,7 @@ static int dir_commit_chunk(struct page *page, loff_t pos, unsigned len)
- 		mark_inode_dirty(dir);
+ 		buffer_io_error(bh, ", lost sync page write");
+-		set_buffer_write_io_error(bh);
++		mark_buffer_write_io_error(bh);
+ 		clear_buffer_uptodate(bh);
  	}
- 	if (IS_DIRSYNC(dir))
--		err = write_one_page(page, 1);
-+		err = write_one_page(page);
- 	else
- 		unlock_page(page);
- 	return err;
-diff --git a/fs/sysv/dir.c b/fs/sysv/dir.c
-index 5bdae85ceef7..f5191cb2c947 100644
---- a/fs/sysv/dir.c
-+++ b/fs/sysv/dir.c
-@@ -45,7 +45,7 @@ static int dir_commit_chunk(struct page *page, loff_t pos, unsigned len)
- 		mark_inode_dirty(dir);
+ 	unlock_buffer(bh);
+@@ -352,8 +352,7 @@ void end_buffer_async_write(struct buffer_head *bh, int uptodate)
+ 		set_buffer_uptodate(bh);
+ 	} else {
+ 		buffer_io_error(bh, ", lost async page write");
+-		mapping_set_error(page->mapping, -EIO);
+-		set_buffer_write_io_error(bh);
++		mark_buffer_write_io_error(bh);
+ 		clear_buffer_uptodate(bh);
+ 		SetPageError(page);
  	}
- 	if (IS_DIRSYNC(dir))
--		err = write_one_page(page, 1);
-+		err = write_one_page(page);
- 	else
- 		unlock_page(page);
- 	return err;
-diff --git a/fs/ufs/dir.c b/fs/ufs/dir.c
-index de01b8f2aa78..48609f1d9580 100644
---- a/fs/ufs/dir.c
-+++ b/fs/ufs/dir.c
-@@ -53,7 +53,7 @@ static int ufs_commit_chunk(struct page *page, loff_t pos, unsigned len)
- 		mark_inode_dirty(dir);
- 	}
- 	if (IS_DIRSYNC(dir))
--		err = write_one_page(page, 1);
-+		err = write_one_page(page);
- 	else
- 		unlock_page(page);
- 	return err;
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index b892e95d4929..c0b1759304ec 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -2199,7 +2199,7 @@ extern void filemap_map_pages(struct vm_fault *vmf,
- extern int filemap_page_mkwrite(struct vm_fault *vmf);
- 
- /* mm/page-writeback.c */
--int write_one_page(struct page *page, int wait);
-+int __must_check write_one_page(struct page *page);
- void task_dirty_inc(struct task_struct *tsk);
- 
- /* readahead.c */
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 143c1c25d680..b901fe52b153 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -2366,15 +2366,16 @@ int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
- }
- 
- /**
-- * write_one_page - write out a single page and optionally wait on I/O
-+ * write_one_page - write out a single page and wait on I/O
-  * @page: the page to write
-- * @wait: if true, wait on writeout
-  *
-  * The page must be locked by the caller and will be unlocked upon return.
-  *
-- * write_one_page() returns a negative error code if I/O failed.
-+ * write_one_page() returns a negative error code if I/O failed. Note that
-+ * the address_space is not marked for error. The caller must do this if
-+ * needed.
-  */
--int write_one_page(struct page *page, int wait)
-+int write_one_page(struct page *page)
+@@ -481,8 +480,6 @@ static void __remove_assoc_queue(struct buffer_head *bh)
  {
- 	struct address_space *mapping = page->mapping;
- 	int ret = 0;
-@@ -2385,13 +2386,12 @@ int write_one_page(struct page *page, int wait)
+ 	list_del_init(&bh->b_assoc_buffers);
+ 	WARN_ON(!bh->b_assoc_map);
+-	if (buffer_write_io_error(bh))
+-		mapping_set_error(bh->b_assoc_map, -EIO);
+ 	bh->b_assoc_map = NULL;
+ }
  
- 	BUG_ON(!PageLocked(page));
+@@ -1181,6 +1178,17 @@ void mark_buffer_dirty(struct buffer_head *bh)
+ }
+ EXPORT_SYMBOL(mark_buffer_dirty);
  
--	if (wait)
--		wait_on_page_writeback(page);
-+	wait_on_page_writeback(page);
++void mark_buffer_write_io_error(struct buffer_head *bh)
++{
++	set_buffer_write_io_error(bh);
++	/* FIXME: do we need to set this in both places? */
++	if (bh->b_page && bh->b_page->mapping)
++		mapping_set_error(bh->b_page->mapping, -EIO);
++	if (bh->b_assoc_map)
++		mapping_set_error(bh->b_assoc_map, -EIO);
++}
++EXPORT_SYMBOL(mark_buffer_write_io_error);
++
+ /*
+  * Decrement a buffer_head's reference count.  If all buffers against a page
+  * have zero reference count, are clean and unlocked, and if the page is clean
+@@ -3279,8 +3287,6 @@ drop_buffers(struct page *page, struct buffer_head **buffers_to_free)
  
- 	if (clear_page_dirty_for_io(page)) {
- 		get_page(page);
- 		ret = mapping->a_ops->writepage(page, &wbc);
--		if (ret == 0 && wait) {
-+		if (ret == 0) {
- 			wait_on_page_writeback(page);
- 			if (PageError(page))
- 				ret = -EIO;
+ 	bh = head;
+ 	do {
+-		if (buffer_write_io_error(bh) && page->mapping)
+-			mapping_set_error(page->mapping, -EIO);
+ 		if (buffer_busy(bh))
+ 			goto failed;
+ 		bh = bh->b_this_page;
+diff --git a/fs/gfs2/lops.c b/fs/gfs2/lops.c
+index b1f9144b42c7..cd7857ab1a6a 100644
+--- a/fs/gfs2/lops.c
++++ b/fs/gfs2/lops.c
+@@ -182,7 +182,7 @@ static void gfs2_end_log_write_bh(struct gfs2_sbd *sdp, struct bio_vec *bvec,
+ 		bh = bh->b_this_page;
+ 	do {
+ 		if (error)
+-			set_buffer_write_io_error(bh);
++			mark_buffer_write_io_error(bh);
+ 		unlock_buffer(bh);
+ 		next = bh->b_this_page;
+ 		size -= bh->b_size;
+diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
+index bd029e52ef5e..e0abeba3ced7 100644
+--- a/include/linux/buffer_head.h
++++ b/include/linux/buffer_head.h
+@@ -149,6 +149,7 @@ void buffer_check_dirty_writeback(struct page *page,
+  */
+ 
+ void mark_buffer_dirty(struct buffer_head *bh);
++void mark_buffer_write_io_error(struct buffer_head *bh);
+ void init_buffer(struct buffer_head *, bh_end_io_t *, void *);
+ void touch_buffer(struct buffer_head *bh);
+ void set_bh_page(struct buffer_head *bh,
 -- 
 2.13.0
 
