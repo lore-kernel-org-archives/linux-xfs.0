@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58250 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:37620 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751984AbdFLMXX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Jun 2017 08:23:23 -0400
+        id S1752062AbdFLMX3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Jun 2017 08:23:29 -0400
 From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v6 03/20] fs: check for writeback errors after syncing out buffers in generic_file_fsync
-Date: Mon, 12 Jun 2017 08:22:55 -0400
-Message-Id: <20170612122316.13244-4-jlayton@redhat.com>
+Subject: [PATCH v6 07/20] mm: clean up error handling in write_one_page
+Date: Mon, 12 Jun 2017 08:22:59 -0400
+Message-Id: <20170612122316.13244-8-jlayton@redhat.com>
 In-Reply-To: <20170612122316.13244-1-jlayton@redhat.com>
 References: <20170612122316.13244-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,53 +15,59 @@ List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-ext2 currently does a test+clear of the AS_EIO flag, which is
-is problematic for some coming changes.
+Don't try to check PageError since that's potentially racy and not
+necessarily going to be set after writepage errors out.
 
-What we really need to do instead is call filemap_check_errors
-in __generic_file_fsync after syncing out the buffers. That
-will be sufficient for this case, and help other callers detect
-these errors properly as well.
+Instead, check the mapping for an error after writepage returns.
 
-With that, we don't need to twiddle it in ext2.
-
-Suggested-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/ext2/file.c | 2 +-
- fs/libfs.c     | 3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ mm/page-writeback.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index b21891a6bfca..ed00e7ae0ef3 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -177,7 +177,7 @@ int ext2_fsync(struct file *file, loff_t start, loff_t end, int datasync)
- 	struct address_space *mapping = sb->s_bdev->bd_inode->i_mapping;
- 
- 	ret = generic_file_fsync(file, start, end, datasync);
--	if (ret == -EIO || test_and_clear_bit(AS_EIO, &mapping->flags)) {
-+	if (ret == -EIO) {
- 		/* We don't really know where the IO error happened... */
- 		ext2_error(sb, __func__,
- 			   "detected IO error when writing metadata buffers");
-diff --git a/fs/libfs.c b/fs/libfs.c
-index a04395334bb1..1dec90819366 100644
---- a/fs/libfs.c
-+++ b/fs/libfs.c
-@@ -991,7 +991,8 @@ int __generic_file_fsync(struct file *file, loff_t start, loff_t end,
- 
- out:
- 	inode_unlock(inode);
--	return ret;
-+	err = filemap_check_errors(inode->i_mapping);
-+	return ret ? ret : err;
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index b901fe52b153..e369e8ea2a29 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -2371,14 +2371,13 @@ int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
+  *
+  * The page must be locked by the caller and will be unlocked upon return.
+  *
+- * write_one_page() returns a negative error code if I/O failed. Note that
+- * the address_space is not marked for error. The caller must do this if
+- * needed.
++ * Note that the mapping's AS_EIO/AS_ENOSPC flags will be cleared when this
++ * function returns.
+  */
+ int write_one_page(struct page *page)
+ {
+ 	struct address_space *mapping = page->mapping;
+-	int ret = 0;
++	int ret = 0, ret2;
+ 	struct writeback_control wbc = {
+ 		.sync_mode = WB_SYNC_ALL,
+ 		.nr_to_write = 1,
+@@ -2391,15 +2390,15 @@ int write_one_page(struct page *page)
+ 	if (clear_page_dirty_for_io(page)) {
+ 		get_page(page);
+ 		ret = mapping->a_ops->writepage(page, &wbc);
+-		if (ret == 0) {
++		if (ret == 0)
+ 			wait_on_page_writeback(page);
+-			if (PageError(page))
+-				ret = -EIO;
+-		}
+ 		put_page(page);
+ 	} else {
+ 		unlock_page(page);
+ 	}
++
++	if (!ret)
++		ret = filemap_check_errors(mapping);
+ 	return ret;
  }
- EXPORT_SYMBOL(__generic_file_fsync);
- 
+ EXPORT_SYMBOL(write_one_page);
 -- 
 2.13.0
 
