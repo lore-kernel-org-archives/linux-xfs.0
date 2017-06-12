@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37832 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35114 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752129AbdFLMXf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Jun 2017 08:23:35 -0400
+        id S1752076AbdFLMX1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Jun 2017 08:23:27 -0400
 From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v6 10/20] mm: tracepoints for writeback error events
-Date: Mon, 12 Jun 2017 08:23:03 -0400
-Message-Id: <20170612122316.13244-12-jlayton@redhat.com>
+Subject: [PATCH v6 06/20] mm: drop "wait" parameter from write_one_page
+Date: Mon, 12 Jun 2017 08:22:58 -0400
+Message-Id: <20170612122316.13244-7-jlayton@redhat.com>
 In-Reply-To: <20170612122316.13244-1-jlayton@redhat.com>
 References: <20170612122316.13244-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,225 +15,172 @@ List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-To enable that, make __errseq_set return the value that it was set to
-when we exit the loop. Take heed that that value is not suitable as a
-later "since" value, as it will not have been marked seen.
+The callers all set it to 1.
+
+Also, make it clear that this function will not set any sort of AS_*
+error, and that the caller must do so if necessary. No existing caller
+uses this on normal files, so none of them need it.
+
+Also, add __must_check here since, in general, the callers need to
+handle an error here in some fashion.
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Matthew Wilcox <mawilcox@microsoft.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/errseq.h         |  2 +-
- include/linux/fs.h             |  5 +++-
- include/trace/events/filemap.h | 55 ++++++++++++++++++++++++++++++++++++++++++
- lib/errseq.c                   | 20 ++++++++++-----
- mm/filemap.c                   | 13 +++++++++-
- 5 files changed, 86 insertions(+), 9 deletions(-)
+ fs/exofs/dir.c        |  2 +-
+ fs/ext2/dir.c         |  2 +-
+ fs/jfs/jfs_metapage.c |  4 ++--
+ fs/minix/dir.c        |  2 +-
+ fs/sysv/dir.c         |  2 +-
+ fs/ufs/dir.c          |  2 +-
+ include/linux/mm.h    |  2 +-
+ mm/page-writeback.c   | 14 +++++++-------
+ 8 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/include/linux/errseq.h b/include/linux/errseq.h
-index 0d2555f310cd..9e0d444ac88d 100644
---- a/include/linux/errseq.h
-+++ b/include/linux/errseq.h
-@@ -5,7 +5,7 @@
+diff --git a/fs/exofs/dir.c b/fs/exofs/dir.c
+index 8eeb694332fe..98233a97b7b8 100644
+--- a/fs/exofs/dir.c
++++ b/fs/exofs/dir.c
+@@ -72,7 +72,7 @@ static int exofs_commit_chunk(struct page *page, loff_t pos, unsigned len)
+ 	set_page_dirty(page);
  
- typedef u32	errseq_t;
+ 	if (IS_DIRSYNC(dir))
+-		err = write_one_page(page, 1);
++		err = write_one_page(page);
+ 	else
+ 		unlock_page(page);
  
--void __errseq_set(errseq_t *eseq, int err);
-+errseq_t __errseq_set(errseq_t *eseq, int err);
- static inline void errseq_set(errseq_t *eseq, int err)
- {
- 	/* Optimize for the common case of no error */
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index e57321b7ee2a..6cd87887430b 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2530,6 +2530,7 @@ extern int filemap_fdatawrite_range(struct address_space *mapping,
- extern int filemap_check_errors(struct address_space *mapping);
- 
- extern int __must_check filemap_report_wb_err(struct file *file);
-+extern void __filemap_set_wb_err(struct address_space *mapping, int err);
- 
- /**
-  * filemap_set_wb_err - set a writeback error on an address_space
-@@ -2549,7 +2550,9 @@ extern int __must_check filemap_report_wb_err(struct file *file);
-  */
- static inline void filemap_set_wb_err(struct address_space *mapping, int err)
- {
--	errseq_set(&mapping->wb_err, err);
-+	/* Fastpath for common case of no error */
-+	if (unlikely(err))
-+		__filemap_set_wb_err(mapping, err);
- }
- 
- /**
-diff --git a/include/trace/events/filemap.h b/include/trace/events/filemap.h
-index 42febb6bc1d5..2af66920f267 100644
---- a/include/trace/events/filemap.h
-+++ b/include/trace/events/filemap.h
-@@ -10,6 +10,7 @@
- #include <linux/memcontrol.h>
- #include <linux/device.h>
- #include <linux/kdev_t.h>
-+#include <linux/errseq.h>
- 
- DECLARE_EVENT_CLASS(mm_filemap_op_page_cache,
- 
-@@ -52,6 +53,60 @@ DEFINE_EVENT(mm_filemap_op_page_cache, mm_filemap_add_to_page_cache,
- 	TP_ARGS(page)
- 	);
- 
-+TRACE_EVENT(filemap_set_wb_err,
-+		TP_PROTO(struct address_space *mapping, errseq_t eseq),
-+
-+		TP_ARGS(mapping, eseq),
-+
-+		TP_STRUCT__entry(
-+			__field(unsigned long, i_ino)
-+			__field(dev_t, s_dev)
-+			__field(errseq_t, errseq)
-+		),
-+
-+		TP_fast_assign(
-+			__entry->i_ino = mapping->host->i_ino;
-+			__entry->errseq = eseq;
-+			if (mapping->host->i_sb)
-+				__entry->s_dev = mapping->host->i_sb->s_dev;
-+			else
-+				__entry->s_dev = mapping->host->i_rdev;
-+		),
-+
-+		TP_printk("dev=%d:%d ino=0x%lx errseq=0x%x",
-+			MAJOR(__entry->s_dev), MINOR(__entry->s_dev),
-+			__entry->i_ino, __entry->errseq)
-+);
-+
-+TRACE_EVENT(filemap_report_wb_err,
-+		TP_PROTO(struct file *file, errseq_t old),
-+
-+		TP_ARGS(file, old),
-+
-+		TP_STRUCT__entry(
-+			__field(struct file *, file);
-+			__field(unsigned long, i_ino)
-+			__field(dev_t, s_dev)
-+			__field(errseq_t, old)
-+			__field(errseq_t, new)
-+		),
-+
-+		TP_fast_assign(
-+			__entry->file = file;
-+			__entry->i_ino = file->f_mapping->host->i_ino;
-+			if (file->f_mapping->host->i_sb)
-+				__entry->s_dev = file->f_mapping->host->i_sb->s_dev;
-+			else
-+				__entry->s_dev = file->f_mapping->host->i_rdev;
-+			__entry->old = old;
-+			__entry->new = file->f_wb_err;
-+		),
-+
-+		TP_printk("file=%p dev=%d:%d ino=0x%lx old=0x%x new=0x%x",
-+			__entry->file, MAJOR(__entry->s_dev),
-+			MINOR(__entry->s_dev), __entry->i_ino, __entry->old,
-+			__entry->new)
-+);
- #endif /* _TRACE_FILEMAP_H */
- 
- /* This part must be outside protection */
-diff --git a/lib/errseq.c b/lib/errseq.c
-index d129c0611c1f..009972d3000c 100644
---- a/lib/errseq.c
-+++ b/lib/errseq.c
-@@ -52,10 +52,14 @@
-  *
-  * Most callers will want to use the errseq_set inline wrapper to efficiently
-  * handle the common case where err is 0.
-+ *
-+ * We do return an errseq_t here, primarily for debugging purposes. The return
-+ * value should not be used as a previously sampled value in later calls as it
-+ * will not have the SEEN flag set.
-  */
--void __errseq_set(errseq_t *eseq, int err)
-+errseq_t __errseq_set(errseq_t *eseq, int err)
- {
--	errseq_t old;
-+	errseq_t cur, old;
- 
- 	/* MAX_ERRNO must be able to serve as a mask */
- 	BUILD_BUG_ON_NOT_POWER_OF_2(MAX_ERRNO + 1);
-@@ -66,13 +70,14 @@ void __errseq_set(errseq_t *eseq, int err)
- 	 * also don't accept zero here as that would effectively clear a
- 	 * previous error.
- 	 */
-+	old = READ_ONCE(*eseq);
-+
- 	if (WARN(unlikely(err == 0 || (unsigned int)-err > MAX_ERRNO),
- 				"err = %d\n", err))
--		return;
-+		return old;
- 
--	old = READ_ONCE(*eseq);
- 	for (;;) {
--		errseq_t new, cur;
-+		errseq_t new;
- 
- 		/* Clear out error bits and set new error */
- 		new = (old & ~(MAX_ERRNO|ERRSEQ_SEEN)) | -err;
-@@ -82,8 +87,10 @@ void __errseq_set(errseq_t *eseq, int err)
- 			new += ERRSEQ_CTR_INC;
- 
- 		/* If there would be no change, then call it done */
--		if (new == old)
-+		if (new == old) {
-+			cur = new;
- 			break;
-+		}
- 
- 		/* Try to swap the new value into place */
- 		cur = cmpxchg(eseq, old, new);
-@@ -98,6 +105,7 @@ void __errseq_set(errseq_t *eseq, int err)
- 		/* Raced with an update, try again */
- 		old = cur;
+diff --git a/fs/ext2/dir.c b/fs/ext2/dir.c
+index d9650c9508e4..e2709695b177 100644
+--- a/fs/ext2/dir.c
++++ b/fs/ext2/dir.c
+@@ -100,7 +100,7 @@ static int ext2_commit_chunk(struct page *page, loff_t pos, unsigned len)
  	}
-+	return cur;
+ 
+ 	if (IS_DIRSYNC(dir)) {
+-		err = write_one_page(page, 1);
++		err = write_one_page(page);
+ 		if (!err)
+ 			err = sync_inode_metadata(dir, 1);
+ 	} else {
+diff --git a/fs/jfs/jfs_metapage.c b/fs/jfs/jfs_metapage.c
+index 489aaa1403e5..744fa3c079e6 100644
+--- a/fs/jfs/jfs_metapage.c
++++ b/fs/jfs/jfs_metapage.c
+@@ -711,7 +711,7 @@ void force_metapage(struct metapage *mp)
+ 	get_page(page);
+ 	lock_page(page);
+ 	set_page_dirty(page);
+-	write_one_page(page, 1);
++	write_one_page(page);
+ 	clear_bit(META_forcewrite, &mp->flag);
+ 	put_page(page);
  }
- EXPORT_SYMBOL(__errseq_set);
- 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index aeb58db10688..c5e19ea0bf12 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -535,6 +535,14 @@ int filemap_write_and_wait_range(struct address_space *mapping,
- }
- EXPORT_SYMBOL(filemap_write_and_wait_range);
- 
-+void __filemap_set_wb_err(struct address_space *mapping, int err)
-+{
-+	errseq_t eseq = __errseq_set(&mapping->wb_err, err);
-+	trace_filemap_set_wb_err(mapping, eseq);
-+
-+}
-+EXPORT_SYMBOL(__filemap_set_wb_err);
-+
- /**
-  * filemap_report_wb_err - report wb error (if any) that was previously set
-  * @file: struct file on which the error is being reported
-@@ -559,14 +567,17 @@ EXPORT_SYMBOL(filemap_write_and_wait_range);
- int filemap_report_wb_err(struct file *file)
- {
- 	int err = 0;
-+	errseq_t old = READ_ONCE(file->f_wb_err);
- 	struct address_space *mapping = file->f_mapping;
- 
- 	/* Locklessly handle the common case where nothing has changed */
--	if (errseq_check(&mapping->wb_err, READ_ONCE(file->f_wb_err))) {
-+	if (errseq_check(&mapping->wb_err, old)) {
- 		/* Something changed, must use slow path */
- 		spin_lock(&file->f_lock);
-+		old = file->f_wb_err;
- 		err = errseq_check_and_advance(&mapping->wb_err,
- 						&file->f_wb_err);
-+		trace_filemap_report_wb_err(file, old);
- 		spin_unlock(&file->f_lock);
+@@ -756,7 +756,7 @@ void release_metapage(struct metapage * mp)
+ 		set_page_dirty(page);
+ 		if (test_bit(META_sync, &mp->flag)) {
+ 			clear_bit(META_sync, &mp->flag);
+-			write_one_page(page, 1);
++			write_one_page(page);
+ 			lock_page(page); /* write_one_page unlocks the page */
+ 		}
+ 	} else if (mp->lsn)	/* discard_metapage doesn't remove it */
+diff --git a/fs/minix/dir.c b/fs/minix/dir.c
+index 7edc9b395700..baa9721f1299 100644
+--- a/fs/minix/dir.c
++++ b/fs/minix/dir.c
+@@ -57,7 +57,7 @@ static int dir_commit_chunk(struct page *page, loff_t pos, unsigned len)
+ 		mark_inode_dirty(dir);
  	}
+ 	if (IS_DIRSYNC(dir))
+-		err = write_one_page(page, 1);
++		err = write_one_page(page);
+ 	else
+ 		unlock_page(page);
  	return err;
+diff --git a/fs/sysv/dir.c b/fs/sysv/dir.c
+index 5bdae85ceef7..f5191cb2c947 100644
+--- a/fs/sysv/dir.c
++++ b/fs/sysv/dir.c
+@@ -45,7 +45,7 @@ static int dir_commit_chunk(struct page *page, loff_t pos, unsigned len)
+ 		mark_inode_dirty(dir);
+ 	}
+ 	if (IS_DIRSYNC(dir))
+-		err = write_one_page(page, 1);
++		err = write_one_page(page);
+ 	else
+ 		unlock_page(page);
+ 	return err;
+diff --git a/fs/ufs/dir.c b/fs/ufs/dir.c
+index de01b8f2aa78..48609f1d9580 100644
+--- a/fs/ufs/dir.c
++++ b/fs/ufs/dir.c
+@@ -53,7 +53,7 @@ static int ufs_commit_chunk(struct page *page, loff_t pos, unsigned len)
+ 		mark_inode_dirty(dir);
+ 	}
+ 	if (IS_DIRSYNC(dir))
+-		err = write_one_page(page, 1);
++		err = write_one_page(page);
+ 	else
+ 		unlock_page(page);
+ 	return err;
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index b892e95d4929..c0b1759304ec 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -2199,7 +2199,7 @@ extern void filemap_map_pages(struct vm_fault *vmf,
+ extern int filemap_page_mkwrite(struct vm_fault *vmf);
+ 
+ /* mm/page-writeback.c */
+-int write_one_page(struct page *page, int wait);
++int __must_check write_one_page(struct page *page);
+ void task_dirty_inc(struct task_struct *tsk);
+ 
+ /* readahead.c */
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 143c1c25d680..b901fe52b153 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -2366,15 +2366,16 @@ int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
+ }
+ 
+ /**
+- * write_one_page - write out a single page and optionally wait on I/O
++ * write_one_page - write out a single page and wait on I/O
+  * @page: the page to write
+- * @wait: if true, wait on writeout
+  *
+  * The page must be locked by the caller and will be unlocked upon return.
+  *
+- * write_one_page() returns a negative error code if I/O failed.
++ * write_one_page() returns a negative error code if I/O failed. Note that
++ * the address_space is not marked for error. The caller must do this if
++ * needed.
+  */
+-int write_one_page(struct page *page, int wait)
++int write_one_page(struct page *page)
+ {
+ 	struct address_space *mapping = page->mapping;
+ 	int ret = 0;
+@@ -2385,13 +2386,12 @@ int write_one_page(struct page *page, int wait)
+ 
+ 	BUG_ON(!PageLocked(page));
+ 
+-	if (wait)
+-		wait_on_page_writeback(page);
++	wait_on_page_writeback(page);
+ 
+ 	if (clear_page_dirty_for_io(page)) {
+ 		get_page(page);
+ 		ret = mapping->a_ops->writepage(page, &wbc);
+-		if (ret == 0 && wait) {
++		if (ret == 0) {
+ 			wait_on_page_writeback(page);
+ 			if (PageError(page))
+ 				ret = -EIO;
 -- 
 2.13.0
 
