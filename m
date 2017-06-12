@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59154 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40566 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752452AbdFLMXu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Jun 2017 08:23:50 -0400
+        id S1752351AbdFLMXl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Jun 2017 08:23:41 -0400
 From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v6 17/20] fs: add f_md_wb_err field to struct file for tracking metadata errors
-Date: Mon, 12 Jun 2017 08:23:13 -0400
-Message-Id: <20170612122316.13244-22-jlayton@redhat.com>
+Subject: [PATCH v6 11/13] Documentation: flesh out the section in vfs.txt on storing and reporting writeback errors
+Date: Mon, 12 Jun 2017 08:23:04 -0400
+Message-Id: <20170612122316.13244-13-jlayton@redhat.com>
 In-Reply-To: <20170612122316.13244-1-jlayton@redhat.com>
 References: <20170612122316.13244-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,150 +15,93 @@ List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-Some filesystems keep a different mapping for metadata writeback. Add a
-second errseq_t to struct file for tracking metadata writeback errors.
-Also add a new function for checking a mapping of the caller's choosing
-vs. the f_md_wb_err value.
+I waxed a little loquacious here, but I figured that more detail was
+better, and writeback error handling is so hard to get right.
 
+Although I think we'll eventually remove it once the transition is
+complete, I've gone ahead and documented the FS_WB_ERRSEQ flag as well.
+
+Cc: Jan Kara <jack@suse.cz>
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- include/linux/fs.h             |  3 +++
- include/trace/events/filemap.h | 23 ++++++++++-------------
- mm/filemap.c                   | 40 +++++++++++++++++++++++++++++++---------
- 3 files changed, 44 insertions(+), 22 deletions(-)
+ Documentation/filesystems/vfs.txt | 50 ++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 47 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index ef3feeec80b2..e366835c93b3 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -871,6 +871,7 @@ struct file {
- 	struct list_head	f_tfile_llink;
- #endif /* #ifdef CONFIG_EPOLL */
- 	struct address_space	*f_mapping;
-+	errseq_t		f_md_wb_err; /* optional metadata wb error tracking */
- } __attribute__((aligned(4)));	/* lest something weird decides that 2 is OK */
+diff --git a/Documentation/filesystems/vfs.txt b/Documentation/filesystems/vfs.txt
+index f42b90687d40..c3efdd833a3d 100644
+--- a/Documentation/filesystems/vfs.txt
++++ b/Documentation/filesystems/vfs.txt
+@@ -576,7 +576,49 @@ should clear PG_Dirty and set PG_Writeback.  It can be actually
+ written at any point after PG_Dirty is clear.  Once it is known to be
+ safe, PG_Writeback is cleared.
  
- struct file_handle {
-@@ -2525,6 +2526,8 @@ extern int filemap_fdatawrite_range(struct address_space *mapping,
- extern int filemap_check_errors(struct address_space *mapping);
- 
- extern int __must_check filemap_report_wb_err(struct file *file);
-+extern int __must_check filemap_report_md_wb_err(struct file *file,
-+					struct address_space *mapping);
- extern void __filemap_set_wb_err(struct address_space *mapping, int err);
- 
- /**
-diff --git a/include/trace/events/filemap.h b/include/trace/events/filemap.h
-index 2af66920f267..6e0d78c01a2e 100644
---- a/include/trace/events/filemap.h
-+++ b/include/trace/events/filemap.h
-@@ -79,12 +79,11 @@ TRACE_EVENT(filemap_set_wb_err,
- );
- 
- TRACE_EVENT(filemap_report_wb_err,
--		TP_PROTO(struct file *file, errseq_t old),
-+		TP_PROTO(struct address_space *mapping, errseq_t old, errseq_t new),
- 
--		TP_ARGS(file, old),
-+		TP_ARGS(mapping, old, new),
- 
- 		TP_STRUCT__entry(
--			__field(struct file *, file);
- 			__field(unsigned long, i_ino)
- 			__field(dev_t, s_dev)
- 			__field(errseq_t, old)
-@@ -92,20 +91,18 @@ TRACE_EVENT(filemap_report_wb_err,
- 		),
- 
- 		TP_fast_assign(
--			__entry->file = file;
--			__entry->i_ino = file->f_mapping->host->i_ino;
--			if (file->f_mapping->host->i_sb)
--				__entry->s_dev = file->f_mapping->host->i_sb->s_dev;
-+			__entry->i_ino = mapping->host->i_ino;
-+			if (mapping->host->i_sb)
-+				__entry->s_dev = mapping->host->i_sb->s_dev;
- 			else
--				__entry->s_dev = file->f_mapping->host->i_rdev;
-+				__entry->s_dev = mapping->host->i_rdev;
- 			__entry->old = old;
--			__entry->new = file->f_wb_err;
-+			__entry->new = new;
- 		),
- 
--		TP_printk("file=%p dev=%d:%d ino=0x%lx old=0x%x new=0x%x",
--			__entry->file, MAJOR(__entry->s_dev),
--			MINOR(__entry->s_dev), __entry->i_ino, __entry->old,
--			__entry->new)
-+		TP_printk("dev=%d:%d ino=0x%lx old=0x%x new=0x%x",
-+			MAJOR(__entry->s_dev), MINOR(__entry->s_dev),
-+			__entry->i_ino, __entry->old, __entry->new)
- );
- #endif /* _TRACE_FILEMAP_H */
- 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index c5e19ea0bf12..ef0ff6b87759 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -564,27 +564,49 @@ EXPORT_SYMBOL(__filemap_set_wb_err);
-  * value is protected by the f_lock since we must ensure that it reflects
-  * the latest value swapped in for this file descriptor.
-  */
--int filemap_report_wb_err(struct file *file)
-+static int __filemap_report_wb_err(errseq_t *cursor, spinlock_t *lock,
-+				struct address_space *mapping)
- {
- 	int err = 0;
--	errseq_t old = READ_ONCE(file->f_wb_err);
--	struct address_space *mapping = file->f_mapping;
-+	errseq_t old = READ_ONCE(*cursor);
- 
- 	/* Locklessly handle the common case where nothing has changed */
- 	if (errseq_check(&mapping->wb_err, old)) {
- 		/* Something changed, must use slow path */
--		spin_lock(&file->f_lock);
--		old = file->f_wb_err;
--		err = errseq_check_and_advance(&mapping->wb_err,
--						&file->f_wb_err);
--		trace_filemap_report_wb_err(file, old);
--		spin_unlock(&file->f_lock);
-+		spin_lock(lock);
-+		old = *cursor;
-+		err = errseq_check_and_advance(&mapping->wb_err, cursor);
-+		trace_filemap_report_wb_err(mapping, old, *cursor);
-+		spin_unlock(lock);
- 	}
- 	return err;
- }
-+EXPORT_SYMBOL(__filemap_report_wb_err);
+-Writeback makes use of a writeback_control structure...
++Writeback makes use of a writeback_control structure to direct the
++operations.  This gives the the writepage and writepages operations some
++information about the nature of and reason for the writeback request,
++and the constraints under which it is being done.  It is also used to
++return information back to the caller about the result of a writepage or
++writepages request.
 +
-+int filemap_report_wb_err(struct file *file)
-+{
-+	return __filemap_report_wb_err(&file->f_wb_err, &file->f_lock,
-+					file->f_mapping);
-+}
- EXPORT_SYMBOL(filemap_report_wb_err);
- 
- /**
-+ * filemap_report_md_wb_err - report wb error (if any) that was previously set
-+ * @file: struct file on which the error is being reported
-+ * @mapping: pointer to metadata mapping to check
-+ *
-+ * Many filesystems keep inode metadata in the pagecache, and will use the
-+ * cache to write it back to the backing store. This function is for these
-+ * callers to track metadata writeback.
-+ */
-+int filemap_report_md_wb_err(struct file *file, struct address_space *mapping)
-+{
-+	return __filemap_report_wb_err(&file->f_md_wb_err, &file->f_lock,
-+					mapping);
-+}
-+EXPORT_SYMBOL(filemap_report_md_wb_err);
++Handling errors during writeback
++--------------------------------
++Most applications that utilize the pagecache will periodically call
++fsync to ensure that data written has made it to the backing store.
++When there is an error during writeback, expect that error to be
++reported when fsync is called.  After an error has been reported to
++fsync, subsequent fsync calls on the same file descriptor should return
++0, unless further writeback errors have occurred since the previous
++fsync.
 +
-+/**
-  * replace_page_cache_page - replace a pagecache page with a new one
-  * @old:	page to be replaced
-  * @new:	page to replace with
++Ideally, the kernel would report an error only on file descriptions on
++which writes were done that subsequently failed to be written back.  The
++generic pagecache infrastructure does not track the file descriptions
++that have dirtied each individual page however, so determining which
++file descriptors should get back an error is not possible.
++
++Instead, the generic writeback error tracking infrastructure in the
++kernel settles for reporting errors to fsync on all file descriptions
++that were open at the time that the error occurred.  In a situation with
++multiple writers, all of them will get back an error on a subsequent fsync,
++even if all of the writes done through that particular file descriptor
++succeeded (or even if there were no writes on that file descriptor at all).
++
++Filesystems that wish to use this infrastructure should call
++filemap_set_wb_err to record the error in the address_space when it
++occurs.  Then, at the end of their fsync operation, they should call
++filemap_report_wb_err to ensure that the struct file's error cursor
++has advanced to the correct point in the stream of errors emitted by
++the backing device(s).
++
++Older kernels used a different method for tracking errors, based on flags
++in the address_space. We're currently switching everything over to use
++the infrastructure based on errseq_t values. During the transition,
++filesystem authors will want to also ensure their file_system_type has
++FS_WB_ERRSEQ set in fs_flags to ensure that shared infrastructure is
++aware of the model in use.
+ 
+ struct address_space_operations
+ -------------------------------
+@@ -804,7 +846,8 @@ struct address_space_operations {
+ The File Object
+ ===============
+ 
+-A file object represents a file opened by a process.
++A file object represents a file opened by a process. This is also known
++as an "open file description" in POSIX parlance.
+ 
+ 
+ struct file_operations
+@@ -887,7 +930,8 @@ otherwise noted.
+ 
+   release: called when the last reference to an open file is closed
+ 
+-  fsync: called by the fsync(2) system call
++  fsync: called by the fsync(2) system call. Also see the section above
++	 entitled "Handling errors during writeback".
+ 
+   fasync: called by the fcntl(2) system call when asynchronous
+ 	(non-blocking) mode is enabled for a file
 -- 
 2.13.0
 
