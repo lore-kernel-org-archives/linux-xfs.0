@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50972 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38306 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751966AbdFLMXs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Jun 2017 08:23:48 -0400
+        id S1751976AbdFLMX5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Jun 2017 08:23:57 -0400
 From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v6 13/20] Documentation: flesh out the section in vfs.txt on storing and reporting writeback errors
-Date: Mon, 12 Jun 2017 08:23:09 -0400
-Message-Id: <20170612122316.13244-18-jlayton@redhat.com>
+Subject: [PATCH v6 19/20] xfs: minimal conversion to errseq_t writeback error reporting
+Date: Mon, 12 Jun 2017 08:23:15 -0400
+Message-Id: <20170612122316.13244-24-jlayton@redhat.com>
 In-Reply-To: <20170612122316.13244-1-jlayton@redhat.com>
 References: <20170612122316.13244-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,90 +15,27 @@ List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-Let's try to make this extra clear for fs authors.
+Just set the FS_WB_ERRSEQ flag to indicate that we want to use errseq_t
+based error reporting. Internal filemap_* calls are left as-is for now.
 
-Also, although I think we'll eventually remove it once the transition is
-complete, I've gone ahead and documented the FS_WB_ERRSEQ flag as well.
-
-Cc: Jan Kara <jack@suse.cz>
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- Documentation/filesystems/vfs.txt | 48 ++++++++++++++++++++++++++++++++++++---
- 1 file changed, 45 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_super.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/filesystems/vfs.txt b/Documentation/filesystems/vfs.txt
-index f42b90687d40..0f6415c26385 100644
---- a/Documentation/filesystems/vfs.txt
-+++ b/Documentation/filesystems/vfs.txt
-@@ -576,7 +576,47 @@ should clear PG_Dirty and set PG_Writeback.  It can be actually
- written at any point after PG_Dirty is clear.  Once it is known to be
- safe, PG_Writeback is cleared.
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 455a575f101d..28d3be187025 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1758,7 +1758,7 @@ static struct file_system_type xfs_fs_type = {
+ 	.name			= "xfs",
+ 	.mount			= xfs_fs_mount,
+ 	.kill_sb		= kill_block_super,
+-	.fs_flags		= FS_REQUIRES_DEV,
++	.fs_flags		= FS_REQUIRES_DEV | FS_WB_ERRSEQ,
+ };
+ MODULE_ALIAS_FS("xfs");
  
--Writeback makes use of a writeback_control structure...
-+Writeback makes use of a writeback_control structure to direct the
-+operations.  This gives the the writepage and writepages operations some
-+information about the nature of and reason for the writeback request,
-+and the constraints under which it is being done.  It is also used to
-+return information back to the caller about the result of a writepage or
-+writepages request.
-+
-+Handling errors during writeback
-+--------------------------------
-+Most applications that utilize the pagecache will periodically call
-+fsync to ensure that data written has made it to the backing store.
-+When there is an error during writeback, expect that error to be
-+reported when fsync is called.  After an error has been reported to
-+fsync, subsequent fsync calls on the same file descriptor should return
-+0, unless further writeback errors have occurred since the previous
-+fsync.
-+
-+Ideally, the kernel would report an error only on file descriptions on
-+which writes were done that subsequently failed to be written back.  The
-+generic pagecache infrastructure does not track the file descriptions
-+that have dirtied each individual page however, so determining which
-+file descriptors should get back an error is not possible.
-+
-+Instead, the generic writeback error tracking infrastructure in the
-+kernel settles for reporting errors to fsync on all file descriptions
-+that were open at the time that the error occurred.  In a situation with
-+multiple writers, all of them will get back an error on a subsequent fsync,
-+even if all of the writes done through that particular file descriptor
-+succeeded (or even if there were no writes on that file descriptor at all).
-+
-+Filesystems that wish to use this infrastructure need to do two things:
-+
-+1) call mapping_set_error to record the error in the address_space when
-+one occurs.
-+
-+2) set FS_WB_ERRSEQ in the fs_flags field in the file_system_type to
-+indicate to other subsystems that the filesystem wants to use errseq_t
-+based error reporting for writeback.
-+
-+The flag may go away in the future or moved to an opt-out flag once
-+the majority of filesystems are converted to use errseq_t based reporting.
- 
- struct address_space_operations
- -------------------------------
-@@ -804,7 +844,8 @@ struct address_space_operations {
- The File Object
- ===============
- 
--A file object represents a file opened by a process.
-+A file object represents a file opened by a process. This is also known
-+as an "open file description" in POSIX parlance.
- 
- 
- struct file_operations
-@@ -887,7 +928,8 @@ otherwise noted.
- 
-   release: called when the last reference to an open file is closed
- 
--  fsync: called by the fsync(2) system call
-+  fsync: called by the fsync(2) system call. Also see the section above
-+	 entitled "Handling errors during writeback".
- 
-   fasync: called by the fcntl(2) system call when asynchronous
- 	(non-blocking) mode is enabled for a file
 -- 
 2.13.0
 
