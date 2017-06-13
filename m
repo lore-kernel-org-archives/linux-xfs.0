@@ -1,33 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:55472 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751966AbdFLHos (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2017 03:44:48 -0400
-Date: Mon, 12 Jun 2017 09:44:41 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: Request for inclusion of b54554ac5afa ("Make
- __xfs_xattr_put_listen preperly report errors.")
-Message-ID: <20170612074441.GA9957@kroah.com>
-References: <f29b6c4b-3f22-21b1-a02a-5331d22ee485@suse.com>
+Received: from mx1.redhat.com ([209.132.183.28]:42654 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751801AbdFMIiU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Jun 2017 04:38:20 -0400
+Date: Tue, 13 Jun 2017 16:38:17 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [xfstests PATCH v4 2/5] ext4: allow ext4 to use $SCRATCH_LOGDEV
+Message-ID: <20170613083817.GD4788@eguan.usersys.redhat.com>
+References: <20170612124213.14855-1-jlayton@redhat.com>
+ <20170612124213.14855-3-jlayton@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f29b6c4b-3f22-21b1-a02a-5331d22ee485@suse.com>
+In-Reply-To: <20170612124213.14855-3-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, darrick.wong@oracle.com, asavkov@redhat.com
+To: Jeff Layton <jlayton@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, David Howells <dhowells@redhat.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-On Mon, Jun 12, 2017 at 10:24:16AM +0300, Nikolay Borisov wrote:
-> Hello,
+On Mon, Jun 12, 2017 at 08:42:10AM -0400, Jeff Layton wrote:
+> The writeback error handling test requires that you put the journal on a
+> separate device. This allows us to use dmerror to simulate data
+> writeback failure, without affecting the journal.
 > 
-> I'd like to request the inclusion of the aforementioned patch. It is
-> needed as an addition to 2a6fba6d2311 ("xfs: only return -errno or
-> success from attr ->put_listent") which was already included in 4.4.71.
+> xfs already has infrastructure for this (a'la $SCRATCH_LOGDEV), so wire
+> up the ext4 code so that it can do the same thing when _scratch_mkfs is
+> called.
+> 
+> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  common/rc | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/common/rc b/common/rc
+> index 87e6ff08b18d..08807ac7c22a 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -676,6 +676,9 @@ _scratch_mkfs_ext4()
+>  	local tmp=`mktemp`
+>  	local mkfs_status
+>  
+> +	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +	    $mkfs_cmd -O journal_dev $SCRATCH_LOGDEV && \
+> +	    mkfs_cmd="$mkfs_cmd $MKFS_OPTIONS -J device=$SCRATCH_LOGDEV"
 
-What kernel tree(s) do you wish to see this included in?
+This $MKFS_OPTIONS should be added to the first command when creating
+the journal device so that journal dev has the same block size as data
+dev, there's no need to update mkfs_cmd string.
 
-thanks,
+The external log dev support for ext3 patch has similar issue.
 
-greg k-h
+Thanks,
+Eryu
+
+>  
+>  	_scratch_do_mkfs "$mkfs_cmd" "$mkfs_filter" $* 2>$tmp.mkfserr 1>$tmp.mkfsstd
+>  	mkfs_status=$?
+> -- 
+> 2.13.0
+> 
