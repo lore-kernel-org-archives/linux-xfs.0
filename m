@@ -1,138 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44616 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751866AbdFMIce (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Jun 2017 04:32:34 -0400
-Date: Tue, 13 Jun 2017 16:32:31 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [xfstests PATCH v4 0/5] new tests for writeback error reporting
- behavior
-Message-ID: <20170613083231.GB4788@eguan.usersys.redhat.com>
-References: <20170612124213.14855-1-jlayton@redhat.com>
+Received: from mail-ua0-f176.google.com ([209.85.217.176]:35494 "EHLO
+        mail-ua0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753286AbdFMOOM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jun 2017 10:14:12 -0400
+Received: by mail-ua0-f176.google.com with SMTP id q15so76224581uaa.2
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Jun 2017 07:14:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170612124213.14855-1-jlayton@redhat.com>
+In-Reply-To: <20170612235002.GF17542@dastard>
+References: <CALoZfD4-uqhRSfEh0Y+v8jjSDY2KkAh-hhwdLnRgZopHEETUXA@mail.gmail.com>
+ <20170609234408.GE17542@dastard> <CALoZfD76r2ohmn=6CpPJ4DKrYVxNkP9LWmzDGm8dZRVZgBcgQA@mail.gmail.com>
+ <20170612235002.GF17542@dastard>
+From: Sweet Tea Dorminy <sweettea@permabit.com>
+Date: Tue, 13 Jun 2017 10:14:10 -0400
+Message-ID: <CALoZfD4RXJUusr7-r8COsUY+8_D6z68LbCRkp+9VM1E2tUV1UA@mail.gmail.com>
+Subject: Re: XFS journal write ordering constraints?
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, David Howells <dhowells@redhat.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jun 12, 2017 at 08:42:08AM -0400, Jeff Layton wrote:
-> v4: respin set based on Eryu's comments
-> 
-> These tests are companion tests to the patchset I recently posted with
-> the cover letter:
-> 
->     [PATCH v6 00/20] fs: enhanced writeback error reporting with errseq_t (pile #1)
-> 
-> This set just adds 3 new xfstests to test writeback behavior. One generic
-> filesystem test, one test for raw block devices, and one test for btrfs.
-> The tests work with dmerror to ensure that writeback fails, and then
-> tests how the kernel reports errors afterward.
-> 
-> xfs, ext2/3/4 and btrfs all pass on a kernel with the patchset above.
+Thank you! I'm glad that we've established it's a mismatch between our
+device's implementation and XFS expectations.
 
-xfs, ext3/4 passed generic/999, btrfs passed btrfs/999 (with some local
-modifications, see reply to btrfs/999), but ext2 (using ext4 driver) and
-btrfs failed generic/999 on my host. (See test log at the end of mail.)
+>.... XFS issues log writes with REQ_PREFLUSH|REQ_FUA. This means
+sequentially issued log writes have clearly specified ordering
+constraints. i.e. the preflush completion order requirements means
+that the block device must commit preflush+write+fua bios to stable
+storage in the exact order they were issued by the filesystem....
 
-In the ext2 case, this test requires an external log device to run, but
-ext2 has no journal at all, I wonder if we should _notrun on ext2.
+That is certainly what REQ_BARRIER did back in the day. But when
+REQ_BARRIER was replaced with separate REQ_FUA and REQ_FLUSH
+flags, and barrier.txt got replaced with writeback_cache_control.txt,
+the documentation seemed to imply the ordering requirement on *issued*
+IO had gone away (but maybe I'm missing something).
 
-btrfs doesn't support external log device either, it should not run this
-generic test either.
 
-I think _require_logdev() should be updated too, to do a check on
-$FSTYP, only allows filesystems that have external log device support to
-continue to run.
+Quoth writeback_cache_control.txt about REQ_PREFLUSH:
+> will make sure the volatile cache of the storage device
+>has been flushed before the actual I/O operation is started.
+> This explicitly guarantees that previously completed write requests are on non-volatile
+> storage before the flagged bio starts.
 
-> 
-> The one comment I couldn't really address from earlier review is that
-> we don't have a great way for xfstests to tell what sort of error
-> reporting behavior it should expect from the running kernel. That
-> makes it difficult to tell whether failure is expected during a given
-> run.
-> 
-> Maybe that's OK though and we should just let unconverted filesystems
-> fail this test?
+And about REQ_FUA:
+> I/O completion for this request is only
+> signaled after the data has been committed to non-volatile storage.
 
-If there's really no good way to tell if current fs supports this new
-behavior, I think this is fine, strictly speaking, it's not a new
-feature anyway.
+I am perhaps overlooking where REQ_PREFLUSH guarantees all previously
+issued write requests with FLUSH|FUA are stable, not just all
+previously completed ones. Is this documented somewhere?
+Nevertheless, if XFS is expecting this guarantee, that would certainly
+be the source of this corruption.
 
-Thanks,
-Eryu
+Thanks again!
 
-P.S. ext2 and btrfs failure in generic/999 run (I renumbered it to
-generic/441)
-
-[root@ibm-x3550m3-05 xfstests]# ./check generic/441 generic/442
-FSTYP         -- ext2
-PLATFORM      -- Linux/x86_64 ibm-x3550m3-05 4.12.0-rc4.jlayton+
-MKFS_OPTIONS  -- /dev/sdc2
-MOUNT_OPTIONS -- -o acl,user_xattr -o context=system_u:object_r:root_t:s0 /dev/sdc2 /mnt/testarea/scratch
-
-generic/441 4s ... - output mismatch (see /root/xfstests/results//generic/441.out.bad)
-    --- tests/generic/441.out   2017-06-13 15:52:09.928413126 +0800
-    +++ /root/xfstests/results//generic/441.out.bad     2017-06-13 16:21:41.414112226 +0800
-    @@ -1,3 +1,3 @@
-     QA output created by 441
-     Format and mount
-    -Test passed!
-    +Third fsync on fd[0] failed: Input/output error
-    ...
-    (Run 'diff -u tests/generic/441.out /root/xfstests/results//generic/441.out.bad'  to see the entire diff)
-
-[root@ibm-x3550m3-05 xfstests]# ./check generic/441 generic/442
-FSTYP         -- btrfs
-PLATFORM      -- Linux/x86_64 ibm-x3550m3-05 4.12.0-rc4.jlayton+
-MKFS_OPTIONS  -- /dev/sdc2
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sdc2 /mnt/testarea/scratch
-
-generic/441 4s ... - output mismatch (see /root/xfstests/results//generic/441.out.bad)
-    --- tests/generic/441.out   2017-06-13 15:52:09.928413126 +0800
-    +++ /root/xfstests/results//generic/441.out.bad     2017-06-13 16:25:17.483273992 +0800
-    @@ -1,3 +1,3 @@
-     QA output created by 441
-     Format and mount
-    -Test passed!
-    +Third fsync on fd[0] failed: Read-only file system
-    ...
-    (Run 'diff -u tests/generic/441.out /root/xfstests/results//generic/441.out.bad'  to see the entire diff)
-> 
-> Jeff Layton (5):
->   generic: add a writeback error handling test
->   ext4: allow ext4 to use $SCRATCH_LOGDEV
->   generic: test writeback error handling on dmerror devices
->   ext3: allow it to put journal on a separate device when doing
->     scratch_mkfs
->   btrfs: make a btrfs version of writeback error reporting test
-> 
->  .gitignore                 |   1 +
->  common/dmerror             |  13 ++-
->  common/rc                  |  14 ++-
->  doc/auxiliary-programs.txt |  16 ++++
->  src/Makefile               |   2 +-
->  src/dmerror                |  44 +++++++++
->  src/fsync-err.c            | 223 +++++++++++++++++++++++++++++++++++++++++++++
->  tests/btrfs/999            |  93 +++++++++++++++++++
->  tests/btrfs/group          |   1 +
->  tests/generic/998          |  64 +++++++++++++
->  tests/generic/998.out      |   2 +
->  tests/generic/999          |  77 ++++++++++++++++
->  tests/generic/999.out      |   3 +
->  tests/generic/group        |   2 +
->  14 files changed, 548 insertions(+), 7 deletions(-)
->  create mode 100755 src/dmerror
->  create mode 100644 src/fsync-err.c
->  create mode 100755 tests/btrfs/999
->  create mode 100755 tests/generic/998
->  create mode 100644 tests/generic/998.out
->  create mode 100755 tests/generic/999
->  create mode 100644 tests/generic/999.out
-> 
-> -- 
-> 2.13.0
-> 
+On Mon, Jun 12, 2017 at 7:50 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Fri, Jun 09, 2017 at 10:06:26PM -0400, Sweet Tea Dorminy wrote:
+>> >What is the xfs_info for this filesystem?
+>>        meta-data=/dev/mapper/tracer-vdo0 isize=256    agcount=4,
+>>        agsize=5242880 blks
+>>                 =                       sectsz=512   attr=2, projid32bit=0
+>>        data     =                       bsize=1024   blocks=20971520,
+>>        imaxpct=25
+>>                 =                       sunit=0      swidth=0 blks
+>>        naming   =version 2              bsize=4096   ascii-ci=0
+>>        log      =internal               bsize=1024   blocks=10240, version=2
+>>                 =                       sectsz=512   sunit=0 blks,
+>>        lazy-count=1
+>>        realtime =none                   extsz=4096   blocks=0, rtextents=0
+>>
+>> > What granularity are these A and B regions (sectors or larger)?
+>> A is 1k, B is 3k.
+>>
+>> >Are you running on some kind of special block device that reproduces this?
+>> It's a device we are developing,
+>> asynchronous, which we believe obeys FLUSH and FUA correctly but may
+>> have missed some case;
+>
+> So Occam's Razor applies here....
+>
+>> we
+>> encountered this issue when testing an XFS filesystem on it, and other
+>> filesystems appear to work fine (although obviously we could have
+>> merely gotten lucky).
+>
+> XFS has quite sophisticated async IO dispatch and ordering
+> mechanisms compared to other filesystems and so frequently exposes
+> problems in the underlying storage layers that other filesystems
+> don't exercise.
+>
+>> Currently, when a flush returns from the device,
+>> we guarantee the data from all bios completed before the flush was
+>> issued is stably on disk;
+>
+> Yup, that's according to
+> Documentation/block/writeback_cache_control.txt, however....
+>
+>> when a write+FUA bio returns from the
+>> device, the data in that bio (only) is guaranteed to be stable on disk. The
+>> device may, however, commit sequentially issued write+fua bios to disk in an
+>> arbitrary order.
+>
+> .... XFS issues log writes with REQ_PREFLUSH|REQ_FUA. This means
+> sequentially issued log writes have clearly specified ordering
+> constraints. i.e. the preflush completion order requirements means
+> that the block device must commit preflush+write+fua bios to stable
+> storage in the exact order they were issued by the filesystem....
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
