@@ -1,228 +1,203 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59922 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754186AbdFLQSW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Jun 2017 12:18:22 -0400
-Date: Mon, 12 Jun 2017 12:18:15 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: XFS journal write ordering constraints?
-Message-ID: <20170612161813.GA11112@bfoster.bfoster>
-References: <CALoZfD4-uqhRSfEh0Y+v8jjSDY2KkAh-hhwdLnRgZopHEETUXA@mail.gmail.com>
- <20170609234408.GE17542@dastard>
- <CALoZfD76r2ohmn=6CpPJ4DKrYVxNkP9LWmzDGm8dZRVZgBcgQA@mail.gmail.com>
- <20170612145523.GC10244@bfoster.bfoster>
+Received: from mr001msb.fastweb.it ([85.18.95.85]:40292 "EHLO
+        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751753AbdFMJKK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jun 2017 05:10:10 -0400
+Received: from ceres.assyoma.it (93.63.55.57) by mr001msb.fastweb.it (8.5.140.05)
+        id 5928FD8A00C47D22 for linux-xfs@vger.kernel.org; Tue, 13 Jun 2017 11:10:07 +0200
+Subject: Re: Shutdown filesystem when a thin pool become full
+References: <c25a8ccc-f143-989d-3d49-3fe8753aa6f7@assyoma.it>
+ <20170522230946.s3sdg4gd73oj7r5u@eorzea.usersys.redhat.com>
+ <940c3b13-dea2-1887-d4ae-89555d1c2a4f@assyoma.it>
+ <5f98a296-6023-f200-4c60-bcfdf0288d34@assyoma.it>
+ <20170523122753.k7plzg3musc4up73@eorzea.usersys.redhat.com>
+ <24daa89a452496d2cdffa5512a64ed2e@assyoma.it>
+From: Gionatan Danti <g.danti@assyoma.it>
+Message-ID: <7e8e16f1-5425-44b3-e908-c0e8a3300e3f@assyoma.it>
+Date: Tue, 13 Jun 2017 11:09:52 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170612145523.GC10244@bfoster.bfoster>
+In-Reply-To: <24daa89a452496d2cdffa5512a64ed2e@assyoma.it>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sweet Tea Dorminy <sweettea@permabit.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: g.danti@assyoma.it
 
-On Mon, Jun 12, 2017 at 10:55:26AM -0400, Brian Foster wrote:
-> It looks like you've replied to one mail and copy/pasted the text from
-> another. FWIW, it's usually best to reply to each mail independently to
-> preserve threading and whatnot.
+Sorry for the bump, but further tests show unexpected behavior and I 
+would really like to understand what I am missing.
+
+Current setup:	CentOS 7.3 x86-64
+Kernel version:	3.10.0-514.21.1.el7.x86_64
+
+LVM2 version (from lvm version):
+   LVM version:     2.02.166(2)-RHEL7 (2016-11-16)
+   Library version: 1.02.135-RHEL7 (2016-11-16)
+   Driver version:  4.34.0
+
+On 23/05/2017 22:05, Gionatan Danti wrote:
 > 
-> On Fri, Jun 09, 2017 at 10:06:26PM -0400, Sweet Tea Dorminy wrote:
-> > >What is the xfs_info for this filesystem?
-> >        meta-data=/dev/mapper/tracer-vdo0 isize=256    agcount=4,
-> >        agsize=5242880 blks
-> >                 =                       sectsz=512   attr=2, projid32bit=0
-> >        data     =                       bsize=1024   blocks=20971520,
-> >        imaxpct=25
-> >                 =                       sunit=0      swidth=0 blks
-> >        naming   =version 2              bsize=4096   ascii-ci=0
-> >        log      =internal               bsize=1024   blocks=10240, version=2
-> >                 =                       sectsz=512   sunit=0 blks,
-> >        lazy-count=1
-> >        realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > 
-> > > What granularity are these A and B regions (sectors or larger)?
-> > A is 1k, B is 3k.
-> > 
-> > >Are you running on some kind of special block device that reproduces this?
-> > It's a device we are developing,
-> > asynchronous, which we believe obeys FLUSH and FUA correctly but may
-> > have missed some case; we
-> > encountered this issue when testing an XFS filesystem on it, and other
-> > filesystems appear to work fine (although obviously we could have
-> > merely gotten lucky). Currently, when a flush returns from the device,
-> > we guarantee the data from all bios completed before the flush was
-> > issued is stably on disk; when a write+FUA bio returns from the
-> > device, the data in that bio (only) is guaranteed to be stable on disk. The
-> > device may, however, commit sequentially issued write+fua bios to disk in an
-> > arbitrary order.
-> > 
-> > > Do you have a consistent reproducer and/or have you
-> > reproduced on an upstream kernel
-> > Our reproducer fails about 20% of the time. We have not tried on an
-> > upstream kernel.
-> > 
+> Ok, I tried with a more typical non-sync write and it seems to report 
+> ENOSPC:
 > 
-> Please do try on something upstream if possible. Also, what exactly
-> triggers the failure that ultimately leads to log recovery on the next
-> mount? Are you doing an XFS shutdown or shutting down the block device
-> underneath the fs?
-> 
-> > >Could you provide an xfs_metadump image of the filesystem that fails log recovery with CRC errors?
-> > I can capture such on Monday.
-> > For now, just the journal (gathered with xfs_logprint -C fsLog) can be
-> > found at (10M)
-> > https://s3.amazonaws.com/permabit-development/20170609-xfsUpload/fsLog
-> > .
-> 
-> Thanks. This certainly looks a bit strange. Up through sectors 19692 of
-> the log are populated with a cycle 2 LSN. After that appears to be the
-> previous cycle 1, which suggests that is the head of the log. The tail
-> then points to 1:20105, but from that point forward a strange mix of
-> cycle 1 and cycle 2 LSNs are seen.
-> 
-> It's not totally clear to me from the physical log state whether this
-> was the in-core state at the time of the crash, but a first guess may be
-> that at least this is what log recovery thinks and thus complains about
-> the tail of the log being borked.
+> [root@blackhole ~]# dd if=/dev/zero of=/mnt/storage/disk.img bs=1M 
+> count=2048
+> dd: error writing ‘/mnt/storage/disk.img’: No space left on device
+> 2002+0 records in
+> 2001+0 records out
+> 2098917376 bytes (2.1 GB) copied, 7.88216 s, 266 MB/s
 > 
 
-Another observation and possible theory... the last two cycle 2 headers
-in the log are:
+Contrary to what reported above, thin pool seems to *not* reporting 
+ENOSPC when full. This means that any new data submitted to the 
+filesystem will be reported as "written" but they never were.
 
- 20116 HEADER Cycle 2 tail 2:010284 len  32256 ops 288
- ...
- 20180 HEADER Cycle 2 tail 2:010284 len  32256 ops 261
+I fully understand that application who cares for their data should 
+regularly use fsync(). However, *many* application don't do that. One 
+notable example is Windows Explorer: when accessing a full thinvol via a 
+samba share, it will blatantly continue do "write" to the share without 
+notice the user in any way that something is wrong. This is a recipe for 
+disaster, as the user continues to uploads file which basically get lost...
 
-... which appear sanely spaced apart. They are mixed with cycle 1/2
-changes, which seems to correspond with your observation that parts of
-the 32k log buffers are succeeding and parts are failing. IOW, these log
-records are effectively incomplete on disk.
+Yes, the lacking fsync() use really is an application-level problem. 
+However, sending files to (basically) /dev/null when the pool is full 
+does not seems a smart thing.
 
-That accounts for 2 of 8 log buffers. If we assume these are the "last"
-two log buffers, each log buffer is full and also spaced 64 sectors
-apart, then the first log buffer would be targetting log sector (20116 -
-6 * 64) = 19732. That refers to the head of the on-disk log noted above:
+I am surely doing wrong something, but I can not found what. Give a look 
+below for how to reproduce...
 
- ...
- 19628 HEADER Cycle 2 tail 1:020105 len  32256 ops 327
- 19692 HEADER Cycle 2 tail 1:020105 len  19968 ops 89
- 19732 HEADER Cycle 1 tail 1:020105 len      0 ops 0
-[00000 - 19732] Cycle 0x00000002 New Cycle 0x00000001
- 19733 HEADER Cycle 1 tail 1:020105 len      0 ops 0
- ...
+# thinpool has errorwhenfull=y set
+# thinpool is 256M, thin volume is 1G
+[root@blackhole mnt]# lvs -o +whenfull
+   LV       VG        Attr       LSize   Pool     Origin Data%  Meta% 
+Move Log Cpy%Sync Convert WhenFull
+   fatvol   vg_kvm    -wi-ao---- 256.00m 
 
-So I'm wondering whether if it's possible that all of the log buffers
-were dirty at the time of the crash, the last two were the only ones
-that made it to disk, and they only made it partially at that. Further,
-in partially writing those last two bufs at 20116 and beyond, we've
-begun to overwrite the tail pointed to by the last record on disk before
-the head (tail 1:020105 -> cycle 1 sector 20105), corrupting that
-reference as well.
+   storage  vg_kvm    -wi-a----- 300.00g 
 
-There are also a bunch of the len == 0 headers at 19733 and beyond,
-which I'm not quite clear on. I'm wondering if log recovery might
-actually do that after it settles on a log head. That could mean there
-actually was more cycle 2 data from other log bufs in that range but it
-was all detected as invalid and cleared out during log recovery.
+   thinpool vg_kvm    twi-aot--- 256.00m                 1.46   0.98 
+                         error
+   thinvol  vg_kvm    Vwi-aot---   1.00g thinpool        0.37 
 
-When you grab the metadump to provide, can you make sure you do so
-_before_ you attempt log recovery on the filesystem for the first time?
-E.g., reproduce crash, umount & create metadump, mount and test for
-corruption, if reproduce -> send metadump, else toss metadump & repeat.
-This is because the first attempt at log recovery may modify the
-physical log and cause some information loss if we take the metadump
-after you've already attempted recovery.
+   root     vg_system -wi-ao----  50.00g 
 
-Brian
+   swap     vg_system -wi-ao----   7.62g
 
-P.S., I've also been assuming based on the log state that you haven't
-used the logbufs/logbsize mount options to change from the defaults, but
-please do confirm that you aren't changing either of those defaults.
-Thanks.
+# current device mappings
+[root@blackhole mnt]# ls -al /dev/mapper/ | grep thin
+lrwxrwxrwx.  1 root root       7 13 giu 09.37 vg_kvm-thinpool -> ../dm-7
+lrwxrwxrwx.  1 root root       7 13 giu 09.39 vg_kvm-thinpool_tdata -> 
+../dm-5
+lrwxrwxrwx.  1 root root       7 13 giu 09.39 vg_kvm-thinpool_tmeta -> 
+../dm-4
+lrwxrwxrwx.  1 root root       7 13 giu 09.39 vg_kvm-thinpool-tpool -> 
+../dm-6
+lrwxrwxrwx.  1 root root       7 13 giu 10.46 vg_kvm-thinvol -> ../dm-8
 
-> > A log of the journal writes can be found at (17M)
-> > https://s3.amazonaws.com/permabit-development/20170609-xfsUpload/log_writes_only.blkparse.
-> > It is in a blkparse-like format. For each 512-byte sector of a bio,
-> > either starting or finishing, the data hash is recorded; the sector is
-> > recorded; and the index of this sector and the number of sectors
-> > within the current bio is recorded. Bios recorded as "FAILED" indicate
-> > that the device has crashed / become disconnected and the bio has
-> > returned with an error.
-> > 
-> > >From there, it searches a previous number of blocks
-> > based on the maximum log buffer concurrency allowed by the fs to
-> > determine whether any such "holes" exist in that range. If so, the head
-> > is walked back to the first instance of such a "hole," effectively
-> > working around out of order buffer completion at the time of a
-> > filesystem crash.
-> > 
-> > In the case logged and linked above, there are 256k of outstanding log
-> > write bytes at once; 187k of these fail and 69k succeed. Of the 69k which
-> > succeed, they are always the first 1k of the 4k block to which they
-> > belong. Is this within the permitted amount of outstanding log buffers?
-> > 
-> 
-> Generally, yes. Log recovery uses the maximum in-core log buffer count
-> (8) and the maximum supported log buffer size (256k) to determine how
-> far to look back (2M). The default log buffer size is 32k, so I suspect
-> 256k means every log buffer was in-flight at this time.
-> 
-> When you reproduce this and presumably provide a metadump, could you
-> also collect the /sys/fs/xfs/<dev>/log/* state information at the time
-> of the crash of that particular metadump? Note that this directory
-> disappears after unmount so you'll have to collect it before.
-> 
-> Brian
-> 
-> > Thanks!
-> > 
-> > Sweet Tea
-> > 
-> > On Fri, Jun 9, 2017 at 7:44 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > > On Thu, Jun 08, 2017 at 11:42:11AM -0400, Sweet Tea Dorminy wrote:
-> > >> Greetings;
-> > >>
-> > >> When using XFS with a 1k block size atop our device, we regularly get
-> > >> "log record CRC mismatch"es when mounting XFS after a crash, and we
-> > >> are attempting to understand why. We are using RHEL7.3 with its kernel
-> > >> 3.10.0-514.10.2.el7.x86_64, xfsprogs version 4.5.0.
-> > >>
-> > >> Tracing indicates the following situation occurs:
-> > >>        Some pair of consecutive locations contains data A1 and B1, respectively.
-> > >>        The XFS journal issues new writes to those locations,
-> > >> containing data A2 and B2.
-> > >>        The write of B' finishes, but A' is still outstanding at the
-> > >> time of the crash.
-> > >>        Crash occurs. The data on disk is A1 and B2, respectively.
-> > >>        XFS fails to mount, complaining that the checksum mismatches.
-> > >>
-> > >> Does XFS expect sequentially issued journal IO to be committed to disk
-> > >> in the order of issuance due to the use of FUA?
-> > >
-> > > Journal IO is not sequentially issued. It's an async process. At
-> > > runtime, ordering is handled by journal IO completion processing
-> > > being queued and run in order, so IOs can both be issued and
-> > > physically complete out of order.
-> > >
-> > > Log recovery is supposed to handle this. It searches and finds the
-> > > latest contiguous journal entry and does not replay past holes that
-> > > may arise from out of order journal writes.
-> > >
-> > > CRC errors like this in recovery imply that journal writes are being
-> > > torn or not completed fully, which may mean that your storage does
-> > > not correctly implement flush/FUA ordering semantics....
-> > >
-> > > Cheers,
-> > >
-> > > Dave.
-> > > --
-> > > Dave Chinner
-> > > david@fromorbit.com
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# disabled ENOSPC max_retries (default value does not change anything)
+[root@blackhole mnt]# cat 
+/sys/fs/xfs/dm-8/error/metadata/ENOSPC/max_retries
+0
+
+# current filesystem use
+[root@blackhole mnt]# df -h | grep thin
+/dev/mapper/vg_kvm-thinvol 1021M   33M  989M   4% /mnt/thinvol
+
+# write 400M - it should fill the thinpool
+[root@blackhole mnt]# dd if=/dev/zero of=/mnt/thinvol/disk.img bs=1M 
+count=400
+400+0 records in
+400+0 records out
+419430400 bytes (419 MB) copied, 0.424677 s, 988 MB/s
+
+... wait 30 seconds ...
+
+# thin pool switched to out-of-space mode
+[root@blackhole mnt]# dmesg
+[ 4408.257419] XFS (dm-8): Mounting V5 Filesystem
+[ 4408.368891] XFS (dm-8): Ending clean mount
+[ 4460.147962] device-mapper: thin: 253:6: switching pool to 
+out-of-data-space (error IO) mode
+[ 4460.218484] buffer_io_error: 199623 callbacks suppressed
+[ 4460.218497] Buffer I/O error on dev dm-8, logical block 86032, lost 
+async page write
+[ 4460.218510] Buffer I/O error on dev dm-8, logical block 86033, lost 
+async page write
+[ 4460.218516] Buffer I/O error on dev dm-8, logical block 86034, lost 
+async page write
+[ 4460.218521] Buffer I/O error on dev dm-8, logical block 86035, lost 
+async page write
+[ 4460.218526] Buffer I/O error on dev dm-8, logical block 86036, lost 
+async page write
+[ 4460.218531] Buffer I/O error on dev dm-8, logical block 86037, lost 
+async page write
+[ 4460.218536] Buffer I/O error on dev dm-8, logical block 86038, lost 
+async page write
+[ 4460.218541] Buffer I/O error on dev dm-8, logical block 86039, lost 
+async page write
+[ 4460.218546] Buffer I/O error on dev dm-8, logical block 86040, lost 
+async page write
+[ 4460.218551] Buffer I/O error on dev dm-8, logical block 86041, lost 
+async page write
+
+# current thinpool state
+[root@blackhole mnt]# lvs -o +whenfull
+   LV       VG        Attr       LSize   Pool     Origin Data%  Meta% 
+Move Log Cpy%Sync Convert WhenFull
+   fatvol   vg_kvm    -wi-a----- 256.00m 
+
+   storage  vg_kvm    -wi-a----- 300.00g 
+
+   thinpool vg_kvm    twi-aot-D- 256.00m                 100.00 4.10 
+                         error
+   thinvol  vg_kvm    Vwi-aot---   1.00g thinpool        25.00 
+
+   root     vg_system -wi-ao----  50.00g 
+
+   swap     vg_system -wi-ao----   7.62g
+
+# write another 400M - they should *not* be allowed to complete without 
+errors
+[root@blackhole mnt]# dd if=/dev/zero of=/mnt/thinvol/disk2.img bs=1M 
+count=400
+400+0 records in
+400+0 records out
+419430400 bytes (419 MB) copied, 0.36643 s, 1.1 GB/s
+
+# no errors reported! give a look at dmesg
+
+[root@blackhole mnt]# dmesg
+[ 4603.649156] buffer_io_error: 44890 callbacks suppressed
+[ 4603.649163] Buffer I/O error on dev dm-8, logical block 163776, lost 
+async page write
+[ 4603.649172] Buffer I/O error on dev dm-8, logical block 163777, lost 
+async page write
+[ 4603.649175] Buffer I/O error on dev dm-8, logical block 163778, lost 
+async page write
+[ 4603.649178] Buffer I/O error on dev dm-8, logical block 163779, lost 
+async page write
+[ 4603.649181] Buffer I/O error on dev dm-8, logical block 163780, lost 
+async page write
+[ 4603.649184] Buffer I/O error on dev dm-8, logical block 163781, lost 
+async page write
+[ 4603.649187] Buffer I/O error on dev dm-8, logical block 163782, lost 
+async page write
+[ 4603.649189] Buffer I/O error on dev dm-8, logical block 163783, lost 
+async page write
+[ 4603.649192] Buffer I/O error on dev dm-8, logical block 163784, lost 
+async page write
+[ 4603.649194] Buffer I/O error on dev dm-8, logical block 163785, lost 
+async page write
+
+# current filesystem use
+[root@blackhole mnt]# df -h | grep thin
+/dev/mapper/vg_kvm-thinvol 1021M  833M  189M  82% /mnt/thinvol
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
