@@ -1,83 +1,138 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36416 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751538AbdFIVXw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jun 2017 17:23:52 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:44616 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751866AbdFMIce (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Jun 2017 04:32:34 -0400
+Date: Tue, 13 Jun 2017 16:32:31 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [xfstests PATCH v4 0/5] new tests for writeback error reporting
+ behavior
+Message-ID: <20170613083231.GB4788@eguan.usersys.redhat.com>
+References: <20170612124213.14855-1-jlayton@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20170607204859.13104-1-ross.zwisler@linux.intel.com>
-References: <20170607204859.13104-1-ross.zwisler@linux.intel.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 9 Jun 2017 14:23:51 -0700
-Message-ID: <CAA9_cmcPsyZCB7-pd9djL0+bLamfL49SJVgkyoJ22G6tgOxyww@mail.gmail.com>
-Subject: Re: [PATCH 1/3] mm: add vm_insert_mixed_mkwrite()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170612124213.14855-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jonathan Corbet <corbet@lwn.net>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-mm <linux-mm@kvack.org>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, ext4 hackers <linux-ext4@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
+To: Jeff Layton <jlayton@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, David Howells <dhowells@redhat.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-On Wed, Jun 7, 2017 at 1:48 PM, Ross Zwisler
-<ross.zwisler@linux.intel.com> wrote:
-> To be able to use the common 4k zero page in DAX we need to have our PTE
-> fault path look more like our PMD fault path where a PTE entry can be
-> marked as dirty and writeable as it is first inserted, rather than waiting
-> for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
->
-> Right now we can rely on having a dax_pfn_mkwrite() call because we can
-> distinguish between these two cases in do_wp_page():
->
->         case 1: 4k zero page => writable DAX storage
->         case 2: read-only DAX storage => writeable DAX storage
->
-> This distinction is made by via vm_normal_page().  vm_normal_page() returns
-> false for the common 4k zero page, though, just as it does for DAX ptes.
-> Instead of special casing the DAX + 4k zero page case, we will simplify our
-> DAX PTE page fault sequence so that it matches our DAX PMD sequence, and
-> get rid of dax_pfn_mkwrite() completely.
->
-> This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
-> and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set insert_pfn()
-> will do the work that was previously done by wp_page_reuse() as part of the
-> dax_pfn_mkwrite() call path.
->
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> ---
->  include/linux/mm.h |  9 +++++++--
->  mm/memory.c        | 21 ++++++++++++++-------
->  2 files changed, 21 insertions(+), 9 deletions(-)
->
-> diff --git a/include/linux/mm.h b/include/linux/mm.h
-> index b892e95..11e323a 100644
-> --- a/include/linux/mm.h
-> +++ b/include/linux/mm.h
-> @@ -2294,10 +2294,15 @@ int vm_insert_pfn(struct vm_area_struct *vma, unsigned long addr,
->                         unsigned long pfn);
->  int vm_insert_pfn_prot(struct vm_area_struct *vma, unsigned long addr,
->                         unsigned long pfn, pgprot_t pgprot);
-> -int vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
-> -                       pfn_t pfn);
-> +int vm_insert_mixed_mkwrite(struct vm_area_struct *vma, unsigned long addr,
-> +                       pfn_t pfn, bool mkwrite);
+On Mon, Jun 12, 2017 at 08:42:08AM -0400, Jeff Layton wrote:
+> v4: respin set based on Eryu's comments
+> 
+> These tests are companion tests to the patchset I recently posted with
+> the cover letter:
+> 
+>     [PATCH v6 00/20] fs: enhanced writeback error reporting with errseq_t (pile #1)
+> 
+> This set just adds 3 new xfstests to test writeback behavior. One generic
+> filesystem test, one test for raw block devices, and one test for btrfs.
+> The tests work with dmerror to ensure that writeback fails, and then
+> tests how the kernel reports errors afterward.
+> 
+> xfs, ext2/3/4 and btrfs all pass on a kernel with the patchset above.
 
-Are there any other planned public users of vm_insert_mixed_mkwrite()
-that would pass false? I think not.
+xfs, ext3/4 passed generic/999, btrfs passed btrfs/999 (with some local
+modifications, see reply to btrfs/999), but ext2 (using ext4 driver) and
+btrfs failed generic/999 on my host. (See test log at the end of mail.)
 
->  int vm_iomap_memory(struct vm_area_struct *vma, phys_addr_t start, unsigned long len);
->
-> +static inline int vm_insert_mixed(struct vm_area_struct *vma,
-> +               unsigned long addr, pfn_t pfn)
-> +{
-> +       return vm_insert_mixed_mkwrite(vma, addr, pfn, false);
-> +}
+In the ext2 case, this test requires an external log device to run, but
+ext2 has no journal at all, I wonder if we should _notrun on ext2.
 
-...in other words instead of making the distinction of
-vm_insert_mixed_mkwrite() and vm_insert_mixed() with extra flag
-argument just move the distinction into mm/memory.c directly.
+btrfs doesn't support external log device either, it should not run this
+generic test either.
 
-So, the prototype remains the same as vm_insert_mixed()
+I think _require_logdev() should be updated too, to do a check on
+$FSTYP, only allows filesystems that have external log device support to
+continue to run.
 
-int vm_insert_mixed_mkwrite(struct vm_area_struct *vma, unsigned long
-addr, pfn_t pfn);
+> 
+> The one comment I couldn't really address from earlier review is that
+> we don't have a great way for xfstests to tell what sort of error
+> reporting behavior it should expect from the running kernel. That
+> makes it difficult to tell whether failure is expected during a given
+> run.
+> 
+> Maybe that's OK though and we should just let unconverted filesystems
+> fail this test?
 
-...and only static insert_pfn(...) needs to change.
+If there's really no good way to tell if current fs supports this new
+behavior, I think this is fine, strictly speaking, it's not a new
+feature anyway.
+
+Thanks,
+Eryu
+
+P.S. ext2 and btrfs failure in generic/999 run (I renumbered it to
+generic/441)
+
+[root@ibm-x3550m3-05 xfstests]# ./check generic/441 generic/442
+FSTYP         -- ext2
+PLATFORM      -- Linux/x86_64 ibm-x3550m3-05 4.12.0-rc4.jlayton+
+MKFS_OPTIONS  -- /dev/sdc2
+MOUNT_OPTIONS -- -o acl,user_xattr -o context=system_u:object_r:root_t:s0 /dev/sdc2 /mnt/testarea/scratch
+
+generic/441 4s ... - output mismatch (see /root/xfstests/results//generic/441.out.bad)
+    --- tests/generic/441.out   2017-06-13 15:52:09.928413126 +0800
+    +++ /root/xfstests/results//generic/441.out.bad     2017-06-13 16:21:41.414112226 +0800
+    @@ -1,3 +1,3 @@
+     QA output created by 441
+     Format and mount
+    -Test passed!
+    +Third fsync on fd[0] failed: Input/output error
+    ...
+    (Run 'diff -u tests/generic/441.out /root/xfstests/results//generic/441.out.bad'  to see the entire diff)
+
+[root@ibm-x3550m3-05 xfstests]# ./check generic/441 generic/442
+FSTYP         -- btrfs
+PLATFORM      -- Linux/x86_64 ibm-x3550m3-05 4.12.0-rc4.jlayton+
+MKFS_OPTIONS  -- /dev/sdc2
+MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sdc2 /mnt/testarea/scratch
+
+generic/441 4s ... - output mismatch (see /root/xfstests/results//generic/441.out.bad)
+    --- tests/generic/441.out   2017-06-13 15:52:09.928413126 +0800
+    +++ /root/xfstests/results//generic/441.out.bad     2017-06-13 16:25:17.483273992 +0800
+    @@ -1,3 +1,3 @@
+     QA output created by 441
+     Format and mount
+    -Test passed!
+    +Third fsync on fd[0] failed: Read-only file system
+    ...
+    (Run 'diff -u tests/generic/441.out /root/xfstests/results//generic/441.out.bad'  to see the entire diff)
+> 
+> Jeff Layton (5):
+>   generic: add a writeback error handling test
+>   ext4: allow ext4 to use $SCRATCH_LOGDEV
+>   generic: test writeback error handling on dmerror devices
+>   ext3: allow it to put journal on a separate device when doing
+>     scratch_mkfs
+>   btrfs: make a btrfs version of writeback error reporting test
+> 
+>  .gitignore                 |   1 +
+>  common/dmerror             |  13 ++-
+>  common/rc                  |  14 ++-
+>  doc/auxiliary-programs.txt |  16 ++++
+>  src/Makefile               |   2 +-
+>  src/dmerror                |  44 +++++++++
+>  src/fsync-err.c            | 223 +++++++++++++++++++++++++++++++++++++++++++++
+>  tests/btrfs/999            |  93 +++++++++++++++++++
+>  tests/btrfs/group          |   1 +
+>  tests/generic/998          |  64 +++++++++++++
+>  tests/generic/998.out      |   2 +
+>  tests/generic/999          |  77 ++++++++++++++++
+>  tests/generic/999.out      |   3 +
+>  tests/generic/group        |   2 +
+>  14 files changed, 548 insertions(+), 7 deletions(-)
+>  create mode 100755 src/dmerror
+>  create mode 100644 src/fsync-err.c
+>  create mode 100755 tests/btrfs/999
+>  create mode 100755 tests/generic/998
+>  create mode 100644 tests/generic/998.out
+>  create mode 100755 tests/generic/999
+>  create mode 100644 tests/generic/999.out
+> 
+> -- 
+> 2.13.0
+> 
