@@ -1,230 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37704 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:50818 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751829AbdFNPFf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Jun 2017 11:05:35 -0400
-Subject: Re: [PATCH 07/10] xfs_spaceman: add new speculative prealloc control
+        id S1751802AbdFMWet (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Jun 2017 18:34:49 -0400
+Subject: Re: [PATCH 04/10] xfs_repair: replace rmap_compare with libxfs
+ version
 References: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
- <149643311754.15899.8219480295517493642.stgit@birch.djwong.org>
+ <149643309903.15899.5862825605175613525.stgit@birch.djwong.org>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <3efe4542-1074-feef-6da8-d193741e7207@sandeen.net>
-Date: Wed, 14 Jun 2017 10:05:33 -0500
+Message-ID: <f4245387-e6bf-206e-101c-000a6a085f6f@sandeen.net>
+Date: Tue, 13 Jun 2017 17:34:47 -0500
 MIME-Version: 1.0
-In-Reply-To: <149643311754.15899.8219480295517493642.stgit@birch.djwong.org>
+In-Reply-To: <149643309903.15899.5862825605175613525.stgit@birch.djwong.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
 On 6/2/17 2:51 PM, Darrick J. Wong wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Add an control interface for purging speculative
-> preallocation via the new ioctls.
+> Now that libxfs has a function to compare rmaps, replace xfs_repair's
+> helper function with that.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> [darrick: change xfsctl to ioctl]
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
->  spaceman/Makefile   |    2 -
->  spaceman/init.c     |    1 
->  spaceman/prealloc.c |  111 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  spaceman/space.h    |    1 
->  4 files changed, 114 insertions(+), 1 deletion(-)
->  create mode 100644 spaceman/prealloc.c
+>  libxfs/libxfs_api_defs.h |    1 +
+>  repair/rmap.c            |   32 ++------------------------------
+>  2 files changed, 3 insertions(+), 30 deletions(-)
 > 
 > 
-> diff --git a/spaceman/Makefile b/spaceman/Makefile
-> index c63a4fc..6aad746 100644
-> --- a/spaceman/Makefile
-> +++ b/spaceman/Makefile
-> @@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index 31239ca..2d8d9c8 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -144,5 +144,6 @@
+>  #define xfs_refcount_get_rec		libxfs_refcount_get_rec
+>  #define xfs_rmap_lookup_le_range	libxfs_rmap_lookup_le_range
+>  #define xfs_refc_block			libxfs_refc_block
+> +#define xfs_rmap_compare		libxfs_rmap_compare
 >  
->  LTCOMMAND = xfs_spaceman
->  HFILES = init.h space.h
-> -CFILES = init.c file.c trim.c
-> +CFILES = init.c file.c prealloc.c trim.c
+>  #endif /* __LIBXFS_API_DEFS_H__ */
+> diff --git a/repair/rmap.c b/repair/rmap.c
+> index 7508973..ab6e583 100644
+> --- a/repair/rmap.c
+> +++ b/repair/rmap.c
+> @@ -49,37 +49,9 @@ static struct xfs_ag_rmap *ag_rmaps;
+>  static bool rmapbt_suspect;
+>  static bool refcbt_suspect;
 >  
->  LLDLIBS = $(LIBXCMD)
->  LTDEPENDENCIES = $(LIBXCMD)
-> diff --git a/spaceman/init.c b/spaceman/init.c
-> index 0958377..93a8a1e 100644
-> --- a/spaceman/init.c
-> +++ b/spaceman/init.c
-> @@ -39,6 +39,7 @@ init_commands(void)
+> -/*
+> - * Compare rmap observations for array sorting.
+> - */
+> -static int
+> -rmap_compare(
+> -	const void		*a,
+> -	const void		*b)
+> +static inline int rmap_compare(const void *a, const void *b)
 >  {
->  	file_init();
->  	help_init();
-> +	prealloc_init();
->  	quit_init();
->  	trim_init();
+> -	const struct xfs_rmap_irec	*pa;
+> -	const struct xfs_rmap_irec	*pb;
+> -	__u64			oa;
+> -	__u64			ob;
+> -
+> -	pa = a; pb = b;
+> -	oa = libxfs_rmap_irec_offset_pack(pa);
+> -	ob = libxfs_rmap_irec_offset_pack(pb);
+> -
+> -	if (pa->rm_startblock < pb->rm_startblock)
+> -		return -1;
+> -	else if (pa->rm_startblock > pb->rm_startblock)
+> -		return 1;
+> -	else if (pa->rm_owner < pb->rm_owner)
+> -		return -1;
+> -	else if (pa->rm_owner > pb->rm_owner)
+> -		return 1;
+> -	else if (oa < ob)
+> -		return -1;
+> -	else if (oa > ob)
+> -		return 1;
+> -	else
+> -		return 0;
+> +	return libxfs_rmap_compare(a, b);
 >  }
-> diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
-> new file mode 100644
-> index 0000000..71c0d80
-> --- /dev/null
-> +++ b/spaceman/prealloc.c
-> @@ -0,0 +1,111 @@
-> +/*
-> + * Copyright (c) 2012 Red Hat, Inc.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +
-> +#include "libxfs.h"
-> +#include "command.h"
-> +#include "input.h"
-> +#include "init.h"
-> +#include "space.h"
-> +
-> +static cmdinfo_t prealloc_cmd;
-> +
-> +/*
-> + * Control preallocation amounts.
-> + */
-> +static int
-> +prealloc_f(
-> +	int	argc,
-> +	char	**argv)
-> +{
-> +	struct xfs_fs_eofblocks eofb = {0};
-> +	int	c;
-> +
-> +	eofb.eof_version = XFS_EOFBLOCKS_VERSION;
-> +
-> +	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
-> +		switch (c) {
-> +		case 'g':
-> +			eofb.eof_flags |= XFS_EOF_FLAGS_GID;
-> +			eofb.eof_gid = atoi(optarg);
-> +			break;
-> +		case 'u':
-> +			eofb.eof_flags |= XFS_EOF_FLAGS_UID;
-> +			eofb.eof_uid = atoi(optarg);
-> +			break;
-> +		case 'p':
-> +			eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
-> +			eofb.eof_prid = atoi(optarg);
-> +			break;
-> +		case 's':
-> +			eofb.eof_flags |= XFS_EOF_FLAGS_SYNC;
-> +			break;
-> +		case 'm':
-> +			eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
-> +			eofb.eof_min_file_size = cvtnum(file->geom.blocksize,
-> +							file->geom.sectsize,
-> +							optarg);
-> +			break;
-> +		case '?':
-> +		default:
-> +			return command_usage(&prealloc_cmd);
-> +		}
-> +	}
-> +	if (optind != argc)
-> +		return command_usage(&prealloc_cmd);
-> +
-> +	if (ioctl(file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
-> +		fprintf(stderr, _("%s: XFS_IOC_FREE_EOFBLOCKS on %s: %s\n"),
-> +			progname, file->name, strerror(errno));
-> +	}
-> +	return 0;
-> +}
-> +
-> +static void
-> +prealloc_help(void)
-> +{
-> +	printf(_(
-> +"\n"
-> +"Control speculative preallocation\n"
-> +"\n"
-> +"Options: [-s] [-ugp id] [-m minlen]\n"
-
-No need to restate Options: because that comes out already with help,
-from the args in the cmd struct:
-
-xfs_spaceman> help prealloc
-prealloc [-s] [-ugp id] [-m minlen] -- Control speculative preallocation
-
-Control speculative preallocation
-
-Options: [-s] [-ugp id] [-m minlen]
-
-
-> +"\n"
-> +" -s        -- wait for removal to complete\n"
-> +" -u uid    -- remove prealloc on files matching user <uid>\n"
-> +" -g gid    -- remove prealloc on files matching group <gid>\n"
-> +" -p prid   -- remove prealloc on files matching project <prid>\n"
-> +" -m minlen -- only consider files larger than <minlen>\n"
-
-units?  (bytes?)  Probably should mention that suffixes are accepted,
-in the manpage.
-
-> +"\n"));
-
-I guess with no -u, -g, or -p it removes speculative prealloc for all ids?
-That'd be good to add to the manpage.
-
-> +
-> +}
-> +
-> +void
-> +prealloc_init(void)
-> +{
-> +	prealloc_cmd.name = "prealloc";
-> +	prealloc_cmd.altname = "prealloc";
-> +	prealloc_cmd.cfunc = prealloc_f;
-> +	prealloc_cmd.argmin = 1;
-> +	prealloc_cmd.argmax = -1;
-> +	prealloc_cmd.args = "[-s] [-ugp id] [-m minlen]";
-
-This help is a little confusing:
-
-xfs_spaceman> prealloc -ugp 0
-prealloc [-s] [-ugp id] [-m minlen] -- Control speculative preallocation
-
-xfs_spaceman> prealloc -u 0 -g 0 -p 0
-xfs_spaceman> 
-
-should probably be:
-
-prealloc [-s] [-u id] [-g id] [-p id] [-m minlen] -- Control speculative preallocation
-
-
-> +	prealloc_cmd.flags = CMD_FLAG_ONESHOT;
-> +	prealloc_cmd.oneline = _("Control speculative preallocation");
-> +	prealloc_cmd.help = prealloc_help;
-> +
-> +	add_command(&prealloc_cmd);
-> +}
-> +
-> diff --git a/spaceman/space.h b/spaceman/space.h
-> index 7b4f034..0ae3116 100644
-> --- a/spaceman/space.h
-> +++ b/spaceman/space.h
-> @@ -33,5 +33,6 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
 >  
->  extern void	file_init(void);
->  extern void	help_init(void);
-> +extern void	prealloc_init(void);
->  extern void	quit_init(void);
->  extern void	trim_init(void);
+>  /*
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
