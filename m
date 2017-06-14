@@ -1,258 +1,276 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56760 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:39826 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750827AbdFUUgi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Jun 2017 16:36:38 -0400
-Subject: Re: [PATCH V2] xfs_metadump: tag metadump image with informational
- flags
-References: <402504cb-1632-85b6-a745-1334ccf0ee8f@redhat.com>
- <fd6d4c25-835d-89de-07b5-a6d891a088f3@sandeen.net>
- <30dda613-f77a-a2db-a18a-3a02e9a86b7c@sandeen.net>
- <20170621203442.GN4733@birch.djwong.org>
+        id S1752455AbdFNPcz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Jun 2017 11:32:55 -0400
+Subject: Re: [PATCH 06/10] xfs_spaceman: add FITRIM support
+References: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
+ <149643311135.15899.9680513857399078950.stgit@birch.djwong.org>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <8bed8814-444d-ac3a-8699-28f80564e702@sandeen.net>
-Date: Wed, 21 Jun 2017 15:36:37 -0500
+Message-ID: <0468491a-0292-e708-ce43-5556f78bcb0d@sandeen.net>
+Date: Wed, 14 Jun 2017 10:32:53 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170621203442.GN4733@birch.djwong.org>
+In-Reply-To: <149643311135.15899.9680513857399078950.stgit@birch.djwong.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On 6/21/17 3:34 PM, Darrick J. Wong wrote:
-> On Wed, Jun 21, 2017 at 02:18:23PM -0500, Eric Sandeen wrote:
->> On 5/26/17 11:13 AM, Eric Sandeen wrote:
->>> After the long discussion about warning the user and/or consumer
->>> of xfs_metadumps about dirty logs, it crossed my mind that we
->>> could use the reserved slot in the metadump header to tag the
->>> file with attributes, so the consumer of the metadump knows how
->>> it was created.
->>>
->>> This patch adds 4 flags to describe the metadump: The first simply
->>> indicates the presence of any (or no) informational flags.
->>> The old mb_reserved field has been 0 on disk since inception, so
->>> the presence of XFS_METADUMP_INFO_FLAGS indicates that this metadump
->>> may contain the informational flags:
->>>
->>>  - dirty log
->>>  - obfuscated
->>>  - full blocks (unused portions of metadata blocks
->>>                 are not zeroed out).
->>>
->>> It then adds a new option to xfs_mdrestore, "-i" to show info,
->>> which can be used with or without a target file:
->>>
->>> # xfs_mdrestore -i metadumpfile
->>> metadumpfile: not obfuscated, clean log, full metadata blocks
->>>
->>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->>> ---
->>>
->>> V2: rename to mb_info, add the "we have flags" flag
->>
->> Ping, any thoughts on this V2?
+On 6/2/17 2:51 PM, Darrick J. Wong wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> /me wonder if show_info mode ought to complain if we see an "obviously"
-> bogus value (flags are set but XFS_METADUMP_INFO_FLAGS is clear, flags
-> we don't know about are set) and dump the raw hex value...
-
-well, it's been memset to 0 since inception.  Sure, something could have
-gone wrong in transit, or whatever, I guess...
-
-I guess it might be nice to sanity check it, but to avoid another
-round trip:
-
-> ...but on the other hand it's redefining a probably-zero field in a
-> semi-ephemeral data file format to be an optional informational field,
-> so maybe it's good enough.
+> Add support for discarding free space extents via the FITRIM
+> command. Make it easy to discard a single range, an entire AG or all
+> the freespace in the filesystem.
 > 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  spaceman/Makefile |    2 -
+>  spaceman/init.c   |    1 
+>  spaceman/space.h  |    1 
+>  spaceman/trim.c   |  127 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 130 insertions(+), 1 deletion(-)
+>  create mode 100644 spaceman/trim.c
+> 
+> 
+> diff --git a/spaceman/Makefile b/spaceman/Makefile
+> index df59edf..c63a4fc 100644
+> --- a/spaceman/Makefile
+> +++ b/spaceman/Makefile
+> @@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
+>  
+>  LTCOMMAND = xfs_spaceman
+>  HFILES = init.h space.h
+> -CFILES = init.c file.c
+> +CFILES = init.c file.c trim.c
+>  
+>  LLDLIBS = $(LIBXCMD)
+>  LTDEPENDENCIES = $(LIBXCMD)
+> diff --git a/spaceman/init.c b/spaceman/init.c
+> index 5dbaef2..0958377 100644
+> --- a/spaceman/init.c
+> +++ b/spaceman/init.c
+> @@ -40,6 +40,7 @@ init_commands(void)
+>  	file_init();
+>  	help_init();
+>  	quit_init();
+> +	trim_init();
+>  }
+>  
+>  static int
+> diff --git a/spaceman/space.h b/spaceman/space.h
+> index 6e1bc52..7b4f034 100644
+> --- a/spaceman/space.h
+> +++ b/spaceman/space.h
+> @@ -34,3 +34,4 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
+>  extern void	file_init(void);
+>  extern void	help_init(void);
+>  extern void	quit_init(void);
+> +extern void	trim_init(void);
+> diff --git a/spaceman/trim.c b/spaceman/trim.c
+> new file mode 100644
+> index 0000000..d58f6d1
+> --- /dev/null
+> +++ b/spaceman/trim.c
+> @@ -0,0 +1,127 @@
+> +/*
+> + * Copyright (c) 2012 Red Hat, Inc.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +
+> +#include "libxfs.h"
+> +#include <linux/fs.h>
+> +#include "command.h"
+> +#include "init.h"
+> +#include "space.h"
+> +#include "input.h"
+> +
+> +static cmdinfo_t trim_cmd;
+> +
+> +/*
+> + * Trim unused space in xfs filesystem.
+> + */
+> +static int
+> +trim_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	struct fstrim_range trim = {0};
+> +	xfs_agnumber_t	agno = 0;
+> +	off64_t		offset = 0;
+> +	ssize_t		length = 0;
+> +	ssize_t		minlen = 0;
+> +	int		aflag = 0;
+> +	int		fflag = 0;
+> +	int		ret;
+> +	int		c;
+> +
+> +	while ((c = getopt(argc, argv, "a:fm:")) != EOF) {
+> +		switch (c) {
+> +		case 'a':
+> +			aflag = 1;
+> +			agno = atoi(optarg);
 
-thanks,
+(do we want to detect errors with strtol?)  *shrug*
+
+> +			break;
+> +		case 'f':
+> +			fflag = 1;
+> +			break;
+> +		case 'm':
+> +			minlen = cvtnum(file->geom.blocksize,
+> +					file->geom.sectsize, argv[optind]);
+
+s/argtv[optind]/optarg/ (see below)
+
+> +			break;
+> +		default:
+> +			return command_usage(&trim_cmd);
+> +		}
+> +	}
+> +
+> +	if (aflag && fflag)
+> +		return command_usage(&trim_cmd);
+> +
+> +	if (optind != argc - 2 && !(aflag || fflag))
+> +		return command_usage(&trim_cmd);
+> +	if (optind != argc) {
+> +		offset = cvtnum(file->geom.blocksize, file->geom.sectsize,
+> +				argv[optind]);
+> +		length = cvtnum(file->geom.blocksize, file->geom.sectsize,
+> +				argv[optind + 1]);
+> +	} else if (agno) {
+> +		offset = agno * file->geom.agblocks * file->geom.blocksize;
+> +		length = file->geom.agblocks * file->geom.blocksize;
+> +	} else {
+> +		offset = 0;
+> +		length = file->geom.datablocks * file->geom.blocksize;
+> +	}
+> +
+> +	trim.start = offset;
+> +	trim.len = length;
+> +	trim.minlen = minlen;
+> +
+> +	ret = ioctl(file->fd, FITRIM, (unsigned long)&trim);
+> +	if (ret < 0) {
+> +		fprintf(stderr, "%s: ioctl(FITRIM) [\"%s\"]: "
+> +			"%s\n", progname, file->name, strerror(errno));
+> +		exitcode = 1;
+> +	}
+> +	return 0;
+> +}
+> +
+> +static void
+> +trim_help(void)
+> +{
+> +	printf(_(
+> +"\n"
+> +"Discard filesystem free space\n"
+> +"\n"
+> +"Options: [-m minlen] [-f]|[-a agno]|[offset length]\n"
+
+Don't restate the Options, that comes out already from
+the cmd args:
+
+xfs_spaceman> help trim
+trim [-m minlen] [-f]|[-a agno]|[offset length] -- Discard filesystem free space
+
+Discard filesystem free space
+
+Options: [-m minlen] [-f]|[-a agno]|[offset length]
+
+
+> +"\n"
+> +" -m minlen     -- skip freespace extents smaller than minlen\n"
+> +" -f            -- trim all the freespace in the entire filesystem\n"
+> +" -a agno       -- trim all the freespace in the given AG agno\n"
+> +" offset length -- trim the freespace in the range {offset, length}\n"
+> +"\n"));
+> +
+> +}
+> +
+> +void
+> +trim_init(void)
+> +{
+> +	trim_cmd.name = "trim";
+> +	trim_cmd.altname = "tr";
+> +	trim_cmd.cfunc = trim_f;
+> +	trim_cmd.argmin = 1;
+> +	trim_cmd.argmax = 4;
+> +	trim_cmd.args = "[-m minlen] [-f]|[-a agno]|[offset length]";
+
+I found myself wondering if any of these were default, and testing shows
+that nope, one is of the last 3 or'd options is required.  Is the above
+the standard way to represent that?
+
+/me checks http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html
+
+Meh, not sure.  If it were in a SYNOPSIS it would be 3 separate lines
+for each of the 3 modes (-f / -a / offset length)
+
+is:
+
+trim_cmd.args = "-f|-a agno|offset length [-m minlen] ";
+
+any better?  Not sure there is a standard way to show mutually exclusive
+but required options on a single line.
+
+> +	trim_cmd.flags = CMD_FLAG_ONESHOT;
+> +	trim_cmd.oneline = _("Discard filesystem free space");
+> +	trim_cmd.help = trim_help;
+> +
+> +	add_command(&trim_cmd);
+> +}
+> +
+
+A little testing....
+
+xfs_spaceman> trim -m 16k
+Segmentation fault
+
+(sadface)
+
+ahah:
+                case 'm':
+                        minlen = cvtnum(file->geom.blocksize,
+-                                       file->geom.sectsize, argv[optind]);
++                                       file->geom.sectsize, optarg);
+
+
+Ok, also, am I forgetting how getopt works?
+
+xfs_spaceman> trim -f -m
+trim: option requires an argument -- 'm'
+trim [-m minlen] [-f]|[-a agno]|[offset length] -- Discard filesystem free space
+
+xfs_spaceman> trim -m -f
+trim [-m minlen] [-f]|[-a agno]|[offset length] -- Discard filesystem free space
+xfs_spaceman> 
+
+getopt is interpreting "-f" as the required argument for "-m?"
+I didn't know it did that ....
+
+xfs_spaceman> trim -m -derp -f
+xfs_spaceman: ioctl(FITRIM) ["mnt/"]: Invalid argument
+
+hm maybe we do want something better than atoi()...
+
 -Eric
-
-> --D
-> 
->>  
->>> diff --git a/db/metadump.c b/db/metadump.c
->>> index fe068ef..2f5b5b5 100644
->>> --- a/db/metadump.c
->>> +++ b/db/metadump.c
->>> @@ -2820,6 +2820,28 @@ metadump_f(
->>>  	metablock->mb_blocklog = BBSHIFT;
->>>  	metablock->mb_magic = cpu_to_be32(XFS_MD_MAGIC);
->>>  
->>> +	/* Set flags about state of metadump */
->>> +	metablock->mb_info = XFS_METADUMP_INFO_FLAGS;
->>> +	if (obfuscate)
->>> +		metablock->mb_info |= XFS_METADUMP_OBFUSCATED;
->>> +	if (!zero_stale_data)
->>> +		metablock->mb_info |= XFS_METADUMP_FULLBLOCKS;
->>> +
->>> +	/* If we'll copy the log, see if the log is dirty */
->>> +	if (mp->m_sb.sb_logstart) {
->>> +		push_cur();
->>> +		set_cur(&typtab[TYP_LOG],
->>> +			XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
->>> +			mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN, NULL);
->>> +		if (iocur_top->data) {	/* best effort */
->>> +			struct xlog	log;
->>> +
->>> +			if (xlog_is_dirty(mp, &log, &x, 0))
->>> +				metablock->mb_info |= XFS_METADUMP_DIRTYLOG;
->>> +		}
->>> +		pop_cur();
->>> +	}
->>> +
->>>  	block_index = (__be64 *)((char *)metablock + sizeof(xfs_metablock_t));
->>>  	block_buffer = (char *)metablock + BBSIZE;
->>>  	num_indices = (BBSIZE - sizeof(xfs_metablock_t)) / sizeof(__be64);
->>> diff --git a/include/xfs_metadump.h b/include/xfs_metadump.h
->>> index f4be51b..7f3039e 100644
->>> --- a/include/xfs_metadump.h
->>> +++ b/include/xfs_metadump.h
->>> @@ -25,8 +25,14 @@ typedef struct xfs_metablock {
->>>  	__be32		mb_magic;
->>>  	__be16		mb_count;
->>>  	__uint8_t	mb_blocklog;
->>> -	__uint8_t	mb_reserved;
->>> +	__uint8_t	mb_info;
->>>  	/* followed by an array of xfs_daddr_t */
->>>  } xfs_metablock_t;
->>>  
->>> +/* These flags are informational only, not backwards compatible */
->>> +#define XFS_METADUMP_INFO_FLAGS	(1 << 0) /* This image has informative flags */
->>> +#define XFS_METADUMP_OBFUSCATED	(1 << 1)
->>> +#define XFS_METADUMP_FULLBLOCKS	(1 << 2)
->>> +#define XFS_METADUMP_DIRTYLOG	(1 << 3)
->>> +
->>>  #endif /* _XFS_METADUMP_H_ */
->>> diff --git a/man/man8/xfs_mdrestore.8 b/man/man8/xfs_mdrestore.8
->>> index 2095f15..72f3b29 100644
->>> --- a/man/man8/xfs_mdrestore.8
->>> +++ b/man/man8/xfs_mdrestore.8
->>> @@ -4,11 +4,15 @@ xfs_mdrestore \- restores an XFS metadump image to a filesystem image
->>>  .SH SYNOPSIS
->>>  .B xfs_mdrestore
->>>  [
->>> -.B \-g
->>> +.B \-gi
->>>  ]
->>>  .I source
->>>  .I target
->>>  .br
->>> +.B xfs_mdrestore
->>> +.B \-i
->>> +.I source
->>> +.br
->>>  .B xfs_mdrestore \-V
->>>  .SH DESCRIPTION
->>>  .B xfs_mdrestore
->>> @@ -39,6 +43,12 @@ can be destroyed.
->>>  .B \-g
->>>  Shows restore progress on stdout.
->>>  .TP
->>> +.B \-i
->>> +Shows metadump information on stdout.  If no
->>> +.I target
->>> +is specified, exits after displaying information.  Older metadumps man not
->>> +include any descriptive information.
->>> +.TP
->>>  .B \-V
->>>  Prints the version number and exits.
->>>  .SH DIAGNOSTICS
->>> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
->>> index 0d399f1..9d1b4e8 100644
->>> --- a/mdrestore/xfs_mdrestore.c
->>> +++ b/mdrestore/xfs_mdrestore.c
->>> @@ -21,6 +21,7 @@
->>>  
->>>  char 		*progname;
->>>  int		show_progress = 0;
->>> +int		show_info = 0;
->>>  int		progress_since_warning = 0;
->>>  
->>>  static void
->>> @@ -213,11 +214,14 @@ main(
->>>  
->>>  	progname = basename(argv[0]);
->>>  
->>> -	while ((c = getopt(argc, argv, "gV")) != EOF) {
->>> +	while ((c = getopt(argc, argv, "giV")) != EOF) {
->>>  		switch (c) {
->>>  			case 'g':
->>>  				show_progress = 1;
->>>  				break;
->>> +			case 'i':
->>> +				show_info = 1;
->>> +				break;
->>>  			case 'V':
->>>  				printf("%s version %s\n", progname, VERSION);
->>>  				exit(0);
->>> @@ -226,7 +230,11 @@ main(
->>>  		}
->>>  	}
->>>  
->>> -	if (argc - optind != 2)
->>> +	if (argc - optind < 1 || argc - optind > 2)
->>> +		usage();
->>> +
->>> +	/* show_info without a target is ok */
->>> +	if (!show_info && argc - optind != 2)
->>>  		usage();
->>>  
->>>  	/* open source */
->>> @@ -239,6 +247,34 @@ main(
->>>  		if (src_f == NULL)
->>>  			fatal("cannot open source dump file\n");
->>>  	}
->>> +
->>> +	if (show_info) {
->>> +		xfs_metablock_t		mb;
->>> +
->>> +		if (fread(&mb, sizeof(mb), 1, src_f) != 1)
->>> +			fatal("error reading from file: %s\n", strerror(errno));
->>> +
->>> +		if (be32_to_cpu(mb.mb_magic) != XFS_MD_MAGIC)
->>> +			fatal("specified file is not a metadata dump\n");
->>> +
->>> +		if (mb.mb_info & XFS_METADUMP_INFO_FLAGS) {
->>> +			printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
->>> +			argv[optind],
->>> +			mb.mb_info & XFS_METADUMP_OBFUSCATED ? "":"not ",
->>> +			mb.mb_info & XFS_METADUMP_DIRTYLOG ? "dirty":"clean",
->>> +			mb.mb_info & XFS_METADUMP_FULLBLOCKS ? "full":"zeroed");
->>> +		} else {
->>> +			printf("%s: no informational flags present\n",
->>> +				argv[optind]);
->>> +		}
->>> +
->>> +		if (argc - optind == 1)
->>> +			exit(0);
->>> +
->>> +		/* Go back to the beginning for the restore function */
->>> +		fseek(src_f, 0L, SEEK_SET);
->>> +	}
->>> +
->>>  	optind++;
->>>  
->>>  	/* check and open target */
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
