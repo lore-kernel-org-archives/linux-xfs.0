@@ -1,33 +1,243 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53706 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752031AbdFPLGv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 07:06:51 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 76B06C057FAD
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 11:06:50 +0000 (UTC)
-Received: from eorzea.usersys.redhat.com (unknown [10.40.205.55])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id CA23F94C5F
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 11:06:49 +0000 (UTC)
-Date: Fri, 16 Jun 2017 13:06:47 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
- error during buffer writeback
-Message-ID: <20170616110647.b5dp5hvb7ylacdwr@eorzea.usersys.redhat.com>
-References: <20170616105445.3314-1-cmaiolino@redhat.com>
- <20170616105445.3314-3-cmaiolino@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:42440 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751714AbdFNQj4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2017 12:39:56 -0400
+Date: Wed, 14 Jun 2017 09:39:45 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 07/10] xfs_spaceman: add new speculative prealloc control
+Message-ID: <20170614163945.GT4530@birch.djwong.org>
+References: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
+ <149643311754.15899.8219480295517493642.stgit@birch.djwong.org>
+ <3efe4542-1074-feef-6da8-d193741e7207@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170616105445.3314-3-cmaiolino@redhat.com>
+In-Reply-To: <3efe4542-1074-feef-6da8-d193741e7207@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-I forgot to add "V4" to the subject here, but the patch is still the V4 one
+On Wed, Jun 14, 2017 at 10:05:33AM -0500, Eric Sandeen wrote:
+> On 6/2/17 2:51 PM, Darrick J. Wong wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Add an control interface for purging speculative
+> > preallocation via the new ioctls.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > [darrick: change xfsctl to ioctl]
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  spaceman/Makefile   |    2 -
+> >  spaceman/init.c     |    1 
+> >  spaceman/prealloc.c |  111 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  spaceman/space.h    |    1 
+> >  4 files changed, 114 insertions(+), 1 deletion(-)
+> >  create mode 100644 spaceman/prealloc.c
+> > 
+> > 
+> > diff --git a/spaceman/Makefile b/spaceman/Makefile
+> > index c63a4fc..6aad746 100644
+> > --- a/spaceman/Makefile
+> > +++ b/spaceman/Makefile
+> > @@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
+> >  
+> >  LTCOMMAND = xfs_spaceman
+> >  HFILES = init.h space.h
+> > -CFILES = init.c file.c trim.c
+> > +CFILES = init.c file.c prealloc.c trim.c
+> >  
+> >  LLDLIBS = $(LIBXCMD)
+> >  LTDEPENDENCIES = $(LIBXCMD)
+> > diff --git a/spaceman/init.c b/spaceman/init.c
+> > index 0958377..93a8a1e 100644
+> > --- a/spaceman/init.c
+> > +++ b/spaceman/init.c
+> > @@ -39,6 +39,7 @@ init_commands(void)
+> >  {
+> >  	file_init();
+> >  	help_init();
+> > +	prealloc_init();
+> >  	quit_init();
+> >  	trim_init();
+> >  }
+> > diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
+> > new file mode 100644
+> > index 0000000..71c0d80
+> > --- /dev/null
+> > +++ b/spaceman/prealloc.c
+> > @@ -0,0 +1,111 @@
+> > +/*
+> > + * Copyright (c) 2012 Red Hat, Inc.
+> > + * All Rights Reserved.
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License as
+> > + * published by the Free Software Foundation.
+> > + *
+> > + * This program is distributed in the hope that it would be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, write the Free Software Foundation,
+> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > + */
+> > +
+> > +#include "libxfs.h"
+> > +#include "command.h"
+> > +#include "input.h"
+> > +#include "init.h"
+> > +#include "space.h"
+> > +
+> > +static cmdinfo_t prealloc_cmd;
+> > +
+> > +/*
+> > + * Control preallocation amounts.
+> > + */
+> > +static int
+> > +prealloc_f(
+> > +	int	argc,
+> > +	char	**argv)
+> > +{
+> > +	struct xfs_fs_eofblocks eofb = {0};
+> > +	int	c;
+> > +
+> > +	eofb.eof_version = XFS_EOFBLOCKS_VERSION;
+> > +
+> > +	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
+> > +		switch (c) {
+> > +		case 'g':
+> > +			eofb.eof_flags |= XFS_EOF_FLAGS_GID;
+> > +			eofb.eof_gid = atoi(optarg);
+> > +			break;
+> > +		case 'u':
+> > +			eofb.eof_flags |= XFS_EOF_FLAGS_UID;
+> > +			eofb.eof_uid = atoi(optarg);
+> > +			break;
+> > +		case 'p':
+> > +			eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
+> > +			eofb.eof_prid = atoi(optarg);
+> > +			break;
+> > +		case 's':
+> > +			eofb.eof_flags |= XFS_EOF_FLAGS_SYNC;
+> > +			break;
+> > +		case 'm':
+> > +			eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
+> > +			eofb.eof_min_file_size = cvtnum(file->geom.blocksize,
+> > +							file->geom.sectsize,
+> > +							optarg);
+> > +			break;
+> > +		case '?':
+> > +		default:
+> > +			return command_usage(&prealloc_cmd);
+> > +		}
+> > +	}
+> > +	if (optind != argc)
+> > +		return command_usage(&prealloc_cmd);
+> > +
+> > +	if (ioctl(file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
+> > +		fprintf(stderr, _("%s: XFS_IOC_FREE_EOFBLOCKS on %s: %s\n"),
+> > +			progname, file->name, strerror(errno));
+> > +	}
+> > +	return 0;
+> > +}
+> > +
+> > +static void
+> > +prealloc_help(void)
+> > +{
+> > +	printf(_(
+> > +"\n"
+> > +"Control speculative preallocation\n"
+> > +"\n"
+> > +"Options: [-s] [-ugp id] [-m minlen]\n"
+> 
+> No need to restate Options: because that comes out already with help,
+> from the args in the cmd struct:
+> 
+> xfs_spaceman> help prealloc
+> prealloc [-s] [-ugp id] [-m minlen] -- Control speculative preallocation
+> 
+> Control speculative preallocation
+> 
+> Options: [-s] [-ugp id] [-m minlen]
+> 
+> 
+> > +"\n"
+> > +" -s        -- wait for removal to complete\n"
+> > +" -u uid    -- remove prealloc on files matching user <uid>\n"
+> > +" -g gid    -- remove prealloc on files matching group <gid>\n"
+> > +" -p prid   -- remove prealloc on files matching project <prid>\n"
+> > +" -m minlen -- only consider files larger than <minlen>\n"
+> 
+> units?  (bytes?)  Probably should mention that suffixes are accepted,
+> in the manpage.
+> 
+> > +"\n"));
+> 
+> I guess with no -u, -g, or -p it removes speculative prealloc for all ids?
+> That'd be good to add to the manpage.
 
--- 
-Carlos
+Will do.
+
+> > +
+> > +}
+> > +
+> > +void
+> > +prealloc_init(void)
+> > +{
+> > +	prealloc_cmd.name = "prealloc";
+> > +	prealloc_cmd.altname = "prealloc";
+> > +	prealloc_cmd.cfunc = prealloc_f;
+> > +	prealloc_cmd.argmin = 1;
+> > +	prealloc_cmd.argmax = -1;
+> > +	prealloc_cmd.args = "[-s] [-ugp id] [-m minlen]";
+> 
+> This help is a little confusing:
+> 
+> xfs_spaceman> prealloc -ugp 0
+> prealloc [-s] [-ugp id] [-m minlen] -- Control speculative preallocation
+> 
+> xfs_spaceman> prealloc -u 0 -g 0 -p 0
+> xfs_spaceman> 
+> 
+> should probably be:
+> 
+> prealloc [-s] [-u id] [-g id] [-p id] [-m minlen] -- Control speculative preallocation
+
+Fixed.
+
+--D
+
+> > +	prealloc_cmd.flags = CMD_FLAG_ONESHOT;
+> > +	prealloc_cmd.oneline = _("Control speculative preallocation");
+> > +	prealloc_cmd.help = prealloc_help;
+> > +
+> > +	add_command(&prealloc_cmd);
+> > +}
+> > +
+> > diff --git a/spaceman/space.h b/spaceman/space.h
+> > index 7b4f034..0ae3116 100644
+> > --- a/spaceman/space.h
+> > +++ b/spaceman/space.h
+> > @@ -33,5 +33,6 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
+> >  
+> >  extern void	file_init(void);
+> >  extern void	help_init(void);
+> > +extern void	prealloc_init(void);
+> >  extern void	quit_init(void);
+> >  extern void	trim_init(void);
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
