@@ -1,92 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41011 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751305AbdFFLTx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jun 2017 07:19:53 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 02/10] fs: Introduce filemap_range_has_page()
-Date: Tue,  6 Jun 2017 06:19:31 -0500
-Message-Id: <20170606111939.27272-3-rgoldwyn@suse.de>
-In-Reply-To: <20170606111939.27272-1-rgoldwyn@suse.de>
-References: <20170606111939.27272-1-rgoldwyn@suse.de>
+Received: from sandeen.net ([63.231.237.45]:36938 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751754AbdFNUwP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Jun 2017 16:52:15 -0400
+Received: from Liberator-5.local (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id E28A87B9656
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2017 15:51:53 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs: for-next updated to f9a6d64
+Message-ID: <9c4f8412-c9af-4744-c3d4-e6a84017850d@sandeen.net>
+Date: Wed, 14 Jun 2017 15:52:13 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Hi folks,
 
-filemap_range_has_page() return true if the file's mapping has
-a page within the range mentioned. This function will be used
-to check if a write() call will cause a writeback of previous
-writes.
+The xfsprogs repository at:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- include/linux/fs.h |  2 ++
- mm/filemap.c       | 33 +++++++++++++++++++++++++++++++++
- 2 files changed, 35 insertions(+)
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index f53867140f43..dc0ab585cd56 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2517,6 +2517,8 @@ extern int filemap_fdatawait(struct address_space *);
- extern void filemap_fdatawait_keep_errors(struct address_space *);
- extern int filemap_fdatawait_range(struct address_space *, loff_t lstart,
- 				   loff_t lend);
-+extern int filemap_range_has_page(struct address_space *, loff_t lstart,
-+				  loff_t lend);
- extern int filemap_write_and_wait(struct address_space *mapping);
- extern int filemap_write_and_wait_range(struct address_space *mapping,
- 				        loff_t lstart, loff_t lend);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 6f1be573a5e6..87aba7698584 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -376,6 +376,39 @@ int filemap_flush(struct address_space *mapping)
- }
- EXPORT_SYMBOL(filemap_flush);
- 
-+/**
-+ * filemap_range_has_page - check if a page exists in range.
-+ * @mapping:           address space structure to wait for
-+ * @start_byte:        offset in bytes where the range starts
-+ * @end_byte:          offset in bytes where the range ends (inclusive)
-+ *
-+ * Find at least one page in the range supplied, usually used to check if
-+ * direct writing in this range will trigger a writeback.
-+ */
-+int filemap_range_has_page(struct address_space *mapping,
-+			   loff_t start_byte, loff_t end_byte)
-+{
-+	pgoff_t index = start_byte >> PAGE_SHIFT;
-+	pgoff_t end = end_byte >> PAGE_SHIFT;
-+	struct pagevec pvec;
-+	int ret;
-+
-+	if (end_byte < start_byte)
-+		return 0;
-+
-+	if (mapping->nrpages == 0)
-+		return 0;
-+
-+	pagevec_init(&pvec, 0);
-+	ret = pagevec_lookup(&pvec, mapping, index, 1);
-+	if (!ret)
-+		return 0;
-+	ret = (pvec.pages[0]->index <= end);
-+	pagevec_release(&pvec);
-+	return ret;
-+}
-+EXPORT_SYMBOL(filemap_range_has_page);
-+
- static int __filemap_fdatawait_range(struct address_space *mapping,
- 				     loff_t start_byte, loff_t end_byte)
- {
--- 
-2.12.0
+has just been updated.
 
+*** this is just a libxfs update ***
+
+I'm working on the patch backlog next. So hold tight, but if you
+don't see your patch in the next update:
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the for-next branch is commit:
+
+f9a6d64 xfs: fix unaligned access in xfs_btree_visit_blocks
+
+New Commits:
+
+Brian Foster (1):
+      [ad1c97f] xfs: fix indlen accounting error on partial delalloc conversion
+
+Darrick J. Wong (2):
+      [07f98c3] xfs: fix warnings about unused stack variables
+      [d4e8eb2] xfs: avoid mount-time deadlock in CoW extent recovery
+
+Eric Sandeen (1):
+      [f9a6d64] xfs: fix unaligned access in xfs_btree_visit_blocks
+
+
+Code Diffstat:
+
+ include/xfs_trans.h      |  1 +
+ libxfs/libxfs_api_defs.h |  1 +
+ libxfs/trans.c           | 22 ++++++++++++++++++++++
+ libxfs/xfs_bmap.c        |  9 ++++-----
+ libxfs/xfs_btree.c       |  2 +-
+ libxfs/xfs_refcount.c    | 43 +++++++++++++++++++++++++++++++------------
+ 6 files changed, 60 insertions(+), 18 deletions(-)
