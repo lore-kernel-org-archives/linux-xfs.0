@@ -1,89 +1,260 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51332 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751620AbdFOAGy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Jun 2017 20:06:54 -0400
-Subject: Re: [PATCH 1/2] metadump: warn about corruption if log is dirty
-References: <20170413081354.22170-1-jtulak@redhat.com>
- <20170413081354.22170-2-jtulak@redhat.com>
- <20170413115408.GA24893@bfoster.bfoster>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5bb73256-ff28-6b3e-0bc4-91402174d96a@sandeen.net>
-Date: Wed, 14 Jun 2017 19:06:52 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:26856 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751760AbdFNUtk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2017 16:49:40 -0400
+Date: Wed, 14 Jun 2017 13:49:27 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 09/10] xfs_spaceman: add a man page
+Message-ID: <20170614204927.GX4530@birch.djwong.org>
+References: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
+ <149643312994.15899.11143097512362345347.stgit@birch.djwong.org>
+ <996ddf19-1bf9-44c8-f41d-93ac45c354e3@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20170413115408.GA24893@bfoster.bfoster>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <996ddf19-1bf9-44c8-f41d-93ac45c354e3@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On 4/13/17 6:54 AM, Brian Foster wrote:
-> On Thu, Apr 13, 2017 at 10:13:53AM +0200, Jan Tulak wrote:
->> Add a warning about possible corruption when exporting a dirty log, as
->> the log content does not agree with obfuscated metadata.
->>
->> Signed-off-by: Jan Tulak <jtulak@redhat.com>
->> ---
->> Change: More elaborate warning message.
->> ---
->>  db/metadump.c | 4 +++-
->>  1 file changed, 3 insertions(+), 1 deletion(-)
->>
->> diff --git a/db/metadump.c b/db/metadump.c
->> index 66952f6..2dd8593 100644
->> --- a/db/metadump.c
->> +++ b/db/metadump.c
->> @@ -2726,7 +2726,9 @@ copy_log(void)
->>  		/* keep the dirty log */
->>  		if (obfuscate)
->>  			print_warning(
->> -_("Filesystem log is dirty; image will contain unobfuscated metadata in log."));
->> +_("Warning: log recovery of an obfuscated metadata image can leak "
->> +"unobfuscated metadata and/or cause image corruption. Please mount "
->> +"the source filesystem to clean the log or disable obfuscation, if possible."));
->>  		break;
+On Wed, Jun 14, 2017 at 11:06:44AM -0500, Eric Sandeen wrote:
+> On 6/2/17 2:52 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Add a manual page describing xfs_spaceman's behavior.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  man/man8/xfs_spaceman.8 |  102 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 102 insertions(+)
+> >  create mode 100644 man/man8/xfs_spaceman.8
+> > 
+> > 
+> > diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
+> > new file mode 100644
+> > index 0000000..c1d19c0
+> > --- /dev/null
+> > +++ b/man/man8/xfs_spaceman.8
+> > @@ -0,0 +1,102 @@
+> > +.TH xfs_spaceman 8
+> > +.SH NAME
+> > +xfs_spaceman \- show free space information about an XFS filesystem
+> > +.SH SYNOPSIS
+> > +.B xfs_spaceman
+> > +[
+> > +.B \-c
+> > +.I cmd
+> > +]
+> > +.I file
+> > +.br
+> > +.B xfs_spaceman \-V
+> > +.SH DESCRIPTION
+> > +.B xfs_spaceman
+> > +reports and controls free space usage in an XFS filesystem.
+> > +.SH OPTIONS
+> > +.TP 1.0i
+> > +.BI \-c " cmd"
+> > +.B xfs_spaceman
+> > +commands may be run interactively (the default) or as arguments on
+> > +the command line. Multiple
+> > +.B \-c
+> > +arguments may be given. The commands are run in the sequence given,
+> > +then the program exits.
+> > +
+> > +.SH COMMANDS
+> > +.TP
+> > +.BI "freesp [ \-sr ] [ \-b | \-e bsize | \-h h1 [ \-m bmult ]] [-a agno]"
 > 
-> Thanks Jan, just one very minor nit having read this again... could we
-> put the "if possible" closer to the part about mounting the source
-> image? Otherwise it reads to me that it might not be technically
-> possible to disable obfuscation, which is not the case (though the user
-> may not want to do that as a matter of policy). For example:
+> Hmm this differs from program help:
 > 
-> "... Please mount the source filesystem to clean the log, if possible,
-> or disable obfuscation."
-
-Hoovering up old patches ... 
-
-To me, Jan's original is ok.  "If possible" applying to both replay and
-disabling obfuscation seems reasonable, because "policy" may make it
-impossible ;)  So I hate to direct the user to disable obfuscation.
-
-"If possible, please mount the filesystem to clean the log, or disable
-obfuscation."
-
-Is that OK?  Gives the user options, and wiggle room..
-
--Eric
-
-> With that tweak:
+> freesp [-bdgsr] [-a agno] [-e bsize] [-h h1]... [-m bmult] 
 > 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> are -b, -e, and -h mutually exclusive or not?
 > 
->>  	case -1:
->>  		/* log detection error */
->> -- 
->> 2.1.4
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> xfs_spaceman> freesp -b
+>    from      to extents  blocks    pct
+>       2       3       1       3   0.00
+>   32768   65536       4  259537 100.00
+> xfs_spaceman> freesp -e 4096
+>    from      to extents  blocks    pct
+>       1    4096       1       3   0.00
+>   61441   65536       4  259537 100.00
+> xfs_spaceman> freesp -e 4096 -b
+> xfs_spaceman> 
+> 
+> Also, where are -g and -d ?
+
+-g is in the next patch.
+
+-d needs to be added.
+> 
+> 
+> [-a agno]...
+> 
+> (multiple allowed)
+
+Oh heck this manpage is so hard to read I'm going to reflow the whole
+section to be easier on the eyes:
+
+freesp [ -drs ] [-a agno] [ -b | -e bsize | -h bsize | -m factor ]
+      With  no  arguments,  freesp shows a histogram of all free space
+      extents in the filesystem.   The  command  takes  the  following
+      options:
+
+	 -a agno
+	     Collect  free  space  information  from  this  allocation
+	     group.  This option can be specified  multiple  times  to
+	     collect from multiple groups.
+
+	 -b  This  argument  establishes  that the histogram bin sizes
+	     are successive powers of two.  This is the  default,  and
+	     is mutually exclusive with the -e, -h, and -m options.
+
+	 -d  Print  debugging  information  such as the raw free space
+	     extent information.
+
+	 -e bsize
+	     Set all histogram bin sizes to a  specific  value.   This
+	     option  is  mutually  exclusive  with  the -b, -h, and -m
+	     options.
+
+	 -h bsize
+	     Create a histogram bin with a lower bound of this  value.
+	     The  upper  bound  of  this bin will be one less than the
+	     lower bound of the  next  highest  histogram  bin.   This
+	     option  can  be given multiple times to control the exact
+	     bin sizes.  This option is mutually  exclusive  with  the
+	     -b, -e, and -m options.
+
+	 -m factor
+	     Create  each  histogram bin with a size that is this many
+	     times the size of the prvious bin created.   This  option
+	     is mutually exclusive with the -b, -e, and -h options.
+
+	 -r  Query the realtime device for free space information.
+
+	 -s  Display a summary of the free space information found.
+
+
+> > +With no arguments,
+> > +.B freesp
+> > +shows a histogram of all free space extents in the filesystem.
+> > +The
+> > +.B -b
+> > +argument establishes that the histogram bins are successive powers of two.
+> > +This is the default.
+> > +The
+> > +.BR -h " and " -m
+> > +options can be used to specify a custom histogram bin size as well as a
+> > +multiplication factor for subsequent bin sizes.
+> > +The
+> > +.BR -e
+> > +option fixes the histogram size to a particular value.
+> > +The
+> > +.BR -a " and " -r
+> > +options constrain the free space information report to a particular AG
+> > +or the realtime device, respectively.  The
+> > +.B -a
+> > +option may be specified multiple times.
+> > +A summary of free space information will be printed if the
+> > +.B -s
+> > +option is given.
+> > +.TP
+> > +.BR "help [ " command " ]"
+> > +Display a brief description of one or all commands.
+> > +.TP
+> > +.BI "prealloc [ \-ugp id ] [ \-m minlen ] [ \-s ]"
+> > +Controls speculative preallocation.  The
+> > +.BR -u ","
+> > +.BR -g ","
+> > +and
+> > +.B -p
+> > +options will clear all speculative preallocations for a given user,
+> > +group, or project ID, respectively.
+> > +The
+> > +.B -m
+> > +option causes the operation to ignore any file with a size smaller than
+> > +.BR minlen "."
+> > +The
+> > +.B -s
+> > +option will flush all dirty data and metadata to disk.
+> > +.TP
+> > +.B print
+> > +Display a list of all open files.
+> > +.TP
+> > +.B quit
+> > +Exit
+> > +.BR xfs_spaceman .
+> > +.TP
+> > +.BI "trim [ \-f ] [ \-a agno ] [ \-m minlen ] [" " offset length " ]
+> 
+> Hm, this looks like -f / -a / offset/length are all optional, and not
+> mutually exclusive.
+> 
+> If this were in a SYNOPSIS section, it'd require 3 synopses I think.
+> 
+> Perhaps here it should be:
+> 
+> trim -f [ -m minlen ] [ offset length ]
+> trim -a agno [ -m minlen ] [ offset length ]
+> trim offset length [ -m minlen ]
+> 
+> as 3 separate invocation methods?
+
+Only problem is that if we add general options in the future we'll have
+to add them to all three invocations.
+
+trim ( -a agno | -f | offset length ) [ -m minlen ]
+
+How about that instead?
+
+> 
+> > +Instructs the underlying storage device to release all storage that may
+> > +be backing free space in the filesystem.
+> > +The
+> > +.B -f
+> > +option trims all free space in the entire filesystem.
+> > +The
+> > +.B -a
+> > +option trims only the free space in a given AG.
+> > +The
+> > +.B -m
+> > +option only trims free space extents that are longer than
+> > +.IR minlen "."
+> 
+> units?  (suffixes?)
+
+I'll add that.
+
+> > +The
+> > +.IR offset " and " length
+> > +arguments trim all free space between
+> > +.I offset
+> > +and
+> > +.IR "offset+length" "."
+> 
+> Units?
+
+and that.
+
+--D
+
+> 
+> > +The
+> > +.BR -a " and " -f
+> > +options are mutually exclusive with each other as well as with the
+> > +.IR offset " and " length
+> > +arguments.
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
