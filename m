@@ -1,222 +1,512 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36712 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39520 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750717AbdFNOHj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Jun 2017 10:07:39 -0400
-Date: Wed, 14 Jun 2017 10:07:32 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: XFS Calltraces by using XFS with Ceph
-Message-ID: <20170614140732.GA857@bfoster.bfoster>
-References: <ff5af7a48b502752faac6f2bbc1c3bb7@jonas-server.de>
- <20170614120829.GA65212@bfoster.bfoster>
- <b447cdcdc5a7278c6a9cc46627e22c94@jonas-server.de>
+        id S1751688AbdFNOPv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Jun 2017 10:15:51 -0400
+Subject: Re: [PATCH 05/10] xfs_spaceman: space management tool
+References: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
+ <149643310508.15899.8647641887998046926.stgit@birch.djwong.org>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <1d4675d8-eec7-22cd-0180-bad5ac230cde@redhat.com>
+Date: Wed, 14 Jun 2017 09:15:49 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b447cdcdc5a7278c6a9cc46627e22c94@jonas-server.de>
+In-Reply-To: <149643310508.15899.8647641887998046926.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: list@jonas-server.de
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Wed, Jun 14, 2017 at 03:22:36PM +0200, list@jonas-server.de wrote:
-> I get this output of gdb:
+On 6/2/17 2:51 PM, Darrick J. Wong wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> # gdb /usr/lib/debug/lib/modules/4.4.0-75-generic/kernel/fs/xfs/xfs.ko
-> GNU gdb (Ubuntu 7.11.1-0ubuntu1~16.04) 7.11.1
-> [...]
-> Reading symbols from
-> /usr/lib/debug/lib/modules/4.4.0-75-generic/kernel/fs/xfs/xfs.ko...done.
-> (gdb) list *xfs_da3_node_read+0x30
-> 0x2b5d0 is in xfs_da3_node_read
-> (/build/linux-Hlembm/linux-4.4.0/fs/xfs/libxfs/xfs_da_btree.c:270).
-> 265	/build/linux-Hlembm/linux-4.4.0/fs/xfs/libxfs/xfs_da_btree.c: No such
-> file or directory.
+> xfs_spaceman is intended as a diagnostic and control tool for space
+> management operations within XFS. Operations like examining free
+> space, managing allocation policies, issuing block discards on free
+> space, etc.
+> 
+> The tool is modelled on the xfs_io interface, allowing both
+> interactive and command line control of the tool, enabling it to be
+> used in scripts and automated management tools.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> [darrick: change xfsctl to ioctl]
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  Makefile          |    3 +
+>  spaceman/Makefile |   33 ++++++++++++
+>  spaceman/file.c   |  149 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  spaceman/init.c   |  114 +++++++++++++++++++++++++++++++++++++++++
+>  spaceman/init.h   |   23 ++++++++
+>  spaceman/space.h  |   36 +++++++++++++
+>  6 files changed, 357 insertions(+), 1 deletion(-)
+>  create mode 100644 spaceman/Makefile
+>  create mode 100644 spaceman/file.c
+>  create mode 100644 spaceman/init.c
+>  create mode 100644 spaceman/init.h
+>  create mode 100644 spaceman/space.h
+> 
+> 
+> diff --git a/Makefile b/Makefile
+> index ba87327..72d0044 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -47,7 +47,7 @@ HDR_SUBDIRS = include libxfs
+>  DLIB_SUBDIRS = libxlog libxcmd libhandle
+>  LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
+>  TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
+> -		mdrestore repair rtcp m4 man doc debian
+> +		mdrestore repair rtcp m4 man doc debian spaceman
+>  
+>  ifneq ("$(PKG_PLATFORM)","darwin")
+>  TOOL_SUBDIRS += fsr
+> @@ -88,6 +88,7 @@ quota: libxcmd
+>  repair: libxlog libxcmd
+>  copy: libxlog
+>  mkfs: libxcmd
+> +spaceman: libxcmd
+>  
+>  ifeq ($(HAVE_BUILDDEFS), yes)
+>  include $(BUILDRULES)
+> diff --git a/spaceman/Makefile b/spaceman/Makefile
+> new file mode 100644
+> index 0000000..df59edf
+> --- /dev/null
+> +++ b/spaceman/Makefile
+> @@ -0,0 +1,33 @@
+> +#
+> +# Copyright (c) 2012 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +
+> +TOPDIR = ..
+> +include $(TOPDIR)/include/builddefs
+> +
+> +LTCOMMAND = xfs_spaceman
+> +HFILES = init.h space.h
+> +CFILES = init.c file.c
+> +
+> +LLDLIBS = $(LIBXCMD)
+> +LTDEPENDENCIES = $(LIBXCMD)
+> +LLDFLAGS = -static
+> +
+> +ifeq ($(ENABLE_READLINE),yes)
+> +LLDLIBS += $(LIBREADLINE) $(LIBTERMCAP)
+> +endif
+> +
+> +ifeq ($(ENABLE_EDITLINE),yes)
+> +LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+> +endif
+> +
+> +default: depend $(LTCOMMAND)
+> +
+> +include $(BUILDRULES)
+> +
+> +install: default
+> +	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+> +	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+> +install-dev:
+> +
+> +-include .dep
+> diff --git a/spaceman/file.c b/spaceman/file.c
+> new file mode 100644
+> index 0000000..9356066
+> --- /dev/null
+> +++ b/spaceman/file.c
+> @@ -0,0 +1,149 @@
+> +/*
+> + * Copyright (c) 2004-2005 Silicon Graphics, Inc.
+> + * Copyright (c) 2012 Red Hat, Inc.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +
+> +#include "libxfs.h"
+> +#include <sys/mman.h>
+> +#include "command.h"
+> +#include "input.h"
+> +#include "init.h"
+> +#include "space.h"
+> +
+> +static cmdinfo_t print_cmd;
+> +
+> +fileio_t	*filetable;
+> +int		filecount;
+> +fileio_t	*file;
+> +
+> +static void
+> +print_fileio(
+> +	fileio_t	*file,
+> +	int		index,
+> +	int		braces)
+> +{
+> +	printf(_("%c%03d%c %-14s (%s,%s,%s%s%s)\n"),
+> +		braces? '[' : ' ', index, braces? ']' : ' ', file->name,
+> +		file->flags & O_SYNC ? _("sync") : _("non-sync"),
+
+Ok, my question last round about this didn't get answered:
+
+[xfsprogs-fsmap]# spaceman/xfs_spaceman -c print mnt/
+[000] mnt/           (non-sync,non-direct,read-write)
+
+[xfsprogs-fsmap]# mount -o remount,ro mnt
+
+[xfsprogs-fsmap]# spaceman/xfs_spaceman -c print mnt/
+[000] mnt/           (non-sync,non-direct,read-write)
+
+I don't see that these flags have any meaning; indeed, the flags argument
+to openfile() and addfile() is initialized to 0 and never changed.  Should
+it just be removed?
+
+If you want to get things merged and clean stuff up with a later patch,
+that's ok by me, or we could remove them now.  It's not really a functionality
+problem so I'm not too bothered.
+
+> +		file->flags & O_DIRECT ? _("direct") : _("non-direct"),
+> +		file->flags & O_RDONLY ? _("read-only") : _("read-write"),
+> +		file->flags & O_APPEND ? _(",append-only") : "",
+> +		file->flags & O_NONBLOCK ? _(",non-block") : "");
+> +}
+> +
+> +int
+> +filelist_f(void)
+> +{
+> +	int		i;
+> +
+> +	for (i = 0; i < filecount; i++)
+> +		print_fileio(&filetable[i], i, &filetable[i] == file);
+> +	return 0;
+> +}
+> +
+> +static int
+> +print_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	filelist_f();
+
+No need for the separate filelist_f, just put the guts here, it has no other
+caller.
+
+Hm, actually ... for consistency with xfs_io should we have both "file" and "print?"
+
+       file [ N ]
+              Display a list of all open files and (optionally) switch to an alternate current open file.
+
+       print  Display a list of all open files and memory mapped regions.  The current file and current mapping are distinguishable from  any others.
+
+Again not overly concerned about this, just pointing it out - if it's modeled on xfs_io behavior, let's keep it as similar as possible.
+
+(If this gets changed, don't forget the manpage)
+
+> +	return 0;
+> +}
+> +
+> +int
+> +openfile(
+> +	char		*path,
+> +	xfs_fsop_geom_t	*geom,
+> +	int		flags,
+
+flags is always called with flags == 0, so all the flag testing below is pointless -
+and probably doesn't relate to filesystem-wide operations anyway.
+
+> +	mode_t		mode)
+> +{
+> +	int		fd;
+> +
+> +	fd = open(path, flags, mode);
+> +	if (fd < 0) {
+> +		if ((errno == EISDIR) && (flags & O_RDWR)) {
+> +			/* make it as if we asked for O_RDONLY & try again */
+> +			flags &= ~O_RDWR;
+> +			flags |= O_RDONLY;
+> +			fd = open(path, flags, mode);
+> +			if (fd < 0) {
+> +				perror(path);
+> +				return -1;
+> +			}
+> +		} else {
+> +			perror(path);
+> +			return -1;
+> +		}
+> +	}
+> +
+> +	if (ioctl(fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
+> +		perror("XFS_IOC_FSGEOMETRY");
+> +		close(fd);
+> +		return -1;
+> +	}
+> +	return fd;
+> +}
+> +
+> +int
+> +addfile(
+> +	char		*name,
+> +	int		fd,
+> +	xfs_fsop_geom_t	*geometry,
+> +	int		flags)
+> +{
+> +	char		*filename;
+> +
+> +	filename = strdup(name);
+> +	if (!filename) {
+> +		perror("strdup");
+> +		close(fd);
+> +		return -1;
+> +	}
+> +
+> +	/* Extend the table of currently open files */
+> +	filetable = (fileio_t *)realloc(filetable,	/* growing */
+> +					++filecount * sizeof(fileio_t));
+
+Are you keeping all the filetable stuff with the thought that maybe some 
+day we'll allow operation on multiple filesystems?  Probably a good idea.
+
+> +	if (!filetable) {
+> +		perror("realloc");
+> +		filecount = 0;
+> +		free(filename);
+> +		close(fd);
+> +		return -1;
+> +	}
+> +
+> +	/* Finally, make this the new active open file */
+> +	file = &filetable[filecount - 1];
+> +	file->fd = fd;
+> +	file->flags = flags;
+> +	file->name = filename;
+> +	file->geom = *geometry;
+> +	return 0;
+> +}
+> +
+> +void
+> +file_init(void)
+> +{
+
+file_init setting up print_cmd is confusing - unless you want both ala xfs_io,
+I'd go consistently with either "print" or "file" but not a mishmash.
+
+> +	print_cmd.name = "print";
+> +	print_cmd.altname = "p";
+> +	print_cmd.cfunc = print_f;
+> +	print_cmd.argmin = 0;
+> +	print_cmd.argmax = 0;
+> +	print_cmd.flags = CMD_FLAG_ONESHOT;
+> +	print_cmd.oneline = _("list current open files");
+> +
+> +	add_command(&print_cmd);
+> +}
+> diff --git a/spaceman/init.c b/spaceman/init.c
+> new file mode 100644
+> index 0000000..5dbaef2
+> --- /dev/null
+> +++ b/spaceman/init.c
+> @@ -0,0 +1,114 @@
+> +/*
+> + * Copyright (c) 2012 Red Hat, Inc
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +
+> +#include "libxfs.h"
+> +#include "command.h"
+> +#include "input.h"
+> +#include "init.h"
+> +#include "space.h"
+> +
+> +char	*progname;
+> +int	exitcode;
+> +
+> +void
+> +usage(void)
+> +{
+> +	fprintf(stderr,
+> +		_("Usage: %s [-c cmd] file\n"),
+> +		progname);
+> +	exit(1);
+> +}
+> +
+> +static void
+> +init_commands(void)
+> +{
+> +	file_init();
+> +	help_init();
+> +	quit_init();
+> +}
+> +
+> +static int
+> +init_args_command(
+> +	int	index)
+> +{
+> +	if (index >= filecount)
+> +		return 0;
+> +	file = &filetable[index++];
+> +	return index;
+> +}
+> +
+> +static int
+> +init_check_command(
+> +	const cmdinfo_t	*ct)
+> +{
+> +	if (!(ct->flags & CMD_FLAG_ONESHOT))
+> +		return 0;
+> +	return 1;
+> +}
+> +
+> +void
+> +init(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	int		c, flags = 0;
+> +	mode_t		mode = 0600;
+> +	xfs_fsop_geom_t	geometry = { 0 };
+> +
+> +	progname = basename(argv[0]);
+> +	setlocale(LC_ALL, "");
+> +	bindtextdomain(PACKAGE, LOCALEDIR);
+> +	textdomain(PACKAGE);
+> +
+> +	while ((c = getopt(argc, argv, "c:V")) != EOF) {
+> +		switch (c) {
+> +		case 'c':
+> +			add_user_command(optarg);
+> +			break;
+> +		case 'V':
+> +			printf(_("%s version %s\n"), progname, VERSION);
+> +			exit(0);
+> +		default:
+> +			usage();
+> +		}
+> +	}
+> +
+> +	if (optind != argc - 1)
+> +		usage();
+> +
+> +	if ((c = openfile(argv[optind], &geometry, flags, mode)) < 0)
+> +		exit(1);
+> +	if (!platform_test_xfs_fd(c))
+> +		printf(_("Not an XFS filesystem!\n"));
+> +	if (addfile(argv[optind], c, &geometry, flags) < 0)
+> +		exit(1);
+> +
+> +	init_commands();
+> +	add_command_iterator(init_args_command);
+> +	add_check_command(init_check_command);
+> +}
+> +
+> +int
+> +main(
+> +	int	argc,
+> +	char	**argv)
+> +{
+> +	init(argc, argv);
+> +	command_loop();
+> +	return exitcode;
+> +}
+> diff --git a/spaceman/init.h b/spaceman/init.h
+> new file mode 100644
+> index 0000000..165e4f5
+> --- /dev/null
+> +++ b/spaceman/init.h
+> @@ -0,0 +1,23 @@
+> +/*
+> + * Copyright (c) 2012 Red Hat, Inc.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +
+> +extern char	*progname;
+> +extern int	exitcode;
+> +
+> +#define min(a,b)	(((a)<(b))?(a):(b))
+> +#define max(a,b)	(((a)>(b))?(a):(b))
+
+these aren't actually used, FWIW.
+
+> diff --git a/spaceman/space.h b/spaceman/space.h
+> new file mode 100644
+> index 0000000..6e1bc52
+> --- /dev/null
+> +++ b/spaceman/space.h
+> @@ -0,0 +1,36 @@
+> +/*
+> + * Copyright (c) 2012 Red Hat, Inc.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +
+> +typedef struct fileio {
+> +	int		fd;		/* open file descriptor */
+> +	int		flags;		/* flags describing file state */
+
+This is never used, really - always 0.
+
+> +	char		*name;		/* file name at time of open */
+> +	xfs_fsop_geom_t	geom;		/* XFS filesystem geometry */
+> +} fileio_t;
+> +
+> +extern fileio_t		*filetable;	/* open file table */
+> +extern int		filecount;	/* number of open files */
+> +extern fileio_t		*file;		/* active file in file table */
+> +extern int filelist_f(void);
+> +
+> +extern int	openfile(char *, xfs_fsop_geom_t *, int, mode_t);
+> +extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
+> +
+> +extern void	file_init(void);
+> +extern void	help_init(void);
+> +extern void	quit_init(void);
 > 
 
-This would be more helpful if you had the source code available. :P
-
-Anyways, I suspect you have a NULL buffer (though I'm not sure where the
-0xa0 offset comes from). There have been a couple fixes in that area
-that come to mind, but it looks to me that v4.4 kernels should already
-have them.  Otherwise, this doesn't ring any bells for me. Perhaps
-somebody else can chime in on that.
-
-I suppose the best next step is to try a more recent, non-distro kernel.
-If the problem still occurs, see if you can provide a crash dump for
-analysis.
-
-Brian
-
-> Am 2017-06-14 14:08, schrieb Brian Foster:
-> > On Wed, Jun 14, 2017 at 10:22:38AM +0200, list@jonas-server.de wrote:
-> > > Hello guys,
-> > > 
-> > > we have currently an issue with our ceph setup based on XFS.
-> > > Sometimes some
-> > > nodes are dying with high load with this calltrace in dmesg:
-> > > 
-> > > [Tue Jun 13 13:18:48 2017] BUG: unable to handle kernel NULL pointer
-> > > dereference at 00000000000000a0
-> > > [Tue Jun 13 13:18:48 2017] IP: [<ffffffffc06555a0>]
-> > > xfs_da3_node_read+0x30/0xb0 [xfs]
-> > > [Tue Jun 13 13:18:48 2017] PGD 0
-> > > [Tue Jun 13 13:18:48 2017] Oops: 0000 [#1] SMP
-> > > [Tue Jun 13 13:18:48 2017] Modules linked in: cpuid arc4 md4
-> > > nls_utf8 cifs
-> > > fscache nfnetlink_queue nfnetlink xt_CHECKSUM xt_nat iptable_nat
-> > > nf_nat_ipv4
-> > > xt_NFQUEUE xt_CLASSIFY ip6table_mangle dccp_diag dccp tcp_diag
-> > > udp_diag
-> > > inet_diag unix_diag af_packet_diag netlink_diag veth dummy bridge
-> > > stp llc
-> > > ebtable_filter ebtables iptable_mangle xt_CT iptable_raw
-> > > nf_conntrack_ipv4
-> > > nf_defrag_ipv4 iptable_filter ip_tables xt_tcpudp nf_conntrack_ipv6
-> > > nf_defrag_ipv6 xt_conntrack ip6table_filter ip6_tables x_tables xfs
-> > > ipmi_devintf dcdbas x86_pkg_temp_thermal intel_powerclamp coretemp
-> > > crct10dif_pclmul crc32_pclmul ghash_clmulni_intel aesni_intel
-> > > ipmi_ssif
-> > > aes_x86_64 lrw gf128mul glue_helper ablk_helper cryptd sb_edac
-> > > edac_core
-> > > input_leds joydev lpc_ich ioatdma shpchp 8250_fintek ipmi_si
-> > > ipmi_msghandler
-> > > acpi_pad acpi_power_meter
-> > > [Tue Jun 13 13:18:48 2017]  mac_hid vhost_net vhost macvtap macvlan
-> > > kvm_intel kvm irqbypass cdc_ether nf_nat_ftp tcp_htcp nf_nat_pptp
-> > > nf_nat_proto_gre nf_conntrack_ftp bonding nf_nat_sip
-> > > nf_conntrack_sip nf_nat
-> > > nf_conntrack_pptp nf_conntrack_proto_gre nf_conntrack usbnet mii lp
-> > > parport
-> > > autofs4 btrfs raid456 async_raid6_recov async_memcpy async_pq
-> > > async_xor
-> > > async_tx xor raid6_pq libcrc32c raid0 multipath linear raid10 raid1
-> > > hid_generic usbhid hid ixgbe igb vxlan ip6_udp_tunnel ahci dca
-> > > udp_tunnel
-> > > libahci i2c_algo_bit ptp megaraid_sas pps_core mdio wmi fjes
-> > > [Tue Jun 13 13:18:48 2017] CPU: 3 PID: 3844 Comm: tp_fstore_op Not
-> > > tainted
-> > > 4.4.0-75-generic #96-Ubuntu
-> > > [Tue Jun 13 13:18:48 2017] Hardware name: Dell Inc. PowerEdge
-> > > R720/0XH7F2,
-> > > BIOS 2.5.4 01/22/2016
-> > > [Tue Jun 13 13:18:48 2017] task: ffff881feda65400 ti: ffff883fbda08000
-> > > task.ti: ffff883fbda08000
-> > > [Tue Jun 13 13:18:48 2017] RIP: 0010:[<ffffffffc06555a0>]
-> > > [<ffffffffc06555a0>] xfs_da3_node_read+0x30/0xb0 [xfs]
-> > 
-> > What line does this point at (i.e., 'list *xfs_da3_node_read+0x30' from
-> > gdb) on your kernel?
-> > 
-> > Brian
-> > 
-> > > [Tue Jun 13 13:18:48 2017] RSP: 0018:ffff883fbda0bc88  EFLAGS:
-> > > 00010286
-> > > [Tue Jun 13 13:18:48 2017] RAX: 0000000000000000 RBX:
-> > > ffff8801102c5050 RCX:
-> > > 0000000000000001
-> > > [Tue Jun 13 13:18:48 2017] RDX: 0000000000000000 RSI:
-> > > 0000000000000000 RDI:
-> > > ffff883fbda0bc38
-> > > [Tue Jun 13 13:18:48 2017] RBP: ffff883fbda0bca8 R08:
-> > > 0000000000000001 R09:
-> > > fffffffffffffffe
-> > > [Tue Jun 13 13:18:48 2017] R10: ffff880007374ae0 R11:
-> > > 0000000000000001 R12:
-> > > ffff883fbda0bcd8
-> > > [Tue Jun 13 13:18:48 2017] R13: ffff880035ac4c80 R14:
-> > > 0000000000000001 R15:
-> > > 000000008b1f4885
-> > > [Tue Jun 13 13:18:48 2017] FS:  00007fc574607700(0000)
-> > > GS:ffff883fff040000(0000) knlGS:0000000000000000
-> > > [Tue Jun 13 13:18:48 2017] CS:  0010 DS: 0000 ES: 0000 CR0:
-> > > 0000000080050033
-> > > [Tue Jun 13 13:18:48 2017] CR2: 00000000000000a0 CR3:
-> > > 0000003fd828d000 CR4:
-> > > 00000000001426e0
-> > > [Tue Jun 13 13:18:48 2017] Stack:
-> > > [Tue Jun 13 13:18:48 2017]  ffffffffc06b4b50 ffffffffc0695ecc
-> > > ffff883fbda0bde0 0000000000000001
-> > > [Tue Jun 13 13:18:48 2017]  ffff883fbda0bd20 ffffffffc06718b3
-> > > 0000000300000008 ffff880e99b44010
-> > > [Tue Jun 13 13:18:48 2017]  00000000360c65a8 ffff88270f80b900
-> > > 0000000000000000 0000000000000000
-> > > [Tue Jun 13 13:18:48 2017] Call Trace:
-> > > [Tue Jun 13 13:18:48 2017]  [<ffffffffc0695ecc>] ?
-> > > xfs_trans_roll+0x2c/0x50
-> > > [xfs]
-> > > [Tue Jun 13 13:18:48 2017]  [<ffffffffc06718b3>]
-> > > xfs_attr3_node_inactive+0x183/0x220 [xfs]
-> > > [Tue Jun 13 13:18:48 2017]  [<ffffffffc06718f9>]
-> > > xfs_attr3_node_inactive+0x1c9/0x220 [xfs]
-> > > [Tue Jun 13 13:18:48 2017]  [<ffffffffc06719fc>]
-> > > xfs_attr3_root_inactive+0xac/0x100 [xfs]
-> > > [Tue Jun 13 13:18:48 2017]  [<ffffffffc0671b9c>]
-> > > xfs_attr_inactive+0x14c/0x1a0 [xfs]
-> > > [Tue Jun 13 13:18:48 2017]  [<ffffffffc068bda5>]
-> > > xfs_inactive+0x85/0x120
-> > > [xfs]
-> > > [Tue Jun 13 13:18:48 2017]  [<ffffffffc06912f5>]
-> > > xfs_fs_evict_inode+0xa5/0x100 [xfs]
-> > > [Tue Jun 13 13:18:48 2017]  [<ffffffff8122a90e>] evict+0xbe/0x190
-> > > [Tue Jun 13 13:18:48 2017]  [<ffffffff8122abf1>] iput+0x1c1/0x240
-> > > [Tue Jun 13 13:18:48 2017]  [<ffffffff8121f6b9>]
-> > > do_unlinkat+0x199/0x2d0
-> > > [Tue Jun 13 13:18:48 2017]  [<ffffffff81220256>] SyS_unlink+0x16/0x20
-> > > [Tue Jun 13 13:18:48 2017]  [<ffffffff8183b972>]
-> > > entry_SYSCALL_64_fastpath+0x16/0x71
-> > > [Tue Jun 13 13:18:48 2017] Code: 55 48 89 e5 41 54 53 4d 89 c4 48 89
-> > > fb 48
-> > > 83 ec 10 48 c7 04 24 50 4b 6b c0 e8 dd fe ff ff 85 c0 75 46 48 85 db
-> > > 74 41
-> > > 49 8b 34 24 <48> 8b 96 a0 00 00 00 0f b7 52 08 66 c1 c2 08 66 81 fa
-> > > be 3e 74
-> > > [Tue Jun 13 13:18:48 2017] RIP  [<ffffffffc06555a0>]
-> > > xfs_da3_node_read+0x30/0xb0 [xfs]
-> > > [Tue Jun 13 13:18:48 2017]  RSP <ffff883fbda0bc88>
-> > > [Tue Jun 13 13:18:48 2017] CR2: 00000000000000a0
-> > > [Tue Jun 13 13:18:48 2017] ---[ end trace 5470d0d55cacb4ef ]---
-> > > 
-> > > The ceph OSD running on this server has then the issue that it can
-> > > not reach
-> > > any other osd in the pool.
-> > > 
-> > >  -1043> 2017-06-13 13:24:00.917597 7fc539a72700  0 --
-> > > 192.168.14.19:6827/3389 >> 192.168.14.7:6805/3658
-> > > pipe(0x558219846000 sd=23
-> > > :6827
-> > > s=0 pgs=0 cs=0 l=0 c=0x55821a330400).accept connect_seq 7 vs
-> > > existing 7
-> > > state standby
-> > >  -1042> 2017-06-13 13:24:00.918433 7fc539a72700  0 --
-> > > 192.168.14.19:6827/3389 >> 192.168.14.7:6805/3658
-> > > pipe(0x558219846000 sd=23
-> > > :6827
-> > > s=0 pgs=0 cs=0 l=0 c=0x55821a330400).accept connect_seq 8 vs
-> > > existing 7
-> > > state standby
-> > >  -1041> 2017-06-13 13:24:03.654983 7fc4dd21d700  0 --
-> > > 192.168.14.19:6825/3389 >> :/0 pipe(0x5581fa6ba000 sd=524 :6825 s=0
-> > > pgs=0
-> > > cs=0 l=0
-> > >  c=0x55820a9e5000).accept failed to getpeername (107) Transport
-> > > endpoint is
-> > > not connected
-> > > 
-> > > 
-> > > There are a lot more of these messages. Does any of you have the
-> > > same issue?
-> > > We are running Ubuntu 16.04 with kernel 4.4.0-75.96.
-> > > 
-> > > Best regards,
-> > > Jonas
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs"
-> > > in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
