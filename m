@@ -1,77 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42440 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:44310 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751714AbdFNQj4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2017 12:39:56 -0400
-Date: Wed, 14 Jun 2017 09:39:45 -0700
+        with ESMTP id S1751857AbdFNQnU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2017 12:43:20 -0400
+Date: Wed, 14 Jun 2017 09:43:12 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 07/10] xfs_spaceman: add new speculative prealloc control
-Message-ID: <20170614163945.GT4530@birch.djwong.org>
+Subject: Re: [PATCH 08/10] xfs_spaceman: Free space mapping command
+Message-ID: <20170614164312.GU4530@birch.djwong.org>
 References: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
- <149643311754.15899.8219480295517493642.stgit@birch.djwong.org>
- <3efe4542-1074-feef-6da8-d193741e7207@sandeen.net>
+ <149643312367.15899.5168600768651475925.stgit@birch.djwong.org>
+ <f86d15fa-1299-b39a-2c9e-e3f332170ff0@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3efe4542-1074-feef-6da8-d193741e7207@sandeen.net>
+In-Reply-To: <f86d15fa-1299-b39a-2c9e-e3f332170ff0@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Wed, Jun 14, 2017 at 10:05:33AM -0500, Eric Sandeen wrote:
-> On 6/2/17 2:51 PM, Darrick J. Wong wrote:
+On Wed, Jun 14, 2017 at 10:43:06AM -0500, Eric Sandeen wrote:
+> On 6/2/17 2:52 PM, Darrick J. Wong wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Add an control interface for purging speculative
-> > preallocation via the new ioctls.
+> > Add freespace mapping tool modelled on the xfs_db freesp command.
+> > The advantage of this command over xfs_db is that it can be done
+> > online and is coherent with concurrent modifications to the
+> > filesystem.
+> > 
+> > This requires the kernel to support the XFS_IOC_GETFSMAP ioctl to map
+> > free space indexes.
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > [darrick: change xfsctl to ioctl]
+> > [darrick: port from FIEMAPFS to GETFSMAP]
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  spaceman/Makefile   |    2 -
-> >  spaceman/init.c     |    1 
-> >  spaceman/prealloc.c |  111 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  spaceman/space.h    |    1 
-> >  4 files changed, 114 insertions(+), 1 deletion(-)
-> >  create mode 100644 spaceman/prealloc.c
+> >  spaceman/Makefile   |    7 +
+> >  spaceman/file.c     |   19 ++-
+> >  spaceman/freesp.c   |  367 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  spaceman/init.c     |    8 +
+> >  spaceman/prealloc.c |    1 
+> >  spaceman/space.h    |   12 +-
+> >  spaceman/trim.c     |    1 
+> >  7 files changed, 409 insertions(+), 6 deletions(-)
+> >  create mode 100644 spaceman/freesp.c
 > > 
 > > 
 > > diff --git a/spaceman/Makefile b/spaceman/Makefile
-> > index c63a4fc..6aad746 100644
+> > index 6aad746..95ec3c0 100644
 > > --- a/spaceman/Makefile
 > > +++ b/spaceman/Makefile
-> > @@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
+> > @@ -21,6 +21,13 @@ ifeq ($(ENABLE_EDITLINE),yes)
+> >  LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+> >  endif
 > >  
-> >  LTCOMMAND = xfs_spaceman
-> >  HFILES = init.h space.h
-> > -CFILES = init.c file.c trim.c
-> > +CFILES = init.c file.c prealloc.c trim.c
+> > +# On linux we get fsmap from the system or define it ourselves
+> > +# so include this based on platform type.  If this reverts to only
+> > +# the autoconf check w/o local definition, change to testing HAVE_GETFSMAP
+> > +ifeq ($(PKG_PLATFORM),linux)
+> > +CFILES += freesp.c
+> > +endif
+> > +
+> >  default: depend $(LTCOMMAND)
 > >  
-> >  LLDLIBS = $(LIBXCMD)
-> >  LTDEPENDENCIES = $(LIBXCMD)
-> > diff --git a/spaceman/init.c b/spaceman/init.c
-> > index 0958377..93a8a1e 100644
-> > --- a/spaceman/init.c
-> > +++ b/spaceman/init.c
-> > @@ -39,6 +39,7 @@ init_commands(void)
+> >  include $(BUILDRULES)
+> > diff --git a/spaceman/file.c b/spaceman/file.c
+> > index 9356066..46b8826 100644
+> > --- a/spaceman/file.c
+> > +++ b/spaceman/file.c
+> > @@ -22,6 +22,7 @@
+> >  #include "command.h"
+> >  #include "input.h"
+> >  #include "init.h"
+> > +#include "path.h"
+> >  #include "space.h"
+> >  
+> >  static cmdinfo_t print_cmd;
+> > @@ -69,8 +70,10 @@ openfile(
+> >  	char		*path,
+> >  	xfs_fsop_geom_t	*geom,
+> >  	int		flags,
+> > -	mode_t		mode)
+> > +	mode_t		mode,
+> > +	struct fs_path	*fs_path)
 > >  {
-> >  	file_init();
-> >  	help_init();
-> > +	prealloc_init();
-> >  	quit_init();
-> >  	trim_init();
+> > +	struct fs_path	*fsp;
+> >  	int		fd;
+> >  
+> >  	fd = open(path, flags, mode);
+> > @@ -95,6 +98,16 @@ openfile(
+> >  		close(fd);
+> >  		return -1;
+> >  	}
+> > +
+> > +	if (fs_path) {
+> > +		fsp = fs_table_lookup(path, FS_MOUNT_POINT);
+> > +		if (!fsp) {
+> > +			fprintf(stderr, _("%s: cannot find mount point."),
+> > +				path);
+> > +			return -1;
+> > +		}
+> > +		memcpy(fs_path, fsp, sizeof(struct fs_path));
+> > +	}
+> >  	return fd;
 > >  }
-> > diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
+> >  
+> > @@ -103,7 +116,8 @@ addfile(
+> >  	char		*name,
+> >  	int		fd,
+> >  	xfs_fsop_geom_t	*geometry,
+> > -	int		flags)
+> > +	int		flags,
+> > +	struct fs_path	*fs_path)
+> >  {
+> >  	char		*filename;
+> >  
+> > @@ -131,6 +145,7 @@ addfile(
+> >  	file->flags = flags;
+> >  	file->name = filename;
+> >  	file->geom = *geometry;
+> > +	memcpy(&file->fs_path, fs_path, sizeof(file->fs_path));
+> >  	return 0;
+> >  }
+> >  
+> > diff --git a/spaceman/freesp.c b/spaceman/freesp.c
 > > new file mode 100644
-> > index 0000000..71c0d80
+> > index 0000000..2290a5e
 > > --- /dev/null
-> > +++ b/spaceman/prealloc.c
-> > @@ -0,0 +1,111 @@
+> > +++ b/spaceman/freesp.c
+> > @@ -0,0 +1,367 @@
 > > +/*
+> > + * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
 > > + * Copyright (c) 2012 Red Hat, Inc.
+> > + * Copyright (c) 2017 Oracle.
 > > + * All Rights Reserved.
 > > + *
 > > + * This program is free software; you can redistribute it and/or
@@ -89,148 +151,470 @@ On Wed, Jun 14, 2017 at 10:05:33AM -0500, Eric Sandeen wrote:
 > > + */
 > > +
 > > +#include "libxfs.h"
+> > +#include <linux/fiemap.h>
 > > +#include "command.h"
-> > +#include "input.h"
 > > +#include "init.h"
+> > +#include "path.h"
 > > +#include "space.h"
 > > +
-> > +static cmdinfo_t prealloc_cmd;
-> > +
-> > +/*
-> > + * Control preallocation amounts.
-> > + */
-> > +static int
-> > +prealloc_f(
-> > +	int	argc,
-> > +	char	**argv)
+> > +typedef struct histent
 > > +{
-> > +	struct xfs_fs_eofblocks eofb = {0};
-> > +	int	c;
+> > +	int		low;
+> > +	int		high;
+> > +	long long	count;
+> > +	long long	blocks;
+> > +} histent_t;
 > > +
-> > +	eofb.eof_version = XFS_EOFBLOCKS_VERSION;
+> > +static int		agcount;
+> > +static xfs_agnumber_t	*aglist;
+> > +static int		dumpflag;
+> > +static int		equalsize;
+> > +static histent_t	*hist;
+> > +static int		histcount;
+> > +static int		multsize;
+> > +static int		seen1;
+> > +static int		summaryflag;
+> > +static bool		rtflag;
+> > +static long long	totblocks;
+> > +static long long	totexts;
 > > +
-> > +	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
+> > +static cmdinfo_t freesp_cmd;
+> > +
+> > +static void
+> > +addhistent(
+> > +	int	h)
+> > +{
+> > +	hist = realloc(hist, (histcount + 1) * sizeof(*hist));
+> > +	if (h == 0)
+> > +		h = 1;
+> > +	hist[histcount].low = h;
+> > +	hist[histcount].count = hist[histcount].blocks = 0;
+> > +	histcount++;
+> > +	if (h == 1)
+> > +		seen1 = 1;
+> > +}
+> > +
+> > +static void
+> > +addtohist(
+> > +	xfs_agnumber_t	agno,
+> > +	xfs_agblock_t	agbno,
+> > +	off64_t		len)
+> > +{
+> > +	int		i;
+> > +
+> > +	if (dumpflag)
+> > +		printf("%8d %8d %8"PRId64"\n", agno, agbno, len);
+> > +	totexts++;
+> > +	totblocks += len;
+> > +	for (i = 0; i < histcount; i++) {
+> > +		if (hist[i].high >= len) {
+> > +			hist[i].count++;
+> > +			hist[i].blocks += len;
+> > +			break;
+> > +		}
+> > +	}
+> > +}
+> > +
+> > +static int
+> > +hcmp(
+> > +	const void	*a,
+> > +	const void	*b)
+> > +{
+> > +	return ((histent_t *)a)->low - ((histent_t *)b)->low;
+> > +}
+> > +
+> > +static void
+> > +histinit(
+> > +	int	maxlen)
+> > +{
+> > +	int	i;
+> > +
+> > +	if (equalsize) {
+> > +		for (i = 1; i < maxlen; i += equalsize)
+> > +			addhistent(i);
+> > +	} else if (multsize) {
+> > +		for (i = 1; i < maxlen; i *= multsize)
+> > +			addhistent(i);
+> > +	} else {
+> > +		if (!seen1)
+> > +			addhistent(1);
+> > +		qsort(hist, histcount, sizeof(*hist), hcmp);
+> > +	}
+> > +	for (i = 0; i < histcount; i++) {
+> > +		if (i < histcount - 1)
+> > +			hist[i].high = hist[i + 1].low - 1;
+> > +		else
+> > +			hist[i].high = maxlen;
+> > +	}
+> > +}
+> > +
+> > +static void
+> > +printhist(void)
+> > +{
+> > +	int	i;
+> > +
+> > +	printf("%7s %7s %7s %7s %6s\n",
+> > +		_("from"), _("to"), _("extents"), _("blocks"), _("pct"));
+> > +	for (i = 0; i < histcount; i++) {
+> > +		if (hist[i].count)
+> > +			printf("%7d %7d %7lld %7lld %6.2f\n", hist[i].low,
+> > +				hist[i].high, hist[i].count, hist[i].blocks,
+> > +				hist[i].blocks * 100.0 / totblocks);
+> > +	}
+> > +}
+> > +
+> > +static int
+> > +inaglist(
+> > +	xfs_agnumber_t	agno)
+> > +{
+> > +	int		i;
+> > +
+> > +	if (agcount == 0)
+> > +		return 1;
+> > +	for (i = 0; i < agcount; i++)
+> > +		if (aglist[i] == agno)
+> > +			return 1;
+> > +	return 0;
+> > +}
+> > +
+> > +#define NR_EXTENTS 128
+> > +
+> > +static void
+> > +scan_ag(
+> > +	xfs_agnumber_t		agno)
+> > +{
+> > +	struct fsmap_head	*fsmap;
+> > +	struct fsmap		*extent;
+> > +	struct fsmap		*l, *h;
+> > +	struct fsmap		*p;
+> > +	off64_t			blocksize = file->geom.blocksize;
+> > +	off64_t			bperag;
+> > +	off64_t			aglen;
+> > +	xfs_agblock_t		agbno;
+> > +	int			ret;
+> > +	int			i;
+> > +
+> > +	bperag = (off64_t)file->geom.agblocks * blocksize;
+> > +
+> > +	fsmap = malloc(fsmap_sizeof(NR_EXTENTS));
+> > +	if (!fsmap) {
+> > +		fprintf(stderr, _("%s: fsmap malloc failed.\n"), progname);
+> > +		exitcode = 1;
+> > +		return;
+> > +	}
+> > +
+> > +	memset(fsmap, 0, sizeof(*fsmap));
+> > +	fsmap->fmh_count = NR_EXTENTS;
+> > +	l = fsmap->fmh_keys;
+> > +	h = fsmap->fmh_keys + 1;
+> > +	if (agno != NULLAGNUMBER) {
+> > +		l->fmr_physical = agno * bperag;
+> > +		h->fmr_physical = ((agno + 1) * bperag) - 1;
+> > +		l->fmr_device = h->fmr_device = file->fs_path.fs_datadev;
+> > +	} else {
+> > +		l->fmr_physical = 0;
+> > +		h->fmr_physical = ULLONG_MAX;
+> > +		l->fmr_device = h->fmr_device = file->fs_path.fs_rtdev;
+> > +	}
+> > +	h->fmr_owner = ULLONG_MAX;
+> > +	h->fmr_flags = UINT_MAX;
+> > +	h->fmr_offset = ULLONG_MAX;
+> > +
+> > +	while (true) {
+> > +		ret = ioctl(file->fd, FS_IOC_GETFSMAP, fsmap);
+> > +		if (ret < 0) {
+> > +			fprintf(stderr, _("%s: FS_IOC_GETFSMAP [\"%s\"]: %s\n"),
+> > +				progname, file->name, strerror(errno));
+> > +			free(fsmap);
+> > +			exitcode = 1;
+> > +			return;
+> > +		}
+> > +
+> > +		/* No more extents to map, exit */
+> > +		if (!fsmap->fmh_entries)
+> > +			break;
+> > +
+> > +		for (i = 0, extent = fsmap->fmh_recs;
+> > +		     i < fsmap->fmh_entries;
+> > +		     i++, extent++) {
+> > +			if (!(extent->fmr_flags & FMR_OF_SPECIAL_OWNER) ||
+> > +			    extent->fmr_owner != XFS_FMR_OWN_FREE)
+> > +				continue;
+> > +			agbno = (extent->fmr_physical - (bperag * agno)) /
+> > +								blocksize;
+> > +			aglen = extent->fmr_length / blocksize;
+> > +
+> > +			addtohist(agno, agbno, aglen);
+> > +		}
+> > +
+> > +		p = &fsmap->fmh_recs[fsmap->fmh_entries - 1];
+> > +		if (p->fmr_flags & FMR_OF_LAST)
+> > +			break;
+> > +		fsmap_advance(fsmap);
+> > +	}
+> > +}
+> > +static void
+> > +aglistadd(
+> > +	char	*a)
+> > +{
+> > +	aglist = realloc(aglist, (agcount + 1) * sizeof(*aglist));
+> > +	aglist[agcount] = (xfs_agnumber_t)atoi(a);
+> > +	agcount++;
+> > +}
+> > +
+> > +static int
+> > +init(
+> > +	int		argc,
+> > +	char		**argv)
+> > +{
+> > +	int		c;
+> > +	int		speced = 0;
+> > +
+> > +	agcount = dumpflag = equalsize = multsize = optind = 0;
+> > +	histcount = seen1 = summaryflag = 0;
+> > +	totblocks = totexts = 0;
+> > +	aglist = NULL;
+> > +	hist = NULL;
+> > +	rtflag = false;
+> > +	while ((c = getopt(argc, argv, "a:bde:h:m:rs")) != EOF) {
 > > +		switch (c) {
-> > +		case 'g':
-> > +			eofb.eof_flags |= XFS_EOF_FLAGS_GID;
-> > +			eofb.eof_gid = atoi(optarg);
+> > +		case 'a':
+> > +			aglistadd(optarg);
 > > +			break;
-> > +		case 'u':
-> > +			eofb.eof_flags |= XFS_EOF_FLAGS_UID;
-> > +			eofb.eof_uid = atoi(optarg);
+> > +		case 'b':
+> > +			if (speced)
+> > +				return 0;
+> > +			multsize = 2;
+> > +			speced = 1;
 > > +			break;
-> > +		case 'p':
-> > +			eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
-> > +			eofb.eof_prid = atoi(optarg);
+> > +		case 'd':
+> > +			dumpflag = 1;
 > > +			break;
-> > +		case 's':
-> > +			eofb.eof_flags |= XFS_EOF_FLAGS_SYNC;
+> > +		case 'e':
+> > +			if (speced)
+> > +				return 0;
+> > +			equalsize = atoi(optarg);
+> > +			speced = 1;
+> > +			break;
+> > +		case 'h':
+> > +			if (speced && !histcount)
+> > +				return 0;
+> > +			addhistent(atoi(optarg));
+> > +			speced = 1;
 > > +			break;
 > > +		case 'm':
-> > +			eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
-> > +			eofb.eof_min_file_size = cvtnum(file->geom.blocksize,
-> > +							file->geom.sectsize,
-> > +							optarg);
+> > +			if (speced)
+> > +				return 0;
+> > +			multsize = atoi(optarg);
+> > +			speced = 1;
+> > +			break;
+> > +		case 'r':
+> > +			rtflag = true;
+> > +			break;
+> > +		case 's':
+> > +			summaryflag = 1;
 > > +			break;
 > > +		case '?':
-> > +		default:
-> > +			return command_usage(&prealloc_cmd);
+> > +			return 0;
 > > +		}
 > > +	}
 > > +	if (optind != argc)
-> > +		return command_usage(&prealloc_cmd);
+> > +		return 0;
+> > +	if (!speced)
+> > +		multsize = 2;
+> > +	histinit(file->geom.agblocks);
+> > +	return 1;
+> > +}
 > > +
-> > +	if (ioctl(file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
-> > +		fprintf(stderr, _("%s: XFS_IOC_FREE_EOFBLOCKS on %s: %s\n"),
-> > +			progname, file->name, strerror(errno));
+> > +/*
+> > + * Report on freespace usage in xfs filesystem.
+> > + */
+> > +static int
+> > +freesp_f(
+> > +	int		argc,
+> > +	char		**argv)
+> > +{
+> > +	xfs_agnumber_t	agno;
+> > +
+> > +	if (!init(argc, argv))
+> > +		return 0;
+> > +	if (rtflag)
+> > +		scan_ag(NULLAGNUMBER);
+> > +	for (agno = 0; !rtflag && agno < file->geom.agcount; agno++)  {
+> > +		if (inaglist(agno))
+> > +			scan_ag(agno);
 > > +	}
+> > +	if (histcount)
+> > +		printhist();
+> > +	if (summaryflag) {
+> > +		printf(_("total free extents %lld\n"), totexts);
+> > +		printf(_("total free blocks %lld\n"), totblocks);
+> > +		printf(_("average free extent size %g\n"),
+> > +			(double)totblocks / (double)totexts);
+> > +	}
+> > +	if (aglist)
+> > +		free(aglist);
+> > +	if (hist)
+> > +		free(hist);
 > > +	return 0;
 > > +}
 > > +
 > > +static void
-> > +prealloc_help(void)
+> > +freesp_help(void)
 > > +{
 > > +	printf(_(
 > > +"\n"
-> > +"Control speculative preallocation\n"
+> > +"Examine filesystem free space\n"
 > > +"\n"
-> > +"Options: [-s] [-ugp id] [-m minlen]\n"
+> > +"Options: [-bdsr] [-a agno] [-e bsize] [-h h1]... [-m bmult]\n"
 > 
-> No need to restate Options: because that comes out already with help,
-> from the args in the cmd struct:
-> 
-> xfs_spaceman> help prealloc
-> prealloc [-s] [-ugp id] [-m minlen] -- Control speculative preallocation
-> 
-> Control speculative preallocation
-> 
-> Options: [-s] [-ugp id] [-m minlen]
-> 
-> 
+> don't restate options ...
+
+Fixed.
+
 > > +"\n"
-> > +" -s        -- wait for removal to complete\n"
-> > +" -u uid    -- remove prealloc on files matching user <uid>\n"
-> > +" -g gid    -- remove prealloc on files matching group <gid>\n"
-> > +" -p prid   -- remove prealloc on files matching project <prid>\n"
-> > +" -m minlen -- only consider files larger than <minlen>\n"
-> 
-> units?  (bytes?)  Probably should mention that suffixes are accepted,
-> in the manpage.
-> 
+> > +" -a agno  -- Scan only the given AG agno.\n"
+> > +" -b       -- binary histogram bin size\n"
+> > +" -d       -- debug output\n"
+> > +" -e bsize -- Use fixed histogram bin size of bsize\n"
+> > +" -h hbsz  -- Use custom histogram bin size of h1.\n"
+> > +"             Multiple specifications are allowed.\n"
+> > +" -m bmult -- Use histogram bin size multiplier of bmult.\n"
+> > +" -r       -- Display realtime device free space information.\n"
+> > +" -s       -- Emit freespace summary information.\n"
 > > +"\n"));
-> 
-> I guess with no -u, -g, or -p it removes speculative prealloc for all ids?
-> That'd be good to add to the manpage.
-
-Will do.
-
 > > +
 > > +}
 > > +
 > > +void
-> > +prealloc_init(void)
+> > +freesp_init(void)
 > > +{
-> > +	prealloc_cmd.name = "prealloc";
-> > +	prealloc_cmd.altname = "prealloc";
-> > +	prealloc_cmd.cfunc = prealloc_f;
-> > +	prealloc_cmd.argmin = 1;
-> > +	prealloc_cmd.argmax = -1;
-> > +	prealloc_cmd.args = "[-s] [-ugp id] [-m minlen]";
+> > +	freesp_cmd.name = "freesp";
+> > +	freesp_cmd.altname = "fsp";
+> > +	freesp_cmd.cfunc = freesp_f;
+> > +	freesp_cmd.argmin = 0;
+> > +	freesp_cmd.argmax = -1;
+> > +	freesp_cmd.args = "[-bdsr] [-a agno] [-e bsize] [-h h1]... [-m bmult]";
 > 
-> This help is a little confusing:
-> 
-> xfs_spaceman> prealloc -ugp 0
-> prealloc [-s] [-ugp id] [-m minlen] -- Control speculative preallocation
-> 
-> xfs_spaceman> prealloc -u 0 -g 0 -p 0
-> xfs_spaceman> 
-> 
-> should probably be:
-> 
-> prealloc [-s] [-u id] [-g id] [-p id] [-m minlen] -- Control speculative preallocation
+> [-a agno]... right?  Multiple allowed?
 
-Fixed.
+Yes, and fixed.
 
 --D
 
-> > +	prealloc_cmd.flags = CMD_FLAG_ONESHOT;
-> > +	prealloc_cmd.oneline = _("Control speculative preallocation");
-> > +	prealloc_cmd.help = prealloc_help;
+> > +	freesp_cmd.flags = CMD_FLAG_ONESHOT;
+> > +	freesp_cmd.oneline = _("Examine filesystem free space");
+> > +	freesp_cmd.help = freesp_help;
 > > +
-> > +	add_command(&prealloc_cmd);
+> > +	add_command(&freesp_cmd);
 > > +}
 > > +
+> > diff --git a/spaceman/init.c b/spaceman/init.c
+> > index 93a8a1e..f3c93c3 100644
+> > --- a/spaceman/init.c
+> > +++ b/spaceman/init.c
+> > @@ -20,6 +20,7 @@
+> >  #include "command.h"
+> >  #include "input.h"
+> >  #include "init.h"
+> > +#include "path.h"
+> >  #include "space.h"
+> >  
+> >  char	*progname;
+> > @@ -38,6 +39,7 @@ static void
+> >  init_commands(void)
+> >  {
+> >  	file_init();
+> > +	freesp_init();
+> >  	help_init();
+> >  	prealloc_init();
+> >  	quit_init();
+> > @@ -71,12 +73,14 @@ init(
+> >  	int		c, flags = 0;
+> >  	mode_t		mode = 0600;
+> >  	xfs_fsop_geom_t	geometry = { 0 };
+> > +	struct fs_path	fsp;
+> >  
+> >  	progname = basename(argv[0]);
+> >  	setlocale(LC_ALL, "");
+> >  	bindtextdomain(PACKAGE, LOCALEDIR);
+> >  	textdomain(PACKAGE);
+> >  
+> > +	fs_table_initialise(0, NULL, 0, NULL);
+> >  	while ((c = getopt(argc, argv, "c:V")) != EOF) {
+> >  		switch (c) {
+> >  		case 'c':
+> > @@ -93,11 +97,11 @@ init(
+> >  	if (optind != argc - 1)
+> >  		usage();
+> >  
+> > -	if ((c = openfile(argv[optind], &geometry, flags, mode)) < 0)
+> > +	if ((c = openfile(argv[optind], &geometry, flags, mode, &fsp)) < 0)
+> >  		exit(1);
+> >  	if (!platform_test_xfs_fd(c))
+> >  		printf(_("Not an XFS filesystem!\n"));
+> > -	if (addfile(argv[optind], c, &geometry, flags) < 0)
+> > +	if (addfile(argv[optind], c, &geometry, flags, &fsp) < 0)
+> >  		exit(1);
+> >  
+> >  	init_commands();
+> > diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
+> > index 71c0d80..55b85ed 100644
+> > --- a/spaceman/prealloc.c
+> > +++ b/spaceman/prealloc.c
+> > @@ -20,6 +20,7 @@
+> >  #include "command.h"
+> >  #include "input.h"
+> >  #include "init.h"
+> > +#include "path.h"
+> >  #include "space.h"
+> >  
+> >  static cmdinfo_t prealloc_cmd;
 > > diff --git a/spaceman/space.h b/spaceman/space.h
-> > index 7b4f034..0ae3116 100644
+> > index 0ae3116..bf9a2df 100644
 > > --- a/spaceman/space.h
 > > +++ b/spaceman/space.h
-> > @@ -33,5 +33,6 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
+> > @@ -21,6 +21,7 @@ typedef struct fileio {
+> >  	int		flags;		/* flags describing file state */
+> >  	char		*name;		/* file name at time of open */
+> >  	xfs_fsop_geom_t	geom;		/* XFS filesystem geometry */
+> > +	struct fs_path	fs_path;	/* XFS path information */
+> >  } fileio_t;
+> >  
+> >  extern fileio_t		*filetable;	/* open file table */
+> > @@ -28,11 +29,18 @@ extern int		filecount;	/* number of open files */
+> >  extern fileio_t		*file;		/* active file in file table */
+> >  extern int filelist_f(void);
+> >  
+> > -extern int	openfile(char *, xfs_fsop_geom_t *, int, mode_t);
+> > -extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
+> > +extern int	openfile(char *, xfs_fsop_geom_t *, int, mode_t,
+> > +			 struct fs_path *);
+> > +extern int	addfile(char *, int , xfs_fsop_geom_t *, int, struct fs_path *);
 > >  
 > >  extern void	file_init(void);
 > >  extern void	help_init(void);
-> > +extern void	prealloc_init(void);
+> >  extern void	prealloc_init(void);
 > >  extern void	quit_init(void);
 > >  extern void	trim_init(void);
+> > +
+> > +#ifdef HAVE_GETFSMAP
+> > +extern void	freesp_init(void);
+> > +#else
+> > +# define freesp_init()	do { } while (0)
+> > +#endif
+> > diff --git a/spaceman/trim.c b/spaceman/trim.c
+> > index d58f6d1..b5908cc 100644
+> > --- a/spaceman/trim.c
+> > +++ b/spaceman/trim.c
+> > @@ -20,6 +20,7 @@
+> >  #include <linux/fs.h>
+> >  #include "command.h"
+> >  #include "init.h"
+> > +#include "path.h"
+> >  #include "space.h"
+> >  #include "input.h"
+> >  
 > > 
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
