@@ -1,75 +1,211 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52036 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751459AbdFOTL5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Jun 2017 15:11:57 -0400
-Subject: Re: [PATCH 2/3] xfs_repair: add prefetch trace calls to debug thread
- creation failures
-References: <1484627973-11535-1-git-send-email-jeffm@suse.com>
- <1484627973-11535-3-git-send-email-jeffm@suse.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <4d7e3221-b8e0-0087-cf09-42e63b13ac30@sandeen.net>
-Date: Thu, 15 Jun 2017 14:11:55 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:20767 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751677AbdFOUgp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 16:36:45 -0400
+Subject: [PATCH 08/12] xfs_spaceman: add FITRIM support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 15 Jun 2017 13:36:38 -0700
+Message-ID: <149755899832.3625.846462761036158527.stgit@birch.djwong.org>
+In-Reply-To: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
+References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <1484627973-11535-3-git-send-email-jeffm@suse.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: jeffm@suse.com, linux-xfs@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On 1/16/17 10:39 PM, jeffm@suse.com wrote:
-> From: Jeff Mahoney <jeffm@suse.com>
-> 
-> When debugging prefetch failures, it's useful to have thread creation
-> failure messages that are output as warnings on stderr in the trace
-> log as well.  It's also helpful to see when an AG gets queued behind
-> another one rather than having the thread started directly, which
-> has a separate trace line.
-> 
-> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Add support for discarding free space extents via the FITRIM
+command. Make it easy to discard a single range, an entire AG or all
+the freespace in the filesystem.
 
-> ---
->  repair/prefetch.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/repair/prefetch.c b/repair/prefetch.c
-> index 044fab2..37d60d6 100644
-> --- a/repair/prefetch.c
-> +++ b/repair/prefetch.c
-> @@ -703,6 +703,8 @@ pf_queuing_worker(
->  		if (err != 0) {
->  			do_warn(_("failed to create prefetch thread: %s\n"),
->  				strerror(err));
-> +			pftrace("failed to create prefetch thread for AG %d: %s",
-> +				args->agno, strerror(err));
->  			args->io_threads[i] = 0;
->  			if (i == 0) {
->  				pf_start_processing(args);
-> @@ -817,6 +819,8 @@ pf_create_prefetch_thread(
->  	if (err != 0) {
->  		do_warn(_("failed to create prefetch thread: %s\n"),
->  			strerror(err));
-> +		pftrace("failed to create prefetch thread for AG %d: %s",
-> +			args->agno, strerror(err));
->  		args->queuing_thread = 0;
->  		cleanup_inode_prefetch(args);
->  	}
-> @@ -882,8 +886,11 @@ start_inode_prefetch(
->  		if (prev_args->prefetch_done) {
->  			if (!pf_create_prefetch_thread(args))
->  				args = NULL;
-> -		} else
-> +		} else {
->  			prev_args->next_args = args;
-> +			pftrace("queued AG %d after AG %d",
-> +				args->agno, prev_args->agno);
-> +		}
->  		pthread_mutex_unlock(&prev_args->lock);
->  	}
->  
-> 
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ spaceman/Makefile |    2 -
+ spaceman/init.c   |    1 
+ spaceman/space.h  |    1 
+ spaceman/trim.c   |  131 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 134 insertions(+), 1 deletion(-)
+ create mode 100644 spaceman/trim.c
+
+
+diff --git a/spaceman/Makefile b/spaceman/Makefile
+index df59edf..c63a4fc 100644
+--- a/spaceman/Makefile
++++ b/spaceman/Makefile
+@@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
+ 
+ LTCOMMAND = xfs_spaceman
+ HFILES = init.h space.h
+-CFILES = init.c file.c
++CFILES = init.c file.c trim.c
+ 
+ LLDLIBS = $(LIBXCMD)
+ LTDEPENDENCIES = $(LIBXCMD)
+diff --git a/spaceman/init.c b/spaceman/init.c
+index 8cbfbda..107a692 100644
+--- a/spaceman/init.c
++++ b/spaceman/init.c
+@@ -40,6 +40,7 @@ init_commands(void)
+ 	print_init();
+ 	help_init();
+ 	quit_init();
++	trim_init();
+ }
+ 
+ static int
+diff --git a/spaceman/space.h b/spaceman/space.h
+index 7bfe874..8cd3953 100644
+--- a/spaceman/space.h
++++ b/spaceman/space.h
+@@ -34,5 +34,6 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *);
+ extern void	print_init(void);
+ extern void	help_init(void);
+ extern void	quit_init(void);
++extern void	trim_init(void);
+ 
+ #endif /* XFS_SPACEMAN_SPACE_H_ */
+diff --git a/spaceman/trim.c b/spaceman/trim.c
+new file mode 100644
+index 0000000..c0bc7f2
+--- /dev/null
++++ b/spaceman/trim.c
+@@ -0,0 +1,131 @@
++/*
++ * Copyright (c) 2012 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include "libxfs.h"
++#include <linux/fs.h>
++#include "command.h"
++#include "init.h"
++#include "space.h"
++#include "input.h"
++
++static cmdinfo_t trim_cmd;
++
++/*
++ * Trim unused space in xfs filesystem.
++ */
++static int
++trim_f(
++	int		argc,
++	char		**argv)
++{
++	struct fstrim_range trim = {0};
++	xfs_agnumber_t	agno = 0;
++	off64_t		offset = 0;
++	ssize_t		length = 0;
++	ssize_t		minlen = 0;
++	int		aflag = 0;
++	int		fflag = 0;
++	int		ret;
++	int		c;
++
++	while ((c = getopt(argc, argv, "a:fm:")) != EOF) {
++		switch (c) {
++		case 'a':
++			aflag = 1;
++			agno = cvt_u32(optarg, 10);
++			if (errno) {
++				printf(_("bad agno value %s\n"), optarg);
++				return command_usage(&trim_cmd);
++			}
++			break;
++		case 'f':
++			fflag = 1;
++			break;
++		case 'm':
++			minlen = cvtnum(file->geom.blocksize,
++					file->geom.sectsize, optarg);
++			break;
++		default:
++			return command_usage(&trim_cmd);
++		}
++	}
++
++	if (aflag && fflag)
++		return command_usage(&trim_cmd);
++
++	if (optind != argc - 2 && !(aflag || fflag))
++		return command_usage(&trim_cmd);
++	if (optind != argc) {
++		offset = cvtnum(file->geom.blocksize, file->geom.sectsize,
++				argv[optind]);
++		length = cvtnum(file->geom.blocksize, file->geom.sectsize,
++				argv[optind + 1]);
++	} else if (agno) {
++		offset = agno * file->geom.agblocks * file->geom.blocksize;
++		length = file->geom.agblocks * file->geom.blocksize;
++	} else {
++		offset = 0;
++		length = file->geom.datablocks * file->geom.blocksize;
++	}
++
++	trim.start = offset;
++	trim.len = length;
++	trim.minlen = minlen;
++
++	ret = ioctl(file->fd, FITRIM, (unsigned long)&trim);
++	if (ret < 0) {
++		fprintf(stderr, "%s: ioctl(FITRIM) [\"%s\"]: "
++			"%s\n", progname, file->name, strerror(errno));
++		exitcode = 1;
++	}
++	return 0;
++}
++
++static void
++trim_help(void)
++{
++	printf(_(
++"\n"
++"Discard filesystem free space\n"
++"\n"
++" -a agno       -- trim all the freespace in the given AG agno\n"
++" -f            -- trim all the freespace in the entire filesystem\n"
++" offset length -- trim the freespace in the range {offset, length}\n"
++" -m minlen     -- skip freespace extents smaller than minlen\n"
++"\n"
++"One of -a, -f, or the offset/length pair are required.\n"
++"\n"));
++
++}
++
++void
++trim_init(void)
++{
++	trim_cmd.name = "trim";
++	trim_cmd.altname = "tr";
++	trim_cmd.cfunc = trim_f;
++	trim_cmd.argmin = 1;
++	trim_cmd.argmax = 4;
++	trim_cmd.args = "[-m minlen] ( -a agno | -f | offset length )";
++	trim_cmd.flags = CMD_FLAG_ONESHOT;
++	trim_cmd.oneline = _("Discard filesystem free space");
++	trim_cmd.help = trim_help;
++
++	add_command(&trim_cmd);
++}
++
+
