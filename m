@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20644 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750936AbdFOUgT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 16:36:19 -0400
-Subject: [PATCH 04/12] xfs: introduce the XFS_IOC_GETFSMAP ioctl
+Received: from aserp1040.oracle.com ([141.146.126.69]:33343 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751677AbdFOUhC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 16:37:02 -0400
+Subject: [PATCH 11/12] xfs_spaceman: add a man page
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 15 Jun 2017 13:36:13 -0700
-Message-ID: <149755897354.3625.17411163584419405510.stgit@birch.djwong.org>
+Date: Thu, 15 Jun 2017 13:36:57 -0700
+Message-ID: <149755901707.3625.18353309221066084398.stgit@birch.djwong.org>
 In-Reply-To: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
 References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -20,198 +20,190 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Introduce a new ioctl that uses the reverse mapping btree to return
-information about the physical layout of the filesystem.
+Add a manual page describing xfs_spaceman's behavior.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-[sandeen: rework to have less autoconf magic]
-Modified-by: Eric Sandeen <sandeen@redhat.com>
 ---
-v3: rework the whole mess to have less autoconf magic; now we only
-track if the system headers actually define getfsmap.
-v2: shorten the device field to u32 since that's all we need for
-dev_t.  Support reporting reverse mapping information for all the
-devices that XFS supports (data, log).
----
- configure.ac          |    1 
- include/builddefs.in  |    4 ++
- include/linux.h       |  103 +++++++++++++++++++++++++++++++++++++++++++++++++
- m4/package_libcdev.m4 |   20 ++++++++++
- 4 files changed, 128 insertions(+)
+ man/man8/xfs_spaceman.8 |  171 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 171 insertions(+)
+ create mode 100644 man/man8/xfs_spaceman.8
 
 
-diff --git a/configure.ac b/configure.ac
-index aa102e4..9534986 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -142,6 +142,7 @@ AC_HAVE_READDIR
- AC_HAVE_FSETXATTR
- AC_HAVE_MREMAP
- AC_NEED_INTERNAL_FSXATTR
-+AC_HAVE_GETFSMAP
- 
- if test "$enable_blkid" = yes; then
- AC_HAVE_BLKID_TOPO
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 4d6bb2d..ec630bd 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -112,6 +112,7 @@ HAVE_FLS = @have_fls@
- HAVE_FSETXATTR = @have_fsetxattr@
- HAVE_MREMAP = @have_mremap@
- NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
-+HAVE_GETFSMAP = @have_getfsmap@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-@@ -150,6 +151,9 @@ endif
- ifeq ($(NEED_INTERNAL_FSXATTR),yes)
- PCFLAGS+= -DOVERRIDE_SYSTEM_FSXATTR
- endif
-+ifeq ($(HAVE_GETFSMAP),yes)
-+PCFLAGS+= -DHAVE_GETFSMAP
-+endif
- 
- 
- GCFLAGS = $(DEBUG) \
-diff --git a/include/linux.h b/include/linux.h
-index 6a676ca..38969d1 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -222,4 +222,107 @@ struct fsxattr {
- #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
- #endif
- 
-+#ifndef HAVE_GETFSMAP
-+/*
-+ *	Structure for FS_IOC_GETFSMAP.
-+ *
-+ *	The memory layout for this call are the scalar values defined in
-+ *	struct fsmap_head, followed by two struct fsmap that describe
-+ *	the lower and upper bound of mappings to return, followed by an
-+ *	array of struct fsmap mappings.
-+ *
-+ *	fmh_iflags control the output of the call, whereas fmh_oflags report
-+ *	on the overall record output.  fmh_count should be set to the
-+ *	length of the fmh_recs array, and fmh_entries will be set to the
-+ *	number of entries filled out during each call.  If fmh_count is
-+ *	zero, the number of reverse mappings will be returned in
-+ *	fmh_entries, though no mappings will be returned.  fmh_reserved
-+ *	must be set to zero.
-+ *
-+ *	The two elements in the fmh_keys array are used to constrain the
-+ *	output.  The first element in the array should represent the
-+ *	lowest disk mapping ("low key") that the user wants to learn
-+ *	about.  If this value is all zeroes, the filesystem will return
-+ *	the first entry it knows about.  For a subsequent call, the
-+ *	contents of fsmap_head.fmh_recs[fsmap_head.fmh_count - 1] should be
-+ *	copied into fmh_keys[0] to have the kernel start where it left off.
-+ *
-+ *	The second element in the fmh_keys array should represent the
-+ *	highest disk mapping ("high key") that the user wants to learn
-+ *	about.  If this value is all ones, the filesystem will not stop
-+ *	until it runs out of mapping to return or runs out of space in
-+ *	fmh_recs.
-+ *
-+ *	fmr_device can be either a 32-bit cookie representing a device, or
-+ *	a 32-bit dev_t if the FMH_OF_DEV_T flag is set.  fmr_physical,
-+ *	fmr_offset, and fmr_length are expressed in units of bytes.
-+ *	fmr_owner is either an inode number, or a special value if
-+ *	FMR_OF_SPECIAL_OWNER is set in fmr_flags.
-+ */
-+struct fsmap {
-+	__u32		fmr_device;	/* device id */
-+	__u32		fmr_flags;	/* mapping flags */
-+	__u64		fmr_physical;	/* device offset of segment */
-+	__u64		fmr_owner;	/* owner id */
-+	__u64		fmr_offset;	/* file offset of segment */
-+	__u64		fmr_length;	/* length of segment */
-+	__u64		fmr_reserved[3];	/* must be zero */
-+};
+diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
+new file mode 100644
+index 0000000..f064360
+--- /dev/null
++++ b/man/man8/xfs_spaceman.8
+@@ -0,0 +1,171 @@
++.TH xfs_spaceman 8
++.SH NAME
++xfs_spaceman \- show free space information about an XFS filesystem
++.SH SYNOPSIS
++.B xfs_spaceman
++[
++.B \-c
++.I cmd
++]
++.I file
++.br
++.B xfs_spaceman \-V
++.SH DESCRIPTION
++.B xfs_spaceman
++reports and controls free space usage in an XFS filesystem.
++.SH OPTIONS
++.TP 1.0i
++.BI \-c " cmd"
++.B xfs_spaceman
++commands may be run interactively (the default) or as arguments on
++the command line. Multiple
++.B \-c
++arguments may be given. The commands are run in the sequence given,
++then the program exits.
 +
-+struct fsmap_head {
-+	__u32		fmh_iflags;	/* control flags */
-+	__u32		fmh_oflags;	/* output flags */
-+	__u32		fmh_count;	/* # of entries in array incl. input */
-+	__u32		fmh_entries;	/* # of entries filled in (output). */
-+	__u64		fmh_reserved[6];	/* must be zero */
++.SH COMMANDS
++.TP
++.BI "freesp [ \-drs ] [-a agno] [ \-b | \-e bsize | \-h bsize | \-m factor ]"
++With no arguments,
++.B freesp
++shows a histogram of all free space extents in the filesystem.
++The command takes the following options:
 +
-+	struct fsmap	fmh_keys[2];	/* low and high keys for the mapping search */
-+	struct fsmap	fmh_recs[];	/* returned records */
-+};
++.RS 1.0i
++.PD 0
++.TP 0.4i
++.B \-a agno
++Collect free space information from this allocation group.
++This option can be specified multiple times to collect from multiple groups.
 +
-+/* Size of an fsmap_head with room for nr records. */
-+static inline size_t
-+fsmap_sizeof(
-+	unsigned int	nr)
-+{
-+	return sizeof(struct fsmap_head) + nr * sizeof(struct fsmap);
-+}
++.TP
++.B \-b
++This argument establishes that the histogram bin sizes are successive powers of two.
++This is the default, and is mutually exclusive with the
++.BR "-e" ", " "-h" ", and " "-m" " options."
 +
-+/* Start the next fsmap query at the end of the current query results. */
-+static inline void
-+fsmap_advance(
-+	struct fsmap_head	*head)
-+{
-+	head->fmh_keys[0] = head->fmh_recs[head->fmh_entries - 1];
-+}
++.TP
++.B \-d
++Print debugging information such as the raw free space extent information.
 +
-+/*	fmh_iflags values - set by XFS_IOC_GETFSMAP caller in the header. */
-+/* no flags defined yet */
-+#define FMH_IF_VALID		0
++.TP
++.B \-e bsize
++Set all histogram bin sizes to a specific value.
++This option is mutually exclusive with the
++.BR "-b" ", " "-h" ", and " "-m" " options."
 +
-+/*	fmh_oflags values - returned in the header segment only. */
-+#define FMH_OF_DEV_T		0x1	/* fmr_device values will be dev_t */
++.TP
++.B \-h bsize
++Create a histogram bin with a lower bound of this value.
++The upper bound of this bin will be one less than the lower bound of the
++next highest histogram bin.
++This option can be given multiple times to control the exact bin sizes.
++This option is mutually exclusive with the
++.BR "-b" ", " "-e" ", and " "-m" " options."
 +
-+/*	fmr_flags values - returned for each non-header segment */
-+#define FMR_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
-+#define FMR_OF_ATTR_FORK	0x2	/* segment = attribute fork */
-+#define FMR_OF_EXTENT_MAP	0x4	/* segment = extent map */
-+#define FMR_OF_SHARED		0x8	/* segment = shared with another file */
-+#define FMR_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
-+#define FMR_OF_LAST		0x20	/* segment is the last in the FS */
++.TP
++.B \-m factor
++Create each histogram bin with a size that is this many times the size
++of the prvious bin created.
++This option is mutually exclusive with the
++.BR "-b" ", " "-e" ", and " "-h" " options."
 +
-+/* Each FS gets to define its own special owner codes. */
-+#define FMR_OWNER(type, code)	(((__u64)type << 32) | \
-+				 ((__u64)code & 0xFFFFFFFFULL))
-+#define FMR_OWNER_TYPE(owner)	((__u32)((__u64)owner >> 32))
-+#define FMR_OWNER_CODE(owner)	((__u32)(((__u64)owner & 0xFFFFFFFFULL)))
-+#define FMR_OWN_FREE		FMR_OWNER(0, 1) /* free space */
-+#define FMR_OWN_UNKNOWN		FMR_OWNER(0, 2) /* unknown owner */
-+#define FMR_OWN_METADATA	FMR_OWNER(0, 3) /* metadata */
++.TP
++.B \-r
++Query the realtime device for free space information.
 +
-+#define FS_IOC_GETFSMAP		_IOWR('X', 59, struct fsmap_head)
++.TP
++.B \-s
++Display a summary of the free space information found.
++.PD
++.RE
++.TP
++.BR "help [ " command " ]"
++Display a brief description of one or all commands.
++.TP
++.BI "prealloc [ \-u id ] [ \-g id ] [ -p id ] [ \-m minlen ] [ \-s ]"
++Controls speculative preallocation.
++If no
++.BR "-u" ", " "-g" ", or " "-p"
++options are given, this command acts on all files.
++The command takes the following options:
 +
-+#define HAVE_GETFSMAP
-+#endif /* HAVE_GETFSMAP */
++.RS 1.0i
++.PD 0
++.TP 0.4i
++.B \-u uid
++Clear all speculative preallocations for files with this user id.
++This option can be given in combination with the
++.B "-g" " and " "-p"
++options.
 +
- #endif	/* __XFS_LINUX_H__ */
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index bc3b4ce..fa5b639 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -277,3 +277,23 @@ AC_DEFUN([AC_NEED_INTERNAL_FSXATTR],
-     )
-     AC_SUBST(need_internal_fsxattr)
-   ])
++.TP
++.B \-g gid
++Clear all speculative preallocations for files with this group id.
++This option can be given in combination with the
++.B "-u" " and " "-p"
++options.
 +
-+#
-+# Check if we have a FS_IOC_GETFSMAP ioctl (Linux)
-+#
-+AC_DEFUN([AC_HAVE_GETFSMAP],
-+  [ AC_MSG_CHECKING([for GETFSMAP])
-+    AC_TRY_LINK([
-+#define _GNU_SOURCE
-+#include <sys/syscall.h>
-+#include <unistd.h>
-+#include <linux/fs.h>
-+#include <linux/fsmap.h>
-+    ], [
-+         unsigned long x = FS_IOC_GETFSMAP;
-+         struct fsmap_head fh;
-+    ], have_getfsmap=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_getfsmap)
-+  ])
++.TP
++.B \-p pid
++Clear all speculative preallocations for files with this project id.
++This option can be given in combination with the
++.B "-u" " and " "-g"
++options.
++
++.TP
++.B \-m minlen
++Ignore all files smaller than this size.
++Units can be supplied for this argument.
++
++.TP
++.B \-s
++Flush all dirty data and metadata to disk.
++.PD
++.RE
++.TP
++.B print
++Display a list of all open files.
++.TP
++.B quit
++Exit
++.BR xfs_spaceman .
++.TP
++.BI "trim ( \-a agno | \-f | " "offset" " " "length" " ) [ -m minlen ]"
++Instructs the underlying storage device to release all storage that may
++be backing free space in the filesystem.
++The command takes the following options:
++
++.RS 1.0i
++.PD 0
++.TP 0.4i
++.B \-a agno
++Trim free space extents in the given allocation group.
++This option is mutually exclusive with the
++.BR "-f" " option and the "
++.IR "offset" "/" "length" " options."
++
++.TP
++.B \-f
++Trim all free space in the filesystem.
++This option is mutually exclusive with the
++.BR "-a" " option and the "
++.IR "offset" "/" "length" " options."
++
++.TP
++.IR "option" ", " "length"
++Trim all free space within the physical range defined by the
++.I offset
++and
++.I length
++from this filesystem.
++Units can be appended to these arguments.
++This option is mutually exclusive with the
++.BR "-a" " and " "-f" " options."
++
++.TP
++.B \-m minlen
++Do not trim free space extents shorter than this length.
++Units can be appended to this argument.
++.PD
++.RE
 
