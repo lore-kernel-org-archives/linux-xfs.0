@@ -1,134 +1,158 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52458 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751760AbdFNUiT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Jun 2017 16:38:19 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 57FCEC04B329
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2017 20:38:19 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 26B9B17106
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2017 20:38:19 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [RFC PATCH] xfs: prevent overwrite of pinned log tail
-Date: Wed, 14 Jun 2017 16:38:17 -0400
-Message-Id: <1497472697-3574-1-git-send-email-bfoster@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38571 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750961AbdFORIC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 13:08:02 -0400
+Date: Thu, 15 Jun 2017 10:07:57 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: free uncommitted transactions during log recovery
+Message-ID: <20170615170757.GZ4530@birch.djwong.org>
+References: <1497029889-12299-1-git-send-email-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1497029889-12299-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-If the log tail is pinned, the head pushes right up behind it and
-the tail moves forward, it's possible for the next N log buffer
-writes to overwrite the previously pinned tail. If those log writes
-all happen to partially fail, the filesystem shuts down having
-corrupted the tail pointed to by the last good record in the on-disk
-log.
+On Fri, Jun 09, 2017 at 01:38:09PM -0400, Brian Foster wrote:
+> Log recovery allocates in-core transaction and member item data
+> structures on-demand as it processes the on-disk log. Transactions
+> are allocated on first encounter on-disk and stored in a hash table
+> structure where they are easily accessible for subsequent lookups.
+> Transaction items are also allocated on demand and are attached to
+> the associated transactions.
+> 
+> When a commit record is encountered in the log, the transaction is
+> committed to the fs and the in-core structures are freed. If a
+> filesystem crashes or shuts down before all in-core log buffers are
+> flushed to the log, however, not all transactions may have commit
+> records in the log. As expected, the modifications in such an
+> incomplete transaction are not replayed to the fs. The in-core data
+> structures for the partial transaction are never freed, however,
+> resulting in a memory leak.
+> 
+> Update xlog_do_recovery_pass() to walk the hash table of transaction
+> lists as the last step before it goes out of scope and free any
+> transactions that may remain on the lists. This prevents a memory
+> leak of partial transactions in the log.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> FYI, I suspect this has been a problem for a while and and rare/harmless
+> enough that this can target 4.13.
+> 
+> Brian
+> 
+>  fs/xfs/xfs_log_recover.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 4a98762..37b34c5 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -5224,6 +5224,7 @@ xlog_do_recovery_pass(
+>  	int			error2 = 0;
+>  	int			bblks, split_bblks;
+>  	int			hblks, split_hblks, wrapped_hblks;
+> +	int			i;
+>  	struct hlist_head	rhash[XLOG_RHASH_SIZE];
+>  	LIST_HEAD		(buffer_list);
+>  
+> @@ -5466,6 +5467,19 @@ xlog_do_recovery_pass(
+>  	if (error && first_bad)
+>  		*first_bad = rhead_blk;
+>  
+> +	/*
+> +	 * Transactions are freed at commit time but transactions without commit
+> +	 * records on disk are never committed. Free any that may be left in the
+> +	 * hash table.
+> +	 */
+> +	for (i = 0; i < XLOG_RHASH_SIZE; i++) {
+> +		struct hlist_node	*tmp;
+> +		struct xlog_recover	*trans;
+> +
+> +		hlist_for_each_entry_safe(trans, tmp, &rhash[i], r_list)
+> +			xlog_recover_free_trans(trans);
+> +	}
 
-On the subsequent mount, log recovery identifies the partially
-written buffers, walks the head back to the last good record and
-uses the tail for that record. If that tail has been corrupted by
-the aforementioned failed log writes, log recovery will likely fail
-with log record CRC errors. Even though the tail was moved forward
-and safely overwritten at runtime, the broader log recovery failure
-leads to the loss of changes beyond the overwritten tail (i.e.,
-starting from wherever the tail was pushed forward to) to the
-current head.
+Hmm, I just got the following crash in xfs/051:
 
-This is a possible data loss and filesystem corruption vector. To
-avoid this problem, leave a buffer of unreservable space behind the
-current in-core tail equal to the maximum amount of log data that
-can be written out at one time. This ensures that if the log writes
-fail, they cannot have overwritten the previous tail and the errors
-are detected and the filesystem shuts down before that occurs.
+[  131.456722] XFS (dm-0): Mounting V5 Filesystem
+[  131.462826] XFS (dm-0): Delaying log recovery for 10 seconds.
+[  141.532271] XFS (dm-0): Starting recovery (logdev: internal)
+[  141.534418] XFS (dm-0): metadata I/O error: block 0x182e70 ("xlog_bread_noalign") error 5 numblks 8
+[  141.539561] general protection fault: 0000 [#1] PREEMPT SMP
+[  141.542236] Dumping ftrace buffer:
+[  141.542972]    (ftrace buffer empty)
+[  141.543083] Modules linked in: xfs dm_flakey libcrc32c dax_pmem device_dax nd_pmem binfmt_misc nfsd auth_rpcgss sch_fq_codel af_packet [last unloaded: xfs]
+[  141.543083] CPU: 1 PID: 3246 Comm: mount Not tainted 4.12.0-rc5-dgc #1
+[  141.543083] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
+[  141.543083] task: ffff88006e0ca900 task.stack: ffffc90001d70000
+[  141.543083] RIP: 0010:xlog_recover_free_trans+0x1d/0xb0 [xfs]
+[  141.543083] RSP: 0018:ffffc90001d73b30 EFLAGS: 00010286
+[  141.543083] RAX: ffffc90001d73bc0 RBX: 00000000fffffffb RCX: ffffc90001d73bc0
+[  141.543083] RDX: 0000000000000000 RSI: 00000000ffffffff RDI: ffff8800756ae800
+[  141.543083] RBP: ffffc90001d73b58 R08: 0000000000000001 R09: 0000000000000000
+[  141.543083] R10: 0000000000000000 R11: 0000000000000000 R12: ffff8800756ae830
+[  141.543083] R13: ffff8800756ae800 R14: ffffc90001d73bd0 R15: 206b636f6c62203a
+[  141.543083] FS:  00007fe28e0d6840(0000) GS:ffff88007f200000(0000) knlGS:0000000000000000
+[  141.543083] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  141.543083] CR2: 00007fe28d6a0cf9 CR3: 000000007b3de000 CR4: 00000000001406e0
+[  141.543083] Call Trace:
+[  141.543083]  xlog_do_recovery_pass+0x3ec/0x740 [xfs]
+[  141.543083]  ? rcu_read_lock_sched_held+0x72/0x80
+[  141.543083]  ? __kmalloc+0x26c/0x2d0
+[  141.543083]  ? kmem_alloc+0x81/0x100 [xfs]
+[  141.543083]  ? kmem_alloc+0x81/0x100 [xfs]
+[  141.543083]  xlog_do_log_recovery+0x70/0x150 [xfs]
+[  141.543083]  xlog_do_recover+0x1b/0x170 [xfs]
+[  141.543083]  xlog_recover+0xa2/0x130 [xfs]
+[  141.543083]  xfs_log_mount+0xdb/0x2e0 [xfs]
+[  141.543083]  xfs_mountfs+0x579/0xad0 [xfs]
+[  141.543083]  xfs_fs_fill_super+0x483/0x610 [xfs]
+[  141.543083]  mount_bdev+0x180/0x1b0
+[  141.543083]  ? xfs_finish_flags+0x150/0x150 [xfs]
+[  141.543083]  xfs_fs_mount+0x15/0x20 [xfs]
+[  141.543083]  mount_fs+0x14/0x80
+[  141.543083]  vfs_kern_mount+0x67/0x150
+[  141.543083]  do_mount+0x195/0xd10
+[  141.543083]  ? _copy_from_user+0x47/0x80
+[  141.543083]  ? memdup_user+0x60/0x90
+[  141.543083]  SyS_mount+0x95/0xe0
+[  141.543083]  entry_SYSCALL_64_fastpath+0x1f/0xbe
+[  141.543083] RIP: 0033:0x7fe28d9b7faa
+[  141.543083] RSP: 002b:00007ffe9168f628 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
+[  141.543083] RAX: ffffffffffffffda RBX: 00007fe28dcb063a RCX: 00007fe28d9b7faa
+[  141.543083] RDX: 0000000001ab2240 RSI: 0000000001ab2280 RDI: 0000000001ab2260
+[  141.543083] RBP: 0000000001ab2120 R08: 0000000000000000 R09: 0000000000000012
+[  141.543083] R10: 00000000c0ed0000 R11: 0000000000000206 R12: 00007fe28dec083c
+[  141.543083] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000003
+[  141.543083] Code: 5d c3 31 c0 c3 66 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 e5 41 57 41 56 41 55 41 54 4c 8d 67 30 53 4c 8b 7f 30 49 89 fd <49> 8b 1f 4d 39 e7 48 89 d8 74 6f 49 8b 57 08 45 31 f6 48 89 50 
+[  141.543083] RIP: xlog_recover_free_trans+0x1d/0xb0 [xfs] RSP: ffffc90001d73b30
+[  141.591289] ---[ end trace b3d5b2775a86318f ]---
 
-Not-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+FWIW I was testing 4.13 for-next with the following xfstest config:
 
-This RFC is fallout from the recent log recovery error thread[1]. Note
-that there is no confirmation of root cause on that thread atm, but I
-suspect something like this could be the culprit.
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 birch-mtr0 4.12.0-rc5-dgc
+MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1, -i sparse=1, /dev/pmem1
+MOUNT_OPTIONS -- /dev/pmem1 /opt
 
-I was initially thinking we'd need to do something like serialize a log
-buffer write against an AIL push before we get into the state where this
-problem is possible. As it turns out, I think iclog issue time is much
-too late to accomplish something like that because the in-core log
-buffers have already been constructed/formatted.
+--D
 
-This RFC is a step back from that train of thought and is an experiment
-that I believe does actually prevent the problem. I don't think it's a
-proper fix, however, for one because it has rather broad ramifications
-in that it steals and makes unusable a portion of the on-disk log.
-Further, the more I think about this, the more this seems to be a log
-recovery problem more than anything. This situation is only possible at
-runtime if the in-core tail has been moved forward, meaning the data at
-the previous tail has been successfully written back.
-
-Therefore, it seems more like it should be the responsibility of log
-recovery to deal with this correctly. For example, if the head is walked
-back some number of blocks due to a partially written record, log
-recovery should accommodate that the updated tail may be stale if it
-points into that range. I think this means the tail may need to be
-walked forward to the point where log recovery can be safely attempted.
-The challenge there may be to distinguish between a stale tail pointer
-and true corruption (where log recovery should actually fail).
-
-This is still not fully thought out. I'm posting this for thoughts or
-comments in the meantime. While I can sort of emulate this problem, I
-also think I need to enhance the current recipe I have to something that
-more resembles a legitimate reproducer. Enough rambling for now...
-thoughts or comments appreciated.
-
-Brian
-
-[1] http://www.spinics.net/lists/linux-xfs/msg07499.html
-
- fs/xfs/xfs_log.c | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 3731f13..8a4ee89 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1140,6 +1140,7 @@ xlog_space_left(
- 	int		tail_cycle;
- 	int		head_cycle;
- 	int		head_bytes;
-+	int		tail_window;
- 
- 	xlog_crack_grant_head(head, &head_cycle, &head_bytes);
- 	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle, &tail_bytes);
-@@ -1167,6 +1168,28 @@ xlog_space_left(
- 		ASSERT(0);
- 		free_bytes = log->l_logsize;
- 	}
-+
-+	/*
-+	 * Now that we have the physical free space, leave a buffer between how
-+	 * far we can push the head behind the tail. If the tail is pinned long
-+	 * enough for the head to push right up behind the tail, chances are the
-+	 * last good record in the log points to the current tail. If the tail
-+	 * moves forward and the next N log buffer writes all happen to fail in
-+	 * spectacular fashion (i.e., partial write failure), we'll potentially
-+	 * overwrite the tail of the last good record in the log.
-+	 *
-+	 * This causes problems for log recovery when it identifies the partial
-+	 * writes, walks the head back to the end of the last good record in the
-+	 * log and attempts to verify that record's tail (the one we've just
-+	 * corrupted). To avoid this problem, leave a window of unusable space
-+	 * behind the current tail large enough to guarantee that the next N log
-+	 * buffers cannot overwrite the old tail. The size is based on the max
-+	 * possible number of iclog buffers in flight at one time (plus 1 for
-+	 * caution).
-+	 */
-+	tail_window = log->l_iclog_size * (log->l_iclog_bufs + 1);
-+	free_bytes -= MIN(free_bytes, tail_window);
-+
- 	return free_bytes;
- }
- 
--- 
-2.7.5
-
+> +
+>  	return error ? error : error2;
+>  }
+>  
+> -- 
+> 2.7.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
