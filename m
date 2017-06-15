@@ -1,68 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:26868 "EHLO mail1.g1.pair.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750835AbdFOR05 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Jun 2017 13:26:57 -0400
-Date: Thu, 15 Jun 2017 19:20:09 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: XFS Calltraces by using XFS with Ceph
-Message-ID: <20170615192009.18ddd3bc@harpe.intellique.com>
-In-Reply-To: <34ddf391569ed02b85a59eff856088ab@jonas-server.de>
-References: <ff5af7a48b502752faac6f2bbc1c3bb7@jonas-server.de>
-        <20170614120829.GA65212@bfoster.bfoster>
-        <b447cdcdc5a7278c6a9cc46627e22c94@jonas-server.de>
-        <20170614140732.GA857@bfoster.bfoster>
-        <20170614155513.GQ4530@birch.djwong.org>
-        <34ddf391569ed02b85a59eff856088ab@jonas-server.de>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:38820 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751908AbdFOLMD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 07:12:03 -0400
+Date: Thu, 15 Jun 2017 12:11:58 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH 0/10 v11] No wait AIO
+Message-ID: <20170615111157.GL31671@ZenIV.linux.org.uk>
+References: <20170606111939.27272-1-rgoldwyn@suse.de>
+ <20170608073910.GB9292@infradead.org>
+ <20170610053441.GD6365@ZenIV.linux.org.uk>
+ <58bbe95e-5a4a-4387-3a00-16ed2e861bd3@suse.de>
+ <20170613061431.GA11432@infradead.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/XsQS+ZCY9_5HYXcSQkklG6g"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170613061431.GA11432@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: list@jonas-server.de
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-xfs-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com
 
---Sig_/XsQS+ZCY9_5HYXcSQkklG6g
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jun 12, 2017 at 11:14:31PM -0700, Christoph Hellwig wrote:
+> On Mon, Jun 12, 2017 at 05:38:13PM -0500, Goldwyn Rodrigues wrote:
+> > We had FS_NOWAIT in filesystem type flags (in v3), but retracted it
+> > later in v4.
+> 
+> A per-fs flag is wrong as file_operation may have different
+> capabilities.
+> 
+> > I will work on adding FMODE_AIO_NOWAIT in the meantime.
+> 
+> If Al prefers that let's go with it for now.  One other thing I'd
+> love is a supported flags field in struct file_operations that we
+> can compare the flags against.  Al, does that sound good as well?
 
-Le Thu, 15 Jun 2017 07:55:12 +0200
-list@jonas-server.de =C3=A9crivait:
-
-> > Looking at the new Elixir[1], it looks like we're trying to deref
-> > ((*bpp)->b_addr)->magic, so that might explain the crash you see.
-> >=20
-> > --D
-> >=20
-> > [1]
-> > http://elixir.free-electrons.com/linux/v4.4.72/source/fs/xfs/libxfs/xfs=
-_da_btree.c#L270
-> >  =20
-> >>=20
-
-Indeed that matches exactly the crash Darrick mentioned. Looks like you
-need either a special hand-patched kernel... or wait for an official
-fix for this one :/
-
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
-
---Sig_/XsQS+ZCY9_5HYXcSQkklG6g
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAllCwcoACgkQX3jQXNUicVb9eQCgnhc+m6NeXq85OvxBqUHVNngb
-lSQAnivkznRdJ39JuJM9cm+HLJ+tk4Gj
-=Ptrq
------END PGP SIGNATURE-----
-
---Sig_/XsQS+ZCY9_5HYXcSQkklG6g--
+Which flags are you talking about?  aio ones?  AFAICS, it's the same
+kind of thing as "can we lseek?" or "can we read/pread?", etc.
+What would that field look like?  Note that some of those might depend
+upon the flags passed to open(), so shoving them into file_operations
+might mean splitting file_operations instances...  Details, please.
