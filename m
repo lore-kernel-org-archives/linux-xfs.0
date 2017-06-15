@@ -1,47 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f169.google.com ([209.85.216.169]:34562 "EHLO
-        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752971AbdFOPD2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 11:03:28 -0400
-Received: by mail-qt0-f169.google.com with SMTP id c10so23971742qtd.1
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Jun 2017 08:03:28 -0700 (PDT)
-Message-ID: <1497539004.4607.7.camel@redhat.com>
-Subject: Re: [PATCH v6 12/20] fs: add a new fstype flag to indicate how
- writeback errors are tracked
-From: Jeff Layton <jlayton@redhat.com>
-Date: Thu, 15 Jun 2017 11:03:24 -0400
-In-Reply-To: <20170615145724.GB14028@infradead.org>
-References: <20170612122316.13244-1-jlayton@redhat.com>
-         <20170612122316.13244-15-jlayton@redhat.com>
-         <20170612124513.GC18360@infradead.org> <1497349472.5762.1.camel@redhat.com>
-         <20170614064731.GB3598@infradead.org> <1497461083.6752.7.camel@redhat.com>
-         <20170615082221.GA22809@infradead.org> <1497523332.4556.1.camel@redhat.com>
-         <20170615145724.GB14028@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mr001msb.fastweb.it ([85.18.95.85]:40360 "EHLO
+        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752409AbdFOPEy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 11:04:54 -0400
+Received: from ceres.assyoma.it (93.63.55.57) by mr001msb.fastweb.it (8.5.140.05)
+        id 5928FD8A00DE0737 for linux-xfs@vger.kernel.org; Thu, 15 Jun 2017 17:04:52 +0200
+Subject: Re: Shutdown filesystem when a thin pool become full
+References: <c25a8ccc-f143-989d-3d49-3fe8753aa6f7@assyoma.it>
+ <20170522230946.s3sdg4gd73oj7r5u@eorzea.usersys.redhat.com>
+ <940c3b13-dea2-1887-d4ae-89555d1c2a4f@assyoma.it>
+ <5f98a296-6023-f200-4c60-bcfdf0288d34@assyoma.it>
+ <20170523122753.k7plzg3musc4up73@eorzea.usersys.redhat.com>
+ <24daa89a452496d2cdffa5512a64ed2e@assyoma.it>
+ <7e8e16f1-5425-44b3-e908-c0e8a3300e3f@assyoma.it>
+ <a89aa00c4f86fbdc674dd8f5b5eeb248@assyoma.it>
+ <20170615131433.n33sqvyes4fhcbye@eorzea.usersys.redhat.com>
+ <20170615141057.q7fpnicynucq6yk2@eorzea.usersys.redhat.com>
+From: Gionatan Danti <g.danti@assyoma.it>
+Message-ID: <f2edd27c-615b-d20f-0b03-51cc399221bb@assyoma.it>
+Date: Thu, 15 Jun 2017 17:04:48 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170615141057.q7fpnicynucq6yk2@eorzea.usersys.redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: g.danti@assyoma.it
 
-On Thu, 2017-06-15 at 07:57 -0700, Christoph Hellwig wrote:
-> On Thu, Jun 15, 2017 at 06:42:12AM -0400, Jeff Layton wrote:
-> > Correct.
-> > 
-> > But if there is a data writeback error, should we report an error on all
-> > open fds at that time (like we will for fsync)?
+On 15/06/2017 16:10, Carlos Maiolino wrote:
 > 
-> We should in theory, but I don't see how to properly do it.  In addition
-> sync_file_range just can't be used for data integrity to start with, so
-> I don't think it's worth it.  At some point we should add a proper
-> fsync_range syscall, though.
+> Disregard this comment, I messed up with some tests, so, basically, the
+> application is responsible for the user data, and need to use fsync/fdatasync to
+> ensure the data is properly written, this is not FS responsibility.
+> 
+> cheers
 
-filemap_report_wb_err will always return 0 if the inode never has
-mapping_set_error called on it. So, I think we should be able to do it
-there once we get all of the fs' converted over. That'll have to happen
-at the end of the series however.
+Hi Carlos,
+I fully agree that it is application responsibility to issue appropriate 
+fsync(). However, knowing that this not always happens in real-world, I 
+am trying to be as much "fail-safe" as possible.
+
+ From my understanding of your previous message, a full thin pool with 
+--errorwhenfull=y should return ENOSPC to the filesystem. Does this work 
+on normal cached/buffered/async writes, or with O_DIRECT writes only?
+
+If it is not the case, how can I prevent further writes to a data-full 
+thin pool? With ext4, I can use "data=journal,errors=remount-ro" to 
+catch any write errors and stop the filesystem (or remount it 
+read-only), losing only some seconds worth of data. This *will* works 
+even for applications that do not issue fsync(), as the read-only 
+filesystem will not let the write() syscall to complete successfully.
+
+On XFS (which I would *really* use, because it is quite more advanced), 
+all writes directed to a full thin-pool will basically end on /dev/null 
+and, as write() succeeded, the application/user will *not* be alerted on 
+any way. If the thin-pool can communicate its "end of free space" to the 
+filesystem, the problem can be avoided.
+
+If this can not be done, the only remaining possibility is to instruct 
+the filesystem to stop itself on data writeout errors. So, we got 
+full-circle about my original question: how can I stop XFS when writes 
+return I/O errors? Please note that I tried to set any 
+/sys/fs/xfs/dm-8/error/metadata/*/max_retries tunable to 0, but I can 
+not get the filesystem to suspend itself, even when dmesg reported 
+metadata write errors.
+
+Thank you very much.
 
 -- 
-Jeff Layton <jlayton@redhat.com>
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
