@@ -1,120 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33208 "EHLO mx1.redhat.com"
+Received: from mail1.g1.pair.com ([66.39.3.162]:26868 "EHLO mail1.g1.pair.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752136AbdFPS4j (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 14:56:39 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 48BA95AFED
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 18:56:39 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2CBE718ACC
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 18:56:39 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2] xfs: free uncommitted transactions during log recovery
-Date: Fri, 16 Jun 2017 14:56:37 -0400
-Message-Id: <1497639397-15083-1-git-send-email-bfoster@redhat.com>
+        id S1750835AbdFOR05 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Jun 2017 13:26:57 -0400
+Date: Thu, 15 Jun 2017 19:20:09 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: XFS Calltraces by using XFS with Ceph
+Message-ID: <20170615192009.18ddd3bc@harpe.intellique.com>
+In-Reply-To: <34ddf391569ed02b85a59eff856088ab@jonas-server.de>
+References: <ff5af7a48b502752faac6f2bbc1c3bb7@jonas-server.de>
+        <20170614120829.GA65212@bfoster.bfoster>
+        <b447cdcdc5a7278c6a9cc46627e22c94@jonas-server.de>
+        <20170614140732.GA857@bfoster.bfoster>
+        <20170614155513.GQ4530@birch.djwong.org>
+        <34ddf391569ed02b85a59eff856088ab@jonas-server.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/XsQS+ZCY9_5HYXcSQkklG6g"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: list@jonas-server.de
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-xfs-owner@vger.kernel.org
 
-Log recovery allocates in-core transaction and member item data
-structures on-demand as it processes the on-disk log. Transactions
-are allocated on first encounter on-disk and stored in a hash table
-structure where they are easily accessible for subsequent lookups.
-Transaction items are also allocated on demand and are attached to
-the associated transactions.
+--Sig_/XsQS+ZCY9_5HYXcSQkklG6g
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-When a commit record is encountered in the log, the transaction is
-committed to the fs and the in-core structures are freed. If a
-filesystem crashes or shuts down before all in-core log buffers are
-flushed to the log, however, not all transactions may have commit
-records in the log. As expected, the modifications in such an
-incomplete transaction are not replayed to the fs. The in-core data
-structures for the partial transaction are never freed, however,
-resulting in a memory leak.
+Le Thu, 15 Jun 2017 07:55:12 +0200
+list@jonas-server.de =C3=A9crivait:
 
-Update xlog_do_recovery_pass() to first correctly initialize the
-hash table array so empty lists can be distinguished from populated
-lists on function exit. Update xlog_recover_free_trans() to always
-remove the transaction from the list prior to freeing the associated
-memory. Finally, walk the hash table of transaction lists as the
-last step before it goes out of scope and free any transactions that
-may remain on the lists. This prevents a memory leak of partial
-transactions in the log.
+> > Looking at the new Elixir[1], it looks like we're trying to deref
+> > ((*bpp)->b_addr)->magic, so that might explain the crash you see.
+> >=20
+> > --D
+> >=20
+> > [1]
+> > http://elixir.free-electrons.com/linux/v4.4.72/source/fs/xfs/libxfs/xfs=
+_da_btree.c#L270
+> >  =20
+> >>=20
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+Indeed that matches exactly the crash Darrick mentioned. Looks like you
+need either a special hand-patched kernel... or wait for an official
+fix for this one :/
 
-v2:
-- Initialize rhash[] properly to address xfs/051 bug.
-- Update xlog_recover_free_trans() to remove trans from list.
-v1: http://www.spinics.net/lists/linux-xfs/msg07516.html
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
- fs/xfs/xfs_log_recover.c | 21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
+--Sig_/XsQS+ZCY9_5HYXcSQkklG6g
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 4a98762..4a4322b 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -4152,7 +4152,7 @@ xlog_recover_commit_trans(
- 
- 	#define XLOG_RECOVER_COMMIT_QUEUE_MAX 100
- 
--	hlist_del(&trans->r_list);
-+	hlist_del_init(&trans->r_list);
- 
- 	error = xlog_recover_reorder_trans(log, trans, pass);
- 	if (error)
-@@ -4354,6 +4354,8 @@ xlog_recover_free_trans(
- 	xlog_recover_item_t	*item, *n;
- 	int			i;
- 
-+	hlist_del_init(&trans->r_list);
-+
- 	list_for_each_entry_safe(item, n, &trans->r_itemq, ri_list) {
- 		/* Free the regions in the item. */
- 		list_del(&item->ri_list);
-@@ -5224,12 +5226,16 @@ xlog_do_recovery_pass(
- 	int			error2 = 0;
- 	int			bblks, split_bblks;
- 	int			hblks, split_hblks, wrapped_hblks;
-+	int			i;
- 	struct hlist_head	rhash[XLOG_RHASH_SIZE];
- 	LIST_HEAD		(buffer_list);
- 
- 	ASSERT(head_blk != tail_blk);
- 	rhead_blk = 0;
- 
-+	for (i = 0; i < XLOG_RHASH_SIZE; i++)
-+		INIT_HLIST_HEAD(&rhash[i]);
-+
- 	/*
- 	 * Read the header of the tail block and get the iclog buffer size from
- 	 * h_size.  Use this to tell how many sectors make up the log header.
-@@ -5466,6 +5472,19 @@ xlog_do_recovery_pass(
- 	if (error && first_bad)
- 		*first_bad = rhead_blk;
- 
-+	/*
-+	 * Transactions are freed at commit time but transactions without commit
-+	 * records on disk are never committed. Free any that may be left in the
-+	 * hash table.
-+	 */
-+	for (i = 0; i < XLOG_RHASH_SIZE; i++) {
-+		struct hlist_node	*tmp;
-+		struct xlog_recover	*trans;
-+
-+		hlist_for_each_entry_safe(trans, tmp, &rhash[i], r_list)
-+			xlog_recover_free_trans(trans);
-+	}
-+
- 	return error ? error : error2;
- }
- 
--- 
-2.7.5
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
+iEYEARECAAYFAllCwcoACgkQX3jQXNUicVb9eQCgnhc+m6NeXq85OvxBqUHVNngb
+lSQAnivkznRdJ39JuJM9cm+HLJ+tk4Gj
+=Ptrq
+-----END PGP SIGNATURE-----
+
+--Sig_/XsQS+ZCY9_5HYXcSQkklG6g--
