@@ -1,165 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31502 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:45802 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751240AbdFBTwZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 15:52:25 -0400
-Subject: [PATCH 10/10] xfs_spaceman: add group summary mode
+        with ESMTP id S1751885AbdFOXs5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 19:48:57 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v5FNmuxs028032
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Jun 2017 23:48:57 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v5FNmudZ009454
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Jun 2017 23:48:56 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v5FNmus8018067
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Jun 2017 23:48:56 GMT
+Date: Thu, 15 Jun 2017 16:48:54 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Jun 2017 12:52:17 -0700
-Message-ID: <149643313776.15899.17808639449781969033.stgit@birch.djwong.org>
-In-Reply-To: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
-References: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
+Subject: [PATCH] docs: fix mailing list
+Message-ID: <20170615234854.GA5421@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Add a -g switch to show only a per-group summary.
+Fix the mailing list since it's way out of date.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- man/man8/xfs_spaceman.8 |    8 +++++++-
- spaceman/freesp.c       |   29 +++++++++++++++++++++++++----
- 2 files changed, 32 insertions(+), 5 deletions(-)
+ .../xfs_filesystem_structure.asciidoc              |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
-index c1d19c0..a57a0c3 100644
---- a/man/man8/xfs_spaceman.8
-+++ b/man/man8/xfs_spaceman.8
-@@ -25,7 +25,7 @@ then the program exits.
+diff --git a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+index 5540fa0..4b0a054 100644
+--- a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
++++ b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+@@ -34,7 +34,7 @@ design goals.
+ The information contained in this document derives from the XFS source code in
+ the Linux kernel as of v4.3.  This book's source code is available at
+ +git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git+.  Feedback should
+-be sent to the XFS mailing list, currently at +xfs@oss.sgi.com+.
++be sent to the XFS mailing list, currently at +linux-xfs@vger.kernel.org+.
  
- .SH COMMANDS
- .TP
--.BI "freesp [ \-sr ] [ \-b | \-e bsize | \-h h1 [ \-m bmult ]] [-a agno]"
-+.BI "freesp [ \-srg ] [ \-b | \-e bsize | \-h h1 [ \-m bmult ]] [-a agno]"
- With no arguments,
- .B freesp
- shows a histogram of all free space extents in the filesystem.
-@@ -49,6 +49,12 @@ option may be specified multiple times.
- A summary of free space information will be printed if the
- .B -s
- option is given.
-+The
-+.B -g
-+option prints a brief per-AG summary of the free space found in that AG.
-+If
-+.B -r
-+is specified it will also report on free space in the realtime device.
- .TP
- .BR "help [ " command " ]"
- Display a brief description of one or all commands.
-diff --git a/spaceman/freesp.c b/spaceman/freesp.c
-index 2290a5e..351f0ce 100644
---- a/spaceman/freesp.c
-+++ b/spaceman/freesp.c
-@@ -42,6 +42,7 @@ static int		histcount;
- static int		multsize;
- static int		seen1;
- static int		summaryflag;
-+static int		gflag;
- static bool		rtflag;
- static long long	totblocks;
- static long long	totexts;
-@@ -159,6 +160,8 @@ scan_ag(
- 	off64_t			bperag;
- 	off64_t			aglen;
- 	xfs_agblock_t		agbno;
-+	unsigned long long	freeblks = 0;
-+	unsigned long long	freeexts = 0;
- 	int			ret;
- 	int			i;
- 
-@@ -211,6 +214,8 @@ scan_ag(
- 			agbno = (extent->fmr_physical - (bperag * agno)) /
- 								blocksize;
- 			aglen = extent->fmr_length / blocksize;
-+			freeblks += aglen;
-+			freeexts++;
- 
- 			addtohist(agno, agbno, aglen);
- 		}
-@@ -220,6 +225,15 @@ scan_ag(
- 			break;
- 		fsmap_advance(fsmap);
- 	}
-+
-+	if (gflag) {
-+		if (agno == NULLAGNUMBER)
-+			printf(_("     rtdev %10llu %10llu\n"), freeexts,
-+					freeblks);
-+		else
-+			printf(_("%10u %10llu %10llu\n"), agno, freeexts,
-+					freeblks);
-+	}
- }
- static void
- aglistadd(
-@@ -244,7 +258,7 @@ init(
- 	aglist = NULL;
- 	hist = NULL;
- 	rtflag = false;
--	while ((c = getopt(argc, argv, "a:bde:h:m:rs")) != EOF) {
-+	while ((c = getopt(argc, argv, "a:bde:gh:m:rs")) != EOF) {
- 		switch (c) {
- 		case 'a':
- 			aglistadd(optarg);
-@@ -264,6 +278,10 @@ init(
- 			equalsize = atoi(optarg);
- 			speced = 1;
- 			break;
-+		case 'g':
-+			histcount = 0;
-+			gflag++;
-+			break;
- 		case 'h':
- 			if (speced && !histcount)
- 				return 0;
-@@ -306,13 +324,15 @@ freesp_f(
- 
- 	if (!init(argc, argv))
- 		return 0;
-+	if (gflag)
-+		printf(_("        AG    extents     blocks\n"));
- 	if (rtflag)
- 		scan_ag(NULLAGNUMBER);
- 	for (agno = 0; !rtflag && agno < file->geom.agcount; agno++)  {
- 		if (inaglist(agno))
- 			scan_ag(agno);
- 	}
--	if (histcount)
-+	if (histcount && !gflag)
- 		printhist();
- 	if (summaryflag) {
- 		printf(_("total free extents %lld\n"), totexts);
-@@ -334,12 +354,13 @@ freesp_help(void)
- "\n"
- "Examine filesystem free space\n"
- "\n"
--"Options: [-bdsr] [-a agno] [-e bsize] [-h h1]... [-m bmult]\n"
-+"Options: [-bdgsr] [-a agno] [-e bsize] [-h h1]... [-m bmult]\n"
- "\n"
- " -a agno  -- Scan only the given AG agno.\n"
- " -b       -- binary histogram bin size\n"
- " -d       -- debug output\n"
- " -e bsize -- Use fixed histogram bin size of bsize\n"
-+" -g       -- Print only a per-AG summary.\n"
- " -h hbsz  -- Use custom histogram bin size of h1.\n"
- "             Multiple specifications are allowed.\n"
- " -m bmult -- Use histogram bin size multiplier of bmult.\n"
-@@ -357,7 +378,7 @@ freesp_init(void)
- 	freesp_cmd.cfunc = freesp_f;
- 	freesp_cmd.argmin = 0;
- 	freesp_cmd.argmax = -1;
--	freesp_cmd.args = "[-bdsr] [-a agno] [-e bsize] [-h h1]... [-m bmult]";
-+	freesp_cmd.args = "[-bdgsr] [-a agno] [-e bsize] [-h h1]... [-m bmult]";
- 	freesp_cmd.flags = CMD_FLAG_ONESHOT;
- 	freesp_cmd.oneline = _("Examine filesystem free space");
- 	freesp_cmd.help = freesp_help;
-
+ [NOTE]
+ All fields in XFS metadata structures are in big-endian byte order except for
