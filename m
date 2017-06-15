@@ -1,199 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32645 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751546AbdFOUfP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 16:35:15 -0400
-Subject: [PATCH 2/3] libxcmd: add cvt{int,
- long} to convert strings to int and long
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 15 Jun 2017 13:35:10 -0700
-Message-ID: <149755891027.3424.14960980470653919270.stgit@birch.djwong.org>
-In-Reply-To: <149755888982.3424.6925834871301440055.stgit@birch.djwong.org>
-References: <149755888982.3424.6925834871301440055.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44496 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750784AbdFOFin (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Jun 2017 01:38:43 -0400
+Date: Thu, 15 Jun 2017 13:38:36 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [xfstests PATCH v4 5/5] btrfs: make a btrfs version of writeback
+ error reporting test
+Message-ID: <20170615053836.GD17436@eguan.usersys.redhat.com>
+References: <20170612124213.14855-1-jlayton@redhat.com>
+ <20170612124213.14855-6-jlayton@redhat.com>
+ <20170613084034.GE4788@eguan.usersys.redhat.com>
+ <1497441317.6752.2.camel@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1497441317.6752.2.camel@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Jeff Layton <jlayton@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, David Howells <dhowells@redhat.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jun 14, 2017 at 07:55:17AM -0400, Jeff Layton wrote:
+> On Tue, 2017-06-13 at 16:40 +0800, Eryu Guan wrote:
+> > On Mon, Jun 12, 2017 at 08:42:13AM -0400, Jeff Layton wrote:
+> > > Make a new btrfs/999 test that works the way Chris Mason suggested:
+> > > 
+> > > Build a filesystem with 2 devices that stripes the data across
+> > > both devices, but mirrors metadata across both. Then, make one
+> > > of the devices fail and see how fsync is handled.
+> > > 
+> > > Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> > > ---
+> > >  tests/btrfs/999   | 93 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> > 
+> > Missing btrfs/999.out file
+> > 
+> > >  tests/btrfs/group |  1 +
+> > >  2 files changed, 94 insertions(+)
+> > >  create mode 100755 tests/btrfs/999
+> > > 
+> > > diff --git a/tests/btrfs/999 b/tests/btrfs/999
+> > > new file mode 100755
+> > > index 000000000000..84031cc0d913
+> > > --- /dev/null
+> > > +++ b/tests/btrfs/999
+> > > @@ -0,0 +1,93 @@
+> > > +#! /bin/bash
+> > > +# FS QA Test No. 999
+> > > +#
+> > > +# Open a file several times, write to it, fsync on all fds and make sure that
+> > > +# they all return 0. Change the device to start throwing errors. Write again
+> > > +# on all fds and fsync on all fds. Ensure that we get errors on all of them.
+> > > +# Then fsync on all one last time and verify that all return 0.
+> > > +#
+> > > +#-----------------------------------------------------------------------
+> > > +# Copyright (c) 2017, Jeff Layton <jlayton@redhat.com>
+> > > +#
+> > > +# This program is free software; you can redistribute it and/or
+> > > +# modify it under the terms of the GNU General Public License as
+> > > +# published by the Free Software Foundation.
+> > > +#
+> > > +# This program is distributed in the hope that it would be useful,
+> > > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > > +# GNU General Public License for more details.
+> > > +#
+> > > +# You should have received a copy of the GNU General Public License
+> > > +# along with this program; if not, write the Free Software Foundation,
+> > > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > > +#-----------------------------------------------------------------------
+> > > +
+> > > +seq=`basename $0`
+> > > +seqres=$RESULT_DIR/$seq
+> > > +echo "QA output created by $seq"
+> > > +
+> > > +here=`pwd`
+> > > +tmp=/tmp/$$
+> > > +status=1    # failure is the default!
+> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > > +
+> > > +_cleanup()
+> > > +{
+> > > +    cd /
+> > > +    rm -rf $tmp.* $testdir
+> > > +    _dmerror_cleanup
+> > > +}
+> > > +
+> > > +# get standard environment, filters and checks
+> > > +. ./common/rc
+> > > +. ./common/filter
+> > > +. ./common/dmerror
+> > > +
+> > > +# real QA test starts here
+> > > +_supported_os Linux
+> > > +_require_dm_target error
+> > > +_require_test_program fsync-err
+> > > +_require_test_program dmerror
+> > > +
+> > > +# bring up dmerror device
+> > > +_scratch_unmount
+> > > +_dmerror_init
+> > > +
+> > > +# Replace first device with error-test device
+> > > +old_SCRATCH_DEV=$SCRATCH_DEV
+> > > +SCRATCH_DEV_POOL=`echo $SCRATCH_DEV_POOL | perl -pe "s#$SCRATCH_DEV#$DMERROR_DEV#"`
+> > > +SCRATCH_DEV=$DMERROR_DEV
+> > > +
+> > > +_require_scratch
+> > > +_require_scratch_dev_pool
+> > 
+> > Need "_require_scratch_dev_pool_equal_size" too, since test creates
+> > raid1 profile for metadata.
 
-Create some helper functions to convert strings to int or long
-in a standard way and work around problems in the C library
-atoi/strtol functions.
+Sorry, it's not needed here. I got confused with device replace
+operation, only "replace" needs this require rule. Thanks for
+confirming!
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- include/input.h |    8 +++
- libxcmd/input.c |  134 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 142 insertions(+)
-
-
-diff --git a/include/input.h b/include/input.h
-index 82cd2f4..145114b 100644
---- a/include/input.h
-+++ b/include/input.h
-@@ -28,6 +28,14 @@ extern char	**breakline(char *input, int *count);
- extern void	doneline(char *input, char **vec);
- extern char	*fetchline(void);
- 
-+extern int64_t	cvt_s64(char *s, int base);
-+extern int32_t	cvt_s32(char *s, int base);
-+extern int16_t	cvt_s16(char *s, int base);
-+
-+extern uint64_t	cvt_u64(char *s, int base);
-+extern uint32_t	cvt_u32(char *s, int base);
-+extern uint16_t	cvt_u16(char *s, int base);
-+
- extern size_t numlen(uint64_t val, size_t base);
- extern long long cvtnum(size_t blocksize, size_t sectorsize, char *s);
- extern void	cvtstr(double value, char *str, size_t sz);
-diff --git a/libxcmd/input.c b/libxcmd/input.c
-index 9437be3..8dd232c 100644
---- a/libxcmd/input.c
-+++ b/libxcmd/input.c
-@@ -149,6 +149,140 @@ numlen(
- 	return len == 0 ? 1 : len;
- }
- 
-+/*
-+ * Convert string to int64_t, set errno if the conversion fails or
-+ * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-+ * prior to conversion.
-+ */
-+int64_t
-+cvt_s64(
-+	char		*s,
-+	int		base)
-+{
-+	long long	i;
-+	char		*sp;
-+	int		c;
-+
-+	errno = 0;
-+	i = strtoll(s, &sp, base);
-+	if (*sp == '\0' && sp != s)
-+		return i;
-+bad:
-+	errno = -ERANGE;
-+	return INT64_MIN;
-+}
-+
-+/*
-+ * Convert string to int32_t, set errno if the conversion fails or
-+ * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-+ * prior to conversion.
-+ */
-+int32_t
-+cvt_s32(
-+	char		*s,
-+	int		base)
-+{
-+	int64_t		i;
-+
-+	i = cvt_s64(s, base);
-+	if (errno)
-+		return i;
-+	if (i > INT32_MAX || i < INT32_MIN) {
-+		errno = -ERANGE;
-+		return INT32_MIN;
-+	}
-+	return i;
-+}
-+
-+/*
-+ * Convert string to int16_t, set errno if the conversion fails or
-+ * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-+ * prior to conversion.
-+ */
-+int16_t
-+cvt_s16(
-+	char		*s,
-+	int		base)
-+{
-+	int64_t		i;
-+
-+	i = cvt_s64(s, base);
-+	if (errno)
-+		return i;
-+	if (i > INT16_MAX || i < INT16_MIN) {
-+		errno = -ERANGE;
-+		return INT16_MIN;
-+	}
-+	return i;
-+}
-+
-+/*
-+ * Convert string to uint64_t, set errno if the conversion fails or
-+ * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-+ * prior to conversion.
-+ */
-+uint64_t
-+cvt_u64(
-+	char		*s,
-+	int		base)
-+{
-+	long long	i;
-+	char		*sp;
-+	int		c;
-+
-+	errno = 0;
-+	i = strtoll(s, &sp, base);
-+	if (*sp == '\0' && sp != s)
-+		return i;
-+bad:
-+	errno = -ERANGE;
-+	return UINT64_MAX;
-+}
-+
-+/*
-+ * Convert string to uint32_t, set errno if the conversion fails or
-+ * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-+ * prior to conversion.
-+ */
-+uint32_t
-+cvt_u32(
-+	char		*s,
-+	int		base)
-+{
-+	uint64_t	i;
-+
-+	i = cvt_u64(s, base);
-+	if (errno)
-+		return i;
-+	if (i > UINT32_MAX) {
-+		errno = -ERANGE;
-+		return UINT32_MAX;
-+	}
-+	return i;
-+}
-+
-+/*
-+ * Convert string to uint16_t, set errno if the conversion fails or
-+ * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-+ * prior to conversion.
-+ */
-+uint16_t
-+cvt_u16(
-+	char		*s,
-+	int		base)
-+{
-+	uint64_t	i;
-+
-+	i = cvt_u64(s, base);
-+	if (errno)
-+		return i;
-+	if (i > UINT16_MAX) {
-+		errno = -ERANGE;
-+		return UINT16_MAX;
-+	}
-+	return i;
-+}
-+
- #define EXABYTES(x)	((long long)(x) << 60)
- #define PETABYTES(x)	((long long)(x) << 50)
- #define TERABYTES(x)	((long long)(x) << 40)
-
+Eryu
