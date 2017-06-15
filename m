@@ -1,297 +1,268 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53114 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751980AbdFPOvc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:51:32 -0400
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH 1/7] GFS2: Make height info part of metapath
-Date: Fri, 16 Jun 2017 16:51:14 +0200
-Message-Id: <1497624680-16685-2-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
-References: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43302 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750794AbdFOFAZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 01:00:25 -0400
+Date: Wed, 14 Jun 2017 22:00:15 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 07/13] xfs: check if an inode is cached and allocated
+Message-ID: <20170615050015.GY4530@birch.djwong.org>
+References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
+ <149643868294.23065.8094890990886436794.stgit@birch.djwong.org>
+ <20170606162813.GB55166@bfoster.bfoster>
+ <20170606184006.GD5196@birch.djwong.org>
+ <20170607142244.GC64146@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170607142244.GC64146@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, Andreas Gruenbacher <agruenba@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Bob Peterson <rpeterso@redhat.com>
+On Wed, Jun 07, 2017 at 10:22:44AM -0400, Brian Foster wrote:
+> On Tue, Jun 06, 2017 at 11:40:06AM -0700, Darrick J. Wong wrote:
+> > On Tue, Jun 06, 2017 at 12:28:13PM -0400, Brian Foster wrote:
+> > > On Fri, Jun 02, 2017 at 02:24:43PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Check the inode cache for a particular inode number.  If it's in the
+> > > > cache, check that it's not currently being reclaimed.  If it's not being
+> > > > reclaimed, return zero if the inode is allocated.  This function will be
+> > > > used by various scrubbers to decide if the cache is more up to date
+> > > > than the disk in terms of checking if an inode is allocated.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > >  fs/xfs/xfs_icache.c |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> > > >  fs/xfs/xfs_icache.h |    3 ++
+> > > >  2 files changed, 86 insertions(+)
+> > > > 
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > > index f61c84f8..d610a7e 100644
+> > > > --- a/fs/xfs/xfs_icache.c
+> > > > +++ b/fs/xfs/xfs_icache.c
+> > > > @@ -633,6 +633,89 @@ xfs_iget(
+> > > >  }
+> > > >  
+> > > >  /*
+> > > > + * "Is this a cached inode that's also allocated?"
+> > > > + *
+> > > > + * Look up an inode by number in the given file system.  If the inode is
+> > > > + * in cache and isn't in purgatory, return 1 if the inode is allocated
+> > > > + * and 0 if it is not.  For all other cases (not in cache, being torn
+> > > > + * down, etc.), return a negative error code.
+> > > > + *
+> > > > + * (The caller has to prevent inode allocation activity.)
+> > > > + */
+> > > 
+> > > Hmm.. so isn't the data returned here potentially invalid once we drop
+> > > the inode reference? In other words, couldn't an inode where we return
+> > > inuse == true be reclaimed immediately after? Perhaps I'm just not far
+> > > enough along to understand how this is used. If that's the case, a note
+> > > about the lifetime/rules of this value might be useful.
+> > 
+> > The comment could state more explicitly what we're assuming the caller
+> > has done to prevent inode allocation or freeing activity.  The scrubber
+> > that calls this function will have locked the AGI buffer for this AG so
+> > that it can compare the inobt ir_free bits against di_mode to make sure
+> > that there aren't any discrepancies.  Even if the inode is immediately
+> > reclaimed/deleted after we release the inode, the corresponding inobt
+> > update will block on the AGI until the scrubber finishes, so from the
+> > scrubber's point of view things are still consistent.  If the scrubber
+> > finds the inode in some intermediate state of being created or torn
+> > down, it doesn't bother checking the free mask on the assumption that
+> > the thread modifying the inode will ensure the consistency or shut down.
+> > 
+> > tldr: We assume the caller has the AGI locked so that inodes stay stable
+> > wrt to allocation or freeing, or only end up in an intermediate state;
+> > we also assume the caller can handle inodes in an intermediate state.
+> > 
+> 
+> Ok, thanks for the explanation. The bits about reclaim are still a bit
+> unclear to me, but that will probably make more sense when I see how
+> this is used.
+> 
+> > > FWIW, I'm also kind of wondering if rather than open code the bits of
+> > > the inode lookup, we could accomplish the same thing with a new flag to
+> > > the existing xfs_iget() lookup mechanism that implements the associated
+> > > semantics (i.e., don't read from disk, don't reinit, sort of a read-only
+> > > semantic).
+> > 
+> > Originally it was just an iget flag, but the flag ended up special
+> > casing a lot of the existing iget functionality.  Basically, we need to
+> > disable the xfs_iget_cache_miss call; avoid the out_error_or_again case;
+> > do our i_mode testing, release the inode, and jump out of the function
+> > prior to the bit that can call xfs_setup_existing_inode; and change the
+> > lock_flags assert to require lock_flags == 0 when we're just checking.
+> > 
+> > All that turned xfs_iget into such a muddy mess that I decided it was
+> > cleaner to separate this specialized case into its own function and hope
+> > that we're not really going to modify _iget a whole lot.
+> > 
+> 
+> Hmm, so obviously I would expect some tweaks in that code, but I'm
+> curious how messy it really has to be. Walking through some of the
+> changes...
+> 
+> - The lock_flags check is already conditional in the code, so I'm not
+>   sure we really need the assert. I'd be fine with dropping it at least
+>   if we had a lock_flags == 0 caller. We could alternatively adjust it
+>   to accommodate the new xfs_iget() flag, which might be safer.
+> - I'm not sure that xfs_iget() really needs to be responsible for the
+>   release. What about a helper function on top that actually receives
+>   the xfs_inode from xfs_iget() and does the resulting checks, sets
+>   inuse appropriately and then releases the inode?
+> - With the above changes, would that reduce the necessary xfs_iget()
+>   changes to basically skipping out in a few places? For example,
+>   consider an XFS_IGET_INCORE flag that skips the -EAGAIN retry, skips
+>   the IRECLAIMABLE reinit in _iget_cache_hit() (returns -EAGAIN) and
+>   returns -ENOENT rather than calling _iget_cache_miss(). The code flow
+>   of the helper might look something like the following:
+> 
+> int
+> xfs_icache_inode_is_allocated(
+> 	...
+> 	xfs_ino_t		ino,
+> 	bool			*inuse)
+> {
+> 	...
+> 
+> 	*inuse = false;
+> 	error = xfs_iget(..., ino, XFS_IGET_INCORE, 0, &ip);
+> 	if (error)
+> 		return error;
+> 
+> 	if (<ip checks>)
+> 		*inuse = true;
+> 
+> 	IRELE(ip);
+> 	return 0;
+> }
+> 
+> ... and may only require fairly straightforward tweaks to xfs_iget().
+> Thoughts?
 
-This patch eliminates height parameters from function gfs2_bmap_alloc.
-Function find_metapath determines the metapath's "find height", also
-known as the desired height. Function lookup_metapath determines the
-metapath's "actual height", previously known as starting height or
-sheight. Function gfs2_bmap_alloc now gets both height values from
-the metapath. This simplification was done as a step toward switching
-the block_map functions to using iomap. The bh_map responsibilities
-are also removed from function gfs2_bmap_alloc for the same reason.
+That could work too.  I'll give it a spin and post a v3 if it succeeds.
 
-Signed-off-by: Bob Peterson <rpeterso@redhat.com>
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/gfs2/bmap.c | 109 ++++++++++++++++++++++++++++++++-------------------------
- 1 file changed, 62 insertions(+), 47 deletions(-)
+--D
 
-diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
-index 4d810be..a431afd 100644
---- a/fs/gfs2/bmap.c
-+++ b/fs/gfs2/bmap.c
-@@ -36,6 +36,8 @@
- struct metapath {
- 	struct buffer_head *mp_bh[GFS2_MAX_META_HEIGHT];
- 	__u16 mp_list[GFS2_MAX_META_HEIGHT];
-+	int mp_fheight; /* find_metapath height */
-+	int mp_aheight; /* actual height (lookup height) */
- };
- 
- /**
-@@ -235,9 +237,9 @@ static void find_metapath(const struct gfs2_sbd *sdp, u64 block,
- {
- 	unsigned int i;
- 
-+	mp->mp_fheight = height;
- 	for (i = height; i--;)
- 		mp->mp_list[i] = do_div(block, sdp->sd_inptrs);
--
- }
- 
- static inline unsigned int metapath_branch_start(const struct metapath *mp)
-@@ -344,10 +346,13 @@ static int lookup_metapath(struct gfs2_inode *ip, struct metapath *mp)
- 	for (x = 0; x < end_of_metadata; x++) {
- 		ret = lookup_mp_height(ip, mp, x);
- 		if (ret)
--			return ret;
-+			goto out;
- 	}
- 
--	return ip->i_height;
-+	ret = ip->i_height;
-+out:
-+	mp->mp_aheight = ret;
-+	return ret;
- }
- 
- /**
-@@ -479,10 +484,11 @@ static inline unsigned int hptrs(struct gfs2_sbd *sdp, const unsigned int hgt)
-  * @inode: The GFS2 inode
-  * @lblock: The logical starting block of the extent
-  * @bh_map: This is used to return the mapping details
-- * @mp: The metapath
-- * @sheight: The starting height (i.e. whats already mapped)
-- * @height: The height to build to
-+ * @zero_new: True if newly allocated blocks should be zeroed
-+ * @mp: The metapath, with proper height information calculated
-  * @maxlen: The max number of data blocks to alloc
-+ * @dblock: Pointer to return the resulting new block
-+ * @dblks: Pointer to return the number of blocks allocated
-  *
-  * In this routine we may have to alloc:
-  *   i) Indirect blocks to grow the metadata tree height
-@@ -499,62 +505,63 @@ static inline unsigned int hptrs(struct gfs2_sbd *sdp, const unsigned int hgt)
-  */
- 
- static int gfs2_bmap_alloc(struct inode *inode, const sector_t lblock,
--			   struct buffer_head *bh_map, struct metapath *mp,
--			   const unsigned int sheight,
--			   const unsigned int height,
--			   const size_t maxlen)
-+			   bool zero_new, struct metapath *mp,
-+			   const size_t maxlen, sector_t *dblock,
-+			   unsigned *dblks)
- {
- 	struct gfs2_inode *ip = GFS2_I(inode);
- 	struct gfs2_sbd *sdp = GFS2_SB(inode);
- 	struct super_block *sb = sdp->sd_vfs;
- 	struct buffer_head *dibh = mp->mp_bh[0];
--	u64 bn, dblock = 0;
-+	u64 bn;
- 	unsigned n, i, blks, alloced = 0, iblks = 0, branch_start = 0;
--	unsigned dblks = 0;
- 	unsigned ptrs_per_blk;
--	const unsigned end_of_metadata = height - 1;
-+	const unsigned end_of_metadata = mp->mp_fheight - 1;
- 	int ret;
- 	int eob = 0;
- 	enum alloc_state state;
- 	__be64 *ptr;
- 	__be64 zero_bn = 0;
- 
--	BUG_ON(sheight < 1);
-+	BUG_ON(mp->mp_aheight < 1);
- 	BUG_ON(dibh == NULL);
- 
-+	*dblock = 0;
-+	*dblks = 0;
- 	gfs2_trans_add_meta(ip->i_gl, dibh);
- 
--	if (height == sheight) {
-+	if (mp->mp_fheight == mp->mp_aheight) {
- 		struct buffer_head *bh;
- 		/* Bottom indirect block exists, find unalloced extent size */
- 		ptr = metapointer(end_of_metadata, mp);
- 		bh = mp->mp_bh[end_of_metadata];
--		dblks = gfs2_extent_length(bh->b_data, bh->b_size, ptr, maxlen,
--					   &eob);
--		BUG_ON(dblks < 1);
-+		*dblks = gfs2_extent_length(bh->b_data, bh->b_size, ptr,
-+					    maxlen, &eob);
-+		BUG_ON(*dblks < 1);
- 		state = ALLOC_DATA;
- 	} else {
- 		/* Need to allocate indirect blocks */
--		ptrs_per_blk = height > 1 ? sdp->sd_inptrs : sdp->sd_diptrs;
--		dblks = min(maxlen, (size_t)(ptrs_per_blk -
--					     mp->mp_list[end_of_metadata]));
--		if (height == ip->i_height) {
-+		ptrs_per_blk = mp->mp_fheight > 1 ? sdp->sd_inptrs :
-+			sdp->sd_diptrs;
-+		*dblks = min(maxlen, (size_t)(ptrs_per_blk -
-+					      mp->mp_list[end_of_metadata]));
-+		if (mp->mp_fheight == ip->i_height) {
- 			/* Writing into existing tree, extend tree down */
--			iblks = height - sheight;
-+			iblks = mp->mp_fheight - mp->mp_aheight;
- 			state = ALLOC_GROW_DEPTH;
- 		} else {
- 			/* Building up tree height */
- 			state = ALLOC_GROW_HEIGHT;
--			iblks = height - ip->i_height;
-+			iblks = mp->mp_fheight - ip->i_height;
- 			branch_start = metapath_branch_start(mp);
--			iblks += (height - branch_start);
-+			iblks += (mp->mp_fheight - branch_start);
- 		}
- 	}
- 
- 	/* start of the second part of the function (state machine) */
- 
--	blks = dblks + iblks;
--	i = sheight;
-+	blks = *dblks + iblks;
-+	i = mp->mp_aheight;
- 	do {
- 		int error;
- 		n = blks - alloced;
-@@ -572,9 +579,10 @@ static int gfs2_bmap_alloc(struct inode *inode, const sector_t lblock,
- 						 sizeof(struct gfs2_dinode));
- 				zero_bn = *ptr;
- 			}
--			for (; i - 1 < height - ip->i_height && n > 0; i++, n--)
-+			for (; i - 1 < mp->mp_fheight - ip->i_height && n > 0;
-+			     i++, n--)
- 				gfs2_indirect_init(mp, ip->i_gl, i, 0, bn++);
--			if (i - 1 == height - ip->i_height) {
-+			if (i - 1 == mp->mp_fheight - ip->i_height) {
- 				i--;
- 				gfs2_buffer_copy_tail(mp->mp_bh[i],
- 						sizeof(struct gfs2_meta_header),
-@@ -586,7 +594,7 @@ static int gfs2_bmap_alloc(struct inode *inode, const sector_t lblock,
- 					sizeof(struct gfs2_meta_header));
- 				*ptr = zero_bn;
- 				state = ALLOC_GROW_DEPTH;
--				for(i = branch_start; i < height; i++) {
-+				for(i = branch_start; i < mp->mp_fheight; i++) {
- 					if (mp->mp_bh[i] == NULL)
- 						break;
- 					brelse(mp->mp_bh[i]);
-@@ -598,44 +606,40 @@ static int gfs2_bmap_alloc(struct inode *inode, const sector_t lblock,
- 				break;
- 		/* Branching from existing tree */
- 		case ALLOC_GROW_DEPTH:
--			if (i > 1 && i < height)
-+			if (i > 1 && i < mp->mp_fheight)
- 				gfs2_trans_add_meta(ip->i_gl, mp->mp_bh[i-1]);
--			for (; i < height && n > 0; i++, n--)
-+			for (; i < mp->mp_fheight && n > 0; i++, n--)
- 				gfs2_indirect_init(mp, ip->i_gl, i,
- 						   mp->mp_list[i-1], bn++);
--			if (i == height)
-+			if (i == mp->mp_fheight)
- 				state = ALLOC_DATA;
- 			if (n == 0)
- 				break;
- 		/* Tree complete, adding data blocks */
- 		case ALLOC_DATA:
--			BUG_ON(n > dblks);
-+			BUG_ON(n > *dblks);
- 			BUG_ON(mp->mp_bh[end_of_metadata] == NULL);
- 			gfs2_trans_add_meta(ip->i_gl, mp->mp_bh[end_of_metadata]);
--			dblks = n;
-+			*dblks = n;
- 			ptr = metapointer(end_of_metadata, mp);
--			dblock = bn;
-+			*dblock = bn;
- 			while (n-- > 0)
- 				*ptr++ = cpu_to_be64(bn++);
--			if (buffer_zeronew(bh_map)) {
--				ret = sb_issue_zeroout(sb, dblock, dblks,
-+			if (zero_new) {
-+				ret = sb_issue_zeroout(sb, *dblock, *dblks,
- 						       GFP_NOFS);
- 				if (ret) {
- 					fs_err(sdp,
- 					       "Failed to zero data buffers\n");
--					clear_buffer_zeronew(bh_map);
- 				}
- 			}
- 			break;
- 		}
--	} while ((state != ALLOC_DATA) || !dblock);
-+	} while ((state != ALLOC_DATA) || !(*dblock));
- 
--	ip->i_height = height;
-+	ip->i_height = mp->mp_fheight;
- 	gfs2_add_inode_blocks(&ip->i_inode, alloced);
- 	gfs2_dinode_out(ip, mp->mp_bh[0]->b_data);
--	map_bh(bh_map, inode->i_sb, dblock);
--	bh_map->b_size = dblks << inode->i_blkbits;
--	set_buffer_new(bh_map);
- 	return 0;
- }
- 
-@@ -669,6 +673,9 @@ int gfs2_block_map(struct inode *inode, sector_t lblock,
- 	unsigned int len;
- 	struct buffer_head *bh;
- 	u8 height;
-+	bool zero_new = false;
-+	sector_t dblock = 0;
-+	unsigned dblks;
- 
- 	BUG_ON(maxlen == 0);
- 
-@@ -692,13 +699,13 @@ int gfs2_block_map(struct inode *inode, sector_t lblock,
- 	while (size > arr[height])
- 		height++;
- 	find_metapath(sdp, lblock, &mp, height);
--	ret = 1;
-+	mp.mp_aheight = 1;
- 	if (height > ip->i_height || gfs2_is_stuffed(ip))
- 		goto do_alloc;
- 	ret = lookup_metapath(ip, &mp);
- 	if (ret < 0)
- 		goto out;
--	if (ret != ip->i_height)
-+	if (mp.mp_aheight != ip->i_height)
- 		goto do_alloc;
- 	ptr = metapointer(ip->i_height - 1, &mp);
- 	if (*ptr == 0)
-@@ -725,7 +732,15 @@ int gfs2_block_map(struct inode *inode, sector_t lblock,
- 	}
- 
- 	/* At this point ret is the tree depth of already allocated blocks */
--	ret = gfs2_bmap_alloc(inode, lblock, bh_map, &mp, ret, height, maxlen);
-+	if (buffer_zeronew(bh_map))
-+		zero_new = true;
-+	ret = gfs2_bmap_alloc(inode, lblock, zero_new, &mp, maxlen, &dblock,
-+			      &dblks);
-+	if (ret == 0) {
-+		map_bh(bh_map, inode->i_sb, dblock);
-+		bh_map->b_size = dblks << inode->i_blkbits;
-+		set_buffer_new(bh_map);
-+	}
- 	goto out;
- }
- 
--- 
-2.7.5
-
+> 
+> Brian
+> 
+> > Anyway, thank you for the reviewing!
+> > 
+> > --D
+> > 
+> > > 
+> > > Brian
+> > > 
+> > > > +int
+> > > > +xfs_icache_inode_is_allocated(
+> > > > +	struct xfs_mount	*mp,
+> > > > +	struct xfs_trans	*tp,
+> > > > +	xfs_ino_t		ino,
+> > > > +	bool			*inuse)
+> > > > +{
+> > > > +	struct xfs_inode	*ip;
+> > > > +	struct xfs_perag	*pag;
+> > > > +	xfs_agino_t		agino;
+> > > > +	int			ret = 0;
+> > > > +
+> > > > +	/* reject inode numbers outside existing AGs */
+> > > > +	if (!ino || XFS_INO_TO_AGNO(mp, ino) >= mp->m_sb.sb_agcount)
+> > > > +		return -EINVAL;
+> > > > +
+> > > > +	/* get the perag structure and ensure that it's inode capable */
+> > > > +	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ino));
+> > > > +	agino = XFS_INO_TO_AGINO(mp, ino);
+> > > > +
+> > > > +	rcu_read_lock();
+> > > > +	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
+> > > > +	if (!ip) {
+> > > > +		ret = -ENOENT;
+> > > > +		goto out;
+> > > > +	}
+> > > > +
+> > > > +	/*
+> > > > +	 * Is the inode being reused?  Is it new?  Is it being
+> > > > +	 * reclaimed?  Is it being torn down?  For any of those cases,
+> > > > +	 * fall back.
+> > > > +	 */
+> > > > +	spin_lock(&ip->i_flags_lock);
+> > > > +	if (ip->i_ino != ino ||
+> > > > +	    (ip->i_flags & (XFS_INEW | XFS_IRECLAIM | XFS_IRECLAIMABLE))) {
+> > > > +		ret = -EAGAIN;
+> > > > +		goto out_istate;
+> > > > +	}
+> > > > +
+> > > > +	/*
+> > > > +	 * If lookup is racing with unlink, jump out immediately.
+> > > > +	 */
+> > > > +	if (VFS_I(ip)->i_mode == 0) {
+> > > > +		*inuse = false;
+> > > > +		ret = 0;
+> > > > +		goto out_istate;
+> > > > +	}
+> > > > +
+> > > > +	/* If the VFS inode is being torn down, forget it. */
+> > > > +	if (!igrab(VFS_I(ip))) {
+> > > > +		ret = -EAGAIN;
+> > > > +		goto out_istate;
+> > > > +	}
+> > > > +
+> > > > +	/* We've got a live one. */
+> > > > +	spin_unlock(&ip->i_flags_lock);
+> > > > +	rcu_read_unlock();
+> > > > +	xfs_perag_put(pag);
+> > > > +
+> > > > +	*inuse = !!(VFS_I(ip)->i_mode);
+> > > > +	ret = 0;
+> > > > +	IRELE(ip);
+> > > > +
+> > > > +	return ret;
+> > > > +
+> > > > +out_istate:
+> > > > +	spin_unlock(&ip->i_flags_lock);
+> > > > +out:
+> > > > +	rcu_read_unlock();
+> > > > +	xfs_perag_put(pag);
+> > > > +	return ret;
+> > > > +}
+> > > > +
+> > > > +/*
+> > > >   * The inode lookup is done in batches to keep the amount of lock traffic and
+> > > >   * radix tree lookups to a minimum. The batch size is a trade off between
+> > > >   * lookup reduction and stack usage. This is in the reclaim path, so we can't
+> > > > diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+> > > > index 9183f77..eadf718 100644
+> > > > --- a/fs/xfs/xfs_icache.h
+> > > > +++ b/fs/xfs/xfs_icache.h
+> > > > @@ -126,4 +126,7 @@ xfs_fs_eofblocks_from_user(
+> > > >  	return 0;
+> > > >  }
+> > > >  
+> > > > +int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
+> > > > +				  xfs_ino_t ino, bool *inuse);
+> > > > +
+> > > >  #endif
+> > > > 
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
