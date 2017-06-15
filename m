@@ -1,185 +1,217 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34134 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752671AbdFPLvy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 07:51:54 -0400
-Date: Fri, 16 Jun 2017 07:51:48 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: free uncommitted transactions during log recovery
-Message-ID: <20170616115147.GA11636@bfoster.bfoster>
-References: <1497029889-12299-1-git-send-email-bfoster@redhat.com>
- <20170615170757.GZ4530@birch.djwong.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:20644 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750936AbdFOUgT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 16:36:19 -0400
+Subject: [PATCH 04/12] xfs: introduce the XFS_IOC_GETFSMAP ioctl
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 15 Jun 2017 13:36:13 -0700
+Message-ID: <149755897354.3625.17411163584419405510.stgit@birch.djwong.org>
+In-Reply-To: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
+References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170615170757.GZ4530@birch.djwong.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 15, 2017 at 10:07:57AM -0700, Darrick J. Wong wrote:
-> On Fri, Jun 09, 2017 at 01:38:09PM -0400, Brian Foster wrote:
-> > Log recovery allocates in-core transaction and member item data
-> > structures on-demand as it processes the on-disk log. Transactions
-> > are allocated on first encounter on-disk and stored in a hash table
-> > structure where they are easily accessible for subsequent lookups.
-> > Transaction items are also allocated on demand and are attached to
-> > the associated transactions.
-> > 
-> > When a commit record is encountered in the log, the transaction is
-> > committed to the fs and the in-core structures are freed. If a
-> > filesystem crashes or shuts down before all in-core log buffers are
-> > flushed to the log, however, not all transactions may have commit
-> > records in the log. As expected, the modifications in such an
-> > incomplete transaction are not replayed to the fs. The in-core data
-> > structures for the partial transaction are never freed, however,
-> > resulting in a memory leak.
-> > 
-> > Update xlog_do_recovery_pass() to walk the hash table of transaction
-> > lists as the last step before it goes out of scope and free any
-> > transactions that may remain on the lists. This prevents a memory
-> > leak of partial transactions in the log.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > FYI, I suspect this has been a problem for a while and and rare/harmless
-> > enough that this can target 4.13.
-> > 
-> > Brian
-> > 
-> >  fs/xfs/xfs_log_recover.c | 14 ++++++++++++++
-> >  1 file changed, 14 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > index 4a98762..37b34c5 100644
-> > --- a/fs/xfs/xfs_log_recover.c
-> > +++ b/fs/xfs/xfs_log_recover.c
-> > @@ -5224,6 +5224,7 @@ xlog_do_recovery_pass(
-> >  	int			error2 = 0;
-> >  	int			bblks, split_bblks;
-> >  	int			hblks, split_hblks, wrapped_hblks;
-> > +	int			i;
-> >  	struct hlist_head	rhash[XLOG_RHASH_SIZE];
-> >  	LIST_HEAD		(buffer_list);
-> >  
-> > @@ -5466,6 +5467,19 @@ xlog_do_recovery_pass(
-> >  	if (error && first_bad)
-> >  		*first_bad = rhead_blk;
-> >  
-> > +	/*
-> > +	 * Transactions are freed at commit time but transactions without commit
-> > +	 * records on disk are never committed. Free any that may be left in the
-> > +	 * hash table.
-> > +	 */
-> > +	for (i = 0; i < XLOG_RHASH_SIZE; i++) {
-> > +		struct hlist_node	*tmp;
-> > +		struct xlog_recover	*trans;
-> > +
-> > +		hlist_for_each_entry_safe(trans, tmp, &rhash[i], r_list)
-> > +			xlog_recover_free_trans(trans);
-> > +	}
-> 
-> Hmm, I just got the following crash in xfs/051:
-> 
-> [  131.456722] XFS (dm-0): Mounting V5 Filesystem
-> [  131.462826] XFS (dm-0): Delaying log recovery for 10 seconds.
-> [  141.532271] XFS (dm-0): Starting recovery (logdev: internal)
-> [  141.534418] XFS (dm-0): metadata I/O error: block 0x182e70 ("xlog_bread_noalign") error 5 numblks 8
-> [  141.539561] general protection fault: 0000 [#1] PREEMPT SMP
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-FWIW, it looks like the problem is that the rhash array of hlist_head's
-is never actually initialized properly. xfs/051 tests the case where log
-recovery fails, we end up in the new freeing code without having added
-any transactions, and the attempted hash list traversals are what
-actually cause the oops.
+Introduce a new ioctl that uses the reverse mapping btree to return
+information about the physical layout of the filesystem.
 
-I've updated the patch to initialize rhash[] at the top of the function
-and it seems to have resolved that problem. I also noticed that
-transaction removal from the hash lists is inconsistent. We remove the
-transaction when it is committed, but it's also possible to free it from
-xlog_recovery_process_trans() in the error case without having it
-removed it. Therefore, I've also updated the patch to make
-xlog_recover_free_trans() remove the transaction first to prevent any
-double-free vectors and changed list_del() to hlist_del_init() to
-preserve existing commit behavior.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[sandeen: rework to have less autoconf magic]
+Modified-by: Eric Sandeen <sandeen@redhat.com>
+---
+v3: rework the whole mess to have less autoconf magic; now we only
+track if the system headers actually define getfsmap.
+v2: shorten the device field to u32 since that's all we need for
+dev_t.  Support reporting reverse mapping information for all the
+devices that XFS supports (data, log).
+---
+ configure.ac          |    1 
+ include/builddefs.in  |    4 ++
+ include/linux.h       |  103 +++++++++++++++++++++++++++++++++++++++++++++++++
+ m4/package_libcdev.m4 |   20 ++++++++++
+ 4 files changed, 128 insertions(+)
 
-I'll post v2 once I get through some more testing..
 
-Brian
+diff --git a/configure.ac b/configure.ac
+index aa102e4..9534986 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -142,6 +142,7 @@ AC_HAVE_READDIR
+ AC_HAVE_FSETXATTR
+ AC_HAVE_MREMAP
+ AC_NEED_INTERNAL_FSXATTR
++AC_HAVE_GETFSMAP
+ 
+ if test "$enable_blkid" = yes; then
+ AC_HAVE_BLKID_TOPO
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 4d6bb2d..ec630bd 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -112,6 +112,7 @@ HAVE_FLS = @have_fls@
+ HAVE_FSETXATTR = @have_fsetxattr@
+ HAVE_MREMAP = @have_mremap@
+ NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
++HAVE_GETFSMAP = @have_getfsmap@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+@@ -150,6 +151,9 @@ endif
+ ifeq ($(NEED_INTERNAL_FSXATTR),yes)
+ PCFLAGS+= -DOVERRIDE_SYSTEM_FSXATTR
+ endif
++ifeq ($(HAVE_GETFSMAP),yes)
++PCFLAGS+= -DHAVE_GETFSMAP
++endif
+ 
+ 
+ GCFLAGS = $(DEBUG) \
+diff --git a/include/linux.h b/include/linux.h
+index 6a676ca..38969d1 100644
+--- a/include/linux.h
++++ b/include/linux.h
+@@ -222,4 +222,107 @@ struct fsxattr {
+ #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
+ #endif
+ 
++#ifndef HAVE_GETFSMAP
++/*
++ *	Structure for FS_IOC_GETFSMAP.
++ *
++ *	The memory layout for this call are the scalar values defined in
++ *	struct fsmap_head, followed by two struct fsmap that describe
++ *	the lower and upper bound of mappings to return, followed by an
++ *	array of struct fsmap mappings.
++ *
++ *	fmh_iflags control the output of the call, whereas fmh_oflags report
++ *	on the overall record output.  fmh_count should be set to the
++ *	length of the fmh_recs array, and fmh_entries will be set to the
++ *	number of entries filled out during each call.  If fmh_count is
++ *	zero, the number of reverse mappings will be returned in
++ *	fmh_entries, though no mappings will be returned.  fmh_reserved
++ *	must be set to zero.
++ *
++ *	The two elements in the fmh_keys array are used to constrain the
++ *	output.  The first element in the array should represent the
++ *	lowest disk mapping ("low key") that the user wants to learn
++ *	about.  If this value is all zeroes, the filesystem will return
++ *	the first entry it knows about.  For a subsequent call, the
++ *	contents of fsmap_head.fmh_recs[fsmap_head.fmh_count - 1] should be
++ *	copied into fmh_keys[0] to have the kernel start where it left off.
++ *
++ *	The second element in the fmh_keys array should represent the
++ *	highest disk mapping ("high key") that the user wants to learn
++ *	about.  If this value is all ones, the filesystem will not stop
++ *	until it runs out of mapping to return or runs out of space in
++ *	fmh_recs.
++ *
++ *	fmr_device can be either a 32-bit cookie representing a device, or
++ *	a 32-bit dev_t if the FMH_OF_DEV_T flag is set.  fmr_physical,
++ *	fmr_offset, and fmr_length are expressed in units of bytes.
++ *	fmr_owner is either an inode number, or a special value if
++ *	FMR_OF_SPECIAL_OWNER is set in fmr_flags.
++ */
++struct fsmap {
++	__u32		fmr_device;	/* device id */
++	__u32		fmr_flags;	/* mapping flags */
++	__u64		fmr_physical;	/* device offset of segment */
++	__u64		fmr_owner;	/* owner id */
++	__u64		fmr_offset;	/* file offset of segment */
++	__u64		fmr_length;	/* length of segment */
++	__u64		fmr_reserved[3];	/* must be zero */
++};
++
++struct fsmap_head {
++	__u32		fmh_iflags;	/* control flags */
++	__u32		fmh_oflags;	/* output flags */
++	__u32		fmh_count;	/* # of entries in array incl. input */
++	__u32		fmh_entries;	/* # of entries filled in (output). */
++	__u64		fmh_reserved[6];	/* must be zero */
++
++	struct fsmap	fmh_keys[2];	/* low and high keys for the mapping search */
++	struct fsmap	fmh_recs[];	/* returned records */
++};
++
++/* Size of an fsmap_head with room for nr records. */
++static inline size_t
++fsmap_sizeof(
++	unsigned int	nr)
++{
++	return sizeof(struct fsmap_head) + nr * sizeof(struct fsmap);
++}
++
++/* Start the next fsmap query at the end of the current query results. */
++static inline void
++fsmap_advance(
++	struct fsmap_head	*head)
++{
++	head->fmh_keys[0] = head->fmh_recs[head->fmh_entries - 1];
++}
++
++/*	fmh_iflags values - set by XFS_IOC_GETFSMAP caller in the header. */
++/* no flags defined yet */
++#define FMH_IF_VALID		0
++
++/*	fmh_oflags values - returned in the header segment only. */
++#define FMH_OF_DEV_T		0x1	/* fmr_device values will be dev_t */
++
++/*	fmr_flags values - returned for each non-header segment */
++#define FMR_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
++#define FMR_OF_ATTR_FORK	0x2	/* segment = attribute fork */
++#define FMR_OF_EXTENT_MAP	0x4	/* segment = extent map */
++#define FMR_OF_SHARED		0x8	/* segment = shared with another file */
++#define FMR_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
++#define FMR_OF_LAST		0x20	/* segment is the last in the FS */
++
++/* Each FS gets to define its own special owner codes. */
++#define FMR_OWNER(type, code)	(((__u64)type << 32) | \
++				 ((__u64)code & 0xFFFFFFFFULL))
++#define FMR_OWNER_TYPE(owner)	((__u32)((__u64)owner >> 32))
++#define FMR_OWNER_CODE(owner)	((__u32)(((__u64)owner & 0xFFFFFFFFULL)))
++#define FMR_OWN_FREE		FMR_OWNER(0, 1) /* free space */
++#define FMR_OWN_UNKNOWN		FMR_OWNER(0, 2) /* unknown owner */
++#define FMR_OWN_METADATA	FMR_OWNER(0, 3) /* metadata */
++
++#define FS_IOC_GETFSMAP		_IOWR('X', 59, struct fsmap_head)
++
++#define HAVE_GETFSMAP
++#endif /* HAVE_GETFSMAP */
++
+ #endif	/* __XFS_LINUX_H__ */
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index bc3b4ce..fa5b639 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -277,3 +277,23 @@ AC_DEFUN([AC_NEED_INTERNAL_FSXATTR],
+     )
+     AC_SUBST(need_internal_fsxattr)
+   ])
++
++#
++# Check if we have a FS_IOC_GETFSMAP ioctl (Linux)
++#
++AC_DEFUN([AC_HAVE_GETFSMAP],
++  [ AC_MSG_CHECKING([for GETFSMAP])
++    AC_TRY_LINK([
++#define _GNU_SOURCE
++#include <sys/syscall.h>
++#include <unistd.h>
++#include <linux/fs.h>
++#include <linux/fsmap.h>
++    ], [
++         unsigned long x = FS_IOC_GETFSMAP;
++         struct fsmap_head fh;
++    ], have_getfsmap=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_getfsmap)
++  ])
 
-> [  141.542236] Dumping ftrace buffer:
-> [  141.542972]    (ftrace buffer empty)
-> [  141.543083] Modules linked in: xfs dm_flakey libcrc32c dax_pmem device_dax nd_pmem binfmt_misc nfsd auth_rpcgss sch_fq_codel af_packet [last unloaded: xfs]
-> [  141.543083] CPU: 1 PID: 3246 Comm: mount Not tainted 4.12.0-rc5-dgc #1
-> [  141.543083] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
-> [  141.543083] task: ffff88006e0ca900 task.stack: ffffc90001d70000
-> [  141.543083] RIP: 0010:xlog_recover_free_trans+0x1d/0xb0 [xfs]
-> [  141.543083] RSP: 0018:ffffc90001d73b30 EFLAGS: 00010286
-> [  141.543083] RAX: ffffc90001d73bc0 RBX: 00000000fffffffb RCX: ffffc90001d73bc0
-> [  141.543083] RDX: 0000000000000000 RSI: 00000000ffffffff RDI: ffff8800756ae800
-> [  141.543083] RBP: ffffc90001d73b58 R08: 0000000000000001 R09: 0000000000000000
-> [  141.543083] R10: 0000000000000000 R11: 0000000000000000 R12: ffff8800756ae830
-> [  141.543083] R13: ffff8800756ae800 R14: ffffc90001d73bd0 R15: 206b636f6c62203a
-> [  141.543083] FS:  00007fe28e0d6840(0000) GS:ffff88007f200000(0000) knlGS:0000000000000000
-> [  141.543083] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  141.543083] CR2: 00007fe28d6a0cf9 CR3: 000000007b3de000 CR4: 00000000001406e0
-> [  141.543083] Call Trace:
-> [  141.543083]  xlog_do_recovery_pass+0x3ec/0x740 [xfs]
-> [  141.543083]  ? rcu_read_lock_sched_held+0x72/0x80
-> [  141.543083]  ? __kmalloc+0x26c/0x2d0
-> [  141.543083]  ? kmem_alloc+0x81/0x100 [xfs]
-> [  141.543083]  ? kmem_alloc+0x81/0x100 [xfs]
-> [  141.543083]  xlog_do_log_recovery+0x70/0x150 [xfs]
-> [  141.543083]  xlog_do_recover+0x1b/0x170 [xfs]
-> [  141.543083]  xlog_recover+0xa2/0x130 [xfs]
-> [  141.543083]  xfs_log_mount+0xdb/0x2e0 [xfs]
-> [  141.543083]  xfs_mountfs+0x579/0xad0 [xfs]
-> [  141.543083]  xfs_fs_fill_super+0x483/0x610 [xfs]
-> [  141.543083]  mount_bdev+0x180/0x1b0
-> [  141.543083]  ? xfs_finish_flags+0x150/0x150 [xfs]
-> [  141.543083]  xfs_fs_mount+0x15/0x20 [xfs]
-> [  141.543083]  mount_fs+0x14/0x80
-> [  141.543083]  vfs_kern_mount+0x67/0x150
-> [  141.543083]  do_mount+0x195/0xd10
-> [  141.543083]  ? _copy_from_user+0x47/0x80
-> [  141.543083]  ? memdup_user+0x60/0x90
-> [  141.543083]  SyS_mount+0x95/0xe0
-> [  141.543083]  entry_SYSCALL_64_fastpath+0x1f/0xbe
-> [  141.543083] RIP: 0033:0x7fe28d9b7faa
-> [  141.543083] RSP: 002b:00007ffe9168f628 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
-> [  141.543083] RAX: ffffffffffffffda RBX: 00007fe28dcb063a RCX: 00007fe28d9b7faa
-> [  141.543083] RDX: 0000000001ab2240 RSI: 0000000001ab2280 RDI: 0000000001ab2260
-> [  141.543083] RBP: 0000000001ab2120 R08: 0000000000000000 R09: 0000000000000012
-> [  141.543083] R10: 00000000c0ed0000 R11: 0000000000000206 R12: 00007fe28dec083c
-> [  141.543083] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000003
-> [  141.543083] Code: 5d c3 31 c0 c3 66 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 e5 41 57 41 56 41 55 41 54 4c 8d 67 30 53 4c 8b 7f 30 49 89 fd <49> 8b 1f 4d 39 e7 48 89 d8 74 6f 49 8b 57 08 45 31 f6 48 89 50 
-> [  141.543083] RIP: xlog_recover_free_trans+0x1d/0xb0 [xfs] RSP: ffffc90001d73b30
-> [  141.591289] ---[ end trace b3d5b2775a86318f ]---
-> 
-> FWIW I was testing 4.13 for-next with the following xfstest config:
-> 
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 birch-mtr0 4.12.0-rc5-dgc
-> MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1, -i sparse=1, /dev/pmem1
-> MOUNT_OPTIONS -- /dev/pmem1 /opt
-> 
-> --D
-> 
-> > +
-> >  	return error ? error : error2;
-> >  }
-> >  
-> > -- 
-> > 2.7.5
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
