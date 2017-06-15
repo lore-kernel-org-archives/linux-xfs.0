@@ -1,121 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44496 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750784AbdFOFin (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Jun 2017 01:38:43 -0400
-Date: Thu, 15 Jun 2017 13:38:36 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [xfstests PATCH v4 5/5] btrfs: make a btrfs version of writeback
- error reporting test
-Message-ID: <20170615053836.GD17436@eguan.usersys.redhat.com>
-References: <20170612124213.14855-1-jlayton@redhat.com>
- <20170612124213.14855-6-jlayton@redhat.com>
- <20170613084034.GE4788@eguan.usersys.redhat.com>
- <1497441317.6752.2.camel@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1497441317.6752.2.camel@redhat.com>
+Received: from mail-qt0-f170.google.com ([209.85.216.170]:35759 "EHLO
+        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752059AbdFOKmR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 06:42:17 -0400
+Received: by mail-qt0-f170.google.com with SMTP id w1so14597717qtg.2
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Jun 2017 03:42:16 -0700 (PDT)
+Message-ID: <1497523332.4556.1.camel@redhat.com>
+Subject: Re: [PATCH v6 12/20] fs: add a new fstype flag to indicate how
+ writeback errors are tracked
+From: Jeff Layton <jlayton@redhat.com>
+Date: Thu, 15 Jun 2017 06:42:12 -0400
+In-Reply-To: <20170615082221.GA22809@infradead.org>
+References: <20170612122316.13244-1-jlayton@redhat.com>
+         <20170612122316.13244-15-jlayton@redhat.com>
+         <20170612124513.GC18360@infradead.org> <1497349472.5762.1.camel@redhat.com>
+         <20170614064731.GB3598@infradead.org> <1497461083.6752.7.camel@redhat.com>
+         <20170615082221.GA22809@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, David Howells <dhowells@redhat.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-On Wed, Jun 14, 2017 at 07:55:17AM -0400, Jeff Layton wrote:
-> On Tue, 2017-06-13 at 16:40 +0800, Eryu Guan wrote:
-> > On Mon, Jun 12, 2017 at 08:42:13AM -0400, Jeff Layton wrote:
-> > > Make a new btrfs/999 test that works the way Chris Mason suggested:
-> > > 
-> > > Build a filesystem with 2 devices that stripes the data across
-> > > both devices, but mirrors metadata across both. Then, make one
-> > > of the devices fail and see how fsync is handled.
-> > > 
-> > > Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> > > ---
-> > >  tests/btrfs/999   | 93 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > 
-> > Missing btrfs/999.out file
-> > 
-> > >  tests/btrfs/group |  1 +
-> > >  2 files changed, 94 insertions(+)
-> > >  create mode 100755 tests/btrfs/999
-> > > 
-> > > diff --git a/tests/btrfs/999 b/tests/btrfs/999
-> > > new file mode 100755
-> > > index 000000000000..84031cc0d913
-> > > --- /dev/null
-> > > +++ b/tests/btrfs/999
-> > > @@ -0,0 +1,93 @@
-> > > +#! /bin/bash
-> > > +# FS QA Test No. 999
-> > > +#
-> > > +# Open a file several times, write to it, fsync on all fds and make sure that
-> > > +# they all return 0. Change the device to start throwing errors. Write again
-> > > +# on all fds and fsync on all fds. Ensure that we get errors on all of them.
-> > > +# Then fsync on all one last time and verify that all return 0.
-> > > +#
-> > > +#-----------------------------------------------------------------------
-> > > +# Copyright (c) 2017, Jeff Layton <jlayton@redhat.com>
-> > > +#
-> > > +# This program is free software; you can redistribute it and/or
-> > > +# modify it under the terms of the GNU General Public License as
-> > > +# published by the Free Software Foundation.
-> > > +#
-> > > +# This program is distributed in the hope that it would be useful,
-> > > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > > +# GNU General Public License for more details.
-> > > +#
-> > > +# You should have received a copy of the GNU General Public License
-> > > +# along with this program; if not, write the Free Software Foundation,
-> > > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > > +#-----------------------------------------------------------------------
-> > > +
-> > > +seq=`basename $0`
-> > > +seqres=$RESULT_DIR/$seq
-> > > +echo "QA output created by $seq"
-> > > +
-> > > +here=`pwd`
-> > > +tmp=/tmp/$$
-> > > +status=1    # failure is the default!
-> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > > +
-> > > +_cleanup()
-> > > +{
-> > > +    cd /
-> > > +    rm -rf $tmp.* $testdir
-> > > +    _dmerror_cleanup
-> > > +}
-> > > +
-> > > +# get standard environment, filters and checks
-> > > +. ./common/rc
-> > > +. ./common/filter
-> > > +. ./common/dmerror
-> > > +
-> > > +# real QA test starts here
-> > > +_supported_os Linux
-> > > +_require_dm_target error
-> > > +_require_test_program fsync-err
-> > > +_require_test_program dmerror
-> > > +
-> > > +# bring up dmerror device
-> > > +_scratch_unmount
-> > > +_dmerror_init
-> > > +
-> > > +# Replace first device with error-test device
-> > > +old_SCRATCH_DEV=$SCRATCH_DEV
-> > > +SCRATCH_DEV_POOL=`echo $SCRATCH_DEV_POOL | perl -pe "s#$SCRATCH_DEV#$DMERROR_DEV#"`
-> > > +SCRATCH_DEV=$DMERROR_DEV
-> > > +
-> > > +_require_scratch
-> > > +_require_scratch_dev_pool
-> > 
-> > Need "_require_scratch_dev_pool_equal_size" too, since test creates
-> > raid1 profile for metadata.
+On Thu, 2017-06-15 at 01:22 -0700, Christoph Hellwig wrote:
+> On Wed, Jun 14, 2017 at 01:24:43PM -0400, Jeff Layton wrote:
+> > In this smaller set, it's only really used for DAX.
+> 
+> DAX only is implemented by three filesystems, please just fix them
+> up in one go.
+> 
 
-Sorry, it's not needed here. I got confused with device replace
-operation, only "replace" needs this require rule. Thanks for
-confirming!
+Ok.
 
-Eryu
+> > sync_file_range: ->fsync isn't called directly there, and I think we
+> > probably want similar semantics to fsync() for it
+> 
+> sync_file_range is only supposed to sync data, so it should not call
+> ->fsync.
+> 
+
+Correct.
+
+But if there is a data writeback error, should we report an error on all
+open fds at that time (like we will for fsync)?
+
+I think we probably do want to do that, but like you say...there is no
+file op for sync_file_range. It'll need some way to figure out what sort
+of error tracking is in play.
+
+> > JBD2: will try to re-set the error after clearing it with
+> > filemap_fdatawait. That's problematic with the new infrastructure so we
+> > need some way to avoid it.
+> 
+> JBD2 only has two users, please fix them up in one go.
+
+I came up with a fix yesterday that makes the flag unnecessary there.
+
+Thanks,
+-- 
+Jeff Layton <jlayton@redhat.com>
