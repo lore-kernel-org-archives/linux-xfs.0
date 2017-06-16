@@ -1,296 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41678 "EHLO mx1.redhat.com"
+Received: from mga05.intel.com ([192.55.52.43]:39375 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751141AbdFPKyy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 06:54:54 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B5D9B723B4
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 10:54:53 +0000 (UTC)
-Received: from eorzea.usersys.redhat.com (unknown [10.40.205.55])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 17DA784D04
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 10:54:52 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 2/2] xfs: Properly retry failed inode items in case of error during buffer writeback
-Date: Fri, 16 Jun 2017 12:54:45 +0200
-Message-Id: <20170616105445.3314-3-cmaiolino@redhat.com>
-In-Reply-To: <20170616105445.3314-1-cmaiolino@redhat.com>
-References: <20170616105445.3314-1-cmaiolino@redhat.com>
+        id S1751079AbdFPTok (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 15:44:40 -0400
+Date: Fri, 16 Jun 2017 13:44:37 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v2 1/3] mm: add vm_insert_mixed_mkwrite()
+Message-ID: <20170616194437.GA20742@linux.intel.com>
+References: <20170614172211.19820-1-ross.zwisler@linux.intel.com>
+ <20170614172211.19820-2-ross.zwisler@linux.intel.com>
+ <20170615144204.GN1764@quack2.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170615144204.GN1764@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-When a buffer has been failed during writeback, the inode items into it
-are kept flush locked, and are never resubmitted due the flush lock, so,
-if any buffer fails to be written, the items in AIL are never written to
-disk and never unlocked.
+On Thu, Jun 15, 2017 at 04:42:04PM +0200, Jan Kara wrote:
+> On Wed 14-06-17 11:22:09, Ross Zwisler wrote:
+> > To be able to use the common 4k zero page in DAX we need to have our PTE
+> > fault path look more like our PMD fault path where a PTE entry can be
+> > marked as dirty and writeable as it is first inserted, rather than waiting
+> > for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
+> > 
+> > Right now we can rely on having a dax_pfn_mkwrite() call because we can
+> > distinguish between these two cases in do_wp_page():
+> > 
+> > 	case 1: 4k zero page => writable DAX storage
+> > 	case 2: read-only DAX storage => writeable DAX storage
+> > 
+> > This distinction is made by via vm_normal_page().  vm_normal_page() returns
+> > false for the common 4k zero page, though, just as it does for DAX ptes.
+> > Instead of special casing the DAX + 4k zero page case, we will simplify our
+> > DAX PTE page fault sequence so that it matches our DAX PMD sequence, and
+> > get rid of dax_pfn_mkwrite() completely.
+> > 
+> > This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
+> > and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set insert_pfn()
+> > will do the work that was previously done by wp_page_reuse() as part of the
+> > dax_pfn_mkwrite() call path.
+> > 
+> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> 
+> So I agree that getting rid of dax_pfn_mkwrite() and using fault handler in
+> that case is a way to go. However I somewhat dislike the
+> vm_insert_mixed_mkwrite() thing - it looks like a hack - and I'm aware that
+> we have a similar thing for PMD which is ugly as well. Besides being ugly
+> I'm also concerned that when 'mkwrite' is set, we just silently overwrite
+> whatever PTE was installed at that position. Not that I'd see how that
+> could screw us for DAX but still a concern that e.g. some PTE flag could
+> get discarded by this is there... In fact, for !HAVE_PTE_SPECIAL
+> architectures, you will leak zero page references by just overwriting the
+> PTE - for those archs you really need to unmap zero page before replacing
+> PTE (and the same for PMD I suppose).
+> 
+> So how about some vmf_insert_pfn(vmf, pe_size, pfn) helper that would
+> properly detect PTE / PMD case, read / write case etc., check that PTE did
+> not change from orig_pte, and handle all the nasty details instead of
+> messing with insert_pfn?
+> 
+> 								Honza
 
-This causes unmount operation to hang due these items flush locked in AIL,
-but this also causes the items in AIL to never be written back, even when
-the IO device comes back to normal.
+Sounds good, I'll figure this out for v3.
 
-I've been testing this patch with a DM-thin device, creating a
-filesystem larger than the real device.
-
-When writing enough data to fill the DM-thin device, XFS receives ENOSPC
-errors from the device, and keep spinning on xfsaild (when 'retry
-forever' configuration is set).
-
-At this point, the filesystem can not be unmounted because of the flush locked
-items in AIL, but worse, the items in AIL are never retried at all
-(once xfs_inode_item_push() will skip the items that are flush locked),
-even if the underlying DM-thin device is expanded to the proper size.
-
-This patch fixes both cases, retrying any item that has been failed
-previously, using the infra-structure provided by the previous patch.
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
-V2:
-	- Fix XFS_LI_FAILED flag removal
-	- Use atomic operations to set and clear XFS_LI_FAILED flag
-	- Remove check for XBF_WRITE_FAIL in xfs_inode_item_push
-	- Add more comments to the code
-	- Add a helper function to resubmit the failed buffers, so this
-	  can be also used in dquot system without duplicating code
-
-V3:
-	- kill xfs_imap_to_bp call using a pointer in the log item to
-	  hold the buffer address
-	- use xa_lock instead of atomic operations to handle log item
-	  flags
-	- Add a hold to the buffer for each log item failed
-	- move buffer resubmission up in xfs_inode_item_push()
-
-V4:
-	- Remove bflags argument from iop_error callback
-	- Remove ip argument from xfs_buf_resubmit_failed_buffers
-	- Use helpers to set/clear XFS_LI_FAILED flag
-	- remove ->xa_lock from the iop->error callback and move it up
-	  on the stack, so all log items are processed into a single
-	  pair of lock/unlock
-
- fs/xfs/xfs_buf_item.c   | 37 +++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_buf_item.h   |  1 +
- fs/xfs/xfs_inode_item.c | 36 +++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_trans.h      | 26 ++++++++++++++++++++++++++
- fs/xfs/xfs_trans_ail.c  |  4 ++--
- 5 files changed, 99 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 4fa68c9..c5d21ea 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1222,3 +1222,40 @@ xfs_buf_iodone(
- 	xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
- 	xfs_buf_item_free(BUF_ITEM(lip));
- }
-+
-+/*
-+ * Requeue a failed buffer for writeback
-+ *
-+ * Return true if the buffer has been re-queued properly, false otherwise
-+ */
-+bool
-+xfs_buf_resubmit_failed_buffers(
-+	struct xfs_log_item	*lip,
-+	struct list_head	*buffer_list)
-+{
-+	struct xfs_log_item	*next;
-+	struct xfs_buf		*bp;
-+	bool			ret;
-+
-+	bp = lip->li_buf;
-+
-+	/* Clear XFS_LI_FAILED flag from all items before resubmit
-+	 *
-+	 * XFS_LI_FAILED set/clear is protected by xa_lock, caller  this
-+	 * function already have it acquired
-+	 */
-+	for (; lip; lip = next) {
-+		next = lip->li_bio_list;
-+		xfs_clear_li_failed(lip);
-+	}
-+
-+	/* Add this buffer back to the delayed write list */
-+	xfs_buf_lock(bp);
-+	if (!xfs_buf_delwri_queue(bp, buffer_list))
-+		ret = false;
-+	else
-+		ret = true;
-+
-+	xfs_buf_unlock(bp);
-+	return ret;
-+}
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index f7eba99..82c3d64 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -70,6 +70,7 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
- 			      xfs_log_item_t *);
- void	xfs_buf_iodone_callbacks(struct xfs_buf *);
- void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
-+bool	xfs_buf_resubmit_failed_buffers(struct xfs_log_item *, struct list_head *);
- 
- extern kmem_zone_t	*xfs_buf_item_zone;
- 
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 08cb7d1..2719ac6 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -27,6 +27,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_trans_priv.h"
-+#include "xfs_buf_item.h"
- #include "xfs_log.h"
- 
- 
-@@ -475,6 +476,18 @@ xfs_inode_item_unpin(
- 		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
- }
- 
-+/*
-+ * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
-+ * have been failed during writeback
-+ */
-+STATIC void
-+xfs_inode_item_error(
-+	struct xfs_log_item	*lip,
-+	struct xfs_buf		*bp)
-+{
-+	xfs_set_li_failed(lip, bp);
-+}
-+
- STATIC uint
- xfs_inode_item_push(
- 	struct xfs_log_item	*lip,
-@@ -491,6 +504,17 @@ xfs_inode_item_push(
- 	if (xfs_ipincount(ip) > 0)
- 		return XFS_ITEM_PINNED;
- 
-+	/*
-+	 * The buffer containing this item failed to be written back
-+	 * previously. Resubmit the buffer for IO.
-+	 */
-+	if (lip->li_flags & XFS_LI_FAILED) {
-+		if (!xfs_buf_resubmit_failed_buffers(lip, buffer_list))
-+			rval = XFS_ITEM_FLUSHING;
-+
-+		return rval;
-+	}
-+
- 	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
- 		return XFS_ITEM_LOCKED;
- 
-@@ -622,7 +646,8 @@ static const struct xfs_item_ops xfs_inode_item_ops = {
- 	.iop_unlock	= xfs_inode_item_unlock,
- 	.iop_committed	= xfs_inode_item_committed,
- 	.iop_push	= xfs_inode_item_push,
--	.iop_committing = xfs_inode_item_committing
-+	.iop_committing = xfs_inode_item_committing,
-+	.iop_error	= xfs_inode_item_error
- };
- 
- 
-@@ -710,7 +735,8 @@ xfs_iflush_done(
- 		 * the AIL lock.
- 		 */
- 		iip = INODE_ITEM(blip);
--		if (iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn)
-+		if ((iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn) ||
-+		    lip->li_flags & XFS_LI_FAILED)
- 			need_ail++;
- 
- 		blip = next;
-@@ -718,7 +744,8 @@ xfs_iflush_done(
- 
- 	/* make sure we capture the state of the initial inode. */
- 	iip = INODE_ITEM(lip);
--	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn)
-+	if ((iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn) ||
-+	    lip->li_flags & XFS_LI_FAILED)
- 		need_ail++;
- 
- 	/*
-@@ -739,6 +766,9 @@ xfs_iflush_done(
- 			if (INODE_ITEM(blip)->ili_logged &&
- 			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
- 				mlip_changed |= xfs_ail_delete_one(ailp, blip);
-+			else {
-+				xfs_clear_li_failed(blip);
-+			}
- 		}
- 
- 		if (mlip_changed) {
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 50df5367..2d7cf91 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -49,6 +49,7 @@ typedef struct xfs_log_item {
- 	struct xfs_ail			*li_ailp;	/* ptr to AIL */
- 	uint				li_type;	/* item type */
- 	uint				li_flags;	/* misc flags */
-+	struct xfs_buf			*li_buf;	/* real buffer pointer */
- 	struct xfs_log_item		*li_bio_list;	/* buffer item list */
- 	void				(*li_cb)(struct xfs_buf *,
- 						 struct xfs_log_item *);
-@@ -72,6 +73,31 @@ typedef struct xfs_log_item {
- 	{ XFS_LI_ABORTED,	"ABORTED" }, \
- 	{ XFS_LI_FAILED,	"FAILED" }
- 
-+static inline void
-+xfs_clear_li_failed(
-+	struct xfs_log_item	*lip)
-+{
-+	struct xfs_buf	*bp = lip->li_buf;
-+
-+	if (lip->li_flags & XFS_LI_FAILED) {
-+		lip->li_flags &= ~XFS_LI_FAILED;
-+		lip->li_buf = NULL;
-+		xfs_buf_rele(bp);
-+	}
-+}
-+
-+static inline void
-+xfs_set_li_failed(
-+	struct xfs_log_item	*lip,
-+	struct xfs_buf		*bp)
-+{
-+	if (lip->li_flags & ~XFS_LI_FAILED) {
-+		xfs_buf_hold(bp);
-+		lip->li_flags |= XFS_LI_FAILED;
-+		lip->li_buf = bp;
-+	}
-+}
-+
- struct xfs_item_ops {
- 	void (*iop_size)(xfs_log_item_t *, int *, int *);
- 	void (*iop_format)(xfs_log_item_t *, struct xfs_log_vec *);
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 9056c0f..c41d640 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -687,15 +687,15 @@ xfs_trans_ail_update_bulk(
- bool
- xfs_ail_delete_one(
- 	struct xfs_ail		*ailp,
--	struct xfs_log_item 	*lip)
-+	struct xfs_log_item	*lip)
- {
- 	struct xfs_log_item	*mlip = xfs_ail_min(ailp);
- 
- 	trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
- 	xfs_ail_delete(ailp, lip);
- 	lip->li_flags &= ~XFS_LI_IN_AIL;
-+	xfs_clear_li_failed(lip);
- 	lip->li_lsn = 0;
--
- 	return mlip == lip;
- }
- 
--- 
-2.9.4
-
+Thanks for the review!
