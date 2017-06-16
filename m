@@ -1,181 +1,191 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45760 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53078 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750873AbdFPQof (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 12:44:35 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 1A281C04B950
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 16:44:35 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id DDC7B91281
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 16:44:34 +0000 (UTC)
+        id S1750798AbdFPQqV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 12:46:21 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: debug mode sysfs flag to force [un]pin the log tail
-Date: Fri, 16 Jun 2017 12:44:33 -0400
-Message-Id: <1497631473-14278-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH] tests/xfs: test for log recovery failure after tail overwrite
+Date: Fri, 16 Jun 2017 12:46:19 -0400
+Message-Id: <1497631579-14454-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1497631473-14278-1-git-send-email-bfoster@redhat.com>
+References: <1497631473-14278-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org
 
-Create a debug mode only sysfs option to force pin the tail of the
-log. This option can be used by test infrastructure to induce head
-behind tail conditions. Specifically, this is intended to be used by
-xfstests to reproduce log recovery problems after failed/corrupted
-log writes overwrite the last good tail LSN in the log.
+XFS is susceptible to log recovery problems if the fs crashes under
+certain circumstances. If the tail has been pinned for long enough
+to the log to fill and the next batch of log buffer submissions
+happen to fail, the filesystem shutsdown having potentially
+overwritten part of the range between the last good tail->head range
+in the log. This causes log recovery to fail with crc mismatch or
+invalid log record errors.
 
-When enabled, AIL push attempts see every log item on the AIL in the
-pinned state. This stalls metadata writeback and thus prevents the
-current tail of the log from moving forward. When disabled,
-subsequent AIL pushes observe the log items in their appropriate
-state and filesystem operation continues as normal.
+This problem is not yet fixed and thus known/expected to fail. At
+this time, this test serves as a reminder that the problem exists
+and a reproducer for future verification purposes. Note that this
+problem is currently only reproducible with larger (non-default) log
+buffer sizes (i.e., '-o logbsize=256k') or smaller block sizes (1k).
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
 
 Hi all,
 
-This patch is a supporting patch for an xfstests test I'm about to post
-that pins the tail of the log in order to reproduce the log recovery
-problem that appears to be the root of the problem in this[1] thread.
-That is the primary motivation for the patch and so should probably be
-reviewed with that context. IOW, if there's a better way to reproduce
-the problem in the test without the need for kernel support, I'm happy
-to drop this. Thoughts, reviews, flames appreciated.
+This patch uses the XFS debug kernel mechanism recently posted for
+review[1] to reproduce an XFS log recovery problem. Note that this test
+depends on the aforementioned patch and thus should not be merged
+until/unless the corresponding kernel patch is merged.
 
 Brian
 
-[1] http://www.spinics.net/lists/linux-xfs/msg07499.html
+[1] "xfs: debug mode sysfs flag to force [un]pin the log tail"
 
- fs/xfs/xfs_log_priv.h  |  2 ++
- fs/xfs/xfs_sysfs.c     | 46 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trans_ail.c | 20 +++++++++++++++++++-
- 3 files changed, 67 insertions(+), 1 deletion(-)
+ tests/xfs/999     | 113 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/999.out |   2 +
+ tests/xfs/group   |   1 +
+ 3 files changed, 116 insertions(+)
+ create mode 100644 tests/xfs/999
+ create mode 100644 tests/xfs/999.out
 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index c2604a5..bfbfde12 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -413,6 +413,8 @@ struct xlog {
- 	void			*l_iclog_bak[XLOG_MAX_ICLOGS];
- 	/* log record crc error injection factor */
- 	uint32_t		l_badcrc_factor;
-+	/* force pin the log tail */
-+	bool			l_pin_tail;
- #endif
- 	/* log recovery lsn tracking (for buffer submission */
- 	xfs_lsn_t		l_recovery_lsn;
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index ec6e0e2..b86148a 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -378,6 +378,51 @@ log_badcrc_factor_show(
- }
- 
- XFS_SYSFS_ATTR_RW(log_badcrc_factor);
+diff --git a/tests/xfs/999 b/tests/xfs/999
+new file mode 100644
+index 0000000..6913a43
+--- /dev/null
++++ b/tests/xfs/999
+@@ -0,0 +1,113 @@
++#! /bin/bash
++# FS QA Test No. 999
++#
++# Attempt to reproduce log recovery failure by writing corrupt log records over
++# the last good tail in the log. The tail is force pinned while a workload runs
++# the head as close as possible behind the tail. Once the head is pinned,
++# corrupted log records are written to the log and the filesystem shuts down.
++#
++# While log recovery should handle the corrupted log records, it has historical
++# problems dealing with the situation where the corrupted log records may have
++# overwritten the tail of the previous good record in the log. If this occurs,
++# log recovery may fail.
++#
++# This can be reproduced more reliably under non-default conditions such as with
++# the smallest supported FSB sizes and/or largest supported log buffer sizes and
++# counts (logbufs and logbsize mount options).
++#
++# Note that this test requires a DEBUG mode kernel.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Red Hat, Inc. All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
 +
-+/*
-+ * DEBUG mode flag to force pin the tail of the log. Used from test
-+ * infrastructure to manufacture head-behind-tail conditions. DO NOT USE
-+ * DIRECTLY. This will lock up the fs!
-+ *
-+ * When this option is enabled, all log items present in the AIL are emulated as
-+ * being in the pinned state until the option is disabled. Once disabled, log
-+ * items return to their natural state and fs operation continues as normal.
-+ */
-+STATIC ssize_t
-+log_pin_tail_store(
-+	struct kobject		*kobject,
-+	const char		*buf,
-+	size_t			count)
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	struct xlog		*log = to_xlog(kobject);
-+	int			ret;
-+	int			val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (val == 1)
-+		log->l_pin_tail = true;
-+	else if (val == 0)
-+		log->l_pin_tail = false;
-+	else
-+		return -EINVAL;
-+
-+	return count;
++	cd /
++	rm -f $tmp.*
++	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
++	[ -e /sys/fs/xfs/$sdev/log/log_pin_tail ] &&
++		echo 0 > /sys/fs/xfs/$sdev/log/log_pin_tail
++	wait > /dev/null 2>&1
 +}
 +
-+STATIC ssize_t
-+log_pin_tail_show(
-+	struct kobject		*kobject,
-+	char			*buf)
-+{
-+	struct xlog		*log = to_xlog(kobject);
++rm -f $seqres.full
 +
-+	return snprintf(buf, PAGE_SIZE, "%d\n", log->l_pin_tail ? 1 : 0);
-+}
-+XFS_SYSFS_ATTR_RW(log_pin_tail);
++# get standard environment, filters and checks
++. ./common/rc
 +
- #endif	/* DEBUG */
- 
- static struct attribute *xfs_log_attrs[] = {
-@@ -387,6 +432,7 @@ static struct attribute *xfs_log_attrs[] = {
- 	ATTR_LIST(write_grant_head),
- #ifdef DEBUG
- 	ATTR_LIST(log_badcrc_factor),
-+	ATTR_LIST(log_pin_tail),
- #endif
- 	NULL,
- };
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 9056c0f..c901e61 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -27,6 +27,7 @@
- #include "xfs_trace.h"
- #include "xfs_error.h"
- #include "xfs_log.h"
-+#include "xfs_log_priv.h"
- 
- #ifdef DEBUG
- /*
-@@ -325,6 +326,23 @@ xfs_ail_delete(
- 	xfs_trans_ail_cursor_clear(ailp, lip);
- }
- 
-+static inline uint
-+xfsaild_push_item(
-+	struct xfs_ail		*ailp,
-+	struct xfs_log_item	*lip)
-+{
-+#ifdef DEBUG
-+	/*
-+	 * If tail pinning is enabled, skip the push and track all items as
-+	 * pinned to force pin the log tail. This helps induce head-behind-tail
-+	 * conditions.
-+	 */
-+	if (ailp->xa_mount->m_log->l_pin_tail)
-+		return XFS_ITEM_PINNED;
-+#endif
-+	return lip->li_ops->iop_push(lip, &ailp->xa_buf_list);
-+}
++# real QA test starts here
 +
- static long
- xfsaild_push(
- 	struct xfs_ail		*ailp)
-@@ -382,7 +400,7 @@ xfsaild_push(
- 		 * rely on the AIL cursor implementation to be able to deal with
- 		 * the dropped lock.
- 		 */
--		lock_result = lip->li_ops->iop_push(lip, &ailp->xa_buf_list);
-+		lock_result = xfsaild_push_item(ailp, lip);
- 		switch (lock_result) {
- 		case XFS_ITEM_SUCCESS:
- 			XFS_STATS_INC(mp, xs_push_ail_success);
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_xfs_sysfs $(_short_dev $TEST_DEV)/log/log_badcrc_factor
++_require_xfs_sysfs $(_short_dev $TEST_DEV)/log/log_pin_tail
++_require_scratch
++_require_command "$KILLALL_PROG" killall
++
++echo "Silence is golden."
++
++sdev=$(_short_dev $SCRATCH_DEV)
++
++_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
++_scratch_mount || _fail "mount failed"
++
++# populate the fs with some data and cycle the mount to reset the log head/tail
++$FSSTRESS_PROG -d $SCRATCH_MNT -z -fcreat=1 -p 4 -n 100000 > /dev/null 2>&1
++_scratch_cycle_mount || _fail "mount failed"
++
++# Pin the tail and start a file removal workload. File removal tends to
++# reproduce the corruption more reliably.
++echo 1 > /sys/fs/xfs/$sdev/log/log_pin_tail
++
++rm -rf $SCRATCH_MNT/* > /dev/null 2>&1 &
++workpid=$!
++
++# wait for the head to stop pushing forward
++prevhead=-1
++head=`cat /sys/fs/xfs/$sdev/log/log_head_lsn`
++while [ "$head" != "$prevhead" ]; do
++	sleep 5
++	prevhead=$head
++	head=`cat /sys/fs/xfs/$sdev/log/log_head_lsn`
++done
++
++# Once the head is pinned behind the tail, enable log record corruption and
++# unpin the tail. All subsequent log buffer writes end up corrupted on-disk and
++# result in log I/O errors.
++echo 1 > /sys/fs/xfs/$sdev/log/log_badcrc_factor
++echo 0 > /sys/fs/xfs/$sdev/log/log_pin_tail
++
++# wait for fs shutdown to kill the workload
++wait $workpid
++
++# cycle mount to test log recovery
++_scratch_cycle_mount
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+new file mode 100644
+index 0000000..d254382
+--- /dev/null
++++ b/tests/xfs/999.out
+@@ -0,0 +1,2 @@
++QA output created by 999
++Silence is golden.
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 792161a..d94f010 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -416,3 +416,4 @@
+ 416 dangerous_fuzzers dangerous_scrub dangerous_repair
+ 417 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 418 dangerous_fuzzers dangerous_scrub dangerous_repair
++999 auto log
 -- 
 2.7.5
 
