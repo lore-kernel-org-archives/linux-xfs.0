@@ -1,60 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24171 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750947AbdFSUXR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Jun 2017 16:23:17 -0400
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v5JKNGud013642
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2017 20:23:16 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v5JKNFEq022031
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2017 20:23:15 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v5JKNF91016496
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2017 20:23:15 GMT
-Date: Mon, 19 Jun 2017 13:23:14 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: don't allow bmap/swap on rt files
-Message-ID: <20170619202314.GB4733@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+Received: from mx1.redhat.com ([209.132.183.28]:37160 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750844AbdFPTee (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 15:34:34 -0400
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [PATCH v7 01/22] fs: remove call_fsync helper function
+Date: Fri, 16 Jun 2017 15:34:06 -0400
+Message-Id: <20170616193427.13955-2-jlayton@redhat.com>
+In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
+References: <20170616193427.13955-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-bmap returns a dumb LBA address but not the block device that goes with
-that LBA.  Swapfiles don't care about this and will blindly assume that
-the data volume is the correct blockdev, which is totally bogus for
-files on the rt subvolume.  This results in the swap code doing IOs to
-arbitrary locations on the data device(!) if the passed in mapping is a
-realtime file, so just turn off bmap for rt files.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Requested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/xfs/xfs_aops.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ fs/sync.c          | 2 +-
+ include/linux/fs.h | 6 ------
+ ipc/shm.c          | 2 +-
+ 3 files changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 6bab8c4..716b5ee 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1316,9 +1316,12 @@ xfs_vm_bmap(
- 	 * The swap code (ab-)uses ->bmap to get a block mapping and then
- 	 * bypasseѕ the file system for actual I/O.  We really can't allow
- 	 * that on reflinks inodes, so we have to skip out here.  And yes,
--	 * 0 is the magic code for a bmap error..
-+	 * 0 is the magic code for a bmap error.
-+	 *
-+	 * Since we don't pass back blockdev info, we can't return bmap
-+	 * information for rt files either.
- 	 */
--	if (xfs_is_reflink_inode(ip))
-+	if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip))
- 		return 0;
+diff --git a/fs/sync.c b/fs/sync.c
+index 11ba023434b1..2a54c1f22035 100644
+--- a/fs/sync.c
++++ b/fs/sync.c
+@@ -192,7 +192,7 @@ int vfs_fsync_range(struct file *file, loff_t start, loff_t end, int datasync)
+ 		spin_unlock(&inode->i_lock);
+ 		mark_inode_dirty_sync(inode);
+ 	}
+-	return call_fsync(file, start, end, datasync);
++	return file->f_op->fsync(file, start, end, datasync);
+ }
+ EXPORT_SYMBOL(vfs_fsync_range);
  
- 	filemap_write_and_wait(mapping);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 4929a8f28cc3..1a135274b4f8 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1740,12 +1740,6 @@ static inline int call_mmap(struct file *file, struct vm_area_struct *vma)
+ 	return file->f_op->mmap(file, vma);
+ }
+ 
+-static inline int call_fsync(struct file *file, loff_t start, loff_t end,
+-			     int datasync)
+-{
+-	return file->f_op->fsync(file, start, end, datasync);
+-}
+-
+ ssize_t rw_copy_check_uvector(int type, const struct iovec __user * uvector,
+ 			      unsigned long nr_segs, unsigned long fast_segs,
+ 			      struct iovec *fast_pointer,
+diff --git a/ipc/shm.c b/ipc/shm.c
+index ec5688e98f25..28a444861a8f 100644
+--- a/ipc/shm.c
++++ b/ipc/shm.c
+@@ -453,7 +453,7 @@ static int shm_fsync(struct file *file, loff_t start, loff_t end, int datasync)
+ 
+ 	if (!sfd->file->f_op->fsync)
+ 		return -EINVAL;
+-	return call_fsync(sfd->file, start, end, datasync);
++	return sfd->file->f_op->fsync(sfd->file, start, end, datasync);
+ }
+ 
+ static long shm_fallocate(struct file *file, int mode, loff_t offset,
+-- 
+2.13.0
+
