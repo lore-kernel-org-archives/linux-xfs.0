@@ -1,67 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39551 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750780AbdFPRrG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Jun 2017 13:47:06 -0400
-Date: Fri, 16 Jun 2017 10:46:47 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:21061 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753049AbdFPRxz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Jun 2017 13:53:55 -0400
+Date: Fri, 16 Jun 2017 10:53:37 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: XFS Calltraces by using XFS with Ceph
-Message-ID: <20170616174646.GD5421@birch.djwong.org>
-References: <ff5af7a48b502752faac6f2bbc1c3bb7@jonas-server.de>
- <20170614120829.GA65212@bfoster.bfoster>
- <b447cdcdc5a7278c6a9cc46627e22c94@jonas-server.de>
- <20170614140732.GA857@bfoster.bfoster>
- <20170614155513.GQ4530@birch.djwong.org>
- <34ddf391569ed02b85a59eff856088ab@jonas-server.de>
- <20170615192009.18ddd3bc@harpe.intellique.com>
- <7c00729f5554099fcf5eae65ee1cb4a0@jonas-server.de>
+Subject: [PATCH] xfs: don't crash on unexpected holes in dir/attr btrees
+Message-ID: <20170616175337.GE5421@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <7c00729f5554099fcf5eae65ee1cb4a0@jonas-server.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: list@jonas-server.de
-Cc: Emmanuel Florac <eflorac@intellique.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-xfs-owner@vger.kernel.org
+To: list@jonas-server.de, David Shaw <dshaw@jabberwocky.com>
+Cc: Emmanuel Florac <eflorac@intellique.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Fri, Jun 16, 2017 at 07:37:11AM +0200, list@jonas-server.de wrote:
-> Am 2017-06-15 19:20, schrieb Emmanuel Florac:
-> >Le Thu, 15 Jun 2017 07:55:12 +0200
-> >list@jonas-server.de écrivait:
-> >
-> >>> Looking at the new Elixir[1], it looks like we're trying to deref
-> >>> ((*bpp)->b_addr)->magic, so that might explain the crash you see.
-> >>>
-> >>> --D
-> >>>
-> >>> [1]
-> >>> http://elixir.free-electrons.com/linux/v4.4.72/source/fs/xfs/libxfs/xfs_da_btree.c#L270
-> >>>
-> >>>>
-> >
-> >Indeed that matches exactly the crash Darrick mentioned. Looks like you
-> >need either a special hand-patched kernel... or wait for an official
-> >fix for this one :/
-> 
-> When will a fix normally be in the ubuntu kernel? I need to have a stable
-> distribution kernel, I can not install a patched version.
+Hi all,
 
-Like Emmanuel said, first a fix has to go upstream, then it can go to the
-4.4 stable kernel, and then it'll probably end up in the Ubuntu kernel.
+So I /think/ the xfs_attr_inactive crashes that both of you have been
+seeing are a result of XFS assuming that there aren't ever any mapping
+holes in the extended attribute fork and crashing when it tries to
+grab a buffer for the hole and fails to notice that holes don't have
+buffers.  This lightly tested patch gets rid of /that/ problem.
 
-Can you post a metadump of the xfs filesystem somewhere for further
-analysis?  I'm pretty sure it's the same problem reported by David Shaw
-on this list a couple of weeks ago.  Since you can't run one-off test
-kernels, send us a metadump for recreation in a lab is the only other
-way to figure out if the fix works.
-
-(And yes, I /do/ have a lightly tested fix which I'm about to send out.)
+So, if you're willing, can you try this out and see if the crashes go
+away?  Granted, this might only enable us to lurch on whatever's next...
 
 --D
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+In quite a few places we call xfs_da_read_buf with a mappedbno that we
+don't control, then assume that the function passes back either an error
+code or a buffer pointer.  Unfortunately, if mappedbno == -2 and bno
+maps to a hole, we get a return code of zero and a NULL buffer, which
+means that we crash if we actually try to use that buffer pointer.  This
+happens immediately when we set the buffer type for transaction context.
+
+Therefore, check that we have no error code and a non-NULL bp before
+trying to use bp.  This patch is a follow-up to an incomplete fix in
+96a3aefb8ffde231 ("xfs: don't crash if reading a directory results in an
+unexpected hole").
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr_leaf.c  |    2 +-
+ fs/xfs/libxfs/xfs_da_btree.c   |    2 +-
+ fs/xfs/libxfs/xfs_dir2_block.c |    2 +-
+ fs/xfs/libxfs/xfs_dir2_leaf.c  |    4 ++--
+ 4 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 2852521..c6c15e5 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -351,7 +351,7 @@ xfs_attr3_leaf_read(
+ 
+ 	err = xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
+ 				XFS_ATTR_FORK, &xfs_attr3_leaf_buf_ops);
+-	if (!err && tp)
++	if (!err && tp && *bpp)
+ 		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_ATTR_LEAF_BUF);
+ 	return err;
+ }
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 356f21d..6d43358 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -263,7 +263,7 @@ xfs_da3_node_read(
+ 
+ 	err = xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
+ 					which_fork, &xfs_da3_node_buf_ops);
+-	if (!err && tp) {
++	if (!err && tp && *bpp) {
+ 		struct xfs_da_blkinfo	*info = (*bpp)->b_addr;
+ 		int			type;
+ 
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index aa17cb7..43c902f 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -139,7 +139,7 @@ xfs_dir3_block_read(
+ 
+ 	err = xfs_da_read_buf(tp, dp, mp->m_dir_geo->datablk, -1, bpp,
+ 				XFS_DATA_FORK, &xfs_dir3_block_buf_ops);
+-	if (!err && tp)
++	if (!err && tp && *bpp)
+ 		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_BLOCK_BUF);
+ 	return err;
+ }
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index 7002024..27297a6 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -268,7 +268,7 @@ xfs_dir3_leaf_read(
+ 
+ 	err = xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
+ 				XFS_DATA_FORK, &xfs_dir3_leaf1_buf_ops);
+-	if (!err && tp)
++	if (!err && tp && *bpp)
+ 		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_LEAF1_BUF);
+ 	return err;
+ }
+@@ -285,7 +285,7 @@ xfs_dir3_leafn_read(
+ 
+ 	err = xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
+ 				XFS_DATA_FORK, &xfs_dir3_leafn_buf_ops);
+-	if (!err && tp)
++	if (!err && tp && *bpp)
+ 		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_LEAFN_BUF);
+ 	return err;
+ }
