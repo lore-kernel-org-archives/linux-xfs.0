@@ -1,33 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:41019 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750746AbdFNGqV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2017 02:46:21 -0400
-Date: Tue, 13 Jun 2017 23:46:19 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS journal write ordering constraints?
-Message-ID: <20170614064619.GA3598@infradead.org>
-References: <CALoZfD4-uqhRSfEh0Y+v8jjSDY2KkAh-hhwdLnRgZopHEETUXA@mail.gmail.com>
- <20170609234408.GE17542@dastard>
- <CALoZfD76r2ohmn=6CpPJ4DKrYVxNkP9LWmzDGm8dZRVZgBcgQA@mail.gmail.com>
- <20170612235002.GF17542@dastard>
- <CALoZfD4RXJUusr7-r8COsUY+8_D6z68LbCRkp+9VM1E2tUV1UA@mail.gmail.com>
- <20170613221647.GG17542@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170613221647.GG17542@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:54942 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751141AbdFPKyw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 06:54:52 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id AE0C3C04B329
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 10:54:51 +0000 (UTC)
+Received: from eorzea.usersys.redhat.com (unknown [10.40.205.55])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0C76F84D1D
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 10:54:50 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 0/2 V4] Resubmit items failed during writeback
+Date: Fri, 16 Jun 2017 12:54:43 +0200
+Message-Id: <20170616105445.3314-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Sweet Tea Dorminy <sweettea@permabit.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Jun 14, 2017 at 08:16:47AM +1000, Dave Chinner wrote:
-> Yes, that's my understanding, too, but I also thought that multiple
-> outstanding flushes are ordered by the block layer. i.e. flushes can
-> be reordered against other operations, but not other flushes.
+Hi,
 
-There is no such guarantee.  For request based drivers some ordering
-happens in practice, but that's an implementation artifact and not
-a gurantee, and for bio based drivers all bets are off.
+there goes a new version of this patchset based on previous reviews on V3.
+
+Changelogs added separated to each patch.
+
+
+-- 
+2.9.4
+
