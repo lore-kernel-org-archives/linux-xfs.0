@@ -1,103 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53592 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58436 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751079AbdFTHBI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Jun 2017 03:01:08 -0400
-Date: Tue, 20 Jun 2017 09:01:03 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
- error during buffer writeback
-Message-ID: <20170620070103.amrnv3nalfzohku2@eorzea.usersys.redhat.com>
-References: <20170616105445.3314-1-cmaiolino@redhat.com>
- <20170616105445.3314-3-cmaiolino@redhat.com>
- <20170616183510.GC21846@wotan.suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170616183510.GC21846@wotan.suse.de>
+        id S1752594AbdFPTgG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 15:36:06 -0400
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [PATCH v7 22/22] btrfs: minimal conversion to errseq_t writeback error reporting on fsync
+Date: Fri, 16 Jun 2017 15:34:27 -0400
+Message-Id: <20170616193427.13955-23-jlayton@redhat.com>
+In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
+References: <20170616193427.13955-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-xfs@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-Hello Luis.
+Just check and advance the errseq_t in the file before returning.
+Internal callers of filemap_* functions are left as-is.
 
-On Fri, Jun 16, 2017 at 08:35:10PM +0200, Luis R. Rodriguez wrote:
-> On Fri, Jun 16, 2017 at 12:54:45PM +0200, Carlos Maiolino wrote:
-> > When a buffer has been failed during writeback, the inode items into it
-> > are kept flush locked, and are never resubmitted due the flush lock, so,
-> > if any buffer fails to be written, the items in AIL are never written to
-> > disk and never unlocked.
-> > 
-> > This causes unmount operation to hang due these items flush locked in AIL,
-> 
-> What type of hang? If it has occurred in production is there a trace somewhere?
-> what does it look like?
-> 
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/btrfs/file.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-No, there isn't any specific trace, the hang can be seen in several different
-places, when unmounting the filesystem, it will hang in xfs_ail_push_all_sync(),
-but this will be hit even if no unmount is attempted, with items stuck forever
-in ail.
-
-I think the easier way to track this is to look at the device stats in sysfs,
-and you will see a forever increase in push_ail statistics even with no work
-going on in the filesystem.
-
-> You said you would work on an xfstest for this, how's that going? Otherewise
-> a commit log description of how to reproduce would be useful.
->
-
-The xfstests is not done yet, and I'm actually not focusing on it right now, I
-already have a reproducer, pointed on the beginning of the discussion from this
-problem and having this fixed by now is my priority, once the patches are in
-shape and accepted, I'll work on the xfstests.
-
-Not to mention that this problem is still possible to occur not only with
-inode items, but also with dquot items, which will also be fixed as soon as we
-reach a consensus of how to best fix this problem by now. Once the dquot items
-fix will use the same infra-structure as the inode items use in this patchset,
-and quite the same code, one of the reasons I segmented the buffer resubmission
-into a different function that can be used for both item types.
-
-
+diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+index 0f102a1b851f..609226beea43 100644
+--- a/fs/btrfs/file.c
++++ b/fs/btrfs/file.c
+@@ -2017,7 +2017,7 @@ int btrfs_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+ 	struct btrfs_root *root = BTRFS_I(inode)->root;
+ 	struct btrfs_trans_handle *trans;
+ 	struct btrfs_log_ctx ctx;
+-	int ret = 0;
++	int ret = 0, err;
+ 	bool full_sync = 0;
+ 	u64 len;
  
-> > but this also causes the items in AIL to never be written back, even when
-> > the IO device comes back to normal.
-> > 
-> > I've been testing this patch with a DM-thin device, creating a
-> > filesystem larger than the real device.
-> > 
-> > When writing enough data to fill the DM-thin device, XFS receives ENOSPC
-> > errors from the device, and keep spinning on xfsaild (when 'retry
-> > forever' configuration is set).
-> > 
-> > At this point, the filesystem can not be unmounted because of the flush locked
-> > items in AIL, but worse, the items in AIL are never retried at all
-> > (once xfs_inode_item_push() will skip the items that are flush locked),
-> > even if the underlying DM-thin device is expanded to the proper size.
-> 
-> Jeesh.
-> 
-> If the above issue is a real hang, shoudl we not consider a sensible stable fix
-> to start off with ?
-> 
-
-Please take a look at the whole history of this issue, this patchset is supposed
-to be the stable fix, that's why one of the reqs was to use xa_lock here, to
-change the log_item flags, instead of using atomic ops, making it easier to
-backport it to stable kernels, without messing around with atomic ops and field
-type changes and yes, this is a real hang problem, which we already received
-several reports on this along the time I'm working on it.
-
-Cheers
-
->   Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+@@ -2036,7 +2036,7 @@ int btrfs_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+ 	 */
+ 	ret = start_ordered_ops(inode, start, end);
+ 	if (ret)
+-		return ret;
++		goto out;
+ 
+ 	inode_lock(inode);
+ 	atomic_inc(&root->log_batch);
+@@ -2233,6 +2233,9 @@ int btrfs_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+ 		ret = btrfs_end_transaction(trans);
+ 	}
+ out:
++	err = filemap_report_wb_err(file);
++	if (!ret)
++		ret = err;
+ 	return ret > 0 ? -EIO : ret;
+ }
+ 
 -- 
-Carlos
+2.13.0
+
