@@ -1,208 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:29225 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751937AbdFTTv2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2017 15:51:28 -0400
-Date: Tue, 20 Jun 2017 12:51:18 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: rewrite xfs_dq_get_next_id using
- xfs_iext_lookup_extent
-Message-ID: <20170620195118.GD4733@birch.djwong.org>
-References: <20170620090244.30876-1-hch@lst.de>
- <20170620090244.30876-2-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170620090244.30876-2-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:37798 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752582AbdFPTgB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 15:36:01 -0400
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [PATCH v7 19/22] ext4: add more robust reporting of metadata writeback errors
+Date: Fri, 16 Jun 2017 15:34:24 -0400
+Message-Id: <20170616193427.13955-20-jlayton@redhat.com>
+In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
+References: <20170616193427.13955-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, agruenba@redhat.com
+To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-On Tue, Jun 20, 2017 at 11:02:43AM +0200, Christoph Hellwig wrote:
-> This goes straight to a single lookup in the extent list and avoids a
-> roundtrip through two layers that don't add any value for the simple
-> quoata file that just has data or holes and no page cache, delayed
-> allocation, unwritten extent or COW fork (which btw, doesn't seem to
-> be handled by the existing SEEK HOLE/DATA code).
+ext4 uses the blockdev mapping for tracking metadata stored in the
+pagecache. Sample its wb_err when opening a file and store that in
+the f_md_wb_err field.
 
-I wrote a test case that tries to create a file with an extent in the
-CoW fork that doesn't have a corresponding extent in the data fork.
-This can be done by setting a large cowextsize hint on a sparse file,
-reflinking the file, writing first to a shared block, and then writing
-to the hole.  In theory this creates the situation:
+Change ext4_sync_file to check for data errors first, and then check the
+blockdev mapping for metadata errors afterward.
 
-data: DD------
-cow:  dddddddd
-      ^--^-------- these two blocks are dirty
+Note that because metadata writeback errors are only tracked on a
+per-device level, this does mean that we'll end up reporting an error on
+all open file descriptors when there is a metadata writeback failure.
+That's not ideal, but we can possibly improve upon it in the future.
 
-(D = data, d = delalloc resv., - = no extent)
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/ext4/dir.c   |  8 ++++++--
+ fs/ext4/file.c  |  5 ++++-
+ fs/ext4/fsync.c | 13 +++++++++++++
+ 3 files changed, 23 insertions(+), 3 deletions(-)
 
-*However* due to a design feature of reflink, I preserved the rule that
-any block backed by a page in the pagecache has to have a data fork
-extent backing the block.  IOWs, we still make a delalloc reservation in
-the data fork even if there's already a reservation for that offset in
-the CoW fork, so in reality the two forks look like this:
+diff --git a/fs/ext4/dir.c b/fs/ext4/dir.c
+index e8b365000d73..6bbb19510f74 100644
+--- a/fs/ext4/dir.c
++++ b/fs/ext4/dir.c
+@@ -611,9 +611,13 @@ static int ext4_dx_readdir(struct file *file, struct dir_context *ctx)
+ 
+ static int ext4_dir_open(struct inode * inode, struct file * filp)
+ {
++	int ret = 0;
++
+ 	if (ext4_encrypted_inode(inode))
+-		return fscrypt_get_encryption_info(inode) ? -EACCES : 0;
+-	return 0;
++		ret = fscrypt_get_encryption_info(inode) ? -EACCES : 0;
++	if (!ret)
++		filp->f_md_wb_err = filemap_sample_wb_err(inode->i_sb->s_bdev->bd_inode->i_mapping);
++	return ret;
+ }
+ 
+ static int ext4_release_dir(struct inode *inode, struct file *filp)
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 02ce7e7bbdf5..6e505269132c 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -435,7 +435,10 @@ static int ext4_file_open(struct inode * inode, struct file * filp)
+ 		if (ret < 0)
+ 			return ret;
+ 	}
+-	return dquot_file_open(inode, filp);
++	ret = dquot_file_open(inode, filp);
++	if (!ret)
++		filp->f_md_wb_err = filemap_sample_wb_err(sb->s_bdev->bd_inode->i_mapping);
++	return ret;
+ }
+ 
+ /*
+diff --git a/fs/ext4/fsync.c b/fs/ext4/fsync.c
+index 03d6259d8662..8ea8ec517da5 100644
+--- a/fs/ext4/fsync.c
++++ b/fs/ext4/fsync.c
+@@ -161,10 +161,23 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+ 			ret = err;
+ 	}
+ out:
++	/*
++	 * Was there a metadata writeback error since last fsync?
++	 *
++	 * FIXME: ext4 tracks metadata with a whole-block device mapping. If
++	 * there is any sort of metadata writeback error, we'll report an
++	 * error on all open fds, even ones not associated with this inode.
++	 */
++	err = filemap_report_md_wb_err(file,
++				inode->i_sb->s_bdev->bd_inode->i_mapping);
++	if (!ret)
++		ret = err;
++
+ 	/* Was there a writeback error of the data since last fsync? */
+ 	err = filemap_report_wb_err(file);
+ 	if (!ret)
+ 		ret = err;
++
+ 	trace_ext4_sync_file_exit(inode, ret);
+ 	return ret;
+ }
+-- 
+2.13.0
 
-data: DD-d----
-cow:  dddddddd
-      ^--^-------- these two blocks are dirty
-
-Therefore, the redundant delalloc reservation in the data fork enable
-SEEK_HOLE and SEEK_DATA work correctly.  The writeback and dio write code /do/
-notice the speculative preallocation in the CoW fork and uses that to
-try to fight fragmentation, so if you dirty block 2 before an fsync then
-blocks 0-3 of the file become a single extent.
-
-Ergo, in XFS it's still the case that the data fork always has an extent
-to back file data, so the existing file offset iteration code should all
-still work even with the pagecache in play.  We pay a price in that the
-data fork delalloc reservation isn't free, but gain the benefit that
-it's not necessary to complicate the code thinking about when we need to
-mergesort the data and CoW fork extent lists to find all the data in a
-file.
-
-Anyway, having written the testcase I'll post it to fstests.
-
---D
-
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_dquot.c | 66 ++++++++++++++++++------------------------------------
->  1 file changed, 22 insertions(+), 44 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 9d06cc30e875..774750bb3e6b 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -695,21 +695,18 @@ xfs_qm_dqread(
->   */
->  static int
->  xfs_dq_get_next_id(
-> -	xfs_mount_t		*mp,
-> +	struct xfs_mount	*mp,
->  	uint			type,
-> -	xfs_dqid_t		*id,
-> -	loff_t			eof)
-> +	xfs_dqid_t		*id)
->  {
-> -	struct xfs_inode	*quotip;
-> +	struct xfs_inode	*quotip = xfs_quota_inode(mp, type);
-> +	xfs_dqid_t		next_id = *id + 1; /* simple advance */
-> +	uint			lock_flags;
-> +	struct xfs_bmbt_irec	got;
-> +	xfs_extnum_t		idx;
->  	xfs_fsblock_t		start;
-> -	loff_t			offset;
-> -	uint			lock;
-> -	xfs_dqid_t		next_id;
->  	int			error = 0;
->  
-> -	/* Simple advance */
-> -	next_id = *id + 1;
-> -
->  	/* If we'd wrap past the max ID, stop */
->  	if (next_id < *id)
->  		return -ENOENT;
-> @@ -723,23 +720,20 @@ xfs_dq_get_next_id(
->  	/* Nope, next_id is now past the current chunk, so find the next one */
->  	start = (xfs_fsblock_t)next_id / mp->m_quotainfo->qi_dqperchunk;
->  
-> -	quotip = xfs_quota_inode(mp, type);
-> -	lock = xfs_ilock_data_map_shared(quotip);
-> -
-> -	offset = __xfs_seek_hole_data(VFS_I(quotip), XFS_FSB_TO_B(mp, start),
-> -				      eof, SEEK_DATA);
-> -	if (offset < 0)
-> -		error = offset;
-> -
-> -	xfs_iunlock(quotip, lock);
-> +	lock_flags = xfs_ilock_data_map_shared(quotip);
-> +	if (!(quotip->i_df.if_flags & XFS_IFEXTENTS)) {
-> +		error = xfs_iread_extents(NULL, quotip, XFS_DATA_FORK);
-> +		if (error)
-> +			return error;
-> +	}
->  
-> -	/* -ENXIO is essentially "no more data" */
-> -	if (error)
-> -		return (error == -ENXIO ? -ENOENT: error);
-> +	if (xfs_iext_lookup_extent(quotip, &quotip->i_df, start, &idx, &got))
-> +		*id = got.br_startoff * mp->m_quotainfo->qi_dqperchunk;
-> +	else
-> +		error = -ENOENT;
-> +	xfs_iunlock(quotip, lock_flags);
->  
-> -	/* Convert next data offset back to a quota id */
-> -	*id = XFS_B_TO_FSB(mp, offset) * mp->m_quotainfo->qi_dqperchunk;
-> -	return 0;
-> +	return error;
->  }
->  
->  /*
-> @@ -762,7 +756,6 @@ xfs_qm_dqget(
->  	struct xfs_quotainfo	*qi = mp->m_quotainfo;
->  	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
->  	struct xfs_dquot	*dqp;
-> -	loff_t			eof = 0;
->  	int			error;
->  
->  	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-> @@ -790,21 +783,6 @@ xfs_qm_dqget(
->  	}
->  #endif
->  
-> -	/* Get the end of the quota file if we need it */
-> -	if (flags & XFS_QMOPT_DQNEXT) {
-> -		struct xfs_inode	*quotip;
-> -		xfs_fileoff_t		last;
-> -		uint			lock_mode;
-> -
-> -		quotip = xfs_quota_inode(mp, type);
-> -		lock_mode = xfs_ilock_data_map_shared(quotip);
-> -		error = xfs_bmap_last_offset(quotip, &last, XFS_DATA_FORK);
-> -		xfs_iunlock(quotip, lock_mode);
-> -		if (error)
-> -			return error;
-> -		eof = XFS_FSB_TO_B(mp, last);
-> -	}
-> -
->  restart:
->  	mutex_lock(&qi->qi_tree_lock);
->  	dqp = radix_tree_lookup(tree, id);
-> @@ -823,7 +801,7 @@ xfs_qm_dqget(
->  			if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
->  				xfs_dqunlock(dqp);
->  				mutex_unlock(&qi->qi_tree_lock);
-> -				error = xfs_dq_get_next_id(mp, type, &id, eof);
-> +				error = xfs_dq_get_next_id(mp, type, &id);
->  				if (error)
->  					return error;
->  				goto restart;
-> @@ -858,7 +836,7 @@ xfs_qm_dqget(
->  
->  	/* If we are asked to find next active id, keep looking */
->  	if (error == -ENOENT && (flags & XFS_QMOPT_DQNEXT)) {
-> -		error = xfs_dq_get_next_id(mp, type, &id, eof);
-> +		error = xfs_dq_get_next_id(mp, type, &id);
->  		if (!error)
->  			goto restart;
->  	}
-> @@ -917,7 +895,7 @@ xfs_qm_dqget(
->  	if (flags & XFS_QMOPT_DQNEXT) {
->  		if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
->  			xfs_qm_dqput(dqp);
-> -			error = xfs_dq_get_next_id(mp, type, &id, eof);
-> +			error = xfs_dq_get_next_id(mp, type, &id);
->  			if (error)
->  				return error;
->  			goto restart;
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
