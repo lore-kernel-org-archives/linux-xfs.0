@@ -1,31 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59790 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750951AbdFTGhY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2017 02:37:24 -0400
-Date: Mon, 19 Jun 2017 23:37:23 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: don't allow bmap/swap on rt files
-Message-ID: <20170620063723.GA2250@infradead.org>
-References: <20170619202314.GB4733@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170619202314.GB4733@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60718 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751079AbdFPTgJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 15:36:09 -0400
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [PATCH v7 21/22] xfs: minimal conversion to errseq_t writeback error reporting
+Date: Fri, 16 Jun 2017 15:34:26 -0400
+Message-Id: <20170616193427.13955-22-jlayton@redhat.com>
+In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
+References: <20170616193427.13955-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-On Mon, Jun 19, 2017 at 01:23:14PM -0700, Darrick J. Wong wrote:
-> bmap returns a dumb LBA address but not the block device that goes with
-> that LBA.  Swapfiles don't care about this and will blindly assume that
-> the data volume is the correct blockdev, which is totally bogus for
-> files on the rt subvolume.  This results in the swap code doing IOs to
-> arbitrary locations on the data device(!) if the passed in mapping is a
-> realtime file, so just turn off bmap for rt files.
+Just check and advance the data errseq_t in struct file before
+before returning from fsync on normal files. Internal filemap_*
+callers are left as-is.
 
-Looks fine,
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/xfs/xfs_file.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 5fb5a0958a14..bc3b1575e8db 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -134,7 +134,7 @@ xfs_file_fsync(
+ 	struct inode		*inode = file->f_mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	int			error = 0;
++	int			error = 0, err2;
+ 	int			log_flushed = 0;
+ 	xfs_lsn_t		lsn = 0;
+ 
+@@ -142,10 +142,12 @@ xfs_file_fsync(
+ 
+ 	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
+ 	if (error)
+-		return error;
++		goto out;
+ 
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return -EIO;
++	if (XFS_FORCED_SHUTDOWN(mp)) {
++		error = -EIO;
++		goto out;
++	}
+ 
+ 	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+ 
+@@ -197,6 +199,11 @@ xfs_file_fsync(
+ 	    mp->m_logdev_targp == mp->m_ddev_targp)
+ 		xfs_blkdev_issue_flush(mp->m_ddev_targp);
+ 
++out:
++	err2 = filemap_report_wb_err(file);
++	if (!error)
++		error = err2;
++
+ 	return error;
+ }
+ 
+-- 
+2.13.0
+
