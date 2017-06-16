@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45310 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41026 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754429AbdFPOvj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:51:39 -0400
+        id S1754435AbdFPOvl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 10:51:41 -0400
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH 4/7] vfs: Add iomap_seek_hole_data helper
-Date: Fri, 16 Jun 2017 16:51:17 +0200
-Message-Id: <1497624680-16685-5-git-send-email-agruenba@redhat.com>
+Subject: [PATCH 5/7] gfs2: Implement lseek SEEK_HOLE / SEEK_DATA via iomap
+Date: Fri, 16 Jun 2017 16:51:18 +0200
+Message-Id: <1497624680-16685-6-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
 References: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,128 +15,102 @@ List-Id: xfs
 To: linux-fsdevel@vger.kernel.org
 Cc: Andreas Gruenbacher <agruenba@redhat.com>, Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel@redhat.com
 
-Filesystems can use this for implementing lseek SEEK_HOLE / SEEK_DATA
-support via iomap.
-
-The __iomap_seek_hole_data helper takes an additional size argument and
-doesn't reposition the file offset; this is for internal use for xfs
-quota files which don't maintain the inode size.
-
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- fs/iomap.c            | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iomap.h |  6 ++++
- 2 files changed, 87 insertions(+)
+ fs/gfs2/file.c  | 14 +++++++++++---
+ fs/gfs2/inode.c | 32 ++++++++++++++++++++++++++++++++
+ fs/gfs2/inode.h |  1 +
+ 3 files changed, 44 insertions(+), 3 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 4b10892..cf01694 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -584,6 +584,87 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
- }
- EXPORT_SYMBOL_GPL(iomap_fiemap);
+diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
+index c2062a1..62ce320 100644
+--- a/fs/gfs2/file.c
++++ b/fs/gfs2/file.c
+@@ -60,9 +60,7 @@ static loff_t gfs2_llseek(struct file *file, loff_t offset, int whence)
+ 	loff_t error;
  
-+static loff_t
-+iomap_seek_hole_actor(struct inode *inode, loff_t offset, loff_t length,
-+		      void *data, struct iomap *iomap)
-+{
-+	if (iomap->type == IOMAP_HOLE)
-+		return 0;
-+	return iomap->offset + iomap->length - offset;
-+}
-+
-+static loff_t
-+iomap_seek_data_actor(struct inode *inode, loff_t offset, loff_t length,
-+		      void *data, struct iomap *iomap)
-+{
-+	if (iomap->type != IOMAP_HOLE)
-+		return 0;
-+	return iomap->offset + iomap->length - offset;
-+}
-+
-+loff_t
-+__iomap_seek_hole_data(struct inode *inode, loff_t offset, loff_t size,
-+		       int whence, const struct iomap_ops *ops)
-+{
-+	static loff_t (*actor)(struct inode *, loff_t, loff_t, void *,
-+			       struct iomap *);
-+	loff_t len = size - offset;
-+	loff_t ret;
-+
-+	/* Nothing to be found beyond the end of the file. */
-+	if (len <= 0)
-+		return -ENXIO;
-+
-+	switch(whence) {
-+	case SEEK_HOLE:
-+		actor = iomap_seek_hole_actor;
-+		break;
+ 	switch (whence) {
+-	case SEEK_END: /* These reference inode->i_size */
+-	case SEEK_DATA:
+-	case SEEK_HOLE:
++	case SEEK_END:
+ 		error = gfs2_glock_nq_init(ip->i_gl, LM_ST_SHARED, LM_FLAG_ANY,
+ 					   &i_gh);
+ 		if (!error) {
+@@ -70,8 +68,18 @@ static loff_t gfs2_llseek(struct file *file, loff_t offset, int whence)
+ 			gfs2_glock_dq_uninit(&i_gh);
+ 		}
+ 		break;
 +
 +	case SEEK_DATA:
-+		actor = iomap_seek_data_actor;
++	case SEEK_HOLE:
++		error = gfs2_seek_hole_data(file, offset, whence);
 +		break;
-+	}
 +
-+	while (len > 0) {
-+		ret = iomap_apply(inode, offset, len, IOMAP_REPORT, ops,
-+				  NULL, actor);
-+		if (ret <= 0) {
-+			if (ret < 0)
-+				return ret;
-+			break;
-+		}
-+		offset += ret;
-+		len -= ret;
-+	}
-+
-+	if (len <= 0) {
-+		/* There is an implicit hole at the end of the file. */
-+		if (whence != SEEK_HOLE)
-+			offset = -ENXIO;
-+
-+		/* The last segment can extend beyond the end of the file. */
-+		if (offset > size)
-+			offset = size;
-+	}
-+
-+	return offset;
-+}
-+EXPORT_SYMBOL_GPL(__iomap_seek_hole_data);
-+
-+loff_t
-+iomap_seek_hole_data(struct file *file, loff_t offset, int whence,
-+		     const struct iomap_ops *ops)
+ 	case SEEK_CUR:
+ 	case SEEK_SET:
++		/*
++		 * These don't reference inode->i_size and don't depend on the
++		 * block mapping, so we don't need the glock.
++		 */
+ 		error = generic_file_llseek(file, offset, whence);
+ 		break;
+ 	default:
+diff --git a/fs/gfs2/inode.c b/fs/gfs2/inode.c
+index 9ed2e91..c8885e5 100644
+--- a/fs/gfs2/inode.c
++++ b/fs/gfs2/inode.c
+@@ -2046,6 +2046,38 @@ static int gfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ 	return ret;
+ }
+ 
++loff_t gfs2_seek_hole_data(struct file *file, loff_t offset, int whence)
 +{
 +	struct inode *inode = file->f_mapping->host;
++	struct gfs2_inode *ip = GFS2_I(inode);
++	struct gfs2_holder gh;
++	loff_t ret;
 +
-+	offset = __iomap_seek_hole_data(inode, offset, i_size_read(inode),
-+					whence, ops);
-+	if (offset <= 0)
-+		return offset;
-+	return vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
++	inode_lock(inode);
++	ret = gfs2_glock_nq_init(ip->i_gl, LM_ST_SHARED, 0, &gh);
++	if (ret)
++		goto out;
++	if (gfs2_is_stuffed(ip)) {
++		u64 size = i_size_read(inode);
++
++		if (offset >= size) {
++			ret = -ENXIO;
++			goto out_dequeue;
++		}
++		ret = offset;
++		if (whence == SEEK_HOLE)
++			ret = size;
++	} else {
++		ret = iomap_seek_hole_data(file, offset, whence, &gfs2_iomap_ops);
++	}
++
++out_dequeue:
++	gfs2_glock_dq_uninit(&gh);
++out:
++	inode_unlock(inode);
++	return ret;
 +}
-+EXPORT_SYMBOL_GPL(iomap_seek_hole_data);
 +
- /*
-  * Private flags for iomap_dio, must not overlap with the public ones in
-  * iomap.h:
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 9d64933..49b6ec0 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -85,6 +85,12 @@ int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops);
- int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
- 		loff_t start, loff_t len, const struct iomap_ops *ops);
+ const struct inode_operations gfs2_file_iops = {
+ 	.permission = gfs2_permission,
+ 	.setattr = gfs2_setattr,
+diff --git a/fs/gfs2/inode.h b/fs/gfs2/inode.h
+index aace8ce..c2866ec 100644
+--- a/fs/gfs2/inode.h
++++ b/fs/gfs2/inode.h
+@@ -109,6 +109,7 @@ extern int gfs2_setattr_simple(struct inode *inode, struct iattr *attr);
+ extern struct inode *gfs2_lookup_simple(struct inode *dip, const char *name);
+ extern void gfs2_dinode_out(const struct gfs2_inode *ip, void *buf);
+ extern int gfs2_open_common(struct inode *inode, struct file *file);
++extern loff_t gfs2_seek_hole_data(struct file *file, loff_t offset, int whence);
  
-+struct file;
-+loff_t __iomap_seek_hole_data(struct inode *inode, loff_t pos, loff_t size,
-+			      int whence, const struct iomap_ops *ops);
-+loff_t iomap_seek_hole_data(struct file *file, loff_t pos,
-+			    int whence, const struct iomap_ops *ops);
-+
- /*
-  * Flags for direct I/O ->end_io:
-  */
+ extern const struct inode_operations gfs2_file_iops;
+ extern const struct inode_operations gfs2_dir_iops;
 -- 
 2.7.5
 
