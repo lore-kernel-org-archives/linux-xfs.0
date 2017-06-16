@@ -1,61 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40164 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:65489 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751980AbdFPOva (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:51:30 -0400
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH 0/7] lseek SEEK_HOLE / SEEK_DATA via iomap
-Date: Fri, 16 Jun 2017 16:51:13 +0200
-Message-Id: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
+        id S1751789AbdFPThW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 15:37:22 -0400
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [xfstests PATCH v5 5/5] btrfs: make a btrfs version of writeback error reporting test
+Date: Fri, 16 Jun 2017 15:36:19 -0400
+Message-Id: <20170616193619.14576-6-jlayton@redhat.com>
+In-Reply-To: <20170616193619.14576-1-jlayton@redhat.com>
+References: <20170616193619.14576-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel@redhat.com
+To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-Here's an updated patch queue that implements iomap in gfs2 and switches gfs2
-fiemap over to use iomap.  Following that is lseek SEEK_HOLE and SEEK_DATA
-support for gfs2 and xfs.  Finally, xfs's internal use of lseek SEEK_HOLE /
-SEEK_DATA is converted to iomap.
+For btrfs, we can test how it reports data writeback errors on fsync by
+implementing a suggestion from Chris Mason:
 
-With the approach taken by this patch queue, filesystems that support iomap
-still need to implement fiemap and lseek SEEK_HOLE / SEEK_DATA separately.
-Those implementations will all be identical except for the filesystem specific
-locking / unlocking code at the beginning / end of the operations.
+Build a filesystem with 2 devices that stripes the data across
+both devices, but mirrors metadata across both. Then, make one
+of the devices fail and test what it does.
 
-Wouldn't it make sense to add iomap_lock and iomap_unlock operations, expose
-the iomap ops at the vfs layer, and implement fiemap and lseek SEEK_HOLE /
-SEEK_DATA generically in a next step?
+Cc: Chris Mason <clm@fb.com>
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ tests/btrfs/999     | 94 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/999.out |  3 ++
+ tests/btrfs/group   |  1 +
+ 3 files changed, 98 insertions(+)
+ create mode 100755 tests/btrfs/999
+ create mode 100644 tests/btrfs/999.out
 
-Thanks,
-Andreas
-
-
-Andreas Gruenbacher (4):
-  vfs: Add iomap_seek_hole_data helper
-  gfs2: Implement lseek SEEK_HOLE / SEEK_DATA via iomap
-  xfs: Switch to iomap for lseek SEEK_HOLE / SEEK_DATA
-  xfs: Switch to iomap for seeking in quota files
-
-Bob Peterson (3):
-  GFS2: Make height info part of metapath
-  GFS2: Implement iomap for block_map
-  GFS2: Switch fiemap implementation to use iomap
-
- fs/gfs2/Kconfig       |   1 +
- fs/gfs2/bmap.c        | 288 ++++++++++++++++++++++++++++++------------
- fs/gfs2/bmap.h        |   4 +
- fs/gfs2/file.c        |  14 ++-
- fs/gfs2/inode.c       |  54 ++++++--
- fs/gfs2/inode.h       |   1 +
- fs/gfs2/trace_gfs2.h  |  65 ++++++++++
- fs/iomap.c            |  81 ++++++++++++
- fs/xfs/xfs_dquot.c    |   5 +-
- fs/xfs/xfs_file.c     | 337 +-------------------------------------------------
- fs/xfs/xfs_inode.h    |   2 -
- include/linux/iomap.h |   9 +-
- 12 files changed, 429 insertions(+), 432 deletions(-)
-
+diff --git a/tests/btrfs/999 b/tests/btrfs/999
+new file mode 100755
+index 000000000000..903e36526708
+--- /dev/null
++++ b/tests/btrfs/999
+@@ -0,0 +1,94 @@
++#! /bin/bash
++# FS QA Test No. 999
++#
++# Open a file several times, write to it, fsync on all fds and make sure that
++# they all return 0. Change the device to start throwing errors. Write again
++# on all fds and fsync on all fds. Ensure that we get errors on all of them.
++# Then fsync on all one last time and verify that all return 0.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017, Jeff Layton <jlayton@redhat.com>
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.* $testdir
++    _dmerror_cleanup
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/dmerror
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs btrfs
++_require_dm_target error
++_require_test_program fsync-err
++_require_test_program dmerror
++
++# bring up dmerror device
++_scratch_unmount
++_dmerror_init
++
++# Replace first device with error-test device
++old_SCRATCH_DEV=$SCRATCH_DEV
++SCRATCH_DEV_POOL=`echo $SCRATCH_DEV_POOL | perl -pe "s#$SCRATCH_DEV#$DMERROR_DEV#"`
++SCRATCH_DEV=$DMERROR_DEV
++
++_require_scratch
++_require_scratch_dev_pool
++
++rm -f $seqres.full
++
++echo "Format and mount"
++
++_scratch_pool_mkfs "-d raid0 -m raid1" > $seqres.full 2>&1
++_scratch_mount
++
++# How much do we need to write? We need to hit all of the stripes. btrfs uses
++# a fixed 64k stripesize, so write enough to hit each one
++number_of_devices=`echo $SCRATCH_DEV_POOL | wc -w`
++write_kb=$(($number_of_devices * 64))
++_require_fs_space $SCRATCH_MNT $write_kb
++
++testfile=$SCRATCH_MNT/fsync-err-test
++
++SCRATCH_DEV=$old_SCRATCH_DEV
++$here/src/fsync-err -b $(($write_kb * 1024)) -d $here/src/dmerror $testfile
++
++# success, all done
++_dmerror_load_working_table
++
++# fs may be corrupt after this -- attempt to repair it
++_repair_scratch_fs >> $seqres.full
++
++# remove dmerror device
++_dmerror_cleanup
++
++status=0
++exit
+diff --git a/tests/btrfs/999.out b/tests/btrfs/999.out
+new file mode 100644
+index 000000000000..2e48492ff6d1
+--- /dev/null
++++ b/tests/btrfs/999.out
+@@ -0,0 +1,3 @@
++QA output created by 999
++Format and mount
++Test passed!
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index be0548796260..c9063f0a4087 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -147,3 +147,4 @@
+ 142 auto quick
+ 143 auto quick
+ 144 auto quick send
++999 auto quick
 -- 
-2.7.5
+2.13.0
 
