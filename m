@@ -1,155 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65489 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35536 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751789AbdFPThW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 15:37:22 -0400
+        id S1752479AbdFPTfp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 15:35:45 -0400
 From: Jeff Layton <jlayton@redhat.com>
-Subject: [xfstests PATCH v5 5/5] btrfs: make a btrfs version of writeback error reporting test
-Date: Fri, 16 Jun 2017 15:36:19 -0400
-Message-Id: <20170616193619.14576-6-jlayton@redhat.com>
-In-Reply-To: <20170616193619.14576-1-jlayton@redhat.com>
-References: <20170616193619.14576-1-jlayton@redhat.com>
+Subject: [PATCH v7 13/22] mm: set both AS_EIO/AS_ENOSPC and errseq_t in mapping_set_error
+Date: Fri, 16 Jun 2017 15:34:18 -0400
+Message-Id: <20170616193427.13955-14-jlayton@redhat.com>
+In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
+References: <20170616193427.13955-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-For btrfs, we can test how it reports data writeback errors on fsync by
-implementing a suggestion from Chris Mason:
+When a writeback error occurs, we want later callers to be able to pick
+up that fact when they go to wait on that writeback to complete.
+Traditionally, we've used AS_EIO/AS_ENOSPC flags to track that, but
+that's problematic since only one "checker" will be informed when an
+error occurs.
 
-Build a filesystem with 2 devices that stripes the data across
-both devices, but mirrors metadata across both. Then, make one
-of the devices fail and test what it does.
+In later patches, we're going to want to convert many of these callers
+to check for errors since a well-defined point in time. For now, ensure
+that we can handle both sorts of checks by both setting errors in both
+places when there is a writeback failure.
 
-Cc: Chris Mason <clm@fb.com>
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- tests/btrfs/999     | 94 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/999.out |  3 ++
- tests/btrfs/group   |  1 +
- 3 files changed, 98 insertions(+)
- create mode 100755 tests/btrfs/999
- create mode 100644 tests/btrfs/999.out
+ include/linux/pagemap.h | 31 +++++++++++++++++++++++++------
+ 1 file changed, 25 insertions(+), 6 deletions(-)
 
-diff --git a/tests/btrfs/999 b/tests/btrfs/999
-new file mode 100755
-index 000000000000..903e36526708
---- /dev/null
-+++ b/tests/btrfs/999
-@@ -0,0 +1,94 @@
-+#! /bin/bash
-+# FS QA Test No. 999
-+#
-+# Open a file several times, write to it, fsync on all fds and make sure that
-+# they all return 0. Change the device to start throwing errors. Write again
-+# on all fds and fsync on all fds. Ensure that we get errors on all of them.
-+# Then fsync on all one last time and verify that all return 0.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017, Jeff Layton <jlayton@redhat.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 316a19f6b635..28acc94e0f81 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -28,14 +28,33 @@ enum mapping_flags {
+ 	AS_NO_WRITEBACK_TAGS = 5,
+ };
+ 
++/**
++ * mapping_set_error - record a writeback error in the address_space
++ * @mapping - the mapping in which an error should be set
++ * @error - the error to set in the mapping
++ *
++ * When writeback fails in some way, we must record that error so that
++ * userspace can be informed when fsync and the like are called.  We endeavor
++ * to report errors on any file that was open at the time of the error.  Some
++ * internal callers also need to know when writeback errors have occurred.
++ *
++ * When a writeback error occurs, most filesystems will want to call
++ * mapping_set_error to record the error in the mapping so that it can be
++ * reported when the application calls fsync(2).
++ */
+ static inline void mapping_set_error(struct address_space *mapping, int error)
+ {
+-	if (unlikely(error)) {
+-		if (error == -ENOSPC)
+-			set_bit(AS_ENOSPC, &mapping->flags);
+-		else
+-			set_bit(AS_EIO, &mapping->flags);
+-	}
++	if (likely(!error))
++		return;
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
++	/* Record in wb_err for checkers using errseq_t based tracking */
++	filemap_set_wb_err(mapping, error);
 +
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.* $testdir
-+    _dmerror_cleanup
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmerror
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs btrfs
-+_require_dm_target error
-+_require_test_program fsync-err
-+_require_test_program dmerror
-+
-+# bring up dmerror device
-+_scratch_unmount
-+_dmerror_init
-+
-+# Replace first device with error-test device
-+old_SCRATCH_DEV=$SCRATCH_DEV
-+SCRATCH_DEV_POOL=`echo $SCRATCH_DEV_POOL | perl -pe "s#$SCRATCH_DEV#$DMERROR_DEV#"`
-+SCRATCH_DEV=$DMERROR_DEV
-+
-+_require_scratch
-+_require_scratch_dev_pool
-+
-+rm -f $seqres.full
-+
-+echo "Format and mount"
-+
-+_scratch_pool_mkfs "-d raid0 -m raid1" > $seqres.full 2>&1
-+_scratch_mount
-+
-+# How much do we need to write? We need to hit all of the stripes. btrfs uses
-+# a fixed 64k stripesize, so write enough to hit each one
-+number_of_devices=`echo $SCRATCH_DEV_POOL | wc -w`
-+write_kb=$(($number_of_devices * 64))
-+_require_fs_space $SCRATCH_MNT $write_kb
-+
-+testfile=$SCRATCH_MNT/fsync-err-test
-+
-+SCRATCH_DEV=$old_SCRATCH_DEV
-+$here/src/fsync-err -b $(($write_kb * 1024)) -d $here/src/dmerror $testfile
-+
-+# success, all done
-+_dmerror_load_working_table
-+
-+# fs may be corrupt after this -- attempt to repair it
-+_repair_scratch_fs >> $seqres.full
-+
-+# remove dmerror device
-+_dmerror_cleanup
-+
-+status=0
-+exit
-diff --git a/tests/btrfs/999.out b/tests/btrfs/999.out
-new file mode 100644
-index 000000000000..2e48492ff6d1
---- /dev/null
-+++ b/tests/btrfs/999.out
-@@ -0,0 +1,3 @@
-+QA output created by 999
-+Format and mount
-+Test passed!
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index be0548796260..c9063f0a4087 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -147,3 +147,4 @@
- 142 auto quick
- 143 auto quick
- 144 auto quick send
-+999 auto quick
++	/* Record it in flags for now, for legacy callers */
++	if (error == -ENOSPC)
++		set_bit(AS_ENOSPC, &mapping->flags);
++	else
++		set_bit(AS_EIO, &mapping->flags);
+ }
+ 
+ static inline void mapping_set_unevictable(struct address_space *mapping)
 -- 
 2.13.0
 
