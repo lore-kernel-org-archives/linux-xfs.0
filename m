@@ -1,191 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f172.google.com ([209.85.216.172]:35387 "EHLO
-        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750941AbdFSQXu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Jun 2017 12:23:50 -0400
-Received: by mail-qt0-f172.google.com with SMTP id w1so113884890qtg.2
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2017 09:23:49 -0700 (PDT)
-Message-ID: <1497889426.4654.7.camel@redhat.com>
-Subject: Re: [PATCH v7 00/22] fs: enhanced writeback error reporting with
- errseq_t (pile #1)
-From: Jeff Layton <jlayton@redhat.com>
-Date: Mon, 19 Jun 2017 12:23:46 -0400
-In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
-References: <20170616193427.13955-1-jlayton@redhat.com>
+Received: from mail-ua0-f181.google.com ([209.85.217.181]:36614 "EHLO
+        mail-ua0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752439AbdFPRKe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Jun 2017 13:10:34 -0400
+Received: by mail-ua0-f181.google.com with SMTP id g40so29207901uaa.3
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 10:10:33 -0700 (PDT)
+MIME-Version: 1.0
+From: Brian Matheson <bmath@paperspace.com>
+Date: Fri, 16 Jun 2017 13:10:32 -0400
+Message-ID: <CAHeTc0YizqSC55utPpe+Rsupv+G1qd2Es2a-6V3PFtf8NxnfOQ@mail.gmail.com>
+Subject: memory allocation deadlock
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, 2017-06-16 at 15:34 -0400, Jeff Layton wrote:
-> v7:
-> ===
-> This is the seventh posting of the patchset to revamp the way writeback
-> errors are tracked and reported.
-> 
-> The main difference from the v6 posting is the removal of the
-> FS_WB_ERRSEQ flag. That requires a few other incremental patches in the
-> writeback code to ensure that both error tracking models are handled
-> in a suitable way.
-> 
-> Also, a bit more cleanup of the metadata writeback codepaths, and some
-> documentation updates.
-> 
-> Some of these patches have been posted separately, but I'm re-posting
-> them here to make it clear that they're prerequisites of the later
-> patches in the series.
-> 
-> This series is based on top of linux-next from a day or so ago. I'd like
-> to have this picked up by linux-next in the near future so we can get
-> some more extensive testing with it. Should I just plan to maintain a
-> topic branch on top of -next and ask Stephen to pick it up?
-> 
-> Background:
-> ===========
-> The basic problem is that we have (for a very long time) tracked and
-> reported writeback errors based on two flags in the address_space:
-> AS_EIO and AS_ENOSPC. Those flags are cleared when they are checked,
-> so only the first caller to check them is able to consume them.
-> 
-> That model is quite unreliable, for several related reasons:
-> 
-> * only the first fsync caller on the inode will see the error. In a
->   world of containerized setups, that's no longer viable. Applications
->   need to know that their writes are safely stored, and they can
->   currently miss seeing errors that they should be aware of when
->   they're not.
-> 
-> * there are a lot of internal callers to filemap_fdatawait* and
->   filemap_write_and_wait* that clear these errors but then never report
->   them to userland in any fashion.
-> 
-> * Some internal callers report writeback errors, but can do so at
->   non-sensical times. For instance, we might want to truncate a file,
->   which triggers a pagecache flush. If that writeback fails, we might
->   report that error to the truncate caller, but a subsequent fsync
->   will likely not see it.
-> 
-> * Some internal callers try to reset the error flags after clearing
->   them, but that's racy. Another task could check the flags between
->   those two events.
-> 
-> Solution:
-> =========
-> This patchset adds a new datatype called an errseq_t that represents a
-> sequence of errors. It's a u32, with a field for a POSIX-flavor error
-> and a counter, managed with atomics. We can sample that value at a
-> particular point in time, and can later tell whether there have been any
-> errors since that point.
-> 
-> That allows us to provide traditional check-and-clear fsync semantics
-> on every open file description in a lightweight fashion. fsync callers
-> no longer need to coordinate between one another in order to ensure
-> that errors at fsync time are handled correctly.
-> 
-> Strategy:
-> =========
-> The aim with this pile is to do the minimum possible to support for
-> reliable reporting of errors on fsync, without substantially changing
-> the internals of the filesystems themselves.
-> 
-> Most of the internal calls to filemap_fdatawait are left alone, so all
-> of the internal error checkers are using the same error handling they
-> always have. The only real difference here is that we're better
-> reporting errors at fsync.
-> 
-> I think that we probably will want to eventually convert all of those
-> internal callers to use errseq_t based reporting, but that can be done
-> in an incremental fashion in follow-on patchsets.
-> 
-> Testing:
-> ========
-> I've primarily been testing this with some new xfstests that I will post
-> in a separate series. These tests use dm-error fault injection to make
-> the underlying block device start throwing I/O errors, and then test the
-> how the filesystem layer reports errors after that.
-> 
-> Jeff Layton (22):
->   fs: remove call_fsync helper function
->   buffer: use mapping_set_error instead of setting the flag
->   fs: check for writeback errors after syncing out buffers in
->     generic_file_fsync
->   buffer: set errors in mapping at the time that the error occurs
->   jbd2: don't clear and reset errors after waiting on writeback
->   mm: clear AS_EIO/AS_ENOSPC when writeback initiation fails
->   mm: don't TestClearPageError in __filemap_fdatawait_range
->   mm: clean up error handling in write_one_page
->   fs: always sync metadata in __generic_file_fsync
->   lib: add errseq_t type and infrastructure for handling it
->   fs: new infrastructure for writeback error handling and reporting
->   mm: tracepoints for writeback error events
->   mm: set both AS_EIO/AS_ENOSPC and errseq_t in mapping_set_error
->   Documentation: flesh out the section in vfs.txt on storing and
->     reporting writeback errors
->   dax: set errors in mapping when writeback fails
->   block: convert to errseq_t based writeback error tracking
->   ext4: use errseq_t based error handling for reporting data writeback
->     errors
->   fs: add f_md_wb_err field to struct file for tracking metadata errors
->   ext4: add more robust reporting of metadata writeback errors
->   ext2: convert to errseq_t based writeback error tracking
->   xfs: minimal conversion to errseq_t writeback error reporting
->   btrfs: minimal conversion to errseq_t writeback error reporting on
->     fsync
-> 
->  Documentation/filesystems/vfs.txt |  43 +++++++-
->  drivers/dax/device.c              |   1 +
->  fs/block_dev.c                    |   9 +-
->  fs/btrfs/file.c                   |   7 +-
->  fs/buffer.c                       |  20 ++--
->  fs/dax.c                          |   4 +-
->  fs/ext2/dir.c                     |   8 ++
->  fs/ext2/file.c                    |  26 ++++-
->  fs/ext4/dir.c                     |   8 +-
->  fs/ext4/file.c                    |   5 +-
->  fs/ext4/fsync.c                   |  28 ++++-
->  fs/file_table.c                   |   1 +
->  fs/gfs2/lops.c                    |   2 +-
->  fs/jbd2/commit.c                  |  15 +--
->  fs/libfs.c                        |  12 +--
->  fs/open.c                         |   3 +
->  fs/sync.c                         |   2 +-
->  fs/xfs/xfs_file.c                 |  15 ++-
->  include/linux/buffer_head.h       |   1 +
->  include/linux/errseq.h            |  19 ++++
->  include/linux/fs.h                |  67 ++++++++++--
->  include/linux/pagemap.h           |  31 ++++--
->  include/trace/events/filemap.h    |  52 ++++++++++
->  ipc/shm.c                         |   2 +-
->  lib/Makefile                      |   2 +-
->  lib/errseq.c                      | 208 ++++++++++++++++++++++++++++++++++++++
->  mm/filemap.c                      | 113 +++++++++++++++++----
->  mm/page-writeback.c               |  15 ++-
->  28 files changed, 628 insertions(+), 91 deletions(-)
->  create mode 100644 include/linux/errseq.h
->  create mode 100644 lib/errseq.c
-> 
+Hi all,
 
-If there are no major objections to this set, I'd like to have
-linux-next start picking it up to get some wider testing. What's the
-right vehicle for this, given that it touches stuff all over the tree?
+I'm writing to get some information about a problem we're seeing on
+our nfs servers.  We're using XFS on an LVM volume backed by an LSI
+RAID card (raid 6, with 24 SSDs).  We're nfs exporting the volume to a
+number of hypervisors.  We're seeing messages like the following:
 
-I can see 3 potential options:
+Jun 16 09:22:30 ny2r3s1 kernel: [15259176.032579] XFS: nfsd(2301)
+possible memory allocation deadlock size 68256 in kmem_alloc
+(mode:0x2400240)
 
-1) I could just pull these into the branch that Stephen is already
-picking up for file-locks in my tree
+These messages are followed by nfsd failures as indicated by log messages like:
 
-2) I could put them into a new branch, and have Stephen pull that one in
-addition to the file-locks branch
+Jun 16 09:22:39 ny2r3s1 kernel: [15259184.933311] nfsd: peername
+failed (err 107)!
 
-3) It could go in via someone else's tree entirely (Andrew or Al's
-maybe?)
+Dropping the caches on the box fixes the problem immediately.  Based
+on a little research, we thought that the problem could be occurring
+due to file fragmentation, so we're running xfs_fsr periodically to
+defragment.  At the moment we're also periodically dropping the cache
+in an attempt to prevent the problem from occurring.
 
-I'm fine with any of these. Anyone have thoughts?
+Any help appreciated, and if this query belongs on a different mailing
+list, please let me know.
 
-Thanks,
--- 
-Jeff Layton <jlayton@redhat.com>
+
+The systems are running ubuntu 14.04 with a 4.4.0 kernel (Linux
+ny2r3s1 4.4.0-53-generic #74~14.04.1-Ubuntu SMP Fri Dec 2 03:43:31 UTC
+2016 x86_64 x86_64 x86_64 GNU/Linux).  xfs_repair is version 3.1.9.
+They have 64G of RAM, most of which is used by cache, and 12 cpu
+cores.  As mentioned we're using ssds connected to an lsi raid card.
+xfs_info reports:
+
+meta-data=/dev/mapper/VMSTORAGE_SSD-XFS_VHD isize=256    agcount=62,
+agsize=167772096 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=10311515136, imaxpct=5
+         =                       sunit=64     swidth=256 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=521728, version=2
+         =                       sectsz=512   sunit=64 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+At the moment, slabtop reports this:
+ Active / Total Objects (% used)    : 5543699 / 5668921 (97.8%)
+ Active / Total Slabs (% used)      : 157822 / 157822 (100.0%)
+ Active / Total Caches (% used)     : 77 / 144 (53.5%)
+ Active / Total Size (% used)       : 1110436.20K / 1259304.73K (88.2%)
+ Minimum / Average / Maximum Object : 0.01K / 0.22K / 18.50K
+
+  OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
+4382508 4382508 100%    0.10K 112372       39    449488K buffer_head
+348152 348152 100%    0.57K  12434       28    198944K radix_tree_node
+116880  83796  71%    4.00K  14610        8    467520K kmalloc-4096
+114492  88855  77%    0.09K   2726       42     10904K kmalloc-96
+108640  86238  79%    0.12K   3395       32     13580K kmalloc-128
+ 51680  51680 100%    0.12K   1520       34      6080K kernfs_node_cache
+ 49536  29011  58%    0.06K    774       64      3096K kmalloc-64
+ 46464  46214  99%    0.03K    363      128      1452K kmalloc-32
+ 44394  34860  78%    0.19K   1057       42      8456K dentry
+ 40188  38679  96%    0.04K    394      102      1576K ext4_extent_status
+ 33150  31649  95%    0.05K    390       85      1560K ftrace_event_field
+ 26207  25842  98%    0.05K    359       73      1436K Acpi-Parse
+ 23142  20528  88%    0.38K    551       42      8816K mnt_cache
+ 21756  21515  98%    0.19K    518       42      4144K kmalloc-192
+ 20160  20160 100%    0.07K    360       56      1440K Acpi-Operand
+ 19800  19800 100%    0.18K    450       44      3600K xfs_log_ticket
+
+Thanks much,
+Brian Matheson
