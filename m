@@ -1,92 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f178.google.com ([209.85.217.178]:32825 "EHLO
-        mail-ua0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751988AbdFSWRB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Jun 2017 18:17:01 -0400
-Received: by mail-ua0-f178.google.com with SMTP id 70so2271189uau.0
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2017 15:17:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170617235751.GH17542@dastard>
-References: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
- <1497624680-16685-7-git-send-email-agruenba@redhat.com> <20170617235751.GH17542@dastard>
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Date: Tue, 20 Jun 2017 00:16:59 +0200
-Message-ID: <CAHc6FU78gW2UYC3VbZVBRHXy_geV0emL=mpd=KQsXTfqhLj0mg@mail.gmail.com>
-Subject: Re: [PATCH 6/7] xfs: Switch to iomap for lseek SEEK_HOLE / SEEK_DATA
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([209.132.183.28]:37464 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752555AbdFPTgH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 15:36:07 -0400
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [PATCH v7 17/22] ext4: use errseq_t based error handling for reporting data writeback errors
+Date: Fri, 16 Jun 2017 15:34:22 -0400
+Message-Id: <20170616193427.13955-18-jlayton@redhat.com>
+In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
+References: <20170616193427.13955-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel <cluster-devel@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-On Sun, Jun 18, 2017 at 1:57 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Fri, Jun 16, 2017 at 04:51:19PM +0200, Andreas Gruenbacher wrote:
->> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
->> ---
->>  fs/xfs/xfs_file.c | 17 ++---------------
->>  1 file changed, 2 insertions(+), 15 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
->> index 5fb5a09..b36dcd7 100644
->> --- a/fs/xfs/xfs_file.c
->> +++ b/fs/xfs/xfs_file.c
->> @@ -1283,28 +1283,15 @@ xfs_seek_hole_data(
->>       struct xfs_inode        *ip = XFS_I(inode);
->>       struct xfs_mount        *mp = ip->i_mount;
->>       uint                    lock;
->> -     loff_t                  offset, end;
->> -     int                     error = 0;
->> +     loff_t                  offset;
->>
->>       if (XFS_FORCED_SHUTDOWN(mp))
->>               return -EIO;
->>
->>       lock = xfs_ilock_data_map_shared(ip);
->> -
->> -     end = i_size_read(inode);
->> -     offset = __xfs_seek_hole_data(inode, start, end, whence);
->> -     if (offset < 0) {
->> -             error = offset;
->> -             goto out_unlock;
->> -     }
->> -
->> -     offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
->> -
->> -out_unlock:
->> +     offset = iomap_seek_hole_data(file, start, whence, &xfs_iomap_ops);
->>       xfs_iunlock(ip, lock);
->>
->> -     if (error)
->> -             return error;
->>       return offset;
->>  }
->
-> Doesn't this change the way data in unwritten extents is reported?
-> i.e. we current report unwritten extents as holes if there is no
-> data pending writeback over the range in the page cache, and as
-> data if there is data in the page cache.
->
-> I don't see this page cache lookup for unwritten extents implemented
-> in iomap_seek_hole_data() - it only reports extents mapped as holes
-> as holes. Hence this will now always report unwritten extents as
-> data . This strikes me as a regression as we currently report them
-> as a hole:
->
-> $ xfs_io -f -c "truncate 1m" -c "falloc 0 1m" -c "seek -a -r 0" foo
-> Whence  Result
-> HOLE    0
-> $
+Add a call to filemap_report_wb_err at the end of ext4_sync_file. This
+will ensure that we check and advance the errseq_t in the file, which
+allows us to track and report errors on all open fds when they occur.
 
-Indeed, thanks for pointing this out.
+Note that metadata writeback errors are not yet reported on all fds at
+this point. That will be added in a later patch.
 
-> I'm pretty sure that ext4 has the same behaviour when it comes to
-> dirty page cache pages over unwritten extents.
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/ext4/fsync.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-That's correct as well.
+diff --git a/fs/ext4/fsync.c b/fs/ext4/fsync.c
+index 9d549608fd30..03d6259d8662 100644
+--- a/fs/ext4/fsync.c
++++ b/fs/ext4/fsync.c
+@@ -100,8 +100,10 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+ 	tid_t commit_tid;
+ 	bool needs_barrier = false;
+ 
+-	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
+-		return -EIO;
++	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb)))) {
++		ret = -EIO;
++		goto out;
++	}
+ 
+ 	J_ASSERT(ext4_journal_current_handle() == NULL);
+ 
+@@ -126,7 +128,8 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+ 
+ 	ret = filemap_write_and_wait_range(inode->i_mapping, start, end);
+ 	if (ret)
+-		return ret;
++		goto out;
++
+ 	/*
+ 	 * data=writeback,ordered:
+ 	 *  The caller's filemap_fdatawrite()/wait will sync the data.
+@@ -152,12 +155,16 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+ 		needs_barrier = true;
+ 	ret = jbd2_complete_transaction(journal, commit_tid);
+ 	if (needs_barrier) {
+-	issue_flush:
++issue_flush:
+ 		err = blkdev_issue_flush(inode->i_sb->s_bdev, GFP_KERNEL, NULL);
+ 		if (!ret)
+ 			ret = err;
+ 	}
+ out:
++	/* Was there a writeback error of the data since last fsync? */
++	err = filemap_report_wb_err(file);
++	if (!ret)
++		ret = err;
+ 	trace_ext4_sync_file_exit(inode, ret);
+ 	return ret;
+ }
+-- 
+2.13.0
 
-The code in xfs and ext4 looks similar enough that we can implement
-this generically in the iomap_seek_hole_data helper, I believe.
-
-Thanks,
-Andreas
