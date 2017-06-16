@@ -1,169 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49272 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45310 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750811AbdFSNsm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Jun 2017 09:48:42 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B12E123E6C9
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2017 13:48:41 +0000 (UTC)
-Date: Mon, 19 Jun 2017 09:48:38 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2 V4] xfs: Add infrastructure needed for error
- propagation during buffer IO failure
-Message-ID: <20170619134834.GB25516@bfoster.bfoster>
-References: <20170616105445.3314-1-cmaiolino@redhat.com>
- <20170616105445.3314-2-cmaiolino@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170616105445.3314-2-cmaiolino@redhat.com>
+        id S1754429AbdFPOvj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 10:51:39 -0400
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH 4/7] vfs: Add iomap_seek_hole_data helper
+Date: Fri, 16 Jun 2017 16:51:17 +0200
+Message-Id: <1497624680-16685-5-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
+References: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel@redhat.com
 
-On Fri, Jun 16, 2017 at 12:54:44PM +0200, Carlos Maiolino wrote:
-> With the current code, XFS never re-submit a failed buffer for IO,
-> because the failed item in the buffer is kept in the flush locked state
-> forever.
-> 
-> To be able to resubmit an log item for IO, we need a way to mark an item
-> as failed, if, for any reason the buffer which the item belonged to
-> failed during writeback.
-> 
-> Add a new log item callback to be used after an IO completion failure
-> and make the needed clean ups.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
-> V2:
-> 	- Update commit log to include a better description of why this
-> 	  patch is needed and fix spelling mistakes
-> 	- Move xfs_buf_do_callbacks_fail() call into
-> 	  xfs_buf_iodone_callback_error, so the callbacks can be executed
-> 	  before the buffer is released, and only after it has been
-> 	  retried once
-> 
-> V3:
-> 	- fix some loops according to hch suggestion
-> 	- whitespace cleanup
-> 
-> V4:
-> 	- Invoke failure callbacks before reset the I/O error
-> 	- Remove bflags field from iop_error callback
-> 	- move spin_lock/unlock xa_lock up in the stack, handling all
-> 	  log items in the same buffer into a single lock
-> 
+Filesystems can use this for implementing lseek SEEK_HOLE / SEEK_DATA
+support via iomap.
 
-Looks mostly Ok to me, just a few nits...
+The __iomap_seek_hole_data helper takes an additional size argument and
+doesn't reposition the file offset; this is for internal use for xfs
+quota files which don't maintain the inode size.
 
->  fs/xfs/xfs_buf_item.c | 23 ++++++++++++++++++++++-
->  fs/xfs/xfs_trans.h    |  7 +++++--
->  2 files changed, 27 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 0306168..4fa68c9 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -29,6 +29,7 @@
->  #include "xfs_error.h"
->  #include "xfs_trace.h"
->  #include "xfs_log.h"
-> +#include "xfs_inode.h"
->  
->  
->  kmem_zone_t	*xfs_buf_item_zone;
-> @@ -1051,6 +1052,22 @@ xfs_buf_do_callbacks(
->  	}
->  }
->  
-> +STATIC void
-> +xfs_buf_do_callbacks_fail(
-> +	struct xfs_buf		*bp)
-> +{
-> +	struct xfs_log_item	*tli, *lip, *next;
-> +
-> +	tli = bp->b_fspriv;
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+---
+ fs/iomap.c            | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iomap.h |  6 ++++
+ 2 files changed, 87 insertions(+)
 
-We can just define a local pointer to the xfs_ail rather than maintain a
-log item pointer purely for the purpose of the lock. E.g.:
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 4b10892..cf01694 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -584,6 +584,87 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+ }
+ EXPORT_SYMBOL_GPL(iomap_fiemap);
+ 
++static loff_t
++iomap_seek_hole_actor(struct inode *inode, loff_t offset, loff_t length,
++		      void *data, struct iomap *iomap)
++{
++	if (iomap->type == IOMAP_HOLE)
++		return 0;
++	return iomap->offset + iomap->length - offset;
++}
++
++static loff_t
++iomap_seek_data_actor(struct inode *inode, loff_t offset, loff_t length,
++		      void *data, struct iomap *iomap)
++{
++	if (iomap->type != IOMAP_HOLE)
++		return 0;
++	return iomap->offset + iomap->length - offset;
++}
++
++loff_t
++__iomap_seek_hole_data(struct inode *inode, loff_t offset, loff_t size,
++		       int whence, const struct iomap_ops *ops)
++{
++	static loff_t (*actor)(struct inode *, loff_t, loff_t, void *,
++			       struct iomap *);
++	loff_t len = size - offset;
++	loff_t ret;
++
++	/* Nothing to be found beyond the end of the file. */
++	if (len <= 0)
++		return -ENXIO;
++
++	switch(whence) {
++	case SEEK_HOLE:
++		actor = iomap_seek_hole_actor;
++		break;
++
++	case SEEK_DATA:
++		actor = iomap_seek_data_actor;
++		break;
++	}
++
++	while (len > 0) {
++		ret = iomap_apply(inode, offset, len, IOMAP_REPORT, ops,
++				  NULL, actor);
++		if (ret <= 0) {
++			if (ret < 0)
++				return ret;
++			break;
++		}
++		offset += ret;
++		len -= ret;
++	}
++
++	if (len <= 0) {
++		/* There is an implicit hole at the end of the file. */
++		if (whence != SEEK_HOLE)
++			offset = -ENXIO;
++
++		/* The last segment can extend beyond the end of the file. */
++		if (offset > size)
++			offset = size;
++	}
++
++	return offset;
++}
++EXPORT_SYMBOL_GPL(__iomap_seek_hole_data);
++
++loff_t
++iomap_seek_hole_data(struct file *file, loff_t offset, int whence,
++		     const struct iomap_ops *ops)
++{
++	struct inode *inode = file->f_mapping->host;
++
++	offset = __iomap_seek_hole_data(inode, offset, i_size_read(inode),
++					whence, ops);
++	if (offset <= 0)
++		return offset;
++	return vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
++}
++EXPORT_SYMBOL_GPL(iomap_seek_hole_data);
++
+ /*
+  * Private flags for iomap_dio, must not overlap with the public ones in
+  * iomap.h:
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 9d64933..49b6ec0 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -85,6 +85,12 @@ int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops);
+ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ 		loff_t start, loff_t len, const struct iomap_ops *ops);
+ 
++struct file;
++loff_t __iomap_seek_hole_data(struct inode *inode, loff_t pos, loff_t size,
++			      int whence, const struct iomap_ops *ops);
++loff_t iomap_seek_hole_data(struct file *file, loff_t pos,
++			    int whence, const struct iomap_ops *ops);
++
+ /*
+  * Flags for direct I/O ->end_io:
+  */
+-- 
+2.7.5
 
-	struct xfs_log_item	*lip = bp->b_fspriv;
-	struct xfs_ail		*ailp = lip->li_ailp;
-
-	spin_lock(&ailp->xa_lock);
-	for (; lip; lip = next) {
-		...
-	}
-	...
-
-It also couldn't hurt to ASSERT(bp->b_error) somewhere in here.
-
-> +	spin_lock(&tli->li_ailp->xa_lock);
-> +	for (lip = bp->b_fspriv; lip; lip = next) {
-> +		next = lip->li_bio_list;
-> +		if (lip->li_ops->iop_error)
-> +			lip->li_ops->iop_error(lip, bp);
-> +	}
-> +	spin_unlock(&tli->li_ailp->xa_lock);
-> +}
-> +
->  static bool
->  xfs_buf_iodone_callback_error(
->  	struct xfs_buf		*bp)
-> @@ -1120,7 +1137,11 @@ xfs_buf_iodone_callback_error(
->  	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
->  		goto permanent_error;
->  
-> -	/* still a transient error, higher layers will retry */
-> +	/*
-> +	 * Still a transient error, run IO completion failure callbacks and let
-> +	 * the higher layers retry the buffer.
-> +	 */
-> +	xfs_buf_do_callbacks_fail(bp);
->  	xfs_buf_ioerror(bp, 0);
->  	xfs_buf_relse(bp);
->  	return true;
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index a07acbf..50df5367 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -64,11 +64,13 @@ typedef struct xfs_log_item {
->  } xfs_log_item_t;
->  
->  #define	XFS_LI_IN_AIL	0x1
-> -#define XFS_LI_ABORTED	0x2
-> +#define	XFS_LI_ABORTED	0x2
-> +#define	XFS_LI_FAILED	0x4
-
-Weren't you planning to change these to (1 << N) format?
-
-Brian
-
->  
->  #define XFS_LI_FLAGS \
->  	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
-> -	{ XFS_LI_ABORTED,	"ABORTED" }
-> +	{ XFS_LI_ABORTED,	"ABORTED" }, \
-> +	{ XFS_LI_FAILED,	"FAILED" }
->  
->  struct xfs_item_ops {
->  	void (*iop_size)(xfs_log_item_t *, int *, int *);
-> @@ -79,6 +81,7 @@ struct xfs_item_ops {
->  	void (*iop_unlock)(xfs_log_item_t *);
->  	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
->  	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
-> +	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *);
->  };
->  
->  void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
-> -- 
-> 2.9.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
