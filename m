@@ -1,114 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34462 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:39524 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752044AbdFPTfI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 15:35:08 -0400
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v7 05/22] jbd2: don't clear and reset errors after waiting on writeback
-Date: Fri, 16 Jun 2017 15:34:10 -0400
-Message-Id: <20170616193427.13955-6-jlayton@redhat.com>
-In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
-References: <20170616193427.13955-1-jlayton@redhat.com>
+        id S1753241AbdFPSND (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 14:13:03 -0400
+Subject: Re: [PATCH] xfs: don't crash on unexpected holes in dir/attr btrees
+References: <20170616175337.GE5421@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <351d0c66-4969-7ce9-da9c-6d2901e1bdef@sandeen.net>
+Date: Fri, 16 Jun 2017 13:12:41 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170616175337.GE5421@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, list@jonas-server.de, David Shaw <dshaw@jabberwocky.com>
+Cc: Emmanuel Florac <eflorac@intellique.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-Resetting this flag is almost certainly racy, and will be problematic
-with some coming changes.
+On 6/16/17 12:53 PM, Darrick J. Wong wrote:
+> Hi all,
+> 
+> So I /think/ the xfs_attr_inactive crashes that both of you have been
+> seeing are a result of XFS assuming that there aren't ever any mapping
+> holes in the extended attribute fork and crashing when it tries to
+> grab a buffer for the hole and fails to notice that holes don't have
+> buffers.  This lightly tested patch gets rid of /that/ problem.
+> 
+> So, if you're willing, can you try this out and see if the crashes go
+> away?  Granted, this might only enable us to lurch on whatever's next...
 
-Make filemap_fdatawait_keep_errors return int, but not clear the flag(s).
-Have jbd2 call it instead of filemap_fdatawait and don't attempt to
-re-set the error flag if it fails.
+If it's unexpected, does that mean something else is wrong?  If so,
+should there be a warning or a corrupted state, or anything like that?
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- fs/jbd2/commit.c   | 15 +++------------
- include/linux/fs.h |  2 +-
- mm/filemap.c       | 16 ++++++++++++++--
- 3 files changed, 18 insertions(+), 15 deletions(-)
+-Eric
 
-diff --git a/fs/jbd2/commit.c b/fs/jbd2/commit.c
-index b6b194ec1b4f..502110540598 100644
---- a/fs/jbd2/commit.c
-+++ b/fs/jbd2/commit.c
-@@ -263,18 +263,9 @@ static int journal_finish_inode_data_buffers(journal_t *journal,
- 			continue;
- 		jinode->i_flags |= JI_COMMIT_RUNNING;
- 		spin_unlock(&journal->j_list_lock);
--		err = filemap_fdatawait(jinode->i_vfs_inode->i_mapping);
--		if (err) {
--			/*
--			 * Because AS_EIO is cleared by
--			 * filemap_fdatawait_range(), set it again so
--			 * that user process can get -EIO from fsync().
--			 */
--			mapping_set_error(jinode->i_vfs_inode->i_mapping, -EIO);
--
--			if (!ret)
--				ret = err;
--		}
-+		err = filemap_fdatawait_keep_errors(jinode->i_vfs_inode->i_mapping);
-+		if (!ret)
-+			ret = err;
- 		spin_lock(&journal->j_list_lock);
- 		jinode->i_flags &= ~JI_COMMIT_RUNNING;
- 		smp_mb();
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 1a135274b4f8..1b1233a1db1e 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2509,7 +2509,7 @@ extern int write_inode_now(struct inode *, int);
- extern int filemap_fdatawrite(struct address_space *);
- extern int filemap_flush(struct address_space *);
- extern int filemap_fdatawait(struct address_space *);
--extern void filemap_fdatawait_keep_errors(struct address_space *);
-+extern int filemap_fdatawait_keep_errors(struct address_space *);
- extern int filemap_fdatawait_range(struct address_space *, loff_t lstart,
- 				   loff_t lend);
- extern int filemap_write_and_wait(struct address_space *mapping);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index b9e870600572..37f286df7c95 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -311,6 +311,16 @@ int filemap_check_errors(struct address_space *mapping)
- }
- EXPORT_SYMBOL(filemap_check_errors);
- 
-+static int filemap_check_and_keep_errors(struct address_space *mapping)
-+{
-+	/* Check for outstanding write errors */
-+	if (test_bit(AS_EIO, &mapping->flags))
-+		return -EIO;
-+	if (test_bit(AS_ENOSPC, &mapping->flags))
-+		return -ENOSPC;
-+	return 0;
-+}
-+
- /**
-  * __filemap_fdatawrite_range - start writeback on mapping dirty pages in range
-  * @mapping:	address space structure to write
-@@ -455,15 +465,17 @@ EXPORT_SYMBOL(filemap_fdatawait_range);
-  * call sites are system-wide / filesystem-wide data flushers: e.g. sync(2),
-  * fsfreeze(8)
-  */
--void filemap_fdatawait_keep_errors(struct address_space *mapping)
-+int filemap_fdatawait_keep_errors(struct address_space *mapping)
- {
- 	loff_t i_size = i_size_read(mapping->host);
- 
- 	if (i_size == 0)
--		return;
-+		return 0;
- 
- 	__filemap_fdatawait_range(mapping, 0, i_size - 1);
-+	return filemap_check_and_keep_errors(mapping);
- }
-+EXPORT_SYMBOL(filemap_fdatawait_keep_errors);
- 
- /**
-  * filemap_fdatawait - wait for all under-writeback pages to complete
--- 
-2.13.0
-
+> --D
+> 
+> ---
+> In quite a few places we call xfs_da_read_buf with a mappedbno that we
+> don't control, then assume that the function passes back either an error
+> code or a buffer pointer.  Unfortunately, if mappedbno == -2 and bno
+> maps to a hole, we get a return code of zero and a NULL buffer, which
+> means that we crash if we actually try to use that buffer pointer.  This
+> happens immediately when we set the buffer type for transaction context.
+> 
+> Therefore, check that we have no error code and a non-NULL bp before
+> trying to use bp.  This patch is a follow-up to an incomplete fix in
+> 96a3aefb8ffde231 ("xfs: don't crash if reading a directory results in an
+> unexpected hole").
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr_leaf.c  |    2 +-
+>  fs/xfs/libxfs/xfs_da_btree.c   |    2 +-
+>  fs/xfs/libxfs/xfs_dir2_block.c |    2 +-
+>  fs/xfs/libxfs/xfs_dir2_leaf.c  |    4 ++--
+>  4 files changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index 2852521..c6c15e5 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -351,7 +351,7 @@ xfs_attr3_leaf_read(
+>  
+>  	err = xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
+>  				XFS_ATTR_FORK, &xfs_attr3_leaf_buf_ops);
+> -	if (!err && tp)
+> +	if (!err && tp && *bpp)
+>  		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_ATTR_LEAF_BUF);
+>  	return err;
+>  }
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index 356f21d..6d43358 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -263,7 +263,7 @@ xfs_da3_node_read(
+>  
+>  	err = xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
+>  					which_fork, &xfs_da3_node_buf_ops);
+> -	if (!err && tp) {
+> +	if (!err && tp && *bpp) {
+>  		struct xfs_da_blkinfo	*info = (*bpp)->b_addr;
+>  		int			type;
+>  
+> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+> index aa17cb7..43c902f 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_block.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
+> @@ -139,7 +139,7 @@ xfs_dir3_block_read(
+>  
+>  	err = xfs_da_read_buf(tp, dp, mp->m_dir_geo->datablk, -1, bpp,
+>  				XFS_DATA_FORK, &xfs_dir3_block_buf_ops);
+> -	if (!err && tp)
+> +	if (!err && tp && *bpp)
+>  		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_BLOCK_BUF);
+>  	return err;
+>  }
+> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> index 7002024..27297a6 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> @@ -268,7 +268,7 @@ xfs_dir3_leaf_read(
+>  
+>  	err = xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
+>  				XFS_DATA_FORK, &xfs_dir3_leaf1_buf_ops);
+> -	if (!err && tp)
+> +	if (!err && tp && *bpp)
+>  		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_LEAF1_BUF);
+>  	return err;
+>  }
+> @@ -285,7 +285,7 @@ xfs_dir3_leafn_read(
+>  
+>  	err = xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
+>  				XFS_DATA_FORK, &xfs_dir3_leafn_buf_ops);
+> -	if (!err && tp)
+> +	if (!err && tp && *bpp)
+>  		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_LEAFN_BUF);
+>  	return err;
+>  }
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
