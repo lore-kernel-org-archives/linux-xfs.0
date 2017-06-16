@@ -1,67 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39456 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:46498 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751546AbdFPTei (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 15:34:38 -0400
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v7 03/22] fs: check for writeback errors after syncing out buffers in generic_file_fsync
-Date: Fri, 16 Jun 2017 15:34:08 -0400
-Message-Id: <20170616193427.13955-4-jlayton@redhat.com>
-In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
-References: <20170616193427.13955-1-jlayton@redhat.com>
+        id S1750903AbdFPTpO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 15:45:14 -0400
+Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
+ error during buffer writeback
+References: <20170616105445.3314-1-cmaiolino@redhat.com>
+ <20170616105445.3314-3-cmaiolino@redhat.com>
+ <20170616183510.GC21846@wotan.suse.de>
+ <20170616192445.GG5421@birch.djwong.org>
+ <20170616193755.GD21846@wotan.suse.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3ff0e0c8-ef9c-b7f8-d37e-ed02e5766c40@sandeen.net>
+Date: Fri, 16 Jun 2017 14:45:13 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170616193755.GD21846@wotan.suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
 
-ext2 currently does a test+clear of the AS_EIO flag, which is
-is problematic for some coming changes.
+On 6/16/17 2:37 PM, Luis R. Rodriguez wrote:
+> On Fri, Jun 16, 2017 at 12:24:45PM -0700, Darrick J. Wong wrote:
+>> On Fri, Jun 16, 2017 at 08:35:10PM +0200, Luis R. Rodriguez wrote:
+>>> On Fri, Jun 16, 2017 at 12:54:45PM +0200, Carlos Maiolino wrote:
+>>>> When a buffer has been failed during writeback, the inode items into it
+>>>> are kept flush locked, and are never resubmitted due the flush lock, so,
+>>>> if any buffer fails to be written, the items in AIL are never written to
+>>>> disk and never unlocked.
+>>>>
+>>>> This causes unmount operation to hang due these items flush locked in AIL,
+>>>
+>>> What type of hang? If it has occurred in production is there a trace somewhere?
+>>> what does it look like?
+>>>
+>>> You said you would work on an xfstest for this, how's that going? Otherewise
+>>> a commit log description of how to reproduce would be useful.
+>>
+>> I'm curious for an xfstest too, but I think Carlos /did/ tell us how to
+>> reproduce -- create a thinp device, format XFS, fill it up, and try to
+>> unmount.
+> 
+> Well he did mention to create a Dm-thin device with a fileystem larger than
+> the real device. You seem to have say just filling up a filsystem?
 
-What we really need to do instead is call filemap_check_errors
-in __generic_file_fsync after syncing out the buffers. That
-will be sufficient for this case, and help other callers detect
-these errors properly as well.
+No - the case is filling up the /thinp device/, not the filesystem.
 
-With that, we don't need to twiddle it in ext2.
+> 
+> Do both cases trigger the issue?
 
-Suggested-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Matthew Wilcox <mawilcox@microsoft.com>
----
- fs/ext2/file.c | 2 +-
- fs/libfs.c     | 3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+This whole issue has to do with errors from the block device during writeback;
+that's why the thin device is involved.  When the backing store fills, we
+see the IO errors that cause this problem.
 
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index b21891a6bfca..ed00e7ae0ef3 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -177,7 +177,7 @@ int ext2_fsync(struct file *file, loff_t start, loff_t end, int datasync)
- 	struct address_space *mapping = sb->s_bdev->bd_inode->i_mapping;
- 
- 	ret = generic_file_fsync(file, start, end, datasync);
--	if (ret == -EIO || test_and_clear_bit(AS_EIO, &mapping->flags)) {
-+	if (ret == -EIO) {
- 		/* We don't really know where the IO error happened... */
- 		ext2_error(sb, __func__,
- 			   "detected IO error when writing metadata buffers");
-diff --git a/fs/libfs.c b/fs/libfs.c
-index a04395334bb1..1dec90819366 100644
---- a/fs/libfs.c
-+++ b/fs/libfs.c
-@@ -991,7 +991,8 @@ int __generic_file_fsync(struct file *file, loff_t start, loff_t end,
- 
- out:
- 	inode_unlock(inode);
--	return ret;
-+	err = filemap_check_errors(inode->i_mapping);
-+	return ret ? ret : err;
- }
- EXPORT_SYMBOL(__generic_file_fsync);
- 
--- 
-2.13.0
+>> I don't think there /is/ much of a trace, just xfsaild doing
+>> nothing and a bunch of ail items that are flush locked and stuck that way.
+> 
+> OK so no hung task seek, no crash, just a system call that never ends?
+> 
+> Is the issue recoverable? So unmount just never completes? Can we CTRL-C
+> (SIGINT) out of it?
 
+No, you can't ctrl-c a stuck kernel.
+
+>>>> but this also causes the items in AIL to never be written back, even when
+>>>> the IO device comes back to normal.
+>>>>
+>>>> I've been testing this patch with a DM-thin device, creating a
+>>>> filesystem larger than the real device.
+>>>>
+>>>> When writing enough data to fill the DM-thin device, XFS receives ENOSPC
+>>>> errors from the device, and keep spinning on xfsaild (when 'retry
+>>>> forever' configuration is set).
+>>>>
+>>>> At this point, the filesystem can not be unmounted because of the flush locked
+>>>> items in AIL, but worse, the items in AIL are never retried at all
+>>>> (once xfs_inode_item_push() will skip the items that are flush locked),
+>>>> even if the underlying DM-thin device is expanded to the proper size.
+>>>
+>>> Jeesh.
+>>>
+>>> If the above issue is a real hang, shoudl we not consider a sensible stable fix
+>>> to start off with ?
+>>
+>> Huh?  I thought this series is supposed to be the fix.
+> 
+> It seems like a rather large set of changes, if the issue was sevee I was hoping
+> for a stable candidate fix first. If its not fixing a severe issue then sure.
+
+Fixes go uptream first, then to stable kernels if appropriate, right?
+
+But not every fix is a trivial one-liner.  I don't think there is any simpler
+fix to be had, here.
+
+-Eric
+
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
