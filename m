@@ -1,155 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20165 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750814AbdFOUfL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 16:35:11 -0400
-Subject: [PATCH 1/3] xfs_io: refactor numlen into a library function
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 15 Jun 2017 13:35:04 -0700
-Message-ID: <149755890422.3424.13436872740520325347.stgit@birch.djwong.org>
-In-Reply-To: <149755888982.3424.6925834871301440055.stgit@birch.djwong.org>
-References: <149755888982.3424.6925834871301440055.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:45210 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754428AbdFPOvh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 10:51:37 -0400
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH 3/7] GFS2: Switch fiemap implementation to use iomap
+Date: Fri, 16 Jun 2017 16:51:16 +0200
+Message-Id: <1497624680-16685-4-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
+References: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, Andreas Gruenbacher <agruenba@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Bob Peterson <rpeterso@redhat.com>
 
-Refactor the competing numlen implementations into a single library function.
+This patch switches GFS2's implementation of fiemap from the old
+block_map code to the new iomap interface.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Bob Peterson <rpeterso@redhat.com>
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- include/input.h |    1 +
- io/bmap.c       |   19 ++++---------------
- io/fiemap.c     |   14 +-------------
- libxcmd/input.c |   13 +++++++++++++
- 4 files changed, 19 insertions(+), 28 deletions(-)
+ fs/gfs2/Kconfig |  1 +
+ fs/gfs2/inode.c | 22 +++++++++++++++-------
+ 2 files changed, 16 insertions(+), 7 deletions(-)
 
-
-diff --git a/include/input.h b/include/input.h
-index 221678e..82cd2f4 100644
---- a/include/input.h
-+++ b/include/input.h
-@@ -28,6 +28,7 @@ extern char	**breakline(char *input, int *count);
- extern void	doneline(char *input, char **vec);
- extern char	*fetchline(void);
+diff --git a/fs/gfs2/Kconfig b/fs/gfs2/Kconfig
+index 90c6a8f..43c827a 100644
+--- a/fs/gfs2/Kconfig
++++ b/fs/gfs2/Kconfig
+@@ -4,6 +4,7 @@ config GFS2_FS
+ 	select FS_POSIX_ACL
+ 	select CRC32
+ 	select QUOTACTL
++	select FS_IOMAP
+ 	help
+ 	  A cluster filesystem.
  
-+extern size_t numlen(uint64_t val, size_t base);
- extern long long cvtnum(size_t blocksize, size_t sectorsize, char *s);
- extern void	cvtstr(double value, char *str, size_t sz);
- extern unsigned long cvttime(char *s);
-diff --git a/io/bmap.c b/io/bmap.c
-index 2333244..2e4ff7b 100644
---- a/io/bmap.c
-+++ b/io/bmap.c
-@@ -18,6 +18,7 @@
+diff --git a/fs/gfs2/inode.c b/fs/gfs2/inode.c
+index 9f605ea..9ed2e91 100644
+--- a/fs/gfs2/inode.c
++++ b/fs/gfs2/inode.c
+@@ -18,7 +18,7 @@
+ #include <linux/posix_acl.h>
+ #include <linux/gfs2_ondisk.h>
+ #include <linux/crc32.h>
+-#include <linux/fiemap.h>
++#include <linux/iomap.h>
+ #include <linux/security.h>
+ #include <linux/uaccess.h>
  
- #include "platform_defs.h"
- #include "command.h"
-+#include "input.h"
- #include "init.h"
- #include "io.h"
- 
-@@ -53,18 +54,6 @@ bmap_help(void)
- "\n"));
+@@ -1996,6 +1996,17 @@ static int gfs2_getattr(const struct path *path, struct kstat *stat,
+ 	return 0;
  }
  
--static int
--numlen(
--	off64_t	val)
--{
--	off64_t	tmp;
--	int	len;
--
--	for (len = 0, tmp = val; tmp > 0; tmp = tmp/10)
--		len++;
--	return (len == 0 ? 1 : len);
--}
--
- int
- bmap_f(
- 	int			argc,
-@@ -323,7 +312,7 @@ bmap_f(
- 			if (map[i + 1].bmv_block == -1) {
- 				foff_w = max(foff_w, strlen(rbuf));
- 				tot_w = max(tot_w,
--					numlen(map[i+1].bmv_length));
-+					numlen(map[i+1].bmv_length, 10));
- 			} else {
- 				snprintf(bbuf, sizeof(bbuf), "%lld..%lld",
- 					(long long) map[i + 1].bmv_block,
-@@ -344,10 +333,10 @@ bmap_f(
- 					aoff_w = 0;
- 				foff_w = max(foff_w, strlen(rbuf));
- 				tot_w = max(tot_w,
--					numlen(map[i+1].bmv_length));
-+					numlen(map[i+1].bmv_length, 10));
- 			}
- 		}
--		agno_w = is_rt ? 0 : max(MINAG_WIDTH, numlen(fsgeo.agcount));
-+		agno_w = is_rt ? 0 : max(MINAG_WIDTH, numlen(fsgeo.agcount, 10));
- 		printf("%4s: %-*s %-*s %*s %-*s %*s%s\n",
- 			_("EXT"),
- 			foff_w, _("FILE-OFFSET"),
-diff --git a/io/fiemap.c b/io/fiemap.c
-index bcbae49..75e8820 100644
---- a/io/fiemap.c
-+++ b/io/fiemap.c
-@@ -18,6 +18,7 @@
- 
- #include "platform_defs.h"
- #include "command.h"
-+#include "input.h"
- #include <linux/fiemap.h>
- #include "init.h"
- #include "io.h"
-@@ -48,19 +49,6 @@ fiemap_help(void)
- "\n"));
- }
- 
--static int
--numlen(
--	__u64	val,
--	int	base)
--{
--	__u64	tmp;
--	int	len;
--
--	for (len = 0, tmp = val; tmp > 0; tmp = tmp/base)
--		len++;
--	return (len == 0 ? 1 : len);
--}
--
- static void
- print_verbose(
- 	struct fiemap_extent	*extent,
-diff --git a/libxcmd/input.c b/libxcmd/input.c
-index 8aeb3b0..9437be3 100644
---- a/libxcmd/input.c
-+++ b/libxcmd/input.c
-@@ -136,6 +136,19 @@ doneline(
- 	free(vec);
- }
- 
-+size_t
-+numlen(
-+	uint64_t	val,
-+	size_t		base)
++static int gfs2_iomap_begin(struct inode *inode, loff_t offset,
++			    loff_t length, unsigned flags,
++			    struct iomap *iomap)
 +{
-+	uint64_t	tmp;
-+	size_t		len;
-+
-+	for (len = 0, tmp = val; tmp > 0; tmp = tmp / base)
-+		len++;
-+	return len == 0 ? 1 : len;
++	return gfs2_get_iomap(inode, offset, length, flags, iomap);
 +}
 +
- #define EXABYTES(x)	((long long)(x) << 60)
- #define PETABYTES(x)	((long long)(x) << 50)
- #define TERABYTES(x)	((long long)(x) << 40)
++const struct iomap_ops gfs2_iomap_ops = {
++	.iomap_begin = gfs2_iomap_begin,
++};
++
+ static int gfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ 		       u64 start, u64 len)
+ {
+@@ -2003,10 +2014,6 @@ static int gfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ 	struct gfs2_holder gh;
+ 	int ret;
+ 
+-	ret = fiemap_check_flags(fieinfo, FIEMAP_FLAG_SYNC);
+-	if (ret)
+-		return ret;
+-
+ 	inode_lock(inode);
+ 
+ 	ret = gfs2_glock_nq_init(ip->i_gl, LM_ST_SHARED, 0, &gh);
+@@ -2018,6 +2025,7 @@ static int gfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ 		u64 size = i_size_read(inode);
+ 		u32 flags = FIEMAP_EXTENT_LAST|FIEMAP_EXTENT_NOT_ALIGNED|
+ 			    FIEMAP_EXTENT_DATA_INLINE;
++
+ 		phys += sizeof(struct gfs2_dinode);
+ 		phys += start;
+ 		if (start + len > size)
+@@ -2028,11 +2036,11 @@ static int gfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ 		if (ret == 1)
+ 			ret = 0;
+ 	} else {
+-		ret = __generic_block_fiemap(inode, fieinfo, start, len,
+-					     gfs2_block_map);
++		ret = iomap_fiemap(inode, fieinfo, start, len, &gfs2_iomap_ops);
+ 	}
+ 
+ 	gfs2_glock_dq_uninit(&gh);
++
+ out:
+ 	inode_unlock(inode);
+ 	return ret;
+-- 
+2.7.5
 
