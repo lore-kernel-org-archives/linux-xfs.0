@@ -1,77 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41018 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751305AbdFFLT6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jun 2017 07:19:58 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 03/10] fs: Use RWF_* flags for AIO operations
-Date: Tue,  6 Jun 2017 06:19:32 -0500
-Message-Id: <20170606111939.27272-4-rgoldwyn@suse.de>
-In-Reply-To: <20170606111939.27272-1-rgoldwyn@suse.de>
-References: <20170606111939.27272-1-rgoldwyn@suse.de>
+Received: from sandeen.net ([63.231.237.45]:53766 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751757AbdFPB4M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Jun 2017 21:56:12 -0400
+Subject: Re: [PATCH] docs: fix mailing list
+References: <20170615234854.GA5421@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <dfc74ab6-c637-793b-c020-2f99fd5df1df@sandeen.net>
+Date: Thu, 15 Jun 2017 20:56:10 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170615234854.GA5421@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, linux-api@vger.kernel.org, adam.manzanares@wdc.com, viro@zeniv.linux.org.uk, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On 6/15/17 6:48 PM, Darrick J. Wong wrote:
+> Fix the mailing list since it's way out of date.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-aio_rw_flags is introduced in struct iocb (using aio_reserved1) which will
-carry the RWF_* flags. We cannot use aio_flags because they are not
-checked for validity which may break existing applications.
+I can handle this one! ;)
 
-Note, the only place RWF_HIPRI comes in effect is dio_await_one().
-All the rest of the locations, aio code return -EIOCBQUEUED before the
-checks for RWF_HIPRI.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- fs/aio.c                     | 8 +++++++-
- include/uapi/linux/aio_abi.h | 2 +-
- 2 files changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/fs/aio.c b/fs/aio.c
-index f52d925ee259..020fa0045e3c 100644
---- a/fs/aio.c
-+++ b/fs/aio.c
-@@ -1541,7 +1541,7 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
- 	ssize_t ret;
- 
- 	/* enforce forwards compatibility on users */
--	if (unlikely(iocb->aio_reserved1 || iocb->aio_reserved2)) {
-+	if (unlikely(iocb->aio_reserved2)) {
- 		pr_debug("EINVAL: reserve field set\n");
- 		return -EINVAL;
- 	}
-@@ -1586,6 +1586,12 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
- 		req->common.ki_flags |= IOCB_EVENTFD;
- 	}
- 
-+	ret = kiocb_set_rw_flags(&req->common, iocb->aio_rw_flags);
-+	if (unlikely(ret)) {
-+		pr_debug("EINVAL: aio_rw_flags\n");
-+		goto out_put_req;
-+	}
-+
- 	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
- 	if (unlikely(ret)) {
- 		pr_debug("EFAULT: aio_key\n");
-diff --git a/include/uapi/linux/aio_abi.h b/include/uapi/linux/aio_abi.h
-index bb2554f7fbd1..a2d4a8ac94ca 100644
---- a/include/uapi/linux/aio_abi.h
-+++ b/include/uapi/linux/aio_abi.h
-@@ -79,7 +79,7 @@ struct io_event {
- struct iocb {
- 	/* these are internal to the kernel/libc. */
- 	__u64	aio_data;	/* data to be returned in event's data */
--	__u32	PADDED(aio_key, aio_reserved1);
-+	__u32	PADDED(aio_key, aio_rw_flags);
- 				/* the kernel sets aio_key to the req # */
- 
- 	/* common fields */
--- 
-2.12.0
-
+> ---
+>  .../xfs_filesystem_structure.asciidoc              |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+> index 5540fa0..4b0a054 100644
+> --- a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+> +++ b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+> @@ -34,7 +34,7 @@ design goals.
+>  The information contained in this document derives from the XFS source code in
+>  the Linux kernel as of v4.3.  This book's source code is available at
+>  +git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git+.  Feedback should
+> -be sent to the XFS mailing list, currently at +xfs@oss.sgi.com+.
+> +be sent to the XFS mailing list, currently at +linux-xfs@vger.kernel.org+.
+>  
+>  [NOTE]
+>  All fields in XFS metadata structures are in big-endian byte order except for
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
