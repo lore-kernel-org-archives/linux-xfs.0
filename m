@@ -1,199 +1,138 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20788 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751677AbdFOUgt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 16:36:49 -0400
-Subject: [PATCH 09/12] xfs_spaceman: add new speculative prealloc control
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 15 Jun 2017 13:36:44 -0700
-Message-ID: <149755900449.3625.1673913017722813839.stgit@birch.djwong.org>
-In-Reply-To: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
-References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:33064 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751141AbdFPKyx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 06:54:53 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id B10C5B15D
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 10:54:52 +0000 (UTC)
+Received: from eorzea.usersys.redhat.com (unknown [10.40.205.55])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 11FF983077
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 10:54:51 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 1/2 V4] xfs: Add infrastructure needed for error propagation during buffer IO failure
+Date: Fri, 16 Jun 2017 12:54:44 +0200
+Message-Id: <20170616105445.3314-2-cmaiolino@redhat.com>
+In-Reply-To: <20170616105445.3314-1-cmaiolino@redhat.com>
+References: <20170616105445.3314-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+With the current code, XFS never re-submit a failed buffer for IO,
+because the failed item in the buffer is kept in the flush locked state
+forever.
 
-Add an control interface for purging speculative
-preallocation via the new ioctls.
+To be able to resubmit an log item for IO, we need a way to mark an item
+as failed, if, for any reason the buffer which the item belonged to
+failed during writeback.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-[darrick: change xfsctl to ioctl]
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Add a new log item callback to be used after an IO completion failure
+and make the needed clean ups.
+
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- spaceman/Makefile   |    2 -
- spaceman/init.c     |    1 
- spaceman/prealloc.c |  118 +++++++++++++++++++++++++++++++++++++++++++++++++++
- spaceman/space.h    |    1 
- 4 files changed, 121 insertions(+), 1 deletion(-)
- create mode 100644 spaceman/prealloc.c
+V2:
+	- Update commit log to include a better description of why this
+	  patch is needed and fix spelling mistakes
+	- Move xfs_buf_do_callbacks_fail() call into
+	  xfs_buf_iodone_callback_error, so the callbacks can be executed
+	  before the buffer is released, and only after it has been
+	  retried once
 
+V3:
+	- fix some loops according to hch suggestion
+	- whitespace cleanup
 
-diff --git a/spaceman/Makefile b/spaceman/Makefile
-index c63a4fc..6aad746 100644
---- a/spaceman/Makefile
-+++ b/spaceman/Makefile
-@@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
+V4:
+	- Invoke failure callbacks before reset the I/O error
+	- Remove bflags field from iop_error callback
+	- move spin_lock/unlock xa_lock up in the stack, handling all
+	  log items in the same buffer into a single lock
+
+ fs/xfs/xfs_buf_item.c | 23 ++++++++++++++++++++++-
+ fs/xfs/xfs_trans.h    |  7 +++++--
+ 2 files changed, 27 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 0306168..4fa68c9 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -29,6 +29,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
++#include "xfs_inode.h"
  
- LTCOMMAND = xfs_spaceman
- HFILES = init.h space.h
--CFILES = init.c file.c trim.c
-+CFILES = init.c file.c prealloc.c trim.c
  
- LLDLIBS = $(LIBXCMD)
- LTDEPENDENCIES = $(LIBXCMD)
-diff --git a/spaceman/init.c b/spaceman/init.c
-index 107a692..a51007d 100644
---- a/spaceman/init.c
-+++ b/spaceman/init.c
-@@ -39,6 +39,7 @@ init_commands(void)
- {
- 	print_init();
- 	help_init();
-+	prealloc_init();
- 	quit_init();
- 	trim_init();
+ kmem_zone_t	*xfs_buf_item_zone;
+@@ -1051,6 +1052,22 @@ xfs_buf_do_callbacks(
+ 	}
  }
-diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
-new file mode 100644
-index 0000000..439a9e8
---- /dev/null
-+++ b/spaceman/prealloc.c
-@@ -0,0 +1,118 @@
-+/*
-+ * Copyright (c) 2012 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include "libxfs.h"
-+#include "command.h"
-+#include "input.h"
-+#include "init.h"
-+#include "space.h"
-+
-+static cmdinfo_t prealloc_cmd;
-+
-+/*
-+ * Control preallocation amounts.
-+ */
-+static int
-+prealloc_f(
-+	int	argc,
-+	char	**argv)
-+{
-+	struct xfs_fs_eofblocks eofb = {0};
-+	int	c;
-+
-+	eofb.eof_version = XFS_EOFBLOCKS_VERSION;
-+
-+	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
-+		switch (c) {
-+		case 'g':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_GID;
-+			eofb.eof_gid = cvt_u32(optarg, 10);
-+			if (errno)
-+				return command_usage(&prealloc_cmd);
-+			break;
-+		case 'u':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_UID;
-+			eofb.eof_uid = cvt_u32(optarg, 10);
-+			if (errno)
-+				return command_usage(&prealloc_cmd);
-+			break;
-+		case 'p':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
-+			eofb.eof_prid = cvt_u32(optarg, 10);
-+			if (errno)
-+				return command_usage(&prealloc_cmd);
-+			break;
-+		case 's':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_SYNC;
-+			break;
-+		case 'm':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
-+			eofb.eof_min_file_size = cvtnum(file->geom.blocksize,
-+							file->geom.sectsize,
-+							optarg);
-+			break;
-+		case '?':
-+		default:
-+			return command_usage(&prealloc_cmd);
-+		}
-+	}
-+	if (optind != argc)
-+		return command_usage(&prealloc_cmd);
-+
-+	if (ioctl(file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
-+		fprintf(stderr, _("%s: XFS_IOC_FREE_EOFBLOCKS on %s: %s\n"),
-+			progname, file->name, strerror(errno));
-+	}
-+	return 0;
-+}
-+
-+static void
-+prealloc_help(void)
-+{
-+	printf(_(
-+"\n"
-+"Control speculative preallocation\n"
-+"\n"
-+" -g gid    -- remove prealloc on files matching group <gid>\n"
-+" -m minlen -- only consider files larger than <minlen>\n"
-+" -p prid   -- remove prealloc on files matching project <prid>\n"
-+" -s        -- wait for removal to complete\n"
-+" -u uid    -- remove prealloc on files matching user <uid>\n"
-+"\n"
-+"If none of -u, -g, or -p are specified, this command acts on all files.\n"
-+"minlen can take units.\n"
-+"\n"));
-+
-+}
-+
-+void
-+prealloc_init(void)
-+{
-+	prealloc_cmd.name = "prealloc";
-+	prealloc_cmd.altname = "prealloc";
-+	prealloc_cmd.cfunc = prealloc_f;
-+	prealloc_cmd.argmin = 1;
-+	prealloc_cmd.argmax = -1;
-+	prealloc_cmd.args = "[-s] [-u id] [-g id] [-p id] [-m minlen]";
-+	prealloc_cmd.flags = CMD_FLAG_ONESHOT;
-+	prealloc_cmd.oneline = _("Control speculative preallocation");
-+	prealloc_cmd.help = prealloc_help;
-+
-+	add_command(&prealloc_cmd);
-+}
-+
-diff --git a/spaceman/space.h b/spaceman/space.h
-index 8cd3953..de97139 100644
---- a/spaceman/space.h
-+++ b/spaceman/space.h
-@@ -33,6 +33,7 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *);
  
- extern void	print_init(void);
- extern void	help_init(void);
-+extern void	prealloc_init(void);
- extern void	quit_init(void);
- extern void	trim_init(void);
++STATIC void
++xfs_buf_do_callbacks_fail(
++	struct xfs_buf		*bp)
++{
++	struct xfs_log_item	*tli, *lip, *next;
++
++	tli = bp->b_fspriv;
++	spin_lock(&tli->li_ailp->xa_lock);
++	for (lip = bp->b_fspriv; lip; lip = next) {
++		next = lip->li_bio_list;
++		if (lip->li_ops->iop_error)
++			lip->li_ops->iop_error(lip, bp);
++	}
++	spin_unlock(&tli->li_ailp->xa_lock);
++}
++
+ static bool
+ xfs_buf_iodone_callback_error(
+ 	struct xfs_buf		*bp)
+@@ -1120,7 +1137,11 @@ xfs_buf_iodone_callback_error(
+ 	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
+ 		goto permanent_error;
  
+-	/* still a transient error, higher layers will retry */
++	/*
++	 * Still a transient error, run IO completion failure callbacks and let
++	 * the higher layers retry the buffer.
++	 */
++	xfs_buf_do_callbacks_fail(bp);
+ 	xfs_buf_ioerror(bp, 0);
+ 	xfs_buf_relse(bp);
+ 	return true;
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index a07acbf..50df5367 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -64,11 +64,13 @@ typedef struct xfs_log_item {
+ } xfs_log_item_t;
+ 
+ #define	XFS_LI_IN_AIL	0x1
+-#define XFS_LI_ABORTED	0x2
++#define	XFS_LI_ABORTED	0x2
++#define	XFS_LI_FAILED	0x4
+ 
+ #define XFS_LI_FLAGS \
+ 	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
+-	{ XFS_LI_ABORTED,	"ABORTED" }
++	{ XFS_LI_ABORTED,	"ABORTED" }, \
++	{ XFS_LI_FAILED,	"FAILED" }
+ 
+ struct xfs_item_ops {
+ 	void (*iop_size)(xfs_log_item_t *, int *, int *);
+@@ -79,6 +81,7 @@ struct xfs_item_ops {
+ 	void (*iop_unlock)(xfs_log_item_t *);
+ 	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
+ 	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
++	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *);
+ };
+ 
+ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
+-- 
+2.9.4
 
