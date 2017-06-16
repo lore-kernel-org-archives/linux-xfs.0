@@ -1,108 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45210 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36680 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754428AbdFPOvh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:51:37 -0400
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH 3/7] GFS2: Switch fiemap implementation to use iomap
-Date: Fri, 16 Jun 2017 16:51:16 +0200
-Message-Id: <1497624680-16685-4-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
-References: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
+        id S1752555AbdFPTf7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Jun 2017 15:35:59 -0400
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [PATCH v7 18/22] fs: add f_md_wb_err field to struct file for tracking metadata errors
+Date: Fri, 16 Jun 2017 15:34:23 -0400
+Message-Id: <20170616193427.13955-19-jlayton@redhat.com>
+In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
+References: <20170616193427.13955-1-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, Andreas Gruenbacher <agruenba@redhat.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-From: Bob Peterson <rpeterso@redhat.com>
+Some filesystems keep a different mapping for metadata writeback. Add a
+second errseq_t to struct file for tracking metadata writeback errors.
+Also add a new function for checking a mapping of the caller's choosing
+vs. the f_md_wb_err value.
 
-This patch switches GFS2's implementation of fiemap from the old
-block_map code to the new iomap interface.
-
-Signed-off-by: Bob Peterson <rpeterso@redhat.com>
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/gfs2/Kconfig |  1 +
- fs/gfs2/inode.c | 22 +++++++++++++++-------
- 2 files changed, 16 insertions(+), 7 deletions(-)
+ include/linux/fs.h             |  3 +++
+ include/trace/events/filemap.h | 23 ++++++++++-------------
+ mm/filemap.c                   | 40 +++++++++++++++++++++++++++++++---------
+ 3 files changed, 44 insertions(+), 22 deletions(-)
 
-diff --git a/fs/gfs2/Kconfig b/fs/gfs2/Kconfig
-index 90c6a8f..43c827a 100644
---- a/fs/gfs2/Kconfig
-+++ b/fs/gfs2/Kconfig
-@@ -4,6 +4,7 @@ config GFS2_FS
- 	select FS_POSIX_ACL
- 	select CRC32
- 	select QUOTACTL
-+	select FS_IOMAP
- 	help
- 	  A cluster filesystem.
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 8980e5ce2063..8f6319981b8b 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -872,6 +872,7 @@ struct file {
+ 	struct list_head	f_tfile_llink;
+ #endif /* #ifdef CONFIG_EPOLL */
+ 	struct address_space	*f_mapping;
++	errseq_t		f_md_wb_err; /* optional metadata wb error tracking */
+ } __attribute__((aligned(4)));	/* lest something weird decides that 2 is OK */
  
-diff --git a/fs/gfs2/inode.c b/fs/gfs2/inode.c
-index 9f605ea..9ed2e91 100644
---- a/fs/gfs2/inode.c
-+++ b/fs/gfs2/inode.c
-@@ -18,7 +18,7 @@
- #include <linux/posix_acl.h>
- #include <linux/gfs2_ondisk.h>
- #include <linux/crc32.h>
--#include <linux/fiemap.h>
-+#include <linux/iomap.h>
- #include <linux/security.h>
- #include <linux/uaccess.h>
+ struct file_handle {
+@@ -2525,6 +2526,8 @@ extern int filemap_fdatawrite_range(struct address_space *mapping,
+ extern int filemap_check_errors(struct address_space *mapping);
  
-@@ -1996,6 +1996,17 @@ static int gfs2_getattr(const struct path *path, struct kstat *stat,
- 	return 0;
- }
+ extern int __must_check filemap_report_wb_err(struct file *file);
++extern int __must_check filemap_report_md_wb_err(struct file *file,
++					struct address_space *mapping);
+ extern void __filemap_set_wb_err(struct address_space *mapping, int err);
  
-+static int gfs2_iomap_begin(struct inode *inode, loff_t offset,
-+			    loff_t length, unsigned flags,
-+			    struct iomap *iomap)
-+{
-+	return gfs2_get_iomap(inode, offset, length, flags, iomap);
-+}
-+
-+const struct iomap_ops gfs2_iomap_ops = {
-+	.iomap_begin = gfs2_iomap_begin,
-+};
-+
- static int gfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
- 		       u64 start, u64 len)
+ /**
+diff --git a/include/trace/events/filemap.h b/include/trace/events/filemap.h
+index 2af66920f267..6e0d78c01a2e 100644
+--- a/include/trace/events/filemap.h
++++ b/include/trace/events/filemap.h
+@@ -79,12 +79,11 @@ TRACE_EVENT(filemap_set_wb_err,
+ );
+ 
+ TRACE_EVENT(filemap_report_wb_err,
+-		TP_PROTO(struct file *file, errseq_t old),
++		TP_PROTO(struct address_space *mapping, errseq_t old, errseq_t new),
+ 
+-		TP_ARGS(file, old),
++		TP_ARGS(mapping, old, new),
+ 
+ 		TP_STRUCT__entry(
+-			__field(struct file *, file);
+ 			__field(unsigned long, i_ino)
+ 			__field(dev_t, s_dev)
+ 			__field(errseq_t, old)
+@@ -92,20 +91,18 @@ TRACE_EVENT(filemap_report_wb_err,
+ 		),
+ 
+ 		TP_fast_assign(
+-			__entry->file = file;
+-			__entry->i_ino = file->f_mapping->host->i_ino;
+-			if (file->f_mapping->host->i_sb)
+-				__entry->s_dev = file->f_mapping->host->i_sb->s_dev;
++			__entry->i_ino = mapping->host->i_ino;
++			if (mapping->host->i_sb)
++				__entry->s_dev = mapping->host->i_sb->s_dev;
+ 			else
+-				__entry->s_dev = file->f_mapping->host->i_rdev;
++				__entry->s_dev = mapping->host->i_rdev;
+ 			__entry->old = old;
+-			__entry->new = file->f_wb_err;
++			__entry->new = new;
+ 		),
+ 
+-		TP_printk("file=%p dev=%d:%d ino=0x%lx old=0x%x new=0x%x",
+-			__entry->file, MAJOR(__entry->s_dev),
+-			MINOR(__entry->s_dev), __entry->i_ino, __entry->old,
+-			__entry->new)
++		TP_printk("dev=%d:%d ino=0x%lx old=0x%x new=0x%x",
++			MAJOR(__entry->s_dev), MINOR(__entry->s_dev),
++			__entry->i_ino, __entry->old, __entry->new)
+ );
+ #endif /* _TRACE_FILEMAP_H */
+ 
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 879623032016..b0aef0a1ec46 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -584,27 +584,49 @@ EXPORT_SYMBOL(__filemap_set_wb_err);
+  * value is protected by the f_lock since we must ensure that it reflects
+  * the latest value swapped in for this file descriptor.
+  */
+-int filemap_report_wb_err(struct file *file)
++static int __filemap_report_wb_err(errseq_t *cursor, spinlock_t *lock,
++				struct address_space *mapping)
  {
-@@ -2003,10 +2014,6 @@ static int gfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
- 	struct gfs2_holder gh;
- 	int ret;
+ 	int err = 0;
+-	errseq_t old = READ_ONCE(file->f_wb_err);
+-	struct address_space *mapping = file->f_mapping;
++	errseq_t old = READ_ONCE(*cursor);
  
--	ret = fiemap_check_flags(fieinfo, FIEMAP_FLAG_SYNC);
--	if (ret)
--		return ret;
--
- 	inode_lock(inode);
- 
- 	ret = gfs2_glock_nq_init(ip->i_gl, LM_ST_SHARED, 0, &gh);
-@@ -2018,6 +2025,7 @@ static int gfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
- 		u64 size = i_size_read(inode);
- 		u32 flags = FIEMAP_EXTENT_LAST|FIEMAP_EXTENT_NOT_ALIGNED|
- 			    FIEMAP_EXTENT_DATA_INLINE;
-+
- 		phys += sizeof(struct gfs2_dinode);
- 		phys += start;
- 		if (start + len > size)
-@@ -2028,11 +2036,11 @@ static int gfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
- 		if (ret == 1)
- 			ret = 0;
- 	} else {
--		ret = __generic_block_fiemap(inode, fieinfo, start, len,
--					     gfs2_block_map);
-+		ret = iomap_fiemap(inode, fieinfo, start, len, &gfs2_iomap_ops);
+ 	/* Locklessly handle the common case where nothing has changed */
+ 	if (errseq_check(&mapping->wb_err, old)) {
+ 		/* Something changed, must use slow path */
+-		spin_lock(&file->f_lock);
+-		old = file->f_wb_err;
+-		err = errseq_check_and_advance(&mapping->wb_err,
+-						&file->f_wb_err);
+-		trace_filemap_report_wb_err(file, old);
+-		spin_unlock(&file->f_lock);
++		spin_lock(lock);
++		old = *cursor;
++		err = errseq_check_and_advance(&mapping->wb_err, cursor);
++		trace_filemap_report_wb_err(mapping, old, *cursor);
++		spin_unlock(lock);
  	}
- 
- 	gfs2_glock_dq_uninit(&gh);
+ 	return err;
+ }
++EXPORT_SYMBOL(__filemap_report_wb_err);
 +
- out:
- 	inode_unlock(inode);
- 	return ret;
++int filemap_report_wb_err(struct file *file)
++{
++	return __filemap_report_wb_err(&file->f_wb_err, &file->f_lock,
++					file->f_mapping);
++}
+ EXPORT_SYMBOL(filemap_report_wb_err);
+ 
+ /**
++ * filemap_report_md_wb_err - report wb error (if any) that was previously set
++ * @file: struct file on which the error is being reported
++ * @mapping: pointer to metadata mapping to check
++ *
++ * Many filesystems keep inode metadata in the pagecache, and will use the
++ * cache to write it back to the backing store. This function is for these
++ * callers to track metadata writeback.
++ */
++int filemap_report_md_wb_err(struct file *file, struct address_space *mapping)
++{
++	return __filemap_report_wb_err(&file->f_md_wb_err, &file->f_lock,
++					mapping);
++}
++EXPORT_SYMBOL(filemap_report_md_wb_err);
++
++/**
+  * replace_page_cache_page - replace a pagecache page with a new one
+  * @old:	page to be replaced
+  * @new:	page to replace with
 -- 
-2.7.5
+2.13.0
 
