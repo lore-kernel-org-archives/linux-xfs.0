@@ -1,115 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37932 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752616AbdFPTgH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 15:36:07 -0400
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v7 20/22] ext2: convert to errseq_t based writeback error tracking
-Date: Fri, 16 Jun 2017 15:34:25 -0400
-Message-Id: <20170616193427.13955-21-jlayton@redhat.com>
-In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
-References: <20170616193427.13955-1-jlayton@redhat.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:63997 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750973AbdFQX6Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Jun 2017 19:58:25 -0400
+Date: Sun, 18 Jun 2017 09:57:51 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 6/7] xfs: Switch to iomap for lseek SEEK_HOLE / SEEK_DATA
+Message-ID: <20170617235751.GH17542@dastard>
+References: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
+ <1497624680-16685-7-git-send-email-agruenba@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1497624680-16685-7-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel@redhat.com
 
-Set the flag to indicate that we want new-style data writeback error
-handling.
+On Fri, Jun 16, 2017 at 04:51:19PM +0200, Andreas Gruenbacher wrote:
+> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> ---
+>  fs/xfs/xfs_file.c | 17 ++---------------
+>  1 file changed, 2 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 5fb5a09..b36dcd7 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1283,28 +1283,15 @@ xfs_seek_hole_data(
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	uint			lock;
+> -	loff_t			offset, end;
+> -	int			error = 0;
+> +	loff_t			offset;
+>  
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+>  
+>  	lock = xfs_ilock_data_map_shared(ip);
+> -
+> -	end = i_size_read(inode);
+> -	offset = __xfs_seek_hole_data(inode, start, end, whence);
+> -	if (offset < 0) {
+> -		error = offset;
+> -		goto out_unlock;
+> -	}
+> -
+> -	offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+> -
+> -out_unlock:
+> +	offset = iomap_seek_hole_data(file, start, whence, &xfs_iomap_ops);
+>  	xfs_iunlock(ip, lock);
+>  
+> -	if (error)
+> -		return error;
+>  	return offset;
+>  }
 
-This means that we need to override the open routines for files and
-directories so that we can sample the bdev wb_err at open.
+Doesn't this change the way data in unwritten extents is reported?
+i.e. we current report unwritten extents as holes if there is no
+data pending writeback over the range in the page cache, and as
+data if there is data in the page cache.
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- fs/ext2/dir.c  |  8 ++++++++
- fs/ext2/file.c | 26 +++++++++++++++++++++-----
- 2 files changed, 29 insertions(+), 5 deletions(-)
+I don't see this page cache lookup for unwritten extents implemented
+in iomap_seek_hole_data() - it only reports extents mapped as holes
+as holes. Hence this will now always report unwritten extents as
+data . This strikes me as a regression as we currently report them
+as a hole:
 
-diff --git a/fs/ext2/dir.c b/fs/ext2/dir.c
-index e2709695b177..6e476c9929f8 100644
---- a/fs/ext2/dir.c
-+++ b/fs/ext2/dir.c
-@@ -713,6 +713,13 @@ int ext2_empty_dir (struct inode * inode)
- 	return 0;
- }
- 
-+static int ext2_dir_open(struct inode *inode, struct file *file)
-+{
-+	/* Sample blockdev mapping errseq_t for metadata writeback */
-+	file->f_md_wb_err = filemap_sample_wb_err(inode->i_sb->s_bdev->bd_inode->i_mapping);
-+	return 0;
-+}
-+
- const struct file_operations ext2_dir_operations = {
- 	.llseek		= generic_file_llseek,
- 	.read		= generic_read_dir,
-@@ -721,5 +728,6 @@ const struct file_operations ext2_dir_operations = {
- #ifdef CONFIG_COMPAT
- 	.compat_ioctl	= ext2_compat_ioctl,
- #endif
-+	.open		= ext2_dir_open,
- 	.fsync		= ext2_fsync,
- };
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index ed00e7ae0ef3..fd44539f6fce 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -172,17 +172,23 @@ static int ext2_release_file (struct inode * inode, struct file * filp)
- 
- int ext2_fsync(struct file *file, loff_t start, loff_t end, int datasync)
- {
--	int ret;
-+	int ret, ret2;
- 	struct super_block *sb = file->f_mapping->host->i_sb;
- 	struct address_space *mapping = sb->s_bdev->bd_inode->i_mapping;
- 
- 	ret = generic_file_fsync(file, start, end, datasync);
--	if (ret == -EIO) {
-+	if (ret == -EIO)
- 		/* We don't really know where the IO error happened... */
- 		ext2_error(sb, __func__,
- 			   "detected IO error when writing metadata buffers");
--		ret = -EIO;
--	}
-+
-+	ret2 = filemap_report_wb_err(file);
-+	if (ret == 0)
-+		ret = ret2;
-+
-+	ret2 = filemap_report_md_wb_err(file, mapping);
-+	if (ret == 0)
-+		ret = ret2;
- 	return ret;
- }
- 
-@@ -204,6 +210,16 @@ static ssize_t ext2_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	return generic_file_write_iter(iocb, from);
- }
- 
-+static int ext2_file_open(struct inode *inode, struct file *file)
-+{
-+	int ret;
-+
-+	ret = dquot_file_open(inode, file);
-+	if (likely(ret == 0))
-+		file->f_md_wb_err = filemap_sample_wb_err(inode->i_sb->s_bdev->bd_inode->i_mapping);
-+	return ret;
-+}
-+
- const struct file_operations ext2_file_operations = {
- 	.llseek		= generic_file_llseek,
- 	.read_iter	= ext2_file_read_iter,
-@@ -213,7 +229,7 @@ const struct file_operations ext2_file_operations = {
- 	.compat_ioctl	= ext2_compat_ioctl,
- #endif
- 	.mmap		= ext2_file_mmap,
--	.open		= dquot_file_open,
-+	.open		= ext2_file_open,
- 	.release	= ext2_release_file,
- 	.fsync		= ext2_fsync,
- 	.get_unmapped_area = thp_get_unmapped_area,
+$ xfs_io -f -c "truncate 1m" -c "falloc 0 1m" -c "seek -a -r 0" foo
+Whence	Result
+HOLE	0
+$
+
+I'm pretty sure that ext4 has the same behaviour when it comes to
+dirty page cache pages over unwritten extents ..
+
+Cheers,
+
+Dave.
 -- 
-2.13.0
-
+Dave Chinner
+david@fromorbit.com
