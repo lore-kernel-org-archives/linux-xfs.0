@@ -1,417 +1,191 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41087 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750750AbdFPPaf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Jun 2017 11:30:35 -0400
-Date: Fri, 16 Jun 2017 08:30:29 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/7] xfs: Switch to iomap for seeking in quota files
-Message-ID: <20170616153029.GB5421@birch.djwong.org>
-References: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
- <1497624680-16685-8-git-send-email-agruenba@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1497624680-16685-8-git-send-email-agruenba@redhat.com>
+Received: from mail-qt0-f172.google.com ([209.85.216.172]:35387 "EHLO
+        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750941AbdFSQXu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Jun 2017 12:23:50 -0400
+Received: by mail-qt0-f172.google.com with SMTP id w1so113884890qtg.2
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2017 09:23:49 -0700 (PDT)
+Message-ID: <1497889426.4654.7.camel@redhat.com>
+Subject: Re: [PATCH v7 00/22] fs: enhanced writeback error reporting with
+ errseq_t (pile #1)
+From: Jeff Layton <jlayton@redhat.com>
+Date: Mon, 19 Jun 2017 12:23:46 -0400
+In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
+References: <20170616193427.13955-1-jlayton@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel@redhat.com
+To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-On Fri, Jun 16, 2017 at 04:51:20PM +0200, Andreas Gruenbacher wrote:
-> (This patch is largely untested.)
-
-In principle the XFS bits look ok, but I think you'd be better off with
-a review from hch and, uh, while you wait, a run through the xfstests
-'quota' group and probably 'auto' too?
-
-I also think the two xfs patches would be better organized either as a
-pair of patches where one patch gets rid of the __xfs_seek_hole_data
-calls and the second removes the __xfs_seek_hole_data implementation;
-or a single patch to refactor it out of xfs in a single blow.
-
---D
-
+On Fri, 2017-06-16 at 15:34 -0400, Jeff Layton wrote:
+> v7:
+> ===
+> This is the seventh posting of the patchset to revamp the way writeback
+> errors are tracked and reported.
 > 
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-> ---
->  fs/xfs/xfs_dquot.c |   5 +-
->  fs/xfs/xfs_file.c  | 320 -----------------------------------------------------
->  fs/xfs/xfs_inode.h |   2 -
->  3 files changed, 3 insertions(+), 324 deletions(-)
+> The main difference from the v6 posting is the removal of the
+> FS_WB_ERRSEQ flag. That requires a few other incremental patches in the
+> writeback code to ensure that both error tracking models are handled
+> in a suitable way.
 > 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 9d06cc3..a10bd921 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -39,6 +39,7 @@
->  #include "xfs_trace.h"
->  #include "xfs_log.h"
->  #include "xfs_bmap_btree.h"
-> +#include "xfs_iomap.h"
->  
->  /*
->   * Lock order:
-> @@ -726,8 +727,8 @@ xfs_dq_get_next_id(
->  	quotip = xfs_quota_inode(mp, type);
->  	lock = xfs_ilock_data_map_shared(quotip);
->  
-> -	offset = __xfs_seek_hole_data(VFS_I(quotip), XFS_FSB_TO_B(mp, start),
-> -				      eof, SEEK_DATA);
-> +	offset = __iomap_seek_hole_data(VFS_I(quotip), XFS_FSB_TO_B(mp, start), eof,
-> +					SEEK_DATA, &xfs_iomap_ops);
->  	if (offset < 0)
->  		error = offset;
->  
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index b36dcd7..3acbbaf 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -953,326 +953,6 @@ xfs_file_readdir(
->  	return xfs_readdir(ip, ctx, bufsize);
->  }
->  
-> -/*
-> - * This type is designed to indicate the type of offset we would like
-> - * to search from page cache for xfs_seek_hole_data().
-> - */
-> -enum {
-> -	HOLE_OFF = 0,
-> -	DATA_OFF,
-> -};
-> -
-> -/*
-> - * Lookup the desired type of offset from the given page.
-> - *
-> - * On success, return true and the offset argument will point to the
-> - * start of the region that was found.  Otherwise this function will
-> - * return false and keep the offset argument unchanged.
-> - */
-> -STATIC bool
-> -xfs_lookup_buffer_offset(
-> -	struct page		*page,
-> -	loff_t			*offset,
-> -	unsigned int		type)
-> -{
-> -	loff_t			lastoff = page_offset(page);
-> -	bool			found = false;
-> -	struct buffer_head	*bh, *head;
-> -
-> -	bh = head = page_buffers(page);
-> -	do {
-> -		/*
-> -		 * Unwritten extents that have data in the page
-> -		 * cache covering them can be identified by the
-> -		 * BH_Unwritten state flag.  Pages with multiple
-> -		 * buffers might have a mix of holes, data and
-> -		 * unwritten extents - any buffer with valid
-> -		 * data in it should have BH_Uptodate flag set
-> -		 * on it.
-> -		 */
-> -		if (buffer_unwritten(bh) ||
-> -		    buffer_uptodate(bh)) {
-> -			if (type == DATA_OFF)
-> -				found = true;
-> -		} else {
-> -			if (type == HOLE_OFF)
-> -				found = true;
-> -		}
-> -
-> -		if (found) {
-> -			*offset = lastoff;
-> -			break;
-> -		}
-> -		lastoff += bh->b_size;
-> -	} while ((bh = bh->b_this_page) != head);
-> -
-> -	return found;
-> -}
-> -
-> -/*
-> - * This routine is called to find out and return a data or hole offset
-> - * from the page cache for unwritten extents according to the desired
-> - * type for xfs_seek_hole_data().
-> - *
-> - * The argument offset is used to tell where we start to search from the
-> - * page cache.  Map is used to figure out the end points of the range to
-> - * lookup pages.
-> - *
-> - * Return true if the desired type of offset was found, and the argument
-> - * offset is filled with that address.  Otherwise, return false and keep
-> - * offset unchanged.
-> - */
-> -STATIC bool
-> -xfs_find_get_desired_pgoff(
-> -	struct inode		*inode,
-> -	struct xfs_bmbt_irec	*map,
-> -	unsigned int		type,
-> -	loff_t			*offset)
-> -{
-> -	struct xfs_inode	*ip = XFS_I(inode);
-> -	struct xfs_mount	*mp = ip->i_mount;
-> -	struct pagevec		pvec;
-> -	pgoff_t			index;
-> -	pgoff_t			end;
-> -	loff_t			endoff;
-> -	loff_t			startoff = *offset;
-> -	loff_t			lastoff = startoff;
-> -	bool			found = false;
-> -
-> -	pagevec_init(&pvec, 0);
-> -
-> -	index = startoff >> PAGE_SHIFT;
-> -	endoff = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount);
-> -	end = (endoff - 1) >> PAGE_SHIFT;
-> -	do {
-> -		int		want;
-> -		unsigned	nr_pages;
-> -		unsigned int	i;
-> -
-> -		want = min_t(pgoff_t, end - index, PAGEVEC_SIZE - 1) + 1;
-> -		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
-> -					  want);
-> -		if (nr_pages == 0)
-> -			break;
-> -
-> -		for (i = 0; i < nr_pages; i++) {
-> -			struct page	*page = pvec.pages[i];
-> -			loff_t		b_offset;
-> -
-> -			/*
-> -			 * At this point, the page may be truncated or
-> -			 * invalidated (changing page->mapping to NULL),
-> -			 * or even swizzled back from swapper_space to tmpfs
-> -			 * file mapping. However, page->index will not change
-> -			 * because we have a reference on the page.
-> -			 *
-> -			 * If current page offset is beyond where we've ended,
-> -			 * we've found a hole.
-> -			 */
-> -			if (type == HOLE_OFF && lastoff < endoff &&
-> -			    lastoff < page_offset(pvec.pages[i])) {
-> -				found = true;
-> -				*offset = lastoff;
-> -				goto out;
-> -			}
-> -			/* Searching done if the page index is out of range. */
-> -			if (page->index > end)
-> -				goto out;
-> -
-> -			lock_page(page);
-> -			/*
-> -			 * Page truncated or invalidated(page->mapping == NULL).
-> -			 * We can freely skip it and proceed to check the next
-> -			 * page.
-> -			 */
-> -			if (unlikely(page->mapping != inode->i_mapping)) {
-> -				unlock_page(page);
-> -				continue;
-> -			}
-> -
-> -			if (!page_has_buffers(page)) {
-> -				unlock_page(page);
-> -				continue;
-> -			}
-> -
-> -			found = xfs_lookup_buffer_offset(page, &b_offset, type);
-> -			if (found) {
-> -				/*
-> -				 * The found offset may be less than the start
-> -				 * point to search if this is the first time to
-> -				 * come here.
-> -				 */
-> -				*offset = max_t(loff_t, startoff, b_offset);
-> -				unlock_page(page);
-> -				goto out;
-> -			}
-> -
-> -			/*
-> -			 * We either searching data but nothing was found, or
-> -			 * searching hole but found a data buffer.  In either
-> -			 * case, probably the next page contains the desired
-> -			 * things, update the last offset to it so.
-> -			 */
-> -			lastoff = page_offset(page) + PAGE_SIZE;
-> -			unlock_page(page);
-> -		}
-> -
-> -		/*
-> -		 * The number of returned pages less than our desired, search
-> -		 * done.
-> -		 */
-> -		if (nr_pages < want)
-> -			break;
-> -
-> -		index = pvec.pages[i - 1]->index + 1;
-> -		pagevec_release(&pvec);
-> -	} while (index <= end);
-> -
-> -	/* No page at lastoff and we are not done - we found a hole. */
-> -	if (type == HOLE_OFF && lastoff < endoff) {
-> -		*offset = lastoff;
-> -		found = true;
-> -	}
-> -out:
-> -	pagevec_release(&pvec);
-> -	return found;
-> -}
-> -
-> -/*
-> - * caller must lock inode with xfs_ilock_data_map_shared,
-> - * can we craft an appropriate ASSERT?
-> - *
-> - * end is because the VFS-level lseek interface is defined such that any
-> - * offset past i_size shall return -ENXIO, but we use this for quota code
-> - * which does not maintain i_size, and we want to SEEK_DATA past i_size.
-> - */
-> -loff_t
-> -__xfs_seek_hole_data(
-> -	struct inode		*inode,
-> -	loff_t			start,
-> -	loff_t			end,
-> -	int			whence)
-> -{
-> -	struct xfs_inode	*ip = XFS_I(inode);
-> -	struct xfs_mount	*mp = ip->i_mount;
-> -	loff_t			uninitialized_var(offset);
-> -	xfs_fileoff_t		fsbno;
-> -	xfs_filblks_t		lastbno;
-> -	int			error;
-> -
-> -	if (start >= end) {
-> -		error = -ENXIO;
-> -		goto out_error;
-> -	}
-> -
-> -	/*
-> -	 * Try to read extents from the first block indicated
-> -	 * by fsbno to the end block of the file.
-> -	 */
-> -	fsbno = XFS_B_TO_FSBT(mp, start);
-> -	lastbno = XFS_B_TO_FSB(mp, end);
-> -
-> -	for (;;) {
-> -		struct xfs_bmbt_irec	map[2];
-> -		int			nmap = 2;
-> -		unsigned int		i;
-> -
-> -		error = xfs_bmapi_read(ip, fsbno, lastbno - fsbno, map, &nmap,
-> -				       XFS_BMAPI_ENTIRE);
-> -		if (error)
-> -			goto out_error;
-> -
-> -		/* No extents at given offset, must be beyond EOF */
-> -		if (nmap == 0) {
-> -			error = -ENXIO;
-> -			goto out_error;
-> -		}
-> -
-> -		for (i = 0; i < nmap; i++) {
-> -			offset = max_t(loff_t, start,
-> -				       XFS_FSB_TO_B(mp, map[i].br_startoff));
-> -
-> -			/* Landed in the hole we wanted? */
-> -			if (whence == SEEK_HOLE &&
-> -			    map[i].br_startblock == HOLESTARTBLOCK)
-> -				goto out;
-> -
-> -			/* Landed in the data extent we wanted? */
-> -			if (whence == SEEK_DATA &&
-> -			    (map[i].br_startblock == DELAYSTARTBLOCK ||
-> -			     (map[i].br_state == XFS_EXT_NORM &&
-> -			      !isnullstartblock(map[i].br_startblock))))
-> -				goto out;
-> -
-> -			/*
-> -			 * Landed in an unwritten extent, try to search
-> -			 * for hole or data from page cache.
-> -			 */
-> -			if (map[i].br_state == XFS_EXT_UNWRITTEN) {
-> -				if (xfs_find_get_desired_pgoff(inode, &map[i],
-> -				      whence == SEEK_HOLE ? HOLE_OFF : DATA_OFF,
-> -							&offset))
-> -					goto out;
-> -			}
-> -		}
-> -
-> -		/*
-> -		 * We only received one extent out of the two requested. This
-> -		 * means we've hit EOF and didn't find what we are looking for.
-> -		 */
-> -		if (nmap == 1) {
-> -			/*
-> -			 * If we were looking for a hole, set offset to
-> -			 * the end of the file (i.e., there is an implicit
-> -			 * hole at the end of any file).
-> -		 	 */
-> -			if (whence == SEEK_HOLE) {
-> -				offset = end;
-> -				break;
-> -			}
-> -			/*
-> -			 * If we were looking for data, it's nowhere to be found
-> -			 */
-> -			ASSERT(whence == SEEK_DATA);
-> -			error = -ENXIO;
-> -			goto out_error;
-> -		}
-> -
-> -		ASSERT(i > 1);
-> -
-> -		/*
-> -		 * Nothing was found, proceed to the next round of search
-> -		 * if the next reading offset is not at or beyond EOF.
-> -		 */
-> -		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
-> -		start = XFS_FSB_TO_B(mp, fsbno);
-> -		if (start >= end) {
-> -			if (whence == SEEK_HOLE) {
-> -				offset = end;
-> -				break;
-> -			}
-> -			ASSERT(whence == SEEK_DATA);
-> -			error = -ENXIO;
-> -			goto out_error;
-> -		}
-> -	}
-> -
-> -out:
-> -	/*
-> -	 * If at this point we have found the hole we wanted, the returned
-> -	 * offset may be bigger than the file size as it may be aligned to
-> -	 * page boundary for unwritten extents.  We need to deal with this
-> -	 * situation in particular.
-> -	 */
-> -	if (whence == SEEK_HOLE)
-> -		offset = min_t(loff_t, offset, end);
-> -
-> -	return offset;
-> -
-> -out_error:
-> -	return error;
-> -}
-> -
->  STATIC loff_t
->  xfs_seek_hole_data(
->  	struct file		*file,
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 10e89fc..17c441a 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -445,8 +445,6 @@ int	xfs_zero_eof(struct xfs_inode *ip, xfs_off_t offset,
->  		     xfs_fsize_t isize, bool *did_zeroing);
->  int	xfs_zero_range(struct xfs_inode *ip, xfs_off_t pos, xfs_off_t count,
->  		bool *did_zero);
-> -loff_t	__xfs_seek_hole_data(struct inode *inode, loff_t start,
-> -			     loff_t eof, int whence);
->  
->  
->  /* from xfs_iops.c */
-> -- 
-> 2.7.5
+> Also, a bit more cleanup of the metadata writeback codepaths, and some
+> documentation updates.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Some of these patches have been posted separately, but I'm re-posting
+> them here to make it clear that they're prerequisites of the later
+> patches in the series.
+> 
+> This series is based on top of linux-next from a day or so ago. I'd like
+> to have this picked up by linux-next in the near future so we can get
+> some more extensive testing with it. Should I just plan to maintain a
+> topic branch on top of -next and ask Stephen to pick it up?
+> 
+> Background:
+> ===========
+> The basic problem is that we have (for a very long time) tracked and
+> reported writeback errors based on two flags in the address_space:
+> AS_EIO and AS_ENOSPC. Those flags are cleared when they are checked,
+> so only the first caller to check them is able to consume them.
+> 
+> That model is quite unreliable, for several related reasons:
+> 
+> * only the first fsync caller on the inode will see the error. In a
+>   world of containerized setups, that's no longer viable. Applications
+>   need to know that their writes are safely stored, and they can
+>   currently miss seeing errors that they should be aware of when
+>   they're not.
+> 
+> * there are a lot of internal callers to filemap_fdatawait* and
+>   filemap_write_and_wait* that clear these errors but then never report
+>   them to userland in any fashion.
+> 
+> * Some internal callers report writeback errors, but can do so at
+>   non-sensical times. For instance, we might want to truncate a file,
+>   which triggers a pagecache flush. If that writeback fails, we might
+>   report that error to the truncate caller, but a subsequent fsync
+>   will likely not see it.
+> 
+> * Some internal callers try to reset the error flags after clearing
+>   them, but that's racy. Another task could check the flags between
+>   those two events.
+> 
+> Solution:
+> =========
+> This patchset adds a new datatype called an errseq_t that represents a
+> sequence of errors. It's a u32, with a field for a POSIX-flavor error
+> and a counter, managed with atomics. We can sample that value at a
+> particular point in time, and can later tell whether there have been any
+> errors since that point.
+> 
+> That allows us to provide traditional check-and-clear fsync semantics
+> on every open file description in a lightweight fashion. fsync callers
+> no longer need to coordinate between one another in order to ensure
+> that errors at fsync time are handled correctly.
+> 
+> Strategy:
+> =========
+> The aim with this pile is to do the minimum possible to support for
+> reliable reporting of errors on fsync, without substantially changing
+> the internals of the filesystems themselves.
+> 
+> Most of the internal calls to filemap_fdatawait are left alone, so all
+> of the internal error checkers are using the same error handling they
+> always have. The only real difference here is that we're better
+> reporting errors at fsync.
+> 
+> I think that we probably will want to eventually convert all of those
+> internal callers to use errseq_t based reporting, but that can be done
+> in an incremental fashion in follow-on patchsets.
+> 
+> Testing:
+> ========
+> I've primarily been testing this with some new xfstests that I will post
+> in a separate series. These tests use dm-error fault injection to make
+> the underlying block device start throwing I/O errors, and then test the
+> how the filesystem layer reports errors after that.
+> 
+> Jeff Layton (22):
+>   fs: remove call_fsync helper function
+>   buffer: use mapping_set_error instead of setting the flag
+>   fs: check for writeback errors after syncing out buffers in
+>     generic_file_fsync
+>   buffer: set errors in mapping at the time that the error occurs
+>   jbd2: don't clear and reset errors after waiting on writeback
+>   mm: clear AS_EIO/AS_ENOSPC when writeback initiation fails
+>   mm: don't TestClearPageError in __filemap_fdatawait_range
+>   mm: clean up error handling in write_one_page
+>   fs: always sync metadata in __generic_file_fsync
+>   lib: add errseq_t type and infrastructure for handling it
+>   fs: new infrastructure for writeback error handling and reporting
+>   mm: tracepoints for writeback error events
+>   mm: set both AS_EIO/AS_ENOSPC and errseq_t in mapping_set_error
+>   Documentation: flesh out the section in vfs.txt on storing and
+>     reporting writeback errors
+>   dax: set errors in mapping when writeback fails
+>   block: convert to errseq_t based writeback error tracking
+>   ext4: use errseq_t based error handling for reporting data writeback
+>     errors
+>   fs: add f_md_wb_err field to struct file for tracking metadata errors
+>   ext4: add more robust reporting of metadata writeback errors
+>   ext2: convert to errseq_t based writeback error tracking
+>   xfs: minimal conversion to errseq_t writeback error reporting
+>   btrfs: minimal conversion to errseq_t writeback error reporting on
+>     fsync
+> 
+>  Documentation/filesystems/vfs.txt |  43 +++++++-
+>  drivers/dax/device.c              |   1 +
+>  fs/block_dev.c                    |   9 +-
+>  fs/btrfs/file.c                   |   7 +-
+>  fs/buffer.c                       |  20 ++--
+>  fs/dax.c                          |   4 +-
+>  fs/ext2/dir.c                     |   8 ++
+>  fs/ext2/file.c                    |  26 ++++-
+>  fs/ext4/dir.c                     |   8 +-
+>  fs/ext4/file.c                    |   5 +-
+>  fs/ext4/fsync.c                   |  28 ++++-
+>  fs/file_table.c                   |   1 +
+>  fs/gfs2/lops.c                    |   2 +-
+>  fs/jbd2/commit.c                  |  15 +--
+>  fs/libfs.c                        |  12 +--
+>  fs/open.c                         |   3 +
+>  fs/sync.c                         |   2 +-
+>  fs/xfs/xfs_file.c                 |  15 ++-
+>  include/linux/buffer_head.h       |   1 +
+>  include/linux/errseq.h            |  19 ++++
+>  include/linux/fs.h                |  67 ++++++++++--
+>  include/linux/pagemap.h           |  31 ++++--
+>  include/trace/events/filemap.h    |  52 ++++++++++
+>  ipc/shm.c                         |   2 +-
+>  lib/Makefile                      |   2 +-
+>  lib/errseq.c                      | 208 ++++++++++++++++++++++++++++++++++++++
+>  mm/filemap.c                      | 113 +++++++++++++++++----
+>  mm/page-writeback.c               |  15 ++-
+>  28 files changed, 628 insertions(+), 91 deletions(-)
+>  create mode 100644 include/linux/errseq.h
+>  create mode 100644 lib/errseq.c
+> 
+
+If there are no major objections to this set, I'd like to have
+linux-next start picking it up to get some wider testing. What's the
+right vehicle for this, given that it touches stuff all over the tree?
+
+I can see 3 potential options:
+
+1) I could just pull these into the branch that Stephen is already
+picking up for file-locks in my tree
+
+2) I could put them into a new branch, and have Stephen pull that one in
+addition to the file-locks branch
+
+3) It could go in via someone else's tree entirely (Andrew or Al's
+maybe?)
+
+I'm fine with any of these. Anyone have thoughts?
+
+Thanks,
+-- 
+Jeff Layton <jlayton@redhat.com>
