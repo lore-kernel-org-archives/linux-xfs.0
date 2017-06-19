@@ -1,75 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42197 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750903AbdFPTpn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 15:45:43 -0400
-Date: Fri, 16 Jun 2017 13:45:40 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v2 3/3] dax: use common 4k zero page for dax mmap reads
-Message-ID: <20170616194540.GB20742@linux.intel.com>
-References: <20170614172211.19820-1-ross.zwisler@linux.intel.com>
- <20170614172211.19820-4-ross.zwisler@linux.intel.com>
- <20170615145856.GO1764@quack2.suse.cz>
+Received: from aserp1040.oracle.com ([141.146.126.69]:40374 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751839AbdFSRci (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Jun 2017 13:32:38 -0400
+Date: Mon, 19 Jun 2017 10:32:32 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/7] vfs: Add iomap_seek_hole_data helper
+Message-ID: <20170619173232.GA4730@birch.djwong.org>
+References: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
+ <1497624680-16685-5-git-send-email-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170615145856.GO1764@quack2.suse.cz>
+In-Reply-To: <1497624680-16685-5-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel@redhat.com
 
-On Thu, Jun 15, 2017 at 04:58:56PM +0200, Jan Kara wrote:
-> On Wed 14-06-17 11:22:11, Ross Zwisler wrote:
-> > @@ -216,17 +217,6 @@ static void dax_unlock_mapping_entry(struct address_space *mapping,
-> >  	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
-> >  }
-> >  
-> > -static void put_locked_mapping_entry(struct address_space *mapping,
-> > -				     pgoff_t index, void *entry)
-> > -{
-> > -	if (!radix_tree_exceptional_entry(entry)) {
-> > -		unlock_page(entry);
-> > -		put_page(entry);
-> > -	} else {
-> > -		dax_unlock_mapping_entry(mapping, index);
-> > -	}
-> > -}
-> > -
+On Fri, Jun 16, 2017 at 04:51:17PM +0200, Andreas Gruenbacher wrote:
+> Filesystems can use this for implementing lseek SEEK_HOLE / SEEK_DATA
+> support via iomap.
 > 
-> The naming becomes asymetric with this. So I'd prefer keeping
-> put_locked_mapping_entry() as a trivial wrapper around
-> dax_unlock_mapping_entry() unless we can craft more sensible naming / API
-> for entry grabbing (and that would be a separate patch anyway).
-
-Sure, that works for me.  I'll fix for v3.
-
-> > -static int dax_load_hole(struct address_space *mapping, void **entry,
-> > +static int dax_load_hole(struct address_space *mapping, void *entry,
-> >  			 struct vm_fault *vmf)
-> >  {
-> >  	struct inode *inode = mapping->host;
-> > -	struct page *page;
-> > -	int ret;
-> > -
-> > -	/* Hole page already exists? Return it...  */
-> > -	if (!radix_tree_exceptional_entry(*entry)) {
-> > -		page = *entry;
-> > -		goto finish_fault;
-> > -	}
-> > +	unsigned long vaddr = vmf->address;
-> > +	int ret = VM_FAULT_NOPAGE;
-> > +	struct page *zero_page;
-> > +	void *entry2;
-> >  
-> > -	/* This will replace locked radix tree entry with a hole page */
-> > -	page = find_or_create_page(mapping, vmf->pgoff,
-> > -				   vmf->gfp_mask | __GFP_ZERO);
+> The __iomap_seek_hole_data helper takes an additional size argument and
+> doesn't reposition the file offset; this is for internal use for xfs
+> quota files which don't maintain the inode size.
 > 
-> With this gone, you can also remove the special DAX handling from
-> mm/filemap.c: page_cache_tree_insert() and remove from dax.h
-> dax_wake_mapping_entry_waiter(), dax_radix_locked_entry() and RADIX_DAX
-> definitions. Yay! As a separate patch please.
+> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> ---
+>  fs/iomap.c            | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/iomap.h |  6 ++++
+>  2 files changed, 87 insertions(+)
+> 
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 4b10892..cf01694 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -584,6 +584,87 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_fiemap);
+>  
+> +static loff_t
+> +iomap_seek_hole_actor(struct inode *inode, loff_t offset, loff_t length,
+> +		      void *data, struct iomap *iomap)
+> +{
+> +	if (iomap->type == IOMAP_HOLE)
 
-Oh, yay!  :)  Sure, I'll have this patch for v3.
+Echoing Dave's comments further on (sorry, I tend to read the patchset but
+reply in reverse order, distractions notwithstanding), for SEEK_{HOLE,DATA}
+you'd want to test for type == IOMAP_HOLE || type == IOMAP_UNWRITTEN since
+unwritten (i.e. fallocated) areas are treated as holes.
+
+--D
+
+> +		return 0;
+> +	return iomap->offset + iomap->length - offset;
+> +}
+> +
+> +static loff_t
+> +iomap_seek_data_actor(struct inode *inode, loff_t offset, loff_t length,
+> +		      void *data, struct iomap *iomap)
+> +{
+> +	if (iomap->type != IOMAP_HOLE)
+> +		return 0;
+> +	return iomap->offset + iomap->length - offset;
+> +}
+> +
+> +loff_t
+> +__iomap_seek_hole_data(struct inode *inode, loff_t offset, loff_t size,
+> +		       int whence, const struct iomap_ops *ops)
+> +{
+> +	static loff_t (*actor)(struct inode *, loff_t, loff_t, void *,
+> +			       struct iomap *);
+> +	loff_t len = size - offset;
+> +	loff_t ret;
+> +
+> +	/* Nothing to be found beyond the end of the file. */
+> +	if (len <= 0)
+> +		return -ENXIO;
+> +
+> +	switch(whence) {
+> +	case SEEK_HOLE:
+> +		actor = iomap_seek_hole_actor;
+> +		break;
+> +
+> +	case SEEK_DATA:
+> +		actor = iomap_seek_data_actor;
+> +		break;
+> +	}
+> +
+> +	while (len > 0) {
+> +		ret = iomap_apply(inode, offset, len, IOMAP_REPORT, ops,
+> +				  NULL, actor);
+> +		if (ret <= 0) {
+> +			if (ret < 0)
+> +				return ret;
+> +			break;
+> +		}
+> +		offset += ret;
+> +		len -= ret;
+> +	}
+> +
+> +	if (len <= 0) {
+> +		/* There is an implicit hole at the end of the file. */
+> +		if (whence != SEEK_HOLE)
+> +			offset = -ENXIO;
+> +
+> +		/* The last segment can extend beyond the end of the file. */
+> +		if (offset > size)
+> +			offset = size;
+> +	}
+> +
+> +	return offset;
+> +}
+> +EXPORT_SYMBOL_GPL(__iomap_seek_hole_data);
+> +
+> +loff_t
+> +iomap_seek_hole_data(struct file *file, loff_t offset, int whence,
+> +		     const struct iomap_ops *ops)
+> +{
+> +	struct inode *inode = file->f_mapping->host;
+> +
+> +	offset = __iomap_seek_hole_data(inode, offset, i_size_read(inode),
+> +					whence, ops);
+> +	if (offset <= 0)
+> +		return offset;
+> +	return vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+> +}
+> +EXPORT_SYMBOL_GPL(iomap_seek_hole_data);
+> +
+>  /*
+>   * Private flags for iomap_dio, must not overlap with the public ones in
+>   * iomap.h:
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 9d64933..49b6ec0 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -85,6 +85,12 @@ int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops);
+>  int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+>  		loff_t start, loff_t len, const struct iomap_ops *ops);
+>  
+> +struct file;
+> +loff_t __iomap_seek_hole_data(struct inode *inode, loff_t pos, loff_t size,
+> +			      int whence, const struct iomap_ops *ops);
+> +loff_t iomap_seek_hole_data(struct file *file, loff_t pos,
+> +			    int whence, const struct iomap_ops *ops);
+> +
+>  /*
+>   * Flags for direct I/O ->end_io:
+>   */
+> -- 
+> 2.7.5
+> 
