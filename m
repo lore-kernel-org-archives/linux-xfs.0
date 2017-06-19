@@ -1,297 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58522 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752516AbdFPTft (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 15:35:49 -0400
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v7 10/22] lib: add errseq_t type and infrastructure for handling it
-Date: Fri, 16 Jun 2017 15:34:15 -0400
-Message-Id: <20170616193427.13955-11-jlayton@redhat.com>
-In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
-References: <20170616193427.13955-1-jlayton@redhat.com>
+Received: from mail-ua0-f178.google.com ([209.85.217.178]:32825 "EHLO
+        mail-ua0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751988AbdFSWRB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Jun 2017 18:17:01 -0400
+Received: by mail-ua0-f178.google.com with SMTP id 70so2271189uau.0
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2017 15:17:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20170617235751.GH17542@dastard>
+References: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
+ <1497624680-16685-7-git-send-email-agruenba@redhat.com> <20170617235751.GH17542@dastard>
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Date: Tue, 20 Jun 2017 00:16:59 +0200
+Message-ID: <CAHc6FU78gW2UYC3VbZVBRHXy_geV0emL=mpd=KQsXTfqhLj0mg@mail.gmail.com>
+Subject: Re: [PATCH 6/7] xfs: Switch to iomap for lseek SEEK_HOLE / SEEK_DATA
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel <cluster-devel@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-An errseq_t is a way of recording errors in one place, and allowing any
-number of "subscribers" to tell whether an error has been set again
-since a previous time.
+On Sun, Jun 18, 2017 at 1:57 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Fri, Jun 16, 2017 at 04:51:19PM +0200, Andreas Gruenbacher wrote:
+>> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+>> ---
+>>  fs/xfs/xfs_file.c | 17 ++---------------
+>>  1 file changed, 2 insertions(+), 15 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+>> index 5fb5a09..b36dcd7 100644
+>> --- a/fs/xfs/xfs_file.c
+>> +++ b/fs/xfs/xfs_file.c
+>> @@ -1283,28 +1283,15 @@ xfs_seek_hole_data(
+>>       struct xfs_inode        *ip = XFS_I(inode);
+>>       struct xfs_mount        *mp = ip->i_mount;
+>>       uint                    lock;
+>> -     loff_t                  offset, end;
+>> -     int                     error = 0;
+>> +     loff_t                  offset;
+>>
+>>       if (XFS_FORCED_SHUTDOWN(mp))
+>>               return -EIO;
+>>
+>>       lock = xfs_ilock_data_map_shared(ip);
+>> -
+>> -     end = i_size_read(inode);
+>> -     offset = __xfs_seek_hole_data(inode, start, end, whence);
+>> -     if (offset < 0) {
+>> -             error = offset;
+>> -             goto out_unlock;
+>> -     }
+>> -
+>> -     offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+>> -
+>> -out_unlock:
+>> +     offset = iomap_seek_hole_data(file, start, whence, &xfs_iomap_ops);
+>>       xfs_iunlock(ip, lock);
+>>
+>> -     if (error)
+>> -             return error;
+>>       return offset;
+>>  }
+>
+> Doesn't this change the way data in unwritten extents is reported?
+> i.e. we current report unwritten extents as holes if there is no
+> data pending writeback over the range in the page cache, and as
+> data if there is data in the page cache.
+>
+> I don't see this page cache lookup for unwritten extents implemented
+> in iomap_seek_hole_data() - it only reports extents mapped as holes
+> as holes. Hence this will now always report unwritten extents as
+> data . This strikes me as a regression as we currently report them
+> as a hole:
+>
+> $ xfs_io -f -c "truncate 1m" -c "falloc 0 1m" -c "seek -a -r 0" foo
+> Whence  Result
+> HOLE    0
+> $
 
-It's implemented as an unsigned 32-bit value that is managed with atomic
-operations. The low order bits are designated to hold an error code
-(max size of MAX_ERRNO). The upper bits are used as a counter.
+Indeed, thanks for pointing this out.
 
-The API works with consumers sampling an errseq_t value at a particular
-point in time. Later, that value can be used to tell whether new errors
-have been set since that time.
+> I'm pretty sure that ext4 has the same behaviour when it comes to
+> dirty page cache pages over unwritten extents.
 
-Note that there is a 1 in 512k risk of collisions here if new errors
-are being recorded frequently, since we have so few bits to use as a
-counter. To mitigate this, one bit is used as a flag to tell whether the
-value has been sampled since a new value was recorded. That allows
-us to avoid bumping the counter if no one has sampled it since it
-was last bumped.
+That's correct as well.
 
-Later patches will build on this infrastructure to change how writeback
-errors are tracked in the kernel.
+The code in xfs and ext4 looks similar enough that we can implement
+this generically in the iomap_seek_hole_data helper, I believe.
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
-Reviewed-by: NeilBrown <neilb@suse.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- include/linux/errseq.h |  19 +++++
- lib/Makefile           |   2 +-
- lib/errseq.c           | 200 +++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 220 insertions(+), 1 deletion(-)
- create mode 100644 include/linux/errseq.h
- create mode 100644 lib/errseq.c
-
-diff --git a/include/linux/errseq.h b/include/linux/errseq.h
-new file mode 100644
-index 000000000000..0d2555f310cd
---- /dev/null
-+++ b/include/linux/errseq.h
-@@ -0,0 +1,19 @@
-+#ifndef _LINUX_ERRSEQ_H
-+#define _LINUX_ERRSEQ_H
-+
-+/* See lib/errseq.c for more info */
-+
-+typedef u32	errseq_t;
-+
-+void __errseq_set(errseq_t *eseq, int err);
-+static inline void errseq_set(errseq_t *eseq, int err)
-+{
-+	/* Optimize for the common case of no error */
-+	if (unlikely(err))
-+		__errseq_set(eseq, err);
-+}
-+
-+errseq_t errseq_sample(errseq_t *eseq);
-+int errseq_check(errseq_t *eseq, errseq_t since);
-+int errseq_check_and_advance(errseq_t *eseq, errseq_t *since);
-+#endif
-diff --git a/lib/Makefile b/lib/Makefile
-index 1cd21743af14..85e91e51a9fe 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -38,7 +38,7 @@ obj-y += bcd.o div64.o sort.o parser.o debug_locks.o random32.o \
- 	 gcd.o lcm.o list_sort.o uuid.o flex_array.o iov_iter.o clz_ctz.o \
- 	 bsearch.o find_bit.o llist.o memweight.o kfifo.o \
- 	 percpu-refcount.o percpu_ida.o rhashtable.o reciprocal_div.o \
--	 once.o refcount.o usercopy.o
-+	 once.o refcount.o usercopy.o errseq.o
- obj-y += string_helpers.o
- obj-$(CONFIG_TEST_STRING_HELPERS) += test-string_helpers.o
- obj-y += hexdump.o
-diff --git a/lib/errseq.c b/lib/errseq.c
-new file mode 100644
-index 000000000000..d129c0611c1f
---- /dev/null
-+++ b/lib/errseq.c
-@@ -0,0 +1,200 @@
-+#include <linux/err.h>
-+#include <linux/bug.h>
-+#include <linux/atomic.h>
-+#include <linux/errseq.h>
-+
-+/*
-+ * An errseq_t is a way of recording errors in one place, and allowing any
-+ * number of "subscribers" to tell whether it has changed since a previous
-+ * point where it was sampled.
-+ *
-+ * It's implemented as an unsigned 32-bit value. The low order bits are
-+ * designated to hold an error code (between 0 and -MAX_ERRNO). The upper bits
-+ * are used as a counter. This is done with atomics instead of locking so that
-+ * these functions can be called from any context.
-+ *
-+ * The general idea is for consumers to sample an errseq_t value. That value
-+ * can later be used to tell whether any new errors have occurred since that
-+ * sampling was done.
-+ *
-+ * Note that there is a risk of collisions if new errors are being recorded
-+ * frequently, since we have so few bits to use as a counter.
-+ *
-+ * To mitigate this, one bit is used as a flag to tell whether the value has
-+ * been sampled since a new value was recorded. That allows us to avoid bumping
-+ * the counter if no one has sampled it since the last time an error was
-+ * recorded.
-+ *
-+ * A new errseq_t should always be zeroed out.  A errseq_t value of all zeroes
-+ * is the special (but common) case where there has never been an error. An all
-+ * zero value thus serves as the "epoch" if one wishes to know whether there
-+ * has ever been an error set since it was first initialized.
-+ */
-+
-+/* The low bits are designated for error code (max of MAX_ERRNO) */
-+#define ERRSEQ_SHIFT		ilog2(MAX_ERRNO + 1)
-+
-+/* This bit is used as a flag to indicate whether the value has been seen */
-+#define ERRSEQ_SEEN		(1 << ERRSEQ_SHIFT)
-+
-+/* The lowest bit of the counter */
-+#define ERRSEQ_CTR_INC		(1 << (ERRSEQ_SHIFT + 1))
-+
-+/**
-+ * __errseq_set - set a errseq_t for later reporting
-+ * @eseq: errseq_t field that should be set
-+ * @err: error to set
-+ *
-+ * This function sets the error in *eseq, and increments the sequence counter
-+ * if the last sequence was sampled at some point in the past.
-+ *
-+ * Any error set will always overwrite an existing error.
-+ *
-+ * Most callers will want to use the errseq_set inline wrapper to efficiently
-+ * handle the common case where err is 0.
-+ */
-+void __errseq_set(errseq_t *eseq, int err)
-+{
-+	errseq_t old;
-+
-+	/* MAX_ERRNO must be able to serve as a mask */
-+	BUILD_BUG_ON_NOT_POWER_OF_2(MAX_ERRNO + 1);
-+
-+	/*
-+	 * Ensure the error code actually fits where we want it to go. If it
-+	 * doesn't then just throw a warning and don't record anything. We
-+	 * also don't accept zero here as that would effectively clear a
-+	 * previous error.
-+	 */
-+	if (WARN(unlikely(err == 0 || (unsigned int)-err > MAX_ERRNO),
-+				"err = %d\n", err))
-+		return;
-+
-+	old = READ_ONCE(*eseq);
-+	for (;;) {
-+		errseq_t new, cur;
-+
-+		/* Clear out error bits and set new error */
-+		new = (old & ~(MAX_ERRNO|ERRSEQ_SEEN)) | -err;
-+
-+		/* Only increment if someone has looked at it */
-+		if (old & ERRSEQ_SEEN)
-+			new += ERRSEQ_CTR_INC;
-+
-+		/* If there would be no change, then call it done */
-+		if (new == old)
-+			break;
-+
-+		/* Try to swap the new value into place */
-+		cur = cmpxchg(eseq, old, new);
-+
-+		/*
-+		 * Call it success if we did the swap or someone else beat us
-+		 * to it for the same value.
-+		 */
-+		if (likely(cur == old || cur == new))
-+			break;
-+
-+		/* Raced with an update, try again */
-+		old = cur;
-+	}
-+}
-+EXPORT_SYMBOL(__errseq_set);
-+
-+/**
-+ * errseq_sample - grab current errseq_t value
-+ * @eseq: pointer to errseq_t to be sampled
-+ *
-+ * This function allows callers to sample an errseq_t value, marking it as
-+ * "seen" if required.
-+ */
-+errseq_t errseq_sample(errseq_t *eseq)
-+{
-+	errseq_t old = READ_ONCE(*eseq);
-+	errseq_t new = old;
-+
-+	/*
-+	 * For the common case of no errors ever having been set, we can skip
-+	 * marking the SEEN bit. Once an error has been set, the value will
-+	 * never go back to zero.
-+	 */
-+	if (old != 0) {
-+		new |= ERRSEQ_SEEN;
-+		if (old != new)
-+			cmpxchg(eseq, old, new);
-+	}
-+	return new;
-+}
-+EXPORT_SYMBOL(errseq_sample);
-+
-+/**
-+ * errseq_check - has an error occurred since a particular sample point?
-+ * @eseq: pointer to errseq_t value to be checked
-+ * @since: previously-sampled errseq_t from which to check
-+ *
-+ * Grab the value that eseq points to, and see if it has changed "since"
-+ * the given value was sampled. The "since" value is not advanced, so there
-+ * is no need to mark the value as seen.
-+ *
-+ * Returns the latest error set in the errseq_t or 0 if it hasn't changed.
-+ */
-+int errseq_check(errseq_t *eseq, errseq_t since)
-+{
-+	errseq_t cur = READ_ONCE(*eseq);
-+
-+	if (likely(cur == since))
-+		return 0;
-+	return -(cur & MAX_ERRNO);
-+}
-+EXPORT_SYMBOL(errseq_check);
-+
-+/**
-+ * errseq_check_and_advance - check an errseq_t and advance it to the current value
-+ * @eseq: pointer to value being checked and reported
-+ * @since: pointer to previously-sampled errseq_t to check against and advance
-+ *
-+ * Grab the eseq value, and see whether it matches the value that "since"
-+ * points to. If it does, then just return 0.
-+ *
-+ * If it doesn't, then the value has changed. Set the "seen" flag, and try to
-+ * swap it into place as the new eseq value. Then, set that value as the new
-+ * "since" value, and return whatever the error portion is set to.
-+ *
-+ * Note that no locking is provided here for concurrent updates to the "since"
-+ * value. The caller must provide that if necessary. Because of this, callers
-+ * may want to do a lockless errseq_check before taking the lock and calling
-+ * this.
-+ */
-+int errseq_check_and_advance(errseq_t *eseq, errseq_t *since)
-+{
-+	int err = 0;
-+	errseq_t old, new;
-+
-+	/*
-+	 * Most callers will want to use the inline wrapper to check this,
-+	 * so that the common case of no error is handled without needing
-+	 * to take the lock that protects the "since" value.
-+	 */
-+	old = READ_ONCE(*eseq);
-+	if (old != *since) {
-+		/*
-+		 * Set the flag and try to swap it into place if it has
-+		 * changed.
-+		 *
-+		 * We don't care about the outcome of the swap here. If the
-+		 * swap doesn't occur, then it has either been updated by a
-+		 * writer who is altering the value in some way (updating
-+		 * counter or resetting the error), or another reader who is
-+		 * just setting the "seen" flag. Either outcome is OK, and we
-+		 * can advance "since" and return an error based on what we
-+		 * have.
-+		 */
-+		new = old | ERRSEQ_SEEN;
-+		if (new != old)
-+			cmpxchg(eseq, old, new);
-+		*since = new;
-+		err = -(new & MAX_ERRNO);
-+	}
-+	return err;
-+}
-+EXPORT_SYMBOL(errseq_check_and_advance);
--- 
-2.13.0
-
+Thanks,
+Andreas
