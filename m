@@ -1,55 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34974 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:62969 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752044AbdFPTfT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 15:35:19 -0400
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v7 06/22] mm: clear AS_EIO/AS_ENOSPC when writeback initiation fails
-Date: Fri, 16 Jun 2017 15:34:11 -0400
-Message-Id: <20170616193427.13955-7-jlayton@redhat.com>
-In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
-References: <20170616193427.13955-1-jlayton@redhat.com>
+        id S1750757AbdFSNv1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Jun 2017 09:51:27 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 70FD7C06586F
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2017 13:51:27 +0000 (UTC)
+Date: Mon, 19 Jun 2017 09:51:22 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 0/2 V4] Resubmit items failed during writeback
+Message-ID: <20170619135120.GD25516@bfoster.bfoster>
+References: <20170616105445.3314-1-cmaiolino@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170616105445.3314-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-filemap_write_and_wait{_range} will return an error if writeback
-initiation fails, but won't clear errors in the address_space. This is
-particularly problematic on DAX, as it's effectively synchronous. Ensure
-that we clear the AS_EIO/AS_ENOSPC flags when filemap_fdatawrite returns
-an error.
+On Fri, Jun 16, 2017 at 12:54:43PM +0200, Carlos Maiolino wrote:
+> Hi,
+> 
+> there goes a new version of this patchset based on previous reviews on V3.
+> 
+> Changelogs added separated to each patch.
+> 
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- mm/filemap.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Hi Carlos,
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 37f286df7c95..c349a5d3a34b 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -517,6 +517,9 @@ int filemap_write_and_wait(struct address_space *mapping)
- 			int err2 = filemap_fdatawait(mapping);
- 			if (!err)
- 				err = err2;
-+		} else {
-+			/* Clear any previously stored errors */
-+			filemap_check_errors(mapping);
- 		}
- 	} else {
- 		err = filemap_check_errors(mapping);
-@@ -551,6 +554,9 @@ int filemap_write_and_wait_range(struct address_space *mapping,
- 						lstart, lend);
- 			if (!err)
- 				err = err2;
-+		} else {
-+			/* Clear any previously stored errors */
-+			filemap_check_errors(mapping);
- 		}
- 	} else {
- 		err = filemap_check_errors(mapping);
--- 
-2.13.0
+I pointed out the last things that I'm aware of that I think need to be
+fixed in this series (along with a few nits here and there). That said,
+it's already been pointed out that we probably want an xfstests test
+case to go along with this before it would be merged. Is that something
+you are still planning on?
 
+I'd actually like to take this a bit farther than a regression test and
+see if we can improve our ability to test the error handling code in
+general. What do you (or anybody else..) think about including a patch
+in this series that introduces the ability to inject metadata writeback
+errors on DEBUG kernels? For example, consider something that just sets
+b_error at the top of xfs_buf_iodone_callbacks() based on a random value
+and configurable error frequency. This could use XFS_TEST_ERROR() or
+something like a new DEBUG sysfs attribute in the error configuration
+(see log_badcrc_factor for a similar example).
+
+This would facilitate longer running tests where iodone callback errors
+occur randomly and transiently and we can thus actually exercise the
+error handling and recovery code. I'd love to run some fsstress testing,
+for example, as I'm hoping that would help wring out any further issues
+that could be lurking (particularly with the tricky xfs_iflush_done()
+logic and whatnot). If implemented generally enough, that could also be
+reused for a more simple xfstests regression test for the original
+problem (e.g., mount fs, set error frequency = 100%, modify an inode,
+set error frequency = 0, umount), albeit it would require debug mode.
+Thoughts?
+
+Brian
+
+> 
+> -- 
+> 2.9.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
