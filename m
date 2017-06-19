@@ -1,80 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35536 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752479AbdFPTfp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 15:35:45 -0400
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v7 13/22] mm: set both AS_EIO/AS_ENOSPC and errseq_t in mapping_set_error
-Date: Fri, 16 Jun 2017 15:34:18 -0400
-Message-Id: <20170616193427.13955-14-jlayton@redhat.com>
-In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
-References: <20170616193427.13955-1-jlayton@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:51128 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750928AbdFSNM4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Jun 2017 09:12:56 -0400
+Date: Mon, 19 Jun 2017 15:12:53 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 01/35] fscache: Remove unused ->now_uncached callback
+Message-ID: <20170619131253.GA22128@quack2.suse.cz>
+References: <20170601093245.29238-2-jack@suse.cz>
+ <20170601093245.29238-1-jack@suse.cz>
+ <10376.1496312768@warthog.procyon.org.uk>
+ <20170601113434.GC23077@quack2.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170601113434.GC23077@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: David Howells <dhowells@redhat.com>
+Cc: Jan Kara <jack@suse.cz>, linux-mm@kvack.org, Hugh Dickins <hughd@google.com>, linux-afs@lists.infradead.org, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, tytso@mit.edu, linux-ext4@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, "Yan, Zheng" <zyan@redhat.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Nadia Yvette Chambers <nyc@holomorphy.com>
 
-When a writeback error occurs, we want later callers to be able to pick
-up that fact when they go to wait on that writeback to complete.
-Traditionally, we've used AS_EIO/AS_ENOSPC flags to track that, but
-that's problematic since only one "checker" will be informed when an
-error occurs.
+On Thu 01-06-17 13:34:34, Jan Kara wrote:
+> On Thu 01-06-17 11:26:08, David Howells wrote:
+> > Jan Kara <jack@suse.cz> wrote:
+> > 
+> > > The callback doesn't ever get called. Remove it.
+> > 
+> > Hmmm...  I should perhaps be calling this.  I'm not sure why I never did.
+> > 
+> > At the moment, it doesn't strictly matter as ops on pages marked with
+> > PG_fscache get ignored if the cache has suffered an I/O error or has been
+> > withdrawn - but it will incur a performance penalty (the PG_fscache flag is
+> > checked in the netfs before calling into fscache).
+> > 
+> > The downside of calling this is that when a cache is removed, fscache would go
+> > through all the cookies for that cache and iterate over all the pages
+> > associated with those cookies - which could cause a performance dip in the
+> > system.
+> 
+> So I know nothing about fscache. If you decide these functions should stay
+> in as you are going to use them soon, then I can just convert them to the
+> new API as everything else. What just caught my eye and why I had a more
+> detailed look is that I didn't understand that 'PAGEVEC_SIZE -
+> pagevec_count(&pvec)' as a pagevec_lookup() argument since pagevec_count()
+> should always return 0 at that point?
 
-In later patches, we're going to want to convert many of these callers
-to check for errors since a well-defined point in time. For now, ensure
-that we can handle both sorts of checks by both setting errors in both
-places when there is a writeback failure.
+David, what is your final decision regarding this? Do you want to keep
+these unused functions (and I will just update my patch to convert them to
+the new calling convention) or will you apply the patch to remove them?
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- include/linux/pagemap.h | 31 +++++++++++++++++++++++++------
- 1 file changed, 25 insertions(+), 6 deletions(-)
-
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 316a19f6b635..28acc94e0f81 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -28,14 +28,33 @@ enum mapping_flags {
- 	AS_NO_WRITEBACK_TAGS = 5,
- };
- 
-+/**
-+ * mapping_set_error - record a writeback error in the address_space
-+ * @mapping - the mapping in which an error should be set
-+ * @error - the error to set in the mapping
-+ *
-+ * When writeback fails in some way, we must record that error so that
-+ * userspace can be informed when fsync and the like are called.  We endeavor
-+ * to report errors on any file that was open at the time of the error.  Some
-+ * internal callers also need to know when writeback errors have occurred.
-+ *
-+ * When a writeback error occurs, most filesystems will want to call
-+ * mapping_set_error to record the error in the mapping so that it can be
-+ * reported when the application calls fsync(2).
-+ */
- static inline void mapping_set_error(struct address_space *mapping, int error)
- {
--	if (unlikely(error)) {
--		if (error == -ENOSPC)
--			set_bit(AS_ENOSPC, &mapping->flags);
--		else
--			set_bit(AS_EIO, &mapping->flags);
--	}
-+	if (likely(!error))
-+		return;
-+
-+	/* Record in wb_err for checkers using errseq_t based tracking */
-+	filemap_set_wb_err(mapping, error);
-+
-+	/* Record it in flags for now, for legacy callers */
-+	if (error == -ENOSPC)
-+		set_bit(AS_ENOSPC, &mapping->flags);
-+	else
-+		set_bit(AS_EIO, &mapping->flags);
- }
- 
- static inline void mapping_set_unevictable(struct address_space *mapping)
+								Honza
 -- 
-2.13.0
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
