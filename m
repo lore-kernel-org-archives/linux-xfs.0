@@ -1,117 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38240 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750846AbdFSSv1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Jun 2017 14:51:27 -0400
-Date: Mon, 19 Jun 2017 14:51:11 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 0/2 V4] Resubmit items failed during writeback
-Message-ID: <20170619185111.GA29903@bfoster.bfoster>
+Received: from mx2.suse.de ([195.135.220.15]:45562 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750859AbdFTSFH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Jun 2017 14:05:07 -0400
+Date: Tue, 20 Jun 2017 20:05:05 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
+ error during buffer writeback
+Message-ID: <20170620180505.GT21846@wotan.suse.de>
 References: <20170616105445.3314-1-cmaiolino@redhat.com>
- <20170619135120.GD25516@bfoster.bfoster>
- <20170619174203.GA4733@birch.djwong.org>
+ <20170616105445.3314-3-cmaiolino@redhat.com>
+ <20170616183510.GC21846@wotan.suse.de>
+ <20170616192445.GG5421@birch.djwong.org>
+ <20170616193755.GD21846@wotan.suse.de>
+ <3ff0e0c8-ef9c-b7f8-d37e-ed02e5766c40@sandeen.net>
+ <20170619105904.GA25255@bfoster.bfoster>
+ <20170620165204.GP21846@wotan.suse.de>
+ <20170620172041.GD3348@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170619174203.GA4733@birch.djwong.org>
+In-Reply-To: <20170620172041.GD3348@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
 
-On Mon, Jun 19, 2017 at 10:42:03AM -0700, Darrick J. Wong wrote:
-> On Mon, Jun 19, 2017 at 09:51:22AM -0400, Brian Foster wrote:
-> > On Fri, Jun 16, 2017 at 12:54:43PM +0200, Carlos Maiolino wrote:
-> > > Hi,
-> > > 
-> > > there goes a new version of this patchset based on previous reviews on V3.
-> > > 
-> > > Changelogs added separated to each patch.
-> > > 
+On Tue, Jun 20, 2017 at 01:20:41PM -0400, Brian Foster wrote:
+> On Tue, Jun 20, 2017 at 06:52:04PM +0200, Luis R. Rodriguez wrote:
+> > On Mon, Jun 19, 2017 at 06:59:05AM -0400, Brian Foster wrote:
+> > > It hasn't seemed necessary to me to take that approach given the lower
+> > > prevalence of the issue 
 > > 
-> > Hi Carlos,
+> > Of this issue? I suppose its why I asked about examples of issues, I seem
+> > to have found it likely much more possible out in the wild than expected.
+> > It would seem folks might be working around it somehow.
 > > 
-> > I pointed out the last things that I'm aware of that I think need to be
-> > fixed in this series (along with a few nits here and there). That said,
-> > it's already been pointed out that we probably want an xfstests test
-> > case to go along with this before it would be merged. Is that something
-> > you are still planning on?
-> > 
-> > I'd actually like to take this a bit farther than a regression test and
-> > see if we can improve our ability to test the error handling code in
-> > general. What do you (or anybody else..) think about including a patch
-> > in this series that introduces the ability to inject metadata writeback
-> > errors on DEBUG kernels? For example, consider something that just sets
-> > b_error at the top of xfs_buf_iodone_callbacks() based on a random value
-> > and configurable error frequency. This could use XFS_TEST_ERROR() or
-> > something like a new DEBUG sysfs attribute in the error configuration
-> > (see log_badcrc_factor for a similar example).
 > 
-> Sounds reasonable.
-> 
-> I wonder if it would be more useful to have individual knobs for each
-> metadata object type so that you could have multiple xfstests, each of
-> which runs the same software scenario but with different failures
-> configured?  Then we could test what happens when, say, only inode
-> writes fail, or bmbt writes fail, etc. rather than one big hammer that's
-> harder to control?
-> 
+> If we're talking about the thin provisioning case, I suspect most people
+> work around it by properly configuring their storage. ;)
 
-I suppose you could do some of that in the test just by making certain
-modifications in isolation (e.g., test an inode modification, test a
-dquot, buffer, etc..). It might be harder to do that from a test script
-at the granularity of things like bmbt buffers, though that may also be
-the case for error injection. Did you have something in mind to filter
-the buffer types.. the blf type perhaps?
+The fact that we *hang* makes it more serious, so even if folks misconfigured
+storage with less space it should be no reason to consider hangs any less
+severe. Specially if it seems to be a common issue, and I'm alluding to the
+fact that this might be more common than the patch describes.
 
-> For a moment I also wondered why not use the error injection mechanism
-> that we already have, rather than inventing more sysfs knobs?  But we
-> have limited space in xfs_error_injection (29/32 bits used) so we
-> probably should just switch everything to sysfs knobs.
-> 
-
-Yeah, I think we discussed this before as well. IIRC, I had already
-implemented whatever the sysfs knob was and and corresponding test, and
-it just wasn't really important enough to reimplement the whole thing.
-
-I didn't really have a preference as to how this would be implemented.
-On a quick look though, it looks like a downside to the existing
-injection mechanism is that we can't control the error frequency..? If
-that's the case, I like the idea of stepping back, perhaps audit the
-granularity of the broader error injection framework and define a new
-sysfs interface that also allows controlling things like the error
-frequency dynamically.
-
-(I would still like to get something targeted towards testing this
-series in the meantime.)
-
-Brian
-
-> --D
-> 
-> > This would facilitate longer running tests where iodone callback errors
-> > occur randomly and transiently and we can thus actually exercise the
-> > error handling and recovery code. I'd love to run some fsstress testing,
-> > for example, as I'm hoping that would help wring out any further issues
-> > that could be lurking (particularly with the tricky xfs_iflush_done()
-> > logic and whatnot). If implemented generally enough, that could also be
-> > reused for a more simple xfstests regression test for the original
-> > problem (e.g., mount fs, set error frequency = 100%, modify an inode,
-> > set error frequency = 0, umount), albeit it would require debug mode.
-> > Thoughts?
-> > 
-> > Brian
-> > 
-> > > 
-> > > -- 
-> > > 2.9.4
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
