@@ -1,396 +1,208 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8408 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754445AbdFPOvp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:51:45 -0400
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH 7/7] xfs: Switch to iomap for seeking in quota files
-Date: Fri, 16 Jun 2017 16:51:20 +0200
-Message-Id: <1497624680-16685-8-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
-References: <1497624680-16685-1-git-send-email-agruenba@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:29225 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751937AbdFTTv2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2017 15:51:28 -0400
+Date: Tue, 20 Jun 2017 12:51:18 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] xfs: rewrite xfs_dq_get_next_id using
+ xfs_iext_lookup_extent
+Message-ID: <20170620195118.GD4733@birch.djwong.org>
+References: <20170620090244.30876-1-hch@lst.de>
+ <20170620090244.30876-2-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170620090244.30876-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel@redhat.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, agruenba@redhat.com
 
-(This patch is largely untested.)
+On Tue, Jun 20, 2017 at 11:02:43AM +0200, Christoph Hellwig wrote:
+> This goes straight to a single lookup in the extent list and avoids a
+> roundtrip through two layers that don't add any value for the simple
+> quoata file that just has data or holes and no page cache, delayed
+> allocation, unwritten extent or COW fork (which btw, doesn't seem to
+> be handled by the existing SEEK HOLE/DATA code).
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/xfs/xfs_dquot.c |   5 +-
- fs/xfs/xfs_file.c  | 320 -----------------------------------------------------
- fs/xfs/xfs_inode.h |   2 -
- 3 files changed, 3 insertions(+), 324 deletions(-)
+I wrote a test case that tries to create a file with an extent in the
+CoW fork that doesn't have a corresponding extent in the data fork.
+This can be done by setting a large cowextsize hint on a sparse file,
+reflinking the file, writing first to a shared block, and then writing
+to the hole.  In theory this creates the situation:
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 9d06cc3..a10bd921 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -39,6 +39,7 @@
- #include "xfs_trace.h"
- #include "xfs_log.h"
- #include "xfs_bmap_btree.h"
-+#include "xfs_iomap.h"
- 
- /*
-  * Lock order:
-@@ -726,8 +727,8 @@ xfs_dq_get_next_id(
- 	quotip = xfs_quota_inode(mp, type);
- 	lock = xfs_ilock_data_map_shared(quotip);
- 
--	offset = __xfs_seek_hole_data(VFS_I(quotip), XFS_FSB_TO_B(mp, start),
--				      eof, SEEK_DATA);
-+	offset = __iomap_seek_hole_data(VFS_I(quotip), XFS_FSB_TO_B(mp, start), eof,
-+					SEEK_DATA, &xfs_iomap_ops);
- 	if (offset < 0)
- 		error = offset;
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index b36dcd7..3acbbaf 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -953,326 +953,6 @@ xfs_file_readdir(
- 	return xfs_readdir(ip, ctx, bufsize);
- }
- 
--/*
-- * This type is designed to indicate the type of offset we would like
-- * to search from page cache for xfs_seek_hole_data().
-- */
--enum {
--	HOLE_OFF = 0,
--	DATA_OFF,
--};
--
--/*
-- * Lookup the desired type of offset from the given page.
-- *
-- * On success, return true and the offset argument will point to the
-- * start of the region that was found.  Otherwise this function will
-- * return false and keep the offset argument unchanged.
-- */
--STATIC bool
--xfs_lookup_buffer_offset(
--	struct page		*page,
--	loff_t			*offset,
--	unsigned int		type)
--{
--	loff_t			lastoff = page_offset(page);
--	bool			found = false;
--	struct buffer_head	*bh, *head;
--
--	bh = head = page_buffers(page);
--	do {
--		/*
--		 * Unwritten extents that have data in the page
--		 * cache covering them can be identified by the
--		 * BH_Unwritten state flag.  Pages with multiple
--		 * buffers might have a mix of holes, data and
--		 * unwritten extents - any buffer with valid
--		 * data in it should have BH_Uptodate flag set
--		 * on it.
--		 */
--		if (buffer_unwritten(bh) ||
--		    buffer_uptodate(bh)) {
--			if (type == DATA_OFF)
--				found = true;
--		} else {
--			if (type == HOLE_OFF)
--				found = true;
--		}
--
--		if (found) {
--			*offset = lastoff;
--			break;
--		}
--		lastoff += bh->b_size;
--	} while ((bh = bh->b_this_page) != head);
--
--	return found;
--}
--
--/*
-- * This routine is called to find out and return a data or hole offset
-- * from the page cache for unwritten extents according to the desired
-- * type for xfs_seek_hole_data().
-- *
-- * The argument offset is used to tell where we start to search from the
-- * page cache.  Map is used to figure out the end points of the range to
-- * lookup pages.
-- *
-- * Return true if the desired type of offset was found, and the argument
-- * offset is filled with that address.  Otherwise, return false and keep
-- * offset unchanged.
-- */
--STATIC bool
--xfs_find_get_desired_pgoff(
--	struct inode		*inode,
--	struct xfs_bmbt_irec	*map,
--	unsigned int		type,
--	loff_t			*offset)
--{
--	struct xfs_inode	*ip = XFS_I(inode);
--	struct xfs_mount	*mp = ip->i_mount;
--	struct pagevec		pvec;
--	pgoff_t			index;
--	pgoff_t			end;
--	loff_t			endoff;
--	loff_t			startoff = *offset;
--	loff_t			lastoff = startoff;
--	bool			found = false;
--
--	pagevec_init(&pvec, 0);
--
--	index = startoff >> PAGE_SHIFT;
--	endoff = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount);
--	end = (endoff - 1) >> PAGE_SHIFT;
--	do {
--		int		want;
--		unsigned	nr_pages;
--		unsigned int	i;
--
--		want = min_t(pgoff_t, end - index, PAGEVEC_SIZE - 1) + 1;
--		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
--					  want);
--		if (nr_pages == 0)
--			break;
--
--		for (i = 0; i < nr_pages; i++) {
--			struct page	*page = pvec.pages[i];
--			loff_t		b_offset;
--
--			/*
--			 * At this point, the page may be truncated or
--			 * invalidated (changing page->mapping to NULL),
--			 * or even swizzled back from swapper_space to tmpfs
--			 * file mapping. However, page->index will not change
--			 * because we have a reference on the page.
--			 *
--			 * If current page offset is beyond where we've ended,
--			 * we've found a hole.
--			 */
--			if (type == HOLE_OFF && lastoff < endoff &&
--			    lastoff < page_offset(pvec.pages[i])) {
--				found = true;
--				*offset = lastoff;
--				goto out;
--			}
--			/* Searching done if the page index is out of range. */
--			if (page->index > end)
--				goto out;
--
--			lock_page(page);
--			/*
--			 * Page truncated or invalidated(page->mapping == NULL).
--			 * We can freely skip it and proceed to check the next
--			 * page.
--			 */
--			if (unlikely(page->mapping != inode->i_mapping)) {
--				unlock_page(page);
--				continue;
--			}
--
--			if (!page_has_buffers(page)) {
--				unlock_page(page);
--				continue;
--			}
--
--			found = xfs_lookup_buffer_offset(page, &b_offset, type);
--			if (found) {
--				/*
--				 * The found offset may be less than the start
--				 * point to search if this is the first time to
--				 * come here.
--				 */
--				*offset = max_t(loff_t, startoff, b_offset);
--				unlock_page(page);
--				goto out;
--			}
--
--			/*
--			 * We either searching data but nothing was found, or
--			 * searching hole but found a data buffer.  In either
--			 * case, probably the next page contains the desired
--			 * things, update the last offset to it so.
--			 */
--			lastoff = page_offset(page) + PAGE_SIZE;
--			unlock_page(page);
--		}
--
--		/*
--		 * The number of returned pages less than our desired, search
--		 * done.
--		 */
--		if (nr_pages < want)
--			break;
--
--		index = pvec.pages[i - 1]->index + 1;
--		pagevec_release(&pvec);
--	} while (index <= end);
--
--	/* No page at lastoff and we are not done - we found a hole. */
--	if (type == HOLE_OFF && lastoff < endoff) {
--		*offset = lastoff;
--		found = true;
--	}
--out:
--	pagevec_release(&pvec);
--	return found;
--}
--
--/*
-- * caller must lock inode with xfs_ilock_data_map_shared,
-- * can we craft an appropriate ASSERT?
-- *
-- * end is because the VFS-level lseek interface is defined such that any
-- * offset past i_size shall return -ENXIO, but we use this for quota code
-- * which does not maintain i_size, and we want to SEEK_DATA past i_size.
-- */
--loff_t
--__xfs_seek_hole_data(
--	struct inode		*inode,
--	loff_t			start,
--	loff_t			end,
--	int			whence)
--{
--	struct xfs_inode	*ip = XFS_I(inode);
--	struct xfs_mount	*mp = ip->i_mount;
--	loff_t			uninitialized_var(offset);
--	xfs_fileoff_t		fsbno;
--	xfs_filblks_t		lastbno;
--	int			error;
--
--	if (start >= end) {
--		error = -ENXIO;
--		goto out_error;
--	}
--
--	/*
--	 * Try to read extents from the first block indicated
--	 * by fsbno to the end block of the file.
--	 */
--	fsbno = XFS_B_TO_FSBT(mp, start);
--	lastbno = XFS_B_TO_FSB(mp, end);
--
--	for (;;) {
--		struct xfs_bmbt_irec	map[2];
--		int			nmap = 2;
--		unsigned int		i;
--
--		error = xfs_bmapi_read(ip, fsbno, lastbno - fsbno, map, &nmap,
--				       XFS_BMAPI_ENTIRE);
--		if (error)
--			goto out_error;
--
--		/* No extents at given offset, must be beyond EOF */
--		if (nmap == 0) {
--			error = -ENXIO;
--			goto out_error;
--		}
--
--		for (i = 0; i < nmap; i++) {
--			offset = max_t(loff_t, start,
--				       XFS_FSB_TO_B(mp, map[i].br_startoff));
--
--			/* Landed in the hole we wanted? */
--			if (whence == SEEK_HOLE &&
--			    map[i].br_startblock == HOLESTARTBLOCK)
--				goto out;
--
--			/* Landed in the data extent we wanted? */
--			if (whence == SEEK_DATA &&
--			    (map[i].br_startblock == DELAYSTARTBLOCK ||
--			     (map[i].br_state == XFS_EXT_NORM &&
--			      !isnullstartblock(map[i].br_startblock))))
--				goto out;
--
--			/*
--			 * Landed in an unwritten extent, try to search
--			 * for hole or data from page cache.
--			 */
--			if (map[i].br_state == XFS_EXT_UNWRITTEN) {
--				if (xfs_find_get_desired_pgoff(inode, &map[i],
--				      whence == SEEK_HOLE ? HOLE_OFF : DATA_OFF,
--							&offset))
--					goto out;
--			}
--		}
--
--		/*
--		 * We only received one extent out of the two requested. This
--		 * means we've hit EOF and didn't find what we are looking for.
--		 */
--		if (nmap == 1) {
--			/*
--			 * If we were looking for a hole, set offset to
--			 * the end of the file (i.e., there is an implicit
--			 * hole at the end of any file).
--		 	 */
--			if (whence == SEEK_HOLE) {
--				offset = end;
--				break;
--			}
--			/*
--			 * If we were looking for data, it's nowhere to be found
--			 */
--			ASSERT(whence == SEEK_DATA);
--			error = -ENXIO;
--			goto out_error;
--		}
--
--		ASSERT(i > 1);
--
--		/*
--		 * Nothing was found, proceed to the next round of search
--		 * if the next reading offset is not at or beyond EOF.
--		 */
--		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
--		start = XFS_FSB_TO_B(mp, fsbno);
--		if (start >= end) {
--			if (whence == SEEK_HOLE) {
--				offset = end;
--				break;
--			}
--			ASSERT(whence == SEEK_DATA);
--			error = -ENXIO;
--			goto out_error;
--		}
--	}
--
--out:
--	/*
--	 * If at this point we have found the hole we wanted, the returned
--	 * offset may be bigger than the file size as it may be aligned to
--	 * page boundary for unwritten extents.  We need to deal with this
--	 * situation in particular.
--	 */
--	if (whence == SEEK_HOLE)
--		offset = min_t(loff_t, offset, end);
--
--	return offset;
--
--out_error:
--	return error;
--}
--
- STATIC loff_t
- xfs_seek_hole_data(
- 	struct file		*file,
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 10e89fc..17c441a 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -445,8 +445,6 @@ int	xfs_zero_eof(struct xfs_inode *ip, xfs_off_t offset,
- 		     xfs_fsize_t isize, bool *did_zeroing);
- int	xfs_zero_range(struct xfs_inode *ip, xfs_off_t pos, xfs_off_t count,
- 		bool *did_zero);
--loff_t	__xfs_seek_hole_data(struct inode *inode, loff_t start,
--			     loff_t eof, int whence);
- 
- 
- /* from xfs_iops.c */
--- 
-2.7.5
+data: DD------
+cow:  dddddddd
+      ^--^-------- these two blocks are dirty
 
+(D = data, d = delalloc resv., - = no extent)
+
+*However* due to a design feature of reflink, I preserved the rule that
+any block backed by a page in the pagecache has to have a data fork
+extent backing the block.  IOWs, we still make a delalloc reservation in
+the data fork even if there's already a reservation for that offset in
+the CoW fork, so in reality the two forks look like this:
+
+data: DD-d----
+cow:  dddddddd
+      ^--^-------- these two blocks are dirty
+
+Therefore, the redundant delalloc reservation in the data fork enable
+SEEK_HOLE and SEEK_DATA work correctly.  The writeback and dio write code /do/
+notice the speculative preallocation in the CoW fork and uses that to
+try to fight fragmentation, so if you dirty block 2 before an fsync then
+blocks 0-3 of the file become a single extent.
+
+Ergo, in XFS it's still the case that the data fork always has an extent
+to back file data, so the existing file offset iteration code should all
+still work even with the pagecache in play.  We pay a price in that the
+data fork delalloc reservation isn't free, but gain the benefit that
+it's not necessary to complicate the code thinking about when we need to
+mergesort the data and CoW fork extent lists to find all the data in a
+file.
+
+Anyway, having written the testcase I'll post it to fstests.
+
+--D
+
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_dquot.c | 66 ++++++++++++++++++------------------------------------
+>  1 file changed, 22 insertions(+), 44 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 9d06cc30e875..774750bb3e6b 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -695,21 +695,18 @@ xfs_qm_dqread(
+>   */
+>  static int
+>  xfs_dq_get_next_id(
+> -	xfs_mount_t		*mp,
+> +	struct xfs_mount	*mp,
+>  	uint			type,
+> -	xfs_dqid_t		*id,
+> -	loff_t			eof)
+> +	xfs_dqid_t		*id)
+>  {
+> -	struct xfs_inode	*quotip;
+> +	struct xfs_inode	*quotip = xfs_quota_inode(mp, type);
+> +	xfs_dqid_t		next_id = *id + 1; /* simple advance */
+> +	uint			lock_flags;
+> +	struct xfs_bmbt_irec	got;
+> +	xfs_extnum_t		idx;
+>  	xfs_fsblock_t		start;
+> -	loff_t			offset;
+> -	uint			lock;
+> -	xfs_dqid_t		next_id;
+>  	int			error = 0;
+>  
+> -	/* Simple advance */
+> -	next_id = *id + 1;
+> -
+>  	/* If we'd wrap past the max ID, stop */
+>  	if (next_id < *id)
+>  		return -ENOENT;
+> @@ -723,23 +720,20 @@ xfs_dq_get_next_id(
+>  	/* Nope, next_id is now past the current chunk, so find the next one */
+>  	start = (xfs_fsblock_t)next_id / mp->m_quotainfo->qi_dqperchunk;
+>  
+> -	quotip = xfs_quota_inode(mp, type);
+> -	lock = xfs_ilock_data_map_shared(quotip);
+> -
+> -	offset = __xfs_seek_hole_data(VFS_I(quotip), XFS_FSB_TO_B(mp, start),
+> -				      eof, SEEK_DATA);
+> -	if (offset < 0)
+> -		error = offset;
+> -
+> -	xfs_iunlock(quotip, lock);
+> +	lock_flags = xfs_ilock_data_map_shared(quotip);
+> +	if (!(quotip->i_df.if_flags & XFS_IFEXTENTS)) {
+> +		error = xfs_iread_extents(NULL, quotip, XFS_DATA_FORK);
+> +		if (error)
+> +			return error;
+> +	}
+>  
+> -	/* -ENXIO is essentially "no more data" */
+> -	if (error)
+> -		return (error == -ENXIO ? -ENOENT: error);
+> +	if (xfs_iext_lookup_extent(quotip, &quotip->i_df, start, &idx, &got))
+> +		*id = got.br_startoff * mp->m_quotainfo->qi_dqperchunk;
+> +	else
+> +		error = -ENOENT;
+> +	xfs_iunlock(quotip, lock_flags);
+>  
+> -	/* Convert next data offset back to a quota id */
+> -	*id = XFS_B_TO_FSB(mp, offset) * mp->m_quotainfo->qi_dqperchunk;
+> -	return 0;
+> +	return error;
+>  }
+>  
+>  /*
+> @@ -762,7 +756,6 @@ xfs_qm_dqget(
+>  	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+>  	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
+>  	struct xfs_dquot	*dqp;
+> -	loff_t			eof = 0;
+>  	int			error;
+>  
+>  	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+> @@ -790,21 +783,6 @@ xfs_qm_dqget(
+>  	}
+>  #endif
+>  
+> -	/* Get the end of the quota file if we need it */
+> -	if (flags & XFS_QMOPT_DQNEXT) {
+> -		struct xfs_inode	*quotip;
+> -		xfs_fileoff_t		last;
+> -		uint			lock_mode;
+> -
+> -		quotip = xfs_quota_inode(mp, type);
+> -		lock_mode = xfs_ilock_data_map_shared(quotip);
+> -		error = xfs_bmap_last_offset(quotip, &last, XFS_DATA_FORK);
+> -		xfs_iunlock(quotip, lock_mode);
+> -		if (error)
+> -			return error;
+> -		eof = XFS_FSB_TO_B(mp, last);
+> -	}
+> -
+>  restart:
+>  	mutex_lock(&qi->qi_tree_lock);
+>  	dqp = radix_tree_lookup(tree, id);
+> @@ -823,7 +801,7 @@ xfs_qm_dqget(
+>  			if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+>  				xfs_dqunlock(dqp);
+>  				mutex_unlock(&qi->qi_tree_lock);
+> -				error = xfs_dq_get_next_id(mp, type, &id, eof);
+> +				error = xfs_dq_get_next_id(mp, type, &id);
+>  				if (error)
+>  					return error;
+>  				goto restart;
+> @@ -858,7 +836,7 @@ xfs_qm_dqget(
+>  
+>  	/* If we are asked to find next active id, keep looking */
+>  	if (error == -ENOENT && (flags & XFS_QMOPT_DQNEXT)) {
+> -		error = xfs_dq_get_next_id(mp, type, &id, eof);
+> +		error = xfs_dq_get_next_id(mp, type, &id);
+>  		if (!error)
+>  			goto restart;
+>  	}
+> @@ -917,7 +895,7 @@ xfs_qm_dqget(
+>  	if (flags & XFS_QMOPT_DQNEXT) {
+>  		if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+>  			xfs_qm_dqput(dqp);
+> -			error = xfs_dq_get_next_id(mp, type, &id, eof);
+> +			error = xfs_dq_get_next_id(mp, type, &id);
+>  			if (error)
+>  				return error;
+>  			goto restart;
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
