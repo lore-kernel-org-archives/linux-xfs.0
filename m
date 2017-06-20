@@ -1,168 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57054 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751041AbdFUUkT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Jun 2017 16:40:19 -0400
-Subject: Re: [PATCH 01/12] xfs_io: refactor numlen into a library function
-References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
- <149755895523.3625.10641288707827420905.stgit@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a0cf2a3a-66fd-1153-3629-4a0329e125eb@sandeen.net>
-Date: Wed, 21 Jun 2017 15:40:18 -0500
+Received: from mx2.suse.de ([195.135.220.15]:55350 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750916AbdFTPcr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Jun 2017 11:32:47 -0400
+Date: Tue, 20 Jun 2017 17:32:43 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v7 05/22] jbd2: don't clear and reset errors after
+ waiting on writeback
+Message-ID: <20170620153243.GB31922@quack2.suse.cz>
+References: <20170616193427.13955-1-jlayton@redhat.com>
+ <20170616193427.13955-6-jlayton@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <149755895523.3625.10641288707827420905.stgit@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170616193427.13955-6-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Jeff Layton <jlayton@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-On 6/15/17 3:35 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri 16-06-17 15:34:10, Jeff Layton wrote:
+> Resetting this flag is almost certainly racy, and will be problematic
+> with some coming changes.
 > 
-> Refactor the competing numlen implementations into a single library function.
+> Make filemap_fdatawait_keep_errors return int, but not clear the flag(s).
+> Have jbd2 call it instead of filemap_fdatawait and don't attempt to
+> re-set the error flag if it fails.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Jeff Layton <jlayton@redhat.com>
 
-Yay!
+Looks good to me. You can add:
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
 
 > ---
->  include/input.h |    1 +
->  io/bmap.c       |   19 ++++---------------
->  io/fiemap.c     |   14 +-------------
->  libxcmd/input.c |   13 +++++++++++++
->  4 files changed, 19 insertions(+), 28 deletions(-)
+>  fs/jbd2/commit.c   | 15 +++------------
+>  include/linux/fs.h |  2 +-
+>  mm/filemap.c       | 16 ++++++++++++++--
+>  3 files changed, 18 insertions(+), 15 deletions(-)
 > 
-> 
-> diff --git a/include/input.h b/include/input.h
-> index 221678e..82cd2f4 100644
-> --- a/include/input.h
-> +++ b/include/input.h
-> @@ -28,6 +28,7 @@ extern char	**breakline(char *input, int *count);
->  extern void	doneline(char *input, char **vec);
->  extern char	*fetchline(void);
->  
-> +extern size_t numlen(uint64_t val, size_t base);
->  extern long long cvtnum(size_t blocksize, size_t sectorsize, char *s);
->  extern void	cvtstr(double value, char *str, size_t sz);
->  extern unsigned long cvttime(char *s);
-> diff --git a/io/bmap.c b/io/bmap.c
-> index 2333244..2e4ff7b 100644
-> --- a/io/bmap.c
-> +++ b/io/bmap.c
-> @@ -18,6 +18,7 @@
->  
->  #include "platform_defs.h"
->  #include "command.h"
-> +#include "input.h"
->  #include "init.h"
->  #include "io.h"
->  
-> @@ -53,18 +54,6 @@ bmap_help(void)
->  "\n"));
+> diff --git a/fs/jbd2/commit.c b/fs/jbd2/commit.c
+> index b6b194ec1b4f..502110540598 100644
+> --- a/fs/jbd2/commit.c
+> +++ b/fs/jbd2/commit.c
+> @@ -263,18 +263,9 @@ static int journal_finish_inode_data_buffers(journal_t *journal,
+>  			continue;
+>  		jinode->i_flags |= JI_COMMIT_RUNNING;
+>  		spin_unlock(&journal->j_list_lock);
+> -		err = filemap_fdatawait(jinode->i_vfs_inode->i_mapping);
+> -		if (err) {
+> -			/*
+> -			 * Because AS_EIO is cleared by
+> -			 * filemap_fdatawait_range(), set it again so
+> -			 * that user process can get -EIO from fsync().
+> -			 */
+> -			mapping_set_error(jinode->i_vfs_inode->i_mapping, -EIO);
+> -
+> -			if (!ret)
+> -				ret = err;
+> -		}
+> +		err = filemap_fdatawait_keep_errors(jinode->i_vfs_inode->i_mapping);
+> +		if (!ret)
+> +			ret = err;
+>  		spin_lock(&journal->j_list_lock);
+>  		jinode->i_flags &= ~JI_COMMIT_RUNNING;
+>  		smp_mb();
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 1a135274b4f8..1b1233a1db1e 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -2509,7 +2509,7 @@ extern int write_inode_now(struct inode *, int);
+>  extern int filemap_fdatawrite(struct address_space *);
+>  extern int filemap_flush(struct address_space *);
+>  extern int filemap_fdatawait(struct address_space *);
+> -extern void filemap_fdatawait_keep_errors(struct address_space *);
+> +extern int filemap_fdatawait_keep_errors(struct address_space *);
+>  extern int filemap_fdatawait_range(struct address_space *, loff_t lstart,
+>  				   loff_t lend);
+>  extern int filemap_write_and_wait(struct address_space *mapping);
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index b9e870600572..37f286df7c95 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -311,6 +311,16 @@ int filemap_check_errors(struct address_space *mapping)
 >  }
+>  EXPORT_SYMBOL(filemap_check_errors);
 >  
-> -static int
-> -numlen(
-> -	off64_t	val)
-> -{
-> -	off64_t	tmp;
-> -	int	len;
-> -
-> -	for (len = 0, tmp = val; tmp > 0; tmp = tmp/10)
-> -		len++;
-> -	return (len == 0 ? 1 : len);
-> -}
-> -
->  int
->  bmap_f(
->  	int			argc,
-> @@ -323,7 +312,7 @@ bmap_f(
->  			if (map[i + 1].bmv_block == -1) {
->  				foff_w = max(foff_w, strlen(rbuf));
->  				tot_w = max(tot_w,
-> -					numlen(map[i+1].bmv_length));
-> +					numlen(map[i+1].bmv_length, 10));
->  			} else {
->  				snprintf(bbuf, sizeof(bbuf), "%lld..%lld",
->  					(long long) map[i + 1].bmv_block,
-> @@ -344,10 +333,10 @@ bmap_f(
->  					aoff_w = 0;
->  				foff_w = max(foff_w, strlen(rbuf));
->  				tot_w = max(tot_w,
-> -					numlen(map[i+1].bmv_length));
-> +					numlen(map[i+1].bmv_length, 10));
->  			}
->  		}
-> -		agno_w = is_rt ? 0 : max(MINAG_WIDTH, numlen(fsgeo.agcount));
-> +		agno_w = is_rt ? 0 : max(MINAG_WIDTH, numlen(fsgeo.agcount, 10));
->  		printf("%4s: %-*s %-*s %*s %-*s %*s%s\n",
->  			_("EXT"),
->  			foff_w, _("FILE-OFFSET"),
-> diff --git a/io/fiemap.c b/io/fiemap.c
-> index bcbae49..75e8820 100644
-> --- a/io/fiemap.c
-> +++ b/io/fiemap.c
-> @@ -18,6 +18,7 @@
->  
->  #include "platform_defs.h"
->  #include "command.h"
-> +#include "input.h"
->  #include <linux/fiemap.h>
->  #include "init.h"
->  #include "io.h"
-> @@ -48,19 +49,6 @@ fiemap_help(void)
->  "\n"));
->  }
->  
-> -static int
-> -numlen(
-> -	__u64	val,
-> -	int	base)
-> -{
-> -	__u64	tmp;
-> -	int	len;
-> -
-> -	for (len = 0, tmp = val; tmp > 0; tmp = tmp/base)
-> -		len++;
-> -	return (len == 0 ? 1 : len);
-> -}
-> -
->  static void
->  print_verbose(
->  	struct fiemap_extent	*extent,
-> diff --git a/libxcmd/input.c b/libxcmd/input.c
-> index 8aeb3b0..9437be3 100644
-> --- a/libxcmd/input.c
-> +++ b/libxcmd/input.c
-> @@ -136,6 +136,19 @@ doneline(
->  	free(vec);
->  }
->  
-> +size_t
-> +numlen(
-> +	uint64_t	val,
-> +	size_t		base)
+> +static int filemap_check_and_keep_errors(struct address_space *mapping)
 > +{
-> +	uint64_t	tmp;
-> +	size_t		len;
-> +
-> +	for (len = 0, tmp = val; tmp > 0; tmp = tmp / base)
-> +		len++;
-> +	return len == 0 ? 1 : len;
+> +	/* Check for outstanding write errors */
+> +	if (test_bit(AS_EIO, &mapping->flags))
+> +		return -EIO;
+> +	if (test_bit(AS_ENOSPC, &mapping->flags))
+> +		return -ENOSPC;
+> +	return 0;
 > +}
 > +
->  #define EXABYTES(x)	((long long)(x) << 60)
->  #define PETABYTES(x)	((long long)(x) << 50)
->  #define TERABYTES(x)	((long long)(x) << 40)
+>  /**
+>   * __filemap_fdatawrite_range - start writeback on mapping dirty pages in range
+>   * @mapping:	address space structure to write
+> @@ -455,15 +465,17 @@ EXPORT_SYMBOL(filemap_fdatawait_range);
+>   * call sites are system-wide / filesystem-wide data flushers: e.g. sync(2),
+>   * fsfreeze(8)
+>   */
+> -void filemap_fdatawait_keep_errors(struct address_space *mapping)
+> +int filemap_fdatawait_keep_errors(struct address_space *mapping)
+>  {
+>  	loff_t i_size = i_size_read(mapping->host);
+>  
+>  	if (i_size == 0)
+> -		return;
+> +		return 0;
+>  
+>  	__filemap_fdatawait_range(mapping, 0, i_size - 1);
+> +	return filemap_check_and_keep_errors(mapping);
+>  }
+> +EXPORT_SYMBOL(filemap_fdatawait_keep_errors);
+>  
+>  /**
+>   * filemap_fdatawait - wait for all under-writeback pages to complete
+> -- 
+> 2.13.0
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
