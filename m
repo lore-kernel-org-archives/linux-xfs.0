@@ -1,119 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38825 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750893AbdFPThV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 15:37:21 -0400
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [xfstests PATCH v5 4/5] generic: test writeback error handling on dmerror devices
-Date: Fri, 16 Jun 2017 15:36:18 -0400
-Message-Id: <20170616193619.14576-5-jlayton@redhat.com>
-In-Reply-To: <20170616193619.14576-1-jlayton@redhat.com>
-References: <20170616193619.14576-1-jlayton@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:34975 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751015AbdFTQYK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Jun 2017 12:24:10 -0400
+Date: Tue, 20 Jun 2017 18:24:08 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
+ error during buffer writeback
+Message-ID: <20170620162408.GN21846@wotan.suse.de>
+References: <20170616105445.3314-1-cmaiolino@redhat.com>
+ <20170616105445.3314-3-cmaiolino@redhat.com>
+ <20170616183510.GC21846@wotan.suse.de>
+ <20170620070103.amrnv3nalfzohku2@eorzea.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170620070103.amrnv3nalfzohku2@eorzea.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
+Cc: Gionatan Danti <g.danti@assyoma.it>
 
-Ensure that we get an error back on all fds when a block device is
-open by multiple writers and writeback fails.
+On Tue, Jun 20, 2017 at 09:01:03AM +0200, Carlos Maiolino wrote:
+> Hello Luis.
+> 
+> On Fri, Jun 16, 2017 at 08:35:10PM +0200, Luis R. Rodriguez wrote:
+> > On Fri, Jun 16, 2017 at 12:54:45PM +0200, Carlos Maiolino wrote:
+> > > When a buffer has been failed during writeback, the inode items into it
+> > > are kept flush locked, and are never resubmitted due the flush lock, so,
+> > > if any buffer fails to be written, the items in AIL are never written to
+> > > disk and never unlocked.
+> > > 
+> > > This causes unmount operation to hang due these items flush locked in AIL,
+> > 
+> > What type of hang? If it has occurred in production is there a trace somewhere?
+> > what does it look like?
+> > 
+> 
+> No, there isn't any specific trace, the hang can be seen in several different
+> places, when unmounting the filesystem, it will hang in xfs_ail_push_all_sync(),
+> but this will be hit even if no unmount is attempted, with items stuck forever
+> in ail.
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- tests/generic/998     | 63 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/998.out |  2 ++
- tests/generic/group   |  1 +
- 3 files changed, 66 insertions(+)
- create mode 100755 tests/generic/998
- create mode 100644 tests/generic/998.out
+Curious, since you can reproduce what happens if you do a hard reset on the
+system when this trigger, once it boots back up? I'd guess it covers but just
+want to be sure.
 
-diff --git a/tests/generic/998 b/tests/generic/998
-new file mode 100755
-index 000000000000..ef528f18986e
---- /dev/null
-+++ b/tests/generic/998
-@@ -0,0 +1,63 @@
-+#! /bin/bash
-+# FS QA Test No. 998
-+#
-+# Test writeback error handling when writing to block devices via pagecache.
-+# See src/fsync-err.c for details of what test actually does.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017, Jeff Layton <jlayton@redhat.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.* $testdir
-+    _dmerror_cleanup
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmerror
-+
-+# real QA test starts here
-+_supported_os Linux
-+_require_scratch
-+_require_dm_target error
-+_require_test_program fsync-err
-+_require_test_program dmerror
-+
-+rm -f $seqres.full
-+
-+_dmerror_init
-+
-+$here/src/fsync-err -d $here/src/dmerror $DMERROR_DEV
-+
-+# success, all done
-+_dmerror_load_working_table
-+_dmerror_cleanup
-+_scratch_mkfs > $seqres.full 2>&1
-+status=0
-+exit
-diff --git a/tests/generic/998.out b/tests/generic/998.out
-new file mode 100644
-index 000000000000..658c438820e2
---- /dev/null
-+++ b/tests/generic/998.out
-@@ -0,0 +1,2 @@
-+QA output created by 998
-+Test passed!
-diff --git a/tests/generic/group b/tests/generic/group
-index b56bae8f04f0..9c62ab13ad36 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -442,4 +442,5 @@
- 437 auto quick
- 438 auto
- 439 auto quick punch
-+998 blockdev
- 999 auto quick
--- 
-2.13.0
+> I think the easier way to track this is to look at the device stats in sysfs,
+> and you will see a forever increase in push_ail statistics even with no work
+> going on in the filesystem.
 
+But the above seems to note it can happen for *any* failed buffer on writeback?
+Has that been really so odd to happen, or was this also just because of a
+requirement of 'retry forever' option? Or did the 'retry forever' help increase
+the chances of reproducing?
+
+I suppose I was hoping for a real world case which might land us in the worst
+case. For instance the dm-thin case with a pool that will run out seems to be
+like a common case for some docker users and from the looks of it folks are as
+a side consequence seeing this as docker just hanging after trying to unmount
+[0] and reaching xfs_ail_push_all_sync(). Could this be an example of a real
+world issue? There was no mention of the requirement of the 'retry forever'
+option though in these cases. If this is an example alternative real world
+situation triggering then this might be more common than what the commit log
+seems to describe.
+
+[0] https://github.com/moby/moby/issues/20707
+
+> > You said you would work on an xfstest for this, how's that going? Otherewise
+> > a commit log description of how to reproduce would be useful.
+> >
+> 
+> The xfstests is not done yet, and I'm actually not focusing on it right now, I
+> already have a reproducer, pointed on the beginning of the discussion from this
+> problem and having this fixed by now is my priority, once the patches are in
+> shape and accepted, I'll work on the xfstests.
+
+OK thanks.
+
+> Not to mention that this problem is still possible to occur not only with
+> inode items, but also with dquot items, which will also be fixed as soon as we
+> reach a consensus of how to best fix this problem by now. Once the dquot items
+> fix will use the same infra-structure as the inode items use in this patchset,
+> and quite the same code, one of the reasons I segmented the buffer resubmission
+> into a different function that can be used for both item types.
+
+I see... thanks!
+
+> > > but this also causes the items in AIL to never be written back, even when
+> > > the IO device comes back to normal.
+> > > 
+> > > I've been testing this patch with a DM-thin device, creating a
+> > > filesystem larger than the real device.
+> > > 
+> > > When writing enough data to fill the DM-thin device, XFS receives ENOSPC
+> > > errors from the device, and keep spinning on xfsaild (when 'retry
+> > > forever' configuration is set).
+> > > 
+> > > At this point, the filesystem can not be unmounted because of the flush locked
+> > > items in AIL, but worse, the items in AIL are never retried at all
+> > > (once xfs_inode_item_push() will skip the items that are flush locked),
+> > > even if the underlying DM-thin device is expanded to the proper size.
+> > 
+> > Jeesh.
+> > 
+> > If the above issue is a real hang, shoudl we not consider a sensible stable fix
+> > to start off with ?
+> > 
+> 
+> Please take a look at the whole history of this issue, this patchset is supposed
+> to be the stable fix, that's why one of the reqs was to use xa_lock here, to
+> change the log_item flags, instead of using atomic ops, making it easier to
+> backport it to stable kernels, without messing around with atomic ops and field
+> type changes and yes, this is a real hang problem, which we already received
+> several reports on this along the time I'm working on it.
+
+I'm thrilled to hear stable is being considered here. Thanks!
+
+  Luis
