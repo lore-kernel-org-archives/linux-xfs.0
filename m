@@ -1,59 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f177.google.com ([209.85.216.177]:32776 "EHLO
-        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751046AbdFTM4U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2017 08:56:20 -0400
-Received: by mail-qt0-f177.google.com with SMTP id u12so132671798qth.0
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2017 05:56:19 -0700 (PDT)
-Message-ID: <1497963376.4555.4.camel@redhat.com>
-Subject: Re: [PATCH v7 11/22] fs: new infrastructure for writeback error
- handling and reporting
-From: Jeff Layton <jlayton@redhat.com>
-Date: Tue, 20 Jun 2017 08:56:16 -0400
-In-Reply-To: <20170620123433.GB19781@infradead.org>
-References: <20170616193427.13955-1-jlayton@redhat.com>
-         <20170616193427.13955-12-jlayton@redhat.com>
-         <20170620123433.GB19781@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from aserp1040.oracle.com ([141.146.126.69]:50390 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751082AbdFTQVD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2017 12:21:03 -0400
+Date: Tue, 20 Jun 2017 09:20:32 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: don't crash on unexpected holes in dir/attr btrees
+Message-ID: <20170620162032.GC4740@birch.djwong.org>
+References: <20170616175337.GE5421@birch.djwong.org>
+ <8076750C-88B9-4E8E-BAFE-332222BCD7C7@jabberwocky.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8076750C-88B9-4E8E-BAFE-332222BCD7C7@jabberwocky.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: David Shaw <dshaw@jabberwocky.com>
+Cc: list@jonas-server.de, Emmanuel Florac <eflorac@intellique.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Tue, 2017-06-20 at 05:34 -0700, Christoph Hellwig wrote:
-> > @@ -393,6 +394,7 @@ struct address_space {
-> >  	gfp_t			gfp_mask;	/* implicit gfp mask for allocations */
-> >  	struct list_head	private_list;	/* ditto */
-> >  	void			*private_data;	/* ditto */
-> > +	errseq_t		wb_err;
-> >  } __attribute__((aligned(sizeof(long))));
-> >  	/*
-> >  	 * On most architectures that alignment is already the case; but
-> > @@ -847,6 +849,7 @@ struct file {
-> >  	 * Must not be taken from IRQ context.
-> >  	 */
-> >  	spinlock_t		f_lock;
-> > +	errseq_t		f_wb_err;
-> >  	atomic_long_t		f_count;
-> >  	unsigned int 		f_flags;
-> >  	fmode_t			f_mode;
+On Tue, Jun 20, 2017 at 09:01:11AM -0400, David Shaw wrote:
+> On Jun 16, 2017, at 1:53 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > 
+> > Hi all,
+> > 
+> > So I /think/ the xfs_attr_inactive crashes that both of you have been
+> > seeing are a result of XFS assuming that there aren't ever any mapping
+> > holes in the extended attribute fork and crashing when it tries to
+> > grab a buffer for the hole and fails to notice that holes don't have
+> > buffers.  This lightly tested patch gets rid of /that/ problem.
+> > 
+> > So, if you're willing, can you try this out and see if the crashes go
+> > away?  Granted, this might only enable us to lurch on whatever's next...
 > 
-> Did you check the sizes of the structure before and after?
-> These places don't look like holes in the packing, but there probably
-> are some available.
+> I can give this a try.
 > 
+> Now that you have an idea of what caused the issue, is there some way
+> to (easily or not) reproduce it, ideally in userspace?  Part of the
+> problem we're having is that we can't reproduce it on a test machine
+> so are forced to wait for it to happen in the field under load, where
+> it inconveniences users.
 
-Yes. That one actually plugs a 4 byte hole in struct file on x86_64.
+I know what caused the crash, but I don't know what caused the hole in
+the xattr fork that caused the crash.  It would appear that the xattr
+hash tree contains a pointer to an xattr fork offset that is no longer
+mapped, but I don't know how we end up with a dangling pointer --
+whether this is corruption going on in the attribute fork, or merely a
+bug in the routine that tears down the attribute fork and accidentally
+tries to delete something twice.
 
-> > +static inline int filemap_check_wb_err(struct address_space *mapping, errseq_t since)
+Unfortunately, the metadumps you've both sent me don't seem to contain
+any inodes with sparse attribute forks, so evidently something cleaned
+up the filesystem before the metadump was taken.
+
+It might help to know a little more about what's going on with the
+xattrs that are being attached to those files.  A fair number of the
+inodes seem to have extended attributes with 2k values attached.  Does
+your workload involve adding and deleting a large number of xattrs?  A
+number of large xattrs?  A large number of large xattrs?
+
+That said, if we're tearing down the inode anyway, maybe it doesn't
+matter if there's a hole in the map, seeing as the attr_inactive
+function already knows how to handle holes and the blocks are all
+getting freed anyway.
+
+--D
+
 > 
-> Overly long line here (the patch has a few more)
+> David
 > 
-
-Ok, I'll fix those up.
-
--- 
-Jeff Layton <jlayton@redhat.com>
