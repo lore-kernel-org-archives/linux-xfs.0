@@ -1,138 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47618 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:34752 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753580AbdFSK7I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Jun 2017 06:59:08 -0400
-Date: Mon, 19 Jun 2017 06:59:05 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
- error during buffer writeback
-Message-ID: <20170619105904.GA25255@bfoster.bfoster>
-References: <20170616105445.3314-1-cmaiolino@redhat.com>
- <20170616105445.3314-3-cmaiolino@redhat.com>
- <20170616183510.GC21846@wotan.suse.de>
- <20170616192445.GG5421@birch.djwong.org>
- <20170616193755.GD21846@wotan.suse.de>
- <3ff0e0c8-ef9c-b7f8-d37e-ed02e5766c40@sandeen.net>
+        id S1751090AbdFTUSA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Jun 2017 16:18:00 -0400
+Subject: Re: [PATCH 1/2] xfs: rewrite xfs_dq_get_next_id using
+ xfs_iext_lookup_extent
+References: <20170620090244.30876-1-hch@lst.de>
+ <20170620090244.30876-2-hch@lst.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <4c3c78ed-9fd3-7b37-65f8-8256a98be951@sandeen.net>
+Date: Tue, 20 Jun 2017 15:17:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3ff0e0c8-ef9c-b7f8-d37e-ed02e5766c40@sandeen.net>
+In-Reply-To: <20170620090244.30876-2-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Cc: agruenba@redhat.com
 
-On Fri, Jun 16, 2017 at 02:45:13PM -0500, Eric Sandeen wrote:
-> On 6/16/17 2:37 PM, Luis R. Rodriguez wrote:
-> > On Fri, Jun 16, 2017 at 12:24:45PM -0700, Darrick J. Wong wrote:
-> >> On Fri, Jun 16, 2017 at 08:35:10PM +0200, Luis R. Rodriguez wrote:
-> >>> On Fri, Jun 16, 2017 at 12:54:45PM +0200, Carlos Maiolino wrote:
-> >>>> When a buffer has been failed during writeback, the inode items into it
-> >>>> are kept flush locked, and are never resubmitted due the flush lock, so,
-> >>>> if any buffer fails to be written, the items in AIL are never written to
-> >>>> disk and never unlocked.
-> >>>>
-> >>>> This causes unmount operation to hang due these items flush locked in AIL,
-> >>>
-> >>> What type of hang? If it has occurred in production is there a trace somewhere?
-> >>> what does it look like?
-> >>>
-> >>> You said you would work on an xfstest for this, how's that going? Otherewise
-> >>> a commit log description of how to reproduce would be useful.
-> >>
-> >> I'm curious for an xfstest too, but I think Carlos /did/ tell us how to
-> >> reproduce -- create a thinp device, format XFS, fill it up, and try to
-> >> unmount.
-> > 
-> > Well he did mention to create a Dm-thin device with a fileystem larger than
-> > the real device. You seem to have say just filling up a filsystem?
-> 
-> No - the case is filling up the /thinp device/, not the filesystem.
-> 
-> > 
-> > Do both cases trigger the issue?
-> 
-> This whole issue has to do with errors from the block device during writeback;
-> that's why the thin device is involved.  When the backing store fills, we
-> see the IO errors that cause this problem.
-> 
-> >> I don't think there /is/ much of a trace, just xfsaild doing
-> >> nothing and a bunch of ail items that are flush locked and stuck that way.
-> > 
-> > OK so no hung task seek, no crash, just a system call that never ends?
-> > 
-> > Is the issue recoverable? So unmount just never completes? Can we CTRL-C
-> > (SIGINT) out of it?
-> 
-> No, you can't ctrl-c a stuck kernel.
-> 
-> >>>> but this also causes the items in AIL to never be written back, even when
-> >>>> the IO device comes back to normal.
-> >>>>
-> >>>> I've been testing this patch with a DM-thin device, creating a
-> >>>> filesystem larger than the real device.
-> >>>>
-> >>>> When writing enough data to fill the DM-thin device, XFS receives ENOSPC
-> >>>> errors from the device, and keep spinning on xfsaild (when 'retry
-> >>>> forever' configuration is set).
-> >>>>
-> >>>> At this point, the filesystem can not be unmounted because of the flush locked
-> >>>> items in AIL, but worse, the items in AIL are never retried at all
-> >>>> (once xfs_inode_item_push() will skip the items that are flush locked),
-> >>>> even if the underlying DM-thin device is expanded to the proper size.
-> >>>
-> >>> Jeesh.
-> >>>
-> >>> If the above issue is a real hang, shoudl we not consider a sensible stable fix
-> >>> to start off with ?
-> >>
-> >> Huh?  I thought this series is supposed to be the fix.
-> > 
-> > It seems like a rather large set of changes, if the issue was sevee I was hoping
-> > for a stable candidate fix first. If its not fixing a severe issue then sure.
-> 
-> Fixes go uptream first, then to stable kernels if appropriate, right?
-> 
-> But not every fix is a trivial one-liner.  I don't think there is any simpler
-> fix to be had, here.
-> 
+On 6/20/17 4:02 AM, Christoph Hellwig wrote:
+> This goes straight to a single lookup in the extent list and avoids a
+> roundtrip through two layers that don't add any value for the simple
+> quoata file that just has data or holes and no page cache, delayed
+> allocation, unwritten extent or COW fork (which btw, doesn't seem to
+> be handled by the existing SEEK HOLE/DATA code).
 
-Yeah, this is kind of intended to be the simplest fix available as far
-as I'm aware. TBH, I don't think the fix here is fundamentally that
-complex (define a state for already flushed/failed log items), but
-rather the code that needs to be modified to implement it has various
-states and corner cases to manage that make it tricky to get right.
+ok well that's a bit embarrassing for the original author.  :D
 
-If we truly needed a stable worthy fix in short order, that would
-probably be to revert ac8809f9a ("xfs: abort metadata writeback on
-permanent errors"), which caused this regression by making the AIL
-responsible for failed retries. A couple caveats I can think of with
-that are that 1.) this would likely short circuit the recently added
-error configuration api (which is kind of irrelevant if the underlying
-error management code doesn't work correctly, but suggests that should
-be reverted as well) and 2.) in doing so, this reverts back to the
-hardcoded infinite retry behavior in XFS. That means that transient
-errors may eventually recover, but the thinp enospc use case and whatnot
-are still going to hang on umount. 
+Much nicer, thanks.  I assume it passes the couple of xfstests that stress this?
 
-It hasn't seemed necessary to me to take that approach given the lower
-prevalence of the issue and the fact that a solution had been worked out
-for a while now. Though I suppose the longer we go without a fix in
-place, the stronger the argument for something like that becomes.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Brian
-
-> -Eric
 > 
-> >   Luis
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_dquot.c | 66 ++++++++++++++++++------------------------------------
+>  1 file changed, 22 insertions(+), 44 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 9d06cc30e875..774750bb3e6b 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -695,21 +695,18 @@ xfs_qm_dqread(
+>   */
+>  static int
+>  xfs_dq_get_next_id(
+> -	xfs_mount_t		*mp,
+> +	struct xfs_mount	*mp,
+>  	uint			type,
+> -	xfs_dqid_t		*id,
+> -	loff_t			eof)
+> +	xfs_dqid_t		*id)
+>  {
+> -	struct xfs_inode	*quotip;
+> +	struct xfs_inode	*quotip = xfs_quota_inode(mp, type);
+> +	xfs_dqid_t		next_id = *id + 1; /* simple advance */
+> +	uint			lock_flags;
+> +	struct xfs_bmbt_irec	got;
+> +	xfs_extnum_t		idx;
+>  	xfs_fsblock_t		start;
+> -	loff_t			offset;
+> -	uint			lock;
+> -	xfs_dqid_t		next_id;
+>  	int			error = 0;
+>  
+> -	/* Simple advance */
+> -	next_id = *id + 1;
+> -
+>  	/* If we'd wrap past the max ID, stop */
+>  	if (next_id < *id)
+>  		return -ENOENT;
+> @@ -723,23 +720,20 @@ xfs_dq_get_next_id(
+>  	/* Nope, next_id is now past the current chunk, so find the next one */
+>  	start = (xfs_fsblock_t)next_id / mp->m_quotainfo->qi_dqperchunk;
+>  
+> -	quotip = xfs_quota_inode(mp, type);
+> -	lock = xfs_ilock_data_map_shared(quotip);
+> -
+> -	offset = __xfs_seek_hole_data(VFS_I(quotip), XFS_FSB_TO_B(mp, start),
+> -				      eof, SEEK_DATA);
+> -	if (offset < 0)
+> -		error = offset;
+> -
+> -	xfs_iunlock(quotip, lock);
+> +	lock_flags = xfs_ilock_data_map_shared(quotip);
+> +	if (!(quotip->i_df.if_flags & XFS_IFEXTENTS)) {
+> +		error = xfs_iread_extents(NULL, quotip, XFS_DATA_FORK);
+> +		if (error)
+> +			return error;
+> +	}
+>  
+> -	/* -ENXIO is essentially "no more data" */
+> -	if (error)
+> -		return (error == -ENXIO ? -ENOENT: error);
+> +	if (xfs_iext_lookup_extent(quotip, &quotip->i_df, start, &idx, &got))
+> +		*id = got.br_startoff * mp->m_quotainfo->qi_dqperchunk;
+> +	else
+> +		error = -ENOENT;
+> +	xfs_iunlock(quotip, lock_flags);
+>  
+> -	/* Convert next data offset back to a quota id */
+> -	*id = XFS_B_TO_FSB(mp, offset) * mp->m_quotainfo->qi_dqperchunk;
+> -	return 0;
+> +	return error;
+>  }
+>  
+>  /*
+> @@ -762,7 +756,6 @@ xfs_qm_dqget(
+>  	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+>  	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
+>  	struct xfs_dquot	*dqp;
+> -	loff_t			eof = 0;
+>  	int			error;
+>  
+>  	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+> @@ -790,21 +783,6 @@ xfs_qm_dqget(
+>  	}
+>  #endif
+>  
+> -	/* Get the end of the quota file if we need it */
+> -	if (flags & XFS_QMOPT_DQNEXT) {
+> -		struct xfs_inode	*quotip;
+> -		xfs_fileoff_t		last;
+> -		uint			lock_mode;
+> -
+> -		quotip = xfs_quota_inode(mp, type);
+> -		lock_mode = xfs_ilock_data_map_shared(quotip);
+> -		error = xfs_bmap_last_offset(quotip, &last, XFS_DATA_FORK);
+> -		xfs_iunlock(quotip, lock_mode);
+> -		if (error)
+> -			return error;
+> -		eof = XFS_FSB_TO_B(mp, last);
+> -	}
+> -
+>  restart:
+>  	mutex_lock(&qi->qi_tree_lock);
+>  	dqp = radix_tree_lookup(tree, id);
+> @@ -823,7 +801,7 @@ xfs_qm_dqget(
+>  			if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+>  				xfs_dqunlock(dqp);
+>  				mutex_unlock(&qi->qi_tree_lock);
+> -				error = xfs_dq_get_next_id(mp, type, &id, eof);
+> +				error = xfs_dq_get_next_id(mp, type, &id);
+>  				if (error)
+>  					return error;
+>  				goto restart;
+> @@ -858,7 +836,7 @@ xfs_qm_dqget(
+>  
+>  	/* If we are asked to find next active id, keep looking */
+>  	if (error == -ENOENT && (flags & XFS_QMOPT_DQNEXT)) {
+> -		error = xfs_dq_get_next_id(mp, type, &id, eof);
+> +		error = xfs_dq_get_next_id(mp, type, &id);
+>  		if (!error)
+>  			goto restart;
+>  	}
+> @@ -917,7 +895,7 @@ xfs_qm_dqget(
+>  	if (flags & XFS_QMOPT_DQNEXT) {
+>  		if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+>  			xfs_qm_dqput(dqp);
+> -			error = xfs_dq_get_next_id(mp, type, &id, eof);
+> +			error = xfs_dq_get_next_id(mp, type, &id);
+>  			if (error)
+>  				return error;
+>  			goto restart;
+> 
