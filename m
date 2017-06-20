@@ -1,294 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17032 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751014AbdFUSkA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 14:40:00 -0400
-Date: Wed, 21 Jun 2017 11:39:55 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/4] xfs: expose errortag knobs via sysfs
-Message-ID: <20170621183955.GK4733@birch.djwong.org>
-References: <149800747210.23118.6423951814449227184.stgit@birch.djwong.org>
- <149800748451.23118.6326280252461129051.stgit@birch.djwong.org>
- <20170621181918.GC29843@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:51292 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750823AbdFTRUp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Jun 2017 13:20:45 -0400
+Date: Tue, 20 Jun 2017 13:20:41 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
+ error during buffer writeback
+Message-ID: <20170620172041.GD3348@bfoster.bfoster>
+References: <20170616105445.3314-1-cmaiolino@redhat.com>
+ <20170616105445.3314-3-cmaiolino@redhat.com>
+ <20170616183510.GC21846@wotan.suse.de>
+ <20170616192445.GG5421@birch.djwong.org>
+ <20170616193755.GD21846@wotan.suse.de>
+ <3ff0e0c8-ef9c-b7f8-d37e-ed02e5766c40@sandeen.net>
+ <20170619105904.GA25255@bfoster.bfoster>
+ <20170620165204.GP21846@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170621181918.GC29843@bfoster.bfoster>
+In-Reply-To: <20170620165204.GP21846@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
 
-On Wed, Jun 21, 2017 at 02:19:18PM -0400, Brian Foster wrote:
-> On Tue, Jun 20, 2017 at 06:11:24PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jun 20, 2017 at 06:52:04PM +0200, Luis R. Rodriguez wrote:
+> On Mon, Jun 19, 2017 at 06:59:05AM -0400, Brian Foster wrote:
+> > On Fri, Jun 16, 2017 at 02:45:13PM -0500, Eric Sandeen wrote:
+> > > On 6/16/17 2:37 PM, Luis R. Rodriguez wrote:
+> > > > On Fri, Jun 16, 2017 at 12:24:45PM -0700, Darrick J. Wong wrote:
+> > > >> On Fri, Jun 16, 2017 at 08:35:10PM +0200, Luis R. Rodriguez wrote:
+> > > > It seems like a rather large set of changes, if the issue was sevee I was hoping
+> > > > for a stable candidate fix first. If its not fixing a severe issue then sure.
+> > > 
+> > > Fixes go uptream first, then to stable kernels if appropriate, right?
+> > > 
+> > > But not every fix is a trivial one-liner.  I don't think there is any simpler
+> > > fix to be had, here.
+> > > 
 > > 
-> > Creates a /sys/fs/xfs/$dev/errortag/ directory to control the errortag
-> > values directly.  This enables us to control the randomness values,
-> > rather than having to accept the defaults.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_error.c |  156 ++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_error.h |    1 
-> >  fs/xfs/xfs_mount.h |    1 
-> >  3 files changed, 157 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> > index ef16ac2..81f260f 100644
-> > --- a/fs/xfs/xfs_error.c
-> > +++ b/fs/xfs/xfs_error.c
-> > @@ -22,6 +22,7 @@
-> >  #include "xfs_trans_resv.h"
-> >  #include "xfs_mount.h"
-> >  #include "xfs_error.h"
-> > +#include "xfs_sysfs.h"
-> >  
-> >  #ifdef DEBUG
-> >  
-> > @@ -56,6 +57,145 @@ static unsigned int xfs_errortag_random_default[] = {
-> >  	XFS_RANDOM_AG_RESV_CRITICAL,
-> >  };
-> >  
-> > +struct xfs_errortag_attr {
-> > +	struct attribute	attr;
-> > +	unsigned int		tag;
-> > +};
-> > +
-> > +static inline struct xfs_errortag_attr *
-> > +to_attr(struct attribute *attr)
-> > +{
-> > +	return container_of(attr, struct xfs_errortag_attr, attr);
-> > +}
-> > +
-> > +static inline struct xfs_mount *
-> > +to_mp(struct kobject *kobject)
-> > +{
-> > +	struct xfs_kobj *kobj = to_kobj(kobject);
-> > +
-> > +	return container_of(kobj, struct xfs_mount, m_errortag_kobj);
-> > +}
-> > +
-> > +STATIC ssize_t
-> > +xfs_errortag_attr_store(
-> > +	struct kobject		*kobject,
-> > +	struct attribute	*attr,
-> > +	const char		*buf,
-> > +	size_t			count)
-> > +{
-> > +	struct xfs_mount	*mp = to_mp(kobject);
-> > +	struct xfs_errortag_attr *xfs_attr = to_attr(attr);
-> > +	int			ret;
-> > +	unsigned int		val;
-> > +
-> > +	if (strcmp(buf, "on") == 0) {
-> > +		val = xfs_errortag_random_default[xfs_attr->tag];
+> > Yeah, this is kind of intended to be the simplest fix available as far
+> > as I'm aware. TBH, I don't think the fix here is fundamentally that
+> > complex (define a state for already flushed/failed log items), but
+> > rather the code that needs to be modified to implement it has various
+> > states and corner cases to manage that make it tricky to get right.
 > 
-> I'm also wondering if we really care to preserve this. It doesn't seem
-> like something we would add if we were adding this mechanism from
-> scratch, for example, but I could be wrong. Obviously this isn't from
-> scratch, but I kind of view this as morphing the old mechanism into
-> something slightly new (while preserving the old interface).
-
-I debated whether or not to port every aspect of the old ioctl to this
-new interface.  My thought was that the current ioctl applies whatever
-default the kernel has, so therefore the sysfs interface needs a kludge
-to preserve that feature because the current crop of test cases accept
-the kernel defaults.  We /could/ change the xfstests helper to supply
-the default value to sysfs if the test doesn't otherwise provide a
-value, but on an old kernel there's no way to figure out if the value
-set was the value you wanted, so if the value you supply is the same as
-the encoded default then try the ioctl and if it succeeds then maybe the
-injection is set up the way the test wants?  Ick.
-
-Then again it's a debug interface that historically didn't check the
-error tag being input either, so.... :(
-
-Also, maybe "default" would have been a better choice for the value?
-
---D
-
-> I'll probably need to stare a bit more at the sysfs bits, but otherwise
-> the rest all seems fine to me at first glance.
+> OK this helps, thanks.
 > 
-> Brian
+> > If we truly needed a stable worthy fix in short order, that would
+> > probably be to revert ac8809f9a ("xfs: abort metadata writeback on
+> > permanent errors"), which caused this regression by making the AIL
+> > responsible for failed retries. 
 > 
-> > +	} else {
-> > +		ret = kstrtouint(buf, 0, &val);
-> > +		if (ret)
-> > +			return ret;
-> > +	}
-> > +
-> > +	ret = xfs_errortag_set(mp, xfs_attr->tag, val);
-> > +	if (ret)
-> > +		return ret;
-> > +	return count;
-> > +}
-> > +
-> > +STATIC ssize_t
-> > +xfs_errortag_attr_show(
-> > +	struct kobject		*kobject,
-> > +	struct attribute	*attr,
-> > +	char			*buf)
-> > +{
-> > +	struct xfs_mount	*mp = to_mp(kobject);
-> > +	struct xfs_errortag_attr *xfs_attr = to_attr(attr);
-> > +
-> > +	return snprintf(buf, PAGE_SIZE, "%u\n",
-> > +			xfs_errortag_get(mp, xfs_attr->tag));
-> > +}
-> > +
-> > +static const struct sysfs_ops xfs_errortag_sysfs_ops = {
-> > +	.show = xfs_errortag_attr_show,
-> > +	.store = xfs_errortag_attr_store,
-> > +};
-> > +
-> > +#define XFS_ERRORTAG_ATTR_RW(_name, _tag) \
-> > +static struct xfs_errortag_attr xfs_errortag_attr_##_name = {		\
-> > +	.attr = {.name = __stringify(_name),				\
-> > +		 .mode = VERIFY_OCTAL_PERMISSIONS(S_IWUSR | S_IRUGO) },	\
-> > +	.tag	= (_tag),						\
-> > +}
-> > +
-> > +#define XFS_ERRORTAG_ATTR_LIST(_name) &xfs_errortag_attr_##_name.attr
-> > +
-> > +XFS_ERRORTAG_ATTR_RW(noerror,		XFS_ERRTAG_NOERROR);
-> > +XFS_ERRORTAG_ATTR_RW(iflush1,		XFS_ERRTAG_IFLUSH_1);
-> > +XFS_ERRORTAG_ATTR_RW(iflush2,		XFS_ERRTAG_IFLUSH_2);
-> > +XFS_ERRORTAG_ATTR_RW(iflush3,		XFS_ERRTAG_IFLUSH_3);
-> > +XFS_ERRORTAG_ATTR_RW(iflush4,		XFS_ERRTAG_IFLUSH_4);
-> > +XFS_ERRORTAG_ATTR_RW(iflush5,		XFS_ERRTAG_IFLUSH_5);
-> > +XFS_ERRORTAG_ATTR_RW(iflush6,		XFS_ERRTAG_IFLUSH_6);
-> > +XFS_ERRORTAG_ATTR_RW(dareadbuf,		XFS_ERRTAG_DA_READ_BUF);
-> > +XFS_ERRORTAG_ATTR_RW(btree_chk_lblk,	XFS_ERRTAG_BTREE_CHECK_LBLOCK);
-> > +XFS_ERRORTAG_ATTR_RW(btree_chk_sblk,	XFS_ERRTAG_BTREE_CHECK_SBLOCK);
-> > +XFS_ERRORTAG_ATTR_RW(readagf,		XFS_ERRTAG_ALLOC_READ_AGF);
-> > +XFS_ERRORTAG_ATTR_RW(readagi,		XFS_ERRTAG_IALLOC_READ_AGI);
-> > +XFS_ERRORTAG_ATTR_RW(itobp,		XFS_ERRTAG_ITOBP_INOTOBP);
-> > +XFS_ERRORTAG_ATTR_RW(iunlink,		XFS_ERRTAG_IUNLINK);
-> > +XFS_ERRORTAG_ATTR_RW(iunlinkrm,		XFS_ERRTAG_IUNLINK_REMOVE);
-> > +XFS_ERRORTAG_ATTR_RW(dirinovalid,	XFS_ERRTAG_DIR_INO_VALIDATE);
-> > +XFS_ERRORTAG_ATTR_RW(bulkstat,		XFS_ERRTAG_BULKSTAT_READ_CHUNK);
-> > +XFS_ERRORTAG_ATTR_RW(logiodone,		XFS_ERRTAG_IODONE_IOERR);
-> > +XFS_ERRORTAG_ATTR_RW(stratread,		XFS_ERRTAG_STRATREAD_IOERR);
-> > +XFS_ERRORTAG_ATTR_RW(stratcmpl,		XFS_ERRTAG_STRATCMPL_IOERR);
-> > +XFS_ERRORTAG_ATTR_RW(diowrite,		XFS_ERRTAG_DIOWRITE_IOERR);
-> > +XFS_ERRORTAG_ATTR_RW(bmapifmt,		XFS_ERRTAG_BMAPIFORMAT);
-> > +XFS_ERRORTAG_ATTR_RW(free_extent,	XFS_ERRTAG_FREE_EXTENT);
-> > +XFS_ERRORTAG_ATTR_RW(rmap_finish_one,	XFS_ERRTAG_RMAP_FINISH_ONE);
-> > +XFS_ERRORTAG_ATTR_RW(refcount_continue_update,	XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE);
-> > +XFS_ERRORTAG_ATTR_RW(refcount_finish_one,	XFS_ERRTAG_REFCOUNT_FINISH_ONE);
-> > +XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
-> > +XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
-> > +
-> > +static struct attribute *xfs_errortag_attrs[] = {
-> > +	XFS_ERRORTAG_ATTR_LIST(noerror),
-> > +	XFS_ERRORTAG_ATTR_LIST(iflush1),
-> > +	XFS_ERRORTAG_ATTR_LIST(iflush2),
-> > +	XFS_ERRORTAG_ATTR_LIST(iflush3),
-> > +	XFS_ERRORTAG_ATTR_LIST(iflush4),
-> > +	XFS_ERRORTAG_ATTR_LIST(iflush5),
-> > +	XFS_ERRORTAG_ATTR_LIST(iflush6),
-> > +	XFS_ERRORTAG_ATTR_LIST(dareadbuf),
-> > +	XFS_ERRORTAG_ATTR_LIST(btree_chk_lblk),
-> > +	XFS_ERRORTAG_ATTR_LIST(btree_chk_sblk),
-> > +	XFS_ERRORTAG_ATTR_LIST(readagf),
-> > +	XFS_ERRORTAG_ATTR_LIST(readagi),
-> > +	XFS_ERRORTAG_ATTR_LIST(itobp),
-> > +	XFS_ERRORTAG_ATTR_LIST(iunlink),
-> > +	XFS_ERRORTAG_ATTR_LIST(iunlinkrm),
-> > +	XFS_ERRORTAG_ATTR_LIST(dirinovalid),
-> > +	XFS_ERRORTAG_ATTR_LIST(bulkstat),
-> > +	XFS_ERRORTAG_ATTR_LIST(logiodone),
-> > +	XFS_ERRORTAG_ATTR_LIST(stratread),
-> > +	XFS_ERRORTAG_ATTR_LIST(stratcmpl),
-> > +	XFS_ERRORTAG_ATTR_LIST(diowrite),
-> > +	XFS_ERRORTAG_ATTR_LIST(bmapifmt),
-> > +	XFS_ERRORTAG_ATTR_LIST(free_extent),
-> > +	XFS_ERRORTAG_ATTR_LIST(rmap_finish_one),
-> > +	XFS_ERRORTAG_ATTR_LIST(refcount_continue_update),
-> > +	XFS_ERRORTAG_ATTR_LIST(refcount_finish_one),
-> > +	XFS_ERRORTAG_ATTR_LIST(bmap_finish_one),
-> > +	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
-> > +	NULL,
-> > +};
-> > +
-> > +struct kobj_type xfs_errortag_ktype = {
-> > +	.release = xfs_sysfs_release,
-> > +	.sysfs_ops = &xfs_errortag_sysfs_ops,
-> > +	.default_attrs = xfs_errortag_attrs,
-> > +};
-> > +
-> >  int
-> >  xfs_errortag_init(
-> >  	struct xfs_mount	*mp)
-> > @@ -64,13 +204,16 @@ xfs_errortag_init(
-> >  			KM_SLEEP | KM_MAYFAIL);
-> >  	if (!mp->m_errortag)
-> >  		return -ENOMEM;
-> > -	return 0;
-> > +
-> > +	return xfs_sysfs_init(&mp->m_errortag_kobj, &xfs_errortag_ktype,
-> > +			       &mp->m_kobj, "errortag");
-> >  }
-> >  
-> >  void
-> >  xfs_errortag_del(
-> >  	struct xfs_mount	*mp)
-> >  {
-> > +	xfs_sysfs_del(&mp->m_errortag_kobj);
-> >  	kmem_free(mp->m_errortag);
-> >  }
-> >  
-> > @@ -96,6 +239,17 @@ xfs_errortag_test(
-> >  }
-> >  
-> >  int
-> > +xfs_errortag_get(
-> > +	struct xfs_mount	*mp,
-> > +	unsigned int		error_tag)
-> > +{
-> > +	if (error_tag >= XFS_ERRTAG_MAX)
-> > +		return -EINVAL;
-> > +
-> > +	return mp->m_errortag[error_tag];
-> > +}
-> > +
-> > +int
-> >  xfs_errortag_set(
-> >  	struct xfs_mount	*mp,
-> >  	unsigned int		error_tag,
-> > diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-> > index 341e8a0..a3c0c1d 100644
-> > --- a/fs/xfs/xfs_error.h
-> > +++ b/fs/xfs/xfs_error.h
-> > @@ -138,6 +138,7 @@ extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
-> >  #define XFS_TEST_ERROR(expr, mp, tag, rf)		\
-> >  	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
-> >  
-> > +extern int xfs_errortag_get(struct xfs_mount *mp, unsigned int error_tag);
-> >  extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
-> >  		unsigned int tag_value);
-> >  extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
-> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > index e002ac5..931e9fc 100644
-> > --- a/fs/xfs/xfs_mount.h
-> > +++ b/fs/xfs/xfs_mount.h
-> > @@ -204,6 +204,7 @@ typedef struct xfs_mount {
-> >  	 * error triggers.  1 = always, 2 = half the time, etc.
-> >  	 */
-> >  	unsigned int		*m_errortag;
-> > +	struct xfs_kobj		m_errortag_kobj;
-> >  
-> >  	/*
-> >  	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Should the following tag be added then to this commit proposed by Carlos:
+> 
+> Fixes: ac8809f9a ("xfs: abort metadata writeback on permanent errors")
+> 
+
+That seems reasonable to me.
+
+> FWIW this was merged as of v3.13. Even though that seems to have taken the
+> failed buffer and kept it the commit log of that change seems to indicate we
+> already ran into similar situations before, after this commit we seem to just
+> retry IO once, but keep the buffer around on the AIL, to allow further
+> modifications of the buffer.
+> 
+
+Before that commit, I believe we would retry the metadata writeback
+indefinitely so long as it failed. If the underlying I/O failure ceased
+to occur, then this loop ends and the fs proceeds as normal. If not,
+then the filesystem is probably going to hang. After that commit, we
+retry once from I/O completion handling and otherwise rely on the AIL to
+issue the next (indefinite) retry. If the item that failed has a flush
+lock, we won't actually ever submit the I/O (which is the bug), however,
+and thus you're toast regardless of whether the I/O would ultimately
+succeed or not.
+
+> 
+> > A couple caveats I can think of with
+> > that are that 1.) this would likely short circuit the recently added
+> > error configuration api (which is kind of irrelevant if the underlying
+> > error management code doesn't work correctly, but suggests that should
+> > be reverted as well) and 2.) in doing so, this reverts back to the
+> > hardcoded infinite retry behavior in XFS. That means that transient
+> > errors may eventually recover, but the thinp enospc use case and whatnot
+> > are still going to hang on umount. 
+> 
+> Right, and also one of the gains of the patch seems to have been to allow
+> thinp devices to keep on chugging with modifications on the buffer, so that
+> would be lost as well. That seems to be like an optimization though so its
+> worth loosing IMHO if would have resolved the hang. Since that's not the case
+> though...
+> 
+
+I think that's just a secondary effect of unlocking the buffer. Probably
+not that important if I/Os are failing.
+
+> > It hasn't seemed necessary to me to take that approach given the lower
+> > prevalence of the issue 
+> 
+> Of this issue? I suppose its why I asked about examples of issues, I seem
+> to have found it likely much more possible out in the wild than expected.
+> It would seem folks might be working around it somehow.
+> 
+
+If we're talking about the thin provisioning case, I suspect most people
+work around it by properly configuring their storage. ;)
+
+Brian
+
+> > and the fact that a solution had been worked out
+> > for a while now. Though I suppose the longer we go without a fix in
+> > place, the stronger the argument for something like that becomes.
+> 
+>   Luis
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
