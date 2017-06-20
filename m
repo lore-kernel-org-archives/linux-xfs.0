@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57686 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53514 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751056AbdFTRBb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Jun 2017 13:01:31 -0400
-Date: Tue, 20 Jun 2017 13:01:29 -0400
+        id S1750859AbdFTRCM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Jun 2017 13:02:12 -0400
+Date: Tue, 20 Jun 2017 13:02:10 -0400
 From: Brian Foster <bfoster@redhat.com>
 Subject: Re: Shutdown filesystem when a thin pool become full
-Message-ID: <20170620170127.GB3348@bfoster.bfoster>
+Message-ID: <20170620170208.GC3348@bfoster.bfoster>
 References: <24daa89a452496d2cdffa5512a64ed2e@assyoma.it>
  <7e8e16f1-5425-44b3-e908-c0e8a3300e3f@assyoma.it>
  <a89aa00c4f86fbdc674dd8f5b5eeb248@assyoma.it>
@@ -16,45 +16,114 @@ References: <24daa89a452496d2cdffa5512a64ed2e@assyoma.it>
  <20170620110548.eruly7ygixydyk2o@eorzea.usersys.redhat.com>
  <dee0d3cc198663bb850ef2576c84d620@assyoma.it>
  <20170620152858.GA3348@bfoster.bfoster>
- <20170620153444.GM21846@wotan.suse.de>
+ <d30c96bafa9d476e1a381a0aaa1bc285@assyoma.it>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170620153444.GM21846@wotan.suse.de>
+In-Reply-To: <d30c96bafa9d476e1a381a0aaa1bc285@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Gionatan Danti <g.danti@assyoma.it>, linux-xfs@vger.kernel.org
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 20, 2017 at 05:34:44PM +0200, Luis R. Rodriguez wrote:
-> On Tue, Jun 20, 2017 at 11:28:58AM -0400, Brian Foster wrote:
-> > On Tue, Jun 20, 2017 at 05:03:42PM +0200, Gionatan Danti wrote:
-> > > Il 20-06-2017 13:05 Carlos Maiolino ha scritto:
-> > > > 
-> > ...
-> > > > Surely this can be improved, but at the end, the application will always
-> > > > need to
-> > > > check for its own data.
-> > > 
-> > > I think the key improvement would be to let the filesystem know about the
-> > > full thin pool - ie: returing ENOSPC at some convenient time (a wild guess:
-> > > can we return ENOSPC during delayed block allocation?)
-> > > 
+On Tue, Jun 20, 2017 at 05:55:26PM +0200, Gionatan Danti wrote:
+> Il 20-06-2017 17:28 Brian Foster ha scritto:
 > > 
 > > FWIW, I played with something like this a while ago. See the following
 > > (and its predecessor for a more detailed cover letter):
 > > 
 > >   http://oss.sgi.com/pipermail/xfs/2016-April/048166.html
+> > 
+> > You lose some allocation efficiency with this approach because XFS
+> > relies on a worst case allocation reservation in dm-thin, but IIRC that
+> > only really manifested when the volume was near ENOSPC. If one finds
+> > that tradeoff acceptable, I think it's otherwise possible to forward
+> > ENOSPC from the the block device earlier than is done currently.
+> > 
+> > Brian
 > 
-> Any chance this is up in a tree somewhere?
+> Very informative thread, thanks for linking. From here [1]:
+> 
+> "That just doesn't help us avoid the overprovisioned situation where we
+> have data in pagecache and nowhere to write it back to (w/o setting the
+> volume read-only). The only way I'm aware of to handle that is to
+> account for the space at write time."
+> 
+> I fully understand that: after all, writes sitting in pagecaches are not,
+> well, yet written. I can also imagine what profound ramifications would have
+> to correctly cover any failed data writeout corner case. What would be a
+> great first step, however, is that at the *first* failed data writeout due
+> to full thin pool, a ENOSPC (or similar) to be returned to the filesystem.
+> Catching this situation, the filesystem can reject any further buffered
+> writes until manual intervention.
+> 
+> Well, my main concern is to avoid sunstained writes to a filled pool, surely
+> your patch target a whole bigger (and better!) solution.
 > 
 
-No, I don't have an upstream tree hosted anywhere unfortunately.
+ISTM you might as well write something in userspace that receives a
+notification from device-mapper and shuts down or remounts the fs if the
+volume has gone inactive or hit a watermark. I don't think we'd bury
+anything in XFS that cuts off and then resumes operations based on
+underlying device errors like that. That sounds like a very crude
+approach with a narrow use case.
+
+That said, I don't think I'd be opposed to something in XFS that
+(optionally) shutdown the fs in response to a similar dm notification
+provided we know with certainty that the underlying device is inactive
+(and that it can be accomplished relatively cleanly).
 
 Brian
 
->   Luis
+> [1] http://oss.sgi.com/pipermail/xfs/2016-April/048378.html
+> 
+> > 
+> > > >
+> > > > I am not really a device-mapper developer and I don't know much about
+> > > > its code
+> > > > in depth. But, I know it will issue warnings when there isn't more space
+> > > > left,
+> > > > and you can configure a watermark too, to warn the admin when the space
+> > > > used
+> > > > reaches that watermark.
+> > > >
+> > > > By now, I believe the best solution is to have a reasonable watermark
+> > > > set on the
+> > > > thin device, and the Admin take the appropriate action whenever this
+> > > > watermark
+> > > > is achieved.
+> > > 
+> > > Yeah, lvmthin *will* return appropriate warnings during pool filling.
+> > > However, this require active monitoring which, albeit a great idea
+> > > and "the
+> > > right thing to do (tm)", it adds complexity and can itself fail. In
+> > > recent
+> > > enought (experimental) versions, lvmthin can be instructed to execute
+> > > specific actions when data allocation is higher than some threshold,
+> > > which
+> > > somewhat addresses my concerns at the block layer.
+> > > 
+> > > Thank you for your patience and sharing, Carlos.
+> > > 
+> > > --
+> > > Danti Gionatan
+> > > Supporto Tecnico
+> > > Assyoma S.r.l. - www.assyoma.it
+> > > email: g.danti@assyoma.it - info@assyoma.it
+> > > GPG public key ID: FF5F32A8
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs"
+> > > in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> -- 
+> Danti Gionatan
+> Supporto Tecnico
+> Assyoma S.r.l. - www.assyoma.it
+> email: g.danti@assyoma.it - info@assyoma.it
+> GPG public key ID: FF5F32A8
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
