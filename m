@@ -1,122 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51292 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54414 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750823AbdFTRUp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Jun 2017 13:20:45 -0400
-Date: Tue, 20 Jun 2017 13:20:41 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
- error during buffer writeback
-Message-ID: <20170620172041.GD3348@bfoster.bfoster>
-References: <20170616105445.3314-1-cmaiolino@redhat.com>
- <20170616105445.3314-3-cmaiolino@redhat.com>
- <20170616183510.GC21846@wotan.suse.de>
- <20170616192445.GG5421@birch.djwong.org>
- <20170616193755.GD21846@wotan.suse.de>
- <3ff0e0c8-ef9c-b7f8-d37e-ed02e5766c40@sandeen.net>
- <20170619105904.GA25255@bfoster.bfoster>
- <20170620165204.GP21846@wotan.suse.de>
+        id S1751046AbdFTLFx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Jun 2017 07:05:53 -0400
+Date: Tue, 20 Jun 2017 13:05:48 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: Shutdown filesystem when a thin pool become full
+Message-ID: <20170620110548.eruly7ygixydyk2o@eorzea.usersys.redhat.com>
+References: <20170522230946.s3sdg4gd73oj7r5u@eorzea.usersys.redhat.com>
+ <940c3b13-dea2-1887-d4ae-89555d1c2a4f@assyoma.it>
+ <5f98a296-6023-f200-4c60-bcfdf0288d34@assyoma.it>
+ <20170523122753.k7plzg3musc4up73@eorzea.usersys.redhat.com>
+ <24daa89a452496d2cdffa5512a64ed2e@assyoma.it>
+ <7e8e16f1-5425-44b3-e908-c0e8a3300e3f@assyoma.it>
+ <a89aa00c4f86fbdc674dd8f5b5eeb248@assyoma.it>
+ <20170615131433.n33sqvyes4fhcbye@eorzea.usersys.redhat.com>
+ <20170615141057.q7fpnicynucq6yk2@eorzea.usersys.redhat.com>
+ <f2edd27c-615b-d20f-0b03-51cc399221bb@assyoma.it>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170620165204.GP21846@wotan.suse.de>
+In-Reply-To: <f2edd27c-615b-d20f-0b03-51cc399221bb@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 20, 2017 at 06:52:04PM +0200, Luis R. Rodriguez wrote:
-> On Mon, Jun 19, 2017 at 06:59:05AM -0400, Brian Foster wrote:
-> > On Fri, Jun 16, 2017 at 02:45:13PM -0500, Eric Sandeen wrote:
-> > > On 6/16/17 2:37 PM, Luis R. Rodriguez wrote:
-> > > > On Fri, Jun 16, 2017 at 12:24:45PM -0700, Darrick J. Wong wrote:
-> > > >> On Fri, Jun 16, 2017 at 08:35:10PM +0200, Luis R. Rodriguez wrote:
-> > > > It seems like a rather large set of changes, if the issue was sevee I was hoping
-> > > > for a stable candidate fix first. If its not fixing a severe issue then sure.
-> > > 
-> > > Fixes go uptream first, then to stable kernels if appropriate, right?
-> > > 
-> > > But not every fix is a trivial one-liner.  I don't think there is any simpler
-> > > fix to be had, here.
-> > > 
+Hi Gionatan,
+
+On Thu, Jun 15, 2017 at 05:04:48PM +0200, Gionatan Danti wrote:
+> On 15/06/2017 16:10, Carlos Maiolino wrote:
 > > 
-> > Yeah, this is kind of intended to be the simplest fix available as far
-> > as I'm aware. TBH, I don't think the fix here is fundamentally that
-> > complex (define a state for already flushed/failed log items), but
-> > rather the code that needs to be modified to implement it has various
-> > states and corner cases to manage that make it tricky to get right.
+> > Disregard this comment, I messed up with some tests, so, basically, the
+> > application is responsible for the user data, and need to use fsync/fdatasync to
+> > ensure the data is properly written, this is not FS responsibility.
+> > 
+> > cheers
 > 
-> OK this helps, thanks.
+> Hi Carlos,
+> I fully agree that it is application responsibility to issue appropriate
+> fsync(). However, knowing that this not always happens in real-world, I am
+> trying to be as much "fail-safe" as possible.
 > 
-> > If we truly needed a stable worthy fix in short order, that would
-> > probably be to revert ac8809f9a ("xfs: abort metadata writeback on
-> > permanent errors"), which caused this regression by making the AIL
-> > responsible for failed retries. 
-> 
-> Should the following tag be added then to this commit proposed by Carlos:
-> 
-> Fixes: ac8809f9a ("xfs: abort metadata writeback on permanent errors")
+Yeah, unfortunately, the real-world has lots of bad written applications :(
+
+
+> From my understanding of your previous message, a full thin pool with
+> --errorwhenfull=y should return ENOSPC to the filesystem. Does this work on
+> normal cached/buffered/async writes, or with O_DIRECT writes only?
 > 
 
-That seems reasonable to me.
+AFAIK, it will return ENOSPC with O_DIRECT, yes. With async writes, you won't
+have any error returned until you issue a fsync/fdatasync, which, per my
+understanding, it will return an EIO.
 
-> FWIW this was merged as of v3.13. Even though that seems to have taken the
-> failed buffer and kept it the commit log of that change seems to indicate we
-> already ran into similar situations before, after this commit we seem to just
-> retry IO once, but keep the buffer around on the AIL, to allow further
-> modifications of the buffer.
+> If it is not the case, how can I prevent further writes to a data-full thin
+> pool? With ext4, I can use "data=journal,errors=remount-ro" to catch any
+> write errors and stop the filesystem (or remount it read-only), losing only
+> some seconds worth of data. This *will* works even for applications that do
+> not issue fsync(), as the read-only filesystem will not let the write()
+> syscall to complete successfully.
+> 
+It 'works' on Ext4, because it will journal the data first, and at some point it
+will try to allocate blocks for metadata, and that will fail, which will
+help ext4 to catch this corner case, although, IIRC, 'data=journal' mode isn't
+supported at all. I even heard rumors of the possibility to have this option
+removed from Ext4, but I don't follow ext4 development close enough to tell you
+if this is just a rumor or they are really considering it.
+
+> On XFS (which I would *really* use, because it is quite more advanced), all
+> writes directed to a full thin-pool will basically end on /dev/null and, as
+> write() succeeded, the application/user will *not* be alerted on any way. If
+> the thin-pool can communicate its "end of free space" to the filesystem, the
+> problem can be avoided.
 > 
 
-Before that commit, I believe we would retry the metadata writeback
-indefinitely so long as it failed. If the underlying I/O failure ceased
-to occur, then this loop ends and the fs proceeds as normal. If not,
-then the filesystem is probably going to hang. After that commit, we
-retry once from I/O completion handling and otherwise rely on the AIL to
-issue the next (indefinite) retry. If the item that failed has a flush
-lock, we won't actually ever submit the I/O (which is the bug), however,
-and thus you're toast regardless of whether the I/O would ultimately
-succeed or not.
+The application won't be alerted in any way unless it uses fsync()/fdatasync()
+with any filesystem being used, even using data=journal in ext4, this won't
+happen, ext4 gets mounted as read-only because there were 'metadata' errors when
+writing the file to the journal, but again, it is not a fix for a faulty
+application, it is not even reliable for shutting down the filesystem the way
+you are thinking this will. It will only shut down the filesystem depending on
+the amount of blocks being allocated, even when using data=journal, if the
+amount of blocks allocated are enough to hold the metadata, but not the data,
+you will see the same problem as you are seeing with XFS (or ext4 without
+data=journal), so, don't rely on it.
+
+
+> If this can not be done, the only remaining possibility is to instruct the
+> filesystem to stop itself on data writeout errors. So, we got full-circle
+> about my original question: how can I stop XFS when writes return I/O
+> errors? Please note that I tried to set any
+> /sys/fs/xfs/dm-8/error/metadata/*/max_retries tunable to 0, but I can not
+> get the filesystem to suspend itself, even when dmesg reported metadata
+> write errors.
+
+Yes, these options won't help, because they are configuration options
+for metadata errors, not data errors.
+
+Please, bear in mind that your question should be: "how can I stop a filesystem
+when async writes return I/O errors", because this isn't a XFS issue.
+
+BUt again, there isn't too much you can do here, async writes are supposed to
+behave this way. And whoever is writing "data" to the device is supposed to care
+of their own data.
+
+Imagine for example a situation where you have 2 applications using the same
+filesystem (quite common right?), then application A and B issues buffered
+writes, and for some reason, application A data, hits an IO error, for any
+reason, maybe a too busy storage, a missed scsi command, whatever, anything that
+can be retried.
+
+then the filesystem shuts down because of that, which will also affect
+application B, even if nothing wrong happened with application B.
+
+One of the goals of multitasking is having applications running at the same time
+without affecting each other.
+
+Now, consider that, application B is a well written application, and application
+A isn't.
+
+App B cares for its data to be written to disk, while app A doesn't.
+
+In case of a casual error, app B will retry to write its data, while app A
+won't.
+
+Should we really shutdown the filesystem here affecting everything on the
+system, because application A is not caring for its own data?
+
+Shutting a filesystem down, has basically one purpose: avoid corruption, we
+basically only shutdown a filesystem when keeping it alive can cause a problem
+with everything using it (really really simple explanation here).
+
+Surely this can be improved, but at the end, the application will always need to
+check for its own data.
+
+I am not really a device-mapper developer and I don't know much about its code
+in depth. But, I know it will issue warnings when there isn't more space left,
+and you can configure a watermark too, to warn the admin when the space used
+reaches that watermark.
+
+By now, I believe the best solution is to have a reasonable watermark set on the
+thin device, and the Admin take the appropriate action whenever this watermark
+is achieved.
+
+Cheers.
 
 > 
-> > A couple caveats I can think of with
-> > that are that 1.) this would likely short circuit the recently added
-> > error configuration api (which is kind of irrelevant if the underlying
-> > error management code doesn't work correctly, but suggests that should
-> > be reverted as well) and 2.) in doing so, this reverts back to the
-> > hardcoded infinite retry behavior in XFS. That means that transient
-> > errors may eventually recover, but the thinp enospc use case and whatnot
-> > are still going to hang on umount. 
+> Thank you very much.
 > 
-> Right, and also one of the gains of the patch seems to have been to allow
-> thinp devices to keep on chugging with modifications on the buffer, so that
-> would be lost as well. That seems to be like an optimization though so its
-> worth loosing IMHO if would have resolved the hang. Since that's not the case
-> though...
-> 
-
-I think that's just a secondary effect of unlocking the buffer. Probably
-not that important if I/Os are failing.
-
-> > It hasn't seemed necessary to me to take that approach given the lower
-> > prevalence of the issue 
-> 
-> Of this issue? I suppose its why I asked about examples of issues, I seem
-> to have found it likely much more possible out in the wild than expected.
-> It would seem folks might be working around it somehow.
-> 
-
-If we're talking about the thin provisioning case, I suspect most people
-work around it by properly configuring their storage. ;)
-
-Brian
-
-> > and the fact that a solution had been worked out
-> > for a while now. Though I suppose the longer we go without a fix in
-> > place, the stronger the argument for something like that becomes.
-> 
->   Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Carlos
