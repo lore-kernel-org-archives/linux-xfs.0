@@ -1,44 +1,190 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34958 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751090AbdFTUUd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Jun 2017 16:20:33 -0400
-Subject: Re: [PATCH 2/2] xfs: remove a whitespace-only line from
- xfs_fs_get_nextdqblk
-References: <20170620090244.30876-1-hch@lst.de>
- <20170620090244.30876-3-hch@lst.de>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <09558ebc-f0bd-85f2-1767-a9ac1b7cf0e6@sandeen.net>
-Date: Tue, 20 Jun 2017 15:20:32 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:32754 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751926AbdFTVsi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2017 17:48:38 -0400
+Date: Tue, 20 Jun 2017 14:48:32 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: debug mode sysfs flag to force [un]pin the log tail
+Message-ID: <20170620214832.GE4733@birch.djwong.org>
+References: <1497631473-14278-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20170620090244.30876-3-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1497631473-14278-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Cc: agruenba@redhat.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-On 6/20/17 4:02 AM, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_quotaops.c | 1 -
->  1 file changed, 1 deletion(-)
+On Fri, Jun 16, 2017 at 12:44:33PM -0400, Brian Foster wrote:
+> Create a debug mode only sysfs option to force pin the tail of the
+> log. This option can be used by test infrastructure to induce head
+> behind tail conditions. Specifically, this is intended to be used by
+> xfstests to reproduce log recovery problems after failed/corrupted
+> log writes overwrite the last good tail LSN in the log.
 > 
-> diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-> index f82d79a8c694..de9493253edf 100644
-> --- a/fs/xfs/xfs_quotaops.c
-> +++ b/fs/xfs/xfs_quotaops.c
-> @@ -269,7 +269,6 @@ xfs_fs_get_nextdqblk(
->  	/* ID may be different, so convert back what we got */
->  	*qid = make_kqid(current_user_ns(), qid->type, id);
->  	return 0;
-> -	
+> When enabled, AIL push attempts see every log item on the AIL in the
+> pinned state. This stalls metadata writeback and thus prevents the
+> current tail of the log from moving forward. When disabled,
+> subsequent AIL pushes observe the log items in their appropriate
+> state and filesystem operation continues as normal.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+
+Looks ok enough to test...
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+> 
+> Hi all,
+> 
+> This patch is a supporting patch for an xfstests test I'm about to post
+> that pins the tail of the log in order to reproduce the log recovery
+> problem that appears to be the root of the problem in this[1] thread.
+> That is the primary motivation for the patch and so should probably be
+> reviewed with that context. IOW, if there's a better way to reproduce
+> the problem in the test without the need for kernel support, I'm happy
+> to drop this. Thoughts, reviews, flames appreciated.
+> 
+> Brian
+> 
+> [1] http://www.spinics.net/lists/linux-xfs/msg07499.html
+> 
+>  fs/xfs/xfs_log_priv.h  |  2 ++
+>  fs/xfs/xfs_sysfs.c     | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_trans_ail.c | 20 +++++++++++++++++++-
+>  3 files changed, 67 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index c2604a5..bfbfde12 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -413,6 +413,8 @@ struct xlog {
+>  	void			*l_iclog_bak[XLOG_MAX_ICLOGS];
+>  	/* log record crc error injection factor */
+>  	uint32_t		l_badcrc_factor;
+> +	/* force pin the log tail */
+> +	bool			l_pin_tail;
+>  #endif
+>  	/* log recovery lsn tracking (for buffer submission */
+>  	xfs_lsn_t		l_recovery_lsn;
+> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+> index ec6e0e2..b86148a 100644
+> --- a/fs/xfs/xfs_sysfs.c
+> +++ b/fs/xfs/xfs_sysfs.c
+> @@ -378,6 +378,51 @@ log_badcrc_factor_show(
 >  }
 >  
->  STATIC int
+>  XFS_SYSFS_ATTR_RW(log_badcrc_factor);
+> +
+> +/*
+> + * DEBUG mode flag to force pin the tail of the log. Used from test
+> + * infrastructure to manufacture head-behind-tail conditions. DO NOT USE
+> + * DIRECTLY. This will lock up the fs!
+> + *
+> + * When this option is enabled, all log items present in the AIL are emulated as
+> + * being in the pinned state until the option is disabled. Once disabled, log
+> + * items return to their natural state and fs operation continues as normal.
+> + */
+> +STATIC ssize_t
+> +log_pin_tail_store(
+> +	struct kobject		*kobject,
+> +	const char		*buf,
+> +	size_t			count)
+> +{
+> +	struct xlog		*log = to_xlog(kobject);
+> +	int			ret;
+> +	int			val;
+> +
+> +	ret = kstrtoint(buf, 0, &val);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (val == 1)
+> +		log->l_pin_tail = true;
+> +	else if (val == 0)
+> +		log->l_pin_tail = false;
+> +	else
+> +		return -EINVAL;
+> +
+> +	return count;
+> +}
+> +
+> +STATIC ssize_t
+> +log_pin_tail_show(
+> +	struct kobject		*kobject,
+> +	char			*buf)
+> +{
+> +	struct xlog		*log = to_xlog(kobject);
+> +
+> +	return snprintf(buf, PAGE_SIZE, "%d\n", log->l_pin_tail ? 1 : 0);
+> +}
+> +XFS_SYSFS_ATTR_RW(log_pin_tail);
+> +
+>  #endif	/* DEBUG */
+>  
+>  static struct attribute *xfs_log_attrs[] = {
+> @@ -387,6 +432,7 @@ static struct attribute *xfs_log_attrs[] = {
+>  	ATTR_LIST(write_grant_head),
+>  #ifdef DEBUG
+>  	ATTR_LIST(log_badcrc_factor),
+> +	ATTR_LIST(log_pin_tail),
+>  #endif
+>  	NULL,
+>  };
+> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> index 9056c0f..c901e61 100644
+> --- a/fs/xfs/xfs_trans_ail.c
+> +++ b/fs/xfs/xfs_trans_ail.c
+> @@ -27,6 +27,7 @@
+>  #include "xfs_trace.h"
+>  #include "xfs_error.h"
+>  #include "xfs_log.h"
+> +#include "xfs_log_priv.h"
+>  
+>  #ifdef DEBUG
+>  /*
+> @@ -325,6 +326,23 @@ xfs_ail_delete(
+>  	xfs_trans_ail_cursor_clear(ailp, lip);
+>  }
+>  
+> +static inline uint
+> +xfsaild_push_item(
+> +	struct xfs_ail		*ailp,
+> +	struct xfs_log_item	*lip)
+> +{
+> +#ifdef DEBUG
+> +	/*
+> +	 * If tail pinning is enabled, skip the push and track all items as
+> +	 * pinned to force pin the log tail. This helps induce head-behind-tail
+> +	 * conditions.
+> +	 */
+> +	if (ailp->xa_mount->m_log->l_pin_tail)
+> +		return XFS_ITEM_PINNED;
+> +#endif
+> +	return lip->li_ops->iop_push(lip, &ailp->xa_buf_list);
+> +}
+> +
+>  static long
+>  xfsaild_push(
+>  	struct xfs_ail		*ailp)
+> @@ -382,7 +400,7 @@ xfsaild_push(
+>  		 * rely on the AIL cursor implementation to be able to deal with
+>  		 * the dropped lock.
+>  		 */
+> -		lock_result = lip->li_ops->iop_push(lip, &ailp->xa_buf_list);
+> +		lock_result = xfsaild_push_item(ailp, lip);
+>  		switch (lock_result) {
+>  		case XFS_ITEM_SUCCESS:
+>  			XFS_STATS_INC(mp, xs_push_ail_success);
+> -- 
+> 2.7.5
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
