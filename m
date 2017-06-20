@@ -1,41 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39386 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751046AbdFPTeg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 15:34:36 -0400
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [PATCH v7 02/22] buffer: use mapping_set_error instead of setting the flag
-Date: Fri, 16 Jun 2017 15:34:07 -0400
-Message-Id: <20170616193427.13955-3-jlayton@redhat.com>
-In-Reply-To: <20170616193427.13955-1-jlayton@redhat.com>
-References: <20170616193427.13955-1-jlayton@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:38571 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752640AbdFTJCw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2017 05:02:52 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/2] xfs: rewrite xfs_dq_get_next_id using xfs_iext_lookup_extent
+Date: Tue, 20 Jun 2017 11:02:43 +0200
+Message-Id: <20170620090244.30876-2-hch@lst.de>
+In-Reply-To: <20170620090244.30876-1-hch@lst.de>
+References: <20170620090244.30876-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: agruenba@redhat.com
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Matthew Wilcox <mawilcox@microsoft.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This goes straight to a single lookup in the extent list and avoids a
+roundtrip through two layers that don't add any value for the simple
+quoata file that just has data or holes and no page cache, delayed
+allocation, unwritten extent or COW fork (which btw, doesn't seem to
+be handled by the existing SEEK HOLE/DATA code).
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/buffer.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_dquot.c | 66 ++++++++++++++++++------------------------------------
+ 1 file changed, 22 insertions(+), 44 deletions(-)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 44172d11efae..7b4f4bfde91e 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -482,7 +482,7 @@ static void __remove_assoc_queue(struct buffer_head *bh)
- 	list_del_init(&bh->b_assoc_buffers);
- 	WARN_ON(!bh->b_assoc_map);
- 	if (buffer_write_io_error(bh))
--		set_bit(AS_EIO, &bh->b_assoc_map->flags);
-+		mapping_set_error(bh->b_assoc_map, -EIO);
- 	bh->b_assoc_map = NULL;
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 9d06cc30e875..774750bb3e6b 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -695,21 +695,18 @@ xfs_qm_dqread(
+  */
+ static int
+ xfs_dq_get_next_id(
+-	xfs_mount_t		*mp,
++	struct xfs_mount	*mp,
+ 	uint			type,
+-	xfs_dqid_t		*id,
+-	loff_t			eof)
++	xfs_dqid_t		*id)
+ {
+-	struct xfs_inode	*quotip;
++	struct xfs_inode	*quotip = xfs_quota_inode(mp, type);
++	xfs_dqid_t		next_id = *id + 1; /* simple advance */
++	uint			lock_flags;
++	struct xfs_bmbt_irec	got;
++	xfs_extnum_t		idx;
+ 	xfs_fsblock_t		start;
+-	loff_t			offset;
+-	uint			lock;
+-	xfs_dqid_t		next_id;
+ 	int			error = 0;
+ 
+-	/* Simple advance */
+-	next_id = *id + 1;
+-
+ 	/* If we'd wrap past the max ID, stop */
+ 	if (next_id < *id)
+ 		return -ENOENT;
+@@ -723,23 +720,20 @@ xfs_dq_get_next_id(
+ 	/* Nope, next_id is now past the current chunk, so find the next one */
+ 	start = (xfs_fsblock_t)next_id / mp->m_quotainfo->qi_dqperchunk;
+ 
+-	quotip = xfs_quota_inode(mp, type);
+-	lock = xfs_ilock_data_map_shared(quotip);
+-
+-	offset = __xfs_seek_hole_data(VFS_I(quotip), XFS_FSB_TO_B(mp, start),
+-				      eof, SEEK_DATA);
+-	if (offset < 0)
+-		error = offset;
+-
+-	xfs_iunlock(quotip, lock);
++	lock_flags = xfs_ilock_data_map_shared(quotip);
++	if (!(quotip->i_df.if_flags & XFS_IFEXTENTS)) {
++		error = xfs_iread_extents(NULL, quotip, XFS_DATA_FORK);
++		if (error)
++			return error;
++	}
+ 
+-	/* -ENXIO is essentially "no more data" */
+-	if (error)
+-		return (error == -ENXIO ? -ENOENT: error);
++	if (xfs_iext_lookup_extent(quotip, &quotip->i_df, start, &idx, &got))
++		*id = got.br_startoff * mp->m_quotainfo->qi_dqperchunk;
++	else
++		error = -ENOENT;
++	xfs_iunlock(quotip, lock_flags);
+ 
+-	/* Convert next data offset back to a quota id */
+-	*id = XFS_B_TO_FSB(mp, offset) * mp->m_quotainfo->qi_dqperchunk;
+-	return 0;
++	return error;
  }
  
+ /*
+@@ -762,7 +756,6 @@ xfs_qm_dqget(
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+ 	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
+ 	struct xfs_dquot	*dqp;
+-	loff_t			eof = 0;
+ 	int			error;
+ 
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+@@ -790,21 +783,6 @@ xfs_qm_dqget(
+ 	}
+ #endif
+ 
+-	/* Get the end of the quota file if we need it */
+-	if (flags & XFS_QMOPT_DQNEXT) {
+-		struct xfs_inode	*quotip;
+-		xfs_fileoff_t		last;
+-		uint			lock_mode;
+-
+-		quotip = xfs_quota_inode(mp, type);
+-		lock_mode = xfs_ilock_data_map_shared(quotip);
+-		error = xfs_bmap_last_offset(quotip, &last, XFS_DATA_FORK);
+-		xfs_iunlock(quotip, lock_mode);
+-		if (error)
+-			return error;
+-		eof = XFS_FSB_TO_B(mp, last);
+-	}
+-
+ restart:
+ 	mutex_lock(&qi->qi_tree_lock);
+ 	dqp = radix_tree_lookup(tree, id);
+@@ -823,7 +801,7 @@ xfs_qm_dqget(
+ 			if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+ 				xfs_dqunlock(dqp);
+ 				mutex_unlock(&qi->qi_tree_lock);
+-				error = xfs_dq_get_next_id(mp, type, &id, eof);
++				error = xfs_dq_get_next_id(mp, type, &id);
+ 				if (error)
+ 					return error;
+ 				goto restart;
+@@ -858,7 +836,7 @@ xfs_qm_dqget(
+ 
+ 	/* If we are asked to find next active id, keep looking */
+ 	if (error == -ENOENT && (flags & XFS_QMOPT_DQNEXT)) {
+-		error = xfs_dq_get_next_id(mp, type, &id, eof);
++		error = xfs_dq_get_next_id(mp, type, &id);
+ 		if (!error)
+ 			goto restart;
+ 	}
+@@ -917,7 +895,7 @@ xfs_qm_dqget(
+ 	if (flags & XFS_QMOPT_DQNEXT) {
+ 		if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+ 			xfs_qm_dqput(dqp);
+-			error = xfs_dq_get_next_id(mp, type, &id, eof);
++			error = xfs_dq_get_next_id(mp, type, &id);
+ 			if (error)
+ 				return error;
+ 			goto restart;
 -- 
-2.13.0
+2.11.0
 
