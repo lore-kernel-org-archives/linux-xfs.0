@@ -1,121 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50700 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753701AbdFWNfB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Jun 2017 09:35:01 -0400
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v2 6/6] gfs2: Implement SEEK_HOLE / SEEK_DATA via iomap
-Date: Fri, 23 Jun 2017 15:34:44 +0200
-Message-Id: <1498224884-346-7-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1498224884-346-1-git-send-email-agruenba@redhat.com>
-References: <1498224884-346-1-git-send-email-agruenba@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:36747 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752105AbdFUV55 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 17:57:57 -0400
+Subject: [PATCH 5/8] reflink: test unlinking a huge extent with a lot of
+ refcount adjustments
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 21 Jun 2017 14:57:48 -0700
+Message-ID: <149808226863.8924.5799576767468365376.stgit@birch.djwong.org>
+In-Reply-To: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
+References: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, Jan Kara <jack@suse.cz>
+To: eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-So far, holes were not reported by lseek SEEK_HOLE / SEEK_DATA on gfs2.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Test a regression in XFS where we blow out a transaction reservation if
+we create a big file, share every other block, and delete the first
+file.  There's nothing particularly fs-specific about this stress test,
+so put it in generic.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/gfs2/file.c  | 14 +++++++++++---
- fs/gfs2/inode.c | 35 +++++++++++++++++++++++++++++++++++
- fs/gfs2/inode.h |  1 +
- 3 files changed, 47 insertions(+), 3 deletions(-)
+ tests/generic/931     |   94 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/931.out |    6 +++
+ tests/generic/group   |    1 +
+ 3 files changed, 101 insertions(+)
+ create mode 100755 tests/generic/931
+ create mode 100644 tests/generic/931.out
 
-diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
-index c2062a1..62ce320 100644
---- a/fs/gfs2/file.c
-+++ b/fs/gfs2/file.c
-@@ -60,9 +60,7 @@ static loff_t gfs2_llseek(struct file *file, loff_t offset, int whence)
- 	loff_t error;
- 
- 	switch (whence) {
--	case SEEK_END: /* These reference inode->i_size */
--	case SEEK_DATA:
--	case SEEK_HOLE:
-+	case SEEK_END:
- 		error = gfs2_glock_nq_init(ip->i_gl, LM_ST_SHARED, LM_FLAG_ANY,
- 					   &i_gh);
- 		if (!error) {
-@@ -70,8 +68,18 @@ static loff_t gfs2_llseek(struct file *file, loff_t offset, int whence)
- 			gfs2_glock_dq_uninit(&i_gh);
- 		}
- 		break;
+
+diff --git a/tests/generic/931 b/tests/generic/931
+new file mode 100755
+index 0000000..afadf81
+--- /dev/null
++++ b/tests/generic/931
+@@ -0,0 +1,94 @@
++#! /bin/bash
++# FS QA Test No. 931
++#
++# See how well we handle deleting a file with a million refcount extents.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
 +
-+	case SEEK_DATA:
-+	case SEEK_HOLE:
-+		error = gfs2_seek_hole_data(file, offset, whence);
-+		break;
++seq=`basename "$0"`
++seqres="$RESULT_DIR/$seq"
++echo "QA output created by $seq"
 +
- 	case SEEK_CUR:
- 	case SEEK_SET:
-+		/*
-+		 * These don't reference inode->i_size and don't depend on the
-+		 * block mapping, so we don't need the glock.
-+		 */
- 		error = generic_file_llseek(file, offset, whence);
- 		break;
- 	default:
-diff --git a/fs/gfs2/inode.c b/fs/gfs2/inode.c
-index 9ed2e91..07e64cc 100644
---- a/fs/gfs2/inode.c
-+++ b/fs/gfs2/inode.c
-@@ -2046,6 +2046,41 @@ static int gfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
- 	return ret;
- }
- 
-+loff_t gfs2_seek_hole_data(struct file *file, loff_t offset, int whence)
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	struct inode *inode = file->f_mapping->host;
-+	struct gfs2_inode *ip = GFS2_I(inode);
-+	struct gfs2_holder gh;
-+	loff_t ret;
-+
-+	inode_lock(inode);
-+	ret = gfs2_glock_nq_init(ip->i_gl, LM_ST_SHARED, 0, &gh);
-+	if (ret)
-+		goto out;
-+	if (gfs2_is_stuffed(ip)) {
-+		u64 size = i_size_read(inode);
-+
-+		if (offset >= size) {
-+			ret = -ENXIO;
-+			goto out_dequeue;
-+		}
-+		ret = offset;
-+		if (whence == SEEK_HOLE)
-+			ret = size;
-+	} else {
-+		ret = iomap_seek_hole_data(inode, offset, whence, &gfs2_iomap_ops);
-+	}
-+
-+out_dequeue:
-+	gfs2_glock_dq_uninit(&gh);
-+out:
-+	inode_unlock(inode);
-+
-+	if (ret < 0)
-+		return ret;
-+	return vfs_setpos(file, ret, inode->i_sb->s_maxbytes);
++    cd /
++    rm -rf "$tmp".* $testdir/file1
 +}
 +
- const struct inode_operations gfs2_file_iops = {
- 	.permission = gfs2_permission,
- 	.setattr = gfs2_setattr,
-diff --git a/fs/gfs2/inode.h b/fs/gfs2/inode.h
-index aace8ce..c2866ec 100644
---- a/fs/gfs2/inode.h
-+++ b/fs/gfs2/inode.h
-@@ -109,6 +109,7 @@ extern int gfs2_setattr_simple(struct inode *inode, struct iattr *attr);
- extern struct inode *gfs2_lookup_simple(struct inode *dip, const char *name);
- extern void gfs2_dinode_out(const struct gfs2_inode *ip, void *buf);
- extern int gfs2_open_common(struct inode *inode, struct file *file);
-+extern loff_t gfs2_seek_hole_data(struct file *file, loff_t offset, int whence);
- 
- extern const struct inode_operations gfs2_file_iops;
- extern const struct inode_operations gfs2_dir_iops;
--- 
-2.7.5
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_require_scratch_reflink
++_require_cp_reflink
++_require_test_program "punch-alternating"
++
++rm -f "$seqres.full"
++
++echo "Format and mount"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount >> "$seqres.full" 2>&1
++
++testdir="$SCRATCH_MNT/test-$seq"
++mkdir "$testdir"
++
++# Setup for one million blocks, but we'll accept stress testing down to
++# 2^17 blocks... that should be plenty for anyone.
++fnr=20
++free_blocks=$(stat -f -c '%a' "$testdir")
++blksz=$(_get_block_size "$testdir")
++space_avail=$((free_blocks * blksz))
++calc_space() {
++	blocks_needed=$(( 2 ** (fnr + 1) ))
++	space_needed=$((blocks_needed * blksz * 5 / 4))
++}
++calc_space
++while test $space_needed -gt $space_avail; do
++	fnr=$((fnr - 1))
++	calc_space
++done
++test $fnr -lt 17 && _notrun "Insufficient space for stress test; would only create $blocks_needed extents ($space_needed/$space_avail blocks)."
++
++echo "Create a many-block file"
++echo "creating $blocks_needed blocks..." >> "$seqres.full"
++$XFS_IO_PROG -f -c "pwrite -S 0x61 -b 4194304 0 $((2 ** (fnr + 1) * blksz))" "$testdir/file1" >> "$seqres.full"
++
++echo "Reflinking file"
++_cp_reflink $testdir/file1 $testdir/file2
++
++echo "Punch file2"
++echo "Punching file2..." >> "$seqres.full"
++"$here/src/punch-alternating" "$testdir/file2" >> "$seqres.full"
++echo "...done" >> "$seqres.full"
++_scratch_cycle_mount
++
++echo "Delete file1"
++rm -rf $testdir/file1
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/931.out b/tests/generic/931.out
+new file mode 100644
+index 0000000..c7b724e
+--- /dev/null
++++ b/tests/generic/931.out
+@@ -0,0 +1,6 @@
++QA output created by 931
++Format and mount
++Create a many-block file
++Reflinking file
++Punch file2
++Delete file1
+diff --git a/tests/generic/group b/tests/generic/group
+index ab1e9d3..b0d1844 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -443,3 +443,4 @@
+ 438 auto
+ 439 auto quick punch
+ 440 auto quick encrypt
++931 auto quick clone
 
