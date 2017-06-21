@@ -1,75 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55077 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751143AbdFUQnt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Jun 2017 12:43:49 -0400
-Date: Wed, 21 Jun 2017 17:25:17 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 2/2] xfs: Properly retry failed inode items in case of
- error during buffer writeback
-Message-ID: <20170621152517.GA21846@wotan.suse.de>
-References: <20170616105445.3314-3-cmaiolino@redhat.com>
- <20170616183510.GC21846@wotan.suse.de>
- <20170616192445.GG5421@birch.djwong.org>
- <20170616193755.GD21846@wotan.suse.de>
- <3ff0e0c8-ef9c-b7f8-d37e-ed02e5766c40@sandeen.net>
- <20170619105904.GA25255@bfoster.bfoster>
- <20170620165204.GP21846@wotan.suse.de>
- <20170620172041.GD3348@bfoster.bfoster>
- <20170620180505.GT21846@wotan.suse.de>
- <20170621101049.GB28914@bfoster.bfoster>
+Received: from userp1040.oracle.com ([156.151.31.81]:19640 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752557AbdFUBLR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2017 21:11:17 -0400
+Subject: [RFC PATCH 0/4] xfs: more configurable error injection
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 20 Jun 2017 18:11:12 -0700
+Message-ID: <149800747210.23118.6423951814449227184.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170621101049.GB28914@bfoster.bfoster>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-On Wed, Jun 21, 2017 at 06:10:52AM -0400, Brian Foster wrote:
-> On Tue, Jun 20, 2017 at 08:05:05PM +0200, Luis R. Rodriguez wrote:
-> > On Tue, Jun 20, 2017 at 01:20:41PM -0400, Brian Foster wrote:
-> > > On Tue, Jun 20, 2017 at 06:52:04PM +0200, Luis R. Rodriguez wrote:
-> > > > On Mon, Jun 19, 2017 at 06:59:05AM -0400, Brian Foster wrote:
-> > > > > It hasn't seemed necessary to me to take that approach given the lower
-> > > > > prevalence of the issue 
-> > > > 
-> > > > Of this issue? I suppose its why I asked about examples of issues, I seem
-> > > > to have found it likely much more possible out in the wild than expected.
-> > > > It would seem folks might be working around it somehow.
-> > > > 
-> > > 
-> > > If we're talking about the thin provisioning case, I suspect most people
-> > > work around it by properly configuring their storage. ;)
-> > 
-> > The fact that we *hang* makes it more serious, so even if folks misconfigured
-> > storage with less space it should be no reason to consider hangs any less
-> > severe. Specially if it seems to be a common issue, and I'm alluding to the
-> > fact that this might be more common than the patch describes.
-> > 
-> 
-> My point is simply that a hang was a likely outcome before the patch
-> that introduced the regression as well, so the benefit of doing a proper
-> revert doesn't clearly outweigh the cost.
+Hi all,
 
-Sure agreed.
+This is a small patch set that exposes all the error injection tags
+under /sys/fs/xfs/$dev/errortag/.  Each tag gets its own sysfs
+attribute; you can enable a tag via:
 
-> Despite what the side effect
-> is, the fact that this tends to primarily affect users who have thin
-> volumes going inactive also suggests that this can be worked around
-> reasonably well enough via storage configuration. This all suggests to
-> me that Carlos' current approach is the most reasonable one. 
+# echo $num > /sys/fs/xfs/$dev/errortag/$tagname
 
-OK thanks.
+The tag names are the same ones as xfs_io's inject command, and the
+number units are the denominator of the occurrence frequency, which is
+to say that they're the same units as XFS_RANDOM_*.  1 = all the time,
+2 = half the time, 100 = 1% of the time, etc.
 
-> I'm not following what the line of argument is here. Are you suggesting
-> a different approach? If so, based on what use case/reasoning?
+The purpose of this patch series is twofold -- first, the old ioctl
+interface doesn't allow us to control how often errors actually get
+injected.  The extra flexibility enables us to write regression tests
+where we set up the next operation to fail, as well as tests that set a
+low frequency of trouble and try to run longer tests.  Second, with
+error injection knobs appearing in sysfs we might as well move them all
+to the same place.  Third, now we can individually /disable/ error
+injectors, whereas the ioctl interface can only turn all of them off at
+once.
 
-No, it just seemed to me you were indicating that the hang was not that serious
-of an issue given you could work around it with proper storage configuration.
-I see now you were using that analogy just to indicate it was also an issue
-before so the revert is with merit.
+Note that the old ioctls are not going away; their behavior is
+unchanged.
 
-  Luis
+Comments and questions are, as always, welcome.
+
+--D
