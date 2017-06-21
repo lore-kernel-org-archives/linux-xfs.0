@@ -1,116 +1,253 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57238 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751866AbdFUUme (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Jun 2017 16:42:34 -0400
-Subject: Re: [PATCH 03/12] libxfs: use crc32c slice-by-8 variant by default
-References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
- <149755896749.3625.4297338613634790741.stgit@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <69d0e24b-915b-db2d-c246-8f50cae95024@sandeen.net>
-Date: Wed, 21 Jun 2017 15:42:32 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:49255 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752557AbdFUBLl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2017 21:11:41 -0400
+Subject: [PATCH 2/4] xfs: expose errortag knobs via sysfs
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 20 Jun 2017 18:11:24 -0700
+Message-ID: <149800748451.23118.6326280252461129051.stgit@birch.djwong.org>
+In-Reply-To: <149800747210.23118.6423951814449227184.stgit@birch.djwong.org>
+References: <149800747210.23118.6423951814449227184.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <149755896749.3625.4297338613634790741.stgit@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-On 6/15/17 3:36 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> The crc32c code used in xfsprogs was copied directly from the Linux
-> kernel.  However, that code selects slice-by-4 by default, which isn't
-> the fastest -- that's slice-by-8, which trades table size for speed.
-> Fix some makefile dependency problems and explicitly select the
-> algorithm we want.  With this patch applied, I see about a 10% drop in
-> CPU time running xfs_repair.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Already said it for the prior verrsion, having missed this one, but for
-posterity, since I'll merge this one:
+Creates a /sys/fs/xfs/$dev/errortag/ directory to control the errortag
+values directly.  This enables us to control the randomness values,
+rather than having to accept the defaults.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_error.c |  156 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_error.h |    1 
+ fs/xfs/xfs_mount.h |    1 
+ 3 files changed, 157 insertions(+), 1 deletion(-)
 
-> ---
->  libxfs/Makefile    |    4 ++--
->  libxfs/crc32defs.h |   34 ++++++++++++++++++++++++++++++++++
->  2 files changed, 36 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/libxfs/Makefile b/libxfs/Makefile
-> index baba02f..d248c1f 100644
-> --- a/libxfs/Makefile
-> +++ b/libxfs/Makefile
-> @@ -122,7 +122,7 @@ LDIRT = gen_crc32table crc32table.h crc32selftest
->  
->  default: crc32selftest ltdepend $(LTLIBRARY)
->  
-> -crc32table.h: gen_crc32table.c
-> +crc32table.h: gen_crc32table.c crc32defs.h
->  	@echo "    [CC]     gen_crc32table"
->  	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
->  	@echo "    [GENERATE] $@"
-> @@ -133,7 +133,7 @@ crc32table.h: gen_crc32table.c
->  # systems/architectures. Hence we make sure that xfsprogs will never use a
->  # busted CRC calculation at build time and hence avoid putting bad CRCs down on
->  # disk.
-> -crc32selftest: gen_crc32table.c crc32table.h crc32.c
-> +crc32selftest: gen_crc32table.c crc32table.h crc32.c crc32defs.h
->  	@echo "    [TEST]    CRC32"
->  	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
->  	$(Q) ./$@
-> diff --git a/libxfs/crc32defs.h b/libxfs/crc32defs.h
-> index 64cba2c..2999782 100644
-> --- a/libxfs/crc32defs.h
-> +++ b/libxfs/crc32defs.h
-> @@ -1,4 +1,38 @@
->  /*
-> + * Use slice-by-8, which is the fastest variant.
-> + *
-> + * Calculate checksum 8 bytes at a time with a clever slicing algorithm.
-> + * This is the fastest algorithm, but comes with a 8KiB lookup table.
-> + * Most modern processors have enough cache to hold this table without
-> + * thrashing the cache.
-> + *
-> + * The Linux kernel uses this as the default implementation "unless you
-> + * have a good reason not to".  The reason why Kconfig urges you to pick
-> + * SLICEBY8 is because people challenged the assertion that we should
-> + * always use slice by 8, so Darrick wrote a crc microbenchmark utility
-> + * and ran it on as many machines as he could get his hands on to show
-> + * that sb8 was the fastest.
-> + *
-> + * Every 64-bit machine (and most of the 32-bit ones too) saw the best
-> + * results with sb8.  Any machine with more than 4K of cache saw better
-> + * results.  The spreadsheet still exists today[1]; note that
-> + * 'crc32-kern-le' corresponds to the slice by 4 algorithm which is the
-> + * default unless CRC_LE_BITS is defined explicitly.
-> + *
-> + * FWIW, there are a handful of board defconfigs in the kernel that
-> + * don't pick sliceby8.  These are all embedded 32-bit mips/ppc systems
-> + * with very small cache sizes which experience cache thrashing with the
-> + * slice by 8 algorithm, and therefore chose to pick defaults that are
-> + * saner for their particular board configuration.  For nearly all of
-> + * XFS' perceived userbase (which we assume are 32 and 64-bit machines
-> + * with sufficiently large CPU cache and largeish storage devices) slice
-> + * by 8 is the right choice.
-> + *
-> + * [1] https://goo.gl/0LSzsG ("crc32c_bench")
-> + */
-> +#define CRC_LE_BITS 64
-> +
-> +/*
->   * There are multiple 16-bit CRC polynomials in common use, but this is
->   * *the* standard CRC-32 polynomial, first popularized by Ethernet.
->   * x^32+x^26+x^23+x^22+x^16+x^12+x^11+x^10+x^8+x^7+x^5+x^4+x^2+x^1+x^0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index ef16ac2..81f260f 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -22,6 +22,7 @@
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
+ #include "xfs_error.h"
++#include "xfs_sysfs.h"
+ 
+ #ifdef DEBUG
+ 
+@@ -56,6 +57,145 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_AG_RESV_CRITICAL,
+ };
+ 
++struct xfs_errortag_attr {
++	struct attribute	attr;
++	unsigned int		tag;
++};
++
++static inline struct xfs_errortag_attr *
++to_attr(struct attribute *attr)
++{
++	return container_of(attr, struct xfs_errortag_attr, attr);
++}
++
++static inline struct xfs_mount *
++to_mp(struct kobject *kobject)
++{
++	struct xfs_kobj *kobj = to_kobj(kobject);
++
++	return container_of(kobj, struct xfs_mount, m_errortag_kobj);
++}
++
++STATIC ssize_t
++xfs_errortag_attr_store(
++	struct kobject		*kobject,
++	struct attribute	*attr,
++	const char		*buf,
++	size_t			count)
++{
++	struct xfs_mount	*mp = to_mp(kobject);
++	struct xfs_errortag_attr *xfs_attr = to_attr(attr);
++	int			ret;
++	unsigned int		val;
++
++	if (strcmp(buf, "on") == 0) {
++		val = xfs_errortag_random_default[xfs_attr->tag];
++	} else {
++		ret = kstrtouint(buf, 0, &val);
++		if (ret)
++			return ret;
++	}
++
++	ret = xfs_errortag_set(mp, xfs_attr->tag, val);
++	if (ret)
++		return ret;
++	return count;
++}
++
++STATIC ssize_t
++xfs_errortag_attr_show(
++	struct kobject		*kobject,
++	struct attribute	*attr,
++	char			*buf)
++{
++	struct xfs_mount	*mp = to_mp(kobject);
++	struct xfs_errortag_attr *xfs_attr = to_attr(attr);
++
++	return snprintf(buf, PAGE_SIZE, "%u\n",
++			xfs_errortag_get(mp, xfs_attr->tag));
++}
++
++static const struct sysfs_ops xfs_errortag_sysfs_ops = {
++	.show = xfs_errortag_attr_show,
++	.store = xfs_errortag_attr_store,
++};
++
++#define XFS_ERRORTAG_ATTR_RW(_name, _tag) \
++static struct xfs_errortag_attr xfs_errortag_attr_##_name = {		\
++	.attr = {.name = __stringify(_name),				\
++		 .mode = VERIFY_OCTAL_PERMISSIONS(S_IWUSR | S_IRUGO) },	\
++	.tag	= (_tag),						\
++}
++
++#define XFS_ERRORTAG_ATTR_LIST(_name) &xfs_errortag_attr_##_name.attr
++
++XFS_ERRORTAG_ATTR_RW(noerror,		XFS_ERRTAG_NOERROR);
++XFS_ERRORTAG_ATTR_RW(iflush1,		XFS_ERRTAG_IFLUSH_1);
++XFS_ERRORTAG_ATTR_RW(iflush2,		XFS_ERRTAG_IFLUSH_2);
++XFS_ERRORTAG_ATTR_RW(iflush3,		XFS_ERRTAG_IFLUSH_3);
++XFS_ERRORTAG_ATTR_RW(iflush4,		XFS_ERRTAG_IFLUSH_4);
++XFS_ERRORTAG_ATTR_RW(iflush5,		XFS_ERRTAG_IFLUSH_5);
++XFS_ERRORTAG_ATTR_RW(iflush6,		XFS_ERRTAG_IFLUSH_6);
++XFS_ERRORTAG_ATTR_RW(dareadbuf,		XFS_ERRTAG_DA_READ_BUF);
++XFS_ERRORTAG_ATTR_RW(btree_chk_lblk,	XFS_ERRTAG_BTREE_CHECK_LBLOCK);
++XFS_ERRORTAG_ATTR_RW(btree_chk_sblk,	XFS_ERRTAG_BTREE_CHECK_SBLOCK);
++XFS_ERRORTAG_ATTR_RW(readagf,		XFS_ERRTAG_ALLOC_READ_AGF);
++XFS_ERRORTAG_ATTR_RW(readagi,		XFS_ERRTAG_IALLOC_READ_AGI);
++XFS_ERRORTAG_ATTR_RW(itobp,		XFS_ERRTAG_ITOBP_INOTOBP);
++XFS_ERRORTAG_ATTR_RW(iunlink,		XFS_ERRTAG_IUNLINK);
++XFS_ERRORTAG_ATTR_RW(iunlinkrm,		XFS_ERRTAG_IUNLINK_REMOVE);
++XFS_ERRORTAG_ATTR_RW(dirinovalid,	XFS_ERRTAG_DIR_INO_VALIDATE);
++XFS_ERRORTAG_ATTR_RW(bulkstat,		XFS_ERRTAG_BULKSTAT_READ_CHUNK);
++XFS_ERRORTAG_ATTR_RW(logiodone,		XFS_ERRTAG_IODONE_IOERR);
++XFS_ERRORTAG_ATTR_RW(stratread,		XFS_ERRTAG_STRATREAD_IOERR);
++XFS_ERRORTAG_ATTR_RW(stratcmpl,		XFS_ERRTAG_STRATCMPL_IOERR);
++XFS_ERRORTAG_ATTR_RW(diowrite,		XFS_ERRTAG_DIOWRITE_IOERR);
++XFS_ERRORTAG_ATTR_RW(bmapifmt,		XFS_ERRTAG_BMAPIFORMAT);
++XFS_ERRORTAG_ATTR_RW(free_extent,	XFS_ERRTAG_FREE_EXTENT);
++XFS_ERRORTAG_ATTR_RW(rmap_finish_one,	XFS_ERRTAG_RMAP_FINISH_ONE);
++XFS_ERRORTAG_ATTR_RW(refcount_continue_update,	XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE);
++XFS_ERRORTAG_ATTR_RW(refcount_finish_one,	XFS_ERRTAG_REFCOUNT_FINISH_ONE);
++XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
++XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
++
++static struct attribute *xfs_errortag_attrs[] = {
++	XFS_ERRORTAG_ATTR_LIST(noerror),
++	XFS_ERRORTAG_ATTR_LIST(iflush1),
++	XFS_ERRORTAG_ATTR_LIST(iflush2),
++	XFS_ERRORTAG_ATTR_LIST(iflush3),
++	XFS_ERRORTAG_ATTR_LIST(iflush4),
++	XFS_ERRORTAG_ATTR_LIST(iflush5),
++	XFS_ERRORTAG_ATTR_LIST(iflush6),
++	XFS_ERRORTAG_ATTR_LIST(dareadbuf),
++	XFS_ERRORTAG_ATTR_LIST(btree_chk_lblk),
++	XFS_ERRORTAG_ATTR_LIST(btree_chk_sblk),
++	XFS_ERRORTAG_ATTR_LIST(readagf),
++	XFS_ERRORTAG_ATTR_LIST(readagi),
++	XFS_ERRORTAG_ATTR_LIST(itobp),
++	XFS_ERRORTAG_ATTR_LIST(iunlink),
++	XFS_ERRORTAG_ATTR_LIST(iunlinkrm),
++	XFS_ERRORTAG_ATTR_LIST(dirinovalid),
++	XFS_ERRORTAG_ATTR_LIST(bulkstat),
++	XFS_ERRORTAG_ATTR_LIST(logiodone),
++	XFS_ERRORTAG_ATTR_LIST(stratread),
++	XFS_ERRORTAG_ATTR_LIST(stratcmpl),
++	XFS_ERRORTAG_ATTR_LIST(diowrite),
++	XFS_ERRORTAG_ATTR_LIST(bmapifmt),
++	XFS_ERRORTAG_ATTR_LIST(free_extent),
++	XFS_ERRORTAG_ATTR_LIST(rmap_finish_one),
++	XFS_ERRORTAG_ATTR_LIST(refcount_continue_update),
++	XFS_ERRORTAG_ATTR_LIST(refcount_finish_one),
++	XFS_ERRORTAG_ATTR_LIST(bmap_finish_one),
++	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
++	NULL,
++};
++
++struct kobj_type xfs_errortag_ktype = {
++	.release = xfs_sysfs_release,
++	.sysfs_ops = &xfs_errortag_sysfs_ops,
++	.default_attrs = xfs_errortag_attrs,
++};
++
+ int
+ xfs_errortag_init(
+ 	struct xfs_mount	*mp)
+@@ -64,13 +204,16 @@ xfs_errortag_init(
+ 			KM_SLEEP | KM_MAYFAIL);
+ 	if (!mp->m_errortag)
+ 		return -ENOMEM;
+-	return 0;
++
++	return xfs_sysfs_init(&mp->m_errortag_kobj, &xfs_errortag_ktype,
++			       &mp->m_kobj, "errortag");
+ }
+ 
+ void
+ xfs_errortag_del(
+ 	struct xfs_mount	*mp)
+ {
++	xfs_sysfs_del(&mp->m_errortag_kobj);
+ 	kmem_free(mp->m_errortag);
+ }
+ 
+@@ -96,6 +239,17 @@ xfs_errortag_test(
+ }
+ 
+ int
++xfs_errortag_get(
++	struct xfs_mount	*mp,
++	unsigned int		error_tag)
++{
++	if (error_tag >= XFS_ERRTAG_MAX)
++		return -EINVAL;
++
++	return mp->m_errortag[error_tag];
++}
++
++int
+ xfs_errortag_set(
+ 	struct xfs_mount	*mp,
+ 	unsigned int		error_tag,
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 341e8a0..a3c0c1d 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -138,6 +138,7 @@ extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
+ #define XFS_TEST_ERROR(expr, mp, tag, rf)		\
+ 	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
+ 
++extern int xfs_errortag_get(struct xfs_mount *mp, unsigned int error_tag);
+ extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
+ 		unsigned int tag_value);
+ extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index e002ac5..931e9fc 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -204,6 +204,7 @@ typedef struct xfs_mount {
+ 	 * error triggers.  1 = always, 2 = half the time, etc.
+ 	 */
+ 	unsigned int		*m_errortag;
++	struct xfs_kobj		m_errortag_kobj;
+ 
+ 	/*
+ 	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
+
