@@ -1,220 +1,408 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:37002 "EHLO
-        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751174AbdFUSOc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 14:14:32 -0400
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
-        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v5LFm5vZ008744
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2017 15:48:05 GMT
-Date: Wed, 21 Jun 2017 08:47:59 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:27491 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751148AbdFUSqS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 14:46:18 -0400
+Date: Wed, 21 Jun 2017 11:46:12 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: debug mode sysfs flag to force [un]pin the log tail
-Message-ID: <20170621154759.GG4733@birch.djwong.org>
-References: <1497631473-14278-1-git-send-email-bfoster@redhat.com>
- <20170620214832.GE4733@birch.djwong.org>
- <20170621101653.GD28914@bfoster.bfoster>
+Subject: Re: [PATCH 1/4] xfs: make errortag a per-mountpoint structure
+Message-ID: <20170621184612.GL4733@birch.djwong.org>
+References: <149800747210.23118.6423951814449227184.stgit@birch.djwong.org>
+ <149800747831.23118.112249700014303831.stgit@birch.djwong.org>
+ <20170621181847.GB29843@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170621101653.GD28914@bfoster.bfoster>
+In-Reply-To: <20170621181847.GB29843@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jun 21, 2017 at 06:16:54AM -0400, Brian Foster wrote:
-> On Tue, Jun 20, 2017 at 02:48:32PM -0700, Darrick J. Wong wrote:
-> > On Fri, Jun 16, 2017 at 12:44:33PM -0400, Brian Foster wrote:
-> > > Create a debug mode only sysfs option to force pin the tail of the
-> > > log. This option can be used by test infrastructure to induce head
-> > > behind tail conditions. Specifically, this is intended to be used by
-> > > xfstests to reproduce log recovery problems after failed/corrupted
-> > > log writes overwrite the last good tail LSN in the log.
-> > > 
-> > > When enabled, AIL push attempts see every log item on the AIL in the
-> > > pinned state. This stalls metadata writeback and thus prevents the
-> > > current tail of the log from moving forward. When disabled,
-> > > subsequent AIL pushes observe the log items in their appropriate
-> > > state and filesystem operation continues as normal.
-> > > 
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+On Wed, Jun 21, 2017 at 02:18:48PM -0400, Brian Foster wrote:
+> On Tue, Jun 20, 2017 at 06:11:18PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Looks ok enough to test...
+> > Remove the xfs_etest structure in favor of a per-mountpoint structure.
+> > This will give us the flexibility to set as many error injection points
+> > as we want, and later enable us to set up sysfs knobs to set the trigger
+> > frequency as we wish.  This comes at a cost of higher memory use, but
+> > unti we hit 1024 injection points (we're at 29) or a lot of mounts this
+> > shouldn't be a huge issue.
+> > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/xfs_error.c |  161 +++++++++++++++++++++++++++++++---------------------
+> >  fs/xfs/xfs_error.h |   23 ++++---
+> >  fs/xfs/xfs_ioctl.c |    4 +
+> >  fs/xfs/xfs_mount.c |   10 +++
+> >  fs/xfs/xfs_mount.h |    7 ++
+> >  5 files changed, 125 insertions(+), 80 deletions(-)
 > > 
+> > 
+> > diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> > index ed7ee4e..ef16ac2 100644
+> > --- a/fs/xfs/xfs_error.c
+> > +++ b/fs/xfs/xfs_error.c
+> > @@ -25,97 +25,126 @@
+> >  
+> >  #ifdef DEBUG
+> >  
+> > -int	xfs_etest[XFS_NUM_INJECT_ERROR];
+> > -int64_t	xfs_etest_fsid[XFS_NUM_INJECT_ERROR];
+> > -char *	xfs_etest_fsname[XFS_NUM_INJECT_ERROR];
+> > -int	xfs_error_test_active;
+> > +static unsigned int xfs_errortag_random_default[] = {
+> > +	XFS_RANDOM_DEFAULT,
+> > +	XFS_RANDOM_IFLUSH_1,
+> > +	XFS_RANDOM_IFLUSH_2,
+> > +	XFS_RANDOM_IFLUSH_3,
+> > +	XFS_RANDOM_IFLUSH_4,
+> > +	XFS_RANDOM_IFLUSH_5,
+> > +	XFS_RANDOM_IFLUSH_6,
+> > +	XFS_RANDOM_DA_READ_BUF,
+> > +	XFS_RANDOM_BTREE_CHECK_LBLOCK,
+> > +	XFS_RANDOM_BTREE_CHECK_SBLOCK,
+> > +	XFS_RANDOM_ALLOC_READ_AGF,
+> > +	XFS_RANDOM_IALLOC_READ_AGI,
+> > +	XFS_RANDOM_ITOBP_INOTOBP,
+> > +	XFS_RANDOM_IUNLINK,
+> > +	XFS_RANDOM_IUNLINK_REMOVE,
+> > +	XFS_RANDOM_DIR_INO_VALIDATE,
+> > +	XFS_RANDOM_BULKSTAT_READ_CHUNK,
+> > +	XFS_RANDOM_IODONE_IOERR,
+> > +	XFS_RANDOM_STRATREAD_IOERR,
+> > +	XFS_RANDOM_STRATCMPL_IOERR,
+> > +	XFS_RANDOM_DIOWRITE_IOERR,
+> > +	XFS_RANDOM_BMAPIFORMAT,
+> > +	XFS_RANDOM_FREE_EXTENT,
+> > +	XFS_RANDOM_RMAP_FINISH_ONE,
+> > +	XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE,
+> > +	XFS_RANDOM_REFCOUNT_FINISH_ONE,
+> > +	XFS_RANDOM_BMAP_FINISH_ONE,
+> > +	XFS_RANDOM_AG_RESV_CRITICAL,
+> > +};
+> >  
+> >  int
+> > -xfs_error_test(int error_tag, int *fsidp, char *expression,
+> > -	       int line, char *file, unsigned long randfactor)
+> > +xfs_errortag_init(
+> > +	struct xfs_mount	*mp)
+> >  {
+> > -	int i;
+> > -	int64_t fsid;
+> > +	mp->m_errortag = kmem_zalloc(sizeof(unsigned int) * XFS_ERRTAG_MAX,
+> > +			KM_SLEEP | KM_MAYFAIL);
+> > +	if (!mp->m_errortag)
+> > +		return -ENOMEM;
+> > +	return 0;
+> > +}
+> >  
+> > -	if (prandom_u32() % randfactor)
+> > -		return 0;
+> > +void
+> > +xfs_errortag_del(
+> > +	struct xfs_mount	*mp)
+> > +{
+> > +	kmem_free(mp->m_errortag);
+> > +}
+> >  
+> > -	memcpy(&fsid, fsidp, sizeof(xfs_fsid_t));
+> > +bool
+> > +xfs_errortag_test(
+> > +	struct xfs_mount	*mp,
+> > +	const char		*expression,
+> > +	const char		*file,
+> > +	int			line,
+> > +	unsigned int		error_tag)
+> > +{
+> > +	unsigned int		randfactor;
+> >  
+> > -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
+> > -		if (xfs_etest[i] == error_tag && xfs_etest_fsid[i] == fsid) {
+> > -			xfs_warn(NULL,
+> > -	"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
+> > -				expression, file, line, xfs_etest_fsname[i]);
+> > -			return 1;
+> > -		}
+> > -	}
+> > +	ASSERT(error_tag < XFS_ERRTAG_MAX);
+> > +	randfactor = mp->m_errortag[error_tag];
+> > +	if (!randfactor || prandom_u32() % randfactor)
+> > +		return false;
+> >  
+> > -	return 0;
+> > +	xfs_warn(mp,
+> > +"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
+> > +			expression, file, line, mp->m_fsname);
+> > +	return true;
 > 
-> I assume you mean Reviewed-by... thanks! :)
+> I wonder if we're going to want/need to ratelimit this now that we have
+> dynamic frequency support. I'm thinking cases like 100% error frequency
+> for the purpose of AIL item pinning could generate quite a bit of
+> output.
 
-Yep.  Though, having now pushed out the errortag-via-sysfs patchset,
-I wonder if this could target that instead?
+Yeah, we should xfs_warn_ratelimited, the one I made to force repair
+to repair undamaged metadata is particularly noisy.
 
-But, first things first, that series has to be reviewed.  We could (in
-theory) push e-v-s and this for 4.13; or hold off on both for another
-cycle; or integrate this patch for 4.13 and e-v-s for 4.14, and update
-the test to sniff out the location of the knob dynamically like xfs/196
-does.
+> 
+> >  }
+> >  
+> >  int
+> > -xfs_errortag_add(unsigned int error_tag, xfs_mount_t *mp)
+> > +xfs_errortag_set(
+> > +	struct xfs_mount	*mp,
+> > +	unsigned int		error_tag,
+> > +	unsigned int		tag_value)
+> >  {
+> > -	int i;
+> > -	int len;
+> > -	int64_t fsid;
+> > -
+> >  	if (error_tag >= XFS_ERRTAG_MAX)
+> >  		return -EINVAL;
+> >  
+> > -	memcpy(&fsid, mp->m_fixedfsid, sizeof(xfs_fsid_t));
+> > +	mp->m_errortag[error_tag] = tag_value;
+> > +	xfs_warn(mp,
+> > +"Turned %s XFS error tag #%d",
+> > +			tag_value ? "on" : "off", error_tag);
+> > +	return 0;
+> 
+> This is unnecessarily noisy IMO as well. If we wanted to preserve it for
+> the ioctl() case, we could pull it up into the caller. Unless it's
+> actually used somewhere that I'm not aware of, I'd be fine with killing
+> it altogether.
 
-<mostly just pre-coffee babbling at this point>
+Sure.  We cough out an error message every time we actually inject
+an error anyway.
+
+> 
+> > +}
+> >  
+> > -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
+> > -		if (xfs_etest_fsid[i] == fsid && xfs_etest[i] == error_tag) {
+> > -			xfs_warn(mp, "error tag #%d on", error_tag);
+> > -			return 0;
+> > -		}
+> > -	}
+> > +int
+> > +xfs_errortag_add(
+> > +	struct xfs_mount	*mp,
+> > +	unsigned int		error_tag)
+> > +{
+> > +	if (error_tag >= XFS_ERRTAG_MAX)
+> > +		return -EINVAL;
+> >  
+> > -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
+> > -		if (xfs_etest[i] == 0) {
+> > -			xfs_warn(mp, "Turned on XFS error tag #%d",
+> > -				error_tag);
+> > -			xfs_etest[i] = error_tag;
+> > -			xfs_etest_fsid[i] = fsid;
+> > -			len = strlen(mp->m_fsname);
+> > -			xfs_etest_fsname[i] = kmem_alloc(len + 1, KM_SLEEP);
+> > -			strcpy(xfs_etest_fsname[i], mp->m_fsname);
+> > -			xfs_error_test_active++;
+> > -			return 0;
+> > -		}
+> > +	if (mp->m_errortag[error_tag]) {
+> > +		xfs_warn(mp, "error tag #%d on", error_tag);
+> > +		return 0;
+> 
+> It probably doesn't matter that much, but I wonder if we should still
+> set the _random_default value even if the tag is already enabled. The
+
+The ioctl errored out if the tag was already enabled, so this preserves
+that behavior.  Note that xfs_errortag_add is only called by the ioctl,
+whereas xfs_errortag_set is called by sysfs and it doesn't care what
+the previous value was.
+
+Granted, maybe we don't care about checking if it's already set and
+should just go ahead and change the value, but that would change the
+behavior of an existing (debug) interface.
+
+> idea being to (sort of) preserve backwards compatibility for the ioctl()
+> in the event that the tag was already enabled via sysfs.
+> 
+> Now that I think of it, does the ioctl() interface even support turning
+> off an individual error tag? :/
+
+Correct.  You only can clear all of them, at least via ioctls.
 
 --D
 
 > 
 > Brian
 > 
-> > --D
+> >  	}
+> >  
+> > -	xfs_warn(mp, "error tag overflow, too many turned on");
+> > -
+> > -	return 1;
+> > +	return xfs_errortag_set(mp, error_tag,
+> > +			xfs_errortag_random_default[error_tag]);
+> >  }
+> >  
+> >  int
+> > -xfs_errortag_clearall(xfs_mount_t *mp, int loud)
+> > +xfs_errortag_clearall(
+> > +	struct xfs_mount	*mp,
+> > +	bool			loud)
+> >  {
+> > -	int64_t fsid;
+> > -	int cleared = 0;
+> > -	int i;
+> > -
+> > -	memcpy(&fsid, mp->m_fixedfsid, sizeof(xfs_fsid_t));
+> > -
+> > -
+> > -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++) {
+> > -		if ((fsid == 0LL || xfs_etest_fsid[i] == fsid) &&
+> > -		     xfs_etest[i] != 0) {
+> > -			cleared = 1;
+> > -			xfs_warn(mp, "Clearing XFS error tag #%d",
+> > -				xfs_etest[i]);
+> > -			xfs_etest[i] = 0;
+> > -			xfs_etest_fsid[i] = 0LL;
+> > -			kmem_free(xfs_etest_fsname[i]);
+> > -			xfs_etest_fsname[i] = NULL;
+> > -			xfs_error_test_active--;
+> > +	bool			cleared = false;
+> > +	unsigned int		i;
+> > +
+> > +	for (i = 0; i < XFS_ERRTAG_MAX; i++) {
+> > +		if (mp->m_errortag[i]) {
+> > +			cleared = true;
+> > +			break;
+> >  		}
+> >  	}
+> >  
+> > +	memset(mp->m_errortag, 0, sizeof(unsigned int) * XFS_ERRTAG_MAX);
+> > +
+> >  	if (loud || cleared)
+> >  		xfs_warn(mp, "Cleared all XFS error tags for filesystem");
+> >  
+> > diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+> > index 05f8666..341e8a0 100644
+> > --- a/fs/xfs/xfs_error.h
+> > +++ b/fs/xfs/xfs_error.h
+> > @@ -131,20 +131,23 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+> >  #define XFS_RANDOM_AG_RESV_CRITICAL			4
+> >  
+> >  #ifdef DEBUG
+> > -extern int xfs_error_test_active;
+> > -extern int xfs_error_test(int, int *, char *, int, char *, unsigned long);
+> > -
+> > -#define	XFS_NUM_INJECT_ERROR				10
+> > +extern int xfs_errortag_init(struct xfs_mount *mp);
+> > +extern void xfs_errortag_del(struct xfs_mount *mp);
+> > +extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
+> > +		const char *file, int line, unsigned int error_tag);
+> >  #define XFS_TEST_ERROR(expr, mp, tag, rf)		\
+> > -	((expr) || (xfs_error_test_active && \
+> > -	 xfs_error_test((tag), (mp)->m_fixedfsid, "expr", __LINE__, __FILE__, \
+> > -			(rf))))
+> > +	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
+> >  
+> > -extern int xfs_errortag_add(unsigned int error_tag, struct xfs_mount *mp);
+> > -extern int xfs_errortag_clearall(struct xfs_mount *mp, int loud);
+> > +extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
+> > +		unsigned int tag_value);
+> > +extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
+> > +extern int xfs_errortag_clearall(struct xfs_mount *mp, bool loud);
+> >  #else
+> > +#define xfs_errortag_init(mp)			(0)
+> > +#define xfs_errortag_del(mp)
+> >  #define XFS_TEST_ERROR(expr, mp, tag, rf)	(expr)
+> > -#define xfs_errortag_add(tag, mp)		(ENOSYS)
+> > +#define xfs_errortag_set(mp, tag, val)		(ENOSYS)
+> > +#define xfs_errortag_add(mp, tag)		(ENOSYS)
+> >  #define xfs_errortag_clearall(mp, loud)		(ENOSYS)
+> >  #endif /* DEBUG */
+> >  
+> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > index 8ffe4ea..ab0894a 100644
+> > --- a/fs/xfs/xfs_ioctl.c
+> > +++ b/fs/xfs/xfs_ioctl.c
+> > @@ -2037,14 +2037,14 @@ xfs_file_ioctl(
+> >  		if (copy_from_user(&in, arg, sizeof(in)))
+> >  			return -EFAULT;
+> >  
+> > -		return xfs_errortag_add(in.errtag, mp);
+> > +		return xfs_errortag_add(mp, in.errtag);
+> >  	}
+> >  
+> >  	case XFS_IOC_ERROR_CLEARALL:
+> >  		if (!capable(CAP_SYS_ADMIN))
+> >  			return -EPERM;
+> >  
+> > -		return xfs_errortag_clearall(mp, 1);
+> > +		return xfs_errortag_clearall(mp, true);
+> >  
+> >  	case XFS_IOC_FREE_EOFBLOCKS: {
+> >  		struct xfs_fs_eofblocks eofb;
+> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > index cc6789d..5cdcf43 100644
+> > --- a/fs/xfs/xfs_mount.c
+> > +++ b/fs/xfs/xfs_mount.c
+> > @@ -720,10 +720,13 @@ xfs_mountfs(
+> >  	if (error)
+> >  		goto out_del_stats;
+> >  
+> > +	error = xfs_errortag_init(mp);
+> > +	if (error)
+> > +		goto out_remove_error_sysfs;
+> >  
+> >  	error = xfs_uuid_mount(mp);
+> >  	if (error)
+> > -		goto out_remove_error_sysfs;
+> > +		goto out_remove_errortag;
+> >  
+> >  	/*
+> >  	 * Set the minimum read and write sizes
+> > @@ -1042,6 +1045,8 @@ xfs_mountfs(
+> >  	xfs_da_unmount(mp);
+> >   out_remove_uuid:
+> >  	xfs_uuid_unmount(mp);
+> > + out_remove_errortag:
+> > +	xfs_errortag_del(mp);
+> >   out_remove_error_sysfs:
+> >  	xfs_error_sysfs_del(mp);
+> >   out_del_stats:
+> > @@ -1145,10 +1150,11 @@ xfs_unmountfs(
+> >  	xfs_uuid_unmount(mp);
+> >  
+> >  #if defined(DEBUG)
+> > -	xfs_errortag_clearall(mp, 0);
+> > +	xfs_errortag_clearall(mp, false);
+> >  #endif
+> >  	xfs_free_perag(mp);
+> >  
+> > +	xfs_errortag_del(mp);
+> >  	xfs_error_sysfs_del(mp);
+> >  	xfs_sysfs_del(&mp->m_stats.xs_kobj);
+> >  	xfs_sysfs_del(&mp->m_kobj);
+> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > index 305d953..e002ac5 100644
+> > --- a/fs/xfs/xfs_mount.h
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -199,6 +199,13 @@ typedef struct xfs_mount {
+> >  	bool			m_fail_unmount;
+> >  #ifdef DEBUG
+> >  	/*
+> > +	 * Frequency with which errors are injected.  Replaces xfs_etest; the
+> > +	 * value stored in here is the inverse of the frequency with which the
+> > +	 * error triggers.  1 = always, 2 = half the time, etc.
+> > +	 */
+> > +	unsigned int		*m_errortag;
+> > +
+> > +	/*
+> >  	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
+> >  	 * block killing in the event of failed writes. When enabled, all
+> >  	 * buffered writes are silenty dropped and handled as if they failed.
 > > 
-> > > ---
-> > > 
-> > > Hi all,
-> > > 
-> > > This patch is a supporting patch for an xfstests test I'm about to post
-> > > that pins the tail of the log in order to reproduce the log recovery
-> > > problem that appears to be the root of the problem in this[1] thread.
-> > > That is the primary motivation for the patch and so should probably be
-> > > reviewed with that context. IOW, if there's a better way to reproduce
-> > > the problem in the test without the need for kernel support, I'm happy
-> > > to drop this. Thoughts, reviews, flames appreciated.
-> > > 
-> > > Brian
-> > > 
-> > > [1] http://www.spinics.net/lists/linux-xfs/msg07499.html
-> > > 
-> > >  fs/xfs/xfs_log_priv.h  |  2 ++
-> > >  fs/xfs/xfs_sysfs.c     | 46 ++++++++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/xfs_trans_ail.c | 20 +++++++++++++++++++-
-> > >  3 files changed, 67 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> > > index c2604a5..bfbfde12 100644
-> > > --- a/fs/xfs/xfs_log_priv.h
-> > > +++ b/fs/xfs/xfs_log_priv.h
-> > > @@ -413,6 +413,8 @@ struct xlog {
-> > >  	void			*l_iclog_bak[XLOG_MAX_ICLOGS];
-> > >  	/* log record crc error injection factor */
-> > >  	uint32_t		l_badcrc_factor;
-> > > +	/* force pin the log tail */
-> > > +	bool			l_pin_tail;
-> > >  #endif
-> > >  	/* log recovery lsn tracking (for buffer submission */
-> > >  	xfs_lsn_t		l_recovery_lsn;
-> > > diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> > > index ec6e0e2..b86148a 100644
-> > > --- a/fs/xfs/xfs_sysfs.c
-> > > +++ b/fs/xfs/xfs_sysfs.c
-> > > @@ -378,6 +378,51 @@ log_badcrc_factor_show(
-> > >  }
-> > >  
-> > >  XFS_SYSFS_ATTR_RW(log_badcrc_factor);
-> > > +
-> > > +/*
-> > > + * DEBUG mode flag to force pin the tail of the log. Used from test
-> > > + * infrastructure to manufacture head-behind-tail conditions. DO NOT USE
-> > > + * DIRECTLY. This will lock up the fs!
-> > > + *
-> > > + * When this option is enabled, all log items present in the AIL are emulated as
-> > > + * being in the pinned state until the option is disabled. Once disabled, log
-> > > + * items return to their natural state and fs operation continues as normal.
-> > > + */
-> > > +STATIC ssize_t
-> > > +log_pin_tail_store(
-> > > +	struct kobject		*kobject,
-> > > +	const char		*buf,
-> > > +	size_t			count)
-> > > +{
-> > > +	struct xlog		*log = to_xlog(kobject);
-> > > +	int			ret;
-> > > +	int			val;
-> > > +
-> > > +	ret = kstrtoint(buf, 0, &val);
-> > > +	if (ret)
-> > > +		return ret;
-> > > +
-> > > +	if (val == 1)
-> > > +		log->l_pin_tail = true;
-> > > +	else if (val == 0)
-> > > +		log->l_pin_tail = false;
-> > > +	else
-> > > +		return -EINVAL;
-> > > +
-> > > +	return count;
-> > > +}
-> > > +
-> > > +STATIC ssize_t
-> > > +log_pin_tail_show(
-> > > +	struct kobject		*kobject,
-> > > +	char			*buf)
-> > > +{
-> > > +	struct xlog		*log = to_xlog(kobject);
-> > > +
-> > > +	return snprintf(buf, PAGE_SIZE, "%d\n", log->l_pin_tail ? 1 : 0);
-> > > +}
-> > > +XFS_SYSFS_ATTR_RW(log_pin_tail);
-> > > +
-> > >  #endif	/* DEBUG */
-> > >  
-> > >  static struct attribute *xfs_log_attrs[] = {
-> > > @@ -387,6 +432,7 @@ static struct attribute *xfs_log_attrs[] = {
-> > >  	ATTR_LIST(write_grant_head),
-> > >  #ifdef DEBUG
-> > >  	ATTR_LIST(log_badcrc_factor),
-> > > +	ATTR_LIST(log_pin_tail),
-> > >  #endif
-> > >  	NULL,
-> > >  };
-> > > diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> > > index 9056c0f..c901e61 100644
-> > > --- a/fs/xfs/xfs_trans_ail.c
-> > > +++ b/fs/xfs/xfs_trans_ail.c
-> > > @@ -27,6 +27,7 @@
-> > >  #include "xfs_trace.h"
-> > >  #include "xfs_error.h"
-> > >  #include "xfs_log.h"
-> > > +#include "xfs_log_priv.h"
-> > >  
-> > >  #ifdef DEBUG
-> > >  /*
-> > > @@ -325,6 +326,23 @@ xfs_ail_delete(
-> > >  	xfs_trans_ail_cursor_clear(ailp, lip);
-> > >  }
-> > >  
-> > > +static inline uint
-> > > +xfsaild_push_item(
-> > > +	struct xfs_ail		*ailp,
-> > > +	struct xfs_log_item	*lip)
-> > > +{
-> > > +#ifdef DEBUG
-> > > +	/*
-> > > +	 * If tail pinning is enabled, skip the push and track all items as
-> > > +	 * pinned to force pin the log tail. This helps induce head-behind-tail
-> > > +	 * conditions.
-> > > +	 */
-> > > +	if (ailp->xa_mount->m_log->l_pin_tail)
-> > > +		return XFS_ITEM_PINNED;
-> > > +#endif
-> > > +	return lip->li_ops->iop_push(lip, &ailp->xa_buf_list);
-> > > +}
-> > > +
-> > >  static long
-> > >  xfsaild_push(
-> > >  	struct xfs_ail		*ailp)
-> > > @@ -382,7 +400,7 @@ xfsaild_push(
-> > >  		 * rely on the AIL cursor implementation to be able to deal with
-> > >  		 * the dropped lock.
-> > >  		 */
-> > > -		lock_result = lip->li_ops->iop_push(lip, &ailp->xa_buf_list);
-> > > +		lock_result = xfsaild_push_item(ailp, lip);
-> > >  		switch (lock_result) {
-> > >  		case XFS_ITEM_SUCCESS:
-> > >  			XFS_STATS_INC(mp, xs_push_ail_success);
-> > > -- 
-> > > 2.7.5
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > the body of a message to majordomo@vger.kernel.org
