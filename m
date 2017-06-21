@@ -1,116 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50660 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751028AbdFUTO6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Jun 2017 15:14:58 -0400
-Subject: Re: [PATCH 3/3] libxfs: use crc32c slice-by-8 variant by default
-References: <149755888982.3424.6925834871301440055.stgit@birch.djwong.org>
- <149755891632.3424.8018763268292554053.stgit@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c06c280e-278a-c80b-a412-8c9d4ec4e62d@sandeen.net>
-Date: Wed, 21 Jun 2017 14:14:57 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:44307 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752026AbdFUV6b (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 17:58:31 -0400
+Subject: [PATCH 8/8] xfs: scrub while appending to a file
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 21 Jun 2017 14:58:22 -0700
+Message-ID: <149808230214.8924.10706838164588131554.stgit@birch.djwong.org>
+In-Reply-To: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
+References: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <149755891632.3424.8018763268292554053.stgit@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+To: eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On 6/15/17 3:35 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> The crc32c code used in xfsprogs was copied directly from the Linux
-> kernel.  However, that code selects slice-by-4 by default, which isn't
-> the fastest -- that's slice-by-8, which trades table size for speed.
-> Fix some makefile dependency problems and explicitly select the
-> algorithm we want.  With this patch applied, I see about a 10% drop in
-> CPU time running xfs_repair.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+It turns out that there was a bug in xfs_bmap_count_blocks wherein the
+block count returned would count or not count delalloc blocks depending
+on the fork format.  This is a bug that is easily exposed via scrub, so
+check the output of that function here -- the buggy version of the
+function produces online fsck errors.
 
-dchinner: are you ok with this now?  You had questions earlier,
-but Darrick's explanations satisfied me, at least... 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/xfs/1379     |   82 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1379.out |    6 ++++
+ tests/xfs/group    |    1 +
+ 3 files changed, 89 insertions(+)
+ create mode 100755 tests/xfs/1379
+ create mode 100644 tests/xfs/1379.out
 
-> ---
->  libxfs/Makefile    |    4 ++--
->  libxfs/crc32defs.h |   34 ++++++++++++++++++++++++++++++++++
->  2 files changed, 36 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/libxfs/Makefile b/libxfs/Makefile
-> index baba02f..d248c1f 100644
-> --- a/libxfs/Makefile
-> +++ b/libxfs/Makefile
-> @@ -122,7 +122,7 @@ LDIRT = gen_crc32table crc32table.h crc32selftest
->  
->  default: crc32selftest ltdepend $(LTLIBRARY)
->  
-> -crc32table.h: gen_crc32table.c
-> +crc32table.h: gen_crc32table.c crc32defs.h
->  	@echo "    [CC]     gen_crc32table"
->  	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
->  	@echo "    [GENERATE] $@"
-> @@ -133,7 +133,7 @@ crc32table.h: gen_crc32table.c
->  # systems/architectures. Hence we make sure that xfsprogs will never use a
->  # busted CRC calculation at build time and hence avoid putting bad CRCs down on
->  # disk.
-> -crc32selftest: gen_crc32table.c crc32table.h crc32.c
-> +crc32selftest: gen_crc32table.c crc32table.h crc32.c crc32defs.h
->  	@echo "    [TEST]    CRC32"
->  	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
->  	$(Q) ./$@
-> diff --git a/libxfs/crc32defs.h b/libxfs/crc32defs.h
-> index 64cba2c..2999782 100644
-> --- a/libxfs/crc32defs.h
-> +++ b/libxfs/crc32defs.h
-> @@ -1,4 +1,38 @@
->  /*
-> + * Use slice-by-8, which is the fastest variant.
-> + *
-> + * Calculate checksum 8 bytes at a time with a clever slicing algorithm.
-> + * This is the fastest algorithm, but comes with a 8KiB lookup table.
-> + * Most modern processors have enough cache to hold this table without
-> + * thrashing the cache.
-> + *
-> + * The Linux kernel uses this as the default implementation "unless you
-> + * have a good reason not to".  The reason why Kconfig urges you to pick
-> + * SLICEBY8 is because people challenged the assertion that we should
-> + * always use slice by 8, so Darrick wrote a crc microbenchmark utility
-> + * and ran it on as many machines as he could get his hands on to show
-> + * that sb8 was the fastest.
-> + *
-> + * Every 64-bit machine (and most of the 32-bit ones too) saw the best
-> + * results with sb8.  Any machine with more than 4K of cache saw better
-> + * results.  The spreadsheet still exists today[1]; note that
-> + * 'crc32-kern-le' corresponds to the slice by 4 algorithm which is the
-> + * default unless CRC_LE_BITS is defined explicitly.
-> + *
-> + * FWIW, there are a handful of board defconfigs in the kernel that
-> + * don't pick sliceby8.  These are all embedded 32-bit mips/ppc systems
-> + * with very small cache sizes which experience cache thrashing with the
-> + * slice by 8 algorithm, and therefore chose to pick defaults that are
-> + * saner for their particular board configuration.  For nearly all of
-> + * XFS' perceived userbase (which we assume are 32 and 64-bit machines
-> + * with sufficiently large CPU cache and largeish storage devices) slice
-> + * by 8 is the right choice.
-> + *
-> + * [1] https://goo.gl/0LSzsG ("crc32c_bench")
-> + */
-> +#define CRC_LE_BITS 64
-> +
-> +/*
->   * There are multiple 16-bit CRC polynomials in common use, but this is
->   * *the* standard CRC-32 polynomial, first popularized by Ethernet.
->   * x^32+x^26+x^23+x^22+x^16+x^12+x^11+x^10+x^8+x^7+x^5+x^4+x^2+x^1+x^0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
+diff --git a/tests/xfs/1379 b/tests/xfs/1379
+new file mode 100755
+index 0000000..acb797e
+--- /dev/null
++++ b/tests/xfs/1379
+@@ -0,0 +1,82 @@
++#! /bin/bash
++# FS QA Test No. 1379
++#
++# Race scrubbing the inode record while appending to a file.
++# This exposes a bug in xfs_bmap_count_blocks where we count delalloc
++# extents for di_nblocks if the fork is in extents format, but we don't
++# count them if the fork is in btree format.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_test_program "punch-alternating"
++_require_xfs_io_command "scrub"
++_require_scratch
++
++echo "Format and populate"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++
++$XFS_IO_PROG -f -c 'falloc 0 10m' $SCRATCH_MNT/a >> $seqres.full
++$XFS_IO_PROG -f -c 'falloc 0 10m' $SCRATCH_MNT/b >> $seqres.full
++./src/punch-alternating $SCRATCH_MNT/b
++sync
++
++echo "Set up delalloc extents"
++$XFS_IO_PROG -c 'pwrite -S 0x66 10m 128k' $SCRATCH_MNT/a >> $seqres.full
++$XFS_IO_PROG -c 'pwrite -S 0x66 10m 128k' $SCRATCH_MNT/b >> $seqres.full
++$XFS_IO_PROG -c 'bmap -ev' $SCRATCH_MNT/a $SCRATCH_MNT/b > $SCRATCH_MNT/before
++cat $SCRATCH_MNT/before >> $seqres.full
++
++echo "Scrub a and b"
++$XFS_IO_PROG -x -c 'scrub inode' $SCRATCH_MNT/a >> $seqres.full
++$XFS_IO_PROG -x -c 'scrub inode' $SCRATCH_MNT/b >> $seqres.full
++$XFS_IO_PROG -c 'bmap -ev' $SCRATCH_MNT/a $SCRATCH_MNT/b > $SCRATCH_MNT/after
++cat $SCRATCH_MNT/after >> $seqres.full
++
++echo "Compare extent maps"
++diff -u $SCRATCH_MNT/before $SCRATCH_MNT/after
++
++echo "Test done"
++status=0
++exit
+diff --git a/tests/xfs/1379.out b/tests/xfs/1379.out
+new file mode 100644
+index 0000000..67ad05f
+--- /dev/null
++++ b/tests/xfs/1379.out
+@@ -0,0 +1,6 @@
++QA output created by 1379
++Format and populate
++Set up delalloc extents
++Scrub a and b
++Compare extent maps
++Test done
+diff --git a/tests/xfs/group b/tests/xfs/group
+index d0a6831..dd10df3 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -420,3 +420,4 @@
+ 901 auto quick clone dedupe
+ 902 auto quick clone dedupe
+ 1378 dangerous_scrub dangerous_online_repair
++1379 dangerous_scrub
+
