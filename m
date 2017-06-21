@@ -1,206 +1,146 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28734 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753379AbdFWQfr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2017 12:35:47 -0400
-Subject: [PATCH 4/4] xfs: convert drop_writes to use the errortag mechanism
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 23 Jun 2017 09:35:42 -0700
-Message-ID: <149823574249.31786.3183222738936027802.stgit@birch.djwong.org>
-In-Reply-To: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
-References: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:15575 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751641AbdFUXhU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 19:37:20 -0400
+Date: Thu, 22 Jun 2017 09:37:14 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH 2/2] mm, fs: daxfile, an interface for
+ byte-addressable updates to pmem
+Message-ID: <20170621233714.GH11993@dastard>
+References: <149766212410.22552.15957843500156182524.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <149766213493.22552.4057048843646200083.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170620052214.GA3787@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170620052214.GA3787@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, akpm@linux-foundation.org, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jun 19, 2017 at 10:22:14PM -0700, Darrick J. Wong wrote:
+> [add linux-xfs to the fray]
+> 
+> On Fri, Jun 16, 2017 at 06:15:35PM -0700, Dan Williams wrote:
+> > +	spin_lock(&dax_lock);
+> > +	list_add(&d->list, &daxfiles);
+> > +	spin_unlock(&dax_lock);
+> > +
+> > +	/*
+> > +	 * We set S_SWAPFILE to gain "no truncate" / static block
+> > +	 * allocation semantics, and S_DAXFILE so we can differentiate
+> > +	 * traditional swapfiles and assume static block mappings in the
+> > +	 * dax mmap path.
+> > +	 */
+> > +	inode->i_flags |= S_SWAPFILE | S_DAXFILE;
+> 
+> Yikes.  You know, I hadn't even thought about considering swap files as
+> a subcase of files with immutable block maps, but here we are.  Both
+> swap files and DAX require absolutely stable block mappings, they are
+> both (probably) intolerant of inode metadata changes (size, mtime, etc.)
 
-We now have enhanced error injection that can control the frequency
-with which errors happen, so convert drop_writes to use this.
+Swap files are intolerant of any metadata changes because once the
+mapping has been sucked into the swapfile code, the inode is never
+looked at again. DAX file data access always goes through the inode,
+so they is much more tolerant of metadata changes given certain
+constraints.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_error.c |    3 +++
- fs/xfs/xfs_error.h |   14 +++++++++++++-
- fs/xfs/xfs_iomap.c |    2 +-
- fs/xfs/xfs_mount.h |   24 ------------------------
- fs/xfs/xfs_sysfs.c |   42 ------------------------------------------
- 5 files changed, 17 insertions(+), 68 deletions(-)
+<snip bmap rant>
 
+> Honestly, I realize we've gone back, forth, and around all over the
+> place on this.  I still prefer something similar to a permanent flag,
+> similar to what Dave suggested, though I hate the name PMEM_IMMUTABLE
+> and some of the semantics.
+> 
+> First, a new inode flag S_IOMAP_FROZEN that means the file's block map
+> cannot change.
 
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index e2278af6..a2f23d2 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -55,6 +55,7 @@ static unsigned int xfs_errortag_random_default[] = {
- 	XFS_RANDOM_REFCOUNT_FINISH_ONE,
- 	XFS_RANDOM_BMAP_FINISH_ONE,
- 	XFS_RANDOM_AG_RESV_CRITICAL,
-+	XFS_RANDOM_DROP_WRITES,
- };
- 
- struct xfs_errortag_attr {
-@@ -157,6 +158,7 @@ XFS_ERRORTAG_ATTR_RW(refcount_continue_update,	XFS_ERRTAG_REFCOUNT_CONTINUE_UPDA
- XFS_ERRORTAG_ATTR_RW(refcount_finish_one,	XFS_ERRTAG_REFCOUNT_FINISH_ONE);
- XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
- XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
-+XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
- 
- static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(noerror),
-@@ -187,6 +189,7 @@ static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(refcount_finish_one),
- 	XFS_ERRORTAG_ATTR_LIST(bmap_finish_one),
- 	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
-+	XFS_ERRORTAG_ATTR_LIST(drop_writes),
- 	NULL,
- };
- 
-diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-index ae8935b..ad9b24a 100644
---- a/fs/xfs/xfs_error.h
-+++ b/fs/xfs/xfs_error.h
-@@ -96,7 +96,18 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
- #define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
- #define XFS_ERRTAG_BMAP_FINISH_ONE			26
- #define XFS_ERRTAG_AG_RESV_CRITICAL			27
--#define XFS_ERRTAG_MAX					28
-+
-+/*
-+ * DEBUG mode instrumentation to test and/or trigger delayed allocation
-+ * block killing in the event of failed writes. When enabled, all
-+ * buffered writes are silenty dropped and handled as if they failed.
-+ * All delalloc blocks in the range of the write (including pre-existing
-+ * delalloc blocks!) are tossed as part of the write failure error
-+ * handling sequence.
-+ */
-+#define XFS_ERRTAG_DROP_WRITES				28
-+
-+#define XFS_ERRTAG_MAX					29
- 
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -129,6 +140,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
- #define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
- #define XFS_RANDOM_BMAP_FINISH_ONE			1
- #define XFS_RANDOM_AG_RESV_CRITICAL			4
-+#define XFS_RANDOM_DROP_WRITES				1
- 
- #ifdef DEBUG
- extern int xfs_errortag_init(struct xfs_mount *mp);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 304b79d..86f1a9f 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1097,7 +1097,7 @@ xfs_file_iomap_end_delalloc(
- 	 * Behave as if the write failed if drop writes is enabled. Set the NEW
- 	 * flag to force delalloc cleanup.
- 	 */
--	if (xfs_mp_drop_writes(mp)) {
-+	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_DROP_WRITES)) {
- 		iomap->flags |= IOMAP_F_NEW;
- 		written = 0;
- 	}
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 931e9fc..e0792d0 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -205,16 +205,6 @@ typedef struct xfs_mount {
- 	 */
- 	unsigned int		*m_errortag;
- 	struct xfs_kobj		m_errortag_kobj;
--
--	/*
--	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
--	 * block killing in the event of failed writes. When enabled, all
--	 * buffered writes are silenty dropped and handled as if they failed.
--	 * All delalloc blocks in the range of the write (including pre-existing
--	 * delalloc blocks!) are tossed as part of the write failure error
--	 * handling sequence.
--	 */
--	bool			m_drop_writes;
- #endif
- } xfs_mount_t;
- 
-@@ -333,20 +323,6 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
- 	return (xfs_agblock_t) do_div(ld, mp->m_sb.sb_agblocks);
- }
- 
--#ifdef DEBUG
--static inline bool
--xfs_mp_drop_writes(struct xfs_mount *mp)
--{
--	return mp->m_drop_writes;
--}
--#else
--static inline bool
--xfs_mp_drop_writes(struct xfs_mount *mp)
--{
--	return 0;
--}
--#endif
--
- /* per-AG block reservation data structures*/
- enum xfs_ag_resv_type {
- 	XFS_AG_RESV_NONE = 0,
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index ec6e0e2..56610a9 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -90,49 +90,7 @@ to_mp(struct kobject *kobject)
- 	return container_of(kobj, struct xfs_mount, m_kobj);
- }
- 
--#ifdef DEBUG
--
--STATIC ssize_t
--drop_writes_store(
--	struct kobject		*kobject,
--	const char		*buf,
--	size_t			count)
--{
--	struct xfs_mount	*mp = to_mp(kobject);
--	int			ret;
--	int			val;
--
--	ret = kstrtoint(buf, 0, &val);
--	if (ret)
--		return ret;
--
--	if (val == 1)
--		mp->m_drop_writes = true;
--	else if (val == 0)
--		mp->m_drop_writes = false;
--	else
--		return -EINVAL;
--
--	return count;
--}
--
--STATIC ssize_t
--drop_writes_show(
--	struct kobject		*kobject,
--	char			*buf)
--{
--	struct xfs_mount	*mp = to_mp(kobject);
--
--	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_drop_writes ? 1 : 0);
--}
--XFS_SYSFS_ATTR_RW(drop_writes);
--
--#endif /* DEBUG */
--
- static struct attribute *xfs_mp_attrs[] = {
--#ifdef DEBUG
--	ATTR_LIST(drop_writes),
--#endif
- 	NULL,
- };
- 
+I've been calling it "immutable extents" - freezing has implications
+that it's only temporary (i.e. freezing filesystems) and will be
+followed shortly by a thaw. That isn't the case here - we truly want
+the extent/block map to be immutable....
 
+> Second, some kind of function to toggle the S_IOMAP_FROZEN flag.
+> Turning it on will lock the inode, check the extent map for holes,
+> shared, or unwritten bits, and bail out if it finds any, or set the
+> flag. 
+
+Hmmm, I disagree on the unwritten state here.  We want swap files to
+be able to use unwritten extents - it means we can preallocate the
+swap file and hand it straight to swapon without having to zero it
+(i.e. no I/O needed to demand allocate more swap space when memory
+is very low).  Also, anyone who tries to read the swap file from
+userspace will be reading unwritten extents, which will always
+return zeros rather than whatever is in the swap file...
+
+> Not sure if we should require CAP_LINUX_IMMUTABLE -- probably
+> yes, at least at first.  I don't currently have any objection to writing
+> non-iomap inode metadata out to disk.
+> 
+> Third, the flag can only be cleared if the file isn't mapped.
+
+How do we check this from the fs without racing? AFAICT we can't
+prevent a concurrent map operation from occurring while we are
+changing the state of the inode - we can only block page faults
+after then inode is mapped....
+
+> Fourth, the VFS entry points for things like read, write, truncate,
+> utimes, fallocate, etc. all just bail out if S_IOMAP_FROZEN is set on a
+> file, so that the block map cannot be modified.
+> mmap is still allowed,
+> as we've discussed.  /Maybe/ we can allow fallocate to extend a file
+> with zeroed extents (it will be slow) as I've heard murmurs about
+> wanting to be able to extend a file, maybe not.
+
+read is fine, write should be fine as long as the iomap call can
+error out operations that would require extent map modifications.
+fallocate should be allowed to modify the extent map, too, because
+it should be the mechanism used be applications to set up file
+extents in the correct form for applications to use as immutable
+(i.e. lock out page faults, allocate, zero, extend and fsync in
+one atomic operation)....
+
+> Fifth, swapfiles now require the S_IOMAP_FROZEN flag since they want
+> stable iomap but probably don't care about things like mtime.  Maybe
+> they can call iomap too.
+> 
+> Sixth, XFS can record the S_IOMAP_FROZEN state in di_flags2 and set it
+> whenever the in-core inode gets constructed.  This enables us to
+> prohibit reflinking and other such undesirable activity.
+
+*nod*
+
+> If we actually /do/ come up with a reference implementation for XFS, I'd
+> be ok with tacking it on the end of my dev branch, which will give us a
+> loooong runway to try it out.  The end of the dev branch is beyond
+> online XFS fsck and repair and the "root metadata btrees in inodes"
+> rework; since that's ~90 patches with my name on it that I cannot also
+> review, it won't go in for a long time indeed!
+
+I don't think it's so complex to need such a long dev time -
+all the infrastructure we need is pretty much there already...
+
+> (Yes, that was also sort of a plea for someone to go review the XFS
+> scrub patches.)
+> 
+> > +	return 0;
+> > +}
+> > +
+> > +SYSCALL_DEFINE3(daxctl, const char __user *, path, int, flags, int, align)
+> 
+> I was /about/ to grouse about this syscall, then realized that maybe it
+> /is/ useful to be able to check a specific alignment.  Maybe not, since
+> I had something more permanent in mind anyway.  In any case, just pass
+> in an opened fd if this sticks around.
+
+We can do all that via fallocate(), too...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
