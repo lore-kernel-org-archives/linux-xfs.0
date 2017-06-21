@@ -1,229 +1,161 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55296 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751106AbdFUUQi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Jun 2017 16:16:38 -0400
-Subject: Re: [PATCH 02/12] libxcmd: add cvt{int, long} to convert strings to
- int and long
-References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
- <149755896133.3625.13813626356334626083.stgit@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6c0086a3-d1db-baa0-f0a4-be1c6d2cebe7@sandeen.net>
-Date: Wed, 21 Jun 2017 15:16:37 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:26281 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbdFUQyW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 12:54:22 -0400
+Date: Wed, 21 Jun 2017 09:54:16 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 0/2 V4] Resubmit items failed during writeback
+Message-ID: <20170621165416.GI4733@birch.djwong.org>
+References: <20170616105445.3314-1-cmaiolino@redhat.com>
+ <20170619135120.GD25516@bfoster.bfoster>
+ <20170619174203.GA4733@birch.djwong.org>
+ <20170619185111.GA29903@bfoster.bfoster>
+ <20170621004550.GF4733@birch.djwong.org>
+ <20170621101526.GC28914@bfoster.bfoster>
+ <20170621110349.xhucfxyratu4qmym@eorzea.usersys.redhat.com>
+ <20170621115132.GE28914@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <149755896133.3625.13813626356334626083.stgit@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170621115132.GE28914@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 6/15/17 3:36 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+[Heh, concurrent replies.]
+
+On Wed, Jun 21, 2017 at 07:51:32AM -0400, Brian Foster wrote:
+> On Wed, Jun 21, 2017 at 01:03:49PM +0200, Carlos Maiolino wrote:
+> > Hey fellows.
+> > 
+> > On Wed, Jun 21, 2017 at 06:15:26AM -0400, Brian Foster wrote:
+> > > On Tue, Jun 20, 2017 at 05:45:50PM -0700, Darrick J. Wong wrote:
+> > > > On Mon, Jun 19, 2017 at 02:51:11PM -0400, Brian Foster wrote:
+> > > > > On Mon, Jun 19, 2017 at 10:42:03AM -0700, Darrick J. Wong wrote:
+> > > > > > On Mon, Jun 19, 2017 at 09:51:22AM -0400, Brian Foster wrote:
+> > > > > > > On Fri, Jun 16, 2017 at 12:54:43PM +0200, Carlos Maiolino wrote:
+> > > > > > > > Hi,
+> > > > > > > > 
+> > > > > > > > there goes a new version of this patchset based on previous reviews on V3.
+> > > > > > > > 
+> > > > > > > > Changelogs added separated to each patch.
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > Hi Carlos,
+> > > > > > > 
+> > > > > > > I pointed out the last things that I'm aware of that I think need to be
+> > > > > > > fixed in this series (along with a few nits here and there). That said,
+> > > > > > > it's already been pointed out that we probably want an xfstests test
+> > > > > > > case to go along with this before it would be merged. Is that something
+> > > > > > > you are still planning on?
+> > > > > > > 
+> > 
+> > Well, I am sure planing a xfstests for this case, I just didn't stop to work on
+> > it yet, and well, I wasn't expecting to have the test done before merging this
+> > patchset, is this a requirement? If so, I'll work on that before finishing this
+> > series, otherwise I'll just finish the series and then move to the xfstests.
+> > 
 > 
-> Create some helper functions to convert strings to int or long
-> in a standard way and work around problems in the C library
-> atoi/strtol functions.
+> I think it's reasonable to expect to at least have an xfstests test
+> posted and available for review before this is merged, but I'll defer to
+> Darrick on that. I don't think you necessarily have to stop working on
+> these patches to get the xfstests done (i.e., maybe start putting
+> something together after the next version goes out for review?), but
+> that's just my .02. ;)
+
+Yes, it's fine to have testcases out for review, even if we haven't
+finalized all the debugging knobs necessary.
+
+> > .
+> > .
+> > .
+> > > > > > > something like a new DEBUG sysfs attribute in the error configuration
+> > > > > > > (see log_badcrc_factor for a similar example).
+> > > > > > 
+> > > > > > I wonder if it would be more useful to have individual knobs for each
+> > > > > > metadata object type so that you could have multiple xfstests, each of
+> > > > > > which runs the same software scenario but with different failures
+> > > > > > 
+> > > > > 
+> > > > > I suppose you could do some of that in the test just by making certain
+> > .
+> > .
+> > .
+> > 
+> > > > XFS_RANDOM_ values (i.e. inverted frequency).  Now we're free of the
+> > > > limitation of only being able to inject 10 error types across all
+> > > > mounted fses, and we can individually disable injection too.
+> > > > 
+> > > 
+> > > Nice, that sounds very interesting.. thanks!
+> > > 
+> > > Brian
+> > > 
+> > 
+> > Regarding the error injection knobs (and the bad quoting of previous replies
+> > above :), I like the idea, and I can surely work on such implementation, but, I
+> > honestly disagree with having the error injection patches in this same patchset.
+> > This will recreate a new discussion regarding the implementation, several new
+> > reviews, comments, etc and postpone this fix even more. I'd highly appreciate if
+> > we could do this in a different patchset, so we can have this fix merged sooner.
+> > 
+> > What you guys think?
+> > 
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  include/input.h |    8 +++
->  libxcmd/input.c |  134 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 142 insertions(+)
+> I think we all agree that generic error injection (which Darrick has
+> started playing with, but I haven't looked at yet) doesn't need to be
+> bundled with this series (I hope we didn't scare you there ;). What I
+> was asking for is a single patch that adds error injection in one spot
+> with a configurable frequency. I'll refer to commit 609adfc2ed ("xfs:
+> debug mode log record crc error injection") again because it is a simple
+> example of a small DEBUG only hunk of code and boilerplate code to add a
+> sysfs knob.
 > 
+> That said, I don't even think such a patch needs to be merged. I'm happy
+> with appending a quick and dirty RFC to the series so long as it works
+> to facilitate testing. I was merely suggesting it could be merged
+> because you could also use it to construct an xfstests test if you so
+> desired. If not, we could leave it as an rfc and perhaps add something
+> later on top of the bits Darrick has started to play with.
 > 
-> diff --git a/include/input.h b/include/input.h
-> index 82cd2f4..145114b 100644
-> --- a/include/input.h
-> +++ b/include/input.h
-> @@ -28,6 +28,14 @@ extern char	**breakline(char *input, int *count);
->  extern void	doneline(char *input, char **vec);
->  extern char	*fetchline(void);
->  
-> +extern int64_t	cvt_s64(char *s, int base);
-> +extern int32_t	cvt_s32(char *s, int base);
-> +extern int16_t	cvt_s16(char *s, int base);
-> +
-> +extern uint64_t	cvt_u64(char *s, int base);
-> +extern uint32_t	cvt_u32(char *s, int base);
-> +extern uint16_t	cvt_u16(char *s, int base);
-> +
->  extern size_t numlen(uint64_t val, size_t base);
->  extern long long cvtnum(size_t blocksize, size_t sectorsize, char *s);
->  extern void	cvtstr(double value, char *str, size_t sz);
-> diff --git a/libxcmd/input.c b/libxcmd/input.c
-> index 9437be3..8dd232c 100644
-> --- a/libxcmd/input.c
-> +++ b/libxcmd/input.c
-> @@ -149,6 +149,140 @@ numlen(
->  	return len == 0 ? 1 : len;
->  }
->  
-> +/*
-> + * Convert string to int64_t, set errno if the conversion fails or
-> + * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-> + * prior to conversion.
-> + */
-> +int64_t
-> +cvt_s64(
-> +	char		*s,
-> +	int		base)
-> +{
-> +	long long	i;
-> +	char		*sp;
-> +	int		c;
+> The reason I'm asking for this is because testing is an important part
+> of code review[1]. We have the ability to test for unrelated regressions
+> already. Presumably, we will have a new regression test for this
+> specific issue based on your current reproducer recipe as well. While I
+> may think the code is ultimately correct, that's not quite enough for me
+> to put a reviewed-by on this set because of the complexity of the area
+> of code it's touching. I'd much prefer to be able to run something that
+> truly stresses out this area of code.
 
-unused var c
+Agree.  I'd love to live in a world where most of my review process is
+examining the overall approach to make sure that it integrates well with
+the design and letting the automated tests look for bugs in the
+implementation details, though obviously we're not there.
 
-> +
-> +	errno = 0;
-> +	i = strtoll(s, &sp, base);
-> +	if (*sp == '\0' && sp != s)
-> +		return i;
-> +bad:
+--D
 
-label bad: defined but not used
-
-> +	errno = -ERANGE;
-> +	return INT64_MIN;
-
-Hm, doesn't strtoll return LLONG_MIN or LLONG_MAX for underflows
-and overflows?  Do you really want to return MIN even if this /overflowed/?
-(Maybe it doesn't matter, gut its a bit of a departure from strtoll semantics)
-
-> +}
-> +
-> +/*
-> + * Convert string to int32_t, set errno if the conversion fails or
-> + * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-> + * prior to conversion.
-> + */
-> +int32_t
-> +cvt_s32(
-> +	char		*s,
-> +	int		base)
-> +{
-> +	int64_t		i;
-> +
-> +	i = cvt_s64(s, base);
-> +	if (errno)
-> +		return i;
-> +	if (i > INT32_MAX || i < INT32_MIN) {
-> +		errno = -ERANGE;
-> +		return INT32_MIN;
-
-same sort of Q here, wouldn't you want MIN or MAX
-for underflow/overflow?  Same below as well for all
-signed type conversions.
-
-> +	}
-> +	return i;
-> +}
-> +
-> +/*
-> + * Convert string to int16_t, set errno if the conversion fails or
-> + * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-> + * prior to conversion.
-> + */
-> +int16_t
-> +cvt_s16(
-> +	char		*s,
-> +	int		base)
-> +{
-> +	int64_t		i;
-> +
-> +	i = cvt_s64(s, base);
-> +	if (errno)
-> +		return i;
-> +	if (i > INT16_MAX || i < INT16_MIN) {
-> +		errno = -ERANGE;
-> +		return INT16_MIN;
-> +	}
-> +	return i;
-> +}
-> +
-> +/*
-> + * Convert string to uint64_t, set errno if the conversion fails or
-> + * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-> + * prior to conversion.
-> + */
-> +uint64_t
-> +cvt_u64(
-> +	char		*s,
-> +	int		base)
-> +{
-> +	long long	i;
-> +	char		*sp;
-> +	int		c;
-
-unused var c:
-
-> +
-> +	errno = 0;
-> +	i = strtoll(s, &sp, base);
-> +	if (*sp == '\0' && sp != s)
-> +		return i;
-> +bad:
-
-unused label bad:
-
-> +	errno = -ERANGE;
-> +	return UINT64_MAX;
-> +}
-> +
-> +/*
-> + * Convert string to uint32_t, set errno if the conversion fails or
-> + * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-> + * prior to conversion.
-> + */
-> +uint32_t
-> +cvt_u32(
-> +	char		*s,
-> +	int		base)
-> +{
-> +	uint64_t	i;
-> +
-> +	i = cvt_u64(s, base);
-> +	if (errno)
-> +		return i;
-> +	if (i > UINT32_MAX) {
-> +		errno = -ERANGE;
-> +		return UINT32_MAX;
-> +	}
-> +	return i;
-> +}
-> +
-> +/*
-> + * Convert string to uint16_t, set errno if the conversion fails or
-> + * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-> + * prior to conversion.
-> + */
-> +uint16_t
-> +cvt_u16(
-> +	char		*s,
-> +	int		base)
-> +{
-> +	uint64_t	i;
-> +
-> +	i = cvt_u64(s, base);
-> +	if (errno)
-> +		return i;
-> +	if (i > UINT16_MAX) {
-> +		errno = -ERANGE;
-> +		return UINT16_MAX;
-> +	}
-> +	return i;
-> +}
-> +
->  #define EXABYTES(x)	((long long)(x) << 60)
->  #define PETABYTES(x)	((long long)(x) << 50)
->  #define TERABYTES(x)	((long long)(x) << 40)
+> Brian
 > 
+> [1] In reality, I'm going to do this myself if necessary. I'm just
+> asking to save myself some time (and possibly encourage similar testing
+> from others). ;)
+> 
+> > also, let me know if I should send the xfstest before moving on with this
+> > patchset.
+> > 
+> > 
+> > Cheers
+> > 
+> > -- 
+> > Carlos
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
