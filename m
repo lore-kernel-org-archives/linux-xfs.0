@@ -1,250 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43630 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750827AbdFUUaF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 16:30:05 -0400
-Date: Wed, 21 Jun 2017 13:29:51 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/12] libxcmd: add cvt{int, long} to convert strings to
- int and long
-Message-ID: <20170621202951.GM4733@birch.djwong.org>
-References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
- <149755896133.3625.13813626356334626083.stgit@birch.djwong.org>
- <6c0086a3-d1db-baa0-f0a4-be1c6d2cebe7@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:40192 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752911AbdFUJxl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Jun 2017 05:53:41 -0400
+Date: Wed, 21 Jun 2017 05:53:24 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Shutdown filesystem when a thin pool become full
+Message-ID: <20170621095324.GA28914@bfoster.bfoster>
+References: <a89aa00c4f86fbdc674dd8f5b5eeb248@assyoma.it>
+ <20170615131433.n33sqvyes4fhcbye@eorzea.usersys.redhat.com>
+ <20170615141057.q7fpnicynucq6yk2@eorzea.usersys.redhat.com>
+ <f2edd27c-615b-d20f-0b03-51cc399221bb@assyoma.it>
+ <20170620110548.eruly7ygixydyk2o@eorzea.usersys.redhat.com>
+ <dee0d3cc198663bb850ef2576c84d620@assyoma.it>
+ <20170620152858.GA3348@bfoster.bfoster>
+ <d30c96bafa9d476e1a381a0aaa1bc285@assyoma.it>
+ <20170620170208.GC3348@bfoster.bfoster>
+ <18cd5d2398dd1187dd1306cdcee508b7@assyoma.it>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <6c0086a3-d1db-baa0-f0a4-be1c6d2cebe7@sandeen.net>
+In-Reply-To: <18cd5d2398dd1187dd1306cdcee508b7@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jun 21, 2017 at 03:16:37PM -0500, Eric Sandeen wrote:
-> On 6/15/17 3:36 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jun 20, 2017 at 08:43:30PM +0200, Gionatan Danti wrote:
+> Il 20-06-2017 19:02 Brian Foster ha scritto:
 > > 
-> > Create some helper functions to convert strings to int or long
-> > in a standard way and work around problems in the C library
-> > atoi/strtol functions.
+> > ISTM you might as well write something in userspace that receives a
+> > notification from device-mapper and shuts down or remounts the fs if the
+> > volume has gone inactive or hit a watermark. I don't think we'd bury
+> > anything in XFS that cuts off and then resumes operations based on
+> > underlying device errors like that. That sounds like a very crude
+> > approach with a narrow use case.
+> 
+> Absolutely, crude & ugly...
+> 
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  include/input.h |    8 +++
-> >  libxcmd/input.c |  134 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  2 files changed, 142 insertions(+)
+> > That said, I don't think I'd be opposed to something in XFS that
+> > (optionally) shutdown the fs in response to a similar dm notification
+> > provided we know with certainty that the underlying device is inactive
+> > (and that it can be accomplished relatively cleanly).
 > > 
-> > 
-> > diff --git a/include/input.h b/include/input.h
-> > index 82cd2f4..145114b 100644
-> > --- a/include/input.h
-> > +++ b/include/input.h
-> > @@ -28,6 +28,14 @@ extern char	**breakline(char *input, int *count);
-> >  extern void	doneline(char *input, char **vec);
-> >  extern char	*fetchline(void);
-> >  
-> > +extern int64_t	cvt_s64(char *s, int base);
-> > +extern int32_t	cvt_s32(char *s, int base);
-> > +extern int16_t	cvt_s16(char *s, int base);
-> > +
-> > +extern uint64_t	cvt_u64(char *s, int base);
-> > +extern uint32_t	cvt_u32(char *s, int base);
-> > +extern uint16_t	cvt_u16(char *s, int base);
-> > +
-> >  extern size_t numlen(uint64_t val, size_t base);
-> >  extern long long cvtnum(size_t blocksize, size_t sectorsize, char *s);
-> >  extern void	cvtstr(double value, char *str, size_t sz);
-> > diff --git a/libxcmd/input.c b/libxcmd/input.c
-> > index 9437be3..8dd232c 100644
-> > --- a/libxcmd/input.c
-> > +++ b/libxcmd/input.c
-> > @@ -149,6 +149,140 @@ numlen(
-> >  	return len == 0 ? 1 : len;
-> >  }
-> >  
-> > +/*
-> > + * Convert string to int64_t, set errno if the conversion fails or
-> > + * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-> > + * prior to conversion.
-> > + */
-> > +int64_t
-> > +cvt_s64(
-> > +	char		*s,
-> > +	int		base)
-> > +{
-> > +	long long	i;
-> > +	char		*sp;
-> > +	int		c;
 > 
-> unused var c
+> This would be a much better approach. Any chances to get it implemented?
+> About your patches, I really like that they addresses the fallocate
+> propagation issue. Are they a work in progress? Any chances to have them
+> shipping in mainline kernel?
 > 
-> > +
-> > +	errno = 0;
-> > +	i = strtoll(s, &sp, base);
-> > +	if (*sp == '\0' && sp != s)
-> > +		return i;
-> > +bad:
+
+Not likely anytime soon, at least. Those patches were an experiment for
+an idea on how to improve usability in an XFS/dm-thin setup, but
+otherwise didn't seem to get much traction. One major downside is that
+the solution is specific to XFS.
+
+Brian
+
+> Thanks.
 > 
-> label bad: defined but not used
-
-Fixed.  Sorry about the stupidity. :(
-
-> > +	errno = -ERANGE;
-> > +	return INT64_MIN;
-> 
-> Hm, doesn't strtoll return LLONG_MIN or LLONG_MAX for underflows
-> and overflows?  Do you really want to return MIN even if this /overflowed/?
-> (Maybe it doesn't matter, gut its a bit of a departure from strtoll semantics)
-
-True, it's a departure from the usual semantics.  The intent is to call
-the function this way:
-
-long foo = cvt_s64(...);
-if (errno) {
-	fprintf(stderr, "N|_|MB3Rz ARE HARDZ!!1!\n");
-	exit(5);
-}
-
-So at least in theory it wouldn't matter what we actually set foo to.
-
-> > +}
-> > +
-> > +/*
-> > + * Convert string to int32_t, set errno if the conversion fails or
-> > + * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-> > + * prior to conversion.
-> > + */
-> > +int32_t
-> > +cvt_s32(
-> > +	char		*s,
-> > +	int		base)
-> > +{
-> > +	int64_t		i;
-> > +
-> > +	i = cvt_s64(s, base);
-> > +	if (errno)
-> > +		return i;
-> > +	if (i > INT32_MAX || i < INT32_MIN) {
-> > +		errno = -ERANGE;
-> > +		return INT32_MIN;
-> 
-> same sort of Q here, wouldn't you want MIN or MAX
-> for underflow/overflow?  Same below as well for all
-> signed type conversions.
-> 
-> > +	}
-> > +	return i;
-> > +}
-> > +
-> > +/*
-> > + * Convert string to int16_t, set errno if the conversion fails or
-> > + * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-> > + * prior to conversion.
-> > + */
-> > +int16_t
-> > +cvt_s16(
-> > +	char		*s,
-> > +	int		base)
-> > +{
-> > +	int64_t		i;
-> > +
-> > +	i = cvt_s64(s, base);
-> > +	if (errno)
-> > +		return i;
-> > +	if (i > INT16_MAX || i < INT16_MIN) {
-> > +		errno = -ERANGE;
-> > +		return INT16_MIN;
-> > +	}
-> > +	return i;
-> > +}
-> > +
-> > +/*
-> > + * Convert string to uint64_t, set errno if the conversion fails or
-> > + * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-> > + * prior to conversion.
-> > + */
-> > +uint64_t
-> > +cvt_u64(
-> > +	char		*s,
-> > +	int		base)
-> > +{
-> > +	long long	i;
-> > +	char		*sp;
-> > +	int		c;
-> 
-> unused var c:
-> 
-> > +
-> > +	errno = 0;
-> > +	i = strtoll(s, &sp, base);
-> > +	if (*sp == '\0' && sp != s)
-> > +		return i;
-> > +bad:
-> 
-> unused label bad:
-
-Yeah, fixed.
-
---D
-
-> > +	errno = -ERANGE;
-> > +	return UINT64_MAX;
-> > +}
-> > +
-> > +/*
-> > + * Convert string to uint32_t, set errno if the conversion fails or
-> > + * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-> > + * prior to conversion.
-> > + */
-> > +uint32_t
-> > +cvt_u32(
-> > +	char		*s,
-> > +	int		base)
-> > +{
-> > +	uint64_t	i;
-> > +
-> > +	i = cvt_u64(s, base);
-> > +	if (errno)
-> > +		return i;
-> > +	if (i > UINT32_MAX) {
-> > +		errno = -ERANGE;
-> > +		return UINT32_MAX;
-> > +	}
-> > +	return i;
-> > +}
-> > +
-> > +/*
-> > + * Convert string to uint16_t, set errno if the conversion fails or
-> > + * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-> > + * prior to conversion.
-> > + */
-> > +uint16_t
-> > +cvt_u16(
-> > +	char		*s,
-> > +	int		base)
-> > +{
-> > +	uint64_t	i;
-> > +
-> > +	i = cvt_u64(s, base);
-> > +	if (errno)
-> > +		return i;
-> > +	if (i > UINT16_MAX) {
-> > +		errno = -ERANGE;
-> > +		return UINT16_MAX;
-> > +	}
-> > +	return i;
-> > +}
-> > +
-> >  #define EXABYTES(x)	((long long)(x) << 60)
-> >  #define PETABYTES(x)	((long long)(x) << 50)
-> >  #define TERABYTES(x)	((long long)(x) << 40)
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
+> -- 
+> Danti Gionatan
+> Supporto Tecnico
+> Assyoma S.r.l. - www.assyoma.it
+> email: g.danti@assyoma.it - info@assyoma.it
+> GPG public key ID: FF5F32A8
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
