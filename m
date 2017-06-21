@@ -1,228 +1,336 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57298 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751901AbdFUUnZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Jun 2017 16:43:25 -0400
-Subject: Re: [PATCH 04/12] xfs: introduce the XFS_IOC_GETFSMAP ioctl
-References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
- <149755897354.3625.17411163584419405510.stgit@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d4febc05-2ce8-b996-88f7-1ad3efbf72a3@sandeen.net>
-Date: Wed, 21 Jun 2017 15:43:23 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:50457 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751108AbdFUUpj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 16:45:39 -0400
+Date: Wed, 21 Jun 2017 13:45:32 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/4] xfs: expose errortag knobs via sysfs
+Message-ID: <20170621204532.GP4733@birch.djwong.org>
+References: <149800747210.23118.6423951814449227184.stgit@birch.djwong.org>
+ <149800748451.23118.6326280252461129051.stgit@birch.djwong.org>
+ <20170621181918.GC29843@bfoster.bfoster>
+ <20170621183955.GK4733@birch.djwong.org>
+ <20170621185354.GF29843@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <149755897354.3625.17411163584419405510.stgit@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170621185354.GF29843@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 6/15/17 3:36 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jun 21, 2017 at 02:53:54PM -0400, Brian Foster wrote:
+> On Wed, Jun 21, 2017 at 11:39:55AM -0700, Darrick J. Wong wrote:
+> > On Wed, Jun 21, 2017 at 02:19:18PM -0400, Brian Foster wrote:
+> > > On Tue, Jun 20, 2017 at 06:11:24PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Creates a /sys/fs/xfs/$dev/errortag/ directory to control the errortag
+> > > > values directly.  This enables us to control the randomness values,
+> > > > rather than having to accept the defaults.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > >  fs/xfs/xfs_error.c |  156 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+> > > >  fs/xfs/xfs_error.h |    1 
+> > > >  fs/xfs/xfs_mount.h |    1 
+> > > >  3 files changed, 157 insertions(+), 1 deletion(-)
+> > > > 
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> > > > index ef16ac2..81f260f 100644
+> > > > --- a/fs/xfs/xfs_error.c
+> > > > +++ b/fs/xfs/xfs_error.c
+> > > > @@ -22,6 +22,7 @@
+> > > >  #include "xfs_trans_resv.h"
+> > > >  #include "xfs_mount.h"
+> > > >  #include "xfs_error.h"
+> > > > +#include "xfs_sysfs.h"
+> > > >  
+> > > >  #ifdef DEBUG
+> > > >  
+> > > > @@ -56,6 +57,145 @@ static unsigned int xfs_errortag_random_default[] = {
+> > > >  	XFS_RANDOM_AG_RESV_CRITICAL,
+> > > >  };
+> > > >  
+> > > > +struct xfs_errortag_attr {
+> > > > +	struct attribute	attr;
+> > > > +	unsigned int		tag;
+> > > > +};
+> > > > +
+> > > > +static inline struct xfs_errortag_attr *
+> > > > +to_attr(struct attribute *attr)
+> > > > +{
+> > > > +	return container_of(attr, struct xfs_errortag_attr, attr);
+> > > > +}
+> > > > +
+> > > > +static inline struct xfs_mount *
+> > > > +to_mp(struct kobject *kobject)
+> > > > +{
+> > > > +	struct xfs_kobj *kobj = to_kobj(kobject);
+> > > > +
+> > > > +	return container_of(kobj, struct xfs_mount, m_errortag_kobj);
+> > > > +}
+> > > > +
+> > > > +STATIC ssize_t
+> > > > +xfs_errortag_attr_store(
+> > > > +	struct kobject		*kobject,
+> > > > +	struct attribute	*attr,
+> > > > +	const char		*buf,
+> > > > +	size_t			count)
+> > > > +{
+> > > > +	struct xfs_mount	*mp = to_mp(kobject);
+> > > > +	struct xfs_errortag_attr *xfs_attr = to_attr(attr);
+> > > > +	int			ret;
+> > > > +	unsigned int		val;
+> > > > +
+> > > > +	if (strcmp(buf, "on") == 0) {
+> > > > +		val = xfs_errortag_random_default[xfs_attr->tag];
+> > > 
+> > > I'm also wondering if we really care to preserve this. It doesn't seem
+> > > like something we would add if we were adding this mechanism from
+> > > scratch, for example, but I could be wrong. Obviously this isn't from
+> > > scratch, but I kind of view this as morphing the old mechanism into
+> > > something slightly new (while preserving the old interface).
+> > 
+> > I debated whether or not to port every aspect of the old ioctl to this
+> > new interface.  My thought was that the current ioctl applies whatever
+> > default the kernel has, so therefore the sysfs interface needs a kludge
+> > to preserve that feature because the current crop of test cases accept
+> > the kernel defaults.  We /could/ change the xfstests helper to supply
+> > the default value to sysfs if the test doesn't otherwise provide a
+> > value, but on an old kernel there's no way to figure out if the value
+> > set was the value you wanted, so if the value you supply is the same as
+> > the encoded default then try the ioctl and if it succeeds then maybe the
+> > injection is set up the way the test wants?  Ick.
+> > 
 > 
-> Introduce a new ioctl that uses the reverse mapping btree to return
-> information about the physical layout of the filesystem.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> [sandeen: rework to have less autoconf magic]
-> Modified-by: Eric Sandeen <sandeen@redhat.com>
+> I'm a little confused... is there any reason we can't keep the ioctl()
+> interface around (and in use by the existing xfstests helpers) for the
+> purpose of preserving this traditional "hardcoded default" behavior?
+> Anything that uses/expects kernel provided settings can just continue to
+> use the existing interface. Anything new or that wants finer grained
+> control can use sysfs.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+I think I confused myself and everyone else about this point.  I wasn't
+planning to get rid of the old ioctl, but then went off into the weeds
+over "what if we ever did remove it".
 
-> ---
-> v3: rework the whole mess to have less autoconf magic; now we only
-> track if the system headers actually define getfsmap.
-> v2: shorten the device field to u32 since that's all we need for
-> dev_t.  Support reporting reverse mapping information for all the
-> devices that XFS supports (data, log).
-> ---
->  configure.ac          |    1 
->  include/builddefs.in  |    4 ++
->  include/linux.h       |  103 +++++++++++++++++++++++++++++++++++++++++++++++++
->  m4/package_libcdev.m4 |   20 ++++++++++
->  4 files changed, 128 insertions(+)
+Sooo... this is my vision:
+
+The ioctl will retain the behavior that you can only set the value to
+the default; it will not let you set the value if it's already been
+turned on; and the only way to turn off any of the error tags is to
+clear all of them.
+
+The sysfs interface will let you set the values to anything you want at
+any time, including 0 (off) or "default".
+
+> > Then again it's a debug interface that historically didn't check the
+> > error tag being input either, so.... :(
+> > 
+> > Also, maybe "default" would have been a better choice for the value?
+> > 
 > 
+> I do like "default" better than "on" if we want to keep the ability to
+> set the associated value via sysfs.
+
+Ok.
+
+--D
+
 > 
-> diff --git a/configure.ac b/configure.ac
-> index aa102e4..9534986 100644
-> --- a/configure.ac
-> +++ b/configure.ac
-> @@ -142,6 +142,7 @@ AC_HAVE_READDIR
->  AC_HAVE_FSETXATTR
->  AC_HAVE_MREMAP
->  AC_NEED_INTERNAL_FSXATTR
-> +AC_HAVE_GETFSMAP
->  
->  if test "$enable_blkid" = yes; then
->  AC_HAVE_BLKID_TOPO
-> diff --git a/include/builddefs.in b/include/builddefs.in
-> index 4d6bb2d..ec630bd 100644
-> --- a/include/builddefs.in
-> +++ b/include/builddefs.in
-> @@ -112,6 +112,7 @@ HAVE_FLS = @have_fls@
->  HAVE_FSETXATTR = @have_fsetxattr@
->  HAVE_MREMAP = @have_mremap@
->  NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
-> +HAVE_GETFSMAP = @have_getfsmap@
->  
->  GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
->  #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-> @@ -150,6 +151,9 @@ endif
->  ifeq ($(NEED_INTERNAL_FSXATTR),yes)
->  PCFLAGS+= -DOVERRIDE_SYSTEM_FSXATTR
->  endif
-> +ifeq ($(HAVE_GETFSMAP),yes)
-> +PCFLAGS+= -DHAVE_GETFSMAP
-> +endif
->  
->  
->  GCFLAGS = $(DEBUG) \
-> diff --git a/include/linux.h b/include/linux.h
-> index 6a676ca..38969d1 100644
-> --- a/include/linux.h
-> +++ b/include/linux.h
-> @@ -222,4 +222,107 @@ struct fsxattr {
->  #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
->  #endif
->  
-> +#ifndef HAVE_GETFSMAP
-> +/*
-> + *	Structure for FS_IOC_GETFSMAP.
-> + *
-> + *	The memory layout for this call are the scalar values defined in
-> + *	struct fsmap_head, followed by two struct fsmap that describe
-> + *	the lower and upper bound of mappings to return, followed by an
-> + *	array of struct fsmap mappings.
-> + *
-> + *	fmh_iflags control the output of the call, whereas fmh_oflags report
-> + *	on the overall record output.  fmh_count should be set to the
-> + *	length of the fmh_recs array, and fmh_entries will be set to the
-> + *	number of entries filled out during each call.  If fmh_count is
-> + *	zero, the number of reverse mappings will be returned in
-> + *	fmh_entries, though no mappings will be returned.  fmh_reserved
-> + *	must be set to zero.
-> + *
-> + *	The two elements in the fmh_keys array are used to constrain the
-> + *	output.  The first element in the array should represent the
-> + *	lowest disk mapping ("low key") that the user wants to learn
-> + *	about.  If this value is all zeroes, the filesystem will return
-> + *	the first entry it knows about.  For a subsequent call, the
-> + *	contents of fsmap_head.fmh_recs[fsmap_head.fmh_count - 1] should be
-> + *	copied into fmh_keys[0] to have the kernel start where it left off.
-> + *
-> + *	The second element in the fmh_keys array should represent the
-> + *	highest disk mapping ("high key") that the user wants to learn
-> + *	about.  If this value is all ones, the filesystem will not stop
-> + *	until it runs out of mapping to return or runs out of space in
-> + *	fmh_recs.
-> + *
-> + *	fmr_device can be either a 32-bit cookie representing a device, or
-> + *	a 32-bit dev_t if the FMH_OF_DEV_T flag is set.  fmr_physical,
-> + *	fmr_offset, and fmr_length are expressed in units of bytes.
-> + *	fmr_owner is either an inode number, or a special value if
-> + *	FMR_OF_SPECIAL_OWNER is set in fmr_flags.
-> + */
-> +struct fsmap {
-> +	__u32		fmr_device;	/* device id */
-> +	__u32		fmr_flags;	/* mapping flags */
-> +	__u64		fmr_physical;	/* device offset of segment */
-> +	__u64		fmr_owner;	/* owner id */
-> +	__u64		fmr_offset;	/* file offset of segment */
-> +	__u64		fmr_length;	/* length of segment */
-> +	__u64		fmr_reserved[3];	/* must be zero */
-> +};
-> +
-> +struct fsmap_head {
-> +	__u32		fmh_iflags;	/* control flags */
-> +	__u32		fmh_oflags;	/* output flags */
-> +	__u32		fmh_count;	/* # of entries in array incl. input */
-> +	__u32		fmh_entries;	/* # of entries filled in (output). */
-> +	__u64		fmh_reserved[6];	/* must be zero */
-> +
-> +	struct fsmap	fmh_keys[2];	/* low and high keys for the mapping search */
-> +	struct fsmap	fmh_recs[];	/* returned records */
-> +};
-> +
-> +/* Size of an fsmap_head with room for nr records. */
-> +static inline size_t
-> +fsmap_sizeof(
-> +	unsigned int	nr)
-> +{
-> +	return sizeof(struct fsmap_head) + nr * sizeof(struct fsmap);
-> +}
-> +
-> +/* Start the next fsmap query at the end of the current query results. */
-> +static inline void
-> +fsmap_advance(
-> +	struct fsmap_head	*head)
-> +{
-> +	head->fmh_keys[0] = head->fmh_recs[head->fmh_entries - 1];
-> +}
-> +
-> +/*	fmh_iflags values - set by XFS_IOC_GETFSMAP caller in the header. */
-> +/* no flags defined yet */
-> +#define FMH_IF_VALID		0
-> +
-> +/*	fmh_oflags values - returned in the header segment only. */
-> +#define FMH_OF_DEV_T		0x1	/* fmr_device values will be dev_t */
-> +
-> +/*	fmr_flags values - returned for each non-header segment */
-> +#define FMR_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
-> +#define FMR_OF_ATTR_FORK	0x2	/* segment = attribute fork */
-> +#define FMR_OF_EXTENT_MAP	0x4	/* segment = extent map */
-> +#define FMR_OF_SHARED		0x8	/* segment = shared with another file */
-> +#define FMR_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
-> +#define FMR_OF_LAST		0x20	/* segment is the last in the FS */
-> +
-> +/* Each FS gets to define its own special owner codes. */
-> +#define FMR_OWNER(type, code)	(((__u64)type << 32) | \
-> +				 ((__u64)code & 0xFFFFFFFFULL))
-> +#define FMR_OWNER_TYPE(owner)	((__u32)((__u64)owner >> 32))
-> +#define FMR_OWNER_CODE(owner)	((__u32)(((__u64)owner & 0xFFFFFFFFULL)))
-> +#define FMR_OWN_FREE		FMR_OWNER(0, 1) /* free space */
-> +#define FMR_OWN_UNKNOWN		FMR_OWNER(0, 2) /* unknown owner */
-> +#define FMR_OWN_METADATA	FMR_OWNER(0, 3) /* metadata */
-> +
-> +#define FS_IOC_GETFSMAP		_IOWR('X', 59, struct fsmap_head)
-> +
-> +#define HAVE_GETFSMAP
-> +#endif /* HAVE_GETFSMAP */
-> +
->  #endif	/* __XFS_LINUX_H__ */
-> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-> index bc3b4ce..fa5b639 100644
-> --- a/m4/package_libcdev.m4
-> +++ b/m4/package_libcdev.m4
-> @@ -277,3 +277,23 @@ AC_DEFUN([AC_NEED_INTERNAL_FSXATTR],
->      )
->      AC_SUBST(need_internal_fsxattr)
->    ])
-> +
-> +#
-> +# Check if we have a FS_IOC_GETFSMAP ioctl (Linux)
-> +#
-> +AC_DEFUN([AC_HAVE_GETFSMAP],
-> +  [ AC_MSG_CHECKING([for GETFSMAP])
-> +    AC_TRY_LINK([
-> +#define _GNU_SOURCE
-> +#include <sys/syscall.h>
-> +#include <unistd.h>
-> +#include <linux/fs.h>
-> +#include <linux/fsmap.h>
-> +    ], [
-> +         unsigned long x = FS_IOC_GETFSMAP;
-> +         struct fsmap_head fh;
-> +    ], have_getfsmap=yes
-> +       AC_MSG_RESULT(yes),
-> +       AC_MSG_RESULT(no))
-> +    AC_SUBST(have_getfsmap)
-> +  ])
+> Brian
 > 
+> > --D
+> > 
+> > > I'll probably need to stare a bit more at the sysfs bits, but otherwise
+> > > the rest all seems fine to me at first glance.
+> > > 
+> > > Brian
+> > > 
+> > > > +	} else {
+> > > > +		ret = kstrtouint(buf, 0, &val);
+> > > > +		if (ret)
+> > > > +			return ret;
+> > > > +	}
+> > > > +
+> > > > +	ret = xfs_errortag_set(mp, xfs_attr->tag, val);
+> > > > +	if (ret)
+> > > > +		return ret;
+> > > > +	return count;
+> > > > +}
+> > > > +
+> > > > +STATIC ssize_t
+> > > > +xfs_errortag_attr_show(
+> > > > +	struct kobject		*kobject,
+> > > > +	struct attribute	*attr,
+> > > > +	char			*buf)
+> > > > +{
+> > > > +	struct xfs_mount	*mp = to_mp(kobject);
+> > > > +	struct xfs_errortag_attr *xfs_attr = to_attr(attr);
+> > > > +
+> > > > +	return snprintf(buf, PAGE_SIZE, "%u\n",
+> > > > +			xfs_errortag_get(mp, xfs_attr->tag));
+> > > > +}
+> > > > +
+> > > > +static const struct sysfs_ops xfs_errortag_sysfs_ops = {
+> > > > +	.show = xfs_errortag_attr_show,
+> > > > +	.store = xfs_errortag_attr_store,
+> > > > +};
+> > > > +
+> > > > +#define XFS_ERRORTAG_ATTR_RW(_name, _tag) \
+> > > > +static struct xfs_errortag_attr xfs_errortag_attr_##_name = {		\
+> > > > +	.attr = {.name = __stringify(_name),				\
+> > > > +		 .mode = VERIFY_OCTAL_PERMISSIONS(S_IWUSR | S_IRUGO) },	\
+> > > > +	.tag	= (_tag),						\
+> > > > +}
+> > > > +
+> > > > +#define XFS_ERRORTAG_ATTR_LIST(_name) &xfs_errortag_attr_##_name.attr
+> > > > +
+> > > > +XFS_ERRORTAG_ATTR_RW(noerror,		XFS_ERRTAG_NOERROR);
+> > > > +XFS_ERRORTAG_ATTR_RW(iflush1,		XFS_ERRTAG_IFLUSH_1);
+> > > > +XFS_ERRORTAG_ATTR_RW(iflush2,		XFS_ERRTAG_IFLUSH_2);
+> > > > +XFS_ERRORTAG_ATTR_RW(iflush3,		XFS_ERRTAG_IFLUSH_3);
+> > > > +XFS_ERRORTAG_ATTR_RW(iflush4,		XFS_ERRTAG_IFLUSH_4);
+> > > > +XFS_ERRORTAG_ATTR_RW(iflush5,		XFS_ERRTAG_IFLUSH_5);
+> > > > +XFS_ERRORTAG_ATTR_RW(iflush6,		XFS_ERRTAG_IFLUSH_6);
+> > > > +XFS_ERRORTAG_ATTR_RW(dareadbuf,		XFS_ERRTAG_DA_READ_BUF);
+> > > > +XFS_ERRORTAG_ATTR_RW(btree_chk_lblk,	XFS_ERRTAG_BTREE_CHECK_LBLOCK);
+> > > > +XFS_ERRORTAG_ATTR_RW(btree_chk_sblk,	XFS_ERRTAG_BTREE_CHECK_SBLOCK);
+> > > > +XFS_ERRORTAG_ATTR_RW(readagf,		XFS_ERRTAG_ALLOC_READ_AGF);
+> > > > +XFS_ERRORTAG_ATTR_RW(readagi,		XFS_ERRTAG_IALLOC_READ_AGI);
+> > > > +XFS_ERRORTAG_ATTR_RW(itobp,		XFS_ERRTAG_ITOBP_INOTOBP);
+> > > > +XFS_ERRORTAG_ATTR_RW(iunlink,		XFS_ERRTAG_IUNLINK);
+> > > > +XFS_ERRORTAG_ATTR_RW(iunlinkrm,		XFS_ERRTAG_IUNLINK_REMOVE);
+> > > > +XFS_ERRORTAG_ATTR_RW(dirinovalid,	XFS_ERRTAG_DIR_INO_VALIDATE);
+> > > > +XFS_ERRORTAG_ATTR_RW(bulkstat,		XFS_ERRTAG_BULKSTAT_READ_CHUNK);
+> > > > +XFS_ERRORTAG_ATTR_RW(logiodone,		XFS_ERRTAG_IODONE_IOERR);
+> > > > +XFS_ERRORTAG_ATTR_RW(stratread,		XFS_ERRTAG_STRATREAD_IOERR);
+> > > > +XFS_ERRORTAG_ATTR_RW(stratcmpl,		XFS_ERRTAG_STRATCMPL_IOERR);
+> > > > +XFS_ERRORTAG_ATTR_RW(diowrite,		XFS_ERRTAG_DIOWRITE_IOERR);
+> > > > +XFS_ERRORTAG_ATTR_RW(bmapifmt,		XFS_ERRTAG_BMAPIFORMAT);
+> > > > +XFS_ERRORTAG_ATTR_RW(free_extent,	XFS_ERRTAG_FREE_EXTENT);
+> > > > +XFS_ERRORTAG_ATTR_RW(rmap_finish_one,	XFS_ERRTAG_RMAP_FINISH_ONE);
+> > > > +XFS_ERRORTAG_ATTR_RW(refcount_continue_update,	XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE);
+> > > > +XFS_ERRORTAG_ATTR_RW(refcount_finish_one,	XFS_ERRTAG_REFCOUNT_FINISH_ONE);
+> > > > +XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
+> > > > +XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
+> > > > +
+> > > > +static struct attribute *xfs_errortag_attrs[] = {
+> > > > +	XFS_ERRORTAG_ATTR_LIST(noerror),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(iflush1),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(iflush2),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(iflush3),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(iflush4),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(iflush5),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(iflush6),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(dareadbuf),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(btree_chk_lblk),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(btree_chk_sblk),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(readagf),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(readagi),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(itobp),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(iunlink),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(iunlinkrm),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(dirinovalid),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(bulkstat),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(logiodone),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(stratread),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(stratcmpl),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(diowrite),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(bmapifmt),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(free_extent),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(rmap_finish_one),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(refcount_continue_update),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(refcount_finish_one),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(bmap_finish_one),
+> > > > +	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
+> > > > +	NULL,
+> > > > +};
+> > > > +
+> > > > +struct kobj_type xfs_errortag_ktype = {
+> > > > +	.release = xfs_sysfs_release,
+> > > > +	.sysfs_ops = &xfs_errortag_sysfs_ops,
+> > > > +	.default_attrs = xfs_errortag_attrs,
+> > > > +};
+> > > > +
+> > > >  int
+> > > >  xfs_errortag_init(
+> > > >  	struct xfs_mount	*mp)
+> > > > @@ -64,13 +204,16 @@ xfs_errortag_init(
+> > > >  			KM_SLEEP | KM_MAYFAIL);
+> > > >  	if (!mp->m_errortag)
+> > > >  		return -ENOMEM;
+> > > > -	return 0;
+> > > > +
+> > > > +	return xfs_sysfs_init(&mp->m_errortag_kobj, &xfs_errortag_ktype,
+> > > > +			       &mp->m_kobj, "errortag");
+> > > >  }
+> > > >  
+> > > >  void
+> > > >  xfs_errortag_del(
+> > > >  	struct xfs_mount	*mp)
+> > > >  {
+> > > > +	xfs_sysfs_del(&mp->m_errortag_kobj);
+> > > >  	kmem_free(mp->m_errortag);
+> > > >  }
+> > > >  
+> > > > @@ -96,6 +239,17 @@ xfs_errortag_test(
+> > > >  }
+> > > >  
+> > > >  int
+> > > > +xfs_errortag_get(
+> > > > +	struct xfs_mount	*mp,
+> > > > +	unsigned int		error_tag)
+> > > > +{
+> > > > +	if (error_tag >= XFS_ERRTAG_MAX)
+> > > > +		return -EINVAL;
+> > > > +
+> > > > +	return mp->m_errortag[error_tag];
+> > > > +}
+> > > > +
+> > > > +int
+> > > >  xfs_errortag_set(
+> > > >  	struct xfs_mount	*mp,
+> > > >  	unsigned int		error_tag,
+> > > > diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+> > > > index 341e8a0..a3c0c1d 100644
+> > > > --- a/fs/xfs/xfs_error.h
+> > > > +++ b/fs/xfs/xfs_error.h
+> > > > @@ -138,6 +138,7 @@ extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
+> > > >  #define XFS_TEST_ERROR(expr, mp, tag, rf)		\
+> > > >  	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
+> > > >  
+> > > > +extern int xfs_errortag_get(struct xfs_mount *mp, unsigned int error_tag);
+> > > >  extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
+> > > >  		unsigned int tag_value);
+> > > >  extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
+> > > > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > > > index e002ac5..931e9fc 100644
+> > > > --- a/fs/xfs/xfs_mount.h
+> > > > +++ b/fs/xfs/xfs_mount.h
+> > > > @@ -204,6 +204,7 @@ typedef struct xfs_mount {
+> > > >  	 * error triggers.  1 = always, 2 = half the time, etc.
+> > > >  	 */
+> > > >  	unsigned int		*m_errortag;
+> > > > +	struct xfs_kobj		m_errortag_kobj;
+> > > >  
+> > > >  	/*
+> > > >  	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
+> > > > 
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
