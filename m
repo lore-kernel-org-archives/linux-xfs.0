@@ -1,146 +1,156 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:15575 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751641AbdFUXhU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 19:37:20 -0400
-Date: Thu, 22 Jun 2017 09:37:14 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 2/2] mm, fs: daxfile, an interface for
- byte-addressable updates to pmem
-Message-ID: <20170621233714.GH11993@dastard>
-References: <149766212410.22552.15957843500156182524.stgit@dwillia2-desk3.amr.corp.intel.com>
- <149766213493.22552.4057048843646200083.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170620052214.GA3787@birch.djwong.org>
+Received: from mx2.suse.de ([195.135.220.15]:48076 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751893AbdFUVuE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Jun 2017 17:50:04 -0400
+Subject: Re: [PATCH] fsr: fix uninitialized fs usage after timeout
+References: <b4921f6d-01c7-09eb-641f-47f1be998e61@suse.com>
+ <118e7672-680a-689d-6b74-7169a38b3d89@sandeen.net>
+From: Jeff Mahoney <jeffm@suse.com>
+Message-ID: <07b82f1b-040f-b472-12f8-fa9eeaf9508f@suse.com>
+Date: Wed, 21 Jun 2017 17:49:59 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170620052214.GA3787@birch.djwong.org>
+In-Reply-To: <118e7672-680a-689d-6b74-7169a38b3d89@sandeen.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="d26wQV4aq6FptPngna8um5e3cCpWcWuGL"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, akpm@linux-foundation.org, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Jun 19, 2017 at 10:22:14PM -0700, Darrick J. Wong wrote:
-> [add linux-xfs to the fray]
-> 
-> On Fri, Jun 16, 2017 at 06:15:35PM -0700, Dan Williams wrote:
-> > +	spin_lock(&dax_lock);
-> > +	list_add(&d->list, &daxfiles);
-> > +	spin_unlock(&dax_lock);
-> > +
-> > +	/*
-> > +	 * We set S_SWAPFILE to gain "no truncate" / static block
-> > +	 * allocation semantics, and S_DAXFILE so we can differentiate
-> > +	 * traditional swapfiles and assume static block mappings in the
-> > +	 * dax mmap path.
-> > +	 */
-> > +	inode->i_flags |= S_SWAPFILE | S_DAXFILE;
-> 
-> Yikes.  You know, I hadn't even thought about considering swap files as
-> a subcase of files with immutable block maps, but here we are.  Both
-> swap files and DAX require absolutely stable block mappings, they are
-> both (probably) intolerant of inode metadata changes (size, mtime, etc.)
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--d26wQV4aq6FptPngna8um5e3cCpWcWuGL
+Content-Type: multipart/mixed; boundary="6WVJtPVJq4uuv7Hr5AFVLfrFvTOIKjSP8";
+ protected-headers="v1"
+From: Jeff Mahoney <jeffm@suse.com>
+To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <07b82f1b-040f-b472-12f8-fa9eeaf9508f@suse.com>
+Subject: Re: [PATCH] fsr: fix uninitialized fs usage after timeout
+References: <b4921f6d-01c7-09eb-641f-47f1be998e61@suse.com>
+ <118e7672-680a-689d-6b74-7169a38b3d89@sandeen.net>
+In-Reply-To: <118e7672-680a-689d-6b74-7169a38b3d89@sandeen.net>
 
-Swap files are intolerant of any metadata changes because once the
-mapping has been sucked into the swapfile code, the inode is never
-looked at again. DAX file data access always goes through the inode,
-so they is much more tolerant of metadata changes given certain
-constraints.
+--6WVJtPVJq4uuv7Hr5AFVLfrFvTOIKjSP8
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-<snip bmap rant>
+On 6/21/17 3:28 PM, Eric Sandeen wrote:
+> On 6/2/17 1:20 PM, Jeff Mahoney wrote:
+>> In the main loop of fsrallfs, we exit when we've hit the timeout but
+>> we increment fs before we get there.  If we're operating on the last
+>> file system in the array, we'll hit an uninitialized fsdesc and
+>> crash in fsrall_cleanup.
+>=20
+> Ugh, really - nobody should be using the defrag-the-world mode,
+> but we ship it, so ...
+>=20
+>> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+>> ---
+>>  fsr/xfs_fsr.c | 4 +---
+>>  1 file changed, 1 insertion(+), 3 deletions(-)
+>>
+>> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+>> index 517b75f0..e695c243 100644
+>> --- a/fsr/xfs_fsr.c
+>> +++ b/fsr/xfs_fsr.c
+>> @@ -598,7 +598,7 @@ fsrallfs(char *mtab, int howlong, char *leftofffil=
+e)
+>>  	signal(SIGTERM, aborter);
+>>
+>>  	/* reorg for 'howlong' -- checked in 'fsrfs' */
+>> -	while (endtime > time(0)) {
+>> +	for (; endtime > time(0); fs->npass++, fs++) {
+>>  		pid_t pid;
+>>  		if (fs =3D=3D fsend)
+>>  			fs =3D fsbase;
+>> @@ -629,8 +629,6 @@ fsrallfs(char *mtab, int howlong, char *leftofffil=
+e)
+>>  			break;
+>>  		}
+>>  		startino =3D 0;  /* reset after the first time through */
+>> -		fs->npass++;
+>> -		fs++;
+>>  	}
+>>  	fsrall_cleanup(endtime <=3D time(0));
+>>  }
+>=20
+> I hate to be that PITA maintainer who only wants to do it his way ;) bu=
+t
+> would this be any tidier?
+>=20
+> I'm just not that big a fan of "for(; ....)" loops.
 
-> Honestly, I realize we've gone back, forth, and around all over the
-> place on this.  I still prefer something similar to a permanent flag,
-> similar to what Dave suggested, though I hate the name PMEM_IMMUTABLE
-> and some of the semantics.
-> 
-> First, a new inode flag S_IOMAP_FROZEN that means the file's block map
-> cannot change.
+Sure, this'll work just as well.
 
-I've been calling it "immutable extents" - freezing has implications
-that it's only temporary (i.e. freezing filesystems) and will be
-followed shortly by a thaw. That isn't the case here - we truly want
-the extent/block map to be immutable....
+-Jeff
 
-> Second, some kind of function to toggle the S_IOMAP_FROZEN flag.
-> Turning it on will lock the inode, check the extent map for holes,
-> shared, or unwritten bits, and bail out if it finds any, or set the
-> flag. 
+> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> index 517b75f..3a5f683 100644
+> --- a/fsr/xfs_fsr.c
+> +++ b/fsr/xfs_fsr.c
+> @@ -600,12 +600,6 @@ fsrallfs(char *mtab, int howlong, char *leftofffil=
+e)
+>  	/* reorg for 'howlong' -- checked in 'fsrfs' */
+>  	while (endtime > time(0)) {
+>  		pid_t pid;
+> -		if (fs =3D=3D fsend)
+> -			fs =3D fsbase;
+> -		if (fs->npass =3D=3D npasses) {
+> -			fsrprintf(_("Completed all %d passes\n"), npasses);
+> -			break;
+> -		}
+>  		if (npasses > 1 && !fs->npass)
+>  			Mflag =3D 1;
+>  		else
+> @@ -631,6 +625,12 @@ fsrallfs(char *mtab, int howlong, char *leftofffil=
+e)
+>  		startino =3D 0;  /* reset after the first time through */
+>  		fs->npass++;
+>  		fs++;
+> +		if (fs =3D=3D fsend)
+> +			fs =3D fsbase;
+> +		if (fs->npass =3D=3D npasses) {
+> +			fsrprintf(_("Completed all %d passes\n"), npasses);
+> +			break;
+> +		}
+>  	}
+>  	fsrall_cleanup(endtime <=3D time(0));
+>  }
+>=20
+>=20
+>=20
 
-Hmmm, I disagree on the unwritten state here.  We want swap files to
-be able to use unwritten extents - it means we can preallocate the
-swap file and hand it straight to swapon without having to zero it
-(i.e. no I/O needed to demand allocate more swap space when memory
-is very low).  Also, anyone who tries to read the swap file from
-userspace will be reading unwritten extents, which will always
-return zeros rather than whatever is in the swap file...
 
-> Not sure if we should require CAP_LINUX_IMMUTABLE -- probably
-> yes, at least at first.  I don't currently have any objection to writing
-> non-iomap inode metadata out to disk.
-> 
-> Third, the flag can only be cleared if the file isn't mapped.
+--=20
+Jeff Mahoney
+SUSE Labs
 
-How do we check this from the fs without racing? AFAICT we can't
-prevent a concurrent map operation from occurring while we are
-changing the state of the inode - we can only block page faults
-after then inode is mapped....
 
-> Fourth, the VFS entry points for things like read, write, truncate,
-> utimes, fallocate, etc. all just bail out if S_IOMAP_FROZEN is set on a
-> file, so that the block map cannot be modified.
-> mmap is still allowed,
-> as we've discussed.  /Maybe/ we can allow fallocate to extend a file
-> with zeroed extents (it will be slow) as I've heard murmurs about
-> wanting to be able to extend a file, maybe not.
+--6WVJtPVJq4uuv7Hr5AFVLfrFvTOIKjSP8--
 
-read is fine, write should be fine as long as the iomap call can
-error out operations that would require extent map modifications.
-fallocate should be allowed to modify the extent map, too, because
-it should be the mechanism used be applications to set up file
-extents in the correct form for applications to use as immutable
-(i.e. lock out page faults, allocate, zero, extend and fsync in
-one atomic operation)....
+--d26wQV4aq6FptPngna8um5e3cCpWcWuGL
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-> Fifth, swapfiles now require the S_IOMAP_FROZEN flag since they want
-> stable iomap but probably don't care about things like mtime.  Maybe
-> they can call iomap too.
-> 
-> Sixth, XFS can record the S_IOMAP_FROZEN state in di_flags2 and set it
-> whenever the in-core inode gets constructed.  This enables us to
-> prohibit reflinking and other such undesirable activity.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2
 
-*nod*
+iQIVAwUBWUrqCB57S2MheeWyAQgPHBAAqZje0XuLxl9HoBHqlLXmsjiKTZmLmQNY
+HpTyV4ZKgHaVLgBE0XR+oojU0U5WNKQ8XYB05HkRDpEpArGE54xQ0+FRHgxnDb8t
+NMYH591mCJieDbblpIL4xdz7yYHG/L3nL2wpIPiqg2o91H3kpVWHLZhI/4WnBfPI
+x9pMZ1Hhqrj1xB10FLHfezW/+MOPL2ii2PD55BkI4auSVe2xqzWuCxZhzCuapNQS
+DHcRzUawno3aT7nT/NcJ1AitPYpVEtyB5N1kfg0rb0KUn+R/ONL+31ReQzKpITRu
+cAeXqc1kU/rx/mJD9xHFi2LyHuJz3/Abm3YnQAMpWjIPRIVGFoIzdTzT/hlfwANh
+pN8GqjlAuidjMA5eGPDp+V5/SXEeZrmO7U1AkBt7rPcH7P/QB7x0aDdbV2e4XxI6
+h+5H0uKq182YzOCzCG+9IER43xRaahEeGIwtbRRp2MQpuKyupW9T/hll2CMGhsdv
+OtZ4NE/7EW1gHJnE+YE0iDGkwMXzIzGnTwmGNlos3VuaO3yduRzyrDqXIK7WzKwq
+LGoRjBRaXHif8QsRc6PBk/vUDG+moPNa3SyedO9EidHHAEsy8MR2tbuKbJ3ttB74
+ypNSdqgdpdxjdYJUccpMDGwaIF4vOBtGPIAn3l6kww9OHmoW5r3wK6NDB4XFg/+N
+E5wnjDRdwhA=
+=vmLR
+-----END PGP SIGNATURE-----
 
-> If we actually /do/ come up with a reference implementation for XFS, I'd
-> be ok with tacking it on the end of my dev branch, which will give us a
-> loooong runway to try it out.  The end of the dev branch is beyond
-> online XFS fsck and repair and the "root metadata btrees in inodes"
-> rework; since that's ~90 patches with my name on it that I cannot also
-> review, it won't go in for a long time indeed!
-
-I don't think it's so complex to need such a long dev time -
-all the infrastructure we need is pretty much there already...
-
-> (Yes, that was also sort of a plea for someone to go review the XFS
-> scrub patches.)
-> 
-> > +	return 0;
-> > +}
-> > +
-> > +SYSCALL_DEFINE3(daxctl, const char __user *, path, int, flags, int, align)
-> 
-> I was /about/ to grouse about this syscall, then realized that maybe it
-> /is/ useful to be able to check a specific alignment.  Maybe not, since
-> I had something more permanent in mind anyway.  In any case, just pass
-> in an opened fd if this sticks around.
-
-We can do all that via fallocate(), too...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--d26wQV4aq6FptPngna8um5e3cCpWcWuGL--
