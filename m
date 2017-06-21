@@ -1,191 +1,213 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31308 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750971AbdFBTwE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2017 15:52:04 -0400
-Subject: [PATCH 07/10] xfs_spaceman: add new speculative prealloc control
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Jun 2017 12:51:57 -0700
-Message-ID: <149643311754.15899.8219480295517493642.stgit@birch.djwong.org>
-In-Reply-To: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
-References: <149643307433.15899.922559884171553380.stgit@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:34362 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751108AbdFUVxy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Jun 2017 17:53:54 -0400
+Subject: Re: [PATCH 12/12] xfs_spaceman: add group summary mode
+References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
+ <149755902328.3625.10845087403849596095.stgit@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <847e6b56-aba2-2371-b8f3-a3d8800c1ae8@sandeen.net>
+Date: Wed, 21 Jun 2017 16:53:52 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <149755902328.3625.10845087403849596095.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On 6/15/17 3:37 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add a -g switch to show only a per-group summary.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add an control interface for purging speculative
-preallocation via the new ioctls.
+with a small fix (see below)
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-[darrick: change xfsctl to ioctl]
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- spaceman/Makefile   |    2 -
- spaceman/init.c     |    1 
- spaceman/prealloc.c |  111 +++++++++++++++++++++++++++++++++++++++++++++++++++
- spaceman/space.h    |    1 
- 4 files changed, 114 insertions(+), 1 deletion(-)
- create mode 100644 spaceman/prealloc.c
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  man/man8/xfs_spaceman.8 |    6 +++++-
+>  spaceman/freesp.c       |   27 ++++++++++++++++++++++++---
+>  2 files changed, 29 insertions(+), 4 deletions(-)
+> 
+> 
+> diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
+> index f064360..0302196 100644
+> --- a/man/man8/xfs_spaceman.8
+> +++ b/man/man8/xfs_spaceman.8
+> @@ -25,7 +25,7 @@ then the program exits.
+>  
+>  .SH COMMANDS
+>  .TP
+> -.BI "freesp [ \-drs ] [-a agno] [ \-b | \-e bsize | \-h bsize | \-m factor ]"
+> +.BI "freesp [ \-dgrs ] [-a agno] [ \-b | \-e bsize | \-h bsize | \-m factor ]"
+>  With no arguments,
+>  .B freesp
+>  shows a histogram of all free space extents in the filesystem.
+> @@ -49,6 +49,10 @@ This is the default, and is mutually exclusive with the
+>  Print debugging information such as the raw free space extent information.
+>  
+>  .TP
+> +.B \-g
+> +Print the free space block and extent counts for each AG.
+> +
+> +.TP
+>  .B \-e bsize
+>  Set all histogram bin sizes to a specific value.
+>  This option is mutually exclusive with the
+> diff --git a/spaceman/freesp.c b/spaceman/freesp.c
+> index 99e50cf..79eea44 100644
+> --- a/spaceman/freesp.c
+> +++ b/spaceman/freesp.c
+> @@ -43,6 +43,7 @@ static long long	multsize;
+>  static int		histcount;
+>  static int		seen1;
+>  static int		summaryflag;
+> +static int		gflag;
+>  static bool		rtflag;
+>  static long long	totblocks;
+>  static long long	totexts;
+> @@ -164,6 +165,8 @@ scan_ag(
+>  	off64_t			bperag;
+>  	off64_t			aglen;
+>  	xfs_agblock_t		agbno;
+> +	unsigned long long	freeblks = 0;
+> +	unsigned long long	freeexts = 0;
+>  	int			ret;
+>  	int			i;
+>  
+> @@ -216,6 +219,8 @@ scan_ag(
+>  			agbno = (extent->fmr_physical - (bperag * agno)) /
+>  								blocksize;
+>  			aglen = extent->fmr_length / blocksize;
+> +			freeblks += aglen;
+> +			freeexts++;
+>  
+>  			addtohist(agno, agbno, aglen);
+>  		}
+> @@ -225,6 +230,15 @@ scan_ag(
+>  			break;
+>  		fsmap_advance(fsmap);
+>  	}
+> +
+> +	if (gflag) {
+> +		if (agno == NULLAGNUMBER)
+> +			printf(_("     rtdev %10llu %10llu\n"), freeexts,
+> +					freeblks);
+> +		else
+> +			printf(_("%10u %10llu %10llu\n"), agno, freeexts,
+> +					freeblks);
+> +	}
+>  }
+>  static void
+>  aglistadd(
+> @@ -258,7 +272,7 @@ init(
+>  	hist = NULL;
+>  	rtflag = false;
+>  
+> -	while ((c = getopt(argc, argv, "a:bde:h:m:rs")) != EOF) {
+> +	while ((c = getopt(argc, argv, "a:bde:gh:m:rs")) != EOF) {
+>  		switch (c) {
+>  		case 'a':
+>  			aglistadd(optarg);
+> @@ -280,6 +294,10 @@ init(
+>  				return command_usage(&freesp_cmd);
+>  			speced = 1;
+>  			break;
+> +		case 'g':
+> +			histcount = 0;
+> +			gflag++;
+> +			break;
+
+This global needs to be reset in init() or it sticks:
+
+(I can fix it on the way in)
+
+xfs_spaceman> freesp
+   from      to extents  blocks    pct
+      1       1  647503  647503   1.69
+      2       3  334189  790976   2.07
+      4       7  369499 2009667   5.26
+      8      15  116258 1233152   3.23
+     16      31   16648  370824   0.97
+     32      63    8817  387963   1.01
+     64     127    5474  487854   1.28
+    128     255    3483  631960   1.65
+    256     511    2613  956121   2.50
+    512    1023    1758 1249204   3.27
+   1024    2047     828 1151649   3.01
+   2048    4095     357  972144   2.54
+   4096    8191     122  687724   1.80
+   8192   16383      38  432634   1.13
+  16384   32767      23  566786   1.48
+  32768   65535      15  765430   2.00
+  65536  131071      14 1359754   3.56
+ 131072  262143       4  653264   1.71
+ 262144  524287       4 1775562   4.64
+ 524288 1048575       2 1390287   3.64
+1048576 2097151       2 2446908   6.40
+2097152 4194303       2 6234130  16.31
+4194304 8388607       2 11023746  28.84
+xfs_spaceman> freesp -g
+        AG    extents     blocks
+         0     280589    6629403
+         1     289696   11847480
+         2      14299    7806587
+         3     923071   11941772
+xfs_spaceman> freesp
+        AG    extents     blocks
+         0     280589    6629403
+         1     289696   11847480
+         2      14299    7806587
+         3     923071   11941772
 
 
-diff --git a/spaceman/Makefile b/spaceman/Makefile
-index c63a4fc..6aad746 100644
---- a/spaceman/Makefile
-+++ b/spaceman/Makefile
-@@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
- 
- LTCOMMAND = xfs_spaceman
- HFILES = init.h space.h
--CFILES = init.c file.c trim.c
-+CFILES = init.c file.c prealloc.c trim.c
- 
- LLDLIBS = $(LIBXCMD)
- LTDEPENDENCIES = $(LIBXCMD)
-diff --git a/spaceman/init.c b/spaceman/init.c
-index 0958377..93a8a1e 100644
---- a/spaceman/init.c
-+++ b/spaceman/init.c
-@@ -39,6 +39,7 @@ init_commands(void)
- {
- 	file_init();
- 	help_init();
-+	prealloc_init();
- 	quit_init();
- 	trim_init();
- }
-diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
-new file mode 100644
-index 0000000..71c0d80
---- /dev/null
-+++ b/spaceman/prealloc.c
-@@ -0,0 +1,111 @@
-+/*
-+ * Copyright (c) 2012 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include "libxfs.h"
-+#include "command.h"
-+#include "input.h"
-+#include "init.h"
-+#include "space.h"
-+
-+static cmdinfo_t prealloc_cmd;
-+
-+/*
-+ * Control preallocation amounts.
-+ */
-+static int
-+prealloc_f(
-+	int	argc,
-+	char	**argv)
-+{
-+	struct xfs_fs_eofblocks eofb = {0};
-+	int	c;
-+
-+	eofb.eof_version = XFS_EOFBLOCKS_VERSION;
-+
-+	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
-+		switch (c) {
-+		case 'g':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_GID;
-+			eofb.eof_gid = atoi(optarg);
-+			break;
-+		case 'u':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_UID;
-+			eofb.eof_uid = atoi(optarg);
-+			break;
-+		case 'p':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
-+			eofb.eof_prid = atoi(optarg);
-+			break;
-+		case 's':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_SYNC;
-+			break;
-+		case 'm':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
-+			eofb.eof_min_file_size = cvtnum(file->geom.blocksize,
-+							file->geom.sectsize,
-+							optarg);
-+			break;
-+		case '?':
-+		default:
-+			return command_usage(&prealloc_cmd);
-+		}
-+	}
-+	if (optind != argc)
-+		return command_usage(&prealloc_cmd);
-+
-+	if (ioctl(file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
-+		fprintf(stderr, _("%s: XFS_IOC_FREE_EOFBLOCKS on %s: %s\n"),
-+			progname, file->name, strerror(errno));
-+	}
-+	return 0;
-+}
-+
-+static void
-+prealloc_help(void)
-+{
-+	printf(_(
-+"\n"
-+"Control speculative preallocation\n"
-+"\n"
-+"Options: [-s] [-ugp id] [-m minlen]\n"
-+"\n"
-+" -s        -- wait for removal to complete\n"
-+" -u uid    -- remove prealloc on files matching user <uid>\n"
-+" -g gid    -- remove prealloc on files matching group <gid>\n"
-+" -p prid   -- remove prealloc on files matching project <prid>\n"
-+" -m minlen -- only consider files larger than <minlen>\n"
-+"\n"));
-+
-+}
-+
-+void
-+prealloc_init(void)
-+{
-+	prealloc_cmd.name = "prealloc";
-+	prealloc_cmd.altname = "prealloc";
-+	prealloc_cmd.cfunc = prealloc_f;
-+	prealloc_cmd.argmin = 1;
-+	prealloc_cmd.argmax = -1;
-+	prealloc_cmd.args = "[-s] [-ugp id] [-m minlen]";
-+	prealloc_cmd.flags = CMD_FLAG_ONESHOT;
-+	prealloc_cmd.oneline = _("Control speculative preallocation");
-+	prealloc_cmd.help = prealloc_help;
-+
-+	add_command(&prealloc_cmd);
-+}
-+
-diff --git a/spaceman/space.h b/spaceman/space.h
-index 7b4f034..0ae3116 100644
---- a/spaceman/space.h
-+++ b/spaceman/space.h
-@@ -33,5 +33,6 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
- 
- extern void	file_init(void);
- extern void	help_init(void);
-+extern void	prealloc_init(void);
- extern void	quit_init(void);
- extern void	trim_init(void);
-
+>  		case 'h':
+>  			if (speced && !histcount)
+>  				goto many_spec;
+> @@ -331,13 +349,15 @@ freesp_f(
+>  
+>  	if (!init(argc, argv))
+>  		return 0;
+> +	if (gflag)
+> +		printf(_("        AG    extents     blocks\n"));
+>  	if (rtflag)
+>  		scan_ag(NULLAGNUMBER);
+>  	for (agno = 0; !rtflag && agno < file->geom.agcount; agno++)  {
+>  		if (inaglist(agno))
+>  			scan_ag(agno);
+>  	}
+> -	if (histcount)
+> +	if (histcount && !gflag)
+>  		printhist();
+>  	if (summaryflag) {
+>  		printf(_("total free extents %lld\n"), totexts);
+> @@ -363,6 +383,7 @@ freesp_help(void)
+>  " -b       -- binary histogram bin size\n"
+>  " -d       -- debug output\n"
+>  " -e bsize -- Use fixed histogram bin size of bsize\n"
+> +" -g       -- Print only a per-AG summary.\n"
+>  " -h hbsz  -- Use custom histogram bin size of h1.\n"
+>  "             Multiple specifications are allowed.\n"
+>  " -m bmult -- Use histogram bin size multiplier of bmult.\n"
+> @@ -382,7 +403,7 @@ freesp_init(void)
+>  	freesp_cmd.cfunc = freesp_f;
+>  	freesp_cmd.argmin = 0;
+>  	freesp_cmd.argmax = -1;
+> -	freesp_cmd.args = "[-drs] [-a agno]... [ -b | -e bsize | -h h1... | -m bmult ]";
+> +	freesp_cmd.args = "[-dgrs] [-a agno]... [ -b | -e bsize | -h h1... | -m bmult ]";
+>  	freesp_cmd.flags = CMD_FLAG_ONESHOT;
+>  	freesp_cmd.oneline = _("Examine filesystem free space");
+>  	freesp_cmd.help = freesp_help;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
