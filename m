@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60248 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:60602 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751093AbdFUVVw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Jun 2017 17:21:52 -0400
-Subject: Re: [PATCH 08/12] xfs_spaceman: add FITRIM support
+        id S1751083AbdFUV0q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Jun 2017 17:26:46 -0400
+Subject: Re: [PATCH 09/12] xfs_spaceman: add new speculative prealloc control
 References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
- <149755899832.3625.846462761036158527.stgit@birch.djwong.org>
+ <149755900449.3625.1673913017722813839.stgit@birch.djwong.org>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <58138380-683c-9b92-958a-5d759f09df59@sandeen.net>
-Date: Wed, 21 Jun 2017 16:21:50 -0500
+Message-ID: <69e495ee-7c82-a7ad-5506-e2403b46005b@sandeen.net>
+Date: Wed, 21 Jun 2017 16:26:44 -0500
 MIME-Version: 1.0
-In-Reply-To: <149755899832.3625.846462761036158527.stgit@birch.djwong.org>
+In-Reply-To: <149755900449.3625.1673913017722813839.stgit@birch.djwong.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -23,66 +23,55 @@ Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 On 6/15/17 3:36 PM, Darrick J. Wong wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Add support for discarding free space extents via the FITRIM
-> command. Make it easy to discard a single range, an entire AG or all
-> the freespace in the filesystem.
+> Add an control interface for purging speculative
+> preallocation via the new ioctls.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> [darrick: change xfsctl to ioctl]
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
->  spaceman/Makefile |    2 -
->  spaceman/init.c   |    1 
->  spaceman/space.h  |    1 
->  spaceman/trim.c   |  131 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  4 files changed, 134 insertions(+), 1 deletion(-)
->  create mode 100644 spaceman/trim.c
+>  spaceman/Makefile   |    2 -
+>  spaceman/init.c     |    1 
+>  spaceman/prealloc.c |  118 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  spaceman/space.h    |    1 
+>  4 files changed, 121 insertions(+), 1 deletion(-)
+>  create mode 100644 spaceman/prealloc.c
 > 
 > 
 > diff --git a/spaceman/Makefile b/spaceman/Makefile
-> index df59edf..c63a4fc 100644
+> index c63a4fc..6aad746 100644
 > --- a/spaceman/Makefile
 > +++ b/spaceman/Makefile
 > @@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
 >  
 >  LTCOMMAND = xfs_spaceman
 >  HFILES = init.h space.h
-> -CFILES = init.c file.c
-> +CFILES = init.c file.c trim.c
+> -CFILES = init.c file.c trim.c
+> +CFILES = init.c file.c prealloc.c trim.c
 >  
 >  LLDLIBS = $(LIBXCMD)
 >  LTDEPENDENCIES = $(LIBXCMD)
 > diff --git a/spaceman/init.c b/spaceman/init.c
-> index 8cbfbda..107a692 100644
+> index 107a692..a51007d 100644
 > --- a/spaceman/init.c
 > +++ b/spaceman/init.c
-> @@ -40,6 +40,7 @@ init_commands(void)
+> @@ -39,6 +39,7 @@ init_commands(void)
+>  {
 >  	print_init();
 >  	help_init();
+> +	prealloc_init();
 >  	quit_init();
-> +	trim_init();
+>  	trim_init();
 >  }
->  
->  static int
-> diff --git a/spaceman/space.h b/spaceman/space.h
-> index 7bfe874..8cd3953 100644
-> --- a/spaceman/space.h
-> +++ b/spaceman/space.h
-> @@ -34,5 +34,6 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *);
->  extern void	print_init(void);
->  extern void	help_init(void);
->  extern void	quit_init(void);
-> +extern void	trim_init(void);
->  
->  #endif /* XFS_SPACEMAN_SPACE_H_ */
-> diff --git a/spaceman/trim.c b/spaceman/trim.c
+> diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
 > new file mode 100644
-> index 0000000..c0bc7f2
+> index 0000000..439a9e8
 > --- /dev/null
-> +++ b/spaceman/trim.c
-> @@ -0,0 +1,131 @@
+> +++ b/spaceman/prealloc.c
+> @@ -0,0 +1,118 @@
 > +/*
 > + * Copyright (c) 2012 Red Hat, Inc.
 > + * All Rights Reserved.
@@ -102,118 +91,117 @@ Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 > + */
 > +
 > +#include "libxfs.h"
-> +#include <linux/fs.h>
 > +#include "command.h"
+> +#include "input.h"
 > +#include "init.h"
 > +#include "space.h"
-> +#include "input.h"
 > +
-> +static cmdinfo_t trim_cmd;
+> +static cmdinfo_t prealloc_cmd;
 > +
 > +/*
-> + * Trim unused space in xfs filesystem.
+> + * Control preallocation amounts.
 > + */
 > +static int
-> +trim_f(
-> +	int		argc,
-> +	char		**argv)
+> +prealloc_f(
+> +	int	argc,
+> +	char	**argv)
 > +{
-> +	struct fstrim_range trim = {0};
-> +	xfs_agnumber_t	agno = 0;
-> +	off64_t		offset = 0;
-> +	ssize_t		length = 0;
-> +	ssize_t		minlen = 0;
-> +	int		aflag = 0;
-> +	int		fflag = 0;
-> +	int		ret;
-> +	int		c;
+> +	struct xfs_fs_eofblocks eofb = {0};
+> +	int	c;
 > +
-> +	while ((c = getopt(argc, argv, "a:fm:")) != EOF) {
+> +	eofb.eof_version = XFS_EOFBLOCKS_VERSION;
+> +
+> +	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
 > +		switch (c) {
-> +		case 'a':
-> +			aflag = 1;
-> +			agno = cvt_u32(optarg, 10);
-> +			if (errno) {
-> +				printf(_("bad agno value %s\n"), optarg);
-> +				return command_usage(&trim_cmd);
-> +			}
+> +		case 'g':
+> +			eofb.eof_flags |= XFS_EOF_FLAGS_GID;
+> +			eofb.eof_gid = cvt_u32(optarg, 10);
+> +			if (errno)
+> +				return command_usage(&prealloc_cmd);
 > +			break;
-> +		case 'f':
-> +			fflag = 1;
+> +		case 'u':
+> +			eofb.eof_flags |= XFS_EOF_FLAGS_UID;
+> +			eofb.eof_uid = cvt_u32(optarg, 10);
+> +			if (errno)
+> +				return command_usage(&prealloc_cmd);
+> +			break;
+> +		case 'p':
+> +			eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
+> +			eofb.eof_prid = cvt_u32(optarg, 10);
+> +			if (errno)
+> +				return command_usage(&prealloc_cmd);
+> +			break;
+> +		case 's':
+> +			eofb.eof_flags |= XFS_EOF_FLAGS_SYNC;
 > +			break;
 > +		case 'm':
-> +			minlen = cvtnum(file->geom.blocksize,
-> +					file->geom.sectsize, optarg);
+> +			eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
+> +			eofb.eof_min_file_size = cvtnum(file->geom.blocksize,
+> +							file->geom.sectsize,
+> +							optarg);
 > +			break;
+> +		case '?':
 > +		default:
-> +			return command_usage(&trim_cmd);
+> +			return command_usage(&prealloc_cmd);
 > +		}
 > +	}
+> +	if (optind != argc)
+> +		return command_usage(&prealloc_cmd);
 > +
-> +	if (aflag && fflag)
-> +		return command_usage(&trim_cmd);
-> +
-> +	if (optind != argc - 2 && !(aflag || fflag))
-> +		return command_usage(&trim_cmd);
-> +	if (optind != argc) {
-> +		offset = cvtnum(file->geom.blocksize, file->geom.sectsize,
-> +				argv[optind]);
-> +		length = cvtnum(file->geom.blocksize, file->geom.sectsize,
-> +				argv[optind + 1]);
-> +	} else if (agno) {
-> +		offset = agno * file->geom.agblocks * file->geom.blocksize;
-> +		length = file->geom.agblocks * file->geom.blocksize;
-> +	} else {
-> +		offset = 0;
-> +		length = file->geom.datablocks * file->geom.blocksize;
-> +	}
-> +
-> +	trim.start = offset;
-> +	trim.len = length;
-> +	trim.minlen = minlen;
-> +
-> +	ret = ioctl(file->fd, FITRIM, (unsigned long)&trim);
-> +	if (ret < 0) {
-> +		fprintf(stderr, "%s: ioctl(FITRIM) [\"%s\"]: "
-> +			"%s\n", progname, file->name, strerror(errno));
-> +		exitcode = 1;
+> +	if (ioctl(file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
+> +		fprintf(stderr, _("%s: XFS_IOC_FREE_EOFBLOCKS on %s: %s\n"),
+> +			progname, file->name, strerror(errno));
 > +	}
 > +	return 0;
 > +}
 > +
 > +static void
-> +trim_help(void)
+> +prealloc_help(void)
 > +{
 > +	printf(_(
 > +"\n"
-> +"Discard filesystem free space\n"
+> +"Control speculative preallocation\n"
 > +"\n"
-> +" -a agno       -- trim all the freespace in the given AG agno\n"
-> +" -f            -- trim all the freespace in the entire filesystem\n"
-> +" offset length -- trim the freespace in the range {offset, length}\n"
-> +" -m minlen     -- skip freespace extents smaller than minlen\n"
+> +" -g gid    -- remove prealloc on files matching group <gid>\n"
+> +" -m minlen -- only consider files larger than <minlen>\n"
+> +" -p prid   -- remove prealloc on files matching project <prid>\n"
+> +" -s        -- wait for removal to complete\n"
+> +" -u uid    -- remove prealloc on files matching user <uid>\n"
 > +"\n"
-> +"One of -a, -f, or the offset/length pair are required.\n"
+> +"If none of -u, -g, or -p are specified, this command acts on all files.\n"
+> +"minlen can take units.\n"
 > +"\n"));
 > +
 > +}
 > +
 > +void
-> +trim_init(void)
+> +prealloc_init(void)
 > +{
-> +	trim_cmd.name = "trim";
-> +	trim_cmd.altname = "tr";
-> +	trim_cmd.cfunc = trim_f;
-> +	trim_cmd.argmin = 1;
-> +	trim_cmd.argmax = 4;
-> +	trim_cmd.args = "[-m minlen] ( -a agno | -f | offset length )";
-> +	trim_cmd.flags = CMD_FLAG_ONESHOT;
-> +	trim_cmd.oneline = _("Discard filesystem free space");
-> +	trim_cmd.help = trim_help;
+> +	prealloc_cmd.name = "prealloc";
+> +	prealloc_cmd.altname = "prealloc";
+> +	prealloc_cmd.cfunc = prealloc_f;
+> +	prealloc_cmd.argmin = 1;
+> +	prealloc_cmd.argmax = -1;
+> +	prealloc_cmd.args = "[-s] [-u id] [-g id] [-p id] [-m minlen]";
+> +	prealloc_cmd.flags = CMD_FLAG_ONESHOT;
+> +	prealloc_cmd.oneline = _("Control speculative preallocation");
+> +	prealloc_cmd.help = prealloc_help;
 > +
-> +	add_command(&trim_cmd);
+> +	add_command(&prealloc_cmd);
 > +}
 > +
+> diff --git a/spaceman/space.h b/spaceman/space.h
+> index 8cd3953..de97139 100644
+> --- a/spaceman/space.h
+> +++ b/spaceman/space.h
+> @@ -33,6 +33,7 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *);
+>  
+>  extern void	print_init(void);
+>  extern void	help_init(void);
+> +extern void	prealloc_init(void);
+>  extern void	quit_init(void);
+>  extern void	trim_init(void);
+>  
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
