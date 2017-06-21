@@ -1,217 +1,168 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56156 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:57054 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751865AbdFUSTo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Jun 2017 14:19:44 -0400
-Date: Wed, 21 Jun 2017 14:19:42 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/4] xfs: convert drop_writes to use the errortag
- mechanism
-Message-ID: <20170621181941.GE29843@bfoster.bfoster>
-References: <149800747210.23118.6423951814449227184.stgit@birch.djwong.org>
- <149800750838.23118.17160603017676771034.stgit@birch.djwong.org>
+        id S1751041AbdFUUkT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Jun 2017 16:40:19 -0400
+Subject: Re: [PATCH 01/12] xfs_io: refactor numlen into a library function
+References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
+ <149755895523.3625.10641288707827420905.stgit@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <a0cf2a3a-66fd-1153-3629-4a0329e125eb@sandeen.net>
+Date: Wed, 21 Jun 2017 15:40:18 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <149800750838.23118.17160603017676771034.stgit@birch.djwong.org>
+In-Reply-To: <149755895523.3625.10641288707827420905.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 20, 2017 at 06:11:48PM -0700, Darrick J. Wong wrote:
+On 6/15/17 3:35 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> We now have enhanced error injection that can control the frequency
-> with which errors happen, so convert drop_writes to use this.
+> Refactor the competing numlen implementations into a single library function.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Yay!
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
-
-Nice. Looks like a simple tweak to xfs/196 too...
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_error.c |    3 +++
->  fs/xfs/xfs_error.h |   14 +++++++++++++-
->  fs/xfs/xfs_iomap.c |    2 +-
->  fs/xfs/xfs_mount.h |   24 ------------------------
->  fs/xfs/xfs_sysfs.c |   42 ------------------------------------------
->  5 files changed, 17 insertions(+), 68 deletions(-)
+>  include/input.h |    1 +
+>  io/bmap.c       |   19 ++++---------------
+>  io/fiemap.c     |   14 +-------------
+>  libxcmd/input.c |   13 +++++++++++++
+>  4 files changed, 19 insertions(+), 28 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> index 81f260f..40a15e2 100644
-> --- a/fs/xfs/xfs_error.c
-> +++ b/fs/xfs/xfs_error.c
-> @@ -55,6 +55,7 @@ static unsigned int xfs_errortag_random_default[] = {
->  	XFS_RANDOM_REFCOUNT_FINISH_ONE,
->  	XFS_RANDOM_BMAP_FINISH_ONE,
->  	XFS_RANDOM_AG_RESV_CRITICAL,
-> +	XFS_RANDOM_DROP_WRITES,
->  };
+> diff --git a/include/input.h b/include/input.h
+> index 221678e..82cd2f4 100644
+> --- a/include/input.h
+> +++ b/include/input.h
+> @@ -28,6 +28,7 @@ extern char	**breakline(char *input, int *count);
+>  extern void	doneline(char *input, char **vec);
+>  extern char	*fetchline(void);
 >  
->  struct xfs_errortag_attr {
-> @@ -157,6 +158,7 @@ XFS_ERRORTAG_ATTR_RW(refcount_continue_update,	XFS_ERRTAG_REFCOUNT_CONTINUE_UPDA
->  XFS_ERRORTAG_ATTR_RW(refcount_finish_one,	XFS_ERRTAG_REFCOUNT_FINISH_ONE);
->  XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
->  XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
-> +XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
+> +extern size_t numlen(uint64_t val, size_t base);
+>  extern long long cvtnum(size_t blocksize, size_t sectorsize, char *s);
+>  extern void	cvtstr(double value, char *str, size_t sz);
+>  extern unsigned long cvttime(char *s);
+> diff --git a/io/bmap.c b/io/bmap.c
+> index 2333244..2e4ff7b 100644
+> --- a/io/bmap.c
+> +++ b/io/bmap.c
+> @@ -18,6 +18,7 @@
 >  
->  static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(noerror),
-> @@ -187,6 +189,7 @@ static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(refcount_finish_one),
->  	XFS_ERRORTAG_ATTR_LIST(bmap_finish_one),
->  	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
-> +	XFS_ERRORTAG_ATTR_LIST(drop_writes),
->  	NULL,
->  };
+>  #include "platform_defs.h"
+>  #include "command.h"
+> +#include "input.h"
+>  #include "init.h"
+>  #include "io.h"
 >  
-> diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-> index 083a6fc..cd7881f 100644
-> --- a/fs/xfs/xfs_error.h
-> +++ b/fs/xfs/xfs_error.h
-> @@ -96,7 +96,18 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
->  #define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
->  #define XFS_ERRTAG_BMAP_FINISH_ONE			26
->  #define XFS_ERRTAG_AG_RESV_CRITICAL			27
-> -#define XFS_ERRTAG_MAX					28
-> +
-> +/*
-> + * DEBUG mode instrumentation to test and/or trigger delayed allocation
-> + * block killing in the event of failed writes. When enabled, all
-> + * buffered writes are silenty dropped and handled as if they failed.
-> + * All delalloc blocks in the range of the write (including pre-existing
-> + * delalloc blocks!) are tossed as part of the write failure error
-> + * handling sequence.
-> + */
-> +#define XFS_ERRTAG_DROP_WRITES				28
-> +
-> +#define XFS_ERRTAG_MAX					29
->  
->  /*
->   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-> @@ -129,6 +140,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
->  #define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
->  #define XFS_RANDOM_BMAP_FINISH_ONE			1
->  #define XFS_RANDOM_AG_RESV_CRITICAL			4
-> +#define XFS_RANDOM_DROP_WRITES				1
->  
->  #ifdef DEBUG
->  extern int xfs_errortag_init(struct xfs_mount *mp);
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 304b79d..86f1a9f 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1097,7 +1097,7 @@ xfs_file_iomap_end_delalloc(
->  	 * Behave as if the write failed if drop writes is enabled. Set the NEW
->  	 * flag to force delalloc cleanup.
->  	 */
-> -	if (xfs_mp_drop_writes(mp)) {
-> +	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_DROP_WRITES)) {
->  		iomap->flags |= IOMAP_F_NEW;
->  		written = 0;
->  	}
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 931e9fc..e0792d0 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -205,16 +205,6 @@ typedef struct xfs_mount {
->  	 */
->  	unsigned int		*m_errortag;
->  	struct xfs_kobj		m_errortag_kobj;
-> -
-> -	/*
-> -	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
-> -	 * block killing in the event of failed writes. When enabled, all
-> -	 * buffered writes are silenty dropped and handled as if they failed.
-> -	 * All delalloc blocks in the range of the write (including pre-existing
-> -	 * delalloc blocks!) are tossed as part of the write failure error
-> -	 * handling sequence.
-> -	 */
-> -	bool			m_drop_writes;
->  #endif
->  } xfs_mount_t;
->  
-> @@ -333,20 +323,6 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
->  	return (xfs_agblock_t) do_div(ld, mp->m_sb.sb_agblocks);
+> @@ -53,18 +54,6 @@ bmap_help(void)
+>  "\n"));
 >  }
 >  
-> -#ifdef DEBUG
-> -static inline bool
-> -xfs_mp_drop_writes(struct xfs_mount *mp)
+> -static int
+> -numlen(
+> -	off64_t	val)
 > -{
-> -	return mp->m_drop_writes;
-> -}
-> -#else
-> -static inline bool
-> -xfs_mp_drop_writes(struct xfs_mount *mp)
-> -{
-> -	return 0;
-> -}
-> -#endif
+> -	off64_t	tmp;
+> -	int	len;
 > -
->  /* per-AG block reservation data structures*/
->  enum xfs_ag_resv_type {
->  	XFS_AG_RESV_NONE = 0,
-> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> index b86148a..3e52662 100644
-> --- a/fs/xfs/xfs_sysfs.c
-> +++ b/fs/xfs/xfs_sysfs.c
-> @@ -90,49 +90,7 @@ to_mp(struct kobject *kobject)
->  	return container_of(kobj, struct xfs_mount, m_kobj);
+> -	for (len = 0, tmp = val; tmp > 0; tmp = tmp/10)
+> -		len++;
+> -	return (len == 0 ? 1 : len);
+> -}
+> -
+>  int
+>  bmap_f(
+>  	int			argc,
+> @@ -323,7 +312,7 @@ bmap_f(
+>  			if (map[i + 1].bmv_block == -1) {
+>  				foff_w = max(foff_w, strlen(rbuf));
+>  				tot_w = max(tot_w,
+> -					numlen(map[i+1].bmv_length));
+> +					numlen(map[i+1].bmv_length, 10));
+>  			} else {
+>  				snprintf(bbuf, sizeof(bbuf), "%lld..%lld",
+>  					(long long) map[i + 1].bmv_block,
+> @@ -344,10 +333,10 @@ bmap_f(
+>  					aoff_w = 0;
+>  				foff_w = max(foff_w, strlen(rbuf));
+>  				tot_w = max(tot_w,
+> -					numlen(map[i+1].bmv_length));
+> +					numlen(map[i+1].bmv_length, 10));
+>  			}
+>  		}
+> -		agno_w = is_rt ? 0 : max(MINAG_WIDTH, numlen(fsgeo.agcount));
+> +		agno_w = is_rt ? 0 : max(MINAG_WIDTH, numlen(fsgeo.agcount, 10));
+>  		printf("%4s: %-*s %-*s %*s %-*s %*s%s\n",
+>  			_("EXT"),
+>  			foff_w, _("FILE-OFFSET"),
+> diff --git a/io/fiemap.c b/io/fiemap.c
+> index bcbae49..75e8820 100644
+> --- a/io/fiemap.c
+> +++ b/io/fiemap.c
+> @@ -18,6 +18,7 @@
+>  
+>  #include "platform_defs.h"
+>  #include "command.h"
+> +#include "input.h"
+>  #include <linux/fiemap.h>
+>  #include "init.h"
+>  #include "io.h"
+> @@ -48,19 +49,6 @@ fiemap_help(void)
+>  "\n"));
 >  }
 >  
-> -#ifdef DEBUG
-> -
-> -STATIC ssize_t
-> -drop_writes_store(
-> -	struct kobject		*kobject,
-> -	const char		*buf,
-> -	size_t			count)
+> -static int
+> -numlen(
+> -	__u64	val,
+> -	int	base)
 > -{
-> -	struct xfs_mount	*mp = to_mp(kobject);
-> -	int			ret;
-> -	int			val;
+> -	__u64	tmp;
+> -	int	len;
 > -
-> -	ret = kstrtoint(buf, 0, &val);
-> -	if (ret)
-> -		return ret;
-> -
-> -	if (val == 1)
-> -		mp->m_drop_writes = true;
-> -	else if (val == 0)
-> -		mp->m_drop_writes = false;
-> -	else
-> -		return -EINVAL;
-> -
-> -	return count;
+> -	for (len = 0, tmp = val; tmp > 0; tmp = tmp/base)
+> -		len++;
+> -	return (len == 0 ? 1 : len);
 > -}
 > -
-> -STATIC ssize_t
-> -drop_writes_show(
-> -	struct kobject		*kobject,
-> -	char			*buf)
-> -{
-> -	struct xfs_mount	*mp = to_mp(kobject);
-> -
-> -	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_drop_writes ? 1 : 0);
-> -}
-> -XFS_SYSFS_ATTR_RW(drop_writes);
-> -
-> -#endif /* DEBUG */
-> -
->  static struct attribute *xfs_mp_attrs[] = {
-> -#ifdef DEBUG
-> -	ATTR_LIST(drop_writes),
-> -#endif
->  	NULL,
->  };
+>  static void
+>  print_verbose(
+>  	struct fiemap_extent	*extent,
+> diff --git a/libxcmd/input.c b/libxcmd/input.c
+> index 8aeb3b0..9437be3 100644
+> --- a/libxcmd/input.c
+> +++ b/libxcmd/input.c
+> @@ -136,6 +136,19 @@ doneline(
+>  	free(vec);
+>  }
 >  
+> +size_t
+> +numlen(
+> +	uint64_t	val,
+> +	size_t		base)
+> +{
+> +	uint64_t	tmp;
+> +	size_t		len;
+> +
+> +	for (len = 0, tmp = val; tmp > 0; tmp = tmp / base)
+> +		len++;
+> +	return len == 0 ? 1 : len;
+> +}
+> +
+>  #define EXABYTES(x)	((long long)(x) << 60)
+>  #define PETABYTES(x)	((long long)(x) << 50)
+>  #define TERABYTES(x)	((long long)(x) << 40)
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
