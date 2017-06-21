@@ -1,94 +1,258 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51642 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:56760 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751742AbdFUT2W (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Jun 2017 15:28:22 -0400
-Subject: Re: [PATCH] fsr: fix uninitialized fs usage after timeout
-References: <b4921f6d-01c7-09eb-641f-47f1be998e61@suse.com>
+        id S1750827AbdFUUgi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Jun 2017 16:36:38 -0400
+Subject: Re: [PATCH V2] xfs_metadump: tag metadump image with informational
+ flags
+References: <402504cb-1632-85b6-a745-1334ccf0ee8f@redhat.com>
+ <fd6d4c25-835d-89de-07b5-a6d891a088f3@sandeen.net>
+ <30dda613-f77a-a2db-a18a-3a02e9a86b7c@sandeen.net>
+ <20170621203442.GN4733@birch.djwong.org>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <118e7672-680a-689d-6b74-7169a38b3d89@sandeen.net>
-Date: Wed, 21 Jun 2017 14:28:20 -0500
+Message-ID: <8bed8814-444d-ac3a-8699-28f80564e702@sandeen.net>
+Date: Wed, 21 Jun 2017 15:36:37 -0500
 MIME-Version: 1.0
-In-Reply-To: <b4921f6d-01c7-09eb-641f-47f1be998e61@suse.com>
+In-Reply-To: <20170621203442.GN4733@birch.djwong.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Mahoney <jeffm@suse.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On 6/2/17 1:20 PM, Jeff Mahoney wrote:
-> In the main loop of fsrallfs, we exit when we've hit the timeout but
-> we increment fs before we get there.  If we're operating on the last
-> file system in the array, we'll hit an uninitialized fsdesc and
-> crash in fsrall_cleanup.
-
-Ugh, really - nobody should be using the defrag-the-world mode,
-but we ship it, so ...
-
-> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
-> ---
->  fsr/xfs_fsr.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
+On 6/21/17 3:34 PM, Darrick J. Wong wrote:
+> On Wed, Jun 21, 2017 at 02:18:23PM -0500, Eric Sandeen wrote:
+>> On 5/26/17 11:13 AM, Eric Sandeen wrote:
+>>> After the long discussion about warning the user and/or consumer
+>>> of xfs_metadumps about dirty logs, it crossed my mind that we
+>>> could use the reserved slot in the metadump header to tag the
+>>> file with attributes, so the consumer of the metadump knows how
+>>> it was created.
+>>>
+>>> This patch adds 4 flags to describe the metadump: The first simply
+>>> indicates the presence of any (or no) informational flags.
+>>> The old mb_reserved field has been 0 on disk since inception, so
+>>> the presence of XFS_METADUMP_INFO_FLAGS indicates that this metadump
+>>> may contain the informational flags:
+>>>
+>>>  - dirty log
+>>>  - obfuscated
+>>>  - full blocks (unused portions of metadata blocks
+>>>                 are not zeroed out).
+>>>
+>>> It then adds a new option to xfs_mdrestore, "-i" to show info,
+>>> which can be used with or without a target file:
+>>>
+>>> # xfs_mdrestore -i metadumpfile
+>>> metadumpfile: not obfuscated, clean log, full metadata blocks
+>>>
+>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>>> ---
+>>>
+>>> V2: rename to mb_info, add the "we have flags" flag
+>>
+>> Ping, any thoughts on this V2?
 > 
-> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index 517b75f0..e695c243 100644
-> --- a/fsr/xfs_fsr.c
-> +++ b/fsr/xfs_fsr.c
-> @@ -598,7 +598,7 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
->  	signal(SIGTERM, aborter);
+> /me wonder if show_info mode ought to complain if we see an "obviously"
+> bogus value (flags are set but XFS_METADUMP_INFO_FLAGS is clear, flags
+> we don't know about are set) and dump the raw hex value...
+
+well, it's been memset to 0 since inception.  Sure, something could have
+gone wrong in transit, or whatever, I guess...
+
+I guess it might be nice to sanity check it, but to avoid another
+round trip:
+
+> ...but on the other hand it's redefining a probably-zero field in a
+> semi-ephemeral data file format to be an optional informational field,
+> so maybe it's good enough.
 > 
->  	/* reorg for 'howlong' -- checked in 'fsrfs' */
-> -	while (endtime > time(0)) {
-> +	for (; endtime > time(0); fs->npass++, fs++) {
->  		pid_t pid;
->  		if (fs == fsend)
->  			fs = fsbase;
-> @@ -629,8 +629,6 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
->  			break;
->  		}
->  		startino = 0;  /* reset after the first time through */
-> -		fs->npass++;
-> -		fs++;
->  	}
->  	fsrall_cleanup(endtime <= time(0));
->  }
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I hate to be that PITA maintainer who only wants to do it his way ;) but
-would this be any tidier?
+thanks,
+-Eric
 
-I'm just not that big a fan of "for(; ....)" loops.
-
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 517b75f..3a5f683 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -600,12 +600,6 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
- 	/* reorg for 'howlong' -- checked in 'fsrfs' */
- 	while (endtime > time(0)) {
- 		pid_t pid;
--		if (fs == fsend)
--			fs = fsbase;
--		if (fs->npass == npasses) {
--			fsrprintf(_("Completed all %d passes\n"), npasses);
--			break;
--		}
- 		if (npasses > 1 && !fs->npass)
- 			Mflag = 1;
- 		else
-@@ -631,6 +625,12 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
- 		startino = 0;  /* reset after the first time through */
- 		fs->npass++;
- 		fs++;
-+		if (fs == fsend)
-+			fs = fsbase;
-+		if (fs->npass == npasses) {
-+			fsrprintf(_("Completed all %d passes\n"), npasses);
-+			break;
-+		}
- 	}
- 	fsrall_cleanup(endtime <= time(0));
- }
-
-
+> --D
+> 
+>>  
+>>> diff --git a/db/metadump.c b/db/metadump.c
+>>> index fe068ef..2f5b5b5 100644
+>>> --- a/db/metadump.c
+>>> +++ b/db/metadump.c
+>>> @@ -2820,6 +2820,28 @@ metadump_f(
+>>>  	metablock->mb_blocklog = BBSHIFT;
+>>>  	metablock->mb_magic = cpu_to_be32(XFS_MD_MAGIC);
+>>>  
+>>> +	/* Set flags about state of metadump */
+>>> +	metablock->mb_info = XFS_METADUMP_INFO_FLAGS;
+>>> +	if (obfuscate)
+>>> +		metablock->mb_info |= XFS_METADUMP_OBFUSCATED;
+>>> +	if (!zero_stale_data)
+>>> +		metablock->mb_info |= XFS_METADUMP_FULLBLOCKS;
+>>> +
+>>> +	/* If we'll copy the log, see if the log is dirty */
+>>> +	if (mp->m_sb.sb_logstart) {
+>>> +		push_cur();
+>>> +		set_cur(&typtab[TYP_LOG],
+>>> +			XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
+>>> +			mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN, NULL);
+>>> +		if (iocur_top->data) {	/* best effort */
+>>> +			struct xlog	log;
+>>> +
+>>> +			if (xlog_is_dirty(mp, &log, &x, 0))
+>>> +				metablock->mb_info |= XFS_METADUMP_DIRTYLOG;
+>>> +		}
+>>> +		pop_cur();
+>>> +	}
+>>> +
+>>>  	block_index = (__be64 *)((char *)metablock + sizeof(xfs_metablock_t));
+>>>  	block_buffer = (char *)metablock + BBSIZE;
+>>>  	num_indices = (BBSIZE - sizeof(xfs_metablock_t)) / sizeof(__be64);
+>>> diff --git a/include/xfs_metadump.h b/include/xfs_metadump.h
+>>> index f4be51b..7f3039e 100644
+>>> --- a/include/xfs_metadump.h
+>>> +++ b/include/xfs_metadump.h
+>>> @@ -25,8 +25,14 @@ typedef struct xfs_metablock {
+>>>  	__be32		mb_magic;
+>>>  	__be16		mb_count;
+>>>  	__uint8_t	mb_blocklog;
+>>> -	__uint8_t	mb_reserved;
+>>> +	__uint8_t	mb_info;
+>>>  	/* followed by an array of xfs_daddr_t */
+>>>  } xfs_metablock_t;
+>>>  
+>>> +/* These flags are informational only, not backwards compatible */
+>>> +#define XFS_METADUMP_INFO_FLAGS	(1 << 0) /* This image has informative flags */
+>>> +#define XFS_METADUMP_OBFUSCATED	(1 << 1)
+>>> +#define XFS_METADUMP_FULLBLOCKS	(1 << 2)
+>>> +#define XFS_METADUMP_DIRTYLOG	(1 << 3)
+>>> +
+>>>  #endif /* _XFS_METADUMP_H_ */
+>>> diff --git a/man/man8/xfs_mdrestore.8 b/man/man8/xfs_mdrestore.8
+>>> index 2095f15..72f3b29 100644
+>>> --- a/man/man8/xfs_mdrestore.8
+>>> +++ b/man/man8/xfs_mdrestore.8
+>>> @@ -4,11 +4,15 @@ xfs_mdrestore \- restores an XFS metadump image to a filesystem image
+>>>  .SH SYNOPSIS
+>>>  .B xfs_mdrestore
+>>>  [
+>>> -.B \-g
+>>> +.B \-gi
+>>>  ]
+>>>  .I source
+>>>  .I target
+>>>  .br
+>>> +.B xfs_mdrestore
+>>> +.B \-i
+>>> +.I source
+>>> +.br
+>>>  .B xfs_mdrestore \-V
+>>>  .SH DESCRIPTION
+>>>  .B xfs_mdrestore
+>>> @@ -39,6 +43,12 @@ can be destroyed.
+>>>  .B \-g
+>>>  Shows restore progress on stdout.
+>>>  .TP
+>>> +.B \-i
+>>> +Shows metadump information on stdout.  If no
+>>> +.I target
+>>> +is specified, exits after displaying information.  Older metadumps man not
+>>> +include any descriptive information.
+>>> +.TP
+>>>  .B \-V
+>>>  Prints the version number and exits.
+>>>  .SH DIAGNOSTICS
+>>> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+>>> index 0d399f1..9d1b4e8 100644
+>>> --- a/mdrestore/xfs_mdrestore.c
+>>> +++ b/mdrestore/xfs_mdrestore.c
+>>> @@ -21,6 +21,7 @@
+>>>  
+>>>  char 		*progname;
+>>>  int		show_progress = 0;
+>>> +int		show_info = 0;
+>>>  int		progress_since_warning = 0;
+>>>  
+>>>  static void
+>>> @@ -213,11 +214,14 @@ main(
+>>>  
+>>>  	progname = basename(argv[0]);
+>>>  
+>>> -	while ((c = getopt(argc, argv, "gV")) != EOF) {
+>>> +	while ((c = getopt(argc, argv, "giV")) != EOF) {
+>>>  		switch (c) {
+>>>  			case 'g':
+>>>  				show_progress = 1;
+>>>  				break;
+>>> +			case 'i':
+>>> +				show_info = 1;
+>>> +				break;
+>>>  			case 'V':
+>>>  				printf("%s version %s\n", progname, VERSION);
+>>>  				exit(0);
+>>> @@ -226,7 +230,11 @@ main(
+>>>  		}
+>>>  	}
+>>>  
+>>> -	if (argc - optind != 2)
+>>> +	if (argc - optind < 1 || argc - optind > 2)
+>>> +		usage();
+>>> +
+>>> +	/* show_info without a target is ok */
+>>> +	if (!show_info && argc - optind != 2)
+>>>  		usage();
+>>>  
+>>>  	/* open source */
+>>> @@ -239,6 +247,34 @@ main(
+>>>  		if (src_f == NULL)
+>>>  			fatal("cannot open source dump file\n");
+>>>  	}
+>>> +
+>>> +	if (show_info) {
+>>> +		xfs_metablock_t		mb;
+>>> +
+>>> +		if (fread(&mb, sizeof(mb), 1, src_f) != 1)
+>>> +			fatal("error reading from file: %s\n", strerror(errno));
+>>> +
+>>> +		if (be32_to_cpu(mb.mb_magic) != XFS_MD_MAGIC)
+>>> +			fatal("specified file is not a metadata dump\n");
+>>> +
+>>> +		if (mb.mb_info & XFS_METADUMP_INFO_FLAGS) {
+>>> +			printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
+>>> +			argv[optind],
+>>> +			mb.mb_info & XFS_METADUMP_OBFUSCATED ? "":"not ",
+>>> +			mb.mb_info & XFS_METADUMP_DIRTYLOG ? "dirty":"clean",
+>>> +			mb.mb_info & XFS_METADUMP_FULLBLOCKS ? "full":"zeroed");
+>>> +		} else {
+>>> +			printf("%s: no informational flags present\n",
+>>> +				argv[optind]);
+>>> +		}
+>>> +
+>>> +		if (argc - optind == 1)
+>>> +			exit(0);
+>>> +
+>>> +		/* Go back to the beginning for the restore function */
+>>> +		fseek(src_f, 0L, SEEK_SET);
+>>> +	}
+>>> +
+>>>  	optind++;
+>>>  
+>>>  	/* check and open target */
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
