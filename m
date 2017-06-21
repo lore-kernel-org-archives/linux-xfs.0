@@ -1,138 +1,222 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33064 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:50916 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751141AbdFPKyx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Jun 2017 06:54:53 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B10C5B15D
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 10:54:52 +0000 (UTC)
-Received: from eorzea.usersys.redhat.com (unknown [10.40.205.55])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 11FF983077
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Jun 2017 10:54:51 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 1/2 V4] xfs: Add infrastructure needed for error propagation during buffer IO failure
-Date: Fri, 16 Jun 2017 12:54:44 +0200
-Message-Id: <20170616105445.3314-2-cmaiolino@redhat.com>
-In-Reply-To: <20170616105445.3314-1-cmaiolino@redhat.com>
-References: <20170616105445.3314-1-cmaiolino@redhat.com>
+        id S1751108AbdFUTSY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Jun 2017 15:18:24 -0400
+Subject: Re: [PATCH V2] xfs_metadump: tag metadump image with informational
+ flags
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <402504cb-1632-85b6-a745-1334ccf0ee8f@redhat.com>
+ <fd6d4c25-835d-89de-07b5-a6d891a088f3@sandeen.net>
+Message-ID: <30dda613-f77a-a2db-a18a-3a02e9a86b7c@sandeen.net>
+Date: Wed, 21 Jun 2017 14:18:23 -0500
+MIME-Version: 1.0
+In-Reply-To: <fd6d4c25-835d-89de-07b5-a6d891a088f3@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-With the current code, XFS never re-submit a failed buffer for IO,
-because the failed item in the buffer is kept in the flush locked state
-forever.
+On 5/26/17 11:13 AM, Eric Sandeen wrote:
+> After the long discussion about warning the user and/or consumer
+> of xfs_metadumps about dirty logs, it crossed my mind that we
+> could use the reserved slot in the metadump header to tag the
+> file with attributes, so the consumer of the metadump knows how
+> it was created.
+> 
+> This patch adds 4 flags to describe the metadump: The first simply
+> indicates the presence of any (or no) informational flags.
+> The old mb_reserved field has been 0 on disk since inception, so
+> the presence of XFS_METADUMP_INFO_FLAGS indicates that this metadump
+> may contain the informational flags:
+> 
+>  - dirty log
+>  - obfuscated
+>  - full blocks (unused portions of metadata blocks
+>                 are not zeroed out).
+> 
+> It then adds a new option to xfs_mdrestore, "-i" to show info,
+> which can be used with or without a target file:
+> 
+> # xfs_mdrestore -i metadumpfile
+> metadumpfile: not obfuscated, clean log, full metadata blocks
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> V2: rename to mb_info, add the "we have flags" flag
 
-To be able to resubmit an log item for IO, we need a way to mark an item
-as failed, if, for any reason the buffer which the item belonged to
-failed during writeback.
-
-Add a new log item callback to be used after an IO completion failure
-and make the needed clean ups.
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
-V2:
-	- Update commit log to include a better description of why this
-	  patch is needed and fix spelling mistakes
-	- Move xfs_buf_do_callbacks_fail() call into
-	  xfs_buf_iodone_callback_error, so the callbacks can be executed
-	  before the buffer is released, and only after it has been
-	  retried once
-
-V3:
-	- fix some loops according to hch suggestion
-	- whitespace cleanup
-
-V4:
-	- Invoke failure callbacks before reset the I/O error
-	- Remove bflags field from iop_error callback
-	- move spin_lock/unlock xa_lock up in the stack, handling all
-	  log items in the same buffer into a single lock
-
- fs/xfs/xfs_buf_item.c | 23 ++++++++++++++++++++++-
- fs/xfs/xfs_trans.h    |  7 +++++--
- 2 files changed, 27 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 0306168..4fa68c9 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -29,6 +29,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_log.h"
-+#include "xfs_inode.h"
+Ping, any thoughts on this V2?
  
- 
- kmem_zone_t	*xfs_buf_item_zone;
-@@ -1051,6 +1052,22 @@ xfs_buf_do_callbacks(
- 	}
- }
- 
-+STATIC void
-+xfs_buf_do_callbacks_fail(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_log_item	*tli, *lip, *next;
-+
-+	tli = bp->b_fspriv;
-+	spin_lock(&tli->li_ailp->xa_lock);
-+	for (lip = bp->b_fspriv; lip; lip = next) {
-+		next = lip->li_bio_list;
-+		if (lip->li_ops->iop_error)
-+			lip->li_ops->iop_error(lip, bp);
-+	}
-+	spin_unlock(&tli->li_ailp->xa_lock);
-+}
-+
- static bool
- xfs_buf_iodone_callback_error(
- 	struct xfs_buf		*bp)
-@@ -1120,7 +1137,11 @@ xfs_buf_iodone_callback_error(
- 	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
- 		goto permanent_error;
- 
--	/* still a transient error, higher layers will retry */
-+	/*
-+	 * Still a transient error, run IO completion failure callbacks and let
-+	 * the higher layers retry the buffer.
-+	 */
-+	xfs_buf_do_callbacks_fail(bp);
- 	xfs_buf_ioerror(bp, 0);
- 	xfs_buf_relse(bp);
- 	return true;
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index a07acbf..50df5367 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -64,11 +64,13 @@ typedef struct xfs_log_item {
- } xfs_log_item_t;
- 
- #define	XFS_LI_IN_AIL	0x1
--#define XFS_LI_ABORTED	0x2
-+#define	XFS_LI_ABORTED	0x2
-+#define	XFS_LI_FAILED	0x4
- 
- #define XFS_LI_FLAGS \
- 	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
--	{ XFS_LI_ABORTED,	"ABORTED" }
-+	{ XFS_LI_ABORTED,	"ABORTED" }, \
-+	{ XFS_LI_FAILED,	"FAILED" }
- 
- struct xfs_item_ops {
- 	void (*iop_size)(xfs_log_item_t *, int *, int *);
-@@ -79,6 +81,7 @@ struct xfs_item_ops {
- 	void (*iop_unlock)(xfs_log_item_t *);
- 	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
- 	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
-+	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *);
- };
- 
- void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
--- 
-2.9.4
-
+> diff --git a/db/metadump.c b/db/metadump.c
+> index fe068ef..2f5b5b5 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -2820,6 +2820,28 @@ metadump_f(
+>  	metablock->mb_blocklog = BBSHIFT;
+>  	metablock->mb_magic = cpu_to_be32(XFS_MD_MAGIC);
+>  
+> +	/* Set flags about state of metadump */
+> +	metablock->mb_info = XFS_METADUMP_INFO_FLAGS;
+> +	if (obfuscate)
+> +		metablock->mb_info |= XFS_METADUMP_OBFUSCATED;
+> +	if (!zero_stale_data)
+> +		metablock->mb_info |= XFS_METADUMP_FULLBLOCKS;
+> +
+> +	/* If we'll copy the log, see if the log is dirty */
+> +	if (mp->m_sb.sb_logstart) {
+> +		push_cur();
+> +		set_cur(&typtab[TYP_LOG],
+> +			XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
+> +			mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN, NULL);
+> +		if (iocur_top->data) {	/* best effort */
+> +			struct xlog	log;
+> +
+> +			if (xlog_is_dirty(mp, &log, &x, 0))
+> +				metablock->mb_info |= XFS_METADUMP_DIRTYLOG;
+> +		}
+> +		pop_cur();
+> +	}
+> +
+>  	block_index = (__be64 *)((char *)metablock + sizeof(xfs_metablock_t));
+>  	block_buffer = (char *)metablock + BBSIZE;
+>  	num_indices = (BBSIZE - sizeof(xfs_metablock_t)) / sizeof(__be64);
+> diff --git a/include/xfs_metadump.h b/include/xfs_metadump.h
+> index f4be51b..7f3039e 100644
+> --- a/include/xfs_metadump.h
+> +++ b/include/xfs_metadump.h
+> @@ -25,8 +25,14 @@ typedef struct xfs_metablock {
+>  	__be32		mb_magic;
+>  	__be16		mb_count;
+>  	__uint8_t	mb_blocklog;
+> -	__uint8_t	mb_reserved;
+> +	__uint8_t	mb_info;
+>  	/* followed by an array of xfs_daddr_t */
+>  } xfs_metablock_t;
+>  
+> +/* These flags are informational only, not backwards compatible */
+> +#define XFS_METADUMP_INFO_FLAGS	(1 << 0) /* This image has informative flags */
+> +#define XFS_METADUMP_OBFUSCATED	(1 << 1)
+> +#define XFS_METADUMP_FULLBLOCKS	(1 << 2)
+> +#define XFS_METADUMP_DIRTYLOG	(1 << 3)
+> +
+>  #endif /* _XFS_METADUMP_H_ */
+> diff --git a/man/man8/xfs_mdrestore.8 b/man/man8/xfs_mdrestore.8
+> index 2095f15..72f3b29 100644
+> --- a/man/man8/xfs_mdrestore.8
+> +++ b/man/man8/xfs_mdrestore.8
+> @@ -4,11 +4,15 @@ xfs_mdrestore \- restores an XFS metadump image to a filesystem image
+>  .SH SYNOPSIS
+>  .B xfs_mdrestore
+>  [
+> -.B \-g
+> +.B \-gi
+>  ]
+>  .I source
+>  .I target
+>  .br
+> +.B xfs_mdrestore
+> +.B \-i
+> +.I source
+> +.br
+>  .B xfs_mdrestore \-V
+>  .SH DESCRIPTION
+>  .B xfs_mdrestore
+> @@ -39,6 +43,12 @@ can be destroyed.
+>  .B \-g
+>  Shows restore progress on stdout.
+>  .TP
+> +.B \-i
+> +Shows metadump information on stdout.  If no
+> +.I target
+> +is specified, exits after displaying information.  Older metadumps man not
+> +include any descriptive information.
+> +.TP
+>  .B \-V
+>  Prints the version number and exits.
+>  .SH DIAGNOSTICS
+> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+> index 0d399f1..9d1b4e8 100644
+> --- a/mdrestore/xfs_mdrestore.c
+> +++ b/mdrestore/xfs_mdrestore.c
+> @@ -21,6 +21,7 @@
+>  
+>  char 		*progname;
+>  int		show_progress = 0;
+> +int		show_info = 0;
+>  int		progress_since_warning = 0;
+>  
+>  static void
+> @@ -213,11 +214,14 @@ main(
+>  
+>  	progname = basename(argv[0]);
+>  
+> -	while ((c = getopt(argc, argv, "gV")) != EOF) {
+> +	while ((c = getopt(argc, argv, "giV")) != EOF) {
+>  		switch (c) {
+>  			case 'g':
+>  				show_progress = 1;
+>  				break;
+> +			case 'i':
+> +				show_info = 1;
+> +				break;
+>  			case 'V':
+>  				printf("%s version %s\n", progname, VERSION);
+>  				exit(0);
+> @@ -226,7 +230,11 @@ main(
+>  		}
+>  	}
+>  
+> -	if (argc - optind != 2)
+> +	if (argc - optind < 1 || argc - optind > 2)
+> +		usage();
+> +
+> +	/* show_info without a target is ok */
+> +	if (!show_info && argc - optind != 2)
+>  		usage();
+>  
+>  	/* open source */
+> @@ -239,6 +247,34 @@ main(
+>  		if (src_f == NULL)
+>  			fatal("cannot open source dump file\n");
+>  	}
+> +
+> +	if (show_info) {
+> +		xfs_metablock_t		mb;
+> +
+> +		if (fread(&mb, sizeof(mb), 1, src_f) != 1)
+> +			fatal("error reading from file: %s\n", strerror(errno));
+> +
+> +		if (be32_to_cpu(mb.mb_magic) != XFS_MD_MAGIC)
+> +			fatal("specified file is not a metadata dump\n");
+> +
+> +		if (mb.mb_info & XFS_METADUMP_INFO_FLAGS) {
+> +			printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
+> +			argv[optind],
+> +			mb.mb_info & XFS_METADUMP_OBFUSCATED ? "":"not ",
+> +			mb.mb_info & XFS_METADUMP_DIRTYLOG ? "dirty":"clean",
+> +			mb.mb_info & XFS_METADUMP_FULLBLOCKS ? "full":"zeroed");
+> +		} else {
+> +			printf("%s: no informational flags present\n",
+> +				argv[optind]);
+> +		}
+> +
+> +		if (argc - optind == 1)
+> +			exit(0);
+> +
+> +		/* Go back to the beginning for the restore function */
+> +		fseek(src_f, 0L, SEEK_SET);
+> +	}
+> +
+>  	optind++;
+>  
+>  	/* check and open target */
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
