@@ -1,158 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34968 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752684AbdFUKPa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Jun 2017 06:15:30 -0400
-Date: Wed, 21 Jun 2017 06:15:26 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 0/2 V4] Resubmit items failed during writeback
-Message-ID: <20170621101526.GC28914@bfoster.bfoster>
-References: <20170616105445.3314-1-cmaiolino@redhat.com>
- <20170619135120.GD25516@bfoster.bfoster>
- <20170619174203.GA4733@birch.djwong.org>
- <20170619185111.GA29903@bfoster.bfoster>
- <20170621004550.GF4733@birch.djwong.org>
+Received: from mr001msb.fastweb.it ([85.18.95.85]:38353 "EHLO
+        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750987AbdFUKjJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 06:39:09 -0400
+Received: from ceres.assyoma.it (93.63.55.57) by mr001msb.fastweb.it (8.5.140.05)
+        id 5928FD8A011180EC for linux-xfs@vger.kernel.org; Wed, 21 Jun 2017 12:39:07 +0200
+Subject: Re: Shutdown filesystem when a thin pool become full
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170621004550.GF4733@birch.djwong.org>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date: Wed, 21 Jun 2017 12:39:06 +0200
+From: Gionatan Danti <g.danti@assyoma.it>
+In-Reply-To: <20170621094453.emxjwuwm6s5euycp@eorzea.usersys.redhat.com>
+References: <a89aa00c4f86fbdc674dd8f5b5eeb248@assyoma.it>
+ <20170615131433.n33sqvyes4fhcbye@eorzea.usersys.redhat.com>
+ <20170615141057.q7fpnicynucq6yk2@eorzea.usersys.redhat.com>
+ <f2edd27c-615b-d20f-0b03-51cc399221bb@assyoma.it>
+ <20170620110548.eruly7ygixydyk2o@eorzea.usersys.redhat.com>
+ <dee0d3cc198663bb850ef2576c84d620@assyoma.it>
+ <20170620152858.GA3348@bfoster.bfoster>
+ <d30c96bafa9d476e1a381a0aaa1bc285@assyoma.it>
+ <20170620170208.GC3348@bfoster.bfoster>
+ <18cd5d2398dd1187dd1306cdcee508b7@assyoma.it>
+ <20170621094453.emxjwuwm6s5euycp@eorzea.usersys.redhat.com>
+Message-ID: <8be1535ef59f423d91f7d387127b924f@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: g.danti@assyoma.it
 
-On Tue, Jun 20, 2017 at 05:45:50PM -0700, Darrick J. Wong wrote:
-> On Mon, Jun 19, 2017 at 02:51:11PM -0400, Brian Foster wrote:
-> > On Mon, Jun 19, 2017 at 10:42:03AM -0700, Darrick J. Wong wrote:
-> > > On Mon, Jun 19, 2017 at 09:51:22AM -0400, Brian Foster wrote:
-> > > > On Fri, Jun 16, 2017 at 12:54:43PM +0200, Carlos Maiolino wrote:
-> > > > > Hi,
-> > > > > 
-> > > > > there goes a new version of this patchset based on previous reviews on V3.
-> > > > > 
-> > > > > Changelogs added separated to each patch.
-> > > > > 
-> > > > 
-> > > > Hi Carlos,
-> > > > 
-> > > > I pointed out the last things that I'm aware of that I think need to be
-> > > > fixed in this series (along with a few nits here and there). That said,
-> > > > it's already been pointed out that we probably want an xfstests test
-> > > > case to go along with this before it would be merged. Is that something
-> > > > you are still planning on?
-> > > > 
-> > > > I'd actually like to take this a bit farther than a regression test and
-> > > > see if we can improve our ability to test the error handling code in
-> > > > general. What do you (or anybody else..) think about including a patch
-> > > > in this series that introduces the ability to inject metadata writeback
-> > > > errors on DEBUG kernels? For example, consider something that just sets
-> > > > b_error at the top of xfs_buf_iodone_callbacks() based on a random value
-> > > > and configurable error frequency. This could use XFS_TEST_ERROR() or
-> > > > something like a new DEBUG sysfs attribute in the error configuration
-> > > > (see log_badcrc_factor for a similar example).
-> > > 
-> > > Sounds reasonable.
-> > > 
-> > > I wonder if it would be more useful to have individual knobs for each
-> > > metadata object type so that you could have multiple xfstests, each of
-> > > which runs the same software scenario but with different failures
-> > > configured?  Then we could test what happens when, say, only inode
-> > > writes fail, or bmbt writes fail, etc. rather than one big hammer that's
-> > > harder to control?
-> > > 
-> > 
-> > I suppose you could do some of that in the test just by making certain
-> > modifications in isolation (e.g., test an inode modification, test a
-> > dquot, buffer, etc..). It might be harder to do that from a test script
-> > at the granularity of things like bmbt buffers, though that may also be
-> > the case for error injection. Did you have something in mind to filter
-> > the buffer types.. the blf type perhaps?
-> > 
-> > > For a moment I also wondered why not use the error injection mechanism
-> > > that we already have, rather than inventing more sysfs knobs?  But we
-> > > have limited space in xfs_error_injection (29/32 bits used) so we
-> > > probably should just switch everything to sysfs knobs.
-> > > 
-> > 
-> > Yeah, I think we discussed this before as well. IIRC, I had already
-> > implemented whatever the sysfs knob was and and corresponding test, and
-> > it just wasn't really important enough to reimplement the whole thing.
+Il 21-06-2017 11:44 Carlos Maiolino ha scritto:
 > 
-> We probably did, back when the other error injection knobs (drop_writes,
-> log/log_badcrc_factor) got added.  Unfortunately now they're all over
-> sysfs, which makes for sort of a mess.
+> I think this is doable, I've been talking with Jeff who is working on 
+> an
+> enhanced writeback error notification for a while, which will be useful 
+> for
+> something like that, or some other type of enhanced communication 
+> between
+> dm-thin and filesystems.
 > 
-> > I didn't really have a preference as to how this would be implemented.
-> > On a quick look though, it looks like a downside to the existing
-> > injection mechanism is that we can't control the error frequency..? If
-> > that's the case, I like the idea of stepping back, perhaps audit the
-> > granularity of the broader error injection framework and define a new
-> > sysfs interface that also allows controlling things like the error
-> > frequency dynamically.
-> 
-> Yes, I've heard you ask for this twice now.  I agree that being able to
-> control the frequency would be a useful feature to enable longer-running
-> tests so that you could, say, have the refcount_finish_one error trigger
-> once every 1,000,000 updates instead of immediately afterwards.
+> Such improvements have been in discussion, I believe, since I brought 
+> up the
+> subject in Linux Plumbers 2013, but there are a lot of work to be done 
+> yet.
 > 
 
-Yep. It allows modeling for longevity tests as you note above, but I'm
-also thinking about the ability to turn a particular error on with 100%
-frequency in order to run fast, deterministic regression tests.
+Hi Carlos, this would be great. Glad to hear it is in 
+progress/discussion.
 
-> So with that in mind I coded up a quick RFC to create sysfs knobs in
-> /sys/fs/xfs/$device/errortag/$tagname ; the units are the same as the
-> XFS_RANDOM_ values (i.e. inverted frequency).  Now we're free of the
-> limitation of only being able to inject 10 error types across all
-> mounted fses, and we can individually disable injection too.
+> 
+> At the end though, I feel that what you are looking for, is a way that 
+> the
+> filesystem/block layer can remove the monitoring job from the sysadmin.
 > 
 
-Nice, that sounds very interesting.. thanks!
+No, this is a misunderstanding due to bad communication on my part, 
+sorry :)
 
-Brian
+I don't want to remove part of my job/responsability; rather, as I 
+always prepare for the worse (ie: my monitoring failing *while* users 
+fill the thin pool), I would like to have a "fail-safe" backup plan. The 
+"gold standard" would for thin pools to react as a full filesystem - ie 
+you (and the application) get a ENOSPC or "No space available" message.
 
-> > (I would still like to get something targeted towards testing this
-> > series in the meantime.)
+This would mimic what happens on ZFS world when using sparse volume. 
+ From its man page:
+"A 'sparse volume' is a volume where the reservation is less then the 
+volume size. Consequently, writes to a sparse volume can fail with 
+ENOSPC when the pool is low on space."
+
 > 
-> Same here.
+> Yes,
+> there are many things that can be done better, yes, there will be lots 
+> of
+> improvements in this area in the near future, but this still won't 
+> remove the
+> responsibility of the sysadmins to monitor their systems and ensure 
+> they take
+> the required actions when needed.
 > 
-> --D
+
+I agree, absolutely.
+
 > 
-> > Brian
-> > 
-> > > --D
-> > > 
-> > > > This would facilitate longer running tests where iodone callback errors
-> > > > occur randomly and transiently and we can thus actually exercise the
-> > > > error handling and recovery code. I'd love to run some fsstress testing,
-> > > > for example, as I'm hoping that would help wring out any further issues
-> > > > that could be lurking (particularly with the tricky xfs_iflush_done()
-> > > > logic and whatnot). If implemented generally enough, that could also be
-> > > > reused for a more simple xfstests regression test for the original
-> > > > problem (e.g., mount fs, set error frequency = 100%, modify an inode,
-> > > > set error frequency = 0, umount), albeit it would require debug mode.
-> > > > Thoughts?
-> > > > 
-> > > > Brian
-> > > > 
-> > > > > 
-> > > > > -- 
-> > > > > 2.9.4
-> > > > > 
-> > > > > --
-> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Thin provisioning isn't a new technology, it is in the market for ages,
+> overprovisioning indeed, and these same problems were expected to 
+> happen AFAIK,
+> and the sysadmin, expected to take the appropriate actions.
+> 
+> It's been too long since I worked with dedicated storages using thin
+> provisioning, so I don't remember how a dedicated hardware is expected 
+> to behave
+> when the physical space is full, or even if there is any standard to 
+> follow on
+> this situation, but I *think*, the same behavior is expected, data 
+> writes
+> failing, and nobody caring about it other than the userspace 
+> application, and
+> the filesystem not taking any action until some metadata write fail.
+> 
+> But I still think that, if you don't want to risk such situation, the
+> applications should be doing their job well, the sysadmin monitoring 
+> the systems
+> as required, or not using overprovisioning at all.
+> 
+
+Overprovision by itself is not my main point: after all, if I blatanly 
+lie claiming to have space that I don't really have, some problem can be 
+expected ;)
+
+Rather, my main concern is that when using snapshots, even a filesystem 
+smaller than thin pool can encounter a "no more data space available", 
+simply due to the additional CoW tracking needed to keep the snapshot 
+"alive". But hey - this is by itself a form of overprovisioning, after 
+all...
+
+> 
+> But anyway, thanks for such discussion, it brought nice ideas of future
+> improvements.
+> 
+
+Thank you (and others) for all the hard work!
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
