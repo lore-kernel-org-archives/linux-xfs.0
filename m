@@ -1,160 +1,383 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26281 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751007AbdFUQyW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 12:54:22 -0400
-Date: Wed, 21 Jun 2017 09:54:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/2 V4] Resubmit items failed during writeback
-Message-ID: <20170621165416.GI4733@birch.djwong.org>
-References: <20170616105445.3314-1-cmaiolino@redhat.com>
- <20170619135120.GD25516@bfoster.bfoster>
- <20170619174203.GA4733@birch.djwong.org>
- <20170619185111.GA29903@bfoster.bfoster>
- <20170621004550.GF4733@birch.djwong.org>
- <20170621101526.GC28914@bfoster.bfoster>
- <20170621110349.xhucfxyratu4qmym@eorzea.usersys.redhat.com>
- <20170621115132.GE28914@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:33338 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751667AbdFUSSu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Jun 2017 14:18:50 -0400
+Date: Wed, 21 Jun 2017 14:18:48 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/4] xfs: make errortag a per-mountpoint structure
+Message-ID: <20170621181847.GB29843@bfoster.bfoster>
+References: <149800747210.23118.6423951814449227184.stgit@birch.djwong.org>
+ <149800747831.23118.112249700014303831.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170621115132.GE28914@bfoster.bfoster>
+In-Reply-To: <149800747831.23118.112249700014303831.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-[Heh, concurrent replies.]
-
-On Wed, Jun 21, 2017 at 07:51:32AM -0400, Brian Foster wrote:
-> On Wed, Jun 21, 2017 at 01:03:49PM +0200, Carlos Maiolino wrote:
-> > Hey fellows.
-> > 
-> > On Wed, Jun 21, 2017 at 06:15:26AM -0400, Brian Foster wrote:
-> > > On Tue, Jun 20, 2017 at 05:45:50PM -0700, Darrick J. Wong wrote:
-> > > > On Mon, Jun 19, 2017 at 02:51:11PM -0400, Brian Foster wrote:
-> > > > > On Mon, Jun 19, 2017 at 10:42:03AM -0700, Darrick J. Wong wrote:
-> > > > > > On Mon, Jun 19, 2017 at 09:51:22AM -0400, Brian Foster wrote:
-> > > > > > > On Fri, Jun 16, 2017 at 12:54:43PM +0200, Carlos Maiolino wrote:
-> > > > > > > > Hi,
-> > > > > > > > 
-> > > > > > > > there goes a new version of this patchset based on previous reviews on V3.
-> > > > > > > > 
-> > > > > > > > Changelogs added separated to each patch.
-> > > > > > > > 
-> > > > > > > 
-> > > > > > > Hi Carlos,
-> > > > > > > 
-> > > > > > > I pointed out the last things that I'm aware of that I think need to be
-> > > > > > > fixed in this series (along with a few nits here and there). That said,
-> > > > > > > it's already been pointed out that we probably want an xfstests test
-> > > > > > > case to go along with this before it would be merged. Is that something
-> > > > > > > you are still planning on?
-> > > > > > > 
-> > 
-> > Well, I am sure planing a xfstests for this case, I just didn't stop to work on
-> > it yet, and well, I wasn't expecting to have the test done before merging this
-> > patchset, is this a requirement? If so, I'll work on that before finishing this
-> > series, otherwise I'll just finish the series and then move to the xfstests.
-> > 
+On Tue, Jun 20, 2017 at 06:11:18PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I think it's reasonable to expect to at least have an xfstests test
-> posted and available for review before this is merged, but I'll defer to
-> Darrick on that. I don't think you necessarily have to stop working on
-> these patches to get the xfstests done (i.e., maybe start putting
-> something together after the next version goes out for review?), but
-> that's just my .02. ;)
-
-Yes, it's fine to have testcases out for review, even if we haven't
-finalized all the debugging knobs necessary.
-
-> > .
-> > .
-> > .
-> > > > > > > something like a new DEBUG sysfs attribute in the error configuration
-> > > > > > > (see log_badcrc_factor for a similar example).
-> > > > > > 
-> > > > > > I wonder if it would be more useful to have individual knobs for each
-> > > > > > metadata object type so that you could have multiple xfstests, each of
-> > > > > > which runs the same software scenario but with different failures
-> > > > > > 
-> > > > > 
-> > > > > I suppose you could do some of that in the test just by making certain
-> > .
-> > .
-> > .
-> > 
-> > > > XFS_RANDOM_ values (i.e. inverted frequency).  Now we're free of the
-> > > > limitation of only being able to inject 10 error types across all
-> > > > mounted fses, and we can individually disable injection too.
-> > > > 
-> > > 
-> > > Nice, that sounds very interesting.. thanks!
-> > > 
-> > > Brian
-> > > 
-> > 
-> > Regarding the error injection knobs (and the bad quoting of previous replies
-> > above :), I like the idea, and I can surely work on such implementation, but, I
-> > honestly disagree with having the error injection patches in this same patchset.
-> > This will recreate a new discussion regarding the implementation, several new
-> > reviews, comments, etc and postpone this fix even more. I'd highly appreciate if
-> > we could do this in a different patchset, so we can have this fix merged sooner.
-> > 
-> > What you guys think?
-> > 
+> Remove the xfs_etest structure in favor of a per-mountpoint structure.
+> This will give us the flexibility to set as many error injection points
+> as we want, and later enable us to set up sysfs knobs to set the trigger
+> frequency as we wish.  This comes at a cost of higher memory use, but
+> unti we hit 1024 injection points (we're at 29) or a lot of mounts this
+> shouldn't be a huge issue.
 > 
-> I think we all agree that generic error injection (which Darrick has
-> started playing with, but I haven't looked at yet) doesn't need to be
-> bundled with this series (I hope we didn't scare you there ;). What I
-> was asking for is a single patch that adds error injection in one spot
-> with a configurable frequency. I'll refer to commit 609adfc2ed ("xfs:
-> debug mode log record crc error injection") again because it is a simple
-> example of a small DEBUG only hunk of code and boilerplate code to add a
-> sysfs knob.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_error.c |  161 +++++++++++++++++++++++++++++++---------------------
+>  fs/xfs/xfs_error.h |   23 ++++---
+>  fs/xfs/xfs_ioctl.c |    4 +
+>  fs/xfs/xfs_mount.c |   10 +++
+>  fs/xfs/xfs_mount.h |    7 ++
+>  5 files changed, 125 insertions(+), 80 deletions(-)
 > 
-> That said, I don't even think such a patch needs to be merged. I'm happy
-> with appending a quick and dirty RFC to the series so long as it works
-> to facilitate testing. I was merely suggesting it could be merged
-> because you could also use it to construct an xfstests test if you so
-> desired. If not, we could leave it as an rfc and perhaps add something
-> later on top of the bits Darrick has started to play with.
 > 
-> The reason I'm asking for this is because testing is an important part
-> of code review[1]. We have the ability to test for unrelated regressions
-> already. Presumably, we will have a new regression test for this
-> specific issue based on your current reproducer recipe as well. While I
-> may think the code is ultimately correct, that's not quite enough for me
-> to put a reviewed-by on this set because of the complexity of the area
-> of code it's touching. I'd much prefer to be able to run something that
-> truly stresses out this area of code.
+> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> index ed7ee4e..ef16ac2 100644
+> --- a/fs/xfs/xfs_error.c
+> +++ b/fs/xfs/xfs_error.c
+> @@ -25,97 +25,126 @@
+>  
+>  #ifdef DEBUG
+>  
+> -int	xfs_etest[XFS_NUM_INJECT_ERROR];
+> -int64_t	xfs_etest_fsid[XFS_NUM_INJECT_ERROR];
+> -char *	xfs_etest_fsname[XFS_NUM_INJECT_ERROR];
+> -int	xfs_error_test_active;
+> +static unsigned int xfs_errortag_random_default[] = {
+> +	XFS_RANDOM_DEFAULT,
+> +	XFS_RANDOM_IFLUSH_1,
+> +	XFS_RANDOM_IFLUSH_2,
+> +	XFS_RANDOM_IFLUSH_3,
+> +	XFS_RANDOM_IFLUSH_4,
+> +	XFS_RANDOM_IFLUSH_5,
+> +	XFS_RANDOM_IFLUSH_6,
+> +	XFS_RANDOM_DA_READ_BUF,
+> +	XFS_RANDOM_BTREE_CHECK_LBLOCK,
+> +	XFS_RANDOM_BTREE_CHECK_SBLOCK,
+> +	XFS_RANDOM_ALLOC_READ_AGF,
+> +	XFS_RANDOM_IALLOC_READ_AGI,
+> +	XFS_RANDOM_ITOBP_INOTOBP,
+> +	XFS_RANDOM_IUNLINK,
+> +	XFS_RANDOM_IUNLINK_REMOVE,
+> +	XFS_RANDOM_DIR_INO_VALIDATE,
+> +	XFS_RANDOM_BULKSTAT_READ_CHUNK,
+> +	XFS_RANDOM_IODONE_IOERR,
+> +	XFS_RANDOM_STRATREAD_IOERR,
+> +	XFS_RANDOM_STRATCMPL_IOERR,
+> +	XFS_RANDOM_DIOWRITE_IOERR,
+> +	XFS_RANDOM_BMAPIFORMAT,
+> +	XFS_RANDOM_FREE_EXTENT,
+> +	XFS_RANDOM_RMAP_FINISH_ONE,
+> +	XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE,
+> +	XFS_RANDOM_REFCOUNT_FINISH_ONE,
+> +	XFS_RANDOM_BMAP_FINISH_ONE,
+> +	XFS_RANDOM_AG_RESV_CRITICAL,
+> +};
+>  
+>  int
+> -xfs_error_test(int error_tag, int *fsidp, char *expression,
+> -	       int line, char *file, unsigned long randfactor)
+> +xfs_errortag_init(
+> +	struct xfs_mount	*mp)
+>  {
+> -	int i;
+> -	int64_t fsid;
+> +	mp->m_errortag = kmem_zalloc(sizeof(unsigned int) * XFS_ERRTAG_MAX,
+> +			KM_SLEEP | KM_MAYFAIL);
+> +	if (!mp->m_errortag)
+> +		return -ENOMEM;
+> +	return 0;
+> +}
+>  
+> -	if (prandom_u32() % randfactor)
+> -		return 0;
+> +void
+> +xfs_errortag_del(
+> +	struct xfs_mount	*mp)
+> +{
+> +	kmem_free(mp->m_errortag);
+> +}
+>  
+> -	memcpy(&fsid, fsidp, sizeof(xfs_fsid_t));
+> +bool
+> +xfs_errortag_test(
+> +	struct xfs_mount	*mp,
+> +	const char		*expression,
+> +	const char		*file,
+> +	int			line,
+> +	unsigned int		error_tag)
+> +{
+> +	unsigned int		randfactor;
+>  
+> -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
+> -		if (xfs_etest[i] == error_tag && xfs_etest_fsid[i] == fsid) {
+> -			xfs_warn(NULL,
+> -	"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
+> -				expression, file, line, xfs_etest_fsname[i]);
+> -			return 1;
+> -		}
+> -	}
+> +	ASSERT(error_tag < XFS_ERRTAG_MAX);
+> +	randfactor = mp->m_errortag[error_tag];
+> +	if (!randfactor || prandom_u32() % randfactor)
+> +		return false;
+>  
+> -	return 0;
+> +	xfs_warn(mp,
+> +"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
+> +			expression, file, line, mp->m_fsname);
+> +	return true;
 
-Agree.  I'd love to live in a world where most of my review process is
-examining the overall approach to make sure that it integrates well with
-the design and letting the automated tests look for bugs in the
-implementation details, though obviously we're not there.
+I wonder if we're going to want/need to ratelimit this now that we have
+dynamic frequency support. I'm thinking cases like 100% error frequency
+for the purpose of AIL item pinning could generate quite a bit of
+output.
 
---D
+>  }
+>  
+>  int
+> -xfs_errortag_add(unsigned int error_tag, xfs_mount_t *mp)
+> +xfs_errortag_set(
+> +	struct xfs_mount	*mp,
+> +	unsigned int		error_tag,
+> +	unsigned int		tag_value)
+>  {
+> -	int i;
+> -	int len;
+> -	int64_t fsid;
+> -
+>  	if (error_tag >= XFS_ERRTAG_MAX)
+>  		return -EINVAL;
+>  
+> -	memcpy(&fsid, mp->m_fixedfsid, sizeof(xfs_fsid_t));
+> +	mp->m_errortag[error_tag] = tag_value;
+> +	xfs_warn(mp,
+> +"Turned %s XFS error tag #%d",
+> +			tag_value ? "on" : "off", error_tag);
+> +	return 0;
 
-> Brian
+This is unnecessarily noisy IMO as well. If we wanted to preserve it for
+the ioctl() case, we could pull it up into the caller. Unless it's
+actually used somewhere that I'm not aware of, I'd be fine with killing
+it altogether.
+
+> +}
+>  
+> -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
+> -		if (xfs_etest_fsid[i] == fsid && xfs_etest[i] == error_tag) {
+> -			xfs_warn(mp, "error tag #%d on", error_tag);
+> -			return 0;
+> -		}
+> -	}
+> +int
+> +xfs_errortag_add(
+> +	struct xfs_mount	*mp,
+> +	unsigned int		error_tag)
+> +{
+> +	if (error_tag >= XFS_ERRTAG_MAX)
+> +		return -EINVAL;
+>  
+> -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
+> -		if (xfs_etest[i] == 0) {
+> -			xfs_warn(mp, "Turned on XFS error tag #%d",
+> -				error_tag);
+> -			xfs_etest[i] = error_tag;
+> -			xfs_etest_fsid[i] = fsid;
+> -			len = strlen(mp->m_fsname);
+> -			xfs_etest_fsname[i] = kmem_alloc(len + 1, KM_SLEEP);
+> -			strcpy(xfs_etest_fsname[i], mp->m_fsname);
+> -			xfs_error_test_active++;
+> -			return 0;
+> -		}
+> +	if (mp->m_errortag[error_tag]) {
+> +		xfs_warn(mp, "error tag #%d on", error_tag);
+> +		return 0;
+
+It probably doesn't matter that much, but I wonder if we should still
+set the _random_default value even if the tag is already enabled. The
+idea being to (sort of) preserve backwards compatibility for the ioctl()
+in the event that the tag was already enabled via sysfs.
+
+Now that I think of it, does the ioctl() interface even support turning
+off an individual error tag? :/
+
+Brian
+
+>  	}
+>  
+> -	xfs_warn(mp, "error tag overflow, too many turned on");
+> -
+> -	return 1;
+> +	return xfs_errortag_set(mp, error_tag,
+> +			xfs_errortag_random_default[error_tag]);
+>  }
+>  
+>  int
+> -xfs_errortag_clearall(xfs_mount_t *mp, int loud)
+> +xfs_errortag_clearall(
+> +	struct xfs_mount	*mp,
+> +	bool			loud)
+>  {
+> -	int64_t fsid;
+> -	int cleared = 0;
+> -	int i;
+> -
+> -	memcpy(&fsid, mp->m_fixedfsid, sizeof(xfs_fsid_t));
+> -
+> -
+> -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++) {
+> -		if ((fsid == 0LL || xfs_etest_fsid[i] == fsid) &&
+> -		     xfs_etest[i] != 0) {
+> -			cleared = 1;
+> -			xfs_warn(mp, "Clearing XFS error tag #%d",
+> -				xfs_etest[i]);
+> -			xfs_etest[i] = 0;
+> -			xfs_etest_fsid[i] = 0LL;
+> -			kmem_free(xfs_etest_fsname[i]);
+> -			xfs_etest_fsname[i] = NULL;
+> -			xfs_error_test_active--;
+> +	bool			cleared = false;
+> +	unsigned int		i;
+> +
+> +	for (i = 0; i < XFS_ERRTAG_MAX; i++) {
+> +		if (mp->m_errortag[i]) {
+> +			cleared = true;
+> +			break;
+>  		}
+>  	}
+>  
+> +	memset(mp->m_errortag, 0, sizeof(unsigned int) * XFS_ERRTAG_MAX);
+> +
+>  	if (loud || cleared)
+>  		xfs_warn(mp, "Cleared all XFS error tags for filesystem");
+>  
+> diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+> index 05f8666..341e8a0 100644
+> --- a/fs/xfs/xfs_error.h
+> +++ b/fs/xfs/xfs_error.h
+> @@ -131,20 +131,23 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+>  #define XFS_RANDOM_AG_RESV_CRITICAL			4
+>  
+>  #ifdef DEBUG
+> -extern int xfs_error_test_active;
+> -extern int xfs_error_test(int, int *, char *, int, char *, unsigned long);
+> -
+> -#define	XFS_NUM_INJECT_ERROR				10
+> +extern int xfs_errortag_init(struct xfs_mount *mp);
+> +extern void xfs_errortag_del(struct xfs_mount *mp);
+> +extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
+> +		const char *file, int line, unsigned int error_tag);
+>  #define XFS_TEST_ERROR(expr, mp, tag, rf)		\
+> -	((expr) || (xfs_error_test_active && \
+> -	 xfs_error_test((tag), (mp)->m_fixedfsid, "expr", __LINE__, __FILE__, \
+> -			(rf))))
+> +	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
+>  
+> -extern int xfs_errortag_add(unsigned int error_tag, struct xfs_mount *mp);
+> -extern int xfs_errortag_clearall(struct xfs_mount *mp, int loud);
+> +extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
+> +		unsigned int tag_value);
+> +extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
+> +extern int xfs_errortag_clearall(struct xfs_mount *mp, bool loud);
+>  #else
+> +#define xfs_errortag_init(mp)			(0)
+> +#define xfs_errortag_del(mp)
+>  #define XFS_TEST_ERROR(expr, mp, tag, rf)	(expr)
+> -#define xfs_errortag_add(tag, mp)		(ENOSYS)
+> +#define xfs_errortag_set(mp, tag, val)		(ENOSYS)
+> +#define xfs_errortag_add(mp, tag)		(ENOSYS)
+>  #define xfs_errortag_clearall(mp, loud)		(ENOSYS)
+>  #endif /* DEBUG */
+>  
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 8ffe4ea..ab0894a 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -2037,14 +2037,14 @@ xfs_file_ioctl(
+>  		if (copy_from_user(&in, arg, sizeof(in)))
+>  			return -EFAULT;
+>  
+> -		return xfs_errortag_add(in.errtag, mp);
+> +		return xfs_errortag_add(mp, in.errtag);
+>  	}
+>  
+>  	case XFS_IOC_ERROR_CLEARALL:
+>  		if (!capable(CAP_SYS_ADMIN))
+>  			return -EPERM;
+>  
+> -		return xfs_errortag_clearall(mp, 1);
+> +		return xfs_errortag_clearall(mp, true);
+>  
+>  	case XFS_IOC_FREE_EOFBLOCKS: {
+>  		struct xfs_fs_eofblocks eofb;
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index cc6789d..5cdcf43 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -720,10 +720,13 @@ xfs_mountfs(
+>  	if (error)
+>  		goto out_del_stats;
+>  
+> +	error = xfs_errortag_init(mp);
+> +	if (error)
+> +		goto out_remove_error_sysfs;
+>  
+>  	error = xfs_uuid_mount(mp);
+>  	if (error)
+> -		goto out_remove_error_sysfs;
+> +		goto out_remove_errortag;
+>  
+>  	/*
+>  	 * Set the minimum read and write sizes
+> @@ -1042,6 +1045,8 @@ xfs_mountfs(
+>  	xfs_da_unmount(mp);
+>   out_remove_uuid:
+>  	xfs_uuid_unmount(mp);
+> + out_remove_errortag:
+> +	xfs_errortag_del(mp);
+>   out_remove_error_sysfs:
+>  	xfs_error_sysfs_del(mp);
+>   out_del_stats:
+> @@ -1145,10 +1150,11 @@ xfs_unmountfs(
+>  	xfs_uuid_unmount(mp);
+>  
+>  #if defined(DEBUG)
+> -	xfs_errortag_clearall(mp, 0);
+> +	xfs_errortag_clearall(mp, false);
+>  #endif
+>  	xfs_free_perag(mp);
+>  
+> +	xfs_errortag_del(mp);
+>  	xfs_error_sysfs_del(mp);
+>  	xfs_sysfs_del(&mp->m_stats.xs_kobj);
+>  	xfs_sysfs_del(&mp->m_kobj);
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 305d953..e002ac5 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -199,6 +199,13 @@ typedef struct xfs_mount {
+>  	bool			m_fail_unmount;
+>  #ifdef DEBUG
+>  	/*
+> +	 * Frequency with which errors are injected.  Replaces xfs_etest; the
+> +	 * value stored in here is the inverse of the frequency with which the
+> +	 * error triggers.  1 = always, 2 = half the time, etc.
+> +	 */
+> +	unsigned int		*m_errortag;
+> +
+> +	/*
+>  	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
+>  	 * block killing in the event of failed writes. When enabled, all
+>  	 * buffered writes are silenty dropped and handled as if they failed.
 > 
-> [1] In reality, I'm going to do this myself if necessary. I'm just
-> asking to save myself some time (and possibly encourage similar testing
-> from others). ;)
-> 
-> > also, let me know if I should send the xfstest before moving on with this
-> > patchset.
-> > 
-> > 
-> > Cheers
-> > 
-> > -- 
-> > Carlos
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
