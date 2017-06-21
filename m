@@ -1,102 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32724 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751590AbdFOUfX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2017 16:35:23 -0400
-Subject: [PATCH 3/3] libxfs: use crc32c slice-by-8 variant by default
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 15 Jun 2017 13:35:16 -0700
-Message-ID: <149755891632.3424.8018763268292554053.stgit@birch.djwong.org>
-In-Reply-To: <149755888982.3424.6925834871301440055.stgit@birch.djwong.org>
-References: <149755888982.3424.6925834871301440055.stgit@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:51642 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751742AbdFUT2W (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Jun 2017 15:28:22 -0400
+Subject: Re: [PATCH] fsr: fix uninitialized fs usage after timeout
+References: <b4921f6d-01c7-09eb-641f-47f1be998e61@suse.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <118e7672-680a-689d-6b74-7169a38b3d89@sandeen.net>
+Date: Wed, 21 Jun 2017 14:28:20 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <b4921f6d-01c7-09eb-641f-47f1be998e61@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Jeff Mahoney <jeffm@suse.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 6/2/17 1:20 PM, Jeff Mahoney wrote:
+> In the main loop of fsrallfs, we exit when we've hit the timeout but
+> we increment fs before we get there.  If we're operating on the last
+> file system in the array, we'll hit an uninitialized fsdesc and
+> crash in fsrall_cleanup.
 
-The crc32c code used in xfsprogs was copied directly from the Linux
-kernel.  However, that code selects slice-by-4 by default, which isn't
-the fastest -- that's slice-by-8, which trades table size for speed.
-Fix some makefile dependency problems and explicitly select the
-algorithm we want.  With this patch applied, I see about a 10% drop in
-CPU time running xfs_repair.
+Ugh, really - nobody should be using the defrag-the-world mode,
+but we ship it, so ...
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/Makefile    |    4 ++--
- libxfs/crc32defs.h |   34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 36 insertions(+), 2 deletions(-)
+> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+> ---
+>  fsr/xfs_fsr.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> index 517b75f0..e695c243 100644
+> --- a/fsr/xfs_fsr.c
+> +++ b/fsr/xfs_fsr.c
+> @@ -598,7 +598,7 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
+>  	signal(SIGTERM, aborter);
+> 
+>  	/* reorg for 'howlong' -- checked in 'fsrfs' */
+> -	while (endtime > time(0)) {
+> +	for (; endtime > time(0); fs->npass++, fs++) {
+>  		pid_t pid;
+>  		if (fs == fsend)
+>  			fs = fsbase;
+> @@ -629,8 +629,6 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
+>  			break;
+>  		}
+>  		startino = 0;  /* reset after the first time through */
+> -		fs->npass++;
+> -		fs++;
+>  	}
+>  	fsrall_cleanup(endtime <= time(0));
+>  }
 
+I hate to be that PITA maintainer who only wants to do it his way ;) but
+would this be any tidier?
 
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index baba02f..d248c1f 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -122,7 +122,7 @@ LDIRT = gen_crc32table crc32table.h crc32selftest
- 
- default: crc32selftest ltdepend $(LTLIBRARY)
- 
--crc32table.h: gen_crc32table.c
-+crc32table.h: gen_crc32table.c crc32defs.h
- 	@echo "    [CC]     gen_crc32table"
- 	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
- 	@echo "    [GENERATE] $@"
-@@ -133,7 +133,7 @@ crc32table.h: gen_crc32table.c
- # systems/architectures. Hence we make sure that xfsprogs will never use a
- # busted CRC calculation at build time and hence avoid putting bad CRCs down on
- # disk.
--crc32selftest: gen_crc32table.c crc32table.h crc32.c
-+crc32selftest: gen_crc32table.c crc32table.h crc32.c crc32defs.h
- 	@echo "    [TEST]    CRC32"
- 	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
- 	$(Q) ./$@
-diff --git a/libxfs/crc32defs.h b/libxfs/crc32defs.h
-index 64cba2c..2999782 100644
---- a/libxfs/crc32defs.h
-+++ b/libxfs/crc32defs.h
-@@ -1,4 +1,38 @@
- /*
-+ * Use slice-by-8, which is the fastest variant.
-+ *
-+ * Calculate checksum 8 bytes at a time with a clever slicing algorithm.
-+ * This is the fastest algorithm, but comes with a 8KiB lookup table.
-+ * Most modern processors have enough cache to hold this table without
-+ * thrashing the cache.
-+ *
-+ * The Linux kernel uses this as the default implementation "unless you
-+ * have a good reason not to".  The reason why Kconfig urges you to pick
-+ * SLICEBY8 is because people challenged the assertion that we should
-+ * always use slice by 8, so Darrick wrote a crc microbenchmark utility
-+ * and ran it on as many machines as he could get his hands on to show
-+ * that sb8 was the fastest.
-+ *
-+ * Every 64-bit machine (and most of the 32-bit ones too) saw the best
-+ * results with sb8.  Any machine with more than 4K of cache saw better
-+ * results.  The spreadsheet still exists today[1]; note that
-+ * 'crc32-kern-le' corresponds to the slice by 4 algorithm which is the
-+ * default unless CRC_LE_BITS is defined explicitly.
-+ *
-+ * FWIW, there are a handful of board defconfigs in the kernel that
-+ * don't pick sliceby8.  These are all embedded 32-bit mips/ppc systems
-+ * with very small cache sizes which experience cache thrashing with the
-+ * slice by 8 algorithm, and therefore chose to pick defaults that are
-+ * saner for their particular board configuration.  For nearly all of
-+ * XFS' perceived userbase (which we assume are 32 and 64-bit machines
-+ * with sufficiently large CPU cache and largeish storage devices) slice
-+ * by 8 is the right choice.
-+ *
-+ * [1] https://goo.gl/0LSzsG ("crc32c_bench")
-+ */
-+#define CRC_LE_BITS 64
-+
-+/*
-  * There are multiple 16-bit CRC polynomials in common use, but this is
-  * *the* standard CRC-32 polynomial, first popularized by Ethernet.
-  * x^32+x^26+x^23+x^22+x^16+x^12+x^11+x^10+x^8+x^7+x^5+x^4+x^2+x^1+x^0
+I'm just not that big a fan of "for(; ....)" loops.
+
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 517b75f..3a5f683 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -600,12 +600,6 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
+ 	/* reorg for 'howlong' -- checked in 'fsrfs' */
+ 	while (endtime > time(0)) {
+ 		pid_t pid;
+-		if (fs == fsend)
+-			fs = fsbase;
+-		if (fs->npass == npasses) {
+-			fsrprintf(_("Completed all %d passes\n"), npasses);
+-			break;
+-		}
+ 		if (npasses > 1 && !fs->npass)
+ 			Mflag = 1;
+ 		else
+@@ -631,6 +625,12 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
+ 		startino = 0;  /* reset after the first time through */
+ 		fs->npass++;
+ 		fs++;
++		if (fs == fsend)
++			fs = fsbase;
++		if (fs->npass == npasses) {
++			fsrprintf(_("Completed all %d passes\n"), npasses);
++			break;
++		}
+ 	}
+ 	fsrall_cleanup(endtime <= time(0));
+ }
+
 
