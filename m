@@ -1,65 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50682 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:50310 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751147AbdFVTdz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Jun 2017 15:33:55 -0400
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: [PATCH] xfs_db: update sector size when type is set
-Date: Thu, 22 Jun 2017 14:33:52 -0500
-Message-Id: <20170622193352.22346-1-billodo@redhat.com>
+        id S1751202AbdFVUQ2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Jun 2017 16:16:28 -0400
+Subject: Re: [PATCH] xfs_db: update sector size when type is set
+References: <20170622193352.22346-1-billodo@redhat.com>
+ <20170622194723.GV4733@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1e03a345-bb6c-7f13-4860-0506b368b987@sandeen.net>
+Date: Thu, 22 Jun 2017 15:16:27 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170622194723.GV4733@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: sandeen@sandeen.net
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Bill O'Donnell <billodo@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-xfs_db doesn't take sector size into account when setting type.
-This can result in an errant crc. For example, with a sector size
-of 4096:
 
-xfs_db> agi 0
-xfs_db> p crc
-crc = 0xab85043e (correct)
-xfs_db> daddr
-current daddr is 16
-xfs_db> daddr 42
-xfs_db> daddr 16
-xfs_db> type agi
-Metadata CRC error detected at xfs_agi block 0x10/0x200
-xfs_db> p crc
-crc = 0xab85043e (bad)
 
-When xfs_db sets the new daddr in daddr_f, it does so with one
-BBSIZE sector (512). Changing the type doesn't change the size
-of the current buffer in iocur_top, so the checksum is calculated
-on the wrong length for the type (when the actual sector size > BBSIZE (512).
+On 6/22/17 2:47 PM, Darrick J. Wong wrote:
+> On Thu, Jun 22, 2017 at 02:33:52PM -0500, Bill O'Donnell wrote:
+>> xfs_db doesn't take sector size into account when setting type.
+>> This can result in an errant crc. For example, with a sector size
+>> of 4096:
+>>
+>> xfs_db> agi 0
+>> xfs_db> p crc
+>> crc = 0xab85043e (correct)
+>> xfs_db> daddr
+>> current daddr is 16
+>> xfs_db> daddr 42
+>> xfs_db> daddr 16
+>> xfs_db> type agi
+>> Metadata CRC error detected at xfs_agi block 0x10/0x200
+>> xfs_db> p crc
+>> crc = 0xab85043e (bad)
+>>
+>> When xfs_db sets the new daddr in daddr_f, it does so with one
+>> BBSIZE sector (512). Changing the type doesn't change the size
+>> of the current buffer in iocur_top, so the checksum is calculated
+>> on the wrong length for the type (when the actual sector size > BBSIZE (512).
+>>
+>> For types with fields, reread the buffer to pick up the correct size for
+>> the new type when it gets set. Facilitate the reread by setting the cursor
+>> with set_cur().
+>>
+>> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+>> ---
+>>  db/io.c | 6 ++++++
+>>  1 file changed, 6 insertions(+)
+>>
+>> diff --git a/db/io.c b/db/io.c
+>> index 9918a51..7e6d330 100644
+>> --- a/db/io.c
+>> +++ b/db/io.c
+>> @@ -616,6 +616,12 @@ set_iocur_type(
+>>  {
+>>  	struct xfs_buf	*bp = iocur_top->bp;
+>>  
 
-For types with fields, reread the buffer to pick up the correct size for
-the new type when it gets set. Facilitate the reread by setting the cursor
-with set_cur().
+a comment about why only this "if" case is there would be good.
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
- db/io.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+>> +	if (t->fields)
+>> +		set_cur(t,
+>> +			iocur_top->bb,
+>> +			fsize(t->fields, iocur_top->data,
+>> +			      0, 0) / mp->m_sb.sb_blocksize,
+> 
+> I thought the third parameter to set_cur (which is fed as the third
+> parameter to libxfs_readbuf) was expressed in units of basic blocks
+> (i.e. 512 bytes)?  fsize returns the size of the field in bytes (I
+> think?), 
 
-diff --git a/db/io.c b/db/io.c
-index 9918a51..7e6d330 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -616,6 +616,12 @@ set_iocur_type(
- {
- 	struct xfs_buf	*bp = iocur_top->bp;
+nope, bits :)
+
+> so dividing by sb_blocksize renders units of fs blocks, not
+> basic blocks.
+
+As Darrick just pointed out to me, you treated bits as bytes and
+daddr as fsblock so for 4k blocks, 8/8 came out right ;)
+
+I think what you want for the size is something like:
+
+BTOBB(byteize(fsize(t->fields, iocur_top->data, 0, 0)));
+
+It might be a little nicer to stash that in a temp var so you
+don't have all that gunk in the call to set_cur.
  
-+	if (t->fields)
-+		set_cur(t,
-+			iocur_top->bb,
-+			fsize(t->fields, iocur_top->data,
-+			      0, 0) / mp->m_sb.sb_blocksize,
-+			DB_RING_IGN, NULL);
- 	iocur_top->typ = t;
- 
- 	/* verify the buffer if the type has one. */
--- 
-2.9.4
+> <shrug> the naming isn't helpful at all:
+> 
+> void
+> set_cur(
+> 	const typ_t	*t,
+> 	int64_t		d,
+> 	int		c,
+> ...
+> 	iocur_top->len = BBTOB(c);
+> 
+> <codeconfused>
 
+yup isn't xfs_db fun?
+
+> 
+> --D
+> 
+>> +			DB_RING_IGN, NULL);
+>>  	iocur_top->typ = t;
+>>  
+>>  	/* verify the buffer if the type has one. */
+>> -- 
+>> 2.9.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
