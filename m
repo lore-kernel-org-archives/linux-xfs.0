@@ -1,86 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52704 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:6293 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751580AbdF1Low (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Jun 2017 07:44:52 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs/141: use new errortag knob for crc error injection
-Date: Wed, 28 Jun 2017 07:44:50 -0400
-Message-Id: <20170628114450.9670-1-bfoster@redhat.com>
+        id S1751927AbdFVRDv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Jun 2017 13:03:51 -0400
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH] xfs_io: add seek consistency checks
+Date: Thu, 22 Jun 2017 19:03:48 +0200
+Message-Id: <1498151028-18433-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, fstests@vger.kernel.org, Jan Kara <jack@suse.cz>
 
-Update the test to use the newly available sysfs errortag injection
-knobs. The errortag knob has replaced the previous custom knob in
-the kernel. Create a local helper to support the old knob for
-backwards compatibility.
+When seeking for data and holes, the lseek result must be greater than
+or equal to the start offset.  Furthermore, assuming that the file
+doesn't change under us, when switching between SEEK_HOLE and SEEK_DATA,
+the seek position must increase monotonically.  Warn and abort if this
+is not the case.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
+ io/seek.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-This updates xfs/141 to use the new error injection tag sysfs knob that
-has replaced log_badcrc_factor in the latest XFS for-next tree.
-
-Brian
-
- tests/xfs/141 | 22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
-
-diff --git a/tests/xfs/141 b/tests/xfs/141
-index 56ff14e..ea4f558 100755
---- a/tests/xfs/141
-+++ b/tests/xfs/141
-@@ -43,6 +43,21 @@ _cleanup()
- 	wait > /dev/null 2>&1
+diff --git a/io/seek.c b/io/seek.c
+index d06375d..871b472 100644
+--- a/io/seek.c
++++ b/io/seek.c
+@@ -147,7 +147,10 @@ seek_f(
+ 	 * decide if we want to display that type of entry.
+ 	 */
+ 	if (flag & SEEK_HFLAG) {
++		current = HOLE;
+ 		offset = lseek(file->fd, start, SEEK_HOLE);
++		if (offset != -1 && offset < start)
++			goto bad_result;
+ 		if ((start == offset) || !(flag & SEEK_DFLAG)) {
+ 			/*
+ 			 * this offset is a hole or are only displaying holes.
+@@ -155,7 +158,6 @@ seek_f(
+ 			 * data, then we will fall through below to
+ 			 * initialize the data search.
+ 			 */
+-			current = HOLE;
+ 			goto found_hole;
+ 		}
+ 	}
+@@ -163,6 +165,8 @@ seek_f(
+ 	/* The offset is not a hole, or we are looking just for data */
+ 	current = DATA;
+ 	offset = lseek(file->fd, start, SEEK_DATA);
++	if (offset != -1 && offset < start)
++		goto bad_result;
+ 
+ found_hole:
+ 	/*
+@@ -203,8 +207,15 @@ found_hole:
+ 		current ^= 1;		/* alternate between data and hole */
+ 		start = offset;
+ 		offset = lseek(file->fd, start, seekinfo[current].seektype);
++		if (offset != -1 && offset <= start)
++			goto bad_result;
+ 	}
+ 	return 0;
++
++bad_result:
++	fprintf(stderr, "Invalid seek result: lseek(<fd>, %lld, SEEK_%s) = %lld\n",
++		(long long)start, seekinfo[current].name, (long long)offset);
++	return 0;
  }
  
-+# require either the current error tag or the old custom log record crc error
-+# injection knob
-+_setup_bad_crc()
-+{
-+	if [ -e /sys/fs/xfs/$1/errortag/log_bad_crc ]; then
-+		badcrc_attr=/sys/fs/xfs/$1/errortag/log_bad_crc
-+		return
-+	fi
-+	if [ -e /sys/fs/xfs/$1/log/log_badcrc_factor ]; then
-+		badcrc_attr=/sys/fs/xfs/$1/log/log_badcrc_factor
-+		return
-+	fi
-+	_notrun "bad crc sysfs attribute not supported"
-+}
-+
- rm -f $seqres.full
- 
- # get standard environment, filters and checks
-@@ -53,7 +68,6 @@ rm -f $seqres.full
- # Modify as appropriate.
- _supported_fs xfs
- _supported_os Linux
--_require_xfs_sysfs $(_short_dev $TEST_DEV)/log/log_badcrc_factor
- _require_scratch
- _require_command "$KILLALL_PROG" killall
- 
-@@ -62,14 +76,14 @@ echo "Silence is golden."
- _scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
- _scratch_mount
- 
--sdev=$(_short_dev $SCRATCH_DEV)
-+_setup_bad_crc $(_short_dev $SCRATCH_DEV)
- 
- for i in $(seq 1 5); do
- 	# Enable error injection. Use a random bad crc factor up to 100
- 	# (increase this value to run fsstress longer).
- 	factor=$((RANDOM % 100 + 1))
--	echo iteration $i log_badcrc_factor: $factor >> $seqres.full 2>&1
--	echo $factor > /sys/fs/xfs/$sdev/log/log_badcrc_factor
-+	echo iteration $i bad crc factor: $factor >> $seqres.full 2>&1
-+	echo $factor > $badcrc_attr
- 
- 	# Run fsstress until the filesystem shuts down. It will shut down
- 	# automatically when error injection triggers.
+ void
 -- 
-2.9.4
+2.7.5
 
