@@ -1,211 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54470 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36290 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753913AbdFWATh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Jun 2017 20:19:37 -0400
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH 2/3] ext4: Switch to page_cache_seek_hole_data
-Date: Fri, 23 Jun 2017 02:19:32 +0200
-Message-Id: <1498177173-30798-2-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1498177173-30798-1-git-send-email-agruenba@redhat.com>
-References: <1498177173-30798-1-git-send-email-agruenba@redhat.com>
+        id S1753919AbdFVXpg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Jun 2017 19:45:36 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 457F1142889
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2017 23:45:36 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-120-226.rdu2.redhat.com [10.10.120.226])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id EBCD177673
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2017 23:45:35 +0000 (UTC)
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: [PATCH v2] xfs_db: update sector size when type is set
+Date: Thu, 22 Jun 2017 18:45:35 -0500
+Message-Id: <20170622234535.30942-1-billodo@redhat.com>
+In-Reply-To: <20170622193352.22346-1-billodo@redhat.com>
+References: <20170622193352.22346-1-billodo@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>
+To: linux-xfs@vger.kernel.org
 
-Fix SEEK_HOLE / SEEK_DATA when a page fits more than two filesystem
-blocks (see the commit that introduces page_cache_seek_hole_data).
+xfs_db doesn't take sector size into account when setting type.
+This can result in an errant crc. For example, with a sector size
+of 4096:
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+xfs_db> agi 0
+xfs_db> p crc
+crc = 0xab85043e (correct)
+xfs_db> daddr
+current daddr is 16
+xfs_db> daddr 42
+xfs_db> daddr 16
+xfs_db> type agi
+Metadata CRC error detected at xfs_agi block 0x10/0x200
+xfs_db> p crc
+crc = 0xab85043e (bad)
+
+When xfs_db sets the new daddr in daddr_f, it does so with one
+BBSIZE sector (512). Changing the type doesn't change the size
+of the current buffer in iocur_top, so the checksum is calculated
+on the wrong length for the type (when the actual sector size > BBSIZE (512)).
+
+For types with fields, reread the buffer to pick up the correct size for
+the new type when it gets set. Facilitate the reread by setting the cursor
+with set_cur().
+
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 ---
- fs/ext4/file.c | 144 ++++++---------------------------------------------------
- 1 file changed, 13 insertions(+), 131 deletions(-)
+v2: correction to argument 3 in call to set_cur: compute and pass basic block count;
+    add comment regarding conditional call to set_cur.
+    
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 02ce7e7..d0b0862 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -439,129 +439,6 @@ static int ext4_file_open(struct inode * inode, struct file * filp)
- }
+ db/io.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/db/io.c b/db/io.c
+index 9918a51..792cc0a 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -615,7 +615,13 @@ set_iocur_type(
+ 	const typ_t	*t)
+ {
+ 	struct xfs_buf	*bp = iocur_top->bp;
++	int bb_count;
  
- /*
-- * Here we use ext4_map_blocks() to get a block mapping for a extent-based
-- * file rather than ext4_ext_walk_space() because we can introduce
-- * SEEK_DATA/SEEK_HOLE for block-mapped and extent-mapped file at the same
-- * function.  When extent status tree has been fully implemented, it will
-- * track all extent status for a file and we can directly use it to
-- * retrieve the offset for SEEK_DATA/SEEK_HOLE.
-- */
--
--/*
-- * When we retrieve the offset for SEEK_DATA/SEEK_HOLE, we would need to
-- * lookup page cache to check whether or not there has some data between
-- * [startoff, endoff] because, if this range contains an unwritten extent,
-- * we determine this extent as a data or a hole according to whether the
-- * page cache has data or not.
-- */
--static int ext4_find_unwritten_pgoff(struct inode *inode,
--				     int whence,
--				     ext4_lblk_t end_blk,
--				     loff_t *offset)
--{
--	struct pagevec pvec;
--	unsigned int blkbits;
--	pgoff_t index;
--	pgoff_t end;
--	loff_t endoff;
--	loff_t startoff;
--	loff_t lastoff;
--	int found = 0;
--
--	blkbits = inode->i_sb->s_blocksize_bits;
--	startoff = *offset;
--	lastoff = startoff;
--	endoff = (loff_t)end_blk << blkbits;
--
--	index = startoff >> PAGE_SHIFT;
--	end = (endoff - 1) >> PAGE_SHIFT;
--
--	pagevec_init(&pvec, 0);
--	do {
--		int i, num;
--		unsigned long nr_pages;
--
--		num = min_t(pgoff_t, end - index, PAGEVEC_SIZE - 1) + 1;
--		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
--					  (pgoff_t)num);
--		if (nr_pages == 0)
--			break;
--
--		for (i = 0; i < nr_pages; i++) {
--			struct page *page = pvec.pages[i];
--			struct buffer_head *bh, *head;
--
--			/*
--			 * If current offset is smaller than the page offset,
--			 * there is a hole at this offset.
--			 */
--			if (whence == SEEK_HOLE && lastoff < endoff &&
--			    lastoff < page_offset(pvec.pages[i])) {
--				found = 1;
--				*offset = lastoff;
--				goto out;
--			}
--
--			if (page->index > end)
--				goto out;
--
--			lock_page(page);
--
--			if (unlikely(page->mapping != inode->i_mapping)) {
--				unlock_page(page);
--				continue;
--			}
--
--			if (!page_has_buffers(page)) {
--				unlock_page(page);
--				continue;
--			}
--
--			if (page_has_buffers(page)) {
--				lastoff = page_offset(page);
--				bh = head = page_buffers(page);
--				do {
--					if (buffer_uptodate(bh) ||
--					    buffer_unwritten(bh)) {
--						if (whence == SEEK_DATA)
--							found = 1;
--					} else {
--						if (whence == SEEK_HOLE)
--							found = 1;
--					}
--					if (found) {
--						*offset = max_t(loff_t,
--							startoff, lastoff);
--						unlock_page(page);
--						goto out;
--					}
--					lastoff += bh->b_size;
--					bh = bh->b_this_page;
--				} while (bh != head);
--			}
--
--			lastoff = page_offset(page) + PAGE_SIZE;
--			unlock_page(page);
--		}
--
--		/* The no. of pages is less than our desired, we are done. */
--		if (nr_pages < num)
--			break;
--
--		index = pvec.pages[i - 1]->index + 1;
--		pagevec_release(&pvec);
--	} while (index <= end);
--
--	if (whence == SEEK_HOLE && lastoff < endoff) {
--		found = 1;
--		*offset = lastoff;
--	}
--out:
--	pagevec_release(&pvec);
--	return found;
--}
--
--/*
-  * ext4_seek_data() retrieves the offset for SEEK_DATA.
-  */
- static loff_t ext4_seek_data(struct file *file, loff_t offset, loff_t maxsize)
-@@ -569,7 +446,7 @@ static loff_t ext4_seek_data(struct file *file, loff_t offset, loff_t maxsize)
- 	struct inode *inode = file->f_mapping->host;
- 	struct extent_status es;
- 	ext4_lblk_t start, last, end;
--	loff_t dataoff, isize;
-+	loff_t dataoff, length, isize;
- 	int blkbits;
- 	int ret;
++	/* adjust cursor for types that contain fields */
++	if (t->fields) {
++		bb_count = BTOBB(byteize(fsize(t->fields, iocur_top->data, 0, 0)));
++		set_cur(t, iocur_top->bb, bb_count, DB_RING_IGN, NULL);
++	}
+ 	iocur_top->typ = t;
  
-@@ -608,8 +485,10 @@ static loff_t ext4_seek_data(struct file *file, loff_t offset, loff_t maxsize)
- 		 * it will be as a data or a hole according to page
- 		 * cache that has data or not.
- 		 */
--		if (ext4_find_unwritten_pgoff(inode, SEEK_DATA,
--					      es.es_lblk + es.es_len, &dataoff))
-+		length = ((loff_t)(last + es.es_len) << blkbits) - dataoff;
-+		dataoff = page_cache_seek_hole_data(inode, dataoff,
-+						    length, SEEK_DATA);
-+		if (dataoff >= 0)
- 			break;
- 		last += es.es_len;
- 		dataoff = (loff_t)last << blkbits;
-@@ -632,7 +511,7 @@ static loff_t ext4_seek_hole(struct file *file, loff_t offset, loff_t maxsize)
- 	struct inode *inode = file->f_mapping->host;
- 	struct extent_status es;
- 	ext4_lblk_t start, last, end;
--	loff_t holeoff, isize;
-+	loff_t holeoff, length, isize;
- 	int blkbits;
- 	int ret;
- 
-@@ -667,10 +546,13 @@ static loff_t ext4_seek_hole(struct file *file, loff_t offset, loff_t maxsize)
- 		 * it will be as a data or a hole according to page
- 		 * cache that has data or not.
- 		 */
--		if (ext4_es_is_unwritten(&es) &&
--		    ext4_find_unwritten_pgoff(inode, SEEK_HOLE,
--					      last + es.es_len, &holeoff))
--			break;
-+		if (ext4_es_is_unwritten(&es)) {
-+			length = ((loff_t)(last + es.es_len) << blkbits) - holeoff;
-+			holeoff = page_cache_seek_hole_data(inode, holeoff,
-+							    length, SEEK_HOLE);
-+			if (holeoff >= 0)
-+				break;
-+		}
- 
- 		last += es.es_len;
- 		holeoff = (loff_t)last << blkbits;
+ 	/* verify the buffer if the type has one. */
 -- 
-2.7.5
+2.9.4
 
