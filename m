@@ -1,48 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sender-pp-092.zoho.com ([135.84.80.237]:25401 "EHLO
-        sender-pp-092.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750969AbdFVEkj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jun 2017 00:40:39 -0400
-From: Todd Chester <ToddAndMargo@zoho.com>
-Subject: RFE: interrupted restore sessions
-Message-ID: <d09f0f23-d8be-0e33-ce74-3b77342b7a6d@zoho.com>
-Date: Wed, 21 Jun 2017 21:40:36 -0700
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:50682 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751147AbdFVTdz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Jun 2017 15:33:55 -0400
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: [PATCH] xfs_db: update sector size when type is set
+Date: Thu, 22 Jun 2017 14:33:52 -0500
+Message-Id: <20170622193352.22346-1-billodo@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: sandeen@sandeen.net
 
-Dear XFS Developers,
+xfs_db doesn't take sector size into account when setting type.
+This can result in an errant crc. For example, with a sector size
+of 4096:
 
-The Red Hat bugzilla staff asked me to post this kind of
-stuff "upstream".   I hope I have the right place.
+xfs_db> agi 0
+xfs_db> p crc
+crc = 0xab85043e (correct)
+xfs_db> daddr
+current daddr is 16
+xfs_db> daddr 42
+xfs_db> daddr 16
+xfs_db> type agi
+Metadata CRC error detected at xfs_agi block 0x10/0x200
+xfs_db> p crc
+crc = 0xab85043e (bad)
 
-http://rpm.pbone.net/index.php3/stat/26/dist/95/size/857409/name/xfsdump-3.1.4-1.el7.src.rpm
+When xfs_db sets the new daddr in daddr_f, it does so with one
+BBSIZE sector (512). Changing the type doesn't change the size
+of the current buffer in iocur_top, so the checksum is calculated
+on the wrong length for the type (when the actual sector size > BBSIZE (512).
 
-Request for Enhancement (RFE):
+For types with fields, reread the buffer to pick up the correct size for
+the new type when it gets set. Facilitate the reread by setting the cursor
+with set_cur().
 
-Would one of our intrepid heroes please consider implementing
-the following RFE for me?
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+ db/io.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-When you have to use xfsrestore, you have usually lost something
-and are typically under a lot of stress.  You do not need to
-contend with other mysteries to solve/troubleshoot to get
-your restore to work.  (When it happened to me, I almost
-had a heart attack.)
-
-When xfsrestore find a "interrupted restore sessions", please prompt the 
-user to correct the situation, if he says "yes", correct the problem and 
-continue with the restore.
-
-This will greatly cut down on the panic/confusion the user experiences 
-when they encounter an "interrupted restore session".
-
-
-I sincerely appreciate your consideration.
-
-Many thanks,
--T
+diff --git a/db/io.c b/db/io.c
+index 9918a51..7e6d330 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -616,6 +616,12 @@ set_iocur_type(
+ {
+ 	struct xfs_buf	*bp = iocur_top->bp;
+ 
++	if (t->fields)
++		set_cur(t,
++			iocur_top->bb,
++			fsize(t->fields, iocur_top->data,
++			      0, 0) / mp->m_sb.sb_blocksize,
++			DB_RING_IGN, NULL);
+ 	iocur_top->typ = t;
+ 
+ 	/* verify the buffer if the type has one. */
+-- 
+2.9.4
 
