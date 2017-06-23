@@ -1,148 +1,264 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44307 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:28628 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752026AbdFUV6b (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 17:58:31 -0400
-Subject: [PATCH 8/8] xfs: scrub while appending to a file
+        with ESMTP id S1751496AbdFWQfe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2017 12:35:34 -0400
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v5NGZX6Z030930
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2017 16:35:33 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v5NGZXs2005476
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2017 16:35:33 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v5NGZVlf008832
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2017 16:35:32 GMT
+Subject: [PATCH 2/4] xfs: expose errortag knobs via sysfs
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 21 Jun 2017 14:58:22 -0700
-Message-ID: <149808230214.8924.10706838164588131554.stgit@birch.djwong.org>
-In-Reply-To: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
-References: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
+Date: Fri, 23 Jun 2017 09:35:29 -0700
+Message-ID: <149823572966.31786.4136322165995385683.stgit@birch.djwong.org>
+In-Reply-To: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
+References: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-It turns out that there was a bug in xfs_bmap_count_blocks wherein the
-block count returned would count or not count delalloc blocks depending
-on the fork format.  This is a bug that is easily exposed via scrub, so
-check the output of that function here -- the buggy version of the
-function produces online fsck errors.
+Creates a /sys/fs/xfs/$dev/errortag/ directory to control the errortag
+values directly.  This enables us to control the randomness values,
+rather than having to accept the defaults.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/1379     |   82 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1379.out |    6 ++++
- tests/xfs/group    |    1 +
- 3 files changed, 89 insertions(+)
- create mode 100755 tests/xfs/1379
- create mode 100644 tests/xfs/1379.out
+ fs/xfs/xfs_error.c |  156 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_error.h |    1 
+ fs/xfs/xfs_mount.h |    1 
+ 3 files changed, 157 insertions(+), 1 deletion(-)
 
 
-diff --git a/tests/xfs/1379 b/tests/xfs/1379
-new file mode 100755
-index 0000000..acb797e
---- /dev/null
-+++ b/tests/xfs/1379
-@@ -0,0 +1,82 @@
-+#! /bin/bash
-+# FS QA Test No. 1379
-+#
-+# Race scrubbing the inode record while appending to a file.
-+# This exposes a bug in xfs_bmap_count_blocks where we count delalloc
-+# extents for di_nblocks if the fork is in extents format, but we don't
-+# count them if the fork is in btree format.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
-+#-----------------------------------------------------------------------
-+#
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 52f75bc..e2278af6 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -22,6 +22,7 @@
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
+ #include "xfs_error.h"
++#include "xfs_sysfs.h"
+ 
+ #ifdef DEBUG
+ 
+@@ -56,6 +57,145 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_AG_RESV_CRITICAL,
+ };
+ 
++struct xfs_errortag_attr {
++	struct attribute	attr;
++	unsigned int		tag;
++};
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
++static inline struct xfs_errortag_attr *
++to_attr(struct attribute *attr)
 +{
-+	cd /
-+	rm -rf $tmp.*
++	return container_of(attr, struct xfs_errortag_attr, attr);
 +}
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/fuzzy
-+. ./common/inject
-+. ./common/xfs
++static inline struct xfs_mount *
++to_mp(struct kobject *kobject)
++{
++	struct xfs_kobj *kobj = to_kobj(kobject);
 +
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_test_program "punch-alternating"
-+_require_xfs_io_command "scrub"
-+_require_scratch
++	return container_of(kobj, struct xfs_mount, m_errortag_kobj);
++}
 +
-+echo "Format and populate"
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount
++STATIC ssize_t
++xfs_errortag_attr_store(
++	struct kobject		*kobject,
++	struct attribute	*attr,
++	const char		*buf,
++	size_t			count)
++{
++	struct xfs_mount	*mp = to_mp(kobject);
++	struct xfs_errortag_attr *xfs_attr = to_attr(attr);
++	int			ret;
++	unsigned int		val;
 +
-+$XFS_IO_PROG -f -c 'falloc 0 10m' $SCRATCH_MNT/a >> $seqres.full
-+$XFS_IO_PROG -f -c 'falloc 0 10m' $SCRATCH_MNT/b >> $seqres.full
-+./src/punch-alternating $SCRATCH_MNT/b
-+sync
++	if (strcmp(buf, "default") == 0) {
++		val = xfs_errortag_random_default[xfs_attr->tag];
++	} else {
++		ret = kstrtouint(buf, 0, &val);
++		if (ret)
++			return ret;
++	}
 +
-+echo "Set up delalloc extents"
-+$XFS_IO_PROG -c 'pwrite -S 0x66 10m 128k' $SCRATCH_MNT/a >> $seqres.full
-+$XFS_IO_PROG -c 'pwrite -S 0x66 10m 128k' $SCRATCH_MNT/b >> $seqres.full
-+$XFS_IO_PROG -c 'bmap -ev' $SCRATCH_MNT/a $SCRATCH_MNT/b > $SCRATCH_MNT/before
-+cat $SCRATCH_MNT/before >> $seqres.full
++	ret = xfs_errortag_set(mp, xfs_attr->tag, val);
++	if (ret)
++		return ret;
++	return count;
++}
 +
-+echo "Scrub a and b"
-+$XFS_IO_PROG -x -c 'scrub inode' $SCRATCH_MNT/a >> $seqres.full
-+$XFS_IO_PROG -x -c 'scrub inode' $SCRATCH_MNT/b >> $seqres.full
-+$XFS_IO_PROG -c 'bmap -ev' $SCRATCH_MNT/a $SCRATCH_MNT/b > $SCRATCH_MNT/after
-+cat $SCRATCH_MNT/after >> $seqres.full
++STATIC ssize_t
++xfs_errortag_attr_show(
++	struct kobject		*kobject,
++	struct attribute	*attr,
++	char			*buf)
++{
++	struct xfs_mount	*mp = to_mp(kobject);
++	struct xfs_errortag_attr *xfs_attr = to_attr(attr);
 +
-+echo "Compare extent maps"
-+diff -u $SCRATCH_MNT/before $SCRATCH_MNT/after
++	return snprintf(buf, PAGE_SIZE, "%u\n",
++			xfs_errortag_get(mp, xfs_attr->tag));
++}
 +
-+echo "Test done"
-+status=0
-+exit
-diff --git a/tests/xfs/1379.out b/tests/xfs/1379.out
-new file mode 100644
-index 0000000..67ad05f
---- /dev/null
-+++ b/tests/xfs/1379.out
-@@ -0,0 +1,6 @@
-+QA output created by 1379
-+Format and populate
-+Set up delalloc extents
-+Scrub a and b
-+Compare extent maps
-+Test done
-diff --git a/tests/xfs/group b/tests/xfs/group
-index d0a6831..dd10df3 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -420,3 +420,4 @@
- 901 auto quick clone dedupe
- 902 auto quick clone dedupe
- 1378 dangerous_scrub dangerous_online_repair
-+1379 dangerous_scrub
++static const struct sysfs_ops xfs_errortag_sysfs_ops = {
++	.show = xfs_errortag_attr_show,
++	.store = xfs_errortag_attr_store,
++};
++
++#define XFS_ERRORTAG_ATTR_RW(_name, _tag) \
++static struct xfs_errortag_attr xfs_errortag_attr_##_name = {		\
++	.attr = {.name = __stringify(_name),				\
++		 .mode = VERIFY_OCTAL_PERMISSIONS(S_IWUSR | S_IRUGO) },	\
++	.tag	= (_tag),						\
++}
++
++#define XFS_ERRORTAG_ATTR_LIST(_name) &xfs_errortag_attr_##_name.attr
++
++XFS_ERRORTAG_ATTR_RW(noerror,		XFS_ERRTAG_NOERROR);
++XFS_ERRORTAG_ATTR_RW(iflush1,		XFS_ERRTAG_IFLUSH_1);
++XFS_ERRORTAG_ATTR_RW(iflush2,		XFS_ERRTAG_IFLUSH_2);
++XFS_ERRORTAG_ATTR_RW(iflush3,		XFS_ERRTAG_IFLUSH_3);
++XFS_ERRORTAG_ATTR_RW(iflush4,		XFS_ERRTAG_IFLUSH_4);
++XFS_ERRORTAG_ATTR_RW(iflush5,		XFS_ERRTAG_IFLUSH_5);
++XFS_ERRORTAG_ATTR_RW(iflush6,		XFS_ERRTAG_IFLUSH_6);
++XFS_ERRORTAG_ATTR_RW(dareadbuf,		XFS_ERRTAG_DA_READ_BUF);
++XFS_ERRORTAG_ATTR_RW(btree_chk_lblk,	XFS_ERRTAG_BTREE_CHECK_LBLOCK);
++XFS_ERRORTAG_ATTR_RW(btree_chk_sblk,	XFS_ERRTAG_BTREE_CHECK_SBLOCK);
++XFS_ERRORTAG_ATTR_RW(readagf,		XFS_ERRTAG_ALLOC_READ_AGF);
++XFS_ERRORTAG_ATTR_RW(readagi,		XFS_ERRTAG_IALLOC_READ_AGI);
++XFS_ERRORTAG_ATTR_RW(itobp,		XFS_ERRTAG_ITOBP_INOTOBP);
++XFS_ERRORTAG_ATTR_RW(iunlink,		XFS_ERRTAG_IUNLINK);
++XFS_ERRORTAG_ATTR_RW(iunlinkrm,		XFS_ERRTAG_IUNLINK_REMOVE);
++XFS_ERRORTAG_ATTR_RW(dirinovalid,	XFS_ERRTAG_DIR_INO_VALIDATE);
++XFS_ERRORTAG_ATTR_RW(bulkstat,		XFS_ERRTAG_BULKSTAT_READ_CHUNK);
++XFS_ERRORTAG_ATTR_RW(logiodone,		XFS_ERRTAG_IODONE_IOERR);
++XFS_ERRORTAG_ATTR_RW(stratread,		XFS_ERRTAG_STRATREAD_IOERR);
++XFS_ERRORTAG_ATTR_RW(stratcmpl,		XFS_ERRTAG_STRATCMPL_IOERR);
++XFS_ERRORTAG_ATTR_RW(diowrite,		XFS_ERRTAG_DIOWRITE_IOERR);
++XFS_ERRORTAG_ATTR_RW(bmapifmt,		XFS_ERRTAG_BMAPIFORMAT);
++XFS_ERRORTAG_ATTR_RW(free_extent,	XFS_ERRTAG_FREE_EXTENT);
++XFS_ERRORTAG_ATTR_RW(rmap_finish_one,	XFS_ERRTAG_RMAP_FINISH_ONE);
++XFS_ERRORTAG_ATTR_RW(refcount_continue_update,	XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE);
++XFS_ERRORTAG_ATTR_RW(refcount_finish_one,	XFS_ERRTAG_REFCOUNT_FINISH_ONE);
++XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
++XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
++
++static struct attribute *xfs_errortag_attrs[] = {
++	XFS_ERRORTAG_ATTR_LIST(noerror),
++	XFS_ERRORTAG_ATTR_LIST(iflush1),
++	XFS_ERRORTAG_ATTR_LIST(iflush2),
++	XFS_ERRORTAG_ATTR_LIST(iflush3),
++	XFS_ERRORTAG_ATTR_LIST(iflush4),
++	XFS_ERRORTAG_ATTR_LIST(iflush5),
++	XFS_ERRORTAG_ATTR_LIST(iflush6),
++	XFS_ERRORTAG_ATTR_LIST(dareadbuf),
++	XFS_ERRORTAG_ATTR_LIST(btree_chk_lblk),
++	XFS_ERRORTAG_ATTR_LIST(btree_chk_sblk),
++	XFS_ERRORTAG_ATTR_LIST(readagf),
++	XFS_ERRORTAG_ATTR_LIST(readagi),
++	XFS_ERRORTAG_ATTR_LIST(itobp),
++	XFS_ERRORTAG_ATTR_LIST(iunlink),
++	XFS_ERRORTAG_ATTR_LIST(iunlinkrm),
++	XFS_ERRORTAG_ATTR_LIST(dirinovalid),
++	XFS_ERRORTAG_ATTR_LIST(bulkstat),
++	XFS_ERRORTAG_ATTR_LIST(logiodone),
++	XFS_ERRORTAG_ATTR_LIST(stratread),
++	XFS_ERRORTAG_ATTR_LIST(stratcmpl),
++	XFS_ERRORTAG_ATTR_LIST(diowrite),
++	XFS_ERRORTAG_ATTR_LIST(bmapifmt),
++	XFS_ERRORTAG_ATTR_LIST(free_extent),
++	XFS_ERRORTAG_ATTR_LIST(rmap_finish_one),
++	XFS_ERRORTAG_ATTR_LIST(refcount_continue_update),
++	XFS_ERRORTAG_ATTR_LIST(refcount_finish_one),
++	XFS_ERRORTAG_ATTR_LIST(bmap_finish_one),
++	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
++	NULL,
++};
++
++struct kobj_type xfs_errortag_ktype = {
++	.release = xfs_sysfs_release,
++	.sysfs_ops = &xfs_errortag_sysfs_ops,
++	.default_attrs = xfs_errortag_attrs,
++};
++
+ int
+ xfs_errortag_init(
+ 	struct xfs_mount	*mp)
+@@ -64,13 +204,16 @@ xfs_errortag_init(
+ 			KM_SLEEP | KM_MAYFAIL);
+ 	if (!mp->m_errortag)
+ 		return -ENOMEM;
+-	return 0;
++
++	return xfs_sysfs_init(&mp->m_errortag_kobj, &xfs_errortag_ktype,
++			       &mp->m_kobj, "errortag");
+ }
+ 
+ void
+ xfs_errortag_del(
+ 	struct xfs_mount	*mp)
+ {
++	xfs_sysfs_del(&mp->m_errortag_kobj);
+ 	kmem_free(mp->m_errortag);
+ }
+ 
+@@ -96,6 +239,17 @@ xfs_errortag_test(
+ }
+ 
+ int
++xfs_errortag_get(
++	struct xfs_mount	*mp,
++	unsigned int		error_tag)
++{
++	if (error_tag >= XFS_ERRTAG_MAX)
++		return -EINVAL;
++
++	return mp->m_errortag[error_tag];
++}
++
++int
+ xfs_errortag_set(
+ 	struct xfs_mount	*mp,
+ 	unsigned int		error_tag,
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index b4316d3..8915bde 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -138,6 +138,7 @@ extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
+ #define XFS_TEST_ERROR(expr, mp, tag, rf)		\
+ 	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
+ 
++extern int xfs_errortag_get(struct xfs_mount *mp, unsigned int error_tag);
+ extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
+ 		unsigned int tag_value);
+ extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index e002ac5..931e9fc 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -204,6 +204,7 @@ typedef struct xfs_mount {
+ 	 * error triggers.  1 = always, 2 = half the time, etc.
+ 	 */
+ 	unsigned int		*m_errortag;
++	struct xfs_kobj		m_errortag_kobj;
+ 
+ 	/*
+ 	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
 
