@@ -1,226 +1,206 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36929 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752026AbdFUV62 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 17:58:28 -0400
-Date: Wed, 21 Jun 2017 14:58:12 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:28734 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753379AbdFWQfr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2017 12:35:47 -0400
+Subject: [PATCH 4/4] xfs: convert drop_writes to use the errortag mechanism
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 12/12] xfs_spaceman: add group summary mode
-Message-ID: <20170621215812.GS4733@birch.djwong.org>
-References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
- <149755902328.3625.10845087403849596095.stgit@birch.djwong.org>
- <847e6b56-aba2-2371-b8f3-a3d8800c1ae8@sandeen.net>
+Date: Fri, 23 Jun 2017 09:35:42 -0700
+Message-ID: <149823574249.31786.3183222738936027802.stgit@birch.djwong.org>
+In-Reply-To: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
+References: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <847e6b56-aba2-2371-b8f3-a3d8800c1ae8@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Wed, Jun 21, 2017 at 04:53:52PM -0500, Eric Sandeen wrote:
-> On 6/15/17 3:37 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Add a -g switch to show only a per-group summary.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> with a small fix (see below)
-> 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> > ---
-> >  man/man8/xfs_spaceman.8 |    6 +++++-
-> >  spaceman/freesp.c       |   27 ++++++++++++++++++++++++---
-> >  2 files changed, 29 insertions(+), 4 deletions(-)
-> > 
-> > 
-> > diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
-> > index f064360..0302196 100644
-> > --- a/man/man8/xfs_spaceman.8
-> > +++ b/man/man8/xfs_spaceman.8
-> > @@ -25,7 +25,7 @@ then the program exits.
-> >  
-> >  .SH COMMANDS
-> >  .TP
-> > -.BI "freesp [ \-drs ] [-a agno] [ \-b | \-e bsize | \-h bsize | \-m factor ]"
-> > +.BI "freesp [ \-dgrs ] [-a agno] [ \-b | \-e bsize | \-h bsize | \-m factor ]"
-> >  With no arguments,
-> >  .B freesp
-> >  shows a histogram of all free space extents in the filesystem.
-> > @@ -49,6 +49,10 @@ This is the default, and is mutually exclusive with the
-> >  Print debugging information such as the raw free space extent information.
-> >  
-> >  .TP
-> > +.B \-g
-> > +Print the free space block and extent counts for each AG.
-> > +
-> > +.TP
-> >  .B \-e bsize
-> >  Set all histogram bin sizes to a specific value.
-> >  This option is mutually exclusive with the
-> > diff --git a/spaceman/freesp.c b/spaceman/freesp.c
-> > index 99e50cf..79eea44 100644
-> > --- a/spaceman/freesp.c
-> > +++ b/spaceman/freesp.c
-> > @@ -43,6 +43,7 @@ static long long	multsize;
-> >  static int		histcount;
-> >  static int		seen1;
-> >  static int		summaryflag;
-> > +static int		gflag;
-> >  static bool		rtflag;
-> >  static long long	totblocks;
-> >  static long long	totexts;
-> > @@ -164,6 +165,8 @@ scan_ag(
-> >  	off64_t			bperag;
-> >  	off64_t			aglen;
-> >  	xfs_agblock_t		agbno;
-> > +	unsigned long long	freeblks = 0;
-> > +	unsigned long long	freeexts = 0;
-> >  	int			ret;
-> >  	int			i;
-> >  
-> > @@ -216,6 +219,8 @@ scan_ag(
-> >  			agbno = (extent->fmr_physical - (bperag * agno)) /
-> >  								blocksize;
-> >  			aglen = extent->fmr_length / blocksize;
-> > +			freeblks += aglen;
-> > +			freeexts++;
-> >  
-> >  			addtohist(agno, agbno, aglen);
-> >  		}
-> > @@ -225,6 +230,15 @@ scan_ag(
-> >  			break;
-> >  		fsmap_advance(fsmap);
-> >  	}
-> > +
-> > +	if (gflag) {
-> > +		if (agno == NULLAGNUMBER)
-> > +			printf(_("     rtdev %10llu %10llu\n"), freeexts,
-> > +					freeblks);
-> > +		else
-> > +			printf(_("%10u %10llu %10llu\n"), agno, freeexts,
-> > +					freeblks);
-> > +	}
-> >  }
-> >  static void
-> >  aglistadd(
-> > @@ -258,7 +272,7 @@ init(
-> >  	hist = NULL;
-> >  	rtflag = false;
-> >  
-> > -	while ((c = getopt(argc, argv, "a:bde:h:m:rs")) != EOF) {
-> > +	while ((c = getopt(argc, argv, "a:bde:gh:m:rs")) != EOF) {
-> >  		switch (c) {
-> >  		case 'a':
-> >  			aglistadd(optarg);
-> > @@ -280,6 +294,10 @@ init(
-> >  				return command_usage(&freesp_cmd);
-> >  			speced = 1;
-> >  			break;
-> > +		case 'g':
-> > +			histcount = 0;
-> > +			gflag++;
-> > +			break;
-> 
-> This global needs to be reset in init() or it sticks:
-> 
-> (I can fix it on the way in)
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok, sounds good.  Assuming it's a simple insertion of "gflag = 0" somewhere
-before the getopt while loop,
+We now have enhanced error injection that can control the frequency
+with which errors happen, so convert drop_writes to use this.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_error.c |    3 +++
+ fs/xfs/xfs_error.h |   14 +++++++++++++-
+ fs/xfs/xfs_iomap.c |    2 +-
+ fs/xfs/xfs_mount.h |   24 ------------------------
+ fs/xfs/xfs_sysfs.c |   42 ------------------------------------------
+ 5 files changed, 17 insertions(+), 68 deletions(-)
 
---D
 
-> 
-> xfs_spaceman> freesp
->    from      to extents  blocks    pct
->       1       1  647503  647503   1.69
->       2       3  334189  790976   2.07
->       4       7  369499 2009667   5.26
->       8      15  116258 1233152   3.23
->      16      31   16648  370824   0.97
->      32      63    8817  387963   1.01
->      64     127    5474  487854   1.28
->     128     255    3483  631960   1.65
->     256     511    2613  956121   2.50
->     512    1023    1758 1249204   3.27
->    1024    2047     828 1151649   3.01
->    2048    4095     357  972144   2.54
->    4096    8191     122  687724   1.80
->    8192   16383      38  432634   1.13
->   16384   32767      23  566786   1.48
->   32768   65535      15  765430   2.00
->   65536  131071      14 1359754   3.56
->  131072  262143       4  653264   1.71
->  262144  524287       4 1775562   4.64
->  524288 1048575       2 1390287   3.64
-> 1048576 2097151       2 2446908   6.40
-> 2097152 4194303       2 6234130  16.31
-> 4194304 8388607       2 11023746  28.84
-> xfs_spaceman> freesp -g
->         AG    extents     blocks
->          0     280589    6629403
->          1     289696   11847480
->          2      14299    7806587
->          3     923071   11941772
-> xfs_spaceman> freesp
->         AG    extents     blocks
->          0     280589    6629403
->          1     289696   11847480
->          2      14299    7806587
->          3     923071   11941772
-> 
-> 
-> >  		case 'h':
-> >  			if (speced && !histcount)
-> >  				goto many_spec;
-> > @@ -331,13 +349,15 @@ freesp_f(
-> >  
-> >  	if (!init(argc, argv))
-> >  		return 0;
-> > +	if (gflag)
-> > +		printf(_("        AG    extents     blocks\n"));
-> >  	if (rtflag)
-> >  		scan_ag(NULLAGNUMBER);
-> >  	for (agno = 0; !rtflag && agno < file->geom.agcount; agno++)  {
-> >  		if (inaglist(agno))
-> >  			scan_ag(agno);
-> >  	}
-> > -	if (histcount)
-> > +	if (histcount && !gflag)
-> >  		printhist();
-> >  	if (summaryflag) {
-> >  		printf(_("total free extents %lld\n"), totexts);
-> > @@ -363,6 +383,7 @@ freesp_help(void)
-> >  " -b       -- binary histogram bin size\n"
-> >  " -d       -- debug output\n"
-> >  " -e bsize -- Use fixed histogram bin size of bsize\n"
-> > +" -g       -- Print only a per-AG summary.\n"
-> >  " -h hbsz  -- Use custom histogram bin size of h1.\n"
-> >  "             Multiple specifications are allowed.\n"
-> >  " -m bmult -- Use histogram bin size multiplier of bmult.\n"
-> > @@ -382,7 +403,7 @@ freesp_init(void)
-> >  	freesp_cmd.cfunc = freesp_f;
-> >  	freesp_cmd.argmin = 0;
-> >  	freesp_cmd.argmax = -1;
-> > -	freesp_cmd.args = "[-drs] [-a agno]... [ -b | -e bsize | -h h1... | -m bmult ]";
-> > +	freesp_cmd.args = "[-dgrs] [-a agno]... [ -b | -e bsize | -h h1... | -m bmult ]";
-> >  	freesp_cmd.flags = CMD_FLAG_ONESHOT;
-> >  	freesp_cmd.oneline = _("Examine filesystem free space");
-> >  	freesp_cmd.help = freesp_help;
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index e2278af6..a2f23d2 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -55,6 +55,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_REFCOUNT_FINISH_ONE,
+ 	XFS_RANDOM_BMAP_FINISH_ONE,
+ 	XFS_RANDOM_AG_RESV_CRITICAL,
++	XFS_RANDOM_DROP_WRITES,
+ };
+ 
+ struct xfs_errortag_attr {
+@@ -157,6 +158,7 @@ XFS_ERRORTAG_ATTR_RW(refcount_continue_update,	XFS_ERRTAG_REFCOUNT_CONTINUE_UPDA
+ XFS_ERRORTAG_ATTR_RW(refcount_finish_one,	XFS_ERRTAG_REFCOUNT_FINISH_ONE);
+ XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
+ XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
++XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
+ 
+ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(noerror),
+@@ -187,6 +189,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(refcount_finish_one),
+ 	XFS_ERRORTAG_ATTR_LIST(bmap_finish_one),
+ 	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
++	XFS_ERRORTAG_ATTR_LIST(drop_writes),
+ 	NULL,
+ };
+ 
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index ae8935b..ad9b24a 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -96,7 +96,18 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+ #define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
+ #define XFS_ERRTAG_BMAP_FINISH_ONE			26
+ #define XFS_ERRTAG_AG_RESV_CRITICAL			27
+-#define XFS_ERRTAG_MAX					28
++
++/*
++ * DEBUG mode instrumentation to test and/or trigger delayed allocation
++ * block killing in the event of failed writes. When enabled, all
++ * buffered writes are silenty dropped and handled as if they failed.
++ * All delalloc blocks in the range of the write (including pre-existing
++ * delalloc blocks!) are tossed as part of the write failure error
++ * handling sequence.
++ */
++#define XFS_ERRTAG_DROP_WRITES				28
++
++#define XFS_ERRTAG_MAX					29
+ 
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -129,6 +140,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+ #define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
+ #define XFS_RANDOM_BMAP_FINISH_ONE			1
+ #define XFS_RANDOM_AG_RESV_CRITICAL			4
++#define XFS_RANDOM_DROP_WRITES				1
+ 
+ #ifdef DEBUG
+ extern int xfs_errortag_init(struct xfs_mount *mp);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 304b79d..86f1a9f 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1097,7 +1097,7 @@ xfs_file_iomap_end_delalloc(
+ 	 * Behave as if the write failed if drop writes is enabled. Set the NEW
+ 	 * flag to force delalloc cleanup.
+ 	 */
+-	if (xfs_mp_drop_writes(mp)) {
++	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_DROP_WRITES)) {
+ 		iomap->flags |= IOMAP_F_NEW;
+ 		written = 0;
+ 	}
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 931e9fc..e0792d0 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -205,16 +205,6 @@ typedef struct xfs_mount {
+ 	 */
+ 	unsigned int		*m_errortag;
+ 	struct xfs_kobj		m_errortag_kobj;
+-
+-	/*
+-	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
+-	 * block killing in the event of failed writes. When enabled, all
+-	 * buffered writes are silenty dropped and handled as if they failed.
+-	 * All delalloc blocks in the range of the write (including pre-existing
+-	 * delalloc blocks!) are tossed as part of the write failure error
+-	 * handling sequence.
+-	 */
+-	bool			m_drop_writes;
+ #endif
+ } xfs_mount_t;
+ 
+@@ -333,20 +323,6 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
+ 	return (xfs_agblock_t) do_div(ld, mp->m_sb.sb_agblocks);
+ }
+ 
+-#ifdef DEBUG
+-static inline bool
+-xfs_mp_drop_writes(struct xfs_mount *mp)
+-{
+-	return mp->m_drop_writes;
+-}
+-#else
+-static inline bool
+-xfs_mp_drop_writes(struct xfs_mount *mp)
+-{
+-	return 0;
+-}
+-#endif
+-
+ /* per-AG block reservation data structures*/
+ enum xfs_ag_resv_type {
+ 	XFS_AG_RESV_NONE = 0,
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index ec6e0e2..56610a9 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -90,49 +90,7 @@ to_mp(struct kobject *kobject)
+ 	return container_of(kobj, struct xfs_mount, m_kobj);
+ }
+ 
+-#ifdef DEBUG
+-
+-STATIC ssize_t
+-drop_writes_store(
+-	struct kobject		*kobject,
+-	const char		*buf,
+-	size_t			count)
+-{
+-	struct xfs_mount	*mp = to_mp(kobject);
+-	int			ret;
+-	int			val;
+-
+-	ret = kstrtoint(buf, 0, &val);
+-	if (ret)
+-		return ret;
+-
+-	if (val == 1)
+-		mp->m_drop_writes = true;
+-	else if (val == 0)
+-		mp->m_drop_writes = false;
+-	else
+-		return -EINVAL;
+-
+-	return count;
+-}
+-
+-STATIC ssize_t
+-drop_writes_show(
+-	struct kobject		*kobject,
+-	char			*buf)
+-{
+-	struct xfs_mount	*mp = to_mp(kobject);
+-
+-	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_drop_writes ? 1 : 0);
+-}
+-XFS_SYSFS_ATTR_RW(drop_writes);
+-
+-#endif /* DEBUG */
+-
+ static struct attribute *xfs_mp_attrs[] = {
+-#ifdef DEBUG
+-	ATTR_LIST(drop_writes),
+-#endif
+ 	NULL,
+ };
+ 
+
