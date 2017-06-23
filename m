@@ -1,127 +1,297 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40566 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751083AbdFUUii (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 16:38:38 -0400
-Date: Wed, 21 Jun 2017 13:38:30 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/12] libxcmd: add cvt{int, long} to convert strings to
- int and long
-Message-ID: <20170621203830.GO4733@birch.djwong.org>
-References: <149755894900.3625.8076720525369136771.stgit@birch.djwong.org>
- <149755896133.3625.13813626356334626083.stgit@birch.djwong.org>
- <6c0086a3-d1db-baa0-f0a4-be1c6d2cebe7@sandeen.net>
- <20170621202951.GM4733@birch.djwong.org>
- <9309853e-b9c0-e9a3-7821-78803d33f0d6@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9309853e-b9c0-e9a3-7821-78803d33f0d6@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:53060 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753820AbdFWNez (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Jun 2017 09:34:55 -0400
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v2 3/6] GFS2: Make height info part of metapath
+Date: Fri, 23 Jun 2017 15:34:41 +0200
+Message-Id: <1498224884-346-4-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1498224884-346-1-git-send-email-agruenba@redhat.com>
+References: <1498224884-346-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, Andreas Gruenbacher <agruenba@redhat.com>
 
-On Wed, Jun 21, 2017 at 03:33:16PM -0500, Eric Sandeen wrote:
-> On 6/21/17 3:29 PM, Darrick J. Wong wrote:
-> > On Wed, Jun 21, 2017 at 03:16:37PM -0500, Eric Sandeen wrote:
-> 
-> ...
-> 
-> >>> --- a/libxcmd/input.c
-> >>> +++ b/libxcmd/input.c
-> >>> @@ -149,6 +149,140 @@ numlen(
-> >>>  	return len == 0 ? 1 : len;
-> >>>  }
-> >>>  
-> >>> +/*
-> >>> + * Convert string to int64_t, set errno if the conversion fails or
-> >>> + * doesn't fit.  Does not allow unit specifiers.  Sets errno to zero
-> >>> + * prior to conversion.
-> >>> + */
-> >>> +int64_t
-> >>> +cvt_s64(
-> >>> +	char		*s,
-> >>> +	int		base)
-> >>> +{
-> >>> +	long long	i;
-> >>> +	char		*sp;
-> >>> +	int		c;
-> >>
-> >> unused var c
-> >>
-> >>> +
-> >>> +	errno = 0;
-> >>> +	i = strtoll(s, &sp, base);
-> >>> +	if (*sp == '\0' && sp != s)
-> >>> +		return i;
-> >>> +bad:
-> >>
-> >> label bad: defined but not used
-> > 
-> > Fixed.  Sorry about the stupidity. :(
-> 
-> no problem, things like this make me feel better :D
-> 
-> > 
-> >>> +	errno = -ERANGE;
-> >>> +	return INT64_MIN;
-> >>
-> >> Hm, doesn't strtoll return LLONG_MIN or LLONG_MAX for underflows
-> >> and overflows?  Do you really want to return MIN even if this /overflowed/?
-> >> (Maybe it doesn't matter, gut its a bit of a departure from strtoll semantics)
-> > 
-> > True, it's a departure from the usual semantics.  The intent is to call
-> > the function this way:
-> > 
-> > long foo = cvt_s64(...);
-> > if (errno) {
-> > 	fprintf(stderr, "N|_|MB3Rz ARE HARDZ!!1!\n");
-> > 	exit(5);
-> > }
-> > 
-> > So at least in theory it wouldn't matter what we actually set foo to.
-> 
-> well, that was my next question.  ;)
-> 
-> But setting it to one extreme value leaves me wondering why you'd not set it
-> to the other extreme.  *shrug*  Not that big a deal, just a thing that made me
-> go "hmmmm"
+From: Bob Peterson <rpeterso@redhat.com>
 
-I'll just change it to:
+This patch eliminates height parameters from function gfs2_bmap_alloc.
+Function find_metapath determines the metapath's "find height", also
+known as the desired height. Function lookup_metapath determines the
+metapath's "actual height", previously known as starting height or
+sheight. Function gfs2_bmap_alloc now gets both height values from
+the metapath. This simplification was done as a step toward switching
+the block_map functions to using iomap. The bh_map responsibilities
+are also removed from function gfs2_bmap_alloc for the same reason.
 
-errno = 0;
-i = strtoll(s, &sp, base);
-if (*sp == '\0' && sp != s)
-	return i;
-else if (errno)
-	return i;
-errno = -ERANGE;
-return INT64_MAX;
+Signed-off-by: Bob Peterson <rpeterso@redhat.com>
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+---
+ fs/gfs2/bmap.c | 109 ++++++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 62 insertions(+), 47 deletions(-)
 
-That way if strtoll /did/ have something to complain about, we'll
-just pass it straight back to the caller.  The last two lines will
-handle the case that someone feeds us junk at the end of the number
-string (e.g. "359urgh") in which case we also want to spit back
-an error condition.
+diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+index 4d810be..a431afd 100644
+--- a/fs/gfs2/bmap.c
++++ b/fs/gfs2/bmap.c
+@@ -36,6 +36,8 @@
+ struct metapath {
+ 	struct buffer_head *mp_bh[GFS2_MAX_META_HEIGHT];
+ 	__u16 mp_list[GFS2_MAX_META_HEIGHT];
++	int mp_fheight; /* find_metapath height */
++	int mp_aheight; /* actual height (lookup height) */
+ };
+ 
+ /**
+@@ -235,9 +237,9 @@ static void find_metapath(const struct gfs2_sbd *sdp, u64 block,
+ {
+ 	unsigned int i;
+ 
++	mp->mp_fheight = height;
+ 	for (i = height; i--;)
+ 		mp->mp_list[i] = do_div(block, sdp->sd_inptrs);
+-
+ }
+ 
+ static inline unsigned int metapath_branch_start(const struct metapath *mp)
+@@ -344,10 +346,13 @@ static int lookup_metapath(struct gfs2_inode *ip, struct metapath *mp)
+ 	for (x = 0; x < end_of_metadata; x++) {
+ 		ret = lookup_mp_height(ip, mp, x);
+ 		if (ret)
+-			return ret;
++			goto out;
+ 	}
+ 
+-	return ip->i_height;
++	ret = ip->i_height;
++out:
++	mp->mp_aheight = ret;
++	return ret;
+ }
+ 
+ /**
+@@ -479,10 +484,11 @@ static inline unsigned int hptrs(struct gfs2_sbd *sdp, const unsigned int hgt)
+  * @inode: The GFS2 inode
+  * @lblock: The logical starting block of the extent
+  * @bh_map: This is used to return the mapping details
+- * @mp: The metapath
+- * @sheight: The starting height (i.e. whats already mapped)
+- * @height: The height to build to
++ * @zero_new: True if newly allocated blocks should be zeroed
++ * @mp: The metapath, with proper height information calculated
+  * @maxlen: The max number of data blocks to alloc
++ * @dblock: Pointer to return the resulting new block
++ * @dblks: Pointer to return the number of blocks allocated
+  *
+  * In this routine we may have to alloc:
+  *   i) Indirect blocks to grow the metadata tree height
+@@ -499,62 +505,63 @@ static inline unsigned int hptrs(struct gfs2_sbd *sdp, const unsigned int hgt)
+  */
+ 
+ static int gfs2_bmap_alloc(struct inode *inode, const sector_t lblock,
+-			   struct buffer_head *bh_map, struct metapath *mp,
+-			   const unsigned int sheight,
+-			   const unsigned int height,
+-			   const size_t maxlen)
++			   bool zero_new, struct metapath *mp,
++			   const size_t maxlen, sector_t *dblock,
++			   unsigned *dblks)
+ {
+ 	struct gfs2_inode *ip = GFS2_I(inode);
+ 	struct gfs2_sbd *sdp = GFS2_SB(inode);
+ 	struct super_block *sb = sdp->sd_vfs;
+ 	struct buffer_head *dibh = mp->mp_bh[0];
+-	u64 bn, dblock = 0;
++	u64 bn;
+ 	unsigned n, i, blks, alloced = 0, iblks = 0, branch_start = 0;
+-	unsigned dblks = 0;
+ 	unsigned ptrs_per_blk;
+-	const unsigned end_of_metadata = height - 1;
++	const unsigned end_of_metadata = mp->mp_fheight - 1;
+ 	int ret;
+ 	int eob = 0;
+ 	enum alloc_state state;
+ 	__be64 *ptr;
+ 	__be64 zero_bn = 0;
+ 
+-	BUG_ON(sheight < 1);
++	BUG_ON(mp->mp_aheight < 1);
+ 	BUG_ON(dibh == NULL);
+ 
++	*dblock = 0;
++	*dblks = 0;
+ 	gfs2_trans_add_meta(ip->i_gl, dibh);
+ 
+-	if (height == sheight) {
++	if (mp->mp_fheight == mp->mp_aheight) {
+ 		struct buffer_head *bh;
+ 		/* Bottom indirect block exists, find unalloced extent size */
+ 		ptr = metapointer(end_of_metadata, mp);
+ 		bh = mp->mp_bh[end_of_metadata];
+-		dblks = gfs2_extent_length(bh->b_data, bh->b_size, ptr, maxlen,
+-					   &eob);
+-		BUG_ON(dblks < 1);
++		*dblks = gfs2_extent_length(bh->b_data, bh->b_size, ptr,
++					    maxlen, &eob);
++		BUG_ON(*dblks < 1);
+ 		state = ALLOC_DATA;
+ 	} else {
+ 		/* Need to allocate indirect blocks */
+-		ptrs_per_blk = height > 1 ? sdp->sd_inptrs : sdp->sd_diptrs;
+-		dblks = min(maxlen, (size_t)(ptrs_per_blk -
+-					     mp->mp_list[end_of_metadata]));
+-		if (height == ip->i_height) {
++		ptrs_per_blk = mp->mp_fheight > 1 ? sdp->sd_inptrs :
++			sdp->sd_diptrs;
++		*dblks = min(maxlen, (size_t)(ptrs_per_blk -
++					      mp->mp_list[end_of_metadata]));
++		if (mp->mp_fheight == ip->i_height) {
+ 			/* Writing into existing tree, extend tree down */
+-			iblks = height - sheight;
++			iblks = mp->mp_fheight - mp->mp_aheight;
+ 			state = ALLOC_GROW_DEPTH;
+ 		} else {
+ 			/* Building up tree height */
+ 			state = ALLOC_GROW_HEIGHT;
+-			iblks = height - ip->i_height;
++			iblks = mp->mp_fheight - ip->i_height;
+ 			branch_start = metapath_branch_start(mp);
+-			iblks += (height - branch_start);
++			iblks += (mp->mp_fheight - branch_start);
+ 		}
+ 	}
+ 
+ 	/* start of the second part of the function (state machine) */
+ 
+-	blks = dblks + iblks;
+-	i = sheight;
++	blks = *dblks + iblks;
++	i = mp->mp_aheight;
+ 	do {
+ 		int error;
+ 		n = blks - alloced;
+@@ -572,9 +579,10 @@ static int gfs2_bmap_alloc(struct inode *inode, const sector_t lblock,
+ 						 sizeof(struct gfs2_dinode));
+ 				zero_bn = *ptr;
+ 			}
+-			for (; i - 1 < height - ip->i_height && n > 0; i++, n--)
++			for (; i - 1 < mp->mp_fheight - ip->i_height && n > 0;
++			     i++, n--)
+ 				gfs2_indirect_init(mp, ip->i_gl, i, 0, bn++);
+-			if (i - 1 == height - ip->i_height) {
++			if (i - 1 == mp->mp_fheight - ip->i_height) {
+ 				i--;
+ 				gfs2_buffer_copy_tail(mp->mp_bh[i],
+ 						sizeof(struct gfs2_meta_header),
+@@ -586,7 +594,7 @@ static int gfs2_bmap_alloc(struct inode *inode, const sector_t lblock,
+ 					sizeof(struct gfs2_meta_header));
+ 				*ptr = zero_bn;
+ 				state = ALLOC_GROW_DEPTH;
+-				for(i = branch_start; i < height; i++) {
++				for(i = branch_start; i < mp->mp_fheight; i++) {
+ 					if (mp->mp_bh[i] == NULL)
+ 						break;
+ 					brelse(mp->mp_bh[i]);
+@@ -598,44 +606,40 @@ static int gfs2_bmap_alloc(struct inode *inode, const sector_t lblock,
+ 				break;
+ 		/* Branching from existing tree */
+ 		case ALLOC_GROW_DEPTH:
+-			if (i > 1 && i < height)
++			if (i > 1 && i < mp->mp_fheight)
+ 				gfs2_trans_add_meta(ip->i_gl, mp->mp_bh[i-1]);
+-			for (; i < height && n > 0; i++, n--)
++			for (; i < mp->mp_fheight && n > 0; i++, n--)
+ 				gfs2_indirect_init(mp, ip->i_gl, i,
+ 						   mp->mp_list[i-1], bn++);
+-			if (i == height)
++			if (i == mp->mp_fheight)
+ 				state = ALLOC_DATA;
+ 			if (n == 0)
+ 				break;
+ 		/* Tree complete, adding data blocks */
+ 		case ALLOC_DATA:
+-			BUG_ON(n > dblks);
++			BUG_ON(n > *dblks);
+ 			BUG_ON(mp->mp_bh[end_of_metadata] == NULL);
+ 			gfs2_trans_add_meta(ip->i_gl, mp->mp_bh[end_of_metadata]);
+-			dblks = n;
++			*dblks = n;
+ 			ptr = metapointer(end_of_metadata, mp);
+-			dblock = bn;
++			*dblock = bn;
+ 			while (n-- > 0)
+ 				*ptr++ = cpu_to_be64(bn++);
+-			if (buffer_zeronew(bh_map)) {
+-				ret = sb_issue_zeroout(sb, dblock, dblks,
++			if (zero_new) {
++				ret = sb_issue_zeroout(sb, *dblock, *dblks,
+ 						       GFP_NOFS);
+ 				if (ret) {
+ 					fs_err(sdp,
+ 					       "Failed to zero data buffers\n");
+-					clear_buffer_zeronew(bh_map);
+ 				}
+ 			}
+ 			break;
+ 		}
+-	} while ((state != ALLOC_DATA) || !dblock);
++	} while ((state != ALLOC_DATA) || !(*dblock));
+ 
+-	ip->i_height = height;
++	ip->i_height = mp->mp_fheight;
+ 	gfs2_add_inode_blocks(&ip->i_inode, alloced);
+ 	gfs2_dinode_out(ip, mp->mp_bh[0]->b_data);
+-	map_bh(bh_map, inode->i_sb, dblock);
+-	bh_map->b_size = dblks << inode->i_blkbits;
+-	set_buffer_new(bh_map);
+ 	return 0;
+ }
+ 
+@@ -669,6 +673,9 @@ int gfs2_block_map(struct inode *inode, sector_t lblock,
+ 	unsigned int len;
+ 	struct buffer_head *bh;
+ 	u8 height;
++	bool zero_new = false;
++	sector_t dblock = 0;
++	unsigned dblks;
+ 
+ 	BUG_ON(maxlen == 0);
+ 
+@@ -692,13 +699,13 @@ int gfs2_block_map(struct inode *inode, sector_t lblock,
+ 	while (size > arr[height])
+ 		height++;
+ 	find_metapath(sdp, lblock, &mp, height);
+-	ret = 1;
++	mp.mp_aheight = 1;
+ 	if (height > ip->i_height || gfs2_is_stuffed(ip))
+ 		goto do_alloc;
+ 	ret = lookup_metapath(ip, &mp);
+ 	if (ret < 0)
+ 		goto out;
+-	if (ret != ip->i_height)
++	if (mp.mp_aheight != ip->i_height)
+ 		goto do_alloc;
+ 	ptr = metapointer(ip->i_height - 1, &mp);
+ 	if (*ptr == 0)
+@@ -725,7 +732,15 @@ int gfs2_block_map(struct inode *inode, sector_t lblock,
+ 	}
+ 
+ 	/* At this point ret is the tree depth of already allocated blocks */
+-	ret = gfs2_bmap_alloc(inode, lblock, bh_map, &mp, ret, height, maxlen);
++	if (buffer_zeronew(bh_map))
++		zero_new = true;
++	ret = gfs2_bmap_alloc(inode, lblock, zero_new, &mp, maxlen, &dblock,
++			      &dblks);
++	if (ret == 0) {
++		map_bh(bh_map, inode->i_sb, dblock);
++		bh_map->b_size = dblks << inode->i_blkbits;
++		set_buffer_new(bh_map);
++	}
+ 	goto out;
+ }
+ 
+-- 
+2.7.5
 
---D
-
-> >>> +bad:
-> >>
-> >> label bad: defined but not used
-> > 
-> > Fixed.  Sorry about the stupidity. :(
-> 
-> no problem, things like this make me feel better :D
-> 
-> > 
-> >>> +	errno = -ERANGE;
-
-> 
-> -Eric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
