@@ -1,83 +1,356 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26665 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:28528 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751620AbdFWPeJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2017 11:34:09 -0400
-Date: Fri, 23 Jun 2017 08:34:03 -0700
+        with ESMTP id S1751496AbdFWQf0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2017 12:35:26 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v5NGZPhv030760
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2017 16:35:25 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v5NGZOsn027119
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2017 16:35:25 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v5NGZOLT010911
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2017 16:35:24 GMT
+Subject: [PATCH 1/4] xfs: make errortag a per-mountpoint structure
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 9/8] common/populate: remember multi-device configurations
-Message-ID: <20170623153403.GX4733@birch.djwong.org>
-References: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
- <20170622062653.GF3787@birch.djwong.org>
- <20170623074902.GK23360@eguan.usersys.redhat.com>
+Date: Fri, 23 Jun 2017 09:35:15 -0700
+Message-ID: <149823571523.31786.9698090244865978473.stgit@birch.djwong.org>
+In-Reply-To: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
+References: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170623074902.GK23360@eguan.usersys.redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jun 23, 2017 at 03:49:02PM +0800, Eryu Guan wrote:
-> On Wed, Jun 21, 2017 at 11:26:53PM -0700, Darrick J. Wong wrote:
-> > Record the external log and realtime device configurations when we
-> > create a sample filesystem.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  common/populate |   10 +++++++++-
-> >  1 file changed, 9 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/common/populate b/common/populate
-> > index e99ce68..b59ed02 100644
-> > --- a/common/populate
-> > +++ b/common/populate
-> > @@ -713,7 +713,15 @@ _scratch_populate_cached() {
-> >  	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
-> >  
-> >  	# Throw away cached image if it doesn't match our spec.
-> > -	meta_descr="FSTYP ${FSTYP} MKFS_OPTIONS ${MKFS_OPTIONS} SIZE $(blockdev --getsz "${SCRATCH_DEV}") ARGS $@"
-> > +	case "${FSTYP}" in
-> > +	"ext4")
-> > +		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL}";;
-> > +	"xfs")
-> > +		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}";;
-> > +	*)
-> > +		extra_descr="";;
-> > +	esac
-> > +	meta_descr="FSTYP ${FSTYP} MKFS_OPTIONS ${MKFS_OPTIONS} SIZE $(blockdev --getsz "${SCRATCH_DEV}") ${extra_descr} ARGS $@"
-> 
-> This works fine if "test without external log" then "test with external
-> log" or vise-versa. But I just found that a second run with external log
-> still cause scratch dev fail to mount. Seems it's because e2image
-> doesn't take the external log dev into account when save/restore fs
-> image, then mounting scratch dev failed with
-> 
-> [184952.642892] EXT4-fs (sdc2): journal UUID does not match
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ohhh... I just remembered that e2image (and xfs_metadump) don't capture
-the external log in the dump.  ext4 chokes when the log device lacks the
-header it needs and fails, though XFS is perfectly happy to complain
-about the zero log and move on.
+Remove the xfs_etest structure in favor of a per-mountpoint structure.
+This will give us the flexibility to set as many error injection points
+as we want, and later enable us to set up sysfs knobs to set the trigger
+frequency as we wish.  This comes at a cost of higher memory use, but
+unti we hit 1024 injection points (we're at 29) or a lot of mounts this
+shouldn't be a huge issue.
 
-So either we can't use _scratch_populate cache in ext4 when
-SCRATCH_LOGDEV is set, or I need to fix it to extract the expected
-logdev uuid from the restored fs and reformat that onto the log device.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_error.c |  154 +++++++++++++++++++++++++++-------------------------
+ fs/xfs/xfs_error.h |   25 +++++---
+ fs/xfs/xfs_ioctl.c |    4 +
+ fs/xfs/xfs_mount.c |   10 +++
+ fs/xfs/xfs_mount.h |    7 ++
+ 5 files changed, 111 insertions(+), 89 deletions(-)
 
-I'll work on that and resubmit.
 
---D
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index ed7ee4e..52f75bc 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -25,100 +25,106 @@
+ 
+ #ifdef DEBUG
+ 
+-int	xfs_etest[XFS_NUM_INJECT_ERROR];
+-int64_t	xfs_etest_fsid[XFS_NUM_INJECT_ERROR];
+-char *	xfs_etest_fsname[XFS_NUM_INJECT_ERROR];
+-int	xfs_error_test_active;
++static unsigned int xfs_errortag_random_default[] = {
++	XFS_RANDOM_DEFAULT,
++	XFS_RANDOM_IFLUSH_1,
++	XFS_RANDOM_IFLUSH_2,
++	XFS_RANDOM_IFLUSH_3,
++	XFS_RANDOM_IFLUSH_4,
++	XFS_RANDOM_IFLUSH_5,
++	XFS_RANDOM_IFLUSH_6,
++	XFS_RANDOM_DA_READ_BUF,
++	XFS_RANDOM_BTREE_CHECK_LBLOCK,
++	XFS_RANDOM_BTREE_CHECK_SBLOCK,
++	XFS_RANDOM_ALLOC_READ_AGF,
++	XFS_RANDOM_IALLOC_READ_AGI,
++	XFS_RANDOM_ITOBP_INOTOBP,
++	XFS_RANDOM_IUNLINK,
++	XFS_RANDOM_IUNLINK_REMOVE,
++	XFS_RANDOM_DIR_INO_VALIDATE,
++	XFS_RANDOM_BULKSTAT_READ_CHUNK,
++	XFS_RANDOM_IODONE_IOERR,
++	XFS_RANDOM_STRATREAD_IOERR,
++	XFS_RANDOM_STRATCMPL_IOERR,
++	XFS_RANDOM_DIOWRITE_IOERR,
++	XFS_RANDOM_BMAPIFORMAT,
++	XFS_RANDOM_FREE_EXTENT,
++	XFS_RANDOM_RMAP_FINISH_ONE,
++	XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE,
++	XFS_RANDOM_REFCOUNT_FINISH_ONE,
++	XFS_RANDOM_BMAP_FINISH_ONE,
++	XFS_RANDOM_AG_RESV_CRITICAL,
++};
+ 
+ int
+-xfs_error_test(int error_tag, int *fsidp, char *expression,
+-	       int line, char *file, unsigned long randfactor)
++xfs_errortag_init(
++	struct xfs_mount	*mp)
+ {
+-	int i;
+-	int64_t fsid;
++	mp->m_errortag = kmem_zalloc(sizeof(unsigned int) * XFS_ERRTAG_MAX,
++			KM_SLEEP | KM_MAYFAIL);
++	if (!mp->m_errortag)
++		return -ENOMEM;
++	return 0;
++}
+ 
+-	if (prandom_u32() % randfactor)
+-		return 0;
++void
++xfs_errortag_del(
++	struct xfs_mount	*mp)
++{
++	kmem_free(mp->m_errortag);
++}
+ 
+-	memcpy(&fsid, fsidp, sizeof(xfs_fsid_t));
++bool
++xfs_errortag_test(
++	struct xfs_mount	*mp,
++	const char		*expression,
++	const char		*file,
++	int			line,
++	unsigned int		error_tag)
++{
++	unsigned int		randfactor;
+ 
+-	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
+-		if (xfs_etest[i] == error_tag && xfs_etest_fsid[i] == fsid) {
+-			xfs_warn(NULL,
+-	"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
+-				expression, file, line, xfs_etest_fsname[i]);
+-			return 1;
+-		}
+-	}
++	ASSERT(error_tag < XFS_ERRTAG_MAX);
++	randfactor = mp->m_errortag[error_tag];
++	if (!randfactor || prandom_u32() % randfactor)
++		return false;
+ 
+-	return 0;
++	xfs_warn_ratelimited(mp,
++"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
++			expression, file, line, mp->m_fsname);
++	return true;
+ }
+ 
+ int
+-xfs_errortag_add(unsigned int error_tag, xfs_mount_t *mp)
++xfs_errortag_set(
++	struct xfs_mount	*mp,
++	unsigned int		error_tag,
++	unsigned int		tag_value)
+ {
+-	int i;
+-	int len;
+-	int64_t fsid;
+-
+ 	if (error_tag >= XFS_ERRTAG_MAX)
+ 		return -EINVAL;
+ 
+-	memcpy(&fsid, mp->m_fixedfsid, sizeof(xfs_fsid_t));
+-
+-	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
+-		if (xfs_etest_fsid[i] == fsid && xfs_etest[i] == error_tag) {
+-			xfs_warn(mp, "error tag #%d on", error_tag);
+-			return 0;
+-		}
+-	}
+-
+-	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
+-		if (xfs_etest[i] == 0) {
+-			xfs_warn(mp, "Turned on XFS error tag #%d",
+-				error_tag);
+-			xfs_etest[i] = error_tag;
+-			xfs_etest_fsid[i] = fsid;
+-			len = strlen(mp->m_fsname);
+-			xfs_etest_fsname[i] = kmem_alloc(len + 1, KM_SLEEP);
+-			strcpy(xfs_etest_fsname[i], mp->m_fsname);
+-			xfs_error_test_active++;
+-			return 0;
+-		}
+-	}
+-
+-	xfs_warn(mp, "error tag overflow, too many turned on");
+-
+-	return 1;
++	mp->m_errortag[error_tag] = tag_value;
++	return 0;
+ }
+ 
+ int
+-xfs_errortag_clearall(xfs_mount_t *mp, int loud)
++xfs_errortag_add(
++	struct xfs_mount	*mp,
++	unsigned int		error_tag)
+ {
+-	int64_t fsid;
+-	int cleared = 0;
+-	int i;
+-
+-	memcpy(&fsid, mp->m_fixedfsid, sizeof(xfs_fsid_t));
+-
+-
+-	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++) {
+-		if ((fsid == 0LL || xfs_etest_fsid[i] == fsid) &&
+-		     xfs_etest[i] != 0) {
+-			cleared = 1;
+-			xfs_warn(mp, "Clearing XFS error tag #%d",
+-				xfs_etest[i]);
+-			xfs_etest[i] = 0;
+-			xfs_etest_fsid[i] = 0LL;
+-			kmem_free(xfs_etest_fsname[i]);
+-			xfs_etest_fsname[i] = NULL;
+-			xfs_error_test_active--;
+-		}
+-	}
++	if (error_tag >= XFS_ERRTAG_MAX)
++		return -EINVAL;
+ 
+-	if (loud || cleared)
+-		xfs_warn(mp, "Cleared all XFS error tags for filesystem");
++	return xfs_errortag_set(mp, error_tag,
++			xfs_errortag_random_default[error_tag]);
++}
+ 
++int
++xfs_errortag_clearall(
++	struct xfs_mount	*mp)
++{
++	memset(mp->m_errortag, 0, sizeof(unsigned int) * XFS_ERRTAG_MAX);
+ 	return 0;
+ }
+ #endif /* DEBUG */
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 05f8666..b4316d3 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -131,21 +131,24 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+ #define XFS_RANDOM_AG_RESV_CRITICAL			4
+ 
+ #ifdef DEBUG
+-extern int xfs_error_test_active;
+-extern int xfs_error_test(int, int *, char *, int, char *, unsigned long);
+-
+-#define	XFS_NUM_INJECT_ERROR				10
++extern int xfs_errortag_init(struct xfs_mount *mp);
++extern void xfs_errortag_del(struct xfs_mount *mp);
++extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
++		const char *file, int line, unsigned int error_tag);
+ #define XFS_TEST_ERROR(expr, mp, tag, rf)		\
+-	((expr) || (xfs_error_test_active && \
+-	 xfs_error_test((tag), (mp)->m_fixedfsid, "expr", __LINE__, __FILE__, \
+-			(rf))))
++	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
+ 
+-extern int xfs_errortag_add(unsigned int error_tag, struct xfs_mount *mp);
+-extern int xfs_errortag_clearall(struct xfs_mount *mp, int loud);
++extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
++		unsigned int tag_value);
++extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
++extern int xfs_errortag_clearall(struct xfs_mount *mp);
+ #else
++#define xfs_errortag_init(mp)			(0)
++#define xfs_errortag_del(mp)
+ #define XFS_TEST_ERROR(expr, mp, tag, rf)	(expr)
+-#define xfs_errortag_add(tag, mp)		(ENOSYS)
+-#define xfs_errortag_clearall(mp, loud)		(ENOSYS)
++#define xfs_errortag_set(mp, tag, val)		(ENOSYS)
++#define xfs_errortag_add(mp, tag)		(ENOSYS)
++#define xfs_errortag_clearall(mp)		(ENOSYS)
+ #endif /* DEBUG */
+ 
+ /*
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 8ffe4ea..9c0c7a9 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -2037,14 +2037,14 @@ xfs_file_ioctl(
+ 		if (copy_from_user(&in, arg, sizeof(in)))
+ 			return -EFAULT;
+ 
+-		return xfs_errortag_add(in.errtag, mp);
++		return xfs_errortag_add(mp, in.errtag);
+ 	}
+ 
+ 	case XFS_IOC_ERROR_CLEARALL:
+ 		if (!capable(CAP_SYS_ADMIN))
+ 			return -EPERM;
+ 
+-		return xfs_errortag_clearall(mp, 1);
++		return xfs_errortag_clearall(mp);
+ 
+ 	case XFS_IOC_FREE_EOFBLOCKS: {
+ 		struct xfs_fs_eofblocks eofb;
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index cc6789d..1a98c35 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -720,10 +720,13 @@ xfs_mountfs(
+ 	if (error)
+ 		goto out_del_stats;
+ 
++	error = xfs_errortag_init(mp);
++	if (error)
++		goto out_remove_error_sysfs;
+ 
+ 	error = xfs_uuid_mount(mp);
+ 	if (error)
+-		goto out_remove_error_sysfs;
++		goto out_remove_errortag;
+ 
+ 	/*
+ 	 * Set the minimum read and write sizes
+@@ -1042,6 +1045,8 @@ xfs_mountfs(
+ 	xfs_da_unmount(mp);
+  out_remove_uuid:
+ 	xfs_uuid_unmount(mp);
++ out_remove_errortag:
++	xfs_errortag_del(mp);
+  out_remove_error_sysfs:
+ 	xfs_error_sysfs_del(mp);
+  out_del_stats:
+@@ -1145,10 +1150,11 @@ xfs_unmountfs(
+ 	xfs_uuid_unmount(mp);
+ 
+ #if defined(DEBUG)
+-	xfs_errortag_clearall(mp, 0);
++	xfs_errortag_clearall(mp);
+ #endif
+ 	xfs_free_perag(mp);
+ 
++	xfs_errortag_del(mp);
+ 	xfs_error_sysfs_del(mp);
+ 	xfs_sysfs_del(&mp->m_stats.xs_kobj);
+ 	xfs_sysfs_del(&mp->m_kobj);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 305d953..e002ac5 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -199,6 +199,13 @@ typedef struct xfs_mount {
+ 	bool			m_fail_unmount;
+ #ifdef DEBUG
+ 	/*
++	 * Frequency with which errors are injected.  Replaces xfs_etest; the
++	 * value stored in here is the inverse of the frequency with which the
++	 * error triggers.  1 = always, 2 = half the time, etc.
++	 */
++	unsigned int		*m_errortag;
++
++	/*
+ 	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
+ 	 * block killing in the event of failed writes. When enabled, all
+ 	 * buffered writes are silenty dropped and handled as if they failed.
 
-> 
-> Thanks,
-> Eryu
-> 
-> >  	cmp -s "${POPULATE_METADUMP_DESCR}" <(echo "${meta_descr}") || rm -rf "${POPULATE_METADUMP}"
-> >  
-> >  	# Do we have a cached image?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
