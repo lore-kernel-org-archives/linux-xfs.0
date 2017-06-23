@@ -1,244 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54480 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:37374 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753913AbdFWATj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Jun 2017 20:19:39 -0400
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH 3/3] xfs: Switch to page_cache_seek_hole_data
-Date: Fri, 23 Jun 2017 02:19:33 +0200
-Message-Id: <1498177173-30798-3-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1498177173-30798-1-git-send-email-agruenba@redhat.com>
-References: <1498177173-30798-1-git-send-email-agruenba@redhat.com>
+        id S1751107AbdFWLDR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Jun 2017 07:03:17 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8A4741F59A
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2017 11:03:16 +0000 (UTC)
+Date: Fri, 23 Jun 2017 13:03:11 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v3] xfs_db: update sector size when type is set
+Message-ID: <20170623110311.ikixwvticrwiqbrh@eorzea.usersys.redhat.com>
+References: <20170622193352.22346-1-billodo@redhat.com>
+ <20170623103405.19428-1-billodo@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170623103405.19428-1-billodo@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Fix SEEK_HOLE / SEEK_DATA when a page fits more than two filesystem
-blocks (see the commit that introduces page_cache_seek_hole_data).
+On Fri, Jun 23, 2017 at 05:34:05AM -0500, Bill O'Donnell wrote:
+> xfs_db doesn't take sector size into account when setting type.
+> This can result in an errant crc. For example, with a sector size
+> of 4096:
+> 
+> xfs_db> agi 0
+> xfs_db> p crc
+> crc = 0xab85043e (correct)
+> xfs_db> daddr
+> current daddr is 16
+> xfs_db> daddr 42
+> xfs_db> daddr 16
+> xfs_db> type agi
+> Metadata CRC error detected at xfs_agi block 0x10/0x200
+> xfs_db> p crc
+> crc = 0xab85043e (bad)
+> 
+> When xfs_db sets the new daddr in daddr_f, it does so with one
+> BBSIZE sector (512). Changing the type doesn't change the size
+> of the current buffer in iocur_top, so the checksum is calculated
+> on the wrong length for the type (when the actual sector size > BBSIZE (512).
+> 
+> For types with fields, reread the buffer to pick up the correct size for
+> the new type when it gets set. Facilitate the reread by setting the cursor
+> with set_cur().
+> 
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+> 
+> v2: correction to argument 3 in call to set_cur: compute and pass basic block count;
+>     add comment regarding conditional call to set_cur.
+> v3: include bit.h for byteize function
+> 
+>  db/io.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/db/io.c b/db/io.c
+> index 9918a51..b97b710 100644
+> --- a/db/io.c
+> +++ b/db/io.c
+> @@ -28,6 +28,7 @@
+>  #include "init.h"
+>  #include "malloc.h"
+>  #include "crc.h"
+> +#include "bit.h"
+>  
+Thanks!!
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/xfs/xfs_file.c | 197 +++---------------------------------------------------
- 1 file changed, 9 insertions(+), 188 deletions(-)
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 5fb5a09..fff9aba 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -954,191 +954,6 @@ xfs_file_readdir(
- }
- 
- /*
-- * This type is designed to indicate the type of offset we would like
-- * to search from page cache for xfs_seek_hole_data().
-- */
--enum {
--	HOLE_OFF = 0,
--	DATA_OFF,
--};
--
--/*
-- * Lookup the desired type of offset from the given page.
-- *
-- * On success, return true and the offset argument will point to the
-- * start of the region that was found.  Otherwise this function will
-- * return false and keep the offset argument unchanged.
-- */
--STATIC bool
--xfs_lookup_buffer_offset(
--	struct page		*page,
--	loff_t			*offset,
--	unsigned int		type)
--{
--	loff_t			lastoff = page_offset(page);
--	bool			found = false;
--	struct buffer_head	*bh, *head;
--
--	bh = head = page_buffers(page);
--	do {
--		/*
--		 * Unwritten extents that have data in the page
--		 * cache covering them can be identified by the
--		 * BH_Unwritten state flag.  Pages with multiple
--		 * buffers might have a mix of holes, data and
--		 * unwritten extents - any buffer with valid
--		 * data in it should have BH_Uptodate flag set
--		 * on it.
--		 */
--		if (buffer_unwritten(bh) ||
--		    buffer_uptodate(bh)) {
--			if (type == DATA_OFF)
--				found = true;
--		} else {
--			if (type == HOLE_OFF)
--				found = true;
--		}
--
--		if (found) {
--			*offset = lastoff;
--			break;
--		}
--		lastoff += bh->b_size;
--	} while ((bh = bh->b_this_page) != head);
--
--	return found;
--}
--
--/*
-- * This routine is called to find out and return a data or hole offset
-- * from the page cache for unwritten extents according to the desired
-- * type for xfs_seek_hole_data().
-- *
-- * The argument offset is used to tell where we start to search from the
-- * page cache.  Map is used to figure out the end points of the range to
-- * lookup pages.
-- *
-- * Return true if the desired type of offset was found, and the argument
-- * offset is filled with that address.  Otherwise, return false and keep
-- * offset unchanged.
-- */
--STATIC bool
--xfs_find_get_desired_pgoff(
--	struct inode		*inode,
--	struct xfs_bmbt_irec	*map,
--	unsigned int		type,
--	loff_t			*offset)
--{
--	struct xfs_inode	*ip = XFS_I(inode);
--	struct xfs_mount	*mp = ip->i_mount;
--	struct pagevec		pvec;
--	pgoff_t			index;
--	pgoff_t			end;
--	loff_t			endoff;
--	loff_t			startoff = *offset;
--	loff_t			lastoff = startoff;
--	bool			found = false;
--
--	pagevec_init(&pvec, 0);
--
--	index = startoff >> PAGE_SHIFT;
--	endoff = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount);
--	end = (endoff - 1) >> PAGE_SHIFT;
--	do {
--		int		want;
--		unsigned	nr_pages;
--		unsigned int	i;
--
--		want = min_t(pgoff_t, end - index, PAGEVEC_SIZE - 1) + 1;
--		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
--					  want);
--		if (nr_pages == 0)
--			break;
--
--		for (i = 0; i < nr_pages; i++) {
--			struct page	*page = pvec.pages[i];
--			loff_t		b_offset;
--
--			/*
--			 * At this point, the page may be truncated or
--			 * invalidated (changing page->mapping to NULL),
--			 * or even swizzled back from swapper_space to tmpfs
--			 * file mapping. However, page->index will not change
--			 * because we have a reference on the page.
--			 *
--			 * If current page offset is beyond where we've ended,
--			 * we've found a hole.
--			 */
--			if (type == HOLE_OFF && lastoff < endoff &&
--			    lastoff < page_offset(pvec.pages[i])) {
--				found = true;
--				*offset = lastoff;
--				goto out;
--			}
--			/* Searching done if the page index is out of range. */
--			if (page->index > end)
--				goto out;
--
--			lock_page(page);
--			/*
--			 * Page truncated or invalidated(page->mapping == NULL).
--			 * We can freely skip it and proceed to check the next
--			 * page.
--			 */
--			if (unlikely(page->mapping != inode->i_mapping)) {
--				unlock_page(page);
--				continue;
--			}
--
--			if (!page_has_buffers(page)) {
--				unlock_page(page);
--				continue;
--			}
--
--			found = xfs_lookup_buffer_offset(page, &b_offset, type);
--			if (found) {
--				/*
--				 * The found offset may be less than the start
--				 * point to search if this is the first time to
--				 * come here.
--				 */
--				*offset = max_t(loff_t, startoff, b_offset);
--				unlock_page(page);
--				goto out;
--			}
--
--			/*
--			 * We either searching data but nothing was found, or
--			 * searching hole but found a data buffer.  In either
--			 * case, probably the next page contains the desired
--			 * things, update the last offset to it so.
--			 */
--			lastoff = page_offset(page) + PAGE_SIZE;
--			unlock_page(page);
--		}
--
--		/*
--		 * The number of returned pages less than our desired, search
--		 * done.
--		 */
--		if (nr_pages < want)
--			break;
--
--		index = pvec.pages[i - 1]->index + 1;
--		pagevec_release(&pvec);
--	} while (index <= end);
--
--	/* No page at lastoff and we are not done - we found a hole. */
--	if (type == HOLE_OFF && lastoff < endoff) {
--		*offset = lastoff;
--		found = true;
--	}
--out:
--	pagevec_release(&pvec);
--	return found;
--}
--
--/*
-  * caller must lock inode with xfs_ilock_data_map_shared,
-  * can we craft an appropriate ASSERT?
-  *
-@@ -1209,10 +1024,16 @@ __xfs_seek_hole_data(
- 			 * for hole or data from page cache.
- 			 */
- 			if (map[i].br_state == XFS_EXT_UNWRITTEN) {
--				if (xfs_find_get_desired_pgoff(inode, &map[i],
--				      whence == SEEK_HOLE ? HOLE_OFF : DATA_OFF,
--							&offset))
-+				xfs_fileoff_t endoff = map[i].br_startoff +
-+						       map[i].br_blockcount;
-+				loff_t length = XFS_FSB_TO_B(mp, endoff) - offset;
-+				loff_t ret;
-+
-+				ret = page_cache_seek_hole_data(inode, offset, length, whence);
-+				if (ret >= 0) {
-+					offset = ret;
- 					goto out;
-+				}
- 			}
- 		}
- 
+
+>  static int	pop_f(int argc, char **argv);
+>  static void     pop_help(void);
+> @@ -615,7 +616,13 @@ set_iocur_type(
+>  	const typ_t	*t)
+>  {
+>  	struct xfs_buf	*bp = iocur_top->bp;
+> +	int bb_count;
+>  
+> +	/* adjust cursor for types that contain fields */
+> +	if (t->fields) {
+> +		bb_count = BTOBB(byteize(fsize(t->fields, iocur_top->data, 0, 0)));
+> +		set_cur(t, iocur_top->bb, bb_count, DB_RING_IGN, NULL);
+> +	}
+>  	iocur_top->typ = t;
+>  
+>  	/* verify the buffer if the type has one. */
+> -- 
+> 2.9.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-2.7.5
-
+Carlos
