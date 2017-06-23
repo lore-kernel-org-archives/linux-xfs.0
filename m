@@ -1,356 +1,192 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28528 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751496AbdFWQf0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2017 12:35:26 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v5NGZPhv030760
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2017 16:35:25 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v5NGZOsn027119
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2017 16:35:25 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v5NGZOLT010911
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2017 16:35:24 GMT
-Subject: [PATCH 1/4] xfs: make errortag a per-mountpoint structure
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 23 Jun 2017 09:35:15 -0700
-Message-ID: <149823571523.31786.9698090244865978473.stgit@birch.djwong.org>
-In-Reply-To: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
-References: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:46414 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753913AbdFWATg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Jun 2017 20:19:36 -0400
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH 1/3] vfs: Add page_cache_seek_hole_data helper
+Date: Fri, 23 Jun 2017 02:19:31 +0200
+Message-Id: <1498177173-30798-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Both ext4 and xfs implement seeking for the next hole or piece of data
+in unwritten extents by scanning the page cache, and both versions share
+the same bug when iterating the buffers of a page: the start offset into
+the page isn't taken into account, so when a page fits more than two
+filesystem blocks, things will go wrong.  For example, on a filesystem
+with a block size of 1k, the following command will fail:
 
-Remove the xfs_etest structure in favor of a per-mountpoint structure.
-This will give us the flexibility to set as many error injection points
-as we want, and later enable us to set up sysfs knobs to set the trigger
-frequency as we wish.  This comes at a cost of higher memory use, but
-unti we hit 1024 injection points (we're at 29) or a lot of mounts this
-shouldn't be a huge issue.
+  xfs_io -f -c "falloc 0 4k" \
+            -c "pwrite 1k 1k" \
+            -c "pwrite 3k 1k" \
+            -c "seek -a -r 0" foo
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+In this example, neither lseek(fd, 1024, SEEK_HOLE) nor
+lseek(fd, 2048, SEEK_DATA) will return the correct result.
+
+Introduce a generic vfs helper for seeking in the page cache that gets
+this right.  The next two commits replace the filesystem specific
+implementations.
+
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- fs/xfs/xfs_error.c |  154 +++++++++++++++++++++++++++-------------------------
- fs/xfs/xfs_error.h |   25 +++++---
- fs/xfs/xfs_ioctl.c |    4 +
- fs/xfs/xfs_mount.c |   10 +++
- fs/xfs/xfs_mount.h |    7 ++
- 5 files changed, 111 insertions(+), 89 deletions(-)
+ fs/buffer.c                 | 125 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/buffer_head.h |   2 +
+ 2 files changed, 127 insertions(+)
 
-
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index ed7ee4e..52f75bc 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -25,100 +25,106 @@
- 
- #ifdef DEBUG
- 
--int	xfs_etest[XFS_NUM_INJECT_ERROR];
--int64_t	xfs_etest_fsid[XFS_NUM_INJECT_ERROR];
--char *	xfs_etest_fsname[XFS_NUM_INJECT_ERROR];
--int	xfs_error_test_active;
-+static unsigned int xfs_errortag_random_default[] = {
-+	XFS_RANDOM_DEFAULT,
-+	XFS_RANDOM_IFLUSH_1,
-+	XFS_RANDOM_IFLUSH_2,
-+	XFS_RANDOM_IFLUSH_3,
-+	XFS_RANDOM_IFLUSH_4,
-+	XFS_RANDOM_IFLUSH_5,
-+	XFS_RANDOM_IFLUSH_6,
-+	XFS_RANDOM_DA_READ_BUF,
-+	XFS_RANDOM_BTREE_CHECK_LBLOCK,
-+	XFS_RANDOM_BTREE_CHECK_SBLOCK,
-+	XFS_RANDOM_ALLOC_READ_AGF,
-+	XFS_RANDOM_IALLOC_READ_AGI,
-+	XFS_RANDOM_ITOBP_INOTOBP,
-+	XFS_RANDOM_IUNLINK,
-+	XFS_RANDOM_IUNLINK_REMOVE,
-+	XFS_RANDOM_DIR_INO_VALIDATE,
-+	XFS_RANDOM_BULKSTAT_READ_CHUNK,
-+	XFS_RANDOM_IODONE_IOERR,
-+	XFS_RANDOM_STRATREAD_IOERR,
-+	XFS_RANDOM_STRATCMPL_IOERR,
-+	XFS_RANDOM_DIOWRITE_IOERR,
-+	XFS_RANDOM_BMAPIFORMAT,
-+	XFS_RANDOM_FREE_EXTENT,
-+	XFS_RANDOM_RMAP_FINISH_ONE,
-+	XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE,
-+	XFS_RANDOM_REFCOUNT_FINISH_ONE,
-+	XFS_RANDOM_BMAP_FINISH_ONE,
-+	XFS_RANDOM_AG_RESV_CRITICAL,
-+};
- 
- int
--xfs_error_test(int error_tag, int *fsidp, char *expression,
--	       int line, char *file, unsigned long randfactor)
-+xfs_errortag_init(
-+	struct xfs_mount	*mp)
- {
--	int i;
--	int64_t fsid;
-+	mp->m_errortag = kmem_zalloc(sizeof(unsigned int) * XFS_ERRTAG_MAX,
-+			KM_SLEEP | KM_MAYFAIL);
-+	if (!mp->m_errortag)
-+		return -ENOMEM;
-+	return 0;
-+}
- 
--	if (prandom_u32() % randfactor)
--		return 0;
-+void
-+xfs_errortag_del(
-+	struct xfs_mount	*mp)
-+{
-+	kmem_free(mp->m_errortag);
-+}
- 
--	memcpy(&fsid, fsidp, sizeof(xfs_fsid_t));
-+bool
-+xfs_errortag_test(
-+	struct xfs_mount	*mp,
-+	const char		*expression,
-+	const char		*file,
-+	int			line,
-+	unsigned int		error_tag)
-+{
-+	unsigned int		randfactor;
- 
--	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
--		if (xfs_etest[i] == error_tag && xfs_etest_fsid[i] == fsid) {
--			xfs_warn(NULL,
--	"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
--				expression, file, line, xfs_etest_fsname[i]);
--			return 1;
--		}
--	}
-+	ASSERT(error_tag < XFS_ERRTAG_MAX);
-+	randfactor = mp->m_errortag[error_tag];
-+	if (!randfactor || prandom_u32() % randfactor)
-+		return false;
- 
--	return 0;
-+	xfs_warn_ratelimited(mp,
-+"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
-+			expression, file, line, mp->m_fsname);
-+	return true;
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 161be58..2c58537 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -3492,6 +3492,131 @@ int bh_submit_read(struct buffer_head *bh)
  }
+ EXPORT_SYMBOL(bh_submit_read);
  
- int
--xfs_errortag_add(unsigned int error_tag, xfs_mount_t *mp)
-+xfs_errortag_set(
-+	struct xfs_mount	*mp,
-+	unsigned int		error_tag,
-+	unsigned int		tag_value)
- {
--	int i;
--	int len;
--	int64_t fsid;
--
- 	if (error_tag >= XFS_ERRTAG_MAX)
- 		return -EINVAL;
- 
--	memcpy(&fsid, mp->m_fixedfsid, sizeof(xfs_fsid_t));
--
--	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
--		if (xfs_etest_fsid[i] == fsid && xfs_etest[i] == error_tag) {
--			xfs_warn(mp, "error tag #%d on", error_tag);
--			return 0;
--		}
--	}
--
--	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
--		if (xfs_etest[i] == 0) {
--			xfs_warn(mp, "Turned on XFS error tag #%d",
--				error_tag);
--			xfs_etest[i] = error_tag;
--			xfs_etest_fsid[i] = fsid;
--			len = strlen(mp->m_fsname);
--			xfs_etest_fsname[i] = kmem_alloc(len + 1, KM_SLEEP);
--			strcpy(xfs_etest_fsname[i], mp->m_fsname);
--			xfs_error_test_active++;
--			return 0;
--		}
--	}
--
--	xfs_warn(mp, "error tag overflow, too many turned on");
--
--	return 1;
-+	mp->m_errortag[error_tag] = tag_value;
-+	return 0;
- }
- 
- int
--xfs_errortag_clearall(xfs_mount_t *mp, int loud)
-+xfs_errortag_add(
-+	struct xfs_mount	*mp,
-+	unsigned int		error_tag)
- {
--	int64_t fsid;
--	int cleared = 0;
--	int i;
--
--	memcpy(&fsid, mp->m_fixedfsid, sizeof(xfs_fsid_t));
--
--
--	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++) {
--		if ((fsid == 0LL || xfs_etest_fsid[i] == fsid) &&
--		     xfs_etest[i] != 0) {
--			cleared = 1;
--			xfs_warn(mp, "Clearing XFS error tag #%d",
--				xfs_etest[i]);
--			xfs_etest[i] = 0;
--			xfs_etest_fsid[i] = 0LL;
--			kmem_free(xfs_etest_fsname[i]);
--			xfs_etest_fsname[i] = NULL;
--			xfs_error_test_active--;
--		}
--	}
-+	if (error_tag >= XFS_ERRTAG_MAX)
-+		return -EINVAL;
- 
--	if (loud || cleared)
--		xfs_warn(mp, "Cleared all XFS error tags for filesystem");
-+	return xfs_errortag_set(mp, error_tag,
-+			xfs_errortag_random_default[error_tag]);
-+}
- 
-+int
-+xfs_errortag_clearall(
-+	struct xfs_mount	*mp)
++/*
++ * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
++ *
++ * Returns the offset within the file on success, and -ENOENT otherwise.
++ */
++static loff_t
++page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
 +{
-+	memset(mp->m_errortag, 0, sizeof(unsigned int) * XFS_ERRTAG_MAX);
- 	return 0;
- }
- #endif /* DEBUG */
-diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-index 05f8666..b4316d3 100644
---- a/fs/xfs/xfs_error.h
-+++ b/fs/xfs/xfs_error.h
-@@ -131,21 +131,24 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
- #define XFS_RANDOM_AG_RESV_CRITICAL			4
- 
- #ifdef DEBUG
--extern int xfs_error_test_active;
--extern int xfs_error_test(int, int *, char *, int, char *, unsigned long);
--
--#define	XFS_NUM_INJECT_ERROR				10
-+extern int xfs_errortag_init(struct xfs_mount *mp);
-+extern void xfs_errortag_del(struct xfs_mount *mp);
-+extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
-+		const char *file, int line, unsigned int error_tag);
- #define XFS_TEST_ERROR(expr, mp, tag, rf)		\
--	((expr) || (xfs_error_test_active && \
--	 xfs_error_test((tag), (mp)->m_fixedfsid, "expr", __LINE__, __FILE__, \
--			(rf))))
-+	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
- 
--extern int xfs_errortag_add(unsigned int error_tag, struct xfs_mount *mp);
--extern int xfs_errortag_clearall(struct xfs_mount *mp, int loud);
-+extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
-+		unsigned int tag_value);
-+extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
-+extern int xfs_errortag_clearall(struct xfs_mount *mp);
- #else
-+#define xfs_errortag_init(mp)			(0)
-+#define xfs_errortag_del(mp)
- #define XFS_TEST_ERROR(expr, mp, tag, rf)	(expr)
--#define xfs_errortag_add(tag, mp)		(ENOSYS)
--#define xfs_errortag_clearall(mp, loud)		(ENOSYS)
-+#define xfs_errortag_set(mp, tag, val)		(ENOSYS)
-+#define xfs_errortag_add(mp, tag)		(ENOSYS)
-+#define xfs_errortag_clearall(mp)		(ENOSYS)
- #endif /* DEBUG */
- 
- /*
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 8ffe4ea..9c0c7a9 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -2037,14 +2037,14 @@ xfs_file_ioctl(
- 		if (copy_from_user(&in, arg, sizeof(in)))
- 			return -EFAULT;
- 
--		return xfs_errortag_add(in.errtag, mp);
-+		return xfs_errortag_add(mp, in.errtag);
- 	}
- 
- 	case XFS_IOC_ERROR_CLEARALL:
- 		if (!capable(CAP_SYS_ADMIN))
- 			return -EPERM;
- 
--		return xfs_errortag_clearall(mp, 1);
-+		return xfs_errortag_clearall(mp);
- 
- 	case XFS_IOC_FREE_EOFBLOCKS: {
- 		struct xfs_fs_eofblocks eofb;
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index cc6789d..1a98c35 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -720,10 +720,13 @@ xfs_mountfs(
- 	if (error)
- 		goto out_del_stats;
- 
-+	error = xfs_errortag_init(mp);
-+	if (error)
-+		goto out_remove_error_sysfs;
- 
- 	error = xfs_uuid_mount(mp);
- 	if (error)
--		goto out_remove_error_sysfs;
-+		goto out_remove_errortag;
- 
- 	/*
- 	 * Set the minimum read and write sizes
-@@ -1042,6 +1045,8 @@ xfs_mountfs(
- 	xfs_da_unmount(mp);
-  out_remove_uuid:
- 	xfs_uuid_unmount(mp);
-+ out_remove_errortag:
-+	xfs_errortag_del(mp);
-  out_remove_error_sysfs:
- 	xfs_error_sysfs_del(mp);
-  out_del_stats:
-@@ -1145,10 +1150,11 @@ xfs_unmountfs(
- 	xfs_uuid_unmount(mp);
- 
- #if defined(DEBUG)
--	xfs_errortag_clearall(mp, 0);
-+	xfs_errortag_clearall(mp);
- #endif
- 	xfs_free_perag(mp);
- 
-+	xfs_errortag_del(mp);
- 	xfs_error_sysfs_del(mp);
- 	xfs_sysfs_del(&mp->m_stats.xs_kobj);
- 	xfs_sysfs_del(&mp->m_kobj);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 305d953..e002ac5 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -199,6 +199,13 @@ typedef struct xfs_mount {
- 	bool			m_fail_unmount;
- #ifdef DEBUG
- 	/*
-+	 * Frequency with which errors are injected.  Replaces xfs_etest; the
-+	 * value stored in here is the inverse of the frequency with which the
-+	 * error triggers.  1 = always, 2 = half the time, etc.
-+	 */
-+	unsigned int		*m_errortag;
++	loff_t offset = page_offset(page);
++	struct buffer_head *bh, *head;
++	bool seek_data = whence == SEEK_DATA;
 +
-+	/*
- 	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
- 	 * block killing in the event of failed writes. When enabled, all
- 	 * buffered writes are silenty dropped and handled as if they failed.
++	if (lastoff < offset)
++		lastoff = offset;
++
++	bh = head = page_buffers(page);
++	do {
++		offset += bh->b_size;
++		if (lastoff >= offset)
++			continue;
++
++		/*
++		 * Unwritten extents that have data in the page cache covering
++		 * them can be identified by the BH_Unwritten state flag.
++		 * Pages with multiple buffers might have a mix of holes, data
++		 * and unwritten extents - any buffer with valid data in it
++		 * should have BH_Uptodate flag set on it.
++		 */
++
++		if ((buffer_unwritten(bh) || buffer_uptodate(bh)) == seek_data)
++			return lastoff;
++
++		lastoff = offset;
++	} while ((bh = bh->b_this_page) != head);
++	return -ENOENT;
++}
++
++/*
++ * Seek for SEEK_DATA / SEEK_HOLE in the page cache.
++ *
++ * Within unwritten extents, the page cache determines which parts are holes
++ * and which are data: unwritten and uptodate buffer heads count as data;
++ * everything else counts as a hole.
++ *
++ * Returns the resulting offset on successs, and -ENOENT otherwise.
++ */
++loff_t
++page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
++			  int whence)
++{
++	pgoff_t index = offset >> PAGE_SHIFT;
++	pgoff_t end = DIV_ROUND_UP(offset + length, PAGE_SIZE);
++	loff_t lastoff = offset;
++	struct pagevec pvec;
++
++	if (length <= 0)
++		return -ENOENT;
++
++	pagevec_init(&pvec, 0);
++
++	do {
++		unsigned want, nr_pages, i;
++
++		want = min_t(unsigned, end - index, PAGEVEC_SIZE);
++		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index, want);
++		if (nr_pages == 0)
++			break;
++
++		for (i = 0; i < nr_pages; i++) {
++			struct page *page = pvec.pages[i];
++
++			/*
++			 * At this point, the page may be truncated or
++			 * invalidated (changing page->mapping to NULL), or
++			 * even swizzled back from swapper_space to tmpfs file
++			 * mapping.  However, page->index will not change
++			 * because we have a reference on the page.
++                         *
++			 * If current page offset is beyond where we've ended,
++			 * we've found a hole.
++                         */
++			if (whence == SEEK_HOLE &&
++			    lastoff < page_offset(page))
++				goto check_range;
++
++			/* Searching done if the page index is out of range. */
++			if (page->index >= end)
++				goto not_found;
++
++			lock_page(page);
++			if (likely(page->mapping == inode->i_mapping) &&
++			    page_has_buffers(page)) {
++				lastoff = page_seek_hole_data(page, lastoff, whence);
++				if (lastoff >= 0) {
++					unlock_page(page);
++					goto check_range;
++				}
++			}
++			unlock_page(page);
++			lastoff = page_offset(page) + PAGE_SIZE;
++		}
++
++		/* Searching done if fewer pages returned than wanted. */
++		if (nr_pages < want)
++			break;
++
++		index = pvec.pages[i - 1]->index + 1;
++		pagevec_release(&pvec);
++	} while (index < end);
++
++	/* When no page at lastoff and we are not done, we found a hole. */
++	if (whence != SEEK_HOLE)
++		goto not_found;
++
++check_range:
++	if (lastoff < offset + length)
++		goto out;
++not_found:
++	lastoff = -ENOENT;
++out:
++	pagevec_release(&pvec);
++	return lastoff;
++}
++EXPORT_SYMBOL_GPL(page_cache_seek_hole_data);
++
+ void __init buffer_init(void)
+ {
+ 	unsigned long nrpages;
+diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
+index bd029e52..ad4e024 100644
+--- a/include/linux/buffer_head.h
++++ b/include/linux/buffer_head.h
+@@ -201,6 +201,8 @@ void write_boundary_block(struct block_device *bdev,
+ 			sector_t bblock, unsigned blocksize);
+ int bh_uptodate_or_lock(struct buffer_head *bh);
+ int bh_submit_read(struct buffer_head *bh);
++loff_t page_cache_seek_hole_data(struct inode *inode, loff_t offset,
++				 loff_t length, int whence);
+ 
+ extern int buffer_heads_over_limit;
+ 
+-- 
+2.7.5
 
