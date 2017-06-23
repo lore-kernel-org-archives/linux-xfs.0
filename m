@@ -1,192 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46414 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:48370 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753913AbdFWATg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Jun 2017 20:19:36 -0400
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH 1/3] vfs: Add page_cache_seek_hole_data helper
-Date: Fri, 23 Jun 2017 02:19:31 +0200
-Message-Id: <1498177173-30798-1-git-send-email-agruenba@redhat.com>
+        id S1754441AbdFWKQH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Jun 2017 06:16:07 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1BE4AC04D2FD
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2017 10:16:07 +0000 (UTC)
+Date: Fri, 23 Jun 2017 12:16:02 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v2] xfs_db: update sector size when type is set
+Message-ID: <20170623101602.6cmzx4os45nktgzj@eorzea.usersys.redhat.com>
+References: <20170622193352.22346-1-billodo@redhat.com>
+ <20170622234535.30942-1-billodo@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170622234535.30942-1-billodo@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Both ext4 and xfs implement seeking for the next hole or piece of data
-in unwritten extents by scanning the page cache, and both versions share
-the same bug when iterating the buffers of a page: the start offset into
-the page isn't taken into account, so when a page fits more than two
-filesystem blocks, things will go wrong.  For example, on a filesystem
-with a block size of 1k, the following command will fail:
+Hey Bill,
 
-  xfs_io -f -c "falloc 0 4k" \
-            -c "pwrite 1k 1k" \
-            -c "pwrite 3k 1k" \
-            -c "seek -a -r 0" foo
+> diff --git a/db/io.c b/db/io.c
+> index 9918a51..792cc0a 100644
+> --- a/db/io.c
+> +++ b/db/io.c
+> @@ -615,7 +615,13 @@ set_iocur_type(
+>  	const typ_t	*t)
+>  {
+>  	struct xfs_buf	*bp = iocur_top->bp;
+> +	int bb_count;
+>  
+> +	/* adjust cursor for types that contain fields */
+> +	if (t->fields) {
+> +		bb_count = BTOBB(byteize(fsize(t->fields, iocur_top->data, 0, 0)));
 
-In this example, neither lseek(fd, 1024, SEEK_HOLE) nor
-lseek(fd, 2048, SEEK_DATA) will return the correct result.
+Doesn't byteize() requires:
 
-Introduce a generic vfs helper for seeking in the page cache that gets
-this right.  The next two commits replace the filesystem specific
-implementations.
+#include "bit.h"
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/buffer.c                 | 125 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/buffer_head.h |   2 +
- 2 files changed, 127 insertions(+)
+?
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 161be58..2c58537 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -3492,6 +3492,131 @@ int bh_submit_read(struct buffer_head *bh)
- }
- EXPORT_SYMBOL(bh_submit_read);
- 
-+/*
-+ * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
-+ *
-+ * Returns the offset within the file on success, and -ENOENT otherwise.
-+ */
-+static loff_t
-+page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
-+{
-+	loff_t offset = page_offset(page);
-+	struct buffer_head *bh, *head;
-+	bool seek_data = whence == SEEK_DATA;
-+
-+	if (lastoff < offset)
-+		lastoff = offset;
-+
-+	bh = head = page_buffers(page);
-+	do {
-+		offset += bh->b_size;
-+		if (lastoff >= offset)
-+			continue;
-+
-+		/*
-+		 * Unwritten extents that have data in the page cache covering
-+		 * them can be identified by the BH_Unwritten state flag.
-+		 * Pages with multiple buffers might have a mix of holes, data
-+		 * and unwritten extents - any buffer with valid data in it
-+		 * should have BH_Uptodate flag set on it.
-+		 */
-+
-+		if ((buffer_unwritten(bh) || buffer_uptodate(bh)) == seek_data)
-+			return lastoff;
-+
-+		lastoff = offset;
-+	} while ((bh = bh->b_this_page) != head);
-+	return -ENOENT;
-+}
-+
-+/*
-+ * Seek for SEEK_DATA / SEEK_HOLE in the page cache.
-+ *
-+ * Within unwritten extents, the page cache determines which parts are holes
-+ * and which are data: unwritten and uptodate buffer heads count as data;
-+ * everything else counts as a hole.
-+ *
-+ * Returns the resulting offset on successs, and -ENOENT otherwise.
-+ */
-+loff_t
-+page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
-+			  int whence)
-+{
-+	pgoff_t index = offset >> PAGE_SHIFT;
-+	pgoff_t end = DIV_ROUND_UP(offset + length, PAGE_SIZE);
-+	loff_t lastoff = offset;
-+	struct pagevec pvec;
-+
-+	if (length <= 0)
-+		return -ENOENT;
-+
-+	pagevec_init(&pvec, 0);
-+
-+	do {
-+		unsigned want, nr_pages, i;
-+
-+		want = min_t(unsigned, end - index, PAGEVEC_SIZE);
-+		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index, want);
-+		if (nr_pages == 0)
-+			break;
-+
-+		for (i = 0; i < nr_pages; i++) {
-+			struct page *page = pvec.pages[i];
-+
-+			/*
-+			 * At this point, the page may be truncated or
-+			 * invalidated (changing page->mapping to NULL), or
-+			 * even swizzled back from swapper_space to tmpfs file
-+			 * mapping.  However, page->index will not change
-+			 * because we have a reference on the page.
-+                         *
-+			 * If current page offset is beyond where we've ended,
-+			 * we've found a hole.
-+                         */
-+			if (whence == SEEK_HOLE &&
-+			    lastoff < page_offset(page))
-+				goto check_range;
-+
-+			/* Searching done if the page index is out of range. */
-+			if (page->index >= end)
-+				goto not_found;
-+
-+			lock_page(page);
-+			if (likely(page->mapping == inode->i_mapping) &&
-+			    page_has_buffers(page)) {
-+				lastoff = page_seek_hole_data(page, lastoff, whence);
-+				if (lastoff >= 0) {
-+					unlock_page(page);
-+					goto check_range;
-+				}
-+			}
-+			unlock_page(page);
-+			lastoff = page_offset(page) + PAGE_SIZE;
-+		}
-+
-+		/* Searching done if fewer pages returned than wanted. */
-+		if (nr_pages < want)
-+			break;
-+
-+		index = pvec.pages[i - 1]->index + 1;
-+		pagevec_release(&pvec);
-+	} while (index < end);
-+
-+	/* When no page at lastoff and we are not done, we found a hole. */
-+	if (whence != SEEK_HOLE)
-+		goto not_found;
-+
-+check_range:
-+	if (lastoff < offset + length)
-+		goto out;
-+not_found:
-+	lastoff = -ENOENT;
-+out:
-+	pagevec_release(&pvec);
-+	return lastoff;
-+}
-+EXPORT_SYMBOL_GPL(page_cache_seek_hole_data);
-+
- void __init buffer_init(void)
- {
- 	unsigned long nrpages;
-diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
-index bd029e52..ad4e024 100644
---- a/include/linux/buffer_head.h
-+++ b/include/linux/buffer_head.h
-@@ -201,6 +201,8 @@ void write_boundary_block(struct block_device *bdev,
- 			sector_t bblock, unsigned blocksize);
- int bh_uptodate_or_lock(struct buffer_head *bh);
- int bh_submit_read(struct buffer_head *bh);
-+loff_t page_cache_seek_hole_data(struct inode *inode, loff_t offset,
-+				 loff_t length, int whence);
- 
- extern int buffer_heads_over_limit;
- 
+I can't build xfsprogs with this patch without including bit.h
+
+In file included from ../include/xfs.h:68:0,
+                 from ../include/libxfs.h:24,
+                 from io.c:19:
+io.c: In function ‘set_iocur_type’:
+io.c:600:20: warning: implicit declaration of function ‘byteize’
+[-Wimplicit-function-declaration]
+   bb_count = BTOBB(byteize(fsize(t->fields, iocur_top->data, 0, 0)));
+                    ^
+
+
+Although, after including it, the patch works fine, fixes the problem with
+different sector sizes.
+
+After fixing the include above, you can add:
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+
+Cheers
+
+
+> +		set_cur(t, iocur_top->bb, bb_count, DB_RING_IGN, NULL);
+> +	}
+>  	iocur_top->typ = t;
+>  
+>  	/* verify the buffer if the type has one. */
+> -- 
+> 2.9.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-2.7.5
-
+Carlos
