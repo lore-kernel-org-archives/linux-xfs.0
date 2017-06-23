@@ -1,311 +1,544 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43938 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752376AbdFUV5W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 17:57:22 -0400
-Subject: [PATCH 1/8] ext4: fsmap tests
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 21 Jun 2017 14:57:11 -0700
-Message-ID: <149808223165.8924.16060163704407458224.stgit@birch.djwong.org>
-In-Reply-To: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
-References: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:40020 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752878AbdFWNe5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Jun 2017 09:34:57 -0400
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v2 4/6] GFS2: Implement iomap for block_map
+Date: Fri, 23 Jun 2017 15:34:42 +0200
+Message-Id: <1498224884-346-5-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1498224884-346-1-git-send-email-agruenba@redhat.com>
+References: <1498224884-346-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: Bob Peterson <rpeterso@redhat.com>, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, Andreas Gruenbacher <agruenba@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Bob Peterson <rpeterso@redhat.com>
 
-Test the GETFSMAP ioctl against ext4.
+This patch implements iomap for block mapping, and switches the
+block_map function to use it under the covers.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+The additional IOMAP_F_BOUNDARY iomap flag indicates when iomap has
+reached a "metadata boundary" and fetching the next mapping is likely to
+incur an additional I/O.  This flag is used for setting the bh buffer
+boundary flag.
+
+Signed-off-by: Bob Peterson <rpeterso@redhat.com>
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- tests/ext4/700     |   76 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/ext4/700.out |    7 +++++
- tests/ext4/701     |   65 ++++++++++++++++++++++++++++++++++++++++++++
- tests/ext4/701.out |    3 ++
- tests/ext4/702     |   66 +++++++++++++++++++++++++++++++++++++++++++++
- tests/ext4/702.out |    4 +++
- tests/ext4/group   |    3 ++
- 7 files changed, 224 insertions(+)
- create mode 100755 tests/ext4/700
- create mode 100644 tests/ext4/700.out
- create mode 100755 tests/ext4/701
- create mode 100644 tests/ext4/701.out
- create mode 100755 tests/ext4/702
- create mode 100644 tests/ext4/702.out
+ fs/gfs2/bmap.c        | 249 ++++++++++++++++++++++++++++++++++++--------------
+ fs/gfs2/bmap.h        |   4 +
+ fs/gfs2/trace_gfs2.h  |  65 +++++++++++++
+ include/linux/iomap.h |   3 +-
+ 4 files changed, 250 insertions(+), 71 deletions(-)
 
-
-diff --git a/tests/ext4/700 b/tests/ext4/700
-new file mode 100755
-index 0000000..a4a1b83
---- /dev/null
-+++ b/tests/ext4/700
-@@ -0,0 +1,76 @@
-+#! /bin/bash
-+# FS QA Test No. 700
-+#
-+# Check that getfsmap reports the BG metadata we're expecting.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
+diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+index a431afd..fa33fdc 100644
+--- a/fs/gfs2/bmap.c
++++ b/fs/gfs2/bmap.c
+@@ -13,6 +13,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/gfs2_ondisk.h>
+ #include <linux/crc32.h>
++#include <linux/iomap.h>
+ 
+ #include "gfs2.h"
+ #include "incore.h"
+@@ -416,7 +417,6 @@ static inline unsigned int gfs2_extent_length(void *start, unsigned int len, __b
+ 	const __be64 *first = ptr;
+ 	u64 d = be64_to_cpu(*ptr);
+ 
+-	*eob = 0;
+ 	do {
+ 		ptr++;
+ 		if (ptr >= end)
+@@ -504,10 +504,8 @@ static inline unsigned int hptrs(struct gfs2_sbd *sdp, const unsigned int hgt)
+  * Returns: errno on error
+  */
+ 
+-static int gfs2_bmap_alloc(struct inode *inode, const sector_t lblock,
+-			   bool zero_new, struct metapath *mp,
+-			   const size_t maxlen, sector_t *dblock,
+-			   unsigned *dblks)
++static int gfs2_iomap_alloc(struct inode *inode, struct iomap *iomap,
++			    unsigned flags, struct metapath *mp)
+ {
+ 	struct gfs2_inode *ip = GFS2_I(inode);
+ 	struct gfs2_sbd *sdp = GFS2_SB(inode);
+@@ -515,36 +513,37 @@ static int gfs2_bmap_alloc(struct inode *inode, const sector_t lblock,
+ 	struct buffer_head *dibh = mp->mp_bh[0];
+ 	u64 bn;
+ 	unsigned n, i, blks, alloced = 0, iblks = 0, branch_start = 0;
++	unsigned dblks = 0;
+ 	unsigned ptrs_per_blk;
+ 	const unsigned end_of_metadata = mp->mp_fheight - 1;
+ 	int ret;
+-	int eob = 0;
+ 	enum alloc_state state;
+ 	__be64 *ptr;
+ 	__be64 zero_bn = 0;
++	size_t maxlen = iomap->length >> inode->i_blkbits;
+ 
+ 	BUG_ON(mp->mp_aheight < 1);
+ 	BUG_ON(dibh == NULL);
+ 
+-	*dblock = 0;
+-	*dblks = 0;
+ 	gfs2_trans_add_meta(ip->i_gl, dibh);
+ 
+ 	if (mp->mp_fheight == mp->mp_aheight) {
+ 		struct buffer_head *bh;
++		int eob;
 +
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
+ 		/* Bottom indirect block exists, find unalloced extent size */
+ 		ptr = metapointer(end_of_metadata, mp);
+ 		bh = mp->mp_bh[end_of_metadata];
+-		*dblks = gfs2_extent_length(bh->b_data, bh->b_size, ptr,
+-					    maxlen, &eob);
+-		BUG_ON(*dblks < 1);
++		dblks = gfs2_extent_length(bh->b_data, bh->b_size, ptr,
++					   maxlen, &eob);
++		BUG_ON(dblks < 1);
+ 		state = ALLOC_DATA;
+ 	} else {
+ 		/* Need to allocate indirect blocks */
+ 		ptrs_per_blk = mp->mp_fheight > 1 ? sdp->sd_inptrs :
+ 			sdp->sd_diptrs;
+-		*dblks = min(maxlen, (size_t)(ptrs_per_blk -
+-					      mp->mp_list[end_of_metadata]));
++		dblks = min(maxlen, (size_t)(ptrs_per_blk -
++					     mp->mp_list[end_of_metadata]));
+ 		if (mp->mp_fheight == ip->i_height) {
+ 			/* Writing into existing tree, extend tree down */
+ 			iblks = mp->mp_fheight - mp->mp_aheight;
+@@ -560,7 +559,7 @@ static int gfs2_bmap_alloc(struct inode *inode, const sector_t lblock,
+ 
+ 	/* start of the second part of the function (state machine) */
+ 
+-	blks = *dblks + iblks;
++	blks = dblks + iblks;
+ 	i = mp->mp_aheight;
+ 	do {
+ 		int error;
+@@ -617,26 +616,28 @@ static int gfs2_bmap_alloc(struct inode *inode, const sector_t lblock,
+ 				break;
+ 		/* Tree complete, adding data blocks */
+ 		case ALLOC_DATA:
+-			BUG_ON(n > *dblks);
++			BUG_ON(n > dblks);
+ 			BUG_ON(mp->mp_bh[end_of_metadata] == NULL);
+ 			gfs2_trans_add_meta(ip->i_gl, mp->mp_bh[end_of_metadata]);
+-			*dblks = n;
++			dblks = n;
+ 			ptr = metapointer(end_of_metadata, mp);
+-			*dblock = bn;
++			iomap->blkno = bn;
+ 			while (n-- > 0)
+ 				*ptr++ = cpu_to_be64(bn++);
+-			if (zero_new) {
+-				ret = sb_issue_zeroout(sb, *dblock, *dblks,
+-						       GFP_NOFS);
++			if (flags & IOMAP_ZERO) {
++				ret = sb_issue_zeroout(sb, iomap->blkno,
++						       dblks, GFP_NOFS);
+ 				if (ret) {
+ 					fs_err(sdp,
+ 					       "Failed to zero data buffers\n");
++					flags &= ~IOMAP_ZERO;
+ 				}
+ 			}
+ 			break;
+ 		}
+-	} while ((state != ALLOC_DATA) || !(*dblock));
++	} while (iomap->blkno == IOMAP_NULL_BLOCK);
+ 
++	iomap->length = (u64)dblks << inode->i_blkbits;
+ 	ip->i_height = mp->mp_fheight;
+ 	gfs2_add_inode_blocks(&ip->i_inode, alloced);
+ 	gfs2_dinode_out(ip, mp->mp_bh[0]->b_data);
+@@ -644,47 +645,101 @@ static int gfs2_bmap_alloc(struct inode *inode, const sector_t lblock,
+ }
+ 
+ /**
+- * gfs2_block_map - Map a block from an inode to a disk block
+- * @inode: The inode
+- * @lblock: The logical block number
+- * @bh_map: The bh to be mapped
+- * @create: True if its ok to alloc blocks to satify the request
++ * hole_size - figure out the size of a hole
++ * @ip: The inode
++ * @lblock: The logical starting block number
++ * @mp: The metapath
+  *
+- * Sets buffer_mapped() if successful, sets buffer_boundary() if a
+- * read of metadata will be required before the next block can be
+- * mapped. Sets buffer_new() if new blocks were allocated.
++ * Returns: The hole size in bytes
+  *
+- * Returns: errno
+  */
++static u64 hole_size(struct inode *inode, sector_t lblock, struct metapath *mp)
 +{
-+	cd /
-+	rm -f "$tmp".* $TEST_DIR/fsmap $TEST_DIR/testout
++	struct gfs2_inode *ip = GFS2_I(inode);
++	struct gfs2_sbd *sdp = GFS2_SB(inode);
++	struct metapath mp_eof;
++	u64 factor = 1;
++	int hgt;
++	u64 holesz = 0;
++	const __be64 *first, *end, *ptr;
++	const struct buffer_head *bh;
++	u64 lblock_stop = (i_size_read(inode) - 1) >> inode->i_blkbits;
++	int zeroptrs;
++	bool done = false;
++
++	/* Get another metapath, to the very last byte */
++	find_metapath(sdp, lblock_stop, &mp_eof, ip->i_height);
++	for (hgt = ip->i_height - 1; hgt >= 0 && !done; hgt--) {
++		bh = mp->mp_bh[hgt];
++		if (bh) {
++			zeroptrs = 0;
++			first = metapointer(hgt, mp);
++			end = (const __be64 *)(bh->b_data + bh->b_size);
++
++			for (ptr = first; ptr < end; ptr++) {
++				if (*ptr) {
++					done = true;
++					break;
++				} else {
++					zeroptrs++;
++				}
++			}
++		} else {
++			zeroptrs = sdp->sd_inptrs;
++		}
++		if (factor * zeroptrs >= lblock_stop - lblock + 1) {
++			holesz = lblock_stop - lblock + 1;
++			break;
++		}
++		holesz += factor * zeroptrs;
+ 
+-int gfs2_block_map(struct inode *inode, sector_t lblock,
+-		   struct buffer_head *bh_map, int create)
++		factor *= sdp->sd_inptrs;
++		if (hgt && (mp->mp_list[hgt - 1] < mp_eof.mp_list[hgt - 1]))
++			(mp->mp_list[hgt - 1])++;
++	}
++	return holesz << inode->i_blkbits;
 +}
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
++/**
++ * gfs2_get_iomap - Map blocks from an inode to disk blocks
++ * @inode: The inode
++ * @pos: Starting position in bytes
++ * @length: Length to map, in bytes
++ * @flags: iomap flags
++ * @iomap: The iomap structure
++ *
++ * Returns: errno
++ */
++int gfs2_get_iomap(struct inode *inode, loff_t pos, ssize_t length,
++		   unsigned flags, struct iomap *iomap)
+ {
+ 	struct gfs2_inode *ip = GFS2_I(inode);
+ 	struct gfs2_sbd *sdp = GFS2_SB(inode);
++	struct metapath mp = { .mp_aheight = 1, };
+ 	unsigned int bsize = sdp->sd_sb.sb_bsize;
+-	const size_t maxlen = bh_map->b_size >> inode->i_blkbits;
+ 	const u64 *arr = sdp->sd_heightsize;
+ 	__be64 *ptr;
+-	u64 size;
+-	struct metapath mp;
++	sector_t lblock = pos >> inode->i_blkbits;
++	sector_t lend = (pos + length + sdp->sd_sb.sb_bsize - 1) >> inode->i_blkbits;
+ 	int ret;
+-	int eob;
++	int eob = 0;
+ 	unsigned int len;
+ 	struct buffer_head *bh;
+ 	u8 height;
+-	bool zero_new = false;
+-	sector_t dblock = 0;
+-	unsigned dblks;
+ 
+-	BUG_ON(maxlen == 0);
++	trace_gfs2_iomap_start(ip, pos, length, flags);
++	if (!length) {
++		ret = -EINVAL;
++		goto out;
++	}
 +
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs ext4
-+_require_scratch
-+_require_xfs_io_command "fsmap"
++	iomap->offset = lblock << inode->i_blkbits;
++	iomap->blkno = IOMAP_NULL_BLOCK;
++	iomap->type = IOMAP_HOLE;
++	iomap->length = (u64)(lend - lblock) << inode->i_blkbits;
++	iomap->flags = 0;
++	bmap_lock(ip, 0);
+ 
+-	memset(&mp, 0, sizeof(mp));
+-	bmap_lock(ip, create);
+-	clear_buffer_mapped(bh_map);
+-	clear_buffer_new(bh_map);
+-	clear_buffer_boundary(bh_map);
+-	trace_gfs2_bmap(ip, bh_map, lblock, create, 1);
+ 	if (gfs2_is_dir(ip)) {
+ 		bsize = sdp->sd_jbsize;
+ 		arr = sdp->sd_jheightsize;
+@@ -692,56 +747,110 @@ int gfs2_block_map(struct inode *inode, sector_t lblock,
+ 
+ 	ret = gfs2_meta_inode_buffer(ip, &mp.mp_bh[0]);
+ 	if (ret)
+-		goto out;
++		goto out_release;
+ 
+ 	height = ip->i_height;
+-	size = (lblock + 1) * bsize;
+-	while (size > arr[height])
++	while ((lblock + 1) * bsize > arr[height])
+ 		height++;
+ 	find_metapath(sdp, lblock, &mp, height);
+-	mp.mp_aheight = 1;
+ 	if (height > ip->i_height || gfs2_is_stuffed(ip))
+ 		goto do_alloc;
 +
-+rm -f "$seqres.full"
+ 	ret = lookup_metapath(ip, &mp);
+ 	if (ret < 0)
+-		goto out;
++		goto out_release;
 +
-+echo "Format and mount"
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount
+ 	if (mp.mp_aheight != ip->i_height)
+ 		goto do_alloc;
 +
-+echo "Get fsmap" | tee -a $seqres.full
-+$XFS_IO_PROG -c 'fsmap' $SCRATCH_MNT > $TEST_DIR/fsmap
-+cat $TEST_DIR/fsmap >> $seqres.full
+ 	ptr = metapointer(ip->i_height - 1, &mp);
+ 	if (*ptr == 0)
+ 		goto do_alloc;
+-	map_bh(bh_map, inode->i_sb, be64_to_cpu(*ptr));
 +
-+echo "Check fs metadata" | tee -a $seqres.full
-+x=$(grep -c 'static fs metadata' $TEST_DIR/fsmap)
-+test $x -gt 0 || echo "No fs metadata?"
++	iomap->type = IOMAP_MAPPED;
++	iomap->blkno = be64_to_cpu(*ptr);
 +
-+echo "Check block bitmap" | tee -a $seqres.full
-+x=$(grep -c 'special 102:1' $TEST_DIR/fsmap)
-+test $x -gt 0 || echo "No block bitmaps?"
+ 	bh = mp.mp_bh[ip->i_height - 1];
+-	len = gfs2_extent_length(bh->b_data, bh->b_size, ptr, maxlen, &eob);
+-	bh_map->b_size = (len << inode->i_blkbits);
++	len = gfs2_extent_length(bh->b_data, bh->b_size, ptr, lend - lblock, &eob);
+ 	if (eob)
+-		set_buffer_boundary(bh_map);
++		iomap->flags |= IOMAP_F_BOUNDARY;
++	iomap->length = (u64)len << inode->i_blkbits;
 +
-+echo "Check inode bitmap" | tee -a $seqres.full
-+x=$(grep -c 'special 102:2' $TEST_DIR/fsmap)
-+test $x -gt 0 || echo "No inode bitmaps?"
+ 	ret = 0;
+-out:
 +
-+echo "Check inodes" | tee -a $seqres.full
-+x=$(grep -c 'inodes' $TEST_DIR/fsmap)
-+test $x -gt 0 || echo "No inodes?"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/ext4/700.out b/tests/ext4/700.out
-new file mode 100644
-index 0000000..3984319
---- /dev/null
-+++ b/tests/ext4/700.out
-@@ -0,0 +1,7 @@
-+QA output created by 700
-+Format and mount
-+Get fsmap
-+Check fs metadata
-+Check block bitmap
-+Check inode bitmap
-+Check inodes
-diff --git a/tests/ext4/701 b/tests/ext4/701
-new file mode 100755
-index 0000000..6ae93d7
---- /dev/null
-+++ b/tests/ext4/701
-@@ -0,0 +1,65 @@
-+#! /bin/bash
-+# FS QA Test No. 701
-+#
-+# Populate filesystem, check that fsmap -n10000 matches fsmap -n1.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f "$tmp".* $TEST_DIR/a $TEST_DIR/b
++out_release:
+ 	release_metapath(&mp);
+-	trace_gfs2_bmap(ip, bh_map, lblock, create, ret);
+-	bmap_unlock(ip, create);
++	bmap_unlock(ip, 0);
++out:
++	trace_gfs2_iomap_end(ip, iomap, ret);
+ 	return ret;
+ 
+ do_alloc:
+-	/* All allocations are done here, firstly check create flag */
+-	if (!create) {
++	if (!(flags & IOMAP_WRITE)) {
++		if (pos >= i_size_read(inode)) {
++			ret = -ENOENT;
++			goto out_release;
++		}
+ 		BUG_ON(gfs2_is_stuffed(ip));
+ 		ret = 0;
+-		goto out;
++		iomap->length = hole_size(inode, lblock, &mp);
++		goto out_release;
+ 	}
+ 
+-	/* At this point ret is the tree depth of already allocated blocks */
++	ret = gfs2_iomap_alloc(inode, iomap, flags, &mp);
++	goto out_release;
 +}
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/populate
++/**
++ * gfs2_block_map - Map a block from an inode to a disk block
++ * @inode: The inode
++ * @lblock: The logical block number
++ * @bh_map: The bh to be mapped
++ * @create: True if its ok to alloc blocks to satify the request
++ *
++ * Sets buffer_mapped() if successful, sets buffer_boundary() if a
++ * read of metadata will be required before the next block can be
++ * mapped. Sets buffer_new() if new blocks were allocated.
++ *
++ * Returns: errno
++ */
 +
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs ext4
-+_require_scratch
-+_require_populate_commands
-+_require_xfs_io_command "fsmap"
-+
-+rm -f "$seqres.full"
-+
-+echo "Format and mount"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+echo "Compare fsmap" | tee -a $seqres.full
-+_scratch_mount
-+$XFS_IO_PROG -c 'fsmap -n 65536' $SCRATCH_MNT | grep -v 'EXT:' > $TEST_DIR/a
-+$XFS_IO_PROG -c 'fsmap -n 1' $SCRATCH_MNT | grep -v 'EXT:' > $TEST_DIR/b
-+cat $TEST_DIR/a $TEST_DIR/b >> $seqres.full
-+
-+diff -uw $TEST_DIR/a $TEST_DIR/b
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/ext4/701.out b/tests/ext4/701.out
-new file mode 100644
-index 0000000..41ef1c6
---- /dev/null
-+++ b/tests/ext4/701.out
-@@ -0,0 +1,3 @@
-+QA output created by 701
-+Format and mount
-+Compare fsmap
-diff --git a/tests/ext4/702 b/tests/ext4/702
-new file mode 100755
-index 0000000..ce3ae11
---- /dev/null
-+++ b/tests/ext4/702
-@@ -0,0 +1,66 @@
-+#! /bin/bash
-+# FS QA Test No. 702
-+#
-+# Check that getfsmap reports external log devices
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
++int gfs2_block_map(struct inode *inode, sector_t lblock,
++		   struct buffer_head *bh_map, int create)
 +{
-+	cd /
-+	rm -f "$tmp".* $TEST_DIR/fsmap $TEST_DIR/testout
-+}
++	struct gfs2_inode *ip = GFS2_I(inode);
++	struct gfs2_sbd *sdp = GFS2_SB(inode);
++	struct iomap iomap;
++	int ret, flags = 0;
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
++	clear_buffer_mapped(bh_map);
++	clear_buffer_new(bh_map);
++	clear_buffer_boundary(bh_map);
++	trace_gfs2_bmap(ip, bh_map, lblock, create, 1);
 +
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs ext4
-+_require_logdev
-+_require_scratch
-+_require_xfs_io_command "fsmap"
++	if (create)
++		flags |= IOMAP_WRITE;
+ 	if (buffer_zeronew(bh_map))
+-		zero_new = true;
+-	ret = gfs2_bmap_alloc(inode, lblock, zero_new, &mp, maxlen, &dblock,
+-			      &dblks);
+-	if (ret == 0) {
+-		map_bh(bh_map, inode->i_sb, dblock);
+-		bh_map->b_size = dblks << inode->i_blkbits;
++		flags |= IOMAP_ZERO;
++	ret = gfs2_get_iomap(inode, lblock << sdp->sd_sb.sb_bsize_shift,
++			     bh_map->b_size, flags, &iomap);
++	if (ret)
++		goto out;
 +
-+rm -f "$seqres.full"
++	iomap.length = round_up(iomap.length, sdp->sd_sb.sb_bsize);
++	bh_map->b_size = iomap.length;
++	if (iomap.flags & IOMAP_F_BOUNDARY)
++		set_buffer_boundary(bh_map);
++	if (iomap.blkno != IOMAP_NULL_BLOCK)
++		map_bh(bh_map, inode->i_sb, iomap.blkno);
++	bh_map->b_size = iomap.length;
++	clear_buffer_zeronew(bh_map);
++	if (iomap.flags & IOMAP_F_NEW)
+ 		set_buffer_new(bh_map);
+-	}
+-	goto out;
 +
-+echo "Format and mount"
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount
++out:
++	trace_gfs2_bmap(ip, bh_map, lblock, create, ret);
++	return ret;
+ }
+ 
+ /*
+diff --git a/fs/gfs2/bmap.h b/fs/gfs2/bmap.h
+index 81ded5e..e904aed 100644
+--- a/fs/gfs2/bmap.h
++++ b/fs/gfs2/bmap.h
+@@ -10,6 +10,8 @@
+ #ifndef __BMAP_DOT_H__
+ #define __BMAP_DOT_H__
+ 
++#include <linux/iomap.h>
 +
-+echo "Get fsmap" | tee -a $seqres.full
-+$XFS_IO_PROG -c 'fsmap' $SCRATCH_MNT >> $seqres.full
-+$XFS_IO_PROG -c 'fsmap' $SCRATCH_MNT | tr '[]()' '    ' > $TEST_DIR/fsmap
+ #include "inode.h"
+ 
+ struct inode;
+@@ -47,6 +49,8 @@ static inline void gfs2_write_calc_reserv(const struct gfs2_inode *ip,
+ extern int gfs2_unstuff_dinode(struct gfs2_inode *ip, struct page *page);
+ extern int gfs2_block_map(struct inode *inode, sector_t lblock,
+ 			  struct buffer_head *bh, int create);
++extern int gfs2_get_iomap(struct inode *inode, loff_t pos, ssize_t length,
++			  unsigned flags, struct iomap *iomap);
+ extern int gfs2_extent_map(struct inode *inode, u64 lblock, int *new,
+ 			   u64 *dblock, unsigned *extlen);
+ extern int gfs2_setattr_size(struct inode *inode, u64 size);
+diff --git a/fs/gfs2/trace_gfs2.h b/fs/gfs2/trace_gfs2.h
+index 49ac55d..3c91ae3 100644
+--- a/fs/gfs2/trace_gfs2.h
++++ b/fs/gfs2/trace_gfs2.h
+@@ -12,6 +12,7 @@
+ #include <linux/gfs2_ondisk.h>
+ #include <linux/writeback.h>
+ #include <linux/ktime.h>
++#include <linux/iomap.h>
+ #include "incore.h"
+ #include "glock.h"
+ #include "rgrp.h"
+@@ -469,6 +470,70 @@ TRACE_EVENT(gfs2_bmap,
+ 		  __entry->errno)
+ );
+ 
++TRACE_EVENT(gfs2_iomap_start,
 +
-+echo "Check device field of FS metadata and journalling log"
-+data_dev=$(grep 'static fs metadata' $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
-+journal_dev=$(grep 'journalling log' $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
-+test "${data_dev}" != "${journal_dev}" || echo "data ${data_dev} journal ${journal_dev}?"
++	TP_PROTO(const struct gfs2_inode *ip, loff_t pos, ssize_t length,
++		 u16 flags),
 +
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/ext4/702.out b/tests/ext4/702.out
-new file mode 100644
-index 0000000..1d3b7ef
---- /dev/null
-+++ b/tests/ext4/702.out
-@@ -0,0 +1,4 @@
-+QA output created by 702
-+Format and mount
-+Get fsmap
-+Check device field of FS metadata and journalling log
-diff --git a/tests/ext4/group b/tests/ext4/group
-index 664c059..9007adf 100644
---- a/tests/ext4/group
-+++ b/tests/ext4/group
-@@ -37,3 +37,6 @@
- 306 auto rw resize quick
- 307 auto ioctl rw defrag
- 308 auto ioctl rw prealloc quick defrag
-+700 auto quick fsmap
-+701 auto quick fsmap
-+702 auto quick fsmap
++	TP_ARGS(ip, pos, length, flags),
++
++	TP_STRUCT__entry(
++		__field(        dev_t,  dev                     )
++		__field(	u64,	inum			)
++		__field(	loff_t, pos			)
++		__field(	ssize_t, length			)
++		__field(	u16,	flags			)
++	),
++
++	TP_fast_assign(
++		__entry->dev            = ip->i_gl->gl_name.ln_sbd->sd_vfs->s_dev;
++		__entry->inum		= ip->i_no_addr;
++		__entry->pos		= pos;
++		__entry->length		= length;
++		__entry->flags		= flags;
++	),
++
++	TP_printk("%u,%u bmap %llu iomap start %llu/%lu flags:%08x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  (unsigned long long)__entry->inum,
++		  (unsigned long long)__entry->pos,
++		  (unsigned long)__entry->length, (u16)__entry->flags)
++);
++
++TRACE_EVENT(gfs2_iomap_end,
++
++	TP_PROTO(const struct gfs2_inode *ip, struct iomap *iomap, int ret),
++
++	TP_ARGS(ip, iomap, ret),
++
++	TP_STRUCT__entry(
++		__field(        dev_t,  dev                     )
++		__field(	u64,	inum			)
++		__field(	loff_t, offset			)
++		__field(	ssize_t, length			)
++		__field(	u16,	flags			)
++		__field(	u16,	type			)
++		__field(	int,	ret			)
++	),
++
++	TP_fast_assign(
++		__entry->dev            = ip->i_gl->gl_name.ln_sbd->sd_vfs->s_dev;
++		__entry->inum		= ip->i_no_addr;
++		__entry->offset		= iomap->offset;
++		__entry->length		= iomap->length;
++		__entry->flags		= iomap->flags;
++		__entry->type		= iomap->type;
++		__entry->ret		= ret;
++	),
++
++	TP_printk("%u,%u bmap %llu iomap end %llu/%lu ty:%d flags:%08x rc:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  (unsigned long long)__entry->inum,
++		  (unsigned long long)__entry->offset,
++		  (unsigned long)__entry->length, (u16)__entry->type,
++		  (u16)__entry->flags, __entry->ret)
++);
++
+ /* Keep track of blocks as they are allocated/freed */
+ TRACE_EVENT(gfs2_block_alloc,
+ 
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index ff89026..4dfdb22 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -21,7 +21,8 @@ struct vm_fault;
+ /*
+  * Flags for all iomap mappings:
+  */
+-#define IOMAP_F_NEW	0x01	/* blocks have been newly allocated */
++#define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
++#define IOMAP_F_BOUNDARY	0x02	/* mapping ends at metadata boundary */
+ 
+ /*
+  * Flags that only need to be reported for IOMAP_REPORT requests:
+-- 
+2.7.5
 
