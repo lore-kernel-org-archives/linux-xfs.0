@@ -1,143 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60802 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751353AbdFZITg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Jun 2017 04:19:36 -0400
-Date: Mon, 26 Jun 2017 10:19:31 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH v7 04/22] buffer: set errors in mapping at the time that
- the error occurs
-Message-ID: <20170626081931.i6jxjel5p2alq6rn@eorzea.usersys.redhat.com>
-References: <20170616193427.13955-1-jlayton@redhat.com>
- <20170616193427.13955-5-jlayton@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:26665 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751620AbdFWPeJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2017 11:34:09 -0400
+Date: Fri, 23 Jun 2017 08:34:03 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 9/8] common/populate: remember multi-device configurations
+Message-ID: <20170623153403.GX4733@birch.djwong.org>
+References: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
+ <20170622062653.GF3787@birch.djwong.org>
+ <20170623074902.GK23360@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170616193427.13955-5-jlayton@redhat.com>
+In-Reply-To: <20170623074902.GK23360@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Fri, Jun 16, 2017 at 03:34:09PM -0400, Jeff Layton wrote:
-> I noticed on xfs that I could still sometimes get back an error on fsync
-> on a fd that was opened after the error condition had been cleared.
+On Fri, Jun 23, 2017 at 03:49:02PM +0800, Eryu Guan wrote:
+> On Wed, Jun 21, 2017 at 11:26:53PM -0700, Darrick J. Wong wrote:
+> > Record the external log and realtime device configurations when we
+> > create a sample filesystem.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  common/populate |   10 +++++++++-
+> >  1 file changed, 9 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/common/populate b/common/populate
+> > index e99ce68..b59ed02 100644
+> > --- a/common/populate
+> > +++ b/common/populate
+> > @@ -713,7 +713,15 @@ _scratch_populate_cached() {
+> >  	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
+> >  
+> >  	# Throw away cached image if it doesn't match our spec.
+> > -	meta_descr="FSTYP ${FSTYP} MKFS_OPTIONS ${MKFS_OPTIONS} SIZE $(blockdev --getsz "${SCRATCH_DEV}") ARGS $@"
+> > +	case "${FSTYP}" in
+> > +	"ext4")
+> > +		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL}";;
+> > +	"xfs")
+> > +		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}";;
+> > +	*)
+> > +		extra_descr="";;
+> > +	esac
+> > +	meta_descr="FSTYP ${FSTYP} MKFS_OPTIONS ${MKFS_OPTIONS} SIZE $(blockdev --getsz "${SCRATCH_DEV}") ${extra_descr} ARGS $@"
 > 
-> The problem is that the buffer code sets the write_io_error flag and
-> then later checks that flag to set the error in the mapping. That flag
-> perisists for quite a while however. If the file is later opened with
-> O_TRUNC, the buffers will then be invalidated and the mapping's error
-> set such that a subsequent fsync will return error. I think this is
-> incorrect, as there was no writeback between the open and fsync.
+> This works fine if "test without external log" then "test with external
+> log" or vise-versa. But I just found that a second run with external log
+> still cause scratch dev fail to mount. Seems it's because e2image
+> doesn't take the external log dev into account when save/restore fs
+> image, then mounting scratch dev failed with
 > 
-> Add a new mark_buffer_write_io_error operation that sets the flag and
-> the error in the mapping at the same time. Replace all calls to
-> set_buffer_write_io_error with mark_buffer_write_io_error, and remove
-> the places that check this flag in order to set the error in the
-> mapping.
-> 
-> This sets the error in the mapping earlier, at the time that it's first
-> detected.
-> 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/buffer.c                 | 20 +++++++++++++-------
->  fs/gfs2/lops.c              |  2 +-
->  include/linux/buffer_head.h |  1 +
->  3 files changed, 15 insertions(+), 8 deletions(-)
-> 
+> [184952.642892] EXT4-fs (sdc2): journal UUID does not match
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Ohhh... I just remembered that e2image (and xfs_metadump) don't capture
+the external log in the dump.  ext4 chokes when the log device lacks the
+header it needs and fails, though XFS is perfectly happy to complain
+about the zero log and move on.
 
-> diff --git a/fs/buffer.c b/fs/buffer.c
-> index 7b4f4bfde91e..4d5d03b42e11 100644
-> --- a/fs/buffer.c
-> +++ b/fs/buffer.c
-> @@ -178,7 +178,7 @@ void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
->  		set_buffer_uptodate(bh);
->  	} else {
->  		buffer_io_error(bh, ", lost sync page write");
-> -		set_buffer_write_io_error(bh);
-> +		mark_buffer_write_io_error(bh);
->  		clear_buffer_uptodate(bh);
->  	}
->  	unlock_buffer(bh);
-> @@ -352,8 +352,7 @@ void end_buffer_async_write(struct buffer_head *bh, int uptodate)
->  		set_buffer_uptodate(bh);
->  	} else {
->  		buffer_io_error(bh, ", lost async page write");
-> -		mapping_set_error(page->mapping, -EIO);
-> -		set_buffer_write_io_error(bh);
-> +		mark_buffer_write_io_error(bh);
->  		clear_buffer_uptodate(bh);
->  		SetPageError(page);
->  	}
-> @@ -481,8 +480,6 @@ static void __remove_assoc_queue(struct buffer_head *bh)
->  {
->  	list_del_init(&bh->b_assoc_buffers);
->  	WARN_ON(!bh->b_assoc_map);
-> -	if (buffer_write_io_error(bh))
-> -		mapping_set_error(bh->b_assoc_map, -EIO);
->  	bh->b_assoc_map = NULL;
->  }
->  
-> @@ -1181,6 +1178,17 @@ void mark_buffer_dirty(struct buffer_head *bh)
->  }
->  EXPORT_SYMBOL(mark_buffer_dirty);
->  
-> +void mark_buffer_write_io_error(struct buffer_head *bh)
-> +{
-> +	set_buffer_write_io_error(bh);
-> +	/* FIXME: do we need to set this in both places? */
-> +	if (bh->b_page && bh->b_page->mapping)
-> +		mapping_set_error(bh->b_page->mapping, -EIO);
-> +	if (bh->b_assoc_map)
-> +		mapping_set_error(bh->b_assoc_map, -EIO);
-> +}
-> +EXPORT_SYMBOL(mark_buffer_write_io_error);
-> +
->  /*
->   * Decrement a buffer_head's reference count.  If all buffers against a page
->   * have zero reference count, are clean and unlocked, and if the page is clean
-> @@ -3266,8 +3274,6 @@ drop_buffers(struct page *page, struct buffer_head **buffers_to_free)
->  
->  	bh = head;
->  	do {
-> -		if (buffer_write_io_error(bh) && page->mapping)
-> -			mapping_set_error(page->mapping, -EIO);
->  		if (buffer_busy(bh))
->  			goto failed;
->  		bh = bh->b_this_page;
-> diff --git a/fs/gfs2/lops.c b/fs/gfs2/lops.c
-> index 885d36e7a29f..1a9c2c08c1a1 100644
-> --- a/fs/gfs2/lops.c
-> +++ b/fs/gfs2/lops.c
-> @@ -182,7 +182,7 @@ static void gfs2_end_log_write_bh(struct gfs2_sbd *sdp, struct bio_vec *bvec,
->  		bh = bh->b_this_page;
->  	do {
->  		if (error)
-> -			set_buffer_write_io_error(bh);
-> +			mark_buffer_write_io_error(bh);
->  		unlock_buffer(bh);
->  		next = bh->b_this_page;
->  		size -= bh->b_size;
-> diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
-> index bd029e52ef5e..e0abeba3ced7 100644
-> --- a/include/linux/buffer_head.h
-> +++ b/include/linux/buffer_head.h
-> @@ -149,6 +149,7 @@ void buffer_check_dirty_writeback(struct page *page,
->   */
->  
->  void mark_buffer_dirty(struct buffer_head *bh);
-> +void mark_buffer_write_io_error(struct buffer_head *bh);
->  void init_buffer(struct buffer_head *, bh_end_io_t *, void *);
->  void touch_buffer(struct buffer_head *bh);
->  void set_bh_page(struct buffer_head *bh,
-> -- 
-> 2.13.0
+So either we can't use _scratch_populate cache in ext4 when
+SCRATCH_LOGDEV is set, or I need to fix it to extract the expected
+logdev uuid from the restored fs and reformat that onto the log device.
+
+I'll work on that and resubmit.
+
+--D
+
 > 
-
--- 
-Carlos
+> Thanks,
+> Eryu
+> 
+> >  	cmp -s "${POPULATE_METADUMP_DESCR}" <(echo "${meta_descr}") || rm -rf "${POPULATE_METADUMP}"
+> >  
+> >  	# Do we have a cached image?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
