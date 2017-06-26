@@ -1,187 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19634 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:25590 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751492AbdF0Qvt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2017 12:51:49 -0400
-Date: Tue, 27 Jun 2017 09:51:45 -0700
+        with ESMTP id S1751406AbdFZPZv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jun 2017 11:25:51 -0400
+Date: Mon, 26 Jun 2017 08:25:46 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: replace log_badcrc_factor knob with error injection
- tag
-Message-ID: <20170627165145.GA4492@birch.djwong.org>
-References: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
- <1498566905-51311-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH v3] xfs_db: update sector size when type is set
+Message-ID: <20170626152546.GD4733@birch.djwong.org>
+References: <20170622193352.22346-1-billodo@redhat.com>
+ <20170623103405.19428-1-billodo@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1498566905-51311-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20170623103405.19428-1-billodo@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Bill O'Donnell <billodo@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 27, 2017 at 08:35:05AM -0400, Brian Foster wrote:
-> Now that error injection tags support dynamic frequency adjustment,
-> replace the debug mode sysfs knob that controls log record CRC error
-> injection with an error injection tag.
+On Fri, Jun 23, 2017 at 05:34:05AM -0500, Bill O'Donnell wrote:
+> xfs_db doesn't take sector size into account when setting type.
+> This can result in an errant crc. For example, with a sector size
+> of 4096:
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
+> xfs_db> agi 0
+> xfs_db> p crc
+> crc = 0xab85043e (correct)
+> xfs_db> daddr
+> current daddr is 16
+> xfs_db> daddr 42
+> xfs_db> daddr 16
+> xfs_db> type agi
+> Metadata CRC error detected at xfs_agi block 0x10/0x200
+> xfs_db> p crc
+> crc = 0xab85043e (bad)
 > 
-> Darrick,
+> When xfs_db sets the new daddr in daddr_f, it does so with one
+> BBSIZE sector (512). Changing the type doesn't change the size
+> of the current buffer in iocur_top, so the checksum is calculated
+> on the wrong length for the type (when the actual sector size > BBSIZE (512).
 > 
-> Care to tack something like this onto this series? We might as well fix
-> this one too before I create another test that relies on it. I'll follow
-> up with an update to xfs/141 to support either knob.
+> For types with fields, reread the buffer to pick up the correct size for
+> the new type when it gets set. Facilitate the reread by setting the cursor
+> with set_cur().
+> 
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 
-Looks ok to me, will test...
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
+> ---
 > 
-> Brian
+> v2: correction to argument 3 in call to set_cur: compute and pass basic block count;
+>     add comment regarding conditional call to set_cur.
+> v3: include bit.h for byteize function
 > 
->  fs/xfs/xfs_error.c |  3 +++
->  fs/xfs/xfs_error.h |  4 +++-
->  fs/xfs/xfs_log.c   |  5 +----
->  fs/xfs/xfs_sysfs.c | 36 ------------------------------------
->  4 files changed, 7 insertions(+), 41 deletions(-)
+>  db/io.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> index a2f23d2..26c32bc 100644
-> --- a/fs/xfs/xfs_error.c
-> +++ b/fs/xfs/xfs_error.c
-> @@ -56,6 +56,7 @@ static unsigned int xfs_errortag_random_default[] = {
->  	XFS_RANDOM_BMAP_FINISH_ONE,
->  	XFS_RANDOM_AG_RESV_CRITICAL,
->  	XFS_RANDOM_DROP_WRITES,
-> +	XFS_RANDOM_LOG_BAD_CRC,
->  };
+> diff --git a/db/io.c b/db/io.c
+> index 9918a51..b97b710 100644
+> --- a/db/io.c
+> +++ b/db/io.c
+> @@ -28,6 +28,7 @@
+>  #include "init.h"
+>  #include "malloc.h"
+>  #include "crc.h"
+> +#include "bit.h"
 >  
->  struct xfs_errortag_attr {
-> @@ -159,6 +160,7 @@ XFS_ERRORTAG_ATTR_RW(refcount_finish_one,	XFS_ERRTAG_REFCOUNT_FINISH_ONE);
->  XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
->  XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
->  XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
-> +XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
+>  static int	pop_f(int argc, char **argv);
+>  static void     pop_help(void);
+> @@ -615,7 +616,13 @@ set_iocur_type(
+>  	const typ_t	*t)
+>  {
+>  	struct xfs_buf	*bp = iocur_top->bp;
+> +	int bb_count;
 >  
->  static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(noerror),
-> @@ -190,6 +192,7 @@ static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(bmap_finish_one),
->  	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
->  	XFS_ERRORTAG_ATTR_LIST(drop_writes),
-> +	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
->  	NULL,
->  };
+> +	/* adjust cursor for types that contain fields */
+> +	if (t->fields) {
+> +		bb_count = BTOBB(byteize(fsize(t->fields, iocur_top->data, 0, 0)));
+> +		set_cur(t, iocur_top->bb, bb_count, DB_RING_IGN, NULL);
+> +	}
+>  	iocur_top->typ = t;
 >  
-> diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-> index ad9b24a..0874d6b 100644
-> --- a/fs/xfs/xfs_error.h
-> +++ b/fs/xfs/xfs_error.h
-> @@ -106,8 +106,9 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
->   * handling sequence.
->   */
->  #define XFS_ERRTAG_DROP_WRITES				28
-> +#define XFS_ERRTAG_LOG_BAD_CRC				29
->  
-> -#define XFS_ERRTAG_MAX					29
-> +#define XFS_ERRTAG_MAX					30
->  
->  /*
->   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-> @@ -141,6 +142,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
->  #define XFS_RANDOM_BMAP_FINISH_ONE			1
->  #define XFS_RANDOM_AG_RESV_CRITICAL			4
->  #define XFS_RANDOM_DROP_WRITES				1
-> +#define XFS_RANDOM_LOG_BAD_CRC				1
->  
->  #ifdef DEBUG
->  extern int xfs_errortag_init(struct xfs_mount *mp);
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 2d1112e..31f11be 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1841,7 +1841,6 @@ xlog_sync(
->  	/* calculcate the checksum */
->  	iclog->ic_header.h_crc = xlog_cksum(log, &iclog->ic_header,
->  					    iclog->ic_datap, size);
-> -#ifdef DEBUG
->  	/*
->  	 * Intentionally corrupt the log record CRC based on the error injection
->  	 * frequency, if defined. This facilitates testing log recovery in the
-> @@ -1849,15 +1848,13 @@ xlog_sync(
->  	 * write on I/O completion and shutdown the fs. The subsequent mount
->  	 * detects the bad CRC and attempts to recover.
->  	 */
-> -	if (log->l_badcrc_factor &&
-> -	    (prandom_u32() % log->l_badcrc_factor == 0)) {
-> +	if (XFS_TEST_ERROR(false, log->l_mp, XFS_ERRTAG_LOG_BAD_CRC)) {
->  		iclog->ic_header.h_crc &= cpu_to_le32(0xAAAAAAAA);
->  		iclog->ic_state |= XLOG_STATE_IOABORT;
->  		xfs_warn(log->l_mp,
->  	"Intentionally corrupted log record at LSN 0x%llx. Shutdown imminent.",
->  			 be64_to_cpu(iclog->ic_header.h_lsn));
->  	}
-> -#endif
->  
->  	bp->b_io_length = BTOBB(count);
->  	bp->b_fspriv = iclog;
-> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> index 56610a9..8b2ccc2 100644
-> --- a/fs/xfs/xfs_sysfs.c
-> +++ b/fs/xfs/xfs_sysfs.c
-> @@ -305,47 +305,11 @@ write_grant_head_show(
->  }
->  XFS_SYSFS_ATTR_RO(write_grant_head);
->  
-> -#ifdef DEBUG
-> -STATIC ssize_t
-> -log_badcrc_factor_store(
-> -	struct kobject	*kobject,
-> -	const char	*buf,
-> -	size_t		count)
-> -{
-> -	struct xlog	*log = to_xlog(kobject);
-> -	int		ret;
-> -	uint32_t	val;
-> -
-> -	ret = kstrtouint(buf, 0, &val);
-> -	if (ret)
-> -		return ret;
-> -
-> -	log->l_badcrc_factor = val;
-> -
-> -	return count;
-> -}
-> -
-> -STATIC ssize_t
-> -log_badcrc_factor_show(
-> -	struct kobject	*kobject,
-> -	char		*buf)
-> -{
-> -	struct xlog	*log = to_xlog(kobject);
-> -
-> -	return snprintf(buf, PAGE_SIZE, "%d\n", log->l_badcrc_factor);
-> -}
-> -
-> -XFS_SYSFS_ATTR_RW(log_badcrc_factor);
-> -#endif	/* DEBUG */
-> -
->  static struct attribute *xfs_log_attrs[] = {
->  	ATTR_LIST(log_head_lsn),
->  	ATTR_LIST(log_tail_lsn),
->  	ATTR_LIST(reserve_grant_head),
->  	ATTR_LIST(write_grant_head),
-> -#ifdef DEBUG
-> -	ATTR_LIST(log_badcrc_factor),
-> -#endif
->  	NULL,
->  };
->  
+>  	/* verify the buffer if the type has one. */
 > -- 
-> 2.7.5
+> 2.9.4
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
