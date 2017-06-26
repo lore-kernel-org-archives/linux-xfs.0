@@ -1,194 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34116 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750752AbdFZOZr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Jun 2017 10:25:47 -0400
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v3 1/5] vfs: Add page_cache_seek_hole_data helper
-Date: Mon, 26 Jun 2017 16:25:14 +0200
-Message-Id: <1498487118-6564-2-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1498487118-6564-1-git-send-email-agruenba@redhat.com>
-References: <1498487118-6564-1-git-send-email-agruenba@redhat.com>
+Received: from mail-qk0-f171.google.com ([209.85.220.171]:36018 "EHLO
+        mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751392AbdFZOeV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jun 2017 10:34:21 -0400
+Received: by mail-qk0-f171.google.com with SMTP id p21so2721471qke.3
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Jun 2017 07:34:20 -0700 (PDT)
+Message-ID: <1498487658.5168.8.camel@redhat.com>
+Subject: Re: [PATCH v7 16/22] block: convert to errseq_t based writeback
+ error tracking
+From: Jeff Layton <jlayton@redhat.com>
+Date: Mon, 26 Jun 2017 10:34:18 -0400
+In-Reply-To: <1498310166.4796.4.camel@redhat.com>
+References: <20170616193427.13955-1-jlayton@redhat.com>
+         <20170616193427.13955-17-jlayton@redhat.com>
+         <20170620123544.GC19781@infradead.org>
+         <1497980684.4555.16.camel@redhat.com>
+         <20170624115946.GA22561@infradead.org> <1498310166.4796.4.camel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-Both ext4 and xfs implement seeking for the next hole or piece of data
-in unwritten extents by scanning the page cache, and both versions share
-the same bug when iterating the buffers of a page: the start offset into
-the page isn't taken into account, so when a page fits more than two
-filesystem blocks, things will go wrong.  For example, on a filesystem
-with a block size of 1k, the following command will fail:
+On Sat, 2017-06-24 at 09:16 -0400, Jeff Layton wrote:
+> On Sat, 2017-06-24 at 04:59 -0700, Christoph Hellwig wrote:
+> > On Tue, Jun 20, 2017 at 01:44:44PM -0400, Jeff Layton wrote:
+> > > In order to query for errors with errseq_t, you need a previously-
+> > > sampled point from which to check. When you call
+> > > filemap_write_and_wait_range though you don't have a struct file and so
+> > > no previously-sampled value.
+> > 
+> > So can we simply introduce variants of them that take a struct file?
+> > That would be:
+> > 
+> >  a) less churn
+> >  b) less code
+> >  c) less chance to get data integrity wrong
+> 
+> Yeah, I had that thought after I sent the reply to you earlier.
+> 
+> The main reason I didn't do that before was that I had myself convinced
+> that we needed to do the check_and_advance as late as possible in the
+> fsync process, after the metadata had been written.
+> 
+> Now that I think about it more, I think you're probably correct. As long
+> as we do the check and advance at some point after doing the
+> write_and_wait, we're fine here and shouldn't violate exactly once
+> semantics on the fsync return.
 
-  xfs_io -f -c "falloc 0 4k" \
-            -c "pwrite 1k 1k" \
-            -c "pwrite 3k 1k" \
-            -c "seek -a -r 0" foo
+So I have a file_write_and_wait_range now that should DTRT for this
+patch.
 
-In this example, neither lseek(fd, 1024, SEEK_HOLE) nor lseek(fd, 2048,
-SEEK_DATA) will return the correct result.
+The bigger question is -- what about more complex filesystems like
+ext4?  There are a couple of cases where we can return -EIO or -EROFS on
+fsync before filemap_write_and_wait_range is ever called. Like this one
+for instance:
 
-Introduce a generic vfs helper for seeking in the page cache that gets
-this right.  The next commits will replace the filesystem specific
-implementations.
+        if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
+                return -EIO;
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/buffer.c                 | 125 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/buffer_head.h |   2 +
- 2 files changed, 127 insertions(+)
+...and the EXT4_MF_FS_ABORTED case.
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 4d5d03b..7702269 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -3485,6 +3485,131 @@ int bh_submit_read(struct buffer_head *bh)
- }
- EXPORT_SYMBOL(bh_submit_read);
- 
-+/*
-+ * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
-+ *
-+ * Returns the offset within the file on success, and -ENOENT otherwise.
-+ */
-+static loff_t
-+page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
-+{
-+	loff_t offset = page_offset(page);
-+	struct buffer_head *bh, *head;
-+	bool seek_data = whence == SEEK_DATA;
-+
-+	if (lastoff < offset)
-+		lastoff = offset;
-+
-+	bh = head = page_buffers(page);
-+	do {
-+		offset += bh->b_size;
-+		if (lastoff >= offset)
-+			continue;
-+
-+		/*
-+		 * Unwritten extents that have data in the page cache covering
-+		 * them can be identified by the BH_Unwritten state flag.
-+		 * Pages with multiple buffers might have a mix of holes, data
-+		 * and unwritten extents - any buffer with valid data in it
-+		 * should have BH_Uptodate flag set on it.
-+		 */
-+
-+		if ((buffer_unwritten(bh) || buffer_uptodate(bh)) == seek_data)
-+			return lastoff;
-+
-+		lastoff = offset;
-+	} while ((bh = bh->b_this_page) != head);
-+	return -ENOENT;
-+}
-+
-+/*
-+ * Seek for SEEK_DATA / SEEK_HOLE in the page cache.
-+ *
-+ * Within unwritten extents, the page cache determines which parts are holes
-+ * and which are data: unwritten and uptodate buffer heads count as data;
-+ * everything else counts as a hole.
-+ *
-+ * Returns the resulting offset on successs, and -ENOENT otherwise.
-+ */
-+loff_t
-+page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
-+			  int whence)
-+{
-+	pgoff_t index = offset >> PAGE_SHIFT;
-+	pgoff_t end = DIV_ROUND_UP(offset + length, PAGE_SIZE);
-+	loff_t lastoff = offset;
-+	struct pagevec pvec;
-+
-+	if (length <= 0)
-+		return -ENOENT;
-+
-+	pagevec_init(&pvec, 0);
-+
-+	do {
-+		unsigned want, nr_pages, i;
-+
-+		want = min_t(unsigned, end - index, PAGEVEC_SIZE);
-+		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index, want);
-+		if (nr_pages == 0)
-+			break;
-+
-+		for (i = 0; i < nr_pages; i++) {
-+			struct page *page = pvec.pages[i];
-+
-+			/*
-+			 * At this point, the page may be truncated or
-+			 * invalidated (changing page->mapping to NULL), or
-+			 * even swizzled back from swapper_space to tmpfs file
-+			 * mapping.  However, page->index will not change
-+			 * because we have a reference on the page.
-+                         *
-+			 * If current page offset is beyond where we've ended,
-+			 * we've found a hole.
-+                         */
-+			if (whence == SEEK_HOLE &&
-+			    lastoff < page_offset(page))
-+				goto check_range;
-+
-+			/* Searching done if the page index is out of range. */
-+			if (page->index >= end)
-+				goto not_found;
-+
-+			lock_page(page);
-+			if (likely(page->mapping == inode->i_mapping) &&
-+			    page_has_buffers(page)) {
-+				lastoff = page_seek_hole_data(page, lastoff, whence);
-+				if (lastoff >= 0) {
-+					unlock_page(page);
-+					goto check_range;
-+				}
-+			}
-+			unlock_page(page);
-+			lastoff = page_offset(page) + PAGE_SIZE;
-+		}
-+
-+		/* Searching done if fewer pages returned than wanted. */
-+		if (nr_pages < want)
-+			break;
-+
-+		index = pvec.pages[i - 1]->index + 1;
-+		pagevec_release(&pvec);
-+	} while (index < end);
-+
-+	/* When no page at lastoff and we are not done, we found a hole. */
-+	if (whence != SEEK_HOLE)
-+		goto not_found;
-+
-+check_range:
-+	if (lastoff < offset + length)
-+		goto out;
-+not_found:
-+	lastoff = -ENOENT;
-+out:
-+	pagevec_release(&pvec);
-+	return lastoff;
-+}
-+EXPORT_SYMBOL_GPL(page_cache_seek_hole_data);
-+
- void __init buffer_init(void)
- {
- 	unsigned long nrpages;
-diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
-index e0abeba..c8dae55 100644
---- a/include/linux/buffer_head.h
-+++ b/include/linux/buffer_head.h
-@@ -202,6 +202,8 @@ void write_boundary_block(struct block_device *bdev,
- 			sector_t bblock, unsigned blocksize);
- int bh_uptodate_or_lock(struct buffer_head *bh);
- int bh_submit_read(struct buffer_head *bh);
-+loff_t page_cache_seek_hole_data(struct inode *inode, loff_t offset,
-+				 loff_t length, int whence);
- 
- extern int buffer_heads_over_limit;
- 
+Are those conditions ever recoverable, such that a later fsync could
+succeed? IOW, could I do a remount or something such that the existing
+fds are left open and become usable again? 
+
+If so, then we really ought to advance the errseq_t in the file when we
+catch those cases as well. If we have to do that, then it probably makes
+sense to leave the ext4 patch as-is.
 -- 
-2.7.5
-
+Jeff Layton <jlayton@redhat.com>
