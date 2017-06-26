@@ -1,84 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6459 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751038AbdFZNkr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Jun 2017 09:40:47 -0400
-Date: Mon, 26 Jun 2017 15:40:24 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH v7 21/22] xfs: minimal conversion to errseq_t writeback
- error reporting
-Message-ID: <20170626134024.mhnzoz5mjfrzkekd@eorzea.usersys.redhat.com>
-References: <20170616193427.13955-1-jlayton@redhat.com>
- <20170616193427.13955-22-jlayton@redhat.com>
+Received: from mail-ua0-f175.google.com ([209.85.217.175]:35815 "EHLO
+        mail-ua0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751302AbdFZOLx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jun 2017 10:11:53 -0400
+Received: by mail-ua0-f175.google.com with SMTP id j53so1552260uaa.2
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Jun 2017 07:11:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170616193427.13955-22-jlayton@redhat.com>
+In-Reply-To: <20170626104716.GB23149@infradead.org>
+References: <1498224884-346-1-git-send-email-agruenba@redhat.com>
+ <1498224884-346-2-git-send-email-agruenba@redhat.com> <20170626104716.GB23149@infradead.org>
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Date: Mon, 26 Jun 2017 16:11:52 +0200
+Message-ID: <CAHc6FU4wSzZ8zswKmyfX5NOq3faHJPrmJxPXWKqAYau+ipE1FQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/6] vfs: Add iomap_seek_hole_data helper
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, cluster-devel <cluster-devel@redhat.com>, Jan Kara <jack@suse.cz>
 
-On Fri, Jun 16, 2017 at 03:34:26PM -0400, Jeff Layton wrote:
-> Just check and advance the data errseq_t in struct file before
-> before returning from fsync on normal files. Internal filemap_*
-> callers are left as-is.
-> 
+On Mon, Jun 26, 2017 at 12:47 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Fri, Jun 23, 2017 at 03:34:39PM +0200, Andreas Gruenbacher wrote:
+>> Filesystems can use this for implementing lseek SEEK_HOLE / SEEK_DATA
+>> support via iomap.
+>>
+>> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+>> ---
+>>  fs/iomap.c            | 89 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  include/linux/iomap.h |  3 ++
+>>  2 files changed, 92 insertions(+)
+>>
+>> diff --git a/fs/iomap.c b/fs/iomap.c
+>> index 4b10892..781f0a0 100644
+>> --- a/fs/iomap.c
+>> +++ b/fs/iomap.c
+>> @@ -584,6 +584,95 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+>>  }
+>>  EXPORT_SYMBOL_GPL(iomap_fiemap);
+>>
+>> +static loff_t
+>> +iomap_seek_hole_actor(struct inode *inode, loff_t offset, loff_t length,
+>> +                   void *data, struct iomap *iomap)
+>> +{
+>> +     if (iomap->type == IOMAP_HOLE)
+>> +             goto found;
+>> +     length = iomap->offset + iomap->length - offset;
+>
+> What is the problem with the passed in length value?
 
-Looks good.
+Yep, no need to recompute that.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+>> +     if (iomap->type != IOMAP_UNWRITTEN)
+>> +             return length;
+>> +     offset = page_cache_seek_hole_data(inode, offset, length, SEEK_HOLE);
+>> +     if (offset < 0)
+>> +             return length;
+>> +found:
+>> +     *(loff_t *)data = offset;
+>> +     return 0;
+>
+> What about using a switch statement?
+>
+>         switch (iomap->type) {
+>         case IOMAP_UNWRITTEN:
+>                 offset = page_cache_seek_hole_data(inode, offset, length,
+>                                 SEEK_HOLE);
+>                 if (offset < 0)
+>                         return length;
+>                 /*FALLTHRU*/
+>         case IOMAP_HOLE:
+>                 *(loff_t *)data = offset;
+>                 return 0;
+>         default:
+>                 return length;
+>         }
 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> ---
->  fs/xfs/xfs_file.c | 15 +++++++++++----
->  1 file changed, 11 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 5fb5a0958a14..bc3b1575e8db 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -134,7 +134,7 @@ xfs_file_fsync(
->  	struct inode		*inode = file->f_mapping->host;
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	struct xfs_mount	*mp = ip->i_mount;
-> -	int			error = 0;
-> +	int			error = 0, err2;
->  	int			log_flushed = 0;
->  	xfs_lsn_t		lsn = 0;
->  
-> @@ -142,10 +142,12 @@ xfs_file_fsync(
->  
->  	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
->  	if (error)
-> -		return error;
-> +		goto out;
->  
-> -	if (XFS_FORCED_SHUTDOWN(mp))
-> -		return -EIO;
-> +	if (XFS_FORCED_SHUTDOWN(mp)) {
-> +		error = -EIO;
-> +		goto out;
-> +	}
->  
->  	xfs_iflags_clear(ip, XFS_ITRUNCATED);
->  
-> @@ -197,6 +199,11 @@ xfs_file_fsync(
->  	    mp->m_logdev_targp == mp->m_ddev_targp)
->  		xfs_blkdev_issue_flush(mp->m_ddev_targp);
->  
-> +out:
-> +	err2 = filemap_report_wb_err(file);
-> +	if (!error)
-> +		error = err2;
-> +
->  	return error;
->  }
->  
-> -- 
-> 2.13.0
-> 
+Ok.
 
--- 
-Carlos
+>> +static loff_t
+>> +iomap_seek_data_actor(struct inode *inode, loff_t offset, loff_t length,
+>> +                   void *data, struct iomap *iomap)
+>> +{
+>> +     if (iomap->type != IOMAP_HOLE && iomap->type != IOMAP_UNWRITTEN)
+>> +             goto found;
+>> +     length = iomap->offset + iomap->length - offset;
+>> +     if (iomap->type != IOMAP_UNWRITTEN)
+>> +             return length;
+>> +     offset = page_cache_seek_hole_data(inode, offset, length, SEEK_DATA);
+>> +     if (offset < 0)
+>> +             return length;
+>> +found:
+>> +     *(loff_t *)data = offset;
+>> +     return 0;
+>
+>> +loff_t
+>> +iomap_seek_hole_data(struct inode *inode, loff_t offset,
+>> +                  int whence, const struct iomap_ops *ops)
+>> +{
+>> +     static loff_t (*actor)(struct inode *, loff_t, loff_t, void *,
+>> +                            struct iomap *);
+>
+> I wonder (but I'm not sure) if it would be simpler and easier to
+> understand to just have to different functions for SEEK_HOLE
+> vs SEEK_DATA here.
+
+Neither variant seems obviously better to me.
+
+Thanks,
+Andreas
