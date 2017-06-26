@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34286 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751392AbdFZPwj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Jun 2017 11:52:39 -0400
-Date: Mon, 26 Jun 2017 11:52:37 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:20194 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751574AbdFZPyy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jun 2017 11:54:54 -0400
+Date: Mon, 26 Jun 2017 08:54:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [PATCH] xfs: fix semicolon.cocci warnings
-Message-ID: <20170626155237.GA55060@bfoster.bfoster>
+Message-ID: <20170626155442.GF4733@birch.djwong.org>
 References: <201706262342.mc5rV25t%fengguang.wu@intel.com>
  <20170626155744.GA78760@lkp-sb04.lkp.intel.com>
 MIME-Version: 1.0
@@ -17,7 +17,7 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: kbuild test robot <fengguang.wu@intel.com>
-Cc: kbuild-all@01.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Brian Foster <bfoster@redhat.com>, kbuild-all@01.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
 On Mon, Jun 26, 2017 at 11:57:44PM +0800, kbuild test robot wrote:
 > fs/xfs/xfs_log.c:2092:38-39: Unneeded semicolon
@@ -30,10 +30,13 @@ On Mon, Jun 26, 2017 at 11:57:44PM +0800, kbuild test robot wrote:
 > Fixes: d4ca1d550d05 ("xfs: dump transaction usage details on log reservation overrun")
 > CC: Brian Foster <bfoster@redhat.com>
 > Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+
+Looks good, will test...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
 > 
 >  xfs_log.c |    2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
