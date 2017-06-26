@@ -1,352 +1,260 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53260 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53584 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751410AbdFZLKy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Jun 2017 07:10:54 -0400
-Date: Mon, 26 Jun 2017 07:10:53 -0400
+        id S1751410AbdFZLLA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Jun 2017 07:11:00 -0400
+Date: Mon, 26 Jun 2017 07:10:58 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/4] xfs: make errortag a per-mountpoint structure
-Message-ID: <20170626111050.GA54427@bfoster.bfoster>
+Subject: Re: [PATCH 2/4] xfs: expose errortag knobs via sysfs
+Message-ID: <20170626111056.GB54427@bfoster.bfoster>
 References: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
- <149823571523.31786.9698090244865978473.stgit@birch.djwong.org>
+ <149823572966.31786.4136322165995385683.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <149823571523.31786.9698090244865978473.stgit@birch.djwong.org>
+In-Reply-To: <149823572966.31786.4136322165995385683.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jun 23, 2017 at 09:35:15AM -0700, Darrick J. Wong wrote:
+On Fri, Jun 23, 2017 at 09:35:29AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Remove the xfs_etest structure in favor of a per-mountpoint structure.
-> This will give us the flexibility to set as many error injection points
-> as we want, and later enable us to set up sysfs knobs to set the trigger
-> frequency as we wish.  This comes at a cost of higher memory use, but
-> unti we hit 1024 injection points (we're at 29) or a lot of mounts this
-> shouldn't be a huge issue.
+> Creates a /sys/fs/xfs/$dev/errortag/ directory to control the errortag
+> values directly.  This enables us to control the randomness values,
+> rather than having to accept the defaults.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_error.c |  154 +++++++++++++++++++++++++++-------------------------
->  fs/xfs/xfs_error.h |   25 +++++---
->  fs/xfs/xfs_ioctl.c |    4 +
->  fs/xfs/xfs_mount.c |   10 +++
->  fs/xfs/xfs_mount.h |    7 ++
->  5 files changed, 111 insertions(+), 89 deletions(-)
+>  fs/xfs/xfs_error.c |  156 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_error.h |    1 
+>  fs/xfs/xfs_mount.h |    1 
+>  3 files changed, 157 insertions(+), 1 deletion(-)
 > 
 > 
 > diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> index ed7ee4e..52f75bc 100644
+> index 52f75bc..e2278af6 100644
 > --- a/fs/xfs/xfs_error.c
 > +++ b/fs/xfs/xfs_error.c
-> @@ -25,100 +25,106 @@
+> @@ -22,6 +22,7 @@
+>  #include "xfs_trans_resv.h"
+>  #include "xfs_mount.h"
+>  #include "xfs_error.h"
+> +#include "xfs_sysfs.h"
 >  
 >  #ifdef DEBUG
 >  
-> -int	xfs_etest[XFS_NUM_INJECT_ERROR];
-> -int64_t	xfs_etest_fsid[XFS_NUM_INJECT_ERROR];
-> -char *	xfs_etest_fsname[XFS_NUM_INJECT_ERROR];
-> -int	xfs_error_test_active;
-> +static unsigned int xfs_errortag_random_default[] = {
-> +	XFS_RANDOM_DEFAULT,
-> +	XFS_RANDOM_IFLUSH_1,
-> +	XFS_RANDOM_IFLUSH_2,
-> +	XFS_RANDOM_IFLUSH_3,
-> +	XFS_RANDOM_IFLUSH_4,
-> +	XFS_RANDOM_IFLUSH_5,
-> +	XFS_RANDOM_IFLUSH_6,
-> +	XFS_RANDOM_DA_READ_BUF,
-> +	XFS_RANDOM_BTREE_CHECK_LBLOCK,
-> +	XFS_RANDOM_BTREE_CHECK_SBLOCK,
-> +	XFS_RANDOM_ALLOC_READ_AGF,
-> +	XFS_RANDOM_IALLOC_READ_AGI,
-> +	XFS_RANDOM_ITOBP_INOTOBP,
-> +	XFS_RANDOM_IUNLINK,
-> +	XFS_RANDOM_IUNLINK_REMOVE,
-> +	XFS_RANDOM_DIR_INO_VALIDATE,
-> +	XFS_RANDOM_BULKSTAT_READ_CHUNK,
-> +	XFS_RANDOM_IODONE_IOERR,
-> +	XFS_RANDOM_STRATREAD_IOERR,
-> +	XFS_RANDOM_STRATCMPL_IOERR,
-> +	XFS_RANDOM_DIOWRITE_IOERR,
-> +	XFS_RANDOM_BMAPIFORMAT,
-> +	XFS_RANDOM_FREE_EXTENT,
-> +	XFS_RANDOM_RMAP_FINISH_ONE,
-> +	XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE,
-> +	XFS_RANDOM_REFCOUNT_FINISH_ONE,
-> +	XFS_RANDOM_BMAP_FINISH_ONE,
-> +	XFS_RANDOM_AG_RESV_CRITICAL,
+> @@ -56,6 +57,145 @@ static unsigned int xfs_errortag_random_default[] = {
+>  	XFS_RANDOM_AG_RESV_CRITICAL,
+>  };
+>  
+> +struct xfs_errortag_attr {
+> +	struct attribute	attr;
+> +	unsigned int		tag;
 > +};
->  
+> +
+> +static inline struct xfs_errortag_attr *
+> +to_attr(struct attribute *attr)
+> +{
+> +	return container_of(attr, struct xfs_errortag_attr, attr);
+> +}
+> +
+> +static inline struct xfs_mount *
+> +to_mp(struct kobject *kobject)
+> +{
+> +	struct xfs_kobj *kobj = to_kobj(kobject);
+> +
+> +	return container_of(kobj, struct xfs_mount, m_errortag_kobj);
+> +}
+> +
+> +STATIC ssize_t
+> +xfs_errortag_attr_store(
+> +	struct kobject		*kobject,
+> +	struct attribute	*attr,
+> +	const char		*buf,
+> +	size_t			count)
+> +{
+> +	struct xfs_mount	*mp = to_mp(kobject);
+> +	struct xfs_errortag_attr *xfs_attr = to_attr(attr);
+> +	int			ret;
+> +	unsigned int		val;
+> +
+> +	if (strcmp(buf, "default") == 0) {
+> +		val = xfs_errortag_random_default[xfs_attr->tag];
+> +	} else {
+> +		ret = kstrtouint(buf, 0, &val);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+> +	ret = xfs_errortag_set(mp, xfs_attr->tag, val);
+> +	if (ret)
+> +		return ret;
+> +	return count;
+> +}
+> +
+> +STATIC ssize_t
+> +xfs_errortag_attr_show(
+> +	struct kobject		*kobject,
+> +	struct attribute	*attr,
+> +	char			*buf)
+> +{
+> +	struct xfs_mount	*mp = to_mp(kobject);
+> +	struct xfs_errortag_attr *xfs_attr = to_attr(attr);
+> +
+> +	return snprintf(buf, PAGE_SIZE, "%u\n",
+> +			xfs_errortag_get(mp, xfs_attr->tag));
+> +}
+> +
+> +static const struct sysfs_ops xfs_errortag_sysfs_ops = {
+> +	.show = xfs_errortag_attr_show,
+> +	.store = xfs_errortag_attr_store,
+> +};
+> +
+> +#define XFS_ERRORTAG_ATTR_RW(_name, _tag) \
+> +static struct xfs_errortag_attr xfs_errortag_attr_##_name = {		\
+> +	.attr = {.name = __stringify(_name),				\
+> +		 .mode = VERIFY_OCTAL_PERMISSIONS(S_IWUSR | S_IRUGO) },	\
+> +	.tag	= (_tag),						\
+> +}
+> +
+> +#define XFS_ERRORTAG_ATTR_LIST(_name) &xfs_errortag_attr_##_name.attr
+> +
+> +XFS_ERRORTAG_ATTR_RW(noerror,		XFS_ERRTAG_NOERROR);
+> +XFS_ERRORTAG_ATTR_RW(iflush1,		XFS_ERRTAG_IFLUSH_1);
+> +XFS_ERRORTAG_ATTR_RW(iflush2,		XFS_ERRTAG_IFLUSH_2);
+> +XFS_ERRORTAG_ATTR_RW(iflush3,		XFS_ERRTAG_IFLUSH_3);
+> +XFS_ERRORTAG_ATTR_RW(iflush4,		XFS_ERRTAG_IFLUSH_4);
+> +XFS_ERRORTAG_ATTR_RW(iflush5,		XFS_ERRTAG_IFLUSH_5);
+> +XFS_ERRORTAG_ATTR_RW(iflush6,		XFS_ERRTAG_IFLUSH_6);
+> +XFS_ERRORTAG_ATTR_RW(dareadbuf,		XFS_ERRTAG_DA_READ_BUF);
+> +XFS_ERRORTAG_ATTR_RW(btree_chk_lblk,	XFS_ERRTAG_BTREE_CHECK_LBLOCK);
+> +XFS_ERRORTAG_ATTR_RW(btree_chk_sblk,	XFS_ERRTAG_BTREE_CHECK_SBLOCK);
+> +XFS_ERRORTAG_ATTR_RW(readagf,		XFS_ERRTAG_ALLOC_READ_AGF);
+> +XFS_ERRORTAG_ATTR_RW(readagi,		XFS_ERRTAG_IALLOC_READ_AGI);
+> +XFS_ERRORTAG_ATTR_RW(itobp,		XFS_ERRTAG_ITOBP_INOTOBP);
+> +XFS_ERRORTAG_ATTR_RW(iunlink,		XFS_ERRTAG_IUNLINK);
+> +XFS_ERRORTAG_ATTR_RW(iunlinkrm,		XFS_ERRTAG_IUNLINK_REMOVE);
+> +XFS_ERRORTAG_ATTR_RW(dirinovalid,	XFS_ERRTAG_DIR_INO_VALIDATE);
+> +XFS_ERRORTAG_ATTR_RW(bulkstat,		XFS_ERRTAG_BULKSTAT_READ_CHUNK);
+> +XFS_ERRORTAG_ATTR_RW(logiodone,		XFS_ERRTAG_IODONE_IOERR);
+> +XFS_ERRORTAG_ATTR_RW(stratread,		XFS_ERRTAG_STRATREAD_IOERR);
+> +XFS_ERRORTAG_ATTR_RW(stratcmpl,		XFS_ERRTAG_STRATCMPL_IOERR);
+> +XFS_ERRORTAG_ATTR_RW(diowrite,		XFS_ERRTAG_DIOWRITE_IOERR);
+> +XFS_ERRORTAG_ATTR_RW(bmapifmt,		XFS_ERRTAG_BMAPIFORMAT);
+> +XFS_ERRORTAG_ATTR_RW(free_extent,	XFS_ERRTAG_FREE_EXTENT);
+> +XFS_ERRORTAG_ATTR_RW(rmap_finish_one,	XFS_ERRTAG_RMAP_FINISH_ONE);
+> +XFS_ERRORTAG_ATTR_RW(refcount_continue_update,	XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE);
+> +XFS_ERRORTAG_ATTR_RW(refcount_finish_one,	XFS_ERRTAG_REFCOUNT_FINISH_ONE);
+> +XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
+> +XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
+> +
+> +static struct attribute *xfs_errortag_attrs[] = {
+> +	XFS_ERRORTAG_ATTR_LIST(noerror),
+> +	XFS_ERRORTAG_ATTR_LIST(iflush1),
+> +	XFS_ERRORTAG_ATTR_LIST(iflush2),
+> +	XFS_ERRORTAG_ATTR_LIST(iflush3),
+> +	XFS_ERRORTAG_ATTR_LIST(iflush4),
+> +	XFS_ERRORTAG_ATTR_LIST(iflush5),
+> +	XFS_ERRORTAG_ATTR_LIST(iflush6),
+> +	XFS_ERRORTAG_ATTR_LIST(dareadbuf),
+> +	XFS_ERRORTAG_ATTR_LIST(btree_chk_lblk),
+> +	XFS_ERRORTAG_ATTR_LIST(btree_chk_sblk),
+> +	XFS_ERRORTAG_ATTR_LIST(readagf),
+> +	XFS_ERRORTAG_ATTR_LIST(readagi),
+> +	XFS_ERRORTAG_ATTR_LIST(itobp),
+> +	XFS_ERRORTAG_ATTR_LIST(iunlink),
+> +	XFS_ERRORTAG_ATTR_LIST(iunlinkrm),
+> +	XFS_ERRORTAG_ATTR_LIST(dirinovalid),
+> +	XFS_ERRORTAG_ATTR_LIST(bulkstat),
+> +	XFS_ERRORTAG_ATTR_LIST(logiodone),
+> +	XFS_ERRORTAG_ATTR_LIST(stratread),
+> +	XFS_ERRORTAG_ATTR_LIST(stratcmpl),
+> +	XFS_ERRORTAG_ATTR_LIST(diowrite),
+> +	XFS_ERRORTAG_ATTR_LIST(bmapifmt),
+> +	XFS_ERRORTAG_ATTR_LIST(free_extent),
+> +	XFS_ERRORTAG_ATTR_LIST(rmap_finish_one),
+> +	XFS_ERRORTAG_ATTR_LIST(refcount_continue_update),
+> +	XFS_ERRORTAG_ATTR_LIST(refcount_finish_one),
+> +	XFS_ERRORTAG_ATTR_LIST(bmap_finish_one),
+> +	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
+> +	NULL,
+> +};
+> +
+> +struct kobj_type xfs_errortag_ktype = {
+> +	.release = xfs_sysfs_release,
+> +	.sysfs_ops = &xfs_errortag_sysfs_ops,
+> +	.default_attrs = xfs_errortag_attrs,
+> +};
+> +
 >  int
-> -xfs_error_test(int error_tag, int *fsidp, char *expression,
-> -	       int line, char *file, unsigned long randfactor)
-> +xfs_errortag_init(
-> +	struct xfs_mount	*mp)
->  {
-> -	int i;
-> -	int64_t fsid;
-> +	mp->m_errortag = kmem_zalloc(sizeof(unsigned int) * XFS_ERRTAG_MAX,
-> +			KM_SLEEP | KM_MAYFAIL);
-> +	if (!mp->m_errortag)
-> +		return -ENOMEM;
-> +	return 0;
-> +}
->  
-> -	if (prandom_u32() % randfactor)
-> -		return 0;
-> +void
-> +xfs_errortag_del(
-> +	struct xfs_mount	*mp)
-> +{
-> +	kmem_free(mp->m_errortag);
-> +}
->  
-> -	memcpy(&fsid, fsidp, sizeof(xfs_fsid_t));
-> +bool
-> +xfs_errortag_test(
-> +	struct xfs_mount	*mp,
-> +	const char		*expression,
-> +	const char		*file,
-> +	int			line,
-> +	unsigned int		error_tag)
-> +{
-> +	unsigned int		randfactor;
->  
-> -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
-> -		if (xfs_etest[i] == error_tag && xfs_etest_fsid[i] == fsid) {
-> -			xfs_warn(NULL,
-> -	"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
-> -				expression, file, line, xfs_etest_fsname[i]);
-> -			return 1;
-> -		}
-> -	}
-> +	ASSERT(error_tag < XFS_ERRTAG_MAX);
-> +	randfactor = mp->m_errortag[error_tag];
-> +	if (!randfactor || prandom_u32() % randfactor)
-> +		return false;
->  
+>  xfs_errortag_init(
+>  	struct xfs_mount	*mp)
+> @@ -64,13 +204,16 @@ xfs_errortag_init(
+>  			KM_SLEEP | KM_MAYFAIL);
+>  	if (!mp->m_errortag)
+>  		return -ENOMEM;
 > -	return 0;
-> +	xfs_warn_ratelimited(mp,
-> +"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
-> +			expression, file, line, mp->m_fsname);
-> +	return true;
+> +
+> +	return xfs_sysfs_init(&mp->m_errortag_kobj, &xfs_errortag_ktype,
+> +			       &mp->m_kobj, "errortag");
 >  }
 >  
->  int
-> -xfs_errortag_add(unsigned int error_tag, xfs_mount_t *mp)
-> +xfs_errortag_set(
-> +	struct xfs_mount	*mp,
-> +	unsigned int		error_tag,
-> +	unsigned int		tag_value)
+>  void
+>  xfs_errortag_del(
+>  	struct xfs_mount	*mp)
 >  {
-> -	int i;
-> -	int len;
-> -	int64_t fsid;
-> -
->  	if (error_tag >= XFS_ERRTAG_MAX)
->  		return -EINVAL;
+> +	xfs_sysfs_del(&mp->m_errortag_kobj);
+>  	kmem_free(mp->m_errortag);
+>  }
 >  
-> -	memcpy(&fsid, mp->m_fixedfsid, sizeof(xfs_fsid_t));
-> -
-> -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
-> -		if (xfs_etest_fsid[i] == fsid && xfs_etest[i] == error_tag) {
-> -			xfs_warn(mp, "error tag #%d on", error_tag);
-> -			return 0;
-> -		}
-> -	}
-> -
-> -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
-> -		if (xfs_etest[i] == 0) {
-> -			xfs_warn(mp, "Turned on XFS error tag #%d",
-> -				error_tag);
-> -			xfs_etest[i] = error_tag;
-> -			xfs_etest_fsid[i] = fsid;
-> -			len = strlen(mp->m_fsname);
-> -			xfs_etest_fsname[i] = kmem_alloc(len + 1, KM_SLEEP);
-> -			strcpy(xfs_etest_fsname[i], mp->m_fsname);
-> -			xfs_error_test_active++;
-> -			return 0;
-> -		}
-> -	}
-> -
-> -	xfs_warn(mp, "error tag overflow, too many turned on");
-> -
-> -	return 1;
-> +	mp->m_errortag[error_tag] = tag_value;
-> +	return 0;
+> @@ -96,6 +239,17 @@ xfs_errortag_test(
 >  }
 >  
 >  int
-> -xfs_errortag_clearall(xfs_mount_t *mp, int loud)
-> +xfs_errortag_add(
+> +xfs_errortag_get(
 > +	struct xfs_mount	*mp,
 > +	unsigned int		error_tag)
->  {
-> -	int64_t fsid;
-> -	int cleared = 0;
-> -	int i;
-> -
-> -	memcpy(&fsid, mp->m_fixedfsid, sizeof(xfs_fsid_t));
-> -
-> -
-> -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++) {
-> -		if ((fsid == 0LL || xfs_etest_fsid[i] == fsid) &&
-> -		     xfs_etest[i] != 0) {
-> -			cleared = 1;
-> -			xfs_warn(mp, "Clearing XFS error tag #%d",
-> -				xfs_etest[i]);
-> -			xfs_etest[i] = 0;
-> -			xfs_etest_fsid[i] = 0LL;
-> -			kmem_free(xfs_etest_fsname[i]);
-> -			xfs_etest_fsname[i] = NULL;
-> -			xfs_error_test_active--;
-> -		}
-> -	}
+> +{
 > +	if (error_tag >= XFS_ERRTAG_MAX)
 > +		return -EINVAL;
->  
-> -	if (loud || cleared)
-> -		xfs_warn(mp, "Cleared all XFS error tags for filesystem");
-> +	return xfs_errortag_set(mp, error_tag,
-> +			xfs_errortag_random_default[error_tag]);
+> +
+> +	return mp->m_errortag[error_tag];
 > +}
->  
+> +
 > +int
-> +xfs_errortag_clearall(
-> +	struct xfs_mount	*mp)
-> +{
-> +	memset(mp->m_errortag, 0, sizeof(unsigned int) * XFS_ERRTAG_MAX);
->  	return 0;
->  }
->  #endif /* DEBUG */
+>  xfs_errortag_set(
+>  	struct xfs_mount	*mp,
+>  	unsigned int		error_tag,
 > diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-> index 05f8666..b4316d3 100644
+> index b4316d3..8915bde 100644
 > --- a/fs/xfs/xfs_error.h
 > +++ b/fs/xfs/xfs_error.h
-> @@ -131,21 +131,24 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
->  #define XFS_RANDOM_AG_RESV_CRITICAL			4
->  
->  #ifdef DEBUG
-> -extern int xfs_error_test_active;
-> -extern int xfs_error_test(int, int *, char *, int, char *, unsigned long);
-> -
-> -#define	XFS_NUM_INJECT_ERROR				10
-> +extern int xfs_errortag_init(struct xfs_mount *mp);
-> +extern void xfs_errortag_del(struct xfs_mount *mp);
-> +extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
-> +		const char *file, int line, unsigned int error_tag);
+> @@ -138,6 +138,7 @@ extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
 >  #define XFS_TEST_ERROR(expr, mp, tag, rf)		\
-> -	((expr) || (xfs_error_test_active && \
-> -	 xfs_error_test((tag), (mp)->m_fixedfsid, "expr", __LINE__, __FILE__, \
-> -			(rf))))
-> +	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
+>  	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
 >  
-> -extern int xfs_errortag_add(unsigned int error_tag, struct xfs_mount *mp);
-> -extern int xfs_errortag_clearall(struct xfs_mount *mp, int loud);
-> +extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
-> +		unsigned int tag_value);
-> +extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
-> +extern int xfs_errortag_clearall(struct xfs_mount *mp);
->  #else
-> +#define xfs_errortag_init(mp)			(0)
-> +#define xfs_errortag_del(mp)
->  #define XFS_TEST_ERROR(expr, mp, tag, rf)	(expr)
-> -#define xfs_errortag_add(tag, mp)		(ENOSYS)
-> -#define xfs_errortag_clearall(mp, loud)		(ENOSYS)
-> +#define xfs_errortag_set(mp, tag, val)		(ENOSYS)
-> +#define xfs_errortag_add(mp, tag)		(ENOSYS)
-> +#define xfs_errortag_clearall(mp)		(ENOSYS)
->  #endif /* DEBUG */
->  
->  /*
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 8ffe4ea..9c0c7a9 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -2037,14 +2037,14 @@ xfs_file_ioctl(
->  		if (copy_from_user(&in, arg, sizeof(in)))
->  			return -EFAULT;
->  
-> -		return xfs_errortag_add(in.errtag, mp);
-> +		return xfs_errortag_add(mp, in.errtag);
->  	}
->  
->  	case XFS_IOC_ERROR_CLEARALL:
->  		if (!capable(CAP_SYS_ADMIN))
->  			return -EPERM;
->  
-> -		return xfs_errortag_clearall(mp, 1);
-> +		return xfs_errortag_clearall(mp);
->  
->  	case XFS_IOC_FREE_EOFBLOCKS: {
->  		struct xfs_fs_eofblocks eofb;
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index cc6789d..1a98c35 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -720,10 +720,13 @@ xfs_mountfs(
->  	if (error)
->  		goto out_del_stats;
->  
-> +	error = xfs_errortag_init(mp);
-> +	if (error)
-> +		goto out_remove_error_sysfs;
->  
->  	error = xfs_uuid_mount(mp);
->  	if (error)
-> -		goto out_remove_error_sysfs;
-> +		goto out_remove_errortag;
->  
->  	/*
->  	 * Set the minimum read and write sizes
-> @@ -1042,6 +1045,8 @@ xfs_mountfs(
->  	xfs_da_unmount(mp);
->   out_remove_uuid:
->  	xfs_uuid_unmount(mp);
-> + out_remove_errortag:
-> +	xfs_errortag_del(mp);
->   out_remove_error_sysfs:
->  	xfs_error_sysfs_del(mp);
->   out_del_stats:
-> @@ -1145,10 +1150,11 @@ xfs_unmountfs(
->  	xfs_uuid_unmount(mp);
->  
->  #if defined(DEBUG)
-> -	xfs_errortag_clearall(mp, 0);
-> +	xfs_errortag_clearall(mp);
->  #endif
->  	xfs_free_perag(mp);
->  
-> +	xfs_errortag_del(mp);
->  	xfs_error_sysfs_del(mp);
->  	xfs_sysfs_del(&mp->m_stats.xs_kobj);
->  	xfs_sysfs_del(&mp->m_kobj);
+> +extern int xfs_errortag_get(struct xfs_mount *mp, unsigned int error_tag);
+>  extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
+>  		unsigned int tag_value);
+>  extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
 > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 305d953..e002ac5 100644
+> index e002ac5..931e9fc 100644
 > --- a/fs/xfs/xfs_mount.h
 > +++ b/fs/xfs/xfs_mount.h
-> @@ -199,6 +199,13 @@ typedef struct xfs_mount {
->  	bool			m_fail_unmount;
->  #ifdef DEBUG
+> @@ -204,6 +204,7 @@ typedef struct xfs_mount {
+>  	 * error triggers.  1 = always, 2 = half the time, etc.
+>  	 */
+>  	unsigned int		*m_errortag;
+> +	struct xfs_kobj		m_errortag_kobj;
+>  
 >  	/*
-> +	 * Frequency with which errors are injected.  Replaces xfs_etest; the
-> +	 * value stored in here is the inverse of the frequency with which the
-> +	 * error triggers.  1 = always, 2 = half the time, etc.
-> +	 */
-> +	unsigned int		*m_errortag;
-> +
-> +	/*
 >  	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
->  	 * block killing in the event of failed writes. When enabled, all
->  	 * buffered writes are silenty dropped and handled as if they failed.
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
