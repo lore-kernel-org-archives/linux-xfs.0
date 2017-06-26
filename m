@@ -1,82 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.jonas-server.de ([185.53.128.64]:60381 "EHLO
-        mail.jonas-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751897AbdFSKRi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Jun 2017 06:17:38 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:17343 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751092AbdFZGEv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jun 2017 02:04:51 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v5Q64oPS007166
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Jun 2017 06:04:50 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v5Q64nok011030
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Jun 2017 06:04:50 GMT
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v5Q64lVL018619
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Jun 2017 06:04:48 GMT
+Date: Sun, 25 Jun 2017 23:04:46 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 15/13] xfs: grab dquots without taking the ilock
+Message-ID: <20170626060446.GB4733@birch.djwong.org>
+References: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date: Mon, 19 Jun 2017 12:17:25 +0200
-From: list@jonas-server.de
-Subject: Re: XFS Calltraces by using XFS with Ceph
-In-Reply-To: <20170616174646.GD5421@birch.djwong.org>
-References: <ff5af7a48b502752faac6f2bbc1c3bb7@jonas-server.de>
- <20170614120829.GA65212@bfoster.bfoster>
- <b447cdcdc5a7278c6a9cc46627e22c94@jonas-server.de>
- <20170614140732.GA857@bfoster.bfoster>
- <20170614155513.GQ4530@birch.djwong.org>
- <34ddf391569ed02b85a59eff856088ab@jonas-server.de>
- <20170615192009.18ddd3bc@harpe.intellique.com>
- <7c00729f5554099fcf5eae65ee1cb4a0@jonas-server.de>
- <20170616174646.GD5421@birch.djwong.org>
-Message-ID: <82ba16f5a8bec542ec56c1d4b7fe473e@jonas-server.de>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <149643863965.23065.10505493683913299340.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Emmanuel Florac <eflorac@intellique.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-xfs-owner@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Am 2017-06-16 19:46, schrieb Darrick J. Wong:
-> On Fri, Jun 16, 2017 at 07:37:11AM +0200, list@jonas-server.de wrote:
->> Am 2017-06-15 19:20, schrieb Emmanuel Florac:
->> >Le Thu, 15 Jun 2017 07:55:12 +0200
->> >list@jonas-server.de écrivait:
->> >
->> >>> Looking at the new Elixir[1], it looks like we're trying to deref
->> >>> ((*bpp)->b_addr)->magic, so that might explain the crash you see.
->> >>>
->> >>> --D
->> >>>
->> >>> [1]
->> >>> http://elixir.free-electrons.com/linux/v4.4.72/source/fs/xfs/libxfs/xfs_da_btree.c#L270
->> >>>
->> >>>>
->> >
->> >Indeed that matches exactly the crash Darrick mentioned. Looks like you
->> >need either a special hand-patched kernel... or wait for an official
->> >fix for this one :/
->> 
->> When will a fix normally be in the ubuntu kernel? I need to have a 
->> stable
->> distribution kernel, I can not install a patched version.
-> 
-> Like Emmanuel said, first a fix has to go upstream, then it can go to 
-> the
-> 4.4 stable kernel, and then it'll probably end up in the Ubuntu kernel.
-> 
-> Can you post a metadump of the xfs filesystem somewhere for further
-> analysis?  I'm pretty sure it's the same problem reported by David Shaw
-> on this list a couple of weeks ago.  Since you can't run one-off test
-> kernels, send us a metadump for recreation in a lab is the only other
-> way to figure out if the fix works.
+Add a new dqget flag that grabs the dquot without taking the ilock.
+This will be used by the scrubber (which will have already grabbed
+the ilock) to perform basic sanity checking of the quota data.
 
-So it is hard for me to run tests with untested kernels as the system is 
-already
-used in production. I've created a metadump from the xfs filesystem and
-uploaded it:
-https://transfer.sh/XdlZ5/xfs_metadump.gz
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_quota_defs.h |    2 ++
+ fs/xfs/xfs_dquot.c             |   11 +++++++----
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
-I hope it helps you trigger the bug during your tests.
-
-> 
-> (And yes, I /do/ have a lightly tested fix which I'm about to send 
-> out.)
-> 
-> --D
-> 
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" 
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+index d69c772..2834574 100644
+--- a/fs/xfs/libxfs/xfs_quota_defs.h
++++ b/fs/xfs/libxfs/xfs_quota_defs.h
+@@ -136,6 +136,8 @@ typedef uint16_t	xfs_qwarncnt_t;
+  */
+ #define XFS_QMOPT_INHERIT	0x1000000
+ 
++#define XFS_QMOPT_NOLOCK	0x2000000 /* don't ilock during dqget */
++
+ /*
+  * flags to xfs_trans_mod_dquot.
+  */
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index e57c6cc..3519efc 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -472,18 +472,20 @@ xfs_qm_dqtobp(
+ 	struct xfs_mount	*mp = dqp->q_mount;
+ 	xfs_dqid_t		id = be32_to_cpu(dqp->q_core.d_id);
+ 	struct xfs_trans	*tp = (tpp ? *tpp : NULL);
+-	uint			lock_mode;
++	uint			lock_mode = 0;
+ 
+ 	quotip = xfs_quota_inode(dqp->q_mount, dqp->dq_flags);
+ 	dqp->q_fileoffset = (xfs_fileoff_t)id / mp->m_quotainfo->qi_dqperchunk;
+ 
+-	lock_mode = xfs_ilock_data_map_shared(quotip);
++	if (!(flags & XFS_QMOPT_NOLOCK))
++		lock_mode = xfs_ilock_data_map_shared(quotip);
+ 	if (!xfs_this_quota_on(dqp->q_mount, dqp->dq_flags)) {
+ 		/*
+ 		 * Return if this type of quotas is turned off while we
+ 		 * didn't have the quota inode lock.
+ 		 */
+-		xfs_iunlock(quotip, lock_mode);
++		if (lock_mode)
++			xfs_iunlock(quotip, lock_mode);
+ 		return -ESRCH;
+ 	}
+ 
+@@ -493,7 +495,8 @@ xfs_qm_dqtobp(
+ 	error = xfs_bmapi_read(quotip, dqp->q_fileoffset,
+ 			       XFS_DQUOT_CLUSTER_SIZE_FSB, &map, &nmaps, 0);
+ 
+-	xfs_iunlock(quotip, lock_mode);
++	if (lock_mode)
++		xfs_iunlock(quotip, lock_mode);
+ 	if (error)
+ 		return error;
+ 
