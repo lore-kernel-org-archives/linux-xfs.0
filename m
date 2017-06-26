@@ -1,174 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47016 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751723AbdF1SmV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Jun 2017 14:42:21 -0400
-Date: Wed, 28 Jun 2017 13:42:18 -0500
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH] xfs_db: improve argument naming in set_cur and
- set_iocur_type
-Message-ID: <20170628184218.GA24893@redhat.com>
-References: <20170628150913.15934-1-billodo@redhat.com>
- <38019898-7c12-428e-3760-dd0cbbf397b4@sandeen.net>
+Received: from userp1040.oracle.com ([156.151.31.81]:35875 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752068AbdFZPXf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jun 2017 11:23:35 -0400
+Date: Mon, 26 Jun 2017 08:22:41 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v7 21/22] xfs: minimal conversion to errseq_t writeback
+ error reporting
+Message-ID: <20170626152241.GC4733@birch.djwong.org>
+References: <20170616193427.13955-1-jlayton@redhat.com>
+ <20170616193427.13955-22-jlayton@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <38019898-7c12-428e-3760-dd0cbbf397b4@sandeen.net>
+In-Reply-To: <20170616193427.13955-22-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Jeff Layton <jlayton@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-On Wed, Jun 28, 2017 at 01:38:35PM -0500, Eric Sandeen wrote:
-> On 6/28/17 10:09 AM, Bill O'Donnell wrote:
-> > In set_cur and set_iocur_type, the current naming for arguments
-> > type, block number, and length are t, d, and c, respectively.
-> > Replace these with more intuitive and descriptive names:
-> > type, blknum, and len. Additionally remove extra blank line
-> > in io.c.
-> > 
-> > Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+On Fri, Jun 16, 2017 at 03:34:26PM -0400, Jeff Layton wrote:
+> Just check and advance the data errseq_t in struct file before
+> before returning from fsync on normal files. Internal filemap_*
+> callers are left as-is.
 > 
-> Could you resend this, rebased on top of the patch you just sent
-> for set_iocur_type() please?
+> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> ---
+>  fs/xfs/xfs_file.c | 15 +++++++++++----
+>  1 file changed, 11 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 5fb5a0958a14..bc3b1575e8db 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -134,7 +134,7 @@ xfs_file_fsync(
+>  	struct inode		*inode = file->f_mapping->host;
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> -	int			error = 0;
+> +	int			error = 0, err2;
+>  	int			log_flushed = 0;
+>  	xfs_lsn_t		lsn = 0;
+>  
+> @@ -142,10 +142,12 @@ xfs_file_fsync(
+>  
+>  	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
+>  	if (error)
+> -		return error;
+> +		goto out;
+>  
+> -	if (XFS_FORCED_SHUTDOWN(mp))
+> -		return -EIO;
+> +	if (XFS_FORCED_SHUTDOWN(mp)) {
+> +		error = -EIO;
+> +		goto out;
+> +	}
+>  
+>  	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+>  
+> @@ -197,6 +199,11 @@ xfs_file_fsync(
+>  	    mp->m_logdev_targp == mp->m_ddev_targp)
+>  		xfs_blkdev_issue_flush(mp->m_ddev_targp);
+>  
+> +out:
+> +	err2 = filemap_report_wb_err(file);
 
-Yes, I'll do that.
-Thanks-
-Bill
+Could we have a comment here to remind anyone reading the code a year
+from now that filemap_report_wb_err has side effects?  Pre-coffee me was
+wondering why we'd bother calling filemap_report_wb_err in the
+XFS_FORCED_SHUTDOWN case, then remembered that it touches data
+structures.
 
+The first sentence of the commit message (really, the word 'advance')
+added as a comment was adequate to remind me of the side effects.
+
+Once that's added,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> +	if (!error)
+> +		error = err2;
+> +
+>  	return error;
+>  }
+>  
+> -- 
+> 2.13.0
 > 
-> (also: watch out for long lines ...)
-> 
-> That'll give you a chance to change the type pointed out earlier,
-> as well.
-> 
-> Thanks,
-> -Eric
-> 
-> > ---
-> >  db/io.c | 31 +++++++++++++++----------------
-> >  db/io.h |  6 +++---
-> >  2 files changed, 18 insertions(+), 19 deletions(-)
-> > 
-> > diff --git a/db/io.c b/db/io.c
-> > index 9918a51d..45cbf3be 100644
-> > --- a/db/io.c
-> > +++ b/db/io.c
-> > @@ -535,9 +535,9 @@ write_cur(void)
-> >  
-> >  void
-> >  set_cur(
-> > -	const typ_t	*t,
-> > -	__int64_t	d,
-> > -	int		c,
-> > +	const typ_t	*type,
-> > +	__int64_t	blknum,
-> > +	int		len,
-> >  	int		ring_flag,
-> >  	bbmap_t		*bbmap)
-> >  {
-> > @@ -545,14 +545,13 @@ set_cur(
-> >  	xfs_ino_t	dirino;
-> >  	xfs_ino_t	ino;
-> >  	__uint16_t	mode;
-> > -	const struct xfs_buf_ops *ops = t ? t->bops : NULL;
-> > +	const struct xfs_buf_ops *ops = type ? type->bops : NULL;
-> >  
-> >  	if (iocur_sp < 0) {
-> >  		dbprintf(_("set_cur no stack element to set\n"));
-> >  		return;
-> >  	}
-> >  
-> > -
-> >  	ino = iocur_top->ino;
-> >  	dirino = iocur_top->dirino;
-> >  	mode = iocur_top->mode;
-> > @@ -562,7 +561,7 @@ set_cur(
-> >  	if (bbmap) {
-> >  #ifdef DEBUG_BBMAP
-> >  		int i;
-> > -		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
-> > +		printf(_("xfs_db got a bbmap for %lld\n"), (long long)blknum);
-> >  		printf(_("\tblock map"));
-> >  		for (i = 0; i < bbmap->nmaps; i++)
-> >  			printf(" %lld:%d", (long long)bbmap->b[i].bm_bn,
-> > @@ -576,7 +575,7 @@ set_cur(
-> >  		bp = libxfs_readbuf_map(mp->m_ddev_targp, bbmap->b,
-> >  					bbmap->nmaps, 0, ops);
-> >  	} else {
-> > -		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, ops);
-> > +		bp = libxfs_readbuf(mp->m_ddev_targp, blknum, len, 0, ops);
-> >  		iocur_top->bbmap = NULL;
-> >  	}
-> >  
-> > @@ -592,13 +591,13 @@ set_cur(
-> >  	if (!ops)
-> >  		bp->b_flags |= LIBXFS_B_UNCHECKED;
-> >  
-> > -	iocur_top->bb = d;
-> > -	iocur_top->blen = c;
-> > +	iocur_top->bb = blknum;
-> > +	iocur_top->blen = len;
-> >  	iocur_top->boff = 0;
-> >  	iocur_top->data = iocur_top->buf;
-> > -	iocur_top->len = BBTOB(c);
-> > -	iocur_top->off = d << BBSHIFT;
-> > -	iocur_top->typ = cur_typ = t;
-> > +	iocur_top->len = BBTOB(len);
-> > +	iocur_top->off = blknum << BBSHIFT;
-> > +	iocur_top->typ = cur_typ = type;
-> >  	iocur_top->ino = ino;
-> >  	iocur_top->dirino = dirino;
-> >  	iocur_top->mode = mode;
-> > @@ -612,16 +611,16 @@ set_cur(
-> >  
-> >  void
-> >  set_iocur_type(
-> > -	const typ_t	*t)
-> > +	const typ_t	*type)
-> >  {
-> >  	struct xfs_buf	*bp = iocur_top->bp;
-> >  
-> > -	iocur_top->typ = t;
-> > +	iocur_top->typ = type;
-> >  
-> >  	/* verify the buffer if the type has one. */
-> >  	if (!bp)
-> >  		return;
-> > -	if (!t->bops) {
-> > +	if (!type->bops) {
-> >  		bp->b_ops = NULL;
-> >  		bp->b_flags |= LIBXFS_B_UNCHECKED;
-> >  		return;
-> > @@ -629,7 +628,7 @@ set_iocur_type(
-> >  	if (!(bp->b_flags & LIBXFS_B_UPTODATE))
-> >  		return;
-> >  	bp->b_error = 0;
-> > -	bp->b_ops = t->bops;
-> > +	bp->b_ops = type->bops;
-> >  	bp->b_ops->verify_read(bp);
-> >  	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
-> >  }
-> > diff --git a/db/io.h b/db/io.h
-> > index b415b82d..ebf51f1d 100644
-> > --- a/db/io.h
-> > +++ b/db/io.h
-> > @@ -59,10 +59,10 @@ extern void	print_iocur(char *tag, iocur_t *ioc);
-> >  extern void	push_cur(void);
-> >  extern int	read_buf(__int64_t daddr, int count, void *bufp);
-> >  extern void     write_cur(void);
-> > -extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
-> > -			bbmap_t *bbmap);
-> > +extern void	set_cur(const struct typ *type, __int64_t blknum,
-> > +			int len, int ring_add, bbmap_t *bbmap);
-> >  extern void     ring_add(void);
-> > -extern void	set_iocur_type(const struct typ *t);
-> > +extern void	set_iocur_type(const struct typ *type);
-> >  extern void	xfs_dummy_verify(struct xfs_buf *bp);
-> >  extern void	xfs_verify_recalc_inode_crc(struct xfs_buf *bp);
-> >  extern void	xfs_verify_recalc_dquot_crc(struct xfs_buf *bp);
-> > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
