@@ -1,39 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from walrus.jabberwocky.com ([173.9.29.57]:53521 "EHLO
-        mail.jabberwocky.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751101AbdFTNGy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2017 09:06:54 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [PATCH] xfs: don't crash on unexpected holes in dir/attr btrees
-From: David Shaw <dshaw@jabberwocky.com>
-In-Reply-To: <20170616175337.GE5421@birch.djwong.org>
-Date: Tue, 20 Jun 2017 09:01:11 -0400
-Content-Transfer-Encoding: 8BIT
-Message-Id: <8076750C-88B9-4E8E-BAFE-332222BCD7C7@jabberwocky.com>
-References: <20170616175337.GE5421@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34570 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750799AbdFZOZX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Jun 2017 10:25:23 -0400
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v3 0/5] lseek SEEK_HOLE / SEEK_DATA fix and switch to iomap
+Date: Mon, 26 Jun 2017 16:25:13 +0200
+Message-Id: <1498487118-6564-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: list@jonas-server.de, Emmanuel Florac <eflorac@intellique.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Jun 16, 2017, at 1:53 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> 
-> Hi all,
-> 
-> So I /think/ the xfs_attr_inactive crashes that both of you have been
-> seeing are a result of XFS assuming that there aren't ever any mapping
-> holes in the extended attribute fork and crashing when it tries to
-> grab a buffer for the hole and fails to notice that holes don't have
-> buffers.  This lightly tested patch gets rid of /that/ problem.
-> 
-> So, if you're willing, can you try this out and see if the crashes go
-> away?  Granted, this might only enable us to lurch on whatever's next...
+Here is an updated version of the lseek and iomap patches.  Changes:
 
-I can give this a try.
+ * Some cleanups to iomap_seek_{hole,data}_actor.
 
-Now that you have an idea of what caused the issue, is there some way to (easily or not) reproduce it, ideally in userspace?  Part of the problem we're having is that we can't reproduce it on a test machine so are forced to wait for it to happen in the field under load, where it inconveniences users.
+ * GFS2 patches omitted for now; those can be discussed later.
 
-David
+ * Per request, lseek and iomap patches posted in a single patch queue.
+
+Thanks,
+Andreas
+
+Andreas Gruenbacher (5):
+  vfs: Add page_cache_seek_hole_data helper
+  ext4: Switch to page_cache_seek_hole_data
+  xfs: Switch to page_cache_seek_hole_data
+  vfs: Add iomap_seek_hole_data helper
+  xfs: Switch to iomap for SEEK_HOLE / SEEK_DATA
+
+ fs/buffer.c                 | 125 +++++++++++++++++++++++++
+ fs/ext4/file.c              | 144 +++--------------------------
+ fs/iomap.c                  |  91 ++++++++++++++++++
+ fs/xfs/xfs_file.c           | 218 +++-----------------------------------------
+ include/linux/buffer_head.h |   2 +
+ include/linux/iomap.h       |   3 +
+ 6 files changed, 248 insertions(+), 335 deletions(-)
+
+-- 
+2.7.5
 
