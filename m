@@ -1,100 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47092 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751353AbdFZKrQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jun 2017 06:47:16 -0400
-Date: Mon, 26 Jun 2017 03:47:16 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 1/6] vfs: Add iomap_seek_hole_data helper
-Message-ID: <20170626104716.GB23149@infradead.org>
-References: <1498224884-346-1-git-send-email-agruenba@redhat.com>
- <1498224884-346-2-git-send-email-agruenba@redhat.com>
+Received: from mail-ua0-f180.google.com ([209.85.217.180]:35644 "EHLO
+        mail-ua0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751387AbdFZKva (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jun 2017 06:51:30 -0400
+Received: by mail-ua0-f180.google.com with SMTP id j53so64965363uaa.2
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Jun 2017 03:51:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1498224884-346-2-git-send-email-agruenba@redhat.com>
+In-Reply-To: <20170626104156.GA23149@infradead.org>
+References: <1498177173-30798-1-git-send-email-agruenba@redhat.com> <20170626104156.GA23149@infradead.org>
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Date: Mon, 26 Jun 2017 12:51:29 +0200
+Message-ID: <CAHc6FU4FdeceDTZHDN4NtH2oA2Yq-XcmAceVaSJY3y2g40-w0g@mail.gmail.com>
+Subject: Re: [PATCH 1/3] vfs: Add page_cache_seek_hole_data helper
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, cluster-devel@redhat.com, Jan Kara <jack@suse.cz>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>
 
-On Fri, Jun 23, 2017 at 03:34:39PM +0200, Andreas Gruenbacher wrote:
-> Filesystems can use this for implementing lseek SEEK_HOLE / SEEK_DATA
-> support via iomap.
-> 
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-> ---
->  fs/iomap.c            | 89 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/iomap.h |  3 ++
->  2 files changed, 92 insertions(+)
-> 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 4b10892..781f0a0 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -584,6 +584,95 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
->  }
->  EXPORT_SYMBOL_GPL(iomap_fiemap);
->  
-> +static loff_t
-> +iomap_seek_hole_actor(struct inode *inode, loff_t offset, loff_t length,
-> +		      void *data, struct iomap *iomap)
-> +{
-> +	if (iomap->type == IOMAP_HOLE)
-> +		goto found;
-> +	length = iomap->offset + iomap->length - offset;
+On Mon, Jun 26, 2017 at 12:41 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Fri, Jun 23, 2017 at 02:19:31AM +0200, Andreas Gruenbacher wrote:
+>> Both ext4 and xfs implement seeking for the next hole or piece of data
+>> in unwritten extents by scanning the page cache, and both versions share
+>> the same bug when iterating the buffers of a page: the start offset into
+>> the page isn't taken into account, so when a page fits more than two
+>> filesystem blocks, things will go wrong.  For example, on a filesystem
+>> with a block size of 1k, the following command will fail:
+>>
+>>   xfs_io -f -c "falloc 0 4k" \
+>>             -c "pwrite 1k 1k" \
+>>             -c "pwrite 3k 1k" \
+>>             -c "seek -a -r 0" foo
+>
+> Can you wire this up for xfstests, please?
 
-What is the problem with the passed in length value?
+I did:
 
-> +	if (iomap->type != IOMAP_UNWRITTEN)
-> +		return length;
-> +	offset = page_cache_seek_hole_data(inode, offset, length, SEEK_HOLE);
-> +	if (offset < 0)
-> +		return length;
-> +found:
-> +	*(loff_t *)data = offset;
-> +	return 0;
+  https://marc.info/?l=fstests&m=149817668119033
 
-What about using a switch statement?
-
-	switch (iomap->type) {
-	case IOMAP_UNWRITTEN:
-		offset = page_cache_seek_hole_data(inode, offset, length,
-				SEEK_HOLE);
-		if (offset < 0)
-			return length;
-		/*FALLTHRU*/
-	case IOMAP_HOLE:
-		*(loff_t *)data = offset;
-		return 0;
-	default:
-		return length;
-	}
-
-> +static loff_t
-> +iomap_seek_data_actor(struct inode *inode, loff_t offset, loff_t length,
-> +		      void *data, struct iomap *iomap)
-> +{
-> +	if (iomap->type != IOMAP_HOLE && iomap->type != IOMAP_UNWRITTEN)
-> +		goto found;
-> +	length = iomap->offset + iomap->length - offset;
-> +	if (iomap->type != IOMAP_UNWRITTEN)
-> +		return length;
-> +	offset = page_cache_seek_hole_data(inode, offset, length, SEEK_DATA);
-> +	if (offset < 0)
-> +		return length;
-> +found:
-> +	*(loff_t *)data = offset;
-> +	return 0;
-
-> +loff_t
-> +iomap_seek_hole_data(struct inode *inode, loff_t offset,
-> +		     int whence, const struct iomap_ops *ops)
-> +{
-> +	static loff_t (*actor)(struct inode *, loff_t, loff_t, void *,
-> +			       struct iomap *);
-
-I wonder (but I'm not sure) if it would be simpler and easier to
-understand to just have to different functions for SEEK_HOLE
-vs SEEK_DATA here.
+Andreas
