@@ -1,109 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57980 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60802 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753384AbdFVUXY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Jun 2017 16:23:24 -0400
-Date: Thu, 22 Jun 2017 15:23:22 -0500
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH] xfs_db: update sector size when type is set
-Message-ID: <20170622202322.GA22273@redhat.com>
-References: <20170622193352.22346-1-billodo@redhat.com>
- <20170622194723.GV4733@birch.djwong.org>
+        id S1751353AbdFZITg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Jun 2017 04:19:36 -0400
+Date: Mon, 26 Jun 2017 10:19:31 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v7 04/22] buffer: set errors in mapping at the time that
+ the error occurs
+Message-ID: <20170626081931.i6jxjel5p2alq6rn@eorzea.usersys.redhat.com>
+References: <20170616193427.13955-1-jlayton@redhat.com>
+ <20170616193427.13955-5-jlayton@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170622194723.GV4733@birch.djwong.org>
+In-Reply-To: <20170616193427.13955-5-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: Jeff Layton <jlayton@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-On Thu, Jun 22, 2017 at 12:47:23PM -0700, Darrick J. Wong wrote:
-> On Thu, Jun 22, 2017 at 02:33:52PM -0500, Bill O'Donnell wrote:
-> > xfs_db doesn't take sector size into account when setting type.
-> > This can result in an errant crc. For example, with a sector size
-> > of 4096:
-> > 
-> > xfs_db> agi 0
-> > xfs_db> p crc
-> > crc = 0xab85043e (correct)
-> > xfs_db> daddr
-> > current daddr is 16
-> > xfs_db> daddr 42
-> > xfs_db> daddr 16
-> > xfs_db> type agi
-> > Metadata CRC error detected at xfs_agi block 0x10/0x200
-> > xfs_db> p crc
-> > crc = 0xab85043e (bad)
-> > 
-> > When xfs_db sets the new daddr in daddr_f, it does so with one
-> > BBSIZE sector (512). Changing the type doesn't change the size
-> > of the current buffer in iocur_top, so the checksum is calculated
-> > on the wrong length for the type (when the actual sector size > BBSIZE (512).
-> > 
-> > For types with fields, reread the buffer to pick up the correct size for
-> > the new type when it gets set. Facilitate the reread by setting the cursor
-> > with set_cur().
-> > 
-> > Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-> > ---
-> >  db/io.c | 6 ++++++
-> >  1 file changed, 6 insertions(+)
-> > 
-> > diff --git a/db/io.c b/db/io.c
-> > index 9918a51..7e6d330 100644
-> > --- a/db/io.c
-> > +++ b/db/io.c
-> > @@ -616,6 +616,12 @@ set_iocur_type(
-> >  {
-> >  	struct xfs_buf	*bp = iocur_top->bp;
-> >  
-> > +	if (t->fields)
-> > +		set_cur(t,
-> > +			iocur_top->bb,
-> > +			fsize(t->fields, iocur_top->data,
-> > +			      0, 0) / mp->m_sb.sb_blocksize,
+On Fri, Jun 16, 2017 at 03:34:09PM -0400, Jeff Layton wrote:
+> I noticed on xfs that I could still sometimes get back an error on fsync
+> on a fd that was opened after the error condition had been cleared.
 > 
-> I thought the third parameter to set_cur (which is fed as the third
-> parameter to libxfs_readbuf) was expressed in units of basic blocks
-> (i.e. 512 bytes)?  fsize returns the size of the field in bytes (I
-> think?), so dividing by sb_blocksize renders units of fs blocks, not
-> basic blocks.
+> The problem is that the buffer code sets the write_io_error flag and
+> then later checks that flag to set the error in the mapping. That flag
+> perisists for quite a while however. If the file is later opened with
+> O_TRUNC, the buffers will then be invalidated and the mapping's error
+> set such that a subsequent fsync will return error. I think this is
+> incorrect, as there was no writeback between the open and fsync.
+> 
+> Add a new mark_buffer_write_io_error operation that sets the flag and
+> the error in the mapping at the same time. Replace all calls to
+> set_buffer_write_io_error with mark_buffer_write_io_error, and remove
+> the places that check this flag in order to set the error in the
+> mapping.
+> 
+> This sets the error in the mapping earlier, at the time that it's first
+> detected.
+> 
+> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> Reviewed-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/buffer.c                 | 20 +++++++++++++-------
+>  fs/gfs2/lops.c              |  2 +-
+>  include/linux/buffer_head.h |  1 +
+>  3 files changed, 15 insertions(+), 8 deletions(-)
 > 
 
-fsize returns the field size in bits. Dividing by sb_blocksize gives basic blocks.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-> <shrug> the naming isn't helpful at all:
+> diff --git a/fs/buffer.c b/fs/buffer.c
+> index 7b4f4bfde91e..4d5d03b42e11 100644
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -178,7 +178,7 @@ void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
+>  		set_buffer_uptodate(bh);
+>  	} else {
+>  		buffer_io_error(bh, ", lost sync page write");
+> -		set_buffer_write_io_error(bh);
+> +		mark_buffer_write_io_error(bh);
+>  		clear_buffer_uptodate(bh);
+>  	}
+>  	unlock_buffer(bh);
+> @@ -352,8 +352,7 @@ void end_buffer_async_write(struct buffer_head *bh, int uptodate)
+>  		set_buffer_uptodate(bh);
+>  	} else {
+>  		buffer_io_error(bh, ", lost async page write");
+> -		mapping_set_error(page->mapping, -EIO);
+> -		set_buffer_write_io_error(bh);
+> +		mark_buffer_write_io_error(bh);
+>  		clear_buffer_uptodate(bh);
+>  		SetPageError(page);
+>  	}
+> @@ -481,8 +480,6 @@ static void __remove_assoc_queue(struct buffer_head *bh)
+>  {
+>  	list_del_init(&bh->b_assoc_buffers);
+>  	WARN_ON(!bh->b_assoc_map);
+> -	if (buffer_write_io_error(bh))
+> -		mapping_set_error(bh->b_assoc_map, -EIO);
+>  	bh->b_assoc_map = NULL;
+>  }
+>  
+> @@ -1181,6 +1178,17 @@ void mark_buffer_dirty(struct buffer_head *bh)
+>  }
+>  EXPORT_SYMBOL(mark_buffer_dirty);
+>  
+> +void mark_buffer_write_io_error(struct buffer_head *bh)
+> +{
+> +	set_buffer_write_io_error(bh);
+> +	/* FIXME: do we need to set this in both places? */
+> +	if (bh->b_page && bh->b_page->mapping)
+> +		mapping_set_error(bh->b_page->mapping, -EIO);
+> +	if (bh->b_assoc_map)
+> +		mapping_set_error(bh->b_assoc_map, -EIO);
+> +}
+> +EXPORT_SYMBOL(mark_buffer_write_io_error);
+> +
+>  /*
+>   * Decrement a buffer_head's reference count.  If all buffers against a page
+>   * have zero reference count, are clean and unlocked, and if the page is clean
+> @@ -3266,8 +3274,6 @@ drop_buffers(struct page *page, struct buffer_head **buffers_to_free)
+>  
+>  	bh = head;
+>  	do {
+> -		if (buffer_write_io_error(bh) && page->mapping)
+> -			mapping_set_error(page->mapping, -EIO);
+>  		if (buffer_busy(bh))
+>  			goto failed;
+>  		bh = bh->b_this_page;
+> diff --git a/fs/gfs2/lops.c b/fs/gfs2/lops.c
+> index 885d36e7a29f..1a9c2c08c1a1 100644
+> --- a/fs/gfs2/lops.c
+> +++ b/fs/gfs2/lops.c
+> @@ -182,7 +182,7 @@ static void gfs2_end_log_write_bh(struct gfs2_sbd *sdp, struct bio_vec *bvec,
+>  		bh = bh->b_this_page;
+>  	do {
+>  		if (error)
+> -			set_buffer_write_io_error(bh);
+> +			mark_buffer_write_io_error(bh);
+>  		unlock_buffer(bh);
+>  		next = bh->b_this_page;
+>  		size -= bh->b_size;
+> diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
+> index bd029e52ef5e..e0abeba3ced7 100644
+> --- a/include/linux/buffer_head.h
+> +++ b/include/linux/buffer_head.h
+> @@ -149,6 +149,7 @@ void buffer_check_dirty_writeback(struct page *page,
+>   */
+>  
+>  void mark_buffer_dirty(struct buffer_head *bh);
+> +void mark_buffer_write_io_error(struct buffer_head *bh);
+>  void init_buffer(struct buffer_head *, bh_end_io_t *, void *);
+>  void touch_buffer(struct buffer_head *bh);
+>  void set_bh_page(struct buffer_head *bh,
+> -- 
+> 2.13.0
+> 
 
-I also found the naming through the call stack to be terrible and damned
-confusing (c, d ? really??), but left that battle for another day, another
-patch. ;)
-
-Thanks-
-Bill
-
-> 
-> void
-> set_cur(
-> 	const typ_t	*t,
-> 	int64_t		d,
-> 	int		c,
-> ...
-> 	iocur_top->len = BBTOB(c);
-> 
-> <codeconfused>
-> 
-> --D
-> 
-> > +			DB_RING_IGN, NULL);
-> >  	iocur_top->typ = t;
-> >  
-> >  	/* verify the buffer if the type has one. */
-> > -- 
-> > 2.9.4
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Carlos
