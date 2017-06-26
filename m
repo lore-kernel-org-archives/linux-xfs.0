@@ -1,173 +1,211 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35352 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40494 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752087AbdF1T0D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Jun 2017 15:26:03 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 549A53D96D
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2017 19:25:57 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-121-88.rdu2.redhat.com [10.10.121.88])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 029F87ABEC
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2017 19:25:56 +0000 (UTC)
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: [PATCH v2] xfs_db: improve argument naming in set_cur and set_iocur_type
-Date: Wed, 28 Jun 2017 14:25:56 -0500
-Message-Id: <20170628192556.9464-1-billodo@redhat.com>
-In-Reply-To: <20170628150913.15934-1-billodo@redhat.com>
-References: <20170628150913.15934-1-billodo@redhat.com>
+        id S1751435AbdFZOZ2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Jun 2017 10:25:28 -0400
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v3 2/5] ext4: Switch to page_cache_seek_hole_data
+Date: Mon, 26 Jun 2017 16:25:15 +0200
+Message-Id: <1498487118-6564-3-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1498487118-6564-1-git-send-email-agruenba@redhat.com>
+References: <1498487118-6564-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-In set_cur and set_iocur_type, the current naming for arguments
-type, block number, and length are t, d, and c, respectively.
-Replace these with more intuitive and descriptive names:
-type, blknum, and len. Fix type of blknum (xfs_daddr_t) to be
-consistent with that of libxfs_readbuf where it's used.
-Additionally remove extra blank line in io.c.
+Fix SEEK_HOLE / SEEK_DATA when a page fits more than two filesystem
+blocks (see the commit that introduces page_cache_seek_hole_data).
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
-v2: Fix type of blknum (xfs_daddr_t) to be consistent with that of
-    libxfs_readbuf. Rebase this patch on recently submitted
-    xfs_db patch touching the same file.
-    (https://www.spinics.net/lists/linux-xfs/msg07909.html)
+ fs/ext4/file.c | 144 ++++++---------------------------------------------------
+ 1 file changed, 13 insertions(+), 131 deletions(-)
 
-
- db/io.c | 38 +++++++++++++++++++-------------------
- db/io.h |  6 +++---
- 2 files changed, 22 insertions(+), 22 deletions(-)
-
-diff --git a/db/io.c b/db/io.c
-index b97b710d..9a893932 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -536,9 +536,9 @@ write_cur(void)
- 
- void
- set_cur(
--	const typ_t	*t,
--	__int64_t	d,
--	int		c,
-+	const typ_t	*type,
-+	xfs_daddr_t	blknum,
-+	int		len,
- 	int		ring_flag,
- 	bbmap_t		*bbmap)
- {
-@@ -546,14 +546,13 @@ set_cur(
- 	xfs_ino_t	dirino;
- 	xfs_ino_t	ino;
- 	__uint16_t	mode;
--	const struct xfs_buf_ops *ops = t ? t->bops : NULL;
-+	const struct xfs_buf_ops *ops = type ? type->bops : NULL;
- 
- 	if (iocur_sp < 0) {
- 		dbprintf(_("set_cur no stack element to set\n"));
- 		return;
- 	}
- 
--
- 	ino = iocur_top->ino;
- 	dirino = iocur_top->dirino;
- 	mode = iocur_top->mode;
-@@ -563,7 +562,7 @@ set_cur(
- 	if (bbmap) {
- #ifdef DEBUG_BBMAP
- 		int i;
--		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
-+		printf(_("xfs_db got a bbmap for %lld\n"), (long long)blknum);
- 		printf(_("\tblock map"));
- 		for (i = 0; i < bbmap->nmaps; i++)
- 			printf(" %lld:%d", (long long)bbmap->b[i].bm_bn,
-@@ -577,7 +576,7 @@ set_cur(
- 		bp = libxfs_readbuf_map(mp->m_ddev_targp, bbmap->b,
- 					bbmap->nmaps, 0, ops);
- 	} else {
--		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, ops);
-+		bp = libxfs_readbuf(mp->m_ddev_targp, blknum, len, 0, ops);
- 		iocur_top->bbmap = NULL;
- 	}
- 
-@@ -593,13 +592,13 @@ set_cur(
- 	if (!ops)
- 		bp->b_flags |= LIBXFS_B_UNCHECKED;
- 
--	iocur_top->bb = d;
--	iocur_top->blen = c;
-+	iocur_top->bb = blknum;
-+	iocur_top->blen = len;
- 	iocur_top->boff = 0;
- 	iocur_top->data = iocur_top->buf;
--	iocur_top->len = BBTOB(c);
--	iocur_top->off = d << BBSHIFT;
--	iocur_top->typ = cur_typ = t;
-+	iocur_top->len = BBTOB(len);
-+	iocur_top->off = blknum << BBSHIFT;
-+	iocur_top->typ = cur_typ = type;
- 	iocur_top->ino = ino;
- 	iocur_top->dirino = dirino;
- 	iocur_top->mode = mode;
-@@ -613,22 +612,23 @@ set_cur(
- 
- void
- set_iocur_type(
--	const typ_t	*t)
-+	const typ_t	*type)
- {
- 	struct xfs_buf	*bp = iocur_top->bp;
- 	int bb_count;
- 
- 	/* adjust cursor for types that contain fields */
--	if (t->fields) {
--		bb_count = BTOBB(byteize(fsize(t->fields, iocur_top->data, 0, 0)));
--		set_cur(t, iocur_top->bb, bb_count, DB_RING_IGN, NULL);
-+	if (type->fields) {
-+		bb_count = BTOBB(byteize(fsize(type->fields,
-+					       iocur_top->data, 0, 0)));
-+		set_cur(type, iocur_top->bb, bb_count, DB_RING_IGN, NULL);
- 	}
--	iocur_top->typ = t;
-+	iocur_top->typ = type;
- 
- 	/* verify the buffer if the type has one. */
- 	if (!bp)
- 		return;
--	if (!t->bops) {
-+	if (!type->bops) {
- 		bp->b_ops = NULL;
- 		bp->b_flags |= LIBXFS_B_UNCHECKED;
- 		return;
-@@ -636,7 +636,7 @@ set_iocur_type(
- 	if (!(bp->b_flags & LIBXFS_B_UPTODATE))
- 		return;
- 	bp->b_error = 0;
--	bp->b_ops = t->bops;
-+	bp->b_ops = type->bops;
- 	bp->b_ops->verify_read(bp);
- 	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 94eeef2..3e8f3d1 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -461,129 +461,6 @@ static int ext4_file_open(struct inode * inode, struct file * filp)
  }
-diff --git a/db/io.h b/db/io.h
-index b415b82d..99730048 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -59,10 +59,10 @@ extern void	print_iocur(char *tag, iocur_t *ioc);
- extern void	push_cur(void);
- extern int	read_buf(__int64_t daddr, int count, void *bufp);
- extern void     write_cur(void);
--extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
--			bbmap_t *bbmap);
-+extern void	set_cur(const struct typ *type, xfs_daddr_t blknum,
-+			int len, int ring_add, bbmap_t *bbmap);
- extern void     ring_add(void);
--extern void	set_iocur_type(const struct typ *t);
-+extern void	set_iocur_type(const struct typ *type);
- extern void	xfs_dummy_verify(struct xfs_buf *bp);
- extern void	xfs_verify_recalc_inode_crc(struct xfs_buf *bp);
- extern void	xfs_verify_recalc_dquot_crc(struct xfs_buf *bp);
+ 
+ /*
+- * Here we use ext4_map_blocks() to get a block mapping for a extent-based
+- * file rather than ext4_ext_walk_space() because we can introduce
+- * SEEK_DATA/SEEK_HOLE for block-mapped and extent-mapped file at the same
+- * function.  When extent status tree has been fully implemented, it will
+- * track all extent status for a file and we can directly use it to
+- * retrieve the offset for SEEK_DATA/SEEK_HOLE.
+- */
+-
+-/*
+- * When we retrieve the offset for SEEK_DATA/SEEK_HOLE, we would need to
+- * lookup page cache to check whether or not there has some data between
+- * [startoff, endoff] because, if this range contains an unwritten extent,
+- * we determine this extent as a data or a hole according to whether the
+- * page cache has data or not.
+- */
+-static int ext4_find_unwritten_pgoff(struct inode *inode,
+-				     int whence,
+-				     ext4_lblk_t end_blk,
+-				     loff_t *offset)
+-{
+-	struct pagevec pvec;
+-	unsigned int blkbits;
+-	pgoff_t index;
+-	pgoff_t end;
+-	loff_t endoff;
+-	loff_t startoff;
+-	loff_t lastoff;
+-	int found = 0;
+-
+-	blkbits = inode->i_sb->s_blocksize_bits;
+-	startoff = *offset;
+-	lastoff = startoff;
+-	endoff = (loff_t)end_blk << blkbits;
+-
+-	index = startoff >> PAGE_SHIFT;
+-	end = (endoff - 1) >> PAGE_SHIFT;
+-
+-	pagevec_init(&pvec, 0);
+-	do {
+-		int i, num;
+-		unsigned long nr_pages;
+-
+-		num = min_t(pgoff_t, end - index, PAGEVEC_SIZE - 1) + 1;
+-		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
+-					  (pgoff_t)num);
+-		if (nr_pages == 0)
+-			break;
+-
+-		for (i = 0; i < nr_pages; i++) {
+-			struct page *page = pvec.pages[i];
+-			struct buffer_head *bh, *head;
+-
+-			/*
+-			 * If current offset is smaller than the page offset,
+-			 * there is a hole at this offset.
+-			 */
+-			if (whence == SEEK_HOLE && lastoff < endoff &&
+-			    lastoff < page_offset(pvec.pages[i])) {
+-				found = 1;
+-				*offset = lastoff;
+-				goto out;
+-			}
+-
+-			if (page->index > end)
+-				goto out;
+-
+-			lock_page(page);
+-
+-			if (unlikely(page->mapping != inode->i_mapping)) {
+-				unlock_page(page);
+-				continue;
+-			}
+-
+-			if (!page_has_buffers(page)) {
+-				unlock_page(page);
+-				continue;
+-			}
+-
+-			if (page_has_buffers(page)) {
+-				lastoff = page_offset(page);
+-				bh = head = page_buffers(page);
+-				do {
+-					if (buffer_uptodate(bh) ||
+-					    buffer_unwritten(bh)) {
+-						if (whence == SEEK_DATA)
+-							found = 1;
+-					} else {
+-						if (whence == SEEK_HOLE)
+-							found = 1;
+-					}
+-					if (found) {
+-						*offset = max_t(loff_t,
+-							startoff, lastoff);
+-						unlock_page(page);
+-						goto out;
+-					}
+-					lastoff += bh->b_size;
+-					bh = bh->b_this_page;
+-				} while (bh != head);
+-			}
+-
+-			lastoff = page_offset(page) + PAGE_SIZE;
+-			unlock_page(page);
+-		}
+-
+-		/* The no. of pages is less than our desired, we are done. */
+-		if (nr_pages < num)
+-			break;
+-
+-		index = pvec.pages[i - 1]->index + 1;
+-		pagevec_release(&pvec);
+-	} while (index <= end);
+-
+-	if (whence == SEEK_HOLE && lastoff < endoff) {
+-		found = 1;
+-		*offset = lastoff;
+-	}
+-out:
+-	pagevec_release(&pvec);
+-	return found;
+-}
+-
+-/*
+  * ext4_seek_data() retrieves the offset for SEEK_DATA.
+  */
+ static loff_t ext4_seek_data(struct file *file, loff_t offset, loff_t maxsize)
+@@ -591,7 +468,7 @@ static loff_t ext4_seek_data(struct file *file, loff_t offset, loff_t maxsize)
+ 	struct inode *inode = file->f_mapping->host;
+ 	struct extent_status es;
+ 	ext4_lblk_t start, last, end;
+-	loff_t dataoff, isize;
++	loff_t dataoff, length, isize;
+ 	int blkbits;
+ 	int ret;
+ 
+@@ -630,8 +507,10 @@ static loff_t ext4_seek_data(struct file *file, loff_t offset, loff_t maxsize)
+ 		 * it will be as a data or a hole according to page
+ 		 * cache that has data or not.
+ 		 */
+-		if (ext4_find_unwritten_pgoff(inode, SEEK_DATA,
+-					      es.es_lblk + es.es_len, &dataoff))
++		length = ((loff_t)(last + es.es_len) << blkbits) - dataoff;
++		dataoff = page_cache_seek_hole_data(inode, dataoff,
++						    length, SEEK_DATA);
++		if (dataoff >= 0)
+ 			break;
+ 		last += es.es_len;
+ 		dataoff = (loff_t)last << blkbits;
+@@ -654,7 +533,7 @@ static loff_t ext4_seek_hole(struct file *file, loff_t offset, loff_t maxsize)
+ 	struct inode *inode = file->f_mapping->host;
+ 	struct extent_status es;
+ 	ext4_lblk_t start, last, end;
+-	loff_t holeoff, isize;
++	loff_t holeoff, length, isize;
+ 	int blkbits;
+ 	int ret;
+ 
+@@ -689,10 +568,13 @@ static loff_t ext4_seek_hole(struct file *file, loff_t offset, loff_t maxsize)
+ 		 * it will be as a data or a hole according to page
+ 		 * cache that has data or not.
+ 		 */
+-		if (ext4_es_is_unwritten(&es) &&
+-		    ext4_find_unwritten_pgoff(inode, SEEK_HOLE,
+-					      last + es.es_len, &holeoff))
+-			break;
++		if (ext4_es_is_unwritten(&es)) {
++			length = ((loff_t)(last + es.es_len) << blkbits) - holeoff;
++			holeoff = page_cache_seek_hole_data(inode, holeoff,
++							    length, SEEK_HOLE);
++			if (holeoff >= 0)
++				break;
++		}
+ 
+ 		last += es.es_len;
+ 		holeoff = (loff_t)last << blkbits;
 -- 
-2.13.0
+2.7.5
 
