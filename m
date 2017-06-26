@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40494 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46566 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751435AbdFZOZ2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Jun 2017 10:25:28 -0400
+        id S1751435AbdFZOZb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Jun 2017 10:25:31 -0400
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v3 2/5] ext4: Switch to page_cache_seek_hole_data
-Date: Mon, 26 Jun 2017 16:25:15 +0200
-Message-Id: <1498487118-6564-3-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v3 4/5] vfs: Add iomap_seek_hole_data helper
+Date: Mon, 26 Jun 2017 16:25:17 +0200
+Message-Id: <1498487118-6564-5-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1498487118-6564-1-git-send-email-agruenba@redhat.com>
 References: <1498487118-6564-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,197 +15,131 @@ List-Id: xfs
 To: linux-fsdevel@vger.kernel.org
 Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-Fix SEEK_HOLE / SEEK_DATA when a page fits more than two filesystem
-blocks (see the commit that introduces page_cache_seek_hole_data).
+Filesystems can use this for implementing lseek SEEK_HOLE / SEEK_DATA
+support via iomap.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- fs/ext4/file.c | 144 ++++++---------------------------------------------------
- 1 file changed, 13 insertions(+), 131 deletions(-)
+ fs/iomap.c            | 91 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iomap.h |  3 ++
+ 2 files changed, 94 insertions(+)
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 94eeef2..3e8f3d1 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -461,129 +461,6 @@ static int ext4_file_open(struct inode * inode, struct file * filp)
+diff --git a/fs/iomap.c b/fs/iomap.c
+index c71a64b..ced7423 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -584,6 +584,97 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
  }
+ EXPORT_SYMBOL_GPL(iomap_fiemap);
+ 
++static loff_t
++iomap_seek_hole_actor(struct inode *inode, loff_t offset, loff_t length,
++		      void *data, struct iomap *iomap)
++{
++	switch(iomap->type) {
++	case IOMAP_UNWRITTEN:
++		offset = page_cache_seek_hole_data(inode, offset, length,
++						   SEEK_HOLE);
++		if (offset < 0)
++			break;
++		/* fall through */
++	case IOMAP_HOLE:
++		*(loff_t *)data = offset;
++		return 0;
++	}
++	return length;
++}
++
++static loff_t
++iomap_seek_data_actor(struct inode *inode, loff_t offset, loff_t length,
++		      void *data, struct iomap *iomap)
++{
++	switch(iomap->type) {
++	case IOMAP_UNWRITTEN:
++		offset = page_cache_seek_hole_data(inode, offset, length,
++						   SEEK_DATA);
++		if (offset >= 0)
++			break;
++		/* fall through */
++	case IOMAP_HOLE:
++		return length;
++	}
++	*(loff_t *)data = offset;
++	return 0;
++}
++
++/*
++ * Filesystem helper for lseek SEEK_HOLE / SEEK_DATA.
++ */
++loff_t
++iomap_seek_hole_data(struct inode *inode, loff_t offset,
++		     int whence, const struct iomap_ops *ops)
++{
++	static loff_t (*actor)(struct inode *, loff_t, loff_t, void *,
++			       struct iomap *);
++	loff_t size = i_size_read(inode);
++	loff_t length;
++
++	/* Nothing to be found beyond the end of the file. */
++	if (offset >= size)
++		return -ENXIO;
++	length = size - offset;
++
++	switch(whence) {
++	case SEEK_HOLE:
++		actor = iomap_seek_hole_actor;
++		break;
++
++	case SEEK_DATA:
++		actor = iomap_seek_data_actor;
++		break;
++	}
++
++	while (length > 0) {
++		loff_t ret;
++
++		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
++				  &offset, actor);
++		if (ret <= 0) {
++			if (ret < 0)
++				return ret;
++			break;
++		}
++		offset += ret;
++		length -= ret;
++	}
++
++	if (length <= 0) {
++		/* There is an implicit hole at the end of the file. */
++		if (whence != SEEK_HOLE)
++			return -ENXIO;
++
++		/* The last segment can extend beyond the end of the file. */
++		if (offset > size)
++			offset = size;
++	}
++
++	return offset;
++}
++EXPORT_SYMBOL_GPL(iomap_seek_hole_data);
++
+ /*
+  * Private flags for iomap_dio, must not overlap with the public ones in
+  * iomap.h:
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 69f4e94..ca0a5ec 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -84,6 +84,9 @@ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+ int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops);
+ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ 		loff_t start, loff_t len, const struct iomap_ops *ops);
++loff_t iomap_seek_hole_data(struct inode *inode, loff_t offset,
++			    int whence, const struct iomap_ops *ops);
++
  
  /*
-- * Here we use ext4_map_blocks() to get a block mapping for a extent-based
-- * file rather than ext4_ext_walk_space() because we can introduce
-- * SEEK_DATA/SEEK_HOLE for block-mapped and extent-mapped file at the same
-- * function.  When extent status tree has been fully implemented, it will
-- * track all extent status for a file and we can directly use it to
-- * retrieve the offset for SEEK_DATA/SEEK_HOLE.
-- */
--
--/*
-- * When we retrieve the offset for SEEK_DATA/SEEK_HOLE, we would need to
-- * lookup page cache to check whether or not there has some data between
-- * [startoff, endoff] because, if this range contains an unwritten extent,
-- * we determine this extent as a data or a hole according to whether the
-- * page cache has data or not.
-- */
--static int ext4_find_unwritten_pgoff(struct inode *inode,
--				     int whence,
--				     ext4_lblk_t end_blk,
--				     loff_t *offset)
--{
--	struct pagevec pvec;
--	unsigned int blkbits;
--	pgoff_t index;
--	pgoff_t end;
--	loff_t endoff;
--	loff_t startoff;
--	loff_t lastoff;
--	int found = 0;
--
--	blkbits = inode->i_sb->s_blocksize_bits;
--	startoff = *offset;
--	lastoff = startoff;
--	endoff = (loff_t)end_blk << blkbits;
--
--	index = startoff >> PAGE_SHIFT;
--	end = (endoff - 1) >> PAGE_SHIFT;
--
--	pagevec_init(&pvec, 0);
--	do {
--		int i, num;
--		unsigned long nr_pages;
--
--		num = min_t(pgoff_t, end - index, PAGEVEC_SIZE - 1) + 1;
--		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
--					  (pgoff_t)num);
--		if (nr_pages == 0)
--			break;
--
--		for (i = 0; i < nr_pages; i++) {
--			struct page *page = pvec.pages[i];
--			struct buffer_head *bh, *head;
--
--			/*
--			 * If current offset is smaller than the page offset,
--			 * there is a hole at this offset.
--			 */
--			if (whence == SEEK_HOLE && lastoff < endoff &&
--			    lastoff < page_offset(pvec.pages[i])) {
--				found = 1;
--				*offset = lastoff;
--				goto out;
--			}
--
--			if (page->index > end)
--				goto out;
--
--			lock_page(page);
--
--			if (unlikely(page->mapping != inode->i_mapping)) {
--				unlock_page(page);
--				continue;
--			}
--
--			if (!page_has_buffers(page)) {
--				unlock_page(page);
--				continue;
--			}
--
--			if (page_has_buffers(page)) {
--				lastoff = page_offset(page);
--				bh = head = page_buffers(page);
--				do {
--					if (buffer_uptodate(bh) ||
--					    buffer_unwritten(bh)) {
--						if (whence == SEEK_DATA)
--							found = 1;
--					} else {
--						if (whence == SEEK_HOLE)
--							found = 1;
--					}
--					if (found) {
--						*offset = max_t(loff_t,
--							startoff, lastoff);
--						unlock_page(page);
--						goto out;
--					}
--					lastoff += bh->b_size;
--					bh = bh->b_this_page;
--				} while (bh != head);
--			}
--
--			lastoff = page_offset(page) + PAGE_SIZE;
--			unlock_page(page);
--		}
--
--		/* The no. of pages is less than our desired, we are done. */
--		if (nr_pages < num)
--			break;
--
--		index = pvec.pages[i - 1]->index + 1;
--		pagevec_release(&pvec);
--	} while (index <= end);
--
--	if (whence == SEEK_HOLE && lastoff < endoff) {
--		found = 1;
--		*offset = lastoff;
--	}
--out:
--	pagevec_release(&pvec);
--	return found;
--}
--
--/*
-  * ext4_seek_data() retrieves the offset for SEEK_DATA.
-  */
- static loff_t ext4_seek_data(struct file *file, loff_t offset, loff_t maxsize)
-@@ -591,7 +468,7 @@ static loff_t ext4_seek_data(struct file *file, loff_t offset, loff_t maxsize)
- 	struct inode *inode = file->f_mapping->host;
- 	struct extent_status es;
- 	ext4_lblk_t start, last, end;
--	loff_t dataoff, isize;
-+	loff_t dataoff, length, isize;
- 	int blkbits;
- 	int ret;
- 
-@@ -630,8 +507,10 @@ static loff_t ext4_seek_data(struct file *file, loff_t offset, loff_t maxsize)
- 		 * it will be as a data or a hole according to page
- 		 * cache that has data or not.
- 		 */
--		if (ext4_find_unwritten_pgoff(inode, SEEK_DATA,
--					      es.es_lblk + es.es_len, &dataoff))
-+		length = ((loff_t)(last + es.es_len) << blkbits) - dataoff;
-+		dataoff = page_cache_seek_hole_data(inode, dataoff,
-+						    length, SEEK_DATA);
-+		if (dataoff >= 0)
- 			break;
- 		last += es.es_len;
- 		dataoff = (loff_t)last << blkbits;
-@@ -654,7 +533,7 @@ static loff_t ext4_seek_hole(struct file *file, loff_t offset, loff_t maxsize)
- 	struct inode *inode = file->f_mapping->host;
- 	struct extent_status es;
- 	ext4_lblk_t start, last, end;
--	loff_t holeoff, isize;
-+	loff_t holeoff, length, isize;
- 	int blkbits;
- 	int ret;
- 
-@@ -689,10 +568,13 @@ static loff_t ext4_seek_hole(struct file *file, loff_t offset, loff_t maxsize)
- 		 * it will be as a data or a hole according to page
- 		 * cache that has data or not.
- 		 */
--		if (ext4_es_is_unwritten(&es) &&
--		    ext4_find_unwritten_pgoff(inode, SEEK_HOLE,
--					      last + es.es_len, &holeoff))
--			break;
-+		if (ext4_es_is_unwritten(&es)) {
-+			length = ((loff_t)(last + es.es_len) << blkbits) - holeoff;
-+			holeoff = page_cache_seek_hole_data(inode, holeoff,
-+							    length, SEEK_HOLE);
-+			if (holeoff >= 0)
-+				break;
-+		}
- 
- 		last += es.es_len;
- 		holeoff = (loff_t)last << blkbits;
+  * Flags for direct I/O ->end_io:
 -- 
 2.7.5
 
