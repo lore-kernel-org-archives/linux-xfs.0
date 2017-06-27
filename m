@@ -1,176 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33429 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751516AbdF1Qs1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2017 12:48:27 -0400
-Date: Wed, 28 Jun 2017 09:48:18 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_db: improve argument naming in set_cur and
- set_iocur_type
-Message-ID: <20170628164818.GD4492@birch.djwong.org>
-References: <20170628150913.15934-1-billodo@redhat.com>
+Received: from mail-yb0-f196.google.com ([209.85.213.196]:35738 "EHLO
+        mail-yb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753883AbdF0WO6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2017 18:14:58 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170628150913.15934-1-billodo@redhat.com>
+In-Reply-To: <20170627214828.1029-5-hch@lst.de>
+References: <20170627214828.1029-1-hch@lst.de> <20170627214828.1029-5-hch@lst.de>
+From: =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date: Wed, 28 Jun 2017 00:14:57 +0200
+Message-ID: <CAHpGcM+Dy+9dNwNpCmu492ayjbSnW-eeivw3+CfJUfbDHajn9w@mail.gmail.com>
+Subject: Re: [PATCH 4/6] vfs: Add iomap_seek_hole and iomap_seek_data helpers
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bill O'Donnell <billodo@redhat.com>
-Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Jan Kara <jack@suse.cz>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Wed, Jun 28, 2017 at 10:09:13AM -0500, Bill O'Donnell wrote:
-> In set_cur and set_iocur_type, the current naming for arguments
-> type, block number, and length are t, d, and c, respectively.
-> Replace these with more intuitive and descriptive names:
-
-Yay!
-
-> type, blknum, and len. Additionally remove extra blank line
-> in io.c.
-> 
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+2017-06-27 23:48 GMT+02:00 Christoph Hellwig <hch@lst.de>:
+> From: Andreas Gruenbacher <agruenba@redhat.com>
+>
+> Filesystems can use this for implementing lseek SEEK_HOLE / SEEK_DATA
+> support via iomap.
+>
+> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> [hch: split functions, coding style cleanups]
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  db/io.c | 31 +++++++++++++++----------------
->  db/io.h |  6 +++---
->  2 files changed, 18 insertions(+), 19 deletions(-)
-> 
-> diff --git a/db/io.c b/db/io.c
-> index 9918a51d..45cbf3be 100644
-> --- a/db/io.c
-> +++ b/db/io.c
-> @@ -535,9 +535,9 @@ write_cur(void)
->  
->  void
->  set_cur(
-> -	const typ_t	*t,
-> -	__int64_t	d,
-> -	int		c,
-> +	const typ_t	*type,
-> +	__int64_t	blknum,
-
-/me wonders if this ought to be "xfs_daddr_t blknum" since that's what
-libxfs_readbuf takes?
-
-Other than that,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-> +	int		len,
-
-This parameter /ought/ to be unsigned int, because a negative length
-makes no sense and xfs_bufkey and xfs_buf have unsigned int lengths.
-OTOH the libxfs/rdwr.c functions take signed int, so all that can be a
-separate cleanup patch to fix all that.
-
---D
-
->  	int		ring_flag,
->  	bbmap_t		*bbmap)
->  {
-> @@ -545,14 +545,13 @@ set_cur(
->  	xfs_ino_t	dirino;
->  	xfs_ino_t	ino;
->  	__uint16_t	mode;
-> -	const struct xfs_buf_ops *ops = t ? t->bops : NULL;
-> +	const struct xfs_buf_ops *ops = type ? type->bops : NULL;
->  
->  	if (iocur_sp < 0) {
->  		dbprintf(_("set_cur no stack element to set\n"));
->  		return;
->  	}
->  
-> -
->  	ino = iocur_top->ino;
->  	dirino = iocur_top->dirino;
->  	mode = iocur_top->mode;
-> @@ -562,7 +561,7 @@ set_cur(
->  	if (bbmap) {
->  #ifdef DEBUG_BBMAP
->  		int i;
-> -		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
-> +		printf(_("xfs_db got a bbmap for %lld\n"), (long long)blknum);
->  		printf(_("\tblock map"));
->  		for (i = 0; i < bbmap->nmaps; i++)
->  			printf(" %lld:%d", (long long)bbmap->b[i].bm_bn,
-> @@ -576,7 +575,7 @@ set_cur(
->  		bp = libxfs_readbuf_map(mp->m_ddev_targp, bbmap->b,
->  					bbmap->nmaps, 0, ops);
->  	} else {
-> -		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, ops);
-> +		bp = libxfs_readbuf(mp->m_ddev_targp, blknum, len, 0, ops);
->  		iocur_top->bbmap = NULL;
->  	}
->  
-> @@ -592,13 +591,13 @@ set_cur(
->  	if (!ops)
->  		bp->b_flags |= LIBXFS_B_UNCHECKED;
->  
-> -	iocur_top->bb = d;
-> -	iocur_top->blen = c;
-> +	iocur_top->bb = blknum;
-> +	iocur_top->blen = len;
->  	iocur_top->boff = 0;
->  	iocur_top->data = iocur_top->buf;
-> -	iocur_top->len = BBTOB(c);
-> -	iocur_top->off = d << BBSHIFT;
-> -	iocur_top->typ = cur_typ = t;
-> +	iocur_top->len = BBTOB(len);
-> +	iocur_top->off = blknum << BBSHIFT;
-> +	iocur_top->typ = cur_typ = type;
->  	iocur_top->ino = ino;
->  	iocur_top->dirino = dirino;
->  	iocur_top->mode = mode;
-> @@ -612,16 +611,16 @@ set_cur(
->  
->  void
->  set_iocur_type(
-> -	const typ_t	*t)
-> +	const typ_t	*type)
->  {
->  	struct xfs_buf	*bp = iocur_top->bp;
->  
-> -	iocur_top->typ = t;
-> +	iocur_top->typ = type;
->  
->  	/* verify the buffer if the type has one. */
->  	if (!bp)
->  		return;
-> -	if (!t->bops) {
-> +	if (!type->bops) {
->  		bp->b_ops = NULL;
->  		bp->b_flags |= LIBXFS_B_UNCHECKED;
->  		return;
-> @@ -629,7 +628,7 @@ set_iocur_type(
->  	if (!(bp->b_flags & LIBXFS_B_UPTODATE))
->  		return;
->  	bp->b_error = 0;
-> -	bp->b_ops = t->bops;
-> +	bp->b_ops = type->bops;
->  	bp->b_ops->verify_read(bp);
->  	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+>  fs/iomap.c            | 98 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/iomap.h |  4 +++
+>  2 files changed, 102 insertions(+)
+>
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 4b10892967a5..c90cda33994b 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -584,6 +584,104 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
 >  }
-> diff --git a/db/io.h b/db/io.h
-> index b415b82d..ebf51f1d 100644
-> --- a/db/io.h
-> +++ b/db/io.h
-> @@ -59,10 +59,10 @@ extern void	print_iocur(char *tag, iocur_t *ioc);
->  extern void	push_cur(void);
->  extern int	read_buf(__int64_t daddr, int count, void *bufp);
->  extern void     write_cur(void);
-> -extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
-> -			bbmap_t *bbmap);
-> +extern void	set_cur(const struct typ *type, __int64_t blknum,
-> +			int len, int ring_add, bbmap_t *bbmap);
->  extern void     ring_add(void);
-> -extern void	set_iocur_type(const struct typ *t);
-> +extern void	set_iocur_type(const struct typ *type);
->  extern void	xfs_dummy_verify(struct xfs_buf *bp);
->  extern void	xfs_verify_recalc_inode_crc(struct xfs_buf *bp);
->  extern void	xfs_verify_recalc_dquot_crc(struct xfs_buf *bp);
-> -- 
-> 2.13.0
-> 
+>  EXPORT_SYMBOL_GPL(iomap_fiemap);
+>
+> +static loff_t
+> +iomap_seek_hole_actor(struct inode *inode, loff_t offset, loff_t length,
+> +                     void *data, struct iomap *iomap)
+> +{
+> +       switch (iomap->type) {
+> +       case IOMAP_UNWRITTEN:
+> +               offset = page_cache_seek_hole_data(inode, offset, length,
+> +                                                  SEEK_HOLE);
+> +               if (offset < 0)
+> +                       return length;
+> +               /* fall through */
+> +       case IOMAP_HOLE:
+> +               *(loff_t *)data = offset;
+> +               return 0;
+> +       default:
+> +               return length;
+> +       }
+> +}
+> +
+> +loff_t
+> +iomap_seek_hole(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
+> +{
+> +       loff_t size = i_size_read(inode);
+> +       loff_t length = size - offset;
+> +       loff_t ret;
+> +
+> +       /* Nothing to be found beyond the end of the file. */
+> +       if (offset >= size)
+> +               return -ENXIO;
+> +
+> +       while (length > 0) {
+> +               ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
+> +                                 &offset, iomap_seek_hole_actor);
+> +               if (ret < 0)
+> +                       return ret;
+> +               if (ret == 0)
+> +                       break;
+> +
+> +               offset += ret;
+> +               length -= ret;
+> +       }
+> +
+> +       /* The last segment can extend beyond the end of the file. */
+> +       if (length <= 0)
+> +               return min(offset, size);
+
+This shouldn't be true anymore now that the actors don't recompute the
+length; the above three lines should be obsolete.
+
+> +       return offset;
+> +}
+> +EXPORT_SYMBOL_GPL(iomap_seek_hole);
+> +
+> +static loff_t
+> +iomap_seek_data_actor(struct inode *inode, loff_t offset, loff_t length,
+> +                     void *data, struct iomap *iomap)
+> +{
+> +       switch (iomap->type) {
+> +       case IOMAP_HOLE:
+> +               return length;
+> +       case IOMAP_UNWRITTEN:
+> +               offset = page_cache_seek_hole_data(inode, offset, length,
+> +                                                  SEEK_DATA);
+> +               if (offset < 0)
+> +                       return length;
+> +               /*FALLTHRU*/
+> +       default:
+> +               *(loff_t *)data = offset;
+> +               return 0;
+> +       }
+> +}
+> +
+> +loff_t
+> +iomap_seek_data(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
+> +{
+> +       loff_t size = i_size_read(inode);
+> +       loff_t length = size - offset;
+> +       loff_t ret;
+> +
+> +       /* Nothing to be found beyond the end of the file. */
+> +       if (offset >= size)
+> +               return -ENXIO;
+> +
+> +       while (length > 0) {
+> +               ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
+> +                                 &offset, iomap_seek_data_actor);
+> +               if (ret < 0)
+> +                       return ret;
+> +               if (ret == 0)
+> +                       break;
+> +
+> +               offset += ret;
+> +               length -= ret;
+> +       }
+> +
+> +       /* There is an implicit hole at the end of the file. */
+
+This comment makes more sense in iomap_seek_hole now.
+
+> +       if (length <= 0)
+> +               return -ENXIO;
+> +       return offset;
+> +}
+> +EXPORT_SYMBOL_GPL(iomap_seek_data);
+> +
+>  /*
+>   * Private flags for iomap_dio, must not overlap with the public ones in
+>   * iomap.h:
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index f753e788da31..8a03f5dcd89b 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -83,6 +83,10 @@ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+>  int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops);
+>  int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+>                 loff_t start, loff_t len, const struct iomap_ops *ops);
+> +loff_t iomap_seek_hole(struct inode *inode, loff_t offset,
+> +               const struct iomap_ops *ops);
+> +loff_t iomap_seek_data(struct inode *inode, loff_t offset,
+> +               const struct iomap_ops *ops);
+>
+>  /*
+>   * Flags for direct I/O ->end_io:
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 2.11.0
+
+Thanks,
+Andreas
