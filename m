@@ -1,95 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:33004 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752924AbdF0M4Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2017 08:56:25 -0400
-Date: Tue, 27 Jun 2017 22:56:15 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 5/5] xfs: Switch to iomap for SEEK_HOLE / SEEK_DATA
-Message-ID: <20170627125615.GQ17542@dastard>
-References: <1498487118-6564-1-git-send-email-agruenba@redhat.com>
- <1498487118-6564-6-git-send-email-agruenba@redhat.com>
- <20170627003435.GI4733@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170627003435.GI4733@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:57040 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751522AbdF0Oki (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Jun 2017 10:40:38 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id A22AB68AF
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2017 14:40:37 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 82D407FDB5
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2017 14:40:37 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 4/4] xfs: add log item pinning error injection tag
+Date: Tue, 27 Jun 2017 10:40:36 -0400
+Message-Id: <1498574436-57561-5-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1498574436-57561-1-git-send-email-bfoster@redhat.com>
+References: <1498574436-57561-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: linux-xfs@vger.kernel.org
 
-On Mon, Jun 26, 2017 at 05:34:35PM -0700, Darrick J. Wong wrote:
-> [adding Christoph to cc]
-> 
-> On Mon, Jun 26, 2017 at 04:25:18PM +0200, Andreas Gruenbacher wrote:
-> > Switch to the iomap_seek_hole_data vfs helper for implementing lseek
-> > SEEK_HOLE / SEEK_DATA.  __xfs_seek_hole_data can go away once it's no
-> > longer used by the quota code.
-> > 
-> > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-> > ---
-> >  fs/xfs/xfs_file.c | 21 +++++----------------
-> >  1 file changed, 5 insertions(+), 16 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > index 962dafd..94fe89a 100644
-> > --- a/fs/xfs/xfs_file.c
-> > +++ b/fs/xfs/xfs_file.c
-> > @@ -1131,29 +1131,18 @@ xfs_seek_hole_data(
-> >  	struct xfs_inode	*ip = XFS_I(inode);
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> >  	uint			lock;
-> > -	loff_t			offset, end;
-> > -	int			error = 0;
-> > +	loff_t			offset;
-> >  
-> >  	if (XFS_FORCED_SHUTDOWN(mp))
-> >  		return -EIO;
-> >  
-> >  	lock = xfs_ilock_data_map_shared(ip);
-> > -
-> > -	end = i_size_read(inode);
-> > -	offset = __xfs_seek_hole_data(inode, start, end, whence);
-> > -	if (offset < 0) {
-> > -		error = offset;
-> > -		goto out_unlock;
-> > -	}
-> > -
-> > -	offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
-> > -
-> > -out_unlock:
-> > +	offset = iomap_seek_hole_data(inode, start, whence, &xfs_iomap_ops);
-> 
-> Hm.  We grab the data map ilock above, then we call
-> iomap_seek_hole_data, which (eventually) calls xfs_file_iomap_begin,
-> which tries to grab the data map ilock.  We shouldn't be grabbing the
-> ilock twice, obviously, but on the other hand...
-> 
-> ...under the old code, we'd take the ilock and do the whole block map
-> and page cache scans without ever dropping the ilock.
+Add an error injection tag to force log items in the AIL to the
+pinned state. This option can be used by test infrastructure to
+induce head behind tail conditions. Specifically, this is intended
+to be used by xfstests to reproduce log recovery problems after
+failed/corrupted log writes overwrite the last good tail LSN in the
+log.
 
-Which I'm pretty sure I've previously pointed out is broken and
-needed fixing (lockdep reports, IIRC), as the lock order is iolock
--> page lock -> ilock.
+When enabled, AIL push attempts see log items in the AIL in the
+pinned state. This stalls metadata writeback and thus prevents the
+current tail of the log from moving forward. When disabled,
+subsequent AIL pushes observe the log items in their appropriate
+state and filesystem operation continues as normal.
 
-(yes, I'm using "iolock" as shorthand for inode->i_rwsem)
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_error.c     |  3 +++
+ fs/xfs/xfs_error.h     |  4 +++-
+ fs/xfs/xfs_trans_ail.c | 17 ++++++++++++++++-
+ 3 files changed, 22 insertions(+), 2 deletions(-)
 
-> This new iomap
-> based thing only holds the ilock during ->iomap_begin, which makes me
-> worry that someone else can wander in and mess with things while we're
-> looking for holes/data?
-
-Locking won't prevent seek races with concurrent modifications from
-the perspective of userspace.
-
-i.e. we can lock the inode down, seek to data, unlock it, and before
-we get back to userspace something else punches out that data. So by
-the time the app gets to use the position set by the seek, there's a
-hole where it's being told there *was* data....
-
--Dave.
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 26c32bc..f2f22a8 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -57,6 +57,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_AG_RESV_CRITICAL,
+ 	XFS_RANDOM_DROP_WRITES,
+ 	XFS_RANDOM_LOG_BAD_CRC,
++	XFS_RANDOM_LOG_ITEM_PIN,
+ };
+ 
+ struct xfs_errortag_attr {
+@@ -161,6 +162,7 @@ XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
+ XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
+ XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
+ XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
++XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
+ 
+ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(noerror),
+@@ -193,6 +195,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
+ 	XFS_ERRORTAG_ATTR_LIST(drop_writes),
+ 	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
++	XFS_ERRORTAG_ATTR_LIST(log_item_pin),
+ 	NULL,
+ };
+ 
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 0874d6b..43d349c 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -107,8 +107,9 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+  */
+ #define XFS_ERRTAG_DROP_WRITES				28
+ #define XFS_ERRTAG_LOG_BAD_CRC				29
++#define XFS_ERRTAG_LOG_ITEM_PIN				30
+ 
+-#define XFS_ERRTAG_MAX					30
++#define XFS_ERRTAG_MAX					31
+ 
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -143,6 +144,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+ #define XFS_RANDOM_AG_RESV_CRITICAL			4
+ #define XFS_RANDOM_DROP_WRITES				1
+ #define XFS_RANDOM_LOG_BAD_CRC				1
++#define XFS_RANDOM_LOG_ITEM_PIN				1
+ 
+ #ifdef DEBUG
+ extern int xfs_errortag_init(struct xfs_mount *mp);
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 9056c0f..563b315 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -325,6 +325,21 @@ xfs_ail_delete(
+ 	xfs_trans_ail_cursor_clear(ailp, lip);
+ }
+ 
++static inline uint
++xfsaild_push_item(
++	struct xfs_ail		*ailp,
++	struct xfs_log_item	*lip)
++{
++	/*
++	 * If log item pinning is enabled, skip the push and track the item as
++	 * pinned. This can help induce head-behind-tail conditions.
++	 */
++	if (XFS_TEST_ERROR(false, ailp->xa_mount, XFS_ERRTAG_LOG_ITEM_PIN))
++		return XFS_ITEM_PINNED;
++
++	return lip->li_ops->iop_push(lip, &ailp->xa_buf_list);
++}
++
+ static long
+ xfsaild_push(
+ 	struct xfs_ail		*ailp)
+@@ -382,7 +397,7 @@ xfsaild_push(
+ 		 * rely on the AIL cursor implementation to be able to deal with
+ 		 * the dropped lock.
+ 		 */
+-		lock_result = lip->li_ops->iop_push(lip, &ailp->xa_buf_list);
++		lock_result = xfsaild_push_item(ailp, lip);
+ 		switch (lock_result) {
+ 		case XFS_ITEM_SUCCESS:
+ 			XFS_STATS_INC(mp, xs_push_ail_success);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.5
+
