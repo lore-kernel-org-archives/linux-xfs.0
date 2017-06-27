@@ -1,159 +1,357 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:55662 "EHLO mga03.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52526 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751615AbdF1WCs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Jun 2017 18:02:48 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v3 1/5] mm: add vm_insert_mixed_mkwrite()
-Date: Wed, 28 Jun 2017 16:01:48 -0600
-Message-Id: <20170628220152.28161-2-ross.zwisler@linux.intel.com>
-In-Reply-To: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
-References: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
+        id S1751543AbdF0HfQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Jun 2017 03:35:16 -0400
+Date: Tue, 27 Jun 2017 09:35:13 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 1/4] xfs: make errortag a per-mountpoint structure
+Message-ID: <20170627073513.himnlwstpjrhc5z4@eorzea.usersys.redhat.com>
+References: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
+ <149823571523.31786.9698090244865978473.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <149823571523.31786.9698090244865978473.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-To be able to use the common 4k zero page in DAX we need to have our PTE
-fault path look more like our PMD fault path where a PTE entry can be
-marked as dirty and writeable as it is first inserted, rather than waiting
-for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
+On Fri, Jun 23, 2017 at 09:35:15AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Remove the xfs_etest structure in favor of a per-mountpoint structure.
+> This will give us the flexibility to set as many error injection points
+> as we want, and later enable us to set up sysfs knobs to set the trigger
+> frequency as we wish.  This comes at a cost of higher memory use, but
+> unti we hit 1024 injection points (we're at 29) or a lot of mounts this
+> shouldn't be a huge issue.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_error.c |  154 +++++++++++++++++++++++++++-------------------------
+>  fs/xfs/xfs_error.h |   25 +++++---
+>  fs/xfs/xfs_ioctl.c |    4 +
+>  fs/xfs/xfs_mount.c |   10 +++
+>  fs/xfs/xfs_mount.h |    7 ++
+>  5 files changed, 111 insertions(+), 89 deletions(-)
+> 
 
-Right now we can rely on having a dax_pfn_mkwrite() call because we can
-distinguish between these two cases in do_wp_page():
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-	case 1: 4k zero page => writable DAX storage
-	case 2: read-only DAX storage => writeable DAX storage
+> 
+> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> index ed7ee4e..52f75bc 100644
+> --- a/fs/xfs/xfs_error.c
+> +++ b/fs/xfs/xfs_error.c
+> @@ -25,100 +25,106 @@
+>  
+>  #ifdef DEBUG
+>  
+> -int	xfs_etest[XFS_NUM_INJECT_ERROR];
+> -int64_t	xfs_etest_fsid[XFS_NUM_INJECT_ERROR];
+> -char *	xfs_etest_fsname[XFS_NUM_INJECT_ERROR];
+> -int	xfs_error_test_active;
+> +static unsigned int xfs_errortag_random_default[] = {
+> +	XFS_RANDOM_DEFAULT,
+> +	XFS_RANDOM_IFLUSH_1,
+> +	XFS_RANDOM_IFLUSH_2,
+> +	XFS_RANDOM_IFLUSH_3,
+> +	XFS_RANDOM_IFLUSH_4,
+> +	XFS_RANDOM_IFLUSH_5,
+> +	XFS_RANDOM_IFLUSH_6,
+> +	XFS_RANDOM_DA_READ_BUF,
+> +	XFS_RANDOM_BTREE_CHECK_LBLOCK,
+> +	XFS_RANDOM_BTREE_CHECK_SBLOCK,
+> +	XFS_RANDOM_ALLOC_READ_AGF,
+> +	XFS_RANDOM_IALLOC_READ_AGI,
+> +	XFS_RANDOM_ITOBP_INOTOBP,
+> +	XFS_RANDOM_IUNLINK,
+> +	XFS_RANDOM_IUNLINK_REMOVE,
+> +	XFS_RANDOM_DIR_INO_VALIDATE,
+> +	XFS_RANDOM_BULKSTAT_READ_CHUNK,
+> +	XFS_RANDOM_IODONE_IOERR,
+> +	XFS_RANDOM_STRATREAD_IOERR,
+> +	XFS_RANDOM_STRATCMPL_IOERR,
+> +	XFS_RANDOM_DIOWRITE_IOERR,
+> +	XFS_RANDOM_BMAPIFORMAT,
+> +	XFS_RANDOM_FREE_EXTENT,
+> +	XFS_RANDOM_RMAP_FINISH_ONE,
+> +	XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE,
+> +	XFS_RANDOM_REFCOUNT_FINISH_ONE,
+> +	XFS_RANDOM_BMAP_FINISH_ONE,
+> +	XFS_RANDOM_AG_RESV_CRITICAL,
+> +};
+>  
+>  int
+> -xfs_error_test(int error_tag, int *fsidp, char *expression,
+> -	       int line, char *file, unsigned long randfactor)
+> +xfs_errortag_init(
+> +	struct xfs_mount	*mp)
+>  {
+> -	int i;
+> -	int64_t fsid;
+> +	mp->m_errortag = kmem_zalloc(sizeof(unsigned int) * XFS_ERRTAG_MAX,
+> +			KM_SLEEP | KM_MAYFAIL);
+> +	if (!mp->m_errortag)
+> +		return -ENOMEM;
+> +	return 0;
+> +}
+>  
+> -	if (prandom_u32() % randfactor)
+> -		return 0;
+> +void
+> +xfs_errortag_del(
+> +	struct xfs_mount	*mp)
+> +{
+> +	kmem_free(mp->m_errortag);
+> +}
+>  
+> -	memcpy(&fsid, fsidp, sizeof(xfs_fsid_t));
+> +bool
+> +xfs_errortag_test(
+> +	struct xfs_mount	*mp,
+> +	const char		*expression,
+> +	const char		*file,
+> +	int			line,
+> +	unsigned int		error_tag)
+> +{
+> +	unsigned int		randfactor;
+>  
+> -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
+> -		if (xfs_etest[i] == error_tag && xfs_etest_fsid[i] == fsid) {
+> -			xfs_warn(NULL,
+> -	"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
+> -				expression, file, line, xfs_etest_fsname[i]);
+> -			return 1;
+> -		}
+> -	}
+> +	ASSERT(error_tag < XFS_ERRTAG_MAX);
+> +	randfactor = mp->m_errortag[error_tag];
+> +	if (!randfactor || prandom_u32() % randfactor)
+> +		return false;
+>  
+> -	return 0;
+> +	xfs_warn_ratelimited(mp,
+> +"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
+> +			expression, file, line, mp->m_fsname);
+> +	return true;
+>  }
+>  
+>  int
+> -xfs_errortag_add(unsigned int error_tag, xfs_mount_t *mp)
+> +xfs_errortag_set(
+> +	struct xfs_mount	*mp,
+> +	unsigned int		error_tag,
+> +	unsigned int		tag_value)
+>  {
+> -	int i;
+> -	int len;
+> -	int64_t fsid;
+> -
+>  	if (error_tag >= XFS_ERRTAG_MAX)
+>  		return -EINVAL;
+>  
+> -	memcpy(&fsid, mp->m_fixedfsid, sizeof(xfs_fsid_t));
+> -
+> -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
+> -		if (xfs_etest_fsid[i] == fsid && xfs_etest[i] == error_tag) {
+> -			xfs_warn(mp, "error tag #%d on", error_tag);
+> -			return 0;
+> -		}
+> -	}
+> -
+> -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
+> -		if (xfs_etest[i] == 0) {
+> -			xfs_warn(mp, "Turned on XFS error tag #%d",
+> -				error_tag);
+> -			xfs_etest[i] = error_tag;
+> -			xfs_etest_fsid[i] = fsid;
+> -			len = strlen(mp->m_fsname);
+> -			xfs_etest_fsname[i] = kmem_alloc(len + 1, KM_SLEEP);
+> -			strcpy(xfs_etest_fsname[i], mp->m_fsname);
+> -			xfs_error_test_active++;
+> -			return 0;
+> -		}
+> -	}
+> -
+> -	xfs_warn(mp, "error tag overflow, too many turned on");
+> -
+> -	return 1;
+> +	mp->m_errortag[error_tag] = tag_value;
+> +	return 0;
+>  }
+>  
+>  int
+> -xfs_errortag_clearall(xfs_mount_t *mp, int loud)
+> +xfs_errortag_add(
+> +	struct xfs_mount	*mp,
+> +	unsigned int		error_tag)
+>  {
+> -	int64_t fsid;
+> -	int cleared = 0;
+> -	int i;
+> -
+> -	memcpy(&fsid, mp->m_fixedfsid, sizeof(xfs_fsid_t));
+> -
+> -
+> -	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++) {
+> -		if ((fsid == 0LL || xfs_etest_fsid[i] == fsid) &&
+> -		     xfs_etest[i] != 0) {
+> -			cleared = 1;
+> -			xfs_warn(mp, "Clearing XFS error tag #%d",
+> -				xfs_etest[i]);
+> -			xfs_etest[i] = 0;
+> -			xfs_etest_fsid[i] = 0LL;
+> -			kmem_free(xfs_etest_fsname[i]);
+> -			xfs_etest_fsname[i] = NULL;
+> -			xfs_error_test_active--;
+> -		}
+> -	}
+> +	if (error_tag >= XFS_ERRTAG_MAX)
+> +		return -EINVAL;
+>  
+> -	if (loud || cleared)
+> -		xfs_warn(mp, "Cleared all XFS error tags for filesystem");
+> +	return xfs_errortag_set(mp, error_tag,
+> +			xfs_errortag_random_default[error_tag]);
+> +}
+>  
+> +int
+> +xfs_errortag_clearall(
+> +	struct xfs_mount	*mp)
+> +{
+> +	memset(mp->m_errortag, 0, sizeof(unsigned int) * XFS_ERRTAG_MAX);
+>  	return 0;
+>  }
+>  #endif /* DEBUG */
+> diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+> index 05f8666..b4316d3 100644
+> --- a/fs/xfs/xfs_error.h
+> +++ b/fs/xfs/xfs_error.h
+> @@ -131,21 +131,24 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+>  #define XFS_RANDOM_AG_RESV_CRITICAL			4
+>  
+>  #ifdef DEBUG
+> -extern int xfs_error_test_active;
+> -extern int xfs_error_test(int, int *, char *, int, char *, unsigned long);
+> -
+> -#define	XFS_NUM_INJECT_ERROR				10
+> +extern int xfs_errortag_init(struct xfs_mount *mp);
+> +extern void xfs_errortag_del(struct xfs_mount *mp);
+> +extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
+> +		const char *file, int line, unsigned int error_tag);
+>  #define XFS_TEST_ERROR(expr, mp, tag, rf)		\
+> -	((expr) || (xfs_error_test_active && \
+> -	 xfs_error_test((tag), (mp)->m_fixedfsid, "expr", __LINE__, __FILE__, \
+> -			(rf))))
+> +	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
+>  
+> -extern int xfs_errortag_add(unsigned int error_tag, struct xfs_mount *mp);
+> -extern int xfs_errortag_clearall(struct xfs_mount *mp, int loud);
+> +extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
+> +		unsigned int tag_value);
+> +extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
+> +extern int xfs_errortag_clearall(struct xfs_mount *mp);
+>  #else
+> +#define xfs_errortag_init(mp)			(0)
+> +#define xfs_errortag_del(mp)
+>  #define XFS_TEST_ERROR(expr, mp, tag, rf)	(expr)
+> -#define xfs_errortag_add(tag, mp)		(ENOSYS)
+> -#define xfs_errortag_clearall(mp, loud)		(ENOSYS)
+> +#define xfs_errortag_set(mp, tag, val)		(ENOSYS)
+> +#define xfs_errortag_add(mp, tag)		(ENOSYS)
+> +#define xfs_errortag_clearall(mp)		(ENOSYS)
+>  #endif /* DEBUG */
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 8ffe4ea..9c0c7a9 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -2037,14 +2037,14 @@ xfs_file_ioctl(
+>  		if (copy_from_user(&in, arg, sizeof(in)))
+>  			return -EFAULT;
+>  
+> -		return xfs_errortag_add(in.errtag, mp);
+> +		return xfs_errortag_add(mp, in.errtag);
+>  	}
+>  
+>  	case XFS_IOC_ERROR_CLEARALL:
+>  		if (!capable(CAP_SYS_ADMIN))
+>  			return -EPERM;
+>  
+> -		return xfs_errortag_clearall(mp, 1);
+> +		return xfs_errortag_clearall(mp);
+>  
+>  	case XFS_IOC_FREE_EOFBLOCKS: {
+>  		struct xfs_fs_eofblocks eofb;
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index cc6789d..1a98c35 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -720,10 +720,13 @@ xfs_mountfs(
+>  	if (error)
+>  		goto out_del_stats;
+>  
+> +	error = xfs_errortag_init(mp);
+> +	if (error)
+> +		goto out_remove_error_sysfs;
+>  
+>  	error = xfs_uuid_mount(mp);
+>  	if (error)
+> -		goto out_remove_error_sysfs;
+> +		goto out_remove_errortag;
+>  
+>  	/*
+>  	 * Set the minimum read and write sizes
+> @@ -1042,6 +1045,8 @@ xfs_mountfs(
+>  	xfs_da_unmount(mp);
+>   out_remove_uuid:
+>  	xfs_uuid_unmount(mp);
+> + out_remove_errortag:
+> +	xfs_errortag_del(mp);
+>   out_remove_error_sysfs:
+>  	xfs_error_sysfs_del(mp);
+>   out_del_stats:
+> @@ -1145,10 +1150,11 @@ xfs_unmountfs(
+>  	xfs_uuid_unmount(mp);
+>  
+>  #if defined(DEBUG)
+> -	xfs_errortag_clearall(mp, 0);
+> +	xfs_errortag_clearall(mp);
+>  #endif
+>  	xfs_free_perag(mp);
+>  
+> +	xfs_errortag_del(mp);
+>  	xfs_error_sysfs_del(mp);
+>  	xfs_sysfs_del(&mp->m_stats.xs_kobj);
+>  	xfs_sysfs_del(&mp->m_kobj);
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 305d953..e002ac5 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -199,6 +199,13 @@ typedef struct xfs_mount {
+>  	bool			m_fail_unmount;
+>  #ifdef DEBUG
+>  	/*
+> +	 * Frequency with which errors are injected.  Replaces xfs_etest; the
+> +	 * value stored in here is the inverse of the frequency with which the
+> +	 * error triggers.  1 = always, 2 = half the time, etc.
+> +	 */
+> +	unsigned int		*m_errortag;
+> +
+> +	/*
+>  	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
+>  	 * block killing in the event of failed writes. When enabled, all
+>  	 * buffered writes are silenty dropped and handled as if they failed.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-This distinction is made by via vm_normal_page().  vm_normal_page() returns
-false for the common 4k zero page, though, just as it does for DAX ptes.
-Instead of special casing the DAX + 4k zero page case, we will simplify our
-DAX PTE page fault sequence so that it matches our DAX PMD sequence, and
-get rid of dax_pfn_mkwrite() completely.
-
-This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
-and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set insert_pfn()
-will do the work that was previously done by wp_page_reuse() as part of the
-dax_pfn_mkwrite() call path.
-
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- include/linux/mm.h |  2 ++
- mm/memory.c        | 57 +++++++++++++++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 54 insertions(+), 5 deletions(-)
-
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 6f543a4..096052f 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -2293,6 +2293,8 @@ int vm_insert_pfn_prot(struct vm_area_struct *vma, unsigned long addr,
- 			unsigned long pfn, pgprot_t pgprot);
- int vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
- 			pfn_t pfn);
-+int vm_insert_mixed_mkwrite(struct vm_area_struct *vma, unsigned long addr,
-+			pfn_t pfn);
- int vm_iomap_memory(struct vm_area_struct *vma, phys_addr_t start, unsigned long len);
- 
- 
-diff --git a/mm/memory.c b/mm/memory.c
-index bb11c47..de4aa71 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -1646,7 +1646,7 @@ int vm_insert_page(struct vm_area_struct *vma, unsigned long addr,
- EXPORT_SYMBOL(vm_insert_page);
- 
- static int insert_pfn(struct vm_area_struct *vma, unsigned long addr,
--			pfn_t pfn, pgprot_t prot)
-+			pfn_t pfn, pgprot_t prot, bool mkwrite)
- {
- 	struct mm_struct *mm = vma->vm_mm;
- 	int retval;
-@@ -1658,14 +1658,26 @@ static int insert_pfn(struct vm_area_struct *vma, unsigned long addr,
- 	if (!pte)
- 		goto out;
- 	retval = -EBUSY;
--	if (!pte_none(*pte))
--		goto out_unlock;
-+	if (!pte_none(*pte)) {
-+		if (mkwrite) {
-+			entry = *pte;
-+			goto out_mkwrite;
-+		} else
-+			goto out_unlock;
-+	}
- 
- 	/* Ok, finally just insert the thing.. */
- 	if (pfn_t_devmap(pfn))
- 		entry = pte_mkdevmap(pfn_t_pte(pfn, prot));
- 	else
- 		entry = pte_mkspecial(pfn_t_pte(pfn, prot));
-+
-+out_mkwrite:
-+	if (mkwrite) {
-+		entry = pte_mkyoung(entry);
-+		entry = maybe_mkwrite(pte_mkdirty(entry), vma);
-+	}
-+
- 	set_pte_at(mm, addr, pte, entry);
- 	update_mmu_cache(vma, addr, pte); /* XXX: why not for insert_page? */
- 
-@@ -1736,7 +1748,8 @@ int vm_insert_pfn_prot(struct vm_area_struct *vma, unsigned long addr,
- 
- 	track_pfn_insert(vma, &pgprot, __pfn_to_pfn_t(pfn, PFN_DEV));
- 
--	ret = insert_pfn(vma, addr, __pfn_to_pfn_t(pfn, PFN_DEV), pgprot);
-+	ret = insert_pfn(vma, addr, __pfn_to_pfn_t(pfn, PFN_DEV), pgprot,
-+			false);
- 
- 	return ret;
- }
-@@ -1772,10 +1785,44 @@ int vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
- 		page = pfn_to_page(pfn_t_to_pfn(pfn));
- 		return insert_page(vma, addr, page, pgprot);
- 	}
--	return insert_pfn(vma, addr, pfn, pgprot);
-+	return insert_pfn(vma, addr, pfn, pgprot, false);
- }
- EXPORT_SYMBOL(vm_insert_mixed);
- 
-+int vm_insert_mixed_mkwrite(struct vm_area_struct *vma, unsigned long addr,
-+			pfn_t pfn)
-+{
-+	pgprot_t pgprot = vma->vm_page_prot;
-+
-+	BUG_ON(!(vma->vm_flags & VM_MIXEDMAP));
-+
-+	if (addr < vma->vm_start || addr >= vma->vm_end)
-+		return -EFAULT;
-+
-+	track_pfn_insert(vma, &pgprot, pfn);
-+
-+	/*
-+	 * If we don't have pte special, then we have to use the pfn_valid()
-+	 * based VM_MIXEDMAP scheme (see vm_normal_page), and thus we *must*
-+	 * refcount the page if pfn_valid is true (hence insert_page rather
-+	 * than insert_pfn).  If a zero_pfn were inserted into a VM_MIXEDMAP
-+	 * without pte special, it would there be refcounted as a normal page.
-+	 */
-+	if (!HAVE_PTE_SPECIAL && !pfn_t_devmap(pfn) && pfn_t_valid(pfn)) {
-+		struct page *page;
-+
-+		/*
-+		 * At this point we are committed to insert_page()
-+		 * regardless of whether the caller specified flags that
-+		 * result in pfn_t_has_page() == false.
-+		 */
-+		page = pfn_to_page(pfn_t_to_pfn(pfn));
-+		return insert_page(vma, addr, page, pgprot);
-+	}
-+	return insert_pfn(vma, addr, pfn, pgprot, true);
-+}
-+EXPORT_SYMBOL(vm_insert_mixed_mkwrite);
-+
- /*
-  * maps a range of physical memory into the requested pages. the old
-  * mappings are removed. any references to nonexistent pages results
 -- 
-2.9.4
-
+Carlos
