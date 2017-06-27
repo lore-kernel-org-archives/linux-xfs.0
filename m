@@ -1,62 +1,158 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtpq2.tb.mail.iss.as9143.net ([212.54.42.165]:39742 "EHLO
-        smtpq2.tb.mail.iss.as9143.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751511AbdF1TmS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2017 15:42:18 -0400
-Received: from [212.54.42.136] (helo=smtp12.tb.mail.iss.as9143.net)
-        by smtpq2.tb.mail.iss.as9143.net with esmtp (Exim 4.86_2)
-        (envelope-from <richardwbb@versatel.nl>)
-        id 1dQIqu-0003ns-20
-        for linux-xfs@vger.kernel.org; Wed, 28 Jun 2017 21:42:16 +0200
-Received: from c16067.upc-c.chello.nl ([212.187.16.67] helo=[192.168.0.3])
-        by smtp12.tb.mail.iss.as9143.net with esmtp (Exim 4.86_2)
-        (envelope-from <richardwbb@versatel.nl>)
-        id 1dQIqt-0007SC-VT
-        for linux-xfs@vger.kernel.org; Wed, 28 Jun 2017 21:42:16 +0200
-Message-ID: <1498686205.13847.1.camel@versatel.nl>
-Subject: non mountable xfs with 2 primary and 2 logical
-From: Richard Waterbeek <richardwbb@versatel.nl>
-Date: Wed, 28 Jun 2017 21:43:25 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([65.50.211.133]:59044 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753880AbdF0Vsd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2017 17:48:33 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/6] xfs: rewrite xfs_dq_get_next_id using xfs_iext_lookup_extent
+Date: Tue, 27 Jun 2017 14:48:23 -0700
+Message-Id: <20170627214828.1029-2-hch@lst.de>
+In-Reply-To: <20170627214828.1029-1-hch@lst.de>
+References: <20170627214828.1029-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-Hi linux-xfs mailinglist,
+This goes straight to a single lookup in the extent list and avoids a
+roundtrip through two layers that don't add any value for the simple
+quoata file that just has data or holes and no page cache, delayed
+allocation, unwritten extent or COW fork (which btw, doesn't seem to
+be handled by the existing SEEK HOLE/DATA code).
 
-I've recently subscribed to this list. I've seen many messages, but have
-little understading of the 'XFS' file system. I know about mkfs.xfs.
-I've benched my hardware. But, now my harddrive had a collision with the
-mbr somehow. [or something]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+---
+ fs/xfs/xfs_dquot.c | 66 ++++++++++++++++++------------------------------------
+ 1 file changed, 22 insertions(+), 44 deletions(-)
 
-But, now I've 'hexdumped', the first 512 bytes, [because after a
-disaterous reboot, cfdisk is now saying; "/dev/sda empty".
-
-I'm aware of two primary and two logical partitions. I feel that I know
-the size of the first and second primary, but the xfs/ sda5 and, xfs
-sda6, are no longer appearing. I had to '#' the /etc/fstab, because it
-won't boot [long waiting].
-
-Now I would like to restore the first 512 bytes which is the MBR.
-
-I have absolutely no understanding of -where-, "the SuperBlock" [or how
-that should be called], happens to be.
-
-But, I feel that 512 bytes missing and no reason to believe a whole
-Terabyte would be "ones and/ or zero's", now, I wonder, how to restore
-this. I have not made backup of this harddrive, just an rsync, which is
-a little outdated and a bit incomplete, because difference in size of
-both drives.
-
-I might be able to create a XFS-something [from /dev/sda, for example],
-and write that with dd. 
-
-But, before I would 'try this out', I would like to gain some
-understanding, of what -should- be on the first 512 bytes of a
-harddrive, besides what I have now, cfdisk is saying empty.
-
-Hoping to receive a reply, Richard, the Netherlands
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index e57c6cce91aa..aa94cf484384 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -695,21 +695,18 @@ xfs_qm_dqread(
+  */
+ static int
+ xfs_dq_get_next_id(
+-	xfs_mount_t		*mp,
++	struct xfs_mount	*mp,
+ 	uint			type,
+-	xfs_dqid_t		*id,
+-	loff_t			eof)
++	xfs_dqid_t		*id)
+ {
+-	struct xfs_inode	*quotip;
++	struct xfs_inode	*quotip = xfs_quota_inode(mp, type);
++	xfs_dqid_t		next_id = *id + 1; /* simple advance */
++	uint			lock_flags;
++	struct xfs_bmbt_irec	got;
++	xfs_extnum_t		idx;
+ 	xfs_fsblock_t		start;
+-	loff_t			offset;
+-	uint			lock;
+-	xfs_dqid_t		next_id;
+ 	int			error = 0;
+ 
+-	/* Simple advance */
+-	next_id = *id + 1;
+-
+ 	/* If we'd wrap past the max ID, stop */
+ 	if (next_id < *id)
+ 		return -ENOENT;
+@@ -723,23 +720,20 @@ xfs_dq_get_next_id(
+ 	/* Nope, next_id is now past the current chunk, so find the next one */
+ 	start = (xfs_fsblock_t)next_id / mp->m_quotainfo->qi_dqperchunk;
+ 
+-	quotip = xfs_quota_inode(mp, type);
+-	lock = xfs_ilock_data_map_shared(quotip);
+-
+-	offset = __xfs_seek_hole_data(VFS_I(quotip), XFS_FSB_TO_B(mp, start),
+-				      eof, SEEK_DATA);
+-	if (offset < 0)
+-		error = offset;
+-
+-	xfs_iunlock(quotip, lock);
++	lock_flags = xfs_ilock_data_map_shared(quotip);
++	if (!(quotip->i_df.if_flags & XFS_IFEXTENTS)) {
++		error = xfs_iread_extents(NULL, quotip, XFS_DATA_FORK);
++		if (error)
++			return error;
++	}
+ 
+-	/* -ENXIO is essentially "no more data" */
+-	if (error)
+-		return (error == -ENXIO ? -ENOENT: error);
++	if (xfs_iext_lookup_extent(quotip, &quotip->i_df, start, &idx, &got))
++		*id = got.br_startoff * mp->m_quotainfo->qi_dqperchunk;
++	else
++		error = -ENOENT;
++	xfs_iunlock(quotip, lock_flags);
+ 
+-	/* Convert next data offset back to a quota id */
+-	*id = XFS_B_TO_FSB(mp, offset) * mp->m_quotainfo->qi_dqperchunk;
+-	return 0;
++	return error;
+ }
+ 
+ /*
+@@ -762,7 +756,6 @@ xfs_qm_dqget(
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+ 	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
+ 	struct xfs_dquot	*dqp;
+-	loff_t			eof = 0;
+ 	int			error;
+ 
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+@@ -790,21 +783,6 @@ xfs_qm_dqget(
+ 	}
+ #endif
+ 
+-	/* Get the end of the quota file if we need it */
+-	if (flags & XFS_QMOPT_DQNEXT) {
+-		struct xfs_inode	*quotip;
+-		xfs_fileoff_t		last;
+-		uint			lock_mode;
+-
+-		quotip = xfs_quota_inode(mp, type);
+-		lock_mode = xfs_ilock_data_map_shared(quotip);
+-		error = xfs_bmap_last_offset(quotip, &last, XFS_DATA_FORK);
+-		xfs_iunlock(quotip, lock_mode);
+-		if (error)
+-			return error;
+-		eof = XFS_FSB_TO_B(mp, last);
+-	}
+-
+ restart:
+ 	mutex_lock(&qi->qi_tree_lock);
+ 	dqp = radix_tree_lookup(tree, id);
+@@ -823,7 +801,7 @@ xfs_qm_dqget(
+ 			if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+ 				xfs_dqunlock(dqp);
+ 				mutex_unlock(&qi->qi_tree_lock);
+-				error = xfs_dq_get_next_id(mp, type, &id, eof);
++				error = xfs_dq_get_next_id(mp, type, &id);
+ 				if (error)
+ 					return error;
+ 				goto restart;
+@@ -858,7 +836,7 @@ xfs_qm_dqget(
+ 
+ 	/* If we are asked to find next active id, keep looking */
+ 	if (error == -ENOENT && (flags & XFS_QMOPT_DQNEXT)) {
+-		error = xfs_dq_get_next_id(mp, type, &id, eof);
++		error = xfs_dq_get_next_id(mp, type, &id);
+ 		if (!error)
+ 			goto restart;
+ 	}
+@@ -917,7 +895,7 @@ xfs_qm_dqget(
+ 	if (flags & XFS_QMOPT_DQNEXT) {
+ 		if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+ 			xfs_qm_dqput(dqp);
+-			error = xfs_dq_get_next_id(mp, type, &id, eof);
++			error = xfs_dq_get_next_id(mp, type, &id);
+ 			if (error)
+ 				return error;
+ 			goto restart;
+-- 
+2.11.0
 
