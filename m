@@ -1,97 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53231 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752363AbdF0Okn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jun 2017 10:40:43 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 775BEC04D2A9
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2017 14:40:37 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5CC2885E53
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2017 14:40:37 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/4] xfs: fix recovery failure when log record header wraps log end
-Date: Tue, 27 Jun 2017 10:40:33 -0400
-Message-Id: <1498574436-57561-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1498574436-57561-1-git-send-email-bfoster@redhat.com>
-References: <1498574436-57561-1-git-send-email-bfoster@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:51169 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752839AbdF0PVZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2017 11:21:25 -0400
+Date: Tue, 27 Jun 2017 08:20:00 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v7 16/22] block: convert to errseq_t based writeback
+ error tracking
+Message-ID: <20170627152000.GA29664@infradead.org>
+References: <20170616193427.13955-1-jlayton@redhat.com>
+ <20170616193427.13955-17-jlayton@redhat.com>
+ <20170620123544.GC19781@infradead.org>
+ <1497980684.4555.16.camel@redhat.com>
+ <20170624115946.GA22561@infradead.org>
+ <1498310166.4796.4.camel@redhat.com>
+ <1498487658.5168.8.camel@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1498487658.5168.8.camel@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Jeff Layton <jlayton@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-The high-level log recovery algorithm consists of two loops that
-walk the physical log and process log records from the tail to the
-head. The first loop handles the case where the tail is beyond the
-head and processes records up to the end of the physical log. The
-subsequent loop processes records from the beginning of the physical
-log to the head.
+On Mon, Jun 26, 2017 at 10:34:18AM -0400, Jeff Layton wrote:
+> The bigger question is -- what about more complex filesystems like
+> ext4?  There are a couple of cases where we can return -EIO or -EROFS on
+> fsync before filemap_write_and_wait_range is ever called. Like this one
+> for instance:
+> 
+>         if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
+>                 return -EIO;
+> 
+> ...and the EXT4_MF_FS_ABORTED case.
+> 
+> Are those conditions ever recoverable, such that a later fsync could
+> succeed? IOW, could I do a remount or something such that the existing
+> fds are left open and become usable again? 
 
-Because log records can wrap around the end of the physical log, the
-first loop mentioned above must handle this case appropriately.
-Records are processed from in-core buffers, which means that this
-algorithm must split the reads of such records into two partial
-I/Os: 1.) from the beginning of the record to the end of the log and
-2.) from the beginning of the log to the end of the record. This is
-further complicated by the fact that the log record header and log
-record data are read into independent buffers.
+This looks copied from the xfs forced shutdown code, and in that
+case it's final and permanent - you'll need an unmount to
+clear it.
 
-The current handling of each buffer correctly splits the reads when
-either the header or data starts before the end of the log and wraps
-around the end. The data read does not correctly handle the case
-where the prior header read wrapped or ends on the physical log end
-boundary. blk_no is incremented to or beyond the log end after the
-header read to point to the record data, but the split data read
-logic triggers, attempts to read from an invalid log block and
-ultimately causes log recovery to fail. This can be reproduced
-fairly reliably via xfstests tests generic/047 and generic/388 with
-large iclog sizes (256k) and small (10M) logs.
+> If so, then we really ought to advance the errseq_t in the file when we
+> catch those cases as well. If we have to do that, then it probably makes
+> sense to leave the ext4 patch as-is.
 
-If the record header read has pushed beyond the end of the physical
-log, the subsequent data read is actually contiguous. Update the
-data read logic to detect the case where blk_no has wrapped, mod it
-against the log size to read from the correct address and issue one
-contiguous read for the log data buffer. The log record is processed
-as normal from the buffer(s), the loop exits after the current
-iteration and the subsequent loop picks up with the first new record
-after the start of the log.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_log_recover.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index b6a40bd..9efcd12 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -5371,10 +5371,20 @@ xlog_do_recovery_pass(
- 			bblks = (int)BTOBB(be32_to_cpu(rhead->h_len));
- 			blk_no += hblks;
- 
--			/* Read in data for log record */
--			if (blk_no + bblks <= log->l_logBBsize) {
--				error = xlog_bread(log, blk_no, bblks, dbp,
--						   &offset);
-+			/*
-+			 * Read the log record data in multiple reads if it
-+			 * wraps around the end of the log. Note that if the
-+			 * header already wrapped, blk_no could point past the
-+			 * end of the log. The record data is contiguous in
-+			 * that case.
-+			 */
-+			if (blk_no + bblks <= log->l_logBBsize ||
-+			    blk_no >= log->l_logBBsize) {
-+				/* mod blk_no in case the header wrapped and
-+				 * pushed it beyond the end of the log */
-+				error = xlog_bread(log,
-+						   blk_no % log->l_logBBsize,
-+						   bblks, dbp, &offset);
- 				if (error)
- 					goto bread_err2;
- 			} else {
--- 
-2.7.5
-
+I think it can switch to the new file helper.
