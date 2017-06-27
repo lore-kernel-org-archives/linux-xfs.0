@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33274 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:33474 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751479AbdF0Okn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jun 2017 10:40:43 -0400
+        id S1751614AbdF0OuW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Jun 2017 10:50:22 -0400
 Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A50A1C04D2AC
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2017 14:40:37 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1E471FEEF9
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2017 14:50:17 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 776DF85A4F
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2017 14:40:37 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E173885A51
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2017 14:50:16 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 3/4] xfs: fix log recovery corruption error due to tail overwrite
-Date: Tue, 27 Jun 2017 10:40:35 -0400
-Message-Id: <1498574436-57561-4-git-send-email-bfoster@redhat.com>
+Subject: [PATCH] tests/xfs: test for log recovery failure after tail overwrite
+Date: Tue, 27 Jun 2017 10:50:16 -0400
+Message-Id: <1498575016-57959-1-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1498574436-57561-1-git-send-email-bfoster@redhat.com>
 References: <1498574436-57561-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,195 +22,176 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-If we consider the case where the tail (T) of the log is pinned long
-enough for the head (H) to push and block behind the tail, we can
-end up blocked in the following state without enough free space (f)
-in the log to satisfy a transaction reservation:
+XFS is susceptible to log recovery problems if the fs crashes under
+certain circumstances. If the tail has been pinned for long enough
+to the log to fill and the next batch of log buffer submissions
+happen to fail, the filesystem shutsdown having potentially
+overwritten part of the range between the last good tail->head range
+in the log. This causes log recovery to fail with crc mismatch or
+invalid log record errors.
 
-	0	phys. log	N
-	[-------HffT---H'--T'---]
-
-The last good record in the log (before H) refers to T. The tail
-eventually pushes forward (T') leaving more free space in the log
-for writes to H. At this point, suppose space frees up in the log
-for the maximum of 8 in-core log buffers to start flushing out to
-the log. If this pushes the head from H to H', these next writes
-overwrite the previous tail T. This is safe because the items logged
-from T to T' have been written back and removed from the AIL.
-
-If the next log writes (H -> H') happen to fail and result in
-partial records in the log, the filesystem shuts down having
-overwritten T with invalid data. Log recovery correctly locates H on
-the subsequent mount, but H still refers to the now corrupted tail
-T. This results in log corruption errors and recovery failure.
-
-Since the tail overwrite results from otherwise correct runtime
-behavior, it is up to log recovery to try and deal with this
-situation. Update log recovery tail verification to run a CRC pass
-from the first record past the tail to the head. This facilitates
-error detection at T and moves the recovery tail to the first good
-record past H' (similar to truncating the head on torn write
-detection). If corruption is detected beyond the range possibly
-affected by the max number of iclogs, the log is legitimately
-corrupted and log recovery failure is expected.
+This problem is not yet fixed and thus known/expected to fail. At
+this time, this test serves as a reminder that the problem exists
+and a reproducer for future verification purposes. Note that this
+problem is currently only reproducible with larger (non-default) log
+buffer sizes (i.e., '-o logbsize=256k') or smaller block sizes (1k).
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c | 110 +++++++++++++++++++++++++++++++++--------------
- 1 file changed, 78 insertions(+), 32 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 269d5f9..4113252 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1029,61 +1029,106 @@ xlog_seek_logrec_hdr(
- }
- 
- /*
-- * Check the log tail for torn writes. This is required when torn writes are
-- * detected at the head and the head had to be walked back to a previous record.
-- * The tail of the previous record must now be verified to ensure the torn
-- * writes didn't corrupt the previous tail.
-+ * Calculate distance from head to tail (i.e., unused space in the log).
-+ */
-+static inline int
-+xlog_tail_distance(
-+	struct xlog	*log,
-+	xfs_daddr_t	head_blk,
-+	xfs_daddr_t	tail_blk)
-+{
-+	if (head_blk < tail_blk)
-+		return tail_blk - head_blk;
+Here's the latest variant of the test that can reproduce this problem.
+This version depends on the recent error injection sysfs knobs and the
+existence of the associated knobs for log item pinning and bad log
+record crc injection.
+
+I've left fstests off the cc list for now since much of that code is
+still outstanding. This is currently posted for reference.
+
+Brian
+
+ tests/xfs/999     | 113 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/999.out |   2 +
+ tests/xfs/group   |   1 +
+ 3 files changed, 116 insertions(+)
+ create mode 100755 tests/xfs/999
+ create mode 100644 tests/xfs/999.out
+
+diff --git a/tests/xfs/999 b/tests/xfs/999
+new file mode 100755
+index 0000000..e321d73
+--- /dev/null
++++ b/tests/xfs/999
+@@ -0,0 +1,113 @@
++#! /bin/bash
++# FS QA Test No. 999
++#
++# Attempt to reproduce log recovery failure by writing corrupt log records over
++# the last good tail in the log. The tail is force pinned while a workload runs
++# the head as close as possible behind the tail. Once the head is pinned,
++# corrupted log records are written to the log and the filesystem shuts down.
++#
++# While log recovery should handle the corrupted log records, it has historical
++# problems dealing with the situation where the corrupted log records may have
++# overwritten the tail of the previous good record in the log. If this occurs,
++# log recovery may fail.
++#
++# This can be reproduced more reliably under non-default conditions such as with
++# the smallest supported FSB sizes and/or largest supported log buffer sizes and
++# counts (logbufs and logbsize mount options).
++#
++# Note that this test requires a DEBUG mode kernel.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Red Hat, Inc. All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
 +
-+	return tail_blk + (log->l_logBBsize - head_blk);
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
++	[ -e /sys/fs/xfs/$sdev/errortag/log_item_pin ] &&
++		echo 0 > /sys/fs/xfs/$sdev/errortag/log_item_pin
++	wait > /dev/null 2>&1
 +}
 +
-+/*
-+ * Verify the log tail. This is particularly important when torn or incomplete
-+ * writes have been detected near the front of the log and the head has been
-+ * walked back accordingly.
-  *
-- * Return an error if CRC verification fails as recovery cannot proceed.
-+ * We also have to handle the case where the tail was pinned and the head
-+ * blocked behind the tail right before a crash. If the tail had been pushed
-+ * immediately prior to the crash and the subsequent checkpoint was only
-+ * partially written, it's possible it overwrote the last referenced tail in the
-+ * log with garbage. This is not a coherency problem because the tail must have
-+ * been pushed before it can be overwritten, but appears as log corruption to
-+ * recovery because we have no way to know the tail was updated if the
-+ * subsequent checkpoint didn't write successfully.
-+ *
-+ * Therefore, CRC check the log from tail to head. If a failure occurs and the
-+ * offending record is within max iclog bufs from the head, walk the tail
-+ * forward and retry until a valid tail is found or corruption is detected out
-+ * of the range of a possible overwrite.
-  */
- STATIC int
- xlog_verify_tail(
- 	struct xlog		*log,
--	xfs_daddr_t		head_blk,
--	xfs_daddr_t		tail_blk)
-+	xfs_daddr_t		*head_blk,
-+	xfs_daddr_t		*tail_blk,
-+	int			hsize)
- {
- 	struct xlog_rec_header	*thead;
- 	struct xfs_buf		*bp;
- 	xfs_daddr_t		first_bad;
--	int			count;
- 	int			error = 0;
- 	bool			wrapped;
--	xfs_daddr_t		tmp_head;
-+	xfs_daddr_t		tmp_tail;
-+	xfs_daddr_t		orig_tail = *tail_blk;
- 
- 	bp = xlog_get_bp(log, 1);
- 	if (!bp)
- 		return -ENOMEM;
- 
- 	/*
--	 * Seek XLOG_MAX_ICLOGS + 1 records past the current tail record to get
--	 * a temporary head block that points after the last possible
--	 * concurrently written record of the tail.
-+	 * Make sure the tail points to a record (returns positive count on
-+	 * success).
- 	 */
--	count = xlog_seek_logrec_hdr(log, head_blk, tail_blk,
--				     XLOG_MAX_ICLOGS + 1, bp, &tmp_head, &thead,
--				     &wrapped);
--	if (count < 0) {
--		error = count;
-+	error = xlog_seek_logrec_hdr(log, *head_blk, *tail_blk, 1, bp,
-+			&tmp_tail, &thead, &wrapped);
-+	if (error < 0)
- 		goto out;
--	}
--
--	/*
--	 * If the call above didn't find XLOG_MAX_ICLOGS + 1 records, we ran
--	 * into the actual log head. tmp_head points to the start of the record
--	 * so update it to the actual head block.
--	 */
--	if (count < XLOG_MAX_ICLOGS + 1)
--		tmp_head = head_blk;
-+	if (*tail_blk != tmp_tail)
-+		*tail_blk = tmp_tail;
- 
- 	/*
--	 * We now have a tail and temporary head block that covers at least
--	 * XLOG_MAX_ICLOGS records from the tail. We need to verify that these
--	 * records were completely written. Run a CRC verification pass from
--	 * tail to head and return the result.
-+	 * Run a CRC check from the tail to the head. We can't just check
-+	 * MAX_ICLOGS records past the tail because the tail may point to stale
-+	 * blocks cleared during the search for the head/tail. These blocks are
-+	 * overwritten with zero-length records and thus record count is not a
-+	 * reliable indicator of the iclog state before a crash.
- 	 */
--	error = xlog_do_recovery_pass(log, tmp_head, tail_blk,
-+	first_bad = 0;
-+	error = xlog_do_recovery_pass(log, *head_blk, *tail_blk,
- 				      XLOG_RECOVER_CRCPASS, &first_bad);
-+	while (error && first_bad) {
-+		int	tail_distance;
++rm -f $seqres.full
 +
-+		/*
-+		 * Is corruption within range of the head? If so, retry from
-+		 * the next record. Otherwise return an error.
-+		 */
-+		tail_distance = xlog_tail_distance(log, *head_blk, first_bad);
-+		if (tail_distance > BTOBB(XLOG_MAX_ICLOGS * hsize))
-+			break;
++# get standard environment, filters and checks
++. ./common/rc
 +
-+		/* skip to the next record; returns positive count on success */
-+		error = xlog_seek_logrec_hdr(log, *head_blk, first_bad, 2, bp,
-+				&tmp_tail, &thead, &wrapped);
-+		if (error < 0)
-+			goto out;
- 
-+		*tail_blk = tmp_tail;
-+		first_bad = 0;
-+		error = xlog_do_recovery_pass(log, *head_blk, *tail_blk,
-+					      XLOG_RECOVER_CRCPASS, &first_bad);
-+	}
++# real QA test starts here
 +
-+	if (!error && *tail_blk != orig_tail)
-+		xfs_warn(log->l_mp,
-+		"Tail block (0x%llx) overwrite detected. Updated to 0x%llx",
-+			 orig_tail, *tail_blk);
- out:
- 	xlog_put_bp(bp);
- 	return error;
-@@ -1185,7 +1230,8 @@ xlog_verify_head(
- 		}
- 	}
- 
--	return xlog_verify_tail(log, *head_blk, *tail_blk);
-+	return xlog_verify_tail(log, head_blk, tail_blk,
-+				be32_to_cpu((*rhead)->h_size));
- }
- 
- /*
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_xfs_sysfs $(_short_dev $TEST_DEV)/errortag/log_item_pin
++_require_xfs_sysfs $(_short_dev $TEST_DEV)/errortag/log_bad_crc
++_require_scratch
++_require_command "$KILLALL_PROG" killall
++
++echo "Silence is golden."
++
++sdev=$(_short_dev $SCRATCH_DEV)
++
++_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
++_scratch_mount || _fail "mount failed"
++
++# populate the fs with some data and cycle the mount to reset the log head/tail
++$FSSTRESS_PROG -d $SCRATCH_MNT -z -fcreat=1 -p 4 -n 100000 > /dev/null 2>&1
++_scratch_cycle_mount || _fail "mount failed"
++
++# Pin the tail and start a file removal workload. File removal tends to
++# reproduce the corruption more reliably.
++echo 1 > /sys/fs/xfs/$sdev/errortag/log_item_pin
++
++rm -rf $SCRATCH_MNT/* > /dev/null 2>&1 &
++workpid=$!
++
++# wait for the head to stop pushing forward
++prevhead=-1
++head=`cat /sys/fs/xfs/$sdev/log/log_head_lsn`
++while [ "$head" != "$prevhead" ]; do
++	sleep 5
++	prevhead=$head
++	head=`cat /sys/fs/xfs/$sdev/log/log_head_lsn`
++done
++
++# Once the head is pinned behind the tail, enable log record corruption and
++# unpin the tail. All subsequent log buffer writes end up corrupted on-disk and
++# result in log I/O errors.
++echo 1 > /sys/fs/xfs/$sdev/errortag/log_bad_crc
++echo 0 > /sys/fs/xfs/$sdev/errortag/log_item_pin
++
++# wait for fs shutdown to kill the workload
++wait $workpid
++
++# cycle mount to test log recovery
++_scratch_cycle_mount
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+new file mode 100644
+index 0000000..d254382
+--- /dev/null
++++ b/tests/xfs/999.out
+@@ -0,0 +1,2 @@
++QA output created by 999
++Silence is golden.
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 2a3b950..a10fd6d 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -419,3 +419,4 @@
+ 419 auto quick
+ 420 auto quick clone dedupe
+ 421 auto quick clone dedupe
++999 auto log
 -- 
 2.7.5
 
