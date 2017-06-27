@@ -1,122 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:29931 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751386AbdFZSLj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jun 2017 14:11:39 -0400
-Date: Mon, 26 Jun 2017 11:10:50 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:18145 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751453AbdF0AfM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jun 2017 20:35:12 -0400
+Date: Mon, 26 Jun 2017 17:34:35 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v7 21/22] xfs: minimal conversion to errseq_t writeback
- error reporting
-Message-ID: <20170626181050.GA31434@birch.djwong.org>
-References: <20170616193427.13955-1-jlayton@redhat.com>
- <20170616193427.13955-22-jlayton@redhat.com>
- <20170626152241.GC4733@birch.djwong.org>
- <1498499912.10049.2.camel@redhat.com>
+Subject: Re: [PATCH v3 5/5] xfs: Switch to iomap for SEEK_HOLE / SEEK_DATA
+Message-ID: <20170627003435.GI4733@birch.djwong.org>
+References: <1498487118-6564-1-git-send-email-agruenba@redhat.com>
+ <1498487118-6564-6-git-send-email-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1498499912.10049.2.camel@redhat.com>
+In-Reply-To: <1498487118-6564-6-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: jlayton@redhat.com
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-On Mon, Jun 26, 2017 at 01:58:32PM -0400, jlayton@redhat.com wrote:
-> On Mon, 2017-06-26 at 08:22 -0700, Darrick J. Wong wrote:
-> > On Fri, Jun 16, 2017 at 03:34:26PM -0400, Jeff Layton wrote:
-> > > Just check and advance the data errseq_t in struct file before
-> > > before returning from fsync on normal files. Internal filemap_*
-> > > callers are left as-is.
-> > > 
-> > > Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_file.c | 15 +++++++++++----
-> > >  1 file changed, 11 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > > index 5fb5a0958a14..bc3b1575e8db 100644
-> > > --- a/fs/xfs/xfs_file.c
-> > > +++ b/fs/xfs/xfs_file.c
-> > > @@ -134,7 +134,7 @@ xfs_file_fsync(
-> > >  	struct inode		*inode = file->f_mapping-
-> > > >host;
-> > >  	struct xfs_inode	*ip = XFS_I(inode);
-> > >  	struct xfs_mount	*mp = ip->i_mount;
-> > > -	int			error = 0;
-> > > +	int			error = 0, err2;
-> > >  	int			log_flushed = 0;
-> > >  	xfs_lsn_t		lsn = 0;
-> > >  
-> > > @@ -142,10 +142,12 @@ xfs_file_fsync(
-> > >  
-> > >  	error = filemap_write_and_wait_range(inode->i_mapping,
-> > > start, end);
-> > >  	if (error)
-> > > -		return error;
-> > > +		goto out;
-> > >  
-> > > -	if (XFS_FORCED_SHUTDOWN(mp))
-> > > -		return -EIO;
-> > > +	if (XFS_FORCED_SHUTDOWN(mp)) {
-> > > +		error = -EIO;
-> > > +		goto out;
-> > > +	}
-> > >  
-> > >  	xfs_iflags_clear(ip, XFS_ITRUNCATED);
-> > >  
-> > > @@ -197,6 +199,11 @@ xfs_file_fsync(
-> > >  	    mp->m_logdev_targp == mp->m_ddev_targp)
-> > >  		xfs_blkdev_issue_flush(mp->m_ddev_targp);
-> > >  
-> > > +out:
-> > > +	err2 = filemap_report_wb_err(file);
-> > 
-> > Could we have a comment here to remind anyone reading the code a year
-> > from now that filemap_report_wb_err has side effects?  Pre-coffee me
-> > was
-> > wondering why we'd bother calling filemap_report_wb_err in the
-> > XFS_FORCED_SHUTDOWN case, then remembered that it touches data
-> > structures.
-> > 
-> > The first sentence of the commit message (really, the word 'advance')
-> > added as a comment was adequate to remind me of the side effects.
-> > 
-> > Once that's added,
-> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > --D
-> > 
-> 
-> Yeah, definitely. I'm working on a respin of the series now to
-> incorporate HCH's suggestion too. I'll add that in as well.
-> 
-> Maybe I should rename that function to file_check_and_advance_wb_err()
-> ? It would be good to make it clear that it does advance the errseq_t
-> cursor.
+[adding Christoph to cc]
 
-Seems like a good idea.
+On Mon, Jun 26, 2017 at 04:25:18PM +0200, Andreas Gruenbacher wrote:
+> Switch to the iomap_seek_hole_data vfs helper for implementing lseek
+> SEEK_HOLE / SEEK_DATA.  __xfs_seek_hole_data can go away once it's no
+> longer used by the quota code.
+> 
+> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> ---
+>  fs/xfs/xfs_file.c | 21 +++++----------------
+>  1 file changed, 5 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 962dafd..94fe89a 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1131,29 +1131,18 @@ xfs_seek_hole_data(
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	uint			lock;
+> -	loff_t			offset, end;
+> -	int			error = 0;
+> +	loff_t			offset;
+>  
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+>  
+>  	lock = xfs_ilock_data_map_shared(ip);
+> -
+> -	end = i_size_read(inode);
+> -	offset = __xfs_seek_hole_data(inode, start, end, whence);
+> -	if (offset < 0) {
+> -		error = offset;
+> -		goto out_unlock;
+> -	}
+> -
+> -	offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+> -
+> -out_unlock:
+> +	offset = iomap_seek_hole_data(inode, start, whence, &xfs_iomap_ops);
+
+Hm.  We grab the data map ilock above, then we call
+iomap_seek_hole_data, which (eventually) calls xfs_file_iomap_begin,
+which tries to grab the data map ilock.  We shouldn't be grabbing the
+ilock twice, obviously, but on the other hand...
+
+...under the old code, we'd take the ilock and do the whole block map
+and page cache scans without ever dropping the ilock.  This new iomap
+based thing only holds the ilock during ->iomap_begin, which makes me
+worry that someone else can wander in and mess with things while we're
+looking for holes/data?
 
 --D
 
+FWIW generic/285 blows up with this:
+
+[ 2975.947417] run fstests generic/285 at 2017-06-26 10:13:48
+
+[ 2976.474195] ============================================
+[ 2976.474856] WARNING: possible recursive locking detected
+[ 2976.475392] 4.12.0-rc6-dgc #2 Tainted: G        W      
+[ 2976.475875] --------------------------------------------
+[ 2976.476361] seek_sanity_tes/18280 is trying to acquire lock:
+[ 2976.476874]  (&xfs_nondir_ilock_class){++++..}, at: [<ffffffffa0143eb7>] xfs_ilock+0x137/0x330 [xfs]
+[ 2976.478009] 
+               but task is already holding lock:
+[ 2976.479328]  (&xfs_nondir_ilock_class){++++..}, at: [<ffffffffa0143eb7>] xfs_ilock+0x137/0x330 [xfs]
+[ 2976.480506] 
+               other info that might help us debug this:
+[ 2976.481295]  Possible unsafe locking scenario:
+
+[ 2976.481973]        CPU0
+[ 2976.482253]        ----
+[ 2976.482556]   lock(&xfs_nondir_ilock_class);
+[ 2976.482960]   lock(&xfs_nondir_ilock_class);
+[ 2976.483360] 
+                *** DEADLOCK ***
+
+[ 2976.486560]  May be due to missing lock nesting notation
+
+[ 2976.487274] 1 lock held by seek_sanity_tes/18280:
+[ 2976.487775]  #0:  (&xfs_nondir_ilock_class){++++..}, at: [<ffffffffa0143eb7>] xfs_ilock+0x137/0x330 [xfs]
+[ 2976.489006] 
+               stack backtrace:
+[ 2976.489760] CPU: 0 PID: 18280 Comm: seek_sanity_tes Tainted: G        W       4.12.0-rc6-dgc #2
+[ 2976.491308] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
+[ 2976.492907] Call Trace:
+[ 2976.493422]  dump_stack+0x85/0xc7
+[ 2976.494049]  __lock_acquire+0x1567/0x15c0
+[ 2976.494782]  ? _raw_spin_unlock+0x31/0x50
+[ 2976.495499]  lock_acquire+0xac/0x200
+[ 2976.496485]  ? lock_acquire+0xac/0x200
+[ 2976.497347]  ? xfs_ilock+0x137/0x330 [xfs]
+[ 2976.497949]  ? xfs_ilock_data_map_shared+0x30/0x40 [xfs]
+[ 2976.498799]  down_read_nested+0x49/0xb0
+[ 2976.499414]  ? xfs_ilock+0x137/0x330 [xfs]
+[ 2976.500153]  xfs_ilock+0x137/0x330 [xfs]
+[ 2976.503377]  xfs_ilock_data_map_shared+0x30/0x40 [xfs]
+[ 2976.504281]  xfs_file_iomap_begin+0x8e/0xd40 [xfs]
+[ 2976.504981]  ? xfs_iunlock+0x2ab/0x310 [xfs]
+[ 2976.505630]  ? xfs_ilock+0x137/0x330 [xfs]
+[ 2976.506198]  iomap_apply+0x48/0xe0
+[ 2976.506760]  iomap_seek_hole_data+0xa6/0x100
+[ 2976.507510]  ? iomap_to_fiemap+0x80/0x80
+[ 2976.508163]  xfs_seek_hole_data+0x6a/0xb0 [xfs]
+[ 2976.508903]  xfs_file_llseek+0x1c/0x30 [xfs]
+[ 2976.509497]  SyS_lseek+0x8d/0xb0
+[ 2976.509936]  entry_SYSCALL_64_fastpath+0x1f/0xbe
+[ 2976.510622] RIP: 0033:0x7f43f2468b67
+[ 2976.511162] RSP: 002b:00007ffd07380e58 EFLAGS: 00000202 ORIG_RAX: 0000000000000008
+[ 2976.512312] RAX: ffffffffffffffda RBX: 00007f43f2452b20 RCX: 00007f43f2468b67
+[ 2976.513448] RDX: 0000000000000003 RSI: 0000000000000000 RDI: 0000000000000004
+[ 2976.514769] RBP: 0000000000001011 R08: 0000000000000000 R09: 0000000000000016
+[ 2976.515995] R10: 00000000000000c2 R11: 0000000000000202 R12: 00007f43f2452b78
+[ 2976.517290] R13: 00007f43f2452b78 R14: 0000000000002710 R15: 0000000000403e26
+[ 2976.733289] XFS (pmem1): Unmounting Filesystem
+[ 2976.850354] XFS (pmem1): Mounting V4 Filesystem
+[ 2976.856274] XFS (pmem1): Ending clean mount
+
+
+>  	xfs_iunlock(ip, lock);
+>  
+> -	if (error)
+> -		return error;
+> -	return offset;
+> +	if (offset < 0)
+> +		return offset;
+> +	return vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+>  }
+>  
+>  STATIC loff_t
+> -- 
+> 2.7.5
 > 
-> > > +	if (!error)
-> > > +		error = err2;
-> > > +
-> > >  	return error;
-> > >  }
-> > >  
-> > > -- 
-> > > 2.13.0
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-
-> > > xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-
-> > btrfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
