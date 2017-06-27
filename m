@@ -1,197 +1,189 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33474 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751614AbdF0OuW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jun 2017 10:50:22 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 1E471FEEF9
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2017 14:50:17 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E173885A51
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2017 14:50:16 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] tests/xfs: test for log recovery failure after tail overwrite
-Date: Tue, 27 Jun 2017 10:50:16 -0400
-Message-Id: <1498575016-57959-1-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1498574436-57561-1-git-send-email-bfoster@redhat.com>
-References: <1498574436-57561-1-git-send-email-bfoster@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:19634 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751492AbdF0Qvt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2017 12:51:49 -0400
+Date: Tue, 27 Jun 2017 09:51:45 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: replace log_badcrc_factor knob with error injection
+ tag
+Message-ID: <20170627165145.GA4492@birch.djwong.org>
+References: <149823570899.31786.10730517727349185585.stgit@birch.djwong.org>
+ <1498566905-51311-1-git-send-email-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1498566905-51311-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-XFS is susceptible to log recovery problems if the fs crashes under
-certain circumstances. If the tail has been pinned for long enough
-to the log to fill and the next batch of log buffer submissions
-happen to fail, the filesystem shutsdown having potentially
-overwritten part of the range between the last good tail->head range
-in the log. This causes log recovery to fail with crc mismatch or
-invalid log record errors.
+On Tue, Jun 27, 2017 at 08:35:05AM -0400, Brian Foster wrote:
+> Now that error injection tags support dynamic frequency adjustment,
+> replace the debug mode sysfs knob that controls log record CRC error
+> injection with an error injection tag.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> Darrick,
+> 
+> Care to tack something like this onto this series? We might as well fix
+> this one too before I create another test that relies on it. I'll follow
+> up with an update to xfs/141 to support either knob.
 
-This problem is not yet fixed and thus known/expected to fail. At
-this time, this test serves as a reminder that the problem exists
-and a reproducer for future verification purposes. Note that this
-problem is currently only reproducible with larger (non-default) log
-buffer sizes (i.e., '-o logbsize=256k') or smaller block sizes (1k).
+Looks ok to me, will test...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+--D
 
-Here's the latest variant of the test that can reproduce this problem.
-This version depends on the recent error injection sysfs knobs and the
-existence of the associated knobs for log item pinning and bad log
-record crc injection.
-
-I've left fstests off the cc list for now since much of that code is
-still outstanding. This is currently posted for reference.
-
-Brian
-
- tests/xfs/999     | 113 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/999.out |   2 +
- tests/xfs/group   |   1 +
- 3 files changed, 116 insertions(+)
- create mode 100755 tests/xfs/999
- create mode 100644 tests/xfs/999.out
-
-diff --git a/tests/xfs/999 b/tests/xfs/999
-new file mode 100755
-index 0000000..e321d73
---- /dev/null
-+++ b/tests/xfs/999
-@@ -0,0 +1,113 @@
-+#! /bin/bash
-+# FS QA Test No. 999
-+#
-+# Attempt to reproduce log recovery failure by writing corrupt log records over
-+# the last good tail in the log. The tail is force pinned while a workload runs
-+# the head as close as possible behind the tail. Once the head is pinned,
-+# corrupted log records are written to the log and the filesystem shuts down.
-+#
-+# While log recovery should handle the corrupted log records, it has historical
-+# problems dealing with the situation where the corrupted log records may have
-+# overwritten the tail of the previous good record in the log. If this occurs,
-+# log recovery may fail.
-+#
-+# This can be reproduced more reliably under non-default conditions such as with
-+# the smallest supported FSB sizes and/or largest supported log buffer sizes and
-+# counts (logbufs and logbsize mount options).
-+#
-+# Note that this test requires a DEBUG mode kernel.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Red Hat, Inc. All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-+	[ -e /sys/fs/xfs/$sdev/errortag/log_item_pin ] &&
-+		echo 0 > /sys/fs/xfs/$sdev/errortag/log_item_pin
-+	wait > /dev/null 2>&1
-+}
-+
-+rm -f $seqres.full
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os Linux
-+_require_xfs_sysfs $(_short_dev $TEST_DEV)/errortag/log_item_pin
-+_require_xfs_sysfs $(_short_dev $TEST_DEV)/errortag/log_bad_crc
-+_require_scratch
-+_require_command "$KILLALL_PROG" killall
-+
-+echo "Silence is golden."
-+
-+sdev=$(_short_dev $SCRATCH_DEV)
-+
-+_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-+_scratch_mount || _fail "mount failed"
-+
-+# populate the fs with some data and cycle the mount to reset the log head/tail
-+$FSSTRESS_PROG -d $SCRATCH_MNT -z -fcreat=1 -p 4 -n 100000 > /dev/null 2>&1
-+_scratch_cycle_mount || _fail "mount failed"
-+
-+# Pin the tail and start a file removal workload. File removal tends to
-+# reproduce the corruption more reliably.
-+echo 1 > /sys/fs/xfs/$sdev/errortag/log_item_pin
-+
-+rm -rf $SCRATCH_MNT/* > /dev/null 2>&1 &
-+workpid=$!
-+
-+# wait for the head to stop pushing forward
-+prevhead=-1
-+head=`cat /sys/fs/xfs/$sdev/log/log_head_lsn`
-+while [ "$head" != "$prevhead" ]; do
-+	sleep 5
-+	prevhead=$head
-+	head=`cat /sys/fs/xfs/$sdev/log/log_head_lsn`
-+done
-+
-+# Once the head is pinned behind the tail, enable log record corruption and
-+# unpin the tail. All subsequent log buffer writes end up corrupted on-disk and
-+# result in log I/O errors.
-+echo 1 > /sys/fs/xfs/$sdev/errortag/log_bad_crc
-+echo 0 > /sys/fs/xfs/$sdev/errortag/log_item_pin
-+
-+# wait for fs shutdown to kill the workload
-+wait $workpid
-+
-+# cycle mount to test log recovery
-+_scratch_cycle_mount
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-new file mode 100644
-index 0000000..d254382
---- /dev/null
-+++ b/tests/xfs/999.out
-@@ -0,0 +1,2 @@
-+QA output created by 999
-+Silence is golden.
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 2a3b950..a10fd6d 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -419,3 +419,4 @@
- 419 auto quick
- 420 auto quick clone dedupe
- 421 auto quick clone dedupe
-+999 auto log
--- 
-2.7.5
-
+> 
+> Brian
+> 
+>  fs/xfs/xfs_error.c |  3 +++
+>  fs/xfs/xfs_error.h |  4 +++-
+>  fs/xfs/xfs_log.c   |  5 +----
+>  fs/xfs/xfs_sysfs.c | 36 ------------------------------------
+>  4 files changed, 7 insertions(+), 41 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> index a2f23d2..26c32bc 100644
+> --- a/fs/xfs/xfs_error.c
+> +++ b/fs/xfs/xfs_error.c
+> @@ -56,6 +56,7 @@ static unsigned int xfs_errortag_random_default[] = {
+>  	XFS_RANDOM_BMAP_FINISH_ONE,
+>  	XFS_RANDOM_AG_RESV_CRITICAL,
+>  	XFS_RANDOM_DROP_WRITES,
+> +	XFS_RANDOM_LOG_BAD_CRC,
+>  };
+>  
+>  struct xfs_errortag_attr {
+> @@ -159,6 +160,7 @@ XFS_ERRORTAG_ATTR_RW(refcount_finish_one,	XFS_ERRTAG_REFCOUNT_FINISH_ONE);
+>  XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
+>  XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
+>  XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
+> +XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
+>  
+>  static struct attribute *xfs_errortag_attrs[] = {
+>  	XFS_ERRORTAG_ATTR_LIST(noerror),
+> @@ -190,6 +192,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+>  	XFS_ERRORTAG_ATTR_LIST(bmap_finish_one),
+>  	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
+>  	XFS_ERRORTAG_ATTR_LIST(drop_writes),
+> +	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
+>  	NULL,
+>  };
+>  
+> diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+> index ad9b24a..0874d6b 100644
+> --- a/fs/xfs/xfs_error.h
+> +++ b/fs/xfs/xfs_error.h
+> @@ -106,8 +106,9 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+>   * handling sequence.
+>   */
+>  #define XFS_ERRTAG_DROP_WRITES				28
+> +#define XFS_ERRTAG_LOG_BAD_CRC				29
+>  
+> -#define XFS_ERRTAG_MAX					29
+> +#define XFS_ERRTAG_MAX					30
+>  
+>  /*
+>   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+> @@ -141,6 +142,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+>  #define XFS_RANDOM_BMAP_FINISH_ONE			1
+>  #define XFS_RANDOM_AG_RESV_CRITICAL			4
+>  #define XFS_RANDOM_DROP_WRITES				1
+> +#define XFS_RANDOM_LOG_BAD_CRC				1
+>  
+>  #ifdef DEBUG
+>  extern int xfs_errortag_init(struct xfs_mount *mp);
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 2d1112e..31f11be 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1841,7 +1841,6 @@ xlog_sync(
+>  	/* calculcate the checksum */
+>  	iclog->ic_header.h_crc = xlog_cksum(log, &iclog->ic_header,
+>  					    iclog->ic_datap, size);
+> -#ifdef DEBUG
+>  	/*
+>  	 * Intentionally corrupt the log record CRC based on the error injection
+>  	 * frequency, if defined. This facilitates testing log recovery in the
+> @@ -1849,15 +1848,13 @@ xlog_sync(
+>  	 * write on I/O completion and shutdown the fs. The subsequent mount
+>  	 * detects the bad CRC and attempts to recover.
+>  	 */
+> -	if (log->l_badcrc_factor &&
+> -	    (prandom_u32() % log->l_badcrc_factor == 0)) {
+> +	if (XFS_TEST_ERROR(false, log->l_mp, XFS_ERRTAG_LOG_BAD_CRC)) {
+>  		iclog->ic_header.h_crc &= cpu_to_le32(0xAAAAAAAA);
+>  		iclog->ic_state |= XLOG_STATE_IOABORT;
+>  		xfs_warn(log->l_mp,
+>  	"Intentionally corrupted log record at LSN 0x%llx. Shutdown imminent.",
+>  			 be64_to_cpu(iclog->ic_header.h_lsn));
+>  	}
+> -#endif
+>  
+>  	bp->b_io_length = BTOBB(count);
+>  	bp->b_fspriv = iclog;
+> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+> index 56610a9..8b2ccc2 100644
+> --- a/fs/xfs/xfs_sysfs.c
+> +++ b/fs/xfs/xfs_sysfs.c
+> @@ -305,47 +305,11 @@ write_grant_head_show(
+>  }
+>  XFS_SYSFS_ATTR_RO(write_grant_head);
+>  
+> -#ifdef DEBUG
+> -STATIC ssize_t
+> -log_badcrc_factor_store(
+> -	struct kobject	*kobject,
+> -	const char	*buf,
+> -	size_t		count)
+> -{
+> -	struct xlog	*log = to_xlog(kobject);
+> -	int		ret;
+> -	uint32_t	val;
+> -
+> -	ret = kstrtouint(buf, 0, &val);
+> -	if (ret)
+> -		return ret;
+> -
+> -	log->l_badcrc_factor = val;
+> -
+> -	return count;
+> -}
+> -
+> -STATIC ssize_t
+> -log_badcrc_factor_show(
+> -	struct kobject	*kobject,
+> -	char		*buf)
+> -{
+> -	struct xlog	*log = to_xlog(kobject);
+> -
+> -	return snprintf(buf, PAGE_SIZE, "%d\n", log->l_badcrc_factor);
+> -}
+> -
+> -XFS_SYSFS_ATTR_RW(log_badcrc_factor);
+> -#endif	/* DEBUG */
+> -
+>  static struct attribute *xfs_log_attrs[] = {
+>  	ATTR_LIST(log_head_lsn),
+>  	ATTR_LIST(log_tail_lsn),
+>  	ATTR_LIST(reserve_grant_head),
+>  	ATTR_LIST(write_grant_head),
+> -#ifdef DEBUG
+> -	ATTR_LIST(log_badcrc_factor),
+> -#endif
+>  	NULL,
+>  };
+>  
+> -- 
+> 2.7.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
