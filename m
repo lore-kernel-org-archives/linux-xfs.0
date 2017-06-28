@@ -1,64 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:35940 "EHLO
-        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752057AbdFTKQQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2017 06:16:16 -0400
-Received: by mail-qk0-f174.google.com with SMTP id g83so53474275qkb.3
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2017 03:16:11 -0700 (PDT)
-Message-ID: <1497953761.4555.1.camel@redhat.com>
-Subject: Re: [PATCH v7 00/22] fs: enhanced writeback error reporting with
- errseq_t (pile #1)
-From: Jeff Layton <jlayton@redhat.com>
-Date: Tue, 20 Jun 2017 06:16:01 -0400
-In-Reply-To: <20170620092507.3998e728@canb.auug.org.au>
-References: <20170616193427.13955-1-jlayton@redhat.com>
-         <1497889426.4654.7.camel@redhat.com>
-         <20170620092507.3998e728@canb.auug.org.au>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from aserp1040.oracle.com ([141.146.126.69]:33660 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753610AbdF1EPU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2017 00:15:20 -0400
+Date: Tue, 27 Jun 2017 21:12:20 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/6] xfs: map KM_MAYFAIL to __GFP_RETRY_MAYFAIL
+Message-ID: <20170628041220.GB7736@birch.djwong.org>
+References: <20170623085345.11304-1-mhocko@kernel.org>
+ <20170623085345.11304-4-mhocko@kernel.org>
+ <20170627084950.GI28072@dhcp22.suse.cz>
+ <20170627134751.GA28043@infradead.org>
+ <20170627140654.GO28072@dhcp22.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170627140654.GO28072@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Vlastimil Babka <vbabka@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, NeilBrown <neilb@suse.com>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, xfs <linux-xfs@vger.kernel.org>
 
-On Tue, 2017-06-20 at 09:25 +1000, Stephen Rothwell wrote:
-> Hi Jeff,
+[add linux-xfs to cc]
+
+FYI this is a discussion of the patch "xfs: map KM_MAYFAIL to
+__GFP_RETRY_MAYFAIL" which was last discussed on the xfs list in March
+and now is in the -mm tree...
+
+https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?h=next-20170627&id=43182d82c48fae80d31a9101b6bb06d75cee32c7
+
+On Tue, Jun 27, 2017 at 04:06:54PM +0200, Michal Hocko wrote:
+> On Tue 27-06-17 06:47:51, Christoph Hellwig wrote:
+> > On Tue, Jun 27, 2017 at 10:49:50AM +0200, Michal Hocko wrote:
+> > > Christoph, Darrick
+> > > could you have a look at this patch please? Andrew has put it into mmotm
+> > > but I definitely do not want it passes your attention.
+> > 
+> > I don't think what we have to gain from it.  Callsite for KM_MAYFAIL
+> > should handler failures, but the current behavior seems to be doing fine
+> > too.
 > 
-> On Mon, 19 Jun 2017 12:23:46 -0400 Jeff Layton <jlayton@redhat.com> wrote:
-> > 
-> > If there are no major objections to this set, I'd like to have
-> > linux-next start picking it up to get some wider testing. What's the
-> > right vehicle for this, given that it touches stuff all over the tree?
-> > 
-> > I can see 3 potential options:
-> > 
-> > 1) I could just pull these into the branch that Stephen is already
-> > picking up for file-locks in my tree
-> > 
-> > 2) I could put them into a new branch, and have Stephen pull that one in
-> > addition to the file-locks branch
-> > 
-> > 3) It could go in via someone else's tree entirely (Andrew or Al's
-> > maybe?)
-> > 
-> > I'm fine with any of these. Anyone have thoughts?
-> 
-> Given that this is a one off development, either 1 or 3 (in Al's tree)
-> would be fine.  2 is a possibility (but people forget to ask me to
-> remove one shot trees :-()
-> 
+> Last time I've asked I didnd't get any reply so let me ask again. Some
+> of those allocations seem to be small (e.g. by a random look
+> xlog_cil_init allocates struct xfs_cil which is 576B and struct
+> xfs_cil_ctx 176B). Those do not fail currently under most conditions and
+> it will retry allocation with the OOM killer if there is no progress. As
+> you know that failing those is acceptable, wouldn't it be better to
+> simply fail them and do not disrupt the system with the oom killer?
 
-Ok -- yeah, I'd probably be one of those people who forget too...
+I remember the first time I saw this patch, and didn't have much of an
+opinion either way -- the current behavior is fine, so why mess around?
+I'd just as soon XFS not have to deal with errors if it doesn't have to. :)
 
-In that case, I'll plan to go ahead and just merge these into my
-linux-next branch. That's easier than bugging others for it. Hopefully
-we won't have a lot in the way of merge conflicts.
+But, you've asked again, so I'll be less glib this time.
 
-I'll see about getting this into branch later today, and hopefully we
-can get it into linux-next for tomorrow.
+I took a quick glance at all the MAYFAIL users in XFS.  /Nearly/ all
+them seem to be cases either where we're mounting a filesystem or are
+collecting memory for some ioctl -- in either case it's not hard to just
+fail back out to userspace.  The upcoming online fsck patches use it
+heavily, which is fine since we can always fail out to userspace and
+tell the admin to go run xfs_repair offline.
 
-Thanks!
--- 
-Jeff Layton <jlayton@redhat.com>
+The one user that caught my eye was xfs_iflush_cluster, which seems to
+want an array of pointers to a cluster's worth of struct xfs_inodes.  On
+a 64k block fs with 256 byte pointers I guess that could be ~2k worth of
+pointers, but otoh it looks like that's an optimization: If we're going
+to flush an inode out to disk we opportunistically scan the inode tree
+to see if the adjacent inodes are also ready to flush; if we can't get
+the memory for this, then it just backs off to flushing the one inode.
+
+All the callers of MAYFAIL that I found actually /do/ check the return
+value and start bailing out... so, uh, I guess I'm fine with it.  At
+worst it's easily reverted during -rc if it causes problems.  Anyone
+have a stronger objection?
+
+Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> -- 
+> Michal Hocko
+> SUSE Labs
