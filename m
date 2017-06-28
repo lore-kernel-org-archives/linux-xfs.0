@@ -1,39 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58026 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:59492 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752128AbdFTJGS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2017 05:06:18 -0400
-Date: Tue, 20 Jun 2017 02:06:07 -0700
+        with ESMTP id S1751559AbdF1Qjg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2017 12:39:36 -0400
+Date: Wed, 28 Jun 2017 09:39:36 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: don't crash on unexpected holes in dir/attr btrees
-Message-ID: <20170620090607.GD15374@infradead.org>
-References: <20170616175337.GE5421@birch.djwong.org>
- <351d0c66-4969-7ce9-da9c-6d2901e1bdef@sandeen.net>
+Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 3b22408
+Message-ID: <20170628163936.GA11468@infradead.org>
+References: <20170628035019.GC4492@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <351d0c66-4969-7ce9-da9c-6d2901e1bdef@sandeen.net>
+In-Reply-To: <20170628035019.GC4492@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, list@jonas-server.de, David Shaw <dshaw@jabberwocky.com>, Emmanuel Florac <eflorac@intellique.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Andreas Gruenbacher <agruenba@redhat.com>
 
-On Fri, Jun 16, 2017 at 01:12:41PM -0500, Eric Sandeen wrote:
-> On 6/16/17 12:53 PM, Darrick J. Wong wrote:
-> > Hi all,
-> > 
-> > So I /think/ the xfs_attr_inactive crashes that both of you have been
-> > seeing are a result of XFS assuming that there aren't ever any mapping
-> > holes in the extended attribute fork and crashing when it tries to
-> > grab a buffer for the hole and fails to notice that holes don't have
-> > buffers.  This lightly tested patch gets rid of /that/ problem.
-> > 
-> > So, if you're willing, can you try this out and see if the crashes go
-> > away?  Granted, this might only enable us to lurch on whatever's next...
-> 
-> If it's unexpected, does that mean something else is wrong?  If so,
-> should there be a warning or a corrupted state, or anything like that?
+On Tue, Jun 27, 2017 at 08:50:19PM -0700, Darrick J. Wong wrote:
+> I am well aware that Brian, Christoph, and Andreas have some fixes for
+> log wrapping problems and a rewrite of SEEK_HOLE/DATA to use iomap and
+> will spend the next day or two reviewing those patch sets; this is
+> merely an interim rollup of everything else that I've collected for 4.13
+> so far.
 
-xfs_attr_rmtval_remove certainly removes blocks from the attr mapping,
-but those should be expected..
+No problem.  Btw, the seek stuff could use some more reviews, and
+after that we should probably pull the core and xfs bits into the
+xfs tree.  IF/when ext4 gets a review we can decide how to feed
+that, same for the gfs2 bits.
