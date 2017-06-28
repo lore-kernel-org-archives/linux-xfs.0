@@ -1,87 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43744 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751265AbdFUWVF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2017 18:21:05 -0400
-Date: Wed, 21 Jun 2017 15:20:59 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfsprogs: new libxfs-apply option for Signed-off-by: tag
-Message-ID: <20170621222059.GT4733@birch.djwong.org>
-References: <09b8530a-6b35-bc05-130e-6dfd35889f2b@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <09b8530a-6b35-bc05-130e-6dfd35889f2b@redhat.com>
+Received: from mga03.intel.com ([134.134.136.65]:55662 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751540AbdF1WCm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Jun 2017 18:02:42 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v3 0/5] DAX common 4k zero page
+Date: Wed, 28 Jun 2017 16:01:47 -0600
+Message-Id: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Thu, May 11, 2017 at 02:35:43PM -0500, Eric Sandeen wrote:
-> Technically when a maintainer moves a patch from another project,
-> they should add their Signed-off-by: tag.  Add an option to
-> libxfs-apply to make that easy when cross-porting libxfs
-> patches.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/tools/libxfs-apply b/tools/libxfs-apply
-> index e7d7e0a..b594ccb 100755
-> --- a/tools/libxfs-apply
-> +++ b/tools/libxfs-apply
-> @@ -8,7 +8,7 @@ usage()
->  	echo $*
->  	echo
->  	echo "Usage:"
-> -	echo "	libxfs-apply [--verbose] --source <repodir> --commit <commit_id>"
-> +	echo "	libxfs-apply [--verbose] --sob <name/email> --source <repodir> --commit <commit_id>"
->  	echo "	libxfs-apply --patch <patchfile>"
->  	echo
->  	echo "libxfs-apply should be run in the destination git repository."
-> @@ -73,6 +73,7 @@ while [ $# -gt 0 ]; do
->  	--source)	REPO=$2 ; shift ;;
->  	--patch)	PATCH=$2; shift ;;
->  	--commit)	COMMIT_ID=$2 ; shift ;;
-> +	--sob)		SIGNED_OFF_BY=$2 ; shift ;;
+When servicing mmap() reads from file holes the current DAX code allocates
+a page cache page of all zeroes and places the struct page pointer in the
+mapping->page_tree radix tree.  This has three major drawbacks:
 
-I wonder, under what circumstances does the user /not/ want to have
-their S-o-b added to the commit?  It seems to me that this ought to be
-the default, since the $maintainer is importing code from another
-libxfs, which (to me anyway) doesn't seem all that different from
-pulling in regular patches from the mailing list or wherever.
+1) It consumes memory unnecessarily.  For every 4k page that is read via a
+DAX mmap() over a hole, we allocate a new page cache page.  This means that
+if you read 1GiB worth of pages, you end up using 1GiB of zeroed memory.
 
-Second, can we just pull the name and email from the output of git
-config --get user.{name,email} unless the user explicitly provided a sob
-line?
+2) It is slower than using a common zero page because each page fault has
+more work to do.  Instead of just inserting a common zero page we have to
+allocate a page cache page, zero it, and then insert it.
 
->  	--verbose)	VERBOSE=true ;;
->  	*)		usage ;;
->  	esac
-> @@ -274,6 +275,14 @@ fixup_header_format()
->  			print $0
->  		}' > $_hdr.new
->  
-> +	# Remove the last line if it contains only whitespace
-> +	sed -i '${/^ *$/d;}' $_hdr.new
-> +
-> +	# Add Signed-off-by: header if specified
-> +	if [ ! -z ${SIGNED_OFF_BY+x} ]; then 
-> +		echo "Signed-off-by: $SIGNED_OFF_BY" >> $_hdr.new
-> +	fi
+3) The fact that we had to check for both DAX exceptional entries and for
+page cache pages in the radix tree made the DAX code more complex.
 
-Third, we could detect that the patch already has the particular S-o-b
-that we'd be adding here, and avoid adding a duplicate.
+This series solves these issues by following the lead of the DAX PMD code
+and using a common 4k zero page instead.  This reduces memory usage and
+decreases latencies for some workloads, and it simplifies the DAX code,
+removing over 100 lines in total.
 
---D
+Andrew, I'm still hoping to get this merged for v4.13 if possible. I I have
+addressed all of Jan's feedback, but he is on vacation for the next few
+weeks so he may not be able to give me Reviewed-by tags.  I think this
+series is relatively low risk with clear benefits, and I think we should be
+able to address any issues that come up during the v4.13 RC series.
 
-> +
->  	# now output the new patch
->  	cat $_hdr.new $_diff
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This series has passed my targeted testing and a full xfstests run on both
+XFS and ext4.
+
+---
+Changes since v2:
+ - If we call insert_pfn() with 'mkwrite' for an entry that already exists,
+   don't overwrite the pte with a brand new one.  Just add the appropriate
+   flags. (Jan)
+
+ - Keep put_locked_mapping_entry() as a simple wrapper for
+   dax_unlock_mapping_entry() so it has naming parity with
+   get_unlocked_mapping_entry(). (Jan)
+
+ - Remove DAX special casing in page_cache_tree_insert(), move
+   now-private definitions from dax.h to dax.c. (Jan)
+
+Ross Zwisler (5):
+  mm: add vm_insert_mixed_mkwrite()
+  dax: relocate some dax functions
+  dax: use common 4k zero page for dax mmap reads
+  dax: remove DAX code from page_cache_tree_insert()
+  dax: move all DAX radix tree defs to fs/dax.c
+
+ Documentation/filesystems/dax.txt |   5 +-
+ fs/dax.c                          | 345 ++++++++++++++++----------------------
+ fs/ext2/file.c                    |  25 +--
+ fs/ext4/file.c                    |  32 +---
+ fs/xfs/xfs_file.c                 |   2 +-
+ include/linux/dax.h               |  45 -----
+ include/linux/mm.h                |   2 +
+ include/trace/events/fs_dax.h     |   2 -
+ mm/filemap.c                      |  13 +-
+ mm/memory.c                       |  57 ++++++-
+ 10 files changed, 205 insertions(+), 323 deletions(-)
+
+-- 
+2.9.4
+
