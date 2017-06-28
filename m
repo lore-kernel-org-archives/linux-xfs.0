@@ -1,56 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:46221 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:54378 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751900AbdF0Wn3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jun 2017 18:43:29 -0400
-Date: Wed, 28 Jun 2017 00:43:27 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 4/6] vfs: Add iomap_seek_hole and iomap_seek_data
-        helpers
-Message-ID: <20170627224326.GA12755@lst.de>
-References: <20170627214828.1029-1-hch@lst.de> <20170627214828.1029-5-hch@lst.de> <CAHpGcM+Dy+9dNwNpCmu492ayjbSnW-eeivw3+CfJUfbDHajn9w@mail.gmail.com>
+        id S1751900AbdF1Arl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Jun 2017 20:47:41 -0400
+Subject: Re: [PATCH] xfs_db: properly set inode type
+References: <e6c83eea-af29-c01b-752e-e049e8fdc69f@redhat.com>
+ <20170628004252.GB4492@birch.djwong.org>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <bb9f2c48-b862-0dab-e198-c6b73aaea5c0@redhat.com>
+Date: Tue, 27 Jun 2017 19:47:39 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAHpGcM+Dy+9dNwNpCmu492ayjbSnW-eeivw3+CfJUfbDHajn9w@mail.gmail.com>
+In-Reply-To: <20170628004252.GB4492@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas =?iso-8859-1?Q?Gr=FCnbacher?= <andreas.gruenbacher@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Andreas Gruenbacher <agruenba@redhat.com>, Jan Kara <jack@suse.cz>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Jun 28, 2017 at 12:14:57AM +0200, Andreas Grünbacher wrote:
-> This shouldn't be true anymore now that the actors don't recompute the
-> length; the above three lines should be obsolete.
+On 6/27/17 7:42 PM, Darrick J. Wong wrote:
+> On Tue, Jun 27, 2017 at 07:16:39PM -0500, Eric Sandeen wrote:
+>> When we set the type to "inode" the verifier validates multiple
+>> inodes in the current fs block, so setting the buffer size to
+>> that of just one inode is not sufficient and it'll emit spurious
+>> verifier errors for all but the first, as we read off the end:
+>>
+>> xfs_db> daddr 99
+>> xfs_db> type inode
+>> Metadata corruption detected at xfs_inode block 0x63/0x200
+>> Metadata corruption detected at xfs_inode block 0x63/0x200
+>> Metadata corruption detected at xfs_inode block 0x63/0x200
+>> Metadata corruption detected at xfs_inode block 0x63/0x200
+>> Metadata corruption detected at xfs_inode block 0x63/0x200
+>> Metadata corruption detected at xfs_inode block 0x63/0x200
+>> Metadata corruption detected at xfs_inode block 0x63/0x200
+>>
+>> Use the special set_cur_inode() function for this purpose
+>> as is done in inode_f().
+> 
+> Do you need a similar thing for dquots?  I sort of worry that we're
+> going down the rabbit hole of special casing all over xfs_db, but...
+> I'll defer to you. :)
 
-Indeed.
+I thought we did, but a quick test worked...
 
-> This comment makes more sense in iomap_seek_hole now.
+the dquot verifier only verifies one (indeed printing the dquot
+only shows the first one in the block) so for now, I think not.
 
-Or just drop it..
+I did find it interesting/curious that i.e. "agi_f" hard-codes
+the size and doesn't use the type's size function, but for
+now I'm just ignoring that...
 
-What about the incremental patch below?
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+>> diff --git a/db/io.c b/db/io.c
+>> index b97b710..655a978 100644
+>> --- a/db/io.c
+>> +++ b/db/io.c
+>> @@ -618,6 +618,18 @@ set_iocur_type(
+>>  	struct xfs_buf	*bp = iocur_top->bp;
+>>  	int bb_count;
+>>  
+>> +	/* Inodes are special; verifier checks all inodes in the buffer */
+>> +	if (t->typnm == TYP_INODE) {
+>> +		xfs_daddr_t	b = iocur_top->bb;
+>> +		xfs_ino_t	ino;
+>> +
+>> +		ino = XFS_AGINO_TO_INO(mp, xfs_daddr_to_agno(mp, b),
+>> +			((b << BBSHIFT) >> mp->m_sb.sb_inodelog) %
+>> +			(mp->m_sb.sb_agblocks << mp->m_sb.sb_inopblog));
+> 
+> XFS_OFFBNO_TO_AGINO(mp, xfs_daddr_to_agbno(mp, b), 0) instead of that
+> long third argument?
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index c90cda33994b..432eed8f091f 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -626,9 +626,6 @@ iomap_seek_hole(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
- 		length -= ret;
- 	}
- 
--	/* The last segment can extend beyond the end of the file. */
--	if (length <= 0)
--		return min(offset, size);
- 	return offset;
- }
- EXPORT_SYMBOL_GPL(iomap_seek_hole);
-@@ -675,7 +672,6 @@ iomap_seek_data(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
- 		length -= ret;
- 	}
- 
--	/* There is an implicit hole at the end of the file. */
- 	if (length <= 0)
- 		return -ENXIO;
- 	return offset;
+Macros, macros everywhere.  Ok, sounds good.
+
+-Eric
+
+> --D
+> 
+>> +		set_cur_inode(ino);
+>> +		return;
+>> +	}
+>> +
+>>  	/* adjust cursor for types that contain fields */
+>>  	if (t->fields) {
+>>  		bb_count = BTOBB(byteize(fsize(t->fields, iocur_top->data, 0, 0)));
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
