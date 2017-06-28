@@ -1,84 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33660 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753610AbdF1EPU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2017 00:15:20 -0400
-Date: Tue, 27 Jun 2017 21:12:20 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/6] xfs: map KM_MAYFAIL to __GFP_RETRY_MAYFAIL
-Message-ID: <20170628041220.GB7736@birch.djwong.org>
-References: <20170623085345.11304-1-mhocko@kernel.org>
- <20170623085345.11304-4-mhocko@kernel.org>
- <20170627084950.GI28072@dhcp22.suse.cz>
- <20170627134751.GA28043@infradead.org>
- <20170627140654.GO28072@dhcp22.suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170627140654.GO28072@dhcp22.suse.cz>
+Received: from smtpq2.tb.mail.iss.as9143.net ([212.54.42.165]:39742 "EHLO
+        smtpq2.tb.mail.iss.as9143.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751511AbdF1TmS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2017 15:42:18 -0400
+Received: from [212.54.42.136] (helo=smtp12.tb.mail.iss.as9143.net)
+        by smtpq2.tb.mail.iss.as9143.net with esmtp (Exim 4.86_2)
+        (envelope-from <richardwbb@versatel.nl>)
+        id 1dQIqu-0003ns-20
+        for linux-xfs@vger.kernel.org; Wed, 28 Jun 2017 21:42:16 +0200
+Received: from c16067.upc-c.chello.nl ([212.187.16.67] helo=[192.168.0.3])
+        by smtp12.tb.mail.iss.as9143.net with esmtp (Exim 4.86_2)
+        (envelope-from <richardwbb@versatel.nl>)
+        id 1dQIqt-0007SC-VT
+        for linux-xfs@vger.kernel.org; Wed, 28 Jun 2017 21:42:16 +0200
+Message-ID: <1498686205.13847.1.camel@versatel.nl>
+Subject: non mountable xfs with 2 primary and 2 logical
+From: Richard Waterbeek <richardwbb@versatel.nl>
+Date: Wed, 28 Jun 2017 21:43:25 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Vlastimil Babka <vbabka@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, NeilBrown <neilb@suse.com>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-[add linux-xfs to cc]
+Hi linux-xfs mailinglist,
 
-FYI this is a discussion of the patch "xfs: map KM_MAYFAIL to
-__GFP_RETRY_MAYFAIL" which was last discussed on the xfs list in March
-and now is in the -mm tree...
+I've recently subscribed to this list. I've seen many messages, but have
+little understading of the 'XFS' file system. I know about mkfs.xfs.
+I've benched my hardware. But, now my harddrive had a collision with the
+mbr somehow. [or something]
 
-https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?h=next-20170627&id=43182d82c48fae80d31a9101b6bb06d75cee32c7
+But, now I've 'hexdumped', the first 512 bytes, [because after a
+disaterous reboot, cfdisk is now saying; "/dev/sda empty".
 
-On Tue, Jun 27, 2017 at 04:06:54PM +0200, Michal Hocko wrote:
-> On Tue 27-06-17 06:47:51, Christoph Hellwig wrote:
-> > On Tue, Jun 27, 2017 at 10:49:50AM +0200, Michal Hocko wrote:
-> > > Christoph, Darrick
-> > > could you have a look at this patch please? Andrew has put it into mmotm
-> > > but I definitely do not want it passes your attention.
-> > 
-> > I don't think what we have to gain from it.  Callsite for KM_MAYFAIL
-> > should handler failures, but the current behavior seems to be doing fine
-> > too.
-> 
-> Last time I've asked I didnd't get any reply so let me ask again. Some
-> of those allocations seem to be small (e.g. by a random look
-> xlog_cil_init allocates struct xfs_cil which is 576B and struct
-> xfs_cil_ctx 176B). Those do not fail currently under most conditions and
-> it will retry allocation with the OOM killer if there is no progress. As
-> you know that failing those is acceptable, wouldn't it be better to
-> simply fail them and do not disrupt the system with the oom killer?
+I'm aware of two primary and two logical partitions. I feel that I know
+the size of the first and second primary, but the xfs/ sda5 and, xfs
+sda6, are no longer appearing. I had to '#' the /etc/fstab, because it
+won't boot [long waiting].
 
-I remember the first time I saw this patch, and didn't have much of an
-opinion either way -- the current behavior is fine, so why mess around?
-I'd just as soon XFS not have to deal with errors if it doesn't have to. :)
+Now I would like to restore the first 512 bytes which is the MBR.
 
-But, you've asked again, so I'll be less glib this time.
+I have absolutely no understanding of -where-, "the SuperBlock" [or how
+that should be called], happens to be.
 
-I took a quick glance at all the MAYFAIL users in XFS.  /Nearly/ all
-them seem to be cases either where we're mounting a filesystem or are
-collecting memory for some ioctl -- in either case it's not hard to just
-fail back out to userspace.  The upcoming online fsck patches use it
-heavily, which is fine since we can always fail out to userspace and
-tell the admin to go run xfs_repair offline.
+But, I feel that 512 bytes missing and no reason to believe a whole
+Terabyte would be "ones and/ or zero's", now, I wonder, how to restore
+this. I have not made backup of this harddrive, just an rsync, which is
+a little outdated and a bit incomplete, because difference in size of
+both drives.
 
-The one user that caught my eye was xfs_iflush_cluster, which seems to
-want an array of pointers to a cluster's worth of struct xfs_inodes.  On
-a 64k block fs with 256 byte pointers I guess that could be ~2k worth of
-pointers, but otoh it looks like that's an optimization: If we're going
-to flush an inode out to disk we opportunistically scan the inode tree
-to see if the adjacent inodes are also ready to flush; if we can't get
-the memory for this, then it just backs off to flushing the one inode.
+I might be able to create a XFS-something [from /dev/sda, for example],
+and write that with dd. 
 
-All the callers of MAYFAIL that I found actually /do/ check the return
-value and start bailing out... so, uh, I guess I'm fine with it.  At
-worst it's easily reverted during -rc if it causes problems.  Anyone
-have a stronger objection?
+But, before I would 'try this out', I would like to gain some
+understanding, of what -should- be on the first 512 bytes of a
+harddrive, besides what I have now, cfdisk is saying empty.
 
-Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
+Hoping to receive a reply, Richard, the Netherlands
 
---D
-
-> -- 
-> Michal Hocko
-> SUSE Labs
