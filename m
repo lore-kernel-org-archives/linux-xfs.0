@@ -1,48 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45988 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52192 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751435AbdFZMUS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Jun 2017 08:20:18 -0400
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH v2 43/51] xfs: convert to bio_for_each_segment_all_sp()
-Date: Mon, 26 Jun 2017 20:10:26 +0800
-Message-Id: <20170626121034.3051-44-ming.lei@redhat.com>
-In-Reply-To: <20170626121034.3051-1-ming.lei@redhat.com>
-References: <20170626121034.3051-1-ming.lei@redhat.com>
+        id S1751616AbdF1PJV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Jun 2017 11:09:21 -0400
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: [PATCH] xfs_db: improve argument naming in set_cur and set_iocur_type
+Date: Wed, 28 Jun 2017 10:09:13 -0500
+Message-Id: <20170628150913.15934-1-billodo@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>, Huang Ying <ying.huang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: sandeen@sandeen.net
 
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+In set_cur and set_iocur_type, the current naming for arguments
+type, block number, and length are t, d, and c, respectively.
+Replace these with more intuitive and descriptive names:
+type, blknum, and len. Additionally remove extra blank line
+in io.c.
+
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 ---
- fs/xfs/xfs_aops.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ db/io.c | 31 +++++++++++++++----------------
+ db/io.h |  6 +++---
+ 2 files changed, 18 insertions(+), 19 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 11ef989b8629..621efe71c70a 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -139,6 +139,7 @@ xfs_destroy_ioend(
- 	for (bio = &ioend->io_inline_bio; bio; bio = next) {
- 		struct bio_vec	*bvec;
- 		int		i;
-+		struct bvec_iter_all bia;
+diff --git a/db/io.c b/db/io.c
+index 9918a51d..45cbf3be 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -535,9 +535,9 @@ write_cur(void)
  
- 		/*
- 		 * For the last bio, bi_private points to the ioend, so we
-@@ -150,7 +151,7 @@ xfs_destroy_ioend(
- 			next = bio->bi_private;
+ void
+ set_cur(
+-	const typ_t	*t,
+-	__int64_t	d,
+-	int		c,
++	const typ_t	*type,
++	__int64_t	blknum,
++	int		len,
+ 	int		ring_flag,
+ 	bbmap_t		*bbmap)
+ {
+@@ -545,14 +545,13 @@ set_cur(
+ 	xfs_ino_t	dirino;
+ 	xfs_ino_t	ino;
+ 	__uint16_t	mode;
+-	const struct xfs_buf_ops *ops = t ? t->bops : NULL;
++	const struct xfs_buf_ops *ops = type ? type->bops : NULL;
  
- 		/* walk each page on bio, ending page IO on them */
--		bio_for_each_segment_all(bvec, bio, i)
-+		bio_for_each_segment_all_sp(bvec, bio, i, bia)
- 			xfs_finish_page_writeback(inode, bvec, error);
+ 	if (iocur_sp < 0) {
+ 		dbprintf(_("set_cur no stack element to set\n"));
+ 		return;
+ 	}
  
- 		bio_put(bio);
+-
+ 	ino = iocur_top->ino;
+ 	dirino = iocur_top->dirino;
+ 	mode = iocur_top->mode;
+@@ -562,7 +561,7 @@ set_cur(
+ 	if (bbmap) {
+ #ifdef DEBUG_BBMAP
+ 		int i;
+-		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
++		printf(_("xfs_db got a bbmap for %lld\n"), (long long)blknum);
+ 		printf(_("\tblock map"));
+ 		for (i = 0; i < bbmap->nmaps; i++)
+ 			printf(" %lld:%d", (long long)bbmap->b[i].bm_bn,
+@@ -576,7 +575,7 @@ set_cur(
+ 		bp = libxfs_readbuf_map(mp->m_ddev_targp, bbmap->b,
+ 					bbmap->nmaps, 0, ops);
+ 	} else {
+-		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, ops);
++		bp = libxfs_readbuf(mp->m_ddev_targp, blknum, len, 0, ops);
+ 		iocur_top->bbmap = NULL;
+ 	}
+ 
+@@ -592,13 +591,13 @@ set_cur(
+ 	if (!ops)
+ 		bp->b_flags |= LIBXFS_B_UNCHECKED;
+ 
+-	iocur_top->bb = d;
+-	iocur_top->blen = c;
++	iocur_top->bb = blknum;
++	iocur_top->blen = len;
+ 	iocur_top->boff = 0;
+ 	iocur_top->data = iocur_top->buf;
+-	iocur_top->len = BBTOB(c);
+-	iocur_top->off = d << BBSHIFT;
+-	iocur_top->typ = cur_typ = t;
++	iocur_top->len = BBTOB(len);
++	iocur_top->off = blknum << BBSHIFT;
++	iocur_top->typ = cur_typ = type;
+ 	iocur_top->ino = ino;
+ 	iocur_top->dirino = dirino;
+ 	iocur_top->mode = mode;
+@@ -612,16 +611,16 @@ set_cur(
+ 
+ void
+ set_iocur_type(
+-	const typ_t	*t)
++	const typ_t	*type)
+ {
+ 	struct xfs_buf	*bp = iocur_top->bp;
+ 
+-	iocur_top->typ = t;
++	iocur_top->typ = type;
+ 
+ 	/* verify the buffer if the type has one. */
+ 	if (!bp)
+ 		return;
+-	if (!t->bops) {
++	if (!type->bops) {
+ 		bp->b_ops = NULL;
+ 		bp->b_flags |= LIBXFS_B_UNCHECKED;
+ 		return;
+@@ -629,7 +628,7 @@ set_iocur_type(
+ 	if (!(bp->b_flags & LIBXFS_B_UPTODATE))
+ 		return;
+ 	bp->b_error = 0;
+-	bp->b_ops = t->bops;
++	bp->b_ops = type->bops;
+ 	bp->b_ops->verify_read(bp);
+ 	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+ }
+diff --git a/db/io.h b/db/io.h
+index b415b82d..ebf51f1d 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -59,10 +59,10 @@ extern void	print_iocur(char *tag, iocur_t *ioc);
+ extern void	push_cur(void);
+ extern int	read_buf(__int64_t daddr, int count, void *bufp);
+ extern void     write_cur(void);
+-extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
+-			bbmap_t *bbmap);
++extern void	set_cur(const struct typ *type, __int64_t blknum,
++			int len, int ring_add, bbmap_t *bbmap);
+ extern void     ring_add(void);
+-extern void	set_iocur_type(const struct typ *t);
++extern void	set_iocur_type(const struct typ *type);
+ extern void	xfs_dummy_verify(struct xfs_buf *bp);
+ extern void	xfs_verify_recalc_inode_crc(struct xfs_buf *bp);
+ extern void	xfs_verify_recalc_dquot_crc(struct xfs_buf *bp);
 -- 
-2.9.4
+2.13.0
 
