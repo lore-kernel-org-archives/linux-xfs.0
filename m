@@ -1,164 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42456 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:58392 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751741AbdF1Sig (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Jun 2017 14:38:36 -0400
-Subject: Re: [PATCH] xfs_db: improve argument naming in set_cur and
- set_iocur_type
-References: <20170628150913.15934-1-billodo@redhat.com>
+        id S1751544AbdF1Vwr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Jun 2017 17:52:47 -0400
+Subject: Re: non mountable xfs with 2 primary and 2 logical
+References: <1498686205.13847.1.camel@versatel.nl>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <38019898-7c12-428e-3760-dd0cbbf397b4@sandeen.net>
-Date: Wed, 28 Jun 2017 13:38:35 -0500
+Message-ID: <f6ba654f-5d85-043d-f632-30d0b88226f7@sandeen.net>
+Date: Wed, 28 Jun 2017 16:52:46 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170628150913.15934-1-billodo@redhat.com>
+In-Reply-To: <1498686205.13847.1.camel@versatel.nl>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+To: Richard Waterbeek <richardwbb@versatel.nl>, linux-xfs@vger.kernel.org
 
-On 6/28/17 10:09 AM, Bill O'Donnell wrote:
-> In set_cur and set_iocur_type, the current naming for arguments
-> type, block number, and length are t, d, and c, respectively.
-> Replace these with more intuitive and descriptive names:
-> type, blknum, and len. Additionally remove extra blank line
-> in io.c.
+On 6/28/17 4:43 PM, Richard Waterbeek wrote:
+> Hi linux-xfs mailinglist,
 > 
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> I've recently subscribed to this list. I've seen many messages, but have
+> little understading of the 'XFS' file system. I know about mkfs.xfs.
+> I've benched my hardware. But, now my harddrive had a collision with the
+> mbr somehow. [or something]
+> 
+> But, now I've 'hexdumped', the first 512 bytes, [because after a
+> disaterous reboot, cfdisk is now saying; "/dev/sda empty".
 
-Could you resend this, rebased on top of the patch you just sent
-for set_iocur_type() please?
+If the xfs partition you lost was on extended partition sda5,
+that's not at the front of the disk.  It sounds like something
+overwrote your partition table. 
 
-(also: watch out for long lines ...)
+Honestly, recreating a partition table isn't an xfs issue.
 
-That'll give you a chance to change the type pointed out earlier,
-as well.
+> I'm aware of two primary and two logical partitions. I feel that I know
+> the size of the first and second primary, but the xfs/ sda5 and, xfs
+> sda6, are no longer appearing. I had to '#' the /etc/fstab, because it
+> won't boot [long waiting].
+> 
+> Now I would like to restore the first 512 bytes which is the MBR.
+> 
+> I have absolutely no understanding of -where-, "the SuperBlock" [or how
+> that should be called], happens to be.
 
-Thanks,
+The MBR is not the XFS superblock.  sda5's XFS superblock is somewhere
+much further into the disk.
+
+I don't think anyone here can tell you how to recreate the partitions,
+because nobody knows what their exact size was.
+ 
+The XFS superblock signature is "XFSB" so you could go hexdumping the
+whole disk, look for eveny-spaced occurences of that pattern, and assume
+that you've found some superblocks, and work backwards from there.
+
+All this is essentially data recovery, getting well beyond the scope of
+normal mailing-list help, though.
+
 -Eric
 
-> ---
->  db/io.c | 31 +++++++++++++++----------------
->  db/io.h |  6 +++---
->  2 files changed, 18 insertions(+), 19 deletions(-)
+> But, I feel that 512 bytes missing and no reason to believe a whole
+> Terabyte would be "ones and/ or zero's", now, I wonder, how to restore
+> this. I have not made backup of this harddrive, just an rsync, which is
+> a little outdated and a bit incomplete, because difference in size of
+> both drives.
 > 
-> diff --git a/db/io.c b/db/io.c
-> index 9918a51d..45cbf3be 100644
-> --- a/db/io.c
-> +++ b/db/io.c
-> @@ -535,9 +535,9 @@ write_cur(void)
->  
->  void
->  set_cur(
-> -	const typ_t	*t,
-> -	__int64_t	d,
-> -	int		c,
-> +	const typ_t	*type,
-> +	__int64_t	blknum,
-> +	int		len,
->  	int		ring_flag,
->  	bbmap_t		*bbmap)
->  {
-> @@ -545,14 +545,13 @@ set_cur(
->  	xfs_ino_t	dirino;
->  	xfs_ino_t	ino;
->  	__uint16_t	mode;
-> -	const struct xfs_buf_ops *ops = t ? t->bops : NULL;
-> +	const struct xfs_buf_ops *ops = type ? type->bops : NULL;
->  
->  	if (iocur_sp < 0) {
->  		dbprintf(_("set_cur no stack element to set\n"));
->  		return;
->  	}
->  
-> -
->  	ino = iocur_top->ino;
->  	dirino = iocur_top->dirino;
->  	mode = iocur_top->mode;
-> @@ -562,7 +561,7 @@ set_cur(
->  	if (bbmap) {
->  #ifdef DEBUG_BBMAP
->  		int i;
-> -		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
-> +		printf(_("xfs_db got a bbmap for %lld\n"), (long long)blknum);
->  		printf(_("\tblock map"));
->  		for (i = 0; i < bbmap->nmaps; i++)
->  			printf(" %lld:%d", (long long)bbmap->b[i].bm_bn,
-> @@ -576,7 +575,7 @@ set_cur(
->  		bp = libxfs_readbuf_map(mp->m_ddev_targp, bbmap->b,
->  					bbmap->nmaps, 0, ops);
->  	} else {
-> -		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, ops);
-> +		bp = libxfs_readbuf(mp->m_ddev_targp, blknum, len, 0, ops);
->  		iocur_top->bbmap = NULL;
->  	}
->  
-> @@ -592,13 +591,13 @@ set_cur(
->  	if (!ops)
->  		bp->b_flags |= LIBXFS_B_UNCHECKED;
->  
-> -	iocur_top->bb = d;
-> -	iocur_top->blen = c;
-> +	iocur_top->bb = blknum;
-> +	iocur_top->blen = len;
->  	iocur_top->boff = 0;
->  	iocur_top->data = iocur_top->buf;
-> -	iocur_top->len = BBTOB(c);
-> -	iocur_top->off = d << BBSHIFT;
-> -	iocur_top->typ = cur_typ = t;
-> +	iocur_top->len = BBTOB(len);
-> +	iocur_top->off = blknum << BBSHIFT;
-> +	iocur_top->typ = cur_typ = type;
->  	iocur_top->ino = ino;
->  	iocur_top->dirino = dirino;
->  	iocur_top->mode = mode;
-> @@ -612,16 +611,16 @@ set_cur(
->  
->  void
->  set_iocur_type(
-> -	const typ_t	*t)
-> +	const typ_t	*type)
->  {
->  	struct xfs_buf	*bp = iocur_top->bp;
->  
-> -	iocur_top->typ = t;
-> +	iocur_top->typ = type;
->  
->  	/* verify the buffer if the type has one. */
->  	if (!bp)
->  		return;
-> -	if (!t->bops) {
-> +	if (!type->bops) {
->  		bp->b_ops = NULL;
->  		bp->b_flags |= LIBXFS_B_UNCHECKED;
->  		return;
-> @@ -629,7 +628,7 @@ set_iocur_type(
->  	if (!(bp->b_flags & LIBXFS_B_UPTODATE))
->  		return;
->  	bp->b_error = 0;
-> -	bp->b_ops = t->bops;
-> +	bp->b_ops = type->bops;
->  	bp->b_ops->verify_read(bp);
->  	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
->  }
-> diff --git a/db/io.h b/db/io.h
-> index b415b82d..ebf51f1d 100644
-> --- a/db/io.h
-> +++ b/db/io.h
-> @@ -59,10 +59,10 @@ extern void	print_iocur(char *tag, iocur_t *ioc);
->  extern void	push_cur(void);
->  extern int	read_buf(__int64_t daddr, int count, void *bufp);
->  extern void     write_cur(void);
-> -extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
-> -			bbmap_t *bbmap);
-> +extern void	set_cur(const struct typ *type, __int64_t blknum,
-> +			int len, int ring_add, bbmap_t *bbmap);
->  extern void     ring_add(void);
-> -extern void	set_iocur_type(const struct typ *t);
-> +extern void	set_iocur_type(const struct typ *type);
->  extern void	xfs_dummy_verify(struct xfs_buf *bp);
->  extern void	xfs_verify_recalc_inode_crc(struct xfs_buf *bp);
->  extern void	xfs_verify_recalc_dquot_crc(struct xfs_buf *bp);
+> I might be able to create a XFS-something [from /dev/sda, for example],
+> and write that with dd. 
+> 
+> But, before I would 'try this out', I would like to gain some
+> understanding, of what -should- be on the first 512 bytes of a
+> harddrive, besides what I have now, cfdisk is saying empty.
+> 
+> Hoping to receive a reply, Richard, the Netherlands
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
