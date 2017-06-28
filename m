@@ -1,144 +1,176 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:58680 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751782AbdF1QFO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Jun 2017 12:05:14 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 94B13614048
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2017 11:05:03 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs: for-next updated to f77f990
-Message-ID: <68d7164d-fe53-2485-348c-c65f49fc99fd@sandeen.net>
-Date: Wed, 28 Jun 2017 11:05:13 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:33429 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751516AbdF1Qs1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2017 12:48:27 -0400
+Date: Wed, 28 Jun 2017 09:48:18 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_db: improve argument naming in set_cur and
+ set_iocur_type
+Message-ID: <20170628164818.GD4492@birch.djwong.org>
+References: <20170628150913.15934-1-billodo@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170628150913.15934-1-billodo@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-Hi folks,
+On Wed, Jun 28, 2017 at 10:09:13AM -0500, Bill O'Donnell wrote:
+> In set_cur and set_iocur_type, the current naming for arguments
+> type, block number, and length are t, d, and c, respectively.
+> Replace these with more intuitive and descriptive names:
 
-The for-next branch of the xfsprogs repository at:
+Yay!
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> type, blknum, and len. Additionally remove extra blank line
+> in io.c.
+> 
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+>  db/io.c | 31 +++++++++++++++----------------
+>  db/io.h |  6 +++---
+>  2 files changed, 18 insertions(+), 19 deletions(-)
+> 
+> diff --git a/db/io.c b/db/io.c
+> index 9918a51d..45cbf3be 100644
+> --- a/db/io.c
+> +++ b/db/io.c
+> @@ -535,9 +535,9 @@ write_cur(void)
+>  
+>  void
+>  set_cur(
+> -	const typ_t	*t,
+> -	__int64_t	d,
+> -	int		c,
+> +	const typ_t	*type,
+> +	__int64_t	blknum,
 
-has just been updated.
+/me wonders if this ought to be "xfs_daddr_t blknum" since that's what
+libxfs_readbuf takes?
 
-The main thing in here is the new spaceman tool; it also includes
-the tweaks to metadump re: dirty log, a change to xfs_info/growfs
-to require an actual mountpoint, a new xfs_db option to show
-only aligned freespace, a new polish tranlation, and more - see
-commit list below for info.
+Other than that,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Thanks to everyone who is actively contributing to xfsprogs!
+> +	int		len,
 
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
+This parameter /ought/ to be unsigned int, because a negative length
+makes no sense and xfs_bufkey and xfs_buf have unsigned int lengths.
+OTOH the libxfs/rdwr.c functions take signed int, so all that can be a
+separate cleanup patch to fix all that.
 
-The new head of the for-next branch is commit:
+--D
 
-f77f990 xfs_spaceman: add group summary mode
-
-New Commits:
-
-Bill O'Donnell (1):
-      [b97815a] xfs_growfs: ensure target path is an active xfs mountpoint
-
-Christoph Hellwig (1):
-      [e195146] mkfs: remove leftover blkid include
-
-Darrick J. Wong (8):
-      [fb2bfcd] xfs_io: refactor numlen into a library function
-      [7f36f37] libxcmd: add cvt{int, long} to convert strings to int and long
-      [5a4d6a2] libxfs: use crc32c slice-by-8 variant by default
-      [71956d7] xfs: introduce the XFS_IOC_GETFSMAP ioctl
-      [3fcab54] xfs_io: support the new getfsmap ioctl
-      [197c2c6] xfs_repair: replace rmap_compare with libxfs version
-      [e627898] xfs_spaceman: add a man page
-      [f77f990] xfs_spaceman: add group summary mode
-
-Dave Chinner (4):
-      [48ec290] xfs_spaceman: space management tool
-      [c6e8a42] xfs_spaceman: add FITRIM support
-      [c98132d] xfs_spaceman: add new speculative prealloc control
-      [cccf6ab] xfs_spaceman: Free space mapping command
-
-Eric Sandeen (2):
-      [732f8f5] xfs_db: add alignment filter to freesp command
-      [2291c68] xfs_metadump: tag metadump image with informational flags
-
-Jakub Bogusz (1):
-      [d14c3ad] po/pl.po: update Polish translation for 4.11.0
-
-Jan Tulak (1):
-      [3b3751a] metadump: warn about corruption if log is dirty
-
-Zirong Lang (1):
-      [28a0a30] xfs_repair: handle reading superblock from image on larger secto
-
-
-Code Diffstat:
-
- Makefile                  |    3 +-
- configure.ac              |    1 +
- db/freesp.c               |   11 +-
- db/metadump.c             |   26 +-
- growfs/xfs_growfs.c       |   10 +-
- include/builddefs.in      |    4 +
- include/input.h           |    9 +
- include/linux.h           |  103 +
- include/path.h            |    1 +
- include/xfs_metadump.h    |    8 +-
- io/Makefile               |    7 +
- io/bmap.c                 |   19 +-
- io/copy_file_range.c      |    2 +-
- io/encrypt.c              |    1 +
- io/fiemap.c               |   14 +-
- io/fsmap.c                |  589 +++
- io/init.c                 |    8 +-
- io/io.h                   |   14 +-
- io/open.c                 |   21 +-
- io/pwrite.c               |    2 +-
- io/reflink.c              |    4 +-
- io/sendfile.c             |    2 +-
- libxcmd/input.c           |  165 +
- libxcmd/paths.c           |   31 +
- libxfs/Makefile           |    4 +-
- libxfs/crc32defs.h        |   34 +
- libxfs/libxfs_api_defs.h  |    1 +
- m4/package_libcdev.m4     |   20 +
- man/man8/xfs_db.8         |    7 +-
- man/man8/xfs_io.8         |   99 +
- man/man8/xfs_mdrestore.8  |   12 +-
- man/man8/xfs_spaceman.8   |  179 +
- mdrestore/xfs_mdrestore.c |   40 +-
- mkfs/xfs_mkfs.c           |    3 -
- po/pl.po                  | 8733 ++++++++++++++++++++++++++++-----------------
- repair/rmap.c             |   32 +-
- repair/xfs_repair.c       |   96 +-
- spaceman/Makefile         |   40 +
- spaceman/file.c           |  137 +
- spaceman/freesp.c         |  413 +++
- spaceman/init.c           |  119 +
- spaceman/init.h           |   24 +
- spaceman/prealloc.c       |  119 +
- spaceman/space.h          |   46 +
- spaceman/trim.c           |  132 +
- 45 files changed, 7887 insertions(+), 3458 deletions(-)
- create mode 100644 io/fsmap.c
- create mode 100644 man/man8/xfs_spaceman.8
- create mode 100644 spaceman/Makefile
- create mode 100644 spaceman/file.c
- create mode 100644 spaceman/freesp.c
- create mode 100644 spaceman/init.c
- create mode 100644 spaceman/init.h
- create mode 100644 spaceman/prealloc.c
- create mode 100644 spaceman/space.h
- create mode 100644 spaceman/trim.c
+>  	int		ring_flag,
+>  	bbmap_t		*bbmap)
+>  {
+> @@ -545,14 +545,13 @@ set_cur(
+>  	xfs_ino_t	dirino;
+>  	xfs_ino_t	ino;
+>  	__uint16_t	mode;
+> -	const struct xfs_buf_ops *ops = t ? t->bops : NULL;
+> +	const struct xfs_buf_ops *ops = type ? type->bops : NULL;
+>  
+>  	if (iocur_sp < 0) {
+>  		dbprintf(_("set_cur no stack element to set\n"));
+>  		return;
+>  	}
+>  
+> -
+>  	ino = iocur_top->ino;
+>  	dirino = iocur_top->dirino;
+>  	mode = iocur_top->mode;
+> @@ -562,7 +561,7 @@ set_cur(
+>  	if (bbmap) {
+>  #ifdef DEBUG_BBMAP
+>  		int i;
+> -		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
+> +		printf(_("xfs_db got a bbmap for %lld\n"), (long long)blknum);
+>  		printf(_("\tblock map"));
+>  		for (i = 0; i < bbmap->nmaps; i++)
+>  			printf(" %lld:%d", (long long)bbmap->b[i].bm_bn,
+> @@ -576,7 +575,7 @@ set_cur(
+>  		bp = libxfs_readbuf_map(mp->m_ddev_targp, bbmap->b,
+>  					bbmap->nmaps, 0, ops);
+>  	} else {
+> -		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, ops);
+> +		bp = libxfs_readbuf(mp->m_ddev_targp, blknum, len, 0, ops);
+>  		iocur_top->bbmap = NULL;
+>  	}
+>  
+> @@ -592,13 +591,13 @@ set_cur(
+>  	if (!ops)
+>  		bp->b_flags |= LIBXFS_B_UNCHECKED;
+>  
+> -	iocur_top->bb = d;
+> -	iocur_top->blen = c;
+> +	iocur_top->bb = blknum;
+> +	iocur_top->blen = len;
+>  	iocur_top->boff = 0;
+>  	iocur_top->data = iocur_top->buf;
+> -	iocur_top->len = BBTOB(c);
+> -	iocur_top->off = d << BBSHIFT;
+> -	iocur_top->typ = cur_typ = t;
+> +	iocur_top->len = BBTOB(len);
+> +	iocur_top->off = blknum << BBSHIFT;
+> +	iocur_top->typ = cur_typ = type;
+>  	iocur_top->ino = ino;
+>  	iocur_top->dirino = dirino;
+>  	iocur_top->mode = mode;
+> @@ -612,16 +611,16 @@ set_cur(
+>  
+>  void
+>  set_iocur_type(
+> -	const typ_t	*t)
+> +	const typ_t	*type)
+>  {
+>  	struct xfs_buf	*bp = iocur_top->bp;
+>  
+> -	iocur_top->typ = t;
+> +	iocur_top->typ = type;
+>  
+>  	/* verify the buffer if the type has one. */
+>  	if (!bp)
+>  		return;
+> -	if (!t->bops) {
+> +	if (!type->bops) {
+>  		bp->b_ops = NULL;
+>  		bp->b_flags |= LIBXFS_B_UNCHECKED;
+>  		return;
+> @@ -629,7 +628,7 @@ set_iocur_type(
+>  	if (!(bp->b_flags & LIBXFS_B_UPTODATE))
+>  		return;
+>  	bp->b_error = 0;
+> -	bp->b_ops = t->bops;
+> +	bp->b_ops = type->bops;
+>  	bp->b_ops->verify_read(bp);
+>  	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+>  }
+> diff --git a/db/io.h b/db/io.h
+> index b415b82d..ebf51f1d 100644
+> --- a/db/io.h
+> +++ b/db/io.h
+> @@ -59,10 +59,10 @@ extern void	print_iocur(char *tag, iocur_t *ioc);
+>  extern void	push_cur(void);
+>  extern int	read_buf(__int64_t daddr, int count, void *bufp);
+>  extern void     write_cur(void);
+> -extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
+> -			bbmap_t *bbmap);
+> +extern void	set_cur(const struct typ *type, __int64_t blknum,
+> +			int len, int ring_add, bbmap_t *bbmap);
+>  extern void     ring_add(void);
+> -extern void	set_iocur_type(const struct typ *t);
+> +extern void	set_iocur_type(const struct typ *type);
+>  extern void	xfs_dummy_verify(struct xfs_buf *bp);
+>  extern void	xfs_verify_recalc_inode_crc(struct xfs_buf *bp);
+>  extern void	xfs_verify_recalc_dquot_crc(struct xfs_buf *bp);
+> -- 
+> 2.13.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
