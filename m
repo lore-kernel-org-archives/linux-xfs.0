@@ -1,85 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:32773 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751819AbdF2UcN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2017 16:32:13 -0400
-Received: by mail-qk0-f196.google.com with SMTP id p21so13097305qke.0
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2017 13:32:10 -0700 (PDT)
-Message-ID: <1498768325.5710.6.camel@poochiereds.net>
-Subject: Re: [PATCH v8 18/18] btrfs: minimal conversion to errseq_t
- writeback error reporting on fsync
-From: Jeff Layton <jlayton@poochiereds.net>
-Date: Thu, 29 Jun 2017 16:32:05 -0400
-In-Reply-To: <20170629141741.GC17251@infradead.org>
-References: <20170629131954.28733-1-jlayton@kernel.org>
-         <20170629131954.28733-19-jlayton@kernel.org>
-         <20170629141741.GC17251@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from mga11.intel.com ([192.55.52.93]:38173 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751646AbdF1WCu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Jun 2017 18:02:50 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v3 4/5] dax: remove DAX code from page_cache_tree_insert()
+Date: Wed, 28 Jun 2017 16:01:51 -0600
+Message-Id: <20170628220152.28161-5-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
+References: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, jlayton@kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Liu Bo <bo.li.liu@oracle.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Thu, 2017-06-29 at 07:17 -0700, Christoph Hellwig wrote:
-> On Thu, Jun 29, 2017 at 09:19:54AM -0400, jlayton@kernel.org wrote:
-> > From: Jeff Layton <jlayton@redhat.com>
-> > 
-> > Just check and advance the errseq_t in the file before returning.
-> > Internal callers of filemap_* functions are left as-is.
-> > 
-> > Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> > ---
-> >  fs/btrfs/file.c | 7 +++++--
-> >  1 file changed, 5 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-> > index da1096eb1a40..1f57e1a523d9 100644
-> > --- a/fs/btrfs/file.c
-> > +++ b/fs/btrfs/file.c
-> > @@ -2011,7 +2011,7 @@ int btrfs_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
-> >  	struct btrfs_root *root = BTRFS_I(inode)->root;
-> >  	struct btrfs_trans_handle *trans;
-> >  	struct btrfs_log_ctx ctx;
-> > -	int ret = 0;
-> > +	int ret = 0, err;
-> >  	bool full_sync = 0;
-> >  	u64 len;
-> >  
-> > @@ -2030,7 +2030,7 @@ int btrfs_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
-> >  	 */
-> >  	ret = start_ordered_ops(inode, start, end);
-> >  	if (ret)
-> > -		return ret;
-> > +		goto out;
-> >  
-> >  	inode_lock(inode);
-> >  	atomic_inc(&root->log_batch);
-> > @@ -2227,6 +2227,9 @@ int btrfs_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
-> >  		ret = btrfs_end_transaction(trans);
-> >  	}
-> >  out:
-> > +	err = file_check_and_advance_wb_err(file);
-> > +	if (!ret)
-> > +		ret = err;
-> >  	return ret > 0 ? -EIO : ret;
-> 
-> This means that we'll lose the exact error returned from
-> start_ordered_ops.  Beyond that I can't really provide good feedback
-> as the btrfs fsync code looks so much different from all the other
-> fs fsync code..
+Now that we no longer insert struct page pointers in DAX radix trees we can
+remove the special casing for DAX in page_cache_tree_insert().  This also
+allows us to make dax_wake_mapping_entry_waiter() local to fs/dax.c,
+removing it from dax.h.
 
-Well, no...we'll keep the error from start_ordered_ops if there was one.
- We just advance the cursor past any stored error in that case without
-returning it.
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Suggested-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c            |  2 +-
+ include/linux/dax.h |  2 --
+ mm/filemap.c        | 13 ++-----------
+ 3 files changed, 3 insertions(+), 14 deletions(-)
 
-I have another fix for this patch too: there's a call to
-filemap_check_errors in this function that I think should probably use
-filemap_check_wb_err instead. Fixed in my tree.
-
-I do agree though that while this works in my testing I'd like the btrfs
-guys to ACK this as I don't fully grok the btrfs fsync code at all.
+diff --git a/fs/dax.c b/fs/dax.c
+index 01e81d228..896e2e7 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -128,7 +128,7 @@ static int wake_exceptional_entry_func(wait_queue_t *wait, unsigned int mode,
+  * correct waitqueue where tasks might be waiting for that old 'entry' and
+  * wake them.
+  */
+-void dax_wake_mapping_entry_waiter(struct address_space *mapping,
++static void dax_wake_mapping_entry_waiter(struct address_space *mapping,
+ 		pgoff_t index, void *entry, bool wake_all)
+ {
+ 	struct exceptional_entry_key key;
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 8352ce1a..d6fd797 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -110,8 +110,6 @@ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
+ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
+ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
+ 				      pgoff_t index);
+-void dax_wake_mapping_entry_waiter(struct address_space *mapping,
+-		pgoff_t index, void *entry, bool wake_all);
+ 
+ #ifdef CONFIG_FS_DAX
+ int __dax_zero_page_range(struct block_device *bdev,
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 6f1be57..15f3df4 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -130,17 +130,8 @@ static int page_cache_tree_insert(struct address_space *mapping,
+ 			return -EEXIST;
+ 
+ 		mapping->nrexceptional--;
+-		if (!dax_mapping(mapping)) {
+-			if (shadowp)
+-				*shadowp = p;
+-		} else {
+-			/* DAX can replace empty locked entry with a hole */
+-			WARN_ON_ONCE(p !=
+-				dax_radix_locked_entry(0, RADIX_DAX_EMPTY));
+-			/* Wakeup waiters for exceptional entry lock */
+-			dax_wake_mapping_entry_waiter(mapping, page->index, p,
+-						      true);
+-		}
++		if (shadowp)
++			*shadowp = p;
+ 	}
+ 	__radix_tree_replace(&mapping->page_tree, node, slot, page,
+ 			     workingset_update_node, mapping);
 -- 
-Jeff Layton <jlayton@poochiereds.net>
+2.9.4
+
