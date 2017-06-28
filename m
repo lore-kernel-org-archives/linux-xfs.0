@@ -1,76 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36989 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753243AbdF0NBn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jun 2017 09:01:43 -0400
-Date: Tue, 27 Jun 2017 15:01:19 +0200
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [v4.12-rc1 regression] nfs server crashed in fstests run
-Message-ID: <20170627130118.GM28072@dhcp22.suse.cz>
-References: <20170602060457.GG23805@eguan.usersys.redhat.com>
- <20170623072656.GI23360@eguan.usersys.redhat.com>
- <20170623074334.GE5308@dhcp22.suse.cz>
- <20170623075156.GF5308@dhcp22.suse.cz>
- <20170626123949.GP17542@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170626123949.GP17542@dastard>
+Received: from mga14.intel.com ([192.55.52.115]:50381 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751654AbdF1WCw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Jun 2017 18:02:52 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v3 5/5] dax: move all DAX radix tree defs to fs/dax.c
+Date: Wed, 28 Jun 2017 16:01:52 -0600
+Message-Id: <20170628220152.28161-6-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
+References: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eryu Guan <eguan@redhat.com>, linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>
+To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Mon 26-06-17 22:39:50, Dave Chinner wrote:
-> On Fri, Jun 23, 2017 at 09:51:56AM +0200, Michal Hocko wrote:
-> > On Fri 23-06-17 09:43:34, Michal Hocko wrote:
-> > > [Let's add Jack and keep the full email for reference]
-> > > 
-> > > On Fri 23-06-17 15:26:56, Eryu Guan wrote:
-> > [...]
-> > > > Then I did further confirmation tests:
-> > > > 1. switch to a new branch with that jbd2 patch as HEAD and compile
-> > > > kernel, run test with both ext4 and XFS exported on this newly compiled
-> > > > kernel, it crashed within 5 iterations.
-> > > > 
-> > > > 2. revert that jbd2 patch (when it was HEAD), run test with both ext4
-> > > > and XFS exported, kernel survived 20 iterations of full fstests run.
-> > > > 
-> > > > 3. kernel from step 1 survived 20 iterations of full fstests run, if I
-> > > > export XFS only (create XFS on /dev/sda4 and mount it at /export/test).
-> > > > 
-> > > > 4. 4.12-rc1 kernel survived the same test if I export ext4 only (both
-> > > > /export/test and /export/scratch were mounted as ext4, and this was done
-> > > > on another test host because I don't have another spare test partition)
-> > > > 
-> > > > 
-> > > > All these facts seem to confirm that commit 81378da64de6 really is the
-> > > > culprit, I just don't see how..
-> > 
-> > AFAIR, no follow up patches to remove GFP_NOFS have been merged into
-> > ext4 so we are currently only with 81378da64de6 and all it does is that
-> > _all_ allocations from the transaction context are implicitly GFP_NOFS.
-> > I can imagine that if there is a GFP_KERNEL allocation in this context
-> > (which would be incorrect AFAIU) some shrinkers will not be called as a
-> > result and that might lead to an observable behavior change. But this
-> > sounds like a wild speculation. The mere fact that xfs oopses and there
-> > is no ext code in the backtrace is suspicious on its own. Does this oops
-> > sound familiar to xfs guys?
-> 
-> Nope, but if it's in write_cache_pages() then it's not actually
-> crashing in XFS code, but in generic page cache and radix tree
-> traversal code. Which means objects that are allocated from slabs
-> and pools that are shared by both XFS and ext4.
-> 
-> We've had problems in the past where use after free of bufferheads
-> in reiserfs was discovered by corruption of bufferheads in XFS code,
-> so maybe there's a similar issue being exposed by the ext4
-> GFP_NOFS changes? i.e. try debugging this by treating it as memory
-> corruption until we know more...
+Now that we no longer insert struct page pointers in DAX radix trees the
+page cache code no longer needs to know anything about DAX exceptional
+entries.  Move all the DAX exceptional entry definitions from dax.h to
+fs/dax.c.
 
-Yes this makes a lot of sense. Maybe slab debugging can catch such a
-corruption earlier?
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Suggested-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c            | 34 ++++++++++++++++++++++++++++++++++
+ include/linux/dax.h | 40 ----------------------------------------
+ 2 files changed, 34 insertions(+), 40 deletions(-)
+
+diff --git a/fs/dax.c b/fs/dax.c
+index 896e2e7..1f1064e 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -55,6 +55,40 @@ static int __init init_dax_wait_table(void)
+ }
+ fs_initcall(init_dax_wait_table);
+ 
++/*
++ * We use lowest available bit in exceptional entry for locking, one bit for
++ * the entry size (PMD) and two more to tell us if the entry is a zero page or
++ * an empty entry that is just used for locking.  In total four special bits.
++ *
++ * If the PMD bit isn't set the entry has size PAGE_SIZE, and if the ZERO_PAGE
++ * and EMPTY bits aren't set the entry is a normal DAX entry with a filesystem
++ * block allocation.
++ */
++#define RADIX_DAX_SHIFT		(RADIX_TREE_EXCEPTIONAL_SHIFT + 4)
++#define RADIX_DAX_ENTRY_LOCK	(1 << RADIX_TREE_EXCEPTIONAL_SHIFT)
++#define RADIX_DAX_PMD		(1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
++#define RADIX_DAX_ZERO_PAGE	(1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
++#define RADIX_DAX_EMPTY		(1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 3))
++
++static unsigned long dax_radix_sector(void *entry)
++{
++	return (unsigned long)entry >> RADIX_DAX_SHIFT;
++}
++
++static void *dax_radix_locked_entry(sector_t sector, unsigned long flags)
++{
++	return (void *)(RADIX_TREE_EXCEPTIONAL_ENTRY | flags |
++			((unsigned long)sector << RADIX_DAX_SHIFT) |
++			RADIX_DAX_ENTRY_LOCK);
++}
++
++static unsigned int dax_radix_order(void *entry)
++{
++	if ((unsigned long)entry & RADIX_DAX_PMD)
++		return PMD_SHIFT - PAGE_SHIFT;
++	return 0;
++}
++
+ static int dax_is_pmd_entry(void *entry)
+ {
+ 	return (unsigned long)entry & RADIX_DAX_PMD;
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index d6fd797..3dcaec5 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -76,33 +76,6 @@ void *dax_get_private(struct dax_device *dax_dev);
+ long dax_direct_access(struct dax_device *dax_dev, pgoff_t pgoff, long nr_pages,
+ 		void **kaddr, pfn_t *pfn);
+ 
+-/*
+- * We use lowest available bit in exceptional entry for locking, one bit for
+- * the entry size (PMD) and two more to tell us if the entry is a zero page or
+- * an empty entry that is just used for locking.  In total four special bits.
+- *
+- * If the PMD bit isn't set the entry has size PAGE_SIZE, and if the ZERO_PAGE
+- * and EMPTY bits aren't set the entry is a normal DAX entry with a filesystem
+- * block allocation.
+- */
+-#define RADIX_DAX_SHIFT	(RADIX_TREE_EXCEPTIONAL_SHIFT + 4)
+-#define RADIX_DAX_ENTRY_LOCK (1 << RADIX_TREE_EXCEPTIONAL_SHIFT)
+-#define RADIX_DAX_PMD (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
+-#define RADIX_DAX_ZERO_PAGE (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
+-#define RADIX_DAX_EMPTY (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 3))
+-
+-static inline unsigned long dax_radix_sector(void *entry)
+-{
+-	return (unsigned long)entry >> RADIX_DAX_SHIFT;
+-}
+-
+-static inline void *dax_radix_locked_entry(sector_t sector, unsigned long flags)
+-{
+-	return (void *)(RADIX_TREE_EXCEPTIONAL_ENTRY | flags |
+-			((unsigned long)sector << RADIX_DAX_SHIFT) |
+-			RADIX_DAX_ENTRY_LOCK);
+-}
+-
+ ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		const struct iomap_ops *ops);
+ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
+@@ -124,19 +97,6 @@ static inline int __dax_zero_page_range(struct block_device *bdev,
+ }
+ #endif
+ 
+-#ifdef CONFIG_FS_DAX_PMD
+-static inline unsigned int dax_radix_order(void *entry)
+-{
+-	if ((unsigned long)entry & RADIX_DAX_PMD)
+-		return PMD_SHIFT - PAGE_SHIFT;
+-	return 0;
+-}
+-#else
+-static inline unsigned int dax_radix_order(void *entry)
+-{
+-	return 0;
+-}
+-#endif
+ static inline bool vma_is_dax(struct vm_area_struct *vma)
+ {
+ 	return vma->vm_file && IS_DAX(vma->vm_file->f_mapping->host);
 -- 
-Michal Hocko
-SUSE Labs
+2.9.4
+
