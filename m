@@ -1,127 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:37341 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751974AbdF2O2w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2017 10:28:52 -0400
-From: William Koh <kkc6196@fb.com>
+Received: from fieldses.org ([173.255.197.46]:50688 "EHLO fieldses.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751974AbdF2Ofw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Jun 2017 10:35:52 -0400
+Date: Thu, 29 Jun 2017 10:35:51 -0400
+From: "J. Bruce Fields" <bfields@fieldses.org>
 Subject: Re: [PATCH] fs: ext4: inode->i_generation not assigned 0.
-Date: Thu, 29 Jun 2017 14:28:41 +0000
-Message-ID: <0D8EA9C1-E2E7-4D63-8F12-4BDED555F18E@fb.com>
+Message-ID: <20170629143551.GB1651@fieldses.org>
 References: <c9f7090b2a58364998ad4a49cfdac379b905c7e9.1498687302.git.kkc6196@fb.com>
  <20A40B3C-E179-432B-B56F-BDAAF0CD2E1F@dilger.ca>
  <7CD38230-D961-428F-B2E9-2C0E28CAF442@fb.com>
  <20170629045940.GB5865@birch.djwong.org>
-In-Reply-To: <20170629045940.GB5865@birch.djwong.org>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <13B26339EA26614EB70AEDD643F901E4@namprd15.prod.outlook.com>
-Content-Transfer-Encoding: base64
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170629045940.GB5865@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, Theodore Ts'o <tytso@mit.edu>, linux-ext4 <linux-ext4@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, xfs <linux-xfs@vger.kernel.org>
+Cc: William Koh <kkc6196@fb.com>, Andreas Dilger <adilger@dilger.ca>, Theodore Ts'o <tytso@mit.edu>, linux-ext4 <linux-ext4@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, xfs <linux-xfs@vger.kernel.org>
 
-T24gNi8yOC8xNywgOTo1OSBQTSwgIkRhcnJpY2sgSi4gV29uZyIgPGRhcnJpY2sud29uZ0BvcmFj
-bGUuY29tPiB3cm90ZToNCg0KICAgIFthZGQgbGludXgteGZzIHRvIGNjXQ0KICAgIA0KICAgIE9u
-IFRodSwgSnVuIDI5LCAyMDE3IGF0IDA0OjM3OjE0QU0gKzAwMDAsIFdpbGxpYW0gS29oIHdyb3Rl
-Og0KICAgID4gT24gNi8yOC8xNywgNzozMiBQTSwgIkFuZHJlYXMgRGlsZ2VyIiA8YWRpbGdlckBk
-aWxnZXIuY2E+IHdyb3RlOg0KICAgID4gDQogICAgPiAgICAgT24gSnVuIDI4LCAyMDE3LCBhdCA0
-OjA2IFBNLCBLeXVuZ2NoYW4gS29oIDxra2M2MTk2QGZiLmNvbT4gd3JvdGU6DQogICAgPiAgICAg
-PiANCiAgICA+ICAgICA+IEluIGZzL2V4dDQvc3VwZXIuYywgdGhlIGZ1bmN0aW9uIGV4dDRfbmZz
-X2dldF9pbm9kZSB0YWtlcyBhcyBpbnB1dA0KICAgID4gICAgID4gImdlbmVyYXRpb24iIHRoYXQg
-Y2FuIGJlIHVzZWQgdG8gc3BlY2lmeSB0aGUgZ2VuZXJhdGlvbiBvZiB0aGUgaW5vZGUgdG8NCiAg
-ICA+ICAgICA+IGJlIHJldHVybmVkLiBXaGVuIDAgaXMgZ2l2ZW4gYXMgaW5wdXQsIHRoZW4gaW5v
-ZGVzIG9mIGFueSBnZW5lcmF0aW9uIGNhbg0KICAgID4gICAgID4gYmUgcmV0dXJuZWQuIFRoZXJl
-Zm9yZSwgZ2VuZXJhdGlvbiAwIGlzIGEgc3BlY2lhbCBjYXNlIHRoYXQgc2hvdWxkIGJlDQogICAg
-PiAgICAgPiBhdm9pZGVkIHdoZW4gYXNzaWduaW5nIGdlbmVyYXRpb24gdG8gaW5vZGVzLg0KICAg
-ID4gICAgIA0KICAgID4gICAgIEknZCBhZ3JlZSB3aXRoIHRoaXMgY2hhbmdlIHRvIGF2b2lkIGFz
-c2lnbmluZyBnZW5lcmF0aW9uID09IDAgdG8gcmVhbCBpbm9kZXMuDQogICAgPiAgICAgDQogICAg
-PiAgICAgQWxzbywgdGhlIHNlcGFyYXRlIHF1ZXN0aW9uIGFyaXNlcyBhYm91dCB3aGV0aGVyIHdl
-IG5lZWQgdG8gYWxsb3cgZmlsZSBoYW5kbGUNCiAgICA+ICAgICBsb29rdXAgd2l0aCBnZW5lcmF0
-aW9uID09IDA/ICBUaGF0IGFsbG93cyBGSUQgZ3Vlc3NpbmcgZWFzaWx5LCB3aGlsZSByZXF1aXJp
-bmcNCiAgICA+ICAgICBhIG5vbi16ZXJvIGdlbmVyYXRpb24gbWFrZXMgdGhhdCBhIGxvdCBoYXJk
-ZXIuDQogICAgPiAgICAgDQogICAgPiAgICAgV2hhdCBhcmUgdGhlIGNhc2VzIHdoZXJlIGdlbmVy
-YXRpb24gPT0gMCBhcmUgdXNlZD8NCiAgICA+IA0KICAgID4gSG9uZXN0bHksIEnigJltIG5vdCB0
-b28gc3VyZS4gSSBqdXN0IG5vdGljZWQgdGhhdCBnZW5lcmF0aW9uIDAgd2FzIGEgc3BlY2lhbA0K
-ICAgID4gY2FzZSBmcm9tIHJlYWRpbmcgdGhlIGNvZGUuDQogICAgPiANCiAgICA+ICAgICA+IEEg
-bmV3IGlubGluZSBmdW5jdGlvbiwgZXh0NF9pbm9kZV9zZXRfZ2VuLCB3aWxsIHRha2UgY2FyZSBv
-ZiB0aGUNCiAgICA+ICAgICA+IHByb2JsZW0uICBOb3csIGlub2RlcyBjYW5ub3QgaGF2ZSBhIGdl
-bmVyYXRpb24gb2YgMCwgc28gdGhpcyBwYXRjaCBmaXhlcw0KICAgID4gICAgID4gdGhlIGlzc3Vl
-Lg0KICAgID4gICAgID4gDQogICAgPiAgICAgPiBTaWduZWQtb2ZmLWJ5OiBLeXVuZ2NoYW4gS29o
-IDxra2M2MTk2QGZiLmNvbT4NCiAgICA+ICAgICA+IA0KICAgID4gICAgID4gZGlmZiAtLWdpdCBh
-L2ZzL2V4dDQvZXh0NC5oIGIvZnMvZXh0NC9leHQ0LmgNCiAgICA+ICAgICA+IGluZGV4IDMyMTkx
-NTQuLjc0YzY2NzcgMTAwNjQ0DQogICAgPiAgICAgPiAtLS0gYS9mcy9leHQ0L2V4dDQuaA0KICAg
-ID4gICAgID4gKysrIGIvZnMvZXh0NC9leHQ0LmgNCiAgICA+ICAgICA+IEBAIC0xNTQ5LDYgKzE1
-NDksMTQgQEAgc3RhdGljIGlubGluZSBpbnQgZXh0NF92YWxpZF9pbnVtKHN0cnVjdCBzdXBlcl9i
-bG9jayAqc2IsIHVuc2lnbmVkIGxvbmcgaW5vKQ0KICAgID4gICAgID4gCQkgaW5vIDw9IGxlMzJf
-dG9fY3B1KEVYVDRfU0Ioc2IpLT5zX2VzLT5zX2lub2Rlc19jb3VudCkpOw0KICAgID4gICAgID4g
-fQ0KICAgID4gICAgID4gDQogICAgPiAgICAgPiArc3RhdGljIGlubGluZSB2b2lkIGV4dDRfaW5v
-ZGVfc2V0X2dlbihzdHJ1Y3QgaW5vZGUgKmlub2RlLA0KICAgID4gICAgID4gKwkJCQkgICAgICBz
-dHJ1Y3QgZXh0NF9zYl9pbmZvICpzYmkpDQogICAgPiAgICAgPiArew0KICAgID4gICAgID4gKwlp
-bm9kZS0+aV9nZW5lcmF0aW9uID0gc2JpLT5zX25leHRfZ2VuZXJhdGlvbisrOw0KICAgID4gICAg
-ID4gKwlpZiAoIWlub2RlLT5pX2dlbmVyYXRpb24pDQogICAgPiAgICAgDQogICAgPiAgICAgVGhp
-cyBzaG91bGQgYmUgbWFya2VkICJ1bmxpa2VseSgpIiBzaW5jZSBpdCBoYXBwZW5zIGF0IG1vc3Qg
-b25jZSBldmVyeSA0Qg0KICAgID4gICAgIGZpbGUgY3JlYXRpb25zICh0aG91Z2ggbGlrZWx5IGV2
-ZW4gbGVzcyBzaW5jZSBpdCBpcyB1bmxpa2VseSB0aGF0IHNvIG1hbnkNCiAgICA+ICAgICBmaWxl
-cyB3aWxsIGJlIGNyZWF0ZWQgaW4gYSBzaW5nbGUgbW91bnQpLg0KICAgID4gDQogICAgPiBHb3Qg
-aXQuDQogICAgPiAgICAgDQogICAgPiAgICAgPiArCQlpbm9kZS0+aV9nZW5lcmF0aW9uID0gc2Jp
-LT5zX25leHRfZ2VuZXJhdGlvbisrOw0KICAgID4gICAgID4gK30NCiAgICA+ICAgICA+ICsNCiAg
-ICA+ICAgICA+IA0KICAgID4gICAgID4gZGlmZiAtLWdpdCBhL2ZzL2V4dDQvaWFsbG9jLmMgYi9m
-cy9leHQ0L2lhbGxvYy5jDQogICAgPiAgICAgPiBpbmRleCA5OGFjMmYxLi5kMzNmNmYwIDEwMDY0
-NA0KICAgID4gICAgID4gLS0tIGEvZnMvZXh0NC9pYWxsb2MuYw0KICAgID4gICAgID4gKysrIGIv
-ZnMvZXh0NC9pYWxsb2MuYw0KICAgID4gICAgID4gQEAgLTEwNzIsNyArMTA3Miw3IEBAIHN0cnVj
-dCBpbm9kZSAqX19leHQ0X25ld19pbm9kZShoYW5kbGVfdCAqaGFuZGxlLCBzdHJ1Y3QgaW5vZGUJ
-fQ0KICAgID4gICAgID4gCXNwaW5fbG9jaygmc2JpLT5zX25leHRfZ2VuX2xvY2spOw0KICAgID4g
-ICAgID4gLQlpbm9kZS0+aV9nZW5lcmF0aW9uID0gc2JpLT5zX25leHRfZ2VuZXJhdGlvbisrOw0K
-ICAgID4gICAgID4gKwlleHQ0X2lub2RlX3NldF9nZW4oaW5vZGUsIHNiaSk7DQogICAgPiAgICAg
-PiAJc3Bpbl91bmxvY2soJnNiaS0+c19uZXh0X2dlbl9sb2NrKTsNCiAgICA+ICAgICA+IA0KICAg
-ID4gICAgID4gZGlmZiAtLWdpdCBhL2ZzL2V4dDQvaW9jdGwuYyBiL2ZzL2V4dDQvaW9jdGwuYw0K
-ICAgID4gICAgID4gaW5kZXggMGMyMWUyMi4uZDUyYTQ2NyAxMDA2NDQNCiAgICA+ICAgICA+IC0t
-LSBhL2ZzL2V4dDQvaW9jdGwuYw0KICAgID4gICAgID4gKysrIGIvZnMvZXh0NC9pb2N0bC5jDQog
-ICAgPiAgICAgPiBAQCAtMTYwLDggKzE2MCw4IEBAIHN0YXRpYyBsb25nIHN3YXBfaW5vZGVfYm9v
-dF9sb2FkZXIoc3RydWN0IHN1cGVyX2Jsb2NrICpzYiwNCiAgICA+ICAgICA+IA0KICAgID4gICAg
-ID4gCXNwaW5fbG9jaygmc2JpLT5zX25leHRfZ2VuX2xvY2spOw0KICAgID4gICAgID4gLQlpbm9k
-ZS0+aV9nZW5lcmF0aW9uID0gc2JpLT5zX25leHRfZ2VuZXJhdGlvbisrOw0KICAgID4gICAgID4g
-LQlpbm9kZV9ibC0+aV9nZW5lcmF0aW9uID0gc2JpLT5zX25leHRfZ2VuZXJhdGlvbisrOw0KICAg
-ID4gICAgID4gKwlleHQ0X2lub2RlX3NldF9nZW4oaW5vZGUsIHNiaSk7DQogICAgPiAgICAgPiAr
-CWV4dDRfaW5vZGVfc2V0X2dlbihpbm9kZV9ibCwgc2JpKTsNCiAgICA+ICAgICA+IAlzcGluX3Vu
-bG9jaygmc2JpLT5zX25leHRfZ2VuX2xvY2spOw0KICAgID4gICAgID4gDQogICAgPiAgICAgDQog
-ICAgPiAgICAgDQogICAgPiAgICAgQ2hlZXJzLCBBbmRyZWFzDQogICAgPiANCiAgICA+IFRoaXMg
-aXMgYXBwbGljYWJsZSB0byBtYW55IGZzLCBpbmNsdWRpbmcgZXh0MiwgZXh0NCwgZXhvZnMsIGpm
-cywgYW5kIGYyZnMuDQogICAgPiBUaGVyZWZvcmUsIGEgc2hhcmVkIGhlbHBlciBpbiBsaW51eC9m
-cy5oIHdpbGwgYWxsb3cgZm9yIGVhc3kgY2hhbmdlcw0KICAgID4gaW4gYWxsIGZzLiBJcyB0aGVy
-ZSBhbnkgcmVhc29uIHRoYXQgbWlnaHQgYmUgYSBiYWQgaWRlYT8NCiAgICANCiAgICBBRkFJQ1Qs
-IGlfZ2VuZXJhdGlvbiA9PSAwIGluIFhGUyBhbmQgYnRyZnMgaXMganVzdCBhcyB2YWxpZCBhcyBh
-bnkgb3RoZXINCiAgICBudW1iZXIuICBUaGVyZSBpcyBubyBzcGVjaWFsIGNhc2luZyBvZiB6ZXJv
-IGluIGVpdGhlciBmaWxlc3lzdGVtLg0KICAgIA0KICAgIFNvIG5vdywgbXkgY3VyaW9zaXR5IGlu
-dHJpZ3VlZCwgSSBzdXJ2ZXllZCBhbGwgdGhlIExpbnV4IGZpbGVzeXN0ZW1zDQogICAgdGhhdCBj
-YW4gZXhwb3J0IHRvIE5GUy4gIEkgc2VlIHRoYXQgdGhlcmUgYXJlIGFjdHVhbGx5IHF1aXRlIGEg
-ZmV3IGZzDQogICAgKGV4dFsyLTRdLCBleG9mcywgZWZzLCBmYXQsIGpmcywgZjJmcywgaXNvZnMs
-IG5pbGZzMiwgcmVpc2VyZnMsIHVkZiwNCiAgICB1ZnMpIHRoYXQgdHJlYXQgemVybyBhcyBhIHNw
-ZWNpYWwgdmFsdWUgbWVhbmluZyAiaWdub3JlIGdlbmVyYXRpb24NCiAgICBjaGVjayI7IG90aGVy
-cyAoeGZzLCBidHJmcywgZnVzZSwgbnRmcywgb2NmczIpIHRoYXQgZG9uJ3QgY29uc2lkZXIgemVy
-bw0KICAgIHNwZWNpYWwgYW5kIGFsd2F5cyByZXF1aXJlIGEgbWF0Y2g7IGFuZCBzdGlsbCBvdGhl
-cnMgKGFmZnMsIGJlZnMsIGNlcGgsDQogICAgZ2ZzMiwgamZmczIsIHNxdWFzaGZzKSB0aGF0IGRv
-bid0IGNoZWNrIGF0IGFsbC4NCiAgICANCiAgICBUaGF0IHRvIG1lYW4gc3Ryb25nbHkgc3VnZ2Vz
-dHMgdGhhdCBtb3JlIHJlc2VhcmNoIGlzIG5lY2Vzc2FyeSB0byBmaWd1cmUNCiAgICBvdXQgd2h5
-IHNvbWUgb2YgdGhlIGZpbGVzeXN0ZW1zIHRoYXQgc3VwcG9ydCBpX2dlbmVyYXRpb24gcmVzZXJ2
-ZSB6ZXJvDQogICAgYXMgYSBzcGVjaWFsIHZhbHVlIHRvIGRpc2FibGUgZ2VuZXJhdGlvbiBjaGVj
-a3MgYW5kIHdoeSBvdGhlcnMgYWx3YXlzDQogICAgcmVxdWlyZSBhbiBleGFjdCBtYXRjaC4gIFVu
-dGlsIHdlIGNhbiByZWNhcHR1cmUgd2h5IHRoaW5ncyBhcmUgdGhleSB3YXkNCiAgICB0aGV5IGFy
-ZSwgaXQgZG9lc24ndCBtYWtlIG11Y2ggc2Vuc2UgdG8gaGF2ZSBhIGhlbHBlciB0aGF0IG9ubHkg
-YXBwbGllcw0KICAgIHRvIGhhbGYgdGhlIGZpbGVzeXN0ZW1zLg0KICAgIA0KICAgIEdyYW50ZWQs
-IHRoZSBjb250ZW50cyBvZiBhIGZpbGUgaGFuZGxlIGFyZSBnZW5lcmFsbHkgbGVmdCB1cCB0byB0
-aGUNCiAgICBpbmRpdmlkdWFsIGZpbGVzeXN0ZW0sIGFuZCB0aGUgYmVoYXZpb3JzIGFyZSB2ZXJ5
-IGRpZmZlcmVudCwgc28gSSBhbHNvDQogICAgZG9uJ3Qgc2VlIHRoYXQgbXVjaCB2YWx1ZSBpbiBo
-b2lzdGluZyBpX2dlbmVyYXRpb24gdXBkYXRlcyB0byB0aGUgVkZTDQogICAgbGV2ZWwuDQogICAg
-DQogICAgSSBndWVzcyBpdCB3b3VsZG4ndCByZWFsbHkgbWF0dGVyIGlmIFhGUyBzdG9wcGVkIHdy
-aXRpbmcgaV9nZW5lcmF0aW9uID0NCiAgICAwIG9udG8gZGlzaywgYnV0IEknbSB0b28gY3VyaW91
-cyBhYm91dCB0aGlzIG9kZCBkaWZmZXJlbmNlIGluIGJlaGF2aW9yDQogICAgdG8gbGV0IGl0IGdv
-IGp1c3QgeWV0LiA6KQ0KICAgIA0KICAgIC0tRA0KDQpUaGF0IG1ha2VzIHNlbnNlLiBJ4oCZbGwg
-dHJ5IHRvIGFsc28gbG9vayBpbnRvIHRoaXMgbWF0dGVyIGFuZCBzZW5kIGENCm5ld2VyIHBhdGNo
-IHdpdGggdGhlIG1vc3Qgb3B0aW1hbCBmaXggdG8gdGhpcyBpc3N1ZS4NCg0KLUt5dW5nY2hhbiBL
-b2gNCiAgICANCiAgICA+IA0KICAgID4gQmVzdCwNCiAgICA+IEt5dW5nY2hhbiBLb2ggDQogICAg
-PiAgICAgDQogICAgPiAgICAgDQogICAgPiAgICAgDQogICAgPiAgICAgDQogICAgPiANCiAgICAN
-Cg0K
+On Wed, Jun 28, 2017 at 09:59:40PM -0700, Darrick J. Wong wrote:
+> AFAICT, i_generation == 0 in XFS and btrfs is just as valid as any other
+> number.  There is no special casing of zero in either filesystem.
+> 
+> So now, my curiosity intrigued, I surveyed all the Linux filesystems
+> that can export to NFS.  I see that there are actually quite a few fs
+> (ext[2-4], exofs, efs, fat, jfs, f2fs, isofs, nilfs2, reiserfs, udf,
+> ufs) that treat zero as a special value meaning "ignore generation
+> check"; others (xfs, btrfs, fuse, ntfs, ocfs2) that don't consider zero
+> special and always require a match; and still others (affs, befs, ceph,
+> gfs2, jffs2, squashfs) that don't check at all.
+> 
+> That to mean strongly suggests that more research is necessary to figure
+> out why some of the filesystems that support i_generation reserve zero
+> as a special value to disable generation checks and why others always
+> require an exact match.  Until we can recapture why things are they way
+> they are, it doesn't make much sense to have a helper that only applies
+> to half the filesystems.
+
+>From a quick look at ext2; correct me if I got anything wrong:
+
+	- it looks like this is *only* used by NFS fh->inode lookups,
+	  there's not some other internal use for this special case.
+	- filehandles are never encoded with i_generation 0, so will
+	  never be returned to clients.
+
+So, this could only ever be used by an NFS client.  But the only NFS
+client that could ever use it would be a non-standard client that knew
+this special feature of these particular filesystems.
+
+Sounds like at most a slightly useful tool for malicious clients
+attempting filehandle-guessing attacks.
+
+I'm probably missing something.
+
+--b.
