@@ -1,75 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50638 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751893AbdF2RZo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2017 13:25:44 -0400
-Date: Thu, 29 Jun 2017 10:25:28 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:25129 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751911AbdF2X6W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2017 19:58:22 -0400
+Date: Thu, 29 Jun 2017 16:58:13 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] fs: ext4: inode->i_generation not assigned 0.
-Message-ID: <20170629172528.GA5869@birch.djwong.org>
-References: <c9f7090b2a58364998ad4a49cfdac379b905c7e9.1498687302.git.kkc6196@fb.com>
- <20A40B3C-E179-432B-B56F-BDAAF0CD2E1F@dilger.ca>
- <7CD38230-D961-428F-B2E9-2C0E28CAF442@fb.com>
- <20170629045940.GB5865@birch.djwong.org>
- <20170629143551.GB1651@fieldses.org>
+Subject: Re: [PATCH] xfs_db: identify attr dabtree field types correctly
+Message-ID: <20170629235813.GA5877@birch.djwong.org>
+References: <20170629195351.GI5874@birch.djwong.org>
+ <ec0d83a4-d98c-4739-3b20-eaeec7e21512@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170629143551.GB1651@fieldses.org>
+In-Reply-To: <ec0d83a4-d98c-4739-3b20-eaeec7e21512@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: William Koh <kkc6196@fb.com>, Andreas Dilger <adilger@dilger.ca>, Theodore Ts'o <tytso@mit.edu>, linux-ext4 <linux-ext4@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Jun 29, 2017 at 10:35:51AM -0400, J. Bruce Fields wrote:
-> On Wed, Jun 28, 2017 at 09:59:40PM -0700, Darrick J. Wong wrote:
-> > AFAICT, i_generation == 0 in XFS and btrfs is just as valid as any other
-> > number.  There is no special casing of zero in either filesystem.
+On Thu, Jun 29, 2017 at 04:19:59PM -0500, Eric Sandeen wrote:
+> On 6/29/17 2:53 PM, Darrick J. Wong wrote:
+> > For whatever reason, the v5 xattr dabtree header fields are mapped to
+> > the directory dabtree header fields, which means that the types are
+> > wrong and hence we cannot use the 'addr' command to step through the
+> > tree.  Since the v4 attr dabtree does this correctly, simply port the v5
+> > fields to the attr code too.
 > > 
-> > So now, my curiosity intrigued, I surveyed all the Linux filesystems
-> > that can export to NFS.  I see that there are actually quite a few fs
-> > (ext[2-4], exofs, efs, fat, jfs, f2fs, isofs, nilfs2, reiserfs, udf,
-> > ufs) that treat zero as a special value meaning "ignore generation
-> > check"; others (xfs, btrfs, fuse, ntfs, ocfs2) that don't consider zero
-> > special and always require a match; and still others (affs, befs, ceph,
-> > gfs2, jffs2, squashfs) that don't check at all.
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  db/attr.c  |   24 ++++++++++++++++++++++--
+> >  db/attr.h  |    2 ++
+> >  db/field.c |    6 ++++--
+> >  db/field.h |    1 +
+> >  4 files changed, 29 insertions(+), 4 deletions(-)
 > > 
-> > That to mean strongly suggests that more research is necessary to figure
-> > out why some of the filesystems that support i_generation reserve zero
-> > as a special value to disable generation checks and why others always
-> > require an exact match.  Until we can recapture why things are they way
-> > they are, it doesn't make much sense to have a helper that only applies
-> > to half the filesystems.
+> > diff --git a/db/attr.c b/db/attr.c
+> > index 6f56953..2b7b164 100644
+> > --- a/db/attr.c
+> > +++ b/db/attr.c
+> > @@ -499,7 +499,7 @@ const field_t	attr3_hfld[] = {
+> >  const field_t	attr3_flds[] = {
+> >  	{ "hdr", FLDT_ATTR3_LEAF_HDR, OI(L3OFF(hdr)), attr3_leaf_hdr_count,
+> >  	  FLD_COUNT, TYP_NONE },
+> > -	{ "hdr", FLDT_DA3_NODE_HDR, OI(N3OFF(hdr)), attr3_node_hdr_count,
+> > +	{ "hdr", FLDT_ATTR3_NODE_HDR, OI(N3OFF(hdr)), attr3_node_hdr_count,
+> >  	  FLD_COUNT, TYP_NONE },
+> >  	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(L3OFF(entries)),
+> >  	  attr3_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
+> > @@ -512,7 +512,7 @@ const field_t	attr3_flds[] = {
+> >  
+> >  #define	LH3OFF(f)	bitize(offsetof(struct xfs_attr3_leaf_hdr, f))
+> >  const field_t	attr3_leaf_hdr_flds[] = {
+> > -	{ "info", FLDT_DA3_BLKINFO, OI(LH3OFF(info)), C1, 0, TYP_NONE },
+> > +	{ "info", FLDT_ATTR3_BLKINFO, OI(LH3OFF(info)), C1, 0, TYP_NONE },
+> >  	{ "count", FLDT_UINT16D, OI(LH3OFF(count)), C1, 0, TYP_NONE },
+> >  	{ "usedbytes", FLDT_UINT16D, OI(LH3OFF(usedbytes)), C1, 0, TYP_NONE },
+> >  	{ "firstused", FLDT_UINT16D, OI(LH3OFF(firstused)), C1, 0, TYP_NONE },
+> > @@ -523,6 +523,26 @@ const field_t	attr3_leaf_hdr_flds[] = {
+> >  	{ NULL }
+> >  };
+> >  
+> > +#define	DB3OFF(f)	bitize(offsetof(struct xfs_da3_blkinfo, f))
 > 
-> From a quick look at ext2; correct me if I got anything wrong:
-> 
-> 	- it looks like this is *only* used by NFS fh->inode lookups,
-> 	  there's not some other internal use for this special case.
-> 	- filehandles are never encoded with i_generation 0, so will
-> 	  never be returned to clients.
-> 
-> So, this could only ever be used by an NFS client.  But the only NFS
-> client that could ever use it would be a non-standard client that knew
-> this special feature of these particular filesystems.
-> 
-> Sounds like at most a slightly useful tool for malicious clients
-> attempting filehandle-guessing attacks.
-> 
-> I'm probably missing something.
+> Doesn't "D" indicate dir?  so:  "B3OFF" (matching the existing "BOFF"
+> for attr_blkinfo_flds I think?)
 
-Was there ever a version of NFS (or more generally callers of the
-exportfs code) that couldn't deal with i_generation in the file handle,
-and therefore we invented this generation hack to work around the loss
-of the generation information?
+Yeah.
 
-There's a comment in xfs_fs_encode_fh about not supporting 64bit inodes
-with subtree_check (which seems to require one ino/gen pair for the file
-and a second pair for the file's parent) on NFSv2 because v2 doesn't
-provide enough space for all the file handle information, but that's the
-furthest I got with lazy-mining the git history. :)
+> > +const field_t	attr3_blkinfo_flds[] = {
+> > +	{ "hdr", FLDT_ATTR_BLKINFO, OI(DB3OFF(hdr)), C1, 0, TYP_NONE },
+> > +	{ "crc", FLDT_CRC, OI(DB3OFF(crc)), C1, 0, TYP_NONE },
+> > +	{ "bno", FLDT_DFSBNO, OI(DB3OFF(blkno)), C1, 0, TYP_BMAPBTD },
+> > +	{ "lsn", FLDT_UINT64X, OI(DB3OFF(lsn)), C1, 0, TYP_NONE },
+> > +	{ "uuid", FLDT_UUID, OI(DB3OFF(uuid)), C1, 0, TYP_NONE },
+> > +	{ "owner", FLDT_INO, OI(DB3OFF(owner)), C1, 0, TYP_NONE },
+> > +	{ NULL }
+> > +};
+> > +
+> > +#define	H3OFF(f)	bitize(offsetof(struct xfs_da3_node_hdr, f))
+> > +const field_t	attr3_node_hdr_flds[] = {
+> > +	{ "info", FLDT_ATTR3_BLKINFO, OI(H3OFF(info)), C1, 0, TYP_NONE },
+> > +	{ "count", FLDT_UINT16D, OI(H3OFF(__count)), C1, 0, TYP_NONE },
+> > +	{ "level", FLDT_UINT16D, OI(H3OFF(__level)), C1, 0, TYP_NONE },
+> > +	{ "pad", FLDT_UINT32D, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
+> > +	{ NULL }
+> > +};
+> > +
+> >  /*
+> >   * Special read verifier for attribute buffers. Detect the magic number
+> >   * appropriately and set the correct verifier and call it.
+> > diff --git a/db/attr.h b/db/attr.h
+> > index bc3431f..21848c1 100644
+> > --- a/db/attr.h
+> > +++ b/db/attr.h
+> > @@ -30,6 +30,8 @@ extern const field_t	attr3_flds[];
+> >  extern const field_t	attr3_hfld[];
+> >  extern const field_t	attr3_leaf_hdr_flds[];
+> >  extern const field_t	attr3_node_hdr_flds[];
+> > +extern const field_t	attr3_blkinfo_flds[];
+> > +extern const field_t	attr3_node_hdr_flds[];
+> >  
+> >  extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
+> >  extern int	attr_size(void *obj, int startoff, int idx);
+> > diff --git a/db/field.c b/db/field.c
+> > index 2a2197a..d0c8e04 100644
+> > --- a/db/field.c
+> > +++ b/db/field.c
+> > @@ -91,12 +91,14 @@ const ftattr_t	ftattrtab[] = {
+> >  /* attr3 specific fields */
+> >  	{ FLDT_ATTR3, "attr3", NULL, (char *)attr3_flds, attr_size, FTARG_SIZE,
+> >  	  NULL, attr3_flds },
+> > +	{ FLDT_ATTR3_BLKINFO, "attr3_blkinfo", NULL, (char *)attr3_blkinfo_flds,
+> > +	  SI(bitsz(struct xfs_da_blkinfo)), 0, NULL, attr3_blkinfo_flds },
+> 
+> SI(bitsz(struct xfs_da3_blkinfo)) I think?
+
+Yes.  Thanks for catching these... it's strange that btdump still worked
+despite the incorrect size.  Will resend.
 
 --D
 
 > 
-> --b.
+> >  	{ FLDT_ATTR3_LEAF_HDR, "attr3_leaf_hdr", NULL,
+> >  	  (char *)attr3_leaf_hdr_flds, SI(bitsz(struct xfs_attr3_leaf_hdr)),
+> >  	  0, NULL, attr3_leaf_hdr_flds },
+> >  	{ FLDT_ATTR3_NODE_HDR, "attr3_node_hdr", NULL,
+> > -	  (char *)da3_node_hdr_flds, SI(bitsz(struct xfs_da3_node_hdr)),
+> > -	  0, NULL, da3_node_hdr_flds },
+> > +	  (char *)attr3_node_hdr_flds, SI(bitsz(struct xfs_da3_node_hdr)),
+> > +	  0, NULL, attr3_node_hdr_flds },
+> >  
+> >  	{ FLDT_BMAPBTA, "bmapbta", NULL, (char *)bmapbta_flds, btblock_size,
+> >  	  FTARG_SIZE, NULL, bmapbta_flds },
+> > diff --git a/db/field.h b/db/field.h
+> > index 53616f1..d1a7095 100644
+> > --- a/db/field.h
+> > +++ b/db/field.h
+> > @@ -44,6 +44,7 @@ typedef enum fldt	{
+> >  
+> >  	/* attr 3 specific fields */
+> >  	FLDT_ATTR3,
+> > +	FLDT_ATTR3_BLKINFO,
+> >  	FLDT_ATTR3_LEAF_HDR,
+> >  	FLDT_ATTR3_NODE_HDR,
+> >  
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
