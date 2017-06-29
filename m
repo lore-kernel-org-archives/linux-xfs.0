@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59894 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:59994 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752614AbdF2NUG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Jun 2017 09:20:06 -0400
+        id S1752614AbdF2NUL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Jun 2017 09:20:11 -0400
 From: jlayton@kernel.org
-Subject: [PATCH v8 03/18] fs: check for writeback errors after syncing out buffers in generic_file_fsync
-Date: Thu, 29 Jun 2017 09:19:39 -0400
-Message-Id: <20170629131954.28733-4-jlayton@kernel.org>
+Subject: [PATCH v8 05/18] jbd2: don't clear and reset errors after waiting on writeback
+Date: Thu, 29 Jun 2017 09:19:41 -0400
+Message-Id: <20170629131954.28733-6-jlayton@kernel.org>
 In-Reply-To: <20170629131954.28733-1-jlayton@kernel.org>
 References: <20170629131954.28733-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,61 +17,103 @@ Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David 
 
 From: Jeff Layton <jlayton@redhat.com>
 
-ext2 currently does a test+clear of the AS_EIO flag, which is
-is problematic for some coming changes.
+Resetting this flag is almost certainly racy, and will be problematic
+with some coming changes.
 
-What we really need to do instead is call filemap_check_errors
-in __generic_file_fsync after syncing out the buffers. That
-will be sufficient for this case, and help other callers detect
-these errors properly as well.
+Make filemap_fdatawait_keep_errors return int, but not clear the flag(s).
+Have jbd2 call it instead of filemap_fdatawait and don't attempt to
+re-set the error flag if it fails.
 
-With that, we don't need to twiddle it in ext2.
-
-Suggested-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Matthew Wilcox <mawilcox@microsoft.com>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/ext2/file.c | 5 +----
- fs/libfs.c     | 3 ++-
- 2 files changed, 3 insertions(+), 5 deletions(-)
+ fs/jbd2/commit.c   | 16 ++++------------
+ include/linux/fs.h |  2 +-
+ mm/filemap.c       | 16 ++++++++++++++--
+ 3 files changed, 19 insertions(+), 15 deletions(-)
 
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index b21891a6bfca..d34d32bdc944 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -174,15 +174,12 @@ int ext2_fsync(struct file *file, loff_t start, loff_t end, int datasync)
+diff --git a/fs/jbd2/commit.c b/fs/jbd2/commit.c
+index b6b194ec1b4f..3c1c31321d9b 100644
+--- a/fs/jbd2/commit.c
++++ b/fs/jbd2/commit.c
+@@ -263,18 +263,10 @@ static int journal_finish_inode_data_buffers(journal_t *journal,
+ 			continue;
+ 		jinode->i_flags |= JI_COMMIT_RUNNING;
+ 		spin_unlock(&journal->j_list_lock);
+-		err = filemap_fdatawait(jinode->i_vfs_inode->i_mapping);
+-		if (err) {
+-			/*
+-			 * Because AS_EIO is cleared by
+-			 * filemap_fdatawait_range(), set it again so
+-			 * that user process can get -EIO from fsync().
+-			 */
+-			mapping_set_error(jinode->i_vfs_inode->i_mapping, -EIO);
+-
+-			if (!ret)
+-				ret = err;
+-		}
++		err = filemap_fdatawait_keep_errors(
++				jinode->i_vfs_inode->i_mapping);
++		if (!ret)
++			ret = err;
+ 		spin_lock(&journal->j_list_lock);
+ 		jinode->i_flags &= ~JI_COMMIT_RUNNING;
+ 		smp_mb();
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 4ff4498297fa..74872c0f1c07 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2508,7 +2508,7 @@ extern int write_inode_now(struct inode *, int);
+ extern int filemap_fdatawrite(struct address_space *);
+ extern int filemap_flush(struct address_space *);
+ extern int filemap_fdatawait(struct address_space *);
+-extern void filemap_fdatawait_keep_errors(struct address_space *);
++extern int filemap_fdatawait_keep_errors(struct address_space *mapping);
+ extern int filemap_fdatawait_range(struct address_space *, loff_t lstart,
+ 				   loff_t lend);
+ extern int filemap_write_and_wait(struct address_space *mapping);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 6f1be573a5e6..e5711b2728f4 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -309,6 +309,16 @@ int filemap_check_errors(struct address_space *mapping)
+ }
+ EXPORT_SYMBOL(filemap_check_errors);
+ 
++static int filemap_check_and_keep_errors(struct address_space *mapping)
++{
++	/* Check for outstanding write errors */
++	if (test_bit(AS_EIO, &mapping->flags))
++		return -EIO;
++	if (test_bit(AS_ENOSPC, &mapping->flags))
++		return -ENOSPC;
++	return 0;
++}
++
+ /**
+  * __filemap_fdatawrite_range - start writeback on mapping dirty pages in range
+  * @mapping:	address space structure to write
+@@ -453,15 +463,17 @@ EXPORT_SYMBOL(filemap_fdatawait_range);
+  * call sites are system-wide / filesystem-wide data flushers: e.g. sync(2),
+  * fsfreeze(8)
+  */
+-void filemap_fdatawait_keep_errors(struct address_space *mapping)
++int filemap_fdatawait_keep_errors(struct address_space *mapping)
  {
- 	int ret;
- 	struct super_block *sb = file->f_mapping->host->i_sb;
--	struct address_space *mapping = sb->s_bdev->bd_inode->i_mapping;
+ 	loff_t i_size = i_size_read(mapping->host);
  
- 	ret = generic_file_fsync(file, start, end, datasync);
--	if (ret == -EIO || test_and_clear_bit(AS_EIO, &mapping->flags)) {
-+	if (ret == -EIO)
- 		/* We don't really know where the IO error happened... */
- 		ext2_error(sb, __func__,
- 			   "detected IO error when writing metadata buffers");
--		ret = -EIO;
--	}
- 	return ret;
+ 	if (i_size == 0)
+-		return;
++		return 0;
+ 
+ 	__filemap_fdatawait_range(mapping, 0, i_size - 1);
++	return filemap_check_and_keep_errors(mapping);
  }
++EXPORT_SYMBOL(filemap_fdatawait_keep_errors);
  
-diff --git a/fs/libfs.c b/fs/libfs.c
-index a04395334bb1..1dec90819366 100644
---- a/fs/libfs.c
-+++ b/fs/libfs.c
-@@ -991,7 +991,8 @@ int __generic_file_fsync(struct file *file, loff_t start, loff_t end,
- 
- out:
- 	inode_unlock(inode);
--	return ret;
-+	err = filemap_check_errors(inode->i_mapping);
-+	return ret ? ret : err;
- }
- EXPORT_SYMBOL(__generic_file_fsync);
- 
+ /**
+  * filemap_fdatawait - wait for all under-writeback pages to complete
 -- 
 2.13.0
 
