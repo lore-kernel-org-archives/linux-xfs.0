@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60312 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:60380 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753230AbdF2NUp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1753229AbdF2NUp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 29 Jun 2017 09:20:45 -0400
 From: jlayton@kernel.org
-Subject: [PATCH v8 14/18] block: convert to errseq_t based writeback error tracking
-Date: Thu, 29 Jun 2017 09:19:50 -0400
-Message-Id: <20170629131954.28733-15-jlayton@kernel.org>
+Subject: [PATCH v8 16/18] ext4: use errseq_t based error handling for reporting data writeback errors
+Date: Thu, 29 Jun 2017 09:19:52 -0400
+Message-Id: <20170629131954.28733-17-jlayton@kernel.org>
 In-Reply-To: <20170629131954.28733-1-jlayton@kernel.org>
 References: <20170629131954.28733-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,33 +17,57 @@ Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David 
 
 From: Jeff Layton <jlayton@redhat.com>
 
-This is a very minimal conversion to errseq_t based error tracking
-for raw block device access. Just have it use the standard
-file_write_and_wait_range call.
+Add a call to filemap_report_wb_err at the end of ext4_sync_file. This
+will ensure that we check and advance the errseq_t in the file, which
+allows us to track and report errors on all open fds when they occur.
 
-Note that there are internal callers that call sync_blockdev
-and the like that are not affected by this. They'll continue
-to use the AS_EIO/AS_ENOSPC flags for error reporting like
-they always have for now.
+Note that metadata writeback errors are not yet reported on all fds at
+this point. That will be added in a later patch.
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/block_dev.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/ext4/fsync.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 4d62fe771587..bcb0be6e423a 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -624,7 +624,7 @@ int blkdev_fsync(struct file *filp, loff_t start, loff_t end, int datasync)
- 	struct block_device *bdev = I_BDEV(bd_inode);
- 	int error;
- 	
--	error = filemap_write_and_wait_range(filp->f_mapping, start, end);
-+	error = file_write_and_wait_range(filp, start, end);
- 	if (error)
- 		return error;
+diff --git a/fs/ext4/fsync.c b/fs/ext4/fsync.c
+index 9d549608fd30..d7cf0934c71c 100644
+--- a/fs/ext4/fsync.c
++++ b/fs/ext4/fsync.c
+@@ -100,8 +100,10 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+ 	tid_t commit_tid;
+ 	bool needs_barrier = false;
  
+-	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
+-		return -EIO;
++	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb)))) {
++		ret = -EIO;
++		goto out;
++	}
+ 
+ 	J_ASSERT(ext4_journal_current_handle() == NULL);
+ 
+@@ -124,9 +126,10 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+ 		goto out;
+ 	}
+ 
+-	ret = filemap_write_and_wait_range(inode->i_mapping, start, end);
++	ret = file_write_and_wait_range(file, start, end);
+ 	if (ret)
+-		return ret;
++		goto out;
++
+ 	/*
+ 	 * data=writeback,ordered:
+ 	 *  The caller's filemap_fdatawrite()/wait will sync the data.
+@@ -152,7 +155,7 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+ 		needs_barrier = true;
+ 	ret = jbd2_complete_transaction(journal, commit_tid);
+ 	if (needs_barrier) {
+-	issue_flush:
++issue_flush:
+ 		err = blkdev_issue_flush(inode->i_sb->s_bdev, GFP_KERNEL, NULL);
+ 		if (!ret)
+ 			ret = err;
 -- 
 2.13.0
 
