@@ -1,24 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38723 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:42137 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752787AbdF2NyY (ORCPT
+        with ESMTP id S1752807AbdF2NyY (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2017 09:54:24 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: lseek SEEK_HOLE / SEEK_DATA fixes and switch to iomap V3.2-hch
-Date: Thu, 29 Jun 2017 06:54:15 -0700
-Message-Id: <20170629135420.21357-1-hch@lst.de>
+Subject: [PATCH 1/5] xfs: remove a whitespace-only line from xfs_fs_get_nextdqblk
+Date: Thu, 29 Jun 2017 06:54:16 -0700
+Message-Id: <20170629135420.21357-2-hch@lst.de>
+In-Reply-To: <20170629135420.21357-1-hch@lst.de>
+References: <20170629135420.21357-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Andreas Gruenbacher <agruenba@redhat.com>
 Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-Here is my take on all the current seek work.  It has my XFS quota changes
-(unmodified from last post), Andrea's page cache seek helper (unmodified
-except that the export is dropped), and Andreas iomap SEEK_HOLE / DATA,
-for which I've added a couple of cleanups and converted ext4 as well.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_quotaops.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-I've made sure both xfs and ext4 pass all the xfstests.
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index f82d79a8c694..de9493253edf 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -269,7 +269,6 @@ xfs_fs_get_nextdqblk(
+ 	/* ID may be different, so convert back what we got */
+ 	*qid = make_kqid(current_user_ns(), qid->type, id);
+ 	return 0;
+-	
+ }
+ 
+ STATIC int
+-- 
+2.11.0
 
-Changes since the previous posting:
- - trivial cleanups of the iomap helper
