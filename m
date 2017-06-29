@@ -1,95 +1,177 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60078 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750715AbdF2EBn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Jun 2017 00:01:43 -0400
-Subject: Re: [PATCH] xfs_db: properly set inode type
-References: <e6c83eea-af29-c01b-752e-e049e8fdc69f@redhat.com>
- <20170628004252.GB4492@birch.djwong.org>
- <ffd4ffc4-c4f0-4935-a785-c6af95c4d4b9@sandeen.net>
- <20170628235411.GA5874@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f7050d91-0bc5-ec0a-fc3f-59a25f8855ef@sandeen.net>
-Date: Wed, 28 Jun 2017 23:01:42 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:34238 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751591AbdF2EkK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2017 00:40:10 -0400
+Date: Wed, 28 Jun 2017 21:40:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs/141: use new errortag knob for crc error injection
+Message-ID: <20170629044000.GA5871@birch.djwong.org>
+References: <20170628114450.9670-1-bfoster@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20170628235411.GA5874@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170628114450.9670-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On 6/28/17 6:54 PM, Darrick J. Wong wrote:
-> On Wed, Jun 28, 2017 at 05:45:55PM -0500, Eric Sandeen wrote:
->> On 6/27/17 7:42 PM, Darrick J. Wong wrote:
->>>> +		ino = XFS_AGINO_TO_INO(mp, xfs_daddr_to_agno(mp, b),
->>>> +			((b << BBSHIFT) >> mp->m_sb.sb_inodelog) %
->>>> +			(mp->m_sb.sb_agblocks << mp->m_sb.sb_inopblog));
->>
->>> XFS_OFFBNO_TO_AGINO(mp, xfs_daddr_to_agbno(mp, b), 0) instead of that
->>> long third argument?
->>
->> Hm, nope:
->>
->> xfs_db> inode 99
->> xfs_db> daddr
->> current daddr is 99
->>
->> xfs_db> daddr 99
->> xfs_db> type inode
->> xfs_db> inode
->> current inode number is 96
->>
->>
->> That ends up taking the first inode in the fsblock (12), not the sector
->> (99) I guess.
->>
->> The macro needs a non-zero offset into the fsblock... found by, um...
->> I'm not sure that's going to be much prettier.
->>
->> How much do you hate how I wrote it first? ;)  (I kind of hate it a
->> lot but dunno what else we have?)
+On Wed, Jun 28, 2017 at 07:44:50AM -0400, Brian Foster wrote:
+> Update the test to use the newly available sysfs errortag injection
+> knobs. The errortag knob has replaced the previous custom knob in
+> the kernel. Create a local helper to support the old knob for
+> backwards compatibility.
 > 
-> I guess there's also the problem that if inodesize != 512 then what are
-> we targeting, anyway?  If inodesize = 256 then we can only hit
-> even-numbered inodes (not so bad) but if inodesize > 512 then do we jump
-> back to wherever the inode starts?  Or just give the user what they
-> asked for, even if it's garbage? 
-
-Oh, hum. Right, big inodes.... 
-
-So I'm trying to go from disk location to inode number, but the current
-disk location may not even be the start of an inode.  Hell.  Well, I'm
-sure I could craft a test to disallow "type inode" if the current location
-cannot be on an inode boundary.  But is that too clever?  Should the
-debug tool just do what the user asks?
-
-> (FWIW I was fine with xfs_db being dumb and giving you exactly what you
-> point it at, even if that makes no sense. :P)
-
-yeah, if you do "daddr 0" "type agf" it'll squawk, too, so it's fine to
-do the dumb user's bidding...
-
-The difference here is that to set things up properly we need "an" inode
-number.  Probably best to reject locations that cannot be the starts
-of inodes, I guess, but that kind of violates the spirit of a debug tool.
-Maybe we're /looking/ for misaligned inodes ...
-
-Bleah.
-
--Eric
-
-
-
-> --D
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
 > 
->>
->> -Eric
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> This updates xfs/141 to use the new error injection tag sysfs knob that
+> has replaced log_badcrc_factor in the latest XFS for-next tree.
+
+Hmmm... for xfstests, I was thinking of rewriting the common/inject helpers:
+
+# Requires that xfs_io inject command knows about this error type
+_require_xfs_io_error_injection()
+{
+	type="$1"
+
+	shortdev=$(_short_dev $TEST_DEV)
+	tagfile=/sys/fs/xfs/$shortdev/errortag/$type
+	test -w $tagfile && return
+
+	_require_error_injection
+
+	if [ "$type" = "log_bad_crc" ]; then
+		tagfile=/sys/fs/xfs/$shortdev/log/log_badcrc_factor
+		test -w $tagfile && return
+		_notrun "Cannot find log_badcrc_factor"
+	fi
+
+	# NOTE: We can't actually test error injection here because xfs
+	# hasn't always range checked the argument to xfs_errortag_add.
+	# We also don't want to trip an error before we're ready to deal
+	# with it.
+
+	$XFS_IO_PROG -x -c 'inject' $TEST_DIR | grep -q "$type" || \
+		_notrun "XFS error injection $type unknown."
+}
+
+# Inject an error into the scratch fs
+_scratch_inject_error()
+{
+	type="$1"
+	value="$2"
+
+	shortdev=$(_short_dev $SCRATCH_DEV)
+	tagfile=/sys/fs/xfs/$shortdev/errortag/$type
+	if [ -w $tagfile ]; then
+		echo "$value" > $tagfile
+		return
+	fi
+
+	if [ "$type" = "log_bad_crc" ]; then
+		tagfile=/sys/fs/xfs/$shortdev/log/log_badcrc_factor
+		if [ -w $tagfile ]; then
+			echo "$value" > $tagfile
+			return
+		fi
+		_notrun "cannot inject error $type value $value"
+	elif [ -z "$value" ] || [ "$value" = "default" ]; then
+		$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
+	else
+		_notrun "cannot inject error $type value $value"
+	fi
+}
+
+...that way we can just change xfs/141 to do:
+
+_require_xfs_io_error_injection "log_bad_crc"
+...
+for i in $(seq 1 5); do
+ 	# Enable error injection. Use a random bad crc factor up to 100
+ 	# (increase this value to run fsstress longer).
+ 	factor=$((RANDOM % 100 + 1))
+	...
+	_scratch_inject_error "log_bad_crc" "$factor"
+	...
+done
+
+Therefore we can move all the other error injection knob tests (looking
+at you, drop_writes) to a standard helper function that will cover all
+the errortag knobs we're moving to sysfs.  Unfortunately we pay for that
+uniformity by uglifying the helper functions to handle the old knobs,
+but oh well.
+
+I do wonder about the old xfs_io command, though -- while it's tempting
+to rewrite it to do all the parsing required to get to sysfs, I'm not so
+enthused about doing in C what can be done much more easily in bash.
+
+--D
+
 > 
+> Brian
+> 
+>  tests/xfs/141 | 22 ++++++++++++++++++----
+>  1 file changed, 18 insertions(+), 4 deletions(-)
+> 
+> diff --git a/tests/xfs/141 b/tests/xfs/141
+> index 56ff14e..ea4f558 100755
+> --- a/tests/xfs/141
+> +++ b/tests/xfs/141
+> @@ -43,6 +43,21 @@ _cleanup()
+>  	wait > /dev/null 2>&1
+>  }
+>  
+> +# require either the current error tag or the old custom log record crc error
+> +# injection knob
+> +_setup_bad_crc()
+> +{
+> +	if [ -e /sys/fs/xfs/$1/errortag/log_bad_crc ]; then
+> +		badcrc_attr=/sys/fs/xfs/$1/errortag/log_bad_crc
+> +		return
+> +	fi
+> +	if [ -e /sys/fs/xfs/$1/log/log_badcrc_factor ]; then
+> +		badcrc_attr=/sys/fs/xfs/$1/log/log_badcrc_factor
+> +		return
+> +	fi
+> +	_notrun "bad crc sysfs attribute not supported"
+> +}
+> +
+>  rm -f $seqres.full
+>  
+>  # get standard environment, filters and checks
+> @@ -53,7 +68,6 @@ rm -f $seqres.full
+>  # Modify as appropriate.
+>  _supported_fs xfs
+>  _supported_os Linux
+> -_require_xfs_sysfs $(_short_dev $TEST_DEV)/log/log_badcrc_factor
+>  _require_scratch
+>  _require_command "$KILLALL_PROG" killall
+>  
+> @@ -62,14 +76,14 @@ echo "Silence is golden."
+>  _scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+>  _scratch_mount
+>  
+> -sdev=$(_short_dev $SCRATCH_DEV)
+> +_setup_bad_crc $(_short_dev $SCRATCH_DEV)
+>  
+>  for i in $(seq 1 5); do
+>  	# Enable error injection. Use a random bad crc factor up to 100
+>  	# (increase this value to run fsstress longer).
+>  	factor=$((RANDOM % 100 + 1))
+> -	echo iteration $i log_badcrc_factor: $factor >> $seqres.full 2>&1
+> -	echo $factor > /sys/fs/xfs/$sdev/log/log_badcrc_factor
+> +	echo iteration $i bad crc factor: $factor >> $seqres.full 2>&1
+> +	echo $factor > $badcrc_attr
+>  
+>  	# Run fsstress until the filesystem shuts down. It will shut down
+>  	# automatically when error injection triggers.
+> -- 
+> 2.9.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
