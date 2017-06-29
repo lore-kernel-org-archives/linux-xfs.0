@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60008 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:60446 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753198AbdF2NUc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Jun 2017 09:20:32 -0400
+        id S1753240AbdF2NUu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Jun 2017 09:20:50 -0400
 From: jlayton@kernel.org
-Subject: [PATCH v8 13/18] dax: set errors in mapping when writeback fails
-Date: Thu, 29 Jun 2017 09:19:49 -0400
-Message-Id: <20170629131954.28733-14-jlayton@kernel.org>
+Subject: [PATCH v8 18/18] btrfs: minimal conversion to errseq_t writeback error reporting on fsync
+Date: Thu, 29 Jun 2017 09:19:54 -0400
+Message-Id: <20170629131954.28733-19-jlayton@kernel.org>
 In-Reply-To: <20170629131954.28733-1-jlayton@kernel.org>
 References: <20170629131954.28733-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,45 +17,46 @@ Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David 
 
 From: Jeff Layton <jlayton@redhat.com>
 
-Jan Kara's description for this patch is much better than mine, so I'm
-quoting it verbatim here:
-
-DAX currently doesn't set errors in the mapping when cache flushing
-fails in dax_writeback_mapping_range(). Since this function can get
-called only from fsync(2) or sync(2), this is actually as good as it can
-currently get since we correctly propagate the error up from
-dax_writeback_mapping_range() to filemap_fdatawrite()
-
-However, in the future better writeback error handling will enable us to
-properly report these errors on fsync(2) even if there are multiple file
-descriptors open against the file or if sync(2) gets called before
-fsync(2). So convert DAX to using standard error reporting through the
-mapping.
+Just check and advance the errseq_t in the file before returning.
+Internal callers of filemap_* functions are left as-is.
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-and-tested-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 ---
- fs/dax.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ fs/btrfs/file.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index c22eaf162f95..441280e15d5b 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -856,8 +856,10 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+index da1096eb1a40..1f57e1a523d9 100644
+--- a/fs/btrfs/file.c
++++ b/fs/btrfs/file.c
+@@ -2011,7 +2011,7 @@ int btrfs_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+ 	struct btrfs_root *root = BTRFS_I(inode)->root;
+ 	struct btrfs_trans_handle *trans;
+ 	struct btrfs_log_ctx ctx;
+-	int ret = 0;
++	int ret = 0, err;
+ 	bool full_sync = 0;
+ 	u64 len;
  
- 			ret = dax_writeback_one(bdev, dax_dev, mapping,
- 					indices[i], pvec.pages[i]);
--			if (ret < 0)
-+			if (ret < 0) {
-+				mapping_set_error(mapping, ret);
- 				goto out;
-+			}
- 		}
+@@ -2030,7 +2030,7 @@ int btrfs_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+ 	 */
+ 	ret = start_ordered_ops(inode, start, end);
+ 	if (ret)
+-		return ret;
++		goto out;
+ 
+ 	inode_lock(inode);
+ 	atomic_inc(&root->log_batch);
+@@ -2227,6 +2227,9 @@ int btrfs_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
+ 		ret = btrfs_end_transaction(trans);
  	}
  out:
++	err = file_check_and_advance_wb_err(file);
++	if (!ret)
++		ret = err;
+ 	return ret > 0 ? -EIO : ret;
+ }
+ 
 -- 
 2.13.0
 
