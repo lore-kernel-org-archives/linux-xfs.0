@@ -1,105 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60008 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752614AbdF2NUV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Jun 2017 09:20:21 -0400
-From: jlayton@kernel.org
-Subject: [PATCH v8 07/18] mm: don't TestClearPageError in __filemap_fdatawait_range
-Date: Thu, 29 Jun 2017 09:19:43 -0400
-Message-Id: <20170629131954.28733-8-jlayton@kernel.org>
-In-Reply-To: <20170629131954.28733-1-jlayton@kernel.org>
-References: <20170629131954.28733-1-jlayton@kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:47010 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752150AbdF2P75 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2017 11:59:57 -0400
+Date: Thu, 29 Jun 2017 08:59:48 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_spaceman: fix potential memory leak by malloc in
+ scan_ag
+Message-ID: <20170629155948.GC5874@birch.djwong.org>
+References: <20170629155256.3607-1-billodo@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170629155256.3607-1-billodo@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, Liu Bo <bo.li.liu@oracle.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-From: Jeff Layton <jlayton@redhat.com>
+On Thu, Jun 29, 2017 at 10:52:56AM -0500, Bill O'Donnell wrote:
+> scan_ag mallocs memory that is potentially leaked. Add a free
+> to alleviate the potential leak.
+> 
+> Fixes CoverityScan CID#1413772 (RESOURCE_LEAK)
 
-The -EIO returned here can end up overriding whatever error is marked in
-the address space, and be returned at fsync time, even when there is a
-more appropriate error stored in the mapping.
+/me feels like the coverity tags he's seen tend to take the format of:
 
-Read errors are also sometimes tracked on a per-page level using
-PG_error. Suppose we have a read error on a page, and then that page is
-subsequently dirtied by overwriting the whole page. Writeback doesn't
-clear PG_error, so we can then end up successfully writing back that
-page and still return -EIO on fsync.
+    Addresses-Coverity-ID: 1091173
+or
+    Detected by CoverityScan, CID#1419681 ("Explicit null dereferenced")
 
-Worse yet, PG_error is cleared during a sync() syscall, but the -EIO
-return from that is silently discarded. Any subsystem that is relying on
-PG_error to report errors during fsync can easily lose writeback errors
-due to this. All you need is a stray sync() call to wait for writeback
-to complete and you've lost the error.
+though to be honest I don't know that there's really a standard.
 
-Since the handling of the PG_error flag is somewhat inconsistent across
-subsystems, let's just rely on marking the address space when there are
-writeback errors. Change the TestClearPageError call to ClearPageError,
-and make __filemap_fdatawait_range a void return function.
+<shrug> It probably ought to use one of the two more common formats, but
+maybe I can just ask Eric to prettyplease fix it on the way in. :)
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- mm/filemap.c | 20 +++++---------------
- 1 file changed, 5 insertions(+), 15 deletions(-)
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 49bc9720fb00..eb99b5f23c61 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -386,17 +386,16 @@ int filemap_flush(struct address_space *mapping)
- }
- EXPORT_SYMBOL(filemap_flush);
- 
--static int __filemap_fdatawait_range(struct address_space *mapping,
-+static void __filemap_fdatawait_range(struct address_space *mapping,
- 				     loff_t start_byte, loff_t end_byte)
- {
- 	pgoff_t index = start_byte >> PAGE_SHIFT;
- 	pgoff_t end = end_byte >> PAGE_SHIFT;
- 	struct pagevec pvec;
- 	int nr_pages;
--	int ret = 0;
- 
- 	if (end_byte < start_byte)
--		goto out;
-+		return;
- 
- 	pagevec_init(&pvec, 0);
- 	while ((index <= end) &&
-@@ -413,14 +412,11 @@ static int __filemap_fdatawait_range(struct address_space *mapping,
- 				continue;
- 
- 			wait_on_page_writeback(page);
--			if (TestClearPageError(page))
--				ret = -EIO;
-+			ClearPageError(page);
- 		}
- 		pagevec_release(&pvec);
- 		cond_resched();
- 	}
--out:
--	return ret;
- }
- 
- /**
-@@ -440,14 +436,8 @@ static int __filemap_fdatawait_range(struct address_space *mapping,
- int filemap_fdatawait_range(struct address_space *mapping, loff_t start_byte,
- 			    loff_t end_byte)
- {
--	int ret, ret2;
--
--	ret = __filemap_fdatawait_range(mapping, start_byte, end_byte);
--	ret2 = filemap_check_errors(mapping);
--	if (!ret)
--		ret = ret2;
--
--	return ret;
-+	__filemap_fdatawait_range(mapping, start_byte, end_byte);
-+	return filemap_check_errors(mapping);
- }
- EXPORT_SYMBOL(filemap_fdatawait_range);
- 
--- 
-2.13.0
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+--D
+
+> ---
+>  spaceman/freesp.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/spaceman/freesp.c b/spaceman/freesp.c
+> index 22aec821..367c95d1 100644
+> --- a/spaceman/freesp.c
+> +++ b/spaceman/freesp.c
+> @@ -239,7 +239,9 @@ scan_ag(
+>  			printf(_("%10u %10llu %10llu\n"), agno, freeexts,
+>  					freeblks);
+>  	}
+> +	free(fsmap);
+>  }
+> +
+>  static void
+>  aglistadd(
+>  	char		*a)
+> -- 
+> 2.13.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
