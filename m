@@ -1,214 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21574 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753399AbdF2PWI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2017 11:22:08 -0400
-Date: Thu, 29 Jun 2017 08:22:01 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs/141: use new errortag knob for crc error injection
-Message-ID: <20170629152201.GB5874@birch.djwong.org>
-References: <20170628114450.9670-1-bfoster@redhat.com>
- <20170629044000.GA5871@birch.djwong.org>
- <20170629115409.GA3291@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170629115409.GA3291@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:40088 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751669AbdF2Pw7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Jun 2017 11:52:59 -0400
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: [PATCH] xfs_spaceman: fix potential memory leak by malloc in scan_ag
+Date: Thu, 29 Jun 2017 10:52:56 -0500
+Message-Id: <20170629155256.3607-1-billodo@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: sandeen@sandeen.net
 
-On Thu, Jun 29, 2017 at 07:54:09AM -0400, Brian Foster wrote:
-> On Wed, Jun 28, 2017 at 09:40:00PM -0700, Darrick J. Wong wrote:
-> > On Wed, Jun 28, 2017 at 07:44:50AM -0400, Brian Foster wrote:
-> > > Update the test to use the newly available sysfs errortag injection
-> > > knobs. The errortag knob has replaced the previous custom knob in
-> > > the kernel. Create a local helper to support the old knob for
-> > > backwards compatibility.
-> > > 
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > ---
-> > > 
-> > > This updates xfs/141 to use the new error injection tag sysfs knob that
-> > > has replaced log_badcrc_factor in the latest XFS for-next tree.
-> > 
-> > Hmmm... for xfstests, I was thinking of rewriting the common/inject helpers:
-> > 
-> > # Requires that xfs_io inject command knows about this error type
-> > _require_xfs_io_error_injection()
-> > {
-> > 	type="$1"
-> > 
-> > 	shortdev=$(_short_dev $TEST_DEV)
-> > 	tagfile=/sys/fs/xfs/$shortdev/errortag/$type
-> > 	test -w $tagfile && return
-> > 
-> > 	_require_error_injection
-> > 
-> > 	if [ "$type" = "log_bad_crc" ]; then
-> > 		tagfile=/sys/fs/xfs/$shortdev/log/log_badcrc_factor
-> > 		test -w $tagfile && return
-> > 		_notrun "Cannot find log_badcrc_factor"
-> > 	fi
-> > 
-> > 	# NOTE: We can't actually test error injection here because xfs
-> > 	# hasn't always range checked the argument to xfs_errortag_add.
-> > 	# We also don't want to trip an error before we're ready to deal
-> > 	# with it.
-> > 
-> > 	$XFS_IO_PROG -x -c 'inject' $TEST_DIR | grep -q "$type" || \
-> > 		_notrun "XFS error injection $type unknown."
-> > }
-> > 
-> > # Inject an error into the scratch fs
-> > _scratch_inject_error()
-> > {
-> > 	type="$1"
-> > 	value="$2"
-> > 
-> > 	shortdev=$(_short_dev $SCRATCH_DEV)
-> > 	tagfile=/sys/fs/xfs/$shortdev/errortag/$type
-> > 	if [ -w $tagfile ]; then
-> > 		echo "$value" > $tagfile
-> > 		return
-> > 	fi
-> > 
-> > 	if [ "$type" = "log_bad_crc" ]; then
-> > 		tagfile=/sys/fs/xfs/$shortdev/log/log_badcrc_factor
-> > 		if [ -w $tagfile ]; then
-> > 			echo "$value" > $tagfile
-> > 			return
-> > 		fi
-> > 		_notrun "cannot inject error $type value $value"
-> > 	elif [ -z "$value" ] || [ "$value" = "default" ]; then
-> > 		$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
-> > 	else
-> > 		_notrun "cannot inject error $type value $value"
-> > 	fi
-> > }
-> > 
-> > ...that way we can just change xfs/141 to do:
-> > 
-> > _require_xfs_io_error_injection "log_bad_crc"
-> > ...
-> > for i in $(seq 1 5); do
-> >  	# Enable error injection. Use a random bad crc factor up to 100
-> >  	# (increase this value to run fsstress longer).
-> >  	factor=$((RANDOM % 100 + 1))
-> > 	...
-> > 	_scratch_inject_error "log_bad_crc" "$factor"
-> > 	...
-> > done
-> > 
-> > Therefore we can move all the other error injection knob tests (looking
-> > at you, drop_writes) to a standard helper function that will cover all
-> > the errortag knobs we're moving to sysfs.  Unfortunately we pay for that
-> > uniformity by uglifying the helper functions to handle the old knobs,
-> > but oh well.
-> > 
-> 
-> That all looks pretty good to me. There's only a couple or so old knobs
-> being killed off, so it doesn't seem like that big of a deal.
-> 
-> Are you planning to send a patch for the above? If so, we can just drop
-> this one (and I'll update the tail overwrite test as well).
+scan_ag mallocs memory that is potentially leaked. Add a free
+to alleviate the potential leak.
 
-Yes, I'll clean that up a little more and send it out.
+Fixes CoverityScan CID#1413772 (RESOURCE_LEAK)
 
-> > I do wonder about the old xfs_io command, though -- while it's tempting
-> > to rewrite it to do all the parsing required to get to sysfs, I'm not so
-> > enthused about doing in C what can be done much more easily in bash.
-> > 
-> 
-> Not sure I follow... are you contemplating rewriting 'xfs_io -c inject
-> ...' to actually use sysfs rather than the ioctl()? That seems like it
-> would get kind of ugly, at first thought. If we really wanted the
-> ability to set the frequency through xfs_io, I think the right approach
-> is probably to define a new ioctl() that takes a frequency param (but
-> I'm not really convinced there is a need).
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+ spaceman/freesp.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Just musing a little about refitting the xfs_io command, and convincing
-myself not to do it. :)
+diff --git a/spaceman/freesp.c b/spaceman/freesp.c
+index 22aec821..367c95d1 100644
+--- a/spaceman/freesp.c
++++ b/spaceman/freesp.c
+@@ -239,7 +239,9 @@ scan_ag(
+ 			printf(_("%10u %10llu %10llu\n"), agno, freeexts,
+ 					freeblks);
+ 	}
++	free(fsmap);
+ }
++
+ static void
+ aglistadd(
+ 	char		*a)
+-- 
+2.13.0
 
---D
-
-> 
-> Brian
-> 
-> > --D
-> > 
-> > > 
-> > > Brian
-> > > 
-> > >  tests/xfs/141 | 22 ++++++++++++++++++----
-> > >  1 file changed, 18 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/tests/xfs/141 b/tests/xfs/141
-> > > index 56ff14e..ea4f558 100755
-> > > --- a/tests/xfs/141
-> > > +++ b/tests/xfs/141
-> > > @@ -43,6 +43,21 @@ _cleanup()
-> > >  	wait > /dev/null 2>&1
-> > >  }
-> > >  
-> > > +# require either the current error tag or the old custom log record crc error
-> > > +# injection knob
-> > > +_setup_bad_crc()
-> > > +{
-> > > +	if [ -e /sys/fs/xfs/$1/errortag/log_bad_crc ]; then
-> > > +		badcrc_attr=/sys/fs/xfs/$1/errortag/log_bad_crc
-> > > +		return
-> > > +	fi
-> > > +	if [ -e /sys/fs/xfs/$1/log/log_badcrc_factor ]; then
-> > > +		badcrc_attr=/sys/fs/xfs/$1/log/log_badcrc_factor
-> > > +		return
-> > > +	fi
-> > > +	_notrun "bad crc sysfs attribute not supported"
-> > > +}
-> > > +
-> > >  rm -f $seqres.full
-> > >  
-> > >  # get standard environment, filters and checks
-> > > @@ -53,7 +68,6 @@ rm -f $seqres.full
-> > >  # Modify as appropriate.
-> > >  _supported_fs xfs
-> > >  _supported_os Linux
-> > > -_require_xfs_sysfs $(_short_dev $TEST_DEV)/log/log_badcrc_factor
-> > >  _require_scratch
-> > >  _require_command "$KILLALL_PROG" killall
-> > >  
-> > > @@ -62,14 +76,14 @@ echo "Silence is golden."
-> > >  _scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-> > >  _scratch_mount
-> > >  
-> > > -sdev=$(_short_dev $SCRATCH_DEV)
-> > > +_setup_bad_crc $(_short_dev $SCRATCH_DEV)
-> > >  
-> > >  for i in $(seq 1 5); do
-> > >  	# Enable error injection. Use a random bad crc factor up to 100
-> > >  	# (increase this value to run fsstress longer).
-> > >  	factor=$((RANDOM % 100 + 1))
-> > > -	echo iteration $i log_badcrc_factor: $factor >> $seqres.full 2>&1
-> > > -	echo $factor > /sys/fs/xfs/$sdev/log/log_badcrc_factor
-> > > +	echo iteration $i bad crc factor: $factor >> $seqres.full 2>&1
-> > > +	echo $factor > $badcrc_attr
-> > >  
-> > >  	# Run fsstress until the filesystem shuts down. It will shut down
-> > >  	# automatically when error injection triggers.
-> > > -- 
-> > > 2.9.4
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
