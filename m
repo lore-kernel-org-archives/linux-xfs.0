@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:37674 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:60817 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752830AbdF2NyY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2017 09:54:24 -0400
+        with ESMTP id S1753046AbdF2Ny2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2017 09:54:28 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/5] vfs: Add page_cache_seek_hole_data helper
-Date: Thu, 29 Jun 2017 06:54:17 -0700
-Message-Id: <20170629135420.21357-3-hch@lst.de>
+Subject: [PATCH 3/5] vfs: Add iomap_seek_hole and iomap_seek_data helpers
+Date: Thu, 29 Jun 2017 06:54:18 -0700
+Message-Id: <20170629135420.21357-4-hch@lst.de>
 In-Reply-To: <20170629135420.21357-1-hch@lst.de>
 References: <20170629135420.21357-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,181 +17,137 @@ Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kerne
 
 From: Andreas Gruenbacher <agruenba@redhat.com>
 
-Both ext4 and xfs implement seeking for the next hole or piece of data
-in unwritten extents by scanning the page cache, and both versions share
-the same bug when iterating the buffers of a page: the start offset into
-the page isn't taken into account, so when a page fits more than two
-filesystem blocks, things will go wrong.  For example, on a filesystem
-with a block size of 1k, the following command will fail:
-
-  xfs_io -f -c "falloc 0 4k" \
-            -c "pwrite 1k 1k" \
-            -c "pwrite 3k 1k" \
-            -c "seek -a -r 0" foo
-
-In this example, neither lseek(fd, 1024, SEEK_HOLE) nor lseek(fd, 2048,
-SEEK_DATA) will return the correct result.
-
-Introduce a generic vfs helper for seeking in the page cache that gets
-this right.  The next commits will replace the filesystem specific
-implementations.
+Filesystems can use this for implementing lseek SEEK_HOLE / SEEK_DATA
+support via iomap.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-[hch: dropped the export]
+[hch: split functions, coding style cleanups]
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/buffer.c                 | 124 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/buffer_head.h |   2 +
- 2 files changed, 126 insertions(+)
+ fs/iomap.c            | 94 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iomap.h |  4 +++
+ 2 files changed, 98 insertions(+)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 161be58c5cb0..b3674eb7c9c0 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -3492,6 +3492,130 @@ int bh_submit_read(struct buffer_head *bh)
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 4b10892967a5..432eed8f091f 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -584,6 +584,100 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
  }
- EXPORT_SYMBOL(bh_submit_read);
+ EXPORT_SYMBOL_GPL(iomap_fiemap);
  
-+/*
-+ * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
-+ *
-+ * Returns the offset within the file on success, and -ENOENT otherwise.
-+ */
 +static loff_t
-+page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
++iomap_seek_hole_actor(struct inode *inode, loff_t offset, loff_t length,
++		      void *data, struct iomap *iomap)
 +{
-+	loff_t offset = page_offset(page);
-+	struct buffer_head *bh, *head;
-+	bool seek_data = whence == SEEK_DATA;
-+
-+	if (lastoff < offset)
-+		lastoff = offset;
-+
-+	bh = head = page_buffers(page);
-+	do {
-+		offset += bh->b_size;
-+		if (lastoff >= offset)
-+			continue;
-+
-+		/*
-+		 * Unwritten extents that have data in the page cache covering
-+		 * them can be identified by the BH_Unwritten state flag.
-+		 * Pages with multiple buffers might have a mix of holes, data
-+		 * and unwritten extents - any buffer with valid data in it
-+		 * should have BH_Uptodate flag set on it.
-+		 */
-+
-+		if ((buffer_unwritten(bh) || buffer_uptodate(bh)) == seek_data)
-+			return lastoff;
-+
-+		lastoff = offset;
-+	} while ((bh = bh->b_this_page) != head);
-+	return -ENOENT;
++	switch (iomap->type) {
++	case IOMAP_UNWRITTEN:
++		offset = page_cache_seek_hole_data(inode, offset, length,
++						   SEEK_HOLE);
++		if (offset < 0)
++			return length;
++		/* fall through */
++	case IOMAP_HOLE:
++		*(loff_t *)data = offset;
++		return 0;
++	default:
++		return length;
++	}
 +}
 +
-+/*
-+ * Seek for SEEK_DATA / SEEK_HOLE in the page cache.
-+ *
-+ * Within unwritten extents, the page cache determines which parts are holes
-+ * and which are data: unwritten and uptodate buffer heads count as data;
-+ * everything else counts as a hole.
-+ *
-+ * Returns the resulting offset on successs, and -ENOENT otherwise.
-+ */
 +loff_t
-+page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
-+			  int whence)
++iomap_seek_hole(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
 +{
-+	pgoff_t index = offset >> PAGE_SHIFT;
-+	pgoff_t end = DIV_ROUND_UP(offset + length, PAGE_SIZE);
-+	loff_t lastoff = offset;
-+	struct pagevec pvec;
++	loff_t size = i_size_read(inode);
++	loff_t length = size - offset;
++	loff_t ret;
++
++	/* Nothing to be found beyond the end of the file. */
++	if (offset >= size)
++		return -ENXIO;
++
++	while (length > 0) {
++		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
++				  &offset, iomap_seek_hole_actor);
++		if (ret < 0)
++			return ret;
++		if (ret == 0)
++			break;
++
++		offset += ret;
++		length -= ret;
++	}
++
++	return offset;
++}
++EXPORT_SYMBOL_GPL(iomap_seek_hole);
++
++static loff_t
++iomap_seek_data_actor(struct inode *inode, loff_t offset, loff_t length,
++		      void *data, struct iomap *iomap)
++{
++	switch (iomap->type) {
++	case IOMAP_HOLE:
++		return length;
++	case IOMAP_UNWRITTEN:
++		offset = page_cache_seek_hole_data(inode, offset, length,
++						   SEEK_DATA);
++		if (offset < 0)
++			return length;
++		/*FALLTHRU*/
++	default:
++		*(loff_t *)data = offset;
++		return 0;
++	}
++}
++
++loff_t
++iomap_seek_data(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
++{
++	loff_t size = i_size_read(inode);
++	loff_t length = size - offset;
++	loff_t ret;
++
++	/* Nothing to be found beyond the end of the file. */
++	if (offset >= size)
++		return -ENXIO;
++
++	while (length > 0) {
++		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
++				  &offset, iomap_seek_data_actor);
++		if (ret < 0)
++			return ret;
++		if (ret == 0)
++			break;
++
++		offset += ret;
++		length -= ret;
++	}
 +
 +	if (length <= 0)
-+		return -ENOENT;
-+
-+	pagevec_init(&pvec, 0);
-+
-+	do {
-+		unsigned want, nr_pages, i;
-+
-+		want = min_t(unsigned, end - index, PAGEVEC_SIZE);
-+		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index, want);
-+		if (nr_pages == 0)
-+			break;
-+
-+		for (i = 0; i < nr_pages; i++) {
-+			struct page *page = pvec.pages[i];
-+
-+			/*
-+			 * At this point, the page may be truncated or
-+			 * invalidated (changing page->mapping to NULL), or
-+			 * even swizzled back from swapper_space to tmpfs file
-+			 * mapping.  However, page->index will not change
-+			 * because we have a reference on the page.
-+                         *
-+			 * If current page offset is beyond where we've ended,
-+			 * we've found a hole.
-+                         */
-+			if (whence == SEEK_HOLE &&
-+			    lastoff < page_offset(page))
-+				goto check_range;
-+
-+			/* Searching done if the page index is out of range. */
-+			if (page->index >= end)
-+				goto not_found;
-+
-+			lock_page(page);
-+			if (likely(page->mapping == inode->i_mapping) &&
-+			    page_has_buffers(page)) {
-+				lastoff = page_seek_hole_data(page, lastoff, whence);
-+				if (lastoff >= 0) {
-+					unlock_page(page);
-+					goto check_range;
-+				}
-+			}
-+			unlock_page(page);
-+			lastoff = page_offset(page) + PAGE_SIZE;
-+		}
-+
-+		/* Searching done if fewer pages returned than wanted. */
-+		if (nr_pages < want)
-+			break;
-+
-+		index = pvec.pages[i - 1]->index + 1;
-+		pagevec_release(&pvec);
-+	} while (index < end);
-+
-+	/* When no page at lastoff and we are not done, we found a hole. */
-+	if (whence != SEEK_HOLE)
-+		goto not_found;
-+
-+check_range:
-+	if (lastoff < offset + length)
-+		goto out;
-+not_found:
-+	lastoff = -ENOENT;
-+out:
-+	pagevec_release(&pvec);
-+	return lastoff;
++		return -ENXIO;
++	return offset;
 +}
++EXPORT_SYMBOL_GPL(iomap_seek_data);
 +
- void __init buffer_init(void)
- {
- 	unsigned long nrpages;
-diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
-index bd029e52ef5e..ad4e024ce17e 100644
---- a/include/linux/buffer_head.h
-+++ b/include/linux/buffer_head.h
-@@ -201,6 +201,8 @@ void write_boundary_block(struct block_device *bdev,
- 			sector_t bblock, unsigned blocksize);
- int bh_uptodate_or_lock(struct buffer_head *bh);
- int bh_submit_read(struct buffer_head *bh);
-+loff_t page_cache_seek_hole_data(struct inode *inode, loff_t offset,
-+				 loff_t length, int whence);
+ /*
+  * Private flags for iomap_dio, must not overlap with the public ones in
+  * iomap.h:
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index f753e788da31..8a03f5dcd89b 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -83,6 +83,10 @@ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+ int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops);
+ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ 		loff_t start, loff_t len, const struct iomap_ops *ops);
++loff_t iomap_seek_hole(struct inode *inode, loff_t offset,
++		const struct iomap_ops *ops);
++loff_t iomap_seek_data(struct inode *inode, loff_t offset,
++		const struct iomap_ops *ops);
  
- extern int buffer_heads_over_limit;
- 
+ /*
+  * Flags for direct I/O ->end_io:
 -- 
 2.11.0
 
