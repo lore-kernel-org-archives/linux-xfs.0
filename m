@@ -1,54 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39099 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751026AbdF3EMI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Jun 2017 00:12:08 -0400
-Date: Thu, 29 Jun 2017 21:12:04 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 9/8] common/populate: remember multi-device configurations
-Message-ID: <20170630041204.GD5871@birch.djwong.org>
-References: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
- <20170622062653.GF3787@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:59776 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751690AbdF2Q2g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Jun 2017 12:28:36 -0400
+Subject: Re: [PATCH] xfs_spaceman: fix potential memory leak by malloc in
+ scan_ag
+References: <20170629155256.3607-1-billodo@redhat.com>
+ <20170629155948.GC5874@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <513ad308-d01e-b8f1-092c-b2504c5998dc@sandeen.net>
+Date: Thu, 29 Jun 2017 11:28:34 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170622062653.GF3787@birch.djwong.org>
+In-Reply-To: <20170629155948.GC5874@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Bill O'Donnell <billodo@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Record the external log and realtime device configurations when we
-create a sample filesystem.  ext4 tightly binds to external logs,
-so we have to preserve that too.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/populate |   13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/common/populate b/common/populate
-index e99ce68..498151f 100644
---- a/common/populate
-+++ b/common/populate
-@@ -713,7 +713,18 @@ _scratch_populate_cached() {
- 	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
- 
- 	# Throw away cached image if it doesn't match our spec.
--	meta_descr="FSTYP ${FSTYP} MKFS_OPTIONS ${MKFS_OPTIONS} SIZE $(blockdev --getsz "${SCRATCH_DEV}") ARGS $@"
-+	case "${FSTYP}" in
-+	"ext4")
-+		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL}"
-+		# ext4 cannot e2image external logs, so we cannot restore
-+		test -n "${SCRATCH_LOGDEV}" && rm -f "${POPULATE_METADUMP}"
-+		;;
-+	"xfs")
-+		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}";;
-+	*)
-+		extra_descr="";;
-+	esac
-+	meta_descr="FSTYP ${FSTYP} MKFS_OPTIONS ${MKFS_OPTIONS} SIZE $(blockdev --getsz "${SCRATCH_DEV}") ${extra_descr} ARGS $@"
- 	cmp -s "${POPULATE_METADUMP_DESCR}" <(echo "${meta_descr}") || rm -rf "${POPULATE_METADUMP}"
- 
- 	# Do we have a cached image?
+On 6/29/17 10:59 AM, Darrick J. Wong wrote:
+> On Thu, Jun 29, 2017 at 10:52:56AM -0500, Bill O'Donnell wrote:
+>> scan_ag mallocs memory that is potentially leaked. Add a free
+>> to alleviate the potential leak.
+>>
+>> Fixes CoverityScan CID#1413772 (RESOURCE_LEAK)
+> 
+> /me feels like the coverity tags he's seen tend to take the format of:
+> 
+>     Addresses-Coverity-ID: 1091173
+> or
+>     Detected by CoverityScan, CID#1419681 ("Explicit null dereferenced")
+> 
+> though to be honest I don't know that there's really a standard.
+> 
+> <shrug> It probably ought to use one of the two more common formats, but
+> maybe I can just ask Eric to prettyplease fix it on the way in. :)
+
+Agreed, will do.
+
+(there are a couple different formats already in the history, but
+best not to invent more as we go) :)
+
+-Eric
+
+> 
+>> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> 
+> Looks ok,
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> --D
+> 
+>> ---
+>>  spaceman/freesp.c | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/spaceman/freesp.c b/spaceman/freesp.c
+>> index 22aec821..367c95d1 100644
+>> --- a/spaceman/freesp.c
+>> +++ b/spaceman/freesp.c
+>> @@ -239,7 +239,9 @@ scan_ag(
+>>  			printf(_("%10u %10llu %10llu\n"), agno, freeexts,
+>>  					freeblks);
+>>  	}
+>> +	free(fsmap);
+>>  }
+>> +
+>>  static void
+>>  aglistadd(
+>>  	char		*a)
+>> -- 
+>> 2.13.0
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
