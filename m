@@ -1,122 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33438 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:8709 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751581AbdF3MWv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Jun 2017 08:22:51 -0400
-Date: Fri, 30 Jun 2017 14:22:47 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 0/2 V4] Resubmit items failed during writeback
-Message-ID: <20170630122247.77yiuystpd3jke3k@eorzea.usersys.redhat.com>
-References: <20170619185111.GA29903@bfoster.bfoster>
- <20170621004550.GF4733@birch.djwong.org>
- <20170621101526.GC28914@bfoster.bfoster>
- <20170621110349.xhucfxyratu4qmym@eorzea.usersys.redhat.com>
- <20170621115132.GE28914@bfoster.bfoster>
- <20170621165416.GI4733@birch.djwong.org>
- <20170622120528.ala3ofmjvrdxx7ye@eorzea.usersys.redhat.com>
- <20170622124047.GA34265@bfoster.bfoster>
- <20170630110913.g43b6ro5tvf3wqho@eorzea.usersys.redhat.com>
- <20170630113342.GA13410@bfoster.bfoster>
+        id S1751810AbdF3Mci (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Jun 2017 08:32:38 -0400
+Date: Fri, 30 Jun 2017 20:32:35 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2 12/8] ext4: don't online scrub ever
+Message-ID: <20170630123235.GG23360@eguan.usersys.redhat.com>
+References: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
+ <20170630041331.GG5871@birch.djwong.org>
+ <20170630045812.GI5871@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170630113342.GA13410@bfoster.bfoster>
+In-Reply-To: <20170630045812.GI5871@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Fri, Jun 30, 2017 at 07:33:42AM -0400, Brian Foster wrote:
-> On Fri, Jun 30, 2017 at 01:09:13PM +0200, Carlos Maiolino wrote:
-> > Hey,
-> > 
-> > > Taking a quick look at something I have laying around that you sent
-> > > previously (I assume the test hasn't changed much), I see we basically
-> > > create an overprovisioned dm-thin vol, mount it and dio write to it
-> > > until we start to see async write failures. So is the purpose of the
-> > > wait that we need the AIL to push and ultimately fail the associated
-> > > buffers before we attempt an unmount? If so, I'm wondering if you could
-> > > xfs_freeze the fs rather than wait (it looks like freeze sync pushes the
-> > > AIL)..?
-> > > 
-> > 
-> > As we discussed off-list, yes, I'd done some testing, and I believe we can use
-> > freezing to test it.
-> > 
-> > > > > > 
-> > > > > > I think we all agree that generic error injection (which Darrick has
-> > > > > > started playing with, but I haven't looked at yet) doesn't need to be
-> > > > > > bundled with this series (I hope we didn't scare you there ;). What I
-> > > > > > was asking for is a single patch that adds error injection in one spot
-> > > > > > with a configurable frequency. I'll refer to commit 609adfc2ed ("xfs:
-> > > > > > debug mode log record crc error injection") again because it is a simple
-> > > > > > example of a small DEBUG only hunk of code and boilerplate code to add a
-> > > > > > sysfs knob.
-> > > > > > 
-> > > > 
-> > > > I'll keep this in mind, and try to work on something like that :)
-> > > > 
-> > > 
-> > > I think error injection would make this test more straightforward
-> > > because you can explicitly control when I/Os fail and there's no need to
-> > > play around with dm-thin. That of course doesn't mean there isn't value
-> > > in having a test for fs' in dm-thin out of space conditions in general.
-> > > :)
-> > 
-> > Well, this is doable, although it has a caveat.
-> > 
-> > To do this, we'd need to inject the error in the buffer during IO completion,
-> > for example in xfs_buf_ioend(). The problem though, is that we start to have IOs
-> > before the 'mp->m_errotag' is actually initialized, so, xfs_buf_ioend() would
-> > need to check for m_errortag initialization before calling XFS_TEST_ERROR().
-> > 
-> > Something like this:
-> > 
-> > 	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
-> >  
-> > +	if (bp->b_target->bt_mount->m_errortag) {
-> > +		if (XFS_TEST_ERROR(false, bp->b_target->bt_mount,
-> > +				   XFS_ERRTAG_BUF_WB)) {
-> > +			bp->b_io_error = -ENOSPC;
-> > +		}
-> > +	}
-> > 
-> > This check could also be done in xfs_errortag_test(), although I'm not sure if
-> > it's worth, giving that there are very few places where error injection can be
-> > useful and m_errortag can be uninitialized.
-> > 
-> > 
-> > Thoughts?
-> > 
+On Thu, Jun 29, 2017 at 09:58:12PM -0700, Darrick J. Wong wrote:
+> The ext4 online scrub program is no longer under active development,
+> so remove all the test code that tried to use it.
 > 
-> This strikes me as a bug in the error injection bits. Are you observing
-> a crash due to the injection point above? We should be able to add
-> injection points anywhere without such issues.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: Fix the description to match what it does now
+> ---
+>  common/fuzzy       |    2 +-
+>  tests/ext4/023     |    7 ++++---
+>  tests/ext4/023.out |    2 +-
+>  3 files changed, 6 insertions(+), 5 deletions(-)
 > 
-Yup, when calling XFS_TEST_ERROR() from xfs_buf_ioend(), this will cause a NULL
-pointer dereference right when the filesystem is mounted. I didn't really got
-deeper into it to know from where exactly it comes from, but, I'd guess it comes
-from the very beginning, in xfs_fs_fill_super(), reading blocks from disk, will
-end up triggering xfs_buf_ioend().
+> diff --git a/common/fuzzy b/common/fuzzy
+> index 304268e..686cf77 100644
+> --- a/common/fuzzy
+> +++ b/common/fuzzy
+> @@ -70,7 +70,7 @@ _require_scrub() {
+>  # Scrub the scratch filesystem metadata (online)
+>  _scratch_scrub() {
+>  	case "${FSTYP}" in
+> -	"xfs"|"ext4"|"ext3"|"ext2")
+> +	"xfs")
+>  		$XFS_SCRUB_PROG -d -T -v "$@" $SCRATCH_MNT
+>  		;;
+>  	*)
 
-> IOW, I think your suggestion to check ->m_errortag in xfs_test_error()
-> is probably the appropriate fix. Darrick may want to chime in.. but in
-> the meantime I'd suggest to throw up a patch to fix that. ;)
->
+The _require_scrub part is still missed, but it's easy enough for me to
+fix at commit time :)
 
-Sounds, reasonable, I'll write the patch and send in the next minutes.
- 
-> BTW, you may want to consider using somewhere like
-> xfs_buf_iodone_callbacks() as an independent injection point from
-> xfs_buf_ioend(). It seems the latter may potentially cause other I/O
-> errors that interfere with testing AIL writeback error processing. I
-> could be wrong though so it doesn't hurt to try (and we could certainly
-> add two separate injection points). Just something to think about..
-> 
+I'll give these patches  more exposure time in the list and leave them
+to next week's update.
 
-Thanks, I'll think about it.
+Thanks,
+Eryu
 
-Cheers
--- 
-Carlos
+> diff --git a/tests/ext4/023 b/tests/ext4/023
+> index 4f5cf3e..7ca3d7d 100755
+> --- a/tests/ext4/023
+> +++ b/tests/ext4/023
+> @@ -1,7 +1,9 @@
+>  #! /bin/bash
+>  # FS QA Test No. 023
+>  #
+> -# Populate a ext4 filesystem and ensure that scrub and repair are happy.
+> +# Ensure that the populate helpers actually /can/ populate a ext4
+> +# filesystem with all types of metadata and create an image of the
+> +# metadata.  Check that fsck is happy with the resulting fs.
+>  #
+>  #-----------------------------------------------------------------------
+>  # Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
+> @@ -51,9 +53,8 @@ _require_scrub
+>  echo "Format and populate"
+>  _scratch_populate_cached > $seqres.full 2>&1
+>  
+> -echo "Scrub"
+> +echo "Mount"
+>  _scratch_mount >> $seqres.full 2>&1
+> -_scratch_scrub >> $seqres.full
+>  
+>  # success, all done
+>  status=0
+> diff --git a/tests/ext4/023.out b/tests/ext4/023.out
+> index da2bd60..8a7659b 100644
+> --- a/tests/ext4/023.out
+> +++ b/tests/ext4/023.out
+> @@ -1,3 +1,3 @@
+>  QA output created by 023
+>  Format and populate
+> -Scrub
+> +Mount
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
