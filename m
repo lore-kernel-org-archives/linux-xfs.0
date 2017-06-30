@@ -1,113 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39724 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751935AbdF3Ldo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Jun 2017 07:33:44 -0400
-Date: Fri, 30 Jun 2017 07:33:42 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 0/2 V4] Resubmit items failed during writeback
-Message-ID: <20170630113342.GA13410@bfoster.bfoster>
-References: <20170619174203.GA4733@birch.djwong.org>
- <20170619185111.GA29903@bfoster.bfoster>
- <20170621004550.GF4733@birch.djwong.org>
- <20170621101526.GC28914@bfoster.bfoster>
- <20170621110349.xhucfxyratu4qmym@eorzea.usersys.redhat.com>
- <20170621115132.GE28914@bfoster.bfoster>
- <20170621165416.GI4733@birch.djwong.org>
- <20170622120528.ala3ofmjvrdxx7ye@eorzea.usersys.redhat.com>
- <20170622124047.GA34265@bfoster.bfoster>
- <20170630110913.g43b6ro5tvf3wqho@eorzea.usersys.redhat.com>
+Received: from mail-vk0-f53.google.com ([209.85.213.53]:34177 "EHLO
+        mail-vk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751560AbdF3LvM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Jun 2017 07:51:12 -0400
+Received: by mail-vk0-f53.google.com with SMTP id r125so65139748vkf.1
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Jun 2017 04:51:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170630110913.g43b6ro5tvf3wqho@eorzea.usersys.redhat.com>
+In-Reply-To: <20170629135420.21357-6-hch@lst.de>
+References: <20170629135420.21357-1-hch@lst.de> <20170629135420.21357-6-hch@lst.de>
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Date: Fri, 30 Jun 2017 13:51:10 +0200
+Message-ID: <CAHc6FU4u+G1gtZVr3CUbJi2i+GwWhfDUOZemQ4Nnde=uiOmjXA@mail.gmail.com>
+Subject: Re: [PATCH 5/5] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Fri, Jun 30, 2017 at 01:09:13PM +0200, Carlos Maiolino wrote:
-> Hey,
-> 
-> > Taking a quick look at something I have laying around that you sent
-> > previously (I assume the test hasn't changed much), I see we basically
-> > create an overprovisioned dm-thin vol, mount it and dio write to it
-> > until we start to see async write failures. So is the purpose of the
-> > wait that we need the AIL to push and ultimately fail the associated
-> > buffers before we attempt an unmount? If so, I'm wondering if you could
-> > xfs_freeze the fs rather than wait (it looks like freeze sync pushes the
-> > AIL)..?
-> > 
-> 
-> As we discussed off-list, yes, I'd done some testing, and I believe we can use
-> freezing to test it.
-> 
-> > > > > 
-> > > > > I think we all agree that generic error injection (which Darrick has
-> > > > > started playing with, but I haven't looked at yet) doesn't need to be
-> > > > > bundled with this series (I hope we didn't scare you there ;). What I
-> > > > > was asking for is a single patch that adds error injection in one spot
-> > > > > with a configurable frequency. I'll refer to commit 609adfc2ed ("xfs:
-> > > > > debug mode log record crc error injection") again because it is a simple
-> > > > > example of a small DEBUG only hunk of code and boilerplate code to add a
-> > > > > sysfs knob.
-> > > > > 
-> > > 
-> > > I'll keep this in mind, and try to work on something like that :)
-> > > 
-> > 
-> > I think error injection would make this test more straightforward
-> > because you can explicitly control when I/Os fail and there's no need to
-> > play around with dm-thin. That of course doesn't mean there isn't value
-> > in having a test for fs' in dm-thin out of space conditions in general.
-> > :)
-> 
-> Well, this is doable, although it has a caveat.
-> 
-> To do this, we'd need to inject the error in the buffer during IO completion,
-> for example in xfs_buf_ioend(). The problem though, is that we start to have IOs
-> before the 'mp->m_errotag' is actually initialized, so, xfs_buf_ioend() would
-> need to check for m_errortag initialization before calling XFS_TEST_ERROR().
-> 
-> Something like this:
-> 
-> 	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
->  
-> +	if (bp->b_target->bt_mount->m_errortag) {
-> +		if (XFS_TEST_ERROR(false, bp->b_target->bt_mount,
-> +				   XFS_ERRTAG_BUF_WB)) {
-> +			bp->b_io_error = -ENOSPC;
-> +		}
-> +	}
-> 
-> This check could also be done in xfs_errortag_test(), although I'm not sure if
-> it's worth, giving that there are very few places where error injection can be
-> useful and m_errortag can be uninitialized.
-> 
-> 
-> Thoughts?
-> 
+On Thu, Jun 29, 2017 at 3:54 PM, Christoph Hellwig <hch@lst.de> wrote:
+> Switch to the iomap_seek_hole and iomap_seek_data helpers for
+> implementing lseek SEEK_HOLE / SEEK_DATA, and remove all the
+> code that isn't needed any more.
+>
+> Note that with this patch ext4 will now always depend on the iomap
+> code instead of only when CONFIG_DAX is enabled, and it requires
+> adding a call into the extent status tree for iomap_begin as well
+> to properly deal with delalloc extents.
 
-This strikes me as a bug in the error injection bits. Are you observing
-a crash due to the injection point above? We should be able to add
-injection points anywhere without such issues.
+This breaks SEEK_HOLE / SEEK_DATA on filesystems with the inline_data feature.
 
-IOW, I think your suggestion to check ->m_errortag in xfs_test_error()
-is probably the appropriate fix. Darrick may want to chime in.. but in
-the meantime I'd suggest to throw up a patch to fix that. ;)
+Also, ext4 no longer calls inode_lock or inode_lock_shared; that needs
+to be added back for consistency between reading i_size and walking
+the file extents.
 
-BTW, you may want to consider using somewhere like
-xfs_buf_iodone_callbacks() as an independent injection point from
-xfs_buf_ioend(). It seems the latter may potentially cause other I/O
-errors that interfere with testing AIL writeback error processing. I
-could be wrong though so it doesn't hurt to try (and we could certainly
-add two separate injection points). Just something to think about..
-
-Brian
-
-> -- 
-> Carlos
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Andreas
