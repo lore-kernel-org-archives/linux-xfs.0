@@ -1,44 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f180.google.com ([209.85.217.180]:36474 "EHLO
-        mail-ua0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751950AbdF3MMA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Jun 2017 08:12:00 -0400
-Received: by mail-ua0-f180.google.com with SMTP id g40so74197000uaa.3
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Jun 2017 05:11:59 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:46752 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751545AbdF3MTP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Jun 2017 08:19:15 -0400
+Date: Fri, 30 Jun 2017 20:19:13 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: xfsprogs for-next branch build failure
+Message-ID: <20170630121913.GE23360@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAHc6FU4u+G1gtZVr3CUbJi2i+GwWhfDUOZemQ4Nnde=uiOmjXA@mail.gmail.com>
-References: <20170629135420.21357-1-hch@lst.de> <20170629135420.21357-6-hch@lst.de>
- <CAHc6FU4u+G1gtZVr3CUbJi2i+GwWhfDUOZemQ4Nnde=uiOmjXA@mail.gmail.com>
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Date: Fri, 30 Jun 2017 14:11:58 +0200
-Message-ID: <CAHc6FU7NOnYywJAbQTwgUS+cqkAZTSeQU3NsCMHWbQ6cztvNJw@mail.gmail.com>
-Subject: Re: [PATCH 5/5] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>
 
-On Fri, Jun 30, 2017 at 1:51 PM, Andreas Gruenbacher
-<agruenba@redhat.com> wrote:
-> On Thu, Jun 29, 2017 at 3:54 PM, Christoph Hellwig <hch@lst.de> wrote:
->> Switch to the iomap_seek_hole and iomap_seek_data helpers for
->> implementing lseek SEEK_HOLE / SEEK_DATA, and remove all the
->> code that isn't needed any more.
->>
->> Note that with this patch ext4 will now always depend on the iomap
->> code instead of only when CONFIG_DAX is enabled, and it requires
->> adding a call into the extent status tree for iomap_begin as well
->> to properly deal with delalloc extents.
->
-> This breaks SEEK_HOLE / SEEK_DATA on filesystems with the inline_data feature.
->
-> Also, ext4 no longer calls inode_lock or inode_lock_shared; that needs
-> to be added back for consistency between reading i_size and walking
-> the file extents.
+Hi all,
 
-Same on xfs, btw.
+I'm seeing a xfsprogs for-next branch (HEAD is f77f9908851e) build
+failure in my test.
+
+This build failure only happens if I installed 4.12-rc kernel headers,
+which has /usr/include/linux/fsmap.h installed, so that in
+xfsprogs/include/builddefs it has "HAVE_GETFSMAP = yes" defined.
+
+e.g. install Fedora rawhide kernel package and its kernel header files,
+and re-compile xfsprogs.
+kernel-4.12.0-0.rc6.git3.1.fc27.x86_64
+kernel-headers-4.12.0-0.rc6.git3.1.fc27.x86_64
+
+Build failure log:
+
+...
+Building fsck
+Building growfs
+...
+Building io
+...
+    [CC]     fsmap.o
+In file included from ../include/xfs.h:68:0,
+                 from io.h:19,   
+                 from fsmap.c:24:
+fsmap.c: In function ‘special_owner’:
+../include/xfs/xfs_fs.h:117:26: error: ‘FMR_OWN_FREE’ undeclared (first use in this function)
+ #define XFS_FMR_OWN_FREE FMR_OWN_FREE      /* free space */
+                          ^
+fsmap.c:61:7: note: in expansion of macro ‘XFS_FMR_OWN_FREE’
+  case XFS_FMR_OWN_FREE:
+       ^
+../include/xfs/xfs_fs.h:117:26: note: each undeclared identifier is reported only once for each function it appears in
+ #define XFS_FMR_OWN_FREE FMR_OWN_FREE      /* free space */
+                          ^
+fsmap.c:61:7: note: in expansion of macro ‘XFS_FMR_OWN_FREE’
+  case XFS_FMR_OWN_FREE:
+       ^
+../include/xfs/xfs_fs.h:118:29: error: ‘FMR_OWN_UNKNOWN’ undeclared (first use in this function)
+ #define XFS_FMR_OWN_UNKNOWN FMR_OWN_UNKNOWN   /* unknown owner */
+                             ^
+fsmap.c:63:7: note: in expansion of macro ‘XFS_FMR_OWN_UNKNOWN’
+  case XFS_FMR_OWN_UNKNOWN:
+       ^
+fsmap.c:65:2: warning: implicit declaration of function ‘FMR_OWNER’ [-Wimplicit-function-declaration]
+  case XFS_FMR_OWN_FS:
+  ^
+...
 
 Thanks,
-Andreas
+Eryu
