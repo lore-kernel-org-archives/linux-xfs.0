@@ -1,60 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49462 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751878AbdF3NDH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Jun 2017 09:03:07 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id EEB64EB9CF
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Jun 2017 13:03:06 +0000 (UTC)
-Received: from eorzea.usersys.redhat.com (unknown [10.40.205.74])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6026587E3D
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Jun 2017 13:03:06 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH] xfs: Check for m_errortag initialization in xfs_errortag_test
-Date: Fri, 30 Jun 2017 15:03:01 +0200
-Message-Id: <20170630130301.32264-1-cmaiolino@redhat.com>
+Received: from mail-qt0-f174.google.com ([209.85.216.174]:34824 "EHLO
+        mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751890AbdF3Qp6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Jun 2017 12:45:58 -0400
+Received: by mail-qt0-f174.google.com with SMTP id 22so8543915qtw.2
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Jun 2017 09:45:57 -0700 (PDT)
+Message-ID: <1498841154.4689.1.camel@redhat.com>
+Subject: Re: [PATCH v8 17/18] xfs: minimal conversion to errseq_t writeback
+ error reporting
+From: Jeff Layton <jlayton@redhat.com>
+Date: Fri, 30 Jun 2017 12:45:54 -0400
+In-Reply-To: <20170629141235.GB17251@infradead.org>
+References: <20170629131954.28733-1-jlayton@kernel.org>
+         <20170629131954.28733-18-jlayton@kernel.org>
+         <20170629141235.GB17251@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, jlayton@kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Liu Bo <bo.li.liu@oracle.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
 
-While adding error injection into IO completion, I notice the lack of
-initialization check in xfs_errortag_test(), make the error injection
-mechanism unable to be used there.
+On Thu, 2017-06-29 at 07:12 -0700, Christoph Hellwig wrote:
+> Nice and simple, this looks great!
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-IO completion is executed a few times before the error injection
-mechanism is initialized, so to be safer, make xfs_errortag_test() check
-if the errortag is properly initialized.
+Thanks! I think this turned out to be a lot cleaner too.
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_error.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+For filesystems that use filemap_write_and_wait_range today this now
+becomes a pretty straight conversion to file_write_and_wait_range -- one
+liner patches for the most part.
 
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 26c32bc..2f4feb9 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -233,6 +233,17 @@ xfs_errortag_test(
- {
- 	unsigned int		randfactor;
- 
-+	/*
-+	 * To be able to use error injection anywhere, we need to ensure error
-+	 * injection mechanism is already initialized.
-+	 *
-+	 * Code paths like I/O completion can be called before the
-+	 * initialization is complete, but be able to inject errors in such
-+	 * places is still useful.
-+	 */
-+	if (!mp->m_errortag)
-+		return false;
-+
- 	ASSERT(error_tag < XFS_ERRTAG_MAX);
- 	randfactor = mp->m_errortag[error_tag];
- 	if (!randfactor || prandom_u32() % randfactor)
+I've started rolling patches to do that, but now I'm wondering...
+
+Should I aim to do that with an individual patch for each fs, or is it
+better to do a swath of them all at once in a single patch here?
 -- 
-2.9.4
-
+Jeff Layton <jlayton@redhat.com>
