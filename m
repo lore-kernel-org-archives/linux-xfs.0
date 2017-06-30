@@ -1,71 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46752 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:33438 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751545AbdF3MTP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Jun 2017 08:19:15 -0400
-Date: Fri, 30 Jun 2017 20:19:13 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: xfsprogs for-next branch build failure
-Message-ID: <20170630121913.GE23360@eguan.usersys.redhat.com>
+        id S1751581AbdF3MWv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Jun 2017 08:22:51 -0400
+Date: Fri, 30 Jun 2017 14:22:47 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 0/2 V4] Resubmit items failed during writeback
+Message-ID: <20170630122247.77yiuystpd3jke3k@eorzea.usersys.redhat.com>
+References: <20170619185111.GA29903@bfoster.bfoster>
+ <20170621004550.GF4733@birch.djwong.org>
+ <20170621101526.GC28914@bfoster.bfoster>
+ <20170621110349.xhucfxyratu4qmym@eorzea.usersys.redhat.com>
+ <20170621115132.GE28914@bfoster.bfoster>
+ <20170621165416.GI4733@birch.djwong.org>
+ <20170622120528.ala3ofmjvrdxx7ye@eorzea.usersys.redhat.com>
+ <20170622124047.GA34265@bfoster.bfoster>
+ <20170630110913.g43b6ro5tvf3wqho@eorzea.usersys.redhat.com>
+ <20170630113342.GA13410@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170630113342.GA13410@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-Hi all,
+On Fri, Jun 30, 2017 at 07:33:42AM -0400, Brian Foster wrote:
+> On Fri, Jun 30, 2017 at 01:09:13PM +0200, Carlos Maiolino wrote:
+> > Hey,
+> > 
+> > > Taking a quick look at something I have laying around that you sent
+> > > previously (I assume the test hasn't changed much), I see we basically
+> > > create an overprovisioned dm-thin vol, mount it and dio write to it
+> > > until we start to see async write failures. So is the purpose of the
+> > > wait that we need the AIL to push and ultimately fail the associated
+> > > buffers before we attempt an unmount? If so, I'm wondering if you could
+> > > xfs_freeze the fs rather than wait (it looks like freeze sync pushes the
+> > > AIL)..?
+> > > 
+> > 
+> > As we discussed off-list, yes, I'd done some testing, and I believe we can use
+> > freezing to test it.
+> > 
+> > > > > > 
+> > > > > > I think we all agree that generic error injection (which Darrick has
+> > > > > > started playing with, but I haven't looked at yet) doesn't need to be
+> > > > > > bundled with this series (I hope we didn't scare you there ;). What I
+> > > > > > was asking for is a single patch that adds error injection in one spot
+> > > > > > with a configurable frequency. I'll refer to commit 609adfc2ed ("xfs:
+> > > > > > debug mode log record crc error injection") again because it is a simple
+> > > > > > example of a small DEBUG only hunk of code and boilerplate code to add a
+> > > > > > sysfs knob.
+> > > > > > 
+> > > > 
+> > > > I'll keep this in mind, and try to work on something like that :)
+> > > > 
+> > > 
+> > > I think error injection would make this test more straightforward
+> > > because you can explicitly control when I/Os fail and there's no need to
+> > > play around with dm-thin. That of course doesn't mean there isn't value
+> > > in having a test for fs' in dm-thin out of space conditions in general.
+> > > :)
+> > 
+> > Well, this is doable, although it has a caveat.
+> > 
+> > To do this, we'd need to inject the error in the buffer during IO completion,
+> > for example in xfs_buf_ioend(). The problem though, is that we start to have IOs
+> > before the 'mp->m_errotag' is actually initialized, so, xfs_buf_ioend() would
+> > need to check for m_errortag initialization before calling XFS_TEST_ERROR().
+> > 
+> > Something like this:
+> > 
+> > 	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
+> >  
+> > +	if (bp->b_target->bt_mount->m_errortag) {
+> > +		if (XFS_TEST_ERROR(false, bp->b_target->bt_mount,
+> > +				   XFS_ERRTAG_BUF_WB)) {
+> > +			bp->b_io_error = -ENOSPC;
+> > +		}
+> > +	}
+> > 
+> > This check could also be done in xfs_errortag_test(), although I'm not sure if
+> > it's worth, giving that there are very few places where error injection can be
+> > useful and m_errortag can be uninitialized.
+> > 
+> > 
+> > Thoughts?
+> > 
+> 
+> This strikes me as a bug in the error injection bits. Are you observing
+> a crash due to the injection point above? We should be able to add
+> injection points anywhere without such issues.
+> 
+Yup, when calling XFS_TEST_ERROR() from xfs_buf_ioend(), this will cause a NULL
+pointer dereference right when the filesystem is mounted. I didn't really got
+deeper into it to know from where exactly it comes from, but, I'd guess it comes
+from the very beginning, in xfs_fs_fill_super(), reading blocks from disk, will
+end up triggering xfs_buf_ioend().
 
-I'm seeing a xfsprogs for-next branch (HEAD is f77f9908851e) build
-failure in my test.
+> IOW, I think your suggestion to check ->m_errortag in xfs_test_error()
+> is probably the appropriate fix. Darrick may want to chime in.. but in
+> the meantime I'd suggest to throw up a patch to fix that. ;)
+>
 
-This build failure only happens if I installed 4.12-rc kernel headers,
-which has /usr/include/linux/fsmap.h installed, so that in
-xfsprogs/include/builddefs it has "HAVE_GETFSMAP = yes" defined.
+Sounds, reasonable, I'll write the patch and send in the next minutes.
+ 
+> BTW, you may want to consider using somewhere like
+> xfs_buf_iodone_callbacks() as an independent injection point from
+> xfs_buf_ioend(). It seems the latter may potentially cause other I/O
+> errors that interfere with testing AIL writeback error processing. I
+> could be wrong though so it doesn't hurt to try (and we could certainly
+> add two separate injection points). Just something to think about..
+> 
 
-e.g. install Fedora rawhide kernel package and its kernel header files,
-and re-compile xfsprogs.
-kernel-4.12.0-0.rc6.git3.1.fc27.x86_64
-kernel-headers-4.12.0-0.rc6.git3.1.fc27.x86_64
+Thanks, I'll think about it.
 
-Build failure log:
-
-...
-Building fsck
-Building growfs
-...
-Building io
-...
-    [CC]     fsmap.o
-In file included from ../include/xfs.h:68:0,
-                 from io.h:19,   
-                 from fsmap.c:24:
-fsmap.c: In function ‘special_owner’:
-../include/xfs/xfs_fs.h:117:26: error: ‘FMR_OWN_FREE’ undeclared (first use in this function)
- #define XFS_FMR_OWN_FREE FMR_OWN_FREE      /* free space */
-                          ^
-fsmap.c:61:7: note: in expansion of macro ‘XFS_FMR_OWN_FREE’
-  case XFS_FMR_OWN_FREE:
-       ^
-../include/xfs/xfs_fs.h:117:26: note: each undeclared identifier is reported only once for each function it appears in
- #define XFS_FMR_OWN_FREE FMR_OWN_FREE      /* free space */
-                          ^
-fsmap.c:61:7: note: in expansion of macro ‘XFS_FMR_OWN_FREE’
-  case XFS_FMR_OWN_FREE:
-       ^
-../include/xfs/xfs_fs.h:118:29: error: ‘FMR_OWN_UNKNOWN’ undeclared (first use in this function)
- #define XFS_FMR_OWN_UNKNOWN FMR_OWN_UNKNOWN   /* unknown owner */
-                             ^
-fsmap.c:63:7: note: in expansion of macro ‘XFS_FMR_OWN_UNKNOWN’
-  case XFS_FMR_OWN_UNKNOWN:
-       ^
-fsmap.c:65:2: warning: implicit declaration of function ‘FMR_OWNER’ [-Wimplicit-function-declaration]
-  case XFS_FMR_OWN_FS:
-  ^
-...
-
-Thanks,
-Eryu
+Cheers
+-- 
+Carlos
