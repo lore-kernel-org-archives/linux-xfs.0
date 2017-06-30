@@ -1,61 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:63502 "EHLO mail1.g1.pair.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49462 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751649AbdF3N6I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Jun 2017 09:58:08 -0400
-Date: Fri, 30 Jun 2017 15:58:08 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: [proposal] making filesystem tools more machine friendly
-Message-ID: <20170630155808.7cbab344@harpe.intellique.com>
-In-Reply-To: <CACj3i70p=ybXZWRncseqwnbs7HAYu-SL02+cj--7T5YnqcwVKQ@mail.gmail.com>
-References: <CACj3i70p=ybXZWRncseqwnbs7HAYu-SL02+cj--7T5YnqcwVKQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/71yZifs.QAq2BYkNNL+M1nU"; protocol="application/pgp-signature"
+        id S1751878AbdF3NDH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Jun 2017 09:03:07 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id EEB64EB9CF
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Jun 2017 13:03:06 +0000 (UTC)
+Received: from eorzea.usersys.redhat.com (unknown [10.40.205.74])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6026587E3D
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Jun 2017 13:03:06 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH] xfs: Check for m_errortag initialization in xfs_errortag_test
+Date: Fri, 30 Jun 2017 15:03:01 +0200
+Message-Id: <20170630130301.32264-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
---Sig_/71yZifs.QAq2BYkNNL+M1nU
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+While adding error injection into IO completion, I notice the lack of
+initialization check in xfs_errortag_test(), make the error injection
+mechanism unable to be used there.
 
-Le Fri, 30 Jun 2017 10:17:17 +0200
-Jan Tulak <jtulak@redhat.com> =C3=A9crivait:
+IO completion is executed a few times before the error injection
+mechanism is initialized, so to be safer, make xfs_errortag_test() check
+if the errortag is properly initialized.
 
-> A structured output is something we should aim for. It helps a lot
-> with the issues and it is the cheapest option. If it goes well, it can
-> be later on followed by creating a library, although, at this moment,
-> that seems a premature thing strive for. Creating a daemon is not a
-> thing any single filesystem should do on its own.
->=20
-> And thank you for reading all this, I look forward to your
-> comments. :-)
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_error.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-The whole concept seems a noble endeavour, I'm a bit wary of the
-possibility to convince all the teams in charge to adhere to it
-however... But that looks like a good idea for sure :)
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 26c32bc..2f4feb9 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -233,6 +233,17 @@ xfs_errortag_test(
+ {
+ 	unsigned int		randfactor;
+ 
++	/*
++	 * To be able to use error injection anywhere, we need to ensure error
++	 * injection mechanism is already initialized.
++	 *
++	 * Code paths like I/O completion can be called before the
++	 * initialization is complete, but be able to inject errors in such
++	 * places is still useful.
++	 */
++	if (!mp->m_errortag)
++		return false;
++
+ 	ASSERT(error_tag < XFS_ERRTAG_MAX);
+ 	randfactor = mp->m_errortag[error_tag];
+ 	if (!randfactor || prandom_u32() % randfactor)
+-- 
+2.9.4
 
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
-
---Sig_/71yZifs.QAq2BYkNNL+M1nU
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAllWWPAACgkQX3jQXNUicVb0oQCg2x+zZeton4toXUcDWtyyRvMH
-tTEAoNozDvK6g6aiKHQNz1fe1bmYFnR7
-=H9Y+
------END PGP SIGNATURE-----
-
---Sig_/71yZifs.QAq2BYkNNL+M1nU--
