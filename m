@@ -1,56 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30155 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752601AbdF2Q1L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2017 12:27:11 -0400
-Date: Thu, 29 Jun 2017 09:27:05 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:39099 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751026AbdF3EMI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Jun 2017 00:12:08 -0400
+Date: Thu, 29 Jun 2017 21:12:04 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_spaceman: close open file for error case in
- openfile()
-Message-ID: <20170629162704.GD5874@birch.djwong.org>
-References: <20170629162530.6023-1-billodo@redhat.com>
+Subject: [PATCH v2 9/8] common/populate: remember multi-device configurations
+Message-ID: <20170630041204.GD5871@birch.djwong.org>
+References: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
+ <20170622062653.GF3787@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170629162530.6023-1-billodo@redhat.com>
+In-Reply-To: <20170622062653.GF3787@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bill O'Donnell <billodo@redhat.com>
-Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: eguan@redhat.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Jun 29, 2017 at 11:25:30AM -0500, Bill O'Donnell wrote:
-> openfile() fails to close the open file in one error case.
-> Add close(fd) to correct the condition.
-> 
-> Detected by CoverityScan, CID#1413770 (RESOURCE_LEAK)
-> 
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+Record the external log and realtime device configurations when we
+create a sample filesystem.  ext4 tightly binds to external logs,
+so we have to preserve that too.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ common/populate |   13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
---D
-
-> ---
->  spaceman/file.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/spaceman/file.c b/spaceman/file.c
-> index 4ab30900..4c13b4a8 100644
-> --- a/spaceman/file.c
-> +++ b/spaceman/file.c
-> @@ -79,6 +79,7 @@ openfile(
->  		if (!fsp) {
->  			fprintf(stderr, _("%s: cannot find mount point."),
->  				path);
-> +			close(fd);
->  			return -1;
->  		}
->  		memcpy(fs_path, fsp, sizeof(struct fs_path));
-> -- 
-> 2.13.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/common/populate b/common/populate
+index e99ce68..498151f 100644
+--- a/common/populate
++++ b/common/populate
+@@ -713,7 +713,18 @@ _scratch_populate_cached() {
+ 	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
+ 
+ 	# Throw away cached image if it doesn't match our spec.
+-	meta_descr="FSTYP ${FSTYP} MKFS_OPTIONS ${MKFS_OPTIONS} SIZE $(blockdev --getsz "${SCRATCH_DEV}") ARGS $@"
++	case "${FSTYP}" in
++	"ext4")
++		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL}"
++		# ext4 cannot e2image external logs, so we cannot restore
++		test -n "${SCRATCH_LOGDEV}" && rm -f "${POPULATE_METADUMP}"
++		;;
++	"xfs")
++		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}";;
++	*)
++		extra_descr="";;
++	esac
++	meta_descr="FSTYP ${FSTYP} MKFS_OPTIONS ${MKFS_OPTIONS} SIZE $(blockdev --getsz "${SCRATCH_DEV}") ${extra_descr} ARGS $@"
+ 	cmp -s "${POPULATE_METADUMP_DESCR}" <(echo "${meta_descr}") || rm -rf "${POPULATE_METADUMP}"
+ 
+ 	# Do we have a cached image?
