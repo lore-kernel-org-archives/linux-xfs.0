@@ -1,123 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22504 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752749AbdF2RMd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2017 13:12:33 -0400
-Date: Thu, 29 Jun 2017 10:11:37 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v8 12/18] Documentation: flesh out the section in vfs.txt
- on storing and reporting writeback errors
-Message-ID: <20170629171137.GE5874@birch.djwong.org>
-References: <20170629131954.28733-1-jlayton@kernel.org>
- <20170629131954.28733-13-jlayton@kernel.org>
+Received: from sandeen.net ([63.231.237.45]:46350 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751656AbdF3B1x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Jun 2017 21:27:53 -0400
+Subject: Re: [PATCH v2] xfs_db: identify attr dabtree field types correctly
+References: <20170630000241.GJ5874@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <7798781d-e064-0cf4-8b90-d595a1ef764b@sandeen.net>
+Date: Thu, 29 Jun 2017 20:27:51 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170629131954.28733-13-jlayton@kernel.org>
+In-Reply-To: <20170630000241.GJ5874@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: jlayton@kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Jan Kara <jack@suse.cz>, tytso@mit.edu, axboe@kernel.dk, mawilcox@microsoft.com, ross.zwisler@linux.intel.com, corbet@lwn.net, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, Carlos Maiolino <cmaiolino@redhat.com>, Eryu Guan <eguan@redhat.com>, David Howells <dhowells@redhat.com>, Christoph Hellwig <hch@infradead.org>, Liu Bo <bo.li.liu@oracle.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Jun 29, 2017 at 09:19:48AM -0400, jlayton@kernel.org wrote:
-> From: Jeff Layton <jlayton@redhat.com>
+On 6/29/17 7:02 PM, Darrick J. Wong wrote:
+> For whatever reason, the v5 xattr dabtree header fields are mapped to
+> the directory dabtree header fields, which means that the types are
+> wrong and hence we cannot use the 'addr' command to step through the
+> tree.  Since the v4 attr dabtree does this correctly, simply port the v5
+> fields to the attr code too.
 > 
-> Let's try to make this extra clear for fs authors.
-> 
-> Cc: Jan Kara <jack@suse.cz>
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  Documentation/filesystems/vfs.txt | 43 ++++++++++++++++++++++++++++++++++++---
->  1 file changed, 40 insertions(+), 3 deletions(-)
+> v2: fix for size selection problems and other complaints from Eric
+
+complaints?! ;)
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  db/attr.c  |   24 ++++++++++++++++++++++--
+>  db/attr.h  |    2 ++
+>  db/field.c |    6 ++++--
+>  db/field.h |    1 +
+>  4 files changed, 29 insertions(+), 4 deletions(-)
 > 
-> diff --git a/Documentation/filesystems/vfs.txt b/Documentation/filesystems/vfs.txt
-> index f42b90687d40..1366043b3942 100644
-> --- a/Documentation/filesystems/vfs.txt
-> +++ b/Documentation/filesystems/vfs.txt
-> @@ -576,7 +576,42 @@ should clear PG_Dirty and set PG_Writeback.  It can be actually
->  written at any point after PG_Dirty is clear.  Once it is known to be
->  safe, PG_Writeback is cleared.
+> diff --git a/db/attr.c b/db/attr.c
+> index 6f56953..23ffcd5 100644
+> --- a/db/attr.c
+> +++ b/db/attr.c
+> @@ -499,7 +499,7 @@ const field_t	attr3_hfld[] = {
+>  const field_t	attr3_flds[] = {
+>  	{ "hdr", FLDT_ATTR3_LEAF_HDR, OI(L3OFF(hdr)), attr3_leaf_hdr_count,
+>  	  FLD_COUNT, TYP_NONE },
+> -	{ "hdr", FLDT_DA3_NODE_HDR, OI(N3OFF(hdr)), attr3_node_hdr_count,
+> +	{ "hdr", FLDT_ATTR3_NODE_HDR, OI(N3OFF(hdr)), attr3_node_hdr_count,
+>  	  FLD_COUNT, TYP_NONE },
+>  	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(L3OFF(entries)),
+>  	  attr3_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
+> @@ -512,7 +512,7 @@ const field_t	attr3_flds[] = {
 >  
-> -Writeback makes use of a writeback_control structure...
-> +Writeback makes use of a writeback_control structure to direct the
-> +operations.  This gives the the writepage and writepages operations some
-> +information about the nature of and reason for the writeback request,
-> +and the constraints under which it is being done.  It is also used to
-> +return information back to the caller about the result of a writepage or
-> +writepages request.
+>  #define	LH3OFF(f)	bitize(offsetof(struct xfs_attr3_leaf_hdr, f))
+>  const field_t	attr3_leaf_hdr_flds[] = {
+> -	{ "info", FLDT_DA3_BLKINFO, OI(LH3OFF(info)), C1, 0, TYP_NONE },
+> +	{ "info", FLDT_ATTR3_BLKINFO, OI(LH3OFF(info)), C1, 0, TYP_NONE },
+>  	{ "count", FLDT_UINT16D, OI(LH3OFF(count)), C1, 0, TYP_NONE },
+>  	{ "usedbytes", FLDT_UINT16D, OI(LH3OFF(usedbytes)), C1, 0, TYP_NONE },
+>  	{ "firstused", FLDT_UINT16D, OI(LH3OFF(firstused)), C1, 0, TYP_NONE },
+> @@ -523,6 +523,26 @@ const field_t	attr3_leaf_hdr_flds[] = {
+>  	{ NULL }
+>  };
+>  
+> +#define	B3OFF(f)	bitize(offsetof(struct xfs_da3_blkinfo, f))
+> +const field_t	attr3_blkinfo_flds[] = {
+> +	{ "hdr", FLDT_ATTR_BLKINFO, OI(B3OFF(hdr)), C1, 0, TYP_NONE },
+> +	{ "crc", FLDT_CRC, OI(B3OFF(crc)), C1, 0, TYP_NONE },
+> +	{ "bno", FLDT_DFSBNO, OI(B3OFF(blkno)), C1, 0, TYP_BMAPBTD },
+> +	{ "lsn", FLDT_UINT64X, OI(B3OFF(lsn)), C1, 0, TYP_NONE },
+> +	{ "uuid", FLDT_UUID, OI(B3OFF(uuid)), C1, 0, TYP_NONE },
+> +	{ "owner", FLDT_INO, OI(B3OFF(owner)), C1, 0, TYP_NONE },
+> +	{ NULL }
+> +};
 > +
-> +Handling errors during writeback
-> +--------------------------------
-> +Most applications that utilize the pagecache will periodically call
-> +fsync to ensure that data written has made it to the backing store.
-
-/me wonders if this sentence ought to be worded more strongly, e.g.
-
-"Applications that utilize the pagecache must call a data
-synchronization syscall such as fsync, fdatasync, or msync to ensure
-that data written has made it to the backing store."
-
-I'm also wondering -- fdatasync and msync will also report any writeback
-errors that have happened anywhere (like fsync), since they all map to
-vfs_fsync_range, correct?  If so, I think it worth it to state
-explicitly that the other *sync methods behave the same as fsync w.r.t.
-writeback error reporting.
-
---D
-
-> +When there is an error during writeback, they expect that error to be
-> +reported when fsync is called.  After an error has been reported on one
-> +fsync, subsequent fsync calls on the same file descriptor should return
-> +0, unless further writeback errors have occurred since the previous
-> +fsync.
+> +#define	H3OFF(f)	bitize(offsetof(struct xfs_da3_node_hdr, f))
+> +const field_t	attr3_node_hdr_flds[] = {
+> +	{ "info", FLDT_ATTR3_BLKINFO, OI(H3OFF(info)), C1, 0, TYP_NONE },
+> +	{ "count", FLDT_UINT16D, OI(H3OFF(__count)), C1, 0, TYP_NONE },
+> +	{ "level", FLDT_UINT16D, OI(H3OFF(__level)), C1, 0, TYP_NONE },
+> +	{ "pad", FLDT_UINT32D, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
+> +	{ NULL }
+> +};
 > +
-> +Ideally, the kernel would report an error only on file descriptions on
-> +which writes were done that subsequently failed to be written back.  The
-> +generic pagecache infrastructure does not track the file descriptions
-> +that have dirtied each individual page however, so determining which
-> +file descriptors should get back an error is not possible.
-> +
-> +Instead, the generic writeback error tracking infrastructure in the
-> +kernel settles for reporting errors to fsync on all file descriptions
-> +that were open at the time that the error occurred.  In a situation with
-> +multiple writers, all of them will get back an error on a subsequent fsync,
-> +even if all of the writes done through that particular file descriptor
-> +succeeded (or even if there were no writes on that file descriptor at all).
-> +
-> +Filesystems that wish to use this infrastructure should call
-> +mapping_set_error to record the error in the address_space when it
-> +occurs.  Then, at the end of their fsync operation, they should call
-> +file_check_and_advance_wb_err to ensure that the struct file's error
-> +cursor has advanced to the correct point in the stream of errors emitted
-> +by the backing device(s).
+>  /*
+>   * Special read verifier for attribute buffers. Detect the magic number
+>   * appropriately and set the correct verifier and call it.
+> diff --git a/db/attr.h b/db/attr.h
+> index bc3431f..21848c1 100644
+> --- a/db/attr.h
+> +++ b/db/attr.h
+> @@ -30,6 +30,8 @@ extern const field_t	attr3_flds[];
+>  extern const field_t	attr3_hfld[];
+>  extern const field_t	attr3_leaf_hdr_flds[];
+>  extern const field_t	attr3_node_hdr_flds[];
+> +extern const field_t	attr3_blkinfo_flds[];
+> +extern const field_t	attr3_node_hdr_flds[];
 >  
->  struct address_space_operations
->  -------------------------------
-> @@ -804,7 +839,8 @@ struct address_space_operations {
->  The File Object
->  ===============
+>  extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
+>  extern int	attr_size(void *obj, int startoff, int idx);
+> diff --git a/db/field.c b/db/field.c
+> index 2a2197a..f1e5f35 100644
+> --- a/db/field.c
+> +++ b/db/field.c
+> @@ -91,12 +91,14 @@ const ftattr_t	ftattrtab[] = {
+>  /* attr3 specific fields */
+>  	{ FLDT_ATTR3, "attr3", NULL, (char *)attr3_flds, attr_size, FTARG_SIZE,
+>  	  NULL, attr3_flds },
+> +	{ FLDT_ATTR3_BLKINFO, "attr3_blkinfo", NULL, (char *)attr3_blkinfo_flds,
+> +	  SI(bitsz(struct xfs_da3_blkinfo)), 0, NULL, attr3_blkinfo_flds },
+>  	{ FLDT_ATTR3_LEAF_HDR, "attr3_leaf_hdr", NULL,
+>  	  (char *)attr3_leaf_hdr_flds, SI(bitsz(struct xfs_attr3_leaf_hdr)),
+>  	  0, NULL, attr3_leaf_hdr_flds },
+>  	{ FLDT_ATTR3_NODE_HDR, "attr3_node_hdr", NULL,
+> -	  (char *)da3_node_hdr_flds, SI(bitsz(struct xfs_da3_node_hdr)),
+> -	  0, NULL, da3_node_hdr_flds },
+> +	  (char *)attr3_node_hdr_flds, SI(bitsz(struct xfs_da3_node_hdr)),
+> +	  0, NULL, attr3_node_hdr_flds },
 >  
-> -A file object represents a file opened by a process.
-> +A file object represents a file opened by a process. This is also known
-> +as an "open file description" in POSIX parlance.
+>  	{ FLDT_BMAPBTA, "bmapbta", NULL, (char *)bmapbta_flds, btblock_size,
+>  	  FTARG_SIZE, NULL, bmapbta_flds },
+> diff --git a/db/field.h b/db/field.h
+> index 53616f1..d1a7095 100644
+> --- a/db/field.h
+> +++ b/db/field.h
+> @@ -44,6 +44,7 @@ typedef enum fldt	{
 >  
+>  	/* attr 3 specific fields */
+>  	FLDT_ATTR3,
+> +	FLDT_ATTR3_BLKINFO,
+>  	FLDT_ATTR3_LEAF_HDR,
+>  	FLDT_ATTR3_NODE_HDR,
 >  
->  struct file_operations
-> @@ -887,7 +923,8 @@ otherwise noted.
->  
->    release: called when the last reference to an open file is closed
->  
-> -  fsync: called by the fsync(2) system call
-> +  fsync: called by the fsync(2) system call. Also see the section above
-> +	 entitled "Handling errors during writeback".
->  
->    fasync: called by the fcntl(2) system call when asynchronous
->  	(non-blocking) mode is enabled for a file
-> -- 
-> 2.13.0
-> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
