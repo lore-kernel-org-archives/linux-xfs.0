@@ -1,69 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25762 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:26581 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751597AbdF1XyU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2017 19:54:20 -0400
-Date: Wed, 28 Jun 2017 16:54:11 -0700
+        with ESMTP id S1752187AbdF3ACs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2017 20:02:48 -0400
+Date: Thu, 29 Jun 2017 17:02:41 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_db: properly set inode type
-Message-ID: <20170628235411.GA5874@birch.djwong.org>
-References: <e6c83eea-af29-c01b-752e-e049e8fdc69f@redhat.com>
- <20170628004252.GB4492@birch.djwong.org>
- <ffd4ffc4-c4f0-4935-a785-c6af95c4d4b9@sandeen.net>
+Subject: [PATCH v2] xfs_db: identify attr dabtree field types correctly
+Message-ID: <20170630000241.GJ5874@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ffd4ffc4-c4f0-4935-a785-c6af95c4d4b9@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Jun 28, 2017 at 05:45:55PM -0500, Eric Sandeen wrote:
-> On 6/27/17 7:42 PM, Darrick J. Wong wrote:
-> >> +		ino = XFS_AGINO_TO_INO(mp, xfs_daddr_to_agno(mp, b),
-> >> +			((b << BBSHIFT) >> mp->m_sb.sb_inodelog) %
-> >> +			(mp->m_sb.sb_agblocks << mp->m_sb.sb_inopblog));
-> 
-> > XFS_OFFBNO_TO_AGINO(mp, xfs_daddr_to_agbno(mp, b), 0) instead of that
-> > long third argument?
-> 
-> Hm, nope:
-> 
-> xfs_db> inode 99
-> xfs_db> daddr
-> current daddr is 99
-> 
-> xfs_db> daddr 99
-> xfs_db> type inode
-> xfs_db> inode
-> current inode number is 96
-> 
-> 
-> That ends up taking the first inode in the fsblock (12), not the sector
-> (99) I guess.
-> 
-> The macro needs a non-zero offset into the fsblock... found by, um...
-> I'm not sure that's going to be much prettier.
-> 
-> How much do you hate how I wrote it first? ;)  (I kind of hate it a
-> lot but dunno what else we have?)
+For whatever reason, the v5 xattr dabtree header fields are mapped to
+the directory dabtree header fields, which means that the types are
+wrong and hence we cannot use the 'addr' command to step through the
+tree.  Since the v4 attr dabtree does this correctly, simply port the v5
+fields to the attr code too.
 
-I guess there's also the problem that if inodesize != 512 then what are
-we targeting, anyway?  If inodesize = 256 then we can only hit
-even-numbered inodes (not so bad) but if inodesize > 512 then do we jump
-back to wherever the inode starts?  Or just give the user what they
-asked for, even if it's garbage? 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: fix for size selection problems and other complaints from Eric
+---
+ db/attr.c  |   24 ++++++++++++++++++++++--
+ db/attr.h  |    2 ++
+ db/field.c |    6 ++++--
+ db/field.h |    1 +
+ 4 files changed, 29 insertions(+), 4 deletions(-)
 
-(FWIW I was fine with xfs_db being dumb and giving you exactly what you
-point it at, even if that makes no sense. :P)
-
---D
-
-> 
-> -Eric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/db/attr.c b/db/attr.c
+index 6f56953..23ffcd5 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -499,7 +499,7 @@ const field_t	attr3_hfld[] = {
+ const field_t	attr3_flds[] = {
+ 	{ "hdr", FLDT_ATTR3_LEAF_HDR, OI(L3OFF(hdr)), attr3_leaf_hdr_count,
+ 	  FLD_COUNT, TYP_NONE },
+-	{ "hdr", FLDT_DA3_NODE_HDR, OI(N3OFF(hdr)), attr3_node_hdr_count,
++	{ "hdr", FLDT_ATTR3_NODE_HDR, OI(N3OFF(hdr)), attr3_node_hdr_count,
+ 	  FLD_COUNT, TYP_NONE },
+ 	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(L3OFF(entries)),
+ 	  attr3_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
+@@ -512,7 +512,7 @@ const field_t	attr3_flds[] = {
+ 
+ #define	LH3OFF(f)	bitize(offsetof(struct xfs_attr3_leaf_hdr, f))
+ const field_t	attr3_leaf_hdr_flds[] = {
+-	{ "info", FLDT_DA3_BLKINFO, OI(LH3OFF(info)), C1, 0, TYP_NONE },
++	{ "info", FLDT_ATTR3_BLKINFO, OI(LH3OFF(info)), C1, 0, TYP_NONE },
+ 	{ "count", FLDT_UINT16D, OI(LH3OFF(count)), C1, 0, TYP_NONE },
+ 	{ "usedbytes", FLDT_UINT16D, OI(LH3OFF(usedbytes)), C1, 0, TYP_NONE },
+ 	{ "firstused", FLDT_UINT16D, OI(LH3OFF(firstused)), C1, 0, TYP_NONE },
+@@ -523,6 +523,26 @@ const field_t	attr3_leaf_hdr_flds[] = {
+ 	{ NULL }
+ };
+ 
++#define	B3OFF(f)	bitize(offsetof(struct xfs_da3_blkinfo, f))
++const field_t	attr3_blkinfo_flds[] = {
++	{ "hdr", FLDT_ATTR_BLKINFO, OI(B3OFF(hdr)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(B3OFF(crc)), C1, 0, TYP_NONE },
++	{ "bno", FLDT_DFSBNO, OI(B3OFF(blkno)), C1, 0, TYP_BMAPBTD },
++	{ "lsn", FLDT_UINT64X, OI(B3OFF(lsn)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(B3OFF(uuid)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_INO, OI(B3OFF(owner)), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
++#define	H3OFF(f)	bitize(offsetof(struct xfs_da3_node_hdr, f))
++const field_t	attr3_node_hdr_flds[] = {
++	{ "info", FLDT_ATTR3_BLKINFO, OI(H3OFF(info)), C1, 0, TYP_NONE },
++	{ "count", FLDT_UINT16D, OI(H3OFF(__count)), C1, 0, TYP_NONE },
++	{ "level", FLDT_UINT16D, OI(H3OFF(__level)), C1, 0, TYP_NONE },
++	{ "pad", FLDT_UINT32D, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
+ /*
+  * Special read verifier for attribute buffers. Detect the magic number
+  * appropriately and set the correct verifier and call it.
+diff --git a/db/attr.h b/db/attr.h
+index bc3431f..21848c1 100644
+--- a/db/attr.h
++++ b/db/attr.h
+@@ -30,6 +30,8 @@ extern const field_t	attr3_flds[];
+ extern const field_t	attr3_hfld[];
+ extern const field_t	attr3_leaf_hdr_flds[];
+ extern const field_t	attr3_node_hdr_flds[];
++extern const field_t	attr3_blkinfo_flds[];
++extern const field_t	attr3_node_hdr_flds[];
+ 
+ extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
+ extern int	attr_size(void *obj, int startoff, int idx);
+diff --git a/db/field.c b/db/field.c
+index 2a2197a..f1e5f35 100644
+--- a/db/field.c
++++ b/db/field.c
+@@ -91,12 +91,14 @@ const ftattr_t	ftattrtab[] = {
+ /* attr3 specific fields */
+ 	{ FLDT_ATTR3, "attr3", NULL, (char *)attr3_flds, attr_size, FTARG_SIZE,
+ 	  NULL, attr3_flds },
++	{ FLDT_ATTR3_BLKINFO, "attr3_blkinfo", NULL, (char *)attr3_blkinfo_flds,
++	  SI(bitsz(struct xfs_da3_blkinfo)), 0, NULL, attr3_blkinfo_flds },
+ 	{ FLDT_ATTR3_LEAF_HDR, "attr3_leaf_hdr", NULL,
+ 	  (char *)attr3_leaf_hdr_flds, SI(bitsz(struct xfs_attr3_leaf_hdr)),
+ 	  0, NULL, attr3_leaf_hdr_flds },
+ 	{ FLDT_ATTR3_NODE_HDR, "attr3_node_hdr", NULL,
+-	  (char *)da3_node_hdr_flds, SI(bitsz(struct xfs_da3_node_hdr)),
+-	  0, NULL, da3_node_hdr_flds },
++	  (char *)attr3_node_hdr_flds, SI(bitsz(struct xfs_da3_node_hdr)),
++	  0, NULL, attr3_node_hdr_flds },
+ 
+ 	{ FLDT_BMAPBTA, "bmapbta", NULL, (char *)bmapbta_flds, btblock_size,
+ 	  FTARG_SIZE, NULL, bmapbta_flds },
+diff --git a/db/field.h b/db/field.h
+index 53616f1..d1a7095 100644
+--- a/db/field.h
++++ b/db/field.h
+@@ -44,6 +44,7 @@ typedef enum fldt	{
+ 
+ 	/* attr 3 specific fields */
+ 	FLDT_ATTR3,
++	FLDT_ATTR3_BLKINFO,
+ 	FLDT_ATTR3_LEAF_HDR,
+ 	FLDT_ATTR3_NODE_HDR,
+ 
