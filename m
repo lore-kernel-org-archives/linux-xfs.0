@@ -1,101 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50100 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751442AbdGAFkI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 1 Jul 2017 01:40:08 -0400
-Date: Sat, 1 Jul 2017 13:40:05 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: xfsprogs for-next branch build failure
-Message-ID: <20170701054005.GH23360@eguan.usersys.redhat.com>
-References: <20170630121913.GE23360@eguan.usersys.redhat.com>
- <20170630164537.GL5874@birch.djwong.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:46706 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751581AbdGAHDT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Jul 2017 03:03:19 -0400
+Date: Sat, 1 Jul 2017 00:03:06 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/5] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
+Message-ID: <20170701070306.GW5874@birch.djwong.org>
+References: <20170629135420.21357-1-hch@lst.de>
+ <20170629135420.21357-6-hch@lst.de>
+ <CAHc6FU4u+G1gtZVr3CUbJi2i+GwWhfDUOZemQ4Nnde=uiOmjXA@mail.gmail.com>
+ <20170630173740.GB11420@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20170630164537.GL5874@birch.djwong.org>
+In-Reply-To: <20170630173740.GB11420@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Fri, Jun 30, 2017 at 09:45:37AM -0700, Darrick J. Wong wrote:
-> On Fri, Jun 30, 2017 at 08:19:13PM +0800, Eryu Guan wrote:
-> > Hi all,
-> > 
-> > I'm seeing a xfsprogs for-next branch (HEAD is f77f9908851e) build
-> > failure in my test.
-> > 
-> > This build failure only happens if I installed 4.12-rc kernel headers,
-> > which has /usr/include/linux/fsmap.h installed, so that in
-> > xfsprogs/include/builddefs it has "HAVE_GETFSMAP = yes" defined.
-> > 
-> > e.g. install Fedora rawhide kernel package and its kernel header files,
-> > and re-compile xfsprogs.
-> > kernel-4.12.0-0.rc6.git3.1.fc27.x86_64
-> > kernel-headers-4.12.0-0.rc6.git3.1.fc27.x86_64
-> > 
-> > Build failure log:
-> > 
-> > ...
-> > Building fsck
-> > Building growfs
-> > ...
-> > Building io
-> > ...
-> >     [CC]     fsmap.o
-> > In file included from ../include/xfs.h:68:0,
-> >                  from io.h:19,   
-> >                  from fsmap.c:24:
-> > fsmap.c: In function ‘special_owner’:
-> > ../include/xfs/xfs_fs.h:117:26: error: ‘FMR_OWN_FREE’ undeclared (first use in this function)
-> >  #define XFS_FMR_OWN_FREE FMR_OWN_FREE      /* free space */
-> >                           ^
-> > fsmap.c:61:7: note: in expansion of macro ‘XFS_FMR_OWN_FREE’
-> >   case XFS_FMR_OWN_FREE:
-> >        ^
-> > ../include/xfs/xfs_fs.h:117:26: note: each undeclared identifier is reported only once for each function it appears in
-> >  #define XFS_FMR_OWN_FREE FMR_OWN_FREE      /* free space */
-> >                           ^
-> > fsmap.c:61:7: note: in expansion of macro ‘XFS_FMR_OWN_FREE’
-> >   case XFS_FMR_OWN_FREE:
-> >        ^
-> > ../include/xfs/xfs_fs.h:118:29: error: ‘FMR_OWN_UNKNOWN’ undeclared (first use in this function)
-> >  #define XFS_FMR_OWN_UNKNOWN FMR_OWN_UNKNOWN   /* unknown owner */
-> >                              ^
-> > fsmap.c:63:7: note: in expansion of macro ‘XFS_FMR_OWN_UNKNOWN’
-> >   case XFS_FMR_OWN_UNKNOWN:
-> >        ^
-> > fsmap.c:65:2: warning: implicit declaration of function ‘FMR_OWNER’ [-Wimplicit-function-declaration]
-> >   case XFS_FMR_OWN_FS:
-> >   ^
-> > ...
+On Fri, Jun 30, 2017 at 07:37:40PM +0200, Christoph Hellwig wrote:
+> On Fri, Jun 30, 2017 at 01:51:10PM +0200, Andreas Gruenbacher wrote:
+> > Also, ext4 no longer calls inode_lock or inode_lock_shared; that needs
+> > to be added back for consistency between reading i_size and walking
+> > the file extents.
 > 
-> Drat, looks like we forgot to include linux/fsmap.h during the refactoring
-> of the original fsmap support patch. :(
-> 
-> Does the patch below fix it for you?
+> At least for XFS we never had such a consistency as we never took
+> the iolock (aka i_rwsem).
 
-Yeah, it works!
+Do we need it?  It seems strange to me that someone else could be
+changing the file size while we're trying to use it to scan for holes or
+data, but OTOH there are plenty of other places where the kernel
+effectively requires that userspace either has synchronized writer
+processess with the seeker process or is prepared to deal with the
+inconsistent results.  If that's the intended behavior for the
+SEEK_{HOLE,DATA} then I guess I can put my fears to rest about XFS /not/
+taking the IOLOCK/i_rwsem.
 
-Eryu
+The non-ext4 mechanical parts look ok to me (and test out ok), but I
+want to be sure that we don't create a locking mess.  Dave complained in
+an earlier thread about lockdep problems because the old code took the
+ilock and then started locking pages; since we take the ILOCK
+during ->iomap_begin, drop it, and only take page locks during
+page_cache_seek_hole_data (which is called from the iomap actor) I think
+that particular problem goes away.
 
-> 
-> --D
-> 
-> diff --git a/include/linux.h b/include/linux.h
-> index 92f291d..6ce344c 100644
-> --- a/include/linux.h
-> +++ b/include/linux.h
-> @@ -222,7 +222,9 @@ struct fsxattr {
->  #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
->  #endif
->  
-> -#ifndef HAVE_GETFSMAP
-> +#ifdef HAVE_GETFSMAP
-> +# include <linux/fsmap.h>
-> +#else
->  /*
->   *	Structure for FS_IOC_GETFSMAP.
->   *
+(As for the ext4 patch that involves deeper surgery to the ext4 iomap
+implementation so you'll have to take that up with Ted...)
+
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
