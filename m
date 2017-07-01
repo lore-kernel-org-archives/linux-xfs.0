@@ -1,147 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45114 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751970AbdF3Thu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Jun 2017 15:37:50 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 19C7F686CAB
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Jun 2017 14:37:44 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs: v4.12.0-rc1 released
-Message-ID: <0b5c49e5-feb3-95e5-08c0-6b2d17709516@sandeen.net>
-Date: Fri, 30 Jun 2017 14:37:37 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:37177 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751581AbdGACfd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Jun 2017 22:35:33 -0400
+Date: Fri, 30 Jun 2017 19:35:29 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: Any tips for moving to reflink?
+Message-ID: <20170701023529.GP5874@birch.djwong.org>
+References: <CAHJqNbyngon0T1wnYpM6f+cWYzCrZjM9a6mp54QHgayeS9Bq5A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="MwNATWJLn7AKFNotk6SqoTPsrOamLxQLr"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHJqNbyngon0T1wnYpM6f+cWYzCrZjM9a6mp54QHgayeS9Bq5A@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Alphazo <alphazo@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---MwNATWJLn7AKFNotk6SqoTPsrOamLxQLr
-Content-Type: multipart/mixed; boundary="rxxBMC58Wx5AnDGDudCwmfXgp7JRIUL2t";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <0b5c49e5-feb3-95e5-08c0-6b2d17709516@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs: v4.12.0-rc1 released
+On Fri, Jun 30, 2017 at 10:33:03AM +0200, Alphazo wrote:
+> Hello,
+> 
+> xfs never stops impressing me. Most if not all of my storage has been
+> converted to it, including a 30TB+ unRaid server. I have been
+> contemplating snapshot and dedup enabled filesystems like btrfs and
+> ZFS but couldn't justify the jump. The new xfs reflink feature seems a
+> good addition and compromise to a stable and proven filesystem.
+> I'm strongly considering using the experimental reflink feature for my
+> new photo drive.
 
---rxxBMC58Wx5AnDGDudCwmfXgp7JRIUL2t
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+FWIW, reflink is still an experimental feature and not production ready,
+so beware that it could eat your backups...
 
-Hi folks,
+> This will be done in a controlled environment with multiple backups.
 
-The for-next branch of the xfsprogs repository at:
+...so good to hear this.  Note that the copy-on-write side of reflink
+can fragment files and filesystems more heavily than 
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> Are there any general rules of conduct when working with a dedup
+> filesystem, like never go above 80% disk usage
 
-has just been updated and tagged with xfsprogs: v4.12.0-rc1
+That's a pretty good rule of thumb for a filesystem regardless of
+whether it supports reflink. :)
 
-This is just a small delta over the last update, and reflects
-the bulk of the content that will be in 4.12.  Feature-ish-wise,
-it's:
+That said, we do try to reserve space for future metadata expansion
+to avoid running out of space and crashing the fs.
 
-xfsprogs-4.12.0-rc1 (30 Jun 2017)
-        - xfs_spaceman: new space management tool (Dave Chinner, Darrick =
-Wong)
-        - xfs_io: implement fsmap command (Darrick Wong)
-        - xfs_repair: fix 512 sector image repair on 4k sector host (Zorr=
-o Lang)
-        - xfs_growfs: ensure target is an active xfs mountpoint (Bill O'D=
-onnell)
-        - xfs_metadump: warn about corruption if log is dirty (Jan Tulak)=
+> or never trust df/dh results?
 
-        - xfs_metadump: tag metadump with informational flags (Eric Sande=
-en)
-        - xfs_db: fix 'type' command for interesting geoms (Bill O'Donnel=
-l)
-        - xfs_db: add alignment filter to freesp command (Eric Sandeen)
-        - libxfs: use crc32c slice-by-8 variant by default (Darrick Wong)=
+The free counts should be accurate, space reservations notwithstanding.
 
-        - update Polish translation (Jakub Bogusz)
+> Also is there any risk of trying to mount a reflink enabled xfs
+> filesystem on an older kernel that doesn't know about it?
 
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
+No, we set a feature flag bit for reflink (and rmap) so that old
+kernels will not try to write to an fs they don't understand.
 
-(jeffm: I want to get your xfs_repair patches in but have not
-had time to completely wrap my head around the pthreads stuff,
-and will get it in for the next release, sorry.)
+> I don't think I need it for the moment but would enabling rmapbt as
+> well add any risk to the data integrity
 
-The new head of the for-next branch is commit:
+It shouldn't.
 
-1d7d0b1 xfsprogs: Release v4.12.0-rc1
+> or impact performance?
 
-New Commits:
+It will, on account of having to update the rmap metadata.
 
-Bill O'Donnell (5):
-      [55f224b] xfs_db: update buffer size when new type is set
-      [db23e0f] xfs_db: improve argument naming in set_cur and set_iocur_=
-type
-      [e177680] xfs_spaceman: fix potential memory leak by malloc in scan=
-_ag
-      [1cda909] xfs_spaceman: close open file for error case in openfile(=
-)
-      [eb125dc] xfs_spaceman: fix potential overflowing expression in tri=
-m_f()
+> Can rmapbt be enabled later on an existing filesystem if required?
 
-Darrick J. Wong (2):
-      [73a423b] xfs_db: identify attr dabtree field types correctly
-      [6644005] libxfs: fix fsmap.h inclusion
+No.
 
-Eric Sandeen (1):
-      [1d7d0b1] xfsprogs: Release v4.12.0-rc1
+> Will rmpabt be only used to enhance filesystem recovery?
 
+It may some day be used to implement online shrink, but for now the only
+things that /could/ use it are xfs_repair and online fsck.
 
-Code Diffstat:
+> I'm planning to use this reflink feature for instant local snapshots
+> and then use my backup software of choice, borg, to keep a long time
+> history of my work on a remote server. Since borg stores data in a
+> dedup fashion I can also backup the reflink snapshots and they won't
+> take additional space. The only drawback is that today borg need to
+> hash all the files found in a reflink directory in order to find out
+> about dedup blocks. I asked a question on the borg mailing list
+> https://github.com/borgbackup/borg/issues/2743 and apparently it won't
+> be an issue to add a feature to support XFS in order to identify the
+> physical extents. Is rmapbt required for that?
 
- VERSION           |  4 ++--
- configure.ac      |  2 +-
- db/attr.c         | 24 ++++++++++++++++++++++--
- db/attr.h         |  2 ++
- db/field.c        |  6 ++++--
- db/field.h        |  1 +
- db/io.c           | 40 ++++++++++++++++++++++++----------------
- db/io.h           |  6 +++---
- doc/CHANGES       | 12 ++++++++++++
- include/linux.h   |  4 +++-
- spaceman/file.c   |  1 +
- spaceman/freesp.c |  2 ++
- spaceman/trim.c   |  2 +-
- 13 files changed, 78 insertions(+), 28 deletions(-)
+borgbackup will probably need to call the GETFSMAP ioctl, which won't
+land until 4.12.  On xfs, rmapbt is needed to supply data block
+ownership info, which is what borgbackup (and bees, and...) say they
+want to be smarter about dedup.
 
+Good luck!
 
---rxxBMC58Wx5AnDGDudCwmfXgp7JRIUL2t--
+--D
 
---MwNATWJLn7AKFNotk6SqoTPsrOamLxQLr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJZVqiIAAoJECCuFpLhPd7gT4YQAK76nVqle1/JVhPbIUoFxEf9
-PzUiC3xKfdfdAc8fqdFfoDyKx6YMVCJmotem9KTzWpsOGlS0V8IQCzwTDoSitIUE
-4bxkanfF/TfUl0IhbaePtd41yLLt3fq/cDs+VYE2kojJ3+3T4pANM+NUscLfJO9E
-aJtFISNvUSxTuVBRF7HlvKmvwaydAj6yXcm2s9lLg14Oktj74kqcM9PNMCjW48Jl
-UhPBZV66iEAokgwAjC6Gc4AJyRH4zbGRrYsXNytoRCywDT70GeokaBbGL4xTf4Cy
-xSZdvjEXYoAHFvcYSzmPJYaOkDGiXsyXkZt3zfVGJzeyQCoRp8fceMbPScXSIjjX
-sZNHHjFhlmvMPMKH1yN/JBgBDvBGqI8OGHVvMeLGxMlXBKLSpgGT6c1J/Ub50CT5
-9djU+KE0jBqhhwhncyCoBBI3MjKit3puDKH9n14OwmEyACMSs7WhjNitk+Ls/WbW
-nArUEqADxIUwE12lwFku2XjWKAVhEjY7unauploUz6eS1uqxtmF8uRtzhfxBRw+9
-ph/h1xIlJiERafdd64rFaJoz2cPT+nVVqJKf28Nd9tWW0zpn8qKnPC49bcBh43kU
-hbOSk5AoFupIlA6RPyoOE5cR69nhdCubvsbf1K5HH/exoNwdvS7h9kQ82FUx6+t+
-pWsVBTk7kFmhbKK5Hmpc
-=eyzf
------END PGP SIGNATURE-----
-
---MwNATWJLn7AKFNotk6SqoTPsrOamLxQLr--
+> Alphazo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
