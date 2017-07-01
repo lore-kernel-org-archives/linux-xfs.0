@@ -1,58 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46706 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751581AbdGAHDT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Jul 2017 03:03:19 -0400
-Date: Sat, 1 Jul 2017 00:03:06 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/5] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
-Message-ID: <20170701070306.GW5874@birch.djwong.org>
-References: <20170629135420.21357-1-hch@lst.de>
- <20170629135420.21357-6-hch@lst.de>
- <CAHc6FU4u+G1gtZVr3CUbJi2i+GwWhfDUOZemQ4Nnde=uiOmjXA@mail.gmail.com>
- <20170630173740.GB11420@lst.de>
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:37977 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751683AbdGALlq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Jul 2017 07:41:46 -0400
+Received: by mail-wm0-f48.google.com with SMTP id f67so14428877wmh.1
+        for <linux-xfs@vger.kernel.org>; Sat, 01 Jul 2017 04:41:46 -0700 (PDT)
+Received: from [192.168.2.44] (p57ACA7F0.dip0.t-ipconnect.de. [87.172.167.240])
+        by smtp.googlemail.com with ESMTPSA id t74sm12992774wmt.19.2017.07.01.04.41.44
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 01 Jul 2017 04:41:44 -0700 (PDT)
+References: <20170701023529.GP5874@birch.djwong.org>
+In-Reply-To: <20170701023529.GP5874@birch.djwong.org>
+From: Marian Beermann <public@enkore.de>
+Subject: Re: Re: Any tips for moving to reflink?
+Message-ID: <03eb6ac0-6c6e-0494-b008-25a187b43e12@enkore.de>
+Date: Sat, 1 Jul 2017 13:41:43 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170630173740.GB11420@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Jun 30, 2017 at 07:37:40PM +0200, Christoph Hellwig wrote:
-> On Fri, Jun 30, 2017 at 01:51:10PM +0200, Andreas Gruenbacher wrote:
-> > Also, ext4 no longer calls inode_lock or inode_lock_shared; that needs
-> > to be added back for consistency between reading i_size and walking
-> > the file extents.
-> 
-> At least for XFS we never had such a consistency as we never took
-> the iolock (aka i_rwsem).
+Hi
 
-Do we need it?  It seems strange to me that someone else could be
-changing the file size while we're trying to use it to scan for holes or
-data, but OTOH there are plenty of other places where the kernel
-effectively requires that userspace either has synchronized writer
-processess with the seeker process or is prepared to deal with the
-inconsistent results.  If that's the intended behavior for the
-SEEK_{HOLE,DATA} then I guess I can put my fears to rest about XFS /not/
-taking the IOLOCK/i_rwsem.
+> > I'm planning to use this reflink feature for instant local snapshots
+> > and then use my backup software of choice, borg, to keep a long time
+> > history of my work on a remote server. Since borg stores data in a
+> > dedup fashion I can also backup the reflink snapshots and they won't
+> > take additional space. The only drawback is that today borg need to
+> > hash all the files found in a reflink directory in order to find out
+> > about dedup blocks. I asked a question on the borg mailing list
+> > https://github.com/borgbackup/borg/issues/2743 and apparently it
+> > won't be an issue to add a feature to support XFS in order to
+> > identify the physical extents. Is rmapbt required for that?
+>
+> borgbackup will probably need to call the GETFSMAP ioctl, which won't
+> land until 4.12.  On xfs, rmapbt is needed to supply data block
+> ownership info, which is what borgbackup (and bees, and...) say they
+> want to be smarter about dedup.
 
-The non-ext4 mechanical parts look ok to me (and test out ok), but I
-want to be sure that we don't create a locking mess.  Dave complained in
-an earlier thread about lockdep problems because the old code took the
-ilock and then started locking pages; since we take the ILOCK
-during ->iomap_begin, drop it, and only take page locks during
-page_cache_seek_hole_data (which is called from the iomap actor) I think
-that particular problem goes away.
+My understanding so far was that FIEMAP would be sufficient to query the
+extents associated with a file. Shouldn't this be sufficient to know
+whether two files on the same file system refer to the same data?
 
-(As for the ext4 patch that involves deeper surgery to the ext4 iomap
-implementation so you'll have to take that up with Ted...)
-
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers, Marian
