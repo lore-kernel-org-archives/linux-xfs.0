@@ -1,63 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19960 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750740AbdGBEtG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Jul 2017 00:49:06 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v624n3nS011779
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 2 Jul 2017 04:49:05 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v624n3wV018027
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 2 Jul 2017 04:49:03 GMT
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v624n3AA030247
-        for <linux-xfs@vger.kernel.org>; Sun, 2 Jul 2017 04:49:03 GMT
-Date: Sat, 1 Jul 2017 21:49:02 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-documentation: master updated to 6f91654
-Message-ID: <20170702044902.GY5874@birch.djwong.org>
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:35161 "EHLO
+        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751682AbdGBQk2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Jul 2017 12:40:28 -0400
+Received: by mail-wm0-f53.google.com with SMTP id w126so148657924wme.0
+        for <linux-xfs@vger.kernel.org>; Sun, 02 Jul 2017 09:40:28 -0700 (PDT)
+Subject: Re: Any tips for moving to reflink?
+References: <20170701023529.GP5874@birch.djwong.org>
+ <03eb6ac0-6c6e-0494-b008-25a187b43e12@enkore.de>
+ <20170701163802.GX5874@birch.djwong.org>
+From: Marian Beermann <public@enkore.de>
+Message-ID: <e8fbb00d-4fe3-19e4-47ee-3dc65e2636b4@enkore.de>
+Date: Sun, 2 Jul 2017 18:40:25 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20170701163802.GX5874@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi folks,
+On 01.07.2017 18:38, Darrick J. Wong wrote:
+> On Sat, Jul 01, 2017 at 01:41:43PM +0200, Marian Beermann wrote:
+>> Hi
+>>
+>>>> I'm planning to use this reflink feature for instant local snapshots
+>>>> and then use my backup software of choice, borg, to keep a long time
+>>>> history of my work on a remote server. Since borg stores data in a
+>>>> dedup fashion I can also backup the reflink snapshots and they won't
+>>>> take additional space. The only drawback is that today borg need to
+>>>> hash all the files found in a reflink directory in order to find out
+>>>> about dedup blocks. I asked a question on the borg mailing list
+>>>> https://github.com/borgbackup/borg/issues/2743 and apparently it
+>>>> won't be an issue to add a feature to support XFS in order to
+>>>> identify the physical extents. Is rmapbt required for that?
+>>>
+>>> borgbackup will probably need to call the GETFSMAP ioctl, which won't
+>>> land until 4.12.  On xfs, rmapbt is needed to supply data block
+>>> ownership info, which is what borgbackup (and bees, and...) say they
+>>> want to be smarter about dedup.
+>>
+>> My understanding so far was that FIEMAP would be sufficient to query the
+>> extents associated with a file. Shouldn't this be sufficient to know
+>> whether two files on the same file system refer to the same data?
+> 
+> Not necessarily -- FIEMAP provides physical offset into a device but
+> does not actually identify which one, which is a problem on multi-device
+> filesystems such as btrfs and XFS.  IIRC btrfs creates a virtual
+> physical offset space consisting of all the devices one after the other,
+> but then you have to know /that/ mapping too.  GETFSMAP by contrast
+> tells you which device and where on that device.
+> 
 
-The master branch of the xfs-documentation repository at:
+I see. If FIEMAP reports same data, while describing different data,
+then it certainly breaks one of the main uses of it (detecting identical
+data)?
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git
+To clarify the intended;
 
-has just been updated.
+Borg would essentially hash the output of FIEMAP/GETFSMAP for a given
+file and compare this hash with a previous hash.
 
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
+If the two hashes don't match,
+then Borg would re-process the entire file.
 
-The new head of the master branch is commit:
+It'd be possible to make this more granular, on a per-extent basis
 
-6f91654 docs: add missing sb_qflags values
-
-New Commits:
-
-Darrick J. Wong (4):
-      [b304a94] docs: clarify what the ATTRBIT and ATTR2BIT feature flags do
-      [fb7cbd8] docs: record the metadump file format
-      [ef2375a] docs: fix mailing list
-      [6f91654] docs: add missing sb_qflags values
-
-
-Code Diffstat:
-
- .../allocation_groups.asciidoc                     | 21 ++++++--
- design/XFS_Filesystem_Structure/docinfo.xml        | 14 +++++
- design/XFS_Filesystem_Structure/magic.asciidoc     |  1 +
- design/XFS_Filesystem_Structure/metadump.asciidoc  | 62 ++++++++++++++++++++++
- .../xfs_filesystem_structure.asciidoc              | 11 +++-
- 5 files changed, 103 insertions(+), 6 deletions(-)
- create mode 100644 design/XFS_Filesystem_Structure/metadump.asciidoc
+Cheers, Marian
