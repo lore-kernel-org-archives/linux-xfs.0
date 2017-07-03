@@ -1,59 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:27534 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S965977AbdGTW1r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2017 18:27:47 -0400
-Date: Fri, 21 Jul 2017 08:27:43 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Collecting aged XFS profiles
-Message-ID: <20170720222743.GV17762@dastard>
-References: <F180D8D4-633B-4CC5-8D70-5CAC36233513@cs.cmu.edu>
- <CAAxjCEzevLnmxyVRME1-kT867KjH2rtOdspv7nF6TOfLUDD+xA@mail.gmail.com>
- <20170717234814.GK17762@dastard>
- <CAAxjCEzP=bf5S12J8rTn7EyJK_MeM=t1JSa7pBzZyXK=9TrjQQ@mail.gmail.com>
- <bcb651de-75bf-97a6-7ed8-c083d2a440e5@sandeen.net>
- <CAAxjCEzZ2Q0wL=nhGVHVtK3M5Ws3MQdrUNKm3jJKO+1y-wxTkw@mail.gmail.com>
- <20170720030252.GT17762@dastard>
- <93399fda-5d20-5ec9-14f1-5496814fed79@sandeen.net>
- <20170720043806.GU17762@dastard>
- <a7d9b022-4328-995c-845e-abc59e5fd038@sandeen.net>
+Received: from cn.fujitsu.com ([59.151.112.132]:32664 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752186AbdGCHgQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jul 2017 03:36:16 -0400
+From: Xiao Yang <yangx.jy@cn.fujitsu.com>
+Subject: [PATCH] generic/446: add __xfs_get_blocks() into _filter_xfs_dmesg
+Date: Mon, 3 Jul 2017 15:35:59 +0800
+Message-ID: <1499067359-23500-1-git-send-email-yangx.jy@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a7d9b022-4328-995c-845e-abc59e5fd038@sandeen.net>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Stefan Ring <stefanrin@gmail.com>, linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: eguan@redhat.com, bfoster@redhat.com, linux-xfs@vger.kernel.org, Xiao Yang <yangx.jy@cn.fujitsu.com>
 
-On Thu, Jul 20, 2017 at 09:24:58AM -0500, Eric Sandeen wrote:
-> On 07/19/2017 11:38 PM, Dave Chinner wrote:
-> > On Wed, Jul 19, 2017 at 10:55:23PM -0500, Eric Sandeen wrote:
-> > FWIW, people building from the git tree are probably using the
-> > master branch (v4.11.0), not the for-next branch. I used to stage
-> > all the -rcX releases in the master branch, which was why I was
-> > confused by this at first. Never mind, I'll update my scripts that
-> > haven't been pulling the xfsprogs for-next branch from kernel.org...
-> 
-> yeah, I was doing that when I was new to the maintainer game, for-next
-> was rebasable and more forgiving.  Maybe I should change that back.
+On xfs filesystem, the following patch fixed system crash caused by
+this race, but it introduced the __xfs_get_blocks() warning when the
+race occurred:
+04197b3 ("xfs: don't BUG() on mixed direct and mapped I/O")
 
-Yeah, for-next is more forgiving, but if you are tagging stuff for
-releases (even -rc) then it probably should have been merged back
-into the master branch and then tagged. I've always worked under the
-assumption that -rc releases are "stable" release points because you
-are asking the wider public to use and test the release....
+On upstream kernel, the fix patch was cleared by:
+acdda3a ("xfs: use iomap_dio_rw")
 
-i.e. If stuff needs to be undone after a -rc release then we should
-use reverts that explain why something was undone - rebasing the
-entire dev branch to remove the problem from recorded history means
-we can't easily find out why that thing caused problems years down
-the track.
+When the fix patch was applied and not cleared(e.g, on RHEL7.4), this
+case triggered the __xfs_get_blocks() warning as expected.  Moreover,
+generic/095 may reproduce the same warning occasionally.  So we could
+add __xfs_get_blocks() into _filter_xfs_dmesg.
 
-Cheers,
+Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+---
+ common/xfs | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Dave.
+diff --git a/common/xfs b/common/xfs
+index 77100f7..a1ee384 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -595,9 +595,11 @@ _filter_xfs_dmesg()
+ 	local warn3="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_read_iter.*"
+ 	local warn4="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_aio_read.*"
+ 	local warn5="WARNING:.*fs/iomap\.c:.*iomap_dio_rw.*"
++	local warn6="WARNING:.*fs/xfs/xfs_aops\.c:.*__xfs_get_blocks.*"
+ 	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
+ 	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
+ 	    -e "s#$warn3#Intentional warnings in xfs_file_read_iter#" \
+ 	    -e "s#$warn4#Intentional warnings in xfs_file_aio_read#" \
+-	    -e "s#$warn5#Intentional warnings in iomap_dio_rw#"
++	    -e "s#$warn5#Intentional warnings in iomap_dio_rw#" \
++	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#"
+ }
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.3.1
+
+
+
