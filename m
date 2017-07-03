@@ -1,180 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:16909 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753345AbdGGDrZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jul 2017 23:47:25 -0400
-Date: Thu, 6 Jul 2017 20:47:13 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: XFS hang - 4.4.73 longterm
-Message-ID: <20170707034713.GD4103@magnolia>
-References: <12EF8D94C6F8734FB2FF37B9FBEDD173010E02746C@EXCHANGE.collogia.de>
- <20170706002436.GA5068@magnolia>
- <12EF8D94C6F8734FB2FF37B9FBEDD173010E027537@EXCHANGE.collogia.de>
+Received: from mx1.redhat.com ([209.132.183.28]:39526 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752538AbdGCMLx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Jul 2017 08:11:53 -0400
+Date: Mon, 3 Jul 2017 08:11:51 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/4] xfs: always verify the log tail during recovery
+Message-ID: <20170703121149.GB26149@bfoster.bfoster>
+References: <1498574436-57561-1-git-send-email-bfoster@redhat.com>
+ <1498574436-57561-3-git-send-email-bfoster@redhat.com>
+ <20170701044349.GU5874@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <12EF8D94C6F8734FB2FF37B9FBEDD173010E027537@EXCHANGE.collogia.de>
+In-Reply-To: <20170701044349.GU5874@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Markus Stockhausen <stockhausen@collogia.de>
-Cc: "'linux-xfs@vger.kernel.org'" <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jul 06, 2017 at 04:45:43AM +0000, Markus Stockhausen wrote:
-> > Von: linux-xfs-owner@vger.kernel.org [mailto:linux-xfs-owner@vger.kernel.org] Im Auftrag von Darrick J. Wong
-> > Gesendet: Donnerstag, 6. Juli 2017 02:25
-> > An: Markus Stockhausen
-> > Cc: 'linux-xfs@vger.kernel.org'
-> > Betreff: Re: XFS hang - 4.4.73 longterm
-> >
-> > On Wed, Jul 05, 2017 at 07:19:28PM +0000, Markus Stockhausen wrote:
-> > > Hi,
-> > > 
-> > > we are using a NFS/XFS fileserver and installed the current 4.4.73 longterm kernel.
-> > > From time to time (reason currently unidentified) it spits blocked for 
-> > > 120s messages Like the attached ones. Any ideas what might be the 
-> > > reason? I can reproduce it With some effort. So in case you want some more logging don't hesitate to ask.
-> > > 
-> > > For more details see 
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=196259
-> > > 
-> > > [1248134.772889] INFO: task nfsd:1623 blocked for more than 120 seconds.
-> > > [1248134.772895]       Tainted: G          I     4.4.73-2.el7.centos.x86_64 #1
-> > > [1248134.772897] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> > > [1248134.772899] nfsd            D ffff880bbf08b9c8     0  1623      2 0x00000080
-> > > [1248134.772905]  ffff880bbf08b9c8 ffff880be0875400 ffff880bbf080000 
-> > > ffff880bbf08c000 [1248134.772908]  0000000000000000 7fffffffffffffff 
-> > > ffff880bbf08bb38 ffffffff816fbb40 [1248134.772911]  ffff880bbf08b9e0 
-> > > ffffffff816fb2d5 ffff880c176d6d00 ffff880bbf08ba88 [1248134.772915] Call Trace:
-> > > [1248134.772923]  [<ffffffff816fbb40>] ? bit_wait+0x50/0x50 
-> > > [1248134.772926]  [<ffffffff816fb2d5>] schedule+0x35/0x80 
-> > > [1248134.772929]  [<ffffffff816fdfe7>] schedule_timeout+0x237/0x2d0 
-> > > [1248134.772935]  [<ffffffff8161ee0e>] ? ip_output+0x6e/0xe0 
-> > > [1248134.772938]  [<ffffffff8161e502>] ? __ip_local_out+0x92/0x110 
-> > > [1248134.772941]  [<ffffffff810f303a>] ? ktime_get+0x3a/0x90 
-> > > [1248134.772944]  [<ffffffff816fbb40>] ? bit_wait+0x50/0x50 
-> > > [1248134.772947]  [<ffffffff816faa46>] io_schedule_timeout+0xa6/0x110 
-> > > [1248134.772950]  [<ffffffff816fbb5b>] bit_wait_io+0x1b/0x60 
-> > > [1248134.772952]  [<ffffffff816fb8ee>] __wait_on_bit_lock+0x4e/0xb0 
-> > > [1248134.772958]  [<ffffffff81189759>] __lock_page+0xb9/0xe0
-> >
-> > Waiting for a page lock with ILOCK held...
-> >
-> > > [1248134.772962]  [<ffffffff810c2910>] ? 
-> > > autoremove_wake_function+0x40/0x40
-> > > [1248134.773007]  [<ffffffffa08d7c70>] 
-> > > xfs_find_get_desired_pgoff.isra.10+0x1e0/0x2d0 [xfs] [1248134.773039]  
-> > > [<ffffffffa08d7f9d>] xfs_seek_hole_data+0x23d/0x2c0 [xfs] 
-> > > [1248134.773054]  [<ffffffffa05d942c>] ? 
-> > > nfs4_preprocess_stateid_op+0x11c/0x430 [nfsd] [1248134.773086]  
-> > > [<ffffffffa08d803c>] xfs_file_llseek+0x1c/0x40 [xfs] [1248134.773090]  
-> > > [<ffffffff8120633e>] vfs_llseek+0x2e/0x30 [1248134.773101]  
-> > > [<ffffffffa05c6080>] nfsd4_seek+0x80/0xe0 [nfsd] [1248134.773112]  
-> > > [<ffffffffa05c8416>] nfsd4_proc_compound+0x3b6/0x710 [nfsd] 
-> > > [1248134.773121]  [<ffffffffa05b4f2e>] nfsd_dispatch+0xce/0x270 [nfsd] 
-> > > [1248134.773142]  [<ffffffffa01a5134>] svc_process_common+0x454/0x720 
-> > > [sunrpc] [1248134.773151]  [<ffffffffa05b4880>] ? 
-> > > nfsd_destroy+0x60/0x60 [nfsd] [1248134.773168]  [<ffffffffa01a5505>] 
-> > > svc_process+0x105/0x1c0 [sunrpc] [1248134.773177]  
-> > > [<ffffffffa05b4970>] nfsd+0xf0/0x160 [nfsd] [1248134.773180]  
-> > > [<ffffffff8109d755>] kthread+0xe5/0x100 [1248134.773183]  
-> > > [<ffffffff8109d670>] ? kthread_park+0x60/0x60 [1248134.773187]  
-> > > [<ffffffff816ff1cf>] ret_from_fork+0x3f/0x70 [1248134.773190]  
-> >  > [<ffffffff8109d670>] ? kthread_park+0x60/0x60 [1248134.773193] 
-> > > INFO: task nfsd:1624 blocked for more than 120 seconds.
-> > > [1248134.773195]       Tainted: G          I     4.4.73-2.el7.centos.x86_64 #1
-> > > [1248134.773197] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> > > [1248134.773198] nfsd            D ffff880bbf1a7738     0  1624      2 0x00000080
-> > > [1248134.773202]  ffff880bbf1a7738 ffffffff81a79500 ffff880bbf081500 
-> > > ffff880bbf1a8000 [1248134.773205]  ffff8802334477a8 ffff880233447790 
-> > > ffffffff00000000 ffffffff00000001 [1248134.773208]  ffff880bbf1a7750 
-> > > ffffffff816fb2d5 ffff880bbf081500 ffff880bbf1a77e0 [1248134.773211] Call Trace:
-> > > [1248134.773214]  [<ffffffff816fb2d5>] schedule+0x35/0x80 
-> > > [1248134.773217]  [<ffffffff816fdab5>] 
-> > > rwsem_down_write_failed+0x1f5/0x320
-> > > [1248134.773243]  [<ffffffffa089e722>] ? 
-> > > xfs_bmap_search_extents+0x72/0xe0 [xfs] [1248134.773273]  
-> > > [<ffffffffa08cd212>] ? __xfs_get_blocks+0x162/0x800 [xfs] 
-> > > [1248134.773276]  [<ffffffff81346433>] 
-> > > call_rwsem_down_write_failed+0x13/0x20
-> > > [1248134.773279]  [<ffffffff816fd35d>] ? down_write+0x2d/0x40 
-> > > [1248134.773311]  [<ffffffffa08e459a>] xfs_ilock+0xea/0x130 [xfs]
-> >
-> >...and waiting for the ILOCK with page lock held.
-> >
-> > This is the known deadlock in SEEK_HOLE/SEEK_DATA; I have patches queued to fix it in 4.13, as soon as the dust settles and I send the pull req.
+On Fri, Jun 30, 2017 at 09:43:49PM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 27, 2017 at 10:40:34AM -0400, Brian Foster wrote:
+> > Log tail verification currently only occurs when torn writes are
+> > detected at the head of the log. This was introduced because a
+> > change in the head block due to torn writes can lead to a change in
+> > the tail block (each log record header references the current tail)
+> > and the tail block should be verified before log recovery proceeds.
+> > 
+> > Tail corruption is possible outside of torn write scenarios,
+> > however. For example, partial log writes can be detected and cleared
+> > during the initial head/tail block discovery process. If the partial
+> > write coincides with a tail overwrite, the log tail is corrupted and
+> > recovery fails.
+> > 
+> > To facilitate correct handling of log tail overwites, update log
+> > recovery to always perform tail verification. This is necessary to
+> > detect potential tail overwrite conditions when torn writes may not
+> > have occurred. This changes normal (i.e., no torn writes) recovery
+> > behavior slightly to detect and return CRC related errors near the
+> > tail before actual recovery starts.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > 
-> Short, precise, frightening.
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Can you advise what will the best option to avoid that error. 
-> First things that come to my mind would be:
+> > ---
+> >  fs/xfs/xfs_log_recover.c | 24 +-----------------------
+> >  1 file changed, 1 insertion(+), 23 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > index 9efcd12..269d5f9 100644
+> > --- a/fs/xfs/xfs_log_recover.c
+> > +++ b/fs/xfs/xfs_log_recover.c
+> > @@ -1183,31 +1183,9 @@ xlog_verify_head(
+> >  			ASSERT(0);
+> >  			return 0;
+> >  		}
+> > -
+> > -		/*
+> > -		 * Now verify the tail based on the updated head. This is
+> > -		 * required because the torn writes trimmed from the head could
+> > -		 * have been written over the tail of a previous record. Return
+> > -		 * any errors since recovery cannot proceed if the tail is
+> > -		 * corrupt.
+> > -		 *
+> > -		 * XXX: This leaves a gap in truly robust protection from torn
+> > -		 * writes in the log. If the head is behind the tail, the tail
+> > -		 * pushes forward to create some space and then a crash occurs
+> > -		 * causing the writes into the previous record's tail region to
+> > -		 * tear, log recovery isn't able to recover.
+> > -		 *
+> > -		 * How likely is this to occur? If possible, can we do something
+> > -		 * more intelligent here? Is it safe to push the tail forward if
+> > -		 * we can determine that the tail is within the range of the
+> > -		 * torn write (e.g., the kernel can only overwrite the tail if
+> > -		 * it has actually been pushed forward)? Alternatively, could we
+> > -		 * somehow prevent this condition at runtime?
+> > -		 */
+> > -		error = xlog_verify_tail(log, *head_blk, *tail_blk);
+> >  	}
+> >  
+> > -	return error;
+> > +	return xlog_verify_tail(log, *head_blk, *tail_blk);
 > 
-> - get back to original 3.10 stable kernel from CentOS Distro 
-> - lower NFS mount version
-> - Maybe remove some single patch that introduced the error?
+> What if (error != 0 && error != -EFSBADCRC) here?  If the CRC checking log
+> recovery pass failed due to some other reason (EIO, ENOMEM, etc.) then is
+> there really a point to verifying the tail, vs. bubbling the error up and
+> (I presume) failing the mount?
+> 
 
-Unfortunately, SEEK_HOLE (and the deadlocky code) go all the way back to
-the beginning of SEEK_HOLE support, so I don't know that there's a good
-workaround for this.  There's not really a way to shut off support for
-it, either, that doesn't involve gross code surgery.
+Probably not. Presumably, the full recovery attempt would hit the same
+error. I suppose that's not necessarily guaranteed with transient
+errors, though, so I think it's probably better and more deterministic
+to stop here. I wouldn't want us to get into situations where a torn
+write had occurred, but the torn write checking happened to ENOMEM while
+the full recovery didn't and the end result appears as a log corruption
+rather than something that should have been fixed up.
 
---D
+The -EFSBADCRC hunk above resets error = 0 when it attempts to fix up
+the head. Therefore, we can probably add a 'if (error) return error;'
+check before the tail verification to ensure any unrelated problems
+at the head continue to fail the mount.
 
-> 
-> Thanks in advance.
-> 
-> Markus
+Brian
 
-> ****************************************************************************
-> Diese E-Mail enth??lt vertrauliche und/oder rechtlich gesch??tzte
-> Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
-> irrt??mlich erhalten haben, informieren Sie bitte sofort den Absender und
-> vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
-> Weitergabe dieser Mail ist nicht gestattet.
+> --D
 > 
-> ??ber das Internet versandte E-Mails k??nnen unter fremden Namen erstellt oder
-> manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
-> rechtsverbindliche Willenserkl??rung.
-> 
-> Collogia
-> Unternehmensberatung AG
-> Ubierring 11
-> D-50678 K??ln
-> 
-> Vorstand:
-> Kadir Akin
-> Dr. Michael H??hnerbach
-> 
-> Vorsitzender des Aufsichtsrates:
-> Hans Kristian Langva
-> 
-> Registergericht: Amtsgericht K??ln
-> Registernummer: HRB 52 497
-> 
-> This e-mail may contain confidential and/or privileged information. If you
-> are not the intended recipient (or have received this e-mail in error)
-> please notify the sender immediately and destroy this e-mail. Any
-> unauthorized copying, disclosure or distribution of the material in this
-> e-mail is strictly forbidden.
-> 
-> e-mails sent over the internet may have been written under a wrong name or
-> been manipulated. That is why this message sent as an e-mail is not a
-> legally binding declaration of intention.
-> 
-> Collogia
-> Unternehmensberatung AG
-> Ubierring 11
-> D-50678 K??ln
-> 
-> executive board:
-> Kadir Akin
-> Dr. Michael H??hnerbach
-> 
-> President of the supervisory board:
-> Hans Kristian Langva
-> 
-> Registry office: district court Cologne
-> Register number: HRB 52 497
-> 
-> ****************************************************************************
-
+> >  }
+> >  
+> >  /*
+> > -- 
+> > 2.7.5
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
