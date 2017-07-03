@@ -1,132 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34454 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751785AbdGGDzs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jul 2017 23:55:48 -0400
-Date: Thu, 6 Jul 2017 20:55:43 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] libxfs: rename MAXPATHLEN to XFS_SYMLINK_MAXLEN
-Message-ID: <20170707035543.GF4103@magnolia>
-References: <20170707032958.GB4103@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:40163 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750861AbdGCW63 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jul 2017 18:58:29 -0400
+Date: Tue, 4 Jul 2017 08:58:25 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/5] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
+Message-ID: <20170703225825.GD17762@dastard>
+References: <20170629135420.21357-1-hch@lst.de>
+ <20170629135420.21357-6-hch@lst.de>
+ <CAHc6FU4u+G1gtZVr3CUbJi2i+GwWhfDUOZemQ4Nnde=uiOmjXA@mail.gmail.com>
+ <20170630173740.GB11420@lst.de>
+ <CAHc6FU4rK3cg+nYeOSSJirKoYiuApV9KauqE_iar+7Q7X6g20A@mail.gmail.com>
+ <20170703162145.GZ5874@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170707032958.GB4103@magnolia>
+In-Reply-To: <20170703162145.GZ5874@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
 
-XFS has a maximum symlink target length of 1024 bytes; this is a
-holdover from the Irix days.  Unfortunately, the constant establishing
-this was 'MAXPATHLEN', and is /not/ the same as the Linux MAXPATHLEN,
-which is 4096.
+On Mon, Jul 03, 2017 at 09:21:45AM -0700, Darrick J. Wong wrote:
+> On Mon, Jul 03, 2017 at 05:03:54PM +0200, Andreas Gruenbacher wrote:
+> > On Fri, Jun 30, 2017 at 7:37 PM, Christoph Hellwig <hch@lst.de> wrote:
+> > > On Fri, Jun 30, 2017 at 01:51:10PM +0200, Andreas Gruenbacher wrote:
+> > >> Also, ext4 no longer calls inode_lock or inode_lock_shared; that needs
+> > >> to be added back for consistency between reading i_size and walking
+> > >> the file extents.
+> > >
+> > > At least for XFS we never had such a consistency as we never took
+> > > the iolock (aka i_rwsem).
+> > 
+> > What else does this piece of code from mainline xfs_seek_hole_data()
+> > do instead then?
+> > 
+> >         lock = xfs_ilock_data_map_shared(ip);
+> 
+> To avoid confusion, I'll start with ilock != iolock.
+> 
+> If I'm reading everything correctly, there are three levels of inode
+> locks that must be taken in XFS: First, the IOLOCK (aka i_rwsem) to
+> protect against concurrent IO when we need it, then the MMAPLOCK (istr
+> this was created to handle dax page faults, which don't take i_rwsem?),
+> and finally the ILOCK for inode core/extent map updates.  I think page
+> locks are supposed to happen before ILOCK.
 
-The kernel enforces its 1024 byte MAXPATHLEN on symlink targets, but
-xfsprogs picks up the (Linux) system 4096 byte MAXPATHLEN, which means
-that xfs_repair doesn't complain about oversized symlinks.
+IOLOCK and MMAPLOCK are equivalent - there are two locks because we
+can't take the IOLOCK in page fault context because page faults can
+occur while we are holding the IOLOCK.
 
-Since this is an on-disk format constraint, put the define in the XFS
-namespace.  As a side effect of the rename, xfs_repair wil detect
-oversized symlinks and clean them off the system.
+Locking order for IO path is:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/xfs_format.h         |    1 +
- libxfs/xfs_symlink_remote.c |    2 +-
- libxfs/xfs_trans_resv.c     |    4 ++--
- repair/dinode.c             |    6 +++---
- repair/xfs_repair.c         |    2 +-
- 5 files changed, 8 insertions(+), 7 deletions(-)
+IOLOCK -> page lock -> ILOCK
 
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index a53f035..79a72bb 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -1211,6 +1211,7 @@ struct xfs_dsymlink_hdr {
- 
- #define XFS_SYMLINK_CRC_OFF	offsetof(struct xfs_dsymlink_hdr, sl_crc)
- 
-+#define XFS_SYMLINK_MAXLEN	1024
- /*
-  * The maximum pathlen is 1024 bytes. Since the minimum file system
-  * blocksize is 512 bytes, we can get a max of 3 extents back from
-diff --git a/libxfs/xfs_symlink_remote.c b/libxfs/xfs_symlink_remote.c
-index 04c7446..d638530 100644
---- a/libxfs/xfs_symlink_remote.c
-+++ b/libxfs/xfs_symlink_remote.c
-@@ -110,7 +110,7 @@ xfs_symlink_verify(
- 	if (bp->b_bn != be64_to_cpu(dsl->sl_blkno))
- 		return false;
- 	if (be32_to_cpu(dsl->sl_offset) +
--				be32_to_cpu(dsl->sl_bytes) >= MAXPATHLEN)
-+				be32_to_cpu(dsl->sl_bytes) >= XFS_SYMLINK_MAXLEN)
- 		return false;
- 	if (dsl->sl_owner == 0)
- 		return false;
-diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index 5152a5b..d35a45f 100644
---- a/libxfs/xfs_trans_resv.c
-+++ b/libxfs/xfs_trans_resv.c
-@@ -476,14 +476,14 @@ xfs_calc_mkdir_reservation(
- /*
-  * Making a new symplink is the same as creating a new file, but
-  * with the added blocks for remote symlink data which can be up to 1kB in
-- * length (MAXPATHLEN).
-+ * length (XFS_SYMLINK_MAXLEN).
-  */
- STATIC uint
- xfs_calc_symlink_reservation(
- 	struct xfs_mount	*mp)
- {
- 	return xfs_calc_create_reservation(mp) +
--	       xfs_calc_buf_res(1, MAXPATHLEN);
-+	       xfs_calc_buf_res(1, XFS_SYMLINK_MAXLEN);
- }
- 
- /*
-diff --git a/repair/dinode.c b/repair/dinode.c
-index da87217..f005335 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -1259,7 +1259,7 @@ null_check(char *name, int length)
- {
- 	int i;
- 
--	ASSERT(length < MAXPATHLEN);
-+	ASSERT(length < XFS_SYMLINK_MAXLEN);
- 
- 	for (i = 0; i < length; i++, name++)  {
- 		if (*name == '\0')
-@@ -1371,7 +1371,7 @@ process_symlink(
- 	blkmap_t 	*blkmap)
- {
- 	char			*symlink;
--	char			data[MAXPATHLEN];
-+	char			data[XFS_SYMLINK_MAXLEN];
- 
- 	/*
- 	 * check size against kernel symlink limits.  we know
-@@ -1379,7 +1379,7 @@ process_symlink(
- 	 * the inode is structurally ok so we don't have to check
- 	 * for that
- 	 */
--	if (be64_to_cpu(dino->di_size) >= MAXPATHLEN)  {
-+	if (be64_to_cpu(dino->di_size) >= XFS_SYMLINK_MAXLEN)  {
- 	       do_warn(_("symlink in inode %" PRIu64 " too long (%llu chars)\n"),
- 		       lino, (unsigned long long) be64_to_cpu(dino->di_size));
- 		return(1);
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index ab60c0f..b2dd91b 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -761,7 +761,7 @@ main(int argc, char **argv)
- 	glob_agcount = mp->m_sb.sb_agcount;
- 
- 	chunks_pblock = mp->m_sb.sb_inopblock / XFS_INODES_PER_CHUNK;
--	max_symlink_blocks = libxfs_symlink_blocks(mp, MAXPATHLEN);
-+	max_symlink_blocks = libxfs_symlink_blocks(mp, XFS_SYMLINK_MAXLEN);
- 	inodes_per_cluster = MAX(mp->m_sb.sb_inopblock,
- 			mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog);
- 
+Locking order for page faults is:
+
+mmap_sem -> MMAPLOCK -> page lock -> ILOCK
+
+> xfs_ilock_data_map_shared() is a helper that takes the ILOCK in shared
+> or exclusive mode depending on whether or not all the inode metadata
+> have already been cached in memory.
+> 
+> The ILOCK must be held before reading or writing the extent map.
+
+More simply:
+
+	- IOLOCK/MMAPLOCK is for access control to file data
+	- ILOCK is for access control to inode metadata
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
