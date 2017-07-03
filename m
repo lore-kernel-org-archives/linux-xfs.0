@@ -1,39 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f178.google.com ([209.85.217.178]:34404 "EHLO
-        mail-ua0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932069AbdGCPLq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jul 2017 11:11:46 -0400
-Received: by mail-ua0-f178.google.com with SMTP id z22so111281514uah.1
-        for <linux-xfs@vger.kernel.org>; Mon, 03 Jul 2017 08:11:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170629185320.GA31467@lst.de>
-References: <20170629135420.21357-1-hch@lst.de> <20170629184751.GH5874@birch.djwong.org>
- <20170629185320.GA31467@lst.de>
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Date: Mon, 3 Jul 2017 17:11:44 +0200
-Message-ID: <CAHc6FU55dj_VBwWq=s1tgbp6nnD333PfRO_hY98GbkzqYSyTiQ@mail.gmail.com>
-Subject: Re: lseek SEEK_HOLE / SEEK_DATA fixes and switch to iomap V3.2-hch
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([209.132.183.28]:55558 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752369AbdGCI2g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Jul 2017 04:28:36 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 11AB4C0587FF
+        for <linux-xfs@vger.kernel.org>; Mon,  3 Jul 2017 08:28:36 +0000 (UTC)
+Received: from eorzea.usersys.redhat.com (unknown [10.43.17.52])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8817087BB9
+        for <linux-xfs@vger.kernel.org>; Mon,  3 Jul 2017 08:28:35 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH] xfs_io: Print filesystem statfs flags in 'statfs' command
+Date: Mon,  3 Jul 2017 10:28:30 +0200
+Message-Id: <20170703082830.22967-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jun 29, 2017 at 8:53 PM, Christoph Hellwig <hch@lst.de> wrote:
-> On Thu, Jun 29, 2017 at 11:47:51AM -0700, Darrick J. Wong wrote:
->> On Thu, Jun 29, 2017 at 06:54:15AM -0700, Christoph Hellwig wrote:
->> > Here is my take on all the current seek work.  It has my XFS quota changes
->>
->> I think the quota change patch fell out of this series, but I can grab
->> it from the previous iteration if it hasn't changed.
->
-> It hasn't, please do.
+Sometimes printing the flags from the statfs structure is useful, so,
+make statfs command print them.
 
-We haven't heard from the ext4 folks on this yet: is everyone happy
-with the vfs changes in this series at least? Can those be merged
-through the xfs tree? That would allow us to move ahead on the gfs2
-side.
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ io/stat.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Andreas
+diff --git a/io/stat.c b/io/stat.c
+index 783eb2e..060ff83 100644
+--- a/io/stat.c
++++ b/io/stat.c
+@@ -199,6 +199,7 @@ statfs_f(
+ 		printf(_("statfs.f_bavail = %lld\n"), (long long) st.f_bavail);
+ 		printf(_("statfs.f_files = %lld\n"), (long long) st.f_files);
+ 		printf(_("statfs.f_ffree = %lld\n"), (long long) st.f_ffree);
++		printf(_("statfs.f_fflags = 0x%llx\n"), (long long) st.f_flags);
+ 	}
+ 	if (file->flags & IO_FOREIGN)
+ 		return 0;
+-- 
+2.9.4
+
