@@ -1,60 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44392 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751157AbdGMMlr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Jul 2017 08:41:47 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 604733680F
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Jul 2017 12:41:47 +0000 (UTC)
-Received: from eorzea.usersys.redhat.com (unknown [10.40.205.35])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id CAF346C927
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Jul 2017 12:41:46 +0000 (UTC)
-Date: Thu, 13 Jul 2017 14:41:44 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs_io: Print filesystem statfs flags in 'statfs' command
-Message-ID: <20170713124144.wruhsij6orjwd3as@eorzea.usersys.redhat.com>
-References: <20170703082830.22967-1-cmaiolino@redhat.com>
+Received: from mail-ua0-f182.google.com ([209.85.217.182]:34963 "EHLO
+        mail-ua0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755513AbdGCPD4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jul 2017 11:03:56 -0400
+Received: by mail-ua0-f182.google.com with SMTP id j53so111081317uaa.2
+        for <linux-xfs@vger.kernel.org>; Mon, 03 Jul 2017 08:03:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170703082830.22967-1-cmaiolino@redhat.com>
+In-Reply-To: <20170630173740.GB11420@lst.de>
+References: <20170629135420.21357-1-hch@lst.de> <20170629135420.21357-6-hch@lst.de>
+ <CAHc6FU4u+G1gtZVr3CUbJi2i+GwWhfDUOZemQ4Nnde=uiOmjXA@mail.gmail.com> <20170630173740.GB11420@lst.de>
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Date: Mon, 3 Jul 2017 17:03:54 +0200
+Message-ID: <CAHc6FU4rK3cg+nYeOSSJirKoYiuApV9KauqE_iar+7Q7X6g20A@mail.gmail.com>
+Subject: Re: [PATCH 5/5] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
 
-Ping?
+On Fri, Jun 30, 2017 at 7:37 PM, Christoph Hellwig <hch@lst.de> wrote:
+> On Fri, Jun 30, 2017 at 01:51:10PM +0200, Andreas Gruenbacher wrote:
+>> Also, ext4 no longer calls inode_lock or inode_lock_shared; that needs
+>> to be added back for consistency between reading i_size and walking
+>> the file extents.
+>
+> At least for XFS we never had such a consistency as we never took
+> the iolock (aka i_rwsem).
 
-On Mon, Jul 03, 2017 at 10:28:30AM +0200, Carlos Maiolino wrote:
-> Sometimes printing the flags from the statfs structure is useful, so,
-> make statfs command print them.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  io/stat.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/io/stat.c b/io/stat.c
-> index 783eb2e..060ff83 100644
-> --- a/io/stat.c
-> +++ b/io/stat.c
-> @@ -199,6 +199,7 @@ statfs_f(
->  		printf(_("statfs.f_bavail = %lld\n"), (long long) st.f_bavail);
->  		printf(_("statfs.f_files = %lld\n"), (long long) st.f_files);
->  		printf(_("statfs.f_ffree = %lld\n"), (long long) st.f_ffree);
-> +		printf(_("statfs.f_fflags = 0x%llx\n"), (long long) st.f_flags);
->  	}
->  	if (file->flags & IO_FOREIGN)
->  		return 0;
-> -- 
-> 2.9.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+What else does this piece of code from mainline xfs_seek_hole_data()
+do instead then?
 
--- 
-Carlos
+        lock = xfs_ilock_data_map_shared(ip);
+
+        end = i_size_read(inode);
+        offset = __xfs_seek_hole_data(inode, start, end, whence);
+
+Thanks,
+Andreas
