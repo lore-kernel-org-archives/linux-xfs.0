@@ -1,69 +1,192 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23623 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753085AbdGDEFE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jul 2017 00:05:04 -0400
-Date: Mon, 3 Jul 2017 21:04:46 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] fs: ext4: inode->i_generation not assigned 0.
-Message-ID: <20170704040446.GB4704@birch.djwong.org>
-References: <c9f7090b2a58364998ad4a49cfdac379b905c7e9.1498687302.git.kkc6196@fb.com>
- <20A40B3C-E179-432B-B56F-BDAAF0CD2E1F@dilger.ca>
- <7CD38230-D961-428F-B2E9-2C0E28CAF442@fb.com>
- <20170629045940.GB5865@birch.djwong.org>
- <20170629143551.GB1651@fieldses.org>
- <20170629172528.GA5869@birch.djwong.org>
- <20170629183053.GA4178@fieldses.org>
- <20170629185022.GB4178@fieldses.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37178 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750896AbdGEQpm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Jul 2017 12:45:42 -0400
+Date: Wed, 5 Jul 2017 12:45:35 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 11/8] common/inject: refactor helpers to use new errortag
+ interface
+Message-ID: <20170705164535.GE51285@bfoster.bfoster>
+References: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
+ <20170630041308.GF5871@birch.djwong.org>
+ <20170705121610.GA51285@bfoster.bfoster>
+ <20170705162914.GB6300@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170629185022.GB4178@fieldses.org>
+In-Reply-To: <20170705162914.GB6300@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: William Koh <kkc6196@fb.com>, Andreas Dilger <adilger@dilger.ca>, Theodore Ts'o <tytso@mit.edu>, linux-ext4 <linux-ext4@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Jun 29, 2017 at 02:50:22PM -0400, J. Bruce Fields wrote:
-> On Thu, Jun 29, 2017 at 02:30:53PM -0400, J. Bruce Fields wrote:
-> > On Thu, Jun 29, 2017 at 10:25:28AM -0700, Darrick J. Wong wrote:
-> > > Was there ever a version of NFS (or more generally callers of the
-> > > exportfs code) that couldn't deal with i_generation in the file handle,
-> > > and therefore we invented this generation hack to work around the loss
-> > > of the generation information?
+On Wed, Jul 05, 2017 at 09:29:14AM -0700, Darrick J. Wong wrote:
+> On Wed, Jul 05, 2017 at 08:16:11AM -0400, Brian Foster wrote:
+> > On Thu, Jun 29, 2017 at 09:13:08PM -0700, Darrick J. Wong wrote:
+> > > Refactor the XFS error injection helpers to use the new errortag
+> > > interface to configure error injection.  If that isn't present, fall
+> > > back either to the xfs_io/ioctl based injection or the older sysfs
+> > > knobs.  Refactor existing testcases to use the new helpers.
 > > > 
-> > > There's a comment in xfs_fs_encode_fh about not supporting 64bit inodes
-> > > with subtree_check (which seems to require one ino/gen pair for the file
-> > > and a second pair for the file's parent) on NFSv2 because v2 doesn't
-> > > provide enough space for all the file handle information, but that's the
-> > > furthest I got with lazy-mining the git history. :)
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  common/inject |   62 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+> > >  tests/xfs/051 |    7 ++++--
+> > >  tests/xfs/141 |    5 +++--
+> > >  tests/xfs/196 |   17 ++++++----------
+> > >  4 files changed, 73 insertions(+), 18 deletions(-)
+> > > 
+> > > diff --git a/common/inject b/common/inject
+> > > index 8ecc290..1f12a2b 100644
+> > > --- a/common/inject
+> > > +++ b/common/inject
+> > > @@ -35,10 +35,50 @@ _require_error_injection()
+> > >  	esac
+> > >  }
+> > >  
+> > > +# Find a given xfs mount's errortag injection knob in sysfs
+> > > +_find_xfs_errortag_knob()
+> > > +{
+> > > +	dev="$1"
+> > > +	knob="$2"
+> > > +	shortdev="$(_short_dev "${dev}")"
+> > > +	tagfile="/sys/fs/xfs/${shortdev}/errortag/${knob}"
+> > > +
+> > > +	# Some of the new sysfs errortag knobs were previously available via
+> > > +	# another sysfs path.
+> > > +	case "${knob}" in
+> > > +	"log_bad_crc")
+> > > +		if [ ! -w "${tagfile}" ]; then
+> > > +			tagfile="/sys/fs/xfs/${shortdev}/log/log_badcrc_factor"
+> > > +		fi
+> > > +		;;
+> > > +	"drop_writes")
+> > > +		if [ ! -w "${tagfile}" ]; then
+> > > +			tagfile="/sys/fs/xfs/${shortdev}/drop_writes"
+> > > +		fi
+> > > +		if [ ! -w "${tagfile}" ]; then
+> > > +			tagfile="/sys/fs/xfs/${shortdev}/fail_writes"
+> > > +		fi
+> > > +		;;
+> > > +	"log_recovery_delay"|"bug_on_assert")
 > > 
-> > There's a comment in fs/ext4/super.c:ext4_nfs_get_inode
-> > 
-> > 	* Currently we don't know the generation for parent directory, so
-> > 	* a generation of 0 means "accept any"
-> > 
-> > But I don't see that used.
-> > 
-> > It was used once upon a time; I see it actually used in old 2.5 code in
-> > nfsd_get_dentry.  Hm.
+> > What's the purpose for having these here? I'm not sure that either is
+> > really related to error injection (which I find a little confusing
+> > despite that this code can be reused to generically send a value to a
+> > sysfs knob).
 > 
-> Oh, maybe it's here in fs/libfs.c:generic_fh_to_parent:
+> I was entertaining the thought of making all the debugging knobs
+> available through a single helper function, though I concede that these
+> two affect all of XFS and are thus a little weird.
 > 
-> 	switch (fh_type) {
-> 	case FILEID_INO32_GEN_PARENT:
-> 		inode = get_inode(sb, fid->i32.parent_ino,
->         			  (fh_len > 3 ? fid->i32.parent_gen : 0));
-> 		break;
-> 	}
+> Perhaps a second helper function for module-wide knobs?
 > 
-> I'm not sure under what conditions that filehandle encoding is used.
 
-The best guess I can come up with is the old nfs_fhbase_old style handles,
-which (afaict) do not carry parent i_generation?
+Yeah, though I'm not sure we need to factor the helpers based on whether
+a knob is per-fs or global. I was thinking about a generic set of
+helpers to handle sysfs knobs, but in poking around it appears we
+already have something like that. See xfs/264 and _set_fs_sysfs_attr()
+and friends. These currently expect a device param, but we should be
+able to fix that up to support either. Perhaps we could also reuse those
+to implement the error injection helpers?
 
---D
+Brian
 
+> > 
+> > > +		# These apply to all xfs filesystems
+> > > +		tagfile="/sys/fs/xfs/debug/${knob}"
+> > > +		;;
+> > > +	*)
+> > > +		;;
+> > > +	esac
+> > > +
+> > > +	echo "${tagfile}"
+> > > +}
+> > > +
+> > >  # Requires that xfs_io inject command knows about this error type
+> > >  _require_xfs_io_error_injection()
+> > >  {
+> > >  	type="$1"
+> > > +
+> > > +	# Can we find the error injection knobs via the new errortag
+> > > +	# configuration mechanism?
+> > > +	test -w "$(_find_xfs_errortag_knob "${TEST_DEV}" "${type}")" && return
+> > > +
+> > >  	_require_error_injection
+> > >  
+> > >  	# NOTE: We can't actually test error injection here because xfs
+> > ...
+> > > diff --git a/tests/xfs/196 b/tests/xfs/196
+> > > index e9b0649..5afc343 100755
+> > > --- a/tests/xfs/196
+> > > +++ b/tests/xfs/196
+> > ...
+> > > @@ -53,13 +54,7 @@ rm -f $seqres.full
+> > >  _supported_fs generic
+> > >  _supported_os Linux
+> > >  _require_scratch
+> > > -
+> > > -DROP_WRITES="drop_writes"
+> > > -# replace "drop_writes" with "fail_writes" for old kernel
+> > > -if [ -f /sys/fs/xfs/$(_short_dev $TEST_DEV)/fail_writes ];then
+> > > -	DROP_WRITES="fail_writes"
+> > > -fi
+> > > -_require_xfs_sysfs $(_short_dev $TEST_DEV)/${DROP_WRITES}
+> > > +_require_xfs_io_error_injection "drop_writes"
+> > >  
+> > >  _scratch_mkfs >/dev/null 2>&1
+> > >  _scratch_mount
+> > > @@ -72,7 +67,7 @@ bytes=$((64 * 1024))
+> > >  $XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
+> > >  
+> > >  # Enable write drops. All buffered writes are dropped from this point on.
+> > > -echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
+> > > +_scratch_inject_error "drop_writes"
+> > 
+> > I'd prefer to keep the parameter in this case (and below) just as a
+> > defense against future changes in the default value. Otherwise the rest
+> > looks pretty good.
 > 
-> --b.
+> Ok.
+> 
+> > 
+> > Brian
+> > 
+> > >  
+> > >  # Write every other 4k range to split the larger delalloc extent into many more
+> > >  # smaller extents. Use pwrite because with write failures enabled, all
+> > > @@ -89,7 +84,7 @@ for i in $(seq 4096 8192 $endoff); do
+> > >  	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
+> > >  done
+> > >  
+> > > -echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
+> > > +_scratch_inject_error "drop_writes" 0
+> > >  
+> > >  _scratch_cycle_mount
+> > >  $XFS_IO_PROG -c 'bmap -vp' $file | _filter_bmap
+> > > @@ -104,9 +99,9 @@ for offset in $(seq 0 100 500); do
+> > >  	$XFS_IO_PROG -fc "pwrite ${offset}m 100m" $file >> $seqres.full 2>&1
+> > >  
+> > >  	punchoffset=$((offset + 75))
+> > > -	echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
+> > > +	_scratch_inject_error "drop_writes"
+> > >  	$XFS_IO_PROG -c "pwrite ${punchoffset}m 4k" $file >> $seqres.full 2>&1
+> > > -	echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
+> > > +	_scratch_inject_error "drop_writes" 0
+> > >  done
+> > >  
+> > >  echo "Silence is golden."
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
