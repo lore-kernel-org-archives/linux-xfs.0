@@ -1,123 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39526 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50000 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752538AbdGCMLx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Jul 2017 08:11:53 -0400
-Date: Mon, 3 Jul 2017 08:11:51 -0400
+        id S1750909AbdGEMQN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Jul 2017 08:16:13 -0400
+Date: Wed, 5 Jul 2017 08:16:11 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/4] xfs: always verify the log tail during recovery
-Message-ID: <20170703121149.GB26149@bfoster.bfoster>
-References: <1498574436-57561-1-git-send-email-bfoster@redhat.com>
- <1498574436-57561-3-git-send-email-bfoster@redhat.com>
- <20170701044349.GU5874@birch.djwong.org>
+Subject: Re: [PATCH 11/8] common/inject: refactor helpers to use new errortag
+ interface
+Message-ID: <20170705121610.GA51285@bfoster.bfoster>
+References: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
+ <20170630041308.GF5871@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170701044349.GU5874@birch.djwong.org>
+In-Reply-To: <20170630041308.GF5871@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Fri, Jun 30, 2017 at 09:43:49PM -0700, Darrick J. Wong wrote:
-> On Tue, Jun 27, 2017 at 10:40:34AM -0400, Brian Foster wrote:
-> > Log tail verification currently only occurs when torn writes are
-> > detected at the head of the log. This was introduced because a
-> > change in the head block due to torn writes can lead to a change in
-> > the tail block (each log record header references the current tail)
-> > and the tail block should be verified before log recovery proceeds.
-> > 
-> > Tail corruption is possible outside of torn write scenarios,
-> > however. For example, partial log writes can be detected and cleared
-> > during the initial head/tail block discovery process. If the partial
-> > write coincides with a tail overwrite, the log tail is corrupted and
-> > recovery fails.
-> > 
-> > To facilitate correct handling of log tail overwites, update log
-> > recovery to always perform tail verification. This is necessary to
-> > detect potential tail overwrite conditions when torn writes may not
-> > have occurred. This changes normal (i.e., no torn writes) recovery
-> > behavior slightly to detect and return CRC related errors near the
-> > tail before actual recovery starts.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+On Thu, Jun 29, 2017 at 09:13:08PM -0700, Darrick J. Wong wrote:
+> Refactor the XFS error injection helpers to use the new errortag
+> interface to configure error injection.  If that isn't present, fall
+> back either to the xfs_io/ioctl based injection or the older sysfs
+> knobs.  Refactor existing testcases to use the new helpers.
 > 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  common/inject |   62 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+>  tests/xfs/051 |    7 ++++--
+>  tests/xfs/141 |    5 +++--
+>  tests/xfs/196 |   17 ++++++----------
+>  4 files changed, 73 insertions(+), 18 deletions(-)
 > 
-> > ---
-> >  fs/xfs/xfs_log_recover.c | 24 +-----------------------
-> >  1 file changed, 1 insertion(+), 23 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > index 9efcd12..269d5f9 100644
-> > --- a/fs/xfs/xfs_log_recover.c
-> > +++ b/fs/xfs/xfs_log_recover.c
-> > @@ -1183,31 +1183,9 @@ xlog_verify_head(
-> >  			ASSERT(0);
-> >  			return 0;
-> >  		}
-> > -
-> > -		/*
-> > -		 * Now verify the tail based on the updated head. This is
-> > -		 * required because the torn writes trimmed from the head could
-> > -		 * have been written over the tail of a previous record. Return
-> > -		 * any errors since recovery cannot proceed if the tail is
-> > -		 * corrupt.
-> > -		 *
-> > -		 * XXX: This leaves a gap in truly robust protection from torn
-> > -		 * writes in the log. If the head is behind the tail, the tail
-> > -		 * pushes forward to create some space and then a crash occurs
-> > -		 * causing the writes into the previous record's tail region to
-> > -		 * tear, log recovery isn't able to recover.
-> > -		 *
-> > -		 * How likely is this to occur? If possible, can we do something
-> > -		 * more intelligent here? Is it safe to push the tail forward if
-> > -		 * we can determine that the tail is within the range of the
-> > -		 * torn write (e.g., the kernel can only overwrite the tail if
-> > -		 * it has actually been pushed forward)? Alternatively, could we
-> > -		 * somehow prevent this condition at runtime?
-> > -		 */
-> > -		error = xlog_verify_tail(log, *head_blk, *tail_blk);
-> >  	}
-> >  
-> > -	return error;
-> > +	return xlog_verify_tail(log, *head_blk, *tail_blk);
-> 
-> What if (error != 0 && error != -EFSBADCRC) here?  If the CRC checking log
-> recovery pass failed due to some other reason (EIO, ENOMEM, etc.) then is
-> there really a point to verifying the tail, vs. bubbling the error up and
-> (I presume) failing the mount?
-> 
+> diff --git a/common/inject b/common/inject
+> index 8ecc290..1f12a2b 100644
+> --- a/common/inject
+> +++ b/common/inject
+> @@ -35,10 +35,50 @@ _require_error_injection()
+>  	esac
+>  }
+>  
+> +# Find a given xfs mount's errortag injection knob in sysfs
+> +_find_xfs_errortag_knob()
+> +{
+> +	dev="$1"
+> +	knob="$2"
+> +	shortdev="$(_short_dev "${dev}")"
+> +	tagfile="/sys/fs/xfs/${shortdev}/errortag/${knob}"
+> +
+> +	# Some of the new sysfs errortag knobs were previously available via
+> +	# another sysfs path.
+> +	case "${knob}" in
+> +	"log_bad_crc")
+> +		if [ ! -w "${tagfile}" ]; then
+> +			tagfile="/sys/fs/xfs/${shortdev}/log/log_badcrc_factor"
+> +		fi
+> +		;;
+> +	"drop_writes")
+> +		if [ ! -w "${tagfile}" ]; then
+> +			tagfile="/sys/fs/xfs/${shortdev}/drop_writes"
+> +		fi
+> +		if [ ! -w "${tagfile}" ]; then
+> +			tagfile="/sys/fs/xfs/${shortdev}/fail_writes"
+> +		fi
+> +		;;
+> +	"log_recovery_delay"|"bug_on_assert")
 
-Probably not. Presumably, the full recovery attempt would hit the same
-error. I suppose that's not necessarily guaranteed with transient
-errors, though, so I think it's probably better and more deterministic
-to stop here. I wouldn't want us to get into situations where a torn
-write had occurred, but the torn write checking happened to ENOMEM while
-the full recovery didn't and the end result appears as a log corruption
-rather than something that should have been fixed up.
+What's the purpose for having these here? I'm not sure that either is
+really related to error injection (which I find a little confusing
+despite that this code can be reused to generically send a value to a
+sysfs knob).
 
-The -EFSBADCRC hunk above resets error = 0 when it attempts to fix up
-the head. Therefore, we can probably add a 'if (error) return error;'
-check before the tail verification to ensure any unrelated problems
-at the head continue to fail the mount.
+> +		# These apply to all xfs filesystems
+> +		tagfile="/sys/fs/xfs/debug/${knob}"
+> +		;;
+> +	*)
+> +		;;
+> +	esac
+> +
+> +	echo "${tagfile}"
+> +}
+> +
+>  # Requires that xfs_io inject command knows about this error type
+>  _require_xfs_io_error_injection()
+>  {
+>  	type="$1"
+> +
+> +	# Can we find the error injection knobs via the new errortag
+> +	# configuration mechanism?
+> +	test -w "$(_find_xfs_errortag_knob "${TEST_DEV}" "${type}")" && return
+> +
+>  	_require_error_injection
+>  
+>  	# NOTE: We can't actually test error injection here because xfs
+...
+> diff --git a/tests/xfs/196 b/tests/xfs/196
+> index e9b0649..5afc343 100755
+> --- a/tests/xfs/196
+> +++ b/tests/xfs/196
+...
+> @@ -53,13 +54,7 @@ rm -f $seqres.full
+>  _supported_fs generic
+>  _supported_os Linux
+>  _require_scratch
+> -
+> -DROP_WRITES="drop_writes"
+> -# replace "drop_writes" with "fail_writes" for old kernel
+> -if [ -f /sys/fs/xfs/$(_short_dev $TEST_DEV)/fail_writes ];then
+> -	DROP_WRITES="fail_writes"
+> -fi
+> -_require_xfs_sysfs $(_short_dev $TEST_DEV)/${DROP_WRITES}
+> +_require_xfs_io_error_injection "drop_writes"
+>  
+>  _scratch_mkfs >/dev/null 2>&1
+>  _scratch_mount
+> @@ -72,7 +67,7 @@ bytes=$((64 * 1024))
+>  $XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
+>  
+>  # Enable write drops. All buffered writes are dropped from this point on.
+> -echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
+> +_scratch_inject_error "drop_writes"
+
+I'd prefer to keep the parameter in this case (and below) just as a
+defense against future changes in the default value. Otherwise the rest
+looks pretty good.
 
 Brian
 
-> --D
-> 
-> >  }
-> >  
-> >  /*
-> > -- 
-> > 2.7.5
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  
+>  # Write every other 4k range to split the larger delalloc extent into many more
+>  # smaller extents. Use pwrite because with write failures enabled, all
+> @@ -89,7 +84,7 @@ for i in $(seq 4096 8192 $endoff); do
+>  	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
+>  done
+>  
+> -echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
+> +_scratch_inject_error "drop_writes" 0
+>  
+>  _scratch_cycle_mount
+>  $XFS_IO_PROG -c 'bmap -vp' $file | _filter_bmap
+> @@ -104,9 +99,9 @@ for offset in $(seq 0 100 500); do
+>  	$XFS_IO_PROG -fc "pwrite ${offset}m 100m" $file >> $seqres.full 2>&1
+>  
+>  	punchoffset=$((offset + 75))
+> -	echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
+> +	_scratch_inject_error "drop_writes"
+>  	$XFS_IO_PROG -c "pwrite ${punchoffset}m 4k" $file >> $seqres.full 2>&1
+> -	echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
+> +	_scratch_inject_error "drop_writes" 0
+>  done
+>  
+>  echo "Silence is golden."
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
