@@ -1,59 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26544 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751851AbdGAQiN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Jul 2017 12:38:13 -0400
-Date: Sat, 1 Jul 2017 09:38:02 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Re: Any tips for moving to reflink?
-Message-ID: <20170701163802.GX5874@birch.djwong.org>
-References: <20170701023529.GP5874@birch.djwong.org>
- <03eb6ac0-6c6e-0494-b008-25a187b43e12@enkore.de>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:33190 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753088AbdGFX2b (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jul 2017 19:28:31 -0400
+Date: Fri, 7 Jul 2017 09:28:03 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Weird xfs_repair error
+Message-ID: <20170706232803.GF17762@dastard>
+References: <20170706153020.0ad6dd47@harpe.intellique.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <03eb6ac0-6c6e-0494-b008-25a187b43e12@enkore.de>
+In-Reply-To: <20170706153020.0ad6dd47@harpe.intellique.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Marian Beermann <public@enkore.de>
-Cc: linux-xfs@vger.kernel.org
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: "'linux-xfs@vger.kernel.org'" <linux-xfs@vger.kernel.org>
 
-On Sat, Jul 01, 2017 at 01:41:43PM +0200, Marian Beermann wrote:
-> Hi
+On Thu, Jul 06, 2017 at 03:30:20PM +0200, Emmanuel Florac wrote:
 > 
-> > > I'm planning to use this reflink feature for instant local snapshots
-> > > and then use my backup software of choice, borg, to keep a long time
-> > > history of my work on a remote server. Since borg stores data in a
-> > > dedup fashion I can also backup the reflink snapshots and they won't
-> > > take additional space. The only drawback is that today borg need to
-> > > hash all the files found in a reflink directory in order to find out
-> > > about dedup blocks. I asked a question on the borg mailing list
-> > > https://github.com/borgbackup/borg/issues/2743 and apparently it
-> > > won't be an issue to add a feature to support XFS in order to
-> > > identify the physical extents. Is rmapbt required for that?
-> >
-> > borgbackup will probably need to call the GETFSMAP ioctl, which won't
-> > land until 4.12.  On xfs, rmapbt is needed to supply data block
-> > ownership info, which is what borgbackup (and bees, and...) say they
-> > want to be smarter about dedup.
+> After a RAID controller went bananas, I encountered an XFS corruption
+> on a filesystem. Weirdly, the corruption seems to be mostly located in
+> lost+found.
 > 
-> My understanding so far was that FIEMAP would be sufficient to query the
-> extents associated with a file. Shouldn't this be sufficient to know
-> whether two files on the same file system refer to the same data?
-
-Not necessarily -- FIEMAP provides physical offset into a device but
-does not actually identify which one, which is a problem on multi-device
-filesystems such as btrfs and XFS.  IIRC btrfs creates a virtual
-physical offset space consisting of all the devices one after the other,
-but then you have to know /that/ mapping too.  GETFSMAP by contrast
-tells you which device and where on that device.
-
---D
-
+> (I'm currently working on a metadump'd image of course, not the real
+> thing; there are 90TB of data to be hopefully salvaged in there).
 > 
-> Cheers, Marian
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> "ls /mnt/rescue/lost+found" gave this:
+> 
+> XFS (loop0): metadata I/O error: block 0x22b03f490
+> ("xfs_trans_read_buf_map") error 117 numblks 16 
+> XFS (loop0): xfs_imap_to_bp: xfs_trans_read_buf() returned error 117.
+> XFS (loop0): Corruption detected. Unmount and run xfs_repair 
+> XFS (loop0): Corruption detected. Unmount and run xfs_repair
+> 
+> I've run xfs_repair 4.9 on the xfs_mdrestored image. It dumps an insane
+> lot of errors (the output log is 65MB)  and ends with this very strange
+> message:
+> 
+> disconnected inode 26417467, moving to lost+found
+> disconnected inode 26417468, moving to lost+found
+> disconnected inode 26417469, moving to lost+found
+> disconnected inode 26417470, moving to lost+found
+> 
+> fatal error -- name create failed in lost+found (117), filesystem may
+> be out of space
+
+Error 117. That's EFSCORRUPTED, not ENOSPC.  IOWs, lost+found was
+corrupted as it was being modified by xfs_repair.
+
+> Even stranger, after mounting back the image, there is no lost+found
+> anywhere to be found! However the filesystem has lots of free space and
+> free inodes, how come?
+
+Because lost+found was corrupted.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
