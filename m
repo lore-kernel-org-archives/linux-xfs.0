@@ -1,127 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:33112 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751700AbdGETHm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2017 15:07:42 -0400
-Received: by mail-qt0-f196.google.com with SMTP id c20so31778112qte.0
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Jul 2017 12:07:42 -0700 (PDT)
-From: Paulo Alcantara <pcacjr@gmail.com>
-Subject: [PATCH] xfsdump: Fix memory leak
-Date: Wed,  5 Jul 2017 16:06:56 -0300
-Message-Id: <20170705190656.9106-1-pcacjr@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57922 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752068AbdGFNsH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Jul 2017 09:48:07 -0400
+Date: Thu, 6 Jul 2017 09:48:05 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Weird xfs_repair error
+Message-ID: <20170706134801.GA56732@bfoster.bfoster>
+References: <20170706153020.0ad6dd47@harpe.intellique.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170706153020.0ad6dd47@harpe.intellique.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Paulo Alcantara <pcacjr@gmail.com>
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: "'linux-xfs@vger.kernel.org'" <linux-xfs@vger.kernel.org>
 
-This patch fixes the following memory leak reported by valgrind:
+On Thu, Jul 06, 2017 at 03:30:20PM +0200, Emmanuel Florac wrote:
+> 
+> After a RAID controller went bananas, I encountered an XFS corruption
+> on a filesystem. Weirdly, the corruption seems to be mostly located in
+> lost+found.
+> 
+> (I'm currently working on a metadump'd image of course, not the real
+> thing; there are 90TB of data to be hopefully salvaged in there).
+> 
+> "ls /mnt/rescue/lost+found" gave this:
+> 
+> XFS (loop0): metadata I/O error: block 0x22b03f490
+> ("xfs_trans_read_buf_map") error 117 numblks 16 
+> XFS (loop0): xfs_imap_to_bp: xfs_trans_read_buf() returned error 117.
+> XFS (loop0): Corruption detected. Unmount and run xfs_repair 
+> XFS (loop0): Corruption detected. Unmount and run xfs_repair
+> 
+> I've run xfs_repair 4.9 on the xfs_mdrestored image. It dumps an insane
+> lot of errors (the output log is 65MB)  and ends with this very strange
+> message:
+> 
+> disconnected inode 26417467, moving to lost+found
+> disconnected inode 26417468, moving to lost+found
+> disconnected inode 26417469, moving to lost+found
+> disconnected inode 26417470, moving to lost+found
+> 
+> fatal error -- name create failed in lost+found (117), filesystem may
+> be out of space
+> 
+> Even stranger, after mounting back the image, there is no lost+found
+> anywhere to be found! However the filesystem has lots of free space and
+> free inodes, how come?
+> 
 
-==9198==
-==9198== HEAP SUMMARY:
-==9198==     in use at exit: 272,248 bytes in 13 blocks
-==9198==   total heap usage: 629 allocs, 616 frees, 354,203 bytes
-allocated
-==9198==
-==9198== 4,096 bytes in 1 blocks are definitely lost in loss record 12
-of 13
-==9198==    at 0x4C2FA50: calloc (vg_replace_malloc.c:711)
-==9198==    by 0x415801: global_hdr_alloc (global.c:80)
-==9198==    by 0x403D12: main (main.c:494)
-==9198==
-==9198== LEAK SUMMARY:
-==9198==    definitely lost: 4,096 bytes in 1 blocks
-==9198==    indirectly lost: 0 bytes in 0 blocks
-==9198==      possibly lost: 0 bytes in 0 blocks
-==9198==    still reachable: 268,152 bytes in 12 blocks
-==9198==         suppressed: 0 bytes in 0 blocks
-==9198== Reachable blocks (those to which a pointer was found) are not
-shown.
-==9198== To see them, rerun with: --leak-check=full
---show-leak-kinds=all
-==9198==
-==9198== For counts of detected and suppressed errors, rerun with: -v
-==9198== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)
+Did you originally run xfs_repair using the -n option? I'd guess not if
+it ultimately failed making a modification, but if so, something to be
+aware of is that it skips warning about a dirty log and potentially can
+report much more corruption than after a log recovery occurs. It might
+be worth running after an attempted log recovery.
 
-Command was:
-    # xfsdump -f /dev/vdb
+Otherwise, I'd be curious about the state of the fs after the above
+error. Does 'xfs_repair -n' continue to report errors?
 
-Signed-off-by: Paulo Alcantara <pcacjr@gmail.com>
----
- common/main.c | 26 +++++++++++++++++++-------
- 1 file changed, 19 insertions(+), 7 deletions(-)
+Also the above suggests that lost+found existed (in a corrupted state)
+prior to the initial repair attempt, yes? If so, it might be interesting
+to identify the inode # of lost+found to follow what xfs_repair does to
+that inode during the initial run (e.g., if lost+found is corrupted and
+is attempted to be used before it is fixed up or something of that
+nature).
 
-diff --git a/common/main.c b/common/main.c
-index 3848499..b34e974 100644
---- a/common/main.c
-+++ b/common/main.c
-@@ -163,6 +163,7 @@ main( int argc, char *argv[] )
- 	bool_t ok;
- 	/* REFERENCED */
- 	int rval;
-+	int err;
- 
- 	/* sanity checks
- 	 */
-@@ -564,7 +565,8 @@ main( int argc, char *argv[] )
- 	ok = content_init( argc, argv, vmsz / VMSZ_PER );
- #endif /* RESTORE */
- 	if ( ! ok ) {
--		return mlog_exit(EXIT_ERROR, RV_INIT);
-+		err = mlog_exit(EXIT_ERROR, RV_INIT);
-+		goto err_free;
- 	}
- 
- 	/* if in a pipeline, go single-threaded with just one stream.
-@@ -587,11 +589,13 @@ main( int argc, char *argv[] )
- 				  ( global_hdr_t * )0 );
- #endif /* RESTORE */
- 		if ( ! ok ) {
--			return mlog_exit(EXIT_ERROR, RV_INIT);
-+			err = mlog_exit(EXIT_ERROR, RV_INIT);
-+			goto err_free;
- 		}
- 		ok = drive_init3( );
- 		if ( ! ok ) {
--			return mlog_exit(EXIT_ERROR, RV_INIT);
-+			err = mlog_exit(EXIT_ERROR, RV_INIT);
-+			goto err_free;
- 		}
- #ifdef DUMP
- 		exitcode = content_stream_dump( 0 );
-@@ -602,12 +606,13 @@ main( int argc, char *argv[] )
- 		if ( exitcode != EXIT_NORMAL ) {
- 			( void )content_complete( );
- 						/* for cleanup side-effect */
--			return mlog_exit(exitcode, RV_UNKNOWN);
-+			err = mlog_exit(exitcode, RV_UNKNOWN);
- 		} else if ( content_complete( )) {
--			return mlog_exit(EXIT_NORMAL, RV_OK);
-+			err = mlog_exit(EXIT_NORMAL, RV_OK);
- 		} else {
--			return mlog_exit(EXIT_INTERRUPT, RV_UNKNOWN);
-+			err = mlog_exit(EXIT_INTERRUPT, RV_UNKNOWN);
- 		}
-+		goto err_free;
- 	}
- 
- 	/* used to skip to end if errors occur during any
-@@ -873,7 +878,14 @@ main( int argc, char *argv[] )
- 				mlog_exit_hint(RV_INCOMPLETE);
- 		}
- 	}
--	return mlog_exit(exitcode, RV_UNKNOWN);
-+
-+	err = mlog_exit(exitcode, RV_UNKNOWN);
-+
-+err_free:
-+#ifdef DUMP
-+	global_hdr_free( gwhdrtemplatep );
-+#endif /* DUMP */
-+	return err;
- }
- 
- #define ULO( f, o )	fprintf( stderr,		\
--- 
-2.9.4
+Brian
+
+> df -i
+> Sys. fich.                    Inodes  IUtil.     ILibre IUti% Monté sur
+> rootfs                             0       0          0     - /
+> /dev/root                          0       0          0     - /
+> tmpfs                        2058692     990    2057702    1% /run
+> tmpfs                        2058692       6    2058686    1% /run/lock
+> tmpfs                        2058692    1623    2057069    1% /dev
+> tmpfs                        2058692       3    2058689    1% /run/shm
+> guitare:/mnt/raid/partage   33554432  305069   33249363    1% /mnt/qnap1
+> /dev/loop0                4914413568 5199932 4909213636    1% /mnt/rescue
+> 
+> df
+> /dev/loop0                122858252288 88827890868 34030361420  73% /mnt/rescue
+> 
+> I'll give a shot to a newer version of xfs_repair just in case...
+> 
+> -- 
+> ------------------------------------------------------------------------
+> Emmanuel Florac     |   Direction technique
+>                     |   Intellique
+>                     |	<eflorac@intellique.com>
+>                     |   +33 1 78 94 84 02
+> ------------------------------------------------------------------------
+
 
