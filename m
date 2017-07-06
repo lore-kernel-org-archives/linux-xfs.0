@@ -1,175 +1,202 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45282 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751856AbdGEQ3Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2017 12:29:24 -0400
-Date: Wed, 5 Jul 2017 09:29:14 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/8] common/inject: refactor helpers to use new errortag
- interface
-Message-ID: <20170705162914.GB6300@magnolia>
-References: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
- <20170630041308.GF5871@birch.djwong.org>
- <20170705121610.GA51285@bfoster.bfoster>
+Received: from mailrelay.collogia.de ([194.8.207.98]:59589 "HELO
+        mailrelay.collogia.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1750898AbdGFEpq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jul 2017 00:45:46 -0400
+From: Markus Stockhausen <stockhausen@collogia.de>
+Subject: AW: XFS hang - 4.4.73 longterm
+Date: Thu, 6 Jul 2017 04:45:43 +0000
+Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD173010E027537@EXCHANGE.collogia.de>
+References: <12EF8D94C6F8734FB2FF37B9FBEDD173010E02746C@EXCHANGE.collogia.de>
+ <20170706002436.GA5068@magnolia>
+In-Reply-To: <20170706002436.GA5068@magnolia>
+Content-Language: de-DE
+Content-Type: multipart/mixed;
+        boundary="----=_NextPartTM-000-3cd04b0a-4ec3-4db4-a09e-3ff21e9c8b09"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170705121610.GA51285@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: "'Darrick J. Wong'" <darrick.wong@oracle.com>
+Cc: "'linux-xfs@vger.kernel.org'" <linux-xfs@vger.kernel.org>
 
-On Wed, Jul 05, 2017 at 08:16:11AM -0400, Brian Foster wrote:
-> On Thu, Jun 29, 2017 at 09:13:08PM -0700, Darrick J. Wong wrote:
-> > Refactor the XFS error injection helpers to use the new errortag
-> > interface to configure error injection.  If that isn't present, fall
-> > back either to the xfs_io/ioctl based injection or the older sysfs
-> > knobs.  Refactor existing testcases to use the new helpers.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  common/inject |   62 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
-> >  tests/xfs/051 |    7 ++++--
-> >  tests/xfs/141 |    5 +++--
-> >  tests/xfs/196 |   17 ++++++----------
-> >  4 files changed, 73 insertions(+), 18 deletions(-)
-> > 
-> > diff --git a/common/inject b/common/inject
-> > index 8ecc290..1f12a2b 100644
-> > --- a/common/inject
-> > +++ b/common/inject
-> > @@ -35,10 +35,50 @@ _require_error_injection()
-> >  	esac
-> >  }
-> >  
-> > +# Find a given xfs mount's errortag injection knob in sysfs
-> > +_find_xfs_errortag_knob()
-> > +{
-> > +	dev="$1"
-> > +	knob="$2"
-> > +	shortdev="$(_short_dev "${dev}")"
-> > +	tagfile="/sys/fs/xfs/${shortdev}/errortag/${knob}"
-> > +
-> > +	# Some of the new sysfs errortag knobs were previously available via
-> > +	# another sysfs path.
-> > +	case "${knob}" in
-> > +	"log_bad_crc")
-> > +		if [ ! -w "${tagfile}" ]; then
-> > +			tagfile="/sys/fs/xfs/${shortdev}/log/log_badcrc_factor"
-> > +		fi
-> > +		;;
-> > +	"drop_writes")
-> > +		if [ ! -w "${tagfile}" ]; then
-> > +			tagfile="/sys/fs/xfs/${shortdev}/drop_writes"
-> > +		fi
-> > +		if [ ! -w "${tagfile}" ]; then
-> > +			tagfile="/sys/fs/xfs/${shortdev}/fail_writes"
-> > +		fi
-> > +		;;
-> > +	"log_recovery_delay"|"bug_on_assert")
-> 
-> What's the purpose for having these here? I'm not sure that either is
-> really related to error injection (which I find a little confusing
-> despite that this code can be reused to generically send a value to a
-> sysfs knob).
 
-I was entertaining the thought of making all the debugging knobs
-available through a single helper function, though I concede that these
-two affect all of XFS and are thus a little weird.
+This is a multi-part message in MIME format.
 
-Perhaps a second helper function for module-wide knobs?
+------=_NextPartTM-000-3cd04b0a-4ec3-4db4-a09e-3ff21e9c8b09
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> > +		# These apply to all xfs filesystems
-> > +		tagfile="/sys/fs/xfs/debug/${knob}"
-> > +		;;
-> > +	*)
-> > +		;;
-> > +	esac
-> > +
-> > +	echo "${tagfile}"
-> > +}
-> > +
-> >  # Requires that xfs_io inject command knows about this error type
-> >  _require_xfs_io_error_injection()
-> >  {
-> >  	type="$1"
-> > +
-> > +	# Can we find the error injection knobs via the new errortag
-> > +	# configuration mechanism?
-> > +	test -w "$(_find_xfs_errortag_knob "${TEST_DEV}" "${type}")" && return
-> > +
-> >  	_require_error_injection
-> >  
-> >  	# NOTE: We can't actually test error injection here because xfs
-> ...
-> > diff --git a/tests/xfs/196 b/tests/xfs/196
-> > index e9b0649..5afc343 100755
-> > --- a/tests/xfs/196
-> > +++ b/tests/xfs/196
-> ...
-> > @@ -53,13 +54,7 @@ rm -f $seqres.full
-> >  _supported_fs generic
-> >  _supported_os Linux
-> >  _require_scratch
-> > -
-> > -DROP_WRITES="drop_writes"
-> > -# replace "drop_writes" with "fail_writes" for old kernel
-> > -if [ -f /sys/fs/xfs/$(_short_dev $TEST_DEV)/fail_writes ];then
-> > -	DROP_WRITES="fail_writes"
-> > -fi
-> > -_require_xfs_sysfs $(_short_dev $TEST_DEV)/${DROP_WRITES}
-> > +_require_xfs_io_error_injection "drop_writes"
-> >  
-> >  _scratch_mkfs >/dev/null 2>&1
-> >  _scratch_mount
-> > @@ -72,7 +67,7 @@ bytes=$((64 * 1024))
-> >  $XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
-> >  
-> >  # Enable write drops. All buffered writes are dropped from this point on.
-> > -echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> > +_scratch_inject_error "drop_writes"
-> 
-> I'd prefer to keep the parameter in this case (and below) just as a
-> defense against future changes in the default value. Otherwise the rest
-> looks pretty good.
+> Von: linux-xfs-owner@vger.kernel.org [mailto:linux-xfs-owner@vger.kernel.=
+org] Im Auftrag von Darrick J. Wong
+> Gesendet: Donnerstag, 6. Juli 2017 02:25
+> An: Markus Stockhausen
+> Cc: 'linux-xfs@vger.kernel.org'
+> Betreff: Re: XFS hang - 4.4.73 longterm
+>
+> On Wed, Jul 05, 2017 at 07:19:28PM +0000, Markus Stockhausen wrote:
+> > Hi,
+> >=20
+> > we are using a NFS/XFS fileserver and installed the current 4.4.73 long=
+term kernel.
+> > From time to time (reason currently unidentified) it spits blocked for=
+=20
+> > 120s messages Like the attached ones. Any ideas what might be the=20
+> > reason? I can reproduce it With some effort. So in case you want some m=
+ore logging don't hesitate to ask.
+> >=20
+> > For more details see=20
+> > https://bugzilla.kernel.org/show_bug.cgi?id=3D196259
+> >=20
+> > [1248134.772889] INFO: task nfsd:1623 blocked for more than 120 seconds=
+.
+> > [1248134.772895]       Tainted: G          I     4.4.73-2.el7.centos.x8=
+6_64 #1
+> > [1248134.772897] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" dis=
+ables this message.
+> > [1248134.772899] nfsd            D ffff880bbf08b9c8     0  1623      2 =
+0x00000080
+> > [1248134.772905]  ffff880bbf08b9c8 ffff880be0875400 ffff880bbf080000=20
+> > ffff880bbf08c000 [1248134.772908]  0000000000000000 7fffffffffffffff=20
+> > ffff880bbf08bb38 ffffffff816fbb40 [1248134.772911]  ffff880bbf08b9e0=20
+> > ffffffff816fb2d5 ffff880c176d6d00 ffff880bbf08ba88 [1248134.772915] Cal=
+l Trace:
+> > [1248134.772923]  [<ffffffff816fbb40>] ? bit_wait+0x50/0x50=20
+> > [1248134.772926]  [<ffffffff816fb2d5>] schedule+0x35/0x80=20
+> > [1248134.772929]  [<ffffffff816fdfe7>] schedule_timeout+0x237/0x2d0=20
+> > [1248134.772935]  [<ffffffff8161ee0e>] ? ip_output+0x6e/0xe0=20
+> > [1248134.772938]  [<ffffffff8161e502>] ? __ip_local_out+0x92/0x110=20
+> > [1248134.772941]  [<ffffffff810f303a>] ? ktime_get+0x3a/0x90=20
+> > [1248134.772944]  [<ffffffff816fbb40>] ? bit_wait+0x50/0x50=20
+> > [1248134.772947]  [<ffffffff816faa46>] io_schedule_timeout+0xa6/0x110=20
+> > [1248134.772950]  [<ffffffff816fbb5b>] bit_wait_io+0x1b/0x60=20
+> > [1248134.772952]  [<ffffffff816fb8ee>] __wait_on_bit_lock+0x4e/0xb0=20
+> > [1248134.772958]  [<ffffffff81189759>] __lock_page+0xb9/0xe0
+>
+> Waiting for a page lock with ILOCK held...
+>
+> > [1248134.772962]  [<ffffffff810c2910>] ?=20
+> > autoremove_wake_function+0x40/0x40
+> > [1248134.773007]  [<ffffffffa08d7c70>]=20
+> > xfs_find_get_desired_pgoff.isra.10+0x1e0/0x2d0 [xfs] [1248134.773039] =
+=20
+> > [<ffffffffa08d7f9d>] xfs_seek_hole_data+0x23d/0x2c0 [xfs]=20
+> > [1248134.773054]  [<ffffffffa05d942c>] ?=20
+> > nfs4_preprocess_stateid_op+0x11c/0x430 [nfsd] [1248134.773086] =20
+> > [<ffffffffa08d803c>] xfs_file_llseek+0x1c/0x40 [xfs] [1248134.773090] =
+=20
+> > [<ffffffff8120633e>] vfs_llseek+0x2e/0x30 [1248134.773101] =20
+> > [<ffffffffa05c6080>] nfsd4_seek+0x80/0xe0 [nfsd] [1248134.773112] =20
+> > [<ffffffffa05c8416>] nfsd4_proc_compound+0x3b6/0x710 [nfsd]=20
+> > [1248134.773121]  [<ffffffffa05b4f2e>] nfsd_dispatch+0xce/0x270 [nfsd]=
+=20
+> > [1248134.773142]  [<ffffffffa01a5134>] svc_process_common+0x454/0x720=20
+> > [sunrpc] [1248134.773151]  [<ffffffffa05b4880>] ?=20
+> > nfsd_destroy+0x60/0x60 [nfsd] [1248134.773168]  [<ffffffffa01a5505>]=20
+> > svc_process+0x105/0x1c0 [sunrpc] [1248134.773177] =20
+> > [<ffffffffa05b4970>] nfsd+0xf0/0x160 [nfsd] [1248134.773180] =20
+> > [<ffffffff8109d755>] kthread+0xe5/0x100 [1248134.773183] =20
+> > [<ffffffff8109d670>] ? kthread_park+0x60/0x60 [1248134.773187] =20
+> > [<ffffffff816ff1cf>] ret_from_fork+0x3f/0x70 [1248134.773190] =20
+>  > [<ffffffff8109d670>] ? kthread_park+0x60/0x60 [1248134.773193]=20
+> > INFO: task nfsd:1624 blocked for more than 120 seconds.
+> > [1248134.773195]       Tainted: G          I     4.4.73-2.el7.centos.x8=
+6_64 #1
+> > [1248134.773197] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" dis=
+ables this message.
+> > [1248134.773198] nfsd            D ffff880bbf1a7738     0  1624      2 =
+0x00000080
+> > [1248134.773202]  ffff880bbf1a7738 ffffffff81a79500 ffff880bbf081500=20
+> > ffff880bbf1a8000 [1248134.773205]  ffff8802334477a8 ffff880233447790=20
+> > ffffffff00000000 ffffffff00000001 [1248134.773208]  ffff880bbf1a7750=20
+> > ffffffff816fb2d5 ffff880bbf081500 ffff880bbf1a77e0 [1248134.773211] Cal=
+l Trace:
+> > [1248134.773214]  [<ffffffff816fb2d5>] schedule+0x35/0x80=20
+> > [1248134.773217]  [<ffffffff816fdab5>]=20
+> > rwsem_down_write_failed+0x1f5/0x320
+> > [1248134.773243]  [<ffffffffa089e722>] ?=20
+> > xfs_bmap_search_extents+0x72/0xe0 [xfs] [1248134.773273] =20
+> > [<ffffffffa08cd212>] ? __xfs_get_blocks+0x162/0x800 [xfs]=20
+> > [1248134.773276]  [<ffffffff81346433>]=20
+> > call_rwsem_down_write_failed+0x13/0x20
+> > [1248134.773279]  [<ffffffff816fd35d>] ? down_write+0x2d/0x40=20
+> > [1248134.773311]  [<ffffffffa08e459a>] xfs_ilock+0xea/0x130 [xfs]
+>
+>...and waiting for the ILOCK with page lock held.
+>
+> This is the known deadlock in SEEK_HOLE/SEEK_DATA; I have patches queued =
+to fix it in 4.13, as soon as the dust settles and I send the pull req.
 
-Ok.
+Short, precise, frightening.
 
-> 
-> Brian
-> 
-> >  
-> >  # Write every other 4k range to split the larger delalloc extent into many more
-> >  # smaller extents. Use pwrite because with write failures enabled, all
-> > @@ -89,7 +84,7 @@ for i in $(seq 4096 8192 $endoff); do
-> >  	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
-> >  done
-> >  
-> > -echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> > +_scratch_inject_error "drop_writes" 0
-> >  
-> >  _scratch_cycle_mount
-> >  $XFS_IO_PROG -c 'bmap -vp' $file | _filter_bmap
-> > @@ -104,9 +99,9 @@ for offset in $(seq 0 100 500); do
-> >  	$XFS_IO_PROG -fc "pwrite ${offset}m 100m" $file >> $seqres.full 2>&1
-> >  
-> >  	punchoffset=$((offset + 75))
-> > -	echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> > +	_scratch_inject_error "drop_writes"
-> >  	$XFS_IO_PROG -c "pwrite ${punchoffset}m 4k" $file >> $seqres.full 2>&1
-> > -	echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> > +	_scratch_inject_error "drop_writes" 0
-> >  done
-> >  
-> >  echo "Silence is golden."
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Can you advise what will the best option to avoid that error.=20
+First things that come to my mind would be:
+
+- get back to original 3.10 stable kernel from CentOS Distro=20
+- lower NFS mount version
+- Maybe remove some single patch that introduced the error?
+
+Thanks in advance.
+
+Markus
+------=_NextPartTM-000-3cd04b0a-4ec3-4db4-a09e-3ff21e9c8b09
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="InterScan_Disclaimer.txt"
+
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
+
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
+
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
+
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
+
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+President of the supervisory board:
+Hans Kristian Langva
+
+Registry office: district court Cologne
+Register number: HRB 52 497
+
+****************************************************************************
+
+------=_NextPartTM-000-3cd04b0a-4ec3-4db4-a09e-3ff21e9c8b09--
