@@ -1,140 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56392 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:33920 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751893AbdGGMBo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Jul 2017 08:01:44 -0400
-Date: Fri, 7 Jul 2017 08:01:35 -0400
+        id S1750938AbdGGMET (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Jul 2017 08:04:19 -0400
+Date: Fri, 7 Jul 2017 08:01:46 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] libxfs: rename MAXPATHLEN to XFS_SYMLINK_MAXLEN
-Message-ID: <20170707120133.GB61756@bfoster.bfoster>
-References: <20170707032958.GB4103@magnolia>
- <20170707035543.GF4103@magnolia>
+Subject: Re: [PATCH] mkfs: set inode alignment and cluster size for minimum
+ log size estimation
+Message-ID: <20170707120144.GD61756@bfoster.bfoster>
+References: <20170707033138.GC4103@magnolia>
+ <20170707035152.GE4103@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170707035543.GF4103@magnolia>
+In-Reply-To: <20170707035152.GE4103@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Jul 06, 2017 at 08:55:43PM -0700, Darrick J. Wong wrote:
-> XFS has a maximum symlink target length of 1024 bytes; this is a
-> holdover from the Irix days.  Unfortunately, the constant establishing
-> this was 'MAXPATHLEN', and is /not/ the same as the Linux MAXPATHLEN,
-> which is 4096.
-> 
-> The kernel enforces its 1024 byte MAXPATHLEN on symlink targets, but
-> xfsprogs picks up the (Linux) system 4096 byte MAXPATHLEN, which means
-> that xfs_repair doesn't complain about oversized symlinks.
-> 
-> Since this is an on-disk format constraint, put the define in the XFS
-> namespace.  As a side effect of the rename, xfs_repair wil detect
-> oversized symlinks and clean them off the system.
+On Thu, Jul 06, 2017 at 08:51:52PM -0700, Darrick J. Wong wrote:
+> In order for mkfs to calculate the minimum log size correctly, it must
+> be able to find the transaction type with the largest reservation.  The
+> iunlink transaction reservation size calculation depends on having the
+> inode cluster size set correctly, which in turn depends on the inode
+> alignment parameters being set as they will be in the final filesystem.
+> Therefore we have to set up the inoalignmt field in max_trans_res.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  libxfs/xfs_format.h         |    1 +
->  libxfs/xfs_symlink_remote.c |    2 +-
->  libxfs/xfs_trans_resv.c     |    4 ++--
->  repair/dinode.c             |    6 +++---
->  repair/xfs_repair.c         |    2 +-
->  5 files changed, 8 insertions(+), 7 deletions(-)
+>  include/xfs_multidisk.h |    2 +-
+>  libxfs/init.c           |    7 +++++++
+>  mkfs/maxtrres.c         |   10 +++++++++-
+>  mkfs/xfs_mkfs.c         |    3 ++-
+>  4 files changed, 19 insertions(+), 3 deletions(-)
 > 
-> diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-> index a53f035..79a72bb 100644
-> --- a/libxfs/xfs_format.h
-> +++ b/libxfs/xfs_format.h
-> @@ -1211,6 +1211,7 @@ struct xfs_dsymlink_hdr {
+> diff --git a/include/xfs_multidisk.h b/include/xfs_multidisk.h
+> index ce9bbce..e5f53b7 100644
+> --- a/include/xfs_multidisk.h
+> +++ b/include/xfs_multidisk.h
+> @@ -69,6 +69,6 @@ extern void res_failed (int err);
+>  extern int max_trans_res(unsigned long agsize, int crcs_enabled, int dirversion,
+>  		int sectorlog, int blocklog, int inodelog, int dirblocklog,
+>  		int logversion, int log_sunit, int finobt, int rmapbt,
+> -		int reflink);
+> +		int reflink, int inode_align);
 >  
->  #define XFS_SYMLINK_CRC_OFF	offsetof(struct xfs_dsymlink_hdr, sl_crc)
+>  #endif	/* __XFS_MULTIDISK_H__ */
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index 3fb0fdf..d77a9e6 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -707,6 +707,13 @@ libxfs_mount(
+>  		mp->m_maxicount = 0;
 >  
-> +#define XFS_SYMLINK_MAXLEN	1024
->  /*
->   * The maximum pathlen is 1024 bytes. Since the minimum file system
->   * blocksize is 512 bytes, we can get a max of 3 extents back from
-> diff --git a/libxfs/xfs_symlink_remote.c b/libxfs/xfs_symlink_remote.c
-> index 04c7446..d638530 100644
-> --- a/libxfs/xfs_symlink_remote.c
-> +++ b/libxfs/xfs_symlink_remote.c
-> @@ -110,7 +110,7 @@ xfs_symlink_verify(
->  	if (bp->b_bn != be64_to_cpu(dsl->sl_blkno))
->  		return false;
->  	if (be32_to_cpu(dsl->sl_offset) +
-> -				be32_to_cpu(dsl->sl_bytes) >= MAXPATHLEN)
-> +				be32_to_cpu(dsl->sl_bytes) >= XFS_SYMLINK_MAXLEN)
->  		return false;
->  	if (dsl->sl_owner == 0)
->  		return false;
-> diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-> index 5152a5b..d35a45f 100644
-> --- a/libxfs/xfs_trans_resv.c
-> +++ b/libxfs/xfs_trans_resv.c
-> @@ -476,14 +476,14 @@ xfs_calc_mkdir_reservation(
->  /*
->   * Making a new symplink is the same as creating a new file, but
->   * with the added blocks for remote symlink data which can be up to 1kB in
-> - * length (MAXPATHLEN).
-> + * length (XFS_SYMLINK_MAXLEN).
->   */
->  STATIC uint
->  xfs_calc_symlink_reservation(
->  	struct xfs_mount	*mp)
->  {
->  	return xfs_calc_create_reservation(mp) +
-> -	       xfs_calc_buf_res(1, MAXPATHLEN);
-> +	       xfs_calc_buf_res(1, XFS_SYMLINK_MAXLEN);
->  }
->  
->  /*
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index da87217..f005335 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -1259,7 +1259,7 @@ null_check(char *name, int length)
->  {
->  	int i;
->  
-> -	ASSERT(length < MAXPATHLEN);
-> +	ASSERT(length < XFS_SYMLINK_MAXLEN);
->  
->  	for (i = 0; i < length; i++, name++)  {
->  		if (*name == '\0')
-> @@ -1371,7 +1371,7 @@ process_symlink(
->  	blkmap_t 	*blkmap)
->  {
->  	char			*symlink;
-> -	char			data[MAXPATHLEN];
-> +	char			data[XFS_SYMLINK_MAXLEN];
+>  	mp->m_inode_cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
+> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +		int	new_size = mp->m_inode_cluster_size;
+> +
+> +		new_size *= mp->m_sb.sb_inodesize / XFS_DINODE_MIN_SIZE;
+> +		if (mp->m_sb.sb_inoalignmt >= XFS_B_TO_FSBT(mp, new_size))
+> +			mp->m_inode_cluster_size = new_size;
+> +	}
 >  
 >  	/*
->  	 * check size against kernel symlink limits.  we know
-> @@ -1379,7 +1379,7 @@ process_symlink(
->  	 * the inode is structurally ok so we don't have to check
->  	 * for that
->  	 */
-> -	if (be64_to_cpu(dino->di_size) >= MAXPATHLEN)  {
-> +	if (be64_to_cpu(dino->di_size) >= XFS_SYMLINK_MAXLEN)  {
->  	       do_warn(_("symlink in inode %" PRIu64 " too long (%llu chars)\n"),
->  		       lino, (unsigned long long) be64_to_cpu(dino->di_size));
->  		return(1);
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index ab60c0f..b2dd91b 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -761,7 +761,7 @@ main(int argc, char **argv)
->  	glob_agcount = mp->m_sb.sb_agcount;
+>  	 * Set whether we're using stripe alignment.
+> diff --git a/mkfs/maxtrres.c b/mkfs/maxtrres.c
+> index 69ec67a..04028bf 100644
+> --- a/mkfs/maxtrres.c
+> +++ b/mkfs/maxtrres.c
+> @@ -40,7 +40,8 @@ max_trans_res(
+>  	int		log_sunit,
+>  	int		finobt,
+>  	int		rmapbt,
+> -	int		reflink)
+> +	int		reflink,
+> +	int		inode_align)
+>  {
+>  	xfs_sb_t	*sbp;
+>  	xfs_mount_t	mount;
+> @@ -61,6 +62,13 @@ max_trans_res(
+>  	sbp->sb_inopblock = 1 << (blocklog - inodelog);
+>  	sbp->sb_dirblklog = dirblocklog - blocklog;
 >  
->  	chunks_pblock = mp->m_sb.sb_inopblock / XFS_INODES_PER_CHUNK;
-> -	max_symlink_blocks = libxfs_symlink_blocks(mp, MAXPATHLEN);
-> +	max_symlink_blocks = libxfs_symlink_blocks(mp, XFS_SYMLINK_MAXLEN);
->  	inodes_per_cluster = MAX(mp->m_sb.sb_inopblock,
->  			mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog);
->  
+> +	if (inode_align) {
+> +		int	cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
+> +		if (crcs_enabled)
+> +			cluster_size *= sbp->sb_inodesize / XFS_DINODE_MIN_SIZE;
+> +		sbp->sb_inoalignmt = cluster_size >> blocklog;
+> +	}
+> +
+>  	if (log_sunit > 0) {
+>  		log_sunit <<= blocklog;
+>  		logversion = 2;
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index c839936..faa0e9a 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2612,7 +2612,8 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+>  				   sb_feat.crcs_enabled, sb_feat.dir_version,
+>  				   sectorlog, blocklog, inodelog, dirblocklog,
+>  				   sb_feat.log_version, lsunit, sb_feat.finobt,
+> -				   sb_feat.rmapbt, sb_feat.reflink);
+> +				   sb_feat.rmapbt, sb_feat.reflink,
+> +				   sb_feat.inode_align);
+>  	ASSERT(min_logblocks);
+>  	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
+>  	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
