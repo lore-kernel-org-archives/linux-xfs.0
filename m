@@ -1,119 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41434 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:26169 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752190AbdGGV2L (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Jul 2017 17:28:11 -0400
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v4 3/3] ext4: Add IOMAP_REPORT support for inline data
-Date: Fri,  7 Jul 2017 23:28:01 +0200
-Message-Id: <1499462881-4238-4-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1499462881-4238-1-git-send-email-agruenba@redhat.com>
-References: <1499462881-4238-1-git-send-email-agruenba@redhat.com>
-In-Reply-To: <CAHc6FU4u+G1gtZVr3CUbJi2i+GwWhfDUOZemQ4Nnde=uiOmjXA@mail.gmail.com>
-References: <CAHc6FU4u+G1gtZVr3CUbJi2i+GwWhfDUOZemQ4Nnde=uiOmjXA@mail.gmail.com>
+        id S1752490AbdGGMCL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Jul 2017 08:02:11 -0400
+Date: Fri, 7 Jul 2017 08:01:41 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] mkfs: set agblklog when we're verifying minimum log size
+Message-ID: <20170707120139.GC61756@bfoster.bfoster>
+References: <20170707033138.GC4103@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170707033138.GC4103@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-Fixes iomap_seek_{hole,data} for files with inline data (on filesystems
-with the inline_data feature).  In addition, this will make converting
-ext4 to use iomap_fiemap easier.
+On Thu, Jul 06, 2017 at 08:31:38PM -0700, Darrick J. Wong wrote:
+> In e5cc9d560a ("mkfs: set agsize prior to calculating minimum log
+> size"), we set the ag size in the superblock structure so that we can
+> calculate the maximum btree height correctly.  The btree heights are
+> used to calculate transaction reservation sizes; these sizes are used to
+> compute the minimum log length; and the minimum log length is checked by
+> the kernel.
+> 
+> Unfortunately, I didn't realize that some of the btree sizing functions
+> also depend on the agblklog (log2 of the ag size), so we've been
+> underestimating the minimum log length allowable, which results in mkfs
+> formatting filesystems that the kernel refuses to mount.
+> 
+> This can be trivially reproduced by formatting a small (~800M) volume
+> with rmap and reflink turned on.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/ext4/ext4.h   |  4 ++++
- fs/ext4/inline.c | 33 +++++++++++++++++++++++++++++++++
- fs/ext4/inode.c  |  9 +++++++--
- 3 files changed, 44 insertions(+), 2 deletions(-)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index eb0a1f2..3eae6ae 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -3017,6 +3017,10 @@ extern struct buffer_head *ext4_get_first_inline_block(struct inode *inode,
- extern int ext4_inline_data_fiemap(struct inode *inode,
- 				   struct fiemap_extent_info *fieinfo,
- 				   int *has_inline, __u64 start, __u64 len);
-+
-+struct iomap;
-+extern int ext4_inline_data_iomap(struct inode *inode, struct iomap *iomap);
-+
- extern int ext4_try_to_evict_inline_data(handle_t *handle,
- 					 struct inode *inode,
- 					 int needed);
-diff --git a/fs/ext4/inline.c b/fs/ext4/inline.c
-index 8d141c0..e9d0ab1 100644
---- a/fs/ext4/inline.c
-+++ b/fs/ext4/inline.c
-@@ -12,6 +12,7 @@
-  * GNU General Public License for more details.
-  */
- 
-+#include <linux/iomap.h>
- #include <linux/fiemap.h>
- 
- #include "ext4_jbd2.h"
-@@ -1827,6 +1828,38 @@ int ext4_destroy_inline_data(handle_t *handle, struct inode *inode)
- 	return ret;
- }
- 
-+int ext4_inline_data_iomap(struct inode *inode, struct iomap *iomap)
-+{
-+	__u64 physical;
-+	int error = -ENOENT;
-+	struct ext4_iloc iloc;
-+
-+	down_read(&EXT4_I(inode)->xattr_sem);
-+	if (!ext4_has_inline_data(inode))
-+		goto out;
-+
-+	error = ext4_get_inode_loc(inode, &iloc);
-+	if (error)
-+		goto out;
-+
-+	physical = (__u64)iloc.bh->b_blocknr << inode->i_sb->s_blocksize_bits;
-+	physical += (char *)ext4_raw_inode(&iloc) - iloc.bh->b_data;
-+	physical += offsetof(struct ext4_inode, i_block);
-+
-+	brelse(iloc.bh);
-+
-+	iomap->physical = physical;
-+	iomap->offset = 0;
-+	iomap->length = min_t(loff_t, ext4_get_inline_size(inode),
-+			      i_size_read(inode));
-+	iomap->type = IOMAP_MAPPED;
-+	iomap->flags = IOMAP_F_INLINE;
-+
-+out:
-+	up_read(&EXT4_I(inode)->xattr_sem);
-+	return error;
-+}
-+
- int ext4_inline_data_fiemap(struct inode *inode,
- 			    struct fiemap_extent_info *fieinfo,
- 			    int *has_inline, __u64 start, __u64 len)
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 82f3f7d..e2b0a8a 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3361,8 +3361,13 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 	bool delalloc = false;
- 	int ret;
- 
--	if (WARN_ON_ONCE(ext4_has_inline_data(inode)))
--		return -ERANGE;
-+	if (ext4_has_inline_data(inode)) {
-+		if (WARN_ON_ONCE(!(flags & IOMAP_REPORT)))
-+			return -ERANGE;
-+		if (!ext4_inline_data_iomap(inode, iomap) &&
-+		    offset < iomap->length)
-+			return 0;
-+	}
- 
- 	map.m_lblk = first_block;
- 	map.m_len = last_block - first_block + 1;
--- 
-2.7.5
-
+>  mkfs/maxtrres.c |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/mkfs/maxtrres.c b/mkfs/maxtrres.c
+> index fba7818..69ec67a 100644
+> --- a/mkfs/maxtrres.c
+> +++ b/mkfs/maxtrres.c
+> @@ -54,6 +54,7 @@ max_trans_res(
+>  	sbp->sb_blocklog = blocklog;
+>  	sbp->sb_blocksize = 1 << blocklog;
+>  	sbp->sb_agblocks = agsize;
+> +	sbp->sb_agblklog = (uint8_t)libxfs_log2_roundup((unsigned int)agsize);
+>  	sbp->sb_inodelog = inodelog;
+>  	sbp->sb_inopblog = blocklog - inodelog;
+>  	sbp->sb_inodesize = 1 << inodelog;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
