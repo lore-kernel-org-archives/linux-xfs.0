@@ -1,101 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39408 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752902AbdGMTE5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2017 15:04:57 -0400
-Date: Thu, 13 Jul 2017 12:04:50 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] generic: test negative SEEK_HOLE/SEEK_DATA offsets
-Message-ID: <20170713190450.GC4151@magnolia>
-References: <20170712173923.GD4212@magnolia>
- <20170713081458.GE2478@eguan.usersys.redhat.com>
+Received: from mail1.g1.pair.com ([66.39.3.162]:15907 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752364AbdGGLuI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Jul 2017 07:50:08 -0400
+Date: Fri, 7 Jul 2017 13:50:09 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Weird xfs_repair error
+Message-ID: <20170707135009.68c22182@harpe.intellique.com>
+In-Reply-To: <20170706232803.GF17762@dastard>
+References: <20170706153020.0ad6dd47@harpe.intellique.com>
+        <20170706232803.GF17762@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170713081458.GE2478@eguan.usersys.redhat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/rg4G=UBxpN2dfhzMB_VuLoi"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "'linux-xfs@vger.kernel.org'" <linux-xfs@vger.kernel.org>
 
-On Thu, Jul 13, 2017 at 04:14:58PM +0800, Eryu Guan wrote:
-> On Wed, Jul 12, 2017 at 10:39:23AM -0700, Darrick J. Wong wrote:
-> > Check that we get -ENXIO if the user calls SEEK_HOLE/SEEK_DATA with
-> > a negative file offset.
-> 
-> A minor nit, this might be confusing, lseek returns -1 on error, and set
-> errno to ENXIO, no one actually returns -ENXIO.
-> 
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  src/seek_sanity_test.c |   25 +++++++++++++++++
-> >  tests/generic/702      |   70 ++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/702.out  |    2 +
-> >  tests/generic/group    |    1 +
-> >  4 files changed, 98 insertions(+)
-> >  create mode 100755 tests/generic/702
-> >  create mode 100644 tests/generic/702.out
-> > 
-> > diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
-> > index a58ec36..547f0a4 100644
-> > --- a/src/seek_sanity_test.c
-> > +++ b/src/seek_sanity_test.c
-> > @@ -274,6 +274,30 @@ static int huge_file_test(int fd, int testnum, off_t filsz)
-> >  	return ret;
-> >  }
-> >  
-> > +/* Make sure we get ENXIO if we pass in a negative offset. */
-> > +static int test18(int fd, int testnum)
-> > +{
-> > +	int ret = 0;
-> > +	off_t pos;
-> > +
-> > +	errno = 0;
-> > +	pos = lseek(fd, -1, SEEK_HOLE);
-> > +	if (pos != -1 || errno != ENXIO) {
-> > +		printf("%02d.1 SEEK_HOLE expected -1 with errno %d, got %jd and %d.\n",
-> > +		       testnum, -ENXIO, pos, -errno);
-> > +		ret++;
-> > +	}
-> > +
-> > +	errno = 0;
-> > +	pos = lseek(fd, -1, SEEK_DATA);
-> > +	if (pos != -1 || errno != ENXIO) {
-> > +		printf("%02d.1 SEEK_DATA expected -1 with errno %d, got %jd and %d.\n",
-> > +		       testnum, -ENXIO, pos, -errno);
-> > +		ret++;
-> > +	}
-> > +	return ret;
-> 
-> Seems cleaner to use do_lseek() helper, e.g.
-> 
-> static int test18(int fd, int testnum)
-> {
-> 	int ret = 0;
-> 
-> 	/* file size doesn't matter in this test, set to 0 */
-> 	ret += do_lseek(testnum, 1, fd, 0, SEEK_HOLE, -1, -1);
-> 	ret += do_lseek(testnum, 2, fd, 0, SEEK_DATA, -1, -1);
-> 	
-> 	return ret;
-> }
-> 
-> And test reports "succ" or "FAIL" as what other subtests do
-> 
-> 18. Test file with negative SEEK_{HOLE,DATA} offsets  
-> 18.01 SEEK_HOLE expected -1 or -1, got 0.                         FAIL
-> 18.02 SEEK_DATA expected -1 with errno -6, got -1.                FAIL
+--Sig_/rg4G=UBxpN2dfhzMB_VuLoi
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Sure, will change and resend.
+Le Fri, 7 Jul 2017 09:28:03 +1000
+Dave Chinner <david@fromorbit.com> =C3=A9crivait:
 
---D
+> > disconnected inode 26417468, moving to lost+found
+> > disconnected inode 26417469, moving to lost+found
+> > disconnected inode 26417470, moving to lost+found
+> >=20
+> > fatal error -- name create failed in lost+found (117), filesystem
+> > may be out of space =20
+>=20
+> Error 117. That's EFSCORRUPTED, not ENOSPC.  IOWs, lost+found was
+> corrupted as it was being modified by xfs_repair.
+>=20
+> > Even stranger, after mounting back the image, there is no lost+found
+> > anywhere to be found! However the filesystem has lots of free space
+> > and free inodes, how come? =20
+>=20
+> Because lost+found was corrupted.
 
-> 
-> Thanks,
-> Eryu
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Actually with xfs_repair 4.11 it's a different error in the end:
+
+disconnected inode 180399699751, moving to lost+found
+disconnected inode 180399699752, moving to lost+found
+
+fatal error -- name create failed in lost+found (28), filesystem may be
+out of space
+
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/rg4G=UBxpN2dfhzMB_VuLoi
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAllfdXIACgkQX3jQXNUicVbCWACgumBufclATt/+mYEOFOPUPwRl
+guoAnjxaZjvPj1X7ya/IyIv8MdOOOs9l
+=rdVv
+-----END PGP SIGNATURE-----
+
+--Sig_/rg4G=UBxpN2dfhzMB_VuLoi--
