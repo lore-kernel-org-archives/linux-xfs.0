@@ -1,111 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:48656 "EHLO fieldses.org"
+Received: from mail1.g1.pair.com ([66.39.3.162]:55554 "EHLO mail1.g1.pair.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752030AbdGEUt3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Jul 2017 16:49:29 -0400
-Date: Wed, 5 Jul 2017 16:49:28 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH] fs: ext4: inode->i_generation not assigned 0.
-Message-ID: <20170705204928.GA8151@fieldses.org>
-References: <20A40B3C-E179-432B-B56F-BDAAF0CD2E1F@dilger.ca>
- <7CD38230-D961-428F-B2E9-2C0E28CAF442@fb.com>
- <20170629045940.GB5865@birch.djwong.org>
- <20170629143551.GB1651@fieldses.org>
- <20170629172528.GA5869@birch.djwong.org>
- <20170629183053.GA4178@fieldses.org>
- <20170629185022.GB4178@fieldses.org>
- <20170704040446.GB4704@birch.djwong.org>
- <20170705011534.GC1420@fieldses.org>
- <20170705191933.GA6297@magnolia>
+        id S1750848AbdGGLgQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Jul 2017 07:36:16 -0400
+Date: Fri, 7 Jul 2017 13:36:17 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Weird xfs_repair error
+Message-ID: <20170707133617.6d3a14b5@harpe.intellique.com>
+In-Reply-To: <20170706232803.GF17762@dastard>
+References: <20170706153020.0ad6dd47@harpe.intellique.com>
+        <20170706232803.GF17762@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170705191933.GA6297@magnolia>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/gK34UJhEl8CfJm+zI5X=QIP"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: William Koh <kkc6196@fb.com>, Andreas Dilger <adilger@dilger.ca>, Theodore Ts'o <tytso@mit.edu>, linux-ext4 <linux-ext4@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, xfs <linux-xfs@vger.kernel.org>, neilb@suse.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "'linux-xfs@vger.kernel.org'" <linux-xfs@vger.kernel.org>
 
-On Wed, Jul 05, 2017 at 12:19:33PM -0700, Darrick J. Wong wrote:
-> On Tue, Jul 04, 2017 at 09:15:34PM -0400, J. Bruce Fields wrote:
-> > On Mon, Jul 03, 2017 at 09:04:46PM -0700, Darrick J. Wong wrote:
-> > > On Thu, Jun 29, 2017 at 02:50:22PM -0400, J. Bruce Fields wrote:
-> > > > On Thu, Jun 29, 2017 at 02:30:53PM -0400, J. Bruce Fields wrote:
-> > > > > On Thu, Jun 29, 2017 at 10:25:28AM -0700, Darrick J. Wong wrote:
-> > > > > > Was there ever a version of NFS (or more generally callers of the
-> > > > > > exportfs code) that couldn't deal with i_generation in the file handle,
-> > > > > > and therefore we invented this generation hack to work around the loss
-> > > > > > of the generation information?
-> > > > > > 
-> > > > > > There's a comment in xfs_fs_encode_fh about not supporting 64bit inodes
-> > > > > > with subtree_check (which seems to require one ino/gen pair for the file
-> > > > > > and a second pair for the file's parent) on NFSv2 because v2 doesn't
-> > > > > > provide enough space for all the file handle information, but that's the
-> > > > > > furthest I got with lazy-mining the git history. :)
-> > > > > 
-> > > > > There's a comment in fs/ext4/super.c:ext4_nfs_get_inode
-> > > > > 
-> > > > > 	* Currently we don't know the generation for parent directory, so
-> > > > > 	* a generation of 0 means "accept any"
-> > > > > 
-> > > > > But I don't see that used.
-> > > > > 
-> > > > > It was used once upon a time; I see it actually used in old 2.5 code in
-> > > > > nfsd_get_dentry.  Hm.
-> > > > 
-> > > > Oh, maybe it's here in fs/libfs.c:generic_fh_to_parent:
-> > > > 
-> > > > 	switch (fh_type) {
-> > > > 	case FILEID_INO32_GEN_PARENT:
-> > > > 		inode = get_inode(sb, fid->i32.parent_ino,
-> > > >         			  (fh_len > 3 ? fid->i32.parent_gen : 0));
-> > > > 		break;
-> > > > 	}
-> > > > 
-> > > > I'm not sure under what conditions that filehandle encoding is used.
-> > > 
-> > > The best guess I can come up with is the old nfs_fhbase_old style handles,
-> > > which (afaict) do not carry parent i_generation?
-> > 
-> > Yeah, I just couldn't tell in the time I looked whether they could still
-> > be handed out.
-> > 
-> > If not, then the only way they'd still be used is if a client had a
-> > server continually mounted while the server was upgraded from a kernel
-> > that still handed out the old filehandle.
-> > 
-> > So if they haven't been given out for long enough it's possible nobody
-> > would notice if we dropped support.
-> > 
-> > But, I didn't get far enough to figure that out.
-> 
-> Hmm, so looking back through prehistory, Linux prior to 2.3.51 (11 March
-> 2000) gave out the old dentry style fhandles.  After that, the kernel
-> only gave out the new style handles that we still use today.  In 2.4.6
-> (4 July 2001) the behavior was modified again to chain handle types,
-> i.e. if the client passed in an old style handle then it would get
-> another old style handle back.  The changelog for -pre9 says that this
-> was done for compatibility reasons.
+--Sig_/gK34UJhEl8CfJm+zI5X=QIP
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Yeah, you're supposed to be able to reboot your NFS server for a kernel
-upgrade without your client applications experiencing anything worse
-than a temporary hang while you wait for the server to come back up.
-So, changing the filehandle format and returning ESTALE to everyone
-would be unpopular.
+Le Fri, 7 Jul 2017 09:28:03 +1000
+Dave Chinner <david@fromorbit.com> =C3=A9crivait:
 
-> So, what's the probability that there are clients out there that started
-> talking to a 2.2-based knfsd and will now want to talk to a modern 4.13
-> kernel seventeen years later?
+> >=20
+> > fatal error -- name create failed in lost+found (117), filesystem
+> > may be out of space =20
+>=20
+> Error 117. That's EFSCORRUPTED, not ENOSPC.  IOWs, lost+found was
+> corrupted as it was being modified by xfs_repair.
+>=20
+> > Even stranger, after mounting back the image, there is no lost+found
+> > anywhere to be found! However the filesystem has lots of free space
+> > and free inodes, how come? =20
+>=20
+> Because lost+found was corrupted.
+>=20
+I've tried again with xfs_repair 4.11, not better. At the end, I've got
+a "lost+found" directory, however, it I run xfs_repair again and again
+it still ends with the same error... I'll try moving the old lost+found
+out of the way.
 
-I think it's unlikely enough that we could drop that code; cc'ing Neil
-in case we overlooked anything.
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
-> (Do nfs handles persist across client restarts/remounts?)
+--Sig_/gK34UJhEl8CfJm+zI5X=QIP
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
 
-No.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-(Well, with maybe a couple exceptions (fscache and persistent NFSv4
-delegations) but neither seem relevant here.)
+iEYEARECAAYFAllfcjIACgkQX3jQXNUicVYIkwCg4oY4S034PT7FE/wd73jfmd2H
+o54AoPjJoWORR5zG5C/7U03bT0glg84y
+=mDfg
+-----END PGP SIGNATURE-----
 
---b.
+--Sig_/gK34UJhEl8CfJm+zI5X=QIP--
