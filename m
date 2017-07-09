@@ -1,192 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37178 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750896AbdGEQpm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Jul 2017 12:45:42 -0400
-Date: Wed, 5 Jul 2017 12:45:35 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 11/8] common/inject: refactor helpers to use new errortag
- interface
-Message-ID: <20170705164535.GE51285@bfoster.bfoster>
-References: <149808222258.8924.1682057078986741098.stgit@birch.djwong.org>
- <20170630041308.GF5871@birch.djwong.org>
- <20170705121610.GA51285@bfoster.bfoster>
- <20170705162914.GB6300@magnolia>
+Received: from mailrelay.collogia.de ([194.8.207.98]:52121 "HELO
+        mailrelay.collogia.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1752146AbdGIRB3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 Jul 2017 13:01:29 -0400
+From: Markus Stockhausen <stockhausen@collogia.de>
+Subject: AW: XFS hang - 4.4.73 longterm
+Date: Sun, 9 Jul 2017 17:01:25 +0000
+Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD173010E0284F8@EXCHANGE.collogia.de>
+References: <12EF8D94C6F8734FB2FF37B9FBEDD173010E02746C@EXCHANGE.collogia.de>
+ <20170706002436.GA5068@magnolia>
+ <12EF8D94C6F8734FB2FF37B9FBEDD173010E027537@EXCHANGE.collogia.de>
+ <20170707034713.GD4103@magnolia>
+In-Reply-To: <20170707034713.GD4103@magnolia>
+Content-Language: de-DE
+Content-Type: multipart/mixed;
+        boundary="----=_NextPartTM-000-800ab520-60a9-4435-a031-d6e5fd657e86"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170705162914.GB6300@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: "'Darrick J. Wong'" <darrick.wong@oracle.com>
+Cc: "'linux-xfs@vger.kernel.org'" <linux-xfs@vger.kernel.org>
 
-On Wed, Jul 05, 2017 at 09:29:14AM -0700, Darrick J. Wong wrote:
-> On Wed, Jul 05, 2017 at 08:16:11AM -0400, Brian Foster wrote:
-> > On Thu, Jun 29, 2017 at 09:13:08PM -0700, Darrick J. Wong wrote:
-> > > Refactor the XFS error injection helpers to use the new errortag
-> > > interface to configure error injection.  If that isn't present, fall
-> > > back either to the xfs_io/ioctl based injection or the older sysfs
-> > > knobs.  Refactor existing testcases to use the new helpers.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  common/inject |   62 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
-> > >  tests/xfs/051 |    7 ++++--
-> > >  tests/xfs/141 |    5 +++--
-> > >  tests/xfs/196 |   17 ++++++----------
-> > >  4 files changed, 73 insertions(+), 18 deletions(-)
-> > > 
-> > > diff --git a/common/inject b/common/inject
-> > > index 8ecc290..1f12a2b 100644
-> > > --- a/common/inject
-> > > +++ b/common/inject
-> > > @@ -35,10 +35,50 @@ _require_error_injection()
-> > >  	esac
-> > >  }
-> > >  
-> > > +# Find a given xfs mount's errortag injection knob in sysfs
-> > > +_find_xfs_errortag_knob()
-> > > +{
-> > > +	dev="$1"
-> > > +	knob="$2"
-> > > +	shortdev="$(_short_dev "${dev}")"
-> > > +	tagfile="/sys/fs/xfs/${shortdev}/errortag/${knob}"
-> > > +
-> > > +	# Some of the new sysfs errortag knobs were previously available via
-> > > +	# another sysfs path.
-> > > +	case "${knob}" in
-> > > +	"log_bad_crc")
-> > > +		if [ ! -w "${tagfile}" ]; then
-> > > +			tagfile="/sys/fs/xfs/${shortdev}/log/log_badcrc_factor"
-> > > +		fi
-> > > +		;;
-> > > +	"drop_writes")
-> > > +		if [ ! -w "${tagfile}" ]; then
-> > > +			tagfile="/sys/fs/xfs/${shortdev}/drop_writes"
-> > > +		fi
-> > > +		if [ ! -w "${tagfile}" ]; then
-> > > +			tagfile="/sys/fs/xfs/${shortdev}/fail_writes"
-> > > +		fi
-> > > +		;;
-> > > +	"log_recovery_delay"|"bug_on_assert")
-> > 
-> > What's the purpose for having these here? I'm not sure that either is
-> > really related to error injection (which I find a little confusing
-> > despite that this code can be reused to generically send a value to a
-> > sysfs knob).
-> 
-> I was entertaining the thought of making all the debugging knobs
-> available through a single helper function, though I concede that these
-> two affect all of XFS and are thus a little weird.
-> 
-> Perhaps a second helper function for module-wide knobs?
-> 
 
-Yeah, though I'm not sure we need to factor the helpers based on whether
-a knob is per-fs or global. I was thinking about a generic set of
-helpers to handle sysfs knobs, but in poking around it appears we
-already have something like that. See xfs/264 and _set_fs_sysfs_attr()
-and friends. These currently expect a device param, but we should be
-able to fix that up to support either. Perhaps we could also reuse those
-to implement the error injection helpers?
+This is a multi-part message in MIME format.
 
-Brian
+------=_NextPartTM-000-800ab520-60a9-4435-a031-d6e5fd657e86
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-> > 
-> > > +		# These apply to all xfs filesystems
-> > > +		tagfile="/sys/fs/xfs/debug/${knob}"
-> > > +		;;
-> > > +	*)
-> > > +		;;
-> > > +	esac
-> > > +
-> > > +	echo "${tagfile}"
-> > > +}
-> > > +
-> > >  # Requires that xfs_io inject command knows about this error type
-> > >  _require_xfs_io_error_injection()
-> > >  {
-> > >  	type="$1"
-> > > +
-> > > +	# Can we find the error injection knobs via the new errortag
-> > > +	# configuration mechanism?
-> > > +	test -w "$(_find_xfs_errortag_knob "${TEST_DEV}" "${type}")" && return
-> > > +
-> > >  	_require_error_injection
-> > >  
-> > >  	# NOTE: We can't actually test error injection here because xfs
-> > ...
-> > > diff --git a/tests/xfs/196 b/tests/xfs/196
-> > > index e9b0649..5afc343 100755
-> > > --- a/tests/xfs/196
-> > > +++ b/tests/xfs/196
-> > ...
-> > > @@ -53,13 +54,7 @@ rm -f $seqres.full
-> > >  _supported_fs generic
-> > >  _supported_os Linux
-> > >  _require_scratch
-> > > -
-> > > -DROP_WRITES="drop_writes"
-> > > -# replace "drop_writes" with "fail_writes" for old kernel
-> > > -if [ -f /sys/fs/xfs/$(_short_dev $TEST_DEV)/fail_writes ];then
-> > > -	DROP_WRITES="fail_writes"
-> > > -fi
-> > > -_require_xfs_sysfs $(_short_dev $TEST_DEV)/${DROP_WRITES}
-> > > +_require_xfs_io_error_injection "drop_writes"
-> > >  
-> > >  _scratch_mkfs >/dev/null 2>&1
-> > >  _scratch_mount
-> > > @@ -72,7 +67,7 @@ bytes=$((64 * 1024))
-> > >  $XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
-> > >  
-> > >  # Enable write drops. All buffered writes are dropped from this point on.
-> > > -echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> > > +_scratch_inject_error "drop_writes"
-> > 
-> > I'd prefer to keep the parameter in this case (and below) just as a
-> > defense against future changes in the default value. Otherwise the rest
-> > looks pretty good.
-> 
-> Ok.
-> 
-> > 
-> > Brian
-> > 
-> > >  
-> > >  # Write every other 4k range to split the larger delalloc extent into many more
-> > >  # smaller extents. Use pwrite because with write failures enabled, all
-> > > @@ -89,7 +84,7 @@ for i in $(seq 4096 8192 $endoff); do
-> > >  	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
-> > >  done
-> > >  
-> > > -echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> > > +_scratch_inject_error "drop_writes" 0
-> > >  
-> > >  _scratch_cycle_mount
-> > >  $XFS_IO_PROG -c 'bmap -vp' $file | _filter_bmap
-> > > @@ -104,9 +99,9 @@ for offset in $(seq 0 100 500); do
-> > >  	$XFS_IO_PROG -fc "pwrite ${offset}m 100m" $file >> $seqres.full 2>&1
-> > >  
-> > >  	punchoffset=$((offset + 75))
-> > > -	echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> > > +	_scratch_inject_error "drop_writes"
-> > >  	$XFS_IO_PROG -c "pwrite ${punchoffset}m 4k" $file >> $seqres.full 2>&1
-> > > -	echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> > > +	_scratch_inject_error "drop_writes" 0
-> > >  done
-> > >  
-> > >  echo "Silence is golden."
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -----Urspr=FCngliche Nachricht-----
+> Von: Darrick J. Wong [mailto:darrick.wong@oracle.com]=20
+> Gesendet: Freitag, 7. Juli 2017 05:47
+> An: Markus Stockhausen
+> Cc: 'linux-xfs@vger.kernel.org'
+> Betreff: Re: XFS hang - 4.4.73 longterm
+>
+> > > ...
+> > > This is the known deadlock in SEEK_HOLE/SEEK_DATA; I have patches que=
+ued to fix it in 4.13, as soon as the dust settles and I send the pull req.
+> >=20
+> > Short, precise, frightening.
+> >=20
+> > Can you advise what will the best option to avoid that error.=20
+> > First things that come to my mind would be:
+> >=20
+> > - get back to original 3.10 stable kernel from CentOS Distro
+> > - lower NFS mount version
+> > - Maybe remove some single patch that introduced the error?
+>
+> Unfortunately, SEEK_HOLE (and the deadlocky code) go all the way back to =
+the beginning of SEEK_HOLE support, so I don't know that=20
+> there's a good workaround for this.  There's not really a way to shut off=
+ support for it, either, that doesn't involve gross code surgery.
+
+Not good news. Finally I disabled SEEK support in nfsd by partially reverti=
+ng 3.18 patch=20
+24bab491220faa446d94 "NFSD: Implement SEEK". While before NFS/XFS crashed w=
+ith=20
+active VM snapshots and heavy disk writes after minutes it now runs for 2 d=
+ays of=20
+intensive testing without errors.
+
+At least now I have full discard support in side VMs (via hole punching of =
+disk files).
+I'm not familiar with SEEK_HOLE/SEEK_data feature. Do you see negative impa=
+ct
+if disabling these? In contrast to falling back to NFS 4 without seek + dis=
+card support.
+
+Markus=20
+------=_NextPartTM-000-800ab520-60a9-4435-a031-d6e5fd657e86
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="InterScan_Disclaimer.txt"
+
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
+
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
+
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
+
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
+
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+President of the supervisory board:
+Hans Kristian Langva
+
+Registry office: district court Cologne
+Register number: HRB 52 497
+
+****************************************************************************
+
+------=_NextPartTM-000-800ab520-60a9-4435-a031-d6e5fd657e86--
