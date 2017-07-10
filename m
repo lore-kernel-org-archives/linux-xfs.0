@@ -1,177 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27768 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751914AbdGFAYo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2017 20:24:44 -0400
-Date: Wed, 5 Jul 2017 17:24:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: XFS hang - 4.4.73 longterm
-Message-ID: <20170706002436.GA5068@magnolia>
+Received: from mailrelay.collogia.de ([194.8.207.98]:49357 "HELO
+        mailrelay.collogia.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1754053AbdGJSKy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2017 14:10:54 -0400
+From: Markus Stockhausen <stockhausen@collogia.de>
+Subject: AW: XFS hang - 4.4.73 longterm
+Date: Mon, 10 Jul 2017 18:10:50 +0000
+Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD173010E028B3B@EXCHANGE.collogia.de>
 References: <12EF8D94C6F8734FB2FF37B9FBEDD173010E02746C@EXCHANGE.collogia.de>
+ <20170706002436.GA5068@magnolia>
+ <12EF8D94C6F8734FB2FF37B9FBEDD173010E027537@EXCHANGE.collogia.de>
+ <20170707034713.GD4103@magnolia>
+ <12EF8D94C6F8734FB2FF37B9FBEDD173010E0284F8@EXCHANGE.collogia.de>
+ <20170710165141.GK4103@magnolia>
+In-Reply-To: <20170710165141.GK4103@magnolia>
+Content-Language: de-DE
+Content-Type: multipart/mixed;
+        boundary="----=_NextPartTM-000-90166cd8-da6a-4c38-a6bd-837968af1957"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <12EF8D94C6F8734FB2FF37B9FBEDD173010E02746C@EXCHANGE.collogia.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Markus Stockhausen <stockhausen@collogia.de>
+To: "'Darrick J. Wong'" <darrick.wong@oracle.com>
 Cc: "'linux-xfs@vger.kernel.org'" <linux-xfs@vger.kernel.org>
 
-On Wed, Jul 05, 2017 at 07:19:28PM +0000, Markus Stockhausen wrote:
-> Hi,
-> 
-> we are using a NFS/XFS fileserver and installed the current 4.4.73 longterm kernel.
-> From time to time (reason currently unidentified) it spits blocked for 120s messages
-> Like the attached ones. Any ideas what might be the reason? I can reproduce it
-> With some effort. So in case you want some more logging don't hesitate to ask.
-> 
-> For more details see https://bugzilla.kernel.org/show_bug.cgi?id=196259
-> 
-> [1248134.772889] INFO: task nfsd:1623 blocked for more than 120 seconds.
-> [1248134.772895]       Tainted: G          I     4.4.73-2.el7.centos.x86_64 #1
-> [1248134.772897] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [1248134.772899] nfsd            D ffff880bbf08b9c8     0  1623      2 0x00000080
-> [1248134.772905]  ffff880bbf08b9c8 ffff880be0875400 ffff880bbf080000 ffff880bbf08c000
-> [1248134.772908]  0000000000000000 7fffffffffffffff ffff880bbf08bb38 ffffffff816fbb40
-> [1248134.772911]  ffff880bbf08b9e0 ffffffff816fb2d5 ffff880c176d6d00 ffff880bbf08ba88
-> [1248134.772915] Call Trace:
-> [1248134.772923]  [<ffffffff816fbb40>] ? bit_wait+0x50/0x50
-> [1248134.772926]  [<ffffffff816fb2d5>] schedule+0x35/0x80
-> [1248134.772929]  [<ffffffff816fdfe7>] schedule_timeout+0x237/0x2d0
-> [1248134.772935]  [<ffffffff8161ee0e>] ? ip_output+0x6e/0xe0
-> [1248134.772938]  [<ffffffff8161e502>] ? __ip_local_out+0x92/0x110
-> [1248134.772941]  [<ffffffff810f303a>] ? ktime_get+0x3a/0x90
-> [1248134.772944]  [<ffffffff816fbb40>] ? bit_wait+0x50/0x50
-> [1248134.772947]  [<ffffffff816faa46>] io_schedule_timeout+0xa6/0x110
-> [1248134.772950]  [<ffffffff816fbb5b>] bit_wait_io+0x1b/0x60
-> [1248134.772952]  [<ffffffff816fb8ee>] __wait_on_bit_lock+0x4e/0xb0
-> [1248134.772958]  [<ffffffff81189759>] __lock_page+0xb9/0xe0
 
-Waiting for a page lock with ILOCK held...
+This is a multi-part message in MIME format.
 
-> [1248134.772962]  [<ffffffff810c2910>] ? autoremove_wake_function+0x40/0x40
-> [1248134.773007]  [<ffffffffa08d7c70>] xfs_find_get_desired_pgoff.isra.10+0x1e0/0x2d0 [xfs]
-> [1248134.773039]  [<ffffffffa08d7f9d>] xfs_seek_hole_data+0x23d/0x2c0 [xfs]
-> [1248134.773054]  [<ffffffffa05d942c>] ? nfs4_preprocess_stateid_op+0x11c/0x430 [nfsd]
-> [1248134.773086]  [<ffffffffa08d803c>] xfs_file_llseek+0x1c/0x40 [xfs]
-> [1248134.773090]  [<ffffffff8120633e>] vfs_llseek+0x2e/0x30
-> [1248134.773101]  [<ffffffffa05c6080>] nfsd4_seek+0x80/0xe0 [nfsd]
-> [1248134.773112]  [<ffffffffa05c8416>] nfsd4_proc_compound+0x3b6/0x710 [nfsd]
-> [1248134.773121]  [<ffffffffa05b4f2e>] nfsd_dispatch+0xce/0x270 [nfsd]
-> [1248134.773142]  [<ffffffffa01a5134>] svc_process_common+0x454/0x720 [sunrpc]
-> [1248134.773151]  [<ffffffffa05b4880>] ? nfsd_destroy+0x60/0x60 [nfsd]
-> [1248134.773168]  [<ffffffffa01a5505>] svc_process+0x105/0x1c0 [sunrpc]
-> [1248134.773177]  [<ffffffffa05b4970>] nfsd+0xf0/0x160 [nfsd]
-> [1248134.773180]  [<ffffffff8109d755>] kthread+0xe5/0x100
-> [1248134.773183]  [<ffffffff8109d670>] ? kthread_park+0x60/0x60
-> [1248134.773187]  [<ffffffff816ff1cf>] ret_from_fork+0x3f/0x70
-> [1248134.773190]  [<ffffffff8109d670>] ? kthread_park+0x60/0x60
-> [1248134.773193] INFO: task nfsd:1624 blocked for more than 120 seconds.
-> [1248134.773195]       Tainted: G          I     4.4.73-2.el7.centos.x86_64 #1
-> [1248134.773197] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [1248134.773198] nfsd            D ffff880bbf1a7738     0  1624      2 0x00000080
-> [1248134.773202]  ffff880bbf1a7738 ffffffff81a79500 ffff880bbf081500 ffff880bbf1a8000
-> [1248134.773205]  ffff8802334477a8 ffff880233447790 ffffffff00000000 ffffffff00000001
-> [1248134.773208]  ffff880bbf1a7750 ffffffff816fb2d5 ffff880bbf081500 ffff880bbf1a77e0
-> [1248134.773211] Call Trace:
-> [1248134.773214]  [<ffffffff816fb2d5>] schedule+0x35/0x80
-> [1248134.773217]  [<ffffffff816fdab5>] rwsem_down_write_failed+0x1f5/0x320
-> [1248134.773243]  [<ffffffffa089e722>] ? xfs_bmap_search_extents+0x72/0xe0 [xfs]
-> [1248134.773273]  [<ffffffffa08cd212>] ? __xfs_get_blocks+0x162/0x800 [xfs]
-> [1248134.773276]  [<ffffffff81346433>] call_rwsem_down_write_failed+0x13/0x20
-> [1248134.773279]  [<ffffffff816fd35d>] ? down_write+0x2d/0x40
-> [1248134.773311]  [<ffffffffa08e459a>] xfs_ilock+0xea/0x130 [xfs]
+------=_NextPartTM-000-90166cd8-da6a-4c38-a6bd-837968af1957
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-...and waiting for the ILOCK with page lock held.
+> Von: Darrick J. Wong [darrick.wong@oracle.com]
+> Gesendet: Montag, 10. Juli 2017 18:51
+> An: Markus Stockhausen
+> Cc: 'linux-xfs@vger.kernel.org'
+> Betreff: Re: XFS hang - 4.4.73 longterm
+>=20
+> >On Sun, Jul 09, 2017 at 05:01:25PM +0000, Markus Stockhausen wrote:
+> >=20
+> > ...
+> > Not good news. Finally I disabled SEEK support in nfsd by partially
+> > reverting 3.18 patch 24bab491220faa446d94 "NFSD: Implement SEEK".
+> > While before NFS/XFS crashed with active VM snapshots and heavy disk
+> > writes after minutes it now runs for 2 days of intensive testing
+> > without errors.
+> >
+> > At least now I have full discard support in side VMs (via hole
+> > punching of disk files).
+>=20
+> I'd advise you to set an extent size hint to reduce fragmentation, the
+> same as we tell everyone else. :)
 
-This is the known deadlock in SEEK_HOLE/SEEK_DATA; I have patches queued
-to fix it in 4.13, as soon as the dust settles and I send the pull req.
+Hehe. Since the days of the memory allocation errors and the need for
+periodical drop caches we have an eye on it.
 
---D
+> I'd also advise you not to punch too many holes in the VM files because
+> that increases extent map overhead.  There's also an unfortunate design
+> problem in the in-memory extent map -- all the extents have to fit in a
+> single chunk of memory -- and punching a lot of small holes when memory
+> is tight can lead to allocation failures.
 
-> [1248134.773341]  [<ffffffffa08cd212>] __xfs_get_blocks+0x162/0x800 [xfs]
-> [1248134.773371]  [<ffffffffa08cd8c4>] xfs_get_blocks+0x14/0x20 [xfs]
-> [1248134.773375]  [<ffffffff8123f349>] __block_write_begin+0x1a9/0x4c0
-> [1248134.773405]  [<ffffffffa08cd8b0>] ? __xfs_get_blocks+0x800/0x800 [xfs]
-> [1248134.773435]  [<ffffffffa08cbae1>] xfs_vm_write_begin+0x51/0xe0 [xfs]
-> [1248134.773464]  [<ffffffffa08cb8f9>] ? xfs_vm_write_end+0x29/0x80 [xfs]
-> [1248134.773468]  [<ffffffff81189aef>] generic_perform_write+0xcf/0x1c0
-> [1248134.773499]  [<ffffffffa08d9615>] xfs_file_buffered_aio_write+0x135/0x290 [xfs]
-> [1248134.773503]  [<ffffffff812bae93>] ? selinux_file_permission+0xc3/0x110
-> [1248134.773534]  [<ffffffffa08d9801>] xfs_file_write_iter+0x91/0x150 [xfs]
-> [1248134.773566]  [<ffffffffa08d9770>] ? xfs_file_buffered_aio_write+0x290/0x290 [xfs]
-> [1248134.773569]  [<ffffffff812072dc>] do_readv_writev+0x1ec/0x2a0
-> [1248134.773573]  [<ffffffff816fe8a5>] ? _raw_spin_unlock_irqrestore+0x15/0x20
-> [1248134.773576]  [<ffffffff810c22f4>] ? __wake_up+0x44/0x50
-> [1248134.773579]  [<ffffffff81207419>] vfs_writev+0x39/0x50
-> [1248134.773589]  [<ffffffffa05b9d40>] nfsd_vfs_write+0xc0/0x370 [nfsd]
-> [1248134.773600]  [<ffffffffa05c64a3>] nfsd4_write+0x1a3/0x200 [nfsd]
-> [1248134.773611]  [<ffffffffa05c8416>] nfsd4_proc_compound+0x3b6/0x710 [nfsd]
-> [1248134.773620]  [<ffffffffa05b4f2e>] nfsd_dispatch+0xce/0x270 [nfsd]
-> [1248134.773638]  [<ffffffffa01a5134>] svc_process_common+0x454/0x720 [sunrpc]
-> [1248134.773647]  [<ffffffffa05b4880>] ? nfsd_destroy+0x60/0x60 [nfsd]
-> [1248134.773664]  [<ffffffffa01a5505>] svc_process+0x105/0x1c0 [sunrpc]
-> [1248134.773672]  [<ffffffffa05b4970>] nfsd+0xf0/0x160 [nfsd]
-> [1248134.773675]  [<ffffffff8109d755>] kthread+0xe5/0x100
-> [1248134.773678]  [<ffffffff8109d670>] ? kthread_park+0x60/0x60
-> [1248134.773682]  [<ffffffff816ff1cf>] ret_from_fork+0x3f/0x70
-> [1248134.773684]  [<ffffffff8109d670>] ? kthread_park+0x60/0x60
-> 
-> Thanks in advance.
-> 
-> Markus
+Thanks for sharing that info. Do you (XFS developers) plan an overhaul=20
+of that design or will it be enough to simply add RAM to the storage?
 
-> ****************************************************************************
-> Diese E-Mail enth??lt vertrauliche und/oder rechtlich gesch??tzte
-> Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
-> irrt??mlich erhalten haben, informieren Sie bitte sofort den Absender und
-> vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
-> Weitergabe dieser Mail ist nicht gestattet.
-> 
-> ??ber das Internet versandte E-Mails k??nnen unter fremden Namen erstellt oder
-> manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
-> rechtsverbindliche Willenserkl??rung.
-> 
-> Collogia
-> Unternehmensberatung AG
-> Ubierring 11
-> D-50678 K??ln
-> 
-> Vorstand:
-> Kadir Akin
-> Dr. Michael H??hnerbach
-> 
-> Vorsitzender des Aufsichtsrates:
-> Hans Kristian Langva
-> 
-> Registergericht: Amtsgericht K??ln
-> Registernummer: HRB 52 497
-> 
-> This e-mail may contain confidential and/or privileged information. If you
-> are not the intended recipient (or have received this e-mail in error)
-> please notify the sender immediately and destroy this e-mail. Any
-> unauthorized copying, disclosure or distribution of the material in this
-> e-mail is strictly forbidden.
-> 
-> e-mails sent over the internet may have been written under a wrong name or
-> been manipulated. That is why this message sent as an e-mail is not a
-> legally binding declaration of intention.
-> 
-> Collogia
-> Unternehmensberatung AG
-> Ubierring 11
-> D-50678 K??ln
-> 
-> executive board:
-> Kadir Akin
-> Dr. Michael H??hnerbach
-> 
-> President of the supervisory board:
-> Hans Kristian Langva
-> 
-> Registry office: district court Cologne
-> Register number: HRB 52 497
-> 
-> ****************************************************************************
+Markus
 
+> ..
+.
+------=_NextPartTM-000-90166cd8-da6a-4c38-a6bd-837968af1957
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="InterScan_Disclaimer.txt"
+
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
+
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
+
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
+
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
+
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+President of the supervisory board:
+Hans Kristian Langva
+
+Registry office: district court Cologne
+Register number: HRB 52 497
+
+****************************************************************************
+
+------=_NextPartTM-000-90166cd8-da6a-4c38-a6bd-837968af1957--
