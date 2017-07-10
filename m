@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44557 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40288 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754168AbdGJN2C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1754167AbdGJN2C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Mon, 10 Jul 2017 09:28:02 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D5F1EC04B310
+        by mx1.redhat.com (Postfix) with ESMTPS id D95E7C04B328
         for <linux-xfs@vger.kernel.org>; Mon, 10 Jul 2017 13:28:01 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BAD967D50B
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BD4C9182FD
         for <linux-xfs@vger.kernel.org>; Mon, 10 Jul 2017 13:28:01 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 6/6] xfs: add log recovery tracepoint for head/tail
-Date: Mon, 10 Jul 2017 09:28:00 -0400
-Message-Id: <20170710132800.19506-7-bfoster@redhat.com>
+Subject: [PATCH v2 5/6] xfs: handle -EFSCORRUPTED during head/tail verification
+Date: Mon, 10 Jul 2017 09:27:59 -0400
+Message-Id: <20170710132800.19506-6-bfoster@redhat.com>
 In-Reply-To: <20170710132800.19506-1-bfoster@redhat.com>
 References: <20170710132800.19506-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,60 +22,65 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Torn write detection and tail overwrite detection can shift the log
-head and tail respectively in the event of CRC mismatch or
-corruption errors. Add a high-level log recovery tracepoint to dump
-the final log head/tail and make those values easily attainable in
-debug/diagnostic situations.
+Torn write and tail overwrite detection both trigger only on
+-EFSBADCRC errors. While this is the most likely failure scenario
+for each condition, -EFSCORRUPTED is still possible in certain cases
+depending on what ends up on disk when a torn write or partial tail
+overwrite occurs. For example, an invalid log record h_len can lead
+to an -EFSCORRUPTED error when running the log recovery CRC pass.
+
+Therefore, update log head and tail verification to trigger the
+associated head/tail fixups in the event of -EFSCORRUPTED errors
+along with -EFSBADCRC. Also, -EFSCORRUPTED can currently be returned
+from xlog_do_recovery_pass() before rhead_blk is initialized if the
+first record encountered happens to be corrupted. This leads to an
+incorrect 'first_bad' return value. Initialize rhead_blk earlier in
+the function to address that problem as well.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c |  2 ++
- fs/xfs/xfs_trace.h       | 18 ++++++++++++++++++
- 2 files changed, 20 insertions(+)
+ fs/xfs/xfs_log_recover.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 2e34797..dd2ad2a 100644
+index d3bef45..2e34797 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -5598,6 +5598,8 @@ xlog_do_recover(
- 	xfs_buf_t	*bp;
- 	xfs_sb_t	*sbp;
+@@ -1102,7 +1102,7 @@ xlog_verify_tail(
+ 	first_bad = 0;
+ 	error = xlog_do_recovery_pass(log, head_blk, *tail_blk,
+ 				      XLOG_RECOVER_CRCPASS, &first_bad);
+-	while (error == -EFSBADCRC && first_bad) {
++	while ((error == -EFSBADCRC || error == -EFSCORRUPTED) && first_bad) {
+ 		int	tail_distance;
  
-+	trace_xfs_log_recover(log, head_blk, tail_blk);
-+
- 	/*
- 	 * First replay the images in the log.
+ 		/*
+@@ -1188,7 +1188,7 @@ xlog_verify_head(
  	 */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index bcc3cdf..6881047 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1963,6 +1963,24 @@ DEFINE_EVENT(xfs_swap_extent_class, name, \
- DEFINE_SWAPEXT_EVENT(xfs_swap_extent_before);
- DEFINE_SWAPEXT_EVENT(xfs_swap_extent_after);
+ 	error = xlog_do_recovery_pass(log, *head_blk, tmp_rhead_blk,
+ 				      XLOG_RECOVER_CRCPASS, &first_bad);
+-	if (error == -EFSBADCRC) {
++	if ((error == -EFSBADCRC || error == -EFSCORRUPTED) && first_bad) {
+ 		/*
+ 		 * We've hit a potential torn write. Reset the error and warn
+ 		 * about it.
+@@ -5257,7 +5257,7 @@ xlog_do_recovery_pass(
+ 	LIST_HEAD		(buffer_list);
  
-+TRACE_EVENT(xfs_log_recover,
-+	TP_PROTO(struct xlog *log, xfs_daddr_t headblk, xfs_daddr_t tailblk),
-+	TP_ARGS(log, headblk, tailblk),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_daddr_t, headblk)
-+		__field(xfs_daddr_t, tailblk)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = log->l_mp->m_super->s_dev;
-+		__entry->headblk = headblk;
-+		__entry->tailblk = tailblk;
-+	),
-+	TP_printk("dev %d:%d headblk 0x%llx tailblk 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->headblk,
-+		  __entry->tailblk)
-+)
-+
- TRACE_EVENT(xfs_log_recover_record,
- 	TP_PROTO(struct xlog *log, struct xlog_rec_header *rhead, int pass),
- 	TP_ARGS(log, rhead, pass),
+ 	ASSERT(head_blk != tail_blk);
+-	rhead_blk = 0;
++	blk_no = rhead_blk = tail_blk;
+ 
+ 	for (i = 0; i < XLOG_RHASH_SIZE; i++)
+ 		INIT_HLIST_HEAD(&rhash[i]);
+@@ -5335,7 +5335,6 @@ xlog_do_recovery_pass(
+ 	}
+ 
+ 	memset(rhash, 0, sizeof(rhash));
+-	blk_no = rhead_blk = tail_blk;
+ 	if (tail_blk > head_blk) {
+ 		/*
+ 		 * Perform recovery around the end of the physical log.
 -- 
 2.9.4
 
