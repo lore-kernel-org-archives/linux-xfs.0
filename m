@@ -1,91 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40268 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754146AbdGJN2B (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Jul 2017 09:28:01 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 79713C04B31B
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Jul 2017 13:28:01 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 54804785E0
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Jul 2017 13:28:01 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 2/6] xfs: always verify the log tail during recovery
-Date: Mon, 10 Jul 2017 09:27:56 -0400
-Message-Id: <20170710132800.19506-3-bfoster@redhat.com>
-In-Reply-To: <20170710132800.19506-1-bfoster@redhat.com>
-References: <20170710132800.19506-1-bfoster@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:46254 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754428AbdGJQvx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2017 12:51:53 -0400
+Date: Mon, 10 Jul 2017 09:51:41 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: XFS hang - 4.4.73 longterm
+Message-ID: <20170710165141.GK4103@magnolia>
+References: <12EF8D94C6F8734FB2FF37B9FBEDD173010E02746C@EXCHANGE.collogia.de>
+ <20170706002436.GA5068@magnolia>
+ <12EF8D94C6F8734FB2FF37B9FBEDD173010E027537@EXCHANGE.collogia.de>
+ <20170707034713.GD4103@magnolia>
+ <12EF8D94C6F8734FB2FF37B9FBEDD173010E0284F8@EXCHANGE.collogia.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <12EF8D94C6F8734FB2FF37B9FBEDD173010E0284F8@EXCHANGE.collogia.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Markus Stockhausen <stockhausen@collogia.de>
+Cc: "'linux-xfs@vger.kernel.org'" <linux-xfs@vger.kernel.org>
 
-Log tail verification currently only occurs when torn writes are
-detected at the head of the log. This was introduced because a
-change in the head block due to torn writes can lead to a change in
-the tail block (each log record header references the current tail)
-and the tail block should be verified before log recovery proceeds.
+On Sun, Jul 09, 2017 at 05:01:25PM +0000, Markus Stockhausen wrote:
+> > -----Ursprüngliche Nachricht-----
+> > Von: Darrick J. Wong [mailto:darrick.wong@oracle.com] 
+> > Gesendet: Freitag, 7. Juli 2017 05:47
+> > An: Markus Stockhausen
+> > Cc: 'linux-xfs@vger.kernel.org'
+> > Betreff: Re: XFS hang - 4.4.73 longterm
+> >
+> > > > ...
+> > > > This is the known deadlock in SEEK_HOLE/SEEK_DATA; I have patches queued to fix it in 4.13, as soon as the dust settles and I send the pull req.
+> > > 
+> > > Short, precise, frightening.
+> > > 
+> > > Can you advise what will the best option to avoid that error. 
+> > > First things that come to my mind would be:
+> > > 
+> > > - get back to original 3.10 stable kernel from CentOS Distro
+> > > - lower NFS mount version
+> > > - Maybe remove some single patch that introduced the error?
+> >
+> > Unfortunately, SEEK_HOLE (and the deadlocky code) go all the way back to the beginning of SEEK_HOLE support, so I don't know that 
+> > there's a good workaround for this.  There's not really a way to shut off support for it, either, that doesn't involve gross code surgery.
+> 
+> Not good news. Finally I disabled SEEK support in nfsd by partially
+> reverting 3.18 patch 24bab491220faa446d94 "NFSD: Implement SEEK".
+> While before NFS/XFS crashed with active VM snapshots and heavy disk
+> writes after minutes it now runs for 2 days of intensive testing
+> without errors.
+> 
+> At least now I have full discard support in side VMs (via hole
+> punching of disk files).
 
-Tail corruption is possible outside of torn write scenarios,
-however. For example, partial log writes can be detected and cleared
-during the initial head/tail block discovery process. If the partial
-write coincides with a tail overwrite, the log tail is corrupted and
-recovery fails.
+I'd advise you to set an extent size hint to reduce fragmentation, the
+same as we tell everyone else. :)
 
-To facilitate correct handling of log tail overwites, update log
-recovery to always perform tail verification. This is necessary to
-detect potential tail overwrite conditions when torn writes may not
-have occurred. This changes normal (i.e., no torn writes) recovery
-behavior slightly to detect and return CRC related errors near the
-tail before actual recovery starts.
+I'd also advise you not to punch too many holes in the VM files because
+that increases extent map overhead.  There's also an unfortunate design
+problem in the in-memory extent map -- all the extents have to fit in a
+single chunk of memory -- and punching a lot of small holes when memory
+is tight can lead to allocation failures.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_log_recover.c | 26 +++-----------------------
- 1 file changed, 3 insertions(+), 23 deletions(-)
+(Even after we fix that problem I'd still advise against punching a lot
+of small holes purely due to the overhead that creates.)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index a388a84..72c12b1 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1183,31 +1183,11 @@ xlog_verify_head(
- 			ASSERT(0);
- 			return 0;
- 		}
--
--		/*
--		 * Now verify the tail based on the updated head. This is
--		 * required because the torn writes trimmed from the head could
--		 * have been written over the tail of a previous record. Return
--		 * any errors since recovery cannot proceed if the tail is
--		 * corrupt.
--		 *
--		 * XXX: This leaves a gap in truly robust protection from torn
--		 * writes in the log. If the head is behind the tail, the tail
--		 * pushes forward to create some space and then a crash occurs
--		 * causing the writes into the previous record's tail region to
--		 * tear, log recovery isn't able to recover.
--		 *
--		 * How likely is this to occur? If possible, can we do something
--		 * more intelligent here? Is it safe to push the tail forward if
--		 * we can determine that the tail is within the range of the
--		 * torn write (e.g., the kernel can only overwrite the tail if
--		 * it has actually been pushed forward)? Alternatively, could we
--		 * somehow prevent this condition at runtime?
--		 */
--		error = xlog_verify_tail(log, *head_blk, *tail_blk);
- 	}
-+	if (error)
-+		return error;
- 
--	return error;
-+	return xlog_verify_tail(log, *head_blk, *tail_blk);
- }
- 
- /*
--- 
-2.9.4
+> I'm not familiar with SEEK_HOLE/SEEK_data feature. Do you see negative
+> impact if disabling these? In contrast to falling back to NFS 4
+> without seek + discard support.
+
+Well, whatever program was using SEEK_{HOLE,DATA} to skip sparse holes
+in the files will likely revert to a much slower "read the whole file
+looking for block aligned zeroes" algorithm... assuming that was why it
+was doing that in the first place.
+
+FWIW I just sent off the 4.13 merge request with the SEEK_HOLE fixes,
+though they depend on iomap, which (iirc) wasn't added to the vfs until
+4.8 or so.
+
+--D
+
+> 
+> Markus 
+
+> ****************************************************************************
+> Diese E-Mail enth??lt vertrauliche und/oder rechtlich gesch??tzte
+> Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+> irrt??mlich erhalten haben, informieren Sie bitte sofort den Absender und
+> vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+> Weitergabe dieser Mail ist nicht gestattet.
+> 
+> ??ber das Internet versandte E-Mails k??nnen unter fremden Namen erstellt oder
+> manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+> rechtsverbindliche Willenserkl??rung.
+> 
+> Collogia
+> Unternehmensberatung AG
+> Ubierring 11
+> D-50678 K??ln
+> 
+> Vorstand:
+> Kadir Akin
+> Dr. Michael H??hnerbach
+> 
+> Vorsitzender des Aufsichtsrates:
+> Hans Kristian Langva
+> 
+> Registergericht: Amtsgericht K??ln
+> Registernummer: HRB 52 497
+> 
+> This e-mail may contain confidential and/or privileged information. If you
+> are not the intended recipient (or have received this e-mail in error)
+> please notify the sender immediately and destroy this e-mail. Any
+> unauthorized copying, disclosure or distribution of the material in this
+> e-mail is strictly forbidden.
+> 
+> e-mails sent over the internet may have been written under a wrong name or
+> been manipulated. That is why this message sent as an e-mail is not a
+> legally binding declaration of intention.
+> 
+> Collogia
+> Unternehmensberatung AG
+> Ubierring 11
+> D-50678 K??ln
+> 
+> executive board:
+> Kadir Akin
+> Dr. Michael H??hnerbach
+> 
+> President of the supervisory board:
+> Hans Kristian Langva
+> 
+> Registry office: district court Cologne
+> Register number: HRB 52 497
+> 
+> ****************************************************************************
 
