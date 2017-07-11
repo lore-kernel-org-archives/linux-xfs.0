@@ -1,60 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49250 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751384AbdGMTXw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2017 15:23:52 -0400
-Date: Thu, 13 Jul 2017 12:23:47 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/4] xfs: fixup xfs_attr_get_ilocked
-Message-ID: <20170713192347.GF4151@magnolia>
-References: <20170713113304.8079-1-hch@lst.de>
- <20170713113304.8079-2-hch@lst.de>
+Received: from mail1.g1.pair.com ([66.39.3.162]:48166 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754709AbdGKNYB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Jul 2017 09:24:01 -0400
+Date: Tue, 11 Jul 2017 15:23:52 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Weird xfs_repair error
+Message-ID: <20170711152340.4cd5dff9@harpe.intellique.com>
+In-Reply-To: <20170707153633.GG4103@magnolia>
+References: <20170706153020.0ad6dd47@harpe.intellique.com>
+        <20170706232803.GF17762@dastard>
+        <20170707135009.68c22182@harpe.intellique.com>
+        <20170707153633.GG4103@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170713113304.8079-2-hch@lst.de>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/SMlVXs5EbolIXdQHAY41Tt8"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, "'linux-xfs@vger.kernel.org'" <linux-xfs@vger.kernel.org>
 
-On Thu, Jul 13, 2017 at 01:33:01PM +0200, Christoph Hellwig wrote:
-> The comment mentioned the wrong lock.  Also add an ASSERT to assert
-> this locking precondition.
+--Sig_/SMlVXs5EbolIXdQHAY41Tt8
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Le Fri, 7 Jul 2017 08:36:33 -0700
+"Darrick J. Wong" <darrick.wong@oracle.com> =C3=A9crivait:
 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index ef8a1c75a467..de7b9bd30bec 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -114,12 +114,14 @@ xfs_inode_hasattr(
->   * Overall external interface routines.
->   *========================================================================*/
->  
-> -/* Retrieve an extended attribute and its value.  Must have iolock. */
-> +/* Retrieve an extended attribute and its value.  Must have ilock. */
->  int
->  xfs_attr_get_ilocked(
->  	struct xfs_inode	*ip,
->  	struct xfs_da_args	*args)
->  {
-> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
-> +
->  	if (!xfs_inode_hasattr(ip))
->  		return -ENOATTR;
->  	else if (ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL)
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > fatal error -- name create failed in lost+found (28), filesystem
+> > may be out of space =20
+>=20
+> Would be helpful to have a metadump of this goobered-up lost+found
+> fs...
+>=20
+
+The metadump is here for anyone who would like to have a look:
+
+http://update2.intellique.com/pub/bign.metadump.xz
+
+The filesystem is about 115 TiB.
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/SMlVXs5EbolIXdQHAY41Tt8
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAllk0XMACgkQX3jQXNUicVZI5ACgiV8hE/DwFlQDwVJ5UArrOgBE
+gIUAoPdbJa5AMK9xZDYuKY65V2mIfgwp
+=KSOd
+-----END PGP SIGNATURE-----
+
+--Sig_/SMlVXs5EbolIXdQHAY41Tt8--
