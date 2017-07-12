@@ -1,74 +1,167 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:15907 "EHLO mail1.g1.pair.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752364AbdGGLuI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Jul 2017 07:50:08 -0400
-Date: Fri, 7 Jul 2017 13:50:09 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Weird xfs_repair error
-Message-ID: <20170707135009.68c22182@harpe.intellique.com>
-In-Reply-To: <20170706232803.GF17762@dastard>
-References: <20170706153020.0ad6dd47@harpe.intellique.com>
-        <20170706232803.GF17762@dastard>
+Received: from userp1040.oracle.com ([156.151.31.81]:50334 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751215AbdGLRj0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jul 2017 13:39:26 -0400
+Date: Wed, 12 Jul 2017 10:39:23 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] generic: test negative SEEK_HOLE/SEEK_DATA offsets
+Message-ID: <20170712173923.GD4212@magnolia>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/rg4G=UBxpN2dfhzMB_VuLoi"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "'linux-xfs@vger.kernel.org'" <linux-xfs@vger.kernel.org>
+To: linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
---Sig_/rg4G=UBxpN2dfhzMB_VuLoi
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Check that we get -ENXIO if the user calls SEEK_HOLE/SEEK_DATA with
+a negative file offset.
 
-Le Fri, 7 Jul 2017 09:28:03 +1000
-Dave Chinner <david@fromorbit.com> =C3=A9crivait:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ src/seek_sanity_test.c |   25 +++++++++++++++++
+ tests/generic/702      |   70 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/702.out  |    2 +
+ tests/generic/group    |    1 +
+ 4 files changed, 98 insertions(+)
+ create mode 100755 tests/generic/702
+ create mode 100644 tests/generic/702.out
 
-> > disconnected inode 26417468, moving to lost+found
-> > disconnected inode 26417469, moving to lost+found
-> > disconnected inode 26417470, moving to lost+found
-> >=20
-> > fatal error -- name create failed in lost+found (117), filesystem
-> > may be out of space =20
->=20
-> Error 117. That's EFSCORRUPTED, not ENOSPC.  IOWs, lost+found was
-> corrupted as it was being modified by xfs_repair.
->=20
-> > Even stranger, after mounting back the image, there is no lost+found
-> > anywhere to be found! However the filesystem has lots of free space
-> > and free inodes, how come? =20
->=20
-> Because lost+found was corrupted.
-
-Actually with xfs_repair 4.11 it's a different error in the end:
-
-disconnected inode 180399699751, moving to lost+found
-disconnected inode 180399699752, moving to lost+found
-
-fatal error -- name create failed in lost+found (28), filesystem may be
-out of space
-
-
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
-
---Sig_/rg4G=UBxpN2dfhzMB_VuLoi
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAllfdXIACgkQX3jQXNUicVbCWACgumBufclATt/+mYEOFOPUPwRl
-guoAnjxaZjvPj1X7ya/IyIv8MdOOOs9l
-=rdVv
------END PGP SIGNATURE-----
-
---Sig_/rg4G=UBxpN2dfhzMB_VuLoi--
+diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
+index a58ec36..547f0a4 100644
+--- a/src/seek_sanity_test.c
++++ b/src/seek_sanity_test.c
+@@ -274,6 +274,30 @@ static int huge_file_test(int fd, int testnum, off_t filsz)
+ 	return ret;
+ }
+ 
++/* Make sure we get ENXIO if we pass in a negative offset. */
++static int test18(int fd, int testnum)
++{
++	int ret = 0;
++	off_t pos;
++
++	errno = 0;
++	pos = lseek(fd, -1, SEEK_HOLE);
++	if (pos != -1 || errno != ENXIO) {
++		printf("%02d.1 SEEK_HOLE expected -1 with errno %d, got %jd and %d.\n",
++		       testnum, -ENXIO, pos, -errno);
++		ret++;
++	}
++
++	errno = 0;
++	pos = lseek(fd, -1, SEEK_DATA);
++	if (pos != -1 || errno != ENXIO) {
++		printf("%02d.1 SEEK_DATA expected -1 with errno %d, got %jd and %d.\n",
++		       testnum, -ENXIO, pos, -errno);
++		ret++;
++	}
++	return ret;
++}
++
+ static int test17(int fd, int testnum)
+ {
+ 	char *buf = NULL;
+@@ -969,6 +993,7 @@ struct testrec seek_tests[] = {
+        { 15, test15, "Test file with unwritten extents, page after unwritten extent" },
+        { 16, test16, "Test file with unwritten extents, non-contiguous dirty pages" },
+        { 17, test17, "Test file with unwritten extents, data-hole-data inside page" },
++       { 18, test18, "Test file with negative SEEK_{HOLE,DATA} offsets" },
+ };
+ 
+ static int run_test(struct testrec *tr)
+diff --git a/tests/generic/702 b/tests/generic/702
+new file mode 100755
+index 0000000..d251c39
+--- /dev/null
++++ b/tests/generic/702
+@@ -0,0 +1,70 @@
++#! /bin/bash
++# FS QA Test No. 702
++#
++# Check what happens when SEEK_HOLE/SEEK_DATA are fed negative offsets.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename "$0"`
++seqres="$RESULT_DIR/$seq"
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -rf "$tmp".* $testdir/file1
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++_supported_fs generic
++_supported_os Linux
++
++_require_test
++_require_seek_data_hole
++
++BASE_TEST_FILE=$TEST_DIR/seek_sanity_testfile
++
++_require_test_program "seek_sanity_test"
++
++# Disable extent zeroing for ext4 as that change where holes are created
++if [ "$FSTYP" = "ext4" ]; then
++	DEV=`_short_dev $TEST_DEV`
++	echo 0 >/sys/fs/ext4/$DEV/extent_max_zeroout_kb
++fi
++
++_cleanup()
++{
++	rm -f $tmp.* $BASE_TEST_FILE.*
++}
++
++$here/src/seek_sanity_test -s 18 -e 18 $BASE_TEST_FILE > $seqres.full 2>&1 ||
++	_fail "seek sanity check failed!"
++
++_check_dmesg
++# success, all done
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/generic/702.out b/tests/generic/702.out
+new file mode 100644
+index 0000000..608d593
+--- /dev/null
++++ b/tests/generic/702.out
+@@ -0,0 +1,2 @@
++QA output created by 702
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index 3c5a19c..6afd402 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -449,4 +449,5 @@
+ 444 auto quick acl
+ 445 auto quick rw
+ 446 auto quick rw dangerous
++702 auto quick rw
+ 931 auto quick clone
