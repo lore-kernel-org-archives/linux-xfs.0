@@ -1,57 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35566 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:56460 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752129AbdGMPqi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Jul 2017 11:46:38 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8C87783F46
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Jul 2017 15:46:38 +0000 (UTC)
-Date: Thu, 13 Jul 2017 10:46:34 -0500
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH] xfs_io: Print filesystem statfs flags in 'statfs' command
-Message-ID: <20170713154634.GA13105@redhat.com>
-References: <20170703082830.22967-1-cmaiolino@redhat.com>
+        id S1751347AbdGLJUY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Jul 2017 05:20:24 -0400
+Date: Wed, 12 Jul 2017 11:20:23 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v4 2/3] iomap: Switch from blkno to physical offset
+Message-ID: <20170712092023.GB8251@lst.de>
+References: <CAHc6FU4u+G1gtZVr3CUbJi2i+GwWhfDUOZemQ4Nnde=uiOmjXA@mail.gmail.com> <1499462881-4238-3-git-send-email-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170703082830.22967-1-cmaiolino@redhat.com>
+In-Reply-To: <1499462881-4238-3-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Mon, Jul 03, 2017 at 10:28:30AM +0200, Carlos Maiolino wrote:
-> Sometimes printing the flags from the statfs structure is useful, so,
-> make statfs command print them.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Maybe diskaddr or just addr instead of physical which sounds a little
+confusing?
 
-looks good.
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Also how well was this tested?  With all the calculation I'm a little
+worried about overflows, so a full xfstests run including sub-page
+blocksize and DAX really is in order here.
 
-> ---
->  io/stat.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/io/stat.c b/io/stat.c
-> index 783eb2e..060ff83 100644
-> --- a/io/stat.c
-> +++ b/io/stat.c
-> @@ -199,6 +199,7 @@ statfs_f(
->  		printf(_("statfs.f_bavail = %lld\n"), (long long) st.f_bavail);
->  		printf(_("statfs.f_files = %lld\n"), (long long) st.f_files);
->  		printf(_("statfs.f_ffree = %lld\n"), (long long) st.f_ffree);
-> +		printf(_("statfs.f_fflags = 0x%llx\n"), (long long) st.f_flags);
->  	}
->  	if (file->flags & IO_FOREIGN)
->  		return 0;
-> -- 
-> 2.9.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +#define IOMAP_F_INLINE	0x40	/* data mixed with metadata */
+
+data inline in the inode?
