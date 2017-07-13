@@ -1,89 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52322 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751828AbdGMLda (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2017 07:33:30 -0400
-Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dVcMy-0001oc-0V
-        for linux-xfs@vger.kernel.org; Thu, 13 Jul 2017 11:33:20 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/4] Revert "xfs: grab dquots without taking the ilock"
-Date: Thu, 13 Jul 2017 13:33:04 +0200
-Message-Id: <20170713113304.8079-5-hch@lst.de>
-In-Reply-To: <20170713113304.8079-1-hch@lst.de>
-References: <20170713113304.8079-1-hch@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:39408 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752902AbdGMTE5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2017 15:04:57 -0400
+Date: Thu, 13 Jul 2017 12:04:50 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] generic: test negative SEEK_HOLE/SEEK_DATA offsets
+Message-ID: <20170713190450.GC4151@magnolia>
+References: <20170712173923.GD4212@magnolia>
+ <20170713081458.GE2478@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170713081458.GE2478@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-This reverts commit 50e0bdbe9f48f98bb02eac7030d682f4716884ae.
+On Thu, Jul 13, 2017 at 04:14:58PM +0800, Eryu Guan wrote:
+> On Wed, Jul 12, 2017 at 10:39:23AM -0700, Darrick J. Wong wrote:
+> > Check that we get -ENXIO if the user calls SEEK_HOLE/SEEK_DATA with
+> > a negative file offset.
+> 
+> A minor nit, this might be confusing, lseek returns -1 on error, and set
+> errno to ENXIO, no one actually returns -ENXIO.
+> 
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  src/seek_sanity_test.c |   25 +++++++++++++++++
+> >  tests/generic/702      |   70 ++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/702.out  |    2 +
+> >  tests/generic/group    |    1 +
+> >  4 files changed, 98 insertions(+)
+> >  create mode 100755 tests/generic/702
+> >  create mode 100644 tests/generic/702.out
+> > 
+> > diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
+> > index a58ec36..547f0a4 100644
+> > --- a/src/seek_sanity_test.c
+> > +++ b/src/seek_sanity_test.c
+> > @@ -274,6 +274,30 @@ static int huge_file_test(int fd, int testnum, off_t filsz)
+> >  	return ret;
+> >  }
+> >  
+> > +/* Make sure we get ENXIO if we pass in a negative offset. */
+> > +static int test18(int fd, int testnum)
+> > +{
+> > +	int ret = 0;
+> > +	off_t pos;
+> > +
+> > +	errno = 0;
+> > +	pos = lseek(fd, -1, SEEK_HOLE);
+> > +	if (pos != -1 || errno != ENXIO) {
+> > +		printf("%02d.1 SEEK_HOLE expected -1 with errno %d, got %jd and %d.\n",
+> > +		       testnum, -ENXIO, pos, -errno);
+> > +		ret++;
+> > +	}
+> > +
+> > +	errno = 0;
+> > +	pos = lseek(fd, -1, SEEK_DATA);
+> > +	if (pos != -1 || errno != ENXIO) {
+> > +		printf("%02d.1 SEEK_DATA expected -1 with errno %d, got %jd and %d.\n",
+> > +		       testnum, -ENXIO, pos, -errno);
+> > +		ret++;
+> > +	}
+> > +	return ret;
+> 
+> Seems cleaner to use do_lseek() helper, e.g.
+> 
+> static int test18(int fd, int testnum)
+> {
+> 	int ret = 0;
+> 
+> 	/* file size doesn't matter in this test, set to 0 */
+> 	ret += do_lseek(testnum, 1, fd, 0, SEEK_HOLE, -1, -1);
+> 	ret += do_lseek(testnum, 2, fd, 0, SEEK_DATA, -1, -1);
+> 	
+> 	return ret;
+> }
+> 
+> And test reports "succ" or "FAIL" as what other subtests do
+> 
+> 18. Test file with negative SEEK_{HOLE,DATA} offsets  
+> 18.01 SEEK_HOLE expected -1 or -1, got 0.                         FAIL
+> 18.02 SEEK_DATA expected -1 with errno -6, got -1.                FAIL
 
-The new XFS_QMOPT_NOLOCK isn't used at all, and conditional locking based
-on a flag is always the wrong thing to do - we should be having helpers
-that can be called without the lock instead.
+Sure, will change and resend.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_quota_defs.h |  2 --
- fs/xfs/xfs_dquot.c             | 14 ++++----------
- 2 files changed, 4 insertions(+), 12 deletions(-)
+--D
 
-diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-index 2834574cb6e7..d69c772271cb 100644
---- a/fs/xfs/libxfs/xfs_quota_defs.h
-+++ b/fs/xfs/libxfs/xfs_quota_defs.h
-@@ -136,8 +136,6 @@ typedef uint16_t	xfs_qwarncnt_t;
-  */
- #define XFS_QMOPT_INHERIT	0x1000000
- 
--#define XFS_QMOPT_NOLOCK	0x2000000 /* don't ilock during dqget */
--
- /*
-  * flags to xfs_trans_mod_dquot.
-  */
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index f89f7b5241e6..fd2ef8c2c9a7 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -472,23 +472,18 @@ xfs_qm_dqtobp(
- 	struct xfs_mount	*mp = dqp->q_mount;
- 	xfs_dqid_t		id = be32_to_cpu(dqp->q_core.d_id);
- 	struct xfs_trans	*tp = (tpp ? *tpp : NULL);
--	uint			lock_mode = 0;
-+	uint			lock_mode;
- 
- 	quotip = xfs_quota_inode(dqp->q_mount, dqp->dq_flags);
- 	dqp->q_fileoffset = (xfs_fileoff_t)id / mp->m_quotainfo->qi_dqperchunk;
- 
--	ASSERT(!(flags & XFS_QMOPT_NOLOCK) ||
--		xfs_isilocked(quotip, XFS_ILOCK_SHARED) ||
--		xfs_isilocked(quotip, XFS_ILOCK_EXCL));
--	if (!(flags & XFS_QMOPT_NOLOCK))
--		lock_mode = xfs_ilock_data_map_shared(quotip);
-+	lock_mode = xfs_ilock_data_map_shared(quotip);
- 	if (!xfs_this_quota_on(dqp->q_mount, dqp->dq_flags)) {
- 		/*
- 		 * Return if this type of quotas is turned off while we
- 		 * didn't have the quota inode lock.
- 		 */
--		if (lock_mode)
--			xfs_iunlock(quotip, lock_mode);
-+		xfs_iunlock(quotip, lock_mode);
- 		return -ESRCH;
- 	}
- 
-@@ -498,8 +493,7 @@ xfs_qm_dqtobp(
- 	error = xfs_bmapi_read(quotip, dqp->q_fileoffset,
- 			       XFS_DQUOT_CLUSTER_SIZE_FSB, &map, &nmaps, 0);
- 
--	if (lock_mode)
--		xfs_iunlock(quotip, lock_mode);
-+	xfs_iunlock(quotip, lock_mode);
- 	if (error)
- 		return error;
- 
--- 
-2.11.0
-
+> 
+> Thanks,
+> Eryu
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
