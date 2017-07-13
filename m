@@ -1,42 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36614 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932080AbdGLRS2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Jul 2017 13:18:28 -0400
-Date: Wed, 12 Jul 2017 18:10:54 +0100
-From: "Richard W.M. Jones" <rjones@redhat.com>
-Subject: Re: [proposal] making filesystem tools more machine friendly
-Message-ID: <20170712171054.GB19996@redhat.com>
-References: <CACj3i70p=ybXZWRncseqwnbs7HAYu-SL02+cj--7T5YnqcwVKQ@mail.gmail.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:56247 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751330AbdGMLda (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2017 07:33:30 -0400
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dVcMs-0001oR-QH
+        for linux-xfs@vger.kernel.org; Thu, 13 Jul 2017 11:33:15 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/4] =?UTF-8?q?xfs:=20assert=20locking=20precond=D1=96tion?= =?UTF-8?q?=20in=20xfs=5Fattr=5Flist=5Fint=5Filocked?=
+Date: Thu, 13 Jul 2017 13:33:02 +0200
+Message-Id: <20170713113304.8079-3-hch@lst.de>
+In-Reply-To: <20170713113304.8079-1-hch@lst.de>
+References: <20170713113304.8079-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACj3i70p=ybXZWRncseqwnbs7HAYu-SL02+cj--7T5YnqcwVKQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_attr_list.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-libguestfs could really use structured output from more of the command
-line tools.  Particularly:
-
- - all the ext4 tools
- - all the xfs tools
- - all the btrfs tools
- - parted
-
-and more.  See also:
-
-  https://github.com/libguestfs/libguestfs/tree/master/daemon
-
-A dbus service would not be useful.
-
-Rich.
-
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index 545eca508d42..7740c8a5e736 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -463,6 +463,8 @@ xfs_attr_list_int_ilocked(
+ {
+ 	struct xfs_inode		*dp = context->dp;
+ 
++	ASSERT(xfs_isilocked(dp, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
++
+ 	/*
+ 	 * Decide on what work routines to call based on the inode size.
+ 	 */
 -- 
-Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
-Read my programming and virtualization blog: http://rwmj.wordpress.com
-virt-builder quickly builds VMs from scratch
-http://libguestfs.org/virt-builder.1.html
+2.11.0
+
