@@ -1,88 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20264 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751060AbdGLS0q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jul 2017 14:26:46 -0400
-Date: Wed, 12 Jul 2017 11:26:41 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfsdump: fix race condition between lseek() and
- read()/write()
-Message-ID: <20170712182641.GB4220@magnolia>
-References: <1461244016-7373-1-git-send-email-eguan@redhat.com>
- <20170327202030.GK5722@birch.djwong.org>
- <20170328034130.GT14226@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170328034130.GT14226@eguan.usersys.redhat.com>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33058 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750933AbdGMGIz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2017 02:08:55 -0400
+Received: by mail-pf0-f193.google.com with SMTP id e199so5957243pfh.0
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jul 2017 23:08:55 -0700 (PDT)
+From: Andreas Dilger <adilger@dilger.ca>
+Message-Id: <566E0688-E3D4-416A-B496-6B2F0FA3C85C@dilger.ca>
+Content-Type: multipart/signed;
+ boundary="Apple-Mail=_B77E4B35-FCE5-4B96-A813-A4FE70E6CF1B";
+ protocol="application/pgp-signature"; micalg=pgp-sha1
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH] vfs: in iomap seek_{hole,data}, return -ENXIO for
+ negative offsets
+Date: Wed, 12 Jul 2017 23:08:51 -0700
+In-Reply-To: <20170712173650.GC4212@magnolia>
+References: <20170712173650.GC4212@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Tue, Mar 28, 2017 at 11:41:30AM +0800, Eryu Guan wrote:
-> On Mon, Mar 27, 2017 at 01:20:30PM -0700, Darrick J. Wong wrote:
-> > [move to new list]
-> > 
-> > On Thu, Apr 21, 2016 at 09:06:56PM +0800, Eryu Guan wrote:
-> > > There's a race condition in the [get|put]_invtrecord() routines, because
-> > > a lseek() followed by a read()/write() is not atmoic, the file offset
-> > > might be changed before read()/write().
-> > > 
-> > > xfs/302 catches this failure as:
-> > > xfsdump: drive 1: INV : Unknown version 0 - Expected version 1
-> > > xfsdump: inv_core.c:66: get_counters: Assertion `((invt_counter_t *)(*cntpp))->ic_vernum == (inv_version_t) 1' failed.
-> > > 
-> > > And it can be reproduced by running multi-stream dump in a tight loop
-> > >   mount /dev/<dev> /mnt/xfs
-> > >   mkdir /mnt/xfs/dumpdir
-> > >   # populate dumpdir here
-> > >   while xfsdump -M l1 -M l2 -f d1 -f d2 -L ses /mnt/xfs -s dumpdir; do
-> > >   	:
-> > >   done
-> > > 
-> > > Fix it by replacing the "lseek(); read()/write()" sequence by
-> > > pread()/pwrite(), which make the seek and I/O an atomic operation.
-> > > 
-> > > Also convert and remove all *_SEEKCUR routines to "SEEK_SET" variants,
-> > > because they depend on the maintenance of current file offset, but
-> > > pread()/pwrite() don't change file offset.
-> > > 
-> > > Signed-off-by: Eryu Guan <eguan@redhat.com>
-> > > ---
-> > > 
-> > > Tested via the reproducer and xfstests "-g dump" run, with both v4 and v5 XFS.
-> > > 
-> > > I'm not sure if this is the right fix, perhaps what should be fixed is the
-> > > "INVLOCK()", which is now implemented by flock(2), and doesn't work in
-> > > multi-thread env, if what it's meant to protect is concurrent accesses from
-> > > different threads, not processes.
-> > > 
-> > > If so, it seems to me that making INVLOCK() a pthread rw lock could fix the
-> > > race condition as well. But the INVLOCK calls are almost everywhere, I didn't
-> > > find a simple way to try it.
-> > 
-> > I wonder, did this ever make any progress?  Offhand it looks ok, but then
-> > I'm no xfsdump expert.
-> 
-> No, you're the first one to comment on this patch :)
-> 
-> > 
-> > (Yes, our QA is bugging me about xfs/302 failures too...)
-> 
-> JFYI, xfs/059 and xfs/301 also fail due to this bug, just that xfs/059
-> failure rarely happens.
 
-Looks fine to me,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+--Apple-Mail=_B77E4B35-FCE5-4B96-A813-A4FE70E6CF1B
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
---D
+On Jul 12, 2017, at 10:36 AM, Darrick J. Wong <darrick.wong@oracle.com> =
+wrote:
+>=20
+> In the iomap implementations of SEEK_HOLE and SEEK_DATA, make sure we
+> return -ENXIO for negative offsets instead of badgering the iomap
+> provider with garbage requests.
 
-> 
-> Thanks,
-> Eryu
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hmm, wouldn't it be useful to be able to seek N bytes before the hole or =
+data?
+It would make more sense to verify the result after finding the hole or =
+data
+and adding the relative offset. It should only be an error if the =
+resulting
+offset is before the start or after the actual file end.  Of course, if
+the passed offset > size from the start then there is no way it can get =
+better
+and that would be grounds for returning early.
+
+Cheers, Andreas
+
+> Inspired-by: Mateusz S <muttdini@gmail.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> fs/iomap.c |    8 ++++----
+> 1 file changed, 4 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 432eed8..16f5c074 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -610,8 +610,8 @@ iomap_seek_hole(struct inode *inode, loff_t =
+offset, const struct iomap_ops *ops)
+> 	loff_t length =3D size - offset;
+> 	loff_t ret;
+>=20
+> -	/* Nothing to be found beyond the end of the file. */
+> -	if (offset >=3D size)
+> +	/* Nothing to be found before or beyond the end of the file. */
+> +	if (offset < 0 || offset >=3D size)
+> 		return -ENXIO;
+>=20
+> 	while (length > 0) {
+> @@ -656,8 +656,8 @@ iomap_seek_data(struct inode *inode, loff_t =
+offset, const struct iomap_ops *ops)
+> 	loff_t length =3D size - offset;
+> 	loff_t ret;
+>=20
+> -	/* Nothing to be found beyond the end of the file. */
+> -	if (offset >=3D size)
+> +	/* Nothing to be found before or beyond the end of the file. */
+> +	if (offset < 0 || offset >=3D size)
+> 		return -ENXIO;
+>=20
+> 	while (length > 0) {
+
+
+Cheers, Andreas
+
+
+
+
+
+
+--Apple-Mail=_B77E4B35-FCE5-4B96-A813-A4FE70E6CF1B
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iD8DBQFZZw5zpIg59Q01vtYRAnWdAJ9wrNmFvf5i0uSNfMO7oWCd00zaeACg5OrW
+59Jw6IaTvWPG75yYFMIezag=
+=qIVO
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_B77E4B35-FCE5-4B96-A813-A4FE70E6CF1B--
