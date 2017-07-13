@@ -1,59 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18055 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753124AbdGNQib (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Jul 2017 12:38:31 -0400
-Date: Fri, 14 Jul 2017 09:38:28 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_db: associate proper type with free inode btree root
-Message-ID: <20170714163828.GA4224@magnolia>
-References: <e6056fa4-40c5-26ab-60f0-8d09d42010ce@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:57634 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752847AbdGMUUn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Jul 2017 16:20:43 -0400
+Received: from [10.0.0.114] (provider [10.0.0.114])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 8902D611EE6
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Jul 2017 15:20:22 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsdump: updated to acd0dda (3.1.7-rc1)
+Message-ID: <5bb50354-9dea-9d2d-3995-7cf11560d341@sandeen.net>
+Date: Thu, 13 Jul 2017 15:20:42 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e6056fa4-40c5-26ab-60f0-8d09d42010ce@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Jul 14, 2017 at 10:52:20AM -0500, Eric Sandeen wrote:
-> When navigating to the free inode btree root, the wrong type
-> is set:
-> 
-> xfs_db> agi 0
-> xfs_db> addr free_root
-> xfs_db> type
-> current type is "inobt"
-> 
-> Change this to type finobt / TYP_FINOBT
-> 
-> (There seems to be no actual difference, but if we have an explicit type
-> name for the free inode btree, we should use it as appropriate)
-> 
+Hi folks,
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+The xfsdump repository at:
 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/db/agi.c b/db/agi.c
-> index 285a3c5..fb69210 100644
-> --- a/db/agi.c
-> +++ b/db/agi.c
-> @@ -57,7 +57,7 @@ const field_t	agi_flds[] = {
->  	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
->  	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
->  	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
-> -	{ "free_root", FLDT_AGBLOCK, OI(OFF(free_root)), C1, 0, TYP_INOBT },
-> +	{ "free_root", FLDT_AGBLOCK, OI(OFF(free_root)), C1, 0, TYP_FINOBT },
->  	{ "free_level", FLDT_UINT32D, OI(OFF(free_level)), C1, 0, TYP_NONE },
->  	{ NULL }
->  };
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
+
+has just been updated and tagged with v3.1.7-rc1
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+acd0dda xfsdump: Release v3.1.7-rc1
+
+New Commits:
+
+Eric Sandeen (3):
+      [25195eb] xfsdump: handle bind mount targets
+      [71860dc] fix build on 32-bit platforms
+      [acd0dda] xfsdump: Release v3.1.7-rc1
+
+Eryu Guan (1):
+      [5903b44] xfsdump: fix race condition between lseek() and read()/write()
+
+Paulo Cezar A Junior (1):
+      [7f42274] xfsdump: Fix memory leak
+
+
+Code Diffstat:
+
+ VERSION              |  2 +-
+ common/inventory.c   |  4 ++--
+ common/main.c        | 26 +++++++++++++++++++-------
+ configure.ac         |  4 +++-
+ doc/CHANGES          |  5 +++++
+ dump/content.c       | 21 +++++++++++++++++++--
+ inventory/inv_api.c  |  5 ++---
+ inventory/inv_core.c | 29 ++++++-----------------------
+ inventory/inv_idx.c  |  4 ++--
+ inventory/inv_priv.h | 21 ++++++---------------
+ inventory/testmain.c | 34 +++++++++++++++++++++++-----------
+ 11 files changed, 88 insertions(+), 67 deletions(-)
+
