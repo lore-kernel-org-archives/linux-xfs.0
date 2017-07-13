@@ -1,238 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:49326 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:44672 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754398AbdGJQjz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Jul 2017 12:39:55 -0400
-Date: Mon, 10 Jul 2017 09:39:54 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: updates for 4.13
-Message-ID: <20170710163954.GJ4103@magnolia>
+        id S1751050AbdGMLgw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Jul 2017 07:36:52 -0400
+Date: Thu, 13 Jul 2017 07:36:50 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [BUG] internal error XFS_WANT_CORRUPTED_GOTO
+Message-ID: <20170713113650.GA38569@bfoster.bfoster>
+References: <CACw1Djo4TUtmE5jJj_2zhtL+W5SK=daA5aNyChY4Qyjv40_ckw@mail.gmail.com>
+ <20170712111924.GB33764@bfoster.bfoster>
+ <CACw1Djrg2nGYDrhfNRhCDyD6JxBiJgLCxWxHqR6-9cy_7f1fAA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <CACw1Djrg2nGYDrhfNRhCDyD6JxBiJgLCxWxHqR6-9cy_7f1fAA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: Sergey F <sf.softevol@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi Linus,
+cc linux-xfs. Please keep replies on list.
 
-Here are some changes for you for 4.13.  For the most part it's fixes
-for bugs and deadlock problems, and preparation for online fsck in some
-future merge window.  The branch merges against this morning's HEAD
-without issue; a quick overnight xfstests run against yesterday's HEAD
-came out cleanly.  Let me know if there are any problems.
+On Thu, Jul 13, 2017 at 01:48:01AM +0300, Sergey F wrote:
+> Hello, Brian.
+> 
+> Thanks for your response to my issue.
+> 
+> >Was any more information dumped with the error, such as a
+> >stacktrace?
+> 
+> Unfortunately, we could not login inside our server.
+> And i already posted all information from server console, accessible
+> through IPMI interface.
+> 
+> >Either way, it's possible the corruption was latent for some
+> >time and only once the broad file removal operation occurred was it
+> >discovered.
+> 
+> Is there any way to defend our servers from errors like that? May be
+> you could give link to any inforamation about how to avoid situation
+> like that?
+> 
 
---Darrick
+Corruption as such is a bug and we don't currently know the root cause
+so there is no specific workaround that we know of. The best I could say
+is 1.) use backups to protect your data and 2.) if you are concerned
+that this may reoccur, introduce routine filesystem checks into your
+workflow. For example, unmount/snapshot the volume at appropriate down
+time intervals and run 'xfs_repair -n' to check the filesystem health
+and hopefully detect corruption before you hit it at runtime.
 
-The following changes since commit 41f1830f5a7af77cf5c86359aba3cbd706687e52:
+If you do detect corruption, it is important to collect the metadump
+image before attempting further mount/recovery operations.
 
-  Linux 4.12-rc6 (2017-06-19 22:19:37 +0800)
+> >Creating a metadump image prior to recovery
+> >is something to consider should you run into this issue again.
+> 
+> What is the best source to read about this operation I would like to
+> be prepared if any similar issues appears one more time.
+> 
 
-are available in the git repository at:
+See 'man xfs_metadump.' It basically clones all of the metadata from the
+fs (data is ignored) into an image file that developers can restore
+using xfs_mdrestore and use to help diagnose problems. You can run it at
+any time to familiarize yourself with the tool, just be sure not to
+restore back to your original device as that will destroy your data ;)
+(i.e., you can xfs_mdrestore to another file and mount it loopback).
 
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.13-merge-5
+It's usually not easy to root cause corruption after the fact, even with
+a metadump image, but it helps provide a starting point at the very
+least.
 
-for you to fetch changes up to cd87d867920155911d0d2e6485b769d853547750:
+Brian
 
-  xfs: don't crash on unexpected holes in dir/attr btrees (2017-07-07 18:55:17 -0700)
-
-----------------------------------------------------------------
-Changes for 4.13:
-- Avoid quotacheck deadlocks
-- Fix transaction overflows when bunmapping fragmented files
-- Refactor directory readahead
-- Allow admin to configure if ASSERT is fatal
-- Improve transaction usage detail logging during overflows
-- Minor cleanups
-- Don't leak log items when the log shuts down
-- Remove double-underscore typedefs
-- Various preparation for online scrubbing
-- Introduce new error injection configuration sysfs knobs
-- Refactor dq_get_next to use extent map directly
-- Fix problems with iterating the page cache for unwritten data
-- Implement SEEK_{HOLE,DATA} via iomap
-- Refactor XFS to use iomap SEEK_HOLE and SEEK_DATA
-- Don't use MAXPATHLEN to check on-disk symlink target lengths
-
-----------------------------------------------------------------
-Andreas Gruenbacher (2):
-      vfs: Add page_cache_seek_hole_data helper
-      vfs: Add iomap_seek_hole and iomap_seek_data helpers
-
-Arnd Bergmann (1):
-      xfs: avoid harmless gcc-7 warnings
-
-Brian Foster (12):
-      xfs: push buffer of flush locked dquot to avoid quotacheck deadlock
-      xfs: define bug_on_assert debug mode sysfs tunable
-      xfs: define fatal assert build time tunable
-      xfs: separate shutdown from ticket reservation print helper
-      xfs: refactor xlog_cil_insert_items() to facilitate transaction dump
-      xfs: dump transaction usage details on log reservation overrun
-      xfs: release bli from transaction properly on fs shutdown
-      xfs: remove bli from AIL before release on transaction abort
-      xfs: free uncommitted transactions during log recovery
-      xfs: replace log_badcrc_factor knob with error injection tag
-      xfs: free cowblocks and retry on buffered write ENOSPC
-      xfs: fix contiguous dquot chunk iteration livelock
-
-Carlos Maiolino (1):
-      xfs: Check for m_errortag initialization in xfs_errortag_test
-
-Christoph Hellwig (4):
-      xfs: remove XFS_HSIZE
-      xfs: rewrite xfs_dq_get_next_id using xfs_iext_lookup_extent
-      xfs: remove a whitespace-only line from xfs_fs_get_nextdqblk
-      xfs: Switch to iomap for SEEK_HOLE / SEEK_DATA
-
-Darrick J. Wong (25):
-      xfs: refactor dir2 leaf readahead shadow buffer cleverness
-      xfs: try to avoid blowing out the transaction reservation when bunmaping a shared extent
-      xfs: optimize _btree_query_all
-      xfs: remove double-underscore integer types
-      xfs: always compile the btree inorder check functions
-      xfs: export various function for the online scrubber
-      xfs: plumb in needed functions for range querying of various btrees
-      xfs: export _inobt_btrec_to_irec and _ialloc_cluster_alignment for scrub
-      xfs: check if an inode is cached and allocated
-      xfs: reflink find shared should take a transaction
-      xfs: separate function to check if inode shares extents
-      xfs: make _bmap_count_blocks consistent wrt delalloc extent behavior
-      xfs: refactor the ifork block counting function
-      xfs: return the hash value of a leaf1 directory block
-      xfs: pass along transaction context when reading directory block buffers
-      xfs: pass along transaction context when reading xattr block buffers
-      xfs: allow reading of already-locked remote symbolic link
-      xfs: don't allow bmap on rt files
-      xfs: make errortag a per-mountpoint structure
-      xfs: expose errortag knobs via sysfs
-      xfs: remove unneeded parameter from XFS_TEST_ERROR
-      xfs: convert drop_writes to use the errortag mechanism
-      xfs: grab dquots without taking the ilock
-      xfs: rename MAXPATHLEN to XFS_SYMLINK_MAXLEN
-      xfs: don't crash on unexpected holes in dir/attr btrees
-
-Jan Kara (1):
-      xfs: Don't clear SGID when inheriting ACLs
-
-Shan Hai (1):
-      xfs: remove lsn relevant fields from xfs_trans structure and its users
-
-kbuild test robot (1):
-      xfs: fix semicolon.cocci warnings
-
- fs/buffer.c                        | 124 ++++++++++++
- fs/iomap.c                         |  94 +++++++++
- fs/xfs/Kconfig                     |  13 ++
- fs/xfs/libxfs/xfs_ag_resv.c        |   3 +-
- fs/xfs/libxfs/xfs_alloc.c          |   8 +-
- fs/xfs/libxfs/xfs_alloc.h          |   2 +
- fs/xfs/libxfs/xfs_alloc_btree.c    |  26 +--
- fs/xfs/libxfs/xfs_attr.c           |  26 ++-
- fs/xfs/libxfs/xfs_attr_leaf.c      |   2 +-
- fs/xfs/libxfs/xfs_attr_remote.c    |  13 +-
- fs/xfs/libxfs/xfs_attr_sf.h        |  10 +-
- fs/xfs/libxfs/xfs_bit.h            |  24 +--
- fs/xfs/libxfs/xfs_bmap.c           |  51 +++--
- fs/xfs/libxfs/xfs_bmap.h           |   2 +-
- fs/xfs/libxfs/xfs_bmap_btree.c     |  34 +++-
- fs/xfs/libxfs/xfs_btree.c          |  52 ++---
- fs/xfs/libxfs/xfs_btree.h          |  33 ++--
- fs/xfs/libxfs/xfs_cksum.h          |  16 +-
- fs/xfs/libxfs/xfs_da_btree.c       |  14 +-
- fs/xfs/libxfs/xfs_da_btree.h       |   8 +-
- fs/xfs/libxfs/xfs_da_format.c      |  28 +--
- fs/xfs/libxfs/xfs_da_format.h      |  64 +++----
- fs/xfs/libxfs/xfs_dir2.c           |   3 +-
- fs/xfs/libxfs/xfs_dir2.h           |   8 +-
- fs/xfs/libxfs/xfs_dir2_block.c     |   2 +-
- fs/xfs/libxfs/xfs_dir2_leaf.c      |  18 +-
- fs/xfs/libxfs/xfs_dir2_node.c      |  10 +-
- fs/xfs/libxfs/xfs_dir2_priv.h      |  10 +-
- fs/xfs/libxfs/xfs_dir2_sf.c        |   2 +-
- fs/xfs/libxfs/xfs_format.h         | 113 +++++------
- fs/xfs/libxfs/xfs_fs.h             |  16 +-
- fs/xfs/libxfs/xfs_ialloc.c         |  53 +++---
- fs/xfs/libxfs/xfs_ialloc.h         |   5 +
- fs/xfs/libxfs/xfs_ialloc_btree.c   |  36 +++-
- fs/xfs/libxfs/xfs_inode_buf.c      |   7 +-
- fs/xfs/libxfs/xfs_inode_buf.h      |  31 +--
- fs/xfs/libxfs/xfs_log_format.h     | 256 ++++++++++++-------------
- fs/xfs/libxfs/xfs_log_recover.h    |   2 +-
- fs/xfs/libxfs/xfs_quota_defs.h     |   6 +-
- fs/xfs/libxfs/xfs_refcount.c       |  16 +-
- fs/xfs/libxfs/xfs_refcount.h       |  16 ++
- fs/xfs/libxfs/xfs_refcount_btree.c |  12 +-
- fs/xfs/libxfs/xfs_rmap.c           |  14 +-
- fs/xfs/libxfs/xfs_rmap.h           |  11 +-
- fs/xfs/libxfs/xfs_rmap_btree.c     |  34 ++--
- fs/xfs/libxfs/xfs_rtbitmap.c       |   4 +-
- fs/xfs/libxfs/xfs_sb.c             |   4 +-
- fs/xfs/libxfs/xfs_symlink_remote.c |   2 +-
- fs/xfs/libxfs/xfs_trans_resv.c     |   4 +-
- fs/xfs/libxfs/xfs_types.h          |  46 ++---
- fs/xfs/xfs.h                       |   4 +
- fs/xfs/xfs_acl.c                   |   6 +-
- fs/xfs/xfs_acl.h                   |   1 +
- fs/xfs/xfs_aops.c                  |  11 +-
- fs/xfs/xfs_attr.h                  |   3 +
- fs/xfs/xfs_attr_list.c             |  61 +++---
- fs/xfs/xfs_bmap_item.c             |  17 +-
- fs/xfs/xfs_bmap_util.c             | 164 +++++++++-------
- fs/xfs/xfs_bmap_util.h             |   4 +
- fs/xfs/xfs_buf.c                   |  62 +++++-
- fs/xfs/xfs_buf.h                   |   1 +
- fs/xfs/xfs_buf_item.c              |  21 ++-
- fs/xfs/xfs_dir2_readdir.c          | 341 ++++++++++-----------------------
- fs/xfs/xfs_discard.c               |   4 +-
- fs/xfs/xfs_dquot.c                 |  85 ++++-----
- fs/xfs/xfs_error.c                 | 319 ++++++++++++++++++++++++-------
- fs/xfs/xfs_error.h                 |  44 +++--
- fs/xfs/xfs_file.c                  | 378 ++-----------------------------------
- fs/xfs/xfs_fsops.c                 |  16 +-
- fs/xfs/xfs_fsops.h                 |   4 +-
- fs/xfs/xfs_globals.c               |   5 +
- fs/xfs/xfs_icache.c                |  52 ++++-
- fs/xfs/xfs_icache.h                |   4 +
- fs/xfs/xfs_inode.c                 |  17 +-
- fs/xfs/xfs_inode.h                 |   7 +-
- fs/xfs/xfs_ioctl.c                 |  27 ++-
- fs/xfs/xfs_ioctl.h                 |  10 +-
- fs/xfs/xfs_ioctl32.h               |   6 +-
- fs/xfs/xfs_iomap.c                 |   4 +-
- fs/xfs/xfs_iops.c                  |   6 +-
- fs/xfs/xfs_itable.c                |   2 +-
- fs/xfs/xfs_itable.h                |   2 +
- fs/xfs/xfs_linux.h                 |  21 +--
- fs/xfs/xfs_log.c                   |  87 ++++++---
- fs/xfs/xfs_log.h                   |   2 +-
- fs/xfs/xfs_log_cil.c               |  91 +++++----
- fs/xfs/xfs_log_priv.h              |   3 +-
- fs/xfs/xfs_log_recover.c           |  49 +++--
- fs/xfs/xfs_message.c               |   5 +-
- fs/xfs/xfs_mount.c                 |  26 ++-
- fs/xfs/xfs_mount.h                 |  60 +++---
- fs/xfs/xfs_qm.c                    |  28 ++-
- fs/xfs/xfs_qm_bhv.c                |   2 +-
- fs/xfs/xfs_quotaops.c              |   1 -
- fs/xfs/xfs_reflink.c               | 101 +++++-----
- fs/xfs/xfs_reflink.h               |   8 +-
- fs/xfs/xfs_rtalloc.c               |   8 +-
- fs/xfs/xfs_rtalloc.h               |   3 +
- fs/xfs/xfs_stats.c                 |   8 +-
- fs/xfs/xfs_stats.h                 | 190 +++++++++----------
- fs/xfs/xfs_super.c                 |  26 +--
- fs/xfs/xfs_symlink.c               |  12 +-
- fs/xfs/xfs_symlink.h               |   1 +
- fs/xfs/xfs_sysctl.h                |   1 +
- fs/xfs/xfs_sysfs.c                 |  81 ++------
- fs/xfs/xfs_trace.h                 |  40 ++--
- fs/xfs/xfs_trans.h                 |   8 +-
- fs/xfs/xfs_trans_bmap.c            |  11 +-
- fs/xfs/xfs_trans_buf.c             |  21 ++-
- fs/xfs/xfs_trans_rmap.c            |   2 +-
- include/linux/buffer_head.h        |   2 +
- include/linux/iomap.h              |   4 +
- 112 files changed, 2121 insertions(+), 1857 deletions(-)
+> Thanks.
+> 
+> On 12 July 2017 at 14:19, Brian Foster <bfoster@redhat.com> wrote:
+> > On Tue, Jul 11, 2017 at 11:25:04PM +0300, Sergey F wrote:
+> >> Hello.
+> >>
+> >> on one from our server we got error
+> >>
+> >> XFS (dm-0): Internal error XFS_WANT_CORRUPTED_GOTO at line 3156 of
+> >> file fs/xfs/libxfs/xfs_btree.c. Caller xfs_free_ag_extent+0x402/0x780
+> >> [xfs]
+> >
+> > Failed to insert a record into a btree.
+> >
+> >> XFS (dm-0): Internal error xfs_trans_cancel at line 990 of file
+> >> fs/xfs/xfs_trans.c. Caller xfs_inactive_truncate+0xe5/0x120 [xfs]
+> >>
+> >
+> > Shutdown due to dirty transaction abort (which is probably expected at
+> > this point). Was any more information dumped with the error, such as a
+> > stacktrace?
+> >
+> >> As this error appear on our / partition - we needed to reboot our
+> >> server through IPMI interface.
+> >> After reboot server enter in emergency mode, where with xfs_repair -L
+> >> option filesystem was successfully repaired and server now seems to
+> >> works correct.
+> >>
+> >
+> > I take it that log recovery failed as well?
+> >
+> >> Last action on server was remove huge number of files (as said  person
+> >> who execute action - 75,000+ )
+> >>
+> >
+> > Given that, I suppose the error could be due to free space corruption
+> > and resulting failure to insert a newly freed record (though I thought
+> > we had another, more explicit check for that condition, so this could be
+> > wrong). Either way, it's possible the corruption was latent for some
+> > time and only once the broad file removal operation occurred was it
+> > discovered.
+> >
+> >> Do you have any ideas what exactly could be the reason for this issue?
+> >> how could we investigate this issue?
+> >>
+> >
+> > A metadump of the broken fs would have been nice to at least confirm the
+> > type of corruption/problem on-disk, but it sounds like the fs has
+> > already been recovered. I'm not sure there is much we can do to further
+> > investigate at this point. Creating a metadump image prior to recovery
+> > is something to consider should you run into this issue again.
+> >
+> > Brian
+> >
+> >> We could find similar information here:
+> >> https://www.centos.org/forums/viewtopic.php?t=15898
+> >> On this link topicstarter said that he could get information from xfs
+> >> maillists, so i think that we could try to work with somebody from
+> >> your specialists.
+> >>
+> >> Server information:
+> >> CentOS7
+> >> LSIMegaRAIDSAS9240-4i
+> >> 2xSeagate ST1000NM0055-1V410C
+> >> Linux kernel version:
+> >> uname  -a
+> >> Linux 3.10.0-514.21.2.el7.x86_64 #1 SMP Tue Jun 20 12:24:47 UTC 2017
+> >> x86_64 x86_64 x86_64 GNU/Linux
+> >> XFS packages version:
+> >> yum list installed | grep xfs
+> >> xfsprogs.x86_64 4.5.0-10.el7_3          @updates
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
