@@ -1,127 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:42873 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751061AbdGKAQh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2017 20:16:37 -0400
-Date: Tue, 11 Jul 2017 10:08:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [BUG] sb_fdblocks counting error caused by too large indlen
- returned from xfs_bmap_worst_indlen()
-Message-ID: <20170711000859.GG17762@dastard>
-References: <20170707120040.GG29475@eguan.usersys.redhat.com>
- <20170708064937.GH4103@magnolia>
- <20170709140818.GI29475@eguan.usersys.redhat.com>
- <20170710161824.GI4103@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170710161824.GI4103@magnolia>
+Received: from bombadil.infradead.org ([65.50.211.133]:52322 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751828AbdGMLda (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2017 07:33:30 -0400
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dVcMy-0001oc-0V
+        for linux-xfs@vger.kernel.org; Thu, 13 Jul 2017 11:33:20 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 4/4] Revert "xfs: grab dquots without taking the ilock"
+Date: Thu, 13 Jul 2017 13:33:04 +0200
+Message-Id: <20170713113304.8079-5-hch@lst.de>
+In-Reply-To: <20170713113304.8079-1-hch@lst.de>
+References: <20170713113304.8079-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Jul 10, 2017 at 09:18:24AM -0700, Darrick J. Wong wrote:
-> On Sun, Jul 09, 2017 at 10:08:18PM +0800, Eryu Guan wrote:
-> > On Fri, Jul 07, 2017 at 11:49:37PM -0700, Darrick J. Wong wrote:
-> > > On Fri, Jul 07, 2017 at 08:01:43PM +0800, Eryu Guan wrote:
-> > > > Hi all,
-> > > > 
-> > > > I recently hit a repeatable sb_fdblocks corruption as below:
-> > > > 
-> > > > Phase 1 - find and verify superblock...
-> > > > Phase 2 - using internal log
-> > > >         - zero log...
-> > > >         - scan filesystem freespace and inode maps...
-> > > > sb_fdblocks 14538692, counted 14669764
-> > > >         - found root inode chunk
-> > > > Phase 3 - for each AG...
-> > > > ...
-> > > > 
-> > > > And the count diff is always 14669764 - 14538692 = 131072 (128k). The
-> > > > XFS in question was formated with "-m rmapbt=1 -b 1k" option.
-> > > > 
-> > > > After turning on XFS_WARN and adding some debug printks (I appended the
-> > > > detailed logs at the end of mail), I found that this was caused by too
-> > > > large 'indlen' returned by xfs_bmap_worst_indlen(), which can't fit in a
-> > > > 17 bits value (STARTBLOCKVALBITS is defined as 17), so the assert in
-> > > > nullstartblock() failed: ASSERT(k < (1 << STARTBLOCKVALBITS));
-> > > > 
-> > > > From the log, newlen = 151513, which needs 18 bits, so nullstartblock()
-> > > > throws away the 18th bit, and the sb_fdblocks difference is always 2^17
-> > > > = 131072.
-> > > 
-> > > br_startblock is encoded in memory (and in the on-disk bmbt records) as
-> > > a 52-bit unsigned integer.  We signal a delayed allocation record by
-> > > setting the uppermost STARTBLOCKMASKBITS (35) bits to 1 and stash the
-> > > 'indlen' reservation (i.e. the worst case estimate of the space we need
-> > > to grow the bmbt/rmapbt to map the entire delayed allocation) in the
-> > > lower 17 bits of br_startblock.  In theory this is ok because we're
-> > > still quite a ways from having enough storage to create an fs where
-> > > the upper bits in the agno part of an xfs_fsblock_t are actually set.
-> > 
-> > This confirms what I read from the code, thanks! But I'm still curious
-> > about how these numbers are chosen, especially STARTBLOCKMASKBITS is
-> > defined as (15 + 20), where are they from?
-> 
-> <shrug> Dave? :)
+This reverts commit 50e0bdbe9f48f98bb02eac7030d682f4716884ae.
 
-You mean these definitions?
+The new XFS_QMOPT_NOLOCK isn't used at all, and conditional locking based
+on a flag is always the wrong thing to do - we should be having helpers
+that can be called without the lock instead.
 
-#define STARTBLOCKVALBITS	17
-#define STARTBLOCKMASKBITS	(15 + 20)
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_quota_defs.h |  2 --
+ fs/xfs/xfs_dquot.c             | 14 ++++----------
+ 2 files changed, 4 insertions(+), 12 deletions(-)
 
-Today: a history lesson. :)
-
-Remember that these are stored encoded in a xfs_bmbt_rec on disk and
-a xfs_bmbt_rec_host in memory, so they need to fit in this
-definition both on disk and in memory:
-
-/*
- * Bmap btree record and extent descriptor.
- *  l0:63 is an extent flag (value 1 indicates non-normal).
- *  l0:9-62 are startoff.
- *  l0:0-8 and l1:21-63 are startblock.
- *  l1:0-20 are blockcount.
- */
-#define BMBT_EXNTFLAG_BITLEN    1
-#define BMBT_STARTOFF_BITLEN    54
-#define BMBT_STARTBLOCK_BITLEN  52
-#define BMBT_BLOCKCOUNT_BITLEN  21
-
-We're looking at BMBT_STARTBLOCK_BITLEN here so it's obvious that
-
-that 15 + 20 + 17 is 52 bits. And that the startblock encoding for
-delayed allocation obivously fits inside the space in on disk and
-host extent tree records correctly.
-
-But what about the old "small block" format that was originally
-used on 32 bit MIPS systems? That only had 32 bits in the start
-block encoding *in memory*, so it should be clear that:
-
-	15 + 17 = 32 bits
-
-Indeed, look back at the older code:
-
-(http://oss.sgi.com/cgi-bin/gitweb.cgi?p=archive/xfs-import.git;a=blob;f=fs/xfs/xfs_bmap_btree.h;h=a4555abb6622a5d2ac6c08ab0f585761d6ff4585;hb=HEAD)
-
-#define STARTBLOCKMASKBITS      (15 + XFS_BIG_BLKNOS * 20)
-#define DSTARTBLOCKMASKBITS     (15 + 20)
-
-And you can see we had different definitions for in-memory and
-on-disk start block masks, and that difference was the size of the
-block addresses the compiled kernel could manage.
-
-IOWs, the "15 + 20" is the old definition that recognised the
-difference in block size between 32 bit and 64 bit systems could
-originally support in memory vs what the 64-bit on-disk format
-supported. We now only support 64bit in memory, so the in-memory and
-on-disk definitions are now the same....
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+index 2834574cb6e7..d69c772271cb 100644
+--- a/fs/xfs/libxfs/xfs_quota_defs.h
++++ b/fs/xfs/libxfs/xfs_quota_defs.h
+@@ -136,8 +136,6 @@ typedef uint16_t	xfs_qwarncnt_t;
+  */
+ #define XFS_QMOPT_INHERIT	0x1000000
+ 
+-#define XFS_QMOPT_NOLOCK	0x2000000 /* don't ilock during dqget */
+-
+ /*
+  * flags to xfs_trans_mod_dquot.
+  */
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index f89f7b5241e6..fd2ef8c2c9a7 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -472,23 +472,18 @@ xfs_qm_dqtobp(
+ 	struct xfs_mount	*mp = dqp->q_mount;
+ 	xfs_dqid_t		id = be32_to_cpu(dqp->q_core.d_id);
+ 	struct xfs_trans	*tp = (tpp ? *tpp : NULL);
+-	uint			lock_mode = 0;
++	uint			lock_mode;
+ 
+ 	quotip = xfs_quota_inode(dqp->q_mount, dqp->dq_flags);
+ 	dqp->q_fileoffset = (xfs_fileoff_t)id / mp->m_quotainfo->qi_dqperchunk;
+ 
+-	ASSERT(!(flags & XFS_QMOPT_NOLOCK) ||
+-		xfs_isilocked(quotip, XFS_ILOCK_SHARED) ||
+-		xfs_isilocked(quotip, XFS_ILOCK_EXCL));
+-	if (!(flags & XFS_QMOPT_NOLOCK))
+-		lock_mode = xfs_ilock_data_map_shared(quotip);
++	lock_mode = xfs_ilock_data_map_shared(quotip);
+ 	if (!xfs_this_quota_on(dqp->q_mount, dqp->dq_flags)) {
+ 		/*
+ 		 * Return if this type of quotas is turned off while we
+ 		 * didn't have the quota inode lock.
+ 		 */
+-		if (lock_mode)
+-			xfs_iunlock(quotip, lock_mode);
++		xfs_iunlock(quotip, lock_mode);
+ 		return -ESRCH;
+ 	}
+ 
+@@ -498,8 +493,7 @@ xfs_qm_dqtobp(
+ 	error = xfs_bmapi_read(quotip, dqp->q_fileoffset,
+ 			       XFS_DQUOT_CLUSTER_SIZE_FSB, &map, &nmaps, 0);
+ 
+-	if (lock_mode)
+-		xfs_iunlock(quotip, lock_mode);
++	xfs_iunlock(quotip, lock_mode);
+ 	if (error)
+ 		return error;
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.11.0
+
