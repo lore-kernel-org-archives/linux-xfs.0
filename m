@@ -1,70 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60705 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751452AbdGSORE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Jul 2017 10:17:04 -0400
-Date: Wed, 19 Jul 2017 16:16:59 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v3 1/5] mm: add vm_insert_mixed_mkwrite()
-Message-ID: <20170719141659.GB15908@quack2.suse.cz>
-References: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
- <20170628220152.28161-2-ross.zwisler@linux.intel.com>
+Received: from sandeen.net ([63.231.237.45]:50020 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753830AbdGNOEz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 Jul 2017 10:04:55 -0400
+Subject: Re: Parent pointers
+References: <59680165.9020201@oracle.com>
+ <20170714085016.4j2yeyihezmb6nkp@eorzea.usersys.redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <817aafad-6b64-3700-6752-c63d7e5cdde7@sandeen.net>
+Date: Fri, 14 Jul 2017 09:04:52 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170628220152.28161-2-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170714085016.4j2yeyihezmb6nkp@eorzea.usersys.redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Allison Henderson <allison.henderson@oracle.com>, linux-xfs@vger.kernel.org
 
-On Wed 28-06-17 16:01:48, Ross Zwisler wrote:
-> To be able to use the common 4k zero page in DAX we need to have our PTE
-> fault path look more like our PMD fault path where a PTE entry can be
-> marked as dirty and writeable as it is first inserted, rather than waiting
-> for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
-> 
-> Right now we can rely on having a dax_pfn_mkwrite() call because we can
-> distinguish between these two cases in do_wp_page():
-> 
-> 	case 1: 4k zero page => writable DAX storage
-> 	case 2: read-only DAX storage => writeable DAX storage
-> 
-> This distinction is made by via vm_normal_page().  vm_normal_page() returns
-> false for the common 4k zero page, though, just as it does for DAX ptes.
-> Instead of special casing the DAX + 4k zero page case, we will simplify our
-> DAX PTE page fault sequence so that it matches our DAX PMD sequence, and
-> get rid of dax_pfn_mkwrite() completely.
-> 
-> This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
-> and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set insert_pfn()
-> will do the work that was previously done by wp_page_reuse() as part of the
-> dax_pfn_mkwrite() call path.
-> 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Just one small comment below.
 
-> @@ -1658,14 +1658,26 @@ static int insert_pfn(struct vm_area_struct *vma, unsigned long addr,
->  	if (!pte)
->  		goto out;
->  	retval = -EBUSY;
-> -	if (!pte_none(*pte))
-> -		goto out_unlock;
-> +	if (!pte_none(*pte)) {
-> +		if (mkwrite) {
-> +			entry = *pte;
-> +			goto out_mkwrite;
+On 07/14/2017 03:50 AM, Carlos Maiolino wrote:
+> Hi,
+> 
+> On Thu, Jul 13, 2017 at 04:25:25PM -0700, Allison Henderson wrote:
+>> Hi all,
+>>
+>> I've been doing some digging on adding parent pointers to xfs and wanted to
+>> send a note to folks here to get peoples opinions on it.
+> 
+> Are you talking about parent pointers in the BTrees?
+> 
 
-Can we maybe check here that (pte_pfn(*pte) == pfn_t_to_pfn(pfn)) and
-return -EBUSY otherwise? That way we are sure insert_pfn() isn't doing
-anything we don't expect and if I understand the code right, we need to
-invalidate all zero page mappings at given file offset (via
-unmap_mapping_range()) before mapping an allocated block there and thus the
-case of filling the hole won't be affected by this?
+No, see [RFC 00/17] RFC parent inode pointers. for example, from long
+ago.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+"Parent inode support allow XFS to quickly derive a file name and
+path from the mount point. This can aid in directory/path policies
+and can help relocate items during filesystem shrink."
+
+It has a long and ... difficult history.
+
+-Eric
+ 
+>> I got in touch
+>> with Brian Foster not too long ago and he had some code partially done from
+>> about a year or so ago (looks like it has patches from Dave Chinner and Mark
+>> Tinguely as well).  So I am hoping to be able to use what we have so far to
+>> create something updated and finished out.  I am still pretty new to the xfs
+>> code, so at the moment I am still just going through old discussion threads,
+>> and reviewing the patches.  But for the most part I just wanted to see what
+>> people thought and get everyone on board with the idea.  Suggestions and
+>> feedback are much appreciated. Thank you!!
+>>
+> 
+> It will be better if you can describe in more details if you have any specific
+> goal with this, and/or what kind of improvement you expect to have with it,
+> adding something new without a reason, is usually not well received.
+> 
+> Cheers
+> 
