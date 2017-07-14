@@ -1,85 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46164 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:43130 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932741AbdGSLRn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Jul 2017 07:17:43 -0400
-Date: Wed, 19 Jul 2017 07:17:41 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH RFC] xfs: fix buffer check for primary sb in userspace
- libxfs
-Message-ID: <20170719111741.GA53744@bfoster.bfoster>
-References: <20170718141337.46255-1-bfoster@redhat.com>
- <20170718231202.GP17762@dastard>
+        id S1751004AbdGNXhv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 Jul 2017 19:37:51 -0400
+Date: Fri, 14 Jul 2017 16:37:50 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: updates for 4.13, part 2
+Message-ID: <20170714233750.GD4224@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20170718231202.GP17762@dastard>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-On Wed, Jul 19, 2017 at 09:12:02AM +1000, Dave Chinner wrote:
-> On Tue, Jul 18, 2017 at 10:13:37AM -0400, Brian Foster wrote:
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > Hi all,
-> > 
-> > This patch is actually targeted at userspace. The previous change in commit
-> > f3d7ebde ("xfs: fix superblock inprogress check") to use ->b_maps technically
-> > breaks the logic in userspace in a similar way to the original problem because
-> > userspace has no concept of uncached buffers.  ->b_maps is NULL in userspace
-> > unless the buffer is truly discontiguous.
-> > 
-> > This would normally result in a segfault but this appears to be hidden
-> > by gcc optimization as -O2 is enabled by default and the
-> > check_inprogress param to xfs_mount_validate_sb() is unused in
-> > userspace. Therefore, the segfault is only reproducible when
-> > optimization is disabled (which is a useful configuration for
-> > debugging).
-> > 
-> > There are obviously different ways to fix this. I'm floating this (untested)
-> > rfc as a kernel patch (do we ever sync libxfs from xfsprogs -> kernel?) with
-> > the objective of keeping the libxfs code the same between the kernel and
-> > userspace. We could alternatively create a custom helper/macro with the
-> > appropriate check in each place. Thoughts?
-> 
-> Wouldn't it be better to simply fix the userspace buffer
-> initialisation to always have a valid bp->b_maps, just like the
-> kernel does? (See xfs_buf_get_maps() in the kernel code).  That way
-> we don't have a landmine lurking in all the shared libxfs code we
-> bring from the kernel that may interact with uncached buffers.
-> 
+Hi Linus,
 
-We could certainly create a bp->__b_map field in xfsprogs libxfs and
-initialize ->b_maps similar to the kernel for nmap == 1 buffers. Given
-the lack of overlap of uncached buffers between xfsprogs and the kernel
-(I'm not sure there are other cases where such buffers are commonly
-handled), I don't personally think one way is notably better than the
-other.
+Here are some more changes for you for 4.13; they're largely debugging
+and regression fixes.  The branch merges against this afternoon's HEAD
+without issue; a quick overnight xfstests run against yesterday's HEAD
+came out cleanly.  Let me know if there are any problems.
 
-The tradeoffs seem to be that this patch is fairly localized but leaves
-the potentially different states for uncached buffers in kernel vs.
-xfsprogs context. The above approach addresses that issue at the cost of
-slightly increasing the size of xfs_buf in userspace for something that
-may not ever be necessary outside of an isolated bit of code. It also
-only requires a change to xfsprogs libxfs.
+--Darrick
 
-Given the tradeoffs, I have no real preference on which approach we
-take. Do you prefer the latter? If so and there are no other objections,
-I'll send a patch along those lines.
+The following changes since commit cd87d867920155911d0d2e6485b769d853547750:
 
-Brian
+  xfs: don't crash on unexpected holes in dir/attr btrees (2017-07-07 18:55:17 -0700)
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.13-merge-6
+
+for you to fetch changes up to d6ab17f261919d212ec0a9e33d01f46df0ec1fde:
+
+  vfs: in iomap seek_{hole,data}, return -ENXIO for negative offsets (2017-07-13 14:55:05 -0700)
+
+----------------------------------------------------------------
+Changes since last update:
+- Add some locking assertions for the _ilock helpers.
+- Revert the XFS_QMOPT_NOLOCK patch; after discussion with hch the
+  online fsck patch that would have needed it has been redesigned and
+  no longer needs it.
+- Fix behavioral regression of SEEK_HOLE/DATA with negative offsets to match
+  4.12-era XFS behavior.
+
+----------------------------------------------------------------
+Christoph Hellwig (4):
+      xfs: fixup xfs_attr_get_ilocked
+      xfs: assert locking precondіtion in xfs_attr_list_int_ilocked
+      xfs: assert locking precondition in xfs_readlink_bmap_ilocked
+      Revert "xfs: grab dquots without taking the ilock"
+
+Darrick J. Wong (1):
+      vfs: in iomap seek_{hole,data}, return -ENXIO for negative offsets
+
+ fs/iomap.c                     |  8 ++++----
+ fs/xfs/libxfs/xfs_attr.c       |  4 +++-
+ fs/xfs/libxfs/xfs_quota_defs.h |  2 --
+ fs/xfs/xfs_attr_list.c         |  2 ++
+ fs/xfs/xfs_dquot.c             | 14 ++++----------
+ fs/xfs/xfs_symlink.c           |  2 ++
+ 6 files changed, 15 insertions(+), 17 deletions(-)
