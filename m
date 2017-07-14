@@ -1,72 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36086 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751639AbdGRBvO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 17 Jul 2017 21:51:14 -0400
-Subject: [PATCH V2] xfs_db: properly set inode type
-References: <e6c83eea-af29-c01b-752e-e049e8fdc69f@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c17ce413-430e-acce-e63d-51fd1b684f62@sandeen.net>
-Date: Mon, 17 Jul 2017 20:51:13 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:22103 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750752AbdGNEyO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Jul 2017 00:54:14 -0400
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6E4sDLq011251
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Jul 2017 04:54:13 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v6E4sDFG008226
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Jul 2017 04:54:13 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v6E4sBpY016470
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Jul 2017 04:54:12 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Parent pointers
+Message-ID: <59684E6E.4030806@oracle.com>
+Date: Thu, 13 Jul 2017 21:54:06 -0700
 MIME-Version: 1.0
-In-Reply-To: <e6c83eea-af29-c01b-752e-e049e8fdc69f@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-When we set the type to "inode" the verifier may validate multiple
-inodes in the current fs block, so setting the buffer size to
-that of just one inode is not sufficient and it'll emit spurious
-verifier errors for all but the first, as we read off the end:
+Hi all,
 
-xfs_db> daddr 99
-xfs_db> type inode
-Metadata corruption detected at xfs_inode block 0x63/0x200
-Metadata corruption detected at xfs_inode block 0x63/0x200
-Metadata corruption detected at xfs_inode block 0x63/0x200
-Metadata corruption detected at xfs_inode block 0x63/0x200
-Metadata corruption detected at xfs_inode block 0x63/0x200
-Metadata corruption detected at xfs_inode block 0x63/0x200
-Metadata corruption detected at xfs_inode block 0x63/0x200
+I've been doing some digging on adding parent pointers to xfs and wanted 
+to send a note to folks here to get peoples opinions on it.  I got in 
+touch with Brian Foster not too long ago and he had some code partially 
+done from about a year or so ago (looks like it has patches from Dave 
+Chinner and Mark Tinguely as well).  So I am hoping to be able to use 
+what we have so far to create something updated and finished out.  I am 
+still pretty new to the xfs code, so at the moment I am still just going 
+through old discussion threads, and reviewing the patches.  But for the 
+most part I just wanted to see what people thought and get everyone on 
+board with the idea.  Suggestions and feedback are much appreciated. 
+Thank you!!
 
-Use the special set_cur_inode() function for this purpose
-as is done in inode_f().
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-V2: Warn if the daddr given was reset to an inode-aligned
-address
-
-diff --git a/db/io.c b/db/io.c
-index b046c8d..4153da0 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -616,6 +616,22 @@ set_iocur_type(
- {
- 	struct xfs_buf	*bp = iocur_top->bp;
- 
-+	/* Inodes are special; verifier checks all inodes in the buffer */
-+	if (type->typnm == TYP_INODE) {
-+		xfs_daddr_t	b = iocur_top->bb;
-+		xfs_ino_t	ino;
-+
-+		ino = XFS_AGINO_TO_INO(mp, xfs_daddr_to_agno(mp, b),
-+			((b << BBSHIFT) >> mp->m_sb.sb_inodelog) %
-+			(mp->m_sb.sb_agblocks << mp->m_sb.sb_inopblog));
-+		set_cur_inode(ino);
-+		if (iocur_top->bb != b)
-+			dbprintf(
-+_("cursor set to nearest inode %llu at daddr %lld\n"),
-+				 ino, iocur_top->bb);
-+		return;
-+	}
-+
- 	/* adjust buffer size for types with fields & hence fsize() */
- 	if (type->fields) {
- 		int bb_count;	/* type's size in basic blocks */
-
+Allison Henderson
