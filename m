@@ -1,63 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40277 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933364AbdGSPdS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Jul 2017 11:33:18 -0400
-Date: Wed, 19 Jul 2017 17:33:14 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v3 3/5] dax: use common 4k zero page for dax mmap reads
-Message-ID: <20170719153314.GC15908@quack2.suse.cz>
-References: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
- <20170628220152.28161-4-ross.zwisler@linux.intel.com>
+Received: from sandeen.net ([63.231.237.45]:49986 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750763AbdGNTO6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 Jul 2017 15:14:58 -0400
+Subject: Re: Parent pointers
+References: <59680165.9020201@oracle.com>
+ <20170714085016.4j2yeyihezmb6nkp@eorzea.usersys.redhat.com>
+ <817aafad-6b64-3700-6752-c63d7e5cdde7@sandeen.net>
+ <59690307.9090407@oracle.com>
+ <5d8fa5a7-110a-520f-9b13-b10627950bd3@sandeen.net>
+ <20170714190740.GA43494@bfoster.bfoster>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <51235072-79ab-05b6-f73a-8945055107d6@sandeen.net>
+Date: Fri, 14 Jul 2017 14:14:57 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170628220152.28161-4-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170714190740.GA43494@bfoster.bfoster>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Allison Henderson <allison.henderson@oracle.com>, cmaiolino@redhat.com, linux-xfs@vger.kernel.org
 
-On Wed 28-06-17 16:01:50, Ross Zwisler wrote:
-> Another major change is that we remove dax_pfn_mkwrite() from our fault
-> flow, and instead rely on the page fault itself to make the PTE dirty and
-> writeable.  The following description from the patch adding the
-> vm_insert_mixed_mkwrite() call explains this a little more:
+On 07/14/2017 02:07 PM, Brian Foster wrote:
+> On Fri, Jul 14, 2017 at 01:46:27PM -0500, Eric Sandeen wrote:
+>> On 07/14/2017 12:44 PM, Allison Henderson wrote:
+>>> On 7/14/2017 7:04 AM, Eric Sandeen wrote:
+>>>>
+>>>>
+>>>> On 07/14/2017 03:50 AM, Carlos Maiolino wrote:
+>>>>> Hi,
+>>>>>
+>>>>> On Thu, Jul 13, 2017 at 04:25:25PM -0700, Allison Henderson wrote:
+>>>>>> Hi all,
+>>>>>>
+>>>>>> I've been doing some digging on adding parent pointers to xfs and wanted to
+>>>>>> send a note to folks here to get peoples opinions on it.
+>>>>>
+>>>>> Are you talking about parent pointers in the BTrees?
+>>>>>
+>>>>
+>>>> No, see [RFC 00/17] RFC parent inode pointers. for example, from long
+>>>> ago.
+>>>>
+>>>> "Parent inode support allow XFS to quickly derive a file name and
+>>>> path from the mount point. This can aid in directory/path policies
+>>>> and can help relocate items during filesystem shrink."
+>>>>
+>>>> It has a long and ... difficult history.
+>>>>
+>>>> -Eric
+>>> Right, so to expand on Eric's answer, it looks like Dave and Brian had been working on some improvements based on that set, but it's not quite finished yet.  The idea is that we add an extended attribute to keep track of the parents inode and generation, and also the child entries offset, and filename. So in this solution the EA is name={parent inode #, parent inode generation, dirent offset}, value={dirent filename}.
+>>>
+>>> My goal at the moment is just to get it compiling again and finish out some of the sub routines that maintain it.  It looks like it hasn't had much attention in a while, so I wanted to let people know the direction I'm planning to move in before I get too far in.
+>>
+>> If you're forward-porting that 17-patch set from Mark, I'd suggest first reading Dave's
+>> response to it - IIRC it amounted to a firm NAK.  it also highlights the complexity
+>> of this undertaking, and may explain why nobody has gotten it done (yet) :)
+>>
 > 
-> ***
->   To be able to use the common 4k zero page in DAX we need to have our PTE
->   fault path look more like our PMD fault path where a PTE entry can be
->   marked as dirty and writeable as it is first inserted, rather than
->   waiting for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
-> 
->   Right now we can rely on having a dax_pfn_mkwrite() call because we can
->   distinguish between these two cases in do_wp_page():
-> 
->   	case 1: 4k zero page => writable DAX storage
->   	case 2: read-only DAX storage => writeable DAX storage
-> 
->   This distinction is made by via vm_normal_page().  vm_normal_page()
->   returns false for the common 4k zero page, though, just as it does for
->   DAX ptes.  Instead of special casing the DAX + 4k zero page case, we will
->   simplify our DAX PTE page fault sequence so that it matches our DAX PMD
->   sequence, and get rid of dax_pfn_mkwrite() completely.
-> 
->   This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
->   and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set
->   insert_pfn() will do the work that was previously done by wp_page_reuse()
->   as part of the dax_pfn_mkwrite() call path.
-> ***
+> The patches that came from me (to Allison) were last sent to me directly
+> from Dave. 
 
-Hum, thinking about this in context of this patch... So what if we have
-allocated storage, a process faults it read-only, we map it to page tables
-writeprotected. Then the process writes through mmap to the area - the code
-in handle_pte_fault() ends up in do_wp_page() if I'm reading it right.
-Then, since we are missing ->pfn_mkwrite() handlers, the PTE will be marked
-writeable but radix tree entry stays clean - bug. Am I missing something?
+Oh, ok.  I didn't know we were talking about off-list patches, sorry if I
+missed that.  I thought Allison was looking at the 17-patch series on the list,
+and wanted to make sure this wouldn't be a false start.  :)
 
-								Honza
-
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Thanks,
+-Eric
