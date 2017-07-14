@@ -1,53 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40688 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:51010 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754067AbdGSPVA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Jul 2017 11:21:00 -0400
-Subject: Re: Collecting aged XFS profiles
-References: <F180D8D4-633B-4CC5-8D70-5CAC36233513@cs.cmu.edu>
- <CAAxjCEzevLnmxyVRME1-kT867KjH2rtOdspv7nF6TOfLUDD+xA@mail.gmail.com>
- <20170717234814.GK17762@dastard>
- <CAAxjCEzP=bf5S12J8rTn7EyJK_MeM=t1JSa7pBzZyXK=9TrjQQ@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <bcb651de-75bf-97a6-7ed8-c083d2a440e5@sandeen.net>
-Date: Wed, 19 Jul 2017 10:20:59 -0500
+        id S1750799AbdGNIuU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 Jul 2017 04:50:20 -0400
+Date: Fri, 14 Jul 2017 10:50:16 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: Parent pointers
+Message-ID: <20170714085016.4j2yeyihezmb6nkp@eorzea.usersys.redhat.com>
+References: <59680165.9020201@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <CAAxjCEzP=bf5S12J8rTn7EyJK_MeM=t1JSa7pBzZyXK=9TrjQQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <59680165.9020201@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Ring <stefanrin@gmail.com>, linux-xfs@vger.kernel.org
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 07/19/2017 02:59 AM, Stefan Ring wrote:
-> On Tue, Jul 18, 2017 at 1:48 AM, Dave Chinner <david@fromorbit.com> wrote:
->> To analyse such things, maybe consider gathering obfuscated metadump
->> images rather asking people to run scripts that gather limited
->> information.  That way you can develop scripts to extract the
->> information your research requires from the filesystem images you
->> received, rather than try to draw tenuous conclusions from a limited
->> data set...
+Hi,
+
+On Thu, Jul 13, 2017 at 04:25:25PM -0700, Allison Henderson wrote:
+> Hi all,
 > 
-> I have created a metadump that is 1GB in size, xz-compressed. However,
-> by running strings on it I find that there are many identifiable
-> remains inside, and I cannot legally pass this on. xfsprogs is
-> xfsprogs-3.1.1-10.el6, which is obviously really old. I'm reluctant to
-> just run a newer version on this production machine; after all I've
-> once almost brought it down by running xfs_bmap on a heavily
-> fragmented file.
+> I've been doing some digging on adding parent pointers to xfs and wanted to
+> send a note to folks here to get peoples opinions on it.
 
-newer metadump should correct that problem, and is a read-only tool,
-so should be (tm) perfectly safe (tm).  You could run it out of a built
-git repo, via the xfs_db commands.
+Are you talking about parent pointers in the BTrees?
 
-> The question is: can I import this metadata image in a VM and recreate
-> the metadata image from there, using modern xfsprogs? Will this
-> preserve most of the relevant information?
 
-yes, that would work too. (mdrestore followed by or piped through metadump)
-If you find significant strings in that result please let me know :)
 
-Thanks,
--Eric
+> I got in touch
+> with Brian Foster not too long ago and he had some code partially done from
+> about a year or so ago (looks like it has patches from Dave Chinner and Mark
+> Tinguely as well).  So I am hoping to be able to use what we have so far to
+> create something updated and finished out.  I am still pretty new to the xfs
+> code, so at the moment I am still just going through old discussion threads,
+> and reviewing the patches.  But for the most part I just wanted to see what
+> people thought and get everyone on board with the idea.  Suggestions and
+> feedback are much appreciated. Thank you!!
+> 
+
+It will be better if you can describe in more details if you have any specific
+goal with this, and/or what kind of improvement you expect to have with it,
+adding something new without a reason, is usually not well received.
+
+Cheers
+
+-- 
+Carlos
