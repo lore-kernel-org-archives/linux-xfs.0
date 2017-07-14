@@ -1,58 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:2867 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751505AbdGRXMG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2017 19:12:06 -0400
-Date: Wed, 19 Jul 2017 09:12:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC] xfs: fix buffer check for primary sb in userspace
- libxfs
-Message-ID: <20170718231202.GP17762@dastard>
-References: <20170718141337.46255-1-bfoster@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49912 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753327AbdGNDlW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Jul 2017 23:41:22 -0400
+Date: Fri, 14 Jul 2017 11:41:19 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2] generic: test negative SEEK_HOLE/SEEK_DATA offsets
+Message-ID: <20170714034119.GI2478@eguan.usersys.redhat.com>
+References: <20170713190641.GA4150@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170718141337.46255-1-bfoster@redhat.com>
+In-Reply-To: <20170713190641.GA4150@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-On Tue, Jul 18, 2017 at 10:13:37AM -0400, Brian Foster wrote:
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+On Thu, Jul 13, 2017 at 12:06:41PM -0700, Darrick J. Wong wrote:
+> Check that we get -ENXIO if the user calls SEEK_HOLE/SEEK_DATA with
+> a negative file offset.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-> 
-> Hi all,
-> 
-> This patch is actually targeted at userspace. The previous change in commit
-> f3d7ebde ("xfs: fix superblock inprogress check") to use ->b_maps technically
-> breaks the logic in userspace in a similar way to the original problem because
-> userspace has no concept of uncached buffers.  ->b_maps is NULL in userspace
-> unless the buffer is truly discontiguous.
-> 
-> This would normally result in a segfault but this appears to be hidden
-> by gcc optimization as -O2 is enabled by default and the
-> check_inprogress param to xfs_mount_validate_sb() is unused in
-> userspace. Therefore, the segfault is only reproducible when
-> optimization is disabled (which is a useful configuration for
-> debugging).
-> 
-> There are obviously different ways to fix this. I'm floating this (untested)
-> rfc as a kernel patch (do we ever sync libxfs from xfsprogs -> kernel?) with
-> the objective of keeping the libxfs code the same between the kernel and
-> userspace. We could alternatively create a custom helper/macro with the
-> appropriate check in each place. Thoughts?
+> v2: use helpers as suggested by Eryu.
+> ---
+[snip]
+> +
+> +seq=`basename "$0"`
+> +seqres="$RESULT_DIR/$seq"
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +    rm -rf "$tmp".* $testdir/file1
+> +}
 
-Wouldn't it be better to simply fix the userspace buffer
-initialisation to always have a valid bp->b_maps, just like the
-kernel does? (See xfs_buf_get_maps() in the kernel code).  That way
-we don't have a landmine lurking in all the shared libxfs code we
-bring from the kernel that may interact with uncached buffers.
+Just noticed there're two _cleanup()s, I'll remove this one and move the
+one below here.
 
-Cheers,
+Thanks,
+Eryu
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +_supported_fs generic
+> +_supported_os Linux
+> +
+> +_require_test
+> +_require_seek_data_hole
+> +
+> +BASE_TEST_FILE=$TEST_DIR/seek_sanity_testfile
+> +
+> +_require_test_program "seek_sanity_test"
+> +
+> +# Disable extent zeroing for ext4 as that change where holes are created
+> +if [ "$FSTYP" = "ext4" ]; then
+> +	DEV=`_short_dev $TEST_DEV`
+> +	echo 0 >/sys/fs/ext4/$DEV/extent_max_zeroout_kb
+> +fi
+> +
+> +_cleanup()
+> +{
+> +	rm -f $tmp.* $BASE_TEST_FILE.*
+> +}
+> +
+> +$here/src/seek_sanity_test -s 18 -e 18 $BASE_TEST_FILE > $seqres.full 2>&1 ||
+> +	_fail "seek sanity check failed!"
+> +
+> +_check_dmesg
+> +# success, all done
+> +echo "Silence is golden"
+> +status=0
+> +exit
+> diff --git a/tests/generic/702.out b/tests/generic/702.out
+> new file mode 100644
+> index 0000000..608d593
+> --- /dev/null
+> +++ b/tests/generic/702.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 702
+> +Silence is golden
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 3c5a19c..6afd402 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -449,4 +449,5 @@
+>  444 auto quick acl
+>  445 auto quick rw
+>  446 auto quick rw dangerous
+> +702 auto quick rw
+>  931 auto quick clone
