@@ -1,168 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51760 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753289AbdGSMJ3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Jul 2017 08:09:29 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+Received: from g2t1383g.austin.hpe.com ([15.233.16.89]:42622 "EHLO
+        g2t1383g.austin.hpe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751081AbdGOQgb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 15 Jul 2017 12:36:31 -0400
+Received: from g2t2354.austin.hpe.com (g2t2354.austin.hpe.com [15.233.44.27])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 74A5C5F7B0
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2017 12:09:29 +0000 (UTC)
-Date: Wed, 19 Jul 2017 08:01:04 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2 V5] xfs: Add infrastructure needed for error
- propagation during buffer IO failure
-Message-ID: <20170719120102.GB53744@bfoster.bfoster>
-References: <20170718145415.21230-1-cmaiolino@redhat.com>
- <20170718145415.21230-2-cmaiolino@redhat.com>
+        by g2t1383g.austin.hpe.com (Postfix) with ESMTPS id 5225154A
+        for <linux-xfs@vger.kernel.org>; Sat, 15 Jul 2017 16:36:31 +0000 (UTC)
+From: "Tinguely, Mark" <mark.tinguely@hpe.com>
+Subject: RE: Parent pointers
+Date: Sat, 15 Jul 2017 16:36:27 +0000
+Message-ID: <AT5PR84MB0163E6FA1BF71A12136E94EAE2A20@AT5PR84MB0163.NAMPRD84.PROD.OUTLOOK.COM>
+References: <59680165.9020201@oracle.com>
+ <20170714085016.4j2yeyihezmb6nkp@eorzea.usersys.redhat.com>
+ <817aafad-6b64-3700-6752-c63d7e5cdde7@sandeen.net>
+ <59690307.9090407@oracle.com>
+ <5d8fa5a7-110a-520f-9b13-b10627950bd3@sandeen.net>
+ <20170714190740.GA43494@bfoster.bfoster> <20170714224658.GB4224@magnolia>
+In-Reply-To: <20170714224658.GB4224@magnolia>
+Content-Language: en-US
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170718145415.21230-2-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Allison Henderson <allison.henderson@oracle.com>, "cmaiolino@redhat.com" <cmaiolino@redhat.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Tue, Jul 18, 2017 at 04:54:14PM +0200, Carlos Maiolino wrote:
-> With the current code, XFS never re-submit a failed buffer for IO,
-> because the failed item in the buffer is kept in the flush locked state
-> forever.
-> 
-> To be able to resubmit an log item for IO, we need a way to mark an item
-> as failed, if, for any reason the buffer which the item belonged to
-> failed during writeback.
-> 
-> Add a new log item callback to be used after an IO completion failure
-> and make the needed clean ups.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
+-----Original Message-----
+From: linux-xfs-owner@vger.kernel.org [mailto:linux-xfs-owner@vger.kernel.org] On Behalf Of Darrick J. Wong
+Sent: Friday, July 14, 2017 5:47 PM
+To: Brian Foster <bfoster@redhat.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>; Allison Henderson <allison.henderson@oracle.com>; cmaiolino@redhat.com; linux-xfs@vger.kernel.org
+Subject: Re: Parent pointers
 
-I think a comment would be nice for _do_callbacks_fail() (see below for
-an example), but otherwise the code looks good to me:
+On Fri, Jul 14, 2017 at 03:07:41PM -0400, Brian Foster wrote:
+> On Fri, Jul 14, 2017 at 01:46:27PM -0500, Eric Sandeen wrote:
+> > On 07/14/2017 12:44 PM, Allison Henderson wrote:
+> > > On 7/14/2017 7:04 AM, Eric Sandeen wrote:
+> > >>
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+<parent inode pointers returneth messages deleted>
 
-> 
-> V2:
-> 	- Update commit log to include a better description of why this
-> 	  patch is needed and fix spelling mistakes
-> 	- Move xfs_buf_do_callbacks_fail() call into
-> 	  xfs_buf_iodone_callback_error, so the callbacks can be executed
-> 	  before the buffer is released, and only after it has been
-> 	  retried once
-> 
-> V3:
-> 	- fix some loops according to hch suggestion
-> 	- whitespace cleanup
-> 
-> V4:
-> 	- Invoke failure callbacks before reset the I/O error
-> 	- Remove bflags field from iop_error callback
-> 	- move spin_lock/unlock xa_lock up in the stack, handling all
-> 	  log items in the same buffer into a single lock
-> 
-> V5:
-> 	- Reorganize variable declarations
-> 	  in fxs_buf_do_callbacks_fail
-> 
->  fs/xfs/xfs_buf_item.c | 24 +++++++++++++++++++++++-
->  fs/xfs/xfs_trans.h    |  7 +++++--
->  2 files changed, 28 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index f6a8422..d6ca7d6 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -29,6 +29,7 @@
->  #include "xfs_error.h"
->  #include "xfs_trace.h"
->  #include "xfs_log.h"
-> +#include "xfs_inode.h"
->  
->  
->  kmem_zone_t	*xfs_buf_item_zone;
-> @@ -1054,6 +1055,23 @@ xfs_buf_do_callbacks(
->  	}
->  }
->  
+> It's something to keep in mind, in any event. IIRC there were also 
+> missing Signed-off-by's required for some of Mark's original patches.
 
-/*
- * Invoke the error state callback for each log item affected by the failed I/O.
- *
- * If a metadata buffer write fails with a non-permanent error, the buffer is
- * eventually resubmitted and so the completion callbacks are not run. The error
- * state may need to be propagated to the log items attached to the buffer,
- * however, so the next AIL push of the item knows how to handle it correctly.
- */
+That's also a problem; unless someone can get Mark to supply them, we probably have to get someone to rewrite them.  At a bare minimum I think we explicitly have to pass back a xfs_dir2_dataptr_t, not a bare uint32_t.
 
-> +STATIC void
-> +xfs_buf_do_callbacks_fail(
-> +	struct xfs_buf		*bp)
-> +{
-> +	struct xfs_log_item	*next;
-> +	struct xfs_log_item	*lip = bp->b_fspriv;
-> +	struct xfs_ail		*ailp = lip->li_ailp;
-> +
-> +	spin_lock(&ailp->xa_lock);
-> +	for (; lip; lip = next) {
-> +		next = lip->li_bio_list;
-> +		if (lip->li_ops->iop_error)
-> +			lip->li_ops->iop_error(lip, bp);
-> +	}
-> +	spin_unlock(&ailp->xa_lock);
-> +}
-> +
->  static bool
->  xfs_buf_iodone_callback_error(
->  	struct xfs_buf		*bp)
-> @@ -1123,7 +1141,11 @@ xfs_buf_iodone_callback_error(
->  	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
->  		goto permanent_error;
->  
-> -	/* still a transient error, higher layers will retry */
-> +	/*
-> +	 * Still a transient error, run IO completion failure callbacks and let
-> +	 * the higher layers retry the buffer.
-> +	 */
-> +	xfs_buf_do_callbacks_fail(bp);
->  	xfs_buf_ioerror(bp, 0);
->  	xfs_buf_relse(bp);
->  	return true;
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 6bdad6f..442d679 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -64,11 +64,13 @@ typedef struct xfs_log_item {
->  } xfs_log_item_t;
->  
->  #define	XFS_LI_IN_AIL	0x1
-> -#define XFS_LI_ABORTED	0x2
-> +#define	XFS_LI_ABORTED	0x2
-> +#define	XFS_LI_FAILED	0x4
->  
->  #define XFS_LI_FLAGS \
->  	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
-> -	{ XFS_LI_ABORTED,	"ABORTED" }
-> +	{ XFS_LI_ABORTED,	"ABORTED" }, \
-> +	{ XFS_LI_FAILED,	"FAILED" }
->  
->  struct xfs_item_ops {
->  	void (*iop_size)(xfs_log_item_t *, int *, int *);
-> @@ -79,6 +81,7 @@ struct xfs_item_ops {
->  	void (*iop_unlock)(xfs_log_item_t *);
->  	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
->  	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
-> +	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *);
->  };
->  
->  void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
-> -- 
-> 2.9.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Me says:
+The community can do what they want.  If you want to start with that code, permission for S-O-B: me (snickers at the pun)
+
+> IMO, the best next step might be to just finish off the implementation 
+> as-is such that we could have a fairly functional RFC to put on the 
+> list and hash out whether there are in fact any remaining design 
+> hurdles, but others might have a different opinion on that. :)
+
+No one is asking me but I will add, IMO (definitely disclaiming the storage group and HPE):
+ the PIP costs outweigh the benefits.
+   Adding the redundant filename for recovery and an occasional output of the path pushes the cost to be *totally unreasonable*.
+    If I had a say, I don't and won't, I would NAK any implementation that included it.
+ Implementing with extended attributes is the wrong, wrong, wrong choice. It was done for hysterical :) reasons and even that appeasement bit me in the asterisk.
+
+Good luck.
+
+--Mark Tinguely 
+  not representing anyone but myself.
+
+
