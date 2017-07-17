@@ -1,100 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:18347 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751963AbdGRW47 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2017 18:56:59 -0400
-Date: Wed, 19 Jul 2017 08:56:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS group quota incorrectly "inherits" its hard limit from user 0
-Message-ID: <20170718225655.GO17762@dastard>
-References: <CAH4CUCPgFnm0s07uEU3ke6V8cPtSvQxMLo60nemuuqGygmZRhA@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52122 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751289AbdGQOtw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Jul 2017 10:49:52 -0400
+Date: Mon, 17 Jul 2017 10:49:48 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Parent pointers
+Message-ID: <20170717144946.GB56739@bfoster.bfoster>
+References: <59680165.9020201@oracle.com>
+ <20170714085016.4j2yeyihezmb6nkp@eorzea.usersys.redhat.com>
+ <817aafad-6b64-3700-6752-c63d7e5cdde7@sandeen.net>
+ <59690307.9090407@oracle.com>
+ <5d8fa5a7-110a-520f-9b13-b10627950bd3@sandeen.net>
+ <20170714190740.GA43494@bfoster.bfoster>
+ <20170714224658.GB4224@magnolia>
+ <AT5PR84MB0163E6FA1BF71A12136E94EAE2A20@AT5PR84MB0163.NAMPRD84.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAH4CUCPgFnm0s07uEU3ke6V8cPtSvQxMLo60nemuuqGygmZRhA@mail.gmail.com>
+In-Reply-To: <AT5PR84MB0163E6FA1BF71A12136E94EAE2A20@AT5PR84MB0163.NAMPRD84.PROD.OUTLOOK.COM>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Yaron Presente <yaron@zadarastorage.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Tinguely, Mark" <mark.tinguely@hpe.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>, Allison Henderson <allison.henderson@oracle.com>, "cmaiolino@redhat.com" <cmaiolino@redhat.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Wed, Jul 19, 2017 at 12:51:20AM +0300, Yaron Presente wrote:
-> Hi,
-> I'm running a Linux system with kernel version 3.18.19.
-> While experimenting with groups quota, I did the following steps:
+On Sat, Jul 15, 2017 at 04:36:27PM +0000, Tinguely, Mark wrote:
+> -----Original Message-----
+> From: linux-xfs-owner@vger.kernel.org [mailto:linux-xfs-owner@vger.kernel.org] On Behalf Of Darrick J. Wong
+> Sent: Friday, July 14, 2017 5:47 PM
+> To: Brian Foster <bfoster@redhat.com>
+> Cc: Eric Sandeen <sandeen@sandeen.net>; Allison Henderson <allison.henderson@oracle.com>; cmaiolino@redhat.com; linux-xfs@vger.kernel.org
+> Subject: Re: Parent pointers
 > 
-> 1. Mounted XFS with both users and groups quota enabled
-> 2. Set user 0 (aka the SuperUser) hard limit to 800000 . I believe
-> that this has the same affect as using xfs_quota limit command with
-> "-d" (i.e. setting the default hard limit for users which don't have
-> their hard limit set explicitly)
+> On Fri, Jul 14, 2017 at 03:07:41PM -0400, Brian Foster wrote:
+> > On Fri, Jul 14, 2017 at 01:46:27PM -0500, Eric Sandeen wrote:
+> > > On 07/14/2017 12:44 PM, Allison Henderson wrote:
+> > > > On 7/14/2017 7:04 AM, Eric Sandeen wrote:
+> > > >>
+> 
+> <parent inode pointers returneth messages deleted>
+> 
+> > It's something to keep in mind, in any event. IIRC there were also 
+> > missing Signed-off-by's required for some of Mark's original patches.
+> 
+> That's also a problem; unless someone can get Mark to supply them, we probably have to get someone to rewrite them.  At a bare minimum I think we explicitly have to pass back a xfs_dir2_dataptr_t, not a bare uint32_t.
+> 
+> Me says:
+> The community can do what they want.  If you want to start with that code, permission for S-O-B: me (snickers at the pun)
+> 
 
-What is the exact command you used to do this, what version of the
-quota utils are you using, and what is the strace output of the
-command?
+Thanks Mark. I guess we can add Mark's Signed-off-by to those patches he
+originally authored and that solves that problem. :)
 
--Dave.
+> > IMO, the best next step might be to just finish off the implementation 
+> > as-is such that we could have a fairly functional RFC to put on the 
+> > list and hash out whether there are in fact any remaining design 
+> > hurdles, but others might have a different opinion on that. :)
+> 
+> No one is asking me but I will add, IMO (definitely disclaiming the storage group and HPE):
+>  the PIP costs outweigh the benefits.
+>    Adding the redundant filename for recovery and an occasional output of the path pushes the cost to be *totally unreasonable*.
+>     If I had a say, I don't and won't, I would NAK any implementation that included it.
+>  Implementing with extended attributes is the wrong, wrong, wrong choice. It was done for hysterical :) reasons and even that appeasement bit me in the asterisk.
+> 
 
-> 3. Set user 2001117 hard limit to 1024000 (I set a different limit
-> than user 0's on purpose, in order to show that the group hard limit
-> was not inherited from this user, but from user 0)
-> 4. Created a 1MB file that is owned by user 2001117 and group 2000514
-> 5. Group 2000514 which previously didn't have any hard limit defined
-> now "inherited" user 0 hard limit of 800000 .
+Could you elaborate on this a bit? I haven't gone through all of the old
+discussions and it's been a while since I've even reviewed the recent
+code, but on a quick look at the links Darrick posted, it appears the
+old implementation incorporated the "first" parent pointer direct in the
+inode with a fallback to xattrs for inodes with multiple parents whereas
+the updated implementation uses xattrs outright (and as a result is able
+to incorporate the dentry name in the xattr). Is that an accurate
+summary?
 
+If so, is the performance concern really the use of xattrs or the fact
+that the name is included (or some combination of both)? For example,
+would you consider a situation where pp's are entirely isolated to
+shortform xattrs much worse than the direct pp approach? It seems to me
+that the inline approach could still be considered as an optimization
+(i.e., maybe an incore cache) if performance does prove to be a problem.
+Maybe we could also consider something where (somehow, handwaving again
+;) some number of pp xattrs are always shortform and thus remain within
+the inode.
+
+IOW, I think performance is a valid concern, but this should probably
+1.) follow correctness and 2.) be more dictated by testing (another
+really good reason to try and finish off the current rfc IMO) where we
+can consider various, potentially problematic situations. We're bound to
+have workloads where pretty much every file is hardlinked more than once
+(think glusterfs), for example.
+
+Brian
+
+> Good luck.
 > 
-> See output of xfs_quota below.
-> Thanks,
-> Yaron
+> --Mark Tinguely 
+>   not representing anyone but myself.
 > 
 > 
-> Before creating the file:
-> ==================
-> 
-> root@vsa-0000011e-vc-0:~# xfs_quota -x -c "report -L0 -U 2100000"
-> /export/share_3
-> User quota on /export/share_3 (/dev/dm-28)
->                                Blocks
-> User ID          Used       Soft       Hard    Warn/Grace
-> ---------- --------------------------------------------------
-> #0                  0               0      800000      00  [--------]
-> #2001117       0               0     1024000     00 [--------]
-> 
-> Group quota on /export/share_3 (/dev/dm-28)
->                                Blocks
-> Group ID         Used       Soft       Hard    Warn/Grace
-> ---------- --------------------------------------------------
-> #0                  0               0          0          00 [--------]
-> 
-> (group 2000514  is not listed since it does not have a hard limit and
-> its quota is not used by any file)
-> 
-> After creating the file:
-> ================
-> 
-> root@vsa-0000011e-vc-0:~# xfs_quota -x -c "report -L0 -U 2100000"
-> /export/share_3
-> User quota on /export/share_3 (/dev/dm-28)
->                                Blocks
-> User ID          Used       Soft       Hard    Warn/Grace
-> ---------- --------------------------------------------------
-> #0                  0               0     800000      00  [--------]
-> #2001117      1024         0    1024000     00 [--------]
-> 
-> Group quota on /export/share_3 (/dev/dm-28)
->                                Blocks
-> Group ID         Used       Soft       Hard    Warn/Grace
-> ---------- --------------------------------------------------
-> #0                  0               0          0           00 [--------]
-> #2000514      1024         0      800000     00 [--------]
->    <===   This is the problem. It's not clear where this hard limit
-> came from
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-Dave Chinner
-david@fromorbit.com
