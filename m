@@ -1,320 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46662 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751165AbdGMImF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Jul 2017 04:42:05 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 5D15EC04B31B
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Jul 2017 08:42:05 +0000 (UTC)
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH v2] xfsdump: fix race condition between lseek() and read()/write()
-Date: Thu, 13 Jul 2017 16:41:53 +0800
-Message-Id: <20170713084153.32535-1-eguan@redhat.com>
-In-Reply-To: <a63c9311-8b97-ad31-63cb-35bdea02b6a3@sandeen.net>
-References: <a63c9311-8b97-ad31-63cb-35bdea02b6a3@sandeen.net>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:46426 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751461AbdGQXsS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2017 19:48:18 -0400
+Date: Tue, 18 Jul 2017 09:48:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Collecting aged XFS profiles
+Message-ID: <20170717234814.GK17762@dastard>
+References: <F180D8D4-633B-4CC5-8D70-5CAC36233513@cs.cmu.edu>
+ <CAAxjCEzevLnmxyVRME1-kT867KjH2rtOdspv7nF6TOfLUDD+xA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAAxjCEzevLnmxyVRME1-kT867KjH2rtOdspv7nF6TOfLUDD+xA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Eryu Guan <eguan@redhat.com>
+To: Stefan Ring <stefanrin@gmail.com>
+Cc: Saurabh Kadekodi <saukad@cs.cmu.edu>, linux-xfs@vger.kernel.org
 
-There's a race condition in the [get|put]_invtrecord() routines, because
-a lseek() followed by a read()/write() is not atmoic, the file offset
-might be changed before read()/write().
+On Mon, Jul 17, 2017 at 09:00:19PM +0200, Stefan Ring wrote:
+> On Sun, Jul 16, 2017 at 2:11 AM, Saurabh Kadekodi
+> <saukad@cs.cmu.edu> wrote:
+> > Hi,
+> >
+> > I am a PhD student studying file and storage systems and I am
+> > currently conducting research on local file system aging. My
+> > research aims at understanding realistic aging patterns and
+> > analyzing the effects of aging on file system data structures
+> > and its performance. For this purpose, I would like to capture
+> > characteristics of naturally aged file systems (i.e. not aged
+> > via synthetic workload generators).
 
-xfs/302 catches this failure as:
-xfsdump: drive 1: INV : Unknown version 0 - Expected version 1
-xfsdump: inv_core.c:66: get_counters: Assertion `((invt_counter_t *)(*cntpp))->ic_vernum == (inv_version_t) 1' failed.
+Hi Saurabh - it's a great idea to do this, but I suspect you might
+want to spend some more time learning about the mechanisms
+and policies XFS uses to prevent aging and maintain performance. I'm
+suggesting this because knowing what the filesystem is trying to do
+will drastically change your idea of what information needs to be
+gathered....
 
-And it can be reproduced by running multi-stream dump in a tight loop
-  mount /dev/<dev> /mnt/xfs
-  mkdir /mnt/xfs/dumpdir
-  # populate dumpdir here
-  while xfsdump -M l1 -M l2 -f d1 -f d2 -L ses /mnt/xfs -s dumpdir; do
-  	:
-  done
+> > In order to facilitate this profile capture, I have written a shell / python based profiling tool (fsagestats - https://github.com/saurabhkadekodi/fsagestats)  that does a file system tree walk and captures different characteristics (file age, file size and directory depth) of files and directories and produces distributions. I do not care about file names or data within each file. It also runs xfs_db in order to capture the free space fragmentation, file fragmentation, directory fragmentation and overall fragmentation; all of which are directly correlated with the file system performance. It dumps the results in the results dir, which is to be specified when you run fsagestats. You can send me the aging profile by tarring up the results directory and sending it via email.
+> >
+> > Since I do not have access to XFS systems that see a lot of churn, I am reaching out to the XFS community in order to find volunteers willing to run my script and capture their XFS aging profile. Please feel free to modify the script as per your installation or as you see fit. Since fsagestats collects no private information, I eventually intend to host these profiles publicly (unless explicitly requested not to) to aid other researchers / enthusiasts.
+> >
+> > In case you have any questions on concerns, please let me know.
+> 
+> I have a nicely aged filesystem (1 TB) on our dev server with around
+> 10 million files on it. I will not run a script that executes two
+> xfs_io calls *for each file* on it. Why don't you just use Python's
+> stat.stat to get at the ctime and the size?
 
-Fix it by replacing the "lseek(); read()/write()" sequence by
-pread()/pwrite(), which make the seek and I/O an atomic operation.
+Ok, had a look at the script. You can replace most of it with
+pretty much one line.
 
-Also convert all *_SEEKCUR routines to "SEEK_SET" variants and
-remove the *_SEEKCUR macros, because they depend on the maintenance
-of current file offset, but pread()/pwrite() don't change file
-offset.
+$ find <dir> -exec stat -c "%n %Z %s" {} \;
 
-And in inventory/testmain.c, get|put_invtrecord() are called
-directly, not from the GET|PUT_REC_* macros, so maintain the offset
-explicitly there.
+Processing the dirents to get the "distribution stats" could be done
+by piping the output into a five line awk script. I'll leave that
+as an exercise for the reader.
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
-v2 passed xfstests -g dump group tests too, with different block size fs(512,
-1k, 4k), with different feature enabled (v4, v5, reflink).
+IMO, the script is not gathering anything particularly useful about
+how the filesystem has aged. The information being gathered doesn't
+tell us anything useful about how the allocator is performing for
+the given workload, nor does it provide insight into the locality
+characteristics and fragmentation of related files and directories
+which directly influence IO (and hence filesystem) performance.
 
-But I didn't really test testmain.c, it's not compiled by default, and I
-suspect it won't be compiled anyway, the usage of inv_put_sessioninfo() doesn't
-match its declaration, and there're might be other problems as well.
+e.g. if the inode64 allocator is in use, then all the files in a
+directory should be in the same physical region. As such, a key sign
+of an aged filesystem is that the allocator is not able to maintain
+the desired locality relationships between files.
 
-v2:
-- remove whence argument from get|pub_invtrecord()
-- update testmain.c to use get|pub_invtrecord() correctly
+To analyse such things, maybe consider gathering obfuscated metadump
+images rather asking people to run scripts that gather limited
+information.  That way you can develop scripts to extract the
+information your research requires from the filesystem images you
+received, rather than try to draw tenuous conclusions from a limited
+data set...
 
- common/inventory.c   |  4 ++--
- inventory/inv_api.c  |  5 ++---
- inventory/inv_core.c | 29 ++++++-----------------------
- inventory/inv_idx.c  |  4 ++--
- inventory/inv_priv.h | 21 ++++++---------------
- inventory/testmain.c | 34 +++++++++++++++++++++++-----------
- 6 files changed, 41 insertions(+), 56 deletions(-)
+Cheers,
 
-diff --git a/common/inventory.c b/common/inventory.c
-index d1b810c5bd10..0e9c2562ec25 100644
---- a/common/inventory.c
-+++ b/common/inventory.c
-@@ -471,8 +471,8 @@ inv_stream_close(
- 	}
- 			
- 	if (dowrite) {
--		rval = PUT_REC_NOLOCK_SEEKCUR( fd, &strm, sizeof( invt_stream_t ),
--					       (off64_t) -(sizeof( invt_stream_t )) );
-+		rval = PUT_REC_NOLOCK(fd, &strm, sizeof(invt_stream_t),
-+				      tok->md_stream_off);
- 	}
-  end:
- 	INVLOCK( fd, LOCK_UN );
-diff --git a/inventory/inv_api.c b/inventory/inv_api.c
-index acca40b00fff..46fdde84740b 100644
---- a/inventory/inv_api.c
-+++ b/inventory/inv_api.c
-@@ -409,9 +409,8 @@ inv_stream_close(
- 		}
- 			
- 		if (dowrite) {
--			rval = PUT_REC_NOLOCK_SEEKCUR( fd, &strm, 
--			             sizeof( invt_stream_t ),
--				     -(off64_t)(sizeof( invt_stream_t )) );
-+			rval = PUT_REC_NOLOCK(fd, &strm, sizeof(invt_stream_t),
-+					      tok->md_stream_off);
- 		}
- 	}
- 
-diff --git a/inventory/inv_core.c b/inventory/inv_core.c
-index a17c2c9c5603..5ef519c91347 100644
---- a/inventory/inv_core.c
-+++ b/inventory/inv_core.c
-@@ -112,7 +112,7 @@ get_headers( int fd, void **hdrs, size_t bufsz, size_t off )
- 
- int
- get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, 
--	        int whence, bool_t dolock )
-+		bool_t dolock )
- {
- 	int  nread;
- 	
-@@ -121,19 +121,10 @@ get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off,
- 	if ( dolock ) 
- 		INVLOCK( fd, LOCK_SH );
- 
--	if ( lseek( fd, (off_t)off, whence ) < 0 ) {
--		INV_PERROR( _("Error in reading inventory record "
--			      "(lseek failed): ") );
--		if ( dolock ) 
--			INVLOCK( fd, LOCK_UN );
--		return -1;
--	}
--	
--	nread = read( fd, buf, bufsz );
--
-+	nread = pread(fd, buf, bufsz, (off_t)off);
- 	if (  nread != (int) bufsz ) {
- 		INV_PERROR( _("Error in reading inventory record :") );
--		if ( dolock ) 
-+		if ( dolock )
- 			INVLOCK( fd, LOCK_UN );
- 		return -1;
- 	}
-@@ -154,23 +145,15 @@ get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off,
- /*----------------------------------------------------------------------*/
- 
- int
--put_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, 
--	        int whence, bool_t dolock )
-+put_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, bool_t dolock )
- {
- 	int nwritten;
- 	
- 	if ( dolock )
- 		INVLOCK( fd, LOCK_EX );
- 	
--	if ( lseek( fd, (off_t)off, whence ) < 0 ) {
--		INV_PERROR( _("Error in writing inventory record "
--			      "(lseek failed): ") );
--		if ( dolock ) 
--			INVLOCK( fd, LOCK_UN );
--		return -1;
--	}
--	
--	if (( nwritten = write( fd, buf, bufsz ) ) != (int) bufsz ) {
-+	nwritten = pwrite(fd, buf, bufsz, (off_t)off);
-+	if (nwritten != (int) bufsz ) {
- 		INV_PERROR( _("Error in writing inventory record :") );
- 		if ( dolock )
- 			INVLOCK( fd, LOCK_UN );
-diff --git a/inventory/inv_idx.c b/inventory/inv_idx.c
-index 95529e8135af..cd9b9cbe7a79 100644
---- a/inventory/inv_idx.c
-+++ b/inventory/inv_idx.c
-@@ -341,8 +341,8 @@ idx_put_sesstime( inv_sestoken_t tok, bool_t whichtime)
- 			      ent.ie_timeperiod.tp_start,
- 			      ent.ie_timeperiod.tp_end );
- #endif
--	rval = PUT_REC_NOLOCK_SEEKCUR( fd, &ent, sizeof( invt_entry_t ),
--				      -(off64_t)(sizeof( invt_entry_t )));
-+	rval = PUT_REC_NOLOCK(fd, &ent, sizeof(invt_entry_t),
-+			      tok->sd_invtok->d_invindex_off);
- 	
- #ifdef INVT_DEBUG
- 	{
-diff --git a/inventory/inv_priv.h b/inventory/inv_priv.h
-index 1690271dd3e3..aa94a3349d79 100644
---- a/inventory/inv_priv.h
-+++ b/inventory/inv_priv.h
-@@ -298,13 +298,10 @@ typedef bool_t (*search_callback_t) (int, invt_seshdr_t *, void *, void *);
- 
- 
- #define GET_REC( fd, buf, sz, off )  \
--                 get_invtrecord( fd, buf, sz, off, SEEK_SET, INVT_DOLOCK )
-+                 get_invtrecord( fd, buf, sz, off, INVT_DOLOCK )
- 
- #define GET_REC_NOLOCK( fd, buf, sz, off )  \
--                 get_invtrecord( fd, buf, sz, off, SEEK_SET, INVT_DONTLOCK )
--
--#define GET_REC_SEEKCUR( fd, buf, sz, off )  \
--                 get_invtrecord( fd, buf, sz, off, SEEK_CUR, INVT_DOLOCK )
-+                 get_invtrecord( fd, buf, sz, off, INVT_DONTLOCK )
- 
- #define GET_ALLHDRS_N_CNTS( fd, h, c, hsz, csz ) \
-                  get_headerinfo( fd, h, c, hsz, csz, INVT_DOLOCK )
-@@ -313,16 +310,10 @@ typedef bool_t (*search_callback_t) (int, invt_seshdr_t *, void *, void *);
-                  get_headerinfo( fd, h, c, hsz, csz, INVT_DONTLOCK )
- 
- #define PUT_REC( fd, buf, sz, off )  \
--                 put_invtrecord( fd, buf, sz, off, SEEK_SET, INVT_DOLOCK )
-+                 put_invtrecord( fd, buf, sz, off, INVT_DOLOCK )
- 
- #define PUT_REC_NOLOCK( fd, buf, sz, off )  \
--                 put_invtrecord( fd, buf, sz, off, SEEK_SET, INVT_DONTLOCK )
--
--#define PUT_REC_SEEKCUR( fd, buf, sz, off )  \
--                 put_invtrecord( fd, buf, sz, off, SEEK_CUR, INVT_DOLOCK )
--
--#define PUT_REC_NOLOCK_SEEKCUR( fd, buf, sz, off )  \
--                 put_invtrecord( fd, buf, sz, off, SEEK_CUR, INVT_DONTLOCK )
-+                 put_invtrecord( fd, buf, sz, off, INVT_DONTLOCK )
- 
- 
- #define GET_COUNTERS( fd, cnt ) get_counters( fd, (void **)(cnt), \
-@@ -515,10 +506,10 @@ int
- get_invtentry( char *fname, time32_t tm, invt_entry_t *buf, size_t bufsz );
- 
- int
--get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, int, bool_t dolock );
-+get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, bool_t dolock );
- 
- int
--put_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, int, bool_t dolock );
-+put_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, bool_t dolock );
- 
- inv_idbtoken_t
- get_token( int fd, int objfd );
-diff --git a/inventory/testmain.c b/inventory/testmain.c
-index ecddf54c4f90..05e3c02af792 100644
---- a/inventory/testmain.c
-+++ b/inventory/testmain.c
-@@ -89,6 +89,7 @@ int
- recons_test( int howmany )
- {
- 	int fd, i, rval = 1;
-+	off64_t off = 0;
- 	
- 	ses sarr[ SESLIM];
- 	
-@@ -96,14 +97,16 @@ recons_test( int howmany )
- 	
- 	for ( i=0; i<howmany && i < SESLIM; i++ ){
- 		rval = get_invtrecord( fd, &sarr[i], 
--				       sizeof( uuid_t ) + sizeof( size_t ), 0,
--				       SEEK_CUR, BOOL_FALSE );
-+				       sizeof( uuid_t ) + sizeof( size_t ), off,
-+				       BOOL_FALSE );
- 		assert( rval > 0 );
- 		assert( sarr[i].sz > 0 );
- 		sarr[i].buf = calloc( 1,  sarr[i].sz );
--		rval = get_invtrecord( fd, sarr[i].buf,  sarr[i].sz, 0, SEEK_CUR,
-+		off += (off64_t)(sizeof(uuid_t) + sizeof(size_t));
-+		rval = get_invtrecord( fd, sarr[i].buf,  sarr[i].sz, off,
- 				       BOOL_FALSE );
- 		assert( rval > 0 );
-+		off += sarr[i].sz;
- 	}
- 	
- 	
-@@ -132,8 +135,7 @@ delete_test( int n )
- 	fd = open( "moids", O_RDONLY );
- 	if ( fd < 0 ) return -1;
- 	
--	get_invtrecord( fd, &moid, sizeof(uuid_t), (n-1)* sizeof( uuid_t),
--		        SEEK_SET, 0 );
-+	get_invtrecord( fd, &moid, sizeof(uuid_t), (n-1)* sizeof( uuid_t), 0 );
- 	uuid_to_string( &moid, &str, &stat );
- 	printf("Searching for Moid = %s\n", str );
- 	free( str );
-@@ -263,7 +265,11 @@ write_test( int nsess, int nstreams, int nmedia, int dumplevel )
- 	char strbuf[128];
- 	void *bufp;
- 	size_t sz;
-+#ifdef RECONS
- 	int rfd;
-+	off64_t off;
-+	struct stat64 statbuf;
-+#endif
- 
- #ifdef FIRSTTIME
- 	printf("first time!\n");
-@@ -285,6 +291,11 @@ write_test( int nsess, int nstreams, int nmedia, int dumplevel )
- #ifdef RECONS
- 	rfd = open( sesfile, O_RDWR | O_CREAT );
- 	fchmod( rfd, INV_PERMS );
-+	if (fstat64(fd, &statbuf) < 0) {
-+		perror("fstat64 session file");
-+		return -1;
-+	}
-+	off = (off64_t)statbuf.st_size;
- #endif
- 
- 	for ( i = 0; i < nsess; i++ ) {
-@@ -325,12 +336,13 @@ write_test( int nsess, int nstreams, int nmedia, int dumplevel )
- 	
- #ifdef RECONS
- 		if (inv_get_sessioninfo( tok2, &bufp, &sz ) == BOOL_TRUE ) {
--		      put_invtrecord( rfd, fsidp, sizeof( uuid_t ), 0, 
--				        SEEK_END, BOOL_FALSE );
--			
--			put_invtrecord( rfd, &sz, sizeof( size_t ), 0,
--				        SEEK_END, BOOL_FALSE); 
--			put_invtrecord( rfd, bufp, sz, 0, SEEK_END, BOOL_FALSE );
-+			put_invtrecord( rfd, fsidp, sizeof( uuid_t ), off,
-+					BOOL_FALSE );
-+			off += (off64_t)sizeof(uuid_t);
-+			put_invtrecord( rfd, &sz, sizeof( size_t ), off,
-+					BOOL_FALSE);
-+			off += (off64_t)sizeof(size_t);
-+			put_invtrecord( rfd, bufp, sz, off, BOOL_FALSE );
- 		}
- #endif
- #ifdef NOTDEF
+Dave.
 -- 
-2.13.0
-
+Dave Chinner
+david@fromorbit.com
