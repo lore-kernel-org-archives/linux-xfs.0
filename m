@@ -1,80 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47075 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49172 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751364AbdGSNUe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Jul 2017 09:20:34 -0400
-Date: Wed, 19 Jul 2017 09:20:32 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/3] xfs: check _alloc_read_agf buffer pointer before
- using
-Message-ID: <20170719132032.GC54534@bfoster.bfoster>
-References: <150040225662.1216.16823172616535217786.stgit@magnolia>
- <150040226878.1216.15454073908001325566.stgit@magnolia>
+        id S1751259AbdGQHqk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Jul 2017 03:46:40 -0400
+Date: Mon, 17 Jul 2017 09:46:34 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v2] xfs_db: redirect printfs when metadumping to stdout
+Message-ID: <20170717074634.oo5rwirwdsmhutjp@eorzea.usersys.redhat.com>
+References: <20170716195415.GE4224@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150040226878.1216.15454073908001325566.stgit@magnolia>
+In-Reply-To: <20170716195415.GE4224@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, David Shaw <dshaw@jabberwocky.com>
 
-On Tue, Jul 18, 2017 at 11:24:28AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sun, Jul 16, 2017 at 12:54:15PM -0700, Darrick J. Wong wrote:
+> If we're metadumping to stdout, we don't want xfs_db's various dbprintf
+> statements dumping to stdout because that'll corrupt the metadump.
+> Therefore, let outf point to the existing stdout and redirect stdout to
+> stderr for the duration of the dump operation.
 > 
-> In some circumstances, _alloc_read_agf can return an error code of zero
-> but also a null AGF buffer pointer.  Check for this and jump out.
-> 
-
-It looks like this is only possible in trylock cases. Otherwise (and
-unless I'm missing something), it should always return a buffer or
-error.
-
-This is circuitous regardless and so seems fine if it shuts up a
-coverity warning:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> Fixes-coverity-id: 1415250
-> Fixes-coverity-id: 1415320
+> Reported-by: David Shaw <dshaw@jabberwocky.com>
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_refcount.c |    4 ++++
->  fs/xfs/xfs_reflink.c         |    2 ++
->  2 files changed, 6 insertions(+)
+> v2: Better comments.
+> ---
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+>  db/metadump.c |   15 +++++++++++++--
+>  1 file changed, 13 insertions(+), 2 deletions(-)
 > 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-> index 900ea23..45b1c3b 100644
-> --- a/fs/xfs/libxfs/xfs_refcount.c
-> +++ b/fs/xfs/libxfs/xfs_refcount.c
-> @@ -1638,6 +1638,10 @@ xfs_refcount_recover_cow_leftovers(
->  	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
->  	if (error)
->  		goto out_trans;
-> +	if (!agbp) {
-> +		error = -ENOMEM;
-> +		goto out_trans;
-> +	}
->  	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
+> diff --git a/db/metadump.c b/db/metadump.c
+> index e046f60..b58acef 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -2874,6 +2874,7 @@ metadump_f(
+>  	xfs_agnumber_t	agno;
+>  	int		c;
+>  	int		start_iocur_sp;
+> +	bool		stdout_metadump = false;
+>  	char		*p;
 >  
->  	/* Find all the leftover CoW staging extents. */
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index d9b3d57..f45fbf0 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -170,6 +170,8 @@ xfs_reflink_find_shared(
->  	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
->  	if (error)
->  		return error;
-> +	if (!agbp)
-> +		return -ENOMEM;
+>  	exitcode = 1;
+> @@ -2988,7 +2989,15 @@ metadump_f(
+>  			free(metablock);
+>  			return 0;
+>  		}
+> +		/*
+> +		 * Redirect stdout to stderr for the duration of the
+> +		 * metadump operation so that dbprintf and other messages
+> +		 * are sent to the console instead of polluting the
+> +		 * metadump stream.
+> +		 */
+>  		outf = stdout;
+> +		stdout = stderr;
+> +		stdout_metadump = true;
+>  	} else {
+>  		outf = fopen(argv[optind], "wb");
+>  		if (outf == NULL) {
+> @@ -3020,9 +3029,11 @@ metadump_f(
+>  		exitcode = write_index() < 0;
 >  
->  	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
+>  	if (progress_since_warning)
+> -		fputc('\n', (outf == stdout) ? stderr : stdout);
+> +		fputc('\n', stdout_metadump ? stderr : stdout);
 >  
-> 
+> -	if (outf != stdout)
+> +	if (stdout_metadump)
+> +		stdout = outf;
+> +	else
+>  		fclose(outf);
+>  
+>  	/* cleanup iocur stack */
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
