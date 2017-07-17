@@ -1,67 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31228 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751557AbdGRSYS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2017 14:24:18 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6IIOI3x029169
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 18:24:18 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v6IIOHMV028048
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 18:24:18 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v6IIOHoS012968
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 18:24:17 GMT
-Subject: [PATCH 1/3] xfs: check _btree_check_block value
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 18 Jul 2017 11:24:16 -0700
-Message-ID: <150040225662.1216.16823172616535217786.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:44686 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751323AbdGQRLb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Jul 2017 13:11:31 -0400
+Date: Mon, 17 Jul 2017 13:11:29 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Weird xfs_repair error
+Message-ID: <20170717171129.GA57771@bfoster.bfoster>
+References: <20170706153020.0ad6dd47@harpe.intellique.com>
+ <20170706232803.GF17762@dastard>
+ <20170707135009.68c22182@harpe.intellique.com>
+ <20170707153633.GG4103@magnolia>
+ <20170711152340.4cd5dff9@harpe.intellique.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170711152340.4cd5dff9@harpe.intellique.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, "'linux-xfs@vger.kernel.org'" <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jul 11, 2017 at 03:23:52PM +0200, Emmanuel Florac wrote:
+> Le Fri, 7 Jul 2017 08:36:33 -0700
+> "Darrick J. Wong" <darrick.wong@oracle.com> écrivait:
+> 
+> > > fatal error -- name create failed in lost+found (28), filesystem
+> > > may be out of space  
+> > 
+> > Would be helpful to have a metadump of this goobered-up lost+found
+> > fs...
+> > 
+> 
+> The metadump is here for anyone who would like to have a look:
+> 
+> http://update2.intellique.com/pub/bign.metadump.xz
+> 
+> The filesystem is about 115 TiB.
+> 
 
-Check the _btree_check_block return value for the firstrec and lastrec
-functions, since we have the ability to signal that the repositioning
-did not succeed.
+Thanks for posting this. The first thing to note is that this filesystem
+is severely corrupted. Nonetheless, I've been playing around with trying
+to get the latest for-next xfs_repair to run through this fs (via gdb)
+and have definitely hit a few issues:
 
-Fixes-coverity-id: 114067
-Fixes-coverity-id: 114068
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_btree.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+- xfs_sb_verify() was changed to use bp->b_maps[0].bm_bn rather than
+  bp->b_bn in libxfs commit 85428dd23f ("xfs: fix superblock inprogress
+  check"). b_maps isn't allocated if the buffer was initialized with
+  libxfs_initbuf() (rather than libxfs_initbuf_map()). This causes a
+  sigsegv here, though only if I disable -O2 optimization for some
+  reason that I haven't dug into yet.
+- libxfs commit 0268fdc3fe ("xfs: remove xfs_trans_get_block_res")
+  replaced the use of xfs_trans_get_block_res() in
+  xfs_bmbt_alloc_block() which causes the -ENOSPC error. The previous
+  function was hardcoded to return 1 such that this would never occur.
+- The recently added directory sf format verifier (xfs_iformat_fork() ->
+  xfs_dir2_sf_verify()) seems to cause a premature repair failure in at
+  least one case.
 
+I was able to eventually get repair to complete with some quick hacks to
+bypass those issues. I did have to run repair two or three times to get
+the fs to a clean state. The fs mounts and otherwise appears clean to
+xfs_repair, but it's not clear to me how usable the resulting fs really
+is (repair is for fs consistency after all, not necessarily data
+recovery). Note that lost+found appears to be loaded with 18T of data
+across almost 2 million inodes. :/
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 4da85ff..e0bcc4a 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -728,7 +728,8 @@ xfs_btree_firstrec(
- 	 * Get the block pointer for this level.
- 	 */
- 	block = xfs_btree_get_block(cur, level, &bp);
--	xfs_btree_check_block(cur, block, level, bp);
-+	if (xfs_btree_check_block(cur, block, level, bp))
-+		return 0;
- 	/*
- 	 * It's empty, there is no such record.
- 	 */
-@@ -757,7 +758,8 @@ xfs_btree_lastrec(
- 	 * Get the block pointer for this level.
- 	 */
- 	block = xfs_btree_get_block(cur, level, &bp);
--	xfs_btree_check_block(cur, block, level, bp);
-+	if (xfs_btree_check_block(cur, block, level, bp))
-+		return 0;
- 	/*
- 	 * It's empty, there is no such record.
- 	 */
+Brian
+
+> -- 
+> ------------------------------------------------------------------------
+> Emmanuel Florac     |   Direction technique
+>                     |   Intellique
+>                     |	<eflorac@intellique.com>
+>                     |   +33 1 78 94 84 02
+> ------------------------------------------------------------------------
+
 
