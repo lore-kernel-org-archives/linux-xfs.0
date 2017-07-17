@@ -1,57 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([59.151.112.132]:32664 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752186AbdGCHgQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jul 2017 03:36:16 -0400
-From: Xiao Yang <yangx.jy@cn.fujitsu.com>
-Subject: [PATCH] generic/446: add __xfs_get_blocks() into _filter_xfs_dmesg
-Date: Mon, 3 Jul 2017 15:35:59 +0800
-Message-ID: <1499067359-23500-1-git-send-email-yangx.jy@cn.fujitsu.com>
+Received: from sandeen.net ([63.231.237.45]:40692 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751324AbdGQUvv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Jul 2017 16:51:51 -0400
+Subject: Re: [PATCH] xfs_db: properly set inode type
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <e6c83eea-af29-c01b-752e-e049e8fdc69f@redhat.com>
+ <20170628004252.GB4492@birch.djwong.org>
+ <ffd4ffc4-c4f0-4935-a785-c6af95c4d4b9@sandeen.net>
+ <20170628235411.GA5874@birch.djwong.org>
+ <f7050d91-0bc5-ec0a-fc3f-59a25f8855ef@sandeen.net>
+Message-ID: <67d06f4f-73fc-577c-a12f-132821386597@sandeen.net>
+Date: Mon, 17 Jul 2017 15:51:50 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <f7050d91-0bc5-ec0a-fc3f-59a25f8855ef@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: eguan@redhat.com, bfoster@redhat.com, linux-xfs@vger.kernel.org, Xiao Yang <yangx.jy@cn.fujitsu.com>
-
-On xfs filesystem, the following patch fixed system crash caused by
-this race, but it introduced the __xfs_get_blocks() warning when the
-race occurred:
-04197b3 ("xfs: don't BUG() on mixed direct and mapped I/O")
-
-On upstream kernel, the fix patch was cleared by:
-acdda3a ("xfs: use iomap_dio_rw")
-
-When the fix patch was applied and not cleared(e.g, on RHEL7.4), this
-case triggered the __xfs_get_blocks() warning as expected.  Moreover,
-generic/095 may reproduce the same warning occasionally.  So we could
-add __xfs_get_blocks() into _filter_xfs_dmesg.
-
-Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
----
- common/xfs | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/common/xfs b/common/xfs
-index 77100f7..a1ee384 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -595,9 +595,11 @@ _filter_xfs_dmesg()
- 	local warn3="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_read_iter.*"
- 	local warn4="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_aio_read.*"
- 	local warn5="WARNING:.*fs/iomap\.c:.*iomap_dio_rw.*"
-+	local warn6="WARNING:.*fs/xfs/xfs_aops\.c:.*__xfs_get_blocks.*"
- 	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
- 	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
- 	    -e "s#$warn3#Intentional warnings in xfs_file_read_iter#" \
- 	    -e "s#$warn4#Intentional warnings in xfs_file_aio_read#" \
--	    -e "s#$warn5#Intentional warnings in iomap_dio_rw#"
-+	    -e "s#$warn5#Intentional warnings in iomap_dio_rw#" \
-+	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#"
- }
--- 
-1.8.3.1
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
 
 
+On 06/28/2017 11:01 PM, Eric Sandeen wrote:
+>> I guess there's also the problem that if inodesize != 512 then what are
+>> we targeting, anyway?  If inodesize = 256 then we can only hit
+>> even-numbered inodes (not so bad) but if inodesize > 512 then do we jump
+>> back to wherever the inode starts?  Or just give the user what they
+>> asked for, even if it's garbage? 
+> Oh, hum. Right, big inodes.... 
+> 
+> So I'm trying to go from disk location to inode number, but the current
+> disk location may not even be the start of an inode.  Hell.  Well, I'm
+> sure I could craft a test to disallow "type inode" if the current location
+> cannot be on an inode boundary.  But is that too clever?  Should the
+> debug tool just do what the user asks?
+> 
+>> (FWIW I was fine with xfs_db being dumb and giving you exactly what you
+>> point it at, even if that makes no sense. :P)
+> yeah, if you do "daddr 0" "type agf" it'll squawk, too, so it's fine to
+> do the dumb user's bidding...
+
+So as I have it today, issuing "type inode" will actually re-align you
+to an inode offset even if you're not on one:
+
+xfs_db> sb 0
+xfs_db> addr rootino
+xfs_db> daddr
+current daddr is 128
+xfs_db> daddr 129
+xfs_db> type inode
+xfs_db> daddr
+current daddr is 128
+xfs_db> 
+
+good? bad? indifferent? I'm thinking "bad" but we have no mechanism to
+read a batch of inodes in xfs_db other than by passing in a legit inode number.
+
+And we have no mechanism to read only a /single/ inode...
+
+Maybe print a warning about the re-alignment and carry on?
+
+-Eric
