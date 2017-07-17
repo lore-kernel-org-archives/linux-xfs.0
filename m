@@ -1,80 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f180.google.com ([209.85.128.180]:33030 "EHLO
-        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752982AbdGRVvW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2017 17:51:22 -0400
-Received: by mail-wr0-f180.google.com with SMTP id v105so17770794wrb.0
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 14:51:21 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:10604 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751351AbdGQWO3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2017 18:14:29 -0400
+Date: Tue, 18 Jul 2017 08:14:07 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Parent pointers
+Message-ID: <20170717221407.GJ17762@dastard>
+References: <59680165.9020201@oracle.com>
+ <20170714085016.4j2yeyihezmb6nkp@eorzea.usersys.redhat.com>
+ <817aafad-6b64-3700-6752-c63d7e5cdde7@sandeen.net>
+ <59690307.9090407@oracle.com>
+ <5d8fa5a7-110a-520f-9b13-b10627950bd3@sandeen.net>
+ <20170714190740.GA43494@bfoster.bfoster>
+ <20170714224658.GB4224@magnolia>
+ <20170717144813.GA56739@bfoster.bfoster>
 MIME-Version: 1.0
-From: Yaron Presente <yaron@zadarastorage.com>
-Date: Wed, 19 Jul 2017 00:51:20 +0300
-Message-ID: <CAH4CUCPgFnm0s07uEU3ke6V8cPtSvQxMLo60nemuuqGygmZRhA@mail.gmail.com>
-Subject: XFS group quota incorrectly "inherits" its hard limit from user 0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170717144813.GA56739@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>, Allison Henderson <allison.henderson@oracle.com>, cmaiolino@redhat.com, linux-xfs@vger.kernel.org
 
-Hi,
-I'm running a Linux system with kernel version 3.18.19.
-While experimenting with groups quota, I did the following steps:
+On Mon, Jul 17, 2017 at 10:48:16AM -0400, Brian Foster wrote:
+> On Fri, Jul 14, 2017 at 03:46:58PM -0700, Darrick J. Wong wrote:
+> > On Fri, Jul 14, 2017 at 03:07:41PM -0400, Brian Foster wrote:
+> > From what I can tell, he seems to have taken Mark's patches to pass dir
+> > offsets back from the dirent manipulation functions and then started
+> > writing a simple implementation of stuffing the attrs into the attr
+> > tree.
 
-1. Mounted XFS with both users and groups quota enabled
-2. Set user 0 (aka the SuperUser) hard limit to 800000 . I believe
-that this has the same affect as using xfs_quota limit command with
-"-d" (i.e. setting the default hard limit for users which don't have
-their hard limit set explicitly)
-3. Set user 2001117 hard limit to 1024000 (I set a different limit
-than user 0's on purpose, in order to show that the group hard limit
-was not inherited from this user, but from user 0)
-4. Created a 1MB file that is owned by user 2001117 and group 2000514
-5. Group 2000514 which previously didn't have any hard limit defined
-now "inherited" user 0 hard limit of 800000 .
+Yup, that's the idea.
 
-See output of xfs_quota below.
-Thanks,
-Yaron
+> > > FWIW, I think there was some mention of porting some of the operations
+> > > over to the deferred ops infrastructure, but it's not clear to me off
+> > > the top of my head how important (or appropriate) that is.
+> > 
+> > Most of the users of xfs_trans_roll seem to be buried in the xattr code.
+> > For example, _attr_set can end up rolling a transaction after converting
+> > an attr fork from short format to leaf format before retrying the attr
+> > add operation, but we don't use log redo items (er, defer_ops items) to
+> > make sure log recovery will restart the attr add operation if we crash
+> > before the final _trans_commit after calling _attr_{leaf,node}_addname.
+> > 
+> > In the case of a regular xattr set operation this wouldn't have been a
+> > big deal because the fsetxattr call wouldn't have returned, so all the
+> > user could possibly see is an inode with a perhaps unnecessarily large
+> > xattr fork.  Now that we need to set xattrs in the same transaction
+> > chain as a directory operation, it becomes very important that log
+> > recovery gain the ability to resume an xattr add operation no matter
+> > where the log stopped.  Creating a directory can become this longwinded
+> > pile of updates:
+> > 
+> 
+> Ok, thanks for the summary. So we have some transaction ordering down in
+> the xattr code that might no longer be sufficient to provide atomicity
+> in the context of parent pointers (via directory operations).
 
+We already have xattr operations that are not atomic with directory
+entry creation - security xattrs (default ACL, etc). This can mean
+that after a crash and recovery, we have a newly created file
+without any security xattr on it.
 
-Before creating the file:
-==================
+This is a long standing problem - it bites SGI's HSM (DMF) all the
+time, so rather than fixing the problem 10+ years ago, they added a
+post-boot inode scan (via bulkstat) to find inodes that didn't have
+a DMF xattr.
 
-root@vsa-0000011e-vc-0:~# xfs_quota -x -c "report -L0 -U 2100000"
-/export/share_3
-User quota on /export/share_3 (/dev/dm-28)
-                               Blocks
-User ID          Used       Soft       Hard    Warn/Grace
----------- --------------------------------------------------
-#0                  0               0      800000      00  [--------]
-#2001117       0               0     1024000     00 [--------]
+The original parent pointer patchset also had this problem the
+moment xattrs were required (i.e. first hardlink) - the creation of
+the pp xattr was not atomic with the dirent creation. To solve this
+problem, I started by moving the xattr creation into the transaction
+context of the dirent.
 
-Group quota on /export/share_3 (/dev/dm-28)
-                               Blocks
-Group ID         Used       Soft       Hard    Warn/Grace
----------- --------------------------------------------------
-#0                  0               0          0          00 [--------]
+> I see that
+> the current patch series increases the transaction size to accommodate
+> parent pointers, but that doesn't help us deal with those situations
+> where the transaction is rolled into a new one.
 
-(group 2000514  is not listed since it does not have a hard limit and
-its quota is not used by any file)
+Right, I hadn't got that far. The plan effective was to get a proof
+of concept running with the xattr creation within the directory
+creation xact context and get that working, knowing that it still
+wasn't properly atomic. This was done before we had deferred ops,
+and my thinking at the time was to add an intent/done pair of ops
+to tell recovery it needed to add an xattr to the dirent once the
+xattr was inside the dirent context. i.e.
 
-After creating the file:
-================
+	- move xattr inside dirent ctx
+	- add pp intent
+	- roll transaction
+	- add pp xattr
+	- roll final xattr transaction rather than commit
+	- add pp done
+	- commit dir ctx transaction.
 
-root@vsa-0000011e-vc-0:~# xfs_quota -x -c "report -L0 -U 2100000"
-/export/share_3
-User quota on /export/share_3 (/dev/dm-28)
-                               Blocks
-User ID          Used       Soft       Hard    Warn/Grace
----------- --------------------------------------------------
-#0                  0               0     800000      00  [--------]
-#2001117      1024         0    1024000     00 [--------]
+This doesn't help us with security context xattrs, though, so
+when deferred ops came along, it made much more sense to me to
+make the adding of an xattr a deferred op so we could use the same
+mechanism for adding all the required xattrs to the inode atomically
+and so have a mechanism for recovery to replay them appropriately.
 
-Group quota on /export/share_3 (/dev/dm-28)
-                               Blocks
-Group ID         Used       Soft       Hard    Warn/Grace
----------- --------------------------------------------------
-#0                  0               0          0           00 [--------]
-#2000514      1024         0      800000     00 [--------]
-   <===   This is the problem. It's not clear where this hard limit
-came from
+> > - Allocate directory block, map into data fork, chain rmap update, add
+> >   directory entry, chain pptr update;
+> > - Add rmap entry for new directory block (more chaining to fix
+> >   freelist), finish first rmap update;
+> > - Allocate xattr block for short->leaf conversion, map into attr fork,
+> >   chain rmap update; chain xattr add operation;
+> > - Add rmap entry for new xattr block (more chaining to fix freelist),
+> >   finish second rmap update;
+> > - Add xattr entry to file, finish xattr add operation;
+> > - Finish pptr update.
+> > 
+> > Basically, I think someone's going to have to go audit all the uses of
+> > xfs_trans_roll in the attr code to figure out which operations need redo
+> > items, and how to cram everything toegether into a single xfs_defer_ops,
+> > rather than sprinkling them around the attr code like we do now, because
+> > redo items cannot be deferred from one defer_ops to another.
+
+Probably should handle that when we dup the transaction just before
+the roll, right?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
