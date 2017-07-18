@@ -1,73 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23487 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:17048 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751230AbdGPTyX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 Jul 2017 15:54:23 -0400
-Date: Sun, 16 Jul 2017 12:54:15 -0700
+        with ESMTP id S1751411AbdGRSYb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2017 14:24:31 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6IIOUWK013176
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 18:24:30 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v6IIOUT7028430
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 18:24:30 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v6IIOTka022179
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 18:24:29 GMT
+Subject: [PATCH 3/3] xfs: check _alloc_read_agf buffer pointer before using
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] xfs_db: redirect printfs when metadumping to stdout
-Message-ID: <20170716195415.GE4224@magnolia>
+Date: Tue, 18 Jul 2017 11:24:28 -0700
+Message-ID: <150040226878.1216.15454073908001325566.stgit@magnolia>
+In-Reply-To: <150040225662.1216.16823172616535217786.stgit@magnolia>
+References: <150040225662.1216.16823172616535217786.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, David Shaw <dshaw@jabberwocky.com>
+To: linux-xfs@vger.kernel.org
 
-If we're metadumping to stdout, we don't want xfs_db's various dbprintf
-statements dumping to stdout because that'll corrupt the metadump.
-Therefore, let outf point to the existing stdout and redirect stdout to
-stderr for the duration of the dump operation.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reported-by: David Shaw <dshaw@jabberwocky.com>
+In some circumstances, _alloc_read_agf can return an error code of zero
+but also a null AGF buffer pointer.  Check for this and jump out.
+
+Fixes-coverity-id: 1415250
+Fixes-coverity-id: 1415320
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: Better comments.
----
- db/metadump.c |   15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_refcount.c |    4 ++++
+ fs/xfs/xfs_reflink.c         |    2 ++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/db/metadump.c b/db/metadump.c
-index e046f60..b58acef 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -2874,6 +2874,7 @@ metadump_f(
- 	xfs_agnumber_t	agno;
- 	int		c;
- 	int		start_iocur_sp;
-+	bool		stdout_metadump = false;
- 	char		*p;
+
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 900ea23..45b1c3b 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1638,6 +1638,10 @@ xfs_refcount_recover_cow_leftovers(
+ 	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+ 	if (error)
+ 		goto out_trans;
++	if (!agbp) {
++		error = -ENOMEM;
++		goto out_trans;
++	}
+ 	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
  
- 	exitcode = 1;
-@@ -2988,7 +2989,15 @@ metadump_f(
- 			free(metablock);
- 			return 0;
- 		}
-+		/*
-+		 * Redirect stdout to stderr for the duration of the
-+		 * metadump operation so that dbprintf and other messages
-+		 * are sent to the console instead of polluting the
-+		 * metadump stream.
-+		 */
- 		outf = stdout;
-+		stdout = stderr;
-+		stdout_metadump = true;
- 	} else {
- 		outf = fopen(argv[optind], "wb");
- 		if (outf == NULL) {
-@@ -3020,9 +3029,11 @@ metadump_f(
- 		exitcode = write_index() < 0;
+ 	/* Find all the leftover CoW staging extents. */
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index d9b3d57..f45fbf0 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -170,6 +170,8 @@ xfs_reflink_find_shared(
+ 	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+ 	if (error)
+ 		return error;
++	if (!agbp)
++		return -ENOMEM;
  
- 	if (progress_since_warning)
--		fputc('\n', (outf == stdout) ? stderr : stdout);
-+		fputc('\n', stdout_metadump ? stderr : stdout);
+ 	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
  
--	if (outf != stdout)
-+	if (stdout_metadump)
-+		stdout = outf;
-+	else
- 		fclose(outf);
- 
- 	/* cleanup iocur stack */
+
