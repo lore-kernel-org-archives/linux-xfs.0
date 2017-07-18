@@ -1,116 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from trent.utfs.org ([94.185.90.103]:36016 "EHLO trent.utfs.org"
+Received: from mx1.redhat.com ([209.132.183.28]:57563 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751216AbdGPSKR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 16 Jul 2017 14:10:17 -0400
-Received: from localhost (localhost [IPv6:::1])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1751617AbdGROyV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Jul 2017 10:54:21 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by trent.utfs.org (Postfix) with ESMTPS id 787EE5F869
-        for <linux-xfs@vger.kernel.org>; Sun, 16 Jul 2017 20:01:37 +0200 (CEST)
-Date: Sun, 16 Jul 2017 11:01:37 -0700 (PDT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Metadata corruption detected at xfs_inode_buf_verify
-Message-ID: <alpine.DEB.2.21.1.1707161018130.22141@trent.utfs.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        by mx1.redhat.com (Postfix) with ESMTPS id A37EF4A6E6
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 14:54:21 +0000 (UTC)
+Received: from eorzea.usersys.redhat.com (ovpn-204-54.brq.redhat.com [10.40.204.54])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1AB707E582
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 14:54:20 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 1/2 V5] xfs: Add infrastructure needed for error propagation during buffer IO failure
+Date: Tue, 18 Jul 2017 16:54:14 +0200
+Message-Id: <20170718145415.21230-2-cmaiolino@redhat.com>
+In-Reply-To: <20170718145415.21230-1-cmaiolino@redhat.com>
+References: <20170718145415.21230-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Hi,
+With the current code, XFS never re-submit a failed buffer for IO,
+because the failed item in the buffer is kept in the flush locked state
+forever.
 
-so, the disk enclosure attached to my RaspberryPi[0] had "some" kind of 
-failure last night: one of the disks appears to have some kind of hardware 
-problem, the other is fine, but the XFS file system cannot be mounted. 
-Instead of using the RPI to try the repair, I attached the enclosure to an 
-Intel i7 machine (16 GB RAM) and attempted to mount:
+To be able to resubmit an log item for IO, we need a way to mark an item
+as failed, if, for any reason the buffer which the item belonged to
+failed during writeback.
 
-====================================================
-# uname -r
-4.9.0-3-amd64
+Add a new log item callback to be used after an IO completion failure
+and make the needed clean ups.
 
-# mount -t xfs /dev/mapper/owc1 /mnt/
-mount: mount /dev/mapper/owc1 on /mnt/ failed: Structure needs cleaning
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
 
-# dmesg
-XFS (dm-1): Mounting V5 Filesystem
-XFS (dm-1): Starting recovery (logdev: internal)
-XFS (dm-1): Metadata corruption detected at xfs_inode_buf_verify+0x6e/0xf0 [xfs], xfs_inode block 0x5a48d610
-XFS (dm-1): Unmount and run xfs_repair 
-XFS (dm-1): First 64 bytes of corrupted metadata buffer:
-ffff9cb8cc428000: dc 70 f3 22 07 71 ab 49 6c a6 5c 23 c9 b1 31 37  .p.".q.Il.\#..17
-ffff9cb8cc428010: 3f db 62 33 54 87 4d 7d 1e 09 cc 4b fb 2c b0 22  ?.b3T.M}...K.,."
-ffff9cb8cc428020: a9 54 91 1a 41 40 fe e1 16 7e 82 e1 56 b4 a8 9a  .T..A@...~..V...
-ffff9cb8cc428030: 29 67 de c0 75 01 75 77 3a 1b af 5a 60 1c 4c c7  )g..u.uw:..Z`.L.
-XFS (dm-1): Metadata corruption detected at xfs_inode_buf_verify+0x6e/0xf0 [xfs], xfs_inode block 0x5a48d610
-XFS (dm-1): Unmount and run xfs_repair 
-XFS (dm-1): First 64 bytes of corrupted metadata buffer:
-[...]
-====================================================
+V2:
+	- Update commit log to include a better description of why this
+	  patch is needed and fix spelling mistakes
+	- Move xfs_buf_do_callbacks_fail() call into
+	  xfs_buf_iodone_callback_error, so the callbacks can be executed
+	  before the buffer is released, and only after it has been
+	  retried once
 
-But it cannot be repaired either:
+V3:
+	- fix some loops according to hch suggestion
+	- whitespace cleanup
 
-====================================================
-# xfs_repair -V
-xfs_repair version 4.11.0
+V4:
+	- Invoke failure callbacks before reset the I/O error
+	- Remove bflags field from iop_error callback
+	- move spin_lock/unlock xa_lock up in the stack, handling all
+	  log items in the same buffer into a single lock
 
-# time xfs_repair -v /dev/mapper/owc1; echo $?
-Phase 1 - find and verify superblock...
-        - reporting progress in intervals of 15 minutes
-        - block cache size set to 1425416 entries
-Phase 2 - using internal log
-        - zero log...
-zero_log: head block 3282156 tail block 3268500
-ERROR: The filesystem has valuable metadata changes in a log which needs 
-to be replayed.  Mount the filesystem to replay the log, and unmount it 
-before re-running xfs_repair.  If you are unable to mount the filesystem, 
-then use the -L option to destroy the log and attempt a repair.
-Note that destroying the log may cause corruption -- please attempt a 
-mount of the filesystem before doing this.
+V5:
+	- Reorganize variable declarations
+	  in fxs_buf_do_callbacks_fail
 
-real    0m21.893s
-user    0m0.004s
-sys     0m0.008s
-2
-====================================================
+ fs/xfs/xfs_buf_item.c | 24 +++++++++++++++++++++++-
+ fs/xfs/xfs_trans.h    |  7 +++++--
+ 2 files changed, 28 insertions(+), 3 deletions(-)
 
-
-I saved the outputs of xfs_logprint, xfs_logprint -t and xfs_metadump and 
-then used the -L option to attempt the repair, but this failed (after 
-Phase 6) with:
-
-
-====================================================
-# time xfs_repair -v /dev/mapper/owc1; echo $?
-[...]
-entry ".." in directory inode 4574814913 points to free inode 268568894, 
-marking entry to be junked
-bad hash table for directory inode 4574814913 (no data entry): rebuilding
-rebuilding directory inode 4574814913
-Invalid inode number 0x0
-xfs_dir_ino_validate: XFS_ERROR_REPORT
-
-fatal error -- couldn't map inode 4574814915, err = 117
-
-real    37m25.619s
-user    0m41.780s
-sys     0m14.852s
-1
-====================================================
-
-Full dmesg and command outputs: http://nerdbynature.de/bits/4.12.0-rc7/
-
-The logprint and metadump outputs could be provided at request, I guess.
-
-Any ideas on how to tackle this?
-
-Thanks,
-Christian.
-
-[0] https://www.spinics.net/lists/linux-xfs/msg05618.html
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index f6a8422..d6ca7d6 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -29,6 +29,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
++#include "xfs_inode.h"
+ 
+ 
+ kmem_zone_t	*xfs_buf_item_zone;
+@@ -1054,6 +1055,23 @@ xfs_buf_do_callbacks(
+ 	}
+ }
+ 
++STATIC void
++xfs_buf_do_callbacks_fail(
++	struct xfs_buf		*bp)
++{
++	struct xfs_log_item	*next;
++	struct xfs_log_item	*lip = bp->b_fspriv;
++	struct xfs_ail		*ailp = lip->li_ailp;
++
++	spin_lock(&ailp->xa_lock);
++	for (; lip; lip = next) {
++		next = lip->li_bio_list;
++		if (lip->li_ops->iop_error)
++			lip->li_ops->iop_error(lip, bp);
++	}
++	spin_unlock(&ailp->xa_lock);
++}
++
+ static bool
+ xfs_buf_iodone_callback_error(
+ 	struct xfs_buf		*bp)
+@@ -1123,7 +1141,11 @@ xfs_buf_iodone_callback_error(
+ 	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
+ 		goto permanent_error;
+ 
+-	/* still a transient error, higher layers will retry */
++	/*
++	 * Still a transient error, run IO completion failure callbacks and let
++	 * the higher layers retry the buffer.
++	 */
++	xfs_buf_do_callbacks_fail(bp);
+ 	xfs_buf_ioerror(bp, 0);
+ 	xfs_buf_relse(bp);
+ 	return true;
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 6bdad6f..442d679 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -64,11 +64,13 @@ typedef struct xfs_log_item {
+ } xfs_log_item_t;
+ 
+ #define	XFS_LI_IN_AIL	0x1
+-#define XFS_LI_ABORTED	0x2
++#define	XFS_LI_ABORTED	0x2
++#define	XFS_LI_FAILED	0x4
+ 
+ #define XFS_LI_FLAGS \
+ 	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
+-	{ XFS_LI_ABORTED,	"ABORTED" }
++	{ XFS_LI_ABORTED,	"ABORTED" }, \
++	{ XFS_LI_FAILED,	"FAILED" }
+ 
+ struct xfs_item_ops {
+ 	void (*iop_size)(xfs_log_item_t *, int *, int *);
+@@ -79,6 +81,7 @@ struct xfs_item_ops {
+ 	void (*iop_unlock)(xfs_log_item_t *);
+ 	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
+ 	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
++	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *);
+ };
+ 
+ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
 -- 
-BOFH excuse #183:
+2.9.4
 
-filesystem not big enough for Jumbo Kernel Patch
