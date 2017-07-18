@@ -1,86 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49172 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56694 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751259AbdGQHqk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 17 Jul 2017 03:46:40 -0400
-Date: Mon, 17 Jul 2017 09:46:34 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH v2] xfs_db: redirect printfs when metadumping to stdout
-Message-ID: <20170717074634.oo5rwirwdsmhutjp@eorzea.usersys.redhat.com>
-References: <20170716195415.GE4224@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170716195415.GE4224@magnolia>
+        id S1751402AbdGRONi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Jul 2017 10:13:38 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 830627DCC8
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 14:13:38 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 66D476F92C
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 14:13:38 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH RFC] xfs: fix buffer check for primary sb in userspace libxfs
+Date: Tue, 18 Jul 2017 10:13:37 -0400
+Message-Id: <20170718141337.46255-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, David Shaw <dshaw@jabberwocky.com>
+To: linux-xfs@vger.kernel.org
 
-On Sun, Jul 16, 2017 at 12:54:15PM -0700, Darrick J. Wong wrote:
-> If we're metadumping to stdout, we don't want xfs_db's various dbprintf
-> statements dumping to stdout because that'll corrupt the metadump.
-> Therefore, let outf point to the existing stdout and redirect stdout to
-> stderr for the duration of the dump operation.
-> 
-> Reported-by: David Shaw <dshaw@jabberwocky.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: Better comments.
-> ---
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Hi all,
 
->  db/metadump.c |   15 +++++++++++++--
->  1 file changed, 13 insertions(+), 2 deletions(-)
-> 
-> diff --git a/db/metadump.c b/db/metadump.c
-> index e046f60..b58acef 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -2874,6 +2874,7 @@ metadump_f(
->  	xfs_agnumber_t	agno;
->  	int		c;
->  	int		start_iocur_sp;
-> +	bool		stdout_metadump = false;
->  	char		*p;
->  
->  	exitcode = 1;
-> @@ -2988,7 +2989,15 @@ metadump_f(
->  			free(metablock);
->  			return 0;
->  		}
-> +		/*
-> +		 * Redirect stdout to stderr for the duration of the
-> +		 * metadump operation so that dbprintf and other messages
-> +		 * are sent to the console instead of polluting the
-> +		 * metadump stream.
-> +		 */
->  		outf = stdout;
-> +		stdout = stderr;
-> +		stdout_metadump = true;
->  	} else {
->  		outf = fopen(argv[optind], "wb");
->  		if (outf == NULL) {
-> @@ -3020,9 +3029,11 @@ metadump_f(
->  		exitcode = write_index() < 0;
->  
->  	if (progress_since_warning)
-> -		fputc('\n', (outf == stdout) ? stderr : stdout);
-> +		fputc('\n', stdout_metadump ? stderr : stdout);
->  
-> -	if (outf != stdout)
-> +	if (stdout_metadump)
-> +		stdout = outf;
-> +	else
->  		fclose(outf);
->  
->  	/* cleanup iocur stack */
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This patch is actually targeted at userspace. The previous change in commit
+f3d7ebde ("xfs: fix superblock inprogress check") to use ->b_maps technically
+breaks the logic in userspace in a similar way to the original problem because
+userspace has no concept of uncached buffers.  ->b_maps is NULL in userspace
+unless the buffer is truly discontiguous.
 
+This would normally result in a segfault but this appears to be hidden
+by gcc optimization as -O2 is enabled by default and the
+check_inprogress param to xfs_mount_validate_sb() is unused in
+userspace. Therefore, the segfault is only reproducible when
+optimization is disabled (which is a useful configuration for
+debugging).
+
+There are obviously different ways to fix this. I'm floating this (untested)
+rfc as a kernel patch (do we ever sync libxfs from xfsprogs -> kernel?) with
+the objective of keeping the libxfs code the same between the kernel and
+userspace. We could alternatively create a custom helper/macro with the
+appropriate check in each place. Thoughts?
+
+Brian
+
+ fs/xfs/libxfs/xfs_sb.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 9b5aae2..ec2fd03 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -583,6 +583,7 @@ xfs_sb_verify(
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ 	struct xfs_sb	sb;
++	bool		primary_sb;
+ 
+ 	/*
+ 	 * Use call variant which doesn't convert quota flags from disk 
+@@ -592,11 +593,14 @@ xfs_sb_verify(
+ 
+ 	/*
+ 	 * Only check the in progress field for the primary superblock as
+-	 * mkfs.xfs doesn't clear it from secondary superblocks.
++	 * mkfs.xfs doesn't clear it from secondary superblocks. Note that
++	 * userspace libxfs does not have uncached buffers and so b_maps is not
++	 * used for the sb buffer.
+ 	 */
+-	return xfs_mount_validate_sb(mp, &sb,
+-				     bp->b_maps[0].bm_bn == XFS_SB_DADDR,
+-				     check_version);
++	primary_sb = (bp->b_bn == XFS_BUF_DADDR_NULL &&
++		      bp->b_maps[0].bm_bn == XFS_SB_DADDR) ||
++		     bp->b_bn == XFS_SB_DADDR;
++	return xfs_mount_validate_sb(mp, &sb, primary_sb, check_version);
+ }
+ 
+ /*
 -- 
-Carlos
+2.9.4
+
