@@ -1,139 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32582 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751388AbdGQWxu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2017 18:53:50 -0400
-Date: Mon, 17 Jul 2017 15:53:41 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Parent pointers
-Message-ID: <20170717225341.GG4224@magnolia>
-References: <59680165.9020201@oracle.com>
- <20170714085016.4j2yeyihezmb6nkp@eorzea.usersys.redhat.com>
- <817aafad-6b64-3700-6752-c63d7e5cdde7@sandeen.net>
- <59690307.9090407@oracle.com>
- <5d8fa5a7-110a-520f-9b13-b10627950bd3@sandeen.net>
- <20170714190740.GA43494@bfoster.bfoster>
- <20170714224658.GB4224@magnolia>
- <AT5PR84MB0163E6FA1BF71A12136E94EAE2A20@AT5PR84MB0163.NAMPRD84.PROD.OUTLOOK.COM>
- <20170717144946.GB56739@bfoster.bfoster>
- <cd120f6c-2b7b-8452-fbd6-6565db574e21@hpe.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cd120f6c-2b7b-8452-fbd6-6565db574e21@hpe.com>
+Received: from smtp01.srv.cs.cmu.edu ([128.2.217.200]:34234 "EHLO
+        smtp01.srv.cs.cmu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751026AbdGRFqA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2017 01:46:00 -0400
+Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
+Subject: Re: Collecting aged XFS profiles
+From: Saurabh Kadekodi <saukad@cs.cmu.edu>
+In-Reply-To: <20170717234814.GK17762@dastard>
+Date: Mon, 17 Jul 2017 22:45:55 -0700
+Content-Transfer-Encoding: 8BIT
+Message-Id: <D76BD005-1AE4-4DEA-9D34-C46DD7F9CEF1@cs.cmu.edu>
+References: <F180D8D4-633B-4CC5-8D70-5CAC36233513@cs.cmu.edu>
+ <CAAxjCEzevLnmxyVRME1-kT867KjH2rtOdspv7nF6TOfLUDD+xA@mail.gmail.com>
+ <20170717234814.GK17762@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mark Tinguely <mark.tinguely@hpe.com>
-Cc: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Allison Henderson <allison.henderson@oracle.com>, "cmaiolino@redhat.com" <cmaiolino@redhat.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Stefan Ring <stefanrin@gmail.com>, linux-xfs@vger.kernel.org
 
-On Mon, Jul 17, 2017 at 10:33:12AM -0500, Mark Tinguely wrote:
-> On 07/17/2017 09:49 AM, Brian Foster wrote:
-> >On Sat, Jul 15, 2017 at 04:36:27PM +0000, Tinguely, Mark wrote:
-> >>-----Original Message-----
-> >>From: linux-xfs-owner@vger.kernel.org [mailto:linux-xfs-owner@vger.kernel.org] On Behalf Of Darrick J. Wong
-> >>Sent: Friday, July 14, 2017 5:47 PM
-> >>To: Brian Foster <bfoster@redhat.com>
-> >>Cc: Eric Sandeen <sandeen@sandeen.net>; Allison Henderson <allison.henderson@oracle.com>; cmaiolino@redhat.com; linux-xfs@vger.kernel.org
-> >>Subject: Re: Parent pointers
-> >>
-> >>On Fri, Jul 14, 2017 at 03:07:41PM -0400, Brian Foster wrote:
-> >>>On Fri, Jul 14, 2017 at 01:46:27PM -0500, Eric Sandeen wrote:
-> >>>>On 07/14/2017 12:44 PM, Allison Henderson wrote:
-> >>>>>On 7/14/2017 7:04 AM, Eric Sandeen wrote:
-> >><parent inode pointers returneth messages deleted>
-> >>
-> >>>It's something to keep in mind, in any event. IIRC there were also
-> >>>missing Signed-off-by's required for some of Mark's original patches.
-> >>That's also a problem; unless someone can get Mark to supply them, we probably have to get someone to rewrite them.  At a bare minimum I think we explicitly have to pass back a xfs_dir2_dataptr_t, not a bare uint32_t.
-> >>
-> >>Me says:
-> >>The community can do what they want.  If you want to start with that code, permission for S-O-B: me (snickers at the pun)
-> >>
-> >Thanks Mark. I guess we can add Mark's Signed-off-by to those patches he
-> >originally authored and that solves that problem. :)
-> >
-> >>>IMO, the best next step might be to just finish off the implementation
-> >>>as-is such that we could have a fairly functional RFC to put on the
-> >>>list and hash out whether there are in fact any remaining design
-> >>>hurdles, but others might have a different opinion on that. :)
-> >>No one is asking me but I will add, IMO (definitely disclaiming the storage group and HPE):
-> >>  the PIP costs outweigh the benefits.
-> >>    Adding the redundant filename for recovery and an occasional output of the path pushes the cost to be *totally unreasonable*.
-> >>     If I had a say, I don't and won't, I would NAK any implementation that included it.
-> >>  Implementing with extended attributes is the wrong, wrong, wrong choice. It was done for hysterical :) reasons and even that appeasement bit me in the asterisk.
-> >>
-> >Could you elaborate on this a bit? I haven't gone through all of the old
-> >discussions and it's been a while since I've even reviewed the recent
-> >code, but on a quick look at the links Darrick posted, it appears the
-> >old implementation incorporated the "first" parent pointer direct in the
-> >inode with a fallback to xattrs for inodes with multiple parents whereas
-> >the updated implementation uses xattrs outright (and as a result is able
-> >to incorporate the dentry name in the xattr). Is that an accurate
-> >summary?
-> >
-> >If so, is the performance concern really the use of xattrs or the fact
-> >that the name is included (or some combination of both)? For example,
-> >would you consider a situation where pp's are entirely isolated to
-> >shortform xattrs much worse than the direct pp approach? It seems to me
-> >that the inline approach could still be considered as an optimization
-> >(i.e., maybe an incore cache) if performance does prove to be a problem.
-> >Maybe we could also consider something where (somehow, handwaving again
-> >;) some number of pp xattrs are always shortform and thus remain within
-> >the inode.
+Hi Dave,
 
-I'd rather not do that, since a certain filesystem is, uh, extending its
-ability to store extended attributes (with biases to keep inline data
-and ACLs and such inside the inode).  Now they have two different places
-where keys can hide and three places where values can get stuffed, and
-it's ... a complicated mess.
+Thanks for the detailed reply. I was unaware of the sophisticated tools that XFS had and since I am also looking at other file systems in parallel, I missed out on exploring these utilities. xfs_metadump seems extremely apt for my study since it will essentially provide me the complete metadata allowing me to query free space fragmentation, file fragmentation, etc, without requiring people to conduct a potentially expensive file system tree walk, as would have been in Stefan’s case.
 
-Better just to leave the existing da btree structure that we understand,
-unless we find that the cost is so outrageous that it becomes worth
-breaking all our brains.  As it is, fixing the existing atomicity
-problems w.r.t. xattrs will be invasive enough.
+I am completely fine with people running xfs_metadump on their aged images. It would be great if they could also run xfs_info on their mount point so that I know the file system size, block size, etc. in order for me to restore and analyze their obfuscated metadata dump.
 
-> I disagree with both saving the name and using xattrs.
+I believe a tar.gz of the metadump file should be small enough to be attached to an email. In case it is too large, you can either create a pull request by forking my github project (https://github.com/saurabhkadekodi/fsagestats) and adding your data in the aged_file_system_profiles directory, or let me know and I can arrange for uploading the data on some server hosted at my school.
 
-FWIW I disagree with /not/ storing the name, because my vision for
-parent pointers is to store backrefs that are rich enough that we can
-(ideally) reconstruct the damaged parts of the directory tree or (worst
-case) feed lost+found better names.
+Thanks,
+Saurabh
 
-(Though, we have enough cooks now that I encourage everyone with
-differing goals to speak up.)
-
-> >IOW, I think performance is a valid concern, but this should probably
-> >1.) follow correctness and 2.) be more dictated by testing (another
-> >really good reason to try and finish off the current rfc IMO) where we
-> >can consider various, potentially problematic situations. We're bound to
-> >have workloads where pretty much every file is hardlinked more than once
-> >(think glusterfs), for example.
-
-Agree.
-
-> >Brian
-> >
-> OMG! Sigh ...
-> >>Good luck.
-> x2
-
-Thanks!
-
---D
-
-> >>
-> >>--Mark Tinguely
-> >>   not representing anyone but myself.
-> >>
-> >>
-> >>--
-> >>To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >>the body of a message to majordomo@vger.kernel.org
-> >>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> On Jul 17, 2017, at 4:48 PM, Dave Chinner <david@fromorbit.com> wrote:
 > 
+> On Mon, Jul 17, 2017 at 09:00:19PM +0200, Stefan Ring wrote:
+>> On Sun, Jul 16, 2017 at 2:11 AM, Saurabh Kadekodi
+>> <saukad@cs.cmu.edu> wrote:
+>>> Hi,
+>>> 
+>>> I am a PhD student studying file and storage systems and I am
+>>> currently conducting research on local file system aging. My
+>>> research aims at understanding realistic aging patterns and
+>>> analyzing the effects of aging on file system data structures
+>>> and its performance. For this purpose, I would like to capture
+>>> characteristics of naturally aged file systems (i.e. not aged
+>>> via synthetic workload generators).
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Hi Saurabh - it's a great idea to do this, but I suspect you might
+> want to spend some more time learning about the mechanisms
+> and policies XFS uses to prevent aging and maintain performance. I'm
+> suggesting this because knowing what the filesystem is trying to do
+> will drastically change your idea of what information needs to be
+> gathered....
+> 
+>>> In order to facilitate this profile capture, I have written a shell / python based profiling tool (fsagestats - https://github.com/saurabhkadekodi/fsagestats)  that does a file system tree walk and captures different characteristics (file age, file size and directory depth) of files and directories and produces distributions. I do not care about file names or data within each file. It also runs xfs_db in order to capture the free space fragmentation, file fragmentation, directory fragmentation and overall fragmentation; all of which are directly correlated with the file system performance. It dumps the results in the results dir, which is to be specified when you run fsagestats. You can send me the aging profile by tarring up the results directory and sending it via email.
+>>> 
+>>> Since I do not have access to XFS systems that see a lot of churn, I am reaching out to the XFS community in order to find volunteers willing to run my script and capture their XFS aging profile. Please feel free to modify the script as per your installation or as you see fit. Since fsagestats collects no private information, I eventually intend to host these profiles publicly (unless explicitly requested not to) to aid other researchers / enthusiasts.
+>>> 
+>>> In case you have any questions on concerns, please let me know.
+>> 
+>> I have a nicely aged filesystem (1 TB) on our dev server with around
+>> 10 million files on it. I will not run a script that executes two
+>> xfs_io calls *for each file* on it. Why don't you just use Python's
+>> stat.stat to get at the ctime and the size?
+> 
+> Ok, had a look at the script. You can replace most of it with
+> pretty much one line.
+> 
+> $ find <dir> -exec stat -c "%n %Z %s" {} \;
+> 
+> Processing the dirents to get the "distribution stats" could be done
+> by piping the output into a five line awk script. I'll leave that
+> as an exercise for the reader.
+> 
+> IMO, the script is not gathering anything particularly useful about
+> how the filesystem has aged. The information being gathered doesn't
+> tell us anything useful about how the allocator is performing for
+> the given workload, nor does it provide insight into the locality
+> characteristics and fragmentation of related files and directories
+> which directly influence IO (and hence filesystem) performance.
+> 
+> e.g. if the inode64 allocator is in use, then all the files in a
+> directory should be in the same physical region. As such, a key sign
+> of an aged filesystem is that the allocator is not able to maintain
+> the desired locality relationships between files.
+> 
+> To analyse such things, maybe consider gathering obfuscated metadump
+> images rather asking people to run scripts that gather limited
+> information.  That way you can develop scripts to extract the
+> information your research requires from the filesystem images you
+> received, rather than try to draw tenuous conclusions from a limited
+> data set...
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+
