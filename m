@@ -1,80 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:52344 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751461AbdGRCU2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2017 22:20:28 -0400
-Date: Tue, 18 Jul 2017 12:20:14 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_db: properly set inode type
-Message-ID: <20170718022014.GM17762@dastard>
-References: <e6c83eea-af29-c01b-752e-e049e8fdc69f@redhat.com>
- <20170628004252.GB4492@birch.djwong.org>
- <ffd4ffc4-c4f0-4935-a785-c6af95c4d4b9@sandeen.net>
- <20170628235411.GA5874@birch.djwong.org>
- <f7050d91-0bc5-ec0a-fc3f-59a25f8855ef@sandeen.net>
- <67d06f4f-73fc-577c-a12f-132821386597@sandeen.net>
+Received: from aserp1040.oracle.com ([141.146.126.69]:40921 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751427AbdGRTGu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2017 15:06:50 -0400
+Subject: [PATCH 1/2] libxfs: add a flags argument to libxfs_iget
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 18 Jul 2017 12:06:45 -0700
+Message-ID: <150040480534.16432.7424988688113046337.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <67d06f4f-73fc-577c-a12f-132821386597@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-On Mon, Jul 17, 2017 at 03:51:50PM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 06/28/2017 11:01 PM, Eric Sandeen wrote:
-> >> I guess there's also the problem that if inodesize != 512 then what are
-> >> we targeting, anyway?  If inodesize = 256 then we can only hit
-> >> even-numbered inodes (not so bad) but if inodesize > 512 then do we jump
-> >> back to wherever the inode starts?  Or just give the user what they
-> >> asked for, even if it's garbage? 
-> > Oh, hum. Right, big inodes.... 
-> > 
-> > So I'm trying to go from disk location to inode number, but the current
-> > disk location may not even be the start of an inode.  Hell.  Well, I'm
-> > sure I could craft a test to disallow "type inode" if the current location
-> > cannot be on an inode boundary.  But is that too clever?  Should the
-> > debug tool just do what the user asks?
-> > 
-> >> (FWIW I was fine with xfs_db being dumb and giving you exactly what you
-> >> point it at, even if that makes no sense. :P)
-> > yeah, if you do "daddr 0" "type agf" it'll squawk, too, so it's fine to
-> > do the dumb user's bidding...
-> 
-> So as I have it today, issuing "type inode" will actually re-align you
-> to an inode offset even if you're not on one:
-> 
-> xfs_db> sb 0
-> xfs_db> addr rootino
-> xfs_db> daddr
-> current daddr is 128
-> xfs_db> daddr 129
-> xfs_db> type inode
-> xfs_db> daddr
-> current daddr is 128
-> xfs_db> 
-> 
-> good? bad? indifferent? I'm thinking "bad" but we have no mechanism to
-> read a batch of inodes in xfs_db other than by passing in a legit inode number.
-> 
-> And we have no mechanism to read only a /single/ inode...
-> 
-> Maybe print a warning about the re-alignment and carry on?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-xfs_db is meant to be a developer tool, not idiot-proof. :P
+Add a flags argument to libxfs_iget to bring it up to date with the
+kernel xfs_iget.  We will use the flags argument in the next patch
+to enable xfs_repair to shut off inode fork verifiers.
 
-i.e. some knowledge of the layout of the metadata you are trying
-to examine is expected. I would not like xfs_db to change the daddr
-I've specified simply because I tried to parse it as the wrong
-object type....
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/attrset.c        |    4 ++--
+ include/xfs_inode.h |    2 +-
+ libxfs/rdwr.c       |   15 ++++++++++-----
+ libxfs/trans.c      |    4 ++--
+ repair/phase6.c     |   10 +++++-----
+ 5 files changed, 20 insertions(+), 15 deletions(-)
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/db/attrset.c b/db/attrset.c
+index ad3c8f3..ddd72ed 100644
+--- a/db/attrset.c
++++ b/db/attrset.c
+@@ -151,7 +151,7 @@ attr_set_f(
+ 		value = NULL;
+ 	}
+ 
+-	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip)) {
++	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, 0, &ip)) {
+ 		dbprintf(_("failed to iget inode %llu\n"),
+ 			(unsigned long long)iocur_top->ino);
+ 		goto out;
+@@ -226,7 +226,7 @@ attr_remove_f(
+ 
+ 	name = argv[optind];
+ 
+-	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip)) {
++	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, 0, &ip)) {
+ 		dbprintf(_("failed to iget inode %llu\n"),
+ 			(unsigned long long)iocur_top->ino);
+ 		goto out;
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 8766024..5d5158e 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -149,7 +149,7 @@ extern int	libxfs_iflush_int (struct xfs_inode *, struct xfs_buf *);
+ 
+ /* Inode Cache Interfaces */
+ extern int	libxfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
+-				uint, struct xfs_inode **);
++				uint, uint, struct xfs_inode **);
+ extern void	libxfs_iput(struct xfs_inode *);
+ 
+ #define IRELE(ip) libxfs_iput(ip)
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 43b4f1d..cf156ba 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -1329,11 +1329,16 @@ extern kmem_zone_t	*xfs_ili_zone;
+ extern kmem_zone_t	*xfs_inode_zone;
+ 
+ int
+-libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
+-		xfs_inode_t **ipp)
++libxfs_iget(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	xfs_ino_t		ino,
++	uint			flags,
++	uint			lock_flags,
++	struct xfs_inode	**ipp)
+ {
+-	xfs_inode_t	*ip;
+-	int		error = 0;
++	struct xfs_inode	*ip;
++	int			error = 0;
+ 
+ 	ip = kmem_zone_zalloc(xfs_inode_zone, 0);
+ 	if (!ip)
+@@ -1341,7 +1346,7 @@ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
+ 
+ 	ip->i_ino = ino;
+ 	ip->i_mount = mp;
+-	error = xfs_iread(mp, tp, ip, 0);
++	error = xfs_iread(mp, tp, ip, flags);
+ 	if (error) {
+ 		kmem_zone_free(xfs_inode_zone, ip);
+ 		*ipp = NULL;
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index e161c28..fe22cb9 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -246,9 +246,9 @@ libxfs_trans_iget(
+ 	xfs_inode_log_item_t	*iip;
+ 
+ 	if (tp == NULL)
+-		return libxfs_iget(mp, tp, ino, lock_flags, ipp);
++		return libxfs_iget(mp, tp, ino, flags, lock_flags, ipp);
+ 
+-	error = libxfs_iget(mp, tp, ino, lock_flags, &ip);
++	error = libxfs_iget(mp, tp, ino, flags, lock_flags, &ip);
+ 	if (error)
+ 		return error;
+ 	ASSERT(ip != NULL);
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 373b1a5..011bcdf 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -925,7 +925,7 @@ mk_orphanage(xfs_mount_t *mp)
+ 	 * would have been cleared in phase3 and phase4.
+ 	 */
+ 
+-	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip)))
++	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, 0, &pip)))
+ 		do_error(_("%d - couldn't iget root inode to obtain %s\n"),
+ 			i, ORPHANAGE);
+ 
+@@ -949,7 +949,7 @@ mk_orphanage(xfs_mount_t *mp)
+ 	 * use iget/ijoin instead of trans_iget because the ialloc
+ 	 * wrapper can commit the transaction and start a new one
+ 	 */
+-/*	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip)))
++/*	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, 0, &pip)))
+ 		do_error(_("%d - couldn't iget root inode to make %s\n"),
+ 			i, ORPHANAGE);*/
+ 
+@@ -1063,7 +1063,7 @@ mv_orphanage(
+ 	xname.len = snprintf((char *)fname, sizeof(fname), "%llu",
+ 				(unsigned long long)ino);
+ 
+-	err = -libxfs_iget(mp, NULL, orphanage_ino, 0, &orphanage_ip);
++	err = -libxfs_iget(mp, NULL, orphanage_ino, 0, 0, &orphanage_ip);
+ 	if (err)
+ 		do_error(_("%d - couldn't iget orphanage inode\n"), err);
+ 	/*
+@@ -1075,7 +1075,7 @@ mv_orphanage(
+ 		xname.len = snprintf((char *)fname, sizeof(fname), "%llu.%d",
+ 					(unsigned long long)ino, ++incr);
+ 
+-	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p)))
++	if ((err = -libxfs_iget(mp, NULL, ino, 0, 0, &ino_p)))
+ 		do_error(_("%d - couldn't iget disconnected inode\n"), err);
+ 
+ 	xname.type = xfs_mode_to_ftype(VFS_I(ino_p)->i_mode);
+@@ -2817,7 +2817,7 @@ process_dir_inode(
+ 
+ 	ASSERT(!is_inode_refchecked(irec, ino_offset) || dotdot_update);
+ 
+-	error = -libxfs_iget(mp, NULL, ino, 0, &ip);
++	error = -libxfs_iget(mp, NULL, ino, 0, 0, &ip);
+ 	if (error) {
+ 		if (!no_modify)
+ 			do_error(
+
