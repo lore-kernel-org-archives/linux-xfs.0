@@ -1,82 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:46426 "EHLO
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:61361 "EHLO
         ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751461AbdGQXsS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2017 19:48:18 -0400
-Date: Tue, 18 Jul 2017 09:48:15 +1000
+        by vger.kernel.org with ESMTP id S1751351AbdGRC4L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2017 22:56:11 -0400
+Date: Tue, 18 Jul 2017 12:56:07 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Collecting aged XFS profiles
-Message-ID: <20170717234814.GK17762@dastard>
-References: <F180D8D4-633B-4CC5-8D70-5CAC36233513@cs.cmu.edu>
- <CAAxjCEzevLnmxyVRME1-kT867KjH2rtOdspv7nF6TOfLUDD+xA@mail.gmail.com>
+Subject: Re: [PATCH] xfs_db: properly set inode type
+Message-ID: <20170718025607.GN17762@dastard>
+References: <e6c83eea-af29-c01b-752e-e049e8fdc69f@redhat.com>
+ <20170628004252.GB4492@birch.djwong.org>
+ <ffd4ffc4-c4f0-4935-a785-c6af95c4d4b9@sandeen.net>
+ <20170628235411.GA5874@birch.djwong.org>
+ <f7050d91-0bc5-ec0a-fc3f-59a25f8855ef@sandeen.net>
+ <67d06f4f-73fc-577c-a12f-132821386597@sandeen.net>
+ <20170718022014.GM17762@dastard>
+ <e97c03e3-dd20-7b2b-3c6e-4b406150edbb@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAAxjCEzevLnmxyVRME1-kT867KjH2rtOdspv7nF6TOfLUDD+xA@mail.gmail.com>
+In-Reply-To: <e97c03e3-dd20-7b2b-3c6e-4b406150edbb@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: Saurabh Kadekodi <saukad@cs.cmu.edu>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Jul 17, 2017 at 09:00:19PM +0200, Stefan Ring wrote:
-> On Sun, Jul 16, 2017 at 2:11 AM, Saurabh Kadekodi
-> <saukad@cs.cmu.edu> wrote:
-> > Hi,
-> >
-> > I am a PhD student studying file and storage systems and I am
-> > currently conducting research on local file system aging. My
-> > research aims at understanding realistic aging patterns and
-> > analyzing the effects of aging on file system data structures
-> > and its performance. For this purpose, I would like to capture
-> > characteristics of naturally aged file systems (i.e. not aged
-> > via synthetic workload generators).
-
-Hi Saurabh - it's a great idea to do this, but I suspect you might
-want to spend some more time learning about the mechanisms
-and policies XFS uses to prevent aging and maintain performance. I'm
-suggesting this because knowing what the filesystem is trying to do
-will drastically change your idea of what information needs to be
-gathered....
-
-> > In order to facilitate this profile capture, I have written a shell / python based profiling tool (fsagestats - https://github.com/saurabhkadekodi/fsagestats)  that does a file system tree walk and captures different characteristics (file age, file size and directory depth) of files and directories and produces distributions. I do not care about file names or data within each file. It also runs xfs_db in order to capture the free space fragmentation, file fragmentation, directory fragmentation and overall fragmentation; all of which are directly correlated with the file system performance. It dumps the results in the results dir, which is to be specified when you run fsagestats. You can send me the aging profile by tarring up the results directory and sending it via email.
-> >
-> > Since I do not have access to XFS systems that see a lot of churn, I am reaching out to the XFS community in order to find volunteers willing to run my script and capture their XFS aging profile. Please feel free to modify the script as per your installation or as you see fit. Since fsagestats collects no private information, I eventually intend to host these profiles publicly (unless explicitly requested not to) to aid other researchers / enthusiasts.
-> >
-> > In case you have any questions on concerns, please let me know.
+On Mon, Jul 17, 2017 at 09:25:57PM -0500, Eric Sandeen wrote:
 > 
-> I have a nicely aged filesystem (1 TB) on our dev server with around
-> 10 million files on it. I will not run a script that executes two
-> xfs_io calls *for each file* on it. Why don't you just use Python's
-> stat.stat to get at the ctime and the size?
+> 
+> On 07/17/2017 09:20 PM, Dave Chinner wrote:
+> > On Mon, Jul 17, 2017 at 03:51:50PM -0500, Eric Sandeen wrote:
+> >>
+> >>
+> >> On 06/28/2017 11:01 PM, Eric Sandeen wrote:
+> >>>> I guess there's also the problem that if inodesize != 512 then what are
+> >>>> we targeting, anyway?  If inodesize = 256 then we can only hit
+> >>>> even-numbered inodes (not so bad) but if inodesize > 512 then do we jump
+> >>>> back to wherever the inode starts?  Or just give the user what they
+> >>>> asked for, even if it's garbage? 
+> >>> Oh, hum. Right, big inodes.... 
+> >>>
+> >>> So I'm trying to go from disk location to inode number, but the current
+> >>> disk location may not even be the start of an inode.  Hell.  Well, I'm
+> >>> sure I could craft a test to disallow "type inode" if the current location
+> >>> cannot be on an inode boundary.  But is that too clever?  Should the
+> >>> debug tool just do what the user asks?
+> >>>
+> >>>> (FWIW I was fine with xfs_db being dumb and giving you exactly what you
+> >>>> point it at, even if that makes no sense. :P)
+> >>> yeah, if you do "daddr 0" "type agf" it'll squawk, too, so it's fine to
+> >>> do the dumb user's bidding...
+> >>
+> >> So as I have it today, issuing "type inode" will actually re-align you
+> >> to an inode offset even if you're not on one:
+> >>
+> >> xfs_db> sb 0
+> >> xfs_db> addr rootino
+> >> xfs_db> daddr
+> >> current daddr is 128
+> >> xfs_db> daddr 129
+> >> xfs_db> type inode
+> >> xfs_db> daddr
+> >> current daddr is 128
+> >> xfs_db> 
+> >>
+> >> good? bad? indifferent? I'm thinking "bad" but we have no mechanism to
+> >> read a batch of inodes in xfs_db other than by passing in a legit inode number.
+> >>
+> >> And we have no mechanism to read only a /single/ inode...
+> >>
+> >> Maybe print a warning about the re-alignment and carry on?
+> > 
+> > xfs_db is meant to be a developer tool, not idiot-proof. :P
+> > 
+> > i.e. some knowledge of the layout of the metadata you are trying
+> > to examine is expected. I would not like xfs_db to change the daddr
+> > I've specified simply because I tried to parse it as the wrong
+> > object type....
+> 
+> That would be my first preference as well, but all the infrastructure
+> we have for gathering up an inode from a cluster is predicated on being
+> given an inode nr, not a daddr.  I could hack the heck out of it and refactor
+> it to allow clusters starting on arbitrary sectors, I guess, but I'm not
+> sure it's worth it.  For now it seems more useful than not to be able to
+> switch from a daddr to an inode (which possibly /contains/ rather than starts
+> at that daddr ...)
 
-Ok, had a look at the script. You can replace most of it with
-pretty much one line.
+That's what already have a mechanism for converting arbitrary daddrs
+to a correctly aligned inode number:
 
-$ find <dir> -exec stat -c "%n %Z %s" {} \;
-
-Processing the dirents to get the "distribution stats" could be done
-by piping the output into a five line awk script. I'll leave that
-as an exercise for the reader.
-
-IMO, the script is not gathering anything particularly useful about
-how the filesystem has aged. The information being gathered doesn't
-tell us anything useful about how the allocator is performing for
-the given workload, nor does it provide insight into the locality
-characteristics and fragmentation of related files and directories
-which directly influence IO (and hence filesystem) performance.
-
-e.g. if the inode64 allocator is in use, then all the files in a
-directory should be in the same physical region. As such, a key sign
-of an aged filesystem is that the allocator is not able to maintain
-the desired locality relationships between files.
-
-To analyse such things, maybe consider gathering obfuscated metadump
-images rather asking people to run scripts that gather limited
-information.  That way you can develop scripts to extract the
-information your research requires from the filesystem images you
-received, rather than try to draw tenuous conclusions from a limited
-data set...
+xfs_db> convert daddr <daddr> inode
 
 Cheers,
 
