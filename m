@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42987 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751318AbdGQVHn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2017 17:07:43 -0400
-Date: Mon, 17 Jul 2017 14:07:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:52344 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751461AbdGRCU2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2017 22:20:28 -0400
+Date: Tue, 18 Jul 2017 12:20:14 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs_db: properly set inode type
-Message-ID: <20170717210736.GF4224@magnolia>
+Message-ID: <20170718022014.GM17762@dastard>
 References: <e6c83eea-af29-c01b-752e-e049e8fdc69f@redhat.com>
  <20170628004252.GB4492@birch.djwong.org>
  <ffd4ffc4-c4f0-4935-a785-c6af95c4d4b9@sandeen.net>
@@ -21,7 +21,7 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
 On Mon, Jul 17, 2017 at 03:51:50PM -0500, Eric Sandeen wrote:
 > 
@@ -60,23 +60,21 @@ On Mon, Jul 17, 2017 at 03:51:50PM -0500, Eric Sandeen wrote:
 > 
 > good? bad? indifferent? I'm thinking "bad" but we have no mechanism to
 > read a batch of inodes in xfs_db other than by passing in a legit inode number.
-
-I suppose there's the argument that if the user feeds us garbage then
-they'll find out pretty quickly when the CRC checks blow up in print...
-...or that it's a debugging tool so if they want to do weird things then
-let them.
-
+> 
 > And we have no mechanism to read only a /single/ inode...
 > 
 > Maybe print a warning about the re-alignment and carry on?
 
-Sure.
+xfs_db is meant to be a developer tool, not idiot-proof. :P
 
---D
+i.e. some knowledge of the layout of the metadata you are trying
+to examine is expected. I would not like xfs_db to change the daddr
+I've specified simply because I tried to parse it as the wrong
+object type....
 
-> 
-> -Eric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
