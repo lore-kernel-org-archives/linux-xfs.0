@@ -1,331 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54586 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751593AbdGROyW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Jul 2017 10:54:22 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 88CE77CB98
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 14:54:22 +0000 (UTC)
-Received: from eorzea.usersys.redhat.com (ovpn-204-54.brq.redhat.com [10.40.204.54])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F1B117E58A
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 14:54:21 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 2/2 V5] xfs: Properly retry failed inode items in case of error during buffer writeback
-Date: Tue, 18 Jul 2017 16:54:15 +0200
-Message-Id: <20170718145415.21230-3-cmaiolino@redhat.com>
-In-Reply-To: <20170718145415.21230-1-cmaiolino@redhat.com>
-References: <20170718145415.21230-1-cmaiolino@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:43039 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751413AbdGRTvI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2017 15:51:08 -0400
+Subject: Re: [PATCH 2/2] libxfs: allow xfs_repair to bypass inode fork read
+ verifiers
+References: <150040480534.16432.7424988688113046337.stgit@magnolia>
+ <150040481174.16432.15688892139606580088.stgit@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <374a2285-fbf4-ca95-26fc-d63660c7c893@oracle.com>
+Date: Tue, 18 Jul 2017 12:51:02 -0700
+MIME-Version: 1.0
+In-Reply-To: <150040481174.16432.15688892139606580088.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-When a buffer has been failed during writeback, the inode items into it
-are kept flush locked, and are never resubmitted due the flush lock, so,
-if any buffer fails to be written, the items in AIL are never written to
-disk and never unlocked.
+This one too.
 
-This causes unmount operation to hang due these items flush locked in AIL,
-but this also causes the items in AIL to never be written back, even when
-the IO device comes back to normal.
+Reviewed by: Allison Henderson <allison.henderson@oracle.com>
 
-I've been testing this patch with a DM-thin device, creating a
-filesystem larger than the real device.
+Thanks!
 
-When writing enough data to fill the DM-thin device, XFS receives ENOSPC
-errors from the device, and keep spinning on xfsaild (when 'retry
-forever' configuration is set).
-
-At this point, the filesystem can not be unmounted because of the flush locked
-items in AIL, but worse, the items in AIL are never retried at all
-(once xfs_inode_item_push() will skip the items that are flush locked),
-even if the underlying DM-thin device is expanded to the proper size.
-
-This patch fixes both cases, retrying any item that has been failed
-previously, using the infra-structure provided by the previous patch.
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
-
-V2:
-	- Fix XFS_LI_FAILED flag removal
-	- Use atomic operations to set and clear XFS_LI_FAILED flag
-	- Remove check for XBF_WRITE_FAIL in xfs_inode_item_push
-	- Add more comments to the code
-	- Add a helper function to resubmit the failed buffers, so this
-	  can be also used in dquot system without duplicating code
-
-V3:
-	- kill xfs_imap_to_bp call using a pointer in the log item to
-	  hold the buffer address
-	- use xa_lock instead of atomic operations to handle log item
-	  flags
-	- Add a hold to the buffer for each log item failed
-	- move buffer resubmission up in xfs_inode_item_push()
-
-V4:
-	- Remove bflags argument from iop_error callback
-	- Remove ip argument from xfs_buf_resubmit_failed_buffers
-	- Use helpers to set/clear XFS_LI_FAILED flag
-	- remove ->xa_lock from the iop->error callback and move it up
-	  on the stack, so all log items are processed into a single
-	  pair of lock/unlock
-
-V5:
-	- fix comments
-	- move buf_lock from xfs_buf_resubmit_failed_buffers() up to
-	  xfs_inode_item_push, and use trylock instead
-	- assert xa_lock is held in xfs_set/clear_li_failed helpers
-	  and move such helpers into xfs_trans_priv.h, once
-	  lockdep_assert_held() usage will require xfs_ail definition
-	- ASSERT XFS_LI_IN_AIL into xfs_clear_li_failed()
-	- assert inode is flush locked in xfs_inode_item_error
-	- fix bitwise ops mess
-
- fs/xfs/xfs_buf_item.c   | 34 ++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_buf_item.h   |  3 +++
- fs/xfs/xfs_inode_item.c | 45 +++++++++++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_trans.h      |  1 +
- fs/xfs/xfs_trans_ail.c  |  4 ++--
- fs/xfs/xfs_trans_priv.h | 31 +++++++++++++++++++++++++++++++
- 6 files changed, 112 insertions(+), 6 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index d6ca7d6..940b0eb 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1226,3 +1226,37 @@ xfs_buf_iodone(
- 	xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
- 	xfs_buf_item_free(BUF_ITEM(lip));
- }
-+
-+/*
-+ * Requeue a failed buffer for writeback
-+ *
-+ * Return true if the buffer has been re-queued properly, false otherwise
-+ */
-+bool
-+xfs_buf_resubmit_failed_buffers(
-+	struct xfs_buf		*bp,
-+	struct xfs_log_item	*lip,
-+	struct list_head	*buffer_list)
-+{
-+	struct xfs_log_item	*next;
-+	bool			ret;
-+
-+	/*
-+	 * Clear XFS_LI_FAILED flag from all items before resubmit
-+	 *
-+	 * XFS_LI_FAILED set/clear is protected by xa_lock, caller  this
-+	 * function already have it acquired
-+	 */
-+	for (; lip; lip = next) {
-+		next = lip->li_bio_list;
-+		xfs_clear_li_failed(lip);
-+	}
-+
-+	/* Add this buffer back to the delayed write list */
-+	if (!xfs_buf_delwri_queue(bp, buffer_list))
-+		ret = false;
-+	else
-+		ret = true;
-+
-+	return ret;
-+}
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index f7eba99..530686e 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -70,6 +70,9 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
- 			      xfs_log_item_t *);
- void	xfs_buf_iodone_callbacks(struct xfs_buf *);
- void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
-+bool	xfs_buf_resubmit_failed_buffers(struct xfs_buf *,
-+					struct xfs_log_item *,
-+					struct list_head *);
- 
- extern kmem_zone_t	*xfs_buf_item_zone;
- 
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 08cb7d1..ad7ec64 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -27,6 +27,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_trans_priv.h"
-+#include "xfs_buf_item.h"
- #include "xfs_log.h"
- 
- 
-@@ -475,6 +476,21 @@ xfs_inode_item_unpin(
- 		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
- }
- 
-+/*
-+ * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
-+ * have been failed during writeback
-+ */
-+STATIC void
-+xfs_inode_item_error(
-+	struct xfs_log_item	*lip,
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_inode	*ip = INODE_ITEM(lip)->ili_inode;
-+
-+	ASSERT(xfs_isiflocked(ip));
-+	xfs_set_li_failed(lip, bp);
-+}
-+
- STATIC uint
- xfs_inode_item_push(
- 	struct xfs_log_item	*lip,
-@@ -484,13 +500,28 @@ xfs_inode_item_push(
- {
- 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
- 	struct xfs_inode	*ip = iip->ili_inode;
--	struct xfs_buf		*bp = NULL;
-+	struct xfs_buf		*bp = lip->li_buf;
- 	uint			rval = XFS_ITEM_SUCCESS;
- 	int			error;
- 
- 	if (xfs_ipincount(ip) > 0)
- 		return XFS_ITEM_PINNED;
- 
-+	/*
-+	 * The buffer containing this item failed to be written back
-+	 * previously. Resubmit the buffer for IO.
-+	 */
-+	if (lip->li_flags & XFS_LI_FAILED) {
-+		if (!xfs_buf_trylock(bp))
-+		    return XFS_ITEM_LOCKED;
-+
-+		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
-+			rval = XFS_ITEM_FLUSHING;
-+
-+		xfs_buf_unlock(bp);
-+		return rval;
-+	}
-+
- 	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
- 		return XFS_ITEM_LOCKED;
- 
-@@ -622,7 +653,8 @@ static const struct xfs_item_ops xfs_inode_item_ops = {
- 	.iop_unlock	= xfs_inode_item_unlock,
- 	.iop_committed	= xfs_inode_item_committed,
- 	.iop_push	= xfs_inode_item_push,
--	.iop_committing = xfs_inode_item_committing
-+	.iop_committing = xfs_inode_item_committing,
-+	.iop_error	= xfs_inode_item_error
- };
- 
- 
-@@ -710,7 +742,8 @@ xfs_iflush_done(
- 		 * the AIL lock.
- 		 */
- 		iip = INODE_ITEM(blip);
--		if (iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn)
-+		if ((iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn) ||
-+		    lip->li_flags & XFS_LI_FAILED)
- 			need_ail++;
- 
- 		blip = next;
-@@ -718,7 +751,8 @@ xfs_iflush_done(
- 
- 	/* make sure we capture the state of the initial inode. */
- 	iip = INODE_ITEM(lip);
--	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn)
-+	if ((iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn) ||
-+	    lip->li_flags & XFS_LI_FAILED)
- 		need_ail++;
- 
- 	/*
-@@ -739,6 +773,9 @@ xfs_iflush_done(
- 			if (INODE_ITEM(blip)->ili_logged &&
- 			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
- 				mlip_changed |= xfs_ail_delete_one(ailp, blip);
-+			else {
-+				xfs_clear_li_failed(blip);
-+			}
- 		}
- 
- 		if (mlip_changed) {
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 442d679..7d62772 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -49,6 +49,7 @@ typedef struct xfs_log_item {
- 	struct xfs_ail			*li_ailp;	/* ptr to AIL */
- 	uint				li_type;	/* item type */
- 	uint				li_flags;	/* misc flags */
-+	struct xfs_buf			*li_buf;	/* real buffer pointer */
- 	struct xfs_log_item		*li_bio_list;	/* buffer item list */
- 	void				(*li_cb)(struct xfs_buf *,
- 						 struct xfs_log_item *);
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 9056c0f..eba21a9 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -687,15 +687,15 @@ xfs_trans_ail_update_bulk(
- bool
- xfs_ail_delete_one(
- 	struct xfs_ail		*ailp,
--	struct xfs_log_item 	*lip)
-+	struct xfs_log_item	*lip)
- {
- 	struct xfs_log_item	*mlip = xfs_ail_min(ailp);
- 
- 	trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
- 	xfs_ail_delete(ailp, lip);
-+	xfs_clear_li_failed(lip);
- 	lip->li_flags &= ~XFS_LI_IN_AIL;
- 	lip->li_lsn = 0;
--
- 	return mlip == lip;
- }
- 
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index d91706c..b317a36 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -164,4 +164,35 @@ xfs_trans_ail_copy_lsn(
- 	*dst = *src;
- }
- #endif
-+
-+static inline void
-+xfs_clear_li_failed(
-+	struct xfs_log_item	*lip)
-+{
-+	struct xfs_buf	*bp = lip->li_buf;
-+
-+	ASSERT(lip->li_flags & XFS_LI_IN_AIL);
-+	lockdep_assert_held(&lip->li_ailp->xa_lock);
-+
-+	if (lip->li_flags & XFS_LI_FAILED) {
-+		lip->li_flags &= ~XFS_LI_FAILED;
-+		lip->li_buf = NULL;
-+		xfs_buf_rele(bp);
-+	}
-+}
-+
-+static inline void
-+xfs_set_li_failed(
-+	struct xfs_log_item	*lip,
-+	struct xfs_buf		*bp)
-+{
-+	lockdep_assert_held(&lip->li_ailp->xa_lock);
-+
-+	if (!(lip->li_flags & XFS_LI_FAILED)) {
-+		xfs_buf_hold(bp);
-+		lip->li_flags |= XFS_LI_FAILED;
-+		lip->li_buf = bp;
-+	}
-+}
-+
- #endif	/* __XFS_TRANS_PRIV_H__ */
--- 
-2.9.4
+On 07/18/2017 12:06 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> In xfs_repair phase 6, we want to be able to check and fix short form
+> directory inodes.  However, if the directory is already corrupt, the
+> read verifier prevents us from loading the inode, which prevents us from
+> fixing it.  Therefore, allow _iget callers to bypass the read verifier.
+> Note that we do /not/ allow bypassing of the write verifier, ever.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>   include/xfs_inode.h     |    3 +++
+>   libxfs/libxfs_priv.h    |    3 ---
+>   libxfs/xfs_inode_buf.c  |    3 ++-
+>   libxfs/xfs_inode_fork.c |   15 ++++++++-------
+>   libxfs/xfs_inode_fork.h |    2 +-
+>   repair/phase6.c         |    2 +-
+>   6 files changed, 15 insertions(+), 13 deletions(-)
+>
+>
+> diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+> index 5d5158e..b2f2af5 100644
+> --- a/include/xfs_inode.h
+> +++ b/include/xfs_inode.h
+> @@ -148,6 +148,9 @@ extern void	libxfs_trans_ichgtime(struct xfs_trans *,
+>   extern int	libxfs_iflush_int (struct xfs_inode *, struct xfs_buf *);
+>   
+>   /* Inode Cache Interfaces */
+> +#define XFS_IGET_CREATE			0x1
+> +#define XFS_IGET_UNTRUSTED		0x2
+> +#define XFS_IGET_SKIP_FORK_VERIFY	0x4
+>   extern int	libxfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
+>   				uint, uint, struct xfs_inode **);
+>   extern void	libxfs_iput(struct xfs_inode *);
+> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+> index 4f5ba7c..da1cc20 100644
+> --- a/libxfs/libxfs_priv.h
+> +++ b/libxfs/libxfs_priv.h
+> @@ -103,9 +103,6 @@ extern char    *progname;
+>   #define ATTR_KERNOTIME			0
+>   #define ATTR_KERNOVAL			0
+>   
+> -#define XFS_IGET_CREATE			0x1
+> -#define XFS_IGET_UNTRUSTED		0x2
+> -
+>   extern void cmn_err(int, char *, ...);
+>   enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+>   
+> diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+> index b0f2c0d..174a24e 100644
+> --- a/libxfs/xfs_inode_buf.c
+> +++ b/libxfs/xfs_inode_buf.c
+> @@ -522,7 +522,8 @@ xfs_iread(
+>   	 */
+>   	if (dip->di_mode) {
+>   		xfs_inode_from_disk(ip, dip);
+> -		error = xfs_iformat_fork(ip, dip);
+> +		error = xfs_iformat_fork(ip, dip,
+> +				!(iget_flags & XFS_IGET_SKIP_FORK_VERIFY));
+>   		if (error)  {
+>   #ifdef DEBUG
+>   			xfs_alert(mp, "%s: xfs_iformat() returned error %d",
+> diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
+> index 0ef989d..e8379e1 100644
+> --- a/libxfs/xfs_inode_fork.c
+> +++ b/libxfs/xfs_inode_fork.c
+> @@ -50,13 +50,14 @@ STATIC int xfs_iformat_btree(xfs_inode_t *, xfs_dinode_t *, int);
+>    */
+>   int
+>   xfs_iformat_fork(
+> -	xfs_inode_t		*ip,
+> -	xfs_dinode_t		*dip)
+> +	struct xfs_inode		*ip,
+> +	struct xfs_dinode		*dip,
+> +	bool				verify_fork)
+>   {
+> -	xfs_attr_shortform_t	*atp;
+> -	int			size;
+> -	int			error = 0;
+> -	xfs_fsize_t             di_size;
+> +	struct xfs_attr_shortform	*atp;
+> +	int				size;
+> +	int				error = 0;
+> +	xfs_fsize_t			di_size;
+>   
+>   	if (unlikely(be32_to_cpu(dip->di_nextents) +
+>   		     be16_to_cpu(dip->di_anextents) >
+> @@ -181,7 +182,7 @@ xfs_iformat_fork(
+>   		return error;
+>   
+>   	/* Check inline dir contents. */
+> -	if (S_ISDIR(VFS_I(ip)->i_mode) &&
+> +	if (verify_fork && S_ISDIR(VFS_I(ip)->i_mode) &&
+>   	    dip->di_format == XFS_DINODE_FMT_LOCAL) {
+>   		error = xfs_dir2_sf_verify(ip);
+>   		if (error) {
+> diff --git a/libxfs/xfs_inode_fork.h b/libxfs/xfs_inode_fork.h
+> index 7fb8365..7a24288 100644
+> --- a/libxfs/xfs_inode_fork.h
+> +++ b/libxfs/xfs_inode_fork.h
+> @@ -139,7 +139,7 @@ typedef struct xfs_ifork {
+>   
+>   struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
+>   
+> -int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
+> +int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *, bool);
+>   void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+>   				struct xfs_inode_log_item *, int);
+>   void		xfs_idestroy_fork(struct xfs_inode *, int);
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 011bcdf..5edfd29 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -2817,7 +2817,7 @@ process_dir_inode(
+>   
+>   	ASSERT(!is_inode_refchecked(irec, ino_offset) || dotdot_update);
+>   
+> -	error = -libxfs_iget(mp, NULL, ino, 0, 0, &ip);
+> +	error = -libxfs_iget(mp, NULL, ino, XFS_IGET_SKIP_FORK_VERIFY, 0, &ip);
+>   	if (error) {
+>   		if (!no_modify)
+>   			do_error(
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
