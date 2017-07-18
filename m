@@ -1,53 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60318 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:36086 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751340AbdGNJLu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 14 Jul 2017 05:11:50 -0400
-Date: Fri, 14 Jul 2017 11:11:46 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: xfstests failures with current kernel/xfsprogs/xfstests
-Message-ID: <20170714091146.pvgc2ctxjcobq7uj@eorzea.usersys.redhat.com>
-References: <20170712114433.GA2231@infradead.org>
- <20170712122900.l7ieyfmks5j74esg@eorzea.usersys.redhat.com>
- <20170713071650.GA2433@infradead.org>
+        id S1751639AbdGRBvO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Jul 2017 21:51:14 -0400
+Subject: [PATCH V2] xfs_db: properly set inode type
+References: <e6c83eea-af29-c01b-752e-e049e8fdc69f@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c17ce413-430e-acce-e63d-51fd1b684f62@sandeen.net>
+Date: Mon, 17 Jul 2017 20:51:13 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170713071650.GA2433@infradead.org>
+In-Reply-To: <e6c83eea-af29-c01b-752e-e049e8fdc69f@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Jul 13, 2017 at 12:16:50AM -0700, Christoph Hellwig wrote:
-> On Wed, Jul 12, 2017 at 02:29:00PM +0200, Carlos Maiolino wrote:
-> > On Wed, Jul 12, 2017 at 04:44:33AM -0700, Christoph Hellwig wrote:
-> > > I see a few failures with a (hopefully) uptodate setup.  I'm pretty
-> > > sure some of them have been around for a while, but I'd like to
-> > > figure out how to get to a clean slate.
-> > > 
-> > > This is a 4k fs on x86-64, with reflink enabled for the test and
-> > > scratch dev.
-> > 
-> > Have you by any chance noticed test 81 locking up? Every time I run a complete
-> > xfstests, it always get stuck on test 81.
-> 
-> Which test 81?  generic/081, xfs/081?  How does it lock up?
+When we set the type to "inode" the verifier may validate multiple
+inodes in the current fs block, so setting the buffer size to
+that of just one inode is not sufficient and it'll emit spurious
+verifier errors for all but the first, as we read off the end:
 
-whoops, missed that, generic/081 specifically it always gets stuck in the lvm
-creation process, but, looks like it's an already know problem. I just wonder
-why it works for some of us, and don't for another ones. I didn't have time to
-dig into it tbh.
+xfs_db> daddr 99
+xfs_db> type inode
+Metadata corruption detected at xfs_inode block 0x63/0x200
+Metadata corruption detected at xfs_inode block 0x63/0x200
+Metadata corruption detected at xfs_inode block 0x63/0x200
+Metadata corruption detected at xfs_inode block 0x63/0x200
+Metadata corruption detected at xfs_inode block 0x63/0x200
+Metadata corruption detected at xfs_inode block 0x63/0x200
+Metadata corruption detected at xfs_inode block 0x63/0x200
 
-cheers
-> 
-> The generic one had some issues due to lvm doing stupid things in the
-> past, but I think we managed to paper over that.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Use the special set_cur_inode() function for this purpose
+as is done in inode_f().
 
--- 
-Carlos
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+V2: Warn if the daddr given was reset to an inode-aligned
+address
+
+diff --git a/db/io.c b/db/io.c
+index b046c8d..4153da0 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -616,6 +616,22 @@ set_iocur_type(
+ {
+ 	struct xfs_buf	*bp = iocur_top->bp;
+ 
++	/* Inodes are special; verifier checks all inodes in the buffer */
++	if (type->typnm == TYP_INODE) {
++		xfs_daddr_t	b = iocur_top->bb;
++		xfs_ino_t	ino;
++
++		ino = XFS_AGINO_TO_INO(mp, xfs_daddr_to_agno(mp, b),
++			((b << BBSHIFT) >> mp->m_sb.sb_inodelog) %
++			(mp->m_sb.sb_agblocks << mp->m_sb.sb_inopblog));
++		set_cur_inode(ino);
++		if (iocur_top->bb != b)
++			dbprintf(
++_("cursor set to nearest inode %llu at daddr %lld\n"),
++				 ino, iocur_top->bb);
++		return;
++	}
++
+ 	/* adjust buffer size for types with fields & hence fsize() */
+ 	if (type->fields) {
+ 		int bb_count;	/* type's size in basic blocks */
+
