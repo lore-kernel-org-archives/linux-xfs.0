@@ -1,143 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19693 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751427AbdGRTG4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2017 15:06:56 -0400
-Subject: [PATCH 2/2] libxfs: allow xfs_repair to bypass inode fork read
- verifiers
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 18 Jul 2017 12:06:51 -0700
-Message-ID: <150040481174.16432.15688892139606580088.stgit@magnolia>
-In-Reply-To: <150040480534.16432.7424988688113046337.stgit@magnolia>
-References: <150040480534.16432.7424988688113046337.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:40277 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933364AbdGSPdS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Jul 2017 11:33:18 -0400
+Date: Wed, 19 Jul 2017 17:33:14 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v3 3/5] dax: use common 4k zero page for dax mmap reads
+Message-ID: <20170719153314.GC15908@quack2.suse.cz>
+References: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
+ <20170628220152.28161-4-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170628220152.28161-4-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed 28-06-17 16:01:50, Ross Zwisler wrote:
+> Another major change is that we remove dax_pfn_mkwrite() from our fault
+> flow, and instead rely on the page fault itself to make the PTE dirty and
+> writeable.  The following description from the patch adding the
+> vm_insert_mixed_mkwrite() call explains this a little more:
+> 
+> ***
+>   To be able to use the common 4k zero page in DAX we need to have our PTE
+>   fault path look more like our PMD fault path where a PTE entry can be
+>   marked as dirty and writeable as it is first inserted, rather than
+>   waiting for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
+> 
+>   Right now we can rely on having a dax_pfn_mkwrite() call because we can
+>   distinguish between these two cases in do_wp_page():
+> 
+>   	case 1: 4k zero page => writable DAX storage
+>   	case 2: read-only DAX storage => writeable DAX storage
+> 
+>   This distinction is made by via vm_normal_page().  vm_normal_page()
+>   returns false for the common 4k zero page, though, just as it does for
+>   DAX ptes.  Instead of special casing the DAX + 4k zero page case, we will
+>   simplify our DAX PTE page fault sequence so that it matches our DAX PMD
+>   sequence, and get rid of dax_pfn_mkwrite() completely.
+> 
+>   This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
+>   and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set
+>   insert_pfn() will do the work that was previously done by wp_page_reuse()
+>   as part of the dax_pfn_mkwrite() call path.
+> ***
 
-In xfs_repair phase 6, we want to be able to check and fix short form
-directory inodes.  However, if the directory is already corrupt, the
-read verifier prevents us from loading the inode, which prevents us from
-fixing it.  Therefore, allow _iget callers to bypass the read verifier.
-Note that we do /not/ allow bypassing of the write verifier, ever.
+Hum, thinking about this in context of this patch... So what if we have
+allocated storage, a process faults it read-only, we map it to page tables
+writeprotected. Then the process writes through mmap to the area - the code
+in handle_pte_fault() ends up in do_wp_page() if I'm reading it right.
+Then, since we are missing ->pfn_mkwrite() handlers, the PTE will be marked
+writeable but radix tree entry stays clean - bug. Am I missing something?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- include/xfs_inode.h     |    3 +++
- libxfs/libxfs_priv.h    |    3 ---
- libxfs/xfs_inode_buf.c  |    3 ++-
- libxfs/xfs_inode_fork.c |   15 ++++++++-------
- libxfs/xfs_inode_fork.h |    2 +-
- repair/phase6.c         |    2 +-
- 6 files changed, 15 insertions(+), 13 deletions(-)
+								Honza
 
-
-diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-index 5d5158e..b2f2af5 100644
---- a/include/xfs_inode.h
-+++ b/include/xfs_inode.h
-@@ -148,6 +148,9 @@ extern void	libxfs_trans_ichgtime(struct xfs_trans *,
- extern int	libxfs_iflush_int (struct xfs_inode *, struct xfs_buf *);
- 
- /* Inode Cache Interfaces */
-+#define XFS_IGET_CREATE			0x1
-+#define XFS_IGET_UNTRUSTED		0x2
-+#define XFS_IGET_SKIP_FORK_VERIFY	0x4
- extern int	libxfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
- 				uint, uint, struct xfs_inode **);
- extern void	libxfs_iput(struct xfs_inode *);
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 4f5ba7c..da1cc20 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -103,9 +103,6 @@ extern char    *progname;
- #define ATTR_KERNOTIME			0
- #define ATTR_KERNOVAL			0
- 
--#define XFS_IGET_CREATE			0x1
--#define XFS_IGET_UNTRUSTED		0x2
--
- extern void cmn_err(int, char *, ...);
- enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
- 
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index b0f2c0d..174a24e 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -522,7 +522,8 @@ xfs_iread(
- 	 */
- 	if (dip->di_mode) {
- 		xfs_inode_from_disk(ip, dip);
--		error = xfs_iformat_fork(ip, dip);
-+		error = xfs_iformat_fork(ip, dip,
-+				!(iget_flags & XFS_IGET_SKIP_FORK_VERIFY));
- 		if (error)  {
- #ifdef DEBUG
- 			xfs_alert(mp, "%s: xfs_iformat() returned error %d",
-diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index 0ef989d..e8379e1 100644
---- a/libxfs/xfs_inode_fork.c
-+++ b/libxfs/xfs_inode_fork.c
-@@ -50,13 +50,14 @@ STATIC int xfs_iformat_btree(xfs_inode_t *, xfs_dinode_t *, int);
-  */
- int
- xfs_iformat_fork(
--	xfs_inode_t		*ip,
--	xfs_dinode_t		*dip)
-+	struct xfs_inode		*ip,
-+	struct xfs_dinode		*dip,
-+	bool				verify_fork)
- {
--	xfs_attr_shortform_t	*atp;
--	int			size;
--	int			error = 0;
--	xfs_fsize_t             di_size;
-+	struct xfs_attr_shortform	*atp;
-+	int				size;
-+	int				error = 0;
-+	xfs_fsize_t			di_size;
- 
- 	if (unlikely(be32_to_cpu(dip->di_nextents) +
- 		     be16_to_cpu(dip->di_anextents) >
-@@ -181,7 +182,7 @@ xfs_iformat_fork(
- 		return error;
- 
- 	/* Check inline dir contents. */
--	if (S_ISDIR(VFS_I(ip)->i_mode) &&
-+	if (verify_fork && S_ISDIR(VFS_I(ip)->i_mode) &&
- 	    dip->di_format == XFS_DINODE_FMT_LOCAL) {
- 		error = xfs_dir2_sf_verify(ip);
- 		if (error) {
-diff --git a/libxfs/xfs_inode_fork.h b/libxfs/xfs_inode_fork.h
-index 7fb8365..7a24288 100644
---- a/libxfs/xfs_inode_fork.h
-+++ b/libxfs/xfs_inode_fork.h
-@@ -139,7 +139,7 @@ typedef struct xfs_ifork {
- 
- struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
- 
--int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
-+int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *, bool);
- void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
- 				struct xfs_inode_log_item *, int);
- void		xfs_idestroy_fork(struct xfs_inode *, int);
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 011bcdf..5edfd29 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -2817,7 +2817,7 @@ process_dir_inode(
- 
- 	ASSERT(!is_inode_refchecked(irec, ino_offset) || dotdot_update);
- 
--	error = -libxfs_iget(mp, NULL, ino, 0, 0, &ip);
-+	error = -libxfs_iget(mp, NULL, ino, XFS_IGET_SKIP_FORK_VERIFY, 0, &ip);
- 	if (error) {
- 		if (!no_modify)
- 			do_error(
-
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
