@@ -1,166 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19888 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42334 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965003AbdGTP0T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Jul 2017 11:26:19 -0400
-Date: Thu, 20 Jul 2017 11:26:16 -0400
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [PATCH v3 1/5] mm: add vm_insert_mixed_mkwrite()
-Message-ID: <20170720152616.GB6664@redhat.com>
-References: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
- <20170628220152.28161-2-ross.zwisler@linux.intel.com>
+        id S933152AbdGSQKq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Jul 2017 12:10:46 -0400
+Date: Wed, 19 Jul 2017 12:10:44 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/3] xfs: set firstfsb to NULLFSBLOCK before feeding it
+ to _bmapi_write
+Message-ID: <20170719161044.GA55813@bfoster.bfoster>
+References: <150040225662.1216.16823172616535217786.stgit@magnolia>
+ <150040226271.1216.6697100927248768726.stgit@magnolia>
+ <20170719132022.GB54534@bfoster.bfoster>
+ <20170719153950.GM4224@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170628220152.28161-2-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170719153950.GM4224@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jun 28, 2017 at 04:01:48PM -0600, Ross Zwisler wrote:
-> To be able to use the common 4k zero page in DAX we need to have our PTE
-> fault path look more like our PMD fault path where a PTE entry can be
-> marked as dirty and writeable as it is first inserted, rather than waiting
-> for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
+On Wed, Jul 19, 2017 at 08:39:50AM -0700, Darrick J. Wong wrote:
+> On Wed, Jul 19, 2017 at 09:20:22AM -0400, Brian Foster wrote:
+> > On Tue, Jul 18, 2017 at 11:24:22AM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > We must initialize the firstfsb parameter to _bmapi_write so that it
+> > > doesn't incorrectly treat stack garbage as a restriction on which AGs
+> > > it can search for free space.
+> > > 
+> > > Fixes-coverity-id: 1402025
+> > > Fixes-coverity-id: 1415167
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_bmap.c |    2 +-
+> > >  fs/xfs/xfs_reflink.c     |    2 +-
+> > >  2 files changed, 2 insertions(+), 2 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > > index 935adde..8c4ee60 100644
+> > > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > > @@ -6508,7 +6508,7 @@ xfs_bmap_finish_one(
+> > >  	xfs_filblks_t			*blockcount,
+> > >  	xfs_exntst_t			state)
+> > >  {
+> > > -	xfs_fsblock_t			firstfsb;
+> > > +	xfs_fsblock_t			firstfsb = NULLFSBLOCK;
+> > >  	int				error = 0;
+> > >  
+> > 
+> > Shouldn't firstfsb be tied to the transaction lifetime in (at least)
+> > this case? It is used in the allocator to control things like AG locking
+> > order.
 > 
-> Right now we can rely on having a dax_pfn_mkwrite() call because we can
-> distinguish between these two cases in do_wp_page():
+> That is correct...
 > 
-> 	case 1: 4k zero page => writable DAX storage
-> 	case 2: read-only DAX storage => writeable DAX storage
+> > Here, it looks like we could potentially do multiple unmaps in a
+> > single transaction without carrying the firstfsb state across..?
 > 
-> This distinction is made by via vm_normal_page().  vm_normal_page() returns
-> false for the common 4k zero page, though, just as it does for DAX ptes.
-> Instead of special casing the DAX + 4k zero page case, we will simplify our
-> DAX PTE page fault sequence so that it matches our DAX PMD sequence, and
-> get rid of dax_pfn_mkwrite() completely.
+> ...but keep in mind that we call xfs_bmap_finish_one once per
+> transaction and roll transactions until the work is done.  I'll add a
+> comment here to that effect:
 > 
-> This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
-> and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set insert_pfn()
-> will do the work that was previously done by wp_page_reuse() as part of the
-> dax_pfn_mkwrite() call path.
+> /*
+>  * firstfsb is tied to the transaction lifetime and is used to ensure
+>  * correct AG locking order and schedule work item continuations.
+>  * XFS_BUI_MAX_FAST_EXTENTS (== 1) restricts us to only making one bmap
+>  * call per transaction, so it should be safe as a local variable.
+>  */
 > 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> ---
->  include/linux/mm.h |  2 ++
->  mm/memory.c        | 57 +++++++++++++++++++++++++++++++++++++++++++++++++-----
->  2 files changed, 54 insertions(+), 5 deletions(-)
-> 
-> diff --git a/include/linux/mm.h b/include/linux/mm.h
-> index 6f543a4..096052f 100644
-> --- a/include/linux/mm.h
-> +++ b/include/linux/mm.h
-> @@ -2293,6 +2293,8 @@ int vm_insert_pfn_prot(struct vm_area_struct *vma, unsigned long addr,
->  			unsigned long pfn, pgprot_t pgprot);
->  int vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
->  			pfn_t pfn);
-> +int vm_insert_mixed_mkwrite(struct vm_area_struct *vma, unsigned long addr,
-> +			pfn_t pfn);
->  int vm_iomap_memory(struct vm_area_struct *vma, phys_addr_t start, unsigned long len);
->  
->  
-> diff --git a/mm/memory.c b/mm/memory.c
-> index bb11c47..de4aa71 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-> @@ -1646,7 +1646,7 @@ int vm_insert_page(struct vm_area_struct *vma, unsigned long addr,
->  EXPORT_SYMBOL(vm_insert_page);
->  
->  static int insert_pfn(struct vm_area_struct *vma, unsigned long addr,
-> -			pfn_t pfn, pgprot_t prot)
-> +			pfn_t pfn, pgprot_t prot, bool mkwrite)
->  {
->  	struct mm_struct *mm = vma->vm_mm;
->  	int retval;
-> @@ -1658,14 +1658,26 @@ static int insert_pfn(struct vm_area_struct *vma, unsigned long addr,
->  	if (!pte)
->  		goto out;
->  	retval = -EBUSY;
-> -	if (!pte_none(*pte))
-> -		goto out_unlock;
-> +	if (!pte_none(*pte)) {
-> +		if (mkwrite) {
-> +			entry = *pte;
-> +			goto out_mkwrite;
-> +		} else
-> +			goto out_unlock;
-> +	}
->  
->  	/* Ok, finally just insert the thing.. */
->  	if (pfn_t_devmap(pfn))
->  		entry = pte_mkdevmap(pfn_t_pte(pfn, prot));
->  	else
->  		entry = pte_mkspecial(pfn_t_pte(pfn, prot));
-> +
-> +out_mkwrite:
-> +	if (mkwrite) {
-> +		entry = pte_mkyoung(entry);
-> +		entry = maybe_mkwrite(pte_mkdirty(entry), vma);
-> +	}
-> +
->  	set_pte_at(mm, addr, pte, entry);
->  	update_mmu_cache(vma, addr, pte); /* XXX: why not for insert_page? */
->  
-> @@ -1736,7 +1748,8 @@ int vm_insert_pfn_prot(struct vm_area_struct *vma, unsigned long addr,
->  
->  	track_pfn_insert(vma, &pgprot, __pfn_to_pfn_t(pfn, PFN_DEV));
->  
-> -	ret = insert_pfn(vma, addr, __pfn_to_pfn_t(pfn, PFN_DEV), pgprot);
-> +	ret = insert_pfn(vma, addr, __pfn_to_pfn_t(pfn, PFN_DEV), pgprot,
-> +			false);
->  
->  	return ret;
->  }
-> @@ -1772,10 +1785,44 @@ int vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
->  		page = pfn_to_page(pfn_t_to_pfn(pfn));
->  		return insert_page(vma, addr, page, pgprot);
->  	}
-> -	return insert_pfn(vma, addr, pfn, pgprot);
-> +	return insert_pfn(vma, addr, pfn, pgprot, false);
->  }
->  EXPORT_SYMBOL(vm_insert_mixed);
->  
-> +int vm_insert_mixed_mkwrite(struct vm_area_struct *vma, unsigned long addr,
-> +			pfn_t pfn)
-> +{
-> +	pgprot_t pgprot = vma->vm_page_prot;
-> +
-> +	BUG_ON(!(vma->vm_flags & VM_MIXEDMAP));
-> +
-> +	if (addr < vma->vm_start || addr >= vma->vm_end)
-> +		return -EFAULT;
-> +
-> +	track_pfn_insert(vma, &pgprot, pfn);
-> +
-> +	/*
-> +	 * If we don't have pte special, then we have to use the pfn_valid()
-> +	 * based VM_MIXEDMAP scheme (see vm_normal_page), and thus we *must*
-> +	 * refcount the page if pfn_valid is true (hence insert_page rather
-> +	 * than insert_pfn).  If a zero_pfn were inserted into a VM_MIXEDMAP
-> +	 * without pte special, it would there be refcounted as a normal page.
-> +	 */
-> +	if (!HAVE_PTE_SPECIAL && !pfn_t_devmap(pfn) && pfn_t_valid(pfn)) {
-> +		struct page *page;
-> +
-> +		/*
-> +		 * At this point we are committed to insert_page()
-> +		 * regardless of whether the caller specified flags that
-> +		 * result in pfn_t_has_page() == false.
-> +		 */
-> +		page = pfn_to_page(pfn_t_to_pfn(pfn));
-> +		return insert_page(vma, addr, page, pgprot);
-> +	}
-> +	return insert_pfn(vma, addr, pfn, pgprot, true);
-> +}
-> +EXPORT_SYMBOL(vm_insert_mixed_mkwrite);
 
-Hi Ross,
+Ok, got it. One transaction per dfp and one unmap per dfp, therefore one
+unmap per transaction. Thanks!
 
-vm_insert_mixed_mkwrite() is same as vm_insert_mixed() except this sets
-write parameter to inser_pfn() true. Will it make sense to just add
-mkwrite parameter to vm_insert_mixed() and not add a new helper function.
-(like insert_pfn()).
+Brian
 
-Vivek
+> > FWIW this patch still looks fine either way:
+> > 
+> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> Thank you for the review!
+> 
+> --D
+> > 
+> > >  	trace_xfs_bmap_deferred(tp->t_mountp,
+> > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > > index ab2270a..d9b3d57 100644
+> > > --- a/fs/xfs/xfs_reflink.c
+> > > +++ b/fs/xfs/xfs_reflink.c
+> > > @@ -329,7 +329,7 @@ xfs_reflink_convert_cow_extent(
+> > >  	xfs_filblks_t			count_fsb,
+> > >  	struct xfs_defer_ops		*dfops)
+> > >  {
+> > > -	xfs_fsblock_t			first_block;
+> > > +	xfs_fsblock_t			first_block = NULLFSBLOCK;
+> > >  	int				nimaps = 1;
+> > >  
+> > >  	if (imap->br_state == XFS_EXT_NORM)
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
