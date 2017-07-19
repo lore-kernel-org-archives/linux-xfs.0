@@ -1,98 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36706 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:42742 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933175AbdGSPj6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2017 11:39:58 -0400
-Date: Wed, 19 Jul 2017 08:39:50 -0700
+        with ESMTP id S1755532AbdGSPsr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2017 11:48:47 -0400
+Date: Wed, 19 Jul 2017 08:48:41 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/3] xfs: set firstfsb to NULLFSBLOCK before feeding it
- to _bmapi_write
-Message-ID: <20170719153950.GM4224@magnolia>
+Subject: Re: [PATCH 3/3] xfs: check _alloc_read_agf buffer pointer before
+ using
+Message-ID: <20170719154841.GN4224@magnolia>
 References: <150040225662.1216.16823172616535217786.stgit@magnolia>
- <150040226271.1216.6697100927248768726.stgit@magnolia>
- <20170719132022.GB54534@bfoster.bfoster>
+ <150040226878.1216.15454073908001325566.stgit@magnolia>
+ <20170719132032.GC54534@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170719132022.GB54534@bfoster.bfoster>
+In-Reply-To: <20170719132032.GC54534@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jul 19, 2017 at 09:20:22AM -0400, Brian Foster wrote:
-> On Tue, Jul 18, 2017 at 11:24:22AM -0700, Darrick J. Wong wrote:
+On Wed, Jul 19, 2017 at 09:20:32AM -0400, Brian Foster wrote:
+> On Tue, Jul 18, 2017 at 11:24:28AM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > We must initialize the firstfsb parameter to _bmapi_write so that it
-> > doesn't incorrectly treat stack garbage as a restriction on which AGs
-> > it can search for free space.
+> > In some circumstances, _alloc_read_agf can return an error code of zero
+> > but also a null AGF buffer pointer.  Check for this and jump out.
 > > 
-> > Fixes-coverity-id: 1402025
-> > Fixes-coverity-id: 1415167
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap.c |    2 +-
-> >  fs/xfs/xfs_reflink.c     |    2 +-
-> >  2 files changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index 935adde..8c4ee60 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -6508,7 +6508,7 @@ xfs_bmap_finish_one(
-> >  	xfs_filblks_t			*blockcount,
-> >  	xfs_exntst_t			state)
-> >  {
-> > -	xfs_fsblock_t			firstfsb;
-> > +	xfs_fsblock_t			firstfsb = NULLFSBLOCK;
-> >  	int				error = 0;
-> >  
 > 
-> Shouldn't firstfsb be tied to the transaction lifetime in (at least)
-> this case? It is used in the allocator to control things like AG locking
-> order.
-
-That is correct...
-
-> Here, it looks like we could potentially do multiple unmaps in a
-> single transaction without carrying the firstfsb state across..?
-
-...but keep in mind that we call xfs_bmap_finish_one once per
-transaction and roll transactions until the work is done.  I'll add a
-comment here to that effect:
-
-/*
- * firstfsb is tied to the transaction lifetime and is used to ensure
- * correct AG locking order and schedule work item continuations.
- * XFS_BUI_MAX_FAST_EXTENTS (== 1) restricts us to only making one bmap
- * call per transaction, so it should be safe as a local variable.
- */
-
-> FWIW this patch still looks fine either way:
+> It looks like this is only possible in trylock cases. Otherwise (and
+> unless I'm missing something), it should always return a buffer or
+> error.
 > 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> This is circuitous regardless and so seems fine if it shuts up a
+> coverity warning:
 
-Thank you for the review!
+<shrug> I argue it's also defensive, in case we ever /do/ change the
+semantics to allow more "zero return and no bp" cases, then these parts
+won't suddenly start blowing up.
+
+I think the Coverity analysis is just plain wrong (it claims that we can
+somehow corrupt return values to end up with a zero return having
+started with -EIO) but I did spot the trylock case and figured we could
+be defensive about that.
 
 --D
+
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 > 
-> >  	trace_xfs_bmap_deferred(tp->t_mountp,
+> > Fixes-coverity-id: 1415250
+> > Fixes-coverity-id: 1415320
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_refcount.c |    4 ++++
+> >  fs/xfs/xfs_reflink.c         |    2 ++
+> >  2 files changed, 6 insertions(+)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+> > index 900ea23..45b1c3b 100644
+> > --- a/fs/xfs/libxfs/xfs_refcount.c
+> > +++ b/fs/xfs/libxfs/xfs_refcount.c
+> > @@ -1638,6 +1638,10 @@ xfs_refcount_recover_cow_leftovers(
+> >  	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+> >  	if (error)
+> >  		goto out_trans;
+> > +	if (!agbp) {
+> > +		error = -ENOMEM;
+> > +		goto out_trans;
+> > +	}
+> >  	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
+> >  
+> >  	/* Find all the leftover CoW staging extents. */
 > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index ab2270a..d9b3d57 100644
+> > index d9b3d57..f45fbf0 100644
 > > --- a/fs/xfs/xfs_reflink.c
 > > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -329,7 +329,7 @@ xfs_reflink_convert_cow_extent(
-> >  	xfs_filblks_t			count_fsb,
-> >  	struct xfs_defer_ops		*dfops)
-> >  {
-> > -	xfs_fsblock_t			first_block;
-> > +	xfs_fsblock_t			first_block = NULLFSBLOCK;
-> >  	int				nimaps = 1;
+> > @@ -170,6 +170,8 @@ xfs_reflink_find_shared(
+> >  	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+> >  	if (error)
+> >  		return error;
+> > +	if (!agbp)
+> > +		return -ENOMEM;
 > >  
-> >  	if (imap->br_state == XFS_EXT_NORM)
+> >  	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
+> >  
 > > 
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
