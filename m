@@ -1,84 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:32861 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751413AbdGRS1q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2017 14:27:46 -0400
-Received: by mail-wr0-f194.google.com with SMTP id y43so5461626wrd.0
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 11:27:46 -0700 (PDT)
-Subject: Re: [PATCH, RFC] xfs: fix multi-AG deadlock in xfs_bunmapi
-References: <20170718172545.18065-1-hch@lst.de>
- <20170718181535.GJ4224@magnolia>
-From: Nikolay Borisov <n.borisov.lkml@gmail.com>
-Message-ID: <f53783a8-3b92-4b07-2d94-e60eb7d878bc@gmail.com>
-Date: Tue, 18 Jul 2017 21:27:43 +0300
+Received: from mx1.redhat.com ([209.132.183.28]:46164 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932741AbdGSLRn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Jul 2017 07:17:43 -0400
+Date: Wed, 19 Jul 2017 07:17:41 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH RFC] xfs: fix buffer check for primary sb in userspace
+ libxfs
+Message-ID: <20170719111741.GA53744@bfoster.bfoster>
+References: <20170718141337.46255-1-bfoster@redhat.com>
+ <20170718231202.GP17762@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20170718181535.GJ4224@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170718231202.GP17762@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-
-
-On 18.07.2017 21:15, Darrick J. Wong wrote:
-> On Tue, Jul 18, 2017 at 07:25:45PM +0200, Christoph Hellwig wrote:
->> Just like in the allocator we must avoid touching multiple AGs out of
->> order when freeing blocks, as freeing still locks the AGF and can cause
->> the same AB-BA deadlocks as in the allocation path.
->>
->> Signed-off-by: Christoph Hellwig <hch@lst.de>
->> Reported-by: Nikolay Borisov <n.borisov.lkml@gmail.com>
+On Wed, Jul 19, 2017 at 09:12:02AM +1000, Dave Chinner wrote:
+> On Tue, Jul 18, 2017 at 10:13:37AM -0400, Brian Foster wrote:
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > Hi all,
+> > 
+> > This patch is actually targeted at userspace. The previous change in commit
+> > f3d7ebde ("xfs: fix superblock inprogress check") to use ->b_maps technically
+> > breaks the logic in userspace in a similar way to the original problem because
+> > userspace has no concept of uncached buffers.  ->b_maps is NULL in userspace
+> > unless the buffer is truly discontiguous.
+> > 
+> > This would normally result in a segfault but this appears to be hidden
+> > by gcc optimization as -O2 is enabled by default and the
+> > check_inprogress param to xfs_mount_validate_sb() is unused in
+> > userspace. Therefore, the segfault is only reproducible when
+> > optimization is disabled (which is a useful configuration for
+> > debugging).
+> > 
+> > There are obviously different ways to fix this. I'm floating this (untested)
+> > rfc as a kernel patch (do we ever sync libxfs from xfsprogs -> kernel?) with
+> > the objective of keeping the libxfs code the same between the kernel and
+> > userspace. We could alternatively create a custom helper/macro with the
+> > appropriate check in each place. Thoughts?
 > 
-> Looks ok, though I wonder what the bug report looked like. :)
-
-https://www.spinics.net/lists/linux-xfs/msg05918.html
-
-
+> Wouldn't it be better to simply fix the userspace buffer
+> initialisation to always have a valid bp->b_maps, just like the
+> kernel does? (See xfs_buf_get_maps() in the kernel code).  That way
+> we don't have a landmine lurking in all the shared libxfs code we
+> bring from the kernel that may interact with uncached buffers.
 > 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+We could certainly create a bp->__b_map field in xfsprogs libxfs and
+initialize ->b_maps similar to the kernel for nmap == 1 buffers. Given
+the lack of overlap of uncached buffers between xfsprogs and the kernel
+(I'm not sure there are other cases where such buffers are commonly
+handled), I don't personally think one way is notably better than the
+other.
+
+The tradeoffs seem to be that this patch is fairly localized but leaves
+the potentially different states for uncached buffers in kernel vs.
+xfsprogs context. The above approach addresses that issue at the cost of
+slightly increasing the size of xfs_buf in userspace for something that
+may not ever be necessary outside of an isolated bit of code. It also
+only requires a change to xfsprogs libxfs.
+
+Given the tradeoffs, I have no real preference on which approach we
+take. Do you prefer the latter? If so and there are no other objections,
+I'll send a patch along those lines.
+
+Brian
+
+> Cheers,
 > 
->> ---
->>  fs/xfs/libxfs/xfs_bmap.c | 12 ++++++++++++
->>  1 file changed, 12 insertions(+)
->>
->> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
->> index 0a9880777c9c..935adde72a8b 100644
->> --- a/fs/xfs/libxfs/xfs_bmap.c
->> +++ b/fs/xfs/libxfs/xfs_bmap.c
->> @@ -5435,6 +5435,7 @@ __xfs_bunmapi(
->>  	xfs_fsblock_t		sum;
->>  	xfs_filblks_t		len = *rlen;	/* length to unmap in file */
->>  	xfs_fileoff_t		max_len;
->> +	xfs_agnumber_t		prev_agno = NULLAGNUMBER, agno;
->>  
->>  	trace_xfs_bunmap(ip, bno, len, flags, _RET_IP_);
->>  
->> @@ -5534,6 +5535,17 @@ __xfs_bunmapi(
->>  		 */
->>  		del = got;
->>  		wasdel = isnullstartblock(del.br_startblock);
->> +
->> +		/*
->> +		 * Make sure we don't touch multiple AGF headers out of order
->> +		 * in a single transaction, as that could cause AB-BA deadlocks.
->> +		 */
->> +		if (!wasdel) {
->> +			agno = XFS_FSB_TO_AGNO(mp, del.br_startblock);
->> +			if (prev_agno != NULLAGNUMBER && prev_agno > agno)
->> +				break;
->> +			prev_agno = agno;
->> +		}
->>  		if (got.br_startoff < start) {
->>  			del.br_startoff = start;
->>  			del.br_blockcount -= start - got.br_startoff;
->> -- 
->> 2.11.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
