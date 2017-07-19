@@ -1,40 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:37653 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:47102 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750877AbdGMHSE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2017 03:18:04 -0400
-Date: Thu, 13 Jul 2017 00:18:02 -0700
+        with ESMTP id S1752760AbdGSGyj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2017 02:54:39 -0400
+Date: Tue, 18 Jul 2017 23:54:38 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfstests failures with current kernel/xfsprogs/xfstests
-Message-ID: <20170713071802.GC2433@infradead.org>
-References: <20170712114433.GA2231@infradead.org>
- <20170712162954.GA4220@magnolia>
- <dba1ac97-e3b9-bddd-61e5-78f164d3dc50@sandeen.net>
+Subject: Re: Metadata corruption detected at xfs_inode_buf_verify
+Message-ID: <20170719065438.GA18386@infradead.org>
+References: <alpine.DEB.2.21.1.1707161018130.22141@trent.utfs.org>
+ <alpine.DEB.2.21.1.1707170035440.22141@trent.utfs.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <dba1ac97-e3b9-bddd-61e5-78f164d3dc50@sandeen.net>
+In-Reply-To: <alpine.DEB.2.21.1.1707170035440.22141@trent.utfs.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Christian Kujau <christian@nerdbynature.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jul 12, 2017 at 11:53:02AM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 07/12/2017 11:29 AM, Darrick J. Wong wrote:
-> >> generic/417 seems to fail to recover things on a r/o to r/w mount.
-> >>
-> >> I thoght Eric had a fix for this, but it seems like it didn't get merge.
-> > He did, but Dave wanted to know more about the side effects of recovering
-> > unlinked inodes on the rootfs during the ro->rw mount and the thread died
-> > after that.
-> > 
-> 
-> Because I really don't know how to answer that.  I didn't see a way to
-> address the vague concerns.  I tried to find a way to make a test which
-> does this, but wasn't able to come up with any way to produce the old/lost
-> orphans on a kernel with the fix.
+On Mon, Jul 17, 2017 at 12:47:16AM -0700, Christian Kujau wrote:
+>  | and I'm pretty sure that the USB mass storage interface/driver does not 
+>  | pass through cache flushes or support FUA operations.
 
-Can you just repost the latest series for another round of review?
+The usb-storage driver of course implements cache flushes and FUA
+properly - it's just a SCSI transport after all.  But that doesn't mean
+that the device itself can't have issue, of which there have been
+plenty.
