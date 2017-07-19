@@ -1,144 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57563 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:41694 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751617AbdGROyV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Jul 2017 10:54:21 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A37EF4A6E6
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 14:54:21 +0000 (UTC)
-Received: from eorzea.usersys.redhat.com (ovpn-204-54.brq.redhat.com [10.40.204.54])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1AB707E582
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2017 14:54:20 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 1/2 V5] xfs: Add infrastructure needed for error propagation during buffer IO failure
-Date: Tue, 18 Jul 2017 16:54:14 +0200
-Message-Id: <20170718145415.21230-2-cmaiolino@redhat.com>
-In-Reply-To: <20170718145415.21230-1-cmaiolino@redhat.com>
-References: <20170718145415.21230-1-cmaiolino@redhat.com>
+        id S933177AbdGSPeB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Jul 2017 11:34:01 -0400
+Subject: Re: XFS group quota incorrectly "inherits" its hard limit from user 0
+References: <CAH4CUCPgFnm0s07uEU3ke6V8cPtSvQxMLo60nemuuqGygmZRhA@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b70d94df-9d0a-ae0d-58ac-7d15c73695bd@sandeen.net>
+Date: Wed, 19 Jul 2017 10:34:00 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAH4CUCPgFnm0s07uEU3ke6V8cPtSvQxMLo60nemuuqGygmZRhA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Yaron Presente <yaron@zadarastorage.com>, linux-xfs@vger.kernel.org
 
-With the current code, XFS never re-submit a failed buffer for IO,
-because the failed item in the buffer is kept in the flush locked state
-forever.
 
-To be able to resubmit an log item for IO, we need a way to mark an item
-as failed, if, for any reason the buffer which the item belonged to
-failed during writeback.
 
-Add a new log item callback to be used after an IO completion failure
-and make the needed clean ups.
+On 07/18/2017 04:51 PM, Yaron Presente wrote:
+> Hi,
+> I'm running a Linux system with kernel version 3.18.19.
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
+Quite an old kernel.  You're missing this upstream fix/change:
 
-V2:
-	- Update commit log to include a better description of why this
-	  patch is needed and fix spelling mistakes
-	- Move xfs_buf_do_callbacks_fail() call into
-	  xfs_buf_iodone_callback_error, so the callbacks can be executed
-	  before the buffer is released, and only after it has been
-	  retried once
+commit be6079461abf796e29d02b450a16908f4bf58f6c
+Author: Carlos Maiolino <cmaiolino@redhat.com>
+Date:   Mon Feb 8 11:27:55 2016 +1100
 
-V3:
-	- fix some loops according to hch suggestion
-	- whitespace cleanup
+    xfs: Split default quota limits by quota type
+    
+    Default quotas are globally set due historical reasons. IRIX only
+    supported user and project quotas, and default quota was only
+    applied to user quotas.
+    
+    In Linux, when a default quota is set, all different quota types
+    inherits the same default value.
+    
+    An user with a quota limit larger than the default quota value, will
+    still be limited to the default value because the group quotas also
+    inherits the default quotas. Unless the group which the user belongs
+    to have a custom quota limit set.
+    
+    This patch aims to split the default quota value by quota type.
+    Allowing each quota type having different default values.
+    
+    Default time limits are still set globally. XFS does not set a
+    per-user/group timer, but a single global timer. For changing this
+    behavior, some changes should be made in user-space tools another
+    bugs being fixed.
+    
+    Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+    Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-V4:
-	- Invoke failure callbacks before reset the I/O error
-	- Remove bflags field from iop_error callback
-	- move spin_lock/unlock xa_lock up in the stack, handling all
-	  log items in the same buffer into a single lock
+-Eric
 
-V5:
-	- Reorganize variable declarations
-	  in fxs_buf_do_callbacks_fail
-
- fs/xfs/xfs_buf_item.c | 24 +++++++++++++++++++++++-
- fs/xfs/xfs_trans.h    |  7 +++++--
- 2 files changed, 28 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index f6a8422..d6ca7d6 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -29,6 +29,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_log.h"
-+#include "xfs_inode.h"
- 
- 
- kmem_zone_t	*xfs_buf_item_zone;
-@@ -1054,6 +1055,23 @@ xfs_buf_do_callbacks(
- 	}
- }
- 
-+STATIC void
-+xfs_buf_do_callbacks_fail(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_log_item	*next;
-+	struct xfs_log_item	*lip = bp->b_fspriv;
-+	struct xfs_ail		*ailp = lip->li_ailp;
-+
-+	spin_lock(&ailp->xa_lock);
-+	for (; lip; lip = next) {
-+		next = lip->li_bio_list;
-+		if (lip->li_ops->iop_error)
-+			lip->li_ops->iop_error(lip, bp);
-+	}
-+	spin_unlock(&ailp->xa_lock);
-+}
-+
- static bool
- xfs_buf_iodone_callback_error(
- 	struct xfs_buf		*bp)
-@@ -1123,7 +1141,11 @@ xfs_buf_iodone_callback_error(
- 	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
- 		goto permanent_error;
- 
--	/* still a transient error, higher layers will retry */
-+	/*
-+	 * Still a transient error, run IO completion failure callbacks and let
-+	 * the higher layers retry the buffer.
-+	 */
-+	xfs_buf_do_callbacks_fail(bp);
- 	xfs_buf_ioerror(bp, 0);
- 	xfs_buf_relse(bp);
- 	return true;
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 6bdad6f..442d679 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -64,11 +64,13 @@ typedef struct xfs_log_item {
- } xfs_log_item_t;
- 
- #define	XFS_LI_IN_AIL	0x1
--#define XFS_LI_ABORTED	0x2
-+#define	XFS_LI_ABORTED	0x2
-+#define	XFS_LI_FAILED	0x4
- 
- #define XFS_LI_FLAGS \
- 	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
--	{ XFS_LI_ABORTED,	"ABORTED" }
-+	{ XFS_LI_ABORTED,	"ABORTED" }, \
-+	{ XFS_LI_FAILED,	"FAILED" }
- 
- struct xfs_item_ops {
- 	void (*iop_size)(xfs_log_item_t *, int *, int *);
-@@ -79,6 +81,7 @@ struct xfs_item_ops {
- 	void (*iop_unlock)(xfs_log_item_t *);
- 	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
- 	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
-+	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *);
- };
- 
- void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
--- 
-2.9.4
-
+> While experimenting with groups quota, I did the following steps:
+> 
+> 1. Mounted XFS with both users and groups quota enabled
+> 2. Set user 0 (aka the SuperUser) hard limit to 800000 . I believe
+> that this has the same affect as using xfs_quota limit command with
+> "-d" (i.e. setting the default hard limit for users which don't have
+> their hard limit set explicitly)
+> 3. Set user 2001117 hard limit to 1024000 (I set a different limit
+> than user 0's on purpose, in order to show that the group hard limit
+> was not inherited from this user, but from user 0)
+> 4. Created a 1MB file that is owned by user 2001117 and group 2000514
+> 5. Group 2000514 which previously didn't have any hard limit defined
+> now "inherited" user 0 hard limit of 800000 .
+> 
+> See output of xfs_quota below.
+> Thanks,
+> Yaron
+> 
+> 
+> Before creating the file:
+> ==================
+> 
+> root@vsa-0000011e-vc-0:~# xfs_quota -x -c "report -L0 -U 2100000"
+> /export/share_3
+> User quota on /export/share_3 (/dev/dm-28)
+>                                Blocks
+> User ID          Used       Soft       Hard    Warn/Grace
+> ---------- --------------------------------------------------
+> #0                  0               0      800000      00  [--------]
+> #2001117       0               0     1024000     00 [--------]
+> 
+> Group quota on /export/share_3 (/dev/dm-28)
+>                                Blocks
+> Group ID         Used       Soft       Hard    Warn/Grace
+> ---------- --------------------------------------------------
+> #0                  0               0          0          00 [--------]
+> 
+> (group 2000514  is not listed since it does not have a hard limit and
+> its quota is not used by any file)
+> 
+> After creating the file:
+> ================
+> 
+> root@vsa-0000011e-vc-0:~# xfs_quota -x -c "report -L0 -U 2100000"
+> /export/share_3
+> User quota on /export/share_3 (/dev/dm-28)
+>                                Blocks
+> User ID          Used       Soft       Hard    Warn/Grace
+> ---------- --------------------------------------------------
+> #0                  0               0     800000      00  [--------]
+> #2001117      1024         0    1024000     00 [--------]
+> 
+> Group quota on /export/share_3 (/dev/dm-28)
+>                                Blocks
+> Group ID         Used       Soft       Hard    Warn/Grace
+> ---------- --------------------------------------------------
+> #0                  0               0          0           00 [--------]
+> #2000514      1024         0      800000     00 [--------]
+>    <===   This is the problem. It's not clear where this hard limit
+> came from
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
