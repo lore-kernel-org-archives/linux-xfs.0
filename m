@@ -1,72 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26696 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:36706 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751379AbdGRSPm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2017 14:15:42 -0400
-Date: Tue, 18 Jul 2017 11:15:35 -0700
+        with ESMTP id S933175AbdGSPj6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2017 11:39:58 -0400
+Date: Wed, 19 Jul 2017 08:39:50 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH, RFC] xfs: fix multi-AG deadlock in xfs_bunmapi
-Message-ID: <20170718181535.GJ4224@magnolia>
-References: <20170718172545.18065-1-hch@lst.de>
+Subject: Re: [PATCH 2/3] xfs: set firstfsb to NULLFSBLOCK before feeding it
+ to _bmapi_write
+Message-ID: <20170719153950.GM4224@magnolia>
+References: <150040225662.1216.16823172616535217786.stgit@magnolia>
+ <150040226271.1216.6697100927248768726.stgit@magnolia>
+ <20170719132022.GB54534@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170718172545.18065-1-hch@lst.de>
+In-Reply-To: <20170719132022.GB54534@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: n.borisov.lkml@gmail.com, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jul 18, 2017 at 07:25:45PM +0200, Christoph Hellwig wrote:
-> Just like in the allocator we must avoid touching multiple AGs out of
-> order when freeing blocks, as freeing still locks the AGF and can cause
-> the same AB-BA deadlocks as in the allocation path.
+On Wed, Jul 19, 2017 at 09:20:22AM -0400, Brian Foster wrote:
+> On Tue, Jul 18, 2017 at 11:24:22AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > We must initialize the firstfsb parameter to _bmapi_write so that it
+> > doesn't incorrectly treat stack garbage as a restriction on which AGs
+> > it can search for free space.
+> > 
+> > Fixes-coverity-id: 1402025
+> > Fixes-coverity-id: 1415167
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c |    2 +-
+> >  fs/xfs/xfs_reflink.c     |    2 +-
+> >  2 files changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 935adde..8c4ee60 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -6508,7 +6508,7 @@ xfs_bmap_finish_one(
+> >  	xfs_filblks_t			*blockcount,
+> >  	xfs_exntst_t			state)
+> >  {
+> > -	xfs_fsblock_t			firstfsb;
+> > +	xfs_fsblock_t			firstfsb = NULLFSBLOCK;
+> >  	int				error = 0;
+> >  
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Nikolay Borisov <n.borisov.lkml@gmail.com>
+> Shouldn't firstfsb be tied to the transaction lifetime in (at least)
+> this case? It is used in the allocator to control things like AG locking
+> order.
 
-Looks ok, though I wonder what the bug report looked like. :)
+That is correct...
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Here, it looks like we could potentially do multiple unmaps in a
+> single transaction without carrying the firstfsb state across..?
 
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
+...but keep in mind that we call xfs_bmap_finish_one once per
+transaction and roll transactions until the work is done.  I'll add a
+comment here to that effect:
+
+/*
+ * firstfsb is tied to the transaction lifetime and is used to ensure
+ * correct AG locking order and schedule work item continuations.
+ * XFS_BUI_MAX_FAST_EXTENTS (== 1) restricts us to only making one bmap
+ * call per transaction, so it should be safe as a local variable.
+ */
+
+> FWIW this patch still looks fine either way:
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 0a9880777c9c..935adde72a8b 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5435,6 +5435,7 @@ __xfs_bunmapi(
->  	xfs_fsblock_t		sum;
->  	xfs_filblks_t		len = *rlen;	/* length to unmap in file */
->  	xfs_fileoff_t		max_len;
-> +	xfs_agnumber_t		prev_agno = NULLAGNUMBER, agno;
->  
->  	trace_xfs_bunmap(ip, bno, len, flags, _RET_IP_);
->  
-> @@ -5534,6 +5535,17 @@ __xfs_bunmapi(
->  		 */
->  		del = got;
->  		wasdel = isnullstartblock(del.br_startblock);
-> +
-> +		/*
-> +		 * Make sure we don't touch multiple AGF headers out of order
-> +		 * in a single transaction, as that could cause AB-BA deadlocks.
-> +		 */
-> +		if (!wasdel) {
-> +			agno = XFS_FSB_TO_AGNO(mp, del.br_startblock);
-> +			if (prev_agno != NULLAGNUMBER && prev_agno > agno)
-> +				break;
-> +			prev_agno = agno;
-> +		}
->  		if (got.br_startoff < start) {
->  			del.br_startoff = start;
->  			del.br_blockcount -= start - got.br_startoff;
-> -- 
-> 2.11.0
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+Thank you for the review!
+
+--D
 > 
+> >  	trace_xfs_bmap_deferred(tp->t_mountp,
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index ab2270a..d9b3d57 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -329,7 +329,7 @@ xfs_reflink_convert_cow_extent(
+> >  	xfs_filblks_t			count_fsb,
+> >  	struct xfs_defer_ops		*dfops)
+> >  {
+> > -	xfs_fsblock_t			first_block;
+> > +	xfs_fsblock_t			first_block = NULLFSBLOCK;
+> >  	int				nimaps = 1;
+> >  
+> >  	if (imap->br_state == XFS_EXT_NORM)
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
