@@ -1,36 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp02.srv.cs.cmu.edu ([128.2.217.201]:45438 "EHLO
-        smtp02.srv.cs.cmu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751198AbdGPALC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 15 Jul 2017 20:11:02 -0400
-Received: from [10.0.1.26] (c-24-6-102-209.hsd1.ca.comcast.net [24.6.102.209])
-        (authenticated bits=0)
-        by smtp02.srv.cs.cmu.edu (8.13.6/8.13.6) with ESMTP id v6G0ACpW024279
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-        for <linux-xfs@vger.kernel.org>; Sat, 15 Jul 2017 20:11:01 -0400 (EDT)
-From: Saurabh Kadekodi <saukad@cs.cmu.edu>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34525 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754087AbdGSPJd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2017 11:09:33 -0400
+Received: by mail-wm0-f68.google.com with SMTP id p204so441156wmg.1
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2017 08:09:32 -0700 (PDT)
+Subject: Re: [PATCH, RFC] xfs: fix multi-AG deadlock in xfs_bunmapi
+From: Nikolay Borisov <n.borisov.lkml@gmail.com>
+References: <20170718172545.18065-1-hch@lst.de>
+ <ac50dda7-6147-1bb2-78ed-b49dafaec242@gmail.com>
+Message-ID: <09500343-740e-0178-c60a-6ea5e6993c11@gmail.com>
+Date: Wed, 19 Jul 2017 18:09:29 +0300
+MIME-Version: 1.0
+In-Reply-To: <ac50dda7-6147-1bb2-78ed-b49dafaec242@gmail.com>
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
-Subject: Collecting aged XFS profiles
-Message-Id: <F180D8D4-633B-4CC5-8D70-5CAC36233513@cs.cmu.edu>
-Date: Sat, 15 Jul 2017 17:11:00 -0700
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-Hi,
 
-I am a PhD student studying file and storage systems and I am currently conducting research on local file system aging. My research aims at understanding realistic aging patterns and analyzing the effects of aging on file system data structures and its performance. For this purpose, I would like to capture characteristics of naturally aged file systems (i.e. not aged via synthetic workload generators).
 
-In order to facilitate this profile capture, I have written a shell / python based profiling tool (fsagestats - https://github.com/saurabhkadekodi/fsagestats)  that does a file system tree walk and captures different characteristics (file age, file size and directory depth) of files and directories and produces distributions. I do not care about file names or data within each file. It also runs xfs_db in order to capture the free space fragmentation, file fragmentation, directory fragmentation and overall fragmentation; all of which are directly correlated with the file system performance. It dumps the results in the results dir, which is to be specified when you run fsagestats. You can send me the aging profile by tarring up the results directory and sending it via email.
+On 19.07.2017 16:11, Nikolay Borisov wrote:
+> 
+> 
+> On 18.07.2017 20:25, Christoph Hellwig wrote:
+>> Just like in the allocator we must avoid touching multiple AGs out of
+>> order when freeing blocks, as freeing still locks the AGF and can cause
+>> the same AB-BA deadlocks as in the allocation path.
+>>
+>> Signed-off-by: Christoph Hellwig <hch@lst.d> Reported-by: Nikolay Borisov <n.borisov.lkml@gmail.com>
+> 
+> Unfortunately I this patch is not enough. I just tested on a 3.12 kernel ( the issue was easiest to repro there) 
+> and I still get stack traces. I will also test on a 4.4-based kernel as well but I assume the results are going to
+> be the same. 
 
-Since I do not have access to XFS systems that see a lot of churn, I am reaching out to the XFS community in order to find volunteers willing to run my script and capture their XFS aging profile. Please feel free to modify the script as per your installation or as you see fit. Since fsagestats collects no private information, I eventually intend to host these profiles publicly (unless explicitly requested not to) to aid other researchers / enthusiasts.
-
-In case you have any questions on concerns, please let me know.
-
-Thanks,
-Saurabh Kadekodi
-
-PS: cc’ing the response and / or the aging profile to saukad@cs.cmu.edu is greatly appreciated.
+I can confirm that on 4.4 I also hit the same deadlock. So this patch is
+not sufficient.
