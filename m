@@ -1,74 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:29492 "EHLO mga04.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53690 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755330AbdGSQ0s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Jul 2017 12:26:48 -0400
-Date: Wed, 19 Jul 2017 10:26:45 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v3 3/5] dax: use common 4k zero page for dax mmap reads
-Message-ID: <20170719162645.GA26445@linux.intel.com>
-References: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
- <20170628220152.28161-4-ross.zwisler@linux.intel.com>
- <20170719153314.GC15908@quack2.suse.cz>
+        id S932087AbdGSQSb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Jul 2017 12:18:31 -0400
+Date: Wed, 19 Jul 2017 12:18:27 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] libxfs: propagate transaction block reservations
+Message-ID: <20170719161827.GB55813@bfoster.bfoster>
+References: <20170719155555.GO4224@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170719153314.GC15908@quack2.suse.cz>
+In-Reply-To: <20170719155555.GO4224@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Jul 19, 2017 at 05:33:14PM +0200, Jan Kara wrote:
-> On Wed 28-06-17 16:01:50, Ross Zwisler wrote:
-> > Another major change is that we remove dax_pfn_mkwrite() from our fault
-> > flow, and instead rely on the page fault itself to make the PTE dirty and
-> > writeable.  The following description from the patch adding the
-> > vm_insert_mixed_mkwrite() call explains this a little more:
-> > 
-> > ***
-> >   To be able to use the common 4k zero page in DAX we need to have our PTE
-> >   fault path look more like our PMD fault path where a PTE entry can be
-> >   marked as dirty and writeable as it is first inserted, rather than
-> >   waiting for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
-> > 
-> >   Right now we can rely on having a dax_pfn_mkwrite() call because we can
-> >   distinguish between these two cases in do_wp_page():
-> > 
-> >   	case 1: 4k zero page => writable DAX storage
-> >   	case 2: read-only DAX storage => writeable DAX storage
-> > 
-> >   This distinction is made by via vm_normal_page().  vm_normal_page()
-> >   returns false for the common 4k zero page, though, just as it does for
-> >   DAX ptes.  Instead of special casing the DAX + 4k zero page case, we will
-> >   simplify our DAX PTE page fault sequence so that it matches our DAX PMD
-> >   sequence, and get rid of dax_pfn_mkwrite() completely.
-> > 
-> >   This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
-> >   and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set
-> >   insert_pfn() will do the work that was previously done by wp_page_reuse()
-> >   as part of the dax_pfn_mkwrite() call path.
-> > ***
+On Wed, Jul 19, 2017 at 08:55:55AM -0700, Darrick J. Wong wrote:
+> Certain parts of the libxfs preemptively refuse to run if the
+> transaction block reservation has fallen to zero.  We leave t_blk_res at
+> its default of zero, which means that these code paths always fail even
+> if the transaction was allocated with a non-zero block reservation.  Set
+> t_blk_res and maintain it through transaction rolls, even though we
+> don't do much enforcement the transaction block limits.
 > 
-> Hum, thinking about this in context of this patch... So what if we have
-> allocated storage, a process faults it read-only, we map it to page tables
-> writeprotected. Then the process writes through mmap to the area - the code
-> in handle_pte_fault() ends up in do_wp_page() if I'm reading it right.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Yep.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> Then, since we are missing ->pfn_mkwrite() handlers, the PTE will be marked
-> writeable but radix tree entry stays clean - bug. Am I missing something?
-
-I don't think we ever end up with a writeable PTE but with a clean radix tree
-entry.  When we get the write fault we do a full fault through
-dax_iomap_pte_fault() and dax_insert_mapping().
-
-dax_insert_mapping() sets up the dirty radix tree entry via
-dax_insert_mapping_entry() before it does anything with the page tables via
-vm_insert_mixed_mkwrite().
-
-So, this mkwrite fault path is exactly the path we would have taken if the
-initial read to real storage hadn't happened, and we end up in the same end
-state - with a dirty DAX radix tree entry and a writeable PTE.
+>  libxfs/trans.c |    7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/libxfs/trans.c b/libxfs/trans.c
+> index fe22cb9..035248f 100644
+> --- a/libxfs/trans.c
+> +++ b/libxfs/trans.c
+> @@ -106,6 +106,7 @@ libxfs_trans_roll(
+>  	struct xfs_mount	*mp;
+>  	struct xfs_trans	*trans;
+>  	struct xfs_trans_res	tres;
+> +	unsigned int		old_blk_res;
+>  	int			error;
+>  
+>  	/*
+> @@ -121,6 +122,7 @@ libxfs_trans_roll(
+>  	mp = trans->t_mountp;
+>  	tres.tr_logres = trans->t_log_res;
+>  	tres.tr_logcount = trans->t_log_count;
+> +	old_blk_res = trans->t_blk_res;
+>  
+>  	/*
+>  	 * Commit the current transaction.
+> @@ -145,6 +147,8 @@ libxfs_trans_roll(
+>  	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
+>  	error = libxfs_trans_alloc(mp, &tres, 0, 0, 0, tpp);
+>  	trans = *tpp;
+> +	trans->t_blk_res = old_blk_res;
+> +
+>  	/*
+>  	 *  Ensure that the inode is in the new transaction and locked.
+>  	 */
+> @@ -185,6 +189,7 @@ libxfs_trans_alloc(
+>  		exit(1);
+>  	}
+>  	ptr->t_mountp = mp;
+> +	ptr->t_blk_res = blocks;
+>  	INIT_LIST_HEAD(&ptr->t_items);
+>  #ifdef XACT_DEBUG
+>  	fprintf(stderr, "allocated new transaction %p\n", ptr);
+> @@ -750,7 +755,7 @@ trans_committed(
+>          list_for_each_entry_safe(lidp, next, &tp->t_items, lid_trans) {
+>  		struct xfs_log_item *lip = lidp->lid_item;
+>  
+> -                xfs_trans_del_item(lip);
+> +		xfs_trans_del_item(lip);
+>  
+>  		if (lip->li_type == XFS_LI_BUF)
+>  			buf_item_done((xfs_buf_log_item_t *)lip);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
