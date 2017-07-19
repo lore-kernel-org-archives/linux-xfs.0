@@ -1,84 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48422 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751513AbdGRV0z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Jul 2017 17:26:55 -0400
-Date: Tue, 18 Jul 2017 16:26:51 -0500
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH V2] xfs_db: properly set inode type
-Message-ID: <20170718212651.GA24515@redhat.com>
-References: <e6c83eea-af29-c01b-752e-e049e8fdc69f@redhat.com>
- <c17ce413-430e-acce-e63d-51fd1b684f62@sandeen.net>
+Received: from mx2.suse.de ([195.135.220.15]:60705 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751452AbdGSORE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Jul 2017 10:17:04 -0400
+Date: Wed, 19 Jul 2017 16:16:59 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v3 1/5] mm: add vm_insert_mixed_mkwrite()
+Message-ID: <20170719141659.GB15908@quack2.suse.cz>
+References: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
+ <20170628220152.28161-2-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c17ce413-430e-acce-e63d-51fd1b684f62@sandeen.net>
+In-Reply-To: <20170628220152.28161-2-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Mon, Jul 17, 2017 at 08:51:13PM -0500, Eric Sandeen wrote:
-> When we set the type to "inode" the verifier may validate multiple
-> inodes in the current fs block, so setting the buffer size to
-> that of just one inode is not sufficient and it'll emit spurious
-> verifier errors for all but the first, as we read off the end:
+On Wed 28-06-17 16:01:48, Ross Zwisler wrote:
+> To be able to use the common 4k zero page in DAX we need to have our PTE
+> fault path look more like our PMD fault path where a PTE entry can be
+> marked as dirty and writeable as it is first inserted, rather than waiting
+> for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
 > 
-> xfs_db> daddr 99
-> xfs_db> type inode
-> Metadata corruption detected at xfs_inode block 0x63/0x200
-> Metadata corruption detected at xfs_inode block 0x63/0x200
-> Metadata corruption detected at xfs_inode block 0x63/0x200
-> Metadata corruption detected at xfs_inode block 0x63/0x200
-> Metadata corruption detected at xfs_inode block 0x63/0x200
-> Metadata corruption detected at xfs_inode block 0x63/0x200
-> Metadata corruption detected at xfs_inode block 0x63/0x200
+> Right now we can rely on having a dax_pfn_mkwrite() call because we can
+> distinguish between these two cases in do_wp_page():
 > 
-> Use the special set_cur_inode() function for this purpose
-> as is done in inode_f().
+> 	case 1: 4k zero page => writable DAX storage
+> 	case 2: read-only DAX storage => writeable DAX storage
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> This distinction is made by via vm_normal_page().  vm_normal_page() returns
+> false for the common 4k zero page, though, just as it does for DAX ptes.
+> Instead of special casing the DAX + 4k zero page case, we will simplify our
+> DAX PTE page fault sequence so that it matches our DAX PMD sequence, and
+> get rid of dax_pfn_mkwrite() completely.
+> 
+> This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
+> and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set insert_pfn()
+> will do the work that was previously done by wp_page_reuse() as part of the
+> dax_pfn_mkwrite() call path.
+> 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-I ran the new, proposed test xfs/424 to test this patch and
-it runs fine. Thanks!
+Just one small comment below.
 
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+> @@ -1658,14 +1658,26 @@ static int insert_pfn(struct vm_area_struct *vma, unsigned long addr,
+>  	if (!pte)
+>  		goto out;
+>  	retval = -EBUSY;
+> -	if (!pte_none(*pte))
+> -		goto out_unlock;
+> +	if (!pte_none(*pte)) {
+> +		if (mkwrite) {
+> +			entry = *pte;
+> +			goto out_mkwrite;
 
-> 
-> V2: Warn if the daddr given was reset to an inode-aligned
-> address
-> 
-> diff --git a/db/io.c b/db/io.c
-> index b046c8d..4153da0 100644
-> --- a/db/io.c
-> +++ b/db/io.c
-> @@ -616,6 +616,22 @@ set_iocur_type(
->  {
->  	struct xfs_buf	*bp = iocur_top->bp;
->  
-> +	/* Inodes are special; verifier checks all inodes in the buffer */
-> +	if (type->typnm == TYP_INODE) {
-> +		xfs_daddr_t	b = iocur_top->bb;
-> +		xfs_ino_t	ino;
-> +
-> +		ino = XFS_AGINO_TO_INO(mp, xfs_daddr_to_agno(mp, b),
-> +			((b << BBSHIFT) >> mp->m_sb.sb_inodelog) %
-> +			(mp->m_sb.sb_agblocks << mp->m_sb.sb_inopblog));
-> +		set_cur_inode(ino);
-> +		if (iocur_top->bb != b)
-> +			dbprintf(
-> +_("cursor set to nearest inode %llu at daddr %lld\n"),
-> +				 ino, iocur_top->bb);
-> +		return;
-> +	}
-> +
->  	/* adjust buffer size for types with fields & hence fsize() */
->  	if (type->fields) {
->  		int bb_count;	/* type's size in basic blocks */
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Can we maybe check here that (pte_pfn(*pte) == pfn_t_to_pfn(pfn)) and
+return -EBUSY otherwise? That way we are sure insert_pfn() isn't doing
+anything we don't expect and if I understand the code right, we need to
+invalidate all zero page mappings at given file offset (via
+unmap_mapping_range()) before mapping an allocated block there and thus the
+case of filling the hole won't be affected by this?
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
