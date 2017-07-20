@@ -1,85 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49980 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750877AbdGMH2v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Jul 2017 03:28:51 -0400
-Date: Thu, 13 Jul 2017 15:28:48 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfsdump: fix race condition between lseek() and
- read()/write()
-Message-ID: <20170713072848.GD2478@eguan.usersys.redhat.com>
-References: <1461244016-7373-1-git-send-email-eguan@redhat.com>
- <a63c9311-8b97-ad31-63cb-35bdea02b6a3@sandeen.net>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:27534 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S965977AbdGTW1r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2017 18:27:47 -0400
+Date: Fri, 21 Jul 2017 08:27:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Collecting aged XFS profiles
+Message-ID: <20170720222743.GV17762@dastard>
+References: <F180D8D4-633B-4CC5-8D70-5CAC36233513@cs.cmu.edu>
+ <CAAxjCEzevLnmxyVRME1-kT867KjH2rtOdspv7nF6TOfLUDD+xA@mail.gmail.com>
+ <20170717234814.GK17762@dastard>
+ <CAAxjCEzP=bf5S12J8rTn7EyJK_MeM=t1JSa7pBzZyXK=9TrjQQ@mail.gmail.com>
+ <bcb651de-75bf-97a6-7ed8-c083d2a440e5@sandeen.net>
+ <CAAxjCEzZ2Q0wL=nhGVHVtK3M5Ws3MQdrUNKm3jJKO+1y-wxTkw@mail.gmail.com>
+ <20170720030252.GT17762@dastard>
+ <93399fda-5d20-5ec9-14f1-5496814fed79@sandeen.net>
+ <20170720043806.GU17762@dastard>
+ <a7d9b022-4328-995c-845e-abc59e5fd038@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a63c9311-8b97-ad31-63cb-35bdea02b6a3@sandeen.net>
+In-Reply-To: <a7d9b022-4328-995c-845e-abc59e5fd038@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Stefan Ring <stefanrin@gmail.com>, linux-xfs@vger.kernel.org
 
-On Wed, Jul 12, 2017 at 03:56:00PM -0500, Eric Sandeen wrote:
-> Hm, but isn't this a problem?
-
-/me rewinds my mind by 15 months and confirms it is a problem :)
-
+On Thu, Jul 20, 2017 at 09:24:58AM -0500, Eric Sandeen wrote:
+> On 07/19/2017 11:38 PM, Dave Chinner wrote:
+> > On Wed, Jul 19, 2017 at 10:55:23PM -0500, Eric Sandeen wrote:
+> > FWIW, people building from the git tree are probably using the
+> > master branch (v4.11.0), not the for-next branch. I used to stage
+> > all the -rcX releases in the master branch, which was why I was
+> > confused by this at first. Never mind, I'll update my scripts that
+> > haven't been pulling the xfsprogs for-next branch from kernel.org...
 > 
-> On 04/21/2016 08:06 AM, Eryu Guan wrote:
-> > diff --git a/inventory/inv_core.c b/inventory/inv_core.c
-> > index a17c2c9..42d0ac4 100644
-> > --- a/inventory/inv_core.c
-> > +++ b/inventory/inv_core.c
-> > @@ -121,19 +121,10 @@ get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off,
-> >  	if ( dolock ) 
-> >  		INVLOCK( fd, LOCK_SH );
-> >  
-> > -	if ( lseek( fd, (off_t)off, whence ) < 0 ) {
-> 
-> whence can be _SET or _CUR depending on the caller, but with this
-> patch whence is no longer used, and -
-> 
-> > -		INV_PERROR( _("Error in reading inventory record "
-> > -			      "(lseek failed): ") );
-> > -		if ( dolock ) 
-> > -			INVLOCK( fd, LOCK_UN );
-> > -		return -1;
-> > -	}
-> > -	
-> > -	nread = read( fd, buf, bufsz );
-> > -
-> > +	nread = pread(fd, buf, bufsz, (off_t)off);
-> 
-> This is only equivalent to SET, no?  With the other changes, perhaps we're
+> yeah, I was doing that when I was new to the maintainer game, for-next
+> was rebasable and more forgiving.  Maybe I should change that back.
 
-Yes, it's only equivalent to SET.
+Yeah, for-next is more forgiving, but if you are tagging stuff for
+releases (even -rc) then it probably should have been merged back
+into the master branch and then tagged. I've always worked under the
+assumption that -rc releases are "stable" release points because you
+are asking the wider public to use and test the release....
 
-> no longer called via GET_REC_SEEKCUR - but in that case, the whence arg should
-> be removed?  Except for that pesky test code which explicitly passes SEEK_CUR ...
+i.e. If stuff needs to be undone after a -rc release then we should
+use reverts that explain why something was undone - rebasing the
+entire dev branch to remove the problem from recorded history means
+we can't easily find out why that thing caused problems years down
+the track.
 
-Agreed, the whence arg can be removed, the test code requires some
-updates though.
+Cheers,
 
-I'm now testing a new version, I'll post it once it passes '-g dump'
-tests.
-
-Thanks for the review!
-
-Eryu
-
-> 
-> 
-> -Eric
-> 
-> >  	if (  nread != (int) bufsz ) {
-> >  		INV_PERROR( _("Error in reading inventory record :") );
-> > -		if ( dolock ) 
-> > +		if ( dolock )
-> >  			INVLOCK( fd, LOCK_UN );
-> >  		return -1;
-> >  	}
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
