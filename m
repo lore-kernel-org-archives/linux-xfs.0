@@ -1,52 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57008 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965574AbdGTTA3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Jul 2017 15:00:29 -0400
-Subject: Re: [ANNOUNCE] xfsprogs: v4.12.0 released!
-References: <f216d8f6-d59b-2424-2ec4-d20f508d265b@redhat.com>
- <698990d2-2c12-c6be-554d-57876275de1b@applied-asynchrony.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6a1e59a3-470f-cd4d-034a-91bffc525e7c@sandeen.net>
-Date: Thu, 20 Jul 2017 14:00:28 -0500
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:60932 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932667AbdGTDD0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2017 23:03:26 -0400
+Date: Thu, 20 Jul 2017 13:02:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Collecting aged XFS profiles
+Message-ID: <20170720030252.GT17762@dastard>
+References: <F180D8D4-633B-4CC5-8D70-5CAC36233513@cs.cmu.edu>
+ <CAAxjCEzevLnmxyVRME1-kT867KjH2rtOdspv7nF6TOfLUDD+xA@mail.gmail.com>
+ <20170717234814.GK17762@dastard>
+ <CAAxjCEzP=bf5S12J8rTn7EyJK_MeM=t1JSa7pBzZyXK=9TrjQQ@mail.gmail.com>
+ <bcb651de-75bf-97a6-7ed8-c083d2a440e5@sandeen.net>
+ <CAAxjCEzZ2Q0wL=nhGVHVtK3M5Ws3MQdrUNKm3jJKO+1y-wxTkw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <698990d2-2c12-c6be-554d-57876275de1b@applied-asynchrony.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAAxjCEzZ2Q0wL=nhGVHVtK3M5Ws3MQdrUNKm3jJKO+1y-wxTkw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Stefan Ring <stefanrin@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-
-
-On 07/20/2017 01:07 PM, Holger Hoffstätte wrote:
-> On 07/20/17 19:07, Eric Sandeen wrote:
->> Hi Folks,
->>
->> The xfsprogs repositories have just been updated and tagged with the
->> v4.12.0 release tag. It can be found here:
->>
->> git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git v4.12.0
->>
->> Release tarballs are hosted on kernel.org, and can be found here:
->>
->> https://kernel.org/pub/linux/utils/fs/xfs/xfsprogs/
+On Wed, Jul 19, 2017 at 11:08:41PM +0200, Stefan Ring wrote:
+> On Wed, Jul 19, 2017 at 5:20 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> > On 07/19/2017 02:59 AM, Stefan Ring wrote:
+> >> I have created a metadump that is 1GB in size, xz-compressed. However,
+> >> by running strings on it I find that there are many identifiable
+> >> remains inside, and I cannot legally pass this on.
+> >
+> > newer metadump should correct that problem, and is a read-only tool,
+> > so should be (tm) perfectly safe (tm).  You could run it out of a built
+> > git repo, via the xfs_db commands.
+> >
+> >> The question is: can I import this metadata image in a VM and recreate
+> >> the metadata image from there, using modern xfsprogs? Will this
+> >> preserve most of the relevant information?
+> >
+> > yes, that would work too. (mdrestore followed by or piped through metadump)
+> > If you find significant strings in that result please let me know :)
 > 
-> Fake news!?
+> There is still quite a lot of stuff that should not be there (pasted
+> selectively while scrolling over it via less):
 
-Nope.  ;)  [1]
+[snip]
 
-> They seem to have landed in the parent directory, probably in a case
-> of rsync gone wrong.
+This stuff could all be in the journal. This is why I said "metadump
+will first need to be modified to avoid dumping the journal".
+Shouldn't be too hard - we already avoid dumping the journal when it
+is external....
 
-whoops, kup misfire, thanks - fixed!
+Cheers,
 
--Eric
-
-[1] "Fake news" is the spread of intentionally false information disguised as a
-news article to misinform of sway the public.  Some news we don't like, but it is not
-"Fake news." Other news, like this, is the result of an error by the author.  Errors
-also do not constitute "Fake news."  Trustworthy authors recognize and acknowledge
-their mistakes and makee amends, as I have done here.  :)
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
