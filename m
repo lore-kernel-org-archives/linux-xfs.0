@@ -1,290 +1,510 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33594 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:43874 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751078AbdGZX1x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 Jul 2017 19:27:53 -0400
-Subject: Re: [PATCH 5/7] mkfs: move getnum within the file
+        id S934247AbdGTJ3j (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Jul 2017 05:29:39 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 03797C058ECC
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2017 09:29:39 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 2/7] mkfs: rename defaultval to flagval in opts
+Date: Thu, 20 Jul 2017 11:29:27 +0200
+Message-Id: <20170720092932.32580-3-jtulak@redhat.com>
+In-Reply-To: <20170720092932.32580-1-jtulak@redhat.com>
 References: <20170720092932.32580-1-jtulak@redhat.com>
- <20170720092932.32580-6-jtulak@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <49f16a2d-8581-88fa-3e4f-07a3819d9bff@sandeen.net>
-Date: Wed, 26 Jul 2017 18:27:52 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170720092932.32580-6-jtulak@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On 7/20/17 4:29 AM, Jan Tulak wrote:
-> Move getnum, check_opt and illegal_option within the file. We have to do
-> this to avoid dependency issues with the following patch. There is no
-> other change in this patch, just cut&paste of these functions.
+The old name 'defaultval' was misleading - it is not the default value,
+but the value the option has when used as a flag by an user.
 
-Yeah, nice to have these up at the top of the file anyway.
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Reviewed-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ mkfs/xfs_mkfs.c | 120 ++++++++++++++++++++++++++++----------------------------
+ 1 file changed, 60 insertions(+), 60 deletions(-)
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 4b030101..f2f6468e 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -101,7 +101,7 @@ unsigned int		sectorsize;
+  *     to zero. But if one value is different: minval=0 and maxval=1,
+  *     then it is OK.)
+  *
+- *   defaultval MANDATORY
++ *   flagval MANDATORY
+  *     The value used if user specifies the subopt, but no value.
+  *     If the subopt accepts some values (-d file=[1|0]), then this
+  *     sets what is used with simple specifying the subopt (-d file).
+@@ -126,7 +126,7 @@ struct opt_params {
+ 		int		conflicts[MAX_CONFLICTS];
+ 		long long	minval;
+ 		long long	maxval;
+-		long long	defaultval;
++		long long	flagval;
+ 		const char	*raw_input;
+ 	}		subopt_params[MAX_SUBOPTS];
+ };
+@@ -146,7 +146,7 @@ struct opt_params bopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_BLOCKSIZE_LOG,
+ 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = B_SIZE,
+ 		  .convert = true,
+@@ -155,7 +155,7 @@ struct opt_params bopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_BLOCKSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+ };
+@@ -201,24 +201,24 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = XFS_MAX_AGNUMBER,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_FILE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = D_NAME,
+ 		  .conflicts = { LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SIZE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = XFS_AG_MIN_BYTES,
+ 		  .maxval = LLONG_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SUNIT,
+ 		  .conflicts = { D_NOALIGN,
+@@ -227,7 +227,7 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SWIDTH,
+ 		  .conflicts = { D_NOALIGN,
+@@ -236,7 +236,7 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_AGSIZE,
+ 		  .conflicts = { D_AGCOUNT,
+@@ -244,7 +244,7 @@ struct opt_params dopts = {
+ 		  .convert = true,
+ 		  .minval = XFS_AG_MIN_BYTES,
+ 		  .maxval = XFS_AG_MAX_BYTES,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SU,
+ 		  .conflicts = { D_NOALIGN,
+@@ -254,7 +254,7 @@ struct opt_params dopts = {
+ 		  .convert = true,
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SW,
+ 		  .conflicts = { D_NOALIGN,
+@@ -263,14 +263,14 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SECTLOG,
+ 		  .conflicts = { D_SECTSIZE,
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SECTSIZE,
+ 		  .conflicts = { D_SECTLOG,
+@@ -279,7 +279,7 @@ struct opt_params dopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_NOALIGN,
+ 		  .conflicts = { D_SU,
+@@ -289,25 +289,25 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = D_RTINHERIT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = D_PROJINHERIT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_EXTSZINHERIT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+ };
+@@ -339,7 +339,7 @@ struct opt_params iopts = {
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = I_LOG,
+ 		  .conflicts = { I_PERBLOCK,
+@@ -347,13 +347,13 @@ struct opt_params iopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_DINODE_MIN_LOG,
+ 		  .maxval = XFS_DINODE_MAX_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_MAXPCT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 100,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_PERBLOCK,
+ 		  .conflicts = { I_LOG,
+@@ -362,7 +362,7 @@ struct opt_params iopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_INODE_PERBLOCK,
+ 		  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_SIZE,
+ 		  .conflicts = { I_PERBLOCK,
+@@ -371,25 +371,25 @@ struct opt_params iopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_DINODE_MIN_SIZE,
+ 		  .maxval = XFS_DINODE_MAX_SIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_ATTR,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 2,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_PROJID32BIT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = I_SPINODES,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 	},
+ };
+@@ -429,7 +429,7 @@ struct opt_params lopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_INTERNAL,
+ 		  .conflicts = { L_FILE,
+@@ -437,27 +437,27 @@ struct opt_params lopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = L_SIZE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
+ 		  .maxval = XFS_MAX_LOG_BYTES,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_VERSION,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = 2,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SUNIT,
+ 		  .conflicts = { L_SU,
+ 				 LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SU,
+ 		  .conflicts = { L_SUNIT,
+@@ -465,20 +465,20 @@ struct opt_params lopts = {
+ 		  .convert = true,
+ 		  .minval = BBTOB(1),
+ 		  .maxval = XLOG_MAX_RECORD_BSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_DEV,
+ 		  .conflicts = { L_AGNUM,
+ 				 L_INTERNAL,
+ 				 LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SECTLOG,
+ 		  .conflicts = { L_SECTSIZE,
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SECTSIZE,
+ 		  .conflicts = { L_SECTLOG,
+@@ -487,26 +487,26 @@ struct opt_params lopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_FILE,
+ 		  .conflicts = { L_INTERNAL,
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = L_NAME,
+ 		  .conflicts = { L_AGNUM,
+ 				 L_INTERNAL,
+ 				 LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_LAZYSBCNTR,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 	},
+ };
+@@ -530,7 +530,7 @@ struct opt_params nopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_REC_DIRSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_SIZE,
+ 		  .conflicts = { N_LOG,
+@@ -539,19 +539,19 @@ struct opt_params nopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = 1 << XFS_MIN_REC_DIRSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_VERSION,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 2,
+ 		  .maxval = 2,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_FTYPE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 	},
+ };
+@@ -579,33 +579,33 @@ struct opt_params ropts = {
+ 		  .convert = true,
+ 		  .minval = XFS_MIN_RTEXTSIZE,
+ 		  .maxval = XFS_MAX_RTEXTSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_SIZE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = 0,
+ 		  .maxval = LLONG_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_DEV,
+ 		  .conflicts = { LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_FILE,
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		},
+ 		{ .index = R_NAME,
+ 		  .conflicts = { LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_NOALIGN,
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		},
+ 	},
+@@ -631,7 +631,7 @@ struct opt_params sopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SECTLOG,
+ 		  .conflicts = { S_SIZE,
+@@ -639,7 +639,7 @@ struct opt_params sopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SIZE,
+ 		  .conflicts = { S_LOG,
+@@ -649,7 +649,7 @@ struct opt_params sopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SECTSIZE,
+ 		  .conflicts = { S_LOG,
+@@ -659,7 +659,7 @@ struct opt_params sopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+ };
+@@ -684,29 +684,29 @@ struct opt_params mopts = {
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = M_FINOBT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = M_UUID,
+ 		  .conflicts = { LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = M_RMAPBT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = M_REFLINK,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 	},
+ };
+@@ -1347,9 +1347,9 @@ getnum(
+ 	check_opt(opts, index, false);
+ 	/* empty strings might just return a default value */
+ 	if (!str || *str == '\0') {
+-		if (sp->defaultval == SUBOPT_NEEDS_VAL)
++		if (sp->flagval == SUBOPT_NEEDS_VAL)
+ 			reqval(opts->name, (char **)opts->subopts, index);
+-		return sp->defaultval;
++		return sp->flagval;
+ 	}
  
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> ---
->  mkfs/xfs_mkfs.c | 236 ++++++++++++++++++++++++++++----------------------------
->  1 file changed, 118 insertions(+), 118 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index f10cb15a..9d2db2a2 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -761,6 +761,124 @@ get_conf_raw(int opt, int subopt)
->  	return opts[opt].subopt_params[subopt].raw_input;
->  }
->  
-> +static __attribute__((noreturn)) void
-> +illegal_option(
-> +	const char		*value,
-> +	struct opt_params	*opts,
-> +	int			index,
-> +	const char		*reason)
-> +{
-> +	fprintf(stderr,
-> +		_("Illegal value %s for -%c %s option. %s\n"),
-> +		value, opts->name, opts->subopts[index],
-> +		reason ? reason : "");
-> +	usage();
-> +}
-> +
-> +/*
-> + * Check for conflicts and option respecification.
-> + */
-> +static void
-> +check_opt(
-> +	struct opt_params	*opts,
-> +	int			index,
-> +	bool			str_seen)
-> +{
-> +	struct subopt_param	*sp = &opts->subopt_params[index];
-> +	int			i;
-> +
-> +	if (sp->index != index) {
-> +		fprintf(stderr,
-> +	("Developer screwed up option parsing (%d/%d)! Please report!\n"),
-> +			sp->index, index);
-> +		reqval(opts->name, (char **)opts->subopts, index);
-> +	}
-> +
-> +	/*
-> +	 * Check for respecification of the option. This is more complex than it
-> +	 * seems because some options are parsed twice - once as a string during
-> +	 * input parsing, then later the string is passed to getnum for
-> +	 * conversion into a number and bounds checking. Hence the two variables
-> +	 * used to track the different uses based on the @str parameter passed
-> +	 * to us.
-> +	 */
-> +	if (!str_seen) {
-> +		if (sp->seen)
-> +			respec(opts->name, (char **)opts->subopts, index);
-> +		sp->seen = true;
-> +	} else {
-> +		if (sp->str_seen)
-> +			respec(opts->name, (char **)opts->subopts, index);
-> +		sp->str_seen = true;
-> +	}
-> +
-> +	/* check for conflicts with the option */
-> +	for (i = 0; i < MAX_CONFLICTS; i++) {
-> +		int conflict_opt = sp->conflicts[i];
-> +
-> +		if (conflict_opt == LAST_CONFLICT)
-> +			break;
-> +		if (opts->subopt_params[conflict_opt].seen ||
-> +		    opts->subopt_params[conflict_opt].str_seen)
-> +			conflict(opts->name, (char **)opts->subopts,
-> +				 conflict_opt, index);
-> +	}
-> +}
-> +
-> +static long long
-> +getnum(
-> +	const char		*str,
-> +	struct opt_params	*opts,
-> +	int			index)
-> +{
-> +	struct subopt_param	*sp = &opts->subopt_params[index];
-> +	long long		c;
-> +
-> +	check_opt(opts, index, false);
-> +	set_conf_raw(opts->index, index, str);
-> +	/* empty strings might just return a default value */
-> +	if (!str || *str == '\0') {
-> +		if (sp->flagval == SUBOPT_NEEDS_VAL)
-> +			reqval(opts->name, (char **)opts->subopts, index);
-> +		return sp->flagval;
-> +	}
-> +
-> +	if (sp->minval == 0 && sp->maxval == 0) {
-> +		fprintf(stderr,
-> +			_("Option -%c %s has undefined minval/maxval."
-> +			  "Can't verify value range. This is a bug.\n"),
-> +			opts->name, opts->subopts[index]);
-> +		exit(1);
-> +	}
-> +
-> +	/*
-> +	 * Some values are pure numbers, others can have suffixes that define
-> +	 * the units of the number. Those get passed to cvtnum(), otherwise we
-> +	 * convert it ourselves to guarantee there is no trailing garbage in the
-> +	 * number.
-> +	 */
-> +	if (sp->convert)
-> +		c = cvtnum(blocksize, sectorsize, str);
-> +	else {
-> +		char		*str_end;
-> +
-> +		c = strtoll(str, &str_end, 0);
-> +		if (c == 0 && str_end == str)
-> +			illegal_option(str, opts, index, NULL);
-> +		if (*str_end != '\0')
-> +			illegal_option(str, opts, index, NULL);
-> +	}
-> +
-> +	/* Validity check the result. */
-> +	if (c < sp->minval)
-> +		illegal_option(str, opts, index, _("value is too small"));
-> +	else if (c > sp->maxval)
-> +		illegal_option(str, opts, index, _("value is too large"));
-> +	if (sp->is_power_2 && !ispow2(c))
-> +		illegal_option(str, opts, index, _("value must be a power of 2"));
-> +	return c;
-> +}
-> +
->  /*
->   * Convert lsu to lsunit for 512 bytes blocks and check validity of the values.
->   */
-> @@ -1285,124 +1403,6 @@ sb_set_features(
->  
->  }
->  
-> -static __attribute__((noreturn)) void
-> -illegal_option(
-> -	const char		*value,
-> -	struct opt_params	*opts,
-> -	int			index,
-> -	const char		*reason)
-> -{
-> -	fprintf(stderr,
-> -		_("Illegal value %s for -%c %s option. %s\n"),
-> -		value, opts->name, opts->subopts[index],
-> -		reason ? reason : "");
-> -	usage();
-> -}
-> -
-> -/*
-> - * Check for conflicts and option respecification.
-> - */
-> -static void
-> -check_opt(
-> -	struct opt_params	*opts,
-> -	int			index,
-> -	bool			str_seen)
-> -{
-> -	struct subopt_param	*sp = &opts->subopt_params[index];
-> -	int			i;
-> -
-> -	if (sp->index != index) {
-> -		fprintf(stderr,
-> -	("Developer screwed up option parsing (%d/%d)! Please report!\n"),
-> -			sp->index, index);
-> -		reqval(opts->name, (char **)opts->subopts, index);
-> -	}
-> -
-> -	/*
-> -	 * Check for respecification of the option. This is more complex than it
-> -	 * seems because some options are parsed twice - once as a string during
-> -	 * input parsing, then later the string is passed to getnum for
-> -	 * conversion into a number and bounds checking. Hence the two variables
-> -	 * used to track the different uses based on the @str parameter passed
-> -	 * to us.
-> -	 */
-> -	if (!str_seen) {
-> -		if (sp->seen)
-> -			respec(opts->name, (char **)opts->subopts, index);
-> -		sp->seen = true;
-> -	} else {
-> -		if (sp->str_seen)
-> -			respec(opts->name, (char **)opts->subopts, index);
-> -		sp->str_seen = true;
-> -	}
-> -
-> -	/* check for conflicts with the option */
-> -	for (i = 0; i < MAX_CONFLICTS; i++) {
-> -		int conflict_opt = sp->conflicts[i];
-> -
-> -		if (conflict_opt == LAST_CONFLICT)
-> -			break;
-> -		if (opts->subopt_params[conflict_opt].seen ||
-> -		    opts->subopt_params[conflict_opt].str_seen)
-> -			conflict(opts->name, (char **)opts->subopts,
-> -				 conflict_opt, index);
-> -	}
-> -}
-> -
-> -static long long
-> -getnum(
-> -	const char		*str,
-> -	struct opt_params	*opts,
-> -	int			index)
-> -{
-> -	struct subopt_param	*sp = &opts->subopt_params[index];
-> -	long long		c;
-> -
-> -	check_opt(opts, index, false);
-> -	set_conf_raw(opts->index, index, str);
-> -	/* empty strings might just return a default value */
-> -	if (!str || *str == '\0') {
-> -		if (sp->flagval == SUBOPT_NEEDS_VAL)
-> -			reqval(opts->name, (char **)opts->subopts, index);
-> -		return sp->flagval;
-> -	}
-> -
-> -	if (sp->minval == 0 && sp->maxval == 0) {
-> -		fprintf(stderr,
-> -			_("Option -%c %s has undefined minval/maxval."
-> -			  "Can't verify value range. This is a bug.\n"),
-> -			opts->name, opts->subopts[index]);
-> -		exit(1);
-> -	}
-> -
-> -	/*
-> -	 * Some values are pure numbers, others can have suffixes that define
-> -	 * the units of the number. Those get passed to cvtnum(), otherwise we
-> -	 * convert it ourselves to guarantee there is no trailing garbage in the
-> -	 * number.
-> -	 */
-> -	if (sp->convert)
-> -		c = cvtnum(blocksize, sectorsize, str);
-> -	else {
-> -		char		*str_end;
-> -
-> -		c = strtoll(str, &str_end, 0);
-> -		if (c == 0 && str_end == str)
-> -			illegal_option(str, opts, index, NULL);
-> -		if (*str_end != '\0')
-> -			illegal_option(str, opts, index, NULL);
-> -	}
-> -
-> -	/* Validity check the result. */
-> -	if (c < sp->minval)
-> -		illegal_option(str, opts, index, _("value is too small"));
-> -	else if (c > sp->maxval)
-> -		illegal_option(str, opts, index, _("value is too large"));
-> -	if (sp->is_power_2 && !ispow2(c))
-> -		illegal_option(str, opts, index, _("value must be a power of 2"));
-> -	return c;
-> -}
-> -
->  /*
->   * Option is a string - do all the option table work, and check there
->   * is actually an option string. Otherwise we don't do anything with the string
-> 
+ 	if (sp->minval == 0 && sp->maxval == 0) {
+-- 
+2.11.0
+
