@@ -1,138 +1,191 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39930 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934609AbdGTUBh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2017 16:01:37 -0400
-Date: Thu, 20 Jul 2017 13:01:29 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: quotacheck deadlock?
-Message-ID: <20170720200129.GU4224@magnolia>
-References: <20170720065804.GR4224@magnolia>
- <20170720123846.GC3944@bfoster.bfoster>
- <20170720185855.GT4224@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:48189 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933317AbdGTC0a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2017 22:26:30 -0400
+Date: Thu, 20 Jul 2017 12:26:02 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH] xfs: consolidate local format inode fork verifiers
+Message-ID: <20170720022602.GR17762@dastard>
+References: <20170719160318.GP4224@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170720185855.GT4224@magnolia>
+In-Reply-To: <20170719160318.GP4224@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Jul 20, 2017 at 11:58:55AM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 20, 2017 at 08:38:46AM -0400, Brian Foster wrote:
-> > On Wed, Jul 19, 2017 at 11:58:04PM -0700, Darrick J. Wong wrote:
-> > > Hi,
-> > > 
-> > > I ran the following sequence of commands on 4.13-rc1:
-> > > 
-> > > # mkfs.xfs -f /dev/sdf
-> > > # xfs_db -x -c 'sb 0' -c 'addr rootino' -c 'write -d core.uid 4294967295' /dev/sdf
-> > > # mount /dev/sdf -o usrquota
-> > > 
-> > > The kernel reports that it's starting quotacheck, but never finishes.
-> > > echo t > /proc/sysrq produces this for the hung mount command:
-> > > 
-> > > mount           R  running task        0   988    895 0x00000000
-> > > Call Trace:
-> > >  ? sched_clock_cpu+0xa8/0xe0
-> > >  ? xfs_qm_flush_one+0x3c/0x120 [xfs]
-> > >  ? lock_acquire+0xac/0x200
-> > >  ? lock_acquire+0xac/0x200
-> > >  ? xfs_qm_flush_one+0x3c/0x120 [xfs]
-> > >  ? xfs_qm_dquot_walk+0xa1/0x170 [xfs]
-> > >  ? get_lock_stats+0x19/0x60
-> > >  ? get_lock_stats+0x19/0x60
-> > >  ? xfs_qm_dquot_walk+0xa1/0x170 [xfs]
-> > >  ? xfs_qm_dquot_walk+0x125/0x170 [xfs]
-> > >  ? radix_tree_gang_lookup+0xd1/0xf0
-> > >  ? xfs_qm_shrink_count+0x20/0x20 [xfs]
-> > >  ? xfs_qm_dquot_walk+0xbb/0x170 [xfs]
-> > >  ? kfree+0x23f/0x2d0
-> > >  ? kvfree+0x2a/0x40
-> > >  ? xfs_bulkstat+0x315/0x680 [xfs]
-> > >  ? xfs_qm_get_rtblks+0xa0/0xa0 [xfs]
-> > >  ? xfs_qm_quotacheck+0x2bd/0x360 [xfs]
-> > >  ? xfs_qm_mount_quotas+0x106/0x1f0 [xfs]
-> > >  ? xfs_mountfs+0x6f2/0xb00 [xfs]
-> > >  ? xfs_fs_fill_super+0x483/0x610 [xfs]
-> > >  ? mount_bdev+0x180/0x1b0
-> > >  ? xfs_finish_flags+0x150/0x150 [xfs]
-> > >  ? xfs_fs_mount+0x15/0x20 [xfs]
-> > >  ? mount_fs+0x14/0x80
-> > >  ? vfs_kern_mount+0x67/0x170
-> > >  ? do_mount+0x195/0xd00
-> > >  ? kmem_cache_alloc_trace+0x231/0x2a0
-> > >  ? SyS_mount+0x95/0xe0
-> > >  ? entry_SYSCALL_64_fastpath+0x1f/0xbe
-> > > 
-> > > Any thoughts?  I'm not sure what's going on for sure, other than the
-> > > call stack looks funny and it's midnight so I'm going to sleep. :)
-> > > 
-> > 
-> > It looks like a problem with the loop in xfs_qm_dquot_walk(). The next
-> > lookup index is calculated as:
-> > 
-> > 	 next_index = be32_to_cpu(dqp->q_core.d_id) + 1;
-> > 
-> > ... each time through the loop. With the uid written above, the +1
-> > overflows the 32-bit next_index back to zero and the lookup starts over.
-> > I suppose a simple fix might be to do something like the following.
-> > Thoughts?
-> > 
-> > --- 8< ---
-> > 
-> > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> > index 6ce948c..f013c893 100644
-> > --- a/fs/xfs/xfs_qm.c
-> > +++ b/fs/xfs/xfs_qm.c
-> > @@ -111,6 +111,8 @@ xfs_qm_dquot_walk(
-> >  			skipped = 0;
-> >  			break;
-> >  		}
-> > +		if (!next_index)
-> > +			break;
+On Wed, Jul 19, 2017 at 09:03:18AM -0700, Darrick J. Wong wrote:
+> Create a centralized function to verify local format inode forks, then
+> migrate the existing short format directory verifier to use this
+> framework and add verifiers for the other two things we support (attrs
+> and symlinks).
 > 
-> Well, this /does/ fix the quotacheck lockup... but leads me straight
-> into the next problem, which is that xfs_quota -x -c 'report -i' just
-> goes into an infinite loop:
+> Obviously this will get broken up into smaller pieces (one patch to
+> refactor/move the existing verifier calls, another one to add the two
+> new verifiers), but what do people think?
 > 
-> root                3          0          0     00 [--------]
-> #4294967295           1          0          0     00 [--------]
-> <repeats>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr_leaf.c      |   70 ++++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_attr_leaf.h      |    1 +
+>  fs/xfs/libxfs/xfs_inode_fork.c     |   10 -----
+>  fs/xfs/libxfs/xfs_shared.h         |    1 +
+>  fs/xfs/libxfs/xfs_symlink_remote.c |   29 +++++++++++++++
+>  fs/xfs/xfs_icache.c                |   46 ++++++++++++++++++++++++
+>  fs/xfs/xfs_icache.h                |    1 +
+>  fs/xfs/xfs_inode.c                 |    6 +--
+>  8 files changed, 150 insertions(+), 14 deletions(-)
 > 
-> That said, the userland APIs *chown/set*uid return -EINVAL if you pass
-> in a userid of -1U, so one could argue that it's not a valid id anyway.
-> Via stat(), the kernel squashes -1U down to 65534 (nobody), which
-> implies that (Linux, anyway) doesn't consider -1U to be a valid id.
-> ISTR XFS treats uids as a mostly opaque value that we get from and pass
-> to the VFS without a whole lot of interpretation...?
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index c6c15e5..43b881e 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -871,6 +871,76 @@ xfs_attr_shortform_allfit(
+>  	return xfs_attr_shortform_bytesfit(dp, bytes);
+>  }
+>  
+> +/* Verify the consistency of an inline attribute fork. */
+> +int
+> +xfs_attr_shortform_verify(
+> +	struct xfs_inode		*ip)
+> +{
+> +	struct xfs_attr_shortform	*sfp;
+> +	struct xfs_attr_sf_entry	*sfep;
+> +	struct xfs_attr_sf_entry	*next_sfep;
+> +	char				*endp;
+> +	struct xfs_ifork		*ifp;
+> +	int				i;
+> +	int				size;
+> +
+> +	ASSERT(ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL);
+> +	ifp = XFS_IFORK_PTR(ip, XFS_ATTR_FORK);
+> +	sfp = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
+> +	size = ifp->if_bytes;
+> +
+> +	/*
+> +	 * Give up if the attribute is way too short.
+> +	 */
+> +	if (size < sizeof (struct xfs_attr_sf_hdr))
+> +		return -EFSCORRUPTED;
 
-Poking around in include/linux/uidgid.h, it seems that uid_valid()
-thinks that -1U is not a valid user id, so perhaps the inode verifier
-should chck for that.  Ditto for gid_valid().
+This seems to already be checked in xfs_iformat_fork() for
+attr forks. There are also inconsistent checks between data/attr
+forks whether size is valid prior formatting the fork, so there's
+more cleanup needed there, and if we are checking attr/dir validity
+in these functions, we shouldn't be peeking inside the fork
+in xfs_iformat_fork().
 
-But then there's project id -- xfs_quota won't let us set a projid of
-4294967295, though I don't see anything in the kernel that prohibits
-that.  chattr -p 4294967295 succeeds in setting the project id, which
-means that we probably can't just ban it retroactively(??)
+> +	endp = (char *)sfp + size;
+> +
+> +	/* Check all reported entries */
+> +	sfep = &sfp->list[0];
+> +	for (i = 0; i < sfp->hdr.count; i++) {
+> +		/*
+> +		 * struct xfs_attr_sf_entry has a variable length.
+> +		 * Check the fixed-offset parts of the structure are
+> +		 * within the data buffer.
+> +		 */
+> +		if (((char *)sfep + sizeof(*sfep)) >= endp)
+> +			return -EFSCORRUPTED;
+> +
+> +		/* Don't allow names with known bad length. */
+> +		if (sfep->namelen == 0)
+> +			return -EFSCORRUPTED;
+> +
+> +		/*
+> +		 * Check that the variable-length part of the structure is
+> +		 * within the data buffer.  The next entry starts after the
+> +		 * name component, so nextentry is an acceptable test.
+> +		 */
+> +		next_sfep = XFS_ATTR_SF_NEXTENTRY(sfep);
+> +		if (endp < (char *)next_sfep)
+> +			return -EFSCORRUPTED;
 
-Thoughts?
+Can we make the "past endp" checks consistent in variable order and
+operators? i.e
 
---D
+		if ((char *)next_sfep >= endp)
 
-> 
-> --D
-> 
-> >  	}
-> >  
-> >  	if (skipped) {
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+[snip]
+
+> diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
+> index c484877..96e2957 100644
+> --- a/fs/xfs/libxfs/xfs_symlink_remote.c
+> +++ b/fs/xfs/libxfs/xfs_symlink_remote.c
+> @@ -207,3 +207,32 @@ xfs_symlink_local_to_remote(
+>  	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsymlink_hdr) +
+>  					ifp->if_bytes - 1);
+>  }
+> +
+> +/* Verify the consistency of an inline symlink. */
+> +int
+> +xfs_symlink_sf_verify(
+> +	struct xfs_inode	*ip)
+> +{
+> +	char			*sfp;
+> +	char			*endp;
+> +	struct xfs_ifork	*ifp;
+> +	int			size;
+> +
+> +	ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL);
+> +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> +	sfp = (char *)ifp->if_u1.if_data;
+> +	size = ifp->if_bytes;
+> +	endp = sfp + size;
+> +
+> +	/* No negative sizes or overly long symlink targets. */
+> +	if (size < 0 || size > XFS_SYMLINK_MAXLEN)
+> +		return -EFSCORRUPTED;
+> +
+> +	/* No NULLs in the target either. */
+> +	for (; sfp < endp; sfp++) {
+> +		if (*sfp == 0)
+> +			return -EFSCORRUPTED;
+> +	}
+
+Hmmm - do we need to check that the symlink has been correctly null
+terminated in memory (i.e. that *endp == 0) because the VFS requires
+this and we add the zero termination before checking fork contents
+validity?
+
+> +/* Check inline fork contents. */
+> +int
+> +xfs_iget_verify_forks(
+
+*_verify_inline_content()?
+
+> +	struct xfs_inode		*ip)
+> +{
+> +	int				error;
+
+Too much indenting :P
+
+> +
+> +	/* Check the attribute fork if there is one. */
+> +	if (XFS_IFORK_PTR(ip, XFS_ATTR_FORK) &&
+> +	    ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+
+If there is no attr fork, then ip->i_d.di_aformat should be set to
+XFS_DINODE_FMT_EXTENTS. Hence we can just do the same check as
+for the data fork....
+
+OTOH, having a value of XFS_DINODE_FMT_LOCAL in di_aformat without
+an attr fork indicates corruption, so perhaps we need to catch that
+here as it's not checked in xfs_ifork_format() or xfs_iflush_int().
+Indeed, there are partial attr/data fork format/size checks in
+xfs_ifork_format() and xfs_iflush_int(), but we don't do
+comprehensive checks in either place. Maybe they should all be moved
+inside this function and expanded to check that all the fork format
+information is valid?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
