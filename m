@@ -1,85 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53690 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932087AbdGSQSb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Jul 2017 12:18:31 -0400
-Date: Wed, 19 Jul 2017 12:18:27 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] libxfs: propagate transaction block reservations
-Message-ID: <20170719161827.GB55813@bfoster.bfoster>
-References: <20170719155555.GO4224@magnolia>
+Received: from aserp1040.oracle.com ([141.146.126.69]:31305 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934546AbdGTS7C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2017 14:59:02 -0400
+Date: Thu, 20 Jul 2017 11:58:55 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: quotacheck deadlock?
+Message-ID: <20170720185855.GT4224@magnolia>
+References: <20170720065804.GR4224@magnolia>
+ <20170720123846.GC3944@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170719155555.GO4224@magnolia>
+In-Reply-To: <20170720123846.GC3944@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Jul 19, 2017 at 08:55:55AM -0700, Darrick J. Wong wrote:
-> Certain parts of the libxfs preemptively refuse to run if the
-> transaction block reservation has fallen to zero.  We leave t_blk_res at
-> its default of zero, which means that these code paths always fail even
-> if the transaction was allocated with a non-zero block reservation.  Set
-> t_blk_res and maintain it through transaction rolls, even though we
-> don't do much enforcement the transaction block limits.
+On Thu, Jul 20, 2017 at 08:38:46AM -0400, Brian Foster wrote:
+> On Wed, Jul 19, 2017 at 11:58:04PM -0700, Darrick J. Wong wrote:
+> > Hi,
+> > 
+> > I ran the following sequence of commands on 4.13-rc1:
+> > 
+> > # mkfs.xfs -f /dev/sdf
+> > # xfs_db -x -c 'sb 0' -c 'addr rootino' -c 'write -d core.uid 4294967295' /dev/sdf
+> > # mount /dev/sdf -o usrquota
+> > 
+> > The kernel reports that it's starting quotacheck, but never finishes.
+> > echo t > /proc/sysrq produces this for the hung mount command:
+> > 
+> > mount           R  running task        0   988    895 0x00000000
+> > Call Trace:
+> >  ? sched_clock_cpu+0xa8/0xe0
+> >  ? xfs_qm_flush_one+0x3c/0x120 [xfs]
+> >  ? lock_acquire+0xac/0x200
+> >  ? lock_acquire+0xac/0x200
+> >  ? xfs_qm_flush_one+0x3c/0x120 [xfs]
+> >  ? xfs_qm_dquot_walk+0xa1/0x170 [xfs]
+> >  ? get_lock_stats+0x19/0x60
+> >  ? get_lock_stats+0x19/0x60
+> >  ? xfs_qm_dquot_walk+0xa1/0x170 [xfs]
+> >  ? xfs_qm_dquot_walk+0x125/0x170 [xfs]
+> >  ? radix_tree_gang_lookup+0xd1/0xf0
+> >  ? xfs_qm_shrink_count+0x20/0x20 [xfs]
+> >  ? xfs_qm_dquot_walk+0xbb/0x170 [xfs]
+> >  ? kfree+0x23f/0x2d0
+> >  ? kvfree+0x2a/0x40
+> >  ? xfs_bulkstat+0x315/0x680 [xfs]
+> >  ? xfs_qm_get_rtblks+0xa0/0xa0 [xfs]
+> >  ? xfs_qm_quotacheck+0x2bd/0x360 [xfs]
+> >  ? xfs_qm_mount_quotas+0x106/0x1f0 [xfs]
+> >  ? xfs_mountfs+0x6f2/0xb00 [xfs]
+> >  ? xfs_fs_fill_super+0x483/0x610 [xfs]
+> >  ? mount_bdev+0x180/0x1b0
+> >  ? xfs_finish_flags+0x150/0x150 [xfs]
+> >  ? xfs_fs_mount+0x15/0x20 [xfs]
+> >  ? mount_fs+0x14/0x80
+> >  ? vfs_kern_mount+0x67/0x170
+> >  ? do_mount+0x195/0xd00
+> >  ? kmem_cache_alloc_trace+0x231/0x2a0
+> >  ? SyS_mount+0x95/0xe0
+> >  ? entry_SYSCALL_64_fastpath+0x1f/0xbe
+> > 
+> > Any thoughts?  I'm not sure what's going on for sure, other than the
+> > call stack looks funny and it's midnight so I'm going to sleep. :)
+> > 
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  libxfs/trans.c |    7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
+> It looks like a problem with the loop in xfs_qm_dquot_walk(). The next
+> lookup index is calculated as:
 > 
-> diff --git a/libxfs/trans.c b/libxfs/trans.c
-> index fe22cb9..035248f 100644
-> --- a/libxfs/trans.c
-> +++ b/libxfs/trans.c
-> @@ -106,6 +106,7 @@ libxfs_trans_roll(
->  	struct xfs_mount	*mp;
->  	struct xfs_trans	*trans;
->  	struct xfs_trans_res	tres;
-> +	unsigned int		old_blk_res;
->  	int			error;
->  
->  	/*
-> @@ -121,6 +122,7 @@ libxfs_trans_roll(
->  	mp = trans->t_mountp;
->  	tres.tr_logres = trans->t_log_res;
->  	tres.tr_logcount = trans->t_log_count;
-> +	old_blk_res = trans->t_blk_res;
->  
->  	/*
->  	 * Commit the current transaction.
-> @@ -145,6 +147,8 @@ libxfs_trans_roll(
->  	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
->  	error = libxfs_trans_alloc(mp, &tres, 0, 0, 0, tpp);
->  	trans = *tpp;
-> +	trans->t_blk_res = old_blk_res;
-> +
->  	/*
->  	 *  Ensure that the inode is in the new transaction and locked.
->  	 */
-> @@ -185,6 +189,7 @@ libxfs_trans_alloc(
->  		exit(1);
+> 	 next_index = be32_to_cpu(dqp->q_core.d_id) + 1;
+> 
+> ... each time through the loop. With the uid written above, the +1
+> overflows the 32-bit next_index back to zero and the lookup starts over.
+> I suppose a simple fix might be to do something like the following.
+> Thoughts?
+> 
+> --- 8< ---
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 6ce948c..f013c893 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -111,6 +111,8 @@ xfs_qm_dquot_walk(
+>  			skipped = 0;
+>  			break;
+>  		}
+> +		if (!next_index)
+> +			break;
+
+Well, this /does/ fix the quotacheck lockup... but leads me straight
+into the next problem, which is that xfs_quota -x -c 'report -i' just
+goes into an infinite loop:
+
+root                3          0          0     00 [--------]
+#4294967295           1          0          0     00 [--------]
+<repeats>
+
+That said, the userland APIs *chown/set*uid return -EINVAL if you pass
+in a userid of -1U, so one could argue that it's not a valid id anyway.
+Via stat(), the kernel squashes -1U down to 65534 (nobody), which
+implies that (Linux, anyway) doesn't consider -1U to be a valid id.
+ISTR XFS treats uids as a mostly opaque value that we get from and pass
+to the VFS without a whole lot of interpretation...?
+
+--D
+
 >  	}
->  	ptr->t_mountp = mp;
-> +	ptr->t_blk_res = blocks;
->  	INIT_LIST_HEAD(&ptr->t_items);
->  #ifdef XACT_DEBUG
->  	fprintf(stderr, "allocated new transaction %p\n", ptr);
-> @@ -750,7 +755,7 @@ trans_committed(
->          list_for_each_entry_safe(lidp, next, &tp->t_items, lid_trans) {
->  		struct xfs_log_item *lip = lidp->lid_item;
 >  
-> -                xfs_trans_del_item(lip);
-> +		xfs_trans_del_item(lip);
->  
->  		if (lip->li_type == XFS_LI_BUF)
->  			buf_item_done((xfs_buf_log_item_t *)lip);
+>  	if (skipped) {
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
