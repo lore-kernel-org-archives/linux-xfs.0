@@ -1,184 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42866 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751413AbdGRTux (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2017 15:50:53 -0400
-Subject: Re: [PATCH 1/2] libxfs: add a flags argument to libxfs_iget
-References: <150040480534.16432.7424988688113046337.stgit@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <03a71db7-7ea2-a346-6213-27282f4111ef@oracle.com>
-Date: Tue, 18 Jul 2017 12:50:27 -0700
-MIME-Version: 1.0
-In-Reply-To: <150040480534.16432.7424988688113046337.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:49074 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935186AbdGTPGN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Jul 2017 11:06:13 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 5D2FAC059739
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2017 15:06:13 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3E0397F6C6
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2017 15:06:13 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] libxfs: init ->b_maps on contig buffers for uncached compatibility
+Date: Thu, 20 Jul 2017 11:06:12 -0400
+Message-Id: <20170720150612.37494-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: linux-xfs@vger.kernel.org
 
-You can add
+There is a bit of an inconsistency in how ->b_maps is used for
+contiguous buffers between kernel libxfs and xfsprogs due to the
+independent buffer implementations. In the kernel, ->b_maps[0] is
+always intialized to a valid range and in xfsprogs, ->b_maps is only
+allocated for discontiguous buffers.
 
-Reviewed by: Allison Henderson <allison.henderson@oracle.com>
+This can lead to confusion when dealing with uncached kernel buffers
+in common libxfs code because xfsprogs has no concept of uncached
+buffers. Kernel uncached buffers have ->b_bn == XFS_BUF_DADDR_NULL
+and ->b_maps[0] points to the physical block address. Block address
+checks in common code for kernel uncached buffers, such as in
+xfs_sb_verify(), therefore would need to check both places for an
+address or risk broken logic or userspace segfaults.
 
-Thanks!
+This problem currently manifests as an xfs_repair segfault due to a
+NULL ->b_maps access in xfs_sb_verify(). Note that this problem is
+only reproducible on builds with (-O2) optimization disabled, as the
+affected parameter is currently unused and thus optimization
+eliminates the problematic access.
 
-On 07/18/2017 12:06 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> Add a flags argument to libxfs_iget to bring it up to date with the
-> kernel xfs_iget.  We will use the flags argument in the next patch
-> to enable xfs_repair to shut off inode fork verifiers.
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   db/attrset.c        |    4 ++--
->   include/xfs_inode.h |    2 +-
->   libxfs/rdwr.c       |   15 ++++++++++-----
->   libxfs/trans.c      |    4 ++--
->   repair/phase6.c     |   10 +++++-----
->   5 files changed, 20 insertions(+), 15 deletions(-)
->
->
-> diff --git a/db/attrset.c b/db/attrset.c
-> index ad3c8f3..ddd72ed 100644
-> --- a/db/attrset.c
-> +++ b/db/attrset.c
-> @@ -151,7 +151,7 @@ attr_set_f(
->   		value = NULL;
->   	}
->   
-> -	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip)) {
-> +	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, 0, &ip)) {
->   		dbprintf(_("failed to iget inode %llu\n"),
->   			(unsigned long long)iocur_top->ino);
->   		goto out;
-> @@ -226,7 +226,7 @@ attr_remove_f(
->   
->   	name = argv[optind];
->   
-> -	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip)) {
-> +	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, 0, &ip)) {
->   		dbprintf(_("failed to iget inode %llu\n"),
->   			(unsigned long long)iocur_top->ino);
->   		goto out;
-> diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-> index 8766024..5d5158e 100644
-> --- a/include/xfs_inode.h
-> +++ b/include/xfs_inode.h
-> @@ -149,7 +149,7 @@ extern int	libxfs_iflush_int (struct xfs_inode *, struct xfs_buf *);
->   
->   /* Inode Cache Interfaces */
->   extern int	libxfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
-> -				uint, struct xfs_inode **);
-> +				uint, uint, struct xfs_inode **);
->   extern void	libxfs_iput(struct xfs_inode *);
->   
->   #define IRELE(ip) libxfs_iput(ip)
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index 43b4f1d..cf156ba 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -1329,11 +1329,16 @@ extern kmem_zone_t	*xfs_ili_zone;
->   extern kmem_zone_t	*xfs_inode_zone;
->   
->   int
-> -libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
-> -		xfs_inode_t **ipp)
-> +libxfs_iget(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_trans	*tp,
-> +	xfs_ino_t		ino,
-> +	uint			flags,
-> +	uint			lock_flags,
-> +	struct xfs_inode	**ipp)
->   {
-> -	xfs_inode_t	*ip;
-> -	int		error = 0;
-> +	struct xfs_inode	*ip;
-> +	int			error = 0;
->   
->   	ip = kmem_zone_zalloc(xfs_inode_zone, 0);
->   	if (!ip)
-> @@ -1341,7 +1346,7 @@ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
->   
->   	ip->i_ino = ino;
->   	ip->i_mount = mp;
-> -	error = xfs_iread(mp, tp, ip, 0);
-> +	error = xfs_iread(mp, tp, ip, flags);
->   	if (error) {
->   		kmem_zone_free(xfs_inode_zone, ip);
->   		*ipp = NULL;
-> diff --git a/libxfs/trans.c b/libxfs/trans.c
-> index e161c28..fe22cb9 100644
-> --- a/libxfs/trans.c
-> +++ b/libxfs/trans.c
-> @@ -246,9 +246,9 @@ libxfs_trans_iget(
->   	xfs_inode_log_item_t	*iip;
->   
->   	if (tp == NULL)
-> -		return libxfs_iget(mp, tp, ino, lock_flags, ipp);
-> +		return libxfs_iget(mp, tp, ino, flags, lock_flags, ipp);
->   
-> -	error = libxfs_iget(mp, tp, ino, lock_flags, &ip);
-> +	error = libxfs_iget(mp, tp, ino, flags, lock_flags, &ip);
->   	if (error)
->   		return error;
->   	ASSERT(ip != NULL);
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index 373b1a5..011bcdf 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -925,7 +925,7 @@ mk_orphanage(xfs_mount_t *mp)
->   	 * would have been cleared in phase3 and phase4.
->   	 */
->   
-> -	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip)))
-> +	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, 0, &pip)))
->   		do_error(_("%d - couldn't iget root inode to obtain %s\n"),
->   			i, ORPHANAGE);
->   
-> @@ -949,7 +949,7 @@ mk_orphanage(xfs_mount_t *mp)
->   	 * use iget/ijoin instead of trans_iget because the ialloc
->   	 * wrapper can commit the transaction and start a new one
->   	 */
-> -/*	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip)))
-> +/*	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, 0, &pip)))
->   		do_error(_("%d - couldn't iget root inode to make %s\n"),
->   			i, ORPHANAGE);*/
->   
-> @@ -1063,7 +1063,7 @@ mv_orphanage(
->   	xname.len = snprintf((char *)fname, sizeof(fname), "%llu",
->   				(unsigned long long)ino);
->   
-> -	err = -libxfs_iget(mp, NULL, orphanage_ino, 0, &orphanage_ip);
-> +	err = -libxfs_iget(mp, NULL, orphanage_ino, 0, 0, &orphanage_ip);
->   	if (err)
->   		do_error(_("%d - couldn't iget orphanage inode\n"), err);
->   	/*
-> @@ -1075,7 +1075,7 @@ mv_orphanage(
->   		xname.len = snprintf((char *)fname, sizeof(fname), "%llu.%d",
->   					(unsigned long long)ino, ++incr);
->   
-> -	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p)))
-> +	if ((err = -libxfs_iget(mp, NULL, ino, 0, 0, &ino_p)))
->   		do_error(_("%d - couldn't iget disconnected inode\n"), err);
->   
->   	xname.type = xfs_mode_to_ftype(VFS_I(ino_p)->i_mode);
-> @@ -2817,7 +2817,7 @@ process_dir_inode(
->   
->   	ASSERT(!is_inode_refchecked(irec, ino_offset) || dotdot_update);
->   
-> -	error = -libxfs_iget(mp, NULL, ino, 0, &ip);
-> +	error = -libxfs_iget(mp, NULL, ino, 0, 0, &ip);
->   	if (error) {
->   		if (!no_modify)
->   			do_error(
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To fix this problem and eliminate the incompatibility, update the
+userspace xfs_buf with an internal ->__b_map field and point
+->b_maps to it for contiguous buffers, similar to the kernel buffer
+implementation. Set valid values in ->b_maps0] for contiguous
+buffers so common code will continue to work regardless of whether a
+buffer is uncached in the kernel.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+This replaces the previous rfc[1] with an xfsprogs only patch that
+resolves the crash by setting a valid ->b_maps on all userspace buffers
+(covering the uncached kernel buffer case).
+
+Brian
+
+[1] http://marc.info/?l=linux-xfs&m=150038722013638&w=2
+
+ libxfs/libxfs_io.h |  1 +
+ libxfs/rdwr.c      | 10 +++++++++-
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index 6612d8f..1209e52 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -76,6 +76,7 @@ typedef struct xfs_buf {
+ 	const struct xfs_buf_ops *b_ops;
+ 	struct xfs_perag	*b_pag;
+ 	struct xfs_buf_map	*b_maps;
++	struct xfs_buf_map	__b_map;
+ 	int			b_nmaps;
+ #ifdef XFS_BUF_TRACING
+ 	struct list_head	b_lock_list;
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 6c8a192..21c42f1 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -591,6 +591,13 @@ __initbuf(xfs_buf_t *bp, struct xfs_buftarg *btp, xfs_daddr_t bno,
+ 	bp->b_holder = 0;
+ 	bp->b_recur = 0;
+ 	bp->b_ops = NULL;
++
++	if (!bp->b_maps) {
++		bp->b_nmaps = 1;
++		bp->b_maps = &bp->__b_map;
++		bp->b_maps[0].bm_bn = bp->b_bn;
++		bp->b_maps[0].bm_len = bp->b_length;
++	}
+ }
+ 
+ static void
+@@ -654,7 +661,8 @@ __libxfs_getbufr(int blen)
+ 			list_del_init(&bp->b_node.cn_mru);
+ 			free(bp->b_addr);
+ 			bp->b_addr = NULL;
+-			free(bp->b_maps);
++			if (bp->b_maps != &bp->__b_map)
++				free(bp->b_maps);
+ 			bp->b_maps = NULL;
+ 		}
+ 	} else
+-- 
+2.9.4
 
