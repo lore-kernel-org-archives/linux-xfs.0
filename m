@@ -1,83 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47764 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964784AbdGTRHe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Jul 2017 13:07:34 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C66E5C03BD7D
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2017 17:07:34 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A071717B64
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2017 17:07:34 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [ANNOUNCE] xfsprogs: v4.12.0 released!
-Message-ID: <f216d8f6-d59b-2424-2ec4-d20f508d265b@redhat.com>
-Date: Thu, 20 Jul 2017 12:07:34 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Received: from smtpq2.tb.mail.iss.as9143.net ([212.54.42.165]:38867 "EHLO
+        smtpq2.tb.mail.iss.as9143.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932416AbdGSWZc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2017 18:25:32 -0400
+Received: from [212.54.42.135] (helo=smtp11.tb.mail.iss.as9143.net)
+        by smtpq2.tb.mail.iss.as9143.net with esmtp (Exim 4.86_2)
+        (envelope-from <richardwbb@versatel.nl>)
+        id 1dXxPO-0003QL-3w
+        for linux-xfs@vger.kernel.org; Thu, 20 Jul 2017 00:25:30 +0200
+Received: from dhcp-077-251-156-033.chello.nl ([77.251.156.33] helo=[192.168.178.3])
+        by smtp11.tb.mail.iss.as9143.net with esmtp (Exim 4.86_2)
+        (envelope-from <richardwbb@versatel.nl>)
+        id 1dXxPO-0003nH-0Z
+        for linux-xfs@vger.kernel.org; Thu, 20 Jul 2017 00:25:30 +0200
+Message-ID: <1500510327.1939.36.camel@versatel.nl>
+Subject: is there a useful purpose to keep "xfs meta-data" when mkfs.xfs has
+ created a new file system
+From: Richard Waterbeek <richardwbb@versatel.nl>
+Date: Thu, 20 Jul 2017 00:25:27 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-Hi Folks,
+I wonder, since I have decided to not follow proper advice, that for
+example ext2 is meant for a usb removable volume, while journalling fs
+aren't [benchmarking wasn't real slow, but I don't seem to appreciate
+i-nodes], nor that the operating system says it has finished copying and
+unmount the device seems impossible/ give a long waiting time, and the
+hardware blinker on this usb stick I have isn't "lying". That was enough
+annoyance to drop the whole ext<n> thing for me.
 
-The xfsprogs repositories have just been updated and tagged with the
-v4.12.0 release tag. It can be found here:
+Now that I've came to the conclusion that jfs somehow didn't want to be
+fsck'd at all, I again went with xfs for usb [only this time I attempt
+to learn about what I can do and do not. Because instead of backing up,
+restoring is just as important as the backup itself.
 
-git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git v4.12.0
-
-Release tarballs are hosted on kernel.org, and can be found here:
-
-https://kernel.org/pub/linux/utils/fs/xfs/xfsprogs/
-
-This release includes a new "xfs_spaceman" tool for space management
-commands, and a new "fsmap" command for xfs_io.
-
-Other somewhat user-visible changes include the tagging of xfs metadumps
-with information about obfuscation and log state, and a modification
-to xfs_info / xfs_growfs so that it will only work on actual mountpoints,
-rather than files within a mountpoint, to avoid admin misfires.
-
-Many thanks go to all the contributors to this release. The summary
-of changes since v4.7.0 can be found listed in doc/CHANGES.  Changes
-since -rc2 are shown below.
-
-Onward to 4.13!  
-
-Cheers,
-
-Eric.
-
+Now I've learnt that xfs has to be treated well, I saw the following
+output with the command "mkfs.xfs /dev/sd<n>"
+---
+meta-data=/dev/sdc               isize=256    agcount=4, agsize=244928
+blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=0        finobt=0
+data     =                       bsize=4096   blocks=979712, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 ---
 
-The new head of the master branch is commit:
+I am not only curious but also interested, what xfs is trying to tell
+me, when I just asked it to create a new xfs. Since I couldn't get jfs
+to do a simple 'fsck -n', and fat and ntfs are of no importance to me,
+and that btrfs simply isn't meant that way and on top of that, that ext2
+is a bit dated, ext3 isn't clear to me, and ext4 doesn't seem to add
+much [I find], the only conclusion that I have now, is to stick with
+xfs, and most of the internet advices otherwise.
 
-0602fbe xfsprogs: Release v4.12.0
+I wonder if someone on this list can tell me more on the meta-data of
+xfs, not my bias to xfs while I wasn't able to give jfs a proper chance.
+It is kind of important for a usb backup to know what could go wrong
+before anything goes wrong with the data trusted to it. That is why I am
+asking here, in the hope that a knowledgeable/ experienced person could
+shed some light on this. [for my main purpose, having a "pre-prepared"
+disaster recovery plan, instead of just backups].
 
-New Commits:
-
-Darrick J. Wong (2):
-      [4944def] xfs_db: redirect printfs when metadumping to stdout
-      [68f7f68] libxfs: propagate transaction block reservations
-
-Eric Sandeen (3):
-      [746d40a] mkfs.xfs: allow specification of 0 data stripe width & unit
-      [533d1d2] xfs_db: properly set inode type
-      [0602fbe] xfsprogs: Release v4.12.0
-
-
-Code Diffstat:
-
- VERSION          |  2 +-
- configure.ac     |  2 +-
- db/io.c          | 16 ++++++++++++++++
- db/metadump.c    | 15 +++++++++++++--
- debian/changelog |  6 ++++++
- doc/CHANGES      |  6 ++++++
- libxfs/trans.c   |  7 ++++++-
- mkfs/xfs_mkfs.c  | 11 ++++++++++-
