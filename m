@@ -1,305 +1,328 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49522 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:36509 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750743AbdGUEjD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 00:39:03 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6L4d23r029893
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 04:39:02 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v6L4d2iB027307
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 04:39:02 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v6L4d2UY008511
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 04:39:02 GMT
-Subject: [PATCH 05/22] xfs: scrub in-memory metadata buffers
+        with ESMTP id S936482AbdGTPyZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2017 11:54:25 -0400
+Date: Thu, 20 Jul 2017 08:54:04 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 20 Jul 2017 21:39:00 -0700
-Message-ID: <150061194082.14732.17289613506653968866.stgit@magnolia>
-In-Reply-To: <150061190859.14732.17040548800470377701.stgit@magnolia>
-References: <150061190859.14732.17040548800470377701.stgit@magnolia>
+Subject: Re: [PATCH 3/7] mkfs: remove intermediate getstr followed by getnum
+Message-ID: <20170720155404.GS4224@magnolia>
+References: <20170720092932.32580-1-jtulak@redhat.com>
+ <20170720092932.32580-4-jtulak@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170720092932.32580-4-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: Jan Tulak <jtulak@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jul 20, 2017 at 11:29:28AM +0200, Jan Tulak wrote:
+> Some options loaded a number as a string with getstr and converted it to
+> number with getnum later in the code, without any reason for this
+> approach.  (They were probably forgotten in some past cleaning.)
+> 
+> This patch changes them to skip the string and use getnum directly in
+> the main option-parsing loop, as do all the other numerical options.
+> And as we now have two variables of the same type for the same value,
+> merge them together. (e.g. former string dsize and number dbytes).
+> 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> Reviewed-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> 
+> ---
+> In reply to Eric's comment, so it doesn't pop up again:
+> This patch has to be applied after "mkfs: Save raw user input ...",
+> because otherwise we would temporary lose the access to strings
+> with user-given values and thus wouldn't be able to report them in
+> case of any issue. 
+> ---
+>  mkfs/xfs_mkfs.c | 90 ++++++++++++++++++++++++++-------------------------------
+>  1 file changed, 41 insertions(+), 49 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index f2f6468e..127f14c3 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -1345,6 +1345,7 @@ getnum(
+>  	long long		c;
+>  
+>  	check_opt(opts, index, false);
+> +	set_conf_raw(opts, index, str);
+>  	/* empty strings might just return a default value */
+>  	if (!str || *str == '\0') {
+>  		if (sp->flagval == SUBOPT_NEEDS_VAL)
+> @@ -1432,12 +1433,12 @@ main(
+>  	char			*dfile;
+>  	int			dirblocklog;
+>  	int			dirblocksize;
+> -	char			*dsize;
+> +	int			dbytes;
+>  	int			dsu;
+>  	int			dsw;
+>  	int			dsunit;
+>  	int			dswidth;
+> -	int			force_overwrite;
+> +	bool			force_overwrite;
+>  	struct fsxattr		fsx;
+>  	int			ilflag;
+>  	int			imaxpct;
+> @@ -1456,7 +1457,7 @@ main(
+>  	xfs_rfsblock_t		logblocks;
+>  	char			*logfile;
+>  	int			loginternal;
+> -	char			*logsize;
+> +	int			logbytes;
+>  	xfs_fsblock_t		logstart;
+>  	int			lvflag;
+>  	int			lsflag;
+> @@ -1485,11 +1486,11 @@ main(
+>  	char			*protostring;
+>  	int			qflag;
+>  	xfs_rfsblock_t		rtblocks;
+> +	int		rtbytes;
+>  	xfs_extlen_t		rtextblocks;
+>  	xfs_rtblock_t		rtextents;
+> -	char			*rtextsize;
+> +	int		rtextbytes;
+>  	char			*rtfile;
+> -	char			*rtsize;
+>  	xfs_sb_t		*sbp;
+>  	int			sectorlog;
+>  	__uint64_t		sector_mask;
+> @@ -1537,7 +1538,8 @@ main(
+>  	qflag = 0;
+>  	imaxpct = inodelog = inopblock = isize = 0;
+>  	dfile = logfile = rtfile = NULL;
+> -	dsize = logsize = rtsize = rtextsize = protofile = NULL;
+> +	protofile = NULL;
+> +	rtbytes = rtextbytes = logbytes = dbytes = 0;
+>  	dsu = dsw = dsunit = dswidth = lalign = lsu = lsunit = 0;
+>  	nodsflag = norsflag = 0;
+>  	force_overwrite = 0;
+> @@ -1601,7 +1603,7 @@ main(
+>  					xi.dname = getstr(value, &dopts, D_NAME);
+>  					break;
+>  				case D_SIZE:
+> -					dsize = getstr(value, &dopts, D_SIZE);
+> +					dbytes = getnum(value, &dopts, D_SIZE);
+>  					break;
+>  				case D_SUNIT:
+>  					dsunit = getnum(value, &dopts, D_SUNIT);
+> @@ -1746,7 +1748,7 @@ main(
+>  					lvflag = 1;
+>  					break;
+>  				case L_SIZE:
+> -					logsize = getstr(value, &lopts, L_SIZE);
+> +					logbytes = getnum(value, &lopts, L_SIZE);
+>  					break;
+>  				case L_SECTLOG:
+>  					lsectorlog = getnum(value, &lopts,
+> @@ -1875,8 +1877,7 @@ main(
+>  
+>  				switch (getsubopt(&p, subopts, &value)) {
+>  				case R_EXTSIZE:
+> -					rtextsize = getstr(value, &ropts,
+> -							   R_EXTSIZE);
+> +					rtextbytes = getnum(value, &ropts, R_EXTSIZE);
+>  					break;
+>  				case R_FILE:
+>  					xi.risfile = getnum(value, &ropts,
+> @@ -1888,7 +1889,7 @@ main(
+>  							   R_NAME);
+>  					break;
+>  				case R_SIZE:
+> -					rtsize = getstr(value, &ropts, R_SIZE);
+> +					rtbytes = getnum(value, &ropts, R_SIZE);
+>  					break;
+>  				case R_NOALIGN:
+>  					norsflag = getnum(value, &ropts,
+> @@ -1991,14 +1992,14 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
+>  	 * sector size mismatches between the new filesystem and the underlying
+>  	 * host filesystem.
+>  	 */
+> -	check_device_type(dfile, &xi.disfile, !dsize, !dfile,
+> +	check_device_type(dfile, &xi.disfile, !dbytes, !dfile,
+>  			  Nflag ? NULL : &xi.dcreat, force_overwrite, "d");
+>  	if (!loginternal)
+> -		check_device_type(xi.logname, &xi.lisfile, !logsize, !xi.logname,
+> -				  Nflag ? NULL : &xi.lcreat,
+> +		check_device_type(xi.logname, &xi.lisfile, !logbytes,
+> +				  !xi.logname, Nflag ? NULL : &xi.lcreat,
+>  				  force_overwrite, "l");
+>  	if (xi.rtname)
+> -		check_device_type(xi.rtname, &xi.risfile, !rtsize, !xi.rtname,
+> +		check_device_type(xi.rtname, &xi.risfile, !rtbytes, !xi.rtname,
+>  				  Nflag ? NULL : &xi.rcreat,
+>  				  force_overwrite, "r");
+>  	if (xi.disfile || xi.lisfile || xi.risfile)
+> @@ -2179,10 +2180,7 @@ _("rmapbt not supported with realtime devices\n"));
+>  	}
+>  
+>  
+> -	if (dsize) {
+> -		__uint64_t dbytes;
+> -
+> -		dbytes = getnum(dsize, &dopts, D_SIZE);
+> +	if (dbytes) {
 
-Call the verifier function for all in-memory metadata buffers, looking
-for memory corruption either due to bad memory or coding bugs.
+Why has dbytes been demoted from uint64_t to int?  This eliminates the
+ability to -d size=8G, right?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/Makefile         |    1 
- fs/xfs/libxfs/xfs_fs.h  |    3 +
- fs/xfs/scrub/common.c   |    4 +
- fs/xfs/scrub/common.h   |    2 +
- fs/xfs/scrub/metabufs.c |  177 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trace.h      |    3 +
- 6 files changed, 188 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/scrub/metabufs.c
+>  		if (dbytes % XFS_MIN_BLOCKSIZE) {
+>  			fprintf(stderr,
+>  			_("illegal data length %lld, not a multiple of %d\n"),
+> @@ -2211,10 +2209,7 @@ _("rmapbt not supported with realtime devices\n"));
+>  		usage();
+>  	}
+>  
+> -	if (logsize) {
+> -		__uint64_t logbytes;
+> -
+> -		logbytes = getnum(logsize, &lopts, L_SIZE);
+> +	if (logbytes) {
+>  		if (logbytes % XFS_MIN_BLOCKSIZE) {
+>  			fprintf(stderr,
+>  			_("illegal log length %lld, not a multiple of %d\n"),
+> @@ -2228,10 +2223,7 @@ _("rmapbt not supported with realtime devices\n"));
+>  				(long long)logbytes, blocksize,
+>  				(long long)(logblocks << blocklog));
+>  	}
+> -	if (rtsize) {
+> -		__uint64_t rtbytes;
+> -
+> -		rtbytes = getnum(rtsize, &ropts, R_SIZE);
+> +	if (rtbytes) {
 
+Same complaint here.
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 4e04da9..67cf4ac 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -142,5 +142,6 @@ ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
- xfs-y				+= $(addprefix scrub/, \
- 				   btree.o \
- 				   common.o \
-+				   metabufs.o \
- 				   )
- endif
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index aeccc99..9fb3c65 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -482,7 +482,8 @@ struct xfs_scrub_metadata {
-  * Metadata types and flags for scrub operation.
-  */
- #define XFS_SCRUB_TYPE_TEST	0	/* dummy to test ioctl */
--#define XFS_SCRUB_TYPE_MAX	0
-+#define XFS_SCRUB_TYPE_METABUFS	1	/* in-core metadata buffers */
-+#define XFS_SCRUB_TYPE_MAX	1
- 
- /* i: repair this metadata */
- #define XFS_SCRUB_FLAG_REPAIR		(1 << 0)
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 331aa14..e06131f 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -610,6 +610,10 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 		.setup	= xfs_scrub_setup_fs,
- 		.scrub	= xfs_scrub_dummy,
- 	},
-+	{ /* in-memory metadata buffers */
-+		.setup	= xfs_scrub_setup_metabufs,
-+		.scrub	= xfs_scrub_metabufs,
-+	},
- };
- 
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 15baccb..5f0818c 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -198,12 +198,14 @@ int xfs_scrub_ag_btcur_init(struct xfs_scrub_context *sc,
- 
- #define SETUP_FN(name) int name(struct xfs_scrub_context *sc, struct xfs_inode *ip)
- SETUP_FN(xfs_scrub_setup_fs);
-+SETUP_FN(xfs_scrub_setup_metabufs);
- #undef SETUP_FN
- 
- /* Metadata scrubbers */
- 
- #define SCRUB_FN(name) int name(struct xfs_scrub_context *sc)
- SCRUB_FN(xfs_scrub_dummy);
-+SCRUB_FN(xfs_scrub_metabufs);
- #undef SCRUB_FN
- 
- #endif	/* __XFS_REPAIR_COMMON_H__ */
-diff --git a/fs/xfs/scrub/metabufs.c b/fs/xfs/scrub/metabufs.c
-new file mode 100644
-index 0000000..63faaa6
---- /dev/null
-+++ b/fs/xfs/scrub/metabufs.c
-@@ -0,0 +1,177 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_trace.h"
-+#include "xfs_sb.h"
-+#include "scrub/common.h"
-+
-+/* We only iterate buffers one by one, so we don't need any setup. */
-+int
-+xfs_scrub_setup_metabufs(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip)
-+{
-+	return 0;
-+}
-+
-+#define XFS_SCRUB_METABUFS_TOO_MANY_RETRIES	10
-+struct xfs_scrub_metabufs_info {
-+	struct xfs_scrub_context	*sc;
-+	unsigned int			retries;
-+};
-+
-+/* In-memory buffer corruption. */
-+
-+#define XFS_SCRUB_BUF_OP_ERROR_GOTO(label) \
-+	XFS_SCRUB_OP_ERROR_GOTO(smi->sc, \
-+			xfs_daddr_to_agno(smi->sc->mp, bp->b_bn), \
-+			xfs_daddr_to_agbno(smi->sc->mp, bp->b_bn), "buf", \
-+			&error, label)
-+STATIC int
-+xfs_scrub_metabufs_scrub_buf(
-+	struct xfs_scrub_metabufs_info	*smi,
-+	struct xfs_buf			*bp)
-+{
-+	int				olderror;
-+	int				error = 0;
-+
-+	/*
-+	 * We hold the rcu lock during the rhashtable walk, so we can't risk
-+	 * having the log forced due to a stale buffer by xfs_buf_lock.
-+	 */
-+	if (bp->b_flags & XBF_STALE)
-+		return 0;
-+
-+	atomic_inc(&bp->b_hold);
-+	if (!xfs_buf_trylock(bp)) {
-+		if (smi->retries > XFS_SCRUB_METABUFS_TOO_MANY_RETRIES) {
-+			/* We've retried too many times, do what we can. */
-+			XFS_SCRUB_INCOMPLETE(smi->sc, "metabufs", true);
-+			error = 0;
-+		} else {
-+			/* Restart the metabuf scrub from the start. */
-+			smi->retries++;
-+			error = -EAGAIN;
-+		}
-+		goto out_dec;
-+	}
-+
-+	/* Skip this buffer if it's stale, unread, or has no verifiers. */
-+	if ((bp->b_flags & XBF_STALE) ||
-+	    !(bp->b_flags & XBF_DONE) ||
-+	    !bp->b_ops)
-+		goto out_unlock;
-+
-+	/*
-+	 * Run the verifiers to see if the in-memory buffer is bitrotting or
-+	 * otherwise corrupt.  If the buffer doesn't have a log item then
-+	 * it's clean, so call the read verifier.  However, if the buffer
-+	 * has a log item, it is probably dirty.  Checksums will be written
-+	 * when the buffer is about to go out to disk, so call the write
-+	 * verifier to check the structure.
-+	 */
-+	olderror = bp->b_error;
-+	if (bp->b_fspriv)
-+		bp->b_ops->verify_write(bp);
-+	else
-+		bp->b_ops->verify_read(bp);
-+	error = bp->b_error;
-+	bp->b_error = olderror;
-+
-+	/* Mark any corruption errors we might find. */
-+	XFS_SCRUB_BUF_OP_ERROR_GOTO(out_unlock);
-+
-+out_unlock:
-+	xfs_buf_unlock(bp);
-+out_dec:
-+	atomic_dec(&bp->b_hold);
-+	return error;
-+}
-+#undef XFS_SCRUB_BUF_OP_ERROR_GOTO
-+
-+/* Walk the buffer rhashtable and dispatch buffer checking. */
-+STATIC int
-+xfs_scrub_metabufs_walk_rhash(
-+	struct xfs_scrub_metabufs_info	*smi,
-+	struct rhashtable_iter		*iter)
-+{
-+	struct xfs_buf			*bp;
-+	int				error = 0;
-+
-+	do {
-+		if (xfs_scrub_should_terminate(&error))
-+			break;
-+
-+		bp = rhashtable_walk_next(iter);
-+		if (IS_ERR(bp))
-+			return PTR_ERR(bp);
-+		else if (bp == NULL)
-+			return 0;
-+
-+		error = xfs_scrub_metabufs_scrub_buf(smi, bp);
-+	} while (error != 0);
-+
-+	return error;
-+}
-+
-+/* Try to walk the buffers in this AG in order to scrub them. */
-+int
-+xfs_scrub_metabufs(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_scrub_metabufs_info	smi;
-+	struct rhashtable_iter		iter;
-+	struct xfs_perag		*pag;
-+	int				error;
-+
-+	smi.sc = sc;
-+	smi.retries = 0;
-+	pag = xfs_perag_get(sc->mp, sc->sm->sm_agno);
-+	rhashtable_walk_enter(&pag->pag_buf_hash, &iter);
-+
-+	while (1) {
-+		if (xfs_scrub_should_terminate(&error))
-+			break;
-+
-+		error = rhashtable_walk_start(&iter);
-+		if (!error) {
-+			error = xfs_scrub_metabufs_walk_rhash(&smi, &iter);
-+			rhashtable_walk_stop(&iter);
-+		}
-+
-+		if (error != -EAGAIN)
-+			break;
-+		cond_resched();
-+	}
-+
-+	rhashtable_walk_exit(&iter);
-+	xfs_perag_put(pag);
-+	return error;
-+}
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index d4de29b..036e65c 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3312,7 +3312,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 
- /* scrub */
- #define XFS_SCRUB_TYPE_DESC \
--	{ XFS_SCRUB_TYPE_TEST,		"dummy" }
-+	{ XFS_SCRUB_TYPE_TEST,		"dummy" }, \
-+	{ XFS_SCRUB_TYPE_METABUFS,	"metabufs" }
- DECLARE_EVENT_CLASS(xfs_scrub_class,
- 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
- 		 int error),
+--D
 
+>  		if (rtbytes % XFS_MIN_BLOCKSIZE) {
+>  			fprintf(stderr,
+>  			_("illegal rt length %lld, not a multiple of %d\n"),
+> @@ -2248,10 +2240,7 @@ _("rmapbt not supported with realtime devices\n"));
+>  	/*
+>  	 * If specified, check rt extent size against its constraints.
+>  	 */
+> -	if (rtextsize) {
+> -		__uint64_t rtextbytes;
+> -
+> -		rtextbytes = getnum(rtextsize, &ropts, R_EXTSIZE);
+> +	if (rtextbytes) {
+>  		if (rtextbytes % blocksize) {
+>  			fprintf(stderr,
+>  		_("illegal rt extent size %lld, not a multiple of %d\n"),
+> @@ -2268,7 +2257,7 @@ _("rmapbt not supported with realtime devices\n"));
+>  		__uint64_t	rswidth;
+>  		__uint64_t	rtextbytes;
+>  
+> -		if (!norsflag && !xi.risfile && !(!rtsize && xi.disfile))
+> +		if (!norsflag && !xi.risfile && !(!rtbytes && xi.disfile))
+>  			rswidth = ft.rtswidth;
+>  		else
+>  			rswidth = 0;
+> @@ -2379,15 +2368,16 @@ _("rmapbt not supported with realtime devices\n"));
+>  		rtfile = _("volume rt");
+>  	else if (!xi.rtdev)
+>  		rtfile = _("none");
+> -	if (dsize && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
+> +	if (dbytes && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
+>  		fprintf(stderr,
+>  			_("size %s specified for data subvolume is too large, "
+>  			"maximum is %lld blocks\n"),
+> -			dsize, (long long)DTOBT(xi.dsize));
+> +			get_conf_raw(&dopts, D_SIZE),
+> +			(long long)DTOBT(xi.dsize));
+>  		usage();
+> -	} else if (!dsize && xi.dsize > 0)
+> +	} else if (!dbytes && xi.dsize > 0)
+>  		dblocks = DTOBT(xi.dsize);
+> -	else if (!dsize) {
+> +	else if (!dbytes) {
+>  		fprintf(stderr, _("can't get size of data subvolume\n"));
+>  		usage();
+>  	}
+> @@ -2420,22 +2410,23 @@ reported by the device (%u).\n"),
+>  reported by the device (%u).\n"),
+>  			lsectorsize, xi.lbsize);
+>  	}
+> -	if (rtsize && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
+> +	if (rtbytes && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
+>  		fprintf(stderr, _(
+>  "Warning: the realtime subvolume sector size %u is less than the sector size\n\
+>  reported by the device (%u).\n"),
+>  			sectorsize, xi.rtbsize);
+>  	}
+>  
+> -	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
+> +	if (rtbytes && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
+>  		fprintf(stderr,
+>  			_("size %s specified for rt subvolume is too large, "
+>  			"maximum is %lld blocks\n"),
+> -			rtsize, (long long)DTOBT(xi.rtsize));
+> +			get_conf_raw(&ropts, R_SIZE),
+> +			(long long)DTOBT(xi.rtsize));
+>  		usage();
+> -	} else if (!rtsize && xi.rtsize > 0)
+> +	} else if (!rtbytes && xi.rtsize > 0)
+>  		rtblocks = DTOBT(xi.rtsize);
+> -	else if (rtsize && !xi.rtdev) {
+> +	else if (rtbytes && !xi.rtdev) {
+>  		fprintf(stderr,
+>  			_("size specified for non-existent rt subvolume\n"));
+>  		usage();
+> @@ -2641,26 +2632,27 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+>  				   sb_feat.inode_align);
+>  	ASSERT(min_logblocks);
+>  	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
+> -	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
+> +	if (!logbytes && dblocks >= (1024*1024*1024) >> blocklog)
+>  		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
+> -	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
+> +	if (logbytes && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
+>  		fprintf(stderr,
+>  _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+> -			logsize, (long long)DTOBT(xi.logBBsize));
+> +			get_conf_raw(&lopts, L_SIZE),
+> +			(long long)DTOBT(xi.logBBsize));
+>  		usage();
+> -	} else if (!logsize && xi.logBBsize > 0) {
+> +	} else if (!logbytes && xi.logBBsize > 0) {
+>  		logblocks = DTOBT(xi.logBBsize);
+> -	} else if (logsize && !xi.logdev && !loginternal) {
+> +	} else if (logbytes && !xi.logdev && !loginternal) {
+>  		fprintf(stderr,
+>  			_("size specified for non-existent log subvolume\n"));
+>  		usage();
+> -	} else if (loginternal && logsize && logblocks >= dblocks) {
+> +	} else if (loginternal && logbytes && logblocks >= dblocks) {
+>  		fprintf(stderr, _("size %lld too large for internal log\n"),
+>  			(long long)logblocks);
+>  		usage();
+>  	} else if (!loginternal && !xi.logdev) {
+>  		logblocks = 0;
+> -	} else if (loginternal && !logsize) {
+> +	} else if (loginternal && !logbytes) {
+>  
+>  		if (dblocks < GIGABYTES(1, blocklog)) {
+>  			/* tiny filesystems get minimum sized logs. */
+> @@ -2724,7 +2716,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+>  		 * Readjust the log size to fit within an AG if it was sized
+>  		 * automatically.
+>  		 */
+> -		if (!logsize) {
+> +		if (!logbytes) {
+>  			logblocks = MIN(logblocks,
+>  					libxfs_alloc_ag_max_usable(mp));
+>  
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
