@@ -1,499 +1,680 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35087 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750743AbdGUEjh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 00:39:37 -0400
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6L4da1r009653
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 04:39:36 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v6L4da7e012792
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 04:39:36 GMT
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v6L4dard006494
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 04:39:36 GMT
-Subject: [PATCH 10/22] xfs: scrub inode btrees
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 20 Jul 2017 21:39:34 -0700
-Message-ID: <150061197454.14732.6179560461009984483.stgit@magnolia>
-In-Reply-To: <150061190859.14732.17040548800470377701.stgit@magnolia>
-References: <150061190859.14732.17040548800470377701.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:38196 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935653AbdGTJwG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Jul 2017 05:52:06 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 79B3580477
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2017 09:52:06 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 3/5] mkfs: replace variables with opts table: -l options
+Date: Thu, 20 Jul 2017 11:51:54 +0200
+Message-Id: <20170720095156.35417-4-jtulak@redhat.com>
+In-Reply-To: <20170720095156.35417-1-jtulak@redhat.com>
+References: <20170720095156.35417-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Remove variables that can be replaced with a direct access to the opts
+table, so we have it all in a single place, accessible from anywhere.
 
-Check the records of the inode btrees to make sure that the values
-make sense given the inode records themselves.
+In future, we can remove some instances where we are passing values as
+arguments to helper functions, when we have the values in the opts
+struct and could pass only the struct.  But for now, limit the changes
+to simple replacement without any change in the logic.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- fs/xfs/Makefile            |    1 
- fs/xfs/libxfs/xfs_format.h |    2 
- fs/xfs/libxfs/xfs_fs.h     |    4 -
- fs/xfs/scrub/common.c      |    9 +
- fs/xfs/scrub/common.h      |    3 
- fs/xfs/scrub/ialloc.c      |  347 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trace.h         |    4 -
- 7 files changed, 367 insertions(+), 3 deletions(-)
- create mode 100644 fs/xfs/scrub/ialloc.c
+ mkfs/xfs_mkfs.c | 259 ++++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 140 insertions(+), 119 deletions(-)
 
-
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index ce492ee..5197bea 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -144,6 +144,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   alloc.o \
- 				   btree.o \
- 				   common.o \
-+				   ialloc.o \
- 				   metabufs.o \
- 				   )
- endif
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 23229f0..154c3dd 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -518,7 +518,7 @@ static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
- 		 (sbp->sb_features2 & XFS_SB_VERSION2_FTYPE));
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 8778d27a..1bc3351f 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -448,6 +448,7 @@ struct opt_params {
+ 			  .minval = 0,
+ 			  .maxval = 1,
+ 			  .flagval = 1,
++			  .value = 1,
+ 			},
+ 			{ .index = L_SIZE,
+ 			  .conflicts = { LAST_CONFLICT },
+@@ -912,7 +913,8 @@ parse_conf_val(int opt, int subopt, char *value)
  }
  
--static inline int xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
-+static inline bool xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
- {
- 	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
- 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index bb36acf..5120cfd 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -489,7 +489,9 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_AGI	5	/* AG inode header */
- #define XFS_SCRUB_TYPE_BNOBT	6	/* freesp by block btree */
- #define XFS_SCRUB_TYPE_CNTBT	7	/* freesp by length btree */
--#define XFS_SCRUB_TYPE_MAX	7
-+#define XFS_SCRUB_TYPE_INOBT	8	/* inode btree */
-+#define XFS_SCRUB_TYPE_FINOBT	9	/* free inode btree */
-+#define XFS_SCRUB_TYPE_MAX	9
+ /*
+- * Convert lsu to lsunit for 512 bytes blocks and check validity of the values.
++ * Convert L_SU to L_SUNIT for 512 bytes blocks and check validity of the
++ * values.
+  */
+ static void
+ calc_stripe_factors(
+@@ -964,7 +966,7 @@ calc_stripe_factors(
+ 	if (lsu)
+ 		*lsunit = (int)BTOBBT(lsu);
  
- /* i: repair this metadata */
- #define XFS_SCRUB_FLAG_REPAIR		(1 << 0)
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 86161b5..9a31846 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -716,6 +716,15 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 		.setup	= xfs_scrub_setup_ag_allocbt,
- 		.scrub	= xfs_scrub_cntbt,
- 	},
-+	{ /* inobt */
-+		.setup	= xfs_scrub_setup_ag_iallocbt,
-+		.scrub	= xfs_scrub_inobt,
-+	},
-+	{ /* finobt */
-+		.setup	= xfs_scrub_setup_ag_iallocbt,
-+		.scrub	= xfs_scrub_finobt,
-+		.has	= xfs_sb_version_hasfinobt,
-+	},
- };
+-	/* verify if lsu/lsunit is a multiple block size */
++	/* verify if L_SU/L_SUNIT is a multiple block size */
+ 	if (lsu % get_conf_val(OPT_B, B_SIZE) != 0) {
+ 		fprintf(stderr,
+ _("log stripe unit (%d) must be a multiple of the block size (%lld)\n"),
+@@ -1487,22 +1489,15 @@ main(
+ 	int			lalign;
+ 	int			ldflag;
+ 	int			liflag;
+-	xfs_agnumber_t		logagno;
+ 	xfs_rfsblock_t		logblocks;
+ 	char			*logfile;
+-	int			loginternal;
+-	int			logbytes;
+ 	xfs_fsblock_t		logstart;
+ 	int			lvflag;
+ 	int			lsflag;
+ 	int			lsuflag;
+ 	int			lsunitflag;
+-	int			lsectorlog;
+-	int			lsectorsize;
+ 	int			lslflag;
+ 	int			lssflag;
+-	int			lsu;
+-	int			lsunit;
+ 	int			min_logblocks;
+ 	xfs_mount_t		*mp;
+ 	xfs_mount_t		mbuf;
+@@ -1557,20 +1552,17 @@ main(
+ 	textdomain(PACKAGE);
  
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index f14abfb..cd89bec 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -210,6 +210,7 @@ SETUP_FN(xfs_scrub_setup_fs);
- SETUP_FN(xfs_scrub_setup_metabufs);
- SETUP_FN(xfs_scrub_setup_ag_header);
- SETUP_FN(xfs_scrub_setup_ag_allocbt);
-+SETUP_FN(xfs_scrub_setup_ag_iallocbt);
- #undef SETUP_FN
+ 	blflag = bsflag = slflag = ssflag = lslflag = lssflag = 0;
+-	lsectorlog = 0;
+-	lsectorsize = 0;
+ 	dasize = dblocks = 0;
+ 	daflag = ilflag = imflag = ipflag = isflag = false;
+ 	liflag = laflag = lsflag = lsuflag = lsunitflag = ldflag = lvflag = false;
+-	loginternal = 1;
+-	logagno = logblocks = rtblocks = rtextblocks = 0;
+-	Nflag = nlflag = nsflag = nvflag = 0;
++	logblocks = rtblocks = rtextblocks = 0;
++	Nflag = nlflag = nsflag = nvflag = false;
+ 	dirblocklog = dirblocksize = 0;
+ 	qflag = false;
+ 	dfile = logfile = rtfile = NULL;
+ 	protofile = NULL;
+-	rtbytes = rtextbytes = logbytes = 0;
+-	lalign = lsu = lsunit = 0;
++	rtbytes = rtextbytes = 0;
++	lalign = 0;
+ 	norsflag = false;
+ 	force_overwrite = false;
+ 	worst_freelist = 0;
+@@ -1804,9 +1796,7 @@ main(
  
- /* Metadata scrubbers */
-@@ -223,6 +224,8 @@ SCRUB_FN(xfs_scrub_agfl);
- SCRUB_FN(xfs_scrub_agi);
- SCRUB_FN(xfs_scrub_bnobt);
- SCRUB_FN(xfs_scrub_cntbt);
-+SCRUB_FN(xfs_scrub_inobt);
-+SCRUB_FN(xfs_scrub_finobt);
- #undef SCRUB_FN
+ 				switch (getsubopt(&p, subopts, &value)) {
+ 				case L_AGNUM:
+-					logagno = parse_conf_val(OPT_L,
+-								 L_AGNUM,
+-								 value);
++					parse_conf_val(OPT_L, L_AGNUM, value);
+ 					laflag = 1;
+ 					break;
+ 				case L_FILE:
+@@ -1815,20 +1805,16 @@ main(
+ 								    value);
+ 					break;
+ 				case L_INTERNAL:
+-					loginternal =
+-						parse_conf_val(OPT_L,
+-							       L_INTERNAL,
+-							       value);
++					parse_conf_val(OPT_L, L_INTERNAL,
++						       value);
+ 					liflag = 1;
+ 					break;
+ 				case L_SU:
+-					lsu = parse_conf_val(OPT_L, L_SU,
+-							     value);
++					parse_conf_val(OPT_L, L_SU, value);
+ 					lsuflag = 1;
+ 					break;
+ 				case L_SUNIT:
+-					lsunit = parse_conf_val(OPT_L, L_SUNIT,
+-								value);
++					parse_conf_val(OPT_L, L_SUNIT, value);
+ 					lsunitflag = 1;
+ 					break;
+ 				case L_NAME:
+@@ -1837,7 +1823,7 @@ main(
+ 								L_NAME);
+ 					xi.logname = logfile;
+ 					ldflag = 1;
+-					loginternal = 0;
++					set_conf_val(OPT_L, L_INTERNAL, 0);
+ 					set_conf_val(OPT_L, L_NAME, 1);
+ 					set_conf_val(OPT_L, L_DEV, 1);
+ 					break;
+@@ -1851,29 +1837,24 @@ main(
+ 						     sb_feat.log_version);
+ 					break;
+ 				case L_SIZE:
+-					logbytes = parse_conf_val(OPT_L,
+-								  L_SIZE,
+-								  value);
++					parse_conf_val(OPT_L, L_SIZE, value);
+ 					break;
+ 				case L_SECTLOG:
+-					lsectorlog = parse_conf_val(OPT_L,
++					tmp = parse_conf_val(OPT_L,
+ 								    L_SECTLOG,
+ 								    value);
+-					lsectorsize = 1 << lsectorlog;
+-					lslflag = 1;
+ 					set_conf_val(OPT_L, L_SECTSIZE,
+-						     lsectorsize);
++						     1 << tmp);
++					lslflag = 1;
+ 					break;
+ 				case L_SECTSIZE:
+-					lsectorsize =
++					tmp =
+ 						parse_conf_val(OPT_L,
+ 							       L_SECTSIZE,
+ 							       value);
+-					lsectorlog =
+-						libxfs_highbit32(lsectorsize);
+-					lssflag = 1;
+ 					set_conf_val(OPT_L, L_SECTLOG,
+-						     lsectorlog);
++						     libxfs_highbit32(tmp));
++					lssflag = 1;
+ 					break;
+ 				case L_LAZYSBCNTR:
+ 					sb_feat.lazy_sb_counters =
+@@ -2072,14 +2053,14 @@ main(
  
- #endif	/* __XFS_REPAIR_COMMON_H__ */
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-new file mode 100644
-index 0000000..ecf1852
---- /dev/null
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -0,0 +1,347 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_trace.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_ialloc.h"
-+#include "xfs_ialloc_btree.h"
-+#include "xfs_icache.h"
-+#include "xfs_rmap.h"
-+#include "xfs_log.h"
-+#include "xfs_trans_priv.h"
-+#include "scrub/common.h"
-+#include "scrub/btree.h"
-+
-+/*
-+ * Set us up to scrub inode btrees.
-+ * If we detect a discrepancy between the inobt and the inode,
-+ * try again after forcing logged inode cores out to disk.
-+ */
-+int
-+xfs_scrub_setup_ag_iallocbt(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip)
-+{
-+	return xfs_scrub_setup_ag_btree(sc, ip, sc->try_harder);
-+}
-+
-+/* Inode btree scrubber. */
-+
-+/* Scrub a chunk of an inobt record. */
-+STATIC int
-+xfs_scrub_iallocbt_chunk(
-+	struct xfs_scrub_btree		*bs,
-+	struct xfs_inobt_rec_incore	*irec,
-+	xfs_agino_t			agino,
-+	xfs_extlen_t			len,
-+	bool				*keep_scanning)
-+{
-+	struct xfs_mount		*mp = bs->cur->bc_mp;
-+	struct xfs_agf			*agf;
-+	xfs_agblock_t			eoag;
-+	xfs_agblock_t			bno;
-+	int				error = 0;
-+
-+	agf = XFS_BUF_TO_AGF(bs->sc->sa.agf_bp);
-+	eoag = be32_to_cpu(agf->agf_length);
-+	bno = XFS_AGINO_TO_AGBNO(mp, agino);
-+
-+	*keep_scanning = true;
-+	XFS_SCRUB_BTREC_CHECK(bs, bno < mp->m_sb.sb_agblocks);
-+	XFS_SCRUB_BTREC_CHECK(bs, bno < eoag);
-+	XFS_SCRUB_BTREC_CHECK(bs, bno < bno + len);
-+	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)bno + len <=
-+			mp->m_sb.sb_agblocks);
-+	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)bno + len <=
-+			eoag);
-+	if (error) {
-+		*keep_scanning = false;
-+		goto out;
-+	}
-+
-+out:
-+	return error;
-+}
-+
-+/* Count the number of free inodes. */
-+static unsigned int
-+xfs_scrub_iallocbt_freecount(
-+	xfs_inofree_t			freemask)
-+{
-+	int				bits = XFS_INODES_PER_CHUNK;
-+	unsigned int			ret = 0;
-+
-+	while (bits--) {
-+		if (freemask & 1)
-+			ret++;
-+		freemask >>= 1;
-+	}
-+
-+	return ret;
-+}
-+
-+/* Check a particular inode with ir_free. */
-+STATIC int
-+xfs_scrub_iallocbt_check_cluster_freemask(
-+	struct xfs_scrub_btree		*bs,
-+	xfs_ino_t			fsino,
-+	xfs_agino_t			chunkino,
-+	xfs_agino_t			clusterino,
-+	struct xfs_inobt_rec_incore	*irec,
-+	struct xfs_buf			*bp)
-+{
-+	struct xfs_dinode		*dip;
-+	struct xfs_mount		*mp = bs->cur->bc_mp;
-+	bool				freemask_ok;
-+	bool				inuse;
-+	int				error;
-+
-+	dip = xfs_buf_offset(bp, clusterino * mp->m_sb.sb_inodesize);
-+	XFS_SCRUB_BTREC_GOTO(bs,
-+			be16_to_cpu(dip->di_magic) == XFS_DINODE_MAGIC,
-+			out);
-+	XFS_SCRUB_BTREC_GOTO(bs,
-+			dip->di_version < 3 || be64_to_cpu(dip->di_ino) ==
-+				fsino + clusterino,
-+			out);
-+	freemask_ok = !!(irec->ir_free & XFS_INOBT_MASK(chunkino + clusterino));
-+	error = xfs_icache_inode_is_allocated(mp, bs->cur->bc_tp,
-+			fsino + clusterino, &inuse);
-+	if (error == -ENOENT) {
-+		/* Not cached, just read the disk buffer */
-+		freemask_ok ^= !!(dip->di_mode);
-+		if (!bs->sc->try_harder && !freemask_ok)
-+			return -EDEADLOCK;
-+	} else if (error < 0) {
-+		/* Inode is only half assembled, don't bother. */
-+		freemask_ok = true;
-+	} else {
-+		/* Inode is all there. */
-+		freemask_ok ^= inuse;
-+	}
-+	XFS_SCRUB_BTREC_CHECK(bs, freemask_ok);
-+out:
-+	return 0;
-+}
-+
-+/* Make sure the free mask is consistent with what the inodes think. */
-+STATIC int
-+xfs_scrub_iallocbt_check_freemask(
-+	struct xfs_scrub_btree		*bs,
-+	struct xfs_inobt_rec_incore	*irec)
-+{
-+	struct xfs_owner_info		oinfo;
-+	struct xfs_imap			imap;
-+	struct xfs_mount		*mp = bs->cur->bc_mp;
-+	struct xfs_dinode		*dip;
-+	struct xfs_buf			*bp;
-+	xfs_ino_t			fsino;
-+	xfs_agino_t			nr_inodes;
-+	xfs_agino_t			agino;
-+	xfs_agino_t			chunkino;
-+	xfs_agino_t			clusterino;
-+	xfs_agblock_t			agbno;
-+	int				blks_per_cluster;
-+	uint16_t			holemask;
-+	uint16_t			ir_holemask;
-+	int				error = 0;
-+
-+	/* Make sure the freemask matches the inode records. */
-+	blks_per_cluster = xfs_icluster_size_fsb(mp);
-+	nr_inodes = XFS_OFFBNO_TO_AGINO(mp, blks_per_cluster, 0);
-+	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INODES);
-+
-+	for (agino = irec->ir_startino;
-+	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
-+	     agino += blks_per_cluster * mp->m_sb.sb_inopblock) {
-+		fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
-+		chunkino = agino - irec->ir_startino;
-+		agbno = XFS_AGINO_TO_AGBNO(mp, agino);
-+
-+		/* Compute the holemask mask for this cluster. */
-+		for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
-+		     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
-+			holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
-+					XFS_INODES_PER_HOLEMASK_BIT);
-+
-+		/* The whole cluster must be a hole or not a hole. */
-+		ir_holemask = (irec->ir_holemask & holemask);
-+		XFS_SCRUB_BTREC_CHECK(bs, ir_holemask == holemask ||
-+				ir_holemask == 0);
-+
-+		/* If any part of this is a hole, skip it. */
-+		if (ir_holemask)
-+			continue;
-+
-+		/* Grab the inode cluster buffer. */
-+		imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno,
-+				agbno);
-+		imap.im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
-+		imap.im_boffset = 0;
-+
-+		error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap,
-+				&dip, &bp, 0, 0);
-+		XFS_SCRUB_BTREC_OP_ERROR_GOTO(bs, &error, next_cluster);
-+
-+		/* Which inodes are free? */
-+		for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
-+			error = xfs_scrub_iallocbt_check_cluster_freemask(bs,
-+					fsino, chunkino, clusterino, irec, bp);
-+			if (error) {
-+				xfs_trans_brelse(bs->cur->bc_tp, bp);
-+				return error;
-+			}
-+		}
-+
-+		xfs_trans_brelse(bs->cur->bc_tp, bp);
-+next_cluster:
-+		;
-+	}
-+
-+	return error;
-+}
-+
-+/* Scrub an inobt/finobt record. */
-+STATIC int
-+xfs_scrub_iallocbt_helper(
-+	struct xfs_scrub_btree		*bs,
-+	union xfs_btree_rec		*rec)
-+{
-+	struct xfs_mount		*mp = bs->cur->bc_mp;
-+	struct xfs_agi			*agi;
-+	struct xfs_inobt_rec_incore	irec;
-+	uint64_t			holes;
-+	xfs_agino_t			agino;
-+	xfs_agblock_t			agbno;
-+	xfs_extlen_t			len;
-+	bool				keep_scanning;
-+	int				holecount;
-+	int				i;
-+	int				error = 0;
-+	int				err2 = 0;
-+	unsigned int			real_freecount;
-+	uint16_t			holemask;
-+
-+	xfs_inobt_btrec_to_irec(mp, rec, &irec);
-+
-+	XFS_SCRUB_BTREC_CHECK(bs, irec.ir_count <= XFS_INODES_PER_CHUNK);
-+	XFS_SCRUB_BTREC_CHECK(bs, irec.ir_freecount <= XFS_INODES_PER_CHUNK);
-+	real_freecount = irec.ir_freecount +
-+			(XFS_INODES_PER_CHUNK - irec.ir_count);
-+	XFS_SCRUB_BTREC_CHECK(bs, real_freecount ==
-+			xfs_scrub_iallocbt_freecount(irec.ir_free));
-+	agi = XFS_BUF_TO_AGI(bs->sc->sa.agi_bp);
-+	agino = irec.ir_startino;
-+	agbno = XFS_AGINO_TO_AGBNO(mp, irec.ir_startino);
-+	XFS_SCRUB_BTREC_GOTO(bs, agbno < be32_to_cpu(agi->agi_length), out);
-+	XFS_SCRUB_BTREC_CHECK(bs,
-+			!(agbno & (xfs_ialloc_cluster_alignment(mp) - 1)));
-+	XFS_SCRUB_BTREC_CHECK(bs, !(agbno & (xfs_icluster_size_fsb(mp) - 1)));
-+
-+	/* Handle non-sparse inodes */
-+	if (!xfs_inobt_issparse(irec.ir_holemask)) {
-+		len = XFS_B_TO_FSB(mp,
-+				XFS_INODES_PER_CHUNK * mp->m_sb.sb_inodesize);
-+		XFS_SCRUB_BTREC_CHECK(bs,
-+				irec.ir_count == XFS_INODES_PER_CHUNK);
-+
-+		error = xfs_scrub_iallocbt_chunk(bs, &irec, agino, len,
-+				&keep_scanning);
-+		if (error)
-+			goto out;
-+		goto check_freemask;
-+	}
-+
-+	/* Check each chunk of a sparse inode cluster. */
-+	holemask = irec.ir_holemask;
-+	holecount = 0;
-+	len = XFS_B_TO_FSB(mp,
-+			XFS_INODES_PER_HOLEMASK_BIT * mp->m_sb.sb_inodesize);
-+	holes = ~xfs_inobt_irec_to_allocmask(&irec);
-+	XFS_SCRUB_BTREC_CHECK(bs, (holes & irec.ir_free) == holes);
-+	XFS_SCRUB_BTREC_CHECK(bs, irec.ir_freecount <= irec.ir_count);
-+
-+	for (i = 0; i < XFS_INOBT_HOLEMASK_BITS; holemask >>= 1,
-+			i++, agino += XFS_INODES_PER_HOLEMASK_BIT) {
-+		if (holemask & 1) {
-+			holecount += XFS_INODES_PER_HOLEMASK_BIT;
-+			continue;
-+		}
-+
-+		err2 = xfs_scrub_iallocbt_chunk(bs, &irec, agino, len,
-+				&keep_scanning);
-+		if (!error && err2)
-+			error = err2;
-+		if (!keep_scanning)
-+			break;
-+	}
-+
-+	XFS_SCRUB_BTREC_CHECK(bs, holecount <= XFS_INODES_PER_CHUNK);
-+	XFS_SCRUB_BTREC_CHECK(bs, holecount + irec.ir_count ==
-+			XFS_INODES_PER_CHUNK);
-+
-+check_freemask:
-+	error = xfs_scrub_iallocbt_check_freemask(bs, &irec);
-+	if (error)
-+		goto out;
-+
-+out:
-+	return error;
-+}
-+
-+/* Scrub the inode btrees for some AG. */
-+STATIC int
-+xfs_scrub_iallocbt(
-+	struct xfs_scrub_context	*sc,
-+	xfs_btnum_t			which)
-+{
-+	struct xfs_btree_cur		*cur;
-+	struct xfs_owner_info		oinfo;
-+
-+	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INOBT);
-+	cur = which == XFS_BTNUM_INO ? sc->sa.ino_cur : sc->sa.fino_cur;
-+	return xfs_scrub_btree(sc, cur, xfs_scrub_iallocbt_helper,
-+			&oinfo, NULL);
-+}
-+
-+int
-+xfs_scrub_inobt(
-+	struct xfs_scrub_context	*sc)
-+{
-+	return xfs_scrub_iallocbt(sc, XFS_BTNUM_INO);
-+}
-+
-+int
-+xfs_scrub_finobt(
-+	struct xfs_scrub_context	*sc)
-+{
-+	return xfs_scrub_iallocbt(sc, XFS_BTNUM_FINO);
-+}
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 4a9a645..e2c5f99 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3319,7 +3319,9 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 	{ XFS_SCRUB_TYPE_AGFL,		"AGFL" }, \
- 	{ XFS_SCRUB_TYPE_AGI,		"AGI" }, \
- 	{ XFS_SCRUB_TYPE_BNOBT,		"bnobt" }, \
--	{ XFS_SCRUB_TYPE_CNTBT,		"cntbt" }
-+	{ XFS_SCRUB_TYPE_CNTBT,		"cntbt" }, \
-+	{ XFS_SCRUB_TYPE_INOBT,		"inobt" }, \
-+	{ XFS_SCRUB_TYPE_FINOBT,	"finobt" }
- DECLARE_EVENT_CLASS(xfs_scrub_class,
- 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
- 		 int error),
+ 					set_conf_val(OPT_S, S_LOG, tmp);
+ 					set_conf_val(OPT_D, D_SECTLOG, tmp);
+-					lsectorlog = tmp;
++					set_conf_val(OPT_L, L_SECTLOG, tmp);
+ 					set_conf_val(OPT_D, D_SECTSIZE,
+ 						     1 << tmp);
+ 					set_conf_val(OPT_S, S_SIZE, 1 << tmp);
+ 					set_conf_val(OPT_S, S_SECTSIZE,
+ 						     1 << tmp);
+ 
+-					lsectorsize = tmp;
++					set_conf_val(OPT_L, L_SECTSIZE, tmp);
+ 					lslflag = slflag = 1;
+ 					break;
+ 				case S_SIZE:
+@@ -2094,14 +2075,15 @@ main(
+ 
+ 					set_conf_val(OPT_S, S_SIZE, tmp);
+ 					set_conf_val(OPT_D, D_SECTSIZE, tmp);
+-					lsectorsize = tmp;
++					set_conf_val(OPT_L, L_SECTSIZE, tmp);
++					set_conf_val(OPT_L, L_SECTLOG,
++						libxfs_highbit32(tmp));
+ 					set_conf_val(OPT_D, D_SECTLOG,
+ 						libxfs_highbit32(tmp));
+ 					set_conf_val(OPT_S, S_LOG,
+ 						libxfs_highbit32(tmp));
+ 					set_conf_val(OPT_S, S_SECTLOG,
+ 						libxfs_highbit32(tmp));
+-					lsectorlog = libxfs_highbit32(tmp);
+ 
+ 					lssflag = ssflag = 1;
+ 					break;
+@@ -2158,8 +2140,9 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
+ 		set_conf_val(OPT_D, D_SECTSIZE, XFS_MIN_SECTORSIZE);
+ 	}
+ 	if (!lslflag && !lssflag) {
+-		lsectorlog = get_conf_val(OPT_D, D_SECTLOG);
+-		lsectorsize = get_conf_val(OPT_D, D_SECTSIZE);
++		set_conf_val(OPT_L, L_SECTLOG, get_conf_val(OPT_D, D_SECTLOG));
++		set_conf_val(OPT_L, L_SECTSIZE,
++			     get_conf_val(OPT_D, D_SECTSIZE));
+ 	}
+ 
+ 	/*
+@@ -2172,8 +2155,9 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
+ 	check_device_type(dfile, &xi.disfile, !get_conf_val(OPT_D, D_SIZE),
+ 			  !dfile,
+ 			  Nflag ? NULL : &xi.dcreat, force_overwrite, "d");
+-	if (!loginternal)
+-		check_device_type(xi.logname, &xi.lisfile, !logbytes,
++	if (!get_conf_val(OPT_L, L_INTERNAL))
++		check_device_type(xi.logname, &xi.lisfile,
++				  !get_conf_val(OPT_L, L_SIZE),
+ 				  !xi.logname, Nflag ? NULL : &xi.lcreat,
+ 				  force_overwrite, "l");
+ 	if (xi.rtname)
+@@ -2221,9 +2205,11 @@ _("switching to logical sector size %d\n"),
+ 	if (!ssflag) {
+ 		set_conf_val(OPT_D, D_SECTLOG,
+ 			     libxfs_highbit32(get_conf_val(OPT_D, D_SECTSIZE)));
+-		if (loginternal) {
+-			lsectorsize = get_conf_val(OPT_D, D_SECTSIZE);
+-			lsectorlog = get_conf_val(OPT_D, D_SECTLOG);
++		if (get_conf_val(OPT_L, L_INTERNAL)) {
++			set_conf_val(OPT_L, L_SECTSIZE,
++				     get_conf_val(OPT_D, D_SECTSIZE));
++			set_conf_val(OPT_L, L_SECTLOG,
++				     get_conf_val(OPT_D, D_SECTLOG));
+ 		}
+ 	}
+ 
+@@ -2244,13 +2230,16 @@ _("block size %lld cannot be smaller than logical sector size %d\n"),
+ 			get_conf_val(OPT_D, D_SECTSIZE), ft.lsectorsize);
+ 		usage();
+ 	}
+-	if (lsectorsize < XFS_MIN_SECTORSIZE ||
+-	    lsectorsize > XFS_MAX_SECTORSIZE ||
+-	    lsectorsize > get_conf_val(OPT_B, B_SIZE)) {
+-		fprintf(stderr, _("illegal log sector size %d\n"), lsectorsize);
++	if (get_conf_val(OPT_L, L_SECTSIZE) < XFS_MIN_SECTORSIZE ||
++	    get_conf_val(OPT_L, L_SECTSIZE) > XFS_MAX_SECTORSIZE ||
++	    get_conf_val(OPT_L, L_SECTSIZE) > get_conf_val(OPT_B, B_SIZE)) {
++		fprintf(stderr, _("illegal log sector size %lld\n"),
++			get_conf_val(OPT_L, L_SECTSIZE));
+ 		usage();
+-	} else if (lsectorsize > XFS_MIN_SECTORSIZE && !lsu && !lsunit) {
+-		lsu = get_conf_val(OPT_B, B_SIZE);
++	} else if (get_conf_val(OPT_L, L_SECTSIZE) > XFS_MIN_SECTORSIZE &&
++		   !get_conf_val(OPT_L, L_SU) &&
++		   !get_conf_val(OPT_L, L_SUNIT)) {
++		set_conf_val(OPT_L, L_SU, get_conf_val(OPT_B, B_SIZE));
+ 		sb_feat.log_version = 2;
+ 	}
+ 
+@@ -2403,19 +2392,20 @@ _("rmapbt not supported with realtime devices\n"));
+ 		usage();
+ 	}
+ 
+-	if (logbytes) {
+-		if (logbytes % XFS_MIN_BLOCKSIZE) {
++	if (get_conf_val(OPT_L, L_SIZE)) {
++		if (get_conf_val(OPT_L, L_SIZE) % XFS_MIN_BLOCKSIZE) {
+ 			fprintf(stderr,
+ 			_("illegal log length %lld, not a multiple of %d\n"),
+-				(long long)logbytes, XFS_MIN_BLOCKSIZE);
++				get_conf_val(OPT_L, L_SIZE), XFS_MIN_BLOCKSIZE);
+ 			usage();
+ 		}
+-		logblocks = (xfs_rfsblock_t)(logbytes >>
++		logblocks = (xfs_rfsblock_t)(get_conf_val(OPT_L, L_SIZE) >>
+ 					     get_conf_val(OPT_B, B_LOG));
+-		if (logbytes % get_conf_val(OPT_B, B_SIZE))
++		if (get_conf_val(OPT_L, L_SIZE) % get_conf_val(OPT_B, B_SIZE))
+ 			fprintf(stderr,
+ 	_("warning: log length %lld not a multiple of %lld, truncated to %lld\n"),
+-				(long long)logbytes, get_conf_val(OPT_B, B_SIZE),
++				get_conf_val(OPT_L, L_SIZE),
++				get_conf_val(OPT_B, B_SIZE),
+ 				(long long)(logblocks <<
+ 					   get_conf_val(OPT_B, B_LOG)));
+ 	}
+@@ -2507,8 +2497,9 @@ _("rmapbt not supported with realtime devices\n"));
+ 		exit(1);
+ 	}
+ 
+-	/* if lsu or lsunit was specified, automatically use v2 logs */
+-	if ((lsu || lsunit) && sb_feat.log_version == 1) {
++	/* if L_SU or L_SUNIT was specified, automatically use v2 logs */
++	if ((get_conf_val(OPT_L, L_SU) ||
++	     get_conf_val(OPT_L, L_SUNIT)) && sb_feat.log_version == 1) {
+ 		fprintf(stderr,
+ 			_("log stripe unit specified, using v2 logs\n"));
+ 		sb_feat.log_version = 2;
+@@ -2516,16 +2507,18 @@ _("rmapbt not supported with realtime devices\n"));
+ 
+ 	int dsunit = get_conf_val(OPT_D, D_SUNIT);
+ 	int dswidth = get_conf_val(OPT_D, D_SWIDTH);
++	int lsunit = get_conf_val(OPT_L, L_SUNIT);
+ 
+ 	calc_stripe_factors(get_conf_val(OPT_D, D_SU),
+ 			    get_conf_val(OPT_D, D_SW),
+ 			    get_conf_val(OPT_D, D_SECTSIZE),
+-			    lsu,
+-			    lsectorsize,
+-				&dsunit, &dswidth, &lsunit);
++			    get_conf_val(OPT_L, L_SU),
++			    get_conf_val(OPT_L, L_SECTSIZE),
++			    &dsunit, &dswidth, &lsunit);
+ 
+ 	set_conf_val(OPT_D, D_SUNIT, dsunit);
+ 	set_conf_val(OPT_D, D_SWIDTH, dswidth);
++	set_conf_val(OPT_L, L_SUNIT, lsunit);
+ 
+ 	xi.setblksize = get_conf_val(OPT_D, D_SECTSIZE);
+ 
+@@ -2554,7 +2547,8 @@ _("rmapbt not supported with realtime devices\n"));
+ 		(MAX(get_conf_val(OPT_D, D_SECTLOG), 10) - BBSHIFT);
+ 	xi.dsize &= sector_mask;
+ 	xi.rtsize &= sector_mask;
+-	xi.logBBsize &= (__uint64_t)-1 << (MAX(lsectorlog, 10) - BBSHIFT);
++	xi.logBBsize &= (__uint64_t)-1 << (MAX(get_conf_val(OPT_L, L_SECTLOG),
++					     10) - BBSHIFT);
+ 
+ 
+ 	/* don't do discards on print-only runs or on files */
+@@ -2568,10 +2562,10 @@ _("rmapbt not supported with realtime devices\n"));
+ 	}
+ 
+ 	if (!liflag && !ldflag)
+-		loginternal = xi.logdev == 0;
++		set_conf_val(OPT_L, L_INTERNAL, xi.logdev == 0);
+ 	if (xi.logname)
+ 		logfile = xi.logname;
+-	else if (loginternal)
++	else if (get_conf_val(OPT_L, L_INTERNAL))
+ 		logfile = _("internal log");
+ 	else if (xi.volname && xi.logdev)
+ 		logfile = _("volume log");
+@@ -2607,12 +2601,13 @@ _("rmapbt not supported with realtime devices\n"));
+ 		usage();
+ 	}
+ 
+-	if (loginternal && xi.logdev) {
++	if (get_conf_val(OPT_L, L_INTERNAL) && xi.logdev) {
+ 		fprintf(stderr,
+ 			_("can't have both external and internal logs\n"));
+ 		usage();
+-	} else if (loginternal &&
+-		   get_conf_val(OPT_D, D_SECTSIZE) != lsectorsize) {
++	} else if (get_conf_val(OPT_L, L_INTERNAL) &&
++		   get_conf_val(OPT_D, D_SECTSIZE) !=
++		   get_conf_val(OPT_L, L_SECTSIZE)) {
+ 		fprintf(stderr,
+ 	_("data and log sector sizes must be equal for internal logs\n"));
+ 		usage();
+@@ -2624,11 +2619,12 @@ _("rmapbt not supported with realtime devices\n"));
+ reported by the device (%u).\n"),
+ 			get_conf_val(OPT_D, D_SECTSIZE), xi.dbsize);
+ 	}
+-	if (!loginternal && xi.lbsize > lsectorsize) {
++	if (!get_conf_val(OPT_L, L_INTERNAL) &&
++	    xi.lbsize > get_conf_val(OPT_L, L_SECTSIZE)) {
+ 		fprintf(stderr, _(
+-"Warning: the log subvolume sector size %u is less than the sector size\n\
++"Warning: the log subvolume sector size %lld is less than the sector size\n\
+ reported by the device (%u).\n"),
+-			lsectorsize, xi.lbsize);
++			get_conf_val(OPT_L, L_SECTSIZE), xi.lbsize);
+ 	}
+ 	if (rtbytes && xi.rtsize > 0 &&
+ 	    xi.rtbsize > get_conf_val(OPT_D, D_SECTSIZE)) {
+@@ -2904,27 +2900,31 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+ 	 * check that log sunit is modulo fsblksize or default it to D_SUNIT.
+ 	 */
+ 
+-	if (lsunit) {
++	if (get_conf_val(OPT_L, L_SUNIT)) {
+ 		/* convert from 512 byte blocks to fs blocks */
+-		lsunit = DTOBT(lsunit);
++		set_conf_val(OPT_L, L_SUNIT,
++			     DTOBT(get_conf_val(OPT_L, L_SUNIT)));
+ 	} else if (sb_feat.log_version == 2 &&
+-		   loginternal &&
++		   get_conf_val(OPT_L, L_INTERNAL) &&
+ 		   get_conf_val(OPT_D, D_SUNIT)) {
+-		/* lsunit and get_conf_val(OPT_D, D_SUNIT) now in fs blocks */
+-		lsunit = get_conf_val(OPT_D, D_SUNIT);
++		/* L_SUNIT and D_SUNIT now in fs blocks */
++		set_conf_val(OPT_L, L_SUNIT, get_conf_val(OPT_D, D_SUNIT));
+ 	}
+ 
+ 	if (sb_feat.log_version == 2 &&
+-	    (lsunit * get_conf_val(OPT_B, B_SIZE)) > 256 * 1024) {
++	    (get_conf_val(OPT_L, L_SUNIT) *
++	     get_conf_val(OPT_B, B_SIZE)) > 256 * 1024) {
+ 		/* Warn only if specified on commandline */
+ 		if (lsuflag || lsunitflag) {
+ 			fprintf(stderr,
+ 	_("log stripe unit (%lld bytes) is too large (maximum is 256KiB)\n"),
+-				(lsunit * get_conf_val(OPT_B, B_SIZE)));
++				(get_conf_val(OPT_L, L_SUNIT) *
++				 get_conf_val(OPT_B, B_SIZE)));
+ 			fprintf(stderr,
+ 	_("log stripe unit adjusted to 32KiB\n"));
+ 		}
+-		lsunit = (32 * 1024) >> get_conf_val(OPT_B, B_LOG);
++		set_conf_val(OPT_L, L_SUNIT,
++			     (32 * 1024) >> get_conf_val(OPT_B, B_LOG));
+ 	}
+ 
+ 	min_logblocks = max_trans_res(get_conf_val(OPT_D, D_AGSIZE),
+@@ -2932,35 +2932,41 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+ 				   get_conf_val(OPT_D, D_SECTLOG),
+ 				   get_conf_val(OPT_B, B_LOG),
+ 				   get_conf_val(OPT_I, I_LOG), dirblocklog,
+-				   sb_feat.log_version, lsunit, sb_feat.finobt,
++				   sb_feat.log_version,
++				   get_conf_val(OPT_L, L_SUNIT),
++				   sb_feat.finobt,
+ 				   sb_feat.rmapbt, sb_feat.reflink,
+ 				   sb_feat.inode_align);
+ 	ASSERT(min_logblocks);
+ 	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
+-	if (!logbytes &&
++	if (!get_conf_val(OPT_L, L_SIZE) &&
+ 	    dblocks >= (1024*1024*1024) >> get_conf_val(OPT_B, B_LOG))
+ 		min_logblocks = MAX(min_logblocks,
+ 				    XFS_MIN_LOG_BYTES >>
+ 				    get_conf_val(OPT_B, B_LOG));
+-	if (logbytes && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
++	if (get_conf_val(OPT_L, L_SIZE) && xi.logBBsize > 0 &&
++	    logblocks > DTOBT(xi.logBBsize)) {
+ 		fprintf(stderr,
+ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			get_conf_raw(OPT_L, L_SIZE),
+ 			(long long)DTOBT(xi.logBBsize));
+ 		usage();
+-	} else if (!logbytes && xi.logBBsize > 0) {
++	} else if (!get_conf_val(OPT_L, L_SIZE) && xi.logBBsize > 0) {
+ 		logblocks = DTOBT(xi.logBBsize);
+-	} else if (logbytes && !xi.logdev && !loginternal) {
++	} else if (get_conf_val(OPT_L, L_SIZE) && !xi.logdev &&
++		   !get_conf_val(OPT_L, L_INTERNAL)) {
+ 		fprintf(stderr,
+ 			_("size specified for non-existent log subvolume\n"));
+ 		usage();
+-	} else if (loginternal && logbytes && logblocks >= dblocks) {
++	} else if (get_conf_val(OPT_L, L_INTERNAL) &&
++		   get_conf_val(OPT_L, L_SIZE) && logblocks >= dblocks) {
+ 		fprintf(stderr, _("size %lld too large for internal log\n"),
+ 			(long long)logblocks);
+ 		usage();
+-	} else if (!loginternal && !xi.logdev) {
++	} else if (!get_conf_val(OPT_L, L_INTERNAL) && !xi.logdev) {
+ 		logblocks = 0;
+-	} else if (loginternal && !logbytes) {
++	} else if (get_conf_val(OPT_L, L_INTERNAL) &&
++		   !get_conf_val(OPT_L, L_SIZE)) {
+ 
+ 		if (dblocks < GIGABYTES(1, get_conf_val(OPT_B, B_LOG))) {
+ 			/* tiny filesystems get minimum sized logs. */
+@@ -3024,16 +3030,16 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	 */
+ 	sb_set_features(&mp->m_sb, &sb_feat,
+ 			get_conf_val(OPT_D, D_SECTSIZE),
+-			lsectorsize,
++			get_conf_val(OPT_L, L_SECTSIZE),
+ 			get_conf_val(OPT_D, D_SUNIT));
+ 
+ 
+-	if (loginternal) {
++	if (get_conf_val(OPT_L, L_INTERNAL)) {
+ 		/*
+ 		 * Readjust the log size to fit within an AG if it was sized
+ 		 * automatically.
+ 		 */
+-		if (!logbytes) {
++		if (!get_conf_val(OPT_L, L_SIZE)) {
+ 			logblocks = MIN(logblocks,
+ 					libxfs_alloc_ag_max_usable(mp));
+ 
+@@ -3051,25 +3057,28 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		}
+ 
+ 		if (laflag) {
+-			if (logagno >= get_conf_val(OPT_D, D_AGCOUNT)) {
++			if (get_conf_val(OPT_L, L_AGNUM) >=
++			    get_conf_val(OPT_D, D_AGCOUNT)) {
+ 				fprintf(stderr,
+-		_("log ag number %d too large, must be less than %lld\n"),
+-					logagno,
++	_("log ag number %lld too large, must be less than %lld\n"),
++					get_conf_val(OPT_L, L_AGNUM),
+ 					get_conf_val(OPT_D, D_AGCOUNT));
+ 				usage();
+ 			}
+ 		} else
+-			logagno = (xfs_agnumber_t)(
+-					get_conf_val(OPT_D, D_AGCOUNT) / 2);
++			set_conf_val(OPT_L, L_AGNUM, (xfs_agnumber_t)(
++					get_conf_val(OPT_D, D_AGCOUNT) / 2));
+ 
+-		logstart = XFS_AGB_TO_FSB(mp, logagno, libxfs_prealloc_blocks(mp));
++		logstart = XFS_AGB_TO_FSB(mp, get_conf_val(OPT_L, L_AGNUM),
++					  libxfs_prealloc_blocks(mp));
+ 		/*
+ 		 * Align the logstart at stripe unit boundary.
+ 		 */
+-		if (lsunit) {
++		if (get_conf_val(OPT_L, L_SUNIT)) {
+ 			logstart = fixup_internal_log_stripe(mp,
+ 					lsflag, logstart,
+-					get_conf_val(OPT_D, D_AGSIZE), lsunit,
++					get_conf_val(OPT_D, D_AGSIZE),
++					get_conf_val(OPT_L, L_SUNIT),
+ 					&logblocks,
+ 					get_conf_val(OPT_B, B_LOG), &lalign);
+ 		} else if (get_conf_val(OPT_D, D_SUNIT)) {
+@@ -3082,8 +3091,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		}
+ 	} else {
+ 		logstart = 0;
+-		if (lsunit)
+-			fixup_log_stripe_unit(lsflag, lsunit,
++		if (get_conf_val(OPT_L, L_SUNIT))
++			fixup_log_stripe_unit(lsflag,
++					      get_conf_val(OPT_L, L_SUNIT),
+ 					&logblocks, get_conf_val(OPT_B, B_LOG));
+ 	}
+ 	validate_log_size(logblocks, get_conf_val(OPT_B, B_LOG), min_logblocks);
+@@ -3115,7 +3125,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			sb_feat.dir_version, (long long)dirblocksize, sb_feat.nci,
+ 				sb_feat.dirftype,
+ 			logfile, 1 << get_conf_val(OPT_B, B_LOG), (long long)logblocks,
+-			sb_feat.log_version, "", (long long)lsectorsize, (long long)lsunit,
++			sb_feat.log_version, "",
++			get_conf_val(OPT_L, L_SECTSIZE),
++			get_conf_val(OPT_L, L_SUNIT),
+ 				sb_feat.lazy_sb_counters,
+ 			rtfile, rtextblocks << get_conf_val(OPT_B, B_LOG),
+ 			(long long)rtblocks, (long long)rtextents);
+@@ -3156,7 +3168,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	sbp->sb_ifree = 0;
+ 	sbp->sb_fdblocks = dblocks -
+ 		get_conf_val(OPT_D, D_AGCOUNT) * libxfs_prealloc_blocks(mp) -
+-		(loginternal ? logblocks : 0);
++		(get_conf_val(OPT_L, L_INTERNAL) ? logblocks : 0);
+ 	sbp->sb_frextents = 0;	/* will do a free later */
+ 	sbp->sb_uquotino = sbp->sb_gquotino = sbp->sb_pquotino = 0;
+ 	sbp->sb_qflags = 0;
+@@ -3164,8 +3176,11 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	sbp->sb_width = get_conf_val(OPT_D, D_SWIDTH);
+ 	sbp->sb_dirblklog = dirblocklog - get_conf_val(OPT_B, B_LOG);
+ 	if (sb_feat.log_version == 2) {	/* This is stored in bytes */
+-		lsunit = (lsunit == 0) ? 1 : XFS_FSB_TO_B(mp, lsunit);
+-		sbp->sb_logsunit = lsunit;
++		set_conf_val(OPT_L, L_SUNIT,
++			     (get_conf_val(OPT_L, L_SUNIT) == 0) ?
++			     1 : XFS_FSB_TO_B(mp,
++					      get_conf_val(OPT_L, L_SUNIT)));
++		sbp->sb_logsunit = get_conf_val(OPT_L, L_SUNIT);
+ 	} else
+ 		sbp->sb_logsunit = 0;
+ 	if (sb_feat.inode_align) {
+@@ -3177,10 +3192,11 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		sb_feat.inode_align = sbp->sb_inoalignmt != 0;
+ 	} else
+ 		sbp->sb_inoalignmt = 0;
+-	if (lsectorsize != BBSIZE ||
++	if (get_conf_val(OPT_L, L_SECTSIZE) != BBSIZE ||
+ 	    get_conf_val(OPT_D, D_SECTSIZE) != BBSIZE) {
+-		sbp->sb_logsectlog = (__uint8_t)lsectorlog;
+-		sbp->sb_logsectsize = (__uint16_t)lsectorsize;
++		sbp->sb_logsectlog = (__uint8_t)get_conf_val(OPT_L, L_SECTLOG);
++		sbp->sb_logsectsize =
++			(__uint16_t)get_conf_val(OPT_L, L_SECTSIZE);
+ 	} else {
+ 		sbp->sb_logsectlog = 0;
+ 		sbp->sb_logsectsize = 0;
+@@ -3188,7 +3204,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 
+ 	sb_set_features(&mp->m_sb, &sb_feat,
+ 			get_conf_val(OPT_D, D_SECTSIZE),
+-			lsectorsize,
++			get_conf_val(OPT_L, L_SECTSIZE),
+ 			get_conf_val(OPT_D, D_SUNIT));
+ 
+ 	if (force_overwrite)
+@@ -3250,7 +3266,8 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	libxfs_log_clear(mp->m_logdev_targp, NULL,
+ 		XFS_FSB_TO_DADDR(mp, logstart),
+ 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
+-		&sbp->sb_uuid, sb_feat.log_version, lsunit, XLOG_FMT, XLOG_INIT_CYCLE, false);
++		&sbp->sb_uuid, sb_feat.log_version,
++		get_conf_val(OPT_L, L_SUNIT), XLOG_FMT, XLOG_INIT_CYCLE, false);
+ 
+ 	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 0);
+ 	if (mp == NULL) {
+@@ -3327,7 +3344,8 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+ 			platform_uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_uuid);
+ 
+-		if (loginternal && agno == logagno) {
++		if (get_conf_val(OPT_L, L_INTERNAL) &&
++		    agno == get_conf_val(OPT_L, L_AGNUM)) {
+ 			be32_add_cpu(&agf->agf_freeblks, -logblocks);
+ 			agf->agf_longest =
+ 				cpu_to_be32(get_conf_val(OPT_D, D_AGSIZE) -
+@@ -3401,7 +3419,8 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 
+ 		arec = XFS_ALLOC_REC_ADDR(mp, block, 1);
+ 		arec->ar_startblock = cpu_to_be32(libxfs_prealloc_blocks(mp));
+-		if (loginternal && agno == logagno) {
++		if (get_conf_val(OPT_L, L_INTERNAL) &&
++		    agno == get_conf_val(OPT_L, L_AGNUM)) {
+ 			if (lalign) {
+ 				/*
+ 				 * Have to insert two records
+@@ -3452,7 +3471,8 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 
+ 		arec = XFS_ALLOC_REC_ADDR(mp, block, 1);
+ 		arec->ar_startblock = cpu_to_be32(libxfs_prealloc_blocks(mp));
+-		if (loginternal && agno == logagno) {
++		if (get_conf_val(OPT_L, L_INTERNAL) &&
++		    agno == get_conf_val(OPT_L, L_AGNUM)) {
+ 			if (lalign) {
+ 				arec->ar_blockcount = cpu_to_be32(
+ 					XFS_FSB_TO_AGBNO(mp, logstart) -
+@@ -3587,7 +3607,8 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			}
+ 
+ 			/* account for the log space */
+-			if (loginternal && agno == logagno) {
++			if (get_conf_val(OPT_L, L_INTERNAL) && agno ==
++			    get_conf_val(OPT_L, L_AGNUM)) {
+ 				rrec = XFS_RMAP_REC_ADDR(block,
+ 					be16_to_cpu(block->bb_numrecs) + 1);
+ 				rrec->rm_startblock = cpu_to_be32(
+-- 
+2.11.0
 
