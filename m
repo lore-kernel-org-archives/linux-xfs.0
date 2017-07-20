@@ -1,69 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55612 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:35382 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751099AbdGLTdj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Jul 2017 15:33:39 -0400
-Received: from [10.0.0.114] (provider [10.0.0.114])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 627957FC379
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Jul 2017 14:33:10 -0500 (CDT)
-Subject: Re: [PATCH] xfsdump: fix race condition between lseek() and
- read()/write()
+        id S935400AbdGTUV6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Jul 2017 16:21:58 -0400
+Subject: Re: Collecting aged XFS profiles
+References: <F180D8D4-633B-4CC5-8D70-5CAC36233513@cs.cmu.edu>
+ <CAAxjCEzevLnmxyVRME1-kT867KjH2rtOdspv7nF6TOfLUDD+xA@mail.gmail.com>
+ <20170717234814.GK17762@dastard>
+ <CAAxjCEzP=bf5S12J8rTn7EyJK_MeM=t1JSa7pBzZyXK=9TrjQQ@mail.gmail.com>
+ <bcb651de-75bf-97a6-7ed8-c083d2a440e5@sandeen.net>
+ <CAAxjCEzZ2Q0wL=nhGVHVtK3M5Ws3MQdrUNKm3jJKO+1y-wxTkw@mail.gmail.com>
+ <cb16e0b4-2ef2-cdef-e0e3-cf04abd3d4c6@sandeen.net>
+ <CAAxjCEwjU+gMszjCWWpv8Vpc+Cx+_b0v9Vvi81d+HC8uy=FGuA@mail.gmail.com>
+ <e632fff1-e72a-7b51-1431-aa0903dec5b4@sandeen.net>
+ <CAAxjCEzCgKi_r8XY-xOQ2iKKa8RmRPjL9WRXQBi9zzNXa_9WKw@mail.gmail.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-References: <1461244016-7373-1-git-send-email-eguan@redhat.com>
- <9253902d-060e-77d7-84af-b5faa1a43e92@sandeen.net>
-Message-ID: <808bf487-7106-d277-99fa-098d4001c005@sandeen.net>
-Date: Wed, 12 Jul 2017 14:33:28 -0500
+Message-ID: <fe347f30-ace2-089e-3137-864c83396951@sandeen.net>
+Date: Thu, 20 Jul 2017 15:21:57 -0500
 MIME-Version: 1.0
-In-Reply-To: <9253902d-060e-77d7-84af-b5faa1a43e92@sandeen.net>
+In-Reply-To: <CAAxjCEzCgKi_r8XY-xOQ2iKKa8RmRPjL9WRXQBi9zzNXa_9WKw@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Stefan Ring <stefanrin@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
 
-On 07/12/2017 01:46 PM, Eric Sandeen wrote:
+
+On 07/20/2017 03:15 PM, Stefan Ring wrote:
+> On Thu, Jul 20, 2017 at 4:27 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>> On 07/20/2017 02:52 AM, Stefan Ring wrote:
+>>> On Thu, Jul 20, 2017 at 12:00 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>>>> ok, that shoulda worked... I wonder how to debug this, if you can't
+>>>> legally share the problematic image with me to investigate...
+>>>>
+>>>> I put a lot of effort into selectively zeroing out unused portions
+>>>> of metablocks a couple years back, I am surprised that this much remains.
+>>>>
+>>>> I wonder if something regressed ...
+>>>
+>>> I will try if I can find out which code paths lead to the content
+>>> being dumped out.
+>>
+>> Perhaps you could send xfs_info output and offsets of the "safe" strings,
+>> and maybe look at block or sector boundaries of the blocks containing
+>> those "safe" strings to identify magic numbers which would identify
+>> the metadata types ...
+>>
 > 
+> Ok,
 > 
+> I'm using the for-next branch now (0602fbe880) and inserted something
+> like this so I can set a breakpoint on my_break.
 
-Sorry, I was wrong ...
+Thanks, I'll dig into this a bit.  I thought we had an xfstest that looked
+for this sort of leaked string problem, but now I'm not finding it... something
+to fix, I guess.
 
-
->> diff --git a/inventory/inv_idx.c b/inventory/inv_idx.c
->> index 95529e8..cd9b9cb 100644
->> --- a/inventory/inv_idx.c
->> +++ b/inventory/inv_idx.c
->> @@ -341,8 +341,8 @@ idx_put_sesstime( inv_sestoken_t tok, bool_t whichtime)
-> 
->         rval = GET_REC_NOLOCK( fd, &ent, sizeof( invt_entry_t ),
->                                 tok->sd_invtok->d_invindex_off);
-> 
-> This sets the offset to d_invindex_off
-
-... and reads sizeof(invt_entry_t), advancing by that much.
-
->>  			      ent.ie_timeperiod.tp_start,
->>  			      ent.ie_timeperiod.tp_end );
->>  #endif
->> -	rval = PUT_REC_NOLOCK_SEEKCUR( fd, &ent, sizeof( invt_entry_t ),
->> -				      -(off64_t)(sizeof( invt_entry_t )));
-> 
-> This backed up one entry from the current offset...
-which goes back to...
-
-> 
->> +	rval = PUT_REC_NOLOCK(fd, &ent, sizeof(invt_entry_t),
->> +			      tok->sd_invtok->d_invindex_off);
-
-...d_invindex_off.  Sorry for the false alarm.
-
--eric
-
-> 
-> but this keeps it at the current offset, no?  Isn't this a different behavior?
-> 
->
+-Eric
