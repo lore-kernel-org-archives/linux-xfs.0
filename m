@@ -1,79 +1,162 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35055 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750873AbdGVQVe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 22 Jul 2017 12:21:34 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:33166 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750861AbdGUOWu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Jul 2017 10:22:50 -0400
+Date: Fri, 21 Jul 2017 10:22:48 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: quotacheck deadlock?
+Message-ID: <20170721142248.GC44069@bfoster.bfoster>
+References: <20170720065804.GR4224@magnolia>
+ <20170720123846.GC3944@bfoster.bfoster>
+ <20170720185855.GT4224@magnolia>
+ <20170720200129.GU4224@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20170721223956.29485-2-ross.zwisler@linux.intel.com>
-References: <20170721223956.29485-1-ross.zwisler@linux.intel.com> <20170721223956.29485-2-ross.zwisler@linux.intel.com>
-From: Dan Williams <dan.j.williams@gmail.com>
-Date: Sat, 22 Jul 2017 09:21:31 -0700
-Message-ID: <CAA9_cmdoEVx88FCuCSOB1Qmom_X8uJPB4-uUx7MA3X5H4fZ=GQ@mail.gmail.com>
-Subject: Re: [PATCH v4 1/5] mm: add mkwrite param to vm_insert_mixed()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170720200129.GU4224@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jan Kara <jack@suse.cz>, linux-doc@vger.kernel.org, David Airlie <airlied@linux.ie>, Dave Chinner <david@fromorbit.com>, dri-devel@lists.freedesktop.org, linux-mm <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Patrik Jakobsson <patrik.r.jakobsson@gmail.com>, Christoph Hellwig <hch@lst.de>, linux-samsung-soc <linux-samsung-soc@vger.kernel.org>, Joonyoung Shim <jy0922.shim@samsung.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Kyungmin Park <kyungmin.park@samsung.com>, Krzysztof Kozlowski <krzk@kernel.org>, Ingo Molnar <mingo@redhat.com>, ext4 hackers <linux-ext4@vger.kernel.org>, Matthew Wilcox <mawilcox@microsoft.com>, linux-arm-msm@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>, Inki Dae <inki.dae@samsung.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Alexander Viro <viro@zeniv.linux.org.uk>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Theodore Ts'o <tytso@mit.edu>, Jonathan Corbet <corbet@lwn.net>, Seung-Woo Kim <sw0312.kim@samsung.com>, linux-xfs@vger.kernel.org, Rob Clark <robdclark@gmail.com>, Kukjin Kim <kgene@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, freedreno@lists.freedesktop.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Jul 21, 2017 at 3:39 PM, Ross Zwisler
-<ross.zwisler@linux.intel.com> wrote:
-> To be able to use the common 4k zero page in DAX we need to have our PTE
-> fault path look more like our PMD fault path where a PTE entry can be
-> marked as dirty and writeable as it is first inserted, rather than waiting
-> for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
->
-> Right now we can rely on having a dax_pfn_mkwrite() call because we can
-> distinguish between these two cases in do_wp_page():
->
->         case 1: 4k zero page => writable DAX storage
->         case 2: read-only DAX storage => writeable DAX storage
->
-> This distinction is made by via vm_normal_page().  vm_normal_page() returns
-> false for the common 4k zero page, though, just as it does for DAX ptes.
-> Instead of special casing the DAX + 4k zero page case, we will simplify our
-> DAX PTE page fault sequence so that it matches our DAX PMD sequence, and
-> get rid of the dax_pfn_mkwrite() helper.  We will instead use
-> dax_iomap_fault() to handle write-protection faults.
->
-> This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
-> and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set insert_pfn()
-> will do the work that was previously done by wp_page_reuse() as part of the
-> dax_pfn_mkwrite() call path.
->
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> ---
->  drivers/dax/device.c                    |  2 +-
->  drivers/gpu/drm/exynos/exynos_drm_gem.c |  3 ++-
->  drivers/gpu/drm/gma500/framebuffer.c    |  2 +-
->  drivers/gpu/drm/msm/msm_gem.c           |  3 ++-
->  drivers/gpu/drm/omapdrm/omap_gem.c      |  6 ++++--
->  drivers/gpu/drm/ttm/ttm_bo_vm.c         |  2 +-
->  fs/dax.c                                |  2 +-
->  include/linux/mm.h                      |  2 +-
->  mm/memory.c                             | 27 +++++++++++++++++++++------
->  9 files changed, 34 insertions(+), 15 deletions(-)
->
-> diff --git a/drivers/dax/device.c b/drivers/dax/device.c
-> index e9f3b3e..3973521 100644
-> --- a/drivers/dax/device.c
-> +++ b/drivers/dax/device.c
-> @@ -273,7 +273,7 @@ static int __dev_dax_pte_fault(struct dev_dax *dev_dax, struct vm_fault *vmf)
->
->         pfn = phys_to_pfn_t(phys, dax_region->pfn_flags);
->
-> -       rc = vm_insert_mixed(vmf->vma, vmf->address, pfn);
-> +       rc = vm_insert_mixed(vmf->vma, vmf->address, pfn, false);
+On Thu, Jul 20, 2017 at 01:01:29PM -0700, Darrick J. Wong wrote:
+> On Thu, Jul 20, 2017 at 11:58:55AM -0700, Darrick J. Wong wrote:
+> > On Thu, Jul 20, 2017 at 08:38:46AM -0400, Brian Foster wrote:
+> > > On Wed, Jul 19, 2017 at 11:58:04PM -0700, Darrick J. Wong wrote:
+> > > > Hi,
+> > > > 
+> > > > I ran the following sequence of commands on 4.13-rc1:
+> > > > 
+> > > > # mkfs.xfs -f /dev/sdf
+> > > > # xfs_db -x -c 'sb 0' -c 'addr rootino' -c 'write -d core.uid 4294967295' /dev/sdf
+> > > > # mount /dev/sdf -o usrquota
+> > > > 
+> > > > The kernel reports that it's starting quotacheck, but never finishes.
+> > > > echo t > /proc/sysrq produces this for the hung mount command:
+> > > > 
+> > > > mount           R  running task        0   988    895 0x00000000
+> > > > Call Trace:
+> > > >  ? sched_clock_cpu+0xa8/0xe0
+> > > >  ? xfs_qm_flush_one+0x3c/0x120 [xfs]
+> > > >  ? lock_acquire+0xac/0x200
+> > > >  ? lock_acquire+0xac/0x200
+> > > >  ? xfs_qm_flush_one+0x3c/0x120 [xfs]
+> > > >  ? xfs_qm_dquot_walk+0xa1/0x170 [xfs]
+> > > >  ? get_lock_stats+0x19/0x60
+> > > >  ? get_lock_stats+0x19/0x60
+> > > >  ? xfs_qm_dquot_walk+0xa1/0x170 [xfs]
+> > > >  ? xfs_qm_dquot_walk+0x125/0x170 [xfs]
+> > > >  ? radix_tree_gang_lookup+0xd1/0xf0
+> > > >  ? xfs_qm_shrink_count+0x20/0x20 [xfs]
+> > > >  ? xfs_qm_dquot_walk+0xbb/0x170 [xfs]
+> > > >  ? kfree+0x23f/0x2d0
+> > > >  ? kvfree+0x2a/0x40
+> > > >  ? xfs_bulkstat+0x315/0x680 [xfs]
+> > > >  ? xfs_qm_get_rtblks+0xa0/0xa0 [xfs]
+> > > >  ? xfs_qm_quotacheck+0x2bd/0x360 [xfs]
+> > > >  ? xfs_qm_mount_quotas+0x106/0x1f0 [xfs]
+> > > >  ? xfs_mountfs+0x6f2/0xb00 [xfs]
+> > > >  ? xfs_fs_fill_super+0x483/0x610 [xfs]
+> > > >  ? mount_bdev+0x180/0x1b0
+> > > >  ? xfs_finish_flags+0x150/0x150 [xfs]
+> > > >  ? xfs_fs_mount+0x15/0x20 [xfs]
+> > > >  ? mount_fs+0x14/0x80
+> > > >  ? vfs_kern_mount+0x67/0x170
+> > > >  ? do_mount+0x195/0xd00
+> > > >  ? kmem_cache_alloc_trace+0x231/0x2a0
+> > > >  ? SyS_mount+0x95/0xe0
+> > > >  ? entry_SYSCALL_64_fastpath+0x1f/0xbe
+> > > > 
+> > > > Any thoughts?  I'm not sure what's going on for sure, other than the
+> > > > call stack looks funny and it's midnight so I'm going to sleep. :)
+> > > > 
+> > > 
+> > > It looks like a problem with the loop in xfs_qm_dquot_walk(). The next
+> > > lookup index is calculated as:
+> > > 
+> > > 	 next_index = be32_to_cpu(dqp->q_core.d_id) + 1;
+> > > 
+> > > ... each time through the loop. With the uid written above, the +1
+> > > overflows the 32-bit next_index back to zero and the lookup starts over.
+> > > I suppose a simple fix might be to do something like the following.
+> > > Thoughts?
+> > > 
+> > > --- 8< ---
+> > > 
+> > > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> > > index 6ce948c..f013c893 100644
+> > > --- a/fs/xfs/xfs_qm.c
+> > > +++ b/fs/xfs/xfs_qm.c
+> > > @@ -111,6 +111,8 @@ xfs_qm_dquot_walk(
+> > >  			skipped = 0;
+> > >  			break;
+> > >  		}
+> > > +		if (!next_index)
+> > > +			break;
+> > 
+> > Well, this /does/ fix the quotacheck lockup... but leads me straight
+> > into the next problem, which is that xfs_quota -x -c 'report -i' just
+> > goes into an infinite loop:
+> > 
+> > root                3          0          0     00 [--------]
+> > #4294967295           1          0          0     00 [--------]
+> > <repeats>
+> > 
 
-Ugh, I generally find bool flags unreadable. They place a tax on
-jumping to function definition to recall what true and false mean. If
-we want to go this 'add an argument' route can we at least add an enum
-like:
+That's a different codepath, right? Do we have a similar problem
+somewhere else..?
 
-enum {
-    PTE_MKDIRTY,
-    PTE_MKCLEAN,
-};
+> > That said, the userland APIs *chown/set*uid return -EINVAL if you pass
+> > in a userid of -1U, so one could argue that it's not a valid id anyway.
+> > Via stat(), the kernel squashes -1U down to 65534 (nobody), which
+> > implies that (Linux, anyway) doesn't consider -1U to be a valid id.
+> > ISTR XFS treats uids as a mostly opaque value that we get from and pass
+> > to the VFS without a whole lot of interpretation...?
+> 
 
-...to differentiate the two cases?
+That's my understanding. At least, I just looked at the size of the id
+and assumed anything therein was valid. I'd still probably want to fix
+the loop in quotacheck either way just to avoid leaving around a
+landmine.
+
+> Poking around in include/linux/uidgid.h, it seems that uid_valid()
+> thinks that -1U is not a valid user id, so perhaps the inode verifier
+> should chck for that.  Ditto for gid_valid().
+> 
+
+Seems reasonable, assuming that has always been the case.
+
+> But then there's project id -- xfs_quota won't let us set a projid of
+> 4294967295, though I don't see anything in the kernel that prohibits
+> that.  chattr -p 4294967295 succeeds in setting the project id, which
+> means that we probably can't just ban it retroactively(??)
+> 
+> Thoughts?
+> 
+
+Not sure.. any idea why the xfs_quota command fails if chattr does not?
+
+Brian
+
+> --D
+> 
+> > 
+> > --D
+> > 
+> > >  	}
+> > >  
+> > >  	if (skipped) {
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
