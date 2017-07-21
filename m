@@ -1,102 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:38083 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750896AbdGXF0m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2017 01:26:42 -0400
-Date: Mon, 24 Jul 2017 15:26:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH] xfs: consolidate local format inode fork verifiers
-Message-ID: <20170724052638.GD17762@dastard>
-References: <20170719160318.GP4224@magnolia>
- <20170720022602.GR17762@dastard>
- <20170720055057.GQ4224@magnolia>
- <20170720224934.GW17762@dastard>
- <20170721135405.GB44069@bfoster.bfoster>
- <20170721230058.GY17762@dastard>
- <20170722122944.GA4783@bfoster.bfoster>
+Received: from mga14.intel.com ([192.55.52.115]:11771 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751504AbdGURoI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Jul 2017 13:44:08 -0400
+Date: Fri, 21 Jul 2017 11:44:05 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v3 1/5] mm: add vm_insert_mixed_mkwrite()
+Message-ID: <20170721174405.GA18697@linux.intel.com>
+References: <20170628220152.28161-1-ross.zwisler@linux.intel.com>
+ <20170628220152.28161-2-ross.zwisler@linux.intel.com>
+ <20170719141659.GB15908@quack2.suse.cz>
+ <20170719175112.GA24588@linux.intel.com>
+ <20170719215831.GC10923@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170722122944.GA4783@bfoster.bfoster>
+In-Reply-To: <20170719215831.GC10923@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@intel.com>, Ingo Molnar <mingo@redhat.com>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Sat, Jul 22, 2017 at 08:29:44AM -0400, Brian Foster wrote:
-> On Sat, Jul 22, 2017 at 09:00:58AM +1000, Dave Chinner wrote:
-> > On Fri, Jul 21, 2017 at 09:54:05AM -0400, Brian Foster wrote:
-> > > On Fri, Jul 21, 2017 at 08:49:34AM +1000, Dave Chinner wrote:
-> > > but I'm also not against crafting a new, verifier
-> > > specific one to accomplish that. Technically, it doesn't have to be
-> > > shouty :), but IMO, the diagnostic/usability benefit outweighs the
-> > > aesthetic cost.
+On Wed, Jul 19, 2017 at 03:58:31PM -0600, Ross Zwisler wrote:
+> On Wed, Jul 19, 2017 at 11:51:12AM -0600, Ross Zwisler wrote:
+> > On Wed, Jul 19, 2017 at 04:16:59PM +0200, Jan Kara wrote:
+> > > On Wed 28-06-17 16:01:48, Ross Zwisler wrote:
+> > > > To be able to use the common 4k zero page in DAX we need to have our PTE
+> > > > fault path look more like our PMD fault path where a PTE entry can be
+> > > > marked as dirty and writeable as it is first inserted, rather than waiting
+> > > > for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
+> > > > 
+> > > > Right now we can rely on having a dax_pfn_mkwrite() call because we can
+> > > > distinguish between these two cases in do_wp_page():
+> > > > 
+> > > > 	case 1: 4k zero page => writable DAX storage
+> > > > 	case 2: read-only DAX storage => writeable DAX storage
+> > > > 
+> > > > This distinction is made by via vm_normal_page().  vm_normal_page() returns
+> > > > false for the common 4k zero page, though, just as it does for DAX ptes.
+> > > > Instead of special casing the DAX + 4k zero page case, we will simplify our
+> > > > DAX PTE page fault sequence so that it matches our DAX PMD sequence, and
+> > > > get rid of dax_pfn_mkwrite() completely.
+> > > > 
+> > > > This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
+> > > > and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set insert_pfn()
+> > > > will do the work that was previously done by wp_page_reuse() as part of the
+> > > > dax_pfn_mkwrite() call path.
+> > > > 
+> > > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > > 
+> > > Just one small comment below.
+> > > 
+> > > > @@ -1658,14 +1658,26 @@ static int insert_pfn(struct vm_area_struct *vma, unsigned long addr,
+> > > >  	if (!pte)
+> > > >  		goto out;
+> > > >  	retval = -EBUSY;
+> > > > -	if (!pte_none(*pte))
+> > > > -		goto out_unlock;
+> > > > +	if (!pte_none(*pte)) {
+> > > > +		if (mkwrite) {
+> > > > +			entry = *pte;
+> > > > +			goto out_mkwrite;
+> > > 
+> > > Can we maybe check here that (pte_pfn(*pte) == pfn_t_to_pfn(pfn)) and
+> > > return -EBUSY otherwise? That way we are sure insert_pfn() isn't doing
+> > > anything we don't expect 
 > > 
-> > I disagree - there are so many verifier checks (and we only grow
-> > more as time goes on) so whatever we do needs them to be
-> > easily maintainable and not compromise the readabilty of the verifer
-> > code.
-> > 
+> > Sure, that's fine.  I'll add it as a WARN_ON_ONCE() so it's a very loud
+> > failure.  If the pfns don't match I think we're insane (and would have been
+> > insane prior to this patch series as well) because we are getting a page fault
+> > and somehow have a different PFN already mapped at that location.
 > 
-> I agree. ;) But I disagree that using a macro somehow automatically
-> negatively affects the readability of verifers. Anybody who can make
-> sense of this:
+> Umm...well, I added the warning, and during my regression testing hit a case
+> where the PFNs didn't match.  (generic/437 with both ext4 & XFS)
 > 
->         if (!xfs_sb_version_hascrc(&mp->m_sb))
->                 return __line__;
->         if (dsl->sl_magic != cpu_to_be32(XFS_SYMLINK_MAGIC))
->                 return __line__;
->         if (!uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_meta_uuid))
->                 return __line__;
+> I've verified that this behavior happens with vanilla v4.12, so it's not a new
+> condition introduced by my patch.
 > 
-> ... could just as easily make sense of something like this:
-> 
-> 	xfs_verify_assert(xfs_sb_version_hascrc(&mp->m_sb));
-> 	xfs_verify_assert(dsl->sl_magic == cpu_to_be32(XFS_SYMLINK_MAGIC));
-> 	xfs_verify_assert(uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_meta_uuid));
+> I'm off tracking that down - there's a bug lurking somewhere, I think.
 
-Still needs branches to return on error so the verifier code
-functions correctly. So it simply isn't as clean as your example
-suggests. And, no hiding goto/return/errno variables inside a macro
-is not an option - that makes for horrible code and we should not
-repeat those past mistakes we inherited from the old Irix
-codebase.
+Actually, I think we're fine.  What was happening was that two faults were
+racing for a private mapping.  One was installing a RW PTE for the COW page
+cache page via wp_page_copy(), and the second was trying to install a
+read-only PTE in insert_pfn().  The PFNs don't match because the two faults
+are trying to map very different PTEs - one for DAX storage, one for a page
+cache page.
 
-And we need to be really careful here - making the code more complex
-for pretty errors blows out the size of the code. That means it runs
-slower, even though we never execute most of the pretty error print
-stuff.  This is an important consideration as verifiers are a
-performance critical fast path, both in the kernel and in userspace.
+This collision is handled by insert_pfn() by just returning -EBUSY, which will
+bail out of the fault and either re-fault if necessary, or use the PTE that
+the other thread installed.  For the case I described above I think both
+faults will just happily use the page cache page, and the RO DAX fault won't
+be retried.
 
-> There is a simple solution to this problem: just include all of the
-> readily accessible state information in the error report. If the
-> messages above looked something like the following:
-> 
->   XFS (...): Metadata corruption detected at xfs_symlink_read_verify [xfs], xfs_symlink block 0x58
->   XFS (...): Read verifier failed: xfs_log_check_lsn(mp, be64_to_cpu(dsl->sl_lsn)), xfs_symlink_remote.c:114
->
-> ... we wouldn't have to decode what the error means for every possible
-> kernel. The error report is self contained like most of the other
-> errors/assert reports in XFS and throughout the kernel.
-
-Just like an assert/warning, we've still got to go match it to the
-exact kernel source tree to determine the context in which the
-message was emitted and what it actually means.  Making it pretty
-doesn't change the amount of work a developer needs to do to
-classify or analyse errors in log files, all it does is change the
-amount of overhead needed to generate the error message,
-
-Really, verifiers are performance critical fast paths, so the code
-that runs inside them needs to be implemented with this in mind. I'm
-not against making messages pretty, but let's not do it based on the
-on the premise that pretty error messages are more important than
-runtime performance when there are no errors...
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+I think this is fine, and I'll preserve this behavior as you suggest in the
+mkwrite case by validating that the PTE is what we think it should be after we
+grab the PTL.
