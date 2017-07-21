@@ -1,238 +1,397 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27318 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:49810 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755368AbdGWRZv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jul 2017 13:25:51 -0400
+        with ESMTP id S1751460AbdGUEkW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 00:40:22 -0400
 Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6NHPofG024343
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6L4eLxN030714
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:25:51 GMT
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 04:40:21 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v6NHPoxh009289
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v6L4eLkl001260
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:25:50 GMT
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v6NHPocg006345
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:25:50 GMT
-Subject: Re: [PATCH 12/22] xfs: scrub refcount btrees
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 04:40:21 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v6L4eKdV019282
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 04:40:21 GMT
+Subject: [PATCH 17/22] xfs: scrub directory freespace
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 20 Jul 2017 21:40:19 -0700
+Message-ID: <150061201947.14732.7337884085202901044.stgit@magnolia>
+In-Reply-To: <150061190859.14732.17040548800470377701.stgit@magnolia>
 References: <150061190859.14732.17040548800470377701.stgit@magnolia>
- <150061198747.14732.9418346330351535155.stgit@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <9dce8578-1745-6da8-b449-4a53fdec2b42@oracle.com>
-Date: Sun, 23 Jul 2017 10:25:50 -0700
 MIME-Version: 1.0
-In-Reply-To: <150061198747.14732.9418346330351535155.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-This one looks fine to me, it is pretty much as it was in v7.
-Reviewed by: Allison Henderson <allison.henderson@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-On 7/20/2017 9:39 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> Plumb in the pieces necessary to check the refcount btree.  If rmap is
-> available, check the reference count by performing an interval query
-> against the rmapbt.
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/Makefile         |    1
->  fs/xfs/libxfs/xfs_fs.h  |    3 +
->  fs/xfs/scrub/common.c   |    5 ++
->  fs/xfs/scrub/common.h   |    2 +
->  fs/xfs/scrub/refcount.c |   96 +++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_trace.h      |    3 +
->  6 files changed, 108 insertions(+), 2 deletions(-)
->  create mode 100644 fs/xfs/scrub/refcount.c
->
->
-> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> index 5fe0c8e..1b1972b 100644
-> --- a/fs/xfs/Makefile
-> +++ b/fs/xfs/Makefile
-> @@ -146,6 +146,7 @@ xfs-y				+= $(addprefix scrub/, \
->  				   common.o \
->  				   ialloc.o \
->  				   metabufs.o \
-> +				   refcount.o \
->  				   rmap.o \
->  				   )
->  endif
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index 24db73a..3253de9 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -492,7 +492,8 @@ struct xfs_scrub_metadata {
->  #define XFS_SCRUB_TYPE_INOBT	8	/* inode btree */
->  #define XFS_SCRUB_TYPE_FINOBT	9	/* free inode btree */
->  #define XFS_SCRUB_TYPE_RMAPBT	10	/* reverse mapping btree */
-> -#define XFS_SCRUB_TYPE_MAX	10
-> +#define XFS_SCRUB_TYPE_REFCNTBT	11	/* reference count btree */
-> +#define XFS_SCRUB_TYPE_MAX	11
->
->  /* i: repair this metadata */
->  #define XFS_SCRUB_FLAG_REPAIR		(1 << 0)
-> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> index dfa5fc5..71a980e 100644
-> --- a/fs/xfs/scrub/common.c
-> +++ b/fs/xfs/scrub/common.c
-> @@ -730,6 +730,11 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
->  		.scrub	= xfs_scrub_rmapbt,
->  		.has	= xfs_sb_version_hasrmapbt,
->  	},
-> +	{ /* refcountbt */
-> +		.setup	= xfs_scrub_setup_ag_refcountbt,
-> +		.scrub	= xfs_scrub_refcountbt,
-> +		.has	= xfs_sb_version_hasreflink,
-> +	},
->  };
->
->  /* Dispatch metadata scrubbing. */
-> diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-> index 8fbd19b..1f9ba8c6 100644
-> --- a/fs/xfs/scrub/common.h
-> +++ b/fs/xfs/scrub/common.h
-> @@ -212,6 +212,7 @@ SETUP_FN(xfs_scrub_setup_ag_header);
->  SETUP_FN(xfs_scrub_setup_ag_allocbt);
->  SETUP_FN(xfs_scrub_setup_ag_iallocbt);
->  SETUP_FN(xfs_scrub_setup_ag_rmapbt);
-> +SETUP_FN(xfs_scrub_setup_ag_refcountbt);
->  #undef SETUP_FN
->
->  /* Metadata scrubbers */
-> @@ -228,6 +229,7 @@ SCRUB_FN(xfs_scrub_cntbt);
->  SCRUB_FN(xfs_scrub_inobt);
->  SCRUB_FN(xfs_scrub_finobt);
->  SCRUB_FN(xfs_scrub_rmapbt);
-> +SCRUB_FN(xfs_scrub_refcountbt);
->  #undef SCRUB_FN
->
->  #endif	/* __XFS_REPAIR_COMMON_H__ */
-> diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-> new file mode 100644
-> index 0000000..fcc72c5
-> --- /dev/null
-> +++ b/fs/xfs/scrub/refcount.c
-> @@ -0,0 +1,96 @@
-> +/*
-> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
-> + *
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License
-> + * as published by the Free Software Foundation; either version 2
-> + * of the License, or (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> + */
-> +#include "xfs.h"
-> +#include "xfs_fs.h"
-> +#include "xfs_shared.h"
-> +#include "xfs_format.h"
-> +#include "xfs_trans_resv.h"
-> +#include "xfs_mount.h"
-> +#include "xfs_defer.h"
-> +#include "xfs_btree.h"
-> +#include "xfs_bit.h"
-> +#include "xfs_log_format.h"
-> +#include "xfs_trans.h"
-> +#include "xfs_trace.h"
-> +#include "xfs_sb.h"
-> +#include "xfs_rmap.h"
-> +#include "scrub/common.h"
-> +#include "scrub/btree.h"
-> +
-> +/*
-> + * Set us up to scrub reference count btrees.
-> + */
-> +int
-> +xfs_scrub_setup_ag_refcountbt(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_inode		*ip)
-> +{
-> +	return xfs_scrub_setup_ag_btree(sc, ip, false);
-> +}
-> +
-> +/* Reference count btree scrubber. */
-> +
-> +/* Scrub a refcountbt record. */
-> +STATIC int
-> +xfs_scrub_refcountbt_helper(
-> +	struct xfs_scrub_btree		*bs,
-> +	union xfs_btree_rec		*rec)
-> +{
-> +	struct xfs_mount		*mp = bs->cur->bc_mp;
-> +	struct xfs_agf			*agf;
-> +	struct xfs_refcount_irec	irec;
-> +	xfs_agblock_t			eoag;
-> +	bool				has_cowflag;
-> +	int				error = 0;
-> +
-> +	irec.rc_startblock = be32_to_cpu(rec->refc.rc_startblock);
-> +	irec.rc_blockcount = be32_to_cpu(rec->refc.rc_blockcount);
-> +	irec.rc_refcount = be32_to_cpu(rec->refc.rc_refcount);
-> +	agf = XFS_BUF_TO_AGF(bs->sc->sa.agf_bp);
-> +	eoag = be32_to_cpu(agf->agf_length);
-> +
-> +	has_cowflag = !!(irec.rc_startblock & XFS_REFC_COW_START);
-> +	XFS_SCRUB_BTREC_CHECK(bs, (irec.rc_refcount == 1 && has_cowflag) ||
-> +				  (irec.rc_refcount != 1 && !has_cowflag));
-> +	irec.rc_startblock &= ~XFS_REFC_COW_START;
-> +	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_startblock < mp->m_sb.sb_agblocks);
-> +	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_startblock < eoag);
-> +	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_startblock < irec.rc_startblock +
-> +			irec.rc_blockcount);
-> +	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)irec.rc_startblock +
-> +			irec.rc_blockcount <= mp->m_sb.sb_agblocks);
-> +	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)irec.rc_startblock +
-> +			irec.rc_blockcount <= eoag);
-> +	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_refcount >= 1);
-> +
-> +	return error;
-> +}
-> +
-> +/* Scrub the refcount btree for some AG. */
-> +int
-> +xfs_scrub_refcountbt(
-> +	struct xfs_scrub_context	*sc)
-> +{
-> +	struct xfs_owner_info		oinfo;
-> +
-> +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_REFC);
-> +	return xfs_scrub_btree(sc, sc->sa.refc_cur, xfs_scrub_refcountbt_helper,
-> +			&oinfo, NULL);
-> +}
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 3996cb8..6c0281b 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3322,7 +3322,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
->  	{ XFS_SCRUB_TYPE_CNTBT,		"cntbt" }, \
->  	{ XFS_SCRUB_TYPE_INOBT,		"inobt" }, \
->  	{ XFS_SCRUB_TYPE_FINOBT,	"finobt" }, \
-> -	{ XFS_SCRUB_TYPE_RMAPBT,	"rmapbt" }
-> +	{ XFS_SCRUB_TYPE_RMAPBT,	"rmapbt" }, \
-> +	{ XFS_SCRUB_TYPE_REFCNTBT,	"refcountbt" }
->  DECLARE_EVENT_CLASS(xfs_scrub_class,
->  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
->  		 int error),
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Check the free space information in a directory.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/dir.c |  337 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 337 insertions(+)
+
+
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index 1d6b5329..661aec3 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -232,6 +232,338 @@ xfs_scrub_dir_rec(
+ #undef XFS_SCRUB_DIRENT_GOTO
+ #undef XFS_SCRUB_DIRENT_CHECK
+ 
++#define XFS_SCRUB_DIR_BLOCK_CHECK(fs_ok) \
++	XFS_SCRUB_DATA_CHECK(sc, XFS_DATA_FORK, \
++		lblk << mp->m_sb.sb_blocklog, "dir", fs_ok)
++#define XFS_SCRUB_DIR_BLOCK_GOTO(fs_ok, label) \
++	XFS_SCRUB_DATA_GOTO(sc, XFS_DATA_FORK, \
++		lblk << mp->m_sb.sb_blocklog, "dir", fs_ok, label)
++#define XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(label) \
++	XFS_SCRUB_FILE_OP_ERROR_GOTO(sc, XFS_DATA_FORK, \
++		lblk << mp->m_sb.sb_blocklog, "dir", &error, label)
++/* Is this free entry either in the bestfree or smaller than all of them? */
++static inline bool
++xfs_scrub_directory_check_free_entry(
++	struct xfs_dir2_data_free	*bf,
++	struct xfs_dir2_data_unused	*dup)
++{
++	struct xfs_dir2_data_free	*dfp;
++	unsigned int			smallest;
++
++	smallest = -1U;
++	for (dfp = &bf[0]; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
++		if (dfp->offset &&
++		    be16_to_cpu(dfp->length) == be16_to_cpu(dup->length))
++			return true;
++		if (smallest < be16_to_cpu(dfp->length))
++			smallest = be16_to_cpu(dfp->length);
++	}
++
++	return be16_to_cpu(dup->length) <= smallest;
++}
++
++/* Check free space info in a directory data block. */
++STATIC int
++xfs_scrub_directory_data_bestfree(
++	struct xfs_scrub_context	*sc,
++	xfs_dablk_t			lblk,
++	bool				is_block)
++{
++	struct xfs_dir2_data_unused	*dup;
++	struct xfs_dir2_data_free	*dfp;
++	struct xfs_buf			*bp;
++	struct xfs_dir2_data_free	*bf;
++	struct xfs_mount		*mp = sc->mp;
++	char				*ptr;
++	char				*endptr;
++	u16				tag;
++	int				newlen;
++	int				offset;
++	int				error;
++
++	if (is_block) {
++		/* dir block format */
++		XFS_SCRUB_DIR_BLOCK_CHECK(lblk ==
++				XFS_B_TO_FSBT(mp, XFS_DIR2_DATA_OFFSET));
++		error = xfs_dir3_block_read(sc->tp, sc->ip, &bp);
++	} else {
++		/* dir data format */
++		error = xfs_dir3_data_read(sc->tp, sc->ip, lblk, -1, &bp);
++	}
++	XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(out);
++
++	/* Do the bestfrees correspond to actual free space? */
++	bf = sc->ip->d_ops->data_bestfree_p(bp->b_addr);
++	for (dfp = &bf[0]; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
++		offset = be16_to_cpu(dfp->offset);
++		XFS_SCRUB_DIR_BLOCK_GOTO(offset < BBTOB(bp->b_length), nextloop);
++		if (!offset)
++			continue;
++		dup = (struct xfs_dir2_data_unused *)(bp->b_addr + offset);
++		tag = be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup));
++
++		XFS_SCRUB_DIR_BLOCK_CHECK(dup->freetag ==
++				cpu_to_be16(XFS_DIR2_DATA_FREE_TAG));
++		XFS_SCRUB_DIR_BLOCK_CHECK(be16_to_cpu(dup->length) ==
++				be16_to_cpu(dfp->length));
++		XFS_SCRUB_DIR_BLOCK_CHECK(tag ==
++				((char *)dup - (char *)bp->b_addr));
++nextloop:;
++	}
++
++	/* Make sure the bestfrees are actually the best free spaces. */
++	ptr = (char *)sc->ip->d_ops->data_entry_p(bp->b_addr);
++	if (is_block) {
++		struct xfs_dir2_block_tail	*btp;
++
++		btp = xfs_dir2_block_tail_p(sc->mp->m_dir_geo, bp->b_addr);
++		endptr = (char *)xfs_dir2_block_leaf_p(btp);
++	} else
++		endptr = (char *)bp->b_addr + BBTOB(bp->b_length);
++	while (ptr < endptr) {
++		dup = (struct xfs_dir2_data_unused *)ptr;
++		/* Skip real entries */
++		if (dup->freetag != cpu_to_be16(XFS_DIR2_DATA_FREE_TAG)) {
++			struct xfs_dir2_data_entry	*dep;
++
++			dep = (struct xfs_dir2_data_entry *)ptr;
++			newlen = sc->ip->d_ops->data_entsize(dep->namelen);
++			XFS_SCRUB_DIR_BLOCK_GOTO(newlen > 0, out_buf);
++			ptr += newlen;
++			XFS_SCRUB_DIR_BLOCK_CHECK(ptr <= endptr);
++			continue;
++		}
++
++		/* Spot check this free entry */
++		tag = be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup));
++		XFS_SCRUB_DIR_BLOCK_CHECK(tag ==
++				((char *)dup - (char *)bp->b_addr));
++
++		/*
++		 * Either this entry is a bestfree or it's smaller than
++		 * any of the bestfrees.
++		 */
++		XFS_SCRUB_DIR_BLOCK_CHECK(
++				xfs_scrub_directory_check_free_entry(bf, dup));
++
++		/* Move on. */
++		newlen = be16_to_cpu(dup->length);
++		XFS_SCRUB_DIR_BLOCK_GOTO(newlen > 0, out_buf);
++		ptr += newlen;
++		XFS_SCRUB_DIR_BLOCK_CHECK(ptr <= endptr);
++	}
++out_buf:
++	xfs_trans_brelse(sc->tp, bp);
++out:
++	return error;
++}
++
++/* Is this the longest free entry in the block? */
++static inline bool
++xfs_scrub_directory_check_freesp(
++	struct xfs_inode		*dp,
++	struct xfs_buf			*dbp,
++	unsigned int			len)
++{
++	struct xfs_dir2_data_free	*bf;
++	struct xfs_dir2_data_free	*dfp;
++	unsigned int			longest = 0;
++	int				offset;
++
++	bf = dp->d_ops->data_bestfree_p(dbp->b_addr);
++	for (dfp = &bf[0]; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
++		offset = be16_to_cpu(dfp->offset);
++		if (!offset)
++			continue;
++		if (longest < be16_to_cpu(dfp->length))
++			longest = be16_to_cpu(dfp->length);
++	}
++
++	return longest == len;
++}
++
++/* Check free space info in a directory leaf1 block. */
++STATIC int
++xfs_scrub_directory_leaf1_bestfree(
++	struct xfs_scrub_context	*sc,
++	struct xfs_da_args		*args,
++	xfs_dablk_t			lblk)
++{
++	struct xfs_dir2_leaf_tail	*ltp;
++	struct xfs_buf			*dbp;
++	struct xfs_buf			*bp;
++	struct xfs_mount		*mp = sc->mp;
++	__be16				*bestp;
++	__u16				best;
++	int				i;
++	int				error;
++
++	/* Read the free space block */
++	error = xfs_dir3_leaf_read(sc->tp, sc->ip, lblk, -1, &bp);
++	XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(out);
++
++	/* Check all the entries. */
++	ltp = xfs_dir2_leaf_tail_p(mp->m_dir_geo, bp->b_addr);
++	bestp = xfs_dir2_leaf_bests_p(ltp);
++	for (i = 0; i < be32_to_cpu(ltp->bestcount); i++, bestp++) {
++		best = be16_to_cpu(*bestp);
++		if (best == NULLDATAOFF)
++			continue;
++		error = xfs_dir3_data_read(sc->tp, sc->ip,
++				i * args->geo->fsbcount, -1, &dbp);
++		XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(skip_buf);
++		XFS_SCRUB_DIR_BLOCK_CHECK(
++				xfs_scrub_directory_check_freesp(sc->ip, dbp,
++					best));
++		xfs_trans_brelse(sc->tp, dbp);
++skip_buf:
++		;
++	}
++out:
++	return error;
++}
++
++/* Check free space info in a directory freespace block. */
++STATIC int
++xfs_scrub_directory_free_bestfree(
++	struct xfs_scrub_context	*sc,
++	struct xfs_da_args		*args,
++	xfs_dablk_t			lblk)
++{
++	struct xfs_dir3_icfree_hdr	freehdr;
++	struct xfs_buf			*dbp;
++	struct xfs_buf			*bp;
++	struct xfs_mount		*mp = sc->mp;
++	__be16				*bestp;
++	__be16				best;
++	int				i;
++	int				error;
++
++	/* Read the free space block */
++	error = xfs_dir2_free_read(sc->tp, sc->ip, lblk, &bp);
++	XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(out);
++
++	/* Check all the entries. */
++	sc->ip->d_ops->free_hdr_from_disk(&freehdr, bp->b_addr);
++	bestp = sc->ip->d_ops->free_bests_p(bp->b_addr);
++	for (i = 0; i < freehdr.nvalid; i++, bestp++) {
++		best = be16_to_cpu(*bestp);
++		if (best == NULLDATAOFF)
++			continue;
++		error = xfs_dir3_data_read(sc->tp, sc->ip,
++				(freehdr.firstdb + i) * args->geo->fsbcount,
++				-1, &dbp);
++		XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(skip_buf);
++		XFS_SCRUB_DIR_BLOCK_CHECK(
++				xfs_scrub_directory_check_freesp(sc->ip, dbp,
++					best));
++		xfs_trans_brelse(sc->tp, dbp);
++skip_buf:
++		;
++	}
++out:
++	return error;
++}
++
++#define for_each_extent_dablk(lblk, args, got) \
++		for ((lblk) = roundup((xfs_dablk_t)(got)->br_startoff, (args)->geo->fsbcount); \
++		     (lblk) < (got)->br_startoff + (got)->br_blockcount; \
++		     (lblk) += (args)->geo->fsbcount)
++/* Check free space information in directories. */
++STATIC int
++xfs_scrub_directory_blocks(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_bmbt_irec		got;
++	struct xfs_da_args		args;
++	struct xfs_ifork		*ifp;
++	struct xfs_mount		*mp = sc->mp;
++	xfs_fileoff_t			leaf_lblk;
++	xfs_fileoff_t			free_lblk;
++	xfs_fileoff_t			lblk;
++	xfs_extnum_t			idx;
++	bool				found;
++	int				is_block = 0;
++	int				error;
++
++	/* Ignore local format directories. */
++	if (sc->ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
++	    sc->ip->i_d.di_format != XFS_DINODE_FMT_BTREE)
++		return 0;
++
++	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
++	lblk = XFS_B_TO_FSB(mp, XFS_DIR2_DATA_OFFSET);
++	leaf_lblk = XFS_B_TO_FSB(mp, XFS_DIR2_LEAF_OFFSET);
++	free_lblk = XFS_B_TO_FSB(mp, XFS_DIR2_FREE_OFFSET);
++
++	/* Is this a block dir? */
++	args.dp = sc->ip;
++	args.geo = mp->m_dir_geo;
++	args.trans = sc->tp;
++	error = xfs_dir2_isblock(&args, &is_block);
++	XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(out);
++
++	/* Iterate all the data extents in the directory... */
++	found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &idx, &got);
++	while (found) {
++		/* No more data blocks... */
++		if (got.br_startoff >= leaf_lblk)
++			break;
++
++		/* Check each data block's bestfree data */
++		for_each_extent_dablk(lblk, &args, &got) {
++			error = xfs_scrub_directory_data_bestfree(sc, lblk,
++					is_block);
++			if (error)
++				goto out;
++		}
++
++		found = xfs_iext_get_extent(ifp, ++idx, &got);
++	}
++
++	/* Look for a leaf1 block, which has free info. */
++	if (xfs_iext_lookup_extent(sc->ip, ifp, leaf_lblk, &idx, &got) &&
++	    got.br_startoff == leaf_lblk &&
++	    got.br_blockcount == args.geo->fsbcount &&
++	    !xfs_iext_get_extent(ifp, ++idx, &got)) {
++		XFS_SCRUB_DIR_BLOCK_GOTO(!is_block, not_leaf1);
++		error = xfs_scrub_directory_leaf1_bestfree(sc, &args,
++				leaf_lblk);
++		if (error)
++			goto out;
++	}
++not_leaf1:
++
++	/* Scan for free blocks */
++	lblk = free_lblk;
++	found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &idx, &got);
++	while (found) {
++		/*
++		 * Dirs can't have blocks mapped above 2^32.
++		 * Single-block dirs shouldn't even be here.
++		 */
++		lblk = got.br_startoff;
++		XFS_SCRUB_DIR_BLOCK_GOTO(!(lblk & ~((1ULL << 32) - 1ULL)), out);
++		XFS_SCRUB_DIR_BLOCK_GOTO(!is_block, nextfree);
++
++		/* Check each dir free block's bestfree data */
++		for_each_extent_dablk(lblk, &args, &got) {
++			error = xfs_scrub_directory_free_bestfree(sc, &args,
++					lblk);
++			if (error)
++				goto out;
++		}
++
++nextfree:
++		found = xfs_iext_get_extent(ifp, ++idx, &got);
++	}
++out:
++	return error;
++}
++#undef for_each_extent_dablk
++#undef XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO
++#undef XFS_SCRUB_DIR_BLOCK_CHECK
++
+ /* Scrub a whole directory. */
+ int
+ xfs_scrub_directory(
+@@ -258,6 +590,11 @@ xfs_scrub_directory(
+ 	if (error)
+ 		return error;
+ 
++	/* Check the freespace. */
++	error = xfs_scrub_directory_blocks(sc);
++	if (error)
++		return error;
++
+ 	/* Check that every dirent we see can also be looked up by hash. */
+ 	bufsize = (size_t)min_t(loff_t, 32768, sc->ip->i_d.di_size);
+ 	sdc.sc = sc;
+
