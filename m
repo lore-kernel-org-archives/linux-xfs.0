@@ -1,512 +1,285 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:23982 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751731AbdGWXqF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jul 2017 19:46:05 -0400
-Date: Mon, 24 Jul 2017 09:45:39 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/22] xfs: create an ioctl to scrub AG metadata
-Message-ID: <20170723234539.GA17762@dastard>
-References: <150061190859.14732.17040548800470377701.stgit@magnolia>
- <150061192762.14732.9274339959944172701.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:50826 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750762AbdGUM6M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Jul 2017 08:58:12 -0400
+Date: Fri, 21 Jul 2017 08:58:10 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH] xfs: consolidate local format inode fork verifiers
+Message-ID: <20170721125808.GA44069@bfoster.bfoster>
+References: <20170719160318.GP4224@magnolia>
+ <20170720115143.GA3944@bfoster.bfoster>
+ <20170720202037.GV4224@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150061192762.14732.9274339959944172701.stgit@magnolia>
+In-Reply-To: <20170720202037.GV4224@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
 
-On Thu, Jul 20, 2017 at 09:38:47PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jul 20, 2017 at 01:20:37PM -0700, Darrick J. Wong wrote:
+> On Thu, Jul 20, 2017 at 07:51:46AM -0400, Brian Foster wrote:
+> > On Wed, Jul 19, 2017 at 09:03:18AM -0700, Darrick J. Wong wrote:
+> > > Create a centralized function to verify local format inode forks, then
+> > > migrate the existing short format directory verifier to use this
+> > > framework and add verifiers for the other two things we support (attrs
+> > > and symlinks).
+> > > 
+> > > Obviously this will get broken up into smaller pieces (one patch to
+> > > refactor/move the existing verifier calls, another one to add the two
+> > > new verifiers), but what do people think?
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > 
+> > I haven't combed through the details of the verifiers, but just a few
+> > very quick thoughts..
+> > 
+> > >  fs/xfs/libxfs/xfs_attr_leaf.c      |   70 ++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/libxfs/xfs_attr_leaf.h      |    1 +
+> > >  fs/xfs/libxfs/xfs_inode_fork.c     |   10 -----
+> > >  fs/xfs/libxfs/xfs_shared.h         |    1 +
+> > >  fs/xfs/libxfs/xfs_symlink_remote.c |   29 +++++++++++++++
+> > >  fs/xfs/xfs_icache.c                |   46 ++++++++++++++++++++++++
+> > >  fs/xfs/xfs_icache.h                |    1 +
+> > >  fs/xfs/xfs_inode.c                 |    6 +--
+> > >  8 files changed, 150 insertions(+), 14 deletions(-)
+> > > 
+> > ...
+> > > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> > > index 0e80f34..5484211 100644
+> > > --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> > > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> > > @@ -183,16 +183,6 @@ xfs_iformat_fork(
+> > >  	if (error)
+> > >  		return error;
+> > >  
+> > > -	/* Check inline dir contents. */
+> > > -	if (S_ISDIR(VFS_I(ip)->i_mode) &&
+> > > -	    dip->di_format == XFS_DINODE_FMT_LOCAL) {
+> > > -		error = xfs_dir2_sf_verify(ip);
+> > > -		if (error) {
+> > > -			xfs_idestroy_fork(ip, XFS_DATA_FORK);
+> > > -			return error;
+> > > -		}
+> > > -	}
+> > > -
+> > 
+> > What's the purpose of moving this? Just to accommodate userspace?
 > 
-> Create an ioctl that can be used to scrub internal filesystem metadata.
-> The new ioctl takes the metadata type, an (optional) AG number, an
-> (optional) inode number and generation, and a flags argument.  This will
-> be used by the upcoming XFS online scrub tool.
+> Yes, it's part of letting repair supply its own ifork verifiers so that
+> phase 6 can libxfs_iget to inspect and correct shortform directories.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok, I'm starting completely cold on this code (never seen it before)
-so there's a few things about the patch series that hit me straight
-away.
+Ok. FWIW, that seems like the wrong reason to shuffle the location of
+the verifier around to me. IMO, we should invoke the verifier in a
+common location with respect to where the target object is
+read/initialized and then implement it in such a way that allows
+conditional verification if that is a requirement of other, higher level
+(outside of libxfs) contexts.
 
-1. I can't really review the previous tracepoint patch because I
-have no context of how they are used or what is being passed into
-them. Tracepoint patches really need to be added when there's
-already context available to verify them Can you split that patch up
-so that tracepoints are introduced with the code that uses them?
+I suppose this is a bit more tricky because we are verifying the in-core
+fork rather than the on-disk format as other verifiers do at the
+read/write boundaries, but otherwise the flag approach (or something
+like it) still makes more sense to me. Just my .02.
 
-2. Macros. Ugh.
+BTW, did we ever consider attempting to verify local format forks at
+read/write time rather than ifork init/flush time? I don't recall
+whether there was a problem/drawback there or we just didn't consider
+it.
 
-3. Lots of different, disjoint bits of infrastructure in this patch,
-but I have no clear idea how it gets used yet. Makes it hard to
-review....
+> > As it is, it looks like this leaves a coverage gap in a log recovery
+> > case where xfs_iget() is not used (xfs_recover_inode_owner_change()).
+> 
+> Ugh, I didn't even notice that.
+> 
+> As it stands today, xfs_recover_inode_owner_change also won't notice
+> corrupt attr forks or inline symlinks.  Seeing as we're (theoretically)
+> only changing the owner fields in v5 bmbt tree blocks this might not
+> have any practical consequence.  At that point we've already replayed
+> everything else in that inode that was dirty and are about to write
+> things out to disk, so everything has to be correct.
+> 
 
-Hence I think this patch also needs to be broken up into individual
-infrastructure operations, with the patch description describing
-what each operation is used for. That way when it comes to adding
-the actual metadata scrub code, the reviewer knows how the pieces
-all go together and what the functions being called are supposed to
-do and return...
+It's not the particular case I was worried about (it looked like
+recovery of an operation associated with extent swap during log
+recovery), just that it's easier to miss the requirement that the inline
+fork format has to be verified explicitly (if so desired) anywhere it is
+initialized.
 
-Once I understand the infrastructure and how it is supposed to drive
-all the other bits, then larger patches for scrubbing individual
-structures are fine, but large patches for infrastructure just lead
-to long, long emails and missed problems...
+> > Also, I think this is best split up into two or three smaller patches.
+> > E.g., one to move/rename the existing mechanism (with justification as
+> > to why), one or more to add the additional verifiers for the other
+> > formats.
+> 
+> (I mentioned that I'd do that before sending a real series...)
+> 
 
-> +/* metadata scrubbing */
-> +struct xfs_scrub_metadata {
-> +	__u32 sm_type;		/* What to check? */
-> +	__u32 sm_flags;		/* flags; see below. */
-> +	__u64 sm_ino;		/* inode number. */
-> +	__u32 sm_gen;		/* inode generation. */
-> +	__u32 sm_agno;		/* ag number. */
-> +	__u64 sm_reserved[5];	/* pad to 64 bytes */
-> +};
-> +
-> +/*
-> + * Metadata types and flags for scrub operation.
-> + */
-> +#define XFS_SCRUB_TYPE_TEST	0	/* dummy to test ioctl */
-> +#define XFS_SCRUB_TYPE_MAX	0
-> +
-> +/* i: repair this metadata */
-> +#define XFS_SCRUB_FLAG_REPAIR		(1 << 0)
+Oops, missed that. Thanks.
 
-If you're going to document a direction, so it in the variable name,
-not the comment. XFS_SCRUB_IFLAG_REPAIR, XFS_SCRUB_OFLAG_CORRUPT,
-etc. Especially as you don't separate the definitions  of i/o flags,
-future flags are going to intertwine i/o in the definitions and
-it's not going to be obvious from a quick look where a flag should
-be used...
+Brian
 
-> +/* o: metadata object needs repair */
-> +#define XFS_SCRUB_FLAG_CORRUPT		(1 << 1)
-> +/* o: metadata object could be optimized */
-> +#define XFS_SCRUB_FLAG_PREEN		(1 << 2)
-
-What does "could be optimised" mean?
-
-> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> new file mode 100644
-> index 0000000..6931793
-> --- /dev/null
-> +++ b/fs/xfs/scrub/common.c
-> @@ -0,0 +1,533 @@
-
-Rather than "common.c", shouldn't this be named "scrub.c" to
-indicate it's the entry point/main infrastructure file? "common"
-usually indicates library/shared functions, not ioctl entry points..
-
-[...]
-
-> + * We use a bit of trickery with transactions to avoid buffer deadlocks
-> + * if there is a cycle in the metadata.  The basic problem is that
-> + * travelling down a btree involves locking the current buffer at each
-> + * tree level.  If a pointer should somehow point back to a buffer that
-> + * we've already examined, we will deadlock due to the second buffer
-> + * locking attempt.  Note however that grabbing a buffer in transaction
-> + * context links the locked buffer to the transaction.  If we try to
-> + * re-grab the buffer in the context of the same transaction, we avoid
-> + * the second lock attempt and continue.  Between the verifier and the
-> + * scrubber, something will notice that something is amiss and report
-> + * the corruption.  Therefore, each scrubber will allocate an empty
-> + * transaction, attach buffers to it, and cancel the transaction at the
-> + * end of the scrub run.  Cancelling a non-dirty transaction simply
-> + * unlocks the buffers.
-
-This whole chunk of trickery should definitely be in it's own patch...
-
-> + * There are four pieces of data that scrub can communicate to
-> + * userspace.  The first is the error code (errno), which can be used to
-> + * communicate operational errors in performing the scrub.  There are
-> + * also three flags that can be set in the scrub context.  If the data
-> + * structure itself is corrupt, the CORRUPT flag will be set.  If
-> + * the metadata is correct but otherwise suboptimal, the PREEN flag
-> + * will be set.
-> + */
-> +
-> +struct xfs_scrub_meta_fns {
-> +	int		(*setup)(struct xfs_scrub_context *,
-> +				 struct xfs_inode *);
-> +	int		(*scrub)(struct xfs_scrub_context *);
-> +	bool		(*has)(struct xfs_sb *);
-> +};
-
-What's this structure do? And why "fns" rather than "ops" as we
-normally call operation callout structures like this?
-
-> +/* Check for operational errors. */
-> +bool
-> +xfs_scrub_op_ok(
-> +	struct xfs_scrub_context	*sc,
-> +	xfs_agnumber_t			agno,
-> +	xfs_agblock_t			bno,
-> +	const char			*type,
-> +	int				*error,
-> +	const char			*func,
-> +	int				line)
-> +{
-> +	struct xfs_mount		*mp = sc->mp;
-> +
-> +	switch (*error) {
-> +	case 0:
-> +		return true;
-> +	case -EDEADLOCK:
-> +		/* Used to restart an op with deadlock avoidance. */
-> +		trace_xfs_scrub_deadlock_retry(sc->ip, sc->sm, *error);
-> +		break;
-> +	case -EFSBADCRC:
-> +	case -EFSCORRUPTED:
-> +		/* Note the badness but don't abort. */
-> +		sc->sm->sm_flags |= XFS_SCRUB_FLAG_CORRUPT;
-> +		*error = 0;
-> +		/* fall through */
-> +	default:
-> +		trace_xfs_scrub_op_error(mp, agno, bno, type, *error, func,
-> +				line);
-> +		break;
-> +	}
-> +	return false;
-> +}
-
-These looks like boiler plate functions that aren't used yet, which
-makes it harder to see all the actual ioctl code that is supposed
-to be introduced in this patch. Again, I'm not sure how they are
-supposed to be used, so I can't actually review this code yet....
-
-Also, it looks like we're passing func/line to tracing functions,
-which further implies wrapper macros to insert them. We've avoided
-this with all the other tracing functions by passing
-__return_address and/or _THIS_IP_ to the tracing function. Doing so
-in all this boiler plate checking code gets rid of the macros.
-
-
-> +/* Dummy scrubber */
-> +
-> +int
-> +xfs_scrub_dummy(
-> +	struct xfs_scrub_context	*sc)
-> +{
-> +	if (sc->sm->sm_ino || sc->sm->sm_agno)
-> +		return -EINVAL;
-> +	if (sc->sm->sm_gen & XFS_SCRUB_FLAG_CORRUPT)
-> +		sc->sm->sm_flags |= XFS_SCRUB_FLAG_CORRUPT;
-> +	if (sc->sm->sm_gen & XFS_SCRUB_FLAG_PREEN)
-> +		sc->sm->sm_flags |= XFS_SCRUB_FLAG_PREEN;
-> +	if (sc->sm->sm_gen & XFS_SCRUB_FLAG_XFAIL)
-> +		sc->sm->sm_flags |= XFS_SCRUB_FLAG_XFAIL;
-> +	if (sc->sm->sm_gen & XFS_SCRUB_FLAG_XCORRUPT)
-> +		sc->sm->sm_flags |= XFS_SCRUB_FLAG_XCORRUPT;
-> +	if (sc->sm->sm_gen & ~XFS_SCRUB_FLAGS_OUT)
-> +		return -ENOENT;
-> +
-> +	return 0;
-> +}
-
-What's the purpose of the dummy? Does it get removed later?
-
-> +/* Per-scrubber setup functions */
-> +
-> +/* Set us up with a transaction and an empty context. */
-> +int
-> +xfs_scrub_setup_fs(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_inode		*ip)
-> +{
-> +	return xfs_scrub_trans_alloc(sc->sm, sc->mp,
-> +			&M_RES(sc->mp)->tr_itruncate, 0, 0, 0, &sc->tp);
-> +}
-
-Why are you using a truncate reservation for this transaction?
-
-Better question: what initial conditions is a setup function
-supposed to create for (I'm guessing here) a scrubber function to
-run?
-
-> +
-> +/* Scrub setup and teardown */
-> +
-> +/* Free all the resources and finish the transactions. */
-> +STATIC int
-> +xfs_scrub_teardown(
-> +	struct xfs_scrub_context	*sc,
-> +	int				error)
-> +{
-> +	if (sc->tp) {
-> +		xfs_trans_cancel(sc->tp);
-> +		sc->tp = NULL;
-> +	}
-> +	return error;
-> +}
-
-So we have scrub function specific setup, but only a global
-teardown? Does that mean scrubber functions are not supposed to
-allocate any memory for keeping state and cross references? i.e.
-they can only store what they can keep attached to a transaction
-handle?
-
-> +
-> +/* Perform common scrub context initialization. */
-> +STATIC int
-> +xfs_scrub_setup(
-> +	struct xfs_inode		*ip,
-> +	struct xfs_scrub_context	*sc,
-> +	const struct xfs_scrub_meta_fns	*fns,
-> +	struct xfs_scrub_metadata	*sm,
-> +	bool				try_harder)
-> +{
-> +	memset(sc, 0, sizeof(*sc));
-> +	sc->mp = ip->i_mount;
-> +	sc->sm = sm;
-> +	sc->fns = fns;
-> +	sc->try_harder = try_harder;
-> +
-> +	return sc->fns->setup(sc, ip);
-> +}
-
-Does this really need a wrapper function? It means main function is
-somewhat convoluted....
-
-> +
-> +/* Scrubbing dispatch. */
-> +
-> +static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
-> +	{ /* dummy verifier */
-> +		.setup	= xfs_scrub_setup_fs,
-> +		.scrub	= xfs_scrub_dummy,
-> +	},
-> +};
-> +
-> +/* Dispatch metadata scrubbing. */
-> +int
-> +xfs_scrub_metadata(
-> +	struct xfs_inode		*ip,
-> +	struct xfs_scrub_metadata	*sm)
-> +{
-> +	struct xfs_scrub_context	sc;
-> +	struct xfs_mount		*mp = ip->i_mount;
-> +	const struct xfs_scrub_meta_fns	*fns;
-> +	bool				try_harder = false;
-> +	int				error = 0;
-> +
-> +	trace_xfs_scrub(ip, sm, error);
-
-	memset(sc, 0, sizeof(*sc));
-	sc->mp = ip->i_mount;
-	sc->sm = sm;
-	sc->try_harder = false;
-
-And we reference everything thru the scrub context from here on.
-I find it a bit confusing to hide sm inside sc, and everywhere else
-references sc.sm, yet later on in this function we make the
-assumption that the structure pointed to by sm is the one that the
-scrubber is actually modifying when it is running. e.g. the
-xfs_scrub_found_corruption() call at the end. Better to make it
-clear all the code is working on the same structure...
-
-> +
-> +	/* Forbidden if we are shut down or mounted norecovery. */
-> +	error = -ESHUTDOWN;
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		goto out;
-
-Shutdown conditions should return EFSCORRUPTED.
-
-> +	error = -ENOTRECOVERABLE;
-> +	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
-> +		goto out;
-
-Same for read only mounts, yes?
-
-Or do we allow scrub on read only, but not repair or whatever
-"optimisation" is?
-
-> +	/* Check our inputs. */
-> +	error = -EINVAL;
-> +	sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-> +	if (sm->sm_flags & ~XFS_SCRUB_FLAGS_IN)
-> +		goto out;
-> +	if (memchr_inv(sm->sm_reserved, 0, sizeof(sm->sm_reserved)))
-> +		goto out;
-> +
-> +	/* Do we know about this type of metadata? */
-> +	error = -ENOENT;
-> +	if (sm->sm_type > XFS_SCRUB_TYPE_MAX)
-> +		goto out;
-> +	fns = &meta_scrub_fns[sm->sm_type];
-
-	sc.fns = &meta_scrub_fns[sm->sm_type];
-
-> new file mode 100644
-> index 0000000..4f3113a
-> --- /dev/null
-> +++ b/fs/xfs/scrub/common.h
-
-scrub.h
-
-> @@ -0,0 +1,179 @@
-> +/*
-> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
-> + *
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License
-> + * as published by the Free Software Foundation; either version 2
-> + * of the License, or (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> + */
-> +#ifndef __XFS_REPAIR_COMMON_H__
-> +#define __XFS_REPAIR_COMMON_H__
-> +
-> +/* Did we find something broken? */
-> +static inline bool xfs_scrub_found_corruption(struct xfs_scrub_metadata *sm)
-> +{
-> +	return sm->sm_flags & (XFS_SCRUB_FLAG_CORRUPT |
-> +			       XFS_SCRUB_FLAG_XCORRUPT);
-> +}
-
-Unless this is going to get more complex, a single call wrapper is
-not necessary.
-
-> +/*
-> + * Grab a transaction.  If we're going to repair something, we need to
-> + * ensure there's enough reservation to make all the changes.  If not,
-> + * we can use an empty transaction.
-> + */
-> +static inline int
-> +xfs_scrub_trans_alloc(
-> +	struct xfs_scrub_metadata	*sm,
-> +	struct xfs_mount		*mp,
-> +	struct xfs_trans_res		*resp,
-> +	uint				blocks,
-> +	uint				rtextents,
-> +	uint				flags,
-> +	struct xfs_trans		**tpp)
-> +{
-> +	return xfs_trans_alloc_empty(mp, tpp);
-> +}
-
-If we only ever use an empty transaction here, then can we get rid
-of the wrapper, too?
-
-> +
-> +/* Check for operational errors. */
-> +bool xfs_scrub_op_ok(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
-> +		     xfs_agblock_t bno, const char *type, int *error,
-> +		     const char	*func, int line);
-> +#define XFS_SCRUB_OP_ERROR_GOTO(sc, agno, bno, type, error, label) \
-> +	do { \
-> +		if (!xfs_scrub_op_ok((sc), (agno), (bno), (type), \
-> +				(error), __func__, __LINE__)) \
-> +			goto label; \
-> +	} while (0)
-
-Ok, I though this is where the func/line variables was going. Can we
-please try to avoid these macros? It's not much extra work to do
-this:
-
-	if (!xfs_scrub_op_ok(sc, agno, bno, type, error, _THIS_IP_))
-		goto label;
-
-But it's much nicer to read than shouty macros, it doesn't hide
-goto's in macros, and it provides exactly the same debug info to the
-tracing code as the macro.
-
-[snip more macros]
-
-> +/* Setup functions */
-> +
-> +#define SETUP_FN(name) int name(struct xfs_scrub_context *sc, struct xfs_inode *ip)
-> +SETUP_FN(xfs_scrub_setup_fs);
-> +#undef SETUP_FN
-
-Please, no. This sort of construct is highly unfriendly to grep and
-cscope. It costs us nothing extra to define the names in full, but
-it makes finding the code so much easier...
-
-
-> --- /dev/null
-> +++ b/fs/xfs/scrub/xfs_scrub.h
-> @@ -0,0 +1,29 @@
-> +/*
-> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
-> + *
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License
-> + * as published by the Free Software Foundation; either version 2
-> + * of the License, or (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> + */
-> +#ifndef __XFS_SCRUB_H__
-> +#define __XFS_SCRUB_H__
-> +
-> +#ifndef CONFIG_XFS_ONLINE_SCRUB
-> +# define xfs_scrub_metadata(ip, sm)	(-ENOTTY)
-> +#else
-> +int xfs_scrub_metadata(struct xfs_inode *ip, struct xfs_scrub_metadata *sm);
-> +#endif /* CONFIG_XFS_ONLINE_SCRUB */
-> +
-> +#endif	/* __XFS_SCRUB_H__ */
-
-This ioctl module stub code should be separated out into it's own
-patch with all the other code that enables building scrub as a
-module.
-
-...
-> index 2e7e193..d4de29b 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3312,7 +3312,7 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
->  
->  /* scrub */
->  #define XFS_SCRUB_TYPE_DESC \
-> -	{ 0, NULL }
-> +	{ XFS_SCRUB_TYPE_TEST,		"dummy" }
->  DECLARE_EVENT_CLASS(xfs_scrub_class,
->  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
->  		 int error),
-> @@ -3330,6 +3330,11 @@ DECLARE_EVENT_CLASS(xfs_scrub_class,
->  	TP_fast_assign(
->  		__entry->dev = ip->i_mount->m_super->s_dev;
->  		__entry->ino = ip->i_ino;
-> +		__entry->type = sm->sm_type;
-> +		__entry->agno = sm->sm_agno;
-> +		__entry->inum = sm->sm_ino;
-> +		__entry->gen = sm->sm_gen;
-> +		__entry->flags = sm->sm_flags;
->  		__entry->error = error;
->  	),
->  	TP_printk("dev %d:%d ino %llu type %s agno %u inum %llu gen %u flags 0x%x error %d",
-
-So the tracepoints in the previous patch are dependent on structures
-that have no yet been defined? Doesn't that break compilation?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > >  	if (xfs_is_reflink_inode(ip)) {
+> > >  		ASSERT(ip->i_cowfp == NULL);
+> > >  		xfs_ifork_init_cow(ip);
+> > ...
+> > > diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
+> > > index c484877..96e2957 100644
+> > > --- a/fs/xfs/libxfs/xfs_symlink_remote.c
+> > > +++ b/fs/xfs/libxfs/xfs_symlink_remote.c
+> > > @@ -207,3 +207,32 @@ xfs_symlink_local_to_remote(
+> > >  	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsymlink_hdr) +
+> > >  					ifp->if_bytes - 1);
+> > >  }
+> > > +
+> > > +/* Verify the consistency of an inline symlink. */
+> > > +int
+> > > +xfs_symlink_sf_verify(
+> > > +	struct xfs_inode	*ip)
+> > > +{
+> > > +	char			*sfp;
+> > > +	char			*endp;
+> > > +	struct xfs_ifork	*ifp;
+> > > +	int			size;
+> > > +
+> > > +	ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL);
+> > > +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> > > +	sfp = (char *)ifp->if_u1.if_data;
+> > > +	size = ifp->if_bytes;
+> > > +	endp = sfp + size;
+> > > +
+> > > +	/* No negative sizes or overly long symlink targets. */
+> > > +	if (size < 0 || size > XFS_SYMLINK_MAXLEN)
+> > > +		return -EFSCORRUPTED;
+> > > +
+> > > +	/* No NULLs in the target either. */
+> > > +	for (; sfp < endp; sfp++) {
+> > > +		if (*sfp == 0)
+> > > +			return -EFSCORRUPTED;
+> > > +	}
+> > 
+> > 	memchr() ?
+> 
+> <nod> Will do.  I should also check the padding fields too...
+> 
+> --D
+> 
+> > Brian
+> > 
+> > > +
+> > > +	return 0;
+> > > +}
+> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > index 0a9e698..fd1d430 100644
+> > > --- a/fs/xfs/xfs_icache.c
+> > > +++ b/fs/xfs/xfs_icache.c
+> > > @@ -34,6 +34,11 @@
+> > >  #include "xfs_dquot_item.h"
+> > >  #include "xfs_dquot.h"
+> > >  #include "xfs_reflink.h"
+> > > +#include "xfs_da_format.h"
+> > > +#include "xfs_da_btree.h"
+> > > +#include "xfs_dir2_priv.h"
+> > > +#include "xfs_attr_leaf.h"
+> > > +#include "xfs_shared.h"
+> > >  
+> > >  #include <linux/kthread.h>
+> > >  #include <linux/freezer.h>
+> > > @@ -449,6 +454,43 @@ xfs_iget_cache_hit(
+> > >  	return error;
+> > >  }
+> > >  
+> > > +/* Check inline fork contents. */
+> > > +int
+> > > +xfs_iget_verify_forks(
+> > > +	struct xfs_inode		*ip)
+> > > +{
+> > > +	int				error;
+> > > +
+> > > +	/* Check the attribute fork if there is one. */
+> > > +	if (XFS_IFORK_PTR(ip, XFS_ATTR_FORK) &&
+> > > +	    ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+> > > +		error = xfs_attr_shortform_verify(ip);
+> > > +		if (error) {
+> > > +			xfs_alert(ip->i_mount,
+> > > +					"%s: bad inode %Lu inline attr fork",
+> > > +					__func__, ip->i_ino);
+> > > +			return error;
+> > > +		}
+> > > +	}
+> > > +
+> > > +	/* Non-local data fork, jump out. */
+> > > +	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
+> > > +		return 0;
+> > > +
+> > > +	/* Check the inline data fork if there is one. */
+> > > +	if (S_ISDIR(VFS_I(ip)->i_mode))
+> > > +		error = xfs_dir2_sf_verify(ip);
+> > > +	else if (S_ISLNK(VFS_I(ip)->i_mode))
+> > > +		error = xfs_symlink_sf_verify(ip);
+> > > +	else
+> > > +		error = -EFSCORRUPTED;
+> > > +
+> > > +	if (error)
+> > > +		xfs_alert(ip->i_mount, "%s: bad inode %Lu inline data fork",
+> > > +				__func__, ip->i_ino);
+> > > +	return error;
+> > > +}
+> > > +
+> > >  
+> > >  static int
+> > >  xfs_iget_cache_miss(
+> > > @@ -473,6 +515,10 @@ xfs_iget_cache_miss(
+> > >  	if (error)
+> > >  		goto out_destroy;
+> > >  
+> > > +	error = xfs_iget_verify_forks(ip);
+> > > +	if (error)
+> > > +		goto out_destroy;
+> > > +
+> > >  	trace_xfs_iget_miss(ip);
+> > >  
+> > >  	if ((VFS_I(ip)->i_mode == 0) && !(flags & XFS_IGET_CREATE)) {
+> > > diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+> > > index bff4d85..abf1cff 100644
+> > > --- a/fs/xfs/xfs_icache.h
+> > > +++ b/fs/xfs/xfs_icache.h
+> > > @@ -129,5 +129,6 @@ xfs_fs_eofblocks_from_user(
+> > >  
+> > >  int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
+> > >  				  xfs_ino_t ino, bool *inuse);
+> > > +int xfs_iget_verify_forks(struct xfs_inode *ip);
+> > >  
+> > >  #endif
+> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > index ceef77c..7ca8336 100644
+> > > --- a/fs/xfs/xfs_inode.c
+> > > +++ b/fs/xfs/xfs_inode.c
+> > > @@ -3547,10 +3547,8 @@ xfs_iflush_int(
+> > >  	if (ip->i_d.di_version < 3)
+> > >  		ip->i_d.di_flushiter++;
+> > >  
+> > > -	/* Check the inline directory data. */
+> > > -	if (S_ISDIR(VFS_I(ip)->i_mode) &&
+> > > -	    ip->i_d.di_format == XFS_DINODE_FMT_LOCAL &&
+> > > -	    xfs_dir2_sf_verify(ip))
+> > > +	/* Check the inline fork data. */
+> > > +	if (xfs_iget_verify_forks(ip))
+> > >  		goto corrupt_out;
+> > >  
+> > >  	/*
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
