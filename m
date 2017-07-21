@@ -1,320 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22515 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751367AbdGWQsH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jul 2017 12:48:07 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6NGm6DN003372
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 16:48:07 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v6NGm6qC005452
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 16:48:06 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v6NGm6jn004882
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 16:48:06 GMT
-Subject: Re: [PATCH 05/22] xfs: scrub in-memory metadata buffers
-References: <150061190859.14732.17040548800470377701.stgit@magnolia>
- <150061194082.14732.17289613506653968866.stgit@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <7679f817-2a2a-f126-940d-0217c2c60d64@oracle.com>
-Date: Sun, 23 Jul 2017 09:48:04 -0700
-MIME-Version: 1.0
-In-Reply-To: <150061194082.14732.17289613506653968866.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33176 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751464AbdGUEkL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 00:40:11 -0400
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: [PATCH v2 03/15] tests: port xfs/095 to Linux
+Date: Thu, 20 Jul 2017 21:38:41 -0700
+Message-Id: <20170721043853.364-4-ebiggers3@gmail.com>
+In-Reply-To: <20170721043853.364-1-ebiggers3@gmail.com>
+References: <20170721043853.364-1-ebiggers3@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
 
+From: Eric Biggers <ebiggers@google.com>
 
+This tests upgrading the XFS log to v2.  Switch from the IRIX xfs_chver
+program to xfs_db.
 
-On 7/20/2017 9:39 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> Call the verifier function for all in-memory metadata buffers, looking
-> for memory corruption either due to bad memory or coding bugs.
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/Makefile         |    1
->  fs/xfs/libxfs/xfs_fs.h  |    3 +
->  fs/xfs/scrub/common.c   |    4 +
->  fs/xfs/scrub/common.h   |    2 +
->  fs/xfs/scrub/metabufs.c |  177 +++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_trace.h      |    3 +
->  6 files changed, 188 insertions(+), 2 deletions(-)
->  create mode 100644 fs/xfs/scrub/metabufs.c
->
->
-> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> index 4e04da9..67cf4ac 100644
-> --- a/fs/xfs/Makefile
-> +++ b/fs/xfs/Makefile
-> @@ -142,5 +142,6 @@ ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
->  xfs-y				+= $(addprefix scrub/, \
->  				   btree.o \
->  				   common.o \
-> +				   metabufs.o \
->  				   )
->  endif
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index aeccc99..9fb3c65 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -482,7 +482,8 @@ struct xfs_scrub_metadata {
->   * Metadata types and flags for scrub operation.
->   */
->  #define XFS_SCRUB_TYPE_TEST	0	/* dummy to test ioctl */
-> -#define XFS_SCRUB_TYPE_MAX	0
-> +#define XFS_SCRUB_TYPE_METABUFS	1	/* in-core metadata buffers */
-> +#define XFS_SCRUB_TYPE_MAX	1
->
->  /* i: repair this metadata */
->  #define XFS_SCRUB_FLAG_REPAIR		(1 << 0)
-> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> index 331aa14..e06131f 100644
-> --- a/fs/xfs/scrub/common.c
-> +++ b/fs/xfs/scrub/common.c
-> @@ -610,6 +610,10 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
->  		.setup	= xfs_scrub_setup_fs,
->  		.scrub	= xfs_scrub_dummy,
->  	},
-> +	{ /* in-memory metadata buffers */
-> +		.setup	= xfs_scrub_setup_metabufs,
-> +		.scrub	= xfs_scrub_metabufs,
-> +	},
->  };
->
->  /* Dispatch metadata scrubbing. */
-> diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-> index 15baccb..5f0818c 100644
-> --- a/fs/xfs/scrub/common.h
-> +++ b/fs/xfs/scrub/common.h
-> @@ -198,12 +198,14 @@ int xfs_scrub_ag_btcur_init(struct xfs_scrub_context *sc,
->
->  #define SETUP_FN(name) int name(struct xfs_scrub_context *sc, struct xfs_inode *ip)
->  SETUP_FN(xfs_scrub_setup_fs);
-> +SETUP_FN(xfs_scrub_setup_metabufs);
->  #undef SETUP_FN
->
->  /* Metadata scrubbers */
->
->  #define SCRUB_FN(name) int name(struct xfs_scrub_context *sc)
->  SCRUB_FN(xfs_scrub_dummy);
-> +SCRUB_FN(xfs_scrub_metabufs);
->  #undef SCRUB_FN
->
->  #endif	/* __XFS_REPAIR_COMMON_H__ */
-> diff --git a/fs/xfs/scrub/metabufs.c b/fs/xfs/scrub/metabufs.c
-> new file mode 100644
-> index 0000000..63faaa6
-> --- /dev/null
-> +++ b/fs/xfs/scrub/metabufs.c
-> @@ -0,0 +1,177 @@
-> +/*
-> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
-> + *
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License
-> + * as published by the Free Software Foundation; either version 2
-> + * of the License, or (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> + */
-> +#include "xfs.h"
-> +#include "xfs_fs.h"
-> +#include "xfs_shared.h"
-> +#include "xfs_format.h"
-> +#include "xfs_trans_resv.h"
-> +#include "xfs_mount.h"
-> +#include "xfs_defer.h"
-> +#include "xfs_btree.h"
-> +#include "xfs_bit.h"
-> +#include "xfs_log_format.h"
-> +#include "xfs_trans.h"
-> +#include "xfs_trace.h"
-> +#include "xfs_sb.h"
-> +#include "scrub/common.h"
-> +
-> +/* We only iterate buffers one by one, so we don't need any setup. */
-> +int
-> +xfs_scrub_setup_metabufs(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_inode		*ip)
-> +{
-> +	return 0;
-> +}
-> +
-> +#define XFS_SCRUB_METABUFS_TOO_MANY_RETRIES	10
-> +struct xfs_scrub_metabufs_info {
-> +	struct xfs_scrub_context	*sc;
-> +	unsigned int			retries;
-> +};
-> +
-> +/* In-memory buffer corruption. */
-> +
-> +#define XFS_SCRUB_BUF_OP_ERROR_GOTO(label) \
-> +	XFS_SCRUB_OP_ERROR_GOTO(smi->sc, \
-> +			xfs_daddr_to_agno(smi->sc->mp, bp->b_bn), \
-> +			xfs_daddr_to_agbno(smi->sc->mp, bp->b_bn), "buf", \
-> +			&error, label)
-> +STATIC int
-> +xfs_scrub_metabufs_scrub_buf(
-> +	struct xfs_scrub_metabufs_info	*smi,
-> +	struct xfs_buf			*bp)
-> +{
-> +	int				olderror;
-> +	int				error = 0;
-> +
-> +	/*
-> +	 * We hold the rcu lock during the rhashtable walk, so we can't risk
-> +	 * having the log forced due to a stale buffer by xfs_buf_lock.
-> +	 */
-> +	if (bp->b_flags & XBF_STALE)
-> +		return 0;
-> +
-> +	atomic_inc(&bp->b_hold);
-> +	if (!xfs_buf_trylock(bp)) {
-> +		if (smi->retries > XFS_SCRUB_METABUFS_TOO_MANY_RETRIES) {
-> +			/* We've retried too many times, do what we can. */
-> +			XFS_SCRUB_INCOMPLETE(smi->sc, "metabufs", true);
-> +			error = 0;
-> +		} else {
-> +			/* Restart the metabuf scrub from the start. */
-> +			smi->retries++;
-> +			error = -EAGAIN;
-> +		}
-> +		goto out_dec;
-> +	}
-> +
-> +	/* Skip this buffer if it's stale, unread, or has no verifiers. */
-> +	if ((bp->b_flags & XBF_STALE) ||
-> +	    !(bp->b_flags & XBF_DONE) ||
-> +	    !bp->b_ops)
-> +		goto out_unlock;
-> +
-> +	/*
-> +	 * Run the verifiers to see if the in-memory buffer is bitrotting or
-> +	 * otherwise corrupt.  If the buffer doesn't have a log item then
-> +	 * it's clean, so call the read verifier.  However, if the buffer
-> +	 * has a log item, it is probably dirty.  Checksums will be written
-> +	 * when the buffer is about to go out to disk, so call the write
-> +	 * verifier to check the structure.
-> +	 */
-> +	olderror = bp->b_error;
-> +	if (bp->b_fspriv)
-> +		bp->b_ops->verify_write(bp);
-> +	else
-> +		bp->b_ops->verify_read(bp);
-> +	error = bp->b_error;
-> +	bp->b_error = olderror;
-> +
-> +	/* Mark any corruption errors we might find. */
-> +	XFS_SCRUB_BUF_OP_ERROR_GOTO(out_unlock);
-> +
-> +out_unlock:
-> +	xfs_buf_unlock(bp);
-> +out_dec:
-> +	atomic_dec(&bp->b_hold);
-> +	return error;
-> +}
-> +#undef XFS_SCRUB_BUF_OP_ERROR_GOTO
-> +
-> +/* Walk the buffer rhashtable and dispatch buffer checking. */
-> +STATIC int
-> +xfs_scrub_metabufs_walk_rhash(
-> +	struct xfs_scrub_metabufs_info	*smi,
-> +	struct rhashtable_iter		*iter)
-> +{
-> +	struct xfs_buf			*bp;
-> +	int				error = 0;
-> +
-> +	do {
-> +		if (xfs_scrub_should_terminate(&error))
-> +			break;
-> +
-> +		bp = rhashtable_walk_next(iter);
-> +		if (IS_ERR(bp))
-> +			return PTR_ERR(bp);
-> +		else if (bp == NULL)
-> +			return 0;
-> +
-> +		error = xfs_scrub_metabufs_scrub_buf(smi, bp);
-> +	} while (error != 0);
-> +
-> +	return error;
-> +}
-> +
-> +/* Try to walk the buffers in this AG in order to scrub them. */
-> +int
-> +xfs_scrub_metabufs(
-> +	struct xfs_scrub_context	*sc)
-> +{
-> +	struct xfs_scrub_metabufs_info	smi;
-> +	struct rhashtable_iter		iter;
-> +	struct xfs_perag		*pag;
-> +	int				error;
-> +
-> +	smi.sc = sc;
-> +	smi.retries = 0;
-> +	pag = xfs_perag_get(sc->mp, sc->sm->sm_agno);
-> +	rhashtable_walk_enter(&pag->pag_buf_hash, &iter);
-> +
-> +	while (1) {
-> +		if (xfs_scrub_should_terminate(&error))
-> +			break;
-> +
-> +		error = rhashtable_walk_start(&iter);
-> +		if (!error) {
-> +			error = xfs_scrub_metabufs_walk_rhash(&smi, &iter);
-> +			rhashtable_walk_stop(&iter);
-> +		}
-> +
-> +		if (error != -EAGAIN)
-> +			break;
-> +		cond_resched();
-> +	}
-I suppose it's unlikely that we end up looping too many times, but do 
-you think we should we have a max number of tries just in case?
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ tests/xfs/095     | 11 +++++------
+ tests/xfs/095.out |  3 +--
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
-Rest of the patch looks good.
-Reviewed by: Allison Henderson <allison.henderson@oracle.com>
+diff --git a/tests/xfs/095 b/tests/xfs/095
+index d1373586..1f5a51f6 100755
+--- a/tests/xfs/095
++++ b/tests/xfs/095
+@@ -1,7 +1,7 @@
+ #! /bin/bash
+ # FS QA Test No. 095
+ #
+-# test out xfs_chver on IRIX
++# Test upgrading the XFS log to v2
+ #
+ #-----------------------------------------------------------------------
+ # Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+@@ -46,7 +46,7 @@ _cleanup()
+ 
+ # Modify as appropriate.
+ _supported_fs xfs
+-_supported_os IRIX
++_supported_os Linux
+ _require_scratch
+ _require_v2log
+ 
+@@ -54,14 +54,13 @@ export MOUNT_OPTIONS="-o logbsize=64k"
+ 
+ # try and mount a v1 log with a v2 LRsize
+ # expect failure
+-_mkfs_log "-l version=1"
++_mkfs_log "-l version=1 -m crc=0 -d sectsize=512"
++_scratch_xfs_db -c 'version' | tr ',' '\n' | grep LOGV2
+ _create_log
+ 
+ # now make the fs a v2 fs and try to mount again
+ # it should succeed this time
+-xfs_chver -l 2 $SCRATCH_DEV | \
+-sed -e "s#$SCRATCH_DEV#SCRATCH_DEV#g" \
+-    -e 's/[0-9][0-9]* AGs/N AGs/'
++_scratch_xfs_db -x -c 'version log2' | tr ',' '\n' | grep LOGV2
+ _create_log
+ 
+ # success, all done
+diff --git a/tests/xfs/095.out b/tests/xfs/095.out
+index 36ffdecc..378876d8 100644
+--- a/tests/xfs/095.out
++++ b/tests/xfs/095.out
+@@ -2,5 +2,4 @@ QA output created by 095
+ 
+ *** mount failed: -o logbsize=64k ***
+ 
+-xfs_chver: SCRATCH_DEV: changing version 0x3084 to 0x3484 in N AGs
+-xfs_chver: SCRATCH_DEV: changing feature2 0x0 to 0x0 in N AGs
++LOGV2
+-- 
+2.13.3
 
-> +
-> +	rhashtable_walk_exit(&iter);
-> +	xfs_perag_put(pag);
-> +	return error;
-> +}
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index d4de29b..036e65c 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3312,7 +3312,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
->
->  /* scrub */
->  #define XFS_SCRUB_TYPE_DESC \
-> -	{ XFS_SCRUB_TYPE_TEST,		"dummy" }
-> +	{ XFS_SCRUB_TYPE_TEST,		"dummy" }, \
-> +	{ XFS_SCRUB_TYPE_METABUFS,	"metabufs" }
->  DECLARE_EVENT_CLASS(xfs_scrub_class,
->  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
->  		 int error),
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
