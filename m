@@ -1,232 +1,319 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32053 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751432AbdGWR7I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jul 2017 13:59:08 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6NHx7nS011188
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:59:08 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v6NHx7Xs030828
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:59:07 GMT
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v6NHx6MK015115
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:59:07 GMT
-Subject: Re: [PATCH 19/22] xfs: scrub symbolic links
-References: <150061190859.14732.17040548800470377701.stgit@magnolia>
- <150061203238.14732.8954692492620694902.stgit@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <d17c3e00-6593-7378-0d68-20c94331f510@oracle.com>
-Date: Sun, 23 Jul 2017 10:59:01 -0700
-MIME-Version: 1.0
-In-Reply-To: <150061203238.14732.8954692492620694902.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:43202 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750835AbdGUMYr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Jul 2017 08:24:47 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 14801C00DB80
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 12:24:47 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 3/7 v2] mkfs: remove intermediate getstr followed by getnum
+Date: Fri, 21 Jul 2017 14:24:43 +0200
+Message-Id: <20170721122443.6084-1-jtulak@redhat.com>
+In-Reply-To: <20170720092932.32580-4-jtulak@redhat.com>
+References: <20170720092932.32580-4-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-Looks good.  Looks like you caught some bugs along the way
-Reviewed by: Allison Henderson <allison.henderson@oracle.com>
+Some options loaded a number as a string with getstr and converted it to
+number with getnum later in the code, without any reason for this
+approach.  (They were probably forgotten in some past cleaning.)
 
-On 7/20/2017 9:40 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> Create the infrastructure to scrub symbolic link data.
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/Makefile        |    1 +
->  fs/xfs/libxfs/xfs_fs.h |    3 +-
->  fs/xfs/scrub/common.c  |    4 ++
->  fs/xfs/scrub/common.h  |    2 +
->  fs/xfs/scrub/symlink.c |   94 ++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_trace.h     |    3 +-
->  6 files changed, 105 insertions(+), 2 deletions(-)
->  create mode 100644 fs/xfs/scrub/symlink.c
->
->
-> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> index da64bef..3d862b9 100644
-> --- a/fs/xfs/Makefile
-> +++ b/fs/xfs/Makefile
-> @@ -153,5 +153,6 @@ xfs-y				+= $(addprefix scrub/, \
->  				   metabufs.o \
->  				   refcount.o \
->  				   rmap.o \
-> +				   symlink.o \
->  				   )
->  endif
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index 2f553ed..95d9ce9 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -499,7 +499,8 @@ struct xfs_scrub_metadata {
->  #define XFS_SCRUB_TYPE_BMBTC	15	/* CoW fork block mapping */
->  #define XFS_SCRUB_TYPE_DIR	16	/* directory */
->  #define XFS_SCRUB_TYPE_XATTR	17	/* extended attribute */
-> -#define XFS_SCRUB_TYPE_MAX	17
-> +#define XFS_SCRUB_TYPE_SYMLINK	18	/* symbolic link */
-> +#define XFS_SCRUB_TYPE_MAX	18
->
->  /* i: repair this metadata */
->  #define XFS_SCRUB_FLAG_REPAIR		(1 << 0)
-> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> index a47c654..4003c2f 100644
-> --- a/fs/xfs/scrub/common.c
-> +++ b/fs/xfs/scrub/common.c
-> @@ -852,6 +852,10 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
->  		.setup	= xfs_scrub_setup_xattr,
->  		.scrub	= xfs_scrub_xattr,
->  	},
-> +	{ /* symbolic link */
-> +		.setup	= xfs_scrub_setup_symlink,
-> +		.scrub	= xfs_scrub_symlink,
-> +	},
->  };
->
->  /* Dispatch metadata scrubbing. */
-> diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-> index 1cfe0cc..6d02a64 100644
-> --- a/fs/xfs/scrub/common.h
-> +++ b/fs/xfs/scrub/common.h
-> @@ -223,6 +223,7 @@ SETUP_FN(xfs_scrub_setup_inode_bmap_data);
->  SETUP_FN(xfs_scrub_setup_inode_bmap);
->  SETUP_FN(xfs_scrub_setup_directory);
->  SETUP_FN(xfs_scrub_setup_xattr);
-> +SETUP_FN(xfs_scrub_setup_symlink);
->  #undef SETUP_FN
->
->  /* Metadata scrubbers */
-> @@ -246,6 +247,7 @@ SCRUB_FN(xfs_scrub_bmap_attr);
->  SCRUB_FN(xfs_scrub_bmap_cow);
->  SCRUB_FN(xfs_scrub_directory);
->  SCRUB_FN(xfs_scrub_xattr);
-> +SCRUB_FN(xfs_scrub_symlink);
->  #undef SCRUB_FN
->
->  #endif	/* __XFS_REPAIR_COMMON_H__ */
-> diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
-> new file mode 100644
-> index 0000000..75537e9
-> --- /dev/null
-> +++ b/fs/xfs/scrub/symlink.c
-> @@ -0,0 +1,94 @@
-> +/*
-> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
-> + *
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License
-> + * as published by the Free Software Foundation; either version 2
-> + * of the License, or (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> + */
-> +#include "xfs.h"
-> +#include "xfs_fs.h"
-> +#include "xfs_shared.h"
-> +#include "xfs_format.h"
-> +#include "xfs_trans_resv.h"
-> +#include "xfs_mount.h"
-> +#include "xfs_defer.h"
-> +#include "xfs_btree.h"
-> +#include "xfs_bit.h"
-> +#include "xfs_log_format.h"
-> +#include "xfs_trans.h"
-> +#include "xfs_trace.h"
-> +#include "xfs_sb.h"
-> +#include "xfs_inode.h"
-> +#include "xfs_inode_fork.h"
-> +#include "xfs_symlink.h"
-> +#include "scrub/common.h"
-> +
-> +/* Set us up to scrub a symbolic link. */
-> +int
-> +xfs_scrub_setup_symlink(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_inode		*ip)
-> +{
-> +	/* Allocate the buffer without the inode lock held. */
-> +	sc->buf = kmem_zalloc_large(XFS_SYMLINK_MAXLEN + 1, KM_SLEEP);
-> +	if (!sc->buf)
-> +		return -ENOMEM;
-> +
-> +	return xfs_scrub_setup_inode_contents(sc, ip, 0);
-> +}
-> +
-> +/* Symbolic links. */
-> +
-> +#define XFS_SCRUB_SYMLINK_CHECK(fs_ok) \
-> +	XFS_SCRUB_INO_CHECK(sc, ip->i_ino, NULL, "symlink", fs_ok)
-> +#define XFS_SCRUB_SYMLINK_GOTO(fs_ok, label) \
-> +	XFS_SCRUB_INO_GOTO(sc, ip->i_ino, NULL, "symlink", fs_ok, label)
-> +int
-> +xfs_scrub_symlink(
-> +	struct xfs_scrub_context	*sc)
-> +{
-> +	struct xfs_inode		*ip = sc->ip;
-> +	struct xfs_ifork		*ifp;
-> +	loff_t				len;
-> +	int				error = 0;
-> +
-> +	if (!S_ISLNK(VFS_I(ip)->i_mode))
-> +		return -ENOENT;
-> +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> +	len = ip->i_d.di_size;
-> +
-> +	/* Plausible size? */
-> +	XFS_SCRUB_SYMLINK_GOTO(len <= XFS_SYMLINK_MAXLEN, out);
-> +	XFS_SCRUB_SYMLINK_GOTO(len > 0, out);
-> +
-> +	/* Inline symlink? */
-> +	if (ifp->if_flags & XFS_IFINLINE) {
-> +		XFS_SCRUB_SYMLINK_GOTO(len > 0, out);
-> +		XFS_SCRUB_SYMLINK_CHECK(len <= XFS_IFORK_DSIZE(ip));
-> +		XFS_SCRUB_SYMLINK_CHECK(len <= strnlen(ifp->if_u1.if_data,
-> +				XFS_IFORK_DSIZE(ip)));
-> +		goto out;
-> +	}
-> +
-> +	/* Remote symlink; must read the contents. */
-> +	error = xfs_readlink_bmap_ilocked(sc->ip, sc->buf);
-> +	XFS_SCRUB_FILE_OP_ERROR_GOTO(sc, XFS_DATA_FORK, 0, "symlink",
-> +			&error, out);
-> +	XFS_SCRUB_SYMLINK_CHECK(len <= strnlen(sc->buf, XFS_SYMLINK_MAXLEN));
-> +out:
-> +	return error;
-> +}
-> +#undef XFS_SCRUB_SYMLINK_GOTO
-> +#undef XFS_SCRUB_SYMLINK_CHECK
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index fe4b313..39824f8 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3329,7 +3329,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
->  	{ XFS_SCRUB_TYPE_BMBTA,		"bmapbta" }, \
->  	{ XFS_SCRUB_TYPE_BMBTC,		"bmapbtc" }, \
->  	{ XFS_SCRUB_TYPE_DIR,		"dir" }, \
-> -	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }
-> +	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }, \
-> +	{ XFS_SCRUB_TYPE_SYMLINK,	"symlink" }
->  DECLARE_EVENT_CLASS(xfs_scrub_class,
->  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
->  		 int error),
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+This patch changes them to skip the string and use getnum directly in
+the main option-parsing loop, as do all the other numerical options.
+And as we now have two variables of the same type for the same value,
+merge them together. (e.g. former string dsize and number dbytes).
+
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+
+---
+
+This patch has to be applied after "mkfs: Save raw user input ...",
+because otherwise we would temporary lose the access to strings
+with user-given values and thus wouldn't be able to report them in
+case of an issue. (In reply to Eric's comment.)
+
+UPDATE:
+ * fix dbytes, rtbytes, rtextbytes and logbytes - these variables should
+   be uint64, as the local old ones they are replacing, but were
+   unintentionally created as int
+
+---
+ mkfs/xfs_mkfs.c | 90 ++++++++++++++++++++++++++-------------------------------
+ 1 file changed, 41 insertions(+), 49 deletions(-)
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index f2f6468e..7a240daf 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1345,6 +1345,7 @@ getnum(
+ 	long long		c;
+ 
+ 	check_opt(opts, index, false);
++	set_conf_raw(opts, index, str);
+ 	/* empty strings might just return a default value */
+ 	if (!str || *str == '\0') {
+ 		if (sp->flagval == SUBOPT_NEEDS_VAL)
+@@ -1432,12 +1433,12 @@ main(
+ 	char			*dfile;
+ 	int			dirblocklog;
+ 	int			dirblocksize;
+-	char			*dsize;
++	uint64_t		dbytes;
+ 	int			dsu;
+ 	int			dsw;
+ 	int			dsunit;
+ 	int			dswidth;
+-	int			force_overwrite;
++	bool			force_overwrite;
+ 	struct fsxattr		fsx;
+ 	int			ilflag;
+ 	int			imaxpct;
+@@ -1456,7 +1457,7 @@ main(
+ 	xfs_rfsblock_t		logblocks;
+ 	char			*logfile;
+ 	int			loginternal;
+-	char			*logsize;
++	uint64_t		logbytes;
+ 	xfs_fsblock_t		logstart;
+ 	int			lvflag;
+ 	int			lsflag;
+@@ -1485,11 +1486,11 @@ main(
+ 	char			*protostring;
+ 	int			qflag;
+ 	xfs_rfsblock_t		rtblocks;
++	uint64_t		rtbytes;
+ 	xfs_extlen_t		rtextblocks;
+ 	xfs_rtblock_t		rtextents;
+-	char			*rtextsize;
++	uint64_t		rtextbytes;
+ 	char			*rtfile;
+-	char			*rtsize;
+ 	xfs_sb_t		*sbp;
+ 	int			sectorlog;
+ 	__uint64_t		sector_mask;
+@@ -1537,7 +1538,8 @@ main(
+ 	qflag = 0;
+ 	imaxpct = inodelog = inopblock = isize = 0;
+ 	dfile = logfile = rtfile = NULL;
+-	dsize = logsize = rtsize = rtextsize = protofile = NULL;
++	protofile = NULL;
++	rtbytes = rtextbytes = logbytes = dbytes = 0;
+ 	dsu = dsw = dsunit = dswidth = lalign = lsu = lsunit = 0;
+ 	nodsflag = norsflag = 0;
+ 	force_overwrite = 0;
+@@ -1601,7 +1603,7 @@ main(
+ 					xi.dname = getstr(value, &dopts, D_NAME);
+ 					break;
+ 				case D_SIZE:
+-					dsize = getstr(value, &dopts, D_SIZE);
++					dbytes = getnum(value, &dopts, D_SIZE);
+ 					break;
+ 				case D_SUNIT:
+ 					dsunit = getnum(value, &dopts, D_SUNIT);
+@@ -1746,7 +1748,7 @@ main(
+ 					lvflag = 1;
+ 					break;
+ 				case L_SIZE:
+-					logsize = getstr(value, &lopts, L_SIZE);
++					logbytes = getnum(value, &lopts, L_SIZE);
+ 					break;
+ 				case L_SECTLOG:
+ 					lsectorlog = getnum(value, &lopts,
+@@ -1875,8 +1877,7 @@ main(
+ 
+ 				switch (getsubopt(&p, subopts, &value)) {
+ 				case R_EXTSIZE:
+-					rtextsize = getstr(value, &ropts,
+-							   R_EXTSIZE);
++					rtextbytes = getnum(value, &ropts, R_EXTSIZE);
+ 					break;
+ 				case R_FILE:
+ 					xi.risfile = getnum(value, &ropts,
+@@ -1888,7 +1889,7 @@ main(
+ 							   R_NAME);
+ 					break;
+ 				case R_SIZE:
+-					rtsize = getstr(value, &ropts, R_SIZE);
++					rtbytes = getnum(value, &ropts, R_SIZE);
+ 					break;
+ 				case R_NOALIGN:
+ 					norsflag = getnum(value, &ropts,
+@@ -1991,14 +1992,14 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
+ 	 * sector size mismatches between the new filesystem and the underlying
+ 	 * host filesystem.
+ 	 */
+-	check_device_type(dfile, &xi.disfile, !dsize, !dfile,
++	check_device_type(dfile, &xi.disfile, !dbytes, !dfile,
+ 			  Nflag ? NULL : &xi.dcreat, force_overwrite, "d");
+ 	if (!loginternal)
+-		check_device_type(xi.logname, &xi.lisfile, !logsize, !xi.logname,
+-				  Nflag ? NULL : &xi.lcreat,
++		check_device_type(xi.logname, &xi.lisfile, !logbytes,
++				  !xi.logname, Nflag ? NULL : &xi.lcreat,
+ 				  force_overwrite, "l");
+ 	if (xi.rtname)
+-		check_device_type(xi.rtname, &xi.risfile, !rtsize, !xi.rtname,
++		check_device_type(xi.rtname, &xi.risfile, !rtbytes, !xi.rtname,
+ 				  Nflag ? NULL : &xi.rcreat,
+ 				  force_overwrite, "r");
+ 	if (xi.disfile || xi.lisfile || xi.risfile)
+@@ -2179,10 +2180,7 @@ _("rmapbt not supported with realtime devices\n"));
+ 	}
+ 
+ 
+-	if (dsize) {
+-		__uint64_t dbytes;
+-
+-		dbytes = getnum(dsize, &dopts, D_SIZE);
++	if (dbytes) {
+ 		if (dbytes % XFS_MIN_BLOCKSIZE) {
+ 			fprintf(stderr,
+ 			_("illegal data length %lld, not a multiple of %d\n"),
+@@ -2211,10 +2209,7 @@ _("rmapbt not supported with realtime devices\n"));
+ 		usage();
+ 	}
+ 
+-	if (logsize) {
+-		__uint64_t logbytes;
+-
+-		logbytes = getnum(logsize, &lopts, L_SIZE);
++	if (logbytes) {
+ 		if (logbytes % XFS_MIN_BLOCKSIZE) {
+ 			fprintf(stderr,
+ 			_("illegal log length %lld, not a multiple of %d\n"),
+@@ -2228,10 +2223,7 @@ _("rmapbt not supported with realtime devices\n"));
+ 				(long long)logbytes, blocksize,
+ 				(long long)(logblocks << blocklog));
+ 	}
+-	if (rtsize) {
+-		__uint64_t rtbytes;
+-
+-		rtbytes = getnum(rtsize, &ropts, R_SIZE);
++	if (rtbytes) {
+ 		if (rtbytes % XFS_MIN_BLOCKSIZE) {
+ 			fprintf(stderr,
+ 			_("illegal rt length %lld, not a multiple of %d\n"),
+@@ -2248,10 +2240,7 @@ _("rmapbt not supported with realtime devices\n"));
+ 	/*
+ 	 * If specified, check rt extent size against its constraints.
+ 	 */
+-	if (rtextsize) {
+-		__uint64_t rtextbytes;
+-
+-		rtextbytes = getnum(rtextsize, &ropts, R_EXTSIZE);
++	if (rtextbytes) {
+ 		if (rtextbytes % blocksize) {
+ 			fprintf(stderr,
+ 		_("illegal rt extent size %lld, not a multiple of %d\n"),
+@@ -2268,7 +2257,7 @@ _("rmapbt not supported with realtime devices\n"));
+ 		__uint64_t	rswidth;
+ 		__uint64_t	rtextbytes;
+ 
+-		if (!norsflag && !xi.risfile && !(!rtsize && xi.disfile))
++		if (!norsflag && !xi.risfile && !(!rtbytes && xi.disfile))
+ 			rswidth = ft.rtswidth;
+ 		else
+ 			rswidth = 0;
+@@ -2379,15 +2368,16 @@ _("rmapbt not supported with realtime devices\n"));
+ 		rtfile = _("volume rt");
+ 	else if (!xi.rtdev)
+ 		rtfile = _("none");
+-	if (dsize && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
++	if (dbytes && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
+ 		fprintf(stderr,
+ 			_("size %s specified for data subvolume is too large, "
+ 			"maximum is %lld blocks\n"),
+-			dsize, (long long)DTOBT(xi.dsize));
++			get_conf_raw(&dopts, D_SIZE),
++			(long long)DTOBT(xi.dsize));
+ 		usage();
+-	} else if (!dsize && xi.dsize > 0)
++	} else if (!dbytes && xi.dsize > 0)
+ 		dblocks = DTOBT(xi.dsize);
+-	else if (!dsize) {
++	else if (!dbytes) {
+ 		fprintf(stderr, _("can't get size of data subvolume\n"));
+ 		usage();
+ 	}
+@@ -2420,22 +2410,23 @@ reported by the device (%u).\n"),
+ reported by the device (%u).\n"),
+ 			lsectorsize, xi.lbsize);
+ 	}
+-	if (rtsize && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
++	if (rtbytes && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
+ 		fprintf(stderr, _(
+ "Warning: the realtime subvolume sector size %u is less than the sector size\n\
+ reported by the device (%u).\n"),
+ 			sectorsize, xi.rtbsize);
+ 	}
+ 
+-	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
++	if (rtbytes && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
+ 		fprintf(stderr,
+ 			_("size %s specified for rt subvolume is too large, "
+ 			"maximum is %lld blocks\n"),
+-			rtsize, (long long)DTOBT(xi.rtsize));
++			get_conf_raw(&ropts, R_SIZE),
++			(long long)DTOBT(xi.rtsize));
+ 		usage();
+-	} else if (!rtsize && xi.rtsize > 0)
++	} else if (!rtbytes && xi.rtsize > 0)
+ 		rtblocks = DTOBT(xi.rtsize);
+-	else if (rtsize && !xi.rtdev) {
++	else if (rtbytes && !xi.rtdev) {
+ 		fprintf(stderr,
+ 			_("size specified for non-existent rt subvolume\n"));
+ 		usage();
+@@ -2641,26 +2632,27 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+ 				   sb_feat.inode_align);
+ 	ASSERT(min_logblocks);
+ 	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
+-	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
++	if (!logbytes && dblocks >= (1024*1024*1024) >> blocklog)
+ 		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
+-	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
++	if (logbytes && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
+ 		fprintf(stderr,
+ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+-			logsize, (long long)DTOBT(xi.logBBsize));
++			get_conf_raw(&lopts, L_SIZE),
++			(long long)DTOBT(xi.logBBsize));
+ 		usage();
+-	} else if (!logsize && xi.logBBsize > 0) {
++	} else if (!logbytes && xi.logBBsize > 0) {
+ 		logblocks = DTOBT(xi.logBBsize);
+-	} else if (logsize && !xi.logdev && !loginternal) {
++	} else if (logbytes && !xi.logdev && !loginternal) {
+ 		fprintf(stderr,
+ 			_("size specified for non-existent log subvolume\n"));
+ 		usage();
+-	} else if (loginternal && logsize && logblocks >= dblocks) {
++	} else if (loginternal && logbytes && logblocks >= dblocks) {
+ 		fprintf(stderr, _("size %lld too large for internal log\n"),
+ 			(long long)logblocks);
+ 		usage();
+ 	} else if (!loginternal && !xi.logdev) {
+ 		logblocks = 0;
+-	} else if (loginternal && !logsize) {
++	} else if (loginternal && !logbytes) {
+ 
+ 		if (dblocks < GIGABYTES(1, blocklog)) {
+ 			/* tiny filesystems get minimum sized logs. */
+@@ -2724,7 +2716,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		 * Readjust the log size to fit within an AG if it was sized
+ 		 * automatically.
+ 		 */
+-		if (!logsize) {
++		if (!logbytes) {
+ 			logblocks = MIN(logblocks,
+ 					libxfs_alloc_ag_max_usable(mp));
+ 
+-- 
+2.11.0
+
