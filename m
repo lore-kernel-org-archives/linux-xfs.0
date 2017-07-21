@@ -1,44 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:37751 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935186AbdGTO6r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2017 10:58:47 -0400
-Received: by mail-wm0-f48.google.com with SMTP id g127so29511656wmd.0
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2017 07:58:47 -0700 (PDT)
-Subject: Re: [PATCH, RFC] xfs: fix multi-AG deadlock in xfs_bunmapi
-References: <20170718172545.18065-1-hch@lst.de>
- <ac50dda7-6147-1bb2-78ed-b49dafaec242@gmail.com>
- <09500343-740e-0178-c60a-6ea5e6993c11@gmail.com>
- <20170720074706.GA22218@lst.de>
- <0eb47db7-24de-a231-be9f-73d9ae1171fd@gmail.com>
- <20170720074924.GA22278@lst.de>
-From: Nikolay Borisov <n.borisov.lkml@gmail.com>
-Message-ID: <16f95f63-1111-9d3c-344c-6b42ddab3b55@gmail.com>
-Date: Thu, 20 Jul 2017 17:58:42 +0300
-MIME-Version: 1.0
-In-Reply-To: <20170720074924.GA22278@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:36339 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751464AbdGUEkQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 00:40:16 -0400
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: [PATCH v2 08/15] tests: remove generic/099
+Date: Thu, 20 Jul 2017 21:38:46 -0700
+Message-Id: <20170721043853.364-9-ebiggers3@gmail.com>
+In-Reply-To: <20170721043853.364-1-ebiggers3@gmail.com>
+References: <20170721043853.364-1-ebiggers3@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
 
+From: Eric Biggers <ebiggers@google.com>
 
+This IRIX-specific ACL test was nearly identical to shared/051, which
+has been better maintained and will be made a generic test in the next
+commit.  Therefore, remove the existing generic/099.
 
-On 20.07.2017 10:49, Christoph Hellwig wrote:
-> On Thu, Jul 20, 2017 at 10:47:50AM +0300, Nikolay Borisov wrote:
->>
->>
->> On 20.07.2017 10:47, Christoph Hellwig wrote:
->>> Odd.  And the patch to always just process a single extent from
->>> xfs_itruncate_extents fixes the issue for you, right?
->>
->> As far as I remember yes.
-> 
-> Can you retest it under otherwise identical conditions?
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ common/attr           |  12 --
+ tests/generic/099     | 331 --------------------------------------------------
+ tests/generic/099.out | 215 --------------------------------
+ tests/generic/group   |   1 -
+ 4 files changed, 559 deletions(-)
+ delete mode 100755 tests/generic/099
+ delete mode 100644 tests/generic/099.out
 
-Okay, I confirm that indeed changing the define from 2 to 1 fixes the
-issue.
+diff --git a/common/attr b/common/attr
+index c840ce42..fae367f0 100644
+--- a/common/attr
++++ b/common/attr
+@@ -117,18 +117,6 @@ _acl_ls()
+     _ls_l -n $* | awk '{ print $1, $3, $4, $NF }' | _acl_filter_id
+ } 
+ 
+-#
+-_acl_list()
+-{
+-    _file1=$1
+-
+-    if [ $HOSTOS = "IRIX" ]; then
+-	ls -dD $_file1 | _acl_filter_id
+-    else 
+-        chacl -l $_file1 | _acl_filter_id
+-    fi
+-}
+-
+ # create an ACL with n ACEs in it
+ #
+ _create_n_aces()
+diff --git a/tests/generic/099 b/tests/generic/099
+deleted file mode 100755
+index 4af588c8..00000000
+diff --git a/tests/generic/099.out b/tests/generic/099.out
+deleted file mode 100644
+index 3f4f663f..00000000
+diff --git a/tests/generic/group b/tests/generic/group
+index 20c278cc..93a7378b 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -101,7 +101,6 @@
+ 096 auto prealloc quick zero
+ 097 attr auto quick
+ 098 auto quick metadata
+-099 udf auto
+ 100 udf auto
+ 101 auto quick metadata
+ 102 auto rw
+-- 
+2.13.3
+
