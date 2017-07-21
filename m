@@ -1,97 +1,185 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42742 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755532AbdGSPsr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2017 11:48:47 -0400
-Date: Wed, 19 Jul 2017 08:48:41 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/3] xfs: check _alloc_read_agf buffer pointer before
- using
-Message-ID: <20170719154841.GN4224@magnolia>
-References: <150040225662.1216.16823172616535217786.stgit@magnolia>
- <150040226878.1216.15454073908001325566.stgit@magnolia>
- <20170719132032.GC54534@bfoster.bfoster>
+Received: from mail-wr0-f171.google.com ([209.85.128.171]:34734 "EHLO
+        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753938AbdGUI4t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 04:56:49 -0400
+Received: by mail-wr0-f171.google.com with SMTP id 12so79872906wrb.1
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 01:56:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170719132032.GC54534@bfoster.bfoster>
+In-Reply-To: <20170720155404.GS4224@magnolia>
+References: <20170720092932.32580-1-jtulak@redhat.com> <20170720092932.32580-4-jtulak@redhat.com>
+ <20170720155404.GS4224@magnolia>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Fri, 21 Jul 2017 10:56:27 +0200
+Message-ID: <CACj3i71m7q2tLFuY82P7Ykrubt54PXs-_JVjYmEDkrKuhqf=MQ@mail.gmail.com>
+Subject: Re: [PATCH 3/7] mkfs: remove intermediate getstr followed by getnum
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Jul 19, 2017 at 09:20:32AM -0400, Brian Foster wrote:
-> On Tue, Jul 18, 2017 at 11:24:28AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > In some circumstances, _alloc_read_agf can return an error code of zero
-> > but also a null AGF buffer pointer.  Check for this and jump out.
-> > 
-> 
-> It looks like this is only possible in trylock cases. Otherwise (and
-> unless I'm missing something), it should always return a buffer or
-> error.
-> 
-> This is circuitous regardless and so seems fine if it shuts up a
-> coverity warning:
+On Thu, Jul 20, 2017 at 5:54 PM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Thu, Jul 20, 2017 at 11:29:28AM +0200, Jan Tulak wrote:
+>> Some options loaded a number as a string with getstr and converted it to
+>> number with getnum later in the code, without any reason for this
+>> approach.  (They were probably forgotten in some past cleaning.)
+>>
+>> This patch changes them to skip the string and use getnum directly in
+>> the main option-parsing loop, as do all the other numerical options.
+>> And as we now have two variables of the same type for the same value,
+>> merge them together. (e.g. former string dsize and number dbytes).
+>>
+>> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+>> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+>> Reviewed-by: Luis R. Rodriguez <mcgrof@kernel.org>
+>>
+>> ---
+>> In reply to Eric's comment, so it doesn't pop up again:
+>> This patch has to be applied after "mkfs: Save raw user input ...",
+>> because otherwise we would temporary lose the access to strings
+>> with user-given values and thus wouldn't be able to report them in
+>> case of any issue.
+>> ---
+>>  mkfs/xfs_mkfs.c | 90 ++++++++++++++++++++++++++-------------------------------
+>>  1 file changed, 41 insertions(+), 49 deletions(-)
+>>
+>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>> index f2f6468e..127f14c3 100644
+>> --- a/mkfs/xfs_mkfs.c
+>> +++ b/mkfs/xfs_mkfs.c
+>> @@ -1345,6 +1345,7 @@ getnum(
+>>       long long               c;
+>>
+>>       check_opt(opts, index, false);
+>> +     set_conf_raw(opts, index, str);
+>>       /* empty strings might just return a default value */
+>>       if (!str || *str == '\0') {
+>>               if (sp->flagval == SUBOPT_NEEDS_VAL)
+>> @@ -1432,12 +1433,12 @@ main(
+>>       char                    *dfile;
+>>       int                     dirblocklog;
+>>       int                     dirblocksize;
+>> -     char                    *dsize;
+>> +     int                     dbytes;
+>>       int                     dsu;
+>>       int                     dsw;
+>>       int                     dsunit;
+>>       int                     dswidth;
+>> -     int                     force_overwrite;
+>> +     bool                    force_overwrite;
+>>       struct fsxattr          fsx;
+>>       int                     ilflag;
+>>       int                     imaxpct;
+>> @@ -1456,7 +1457,7 @@ main(
+>>       xfs_rfsblock_t          logblocks;
+>>       char                    *logfile;
+>>       int                     loginternal;
+>> -     char                    *logsize;
+>> +     int                     logbytes;
+>>       xfs_fsblock_t           logstart;
+>>       int                     lvflag;
+>>       int                     lsflag;
+>> @@ -1485,11 +1486,11 @@ main(
+>>       char                    *protostring;
+>>       int                     qflag;
+>>       xfs_rfsblock_t          rtblocks;
+>> +     int             rtbytes;
+>>       xfs_extlen_t            rtextblocks;
+>>       xfs_rtblock_t           rtextents;
+>> -     char                    *rtextsize;
+>> +     int             rtextbytes;
+>>       char                    *rtfile;
+>> -     char                    *rtsize;
+>>       xfs_sb_t                *sbp;
+>>       int                     sectorlog;
+>>       __uint64_t              sector_mask;
+>> @@ -1537,7 +1538,8 @@ main(
+>>       qflag = 0;
+>>       imaxpct = inodelog = inopblock = isize = 0;
+>>       dfile = logfile = rtfile = NULL;
+>> -     dsize = logsize = rtsize = rtextsize = protofile = NULL;
+>> +     protofile = NULL;
+>> +     rtbytes = rtextbytes = logbytes = dbytes = 0;
+>>       dsu = dsw = dsunit = dswidth = lalign = lsu = lsunit = 0;
+>>       nodsflag = norsflag = 0;
+>>       force_overwrite = 0;
+>> @@ -1601,7 +1603,7 @@ main(
+>>                                       xi.dname = getstr(value, &dopts, D_NAME);
+>>                                       break;
+>>                               case D_SIZE:
+>> -                                     dsize = getstr(value, &dopts, D_SIZE);
+>> +                                     dbytes = getnum(value, &dopts, D_SIZE);
+>>                                       break;
+>>                               case D_SUNIT:
+>>                                       dsunit = getnum(value, &dopts, D_SUNIT);
+>> @@ -1746,7 +1748,7 @@ main(
+>>                                       lvflag = 1;
+>>                                       break;
+>>                               case L_SIZE:
+>> -                                     logsize = getstr(value, &lopts, L_SIZE);
+>> +                                     logbytes = getnum(value, &lopts, L_SIZE);
+>>                                       break;
+>>                               case L_SECTLOG:
+>>                                       lsectorlog = getnum(value, &lopts,
+>> @@ -1875,8 +1877,7 @@ main(
+>>
+>>                               switch (getsubopt(&p, subopts, &value)) {
+>>                               case R_EXTSIZE:
+>> -                                     rtextsize = getstr(value, &ropts,
+>> -                                                        R_EXTSIZE);
+>> +                                     rtextbytes = getnum(value, &ropts, R_EXTSIZE);
+>>                                       break;
+>>                               case R_FILE:
+>>                                       xi.risfile = getnum(value, &ropts,
+>> @@ -1888,7 +1889,7 @@ main(
+>>                                                          R_NAME);
+>>                                       break;
+>>                               case R_SIZE:
+>> -                                     rtsize = getstr(value, &ropts, R_SIZE);
+>> +                                     rtbytes = getnum(value, &ropts, R_SIZE);
+>>                                       break;
+>>                               case R_NOALIGN:
+>>                                       norsflag = getnum(value, &ropts,
+>> @@ -1991,14 +1992,14 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
+>>        * sector size mismatches between the new filesystem and the underlying
+>>        * host filesystem.
+>>        */
+>> -     check_device_type(dfile, &xi.disfile, !dsize, !dfile,
+>> +     check_device_type(dfile, &xi.disfile, !dbytes, !dfile,
+>>                         Nflag ? NULL : &xi.dcreat, force_overwrite, "d");
+>>       if (!loginternal)
+>> -             check_device_type(xi.logname, &xi.lisfile, !logsize, !xi.logname,
+>> -                               Nflag ? NULL : &xi.lcreat,
+>> +             check_device_type(xi.logname, &xi.lisfile, !logbytes,
+>> +                               !xi.logname, Nflag ? NULL : &xi.lcreat,
+>>                                 force_overwrite, "l");
+>>       if (xi.rtname)
+>> -             check_device_type(xi.rtname, &xi.risfile, !rtsize, !xi.rtname,
+>> +             check_device_type(xi.rtname, &xi.risfile, !rtbytes, !xi.rtname,
+>>                                 Nflag ? NULL : &xi.rcreat,
+>>                                 force_overwrite, "r");
+>>       if (xi.disfile || xi.lisfile || xi.risfile)
+>> @@ -2179,10 +2180,7 @@ _("rmapbt not supported with realtime devices\n"));
+>>       }
+>>
+>>
+>> -     if (dsize) {
+>> -             __uint64_t dbytes;
+>> -
+>> -             dbytes = getnum(dsize, &dopts, D_SIZE);
+>> +     if (dbytes) {
+>
+> Why has dbytes been demoted from uint64_t to int?  This eliminates the
+> ability to -d size=8G, right?
+>
 
-<shrug> I argue it's also defensive, in case we ever /do/ change the
-semantics to allow more "zero return and no bp" cases, then these parts
-won't suddenly start blowing up.
+Ah, thanks for spotting it, I will check the other variables as well.
 
-I think the Coverity analysis is just plain wrong (it claims that we can
-somehow corrupt return values to end up with a zero return having
-started with -EIO) but I did spot the trylock case and figured we could
-be defensive about that.
+Jan
 
---D
-
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> > Fixes-coverity-id: 1415250
-> > Fixes-coverity-id: 1415320
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_refcount.c |    4 ++++
-> >  fs/xfs/xfs_reflink.c         |    2 ++
-> >  2 files changed, 6 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-> > index 900ea23..45b1c3b 100644
-> > --- a/fs/xfs/libxfs/xfs_refcount.c
-> > +++ b/fs/xfs/libxfs/xfs_refcount.c
-> > @@ -1638,6 +1638,10 @@ xfs_refcount_recover_cow_leftovers(
-> >  	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
-> >  	if (error)
-> >  		goto out_trans;
-> > +	if (!agbp) {
-> > +		error = -ENOMEM;
-> > +		goto out_trans;
-> > +	}
-> >  	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
-> >  
-> >  	/* Find all the leftover CoW staging extents. */
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index d9b3d57..f45fbf0 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -170,6 +170,8 @@ xfs_reflink_find_shared(
-> >  	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
-> >  	if (error)
-> >  		return error;
-> > +	if (!agbp)
-> > +		return -ENOMEM;
-> >  
-> >  	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
-> >  
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
