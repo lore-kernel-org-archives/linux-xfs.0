@@ -1,206 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:4277 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751782AbdGXBna (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jul 2017 21:43:30 -0400
-Date: Mon, 24 Jul 2017 11:43:27 +1000
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:17067 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754726AbdGUXBi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 19:01:38 -0400
+Date: Sat, 22 Jul 2017 09:00:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/22] xfs: scrub in-memory metadata buffers
-Message-ID: <20170724014327.GC17762@dastard>
-References: <150061190859.14732.17040548800470377701.stgit@magnolia>
- <150061194082.14732.17289613506653968866.stgit@magnolia>
+Subject: Re: [RFC PATCH] xfs: consolidate local format inode fork verifiers
+Message-ID: <20170721230058.GY17762@dastard>
+References: <20170719160318.GP4224@magnolia>
+ <20170720022602.GR17762@dastard>
+ <20170720055057.GQ4224@magnolia>
+ <20170720224934.GW17762@dastard>
+ <20170721135405.GB44069@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150061194082.14732.17289613506653968866.stgit@magnolia>
+In-Reply-To: <20170721135405.GB44069@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Jul 20, 2017 at 09:39:00PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Jul 21, 2017 at 09:54:05AM -0400, Brian Foster wrote:
+> On Fri, Jul 21, 2017 at 08:49:34AM +1000, Dave Chinner wrote:
+> > On Wed, Jul 19, 2017 at 10:50:57PM -0700, Darrick J. Wong wrote:
+> > > On Thu, Jul 20, 2017 at 12:26:02PM +1000, Dave Chinner wrote:
+> > > > On Wed, Jul 19, 2017 at 09:03:18AM -0700, Darrick J. Wong wrote:
+> ...
+> > > <rambling off topic now>
+> > > 
+> > > While we're on the subject of verifiers, Eric Sandeen has been wishing
+> > > that we could make it easier to figure out which buffer verifier test
+> > > failed, and it would seem that the XFS_CORRUPTION_ERROR macro is used to
+> > > highlight bad inode fork contents.  Perhaps we should create a similar
+> > > macro that we could use to log exactly which buffer verifier test
+> > > failed?
+> > 
+> > I don't want to put some shouty macro on every second line of a
+> > verifier. Think differently - we currently return a true/false
+> > from the internal verifier functions to trigger a call to
+> > xfs_verifier_error(). How about they return __line__
+> > on error and 0 on success and then pass that returned value into
+> > xfs_verifier_error() and add that to the error output?
+> > 
+> > That tells us which check failed without adding more code to every
+> > single verifier check - use the compiler to give us what we need
+> > without any additional code, maintenance or runtime overhead.  All
+> > we need to know is the kernel version so we can translate the line
+> > number to a failed check...
+> > 
 > 
-> Call the verifier function for all in-memory metadata buffers, looking
-> for memory corruption either due to bad memory or coding bugs.
+> I think the ideal situation is the verifier error prints the check that
+> failed, similar to an assert failure.
 
-How does this fit into the bigger picture? We can't do an exhaustive
-search of the in memory buffer cache, because access is racy w.r.t.
-the life cycle of in memory buffers.
+Well, that comes from a macro that feeds the assert failure message
+__func__ and __line__.
 
-Also, if we are doing a full scrub, we're going to hit and then
-check the cached in-memory buffers anyway, so I'm missing the
-context that explains why this code is necessary.
+> I'm not aware of any way to do
+> that without a macro,
 
->  #endif	/* __XFS_REPAIR_COMMON_H__ */
-> diff --git a/fs/xfs/scrub/metabufs.c b/fs/xfs/scrub/metabufs.c
-> new file mode 100644
-> index 0000000..63faaa6
-> --- /dev/null
-> +++ b/fs/xfs/scrub/metabufs.c
-> @@ -0,0 +1,177 @@
-> +/*
-> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
-> + *
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License
-> + * as published by the Free Software Foundation; either version 2
-> + * of the License, or (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> + */
-> +#include "xfs.h"
-> +#include "xfs_fs.h"
-> +#include "xfs_shared.h"
-> +#include "xfs_format.h"
-> +#include "xfs_trans_resv.h"
-> +#include "xfs_mount.h"
-> +#include "xfs_defer.h"
-> +#include "xfs_btree.h"
-> +#include "xfs_bit.h"
-> +#include "xfs_log_format.h"
-> +#include "xfs_trans.h"
-> +#include "xfs_trace.h"
-> +#include "xfs_sb.h"
-> +#include "scrub/common.h"
-> +
-> +/* We only iterate buffers one by one, so we don't need any setup. */
-> +int
-> +xfs_scrub_setup_metabufs(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_inode		*ip)
-> +{
-> +	return 0;
-> +}
-> +
-> +#define XFS_SCRUB_METABUFS_TOO_MANY_RETRIES	10
-> +struct xfs_scrub_metabufs_info {
-> +	struct xfs_scrub_context	*sc;
-> +	unsigned int			retries;
-> +};
+I just outlined how to do it above.
 
-So do we get 10 retries per buffer, or 10 retries across an entire
-scan?
+> but I'm also not against crafting a new, verifier
+> specific one to accomplish that. Technically, it doesn't have to be
+> shouty :), but IMO, the diagnostic/usability benefit outweighs the
+> aesthetic cost.
 
-> +/* In-memory buffer corruption. */
-> +
-> +#define XFS_SCRUB_BUF_OP_ERROR_GOTO(label) \
-> +	XFS_SCRUB_OP_ERROR_GOTO(smi->sc, \
-> +			xfs_daddr_to_agno(smi->sc->mp, bp->b_bn), \
-> +			xfs_daddr_to_agbno(smi->sc->mp, bp->b_bn), "buf", \
-> +			&error, label)
+I disagree - there are so many verifier checks (and we only grow
+more as time goes on) so whatever we do needs them to be
+easily maintainable and not compromise the readabilty of the verifer
+code.
 
-Nested macros - yuck!
+> Beyond that, I'm not against dumping a line number but it would seem
+> kind of unusual to dump a line number without at least a filename. FWIW,
 
-> +STATIC int
-> +xfs_scrub_metabufs_scrub_buf(
-> +	struct xfs_scrub_metabufs_info	*smi,
-> +	struct xfs_buf			*bp)
-> +{
-> +	int				olderror;
-> +	int				error = 0;
-> +
-> +	/*
-> +	 * We hold the rcu lock during the rhashtable walk, so we can't risk
-> +	 * having the log forced due to a stale buffer by xfs_buf_lock.
-> +	 */
-> +	if (bp->b_flags & XBF_STALE)
-> +		return 0;
-> +
-> +	atomic_inc(&bp->b_hold);
+We don't really need the filename because we have the name of the
+verifier that failed in the ops structure. Hence we can print a
+{verfier name, line number} tuple which is effectively the same as
+{filename, line number}.
 
-This looks wrong. I think it can race with reclaim because we don't
-hold the pag->pag_buf_lock. i.e.  xfs_buf_rele() does this:
+> the generic verifier error reporting function also dumps an instruction
+> address for where the report is generated:
+> 
+>  XFS (...): Metadata corruption detected at xfs_symlink_read_verify+0xcd/0x100 [xfs], xfs_symlink block 0x58
+>
+> We obviously want to have information about which verifier failed, but
+> I'm not sure we need the actual address of the xfs_verifier_error()
+> caller. It would be nice if we could replace (the address, not
+> necessarily the function name) that with, or add to it, an address that
+> refers to the particular check that failed.
 
-	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
+Yes, that's exactly what I'm proposing we do.  What we really need to know is
 
-to prevent lookups - which are done under the pag->pag_buf_lock -
-from finding the buffer while it has a zero hold count and may be
-removed from the cache and freed.
+	1. the block that was corrupted (from bp)
+	2. the verifier that detected the corruption (from bp)
+	3. the IO type (read/write from bp)
+	4. the verifier check that failed (returned from verifier)
 
-Further, if we are going to iterate the cache, I'd much prefer the
-iteration code to be in fs/xfs/xfs_buf.c - nothing outside that file
-should be touching core buffer cache structures....
+We already have 1-3, but we don't have 4. We need to replace the
+replace __return_address used in the error message with __line__ or
+__THIS_IP__ that is returned from the if() branch that failed and
+from that we can then easily track the cause of the failure back to
+the source.
 
-FWIW, the LRU walks already handle this problem by the fact the LRU
-owns a hold count on the buffer. So it may be better to do this via
-a LRU walk rather than a hashtable walk....
+Returning __line__ or __THIS_IP__ from the verifier doesn't require
+new macros, or really any significant code change as most verifiers
+arelady return a true/false. All we need to do is plumb it into
+xfs_verifier_error().
 
-[snip]
+With that extra info we can output a slightly different message,
+say:
 
-> +	olderror = bp->b_error;
-> +	if (bp->b_fspriv)
-> +		bp->b_ops->verify_write(bp);
-
-Should we be recalculating the CRC on buffers we aren't about to 
-be writing to disk? Should we be verifying a buffer that has a
-non-zero error value on it?
-
-> +	else
-> +		bp->b_ops->verify_read(bp);
-> +	error = bp->b_error;
-> +	bp->b_error = olderror;
-> +
-> +	/* Mark any corruption errors we might find. */
-> +	XFS_SCRUB_BUF_OP_ERROR_GOTO(out_unlock);
-
-Ah, what? Why does this need a goto? And why doesn't it report the
-error that was found? (bloody macros!).
-
-> +out_unlock:
-> +	xfs_buf_unlock(bp);
-> +out_dec:
-> +	atomic_dec(&bp->b_hold);
-> +	return error;
-> +}
-> +#undef XFS_SCRUB_BUF_OP_ERROR_GOTO
-
-Oh, that's the macro defined above the function. Which I paid little
-attention to other than it called another macro. Now I realise that
-it (ab)uses local variables without them being passed into the
-macro. Yup, another reason we need to get rid of the macros from
-this code....
-
-> +	struct xfs_scrub_metabufs_info	*smi,
-> +	struct rhashtable_iter		*iter)
-> +{
-> +	struct xfs_buf			*bp;
-> +	int				error = 0;
-> +
-> +	do {
-> +		if (xfs_scrub_should_terminate(&error))
-> +			break;
-> +
-> +		bp = rhashtable_walk_next(iter);
-> +		if (IS_ERR(bp))
-> +			return PTR_ERR(bp);
-> +		else if (bp == NULL)
-> +			return 0;
-> +
-> +		error = xfs_scrub_metabufs_scrub_buf(smi, bp);
-> +	} while (error != 0);
-> +
-> +	return error;
-> +}
-> +
-> +/* Try to walk the buffers in this AG in order to scrub them. */
-> +int
-> +xfs_scrub_metabufs(
-
-Ah, please put an "_ag_" in this so it's clear it's only scrubbing a
-single AG. This is hidden deep inside the scrub context, so it took
-me a little bit of back tracking to understand that this wasn't a
-global scan....
+XFS (...): Metadata corruption detected during read of block 0xx58 by xfs_symlink verifier, line 132
 
 Cheers,
 
