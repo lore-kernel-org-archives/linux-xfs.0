@@ -1,177 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28231 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:20409 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751648AbdGaVHZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jul 2017 17:07:25 -0400
-Subject: [PATCH 5/7] xfs_db: print attribute remote value blocks
+        with ESMTP id S1754991AbdGUWE6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 18:04:58 -0400
+Subject: [PATCH 4/5] common/populate: enable xfs quota accounting
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 31 Jul 2017 14:07:19 -0700
-Message-ID: <150153523972.26081.18217476990683895058.stgit@magnolia>
-In-Reply-To: <150153520589.26081.8786864874176090813.stgit@magnolia>
-References: <150153520589.26081.8786864874176090813.stgit@magnolia>
+Date: Fri, 21 Jul 2017 15:04:52 -0700
+Message-ID: <150067469221.30639.16711306489951233808.stgit@magnolia>
+In-Reply-To: <150067465981.30639.14801416171688538711.stgit@magnolia>
+References: <150067465981.30639.14801416171688538711.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Teach xfs_db how to print the contents of xattr remote value blocks.
+When we're creating a populated xfs image, turn on quotas so that we can
+fuzz those fields too.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/attr.c  |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- db/attr.h  |    1 +
- db/field.c |    3 +++
- db/field.h |    1 +
- 4 files changed, 64 insertions(+)
+ common/populate |   50 +++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 49 insertions(+), 1 deletion(-)
 
 
-diff --git a/db/attr.c b/db/attr.c
-index 23ffcd5..98fb069 100644
---- a/db/attr.c
-+++ b/db/attr.c
-@@ -41,6 +41,9 @@ static int	attr_leaf_nvlist_offset(void *obj, int startoff, int idx);
- static int	attr_node_btree_count(void *obj, int startoff);
- static int	attr_node_hdr_count(void *obj, int startoff);
+diff --git a/common/populate b/common/populate
+index 498151f..b77c508 100644
+--- a/common/populate
++++ b/common/populate
+@@ -21,6 +21,7 @@
+ #  Contact information: Silicon Graphics, Inc., 1500 Crittenden Lane,
+ #  Mountain View, CA 94043, USA, or: http://www.sgi.com
+ #-----------------------------------------------------------------------
++. ./common/quota
  
-+static int	attr_remote_count(void *obj, int startoff);
-+static int	attr3_remote_count(void *obj, int startoff);
-+
- const field_t	attr_hfld[] = {
- 	{ "", FLDT_ATTR, OI(0), C1, 0, TYP_NONE },
- 	{ NULL }
-@@ -53,6 +56,7 @@ const field_t	attr_flds[] = {
- 	  FLD_COUNT, TYP_NONE },
- 	{ "hdr", FLDT_ATTR_NODE_HDR, OI(NOFF(hdr)), attr_node_hdr_count,
- 	  FLD_COUNT, TYP_NONE },
-+	{ "data", FLDT_CHARNS, OI(0), attr_remote_count, FLD_COUNT, TYP_NONE },
- 	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(LOFF(entries)),
- 	  attr_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
- 	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(NOFF(__btree)), attr_node_btree_count,
-@@ -197,6 +201,33 @@ attr3_leaf_hdr_count(
- 	return be16_to_cpu(leaf->hdr.info.hdr.magic) == XFS_ATTR3_LEAF_MAGIC;
+ _require_populate_commands() {
+ 	_require_xfs_io_command "falloc"
+@@ -94,6 +95,47 @@ __populate_fill_fs() {
+ 	done
  }
  
-+static int
-+attr_remote_count(
-+	void		*obj,
-+	int		startoff)
++# For XFS, force on all the quota options if quota is enabled
++# and the user didn't feed us noquota.
++_populate_xfs_qmount_option()
 +{
-+	if (attr_leaf_hdr_count(obj, startoff) == 0 &&
-+	    attr_node_hdr_count(obj, startoff) == 0)
-+		return mp->m_sb.sb_blocksize;
-+	return 0;
++	# User explicitly told us not to quota
++	if echo "${MOUNT_OPTIONS}" | grep -q 'noquota'; then
++		return
++	fi
++
++	# Don't bother if we can't turn on quotas
++	if [ ! -f /proc/fs/xfs/xqmstat ]; then
++		# No quota support
++		return
++	elif [ "${USE_EXTERNAL}" = "yes" ] && [ ! -z "${SCRATCH_RTDEV}" ]; then
++		# Quotas not supported on rt filesystems
++		return
++	elif [ -z "${XFS_QUOTA_PROG}" ]; then
++		# xfs quota tools not installed
++		return
++	fi
++
++	# Turn on all the quotas
++	if xfs_info "${TEST_DIR}" | grep -q 'crc=1'; then
++		# v5 filesystems can have group & project quotas
++		quota="usrquota,grpquota,prjquota"
++	else
++		# v4 filesystems cannot mix group & project quotas
++		quota="usrquota,grpquota"
++	fi
++
++	# Inject our quota mount options
++	if echo "${MOUNT_OPTIONS}" | grep -q "${quota}"; then
++		return
++	elif echo "${MOUNT_OPTIONS}" | egrep -q '(quota|noenforce)'; then
++		_qmount_option "${quota}"
++	else
++		export MOUNT_OPTIONS="$MOUNT_OPTIONS -o ${quota}"
++		echo "MOUNT_OPTIONS = $MOUNT_OPTIONS" >>$seqres.full
++	fi
 +}
 +
-+static int
-+attr3_remote_count(
-+	void		*obj,
-+	int		startoff)
-+{
-+	struct xfs_attr3_rmt_hdr	*hdr = obj;
-+
-+	ASSERT(startoff == 0);
-+
-+	if (hdr->rm_magic != cpu_to_be32(XFS_ATTR3_RMT_MAGIC))
-+		return 0;
-+	if (be32_to_cpu(hdr->rm_bytes) + sizeof(*hdr) > mp->m_sb.sb_blocksize)
-+		return mp->m_sb.sb_blocksize - sizeof(*hdr);
-+	return be32_to_cpu(hdr->rm_bytes);
-+}
-+
- typedef int (*attr_leaf_entry_walk_f)(struct xfs_attr_leafblock *,
- 				      struct xfs_attr_leaf_entry *, int);
- static int
-@@ -477,6 +508,17 @@ attr3_node_hdr_count(
- 	return be16_to_cpu(node->hdr.info.hdr.magic) == XFS_DA3_NODE_MAGIC;
- }
+ # Populate an XFS on the scratch device with (we hope) all known
+ # types of metadata block
+ _scratch_xfs_populate() {
+@@ -106,6 +148,7 @@ _scratch_xfs_populate() {
+ 		esac
+ 	done
  
-+static int
-+attr3_remote_hdr_count(
-+	void			*obj,
-+	int			startoff)
-+{
-+	struct xfs_attr3_rmt_hdr	*node = obj;
-+
-+	ASSERT(startoff == 0);
-+	return be32_to_cpu(node->rm_magic) == XFS_ATTR3_RMT_MAGIC;
-+}
-+
- int
- attr_size(
- 	void	*obj,
-@@ -501,6 +543,8 @@ const field_t	attr3_flds[] = {
- 	  FLD_COUNT, TYP_NONE },
- 	{ "hdr", FLDT_ATTR3_NODE_HDR, OI(N3OFF(hdr)), attr3_node_hdr_count,
- 	  FLD_COUNT, TYP_NONE },
-+	{ "hdr", FLDT_ATTR3_REMOTE_HDR, OI(0), attr3_remote_hdr_count,
-+	  FLD_COUNT, TYP_NONE },
- 	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(L3OFF(entries)),
- 	  attr3_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
- 	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(N3OFF(__btree)),
-@@ -543,6 +587,21 @@ const field_t	attr3_node_hdr_flds[] = {
- 	{ NULL }
- };
- 
-+#define	RM3OFF(f)	bitize(offsetof(struct xfs_attr3_rmt_hdr, rm_ ## f))
-+const struct field	attr3_remote_crc_flds[] = {
-+	{ "magic", FLDT_UINT32X, OI(RM3OFF(magic)), C1, 0, TYP_NONE },
-+	{ "offset", FLDT_UINT32D, OI(RM3OFF(offset)), C1, 0, TYP_NONE },
-+	{ "bytes", FLDT_UINT32D, OI(RM3OFF(bytes)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(RM3OFF(crc)), C1, 0, TYP_NONE },
-+	{ "uuid", FLDT_UUID, OI(RM3OFF(uuid)), C1, 0, TYP_NONE },
-+	{ "owner", FLDT_INO, OI(RM3OFF(owner)), C1, 0, TYP_NONE },
-+	{ "bno", FLDT_DFSBNO, OI(RM3OFF(blkno)), C1, 0, TYP_BMAPBTD },
-+	{ "lsn", FLDT_UINT64X, OI(RM3OFF(lsn)), C1, 0, TYP_NONE },
-+	{ "data", FLDT_CHARNS, OI(bitize(sizeof(struct xfs_attr3_rmt_hdr))),
-+		attr3_remote_count, FLD_COUNT, TYP_NONE },
-+	{ NULL }
-+};
-+
- /*
-  * Special read verifier for attribute buffers. Detect the magic number
-  * appropriately and set the correct verifier and call it.
-diff --git a/db/attr.h b/db/attr.h
-index 21848c1..565d6d8 100644
---- a/db/attr.h
-+++ b/db/attr.h
-@@ -32,6 +32,7 @@ extern const field_t	attr3_leaf_hdr_flds[];
- extern const field_t	attr3_node_hdr_flds[];
- extern const field_t	attr3_blkinfo_flds[];
- extern const field_t	attr3_node_hdr_flds[];
-+extern const field_t	attr3_remote_crc_flds[];
- 
- extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
- extern int	attr_size(void *obj, int startoff, int idx);
-diff --git a/db/field.c b/db/field.c
-index f1e5f35..ae4c805 100644
---- a/db/field.c
-+++ b/db/field.c
-@@ -99,6 +99,9 @@ const ftattr_t	ftattrtab[] = {
- 	{ FLDT_ATTR3_NODE_HDR, "attr3_node_hdr", NULL,
- 	  (char *)attr3_node_hdr_flds, SI(bitsz(struct xfs_da3_node_hdr)),
- 	  0, NULL, attr3_node_hdr_flds },
-+	{ FLDT_ATTR3_REMOTE_HDR, "attr3_remote_hdr", NULL,
-+	  (char *)attr3_remote_crc_flds, attr_size, FTARG_SIZE, NULL,
-+	  attr3_remote_crc_flds },
- 
- 	{ FLDT_BMAPBTA, "bmapbta", NULL, (char *)bmapbta_flds, btblock_size,
- 	  FTARG_SIZE, NULL, bmapbta_flds },
-diff --git a/db/field.h b/db/field.h
-index d1a7095..a8df29b 100644
---- a/db/field.h
-+++ b/db/field.h
-@@ -47,6 +47,7 @@ typedef enum fldt	{
- 	FLDT_ATTR3_BLKINFO,
- 	FLDT_ATTR3_LEAF_HDR,
- 	FLDT_ATTR3_NODE_HDR,
-+	FLDT_ATTR3_REMOTE_HDR,
- 
- 	FLDT_BMAPBTA,
- 	FLDT_BMAPBTA_CRC,
++	_populate_xfs_qmount_option
+ 	_scratch_mount
+ 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+ 	dblksz="$(xfs_info "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
+@@ -720,7 +763,12 @@ _scratch_populate_cached() {
+ 		test -n "${SCRATCH_LOGDEV}" && rm -f "${POPULATE_METADUMP}"
+ 		;;
+ 	"xfs")
+-		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}";;
++		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}"
++		_populate_xfs_qmount_option
++		if echo "${MOUNT_OPTIONS}" | grep -q 'usrquota'; then
++			extra_descr="${extra_descr} QUOTAS"
++		fi
++		;;
+ 	*)
+ 		extra_descr="";;
+ 	esac
 
