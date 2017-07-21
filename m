@@ -1,312 +1,211 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:35624 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751806AbdGUEkW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 00:40:22 -0400
-From: Eric Biggers <ebiggers3@gmail.com>
-Subject: [PATCH v2 13/15] common: remove IRIX-specific code
-Date: Thu, 20 Jul 2017 21:38:51 -0700
-Message-Id: <20170721043853.364-14-ebiggers3@gmail.com>
-In-Reply-To: <20170721043853.364-1-ebiggers3@gmail.com>
-References: <20170721043853.364-1-ebiggers3@gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20374 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754852AbdGUWEw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 18:04:52 -0400
+Subject: [PATCH 3/5] common/inject: refactor helpers to use new errortag
+ interface
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 21 Jul 2017 15:04:45 -0700
+Message-ID: <150067468569.30639.11717903404151243816.stgit@magnolia>
+In-Reply-To: <150067465981.30639.14801416171688538711.stgit@magnolia>
+References: <150067465981.30639.14801416171688538711.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
+To: eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-As xfstests is no longer supported on IRIX, remove IRIX-specific code
-from the common helper scripts.
+Refactor the XFS error injection helpers to use the new errortag
+interface to configure error injection.  If that isn't present, fall
+back either to the xfs_io/ioctl based injection or the older sysfs
+knobs.  Refactor existing testcases to use the new helpers.
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/config      | 12 ------------
- common/dump        | 39 +++------------------------------------
- common/filestreams | 43 ++++++-------------------------------------
- common/log         |  1 -
- common/rc          | 23 +++--------------------
- 5 files changed, 12 insertions(+), 106 deletions(-)
+ common/inject |   58 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ tests/xfs/141 |    5 +++--
+ tests/xfs/196 |   17 ++++++-----------
+ 3 files changed, 65 insertions(+), 15 deletions(-)
 
-diff --git a/common/config b/common/config
-index 5091db9d..80598d06 100644
---- a/common/config
-+++ b/common/config
-@@ -52,15 +52,10 @@
- export LANG=C
- export LC_ALL=C
+
+diff --git a/common/inject b/common/inject
+index 8ecc290..9aa24de 100644
+--- a/common/inject
++++ b/common/inject
+@@ -35,10 +35,46 @@ _require_error_injection()
+ 	esac
+ }
  
--# Warning: don't put freeware before /usr/bsd on IRIX coz you'll
--#  get the wrong hostname and set your system name to -s  :)
--[ -d /usr/bsd ] && PATH=$PATH:/usr/bsd
--[ -d /usr/freeware/bin ] && PATH=$PATH:/usr/freeware/bin
- PATH=".:$PATH"
- 
- export HOST=`hostname -s`
- export HOSTOS=`uname -s`
--[ "$HOSTOS" = "IRIX64" ] && export HOSTOS="IRIX"
- 
- export MODULAR=0               # using XFS as a module or not
- export BOOT="/boot"            # install target for kernels
-@@ -220,13 +215,6 @@ fi
- export UDEV_SETTLE_PROG
- 
- case "$HOSTOS" in
--    IRIX*)
--        export MKFS_XFS_PROG="`set_prog_path mkfs_xfs`"
--        export MKFS_UDF_PROG="`set_prog_path mkfs_udf`"
--        export XFS_FSR_PROG="`set_prog_path /usr/etc/fsr_xfs`"
--        export MKFS_NFS_PROG="false"
--        export MKFS_CIFS_PROG="false"
--        ;;
-     Linux)
-         export MKFS_XFS_PROG="`set_prog_path mkfs.xfs`"
-         export MKFS_EXT4_PROG="`set_prog_path mkfs.ext4`"
-diff --git a/common/dump b/common/dump
-index d6663e0c..b0e4a12f 100644
---- a/common/dump
-+++ b/common/dump
-@@ -395,8 +395,6 @@ End-of-File
- 
- _mk_fillconfig_perm()
++# Find a given xfs mount's errortag injection knob in sysfs
++_find_xfs_mount_errortag_knob()
++{
++	dev="$1"
++	knob="$2"
++	shortdev="$(_short_dev "${dev}")"
++	tagfile="/sys/fs/xfs/${shortdev}/errortag/${knob}"
++
++	# Some of the new sysfs errortag knobs were previously available via
++	# another sysfs path.
++	case "${knob}" in
++	"log_bad_crc")
++		if [ ! -w "${tagfile}" ]; then
++			tagfile="/sys/fs/xfs/${shortdev}/log/log_badcrc_factor"
++		fi
++		;;
++	"drop_writes")
++		if [ ! -w "${tagfile}" ]; then
++			tagfile="/sys/fs/xfs/${shortdev}/drop_writes"
++		fi
++		if [ ! -w "${tagfile}" ]; then
++			tagfile="/sys/fs/xfs/${shortdev}/fail_writes"
++		fi
++		;;
++	*)
++		;;
++	esac
++
++	echo "${tagfile}"
++}
++
+ # Requires that xfs_io inject command knows about this error type
+ _require_xfs_io_error_injection()
  {
--    # dir_guid: ugo=rwx,g+s on dir is for IRIX chmod(1)
+ 	type="$1"
++
++	# Can we find the error injection knobs via the new errortag
++	# configuration mechanism?
++	test -w "$(_find_xfs_mount_errortag_knob "${TEST_DEV}" "${type}")" && return
++
+ 	_require_error_injection
+ 
+ 	# NOTE: We can't actually test error injection here because xfs
+@@ -54,16 +90,34 @@ _require_xfs_io_error_injection()
+ _test_inject_error()
+ {
+ 	type="$1"
++	value="$2"
+ 
+-	$XFS_IO_PROG -x -c "inject $type" $TEST_DIR
++	knob="$(_find_xfs_mount_errortag_knob "${TEST_DEV}" "${type}")"
++	if [ -w "${knob}" ]; then
++		test -z "${value}" && value="default"
++		echo -n "${value}" > "${knob}"
++	elif [ -z "${value}" ] || [ "${value}" = "default" ]; then
++		$XFS_IO_PROG -x -c "inject $type" $TEST_DIR
++	else
++		_notrun "Cannot inject error ${type} value ${value}."
++	fi
+ }
+ 
+ # Inject an error into the scratch fs
+ _scratch_inject_error()
+ {
+ 	type="$1"
++	value="$2"
+ 
+-	$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
++	knob="$(_find_xfs_mount_errortag_knob "${SCRATCH_DEV}" "${type}")"
++	if [ -w "${knob}" ]; then
++		test -z "${value}" && value="default"
++		echo -n "${value}" > "${knob}"
++	elif [ -z "${value}" ] || [ "${value}" = "default" ]; then
++		$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
++	else
++		_notrun "Cannot inject error ${type} value ${value}."
++	fi
+ }
+ 
+ # Unmount and remount the scratch device, dumping the log
+diff --git a/tests/xfs/141 b/tests/xfs/141
+index 56ff14e..f61e524 100755
+--- a/tests/xfs/141
++++ b/tests/xfs/141
+@@ -47,13 +47,14 @@ rm -f $seqres.full
+ 
+ # get standard environment, filters and checks
+ . ./common/rc
++. ./common/inject
+ 
+ # real QA test starts here
+ 
+ # Modify as appropriate.
+ _supported_fs xfs
+ _supported_os Linux
+-_require_xfs_sysfs $(_short_dev $TEST_DEV)/log/log_badcrc_factor
++_require_xfs_io_error_injection "log_bad_crc"
+ _require_scratch
+ _require_command "$KILLALL_PROG" killall
+ 
+@@ -69,7 +70,7 @@ for i in $(seq 1 5); do
+ 	# (increase this value to run fsstress longer).
+ 	factor=$((RANDOM % 100 + 1))
+ 	echo iteration $i log_badcrc_factor: $factor >> $seqres.full 2>&1
+-	echo $factor > /sys/fs/xfs/$sdev/log/log_badcrc_factor
++	_scratch_inject_error "log_bad_crc" "$factor"
+ 
+ 	# Run fsstress until the filesystem shuts down. It will shut down
+ 	# automatically when error injection triggers.
+diff --git a/tests/xfs/196 b/tests/xfs/196
+index e9b0649..fe3f570 100755
+--- a/tests/xfs/196
++++ b/tests/xfs/196
+@@ -45,6 +45,7 @@ _cleanup()
+ # get standard environment, filters and checks
+ . ./common/rc
+ . ./common/punch
++. ./common/inject
+ 
+ # real QA test starts here
+ rm -f $seqres.full
+@@ -53,13 +54,7 @@ rm -f $seqres.full
+ _supported_fs generic
+ _supported_os Linux
+ _require_scratch
 -
-     cat <<End-of-File >$tmp.config
- # pathname	size/dir  user group mode
- #
-@@ -406,7 +404,7 @@ file_sticky	10	$nobody	$nobody	01777
- file_mix1	10	$nobody	$nobody	761
- file_mix2	10	$nobody	$nobody	642
- dir_suid	d	$nobody	$nobody	04777
--dir_guid	d	$nobody	$nobody	ugo=rwx,g+s
-+dir_guid	d	$nobody	$nobody	02777
- dir_sticky	d	$nobody	$nobody	01777
- dir_mix1	d	$nobody	$nobody	761
- dir_mix2	d	$nobody	$nobody	642
-@@ -798,25 +796,6 @@ _ls_filter()
-   | sed -e 's/total [0-9][0-9]*/total TOTAL/'
- }
+-DROP_WRITES="drop_writes"
+-# replace "drop_writes" with "fail_writes" for old kernel
+-if [ -f /sys/fs/xfs/$(_short_dev $TEST_DEV)/fail_writes ];then
+-	DROP_WRITES="fail_writes"
+-fi
+-_require_xfs_sysfs $(_short_dev $TEST_DEV)/${DROP_WRITES}
++_require_xfs_io_error_injection "drop_writes"
  
--#
--# Filtering of Irix character hwgraph device names
--# e.g.
--# chardev: /hw/node/xtalk/15/pci/0/scsi_ctlr/0/target/1/lun/0/disk/partition/4/char
--# blkdev:  /dev/dsk/dks0d1s4
--#
--_filter_devchar()
--{
--    $AWK_PROG '
--	/\/hw\/node/ {
--	    sub(/\/hw.*scsi_ctlr\//,"/dev/dsk/dks")  # blah blah /dev/dsk/dks0/target/1/....
--	    sub(/\/target\//,"d")                    # blah blah /dev/dsk/dks0d1/lun/0/disk.....
--	    sub(/\/lun.*partition\//,"s")            # blah blah /dev/dsk/dks0d1s4/char
--	    sub(/\/char/,"")			     # blah blah /dev/dsk/dks0d1s4
--	}
--	{ print }
--    '
--}
--
+ _scratch_mkfs >/dev/null 2>&1
+ _scratch_mount
+@@ -72,7 +67,7 @@ bytes=$((64 * 1024))
+ $XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
  
- #
- # Filter out the non-deterministic dump msgs from
-@@ -824,7 +803,6 @@ _filter_devchar()
- #
- _dump_filter_main()
- {
--  _filter_devchar |\
-   sed \
-       -e "s#$__XFSDUMP_PROG#xfsdump#"			\
-       -e "s#$XFSRESTORE_PROG#xfsrestore#"		\
-@@ -1191,7 +1169,7 @@ _do_restore_toc()
-     echo "Contents of dump ..."
-     opts="$_restore_debug$restore_args -f $dump_file -t"
-     echo "xfsrestore $opts" | _dir_filter
--    cd $SCRATCH_MNT # for IRIX which needs xfs cwd
-+    cd $SCRATCH_MNT
-     $XFSRESTORE_PROG $opts 2>&1 | tee -a $seqres.full | _dump_filter_main |\
-     _check_quota_file |\
-     _check_quota_entries |\
-@@ -1484,25 +1462,14 @@ _check_quota_entries()
- # xfsrestore: user quota information written to ...'
- # xfsrestore: group quota information written to ...'
- # xfsrestore: project quota information written to ...'
--#
--# If on IRIX then look for:
--# xfsrestore: use 'edquota' to restore quotas
--# Else look for:
- # xfsrestore: use 'xfs_quota' to restore quotas
- #
- _check_quota_dumprestore()
- {
--    if [ "$HOSTOS" == "IRIX" ]; then
- 	_check_quota 'user quota information' \
- 		     'group quota information' \
- 		     'project quota information' | \
--	sed "/xfsrestore:.*use 'edquota' to restore quotas/d"
--    else
--	_check_quota 'user quota information' \
--		     'group quota information' \
--		     'project quota information' | \
--	sed "/xfsrestore:.*use 'xfs_quota' to restore quotas/d"
--    fi
-+		sed "/xfsrestore:.*use 'xfs_quota' to restore quotas/d"
- }
+ # Enable write drops. All buffered writes are dropped from this point on.
+-echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
++_scratch_inject_error "drop_writes" 1
  
- #
-diff --git a/common/filestreams b/common/filestreams
-index 4d146648..f5441f5a 100644
---- a/common/filestreams
-+++ b/common/filestreams
-@@ -21,35 +21,12 @@
+ # Write every other 4k range to split the larger delalloc extent into many more
+ # smaller extents. Use pwrite because with write failures enabled, all
+@@ -89,7 +84,7 @@ for i in $(seq 4096 8192 $endoff); do
+ 	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
+ done
  
- _check_filestreams_support()
- {
--	local irix_timeout_sysvar="xfs_mfstream_timeout"
--	local linux_timeout_procvar="/proc/sys/fs/xfs/filestream_centisecs"
--	local streams_avail=""
--	if [ "$HOSTOS" == "IRIX" ]; then
--		# check for the filestreams timeout systune variable in irix
--		streams_avail=`systune $irix_timeout_sysvar 2>&1 |
--			perl -ne 'if (/'$irix_timeout_sysvar'\s+=\s+\d+/) {print "true"}'`
--	else
--		# check for the filestreams timeout proc entry in linux
--		[ -f $linux_timeout_procvar ] && streams_avail="true"
--	fi
--
--	if [ "$streams_avail" == "true" ]; then
--		return 0
--	else
--		return 1
--	fi
-+	[ -f /proc/sys/fs/xfs/filestream_centisecs ]
- }
+-echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
++_scratch_inject_error "drop_writes" 0
  
- _set_stream_timeout_centisecs()
- {
--	local new_timeout_csecs=$1
--	local irix_timeout_sysvar="xfs_mfstream_timeout"
--	local linux_timeout_procvar="/proc/sys/fs/xfs/filestream_centisecs"
--	if [ "$HOSTOS" == "IRIX" ]; then
--		echo y | systune -r $irix_timeout_sysvar $new_timeout_csecs >/dev/null
--	else
--		echo $new_timeout_csecs > $linux_timeout_procvar
--	fi
-+	echo $1 > /proc/sys/fs/xfs/filestream_centisecs
- }
+ _scratch_cycle_mount
+ $XFS_IO_PROG -c 'bmap -vp' $file | _filter_bmap
+@@ -104,9 +99,9 @@ for offset in $(seq 0 100 500); do
+ 	$XFS_IO_PROG -fc "pwrite ${offset}m 100m" $file >> $seqres.full 2>&1
  
- _do_stream()
-@@ -63,22 +40,14 @@ _do_stream()
- 	local blocks_in_file=`expr $file_size / $bsize`
+ 	punchoffset=$((offset + 75))
+-	echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
++	_scratch_inject_error "drop_writes"
+ 	$XFS_IO_PROG -c "pwrite ${punchoffset}m 4k" $file >> $seqres.full 2>&1
+-	echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
++	_scratch_inject_error "drop_writes" 0
+ done
  
- 	mkdir $directory_name
--	if [ "$iflag" = "1" -a "$HOSTOS" != "IRIX" ]; then
-+	if [ "$iflag" = "1" ]; then
- 		$XFS_IO_PROG -x -c "chattr +S" $directory_name \
- 			|| _fail "chattr of filestream flag"
- 	fi
- 	cd $directory_name
- 
--	local dd_cmd=""
--	if [ "$HOSTOS" == "IRIX" ]; then
--		# for irix use lmdd
--		dd_cmd="lmdd"
--		[ "$dio" = "1" ] && dd_cmd="$dd_cmd odirect=1"
--	else
--		# for linux use dd
--		dd_cmd="dd"
--		[ "$dio" = "1" ] && dd_cmd="$dd_cmd oflag=direct"
--	fi
-+	local dd_cmd="dd"
-+	[ "$dio" = "1" ] && dd_cmd="$dd_cmd oflag=direct"
- 	dd_cmd="$dd_cmd if=/dev/zero bs=${bsize} count=${blocks_in_file}"
- 
- 	local i=1
-@@ -140,7 +109,7 @@ _test_streams() {
- 	_scratch_mkfs_xfs -dsize=$size,agcount=$agcount >/dev/null 2>&1 \
- 		|| _fail "mkfs failed"
- 
--	if [ "$use_iflag" = "0" -o "$HOSTOS" == "IRIX" ]; then
-+	if [ "$use_iflag" = "0" ]; then
- 		# mount using filestreams mount option
- 		_scratch_mount "-o filestreams" \
- 			|| _fail "filestreams mount failed"
-diff --git a/common/log b/common/log
-index d1c19ff5..bdb4ed68 100644
---- a/common/log
-+++ b/common/log
-@@ -314,7 +314,6 @@ _print_operation()
- # and may not match with the FS mounted at a different LR size 
- # => xlog_do_recovery_pass() can not handle the different hdr sizes
- #    it assumes them all to be the same between the start..finish
--# NB: On IRIX there is no UMOUNT record and so we could start from -s 0.
- 
- _print_transaction_inode()
- {
-diff --git a/common/rc b/common/rc
-index fa1314c6..d3bf8339 100644
---- a/common/rc
-+++ b/common/rc
-@@ -238,7 +238,7 @@ _scratch_options()
- 
-     case $type in
-     mkfs)
--	[ "$HOSTOS" != "IRIX" ] && SCRATCH_OPTIONS="$SCRATCH_OPTIONS -f"
-+	SCRATCH_OPTIONS="$SCRATCH_OPTIONS -f"
- 	rt_opt="-r"
-         log_opt="-l"
- 	;;
-@@ -287,14 +287,7 @@ _mount_ops_filter()
-     [ $last_index -gt 0 ] && shift $last_index
-     FS_ESCAPED=$1
-     
--    # irix is fussy about how it is fed its mount options
--    # - multiple -o's are not allowed
--    # - no spaces between comma delimitered options
--    # the sed script replaces all -o's (except the first) with a comma
--    # not required for linux, but won't hurt
--    
--    echo $params | sed -e 's/[[:space:]]\+-o[[:space:]]*/UnIqUe/1; s/[[:space:]]\+-o[[:space:]]*/,/g; s/UnIqUe/ -o /1' \
--        | sed -e 's/dmapi/dmi/' \
-+    echo $params | sed -e 's/dmapi/dmi/' \
-         | $PERL_PROG -ne "s#mtpt=[^,|^\n|^\s]*#mtpt=$FS_ESCAPED\1\2#; print;"
- 
- }
-@@ -2116,12 +2109,7 @@ s,^\s*$,,;
- 
- _user_do()
- {
--    if [ "$HOSTOS" == "IRIX" ]
--	then
--	echo $1 | /bin/bash "su $qa_user 2>&1" | _filter_user_do
--    else
- 	echo $1 | su -s /bin/bash $qa_user 2>&1 | _filter_user_do
--    fi
- }
- 
- _require_xfs_io_command()
-@@ -2693,9 +2681,7 @@ _full_platform_details()
- 
- _get_os_name()
- {
--	if [ "`uname`" == "IRIX64" ] || [ "`uname`" == "IRIX" ]; then
--		echo 'irix'
--	elif [ "`uname`" == "Linux" ]; then
-+	if [ "`uname`" == "Linux" ]; then
- 		echo 'linux'
- 	else
- 		echo Unknown operating system: `uname`
-@@ -3259,9 +3245,6 @@ run_check()
- 
- _require_test_symlinks()
- {
--	# IRIX UDF does not support symlinks
--	[ "$HOSTOS" = "IRIX" -a "$FSTYP" = 'udf' ] && \
--		_notrun "Require symlinks support"
- 	target=`mktemp -p $TEST_DIR`
- 	link=`mktemp -p $TEST_DIR -u`
- 	ln -s `basename $target` $link
--- 
-2.13.3
+ echo "Silence is golden."
 
