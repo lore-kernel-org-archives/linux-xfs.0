@@ -1,81 +1,197 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:21158 "EHLO mga03.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43250 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753509AbdGUWkD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Jul 2017 18:40:03 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v4 0/5] DAX common 4k zero page
-Date: Fri, 21 Jul 2017 16:39:50 -0600
-Message-Id: <20170721223956.29485-1-ross.zwisler@linux.intel.com>
+        id S1755127AbdGVM3q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 22 Jul 2017 08:29:46 -0400
+Date: Sat, 22 Jul 2017 08:29:44 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH] xfs: consolidate local format inode fork verifiers
+Message-ID: <20170722122944.GA4783@bfoster.bfoster>
+References: <20170719160318.GP4224@magnolia>
+ <20170720022602.GR17762@dastard>
+ <20170720055057.GQ4224@magnolia>
+ <20170720224934.GW17762@dastard>
+ <20170721135405.GB44069@bfoster.bfoster>
+ <20170721230058.GY17762@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170721230058.GY17762@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, David Airlie <airlied@linux.ie>, Ingo Molnar <mingo@redhat.com>, Inki Dae <inki.dae@samsung.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Joonyoung Shim <jy0922.shim@samsung.com>, Krzysztof Kozlowski <krzk@kernel.org>, Kukjin Kim <kgene@kernel.org>, Kyungmin Park <kyungmin.park@samsung.com>, Matthew Wilcox <mawilcox@microsoft.com>, Patrik Jakobsson <patrik.r.jakobsson@gmail.com>, Rob Clark <robdclark@gmail.com>, Seung-Woo Kim <sw0312.kim@samsung.com>, Steven Rostedt <rostedt@goodmis.org>, Tomi Valkeinen <tomi.valkeinen@ti.com>, dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-samsung-soc@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
 
-Changes since v3:
- - Rebased onto the current linux/master which is based on v4.13-rc1.
+On Sat, Jul 22, 2017 at 09:00:58AM +1000, Dave Chinner wrote:
+> On Fri, Jul 21, 2017 at 09:54:05AM -0400, Brian Foster wrote:
+> > On Fri, Jul 21, 2017 at 08:49:34AM +1000, Dave Chinner wrote:
+> > > On Wed, Jul 19, 2017 at 10:50:57PM -0700, Darrick J. Wong wrote:
+> > > > On Thu, Jul 20, 2017 at 12:26:02PM +1000, Dave Chinner wrote:
+> > > > > On Wed, Jul 19, 2017 at 09:03:18AM -0700, Darrick J. Wong wrote:
+> > ...
+> > > > <rambling off topic now>
+> > > > 
+> > > > While we're on the subject of verifiers, Eric Sandeen has been wishing
+> > > > that we could make it easier to figure out which buffer verifier test
+> > > > failed, and it would seem that the XFS_CORRUPTION_ERROR macro is used to
+> > > > highlight bad inode fork contents.  Perhaps we should create a similar
+> > > > macro that we could use to log exactly which buffer verifier test
+> > > > failed?
+> > > 
+> > > I don't want to put some shouty macro on every second line of a
+> > > verifier. Think differently - we currently return a true/false
+> > > from the internal verifier functions to trigger a call to
+> > > xfs_verifier_error(). How about they return __line__
+> > > on error and 0 on success and then pass that returned value into
+> > > xfs_verifier_error() and add that to the error output?
+> > > 
+> > > That tells us which check failed without adding more code to every
+> > > single verifier check - use the compiler to give us what we need
+> > > without any additional code, maintenance or runtime overhead.  All
+> > > we need to know is the kernel version so we can translate the line
+> > > number to a failed check...
+> > > 
+> > 
+> > I think the ideal situation is the verifier error prints the check that
+> > failed, similar to an assert failure.
+> 
+> Well, that comes from a macro that feeds the assert failure message
+> __func__ and __line__.
+> 
+> > I'm not aware of any way to do
+> > that without a macro,
+> 
+> I just outlined how to do it above.
+> 
 
- - Instead of adding vm_insert_mkwrite_mixed() and duplicating code from
-   vm_insert_mixed(), instead just add a 'mkwrite' parameter to
-   vm_insert_mixed() and update all call sites.  (Vivek)
+What I mean is that assert failures (warnings, etc.) print the actual
+expression that caused the report along with the file/line information.
+What you've described here doesn't accomplish that.
 
- - Added a sanity check to the mkwrite case of insert_pfn() to be sure the
-   pfn for the pte we are about to make writable matches the pfn for our
-   fault. (Jan)
+> > but I'm also not against crafting a new, verifier
+> > specific one to accomplish that. Technically, it doesn't have to be
+> > shouty :), but IMO, the diagnostic/usability benefit outweighs the
+> > aesthetic cost.
+> 
+> I disagree - there are so many verifier checks (and we only grow
+> more as time goes on) so whatever we do needs them to be
+> easily maintainable and not compromise the readabilty of the verifer
+> code.
+> 
 
- - Fixed up some changelog wording for clarity. (Jan)
+I agree. ;) But I disagree that using a macro somehow automatically
+negatively affects the readability of verifers. Anybody who can make
+sense of this:
 
----
+        if (!xfs_sb_version_hascrc(&mp->m_sb))
+                return __line__;
+        if (dsl->sl_magic != cpu_to_be32(XFS_SYMLINK_MAGIC))
+                return __line__;
+        if (!uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_meta_uuid))
+                return __line__;
 
-When servicing mmap() reads from file holes the current DAX code allocates
-a page cache page of all zeroes and places the struct page pointer in the
-mapping->page_tree radix tree.  This has three major drawbacks:
+... could just as easily make sense of something like this:
 
-1) It consumes memory unnecessarily.  For every 4k page that is read via a
-DAX mmap() over a hole, we allocate a new page cache page.  This means that
-if you read 1GiB worth of pages, you end up using 1GiB of zeroed memory.
+	xfs_verify_assert(xfs_sb_version_hascrc(&mp->m_sb));
+	xfs_verify_assert(dsl->sl_magic == cpu_to_be32(XFS_SYMLINK_MAGIC));
+	xfs_verify_assert(uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_meta_uuid));
 
-2) It is slower than using a common zero page because each page fault has
-more work to do.  Instead of just inserting a common zero page we have to
-allocate a page cache page, zero it, and then insert it.
+... where xfs_verify_assert() is some macro that magically packages up
+the error information for the report to userspace and affects code
+execution appropriately (i.e., function exit).
 
-3) The fact that we had to check for both DAX exceptional entries and for
-page cache pages in the radix tree made the DAX code more complex.
+The macros themselves may be ugly, but nobody concerned with the error
+report needs to know anything about how the error reporting mechanism
+works. Even then, there is no real complexity here IMO. This is a simple
+abstraction to package up error state information. The verifiers
+themselves remain just as straightforward (and may very well end up more
+compact). Further, we already use these kinds of macros all over the
+place today as they seem to be suited for this purpose. 
 
-This series solves these issues by following the lead of the DAX PMD code
-and using a common 4k zero page instead.  This reduces memory usage and
-decreases latencies for some workloads, and it simplifies the DAX code,
-removing over 100 lines in total.
+> > Beyond that, I'm not against dumping a line number but it would seem
+> > kind of unusual to dump a line number without at least a filename. FWIW,
+> 
+> We don't really need the filename because we have the name of the
+> verifier that failed in the ops structure. Hence we can print a
+> {verfier name, line number} tuple which is effectively the same as
+> {filename, line number}.
+> 
 
-This series has passed my targeted testing and a full xfstests run on both
-XFS and ext4.
+Technically, better than nothing...
 
-Ross Zwisler (5):
-  mm: add mkwrite param to vm_insert_mixed()
-  dax: relocate some dax functions
-  dax: use common 4k zero page for dax mmap reads
-  dax: remove DAX code from page_cache_tree_insert()
-  dax: move all DAX radix tree defs to fs/dax.c
+> > the generic verifier error reporting function also dumps an instruction
+> > address for where the report is generated:
+> > 
+> >  XFS (...): Metadata corruption detected at xfs_symlink_read_verify+0xcd/0x100 [xfs], xfs_symlink block 0x58
+> >
+> > We obviously want to have information about which verifier failed, but
+> > I'm not sure we need the actual address of the xfs_verifier_error()
+> > caller. It would be nice if we could replace (the address, not
+> > necessarily the function name) that with, or add to it, an address that
+> > refers to the particular check that failed.
+> 
+> Yes, that's exactly what I'm proposing we do.  What we really need to know is
+> 
+> 	1. the block that was corrupted (from bp)
+> 	2. the verifier that detected the corruption (from bp)
+> 	3. the IO type (read/write from bp)
+> 	4. the verifier check that failed (returned from verifier)
+> 
+> We already have 1-3, but we don't have 4. We need to replace the
+> replace __return_address used in the error message with __line__ or
+> __THIS_IP__ that is returned from the if() branch that failed and
+> from that we can then easily track the cause of the failure back to
+> the source.
+> 
+> Returning __line__ or __THIS_IP__ from the verifier doesn't require
+> new macros, or really any significant code change as most verifiers
+> arelady return a true/false. All we need to do is plumb it into
+> xfs_verifier_error().
+> 
+> With that extra info we can output a slightly different message,
+> say:
+> 
+> XFS (...): Metadata corruption detected during read of block 0xx58 by xfs_symlink verifier, line 132
+> 
 
- Documentation/filesystems/dax.txt       |   5 +-
- drivers/dax/device.c                    |   2 +-
- drivers/gpu/drm/exynos/exynos_drm_gem.c |   3 +-
- drivers/gpu/drm/gma500/framebuffer.c    |   2 +-
- drivers/gpu/drm/msm/msm_gem.c           |   3 +-
- drivers/gpu/drm/omapdrm/omap_gem.c      |   6 +-
- drivers/gpu/drm/ttm/ttm_bo_vm.c         |   2 +-
- fs/dax.c                                | 342 +++++++++++++-------------------
- fs/ext2/file.c                          |  25 +--
- fs/ext4/file.c                          |  32 +--
- fs/xfs/xfs_file.c                       |   2 +-
- include/linux/dax.h                     |  45 -----
- include/linux/mm.h                      |   2 +-
- include/trace/events/fs_dax.h           |   2 -
- mm/filemap.c                            |  13 +-
- mm/memory.c                             |  27 ++-
- 16 files changed, 181 insertions(+), 332 deletions(-)
+It sounds to me you're more preoccupied with making a particular code
+change here than focusing on what the ideal error report should look
+like, and then figuring out the best way to implement it. The above is
+incrementally more useful than the original, but still not sufficiently
+usable IMO.
 
--- 
-2.9.4
+Consider the case where a bug report includes a logfile with tens of
+(unique) such corruption errors. Nobody wants to go fishing through
+verifier callchains to validate that the file of the specific failure
+matches the top-level verifier function and then subsequently that the
+reported line is sane with respect to the failure ("Oh, did that
+verifier call any other functions in separate files with line numbers
+that I have to rule out? Let me double check.." "Oh you're on for-next?
+I hope my for-next line numbers match up.." "If they don't, hopefully
+it's a severe enough mismatch not to point to another test in the same
+function." :/). Compound that further with cases where reports may
+involve sosreports across 5 or 6 different physical nodes, all with
+similar corruption reports (and maybe even running slightly different
+kernels, perhaps some with test patches that render all previous line
+numbers invalid, etc.) and this all becomes rather painful.
 
+There is a simple solution to this problem: just include all of the
+readily accessible state information in the error report. If the
+messages above looked something like the following:
+
+  XFS (...): Metadata corruption detected at xfs_symlink_read_verify [xfs], xfs_symlink block 0x58
+  XFS (...): Read verifier failed: xfs_log_check_lsn(mp, be64_to_cpu(dsl->sl_lsn)), xfs_symlink_remote.c:114
+
+... we wouldn't have to decode what the error means for every possible
+kernel. The error report is self contained like most of the other
+errors/assert reports in XFS and throughout the kernel.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
