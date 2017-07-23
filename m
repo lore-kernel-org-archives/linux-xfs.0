@@ -1,319 +1,382 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43202 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750835AbdGUMYr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Jul 2017 08:24:47 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 14801C00DB80
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 12:24:47 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 3/7 v2] mkfs: remove intermediate getstr followed by getnum
-Date: Fri, 21 Jul 2017 14:24:43 +0200
-Message-Id: <20170721122443.6084-1-jtulak@redhat.com>
-In-Reply-To: <20170720092932.32580-4-jtulak@redhat.com>
-References: <20170720092932.32580-4-jtulak@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:17617 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751412AbdGWSDK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jul 2017 14:03:10 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6NI393m027258
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 18:03:10 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v6NI3840020794
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 18:03:09 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v6NI37qX013591
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 18:03:08 GMT
+Subject: Re: [PATCH 20/22] xfs: scrub parent pointers
+References: <150061190859.14732.17040548800470377701.stgit@magnolia>
+ <150061203891.14732.2830567045712478700.stgit@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <6dc9a794-b64d-378e-5a34-b541809f7776@oracle.com>
+Date: Sun, 23 Jul 2017 11:03:07 -0700
+MIME-Version: 1.0
+In-Reply-To: <150061203891.14732.2830567045712478700.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Some options loaded a number as a string with getstr and converted it to
-number with getnum later in the code, without any reason for this
-approach.  (They were probably forgotten in some past cleaning.)
 
-This patch changes them to skip the string and use getnum directly in
-the main option-parsing loop, as do all the other numerical options.
-And as we now have two variables of the same type for the same value,
-merge them together. (e.g. former string dsize and number dbytes).
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
+On 7/20/2017 9:40 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> Scrub parent pointers, sort of.  For directories, we can ride the
+> '..' entry up to the parent to confirm that there's at most one
+> dentry that points back to this directory.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/Makefile        |    1
+>  fs/xfs/libxfs/xfs_fs.h |    3 -
+>  fs/xfs/scrub/common.c  |    4 +
+>  fs/xfs/scrub/common.h  |    2
+>  fs/xfs/scrub/parent.c  |  252 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  5 files changed, 261 insertions(+), 1 deletion(-)
+>  create mode 100644 fs/xfs/scrub/parent.c
+>
+>
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index 3d862b9..e73cdc2 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -151,6 +151,7 @@ xfs-y				+= $(addprefix scrub/, \
+>  				   ialloc.o \
+>  				   inode.o \
+>  				   metabufs.o \
+> +				   parent.o \
+>  				   refcount.o \
+>  				   rmap.o \
+>  				   symlink.o \
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 95d9ce9..4ad3056 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -500,7 +500,8 @@ struct xfs_scrub_metadata {
+>  #define XFS_SCRUB_TYPE_DIR	16	/* directory */
+>  #define XFS_SCRUB_TYPE_XATTR	17	/* extended attribute */
+>  #define XFS_SCRUB_TYPE_SYMLINK	18	/* symbolic link */
+> -#define XFS_SCRUB_TYPE_MAX	18
+> +#define XFS_SCRUB_TYPE_PARENT	19	/* parent pointers */
+> +#define XFS_SCRUB_TYPE_MAX	19
+>
+>  /* i: repair this metadata */
+>  #define XFS_SCRUB_FLAG_REPAIR		(1 << 0)
+> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> index 4003c2f..6f701c6 100644
+> --- a/fs/xfs/scrub/common.c
+> +++ b/fs/xfs/scrub/common.c
+> @@ -856,6 +856,10 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
+>  		.setup	= xfs_scrub_setup_symlink,
+>  		.scrub	= xfs_scrub_symlink,
+>  	},
+> +	{ /* parent pointers */
+> +		.setup	= xfs_scrub_setup_parent,
+> +		.scrub	= xfs_scrub_parent,
+> +	},
+>  };
+>
+>  /* Dispatch metadata scrubbing. */
+> diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+> index 6d02a64..1873a31 100644
+> --- a/fs/xfs/scrub/common.h
+> +++ b/fs/xfs/scrub/common.h
+> @@ -223,6 +223,7 @@ SETUP_FN(xfs_scrub_setup_inode_bmap_data);
+>  SETUP_FN(xfs_scrub_setup_inode_bmap);
+>  SETUP_FN(xfs_scrub_setup_directory);
+>  SETUP_FN(xfs_scrub_setup_xattr);
+> +SETUP_FN(xfs_scrub_setup_parent);
+>  SETUP_FN(xfs_scrub_setup_symlink);
+>  #undef SETUP_FN
+>
+> @@ -247,6 +248,7 @@ SCRUB_FN(xfs_scrub_bmap_attr);
+>  SCRUB_FN(xfs_scrub_bmap_cow);
+>  SCRUB_FN(xfs_scrub_directory);
+>  SCRUB_FN(xfs_scrub_xattr);
+> +SCRUB_FN(xfs_scrub_parent);
+>  SCRUB_FN(xfs_scrub_symlink);
+>  #undef SCRUB_FN
+>
+> diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
+> new file mode 100644
+> index 0000000..e604885
+> --- /dev/null
+> +++ b/fs/xfs/scrub/parent.c
+> @@ -0,0 +1,252 @@
+> +/*
+> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> + */
+> +#include "xfs.h"
+> +#include "xfs_fs.h"
+> +#include "xfs_shared.h"
+> +#include "xfs_format.h"
+> +#include "xfs_trans_resv.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_defer.h"
+> +#include "xfs_btree.h"
+> +#include "xfs_bit.h"
+> +#include "xfs_log_format.h"
+> +#include "xfs_trans.h"
+> +#include "xfs_trace.h"
+> +#include "xfs_sb.h"
+> +#include "xfs_inode.h"
+> +#include "xfs_icache.h"
+> +#include "xfs_dir2.h"
+> +#include "xfs_dir2_priv.h"
+> +#include "scrub/common.h"
+> +
+> +/* Set us up to scrub parents. */
+> +int
+> +xfs_scrub_setup_parent(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_inode		*ip)
+> +{
+> +	return xfs_scrub_setup_inode_contents(sc, ip, 0);
+> +}
+> +
+> +/* Parent pointers */
+> +
+> +/* Look for an entry in a parent pointing to this inode. */
+> +
+> +struct xfs_scrub_parent_ctx {
+> +	struct dir_context		dc;
+> +	xfs_ino_t			ino;
+> +	xfs_nlink_t			nr;
+> +};
+> +
+> +/* Look for a single entry in a directory pointing to an inode. */
+> +STATIC int
+> +xfs_scrub_parent_actor(
+> +	struct dir_context		*dc,
+> +	const char			*name,
+> +	int				namelen,
+> +	loff_t				pos,
+> +	u64				ino,
+> +	unsigned			type)
+> +{
+> +	struct xfs_scrub_parent_ctx	*spc;
+> +
+> +	spc = container_of(dc, struct xfs_scrub_parent_ctx, dc);
+> +	if (spc->ino == ino)
+> +		spc->nr++;
+> +	return 0;
+> +}
+> +
+> +/* Count the number of dentries in the parent dir that point to this inode. */
+> +STATIC int
+> +xfs_scrub_parent_count_parent_dentries(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_inode		*parent,
+> +	xfs_nlink_t			*nr)
+> +{
+> +	struct xfs_scrub_parent_ctx	spc = {
+> +		.dc.actor = xfs_scrub_parent_actor,
+> +		.dc.pos = 0,
+> +		.ino = sc->ip->i_ino,
+> +		.nr = 0,
+> +	};
+> +	struct xfs_ifork		*ifp;
+> +	size_t				bufsize;
+> +	loff_t				oldpos;
+> +	uint				lock_mode;
+> +	int				error;
+> +
+> +	/*
+> +	 * Load the parent directory's extent map.  A regular directory
+> +	 * open would start readahead (and thus load the extent map)
+> +	 * before we even got to a readdir call, but this isn't
+> +	 * guaranteed here.
+> +	 */
+> +	lock_mode = xfs_ilock_data_map_shared(parent);
+> +	ifp = XFS_IFORK_PTR(parent, XFS_DATA_FORK);
+> +	if (XFS_IFORK_FORMAT(parent, XFS_DATA_FORK) == XFS_DINODE_FMT_BTREE &&
+> +	    !(ifp->if_flags & XFS_IFEXTENTS)) {
+> +		error = xfs_iread_extents(sc->tp, parent, XFS_DATA_FORK);
+> +		if (error) {
+> +			xfs_iunlock(parent, lock_mode);
+> +			return error;
+> +		}
+> +	}
+> +	xfs_iunlock(parent, lock_mode);
+> +
+> +	/*
+> +	 * Iterate the parent dir to confirm that there is
+> +	 * exactly one entry pointing back to the inode being
+> +	 * scanned.
+> +	 */
+> +	bufsize = (size_t)min_t(loff_t, 32768, parent->i_d.di_size);
+Where does the 32768 come from?  A max number of entries for the parent 
+maybe? Rest looks good otherwise.
 
----
+Reviewed by: Allison Henderson <allison.henderson@oracle.com>
 
-This patch has to be applied after "mkfs: Save raw user input ...",
-because otherwise we would temporary lose the access to strings
-with user-given values and thus wouldn't be able to report them in
-case of an issue. (In reply to Eric's comment.)
-
-UPDATE:
- * fix dbytes, rtbytes, rtextbytes and logbytes - these variables should
-   be uint64, as the local old ones they are replacing, but were
-   unintentionally created as int
-
----
- mkfs/xfs_mkfs.c | 90 ++++++++++++++++++++++++++-------------------------------
- 1 file changed, 41 insertions(+), 49 deletions(-)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index f2f6468e..7a240daf 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1345,6 +1345,7 @@ getnum(
- 	long long		c;
- 
- 	check_opt(opts, index, false);
-+	set_conf_raw(opts, index, str);
- 	/* empty strings might just return a default value */
- 	if (!str || *str == '\0') {
- 		if (sp->flagval == SUBOPT_NEEDS_VAL)
-@@ -1432,12 +1433,12 @@ main(
- 	char			*dfile;
- 	int			dirblocklog;
- 	int			dirblocksize;
--	char			*dsize;
-+	uint64_t		dbytes;
- 	int			dsu;
- 	int			dsw;
- 	int			dsunit;
- 	int			dswidth;
--	int			force_overwrite;
-+	bool			force_overwrite;
- 	struct fsxattr		fsx;
- 	int			ilflag;
- 	int			imaxpct;
-@@ -1456,7 +1457,7 @@ main(
- 	xfs_rfsblock_t		logblocks;
- 	char			*logfile;
- 	int			loginternal;
--	char			*logsize;
-+	uint64_t		logbytes;
- 	xfs_fsblock_t		logstart;
- 	int			lvflag;
- 	int			lsflag;
-@@ -1485,11 +1486,11 @@ main(
- 	char			*protostring;
- 	int			qflag;
- 	xfs_rfsblock_t		rtblocks;
-+	uint64_t		rtbytes;
- 	xfs_extlen_t		rtextblocks;
- 	xfs_rtblock_t		rtextents;
--	char			*rtextsize;
-+	uint64_t		rtextbytes;
- 	char			*rtfile;
--	char			*rtsize;
- 	xfs_sb_t		*sbp;
- 	int			sectorlog;
- 	__uint64_t		sector_mask;
-@@ -1537,7 +1538,8 @@ main(
- 	qflag = 0;
- 	imaxpct = inodelog = inopblock = isize = 0;
- 	dfile = logfile = rtfile = NULL;
--	dsize = logsize = rtsize = rtextsize = protofile = NULL;
-+	protofile = NULL;
-+	rtbytes = rtextbytes = logbytes = dbytes = 0;
- 	dsu = dsw = dsunit = dswidth = lalign = lsu = lsunit = 0;
- 	nodsflag = norsflag = 0;
- 	force_overwrite = 0;
-@@ -1601,7 +1603,7 @@ main(
- 					xi.dname = getstr(value, &dopts, D_NAME);
- 					break;
- 				case D_SIZE:
--					dsize = getstr(value, &dopts, D_SIZE);
-+					dbytes = getnum(value, &dopts, D_SIZE);
- 					break;
- 				case D_SUNIT:
- 					dsunit = getnum(value, &dopts, D_SUNIT);
-@@ -1746,7 +1748,7 @@ main(
- 					lvflag = 1;
- 					break;
- 				case L_SIZE:
--					logsize = getstr(value, &lopts, L_SIZE);
-+					logbytes = getnum(value, &lopts, L_SIZE);
- 					break;
- 				case L_SECTLOG:
- 					lsectorlog = getnum(value, &lopts,
-@@ -1875,8 +1877,7 @@ main(
- 
- 				switch (getsubopt(&p, subopts, &value)) {
- 				case R_EXTSIZE:
--					rtextsize = getstr(value, &ropts,
--							   R_EXTSIZE);
-+					rtextbytes = getnum(value, &ropts, R_EXTSIZE);
- 					break;
- 				case R_FILE:
- 					xi.risfile = getnum(value, &ropts,
-@@ -1888,7 +1889,7 @@ main(
- 							   R_NAME);
- 					break;
- 				case R_SIZE:
--					rtsize = getstr(value, &ropts, R_SIZE);
-+					rtbytes = getnum(value, &ropts, R_SIZE);
- 					break;
- 				case R_NOALIGN:
- 					norsflag = getnum(value, &ropts,
-@@ -1991,14 +1992,14 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
- 	 * sector size mismatches between the new filesystem and the underlying
- 	 * host filesystem.
- 	 */
--	check_device_type(dfile, &xi.disfile, !dsize, !dfile,
-+	check_device_type(dfile, &xi.disfile, !dbytes, !dfile,
- 			  Nflag ? NULL : &xi.dcreat, force_overwrite, "d");
- 	if (!loginternal)
--		check_device_type(xi.logname, &xi.lisfile, !logsize, !xi.logname,
--				  Nflag ? NULL : &xi.lcreat,
-+		check_device_type(xi.logname, &xi.lisfile, !logbytes,
-+				  !xi.logname, Nflag ? NULL : &xi.lcreat,
- 				  force_overwrite, "l");
- 	if (xi.rtname)
--		check_device_type(xi.rtname, &xi.risfile, !rtsize, !xi.rtname,
-+		check_device_type(xi.rtname, &xi.risfile, !rtbytes, !xi.rtname,
- 				  Nflag ? NULL : &xi.rcreat,
- 				  force_overwrite, "r");
- 	if (xi.disfile || xi.lisfile || xi.risfile)
-@@ -2179,10 +2180,7 @@ _("rmapbt not supported with realtime devices\n"));
- 	}
- 
- 
--	if (dsize) {
--		__uint64_t dbytes;
--
--		dbytes = getnum(dsize, &dopts, D_SIZE);
-+	if (dbytes) {
- 		if (dbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
- 			_("illegal data length %lld, not a multiple of %d\n"),
-@@ -2211,10 +2209,7 @@ _("rmapbt not supported with realtime devices\n"));
- 		usage();
- 	}
- 
--	if (logsize) {
--		__uint64_t logbytes;
--
--		logbytes = getnum(logsize, &lopts, L_SIZE);
-+	if (logbytes) {
- 		if (logbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
- 			_("illegal log length %lld, not a multiple of %d\n"),
-@@ -2228,10 +2223,7 @@ _("rmapbt not supported with realtime devices\n"));
- 				(long long)logbytes, blocksize,
- 				(long long)(logblocks << blocklog));
- 	}
--	if (rtsize) {
--		__uint64_t rtbytes;
--
--		rtbytes = getnum(rtsize, &ropts, R_SIZE);
-+	if (rtbytes) {
- 		if (rtbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
- 			_("illegal rt length %lld, not a multiple of %d\n"),
-@@ -2248,10 +2240,7 @@ _("rmapbt not supported with realtime devices\n"));
- 	/*
- 	 * If specified, check rt extent size against its constraints.
- 	 */
--	if (rtextsize) {
--		__uint64_t rtextbytes;
--
--		rtextbytes = getnum(rtextsize, &ropts, R_EXTSIZE);
-+	if (rtextbytes) {
- 		if (rtextbytes % blocksize) {
- 			fprintf(stderr,
- 		_("illegal rt extent size %lld, not a multiple of %d\n"),
-@@ -2268,7 +2257,7 @@ _("rmapbt not supported with realtime devices\n"));
- 		__uint64_t	rswidth;
- 		__uint64_t	rtextbytes;
- 
--		if (!norsflag && !xi.risfile && !(!rtsize && xi.disfile))
-+		if (!norsflag && !xi.risfile && !(!rtbytes && xi.disfile))
- 			rswidth = ft.rtswidth;
- 		else
- 			rswidth = 0;
-@@ -2379,15 +2368,16 @@ _("rmapbt not supported with realtime devices\n"));
- 		rtfile = _("volume rt");
- 	else if (!xi.rtdev)
- 		rtfile = _("none");
--	if (dsize && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
-+	if (dbytes && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
- 		fprintf(stderr,
- 			_("size %s specified for data subvolume is too large, "
- 			"maximum is %lld blocks\n"),
--			dsize, (long long)DTOBT(xi.dsize));
-+			get_conf_raw(&dopts, D_SIZE),
-+			(long long)DTOBT(xi.dsize));
- 		usage();
--	} else if (!dsize && xi.dsize > 0)
-+	} else if (!dbytes && xi.dsize > 0)
- 		dblocks = DTOBT(xi.dsize);
--	else if (!dsize) {
-+	else if (!dbytes) {
- 		fprintf(stderr, _("can't get size of data subvolume\n"));
- 		usage();
- 	}
-@@ -2420,22 +2410,23 @@ reported by the device (%u).\n"),
- reported by the device (%u).\n"),
- 			lsectorsize, xi.lbsize);
- 	}
--	if (rtsize && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
-+	if (rtbytes && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
- 		fprintf(stderr, _(
- "Warning: the realtime subvolume sector size %u is less than the sector size\n\
- reported by the device (%u).\n"),
- 			sectorsize, xi.rtbsize);
- 	}
- 
--	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
-+	if (rtbytes && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
- 		fprintf(stderr,
- 			_("size %s specified for rt subvolume is too large, "
- 			"maximum is %lld blocks\n"),
--			rtsize, (long long)DTOBT(xi.rtsize));
-+			get_conf_raw(&ropts, R_SIZE),
-+			(long long)DTOBT(xi.rtsize));
- 		usage();
--	} else if (!rtsize && xi.rtsize > 0)
-+	} else if (!rtbytes && xi.rtsize > 0)
- 		rtblocks = DTOBT(xi.rtsize);
--	else if (rtsize && !xi.rtdev) {
-+	else if (rtbytes && !xi.rtdev) {
- 		fprintf(stderr,
- 			_("size specified for non-existent rt subvolume\n"));
- 		usage();
-@@ -2641,26 +2632,27 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 				   sb_feat.inode_align);
- 	ASSERT(min_logblocks);
- 	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
--	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
-+	if (!logbytes && dblocks >= (1024*1024*1024) >> blocklog)
- 		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
--	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
-+	if (logbytes && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
- 		fprintf(stderr,
- _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
--			logsize, (long long)DTOBT(xi.logBBsize));
-+			get_conf_raw(&lopts, L_SIZE),
-+			(long long)DTOBT(xi.logBBsize));
- 		usage();
--	} else if (!logsize && xi.logBBsize > 0) {
-+	} else if (!logbytes && xi.logBBsize > 0) {
- 		logblocks = DTOBT(xi.logBBsize);
--	} else if (logsize && !xi.logdev && !loginternal) {
-+	} else if (logbytes && !xi.logdev && !loginternal) {
- 		fprintf(stderr,
- 			_("size specified for non-existent log subvolume\n"));
- 		usage();
--	} else if (loginternal && logsize && logblocks >= dblocks) {
-+	} else if (loginternal && logbytes && logblocks >= dblocks) {
- 		fprintf(stderr, _("size %lld too large for internal log\n"),
- 			(long long)logblocks);
- 		usage();
- 	} else if (!loginternal && !xi.logdev) {
- 		logblocks = 0;
--	} else if (loginternal && !logsize) {
-+	} else if (loginternal && !logbytes) {
- 
- 		if (dblocks < GIGABYTES(1, blocklog)) {
- 			/* tiny filesystems get minimum sized logs. */
-@@ -2724,7 +2716,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		 * Readjust the log size to fit within an AG if it was sized
- 		 * automatically.
- 		 */
--		if (!logsize) {
-+		if (!logbytes) {
- 			logblocks = MIN(logblocks,
- 					libxfs_alloc_ag_max_usable(mp));
- 
--- 
-2.11.0
-
+> +	oldpos = 0;
+> +	while (true) {
+> +		error = xfs_readdir(sc->tp, parent, &spc.dc, bufsize);
+> +		if (error)
+> +			goto out;
+> +		if (oldpos == spc.dc.pos)
+> +			break;
+> +		oldpos = spc.dc.pos;
+> +	}
+> +	*nr = spc.nr;
+> +out:
+> +	return error;
+> +}
+> +
+> +/* Scrub a parent pointer. */
+> +#define XFS_SCRUB_PARENT_CHECK(fs_ok) \
+> +	XFS_SCRUB_DATA_CHECK(sc, XFS_DATA_FORK, 0, "parent", fs_ok)
+> +#define XFS_SCRUB_PARENT_GOTO(fs_ok, label) \
+> +	XFS_SCRUB_DATA_GOTO(sc, XFS_DATA_FORK, 0, "parent", fs_ok, label)
+> +#define XFS_SCRUB_PARENT_OP_ERROR_GOTO(label) \
+> +	XFS_SCRUB_FILE_OP_ERROR_GOTO(sc, XFS_DATA_FORK, 0, "parent", \
+> +		&error, label)
+> +int
+> +xfs_scrub_parent(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_inode		*dp = NULL;
+> +	xfs_ino_t			dnum;
+> +	xfs_nlink_t			nr;
+> +	int				tries = 0;
+> +	int				error;
+> +
+> +	/*
+> +	 * If we're a directory, check that the '..' link points up to
+> +	 * a directory that has one entry pointing to us.
+> +	 */
+> +	if (!S_ISDIR(VFS_I(sc->ip)->i_mode))
+> +		return -ENOENT;
+> +
+> +	/*
+> +	 * The VFS grabs a read or write lock via i_rwsem before it reads
+> +	 * or writes to a directory.  If we've gotten this far we've
+> +	 * already obtained IOLOCK_EXCL, which (since 4.10) is the same as
+> +	 * getting a write lock on i_rwsem.  Therefore, it is safe for us
+> +	 * to drop the ILOCK here in order to do directory lookups.
+> +	 */
+> +	sc->ilock_flags &= ~(XFS_ILOCK_EXCL | XFS_MMAPLOCK_EXCL);
+> +	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL | XFS_MMAPLOCK_EXCL);
+> +
+> +	/* Look up '..' */
+> +	error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot, &dnum, NULL);
+> +	XFS_SCRUB_PARENT_OP_ERROR_GOTO(out);
+> +
+> +	/* Is this the root dir?  Then '..' must point to itself. */
+> +	if (sc->ip == mp->m_rootip) {
+> +		XFS_SCRUB_PARENT_CHECK(sc->ip->i_ino == mp->m_sb.sb_rootino);
+> +		XFS_SCRUB_PARENT_CHECK(dnum == sc->ip->i_ino);
+> +		return 0;
+> +	}
+> +
+> +try_again:
+> +	/* Otherwise, '..' must not point to ourselves. */
+> +	XFS_SCRUB_PARENT_GOTO(sc->ip->i_ino != dnum, out);
+> +
+> +	error = xfs_iget(mp, sc->tp, dnum, 0, 0, &dp);
+> +	XFS_SCRUB_PARENT_OP_ERROR_GOTO(out);
+> +	XFS_SCRUB_PARENT_GOTO(dp != sc->ip, out_rele);
+> +
+> +	/*
+> +	 * We prefer to keep the inode locked while we lock and search
+> +	 * its alleged parent for a forward reference.  However, this
+> +	 * child -> parent scheme can deadlock with the parent -> child
+> +	 * scheme that is normally used.  Therefore, if we can lock the
+> +	 * parent, just validate the references and get out.
+> +	 */
+> +	if (xfs_ilock_nowait(dp, XFS_IOLOCK_SHARED)) {
+> +		error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nr);
+> +		XFS_SCRUB_PARENT_OP_ERROR_GOTO(out_unlock);
+> +		XFS_SCRUB_PARENT_CHECK(nr == 1);
+> +		goto out_unlock;
+> +	}
+> +
+> +	/*
+> +	 * The game changes if we get here.  We failed to lock the parent,
+> +	 * so we're going to try to verify both pointers while only holding
+> +	 * one lock so as to avoid deadlocking with something that's actually
+> +	 * trying to traverse down the directory tree.
+> +	 */
+> +	xfs_iunlock(sc->ip, sc->ilock_flags);
+> +	sc->ilock_flags = 0;
+> +	xfs_ilock(dp, XFS_IOLOCK_SHARED);
+> +
+> +	/* Go looking for our dentry. */
+> +	error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nr);
+> +	XFS_SCRUB_PARENT_OP_ERROR_GOTO(out_unlock);
+> +
+> +	/* Drop the parent lock, relock this inode. */
+> +	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
+> +	sc->ilock_flags = XFS_IOLOCK_EXCL;
+> +	xfs_ilock(sc->ip, sc->ilock_flags);
+> +
+> +	/* Look up '..' to see if the inode changed. */
+> +	error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot, &dnum, NULL);
+> +	XFS_SCRUB_PARENT_OP_ERROR_GOTO(out_rele);
+> +
+> +	/* Drat, parent changed.  Try again! */
+> +	if (dnum != dp->i_ino) {
+> +		IRELE(dp);
+> +		tries++;
+> +		if (tries < 20)
+> +			goto try_again;
+> +		XFS_SCRUB_INCOMPLETE(sc, "parent", false);
+> +		goto out;
+> +	}
+> +	IRELE(dp);
+> +
+> +	/*
+> +	 * '..' didn't change, so check that there was only one entry
+> +	 * for us in the parent.
+> +	 */
+> +	XFS_SCRUB_PARENT_CHECK(nr == 1);
+> +	goto out;
+> +
+> +out_unlock:
+> +	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
+> +out_rele:
+> +	IRELE(dp);
+> +out:
+> +	return error;
+> +}
+> +#undef XFS_SCRUB_PARENT_OP_ERROR_GOTO
+> +#undef XFS_SCRUB_PARENT_GOTO
+> +#undef XFS_SCRUB_PARENT_CHECK
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
