@@ -1,244 +1,238 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:21158 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753111AbdGUWkE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Jul 2017 18:40:04 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v4 1/5] mm: add mkwrite param to vm_insert_mixed()
-Date: Fri, 21 Jul 2017 16:39:51 -0600
-Message-Id: <20170721223956.29485-2-ross.zwisler@linux.intel.com>
-In-Reply-To: <20170721223956.29485-1-ross.zwisler@linux.intel.com>
-References: <20170721223956.29485-1-ross.zwisler@linux.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:27318 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755368AbdGWRZv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jul 2017 13:25:51 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6NHPofG024343
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:25:51 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v6NHPoxh009289
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:25:50 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v6NHPocg006345
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:25:50 GMT
+Subject: Re: [PATCH 12/22] xfs: scrub refcount btrees
+References: <150061190859.14732.17040548800470377701.stgit@magnolia>
+ <150061198747.14732.9418346330351535155.stgit@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <9dce8578-1745-6da8-b449-4a53fdec2b42@oracle.com>
+Date: Sun, 23 Jul 2017 10:25:50 -0700
+MIME-Version: 1.0
+In-Reply-To: <150061198747.14732.9418346330351535155.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, David Airlie <airlied@linux.ie>, Ingo Molnar <mingo@redhat.com>, Inki Dae <inki.dae@samsung.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Joonyoung Shim <jy0922.shim@samsung.com>, Krzysztof Kozlowski <krzk@kernel.org>, Kukjin Kim <kgene@kernel.org>, Kyungmin Park <kyungmin.park@samsung.com>, Matthew Wilcox <mawilcox@microsoft.com>, Patrik Jakobsson <patrik.r.jakobsson@gmail.com>, Rob Clark <robdclark@gmail.com>, Seung-Woo Kim <sw0312.kim@samsung.com>, Steven Rostedt <rostedt@goodmis.org>, Tomi Valkeinen <tomi.valkeinen@ti.com>, dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-samsung-soc@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-To be able to use the common 4k zero page in DAX we need to have our PTE
-fault path look more like our PMD fault path where a PTE entry can be
-marked as dirty and writeable as it is first inserted, rather than waiting
-for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
+This one looks fine to me, it is pretty much as it was in v7.
+Reviewed by: Allison Henderson <allison.henderson@oracle.com>
 
-Right now we can rely on having a dax_pfn_mkwrite() call because we can
-distinguish between these two cases in do_wp_page():
-
-	case 1: 4k zero page => writable DAX storage
-	case 2: read-only DAX storage => writeable DAX storage
-
-This distinction is made by via vm_normal_page().  vm_normal_page() returns
-false for the common 4k zero page, though, just as it does for DAX ptes.
-Instead of special casing the DAX + 4k zero page case, we will simplify our
-DAX PTE page fault sequence so that it matches our DAX PMD sequence, and
-get rid of the dax_pfn_mkwrite() helper.  We will instead use
-dax_iomap_fault() to handle write-protection faults.
-
-This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
-and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set insert_pfn()
-will do the work that was previously done by wp_page_reuse() as part of the
-dax_pfn_mkwrite() call path.
-
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- drivers/dax/device.c                    |  2 +-
- drivers/gpu/drm/exynos/exynos_drm_gem.c |  3 ++-
- drivers/gpu/drm/gma500/framebuffer.c    |  2 +-
- drivers/gpu/drm/msm/msm_gem.c           |  3 ++-
- drivers/gpu/drm/omapdrm/omap_gem.c      |  6 ++++--
- drivers/gpu/drm/ttm/ttm_bo_vm.c         |  2 +-
- fs/dax.c                                |  2 +-
- include/linux/mm.h                      |  2 +-
- mm/memory.c                             | 27 +++++++++++++++++++++------
- 9 files changed, 34 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/dax/device.c b/drivers/dax/device.c
-index e9f3b3e..3973521 100644
---- a/drivers/dax/device.c
-+++ b/drivers/dax/device.c
-@@ -273,7 +273,7 @@ static int __dev_dax_pte_fault(struct dev_dax *dev_dax, struct vm_fault *vmf)
- 
- 	pfn = phys_to_pfn_t(phys, dax_region->pfn_flags);
- 
--	rc = vm_insert_mixed(vmf->vma, vmf->address, pfn);
-+	rc = vm_insert_mixed(vmf->vma, vmf->address, pfn, false);
- 
- 	if (rc == -ENOMEM)
- 		return VM_FAULT_OOM;
-diff --git a/drivers/gpu/drm/exynos/exynos_drm_gem.c b/drivers/gpu/drm/exynos/exynos_drm_gem.c
-index c23479b..bfa6648 100644
---- a/drivers/gpu/drm/exynos/exynos_drm_gem.c
-+++ b/drivers/gpu/drm/exynos/exynos_drm_gem.c
-@@ -466,7 +466,8 @@ int exynos_drm_gem_fault(struct vm_fault *vmf)
- 	}
- 
- 	pfn = page_to_pfn(exynos_gem->pages[page_offset]);
--	ret = vm_insert_mixed(vma, vmf->address, __pfn_to_pfn_t(pfn, PFN_DEV));
-+	ret = vm_insert_mixed(vma, vmf->address, __pfn_to_pfn_t(pfn, PFN_DEV),
-+			false);
- 
- out:
- 	switch (ret) {
-diff --git a/drivers/gpu/drm/gma500/framebuffer.c b/drivers/gpu/drm/gma500/framebuffer.c
-index 7da70b6..6dd865f 100644
---- a/drivers/gpu/drm/gma500/framebuffer.c
-+++ b/drivers/gpu/drm/gma500/framebuffer.c
-@@ -134,7 +134,7 @@ static int psbfb_vm_fault(struct vm_fault *vmf)
- 		pfn = (phys_addr >> PAGE_SHIFT);
- 
- 		ret = vm_insert_mixed(vma, address,
--				__pfn_to_pfn_t(pfn, PFN_DEV));
-+				__pfn_to_pfn_t(pfn, PFN_DEV), false);
- 		if (unlikely((ret == -EBUSY) || (ret != 0 && i > 0)))
- 			break;
- 		else if (unlikely(ret != 0)) {
-diff --git a/drivers/gpu/drm/msm/msm_gem.c b/drivers/gpu/drm/msm/msm_gem.c
-index 65f3554..c187fd1 100644
---- a/drivers/gpu/drm/msm/msm_gem.c
-+++ b/drivers/gpu/drm/msm/msm_gem.c
-@@ -249,7 +249,8 @@ int msm_gem_fault(struct vm_fault *vmf)
- 	VERB("Inserting %p pfn %lx, pa %lx", (void *)vmf->address,
- 			pfn, pfn << PAGE_SHIFT);
- 
--	ret = vm_insert_mixed(vma, vmf->address, __pfn_to_pfn_t(pfn, PFN_DEV));
-+	ret = vm_insert_mixed(vma, vmf->address, __pfn_to_pfn_t(pfn, PFN_DEV),
-+			false);
- 
- out_unlock:
- 	mutex_unlock(&msm_obj->lock);
-diff --git a/drivers/gpu/drm/omapdrm/omap_gem.c b/drivers/gpu/drm/omapdrm/omap_gem.c
-index 5c5c86d..26eebcd 100644
---- a/drivers/gpu/drm/omapdrm/omap_gem.c
-+++ b/drivers/gpu/drm/omapdrm/omap_gem.c
-@@ -393,7 +393,8 @@ static int fault_1d(struct drm_gem_object *obj,
- 	VERB("Inserting %p pfn %lx, pa %lx", (void *)vmf->address,
- 			pfn, pfn << PAGE_SHIFT);
- 
--	return vm_insert_mixed(vma, vmf->address, __pfn_to_pfn_t(pfn, PFN_DEV));
-+	return vm_insert_mixed(vma, vmf->address, __pfn_to_pfn_t(pfn, PFN_DEV),
-+			false);
- }
- 
- /* Special handling for the case of faulting in 2d tiled buffers */
-@@ -486,7 +487,8 @@ static int fault_2d(struct drm_gem_object *obj,
- 			pfn, pfn << PAGE_SHIFT);
- 
- 	for (i = n; i > 0; i--) {
--		vm_insert_mixed(vma, vaddr, __pfn_to_pfn_t(pfn, PFN_DEV));
-+		vm_insert_mixed(vma, vaddr, __pfn_to_pfn_t(pfn, PFN_DEV),
-+				false);
- 		pfn += priv->usergart[fmt].stride_pfn;
- 		vaddr += PAGE_SIZE * m;
- 	}
-diff --git a/drivers/gpu/drm/ttm/ttm_bo_vm.c b/drivers/gpu/drm/ttm/ttm_bo_vm.c
-index b442d12..e85bfa7 100644
---- a/drivers/gpu/drm/ttm/ttm_bo_vm.c
-+++ b/drivers/gpu/drm/ttm/ttm_bo_vm.c
-@@ -248,7 +248,7 @@ static int ttm_bo_vm_fault(struct vm_fault *vmf)
- 
- 		if (vma->vm_flags & VM_MIXEDMAP)
- 			ret = vm_insert_mixed(&cvma, address,
--					__pfn_to_pfn_t(pfn, PFN_DEV));
-+					__pfn_to_pfn_t(pfn, PFN_DEV), false);
- 		else
- 			ret = vm_insert_pfn(&cvma, address, pfn);
- 
-diff --git a/fs/dax.c b/fs/dax.c
-index 306c2b6..c844a51 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -899,7 +899,7 @@ static int dax_insert_mapping(struct address_space *mapping,
- 	*entryp = ret;
- 
- 	trace_dax_insert_mapping(mapping->host, vmf, ret);
--	return vm_insert_mixed(vma, vaddr, pfn);
-+	return vm_insert_mixed(vma, vaddr, pfn, false);
- }
- 
- /**
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 46b9ac5..3eabc40 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -2292,7 +2292,7 @@ int vm_insert_pfn(struct vm_area_struct *vma, unsigned long addr,
- int vm_insert_pfn_prot(struct vm_area_struct *vma, unsigned long addr,
- 			unsigned long pfn, pgprot_t pgprot);
- int vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
--			pfn_t pfn);
-+			pfn_t pfn, bool mkwrite);
- int vm_iomap_memory(struct vm_area_struct *vma, phys_addr_t start, unsigned long len);
- 
- 
-diff --git a/mm/memory.c b/mm/memory.c
-index 0e517be..d351911 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -1646,7 +1646,7 @@ int vm_insert_page(struct vm_area_struct *vma, unsigned long addr,
- EXPORT_SYMBOL(vm_insert_page);
- 
- static int insert_pfn(struct vm_area_struct *vma, unsigned long addr,
--			pfn_t pfn, pgprot_t prot)
-+			pfn_t pfn, pgprot_t prot, bool mkwrite)
- {
- 	struct mm_struct *mm = vma->vm_mm;
- 	int retval;
-@@ -1658,14 +1658,28 @@ static int insert_pfn(struct vm_area_struct *vma, unsigned long addr,
- 	if (!pte)
- 		goto out;
- 	retval = -EBUSY;
--	if (!pte_none(*pte))
--		goto out_unlock;
-+	if (!pte_none(*pte)) {
-+		if (mkwrite) {
-+			if (WARN_ON_ONCE(pte_pfn(*pte) != pfn_t_to_pfn(pfn)))
-+				goto out_unlock;
-+			entry = *pte;
-+			goto out_mkwrite;
-+		} else
-+			goto out_unlock;
-+	}
- 
- 	/* Ok, finally just insert the thing.. */
- 	if (pfn_t_devmap(pfn))
- 		entry = pte_mkdevmap(pfn_t_pte(pfn, prot));
- 	else
- 		entry = pte_mkspecial(pfn_t_pte(pfn, prot));
-+
-+out_mkwrite:
-+	if (mkwrite) {
-+		entry = pte_mkyoung(entry);
-+		entry = maybe_mkwrite(pte_mkdirty(entry), vma);
-+	}
-+
- 	set_pte_at(mm, addr, pte, entry);
- 	update_mmu_cache(vma, addr, pte); /* XXX: why not for insert_page? */
- 
-@@ -1736,14 +1750,15 @@ int vm_insert_pfn_prot(struct vm_area_struct *vma, unsigned long addr,
- 
- 	track_pfn_insert(vma, &pgprot, __pfn_to_pfn_t(pfn, PFN_DEV));
- 
--	ret = insert_pfn(vma, addr, __pfn_to_pfn_t(pfn, PFN_DEV), pgprot);
-+	ret = insert_pfn(vma, addr, __pfn_to_pfn_t(pfn, PFN_DEV), pgprot,
-+			false);
- 
- 	return ret;
- }
- EXPORT_SYMBOL(vm_insert_pfn_prot);
- 
- int vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
--			pfn_t pfn)
-+			pfn_t pfn, bool mkwrite)
- {
- 	pgprot_t pgprot = vma->vm_page_prot;
- 
-@@ -1772,7 +1787,7 @@ int vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
- 		page = pfn_to_page(pfn_t_to_pfn(pfn));
- 		return insert_page(vma, addr, page, pgprot);
- 	}
--	return insert_pfn(vma, addr, pfn, pgprot);
-+	return insert_pfn(vma, addr, pfn, pgprot, mkwrite);
- }
- EXPORT_SYMBOL(vm_insert_mixed);
- 
--- 
-2.9.4
-
+On 7/20/2017 9:39 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> Plumb in the pieces necessary to check the refcount btree.  If rmap is
+> available, check the reference count by performing an interval query
+> against the rmapbt.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/Makefile         |    1
+>  fs/xfs/libxfs/xfs_fs.h  |    3 +
+>  fs/xfs/scrub/common.c   |    5 ++
+>  fs/xfs/scrub/common.h   |    2 +
+>  fs/xfs/scrub/refcount.c |   96 +++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_trace.h      |    3 +
+>  6 files changed, 108 insertions(+), 2 deletions(-)
+>  create mode 100644 fs/xfs/scrub/refcount.c
+>
+>
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index 5fe0c8e..1b1972b 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -146,6 +146,7 @@ xfs-y				+= $(addprefix scrub/, \
+>  				   common.o \
+>  				   ialloc.o \
+>  				   metabufs.o \
+> +				   refcount.o \
+>  				   rmap.o \
+>  				   )
+>  endif
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 24db73a..3253de9 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -492,7 +492,8 @@ struct xfs_scrub_metadata {
+>  #define XFS_SCRUB_TYPE_INOBT	8	/* inode btree */
+>  #define XFS_SCRUB_TYPE_FINOBT	9	/* free inode btree */
+>  #define XFS_SCRUB_TYPE_RMAPBT	10	/* reverse mapping btree */
+> -#define XFS_SCRUB_TYPE_MAX	10
+> +#define XFS_SCRUB_TYPE_REFCNTBT	11	/* reference count btree */
+> +#define XFS_SCRUB_TYPE_MAX	11
+>
+>  /* i: repair this metadata */
+>  #define XFS_SCRUB_FLAG_REPAIR		(1 << 0)
+> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> index dfa5fc5..71a980e 100644
+> --- a/fs/xfs/scrub/common.c
+> +++ b/fs/xfs/scrub/common.c
+> @@ -730,6 +730,11 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
+>  		.scrub	= xfs_scrub_rmapbt,
+>  		.has	= xfs_sb_version_hasrmapbt,
+>  	},
+> +	{ /* refcountbt */
+> +		.setup	= xfs_scrub_setup_ag_refcountbt,
+> +		.scrub	= xfs_scrub_refcountbt,
+> +		.has	= xfs_sb_version_hasreflink,
+> +	},
+>  };
+>
+>  /* Dispatch metadata scrubbing. */
+> diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+> index 8fbd19b..1f9ba8c6 100644
+> --- a/fs/xfs/scrub/common.h
+> +++ b/fs/xfs/scrub/common.h
+> @@ -212,6 +212,7 @@ SETUP_FN(xfs_scrub_setup_ag_header);
+>  SETUP_FN(xfs_scrub_setup_ag_allocbt);
+>  SETUP_FN(xfs_scrub_setup_ag_iallocbt);
+>  SETUP_FN(xfs_scrub_setup_ag_rmapbt);
+> +SETUP_FN(xfs_scrub_setup_ag_refcountbt);
+>  #undef SETUP_FN
+>
+>  /* Metadata scrubbers */
+> @@ -228,6 +229,7 @@ SCRUB_FN(xfs_scrub_cntbt);
+>  SCRUB_FN(xfs_scrub_inobt);
+>  SCRUB_FN(xfs_scrub_finobt);
+>  SCRUB_FN(xfs_scrub_rmapbt);
+> +SCRUB_FN(xfs_scrub_refcountbt);
+>  #undef SCRUB_FN
+>
+>  #endif	/* __XFS_REPAIR_COMMON_H__ */
+> diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+> new file mode 100644
+> index 0000000..fcc72c5
+> --- /dev/null
+> +++ b/fs/xfs/scrub/refcount.c
+> @@ -0,0 +1,96 @@
+> +/*
+> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> + */
+> +#include "xfs.h"
+> +#include "xfs_fs.h"
+> +#include "xfs_shared.h"
+> +#include "xfs_format.h"
+> +#include "xfs_trans_resv.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_defer.h"
+> +#include "xfs_btree.h"
+> +#include "xfs_bit.h"
+> +#include "xfs_log_format.h"
+> +#include "xfs_trans.h"
+> +#include "xfs_trace.h"
+> +#include "xfs_sb.h"
+> +#include "xfs_rmap.h"
+> +#include "scrub/common.h"
+> +#include "scrub/btree.h"
+> +
+> +/*
+> + * Set us up to scrub reference count btrees.
+> + */
+> +int
+> +xfs_scrub_setup_ag_refcountbt(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_inode		*ip)
+> +{
+> +	return xfs_scrub_setup_ag_btree(sc, ip, false);
+> +}
+> +
+> +/* Reference count btree scrubber. */
+> +
+> +/* Scrub a refcountbt record. */
+> +STATIC int
+> +xfs_scrub_refcountbt_helper(
+> +	struct xfs_scrub_btree		*bs,
+> +	union xfs_btree_rec		*rec)
+> +{
+> +	struct xfs_mount		*mp = bs->cur->bc_mp;
+> +	struct xfs_agf			*agf;
+> +	struct xfs_refcount_irec	irec;
+> +	xfs_agblock_t			eoag;
+> +	bool				has_cowflag;
+> +	int				error = 0;
+> +
+> +	irec.rc_startblock = be32_to_cpu(rec->refc.rc_startblock);
+> +	irec.rc_blockcount = be32_to_cpu(rec->refc.rc_blockcount);
+> +	irec.rc_refcount = be32_to_cpu(rec->refc.rc_refcount);
+> +	agf = XFS_BUF_TO_AGF(bs->sc->sa.agf_bp);
+> +	eoag = be32_to_cpu(agf->agf_length);
+> +
+> +	has_cowflag = !!(irec.rc_startblock & XFS_REFC_COW_START);
+> +	XFS_SCRUB_BTREC_CHECK(bs, (irec.rc_refcount == 1 && has_cowflag) ||
+> +				  (irec.rc_refcount != 1 && !has_cowflag));
+> +	irec.rc_startblock &= ~XFS_REFC_COW_START;
+> +	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_startblock < mp->m_sb.sb_agblocks);
+> +	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_startblock < eoag);
+> +	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_startblock < irec.rc_startblock +
+> +			irec.rc_blockcount);
+> +	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)irec.rc_startblock +
+> +			irec.rc_blockcount <= mp->m_sb.sb_agblocks);
+> +	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)irec.rc_startblock +
+> +			irec.rc_blockcount <= eoag);
+> +	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_refcount >= 1);
+> +
+> +	return error;
+> +}
+> +
+> +/* Scrub the refcount btree for some AG. */
+> +int
+> +xfs_scrub_refcountbt(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	struct xfs_owner_info		oinfo;
+> +
+> +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_REFC);
+> +	return xfs_scrub_btree(sc, sc->sa.refc_cur, xfs_scrub_refcountbt_helper,
+> +			&oinfo, NULL);
+> +}
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 3996cb8..6c0281b 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3322,7 +3322,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
+>  	{ XFS_SCRUB_TYPE_CNTBT,		"cntbt" }, \
+>  	{ XFS_SCRUB_TYPE_INOBT,		"inobt" }, \
+>  	{ XFS_SCRUB_TYPE_FINOBT,	"finobt" }, \
+> -	{ XFS_SCRUB_TYPE_RMAPBT,	"rmapbt" }
+> +	{ XFS_SCRUB_TYPE_RMAPBT,	"rmapbt" }, \
+> +	{ XFS_SCRUB_TYPE_REFCNTBT,	"refcountbt" }
+>  DECLARE_EVENT_CLASS(xfs_scrub_class,
+>  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
+>  		 int error),
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
