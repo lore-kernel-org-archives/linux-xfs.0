@@ -1,419 +1,407 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35414 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750972AbdGUEkz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 00:40:55 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:31561 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751410AbdGWRzZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jul 2017 13:55:25 -0400
 Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6L4essQ010571
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6NHtO4Q009098
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 04:40:54 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v6L4er7e001245
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:55:25 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v6NHtOOZ026728
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 04:40:54 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v6L4er7o017868
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 04:40:53 GMT
-Subject: [PATCH 22/22] xfs: scrub quota information
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 20 Jul 2017 21:40:52 -0700
-Message-ID: <150061205214.14732.3436141782959149381.stgit@magnolia>
-In-Reply-To: <150061190859.14732.17040548800470377701.stgit@magnolia>
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:55:24 GMT
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v6NHtOkY010588
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:55:24 GMT
+Subject: Re: [PATCH 17/22] xfs: scrub directory freespace
 References: <150061190859.14732.17040548800470377701.stgit@magnolia>
+ <150061201947.14732.7337884085202901044.stgit@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <9cc3a14c-37f1-de09-4505-6bbd752e274c@oracle.com>
+Date: Sun, 23 Jul 2017 10:55:23 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <150061201947.14732.7337884085202901044.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Looks fine, not much change since v7
+Reviewed by: Allison Henderson <allison.henderson@oracle.com>
 
-Perform some quick sanity testing of the disk quota information.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/Makefile        |    1 
- fs/xfs/libxfs/xfs_fs.h |    5 +
- fs/xfs/scrub/common.c  |   18 +++
- fs/xfs/scrub/common.h  |    2 
- fs/xfs/scrub/quota.c   |  274 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trace.h     |    5 +
- 6 files changed, 303 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/scrub/quota.c
-
-
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 86fc94c..010a90f 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -158,4 +158,5 @@ xfs-y				+= $(addprefix scrub/, \
- 				   )
- 
- xfs-$(CONFIG_XFS_RT)		+= scrub/rtbitmap.o
-+xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
- endif
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 83121fc..444e286 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -503,7 +503,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_PARENT	19	/* parent pointers */
- #define XFS_SCRUB_TYPE_RTBITMAP	20	/* realtime bitmap */
- #define XFS_SCRUB_TYPE_RTSUM	21	/* realtime summary */
--#define XFS_SCRUB_TYPE_MAX	21
-+#define XFS_SCRUB_TYPE_UQUOTA	22	/* user quotas */
-+#define XFS_SCRUB_TYPE_GQUOTA	23	/* group quotas */
-+#define XFS_SCRUB_TYPE_PQUOTA	24	/* project quotas */
-+#define XFS_SCRUB_TYPE_MAX	24
- 
- /* i: repair this metadata */
- #define XFS_SCRUB_FLAG_REPAIR		(1 << 0)
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 6e40fa6..62884a8 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -875,6 +875,24 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 	{ NULL },
- 	{ NULL },
- #endif
-+#ifdef CONFIG_XFS_QUOTA
-+	{ /* user quota */
-+		.setup = xfs_scrub_setup_quota,
-+		.scrub = xfs_scrub_quota,
-+	},
-+	{ /* group quota */
-+		.setup = xfs_scrub_setup_quota,
-+		.scrub = xfs_scrub_quota,
-+	},
-+	{ /* project quota */
-+		.setup = xfs_scrub_setup_quota,
-+		.scrub = xfs_scrub_quota,
-+	},
-+#else
-+	{ NULL },
-+	{ NULL },
-+	{ NULL },
-+#endif
- };
- 
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 43a74f0..fcb3764 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -226,6 +226,7 @@ SETUP_FN(xfs_scrub_setup_xattr);
- SETUP_FN(xfs_scrub_setup_parent);
- SETUP_FN(xfs_scrub_setup_symlink);
- SETUP_FN(xfs_scrub_setup_rt);
-+SETUP_FN(xfs_scrub_setup_quota);
- #undef SETUP_FN
- 
- /* Metadata scrubbers */
-@@ -253,6 +254,7 @@ SCRUB_FN(xfs_scrub_parent);
- SCRUB_FN(xfs_scrub_symlink);
- SCRUB_FN(xfs_scrub_rtbitmap);
- SCRUB_FN(xfs_scrub_rtsummary);
-+SCRUB_FN(xfs_scrub_quota);
- #undef SCRUB_FN
- 
- #endif	/* __XFS_REPAIR_COMMON_H__ */
-diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-new file mode 100644
-index 0000000..117b8b6
---- /dev/null
-+++ b/fs/xfs/scrub/quota.c
-@@ -0,0 +1,274 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_trace.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_bmap.h"
-+#include "xfs_quota.h"
-+#include "xfs_qm.h"
-+#include "xfs_dquot.h"
-+#include "xfs_dquot_item.h"
-+#include "scrub/common.h"
-+
-+/* Convert a scrub type code to a DQ flag, or return 0 if error. */
-+static inline uint
-+xfs_scrub_quota_to_dqtype(
-+	struct xfs_scrub_context	*sc)
-+{
-+	switch (sc->sm->sm_type) {
-+	case XFS_SCRUB_TYPE_UQUOTA:
-+		return XFS_DQ_USER;
-+	case XFS_SCRUB_TYPE_GQUOTA:
-+		return XFS_DQ_GROUP;
-+	case XFS_SCRUB_TYPE_PQUOTA:
-+		return XFS_DQ_PROJ;
-+	default:
-+		return 0;
-+	}
-+}
-+
-+/* Set us up to scrub a quota. */
-+int
-+xfs_scrub_setup_quota(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip)
-+{
-+	uint				dqtype;
-+
-+	if (sc->sm->sm_agno || sc->sm->sm_ino || sc->sm->sm_gen)
-+		return -EINVAL;
-+
-+	dqtype = xfs_scrub_quota_to_dqtype(sc);
-+	if (dqtype == 0)
-+		return -EINVAL;
-+	return 0;
-+}
-+
-+/* Quotas. */
-+
-+#define XFS_SCRUB_QUOTA_CHECK(fs_ok) \
-+	XFS_SCRUB_DATA_CHECK(sc, XFS_DATA_FORK, id, tag, fs_ok)
-+#define XFS_SCRUB_QUOTA_WARN(fs_ok) \
-+	XFS_SCRUB_DATA_WARN(sc, XFS_DATA_FORK, id, tag, fs_ok)
-+#define XFS_SCRUB_QUOTA_GOTO(fs_ok, label) \
-+	XFS_SCRUB_DATA_GOTO(sc, XFS_DATA_FORK, id, tag, fs_ok, label)
-+#define XFS_SCRUB_QUOTA_OP_ERR(label) \
-+	XFS_SCRUB_FILE_OP_ERROR_GOTO(sc, XFS_DATA_FORK, id, tag, &error, label)
-+/* Scrub the fields in an individual quota item. */
-+STATIC void
-+xfs_scrub_quota_item(
-+	struct xfs_scrub_context	*sc,
-+	const char			*tag,
-+	uint				dqtype,
-+	struct xfs_dquot		*dq,
-+	xfs_dqid_t			id)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_disk_dquot		*d = &dq->q_core;
-+	unsigned long long		bsoft;
-+	unsigned long long		isoft;
-+	unsigned long long		rsoft;
-+	unsigned long long		bhard;
-+	unsigned long long		ihard;
-+	unsigned long long		rhard;
-+	unsigned long long		bcount;
-+	unsigned long long		icount;
-+	unsigned long long		rcount;
-+	xfs_ino_t			inodes;
-+
-+	/* Did we get the dquot we wanted? */
-+	XFS_SCRUB_QUOTA_CHECK(id <= be32_to_cpu(d->d_id));
-+	XFS_SCRUB_QUOTA_CHECK(dqtype ==
-+			(d->d_flags & XFS_DQ_ALLTYPES));
-+
-+	/* Check the limits. */
-+	bhard = be64_to_cpu(d->d_blk_hardlimit);
-+	ihard = be64_to_cpu(d->d_ino_hardlimit);
-+	rhard = be64_to_cpu(d->d_rtb_hardlimit);
-+
-+	bsoft = be64_to_cpu(d->d_blk_softlimit);
-+	isoft = be64_to_cpu(d->d_ino_softlimit);
-+	rsoft = be64_to_cpu(d->d_rtb_softlimit);
-+
-+	inodes = XFS_AGINO_TO_INO(mp, mp->m_sb.sb_agcount, 0);
-+
-+	/*
-+	 * Warn if the limits are larger than the fs.  Administrators
-+	 * can do this, though in production this seems suspect.
-+	 */
-+	XFS_SCRUB_QUOTA_WARN(bhard <= mp->m_sb.sb_dblocks);
-+	XFS_SCRUB_QUOTA_WARN(ihard <= inodes);
-+	XFS_SCRUB_QUOTA_WARN(rhard <= mp->m_sb.sb_rblocks);
-+
-+	XFS_SCRUB_QUOTA_WARN(bsoft <= mp->m_sb.sb_dblocks);
-+	XFS_SCRUB_QUOTA_WARN(isoft <= inodes);
-+	XFS_SCRUB_QUOTA_WARN(rsoft <= mp->m_sb.sb_rblocks);
-+
-+	/* Soft limit must be less than the hard limit. */
-+	XFS_SCRUB_QUOTA_CHECK(bsoft <= bhard);
-+	XFS_SCRUB_QUOTA_CHECK(isoft <= ihard);
-+	XFS_SCRUB_QUOTA_CHECK(rsoft <= rhard);
-+
-+	/* Check the resource counts. */
-+	bcount = be64_to_cpu(d->d_bcount);
-+	icount = be64_to_cpu(d->d_icount);
-+	rcount = be64_to_cpu(d->d_rtbcount);
-+	inodes = percpu_counter_sum(&mp->m_icount);
-+
-+	/*
-+	 * Check that usage doesn't exceed physical limits.  However, on
-+	 * a reflink filesystem we're allowed to exceed physical space
-+	 * if there are no quota limits.
-+	 */
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		XFS_SCRUB_QUOTA_WARN(bcount <= mp->m_sb.sb_dblocks);
-+	else
-+		XFS_SCRUB_QUOTA_CHECK(bcount <= mp->m_sb.sb_dblocks);
-+	XFS_SCRUB_QUOTA_CHECK(icount <= inodes);
-+	XFS_SCRUB_QUOTA_CHECK(rcount <= mp->m_sb.sb_rblocks);
-+
-+	/*
-+	 * We can violate the hard limits if the admin suddenly sets a
-+	 * lower limit than the actual usage.  However, we flag it for
-+	 * admin review.
-+	 */
-+	XFS_SCRUB_QUOTA_WARN(id == 0 || bhard == 0 || bcount <= bhard);
-+	XFS_SCRUB_QUOTA_WARN(id == 0 || ihard == 0 || icount <= ihard);
-+	XFS_SCRUB_QUOTA_WARN(id == 0 || rhard == 0 || rcount <= rhard);
-+}
-+
-+/* Scrub all of a quota type's items. */
-+int
-+xfs_scrub_quota(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_bmbt_irec		irec = { 0 };
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_inode		*ip;
-+	const char			*tag = NULL;
-+	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-+	struct xfs_dquot		*dq;
-+	xfs_fileoff_t			max_dqid_off;
-+	xfs_fileoff_t			off = 0;
-+	xfs_dqid_t			id = 0;
-+	uint				dqtype;
-+	int				nimaps;
-+	int				error;
-+
-+	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
-+		return -ENOENT;
-+
-+	dqtype = xfs_scrub_quota_to_dqtype(sc);
-+	switch (dqtype) {
-+	case XFS_DQ_USER:
-+		tag = "usrquota";
-+		break;
-+	case XFS_DQ_GROUP:
-+		tag = "grpquota";
-+		break;
-+	case XFS_DQ_PROJ:
-+		tag = "prjquota";
-+		break;
-+	default:
-+		ASSERT(0);
-+	}
-+
-+	mutex_lock(&qi->qi_quotaofflock);
-+	if (!xfs_this_quota_on(sc->mp, dqtype)) {
-+		error = -ENOENT;
-+		goto out;
-+	}
-+
-+	/* Attach to the quota inode and set sc->ip so that reporting works. */
-+	ip = xfs_quota_inode(sc->mp, dqtype);
-+	sc->ip = ip;
-+
-+	/* Look for problem extents. */
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
-+	while (1) {
-+		if (xfs_scrub_should_terminate(&error))
-+			break;
-+
-+		off = irec.br_startoff + irec.br_blockcount;
-+		nimaps = 1;
-+		error = xfs_bmapi_read(ip, off, -1, &irec, &nimaps,
-+				XFS_BMAPI_ENTIRE);
-+		XFS_SCRUB_QUOTA_OP_ERR(out_unlock);
-+		if (!nimaps)
-+			break;
-+		if (irec.br_startblock == HOLESTARTBLOCK)
-+			continue;
-+
-+		/*
-+		 * Unwritten extents or blocks mapped above the highest
-+		 * quota id shouldn't happen.
-+		 */
-+		XFS_SCRUB_QUOTA_GOTO(!isnullstartblock(irec.br_startblock),
-+				next_extent);
-+		XFS_SCRUB_QUOTA_GOTO(irec.br_startoff <= max_dqid_off,
-+				next_extent);
-+		XFS_SCRUB_QUOTA_GOTO(irec.br_startoff + irec.br_blockcount <=
-+				max_dqid_off + 1, next_extent);
-+next_extent:;
-+	}
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+
-+	/* Check all the quota items. */
-+	while (id < ((xfs_dqid_t)-1ULL)) {
-+		if (xfs_scrub_should_terminate(&error))
-+			break;
-+
-+		error = xfs_qm_dqget(mp, NULL, id, dqtype, XFS_QMOPT_DQNEXT,
-+				&dq);
-+		if (error == -ENOENT)
-+			break;
-+		XFS_SCRUB_QUOTA_OP_ERR(out);
-+
-+		xfs_scrub_quota_item(sc, tag, dqtype, dq, id);
-+
-+		id = be32_to_cpu(dq->q_core.d_id) + 1;
-+		xfs_qm_dqput(dq);
-+	}
-+	goto out;
-+
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+out:
-+	sc->ip = NULL;
-+	mutex_unlock(&qi->qi_quotaofflock);
-+	return error;
-+}
-+#undef XFS_SCRUB_QUOTA_OP_ERR
-+#undef XFS_SCRUB_QUOTA_GOTO
-+#undef XFS_SCRUB_QUOTA_WARN
-+#undef XFS_SCRUB_QUOTA_CHECK
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 1be7b00..9f71cb9 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3332,7 +3332,10 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }, \
- 	{ XFS_SCRUB_TYPE_SYMLINK,	"symlink" }, \
- 	{ XFS_SCRUB_TYPE_RTBITMAP,	"rtbitmap" }, \
--	{ XFS_SCRUB_TYPE_RTSUM,		"rtsummary" }
-+	{ XFS_SCRUB_TYPE_RTSUM,		"rtsummary" }, \
-+	{ XFS_SCRUB_TYPE_UQUOTA,	"usrquota" }, \
-+	{ XFS_SCRUB_TYPE_GQUOTA,	"grpquota" }, \
-+	{ XFS_SCRUB_TYPE_PQUOTA,	"prjquota" }
- DECLARE_EVENT_CLASS(xfs_scrub_class,
- 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
- 		 int error),
-
+On 7/20/2017 9:40 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> Check the free space information in a directory.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/dir.c |  337 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 337 insertions(+)
+>
+>
+> diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+> index 1d6b5329..661aec3 100644
+> --- a/fs/xfs/scrub/dir.c
+> +++ b/fs/xfs/scrub/dir.c
+> @@ -232,6 +232,338 @@ xfs_scrub_dir_rec(
+>  #undef XFS_SCRUB_DIRENT_GOTO
+>  #undef XFS_SCRUB_DIRENT_CHECK
+>
+> +#define XFS_SCRUB_DIR_BLOCK_CHECK(fs_ok) \
+> +	XFS_SCRUB_DATA_CHECK(sc, XFS_DATA_FORK, \
+> +		lblk << mp->m_sb.sb_blocklog, "dir", fs_ok)
+> +#define XFS_SCRUB_DIR_BLOCK_GOTO(fs_ok, label) \
+> +	XFS_SCRUB_DATA_GOTO(sc, XFS_DATA_FORK, \
+> +		lblk << mp->m_sb.sb_blocklog, "dir", fs_ok, label)
+> +#define XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(label) \
+> +	XFS_SCRUB_FILE_OP_ERROR_GOTO(sc, XFS_DATA_FORK, \
+> +		lblk << mp->m_sb.sb_blocklog, "dir", &error, label)
+> +/* Is this free entry either in the bestfree or smaller than all of them? */
+> +static inline bool
+> +xfs_scrub_directory_check_free_entry(
+> +	struct xfs_dir2_data_free	*bf,
+> +	struct xfs_dir2_data_unused	*dup)
+> +{
+> +	struct xfs_dir2_data_free	*dfp;
+> +	unsigned int			smallest;
+> +
+> +	smallest = -1U;
+> +	for (dfp = &bf[0]; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
+> +		if (dfp->offset &&
+> +		    be16_to_cpu(dfp->length) == be16_to_cpu(dup->length))
+> +			return true;
+> +		if (smallest < be16_to_cpu(dfp->length))
+> +			smallest = be16_to_cpu(dfp->length);
+> +	}
+> +
+> +	return be16_to_cpu(dup->length) <= smallest;
+> +}
+> +
+> +/* Check free space info in a directory data block. */
+> +STATIC int
+> +xfs_scrub_directory_data_bestfree(
+> +	struct xfs_scrub_context	*sc,
+> +	xfs_dablk_t			lblk,
+> +	bool				is_block)
+> +{
+> +	struct xfs_dir2_data_unused	*dup;
+> +	struct xfs_dir2_data_free	*dfp;
+> +	struct xfs_buf			*bp;
+> +	struct xfs_dir2_data_free	*bf;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	char				*ptr;
+> +	char				*endptr;
+> +	u16				tag;
+> +	int				newlen;
+> +	int				offset;
+> +	int				error;
+> +
+> +	if (is_block) {
+> +		/* dir block format */
+> +		XFS_SCRUB_DIR_BLOCK_CHECK(lblk ==
+> +				XFS_B_TO_FSBT(mp, XFS_DIR2_DATA_OFFSET));
+> +		error = xfs_dir3_block_read(sc->tp, sc->ip, &bp);
+> +	} else {
+> +		/* dir data format */
+> +		error = xfs_dir3_data_read(sc->tp, sc->ip, lblk, -1, &bp);
+> +	}
+> +	XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(out);
+> +
+> +	/* Do the bestfrees correspond to actual free space? */
+> +	bf = sc->ip->d_ops->data_bestfree_p(bp->b_addr);
+> +	for (dfp = &bf[0]; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
+> +		offset = be16_to_cpu(dfp->offset);
+> +		XFS_SCRUB_DIR_BLOCK_GOTO(offset < BBTOB(bp->b_length), nextloop);
+> +		if (!offset)
+> +			continue;
+> +		dup = (struct xfs_dir2_data_unused *)(bp->b_addr + offset);
+> +		tag = be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup));
+> +
+> +		XFS_SCRUB_DIR_BLOCK_CHECK(dup->freetag ==
+> +				cpu_to_be16(XFS_DIR2_DATA_FREE_TAG));
+> +		XFS_SCRUB_DIR_BLOCK_CHECK(be16_to_cpu(dup->length) ==
+> +				be16_to_cpu(dfp->length));
+> +		XFS_SCRUB_DIR_BLOCK_CHECK(tag ==
+> +				((char *)dup - (char *)bp->b_addr));
+> +nextloop:;
+> +	}
+> +
+> +	/* Make sure the bestfrees are actually the best free spaces. */
+> +	ptr = (char *)sc->ip->d_ops->data_entry_p(bp->b_addr);
+> +	if (is_block) {
+> +		struct xfs_dir2_block_tail	*btp;
+> +
+> +		btp = xfs_dir2_block_tail_p(sc->mp->m_dir_geo, bp->b_addr);
+> +		endptr = (char *)xfs_dir2_block_leaf_p(btp);
+> +	} else
+> +		endptr = (char *)bp->b_addr + BBTOB(bp->b_length);
+> +	while (ptr < endptr) {
+> +		dup = (struct xfs_dir2_data_unused *)ptr;
+> +		/* Skip real entries */
+> +		if (dup->freetag != cpu_to_be16(XFS_DIR2_DATA_FREE_TAG)) {
+> +			struct xfs_dir2_data_entry	*dep;
+> +
+> +			dep = (struct xfs_dir2_data_entry *)ptr;
+> +			newlen = sc->ip->d_ops->data_entsize(dep->namelen);
+> +			XFS_SCRUB_DIR_BLOCK_GOTO(newlen > 0, out_buf);
+> +			ptr += newlen;
+> +			XFS_SCRUB_DIR_BLOCK_CHECK(ptr <= endptr);
+> +			continue;
+> +		}
+> +
+> +		/* Spot check this free entry */
+> +		tag = be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup));
+> +		XFS_SCRUB_DIR_BLOCK_CHECK(tag ==
+> +				((char *)dup - (char *)bp->b_addr));
+> +
+> +		/*
+> +		 * Either this entry is a bestfree or it's smaller than
+> +		 * any of the bestfrees.
+> +		 */
+> +		XFS_SCRUB_DIR_BLOCK_CHECK(
+> +				xfs_scrub_directory_check_free_entry(bf, dup));
+> +
+> +		/* Move on. */
+> +		newlen = be16_to_cpu(dup->length);
+> +		XFS_SCRUB_DIR_BLOCK_GOTO(newlen > 0, out_buf);
+> +		ptr += newlen;
+> +		XFS_SCRUB_DIR_BLOCK_CHECK(ptr <= endptr);
+> +	}
+> +out_buf:
+> +	xfs_trans_brelse(sc->tp, bp);
+> +out:
+> +	return error;
+> +}
+> +
+> +/* Is this the longest free entry in the block? */
+> +static inline bool
+> +xfs_scrub_directory_check_freesp(
+> +	struct xfs_inode		*dp,
+> +	struct xfs_buf			*dbp,
+> +	unsigned int			len)
+> +{
+> +	struct xfs_dir2_data_free	*bf;
+> +	struct xfs_dir2_data_free	*dfp;
+> +	unsigned int			longest = 0;
+> +	int				offset;
+> +
+> +	bf = dp->d_ops->data_bestfree_p(dbp->b_addr);
+> +	for (dfp = &bf[0]; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
+> +		offset = be16_to_cpu(dfp->offset);
+> +		if (!offset)
+> +			continue;
+> +		if (longest < be16_to_cpu(dfp->length))
+> +			longest = be16_to_cpu(dfp->length);
+> +	}
+> +
+> +	return longest == len;
+> +}
+> +
+> +/* Check free space info in a directory leaf1 block. */
+> +STATIC int
+> +xfs_scrub_directory_leaf1_bestfree(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_da_args		*args,
+> +	xfs_dablk_t			lblk)
+> +{
+> +	struct xfs_dir2_leaf_tail	*ltp;
+> +	struct xfs_buf			*dbp;
+> +	struct xfs_buf			*bp;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	__be16				*bestp;
+> +	__u16				best;
+> +	int				i;
+> +	int				error;
+> +
+> +	/* Read the free space block */
+> +	error = xfs_dir3_leaf_read(sc->tp, sc->ip, lblk, -1, &bp);
+> +	XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(out);
+> +
+> +	/* Check all the entries. */
+> +	ltp = xfs_dir2_leaf_tail_p(mp->m_dir_geo, bp->b_addr);
+> +	bestp = xfs_dir2_leaf_bests_p(ltp);
+> +	for (i = 0; i < be32_to_cpu(ltp->bestcount); i++, bestp++) {
+> +		best = be16_to_cpu(*bestp);
+> +		if (best == NULLDATAOFF)
+> +			continue;
+> +		error = xfs_dir3_data_read(sc->tp, sc->ip,
+> +				i * args->geo->fsbcount, -1, &dbp);
+> +		XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(skip_buf);
+> +		XFS_SCRUB_DIR_BLOCK_CHECK(
+> +				xfs_scrub_directory_check_freesp(sc->ip, dbp,
+> +					best));
+> +		xfs_trans_brelse(sc->tp, dbp);
+> +skip_buf:
+> +		;
+> +	}
+> +out:
+> +	return error;
+> +}
+> +
+> +/* Check free space info in a directory freespace block. */
+> +STATIC int
+> +xfs_scrub_directory_free_bestfree(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_da_args		*args,
+> +	xfs_dablk_t			lblk)
+> +{
+> +	struct xfs_dir3_icfree_hdr	freehdr;
+> +	struct xfs_buf			*dbp;
+> +	struct xfs_buf			*bp;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	__be16				*bestp;
+> +	__be16				best;
+> +	int				i;
+> +	int				error;
+> +
+> +	/* Read the free space block */
+> +	error = xfs_dir2_free_read(sc->tp, sc->ip, lblk, &bp);
+> +	XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(out);
+> +
+> +	/* Check all the entries. */
+> +	sc->ip->d_ops->free_hdr_from_disk(&freehdr, bp->b_addr);
+> +	bestp = sc->ip->d_ops->free_bests_p(bp->b_addr);
+> +	for (i = 0; i < freehdr.nvalid; i++, bestp++) {
+> +		best = be16_to_cpu(*bestp);
+> +		if (best == NULLDATAOFF)
+> +			continue;
+> +		error = xfs_dir3_data_read(sc->tp, sc->ip,
+> +				(freehdr.firstdb + i) * args->geo->fsbcount,
+> +				-1, &dbp);
+> +		XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(skip_buf);
+> +		XFS_SCRUB_DIR_BLOCK_CHECK(
+> +				xfs_scrub_directory_check_freesp(sc->ip, dbp,
+> +					best));
+> +		xfs_trans_brelse(sc->tp, dbp);
+> +skip_buf:
+> +		;
+> +	}
+> +out:
+> +	return error;
+> +}
+> +
+> +#define for_each_extent_dablk(lblk, args, got) \
+> +		for ((lblk) = roundup((xfs_dablk_t)(got)->br_startoff, (args)->geo->fsbcount); \
+> +		     (lblk) < (got)->br_startoff + (got)->br_blockcount; \
+> +		     (lblk) += (args)->geo->fsbcount)
+> +/* Check free space information in directories. */
+> +STATIC int
+> +xfs_scrub_directory_blocks(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	struct xfs_bmbt_irec		got;
+> +	struct xfs_da_args		args;
+> +	struct xfs_ifork		*ifp;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	xfs_fileoff_t			leaf_lblk;
+> +	xfs_fileoff_t			free_lblk;
+> +	xfs_fileoff_t			lblk;
+> +	xfs_extnum_t			idx;
+> +	bool				found;
+> +	int				is_block = 0;
+> +	int				error;
+> +
+> +	/* Ignore local format directories. */
+> +	if (sc->ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
+> +	    sc->ip->i_d.di_format != XFS_DINODE_FMT_BTREE)
+> +		return 0;
+> +
+> +	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
+> +	lblk = XFS_B_TO_FSB(mp, XFS_DIR2_DATA_OFFSET);
+> +	leaf_lblk = XFS_B_TO_FSB(mp, XFS_DIR2_LEAF_OFFSET);
+> +	free_lblk = XFS_B_TO_FSB(mp, XFS_DIR2_FREE_OFFSET);
+> +
+> +	/* Is this a block dir? */
+> +	args.dp = sc->ip;
+> +	args.geo = mp->m_dir_geo;
+> +	args.trans = sc->tp;
+> +	error = xfs_dir2_isblock(&args, &is_block);
+> +	XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO(out);
+> +
+> +	/* Iterate all the data extents in the directory... */
+> +	found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &idx, &got);
+> +	while (found) {
+> +		/* No more data blocks... */
+> +		if (got.br_startoff >= leaf_lblk)
+> +			break;
+> +
+> +		/* Check each data block's bestfree data */
+> +		for_each_extent_dablk(lblk, &args, &got) {
+> +			error = xfs_scrub_directory_data_bestfree(sc, lblk,
+> +					is_block);
+> +			if (error)
+> +				goto out;
+> +		}
+> +
+> +		found = xfs_iext_get_extent(ifp, ++idx, &got);
+> +	}
+> +
+> +	/* Look for a leaf1 block, which has free info. */
+> +	if (xfs_iext_lookup_extent(sc->ip, ifp, leaf_lblk, &idx, &got) &&
+> +	    got.br_startoff == leaf_lblk &&
+> +	    got.br_blockcount == args.geo->fsbcount &&
+> +	    !xfs_iext_get_extent(ifp, ++idx, &got)) {
+> +		XFS_SCRUB_DIR_BLOCK_GOTO(!is_block, not_leaf1);
+> +		error = xfs_scrub_directory_leaf1_bestfree(sc, &args,
+> +				leaf_lblk);
+> +		if (error)
+> +			goto out;
+> +	}
+> +not_leaf1:
+> +
+> +	/* Scan for free blocks */
+> +	lblk = free_lblk;
+> +	found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &idx, &got);
+> +	while (found) {
+> +		/*
+> +		 * Dirs can't have blocks mapped above 2^32.
+> +		 * Single-block dirs shouldn't even be here.
+> +		 */
+> +		lblk = got.br_startoff;
+> +		XFS_SCRUB_DIR_BLOCK_GOTO(!(lblk & ~((1ULL << 32) - 1ULL)), out);
+> +		XFS_SCRUB_DIR_BLOCK_GOTO(!is_block, nextfree);
+> +
+> +		/* Check each dir free block's bestfree data */
+> +		for_each_extent_dablk(lblk, &args, &got) {
+> +			error = xfs_scrub_directory_free_bestfree(sc, &args,
+> +					lblk);
+> +			if (error)
+> +				goto out;
+> +		}
+> +
+> +nextfree:
+> +		found = xfs_iext_get_extent(ifp, ++idx, &got);
+> +	}
+> +out:
+> +	return error;
+> +}
+> +#undef for_each_extent_dablk
+> +#undef XFS_SCRUB_DIR_BLOCK_OP_ERROR_GOTO
+> +#undef XFS_SCRUB_DIR_BLOCK_CHECK
+> +
+>  /* Scrub a whole directory. */
+>  int
+>  xfs_scrub_directory(
+> @@ -258,6 +590,11 @@ xfs_scrub_directory(
+>  	if (error)
+>  		return error;
+>
+> +	/* Check the freespace. */
+> +	error = xfs_scrub_directory_blocks(sc);
+> +	if (error)
+> +		return error;
+> +
+>  	/* Check that every dirent we see can also be looked up by hash. */
+>  	bufsize = (size_t)min_t(loff_t, 32768, sc->ip->i_d.di_size);
+>  	sdc.sc = sc;
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
