@@ -1,53 +1,340 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33180 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751460AbdGUEkM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 00:40:12 -0400
-From: Eric Biggers <ebiggers3@gmail.com>
-Subject: [PATCH v2 04/15] tests: remove udf/098
-Date: Thu, 20 Jul 2017 21:38:42 -0700
-Message-Id: <20170721043853.364-5-ebiggers3@gmail.com>
-In-Reply-To: <20170721043853.364-1-ebiggers3@gmail.com>
-References: <20170721043853.364-1-ebiggers3@gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:22841 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751367AbdGWQvA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jul 2017 12:51:00 -0400
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6NGoxpV004866
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 16:50:59 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v6NGoxaP022847
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 16:50:59 GMT
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v6NGow5u018932
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 16:50:58 GMT
+Subject: Re: [PATCH 06/22] xfs: scrub the backup superblocks
+References: <150061190859.14732.17040548800470377701.stgit@magnolia>
+ <150061194700.14732.436243943528759418.stgit@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <a343bf0d-c3cc-c957-ea31-bf39f87765b6@oracle.com>
+Date: Sun, 23 Jul 2017 09:50:57 -0700
+MIME-Version: 1.0
+In-Reply-To: <150061194700.14732.436243943528759418.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+This one looks ok to me.  Most of the work is in the macros, I think it 
+looks pretty clean.
 
-udf/098 was an IRIX and UDF-specific test which tested xattrs.  But the
-Linux UDF driver doesn't support xattrs, and even if it did there are
-already generic xattr tests --- including now generic/097 which is
-basically the same test.  So just delete udf/098.
+Reviewed by: Allison Henderson <allison.henderson@oracle.com>
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- tests/udf/098     |  274 ---------
- tests/udf/098.out | 1594 -----------------------------------------------------
- tests/udf/group   |    1 -
- 3 files changed, 1869 deletions(-)
- delete mode 100755 tests/udf/098
- delete mode 100644 tests/udf/098.out
-
-diff --git a/tests/udf/098 b/tests/udf/098
-deleted file mode 100755
-index 09792a76..00000000
-diff --git a/tests/udf/098.out b/tests/udf/098.out
-deleted file mode 100644
-index 63772a0a..00000000
-diff --git a/tests/udf/group b/tests/udf/group
-index 24f682cc..f4372e09 100644
---- a/tests/udf/group
-+++ b/tests/udf/group
-@@ -3,6 +3,5 @@
- # - do not start group names with a digit
- # - comment line before each group is "new" description
- #
--098 udf auto
- 101 udf
- 102 udf
--- 
-2.13.3
-
+On 7/20/2017 9:39 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> Ensure that the geometry presented in the backup superblocks matches
+> the primary superblock so that repair can recover the filesystem if
+> that primary gets corrupted.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/Makefile         |    1
+>  fs/xfs/libxfs/xfs_fs.h  |    3 -
+>  fs/xfs/scrub/agheader.c |  197 +++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/common.c   |    4 +
+>  fs/xfs/scrub/common.h   |    2
+>  fs/xfs/xfs_trace.h      |    3 -
+>  6 files changed, 208 insertions(+), 2 deletions(-)
+>  create mode 100644 fs/xfs/scrub/agheader.c
+>
+>
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index 67cf4ac..1b9bd1a 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -140,6 +140,7 @@ xfs-$(CONFIG_EXPORTFS_BLOCK_OPS)	+= xfs_pnfs.o
+>  # online scrub/repair
+>  ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
+>  xfs-y				+= $(addprefix scrub/, \
+> +				   agheader.o \
+>  				   btree.o \
+>  				   common.o \
+>  				   metabufs.o \
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 9fb3c65..2f12fb1 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -483,7 +483,8 @@ struct xfs_scrub_metadata {
+>   */
+>  #define XFS_SCRUB_TYPE_TEST	0	/* dummy to test ioctl */
+>  #define XFS_SCRUB_TYPE_METABUFS	1	/* in-core metadata buffers */
+> -#define XFS_SCRUB_TYPE_MAX	1
+> +#define XFS_SCRUB_TYPE_SB	2	/* superblock */
+> +#define XFS_SCRUB_TYPE_MAX	2
+>
+>  /* i: repair this metadata */
+>  #define XFS_SCRUB_FLAG_REPAIR		(1 << 0)
+> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+> new file mode 100644
+> index 0000000..3bca60d
+> --- /dev/null
+> +++ b/fs/xfs/scrub/agheader.c
+> @@ -0,0 +1,197 @@
+> +/*
+> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> + */
+> +#include "xfs.h"
+> +#include "xfs_fs.h"
+> +#include "xfs_shared.h"
+> +#include "xfs_format.h"
+> +#include "xfs_trans_resv.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_defer.h"
+> +#include "xfs_btree.h"
+> +#include "xfs_bit.h"
+> +#include "xfs_log_format.h"
+> +#include "xfs_trans.h"
+> +#include "xfs_trace.h"
+> +#include "xfs_sb.h"
+> +#include "xfs_inode.h"
+> +#include "scrub/common.h"
+> +
+> +/* Set us up to check an AG header. */
+> +int
+> +xfs_scrub_setup_ag_header(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_inode		*ip)
+> +{
+> +	struct xfs_mount		*mp = sc->mp;
+> +
+> +	if (sc->sm->sm_agno >= mp->m_sb.sb_agcount ||
+> +	    sc->sm->sm_ino || sc->sm->sm_gen)
+> +		return -EINVAL;
+> +	return xfs_scrub_setup_fs(sc, ip);
+> +}
+> +
+> +/* Superblock */
+> +
+> +#define XFS_SCRUB_SB_CHECK(fs_ok) \
+> +	XFS_SCRUB_CHECK(sc, bp, "superblock", fs_ok)
+> +#define XFS_SCRUB_SB_PREEN(fs_ok) \
+> +	XFS_SCRUB_PREEN(sc, bp, "superblock", fs_ok)
+> +#define XFS_SCRUB_SB_OP_ERROR_GOTO(label) \
+> +	XFS_SCRUB_OP_ERROR_GOTO(sc, agno, 0, "superblock", &error, out)
+> +/* Scrub the filesystem superblock. */
+> +int
+> +xfs_scrub_superblock(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_buf			*bp;
+> +	struct xfs_sb			sb;
+> +	xfs_agnumber_t			agno;
+> +	uint32_t			v2_ok;
+> +	int				error;
+> +
+> +	agno = sc->sm->sm_agno;
+> +
+> +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> +		  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+> +		  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
+> +	if (error) {
+> +		trace_xfs_scrub_block_error(mp, agno, XFS_SB_BLOCK(mp),
+> +				"superblock", "error != 0", __func__, __LINE__);
+> +		error = 0;
+> +		sc->sm->sm_flags |= XFS_SCRUB_FLAG_CORRUPT;
+> +		goto out;
+> +	}
+> +
+> +	/*
+> +	 * The in-core sb is a more up-to-date copy of AG 0's sb,
+> +	 * so there's no point in comparing the two.
+> +	 */
+> +	if (agno == 0)
+> +		goto out;
+> +
+> +	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
+> +
+> +	/* Verify the geometries match. */
+> +#define XFS_SCRUB_SB_FIELD(fn) \
+> +		XFS_SCRUB_SB_CHECK(sb.sb_##fn == mp->m_sb.sb_##fn)
+> +#define XFS_PREEN_SB_FIELD(fn) \
+> +		XFS_SCRUB_SB_PREEN(sb.sb_##fn == mp->m_sb.sb_##fn)
+> +	XFS_SCRUB_SB_FIELD(blocksize);
+> +	XFS_SCRUB_SB_FIELD(dblocks);
+> +	XFS_SCRUB_SB_FIELD(rblocks);
+> +	XFS_SCRUB_SB_FIELD(rextents);
+> +	XFS_SCRUB_SB_PREEN(uuid_equal(&sb.sb_uuid, &mp->m_sb.sb_uuid));
+> +	XFS_SCRUB_SB_FIELD(logstart);
+> +	XFS_PREEN_SB_FIELD(rootino);
+> +	XFS_PREEN_SB_FIELD(rbmino);
+> +	XFS_PREEN_SB_FIELD(rsumino);
+> +	XFS_SCRUB_SB_FIELD(rextsize);
+> +	XFS_SCRUB_SB_FIELD(agblocks);
+> +	XFS_SCRUB_SB_FIELD(agcount);
+> +	XFS_SCRUB_SB_FIELD(rbmblocks);
+> +	XFS_SCRUB_SB_FIELD(logblocks);
+> +	XFS_SCRUB_SB_CHECK(!(sb.sb_versionnum & ~XFS_SB_VERSION_OKBITS));
+> +	XFS_SCRUB_SB_CHECK(XFS_SB_VERSION_NUM(&sb) ==
+> +			   XFS_SB_VERSION_NUM(&mp->m_sb));
+> +	XFS_SCRUB_SB_FIELD(sectsize);
+> +	XFS_SCRUB_SB_FIELD(inodesize);
+> +	XFS_SCRUB_SB_FIELD(inopblock);
+> +	XFS_SCRUB_SB_PREEN(memcmp(sb.sb_fname, mp->m_sb.sb_fname,
+> +			   sizeof(sb.sb_fname)) == 0);
+> +	XFS_SCRUB_SB_FIELD(blocklog);
+> +	XFS_SCRUB_SB_FIELD(sectlog);
+> +	XFS_SCRUB_SB_FIELD(inodelog);
+> +	XFS_SCRUB_SB_FIELD(inopblog);
+> +	XFS_SCRUB_SB_FIELD(agblklog);
+> +	XFS_SCRUB_SB_FIELD(rextslog);
+> +	XFS_PREEN_SB_FIELD(imax_pct);
+> +	XFS_PREEN_SB_FIELD(uquotino);
+> +	XFS_PREEN_SB_FIELD(gquotino);
+> +	XFS_SCRUB_SB_FIELD(shared_vn);
+> +	XFS_SCRUB_SB_FIELD(inoalignmt);
+> +	XFS_PREEN_SB_FIELD(unit);
+> +	XFS_PREEN_SB_FIELD(width);
+> +	XFS_SCRUB_SB_FIELD(dirblklog);
+> +	XFS_SCRUB_SB_FIELD(logsectlog);
+> +	XFS_SCRUB_SB_FIELD(logsectsize);
+> +	XFS_SCRUB_SB_FIELD(logsunit);
+> +	v2_ok = XFS_SB_VERSION2_OKBITS;
+> +	if (XFS_SB_VERSION_NUM(&sb) >= XFS_SB_VERSION_5)
+> +		v2_ok |= XFS_SB_VERSION2_CRCBIT;
+> +	XFS_SCRUB_SB_CHECK(!(sb.sb_features2 & ~v2_ok));
+> +	XFS_SCRUB_SB_PREEN(sb.sb_features2 == sb.sb_bad_features2);
+> +	XFS_SCRUB_SB_CHECK(!sb.sb_features2 ||
+> +			xfs_sb_version_hasmorebits(&mp->m_sb));
+> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +		XFS_SCRUB_SB_CHECK(!xfs_sb_has_compat_feature(&sb,
+> +				XFS_SB_FEAT_COMPAT_UNKNOWN));
+> +		XFS_SCRUB_SB_CHECK(!xfs_sb_has_ro_compat_feature(&sb,
+> +				XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
+> +		XFS_SCRUB_SB_CHECK(!xfs_sb_has_incompat_feature(&sb,
+> +				XFS_SB_FEAT_INCOMPAT_UNKNOWN));
+> +		XFS_SCRUB_SB_CHECK(!xfs_sb_has_incompat_log_feature(&sb,
+> +				XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN));
+> +		XFS_SCRUB_SB_FIELD(spino_align);
+> +		XFS_PREEN_SB_FIELD(pquotino);
+> +	}
+> +	if (xfs_sb_version_hasmetauuid(&mp->m_sb)) {
+> +		XFS_SCRUB_SB_CHECK(uuid_equal(&sb.sb_meta_uuid,
+> +					&mp->m_sb.sb_meta_uuid));
+> +		XFS_SCRUB_SB_CHECK(uuid_equal(&sb.sb_uuid,
+> +					&mp->m_sb.sb_uuid));
+> +	} else
+> +		XFS_SCRUB_SB_CHECK(uuid_equal(&sb.sb_uuid,
+> +					&mp->m_sb.sb_meta_uuid));
+> +#undef XFS_SCRUB_SB_FIELD
+> +
+> +#define XFS_SCRUB_SB_FEAT(fn) \
+> +		XFS_SCRUB_SB_CHECK(xfs_sb_version_has##fn(&sb) == \
+> +		xfs_sb_version_has##fn(&mp->m_sb))
+> +	XFS_SCRUB_SB_FEAT(align);
+> +	XFS_SCRUB_SB_FEAT(dalign);
+> +	XFS_SCRUB_SB_FEAT(logv2);
+> +	XFS_SCRUB_SB_FEAT(extflgbit);
+> +	XFS_SCRUB_SB_FEAT(sector);
+> +	XFS_SCRUB_SB_FEAT(asciici);
+> +	XFS_SCRUB_SB_FEAT(morebits);
+> +	XFS_SCRUB_SB_FEAT(lazysbcount);
+> +	XFS_SCRUB_SB_FEAT(crc);
+> +	XFS_SCRUB_SB_FEAT(_pquotino);
+> +	XFS_SCRUB_SB_FEAT(ftype);
+> +	XFS_SCRUB_SB_FEAT(finobt);
+> +	XFS_SCRUB_SB_FEAT(sparseinodes);
+> +	XFS_SCRUB_SB_FEAT(metauuid);
+> +	XFS_SCRUB_SB_FEAT(rmapbt);
+> +	XFS_SCRUB_SB_FEAT(reflink);
+> +#undef XFS_SCRUB_SB_FEAT
+> +
+> +#define XFS_SCRUB_SB_FEAT_PREEN(fn) \
+> +		XFS_SCRUB_SB_PREEN(xfs_sb_version_has##fn(&sb) == \
+> +		xfs_sb_version_has##fn(&mp->m_sb))
+> +	XFS_SCRUB_SB_FEAT_PREEN(attr);
+> +	XFS_SCRUB_SB_FEAT_PREEN(attr2);
+> +#undef XFS_SCRUB_SB_FEAT_PREEN
+> +
+> +out:
+> +	return error;
+> +}
+> +#undef XFS_SCRUB_SB_OP_ERROR_GOTO
+> +#undef XFS_SCRUB_SB_CHECK
+> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> index e06131f..9285107 100644
+> --- a/fs/xfs/scrub/common.c
+> +++ b/fs/xfs/scrub/common.c
+> @@ -614,6 +614,10 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
+>  		.setup	= xfs_scrub_setup_metabufs,
+>  		.scrub	= xfs_scrub_metabufs,
+>  	},
+> +	{ /* superblock */
+> +		.setup	= xfs_scrub_setup_ag_header,
+> +		.scrub	= xfs_scrub_superblock,
+> +	},
+>  };
+>
+>  /* Dispatch metadata scrubbing. */
+> diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+> index 5f0818c..094a708 100644
+> --- a/fs/xfs/scrub/common.h
+> +++ b/fs/xfs/scrub/common.h
+> @@ -199,6 +199,7 @@ int xfs_scrub_ag_btcur_init(struct xfs_scrub_context *sc,
+>  #define SETUP_FN(name) int name(struct xfs_scrub_context *sc, struct xfs_inode *ip)
+>  SETUP_FN(xfs_scrub_setup_fs);
+>  SETUP_FN(xfs_scrub_setup_metabufs);
+> +SETUP_FN(xfs_scrub_setup_ag_header);
+>  #undef SETUP_FN
+>
+>  /* Metadata scrubbers */
+> @@ -206,6 +207,7 @@ SETUP_FN(xfs_scrub_setup_metabufs);
+>  #define SCRUB_FN(name) int name(struct xfs_scrub_context *sc)
+>  SCRUB_FN(xfs_scrub_dummy);
+>  SCRUB_FN(xfs_scrub_metabufs);
+> +SCRUB_FN(xfs_scrub_superblock);
+>  #undef SCRUB_FN
+>
+>  #endif	/* __XFS_REPAIR_COMMON_H__ */
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 036e65c..483008a 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3313,7 +3313,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
+>  /* scrub */
+>  #define XFS_SCRUB_TYPE_DESC \
+>  	{ XFS_SCRUB_TYPE_TEST,		"dummy" }, \
+> -	{ XFS_SCRUB_TYPE_METABUFS,	"metabufs" }
+> +	{ XFS_SCRUB_TYPE_METABUFS,	"metabufs" }, \
+> +	{ XFS_SCRUB_TYPE_SB,		"superblock" }
+>  DECLARE_EVENT_CLASS(xfs_scrub_class,
+>  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
+>  		 int error),
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
