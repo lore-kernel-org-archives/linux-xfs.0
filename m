@@ -1,168 +1,281 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:37235 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751460AbdGUEkS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 00:40:18 -0400
-From: Eric Biggers <ebiggers3@gmail.com>
-Subject: [PATCH v2 09/15] tests: make shared/051 a generic test
-Date: Thu, 20 Jul 2017 21:38:47 -0700
-Message-Id: <20170721043853.364-10-ebiggers3@gmail.com>
-In-Reply-To: <20170721043853.364-1-ebiggers3@gmail.com>
-References: <20170721043853.364-1-ebiggers3@gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:25240 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751406AbdGWRJj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jul 2017 13:09:39 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6NH9caT015615
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:09:38 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v6NH9bOc024323
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:09:38 GMT
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v6NH9a2L025794
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:09:37 GMT
+Subject: Re: [PATCH 09/22] xfs: scrub free space btrees
+References: <150061190859.14732.17040548800470377701.stgit@magnolia>
+ <150061196598.14732.397774100309714676.stgit@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <bce4b17c-2902-9539-3fa4-5a194263db94@oracle.com>
+Date: Sun, 23 Jul 2017 10:09:36 -0700
+MIME-Version: 1.0
+In-Reply-To: <150061196598.14732.397774100309714676.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+Reviewed by: Allison Henderson <allison.henderson@oracle.com>
 
-The ACL test shared/051 was very similar to generic/099 which was not
-being run and was just removed; most likely the script was copy+pasted
-at some point.  Since shared/051 has been getting maintained+run and is
-not really XFS and UDF-specific, move it to generic, reusing the old
-number of 099.  One change was required for it to work on other
-filesystems: the output of 'find' must be sorted.
-
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- tests/{shared/051 => generic/099}         |  8 ++++----
- tests/{shared/051.out => generic/099.out} | 18 +++++++++---------
- tests/generic/group                       |  1 +
- tests/shared/group                        |  1 -
- 4 files changed, 14 insertions(+), 14 deletions(-)
- rename tests/{shared/051 => generic/099} (98%)
- rename tests/{shared/051.out => generic/099.out} (99%)
-
-diff --git a/tests/shared/051 b/tests/generic/099
-similarity index 98%
-rename from tests/shared/051
-rename to tests/generic/099
-index 298838e7..f65c53f1 100755
---- a/tests/shared/051
-+++ b/tests/generic/099
-@@ -1,5 +1,5 @@
- #! /bin/bash
--# FS QA Test No. 051
-+# FS QA Test No. 099
- #
- # Test out ACLs.
- #
-@@ -67,7 +67,7 @@ _cleanup()
- #
- 
- # real QA test starts here
--_supported_fs xfs udf
-+_supported_fs generic
- _supported_os Linux
- _require_test
- _require_runas
-@@ -292,10 +292,10 @@ popd >/dev/null
- chown -R 12345.54321 root
- echo "Change #1..."
- _runas -u 12345 -g 54321 -- chacl -r u::rwx,g::-w-,o::--x root
--find root -print | xargs chacl -l
-+find root -print | sort | xargs chacl -l
- echo "Change #2..."
- _runas -u 12345 -g 54321 -- chacl -r u::---,g::---,o::--- root
--find root -print | xargs chacl -l
-+find root -print | sort | xargs chacl -l
- 
- #-------------------------------------------------------
- 
-diff --git a/tests/shared/051.out b/tests/generic/099.out
-similarity index 99%
-rename from tests/shared/051.out
-rename to tests/generic/099.out
-index 2b5220f7..94172420 100644
---- a/tests/shared/051.out
-+++ b/tests/generic/099.out
-@@ -1,4 +1,4 @@
--QA output created by 051
-+QA output created by 099
- 
- === Test minimal ACE ===
- Setup file
-@@ -111,6 +111,8 @@ acldir/file2 [u::r--,g::r--,o::---]
- Change #1...
- root [u::rwx,g::-w-,o::--x]
- root/a [u::rwx,g::-w-,o::--x]
-+root/a/0 [u::rwx,g::-w-,o::--x]
-+root/a/0/mumble [u::rwx,g::-w-,o::--x]
- root/a/1 [u::rwx,g::-w-,o::--x]
- root/a/1/mumble [u::rwx,g::-w-,o::--x]
- root/a/2 [u::rwx,g::-w-,o::--x]
-@@ -129,9 +131,9 @@ root/a/8 [u::rwx,g::-w-,o::--x]
- root/a/8/mumble [u::rwx,g::-w-,o::--x]
- root/a/9 [u::rwx,g::-w-,o::--x]
- root/a/9/mumble [u::rwx,g::-w-,o::--x]
--root/a/0 [u::rwx,g::-w-,o::--x]
--root/a/0/mumble [u::rwx,g::-w-,o::--x]
- root/b [u::rwx,g::-w-,o::--x]
-+root/b/c0 [u::rwx,g::-w-,o::--x]
-+root/b/c0/0 [u::rwx,g::-w-,o::--x]
- root/b/c1 [u::rwx,g::-w-,o::--x]
- root/b/c1/1 [u::rwx,g::-w-,o::--x]
- root/b/c2 [u::rwx,g::-w-,o::--x]
-@@ -150,11 +152,11 @@ root/b/c8 [u::rwx,g::-w-,o::--x]
- root/b/c8/8 [u::rwx,g::-w-,o::--x]
- root/b/c9 [u::rwx,g::-w-,o::--x]
- root/b/c9/9 [u::rwx,g::-w-,o::--x]
--root/b/c0 [u::rwx,g::-w-,o::--x]
--root/b/c0/0 [u::rwx,g::-w-,o::--x]
- Change #2...
- root [u::---,g::---,o::---]
- root/a [u::---,g::---,o::---]
-+root/a/0 [u::---,g::---,o::---]
-+root/a/0/mumble [u::---,g::---,o::---]
- root/a/1 [u::---,g::---,o::---]
- root/a/1/mumble [u::---,g::---,o::---]
- root/a/2 [u::---,g::---,o::---]
-@@ -173,9 +175,9 @@ root/a/8 [u::---,g::---,o::---]
- root/a/8/mumble [u::---,g::---,o::---]
- root/a/9 [u::---,g::---,o::---]
- root/a/9/mumble [u::---,g::---,o::---]
--root/a/0 [u::---,g::---,o::---]
--root/a/0/mumble [u::---,g::---,o::---]
- root/b [u::---,g::---,o::---]
-+root/b/c0 [u::---,g::---,o::---]
-+root/b/c0/0 [u::---,g::---,o::---]
- root/b/c1 [u::---,g::---,o::---]
- root/b/c1/1 [u::---,g::---,o::---]
- root/b/c2 [u::---,g::---,o::---]
-@@ -194,8 +196,6 @@ root/b/c8 [u::---,g::---,o::---]
- root/b/c8/8 [u::---,g::---,o::---]
- root/b/c9 [u::---,g::---,o::---]
- root/b/c9/9 [u::---,g::---,o::---]
--root/b/c0 [u::---,g::---,o::---]
--root/b/c0/0 [u::---,g::---,o::---]
- 
- === Test out error messages for ACL text parsing  ===
- Note: Old interface gave more informative error msgs
-diff --git a/tests/generic/group b/tests/generic/group
-index 93a7378b..ee9a7539 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -101,6 +101,7 @@
- 096 auto prealloc quick zero
- 097 attr auto quick
- 098 auto quick metadata
-+099 acl auto quick
- 100 udf auto
- 101 auto quick metadata
- 102 auto rw
-diff --git a/tests/shared/group b/tests/shared/group
-index fab93315..b3663a03 100644
---- a/tests/shared/group
-+++ b/tests/shared/group
-@@ -11,7 +11,6 @@
- 006 auto enospc
- 007 dangerous_fuzzers
- 032 mkfs auto quick
--051 acl udf auto quick
- 272 auto enospc rw
- 289 auto quick
- 298 auto trim
--- 
-2.13.3
-
+On 7/20/2017 9:39 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> Check the extent records free space btrees to ensure that the values
+> look sane.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/Makefile        |    1
+>  fs/xfs/libxfs/xfs_fs.h |    4 +-
+>  fs/xfs/scrub/alloc.c   |  105 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/common.c  |   24 +++++++++++
+>  fs/xfs/scrub/common.h  |    6 +++
+>  fs/xfs/xfs_trace.h     |    4 +-
+>  6 files changed, 142 insertions(+), 2 deletions(-)
+>  create mode 100644 fs/xfs/scrub/alloc.c
+>
+>
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index 1b9bd1a..ce492ee 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -141,6 +141,7 @@ xfs-$(CONFIG_EXPORTFS_BLOCK_OPS)	+= xfs_pnfs.o
+>  ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
+>  xfs-y				+= $(addprefix scrub/, \
+>  				   agheader.o \
+> +				   alloc.o \
+>  				   btree.o \
+>  				   common.o \
+>  				   metabufs.o \
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 208cc48..bb36acf 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -487,7 +487,9 @@ struct xfs_scrub_metadata {
+>  #define XFS_SCRUB_TYPE_AGF	3	/* AG free header */
+>  #define XFS_SCRUB_TYPE_AGFL	4	/* AG free list */
+>  #define XFS_SCRUB_TYPE_AGI	5	/* AG inode header */
+> -#define XFS_SCRUB_TYPE_MAX	5
+> +#define XFS_SCRUB_TYPE_BNOBT	6	/* freesp by block btree */
+> +#define XFS_SCRUB_TYPE_CNTBT	7	/* freesp by length btree */
+> +#define XFS_SCRUB_TYPE_MAX	7
+>
+>  /* i: repair this metadata */
+>  #define XFS_SCRUB_FLAG_REPAIR		(1 << 0)
+> diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
+> new file mode 100644
+> index 0000000..1709ab2
+> --- /dev/null
+> +++ b/fs/xfs/scrub/alloc.c
+> @@ -0,0 +1,105 @@
+> +/*
+> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> + */
+> +#include "xfs.h"
+> +#include "xfs_fs.h"
+> +#include "xfs_shared.h"
+> +#include "xfs_format.h"
+> +#include "xfs_trans_resv.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_defer.h"
+> +#include "xfs_btree.h"
+> +#include "xfs_bit.h"
+> +#include "xfs_log_format.h"
+> +#include "xfs_trans.h"
+> +#include "xfs_trace.h"
+> +#include "xfs_sb.h"
+> +#include "xfs_rmap.h"
+> +#include "scrub/common.h"
+> +#include "scrub/btree.h"
+> +
+> +/*
+> + * Set us up to scrub free space btrees.
+> + * Push everything out of the log so that the busy extent list is empty.
+> + */
+> +int
+> +xfs_scrub_setup_ag_allocbt(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_inode		*ip)
+> +{
+> +	return xfs_scrub_setup_ag_btree(sc, ip, sc->try_harder);
+> +}
+> +
+> +/* Free space btree scrubber. */
+> +
+> +/* Scrub a bnobt/cntbt record. */
+> +STATIC int
+> +xfs_scrub_allocbt_helper(
+> +	struct xfs_scrub_btree		*bs,
+> +	union xfs_btree_rec		*rec)
+> +{
+> +	struct xfs_mount		*mp = bs->cur->bc_mp;
+> +	struct xfs_agf			*agf;
+> +	xfs_agblock_t			bno;
+> +	xfs_extlen_t			len;
+> +	int				error = 0;
+> +
+> +	bno = be32_to_cpu(rec->alloc.ar_startblock);
+> +	len = be32_to_cpu(rec->alloc.ar_blockcount);
+> +	agf = XFS_BUF_TO_AGF(bs->sc->sa.agf_bp);
+> +
+> +	XFS_SCRUB_BTREC_CHECK(bs, bno < mp->m_sb.sb_agblocks);
+> +	XFS_SCRUB_BTREC_CHECK(bs, bno < be32_to_cpu(agf->agf_length));
+> +	XFS_SCRUB_BTREC_CHECK(bs, bno < bno + len);
+> +	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)bno + len <=
+> +			mp->m_sb.sb_agblocks);
+> +	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)bno + len <=
+> +			be32_to_cpu(agf->agf_length));
+> +
+> +	return error;
+> +}
+> +
+> +/* Scrub the freespace btrees for some AG. */
+> +STATIC int
+> +xfs_scrub_allocbt(
+> +	struct xfs_scrub_context	*sc,
+> +	xfs_btnum_t			which)
+> +{
+> +	struct xfs_owner_info		oinfo;
+> +	struct xfs_btree_cur		*cur;
+> +
+> +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
+> +	cur = which == XFS_BTNUM_BNO ? sc->sa.bno_cur : sc->sa.cnt_cur;
+> +	return xfs_scrub_btree(sc, cur, xfs_scrub_allocbt_helper,
+> +			&oinfo, NULL);
+> +}
+> +
+> +int
+> +xfs_scrub_bnobt(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	return xfs_scrub_allocbt(sc, XFS_BTNUM_BNO);
+> +}
+> +
+> +int
+> +xfs_scrub_cntbt(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	return xfs_scrub_allocbt(sc, XFS_BTNUM_CNT);
+> +}
+> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> index 994c6c8..86161b5 100644
+> --- a/fs/xfs/scrub/common.c
+> +++ b/fs/xfs/scrub/common.c
+> @@ -556,6 +556,22 @@ xfs_scrub_dummy(
+>  	return 0;
+>  }
+>
+> +/* Set us up with AG headers and btree cursors. */
+> +int
+> +xfs_scrub_setup_ag_btree(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_inode		*ip,
+> +	bool				force_log)
+> +{
+> +	int				error;
+> +
+> +	error = xfs_scrub_setup_ag_header(sc, ip);
+> +	if (error)
+> +		return error;
+> +
+> +	return xfs_scrub_ag_init(sc, sc->sm->sm_agno, &sc->sa);
+> +}
+> +
+>  /* Per-scrubber setup functions */
+>
+>  /* Set us up with a transaction and an empty context. */
+> @@ -692,6 +708,14 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
+>  		.setup	= xfs_scrub_setup_ag_header,
+>  		.scrub	= xfs_scrub_agi,
+>  	},
+> +	{ /* bnobt */
+> +		.setup	= xfs_scrub_setup_ag_allocbt,
+> +		.scrub	= xfs_scrub_bnobt,
+> +	},
+> +	{ /* cntbt */
+> +		.setup	= xfs_scrub_setup_ag_allocbt,
+> +		.scrub	= xfs_scrub_cntbt,
+> +	},
+>  };
+>
+>  /* Dispatch metadata scrubbing. */
+> diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+> index 952151a..f14abfb 100644
+> --- a/fs/xfs/scrub/common.h
+> +++ b/fs/xfs/scrub/common.h
+> @@ -202,10 +202,14 @@ int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
+>
+>  /* Setup functions */
+>
+> +int xfs_scrub_setup_ag_btree(struct xfs_scrub_context *sc,
+> +			     struct xfs_inode *ip, bool force_log);
+> +
+>  #define SETUP_FN(name) int name(struct xfs_scrub_context *sc, struct xfs_inode *ip)
+>  SETUP_FN(xfs_scrub_setup_fs);
+>  SETUP_FN(xfs_scrub_setup_metabufs);
+>  SETUP_FN(xfs_scrub_setup_ag_header);
+> +SETUP_FN(xfs_scrub_setup_ag_allocbt);
+>  #undef SETUP_FN
+>
+>  /* Metadata scrubbers */
+> @@ -217,6 +221,8 @@ SCRUB_FN(xfs_scrub_superblock);
+>  SCRUB_FN(xfs_scrub_agf);
+>  SCRUB_FN(xfs_scrub_agfl);
+>  SCRUB_FN(xfs_scrub_agi);
+> +SCRUB_FN(xfs_scrub_bnobt);
+> +SCRUB_FN(xfs_scrub_cntbt);
+>  #undef SCRUB_FN
+>
+>  #endif	/* __XFS_REPAIR_COMMON_H__ */
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 24efbff..4a9a645 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3317,7 +3317,9 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
+>  	{ XFS_SCRUB_TYPE_SB,		"superblock" }, \
+>  	{ XFS_SCRUB_TYPE_AGF,		"AGF" }, \
+>  	{ XFS_SCRUB_TYPE_AGFL,		"AGFL" }, \
+> -	{ XFS_SCRUB_TYPE_AGI,		"AGI" }
+> +	{ XFS_SCRUB_TYPE_AGI,		"AGI" }, \
+> +	{ XFS_SCRUB_TYPE_BNOBT,		"bnobt" }, \
+> +	{ XFS_SCRUB_TYPE_CNTBT,		"cntbt" }
+>  DECLARE_EVENT_CLASS(xfs_scrub_class,
+>  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
+>  		 int error),
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
