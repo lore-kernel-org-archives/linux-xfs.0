@@ -1,795 +1,591 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:21158 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754844AbdGUWkJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Jul 2017 18:40:09 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v4 3/5] dax: use common 4k zero page for dax mmap reads
-Date: Fri, 21 Jul 2017 16:39:53 -0600
-Message-Id: <20170721223956.29485-4-ross.zwisler@linux.intel.com>
-In-Reply-To: <20170721223956.29485-1-ross.zwisler@linux.intel.com>
-References: <20170721223956.29485-1-ross.zwisler@linux.intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:49369 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751440AbdGWRiM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jul 2017 13:38:12 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6NHcA9w011727
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:38:11 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v6NHcAO6006005
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:38:10 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v6NHc9u0009354
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2017 17:38:10 GMT
+Subject: Re: [PATCH 13/22] xfs: scrub inodes
+References: <150061190859.14732.17040548800470377701.stgit@magnolia>
+ <150061199381.14732.17940648720983107680.stgit@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <a99f69f6-3030-20ed-231a-07745d630d3f@oracle.com>
+Date: Sun, 23 Jul 2017 10:38:08 -0700
+MIME-Version: 1.0
+In-Reply-To: <150061199381.14732.17940648720983107680.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, David Airlie <airlied@linux.ie>, Ingo Molnar <mingo@redhat.com>, Inki Dae <inki.dae@samsung.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Joonyoung Shim <jy0922.shim@samsung.com>, Krzysztof Kozlowski <krzk@kernel.org>, Kukjin Kim <kgene@kernel.org>, Kyungmin Park <kyungmin.park@samsung.com>, Matthew Wilcox <mawilcox@microsoft.com>, Patrik Jakobsson <patrik.r.jakobsson@gmail.com>, Rob Clark <robdclark@gmail.com>, Seung-Woo Kim <sw0312.kim@samsung.com>, Steven Rostedt <rostedt@goodmis.org>, Tomi Valkeinen <tomi.valkeinen@ti.com>, dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-samsung-soc@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-When servicing mmap() reads from file holes the current DAX code allocates
-a page cache page of all zeroes and places the struct page pointer in the
-mapping->page_tree radix tree.  This has three major drawbacks:
 
-1) It consumes memory unnecessarily.  For every 4k page that is read via a
-DAX mmap() over a hole, we allocate a new page cache page.  This means that
-if you read 1GiB worth of pages, you end up using 1GiB of zeroed memory.
-This is easily visible by looking at the overall memory consumption of the
-system or by looking at /proc/[pid]/smaps:
 
-	7f62e72b3000-7f63272b3000 rw-s 00000000 103:00 12   /root/dax/data
-	Size:            1048576 kB
-	Rss:             1048576 kB
-	Pss:             1048576 kB
-	Shared_Clean:          0 kB
-	Shared_Dirty:          0 kB
-	Private_Clean:   1048576 kB
-	Private_Dirty:         0 kB
-	Referenced:      1048576 kB
-	Anonymous:             0 kB
-	LazyFree:              0 kB
-	AnonHugePages:         0 kB
-	ShmemPmdMapped:        0 kB
-	Shared_Hugetlb:        0 kB
-	Private_Hugetlb:       0 kB
-	Swap:                  0 kB
-	SwapPss:               0 kB
-	KernelPageSize:        4 kB
-	MMUPageSize:           4 kB
-	Locked:                0 kB
+On 7/20/2017 9:39 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> Scrub the fields within an inode.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/Makefile        |    1
+>  fs/xfs/libxfs/xfs_fs.h |    3
+>  fs/xfs/scrub/common.c  |   64 +++++++++
+>  fs/xfs/scrub/common.h  |    4 +
+>  fs/xfs/scrub/inode.c   |  326 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_trace.h     |    3
+>  6 files changed, 397 insertions(+), 4 deletions(-)
+>  create mode 100644 fs/xfs/scrub/inode.c
+>
+>
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index 1b1972b..2ba33ad 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -145,6 +145,7 @@ xfs-y				+= $(addprefix scrub/, \
+>  				   btree.o \
+>  				   common.o \
+>  				   ialloc.o \
+> +				   inode.o \
+>  				   metabufs.o \
+>  				   refcount.o \
+>  				   rmap.o \
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 3253de9..277b528 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -493,7 +493,8 @@ struct xfs_scrub_metadata {
+>  #define XFS_SCRUB_TYPE_FINOBT	9	/* free inode btree */
+>  #define XFS_SCRUB_TYPE_RMAPBT	10	/* reverse mapping btree */
+>  #define XFS_SCRUB_TYPE_REFCNTBT	11	/* reference count btree */
+> -#define XFS_SCRUB_TYPE_MAX	11
+> +#define XFS_SCRUB_TYPE_INODE	12	/* inode record */
+> +#define XFS_SCRUB_TYPE_MAX	12
+>
+>  /* i: repair this metadata */
+>  #define XFS_SCRUB_FLAG_REPAIR		(1 << 0)
+> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> index 71a980e..066fd3e 100644
+> --- a/fs/xfs/scrub/common.c
+> +++ b/fs/xfs/scrub/common.c
+> @@ -31,6 +31,8 @@
+>  #include "xfs_trace.h"
+>  #include "xfs_sb.h"
+>  #include "xfs_inode.h"
+> +#include "xfs_icache.h"
+> +#include "xfs_itable.h"
+>  #include "xfs_alloc.h"
+>  #include "xfs_alloc_btree.h"
+>  #include "xfs_bmap.h"
+> @@ -584,12 +586,60 @@ xfs_scrub_setup_fs(
+>  			&M_RES(sc->mp)->tr_itruncate, 0, 0, 0, &sc->tp);
+>  }
+>
+> +/*
+> + * Given an inode and the scrub control structure, grab either the
+> + * inode referenced in the control structure or the inode passed in.
+> + * The inode is not locked.
+> + */
+> +int
+> +xfs_scrub_get_inode(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_inode		*ip_in)
+> +{
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_inode		*ips = NULL;
+> +	int				error;
+> +
+> +	if (sc->sm->sm_agno || (sc->sm->sm_gen && !sc->sm->sm_ino))
+> +		return -EINVAL;
+> +
+> +	/* We want to scan the inode we already had opened. */
+> +	if (sc->sm->sm_ino == 0 || sc->sm->sm_ino == ip_in->i_ino) {
+> +		sc->ip = ip_in;
+> +		return 0;
+> +	}
+> +
+> +	/* Look up the inode, see if the generation number matches. */
+> +	if (xfs_internal_inum(mp, sc->sm->sm_ino))
+> +		return -ENOENT;
+> +	error = xfs_iget(mp, NULL, sc->sm->sm_ino, XFS_IGET_UNTRUSTED,
+> +			0, &ips);
+> +	if (error == -ENOENT || error == -EINVAL) {
+> +		/* inode doesn't exist... */
+> +		return -ENOENT;
+> +	} else if (error) {
+> +		trace_xfs_scrub_op_error(mp,
+> +				XFS_INO_TO_AGNO(mp, sc->sm->sm_ino),
+> +				XFS_INO_TO_AGBNO(mp, sc->sm->sm_ino),
+> +				"inode", error, __func__, __LINE__);
+> +		return error;
+> +	}
+> +	if (VFS_I(ips)->i_generation != sc->sm->sm_gen) {
+> +		IRELE(ips);
+> +		return -ENOENT;
+> +	}
+> +
+> +	sc->ip = ips;
+> +	return 0;
+> +}
+> +
+>  /* Scrub setup and teardown */
+>
+>  /* Free all the resources and finish the transactions. */
+>  STATIC int
+>  xfs_scrub_teardown(
+>  	struct xfs_scrub_context	*sc,
+> +	struct xfs_inode		*ip_in,
+>  	int				error)
+>  {
+>  	xfs_scrub_ag_free(sc, &sc->sa);
+> @@ -597,6 +647,12 @@ xfs_scrub_teardown(
+>  		xfs_trans_cancel(sc->tp);
+>  		sc->tp = NULL;
+>  	}
+> +	if (sc->ip) {
+> +		xfs_iunlock(sc->ip, sc->ilock_flags);
+> +		if (sc->ip != ip_in)
+> +			IRELE(sc->ip);
+> +		sc->ip = NULL;
+> +	}
+>  	return error;
+>  }
+>
+> @@ -735,6 +791,10 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
+>  		.scrub	= xfs_scrub_refcountbt,
+>  		.has	= xfs_sb_version_hasreflink,
+>  	},
+> +	{ /* inode record */
+> +		.setup	= xfs_scrub_setup_inode,
+> +		.scrub	= xfs_scrub_inode,
+> +	},
+>  };
+>
+>  /* Dispatch metadata scrubbing. */
+> @@ -808,7 +868,7 @@ xfs_scrub_metadata(
+>  		 * Tear down everything we hold, then set up again with
+>  		 * preparation for worst-case scenarios.
+>  		 */
+> -		error = xfs_scrub_teardown(&sc, 0);
+> +		error = xfs_scrub_teardown(&sc, ip, 0);
+>  		if (error)
+>  			goto out;
+>  		try_harder = true;
+> @@ -820,7 +880,7 @@ xfs_scrub_metadata(
+>  		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
+>
+>  out_teardown:
+> -	error = xfs_scrub_teardown(&sc, error);
+> +	error = xfs_scrub_teardown(&sc, ip, error);
+>  out:
+>  	trace_xfs_scrub_done(ip, sm, error);
+>  	return error;
+> diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+> index 1f9ba8c6..5caa6c9 100644
+> --- a/fs/xfs/scrub/common.h
+> +++ b/fs/xfs/scrub/common.h
+> @@ -52,6 +52,7 @@ struct xfs_scrub_context {
+>  	const struct xfs_scrub_meta_fns	*fns;
+>  	struct xfs_trans		*tp;
+>  	struct xfs_inode		*ip;
+> +	uint				ilock_flags;
+>  	bool				try_harder;
+>
+>  	/* State tracking for single-AG operations. */
+> @@ -204,6 +205,7 @@ int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
+>
+>  int xfs_scrub_setup_ag_btree(struct xfs_scrub_context *sc,
+>  			     struct xfs_inode *ip, bool force_log);
+> +int xfs_scrub_get_inode(struct xfs_scrub_context *sc, struct xfs_inode *ip_in);
+>
+>  #define SETUP_FN(name) int name(struct xfs_scrub_context *sc, struct xfs_inode *ip)
+>  SETUP_FN(xfs_scrub_setup_fs);
+> @@ -213,6 +215,7 @@ SETUP_FN(xfs_scrub_setup_ag_allocbt);
+>  SETUP_FN(xfs_scrub_setup_ag_iallocbt);
+>  SETUP_FN(xfs_scrub_setup_ag_rmapbt);
+>  SETUP_FN(xfs_scrub_setup_ag_refcountbt);
+> +SETUP_FN(xfs_scrub_setup_inode);
+>  #undef SETUP_FN
+>
+>  /* Metadata scrubbers */
+> @@ -230,6 +233,7 @@ SCRUB_FN(xfs_scrub_inobt);
+>  SCRUB_FN(xfs_scrub_finobt);
+>  SCRUB_FN(xfs_scrub_rmapbt);
+>  SCRUB_FN(xfs_scrub_refcountbt);
+> +SCRUB_FN(xfs_scrub_inode);
+>  #undef SCRUB_FN
+>
+>  #endif	/* __XFS_REPAIR_COMMON_H__ */
+> diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+> new file mode 100644
+> index 0000000..6e1e037
+> --- /dev/null
+> +++ b/fs/xfs/scrub/inode.c
+> @@ -0,0 +1,326 @@
+> +/*
+> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> + */
+> +#include "xfs.h"
+> +#include "xfs_fs.h"
+> +#include "xfs_shared.h"
+> +#include "xfs_format.h"
+> +#include "xfs_trans_resv.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_defer.h"
+> +#include "xfs_btree.h"
+> +#include "xfs_bit.h"
+> +#include "xfs_log_format.h"
+> +#include "xfs_trans.h"
+> +#include "xfs_trace.h"
+> +#include "xfs_sb.h"
+> +#include "xfs_inode.h"
+> +#include "xfs_icache.h"
+> +#include "xfs_inode_buf.h"
+> +#include "xfs_inode_fork.h"
+> +#include "xfs_ialloc.h"
+> +#include "xfs_log.h"
+> +#include "xfs_trans_priv.h"
+> +#include "xfs_reflink.h"
+> +#include "scrub/common.h"
+> +
+> +/* Set us up with an inode. */
+> +int
+> +xfs_scrub_setup_inode(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_inode		*ip)
+> +{
+> +	struct xfs_mount		*mp = sc->mp;
+> +	int				error;
+> +
+> +	/*
+> +	 * Try to get the inode.  If the verifiers fail, we try again
+> +	 * in raw mode.
+> +	 */
+> +	error = xfs_scrub_get_inode(sc, ip);
+> +	switch (error) {
+> +	case 0:
+> +		break;
+> +	case -EFSCORRUPTED:
+> +	case -EFSBADCRC:
+> +		/* Push everything out of the log onto disk prior to check. */
+> +		error = _xfs_log_force(mp, XFS_LOG_SYNC, NULL);
+> +		if (error)
+> +			return error;
+> +		xfs_ail_push_all_sync(mp->m_ail);
+> +		return 0;
+> +	default:
+> +		return error;
+> +	}
+> +
+> +	/* Got the inode, lock it and we're ready to go. */
+> +	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+> +	xfs_ilock(sc->ip, sc->ilock_flags);
+Is this lock....
 
-2) It is slower than using a common zero page because each page fault has
-more work to do.  Instead of just inserting a common zero page we have to
-allocate a page cache page, zero it, and then insert it.  Here are the
-average latencies of dax_load_hole() as measured by ftrace on a random test
-box:
+> +	error = xfs_scrub_trans_alloc(sc->sm, mp, &M_RES(mp)->tr_itruncate,
+> +			0, 0, 0, &sc->tp);
+> +	if (error)
+> +		goto out_unlock;
+> +	sc->ilock_flags |= XFS_ILOCK_EXCL;
+> +	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
+.... and then this lock, supposed to be locking twice like this?  Did 
+you maybe mean for the second one to be an unlock?  Also did you mean to 
+call it with sc->ilock_flags as the flags like the first call does?
 
-Old method, using zeroed page cache pages:	3.4 us
-New method, using the common 4k zero page:	0.8 us
+Other than that it looks good.  Looks like you caught a few extra bugs 
+since the last revision.
+Reviewed by: Allison Henderson <allison.henderson@oracle.com>
 
-This was the average latency over 1 GiB of sequential reads done by this
-simple fio script:
-
-  [global]
-  size=1G
-  filename=/root/dax/data
-  fallocate=none
-  [io]
-  rw=read
-  ioengine=mmap
-
-3) The fact that we had to check for both DAX exceptional entries and for
-page cache pages in the radix tree made the DAX code more complex.
-
-Solve these issues by following the lead of the DAX PMD code and using a
-common 4k zero page instead.  As with the PMD code we will now insert a DAX
-exceptional entry into the radix tree instead of a struct page pointer
-which allows us to remove all the special casing in the DAX code.
-
-Note that we do still pretty aggressively check for regular pages in the
-DAX radix tree, especially where we take action based on the bits set in
-the page.  If we ever find a regular page in our radix tree now that most
-likely means that someone besides DAX is inserting pages (which has
-happened lots of times in the past), and we want to find that out early and
-fail loudly.
-
-This solution also removes the extra memory consumption.  Here is that same
-/proc/[pid]/smaps after 1GiB of reading from a hole with the new code:
-
-	7f2054a74000-7f2094a74000 rw-s 00000000 103:00 12   /root/dax/data
-	Size:            1048576 kB
-	Rss:                   0 kB
-	Pss:                   0 kB
-	Shared_Clean:          0 kB
-	Shared_Dirty:          0 kB
-	Private_Clean:         0 kB
-	Private_Dirty:         0 kB
-	Referenced:            0 kB
-	Anonymous:             0 kB
-	LazyFree:              0 kB
-	AnonHugePages:         0 kB
-	ShmemPmdMapped:        0 kB
-	Shared_Hugetlb:        0 kB
-	Private_Hugetlb:       0 kB
-	Swap:                  0 kB
-	SwapPss:               0 kB
-	KernelPageSize:        4 kB
-	MMUPageSize:           4 kB
-	Locked:                0 kB
-
-Overall system memory consumption is similarly improved.
-
-Another major change is that we remove dax_pfn_mkwrite() from our fault
-flow, and instead rely on the page fault itself to make the PTE dirty and
-writeable.  The following description from the patch adding the
-vm_insert_mixed_mkwrite() call explains this a little more:
-
-***
-  To be able to use the common 4k zero page in DAX we need to have our PTE
-  fault path look more like our PMD fault path where a PTE entry can be
-  marked as dirty and writeable as it is first inserted, rather than
-  waiting for a follow-up dax_pfn_mkwrite() => finish_mkwrite_fault() call.
-
-  Right now we can rely on having a dax_pfn_mkwrite() call because we can
-  distinguish between these two cases in do_wp_page():
-
-          case 1: 4k zero page => writable DAX storage
-          case 2: read-only DAX storage => writeable DAX storage
-
-  This distinction is made by via vm_normal_page().  vm_normal_page()
-  returns false for the common 4k zero page, though, just as it does for
-  DAX ptes.  Instead of special casing the DAX + 4k zero page case, we will
-  simplify our DAX PTE page fault sequence so that it matches our DAX PMD
-  sequence, and get rid of the dax_pfn_mkwrite() helper.  We will instead
-  use dax_iomap_fault() to handle write-protection faults.
-
-  This means that insert_pfn() needs to follow the lead of insert_pfn_pmd()
-  and allow us to pass in a 'mkwrite' flag.  If 'mkwrite' is set
-  insert_pfn() will do the work that was previously done by wp_page_reuse()
-  as part of the dax_pfn_mkwrite() call path.
-***
-
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- Documentation/filesystems/dax.txt |   5 +-
- fs/dax.c                          | 240 ++++++++++++--------------------------
- fs/ext2/file.c                    |  25 +---
- fs/ext4/file.c                    |  32 +----
- fs/xfs/xfs_file.c                 |   2 +-
- include/linux/dax.h               |  12 +-
- include/trace/events/fs_dax.h     |   2 -
- 7 files changed, 83 insertions(+), 235 deletions(-)
-
-diff --git a/Documentation/filesystems/dax.txt b/Documentation/filesystems/dax.txt
-index a7e6e14..3be3b26 100644
---- a/Documentation/filesystems/dax.txt
-+++ b/Documentation/filesystems/dax.txt
-@@ -63,9 +63,8 @@ Filesystem support consists of
- - implementing an mmap file operation for DAX files which sets the
-   VM_MIXEDMAP and VM_HUGEPAGE flags on the VMA, and setting the vm_ops to
-   include handlers for fault, pmd_fault, page_mkwrite, pfn_mkwrite. These
--  handlers should probably call dax_iomap_fault() (for fault and page_mkwrite
--  handlers), dax_iomap_pmd_fault(), dax_pfn_mkwrite() passing the appropriate
--  iomap operations.
-+  handlers should probably call dax_iomap_fault() passing the appropriate
-+  fault size and iomap operations.
- - calling iomap_zero_range() passing appropriate iomap operations instead of
-   block_truncate_page() for DAX files
- - ensuring that there is sufficient locking between reads, writes,
-diff --git a/fs/dax.c b/fs/dax.c
-index 779dc5e..fb0e4c1 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -66,7 +66,7 @@ static int dax_is_pte_entry(void *entry)
- 
- static int dax_is_zero_entry(void *entry)
- {
--	return (unsigned long)entry & RADIX_DAX_HZP;
-+	return (unsigned long)entry & RADIX_DAX_ZERO_PAGE;
- }
- 
- static int dax_is_empty_entry(void *entry)
-@@ -206,7 +206,8 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
- 	for (;;) {
- 		entry = __radix_tree_lookup(&mapping->page_tree, index, NULL,
- 					  &slot);
--		if (!entry || !radix_tree_exceptional_entry(entry) ||
-+		if (!entry ||
-+		    WARN_ON_ONCE(!radix_tree_exceptional_entry(entry)) ||
- 		    !slot_locked(mapping, slot)) {
- 			if (slotp)
- 				*slotp = slot;
-@@ -241,14 +242,9 @@ static void dax_unlock_mapping_entry(struct address_space *mapping,
- }
- 
- static void put_locked_mapping_entry(struct address_space *mapping,
--				     pgoff_t index, void *entry)
-+		pgoff_t index)
- {
--	if (!radix_tree_exceptional_entry(entry)) {
--		unlock_page(entry);
--		put_page(entry);
--	} else {
--		dax_unlock_mapping_entry(mapping, index);
--	}
-+	dax_unlock_mapping_entry(mapping, index);
- }
- 
- /*
-@@ -258,7 +254,7 @@ static void put_locked_mapping_entry(struct address_space *mapping,
- static void put_unlocked_mapping_entry(struct address_space *mapping,
- 				       pgoff_t index, void *entry)
- {
--	if (!radix_tree_exceptional_entry(entry))
-+	if (!entry)
- 		return;
- 
- 	/* We have to wake up next waiter for the radix tree entry lock */
-@@ -266,15 +262,15 @@ static void put_unlocked_mapping_entry(struct address_space *mapping,
- }
- 
- /*
-- * Find radix tree entry at given index. If it points to a page, return with
-- * the page locked. If it points to the exceptional entry, return with the
-- * radix tree entry locked. If the radix tree doesn't contain given index,
-- * create empty exceptional entry for the index and return with it locked.
-+ * Find radix tree entry at given index. If it points to an exceptional entry,
-+ * return it with the radix tree entry locked. If the radix tree doesn't
-+ * contain given index, create an empty exceptional entry for the index and
-+ * return with it locked.
-  *
-  * When requesting an entry with size RADIX_DAX_PMD, grab_mapping_entry() will
-  * either return that locked entry or will return an error.  This error will
-- * happen if there are any 4k entries (either zero pages or DAX entries)
-- * within the 2MiB range that we are requesting.
-+ * happen if there are any 4k entries within the 2MiB range that we are
-+ * requesting.
-  *
-  * We always favor 4k entries over 2MiB entries. There isn't a flow where we
-  * evict 4k entries in order to 'upgrade' them to a 2MiB entry.  A 2MiB
-@@ -301,18 +297,21 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 	spin_lock_irq(&mapping->tree_lock);
- 	entry = get_unlocked_mapping_entry(mapping, index, &slot);
- 
-+	if (WARN_ON_ONCE(entry && !radix_tree_exceptional_entry(entry))) {
-+		entry = ERR_PTR(-EIO);
-+		goto out_unlock;
-+	}
-+
- 	if (entry) {
- 		if (size_flag & RADIX_DAX_PMD) {
--			if (!radix_tree_exceptional_entry(entry) ||
--			    dax_is_pte_entry(entry)) {
-+			if (dax_is_pte_entry(entry)) {
- 				put_unlocked_mapping_entry(mapping, index,
- 						entry);
- 				entry = ERR_PTR(-EEXIST);
- 				goto out_unlock;
- 			}
- 		} else { /* trying to grab a PTE entry */
--			if (radix_tree_exceptional_entry(entry) &&
--			    dax_is_pmd_entry(entry) &&
-+			if (dax_is_pmd_entry(entry) &&
- 			    (dax_is_zero_entry(entry) ||
- 			     dax_is_empty_entry(entry))) {
- 				pmd_downgrade = true;
-@@ -346,7 +345,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 				mapping_gfp_mask(mapping) & ~__GFP_HIGHMEM);
- 		if (err) {
- 			if (pmd_downgrade)
--				put_locked_mapping_entry(mapping, index, entry);
-+				put_locked_mapping_entry(mapping, index);
- 			return ERR_PTR(err);
- 		}
- 		spin_lock_irq(&mapping->tree_lock);
-@@ -396,21 +395,6 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 		spin_unlock_irq(&mapping->tree_lock);
- 		return entry;
- 	}
--	/* Normal page in radix tree? */
--	if (!radix_tree_exceptional_entry(entry)) {
--		struct page *page = entry;
--
--		get_page(page);
--		spin_unlock_irq(&mapping->tree_lock);
--		lock_page(page);
--		/* Page got truncated? Retry... */
--		if (unlikely(page->mapping != mapping)) {
--			unlock_page(page);
--			put_page(page);
--			goto restart;
--		}
--		return page;
--	}
- 	entry = lock_slot(mapping, slot);
-  out_unlock:
- 	spin_unlock_irq(&mapping->tree_lock);
-@@ -426,7 +410,7 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 
- 	spin_lock_irq(&mapping->tree_lock);
- 	entry = get_unlocked_mapping_entry(mapping, index, NULL);
--	if (!entry || !radix_tree_exceptional_entry(entry))
-+	if (!entry || WARN_ON_ONCE(!radix_tree_exceptional_entry(entry)))
- 		goto out;
- 	if (!trunc &&
- 	    (radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_DIRTY) ||
-@@ -508,47 +492,27 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
- 				      unsigned long flags)
- {
- 	struct radix_tree_root *page_tree = &mapping->page_tree;
--	int error = 0;
--	bool hole_fill = false;
- 	void *new_entry;
- 	pgoff_t index = vmf->pgoff;
- 
- 	if (vmf->flags & FAULT_FLAG_WRITE)
- 		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
- 
--	/* Replacing hole page with block mapping? */
--	if (!radix_tree_exceptional_entry(entry)) {
--		hole_fill = true;
--		/*
--		 * Unmap the page now before we remove it from page cache below.
--		 * The page is locked so it cannot be faulted in again.
--		 */
--		unmap_mapping_range(mapping, vmf->pgoff << PAGE_SHIFT,
--				    PAGE_SIZE, 0);
--		error = radix_tree_preload(vmf->gfp_mask & ~__GFP_HIGHMEM);
--		if (error)
--			return ERR_PTR(error);
--	} else if (dax_is_zero_entry(entry) && !(flags & RADIX_DAX_HZP)) {
--		/* replacing huge zero page with PMD block mapping */
--		unmap_mapping_range(mapping,
--			(vmf->pgoff << PAGE_SHIFT) & PMD_MASK, PMD_SIZE, 0);
-+	if (dax_is_zero_entry(entry) && !(flags & RADIX_DAX_ZERO_PAGE)) {
-+		/* we are replacing a zero page with block mapping */
-+		if (dax_is_pmd_entry(entry))
-+			unmap_mapping_range(mapping,
-+					(vmf->pgoff << PAGE_SHIFT) & PMD_MASK,
-+					PMD_SIZE, 0);
-+		else /* pte entry */
-+			unmap_mapping_range(mapping, vmf->pgoff << PAGE_SHIFT,
-+					PAGE_SIZE, 0);
- 	}
- 
- 	spin_lock_irq(&mapping->tree_lock);
- 	new_entry = dax_radix_locked_entry(sector, flags);
- 
--	if (hole_fill) {
--		__delete_from_page_cache(entry, NULL);
--		/* Drop pagecache reference */
--		put_page(entry);
--		error = __radix_tree_insert(page_tree, index,
--				dax_radix_order(new_entry), new_entry);
--		if (error) {
--			new_entry = ERR_PTR(error);
--			goto unlock;
--		}
--		mapping->nrexceptional++;
--	} else if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
-+	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
- 		/*
- 		 * Only swap our new entry into the radix tree if the current
- 		 * entry is a zero page or an empty entry.  If a normal PTE or
-@@ -565,23 +529,14 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
- 		WARN_ON_ONCE(ret != entry);
- 		__radix_tree_replace(page_tree, node, slot,
- 				     new_entry, NULL, NULL);
-+		entry = new_entry;
- 	}
-+
- 	if (vmf->flags & FAULT_FLAG_WRITE)
- 		radix_tree_tag_set(page_tree, index, PAGECACHE_TAG_DIRTY);
-- unlock:
-+
- 	spin_unlock_irq(&mapping->tree_lock);
--	if (hole_fill) {
--		radix_tree_preload_end();
--		/*
--		 * We don't need hole page anymore, it has been replaced with
--		 * locked radix tree entry now.
--		 */
--		if (mapping->a_ops->freepage)
--			mapping->a_ops->freepage(entry);
--		unlock_page(entry);
--		put_page(entry);
--	}
--	return new_entry;
-+	return entry;
- }
- 
- static inline unsigned long
-@@ -680,7 +635,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 	spin_lock_irq(&mapping->tree_lock);
- 	entry2 = get_unlocked_mapping_entry(mapping, index, &slot);
- 	/* Entry got punched out / reallocated? */
--	if (!entry2 || !radix_tree_exceptional_entry(entry2))
-+	if (!entry2 || WARN_ON_ONCE(!radix_tree_exceptional_entry(entry2)))
- 		goto put_unlocked;
- 	/*
- 	 * Entry got reallocated elsewhere? No need to writeback. We have to
-@@ -752,7 +707,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 	trace_dax_writeback_one(mapping->host, index, size >> PAGE_SHIFT);
-  dax_unlock:
- 	dax_read_unlock(id);
--	put_locked_mapping_entry(mapping, index, entry);
-+	put_locked_mapping_entry(mapping, index);
- 	return ret;
- 
-  put_unlocked:
-@@ -827,11 +782,10 @@ EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
- 
- static int dax_insert_mapping(struct address_space *mapping,
- 		struct block_device *bdev, struct dax_device *dax_dev,
--		sector_t sector, size_t size, void **entryp,
-+		sector_t sector, size_t size, void *entry,
- 		struct vm_area_struct *vma, struct vm_fault *vmf)
- {
- 	unsigned long vaddr = vmf->address;
--	void *entry = *entryp;
- 	void *ret, *kaddr;
- 	pgoff_t pgoff;
- 	int id, rc;
-@@ -852,87 +806,41 @@ static int dax_insert_mapping(struct address_space *mapping,
- 	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector, 0);
- 	if (IS_ERR(ret))
- 		return PTR_ERR(ret);
--	*entryp = ret;
- 
- 	trace_dax_insert_mapping(mapping->host, vmf, ret);
--	return vm_insert_mixed(vma, vaddr, pfn, false);
-+	return vm_insert_mixed(vma, vaddr, pfn, vmf->flags & FAULT_FLAG_WRITE);
- }
- 
--/**
-- * dax_pfn_mkwrite - handle first write to DAX page
-- * @vmf: The description of the fault
-- */
--int dax_pfn_mkwrite(struct vm_fault *vmf)
--{
--	struct file *file = vmf->vma->vm_file;
--	struct address_space *mapping = file->f_mapping;
--	struct inode *inode = mapping->host;
--	void *entry, **slot;
--	pgoff_t index = vmf->pgoff;
--
--	spin_lock_irq(&mapping->tree_lock);
--	entry = get_unlocked_mapping_entry(mapping, index, &slot);
--	if (!entry || !radix_tree_exceptional_entry(entry)) {
--		if (entry)
--			put_unlocked_mapping_entry(mapping, index, entry);
--		spin_unlock_irq(&mapping->tree_lock);
--		trace_dax_pfn_mkwrite_no_entry(inode, vmf, VM_FAULT_NOPAGE);
--		return VM_FAULT_NOPAGE;
--	}
--	radix_tree_tag_set(&mapping->page_tree, index, PAGECACHE_TAG_DIRTY);
--	entry = lock_slot(mapping, slot);
--	spin_unlock_irq(&mapping->tree_lock);
--	/*
--	 * If we race with somebody updating the PTE and finish_mkwrite_fault()
--	 * fails, we don't care. We need to return VM_FAULT_NOPAGE and retry
--	 * the fault in either case.
--	 */
--	finish_mkwrite_fault(vmf);
--	put_locked_mapping_entry(mapping, index, entry);
--	trace_dax_pfn_mkwrite(inode, vmf, VM_FAULT_NOPAGE);
--	return VM_FAULT_NOPAGE;
--}
--EXPORT_SYMBOL_GPL(dax_pfn_mkwrite);
--
- /*
-- * The user has performed a load from a hole in the file.  Allocating
-- * a new page in the file would cause excessive storage usage for
-- * workloads with sparse files.  We allocate a page cache page instead.
-- * We'll kick it out of the page cache if it's ever written to,
-- * otherwise it will simply fall out of the page cache under memory
-- * pressure without ever having been dirtied.
-+ * The user has performed a load from a hole in the file.  Allocating a new
-+ * page in the file would cause excessive storage usage for workloads with
-+ * sparse files.  Instead we insert a read-only mapping of the 4k zero page.
-+ * If this page is ever written to we will re-fault and change the mapping to
-+ * point to real DAX storage instead.
-  */
--static int dax_load_hole(struct address_space *mapping, void **entry,
-+static int dax_load_hole(struct address_space *mapping, void *entry,
- 			 struct vm_fault *vmf)
- {
- 	struct inode *inode = mapping->host;
--	struct page *page;
--	int ret;
--
--	/* Hole page already exists? Return it...  */
--	if (!radix_tree_exceptional_entry(*entry)) {
--		page = *entry;
--		goto finish_fault;
--	}
-+	unsigned long vaddr = vmf->address;
-+	int ret = VM_FAULT_NOPAGE;
-+	struct page *zero_page;
-+	void *entry2;
- 
--	/* This will replace locked radix tree entry with a hole page */
--	page = find_or_create_page(mapping, vmf->pgoff,
--				   vmf->gfp_mask | __GFP_ZERO);
--	if (!page) {
-+	zero_page = ZERO_PAGE(0);
-+	if (unlikely(!zero_page)) {
- 		ret = VM_FAULT_OOM;
- 		goto out;
- 	}
- 
--finish_fault:
--	vmf->page = page;
--	ret = finish_fault(vmf);
--	vmf->page = NULL;
--	*entry = page;
--	if (!ret) {
--		/* Grab reference for PTE that is now referencing the page */
--		get_page(page);
--		ret = VM_FAULT_NOPAGE;
-+	entry2 = dax_insert_mapping_entry(mapping, vmf, entry, 0,
-+			RADIX_DAX_ZERO_PAGE);
-+	if (IS_ERR(entry2)) {
-+		ret = VM_FAULT_SIGBUS;
-+		goto out;
- 	}
-+
-+	vm_insert_mixed(vmf->vma, vaddr, page_to_pfn_t(zero_page), false);
- out:
- 	trace_dax_load_hole(inode, vmf, ret);
- 	return ret;
-@@ -1220,7 +1128,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 			major = VM_FAULT_MAJOR;
- 		}
- 		error = dax_insert_mapping(mapping, iomap.bdev, iomap.dax_dev,
--				sector, PAGE_SIZE, &entry, vmf->vma, vmf);
-+				sector, PAGE_SIZE, entry, vmf->vma, vmf);
- 		/* -EBUSY is fine, somebody else faulted on the same PTE */
- 		if (error == -EBUSY)
- 			error = 0;
-@@ -1228,7 +1136,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 	case IOMAP_UNWRITTEN:
- 	case IOMAP_HOLE:
- 		if (!(vmf->flags & FAULT_FLAG_WRITE)) {
--			vmf_ret = dax_load_hole(mapping, &entry, vmf);
-+			vmf_ret = dax_load_hole(mapping, entry, vmf);
- 			goto finish_iomap;
- 		}
- 		/*FALLTHRU*/
-@@ -1255,7 +1163,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 		ops->iomap_end(inode, pos, PAGE_SIZE, copied, flags, &iomap);
- 	}
-  unlock_entry:
--	put_locked_mapping_entry(mapping, vmf->pgoff, entry);
-+	put_locked_mapping_entry(mapping, vmf->pgoff);
-  out:
- 	trace_dax_pte_fault_done(inode, vmf, vmf_ret);
- 	return vmf_ret;
-@@ -1269,7 +1177,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- #define PG_PMD_COLOUR	((PMD_SIZE >> PAGE_SHIFT) - 1)
- 
- static int dax_pmd_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
--		loff_t pos, void **entryp)
-+		loff_t pos, void *entry)
- {
- 	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
- 	const sector_t sector = dax_iomap_sector(iomap, pos);
-@@ -1300,11 +1208,10 @@ static int dax_pmd_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
- 		goto unlock_fallback;
- 	dax_read_unlock(id);
- 
--	ret = dax_insert_mapping_entry(mapping, vmf, *entryp, sector,
-+	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector,
- 			RADIX_DAX_PMD);
- 	if (IS_ERR(ret))
- 		goto fallback;
--	*entryp = ret;
- 
- 	trace_dax_pmd_insert_mapping(inode, vmf, length, pfn, ret);
- 	return vmf_insert_pfn_pmd(vmf->vma, vmf->address, vmf->pmd,
-@@ -1318,7 +1225,7 @@ static int dax_pmd_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
- }
- 
- static int dax_pmd_load_hole(struct vm_fault *vmf, struct iomap *iomap,
--		void **entryp)
-+		void *entry)
- {
- 	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
- 	unsigned long pmd_addr = vmf->address & PMD_MASK;
-@@ -1333,11 +1240,10 @@ static int dax_pmd_load_hole(struct vm_fault *vmf, struct iomap *iomap,
- 	if (unlikely(!zero_page))
- 		goto fallback;
- 
--	ret = dax_insert_mapping_entry(mapping, vmf, *entryp, 0,
--			RADIX_DAX_PMD | RADIX_DAX_HZP);
-+	ret = dax_insert_mapping_entry(mapping, vmf, entry, 0,
-+			RADIX_DAX_PMD | RADIX_DAX_ZERO_PAGE);
- 	if (IS_ERR(ret))
- 		goto fallback;
--	*entryp = ret;
- 
- 	ptl = pmd_lock(vmf->vma->vm_mm, vmf->pmd);
- 	if (!pmd_none(*(vmf->pmd))) {
-@@ -1403,10 +1309,10 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
- 		goto fallback;
- 
- 	/*
--	 * grab_mapping_entry() will make sure we get a 2M empty entry, a DAX
--	 * PMD or a HZP entry.  If it can't (because a 4k page is already in
--	 * the tree, for instance), it will return -EEXIST and we just fall
--	 * back to 4k entries.
-+	 * grab_mapping_entry() will make sure we get a 2MiB empty entry, a
-+	 * 2MiB zero page entry or a DAX PMD.  If it can't (because a 4k page
-+	 * is already in the tree, for instance), it will return -EEXIST and
-+	 * we just fall back to 4k entries.
- 	 */
- 	entry = grab_mapping_entry(mapping, pgoff, RADIX_DAX_PMD);
- 	if (IS_ERR(entry))
-@@ -1439,13 +1345,13 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
- 
- 	switch (iomap.type) {
- 	case IOMAP_MAPPED:
--		result = dax_pmd_insert_mapping(vmf, &iomap, pos, &entry);
-+		result = dax_pmd_insert_mapping(vmf, &iomap, pos, entry);
- 		break;
- 	case IOMAP_UNWRITTEN:
- 	case IOMAP_HOLE:
- 		if (WARN_ON_ONCE(write))
- 			break;
--		result = dax_pmd_load_hole(vmf, &iomap, &entry);
-+		result = dax_pmd_load_hole(vmf, &iomap, entry);
- 		break;
- 	default:
- 		WARN_ON_ONCE(1);
-@@ -1468,7 +1374,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
- 				&iomap);
- 	}
-  unlock_entry:
--	put_locked_mapping_entry(mapping, pgoff, entry);
-+	put_locked_mapping_entry(mapping, pgoff);
-  fallback:
- 	if (result == VM_FAULT_FALLBACK) {
- 		split_huge_pmd(vma, vmf->pmd, vmf->address);
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index d34d32b..ff3a363 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -107,29 +107,6 @@ static int ext2_dax_fault(struct vm_fault *vmf)
- 	return ret;
- }
- 
--static int ext2_dax_pfn_mkwrite(struct vm_fault *vmf)
--{
--	struct inode *inode = file_inode(vmf->vma->vm_file);
--	struct ext2_inode_info *ei = EXT2_I(inode);
--	loff_t size;
--	int ret;
--
--	sb_start_pagefault(inode->i_sb);
--	file_update_time(vmf->vma->vm_file);
--	down_read(&ei->dax_sem);
--
--	/* check that the faulting page hasn't raced with truncate */
--	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
--	if (vmf->pgoff >= size)
--		ret = VM_FAULT_SIGBUS;
--	else
--		ret = dax_pfn_mkwrite(vmf);
--
--	up_read(&ei->dax_sem);
--	sb_end_pagefault(inode->i_sb);
--	return ret;
--}
--
- static const struct vm_operations_struct ext2_dax_vm_ops = {
- 	.fault		= ext2_dax_fault,
- 	/*
-@@ -138,7 +115,7 @@ static const struct vm_operations_struct ext2_dax_vm_ops = {
- 	 * will always fail and fail back to regular faults.
- 	 */
- 	.page_mkwrite	= ext2_dax_fault,
--	.pfn_mkwrite	= ext2_dax_pfn_mkwrite,
-+	.pfn_mkwrite	= ext2_dax_fault,
- };
- 
- static int ext2_file_mmap(struct file *file, struct vm_area_struct *vma)
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 58294c9..9dda70e 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -311,41 +311,11 @@ static int ext4_dax_fault(struct vm_fault *vmf)
- 	return ext4_dax_huge_fault(vmf, PE_SIZE_PTE);
- }
- 
--/*
-- * Handle write fault for VM_MIXEDMAP mappings. Similarly to ext4_dax_fault()
-- * handler we check for races agaist truncate. Note that since we cycle through
-- * i_mmap_sem, we are sure that also any hole punching that began before we
-- * were called is finished by now and so if it included part of the file we
-- * are working on, our pte will get unmapped and the check for pte_same() in
-- * wp_pfn_shared() fails. Thus fault gets retried and things work out as
-- * desired.
-- */
--static int ext4_dax_pfn_mkwrite(struct vm_fault *vmf)
--{
--	struct inode *inode = file_inode(vmf->vma->vm_file);
--	struct super_block *sb = inode->i_sb;
--	loff_t size;
--	int ret;
--
--	sb_start_pagefault(sb);
--	file_update_time(vmf->vma->vm_file);
--	down_read(&EXT4_I(inode)->i_mmap_sem);
--	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
--	if (vmf->pgoff >= size)
--		ret = VM_FAULT_SIGBUS;
--	else
--		ret = dax_pfn_mkwrite(vmf);
--	up_read(&EXT4_I(inode)->i_mmap_sem);
--	sb_end_pagefault(sb);
--
--	return ret;
--}
--
- static const struct vm_operations_struct ext4_dax_vm_ops = {
- 	.fault		= ext4_dax_fault,
- 	.huge_fault	= ext4_dax_huge_fault,
- 	.page_mkwrite	= ext4_dax_fault,
--	.pfn_mkwrite	= ext4_dax_pfn_mkwrite,
-+	.pfn_mkwrite	= ext4_dax_fault,
- };
- #else
- #define ext4_dax_vm_ops	ext4_file_vm_ops
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index c4893e2..62db8ff 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1130,7 +1130,7 @@ xfs_filemap_pfn_mkwrite(
- 	if (vmf->pgoff >= size)
- 		ret = VM_FAULT_SIGBUS;
- 	else if (IS_DAX(inode))
--		ret = dax_pfn_mkwrite(vmf);
-+		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
- 	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
- 	sb_end_pagefault(inode->i_sb);
- 	return ret;
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 7948118..29cced8 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -90,18 +90,17 @@ void dax_write_cache(struct dax_device *dax_dev, bool wc);
- 
- /*
-  * We use lowest available bit in exceptional entry for locking, one bit for
-- * the entry size (PMD) and two more to tell us if the entry is a huge zero
-- * page (HZP) or an empty entry that is just used for locking.  In total four
-- * special bits.
-+ * the entry size (PMD) and two more to tell us if the entry is a zero page or
-+ * an empty entry that is just used for locking.  In total four special bits.
-  *
-- * If the PMD bit isn't set the entry has size PAGE_SIZE, and if the HZP and
-- * EMPTY bits aren't set the entry is a normal DAX entry with a filesystem
-+ * If the PMD bit isn't set the entry has size PAGE_SIZE, and if the ZERO_PAGE
-+ * and EMPTY bits aren't set the entry is a normal DAX entry with a filesystem
-  * block allocation.
-  */
- #define RADIX_DAX_SHIFT	(RADIX_TREE_EXCEPTIONAL_SHIFT + 4)
- #define RADIX_DAX_ENTRY_LOCK (1 << RADIX_TREE_EXCEPTIONAL_SHIFT)
- #define RADIX_DAX_PMD (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
--#define RADIX_DAX_HZP (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
-+#define RADIX_DAX_ZERO_PAGE (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
- #define RADIX_DAX_EMPTY (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 3))
- 
- static inline unsigned long dax_radix_sector(void *entry)
-@@ -152,7 +151,6 @@ static inline unsigned int dax_radix_order(void *entry)
- 	return 0;
- }
- #endif
--int dax_pfn_mkwrite(struct vm_fault *vmf);
- 
- static inline bool dax_mapping(struct address_space *mapping)
- {
-diff --git a/include/trace/events/fs_dax.h b/include/trace/events/fs_dax.h
-index 08bb3ed..fbc4a06 100644
---- a/include/trace/events/fs_dax.h
-+++ b/include/trace/events/fs_dax.h
-@@ -190,8 +190,6 @@ DEFINE_EVENT(dax_pte_fault_class, name, \
- 
- DEFINE_PTE_FAULT_EVENT(dax_pte_fault);
- DEFINE_PTE_FAULT_EVENT(dax_pte_fault_done);
--DEFINE_PTE_FAULT_EVENT(dax_pfn_mkwrite_no_entry);
--DEFINE_PTE_FAULT_EVENT(dax_pfn_mkwrite);
- DEFINE_PTE_FAULT_EVENT(dax_load_hole);
- 
- TRACE_EVENT(dax_insert_mapping,
--- 
-2.9.4
-
+> +
+> +	return error;
+> +out_unlock:
+> +	xfs_iunlock(sc->ip, sc->ilock_flags);
+> +	if (sc->ip != ip)
+> +		IRELE(sc->ip);
+> +	sc->ip = NULL;
+> +	return error;
+> +}
+> +
+> +/* Inode core */
+> +
+> +#define XFS_SCRUB_INODE_CHECK(fs_ok) \
+> +	XFS_SCRUB_INO_CHECK(sc, ino, bp, "inode", fs_ok)
+> +#define XFS_SCRUB_INODE_GOTO(fs_ok, label) \
+> +	XFS_SCRUB_INO_GOTO(sc, ino, bp, "inode", fs_ok, label)
+> +#define XFS_SCRUB_INODE_OP_ERROR_GOTO(label) \
+> +	XFS_SCRUB_OP_ERROR_GOTO(sc, XFS_INO_TO_AGNO(mp, ino), \
+> +			XFS_INO_TO_AGBNO(mp, ino), "inode", &error, label)
+> +#define XFS_SCRUB_INODE_PREEN(fs_ok) \
+> +	XFS_SCRUB_INO_PREEN(sc, bp, "inode", fs_ok)
+> +/* Scrub an inode. */
+> +int
+> +xfs_scrub_inode(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	struct xfs_imap			imap;
+> +	struct xfs_dinode		di;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_buf			*bp = NULL;
+> +	struct xfs_dinode		*dip;
+> +	xfs_ino_t			ino;
+> +	unsigned long long		isize;
+> +	uint64_t			flags2;
+> +	uint32_t			nextents;
+> +	uint32_t			extsize;
+> +	uint32_t			cowextsize;
+> +	uint16_t			flags;
+> +	uint16_t			mode;
+> +	bool				has_shared;
+> +	int				error = 0;
+> +
+> +	/* Did we get the in-core inode, or are we doing this manually? */
+> +	if (sc->ip) {
+> +		ino = sc->ip->i_ino;
+> +		xfs_inode_to_disk(sc->ip, &di, 0);
+> +		dip = &di;
+> +	} else {
+> +		/* Map & read inode. */
+> +		ino = sc->sm->sm_ino;
+> +		error = xfs_imap(mp, sc->tp, ino, &imap, XFS_IGET_UNTRUSTED);
+> +		if (error == -EINVAL) {
+> +			/*
+> +			 * Inode could have gotten deleted out from under us;
+> +			 * just forget about it.
+> +			 */
+> +			error = -ENOENT;
+> +			goto out;
+> +		}
+> +		XFS_SCRUB_INODE_OP_ERROR_GOTO(out);
+> +
+> +		error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> +				imap.im_blkno, imap.im_len, XBF_UNMAPPED, &bp,
+> +				NULL);
+> +		XFS_SCRUB_INODE_OP_ERROR_GOTO(out);
+> +
+> +		/* Is this really the inode we want? */
+> +		bp->b_ops = &xfs_inode_buf_ops;
+> +		dip = xfs_buf_offset(bp, imap.im_boffset);
+> +		error = xfs_dinode_verify(mp, ino, dip) ? 0 : -EFSCORRUPTED;
+> +		XFS_SCRUB_INODE_OP_ERROR_GOTO(out);
+> +		XFS_SCRUB_INODE_GOTO(
+> +				xfs_dinode_good_version(mp, dip->di_version),
+> +				out);
+> +		if (be32_to_cpu(dip->di_gen) != sc->sm->sm_gen) {
+> +			error = -ENOENT;
+> +			goto out;
+> +		}
+> +	}
+> +
+> +	flags = be16_to_cpu(dip->di_flags);
+> +	if (dip->di_version >= 3)
+> +		flags2 = be64_to_cpu(dip->di_flags2);
+> +	else
+> +		flags2 = 0;
+> +
+> +	/* di_mode */
+> +	mode = be16_to_cpu(dip->di_mode);
+> +	XFS_SCRUB_INODE_CHECK(!(mode & ~(S_IALLUGO | S_IFMT)));
+> +
+> +	/* v1/v2 fields */
+> +	switch (dip->di_version) {
+> +	case 1:
+> +		XFS_SCRUB_INODE_CHECK(dip->di_nlink == 0);
+> +		XFS_SCRUB_INODE_CHECK(dip->di_mode || !sc->ip);
+> +		XFS_SCRUB_INODE_CHECK(dip->di_projid_lo == 0);
+> +		XFS_SCRUB_INODE_CHECK(dip->di_projid_hi == 0);
+> +		break;
+> +	case 2:
+> +	case 3:
+> +		XFS_SCRUB_INODE_CHECK(dip->di_onlink == 0);
+> +		XFS_SCRUB_INODE_CHECK(dip->di_mode || !sc->ip);
+> +		XFS_SCRUB_INODE_CHECK(dip->di_projid_hi == 0 ||
+> +				xfs_sb_version_hasprojid32bit(&mp->m_sb));
+> +		break;
+> +	default:
+> +		ASSERT(0);
+> +		break;
+> +	}
+> +
+> +	/* di_format */
+> +	switch (dip->di_format) {
+> +	case XFS_DINODE_FMT_DEV:
+> +		XFS_SCRUB_INODE_CHECK(S_ISCHR(mode) || S_ISBLK(mode) ||
+> +				      S_ISFIFO(mode) || S_ISSOCK(mode));
+> +		break;
+> +	case XFS_DINODE_FMT_LOCAL:
+> +		XFS_SCRUB_INODE_CHECK(S_ISDIR(mode) || S_ISLNK(mode));
+> +		break;
+> +	case XFS_DINODE_FMT_EXTENTS:
+> +		XFS_SCRUB_INODE_CHECK(S_ISREG(mode) || S_ISDIR(mode) ||
+> +				      S_ISLNK(mode));
+> +		break;
+> +	case XFS_DINODE_FMT_BTREE:
+> +		XFS_SCRUB_INODE_CHECK(S_ISREG(mode) || S_ISDIR(mode));
+> +		break;
+> +	case XFS_DINODE_FMT_UUID:
+> +	default:
+> +		XFS_SCRUB_INODE_CHECK(false);
+> +		break;
+> +	}
+> +
+> +	/* di_size */
+> +	isize = be64_to_cpu(dip->di_size);
+> +	XFS_SCRUB_INODE_CHECK(!(isize & (1ULL << 63)));
+> +	if (!S_ISDIR(mode) && !S_ISREG(mode) && !S_ISLNK(mode))
+> +		XFS_SCRUB_INODE_CHECK(isize == 0);
+> +
+> +	/* di_nblocks */
+> +	if (flags2 & XFS_DIFLAG2_REFLINK) {
+> +		; /* nblocks can exceed dblocks */
+> +	} else if (flags & XFS_DIFLAG_REALTIME) {
+> +		XFS_SCRUB_INODE_CHECK(be64_to_cpu(dip->di_nblocks) <
+> +				mp->m_sb.sb_dblocks + mp->m_sb.sb_rblocks);
+> +	} else {
+> +		XFS_SCRUB_INODE_CHECK(be64_to_cpu(dip->di_nblocks) <
+> +				mp->m_sb.sb_dblocks);
+> +	}
+> +
+> +	/* di_extsize */
+> +	if (flags & XFS_DIFLAG_EXTSIZE) {
+> +		extsize = be32_to_cpu(dip->di_extsize);
+> +		XFS_SCRUB_INODE_CHECK(extsize > 0);
+> +		XFS_SCRUB_INODE_CHECK(extsize <= MAXEXTLEN);
+> +		XFS_SCRUB_INODE_CHECK(extsize <= mp->m_sb.sb_agblocks / 2 ||
+> +				(flags & XFS_DIFLAG_REALTIME));
+> +	}
+> +
+> +	/* di_flags */
+> +	XFS_SCRUB_INODE_CHECK(!(flags & XFS_DIFLAG_IMMUTABLE) ||
+> +			      !(flags & XFS_DIFLAG_APPEND));
+> +
+> +	XFS_SCRUB_INODE_CHECK(!(flags & XFS_DIFLAG_FILESTREAM) ||
+> +			      !(flags & XFS_DIFLAG_REALTIME));
+> +
+> +	/* di_nextents */
+> +	nextents = be32_to_cpu(dip->di_nextents);
+> +	switch (dip->di_format) {
+> +	case XFS_DINODE_FMT_EXTENTS:
+> +		XFS_SCRUB_INODE_CHECK(nextents <=
+> +			XFS_DFORK_DSIZE(dip, mp) / sizeof(struct xfs_bmbt_rec));
+> +		break;
+> +	case XFS_DINODE_FMT_BTREE:
+> +		XFS_SCRUB_INODE_CHECK(nextents >
+> +			XFS_DFORK_DSIZE(dip, mp) / sizeof(struct xfs_bmbt_rec));
+> +		break;
+> +	case XFS_DINODE_FMT_LOCAL:
+> +	case XFS_DINODE_FMT_DEV:
+> +	case XFS_DINODE_FMT_UUID:
+> +	default:
+> +		XFS_SCRUB_INODE_CHECK(nextents == 0);
+> +		break;
+> +	}
+> +
+> +	/* di_anextents */
+> +	nextents = be16_to_cpu(dip->di_anextents);
+> +	switch (dip->di_aformat) {
+> +	case XFS_DINODE_FMT_EXTENTS:
+> +		XFS_SCRUB_INODE_CHECK(nextents <=
+> +			XFS_DFORK_ASIZE(dip, mp) / sizeof(struct xfs_bmbt_rec));
+> +		break;
+> +	case XFS_DINODE_FMT_BTREE:
+> +		XFS_SCRUB_INODE_CHECK(nextents >
+> +			XFS_DFORK_ASIZE(dip, mp) / sizeof(struct xfs_bmbt_rec));
+> +		break;
+> +	case XFS_DINODE_FMT_LOCAL:
+> +	case XFS_DINODE_FMT_DEV:
+> +	case XFS_DINODE_FMT_UUID:
+> +	default:
+> +		XFS_SCRUB_INODE_CHECK(nextents == 0);
+> +		break;
+> +	}
+> +
+> +	/* di_forkoff */
+> +	XFS_SCRUB_INODE_CHECK(XFS_DFORK_APTR(dip) <
+> +			(char *)dip + mp->m_sb.sb_inodesize);
+> +	XFS_SCRUB_INODE_CHECK(dip->di_anextents == 0 || dip->di_forkoff);
+> +
+> +	/* di_aformat */
+> +	XFS_SCRUB_INODE_CHECK(dip->di_aformat == XFS_DINODE_FMT_LOCAL ||
+> +			      dip->di_aformat == XFS_DINODE_FMT_EXTENTS ||
+> +			      dip->di_aformat == XFS_DINODE_FMT_BTREE);
+> +
+> +	/* di_cowextsize */
+> +	if (flags2 & XFS_DIFLAG2_COWEXTSIZE) {
+> +		cowextsize = be32_to_cpu(dip->di_cowextsize);
+> +		XFS_SCRUB_INODE_CHECK(xfs_sb_version_hasreflink(&mp->m_sb));
+> +		XFS_SCRUB_INODE_CHECK(cowextsize > 0);
+> +		XFS_SCRUB_INODE_CHECK(cowextsize <= MAXEXTLEN);
+> +		XFS_SCRUB_INODE_CHECK(cowextsize <= mp->m_sb.sb_agblocks / 2);
+> +	}
+> +
+> +	/* Now let's do the things that require a live inode. */
+> +	if (!sc->ip)
+> +		goto out;
+> +
+> +	/*
+> +	 * Does this inode have the reflink flag set but no shared extents?
+> +	 * Set the preening flag if this is the case.
+> +	 */
+> +	if (xfs_is_reflink_inode(sc->ip)) {
+> +		error = xfs_reflink_inode_has_shared_extents(sc->tp, sc->ip,
+> +				&has_shared);
+> +		XFS_SCRUB_INODE_OP_ERROR_GOTO(out);
+> +		XFS_SCRUB_INODE_PREEN(has_shared == true);
+> +	}
+> +
+> +out:
+> +	if (bp)
+> +		xfs_trans_brelse(sc->tp, bp);
+> +	return error;
+> +}
+> +#undef XFS_SCRUB_INODE_PREEN
+> +#undef XFS_SCRUB_INODE_OP_ERROR_GOTO
+> +#undef XFS_SCRUB_INODE_GOTO
+> +#undef XFS_SCRUB_INODE_CHECK
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 6c0281b..950e2c8 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3323,7 +3323,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
+>  	{ XFS_SCRUB_TYPE_INOBT,		"inobt" }, \
+>  	{ XFS_SCRUB_TYPE_FINOBT,	"finobt" }, \
+>  	{ XFS_SCRUB_TYPE_RMAPBT,	"rmapbt" }, \
+> -	{ XFS_SCRUB_TYPE_REFCNTBT,	"refcountbt" }
+> +	{ XFS_SCRUB_TYPE_REFCNTBT,	"refcountbt" }, \
+> +	{ XFS_SCRUB_TYPE_INODE,		"inode" }
+>  DECLARE_EVENT_CLASS(xfs_scrub_class,
+>  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
+>  		 int error),
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
