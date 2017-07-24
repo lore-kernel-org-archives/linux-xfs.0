@@ -1,51 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:45883 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751657AbdGYNm2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2017 09:42:28 -0400
-Date: Tue, 25 Jul 2017 06:42:21 -0700
-From: Greg KH <greg@kroah.com>
-Subject: Re: request for inclusion of 04197b341f23 ("xfs: don't BUG() on
- mixed direct and mapped I/O")
-Message-ID: <20170725134221.GB19075@kroah.com>
-References: <5bcfc94b-ecb9-468b-78f3-ae5de53f62a0@suse.com>
- <666c5faf-cbee-f83b-90bf-279284f0600b@applied-asynchrony.com>
- <18dc98f7-abd8-4925-a303-7ae4c1e46db5@suse.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <18dc98f7-abd8-4925-a303-7ae4c1e46db5@suse.com>
+Received: from mga05.intel.com ([192.55.52.43]:4081 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755855AbdGXRGZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Jul 2017 13:06:25 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v5 4/5] dax: remove DAX code from page_cache_tree_insert()
+Date: Mon, 24 Jul 2017 11:06:15 -0600
+Message-Id: <20170724170616.25810-5-ross.zwisler@linux.intel.com>
+In-Reply-To: <20170724170616.25810-1-ross.zwisler@linux.intel.com>
+References: <20170724170616.25810-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>, stable@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Tue, Jul 25, 2017 at 01:44:30PM +0300, Nikolay Borisov wrote:
-> 
-> 
-> On 25.07.2017 13:43, Holger Hoffstätte wrote:
-> > On 07/25/17 08:47, Nikolay Borisov wrote:
-> >> I'd like to request the aforementioned patch to be included into stable
-> >> kernels. I've attached the 4.4 backport, the patch got introduced in
-> >> 4.10 so for 4.9 it will likely be able to apply cleanly, for 4.4 it
-> >> needed a bit of adjustment.
-> > 
-> > It has been in 4.9-stable since January, see:
-> > 
-> > https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit/fs/xfs?h=linux-4.9.y&id=3978c5bb004312fd267aed7279fe64b119e126b0
-> > 
-> 
-> Strange, it's missing a stable tag
+Now that we no longer insert struct page pointers in DAX radix trees we can
+remove the special casing for DAX in page_cache_tree_insert().  This also
+allows us to make dax_wake_mapping_entry_waiter() local to fs/dax.c,
+removing it from dax.h.
 
-What does that have to do with anything?  Lots of patches get asked to
-be included that don't have stable tags, just like you just did :)
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Suggested-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c            |  2 +-
+ include/linux/dax.h |  2 --
+ mm/filemap.c        | 13 ++-----------
+ 3 files changed, 3 insertions(+), 14 deletions(-)
 
-Also, please always include the original git commit id of the patch you
-wish to have included with your request so that I don't have to turn
-around and ask for it...
+diff --git a/fs/dax.c b/fs/dax.c
+index 8f8bcb8..a0484a1 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -127,7 +127,7 @@ static int wake_exceptional_entry_func(wait_queue_entry_t *wait, unsigned int mo
+  * correct waitqueue where tasks might be waiting for that old 'entry' and
+  * wake them.
+  */
+-void dax_wake_mapping_entry_waiter(struct address_space *mapping,
++static void dax_wake_mapping_entry_waiter(struct address_space *mapping,
+ 		pgoff_t index, void *entry, bool wake_all)
+ {
+ 	struct exceptional_entry_key key;
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 29cced8..afa99bb 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -122,8 +122,6 @@ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
+ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
+ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
+ 				      pgoff_t index);
+-void dax_wake_mapping_entry_waiter(struct address_space *mapping,
+-		pgoff_t index, void *entry, bool wake_all);
+ 
+ #ifdef CONFIG_FS_DAX
+ int __dax_zero_page_range(struct block_device *bdev,
+diff --git a/mm/filemap.c b/mm/filemap.c
+index a497024..1bf1265 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -130,17 +130,8 @@ static int page_cache_tree_insert(struct address_space *mapping,
+ 			return -EEXIST;
+ 
+ 		mapping->nrexceptional--;
+-		if (!dax_mapping(mapping)) {
+-			if (shadowp)
+-				*shadowp = p;
+-		} else {
+-			/* DAX can replace empty locked entry with a hole */
+-			WARN_ON_ONCE(p !=
+-				dax_radix_locked_entry(0, RADIX_DAX_EMPTY));
+-			/* Wakeup waiters for exceptional entry lock */
+-			dax_wake_mapping_entry_waiter(mapping, page->index, p,
+-						      true);
+-		}
++		if (shadowp)
++			*shadowp = p;
+ 	}
+ 	__radix_tree_replace(&mapping->page_tree, node, slot, page,
+ 			     workingset_update_node, mapping);
+-- 
+2.9.4
 
-thanks,
-
-greg k-h
