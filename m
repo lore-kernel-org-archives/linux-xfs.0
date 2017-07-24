@@ -1,42 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59679 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750778AbdGYJfN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Jul 2017 05:35:13 -0400
-Date: Tue, 25 Jul 2017 11:35:08 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v5 1/5] mm: add vm_insert_mixed_mkwrite()
-Message-ID: <20170725093508.GA19943@quack2.suse.cz>
-References: <20170724170616.25810-1-ross.zwisler@linux.intel.com>
- <20170724170616.25810-2-ross.zwisler@linux.intel.com>
- <20170724221400.pcq5zvke7w2yfkxi@node.shutemov.name>
- <20170725080158.GA5374@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170725080158.GA5374@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:41458 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754830AbdGXNeg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Jul 2017 09:34:36 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id B2FE67F418
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2017 13:34:36 +0000 (UTC)
+Received: from eorzea.usersys.redhat.com (unknown [10.43.17.187])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3607C91E99
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2017 13:34:36 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 0/2 V7] Resubmit items failed during writeback
+Date: Mon, 24 Jul 2017 15:34:29 +0200
+Message-Id: <20170724133431.11479-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Kirill A. Shutemov" <kirill@shutemov.name>, Ross Zwisler <ross.zwisler@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue 25-07-17 10:01:58, Christoph Hellwig wrote:
-> On Tue, Jul 25, 2017 at 01:14:00AM +0300, Kirill A. Shutemov wrote:
-> > I guess it's up to filesystem if it wants to reuse the same spot to write
-> > data or not. I think your assumptions works for ext4 and xfs. I wouldn't
-> > be that sure for btrfs or other filesystems with CoW support.
-> 
-> Or XFS with reflinks for that matter.  Which currently can't be
-> combined with DAX, but I had a somewhat working version a few month
-> ago.
+Hi,
 
-But in cases like COW when the block mapping changes, the process
-must run unmap_mapping_range() before installing the new PTE so that all
-processes mapping this file offset actually refault and see the new
-mapping. So this would go through pte_none() case. Am I missing something?
+V7 version of this patchset,
 
-								Honza
+just removed an 'unused variable' warning from an ASSERT in xfs_inode_item_error
+in patch 2/2
+
+no changes in patch 1/2
+
+keeping Brian's reviewed-by on both patches
+
+cheers
+
+Carlos Maiolino (2):
+  xfs: Add infrastructure needed for error propagation during buffer IO
+    failure
+  xfs: Properly retry failed inode items in case of error during buffer
+    writeback
+
+ fs/xfs/xfs_buf_item.c   | 60 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_buf_item.h   |  3 +++
+ fs/xfs/xfs_inode_item.c | 47 ++++++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_trans.h      |  8 +++++--
+ fs/xfs/xfs_trans_ail.c  |  3 ++-
+ fs/xfs/xfs_trans_priv.h | 31 +++++++++++++++++++++++++
+ 6 files changed, 144 insertions(+), 8 deletions(-)
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.9.4
+
