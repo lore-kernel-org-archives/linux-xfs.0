@@ -1,331 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41298 "EHLO mx1.redhat.com"
+Received: from mail1.g1.pair.com ([66.39.3.162]:16101 "EHLO mail1.g1.pair.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754830AbdGXNei (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Jul 2017 09:34:38 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 560AB52748
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2017 13:34:38 +0000 (UTC)
-Received: from eorzea.usersys.redhat.com (unknown [10.43.17.187])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id CB98A70BC7
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2017 13:34:37 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 2/2 V7] xfs: Properly retry failed inode items in case of error during buffer writeback
-Date: Mon, 24 Jul 2017 15:34:31 +0200
-Message-Id: <20170724133431.11479-3-cmaiolino@redhat.com>
-In-Reply-To: <20170724133431.11479-1-cmaiolino@redhat.com>
-References: <20170724133431.11479-1-cmaiolino@redhat.com>
+        id S1751827AbdGXO1Z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Jul 2017 10:27:25 -0400
+Date: Mon, 24 Jul 2017 16:27:28 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Weird xfs_repair error
+Message-ID: <20170724162728.2a77797a@harpe.intellique.com>
+In-Reply-To: <20170717171129.GA57771@bfoster.bfoster>
+References: <20170706153020.0ad6dd47@harpe.intellique.com>
+        <20170706232803.GF17762@dastard>
+        <20170707135009.68c22182@harpe.intellique.com>
+        <20170707153633.GG4103@magnolia>
+        <20170711152340.4cd5dff9@harpe.intellique.com>
+        <20170717171129.GA57771@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/tNlR9snWEW0nLW/fQ=shNGe"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, "'linux-xfs@vger.kernel.org'" <linux-xfs@vger.kernel.org>
 
-When a buffer has been failed during writeback, the inode items into it
-are kept flush locked, and are never resubmitted due the flush lock, so,
-if any buffer fails to be written, the items in AIL are never written to
-disk and never unlocked.
+--Sig_/tNlR9snWEW0nLW/fQ=shNGe
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-This causes unmount operation to hang due these items flush locked in AIL,
-but this also causes the items in AIL to never be written back, even when
-the IO device comes back to normal.
+Le Mon, 17 Jul 2017 13:11:29 -0400
+Brian Foster <bfoster@redhat.com> =C3=A9crivait:
 
-I've been testing this patch with a DM-thin device, creating a
-filesystem larger than the real device.
+> On Tue, Jul 11, 2017 at 03:23:52PM +0200, Emmanuel Florac wrote:
+> > Le Fri, 7 Jul 2017 08:36:33 -0700
+> > "Darrick J. Wong" <darrick.wong@oracle.com> =C3=A9crivait:
+> >  =20
+> > > > fatal error -- name create failed in lost+found (28), filesystem
+> > > > may be out of space   =20
+> > >=20
+> > > Would be helpful to have a metadump of this goobered-up lost+found
+> > > fs...
+> > >  =20
+> >=20
+> > The metadump is here for anyone who would like to have a look:
+> >=20
+> > http://update2.intellique.com/pub/bign.metadump.xz
+> >=20
+> > The filesystem is about 115 TiB.
+> >  =20
+>=20
+> Thanks for posting this. The first thing to note is that this
+> filesystem is severely corrupted.
 
-When writing enough data to fill the DM-thin device, XFS receives ENOSPC
-errors from the device, and keep spinning on xfsaild (when 'retry
-forever' configuration is set).
+This I have determined myself through the fact that many runs of
+xfs_repair (and different versions of it, v4.7, 4.9, 4.11...) can't get
+it into a stable (i.e. that won't crash while trying to access it)
+state.
 
-At this point, the filesystem can not be unmounted because of the flush locked
-items in AIL, but worse, the items in AIL are never retried at all
-(once xfs_inode_item_push() will skip the items that are flush locked),
-even if the underlying DM-thin device is expanded to the proper size.
+> Nonetheless, I've been playing
+> around with trying to get the latest for-next xfs_repair to run
+> through this fs (via gdb) and have definitely hit a few issues:
+>=20
+> - xfs_sb_verify() was changed to use bp->b_maps[0].bm_bn rather than
+>   bp->b_bn in libxfs commit 85428dd23f ("xfs: fix superblock
+> inprogress check"). b_maps isn't allocated if the buffer was
+> initialized with libxfs_initbuf() (rather than libxfs_initbuf_map()).
+> This causes a sigsegv here, though only if I disable -O2 optimization
+> for some reason that I haven't dug into yet.
+> - libxfs commit 0268fdc3fe ("xfs: remove xfs_trans_get_block_res")
+>   replaced the use of xfs_trans_get_block_res() in
+>   xfs_bmbt_alloc_block() which causes the -ENOSPC error. The previous
+>   function was hardcoded to return 1 such that this would never occur.
+> - The recently added directory sf format verifier (xfs_iformat_fork()
+> -> xfs_dir2_sf_verify()) seems to cause a premature repair failure in
+> at least one case.
+>=20
+> I was able to eventually get repair to complete with some quick hacks
+> to bypass those issues. I did have to run repair two or three times
+> to get the fs to a clean state. The fs mounts and otherwise appears
+> clean to xfs_repair, but it's not clear to me how usable the
+> resulting fs really is (repair is for fs consistency after all, not
+> necessarily data recovery). Note that lost+found appears to be loaded
+> with 18T of data across almost 2 million inodes. :/
 
-This patch fixes both cases, retrying any item that has been failed
-previously, using the infra-structure provided by the previous patch.
+Thank you for your efforts, the loaded lost+found matches my own
+results, however some of the files there have been present for possibly
+years. In fact this filesystem has crashed several times in the past
+years but always went back online at some point, until... now.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
-V2:
-	- Fix XFS_LI_FAILED flag removal
-	- Use atomic operations to set and clear XFS_LI_FAILED flag
-	- Remove check for XBF_WRITE_FAIL in xfs_inode_item_push
-	- Add more comments to the code
-	- Add a helper function to resubmit the failed buffers, so this
-	  can be also used in dquot system without duplicating code
+So what could I do, at least to be able to mount it and copy everything
+elsewhere before mkfs'ing it all again? Do you have an xfs_repair
+binary at hand that I could use, or should I dig into the latest
+source?
 
-V3:
-	- kill xfs_imap_to_bp call using a pointer in the log item to
-	  hold the buffer address
-	- use xa_lock instead of atomic operations to handle log item
-	  flags
-	- Add a hold to the buffer for each log item failed
-	- move buffer resubmission up in xfs_inode_item_push()
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
-V4:
-	- Remove bflags argument from iop_error callback
-	- Remove ip argument from xfs_buf_resubmit_failed_buffers
-	- Use helpers to set/clear XFS_LI_FAILED flag
-	- remove ->xa_lock from the iop->error callback and move it up
-	  on the stack, so all log items are processed into a single
-	  pair of lock/unlock
+--Sig_/tNlR9snWEW0nLW/fQ=shNGe
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
 
-V5:
-	- fix comments
-	- move buf_lock from xfs_buf_resubmit_failed_buffers() up to
-	  xfs_inode_item_push, and use trylock instead
-	- assert xa_lock is held in xfs_set/clear_li_failed helpers
-	  and move such helpers into xfs_trans_priv.h, once
-	  lockdep_assert_held() usage will require xfs_ail definition
-	- ASSERT XFS_LI_IN_AIL into xfs_clear_li_failed()
-	- assert inode is flush locked in xfs_inode_item_error
-	- fix bitwise ops mess
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-V6:
-	- Better comment for xfs_inode_item_error
-	- Indentation fixes
+iEYEARECAAYFAll2A9AACgkQX3jQXNUicVaF7gCcDbcAAtSjl7aZMlWyWj9l2vRa
+Zh8AoN1x3cUKpzzJlVGbQ+DKFpAekJz0
+=XWSq
+-----END PGP SIGNATURE-----
 
-V7:
-	- Fix unused variable warning
-
- fs/xfs/xfs_buf_item.c   | 28 ++++++++++++++++++++++++++++
- fs/xfs/xfs_buf_item.h   |  3 +++
- fs/xfs/xfs_inode_item.c | 47 +++++++++++++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_trans.h      |  1 +
- fs/xfs/xfs_trans_ail.c  |  3 ++-
- fs/xfs/xfs_trans_priv.h | 31 +++++++++++++++++++++++++++++++
- 6 files changed, 108 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 7573a1f..573fc72 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1234,3 +1234,31 @@ xfs_buf_iodone(
- 	xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
- 	xfs_buf_item_free(BUF_ITEM(lip));
- }
-+
-+/*
-+ * Requeue a failed buffer for writeback
-+ *
-+ * Return true if the buffer has been re-queued properly, false otherwise
-+ */
-+bool
-+xfs_buf_resubmit_failed_buffers(
-+	struct xfs_buf		*bp,
-+	struct xfs_log_item	*lip,
-+	struct list_head	*buffer_list)
-+{
-+	struct xfs_log_item	*next;
-+
-+	/*
-+	 * Clear XFS_LI_FAILED flag from all items before resubmit
-+	 *
-+	 * XFS_LI_FAILED set/clear is protected by xa_lock, caller  this
-+	 * function already have it acquired
-+	 */
-+	for (; lip; lip = next) {
-+		next = lip->li_bio_list;
-+		xfs_clear_li_failed(lip);
-+	}
-+
-+	/* Add this buffer back to the delayed write list */
-+	return xfs_buf_delwri_queue(bp, buffer_list);
-+}
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index f7eba99..530686e 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -70,6 +70,9 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
- 			      xfs_log_item_t *);
- void	xfs_buf_iodone_callbacks(struct xfs_buf *);
- void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
-+bool	xfs_buf_resubmit_failed_buffers(struct xfs_buf *,
-+					struct xfs_log_item *,
-+					struct list_head *);
- 
- extern kmem_zone_t	*xfs_buf_item_zone;
- 
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 08cb7d1..9491574 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -27,6 +27,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_trans_priv.h"
-+#include "xfs_buf_item.h"
- #include "xfs_log.h"
- 
- 
-@@ -475,6 +476,23 @@ xfs_inode_item_unpin(
- 		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
- }
- 
-+/*
-+ * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
-+ * have been failed during writeback
-+ *
-+ * This informs the AIL that the inode is already flush locked on the next push,
-+ * and acquires a hold on the buffer to ensure that it isn't reclaimed before
-+ * dirty data makes it to disk.
-+ */
-+STATIC void
-+xfs_inode_item_error(
-+	struct xfs_log_item	*lip,
-+	struct xfs_buf		*bp)
-+{
-+	ASSERT(xfs_isiflocked(INODE_ITEM(lip)->ili_inode));
-+	xfs_set_li_failed(lip, bp);
-+}
-+
- STATIC uint
- xfs_inode_item_push(
- 	struct xfs_log_item	*lip,
-@@ -484,13 +502,28 @@ xfs_inode_item_push(
- {
- 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
- 	struct xfs_inode	*ip = iip->ili_inode;
--	struct xfs_buf		*bp = NULL;
-+	struct xfs_buf		*bp = lip->li_buf;
- 	uint			rval = XFS_ITEM_SUCCESS;
- 	int			error;
- 
- 	if (xfs_ipincount(ip) > 0)
- 		return XFS_ITEM_PINNED;
- 
-+	/*
-+	 * The buffer containing this item failed to be written back
-+	 * previously. Resubmit the buffer for IO.
-+	 */
-+	if (lip->li_flags & XFS_LI_FAILED) {
-+		if (!xfs_buf_trylock(bp))
-+			return XFS_ITEM_LOCKED;
-+
-+		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
-+			rval = XFS_ITEM_FLUSHING;
-+
-+		xfs_buf_unlock(bp);
-+		return rval;
-+	}
-+
- 	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
- 		return XFS_ITEM_LOCKED;
- 
-@@ -622,7 +655,8 @@ static const struct xfs_item_ops xfs_inode_item_ops = {
- 	.iop_unlock	= xfs_inode_item_unlock,
- 	.iop_committed	= xfs_inode_item_committed,
- 	.iop_push	= xfs_inode_item_push,
--	.iop_committing = xfs_inode_item_committing
-+	.iop_committing = xfs_inode_item_committing,
-+	.iop_error	= xfs_inode_item_error
- };
- 
- 
-@@ -710,7 +744,8 @@ xfs_iflush_done(
- 		 * the AIL lock.
- 		 */
- 		iip = INODE_ITEM(blip);
--		if (iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn)
-+		if ((iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn) ||
-+		    lip->li_flags & XFS_LI_FAILED)
- 			need_ail++;
- 
- 		blip = next;
-@@ -718,7 +753,8 @@ xfs_iflush_done(
- 
- 	/* make sure we capture the state of the initial inode. */
- 	iip = INODE_ITEM(lip);
--	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn)
-+	if ((iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn) ||
-+	    lip->li_flags & XFS_LI_FAILED)
- 		need_ail++;
- 
- 	/*
-@@ -739,6 +775,9 @@ xfs_iflush_done(
- 			if (INODE_ITEM(blip)->ili_logged &&
- 			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
- 				mlip_changed |= xfs_ail_delete_one(ailp, blip);
-+			else {
-+				xfs_clear_li_failed(blip);
-+			}
- 		}
- 
- 		if (mlip_changed) {
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 442d679..7d62772 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -49,6 +49,7 @@ typedef struct xfs_log_item {
- 	struct xfs_ail			*li_ailp;	/* ptr to AIL */
- 	uint				li_type;	/* item type */
- 	uint				li_flags;	/* misc flags */
-+	struct xfs_buf			*li_buf;	/* real buffer pointer */
- 	struct xfs_log_item		*li_bio_list;	/* buffer item list */
- 	void				(*li_cb)(struct xfs_buf *,
- 						 struct xfs_log_item *);
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 9056c0f..70f5ab0 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -687,12 +687,13 @@ xfs_trans_ail_update_bulk(
- bool
- xfs_ail_delete_one(
- 	struct xfs_ail		*ailp,
--	struct xfs_log_item 	*lip)
-+	struct xfs_log_item	*lip)
- {
- 	struct xfs_log_item	*mlip = xfs_ail_min(ailp);
- 
- 	trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
- 	xfs_ail_delete(ailp, lip);
-+	xfs_clear_li_failed(lip);
- 	lip->li_flags &= ~XFS_LI_IN_AIL;
- 	lip->li_lsn = 0;
- 
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index d91706c..b317a36 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -164,4 +164,35 @@ xfs_trans_ail_copy_lsn(
- 	*dst = *src;
- }
- #endif
-+
-+static inline void
-+xfs_clear_li_failed(
-+	struct xfs_log_item	*lip)
-+{
-+	struct xfs_buf	*bp = lip->li_buf;
-+
-+	ASSERT(lip->li_flags & XFS_LI_IN_AIL);
-+	lockdep_assert_held(&lip->li_ailp->xa_lock);
-+
-+	if (lip->li_flags & XFS_LI_FAILED) {
-+		lip->li_flags &= ~XFS_LI_FAILED;
-+		lip->li_buf = NULL;
-+		xfs_buf_rele(bp);
-+	}
-+}
-+
-+static inline void
-+xfs_set_li_failed(
-+	struct xfs_log_item	*lip,
-+	struct xfs_buf		*bp)
-+{
-+	lockdep_assert_held(&lip->li_ailp->xa_lock);
-+
-+	if (!(lip->li_flags & XFS_LI_FAILED)) {
-+		xfs_buf_hold(bp);
-+		lip->li_flags |= XFS_LI_FAILED;
-+		lip->li_buf = bp;
-+	}
-+}
-+
- #endif	/* __XFS_TRANS_PRIV_H__ */
--- 
-2.9.4
-
+--Sig_/tNlR9snWEW0nLW/fQ=shNGe--
