@@ -1,60 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36264 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752259AbdGXPfG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2017 11:35:06 -0400
-Date: Mon, 24 Jul 2017 08:33:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix quotacheck dquot id overflow infinite loop
-Message-ID: <20170724153336.GA4352@magnolia>
-References: <20170724150229.12549-1-bfoster@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:53354 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751671AbdGXP7M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Jul 2017 11:59:12 -0400
+Date: Mon, 24 Jul 2017 17:59:06 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v4 1/5] mm: add mkwrite param to vm_insert_mixed()
+Message-ID: <20170724155906.GR652@quack2.suse.cz>
+References: <20170721223956.29485-1-ross.zwisler@linux.intel.com>
+ <20170721223956.29485-2-ross.zwisler@linux.intel.com>
+ <20170724112530.GI652@quack2.suse.cz>
+ <20170724152357.GB1639@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170724150229.12549-1-bfoster@redhat.com>
+In-Reply-To: <20170724152357.GB1639@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, David Airlie <airlied@linux.ie>, Ingo Molnar <mingo@redhat.com>, Inki Dae <inki.dae@samsung.com>, Jonathan Corbet <corbet@lwn.net>, Joonyoung Shim <jy0922.shim@samsung.com>, Krzysztof Kozlowski <krzk@kernel.org>, Kukjin Kim <kgene@kernel.org>, Kyungmin Park <kyungmin.park@samsung.com>, Matthew Wilcox <mawilcox@microsoft.com>, Patrik Jakobsson <patrik.r.jakobsson@gmail.com>, Rob Clark <robdclark@gmail.com>, Seung-Woo Kim <sw0312.kim@samsung.com>, Steven Rostedt <rostedt@goodmis.org>, Tomi Valkeinen <tomi.valkeinen@ti.com>, dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org, linux-doc@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-samsung-soc@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Jul 24, 2017 at 11:02:29AM -0400, Brian Foster wrote:
-> If a dquot has an id of U32_MAX, the next lookup index increment
-> overflows the uint32_t back to 0. This starts the lookup sequence
-> over from the beginning, repeats indefinitely and results in a
-> livelock.
+On Mon 24-07-17 09:23:57, Ross Zwisler wrote:
+> On Mon, Jul 24, 2017 at 01:25:30PM +0200, Jan Kara wrote:
+> > > @@ -1658,14 +1658,28 @@ static int insert_pfn(struct vm_area_struct *vma, unsigned long addr,
+> > >  	if (!pte)
+> > >  		goto out;
+> > >  	retval = -EBUSY;
+> > > -	if (!pte_none(*pte))
+> > > -		goto out_unlock;
+> > > +	if (!pte_none(*pte)) {
+> > > +		if (mkwrite) {
+> > > +			if (WARN_ON_ONCE(pte_pfn(*pte) != pfn_t_to_pfn(pfn)))
+> > 
+> > Is the WARN_ON_ONCE() really appropriate here? Your testcase with private
+> > mappings has triggered this situation if I'm right...
 > 
-> Update xfs_qm_dquot_walk() to explicitly check for the lookup
-> overflow and exit the loop.
+> Yep, I think this WARN_ON_ONCE() is correct.  The test with private mappings
+> had collisions between read-only DAX mappings which were being faulted in via
+> insert_pfn(), and read/write COW page cache mappings which were being faulted
+> in by wp_page_copy().
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> I was hitting a false-positive warning when I had the WARN_ON_ONCE() in
+> insert_pfn() outside of the mkwrite case, i.e.:
+> 
+> 	if (!pte_none(*pte)) {
+> 		if (WARN_ON_ONCE(pte_pfn(*pte) != pfn_t_to_pfn(pfn)))
+> 			goto out_unlock;
+> 		if (mkwrite) {
+> 			entry = *pte;
+> 			goto out_mkwrite;
+> 		} else
+> 			goto out_unlock;
+> 	}
+> 
+> This was triggering when one thread was faulting in a read-only DAX mapping
+> when another thread had already faulted in a read-write COW page cache page.
+> 
+> The patches I sent out have the warning in the mkwrite case, which would mean
+> that we were getting a fault for a read/write PTE in insert_pfn() and the PFN
+> didn't match what was already in the PTE.
+> 
+> This can't ever happen in the private mapping case because we will never
+> install a read/write PTE for normal storage, only for COW page cache pages.
+> Essentially I don't think we should ever be able to hit this warning, and if
+> we do I'd like to get the bug report so that I can track down how it was
+> happening and make sure that it's safe.  It is in the mkwrite path of
+> insert_pfn() which is currently only used by the DAX code.
+> 
+> Does that make sense to you, or would you recommend leaving it out?  (If so,
+> why?)
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Ah, OK, makes sense. So feel free to add:
 
---D
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-> ---
->  fs/xfs/xfs_qm.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 6ce948c..15751dc 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -111,6 +111,9 @@ xfs_qm_dquot_walk(
->  			skipped = 0;
->  			break;
->  		}
-> +		/* we're done if id overflows back to zero */
-> +		if (!next_index)
-> +			break;
->  	}
->  
->  	if (skipped) {
-> -- 
-> 2.9.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
