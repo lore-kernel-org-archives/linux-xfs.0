@@ -1,58 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38172 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752568AbdGYPqL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2017 11:46:11 -0400
-Date: Tue, 25 Jul 2017 08:45:48 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: request for inclusion of 04197b341f23 ("xfs: don't BUG() on
- mixed direct and mapped I/O")
-Message-ID: <20170725154548.GO4352@magnolia>
-References: <5bcfc94b-ecb9-468b-78f3-ae5de53f62a0@suse.com>
- <666c5faf-cbee-f83b-90bf-279284f0600b@applied-asynchrony.com>
- <18dc98f7-abd8-4925-a303-7ae4c1e46db5@suse.com>
- <20170725134221.GB19075@kroah.com>
- <20170725134334.GC19075@kroah.com>
- <20170725134745.GA19961@kroah.com>
- <20170725135035.GA20865@lst.de>
- <8639f3da-77f4-6330-40f5-3c3d9cbfbc06@suse.com>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:6235 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751864AbdGXWC1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2017 18:02:27 -0400
+Date: Tue, 25 Jul 2017 08:02:05 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: warnings complaining IOMAP_DELALLOC blocks in iomap_dio_actor
+ from generic/446
+Message-ID: <20170724220205.GE17762@dastard>
+References: <20170724145019.GG9167@eguan.usersys.redhat.com>
+ <20170724160551.GB4352@magnolia>
+ <20170724175125.GH9167@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <8639f3da-77f4-6330-40f5-3c3d9cbfbc06@suse.com>
+In-Reply-To: <20170724175125.GH9167@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: Christoph Hellwig <hch@lst.de>, Greg KH <greg@kroah.com>, Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>, stable@vger.kernel.org, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: Eryu Guan <eguan@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Tue, Jul 25, 2017 at 05:02:54PM +0300, Nikolay Borisov wrote:
+On Tue, Jul 25, 2017 at 01:51:25AM +0800, Eryu Guan wrote:
+> On Mon, Jul 24, 2017 at 09:05:51AM -0700, Darrick J. Wong wrote:
+> > On Mon, Jul 24, 2017 at 10:50:19PM +0800, Eryu Guan wrote:
+> And I'm wondering what's the bigger problem of letting the dio path take
+> MMAPLOCK too to serialize against mmap page faults? e.g.
+> xfs_file_dio_aio_read() takes XFS_MMAPLOCK_SHRED and
+> xfs_filemap_page_mkwrite() takes XFS_MMAPLOCK_EXCL.
+
+direct IO calls get_user_pages() which can trigger page faults and
+that means we can't hold any lock that is taken in the page fault
+path.
+
+It's the same reason we have the MMAPLOCK in the first place - we
+can't use the IOLOCK in the page fault path because copy-in/copy-out
+in the buffered IO path can trigger page faults, hence we need some
+other lock that we can use to serialise page faults against extent
+operations (like fallocate).
+
+> > It looks like the end result of a dioread/mmapwrite collision is that
+> > the dio reader gets -EIO.  Would it be better to return a short read?
 > 
-> 
-> On 25.07.2017 16:50, Christoph Hellwig wrote:
-> > On Tue, Jul 25, 2017 at 06:47:45AM -0700, Greg KH wrote:
-> >> Oh, and I need an ack from the xfs maintainers to be able to take this,
-> >> there must be some reason they didn't backport it like they did for a
-> >> number of other xfs patches...
-> > 
-> > In general we'd like to see xfstests runs for all stable backports,
-> > because file system code is hairy.
-> > 
-> > So for any xfs stable backports please send the list of patches you
-> > want backported, and tell us that you did indeed run xfstests.  No
-> > proof is required, we'd like to trust our contributors.
-> > 
-> 
-> Before including this in our enterprise distribution I did run xfstest
-> with and without the patch and there was no difference in the result.
-> Hence I sent the patch.
+> Yes, right now dio read gets EIO in this case. I can't tell which one is
+> better, if the whole dio vs mmap is not recommended, EIO seems to be a
+> strong signal that indicates "don't do this " :)
 
-Looks fine to me...
-Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
+$ man 2 open
+.....
+	.... Likewise, applications should avoid  mixing  mmap(2)
+	of files with direct I/O to the same files.
+....
 
---D
+That said, EIO is extremely unfriendly - a short read would be much
+better as a properly written app will simply try to read the bit it
+didn't get again, whereas EIO tends to be an indication of severe
+failure to the application...
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
