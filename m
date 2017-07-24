@@ -1,74 +1,248 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33666 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751527AbdGYQ43 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Jul 2017 12:56:29 -0400
-Subject: Re: [PATCH] xfs_db: fix metadump redirection (again)
-References: <20170725162740.GP4352@magnolia>
- <917a7bd4-fe2d-3839-f20e-ec44b8291044@sandeen.net>
- <20170725164422.GQ4352@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6eaef6d8-66df-8997-f4d6-8bb26c6511d8@sandeen.net>
-Date: Tue, 25 Jul 2017 11:56:28 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:45813 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752785AbdGXWg7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2017 18:36:59 -0400
+Date: Mon, 24 Jul 2017 15:36:54 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 05/22] xfs: scrub in-memory metadata buffers
+Message-ID: <20170724223654.GK4352@magnolia>
+References: <150061190859.14732.17040548800470377701.stgit@magnolia>
+ <150061194082.14732.17289613506653968866.stgit@magnolia>
+ <20170724014327.GC17762@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20170725164422.GQ4352@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170724014327.GC17762@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, anarchy@gentoo.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 07/25/2017 11:44 AM, Darrick J. Wong wrote:
-> On Tue, Jul 25, 2017 at 11:32:23AM -0500, Eric Sandeen wrote:
->> On 07/25/2017 11:27 AM, Darrick J. Wong wrote:
->>> In patch 4944defad4 ("xfs_db: redirect printfs when metadumping to
->>> stdout"), we solved the problem of xfs_db printfs ending up in the
->>> metadump stream by reassigning stdout for the duration of a stdout
->>> metadump.  Unfortunately, musl doesn't allow stdout to be reassigned (in
->>> their view "extern FILE *stdout" means "extern FILE * const stdout"), so
->>> we abandon the old approach in favor of playing games with dup() to
->>> switch the raw file descriptors.
->>>
->>> While we're at it, fix a regression where an unconverted outf test
->>> allows progress info to end up in the metadump stream.
->>
->> "while we're at it" usually indicates the need for a separate patch ;)
+On Mon, Jul 24, 2017 at 11:43:27AM +1000, Dave Chinner wrote:
+> On Thu, Jul 20, 2017 at 09:39:00PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Call the verifier function for all in-memory metadata buffers, looking
+> > for memory corruption either due to bad memory or coding bugs.
 > 
-> Ok, though the "while we're at it" fix is only necessary if we keep the
-> stdout redirection stuff.
-
-It's just that that is a fix for the last patch, and the rest is a new approach
-which is still under debate. </pedantic>
- 
->> So what if we just converted dbprintf to do fprintf, with the destination
->> held in some global variable that metadump can change?   Seems like that
->> might be less tricksy, and xfs_db is no stranger to globals.
->>
->> there are about 5 bare printfs in xfs_db, but none should be encountered
->> during a metadump (well ... maybe the one in set_cur).
+> How does this fit into the bigger picture? We can't do an exhaustive
+> search of the in memory buffer cache, because access is racy w.r.t.
+> the life cycle of in memory buffers.
 > 
-> Less tricksy, but more of a maintenance burden for us, because now we
-> can't ever allow printf() or fprintf(stdout) in any code path that gets
-> called from metadump.  The reviewers will have to remember (and document
-> for future reviewers).
+> Also, if we are doing a full scrub, we're going to hit and then
+> check the cached in-memory buffers anyway, so I'm missing the
+> context that explains why this code is necessary.
 
-Well, history shows that this isn't much of a problem.  There are over 500 calls
-to dbprintf, and 6 to printf - including some which are probably appropriate,
-i.e. to print version number and exit.
+Before we start scanning the filesystem (which could lead to clean
+buffers being pushed out of memory and later reread), we want to check
+the buffers that have been sitting around in memory to see if they've
+mutated since the last time the verifiers ran.
 
-> OTOH, if we let printfs slip in to something that isn't called by
-> metadump and then a later patch moves it into the metadump call graph,
-> now we have a logic bomb that will manifest itself in silently corrupted
-> metadumps again.
+> >  #endif	/* __XFS_REPAIR_COMMON_H__ */
+> > diff --git a/fs/xfs/scrub/metabufs.c b/fs/xfs/scrub/metabufs.c
+> > new file mode 100644
+> > index 0000000..63faaa6
+> > --- /dev/null
+> > +++ b/fs/xfs/scrub/metabufs.c
+> > @@ -0,0 +1,177 @@
+> > +/*
+> > + * Copyright (C) 2017 Oracle.  All Rights Reserved.
+> > + *
+> > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License
+> > + * as published by the Free Software Foundation; either version 2
+> > + * of the License, or (at your option) any later version.
+> > + *
+> > + * This program is distributed in the hope that it would be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, write the Free Software Foundation,
+> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> > + */
+> > +#include "xfs.h"
+> > +#include "xfs_fs.h"
+> > +#include "xfs_shared.h"
+> > +#include "xfs_format.h"
+> > +#include "xfs_trans_resv.h"
+> > +#include "xfs_mount.h"
+> > +#include "xfs_defer.h"
+> > +#include "xfs_btree.h"
+> > +#include "xfs_bit.h"
+> > +#include "xfs_log_format.h"
+> > +#include "xfs_trans.h"
+> > +#include "xfs_trace.h"
+> > +#include "xfs_sb.h"
+> > +#include "scrub/common.h"
+> > +
+> > +/* We only iterate buffers one by one, so we don't need any setup. */
+> > +int
+> > +xfs_scrub_setup_metabufs(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_inode		*ip)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +#define XFS_SCRUB_METABUFS_TOO_MANY_RETRIES	10
+> > +struct xfs_scrub_metabufs_info {
+> > +	struct xfs_scrub_context	*sc;
+> > +	unsigned int			retries;
+> > +};
 > 
-> So that's why I went with playing games making stdout (or now just fd 1)
-> dump to stderr -- the buffoonery required to make metadumping to stdout
-> work properly is contained in db/metadump.c.
+> So do we get 10 retries per buffer, or 10 retries across an entire
+> scan?
 
-yeah, I can see that POV too.  I'll see if anyone else really cares one way
-or another.
+Ten per scan.
 
--Eric
+> > +/* In-memory buffer corruption. */
+> > +
+> > +#define XFS_SCRUB_BUF_OP_ERROR_GOTO(label) \
+> > +	XFS_SCRUB_OP_ERROR_GOTO(smi->sc, \
+> > +			xfs_daddr_to_agno(smi->sc->mp, bp->b_bn), \
+> > +			xfs_daddr_to_agbno(smi->sc->mp, bp->b_bn), "buf", \
+> > +			&error, label)
+> 
+> Nested macros - yuck!
+> 
+> > +STATIC int
+> > +xfs_scrub_metabufs_scrub_buf(
+> > +	struct xfs_scrub_metabufs_info	*smi,
+> > +	struct xfs_buf			*bp)
+> > +{
+> > +	int				olderror;
+> > +	int				error = 0;
+> > +
+> > +	/*
+> > +	 * We hold the rcu lock during the rhashtable walk, so we can't risk
+> > +	 * having the log forced due to a stale buffer by xfs_buf_lock.
+> > +	 */
+> > +	if (bp->b_flags & XBF_STALE)
+> > +		return 0;
+> > +
+> > +	atomic_inc(&bp->b_hold);
+> 
+> This looks wrong. I think it can race with reclaim because we don't
+> hold the pag->pag_buf_lock. i.e.  xfs_buf_rele() does this:
+> 
+> 	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
+> 
+> to prevent lookups - which are done under the pag->pag_buf_lock -
+> from finding the buffer while it has a zero hold count and may be
+> removed from the cache and freed.
+
+I could be misunderstanding rhashtable here -- as I understand it, the
+rhashtable_walk_start function calls rcu_read_lock and doesn't release
+it until we call rhashtable_walk_stop.  The rhashtable lookup, insert,
+and remove functions each call rcu_read_lock before fidding with the
+hashtable internals.  I /think/ this means that even if the scrubber
+gets ahold of a buffer with zero b_hold that's being xfs_buf_rele'd,
+that concurrent xfs_buf_rele will be waiting for rcu_read_lock, and
+therefore the buffer cannot be freed until the walk stops.
+
+> Further, if we are going to iterate the cache, I'd much prefer the
+> iteration code to be in fs/xfs/xfs_buf.c - nothing outside that file
+> should be touching core buffer cache structures....
+> 
+> FWIW, the LRU walks already handle this problem by the fact the LRU
+> owns a hold count on the buffer. So it may be better to do this via
+> a LRU walk rather than a hashtable walk....
+
+Yeah, once we clear up the above I'll move it to xfs_buf.c.
+
+> [snip]
+> 
+> > +	olderror = bp->b_error;
+> > +	if (bp->b_fspriv)
+> > +		bp->b_ops->verify_write(bp);
+> 
+> Should we be recalculating the CRC on buffers we aren't about to 
+> be writing to disk?
+
+I don't think it causes any harm to recalculate the crc early.  If the
+buffer is dirty and corrupt we can't fix it and write out will flag it
+and shut down the fs anyway, so it likely doesn't matter anyway.
+
+> Should we be verifying a buffer that has a non-zero error value on it?
+
+No.
+
+> > +	else
+> > +		bp->b_ops->verify_read(bp);
+> > +	error = bp->b_error;
+> > +	bp->b_error = olderror;
+> > +
+> > +	/* Mark any corruption errors we might find. */
+> > +	XFS_SCRUB_BUF_OP_ERROR_GOTO(out_unlock);
+> 
+> Ah, what? Why does this need a goto? And why doesn't it report the
+> error that was found? (bloody macros!).
+> 
+> > +out_unlock:
+> > +	xfs_buf_unlock(bp);
+> > +out_dec:
+> > +	atomic_dec(&bp->b_hold);
+> > +	return error;
+> > +}
+> > +#undef XFS_SCRUB_BUF_OP_ERROR_GOTO
+> 
+> Oh, that's the macro defined above the function. Which I paid little
+> attention to other than it called another macro. Now I realise that
+> it (ab)uses local variables without them being passed into the
+> macro. Yup, another reason we need to get rid of the macros from
+> this code....
+
+Ok.
+
+> > +	struct xfs_scrub_metabufs_info	*smi,
+> > +	struct rhashtable_iter		*iter)
+> > +{
+> > +	struct xfs_buf			*bp;
+> > +	int				error = 0;
+> > +
+> > +	do {
+> > +		if (xfs_scrub_should_terminate(&error))
+> > +			break;
+> > +
+> > +		bp = rhashtable_walk_next(iter);
+> > +		if (IS_ERR(bp))
+> > +			return PTR_ERR(bp);
+> > +		else if (bp == NULL)
+> > +			return 0;
+> > +
+> > +		error = xfs_scrub_metabufs_scrub_buf(smi, bp);
+> > +	} while (error != 0);
+> > +
+> > +	return error;
+> > +}
+> > +
+> > +/* Try to walk the buffers in this AG in order to scrub them. */
+> > +int
+> > +xfs_scrub_metabufs(
+> 
+> Ah, please put an "_ag_" in this so it's clear it's only scrubbing a
+> single AG. This is hidden deep inside the scrub context, so it took
+> me a little bit of back tracking to understand that this wasn't a
+> global scan....
+
+Ok.
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
