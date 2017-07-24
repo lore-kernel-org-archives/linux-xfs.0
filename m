@@ -1,353 +1,528 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60196 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751677AbdGZMPu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 Jul 2017 08:15:50 -0400
-Date: Wed, 26 Jul 2017 08:15:48 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Metadata corruption at xfs_attr3_leaf_write_verify()
-Message-ID: <20170726121548.GC59833@bfoster.bfoster>
-References: <CAPh1sj5oU6QRyH_cnzrkGJb6ed3XO4fGABJ4yJLPnb-ppqVJeg@mail.gmail.com>
- <d05c5fec57e551e85e7351dee11bb4d4@mail.gmail.com>
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:1295 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751768AbdGXBGX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jul 2017 21:06:23 -0400
+Date: Mon, 24 Jul 2017 11:05:49 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 04/22] xfs: generic functions to scrub metadata and btrees
+Message-ID: <20170724010549.GB17762@dastard>
+References: <150061190859.14732.17040548800470377701.stgit@magnolia>
+ <150061193407.14732.9644386359653380682.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d05c5fec57e551e85e7351dee11bb4d4@mail.gmail.com>
+In-Reply-To: <150061193407.14732.9644386359653380682.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Shyam Kaushik <shyam@zadarastorage.com>
-Cc: dchinner@redhat.com, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jul 26, 2017 at 10:52:50AM +0530, Shyam Kaushik wrote:
-> Hi Dave,
+On Thu, Jul 20, 2017 at 09:38:54PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> From time to time we hit an xfs corruption when xattr leaf is attempted to
-> be written when it has ichdr.count==0.
+> Create a function that walks a btree, checking the integrity of each
+> btree block (headers, keys, records) and calling back to the caller
+> to perform further checks on the records.  Add some helper functions
+> so that we report detailed scrub errors in a uniform manner in dmesg.
+> These are helper functions for subsequent patches.
 > 
-> We are on an old kernel 3.18.19. We managed to capture xfs trace buffer
-> closer to the problem time.
-> 
-> This is the corruption report
-> 	Jul 20 05:22:27.189727 node1 kernel: [466290.765299] XFS (dm-78): Metadata
-> corruption detected at xfs_attr3_leaf_write_verify+0xe5/0x100 [xfs], block
-> 0x9698734d8
-> 	Jul 20 05:22:27.189741 node1 kernel: [466290.767279] XFS (dm-78): Unmount
-> and run xfs_repair
-> 	Jul 20 05:22:27.189743 node1 kernel: [466290.768022] XFS (dm-78): First 64
-> bytes of corrupted metadata buffer:
-> 	Jul 20 05:22:27.191635 node1 kernel: [466290.768832] ffff88002b4bf000: 00
-> 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
-> 	Jul 20 05:22:27.192949 node1 kernel: [466290.770163] ffff88002b4bf010: 10
-> 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
-> 	Jul 20 05:22:27.192953 node1 kernel: [466290.771264] ffff88002b4bf020: 00
-> 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> 	Jul 20 05:22:27.195921 node1 kernel: [466290.772815] ffff88002b4bf030: 00
-> 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> 
-> From xfs xattr debug trace, it appears that a file is created within a
-> directory having default ACL set. This causes file creation to insert xattr
-> leaf during file creation. This completes queuing an AIL. Immediately after
-> this an explicit xfs_setattr is being done on the same file which alters the
-> default ACL & this causes default ACL to be removed/added. It looks like
-> this 2nd set attr is somehow influencing the first AIL entry that it is
-> being seen with ichr.count==0 during the write.
-> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/Makefile       |    1 
+>  fs/xfs/scrub/btree.c  |  658 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/btree.h  |   95 +++++++
+>  fs/xfs/scrub/common.c |  169 +++++++++++++
+>  fs/xfs/scrub/common.h |   30 ++
+>  5 files changed, 953 insertions(+)
+>  create mode 100644 fs/xfs/scrub/btree.c
+>  create mode 100644 fs/xfs/scrub/btree.h
+.....
+> +/* btree scrubbing */
+> +
+> +const char * const btree_types[] = {
+> +	[XFS_BTNUM_BNO]		= "bnobt",
+> +	[XFS_BTNUM_CNT]		= "cntbt",
+> +	[XFS_BTNUM_RMAP]	= "rmapbt",
+> +	[XFS_BTNUM_BMAP]	= "bmapbt",
+> +	[XFS_BTNUM_INO]		= "inobt",
+> +	[XFS_BTNUM_FINO]	= "finobt",
+> +	[XFS_BTNUM_REFC]	= "refcountbt",
+> +};
 
-I didn't notice anything on a quick pass through the code that would
-lead to this situation. It looks to me that the initial attr creates the
-leaf (where count is initialized to 0), but then adds the xattr in the
-same transaction (which should bump ichdr.count). The next set of
-SGI_ACL_FILE calls xfs_attr_leaf_add[_work]() before it rolls the
-transaction, which looks like it should bump ichdr.count again before we
-flip the inactive flags and remove the old attr.
+Don't we already have that already defined somewhere?
 
-The output above clearly shows ichdr.count == 0, so I could easily be
-missing something or something else could be going on here. Unless
-somebody else chimes in with something more concrete, could you add a
-trace_printk() statement to xfs_attr3_leaf_verify() at the appropriate
-point where the verifier fails and re-collect the above tracepoint data?
-You could print out bp->b_bno just so we can correspond the log message
-to the tracepoint, but otherwise I'm just more curious to see where in
-the sequence of the xattr replace that the verifier happens to trigger
-and fail.
+> +
+> +/* Format the trace parameters for the tree cursor. */
+> +static inline void
+> +xfs_scrub_btree_format(
+> +	struct xfs_btree_cur		*cur,
+> +	int				level,
+> +	char				*bt_type,
+> +	size_t				type_len,
+> +	char				*bt_ptr,
+> +	size_t				ptr_len,
+> +	xfs_fsblock_t			*fsbno)
+> +{
+> +	char				*type = NULL;
+> +	struct xfs_btree_block		*block;
+> +	struct xfs_buf			*bp;
 
-Note that when you enable the attr tracepoints, you may have to include
-'-e print' to make sure the trace_printk() is enabled as well. E.g.,
-something like 'trace-cmd start -e xfs:xfs_attr_* -e print' should work.
+hmmm - complex text formatting just for trace point output,
+which are rarely going to be used in production? Not sure how I feel
+about that yet.
 
-Brian
+Also, the function is way too big for being an inline function. I'd
+be tempted to mark it noinline so the compiler doesn't blow out the
+size of the code unnecessarily with automatic inlining of static
+functions.
 
-> I can pass the full xfs debug trace if required. Here is the snippet of
-> debug trace causing the issue
-> 
->            <...>-18953 [004] ...1 466290.749358: xfs_attr_sf_create: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.749359: xfs_attr_sf_addname: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.749361: xfs_attr_sf_lookup: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.749362: xfs_attr_sf_to_leaf: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.749430: xfs_attr_leaf_create: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.749454: xfs_attr_leaf_addname: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.749456: xfs_attr_leaf_lookup: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.749457: xfs_attr_leaf_add: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.749458: xfs_attr_leaf_add_work: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.749649: xfs_getattr: dev 253:78 ino
-> 0x1749833903
->            <...>-18953 [004] ...1 466290.749908: xfs_attr_leaf_get: dev
-> 253:78 ino 0x1749833903 name NTACL namelen 5 valuelen 1024 hashval
-> 0xea9061c8 op_flags
->            <...>-18953 [004] ...1 466290.749910: xfs_attr_leaf_lookup: dev
-> 253:78 ino 0x1749833903 name NTACL namelen 5 valuelen 1024 hashval
-> 0xea9061c8 op_flags
->            <...>-18953 [004] ...1 466290.749918: xfs_getattr: dev 253:78 ino
-> 0x1749833903
->            <...>-18953 [004] ...1 466290.749931: xfs_attr_leaf_get: dev
-> 253:78 ino 0x1749833903 name SAMBA_PAI namelen 9 valuelen 1024 hashval
-> 0x487716dd op_flags
->            <...>-18953 [004] ...1 466290.749932: xfs_attr_leaf_lookup: dev
-> 253:78 ino 0x1749833903 name SAMBA_PAI namelen 9 valuelen 1024 hashval
-> 0x487716dd op_flags
->            <...>-18953 [004] ...1 466290.749984: xfs_getattr: dev 253:78 ino
-> 0x1749833903
->            <...>-18953 [004] ...1 466290.749990: xfs_getattr: dev 253:78 ino
-> 0x1749833903
->            <...>-18953 [004] ...1 466290.750063: xfs_setattr: dev 253:78 ino
-> 0x1749833903
->            <...>-18953 [004] ...1 466290.750257: xfs_attr_leaf_addname: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750260: xfs_attr_leaf_lookup: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750261: xfs_attr_leaf_replace: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750262: xfs_attr_leaf_add: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags RENAME|ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750262: xfs_attr_leaf_add_work: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags RENAME|ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750270: xfs_attr_leaf_flipflags:
-> dev 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100
-> hashval 0x275b19c4 op_flags RENAME|ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750275: xfs_attr_leaf_remove: dev
-> 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
-> 0x275b19c4 op_flags RENAME|ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750461: xfs_attr_leaf_removename:
-> dev 253:78 ino 0x1749833903 name NTACL namelen 5 valuelen 0 hashval
-> 0xea9061c8 op_flags OKNOENT
->            <...>-18953 [004] ...1 466290.750463: xfs_attr_leaf_lookup: dev
-> 253:78 ino 0x1749833903 name NTACL namelen 5 valuelen 0 hashval 0xea9061c8
-> op_flags OKNOENT
->            <...>-18953 [004] ...1 466290.750474: xfs_attr_leaf_addname: dev
-> 253:78 ino 0x1749833903 name SAMBA_PAI namelen 9 valuelen 49 hashval
-> 0x487716dd op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750475: xfs_attr_leaf_lookup: dev
-> 253:78 ino 0x1749833903 name SAMBA_PAI namelen 9 valuelen 49 hashval
-> 0x487716dd op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750476: xfs_attr_leaf_add: dev
-> 253:78 ino 0x1749833903 name SAMBA_PAI namelen 9 valuelen 49 hashval
-> 0x487716dd op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750476: xfs_attr_leaf_add_work: dev
-> 253:78 ino 0x1749833903 name SAMBA_PAI namelen 9 valuelen 49 hashval
-> 0x487716dd op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750645: xfs_getattr: dev 253:78 ino
-> 0x1749833903
->            <...>-18953 [004] ...1 466290.750648: xfs_getattr: dev 253:78 ino
-> 0x1749833903
->            <...>-18953 [004] ...1 466290.750645: xfs_getattr: dev 253:78 ino
-> 0x1749833903
->            <...>-18953 [004] ...1 466290.750648: xfs_getattr: dev 253:78 ino
-> 0x1749833903
->            <...>-18953 [004] ...1 466290.750659: xfs_attr_leaf_get: dev
-> 253:78 ino 0x1749833903 name SAMBA_PAI namelen 9 valuelen 1024 hashval
-> 0x487716dd op_flags
->            <...>-18953 [004] ...1 466290.750661: xfs_attr_leaf_lookup: dev
-> 253:78 ino 0x1749833903 name SAMBA_PAI namelen 9 valuelen 1024 hashval
-> 0x487716dd op_flags
->            <...>-18953 [004] ...1 466290.750744: xfs_getattr: dev 253:78 ino
-> 0x1749833903
->            <...>-18953 [004] ...1 466290.750791: xfs_attr_leaf_addname: dev
-> 253:78 ino 0x1749833903 name NTACL namelen 5 valuelen 444 hashval 0xea9061c8
-> op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750793: xfs_attr_leaf_lookup: dev
-> 253:78 ino 0x1749833903 name NTACL namelen 5 valuelen 444 hashval 0xea9061c8
-> op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750794: xfs_attr_leaf_add: dev
-> 253:78 ino 0x1749833903 name NTACL namelen 5 valuelen 444 hashval 0xea9061c8
-> op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.750794: xfs_attr_leaf_add_work: dev
-> 253:78 ino 0x1749833903 name NTACL namelen 5 valuelen 444 hashval 0xea9061c8
-> op_flags ADDNAME|OKNOENT
->            <...>-18953 [004] ...1 466290.751029: xfs_attr_leaf_get: dev
-> 253:78 ino 0x1749833903 name NTACL namelen 5 valuelen 1024 hashval
-> 0xea9061c8 op_flags
->            <...>-18953 [004] ...1 466290.751031: xfs_attr_leaf_lookup: dev
-> 253:78 ino 0x1749833903 name NTACL namelen 5 valuelen 1024 hashval
-> 0xea9061c8 op_flags
-> 
-> 
-> Any pointers/input to check this further is greatly appreciated! Thanks.
-> 
-> --Shyam
-> 
-> On Tue, Apr 26, 2016 at 4:10 PM, Shyam Kaushik <shyam@zadarastorage.com>
-> wrote:
-> Hi Eric,
-> 
-> Yes this is a non-CRC FS. The workload is we a custom application that
-> does several (16 threads) file create/read/writes/update xattrs on a XFS
-> mounted over raw disk.
-> 
-> There is no messages prior to this & we hit this once in a few days (like
-> every 4-5 days). I will try your suggestion of running with xfs_attr_*
-> tracepoints all the time so that when we hit this error we have better
-> info. Please let me know if you prefer to add further debug prints.
-> Thanks.
-> 
-> --Shyam
-> 
-> > Eric Sandeen sandeen at sandeen.net wrote:
-> > On Mon Apr 25 16:57:11 CDT 2016
-> >
-> > Is this a non-crc filesystem?
-> >
-> >
-> > XFS_ATTR_LEAF_MAGIC is ok (if it's a non-crc filesystem)
-> >
-> > Looks the same as the other report, tripping on:
-> >
-> >        if (ichdr.count == 0)
-> >                return false;
-> >
-> > A reproducer would be super here.  At least maybe a description of the
-> > workload that hits it?
-> >
-> > Count is manipulated in things like attr leaf compaction...
-> > Any other messages prior to this?
-> >
-> > How often do you hit it?
-> >
-> > You could also turn on xfs_attr_* tracepoints, maybe.
-> >
-> > -Eric
-> 
-> -----Original Message-----
-> From: Shyam Kaushik [mailto:shyam@zadarastorage.com]
-> Sent: 25 April 2016 22:22
-> To: 'xfs@oss.sgi.com'
-> Cc: Alex Lyakas
-> Subject: Metadata corruption detected at
-> xfs_attr3_leaf_write_verify+0xe5/0x100
-> 
-> Hi Dave et al,
-> 
-> We are periodically hitting the below metadata corruption with XFS over a
-> raw disk running several file copies with xattr operations on kernel
-> 3.18.19. Unmounting & running xfs_repair doesn't report any corruption. I
-> see that this was last reported here
-> http://oss.sgi.com/archives/xfs/2015-12/msg00224.html
-> 
-> Unfortunately we dont have a reproducer, but this issue happens
-> periodically. We can add more debug prints & allow this issue to happen
-> again. Can you pls suggest any options to debug this further? Thanks
-> 
-> Apr 20 21:58:03 node1 kernel: [16736.286370] XFS (dm-26): Metadata
-> corruption detected at xfs_attr3_leaf_write_verify+0xe5/0x100 [xfs], block
-> 0x19c5c728
-> Apr 20 21:58:03 node1 kernel: [16736.289084] XFS (dm-26): Unmount and run
-> xfs_repair
-> Apr 20 21:58:03 node1 kernel: [16736.290257] XFS (dm-26): First 64 bytes
-> of corrupted metadata buffer:
-> Apr 20 21:58:03 node1 kernel: [16736.291797] ffff880123668000: 00 00 00 00
-> 00 00 00 00 fb ee 00 00 00 00 00 00  ................
-> Apr 20 21:58:03 node1 kernel: [16736.293823] ffff880123668010: 10 00 00 00
-> 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
-> Apr 20 21:58:03 node1 kernel: [16736.297504] ffff880123668020: 00 00 00 00
-> 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> Apr 20 21:58:03 node1 kernel: [16736.299343] ffff880123668030: 00 00 00 00
-> 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> Apr 20 21:58:03 node1 kernel: [16736.301465] XFS (dm-26):
-> xfs_do_force_shutdown(0x8) called from line 1244 of file fs/xfs/xfs_buf.c.
-> Return address = 0xffffffffc095cee0
-> Apr 20 21:58:03 node1 kernel: [16736.301469] ------------[ cut here
-> ]------------
-> Apr 20 21:58:03 node1 kernel: [16736.301551] XFS(dm-26): SHUTDOWN!!!
-> old_flags=0x0 new_flags=0x8
-> Apr 20 21:58:03 node1 kernel: [16736.301703] CPU: 1 PID: 7857 Comm:
-> xfsaild/dm-26 Tainted: G           OE  3.18.19 #1
-> Apr 20 21:58:03 node1 kernel: [16736.301705] Hardware name: Bochs Bochs,
-> BIOS Bochs 01/01/2011
-> Apr 20 21:58:03 node1 kernel: [16736.301707]  0000000000000009
-> ffff88020c5ffb38 ffffffff81710c85 0000000000000000
-> Apr 20 21:58:03 node1 kernel: [16736.301711]  ffff88020c5ffb88
-> ffff88020c5ffb78 ffffffff81072df1 2e2e202030302030
-> Apr 20 21:58:03 node1 kernel: [16736.301715]  0000000000000000
-> 0000000000000008 ffff88020c127000 0000000000000000
-> Apr 20 21:58:03 node1 kernel: [16736.301718] Call Trace:
-> Apr 20 21:58:03 node1 kernel: [16736.301769]  [<ffffffff81710c85>]
-> dump_stack+0x4e/0x71
-> Apr 20 21:58:03 node1 kernel: [16736.301780]  [<ffffffff81072df1>]
-> warn_slowpath_common+0x81/0xa0
-> Apr 20 21:58:03 node1 kernel: [16736.301784]  [<ffffffff81072e56>]
-> warn_slowpath_fmt+0x46/0x50
-> Apr 20 21:58:03 node1 kernel: [16736.301860]  [<ffffffffc09693f3>]
-> xfs_do_force_shutdown+0x33/0x170 [xfs]
-> Apr 20 21:58:03 node1 kernel: [16736.301921]  [<ffffffffc095cee0>] ?
-> _xfs_buf_ioapply+0xa0/0x430 [xfs]
-> Apr 20 21:58:03 node1 kernel: [16736.301951]  [<ffffffffc095ee4b>] ?
-> __xfs_buf_delwri_submit+0x22b/0x290 [xfs]
-> Apr 20 21:58:03 node1 kernel: [16736.302066]  [<ffffffffc095cee0>]
-> _xfs_buf_ioapply+0xa0/0x430 [xfs]
-> Apr 20 21:58:03 node1 kernel: [16736.302137]  [<ffffffff8109e260>] ?
-> wake_up_state+0x20/0x20
-> Apr 20 21:58:03 node1 kernel: [16736.302162]  [<ffffffffc095ee4b>] ?
-> __xfs_buf_delwri_submit+0x22b/0x290 [xfs]
-> Apr 20 21:58:03 node1 kernel: [16736.302183]  [<ffffffffc095ea78>]
-> xfs_buf_submit+0x68/0x210 [xfs]
-> Apr 20 21:58:03 node1 kernel: [16736.302241]  [<ffffffffc095ee4b>]
-> __xfs_buf_delwri_submit+0x22b/0x290 [xfs]
-> Apr 20 21:58:03 node1 kernel: [16736.302267]  [<ffffffffc095fc60>] ?
-> xfs_buf_delwri_submit_nowait+0x20/0x30 [xfs]
-> Apr 20 21:58:03 node1 kernel: [16736.302291]  [<ffffffffc098f440>] ?
-> xfs_trans_ail_cursor_first+0x90/0x90 [xfs]
-> Apr 20 21:58:03 node1 kernel: [16736.302308]  [<ffffffffc095fc60>]
-> xfs_buf_delwri_submit_nowait+0x20/0x30 [xfs]
-> Apr 20 21:58:03 node1 kernel: [16736.302333]  [<ffffffffc098f66b>]
-> xfsaild+0x22b/0x630 [xfs]
-> Apr 20 21:58:03 node1 kernel: [16736.302513]  [<ffffffffc098f440>] ?
-> xfs_trans_ail_cursor_first+0x90/0x90 [xfs]
-> Apr 20 21:58:03 node1 kernel: [16736.302518]  [<ffffffff810911b9>]
-> kthread+0xc9/0xe0
-> Apr 20 21:58:03 node1 kernel: [16736.302522]  [<ffffffff810910f0>] ?
-> kthread_create_on_node+0x180/0x180
-> Apr 20 21:58:03 node1 kernel: [16736.302530]  [<ffffffff81717918>]
-> ret_from_fork+0x58/0x90
-> Apr 20 21:58:03 node1 kernel: [16736.302549]  [<ffffffff810910f0>] ?
-> kthread_create_on_node+0x180/0x180
-> Apr 20 21:58:03 node1 kernel: [16736.302551] ---[ end trace
-> 0bb81b88fdd6a298 ]---
-> 
-> --Shyam
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+(I haven't reviewed the formatting for sanity).
+
+> +/* Check for btree corruption. */
+> +bool
+> +xfs_scrub_btree_ok(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_btree_cur		*cur,
+> +	int				level,
+> +	bool				fs_ok,
+> +	const char			*check,
+> +	const char			*func,
+> +	int				line)
+> +{
+> +	char				bt_ptr[24];
+> +	char				bt_type[48];
+> +	xfs_fsblock_t			fsbno;
+> +
+> +	if (fs_ok)
+> +		return fs_ok;
+> +
+> +	sc->sm->sm_flags |= XFS_SCRUB_FLAG_CORRUPT;
+> +	xfs_scrub_btree_format(cur, level, bt_type, 48, bt_ptr, 24, &fsbno);
+
+Ok, magic numbers for buffer lengths. Please use #defines for these
+with an explanation of why the chosen lengths are sufficient for the
+information they'll be used to hold.
+
+> +	trace_xfs_scrub_btree_error(cur->bc_mp, bt_type, bt_ptr,
+> +			XFS_FSB_TO_AGNO(cur->bc_mp, fsbno),
+> +			XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno),
+> +			check, func, line);
+
+hmmmm - tracepoints are conditional, but the formatting call isn't.
+Can this formatting be called/run from inside the tracepoint code
+itself?
+
+> +
+> +/*
+> + * Make sure this record is in order and doesn't stray outside of the parent
+> + * keys.
+> + */
+> +STATIC int
+> +xfs_scrub_btree_rec(
+> +	struct xfs_scrub_btree	*bs)
+> +{
+> +	struct xfs_btree_cur	*cur = bs->cur;
+> +	union xfs_btree_rec	*rec;
+> +	union xfs_btree_key	key;
+> +	union xfs_btree_key	hkey;
+> +	union xfs_btree_key	*keyp;
+> +	struct xfs_btree_block	*block;
+> +	struct xfs_btree_block	*keyblock;
+> +	struct xfs_buf		*bp;
+> +
+> +	block = xfs_btree_get_block(cur, 0, &bp);
+> +	rec = xfs_btree_rec_addr(cur, cur->bc_ptrs[0], block);
+> +
+> +	if (bp)
+> +		trace_xfs_scrub_btree_rec(cur->bc_mp,
+> +				XFS_FSB_TO_AGNO(cur->bc_mp,
+> +					XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn)),
+> +				XFS_FSB_TO_AGBNO(cur->bc_mp,
+> +					XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn)),
+> +				cur->bc_btnum, 0, cur->bc_nlevels,
+> +				cur->bc_ptrs[0]);
+> +	else if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
+> +		trace_xfs_scrub_btree_rec(cur->bc_mp,
+> +				XFS_INO_TO_AGNO(cur->bc_mp,
+> +					cur->bc_private.b.ip->i_ino),
+> +				XFS_INO_TO_AGBNO(cur->bc_mp,
+> +					cur->bc_private.b.ip->i_ino),
+> +				cur->bc_btnum, 0, cur->bc_nlevels,
+> +				cur->bc_ptrs[0]);
+> +	else
+> +		trace_xfs_scrub_btree_rec(cur->bc_mp,
+> +				NULLAGNUMBER, NULLAGBLOCK,
+> +				cur->bc_btnum, 0, cur->bc_nlevels,
+> +				cur->bc_ptrs[0]);
+
+Hmmm - there's more code in the trace calls than there is in the
+scrubbing code. Is this really all necessary? I can see code
+getting changed in future but not the tracepoints, similar to how
+comment updates get missed...
+
+> +	/* If this isn't the first record, are they in order? */
+> +	XFS_SCRUB_BTREC_CHECK(bs, bs->firstrec ||
+> +			cur->bc_ops->recs_inorder(cur, &bs->lastrec, rec));
+
+So, I go look at the macro:
+
+define XFS_SCRUB_BTREC_CHECK(bs, fs_ok) \
+	xfs_scrub_btree_ok((bs)->sc, (bs)->cur, 0, (fs_ok), #fs_ok, \
+			   __func__, __LINE__)
+
+I find this:
+
+	/* If this isn't the first record, are they in order? */
+	if (!(bs->firstrec &&
+	     cur->bc_ops->recs_inorder(cur, &bs->lastrec, rec)))
+		xfs_scrub_btree_error(bs->sc, cur, 0, "Record order", _THIS_IP_)
+
+A lot easier to read, understand and maintain because I don't have
+to go look at a macro to find out it actually does and what happens
+if the records aren't in order....
+
+> +/* Check a btree pointer. */
+> +static int
+> +xfs_scrub_btree_ptr(
+> +	struct xfs_scrub_btree		*bs,
+> +	int				level,
+> +	union xfs_btree_ptr		*ptr)
+> +{
+> +	struct xfs_btree_cur		*cur = bs->cur;
+> +	xfs_daddr_t			daddr;
+> +	xfs_daddr_t			eofs;
+> +
+> +	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) &&
+> +			level == cur->bc_nlevels) {
+> +		if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
+> +			XFS_SCRUB_BTKEY_GOTO(bs, level, ptr->l == 0, corrupt);
+> +		} else {
+> +			XFS_SCRUB_BTKEY_GOTO(bs, level, ptr->s == 0, corrupt);
+> +		}
+> +		return 0;
+> +	}
+> +
+> +	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
+> +		XFS_SCRUB_BTKEY_GOTO(bs, level,
+> +				ptr->l != cpu_to_be64(NULLFSBLOCK), corrupt);
+> +
+> +		daddr = XFS_FSB_TO_DADDR(cur->bc_mp, be64_to_cpu(ptr->l));
+> +	} else {
+> +		XFS_SCRUB_BTKEY_GOTO(bs, level,
+> +				cur->bc_private.a.agno != NULLAGNUMBER, corrupt);
+> +		XFS_SCRUB_BTKEY_GOTO(bs, level,
+> +				ptr->s != cpu_to_be32(NULLAGBLOCK), corrupt);
+> +
+
+Need to check the ptr points to an agbno within the AG size.
+
+Also:
+	why no tracing on ptr values?
+	check the ptr points to an agbno within the AG size.
+	check the ptr points to an agno within agcount
+
+
+> +		daddr = XFS_AGB_TO_DADDR(cur->bc_mp, cur->bc_private.a.agno,
+> +				be32_to_cpu(ptr->s));
+> +	}
+> +	eofs = XFS_FSB_TO_BB(cur->bc_mp, cur->bc_mp->m_sb.sb_dblocks);
+> +	XFS_SCRUB_BTKEY_GOTO(bs, level, daddr != 0, corrupt);
+> +	XFS_SCRUB_BTKEY_GOTO(bs, level, daddr < eofs, corrupt);
+> +
+> +	return 0;
+> +
+> +corrupt:
+> +	return -EFSCORRUPTED;
+> +}
+> +
+> +/* Check the siblings of a large format btree block. */
+> +STATIC int
+> +xfs_scrub_btree_lblock_check_siblings(
+> +	struct xfs_scrub_btree		*bs,
+> +	struct xfs_btree_block		*block)
+> +{
+> +	struct xfs_btree_block		*pblock;
+> +	struct xfs_buf			*pbp;
+> +	struct xfs_btree_cur		*ncur = NULL;
+> +	union xfs_btree_ptr		*pp;
+> +	xfs_fsblock_t			leftsib;
+> +	xfs_fsblock_t			rightsib;
+> +	xfs_fsblock_t			fsbno;
+> +	int				level;
+> +	int				success;
+> +	int				error = 0;
+> +
+> +	leftsib = be64_to_cpu(block->bb_u.l.bb_leftsib);
+> +	rightsib = be64_to_cpu(block->bb_u.l.bb_rightsib);
+> +	level = xfs_btree_get_level(block);
+> +
+> +	/* Root block should never have siblings. */
+> +	if (level == bs->cur->bc_nlevels - 1) {
+> +		XFS_SCRUB_BTKEY_CHECK(bs, level, leftsib == NULLFSBLOCK);
+> +		XFS_SCRUB_BTKEY_CHECK(bs, level, rightsib == NULLFSBLOCK);
+> +		return error;
+> +	}
+
+This is where the macros force us into silly patterns and blow out
+the code size.
+
+	if (level == bs->cur->bc_nlevels - 1 &&
+	    (leftsib != NULLFSBLOCK || rightsib != NULLFSBLOCK) {
+		/* error trace call */
+		return error;
+	}
+
+
+> +	/* Does the left sibling match the parent level left block? */
+> +	if (leftsib != NULLFSBLOCK) {
+> +		error = xfs_btree_dup_cursor(bs->cur, &ncur);
+> +		if (error)
+> +			return error;
+> +		error = xfs_btree_decrement(ncur, level + 1, &success);
+> +		XFS_SCRUB_BTKEY_OP_ERROR_GOTO(bs, level + 1, &error, out_cur);
+
+Hmmm - if I read that right, there's a goto out_cur on error hidden
+in this macro....
+
+> +		XFS_SCRUB_BTKEY_GOTO(bs, level, success, out_cur);
+> +
+> +		pblock = xfs_btree_get_block(ncur, level + 1, &pbp);
+> +		pp = xfs_btree_ptr_addr(ncur, ncur->bc_ptrs[level + 1], pblock);
+> +		if (!xfs_scrub_btree_ptr(bs, level + 1, pp)) {
+> +			fsbno = be64_to_cpu(pp->l);
+> +			XFS_SCRUB_BTKEY_CHECK(bs, level, fsbno == leftsib);
+> +		}
+> +
+> +		xfs_btree_del_cursor(ncur, XFS_BTREE_ERROR);
+> +		ncur = NULL;
+> +	}
+> +
+> +	/* Does the right sibling match the parent level right block? */
+> +	if (!error && rightsib != NULLFSBLOCK) {
+
+So when would error ever be non-zero here?
+
+This is one of the reasons I really don't like all the macros in
+this code - it unnecessarily obfuscates the checks being done and
+the code flow....
+
+> +/* Check the siblings of a small format btree block. */
+> +STATIC int
+> +xfs_scrub_btree_sblock_check_siblings(
+> +	struct xfs_scrub_btree		*bs,
+> +	struct xfs_btree_block		*block)
+> +{
+> +	struct xfs_btree_block		*pblock;
+> +	struct xfs_buf			*pbp;
+> +	struct xfs_btree_cur		*ncur = NULL;
+> +	union xfs_btree_ptr		*pp;
+> +	xfs_agblock_t			leftsib;
+> +	xfs_agblock_t			rightsib;
+> +	xfs_agblock_t			agbno;
+> +	int				level;
+> +	int				success;
+> +	int				error = 0;
+> +
+> +	leftsib = be32_to_cpu(block->bb_u.s.bb_leftsib);
+> +	rightsib = be32_to_cpu(block->bb_u.s.bb_rightsib);
+> +	level = xfs_btree_get_level(block);
+> +
+> +	/* Root block should never have siblings. */
+> +	if (level == bs->cur->bc_nlevels - 1) {
+> +		XFS_SCRUB_BTKEY_CHECK(bs, level, leftsib == NULLAGBLOCK);
+> +		XFS_SCRUB_BTKEY_CHECK(bs, level, rightsib == NULLAGBLOCK);
+> +		return error;
+> +	}
+> +
+> +	/* Does the left sibling match the parent level left block? */
+> +	if (leftsib != NULLAGBLOCK) {
+> +		error = xfs_btree_dup_cursor(bs->cur, &ncur);
+> +		if (error)
+> +			return error;
+> +		error = xfs_btree_decrement(ncur, level + 1, &success);
+> +		XFS_SCRUB_BTKEY_OP_ERROR_GOTO(bs, level + 1, &error, out_cur);
+> +		XFS_SCRUB_BTKEY_GOTO(bs, level, success, verify_rightsib);
+
+Why is this different to the lblock checks?
+
+FWIW, this is one of the reasons for abstracting the sblock/lblock
+code as much as possible - the core operations should be identical,
+so apart from header decode/encode operations, the rest of the code
+should be shared...
+
+> +
+> +		pblock = xfs_btree_get_block(ncur, level + 1, &pbp);
+> +		pp = xfs_btree_ptr_addr(ncur, ncur->bc_ptrs[level + 1], pblock);
+> +		if (!xfs_scrub_btree_ptr(bs, level + 1, pp)) {
+> +			agbno = be32_to_cpu(pp->s);
+> +			XFS_SCRUB_BTKEY_CHECK(bs, level, agbno == leftsib);
+> +		}
+> +
+> +		xfs_btree_del_cursor(ncur, XFS_BTREE_ERROR);
+> +		ncur = NULL;
+> +	}
+> +
+> +verify_rightsib:
+> +	if (ncur) {
+> +		xfs_btree_del_cursor(ncur, XFS_BTREE_ERROR);
+> +		ncur = NULL;
+> +	}
+> +
+> +	/* Does the right sibling match the parent level right block? */
+> +	if (rightsib != NULLAGBLOCK) {
+
+No "if (!error ...) check here - I'm thinking there's some factoring
+needed here to reduce the code duplication going on here...
+
+> +/*
+> + * Visit all nodes and leaves of a btree.  Check that all pointers and
+> + * records are in order, that the keys reflect the records, and use a callback
+> + * so that the caller can verify individual records.  The callback is the same
+> + * as the one for xfs_btree_query_range, so therefore this function also
+> + * returns XFS_BTREE_QUERY_RANGE_ABORT, zero, or a negative error code.
+> + */
+> +int
+> +xfs_scrub_btree(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_btree_cur		*cur,
+> +	xfs_scrub_btree_rec_fn		scrub_fn,
+> +	struct xfs_owner_info		*oinfo,
+> +	void				*private)
+> +{
+> +	struct xfs_scrub_btree		bs = {0};
+> +	union xfs_btree_ptr		ptr;
+> +	union xfs_btree_ptr		*pp;
+> +	union xfs_btree_rec		*recp;
+> +	struct xfs_btree_block		*block;
+> +	int				level;
+> +	struct xfs_buf			*bp;
+> +	int				i;
+> +	int				error = 0;
+> +
+> +	/* Finish filling out the scrub state */
+
+	/* Initialise the scrub state */
+
+> +	bs.cur = cur;
+> +	bs.scrub_rec = scrub_fn;
+> +	bs.oinfo = oinfo;
+> +	bs.firstrec = true;
+> +	bs.private = private;
+> +	bs.sc = sc;
+> +	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++)
+> +		bs.firstkey[i] = true;
+> +	INIT_LIST_HEAD(&bs.to_check);
+> +
+> +	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
+> +		bs.check_siblings_fn = xfs_scrub_btree_lblock_check_siblings;
+> +	else
+> +		bs.check_siblings_fn = xfs_scrub_btree_sblock_check_siblings;
+
+I'm thinking now that maybe a "get sibling from block" is what is
+necessary here, so there can be a shared check function....
+
+> +	/* Don't try to check a tree with a height we can't handle. */
+> +	XFS_SCRUB_BTREC_GOTO(&bs, cur->bc_nlevels > 0, out_badcursor);
+> +	XFS_SCRUB_BTREC_GOTO(&bs, cur->bc_nlevels <= XFS_BTREE_MAXLEVELS,
+> +			out_badcursor);
+
+More single checks that are doubled up...
+
+....
+> +out:
+> +	/*
+> +	 * If we don't end this function with the cursor pointing at a record
+> +	 * block, a subsequent non-error cursor deletion will not release
+> +	 * node-level buffers, causing a buffer leak.  This is quite possible
+> +	 * with a zero-results scrubbing run, so release the buffers if we
+> +	 * aren't pointing at a record.
+> +	 */
+> +	if (cur->bc_bufs[0] == NULL) {
+> +		for (i = 0; i < cur->bc_nlevels; i++) {
+> +			if (cur->bc_bufs[i]) {
+> +				xfs_trans_brelse(cur->bc_tp, cur->bc_bufs[i]);
+> +				cur->bc_bufs[i] = NULL;
+> +				cur->bc_ptrs[i] = 0;
+> +				cur->bc_ra[i] = 0;
+> +			}
+> +		}
+> +	}
+
+I think cursor deletion should be made to handle this case, rather
+than special casing it here....
+
+> +struct xfs_scrub_btree;
+> +typedef int (*xfs_scrub_btree_rec_fn)(
+> +	struct xfs_scrub_btree	*bs,
+> +	union xfs_btree_rec	*rec);
+> +
+> +struct xfs_scrub_btree {
+> +	/* caller-provided scrub state */
+> +	struct xfs_scrub_context	*sc;
+> +	struct xfs_btree_cur		*cur;
+> +	xfs_scrub_btree_rec_fn		scrub_rec;
+> +	struct xfs_owner_info		*oinfo;
+> +	void				*private;
+> +
+> +	/* internal scrub state */
+> +	union xfs_btree_rec		lastrec;
+> +	bool				firstrec;
+> +	union xfs_btree_key		lastkey[XFS_BTREE_MAXLEVELS];
+> +	bool				firstkey[XFS_BTREE_MAXLEVELS];
+> +	struct list_head		to_check;
+> +	int				(*check_siblings_fn)(
+> +						struct xfs_scrub_btree *,
+> +						struct xfs_btree_block *);
+> +};
+
+This looks like maybe another ops style structure should be used. We've
+got a xfs_scrub_btree_rec_fn() and check_siblings_fn() operations -
+maybe these should be pushed into the generic libxfs btree ops
+vectors?
+
+> +int xfs_scrub_btree(struct xfs_scrub_context *sc, struct xfs_btree_cur *cur,
+> +		    xfs_scrub_btree_rec_fn scrub_fn,
+> +		    struct xfs_owner_info *oinfo, void *private);
+> +
+> +#endif /* __XFS_REPAIR_BTREE_H__ */
+> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> index 6931793..331aa14 100644
+> --- a/fs/xfs/scrub/common.c
+> +++ b/fs/xfs/scrub/common.c
+> @@ -43,6 +43,7 @@
+>  #include "xfs_rmap_btree.h"
+>  #include "scrub/xfs_scrub.h"
+>  #include "scrub/common.h"
+> +#include "scrub/btree.h"
+>  
+>  /*
+>   * Online Scrub and Repair
+> @@ -367,6 +368,172 @@ xfs_scrub_incomplete(
+>  	return fs_ok;
+>  }
+>  
+> +/* AG scrubbing */
+> +
+
+All this from here down doesn't seem related to scrubbing a btree?
+It's infrastructure for scanning AGs, but I don't see where it is
+called from - it looks unused at this point. I think it should be
+separated from the btree validation into it's own patchset and put
+before the individual btree verification code...
+
+I haven't really looked at this AG scrubbing code in depth because I
+can't tell how it fits into the code that is supposed to call it
+yet. I've read it, but without knowing how it's called I can't tell
+if the abstractions are just convoluted or whether they are
+necessary due to the infrastructure eventually ending up with
+multiple different call sites for some of the functions...
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
