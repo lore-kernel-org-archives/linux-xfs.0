@@ -1,92 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:14706 "EHLO
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:35061 "EHLO
         ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751210AbdGYXZk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2017 19:25:40 -0400
-Date: Wed, 26 Jul 2017 09:25:36 +1000
+        by vger.kernel.org with ESMTP id S1751325AbdGYXnM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2017 19:43:12 -0400
+Date: Wed, 26 Jul 2017 09:43:09 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] docs: record the metadump file format
-Message-ID: <20170725232536.GJ17762@dastard>
-References: <20170615220002.GB4530@birch.djwong.org>
- <20170725162054.GG18884@wotan.suse.de>
- <20170725163612.GD4369@magnolia>
+Subject: Re: warnings complaining IOMAP_DELALLOC blocks in iomap_dio_actor
+ from generic/446
+Message-ID: <20170725234309.GK17762@dastard>
+References: <20170724145019.GG9167@eguan.usersys.redhat.com>
+ <20170724160551.GB4352@magnolia>
+ <20170724175125.GH9167@eguan.usersys.redhat.com>
+ <20170724220205.GE17762@dastard>
+ <20170725075348.GO9167@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170725163612.GD4369@magnolia>
+In-Reply-To: <20170725075348.GO9167@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: Eryu Guan <eguan@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Tue, Jul 25, 2017 at 09:36:12AM -0700, Darrick J. Wong wrote:
-> [cc xfs]
+On Tue, Jul 25, 2017 at 03:53:48PM +0800, Eryu Guan wrote:
+> On Tue, Jul 25, 2017 at 08:02:05AM +1000, Dave Chinner wrote:
+> > On Tue, Jul 25, 2017 at 01:51:25AM +0800, Eryu Guan wrote:
+> > > On Mon, Jul 24, 2017 at 09:05:51AM -0700, Darrick J. Wong wrote:
+> > > > On Mon, Jul 24, 2017 at 10:50:19PM +0800, Eryu Guan wrote:
+> > > And I'm wondering what's the bigger problem of letting the dio path take
+> > > MMAPLOCK too to serialize against mmap page faults? e.g.
+> > > xfs_file_dio_aio_read() takes XFS_MMAPLOCK_SHRED and
+> > > xfs_filemap_page_mkwrite() takes XFS_MMAPLOCK_EXCL.
+> > 
+> > direct IO calls get_user_pages() which can trigger page faults and
+> > that means we can't hold any lock that is taken in the page fault
+> > path.
 > 
-> On Tue, Jul 25, 2017 at 06:20:54PM +0200, Luis R. Rodriguez wrote:
-> > On Thu, Jun 15, 2017 at 03:00:02PM -0700, Darrick J. Wong wrote:
-> > > Document the metadump file format.
-> > 
-> > Thanks for all this! I have started wondering all this and was
-> > curious if there are perhaps more docs about the format or more
-> > practical docs which can help one go read the dumps and help
-> > analyze through examples.
-> > 
-> > > --- /dev/null
-> > > +++ b/design/XFS_Filesystem_Structure/metadump.asciidoc
-> > > +== Dump Obfuscation
-> > > +
-> > > +Unless explicitly disabled, the +xfs_metadump+ tool obfuscates empty block
-> > > +space and naming information to avoid leaking sensitive information into
-> > > +the metadump file.  +xfs_metadump+ does not copy user data blocks.
-> > > +
-> > > +The obfuscation policy is as follows:
-> > > +
-> > > +* File and extended attribute names are both considered "names".
-> > > +* Names longer than 8 characters are totally rewritten with a name that matches the hash of the old name.
-> > > +* Names between 5 and 8 characters are partially rewritten to match the hash of the old name.
-> > 
-> > Any reason for this?
+> Ah, that's what I missed, thanks!
 > 
-> /me doesn't know.  Maybe it's too hard to generate a new name with the
-> same hash?
->
-> > > +* Names shorter than 5 characters are not obscured at all.
 > > 
-> > This does not seem like a good idea, do we have a record of why this was done
-> > historically?
-
-It was done because of mathematics. This is all "IIRC" off the top
-of my head....
-
-The hash we calculate is 4 bytes long, so we can't calculate a hash
-collision from less than 5 bytes of input. i.e. 4 bytes + 1 byte
-to cause collision is the shortest we can obfuscate, but one byte of
-"name overwrite" isn't enough to find collisions if all 4 of the
-first 4 bytes are randomly chosen.
-
-Hence for names 5-8 bytes in length we are limited to 1 byte of
-correction for each of the first 4 bytes that is randomised. Hence
-it's not until filenames are longer than 8 bytes that we can
-generate a truly random filename that causes a hash collision.
-
-> > > +* Names that cross a block boundary are not obscured at all.
+> > It's the same reason we have the MMAPLOCK in the first place - we
+> > can't use the IOLOCK in the page fault path because copy-in/copy-out
+> > in the buffered IO path can trigger page faults, hence we need some
+> > other lock that we can use to serialise page faults against extent
+> > operations (like fallocate).
 > > 
-> > Likewise.
+> > > > It looks like the end result of a dioread/mmapwrite collision is that
+> > > > the dio reader gets -EIO.  Would it be better to return a short read?
+> > > 
+> > > Yes, right now dio read gets EIO in this case. I can't tell which one is
+> > > better, if the whole dio vs mmap is not recommended, EIO seems to be a
+> > > strong signal that indicates "don't do this " :)
+> > 
+> > $ man 2 open
+> > .....
+> > 	.... Likewise, applications should avoid  mixing  mmap(2)
+> > 	of files with direct I/O to the same files.
+> > ....
+> > 
+> > That said, EIO is extremely unfriendly - a short read would be much
+> > better as a properly written app will simply try to read the bit it
+> > didn't get again, whereas EIO tends to be an indication of severe
+> > failure to the application...
 > 
-> iirc we basically copy things a block at a time, which makes it harder
-> to deal with multi-fsblock dirblocks (???)
+> The problem is dio read could hit delalloc blocks on its first read and
+> return 0, how can we tell between a short read and a real EOF? I may
+> miss something again ..
 
-Discontiguous multi-block directories should be handled
-transparently for xfs_db via libxfs buffers now. Maybe metadump
-doesn't use these for dumping directory blocks? Also, We shouldn't
-be splitting names and values across da block boundaries - we leave
-free space in the block and allocate a new one if it doesn't fit....
+Well, stat() + lseek(fd, 0, SEEK_CUR) can be used to determine if
+the read() started at the current EOF.
+
+But, yeah, the read(2) man page says "return of zero means EOF" but
+then muddies the waters by saying "a read with count = 0 will return
+zero but have no effect". IOWs, a return of 0 does not /always/ mean
+the read was called at/beyond EOF....
+
+Yay?
+
+POSIX defined behaviour can be a real problem at times, especially
+when you are using methods that are specifically designed to work
+around limitations of the POSIX specification. Like, for example,
+applications using direct IO...
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
