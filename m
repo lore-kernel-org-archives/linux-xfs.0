@@ -1,72 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40674 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932195AbdGXSgx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Jul 2017 14:36:53 -0400
-Date: Mon, 24 Jul 2017 14:36:51 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH] xfs: consolidate local format inode fork verifiers
-Message-ID: <20170724183651.GA12942@bfoster.bfoster>
-References: <20170719160318.GP4224@magnolia>
- <20170720022602.GR17762@dastard>
- <20170720055057.GQ4224@magnolia>
- <20170720224934.GW17762@dastard>
- <20170721135405.GB44069@bfoster.bfoster>
- <20170721230058.GY17762@dastard>
- <20170722122944.GA4783@bfoster.bfoster>
- <20170724052638.GD17762@dastard>
- <20170724130752.GA11537@bfoster.bfoster>
+Received: from mx2.suse.de ([195.135.220.15]:50456 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750897AbdGYMpP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Jul 2017 08:45:15 -0400
+Date: Tue, 25 Jul 2017 14:45:11 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 5/5] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
+Message-ID: <20170725124511.GG19943@quack2.suse.cz>
+References: <20170629135420.21357-1-hch@lst.de>
+ <20170629135420.21357-6-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170724130752.GA11537@bfoster.bfoster>
+In-Reply-To: <20170629135420.21357-6-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Mon, Jul 24, 2017 at 09:07:52AM -0400, Brian Foster wrote:
-> On Mon, Jul 24, 2017 at 03:26:38PM +1000, Dave Chinner wrote:
-> > On Sat, Jul 22, 2017 at 08:29:44AM -0400, Brian Foster wrote:
-> > > On Sat, Jul 22, 2017 at 09:00:58AM +1000, Dave Chinner wrote:
-> > > > On Fri, Jul 21, 2017 at 09:54:05AM -0400, Brian Foster wrote:
-> > > > > On Fri, Jul 21, 2017 at 08:49:34AM +1000, Dave Chinner wrote:
-...
-> 
-> [1] A simple test that we can do at the moment is to compare a
-> production xfs.ko with one with asserts enabled. My local for-next
-> branch builds a module of 40104000 bytes without XFS_WARN and 40540208
-> bytes with XFS_WARN enabled. That makes for a difference of ~425k and
-> roughly a 1% code size increase (accounting for ~1750 asserts and
-> supporting code).
-> 
+On Thu 29-06-17 06:54:20, Christoph Hellwig wrote:
+> @@ -3359,6 +3358,7 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+>  	unsigned long first_block = offset >> blkbits;
+>  	unsigned long last_block = (offset + length - 1) >> blkbits;
+>  	struct ext4_map_blocks map;
+> +	bool delalloc = false;
+>  	int ret;
+>  
+>  	if (WARN_ON_ONCE(ext4_has_inline_data(inode)))
+> @@ -3369,6 +3369,27 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+>  
+>  	if (!(flags & IOMAP_WRITE)) {
+>  		ret = ext4_map_blocks(NULL, inode, &map, 0);
+> +		if (!ret) {
+> +			struct extent_status es = {};
+> +
+> +			ext4_es_find_delayed_extent_range(inode, map.m_lblk,
+> +					map.m_lblk + map.m_len - 1, &es);
+> +			/* Is delalloc data before next block in extent tree? */
+> +			if (es.es_len && es.es_lblk < map.m_lblk + map.m_len) {
+> +				ext4_lblk_t offset = 0;
+> +
+> +				if (es.es_lblk < map.m_lblk)
+> +					offset = map.m_lblk - es.es_lblk;
+> +				map.m_lblk = es.es_lblk + offset;
+> +				map.m_pblk = ext4_es_pblock(&es) + offset;
 
-FWIW, the huge size here didn't register to me until Darrick mentioned
-it on irc. I'm guessing I have a bunch of debug enabled in my kernel
-config (that I don't really want to disable right now). If I strip the
-resulting module binaries, I end up with 1076736 bytes vs. 1210624 bytes
-(for a 130kb delta and ~12% increase), which I'm guessing is a more
-accurate assessment.
+This is wrong for delalloc extent - adding offset to some magic block
+value...
 
-Brian
+> +				map.m_len = es.es_len - offset;
+> +				if (ext4_es_status(&es) & EXTENT_STATUS_UNWRITTEN)
+> +					map.m_flags |= EXT4_MAP_UNWRITTEN;
+> +				if (ext4_es_status(&es) & EXTENT_STATUS_DELAYED)
+> +					delalloc = true;
+> +				ret = 1;
+> +			}
+> +		}
 
-> [2] We may not want to use ASSERT() here, but perhaps define a new
-> variant to omit the stack trace and otherwise customize to a verifier
-> report.
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > 
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Also the delalloc handling seems to be wrong that if we have file as:
+
+HD
+
+where H is hole, D is delalloc block, and iomap is called at offset 0, we
+should be getting back "hole at 0" back but instead you will return
+"delalloc at 1".
+
+We deal with a similar situation in ext4_da_map_blocks() so it would be
+good if we could reuse that one rather than reimplementing it here. But
+factoring the necessary functionality out isn't that easy.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
