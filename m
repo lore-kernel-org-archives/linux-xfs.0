@@ -1,60 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:33595 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755065AbdGXRiT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2017 13:38:19 -0400
-Date: Mon, 24 Jul 2017 10:38:15 -0700
-From: Eric Biggers <ebiggers3@gmail.com>
-Subject: Re: [PATCH v2 00/15] xfstests: remove IRIX support
-Message-ID: <20170724173815.GB143373@gmail.com>
-References: <20170721043853.364-1-ebiggers3@gmail.com>
- <20170724044308.GB9167@eguan.usersys.redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:47654 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750732AbdGYMQw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Jul 2017 08:16:52 -0400
+Date: Tue, 25 Jul 2017 14:16:44 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v4 3/3] ext4: Add IOMAP_REPORT support for inline data
+Message-ID: <20170725121644.GF19943@quack2.suse.cz>
+References: <CAHc6FU4u+G1gtZVr3CUbJi2i+GwWhfDUOZemQ4Nnde=uiOmjXA@mail.gmail.com>
+ <1499462881-4238-4-git-send-email-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170724044308.GB9167@eguan.usersys.redhat.com>
+In-Reply-To: <1499462881-4238-4-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Mon, Jul 24, 2017 at 12:43:08PM +0800, Eryu Guan wrote:
-> On Thu, Jul 20, 2017 at 09:38:38PM -0700, Eric Biggers wrote:
-> > Hello,
-> > 
-> > This is v2 of the patchset to remove IRIX support from xfstests.  For
-> > some time xfstests has de facto not supported IRIX anymore.  The final
-> > release of IRIX was over 10 years ago and it seems no one has been
-> > running the latest xfstests releases on any IRIX system, as at the very
-> > least xfstests now assumes the existence of some util-linux binaries.
-> > There are very likely other examples of this bitrot as well.  Also,
-> > xfsprogs has already dropped IRIX support.
-> > 
-> > Therefore, this patchset simplifies things by removing IRIX support from
-> > the xfstests tests, build system, and documentation.  It also ports the
-> > useful IRIX-specific tests to Linux.  Of course, people will still find
-> > more cruft later to remove, but this should be a good start.
-> > 
-> > To get around the mailing list message size limit, the series is
-> > formatted with --irreversible-delete.  Therefore it can't be applied
-> > directly.  It can be retrieved from git here:
-> > https://github.com/ebiggers/xfstests.git, branch remove_irix_support_v2.
-> 
-> Great work! Thank you so much for doing this! I pulled & merged your
-> branch into a test branch and am running some tests now, overall it
-> looks good to me.
-> 
-> Though, as you mentioned, there're some places that could do further
-> cleanups (e.g. I'm wondering if we can kill _supported_os completely and
-> remove it from 'new' template, and some $HOSTOS and $PKG_PLATFORM checks
-> could be cleaned up too), I agree this is a great start. Thanks again!
-> 
+On Fri 07-07-17 23:28:01, Andreas Gruenbacher wrote:
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 82f3f7d..e2b0a8a 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -3361,8 +3361,13 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+>  	bool delalloc = false;
+>  	int ret;
+>  
+> -	if (WARN_ON_ONCE(ext4_has_inline_data(inode)))
+> -		return -ERANGE;
+> +	if (ext4_has_inline_data(inode)) {
+> +		if (WARN_ON_ONCE(!(flags & IOMAP_REPORT)))
+> +			return -ERANGE;
+> +		if (!ext4_inline_data_iomap(inode, iomap) &&
+> +		    offset < iomap->length)
 
-We shouldn't make it too hard to port xfstests to other platforms in the future,
-but yes I think at least _supported_os and $HOSTOS should probably go, since
-they're subject to bitrot and checking the OS isn't usually what is really
-wanted anyway.  Really we should check for the presence of some feature,
-program, quirk, etc. instead, instead of being lazy and checking for "Linux".
+Hum, what's the thinking behind this "offset < iomap->length" check? If it
+fails, we'd just fall through to the normal case which I'm not sure is
+guaranteed to be safe? Shouldn't we return error instead?
 
-Eric
+								Honza
+
+> +			return 0;
+> +	}
+>  
+>  	map.m_lblk = first_block;
+>  	map.m_len = last_block - first_block + 1;
+> -- 
+> 2.7.5
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
