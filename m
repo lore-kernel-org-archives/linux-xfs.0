@@ -1,114 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51481 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753788AbdGXTHL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2017 15:07:11 -0400
-Date: Mon, 24 Jul 2017 12:07:07 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 01/22] xfs: query the per-AG reservation counters
-Message-ID: <20170724190707.GF4352@magnolia>
-References: <150061190859.14732.17040548800470377701.stgit@magnolia>
- <150061191503.14732.3422428110288650460.stgit@magnolia>
- <20170723222516.GZ17762@dastard>
+Received: from mx2.suse.de ([195.135.220.15]:34265 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750793AbdGYGrn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Jul 2017 02:47:43 -0400
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: request for inclusion of 04197b341f23 ("xfs: don't BUG() on mixed
+ direct and mapped I/O")
+Message-ID: <5bcfc94b-ecb9-468b-78f3-ae5de53f62a0@suse.com>
+Date: Tue, 25 Jul 2017 09:47:40 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170723222516.GZ17762@dastard>
+Content-Type: multipart/mixed;
+ boundary="------------CF66E4C31C881A18A729F33E"
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Mon, Jul 24, 2017 at 08:25:16AM +1000, Dave Chinner wrote:
-> On Thu, Jul 20, 2017 at 09:38:35PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Establish an ioctl for userspace to query the original and current
-> > per-AG reservation counts.  This will be used by xfs_scrub to
-> > check that the vfs counters are at least somewhat sane.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_fs.h |   10 ++++++++++
-> >  fs/xfs/xfs_fsops.c     |   29 +++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_fsops.h     |    2 ++
-> >  fs/xfs/xfs_ioctl.c     |   16 ++++++++++++++++
-> >  fs/xfs/xfs_ioctl32.c   |    1 +
-> >  5 files changed, 58 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index 8c61f21..5dedab9 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -469,6 +469,15 @@ typedef struct xfs_swapext
-> >  #define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH		0x2	/* don't flush log nor data */
-> >  
-> >  /*
-> > + * AG reserved block counters
-> > + */
-> > +struct xfs_fsop_ag_resblks {
-> > +	__u64 resblks;		/* blocks reserved now */
-> 
-> 		current_reservation
-> 
-> > +	__u64 resblks_orig;	/* blocks reserved at mount time */
-> 
-> 		mount_reservation;
-> 
-> > +	__u64 reserved[2];
+This is a multi-part message in MIME format.
+--------------CF66E4C31C881A18A729F33E
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-So long as I'm going to add a flags field I might as well bump this
-whole structure up to a full 64 bytes.
+Hello,
 
-struct xfs_fsop_ag_resblks {
-	__u32 flags;			/* output flags, none defined now */
-	__u32 reserved;			/* zero */
-	__u64 current_resv;		/* blocks reserved now */
-	__u64 mount_resv;		/* blocks reserved at mount time */
-	__u64 reserved[5];		/* zero */
-};
+I'd like to request the aforementioned patch to be included into stable
+kernels. I've attached the 4.4 backport, the patch got introduced in
+4.10 so for 4.9 it will likely be able to apply cleanly, for 4.4 it
+needed a bit of adjustment.
+
+Regards,
+Nikolay
+
+--------------CF66E4C31C881A18A729F33E
+Content-Type: text/x-patch;
+ name="xfs-bug-on-backport.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="xfs-bug-on-backport.patch"
+
+From: Brian Foster <bfoster@redhat.com>                                         
+Date: Tue, 8 Nov 2016 12:54:14 +1100                                            
+Subject: xfs: don't BUG() on mixed direct and mapped I/O                        
+                                                                                
+We've had reports of generic/095 causing XFS to BUG() in                        
+__xfs_get_blocks() due to the existence of delalloc blocks on a                 
+direct I/O read. generic/095 issues a mix of various types of I/O,              
+including direct and memory mapped I/O to a single file. This is                
+clearly not supported behavior and is known to lead to such                     
+problems. E.g., the lack of exclusion between the direct I/O and                
+write fault paths means that a write fault can allocate delalloc                
+blocks in a region of a file that was previously a hole after the               
+direct read has attempted to flush/inval the file range, but before             
+it actually reads the block mapping. In turn, the direct read                   
+discovers a delalloc extent and cannot proceed.                                 
+                                                                                
+While the appropriate solution here is to not mix direct and memory             
+mapped I/O to the same regions of the same file, the current                    
+BUG_ON() behavior is probably overkill as it can crash the entire               
+system.  Instead, localize the failure to the I/O in question by                
+returning an error for a direct I/O that cannot be handled safely               
+due to delalloc blocks. Be careful to allow the case of a direct                
+write to post-eof delalloc blocks. This can occur due to speculative            
+preallocation and is safe as post-eof blocks are not accompanied by             
+dirty pages in pagecache (conversely, preallocation within eof must             
+have been zeroed, and thus dirtied, before the inode size could have            
+been increased beyond said blocks).                                             
+                                                                                
+Finally, provide an additional warning if a direct I/O write occurs             
+while the file is memory mapped. This may not catch all problematic             
+scenarios, but provides a hint that some known-to-be-problematic I/O            
+methods are in use.                                       
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>                                
+Reviewed-by: Dave Chinner <dchinner@redhat.com>                                 
+Signed-off-by: Dave Chinner <david@fromorbit.com>                               
+Signed-off-by: Nikolay Borisov <nborisov@suse.com> 
+---
+ fs/xfs/xfs_aops.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index d4752078b471..11fa73d8be78 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1439,6 +1439,26 @@ __xfs_get_blocks(
+ 	if (error)
+ 		goto out_unlock;
+ 
++	/*
++	 * The only time we can ever safely find delalloc blocks on direct I/O
++	 * is a dio write to post-eof speculative preallocation. All other
++	 * scenarios are indicative of a problem or misuse (such as mixing
++	 * direct and mapped I/O).
++	 *
++	 * The file may be unmapped by the time we get here so we cannot
++	 * reliably fail the I/O based on mapping. Instead, fail the I/O if this
++	 * is a read or a write within eof. Otherwise, carry on but warn as a
++	 * precuation if the file happens to be mapped.
++	 */
++	if (direct && imap.br_startblock == DELAYSTARTBLOCK) {
++	        if (!create || offset < i_size_read(VFS_I(ip))) {
++	                WARN_ON_ONCE(1);
++	                error = -EIO;
++	                goto out_unlock;
++	        }
++	        WARN_ON_ONCE(mapping_mapped(VFS_I(ip)->i_mapping));
++	}
++
+ 	/* for DAX, we convert unwritten extents directly */
+ 	if (create &&
+ 	    (!nimaps ||
+@@ -1538,7 +1558,6 @@ __xfs_get_blocks(
+ 		set_buffer_new(bh_result);
+ 
+ 	if (imap.br_startblock == DELAYSTARTBLOCK) {
+-		BUG_ON(direct);
+ 		if (create) {
+ 			set_buffer_uptodate(bh_result);
+ 			set_buffer_mapped(bh_result);
+-- 
+2.7.4
 
 
-> > +};
-> 
-> Also, any new structure we pass to userspace should be versioned
-> from the start. At minimum, a flags field so we can, in future, tell
-> userspace what the reserved space means in future.
-
-Will do.
-
-> > +
-> > +/* Query the per-AG reservations to see how many blocks we have reserved. */
-> > +int
-> > +xfs_fs_get_ag_reserve_blocks(
-> > +	struct xfs_mount		*mp,
-> > +	struct xfs_fsop_ag_resblks	*out)
-> > +{
-> > +	struct xfs_ag_resv		*r;
-> > +	struct xfs_perag		*pag;
-> > +	xfs_agnumber_t			agno;
-> > +
-> > +	out->resblks = 0;
-> > +	out->resblks_orig = 0;
-> > +	out->reserved[0] = out->reserved[1] = 0;
-> 
-> memset() the structure so we don't forget in future to zero it
-> properly.
-
-Ok.
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--------------CF66E4C31C881A18A729F33E--
