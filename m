@@ -1,219 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24298 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750723AbdGYFmV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2017 01:42:21 -0400
-Date: Mon, 24 Jul 2017 22:42:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/22] xfs: scrub the backup superblocks
-Message-ID: <20170725054216.GB4369@magnolia>
-References: <150061190859.14732.17040548800470377701.stgit@magnolia>
- <150061194700.14732.436243943528759418.stgit@magnolia>
- <20170725040500.GI17762@dastard>
+Received: from smtp.gentoo.org ([140.211.166.183]:50166 "EHLO smtp.gentoo.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750857AbdGYJvw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Jul 2017 05:51:52 -0400
+Subject: Re: xfsprogs commit 4944defad4ae2cbcf056207490d7c597bb92cd7c
+References: <c16e39da-27dd-d35c-e9e1-463d36472a8b@gentoo.org>
+ <8A0CFE17-BAB8-4CC9-8A01-BFD99F6C83FE@jabberwocky.com>
+ <20170725055659.GC4369@magnolia>
+From: "Jory A. Pratt" <anarchy@gentoo.org>
+Message-ID: <a65b4362-8355-d50d-745a-1ad4d027121e@gentoo.org>
+Date: Tue, 25 Jul 2017 04:51:40 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170725040500.GI17762@dastard>
+In-Reply-To: <20170725055659.GC4369@magnolia>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="jkerQ9kFbmsaINjIpCRtg5cs5bc35jw9Q"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, David Shaw <dshaw@jabberwocky.com>
+Cc: cmaiolino@redhat.com, xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Jul 25, 2017 at 02:05:00PM +1000, Dave Chinner wrote:
-> On Thu, Jul 20, 2017 at 09:39:07PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Ensure that the geometry presented in the backup superblocks matches
-> > the primary superblock so that repair can recover the filesystem if
-> > that primary gets corrupted.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ....
-> > +int
-> > +xfs_scrub_setup_ag_header(
-> > +	struct xfs_scrub_context	*sc,
-> > +	struct xfs_inode		*ip)
-> > +{
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +
-> > +	if (sc->sm->sm_agno >= mp->m_sb.sb_agcount ||
-> > +	    sc->sm->sm_ino || sc->sm->sm_gen)
-> > +		return -EINVAL;
-> > +	return xfs_scrub_setup_fs(sc, ip);
-> > +}
-> 
-> Could we create a superblock buffer here that contains just the bits
-> we expect the secondary superblocks to have up to date (everything
-> else should be zero!), and then just use a memcmp() on the raw
-> secondary superblock buffer?
-> 
-> If there is a difference, then we can dig further to find what's
-> wrong?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--jkerQ9kFbmsaINjIpCRtg5cs5bc35jw9Q
+Content-Type: multipart/mixed; boundary="JcikB9bj9VuSDGw4UtN0e7gcrMUAtUiG7";
+ protected-headers="v1"
+From: "Jory A. Pratt" <anarchy@gentoo.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>,
+ David Shaw <dshaw@jabberwocky.com>
+Cc: cmaiolino@redhat.com, xfs <linux-xfs@vger.kernel.org>
+Message-ID: <a65b4362-8355-d50d-745a-1ad4d027121e@gentoo.org>
+Subject: Re: xfsprogs commit 4944defad4ae2cbcf056207490d7c597bb92cd7c
+References: <c16e39da-27dd-d35c-e9e1-463d36472a8b@gentoo.org>
+ <8A0CFE17-BAB8-4CC9-8A01-BFD99F6C83FE@jabberwocky.com>
+ <20170725055659.GC4369@magnolia>
+In-Reply-To: <20170725055659.GC4369@magnolia>
 
-Sure.
+--JcikB9bj9VuSDGw4UtN0e7gcrMUAtUiG7
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: quoted-printable
 
-> > +/* Superblock */
-> > +
-> > +#define XFS_SCRUB_SB_CHECK(fs_ok) \
-> > +	XFS_SCRUB_CHECK(sc, bp, "superblock", fs_ok)
-> > +#define XFS_SCRUB_SB_PREEN(fs_ok) \
-> > +	XFS_SCRUB_PREEN(sc, bp, "superblock", fs_ok)
-> 
-> I don't understand from reading the code why some fields are checked
-> and others are preened. A comment explaining this would be helpful.
+On 07/25/17 00:56, Darrick J. Wong wrote:
+> [cc xfs list]
+>=20
+> On Sun, Jul 23, 2017 at 10:21:56AM -0400, David Shaw wrote:
+>> On Jul 22, 2017, at 10:13 PM, Jory A. Pratt <anarchy@gentoo.org> wrote=
+:
+>>>
+>>> Is there any specific reason you all have drop'd away from the posix
+>>> standard? This change introduces build failure as it no longer follow=
+s
+>>> the posix standard for stdout.
+>>>
+>>> metadump.c:2875:10: error: assignment of read-only variable 'stdout'
+>>>   stdout =3D stderr;
+>>>          ^
+>>> metadump.c:2911:10: error: assignment of read-only variable 'stdout'
+>>>   stdout =3D outf;
+>=20
+> Huh?  What system configuration (libc, etc.) is this?
+>=20
+> The Open Group Base Specifications Issue 7
+> http://pubs.opengroup.org/onlinepubs/9699919799/functions/stdin.html
+> only mentions this:
+>=20
+>     extern FILE *stderr, *stdin, *stdout;
+>=20
+> and says that it defers to the ISO C standard.
+>=20
+> The ISO C11 standard (draft 1570, anyway)
+> https://port70.net/~nsz/c/c11/n1570.txt
+> has this to say:
+>=20
+>             stderr
+>             stdin
+>             stdout
+>     which are expressions of type ''pointer to FILE'' that point to the=
 
-Ok.
+>     FILE objects associated, respectively, with the standard error,
+>     input, and output streams.
+>=20
+> I don't see anything in there about stdout being read only, though I
+> suppose there's nothing in that explicitly requiring they be assignable=
+=2E
+>=20
+> <grumble> musl, isn't it...?
 
-/* 
- * Superblock fields that are set at mkfs time are checked.
- * Fields in super block 0 that can be updated after mkfs and
- * not copied to the backup superblocks are preened.
- */
+Yes that is correct musl.
+>=20
+> --D
+>=20
+>>
+>> Hi,
+>>
+>> I think you may have meant this to go to Darrick Wong
+>> (darrick.wong@oracle.com), cc'd.  I reported the bug (well,
+>> indirectly), but Darrick was the person who fixed it.
+>>
+>> David
+>>
+>=20
 
-> 
-> > +#define XFS_SCRUB_SB_OP_ERROR_GOTO(label) \
-> > +	XFS_SCRUB_OP_ERROR_GOTO(sc, agno, 0, "superblock", &error, out)
-> > +/* Scrub the filesystem superblock. */
-> > +int
-> > +xfs_scrub_superblock(
-> > +	struct xfs_scrub_context	*sc)
-> > +{
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +	struct xfs_buf			*bp;
-> > +	struct xfs_sb			sb;
-> > +	xfs_agnumber_t			agno;
-> > +	uint32_t			v2_ok;
-> > +	int				error;
-> > +
-> > +	agno = sc->sm->sm_agno;
-> > +
-> > +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-> > +		  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> > +		  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
-> > +	if (error) {
-> > +		trace_xfs_scrub_block_error(mp, agno, XFS_SB_BLOCK(mp),
-> > +				"superblock", "error != 0", __func__, __LINE__);
-> > +		error = 0;
-> > +		sc->sm->sm_flags |= XFS_SCRUB_FLAG_CORRUPT;
-> > +		goto out;
-> > +	}
-> > +
-> > +	/*
-> > +	 * The in-core sb is a more up-to-date copy of AG 0's sb,
-> > +	 * so there's no point in comparing the two.
-> > +	 */
-> > +	if (agno == 0)
-> > +		goto out;
-> 
-> Check this before reading the sb buffer?
-> 
-> > +	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
-> 
-> Ok, there's a problem here - the on-disk superblock needs all unused
-> fields, empty space and feature bit conditional fields to be zero on
-> disk. Unused and feature dependent fields aren't necessarily zero in
-> memory, so we're not really scrubbing the on-disk superblock here.
 
-Ok.
+--=20
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D
+Jory A. Pratt
+Gentoo Linux Developer [Mozilla Lead]
+E-Mail    : anarchy@gentoo.org
+GnuPG FP  : D4AC 8D63 0B16 F7C9 08E9  B909 A0CC C3BA B4D0 88B4
+GnuPG ID  : B4D088B4
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D
 
-> ALso, all the space between the end of the defined superblock and
-> the end of the superblock sector must be zero, so scrubbing needs to
-> verify that, too.
 
-Ok.
+--JcikB9bj9VuSDGw4UtN0e7gcrMUAtUiG7--
 
-> 
-> > +
-> > +	/* Verify the geometries match. */
-> > +#define XFS_SCRUB_SB_FIELD(fn) \
-> > +		XFS_SCRUB_SB_CHECK(sb.sb_##fn == mp->m_sb.sb_##fn)
-> > +#define XFS_PREEN_SB_FIELD(fn) \
-> > +		XFS_SCRUB_SB_PREEN(sb.sb_##fn == mp->m_sb.sb_##fn)
-> > +	XFS_SCRUB_SB_FIELD(blocksize);
-> > +	XFS_SCRUB_SB_FIELD(dblocks);
-> > +	XFS_SCRUB_SB_FIELD(rblocks);
-> > +	XFS_SCRUB_SB_FIELD(rextents);
-> > +	XFS_SCRUB_SB_PREEN(uuid_equal(&sb.sb_uuid, &mp->m_sb.sb_uuid));
-> 
-> Isn't this dependent on the xfs_sb_version_hasmetauuid() feature?
-> Regardless, I think this should be part of the checks done based on
-> that feature bit below...
+--jkerQ9kFbmsaINjIpCRtg5cs5bc35jw9Q
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-I don't think it's dependent on hasmetauuid.  sb_uuid is the admin-set
-uuid, which ought to be the same on all supers, right?  So that if we
-set a new uuid, break sb 0, and have repair fix the fs, the uuid won't
-suddenly shift.
+-----BEGIN PGP SIGNATURE-----
 
-Versus sb_meta_uuid, which if hasmetauuid /has/ to match on all supers.
+iQEzBAEBCgAdFiEE1KyNYwsW98kI6bkJoMzDurTQiLQFAll3FLMACgkQoMzDurTQ
+iLTZWQf5AauDOfJTvu2Grx05zx5PSci9Za/PMfLo7FxHF7BQGkj0VSTGH0bn3QYU
+gxF6DvPVbZLzDVU/4rptRk0AlZDIlBz+RFCWmbWJdvglhfwaNjQB6246agC5fzne
+3Zw4wc0c7Cf6i1/reeRKu97szwSTFhMW5bK7hKtl05wLZk3Bqbp3xD0KtfJuaScI
+nlV1i4Oh87Z7O5P6uLso8Dy+zNDUTL8Gv6RIBPHPUpo+zU+vfR7No+QeK8deQ1q1
+CPTS2sgmLDXdwMGphwEbq24bAZxPNUVX0mJp6mto5xzvTGq+e3hXTAC4PPYoIH+d
+7pb5WTHThPp6Dp1SKmxrlEwfVpguiA==
+=MN6I
+-----END PGP SIGNATURE-----
 
-> ....
-> 
-> > +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> > +		XFS_SCRUB_SB_CHECK(!xfs_sb_has_compat_feature(&sb,
-> > +				XFS_SB_FEAT_COMPAT_UNKNOWN));
-> > +		XFS_SCRUB_SB_CHECK(!xfs_sb_has_ro_compat_feature(&sb,
-> > +				XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
-> > +		XFS_SCRUB_SB_CHECK(!xfs_sb_has_incompat_feature(&sb,
-> > +				XFS_SB_FEAT_INCOMPAT_UNKNOWN));
-> > +		XFS_SCRUB_SB_CHECK(!xfs_sb_has_incompat_log_feature(&sb,
-> > +				XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN));
-> > +		XFS_SCRUB_SB_FIELD(spino_align);
-> > +		XFS_PREEN_SB_FIELD(pquotino);
-> > +	}
-> 
-> else all these fields should be zero on disk.
-
-Ok.
-
-> > +	if (xfs_sb_version_hasmetauuid(&mp->m_sb)) {
-> > +		XFS_SCRUB_SB_CHECK(uuid_equal(&sb.sb_meta_uuid,
-> > +					&mp->m_sb.sb_meta_uuid));
-> > +		XFS_SCRUB_SB_CHECK(uuid_equal(&sb.sb_uuid,
-> > +					&mp->m_sb.sb_uuid));
-> > +	} else
-> > +		XFS_SCRUB_SB_CHECK(uuid_equal(&sb.sb_uuid,
-> > +					&mp->m_sb.sb_meta_uuid));
-> 
-> That's checking in-memory state is valid, not that the on-disk
-> sb_meta_uuid field is zero for this case.
-
-Eeyuck, that needs some TLC indeed.
-
-> > +#undef XFS_SCRUB_SB_FIELD
-> > +
-> > +#define XFS_SCRUB_SB_FEAT(fn) \
-> > +		XFS_SCRUB_SB_CHECK(xfs_sb_version_has##fn(&sb) == \
-> > +		xfs_sb_version_has##fn(&mp->m_sb))
-> > +	XFS_SCRUB_SB_FEAT(align);
-> > +	XFS_SCRUB_SB_FEAT(dalign);
-> > +	XFS_SCRUB_SB_FEAT(logv2);
-> > +	XFS_SCRUB_SB_FEAT(extflgbit);
-> > +	XFS_SCRUB_SB_FEAT(sector);
-> > +	XFS_SCRUB_SB_FEAT(asciici);
-> > +	XFS_SCRUB_SB_FEAT(morebits);
-> > +	XFS_SCRUB_SB_FEAT(lazysbcount);
-> > +	XFS_SCRUB_SB_FEAT(crc);
-> > +	XFS_SCRUB_SB_FEAT(_pquotino);
-> > +	XFS_SCRUB_SB_FEAT(ftype);
-> > +	XFS_SCRUB_SB_FEAT(finobt);
-> > +	XFS_SCRUB_SB_FEAT(sparseinodes);
-> > +	XFS_SCRUB_SB_FEAT(metauuid);
-> > +	XFS_SCRUB_SB_FEAT(rmapbt);
-> > +	XFS_SCRUB_SB_FEAT(reflink);
-> > +#undef XFS_SCRUB_SB_FEAT
-> 
-> Do we need bit by bit feature checks? It's trivial to look up the
-> mismatched bits from just the raw values....
-
-We could forgo this.
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+--jkerQ9kFbmsaINjIpCRtg5cs5bc35jw9Q--
