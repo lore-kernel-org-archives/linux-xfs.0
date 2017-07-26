@@ -1,80 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:49144 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751750AbdHAApK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jul 2017 20:45:10 -0400
-Date: Tue, 1 Aug 2017 10:42:01 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] xfs: persist S_IOMAP_IMMUTABLE in di_flags2
-Message-ID: <20170801004201.GM17762@dastard>
-References: <150135740948.35318.10730072114996910905.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150135742595.35318.6882401569584241548.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51712 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751395AbdGZUfj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:35:39 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 81928ECF8F
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2017 20:35:38 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 54FB586E81
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2017 20:35:38 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_metadump: properly handle obfuscation of all remote
+ attribute blocks
+Message-ID: <7862201b-e387-8037-ca99-b6ab3212f4a7@redhat.com>
+Date: Wed, 26 Jul 2017 15:35:37 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150135742595.35318.6882401569584241548.stgit@dwillia2-desk3.amr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: darrick.wong@oracle.com, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sat, Jul 29, 2017 at 12:43:46PM -0700, Dan Williams wrote:
-> Record the immutable state in the on-disk inode so that on the next boot
-> the protections against reflink and hole punch etc are automatically
-> restored.
+add_remote_vals assumes that it can subtract blocksize
+from each block that it processes, but with CRCs, there
+is a header on each block, so the assumption that each
+block consumes $BLOCKSIZE of the value length is incorrect.
 
-Keep in mind we can't do this without all the userspace side support
-for the addition to the in-disk format....
+This causes us to stop adding remote blocks too soon, and
+the missed blocks do not get obfuscated.
 
-> This deliberately does not add a FS_XFLAG_IOMAP_IMMUTABLE since
-> fallocate(2) is the path to toggle this flag.
+Fix this by accounting for the header size as appropriate,
+depending on whether or not we have a CRC filesystem.
 
-That's a problem. The flag needs to be added so that we can /view/
-the state of the inode through xfs_io. Just because we can't set it
-through the extended inode flag interface doesn't mean the flag
-should not exist.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index c4fc79a0704f..1dcb521da456 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1021,7 +1021,8 @@ xfs_alloc_file_space(
->  	struct xfs_inode	*ip,
->  	xfs_off_t		offset,
->  	xfs_off_t		len,
-> -	int			alloc_type)
-> +	int			alloc_type,
-> +	uint64_t		di_flags2)
->  {
->  	xfs_mount_t		*mp = ip->i_mount;
->  	xfs_off_t		count;
-> @@ -1119,6 +1120,12 @@ xfs_alloc_file_space(
->  			break;
->  		}
->  		xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +		if (di_flags2) {
-> +			/* fold inode attributes for this allocation */
-> +			ip->i_d.di_flags2 |= di_flags2;
-> +			di_flags2 = 0;
-> +		}
+diff --git a/db/metadump.c b/db/metadump.c
+index 96641e0..c8abfeb 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1602,14 +1602,20 @@ static struct attr_data_s {
+ 
+ static inline void
+ add_remote_vals(
++	struct xfs_mount	*mp,
+ 	xfs_dablk_t 		blockidx,
+ 	int			length)
+ {
++	int			hdrsize = 0;
++
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		hdrsize = sizeof(struct xfs_attr3_rmt_hdr);
++
+ 	while (length > 0 && attr_data.remote_val_count < MAX_REMOTE_VALS) {
+ 		attr_data.remote_vals[attr_data.remote_val_count] = blockidx;
+ 		attr_data.remote_val_count++;
+ 		blockidx++;
+-		length -= mp->m_sb.sb_blocksize;
++		length -= (mp->m_sb.sb_blocksize - hdrsize);
+ 	}
+ 
+ 	if (attr_data.remote_val_count >= MAX_REMOTE_VALS) {
+@@ -1716,7 +1722,8 @@ process_attr_block(
+ 			if (obfuscate) {
+ 				generate_obfuscated_name(0, remote->namelen,
+ 							 &remote->name[0]);
+-				add_remote_vals(be32_to_cpu(remote->valueblk),
++				add_remote_vals(mp,
++						be32_to_cpu(remote->valueblk),
+ 						be32_to_cpu(remote->valuelen));
+ 			}
+ 			/* zero from end of name[] to next name start */
 
-Yikes, no! Darrick already mentioned this, but it needs pointing out
-again...
-
-Especially as it means that we are setting the immutable flag before
-we've allocated all the extents to fill the file space. If we've
-implemented immutable extent maps correctly, then xfs_bmapi_write()
-should be rejecting any attempt to allocate or modify extents if
-that flag is set on the inode, which means this code will now fail
-to allocate/zero anything...
-
-IOWs, this flag should be the last thing that is set on the inode
-once it's been fully allocated and zeroed.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
