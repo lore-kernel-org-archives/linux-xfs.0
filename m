@@ -1,27 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:34141 "EHLO
-        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750777AbdGUNb7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 09:31:59 -0400
-Received: by mail-oi0-f46.google.com with SMTP id q4so51857301oif.1
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2017 06:31:58 -0700 (PDT)
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:36804 "EHLO
+        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750711AbdGZFWs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jul 2017 01:22:48 -0400
+Received: by mail-oi0-f43.google.com with SMTP id g131so71236218oic.3
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2017 22:22:48 -0700 (PDT)
 From: Shyam Kaushik <shyam@zadarastorage.com>
 References: <CAPh1sj5oU6QRyH_cnzrkGJb6ed3XO4fGABJ4yJLPnb-ppqVJeg@mail.gmail.com>
-In-Reply-To: <CAPh1sj5oU6QRyH_cnzrkGJb6ed3XO4fGABJ4yJLPnb-ppqVJeg@mail.gmail.com>
+ 4381c2b04c11a81f9203d5595651c64a@mail.gmail.com
+In-Reply-To: 4381c2b04c11a81f9203d5595651c64a@mail.gmail.com
 MIME-Version: 1.0
-Date: Fri, 21 Jul 2017 19:01:58 +0530
-Message-ID: <4381c2b04c11a81f9203d5595651c64a@mail.gmail.com>
-Subject: RE: Metadata corruption detected at xfs_attr3_leaf_write_verify
+Date: Wed, 26 Jul 2017 10:52:50 +0530
+Message-ID: <d05c5fec57e551e85e7351dee11bb4d4@mail.gmail.com>
+Subject: Metadata corruption at xfs_attr3_leaf_write_verify()
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: dchinner@redhat.com, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi Eric et al,
+Hi Dave,
 
-I'am pulling from an old thread. From time to time we hit an xfs corruption
-when xattr leaf is attempted to be written when it has ichdr.count==0.
+>From time to time we hit an xfs corruption when xattr leaf is attempted to
+be written when it has ichdr.count==0.
 
 We are on an old kernel 3.18.19. We managed to capture xfs trace buffer
 closer to the problem time.
@@ -49,9 +51,10 @@ leaf during file creation. This completes queuing an AIL. Immediately after
 this an explicit xfs_setattr is being done on the same file which alters the
 default ACL & this causes default ACL to be removed/added. It looks like
 this 2nd set attr is somehow influencing the first AIL entry that it is
-being seen with ichr.count==0 during the write. Any pointers/input to check
-this further is greatly appreciated. I can pass the full xfs debug trace if
-required. Here is the snippet of debug trace causing the issue
+being seen with ichr.count==0 during the write.
+
+I can pass the full xfs debug trace if required. Here is the snippet of
+debug trace causing the issue
 
            <...>-18953 [004] ...1 466290.749358: xfs_attr_sf_create: dev
 253:78 ino 0x1749833903 name SGI_ACL_FILE namelen 12 valuelen 100 hashval
@@ -177,7 +180,7 @@ op_flags ADDNAME|OKNOENT
 0xea9061c8 op_flags
 
 
-Thanks.
+Any pointers/input to check this further is greatly appreciated! Thanks.
 
 --Shyam
 
