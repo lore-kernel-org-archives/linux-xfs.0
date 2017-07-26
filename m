@@ -1,94 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:2860 "EHLO mga07.intel.com"
+Received: from verein.lst.de ([213.95.11.211]:35510 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751454AbdG0WWb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Jul 2017 18:22:31 -0400
-Date: Thu, 27 Jul 2017 16:22:30 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 4/7] dax: Make dax_insert_mapping() return VM_FAULT_ state
-Message-ID: <20170727222230.GE22000@linux.intel.com>
-References: <20170727131245.28279-1-jack@suse.cz>
- <20170727131245.28279-5-jack@suse.cz>
+        id S1750781AbdGZNEn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 Jul 2017 09:04:43 -0400
+Date: Wed, 26 Jul 2017 15:04:42 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH, RFC] xfs: fix multi-AG deadlock in xfs_bunmapi
+Message-ID: <20170726130442.GA24681@lst.de>
+References: <20170718172545.18065-1-hch@lst.de> <ac50dda7-6147-1bb2-78ed-b49dafaec242@gmail.com> <09500343-740e-0178-c60a-6ea5e6993c11@gmail.com> <20170720074706.GA22218@lst.de> <0eb47db7-24de-a231-be9f-73d9ae1171fd@gmail.com> <20170720074924.GA22278@lst.de> <16f95f63-1111-9d3c-344c-6b42ddab3b55@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170727131245.28279-5-jack@suse.cz>
+In-Reply-To: <16f95f63-1111-9d3c-344c-6b42ddab3b55@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Andy Lutomirski <luto@kernel.org>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
+To: Nikolay Borisov <n.borisov.lkml@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Thu, Jul 27, 2017 at 03:12:42PM +0200, Jan Kara wrote:
-> Currently dax_insert_mapping() returns normal error code which is later
-> converted to VM_FAULT_ state. Since we will need to do more state
-> modifications specific to dax_insert_mapping() it does not make sense to
-> push them up to the caller of dax_insert_mapping(). Instead make
-> dax_insert_mapping() return VM_FAULT_ state the same way as
-> dax_pmd_insert_mapping() does that.
+On Thu, Jul 20, 2017 at 05:58:42PM +0300, Nikolay Borisov wrote:
 > 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/dax.c | 45 +++++++++++++++++++++++++--------------------
->  1 file changed, 25 insertions(+), 20 deletions(-)
 > 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index 0673efd72f53..9658975b926a 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -814,6 +814,15 @@ int dax_writeback_mapping_range(struct address_space *mapping,
->  }
->  EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
->  
-> +static int dax_fault_return(int error)
-> +{
-> +	if (error == 0)
-> +		return VM_FAULT_NOPAGE;
-> +	if (error == -ENOMEM)
-> +		return VM_FAULT_OOM;
-> +	return VM_FAULT_SIGBUS;
-> +}
-> +
->  static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
->  {
->  	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
-> @@ -828,7 +837,7 @@ static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
->  	unsigned long vaddr = vmf->address;
->  	void *ret, *kaddr;
->  	pgoff_t pgoff;
-> -	int id, rc;
-> +	int id, rc, vmf_ret;
->  	pfn_t pfn;
->  
->  	rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
-> @@ -850,9 +859,18 @@ static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
->  
->  	trace_dax_insert_mapping(mapping->host, vmf, ret);
->  	if (vmf->flags & FAULT_FLAG_WRITE)
-> -		return vm_insert_mixed_mkwrite(vma, vaddr, pfn);
-> +		rc = vm_insert_mixed_mkwrite(vma, vaddr, pfn);
->  	else
-> -		return vm_insert_mixed(vma, vaddr, pfn);
-> +		rc = vm_insert_mixed(vma, vaddr, pfn);
-> +
-> +	/* -EBUSY is fine, somebody else faulted on the same PTE */
-> +	if (rc == -EBUSY)
-> +		rc = 0;
-> +
-> +	vmf_ret = dax_fault_return(rc);
+> On 20.07.2017 10:49, Christoph Hellwig wrote:
+> > On Thu, Jul 20, 2017 at 10:47:50AM +0300, Nikolay Borisov wrote:
+> >>
+> >>
+> >> On 20.07.2017 10:47, Christoph Hellwig wrote:
+> >>> Odd.  And the patch to always just process a single extent from
+> >>> xfs_itruncate_extents fixes the issue for you, right?
+> >>
+> >> As far as I remember yes.
+> > 
+> > Can you retest it under otherwise identical conditions?
+> 
+> Okay, I confirm that indeed changing the define from 2 to 1 fixes the
+> issue.
 
-Prior to this point where we convert our 'rc' (which is a normal error code
-like 0, -ENOMEM, etc) to a 'vmf_ret' (which is a VM return code like
-VM_FAULT_NOPAGE, VM_FAULT_SIGBUS, etc), there are several paths in
-dax_insert_mapping() where we could still return a normal error code.  I think
-this will confuse the fault handler because this code will get returned all
-the way up to do_fault() which expects to get a VM return code.
-
-So, I think we either need to:
-
-a) Make sure all return paths through dax_insert_mapping() end up going
-through dax_fault_return(), as we do in the PMD case, or
-
-b) Keep allowing this function to return normal error codes, and just teach
-dax_fault_return() to look for IOMAP_F_NEEDSYNC flag so it knows when to set
-VM_FAULT_RO.
+But this is just on 4.4 and older, right?  We had issues in the
+allocation path there as well, which should be fixed in 4.11 and later,
+and in recrnt 4.9-stable releases.  Without those the allocation path
+might sometimes lock out of order as well.
