@@ -1,408 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36420 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751712AbdG0Wog (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2017 18:44:36 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6RMiZwb009011
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 22:44:36 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v6RMiZbM014679
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 22:44:35 GMT
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v6RMiZNN022608
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 22:44:35 GMT
-Subject: [PATCH 26/26] xfs: scrub quota information
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 27 Jul 2017 15:44:33 -0700
-Message-ID: <150119547345.15159.7829129118366065398.stgit@magnolia>
-In-Reply-To: <150119530010.15159.9900948790538082160.stgit@magnolia>
-References: <150119530010.15159.9900948790538082160.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:48279 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750981AbdG0Qjg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Jul 2017 12:39:36 -0400
+Date: Thu, 27 Jul 2017 18:39:35 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 1/5 v2] mkfs: replace variables with opts table: -b,d,s
+ options
+Message-ID: <20170727163935.GL18884@wotan.suse.de>
+References: <20170720095156.35417-2-jtulak@redhat.com>
+ <20170721123448.6956-1-jtulak@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170721123448.6956-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Jul 21, 2017 at 02:34:48PM +0200, Jan Tulak wrote:
+> @@ -1609,6 +1593,7 @@ main(
+>  			break;
+>  		case 'b':
+>  			p = optarg;
+> +			uint64_t tmp;
 
-Perform some quick sanity testing of the disk quota information.
+Note:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/Makefile        |    1 
- fs/xfs/libxfs/xfs_fs.h |    5 +
- fs/xfs/scrub/common.h  |    1 
- fs/xfs/scrub/quota.c   |  258 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/scrub.c   |   18 +++
- fs/xfs/scrub/scrub.h   |    1 
- fs/xfs/scrub/trace.h   |    5 +
- 7 files changed, 287 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/scrub/quota.c
+An extra variable added, just so we can get the current value parsed
+so we can then convert it to also set similar collateral variables.
 
+>  			while (*p != '\0') {
+>  				char	**subopts =
+>  						(char **)opts[OPT_B].subopts;
+> @@ -1616,19 +1601,17 @@ main(
+>  
+>  				switch (getsubopt(&p, subopts, &value)) {
+>  				case B_LOG:
+> -					blocklog = parse_conf_val(OPT_B, B_LOG,
+> -								  value);
+> -					blocksize = 1 << blocklog;
+> +					tmp = parse_conf_val(OPT_B, B_LOG,
+> +							     value);
+> +					set_conf_val(OPT_B, B_SIZE, 1 << tmp);
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 695b4c0..f8b3915 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -162,4 +162,5 @@ xfs-y				+= $(addprefix scrub/, \
- 				   )
- 
- xfs-$(CONFIG_XFS_RT)		+= scrub/rtbitmap.o
-+xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
- endif
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 3f37156..fba0105 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -504,9 +504,12 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_PARENT	18	/* parent pointers */
- #define XFS_SCRUB_TYPE_RTBITMAP	19	/* realtime bitmap */
- #define XFS_SCRUB_TYPE_RTSUM	20	/* realtime summary */
-+#define XFS_SCRUB_TYPE_UQUOTA	21	/* user quotas */
-+#define XFS_SCRUB_TYPE_GQUOTA	22	/* group quotas */
-+#define XFS_SCRUB_TYPE_PQUOTA	23	/* project quotas */
- 
- /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	21
-+#define XFS_SCRUB_TYPE_NR	24
- 
- /* i: Repair this metadata. */
- #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 871204a..a4a2ca5 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -117,6 +117,7 @@ int xfs_scrub_setup_symlink(struct xfs_scrub_context *sc,
- int xfs_scrub_setup_parent(struct xfs_scrub_context *sc,
- 			   struct xfs_inode *ip);
- int xfs_scrub_setup_rt(struct xfs_scrub_context *sc, struct xfs_inode *ip);
-+int xfs_scrub_setup_quota(struct xfs_scrub_context *sc, struct xfs_inode *ip);
- 
- void xfs_scrub_ag_free(struct xfs_scrub_context *sc, struct xfs_scrub_ag *sa);
- int xfs_scrub_ag_init(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
-diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-new file mode 100644
-index 0000000..302d5a8
---- /dev/null
-+++ b/fs/xfs/scrub/quota.c
-@@ -0,0 +1,258 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_bmap.h"
-+#include "xfs_quota.h"
-+#include "xfs_qm.h"
-+#include "xfs_dquot.h"
-+#include "xfs_dquot_item.h"
-+#include "scrub/xfs_scrub.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/trace.h"
-+
-+/* Convert a scrub type code to a DQ flag, or return 0 if error. */
-+static inline uint
-+xfs_scrub_quota_to_dqtype(
-+	struct xfs_scrub_context	*sc)
-+{
-+	switch (sc->sm->sm_type) {
-+	case XFS_SCRUB_TYPE_UQUOTA:
-+		return XFS_DQ_USER;
-+	case XFS_SCRUB_TYPE_GQUOTA:
-+		return XFS_DQ_GROUP;
-+	case XFS_SCRUB_TYPE_PQUOTA:
-+		return XFS_DQ_PROJ;
-+	default:
-+		return 0;
-+	}
-+}
-+
-+/* Set us up to scrub a quota. */
-+int
-+xfs_scrub_setup_quota(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip)
-+{
-+	uint				dqtype;
-+
-+	if (sc->sm->sm_agno || sc->sm->sm_ino || sc->sm->sm_gen)
-+		return -EINVAL;
-+
-+	dqtype = xfs_scrub_quota_to_dqtype(sc);
-+	if (dqtype == 0)
-+		return -EINVAL;
-+	return 0;
-+}
-+
-+/* Quotas. */
-+
-+/* Scrub the fields in an individual quota item. */
-+STATIC void
-+xfs_scrub_quota_item(
-+	struct xfs_scrub_context	*sc,
-+	uint				dqtype,
-+	struct xfs_dquot		*dq,
-+	xfs_dqid_t			id)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_disk_dquot		*d = &dq->q_core;
-+	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-+	xfs_fileoff_t			offset;
-+	unsigned long long		bsoft;
-+	unsigned long long		isoft;
-+	unsigned long long		rsoft;
-+	unsigned long long		bhard;
-+	unsigned long long		ihard;
-+	unsigned long long		rhard;
-+	unsigned long long		bcount;
-+	unsigned long long		icount;
-+	unsigned long long		rcount;
-+	xfs_ino_t			inodes;
-+
-+	/* Did we get the dquot we wanted? */
-+	offset = id * qi->qi_dqperchunk;
-+	xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, offset,
-+			id <= be32_to_cpu(d->d_id) &&
-+			dqtype == (d->d_flags & XFS_DQ_ALLTYPES));
-+
-+	/* Check the limits. */
-+	bhard = be64_to_cpu(d->d_blk_hardlimit);
-+	ihard = be64_to_cpu(d->d_ino_hardlimit);
-+	rhard = be64_to_cpu(d->d_rtb_hardlimit);
-+
-+	bsoft = be64_to_cpu(d->d_blk_softlimit);
-+	isoft = be64_to_cpu(d->d_ino_softlimit);
-+	rsoft = be64_to_cpu(d->d_rtb_softlimit);
-+
-+	inodes = XFS_AGINO_TO_INO(mp, mp->m_sb.sb_agcount, 0);
-+
-+	/*
-+	 * Warn if the limits are larger than the fs.  Administrators
-+	 * can do this, though in production this seems suspect.
-+	 */
-+	xfs_scrub_fblock_warn_ok(sc, XFS_DATA_FORK, offset,
-+			bhard <= mp->m_sb.sb_dblocks &&
-+			ihard <= inodes &&
-+			rhard <= mp->m_sb.sb_rblocks &&
-+			bsoft <= mp->m_sb.sb_dblocks &&
-+			isoft <= inodes &&
-+			rsoft <= mp->m_sb.sb_rblocks);
-+
-+	/* Soft limit must be less than the hard limit. */
-+	xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, offset,
-+			bsoft <= bhard &&
-+			isoft <= ihard &&
-+			rsoft <= rhard);
-+
-+	/* Check the resource counts. */
-+	bcount = be64_to_cpu(d->d_bcount);
-+	icount = be64_to_cpu(d->d_icount);
-+	rcount = be64_to_cpu(d->d_rtbcount);
-+	inodes = percpu_counter_sum(&mp->m_icount);
-+
-+	/*
-+	 * Check that usage doesn't exceed physical limits.  However, on
-+	 * a reflink filesystem we're allowed to exceed physical space
-+	 * if there are no quota limits.
-+	 */
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		xfs_scrub_fblock_warn_ok(sc, XFS_DATA_FORK, offset,
-+				bcount <= mp->m_sb.sb_dblocks);
-+	else
-+		xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, offset,
-+				bcount <= mp->m_sb.sb_dblocks);
-+	xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, offset,
-+			icount <= inodes && rcount <= mp->m_sb.sb_rblocks);
-+
-+	/*
-+	 * We can violate the hard limits if the admin suddenly sets a
-+	 * lower limit than the actual usage.  However, we flag it for
-+	 * admin review.
-+	 */
-+	xfs_scrub_fblock_warn_ok(sc, XFS_DATA_FORK, offset,
-+			(id == 0 || bhard == 0 || bcount <= bhard) &&
-+			(id == 0 || ihard == 0 || icount <= ihard) &&
-+			(id == 0 || rhard == 0 || rcount <= rhard));
-+}
-+
-+/* Scrub all of a quota type's items. */
-+int
-+xfs_scrub_quota(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_bmbt_irec		irec = { 0 };
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_inode		*ip;
-+	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-+	struct xfs_dquot		*dq;
-+	xfs_fileoff_t			max_dqid_off;
-+	xfs_fileoff_t			off = 0;
-+	xfs_dqid_t			id = 0;
-+	uint				dqtype;
-+	int				nimaps;
-+	int				error;
-+
-+	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
-+		return -ENOENT;
-+
-+	mutex_lock(&qi->qi_quotaofflock);
-+	dqtype = xfs_scrub_quota_to_dqtype(sc);
-+	if (!xfs_this_quota_on(sc->mp, dqtype)) {
-+		error = -ENOENT;
-+		goto out;
-+	}
-+
-+	/* Attach to the quota inode and set sc->ip so that reporting works. */
-+	ip = xfs_quota_inode(sc->mp, dqtype);
-+	sc->ip = ip;
-+
-+	/* Look for problem extents. */
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
-+	while (1) {
-+		if (xfs_scrub_should_terminate(&error))
-+			break;
-+
-+		off = irec.br_startoff + irec.br_blockcount;
-+		nimaps = 1;
-+		error = xfs_bmapi_read(ip, off, -1, &irec, &nimaps,
-+				XFS_BMAPI_ENTIRE);
-+		if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, off, &error))
-+			goto out_unlock;
-+		if (!nimaps)
-+			break;
-+		if (irec.br_startblock == HOLESTARTBLOCK)
-+			continue;
-+
-+		/*
-+		 * Unwritten extents or blocks mapped above the highest
-+		 * quota id shouldn't happen.
-+		 */
-+		xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, off,
-+				!isnullstartblock(irec.br_startblock) &&
-+				irec.br_startoff <= max_dqid_off &&
-+				irec.br_startoff + irec.br_blockcount <=
-+					max_dqid_off + 1);
-+	}
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+
-+	/* Check all the quota items. */
-+	while (id < ((xfs_dqid_t)-1ULL)) {
-+		if (xfs_scrub_should_terminate(&error))
-+			break;
-+
-+		error = xfs_qm_dqget(mp, NULL, id, dqtype, XFS_QMOPT_DQNEXT,
-+				&dq);
-+		if (error == -ENOENT)
-+			break;
-+		if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK,
-+				id * qi->qi_dqperchunk, &error))
-+			goto out;
-+
-+		xfs_scrub_quota_item(sc, dqtype, dq, id);
-+
-+		id = be32_to_cpu(dq->q_core.d_id) + 1;
-+		xfs_qm_dqput(dq);
-+		if (!id)
-+			break;
-+	}
-+	goto out;
-+
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+out:
-+	sc->ip = NULL;
-+	mutex_unlock(&qi->qi_quotaofflock);
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 30c08ff..4a882f4 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -265,6 +265,24 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 	{ NULL },
- 	{ NULL },
- #endif
-+#ifdef CONFIG_XFS_QUOTA
-+	{ /* user quota */
-+		.setup = xfs_scrub_setup_quota,
-+		.scrub = xfs_scrub_quota,
-+	},
-+	{ /* group quota */
-+		.setup = xfs_scrub_setup_quota,
-+		.scrub = xfs_scrub_quota,
-+	},
-+	{ /* project quota */
-+		.setup = xfs_scrub_setup_quota,
-+		.scrub = xfs_scrub_quota,
-+	},
-+#else
-+	{ NULL },
-+	{ NULL },
-+	{ NULL },
-+#endif
- };
- 
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 97fd03f..3218664 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -84,5 +84,6 @@ int xfs_scrub_symlink(struct xfs_scrub_context *sc);
- int xfs_scrub_parent(struct xfs_scrub_context *sc);
- int xfs_scrub_rtbitmap(struct xfs_scrub_context *sc);
- int xfs_scrub_rtsummary(struct xfs_scrub_context *sc);
-+int xfs_scrub_quota(struct xfs_scrub_context *sc);
- 
- #endif	/* __XFS_SCRUB_SCRUB_H__ */
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 6024a2b..b9ccb85 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -46,7 +46,10 @@
- 	{ XFS_SCRUB_TYPE_SYMLINK,	"symlink" }, \
- 	{ XFS_SCRUB_TYPE_PARENT,	"parent" }, \
- 	{ XFS_SCRUB_TYPE_RTBITMAP,	"rtbitmap" }, \
--	{ XFS_SCRUB_TYPE_RTSUM,		"rtsummary" }
-+	{ XFS_SCRUB_TYPE_RTSUM,		"rtsummary" }, \
-+	{ XFS_SCRUB_TYPE_UQUOTA,	"usrquota" }, \
-+	{ XFS_SCRUB_TYPE_GQUOTA,	"grpquota" }, \
-+	{ XFS_SCRUB_TYPE_PQUOTA,	"prjquota" }
- DECLARE_EVENT_CLASS(xfs_scrub_class,
- 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
- 		 int error),
+So here when BLOG is set we update B_SIZE as collateral.
 
+>  					blflag = 1;
+> -					set_conf_val(OPT_B, B_SIZE, blocksize);
+>  					break;
+>  				case B_SIZE:
+> -					blocksize = parse_conf_val(OPT_B,
+> -								   B_SIZE,
+> -								   value);
+> -					blocklog = libxfs_highbit32(blocksize);
+> +					tmp = parse_conf_val(OPT_B, B_SIZE,
+> +							     value);
+> +					set_conf_val(OPT_B, B_LOG,
+> +						libxfs_highbit32(tmp));
+
+Here is the reverse, when B_SIZE is set we set B_LOG as well.
+
+>  					bsflag = 1;
+> -					set_conf_val(OPT_B, B_LOG, blocklog);
+>  					break;
+>  				default:
+>  					unknown('b', value);
+> @@ -1641,18 +1624,17 @@ main(
+>  				char	**subopts =
+>  						(char **)opts[OPT_D].subopts;
+>  				char	*value;
+> +				uint64_t tmp;
+> +
+>  
+>  				switch (getsubopt(&p, subopts, &value)) {
+>  				case D_AGCOUNT:
+> -					agcount = parse_conf_val(OPT_D,
+> -								 D_AGCOUNT,
+> -								 value);
+> +					parse_conf_val(OPT_D, D_AGCOUNT,
+> +						       value);
+
+If parse_conf_val() could just update the collateral values for us then main()
+would be much cleaner.
+
+Here parse_conf_val() is used only to update D_AGCOUNT based on the parsed
+value. But note that the return value is ignored. In some other places the
+return value is used. This is inconsistent, and I realize that the reason
+we ignore errors is that getnum() is used, however now is a good time to
+consider if we should just allow the caller to check the error value and
+return a proper error message and bail on their own. This would allow for
+better contextual error messages as the code grows. We can discuss this in
+the patch that adds parse_conf_val().
+
+> @@ -2464,10 +2517,20 @@ _("rmapbt not supported with realtime devices\n"));
+>  		sb_feat.log_version = 2;
+>  	}
+>  
+> -	calc_stripe_factors(dsu, dsw, sectorsize, lsu, lsectorsize,
+> +	int dsunit = get_conf_val(OPT_D, D_SUNIT);
+> +	int dswidth = get_conf_val(OPT_D, D_SWIDTH);
+
+Is int proper here?
+
+  Luis
