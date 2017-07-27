@@ -1,102 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:34410 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752935AbdGYTVk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2017 15:21:40 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 070/125] xfs: Dont clear SGID when inheriting ACLs
-Date: Tue, 25 Jul 2017 12:19:45 -0700
-Message-Id: <20170725192018.202296350@linuxfoundation.org>
-In-Reply-To: <20170725192014.314851996@linuxfoundation.org>
-References: <20170725192014.314851996@linuxfoundation.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58842 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751579AbdG0OJJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Jul 2017 10:09:09 -0400
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [RFC PATCH 0/7] dax, ext4: Synchronous page faults
+References: <20170727131245.28279-1-jack@suse.cz>
+Date: Thu, 27 Jul 2017 10:09:07 -0400
+In-Reply-To: <20170727131245.28279-1-jack@suse.cz> (Jan Kara's message of
+        "Thu, 27 Jul 2017 15:12:38 +0200")
+Message-ID: <x49zibq3rb0.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
+Jan Kara <jack@suse.cz> writes:
 
-------------------
+Hi, Jan,
 
-From: Jan Kara <jack@suse.cz>
+Thanks for looking into this!
 
-commit 8ba358756aa08414fa9e65a1a41d28304ed6fd7f upstream.
+> There are couple of open questions with this implementation:
+>
+> 1) Is it worth the hassle?
+> 2) Is S_SYNC good flag to use or should we use a new inode flag?
+> 3) VM_FAULT_RO and especially passing of resulting 'pfn' from
+>    dax_iomap_fault() through filesystem fault handler to dax_pfn_mkwrite() in
+>    vmf->orig_pte is a bit of a hack. So far I'm not sure how to refactor
+>    things to make this cleaner.
 
-When new directory 'DIR1' is created in a directory 'DIR0' with SGID bit
-set, DIR1 is expected to have SGID bit set (and owning group equal to
-the owning group of 'DIR0'). However when 'DIR0' also has some default
-ACLs that 'DIR1' inherits, setting these ACLs will result in SGID bit on
-'DIR1' to get cleared if user is not member of the owning group.
+4) How does an application discover that it is safe to flush from
+   userspace?
 
-Fix the problem by calling __xfs_set_acl() instead of xfs_set_acl() when
-setting up inode in xfs_generic_create(). That prevents SGID bit
-clearing and mode is properly set by posix_acl_create() anyway. We also
-reorder arguments of __xfs_set_acl() to match the ordering of
-xfs_set_acl() to make things consistent.
-
-Fixes: 073931017b49d9458aa351605b43a7e34598caef
-CC: Darrick J. Wong <darrick.wong@oracle.com>
-CC: linux-xfs@vger.kernel.org
-Signed-off-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- fs/xfs/xfs_acl.c  |    6 +++---
- fs/xfs/xfs_acl.h  |    1 +
- fs/xfs/xfs_iops.c |    4 ++--
- 3 files changed, 6 insertions(+), 5 deletions(-)
-
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -170,8 +170,8 @@ xfs_get_acl(struct inode *inode, int typ
- 	return acl;
- }
- 
--STATIC int
--__xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
-+int
-+__xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
- {
- 	struct xfs_inode *ip = XFS_I(inode);
- 	unsigned char *ea_name;
-@@ -268,5 +268,5 @@ xfs_set_acl(struct inode *inode, struct
- 	}
- 
-  set_acl:
--	return __xfs_set_acl(inode, type, acl);
-+	return __xfs_set_acl(inode, acl, type);
- }
---- a/fs/xfs/xfs_acl.h
-+++ b/fs/xfs/xfs_acl.h
-@@ -24,6 +24,7 @@ struct posix_acl;
- #ifdef CONFIG_XFS_POSIX_ACL
- extern struct posix_acl *xfs_get_acl(struct inode *inode, int type);
- extern int xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type);
-+extern int __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type);
- #else
- static inline struct posix_acl *xfs_get_acl(struct inode *inode, int type)
- {
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -190,12 +190,12 @@ xfs_generic_create(
- 
- #ifdef CONFIG_XFS_POSIX_ACL
- 	if (default_acl) {
--		error = xfs_set_acl(inode, default_acl, ACL_TYPE_DEFAULT);
-+		error = __xfs_set_acl(inode, default_acl, ACL_TYPE_DEFAULT);
- 		if (error)
- 			goto out_cleanup_inode;
- 	}
- 	if (acl) {
--		error = xfs_set_acl(inode, acl, ACL_TYPE_ACCESS);
-+		error = __xfs_set_acl(inode, acl, ACL_TYPE_ACCESS);
- 		if (error)
- 			goto out_cleanup_inode;
- 	}
-
-
+-Jeff
