@@ -1,112 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52463 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:47176 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751452AbdG0NMt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Jul 2017 09:12:49 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 3/7] dax: Simplify arguments of dax_insert_mapping()
-Date: Thu, 27 Jul 2017 15:12:41 +0200
-Message-Id: <20170727131245.28279-4-jack@suse.cz>
-In-Reply-To: <20170727131245.28279-1-jack@suse.cz>
-References: <20170727131245.28279-1-jack@suse.cz>
+        id S1751451AbdG0Q1y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Jul 2017 12:27:54 -0400
+Date: Thu, 27 Jul 2017 18:27:52 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 1/7] mkfs: Save raw user input field to the opts struct
+Message-ID: <20170727162752.GK18884@wotan.suse.de>
+References: <20170720092932.32580-1-jtulak@redhat.com>
+ <20170720092932.32580-2-jtulak@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170720092932.32580-2-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Andy Lutomirski <luto@kernel.org>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-dax_insert_mapping() has lots of arguments and a lot of them is actuall
-duplicated by passing vm_fault structure as well. Change the function to
-take the same arguments as dax_pmd_insert_mapping().
+On Thu, Jul 20, 2017 at 11:29:26AM +0200, Jan Tulak wrote:
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index a69190b9..4b030101 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -107,6 +107,11 @@ unsigned int		sectorsize;
+>   *     sets what is used with simple specifying the subopt (-d file).
+>   *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
+>   *     value in any case.
+> + *
+> + *   raw_input INTERNAL
+> + *     Filled raw string from the user, so we never lose that information e.g.
+> + *     to print it back in case of an issue.
+> + *
+>   */
+>  struct opt_params {
+>  	const char	name;
+> @@ -122,6 +127,7 @@ struct opt_params {
+>  		long long	minval;
+>  		long long	maxval;
+>  		long long	defaultval;
+> +		const char	*raw_input;
+>  	}		subopt_params[MAX_SUBOPTS];
+>  };
+>  
+> @@ -729,6 +735,18 @@ struct opt_params mopts = {
+>   */
+>  #define WHACK_SIZE (128 * 1024)
+>  
+> +static inline void
+> +set_conf_raw(struct opt_params *opt, int subopt, const char *value)
+> +{
+> +	opt->subopt_params[subopt].raw_input = value;
+> +}
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/dax.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+There are no bounds check on the array here, I think set_conf_raw()
+should return int and we would check the return value. It could
+return -EINVAL if the subopt is invalid for instance.
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 44d9cce4399b..0673efd72f53 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -814,23 +814,30 @@ int dax_writeback_mapping_range(struct address_space *mapping,
- }
- EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
- 
--static int dax_insert_mapping(struct address_space *mapping,
--		struct block_device *bdev, struct dax_device *dax_dev,
--		sector_t sector, size_t size, void *entry,
--		struct vm_area_struct *vma, struct vm_fault *vmf)
-+static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
-+{
-+	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
-+}
-+
-+static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
-+			      loff_t pos, void *entry)
- {
-+	const sector_t sector = dax_iomap_sector(iomap, pos);
-+	struct vm_area_struct *vma = vmf->vma;
-+	struct address_space *mapping = vma->vm_file->f_mapping;
- 	unsigned long vaddr = vmf->address;
- 	void *ret, *kaddr;
- 	pgoff_t pgoff;
- 	int id, rc;
- 	pfn_t pfn;
- 
--	rc = bdev_dax_pgoff(bdev, sector, size, &pgoff);
-+	rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
- 	if (rc)
- 		return rc;
- 
- 	id = dax_read_lock();
--	rc = dax_direct_access(dax_dev, pgoff, PHYS_PFN(size), &kaddr, &pfn);
-+	rc = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(PAGE_SIZE),
-+			       &kaddr, &pfn);
- 	if (rc < 0) {
- 		dax_read_unlock(id);
- 		return rc;
-@@ -930,11 +937,6 @@ int __dax_zero_page_range(struct block_device *bdev,
- }
- EXPORT_SYMBOL_GPL(__dax_zero_page_range);
- 
--static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
--{
--	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
--}
--
- static loff_t
- dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		struct iomap *iomap)
-@@ -1076,7 +1078,6 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, bool sync,
- 	struct inode *inode = mapping->host;
- 	unsigned long vaddr = vmf->address;
- 	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
--	sector_t sector;
- 	struct iomap iomap = { 0 };
- 	unsigned flags = IOMAP_FAULT;
- 	int error, major = 0;
-@@ -1129,9 +1130,9 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, bool sync,
- 		goto error_finish_iomap;
- 	}
- 
--	sector = dax_iomap_sector(&iomap, pos);
--
- 	if (vmf->cow_page) {
-+		sector_t sector = dax_iomap_sector(&iomap, pos);
-+
- 		switch (iomap.type) {
- 		case IOMAP_HOLE:
- 		case IOMAP_UNWRITTEN:
-@@ -1164,8 +1165,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, bool sync,
- 			count_memcg_event_mm(vmf->vma->vm_mm, PGMAJFAULT);
- 			major = VM_FAULT_MAJOR;
- 		}
--		error = dax_insert_mapping(mapping, iomap.bdev, iomap.dax_dev,
--				sector, PAGE_SIZE, entry, vmf->vma, vmf);
-+		error = dax_insert_mapping(vmf, &iomap, pos, entry);
- 		/* -EBUSY is fine, somebody else faulted on the same PTE */
- 		if (error == -EBUSY)
- 			error = 0;
--- 
-2.12.3
+> +
+> +static inline const char *
+> +get_conf_raw(const struct opt_params *opt, int subopt)
+> +{
+> +	return opt->subopt_params[subopt].raw_input;
+> +}
+> +
+>  /*
+>   * Convert lsu to lsunit for 512 bytes blocks and check validity of the values.
 
+These are not pass by value.
+
+The usage of set_conf_raw() and get_conf_raw() therefore have strict
+constraints and can be only used within certain contexts:
+
+  o Since they are pointers the lifetime usage of these functions
+    are limited to the lifetime of the pointers                                 
+  o Since they are *currently* used on main() this is fine but this would
+    limit its use. In the future if we want to defer access to these
+    pointers outside of main() or if main() uses a library which would
+    parse some string and free it we'd have to make another change
+    yet again.
+
+Even if its *OK* today, if some helpers are used later which for instance call
+set_conf_raw() and then free the passed pointer right away we are screwed,
+leading to potentially using random values.  An alternative to limiting the use
+of these routines would be to instead have set_conf_raw() to use strdup() and
+have it return an int in case of -ENOMEM.
+
+  Luis
