@@ -1,62 +1,220 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:33810 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751735AbdG0Wmr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Jul 2017 18:42:47 -0400
-Date: Thu, 27 Jul 2017 16:42:45 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 5/7] dax, iomap: Add support for synchronous faults
-Message-ID: <20170727224245.GF22000@linux.intel.com>
-References: <20170727131245.28279-1-jack@suse.cz>
- <20170727131245.28279-6-jack@suse.cz>
+Received: from aserp1040.oracle.com ([141.146.126.69]:35789 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751705AbdG0Wm4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2017 18:42:56 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6RMguj6007401
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 22:42:56 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v6RMgtmo010520
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 22:42:55 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v6RMgtCF011665
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 22:42:55 GMT
+Subject: [PATCH 12/26] xfs: scrub the AGI
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 27 Jul 2017 15:42:53 -0700
+Message-ID: <150119537372.15159.10202684794665006334.stgit@magnolia>
+In-Reply-To: <150119530010.15159.9900948790538082160.stgit@magnolia>
+References: <150119530010.15159.9900948790538082160.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170727131245.28279-6-jack@suse.cz>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Andy Lutomirski <luto@kernel.org>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jul 27, 2017 at 03:12:43PM +0200, Jan Kara wrote:
-> Add a flag to iomap interface informing the caller that inode needs
-> fdstasync(2) for returned extent to become persistent and use it in DAX
-> fault code so that we map such extents only read only. We propagate the
-> information that the page table entry has been inserted write-protected
-> from dax_iomap_fault() with a new VM_FAULT_RO flag. Filesystem fault
-> handler is then responsible for calling fdatasync(2) and updating page
-> tables to map pfns read-write. dax_iomap_fault() also takes care of
-> updating vmf->orig_pte to match the PTE that was inserted so that we can
-> safely recheck that PTE did not change while write-enabling it.
-> 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-<>
-> @@ -1385,9 +1409,13 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf, bool sync,
->  	if (iomap.offset + iomap.length < pos + PMD_SIZE)
->  		goto finish_iomap;
->  
-> +	force_ro = (vmf->flags & FAULT_FLAG_WRITE) && sync &&
-> +			(iomap.flags & IOMAP_F_NEEDDSYNC);
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I already mentioned this in my response to your cover letter, but I think that
-we can just lean really heavily on IOMAP_F_NEEDDSYNC and have that let us know
-that we are doing sync faults and that the fault is a write.  That simplifies
-a few things in this patch, with the above just becoming:
+Add a forgotten check to the AGI verifier, then wire up the scrub
+infrastructure to check the AGI contents.
 
-	force_ro = (iomap.flags & IOMAP_F_NEEDDSYNC);
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_fs.h  |    3 +-
+ fs/xfs/scrub/agheader.c |   88 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/common.c   |    6 ++-
+ fs/xfs/scrub/scrub.c    |    4 ++
+ fs/xfs/scrub/scrub.h    |    1 +
+ fs/xfs/scrub/trace.h    |    3 +-
+ 6 files changed, 101 insertions(+), 4 deletions(-)
 
-> diff --git a/include/linux/mm.h b/include/linux/mm.h
-> index fa036093e76c..5085647d9f2f 100644
-> --- a/include/linux/mm.h
-> +++ b/include/linux/mm.h
-> @@ -1142,6 +1142,8 @@ static inline void clear_page_pfmemalloc(struct page *page)
->  #define VM_FAULT_RETRY	0x0400	/* ->fault blocked, must retry */
->  #define VM_FAULT_FALLBACK 0x0800	/* huge page fault failed, fall back to small */
->  #define VM_FAULT_DONE_COW   0x1000	/* ->fault has fully handled COW */
-> +#define VM_FAULT_RO	0x2000		/* Write fault was handled just by
-> +					 * inserting RO page table entry for DAX */
 
-I wonder if we should name this flag something a little stronger and more
-specific to its usage with respect to DAX and sync faults?  Maybe
-"VM_FAULT_NEEDDSYNC" for consistency with the iomap flag?
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index a22d90f..2ac0049 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -487,9 +487,10 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_TYPE_SB	1	/* superblock */
+ #define XFS_SCRUB_TYPE_AGF	2	/* AG free header */
+ #define XFS_SCRUB_TYPE_AGFL	3	/* AG free list */
++#define XFS_SCRUB_TYPE_AGI	4	/* AG inode header */
+ 
+ /* Number of scrub subcommands. */
+-#define XFS_SCRUB_TYPE_NR	4
++#define XFS_SCRUB_TYPE_NR	5
+ 
+ /* i: Repair this metadata. */
+ #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index c2cc2af..cfbbe9e 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -544,3 +544,91 @@ xfs_scrub_agfl(
+ out:
+ 	return error;
+ }
++
++/* AGI */
++
++/* Scrub the AGI. */
++int
++xfs_scrub_agi(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_agi			*agi;
++	xfs_daddr_t			daddr;
++	xfs_daddr_t			eofs;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			agbno;
++	xfs_agblock_t			eoag;
++	xfs_agino_t			agino;
++	xfs_agino_t			first_agino;
++	xfs_agino_t			last_agino;
++	int				i;
++	int				level;
++	int				error = 0;
++
++	agno = sc->sm->sm_agno;
++	error = xfs_scrub_load_ag_headers(sc, agno, XFS_SCRUB_TYPE_AGI);
++	if (!xfs_scrub_op_ok(sc, agno, XFS_AGI_BLOCK(sc->mp), &error))
++		goto out;
++
++	agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
++	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
++
++	/* Check the AG length */
++	eoag = be32_to_cpu(agi->agi_length);
++	xfs_scrub_block_check_ok(sc, sc->sa.agi_bp,
++			eoag == xfs_scrub_ag_blocks(mp, agno));
++
++	/* Check btree roots and levels */
++	agbno = be32_to_cpu(agi->agi_root);
++	daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
++	xfs_scrub_block_check_ok(sc, sc->sa.agi_bp,
++			agbno > XFS_AGI_BLOCK(mp) &&
++			agbno < mp->m_sb.sb_agblocks &&
++			agbno < eoag && daddr < eofs);
++
++	level = be32_to_cpu(agi->agi_level);
++	xfs_scrub_block_check_ok(sc, sc->sa.agi_bp,
++			level > 0 && level <= XFS_BTREE_MAXLEVELS);
++
++	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
++		agbno = be32_to_cpu(agi->agi_free_root);
++		daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
++		xfs_scrub_block_check_ok(sc, sc->sa.agi_bp,
++				agbno > XFS_AGI_BLOCK(mp) &&
++				agbno < mp->m_sb.sb_agblocks &&
++				agbno < eoag && daddr < eofs);
++
++		level = be32_to_cpu(agi->agi_free_level);
++		xfs_scrub_block_check_ok(sc, sc->sa.agi_bp,
++				level > 0 && level <= XFS_BTREE_MAXLEVELS);
++	}
++
++	/* Check inode counters */
++	first_agino = XFS_OFFBNO_TO_AGINO(mp, XFS_AGI_BLOCK(mp) + 1, 0);
++	last_agino = XFS_OFFBNO_TO_AGINO(mp, eoag + 1, 0) - 1;
++	agino = be32_to_cpu(agi->agi_count);
++	xfs_scrub_block_check_ok(sc, sc->sa.agi_bp,
++			agino <= last_agino - first_agino + 1 &&
++			agino >= be32_to_cpu(agi->agi_freecount));
++
++	/* Check inode pointers */
++	agino = be32_to_cpu(agi->agi_newino);
++	xfs_scrub_block_check_ok(sc, sc->sa.agi_bp, agino == NULLAGINO ||
++			(agino >= first_agino && agino <= last_agino));
++	agino = be32_to_cpu(agi->agi_dirino);
++	xfs_scrub_block_check_ok(sc, sc->sa.agi_bp, agino == NULLAGINO ||
++			(agino >= first_agino && agino <= last_agino));
++
++	/* Check unlinked inode buckets */
++	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
++		agino = be32_to_cpu(agi->agi_unlinked[i]);
++		if (agino == NULLAGINO)
++			continue;
++		xfs_scrub_block_check_ok(sc, sc->sa.agi_bp,
++				(agino >= first_agino && agino <= last_agino));
++	}
++
++out:
++	return error;
++}
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index e0e611d..b62f084 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -499,12 +499,14 @@ xfs_scrub_load_ag_headers(
+ 	struct xfs_mount		*mp = sc->mp;
+ 	int				error;
+ 
+-	ASSERT(type == XFS_SCRUB_TYPE_AGF || type == XFS_SCRUB_TYPE_AGFL);
++	ASSERT(type == XFS_SCRUB_TYPE_AGF || type == XFS_SCRUB_TYPE_AGFL ||
++	       type == XFS_SCRUB_TYPE_AGI);
+ 	memset(&sc->sa, 0, sizeof(sc->sa));
+ 	sc->sa.agno = agno;
+ 
+ 	error = xfs_scrub_load_ag_header(sc, XFS_AGI_DADDR(mp),
+-			&sc->sa.agi_bp, &xfs_agi_buf_ops, false);
++			&sc->sa.agi_bp, &xfs_agi_buf_ops,
++			type == XFS_SCRUB_TYPE_AGI);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 5e2f1f5..425f0c1 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -174,6 +174,10 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 		.setup	= xfs_scrub_setup_ag_header,
+ 		.scrub	= xfs_scrub_agfl,
+ 	},
++	{ /* agi */
++		.setup	= xfs_scrub_setup_ag_header,
++		.scrub	= xfs_scrub_agi,
++	},
+ };
+ 
+ /* Dispatch metadata scrubbing. */
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index cb31a01..00020a3 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -65,5 +65,6 @@ int xfs_scrub_tester(struct xfs_scrub_context *sc);
+ int xfs_scrub_superblock(struct xfs_scrub_context *sc);
+ int xfs_scrub_agf(struct xfs_scrub_context *sc);
+ int xfs_scrub_agfl(struct xfs_scrub_context *sc);
++int xfs_scrub_agi(struct xfs_scrub_context *sc);
+ 
+ #endif	/* __XFS_SCRUB_SCRUB_H__ */
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 69987b8..e0ad7b4 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -29,7 +29,8 @@
+ 	{ XFS_SCRUB_TYPE_TEST,		"test" }, \
+ 	{ XFS_SCRUB_TYPE_SB,		"superblock" }, \
+ 	{ XFS_SCRUB_TYPE_AGF,		"AGF" }, \
+-	{ XFS_SCRUB_TYPE_AGFL,		"AGFL" }
++	{ XFS_SCRUB_TYPE_AGFL,		"AGFL" }, \
++	{ XFS_SCRUB_TYPE_AGI,		"AGI" }
+ DECLARE_EVENT_CLASS(xfs_scrub_class,
+ 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
+ 		 int error),
+
