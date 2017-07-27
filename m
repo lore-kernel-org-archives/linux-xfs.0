@@ -1,121 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:37029 "EHLO
-        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751933AbdG1Oof (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jul 2017 10:44:35 -0400
-Received: by mail-wm0-f43.google.com with SMTP id e199so21809333wmd.0
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Jul 2017 07:44:34 -0700 (PDT)
-Subject: Re: [PATCH 1/5 v2] mkfs: replace variables with opts table: -b,d,s
- options
-References: <20170720095156.35417-2-jtulak@redhat.com>
- <20170721123448.6956-1-jtulak@redhat.com>
- <20170727163935.GL18884@wotan.suse.de>
-From: Jan Tulak <jtulak@redhat.com>
-Message-ID: <7bcbb410-ed94-27db-0f85-cdfd4ab267b4@redhat.com>
-Date: Fri, 28 Jul 2017 16:44:32 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:44190 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751122AbdG0PET (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Jul 2017 11:04:19 -0400
+Date: Thu, 27 Jul 2017 11:04:18 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Recover file after truncate
+Message-ID: <20170727150416.GB5597@bfoster.bfoster>
+References: <575c9d8d-04c9-4d60-93d2-ccc86ec893a9@ashurst.eu.org>
+ <20170726111541.GB59833@bfoster.bfoster>
+ <0e11333c-0f02-4e4d-8ab2-0d86cb78d7e4@ashurst.eu.org>
+ <20170727124350.GB3858@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20170727163935.GL18884@wotan.suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170727124350.GB3858@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Andy Bennett <andyjpb@ashurst.eu.org>
 Cc: linux-xfs@vger.kernel.org
 
-On 27/07/2017 18:39, Luis R. Rodriguez wrote:
+On Thu, Jul 27, 2017 at 08:43:50AM -0400, Brian Foster wrote:
+> On Wed, Jul 26, 2017 at 11:12:19PM +0100, Andy Bennett wrote:
+> > Hi,
+> > 
+> > 
+...
+> 
+> Are you filtering the xfs_logprint output here? If so, please attach the
+> full output from xfs_logprint.
+> 
 
-> On Fri, Jul 21, 2017 at 02:34:48PM +0200, Jan Tulak wrote:
->> @@ -1609,6 +1593,7 @@ main(
->>   			break;
->>   		case 'b':
->>   			p = optarg;
->> +			uint64_t tmp;
-> Note:
->
-> An extra variable added, just so we can get the current value parsed
-> so we can then convert it to also set similar collateral variables.
->
->>   			while (*p != '\0') {
->>   				char	**subopts =
->>   						(char **)opts[OPT_B].subopts;
->> @@ -1616,19 +1601,17 @@ main(
->>   
->>   				switch (getsubopt(&p, subopts, &value)) {
->>   				case B_LOG:
->> -					blocklog = parse_conf_val(OPT_B, B_LOG,
->> -								  value);
->> -					blocksize = 1 << blocklog;
->> +					tmp = parse_conf_val(OPT_B, B_LOG,
->> +							     value);
->> +					set_conf_val(OPT_B, B_SIZE, 1 << tmp);
-> So here when BLOG is set we update B_SIZE as collateral.
->
->>   					blflag = 1;
->> -					set_conf_val(OPT_B, B_SIZE, blocksize);
->>   					break;
->>   				case B_SIZE:
->> -					blocksize = parse_conf_val(OPT_B,
->> -								   B_SIZE,
->> -								   value);
->> -					blocklog = libxfs_highbit32(blocksize);
->> +					tmp = parse_conf_val(OPT_B, B_SIZE,
->> +							     value);
->> +					set_conf_val(OPT_B, B_LOG,
->> +						libxfs_highbit32(tmp));
-> Here is the reverse, when B_SIZE is set we set B_LOG as well.
->
->>   					bsflag = 1;
->> -					set_conf_val(OPT_B, B_LOG, blocklog);
->>   					break;
->>   				default:
->>   					unknown('b', value);
->> @@ -1641,18 +1624,17 @@ main(
->>   				char	**subopts =
->>   						(char **)opts[OPT_D].subopts;
->>   				char	*value;
->> +				uint64_t tmp;
->> +
->>   
->>   				switch (getsubopt(&p, subopts, &value)) {
->>   				case D_AGCOUNT:
->> -					agcount = parse_conf_val(OPT_D,
->> -								 D_AGCOUNT,
->> -								 value);
->> +					parse_conf_val(OPT_D, D_AGCOUNT,
->> +						       value);
-> If parse_conf_val() could just update the collateral values for us then main()
-> would be much cleaner.
-It didn't occurred to me that these collaterals could be put into 
-parse_conf_val(). That would certainly help both with the main and with 
-spotting bugs where some collateral is not set correctly in all cases. 
-It seems there should be no issue with that, so I will try to change it 
-in the next revision of this set.
+Andy sent the logprint output privately due to the size of the
+attachment.
 
-> Here parse_conf_val() is used only to update D_AGCOUNT based on the parsed
-> value. But note that the return value is ignored. In some other places the
-> return value is used. This is inconsistent, and I realize that the reason
-> we ignore errors is that getnum() is used, however now is a good time to
-> consider if we should just allow the caller to check the error value and
-> return a proper error message and bail on their own. This would allow for
-> better contextual error messages as the code grows. We can discuss this in
-> the patch that adds parse_conf_val().
-The returned value is used to shorter parse_conf_val(X); tmp = 
-get_conf_val(X); to just tmp = parse_conf_val();, not for testing for 
-errors.
->
->> @@ -2464,10 +2517,20 @@ _("rmapbt not supported with realtime devices\n"));
->>   		sb_feat.log_version = 2;
->>   	}
->>   
->> -	calc_stripe_factors(dsu, dsw, sectorsize, lsu, lsectorsize,
->> +	int dsunit = get_conf_val(OPT_D, D_SUNIT);
->> +	int dswidth = get_conf_val(OPT_D, D_SWIDTH);
-> Is int proper here?
->
-calc_stripe_factors() has all arguments as int since 2002, so I see no 
-issue here - it doesn't change anything.
+Andy,
 
-Jan
+The last reference I see of your inode in the log before the size goes
+to zero is this:
 
+----------------------------------------------------------------------------                                           
+Oper (2): tid: c6720129  len: 56  clientid: TRANS  flags: none                                                         
+INODE: #regs: 2   ino: 0x12c37053  flags: 0x1   dsize: 0   
+        blkno: 235989736  len: 32  boff: 9728              
+Oper (3): tid: c6720129  len: 176  clientid: TRANS  flags: none                                                        
+INODE CORE                                                 
+magic 0x494e mode 0100644 version 3 format 2               
+nlink 1 uid 501 gid 100                                    
+atime 0x5977c96e mtime 0x5973ac16 ctime 0x5973ac16         
+size 0x1a81f2218 nblocks 0x1a81f3 extsize 0x0 nextents 0x2 
+naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0           
+flags 0x0 gen 0xb8791e20                                   
+----------------------------------------------------------------------------
+
+This suggests the file size was 0x1a81f2218 (7115579928) and it had
+0x1a81f3 (1737203) blocks across two extents (roughly 6.6GB). Note that
+the file size is not exactly aligned to the (blockcount * 4096).
+
+Further along, the following EFI exists:
+
+----------------------------------------------------------------------------
+Oper (19): tid: 6a85c7fc  len: 48  clientid: TRANS  flags: none
+EFI:  #regs: 1    num_extents: 2  id: 0xffff8bfcb4f38990
+(s: 0x12a9233, l: 688643) (s: 0x34ae0d5, l: 1048560)
+----------------------------------------------------------------------------
+
+... which frees two extents that add up to 688643 + 1048560 = 1737203
+(0x1a81f3) blocks. The starting filesystem blocks for these extents are
+0x12a9233 and 0x34ae0d5, respectively.
+
+If you can convert those starting fsb values to agno/agbno combinations
+as shown in my previous mail, you could confirm whether they reside in
+the free space btrees for the associated allocation group of each
+extent. If so, you could convert each start fsb to a raw daddr (xfs_db
+-c "convert fsb 0x12a9233 daddr" <dev>) and use that to try and read
+each extent off the raw device as previously discussed.
+
+I have no idea whether those extents contain the file data you're after
+(note that I'm not sure we've actually confirmed your file data would
+have made it to disk), but if the file size values look sane that might
+be worth a try before you go fishing the device for raw data.
+
+Brian
+
+> Brian
+> 
+> > ----------------------------------------------------------------------------
+> > Oper (3): tid: 4d4486ed  len: 32  clientid: TRANS  flags: none
+> > EFD:  #regs: 1    num_extents: 1  id: 0xffff8bff07e21e58
+> > ----------------------------------------------------------------------------
+> > Oper (4): tid: 4d4486ed  len: 24  clientid: TRANS  flags: none
+> > BUF:  #regs: 2   start blkno: 1 (0x1)  len: 1  bmap size: 1  flags: 0x2800
+> > Oper (5): tid: 4d4486ed  len: 128  clientid: TRANS  flags: none
+> > AGF Buffer: XAGF  Out of space
+> > ----------------------------------------------------------------------------
+> > Oper (6): tid: 4d4486ed  len: 24  clientid: TRANS  flags: none
+> > BUF:  #regs: 2   start blkno: 8 (0x8)  len: 8  bmap size: 1  flags: 0x2000
+> > Oper (7): tid: 4d4486ed  len: 128  clientid: TRANS  flags: none
+> > BUF DATA
+> > ----------------------------------------------------------------------------
+> > Oper (8): tid: 4d4486ed  len: 24  clientid: TRANS  flags: none
+> > BUF:  #regs: 3   start blkno: 16 (0x10)  len: 8  bmap size: 1  flags: 0x2000
+> > Oper (9): tid: 4d4486ed  len: 128  clientid: TRANS  flags: none
+> > BUF DATA
+> > Oper (10): tid: 4d4486ed  len: 128  clientid: TRANS  flags: none
+> > BUF DATA
+> > ----------------------------------------------------------------------------
+> > Oper (11): tid: 4d4486ed  len: 56  clientid: TRANS  flags: none
+> > INODE: #regs: 3   ino: 0x89c95dd  flags: 0x5   dsize: 16
+> >        blkno: 144479680  len: 32  boff: 14848
+> > Oper (12): tid: 4d4486ed  len: 176  clientid: TRANS  flags: none
+> > INODE CORE
+> > magic 0x494e mode 0100600 version 3 format 2
+> > nlink 1 uid 501 gid 100
+> > atime 0x59790f5b mtime 0x59790f6d ctime 0x59790f6d
+> > size 0x3a9c161 nblocks 0x3a9d extsize 0x0 nextents 0x1
+> > naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> > flags 0x0 gen 0x51eeced9
+> > Oper (13): tid: 4d4486ed  len: 16  clientid: TRANS  flags: none
+> > EXTENTS inode data
+> > ----------------------------------------------------------------------------
+> > Oper (14): tid: 4d4486ed  len: 0  clientid: TRANS  flags: COMMIT -----
+> > 
+> > 
+> > > Do note that the simple act of mounting the filesystem runs the risk of
+> > > overwriting previous log data. An 'xfs_metadump -go' might be a good way
+> > > to preserve current log content.
+> > 
+> > I've been hibernating the machine and haven't tried remounting it read-only:
+> > I'm not expecting anything to do any serious writes on that partition and I
+> > don't think there will be anything much at all that tries to write there.
+> > 
+> > 
+> > > Brian
+> > 
+> > Thanks for your help!
+> > 
+> > 
+> > 
+> > 
+> > Regards,
+> > @ndy
+> > 
+> > -- 
+> > andyjpb@ashurst.eu.org
+> > http://www.ashurst.eu.org/
+> > 0x7EBA75FF
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
