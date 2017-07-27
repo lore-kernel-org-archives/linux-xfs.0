@@ -1,41 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:32916 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750781AbdGZN73 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jul 2017 09:59:29 -0400
-Received: by mail-wr0-f194.google.com with SMTP id y43so22182320wrd.0
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2017 06:59:28 -0700 (PDT)
-Subject: Re: [PATCH, RFC] xfs: fix multi-AG deadlock in xfs_bunmapi
-References: <20170718172545.18065-1-hch@lst.de>
- <ac50dda7-6147-1bb2-78ed-b49dafaec242@gmail.com>
- <09500343-740e-0178-c60a-6ea5e6993c11@gmail.com>
- <20170720074706.GA22218@lst.de>
- <0eb47db7-24de-a231-be9f-73d9ae1171fd@gmail.com>
- <20170720074924.GA22278@lst.de>
- <16f95f63-1111-9d3c-344c-6b42ddab3b55@gmail.com>
- <20170726130442.GA24681@lst.de>
-From: Nikolay Borisov <n.borisov.lkml@gmail.com>
-Message-ID: <fde0bf1e-5ee6-3671-9cb2-f76b428abb07@gmail.com>
-Date: Wed, 26 Jul 2017 16:59:26 +0300
+Received: from mga02.intel.com ([134.134.136.20]:58036 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751454AbdG0Wxa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Jul 2017 18:53:30 -0400
+Date: Thu, 27 Jul 2017 16:53:22 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 6/7] dax: Implement dax_pfn_mkwrite()
+Message-ID: <20170727225322.GG22000@linux.intel.com>
+References: <20170727131245.28279-1-jack@suse.cz>
+ <20170727131245.28279-7-jack@suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <20170726130442.GA24681@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170727131245.28279-7-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Andy Lutomirski <luto@kernel.org>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
 
+On Thu, Jul 27, 2017 at 03:12:44PM +0200, Jan Kara wrote:
+> Implement a function that marks existing page table entry (PTE or PMD)
+> as writeable and takes care of marking it dirty in the radix tree. This
+> function will be used to finish synchronous page fault where the page
+> table entry is first inserted as read-only and then needs to be marked
+> as read-write.
+> 
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/dax.c            | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/dax.h |  1 +
+>  2 files changed, 49 insertions(+)
+> 
+> diff --git a/fs/dax.c b/fs/dax.c
+> index 8a6cf158c691..90b763c86dc2 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -1485,3 +1485,51 @@ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
+>  	}
+>  }
+>  EXPORT_SYMBOL_GPL(dax_iomap_fault);
+> +
+> +/**
+> + * dax_pfn_mkwrite - make page table entry writeable on a DAX file
+> + * @vmf: The description of the fault
+> + * @pe_size: size of entry to be marked writeable
+> + *
+> + * This function mark PTE or PMD entry as writeable in page tables for mmaped
+> + * DAX file. It takes care of marking corresponding radix tree entry as dirty
+> + * as well.
+> + */
+> +int dax_pfn_mkwrite(struct vm_fault *vmf, enum page_entry_size pe_size)
 
+I wonder if this incarnation of this function should be named something other
+than *_pfn_mkwrite so that it's clear that unlike in previous versions of the
+codd, this version isn't supposed to be called via
+vm_operations_struct->pfn_mkwrite, but is instead a helper for sync faults?
+Maybe just dax_mkwrite()?
 
-On 26.07.2017 16:04, Christoph Hellwig wrote:
-> But this is just on 4.4 and older, right?  We had issues in the
-> allocation path there as well, which should be fixed in 4.11 and later,
-> and in recrnt 4.9-stable releases.  Without those the allocation path
-> might sometimes lock out of order as well.
+> +{
+> +	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
+> +	void *entry, **slot;
+> +	pgoff_t index = vmf->pgoff;
+> +	pfn_t pfn = pfn_to_pfn_t(pte_pfn(vmf->orig_pte));
+> +	int vmf_ret, error;
+> +
+> +	spin_lock_irq(&mapping->tree_lock);
+> +	entry = get_unlocked_mapping_entry(mapping, index, &slot);
+> +	/* Did we race with someone splitting entry or so? */
+> +	if (!entry || (pe_size == PE_SIZE_PTE && !dax_is_pte_entry(entry)) ||
+> +	    (pe_size == PE_SIZE_PMD && !dax_is_pmd_entry(entry))) {
+> +		put_unlocked_mapping_entry(mapping, index, entry);
+> +		spin_unlock_irq(&mapping->tree_lock);
 
-I will try to repro on 4.11 WITHOUT your patch just to see that the
-issue happens there as well. But if memory serves me right on newer
-kernels it was much harder to hit (but not impossible).
+The previous version of this function had tracepoints in this failure path and
+in the successful completion path.  I use this kind of tracing daily for
+debugging, so lets add it back in.
+
+> +		return VM_FAULT_NOPAGE;
+> +	}
+> +	radix_tree_tag_set(&mapping->page_tree, index, PAGECACHE_TAG_DIRTY);
+> +	entry = lock_slot(mapping, slot);
+> +	spin_unlock_irq(&mapping->tree_lock);
+> +	switch (pe_size) {
+> +	case PE_SIZE_PTE:
+> +		error = vm_insert_mixed_mkwrite(vmf->vma, vmf->address, pfn);
+
+This path goes through the 'mkwrite' branch in insert_pfn() where we validate
+that the PFN we are about to map matches the one pointed to by the existing
+PTE, but I don't see any checks in this path that validate against
+vmf->orig_pte?
+
+This kind of check was done by the old
+dax_pfn_mkwrite()->finish_mkwrite_fault() path via the pte_same() check in
+finish_mkwrite_fault().
+
+Do we need to add an equivalent check somewhere in this path, since we're
+going through the trouble of setting vmf->orig_pte in the DAX fault handlers?
