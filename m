@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47527 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751676AbdG0WoS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2017 18:44:18 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6RMiHLN013990
+Received: from aserp1040.oracle.com ([141.146.126.69]:36420 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751712AbdG0Wog (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2017 18:44:36 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v6RMiZwb009011
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 22:44:18 GMT
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 22:44:36 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v6RMiGcD013420
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v6RMiZbM014679
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 22:44:17 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v6RMiGtX022522
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 22:44:16 GMT
-Subject: [PATCH 23/26] xfs: scrub symbolic links
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 22:44:35 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v6RMiZNN022608
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 22:44:35 GMT
+Subject: [PATCH 26/26] xfs: scrub quota information
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 27 Jul 2017 15:44:15 -0700
-Message-ID: <150119545506.15159.6652101161403233001.stgit@magnolia>
+Date: Thu, 27 Jul 2017 15:44:33 -0700
+Message-ID: <150119547345.15159.7829129118366065398.stgit@magnolia>
 In-Reply-To: <150119530010.15159.9900948790538082160.stgit@magnolia>
 References: <150119530010.15159.9900948790538082160.stgit@magnolia>
 MIME-Version: 1.0
@@ -30,93 +30,67 @@ To: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create the infrastructure to scrub symbolic link data.
+Perform some quick sanity testing of the disk quota information.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile        |    1 +
- fs/xfs/libxfs/xfs_fs.h |    3 +-
- fs/xfs/scrub/common.h  |    2 +
- fs/xfs/scrub/scrub.c   |    4 ++
- fs/xfs/scrub/scrub.h   |    1 +
- fs/xfs/scrub/symlink.c |   92 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/trace.h   |    3 +-
- 7 files changed, 104 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/scrub/symlink.c
+ fs/xfs/Makefile        |    1 
+ fs/xfs/libxfs/xfs_fs.h |    5 +
+ fs/xfs/scrub/common.h  |    1 
+ fs/xfs/scrub/quota.c   |  258 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/scrub.c   |   18 +++
+ fs/xfs/scrub/scrub.h   |    1 
+ fs/xfs/scrub/trace.h   |    5 +
+ 7 files changed, 287 insertions(+), 2 deletions(-)
+ create mode 100644 fs/xfs/scrub/quota.c
 
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 2a1b118..6bcf220 100644
+index 695b4c0..f8b3915 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -157,5 +157,6 @@ xfs-y				+= $(addprefix scrub/, \
- 				   refcount.o \
- 				   rmap.o \
- 				   scrub.o \
-+				   symlink.o \
+@@ -162,4 +162,5 @@ xfs-y				+= $(addprefix scrub/, \
  				   )
+ 
+ xfs-$(CONFIG_XFS_RT)		+= scrub/rtbitmap.o
++xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
  endif
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index d31d743..955eea7 100644
+index 3f37156..fba0105 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -500,9 +500,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_BMBTC	14	/* CoW fork block mapping */
- #define XFS_SCRUB_TYPE_DIR	15	/* directory */
- #define XFS_SCRUB_TYPE_XATTR	16	/* extended attribute */
-+#define XFS_SCRUB_TYPE_SYMLINK	17	/* symbolic link */
+@@ -504,9 +504,12 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_TYPE_PARENT	18	/* parent pointers */
+ #define XFS_SCRUB_TYPE_RTBITMAP	19	/* realtime bitmap */
+ #define XFS_SCRUB_TYPE_RTSUM	20	/* realtime summary */
++#define XFS_SCRUB_TYPE_UQUOTA	21	/* user quotas */
++#define XFS_SCRUB_TYPE_GQUOTA	22	/* group quotas */
++#define XFS_SCRUB_TYPE_PQUOTA	23	/* project quotas */
  
  /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	17
-+#define XFS_SCRUB_TYPE_NR	18
+-#define XFS_SCRUB_TYPE_NR	21
++#define XFS_SCRUB_TYPE_NR	24
  
  /* i: Repair this metadata. */
  #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
 diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index f0a33b3..eeb6bc4 100644
+index 871204a..a4a2ca5 100644
 --- a/fs/xfs/scrub/common.h
 +++ b/fs/xfs/scrub/common.h
-@@ -112,6 +112,8 @@ int xfs_scrub_setup_directory(struct xfs_scrub_context *sc,
- 			      struct xfs_inode *ip);
- int xfs_scrub_setup_xattr(struct xfs_scrub_context *sc,
- 			  struct xfs_inode *ip);
-+int xfs_scrub_setup_symlink(struct xfs_scrub_context *sc,
-+			    struct xfs_inode *ip);
+@@ -117,6 +117,7 @@ int xfs_scrub_setup_symlink(struct xfs_scrub_context *sc,
+ int xfs_scrub_setup_parent(struct xfs_scrub_context *sc,
+ 			   struct xfs_inode *ip);
+ int xfs_scrub_setup_rt(struct xfs_scrub_context *sc, struct xfs_inode *ip);
++int xfs_scrub_setup_quota(struct xfs_scrub_context *sc, struct xfs_inode *ip);
  
  void xfs_scrub_ag_free(struct xfs_scrub_context *sc, struct xfs_scrub_ag *sa);
  int xfs_scrub_ag_init(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 361aaff..df609e6 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -242,6 +242,10 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.setup	= xfs_scrub_setup_xattr,
- 		.scrub	= xfs_scrub_xattr,
- 	},
-+	{ /* symbolic link */
-+		.setup	= xfs_scrub_setup_symlink,
-+		.scrub	= xfs_scrub_symlink,
-+	},
- };
- 
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index b440e26..89dfb66 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -80,5 +80,6 @@ int xfs_scrub_bmap_attr(struct xfs_scrub_context *sc);
- int xfs_scrub_bmap_cow(struct xfs_scrub_context *sc);
- int xfs_scrub_directory(struct xfs_scrub_context *sc);
- int xfs_scrub_xattr(struct xfs_scrub_context *sc);
-+int xfs_scrub_symlink(struct xfs_scrub_context *sc);
- 
- #endif	/* __XFS_SCRUB_SCRUB_H__ */
-diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
 new file mode 100644
-index 0000000..e3b5d35
+index 0000000..302d5a8
 --- /dev/null
-+++ b/fs/xfs/scrub/symlink.c
-@@ -0,0 +1,92 @@
++++ b/fs/xfs/scrub/quota.c
+@@ -0,0 +1,258 @@
 +/*
 + * Copyright (C) 2017 Oracle.  All Rights Reserved.
 + *
@@ -150,76 +124,284 @@ index 0000000..e3b5d35
 +#include "xfs_sb.h"
 +#include "xfs_inode.h"
 +#include "xfs_inode_fork.h"
-+#include "xfs_symlink.h"
++#include "xfs_bmap.h"
++#include "xfs_quota.h"
++#include "xfs_qm.h"
++#include "xfs_dquot.h"
++#include "xfs_dquot_item.h"
 +#include "scrub/xfs_scrub.h"
 +#include "scrub/scrub.h"
 +#include "scrub/common.h"
 +#include "scrub/trace.h"
 +
-+/* Set us up to scrub a symbolic link. */
++/* Convert a scrub type code to a DQ flag, or return 0 if error. */
++static inline uint
++xfs_scrub_quota_to_dqtype(
++	struct xfs_scrub_context	*sc)
++{
++	switch (sc->sm->sm_type) {
++	case XFS_SCRUB_TYPE_UQUOTA:
++		return XFS_DQ_USER;
++	case XFS_SCRUB_TYPE_GQUOTA:
++		return XFS_DQ_GROUP;
++	case XFS_SCRUB_TYPE_PQUOTA:
++		return XFS_DQ_PROJ;
++	default:
++		return 0;
++	}
++}
++
++/* Set us up to scrub a quota. */
 +int
-+xfs_scrub_setup_symlink(
++xfs_scrub_setup_quota(
 +	struct xfs_scrub_context	*sc,
 +	struct xfs_inode		*ip)
 +{
-+	/* Allocate the buffer without the inode lock held. */
-+	sc->buf = kmem_zalloc_large(XFS_SYMLINK_MAXLEN + 1, KM_SLEEP);
-+	if (!sc->buf)
-+		return -ENOMEM;
++	uint				dqtype;
 +
-+	return xfs_scrub_setup_inode_contents(sc, ip, 0);
++	if (sc->sm->sm_agno || sc->sm->sm_ino || sc->sm->sm_gen)
++		return -EINVAL;
++
++	dqtype = xfs_scrub_quota_to_dqtype(sc);
++	if (dqtype == 0)
++		return -EINVAL;
++	return 0;
 +}
 +
-+/* Symbolic links. */
++/* Quotas. */
 +
++/* Scrub the fields in an individual quota item. */
++STATIC void
++xfs_scrub_quota_item(
++	struct xfs_scrub_context	*sc,
++	uint				dqtype,
++	struct xfs_dquot		*dq,
++	xfs_dqid_t			id)
++{
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_disk_dquot		*d = &dq->q_core;
++	struct xfs_quotainfo		*qi = mp->m_quotainfo;
++	xfs_fileoff_t			offset;
++	unsigned long long		bsoft;
++	unsigned long long		isoft;
++	unsigned long long		rsoft;
++	unsigned long long		bhard;
++	unsigned long long		ihard;
++	unsigned long long		rhard;
++	unsigned long long		bcount;
++	unsigned long long		icount;
++	unsigned long long		rcount;
++	xfs_ino_t			inodes;
++
++	/* Did we get the dquot we wanted? */
++	offset = id * qi->qi_dqperchunk;
++	xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, offset,
++			id <= be32_to_cpu(d->d_id) &&
++			dqtype == (d->d_flags & XFS_DQ_ALLTYPES));
++
++	/* Check the limits. */
++	bhard = be64_to_cpu(d->d_blk_hardlimit);
++	ihard = be64_to_cpu(d->d_ino_hardlimit);
++	rhard = be64_to_cpu(d->d_rtb_hardlimit);
++
++	bsoft = be64_to_cpu(d->d_blk_softlimit);
++	isoft = be64_to_cpu(d->d_ino_softlimit);
++	rsoft = be64_to_cpu(d->d_rtb_softlimit);
++
++	inodes = XFS_AGINO_TO_INO(mp, mp->m_sb.sb_agcount, 0);
++
++	/*
++	 * Warn if the limits are larger than the fs.  Administrators
++	 * can do this, though in production this seems suspect.
++	 */
++	xfs_scrub_fblock_warn_ok(sc, XFS_DATA_FORK, offset,
++			bhard <= mp->m_sb.sb_dblocks &&
++			ihard <= inodes &&
++			rhard <= mp->m_sb.sb_rblocks &&
++			bsoft <= mp->m_sb.sb_dblocks &&
++			isoft <= inodes &&
++			rsoft <= mp->m_sb.sb_rblocks);
++
++	/* Soft limit must be less than the hard limit. */
++	xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, offset,
++			bsoft <= bhard &&
++			isoft <= ihard &&
++			rsoft <= rhard);
++
++	/* Check the resource counts. */
++	bcount = be64_to_cpu(d->d_bcount);
++	icount = be64_to_cpu(d->d_icount);
++	rcount = be64_to_cpu(d->d_rtbcount);
++	inodes = percpu_counter_sum(&mp->m_icount);
++
++	/*
++	 * Check that usage doesn't exceed physical limits.  However, on
++	 * a reflink filesystem we're allowed to exceed physical space
++	 * if there are no quota limits.
++	 */
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		xfs_scrub_fblock_warn_ok(sc, XFS_DATA_FORK, offset,
++				bcount <= mp->m_sb.sb_dblocks);
++	else
++		xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, offset,
++				bcount <= mp->m_sb.sb_dblocks);
++	xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, offset,
++			icount <= inodes && rcount <= mp->m_sb.sb_rblocks);
++
++	/*
++	 * We can violate the hard limits if the admin suddenly sets a
++	 * lower limit than the actual usage.  However, we flag it for
++	 * admin review.
++	 */
++	xfs_scrub_fblock_warn_ok(sc, XFS_DATA_FORK, offset,
++			(id == 0 || bhard == 0 || bcount <= bhard) &&
++			(id == 0 || ihard == 0 || icount <= ihard) &&
++			(id == 0 || rhard == 0 || rcount <= rhard));
++}
++
++/* Scrub all of a quota type's items. */
 +int
-+xfs_scrub_symlink(
++xfs_scrub_quota(
 +	struct xfs_scrub_context	*sc)
 +{
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_ifork		*ifp;
-+	loff_t				len;
-+	int				error = 0;
++	struct xfs_bmbt_irec		irec = { 0 };
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_inode		*ip;
++	struct xfs_quotainfo		*qi = mp->m_quotainfo;
++	struct xfs_dquot		*dq;
++	xfs_fileoff_t			max_dqid_off;
++	xfs_fileoff_t			off = 0;
++	xfs_dqid_t			id = 0;
++	uint				dqtype;
++	int				nimaps;
++	int				error;
 +
-+	if (!S_ISLNK(VFS_I(ip)->i_mode))
++	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
 +		return -ENOENT;
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	len = ip->i_d.di_size;
 +
-+	/* Plausible size? */
-+	if (!xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, 0,
-+			len <= XFS_SYMLINK_MAXLEN && len > 0))
-+		goto out;
-+
-+	/* Inline symlink? */
-+	if (ifp->if_flags & XFS_IFINLINE) {
-+		xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, 0,
-+				len <= XFS_IFORK_DSIZE(ip) &&
-+				len <= strnlen(ifp->if_u1.if_data,
-+					XFS_IFORK_DSIZE(ip)));
++	mutex_lock(&qi->qi_quotaofflock);
++	dqtype = xfs_scrub_quota_to_dqtype(sc);
++	if (!xfs_this_quota_on(sc->mp, dqtype)) {
++		error = -ENOENT;
 +		goto out;
 +	}
 +
-+	/* Remote symlink; must read the contents. */
-+	error = xfs_readlink_bmap_ilocked(sc->ip, sc->buf);
-+	if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, 0, &error))
-+		goto out;
-+	xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, 0,
-+			len <= strnlen(sc->buf, XFS_SYMLINK_MAXLEN));
++	/* Attach to the quota inode and set sc->ip so that reporting works. */
++	ip = xfs_quota_inode(sc->mp, dqtype);
++	sc->ip = ip;
++
++	/* Look for problem extents. */
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
++	while (1) {
++		if (xfs_scrub_should_terminate(&error))
++			break;
++
++		off = irec.br_startoff + irec.br_blockcount;
++		nimaps = 1;
++		error = xfs_bmapi_read(ip, off, -1, &irec, &nimaps,
++				XFS_BMAPI_ENTIRE);
++		if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK, off, &error))
++			goto out_unlock;
++		if (!nimaps)
++			break;
++		if (irec.br_startblock == HOLESTARTBLOCK)
++			continue;
++
++		/*
++		 * Unwritten extents or blocks mapped above the highest
++		 * quota id shouldn't happen.
++		 */
++		xfs_scrub_fblock_check_ok(sc, XFS_DATA_FORK, off,
++				!isnullstartblock(irec.br_startblock) &&
++				irec.br_startoff <= max_dqid_off &&
++				irec.br_startoff + irec.br_blockcount <=
++					max_dqid_off + 1);
++	}
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++	/* Check all the quota items. */
++	while (id < ((xfs_dqid_t)-1ULL)) {
++		if (xfs_scrub_should_terminate(&error))
++			break;
++
++		error = xfs_qm_dqget(mp, NULL, id, dqtype, XFS_QMOPT_DQNEXT,
++				&dq);
++		if (error == -ENOENT)
++			break;
++		if (!xfs_scrub_fblock_op_ok(sc, XFS_DATA_FORK,
++				id * qi->qi_dqperchunk, &error))
++			goto out;
++
++		xfs_scrub_quota_item(sc, dqtype, dq, id);
++
++		id = be32_to_cpu(dq->q_core.d_id) + 1;
++		xfs_qm_dqput(dq);
++		if (!id)
++			break;
++	}
++	goto out;
++
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
 +out:
++	sc->ip = NULL;
++	mutex_unlock(&qi->qi_quotaofflock);
 +	return error;
 +}
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 30c08ff..4a882f4 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -265,6 +265,24 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 	{ NULL },
+ 	{ NULL },
+ #endif
++#ifdef CONFIG_XFS_QUOTA
++	{ /* user quota */
++		.setup = xfs_scrub_setup_quota,
++		.scrub = xfs_scrub_quota,
++	},
++	{ /* group quota */
++		.setup = xfs_scrub_setup_quota,
++		.scrub = xfs_scrub_quota,
++	},
++	{ /* project quota */
++		.setup = xfs_scrub_setup_quota,
++		.scrub = xfs_scrub_quota,
++	},
++#else
++	{ NULL },
++	{ NULL },
++	{ NULL },
++#endif
+ };
+ 
+ /* Dispatch metadata scrubbing. */
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 97fd03f..3218664 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -84,5 +84,6 @@ int xfs_scrub_symlink(struct xfs_scrub_context *sc);
+ int xfs_scrub_parent(struct xfs_scrub_context *sc);
+ int xfs_scrub_rtbitmap(struct xfs_scrub_context *sc);
+ int xfs_scrub_rtsummary(struct xfs_scrub_context *sc);
++int xfs_scrub_quota(struct xfs_scrub_context *sc);
+ 
+ #endif	/* __XFS_SCRUB_SCRUB_H__ */
 diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 549d305..be01b7fa 100644
+index 6024a2b..b9ccb85 100644
 --- a/fs/xfs/scrub/trace.h
 +++ b/fs/xfs/scrub/trace.h
-@@ -42,7 +42,8 @@
- 	{ XFS_SCRUB_TYPE_BMBTA,		"bmapbta" }, \
- 	{ XFS_SCRUB_TYPE_BMBTC,		"bmapbtc" }, \
- 	{ XFS_SCRUB_TYPE_DIR,		"dir" }, \
--	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }
-+	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }, \
-+	{ XFS_SCRUB_TYPE_SYMLINK,	"symlink" }
+@@ -46,7 +46,10 @@
+ 	{ XFS_SCRUB_TYPE_SYMLINK,	"symlink" }, \
+ 	{ XFS_SCRUB_TYPE_PARENT,	"parent" }, \
+ 	{ XFS_SCRUB_TYPE_RTBITMAP,	"rtbitmap" }, \
+-	{ XFS_SCRUB_TYPE_RTSUM,		"rtsummary" }
++	{ XFS_SCRUB_TYPE_RTSUM,		"rtsummary" }, \
++	{ XFS_SCRUB_TYPE_UQUOTA,	"usrquota" }, \
++	{ XFS_SCRUB_TYPE_GQUOTA,	"grpquota" }, \
++	{ XFS_SCRUB_TYPE_PQUOTA,	"prjquota" }
  DECLARE_EVENT_CLASS(xfs_scrub_class,
  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
  		 int error),
