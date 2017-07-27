@@ -1,113 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:53858 "EHLO mga05.intel.com"
+Received: from mga06.intel.com ([134.134.136.31]:4643 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751600AbdG0W5k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Jul 2017 18:57:40 -0400
-Date: Thu, 27 Jul 2017 16:57:39 -0600
+        id S1751454AbdG0XEm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Jul 2017 19:04:42 -0400
+Date: Thu, 27 Jul 2017 17:04:40 -0600
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 7/7] ext4: Support for synchronous DAX faults
-Message-ID: <20170727225739.GH22000@linux.intel.com>
+Subject: Re: [PATCH 6/7] dax: Implement dax_pfn_mkwrite()
+Message-ID: <20170727230440.GI22000@linux.intel.com>
 References: <20170727131245.28279-1-jack@suse.cz>
- <20170727131245.28279-8-jack@suse.cz>
+ <20170727131245.28279-7-jack@suse.cz>
+ <20170727225322.GG22000@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170727131245.28279-8-jack@suse.cz>
+In-Reply-To: <20170727225322.GG22000@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Andy Lutomirski <luto@kernel.org>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Andy Lutomirski <luto@kernel.org>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
 
-On Thu, Jul 27, 2017 at 03:12:45PM +0200, Jan Kara wrote:
-> We return IOMAP_F_NEEDDSYNC flag from ext4_iomap_begin() for a
-> synchronous write fault when inode has some uncommitted metadata
-> changes. In the fault handler ext4_dax_fault() we then detect this case,
-> call vfs_fsync_range() to make sure all metadata is committed, and call
-> dax_pfn_mkwrite() to mark PTE as writeable. Note that this will also
-> dirty corresponding radix tree entry which is what we want - fsync(2)
-> will still provide data integrity guarantees for applications not using
-> userspace flushing. And applications using userspace flushing can avoid
-> calling fsync(2) and thus avoid the performance overhead.
+On Thu, Jul 27, 2017 at 04:53:22PM -0600, Ross Zwisler wrote:
+> On Thu, Jul 27, 2017 at 03:12:44PM +0200, Jan Kara wrote:
+> > Implement a function that marks existing page table entry (PTE or PMD)
+> > as writeable and takes care of marking it dirty in the radix tree. This
+> > function will be used to finish synchronous page fault where the page
+> > table entry is first inserted as read-only and then needs to be marked
+> > as read-write.
+> > 
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+<>
+> > +	radix_tree_tag_set(&mapping->page_tree, index, PAGECACHE_TAG_DIRTY);
+> > +	entry = lock_slot(mapping, slot);
+> > +	spin_unlock_irq(&mapping->tree_lock);
+> > +	switch (pe_size) {
+> > +	case PE_SIZE_PTE:
+> > +		error = vm_insert_mixed_mkwrite(vmf->vma, vmf->address, pfn);
 > 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/ext4/file.c       | 35 +++++++++++++++++++++++++++++------
->  fs/ext4/inode.c      |  4 ++++
->  fs/jbd2/journal.c    | 16 ++++++++++++++++
->  include/linux/jbd2.h |  1 +
->  4 files changed, 50 insertions(+), 6 deletions(-)
+> This path goes through the 'mkwrite' branch in insert_pfn() where we validate
+> that the PFN we are about to map matches the one pointed to by the existing
+> PTE, but I don't see any checks in this path that validate against
+> vmf->orig_pte?
 > 
-> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-> index d401403e5095..b221d0b546b0 100644
-> --- a/fs/ext4/file.c
-> +++ b/fs/ext4/file.c
-> @@ -287,16 +287,39 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
->  		down_read(&EXT4_I(inode)->i_mmap_sem);
->  		handle = ext4_journal_start_sb(sb, EXT4_HT_WRITE_PAGE,
->  					       EXT4_DATA_TRANS_BLOCKS(sb));
-> +		if (IS_ERR(handle)) {
-> +			up_read(&EXT4_I(inode)->i_mmap_sem);
-> +			sb_end_pagefault(sb);
-> +			return VM_FAULT_SIGBUS;
-> +		}
+> This kind of check was done by the old
+> dax_pfn_mkwrite()->finish_mkwrite_fault() path via the pte_same() check in
+> finish_mkwrite_fault().
+> 
+> Do we need to add an equivalent check somewhere in this path, since we're
+> going through the trouble of setting vmf->orig_pte in the DAX fault handlers?
 
-Yay, this error handling seems cleaner to me anyway.
-
->  	} else {
->  		down_read(&EXT4_I(inode)->i_mmap_sem);
->  	}
-> -	if (!IS_ERR(handle))
-> -		result = dax_iomap_fault(vmf, pe_size, false, &ext4_iomap_ops);
-> -	else
-> -		result = VM_FAULT_SIGBUS;
-> +	result = dax_iomap_fault(vmf, pe_size, IS_SYNC(inode), &ext4_iomap_ops);
->  	if (write) {
-> -		if (!IS_ERR(handle))
-> -			ext4_journal_stop(handle);
-> +		ext4_journal_stop(handle);
-> +		/* Write fault but PFN mapped only RO? */
-> +		if (result & VM_FAULT_RO) {
-> +			int err;
-> +			loff_t start = ((loff_t)vmf->pgoff) << PAGE_SHIFT;
-> +			size_t len = 0;
-> +
-> +			if (pe_size == PE_SIZE_PTE)
-> +				len = PAGE_SIZE;
-> +#ifdef CONFIG_FS_DAX_PMD
-> +			else if (pe_size == PE_SIZE_PMD)
-> +				len = HPAGE_PMD_SIZE;
-> +			else
-> +				WARN_ON_ONCE(1);
-
-I think this "else WARN_ON_ONCE(1);" should live outside of the
-CONFIG_FS_DAX_PMD so that we get warned in all configs if we get an
-unsupported pe_size.
-
-> +#endif
-> +			WARN_ON_ONCE(!IS_SYNC(inode));
-> +			err = vfs_fsync_range(vmf->vma->vm_file, start,
-> +					      start + len - 1, 1);
-> +			if (err)
-> +				result = VM_FAULT_SIGBUS;
-> +			else
-> +				result = dax_pfn_mkwrite(vmf, pe_size);
-> +		}
->  		up_read(&EXT4_I(inode)->i_mmap_sem);
->  		sb_end_pagefault(sb);
->  	} else {
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 3c600f02673f..e68231bb227c 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -3429,6 +3429,10 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
->  	}
->  
->  	iomap->flags = 0;
-> +	if ((flags & IOMAP_FAULT) && (flags & IOMAP_WRITE) && IS_SYNC(inode) &&
-> +	    !jbd2_transaction_committed(EXT4_SB(inode->i_sb)->s_journal,
-> +					EXT4_I(inode)->i_datasync_tid))
-> +		iomap->flags |= IOMAP_F_NEEDDSYNC;
-
-Do we need to check for (flags & IOMAP_FAULT), or can we rely on the fact that
-we are in ext4_iomap_begin()?
+Or, actually, does the fact that we do the PFN based sanity check in
+insert_pfn() mean that we don't actually need to set vmf->orig_pte in the DAX
+fault handlers at all?  We already sanity check the PFN of the RW PTE we
+insert against what is already in the page table, and maybe we don't need to
+keep another copy around in vmf->orig_pte to verify against?
