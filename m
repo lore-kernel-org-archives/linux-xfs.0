@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52507 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52476 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751526AbdG0NMv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Jul 2017 09:12:51 -0400
+        id S1751501AbdG0NMu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Jul 2017 09:12:50 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 6/7] dax: Implement dax_pfn_mkwrite()
-Date: Thu, 27 Jul 2017 15:12:44 +0200
-Message-Id: <20170727131245.28279-7-jack@suse.cz>
+Subject: [PATCH 4/7] dax: Make dax_insert_mapping() return VM_FAULT_ state
+Date: Thu, 27 Jul 2017 15:12:42 +0200
+Message-Id: <20170727131245.28279-5-jack@suse.cz>
 In-Reply-To: <20170727131245.28279-1-jack@suse.cz>
 References: <20170727131245.28279-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,86 +15,118 @@ List-Id: xfs
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Andy Lutomirski <luto@kernel.org>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>
 
-Implement a function that marks existing page table entry (PTE or PMD)
-as writeable and takes care of marking it dirty in the radix tree. This
-function will be used to finish synchronous page fault where the page
-table entry is first inserted as read-only and then needs to be marked
-as read-write.
+Currently dax_insert_mapping() returns normal error code which is later
+converted to VM_FAULT_ state. Since we will need to do more state
+modifications specific to dax_insert_mapping() it does not make sense to
+push them up to the caller of dax_insert_mapping(). Instead make
+dax_insert_mapping() return VM_FAULT_ state the same way as
+dax_pmd_insert_mapping() does that.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/dax.c            | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/dax.h |  1 +
- 2 files changed, 49 insertions(+)
+ fs/dax.c | 45 +++++++++++++++++++++++++--------------------
+ 1 file changed, 25 insertions(+), 20 deletions(-)
 
 diff --git a/fs/dax.c b/fs/dax.c
-index 8a6cf158c691..90b763c86dc2 100644
+index 0673efd72f53..9658975b926a 100644
 --- a/fs/dax.c
 +++ b/fs/dax.c
-@@ -1485,3 +1485,51 @@ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
- 	}
+@@ -814,6 +814,15 @@ int dax_writeback_mapping_range(struct address_space *mapping,
  }
- EXPORT_SYMBOL_GPL(dax_iomap_fault);
-+
-+/**
-+ * dax_pfn_mkwrite - make page table entry writeable on a DAX file
-+ * @vmf: The description of the fault
-+ * @pe_size: size of entry to be marked writeable
-+ *
-+ * This function mark PTE or PMD entry as writeable in page tables for mmaped
-+ * DAX file. It takes care of marking corresponding radix tree entry as dirty
-+ * as well.
-+ */
-+int dax_pfn_mkwrite(struct vm_fault *vmf, enum page_entry_size pe_size)
+ EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
+ 
++static int dax_fault_return(int error)
 +{
-+	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
-+	void *entry, **slot;
-+	pgoff_t index = vmf->pgoff;
-+	pfn_t pfn = pfn_to_pfn_t(pte_pfn(vmf->orig_pte));
-+	int vmf_ret, error;
-+
-+	spin_lock_irq(&mapping->tree_lock);
-+	entry = get_unlocked_mapping_entry(mapping, index, &slot);
-+	/* Did we race with someone splitting entry or so? */
-+	if (!entry || (pe_size == PE_SIZE_PTE && !dax_is_pte_entry(entry)) ||
-+	    (pe_size == PE_SIZE_PMD && !dax_is_pmd_entry(entry))) {
-+		put_unlocked_mapping_entry(mapping, index, entry);
-+		spin_unlock_irq(&mapping->tree_lock);
++	if (error == 0)
 +		return VM_FAULT_NOPAGE;
-+	}
-+	radix_tree_tag_set(&mapping->page_tree, index, PAGECACHE_TAG_DIRTY);
-+	entry = lock_slot(mapping, slot);
-+	spin_unlock_irq(&mapping->tree_lock);
-+	switch (pe_size) {
-+	case PE_SIZE_PTE:
-+		error = vm_insert_mixed_mkwrite(vmf->vma, vmf->address, pfn);
-+		vmf_ret = dax_fault_return(error);
-+		break;
-+#ifdef CONFIG_FS_DAX_PMD
-+	case PE_SIZE_PMD:
-+		vmf_ret = vmf_insert_pfn_pmd(vmf->vma, vmf->address, vmf->pmd,
-+			pfn, true);
-+		break;
-+#endif
-+	default:
-+		vmf_ret = VM_FAULT_FALLBACK;
-+	}
-+	put_locked_mapping_entry(mapping, index);
-+	return vmf_ret;
++	if (error == -ENOMEM)
++		return VM_FAULT_OOM;
++	return VM_FAULT_SIGBUS;
 +}
-+EXPORT_SYMBOL_GPL(dax_pfn_mkwrite);
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 98950f4d127e..6ce5912e4516 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -92,6 +92,7 @@ ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		const struct iomap_ops *ops);
- int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
- 		    bool sync, const struct iomap_ops *ops);
-+int dax_pfn_mkwrite(struct vm_fault *vmf, enum page_entry_size pe_size);
- int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
- int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index);
++
+ static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
+ {
+ 	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
+@@ -828,7 +837,7 @@ static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
+ 	unsigned long vaddr = vmf->address;
+ 	void *ret, *kaddr;
+ 	pgoff_t pgoff;
+-	int id, rc;
++	int id, rc, vmf_ret;
+ 	pfn_t pfn;
+ 
+ 	rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
+@@ -850,9 +859,18 @@ static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
+ 
+ 	trace_dax_insert_mapping(mapping->host, vmf, ret);
+ 	if (vmf->flags & FAULT_FLAG_WRITE)
+-		return vm_insert_mixed_mkwrite(vma, vaddr, pfn);
++		rc = vm_insert_mixed_mkwrite(vma, vaddr, pfn);
+ 	else
+-		return vm_insert_mixed(vma, vaddr, pfn);
++		rc = vm_insert_mixed(vma, vaddr, pfn);
++
++	/* -EBUSY is fine, somebody else faulted on the same PTE */
++	if (rc == -EBUSY)
++		rc = 0;
++
++	vmf_ret = dax_fault_return(rc);
++	if (iomap->flags & IOMAP_F_NEW)
++		vmf_ret |= VM_FAULT_MAJOR;
++	return vmf_ret;
+ }
+ 
+ /*
+@@ -1062,15 +1080,6 @@ dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
+ }
+ EXPORT_SYMBOL_GPL(dax_iomap_rw);
+ 
+-static int dax_fault_return(int error)
+-{
+-	if (error == 0)
+-		return VM_FAULT_NOPAGE;
+-	if (error == -ENOMEM)
+-		return VM_FAULT_OOM;
+-	return VM_FAULT_SIGBUS;
+-}
+-
+ static int dax_iomap_pte_fault(struct vm_fault *vmf, bool sync,
+ 			       const struct iomap_ops *ops)
+ {
+@@ -1080,7 +1089,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, bool sync,
+ 	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
+ 	struct iomap iomap = { 0 };
+ 	unsigned flags = IOMAP_FAULT;
+-	int error, major = 0;
++	int error;
+ 	int vmf_ret = 0;
+ 	void *entry;
+ 
+@@ -1163,13 +1172,9 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, bool sync,
+ 		if (iomap.flags & IOMAP_F_NEW) {
+ 			count_vm_event(PGMAJFAULT);
+ 			count_memcg_event_mm(vmf->vma->vm_mm, PGMAJFAULT);
+-			major = VM_FAULT_MAJOR;
+ 		}
+-		error = dax_insert_mapping(vmf, &iomap, pos, entry);
+-		/* -EBUSY is fine, somebody else faulted on the same PTE */
+-		if (error == -EBUSY)
+-			error = 0;
+-		break;
++		vmf_ret = dax_insert_mapping(vmf, &iomap, pos, entry);
++		goto finish_iomap;
+ 	case IOMAP_UNWRITTEN:
+ 	case IOMAP_HOLE:
+ 		if (!(vmf->flags & FAULT_FLAG_WRITE)) {
+@@ -1184,7 +1189,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, bool sync,
+ 	}
+ 
+  error_finish_iomap:
+-	vmf_ret = dax_fault_return(error) | major;
++	vmf_ret = dax_fault_return(error);
+  finish_iomap:
+ 	if (ops->iomap_end) {
+ 		int copied = PAGE_SIZE;
 -- 
 2.12.3
 
