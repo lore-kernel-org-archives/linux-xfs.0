@@ -1,44 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41436 "EHLO sandeen.net"
+Received: from mga01.intel.com ([192.55.52.88]:46200 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751524AbdG0Nfl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Jul 2017 09:35:41 -0400
-Subject: Re: [PATCH 3/7] mkfs: remove intermediate getstr followed by getnum
-References: <20170720092932.32580-1-jtulak@redhat.com>
- <20170720092932.32580-4-jtulak@redhat.com> <20170720155404.GS4224@magnolia>
- <5b66fcad-4cd4-d1d2-611e-56bcb8004dd4@sandeen.net>
- <CACj3i73cMx9GvY=VQzVZyr5nvU-wiT-n4jweX=ccDUzOTzwY8w@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <db690569-1804-9816-516f-f77ca0bb7e35@sandeen.net>
-Date: Thu, 27 Jul 2017 08:35:39 -0500
+        id S1751749AbdG0WGi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Jul 2017 18:06:38 -0400
+Date: Thu, 27 Jul 2017 16:06:37 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 2/7] dax: Add sync argument to dax_iomap_fault()
+Message-ID: <20170727220637.GC22000@linux.intel.com>
+References: <20170727131245.28279-1-jack@suse.cz>
+ <20170727131245.28279-3-jack@suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <CACj3i73cMx9GvY=VQzVZyr5nvU-wiT-n4jweX=ccDUzOTzwY8w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170727131245.28279-3-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Andy Lutomirski <luto@kernel.org>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
 
-On 7/27/17 2:50 AM, Jan Tulak wrote:
-> On Wed, Jul 26, 2017 at 10:49 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->> On 7/20/17 10:54 AM, Darrick J. Wong wrote:
+On Thu, Jul 27, 2017 at 03:12:40PM +0200, Jan Kara wrote:
+> Add 'sync' argument to dax_iomap_fault(). It will be used to communicate
+> the fact that synchronous fault is requested.
 
-...
+I don't actually think you need to pass this 'sync' parameter around.  I think
+you can completely rely on IOMAP_F_NEEDSYNC being set in iomap.flags.  The DAX
+fault handlers can call ops->iomap_begin() and use that flag for all the
+tests and make it our once source of truth.
 
->>> Why has dbytes been demoted from uint64_t to int?  This eliminates the
->>> ability to -d size=8G, right?
->>
->> That wasn't a problem in the version I reviewed.... pls don't keep reviewed-by's
->> on patches that change from the reviewed version.  Further, best to indicate
->> explicitly what has changed since the last version, under the "---"
->>
-> 
-> Yes, I'm sorry about that. :( I forgot to remove the Reviewed-by after
-> rebasing it without the uint64 change. :(
+That flag also tells us that we are doing a write fault (from
+ext4_iomap_begin()):
 
-No problem, just a friendly reminder.  :)
+	if ((flags & IOMAP_FAULT) && (flags & IOMAP_WRITE) && IS_SYNC(inode) &&
+	    !jbd2_transaction_committed(EXT4_SB(inode->i_sb)->s_journal,
+					EXT4_I(inode)->i_datasync_tid))
+		iomap->flags |= IOMAP_F_NEEDDSYNC;
 
--Eric
+So conditionals like this from dax_iomap_pte_fault():
+
+	force_ro = (vmf->flags & FAULT_FLAG_WRITE) && sync &&
+			(iomap.flags & IOMAP_F_NEEDDSYNC);
+
+can be simplified to:
+
+	force_ro = (iomap.flags & IOMAP_F_NEEDDSYNC);
