@@ -1,19 +1,19 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f179.google.com ([209.85.128.179]:37902 "EHLO
-        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752070AbdG1Oox (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jul 2017 10:44:53 -0400
-Received: by mail-wr0-f179.google.com with SMTP id f21so99577134wrf.5
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Jul 2017 07:44:52 -0700 (PDT)
-Subject: Re: [PATCH 6/7] mkfs: extend opt_params with a value field
+Received: from mail-wr0-f169.google.com ([209.85.128.169]:35995 "EHLO
+        mail-wr0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752310AbdG1OqB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jul 2017 10:46:01 -0400
+Received: by mail-wr0-f169.google.com with SMTP id y43so155970474wrd.3
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jul 2017 07:46:00 -0700 (PDT)
+Subject: Re: [PATCH 1/7] mkfs: Save raw user input field to the opts struct
 References: <20170720092932.32580-1-jtulak@redhat.com>
- <20170720092932.32580-7-jtulak@redhat.com>
- <20170727161806.GJ18884@wotan.suse.de>
+ <20170720092932.32580-2-jtulak@redhat.com>
+ <20170727162752.GK18884@wotan.suse.de>
 From: Jan Tulak <jtulak@redhat.com>
-Message-ID: <30eae9db-14fd-b245-3aab-5c1670894b44@redhat.com>
-Date: Fri, 28 Jul 2017 16:44:50 +0200
+Message-ID: <0c34504a-923a-20ac-9f03-6972e38bbfde@redhat.com>
+Date: Fri, 28 Jul 2017 16:45:58 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170727161806.GJ18884@wotan.suse.de>
+In-Reply-To: <20170727162752.GK18884@wotan.suse.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Language: en-US
@@ -23,91 +23,82 @@ List-Id: xfs
 To: "Luis R. Rodriguez" <mcgrof@kernel.org>
 Cc: linux-xfs@vger.kernel.org
 
-On 27/07/2017 18:18, Luis R. Rodriguez wrote:
-> On Thu, Jul 20, 2017 at 11:29:31AM +0200, Jan Tulak wrote:
->> +/*
->> + * Get and set values to the opts table.
->> + */
->> +static inline uint64_t
->> +get_conf_val(int opt, int subopt)
->> +{
->> +	return opts[opt].subopt_params[subopt].value;
->> +}
->> +
->> +static void
->> +set_conf_val(int opt, int subopt, uint64_t val)
->> +{
->> +	struct subopt_param *sp = &opts[opt].subopt_params[subopt];
-> These are pass by value so its fine to do it this way.
->
->> +
->> +	sp->value = val;
->> +}
->> +
->>   static inline void
->>   set_conf_raw(int opt, int subopt, const char *value)
->>   {
->> @@ -880,6 +905,18 @@ getnum(
->>   }
+
+
+On 27/07/2017 18:27, Luis R. Rodriguez wrote:
+> On Thu, Jul 20, 2017 at 11:29:26AM +0200, Jan Tulak wrote:
+>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>> index a69190b9..4b030101 100644
+>> --- a/mkfs/xfs_mkfs.c
+>> +++ b/mkfs/xfs_mkfs.c
+>> @@ -107,6 +107,11 @@ unsigned int		sectorsize;
+>>    *     sets what is used with simple specifying the subopt (-d file).
+>>    *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
+>>    *     value in any case.
+>> + *
+>> + *   raw_input INTERNAL
+>> + *     Filled raw string from the user, so we never lose that information e.g.
+>> + *     to print it back in case of an issue.
+>> + *
+>>    */
+>>   struct opt_params {
+>>   	const char	name;
+>> @@ -122,6 +127,7 @@ struct opt_params {
+>>   		long long	minval;
+>>   		long long	maxval;
+>>   		long long	defaultval;
+>> +		const char	*raw_input;
+>>   	}		subopt_params[MAX_SUBOPTS];
+>>   };
 >>   
->>   /*
->> + * A wrapper for getnum and set_conf_val.
->> + */
->> +static inline uint64_t
->> +parse_conf_val(int opt, int subopt, char *value)
+>> @@ -729,6 +735,18 @@ struct opt_params mopts = {
+>>    */
+>>   #define WHACK_SIZE (128 * 1024)
+>>   
+>> +static inline void
+>> +set_conf_raw(struct opt_params *opt, int subopt, const char *value)
 >> +{
->> +	uint64_t num = getnum(value, &opts[opt], subopt);
->> +
->> +	set_conf_val(opt, subopt, num);
->> +	return num;
+>> +	opt->subopt_params[subopt].raw_input = value;
 >> +}
-> A good comment explaining getnum() will abort if parsing for some reasons fails
-> is worth it given the way you use parse_conf_val() is rather inconsistent -- in
-> some places you use the return value, in some other you do not, and someone
-> reading the code should hopefully get a sense of a relief that error checking
-> is *not* required given it is already built-in to the helpers used by
-> parse_conf_val().
-Good idea.
+> There are no bounds check on the array here, I think set_conf_raw()
+> should return int and we would check the return value. It could
+> return -EINVAL if the subopt is invalid for instance.
+Good idea. The only issue is with the return code, that causes some 
+issues when we are also returning values - I wanted the values to be 
+turned into uint64. But do we need to return an error? I don't see what 
+usecase there would be for it, other than detecting a bug. So an assert 
+might be a better solution - then it can't happen that a wrong index is 
+used and result not tested.
+>> +
+>> +static inline const char *
+>> +get_conf_raw(const struct opt_params *opt, int subopt)
+>> +{
+>> +	return opt->subopt_params[subopt].raw_input;
+>> +}
+>> +
+>>   /*
+>>    * Convert lsu to lsunit for 512 bytes blocks and check validity of the values.
+> These are not pass by value.
 >
-> This also limits the use of parse_conf_val() in that we won't be able to
-> customize error messages with better context, so its a good time to evaluate
-> if we want to continue with that tradition or let parse_conf_val() return
-> int and if it returns 0 it was successful, otherwise an error value.
-Quoting also the other email (Re: [PATCH 1/5 v2] mkfs: replace variables 
-with opts table: -b,d,s options):
-> Here parse_conf_val() is used only to update D_AGCOUNT based on the parsed
-> value. But note that the return value is ignored. In some other places the
-> return value is used. This is inconsistent, and I realize that the reason
-> we ignore errors is that getnum() is used, however now is a good time to
-> consider if we should just allow the caller to check the error value and
-> return a proper error message and bail on their own. This would allow for
-> better contextual error messages as the code grows. We can discuss this in
-> the patch that adds parse_conf_val().
+> The usage of set_conf_raw() and get_conf_raw() therefore have strict
+> constraints and can be only used within certain contexts:
+>
+>    o Since they are pointers the lifetime usage of these functions
+>      are limited to the lifetime of the pointers
+>    o Since they are *currently* used on main() this is fine but this would
+>      limit its use. In the future if we want to defer access to these
+>      pointers outside of main() or if main() uses a library which would
+>      parse some string and free it we'd have to make another change
+>      yet again.
+>
+> Even if its *OK* today, if some helpers are used later which for instance call
+> set_conf_raw() and then free the passed pointer right away we are screwed,
+> leading to potentially using random values.  An alternative to limiting the use
+> of these routines would be to instead have set_conf_raw() to use strdup() and
+> have it return an int in case of -ENOMEM.
+>
+>    Luis
 
-And do we need better messages? If some value is out of range, or it is 
-a conflict, there is not much context needed, and better to not have to 
-care about these errors... Do you have an example when it would be 
-helpful? If it just spits out a return code, you have to add a check to 
-every use and you will have many times the same code like what is in 
-getnum() at this moment:
-
-
-     /* Validity check the result. */
-     if (c == E_SMALL)
-         illegal_option(str, opts, index, _("value is too small"));
-     else if (c == E_BIG)
-         illegal_option(str, opts, index, _("value is too large"));
-     else if (c == E_PO2)
-         illegal_option(str, opts, index, _("value must be a power of 2"));
-     ... and other checks for conflicts, etc...
-
-I think this goes exactly against what I'm trying to do...
+Sounds reasonable.
 
 Jan
->
-> Making this return an int and have the return value checked makes this code
-> IMHO cleaner and subject to growth. Right now this sort of hack IMHO limits
-> the code to growth, despite the fact that I know this would create more work
-> at the moment.
->
-
