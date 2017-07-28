@@ -1,55 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:4643 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751454AbdG0XEm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Jul 2017 19:04:42 -0400
-Date: Thu, 27 Jul 2017 17:04:40 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 6/7] dax: Implement dax_pfn_mkwrite()
-Message-ID: <20170727230440.GI22000@linux.intel.com>
-References: <20170727131245.28279-1-jack@suse.cz>
- <20170727131245.28279-7-jack@suse.cz>
- <20170727225322.GG22000@linux.intel.com>
+Received: from mail-wr0-f172.google.com ([209.85.128.172]:37112 "EHLO
+        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751737AbdG1Onj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jul 2017 10:43:39 -0400
+Received: by mail-wr0-f172.google.com with SMTP id 33so99431417wrz.4
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jul 2017 07:43:39 -0700 (PDT)
+Subject: Re: [PATCH 1/5 v2] mkfs: replace variables with opts table: -b,d,s
+ options
+References: <20170720095156.35417-2-jtulak@redhat.com>
+ <20170721123448.6956-1-jtulak@redhat.com>
+ <20170727163935.GL18884@wotan.suse.de>
+ <08b84b1c-dbe9-8391-8c52-c7e7afbab27c@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Message-ID: <0573c58f-7759-d113-f8da-208d82321194@redhat.com>
+Date: Fri, 28 Jul 2017 16:43:36 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170727225322.GG22000@linux.intel.com>
+In-Reply-To: <08b84b1c-dbe9-8391-8c52-c7e7afbab27c@sandeen.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Andy Lutomirski <luto@kernel.org>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jul 27, 2017 at 04:53:22PM -0600, Ross Zwisler wrote:
-> On Thu, Jul 27, 2017 at 03:12:44PM +0200, Jan Kara wrote:
-> > Implement a function that marks existing page table entry (PTE or PMD)
-> > as writeable and takes care of marking it dirty in the radix tree. This
-> > function will be used to finish synchronous page fault where the page
-> > table entry is first inserted as read-only and then needs to be marked
-> > as read-write.
-> > 
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-<>
-> > +	radix_tree_tag_set(&mapping->page_tree, index, PAGECACHE_TAG_DIRTY);
-> > +	entry = lock_slot(mapping, slot);
-> > +	spin_unlock_irq(&mapping->tree_lock);
-> > +	switch (pe_size) {
-> > +	case PE_SIZE_PTE:
-> > +		error = vm_insert_mixed_mkwrite(vmf->vma, vmf->address, pfn);
-> 
-> This path goes through the 'mkwrite' branch in insert_pfn() where we validate
-> that the PFN we are about to map matches the one pointed to by the existing
-> PTE, but I don't see any checks in this path that validate against
-> vmf->orig_pte?
-> 
-> This kind of check was done by the old
-> dax_pfn_mkwrite()->finish_mkwrite_fault() path via the pte_same() check in
-> finish_mkwrite_fault().
-> 
-> Do we need to add an equivalent check somewhere in this path, since we're
-> going through the trouble of setting vmf->orig_pte in the DAX fault handlers?
+On 28/07/2017 04:18, Eric Sandeen wrote:
+> On 7/27/17 11:39 AM, Luis R. Rodriguez wrote:
+>> On Fri, Jul 21, 2017 at 02:34:48PM +0200, Jan Tulak wrote:
+>>> @@ -1609,6 +1593,7 @@ main(
+>>>   			break;
+>>>   		case 'b':
+>>>   			p = optarg;
+>>> +			uint64_t tmp;
+>> Note:
+>>
+>> An extra variable added, just so we can get the current value parsed
+>> so we can then convert it to also set similar collateral variables.
+> Also, please don't declare variables in the middle of code like this,
+> we generally stick to C89 rules.
+>
+> Thanks,
+> -Eric
+OK
 
-Or, actually, does the fact that we do the PFN based sanity check in
-insert_pfn() mean that we don't actually need to set vmf->orig_pte in the DAX
-fault handlers at all?  We already sanity check the PFN of the RW PTE we
-insert against what is already in the page table, and maybe we don't need to
-keep another copy around in vmf->orig_pte to verify against?
+Jan
