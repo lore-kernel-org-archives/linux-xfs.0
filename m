@@ -1,116 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54202 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36494 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935006AbdGTJ3n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Jul 2017 05:29:43 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        id S1751673AbdG1MwG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 28 Jul 2017 08:52:06 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 50E51315FDE
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2017 09:29:43 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 6/7] mkfs: extend opt_params with a value field
-Date: Thu, 20 Jul 2017 11:29:31 +0200
-Message-Id: <20170720092932.32580-7-jtulak@redhat.com>
-In-Reply-To: <20170720092932.32580-1-jtulak@redhat.com>
-References: <20170720092932.32580-1-jtulak@redhat.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id 1E0D0C0F9302
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jul 2017 12:52:05 +0000 (UTC)
+Date: Fri, 28 Jul 2017 08:52:02 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs_metadump: properly handle obfuscation of all remote
+ attribute blocks
+Message-ID: <20170728125201.GA12444@bfoster.bfoster>
+References: <7862201b-e387-8037-ca99-b6ab3212f4a7@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7862201b-e387-8037-ca99-b6ab3212f4a7@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-This patch adds infrastructure that will be used in subsequent patches.
+On Wed, Jul 26, 2017 at 03:35:37PM -0500, Eric Sandeen wrote:
+> add_remote_vals assumes that it can subtract blocksize
+> from each block that it processes, but with CRCs, there
+> is a header on each block, so the assumption that each
+> block consumes $BLOCKSIZE of the value length is incorrect.
+> 
+> This causes us to stop adding remote blocks too soon, and
+> the missed blocks do not get obfuscated.
+> 
+> Fix this by accounting for the header size as appropriate,
+> depending on whether or not we have a CRC filesystem.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 96641e0..c8abfeb 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -1602,14 +1602,20 @@ static struct attr_data_s {
+>  
+>  static inline void
+>  add_remote_vals(
+> +	struct xfs_mount	*mp,
+>  	xfs_dablk_t 		blockidx,
+>  	int			length)
+>  {
+> +	int			hdrsize = 0;
+> +
+> +	if (xfs_sb_version_hascrc(&mp->m_sb))
+> +		hdrsize = sizeof(struct xfs_attr3_rmt_hdr);
+> +
+>  	while (length > 0 && attr_data.remote_val_count < MAX_REMOTE_VALS) {
+>  		attr_data.remote_vals[attr_data.remote_val_count] = blockidx;
+>  		attr_data.remote_val_count++;
+>  		blockidx++;
+> -		length -= mp->m_sb.sb_blocksize;
+> +		length -= (mp->m_sb.sb_blocksize - hdrsize);
 
-The Value field is the actual value used in computations for creating
-the filesystem.  This is initialized with sensible default values. If
-initialized to 0, the value is considered disabled. User input will
-override default values.  If the field is a string and not a number, the
-value is set to a positive non-zero number when user input has been
-supplied.
+XFS_ATTR3_RMT_BUF_SPACE()?
 
-Add functions that can be used to get/set values to opts table.
+Brian
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
-
----
-Change:
-* update the description of commit/in code
-* merge with another patch, which adds the get/set functions.
-
----
- mkfs/xfs_mkfs.c | 37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 9d2db2a2..e008b5a4 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -117,6 +117,13 @@ unsigned int		sectorsize;
-  *     Filled raw string from the user, so we never lose that information e.g.
-  *     to print it back in case of an issue.
-  *
-+ *   value OPTIONAL
-+ *     The actual value used in computations for creating the filesystem.
-+ *     This is initialized with sensible default values. If initialized to 0,
-+ *     the value is considered disabled. User input will override default
-+ *     values. If the field is a string and not a number, the value is set to
-+ *     a positive non-zero number when user input has been supplied.
-+ *
-  */
- struct opt_params {
- 	int		index;
-@@ -134,6 +141,7 @@ struct opt_params {
- 		long long	maxval;
- 		long long	flagval;
- 		const char	*raw_input;
-+		uint64_t	value;
- 	}		subopt_params[MAX_SUBOPTS];
- } opts[MAX_OPTS] = {
- #define OPT_B	0
-@@ -749,6 +757,23 @@ struct opt_params {
-  */
- #define WHACK_SIZE (128 * 1024)
- 
-+/*
-+ * Get and set values to the opts table.
-+ */
-+static inline uint64_t
-+get_conf_val(int opt, int subopt)
-+{
-+	return opts[opt].subopt_params[subopt].value;
-+}
-+
-+static void
-+set_conf_val(int opt, int subopt, uint64_t val)
-+{
-+	struct subopt_param *sp = &opts[opt].subopt_params[subopt];
-+
-+	sp->value = val;
-+}
-+
- static inline void
- set_conf_raw(int opt, int subopt, const char *value)
- {
-@@ -880,6 +905,18 @@ getnum(
- }
- 
- /*
-+ * A wrapper for getnum and set_conf_val.
-+ */
-+static inline uint64_t
-+parse_conf_val(int opt, int subopt, char *value)
-+{
-+	uint64_t num = getnum(value, &opts[opt], subopt);
-+
-+	set_conf_val(opt, subopt, num);
-+	return num;
-+}
-+
-+/*
-  * Convert lsu to lsunit for 512 bytes blocks and check validity of the values.
-  */
- static void
--- 
-2.11.0
-
+>  	}
+>  
+>  	if (attr_data.remote_val_count >= MAX_REMOTE_VALS) {
+> @@ -1716,7 +1722,8 @@ process_attr_block(
+>  			if (obfuscate) {
+>  				generate_obfuscated_name(0, remote->namelen,
+>  							 &remote->name[0]);
+> -				add_remote_vals(be32_to_cpu(remote->valueblk),
+> +				add_remote_vals(mp,
+> +						be32_to_cpu(remote->valueblk),
+>  						be32_to_cpu(remote->valuelen));
+>  			}
+>  			/* zero from end of name[] to next name start */
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
