@@ -1,78 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44962 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:45688 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751622AbdG1Ji1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 28 Jul 2017 05:38:27 -0400
-Date: Fri, 28 Jul 2017 11:38:21 +0200
+        id S1751830AbdG1JnR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 28 Jul 2017 05:43:17 -0400
+Date: Fri, 28 Jul 2017 11:43:14 +0200
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [RFC PATCH 0/7] dax, ext4: Synchronous page faults
-Message-ID: <20170728093821.GB29433@quack2.suse.cz>
+Subject: Re: [PATCH 4/7] dax: Make dax_insert_mapping() return VM_FAULT_ state
+Message-ID: <20170728094314.GD29433@quack2.suse.cz>
 References: <20170727131245.28279-1-jack@suse.cz>
- <x49zibq3rb0.fsf@segfault.boston.devel.redhat.com>
- <20170727215713.GA22000@linux.intel.com>
- <CALCETrVzxrQ76BXEfo4kcRFyQmxbrMwCLE17yPyTJzz0tUs+Dg@mail.gmail.com>
+ <20170727131245.28279-5-jack@suse.cz>
+ <20170727222230.GE22000@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CALCETrVzxrQ76BXEfo4kcRFyQmxbrMwCLE17yPyTJzz0tUs+Dg@mail.gmail.com>
+In-Reply-To: <20170727222230.GE22000@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Lutomirski <luto@kernel.org>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Jeff Moyer <jmoyer@redhat.com>, Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org, linux-nvdimm <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Andy Lutomirski <luto@kernel.org>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
 
-On Thu 27-07-17 19:05:24, Andy Lutomirski wrote:
-> On Thu, Jul 27, 2017 at 2:57 PM, Ross Zwisler
-> <ross.zwisler@linux.intel.com> wrote:
-> > On Thu, Jul 27, 2017 at 10:09:07AM -0400, Jeff Moyer wrote:
-> >> Jan Kara <jack@suse.cz> writes:
-> >>
-> >> Hi, Jan,
-> >>
-> >> Thanks for looking into this!
-> >>
-> >> > There are couple of open questions with this implementation:
-> >> >
-> >> > 1) Is it worth the hassle?
-> >> > 2) Is S_SYNC good flag to use or should we use a new inode flag?
-> >> > 3) VM_FAULT_RO and especially passing of resulting 'pfn' from
-> >> >    dax_iomap_fault() through filesystem fault handler to dax_pfn_mkwrite() in
-> >> >    vmf->orig_pte is a bit of a hack. So far I'm not sure how to refactor
-> >> >    things to make this cleaner.
-> >>
-> >> 4) How does an application discover that it is safe to flush from
-> >>    userspace?
-> >
-> > I think that we would be best off with a new flag available via
-> > lsattr(1)/chattr(1).  This would have the following advantages:
-> >
-> > 1) We could only set the flag if the inode supported DAX (either via the mount
-> > option or via the individual DAX flag).  This would give NVML et al. one
-> > central way to detect whether it was safe to flush from userspace because the
-> > FS supported synchronous faults.
-> >
-> > 2) Defining a new flag prevents any confusion about whether the kernel version
-> > you have supports sync faults.  Otherwise NVML would have to do something like
-> > look at the trio of (kernel version, S_SYNC flag, mount/inode option for DAX)
-> > which is complex and of course breaks for OS kernel versions.
-> >
-> > 3) Defining the flag in a generic way via lsattr/chattr opens the door for the
-> > same API and flag to be used by other filesystems in the future.
+On Thu 27-07-17 16:22:30, Ross Zwisler wrote:
+> On Thu, Jul 27, 2017 at 03:12:42PM +0200, Jan Kara wrote:
+> > Currently dax_insert_mapping() returns normal error code which is later
+> > converted to VM_FAULT_ state. Since we will need to do more state
+> > modifications specific to dax_insert_mapping() it does not make sense to
+> > push them up to the caller of dax_insert_mapping(). Instead make
+> > dax_insert_mapping() return VM_FAULT_ state the same way as
+> > dax_pmd_insert_mapping() does that.
+> > 
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> >  fs/dax.c | 45 +++++++++++++++++++++++++--------------------
+> >  1 file changed, 25 insertions(+), 20 deletions(-)
+> > 
+> > diff --git a/fs/dax.c b/fs/dax.c
+> > index 0673efd72f53..9658975b926a 100644
+> > --- a/fs/dax.c
+> > +++ b/fs/dax.c
+> > @@ -814,6 +814,15 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+> >  }
+> >  EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
+> >  
+> > +static int dax_fault_return(int error)
+> > +{
+> > +	if (error == 0)
+> > +		return VM_FAULT_NOPAGE;
+> > +	if (error == -ENOMEM)
+> > +		return VM_FAULT_OOM;
+> > +	return VM_FAULT_SIGBUS;
+> > +}
+> > +
+> >  static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
+> >  {
+> >  	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
+> > @@ -828,7 +837,7 @@ static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
+> >  	unsigned long vaddr = vmf->address;
+> >  	void *ret, *kaddr;
+> >  	pgoff_t pgoff;
+> > -	int id, rc;
+> > +	int id, rc, vmf_ret;
+> >  	pfn_t pfn;
+> >  
+> >  	rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
+> > @@ -850,9 +859,18 @@ static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
+> >  
+> >  	trace_dax_insert_mapping(mapping->host, vmf, ret);
+> >  	if (vmf->flags & FAULT_FLAG_WRITE)
+> > -		return vm_insert_mixed_mkwrite(vma, vaddr, pfn);
+> > +		rc = vm_insert_mixed_mkwrite(vma, vaddr, pfn);
+> >  	else
+> > -		return vm_insert_mixed(vma, vaddr, pfn);
+> > +		rc = vm_insert_mixed(vma, vaddr, pfn);
+> > +
+> > +	/* -EBUSY is fine, somebody else faulted on the same PTE */
+> > +	if (rc == -EBUSY)
+> > +		rc = 0;
+> > +
+> > +	vmf_ret = dax_fault_return(rc);
 > 
-> I would advocate using a new fcntl() instead of lsattr for the
-> following reason: ISTM the fact that it's an *inode* flag in this
-> patchset is a bit of an implementation detail.  I can easily imagine a
-> future implementation that makes it per-struct-file instead.  A
-> fcntl() that asks "can I flush from userspace" would still work under
-> than scenario.
+> Prior to this point where we convert our 'rc' (which is a normal error code
+> like 0, -ENOMEM, etc) to a 'vmf_ret' (which is a VM return code like
+> VM_FAULT_NOPAGE, VM_FAULT_SIGBUS, etc), there are several paths in
+> dax_insert_mapping() where we could still return a normal error code.  I think
+> this will confuse the fault handler because this code will get returned all
+> the way up to do_fault() which expects to get a VM return code.
+> 
+> So, I think we either need to:
+> 
+> a) Make sure all return paths through dax_insert_mapping() end up going
+> through dax_fault_return(), as we do in the PMD case, or
 
-Well, you are right I can make the implementation work with struct file
-flag as well - let's call it O_DAXDSYNC. However there are filesystem
-operations where you may need to answer question: Is there any fd with
-O_DAXDSYNC open against this inode (for operations that change file offset
--> block mapping)? And in that case inode flag is straightforward while
-file flag is a bit awkward (you need to implement counter of fd's with that
-flag in the inode).
+Yeah, this was the intention (as my eventually I'd like to make
+dax_insert_mapping() and dax_pmd_insert_mapping() one function - they are
+already currently very similar). I'll fix the missed cases.
 
 								Honza
 -- 
