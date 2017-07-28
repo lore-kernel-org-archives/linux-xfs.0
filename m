@@ -1,53 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:53121 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751816AbdHACPN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jul 2017 22:15:13 -0400
-Message-Id: <1501553712.1055225.1059044352.109C04CB@webmail.messagingengine.com>
-From: Colin Walters <walters@verbum.org>
+Received: from mail.kernel.org ([198.145.29.99]:57550 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752488AbdG1TfH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 28 Jul 2017 15:35:07 -0400
+Date: Fri, 28 Jul 2017 12:35:06 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: fixes for 4.13-rc3
+Message-ID: <20170728193506.GA4477@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-References: <150135740948.35318.10730072114996910905.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150135741519.35318.16765137368329971936.stgit@dwillia2-desk3.amr.corp.intel.com>
- <1501516968.579311.1058393288.0714478A@webmail.messagingengine.com>
- <CAPcyv4h_YWaAXG5pfkOJ0M74i5yEke1SoC3ESErTh41hngtG-w@mail.gmail.com>
- <1501518747.586018.1058450568.4B6F28FB@webmail.messagingengine.com>
- <1501522933.602272.1058529880.6C4A2D98@webmail.messagingengine.com>
- <20170731182352.GE4477@magnolia>
-Subject: Re: [PATCH 1/3] fs, xfs: introduce S_IOMAP_IMMUTABLE
-In-Reply-To: <20170731182352.GE4477@magnolia>
-Date: Mon, 31 Jul 2017 22:15:12 -0400
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-On Mon, Jul 31, 2017, at 02:23 PM, Darrick J. Wong wrote:
+Hi Linus,
 
-> I don't think F_SEAL_{SHRINK,GROW} prevents reflinking or CoW of file data,
-> which are two things that cannot happen under S_IOMAP_IMMUTABLE that
-> aren't size changes.  From the implementation it looks like shrink and
-> grow are only supposed to disallow changes to i_size, not i_blocks (or
-> the file block map).
+Here's the first batch of bug fixes for 4.13.
 
-True. 
+--Darrick
 
-> Then again, I suppose F_SEAL_* only work on shmem, so maybe it simply
-> isn't defined for any other filesystem...?  e.g. it doesn't prohibit
-> reflink, but the only fs implementing seals doesn't support reflink.
-> 
-> <shrug>
-> 
-> Seals cannot be removed, which is too strict for the S_IOMAP_IMMUTABLE
-> user cases being presented.
+The following changes since commit 5771a8c08880cdca3bfb4a3fc6d309d6bba20877:
 
-To be clear, the set of use cases is swap files and DAX, right?  Or is there anything else?
-I can't imagine why anyone would want to turn a swap file back into a regular file.
-I haven't fully followed DAX, but I'd take your word for it if people want to
-be able to remove the flag after.
+  Linux v4.13-rc1 (2017-07-15 15:22:10 -0700)
 
-Anyways, I think your broader point is right; the use cases are different enough
-that it doesn't make sense to try to add S_CONTENT_IMMUTABLE (or however 
-one decides to call it) at the same time.
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.13-fixes-2
+
+for you to fetch changes up to 5b094d6dac0451ad89b1dc088395c7b399b7e9e8:
+
+  xfs: fix multi-AG deadlock in xfs_bunmapi (2017-07-26 08:20:03 -0700)
+
+----------------------------------------------------------------
+Changes since last update:
+- Fix firstfsb variables that we left uninitialized, which could lead to
+  locking problems.
+- Check for NULL metadata buffer pointers before using them.
+- Don't allow btree cursor manipulation if the btree block is corrupt.
+  Better to just shut down.
+- Fix infinite loop problems in quotacheck.
+- Fix buffer overrun when validating directory blocks.
+- Fix deadlock problem in bunmapi.
+
+----------------------------------------------------------------
+Brian Foster (1):
+      xfs: fix quotacheck dquot id overflow infinite loop
+
+Christoph Hellwig (1):
+      xfs: fix multi-AG deadlock in xfs_bunmapi
+
+Darrick J. Wong (4):
+      xfs: check _btree_check_block value
+      xfs: set firstfsb to NULLFSBLOCK before feeding it to _bmapi_write
+      xfs: check _alloc_read_agf buffer pointer before using
+      xfs: check that dir block entries don't off the end of the buffer
+
+ fs/xfs/libxfs/xfs_bmap.c      | 21 +++++++++++++++++++++
+ fs/xfs/libxfs/xfs_btree.c     |  6 ++++--
+ fs/xfs/libxfs/xfs_dir2_data.c |  4 ++++
+ fs/xfs/libxfs/xfs_refcount.c  |  4 ++++
+ fs/xfs/xfs_qm.c               |  3 +++
+ fs/xfs/xfs_reflink.c          |  4 +++-
+ 6 files changed, 39 insertions(+), 3 deletions(-)
