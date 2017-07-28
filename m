@@ -1,61 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:38713 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751045AbdG1GFy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jul 2017 02:05:54 -0400
-Received: by mail-wr0-f194.google.com with SMTP id g32so8520097wrd.5
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 23:05:54 -0700 (PDT)
-Subject: Re: [PATCH, RFC] xfs: fix multi-AG deadlock in xfs_bunmapi
-References: <20170718172545.18065-1-hch@lst.de>
- <ac50dda7-6147-1bb2-78ed-b49dafaec242@gmail.com>
- <09500343-740e-0178-c60a-6ea5e6993c11@gmail.com>
- <20170720074706.GA22218@lst.de>
- <0eb47db7-24de-a231-be9f-73d9ae1171fd@gmail.com>
- <20170720074924.GA22278@lst.de>
- <16f95f63-1111-9d3c-344c-6b42ddab3b55@gmail.com>
- <20170726130442.GA24681@lst.de>
-From: Nikolay Borisov <n.borisov.lkml@gmail.com>
-Message-ID: <dfaa4bb9-1915-c1c6-af7e-38cb2d9ad6b7@gmail.com>
-Date: Fri, 28 Jul 2017 09:05:51 +0300
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:36975 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751960AbdG1QuW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jul 2017 12:50:22 -0400
+Date: Fri, 28 Jul 2017 09:50:19 -0700
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: [PATCH v2 13/15] common: remove IRIX-specific code
+Message-ID: <20170728165019.GA144538@gmail.com>
+References: <20170721043853.364-1-ebiggers3@gmail.com>
+ <20170721043853.364-14-ebiggers3@gmail.com>
+ <20170728111926.GE9167@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20170726130442.GA24681@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170728111926.GE9167@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
 
-
-
-On 26.07.2017 16:04, Christoph Hellwig wrote:
-> On Thu, Jul 20, 2017 at 05:58:42PM +0300, Nikolay Borisov wrote:
->>
->>
->> On 20.07.2017 10:49, Christoph Hellwig wrote:
->>> On Thu, Jul 20, 2017 at 10:47:50AM +0300, Nikolay Borisov wrote:
->>>>
->>>>
->>>> On 20.07.2017 10:47, Christoph Hellwig wrote:
->>>>> Odd.  And the patch to always just process a single extent from
->>>>> xfs_itruncate_extents fixes the issue for you, right?
->>>>
->>>> As far as I remember yes.
->>>
->>> Can you retest it under otherwise identical conditions?
->>
->> Okay, I confirm that indeed changing the define from 2 to 1 fixes the
->> issue.
+On Fri, Jul 28, 2017 at 07:19:26PM +0800, Eryu Guan wrote:
+> > -#
+> > -# Filtering of Irix character hwgraph device names
+> > -# e.g.
+> > -# chardev: /hw/node/xtalk/15/pci/0/scsi_ctlr/0/target/1/lun/0/disk/partition/4/char
+> > -# blkdev:  /dev/dsk/dks0d1s4
+> > -#
+> > -_filter_devchar()
+> > -{
+> > -    $AWK_PROG '
+> > -	/\/hw\/node/ {
+> > -	    sub(/\/hw.*scsi_ctlr\//,"/dev/dsk/dks")  # blah blah /dev/dsk/dks0/target/1/....
+> > -	    sub(/\/target\//,"d")                    # blah blah /dev/dsk/dks0d1/lun/0/disk.....
+> > -	    sub(/\/lun.*partition\//,"s")            # blah blah /dev/dsk/dks0d1s4/char
+> > -	    sub(/\/char/,"")			     # blah blah /dev/dsk/dks0d1s4
+> > -	}
+> > -	{ print }
+> > -    '
+> > -}
+> > -
+> >  
+> >  #
+> >  # Filter out the non-deterministic dump msgs from
+> > @@ -824,7 +803,6 @@ _filter_devchar()
+> >  #
+> >  _dump_filter_main()
+> >  {
+> > -  _filter_devchar |\
 > 
-> But this is just on 4.4 and older, right?  We had issues in the
-> allocation path there as well, which should be fixed in 4.11 and later,
-> and in recrnt 4.9-stable releases.  Without those the allocation path
-> might sometimes lock out of order as well.
+> I added this _filter_devchar function back as xfs/061 needs it,
+> otherwise it fails like:
+> 
+>  -xfsrestore: volume: /dev/dsk/dks0d2s1
+>  +xfsrestore: volume: /hw/node/io/gio/hpc/scsi_ctlr/0/target/2/lun/0/disk/partition/1/char
+> 
+> I think this is the safest and easiest thing to do at this moment.
 > 
 
-Couldn't repro on 4.11 and 4.10 (which supposedly shouldn't have the
-fixes). I tried running generic/299 200 times on each kernel. Which
-exactly are the patches in 4.11 which fix the alloc path?
+Okay, that's fine for now.  Thanks for testing!
 
+Eric
