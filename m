@@ -1,55 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:57829 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751465AbdG0V5P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Jul 2017 17:57:15 -0400
-Date: Thu, 27 Jul 2017 15:57:13 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [RFC PATCH 0/7] dax, ext4: Synchronous page faults
-Message-ID: <20170727215713.GA22000@linux.intel.com>
-References: <20170727131245.28279-1-jack@suse.cz>
- <x49zibq3rb0.fsf@segfault.boston.devel.redhat.com>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:38713 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751045AbdG1GFy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jul 2017 02:05:54 -0400
+Received: by mail-wr0-f194.google.com with SMTP id g32so8520097wrd.5
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2017 23:05:54 -0700 (PDT)
+Subject: Re: [PATCH, RFC] xfs: fix multi-AG deadlock in xfs_bunmapi
+References: <20170718172545.18065-1-hch@lst.de>
+ <ac50dda7-6147-1bb2-78ed-b49dafaec242@gmail.com>
+ <09500343-740e-0178-c60a-6ea5e6993c11@gmail.com>
+ <20170720074706.GA22218@lst.de>
+ <0eb47db7-24de-a231-be9f-73d9ae1171fd@gmail.com>
+ <20170720074924.GA22278@lst.de>
+ <16f95f63-1111-9d3c-344c-6b42ddab3b55@gmail.com>
+ <20170726130442.GA24681@lst.de>
+From: Nikolay Borisov <n.borisov.lkml@gmail.com>
+Message-ID: <dfaa4bb9-1915-c1c6-af7e-38cb2d9ad6b7@gmail.com>
+Date: Fri, 28 Jul 2017 09:05:51 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <x49zibq3rb0.fsf@segfault.boston.devel.redhat.com>
+In-Reply-To: <20170726130442.GA24681@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jul 27, 2017 at 10:09:07AM -0400, Jeff Moyer wrote:
-> Jan Kara <jack@suse.cz> writes:
+
+
+On 26.07.2017 16:04, Christoph Hellwig wrote:
+> On Thu, Jul 20, 2017 at 05:58:42PM +0300, Nikolay Borisov wrote:
+>>
+>>
+>> On 20.07.2017 10:49, Christoph Hellwig wrote:
+>>> On Thu, Jul 20, 2017 at 10:47:50AM +0300, Nikolay Borisov wrote:
+>>>>
+>>>>
+>>>> On 20.07.2017 10:47, Christoph Hellwig wrote:
+>>>>> Odd.  And the patch to always just process a single extent from
+>>>>> xfs_itruncate_extents fixes the issue for you, right?
+>>>>
+>>>> As far as I remember yes.
+>>>
+>>> Can you retest it under otherwise identical conditions?
+>>
+>> Okay, I confirm that indeed changing the define from 2 to 1 fixes the
+>> issue.
 > 
-> Hi, Jan,
+> But this is just on 4.4 and older, right?  We had issues in the
+> allocation path there as well, which should be fixed in 4.11 and later,
+> and in recrnt 4.9-stable releases.  Without those the allocation path
+> might sometimes lock out of order as well.
 > 
-> Thanks for looking into this!
-> 
-> > There are couple of open questions with this implementation:
-> >
-> > 1) Is it worth the hassle?
-> > 2) Is S_SYNC good flag to use or should we use a new inode flag?
-> > 3) VM_FAULT_RO and especially passing of resulting 'pfn' from
-> >    dax_iomap_fault() through filesystem fault handler to dax_pfn_mkwrite() in
-> >    vmf->orig_pte is a bit of a hack. So far I'm not sure how to refactor
-> >    things to make this cleaner.
-> 
-> 4) How does an application discover that it is safe to flush from
->    userspace?
 
-I think that we would be best off with a new flag available via
-lsattr(1)/chattr(1).  This would have the following advantages:
+Couldn't repro on 4.11 and 4.10 (which supposedly shouldn't have the
+fixes). I tried running generic/299 200 times on each kernel. Which
+exactly are the patches in 4.11 which fix the alloc path?
 
-1) We could only set the flag if the inode supported DAX (either via the mount
-option or via the individual DAX flag).  This would give NVML et al. one
-central way to detect whether it was safe to flush from userspace because the
-FS supported synchronous faults.
-
-2) Defining a new flag prevents any confusion about whether the kernel version
-you have supports sync faults.  Otherwise NVML would have to do something like
-look at the trio of (kernel version, S_SYNC flag, mount/inode option for DAX)
-which is complex and of course breaks for OS kernel versions.
-
-3) Defining the flag in a generic way via lsattr/chattr opens the door for the
-same API and flag to be used by other filesystems in the future.
