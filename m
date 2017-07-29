@@ -1,78 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51712 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751395AbdGZUfj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:35:39 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 81928ECF8F
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2017 20:35:38 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 54FB586E81
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2017 20:35:38 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_metadump: properly handle obfuscation of all remote
- attribute blocks
-Message-ID: <7862201b-e387-8037-ca99-b6ab3212f4a7@redhat.com>
-Date: Wed, 26 Jul 2017 15:35:37 -0500
+Received: from mx2.suse.de ([195.135.220.15]:50701 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752912AbdG2RMI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 29 Jul 2017 13:12:08 -0400
+Date: Sat, 29 Jul 2017 19:12:07 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 1/7] mkfs: Save raw user input field to the opts struct
+Message-ID: <20170729171207.GN18884@wotan.suse.de>
+References: <20170720092932.32580-1-jtulak@redhat.com>
+ <20170720092932.32580-2-jtulak@redhat.com>
+ <20170727162752.GK18884@wotan.suse.de>
+ <0c34504a-923a-20ac-9f03-6972e38bbfde@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0c34504a-923a-20ac-9f03-6972e38bbfde@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
 
-add_remote_vals assumes that it can subtract blocksize
-from each block that it processes, but with CRCs, there
-is a header on each block, so the assumption that each
-block consumes $BLOCKSIZE of the value length is incorrect.
+On Fri, Jul 28, 2017 at 04:45:58PM +0200, Jan Tulak wrote:
+> 
+> 
+> On 27/07/2017 18:27, Luis R. Rodriguez wrote:
+> > On Thu, Jul 20, 2017 at 11:29:26AM +0200, Jan Tulak wrote:
+> > > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > > index a69190b9..4b030101 100644
+> > > --- a/mkfs/xfs_mkfs.c
+> > > +++ b/mkfs/xfs_mkfs.c
+> > > @@ -107,6 +107,11 @@ unsigned int		sectorsize;
+> > >    *     sets what is used with simple specifying the subopt (-d file).
+> > >    *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
+> > >    *     value in any case.
+> > > + *
+> > > + *   raw_input INTERNAL
+> > > + *     Filled raw string from the user, so we never lose that information e.g.
+> > > + *     to print it back in case of an issue.
+> > > + *
+> > >    */
+> > >   struct opt_params {
+> > >   	const char	name;
+> > > @@ -122,6 +127,7 @@ struct opt_params {
+> > >   		long long	minval;
+> > >   		long long	maxval;
+> > >   		long long	defaultval;
+> > > +		const char	*raw_input;
+> > >   	}		subopt_params[MAX_SUBOPTS];
+> > >   };
+> > > @@ -729,6 +735,18 @@ struct opt_params mopts = {
+> > >    */
+> > >   #define WHACK_SIZE (128 * 1024)
+> > > +static inline void
+> > > +set_conf_raw(struct opt_params *opt, int subopt, const char *value)
+> > > +{
+> > > +	opt->subopt_params[subopt].raw_input = value;
+> > > +}
+> > There are no bounds check on the array here, I think set_conf_raw()
+> > should return int and we would check the return value. It could
+> > return -EINVAL if the subopt is invalid for instance.
+> Good idea. The only issue is with the return code, that causes some issues
+> when we are also returning values - I wanted the values to be turned into
+> uint64. But do we need to return an error? I don't see what usecase there
+> would be for it, other than detecting a bug. So an assert might be a better
+> solution - then it can't happen that a wrong index is used and result not
+> tested.
 
-This causes us to stop adding remote blocks too soon, and
-the missed blocks do not get obfuscated.
+The setting of the value can be done by using an extra argument pointer. Then
+if its set it be assigned. Otherwise it would be left alone. The return value
+would return 0 on success, otherwise a standard return value indicating the
+cause of the error.
 
-Fix this by accounting for the header size as appropriate,
-depending on whether or not we have a CRC filesystem.
+I don't think we need the too small or too big, a simple range issue should
+suffice and we have -ERANGE.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/db/metadump.c b/db/metadump.c
-index 96641e0..c8abfeb 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1602,14 +1602,20 @@ static struct attr_data_s {
- 
- static inline void
- add_remote_vals(
-+	struct xfs_mount	*mp,
- 	xfs_dablk_t 		blockidx,
- 	int			length)
- {
-+	int			hdrsize = 0;
-+
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		hdrsize = sizeof(struct xfs_attr3_rmt_hdr);
-+
- 	while (length > 0 && attr_data.remote_val_count < MAX_REMOTE_VALS) {
- 		attr_data.remote_vals[attr_data.remote_val_count] = blockidx;
- 		attr_data.remote_val_count++;
- 		blockidx++;
--		length -= mp->m_sb.sb_blocksize;
-+		length -= (mp->m_sb.sb_blocksize - hdrsize);
- 	}
- 
- 	if (attr_data.remote_val_count >= MAX_REMOTE_VALS) {
-@@ -1716,7 +1722,8 @@ process_attr_block(
- 			if (obfuscate) {
- 				generate_obfuscated_name(0, remote->namelen,
- 							 &remote->name[0]);
--				add_remote_vals(be32_to_cpu(remote->valueblk),
-+				add_remote_vals(mp,
-+						be32_to_cpu(remote->valueblk),
- 						be32_to_cpu(remote->valuelen));
- 			}
- 			/* zero from end of name[] to next name start */
-
+  Luis
