@@ -1,195 +1,158 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:50555 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751530AbdG2TuN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 29 Jul 2017 15:50:13 -0400
-Subject: [PATCH 3/3] xfs: persist S_IOMAP_IMMUTABLE in di_flags2
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 29 Jul 2017 12:43:46 -0700
-Message-ID: <150135742595.35318.6882401569584241548.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150135740948.35318.10730072114996910905.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150135740948.35318.10730072114996910905.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from pavilion.ashurst.eu.org ([85.119.82.45]:34040 "EHLO
+        pavilion.ashurst.eu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750817AbdG3OgF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Jul 2017 10:36:05 -0400
+From: Andy Bennett <andyjpb@ashurst.eu.org>
+Date: Sun, 30 Jul 2017 15:36:00 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Message-ID: <5310bb84-84f8-414a-97ae-90ecb380c4a9@ashurst.eu.org>
+In-Reply-To: <20170727150416.GB5597@bfoster.bfoster>
+References: <575c9d8d-04c9-4d60-93d2-ccc86ec893a9@ashurst.eu.org>
+ <20170726111541.GB59833@bfoster.bfoster>
+ <0e11333c-0f02-4e4d-8ab2-0d86cb78d7e4@ashurst.eu.org>
+ <20170727124350.GB3858@bfoster.bfoster>
+ <20170727150416.GB5597@bfoster.bfoster>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8BIT
+Subject: Re: Recover file after truncate
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Record the immutable state in the on-disk inode so that on the next boot
-the protections against reflink and hole punch etc are automatically
-restored.
+Hi,
 
-This deliberately does not add a FS_XFLAG_IOMAP_IMMUTABLE since
-fallocate(2) is the path to toggle this flag.
+> The last reference I see of your inode in the log before the size goes
+> to zero is this:
+>
+> ---------------------------------------------------------------------------- 
+>                                           
+> Oper (2): tid: c6720129  len: 56  clientid: TRANS  flags: none  
+>                                                        
+> INODE: #regs: 2   ino: 0x12c37053  flags: 0x1   dsize: 0   
+>         blkno: 235989736  len: 32  boff: 9728              
+> Oper (3): tid: c6720129  len: 176  clientid: TRANS  flags: none 
+>                                                        
+> INODE CORE                                                 
+> magic 0x494e mode 0100644 version 3 format 2               
+> nlink 1 uid 501 gid 100                                    
+> atime 0x5977c96e mtime 0x5973ac16 ctime 0x5973ac16         
+> size 0x1a81f2218 nblocks 0x1a81f3 extsize 0x0 nextents 0x2 
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0           
+> flags 0x0 gen 0xb8791e20                                   
+> ----------------------------------------------------------------------------
+>
+> This suggests the file size was 0x1a81f2218 (7115579928) and it had
+> 0x1a81f3 (1737203) blocks across two extents (roughly 6.6GB). Note that
+> the file size is not exactly aligned to the (blockcount * 4096).
+>
+> Further along, the following EFI exists:
+>
+> ----------------------------------------------------------------------------
+> Oper (19): tid: 6a85c7fc  len: 48  clientid: TRANS  flags: none
+> EFI:  #regs: 1    num_extents: 2  id: 0xffff8bfcb4f38990
+> (s: 0x12a9233, l: 688643) (s: 0x34ae0d5, l: 1048560)
+> ----------------------------------------------------------------------------
+>
+> ... which frees two extents that add up to 688643 + 1048560 = 1737203
+> (0x1a81f3) blocks. The starting filesystem blocks for these extents are
+> 0x12a9233 and 0x34ae0d5, respectively.
+>
+> If you can convert those starting fsb values to agno/agbno combinations
+> as shown in my previous mail, you could confirm whether they reside in
+> the free space btrees for the associated allocation group of each
+> extent.
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/xfs/libxfs/xfs_format.h |    5 ++++-
- fs/xfs/xfs_bmap_util.c     |   14 +++++++++++---
- fs/xfs/xfs_bmap_util.h     |    2 +-
- fs/xfs/xfs_file.c          |    4 ++--
- fs/xfs/xfs_ioctl.c         |    4 ++--
- fs/xfs/xfs_iops.c          |    8 +++++---
- 6 files changed, 25 insertions(+), 12 deletions(-)
+Here are the translations for those extents:
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index d4d9bef20c3a..9e720e55776b 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1063,12 +1063,15 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
- #define XFS_DIFLAG2_DAX_BIT	0	/* use DAX for this inode */
- #define XFS_DIFLAG2_REFLINK_BIT	1	/* file's blocks may be shared */
- #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
-+#define XFS_DIFLAG2_IOMAP_IMMUTABLE_BIT 3 /* set S_IOMAP_IMMUTABLE for this inode */
- #define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
- #define XFS_DIFLAG2_REFLINK     (1 << XFS_DIFLAG2_REFLINK_BIT)
- #define XFS_DIFLAG2_COWEXTSIZE  (1 << XFS_DIFLAG2_COWEXTSIZE_BIT)
-+#define XFS_DIFLAG2_IOMAP_IMMUTABLE (1 << XFS_DIFLAG2_IOMAP_IMMUTABLE_BIT)
- 
- #define XFS_DIFLAG2_ANY \
--	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE)
-+	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE | \
-+	 XFS_DIFLAG2_IOMAP_IMMUTABLE)
- 
- /*
-  * Inode number format:
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index c4fc79a0704f..1dcb521da456 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1021,7 +1021,8 @@ xfs_alloc_file_space(
- 	struct xfs_inode	*ip,
- 	xfs_off_t		offset,
- 	xfs_off_t		len,
--	int			alloc_type)
-+	int			alloc_type,
-+	uint64_t		di_flags2)
- {
- 	xfs_mount_t		*mp = ip->i_mount;
- 	xfs_off_t		count;
-@@ -1119,6 +1120,12 @@ xfs_alloc_file_space(
- 			break;
- 		}
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
-+		if (di_flags2) {
-+			/* fold inode attributes for this allocation */
-+			ip->i_d.di_flags2 |= di_flags2;
-+			di_flags2 = 0;
-+		}
-+
- 		error = xfs_trans_reserve_quota_nblks(tp, ip, qblocks,
- 						      0, quota_flag);
- 		if (error)
-@@ -1381,7 +1388,7 @@ xfs_zero_file_space(
- 	error = xfs_alloc_file_space(ip, round_down(offset, blksize),
- 				     round_up(offset + len, blksize) -
- 				     round_down(offset, blksize),
--				     XFS_BMAPI_PREALLOC);
-+				     XFS_BMAPI_PREALLOC, 0);
- out:
- 	return error;
- 
-@@ -1461,7 +1468,8 @@ xfs_seal_file_space(
- 		goto err;
- 
- 	error = xfs_alloc_file_space(ip, offset, len,
--			XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO);
-+			XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO,
-+			XFS_DIFLAG2_IOMAP_IMMUTABLE);
- 	if (error)
- 		goto err;
- 
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 5115a32a2483..1698e0c58b78 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -51,7 +51,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
- 
- /* preallocation and hole punch interface */
- int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
--			     xfs_off_t len, int alloc_type);
-+			     xfs_off_t len, int alloc_type, uint64_t di_flags2);
- int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
- 			    xfs_off_t len);
- int	xfs_zero_file_space(struct xfs_inode *ip, xfs_off_t offset,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e21121530a90..2d9ffa1773bd 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -837,12 +837,12 @@ xfs_file_fallocate(
- 					goto out_unlock;
- 
- 				error = xfs_alloc_file_space(ip, offset, len,
--						XFS_BMAPI_PREALLOC);
-+						XFS_BMAPI_PREALLOC, 0);
- 			} else if (mode & FALLOC_FL_SEAL_BLOCK_MAP) {
- 				error = xfs_seal_file_space(ip, offset, len);
- 			} else
- 				error = xfs_alloc_file_space(ip, offset, len,
--						XFS_BMAPI_PREALLOC);
-+						XFS_BMAPI_PREALLOC, 0);
- 		}
- 		if (error)
- 			goto out_unlock;
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 2e64488bc4de..c829f85bed99 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -703,7 +703,7 @@ xfs_ioc_space(
- 	case XFS_IOC_RESVSP64:
- 		flags |= XFS_PREALLOC_SET;
- 		error = xfs_alloc_file_space(ip, bf->l_start, bf->l_len,
--						XFS_BMAPI_PREALLOC);
-+						XFS_BMAPI_PREALLOC, 0);
- 		break;
- 	case XFS_IOC_UNRESVSP:
- 	case XFS_IOC_UNRESVSP64:
-@@ -716,7 +716,7 @@ xfs_ioc_space(
- 		flags |= XFS_PREALLOC_CLEAR;
- 		if (bf->l_start > XFS_ISIZE(ip)) {
- 			error = xfs_alloc_file_space(ip, XFS_ISIZE(ip),
--					bf->l_start - XFS_ISIZE(ip), 0);
-+					bf->l_start - XFS_ISIZE(ip), 0, 0);
- 			if (error)
- 				goto out_unlock;
- 		}
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 469c9fa4c178..174ef95453f5 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1186,9 +1186,10 @@ xfs_diflags_to_iflags(
- 	struct xfs_inode	*ip)
- {
- 	uint16_t		flags = ip->i_d.di_flags;
-+	uint64_t		flags2 = ip->i_d.di_flags2;
- 
- 	inode->i_flags &= ~(S_IMMUTABLE | S_APPEND | S_SYNC |
--			    S_NOATIME | S_DAX);
-+			    S_NOATIME | S_DAX | S_IOMAP_IMMUTABLE);
- 
- 	if (flags & XFS_DIFLAG_IMMUTABLE)
- 		inode->i_flags |= S_IMMUTABLE;
-@@ -1201,9 +1202,10 @@ xfs_diflags_to_iflags(
- 	if (S_ISREG(inode->i_mode) &&
- 	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
- 	    !xfs_is_reflink_inode(ip) &&
--	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
--	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
-+	    (ip->i_mount->m_flags & XFS_MOUNT_DAX || flags2 & XFS_DIFLAG2_DAX))
- 		inode->i_flags |= S_DAX;
-+	if (flags2 & XFS_DIFLAG2_IOMAP_IMMUTABLE)
-+		inode->i_flags |= S_IOMAP_IMMUTABLE;
- }
- 
- /*
+fsb 0x12a9233
+	agno 0
+	agbno 0x12a9233 (19567155)
+	daddr 0x9549198 (156537240)
+
+fsb 0x34ae0d5
+	agno 1
+	agno 0x14ae0d5 (21684437)
+	daddr 0x15a48150 (363102544)
+
+
+xfs_db's 'freesp -d' output contains:
+
+-----
+...
+       0 19566515      639
+       0 19567155  1396803
+       0 20963959   408468
+...
+       1 20621811   106501
+       1 21684437  1104130
+       1 22788568   421464
+...
+-----
+
+Both chunks of free space appear to have more blocks that the original 
+extents.
+
+
+> If so, you could convert each start fsb to a raw daddr (xfs_db
+> -c "convert fsb 0x12a9233 daddr" <dev>) and use that to try and read
+> each extent off the raw device as previously discussed.
+
+156537240 is in 512 byte blocks which is 19567155 in 4096 byte blocks.
+
+dd if=/dev/nvme0n1p8 bs=4096 skip=19567155 count=688643 of=extentfile.0
+
+
+363102544 is in 512 byte blocks which is 45387818 in 4096 byte blocks.
+
+dd if=/dev/nvme0n1p8 bs=4096 skip=45387818 count=1048560 of=extentfile.1
+
+These files both look good and 'cat extentfile.0 >> extentfile.1' gives me 
+back the original order of the file.
+
+-----
+$ wc -c extentfile.1
+7115583488 extentfile.1
+
+$ du -hs extentfile.1
+6.7G    extentfile.1
+-----
+
+...which seems slightly larger than the original file as reported in the 
+'INODE CORE' message that you found in the log.
+
+The recovered file ends up being some 53 extents long; probably because the 
+filesystem I recovered it too was rather full.
+
+However, when I run it through my tool chain, I seem to get exactly what I 
+expect.
+
+
+> I have no idea whether those extents contain the file data you're after
+> (note that I'm not sure we've actually confirmed your file data would
+> have made it to disk), but if the file size values look sane that might
+> be worth a try before you go fishing the device for raw data.
+
+It seems that it did and we have been able to retrieve it!
+
+
+Thanks so much for your help. I really appreiciate it, especially the time 
+you took to poor through my logs.
+
+Let me know if you're ever near London and I'll shout you dinner and 
+drinks.
+
+
+
+
+
+Regards,
+@ndy
+
+-- 
+andyjpb@ashurst.eu.org
+http://www.ashurst.eu.org/
+0x7EBA75FF
 
