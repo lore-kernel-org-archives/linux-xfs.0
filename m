@@ -1,181 +1,177 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:60702 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751217AbdHAAj1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jul 2017 20:39:27 -0400
-Date: Tue, 1 Aug 2017 10:30:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
-Message-ID: <20170801003032.GL17762@dastard>
-References: <150135740948.35318.10730072114996910905.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150135742076.35318.12884268722541769179.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170731170939.GC4477@magnolia>
- <CAPcyv4hPr8b3UsshQ086hi7_KrE3-y0uGTpdi1eXc5R59mYmUw@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:28231 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751648AbdGaVHZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jul 2017 17:07:25 -0400
+Subject: [PATCH 5/7] xfs_db: print attribute remote value blocks
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 31 Jul 2017 14:07:19 -0700
+Message-ID: <150153523972.26081.18217476990683895058.stgit@magnolia>
+In-Reply-To: <150153520589.26081.8786864874176090813.stgit@magnolia>
+References: <150153520589.26081.8786864874176090813.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4hPr8b3UsshQ086hi7_KrE3-y0uGTpdi1eXc5R59mYmUw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jul 31, 2017 at 11:25:34AM -0700, Dan Williams wrote:
-> On Mon, Jul 31, 2017 at 10:09 AM, Darrick J. Wong
-> <darrick.wong@oracle.com> wrote:
-> >> index 93e955262d07..c4fc79a0704f 100644
-> >> --- a/fs/xfs/xfs_bmap_util.c
-> >> +++ b/fs/xfs/xfs_bmap_util.c
-> >> @@ -1387,6 +1387,92 @@ xfs_zero_file_space(
-> >>
-> >>  }
-> >>
-> >> +int
-> >> +xfs_seal_file_space(
-> >> +     struct xfs_inode        *ip,
-> >> +     xfs_off_t               offset,
-> >> +     xfs_off_t               len)
-> >> +{
-> >> +     struct inode            *inode = VFS_I(ip);
-> >> +     struct address_space    *mapping = inode->i_mapping;
-> >> +     int                     error = 0;
-> >> +
-> >> +     if (offset)
-> >> +             return -EINVAL;
-> >> +
-> >> +     i_mmap_lock_read(mapping);
-> >
-> > (Are we allowed to take address_space->i_mmap_rwsem while holding
-> > xfs_inode->i_mmaplock?)
-> 
-> Empirically, yes. Lockdep complains when those locks are taken in the
-> reverse order.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-My pet hate: people who rely on lockdep to tell them that locking is
-wrong rather than understanding what the correct locking order is
-before writing code.
+Teach xfs_db how to print the contents of xattr remote value blocks.
 
-> That seems to be inconsistent with the "mmap_sem -> i_mmap_lock ->
-> page_lock" note in the xfs_ilock comment. Am I confusing what
-> i_mmap_lock means in that comment, is that the i_mmap_lock_read(), or
-> the i_mmaplock in the xfs_inode?
-
-The latter. The lock orders you need to pay attention to are
-documented in mm/filemap.c. (Which, incidentally, needs updating to
-refer to i_rwsem, not i_mutex.)
-
- *  ->i_mutex
- *    ->i_mmap_rwsem            (truncate->unmap_mapping_range)
-
- *  ->mmap_sem                                                                   
- *    ->i_mmap_rwsem                                                             
- *      ->page_table_lock or pte_lock   (various, mainly in memory.c)            
- *        ->mapping->tree_lock  (arch-dependent flush_dcache_mmap_lock)
-
-As it is, I think we shold not be taking internal mm/ state locks
-deep inside filesystem code as it smells of layering violations. We
-don't do this anywhere else for mapping checks - if we already hold
-the XFS_MMAPLOCK_EXCL here, then we've already locked out page
-faults from changing the state of the inode. In which case, we
-should not need a mmap internal lock to be held here, same as all
-the other filesystem operations that lock out page faults....
-
-> >> +     xfs_ilock(ip, XFS_ILOCK_EXCL);
-> >> +     if (len == 0) {
-> >> +             /*
-> >> +              * Clear the immutable flag provided there are no active
-> >> +              * mappings. The active mapping check prevents an
-> >> +              * application that is assuming a static block map, for
-> >> +              * DAX or peer-to-peer DMA, from having this state
-> >> +              * silently change behind its back.
-> >> +              */
-> >> +             if (RB_EMPTY_ROOT(&mapping->i_mmap))
-
-			mapping_mapped(mapping)
-
-> >> +                     inode->i_flags &= ~S_IOMAP_IMMUTABLE;
-> >> +             else
-> >> +                     error = -EBUSY;
-> >> +     } else if (IS_IOMAP_IMMUTABLE(inode)) {
-> >> +             if (len == i_size_read(inode)) {
-> >> +                     /*
-> >> +                      * The file is already in the correct state,
-> >> +                      * bail out without error below.
-> >> +                      */
-> >> +                     len = 0;
-
-> >> +             } else {
-> >> +                     /* too late to allocate more space */
-> >> +                     error = -ETXTBSY;
-> >> +             }
-> >> +     } else {
-> >> +             if (len < i_size_read(inode)) {
-> >> +                     /*
-> >> +                      * Since S_IOMAP_IMMUTABLE is inode global it
-> >> +                      * does not make sense to fallocate(immutable)
-> >> +                      * on a sub-range of the file.
-> >> +                      */
-> >> +                     error = -EINVAL;
-> >> +             } else if (!RB_EMPTY_ROOT(&mapping->i_mmap)) {
-> >> +                     /*
-> >> +                      * It's not strictly required to prevent setting
-> >> +                      * immutable while a file is already mapped, but
-> >> +                      * we do it for simplicity and symmetry with the
-> >> +                      * S_IOMAP_IMMUTABLE disable case.
-> >> +                      */
-> >> +                     error = -EBUSY;
-> >> +             } else
-> >> +                     inode->i_flags |= S_IOMAP_IMMUTABLE;
-> >> +     }
-> >> +     xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> >> +     i_mmap_unlock_read(mapping);
-> >> +
-> >> +     if (error || len == 0)
-> >> +             return error;
-
-I have to say, I find this checking to be fairly grotty. The "len ==
-0" API to remove the immutable flag is a gross hack.  IMO, it's
-better to add a separate fallocate command to "unseal" the extent
-map, and let that happen according to whether the file is mapped or
-not.  Perhaps it would be better to start with a man page
-documenting the desired API?
-
-FWIW, the if/else if/else structure could be cleaned up with a
-simple "goto out_unlock" construct such as:
-
-	/* don't make immutable if inode is currently mapped */
-	error = -EBUSY;
-	if (mapping_mapped(mapping))
-		goto out_unlock;
-
-	/* can't do anything if inode is already immutable */
-	error = -ETXTBSY;
-	if (IS_IMMUTABLE(inode) || IS_IOMAP_IMMUTABLE(inode))
-		goto out_unlock;
-
-	/* XFS only supports whole file extent immutability */
-	error = -EINVAL;
-	if (len != i_size_read(inode))
-		goto out_unlock;
-
-	/* all good to go */
-	error = 0;
-
-out_unlock:
-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-	i_mmap_unlock_read(mapping);
-
-	if (error)
-	     return error;
-
-	/* now unshare, allocate and add immutable flag */
-
-Cheers,
-
-Dave.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/attr.c  |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/attr.h  |    1 +
+ db/field.c |    3 +++
+ db/field.h |    1 +
+ 4 files changed, 64 insertions(+)
 
 
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/db/attr.c b/db/attr.c
+index 23ffcd5..98fb069 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -41,6 +41,9 @@ static int	attr_leaf_nvlist_offset(void *obj, int startoff, int idx);
+ static int	attr_node_btree_count(void *obj, int startoff);
+ static int	attr_node_hdr_count(void *obj, int startoff);
+ 
++static int	attr_remote_count(void *obj, int startoff);
++static int	attr3_remote_count(void *obj, int startoff);
++
+ const field_t	attr_hfld[] = {
+ 	{ "", FLDT_ATTR, OI(0), C1, 0, TYP_NONE },
+ 	{ NULL }
+@@ -53,6 +56,7 @@ const field_t	attr_flds[] = {
+ 	  FLD_COUNT, TYP_NONE },
+ 	{ "hdr", FLDT_ATTR_NODE_HDR, OI(NOFF(hdr)), attr_node_hdr_count,
+ 	  FLD_COUNT, TYP_NONE },
++	{ "data", FLDT_CHARNS, OI(0), attr_remote_count, FLD_COUNT, TYP_NONE },
+ 	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(LOFF(entries)),
+ 	  attr_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
+ 	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(NOFF(__btree)), attr_node_btree_count,
+@@ -197,6 +201,33 @@ attr3_leaf_hdr_count(
+ 	return be16_to_cpu(leaf->hdr.info.hdr.magic) == XFS_ATTR3_LEAF_MAGIC;
+ }
+ 
++static int
++attr_remote_count(
++	void		*obj,
++	int		startoff)
++{
++	if (attr_leaf_hdr_count(obj, startoff) == 0 &&
++	    attr_node_hdr_count(obj, startoff) == 0)
++		return mp->m_sb.sb_blocksize;
++	return 0;
++}
++
++static int
++attr3_remote_count(
++	void		*obj,
++	int		startoff)
++{
++	struct xfs_attr3_rmt_hdr	*hdr = obj;
++
++	ASSERT(startoff == 0);
++
++	if (hdr->rm_magic != cpu_to_be32(XFS_ATTR3_RMT_MAGIC))
++		return 0;
++	if (be32_to_cpu(hdr->rm_bytes) + sizeof(*hdr) > mp->m_sb.sb_blocksize)
++		return mp->m_sb.sb_blocksize - sizeof(*hdr);
++	return be32_to_cpu(hdr->rm_bytes);
++}
++
+ typedef int (*attr_leaf_entry_walk_f)(struct xfs_attr_leafblock *,
+ 				      struct xfs_attr_leaf_entry *, int);
+ static int
+@@ -477,6 +508,17 @@ attr3_node_hdr_count(
+ 	return be16_to_cpu(node->hdr.info.hdr.magic) == XFS_DA3_NODE_MAGIC;
+ }
+ 
++static int
++attr3_remote_hdr_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_attr3_rmt_hdr	*node = obj;
++
++	ASSERT(startoff == 0);
++	return be32_to_cpu(node->rm_magic) == XFS_ATTR3_RMT_MAGIC;
++}
++
+ int
+ attr_size(
+ 	void	*obj,
+@@ -501,6 +543,8 @@ const field_t	attr3_flds[] = {
+ 	  FLD_COUNT, TYP_NONE },
+ 	{ "hdr", FLDT_ATTR3_NODE_HDR, OI(N3OFF(hdr)), attr3_node_hdr_count,
+ 	  FLD_COUNT, TYP_NONE },
++	{ "hdr", FLDT_ATTR3_REMOTE_HDR, OI(0), attr3_remote_hdr_count,
++	  FLD_COUNT, TYP_NONE },
+ 	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(L3OFF(entries)),
+ 	  attr3_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
+ 	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(N3OFF(__btree)),
+@@ -543,6 +587,21 @@ const field_t	attr3_node_hdr_flds[] = {
+ 	{ NULL }
+ };
+ 
++#define	RM3OFF(f)	bitize(offsetof(struct xfs_attr3_rmt_hdr, rm_ ## f))
++const struct field	attr3_remote_crc_flds[] = {
++	{ "magic", FLDT_UINT32X, OI(RM3OFF(magic)), C1, 0, TYP_NONE },
++	{ "offset", FLDT_UINT32D, OI(RM3OFF(offset)), C1, 0, TYP_NONE },
++	{ "bytes", FLDT_UINT32D, OI(RM3OFF(bytes)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(RM3OFF(crc)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(RM3OFF(uuid)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_INO, OI(RM3OFF(owner)), C1, 0, TYP_NONE },
++	{ "bno", FLDT_DFSBNO, OI(RM3OFF(blkno)), C1, 0, TYP_BMAPBTD },
++	{ "lsn", FLDT_UINT64X, OI(RM3OFF(lsn)), C1, 0, TYP_NONE },
++	{ "data", FLDT_CHARNS, OI(bitize(sizeof(struct xfs_attr3_rmt_hdr))),
++		attr3_remote_count, FLD_COUNT, TYP_NONE },
++	{ NULL }
++};
++
+ /*
+  * Special read verifier for attribute buffers. Detect the magic number
+  * appropriately and set the correct verifier and call it.
+diff --git a/db/attr.h b/db/attr.h
+index 21848c1..565d6d8 100644
+--- a/db/attr.h
++++ b/db/attr.h
+@@ -32,6 +32,7 @@ extern const field_t	attr3_leaf_hdr_flds[];
+ extern const field_t	attr3_node_hdr_flds[];
+ extern const field_t	attr3_blkinfo_flds[];
+ extern const field_t	attr3_node_hdr_flds[];
++extern const field_t	attr3_remote_crc_flds[];
+ 
+ extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
+ extern int	attr_size(void *obj, int startoff, int idx);
+diff --git a/db/field.c b/db/field.c
+index f1e5f35..ae4c805 100644
+--- a/db/field.c
++++ b/db/field.c
+@@ -99,6 +99,9 @@ const ftattr_t	ftattrtab[] = {
+ 	{ FLDT_ATTR3_NODE_HDR, "attr3_node_hdr", NULL,
+ 	  (char *)attr3_node_hdr_flds, SI(bitsz(struct xfs_da3_node_hdr)),
+ 	  0, NULL, attr3_node_hdr_flds },
++	{ FLDT_ATTR3_REMOTE_HDR, "attr3_remote_hdr", NULL,
++	  (char *)attr3_remote_crc_flds, attr_size, FTARG_SIZE, NULL,
++	  attr3_remote_crc_flds },
+ 
+ 	{ FLDT_BMAPBTA, "bmapbta", NULL, (char *)bmapbta_flds, btblock_size,
+ 	  FTARG_SIZE, NULL, bmapbta_flds },
+diff --git a/db/field.h b/db/field.h
+index d1a7095..a8df29b 100644
+--- a/db/field.h
++++ b/db/field.h
+@@ -47,6 +47,7 @@ typedef enum fldt	{
+ 	FLDT_ATTR3_BLKINFO,
+ 	FLDT_ATTR3_LEAF_HDR,
+ 	FLDT_ATTR3_NODE_HDR,
++	FLDT_ATTR3_REMOTE_HDR,
+ 
+ 	FLDT_BMAPBTA,
+ 	FLDT_BMAPBTA_CRC,
+
