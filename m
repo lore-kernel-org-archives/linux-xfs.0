@@ -1,83 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:25073 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751672AbdHACmX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jul 2017 22:42:23 -0400
-Date: Tue, 1 Aug 2017 12:42:18 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3] fs, xfs: introduce S_IOMAP_IMMUTABLE
-Message-ID: <20170801024218.GN17762@dastard>
-References: <150135740948.35318.10730072114996910905.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150135741519.35318.16765137368329971936.stgit@dwillia2-desk3.amr.corp.intel.com>
- <1501516968.579311.1058393288.0714478A@webmail.messagingengine.com>
- <CAPcyv4h_YWaAXG5pfkOJ0M74i5yEke1SoC3ESErTh41hngtG-w@mail.gmail.com>
- <1501518747.586018.1058450568.4B6F28FB@webmail.messagingengine.com>
- <1501522933.602272.1058529880.6C4A2D98@webmail.messagingengine.com>
- <20170731182352.GE4477@magnolia>
- <1501553712.1055225.1059044352.109C04CB@webmail.messagingengine.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:28152 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751052AbdGaVHP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jul 2017 17:07:15 -0400
+Subject: [PATCH 3/7] xfs_db: fix metadump redirection (again)
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 31 Jul 2017 14:07:07 -0700
+Message-ID: <150153522749.26081.13898276114157159134.stgit@magnolia>
+In-Reply-To: <150153520589.26081.8786864874176090813.stgit@magnolia>
+References: <150153520589.26081.8786864874176090813.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1501553712.1055225.1059044352.109C04CB@webmail.messagingengine.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Colin Walters <walters@verbum.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jul 31, 2017 at 10:15:12PM -0400, Colin Walters wrote:
-> On Mon, Jul 31, 2017, at 02:23 PM, Darrick J. Wong wrote:
-> 
-> > I don't think F_SEAL_{SHRINK,GROW} prevents reflinking or CoW of file data,
-> > which are two things that cannot happen under S_IOMAP_IMMUTABLE that
-> > aren't size changes.  From the implementation it looks like shrink and
-> > grow are only supposed to disallow changes to i_size, not i_blocks (or
-> > the file block map).
-> 
-> True. 
-> 
-> > Then again, I suppose F_SEAL_* only work on shmem, so maybe it simply
-> > isn't defined for any other filesystem...?  e.g. it doesn't prohibit
-> > reflink, but the only fs implementing seals doesn't support reflink.
-> > 
-> > <shrug>
-> > 
-> > Seals cannot be removed, which is too strict for the S_IOMAP_IMMUTABLE
-> > user cases being presented.
-> 
-> To be clear, the set of use cases is swap files and DAX, right?  Or is there anything else?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I've outlined other use cases in previous discussions. To repeat
-myself, every so often we get someone with, say, a new high
-speed camera that want to dma the camera frames direct to the
-storage because they can't push 500,000 frames/s through the CPU
-to storage. Hence they want to bypass the OS and DMA the data direct
-to the storage. To do this they need a mechanism to freeze and unfreeze
-the block map of the file so that nothing modifies the block map
-while the camera hardware is dumping data direct to the storage.
-Immutable extent maps provide the functionality they need to
-implement this safely.
+In patch 4944defad4 ("xfs_db: redirect printfs when metadumping to
+stdout"), we solved the problem of xfs_db printfs ending up in the
+metadump stream by reassigning stdout for the duration of a stdout
+metadump.  Unfortunately, musl doesn't allow stdout to be reassigned (in
+their view "extern FILE *stdout" means "extern FILE * const stdout"), so
+we abandon the old approach in favor of playing games with dup() to
+switch the raw file descriptors.
 
-There's also other similar use cases for RDMA targets on PMEM
-(regardless of whether DAX is enabled or not), and I've come across
-a couple of requests for mechanisms to allow fabric based nvme
-storage to do direct data transfers between storage devices, too.
-All of these use cases can be safely implemented if there is a
-mechanism to mark extent maps as immutable for the duration of
-the operation they need to perform.
+While we're at it, fix a regression where an unconverted outf test
+allows progress info to end up in the metadump stream.
 
-> I can't imagine why anyone would want to turn a swap file back into a regular file.
-> I haven't fully followed DAX, but I'd take your word for it if people want to
-> be able to remove the flag after.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/metadump.c |   47 ++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 36 insertions(+), 11 deletions(-)
 
-DAX isn't the driver of that functionality, it's the other use cases
-that need it, and why the proposed "only remove flag if len == 0"
-API is a non-starter....
 
-Cheers,
+diff --git a/db/metadump.c b/db/metadump.c
+index be2e712..227796b 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -78,6 +78,7 @@ static int		obfuscate = 1;
+ static int		zero_stale_data = 1;
+ static int		show_warnings = 0;
+ static int		progress_since_warning = 0;
++static bool		stdout_metadump;
+ 
+ void
+ metadump_init(void)
+@@ -137,7 +138,7 @@ print_progress(const char *fmt, ...)
+ 	va_end(ap);
+ 	buf[sizeof(buf)-1] = '\0';
+ 
+-	f = (outf == stdout) ? stderr : stdout;
++	f = stdout_metadump ? stderr : stdout;
+ 	fprintf(f, "\r%-59s", buf);
+ 	fflush(f);
+ 	progress_since_warning = 1;
+@@ -2750,7 +2751,8 @@ metadump_f(
+ 	xfs_agnumber_t	agno;
+ 	int		c;
+ 	int		start_iocur_sp;
+-	bool		stdout_metadump = false;
++	int		outfd = -1;
++	int		ret;
+ 	char		*p;
+ 
+ 	exitcode = 1;
+@@ -2870,16 +2872,35 @@ metadump_f(
+ 		 * metadump operation so that dbprintf and other messages
+ 		 * are sent to the console instead of polluting the
+ 		 * metadump stream.
++		 *
++		 * We get to do this the hard way because musl doesn't
++		 * allow reassignment of stdout.
+ 		 */
+-		outf = stdout;
+-		stdout = stderr;
++		fflush(stdout);
++		outfd = dup(STDOUT_FILENO);
++		if (outfd < 0) {
++			perror("opening dump stream");
++			goto out;
++		}
++		ret = dup2(STDERR_FILENO, STDOUT_FILENO);
++		if (ret < 0) {
++			perror("redirecting stdout");
++			close(outfd);
++			goto out;
++		}
++		outf = fdopen(outfd, "a");
++		if (outf == NULL) {
++			fprintf(stderr, "cannot create dump stream\n");
++			dup2(outfd, 1);
++			close(outfd);
++			goto out;
++		}
+ 		stdout_metadump = true;
+ 	} else {
+ 		outf = fopen(argv[optind], "wb");
+ 		if (outf == NULL) {
+ 			print_warning("cannot create dump file");
+-			free(metablock);
+-			return 0;
++			goto out;
+ 		}
+ 	}
+ 
+@@ -2907,15 +2928,19 @@ metadump_f(
+ 	if (progress_since_warning)
+ 		fputc('\n', stdout_metadump ? stderr : stdout);
+ 
+-	if (stdout_metadump)
+-		stdout = outf;
+-	else
+-		fclose(outf);
++	if (stdout_metadump) {
++		fflush(outf);
++		fflush(stdout);
++		ret = dup2(outfd, STDOUT_FILENO);
++		if (ret < 0)
++			perror("un-redirecting stdout");
++	}
++	fclose(outf);
+ 
+ 	/* cleanup iocur stack */
+ 	while (iocur_sp > start_iocur_sp)
+ 		pop_cur();
+-
++out:
+ 	free(metablock);
+ 
+ 	return 0;
 
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
