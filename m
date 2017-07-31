@@ -1,68 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:59409 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752649AbdGFXLg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jul 2017 19:11:36 -0400
-Date: Fri, 7 Jul 2017 09:11:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: MAXPATHLEN == 1024 and 4096?!
-Message-ID: <20170706231132.GE17762@dastard>
-References: <20170706224738.GA4103@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170706224738.GA4103@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:49484 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750709AbdGaE2r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 31 Jul 2017 00:28:47 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH 2/2] common/xfs: add iomap_dio_actor() to the dmesg filter
+Date: Mon, 31 Jul 2017 12:28:25 +0800
+Message-Id: <20170731042825.6250-2-eguan@redhat.com>
+In-Reply-To: <20170731042825.6250-1-eguan@redhat.com>
+References: <20170731042825.6250-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-On Thu, Jul 06, 2017 at 03:47:38PM -0700, Darrick J. Wong wrote:
-> Heh,
-> 
-> Brian Foster complained that he could create filesystems that do this on
-> for-next during the first mount attempt:
-> 
-> [62548.735187] XFS (dm-1): Log size 4497 blocks too small, minimum size is 4499 blocks
-> [62548.742853] XFS (dm-1): AAIEEE! Log failed size checks. Abort!
-> 
-> I started looking into why mkfs and mount have different ideas about the
-> minimum log length, and discovered that the struct xfs_trans_res between
-> kernel and userspace have vastly different ideas about how much space a
-> transaction type requires.  Most of the problems are easily fixed by
-> constructing a more complete phony superblock in mkfs' max_trans_res()
-> (patches soon), but I ran into a nasty one that I cannot resolve in
-> tr_symlink.
-> 
-> In fs/xfs/, MAXPATHLEN is defined as 1024, and returns -ENAMETOOLONG
-> (set) or -EFSCORRUPTED (get) if it is fed a symlink with a target longer
-> than 1024 bytes.
-> 
-> However, xfsprogs picks up the definition offered by libc, which is
-> PATH_MAX (4096).  Unfortunately, this also means that xfs_repair only
-> complains if the target is longer than 4096 bytes.
-> 
-> AFAICT the other filesystems allow 4k symlink targets, but XFS' special
-> definition has been there at least since git-prehistory.
-> 
-> Soooo... which is the correct value?  We could raise the kernel limit to
-> 4k with at least the obvious problem that old kernels can't read such
-> symlinks, or lower the xfsprogs limit to 1k, with the problem that at
-> least in theory this would result in xfs_repair flagging things it
-> wouldn't have before.
-> 
-> My cautious side says lower xfsprogs, but I'll ask the list anyway. :)
+The warning in fs/iomap.c::iomap_dio_actor() could be triggered when
+mixing dio and mmap I/O on the same sparse file. Several tests could
+hit this warning now, like generic/095 generic/224 and generic/446.
+So add this expected warning to whitelist too.
 
-A summary of what we just talked about on IRC - it's part of the on
-disk format so grabbing an arbitrary value from libc is wrong.
-Rename the kernel definition to XFS_SYMLINK_MAXLEN and move to
-xfs_format.h, make all the userspace and kernel code use the new
-libxfs definition....
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ common/xfs | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Cheers,
-
-Dave.
+diff --git a/common/xfs b/common/xfs
+index 47b4e1ba4b7f..4995f8ba8dd8 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -596,10 +596,12 @@ _filter_xfs_dmesg()
+ 	local warn4="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_aio_read.*"
+ 	local warn5="WARNING:.*fs/iomap\.c:.*iomap_dio_rw.*"
+ 	local warn6="WARNING:.*fs/xfs/xfs_aops\.c:.*__xfs_get_blocks.*"
++	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
+ 	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
+ 	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
+ 	    -e "s#$warn3#Intentional warnings in xfs_file_read_iter#" \
+ 	    -e "s#$warn4#Intentional warnings in xfs_file_aio_read#" \
+ 	    -e "s#$warn5#Intentional warnings in iomap_dio_rw#" \
+-	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#"
++	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
++	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#"
+ }
 -- 
-Dave Chinner
-david@fromorbit.com
+2.13.3
+
