@@ -1,543 +1,221 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35713 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754885AbdGUWFF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2017 18:05:05 -0400
-Subject: [PATCH 5/5] xfs: test fuzzing every field of a dquot
+Received: from aserp1040.oracle.com ([141.146.126.69]:28261 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751648AbdGaVHc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jul 2017 17:07:32 -0400
+Subject: [PATCH 6/7] xfs_db: write values into dir/attr blocks and
+ recalculate CRCs
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 21 Jul 2017 15:04:58 -0700
-Message-ID: <150067469875.30639.1164952553984333812.stgit@magnolia>
-In-Reply-To: <150067465981.30639.14801416171688538711.stgit@magnolia>
-References: <150067465981.30639.14801416171688538711.stgit@magnolia>
+Date: Mon, 31 Jul 2017 14:07:25 -0700
+Message-ID: <150153524586.26081.6633141009302900940.stgit@magnolia>
+In-Reply-To: <150153520589.26081.8786864874176090813.stgit@magnolia>
+References: <150153520589.26081.8786864874176090813.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-See what happens when we fuzz every field of a quota information structure.
+Extend typ_t to (optionally) store a pointer to a function to calculate
+the CRC of the block, provide functions to do this for the dir3 and
+attr3 types, and then wire up the write command so that we can modify
+directory and extended attribute block fields.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/1380     |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1380.out |    4 +++
- tests/xfs/1381     |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1381.out |    4 +++
- tests/xfs/1382     |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1382.out |    4 +++
- tests/xfs/1383     |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1383.out |    4 +++
- tests/xfs/1384     |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1384.out |    4 +++
- tests/xfs/1385     |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1385.out |    4 +++
- tests/xfs/group    |    6 +++++
- 13 files changed, 408 insertions(+)
- create mode 100755 tests/xfs/1380
- create mode 100644 tests/xfs/1380.out
- create mode 100755 tests/xfs/1381
- create mode 100644 tests/xfs/1381.out
- create mode 100755 tests/xfs/1382
- create mode 100644 tests/xfs/1382.out
- create mode 100755 tests/xfs/1383
- create mode 100644 tests/xfs/1383.out
- create mode 100755 tests/xfs/1384
- create mode 100644 tests/xfs/1384.out
- create mode 100755 tests/xfs/1385
- create mode 100644 tests/xfs/1385.out
+ db/attr.c  |   32 ++++++++++++++++++++++++++++++++
+ db/attr.h  |    1 +
+ db/dir2.c  |   37 +++++++++++++++++++++++++++++++++++++
+ db/dir2.h  |    1 +
+ db/type.c  |    8 ++++----
+ db/type.h  |    2 ++
+ db/write.c |    3 +++
+ 7 files changed, 80 insertions(+), 4 deletions(-)
 
 
-diff --git a/tests/xfs/1380 b/tests/xfs/1380
-new file mode 100755
-index 0000000..6ce5cdf
---- /dev/null
-+++ b/tests/xfs/1380
-@@ -0,0 +1,63 @@
-+#! /bin/bash
-+# FS QA Test No. 1380
-+#
-+# Populate a XFS filesystem and fuzz every user dquot field.
-+# Use xfs_repair to fix the corruption.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
+diff --git a/db/attr.c b/db/attr.c
+index 98fb069..2fa6690 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -602,6 +602,38 @@ const struct field	attr3_remote_crc_flds[] = {
+ 	{ NULL }
+ };
+ 
++/* Set the CRC. */
++void
++xfs_attr3_set_crc(
++	struct xfs_buf		*bp)
 +{
-+	cd /
-+	rm -rf $tmp.*
++	__be32			magic32;
++	__be16			magic16;
++
++	magic32 = *(__be32 *)bp->b_addr;
++	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
++
++	switch (magic16) {
++	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF);
++		return;
++	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_DA3_NODE_CRC_OFF);
++		return;
++	default:
++		break;
++	}
++
++	switch (magic32) {
++	case cpu_to_be32(XFS_ATTR3_RMT_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_ATTR3_RMT_CRC_OFF);
++		return;
++	default:
++		dbprintf(_("Unknown attribute buffer type!\n"));
++		break;
++	}
 +}
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+. ./common/quota
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_xfs_fuzz_fields
-+_require_quota
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+echo "${MOUNT_OPTIONS}" | grep -q 'usrquota' || _notrun "user quota disabled"
-+
-+echo "Fuzz user 0 dquot"
-+_scratch_xfs_fuzz_metadata '' 'offline'  "dquot -u 0" >> $seqres.full
-+echo "Done fuzzing dquot"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1380.out b/tests/xfs/1380.out
-new file mode 100644
-index 0000000..206445e
---- /dev/null
-+++ b/tests/xfs/1380.out
-@@ -0,0 +1,4 @@
-+QA output created by 1380
-+Format and populate
-+Fuzz user 0 dquot
-+Done fuzzing dquot
-diff --git a/tests/xfs/1381 b/tests/xfs/1381
-new file mode 100755
-index 0000000..fc5bca9
---- /dev/null
-+++ b/tests/xfs/1381
-@@ -0,0 +1,63 @@
-+#! /bin/bash
-+# FS QA Test No. 1381
-+#
-+# Populate a XFS filesystem and fuzz every user dquot field.
-+# Use xfs_scrub to fix the corruption.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
+ /*
+  * Special read verifier for attribute buffers. Detect the magic number
+  * appropriately and set the correct verifier and call it.
+diff --git a/db/attr.h b/db/attr.h
+index 565d6d8..ba23480 100644
+--- a/db/attr.h
++++ b/db/attr.h
+@@ -36,5 +36,6 @@ extern const field_t	attr3_remote_crc_flds[];
+ 
+ extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
+ extern int	attr_size(void *obj, int startoff, int idx);
++extern void	xfs_attr3_set_crc(struct xfs_buf *bp);
+ 
+ extern const struct xfs_buf_ops xfs_attr3_db_buf_ops;
+diff --git a/db/dir2.c b/db/dir2.c
+index 533f705..3e21a7b 100644
+--- a/db/dir2.c
++++ b/db/dir2.c
+@@ -981,6 +981,43 @@ const field_t	da3_node_hdr_flds[] = {
+ 	{ NULL }
+ };
+ 
++/* Set the CRC. */
++void
++xfs_dir3_set_crc(
++	struct xfs_buf		*bp)
 +{
-+	cd /
-+	rm -rf $tmp.*
++	__be32			magic32;
++	__be16			magic16;
++
++	magic32 = *(__be32 *)bp->b_addr;
++	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
++
++	switch (magic32) {
++	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
++	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_DIR3_DATA_CRC_OFF);
++		return;
++	case cpu_to_be32(XFS_DIR3_FREE_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_DIR3_FREE_CRC_OFF);
++		return;
++	default:
++		break;
++	}
++
++	switch (magic16) {
++	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
++	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_DIR3_LEAF_CRC_OFF);
++		return;
++	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_DA3_NODE_CRC_OFF);
++		return;
++	default:
++		dbprintf(_("Unknown directory buffer type! %x %x\n"), magic32, magic16);
++		break;
++	}
 +}
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+. ./common/quota
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_xfs_fuzz_fields
-+_require_quota
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+echo "${MOUNT_OPTIONS}" | grep -q 'usrquota' || _notrun "user quota disabled"
-+
-+echo "Fuzz user 0 dquot"
-+_scratch_xfs_fuzz_metadata '' 'online'  "dquot -u 0" >> $seqres.full
-+echo "Done fuzzing dquot"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1381.out b/tests/xfs/1381.out
-new file mode 100644
-index 0000000..f656609
---- /dev/null
-+++ b/tests/xfs/1381.out
-@@ -0,0 +1,4 @@
-+QA output created by 1381
-+Format and populate
-+Fuzz user 0 dquot
-+Done fuzzing dquot
-diff --git a/tests/xfs/1382 b/tests/xfs/1382
-new file mode 100755
-index 0000000..fd7e50d
---- /dev/null
-+++ b/tests/xfs/1382
-@@ -0,0 +1,63 @@
-+#! /bin/bash
-+# FS QA Test No. 1380
-+#
-+# Populate a XFS filesystem and fuzz every group dquot field.
-+# Use xfs_repair to fix the corruption.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -rf $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+. ./common/quota
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_xfs_fuzz_fields
-+_require_quota
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+echo "${MOUNT_OPTIONS}" | grep -q 'grpquota' || _notrun "group quota disabled"
-+
-+echo "Fuzz group 0 dquot"
-+_scratch_xfs_fuzz_metadata '' 'offline'  "dquot -g 0" >> $seqres.full
-+echo "Done fuzzing dquot"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1382.out b/tests/xfs/1382.out
-new file mode 100644
-index 0000000..5350eb6
---- /dev/null
-+++ b/tests/xfs/1382.out
-@@ -0,0 +1,4 @@
-+QA output created by 1382
-+Format and populate
-+Fuzz group 0 dquot
-+Done fuzzing dquot
-diff --git a/tests/xfs/1383 b/tests/xfs/1383
-new file mode 100755
-index 0000000..0095b67
---- /dev/null
-+++ b/tests/xfs/1383
-@@ -0,0 +1,63 @@
-+#! /bin/bash
-+# FS QA Test No. 1383
-+#
-+# Populate a XFS filesystem and fuzz every group dquot field.
-+# Use xfs_scrub to fix the corruption.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -rf $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+. ./common/quota
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_xfs_fuzz_fields
-+_require_quota
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+echo "${MOUNT_OPTIONS}" | grep -q 'grpquota' || _notrun "group quota disabled"
-+
-+echo "Fuzz group 0 dquot"
-+_scratch_xfs_fuzz_metadata '' 'online'  "dquot -g 0" >> $seqres.full
-+echo "Done fuzzing dquot"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1383.out b/tests/xfs/1383.out
-new file mode 100644
-index 0000000..3af271b
---- /dev/null
-+++ b/tests/xfs/1383.out
-@@ -0,0 +1,4 @@
-+QA output created by 1383
-+Format and populate
-+Fuzz group 0 dquot
-+Done fuzzing dquot
-diff --git a/tests/xfs/1384 b/tests/xfs/1384
-new file mode 100755
-index 0000000..53b0450
---- /dev/null
-+++ b/tests/xfs/1384
-@@ -0,0 +1,63 @@
-+#! /bin/bash
-+# FS QA Test No. 1384
-+#
-+# Populate a XFS filesystem and fuzz every project dquot field.
-+# Use xfs_repair to fix the corruption.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -rf $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+. ./common/quota
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_xfs_fuzz_fields
-+_require_quota
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+echo "${MOUNT_OPTIONS}" | grep -q 'prjquota' || _notrun "project quota disabled"
-+
-+echo "Fuzz project 0 dquot"
-+_scratch_xfs_fuzz_metadata '' 'offline'  "dquot -p 0" >> $seqres.full
-+echo "Done fuzzing dquot"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1384.out b/tests/xfs/1384.out
-new file mode 100644
-index 0000000..0bba74e
---- /dev/null
-+++ b/tests/xfs/1384.out
-@@ -0,0 +1,4 @@
-+QA output created by 1384
-+Format and populate
-+Fuzz project 0 dquot
-+Done fuzzing dquot
-diff --git a/tests/xfs/1385 b/tests/xfs/1385
-new file mode 100755
-index 0000000..f6fc7b7
---- /dev/null
-+++ b/tests/xfs/1385
-@@ -0,0 +1,63 @@
-+#! /bin/bash
-+# FS QA Test No. 1385
-+#
-+# Populate a XFS filesystem and fuzz every project dquot field.
-+# Use xfs_scrub to fix the corruption.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -rf $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+. ./common/quota
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_xfs_fuzz_fields
-+_require_quota
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+echo "${MOUNT_OPTIONS}" | grep -q 'prjquota' || _notrun "project quota disabled"
-+
-+echo "Fuzz project 0 dquot"
-+_scratch_xfs_fuzz_metadata '' 'online'  "dquot -p 0" >> $seqres.full
-+echo "Done fuzzing dquot"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1385.out b/tests/xfs/1385.out
-new file mode 100644
-index 0000000..e980490
---- /dev/null
-+++ b/tests/xfs/1385.out
-@@ -0,0 +1,4 @@
-+QA output created by 1385
-+Format and populate
-+Fuzz project 0 dquot
-+Done fuzzing dquot
-diff --git a/tests/xfs/group b/tests/xfs/group
-index ffdb061..079dc48 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -421,3 +421,9 @@
- 421 auto quick clone dedupe
- 422 dangerous_scrub dangerous_online_repair
- 423 dangerous_scrub
-+1380 dangerous_fuzzers dangerous_scrub dangerous_repair
-+1381 dangerous_fuzzers dangerous_scrub dangerous_online_repair
-+1382 dangerous_fuzzers dangerous_scrub dangerous_repair
-+1383 dangerous_fuzzers dangerous_scrub dangerous_online_repair
-+1384 dangerous_fuzzers dangerous_scrub dangerous_repair
-+1385 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ /*
+  * Special read verifier for directory buffers. Detect the magic number
+  * appropriately and set the correct verifier and call it.
+diff --git a/db/dir2.h b/db/dir2.h
+index 0c2a62e..1b87cd2 100644
+--- a/db/dir2.h
++++ b/db/dir2.h
+@@ -60,5 +60,6 @@ static inline uint8_t *xfs_dir2_sf_inumberp(xfs_dir2_sf_entry_t *sfep)
+ 
+ extern int	dir2_data_union_size(void *obj, int startoff, int idx);
+ extern int	dir2_size(void *obj, int startoff, int idx);
++extern void	xfs_dir3_set_crc(struct xfs_buf *bp);
+ 
+ extern const struct xfs_buf_ops xfs_dir3_db_buf_ops;
+diff --git a/db/type.c b/db/type.c
+index 10fa54e..bf31e04 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -87,7 +87,7 @@ static const typ_t	__typtab_crc[] = {
+ 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops,
+ 		XFS_AGI_CRC_OFF },
+ 	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
+-		&xfs_attr3_db_buf_ops, TYP_F_NO_CRC_OFF },
++		&xfs_attr3_db_buf_ops, TYP_F_CRC_FUNC, xfs_attr3_set_crc },
+ 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
+ 		&xfs_bmbt_buf_ops, XFS_BTREE_LBLOCK_CRC_OFF },
+ 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
+@@ -102,7 +102,7 @@ static const typ_t	__typtab_crc[] = {
+ 		&xfs_refcountbt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
+ 	{ TYP_DATA, "data", handle_block, NULL, NULL, TYP_F_NO_CRC_OFF },
+ 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
+-		&xfs_dir3_db_buf_ops, TYP_F_NO_CRC_OFF },
++		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
+ 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
+ 		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
+ 	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
+@@ -131,7 +131,7 @@ static const typ_t	__typtab_spcrc[] = {
+ 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops ,
+ 		XFS_AGI_CRC_OFF },
+ 	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
+-		&xfs_attr3_db_buf_ops, TYP_F_NO_CRC_OFF },
++		&xfs_attr3_db_buf_ops, TYP_F_CRC_FUNC, xfs_attr3_set_crc },
+ 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
+ 		&xfs_bmbt_buf_ops, XFS_BTREE_LBLOCK_CRC_OFF },
+ 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
+@@ -146,7 +146,7 @@ static const typ_t	__typtab_spcrc[] = {
+ 		&xfs_refcountbt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
+ 	{ TYP_DATA, "data", handle_block, NULL, NULL, TYP_F_NO_CRC_OFF },
+ 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
+-		&xfs_dir3_db_buf_ops, TYP_F_NO_CRC_OFF },
++		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
+ 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
+ 		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
+ 	{ TYP_INOBT, "inobt", handle_struct, inobt_spcrc_hfld,
+diff --git a/db/type.h b/db/type.h
+index 87ff107..85d89c7 100644
+--- a/db/type.h
++++ b/db/type.h
+@@ -45,6 +45,8 @@ typedef struct typ
+ 	const struct xfs_buf_ops *bops;
+ 	unsigned long		crc_off;
+ #define TYP_F_NO_CRC_OFF	(-1UL)
++#define TYP_F_CRC_FUNC		(-2UL)
++	void			(*set_crc)(struct xfs_buf *);
+ } typ_t;
+ extern const typ_t	*typtab, *cur_typ;
+ 
+diff --git a/db/write.c b/db/write.c
+index d24ea05..266bde4 100644
+--- a/db/write.c
++++ b/db/write.c
+@@ -173,6 +173,9 @@ write_f(
+ 	} else if (iocur_top->dquot_buf) {
+ 		local_ops.verify_write = xfs_verify_recalc_dquot_crc;
+ 		dbprintf(_("Allowing write of corrupted dquot with good CRC\n"));
++	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
++		local_ops.verify_write = iocur_top->typ->set_crc;
++		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
+ 	} else { /* invalid data */
+ 		local_ops.verify_write = xfs_verify_recalc_crc;
+ 		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
 
