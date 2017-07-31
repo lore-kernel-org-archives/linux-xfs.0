@@ -1,92 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:47904 "EHLO mail1.g1.pair.com"
+Received: from verein.lst.de ([213.95.11.211]:57655 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751446AbdGaLRy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 31 Jul 2017 07:17:54 -0400
-Date: Mon, 31 Jul 2017 13:17:54 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: xfs seems performance lower when long time seq write into ssd
-Message-ID: <20170731131754.73fac669@harpe.intellique.com>
-In-Reply-To: <CA+jpiF7jK8m+a6LGKfj-CbfMEHqjsL5ZdagnzOAdRRwNxZg0oA@mail.gmail.com>
-References: <CA+jpiF7jK8m+a6LGKfj-CbfMEHqjsL5ZdagnzOAdRRwNxZg0oA@mail.gmail.com>
+        id S1750933AbdGaMJD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 31 Jul 2017 08:09:03 -0400
+Date: Mon, 31 Jul 2017 14:09:02 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH, RFC] xfs: fix multi-AG deadlock in xfs_bunmapi
+Message-ID: <20170731120902.GA22412@lst.de>
+References: <20170718172545.18065-1-hch@lst.de> <ac50dda7-6147-1bb2-78ed-b49dafaec242@gmail.com> <09500343-740e-0178-c60a-6ea5e6993c11@gmail.com> <20170720074706.GA22218@lst.de> <0eb47db7-24de-a231-be9f-73d9ae1171fd@gmail.com> <20170720074924.GA22278@lst.de> <16f95f63-1111-9d3c-344c-6b42ddab3b55@gmail.com> <20170726130442.GA24681@lst.de> <dfaa4bb9-1915-c1c6-af7e-38cb2d9ad6b7@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/LoXmq39NI=OaM9qmWIKbdcm"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dfaa4bb9-1915-c1c6-af7e-38cb2d9ad6b7@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?UTF-8?B?546L5YuH?= <wang.yong@datatom.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, xfs <xfs@oss.sgi.com>
+To: Nikolay Borisov <n.borisov.lkml@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
---Sig_/LoXmq39NI=OaM9qmWIKbdcm
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Hi Nikolay,
 
-Le Mon, 31 Jul 2017 16:51:29 +0800
-=E7=8E=8B=E5=8B=87 <wang.yong@datatom.com> =C3=A9crivait:
+On Fri, Jul 28, 2017 at 09:05:51AM +0300, Nikolay Borisov wrote:
+> Couldn't repro on 4.11 and 4.10 (which supposedly shouldn't have the
+> fixes). I tried running generic/299 200 times on each kernel. Which
+> exactly are the patches in 4.11 which fix the alloc path?
 
-> Hi All,
-> Recently, I meet a  strange quetion. I have done seq write
-> (blocksize=3D1m) into mount folders.
-> If total bytes is small, the avg write rate is 370MBs (little files :
->  4MB * 256 * 60 )
-> If total bytes is big, the avg write rate is 180MBs  (a lot of files :
->   4MB * 256 * 600)
-> the raw ssd benchmark, seq write is 400MBs.
->=20
-> Can anybody help to explain it?  argument is wrong, or something else.
+My suspects in 4.11 would be:
 
-There are several problems here:
+xfs: don't fail xfs_extent_busy allocation
+xfs: improve handling of busy extents in the low-level allocator
+xfs: fix len comparison in xfs_extent_busy_trim
 
-First you didn't mention which version of xfsprogs you're using (try
-"xfs_repair -V" for instance). You didn't say what your SSD is like
-(make, model, size, flash type, interface, etc), either.
-
-Second, you didn't tell the exact command lines you used in each of
-your tests (small, big, and raw): "dd if=3D/dev/zero...", "iozone", etc?
-and how you measured throughput: is it overall, mean throughput, as
-reported by "dd" after the fact, or did you sample the performance at
-some points during the test?
-
-Third, SSD don't work like HDD. Particularly, you can't simply
-oeverwrite on data blocks that are marked unused but still hold data;
-you must erase them first. Worse, you write pages (typically 4K) but
-erase much larger blocks (typically 128K or more).=20
-
-So you can't benchmark an SSD properly by simply writing again and
-again; you MUST use the "trim" command beforehand, to clean up blocks
-that have been written but NOT actually erased. Else the SSD controller
-will need to perform some "garbage collection" while writing, creating
-slowdowns or even pauses.
-Also notice that many SSD controllers perform on-the-fly compression.
-That may greatly affect performance.
-
-Let's say that your SSD is 1000 GB. You run 10 tests with a 60GB
-data set. That fills in 600 GB of flash.
-
-You erased the files, but *that doesn't necessarily clear the flash*. So
-when you try writing 600 GB the next time, the SSD will use its
-remaining 400 GB, then becomes very slow for the last 200GB because it
-must clear up some space before each write...=20
-
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
-
---Sig_/LoXmq39NI=OaM9qmWIKbdcm
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAll/EeMACgkQX3jQXNUicVZR4gCgljwjDhutINy+GD2YjrhilPqN
-/MQAn2U+qlHQRsyGI1wlUAtdG3fkAmih
-=itTK
------END PGP SIGNATURE-----
-
---Sig_/LoXmq39NI=OaM9qmWIKbdcm--
+4.10 also had a couple allocator fixes, but nothing that looks
+directly related.
