@@ -1,103 +1,349 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50804 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:42018 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751114AbdGaVmG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 31 Jul 2017 17:42:06 -0400
-Subject: Re: [PATCH 2/7] xfs_repair: fix symlink target length checks by
- changing MAXPATHLEN to XFS_SYMLINK_MAXLEN
+        id S1751126AbdGaWFh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 31 Jul 2017 18:05:37 -0400
+Subject: Re: [PATCH 4/7] xfs_db: dump dir/attr btrees
 References: <150153520589.26081.8786864874176090813.stgit@magnolia>
- <150153522140.26081.14216937967974288340.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <2230cbef-442f-08cb-5d05-9c6be38e9f5e@sandeen.net>
-Date: Mon, 31 Jul 2017 16:42:05 -0500
+ <150153523353.26081.1989249017494623271.stgit@magnolia>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <acf15f9c-4e1d-b2eb-4e55-0b91fbd6831f@redhat.com>
+Date: Mon, 31 Jul 2017 17:05:36 -0500
 MIME-Version: 1.0
-In-Reply-To: <150153522140.26081.14216937967974288340.stgit@magnolia>
+In-Reply-To: <150153523353.26081.1989249017494623271.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
 On 7/31/17 4:07 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> XFS has a maximum symlink target length of 1024 bytes; this is a
-> holdover from the Irix days.  Unfortunately, the constant establishing
-> this was 'MAXPATHLEN', and is /not/ the same as the Linux MAXPATHLEN,
-> which is 4096.
+> Dump the directory or extended attribute btree contents.
 > 
-> The kernel enforces its 1024 byte MAXPATHLEN on symlink targets, but
-> xfsprogs picks up the (Linux) system 4096 byte MAXPATHLEN, which means
-> that xfs_repair doesn't complain about oversized symlinks.
-> 
-> Since this is an on-disk format constraint, put the define in the XFS
-> namespace.  As a side effect of the rename, xfs_repair wil detect
-> oversized symlinks and clean them off the system.
-
-null_check() is only used for symlinks today, but it's not described
-as such, so I was on the fence about shortening the ASSERT in there.
-
-but meh, not worth haggling over.
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  repair/dinode.c     |    6 +++---
->  repair/xfs_repair.c |    2 +-
->  2 files changed, 4 insertions(+), 4 deletions(-)
+>  db/btdump.c       |  251 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  man/man8/xfs_db.8 |    1 
+>  2 files changed, 252 insertions(+)
 > 
 > 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index da87217..f005335 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -1259,7 +1259,7 @@ null_check(char *name, int length)
+> diff --git a/db/btdump.c b/db/btdump.c
+> index 3b76e17..e351202 100644
+> --- a/db/btdump.c
+> +++ b/db/btdump.c
+> @@ -227,6 +227,252 @@ dump_inode(
+>  	return ret;
+>  }
+>  
+> +static bool
+> +dir_has_rightsib(
+> +	void				*block,
+> +	int				level)
+> +{
+> +	struct xfs_dir3_icleaf_hdr	lhdr;
+> +	struct xfs_da3_icnode_hdr	nhdr;
+> +
+> +	if (level > 0) {
+> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> +		return nhdr.forw != 0;
+> +	}
+> +	M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
+> +	return lhdr.forw != 0;
+> +}
+> +
+> +static int
+> +dir_level(
+> +	void				*block)
+> +{
+> +	struct xfs_dir3_icleaf_hdr	lhdr;
+> +	struct xfs_da3_icnode_hdr	nhdr;
+> +
+> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
+> +	case cpu_to_be16(XFS_DIR2_LEAF1_MAGIC):
+> +	case cpu_to_be16(XFS_DIR2_LEAFN_MAGIC):
+> +		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
+> +		return 0;
+> +	case cpu_to_be16(XFS_DA_NODE_MAGIC):
+> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> +		return nhdr.level;
+> +	default:
+> +		return -1;
+> +	}
+> +}
+> +
+> +static int
+> +dir3_level(
+> +	void				*block)
+> +{
+> +	struct xfs_dir3_icleaf_hdr	lhdr;
+> +	struct xfs_da3_icnode_hdr	nhdr;
+> +
+> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
+> +	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
+> +	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
+> +		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
+> +		return 0;
+> +	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> +		return nhdr.level;
+> +	default:
+> +		return -1;
+> +	}
+> +}
+> +
+> +static bool
+> +attr_has_rightsib(
+> +	void				*block,
+> +	int				level)
+> +{
+> +        struct xfs_attr_leafblock	lhdr;
+> +	struct xfs_da3_icnode_hdr	nhdr;
+> +
+> +	if (level > 0) {
+> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> +		return nhdr.forw != 0;
+> +	}
+> +	xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
+> +	return lhdr.hdr.info.forw != 0;
+> +}
+> +
+> +static int
+> +attr_level(
+> +	void				*block)
+> +{
+> +        struct xfs_attr_leafblock	lhdr;
+
+funky whitespace
+
+> +	struct xfs_da3_icnode_hdr	nhdr;
+> +
+> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
+> +	case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
+> +		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
+> +		return 0;
+> +	case cpu_to_be16(XFS_DA_NODE_MAGIC):
+> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> +		return nhdr.level;
+> +	default:
+> +		return -1;
+> +	}
+> +}
+> +
+> +static int
+> +attr3_level(
+> +	void				*block)
+> +{
+> +        struct xfs_attr_leafblock	lhdr;
+
+... again
+
+> +	struct xfs_da3_icnode_hdr	nhdr;
+> +
+> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
+> +	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
+> +		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
+> +		return 0;
+> +	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> +		return nhdr.level;
+> +	default:
+> +		return -1;
+> +	}
+> +}
+> +
+> +struct dabprinter {
+> +	const char		*print_node_entries;
+> +	const char		*print_leaf_entries;
+> +	const char		*go_node_forward;
+> +	const char		*go_leaf_forward;
+> +	const char		*go_down;
+> +	bool			(*has_rightsib)(void *, int);
+> +	int			(*level)(void *);
+> +};
+> +
+> +static struct dabprinter attr_print = {
+> +	.print_node_entries	= "btree",
+> +	.print_leaf_entries	= "entries nvlist",
+> +	.go_node_forward	= "hdr.info.forw",
+> +	.go_leaf_forward	= "hdr.info.forw",
+> +	.go_down		= "btree[0].before",
+> +	.has_rightsib		= attr_has_rightsib,
+> +	.level			= attr_level,
+> +};
+> +
+> +static struct dabprinter attr3_print = {
+> +	.print_node_entries	= "btree",
+> +	.print_leaf_entries	= "entries nvlist",
+> +	.go_node_forward	= "hdr.info.hdr.forw",
+> +	.go_leaf_forward	= "hdr.info.hdr.forw",
+> +	.go_down		= "btree[0].before",
+> +	.has_rightsib		= attr_has_rightsib,
+> +	.level			= attr3_level,
+> +};
+> +
+> +static struct dabprinter dir_print = {
+> +	.print_node_entries	= "nbtree",
+> +	.print_leaf_entries	= "lents",
+> +	.go_node_forward	= "nhdr.info.hdr.forw",
+> +	.go_leaf_forward	= "lhdr.info.hdr.forw",
+> +	.go_down		= "nbtree[0].before",
+> +	.has_rightsib		= dir_has_rightsib,
+> +	.level			= dir_level,
+> +};
+> +
+> +static struct dabprinter dir3_print = {
+> +	.print_node_entries	= "nbtree",
+> +	.print_leaf_entries	= "lents",
+> +	.go_node_forward	= "nhdr.info.forw",
+> +	.go_leaf_forward	= "lhdr.info.forw",
+> +	.go_down		= "nbtree[0].before",
+> +	.has_rightsib		= dir_has_rightsib,
+> +	.level			= dir3_level,
+> +};
+> +
+> +static int
+> +dump_dablevel(
+> +	int			level,
+> +	struct dabprinter	*dbp)
+> +{
+> +	xfs_daddr_t		orig_daddr = iocur_top->bb;
+> +	xfs_daddr_t		last_daddr;
+> +	unsigned int		nr;
+> +	int			ret;
+> +
+> +	ret = eval("push");
+
+stupid question, is this different from simply push_cur()? 
+
+> +	if (ret)
+> +		return ret;
+> +
+> +	nr = 1;
+> +	do {
+> +		last_daddr = iocur_top->bb;
+> +		dbprintf(_("%s level %u block %u daddr %llu\n"),
+> +			 iocur_top->typ->name, level, nr, last_daddr);
+> +		ret = eval("print %s", level > 0 ? dbp->print_node_entries :
+> +						   dbp->print_leaf_entries);
+> +		if (ret)
+> +			goto err;
+> +		if (dbp->has_rightsib(iocur_top->data, level)) {
+> +			ret = eval("addr %s", level > 0 ? dbp->go_node_forward :
+> +							  dbp->go_leaf_forward);
+> +			if (ret)
+> +				goto err;
+> +		}
+> +		nr++;
+> +	} while (iocur_top->bb != orig_daddr && iocur_top->bb != last_daddr);
+> +
+> +	ret = eval("pop");
+> +	return ret;
+> +err:
+> +	eval("pop");
+> +	return ret;
+> +}
+> +
+> +static int
+> +dump_dabtree(
+> +	bool				dump_node_blocks,
+> +	struct dabprinter		*dbp)
+> +{
+> +	xfs_daddr_t			orig_daddr = iocur_top->bb;
+> +	xfs_daddr_t			last_daddr;
+> +	int				level;
+> +	int				ret;
+> +
+> +	ret = eval("push");
+> +	if (ret)
+> +		return ret;
+> +
+> +	cur_agno = XFS_FSB_TO_AGNO(mp, XFS_DADDR_TO_FSB(mp, iocur_top->bb));
+> +	level = dbp->level(iocur_top->data);
+> +	if (level < 0) {
+> +		printf(_("Current location is not part of a dir/attr btree.\n"));
+> +		goto err;
+> +	}
+> +
+> +	do {
+> +		last_daddr = iocur_top->bb;
+> +		if (level > 0) {
+> +			if (dump_node_blocks) {
+> +				ret = dump_dablevel(level, dbp);
+> +				if (ret)
+> +					goto err;
+> +			}
+> +			ret = eval("addr %s", dbp->go_down);
+> +		} else {
+> +			ret = dump_dablevel(level, dbp);
+> +		}
+> +		if (ret)
+> +			goto err;
+> +		level--;
+> +	} while (level >= 0 &&
+> +		 iocur_top->bb != orig_daddr &&
+> +		 iocur_top->bb != last_daddr);
+> +
+> +	ret = eval("pop");
+> +	return ret;
+> +err:
+> +	eval("pop");
+> +	return ret;
+> +}
+> +
+>  static int
+>  btdump_f(
+>  	int		argc,
+> @@ -234,6 +480,7 @@ btdump_f(
 >  {
->  	int i;
+>  	bool		aflag = false;
+>  	bool		iflag = false;
+> +	bool		crc = xfs_sb_version_hascrc(&mp->m_sb);
+>  	int		c;
 >  
-> -	ASSERT(length < MAXPATHLEN);
-> +	ASSERT(length < XFS_SYMLINK_MAXLEN);
->  
->  	for (i = 0; i < length; i++, name++)  {
->  		if (*name == '\0')
-> @@ -1371,7 +1371,7 @@ process_symlink(
->  	blkmap_t 	*blkmap)
->  {
->  	char			*symlink;
-> -	char			data[MAXPATHLEN];
-> +	char			data[XFS_SYMLINK_MAXLEN];
->  
->  	/*
->  	 * check size against kernel symlink limits.  we know
-> @@ -1379,7 +1379,7 @@ process_symlink(
->  	 * the inode is structurally ok so we don't have to check
->  	 * for that
->  	 */
-> -	if (be64_to_cpu(dino->di_size) >= MAXPATHLEN)  {
-> +	if (be64_to_cpu(dino->di_size) >= XFS_SYMLINK_MAXLEN)  {
->  	       do_warn(_("symlink in inode %" PRIu64 " too long (%llu chars)\n"),
->  		       lino, (unsigned long long) be64_to_cpu(dino->di_size));
->  		return(1);
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index ab60c0f..b2dd91b 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -761,7 +761,7 @@ main(int argc, char **argv)
->  	glob_agcount = mp->m_sb.sb_agcount;
->  
->  	chunks_pblock = mp->m_sb.sb_inopblock / XFS_INODES_PER_CHUNK;
-> -	max_symlink_blocks = libxfs_symlink_blocks(mp, MAXPATHLEN);
-> +	max_symlink_blocks = libxfs_symlink_blocks(mp, XFS_SYMLINK_MAXLEN);
->  	inodes_per_cluster = MAX(mp->m_sb.sb_inopblock,
->  			mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog);
->  
+>  	if (cur_typ == NULL) {
+> @@ -276,6 +523,10 @@ btdump_f(
+>  		return dump_btree_long(iflag);
+>  	case TYP_INODE:
+>  		return dump_inode(iflag, aflag);
+> +	case TYP_ATTR:
+> +		return dump_dabtree(iflag, crc ? &attr3_print : &attr_print);
+> +	case TYP_DIR2:
+> +		return dump_dabtree(iflag, crc ? &dir3_print : &dir_print);
+>  	default:
+>  		dbprintf(_("type \"%s\" is not a btree type or inode\n"),
+>  				cur_typ->name);
+> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+> index 6a97504..b3129f7 100644
+> --- a/man/man8/xfs_db.8
+> +++ b/man/man8/xfs_db.8
+> @@ -335,6 +335,7 @@ area of the inode, if neither option is given then both areas are shown.
+>  .B btdump [-a] [-i]
+>  If the cursor points to a btree node, dump the btree from that block downward.
+>  If instead the cursor points to an inode, dump the data fork block mapping btree if there is one.
+> +If the cursor points to a directory or extended attribute btree node, dump that.
+>  By default, only records stored in the btree are dumped.
+
+adding this to the command long help would be nice too
+
+xfs_db> help btdump
+btdump [-a] [-i] -- dump btree
+
+ If the cursor points to a btree block, 'btdump' dumps the btree
+ downward from that block.  If the cursor points to an inode,
+ the data fork btree root is selected by default.
+
+ Options:
+   -a -- Display an inode's extended attribute fork btree.
+   -i -- Print internal btree nodes.
+
+
+
+>  .RS 1.0i
+>  .TP 0.4i
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
