@@ -1,78 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:45871 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750858AbdG2Tty (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 29 Jul 2017 15:49:54 -0400
-Subject: [PATCH 0/3] fs, xfs: block map immutable files for dax,
- dma-to-storage, and swap
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 29 Jul 2017 12:43:29 -0700
-Message-ID: <150135740948.35318.10730072114996910905.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:44986 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750877AbdGaSYQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jul 2017 14:24:16 -0400
+Date: Mon, 31 Jul 2017 11:23:52 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/3] fs, xfs: introduce S_IOMAP_IMMUTABLE
+Message-ID: <20170731182352.GE4477@magnolia>
+References: <150135740948.35318.10730072114996910905.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150135741519.35318.16765137368329971936.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <1501516968.579311.1058393288.0714478A@webmail.messagingengine.com>
+ <CAPcyv4h_YWaAXG5pfkOJ0M74i5yEke1SoC3ESErTh41hngtG-w@mail.gmail.com>
+ <1501518747.586018.1058450568.4B6F28FB@webmail.messagingengine.com>
+ <1501522933.602272.1058529880.6C4A2D98@webmail.messagingengine.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1501522933.602272.1058529880.6C4A2D98@webmail.messagingengine.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Colin Walters <walters@verbum.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-tl;dr: The proposed S_IOMAP_IMMUTABLE mechanism
+On Mon, Jul 31, 2017 at 01:42:13PM -0400, Colin Walters wrote:
+> 
+> 
+> On Mon, Jul 31, 2017, at 12:32 PM, Colin Walters wrote:
+> > On Mon, Jul 31, 2017, at 12:29 PM, Dan Williams wrote:
+> > > 
+> > > How is S_CONTENTS_IMMUTABLE different than S_IMMUTABLE?
+> > 
+> > We still want the ability to make hardlinks.
+> 
+> Also of course, symmetrically, to unlink.   If we used S_IMMUTABLE for /etc/sudoers,
+> it'd still be racy since one would have to transiently remove the flag in order
+> to replace it with a new version.
+> 
+> Related to this topic is the fact that S_IMMUTABLE is itself mutable; I
+> think once S_IMMUTABLE_CONTENTS is set, it would not be able to made
+> mutable again.  
+> 
+> Also I just remembered that since then memfd_create() and more notably
+> fcntl(F_ADD_SEALS) landed - in fact it already has flags for what we want
+> here AFAICS.  Your S_IOMAP_IMMUTABLE is fcntl(F_ADD_SEALS, F_SEAL_SHRINK | F_SEAL_GROW)
 
-The daxfile proposal a few weeks back [1] sought to piggy back on the
-swapfile implementation to approximate a block map immutable file. This
-is an idea Dave originated last year to solve the dax "flush from
-userspace" problem [2].
+I don't think F_SEAL_{SHRINK,GROW} prevents reflinking or CoW of file data,
+which are two things that cannot happen under S_IOMAP_IMMUTABLE that
+aren't size changes.  From the implementation it looks like shrink and
+grow are only supposed to disallow changes to i_size, not i_blocks (or
+the file block map).
 
-The discussion yielded several results. First, Christoph pointed out that
-swapfiles are subtly broken [3].  Second, Darrick [4]
-and Dave [5] proposed how to properly implement a block map immutable file.
-Finally, Dave identified some improvements to swapfiles that can be
-built on the block-map-immutable mecahanism. These patches seek to
-implement the first part of the proposal and save the swapfile work to
-build on top once the base mechanism is complete.
+Then again, I suppose F_SEAL_* only work on shmem, so maybe it simply
+isn't defined for any other filesystem...?  e.g. it doesn't prohibit
+reflink, but the only fs implementing seals doesn't support reflink.
 
-While the initial motivation for this feature is support for
-byte-addressable updates of persistent memory and managing cache
-maintenance from userspace, the applications of the feature are broader.
-In addition to being the start of a better swapfile mechanism it can
-also support a DMA-to-storage use case.  This use case enables
-data-acquisition hardware to DMA directly to a storage device address
-while being safe in the knowledge that storage mappings will not change.
+<shrug>
 
-These patches are relative to Darrick's 'devel' tree. Patch 3 is likely
-wrong in the way it sets the new XFS_DIFLAG2_IOMAP_IMMUTABLE flag, but
-seems to work with a basic test. The test just turns the flag on and
-off, checks that the file is fully allocated and immutable, and
-validates that the state persists over a umount / mount cycle. A proper
-xfstest is in the works, but comments on this first draft are welcome.
+Seals cannot be removed, which is too strict for the S_IOMAP_IMMUTABLE
+user cases being presented.
 
-[1]: https://lkml.org/lkml/2017/6/16/790
-[2]: https://lkml.org/lkml/2016/9/11/159
-[3]: https://lkml.org/lkml/2017/6/18/31
-[4]: https://lkml.org/lkml/2017/6/20/49
-[5]: https://www.spinics.net/lists/linux-xfs/msg07871.html
+> and mine just adds in F_SEAL_WRITE.  I think there was some discussion
+> of the seals for persistent files when memfd_create() landed, but I can't
+> find it offhand.
 
----
+--D
 
-Dan Williams (3):
-      fs, xfs: introduce S_IOMAP_IMMUTABLE
-      fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
-      xfs: persist S_IOMAP_IMMUTABLE in di_flags2
-
-
- fs/attr.c                   |   10 ++++
- fs/namei.c                  |    3 +
- fs/open.c                   |   28 ++++++++++++
- fs/read_write.c             |    3 +
- fs/xfs/libxfs/xfs_format.h  |    5 ++
- fs/xfs/xfs_bmap_util.c      |   98 ++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_bmap_util.h      |    4 +-
- fs/xfs/xfs_file.c           |   14 ++++--
- fs/xfs/xfs_ioctl.c          |   10 ++++
- fs/xfs/xfs_iops.c           |    8 ++--
- include/linux/falloc.h      |    3 +
- include/linux/fs.h          |    2 +
- include/uapi/linux/falloc.h |   19 ++++++++
- mm/filemap.c                |    9 ++++
- 14 files changed, 200 insertions(+), 16 deletions(-)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
