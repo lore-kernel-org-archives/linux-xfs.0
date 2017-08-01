@@ -1,339 +1,241 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:53348 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751295AbdHAQVV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 Aug 2017 12:21:21 -0400
-Subject: Re: [PATCH v2 4/7] xfs_db: dump dir/attr btrees
+Received: from aserp1040.oracle.com ([141.146.126.69]:39679 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752096AbdHAUaB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2017 16:30:01 -0400
+Date: Tue, 1 Aug 2017 13:29:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/7] xfs_db: print attribute remote value blocks
+Message-ID: <20170801202953.GJ4477@magnolia>
 References: <150153520589.26081.8786864874176090813.stgit@magnolia>
- <150153523353.26081.1989249017494623271.stgit@magnolia>
- <20170801154053.GH4477@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <da85b931-434d-1a1a-9705-c0497613efba@sandeen.net>
-Date: Tue, 1 Aug 2017 11:21:19 -0500
+ <150153523972.26081.18217476990683895058.stgit@magnolia>
+ <8d87dbcb-862e-c0da-313f-d739e1b836a1@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20170801154053.GH4477@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8d87dbcb-862e-c0da-313f-d739e1b836a1@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On 8/1/17 10:40 AM, Darrick J. Wong wrote:
-> Dump the directory or extended attribute btree contents.
+On Tue, Aug 01, 2017 at 12:15:48PM -0500, Eric Sandeen wrote:
+> On 7/31/17 4:07 PM, Darrick J. Wong wrote:
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  db/btdump.c       |  255 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  man/man8/xfs_db.8 |    1 
->  2 files changed, 255 insertions(+), 1 deletion(-)
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Teach xfs_db how to print the contents of xattr remote value blocks.
 > 
-> diff --git a/db/btdump.c b/db/btdump.c
-> index 3b76e17..f525a4a 100644
-> --- a/db/btdump.c
-> +++ b/db/btdump.c
-> @@ -32,7 +32,9 @@ btdump_help(void)
->  "\n"
->  " If the cursor points to a btree block, 'btdump' dumps the btree\n"
->  " downward from that block.  If the cursor points to an inode,\n"
-> -" the data fork btree root is selected by default.\n"
-> +" the data fork btree root is selected by default.  If the cursor\n"
-> +" points to a directory or extended attribute btree node, the tree\n"
-> +" will be printed downward from that block.\n"
->  "\n"
->  " Options:\n"
->  "   -a -- Display an inode's extended attribute fork btree.\n"
-> @@ -227,6 +229,252 @@ dump_inode(
->  	return ret;
->  }
->  
-> +static bool
-> +dir_has_rightsib(
-> +	void				*block,
-> +	int				level)
-> +{
-> +	struct xfs_dir3_icleaf_hdr	lhdr;
-> +	struct xfs_da3_icnode_hdr	nhdr;
-> +
-> +	if (level > 0) {
-> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-> +		return nhdr.forw != 0;
-> +	}
-> +	M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
-> +	return lhdr.forw != 0;
-> +}
-> +
-> +static int
-> +dir_level(
-> +	void				*block)
-> +{
-> +	struct xfs_dir3_icleaf_hdr	lhdr;
-> +	struct xfs_da3_icnode_hdr	nhdr;
-> +
-> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
-> +	case cpu_to_be16(XFS_DIR2_LEAF1_MAGIC):
-> +	case cpu_to_be16(XFS_DIR2_LEAFN_MAGIC):
-> +		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
-> +		return 0;
-> +	case cpu_to_be16(XFS_DA_NODE_MAGIC):
-> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-> +		return nhdr.level;
-> +	default:
-> +		return -1;
-> +	}
-> +}
-> +
-> +static int
-> +dir3_level(
-> +	void				*block)
-> +{
-> +	struct xfs_dir3_icleaf_hdr	lhdr;
-> +	struct xfs_da3_icnode_hdr	nhdr;
-> +
-> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
-> +	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
-> +	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
-> +		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
-> +		return 0;
-> +	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-> +		return nhdr.level;
-> +	default:
-> +		return -1;
-> +	}
-> +}
-> +
-> +static bool
-> +attr_has_rightsib(
-> +	void				*block,
-> +	int				level)
-> +{
-> +        struct xfs_attr_leafblock	lhdr;
-> +	struct xfs_da3_icnode_hdr	nhdr;
-> +
-> +	if (level > 0) {
-> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-> +		return nhdr.forw != 0;
-> +	}
-> +	xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
-> +	return lhdr.hdr.info.forw != 0;
-> +}
-> +
-> +static int
-> +attr_level(
-> +	void				*block)
-> +{
-> +	struct xfs_attr_leafblock	lhdr;
-> +	struct xfs_da3_icnode_hdr	nhdr;
-> +
-> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
-> +	case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
-> +		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
-> +		return 0;
-> +	case cpu_to_be16(XFS_DA_NODE_MAGIC):
-> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-> +		return nhdr.level;
-> +	default:
-> +		return -1;
-> +	}
-> +}
-> +
-> +static int
-> +attr3_level(
-> +	void				*block)
-> +{
-> +	struct xfs_attr_leafblock	lhdr;
-> +	struct xfs_da3_icnode_hdr	nhdr;
-> +
-> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
-> +	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
-> +		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
-> +		return 0;
-> +	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-> +		return nhdr.level;
-> +	default:
-> +		return -1;
-> +	}
-> +}
-> +
-> +struct dabprinter_ops {
-> +	const char		*print_node_entries;
-> +	const char		*print_leaf_entries;
-> +	const char		*go_node_forward;
-> +	const char		*go_leaf_forward;
-> +	const char		*go_down;
-> +	bool			(*has_rightsib)(void *, int);
-> +	int			(*level)(void *);
-> +};
-> +
-> +static struct dabprinter_ops attr_print = {
-> +	.print_node_entries	= "btree",
-> +	.print_leaf_entries	= "entries nvlist",
-> +	.go_node_forward	= "hdr.info.forw",
-> +	.go_leaf_forward	= "hdr.info.forw",
-> +	.go_down		= "btree[0].before",
-> +	.has_rightsib		= attr_has_rightsib,
-> +	.level			= attr_level,
-> +};
-> +
-> +static struct dabprinter_ops attr3_print = {
-> +	.print_node_entries	= "btree",
-> +	.print_leaf_entries	= "entries nvlist",
-> +	.go_node_forward	= "hdr.info.hdr.forw",
-> +	.go_leaf_forward	= "hdr.info.hdr.forw",
-> +	.go_down		= "btree[0].before",
-> +	.has_rightsib		= attr_has_rightsib,
-> +	.level			= attr3_level,
-> +};
-> +
-> +static struct dabprinter_ops dir_print = {
-> +	.print_node_entries	= "nbtree",
-> +	.print_leaf_entries	= "lents",
-> +	.go_node_forward	= "nhdr.info.hdr.forw",
-> +	.go_leaf_forward	= "lhdr.info.hdr.forw",
-> +	.go_down		= "nbtree[0].before",
-> +	.has_rightsib		= dir_has_rightsib,
-> +	.level			= dir_level,
-> +};
-> +
-> +static struct dabprinter_ops dir3_print = {
-> +	.print_node_entries	= "nbtree",
-> +	.print_leaf_entries	= "lents",
-> +	.go_node_forward	= "nhdr.info.forw",
-> +	.go_leaf_forward	= "lhdr.info.forw",
-> +	.go_down		= "nbtree[0].before",
-> +	.has_rightsib		= dir_has_rightsib,
-> +	.level			= dir3_level,
-> +};
-> +
-> +static int
-> +dump_dablevel(
-> +	int			level,
-> +	struct dabprinter_ops	*dbp)
-> +{
-> +	xfs_daddr_t		orig_daddr = iocur_top->bb;
-> +	xfs_daddr_t		last_daddr;
-> +	unsigned int		nr;
-> +	int			ret;
-> +
-> +	ret = eval("push");
-> +	if (ret)
-> +		return ret;
-> +
-> +	nr = 1;
-> +	do {
-> +		last_daddr = iocur_top->bb;
-> +		dbprintf(_("%s level %u block %u daddr %llu\n"),
-> +			 iocur_top->typ->name, level, nr, last_daddr);
-> +		ret = eval("print %s", level > 0 ? dbp->print_node_entries :
-> +						   dbp->print_leaf_entries);
-> +		if (ret)
-> +			goto err;
-> +		if (dbp->has_rightsib(iocur_top->data, level)) {
-> +			ret = eval("addr %s", level > 0 ? dbp->go_node_forward :
-> +							  dbp->go_leaf_forward);
-> +			if (ret)
-> +				goto err;
-> +		}
-> +		nr++;
-> +	} while (iocur_top->bb != orig_daddr && iocur_top->bb != last_daddr);
-> +
-> +	ret = eval("pop");
-> +	return ret;
-> +err:
-> +	eval("pop");
-> +	return ret;
-> +}
-> +
-> +static int
-> +dump_dabtree(
-> +	bool				dump_node_blocks,
-> +	struct dabprinter_ops		*dbp)
-> +{
-> +	xfs_daddr_t			orig_daddr = iocur_top->bb;
-> +	xfs_daddr_t			last_daddr;
-> +	int				level;
-> +	int				ret;
-> +
-> +	ret = eval("push");
-> +	if (ret)
-> +		return ret;
-> +
-> +	cur_agno = XFS_FSB_TO_AGNO(mp, XFS_DADDR_TO_FSB(mp, iocur_top->bb));
-> +	level = dbp->level(iocur_top->data);
-> +	if (level < 0) {
-> +		printf(_("Current location is not part of a dir/attr btree.\n"));
-> +		goto err;
-> +	}
-> +
-> +	do {
-> +		last_daddr = iocur_top->bb;
-> +		if (level > 0) {
-> +			if (dump_node_blocks) {
-> +				ret = dump_dablevel(level, dbp);
-> +				if (ret)
-> +					goto err;
-> +			}
-> +			ret = eval("addr %s", dbp->go_down);
-> +		} else {
-> +			ret = dump_dablevel(level, dbp);
-> +		}
-> +		if (ret)
-> +			goto err;
-> +		level--;
-> +	} while (level >= 0 &&
-> +		 iocur_top->bb != orig_daddr &&
-> +		 iocur_top->bb != last_daddr);
-> +
-> +	ret = eval("pop");
-> +	return ret;
-> +err:
-> +	eval("pop");
-> +	return ret;
-> +}
-> +
->  static int
->  btdump_f(
->  	int		argc,
-> @@ -234,6 +482,7 @@ btdump_f(
->  {
->  	bool		aflag = false;
->  	bool		iflag = false;
-> +	bool		crc = xfs_sb_version_hascrc(&mp->m_sb);
->  	int		c;
->  
->  	if (cur_typ == NULL) {
-> @@ -276,6 +525,10 @@ btdump_f(
->  		return dump_btree_long(iflag);
->  	case TYP_INODE:
->  		return dump_inode(iflag, aflag);
-> +	case TYP_ATTR:
-> +		return dump_dabtree(iflag, crc ? &attr3_print : &attr_print);
-> +	case TYP_DIR2:
-> +		return dump_dabtree(iflag, crc ? &dir3_print : &dir_print);
->  	default:
->  		dbprintf(_("type \"%s\" is not a btree type or inode\n"),
->  				cur_typ->name);
-> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-> index 6a97504..b3129f7 100644
-> --- a/man/man8/xfs_db.8
-> +++ b/man/man8/xfs_db.8
-> @@ -335,6 +335,7 @@ area of the inode, if neither option is given then both areas are shown.
->  .B btdump [-a] [-i]
->  If the cursor points to a btree node, dump the btree from that block downward.
->  If instead the cursor points to an inode, dump the data fork block mapping btree if there is one.
-> +If the cursor points to a directory or extended attribute btree node, dump that.
->  By default, only records stored in the btree are dumped.
->  .RS 1.0i
->  .TP 0.4i
+> The xfs_db manpage explains what the various attr fields are (hdr, entries,
+> and nvlist) - should the new fields be added to the manpage?
+
+Yeah.
+
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  db/attr.c  |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  db/attr.h  |    1 +
+> >  db/field.c |    3 +++
+> >  db/field.h |    1 +
+> >  4 files changed, 64 insertions(+)
+> > 
+> > 
+> > diff --git a/db/attr.c b/db/attr.c
+> > index 23ffcd5..98fb069 100644
+> > --- a/db/attr.c
+> > +++ b/db/attr.c
+> > @@ -41,6 +41,9 @@ static int	attr_leaf_nvlist_offset(void *obj, int startoff, int idx);
+> >  static int	attr_node_btree_count(void *obj, int startoff);
+> >  static int	attr_node_hdr_count(void *obj, int startoff);
+> >  
+> > +static int	attr_remote_count(void *obj, int startoff);
+> > +static int	attr3_remote_count(void *obj, int startoff);
+> > +
+> >  const field_t	attr_hfld[] = {
+> >  	{ "", FLDT_ATTR, OI(0), C1, 0, TYP_NONE },
+> >  	{ NULL }
+> > @@ -53,6 +56,7 @@ const field_t	attr_flds[] = {
+> >  	  FLD_COUNT, TYP_NONE },
+> >  	{ "hdr", FLDT_ATTR_NODE_HDR, OI(NOFF(hdr)), attr_node_hdr_count,
+> >  	  FLD_COUNT, TYP_NONE },
+> > +	{ "data", FLDT_CHARNS, OI(0), attr_remote_count, FLD_COUNT, TYP_NONE },
+> 
+> I never know how we choose names in xfs_db.  Should this be "value?" Or do you
+> prefer "data" because it may not be the start of, or the full, value?
+
+Correct -- the full attr value is the concatenation of the data fields
+in each block.
+
+I would add that the disk format reference also refers to the space
+after the header as the 'data' area, but that's a little disingenuous
+because I wrote that part of the documentation. :P
+
+> >  	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(LOFF(entries)),
+> >  	  attr_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
+> >  	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(NOFF(__btree)), attr_node_btree_count,
+> > @@ -197,6 +201,33 @@ attr3_leaf_hdr_count(
+> >  	return be16_to_cpu(leaf->hdr.info.hdr.magic) == XFS_ATTR3_LEAF_MAGIC;
+> >  }
+> >  
+> > +static int
+> > +attr_remote_count(
+> > +	void		*obj,
+> > +	int		startoff)
+> > +{
+> > +	if (attr_leaf_hdr_count(obj, startoff) == 0 &&
+> > +	    attr_node_hdr_count(obj, startoff) == 0)
+> > +		return mp->m_sb.sb_blocksize;
+> > +	return 0;
+> > +}
+> > +
+> > +static int
+> > +attr3_remote_count(
+> > +	void		*obj,
+> > +	int		startoff)
+> > +{
+> > +	struct xfs_attr3_rmt_hdr	*hdr = obj;
+> > +
+> > +	ASSERT(startoff == 0);
+> > +
+> > +	if (hdr->rm_magic != cpu_to_be32(XFS_ATTR3_RMT_MAGIC))
+> > +		return 0;
+> > +	if (be32_to_cpu(hdr->rm_bytes) + sizeof(*hdr) > mp->m_sb.sb_blocksize)
+> > +		return mp->m_sb.sb_blocksize - sizeof(*hdr);
+> 
+> XFS_ATTR3_RMT_BUF_SPACE() ?  (h/t bfoster!)
+> 
+> maybe even:
+> 
+> if (be32_to_cpu(hdr->rm_bytes) > XFS_ATTR3_RMT_BUF_SPACE
+> 	return XFS_ATTR3_RMT_BUF_SPACE
+> 
+> 
+> > +	return be32_to_cpu(hdr->rm_bytes);
+
+Yes.
+
+> > +}
+> > +
+> >  typedef int (*attr_leaf_entry_walk_f)(struct xfs_attr_leafblock *,
+> >  				      struct xfs_attr_leaf_entry *, int);
+> >  static int
+> > @@ -477,6 +508,17 @@ attr3_node_hdr_count(
+> >  	return be16_to_cpu(node->hdr.info.hdr.magic) == XFS_DA3_NODE_MAGIC;
+> >  }
+> >  
+> > +static int
+> > +attr3_remote_hdr_count(
+> > +	void			*obj,
+> > +	int			startoff)
+> > +{
+> > +	struct xfs_attr3_rmt_hdr	*node = obj;
+> > +
+> > +	ASSERT(startoff == 0);
+> > +	return be32_to_cpu(node->rm_magic) == XFS_ATTR3_RMT_MAGIC;
+> > +}
+> > +
+> >  int
+> >  attr_size(
+> >  	void	*obj,
+> > @@ -501,6 +543,8 @@ const field_t	attr3_flds[] = {
+> >  	  FLD_COUNT, TYP_NONE },
+> >  	{ "hdr", FLDT_ATTR3_NODE_HDR, OI(N3OFF(hdr)), attr3_node_hdr_count,
+> >  	  FLD_COUNT, TYP_NONE },
+> > +	{ "hdr", FLDT_ATTR3_REMOTE_HDR, OI(0), attr3_remote_hdr_count,
+> > +	  FLD_COUNT, TYP_NONE },
+> 
+> I'm probably just confused - I get it that attr_flds has no remote header
+> type (there is none w/o crcs) but why is there no "data" field
+> added here as well?
+> 
+> >  	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(L3OFF(entries)),
+> >  	  attr3_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
+> >  	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(N3OFF(__btree)),
+> > @@ -543,6 +587,21 @@ const field_t	attr3_node_hdr_flds[] = {
+> >  	{ NULL }
+> >  };
+> >  
+> > +#define	RM3OFF(f)	bitize(offsetof(struct xfs_attr3_rmt_hdr, rm_ ## f))
+> > +const struct field	attr3_remote_crc_flds[] = {
+> > +	{ "magic", FLDT_UINT32X, OI(RM3OFF(magic)), C1, 0, TYP_NONE },
+> > +	{ "offset", FLDT_UINT32D, OI(RM3OFF(offset)), C1, 0, TYP_NONE },
+> > +	{ "bytes", FLDT_UINT32D, OI(RM3OFF(bytes)), C1, 0, TYP_NONE },
+> > +	{ "crc", FLDT_CRC, OI(RM3OFF(crc)), C1, 0, TYP_NONE },
+> > +	{ "uuid", FLDT_UUID, OI(RM3OFF(uuid)), C1, 0, TYP_NONE },
+> > +	{ "owner", FLDT_INO, OI(RM3OFF(owner)), C1, 0, TYP_NONE },
+> > +	{ "bno", FLDT_DFSBNO, OI(RM3OFF(blkno)), C1, 0, TYP_BMAPBTD },
+> > +	{ "lsn", FLDT_UINT64X, OI(RM3OFF(lsn)), C1, 0, TYP_NONE },
+> > +	{ "data", FLDT_CHARNS, OI(bitize(sizeof(struct xfs_attr3_rmt_hdr))),
+> > +		attr3_remote_count, FLD_COUNT, TYP_NONE },
+> > +	{ NULL }
+> 
+> I'm having trouble grokking how the /data/ lands under what seems to be
+> described as the header.
+> 
+> "attr3_remote_hdr" -> attr3_remote_crc_flds -> header /+ data/
+
+Yes, you're right, the "data" item should be in attr3_flds, not
+attr3_remote_crc_flds.
+
+--D
+
+> I guess I need to just test drive the patch a bit and see if it makes more
+> sense.
+> 
+> Thanks,
+> -eric
+> 
+> > +};
+> > +
+> >  /*
+> >   * Special read verifier for attribute buffers. Detect the magic number
+> >   * appropriately and set the correct verifier and call it.
+> > diff --git a/db/attr.h b/db/attr.h
+> > index 21848c1..565d6d8 100644
+> > --- a/db/attr.h
+> > +++ b/db/attr.h
+> > @@ -32,6 +32,7 @@ extern const field_t	attr3_leaf_hdr_flds[];
+> >  extern const field_t	attr3_node_hdr_flds[];
+> >  extern const field_t	attr3_blkinfo_flds[];
+> >  extern const field_t	attr3_node_hdr_flds[];
+> > +extern const field_t	attr3_remote_crc_flds[];
+> >  
+> >  extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
+> >  extern int	attr_size(void *obj, int startoff, int idx);
+> > diff --git a/db/field.c b/db/field.c
+> > index f1e5f35..ae4c805 100644
+> > --- a/db/field.c
+> > +++ b/db/field.c
+> > @@ -99,6 +99,9 @@ const ftattr_t	ftattrtab[] = {
+> >  	{ FLDT_ATTR3_NODE_HDR, "attr3_node_hdr", NULL,
+> >  	  (char *)attr3_node_hdr_flds, SI(bitsz(struct xfs_da3_node_hdr)),
+> >  	  0, NULL, attr3_node_hdr_flds },
+> > +	{ FLDT_ATTR3_REMOTE_HDR, "attr3_remote_hdr", NULL,
+> > +	  (char *)attr3_remote_crc_flds, attr_size, FTARG_SIZE, NULL,
+> > +	  attr3_remote_crc_flds },
+> >  
+> >  	{ FLDT_BMAPBTA, "bmapbta", NULL, (char *)bmapbta_flds, btblock_size,
+> >  	  FTARG_SIZE, NULL, bmapbta_flds },
+> > diff --git a/db/field.h b/db/field.h
+> > index d1a7095..a8df29b 100644
+> > --- a/db/field.h
+> > +++ b/db/field.h
+> > @@ -47,6 +47,7 @@ typedef enum fldt	{
+> >  	FLDT_ATTR3_BLKINFO,
+> >  	FLDT_ATTR3_LEAF_HDR,
+> >  	FLDT_ATTR3_NODE_HDR,
+> > +	FLDT_ATTR3_REMOTE_HDR,
+> >  
+> >  	FLDT_BMAPBTA,
+> >  	FLDT_BMAPBTA_CRC,
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
