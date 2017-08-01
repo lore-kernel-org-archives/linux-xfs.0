@@ -1,241 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39439 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752154AbdHBIho (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Aug 2017 04:37:44 -0400
-Date: Wed, 2 Aug 2017 16:37:42 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 3/5] common/inject: refactor helpers to use new errortag
- interface
-Message-ID: <20170802083742.GU9167@eguan.usersys.redhat.com>
-References: <150067465981.30639.14801416171688538711.stgit@magnolia>
- <150067468569.30639.11717903404151243816.stgit@magnolia>
+Received: from cloud1-vm154.de-nserver.de ([178.250.10.56]:38635 "EHLO
+        cloud1-vm154.de-nserver.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751697AbdHAIM7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2017 04:12:59 -0400
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Subject: metadata I/O error: block 0x575b6d70,("xfs_trans_read_buf_map") error
+ 4 numblks 16
+Message-ID: <e4606e43-468e-431c-1663-6b167cc5648b@profihost.ag>
+Date: Tue, 1 Aug 2017 10:12:57 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150067468569.30639.11717903404151243816.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: de-DE
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Jul 21, 2017 at 03:04:45PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Refactor the XFS error injection helpers to use the new errortag
-> interface to configure error injection.  If that isn't present, fall
-> back either to the xfs_io/ioctl based injection or the older sysfs
-> knobs.  Refactor existing testcases to use the new helpers.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Hello,
 
-This looks good to me overall, but I still perfer let other people
-who're more familar with XFS errortag and error injection to review too.
-While I do have some questions/comments :)
+under very high load i'm getting the following error on a bcache device
+using XFS:
+XFS (bcache1): metadata I/O error: block 0x575b6d70
+("xfs_trans_read_buf_map") error 4 numblks 16
+XFS (bcache1): xfs_imap_to_bp: xfs_trans_read_buf() returned error -4.
+XFS (bcache1): xfs_do_force_shutdown(0x8) called from line 3519 of file
+fs/xfs/xfs_inode.c. Return address = 0xffffffff993441ff
+XFS (bcache1): Corruption of in-memory data detected. Shutting down
+filesystem
+XFS (bcache1): Please umount the filesystem and rectify the problem(s)
+XFS (bcache1): xfs_log_force: error -5 returned.
+XFS (bcache1): xfs_log_force: error -5 returned.
+XFS (bcache1): xfs_log_force: error -5 returned.
 
-> ---
->  common/inject |   58 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
->  tests/xfs/141 |    5 +++--
->  tests/xfs/196 |   17 ++++++-----------
->  3 files changed, 65 insertions(+), 15 deletions(-)
-> 
-> 
-> diff --git a/common/inject b/common/inject
-> index 8ecc290..9aa24de 100644
-> --- a/common/inject
-> +++ b/common/inject
-> @@ -35,10 +35,46 @@ _require_error_injection()
->  	esac
->  }
->  
-> +# Find a given xfs mount's errortag injection knob in sysfs
-> +_find_xfs_mount_errortag_knob()
+The used kernel is 4.4.79 based while using an opensuses patchset. Is
+this something which is a known problem or something suse has broken?
 
-While The function name and comment both indicate it needs a mounted
-XFS, it seems weird that the first argument is expected to be a block
-device. And do we need to check if the given device is really mounted?
+Thanks!
 
-> +{
-> +	dev="$1"
-> +	knob="$2"
-> +	shortdev="$(_short_dev "${dev}")"
-> +	tagfile="/sys/fs/xfs/${shortdev}/errortag/${knob}"
-> +
-> +	# Some of the new sysfs errortag knobs were previously available via
-> +	# another sysfs path.
-> +	case "${knob}" in
-> +	"log_bad_crc")
-> +		if [ ! -w "${tagfile}" ]; then
-> +			tagfile="/sys/fs/xfs/${shortdev}/log/log_badcrc_factor"
-> +		fi
-> +		;;
-> +	"drop_writes")
-> +		if [ ! -w "${tagfile}" ]; then
-> +			tagfile="/sys/fs/xfs/${shortdev}/drop_writes"
-> +		fi
-> +		if [ ! -w "${tagfile}" ]; then
-> +			tagfile="/sys/fs/xfs/${shortdev}/fail_writes"
-> +		fi
-> +		;;
-> +	*)
-> +		;;
-> +	esac
-> +
-> +	echo "${tagfile}"
-> +}
-> +
->  # Requires that xfs_io inject command knows about this error type
->  _require_xfs_io_error_injection()
->  {
->  	type="$1"
-> +
-> +	# Can we find the error injection knobs via the new errortag
-> +	# configuration mechanism?
-> +	test -w "$(_find_xfs_mount_errortag_knob "${TEST_DEV}" "${type}")" && return
-> +
-
-As this check goes prior to the _require_error_injection check, so I
-assume this new errortag framework doesn't depend on a debug built XFS,
-can I?
-
->  	_require_error_injection
->  
->  	# NOTE: We can't actually test error injection here because xfs
-> @@ -54,16 +90,34 @@ _require_xfs_io_error_injection()
->  _test_inject_error()
->  {
->  	type="$1"
-> +	value="$2"
->  
-> -	$XFS_IO_PROG -x -c "inject $type" $TEST_DIR
-> +	knob="$(_find_xfs_mount_errortag_knob "${TEST_DEV}" "${type}")"
-> +	if [ -w "${knob}" ]; then
-> +		test -z "${value}" && value="default"
-> +		echo -n "${value}" > "${knob}"
-> +	elif [ -z "${value}" ] || [ "${value}" = "default" ]; then
-> +		$XFS_IO_PROG -x -c "inject $type" $TEST_DIR
-> +	else
-> +		_notrun "Cannot inject error ${type} value ${value}."
-
-_require_xfs_io_error_injection already made sure we can do error
-jection, it looks like a bug somewhere to me if we can't inject error
-here, either wanted to inject error without checking the support status
-first or an implementation bug in the error injection framework in
-xfstests. So "_fail" might be the right choice.
-
-> +	fi
->  }
->  
->  # Inject an error into the scratch fs
->  _scratch_inject_error()
->  {
->  	type="$1"
-> +	value="$2"
->  
-> -	$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
-> +	knob="$(_find_xfs_mount_errortag_knob "${SCRATCH_DEV}" "${type}")"
-> +	if [ -w "${knob}" ]; then
-> +		test -z "${value}" && value="default"
-> +		echo -n "${value}" > "${knob}"
-> +	elif [ -z "${value}" ] || [ "${value}" = "default" ]; then
-> +		$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
-> +	else
-> +		_notrun "Cannot inject error ${type} value ${value}."
-
-Same here.
-
-Thanks,
-Eryu
-
-> +	fi
->  }
->  
->  # Unmount and remount the scratch device, dumping the log
-> diff --git a/tests/xfs/141 b/tests/xfs/141
-> index 56ff14e..f61e524 100755
-> --- a/tests/xfs/141
-> +++ b/tests/xfs/141
-> @@ -47,13 +47,14 @@ rm -f $seqres.full
->  
->  # get standard environment, filters and checks
->  . ./common/rc
-> +. ./common/inject
->  
->  # real QA test starts here
->  
->  # Modify as appropriate.
->  _supported_fs xfs
->  _supported_os Linux
-> -_require_xfs_sysfs $(_short_dev $TEST_DEV)/log/log_badcrc_factor
-> +_require_xfs_io_error_injection "log_bad_crc"
->  _require_scratch
->  _require_command "$KILLALL_PROG" killall
->  
-> @@ -69,7 +70,7 @@ for i in $(seq 1 5); do
->  	# (increase this value to run fsstress longer).
->  	factor=$((RANDOM % 100 + 1))
->  	echo iteration $i log_badcrc_factor: $factor >> $seqres.full 2>&1
-> -	echo $factor > /sys/fs/xfs/$sdev/log/log_badcrc_factor
-> +	_scratch_inject_error "log_bad_crc" "$factor"
->  
->  	# Run fsstress until the filesystem shuts down. It will shut down
->  	# automatically when error injection triggers.
-> diff --git a/tests/xfs/196 b/tests/xfs/196
-> index e9b0649..fe3f570 100755
-> --- a/tests/xfs/196
-> +++ b/tests/xfs/196
-> @@ -45,6 +45,7 @@ _cleanup()
->  # get standard environment, filters and checks
->  . ./common/rc
->  . ./common/punch
-> +. ./common/inject
->  
->  # real QA test starts here
->  rm -f $seqres.full
-> @@ -53,13 +54,7 @@ rm -f $seqres.full
->  _supported_fs generic
->  _supported_os Linux
->  _require_scratch
-> -
-> -DROP_WRITES="drop_writes"
-> -# replace "drop_writes" with "fail_writes" for old kernel
-> -if [ -f /sys/fs/xfs/$(_short_dev $TEST_DEV)/fail_writes ];then
-> -	DROP_WRITES="fail_writes"
-> -fi
-> -_require_xfs_sysfs $(_short_dev $TEST_DEV)/${DROP_WRITES}
-> +_require_xfs_io_error_injection "drop_writes"
->  
->  _scratch_mkfs >/dev/null 2>&1
->  _scratch_mount
-> @@ -72,7 +67,7 @@ bytes=$((64 * 1024))
->  $XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
->  
->  # Enable write drops. All buffered writes are dropped from this point on.
-> -echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> +_scratch_inject_error "drop_writes" 1
->  
->  # Write every other 4k range to split the larger delalloc extent into many more
->  # smaller extents. Use pwrite because with write failures enabled, all
-> @@ -89,7 +84,7 @@ for i in $(seq 4096 8192 $endoff); do
->  	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
->  done
->  
-> -echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> +_scratch_inject_error "drop_writes" 0
->  
->  _scratch_cycle_mount
->  $XFS_IO_PROG -c 'bmap -vp' $file | _filter_bmap
-> @@ -104,9 +99,9 @@ for offset in $(seq 0 100 500); do
->  	$XFS_IO_PROG -fc "pwrite ${offset}m 100m" $file >> $seqres.full 2>&1
->  
->  	punchoffset=$((offset + 75))
-> -	echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> +	_scratch_inject_error "drop_writes"
->  	$XFS_IO_PROG -c "pwrite ${punchoffset}m 4k" $file >> $seqres.full 2>&1
-> -	echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> +	_scratch_inject_error "drop_writes" 0
->  done
->  
->  echo "Silence is golden."
-> 
+Greets,
+Stefan
