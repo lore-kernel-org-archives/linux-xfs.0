@@ -1,330 +1,237 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53650 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752139AbdHBJNJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Aug 2017 05:13:09 -0400
-Date: Wed, 2 Aug 2017 11:13:05 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 1/7] xfs: remove double-underscore integer types
-Message-ID: <20170802091305.oyxfyhw4eagmatq3@hades.localdomain>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21203 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752297AbdHAVEz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2017 17:04:55 -0400
+Date: Tue, 1 Aug 2017 14:04:49 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 5/7] xfs_db: print attribute remote value blocks
+Message-ID: <20170801210449.GK4477@magnolia>
 References: <150153520589.26081.8786864874176090813.stgit@magnolia>
- <150153521484.26081.9491485993495513310.stgit@magnolia>
+ <150153523972.26081.18217476990683895058.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150153521484.26081.9491485993495513310.stgit@magnolia>
+In-Reply-To: <150153523972.26081.18217476990683895058.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-Hi,
+Teach xfs_db how to print the contents of xattr remote value blocks.
 
-On Mon, Jul 31, 2017 at 02:06:54PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> This is a purely mechanical patch that removes the private
-> __{u,}int{8,16,32,64}_t typedefs in favor of using the system
-> {u,}int{8,16,32,64}_t typedefs.  This is the sed script used to perform
-> the transformation and fix the resulting whitespace and indentation
-> errors:
-> 
-> s/typedef\t__uint8_t/typedef __uint8_t\t/g
-> s/typedef\t__uint/typedef __uint/g
-> s/typedef\t__int\([0-9]*\)_t/typedef int\1_t\t/g
-> s/__uint8_t\t/__uint8_t\t\t/g
-> s/__uint/uint/g
-> s/__int\([0-9]*\)_t\t/__int\1_t\t\t/g
-> s/__int/int/g
-> /^typedef.*int[0-9]*_t;$/d
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: update manpage, fix some field placement and function naming problems
+---
+ db/attr.c         |   63 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/attr.h         |    1 +
+ db/field.c        |    3 +++
+ db/field.h        |    1 +
+ man/man8/xfs_db.8 |   38 ++++++++++++++++++++++++++++++--
+ 5 files changed, 104 insertions(+), 2 deletions(-)
 
-Loos fine, with a few space X tabs cosmetic changes maybe worth to change?
-
-
-Anyway, just a suggestion, changing it or not:
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  
-> diff --git a/db/bit.h b/db/bit.h
-> index 80ba24c..9fd71f4 100644
-> --- a/db/bit.h
-> +++ b/db/bit.h
-> @@ -25,5 +25,5 @@
->  #define	BVUNSIGNED	0
->  #define	BVSIGNED	1
->  
-> -extern __int64_t	getbitval(void *obj, int bitoff, int nbits, int flags);
-> +extern int64_t		getbitval(void *obj, int bitoff, int nbits, int flags);
->  extern void             setbitval(void *obuf, int bitoff, int nbits, void *ibuf);
-
-		^ Maybe worth to fix this space x tabs while in this code?
-
-> diff --git a/db/io.h b/db/io.h
-> index 9973004..df0fdd7 100644
-> --- a/db/io.h
-> +++ b/db/io.h
-> @@ -25,7 +25,7 @@ typedef struct bbmap {
->  } bbmap_t;
->  
->  typedef struct iocur {
-> -	__int64_t		bb;	/* BB number in filesystem of buf */
-> +	int64_t			bb;	/* BB number in filesystem of buf */
->  	int			blen;	/* length of "buf", bb's */
->  	int			boff;	/* data - buf */
->  	void			*buf;	/* base address of buffer */
-> @@ -33,7 +33,7 @@ typedef struct iocur {
->  	xfs_ino_t		dirino;	/* current directory inode number */
->  	xfs_ino_t		ino;	/* current inode number */
->  	int			len;	/* length of "data", bytes */
-> -	__uint16_t		mode;	/* current inode's mode */
-> +	uint16_t		mode;	/* current inode's mode */
->  	xfs_off_t		off;	/* fs offset of "data" in bytes */
->  	const struct typ	*typ;	/* type of "data" */
->  	bbmap_t			*bbmap;	/* map daddr if fragmented */
-> @@ -57,7 +57,7 @@ extern void	off_cur(int off, int len);
->  extern void	pop_cur(void);
->  extern void	print_iocur(char *tag, iocur_t *ioc);
->  extern void	push_cur(void);
-> -extern int	read_buf(__int64_t daddr, int count, void *bufp);
-> +extern int	read_buf(int64_t daddr, int count, void *bufp);
->  extern void     write_cur(void);
-
-		^^
-
->  
-> diff --git a/db/sb.c b/db/sb.c
-> index 8e7722c..f19248d 100644
-> --- a/db/sb.c
-> +++ b/db/sb.c
-> @@ -606,7 +606,7 @@ version_help(void)
->  }
->  
->  static int
-> -do_version(xfs_agnumber_t agno, __uint16_t version, __uint32_t features)
-> +do_version(xfs_agnumber_t agno, uint16_t version, uint32_t features)
->  {
->  	xfs_sb_t	tsb;
->  
-> @@ -710,8 +710,8 @@ version_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	__uint16_t	version = 0;
-> -	__uint32_t	features = 0;
-> +	uint16_t	version = 0;
-> +	uint32_t	features = 0;
->  	xfs_agnumber_t	ag;
->  
->  	if (argc == 2) {	/* WRITE VERSION */
-> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index 517b75f..d4846a3 100644
-> --- a/fsr/xfs_fsr.c
-> +++ b/fsr/xfs_fsr.c
-> @@ -54,7 +54,7 @@ struct getbmap  *outmap = NULL;
->  int             outmap_size = 0;
-
-	^^^
-
->  int		RealUid;
->  int		tmp_agi;
-> -static __int64_t	minimumfree = 2048;
-> +static int64_t		minimumfree = 2048;
->  
->  #define MNTTYPE_XFS             "xfs"
->  
-			^^^
-
-> diff --git a/include/xfs_arch.h b/include/xfs_arch.h
-> index 12cd43e..186cadb 100644
-> --- a/include/xfs_arch.h
-> +++ b/include/xfs_arch.h
-> @@ -244,39 +244,39 @@ static inline void be64_add_cpu(__be64 *a, __s64 b)
->  	*a = cpu_to_be64(be64_to_cpu(*a) + b);
->  }
->  
-> -static inline __uint16_t get_unaligned_be16(void *p)
-> +static inline uint16_t get_unaligned_be16(void *p)
->  {
-> -	__uint8_t *__p = p;
-> +	uint8_t *__p = p;
->  	return __p[0] << 8 | __p[1];
->  }
->  
-> -static inline __uint32_t get_unaligned_be32(void *p)
-> +static inline uint32_t get_unaligned_be32(void *p)
->  {
-> -	__uint8_t *__p = p;
-> +	uint8_t *__p = p;
->          return __p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
-
- ^^^
-
->  /*
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index 6c8a192..43b4f1d 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -118,9 +118,9 @@ static void unmount_record(void *p)
->  	xlog_op_header_t	*op = (xlog_op_header_t *)p;
->  	/* the data section must be 32 bit size aligned */
->  	struct {
-> -	    __uint16_t magic;
-> -	    __uint16_t pad1;
-> -	    __uint32_t pad2; /* may as well make it 64 bits */
-> +	    uint16_t magic;
-> +	    uint16_t pad1;
-> +	    uint32_t pad2; /* may as well make it 64 bits */
->  	} magic = { XLOG_UNMOUNT_TYPE, 0, 0 };
-
-	^^^
-> diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-> index 0dfcfd1..fe27f15 100644
-> --- a/logprint/log_misc.c
-> +++ b/logprint/log_misc.c
-> @@ -166,12 +166,12 @@ xlog_print_trans_header(char **ptr, int len)
->  {
->      xfs_trans_header_t  *h;
->      char		*cptr = *ptr;
-> -    __uint32_t          magic;
-> +    uint32_t          magic;
->      char                *magic_c = (char *)&magic;
->  
-
-	^^^^
-
-
->      *ptr += len;
->  
-> -    magic=*(__uint32_t*)cptr; /* XXX be32_to_cpu soon */
-> +    magic=*(uint32_t*)cptr; /* XXX be32_to_cpu soon */
->  
->      if (len >= 4) {
->  #if __BYTE_ORDER == __LITTLE_ENDIAN
-> @@ -201,7 +201,7 @@ xlog_print_trans_buffer(char **ptr, int len, int *i, int num_ops)
->      int			 num, skip;
->      int			 super_block = 0;
->      int			 bucket, col, buckets;
-> -    __int64_t		 blkno;
-> +    int64_t			 blkno;
->      xfs_buf_log_format_t lbuf;
->      int			 size, blen, map_size, struct_size;
->      __be64		 x, y;
-
-	^^^
-
-> --- a/repair/attr_repair.h
-> +++ b/repair/attr_repair.h
-> @@ -32,10 +32,10 @@
->  #define ACL_WRITE	02
->  #define ACL_EXECUTE	01
->  
->   */
->  #define XFS_MAC_MAX_SETS	250
->  typedef struct xfs_mac_label {
-> -	__uint8_t       ml_msen_type;	/* MSEN label type */
-> -	__uint8_t       ml_mint_type;	/* MINT label type */
-> -	__uint8_t       ml_level;	/* Hierarchical level */
-> -	__uint8_t       ml_grade;	/* Hierarchical grade */
-> -	__uint16_t      ml_catcount;	/* Category count */
-> -	__uint16_t      ml_divcount;	/* Division count */
-> +	uint8_t       ml_msen_type;	/* MSEN label type */
-> +	uint8_t       ml_mint_type;	/* MINT label type */
-> +	uint8_t       ml_level;	/* Hierarchical level */
-> +	uint8_t       ml_grade;	/* Hierarchical grade */
-> +	uint16_t      ml_catcount;	/* Category count */
-> +	uint16_t      ml_divcount;	/* Division count */
->  					/* Category set, then Division set */
-> -	__uint16_t      ml_list[XFS_MAC_MAX_SETS];
-> +	uint16_t      ml_list[XFS_MAC_MAX_SETS];
-
-		^^^
->  } xfs_mac_label_t;
-
-> diff --git a/repair/avl64.c b/repair/avl64.c
-> index 51cd624..8f4a121 100644
-> --- a/repair/avl64.c
-> +++ b/repair/avl64.c
-> @@ -70,8 +70,8 @@ avl64_checktree(
->  	avl64node_t *root)
->  {
->  	avl64node_t *nlast, *nnext, *np;
-> -	__uint64_t offset = 0;
-> -	__uint64_t end;
-> +	uint64_t offset = 0;
-> +	uint64_t end;
->  
->  	nlast = nnext = root;
->  
->  avl64node_t *
->  avl64_insert_find_growth(
->  		avl64tree_desc_t *tree,
-> -		__uint64_t start,	/* range start at start, */
-> -		__uint64_t end,	/* exclusive */
-> +		uint64_t start,	/* range start at start, */
-> +		uint64_t end,	/* exclusive */
->  		int   *growthp)	/* OUT */
-		   ^^^
->  {
->  	avl64node_t *np = tree->avl_root;
-> @@ -1378,8 +1378,8 @@ avl64_findadjacent(
->  void
->  avl64_findranges(
->  	avl64tree_desc_t *tree,
-> -	__uint64_t start,
-> -	__uint64_t end,
-> +	uint64_t start,
-> +	uint64_t end,
->  	avl64node_t	        **startp,
-
-			^^^
-
->  	avl64node_t		**endp)
->  {
-> diff --git a/repair/avl64.h b/repair/avl64.h
-> index fd19321..cd079a0 100644
-> --- a/repair/avl64.h
-> +++ b/repair/avl64.h
-> @@ -32,8 +32,8 @@ typedef struct	avl64node {
->   * avl-tree operations
->   */
->  
->  avl64node_t *
->  avl64_findanyrange(
->  	avl64tree_desc_t *tree,
-> -	__uint64_t	start,
-> -	__uint64_t	end,
-> +	uint64_t	start,
-> +	uint64_t	end,
->  	int     checklen);
-
-	^^^
->  
->  
->  avl64node_t *
->  avl64_findadjacent(
->  	avl64tree_desc_t *tree,
-> -	__uint64_t	value,
-> +	uint64_t	value,
->  	int		dir);
->  
->  void
->  avl64_findranges(
->  	avl64tree_desc_t *tree,
-> -	__uint64_t	start,
-> -	__uint64_t	end,
-> +	uint64_t	start,
-> +	uint64_t	end,
->  	avl64node_t	        **startp,
-
-			^^^
-
->  	avl64node_t		**endp);
->  
-
--- 
-Carlos
+diff --git a/db/attr.c b/db/attr.c
+index 23ffcd5..0284fd4 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -41,6 +41,10 @@ static int	attr_leaf_nvlist_offset(void *obj, int startoff, int idx);
+ static int	attr_node_btree_count(void *obj, int startoff);
+ static int	attr_node_hdr_count(void *obj, int startoff);
+ 
++static int	attr_remote_data_count(void *obj, int startoff);
++static int	attr3_remote_hdr_count(void *obj, int startoff);
++static int	attr3_remote_data_count(void *obj, int startoff);
++
+ const field_t	attr_hfld[] = {
+ 	{ "", FLDT_ATTR, OI(0), C1, 0, TYP_NONE },
+ 	{ NULL }
+@@ -53,6 +57,8 @@ const field_t	attr_flds[] = {
+ 	  FLD_COUNT, TYP_NONE },
+ 	{ "hdr", FLDT_ATTR_NODE_HDR, OI(NOFF(hdr)), attr_node_hdr_count,
+ 	  FLD_COUNT, TYP_NONE },
++	{ "data", FLDT_CHARNS, OI(0), attr_remote_data_count, FLD_COUNT,
++	  TYP_NONE },
+ 	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(LOFF(entries)),
+ 	  attr_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
+ 	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(NOFF(__btree)), attr_node_btree_count,
+@@ -197,6 +203,35 @@ attr3_leaf_hdr_count(
+ 	return be16_to_cpu(leaf->hdr.info.hdr.magic) == XFS_ATTR3_LEAF_MAGIC;
+ }
+ 
++static int
++attr_remote_data_count(
++	void				*obj,
++	int				startoff)
++{
++	if (attr_leaf_hdr_count(obj, startoff) == 0 &&
++	    attr_node_hdr_count(obj, startoff) == 0)
++		return mp->m_sb.sb_blocksize;
++	return 0;
++}
++
++static int
++attr3_remote_data_count(
++	void				*obj,
++	int				startoff)
++{
++	struct xfs_attr3_rmt_hdr	*hdr = obj;
++	size_t				buf_space;
++
++	ASSERT(startoff == 0);
++
++	if (hdr->rm_magic != cpu_to_be32(XFS_ATTR3_RMT_MAGIC))
++		return 0;
++	buf_space = XFS_ATTR3_RMT_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
++	if (be32_to_cpu(hdr->rm_bytes) > buf_space)
++		return buf_space;
++	return be32_to_cpu(hdr->rm_bytes);
++}
++
+ typedef int (*attr_leaf_entry_walk_f)(struct xfs_attr_leafblock *,
+ 				      struct xfs_attr_leaf_entry *, int);
+ static int
+@@ -477,6 +512,17 @@ attr3_node_hdr_count(
+ 	return be16_to_cpu(node->hdr.info.hdr.magic) == XFS_DA3_NODE_MAGIC;
+ }
+ 
++static int
++attr3_remote_hdr_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_attr3_rmt_hdr	*node = obj;
++
++	ASSERT(startoff == 0);
++	return be32_to_cpu(node->rm_magic) == XFS_ATTR3_RMT_MAGIC;
++}
++
+ int
+ attr_size(
+ 	void	*obj,
+@@ -501,6 +547,10 @@ const field_t	attr3_flds[] = {
+ 	  FLD_COUNT, TYP_NONE },
+ 	{ "hdr", FLDT_ATTR3_NODE_HDR, OI(N3OFF(hdr)), attr3_node_hdr_count,
+ 	  FLD_COUNT, TYP_NONE },
++	{ "hdr", FLDT_ATTR3_REMOTE_HDR, OI(0), attr3_remote_hdr_count,
++	  FLD_COUNT, TYP_NONE },
++	{ "data", FLDT_CHARNS, OI(bitize(sizeof(struct xfs_attr3_rmt_hdr))),
++	  attr3_remote_data_count, FLD_COUNT, TYP_NONE },
+ 	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(L3OFF(entries)),
+ 	  attr3_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
+ 	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(N3OFF(__btree)),
+@@ -543,6 +593,19 @@ const field_t	attr3_node_hdr_flds[] = {
+ 	{ NULL }
+ };
+ 
++#define	RM3OFF(f)	bitize(offsetof(struct xfs_attr3_rmt_hdr, rm_ ## f))
++const struct field	attr3_remote_crc_flds[] = {
++	{ "magic", FLDT_UINT32X, OI(RM3OFF(magic)), C1, 0, TYP_NONE },
++	{ "offset", FLDT_UINT32D, OI(RM3OFF(offset)), C1, 0, TYP_NONE },
++	{ "bytes", FLDT_UINT32D, OI(RM3OFF(bytes)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(RM3OFF(crc)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(RM3OFF(uuid)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_INO, OI(RM3OFF(owner)), C1, 0, TYP_NONE },
++	{ "bno", FLDT_DFSBNO, OI(RM3OFF(blkno)), C1, 0, TYP_BMAPBTD },
++	{ "lsn", FLDT_UINT64X, OI(RM3OFF(lsn)), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
+ /*
+  * Special read verifier for attribute buffers. Detect the magic number
+  * appropriately and set the correct verifier and call it.
+diff --git a/db/attr.h b/db/attr.h
+index 21848c1..565d6d8 100644
+--- a/db/attr.h
++++ b/db/attr.h
+@@ -32,6 +32,7 @@ extern const field_t	attr3_leaf_hdr_flds[];
+ extern const field_t	attr3_node_hdr_flds[];
+ extern const field_t	attr3_blkinfo_flds[];
+ extern const field_t	attr3_node_hdr_flds[];
++extern const field_t	attr3_remote_crc_flds[];
+ 
+ extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
+ extern int	attr_size(void *obj, int startoff, int idx);
+diff --git a/db/field.c b/db/field.c
+index f1e5f35..ae4c805 100644
+--- a/db/field.c
++++ b/db/field.c
+@@ -99,6 +99,9 @@ const ftattr_t	ftattrtab[] = {
+ 	{ FLDT_ATTR3_NODE_HDR, "attr3_node_hdr", NULL,
+ 	  (char *)attr3_node_hdr_flds, SI(bitsz(struct xfs_da3_node_hdr)),
+ 	  0, NULL, attr3_node_hdr_flds },
++	{ FLDT_ATTR3_REMOTE_HDR, "attr3_remote_hdr", NULL,
++	  (char *)attr3_remote_crc_flds, attr_size, FTARG_SIZE, NULL,
++	  attr3_remote_crc_flds },
+ 
+ 	{ FLDT_BMAPBTA, "bmapbta", NULL, (char *)bmapbta_flds, btblock_size,
+ 	  FTARG_SIZE, NULL, bmapbta_flds },
+diff --git a/db/field.h b/db/field.h
+index d1a7095..a8df29b 100644
+--- a/db/field.h
++++ b/db/field.h
+@@ -47,6 +47,7 @@ typedef enum fldt	{
+ 	FLDT_ATTR3_BLKINFO,
+ 	FLDT_ATTR3_LEAF_HDR,
+ 	FLDT_ATTR3_NODE_HDR,
++	FLDT_ATTR3_REMOTE_HDR,
+ 
+ 	FLDT_BMAPBTA,
+ 	FLDT_BMAPBTA_CRC,
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index b3129f7..043985e 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -940,8 +940,7 @@ version 1 and version 2 directories, see type
+ .B dir
+ for a description. Leaf blocks can refer to "local" or "remote" attribute
+ values. Local values are stored directly in the leaf block.
+-Remote values are stored in an independent block in the attribute fork
+-(with no structure). Leaf blocks contain the following fields:
++Leaf blocks contain the following fields:
+ .RS 1.4i
+ .PD 0
+ .TP 1.2i
+@@ -989,6 +988,41 @@ Fields present for local values:
+ (fork block number of containing the value).
+ .PD
+ .RE
++.IP
++Remote values are stored in an independent block in the attribute fork.
++Prior to v5, value blocks had no structure, but in v5 they acquired a header
++structure with the following fields:
++.RS 1.4i
++.PD 0
++.TP 1.2i
++.B magic
++attr3 remote block magic number, 0x5841524d ('XARM').
++.TP
++.B offset
++Byte offset of this data block within the overall attribute value.
++.TP
++.B bytes
++Number of bytes stored in this block.
++.TP
++.B crc
++Checksum of the attribute block contents.
++.TP
++.B uuid
++Filesystem UUID.
++.TP
++.B owner
++Inode that owns this attribute value.
++.TP
++.B bno
++Block offset of this block within the inode's attribute fork.
++.TP
++.B lsn
++Log serial number of the last time this block was logged.
++.TP
++.B data
++The attribute value data.
++.PD
++.RE
+ .TP
+ .B bmapbt
+ Files with many extents in their data or attribute fork will have the
