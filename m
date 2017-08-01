@@ -1,88 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f174.google.com ([209.85.128.174]:36474 "EHLO
-        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752014AbdHBOnM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2017 10:43:12 -0400
-Received: by mail-wr0-f174.google.com with SMTP id y43so19627090wrd.3
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Aug 2017 07:43:11 -0700 (PDT)
-Subject: Re: [PATCH 6/7] mkfs: extend opt_params with a value field
-References: <20170720092932.32580-1-jtulak@redhat.com>
- <20170720092932.32580-7-jtulak@redhat.com>
- <20170727161806.GJ18884@wotan.suse.de>
- <30eae9db-14fd-b245-3aab-5c1670894b44@redhat.com>
- <20170729170241.GM18884@wotan.suse.de>
-From: Jan Tulak <jtulak@redhat.com>
-Message-ID: <27945607-28e6-31ec-7844-b63a729d040c@redhat.com>
-Date: Wed, 2 Aug 2017 16:43:09 +0200
+Received: from mail1.g1.pair.com ([66.39.3.162]:53455 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751115AbdHAOEL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 Aug 2017 10:04:11 -0400
+Date: Tue, 1 Aug 2017 16:04:12 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: metadata I/O error: block 0x575b6d70,("xfs_trans_read_buf_map")
+ error 4 numblks 16
+Message-ID: <20170801160412.1ee5be5b@harpe.intellique.com>
+In-Reply-To: <b29b31a1-edb9-47f4-a641-11ecfc289c99@profihost.ag>
+References: <e4606e43-468e-431c-1663-6b167cc5648b@profihost.ag>
+        <20170801153548.15cf74ef@harpe.intellique.com>
+        <b29b31a1-edb9-47f4-a641-11ecfc289c99@profihost.ag>
 MIME-Version: 1.0
-In-Reply-To: <20170729170241.GM18884@wotan.suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/k25T4yGzPOfrDYseqxkAtHx"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 Cc: linux-xfs@vger.kernel.org
 
+--Sig_/k25T4yGzPOfrDYseqxkAtHx
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
+Le Tue, 1 Aug 2017 15:50:20 +0200
+Stefan Priebe - Profihost AG <s.priebe@profihost.ag> =C3=A9crivait:
 
-On 29/07/2017 19:02, Luis R. Rodriguez wrote:
-> On Fri, Jul 28, 2017 at 04:44:50PM +0200, Jan Tulak wrote:
->> And do we need better messages?
-> We could later when parsing the configuration file, yes. An abort is fine too but
-> seems rather grotesque. But also more importantly this is a matter of style and I
-> realize the old style is to just abort/assert, so I figured it would be a good time
-> now to ask ourselves if we want proper error messages dealt with / passed slowly
-> moving forward.
->
-> But yes, I do suspect we may want better error messages when parsing these. This
-> may mean for instance we want a string built into the struct that defines the sobopt
-> so we can use it to inform userspace using a pointer to the description rather than
-> doing a switch statement on each one and interpreting back to plain english.
->
-The reason for better messages is reasonable. About the style... well, 
-it makes sense. But I would certainly not do this in this set. So, I 
-think about a way how to keep the current behavior, but slowly build up 
-the ground for something like what you suggest.
+> Hello Emmanuel,
+>=20
+> yes there are bcache patches already applied:
+> 0002-bcache-bch_writeback_thread-is-not-freezable.patch
+> 0003-bcache-bch_allocator_thread-is-not-freezable.patch
+> 0001-bcache-partition-support-add-16-minors-per-bcacheN-d.patch
+> 0044-bcache-Remove-deprecated-create_workqueue.patch
+> 0045-bcache-Remove-redundant-parameter-for-cache_alloc.patch
+> 0046-bcache-update-document-info.patch
+> 0047-bcache-Remove-redundant-block_size-assignment.patch
+> 0048-bcache-register_bcache-call-blkdev_put-when-cache_al.patch
+> 0049-bcache-pr_err-more-meaningful-error-message-when-nr_.patch
+> 0071-bcache-switch-to-using-blk_queue_write_cache.patch
+> 0092-bcache-use-op_is_write-instead-of-checking-for-REQ_W.patch
+> 0110-bcache-use-bio-op-accessors.patch
+> 0253-bcache-use-op_is_sync-to-check-for-synchronous-reque.patch
+> 0344-bcache-debug-avoid-accessing-.bi_io_vec-directly.patch
+> 0002-bcache-fix-calling-ida_simple_remove-with-incorrect-minor.patch
+> 0001-bcache-force-trigger-gc.patch
+> 0001-bcache-only-recovery-I-O-error-for-writethrough-mode.patch
 
-Using the same style of error-returning logic from the other email 
-([PATCH 1/7] mkfs: Save raw ...), the error argument pointer would be 
-optional. So, when you do parse_conf_val(OPT_D, D_AGCOUNT, str, NULL); 
-then you get the old behavior and any error causes a termination inside 
-of this function. But if you instead pass some pointer: 
-parse_conf_val(OPT_D, D_AGCOUNT, str, &err); then right now, we would 
-print the message but do not terminate. And later on, some other message 
-handling can be added.
->> If some value is out of range, or it is a
->> conflict, there is not much context needed, and better to not have to care
->> about these errors... Do you have an example when it would be helpful? If it
->> just spits out a return code, you have to add a check to every use and you
->> will have many times the same code like what is in getnum() at this moment
-> Not really, if we are parsing say D_AGCOUNT we could have a member as part of the
-> struct, say "description" then we can use say subopt[D_AGCOUNT].description on
-> the error message, perhaps the only thing that would change for instance would be
-> the context on which the error was run into, command line option passed or config
-> file read, say with the filename and line number.
->
-> How would we be able to detect an error happened and pass exactly where the
-> error happened otherwise on a config file for example?
-Yes, I see the issue - getnum finds an error, but it doesn't know the 
-line in the config file to report it. But with what I write above about 
-the error handling, this could work.
+Good.
+=20
+> There is no trace involved as there is no kernel bug triggered. That's
+> the whole output.
 
-if (c < sp->minval) {
-     if (config_file) illegal_config(str, line, opts, index, _("value is 
-too small"), err);
-     else illegal_option(str, opts, index, _("value is too small"), err);
-}
+Too bad :/ What are the underlying devices? No error at all at the
+kernel level? No IO error? Is bcache configured write-back or
+write-through?
 
-... and later in the code, if you are in the config file, you could do 
-something like:
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
-parse_conf_val(opt, subopt, str, &err);
-if (err) report_invalid_line(current_line);
+--Sig_/k25T4yGzPOfrDYseqxkAtHx
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
 
-Thoughts?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-Jan
+iEYEARECAAYFAlmAilwACgkQX3jQXNUicVaxbQCg2/H4fJfkMYQLPd9e7nxYLM3/
+2/oAn0D1/SwqmsCgRcfudP7Ra4/O7/7R
+=+Jl8
+-----END PGP SIGNATURE-----
+
+--Sig_/k25T4yGzPOfrDYseqxkAtHx--
