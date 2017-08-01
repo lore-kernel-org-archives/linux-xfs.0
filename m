@@ -1,320 +1,181 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28188 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751075AbdGaVHT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jul 2017 17:07:19 -0400
-Subject: [PATCH 4/7] xfs_db: dump dir/attr btrees
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 31 Jul 2017 14:07:13 -0700
-Message-ID: <150153523353.26081.1989249017494623271.stgit@magnolia>
-In-Reply-To: <150153520589.26081.8786864874176090813.stgit@magnolia>
-References: <150153520589.26081.8786864874176090813.stgit@magnolia>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:60702 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751217AbdHAAj1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jul 2017 20:39:27 -0400
+Date: Tue, 1 Aug 2017 10:30:32 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/3] fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
+Message-ID: <20170801003032.GL17762@dastard>
+References: <150135740948.35318.10730072114996910905.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150135742076.35318.12884268722541769179.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170731170939.GC4477@magnolia>
+ <CAPcyv4hPr8b3UsshQ086hi7_KrE3-y0uGTpdi1eXc5R59mYmUw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4hPr8b3UsshQ086hi7_KrE3-y0uGTpdi1eXc5R59mYmUw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jul 31, 2017 at 11:25:34AM -0700, Dan Williams wrote:
+> On Mon, Jul 31, 2017 at 10:09 AM, Darrick J. Wong
+> <darrick.wong@oracle.com> wrote:
+> >> index 93e955262d07..c4fc79a0704f 100644
+> >> --- a/fs/xfs/xfs_bmap_util.c
+> >> +++ b/fs/xfs/xfs_bmap_util.c
+> >> @@ -1387,6 +1387,92 @@ xfs_zero_file_space(
+> >>
+> >>  }
+> >>
+> >> +int
+> >> +xfs_seal_file_space(
+> >> +     struct xfs_inode        *ip,
+> >> +     xfs_off_t               offset,
+> >> +     xfs_off_t               len)
+> >> +{
+> >> +     struct inode            *inode = VFS_I(ip);
+> >> +     struct address_space    *mapping = inode->i_mapping;
+> >> +     int                     error = 0;
+> >> +
+> >> +     if (offset)
+> >> +             return -EINVAL;
+> >> +
+> >> +     i_mmap_lock_read(mapping);
+> >
+> > (Are we allowed to take address_space->i_mmap_rwsem while holding
+> > xfs_inode->i_mmaplock?)
+> 
+> Empirically, yes. Lockdep complains when those locks are taken in the
+> reverse order.
 
-Dump the directory or extended attribute btree contents.
+My pet hate: people who rely on lockdep to tell them that locking is
+wrong rather than understanding what the correct locking order is
+before writing code.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- db/btdump.c       |  251 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_db.8 |    1 
- 2 files changed, 252 insertions(+)
+> That seems to be inconsistent with the "mmap_sem -> i_mmap_lock ->
+> page_lock" note in the xfs_ilock comment. Am I confusing what
+> i_mmap_lock means in that comment, is that the i_mmap_lock_read(), or
+> the i_mmaplock in the xfs_inode?
+
+The latter. The lock orders you need to pay attention to are
+documented in mm/filemap.c. (Which, incidentally, needs updating to
+refer to i_rwsem, not i_mutex.)
+
+ *  ->i_mutex
+ *    ->i_mmap_rwsem            (truncate->unmap_mapping_range)
+
+ *  ->mmap_sem                                                                   
+ *    ->i_mmap_rwsem                                                             
+ *      ->page_table_lock or pte_lock   (various, mainly in memory.c)            
+ *        ->mapping->tree_lock  (arch-dependent flush_dcache_mmap_lock)
+
+As it is, I think we shold not be taking internal mm/ state locks
+deep inside filesystem code as it smells of layering violations. We
+don't do this anywhere else for mapping checks - if we already hold
+the XFS_MMAPLOCK_EXCL here, then we've already locked out page
+faults from changing the state of the inode. In which case, we
+should not need a mmap internal lock to be held here, same as all
+the other filesystem operations that lock out page faults....
+
+> >> +     xfs_ilock(ip, XFS_ILOCK_EXCL);
+> >> +     if (len == 0) {
+> >> +             /*
+> >> +              * Clear the immutable flag provided there are no active
+> >> +              * mappings. The active mapping check prevents an
+> >> +              * application that is assuming a static block map, for
+> >> +              * DAX or peer-to-peer DMA, from having this state
+> >> +              * silently change behind its back.
+> >> +              */
+> >> +             if (RB_EMPTY_ROOT(&mapping->i_mmap))
+
+			mapping_mapped(mapping)
+
+> >> +                     inode->i_flags &= ~S_IOMAP_IMMUTABLE;
+> >> +             else
+> >> +                     error = -EBUSY;
+> >> +     } else if (IS_IOMAP_IMMUTABLE(inode)) {
+> >> +             if (len == i_size_read(inode)) {
+> >> +                     /*
+> >> +                      * The file is already in the correct state,
+> >> +                      * bail out without error below.
+> >> +                      */
+> >> +                     len = 0;
+
+> >> +             } else {
+> >> +                     /* too late to allocate more space */
+> >> +                     error = -ETXTBSY;
+> >> +             }
+> >> +     } else {
+> >> +             if (len < i_size_read(inode)) {
+> >> +                     /*
+> >> +                      * Since S_IOMAP_IMMUTABLE is inode global it
+> >> +                      * does not make sense to fallocate(immutable)
+> >> +                      * on a sub-range of the file.
+> >> +                      */
+> >> +                     error = -EINVAL;
+> >> +             } else if (!RB_EMPTY_ROOT(&mapping->i_mmap)) {
+> >> +                     /*
+> >> +                      * It's not strictly required to prevent setting
+> >> +                      * immutable while a file is already mapped, but
+> >> +                      * we do it for simplicity and symmetry with the
+> >> +                      * S_IOMAP_IMMUTABLE disable case.
+> >> +                      */
+> >> +                     error = -EBUSY;
+> >> +             } else
+> >> +                     inode->i_flags |= S_IOMAP_IMMUTABLE;
+> >> +     }
+> >> +     xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> >> +     i_mmap_unlock_read(mapping);
+> >> +
+> >> +     if (error || len == 0)
+> >> +             return error;
+
+I have to say, I find this checking to be fairly grotty. The "len ==
+0" API to remove the immutable flag is a gross hack.  IMO, it's
+better to add a separate fallocate command to "unseal" the extent
+map, and let that happen according to whether the file is mapped or
+not.  Perhaps it would be better to start with a man page
+documenting the desired API?
+
+FWIW, the if/else if/else structure could be cleaned up with a
+simple "goto out_unlock" construct such as:
+
+	/* don't make immutable if inode is currently mapped */
+	error = -EBUSY;
+	if (mapping_mapped(mapping))
+		goto out_unlock;
+
+	/* can't do anything if inode is already immutable */
+	error = -ETXTBSY;
+	if (IS_IMMUTABLE(inode) || IS_IOMAP_IMMUTABLE(inode))
+		goto out_unlock;
+
+	/* XFS only supports whole file extent immutability */
+	error = -EINVAL;
+	if (len != i_size_read(inode))
+		goto out_unlock;
+
+	/* all good to go */
+	error = 0;
+
+out_unlock:
+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+	i_mmap_unlock_read(mapping);
+
+	if (error)
+	     return error;
+
+	/* now unshare, allocate and add immutable flag */
+
+Cheers,
+
+Dave.
 
 
-diff --git a/db/btdump.c b/db/btdump.c
-index 3b76e17..e351202 100644
---- a/db/btdump.c
-+++ b/db/btdump.c
-@@ -227,6 +227,252 @@ dump_inode(
- 	return ret;
- }
- 
-+static bool
-+dir_has_rightsib(
-+	void				*block,
-+	int				level)
-+{
-+	struct xfs_dir3_icleaf_hdr	lhdr;
-+	struct xfs_da3_icnode_hdr	nhdr;
-+
-+	if (level > 0) {
-+		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-+		return nhdr.forw != 0;
-+	}
-+	M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
-+	return lhdr.forw != 0;
-+}
-+
-+static int
-+dir_level(
-+	void				*block)
-+{
-+	struct xfs_dir3_icleaf_hdr	lhdr;
-+	struct xfs_da3_icnode_hdr	nhdr;
-+
-+	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
-+	case cpu_to_be16(XFS_DIR2_LEAF1_MAGIC):
-+	case cpu_to_be16(XFS_DIR2_LEAFN_MAGIC):
-+		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
-+		return 0;
-+	case cpu_to_be16(XFS_DA_NODE_MAGIC):
-+		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-+		return nhdr.level;
-+	default:
-+		return -1;
-+	}
-+}
-+
-+static int
-+dir3_level(
-+	void				*block)
-+{
-+	struct xfs_dir3_icleaf_hdr	lhdr;
-+	struct xfs_da3_icnode_hdr	nhdr;
-+
-+	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
-+	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
-+	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
-+		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
-+		return 0;
-+	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-+		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-+		return nhdr.level;
-+	default:
-+		return -1;
-+	}
-+}
-+
-+static bool
-+attr_has_rightsib(
-+	void				*block,
-+	int				level)
-+{
-+        struct xfs_attr_leafblock	lhdr;
-+	struct xfs_da3_icnode_hdr	nhdr;
-+
-+	if (level > 0) {
-+		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-+		return nhdr.forw != 0;
-+	}
-+	xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
-+	return lhdr.hdr.info.forw != 0;
-+}
-+
-+static int
-+attr_level(
-+	void				*block)
-+{
-+        struct xfs_attr_leafblock	lhdr;
-+	struct xfs_da3_icnode_hdr	nhdr;
-+
-+	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
-+	case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
-+		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
-+		return 0;
-+	case cpu_to_be16(XFS_DA_NODE_MAGIC):
-+		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-+		return nhdr.level;
-+	default:
-+		return -1;
-+	}
-+}
-+
-+static int
-+attr3_level(
-+	void				*block)
-+{
-+        struct xfs_attr_leafblock	lhdr;
-+	struct xfs_da3_icnode_hdr	nhdr;
-+
-+	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
-+	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
-+		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
-+		return 0;
-+	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-+		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-+		return nhdr.level;
-+	default:
-+		return -1;
-+	}
-+}
-+
-+struct dabprinter {
-+	const char		*print_node_entries;
-+	const char		*print_leaf_entries;
-+	const char		*go_node_forward;
-+	const char		*go_leaf_forward;
-+	const char		*go_down;
-+	bool			(*has_rightsib)(void *, int);
-+	int			(*level)(void *);
-+};
-+
-+static struct dabprinter attr_print = {
-+	.print_node_entries	= "btree",
-+	.print_leaf_entries	= "entries nvlist",
-+	.go_node_forward	= "hdr.info.forw",
-+	.go_leaf_forward	= "hdr.info.forw",
-+	.go_down		= "btree[0].before",
-+	.has_rightsib		= attr_has_rightsib,
-+	.level			= attr_level,
-+};
-+
-+static struct dabprinter attr3_print = {
-+	.print_node_entries	= "btree",
-+	.print_leaf_entries	= "entries nvlist",
-+	.go_node_forward	= "hdr.info.hdr.forw",
-+	.go_leaf_forward	= "hdr.info.hdr.forw",
-+	.go_down		= "btree[0].before",
-+	.has_rightsib		= attr_has_rightsib,
-+	.level			= attr3_level,
-+};
-+
-+static struct dabprinter dir_print = {
-+	.print_node_entries	= "nbtree",
-+	.print_leaf_entries	= "lents",
-+	.go_node_forward	= "nhdr.info.hdr.forw",
-+	.go_leaf_forward	= "lhdr.info.hdr.forw",
-+	.go_down		= "nbtree[0].before",
-+	.has_rightsib		= dir_has_rightsib,
-+	.level			= dir_level,
-+};
-+
-+static struct dabprinter dir3_print = {
-+	.print_node_entries	= "nbtree",
-+	.print_leaf_entries	= "lents",
-+	.go_node_forward	= "nhdr.info.forw",
-+	.go_leaf_forward	= "lhdr.info.forw",
-+	.go_down		= "nbtree[0].before",
-+	.has_rightsib		= dir_has_rightsib,
-+	.level			= dir3_level,
-+};
-+
-+static int
-+dump_dablevel(
-+	int			level,
-+	struct dabprinter	*dbp)
-+{
-+	xfs_daddr_t		orig_daddr = iocur_top->bb;
-+	xfs_daddr_t		last_daddr;
-+	unsigned int		nr;
-+	int			ret;
-+
-+	ret = eval("push");
-+	if (ret)
-+		return ret;
-+
-+	nr = 1;
-+	do {
-+		last_daddr = iocur_top->bb;
-+		dbprintf(_("%s level %u block %u daddr %llu\n"),
-+			 iocur_top->typ->name, level, nr, last_daddr);
-+		ret = eval("print %s", level > 0 ? dbp->print_node_entries :
-+						   dbp->print_leaf_entries);
-+		if (ret)
-+			goto err;
-+		if (dbp->has_rightsib(iocur_top->data, level)) {
-+			ret = eval("addr %s", level > 0 ? dbp->go_node_forward :
-+							  dbp->go_leaf_forward);
-+			if (ret)
-+				goto err;
-+		}
-+		nr++;
-+	} while (iocur_top->bb != orig_daddr && iocur_top->bb != last_daddr);
-+
-+	ret = eval("pop");
-+	return ret;
-+err:
-+	eval("pop");
-+	return ret;
-+}
-+
-+static int
-+dump_dabtree(
-+	bool				dump_node_blocks,
-+	struct dabprinter		*dbp)
-+{
-+	xfs_daddr_t			orig_daddr = iocur_top->bb;
-+	xfs_daddr_t			last_daddr;
-+	int				level;
-+	int				ret;
-+
-+	ret = eval("push");
-+	if (ret)
-+		return ret;
-+
-+	cur_agno = XFS_FSB_TO_AGNO(mp, XFS_DADDR_TO_FSB(mp, iocur_top->bb));
-+	level = dbp->level(iocur_top->data);
-+	if (level < 0) {
-+		printf(_("Current location is not part of a dir/attr btree.\n"));
-+		goto err;
-+	}
-+
-+	do {
-+		last_daddr = iocur_top->bb;
-+		if (level > 0) {
-+			if (dump_node_blocks) {
-+				ret = dump_dablevel(level, dbp);
-+				if (ret)
-+					goto err;
-+			}
-+			ret = eval("addr %s", dbp->go_down);
-+		} else {
-+			ret = dump_dablevel(level, dbp);
-+		}
-+		if (ret)
-+			goto err;
-+		level--;
-+	} while (level >= 0 &&
-+		 iocur_top->bb != orig_daddr &&
-+		 iocur_top->bb != last_daddr);
-+
-+	ret = eval("pop");
-+	return ret;
-+err:
-+	eval("pop");
-+	return ret;
-+}
-+
- static int
- btdump_f(
- 	int		argc,
-@@ -234,6 +480,7 @@ btdump_f(
- {
- 	bool		aflag = false;
- 	bool		iflag = false;
-+	bool		crc = xfs_sb_version_hascrc(&mp->m_sb);
- 	int		c;
- 
- 	if (cur_typ == NULL) {
-@@ -276,6 +523,10 @@ btdump_f(
- 		return dump_btree_long(iflag);
- 	case TYP_INODE:
- 		return dump_inode(iflag, aflag);
-+	case TYP_ATTR:
-+		return dump_dabtree(iflag, crc ? &attr3_print : &attr_print);
-+	case TYP_DIR2:
-+		return dump_dabtree(iflag, crc ? &dir3_print : &dir_print);
- 	default:
- 		dbprintf(_("type \"%s\" is not a btree type or inode\n"),
- 				cur_typ->name);
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 6a97504..b3129f7 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -335,6 +335,7 @@ area of the inode, if neither option is given then both areas are shown.
- .B btdump [-a] [-i]
- If the cursor points to a btree node, dump the btree from that block downward.
- If instead the cursor points to an inode, dump the data fork block mapping btree if there is one.
-+If the cursor points to a directory or extended attribute btree node, dump that.
- By default, only records stored in the btree are dumped.
- .RS 1.0i
- .TP 0.4i
-
+-- 
+Dave Chinner
+david@fromorbit.com
