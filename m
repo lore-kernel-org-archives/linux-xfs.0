@@ -1,287 +1,363 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35424 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751923AbdHAMwj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 Aug 2017 08:52:39 -0400
-Date: Tue, 1 Aug 2017 08:52:36 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v3] generic: test read around EOF
-Message-ID: <20170801125236.GA30198@bfoster.bfoster>
-References: <20170731130956.30494-1-zlang@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:35682 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751352AbdHAO71 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2017 10:59:27 -0400
+Date: Tue, 1 Aug 2017 07:59:18 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/7] xfs_db: dump dir/attr btrees
+Message-ID: <20170801145918.GG4477@magnolia>
+References: <150153520589.26081.8786864874176090813.stgit@magnolia>
+ <150153523353.26081.1989249017494623271.stgit@magnolia>
+ <acf15f9c-4e1d-b2eb-4e55-0b91fbd6831f@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170731130956.30494-1-zlang@redhat.com>
+In-Reply-To: <acf15f9c-4e1d-b2eb-4e55-0b91fbd6831f@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jul 31, 2017 at 09:09:56PM +0800, Zorro Lang wrote:
-> As posix standard, if the file offset is at or past the end of file,
-> no bytes are read, and read() returns zero.
+On Mon, Jul 31, 2017 at 05:05:36PM -0500, Eric Sandeen wrote:
+> On 7/31/17 4:07 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Dump the directory or extended attribute btree contents.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  db/btdump.c       |  251 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  man/man8/xfs_db.8 |    1 
+> >  2 files changed, 252 insertions(+)
+> > 
+> > 
+> > diff --git a/db/btdump.c b/db/btdump.c
+> > index 3b76e17..e351202 100644
+> > --- a/db/btdump.c
+> > +++ b/db/btdump.c
+> > @@ -227,6 +227,252 @@ dump_inode(
+> >  	return ret;
+> >  }
+> >  
+> > +static bool
+> > +dir_has_rightsib(
+> > +	void				*block,
+> > +	int				level)
+> > +{
+> > +	struct xfs_dir3_icleaf_hdr	lhdr;
+> > +	struct xfs_da3_icnode_hdr	nhdr;
+> > +
+> > +	if (level > 0) {
+> > +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> > +		return nhdr.forw != 0;
+> > +	}
+> > +	M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
+> > +	return lhdr.forw != 0;
+> > +}
+> > +
+> > +static int
+> > +dir_level(
+> > +	void				*block)
+> > +{
+> > +	struct xfs_dir3_icleaf_hdr	lhdr;
+> > +	struct xfs_da3_icnode_hdr	nhdr;
+> > +
+> > +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
+> > +	case cpu_to_be16(XFS_DIR2_LEAF1_MAGIC):
+> > +	case cpu_to_be16(XFS_DIR2_LEAFN_MAGIC):
+> > +		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
+> > +		return 0;
+> > +	case cpu_to_be16(XFS_DA_NODE_MAGIC):
+> > +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> > +		return nhdr.level;
+> > +	default:
+> > +		return -1;
+> > +	}
+> > +}
+> > +
+> > +static int
+> > +dir3_level(
+> > +	void				*block)
+> > +{
+> > +	struct xfs_dir3_icleaf_hdr	lhdr;
+> > +	struct xfs_da3_icnode_hdr	nhdr;
+> > +
+> > +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
+> > +	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
+> > +	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
+> > +		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
+> > +		return 0;
+> > +	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+> > +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> > +		return nhdr.level;
+> > +	default:
+> > +		return -1;
+> > +	}
+> > +}
+> > +
+> > +static bool
+> > +attr_has_rightsib(
+> > +	void				*block,
+> > +	int				level)
+> > +{
+> > +        struct xfs_attr_leafblock	lhdr;
+> > +	struct xfs_da3_icnode_hdr	nhdr;
+> > +
+> > +	if (level > 0) {
+> > +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> > +		return nhdr.forw != 0;
+> > +	}
+> > +	xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
+> > +	return lhdr.hdr.info.forw != 0;
+> > +}
+> > +
+> > +static int
+> > +attr_level(
+> > +	void				*block)
+> > +{
+> > +        struct xfs_attr_leafblock	lhdr;
 > 
-> This case reads from range within EOF, past EOF and at EOF, to make
-> sure the return value as expected, especially read from past/at EOF
-> returns 0.
+> funky whitespace
 > 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
+> > +	struct xfs_da3_icnode_hdr	nhdr;
+> > +
+> > +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
+> > +	case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
+> > +		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
+> > +		return 0;
+> > +	case cpu_to_be16(XFS_DA_NODE_MAGIC):
+> > +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> > +		return nhdr.level;
+> > +	default:
+> > +		return -1;
+> > +	}
+> > +}
+> > +
+> > +static int
+> > +attr3_level(
+> > +	void				*block)
+> > +{
+> > +        struct xfs_attr_leafblock	lhdr;
 > 
-> Hi,
+> ... again
+
+Fixed both.
+
+> > +	struct xfs_da3_icnode_hdr	nhdr;
+> > +
+> > +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
+> > +	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
+> > +		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
+> > +		return 0;
+> > +	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+> > +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> > +		return nhdr.level;
+> > +	default:
+> > +		return -1;
+> > +	}
+> > +}
+> > +
+> > +struct dabprinter {
+> > +	const char		*print_node_entries;
+> > +	const char		*print_leaf_entries;
+> > +	const char		*go_node_forward;
+> > +	const char		*go_leaf_forward;
+> > +	const char		*go_down;
+> > +	bool			(*has_rightsib)(void *, int);
+> > +	int			(*level)(void *);
+> > +};
+> > +
+> > +static struct dabprinter attr_print = {
+> > +	.print_node_entries	= "btree",
+> > +	.print_leaf_entries	= "entries nvlist",
+> > +	.go_node_forward	= "hdr.info.forw",
+> > +	.go_leaf_forward	= "hdr.info.forw",
+> > +	.go_down		= "btree[0].before",
+> > +	.has_rightsib		= attr_has_rightsib,
+> > +	.level			= attr_level,
+> > +};
+> > +
+> > +static struct dabprinter attr3_print = {
+> > +	.print_node_entries	= "btree",
+> > +	.print_leaf_entries	= "entries nvlist",
+> > +	.go_node_forward	= "hdr.info.hdr.forw",
+> > +	.go_leaf_forward	= "hdr.info.hdr.forw",
+> > +	.go_down		= "btree[0].before",
+> > +	.has_rightsib		= attr_has_rightsib,
+> > +	.level			= attr3_level,
+> > +};
+> > +
+> > +static struct dabprinter dir_print = {
+> > +	.print_node_entries	= "nbtree",
+> > +	.print_leaf_entries	= "lents",
+> > +	.go_node_forward	= "nhdr.info.hdr.forw",
+> > +	.go_leaf_forward	= "lhdr.info.hdr.forw",
+> > +	.go_down		= "nbtree[0].before",
+> > +	.has_rightsib		= dir_has_rightsib,
+> > +	.level			= dir_level,
+> > +};
+> > +
+> > +static struct dabprinter dir3_print = {
+> > +	.print_node_entries	= "nbtree",
+> > +	.print_leaf_entries	= "lents",
+> > +	.go_node_forward	= "nhdr.info.forw",
+> > +	.go_leaf_forward	= "lhdr.info.forw",
+> > +	.go_down		= "nbtree[0].before",
+> > +	.has_rightsib		= dir_has_rightsib,
+> > +	.level			= dir3_level,
+> > +};
+> > +
+> > +static int
+> > +dump_dablevel(
+> > +	int			level,
+> > +	struct dabprinter	*dbp)
+> > +{
+> > +	xfs_daddr_t		orig_daddr = iocur_top->bb;
+> > +	xfs_daddr_t		last_daddr;
+> > +	unsigned int		nr;
+> > +	int			ret;
+> > +
+> > +	ret = eval("push");
 > 
-> V3 did below changes:
-> 1) Remove truncate/fallocate/resvsp/alloc operations, only leave pwrite.
-> 2) Only test on sector size <= (block size / 4), generally that means
->    512b sector size and 4k block size.
-> 3) remove all unaligned test, due to ext4 and xfs got different results
->    when read past EOF with unaligned offset/length. And I can get a pretty
->    sure expected result for this situation.
+> stupid question, is this different from simply push_cur()? 
+
+Yes, we need set_cur() to finish initializing iocur_top.
+
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	nr = 1;
+> > +	do {
+> > +		last_daddr = iocur_top->bb;
+> > +		dbprintf(_("%s level %u block %u daddr %llu\n"),
+> > +			 iocur_top->typ->name, level, nr, last_daddr);
+> > +		ret = eval("print %s", level > 0 ? dbp->print_node_entries :
+> > +						   dbp->print_leaf_entries);
+> > +		if (ret)
+> > +			goto err;
+> > +		if (dbp->has_rightsib(iocur_top->data, level)) {
+> > +			ret = eval("addr %s", level > 0 ? dbp->go_node_forward :
+> > +							  dbp->go_leaf_forward);
+> > +			if (ret)
+> > +				goto err;
+> > +		}
+> > +		nr++;
+> > +	} while (iocur_top->bb != orig_daddr && iocur_top->bb != last_daddr);
+> > +
+> > +	ret = eval("pop");
+> > +	return ret;
+> > +err:
+> > +	eval("pop");
+> > +	return ret;
+> > +}
+> > +
+> > +static int
+> > +dump_dabtree(
+> > +	bool				dump_node_blocks,
+> > +	struct dabprinter		*dbp)
+> > +{
+> > +	xfs_daddr_t			orig_daddr = iocur_top->bb;
+> > +	xfs_daddr_t			last_daddr;
+> > +	int				level;
+> > +	int				ret;
+> > +
+> > +	ret = eval("push");
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	cur_agno = XFS_FSB_TO_AGNO(mp, XFS_DADDR_TO_FSB(mp, iocur_top->bb));
+> > +	level = dbp->level(iocur_top->data);
+> > +	if (level < 0) {
+> > +		printf(_("Current location is not part of a dir/attr btree.\n"));
+> > +		goto err;
+> > +	}
+> > +
+> > +	do {
+> > +		last_daddr = iocur_top->bb;
+> > +		if (level > 0) {
+> > +			if (dump_node_blocks) {
+> > +				ret = dump_dablevel(level, dbp);
+> > +				if (ret)
+> > +					goto err;
+> > +			}
+> > +			ret = eval("addr %s", dbp->go_down);
+> > +		} else {
+> > +			ret = dump_dablevel(level, dbp);
+> > +		}
+> > +		if (ret)
+> > +			goto err;
+> > +		level--;
+> > +	} while (level >= 0 &&
+> > +		 iocur_top->bb != orig_daddr &&
+> > +		 iocur_top->bb != last_daddr);
+> > +
+> > +	ret = eval("pop");
+> > +	return ret;
+> > +err:
+> > +	eval("pop");
+> > +	return ret;
+> > +}
+> > +
+> >  static int
+> >  btdump_f(
+> >  	int		argc,
+> > @@ -234,6 +480,7 @@ btdump_f(
+> >  {
+> >  	bool		aflag = false;
+> >  	bool		iflag = false;
+> > +	bool		crc = xfs_sb_version_hascrc(&mp->m_sb);
+> >  	int		c;
+> >  
+> >  	if (cur_typ == NULL) {
+> > @@ -276,6 +523,10 @@ btdump_f(
+> >  		return dump_btree_long(iflag);
+> >  	case TYP_INODE:
+> >  		return dump_inode(iflag, aflag);
+> > +	case TYP_ATTR:
+> > +		return dump_dabtree(iflag, crc ? &attr3_print : &attr_print);
+> > +	case TYP_DIR2:
+> > +		return dump_dabtree(iflag, crc ? &dir3_print : &dir_print);
+> >  	default:
+> >  		dbprintf(_("type \"%s\" is not a btree type or inode\n"),
+> >  				cur_typ->name);
+> > diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+> > index 6a97504..b3129f7 100644
+> > --- a/man/man8/xfs_db.8
+> > +++ b/man/man8/xfs_db.8
+> > @@ -335,6 +335,7 @@ area of the inode, if neither option is given then both areas are shown.
+> >  .B btdump [-a] [-i]
+> >  If the cursor points to a btree node, dump the btree from that block downward.
+> >  If instead the cursor points to an inode, dump the data fork block mapping btree if there is one.
+> > +If the cursor points to a directory or extended attribute btree node, dump that.
+> >  By default, only records stored in the btree are dumped.
 > 
-> For the 3rd situation (*unaligned* read from past EOF):
->  - RHEL-7.3 ext4 return 0, xfs return error (known bug).
->  - Upstream 4.13-rc1 ext4 return EINVAL, xfs return 0.
+> adding this to the command long help would be nice too
 > 
-> I can't find any standard explain how a unaligned read from past EOF should
-> be. So I decide to skip this gray area for now.
+> xfs_db> help btdump
+> btdump [-a] [-i] -- dump btree
 > 
-
-This looks mostly good to me. Thanks for the rework. Just some nits...
-
-> Thanks,
-> Zorro
+>  If the cursor points to a btree block, 'btdump' dumps the btree
+>  downward from that block.  If the cursor points to an inode,
+>  the data fork btree root is selected by default.
 > 
->  tests/generic/450     | 149 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/450.out |  11 ++++
->  tests/generic/group   |   1 +
->  3 files changed, 161 insertions(+)
->  create mode 100755 tests/generic/450
->  create mode 100644 tests/generic/450.out
+>  Options:
+>    -a -- Display an inode's extended attribute fork btree.
+>    -i -- Print internal btree nodes.
+
+Will do.
+
+--D
+
 > 
-> diff --git a/tests/generic/450 b/tests/generic/450
-> new file mode 100755
-> index 00000000..0aa2e81c
-> --- /dev/null
-> +++ b/tests/generic/450
-> @@ -0,0 +1,149 @@
-> +#! /bin/bash
-> +# FS QA Test 450
-> +#
-> +# Test read around EOF. If the file offset is at or past the end of file,
-> +# no bytes are read, and read() returns zero.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +	rm -f $tfile
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-
-Is ./common/filter used in this test?
-
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_test
-> +
-> +tfile=$TEST_DIR/testfile_${seq}
-> +ssize=`_min_dio_alignment $TEST_DEV`
-> +bsize=`_get_block_size $TEST_DIR`
-> +
-> +if [ $ssize -gt $((bsize/4)) ]; then
-> +	_notrun "Only test on sector size < half of block size"
-> +fi
-> +
-> +rm -f $tfile 2>/dev/null
-> +
-> +# check xfs_io pread result, especially for
-> +# Param1: expected pread return
-> +# Param2: expected pread count
-> +# Param3: expected pread offset
-> +#
-> +# If any of above values are not as expected, the output keeps
-> +# using the real value
-> +check_xfs_io_read()
-> +{
-> +	RETURN=$1
-> +	COUNT=$2
-> +	OFFSET=$3
-> +
-> +	$AWK_PROG -v ret="$RETURN" -v cnt="$COUNT" -v off="$OFFSET" '
-> +		/read/{
-> +			split($2, bytes, "/")
-> +
-> +			retval=bytes[1]
-> +			count=bytes[2]
-> +			offset=$NF
-> +
-> +			if(retval != ret || count != cnt || offset != off)
-> +				printf("expect [%s, %s, %s], but get [%s, %s, %s]\n", ret, cnt, off, retval, count, offset)
-
-I'm not terribly familiar with the syntax here, but can we split this
-long line up without breaking it? We could also shorten it up a bit with
-an output format that looks like:
-
-	expect [...], got [...]
-
-> +
-> +			next
-> +		}
-> +	'
-> +}
-> +
-> +# +-------------------------------------------------------+
-> +# |           block           |           block           |
-> +# +-------------------------------------------------------+
-> +# | sect | sect | sect | sect | sect | sect | sect | sect |
-> +#                                           |
-> +#                                          EOF
-> +# |<--------------- move EOF -------------->| xxxxxxxxxxx |
-> +# [pread1]
-> +#                             [           pread2          ]
-> +#                                           [pread3]
-> +#                                                  [pread4]  ...  [pread5]
-> +#
-> +# Run below steps with differnt $operation and $openflag
-
-			  different
-
-> +#
-> +# 1) write 2 blocks (6 sectors) data to move EOF to the penultimate sector
-> +# 2) read (pread1) the first sector within EOF
-> +# 3) read (pread2) the second block contain EOF
-> +# 4) read (pread3) a sector at (after) EOF
-> +# 6) read (pread4) the last sector past EOF
-> +# 7) read (pread5) at far away from EOF
-> +#
-> +# NOTE: This case generally test on sector size < block size, but equal is fine
-
-Is this still valid..?
-
-> +#
-> +asize=$((bsize * 2))
-> +tsize=$((asize - ssize * 2))
-> +
-> +read_test()
-> +{
-> +	echo "## pread1 $oflag ##"
-> +	$XFS_IO_PROG $oflag -c "pread 0 $ssize" $tfile | \
-> +		check_xfs_io_read "$ssize" "$ssize" "0"
-> +
-> +	echo "## pread2 $oflag ##"
-> +	$XFS_IO_PROG $oflag -c "pread $bsize $bsize" $tfile | \
-> +		check_xfs_io_read "$((bsize - ssize * 2))" "$bsize" "$bsize"
-
-An expected return value of $((tsize - bsize)) seems a bit more clear to
-me (i.e., file size - offset).
-
-> +
-> +	echo "## pread3 $oflag ##"
-> +	$XFS_IO_PROG $oflag -c "pread $tsize $ssize" $tfile | \
-> +		check_xfs_io_read "0" "$ssize" "$tsize"
-> +
-> +	echo "## pread4 $oflag ##"
-> +	$XFS_IO_PROG $oflag -c "pread $((asize - ssize)) $ssize" $tfile | \
-
-$((tsize + ssize)) ?
-
-> +		check_xfs_io_read "0" "$ssize" "$((asize - ssize))"
-> +
-> +	echo "## pread5 $oflag ##"
-> +	$XFS_IO_PROG $oflag -c "pread $((bsize * 100)) $ssize" $tfile | \
-> +		check_xfs_io_read "0" "$ssize" "$((bsize * 100))"
-> +}
-> +
-> +# Test buffer/direct I/O read
-> +for oflag in "" "-d"; do
-> +	$XFS_IO_PROG -ft -c "pwrite 0 ${tsize}" $tfile >>$seqres.full
-> +	read_test
-> +done
-
-I don't see why we need to write the file for each iteration of the
-loop. As it is, any writes beyond the initial iteration look like
-overwrites that otherwise won't modify the state of the file. Also, I
-think we should -c fsync the file to ensure consistent test behavior and
-it's slightly cleaner to pass oflag to read_test() so it's obvious how
-it's used.  E.g.:
-
-$XFS_IO_PROG -ft -c "pwrite ..." -c fsync ...
-for oflag in "" "-d"; do
-	read_test $oflag
-done
-
-Brian
-
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/450.out b/tests/generic/450.out
-> new file mode 100644
-> index 00000000..ce3571bc
-> --- /dev/null
-> +++ b/tests/generic/450.out
-> @@ -0,0 +1,11 @@
-> +QA output created by 450
-> +## pread1  ##
-> +## pread2  ##
-> +## pread3  ##
-> +## pread4  ##
-> +## pread5  ##
-> +## pread1 -d ##
-> +## pread2 -d ##
-> +## pread3 -d ##
-> +## pread4 -d ##
-> +## pread5 -d ##
-> diff --git a/tests/generic/group b/tests/generic/group
-> index a04cc900..0b29be0a 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -452,3 +452,4 @@
->  447 auto quick clone
->  448 auto quick rw
->  449 auto quick acl enospc
-> +450 auto quick rw
-> -- 
-> 2.13.3
+> 
+> 
+> >  .RS 1.0i
+> >  .TP 0.4i
+> > 
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
