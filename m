@@ -1,257 +1,328 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45232 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751865AbdHCRP2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Aug 2017 13:15:28 -0400
-Subject: [PATCH 8/7 V2] xfs_db: use TYP_F_CRC_FUNC for inodes & dquots
+Received: from aserp1040.oracle.com ([141.146.126.69]:35395 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751775AbdHAPlF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2017 11:41:05 -0400
+Date: Tue, 1 Aug 2017 08:40:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 4/7] xfs_db: dump dir/attr btrees
+Message-ID: <20170801154053.GH4477@magnolia>
 References: <150153520589.26081.8786864874176090813.stgit@magnolia>
- <150153525206.26081.8927560161890396433.stgit@magnolia>
- <ddf6bf02-e210-e299-6966-b7d926da4d2e@sandeen.net>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <95262dad-848c-0582-d7e5-230d630f3349@redhat.com>
-Date: Thu, 3 Aug 2017 12:15:26 -0500
+ <150153523353.26081.1989249017494623271.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <ddf6bf02-e210-e299-6966-b7d926da4d2e@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150153523353.26081.1989249017494623271.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-Now that typ_t has a ->set_crc method, use it for inodes & dquots
-as well, rather than recognizing them as special types and calling
-their crc functions directly by name.
+Dump the directory or extended attribute btree contents.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ db/btdump.c       |  255 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_db.8 |    1 
+ 2 files changed, 255 insertions(+), 1 deletion(-)
 
-V2: Remove one more buf type special case in write_f(), and call crc
-writer helpers rather than open coded versions in write_cur()
-
-diff --git a/db/dquot.c b/db/dquot.c
-index 061eca5..4e35df4 100644
---- a/db/dquot.c
-+++ b/db/dquot.c
-@@ -171,6 +171,17 @@ dquot_f(
+diff --git a/db/btdump.c b/db/btdump.c
+index 3b76e17..f525a4a 100644
+--- a/db/btdump.c
++++ b/db/btdump.c
+@@ -32,7 +32,9 @@ btdump_help(void)
+ "\n"
+ " If the cursor points to a btree block, 'btdump' dumps the btree\n"
+ " downward from that block.  If the cursor points to an inode,\n"
+-" the data fork btree root is selected by default.\n"
++" the data fork btree root is selected by default.  If the cursor\n"
++" points to a directory or extended attribute btree node, the tree\n"
++" will be printed downward from that block.\n"
+ "\n"
+ " Options:\n"
+ "   -a -- Display an inode's extended attribute fork btree.\n"
+@@ -227,6 +229,252 @@ dump_inode(
+ 	return ret;
  }
  
- void
-+xfs_dquot_set_crc(
-+	struct xfs_buf *bp)
++static bool
++dir_has_rightsib(
++	void				*block,
++	int				level)
 +{
-+	ASSERT((iocur_top->dquot_buf));
-+	ASSERT(iocur_top->bp == bp);
++	struct xfs_dir3_icleaf_hdr	lhdr;
++	struct xfs_da3_icnode_hdr	nhdr;
 +
-+	xfs_update_cksum(iocur_top->data, sizeof(struct xfs_dqblk),
-+			 XFS_DQUOT_CRC_OFF);
++	if (level > 0) {
++		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
++		return nhdr.forw != 0;
++	}
++	M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
++	return lhdr.forw != 0;
 +}
 +
-+void
- dquot_init(void)
- {
- 	add_command(&dquot_cmd);
-diff --git a/db/dquot.h b/db/dquot.h
-index 83a5118..12a7244 100644
---- a/db/dquot.h
-+++ b/db/dquot.h
-@@ -20,4 +20,5 @@ extern const struct field	disk_dquot_flds[];
- extern const struct field	dqblk_flds[];
- extern const struct field	dqblk_hfld[];
- 
-+extern void	xfs_dquot_set_crc(struct xfs_buf *);
- extern void	dquot_init(void);
-diff --git a/db/fuzz.c b/db/fuzz.c
-index e1c2045..a9b1577 100644
---- a/db/fuzz.c
-+++ b/db/fuzz.c
-@@ -125,8 +125,7 @@ fuzz_f(
- 		return 0;
- 	}
- 
--	if (invalid_data && iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF &&
--			!iocur_top->ino_buf && !iocur_top->dquot_buf) {
-+	if (invalid_data && iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF) {
- 		dbprintf(_("Cannot recalculate CRCs on this type of object\n"));
- 		return 0;
- 	}
-@@ -153,12 +152,6 @@ fuzz_f(
- 	if (corrupt) {
- 		local_ops.verify_write = xfs_dummy_verify;
- 		dbprintf(_("Allowing fuzz of corrupted data and bad CRC\n"));
--	} else if (iocur_top->ino_buf) {
--		local_ops.verify_write = xfs_verify_recalc_inode_crc;
--		dbprintf(_("Allowing fuzz of corrupted inode with good CRC\n"));
--	} else if (iocur_top->dquot_buf) {
--		local_ops.verify_write = xfs_verify_recalc_dquot_crc;
--		dbprintf(_("Allowing fuzz of corrupted dquot with good CRC\n"));
- 	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
- 		local_ops.verify_write = iocur_top->typ->set_crc;
- 		dbprintf(_("Allowing fuzz of corrupted data with good CRC\n"));
-diff --git a/db/inode.c b/db/inode.c
-index 6cc47d6..6f971c6 100644
---- a/db/inode.c
-+++ b/db/inode.c
-@@ -711,3 +711,14 @@ _("Metadata CRC error detected for ino %lld\n"),
- 	/* track updated info in ring */
- 	ring_add();
- }
-+
-+void
-+xfs_inode_set_crc(
-+	struct xfs_buf *bp)
++static int
++dir_level(
++	void				*block)
 +{
-+	ASSERT(iocur_top->ino_buf);
-+	ASSERT(iocur_top->bp == bp);
++	struct xfs_dir3_icleaf_hdr	lhdr;
++	struct xfs_da3_icnode_hdr	nhdr;
 +
-+	libxfs_dinode_calc_crc(mp, iocur_top->data);
-+	iocur_top->ino_crc_ok = 1;
++	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
++	case cpu_to_be16(XFS_DIR2_LEAF1_MAGIC):
++	case cpu_to_be16(XFS_DIR2_LEAFN_MAGIC):
++		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
++		return 0;
++	case cpu_to_be16(XFS_DA_NODE_MAGIC):
++		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
++		return nhdr.level;
++	default:
++		return -1;
++	}
 +}
-diff --git a/db/inode.h b/db/inode.h
-index 1624f1d..d79b0a4 100644
---- a/db/inode.h
-+++ b/db/inode.h
-@@ -33,4 +33,5 @@ extern void	inode_init(void);
- extern typnm_t	inode_next_type(void);
- extern int	inode_size(void *obj, int startoff, int idx);
- extern int	inode_u_size(void *obj, int startoff, int idx);
-+extern void	xfs_inode_set_crc(struct xfs_buf *);
- extern void	set_cur_inode(xfs_ino_t ino);
-diff --git a/db/io.c b/db/io.c
-index fd9b9f4..2716255 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -22,6 +22,7 @@
- #include "faddr.h"
- #include "fprint.h"
- #include "field.h"
-+#include "dquot.h"
- #include "inode.h"
- #include "io.h"
- #include "output.h"
-@@ -466,28 +467,6 @@ xfs_dummy_verify(
- }
- 
- void
--xfs_verify_recalc_inode_crc(
--	struct xfs_buf *bp)
--{
--	ASSERT(iocur_top->ino_buf);
--	ASSERT(iocur_top->bp == bp);
--
--	libxfs_dinode_calc_crc(mp, iocur_top->data);
--	iocur_top->ino_crc_ok = 1;
--}
--
--void
--xfs_verify_recalc_dquot_crc(
--	struct xfs_buf *bp)
--{
--	ASSERT((iocur_top->dquot_buf));
--	ASSERT(iocur_top->bp == bp);
--
--	xfs_update_cksum(iocur_top->data, sizeof(struct xfs_dqblk),
--			 XFS_DQUOT_CRC_OFF);
--}
--
--void
- xfs_verify_recalc_crc(
- 	struct xfs_buf *bp)
++
++static int
++dir3_level(
++	void				*block)
++{
++	struct xfs_dir3_icleaf_hdr	lhdr;
++	struct xfs_da3_icnode_hdr	nhdr;
++
++	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
++	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
++	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
++		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
++		return 0;
++	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
++		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
++		return nhdr.level;
++	default:
++		return -1;
++	}
++}
++
++static bool
++attr_has_rightsib(
++	void				*block,
++	int				level)
++{
++        struct xfs_attr_leafblock	lhdr;
++	struct xfs_da3_icnode_hdr	nhdr;
++
++	if (level > 0) {
++		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
++		return nhdr.forw != 0;
++	}
++	xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
++	return lhdr.hdr.info.forw != 0;
++}
++
++static int
++attr_level(
++	void				*block)
++{
++	struct xfs_attr_leafblock	lhdr;
++	struct xfs_da3_icnode_hdr	nhdr;
++
++	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
++	case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
++		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
++		return 0;
++	case cpu_to_be16(XFS_DA_NODE_MAGIC):
++		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
++		return nhdr.level;
++	default:
++		return -1;
++	}
++}
++
++static int
++attr3_level(
++	void				*block)
++{
++	struct xfs_attr_leafblock	lhdr;
++	struct xfs_da3_icnode_hdr	nhdr;
++
++	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
++	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
++		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
++		return 0;
++	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
++		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
++		return nhdr.level;
++	default:
++		return -1;
++	}
++}
++
++struct dabprinter_ops {
++	const char		*print_node_entries;
++	const char		*print_leaf_entries;
++	const char		*go_node_forward;
++	const char		*go_leaf_forward;
++	const char		*go_down;
++	bool			(*has_rightsib)(void *, int);
++	int			(*level)(void *);
++};
++
++static struct dabprinter_ops attr_print = {
++	.print_node_entries	= "btree",
++	.print_leaf_entries	= "entries nvlist",
++	.go_node_forward	= "hdr.info.forw",
++	.go_leaf_forward	= "hdr.info.forw",
++	.go_down		= "btree[0].before",
++	.has_rightsib		= attr_has_rightsib,
++	.level			= attr_level,
++};
++
++static struct dabprinter_ops attr3_print = {
++	.print_node_entries	= "btree",
++	.print_leaf_entries	= "entries nvlist",
++	.go_node_forward	= "hdr.info.hdr.forw",
++	.go_leaf_forward	= "hdr.info.hdr.forw",
++	.go_down		= "btree[0].before",
++	.has_rightsib		= attr_has_rightsib,
++	.level			= attr3_level,
++};
++
++static struct dabprinter_ops dir_print = {
++	.print_node_entries	= "nbtree",
++	.print_leaf_entries	= "lents",
++	.go_node_forward	= "nhdr.info.hdr.forw",
++	.go_leaf_forward	= "lhdr.info.hdr.forw",
++	.go_down		= "nbtree[0].before",
++	.has_rightsib		= dir_has_rightsib,
++	.level			= dir_level,
++};
++
++static struct dabprinter_ops dir3_print = {
++	.print_node_entries	= "nbtree",
++	.print_leaf_entries	= "lents",
++	.go_node_forward	= "nhdr.info.forw",
++	.go_leaf_forward	= "lhdr.info.forw",
++	.go_down		= "nbtree[0].before",
++	.has_rightsib		= dir_has_rightsib,
++	.level			= dir3_level,
++};
++
++static int
++dump_dablevel(
++	int			level,
++	struct dabprinter_ops	*dbp)
++{
++	xfs_daddr_t		orig_daddr = iocur_top->bb;
++	xfs_daddr_t		last_daddr;
++	unsigned int		nr;
++	int			ret;
++
++	ret = eval("push");
++	if (ret)
++		return ret;
++
++	nr = 1;
++	do {
++		last_daddr = iocur_top->bb;
++		dbprintf(_("%s level %u block %u daddr %llu\n"),
++			 iocur_top->typ->name, level, nr, last_daddr);
++		ret = eval("print %s", level > 0 ? dbp->print_node_entries :
++						   dbp->print_leaf_entries);
++		if (ret)
++			goto err;
++		if (dbp->has_rightsib(iocur_top->data, level)) {
++			ret = eval("addr %s", level > 0 ? dbp->go_node_forward :
++							  dbp->go_leaf_forward);
++			if (ret)
++				goto err;
++		}
++		nr++;
++	} while (iocur_top->bb != orig_daddr && iocur_top->bb != last_daddr);
++
++	ret = eval("pop");
++	return ret;
++err:
++	eval("pop");
++	return ret;
++}
++
++static int
++dump_dabtree(
++	bool				dump_node_blocks,
++	struct dabprinter_ops		*dbp)
++{
++	xfs_daddr_t			orig_daddr = iocur_top->bb;
++	xfs_daddr_t			last_daddr;
++	int				level;
++	int				ret;
++
++	ret = eval("push");
++	if (ret)
++		return ret;
++
++	cur_agno = XFS_FSB_TO_AGNO(mp, XFS_DADDR_TO_FSB(mp, iocur_top->bb));
++	level = dbp->level(iocur_top->data);
++	if (level < 0) {
++		printf(_("Current location is not part of a dir/attr btree.\n"));
++		goto err;
++	}
++
++	do {
++		last_daddr = iocur_top->bb;
++		if (level > 0) {
++			if (dump_node_blocks) {
++				ret = dump_dablevel(level, dbp);
++				if (ret)
++					goto err;
++			}
++			ret = eval("addr %s", dbp->go_down);
++		} else {
++			ret = dump_dablevel(level, dbp);
++		}
++		if (ret)
++			goto err;
++		level--;
++	} while (level >= 0 &&
++		 iocur_top->bb != orig_daddr &&
++		 iocur_top->bb != last_daddr);
++
++	ret = eval("pop");
++	return ret;
++err:
++	eval("pop");
++	return ret;
++}
++
+ static int
+ btdump_f(
+ 	int		argc,
+@@ -234,6 +482,7 @@ btdump_f(
  {
-@@ -510,14 +489,10 @@ write_cur(void)
- 		skip_crc = true;
+ 	bool		aflag = false;
+ 	bool		iflag = false;
++	bool		crc = xfs_sb_version_hascrc(&mp->m_sb);
+ 	int		c;
  
- 	if (!skip_crc) {
--		if (iocur_top->ino_buf) {
--			libxfs_dinode_calc_crc(mp, iocur_top->data);
--			iocur_top->ino_crc_ok = 1;
--		} else if (iocur_top->dquot_buf) {
--			xfs_update_cksum(iocur_top->data,
--					 sizeof(struct xfs_dqblk),
--					 XFS_DQUOT_CRC_OFF);
--		}
-+		if (iocur_top->ino_buf)
-+			xfs_inode_set_crc(iocur_top->bp);
-+		else if (iocur_top->dquot_buf)
-+			xfs_dquot_set_crc(iocur_top->bp);
- 	}
- 	if (iocur_top->bbmap)
- 		write_cur_bbs();
-diff --git a/db/io.h b/db/io.h
-index df0fdd7..374dd84 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -64,8 +64,6 @@ extern void	set_cur(const struct typ *type, xfs_daddr_t blknum,
- extern void     ring_add(void);
- extern void	set_iocur_type(const struct typ *type);
- extern void	xfs_dummy_verify(struct xfs_buf *bp);
--extern void	xfs_verify_recalc_inode_crc(struct xfs_buf *bp);
--extern void	xfs_verify_recalc_dquot_crc(struct xfs_buf *bp);
- extern void	xfs_verify_recalc_crc(struct xfs_buf *bp);
- 
- /*
-diff --git a/db/type.c b/db/type.c
-index 740adc0..0c1ed37 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -105,12 +105,12 @@ static const typ_t	__typtab_crc[] = {
- 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
- 		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
- 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
--		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
-+		&xfs_dquot_buf_ops, TYP_F_CRC_FUNC, xfs_dquot_set_crc },
- 	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
- 		&xfs_inobt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
- 	{ TYP_INODATA, "inodata", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
--		&xfs_inode_buf_ops, TYP_F_NO_CRC_OFF },
-+		&xfs_inode_buf_ops, TYP_F_CRC_FUNC, xfs_inode_set_crc },
- 	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
-@@ -149,12 +149,12 @@ static const typ_t	__typtab_spcrc[] = {
- 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
- 		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
- 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
--		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
-+		&xfs_dquot_buf_ops, TYP_F_CRC_FUNC, xfs_dquot_set_crc },
- 	{ TYP_INOBT, "inobt", handle_struct, inobt_spcrc_hfld,
- 		&xfs_inobt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
- 	{ TYP_INODATA, "inodata", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
--		&xfs_inode_buf_ops, TYP_F_NO_CRC_OFF },
-+		&xfs_inode_buf_ops, TYP_F_CRC_FUNC, xfs_inode_set_crc },
- 	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
-diff --git a/db/write.c b/db/write.c
-index 266bde4..9fc6d8e 100644
---- a/db/write.c
-+++ b/db/write.c
-@@ -138,9 +138,7 @@ write_f(
- 	}
- 
- 	if (invalid_data &&
--	    iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF &&
--	    !iocur_top->ino_buf &&
--	    !iocur_top->dquot_buf) {
-+	    iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF) {
- 		dbprintf(_("Cannot recalculate CRCs on this type of object\n"));
- 		return 0;
- 	}
-@@ -167,12 +165,6 @@ write_f(
- 	if (corrupt) {
- 		local_ops.verify_write = xfs_dummy_verify;
- 		dbprintf(_("Allowing write of corrupted data and bad CRC\n"));
--	} else if (iocur_top->ino_buf) {
--		local_ops.verify_write = xfs_verify_recalc_inode_crc;
--		dbprintf(_("Allowing write of corrupted inode with good CRC\n"));
--	} else if (iocur_top->dquot_buf) {
--		local_ops.verify_write = xfs_verify_recalc_dquot_crc;
--		dbprintf(_("Allowing write of corrupted dquot with good CRC\n"));
- 	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
- 		local_ops.verify_write = iocur_top->typ->set_crc;
- 		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
-
+ 	if (cur_typ == NULL) {
+@@ -276,6 +525,10 @@ btdump_f(
+ 		return dump_btree_long(iflag);
+ 	case TYP_INODE:
+ 		return dump_inode(iflag, aflag);
++	case TYP_ATTR:
++		return dump_dabtree(iflag, crc ? &attr3_print : &attr_print);
++	case TYP_DIR2:
++		return dump_dabtree(iflag, crc ? &dir3_print : &dir_print);
+ 	default:
+ 		dbprintf(_("type \"%s\" is not a btree type or inode\n"),
+ 				cur_typ->name);
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 6a97504..b3129f7 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -335,6 +335,7 @@ area of the inode, if neither option is given then both areas are shown.
+ .B btdump [-a] [-i]
+ If the cursor points to a btree node, dump the btree from that block downward.
+ If instead the cursor points to an inode, dump the data fork block mapping btree if there is one.
++If the cursor points to a directory or extended attribute btree node, dump that.
+ By default, only records stored in the btree are dumped.
+ .RS 1.0i
+ .TP 0.4i
