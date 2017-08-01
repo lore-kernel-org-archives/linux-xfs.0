@@ -1,77 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cloud1-vm154.de-nserver.de ([178.250.10.56]:27287 "EHLO
-        cloud1-vm154.de-nserver.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751737AbdHANuW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2017 09:50:22 -0400
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Subject: Re: metadata I/O error: block 0x575b6d70,("xfs_trans_read_buf_map")
- error 4 numblks 16
-References: <e4606e43-468e-431c-1663-6b167cc5648b@profihost.ag>
- <20170801153548.15cf74ef@harpe.intellique.com>
-Message-ID: <b29b31a1-edb9-47f4-a641-11ecfc289c99@profihost.ag>
-Date: Tue, 1 Aug 2017 15:50:20 +0200
+Received: from sandeen.net ([63.231.237.45]:53754 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751295AbdHAQ01 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 Aug 2017 12:26:27 -0400
+Subject: Re: [PATCH] xfs_metadump: properly handle obfuscation of all remote
+ attribute blocks
+References: <7862201b-e387-8037-ca99-b6ab3212f4a7@redhat.com>
+ <20170728125201.GA12444@bfoster.bfoster>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <8125572f-a7fa-ecb3-4b50-7684a8ae2372@sandeen.net>
+Date: Tue, 1 Aug 2017 11:26:25 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170801153548.15cf74ef@harpe.intellique.com>
+In-Reply-To: <20170728125201.GA12444@bfoster.bfoster>
 Content-Type: text/plain; charset=utf-8
-Content-Language: de-DE
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Hello Emmanuel,
-
-yes there are bcache patches already applied:
-0002-bcache-bch_writeback_thread-is-not-freezable.patch
-0003-bcache-bch_allocator_thread-is-not-freezable.patch
-0001-bcache-partition-support-add-16-minors-per-bcacheN-d.patch
-0044-bcache-Remove-deprecated-create_workqueue.patch
-0045-bcache-Remove-redundant-parameter-for-cache_alloc.patch
-0046-bcache-update-document-info.patch
-0047-bcache-Remove-redundant-block_size-assignment.patch
-0048-bcache-register_bcache-call-blkdev_put-when-cache_al.patch
-0049-bcache-pr_err-more-meaningful-error-message-when-nr_.patch
-0071-bcache-switch-to-using-blk_queue_write_cache.patch
-0092-bcache-use-op_is_write-instead-of-checking-for-REQ_W.patch
-0110-bcache-use-bio-op-accessors.patch
-0253-bcache-use-op_is_sync-to-check-for-synchronous-reque.patch
-0344-bcache-debug-avoid-accessing-.bi_io_vec-directly.patch
-0002-bcache-fix-calling-ida_simple_remove-with-incorrect-minor.patch
-0001-bcache-force-trigger-gc.patch
-0001-bcache-only-recovery-I-O-error-for-writethrough-mode.patch
-
-There is no trace involved as there is no kernel bug triggered. That's
-the whole output.
-
-Greets,
-Stefan
-Am 01.08.2017 um 15:35 schrieb Emmanuel Florac:
-> Le Tue, 1 Aug 2017 10:12:57 +0200
-> Stefan Priebe - Profihost AG <s.priebe@profihost.ag> écrivait:
-> 
->> Hello,
+On 7/28/17 7:52 AM, Brian Foster wrote:
+> On Wed, Jul 26, 2017 at 03:35:37PM -0500, Eric Sandeen wrote:
+>> add_remote_vals assumes that it can subtract blocksize
+>> from each block that it processes, but with CRCs, there
+>> is a header on each block, so the assumption that each
+>> block consumes $BLOCKSIZE of the value length is incorrect.
 >>
->> under very high load i'm getting the following error on a bcache
->> device using XFS:
->> XFS (bcache1): metadata I/O error: block 0x575b6d70
->> ("xfs_trans_read_buf_map") error 4 numblks 16
->> XFS (bcache1): xfs_imap_to_bp: xfs_trans_read_buf() returned error -4.
->> XFS (bcache1): xfs_do_force_shutdown(0x8) called from line 3519 of
->> file fs/xfs/xfs_inode.c. Return address = 0xffffffff993441ff
->> XFS (bcache1): Corruption of in-memory data detected. Shutting down
->> filesystem
->> XFS (bcache1): Please umount the filesystem and rectify the problem(s)
->> XFS (bcache1): xfs_log_force: error -5 returned.
->> XFS (bcache1): xfs_log_force: error -5 returned.
->> XFS (bcache1): xfs_log_force: error -5 returned.
+>> This causes us to stop adding remote blocks too soon, and
+>> the missed blocks do not get obfuscated.
 >>
->> The used kernel is 4.4.79 based while using an opensuses patchset. Is
->> this something which is a known problem or something suse has broken?
+>> Fix this by accounting for the header size as appropriate,
+>> depending on whether or not we have a CRC filesystem.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+>> diff --git a/db/metadump.c b/db/metadump.c
+>> index 96641e0..c8abfeb 100644
+>> --- a/db/metadump.c
+>> +++ b/db/metadump.c
+>> @@ -1602,14 +1602,20 @@ static struct attr_data_s {
+>>  
+>>  static inline void
+>>  add_remote_vals(
+>> +	struct xfs_mount	*mp,
+>>  	xfs_dablk_t 		blockidx,
+>>  	int			length)
+>>  {
+>> +	int			hdrsize = 0;
+>> +
+>> +	if (xfs_sb_version_hascrc(&mp->m_sb))
+>> +		hdrsize = sizeof(struct xfs_attr3_rmt_hdr);
+>> +
+>>  	while (length > 0 && attr_data.remote_val_count < MAX_REMOTE_VALS) {
+>>  		attr_data.remote_vals[attr_data.remote_val_count] = blockidx;
+>>  		attr_data.remote_val_count++;
+>>  		blockidx++;
+>> -		length -= mp->m_sb.sb_blocksize;
+>> +		length -= (mp->m_sb.sb_blocksize - hdrsize);
 > 
-> Do you know if the patchset includes Eric Wheeler's stability patches
-> for bcache?
-> 
-> Also please post the output from dmesg with the complete trace.
-> 
+> XFS_ATTR3_RMT_BUF_SPACE()?
+
+Oh, yeah, why didn't I use that!
+
+Thanks,
+-Eric
+
+> Brian
