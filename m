@@ -1,89 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:36217 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752014AbdHBIim (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2017 04:38:42 -0400
-Received: by mail-wm0-f47.google.com with SMTP id t201so35042051wmt.1
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Aug 2017 01:38:42 -0700 (PDT)
-Message-ID: <7AF4FEF16E034B868577B3ED535D5C41@alyakaslap>
-From: "Alex Lyakas" <alex@zadarastorage.com>
-References: <d161b07cad6536b0baf285328cf99500@mail.gmail.com> <A3EABCF079964F4FA6058F30EBF80FD8@alyakaslap> <20170801231839.GQ17762@dastard>
-In-Reply-To: <20170801231839.GQ17762@dastard>
-Subject: Re: Metadata corruption at xfs_attr3_leaf_write_verify()
-Date: Wed, 2 Aug 2017 11:38:36 +0300
+Received: from bombadil.infradead.org ([65.50.211.133]:39584 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751735AbdHAKwV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2017 06:52:21 -0400
+Date: Tue, 1 Aug 2017 03:52:19 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC PATCH 0/7] dax, ext4: Synchronous page faults
+Message-ID: <20170801105219.GA6742@infradead.org>
+References: <20170727131245.28279-1-jack@suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        format=flowed;
-        charset="iso-8859-1";
-        reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170727131245.28279-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, Shyam Kaushik <shyam@zadarastorage.com>, bfoster@redhat.com, dchinner@redhat.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Andy Lutomirski <luto@kernel.org>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
 
-Hello Dave,
+On Thu, Jul 27, 2017 at 03:12:38PM +0200, Jan Kara wrote:
+> So the functionality this patches implement: We have an inode flag (currently
+> I abuse S_SYNC inode flag for this and IMHO it kind of makes sense but if
+> people hate that I'm certainly open to using new flag in the final
+> implementation) that marks inode as requiring synchronous page faults.
+> The guarantee provided by this flag on inode is: While a block is writeably
+> mapped into page tables, it is guaranteed to be visible in the file at that
+> offset also after a crash.
 
-Thank you for your analysis. It sounds like this issue exists in recent 
-kernels as well.
+I think the right interface for page fault behavior is a mmap
+flag, MAP_SYNC or similar, which will be optional and a failure of
+a MAP_SYNC mmap will indicated that this behavior can't be provided
+for the given file descriptor.
 
-We are reviewing some of the paths that operate xfs_buf's, but still we 
-don't have enough understanding on how to properly lock out the xfs_buf from 
-AIL grabbing it. Can you please point us at similar flows, where such 
-locking is done?
+> >From my (fairly limited) knowledge of XFS it seems XFS should be able to do the
+> same and it should be even possible for filesystem to implement safe remapping
+> of a file offset to a different block (i.e. break reflink, do defrag, or
+> similar stuff) like:
 
-Or otherwise, should you propose a patch to fix this, we can test it. If 
-possible, making the patch applicable to kernel 3.18.19 would be 
-appreciated. I realize that this is an EOL kernel, but still it used to be a 
-long-term kernel.
+It should.  But what I'm worried about for both ext4 and XFS is the
+worst case behavior that the page faul path can now hit, e.g. flushing
+a potentially full log.  Do you have any numbers of how long your
+ext4 page faults take with this in the worst case?
 
-Thanks,
-Alex.
+> There are couple of open questions with this implementation:
+> 
+> 1) Is it worth the hassle?
 
+For that I'd really like to see performance numbers.  And compared to
+the immutable nightmare that Dan proposed this looks orders of magnitude
+better.
 
+> 2) Is S_SYNC good flag to use or should we use a new inode flag?
 
------Original Message----- 
-From: Dave Chinner
-Sent: Wednesday, August 02, 2017 2:18 AM
-To: Alex Lyakas
-Cc: linux-xfs@vger.kernel.org ; Shyam Kaushik ; bfoster@redhat.com ; 
-dchinner@redhat.com
-Subject: Re: Metadata corruption at xfs_attr3_leaf_write_verify()
+I think the right interface is mmap as said above.  But even if not
+we should not simply reuse existing flags with a well defined (although
+not particular useful) behavior.
 
-On Tue, Aug 01, 2017 at 08:30:31PM +0300, Alex Lyakas wrote:
-> Greetings XFS developers, David, Brian,
->
-> We did additional debugging on this issue. The problematic flow
-> happens to be the following:
->
-> - New inode (regular file) is being created.
-> - As part of creation, due to parent directory having a default ACL,
-> initial ACL is applied to the inode.
-> - This ACL is applied as an extended attribute with name
-> "SGI_ACL_FILE" and value length of 100 bytes.
-> - XFS tries to add this attribute into the inline inode attribute
-> fork area (AKA shortform).
-> - But 100 bytes is too large for the shortform, so XFS creates an
-> empty shortform and then calls xfs_attr_shortform_to_leaf()
-> - This calls xfs_attr3_leaf_create() and creates a leaf with zero
-> attributes.
-> - Before XFS is able to add the attribute to the leaf, the xfsaild
-> thread wants to write this leaf to disk, and trips over the assert
-> in xfs_attr3_leaf_verify, that ichdr.count should not be 0
+> 3) VM_FAULT_RO and especially passing of resulting 'pfn' from
+>    dax_iomap_fault() through filesystem fault handler to dax_pfn_mkwrite() in
+>    vmf->orig_pte is a bit of a hack. So far I'm not sure how to refactor
+>    things to make this cleaner.
 
-Ok, this makes it pretty obvious as to what's going on here. The new
-attribute leaf buffer is not held locked across the transaction roll
-between the shortform->leaf modification and the addition of the new
-entry. As a result the attribute buffer modification being made is
-not atomic from an operational perspective. Hence the AIL push can
-grab it in the transient state of "just created" after the initial
-transaction is rolled because the buffer has been released.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com 
-
+I'll take a look.
