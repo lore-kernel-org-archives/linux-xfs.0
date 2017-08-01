@@ -1,73 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:24047 "EHLO mail1.g1.pair.com"
+Received: from sandeen.net ([63.231.237.45]:34606 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751199AbdHANfr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 Aug 2017 09:35:47 -0400
-Date: Tue, 1 Aug 2017 15:35:48 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: metadata I/O error: block 0x575b6d70,("xfs_trans_read_buf_map")
- error 4 numblks 16
-Message-ID: <20170801153548.15cf74ef@harpe.intellique.com>
-In-Reply-To: <e4606e43-468e-431c-1663-6b167cc5648b@profihost.ag>
-References: <e4606e43-468e-431c-1663-6b167cc5648b@profihost.ag>
+        id S1751049AbdHASWj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 Aug 2017 14:22:39 -0400
+Subject: Re: Metadata corruption at xfs_attr3_leaf_write_verify()
+References: <d161b07cad6536b0baf285328cf99500@mail.gmail.com>
+ <A3EABCF079964F4FA6058F30EBF80FD8@alyakaslap>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b1f0c224-11b6-ba24-23e4-187f13d5cf17@sandeen.net>
+Date: Tue, 1 Aug 2017 13:22:37 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/g3A9=/TDFwFL9R55iqpcvuW"; protocol="application/pgp-signature"
+In-Reply-To: <A3EABCF079964F4FA6058F30EBF80FD8@alyakaslap>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: linux-xfs@vger.kernel.org
+To: Alex Lyakas <alex@zadarastorage.com>, linux-xfs@vger.kernel.org
+Cc: Shyam Kaushik <shyam@zadarastorage.com>, bfoster@redhat.com, dchinner@redhat.com, david@fromorbit.com
 
---Sig_/g3A9=/TDFwFL9R55iqpcvuW
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
 
-Le Tue, 1 Aug 2017 10:12:57 +0200
-Stefan Priebe - Profihost AG <s.priebe@profihost.ag> =C3=A9crivait:
 
-> Hello,
->=20
-> under very high load i'm getting the following error on a bcache
-> device using XFS:
-> XFS (bcache1): metadata I/O error: block 0x575b6d70
-> ("xfs_trans_read_buf_map") error 4 numblks 16
-> XFS (bcache1): xfs_imap_to_bp: xfs_trans_read_buf() returned error -4.
-> XFS (bcache1): xfs_do_force_shutdown(0x8) called from line 3519 of
-> file fs/xfs/xfs_inode.c. Return address =3D 0xffffffff993441ff
-> XFS (bcache1): Corruption of in-memory data detected. Shutting down
-> filesystem
-> XFS (bcache1): Please umount the filesystem and rectify the problem(s)
-> XFS (bcache1): xfs_log_force: error -5 returned.
-> XFS (bcache1): xfs_log_force: error -5 returned.
-> XFS (bcache1): xfs_log_force: error -5 returned.
->=20
-> The used kernel is 4.4.79 based while using an opensuses patchset. Is
-> this something which is a known problem or something suse has broken?
+On 8/1/17 12:30 PM, Alex Lyakas wrote:
+> Greetings XFS developers, David, Brian,
+> 
+> We did additional debugging on this issue. The problematic flow happens to be the following:
+> 
+> - New inode (regular file) is being created.
+> - As part of creation, due to parent directory having a default ACL, initial ACL is applied to the inode.
+> - This ACL is applied as an extended attribute with name "SGI_ACL_FILE" and value length of 100 bytes.
+> - XFS tries to add this attribute into the inline inode attribute fork area (AKA shortform).
+> - But 100 bytes is too large for the shortform, so XFS creates an empty shortform and then calls xfs_attr_shortform_to_leaf()
+> - This calls xfs_attr3_leaf_create() and creates a leaf with zero attributes.
+> - Before XFS is able to add the attribute to the leaf, the xfsaild thread wants to write this leaf to disk, and trips over the assert in xfs_attr3_leaf_verify, that ichdr.count should not be 0
+> 
+> So this seems like a race condition, where xfsaild writes a not-fully-prepared xfs_buf to disk. To my understanding this can lead to different kinds of corruptions.
 
-Do you know if the patchset includes Eric Wheeler's stability patches
-for bcache?
+Interesting, this seems possibly related to this commit, which
+addresses a similar issue only during log replay:
 
-Also please post the output from dmesg with the complete trace.
+commit 2e1d23370e75d7d89350d41b4ab58c7f6a0e26b2
+Author: Eric Sandeen <sandeen@redhat.com>
+Date:   Fri Dec 9 16:49:47 2016 +1100
 
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+    xfs: ignore leaf attr ichdr.count in verifier during log replay
+    
+    When we create a new attribute, we first create a shortform
+    attribute, and try to fit the new attribute into it.
+    If that fails, we copy the (empty) attribute into a leaf attribute,
+    and do the copy again.  Thus there can be a transient state where
+    we have an empty leaf attribute.
+    
+    If we encounter this during log replay, the verifier will fail.
+    So add a test to ignore this part of the leaf attr verification
+    during log replay.
+    
+    Thanks as usual to dchinner for spotting the problem.
+    
+    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
 
---Sig_/g3A9=/TDFwFL9R55iqpcvuW
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlmAg7QACgkQX3jQXNUicVa0oQCdF1SKVKw97a3+uEJkPzenTXGa
-CjUAoOn5Oe5zJzq58D58UtsZ8jedIBg6
-=6zHW
------END PGP SIGNATURE-----
-
---Sig_/g3A9=/TDFwFL9R55iqpcvuW--
+-Eric
