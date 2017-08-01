@@ -1,135 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33590 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751940AbdHAQXk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2017 12:23:40 -0400
-Date: Tue, 1 Aug 2017 09:23:33 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 3/7] xfs_db: fix metadump redirection (again)
-Message-ID: <20170801162333.GI4477@magnolia>
-References: <150153520589.26081.8786864874176090813.stgit@magnolia>
- <150153522749.26081.13898276114157159134.stgit@magnolia>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:36518 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751554AbdHAWXe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2017 18:23:34 -0400
+Date: Wed, 2 Aug 2017 08:23:30 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: metadata I/O error: block 0x575b6d70,("xfs_trans_read_buf_map")
+ error 4 numblks 16
+Message-ID: <20170801222330.GO17762@dastard>
+References: <e4606e43-468e-431c-1663-6b167cc5648b@profihost.ag>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150153522749.26081.13898276114157159134.stgit@magnolia>
+In-Reply-To: <e4606e43-468e-431c-1663-6b167cc5648b@profihost.ag>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
+To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 Cc: linux-xfs@vger.kernel.org
 
-In patch 4944defad4 ("xfs_db: redirect printfs when metadumping to
-stdout"), we solved the problem of xfs_db printfs ending up in the
-metadump stream by reassigning stdout for the duration of a stdout
-metadump.  Unfortunately, musl doesn't allow stdout to be reassigned (in
-their view "extern FILE *stdout" means "extern FILE * const stdout"), so
-we abandon the old approach in favor of playing games with dup() to
-switch the raw file descriptors.
+On Tue, Aug 01, 2017 at 10:12:57AM +0200, Stefan Priebe - Profihost AG wrote:
+> Hello,
+> 
+> under very high load i'm getting the following error on a bcache device
+> using XFS:
+> XFS (bcache1): metadata I/O error: block 0x575b6d70
+> ("xfs_trans_read_buf_map") error 4 numblks 16
 
-While we're at it, fix a regression where an unconverted outf test
-allows progress info to end up in the metadump stream.
+#define EINTR            4      /* Interrupted system call */
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: fix STDOUT_FILENO usage
----
- db/metadump.c |   47 ++++++++++++++++++++++++++++++++++++-----------
- 1 file changed, 36 insertions(+), 11 deletions(-)
+That's an EINTR error coming from the block layer. This is most
+definitely not an error that the block layer should be returning to
+the filesystem.
 
-diff --git a/db/metadump.c b/db/metadump.c
-index be2e712..6a23d58 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -78,6 +78,7 @@ static int		obfuscate = 1;
- static int		zero_stale_data = 1;
- static int		show_warnings = 0;
- static int		progress_since_warning = 0;
-+static bool		stdout_metadump;
- 
- void
- metadump_init(void)
-@@ -137,7 +138,7 @@ print_progress(const char *fmt, ...)
- 	va_end(ap);
- 	buf[sizeof(buf)-1] = '\0';
- 
--	f = (outf == stdout) ? stderr : stdout;
-+	f = stdout_metadump ? stderr : stdout;
- 	fprintf(f, "\r%-59s", buf);
- 	fflush(f);
- 	progress_since_warning = 1;
-@@ -2750,7 +2751,8 @@ metadump_f(
- 	xfs_agnumber_t	agno;
- 	int		c;
- 	int		start_iocur_sp;
--	bool		stdout_metadump = false;
-+	int		outfd = -1;
-+	int		ret;
- 	char		*p;
- 
- 	exitcode = 1;
-@@ -2870,16 +2872,35 @@ metadump_f(
- 		 * metadump operation so that dbprintf and other messages
- 		 * are sent to the console instead of polluting the
- 		 * metadump stream.
-+		 *
-+		 * We get to do this the hard way because musl doesn't
-+		 * allow reassignment of stdout.
- 		 */
--		outf = stdout;
--		stdout = stderr;
-+		fflush(stdout);
-+		outfd = dup(STDOUT_FILENO);
-+		if (outfd < 0) {
-+			perror("opening dump stream");
-+			goto out;
-+		}
-+		ret = dup2(STDERR_FILENO, STDOUT_FILENO);
-+		if (ret < 0) {
-+			perror("redirecting stdout");
-+			close(outfd);
-+			goto out;
-+		}
-+		outf = fdopen(outfd, "a");
-+		if (outf == NULL) {
-+			fprintf(stderr, "cannot create dump stream\n");
-+			dup2(outfd, STDOUT_FILENO);
-+			close(outfd);
-+			goto out;
-+		}
- 		stdout_metadump = true;
- 	} else {
- 		outf = fopen(argv[optind], "wb");
- 		if (outf == NULL) {
- 			print_warning("cannot create dump file");
--			free(metablock);
--			return 0;
-+			goto out;
- 		}
- 	}
- 
-@@ -2907,15 +2928,19 @@ metadump_f(
- 	if (progress_since_warning)
- 		fputc('\n', stdout_metadump ? stderr : stdout);
- 
--	if (stdout_metadump)
--		stdout = outf;
--	else
--		fclose(outf);
-+	if (stdout_metadump) {
-+		fflush(outf);
-+		fflush(stdout);
-+		ret = dup2(outfd, STDOUT_FILENO);
-+		if (ret < 0)
-+			perror("un-redirecting stdout");
-+	}
-+	fclose(outf);
- 
- 	/* cleanup iocur stack */
- 	while (iocur_sp > start_iocur_sp)
- 		pop_cur();
--
-+out:
- 	free(metablock);
- 
- 	return 0;
+IOWs, you've hit a bcache bug.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
