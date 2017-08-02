@@ -1,95 +1,294 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49827 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751921AbdHCWZ2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Aug 2017 18:25:28 -0400
-Date: Fri, 4 Aug 2017 00:25:27 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 1/7] mkfs: Save raw user input field to the opts struct
-Message-ID: <20170803222527.GH27873@wotan.suse.de>
-References: <20170720092932.32580-1-jtulak@redhat.com>
- <20170720092932.32580-2-jtulak@redhat.com>
- <20170727162752.GK18884@wotan.suse.de>
- <0c34504a-923a-20ac-9f03-6972e38bbfde@redhat.com>
- <20170729171207.GN18884@wotan.suse.de>
- <723e3733-0a80-1bf2-89ed-e80b914037ed@redhat.com>
- <20170802191932.GG18884@wotan.suse.de>
- <bf5c5e66-526e-4431-335a-b9fc98fc31e8@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46026 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752404AbdHBQ3g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Aug 2017 12:29:36 -0400
+Date: Wed, 2 Aug 2017 12:29:34 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/5] common/inject: refactor helpers to use new errortag
+ interface
+Message-ID: <20170802162934.GC38674@bfoster.bfoster>
+References: <150067465981.30639.14801416171688538711.stgit@magnolia>
+ <150067468569.30639.11717903404151243816.stgit@magnolia>
+ <20170802083742.GU9167@eguan.usersys.redhat.com>
+ <20170802143010.GB38674@bfoster.bfoster>
+ <20170802155257.GL4477@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bf5c5e66-526e-4431-335a-b9fc98fc31e8@redhat.com>
+In-Reply-To: <20170802155257.GL4477@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Aug 03, 2017 at 03:07:20PM +0200, Jan Tulak wrote:
-> OK, I'm willing to return errors for the _raw functions. These are used only
-> on few places, so it is not a big issue. Especially if I add a wrapper for
-> the get_conf_raw function - right now, these are used only as fprintf()
-> arguments to print an error. So the wrapper makes it easy to use in this
-> case (with the old die-on-error behavior), but if you want to use it for
-> something else, you can use it directly and get an error as a return code.
-> Does this looks good?
-> 
-> +/*
-> + * Return 0 on success, -ENOMEM if it could not allocate enough memory for
-> + * the string to be saved into the out pointer.
-> + */
-> +static int
-> +get_conf_raw(const struct opt_params *opt, const int subopt, char **out)
-> +{
-> +       if (subopt < 0 || subopt >= MAX_SUBOPTS) {
-> +               fprintf(stderr,
-> +               "This is a bug: get_conf_raw called with invalid opt/subopt:
-> %c/%d\n",
-> +               opt->name, subopt);
-> +               exit(1);
-
-Why not return -EINVAL?
-
-> +       }
-> +       *out = strdup(opt->subopt_params[subopt].raw_input);
-> +       if (*out == NULL)
-> +               return -ENOMEM;
-> +       return 0;
-> +
-> +}
-> +
-> +/*
-> + * Same as get_conf_raw(), except it returns the string through return
-> + * and dies on any error.
-> + */
-> +static char *
-> +get_conf_raw_safe(const struct opt_params *opt, const int subopt)
-> +{
-> +       char *str;
-> +       if (get_conf_raw(opt, subopt, &str) == -ENOMEM) {
-> +               fprintf(stderr, "Out of memory!");
-> +               exit(1);
-
-I'd say no, just return NULL; these aborts drive me personally nuts.
-
-> +       }
-> +       return str;
-> +}
-> 
-> 
-> > 
-> > > > I don't think we need the too small or too big, a simple range issue should
-> > > > suffice and we have -ERANGE.
+On Wed, Aug 02, 2017 at 08:52:57AM -0700, Darrick J. Wong wrote:
+> On Wed, Aug 02, 2017 at 10:30:10AM -0400, Brian Foster wrote:
+> > On Wed, Aug 02, 2017 at 04:37:42PM +0800, Eryu Guan wrote:
+> > > On Fri, Jul 21, 2017 at 03:04:45PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > > > 
-> > > At this moment, we are telling if it is too small or too big, but when there
-> > > is no standard error code for that, ERANGE has to suffice.
-> > Sure, my point was that we have special values for too big or too small, and
-> > I consider that hacky, we could just *say* if it was too big or too small
-> > but just use ERANGE as its standard and non-hacky.
-> We don't have special values, we just print it out and die. But yes, if we
-> will pass the information anywhere, then it is better to use ERANGE rather
-> than some custom error number.
+> > > > Refactor the XFS error injection helpers to use the new errortag
+> > > > interface to configure error injection.  If that isn't present, fall
+> > > > back either to the xfs_io/ioctl based injection or the older sysfs
+> > > > knobs.  Refactor existing testcases to use the new helpers.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > This looks good to me overall, but I still perfer let other people
+> > > who're more familar with XFS errortag and error injection to review too.
+> > > While I do have some questions/comments :)
+> > > 
+> > > > ---
+> > > >  common/inject |   58 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+> > > >  tests/xfs/141 |    5 +++--
+> > > >  tests/xfs/196 |   17 ++++++-----------
+> > > >  3 files changed, 65 insertions(+), 15 deletions(-)
+> > > > 
+> > > > 
+> > > > diff --git a/common/inject b/common/inject
+> > > > index 8ecc290..9aa24de 100644
+> > > > --- a/common/inject
+> > > > +++ b/common/inject
+> > > > @@ -35,10 +35,46 @@ _require_error_injection()
+> > > >  	esac
+> > > >  }
+> > > >  
+> > > > +# Find a given xfs mount's errortag injection knob in sysfs
+> > > > +_find_xfs_mount_errortag_knob()
+> > > 
+> > > While The function name and comment both indicate it needs a mounted
+> > > XFS, it seems weird that the first argument is expected to be a block
+> > > device. And do we need to check if the given device is really mounted?
+> > > 
+> > 
+> > The xfs per-mount sysfs knobs distinguish between mounts via the
+> > block device name.
+> 
+> What if we rename the helper and change its documentation as such?
+> 
+> # Find the errortag injection knob in sysfs for a given xfs mount's
+> # block device.
+> _find_xfs_mountdev_errortag_knob()
+> {
+> 	...
+> }
+> 
+> > ...
+> > > >  # Requires that xfs_io inject command knows about this error type
+> > > >  _require_xfs_io_error_injection()
+> > > >  {
+> > > >  	type="$1"
+> > > > +
+> > > > +	# Can we find the error injection knobs via the new errortag
+> > > > +	# configuration mechanism?
+> > > > +	test -w "$(_find_xfs_mount_errortag_knob "${TEST_DEV}" "${type}")" && return
+> > > > +
+> > > 
+> > > As this check goes prior to the _require_error_injection check, so I
+> > > assume this new errortag framework doesn't depend on a debug built XFS,
+> > > can I?
+> 
+> It depends on the sysfs knobs, and the sysfs knobs in turn depend on
+> XFS_DEBUG=y.
+> 
+> > It does depend on debug mode so it probably makes sense to push this
+> > after the _require_error_injection check. That way the DEBUG=0 message
+> > has precedent over a message regarding lack of support for a particular
+> > knob.
+> 
+> Hm?  This is what _require_xfs_io_error_injection does:
+> 
+> First we compute the path to the knob if it exists
+> (_find_xfs_mount_errortag_knob).
+> 
+> Then we check if that path is writable.  If it is, error injection is
+> enabled (which presumably means XFS_DEBUG=y) and we can continue.
+> 
+> If not, then we use _require_error_injection to bail out if XFS_DEBUG=n.
+> 
 
-Great.
+Ah, right. I misinterpreted that the lack of the knob would fall through
+to the subsequent checks, so there's no difference with respect to the
+resulting message if DEBUG=0. It still looks cleaner to me to check
+debug mode first, fwiw, but not a big deal either way.
 
-  Luis
+Brian
+
+> If we don't bail out, XFS_DEBUG=y and so we check if the xfs_io inject
+> help page knows about the error type, and bail out if it doesn't.
+> 
+> 
+> In the end it doesn't really matter if we look for XFS_DEBUG=y before or
+> after we look for the new sysfs knob.  I figured it was simple enough to
+> assume that if the knob is present and writable, then our preconditions
+> are satisfied and it's ok to proceed with the injection test.
+> 
+> That said, I also interpreted the "look for evidence of XFS_DEBUG=y" and
+> "see if xfs_io inject knows about the specific error tag" sequence as a
+> best effort work around for the fact that the ioctl-based injection
+> mechanism isn't directly discoverable at all, so instead we assume it's
+> safe to proceed if we can detect a debug kernel and xfs_io is new enough
+> to issue the request.
+> 
+> --D
+> 
+> > Outside of Eryu's further comments, the rest looks good to me. This
+> > reminds me that I still need to post the latest log tail overwrite test
+> > that depends on this, now that the kernel bits have been reviewed...
+> > 
+> > Brian
+> > 
+> > > >  	_require_error_injection
+> > > >  
+> > > >  	# NOTE: We can't actually test error injection here because xfs
+> > > > @@ -54,16 +90,34 @@ _require_xfs_io_error_injection()
+> > > >  _test_inject_error()
+> > > >  {
+> > > >  	type="$1"
+> > > > +	value="$2"
+> > > >  
+> > > > -	$XFS_IO_PROG -x -c "inject $type" $TEST_DIR
+> > > > +	knob="$(_find_xfs_mount_errortag_knob "${TEST_DEV}" "${type}")"
+> > > > +	if [ -w "${knob}" ]; then
+> > > > +		test -z "${value}" && value="default"
+> > > > +		echo -n "${value}" > "${knob}"
+> > > > +	elif [ -z "${value}" ] || [ "${value}" = "default" ]; then
+> > > > +		$XFS_IO_PROG -x -c "inject $type" $TEST_DIR
+> > > > +	else
+> > > > +		_notrun "Cannot inject error ${type} value ${value}."
+> > > 
+> > > _require_xfs_io_error_injection already made sure we can do error
+> > > jection, it looks like a bug somewhere to me if we can't inject error
+> > > here, either wanted to inject error without checking the support status
+> > > first or an implementation bug in the error injection framework in
+> > > xfstests. So "_fail" might be the right choice.
+> > > 
+> > > > +	fi
+> > > >  }
+> > > >  
+> > > >  # Inject an error into the scratch fs
+> > > >  _scratch_inject_error()
+> > > >  {
+> > > >  	type="$1"
+> > > > +	value="$2"
+> > > >  
+> > > > -	$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
+> > > > +	knob="$(_find_xfs_mount_errortag_knob "${SCRATCH_DEV}" "${type}")"
+> > > > +	if [ -w "${knob}" ]; then
+> > > > +		test -z "${value}" && value="default"
+> > > > +		echo -n "${value}" > "${knob}"
+> > > > +	elif [ -z "${value}" ] || [ "${value}" = "default" ]; then
+> > > > +		$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
+> > > > +	else
+> > > > +		_notrun "Cannot inject error ${type} value ${value}."
+> > > 
+> > > Same here.
+> > > 
+> > > Thanks,
+> > > Eryu
+> > > 
+> > > > +	fi
+> > > >  }
+> > > >  
+> > > >  # Unmount and remount the scratch device, dumping the log
+> > > > diff --git a/tests/xfs/141 b/tests/xfs/141
+> > > > index 56ff14e..f61e524 100755
+> > > > --- a/tests/xfs/141
+> > > > +++ b/tests/xfs/141
+> > > > @@ -47,13 +47,14 @@ rm -f $seqres.full
+> > > >  
+> > > >  # get standard environment, filters and checks
+> > > >  . ./common/rc
+> > > > +. ./common/inject
+> > > >  
+> > > >  # real QA test starts here
+> > > >  
+> > > >  # Modify as appropriate.
+> > > >  _supported_fs xfs
+> > > >  _supported_os Linux
+> > > > -_require_xfs_sysfs $(_short_dev $TEST_DEV)/log/log_badcrc_factor
+> > > > +_require_xfs_io_error_injection "log_bad_crc"
+> > > >  _require_scratch
+> > > >  _require_command "$KILLALL_PROG" killall
+> > > >  
+> > > > @@ -69,7 +70,7 @@ for i in $(seq 1 5); do
+> > > >  	# (increase this value to run fsstress longer).
+> > > >  	factor=$((RANDOM % 100 + 1))
+> > > >  	echo iteration $i log_badcrc_factor: $factor >> $seqres.full 2>&1
+> > > > -	echo $factor > /sys/fs/xfs/$sdev/log/log_badcrc_factor
+> > > > +	_scratch_inject_error "log_bad_crc" "$factor"
+> > > >  
+> > > >  	# Run fsstress until the filesystem shuts down. It will shut down
+> > > >  	# automatically when error injection triggers.
+> > > > diff --git a/tests/xfs/196 b/tests/xfs/196
+> > > > index e9b0649..fe3f570 100755
+> > > > --- a/tests/xfs/196
+> > > > +++ b/tests/xfs/196
+> > > > @@ -45,6 +45,7 @@ _cleanup()
+> > > >  # get standard environment, filters and checks
+> > > >  . ./common/rc
+> > > >  . ./common/punch
+> > > > +. ./common/inject
+> > > >  
+> > > >  # real QA test starts here
+> > > >  rm -f $seqres.full
+> > > > @@ -53,13 +54,7 @@ rm -f $seqres.full
+> > > >  _supported_fs generic
+> > > >  _supported_os Linux
+> > > >  _require_scratch
+> > > > -
+> > > > -DROP_WRITES="drop_writes"
+> > > > -# replace "drop_writes" with "fail_writes" for old kernel
+> > > > -if [ -f /sys/fs/xfs/$(_short_dev $TEST_DEV)/fail_writes ];then
+> > > > -	DROP_WRITES="fail_writes"
+> > > > -fi
+> > > > -_require_xfs_sysfs $(_short_dev $TEST_DEV)/${DROP_WRITES}
+> > > > +_require_xfs_io_error_injection "drop_writes"
+> > > >  
+> > > >  _scratch_mkfs >/dev/null 2>&1
+> > > >  _scratch_mount
+> > > > @@ -72,7 +67,7 @@ bytes=$((64 * 1024))
+> > > >  $XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
+> > > >  
+> > > >  # Enable write drops. All buffered writes are dropped from this point on.
+> > > > -echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
+> > > > +_scratch_inject_error "drop_writes" 1
+> > > >  
+> > > >  # Write every other 4k range to split the larger delalloc extent into many more
+> > > >  # smaller extents. Use pwrite because with write failures enabled, all
+> > > > @@ -89,7 +84,7 @@ for i in $(seq 4096 8192 $endoff); do
+> > > >  	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
+> > > >  done
+> > > >  
+> > > > -echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
+> > > > +_scratch_inject_error "drop_writes" 0
+> > > >  
+> > > >  _scratch_cycle_mount
+> > > >  $XFS_IO_PROG -c 'bmap -vp' $file | _filter_bmap
+> > > > @@ -104,9 +99,9 @@ for offset in $(seq 0 100 500); do
+> > > >  	$XFS_IO_PROG -fc "pwrite ${offset}m 100m" $file >> $seqres.full 2>&1
+> > > >  
+> > > >  	punchoffset=$((offset + 75))
+> > > > -	echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
+> > > > +	_scratch_inject_error "drop_writes"
+> > > >  	$XFS_IO_PROG -c "pwrite ${punchoffset}m 4k" $file >> $seqres.full 2>&1
+> > > > -	echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
+> > > > +	_scratch_inject_error "drop_writes" 0
+> > > >  done
+> > > >  
+> > > >  echo "Silence is golden."
+> > > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
