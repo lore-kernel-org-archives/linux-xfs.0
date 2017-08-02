@@ -1,235 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29424 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49538 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751866AbdHDApH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Aug 2017 20:45:07 -0400
-Date: Fri, 4 Aug 2017 08:45:02 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2 3/5] common/inject: refactor helpers to use new
- errortag interface
-Message-ID: <20170804004502.GA1991@eguan.usersys.redhat.com>
-References: <150067465981.30639.14801416171688538711.stgit@magnolia>
- <150067468569.30639.11717903404151243816.stgit@magnolia>
- <20170803154900.GR4477@magnolia>
+        id S1752432AbdHBJRz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Aug 2017 05:17:55 -0400
+Date: Wed, 2 Aug 2017 11:17:49 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v2 3/7] xfs_db: fix metadump redirection (again)
+Message-ID: <20170802091749.rjjdktkcuqqwcxas@hades.localdomain>
+References: <150153520589.26081.8786864874176090813.stgit@magnolia>
+ <150153522749.26081.13898276114157159134.stgit@magnolia>
+ <20170801162333.GI4477@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170803154900.GR4477@magnolia>
+In-Reply-To: <20170801162333.GI4477@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Thu, Aug 03, 2017 at 08:49:00AM -0700, Darrick J. Wong wrote:
-> Refactor the XFS error injection helpers to use the new errortag
-> interface to configure error injection.  If that isn't present, fall
-> back either to the xfs_io/ioctl based injection or the older sysfs
-> knobs.  Refactor existing testcases to use the new helpers.
+On Tue, Aug 01, 2017 at 09:23:33AM -0700, Darrick J. Wong wrote:
+> In patch 4944defad4 ("xfs_db: redirect printfs when metadumping to
+> stdout"), we solved the problem of xfs_db printfs ending up in the
+> metadump stream by reassigning stdout for the duration of a stdout
+> metadump.  Unfortunately, musl doesn't allow stdout to be reassigned (in
+> their view "extern FILE *stdout" means "extern FILE * const stdout"), so
+> we abandon the old approach in favor of playing games with dup() to
+> switch the raw file descriptors.
+> 
+> While we're at it, fix a regression where an unconverted outf test
+> allows progress info to end up in the metadump stream.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-> v2: fix name of the 'find knob' function to communicate that it takes a
-> mountpoint's device, not the mountpoint itself; check for debug before
-> we check for knobs
+> v2: fix STDOUT_FILENO usage
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
 > ---
->  common/inject |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
->  tests/xfs/141 |    5 +++--
->  tests/xfs/196 |   17 ++++++----------
->  3 files changed, 66 insertions(+), 15 deletions(-)
+>  db/metadump.c |   47 ++++++++++++++++++++++++++++++++++++-----------
+>  1 file changed, 36 insertions(+), 11 deletions(-)
 > 
-> diff --git a/common/inject b/common/inject
-> index 8ecc290..c1b7869 100644
-> --- a/common/inject
-> +++ b/common/inject
-> @@ -35,12 +35,49 @@ _require_error_injection()
->  	esac
->  }
+> diff --git a/db/metadump.c b/db/metadump.c
+> index be2e712..6a23d58 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -78,6 +78,7 @@ static int		obfuscate = 1;
+>  static int		zero_stale_data = 1;
+>  static int		show_warnings = 0;
+>  static int		progress_since_warning = 0;
+> +static bool		stdout_metadump;
 >  
-> +# Find the errortag injection knob in sysfs for a given xfs mount's
-> +# block device.
-> +_find_xfs_mountdev_errortag_knob()
-> +{
-> +	dev="$1"
-> +	knob="$2"
-> +	shortdev="$(_short_dev "${dev}")"
-> +	tagfile="/sys/fs/xfs/${shortdev}/errortag/${knob}"
-> +
-> +	# Some of the new sysfs errortag knobs were previously available via
-> +	# another sysfs path.
-> +	case "${knob}" in
-> +	"log_bad_crc")
-> +		if [ ! -w "${tagfile}" ]; then
-> +			tagfile="/sys/fs/xfs/${shortdev}/log/log_badcrc_factor"
-> +		fi
-> +		;;
-> +	"drop_writes")
-> +		if [ ! -w "${tagfile}" ]; then
-> +			tagfile="/sys/fs/xfs/${shortdev}/drop_writes"
-> +		fi
-> +		if [ ! -w "${tagfile}" ]; then
-> +			tagfile="/sys/fs/xfs/${shortdev}/fail_writes"
-> +		fi
-> +		;;
-> +	*)
-> +		;;
-> +	esac
-> +
-> +	echo "${tagfile}"
-> +}
-> +
->  # Requires that xfs_io inject command knows about this error type
->  _require_xfs_io_error_injection()
->  {
->  	type="$1"
->  	_require_error_injection
+>  void
+>  metadump_init(void)
+> @@ -137,7 +138,7 @@ print_progress(const char *fmt, ...)
+>  	va_end(ap);
+>  	buf[sizeof(buf)-1] = '\0';
 >  
-> +	# Can we find the error injection knobs via the new errortag
-> +	# configuration mechanism?
-> +	knob="$(_find_xfs_mountdev_errortag_knob "${TEST_DEV}" "${type}")"
-> +	test -w "${knob}" && return
-> +
->  	# NOTE: We can't actually test error injection here because xfs
->  	# hasn't always range checked the argument to xfs_errortag_add.
->  	# We also don't want to trip an error before we're ready to deal
-> @@ -54,16 +91,34 @@ _require_xfs_io_error_injection()
->  _test_inject_error()
->  {
->  	type="$1"
-> +	value="$2"
+> -	f = (outf == stdout) ? stderr : stdout;
+> +	f = stdout_metadump ? stderr : stdout;
+>  	fprintf(f, "\r%-59s", buf);
+>  	fflush(f);
+>  	progress_since_warning = 1;
+> @@ -2750,7 +2751,8 @@ metadump_f(
+>  	xfs_agnumber_t	agno;
+>  	int		c;
+>  	int		start_iocur_sp;
+> -	bool		stdout_metadump = false;
+> +	int		outfd = -1;
+> +	int		ret;
+>  	char		*p;
 >  
-> -	$XFS_IO_PROG -x -c "inject $type" $TEST_DIR
-> +	knob="$(_find_xfs_mountdev_errortag_knob "${TEST_DEV}" "${type}")"
-> +	if [ -w "${knob}" ]; then
-> +		test -z "${value}" && value="default"
-> +		echo -n "${value}" > "${knob}"
-> +	elif [ -z "${value}" ] || [ "${value}" = "default" ]; then
-> +		$XFS_IO_PROG -x -c "inject $type" $TEST_DIR
-> +	else
-> +		_notrun "Cannot inject error ${type} value ${value}."
-
-(Seems you missed the comments on this "_notrun" in my first reply :)
-
-I don't think _notrun belongs here, because at this point we should have
-already made sure, by _require_xfs_io_error_injection, that XFS does
-support the error injection we want. Something went wrong If we failed
-to inject the error. So I think "_fail" is more appropriate.
-
-> +	fi
->  }
+>  	exitcode = 1;
+> @@ -2870,16 +2872,35 @@ metadump_f(
+>  		 * metadump operation so that dbprintf and other messages
+>  		 * are sent to the console instead of polluting the
+>  		 * metadump stream.
+> +		 *
+> +		 * We get to do this the hard way because musl doesn't
+> +		 * allow reassignment of stdout.
+>  		 */
+> -		outf = stdout;
+> -		stdout = stderr;
+> +		fflush(stdout);
+> +		outfd = dup(STDOUT_FILENO);
+> +		if (outfd < 0) {
+> +			perror("opening dump stream");
+> +			goto out;
+> +		}
+> +		ret = dup2(STDERR_FILENO, STDOUT_FILENO);
+> +		if (ret < 0) {
+> +			perror("redirecting stdout");
+> +			close(outfd);
+> +			goto out;
+> +		}
+> +		outf = fdopen(outfd, "a");
+> +		if (outf == NULL) {
+> +			fprintf(stderr, "cannot create dump stream\n");
+> +			dup2(outfd, STDOUT_FILENO);
+> +			close(outfd);
+> +			goto out;
+> +		}
+>  		stdout_metadump = true;
+>  	} else {
+>  		outf = fopen(argv[optind], "wb");
+>  		if (outf == NULL) {
+>  			print_warning("cannot create dump file");
+> -			free(metablock);
+> -			return 0;
+> +			goto out;
+>  		}
+>  	}
 >  
->  # Inject an error into the scratch fs
->  _scratch_inject_error()
->  {
->  	type="$1"
-> +	value="$2"
+> @@ -2907,15 +2928,19 @@ metadump_f(
+>  	if (progress_since_warning)
+>  		fputc('\n', stdout_metadump ? stderr : stdout);
 >  
-> -	$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
-> +	knob="$(_find_xfs_mountdev_errortag_knob "${SCRATCH_DEV}" "${type}")"
-> +	if [ -w "${knob}" ]; then
-> +		test -z "${value}" && value="default"
-> +		echo -n "${value}" > "${knob}"
-> +	elif [ -z "${value}" ] || [ "${value}" = "default" ]; then
-> +		$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
-> +	else
-> +		_notrun "Cannot inject error ${type} value ${value}."
-
-Same here.
-
-Thanks,
-Eryu
-
-> +	fi
->  }
+> -	if (stdout_metadump)
+> -		stdout = outf;
+> -	else
+> -		fclose(outf);
+> +	if (stdout_metadump) {
+> +		fflush(outf);
+> +		fflush(stdout);
+> +		ret = dup2(outfd, STDOUT_FILENO);
+> +		if (ret < 0)
+> +			perror("un-redirecting stdout");
+> +	}
+> +	fclose(outf);
 >  
->  # Unmount and remount the scratch device, dumping the log
-> diff --git a/tests/xfs/141 b/tests/xfs/141
-> index 56ff14e..f61e524 100755
-> --- a/tests/xfs/141
-> +++ b/tests/xfs/141
-> @@ -47,13 +47,14 @@ rm -f $seqres.full
->  
->  # get standard environment, filters and checks
->  . ./common/rc
-> +. ./common/inject
->  
->  # real QA test starts here
->  
->  # Modify as appropriate.
->  _supported_fs xfs
->  _supported_os Linux
-> -_require_xfs_sysfs $(_short_dev $TEST_DEV)/log/log_badcrc_factor
-> +_require_xfs_io_error_injection "log_bad_crc"
->  _require_scratch
->  _require_command "$KILLALL_PROG" killall
->  
-> @@ -69,7 +70,7 @@ for i in $(seq 1 5); do
->  	# (increase this value to run fsstress longer).
->  	factor=$((RANDOM % 100 + 1))
->  	echo iteration $i log_badcrc_factor: $factor >> $seqres.full 2>&1
-> -	echo $factor > /sys/fs/xfs/$sdev/log/log_badcrc_factor
-> +	_scratch_inject_error "log_bad_crc" "$factor"
->  
->  	# Run fsstress until the filesystem shuts down. It will shut down
->  	# automatically when error injection triggers.
-> diff --git a/tests/xfs/196 b/tests/xfs/196
-> index e9b0649..fe3f570 100755
-> --- a/tests/xfs/196
-> +++ b/tests/xfs/196
-> @@ -45,6 +45,7 @@ _cleanup()
->  # get standard environment, filters and checks
->  . ./common/rc
->  . ./common/punch
-> +. ./common/inject
->  
->  # real QA test starts here
->  rm -f $seqres.full
-> @@ -53,13 +54,7 @@ rm -f $seqres.full
->  _supported_fs generic
->  _supported_os Linux
->  _require_scratch
+>  	/* cleanup iocur stack */
+>  	while (iocur_sp > start_iocur_sp)
+>  		pop_cur();
 > -
-> -DROP_WRITES="drop_writes"
-> -# replace "drop_writes" with "fail_writes" for old kernel
-> -if [ -f /sys/fs/xfs/$(_short_dev $TEST_DEV)/fail_writes ];then
-> -	DROP_WRITES="fail_writes"
-> -fi
-> -_require_xfs_sysfs $(_short_dev $TEST_DEV)/${DROP_WRITES}
-> +_require_xfs_io_error_injection "drop_writes"
+> +out:
+>  	free(metablock);
 >  
->  _scratch_mkfs >/dev/null 2>&1
->  _scratch_mount
-> @@ -72,7 +67,7 @@ bytes=$((64 * 1024))
->  $XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
->  
->  # Enable write drops. All buffered writes are dropped from this point on.
-> -echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> +_scratch_inject_error "drop_writes" 1
->  
->  # Write every other 4k range to split the larger delalloc extent into many more
->  # smaller extents. Use pwrite because with write failures enabled, all
-> @@ -89,7 +84,7 @@ for i in $(seq 4096 8192 $endoff); do
->  	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
->  done
->  
-> -echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> +_scratch_inject_error "drop_writes" 0
->  
->  _scratch_cycle_mount
->  $XFS_IO_PROG -c 'bmap -vp' $file | _filter_bmap
-> @@ -104,9 +99,9 @@ for offset in $(seq 0 100 500); do
->  	$XFS_IO_PROG -fc "pwrite ${offset}m 100m" $file >> $seqres.full 2>&1
->  
->  	punchoffset=$((offset + 75))
-> -	echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> +	_scratch_inject_error "drop_writes"
->  	$XFS_IO_PROG -c "pwrite ${punchoffset}m 4k" $file >> $seqres.full 2>&1
-> -	echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> +	_scratch_inject_error "drop_writes" 0
->  done
->  
->  echo "Silence is golden."
+>  	return 0;
 > --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
