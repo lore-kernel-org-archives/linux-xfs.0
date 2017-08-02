@@ -1,342 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55156 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752323AbdHBJWM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Aug 2017 05:22:12 -0400
-Date: Wed, 2 Aug 2017 11:22:08 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH v2 4/7] xfs_db: dump dir/attr btrees
-Message-ID: <20170802092208.5z5ujhd6q4udvbl3@hades.localdomain>
-References: <150153520589.26081.8786864874176090813.stgit@magnolia>
- <150153523353.26081.1989249017494623271.stgit@magnolia>
- <20170801154053.GH4477@magnolia>
+Received: from mail-wr0-f173.google.com ([209.85.128.173]:34015 "EHLO
+        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752579AbdHBOaM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2017 10:30:12 -0400
+Received: by mail-wr0-f173.google.com with SMTP id 12so19535602wrb.1
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Aug 2017 07:30:12 -0700 (PDT)
+Subject: Re: [PATCH 1/7] mkfs: Save raw user input field to the opts struct
+References: <20170720092932.32580-1-jtulak@redhat.com>
+ <20170720092932.32580-2-jtulak@redhat.com>
+ <20170727162752.GK18884@wotan.suse.de>
+ <0c34504a-923a-20ac-9f03-6972e38bbfde@redhat.com>
+ <20170729171207.GN18884@wotan.suse.de>
+From: Jan Tulak <jtulak@redhat.com>
+Message-ID: <723e3733-0a80-1bf2-89ed-e80b914037ed@redhat.com>
+Date: Wed, 2 Aug 2017 16:30:09 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170801154053.GH4477@magnolia>
+In-Reply-To: <20170729171207.GN18884@wotan.suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Aug 01, 2017 at 08:40:53AM -0700, Darrick J. Wong wrote:
-> Dump the directory or extended attribute btree contents.
-> 
 
-Sweet, thanks
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+On 29/07/2017 19:12, Luis R. Rodriguez wrote:
+> On Fri, Jul 28, 2017 at 04:45:58PM +0200, Jan Tulak wrote:
+>>
+>> On 27/07/2017 18:27, Luis R. Rodriguez wrote:
+>>> On Thu, Jul 20, 2017 at 11:29:26AM +0200, Jan Tulak wrote:
+>>>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>>>> index a69190b9..4b030101 100644
+>>>> --- a/mkfs/xfs_mkfs.c
+>>>> +++ b/mkfs/xfs_mkfs.c
+>>>> @@ -107,6 +107,11 @@ unsigned int		sectorsize;
+>>>>     *     sets what is used with simple specifying the subopt (-d file).
+>>>>     *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
+>>>>     *     value in any case.
+>>>> + *
+>>>> + *   raw_input INTERNAL
+>>>> + *     Filled raw string from the user, so we never lose that information e.g.
+>>>> + *     to print it back in case of an issue.
+>>>> + *
+>>>>     */
+>>>>    struct opt_params {
+>>>>    	const char	name;
+>>>> @@ -122,6 +127,7 @@ struct opt_params {
+>>>>    		long long	minval;
+>>>>    		long long	maxval;
+>>>>    		long long	defaultval;
+>>>> +		const char	*raw_input;
+>>>>    	}		subopt_params[MAX_SUBOPTS];
+>>>>    };
+>>>> @@ -729,6 +735,18 @@ struct opt_params mopts = {
+>>>>     */
+>>>>    #define WHACK_SIZE (128 * 1024)
+>>>> +static inline void
+>>>> +set_conf_raw(struct opt_params *opt, int subopt, const char *value)
+>>>> +{
+>>>> +	opt->subopt_params[subopt].raw_input = value;
+>>>> +}
+>>> There are no bounds check on the array here, I think set_conf_raw()
+>>> should return int and we would check the return value. It could
+>>> return -EINVAL if the subopt is invalid for instance.
+>> Good idea. The only issue is with the return code, that causes some issues
+>> when we are also returning values - I wanted the values to be turned into
+>> uint64. But do we need to return an error? I don't see what usecase there
+>> would be for it, other than detecting a bug. So an assert might be a better
+>> solution - then it can't happen that a wrong index is used and result not
+>> tested.
+> The setting of the value can be done by using an extra argument pointer. Then
+> if its set it be assigned. Otherwise it would be left alone. The return value
+> would return 0 on success, otherwise a standard return value indicating the
+> cause of the error.
+I strongly prefer to return the value, not an error code. We can do the 
+other way around, put the error code into an argument to get roughly the 
+same result, while constructions like set_conf_raw(FOO, BAR, baz * 
+get_conf_raw(FOO, BAR)) will continue to work without the need for 
+intermediate variables.
 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  db/btdump.c       |  255 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  man/man8/xfs_db.8 |    1 
->  2 files changed, 255 insertions(+), 1 deletion(-)
-> 
-> diff --git a/db/btdump.c b/db/btdump.c
-> index 3b76e17..f525a4a 100644
-> --- a/db/btdump.c
-> +++ b/db/btdump.c
-> @@ -32,7 +32,9 @@ btdump_help(void)
->  "\n"
->  " If the cursor points to a btree block, 'btdump' dumps the btree\n"
->  " downward from that block.  If the cursor points to an inode,\n"
-> -" the data fork btree root is selected by default.\n"
-> +" the data fork btree root is selected by default.  If the cursor\n"
-> +" points to a directory or extended attribute btree node, the tree\n"
-> +" will be printed downward from that block.\n"
->  "\n"
->  " Options:\n"
->  "   -a -- Display an inode's extended attribute fork btree.\n"
-> @@ -227,6 +229,252 @@ dump_inode(
->  	return ret;
->  }
->  
-> +static bool
-> +dir_has_rightsib(
-> +	void				*block,
-> +	int				level)
-> +{
-> +	struct xfs_dir3_icleaf_hdr	lhdr;
-> +	struct xfs_da3_icnode_hdr	nhdr;
-> +
-> +	if (level > 0) {
-> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-> +		return nhdr.forw != 0;
-> +	}
-> +	M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
-> +	return lhdr.forw != 0;
-> +}
-> +
-> +static int
-> +dir_level(
-> +	void				*block)
-> +{
-> +	struct xfs_dir3_icleaf_hdr	lhdr;
-> +	struct xfs_da3_icnode_hdr	nhdr;
-> +
-> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
-> +	case cpu_to_be16(XFS_DIR2_LEAF1_MAGIC):
-> +	case cpu_to_be16(XFS_DIR2_LEAFN_MAGIC):
-> +		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
-> +		return 0;
-> +	case cpu_to_be16(XFS_DA_NODE_MAGIC):
-> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-> +		return nhdr.level;
-> +	default:
-> +		return -1;
-> +	}
-> +}
-> +
-> +static int
-> +dir3_level(
-> +	void				*block)
-> +{
-> +	struct xfs_dir3_icleaf_hdr	lhdr;
-> +	struct xfs_da3_icnode_hdr	nhdr;
-> +
-> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
-> +	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
-> +	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
-> +		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
-> +		return 0;
-> +	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-> +		return nhdr.level;
-> +	default:
-> +		return -1;
-> +	}
-> +}
-> +
-> +static bool
-> +attr_has_rightsib(
-> +	void				*block,
-> +	int				level)
-> +{
-> +        struct xfs_attr_leafblock	lhdr;
-> +	struct xfs_da3_icnode_hdr	nhdr;
-> +
-> +	if (level > 0) {
-> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-> +		return nhdr.forw != 0;
-> +	}
-> +	xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
-> +	return lhdr.hdr.info.forw != 0;
-> +}
-> +
-> +static int
-> +attr_level(
-> +	void				*block)
-> +{
-> +	struct xfs_attr_leafblock	lhdr;
-> +	struct xfs_da3_icnode_hdr	nhdr;
-> +
-> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
-> +	case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
-> +		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
-> +		return 0;
-> +	case cpu_to_be16(XFS_DA_NODE_MAGIC):
-> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-> +		return nhdr.level;
-> +	default:
-> +		return -1;
-> +	}
-> +}
-> +
-> +static int
-> +attr3_level(
-> +	void				*block)
-> +{
-> +	struct xfs_attr_leafblock	lhdr;
-> +	struct xfs_da3_icnode_hdr	nhdr;
-> +
-> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
-> +	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
-> +		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
-> +		return 0;
-> +	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
-> +		return nhdr.level;
-> +	default:
-> +		return -1;
-> +	}
-> +}
-> +
-> +struct dabprinter_ops {
-> +	const char		*print_node_entries;
-> +	const char		*print_leaf_entries;
-> +	const char		*go_node_forward;
-> +	const char		*go_leaf_forward;
-> +	const char		*go_down;
-> +	bool			(*has_rightsib)(void *, int);
-> +	int			(*level)(void *);
-> +};
-> +
-> +static struct dabprinter_ops attr_print = {
-> +	.print_node_entries	= "btree",
-> +	.print_leaf_entries	= "entries nvlist",
-> +	.go_node_forward	= "hdr.info.forw",
-> +	.go_leaf_forward	= "hdr.info.forw",
-> +	.go_down		= "btree[0].before",
-> +	.has_rightsib		= attr_has_rightsib,
-> +	.level			= attr_level,
-> +};
-> +
-> +static struct dabprinter_ops attr3_print = {
-> +	.print_node_entries	= "btree",
-> +	.print_leaf_entries	= "entries nvlist",
-> +	.go_node_forward	= "hdr.info.hdr.forw",
-> +	.go_leaf_forward	= "hdr.info.hdr.forw",
-> +	.go_down		= "btree[0].before",
-> +	.has_rightsib		= attr_has_rightsib,
-> +	.level			= attr3_level,
-> +};
-> +
-> +static struct dabprinter_ops dir_print = {
-> +	.print_node_entries	= "nbtree",
-> +	.print_leaf_entries	= "lents",
-> +	.go_node_forward	= "nhdr.info.hdr.forw",
-> +	.go_leaf_forward	= "lhdr.info.hdr.forw",
-> +	.go_down		= "nbtree[0].before",
-> +	.has_rightsib		= dir_has_rightsib,
-> +	.level			= dir_level,
-> +};
-> +
-> +static struct dabprinter_ops dir3_print = {
-> +	.print_node_entries	= "nbtree",
-> +	.print_leaf_entries	= "lents",
-> +	.go_node_forward	= "nhdr.info.forw",
-> +	.go_leaf_forward	= "lhdr.info.forw",
-> +	.go_down		= "nbtree[0].before",
-> +	.has_rightsib		= dir_has_rightsib,
-> +	.level			= dir3_level,
-> +};
-> +
-> +static int
-> +dump_dablevel(
-> +	int			level,
-> +	struct dabprinter_ops	*dbp)
-> +{
-> +	xfs_daddr_t		orig_daddr = iocur_top->bb;
-> +	xfs_daddr_t		last_daddr;
-> +	unsigned int		nr;
-> +	int			ret;
-> +
-> +	ret = eval("push");
-> +	if (ret)
-> +		return ret;
-> +
-> +	nr = 1;
-> +	do {
-> +		last_daddr = iocur_top->bb;
-> +		dbprintf(_("%s level %u block %u daddr %llu\n"),
-> +			 iocur_top->typ->name, level, nr, last_daddr);
-> +		ret = eval("print %s", level > 0 ? dbp->print_node_entries :
-> +						   dbp->print_leaf_entries);
-> +		if (ret)
-> +			goto err;
-> +		if (dbp->has_rightsib(iocur_top->data, level)) {
-> +			ret = eval("addr %s", level > 0 ? dbp->go_node_forward :
-> +							  dbp->go_leaf_forward);
-> +			if (ret)
-> +				goto err;
-> +		}
-> +		nr++;
-> +	} while (iocur_top->bb != orig_daddr && iocur_top->bb != last_daddr);
-> +
-> +	ret = eval("pop");
-> +	return ret;
-> +err:
-> +	eval("pop");
-> +	return ret;
-> +}
-> +
-> +static int
-> +dump_dabtree(
-> +	bool				dump_node_blocks,
-> +	struct dabprinter_ops		*dbp)
-> +{
-> +	xfs_daddr_t			orig_daddr = iocur_top->bb;
-> +	xfs_daddr_t			last_daddr;
-> +	int				level;
-> +	int				ret;
-> +
-> +	ret = eval("push");
-> +	if (ret)
-> +		return ret;
-> +
-> +	cur_agno = XFS_FSB_TO_AGNO(mp, XFS_DADDR_TO_FSB(mp, iocur_top->bb));
-> +	level = dbp->level(iocur_top->data);
-> +	if (level < 0) {
-> +		printf(_("Current location is not part of a dir/attr btree.\n"));
-> +		goto err;
-> +	}
-> +
-> +	do {
-> +		last_daddr = iocur_top->bb;
-> +		if (level > 0) {
-> +			if (dump_node_blocks) {
-> +				ret = dump_dablevel(level, dbp);
-> +				if (ret)
-> +					goto err;
-> +			}
-> +			ret = eval("addr %s", dbp->go_down);
-> +		} else {
-> +			ret = dump_dablevel(level, dbp);
-> +		}
-> +		if (ret)
-> +			goto err;
-> +		level--;
-> +	} while (level >= 0 &&
-> +		 iocur_top->bb != orig_daddr &&
-> +		 iocur_top->bb != last_daddr);
-> +
-> +	ret = eval("pop");
-> +	return ret;
-> +err:
-> +	eval("pop");
-> +	return ret;
-> +}
-> +
->  static int
->  btdump_f(
->  	int		argc,
-> @@ -234,6 +482,7 @@ btdump_f(
->  {
->  	bool		aflag = false;
->  	bool		iflag = false;
-> +	bool		crc = xfs_sb_version_hascrc(&mp->m_sb);
->  	int		c;
->  
->  	if (cur_typ == NULL) {
-> @@ -276,6 +525,10 @@ btdump_f(
->  		return dump_btree_long(iflag);
->  	case TYP_INODE:
->  		return dump_inode(iflag, aflag);
-> +	case TYP_ATTR:
-> +		return dump_dabtree(iflag, crc ? &attr3_print : &attr_print);
-> +	case TYP_DIR2:
-> +		return dump_dabtree(iflag, crc ? &dir3_print : &dir_print);
->  	default:
->  		dbprintf(_("type \"%s\" is not a btree type or inode\n"),
->  				cur_typ->name);
-> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-> index 6a97504..b3129f7 100644
-> --- a/man/man8/xfs_db.8
-> +++ b/man/man8/xfs_db.8
-> @@ -335,6 +335,7 @@ area of the inode, if neither option is given then both areas are shown.
->  .B btdump [-a] [-i]
->  If the cursor points to a btree node, dump the btree from that block downward.
->  If instead the cursor points to an inode, dump the data fork block mapping btree if there is one.
-> +If the cursor points to a directory or extended attribute btree node, dump that.
->  By default, only records stored in the btree are dumped.
->  .RS 1.0i
->  .TP 0.4i
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The *_raw functions are used on few places only, so it would be only a 
+small issue there, but for consistency, (get|set)_conf_val should have 
+the same behavior and an intermediate variable for every use of those 
+would be really annoying. So, how about this?
 
--- 
-Carlos
+static inline void
+set_conf_raw(struct opt_params *opt, int subopt, const char *value, int 
+*err)
+{
+     if (subopt < 0 || subopt >= MAX_SUBOPTS) {
+         if (err != NULL) *err = EINVAL;
+         return;
+     }
+     opt->subopt_params[subopt].raw_input = value;
+}
+
+> I don't think we need the too small or too big, a simple range issue should
+> suffice and we have -ERANGE.
+>
+At this moment, we are telling if it is too small or too big, but when 
+there is no standard error code for that, ERANGE has to suffice.
+
+Cheers,
+Jan
