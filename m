@@ -1,130 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:25709 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751910AbdHDCfA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Aug 2017 22:35:00 -0400
-Subject: [PATCH v2 5/5] xfs: toggle XFS_DIFLAG2_IOMAP_IMMUTABLE in response
- to fallocate
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 03 Aug 2017 19:28:35 -0700
-Message-ID: <150181371519.32119.2762945986660101008.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mail-wr0-f172.google.com ([209.85.128.172]:38358 "EHLO
+        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751154AbdHBPvv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2017 11:51:51 -0400
+Received: by mail-wr0-f172.google.com with SMTP id f21so20318393wrf.5
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Aug 2017 08:51:50 -0700 (PDT)
+Subject: Re: [PATCH 1/7] mkfs: Save raw user input field to the opts struct
+From: Jan Tulak <jtulak@redhat.com>
+References: <20170720092932.32580-1-jtulak@redhat.com>
+ <20170720092932.32580-2-jtulak@redhat.com>
+ <20170727162752.GK18884@wotan.suse.de>
+ <0c34504a-923a-20ac-9f03-6972e38bbfde@redhat.com>
+ <20170729171207.GN18884@wotan.suse.de>
+ <723e3733-0a80-1bf2-89ed-e80b914037ed@redhat.com>
+Message-ID: <8374a422-83e6-1426-1548-721da2cb8782@redhat.com>
+Date: Wed, 2 Aug 2017 17:51:47 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <723e3733-0a80-1bf2-89ed-e80b914037ed@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: linux-xfs@vger.kernel.org
 
-After validating the state of the file as not having holes, shared
-extents, or active mappings try to commit the
-XFS_DIFLAG2_IOMAP_IMMUTABLE flag to the on-disk inode metadata. If that
-succeeds then allow the S_IOMAP_IMMUTABLE to be set on the vfs inode.
+An addendum to the previous email.
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/xfs/xfs_bmap_util.c |   32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+On 02/08/2017 16:30, Jan Tulak wrote:
+> On 29/07/2017 19:12, Luis R. Rodriguez wrote:
+>> On Fri, Jul 28, 2017 at 04:45:58PM +0200, Jan Tulak wrote:
+>>>
+>>> On 27/07/2017 18:27, Luis R. Rodriguez wrote:
+>>>> On Thu, Jul 20, 2017 at 11:29:26AM +0200, Jan Tulak wrote:
+>>>>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>>>>> index a69190b9..4b030101 100644
+>>>>> --- a/mkfs/xfs_mkfs.c
+>>>>> +++ b/mkfs/xfs_mkfs.c
+>>>>> @@ -107,6 +107,11 @@ unsigned int        sectorsize;
+>>>>>     *     sets what is used with simple specifying the subopt (-d 
+>>>>> file).
+>>>>>     *     A special SUBOPT_NEEDS_VAL can be used to require a 
+>>>>> user-given
+>>>>>     *     value in any case.
+>>>>> + *
+>>>>> + *   raw_input INTERNAL
+>>>>> + *     Filled raw string from the user, so we never lose that 
+>>>>> information e.g.
+>>>>> + *     to print it back in case of an issue.
+>>>>> + *
+>>>>>     */
+>>>>>    struct opt_params {
+>>>>>        const char    name;
+>>>>> @@ -122,6 +127,7 @@ struct opt_params {
+>>>>>            long long    minval;
+>>>>>            long long    maxval;
+>>>>>            long long    defaultval;
+>>>>> +        const char    *raw_input;
+>>>>>        }        subopt_params[MAX_SUBOPTS];
+>>>>>    };
+>>>>> @@ -729,6 +735,18 @@ struct opt_params mopts = {
+>>>>>     */
+>>>>>    #define WHACK_SIZE (128 * 1024)
+>>>>> +static inline void
+>>>>> +set_conf_raw(struct opt_params *opt, int subopt, const char *value)
+>>>>> +{
+>>>>> +    opt->subopt_params[subopt].raw_input = value;
+>>>>> +}
+>>>> There are no bounds check on the array here, I think set_conf_raw()
+>>>> should return int and we would check the return value. It could
+>>>> return -EINVAL if the subopt is invalid for instance.
+>>> Good idea. The only issue is with the return code, that causes some 
+>>> issues
+>>> when we are also returning values - I wanted the values to be turned 
+>>> into
+>>> uint64. But do we need to return an error? I don't see what usecase 
+>>> there
+>>> would be for it, other than detecting a bug. So an assert might be a 
+>>> better
+>>> solution - then it can't happen that a wrong index is used and 
+>>> result not
+>>> tested.
+>> The setting of the value can be done by using an extra argument 
+>> pointer. Then
+>> if its set it be assigned. Otherwise it would be left alone. The 
+>> return value
+>> would return 0 on success, otherwise a standard return value 
+>> indicating the
+>> cause of the error.
+> I strongly prefer to return the value, not an error code. We can do 
+> the other way around, put the error code into an argument to get 
+> roughly the same result, while constructions like set_conf_raw(FOO, 
+> BAR, baz * get_conf_raw(FOO, BAR)) will continue to work without the 
+> need for intermediate variables.
+>
+> The *_raw functions are used on few places only, so it would be only a 
+> small issue there, but for consistency, (get|set)_conf_val should have 
+> the same behavior and an intermediate variable for every use of those 
+> would be really annoying. So, how about this?
+>
+> static inline void
+> set_conf_raw(struct opt_params *opt, int subopt, const char *value, 
+> int *err)
+> {
+>     if (subopt < 0 || subopt >= MAX_SUBOPTS) {
+>         if (err != NULL) *err = EINVAL;
+>         return;
+>     }
+>     opt->subopt_params[subopt].raw_input = value;
+> }
+>
+I just realized that there is probably no reason for set_conf_raw to 
+expect invalid subopt - that's clearly a bug and we should just print a 
+message and die, because who knows what happened... But for errors that 
+can arose from user input, the style presented above is still valid.
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 70ac2d33ab27..8464c25a2403 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1436,9 +1436,11 @@ xfs_seal_file_space(
- 	xfs_off_t		offset,
- 	xfs_off_t		len)
- {
-+	struct xfs_mount	*mp = ip->i_mount;
- 	struct inode		*inode = VFS_I(ip);
- 	struct address_space	*mapping = inode->i_mapping;
- 	int			error;
-+	struct xfs_trans	*tp;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
- 
-@@ -1454,6 +1456,10 @@ xfs_seal_file_space(
- 	if (error)
- 		return error;
- 
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
-+	if (error)
-+		return error;
-+
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	/*
- 	 * Either the size changed after we performed allocation /
-@@ -1486,10 +1492,20 @@ xfs_seal_file_space(
- 	if (error < 0)
- 		goto out_unlock;
- 
-+	xfs_trans_ijoin(tp, ip, 0);
-+	ip->i_d.di_flags2 |= XFS_DIFLAG2_IOMAP_IMMUTABLE;
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	error = xfs_trans_commit(tp);
-+	tp = NULL; /* nothing to cancel */
-+	if (error)
-+		goto out_unlock;
-+
- 	inode->i_flags |= S_IOMAP_IMMUTABLE;
- 
- out_unlock:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	if (tp)
-+		xfs_trans_cancel(tp);
- 
- 	return error;
- }
-@@ -1500,15 +1516,21 @@ xfs_unseal_file_space(
- 	xfs_off_t		offset,
- 	xfs_off_t		len)
- {
-+	struct xfs_mount	*mp = ip->i_mount;
- 	struct inode		*inode = VFS_I(ip);
- 	struct address_space	*mapping = inode->i_mapping;
- 	int			error;
-+	struct xfs_trans	*tp;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
- 
- 	if (offset)
- 		return -EINVAL;
- 
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
-+	if (error)
-+		return error;
-+
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	/*
- 	 * It does not make sense to unseal less than the full range of
-@@ -1527,11 +1549,21 @@ xfs_unseal_file_space(
- 	if (mapping_mapped(mapping))
- 		goto out_unlock;
- 
-+	xfs_trans_ijoin(tp, ip, 0);
-+	ip->i_d.di_flags2 &= ~XFS_DIFLAG2_IOMAP_IMMUTABLE;
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	error = xfs_trans_commit(tp);
-+	tp = NULL; /* nothing to cancel */
-+	if (error)
-+		goto out_unlock;
-+
- 	inode->i_flags &= ~S_IOMAP_IMMUTABLE;
- 	error = 0;
- 
- out_unlock:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	if (tp)
-+		xfs_trans_cancel(tp);
- 
- 	return error;
- }
+Jan
+>> I don't think we need the too small or too big, a simple range issue 
+>> should
+>> suffice and we have -ERANGE.
+>>
+> At this moment, we are telling if it is too small or too big, but when 
+> there is no standard error code for that, ERANGE has to suffice.
+>
+> Cheers,
+> Jan
 
