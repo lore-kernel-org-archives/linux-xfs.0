@@ -1,66 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34606 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:46810 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751049AbdHASWj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 Aug 2017 14:22:39 -0400
-Subject: Re: Metadata corruption at xfs_attr3_leaf_write_verify()
-References: <d161b07cad6536b0baf285328cf99500@mail.gmail.com>
- <A3EABCF079964F4FA6058F30EBF80FD8@alyakaslap>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b1f0c224-11b6-ba24-23e4-187f13d5cf17@sandeen.net>
-Date: Tue, 1 Aug 2017 13:22:37 -0500
+        id S1751145AbdHBJOk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Aug 2017 05:14:40 -0400
+Date: Wed, 2 Aug 2017 11:14:35 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 2/7] xfs_repair: fix symlink target length checks by
+ changing MAXPATHLEN to XFS_SYMLINK_MAXLEN
+Message-ID: <20170802091435.xmnalhhfjz47pnkt@hades.localdomain>
+References: <150153520589.26081.8786864874176090813.stgit@magnolia>
+ <150153522140.26081.14216937967974288340.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <A3EABCF079964F4FA6058F30EBF80FD8@alyakaslap>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150153522140.26081.14216937967974288340.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alex Lyakas <alex@zadarastorage.com>, linux-xfs@vger.kernel.org
-Cc: Shyam Kaushik <shyam@zadarastorage.com>, bfoster@redhat.com, dchinner@redhat.com, david@fromorbit.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-
-
-On 8/1/17 12:30 PM, Alex Lyakas wrote:
-> Greetings XFS developers, David, Brian,
+On Mon, Jul 31, 2017 at 02:07:01PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> We did additional debugging on this issue. The problematic flow happens to be the following:
+> XFS has a maximum symlink target length of 1024 bytes; this is a
+> holdover from the Irix days.  Unfortunately, the constant establishing
+> this was 'MAXPATHLEN', and is /not/ the same as the Linux MAXPATHLEN,
+> which is 4096.
 > 
-> - New inode (regular file) is being created.
-> - As part of creation, due to parent directory having a default ACL, initial ACL is applied to the inode.
-> - This ACL is applied as an extended attribute with name "SGI_ACL_FILE" and value length of 100 bytes.
-> - XFS tries to add this attribute into the inline inode attribute fork area (AKA shortform).
-> - But 100 bytes is too large for the shortform, so XFS creates an empty shortform and then calls xfs_attr_shortform_to_leaf()
-> - This calls xfs_attr3_leaf_create() and creates a leaf with zero attributes.
-> - Before XFS is able to add the attribute to the leaf, the xfsaild thread wants to write this leaf to disk, and trips over the assert in xfs_attr3_leaf_verify, that ichdr.count should not be 0
+> The kernel enforces its 1024 byte MAXPATHLEN on symlink targets, but
+> xfsprogs picks up the (Linux) system 4096 byte MAXPATHLEN, which means
+> that xfs_repair doesn't complain about oversized symlinks.
 > 
-> So this seems like a race condition, where xfsaild writes a not-fully-prepared xfs_buf to disk. To my understanding this can lead to different kinds of corruptions.
+> Since this is an on-disk format constraint, put the define in the XFS
+> namespace.  As a side effect of the rename, xfs_repair wil detect
+> oversized symlinks and clean them off the system.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Interesting, this seems possibly related to this commit, which
-addresses a similar issue only during log replay:
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-commit 2e1d23370e75d7d89350d41b4ab58c7f6a0e26b2
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Fri Dec 9 16:49:47 2016 +1100
+> ---
+>  repair/dinode.c     |    6 +++---
+>  repair/xfs_repair.c |    2 +-
+>  2 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> 
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index da87217..f005335 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -1259,7 +1259,7 @@ null_check(char *name, int length)
+>  {
+>  	int i;
+>  
+> -	ASSERT(length < MAXPATHLEN);
+> +	ASSERT(length < XFS_SYMLINK_MAXLEN);
+>  
+>  	for (i = 0; i < length; i++, name++)  {
+>  		if (*name == '\0')
+> @@ -1371,7 +1371,7 @@ process_symlink(
+>  	blkmap_t 	*blkmap)
+>  {
+>  	char			*symlink;
+> -	char			data[MAXPATHLEN];
+> +	char			data[XFS_SYMLINK_MAXLEN];
+>  
+>  	/*
+>  	 * check size against kernel symlink limits.  we know
+> @@ -1379,7 +1379,7 @@ process_symlink(
+>  	 * the inode is structurally ok so we don't have to check
+>  	 * for that
+>  	 */
+> -	if (be64_to_cpu(dino->di_size) >= MAXPATHLEN)  {
+> +	if (be64_to_cpu(dino->di_size) >= XFS_SYMLINK_MAXLEN)  {
+>  	       do_warn(_("symlink in inode %" PRIu64 " too long (%llu chars)\n"),
+>  		       lino, (unsigned long long) be64_to_cpu(dino->di_size));
+>  		return(1);
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index ab60c0f..b2dd91b 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -761,7 +761,7 @@ main(int argc, char **argv)
+>  	glob_agcount = mp->m_sb.sb_agcount;
+>  
+>  	chunks_pblock = mp->m_sb.sb_inopblock / XFS_INODES_PER_CHUNK;
+> -	max_symlink_blocks = libxfs_symlink_blocks(mp, MAXPATHLEN);
+> +	max_symlink_blocks = libxfs_symlink_blocks(mp, XFS_SYMLINK_MAXLEN);
+>  	inodes_per_cluster = MAX(mp->m_sb.sb_inopblock,
+>  			mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog);
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-    xfs: ignore leaf attr ichdr.count in verifier during log replay
-    
-    When we create a new attribute, we first create a shortform
-    attribute, and try to fit the new attribute into it.
-    If that fails, we copy the (empty) attribute into a leaf attribute,
-    and do the copy again.  Thus there can be a transient state where
-    we have an empty leaf attribute.
-    
-    If we encounter this during log replay, the verifier will fail.
-    So add a test to ignore this part of the leaf attr verification
-    during log replay.
-    
-    Thanks as usual to dchinner for spotting the problem.
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-
--Eric
+-- 
+Carlos
