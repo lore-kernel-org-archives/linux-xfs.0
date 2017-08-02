@@ -1,90 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42542 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751899AbdHCUTH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 16:19:07 -0400
-Date: Thu, 3 Aug 2017 13:18:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: Fix per-inode DAX flag inheritance
-Message-ID: <20170803201858.GX4477@magnolia>
-References: <1501771038-17216-1-git-send-email-lczerner@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:37933 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752299AbdHBTlv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Aug 2017 15:41:51 -0400
+Date: Wed, 2 Aug 2017 21:41:49 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 1/7] mkfs: Save raw user input field to the opts struct
+Message-ID: <20170802194149.GH18884@wotan.suse.de>
+References: <20170720092932.32580-1-jtulak@redhat.com>
+ <20170720092932.32580-2-jtulak@redhat.com>
+ <20170727162752.GK18884@wotan.suse.de>
+ <0c34504a-923a-20ac-9f03-6972e38bbfde@redhat.com>
+ <20170729171207.GN18884@wotan.suse.de>
+ <723e3733-0a80-1bf2-89ed-e80b914037ed@redhat.com>
+ <8374a422-83e6-1426-1548-721da2cb8782@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1501771038-17216-1-git-send-email-lczerner@redhat.com>
+In-Reply-To: <8374a422-83e6-1426-1548-721da2cb8782@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>, g@suse.de
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
 
-On Thu, Aug 03, 2017 at 04:37:18PM +0200, Lukas Czerner wrote:
-> According to the commit that implemented per-inode DAX flag:
-> commit 58f88ca2df72 ("xfs: introduce per-inode DAX enablement")
-> the flag is supposed to act as "inherit flag".
+On Wed, Aug 02, 2017 at 05:51:47PM +0200, Jan Tulak wrote:
+> An addendum to the previous email.
 > 
-> Currently this only works in the situations where parent directory
-> already has a flag in di_flags set, otherwise inheritance does not
-> work. This is because setting the XFS_DIFLAG2_DAX flag is done in a
-> wrong branch designated for di_flags, not di_flags2.
-> 
-> Fix this by moving the code to branch designated for setting di_flags2,
-> which does test for flags in di_flags2.
-> 
-> Fixes: 58f88ca2df72 ("xfs: introduce per-inode DAX enablement")
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> On 02/08/2017 16:30, Jan Tulak wrote:
+> > On 29/07/2017 19:12, Luis R. Rodriguez wrote:
+> > > On Fri, Jul 28, 2017 at 04:45:58PM +0200, Jan Tulak wrote:
+> > > > 
+> > > > On 27/07/2017 18:27, Luis R. Rodriguez wrote:
+> > > > > On Thu, Jul 20, 2017 at 11:29:26AM +0200, Jan Tulak wrote:
+> > > > > > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > > > > > index a69190b9..4b030101 100644
+> > > > > > --- a/mkfs/xfs_mkfs.c
+> > > > > > +++ b/mkfs/xfs_mkfs.c
+> > > > > > @@ -107,6 +107,11 @@ unsigned int        sectorsize;
+> > > > > >     *     sets what is used with simple specifying the
+> > > > > > subopt (-d file).
+> > > > > >     *     A special SUBOPT_NEEDS_VAL can be used to
+> > > > > > require a user-given
+> > > > > >     *     value in any case.
+> > > > > > + *
+> > > > > > + *   raw_input INTERNAL
+> > > > > > + *     Filled raw string from the user, so we never
+> > > > > > lose that information e.g.
+> > > > > > + *     to print it back in case of an issue.
+> > > > > > + *
+> > > > > >     */
+> > > > > >    struct opt_params {
+> > > > > >        const char    name;
+> > > > > > @@ -122,6 +127,7 @@ struct opt_params {
+> > > > > >            long long    minval;
+> > > > > >            long long    maxval;
+> > > > > >            long long    defaultval;
+> > > > > > +        const char    *raw_input;
+> > > > > >        }        subopt_params[MAX_SUBOPTS];
+> > > > > >    };
+> > > > > > @@ -729,6 +735,18 @@ struct opt_params mopts = {
+> > > > > >     */
+> > > > > >    #define WHACK_SIZE (128 * 1024)
+> > > > > > +static inline void
+> > > > > > +set_conf_raw(struct opt_params *opt, int subopt, const char *value)
+> > > > > > +{
+> > > > > > +    opt->subopt_params[subopt].raw_input = value;
+> > > > > > +}
+> > > > > There are no bounds check on the array here, I think set_conf_raw()
+> > > > > should return int and we would check the return value. It could
+> > > > > return -EINVAL if the subopt is invalid for instance.
+> > > > Good idea. The only issue is with the return code, that causes
+> > > > some issues
+> > > > when we are also returning values - I wanted the values to be
+> > > > turned into
+> > > > uint64. But do we need to return an error? I don't see what
+> > > > usecase there
+> > > > would be for it, other than detecting a bug. So an assert might
+> > > > be a better
+> > > > solution - then it can't happen that a wrong index is used and
+> > > > result not
+> > > > tested.
+> > > The setting of the value can be done by using an extra argument
+> > > pointer. Then
+> > > if its set it be assigned. Otherwise it would be left alone. The
+> > > return value
+> > > would return 0 on success, otherwise a standard return value
+> > > indicating the
+> > > cause of the error.
+> > I strongly prefer to return the value, not an error code. We can do the
+> > other way around, put the error code into an argument to get roughly the
+> > same result, while constructions like set_conf_raw(FOO, BAR, baz *
+> > get_conf_raw(FOO, BAR)) will continue to work without the need for
+> > intermediate variables.
+> > 
+> > The *_raw functions are used on few places only, so it would be only a
+> > small issue there, but for consistency, (get|set)_conf_val should have
+> > the same behavior and an intermediate variable for every use of those
+> > would be really annoying. So, how about this?
+> > 
+> > static inline void
+> > set_conf_raw(struct opt_params *opt, int subopt, const char *value, int
+> > *err)
+> > {
+> >     if (subopt < 0 || subopt >= MAX_SUBOPTS) {
+> >         if (err != NULL) *err = EINVAL;
+> >         return;
+> >     }
+> >     opt->subopt_params[subopt].raw_input = value;
+> > }
+> > 
+> I just realized that there is probably no reason for set_conf_raw to expect
+> invalid subopt - that's clearly a bug and we should just print a message and
+> die, because who knows what happened... But for errors that can arose from
+> user input, the style presented above is still valid.
 
-Looks good,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+True however the issue of limiting the context of the use of the pointer
+is still present and if you strdup you have to check for ENOMEM. If this
+is done in a helper then its done only once, specially if a description
+for the subopt is placed into the subopt structure.
 
-> ---
->  fs/xfs/xfs_inode.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index ceef77c..ff48f00 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -874,7 +874,6 @@ xfs_ialloc(
->  	case S_IFREG:
->  	case S_IFDIR:
->  		if (pip && (pip->i_d.di_flags & XFS_DIFLAG_ANY)) {
-> -			uint64_t	di_flags2 = 0;
->  			uint		di_flags = 0;
->  
->  			if (S_ISDIR(mode)) {
-> @@ -911,20 +910,23 @@ xfs_ialloc(
->  				di_flags |= XFS_DIFLAG_NODEFRAG;
->  			if (pip->i_d.di_flags & XFS_DIFLAG_FILESTREAM)
->  				di_flags |= XFS_DIFLAG_FILESTREAM;
-> -			if (pip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
-> -				di_flags2 |= XFS_DIFLAG2_DAX;
->  
->  			ip->i_d.di_flags |= di_flags;
-> -			ip->i_d.di_flags2 |= di_flags2;
->  		}
->  		if (pip &&
->  		    (pip->i_d.di_flags2 & XFS_DIFLAG2_ANY) &&
->  		    pip->i_d.di_version == 3 &&
->  		    ip->i_d.di_version == 3) {
-> +			uint64_t	di_flags2 = 0;
-> +
->  			if (pip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) {
-> -				ip->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
-> +				di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
->  				ip->i_d.di_cowextsize = pip->i_d.di_cowextsize;
->  			}
-> +			if (pip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
-> +				di_flags2 |= XFS_DIFLAG2_DAX;
-> +
-> +			ip->i_d.di_flags2 |= di_flags2;
->  		}
->  		/* FALLTHROUGH */
->  	case S_IFLNK:
-> -- 
-> 2.7.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
