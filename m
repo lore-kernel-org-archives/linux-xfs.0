@@ -1,193 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:40420 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751910AbdHDCeu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Aug 2017 22:34:50 -0400
-Subject: [PATCH v2 3/5] fs, xfs: introduce FALLOC_FL_UNSEAL_BLOCK_MAP
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 03 Aug 2017 19:28:23 -0700
-Message-ID: <150181370272.32119.9941879917087053701.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:18615 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752112AbdHBLuu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2017 07:50:50 -0400
+Date: Wed, 2 Aug 2017 21:50:30 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Metadata corruption at xfs_attr3_leaf_write_verify()
+Message-ID: <20170802115030.GS17762@dastard>
+References: <d161b07cad6536b0baf285328cf99500@mail.gmail.com>
+ <A3EABCF079964F4FA6058F30EBF80FD8@alyakaslap>
+ <20170801231839.GQ17762@dastard>
+ <7AF4FEF16E034B868577B3ED535D5C41@alyakaslap>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7AF4FEF16E034B868577B3ED535D5C41@alyakaslap>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Alex Lyakas <alex@zadarastorage.com>
+Cc: linux-xfs@vger.kernel.org, Shyam Kaushik <shyam@zadarastorage.com>, bfoster@redhat.com, dchinner@redhat.com
 
-Provide an explicit fallocate operation type for clearing the
-S_IOMAP_IMMUTABLE flag. Like the enable case it requires CAP_IMMUTABLE
-and it can only be performed while no process has the file mapped.
+On Wed, Aug 02, 2017 at 11:38:36AM +0300, Alex Lyakas wrote:
+> Hello Dave,
+> 
+> Thank you for your analysis. It sounds like this issue exists in
+> recent kernels as well.
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/open.c                   |   17 +++++++++++------
- fs/xfs/xfs_bmap_util.c      |   42 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap_util.h      |    3 +++
- fs/xfs/xfs_file.c           |    4 +++-
- include/linux/falloc.h      |    3 ++-
- include/uapi/linux/falloc.h |    1 +
- 6 files changed, 62 insertions(+), 8 deletions(-)
+It's effectively a zero day bug. The two-transaction conversion to
+leaf form is recognisable in this commit from Jun 1995:
 
-diff --git a/fs/open.c b/fs/open.c
-index e3aae59785ae..ccfd8d3becc8 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -274,13 +274,17 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 		return -EINVAL;
- 
- 	/*
--	 * Seal block map operation should only be used exclusively, and
--	 * with the IMMUTABLE capability.
-+	 * Seal/unseal block map operations should only be used
-+	 * exclusively, and with the IMMUTABLE capability.
- 	 */
--	if (mode & FALLOC_FL_SEAL_BLOCK_MAP) {
-+	if (mode & (FALLOC_FL_SEAL_BLOCK_MAP | FALLOC_FL_UNSEAL_BLOCK_MAP)) {
- 		if (!capable(CAP_LINUX_IMMUTABLE))
- 			return -EPERM;
--		if (mode & ~FALLOC_FL_SEAL_BLOCK_MAP)
-+		if (mode == (FALLOC_FL_SEAL_BLOCK_MAP
-+					| FALLOC_FL_UNSEAL_BLOCK_MAP))
-+			return -EINVAL;
-+		if (mode & ~(FALLOC_FL_SEAL_BLOCK_MAP
-+					| FALLOC_FL_UNSEAL_BLOCK_MAP))
- 			return -EINVAL;
- 	}
- 
-@@ -303,9 +307,10 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 		return -ETXTBSY;
- 
- 	/*
--	 * We cannot allow any allocation changes on an iomap immutable file
-+	 * We cannot allow any allocation changes on an iomap immutable
-+	 * file, but we can allow clearing the immutable state.
- 	 */
--	if (IS_IOMAP_IMMUTABLE(inode))
-+	if (IS_IOMAP_IMMUTABLE(inode) && !(mode & FALLOC_FL_UNSEAL_BLOCK_MAP))
- 		return -ETXTBSY;
- 
- 	/*
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 46d8eb9e19fc..70ac2d33ab27 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1494,6 +1494,48 @@ xfs_seal_file_space(
- 	return error;
- }
- 
-+int
-+xfs_unseal_file_space(
-+	struct xfs_inode	*ip,
-+	xfs_off_t		offset,
-+	xfs_off_t		len)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+	struct address_space	*mapping = inode->i_mapping;
-+	int			error;
-+
-+	ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
-+
-+	if (offset)
-+		return -EINVAL;
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	/*
-+	 * It does not make sense to unseal less than the full range of
-+	 * the file.
-+	 */
-+	error = -EINVAL;
-+	if (len < i_size_read(inode))
-+		goto out_unlock;
-+
-+	/*
-+	 * Provide safety against one thread changing the policy of not
-+	 * requiring fsync/msync (for block allocations) behind another
-+	 * thread's back.
-+	 */
-+	error = -EBUSY;
-+	if (mapping_mapped(mapping))
-+		goto out_unlock;
-+
-+	inode->i_flags &= ~S_IOMAP_IMMUTABLE;
-+	error = 0;
-+
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+
-+	return error;
-+}
-+
- /*
-  * @next_fsb will keep track of the extent currently undergoing shift.
-  * @stop_fsb will keep track of the extent at which we have to stop.
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 5115a32a2483..b64653a75942 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -62,6 +62,9 @@ int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
- int	xfs_seal_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
-+int	xfs_unseal_file_space(struct xfs_inode *, xfs_off_t offset,
-+				xfs_off_t len);
-+
- 
- /* EOF block manipulation functions */
- bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e21121530a90..833f77700be2 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -740,7 +740,7 @@ xfs_file_write_iter(
- 		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
- 		 FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |	\
- 		 FALLOC_FL_INSERT_RANGE | FALLOC_FL_UNSHARE_RANGE |	\
--		 FALLOC_FL_SEAL_BLOCK_MAP)
-+		 FALLOC_FL_SEAL_BLOCK_MAP | FALLOC_FL_UNSEAL_BLOCK_MAP)
- 
- STATIC long
- xfs_file_fallocate(
-@@ -840,6 +840,8 @@ xfs_file_fallocate(
- 						XFS_BMAPI_PREALLOC);
- 			} else if (mode & FALLOC_FL_SEAL_BLOCK_MAP) {
- 				error = xfs_seal_file_space(ip, offset, len);
-+			} else if (mode & FALLOC_FL_UNSEAL_BLOCK_MAP) {
-+				error = xfs_unseal_file_space(ip, offset, len);
- 			} else
- 				error = xfs_alloc_file_space(ip, offset, len,
- 						XFS_BMAPI_PREALLOC);
-diff --git a/include/linux/falloc.h b/include/linux/falloc.h
-index 48546c6fbec7..b22c1368ed1e 100644
---- a/include/linux/falloc.h
-+++ b/include/linux/falloc.h
-@@ -27,6 +27,7 @@ struct space_resv {
- 					 FALLOC_FL_ZERO_RANGE |		\
- 					 FALLOC_FL_INSERT_RANGE |	\
- 					 FALLOC_FL_UNSHARE_RANGE |	\
--					 FALLOC_FL_SEAL_BLOCK_MAP)
-+					 FALLOC_FL_SEAL_BLOCK_MAP |	\
-+					 FALLOC_FL_UNSEAL_BLOCK_MAP)
- 
- #endif /* _FALLOC_H_ */
-diff --git a/include/uapi/linux/falloc.h b/include/uapi/linux/falloc.h
-index 39076975bf6f..a4949e1a2dae 100644
---- a/include/uapi/linux/falloc.h
-+++ b/include/uapi/linux/falloc.h
-@@ -95,4 +95,5 @@
-  * with the punch, zero, collapse, or insert range modes.
-  */
- #define FALLOC_FL_SEAL_BLOCK_MAP	0x080
-+#define FALLOC_FL_UNSEAL_BLOCK_MAP	0x100
- #endif /* _UAPI_FALLOC_H_ */
+http://oss.sgi.com/cgi-bin/gitweb.cgi?p=archive/xfs-import.git;a=commitdiff;h=d4e0d38051ce61f9d8f330f59e0a99ed710d5f9e
 
+This was about a month after attr support first shows up in the XFS
+commit history, so it's been there forever....
+
+> We are reviewing some of the paths that operate xfs_buf's, but still
+> we don't have enough understanding on how to properly lock out the
+> xfs_buf from AIL grabbing it. Can you please point us at similar
+> flows, where such locking is done?
+
+It's simple - if the buffer is locked, the AIL can't grab it. The
+buffer needs to be held locked across transaction commit
+and then rejoined to the new transaction after it is rolled. THis is
+acheived by using xfs_trans_bhold() in the initial transaction
+context, and after commit it is rejoined to the new transaction
+context.
+
+See the inode chunk allocation code in xfs_dir_ialloc() for an
+example of how this works.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
