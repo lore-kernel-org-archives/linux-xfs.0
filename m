@@ -1,99 +1,342 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:57477 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751496AbdHARtw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 Aug 2017 13:49:52 -0400
-Subject: Re: Locking problems with Linux 4.9 and 4.11 with NFSD and
- `fs/iomap.c`
-References: <de171adc29600902515d1424fd800678@molgen.mpg.de>
- <20170508131843.GB29840@bfoster.bfoster> <20170509090534.GB2378@lst.de>
- <7ae18b0d-38e3-9b12-0989-ede68956ad43@molgen.mpg.de>
- <358037e8-6784-ebca-9fbb-ec7eef3977d6@molgen.mpg.de>
- <20170510171757.GA10534@localhost.localdomain>
- <f6115b81-918d-ecfe-e3d9-812bccf7c80f@molgen.mpg.de>
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-Message-ID: <979473d1-9e8a-51ba-28d9-9ace63f8105b@molgen.mpg.de>
-Date: Tue, 1 Aug 2017 19:49:50 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:55156 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752323AbdHBJWM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Aug 2017 05:22:12 -0400
+Date: Wed, 2 Aug 2017 11:22:08 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v2 4/7] xfs_db: dump dir/attr btrees
+Message-ID: <20170802092208.5z5ujhd6q4udvbl3@hades.localdomain>
+References: <150153520589.26081.8786864874176090813.stgit@magnolia>
+ <150153523353.26081.1989249017494623271.stgit@magnolia>
+ <20170801154053.GH4477@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <f6115b81-918d-ecfe-e3d9-812bccf7c80f@molgen.mpg.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170801154053.GH4477@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>
-Cc: it+linux-nfs@molgen.mpg.de, linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Dear Brian, dear Christoph,
-
-
-On 06/27/17 13:59, Paul Menzel wrote:
-
-> Just a small update that we were hit by the problem on a different 
-> machine (identical model) with Linux 4.9.32 and the exact same symptoms.
+On Tue, Aug 01, 2017 at 08:40:53AM -0700, Darrick J. Wong wrote:
+> Dump the directory or extended attribute btree contents.
 > 
-> ```
-> $ sudo cat /proc/2085/stack
-> [<ffffffff811f920c>] iomap_write_begin+0x8c/0x120
-> [<ffffffff811f982b>] iomap_zero_range_actor+0xeb/0x210
-> [<ffffffff811f9a82>] iomap_apply+0xa2/0x110
-> [<ffffffff811f9c58>] iomap_zero_range+0x58/0x80
-> [<ffffffff8133c7de>] xfs_zero_eof+0x4e/0xb0
-> [<ffffffff8133c9dd>] xfs_file_aio_write_checks+0x19d/0x1c0
-> [<ffffffff8133ce89>] xfs_file_buffered_aio_write+0x79/0x2d0
-> [<ffffffff8133d17e>] xfs_file_write_iter+0x9e/0x150
-> [<ffffffff81198dc0>] do_iter_readv_writev+0xa0/0xf0
-> [<ffffffff81199fba>] do_readv_writev+0x18a/0x230
-> [<ffffffff8119a2ac>] vfs_writev+0x3c/0x50
-> [<ffffffffffffffff>] 0xffffffffffffffff
-> ```
+
+Sweet, thanks
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  db/btdump.c       |  255 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  man/man8/xfs_db.8 |    1 
+>  2 files changed, 255 insertions(+), 1 deletion(-)
 > 
-> We haven’t had time to set up a test system yet to analyze that further.
+> diff --git a/db/btdump.c b/db/btdump.c
+> index 3b76e17..f525a4a 100644
+> --- a/db/btdump.c
+> +++ b/db/btdump.c
+> @@ -32,7 +32,9 @@ btdump_help(void)
+>  "\n"
+>  " If the cursor points to a btree block, 'btdump' dumps the btree\n"
+>  " downward from that block.  If the cursor points to an inode,\n"
+> -" the data fork btree root is selected by default.\n"
+> +" the data fork btree root is selected by default.  If the cursor\n"
+> +" points to a directory or extended attribute btree node, the tree\n"
+> +" will be printed downward from that block.\n"
+>  "\n"
+>  " Options:\n"
+>  "   -a -- Display an inode's extended attribute fork btree.\n"
+> @@ -227,6 +229,252 @@ dump_inode(
+>  	return ret;
+>  }
+>  
+> +static bool
+> +dir_has_rightsib(
+> +	void				*block,
+> +	int				level)
+> +{
+> +	struct xfs_dir3_icleaf_hdr	lhdr;
+> +	struct xfs_da3_icnode_hdr	nhdr;
+> +
+> +	if (level > 0) {
+> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> +		return nhdr.forw != 0;
+> +	}
+> +	M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
+> +	return lhdr.forw != 0;
+> +}
+> +
+> +static int
+> +dir_level(
+> +	void				*block)
+> +{
+> +	struct xfs_dir3_icleaf_hdr	lhdr;
+> +	struct xfs_da3_icnode_hdr	nhdr;
+> +
+> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
+> +	case cpu_to_be16(XFS_DIR2_LEAF1_MAGIC):
+> +	case cpu_to_be16(XFS_DIR2_LEAFN_MAGIC):
+> +		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
+> +		return 0;
+> +	case cpu_to_be16(XFS_DA_NODE_MAGIC):
+> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> +		return nhdr.level;
+> +	default:
+> +		return -1;
+> +	}
+> +}
+> +
+> +static int
+> +dir3_level(
+> +	void				*block)
+> +{
+> +	struct xfs_dir3_icleaf_hdr	lhdr;
+> +	struct xfs_da3_icnode_hdr	nhdr;
+> +
+> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
+> +	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
+> +	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
+> +		M_DIROPS(mp)->leaf_hdr_from_disk(&lhdr, block);
+> +		return 0;
+> +	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> +		return nhdr.level;
+> +	default:
+> +		return -1;
+> +	}
+> +}
+> +
+> +static bool
+> +attr_has_rightsib(
+> +	void				*block,
+> +	int				level)
+> +{
+> +        struct xfs_attr_leafblock	lhdr;
+> +	struct xfs_da3_icnode_hdr	nhdr;
+> +
+> +	if (level > 0) {
+> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> +		return nhdr.forw != 0;
+> +	}
+> +	xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
+> +	return lhdr.hdr.info.forw != 0;
+> +}
+> +
+> +static int
+> +attr_level(
+> +	void				*block)
+> +{
+> +	struct xfs_attr_leafblock	lhdr;
+> +	struct xfs_da3_icnode_hdr	nhdr;
+> +
+> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
+> +	case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
+> +		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
+> +		return 0;
+> +	case cpu_to_be16(XFS_DA_NODE_MAGIC):
+> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> +		return nhdr.level;
+> +	default:
+> +		return -1;
+> +	}
+> +}
+> +
+> +static int
+> +attr3_level(
+> +	void				*block)
+> +{
+> +	struct xfs_attr_leafblock	lhdr;
+> +	struct xfs_da3_icnode_hdr	nhdr;
+> +
+> +	switch (((struct xfs_da_intnode *)block)->hdr.info.magic) {
+> +	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
+> +		xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, &lhdr, block);
+> +		return 0;
+> +	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+> +		M_DIROPS(mp)->node_hdr_from_disk(&nhdr, block);
+> +		return nhdr.level;
+> +	default:
+> +		return -1;
+> +	}
+> +}
+> +
+> +struct dabprinter_ops {
+> +	const char		*print_node_entries;
+> +	const char		*print_leaf_entries;
+> +	const char		*go_node_forward;
+> +	const char		*go_leaf_forward;
+> +	const char		*go_down;
+> +	bool			(*has_rightsib)(void *, int);
+> +	int			(*level)(void *);
+> +};
+> +
+> +static struct dabprinter_ops attr_print = {
+> +	.print_node_entries	= "btree",
+> +	.print_leaf_entries	= "entries nvlist",
+> +	.go_node_forward	= "hdr.info.forw",
+> +	.go_leaf_forward	= "hdr.info.forw",
+> +	.go_down		= "btree[0].before",
+> +	.has_rightsib		= attr_has_rightsib,
+> +	.level			= attr_level,
+> +};
+> +
+> +static struct dabprinter_ops attr3_print = {
+> +	.print_node_entries	= "btree",
+> +	.print_leaf_entries	= "entries nvlist",
+> +	.go_node_forward	= "hdr.info.hdr.forw",
+> +	.go_leaf_forward	= "hdr.info.hdr.forw",
+> +	.go_down		= "btree[0].before",
+> +	.has_rightsib		= attr_has_rightsib,
+> +	.level			= attr3_level,
+> +};
+> +
+> +static struct dabprinter_ops dir_print = {
+> +	.print_node_entries	= "nbtree",
+> +	.print_leaf_entries	= "lents",
+> +	.go_node_forward	= "nhdr.info.hdr.forw",
+> +	.go_leaf_forward	= "lhdr.info.hdr.forw",
+> +	.go_down		= "nbtree[0].before",
+> +	.has_rightsib		= dir_has_rightsib,
+> +	.level			= dir_level,
+> +};
+> +
+> +static struct dabprinter_ops dir3_print = {
+> +	.print_node_entries	= "nbtree",
+> +	.print_leaf_entries	= "lents",
+> +	.go_node_forward	= "nhdr.info.forw",
+> +	.go_leaf_forward	= "lhdr.info.forw",
+> +	.go_down		= "nbtree[0].before",
+> +	.has_rightsib		= dir_has_rightsib,
+> +	.level			= dir3_level,
+> +};
+> +
+> +static int
+> +dump_dablevel(
+> +	int			level,
+> +	struct dabprinter_ops	*dbp)
+> +{
+> +	xfs_daddr_t		orig_daddr = iocur_top->bb;
+> +	xfs_daddr_t		last_daddr;
+> +	unsigned int		nr;
+> +	int			ret;
+> +
+> +	ret = eval("push");
+> +	if (ret)
+> +		return ret;
+> +
+> +	nr = 1;
+> +	do {
+> +		last_daddr = iocur_top->bb;
+> +		dbprintf(_("%s level %u block %u daddr %llu\n"),
+> +			 iocur_top->typ->name, level, nr, last_daddr);
+> +		ret = eval("print %s", level > 0 ? dbp->print_node_entries :
+> +						   dbp->print_leaf_entries);
+> +		if (ret)
+> +			goto err;
+> +		if (dbp->has_rightsib(iocur_top->data, level)) {
+> +			ret = eval("addr %s", level > 0 ? dbp->go_node_forward :
+> +							  dbp->go_leaf_forward);
+> +			if (ret)
+> +				goto err;
+> +		}
+> +		nr++;
+> +	} while (iocur_top->bb != orig_daddr && iocur_top->bb != last_daddr);
+> +
+> +	ret = eval("pop");
+> +	return ret;
+> +err:
+> +	eval("pop");
+> +	return ret;
+> +}
+> +
+> +static int
+> +dump_dabtree(
+> +	bool				dump_node_blocks,
+> +	struct dabprinter_ops		*dbp)
+> +{
+> +	xfs_daddr_t			orig_daddr = iocur_top->bb;
+> +	xfs_daddr_t			last_daddr;
+> +	int				level;
+> +	int				ret;
+> +
+> +	ret = eval("push");
+> +	if (ret)
+> +		return ret;
+> +
+> +	cur_agno = XFS_FSB_TO_AGNO(mp, XFS_DADDR_TO_FSB(mp, iocur_top->bb));
+> +	level = dbp->level(iocur_top->data);
+> +	if (level < 0) {
+> +		printf(_("Current location is not part of a dir/attr btree.\n"));
+> +		goto err;
+> +	}
+> +
+> +	do {
+> +		last_daddr = iocur_top->bb;
+> +		if (level > 0) {
+> +			if (dump_node_blocks) {
+> +				ret = dump_dablevel(level, dbp);
+> +				if (ret)
+> +					goto err;
+> +			}
+> +			ret = eval("addr %s", dbp->go_down);
+> +		} else {
+> +			ret = dump_dablevel(level, dbp);
+> +		}
+> +		if (ret)
+> +			goto err;
+> +		level--;
+> +	} while (level >= 0 &&
+> +		 iocur_top->bb != orig_daddr &&
+> +		 iocur_top->bb != last_daddr);
+> +
+> +	ret = eval("pop");
+> +	return ret;
+> +err:
+> +	eval("pop");
+> +	return ret;
+> +}
+> +
+>  static int
+>  btdump_f(
+>  	int		argc,
+> @@ -234,6 +482,7 @@ btdump_f(
+>  {
+>  	bool		aflag = false;
+>  	bool		iflag = false;
+> +	bool		crc = xfs_sb_version_hascrc(&mp->m_sb);
+>  	int		c;
+>  
+>  	if (cur_typ == NULL) {
+> @@ -276,6 +525,10 @@ btdump_f(
+>  		return dump_btree_long(iflag);
+>  	case TYP_INODE:
+>  		return dump_inode(iflag, aflag);
+> +	case TYP_ATTR:
+> +		return dump_dabtree(iflag, crc ? &attr3_print : &attr_print);
+> +	case TYP_DIR2:
+> +		return dump_dabtree(iflag, crc ? &dir3_print : &dir_print);
+>  	default:
+>  		dbprintf(_("type \"%s\" is not a btree type or inode\n"),
+>  				cur_typ->name);
+> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+> index 6a97504..b3129f7 100644
+> --- a/man/man8/xfs_db.8
+> +++ b/man/man8/xfs_db.8
+> @@ -335,6 +335,7 @@ area of the inode, if neither option is given then both areas are shown.
+>  .B btdump [-a] [-i]
+>  If the cursor points to a btree node, dump the btree from that block downward.
+>  If instead the cursor points to an inode, dump the data fork block mapping btree if there is one.
+> +If the cursor points to a directory or extended attribute btree node, dump that.
+>  By default, only records stored in the btree are dumped.
+>  .RS 1.0i
+>  .TP 0.4i
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Today, two systems with Linux 4.9.23 exhibited the problem of `top` 
-showing that `nfsd` is at 100 %. Restarting one machine into Linux 
-*4.9.38* showed the same problem. One of them with a 1 GBit/s network 
-device got traffic from a 10 GBit/s system, so the connection was saturated.
-
-But looking at the current processes, process with ID 829 does not show 
-that CPU usage value. (I don’t remember what the behavior during the 
-other incidents on other machines was.)
-
-This is from 4.9.38.
-
-The stack trace of the process with ID 857 is below.
-
-```
-$ sudo cat /proc/857/stack
-[<ffffffff811f94fc>] iomap_write_begin+0x6c/0x120
-[<ffffffffffffffff>] 0xffffffffffffffff
-```
-
-Then I executed Brian’s commands.
-
-```
-$ trace-cmd start -p function -l iomap* -P <pid>
-$ cat /sys/kernel/debug/tracing/trace_pipe
-```
-
-This produced output.
-
-```
-             nfsd-857   [005] ....   426.650413: iomap_write_end 
-<-iomap_zero_range_actor
-             nfsd-857   [005] ....   426.650414: iomap_write_begin 
-<-iomap_zero_range_actor
-CPU:5 [LOST 115621695 EVENTS]
-             nfsd-857   [005] ....   453.070439: iomap_write_begin 
-<-iomap_zero_range_actor
-             nfsd-857   [005] ....   453.070440: iomap_write_end 
-<-iomap_zero_range_actor
-```
-
-This continues endlessly.
-
-
-Kind regards,
-
-Paul
+-- 
+Carlos
