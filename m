@@ -1,279 +1,356 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41907 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751648AbdHBPxH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2017 11:53:07 -0400
-Date: Wed, 2 Aug 2017 08:52:57 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:42749 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752433AbdHBQBQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2017 12:01:16 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v72G1EGt006864
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 2 Aug 2017 16:01:14 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v72G1Drw014261
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 2 Aug 2017 16:01:13 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v72G1D5n002031
+        for <linux-xfs@vger.kernel.org>; Wed, 2 Aug 2017 16:01:13 GMT
+Date: Wed, 2 Aug 2017 09:01:12 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/5] common/inject: refactor helpers to use new errortag
- interface
-Message-ID: <20170802155257.GL4477@magnolia>
-References: <150067465981.30639.14801416171688538711.stgit@magnolia>
- <150067468569.30639.11717903404151243816.stgit@magnolia>
- <20170802083742.GU9167@eguan.usersys.redhat.com>
- <20170802143010.GB38674@bfoster.bfoster>
+Subject: Re: [PATCH 1/7] xfs: remove double-underscore integer types
+Message-ID: <20170802160112.GM4477@magnolia>
+References: <150153520589.26081.8786864874176090813.stgit@magnolia>
+ <150153521484.26081.9491485993495513310.stgit@magnolia>
+ <20170802091305.oyxfyhw4eagmatq3@hades.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170802143010.GB38674@bfoster.bfoster>
+In-Reply-To: <20170802091305.oyxfyhw4eagmatq3@hades.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Aug 02, 2017 at 10:30:10AM -0400, Brian Foster wrote:
-> On Wed, Aug 02, 2017 at 04:37:42PM +0800, Eryu Guan wrote:
-> > On Fri, Jul 21, 2017 at 03:04:45PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Refactor the XFS error injection helpers to use the new errortag
-> > > interface to configure error injection.  If that isn't present, fall
-> > > back either to the xfs_io/ioctl based injection or the older sysfs
-> > > knobs.  Refactor existing testcases to use the new helpers.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Aug 02, 2017 at 11:13:05AM +0200, Carlos Maiolino wrote:
+> Hi,
+> 
+> On Mon, Jul 31, 2017 at 02:06:54PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > This looks good to me overall, but I still perfer let other people
-> > who're more familar with XFS errortag and error injection to review too.
-> > While I do have some questions/comments :)
+> > This is a purely mechanical patch that removes the private
+> > __{u,}int{8,16,32,64}_t typedefs in favor of using the system
+> > {u,}int{8,16,32,64}_t typedefs.  This is the sed script used to perform
+> > the transformation and fix the resulting whitespace and indentation
+> > errors:
 > > 
-> > > ---
-> > >  common/inject |   58 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
-> > >  tests/xfs/141 |    5 +++--
-> > >  tests/xfs/196 |   17 ++++++-----------
-> > >  3 files changed, 65 insertions(+), 15 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/common/inject b/common/inject
-> > > index 8ecc290..9aa24de 100644
-> > > --- a/common/inject
-> > > +++ b/common/inject
-> > > @@ -35,10 +35,46 @@ _require_error_injection()
-> > >  	esac
-> > >  }
-> > >  
-> > > +# Find a given xfs mount's errortag injection knob in sysfs
-> > > +_find_xfs_mount_errortag_knob()
-> > 
-> > While The function name and comment both indicate it needs a mounted
-> > XFS, it seems weird that the first argument is expected to be a block
-> > device. And do we need to check if the given device is really mounted?
+> > s/typedef\t__uint8_t/typedef __uint8_t\t/g
+> > s/typedef\t__uint/typedef __uint/g
+> > s/typedef\t__int\([0-9]*\)_t/typedef int\1_t\t/g
+> > s/__uint8_t\t/__uint8_t\t\t/g
+> > s/__uint/uint/g
+> > s/__int\([0-9]*\)_t\t/__int\1_t\t\t/g
+> > s/__int/int/g
+> > /^typedef.*int[0-9]*_t;$/d
 > > 
 > 
-> The xfs per-mount sysfs knobs distinguish between mounts via the
-> block device name.
+> Loos fine, with a few space X tabs cosmetic changes maybe worth to change?
 
-What if we rename the helper and change its documentation as such?
+> 
+> 
+> Anyway, just a suggestion, changing it or not:
+> 
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  
+> > diff --git a/db/bit.h b/db/bit.h
+> > index 80ba24c..9fd71f4 100644
+> > --- a/db/bit.h
+> > +++ b/db/bit.h
+> > @@ -25,5 +25,5 @@
+> >  #define	BVUNSIGNED	0
+> >  #define	BVSIGNED	1
+> >  
+> > -extern __int64_t	getbitval(void *obj, int bitoff, int nbits, int flags);
+> > +extern int64_t		getbitval(void *obj, int bitoff, int nbits, int flags);
+> >  extern void             setbitval(void *obuf, int bitoff, int nbits, void *ibuf);
+> 
+> 		^ Maybe worth to fix this space x tabs while in this code?
 
-# Find the errortag injection knob in sysfs for a given xfs mount's
-# block device.
-_find_xfs_mountdev_errortag_knob()
-{
-	...
-}
+Different cleanup patch, please.  The double-underscore cleanup patch
+should /only/ touch double underscore types, and nothing else.  I think
+Eric fixed a few cases of extra whitespace that drifts this patch away
+from the giant sed blob, but whatever already too hot here to bikeshed
+further over whitespace. :)
 
-> ...
-> > >  # Requires that xfs_io inject command knows about this error type
-> > >  _require_xfs_io_error_injection()
-> > >  {
-> > >  	type="$1"
-> > > +
-> > > +	# Can we find the error injection knobs via the new errortag
-> > > +	# configuration mechanism?
-> > > +	test -w "$(_find_xfs_mount_errortag_knob "${TEST_DEV}" "${type}")" && return
-> > > +
-> > 
-> > As this check goes prior to the _require_error_injection check, so I
-> > assume this new errortag framework doesn't depend on a debug built XFS,
-> > can I?
-
-It depends on the sysfs knobs, and the sysfs knobs in turn depend on
-XFS_DEBUG=y.
-
-> It does depend on debug mode so it probably makes sense to push this
-> after the _require_error_injection check. That way the DEBUG=0 message
-> has precedent over a message regarding lack of support for a particular
-> knob.
-
-Hm?  This is what _require_xfs_io_error_injection does:
-
-First we compute the path to the knob if it exists
-(_find_xfs_mount_errortag_knob).
-
-Then we check if that path is writable.  If it is, error injection is
-enabled (which presumably means XFS_DEBUG=y) and we can continue.
-
-If not, then we use _require_error_injection to bail out if XFS_DEBUG=n.
-
-If we don't bail out, XFS_DEBUG=y and so we check if the xfs_io inject
-help page knows about the error type, and bail out if it doesn't.
-
-
-In the end it doesn't really matter if we look for XFS_DEBUG=y before or
-after we look for the new sysfs knob.  I figured it was simple enough to
-assume that if the knob is present and writable, then our preconditions
-are satisfied and it's ok to proceed with the injection test.
-
-That said, I also interpreted the "look for evidence of XFS_DEBUG=y" and
-"see if xfs_io inject knows about the specific error tag" sequence as a
-best effort work around for the fact that the ioctl-based injection
-mechanism isn't directly discoverable at all, so instead we assume it's
-safe to proceed if we can detect a debug kernel and xfs_io is new enough
-to issue the request.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> Outside of Eryu's further comments, the rest looks good to me. This
-> reminds me that I still need to post the latest log tail overwrite test
-> that depends on this, now that the kernel bits have been reviewed...
+> > diff --git a/db/io.h b/db/io.h
+> > index 9973004..df0fdd7 100644
+> > --- a/db/io.h
+> > +++ b/db/io.h
+> > @@ -25,7 +25,7 @@ typedef struct bbmap {
+> >  } bbmap_t;
+> >  
+> >  typedef struct iocur {
+> > -	__int64_t		bb;	/* BB number in filesystem of buf */
+> > +	int64_t			bb;	/* BB number in filesystem of buf */
+> >  	int			blen;	/* length of "buf", bb's */
+> >  	int			boff;	/* data - buf */
+> >  	void			*buf;	/* base address of buffer */
+> > @@ -33,7 +33,7 @@ typedef struct iocur {
+> >  	xfs_ino_t		dirino;	/* current directory inode number */
+> >  	xfs_ino_t		ino;	/* current inode number */
+> >  	int			len;	/* length of "data", bytes */
+> > -	__uint16_t		mode;	/* current inode's mode */
+> > +	uint16_t		mode;	/* current inode's mode */
+> >  	xfs_off_t		off;	/* fs offset of "data" in bytes */
+> >  	const struct typ	*typ;	/* type of "data" */
+> >  	bbmap_t			*bbmap;	/* map daddr if fragmented */
+> > @@ -57,7 +57,7 @@ extern void	off_cur(int off, int len);
+> >  extern void	pop_cur(void);
+> >  extern void	print_iocur(char *tag, iocur_t *ioc);
+> >  extern void	push_cur(void);
+> > -extern int	read_buf(__int64_t daddr, int count, void *bufp);
+> > +extern int	read_buf(int64_t daddr, int count, void *bufp);
+> >  extern void     write_cur(void);
 > 
-> Brian
+> 		^^
 > 
-> > >  	_require_error_injection
-> > >  
-> > >  	# NOTE: We can't actually test error injection here because xfs
-> > > @@ -54,16 +90,34 @@ _require_xfs_io_error_injection()
-> > >  _test_inject_error()
-> > >  {
-> > >  	type="$1"
-> > > +	value="$2"
-> > >  
-> > > -	$XFS_IO_PROG -x -c "inject $type" $TEST_DIR
-> > > +	knob="$(_find_xfs_mount_errortag_knob "${TEST_DEV}" "${type}")"
-> > > +	if [ -w "${knob}" ]; then
-> > > +		test -z "${value}" && value="default"
-> > > +		echo -n "${value}" > "${knob}"
-> > > +	elif [ -z "${value}" ] || [ "${value}" = "default" ]; then
-> > > +		$XFS_IO_PROG -x -c "inject $type" $TEST_DIR
-> > > +	else
-> > > +		_notrun "Cannot inject error ${type} value ${value}."
-> > 
-> > _require_xfs_io_error_injection already made sure we can do error
-> > jection, it looks like a bug somewhere to me if we can't inject error
-> > here, either wanted to inject error without checking the support status
-> > first or an implementation bug in the error injection framework in
-> > xfstests. So "_fail" might be the right choice.
-> > 
-> > > +	fi
-> > >  }
-> > >  
-> > >  # Inject an error into the scratch fs
-> > >  _scratch_inject_error()
-> > >  {
-> > >  	type="$1"
-> > > +	value="$2"
-> > >  
-> > > -	$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
-> > > +	knob="$(_find_xfs_mount_errortag_knob "${SCRATCH_DEV}" "${type}")"
-> > > +	if [ -w "${knob}" ]; then
-> > > +		test -z "${value}" && value="default"
-> > > +		echo -n "${value}" > "${knob}"
-> > > +	elif [ -z "${value}" ] || [ "${value}" = "default" ]; then
-> > > +		$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
-> > > +	else
-> > > +		_notrun "Cannot inject error ${type} value ${value}."
-> > 
-> > Same here.
-> > 
-> > Thanks,
-> > Eryu
-> > 
-> > > +	fi
-> > >  }
-> > >  
-> > >  # Unmount and remount the scratch device, dumping the log
-> > > diff --git a/tests/xfs/141 b/tests/xfs/141
-> > > index 56ff14e..f61e524 100755
-> > > --- a/tests/xfs/141
-> > > +++ b/tests/xfs/141
-> > > @@ -47,13 +47,14 @@ rm -f $seqres.full
-> > >  
-> > >  # get standard environment, filters and checks
-> > >  . ./common/rc
-> > > +. ./common/inject
-> > >  
-> > >  # real QA test starts here
-> > >  
-> > >  # Modify as appropriate.
-> > >  _supported_fs xfs
-> > >  _supported_os Linux
-> > > -_require_xfs_sysfs $(_short_dev $TEST_DEV)/log/log_badcrc_factor
-> > > +_require_xfs_io_error_injection "log_bad_crc"
-> > >  _require_scratch
-> > >  _require_command "$KILLALL_PROG" killall
-> > >  
-> > > @@ -69,7 +70,7 @@ for i in $(seq 1 5); do
-> > >  	# (increase this value to run fsstress longer).
-> > >  	factor=$((RANDOM % 100 + 1))
-> > >  	echo iteration $i log_badcrc_factor: $factor >> $seqres.full 2>&1
-> > > -	echo $factor > /sys/fs/xfs/$sdev/log/log_badcrc_factor
-> > > +	_scratch_inject_error "log_bad_crc" "$factor"
-> > >  
-> > >  	# Run fsstress until the filesystem shuts down. It will shut down
-> > >  	# automatically when error injection triggers.
-> > > diff --git a/tests/xfs/196 b/tests/xfs/196
-> > > index e9b0649..fe3f570 100755
-> > > --- a/tests/xfs/196
-> > > +++ b/tests/xfs/196
-> > > @@ -45,6 +45,7 @@ _cleanup()
-> > >  # get standard environment, filters and checks
-> > >  . ./common/rc
-> > >  . ./common/punch
-> > > +. ./common/inject
-> > >  
-> > >  # real QA test starts here
-> > >  rm -f $seqres.full
-> > > @@ -53,13 +54,7 @@ rm -f $seqres.full
-> > >  _supported_fs generic
-> > >  _supported_os Linux
-> > >  _require_scratch
-> > > -
-> > > -DROP_WRITES="drop_writes"
-> > > -# replace "drop_writes" with "fail_writes" for old kernel
-> > > -if [ -f /sys/fs/xfs/$(_short_dev $TEST_DEV)/fail_writes ];then
-> > > -	DROP_WRITES="fail_writes"
-> > > -fi
-> > > -_require_xfs_sysfs $(_short_dev $TEST_DEV)/${DROP_WRITES}
-> > > +_require_xfs_io_error_injection "drop_writes"
-> > >  
-> > >  _scratch_mkfs >/dev/null 2>&1
-> > >  _scratch_mount
-> > > @@ -72,7 +67,7 @@ bytes=$((64 * 1024))
-> > >  $XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
-> > >  
-> > >  # Enable write drops. All buffered writes are dropped from this point on.
-> > > -echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> > > +_scratch_inject_error "drop_writes" 1
-> > >  
-> > >  # Write every other 4k range to split the larger delalloc extent into many more
-> > >  # smaller extents. Use pwrite because with write failures enabled, all
-> > > @@ -89,7 +84,7 @@ for i in $(seq 4096 8192 $endoff); do
-> > >  	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
-> > >  done
-> > >  
-> > > -echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> > > +_scratch_inject_error "drop_writes" 0
-> > >  
-> > >  _scratch_cycle_mount
-> > >  $XFS_IO_PROG -c 'bmap -vp' $file | _filter_bmap
-> > > @@ -104,9 +99,9 @@ for offset in $(seq 0 100 500); do
-> > >  	$XFS_IO_PROG -fc "pwrite ${offset}m 100m" $file >> $seqres.full 2>&1
-> > >  
-> > >  	punchoffset=$((offset + 75))
-> > > -	echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> > > +	_scratch_inject_error "drop_writes"
-> > >  	$XFS_IO_PROG -c "pwrite ${punchoffset}m 4k" $file >> $seqres.full 2>&1
-> > > -	echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
-> > > +	_scratch_inject_error "drop_writes" 0
-> > >  done
-> > >  
-> > >  echo "Silence is golden."
-> > > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >  
+> > diff --git a/db/sb.c b/db/sb.c
+> > index 8e7722c..f19248d 100644
+> > --- a/db/sb.c
+> > +++ b/db/sb.c
+> > @@ -606,7 +606,7 @@ version_help(void)
+> >  }
+> >  
+> >  static int
+> > -do_version(xfs_agnumber_t agno, __uint16_t version, __uint32_t features)
+> > +do_version(xfs_agnumber_t agno, uint16_t version, uint32_t features)
+> >  {
+> >  	xfs_sb_t	tsb;
+> >  
+> > @@ -710,8 +710,8 @@ version_f(
+> >  	int		argc,
+> >  	char		**argv)
+> >  {
+> > -	__uint16_t	version = 0;
+> > -	__uint32_t	features = 0;
+> > +	uint16_t	version = 0;
+> > +	uint32_t	features = 0;
+> >  	xfs_agnumber_t	ag;
+> >  
+> >  	if (argc == 2) {	/* WRITE VERSION */
+> > diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> > index 517b75f..d4846a3 100644
+> > --- a/fsr/xfs_fsr.c
+> > +++ b/fsr/xfs_fsr.c
+> > @@ -54,7 +54,7 @@ struct getbmap  *outmap = NULL;
+> >  int             outmap_size = 0;
+> 
+> 	^^^
+> 
+> >  int		RealUid;
+> >  int		tmp_agi;
+> > -static __int64_t	minimumfree = 2048;
+> > +static int64_t		minimumfree = 2048;
+> >  
+> >  #define MNTTYPE_XFS             "xfs"
+> >  
+> 			^^^
+> 
+> > diff --git a/include/xfs_arch.h b/include/xfs_arch.h
+> > index 12cd43e..186cadb 100644
+> > --- a/include/xfs_arch.h
+> > +++ b/include/xfs_arch.h
+> > @@ -244,39 +244,39 @@ static inline void be64_add_cpu(__be64 *a, __s64 b)
+> >  	*a = cpu_to_be64(be64_to_cpu(*a) + b);
+> >  }
+> >  
+> > -static inline __uint16_t get_unaligned_be16(void *p)
+> > +static inline uint16_t get_unaligned_be16(void *p)
+> >  {
+> > -	__uint8_t *__p = p;
+> > +	uint8_t *__p = p;
+> >  	return __p[0] << 8 | __p[1];
+> >  }
+> >  
+> > -static inline __uint32_t get_unaligned_be32(void *p)
+> > +static inline uint32_t get_unaligned_be32(void *p)
+> >  {
+> > -	__uint8_t *__p = p;
+> > +	uint8_t *__p = p;
+> >          return __p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
+> 
+>  ^^^
+> 
+> >  /*
+> > diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> > index 6c8a192..43b4f1d 100644
+> > --- a/libxfs/rdwr.c
+> > +++ b/libxfs/rdwr.c
+> > @@ -118,9 +118,9 @@ static void unmount_record(void *p)
+> >  	xlog_op_header_t	*op = (xlog_op_header_t *)p;
+> >  	/* the data section must be 32 bit size aligned */
+> >  	struct {
+> > -	    __uint16_t magic;
+> > -	    __uint16_t pad1;
+> > -	    __uint32_t pad2; /* may as well make it 64 bits */
+> > +	    uint16_t magic;
+> > +	    uint16_t pad1;
+> > +	    uint32_t pad2; /* may as well make it 64 bits */
+> >  	} magic = { XLOG_UNMOUNT_TYPE, 0, 0 };
+> 
+> 	^^^
+> > diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+> > index 0dfcfd1..fe27f15 100644
+> > --- a/logprint/log_misc.c
+> > +++ b/logprint/log_misc.c
+> > @@ -166,12 +166,12 @@ xlog_print_trans_header(char **ptr, int len)
+> >  {
+> >      xfs_trans_header_t  *h;
+> >      char		*cptr = *ptr;
+> > -    __uint32_t          magic;
+> > +    uint32_t          magic;
+> >      char                *magic_c = (char *)&magic;
+> >  
+> 
+> 	^^^^
+> 
+> 
+> >      *ptr += len;
+> >  
+> > -    magic=*(__uint32_t*)cptr; /* XXX be32_to_cpu soon */
+> > +    magic=*(uint32_t*)cptr; /* XXX be32_to_cpu soon */
+> >  
+> >      if (len >= 4) {
+> >  #if __BYTE_ORDER == __LITTLE_ENDIAN
+> > @@ -201,7 +201,7 @@ xlog_print_trans_buffer(char **ptr, int len, int *i, int num_ops)
+> >      int			 num, skip;
+> >      int			 super_block = 0;
+> >      int			 bucket, col, buckets;
+> > -    __int64_t		 blkno;
+> > +    int64_t			 blkno;
+> >      xfs_buf_log_format_t lbuf;
+> >      int			 size, blen, map_size, struct_size;
+> >      __be64		 x, y;
+> 
+> 	^^^
+> 
+> > --- a/repair/attr_repair.h
+> > +++ b/repair/attr_repair.h
+> > @@ -32,10 +32,10 @@
+> >  #define ACL_WRITE	02
+> >  #define ACL_EXECUTE	01
+> >  
+> >   */
+> >  #define XFS_MAC_MAX_SETS	250
+> >  typedef struct xfs_mac_label {
+> > -	__uint8_t       ml_msen_type;	/* MSEN label type */
+> > -	__uint8_t       ml_mint_type;	/* MINT label type */
+> > -	__uint8_t       ml_level;	/* Hierarchical level */
+> > -	__uint8_t       ml_grade;	/* Hierarchical grade */
+> > -	__uint16_t      ml_catcount;	/* Category count */
+> > -	__uint16_t      ml_divcount;	/* Division count */
+> > +	uint8_t       ml_msen_type;	/* MSEN label type */
+> > +	uint8_t       ml_mint_type;	/* MINT label type */
+> > +	uint8_t       ml_level;	/* Hierarchical level */
+> > +	uint8_t       ml_grade;	/* Hierarchical grade */
+> > +	uint16_t      ml_catcount;	/* Category count */
+> > +	uint16_t      ml_divcount;	/* Division count */
+> >  					/* Category set, then Division set */
+> > -	__uint16_t      ml_list[XFS_MAC_MAX_SETS];
+> > +	uint16_t      ml_list[XFS_MAC_MAX_SETS];
+> 
+> 		^^^
+> >  } xfs_mac_label_t;
+> 
+> > diff --git a/repair/avl64.c b/repair/avl64.c
+> > index 51cd624..8f4a121 100644
+> > --- a/repair/avl64.c
+> > +++ b/repair/avl64.c
+> > @@ -70,8 +70,8 @@ avl64_checktree(
+> >  	avl64node_t *root)
+> >  {
+> >  	avl64node_t *nlast, *nnext, *np;
+> > -	__uint64_t offset = 0;
+> > -	__uint64_t end;
+> > +	uint64_t offset = 0;
+> > +	uint64_t end;
+> >  
+> >  	nlast = nnext = root;
+> >  
+> >  avl64node_t *
+> >  avl64_insert_find_growth(
+> >  		avl64tree_desc_t *tree,
+> > -		__uint64_t start,	/* range start at start, */
+> > -		__uint64_t end,	/* exclusive */
+> > +		uint64_t start,	/* range start at start, */
+> > +		uint64_t end,	/* exclusive */
+> >  		int   *growthp)	/* OUT */
+> 		   ^^^
+> >  {
+> >  	avl64node_t *np = tree->avl_root;
+> > @@ -1378,8 +1378,8 @@ avl64_findadjacent(
+> >  void
+> >  avl64_findranges(
+> >  	avl64tree_desc_t *tree,
+> > -	__uint64_t start,
+> > -	__uint64_t end,
+> > +	uint64_t start,
+> > +	uint64_t end,
+> >  	avl64node_t	        **startp,
+> 
+> 			^^^
+> 
+> >  	avl64node_t		**endp)
+> >  {
+> > diff --git a/repair/avl64.h b/repair/avl64.h
+> > index fd19321..cd079a0 100644
+> > --- a/repair/avl64.h
+> > +++ b/repair/avl64.h
+> > @@ -32,8 +32,8 @@ typedef struct	avl64node {
+> >   * avl-tree operations
+> >   */
+> >  
+> >  avl64node_t *
+> >  avl64_findanyrange(
+> >  	avl64tree_desc_t *tree,
+> > -	__uint64_t	start,
+> > -	__uint64_t	end,
+> > +	uint64_t	start,
+> > +	uint64_t	end,
+> >  	int     checklen);
+> 
+> 	^^^
+> >  
+> >  
+> >  avl64node_t *
+> >  avl64_findadjacent(
+> >  	avl64tree_desc_t *tree,
+> > -	__uint64_t	value,
+> > +	uint64_t	value,
+> >  	int		dir);
+> >  
+> >  void
+> >  avl64_findranges(
+> >  	avl64tree_desc_t *tree,
+> > -	__uint64_t	start,
+> > -	__uint64_t	end,
+> > +	uint64_t	start,
+> > +	uint64_t	end,
+> >  	avl64node_t	        **startp,
+> 
+> 			^^^
+> 
+> >  	avl64node_t		**endp);
+> >  
+> 
+> -- 
+> Carlos
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
