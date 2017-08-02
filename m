@@ -1,467 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25174 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751877AbdHDAHs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 20:07:48 -0400
-Subject: [PATCH 01/22] xfs_scrub: create online filesystem scrub program
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 03 Aug 2017 17:07:43 -0700
-Message-ID: <150180526303.18784.18345664348946121099.stgit@magnolia>
-In-Reply-To: <150180525692.18784.13730590233404009267.stgit@magnolia>
-References: <150180525692.18784.13730590233404009267.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:53985 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751162AbdHBQ5S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Aug 2017 12:57:18 -0400
+Date: Wed, 2 Aug 2017 18:57:16 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 6/7] mkfs: extend opt_params with a value field
+Message-ID: <20170802165716.GF18884@wotan.suse.de>
+References: <20170720092932.32580-1-jtulak@redhat.com>
+ <20170720092932.32580-7-jtulak@redhat.com>
+ <20170727161806.GJ18884@wotan.suse.de>
+ <30eae9db-14fd-b245-3aab-5c1670894b44@redhat.com>
+ <20170729170241.GM18884@wotan.suse.de>
+ <27945607-28e6-31ec-7844-b63a729d040c@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <27945607-28e6-31ec-7844-b63a729d040c@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Aug 02, 2017 at 04:43:09PM +0200, Jan Tulak wrote:
+> On 29/07/2017 19:02, Luis R. Rodriguez wrote:
+> > On Fri, Jul 28, 2017 at 04:44:50PM +0200, Jan Tulak wrote:
+> > > And do we need better messages?
+> > We could later when parsing the configuration file, yes. An abort is fine too but
+> > seems rather grotesque. But also more importantly this is a matter of style and I
+> > realize the old style is to just abort/assert, so I figured it would be a good time
+> > now to ask ourselves if we want proper error messages dealt with / passed slowly
+> > moving forward.
+> > 
+> > But yes, I do suspect we may want better error messages when parsing these. This
+> > may mean for instance we want a string built into the struct that defines the sobopt
+> > so we can use it to inform userspace using a pointer to the description rather than
+> > doing a switch statement on each one and interpreting back to plain english.
+> > 
+> The reason for better messages is reasonable. About the style... well, it
+> makes sense. But I would certainly not do this in this set. So, I think
+> about a way how to keep the current behavior, but slowly build up the ground
+> for something like what you suggest.
+> 
+> Using the same style of error-returning logic from the other email ([PATCH
+> 1/7] mkfs: Save raw ...), the error argument pointer would be optional. So,
+> when you do parse_conf_val(OPT_D, D_AGCOUNT, str, NULL); then you get the
+> old behavior and any error causes a termination inside of this function. But
+> if you instead pass some pointer: parse_conf_val(OPT_D, D_AGCOUNT, str,
+> &err); then right now, we would print the message but do not terminate. And
+> later on, some other message handling can be added.
 
-Create the foundations of a filesystem scrubbing tool that asks the
-kernel to inspect all metadata in the filesystem and (ultimately) to
-repair anything that's broken.  Also create the man page for the
-utility.
+I think this is grotesque. Also, how would we know an error did happen then?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- Makefile             |    3 +
- man/man8/xfs_scrub.8 |  117 ++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/Makefile       |   42 +++++++++++++++++
- scrub/common.c       |   36 +++++++++++++++
- scrub/common.h       |   23 +++++++++
- scrub/scrub.c        |  123 ++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/scrub.h        |   23 +++++++++
- 7 files changed, 366 insertions(+), 1 deletion(-)
- create mode 100644 man/man8/xfs_scrub.8
- create mode 100644 scrub/Makefile
- create mode 100644 scrub/common.c
- create mode 100644 scrub/common.h
- create mode 100644 scrub/scrub.c
- create mode 100644 scrub/scrub.h
+> > > If some value is out of range, or it is a
+> > > conflict, there is not much context needed, and better to not have to care
+> > > about these errors... Do you have an example when it would be helpful? If it
+> > > just spits out a return code, you have to add a check to every use and you
+> > > will have many times the same code like what is in getnum() at this moment
+> > Not really, if we are parsing say D_AGCOUNT we could have a member as part of the
+> > struct, say "description" then we can use say subopt[D_AGCOUNT].description on
+> > the error message, perhaps the only thing that would change for instance would be
+> > the context on which the error was run into, command line option passed or config
+> > file read, say with the filename and line number.
+> > 
+> > How would we be able to detect an error happened and pass exactly where the
+> > error happened otherwise on a config file for example?
+> Yes, I see the issue - getnum finds an error, but it doesn't know the line
+> in the config file to report it. But with what I write above about the error
+> handling, this could work.
+> 
+> if (c < sp->minval) {
+>     if (config_file) illegal_config(str, line, opts, index, _("value is too
+> small"), err);
 
+How would it know what str and line are?
 
-diff --git a/Makefile b/Makefile
-index 72d0044..ef54bda 100644
---- a/Makefile
-+++ b/Makefile
-@@ -47,7 +47,7 @@ HDR_SUBDIRS = include libxfs
- DLIB_SUBDIRS = libxlog libxcmd libhandle
- LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
- TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
--		mdrestore repair rtcp m4 man doc debian spaceman
-+		mdrestore repair rtcp m4 man doc debian spaceman scrub
- 
- ifneq ("$(PKG_PLATFORM)","darwin")
- TOOL_SUBDIRS += fsr
-@@ -89,6 +89,7 @@ repair: libxlog libxcmd
- copy: libxlog
- mkfs: libxcmd
- spaceman: libxcmd
-+scrub: libhandle libxcmd repair
- 
- ifeq ($(HAVE_BUILDDEFS), yes)
- include $(BUILDRULES)
-diff --git a/man/man8/xfs_scrub.8 b/man/man8/xfs_scrub.8
-new file mode 100644
-index 0000000..a432aed
---- /dev/null
-+++ b/man/man8/xfs_scrub.8
-@@ -0,0 +1,117 @@
-+.TH xfs_scrub 8
-+.SH NAME
-+xfs_scrub \- scrub the contents of an XFS filesystem
-+.SH SYNOPSIS
-+.B xfs_scrub
-+[
-+.B \-abemnTvVxy
-+]
-+.I mount-point
-+.br
-+.B xfs_scrub \-V
-+.SH DESCRIPTION
-+.B xfs_scrub
-+attempts to check and repair all metadata in a mounted XFS filesystem.
-+.PP
-+.B xfs_scrub
-+asks the kernel to scrub all metadata objects in the filesystem.
-+Metadata records are scanned for obviously bad values and then
-+cross-referenced against other metadata.
-+The goal is to establish a threasonable confidence about the consistency
-+of the overall filesystem by examining the consistency of individual
-+metadata records against the other metadata in the filesystem across the
-+entire filesystem.
-+Damaged metadata can be rebuilt from other metadata if there is
-+sufficient redundancy (and no other corruption) in the metadata.
-+.PP
-+This utility does not know how to correct all errors.
-+If the tool cannot fix the detected errors, you must unmount the
-+filesystem and run
-+.B xfs_repair
-+to fix the problems.
-+If this tool is not run with either of the
-+.B \-n
-+or
-+.B \-y
-+options, then it will optimize the filesystem when possible,
-+but it will not try to fix errors.
-+.SH OPTIONS
-+.TP
-+.BI \-a " errors"
-+Abort if more than this many errors are found on the filesystem.
-+.TP
-+.B \-b
-+Run in background mode.
-+If the option is specified once, only run a single scrubbing thread at a
-+time.
-+If given more than once, an artificial delay of 100us is added to each
-+scrub call to reduce CPU overhead even further.
-+.TP
-+.B \-e
-+Specifies what happens when errors are detected.
-+If
-+.IR shutdown
-+is given, the filesystem will be taken offline if errors are found.
-+Not all backends can shut down a filesystem.
-+If
-+.IR continue
-+is given, no action taken if errors are found.
-+This is the default.
-+.TP
-+.BI \-m " file"
-+Search this file for mounted filesystems instead of /etc/mtab.
-+.TP
-+.B \-n
-+Dry run, do not modify anything in the filesystem.
-+This disables all preening and optimization behaviors, and disables
-+calling FITRIM on the free space after a successful run.
-+.TP
-+.BI \-T
-+Print timing and memory usage information for each phase.
-+.TP
-+.B \-v
-+Enable verbose mode, which prints periodic status updates.
-+.TP
-+.B \-V
-+Prints the version number and exits.
-+.TP
-+.B \-x
-+Scrub all file data too.
-+The block list will be sorted in disk order for better performance.
-+.B xfs_scrub
-+will issue O_DIRECT reads to the block device directly.
-+If the block device is a SCSI disk, it will issue READ VERIFY commands
-+directly to the disk.
-+.TP
-+.B \-y
-+Try to repair all filesystem errors.
-+If the errors cannot be fixed online, then the filesystem must be taken
-+offline for repair.
-+.SH EXIT CODE
-+The exit code returned by
-+.B xfs_scrub
-+is the sum of the following conditions:
-+.br
-+\	0\	\-\ No errors
-+.br
-+\	1\	\-\ File system errors left uncorrected
-+.br
-+\	2\	\-\ File system optimizations possible
-+.br
-+\	4\	\-\ Operational error
-+.br
-+\	8\	\-\ Usage or syntax error
-+.br
-+.SH CAVEATS
-+.B xfs_scrub
-+is an immature utility!
-+This program takes advantage of in-kernel scrubbing to verify a given
-+data structure with locks held.
-+The kernel must support the BULKSTAT, FSGEOMETRY, FSCOUNTS, GET_RESBLKS,
-+GET_AG_RESBLKS, GETBMAPX, GETFSMAP, INUMBERS, and SCRUB_METADATA ioctls.
-+This can tie up the system for a while.
-+.PP
-+If errors are found and cannot be repaired, the filesystem must be taken
-+offline and repaired.
-+.SH SEE ALSO
-+.BR xfs_repair (8).
-diff --git a/scrub/Makefile b/scrub/Makefile
-new file mode 100644
-index 0000000..90a1c47
---- /dev/null
-+++ b/scrub/Makefile
-@@ -0,0 +1,42 @@
-+#
-+# Copyright (c) 2017 Oracle.  All Rights Reserved.
-+#
-+
-+TOPDIR = ..
-+include $(TOPDIR)/include/builddefs
-+
-+# On linux we get fsmap from the system or define it ourselves
-+# so include this based on platform type.  If this reverts to only
-+# the autoconf check w/o local definition, change to testing HAVE_GETFSMAP
-+SCRUB_PREREQS=$(PKG_PLATFORM)
-+
-+ifeq ($(SCRUB_PREREQS),linux)
-+LTCOMMAND = xfs_scrub
-+INSTALL_SCRUB = install-scrub
-+endif	# scrub_prereqs
-+
-+HFILES = \
-+common.h \
-+scrub.h
-+
-+CFILES = \
-+common.c \
-+scrub.c
-+
-+LLDLIBS += $(LIBXCMD) $(LIBHANDLE) $(LIBPTHREAD)
-+LTDEPENDENCIES += $(LIBXCMD) $(LIBHANDLE)
-+LLDFLAGS = -static
-+
-+default: depend $(LTCOMMAND)
-+
-+include $(BUILDRULES)
-+
-+install: default $(INSTALL_SCRUB)
-+
-+install-scrub:
-+	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
-+	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
-+
-+install-dev:
-+
-+-include .dep
-diff --git a/scrub/common.c b/scrub/common.c
-new file mode 100644
-index 0000000..7f2b4d2
---- /dev/null
-+++ b/scrub/common.c
-@@ -0,0 +1,36 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "libxfs.h"
-+#include <stdio.h>
-+#include <mntent.h>
-+#include <unistd.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/time.h>
-+#include <sys/resource.h>
-+#include <sys/statvfs.h>
-+#include <sys/vfs.h>
-+#include <fcntl.h>
-+#include <dirent.h>
-+#include "../repair/threads.h"
-+#include "path.h"
-+#include "scrub.h"
-+#include "common.h"
-+#include "input.h"
-diff --git a/scrub/common.h b/scrub/common.h
-new file mode 100644
-index 0000000..f29e4d3
---- /dev/null
-+++ b/scrub/common.h
-@@ -0,0 +1,23 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef XFS_SCRUB_COMMON_H_
-+#define XFS_SCRUB_COMMON_H_
-+
-+#endif /* XFS_SCRUB_COMMON_H_ */
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-new file mode 100644
-index 0000000..4fe1590
---- /dev/null
-+++ b/scrub/scrub.c
-@@ -0,0 +1,123 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "libxfs.h"
-+#include <stdio.h>
-+#include <mntent.h>
-+#include <unistd.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/time.h>
-+#include <sys/resource.h>
-+#include <sys/statvfs.h>
-+#include <sys/vfs.h>
-+#include <fcntl.h>
-+#include <dirent.h>
-+#include "../repair/threads.h"
-+#include "path.h"
-+#include "scrub.h"
-+#include "common.h"
-+
-+/*
-+ * XFS Online Metadata Scrub (and Repair)
-+ *
-+ * The XFS scrubber uses custom XFS ioctls to probe more deeply into the
-+ * internals of the filesystem.  It takes advantage of scrubbing ioctls
-+ * to check all the records stored in a metadata object and to
-+ * cross-reference those records against the other filesystem metadata.
-+ *
-+ * After the program gathers command line arguments to figure out
-+ * exactly what the user wants the program is going to do, scrub
-+ * execution is split up into several separate phases:
-+ *
-+ * The "find geometry" phase queries XFS for the filesystem geometry.
-+ * The block devices for the data, realtime, and log devices are opened.
-+ * Kernel ioctls are test-queried to see if they actually work (the scrub
-+ * ioctl in particular), and any other filesystem-specific information
-+ * is gathered.
-+ *
-+ * In the "check internal metadata" phase, we call the metadata scrub
-+ * ioctl to check the filesystem's internal per-AG btrees.  This
-+ * includes the AG superblock, AGF, AGFL, and AGI headers, freespace
-+ * btrees, the regular and free inode btrees, the reverse mapping
-+ * btrees, and the reference counting btrees.  If the realtime device is
-+ * enabled, the realtime bitmap and reverse mapping btrees are enabled.
-+ * Quotas, if enabled, are also checked in this phase.
-+ *
-+ * Each AG (and the realtime device) has its metadata checked in a
-+ * separate thread for better performance.  Errors in the internal
-+ * metadata can be fixed here prior to the inode scan; refer to the
-+ * section about the "repair filesystem" phase for more information.
-+ *
-+ * The "scan all inodes" phase uses BULKSTAT to scan all the inodes in
-+ * an AG in disk order.  The BULKSTAT information provides enough
-+ * information to construct a file handle that is used to check the
-+ * following parts of every file:
-+ *
-+ *  - The inode record
-+ *  - All three block forks (data, attr, CoW)
-+ *  - If it's a symlink, the symlink target.
-+ *  - If it's a directory, the directory entries.
-+ *  - All extended attributes
-+ *  - The parent pointer
-+ *
-+ * Multiple threads are started to check each the inodes of each AG in
-+ * parallel.  Errors in file metadata can be fixed here; see the section
-+ * about the "repair filesystem" phase for more information.
-+ *
-+ * Next comes the (configurable) "repair filesystem" phase.  The user
-+ * can instruct this program to fix all problems encountered; to fix
-+ * only optimality problems and leave the corruptions; or not to touch
-+ * the filesystem at all.  Any metadata repairs that did not succeed in
-+ * the previous two phases are retried here; if there are uncorrectable
-+ * errors, xfs_scrub stops here.
-+ *
-+ * The next phase is the "check directory tree" phase.  In this phase,
-+ * every directory is opened (via file handle) to confirm that each
-+ * directory is connected to the root.  Directory entries are checked
-+ * for ambiguous Unicode normalization mappings, which is to say that we
-+ * look for pairs of entries whose utf-8 strings normalize to the same
-+ * code point sequence and map to different inodes, because that could
-+ * be used to trick a user into opening the wrong file.  The names of
-+ * extended attributes are checked for Unicode normalization collisions.
-+ *
-+ * In the "verify data file integrity" phase, we employ GETFSMAP to read
-+ * the reverse-mappings of all AGs and issue direct-reads of the
-+ * underlying disk blocks.  We rely on the underlying storage to have
-+ * checksummed the data blocks appropriately.  Multiple threads are
-+ * started to check each AG in parallel; a separate thread pool is used
-+ * to handle the direct reads.
-+ *
-+ * In the "check summary counters" phase, use GETFSMAP to tally up the
-+ * blocks and BULKSTAT to tally up the inodes we saw and compare that to
-+ * the statfs output.  This gives the user a rough estimate of how
-+ * thorough the scrub was.
-+ */
-+
-+/* Program name; needed for libxcmd error reports. */
-+char				*progname = "xfs_scrub";
-+
-+int
-+main(
-+	int			argc,
-+	char			**argv)
-+{
-+	fprintf(stderr, "XXX: This program is not complete!\n");
-+	return 4;
-+}
-diff --git a/scrub/scrub.h b/scrub/scrub.h
-new file mode 100644
-index 0000000..b07029b
---- /dev/null
-+++ b/scrub/scrub.h
-@@ -0,0 +1,23 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef XFS_SCRUB_SCRUB_H_
-+#define XFS_SCRUB_SCRUB_H_
-+
-+#endif /* XFS_SCRUB_SCRUB_H_ */
+>     else illegal_option(str, opts, index, _("value is too small"), err);
+> }
 
+This seems convoluted and I don't really like it one bit.
+
+> ... and later in the code, if you are in the config file, you could do
+> something like:
+> 
+> parse_conf_val(opt, subopt, str, &err);
+> if (err) report_invalid_line(current_line);
+> 
+> Thoughts?
+
+Just my take: I prefer we do the right thing from the start. Even 
+if it takes us ages to move forward, baby steps, and clean patches
+and evolutions, moving slowly away from the old crazy habits.
+
+  Luis
