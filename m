@@ -1,105 +1,223 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36272 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751455AbdHJVaM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 Aug 2017 17:30:12 -0400
-Subject: [PATCH V2] xfs_metadump: zap stale date in DIR2_LEAF1 dirs
-References: <37cd41d1-335f-a3af-d92c-c0b4b6d1356a@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5f60ef75-8481-872e-91ac-76ea62588773@sandeen.net>
-Date: Thu, 10 Aug 2017 14:30:10 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:37381 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751208AbdHCREK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 13:04:10 -0400
+Date: Thu, 3 Aug 2017 10:04:04 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 9/7] xfs_db: btdump should avoid eval for push and pop of
+ cursor
+Message-ID: <20170803170404.GU4477@magnolia>
+References: <150153520589.26081.8786864874176090813.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <37cd41d1-335f-a3af-d92c-c0b4b6d1356a@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150153520589.26081.8786864874176090813.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Stefan Ring <stefanrin@gmail.com>
+To: sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-xfs_metadump attempts to zero out unused regions of metadata
-blocks to prevent data leaks when sharing metadata images.
+We can call the cursor push and pop functions directly from btdump,
+so skip all the eval overhead.
 
-However, Stefan Ring reported a significant number of leaked
-strings when dumping his 1T filesystem.  Based on a reduced
-metadata set, I was able to identify "leaf" directories
-(with XFS_DIR2_LEAF1_MAGIC magic) as the primary culprit;
-the region between the end of the entries array and the start
-of the bests array was not getting zeroed out.  This patch
-seems to remedy that problem.
-
-Reported-by: Stefan Ring <stefanrin@gmail.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ db/btdump.c |   50 +++++++++++++++-----------------------------------
+ db/io.c     |   22 ++++++++++++++--------
+ db/io.h     |    1 +
+ 3 files changed, 30 insertions(+), 43 deletions(-)
 
-V2:
-
-- factor into new function, process_dir_leaf_block
-- add DIR3_LEAF1_MAGIC
-- don't add count+stale; count includes stale entries
-- move ltp into code block
-
-diff --git a/db/metadump.c b/db/metadump.c
-index 3967df6..a8756d6 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1442,6 +1442,37 @@ process_sf_attr(
+diff --git a/db/btdump.c b/db/btdump.c
+index f525a4a..59c5712 100644
+--- a/db/btdump.c
++++ b/db/btdump.c
+@@ -82,11 +82,9 @@ dump_btlevel(
+ 	xfs_daddr_t		orig_daddr = iocur_top->bb;
+ 	xfs_daddr_t		last_daddr;
+ 	unsigned int		nr;
+-	int			ret;
++	int			ret = 0;
+ 
+-	ret = eval("push");
+-	if (ret)
+-		return ret;
++	push_cur_and_set_type();
+ 
+ 	nr = 1;
+ 	do {
+@@ -111,10 +109,8 @@ dump_btlevel(
+ 		nr++;
+ 	} while (iocur_top->bb != orig_daddr && iocur_top->bb != last_daddr);
+ 
+-	ret = eval("pop");
+-	return ret;
+ err:
+-	eval("pop");
++	pop_cur();
+ 	return ret;
  }
  
- static void
-+process_dir_leaf_block(
-+	char				*block)
+@@ -126,11 +122,9 @@ dump_btree(
+ 	xfs_daddr_t	orig_daddr = iocur_top->bb;
+ 	xfs_daddr_t	last_daddr;
+ 	int		level;
+-	int		ret;
++	int		ret = 0;
+ 
+-	ret = eval("push");
+-	if (ret)
+-		return ret;
++	push_cur_and_set_type();
+ 
+ 	cur_agno = XFS_FSB_TO_AGNO(mp, XFS_DADDR_TO_FSB(mp, iocur_top->bb));
+ 	level = xfs_btree_get_level(iocur_top->data);
+@@ -153,10 +147,8 @@ dump_btree(
+ 		 iocur_top->bb != orig_daddr &&
+ 		 iocur_top->bb != last_daddr);
+ 
+-	ret = eval("pop");
+-	return ret;
+ err:
+-	eval("pop");
++	pop_cur();
+ 	return ret;
+ }
+ 
+@@ -177,7 +169,7 @@ dump_inode(
+ {
+ 	char			*prefix;
+ 	struct xfs_dinode	*dip;
+-	int			ret;
++	int			ret = 0;
+ 
+ 	if (attrfork)
+ 		prefix = "a.bmbt";
+@@ -201,9 +193,7 @@ dump_inode(
+ 		}
+ 	}
+ 
+-	ret = eval("push");
+-	if (ret)
+-		return ret;
++	push_cur_and_set_type();
+ 
+ 	if (dump_node_blocks) {
+ 		ret = eval("print %s.keys", prefix);
+@@ -222,10 +212,8 @@ dump_inode(
+ 	if (ret)
+ 		goto err;
+ 
+-	ret = eval("pop");
+-	return ret;
+ err:
+-	eval("pop");
++	pop_cur();
+ 	return ret;
+ }
+ 
+@@ -397,11 +385,9 @@ dump_dablevel(
+ 	xfs_daddr_t		orig_daddr = iocur_top->bb;
+ 	xfs_daddr_t		last_daddr;
+ 	unsigned int		nr;
+-	int			ret;
++	int			ret = 0;
+ 
+-	ret = eval("push");
+-	if (ret)
+-		return ret;
++	push_cur_and_set_type();
+ 
+ 	nr = 1;
+ 	do {
+@@ -421,10 +407,8 @@ dump_dablevel(
+ 		nr++;
+ 	} while (iocur_top->bb != orig_daddr && iocur_top->bb != last_daddr);
+ 
+-	ret = eval("pop");
+-	return ret;
+ err:
+-	eval("pop");
++	pop_cur();
+ 	return ret;
+ }
+ 
+@@ -436,11 +420,9 @@ dump_dabtree(
+ 	xfs_daddr_t			orig_daddr = iocur_top->bb;
+ 	xfs_daddr_t			last_daddr;
+ 	int				level;
+-	int				ret;
++	int				ret = 0;
+ 
+-	ret = eval("push");
+-	if (ret)
+-		return ret;
++	push_cur_and_set_type();
+ 
+ 	cur_agno = XFS_FSB_TO_AGNO(mp, XFS_DADDR_TO_FSB(mp, iocur_top->bb));
+ 	level = dbp->level(iocur_top->data);
+@@ -468,10 +450,8 @@ dump_dabtree(
+ 		 iocur_top->bb != orig_daddr &&
+ 		 iocur_top->bb != last_daddr);
+ 
+-	ret = eval("pop");
+-	return ret;
+ err:
+-	eval("pop");
++	pop_cur();
+ 	return ret;
+ }
+ 
+diff --git a/db/io.c b/db/io.c
+index fd9b9f4..0974fee 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -220,6 +220,19 @@ push_cur(void)
+ 	cur_typ = NULL;
+ }
+ 
++void
++push_cur_and_set_type(void)
 +{
-+	struct xfs_dir2_leaf		*leaf;
-+	struct xfs_dir3_icleaf_hdr 	leafhdr;
-+
-+	if (!zero_stale_data)
-+		return;
-+
-+	/* Yes, this works for dir2 & dir3.  Difference is padding. */
-+	leaf = (struct xfs_dir2_leaf *)block;
-+	M_DIROPS(mp)->leaf_hdr_from_disk(&leafhdr, leaf);
-+
-+	/* Zero out space from end of ents[] to bests */
-+	if (leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
-+	    leafhdr.magic == XFS_DIR3_LEAF1_MAGIC) {
-+		struct xfs_dir2_leaf_tail	*ltp;
-+		__be16				*lbp;
-+		struct xfs_dir2_leaf_entry	*ents;
-+		char				*free; /* end of ents */
-+
-+		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
-+		free = (char *)&ents[leafhdr.count];
-+		ltp = xfs_dir2_leaf_tail_p(mp->m_dir_geo, leaf);
-+		lbp = xfs_dir2_leaf_bests_p(ltp);
-+		memset(free, 0, (char *)lbp - free);
-+		iocur_top->need_crc = 1;
-+	}
++	/* save current state */
++	push_cur();
++	if (iocur_top[-1].typ && iocur_top[-1].typ->typnm == TYP_INODE)
++		set_cur_inode(iocur_top[-1].ino);
++	else
++		set_cur(iocur_top[-1].typ, iocur_top[-1].bb,
++			iocur_top[-1].blen, DB_RING_IGN,
++			iocur_top[-1].bbmap);
 +}
 +
-+static void
- process_dir_data_block(
- 	char		*block,
- 	xfs_fileoff_t	offset,
-@@ -1801,11 +1832,15 @@ process_single_fsb_objects(
- 		dp = iocur_top->data;
- 		switch (btype) {
- 		case TYP_DIR2:
--			if (o >= mp->m_dir_geo->leafblk)
-+			if (o >= mp->m_dir_geo->freeblk) {
-+				/* TODO, zap any stale data */
- 				break;
--
--			process_dir_data_block(dp, o,
-+			} else if (o >= mp->m_dir_geo->leafblk) {
-+				process_dir_leaf_block(dp);
-+			} else {
-+				process_dir_data_block(dp, o,
- 					 last == mp->m_dir_geo->fsbcount);
-+			}
- 			iocur_top->need_crc = 1;
- 			break;
- 		case TYP_SYMLINK:
-
+ static int
+ push_f(
+ 	int		argc,
+@@ -240,14 +253,7 @@ push_f(
+ 		}
+ 	}
+ 
+-	/* save current state */
+-	push_cur();
+-	if (iocur_top[-1].typ && iocur_top[-1].typ->typnm == TYP_INODE)
+-		set_cur_inode(iocur_top[-1].ino);
+-	else
+-		set_cur(iocur_top[-1].typ, iocur_top[-1].bb,
+-			iocur_top[-1].blen, DB_RING_IGN,
+-			iocur_top[-1].bbmap);
++	push_cur_and_set_type();
+ 
+ 	/* run requested command */
+ 	if (argc>1)
+diff --git a/db/io.h b/db/io.h
+index df0fdd7..d238685 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -57,6 +57,7 @@ extern void	off_cur(int off, int len);
+ extern void	pop_cur(void);
+ extern void	print_iocur(char *tag, iocur_t *ioc);
+ extern void	push_cur(void);
++extern void	push_cur_and_set_type(void);
+ extern int	read_buf(int64_t daddr, int count, void *bufp);
+ extern void     write_cur(void);
+ extern void	set_cur(const struct typ *type, xfs_daddr_t blknum,
