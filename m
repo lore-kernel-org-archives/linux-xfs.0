@@ -1,233 +1,216 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36600 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:51184 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752688AbdHBJk7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Aug 2017 05:40:59 -0400
-Date: Wed, 2 Aug 2017 11:40:54 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 6/7] xfs_db: write values into dir/attr blocks and
- recalculate CRCs
-Message-ID: <20170802094054.nrvjpfi5e42jpjsh@hades.localdomain>
+        id S1751262AbdHCQrZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Aug 2017 12:47:25 -0400
+Subject: [PATCH 8/7] xfs_db: use TYP_F_CRC_FUNC for inodes & dquots
 References: <150153520589.26081.8786864874176090813.stgit@magnolia>
- <150153524586.26081.6633141009302900940.stgit@magnolia>
+ <150153525206.26081.8927560161890396433.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ddf6bf02-e210-e299-6966-b7d926da4d2e@sandeen.net>
+Date: Thu, 3 Aug 2017 11:47:24 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150153524586.26081.6633141009302900940.stgit@magnolia>
+In-Reply-To: <150153525206.26081.8927560161890396433.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jul 31, 2017 at 02:07:25PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Extend typ_t to (optionally) store a pointer to a function to calculate
-> the CRC of the block, provide functions to do this for the dir3 and
-> attr3 types, and then wire up the write command so that we can modify
-> directory and extended attribute block fields.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Now that typ_t has a ->set_crc method, use it for inodes & dquots
+as well, rather than recognizing them as special types and calling
+their crc functions directly by name.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> ---
->  db/attr.c  |   32 ++++++++++++++++++++++++++++++++
->  db/attr.h  |    1 +
->  db/dir2.c  |   37 +++++++++++++++++++++++++++++++++++++
->  db/dir2.h  |    1 +
->  db/type.c  |    8 ++++----
->  db/type.h  |    2 ++
->  db/write.c |    3 +++
->  7 files changed, 80 insertions(+), 4 deletions(-)
-> 
-> 
-> diff --git a/db/attr.c b/db/attr.c
-> index 98fb069..2fa6690 100644
-> --- a/db/attr.c
-> +++ b/db/attr.c
-> @@ -602,6 +602,38 @@ const struct field	attr3_remote_crc_flds[] = {
->  	{ NULL }
->  };
->  
-> +/* Set the CRC. */
-> +void
-> +xfs_attr3_set_crc(
-> +	struct xfs_buf		*bp)
-> +{
-> +	__be32			magic32;
-> +	__be16			magic16;
-> +
-> +	magic32 = *(__be32 *)bp->b_addr;
-> +	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
-> +
-> +	switch (magic16) {
-> +	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
-> +		xfs_buf_update_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF);
-> +		return;
-> +	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-> +		xfs_buf_update_cksum(bp, XFS_DA3_NODE_CRC_OFF);
-> +		return;
-> +	default:
-> +		break;
-> +	}
-> +
-> +	switch (magic32) {
-> +	case cpu_to_be32(XFS_ATTR3_RMT_MAGIC):
-> +		xfs_buf_update_cksum(bp, XFS_ATTR3_RMT_CRC_OFF);
-> +		return;
-> +	default:
-> +		dbprintf(_("Unknown attribute buffer type!\n"));
-> +		break;
-> +	}
-> +}
-> +
->  /*
->   * Special read verifier for attribute buffers. Detect the magic number
->   * appropriately and set the correct verifier and call it.
-> diff --git a/db/attr.h b/db/attr.h
-> index 565d6d8..ba23480 100644
-> --- a/db/attr.h
-> +++ b/db/attr.h
-> @@ -36,5 +36,6 @@ extern const field_t	attr3_remote_crc_flds[];
->  
->  extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
->  extern int	attr_size(void *obj, int startoff, int idx);
-> +extern void	xfs_attr3_set_crc(struct xfs_buf *bp);
->  
->  extern const struct xfs_buf_ops xfs_attr3_db_buf_ops;
-> diff --git a/db/dir2.c b/db/dir2.c
-> index 533f705..3e21a7b 100644
-> --- a/db/dir2.c
-> +++ b/db/dir2.c
-> @@ -981,6 +981,43 @@ const field_t	da3_node_hdr_flds[] = {
->  	{ NULL }
->  };
->  
-> +/* Set the CRC. */
-> +void
-> +xfs_dir3_set_crc(
-> +	struct xfs_buf		*bp)
-> +{
-> +	__be32			magic32;
-> +	__be16			magic16;
-> +
-> +	magic32 = *(__be32 *)bp->b_addr;
-> +	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
-> +
-> +	switch (magic32) {
-> +	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
-> +	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
-> +		xfs_buf_update_cksum(bp, XFS_DIR3_DATA_CRC_OFF);
-> +		return;
-> +	case cpu_to_be32(XFS_DIR3_FREE_MAGIC):
-> +		xfs_buf_update_cksum(bp, XFS_DIR3_FREE_CRC_OFF);
-> +		return;
-> +	default:
-> +		break;
-> +	}
-> +
-> +	switch (magic16) {
-> +	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
-> +	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
-> +		xfs_buf_update_cksum(bp, XFS_DIR3_LEAF_CRC_OFF);
-> +		return;
-> +	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-> +		xfs_buf_update_cksum(bp, XFS_DA3_NODE_CRC_OFF);
-> +		return;
-> +	default:
-> +		dbprintf(_("Unknown directory buffer type! %x %x\n"), magic32, magic16);
-> +		break;
-> +	}
-> +}
-> +
->  /*
->   * Special read verifier for directory buffers. Detect the magic number
->   * appropriately and set the correct verifier and call it.
-> diff --git a/db/dir2.h b/db/dir2.h
-> index 0c2a62e..1b87cd2 100644
-> --- a/db/dir2.h
-> +++ b/db/dir2.h
-> @@ -60,5 +60,6 @@ static inline uint8_t *xfs_dir2_sf_inumberp(xfs_dir2_sf_entry_t *sfep)
->  
->  extern int	dir2_data_union_size(void *obj, int startoff, int idx);
->  extern int	dir2_size(void *obj, int startoff, int idx);
-> +extern void	xfs_dir3_set_crc(struct xfs_buf *bp);
->  
->  extern const struct xfs_buf_ops xfs_dir3_db_buf_ops;
-> diff --git a/db/type.c b/db/type.c
-> index 10fa54e..bf31e04 100644
-> --- a/db/type.c
-> +++ b/db/type.c
-> @@ -87,7 +87,7 @@ static const typ_t	__typtab_crc[] = {
->  	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops,
->  		XFS_AGI_CRC_OFF },
->  	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
-> -		&xfs_attr3_db_buf_ops, TYP_F_NO_CRC_OFF },
-> +		&xfs_attr3_db_buf_ops, TYP_F_CRC_FUNC, xfs_attr3_set_crc },
->  	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
->  		&xfs_bmbt_buf_ops, XFS_BTREE_LBLOCK_CRC_OFF },
->  	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
-> @@ -102,7 +102,7 @@ static const typ_t	__typtab_crc[] = {
->  		&xfs_refcountbt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
->  	{ TYP_DATA, "data", handle_block, NULL, NULL, TYP_F_NO_CRC_OFF },
->  	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
-> -		&xfs_dir3_db_buf_ops, TYP_F_NO_CRC_OFF },
-> +		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
->  	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
->  		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
->  	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
-> @@ -131,7 +131,7 @@ static const typ_t	__typtab_spcrc[] = {
->  	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops ,
->  		XFS_AGI_CRC_OFF },
->  	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
-> -		&xfs_attr3_db_buf_ops, TYP_F_NO_CRC_OFF },
-> +		&xfs_attr3_db_buf_ops, TYP_F_CRC_FUNC, xfs_attr3_set_crc },
->  	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
->  		&xfs_bmbt_buf_ops, XFS_BTREE_LBLOCK_CRC_OFF },
->  	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
-> @@ -146,7 +146,7 @@ static const typ_t	__typtab_spcrc[] = {
->  		&xfs_refcountbt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
->  	{ TYP_DATA, "data", handle_block, NULL, NULL, TYP_F_NO_CRC_OFF },
->  	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
-> -		&xfs_dir3_db_buf_ops, TYP_F_NO_CRC_OFF },
-> +		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
->  	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
->  		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
->  	{ TYP_INOBT, "inobt", handle_struct, inobt_spcrc_hfld,
-> diff --git a/db/type.h b/db/type.h
-> index 87ff107..85d89c7 100644
-> --- a/db/type.h
-> +++ b/db/type.h
-> @@ -45,6 +45,8 @@ typedef struct typ
->  	const struct xfs_buf_ops *bops;
->  	unsigned long		crc_off;
->  #define TYP_F_NO_CRC_OFF	(-1UL)
-> +#define TYP_F_CRC_FUNC		(-2UL)
-> +	void			(*set_crc)(struct xfs_buf *);
->  } typ_t;
->  extern const typ_t	*typtab, *cur_typ;
->  
-> diff --git a/db/write.c b/db/write.c
-> index d24ea05..266bde4 100644
-> --- a/db/write.c
-> +++ b/db/write.c
-> @@ -173,6 +173,9 @@ write_f(
->  	} else if (iocur_top->dquot_buf) {
->  		local_ops.verify_write = xfs_verify_recalc_dquot_crc;
->  		dbprintf(_("Allowing write of corrupted dquot with good CRC\n"));
-> +	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
-> +		local_ops.verify_write = iocur_top->typ->set_crc;
-> +		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
->  	} else { /* invalid data */
->  		local_ops.verify_write = xfs_verify_recalc_crc;
->  		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/db/dquot.c b/db/dquot.c
+index 061eca5..4e35df4 100644
+--- a/db/dquot.c
++++ b/db/dquot.c
+@@ -171,6 +171,17 @@ dquot_f(
+ }
+ 
+ void
++xfs_dquot_set_crc(
++	struct xfs_buf *bp)
++{
++	ASSERT((iocur_top->dquot_buf));
++	ASSERT(iocur_top->bp == bp);
++
++	xfs_update_cksum(iocur_top->data, sizeof(struct xfs_dqblk),
++			 XFS_DQUOT_CRC_OFF);
++}
++
++void
+ dquot_init(void)
+ {
+ 	add_command(&dquot_cmd);
+diff --git a/db/dquot.h b/db/dquot.h
+index 83a5118..12a7244 100644
+--- a/db/dquot.h
++++ b/db/dquot.h
+@@ -20,4 +20,5 @@ extern const struct field	disk_dquot_flds[];
+ extern const struct field	dqblk_flds[];
+ extern const struct field	dqblk_hfld[];
+ 
++extern void	xfs_dquot_set_crc(struct xfs_buf *);
+ extern void	dquot_init(void);
+diff --git a/db/fuzz.c b/db/fuzz.c
+index e1c2045..a9b1577 100644
+--- a/db/fuzz.c
++++ b/db/fuzz.c
+@@ -125,8 +125,7 @@ fuzz_f(
+ 		return 0;
+ 	}
+ 
+-	if (invalid_data && iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF &&
+-			!iocur_top->ino_buf && !iocur_top->dquot_buf) {
++	if (invalid_data && iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF) {
+ 		dbprintf(_("Cannot recalculate CRCs on this type of object\n"));
+ 		return 0;
+ 	}
+@@ -153,12 +152,6 @@ fuzz_f(
+ 	if (corrupt) {
+ 		local_ops.verify_write = xfs_dummy_verify;
+ 		dbprintf(_("Allowing fuzz of corrupted data and bad CRC\n"));
+-	} else if (iocur_top->ino_buf) {
+-		local_ops.verify_write = xfs_verify_recalc_inode_crc;
+-		dbprintf(_("Allowing fuzz of corrupted inode with good CRC\n"));
+-	} else if (iocur_top->dquot_buf) {
+-		local_ops.verify_write = xfs_verify_recalc_dquot_crc;
+-		dbprintf(_("Allowing fuzz of corrupted dquot with good CRC\n"));
+ 	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
+ 		local_ops.verify_write = iocur_top->typ->set_crc;
+ 		dbprintf(_("Allowing fuzz of corrupted data with good CRC\n"));
+diff --git a/db/inode.c b/db/inode.c
+index 6cc47d6..6f971c6 100644
+--- a/db/inode.c
++++ b/db/inode.c
+@@ -711,3 +711,14 @@ _("Metadata CRC error detected for ino %lld\n"),
+ 	/* track updated info in ring */
+ 	ring_add();
+ }
++
++void
++xfs_inode_set_crc(
++	struct xfs_buf *bp)
++{
++	ASSERT(iocur_top->ino_buf);
++	ASSERT(iocur_top->bp == bp);
++
++	libxfs_dinode_calc_crc(mp, iocur_top->data);
++	iocur_top->ino_crc_ok = 1;
++}
+diff --git a/db/inode.h b/db/inode.h
+index 1624f1d..d79b0a4 100644
+--- a/db/inode.h
++++ b/db/inode.h
+@@ -33,4 +33,5 @@ extern void	inode_init(void);
+ extern typnm_t	inode_next_type(void);
+ extern int	inode_size(void *obj, int startoff, int idx);
+ extern int	inode_u_size(void *obj, int startoff, int idx);
++extern void	xfs_inode_set_crc(struct xfs_buf *);
+ extern void	set_cur_inode(xfs_ino_t ino);
+diff --git a/db/io.c b/db/io.c
+index fd9b9f4..9787dea 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -466,28 +466,6 @@ xfs_dummy_verify(
+ }
+ 
+ void
+-xfs_verify_recalc_inode_crc(
+-	struct xfs_buf *bp)
+-{
+-	ASSERT(iocur_top->ino_buf);
+-	ASSERT(iocur_top->bp == bp);
+-
+-	libxfs_dinode_calc_crc(mp, iocur_top->data);
+-	iocur_top->ino_crc_ok = 1;
+-}
+-
+-void
+-xfs_verify_recalc_dquot_crc(
+-	struct xfs_buf *bp)
+-{
+-	ASSERT((iocur_top->dquot_buf));
+-	ASSERT(iocur_top->bp == bp);
+-
+-	xfs_update_cksum(iocur_top->data, sizeof(struct xfs_dqblk),
+-			 XFS_DQUOT_CRC_OFF);
+-}
+-
+-void
+ xfs_verify_recalc_crc(
+ 	struct xfs_buf *bp)
+ {
+diff --git a/db/io.h b/db/io.h
+index df0fdd7..374dd84 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -64,8 +64,6 @@ extern void	set_cur(const struct typ *type, xfs_daddr_t blknum,
+ extern void     ring_add(void);
+ extern void	set_iocur_type(const struct typ *type);
+ extern void	xfs_dummy_verify(struct xfs_buf *bp);
+-extern void	xfs_verify_recalc_inode_crc(struct xfs_buf *bp);
+-extern void	xfs_verify_recalc_dquot_crc(struct xfs_buf *bp);
+ extern void	xfs_verify_recalc_crc(struct xfs_buf *bp);
+ 
+ /*
+diff --git a/db/type.c b/db/type.c
+index 740adc0..00f580a 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -105,12 +105,12 @@ static const typ_t	__typtab_crc[] = {
+ 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
+ 		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
+ 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
+-		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
++		&xfs_dquot_buf_ops, TYP_F_CRC_FUNC, xfs_dquot_set_crc },
+ 	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
+ 		&xfs_inobt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
+ 	{ TYP_INODATA, "inodata", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+ 	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
+-		&xfs_inode_buf_ops, TYP_F_NO_CRC_OFF },
++		&xfs_inode_buf_ops, TYP_F_CRC_FUNC, xfs_inode_set_crc },
+ 	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+ 	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+ 	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+@@ -149,12 +149,12 @@ static const typ_t	__typtab_spcrc[] = {
+ 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
+ 		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
+ 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
+-		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
++		&xfs_dquot_buf_ops, TYP_F_CRC_FUNC, xfs_dquot_set_crc },
+ 	{ TYP_INOBT, "inobt", handle_struct, inobt_spcrc_hfld,
+ 		&xfs_inobt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
+ 	{ TYP_INODATA, "inodata", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+ 	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
+-		&xfs_inode_buf_ops, TYP_F_NO_CRC_OFF },
++		&xfs_inode_buf_ops, TYP_F_CRC_FUNC, xfs_inode_set_crc },
+ 	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+ 	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+ 	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+diff --git a/db/write.c b/db/write.c
+index 266bde4..8f8a6f7 100644
+--- a/db/write.c
++++ b/db/write.c
+@@ -167,12 +167,6 @@ write_f(
+ 	if (corrupt) {
+ 		local_ops.verify_write = xfs_dummy_verify;
+ 		dbprintf(_("Allowing write of corrupted data and bad CRC\n"));
+-	} else if (iocur_top->ino_buf) {
+-		local_ops.verify_write = xfs_verify_recalc_inode_crc;
+-		dbprintf(_("Allowing write of corrupted inode with good CRC\n"));
+-	} else if (iocur_top->dquot_buf) {
+-		local_ops.verify_write = xfs_verify_recalc_dquot_crc;
+-		dbprintf(_("Allowing write of corrupted dquot with good CRC\n"));
+ 	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
+ 		local_ops.verify_write = iocur_top->typ->set_crc;
+ 		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
 
--- 
-Carlos
+
