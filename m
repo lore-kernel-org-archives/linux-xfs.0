@@ -1,381 +1,178 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25752 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751877AbdHDAKD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 20:10:03 -0400
-Subject: [PATCH 22/22] xfs_scrub: integrate services with systemd
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 03 Aug 2017 17:09:58 -0700
-Message-ID: <150180539838.18784.16016614029769784082.stgit@magnolia>
-In-Reply-To: <150180525692.18784.13730590233404009267.stgit@magnolia>
-References: <150180525692.18784.13730590233404009267.stgit@magnolia>
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:37851 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751087AbdHCNHX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 09:07:23 -0400
+Received: by mail-wm0-f51.google.com with SMTP id t201so14925457wmt.0
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Aug 2017 06:07:22 -0700 (PDT)
+Subject: Re: [PATCH 1/7] mkfs: Save raw user input field to the opts struct
+References: <20170720092932.32580-1-jtulak@redhat.com>
+ <20170720092932.32580-2-jtulak@redhat.com>
+ <20170727162752.GK18884@wotan.suse.de>
+ <0c34504a-923a-20ac-9f03-6972e38bbfde@redhat.com>
+ <20170729171207.GN18884@wotan.suse.de>
+ <723e3733-0a80-1bf2-89ed-e80b914037ed@redhat.com>
+ <20170802191932.GG18884@wotan.suse.de>
+From: Jan Tulak <jtulak@redhat.com>
+Message-ID: <bf5c5e66-526e-4431-335a-b9fc98fc31e8@redhat.com>
+Date: Thu, 3 Aug 2017 15:07:20 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20170802191932.GG18884@wotan.suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 02/08/2017 21:19, Luis R. Rodriguez wrote:
+> On Wed, Aug 02, 2017 at 04:30:09PM +0200, Jan Tulak wrote:
+>> On 29/07/2017 19:12, Luis R. Rodriguez wrote:
+>>> On Fri, Jul 28, 2017 at 04:45:58PM +0200, Jan Tulak wrote:
+>>>> On 27/07/2017 18:27, Luis R. Rodriguez wrote:
+>>>>> On Thu, Jul 20, 2017 at 11:29:26AM +0200, Jan Tulak wrote:
+>>>>>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>>>>>> index a69190b9..4b030101 100644
+>>>>>> --- a/mkfs/xfs_mkfs.c
+>>>>>> +++ b/mkfs/xfs_mkfs.c
+>>>>>> @@ -107,6 +107,11 @@ unsigned int		sectorsize;
+>>>>>>      *     sets what is used with simple specifying the subopt (-d file).
+>>>>>>      *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
+>>>>>>      *     value in any case.
+>>>>>> + *
+>>>>>> + *   raw_input INTERNAL
+>>>>>> + *     Filled raw string from the user, so we never lose that information e.g.
+>>>>>> + *     to print it back in case of an issue.
+>>>>>> + *
+>>>>>>      */
+>>>>>>     struct opt_params {
+>>>>>>     	const char	name;
+>>>>>> @@ -122,6 +127,7 @@ struct opt_params {
+>>>>>>     		long long	minval;
+>>>>>>     		long long	maxval;
+>>>>>>     		long long	defaultval;
+>>>>>> +		const char	*raw_input;
+>>>>>>     	}		subopt_params[MAX_SUBOPTS];
+>>>>>>     };
+>>>>>> @@ -729,6 +735,18 @@ struct opt_params mopts = {
+>>>>>>      */
+>>>>>>     #define WHACK_SIZE (128 * 1024)
+>>>>>> +static inline void
+>>>>>> +set_conf_raw(struct opt_params *opt, int subopt, const char *value)
+>>>>>> +{
+>>>>>> +	opt->subopt_params[subopt].raw_input = value;
+>>>>>> +}
+>>>>> There are no bounds check on the array here, I think set_conf_raw()
+>>>>> should return int and we would check the return value. It could
+>>>>> return -EINVAL if the subopt is invalid for instance.
+>>>> Good idea. The only issue is with the return code, that causes some issues
+>>>> when we are also returning values - I wanted the values to be turned into
+>>>> uint64. But do we need to return an error? I don't see what usecase there
+>>>> would be for it, other than detecting a bug. So an assert might be a better
+>>>> solution - then it can't happen that a wrong index is used and result not
+>>>> tested.
+>>> The setting of the value can be done by using an extra argument pointer. Then
+>>> if its set it be assigned. Otherwise it would be left alone. The return value
+>>> would return 0 on success, otherwise a standard return value indicating the
+>>> cause of the error.
+>> I strongly prefer to return the value, not an error code. We can do the
+>> other way around, put the error code into an argument to get roughly the
+>> same result, while constructions like set_conf_raw(FOO, BAR, baz *
+>> get_conf_raw(FOO, BAR)) will continue to work without the need for
+>> intermediate variables.
+>>
+>> The *_raw functions are used on few places only, so it would be only a small
+>> issue there, but for consistency, (get|set)_conf_val should have the same
+>> behavior and an intermediate variable for every use of those would be really
+>> annoying. So, how about this?
+> It would not be intermediate, the main error variable from the start of
+> each function could be used, as is typical in many properly written C
+> programs.
+I meant value-carrying variables, not the error one:
 
-Create a systemd service unit so that we can run the online scrubber
-under systemd with (somewhat) appropriate containment.
+int temp; // a variable useful only on the next two lines
+err = foo(&temp);
+bar(temp);
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- configure.ac                     |   15 +++++++++++
- include/builddefs.in             |    3 ++
- scrub/Makefile                   |   22 ++++++++++++++--
- scrub/scrub.c                    |   25 ++++++++++++++++++
- scrub/xfs_scrub@.service.in      |   18 +++++++++++++
- scrub/xfs_scrub_all.in           |   53 ++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub_all.service.in   |    8 ++++++
- scrub/xfs_scrub_all.timer        |   11 ++++++++
- scrub/xfs_scrub_fail             |   26 +++++++++++++++++++
- scrub/xfs_scrub_fail@.service.in |   10 +++++++
- 10 files changed, 189 insertions(+), 2 deletions(-)
- create mode 100644 scrub/xfs_scrub@.service.in
- create mode 100644 scrub/xfs_scrub_all.service.in
- create mode 100644 scrub/xfs_scrub_all.timer
- create mode 100755 scrub/xfs_scrub_fail
- create mode 100644 scrub/xfs_scrub_fail@.service.in
+versus:
+bar(foo(&err));
 
+The composition of functions would not be usable all the time, it 
+depends on what would be the return value in case of an error and how 
+would the outer function deal with it. But when I checked the code, I 
+think that it could work in a lot of places.
+>> static inline void
+>> set_conf_raw(struct opt_params *opt, int subopt, const char *value, int
+>> *err)
+>> {
+>>      if (subopt < 0 || subopt >= MAX_SUBOPTS) {
+>>          if (err != NULL) *err = EINVAL;
+>>          return;
+>>      }
+>>      opt->subopt_params[subopt].raw_input = value;
+>> }
+> If you go with the strdup thing to avoid limiting the context of the use of
+> the pointer then you'll still have to return an error or abort, and I think
+> returning an error is best.
+OK, I'm willing to return errors for the _raw functions. These are used 
+only on few places, so it is not a big issue. Especially if I add a 
+wrapper for the get_conf_raw function - right now, these are used only 
+as fprintf() arguments to print an error. So the wrapper makes it easy 
+to use in this case (with the old die-on-error behavior), but if you 
+want to use it for something else, you can use it directly and get an 
+error as a return code. Does this looks good?
 
-diff --git a/configure.ac b/configure.ac
-index 91fba71..2e92ee6 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -103,6 +103,21 @@ esac
- AC_SUBST([root_sbindir])
- AC_SUBST([root_libdir])
- 
-+# Where do systemd services go?
-+pkg_systemdsystemunitdir="$(pkg-config --variable=systemdsystemunitdir systemd 2>/dev/null)"
-+case "${pkg_systemdsystemunitdir}" in
-+"")
-+	systemdsystemunitdir=""
-+	have_systemd=no
-+	;;
-+*)
-+	systemdsystemunitdir="${pkg_systemdsystemunitdir}"
-+	have_systemd=yes
-+	;;
-+esac
-+AC_SUBST([have_systemd])
-+AC_SUBST([systemdsystemunitdir])
-+
- # Find localized files.  Don't descend into any "dot directories"
- # (like .git or .pc from quilt).  Strangely, the "-print" argument
- # to "find" is required, to avoid including such directories in the
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 2cde2dc..cf50a26 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -122,6 +122,9 @@ HAVE_SG_IO = @have_sg_io@
- HAVE_HDIO_GETGEO = @have_hdio_getgeo@
- HAVE_ATTR_ROOT = @have_attr_root@
- 
-+HAVE_SYSTEMD = @have_systemd@
-+SYSTEMDSYSTEMUNITDIR = @systemdsystemunitdir@
-+
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
- 
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 9db4a5d..d10f171 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -14,7 +14,12 @@ ifeq ($(SCRUB_PREREQS),linuxyesyes)
- LTCOMMAND = xfs_scrub
- INSTALL_SCRUB = install-scrub
- XFS_SCRUB_ALL_PROG = xfs_scrub_all
--XFS_SCRUB_ARGS = -n
-+XFS_SCRUB_ARGS = -b -n
-+ifeq ($(HAVE_SYSTEMD),yes)
-+INSTALL_SCRUB += install-systemd
-+SYSTEMDSERVICES = xfs_scrub@.service xfs_scrub_all.service xfs_scrub_all.timer xfs_scrub_fail@.service
-+endif
-+
- endif	# scrub_prereqs
- 
- HFILES = \
-@@ -85,7 +90,7 @@ ifeq ($(HAVE_ATTR_ROOT),yes)
- LCFLAGS += -DHAVE_ATTR_ROOT
- endif
- 
--default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG)
-+default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(SYSTEMDSERVICES)
- 
- xfs_scrub_all: xfs_scrub_all.in
- 	@echo "    [SED]    $@"
-@@ -99,6 +104,19 @@ include $(BUILDRULES)
- 
- install: $(INSTALL_SCRUB)
- 
-+%.service: %.service.in
-+	@echo "    [SED]    $@"
-+	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
-+		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" \
-+		   -e "s|@pkg_lib_dir@|$(PKG_LIB_DIR)|g" \
-+		   -e "s|@pkg_name@|$(PKG_NAME)|g" < $< > $@
-+
-+install-systemd: default
-+	$(INSTALL) -m 755 -d $(SYSTEMDSYSTEMUNITDIR)
-+	$(INSTALL) -m 644 $(SYSTEMDSERVICES) $(SYSTEMDSYSTEMUNITDIR)
-+	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/$(PKG_NAME)
-+	$(INSTALL) -m 755 xfs_scrub_fail $(PKG_LIB_DIR)/$(PKG_NAME)
-+
- install-scrub: default
- 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index f319f5b..915fc4a 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -161,6 +161,12 @@ long				page_size;
- bool				stderr_isatty;
- bool				stdout_isatty;
- 
 +/*
-+ * If we are running as a service, we need to be careful about what
-+ * error codes we return to the calling process.
++ * Return 0 on success, -ENOMEM if it could not allocate enough memory for
++ * the string to be saved into the out pointer.
 + */
-+bool				is_service;
++static int
++get_conf_raw(const struct opt_params *opt, const int subopt, char **out)
++{
++       if (subopt < 0 || subopt >= MAX_SUBOPTS) {
++               fprintf(stderr,
++               "This is a bug: get_conf_raw called with invalid 
+opt/subopt: %c/%d\n",
++               opt->name, subopt);
++               exit(1);
++       }
++       *out = strdup(opt->subopt_params[subopt].raw_input);
++       if (*out == NULL)
++               return -ENOMEM;
++       return 0;
 +
- static void __attribute__((noreturn))
- usage(void)
- {
-@@ -692,6 +698,9 @@ _("Only one of the options -n or -y may be specified.\n"));
- 
- 	ctx.mntpoint = argv[optind];
- 
-+	if (getenv("SERVICE_MODE"))
-+		is_service = true;
++}
 +
- 	/* Find the mount record for the passed-in argument. */
- 	if (stat(argv[optind], &ctx.mnt_sb) < 0) {
- 		fprintf(stderr,
-@@ -817,5 +826,21 @@ _("%s: %llu warnings found.\n"),
- 	free(ctx.readbuf);
- 	free(ctx.mntpoint);
- end:
-+	/*
-+	 * If we're running as a service, bump return code up by 16 to
-+	 * avoid conflicting with service return codes.
-+	 */
-+	if (is_service) {
-+		/*
-+		 * journald queries /proc as part of taking in log
-+		 * messages; it uses this information to associate the
-+		 * message with systemd units, etc.  This races with
-+		 * process exit, so delay that a couple of seconds so
-+		 * that we capture the summary outputs in the job log.
-+		 */
-+		sleep(2);
-+		if (ret)
-+			ret += 150;
-+	}
- 	return ret;
- }
-diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
-new file mode 100644
-index 0000000..6b6992d
---- /dev/null
-+++ b/scrub/xfs_scrub@.service.in
-@@ -0,0 +1,18 @@
-+[Unit]
-+Description=Online XFS Metadata Check for %I
-+OnFailure=xfs_scrub_fail@%i.service
-+
-+[Service]
-+Type=oneshot
-+WorkingDirectory=%I
-+PrivateNetwork=true
-+ProtectSystem=full
-+ProtectHome=read-only
-+PrivateTmp=yes
-+AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
-+NoNewPrivileges=yes
-+User=nobody
-+IOSchedulingClass=idle
-+CPUSchedulingPolicy=idle
-+Environment=SERVICE_MODE=1
-+ExecStart=@sbindir@/xfs_scrub @scrub_args@ %I
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index 1abcef6..c522181 100644
---- a/scrub/xfs_scrub_all.in
-+++ b/scrub/xfs_scrub_all.in
-@@ -25,10 +25,19 @@ import json
- import threading
- import time
- import sys
-+import os
- 
- retcode = 0
- terminate = False
- 
-+def DEVNULL():
-+	'''Return /dev/null in subprocess writable format.'''
-+	try:
-+		from subprocess import DEVNULL
-+		return DEVNULL
-+	except ImportError:
-+		return open(os.devnull, 'wb')
-+
- def find_mounts():
- 	'''Map mountpoints to physical disks.'''
- 
-@@ -55,6 +64,13 @@ def find_mounts():
- 				fs[mnt] = set([lastdisk])
- 	return fs
- 
-+def kill_systemd(unit, proc):
-+	'''Kill systemd unit.'''
-+	proc.terminate()
-+	cmd=['systemctl', 'stop', unit]
-+	x = subprocess.Popen(cmd)
-+	x.wait()
-+
- def run_killable(cmd, stdout, killfuncs, kill_fn):
- 	'''Run a killable program.  Returns program retcode or -1 if we can't start it.'''
- 	try:
-@@ -81,6 +97,19 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
- 		if terminate:
- 			return
- 
-+		# Try it the systemd way
-+		cmd=['systemctl', 'start', 'xfs_scrub@%s' % mnt]
-+		ret = run_killable(cmd, DEVNULL(), killfuncs, \
-+				lambda proc: kill_systemd('xfs_scrub@%s' % mnt, proc))
-+		if ret == 0 or ret == 1:
-+			print("Scrubbing %s done, (err=%d)" % (mnt, ret))
-+			sys.stdout.flush()
-+			retcode |= ret
-+			return
-+
-+		if terminate:
-+			return
-+
- 		# Invoke xfs_scrub manually
- 		cmd=['@sbindir@/xfs_scrub', '@scrub_args@', mnt]
- 		ret = run_killable(cmd, None, killfuncs, \
-@@ -112,6 +141,17 @@ def main():
- 
- 	fs = find_mounts()
- 
-+	# Tail the journal if we ourselves aren't a service...
-+	journalthread = None
-+	if 'SERVICE_MODE' not in os.environ:
-+		try:
-+			cmd=['journalctl', '--no-pager', '-q', '-S', 'now', \
-+					'-f', '-u', 'xfs_scrub@*', '-o', \
-+					'cat']
-+			journalthread = subprocess.Popen(cmd)
-+		except:
-+			pass
-+
- 	# Schedule scrub jobs...
- 	running_devs = set()
- 	killfuncs = set()
-@@ -148,6 +188,19 @@ def main():
- 			fs = []
- 		cond.release()
- 
-+	if journalthread is not None:
-+		journalthread.terminate()
-+
-+	# journald queries /proc as part of taking in log
-+	# messages; it uses this information to associate the
-+	# message with systemd units, etc.  This races with
-+	# process exit, so delay that a couple of seconds so
-+	# that we capture the summary outputs in the job log.
-+	if 'SERVICE_MODE' in os.environ:
-+		time.sleep(2)
-+		if retcode:
-+			retcode += 150
-+
- 	sys.exit(retcode)
- 
- if __name__ == '__main__':
-diff --git a/scrub/xfs_scrub_all.service.in b/scrub/xfs_scrub_all.service.in
-new file mode 100644
-index 0000000..683804e
---- /dev/null
-+++ b/scrub/xfs_scrub_all.service.in
-@@ -0,0 +1,8 @@
-+[Unit]
-+Description=Online XFS Metadata Check for All Filesystems
-+ConditionACPower=true
-+
-+[Service]
-+Type=oneshot
-+Environment=SERVICE_MODE=1
-+ExecStart=@sbindir@/xfs_scrub_all
-diff --git a/scrub/xfs_scrub_all.timer b/scrub/xfs_scrub_all.timer
-new file mode 100644
-index 0000000..2e4a33b
---- /dev/null
-+++ b/scrub/xfs_scrub_all.timer
-@@ -0,0 +1,11 @@
-+[Unit]
-+Description=Periodic XFS Online Metadata Check for All Filesystems
-+
-+[Timer]
-+# Run on Sunday at 3:10am, to avoid running afoul of DST changes
-+OnCalendar=Sun *-*-* 03:10:00
-+RandomizedDelaySec=60
-+Persistent=true
-+
-+[Install]
-+WantedBy=timers.target
-diff --git a/scrub/xfs_scrub_fail b/scrub/xfs_scrub_fail
-new file mode 100755
-index 0000000..36dd50e
---- /dev/null
-+++ b/scrub/xfs_scrub_fail
-@@ -0,0 +1,26 @@
-+#!/bin/bash
-+
-+# Email logs of failed xfs_scrub unit runs
-+
-+mailer=/usr/sbin/sendmail
-+recipient="$1"
-+test -z "${recipient}" && exit 0
-+mntpoint="$2"
-+test -z "${mntpoint}" && exit 0
-+hostname="$(hostname -f 2>/dev/null)"
-+test -z "${hostname}" && hostname="${HOSTNAME}"
-+if [ ! -x "${mailer}" ]; then
-+	echo "${mailer}: Mailer program not found."
-+	exit 1
-+fi
-+
-+(cat << ENDL
-+To: $1
-+From: <xfs_scrub@${hostname}>
-+Subject: xfs_scrub failure on ${mntpoint}
-+
-+So sorry, the automatic xfs_scrub of ${mntpoint} on ${hostname} failed.
-+
-+A log of what happened follows:
-+ENDL
-+systemctl status --full --lines 4294967295 "xfs_scrub@${mntpoint}") | "${mailer}" -t -i
-diff --git a/scrub/xfs_scrub_fail@.service.in b/scrub/xfs_scrub_fail@.service.in
-new file mode 100644
-index 0000000..785f881
---- /dev/null
-+++ b/scrub/xfs_scrub_fail@.service.in
-@@ -0,0 +1,10 @@
-+[Unit]
-+Description=Online XFS Metadata Check Failure Reporting for %I
-+
-+[Service]
-+Type=oneshot
-+Environment=EMAIL_ADDR=root
-+ExecStart=@pkg_lib_dir@/@pkg_name@/xfs_scrub_fail "${EMAIL_ADDR}" %I
-+User=mail
-+Group=mail
-+SupplementaryGroups=systemd-journal
++/*
++ * Same as get_conf_raw(), except it returns the string through return
++ * and dies on any error.
++ */
++static char *
++get_conf_raw_safe(const struct opt_params *opt, const int subopt)
++{
++       char *str;
++       if (get_conf_raw(opt, subopt, &str) == -ENOMEM) {
++               fprintf(stderr, "Out of memory!");
++               exit(1);
++       }
++       return str;
++}
+
+
+>
+>>> I don't think we need the too small or too big, a simple range issue should
+>>> suffice and we have -ERANGE.
+>>>
+>> At this moment, we are telling if it is too small or too big, but when there
+>> is no standard error code for that, ERANGE has to suffice.
+> Sure, my point was that we have special values for too big or too small, and
+> I consider that hacky, we could just *say* if it was too big or too small
+> but just use ERANGE as its standard and non-hacky.
+We don't have special values, we just print it out and die. But yes, if 
+we will pass the information anywhere, then it is better to use ERANGE 
+rather than some custom error number.
+
+Jan
 
