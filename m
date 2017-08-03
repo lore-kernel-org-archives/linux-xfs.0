@@ -1,278 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:60128 "EHLO mga07.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54130 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751910AbdHDCen (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Aug 2017 22:34:43 -0400
-Subject: [PATCH v2 2/5] fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 03 Aug 2017 19:28:17 -0700
-Message-ID: <150181369754.32119.7390149918955188408.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        id S1751134AbdHCOhp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Aug 2017 10:37:45 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id A53F676A13
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Aug 2017 14:37:45 +0000 (UTC)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH] xfs: Fix per-inode DAX flag inheritance
+Date: Thu,  3 Aug 2017 16:37:18 +0200
+Message-Id: <1501771038-17216-1-git-send-email-lczerner@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: linux-xfs@vger.kernel.org
+Cc: Lukas Czerner <lczerner@redhat.com>
 
->From falloc.h:
+According to the commit that implemented per-inode DAX flag:
+commit 58f88ca2df72 ("xfs: introduce per-inode DAX enablement")
+the flag is supposed to act as "inherit flag".
 
-    FALLOC_FL_SEAL_BLOCK_MAP is used to seal (make immutable) all of the
-    file logical-to-physical extent offset mappings in the file. The
-    purpose is to allow an application to assume that there are no holes
-    or shared extents in the file and that the metadata needed to find
-    all the physical extents of the file is stable and can never be
-    dirtied.
+Currently this only works in the situations where parent directory
+already has a flag in di_flags set, otherwise inheritance does not
+work. This is because setting the XFS_DIFLAG2_DAX flag is done in a
+wrong branch designated for di_flags, not di_flags2.
 
-For now this patch only permits setting the in-memory state of
-S_IOMAP_IMMMUTABLE. Support for clearing and persisting the state is
-saved for later patches.
+Fix this by moving the code to branch designated for setting di_flags2,
+which does test for flags in di_flags2.
 
-The implementation is careful to not allow the immutable state to change
-while any process might have any established mappings. It reuses the
-existing xfs_reflink_unshare() and xfs_alloc_file_space() to unshare
-extents and fill all holes in the file. It then holds XFS_ILOCK_EXCL
-while it validates the file is in the proper state and sets
-S_IOMAP_IMMUTABLE.
-
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Fixes: 58f88ca2df72 ("xfs: introduce per-inode DAX enablement")
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- fs/open.c                   |   11 +++++
- fs/xfs/xfs_bmap_util.c      |  101 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap_util.h      |    2 +
- fs/xfs/xfs_file.c           |   14 ++++--
- include/linux/falloc.h      |    3 +
- include/uapi/linux/falloc.h |   19 ++++++++
- 6 files changed, 145 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_inode.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/fs/open.c b/fs/open.c
-index 7395860d7164..e3aae59785ae 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -273,6 +273,17 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 	    (mode & ~(FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_KEEP_SIZE)))
- 		return -EINVAL;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index ceef77c..ff48f00 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -874,7 +874,6 @@ xfs_ialloc(
+ 	case S_IFREG:
+ 	case S_IFDIR:
+ 		if (pip && (pip->i_d.di_flags & XFS_DIFLAG_ANY)) {
+-			uint64_t	di_flags2 = 0;
+ 			uint		di_flags = 0;
  
-+	/*
-+	 * Seal block map operation should only be used exclusively, and
-+	 * with the IMMUTABLE capability.
-+	 */
-+	if (mode & FALLOC_FL_SEAL_BLOCK_MAP) {
-+		if (!capable(CAP_LINUX_IMMUTABLE))
-+			return -EPERM;
-+		if (mode & ~FALLOC_FL_SEAL_BLOCK_MAP)
-+			return -EINVAL;
-+	}
-+
- 	if (!(file->f_mode & FMODE_WRITE))
- 		return -EBADF;
+ 			if (S_ISDIR(mode)) {
+@@ -911,20 +910,23 @@ xfs_ialloc(
+ 				di_flags |= XFS_DIFLAG_NODEFRAG;
+ 			if (pip->i_d.di_flags & XFS_DIFLAG_FILESTREAM)
+ 				di_flags |= XFS_DIFLAG_FILESTREAM;
+-			if (pip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
+-				di_flags2 |= XFS_DIFLAG2_DAX;
  
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index fe0f8f7f4bb7..46d8eb9e19fc 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1393,6 +1393,107 @@ xfs_zero_file_space(
- 
- }
- 
-+/* Return 1 if hole detected, 0 if not, and < 0 if fail to determine */
-+STATIC int
-+xfs_file_has_holes(
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_bmbt_irec	*map;
-+	const int		map_size = 10;	/* constrain memory overhead */
-+	int			i, nmaps;
-+	int			error = 0;
-+	xfs_fileoff_t		lblkno = 0;
-+	xfs_filblks_t		maxlblkcnt;
-+
-+	map = kmem_alloc(map_size * sizeof(*map), KM_SLEEP);
-+
-+	maxlblkcnt = XFS_B_TO_FSB(mp, i_size_read(VFS_I(ip)));
-+	do {
-+		nmaps = map_size;
-+		error = xfs_bmapi_read(ip, lblkno, maxlblkcnt - lblkno,
-+				       map, &nmaps, 0);
-+		if (error)
-+			break;
-+
-+		ASSERT(nmaps <= map_size);
-+		for (i = 0; i < nmaps; i++) {
-+			lblkno += map[i].br_blockcount;
-+			if (map[i].br_startblock == HOLESTARTBLOCK) {
-+				error = 1;
-+				break;
-+			}
-+		}
-+	} while (nmaps > 0 && error == 0);
-+
-+	kmem_free(map);
-+	return error;
-+}
-+
-+int
-+xfs_seal_file_space(
-+	struct xfs_inode	*ip,
-+	xfs_off_t		offset,
-+	xfs_off_t		len)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+	struct address_space	*mapping = inode->i_mapping;
-+	int			error;
-+
-+	ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
-+
-+	if (offset)
-+		return -EINVAL;
-+
-+	error = xfs_reflink_unshare(ip, offset, len);
-+	if (error)
-+		return error;
-+
-+	error = xfs_alloc_file_space(ip, offset, len,
-+			XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO);
-+	if (error)
-+		return error;
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	/*
-+	 * Either the size changed after we performed allocation /
-+	 * unsharing, or the request was too small to begin with.
-+	 */
-+	error = -EINVAL;
-+	if (len < i_size_read(inode))
-+		goto out_unlock;
-+
-+	/*
-+	 * Allow DAX path to assume that the state of S_IOMAP_IMMUTABLE
-+	 * will never change while any mapping is established.
-+	 */
-+	error = -EBUSY;
-+	if (mapping_mapped(mapping))
-+		goto out_unlock;
-+
-+	/* Did we race someone attempting to share extents? */
-+	if (xfs_is_reflink_inode(ip))
-+		goto out_unlock;
-+
-+	/* Did we race a hole punch? */
-+	error = xfs_file_has_holes(ip);
-+	if (error == 1) {
-+		error = -EBUSY;
-+		goto out_unlock;
-+	}
-+
-+	/* Abort on an error reading the block map */
-+	if (error < 0)
-+		goto out_unlock;
-+
-+	inode->i_flags |= S_IOMAP_IMMUTABLE;
-+
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+
-+	return error;
-+}
-+
- /*
-  * @next_fsb will keep track of the extent currently undergoing shift.
-  * @stop_fsb will keep track of the extent at which we have to stop.
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 0cede1043571..5115a32a2483 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -60,6 +60,8 @@ int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
- int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
-+int	xfs_seal_file_space(struct xfs_inode *, xfs_off_t offset,
-+				xfs_off_t len);
- 
- /* EOF block manipulation functions */
- bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index c4893e226fd8..e21121530a90 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -739,7 +739,8 @@ xfs_file_write_iter(
- #define	XFS_FALLOC_FL_SUPPORTED						\
- 		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
- 		 FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |	\
--		 FALLOC_FL_INSERT_RANGE | FALLOC_FL_UNSHARE_RANGE)
-+		 FALLOC_FL_INSERT_RANGE | FALLOC_FL_UNSHARE_RANGE |	\
-+		 FALLOC_FL_SEAL_BLOCK_MAP)
- 
- STATIC long
- xfs_file_fallocate(
-@@ -834,9 +835,14 @@ xfs_file_fallocate(
- 				error = xfs_reflink_unshare(ip, offset, len);
- 				if (error)
- 					goto out_unlock;
--			}
--			error = xfs_alloc_file_space(ip, offset, len,
--						     XFS_BMAPI_PREALLOC);
-+
-+				error = xfs_alloc_file_space(ip, offset, len,
-+						XFS_BMAPI_PREALLOC);
-+			} else if (mode & FALLOC_FL_SEAL_BLOCK_MAP) {
-+				error = xfs_seal_file_space(ip, offset, len);
-+			} else
-+				error = xfs_alloc_file_space(ip, offset, len,
-+						XFS_BMAPI_PREALLOC);
+ 			ip->i_d.di_flags |= di_flags;
+-			ip->i_d.di_flags2 |= di_flags2;
  		}
- 		if (error)
- 			goto out_unlock;
-diff --git a/include/linux/falloc.h b/include/linux/falloc.h
-index 7494dc67c66f..48546c6fbec7 100644
---- a/include/linux/falloc.h
-+++ b/include/linux/falloc.h
-@@ -26,6 +26,7 @@ struct space_resv {
- 					 FALLOC_FL_COLLAPSE_RANGE |	\
- 					 FALLOC_FL_ZERO_RANGE |		\
- 					 FALLOC_FL_INSERT_RANGE |	\
--					 FALLOC_FL_UNSHARE_RANGE)
-+					 FALLOC_FL_UNSHARE_RANGE |	\
-+					 FALLOC_FL_SEAL_BLOCK_MAP)
- 
- #endif /* _FALLOC_H_ */
-diff --git a/include/uapi/linux/falloc.h b/include/uapi/linux/falloc.h
-index b075f601919b..39076975bf6f 100644
---- a/include/uapi/linux/falloc.h
-+++ b/include/uapi/linux/falloc.h
-@@ -76,4 +76,23 @@
-  */
- #define FALLOC_FL_UNSHARE_RANGE		0x40
- 
-+/*
-+ * FALLOC_FL_SEAL_BLOCK_MAP is used to seal (make immutable) all of the
-+ * file logical-to-physical extent offset mappings in the file. The
-+ * purpose is to allow an application to assume that there are no holes
-+ * or shared extents in the file and that the metadata needed to find
-+ * all the physical extents of the file is stable and can never be
-+ * dirtied.
-+ *
-+ * The immutable property is in effect for the entire inode, so the
-+ * range for this operation must start at offset 0 and len must be
-+ * greater than or equal to the current size of the file. If greater,
-+ * this operation allocates, unshares, hole fills, and seals in one
-+ * atomic step. If len is zero then the immutable state is cleared for
-+ * the inode.
-+ *
-+ * This flag implies FALLOC_FL_UNSHARE_RANGE and as such cannot be used
-+ * with the punch, zero, collapse, or insert range modes.
-+ */
-+#define FALLOC_FL_SEAL_BLOCK_MAP	0x080
- #endif /* _UAPI_FALLOC_H_ */
+ 		if (pip &&
+ 		    (pip->i_d.di_flags2 & XFS_DIFLAG2_ANY) &&
+ 		    pip->i_d.di_version == 3 &&
+ 		    ip->i_d.di_version == 3) {
++			uint64_t	di_flags2 = 0;
++
+ 			if (pip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) {
+-				ip->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
++				di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
+ 				ip->i_d.di_cowextsize = pip->i_d.di_cowextsize;
+ 			}
++			if (pip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
++				di_flags2 |= XFS_DIFLAG2_DAX;
++
++			ip->i_d.di_flags2 |= di_flags2;
+ 		}
+ 		/* FALLTHROUGH */
+ 	case S_IFLNK:
+-- 
+2.7.5
 
