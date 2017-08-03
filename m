@@ -1,99 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:39254 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751361AbdHLAaj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 20:30:39 -0400
-Date: Sat, 12 Aug 2017 10:30:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 2/6] fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
-Message-ID: <20170812003034.GX21024@dastard>
-References: <150243355681.8777.14902834768886160223.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150243356799.8777.11625037981403766282.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170811232708.GT21024@dastard>
- <CAPcyv4gwgYfLviDJ5wJ5ZRKbX+fDkw_i7A+OwQyMM+MKXe8e=w@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:41194 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752434AbdHCLyL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Aug 2017 07:54:11 -0400
+Date: Thu, 3 Aug 2017 07:54:09 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] common/xfs: add iomap_dio_actor() to the dmesg filter
+Message-ID: <20170803115409.GE62447@bfoster.bfoster>
+References: <20170731042825.6250-1-eguan@redhat.com>
+ <20170731042825.6250-2-eguan@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4gwgYfLviDJ5wJ5ZRKbX+fDkw_i7A+OwQyMM+MKXe8e=w@mail.gmail.com>
+In-Reply-To: <20170731042825.6250-2-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri, Aug 11, 2017 at 04:42:18PM -0700, Dan Williams wrote:
-> On Fri, Aug 11, 2017 at 4:27 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Thu, Aug 10, 2017 at 11:39:28PM -0700, Dan Williams wrote:
-> >> >From falloc.h:
-> >>
-> >>     FALLOC_FL_SEAL_BLOCK_MAP is used to seal (make immutable) all of the
-> >>     file logical-to-physical extent offset mappings in the file. The
-> >>     purpose is to allow an application to assume that there are no holes
-> >>     or shared extents in the file and that the metadata needed to find
-> >>     all the physical extents of the file is stable and can never be
-> >>     dirtied.
-> >>
-> >> For now this patch only permits setting the in-memory state of
-> >> S_IOMAP_IMMMUTABLE. Support for clearing and persisting the state is
-> >> saved for later patches.
-> >>
-> >> The implementation is careful to not allow the immutable state to change
-> >> while any process might have any established mappings. It reuses the
-> >> existing xfs_reflink_unshare() and xfs_alloc_file_space() to unshare
-> >> extents and fill all holes in the file. It then holds XFS_ILOCK_EXCL
-> >> while it validates the file is in the proper state and sets
-> >> S_IOMAP_IMMUTABLE.
-> >
-> > SO I've been thinking about this - I'm thinking that we need to
-> > separate the changes to the extent map from the action of sealing
-> > the extent map.
-> >
-> > That is, I have a need to freeze an extent map without any
-> > modification to it at all and breaking all the sharing and filling
-> > all the holes completely screws up the file layout I need to
-> > preserve. i.e. I want to be able to freeze the maps of a pair of
-> > reflinked files so I can use FIEMAP to query only the changed blocks
-> > and then read out the data in the private/changed blocks in the
-> > reflinked file. I only need a temporary seal (if we crash it goes
-> > away), so maybe there's another command modifier flag needed here,
-> > too.
-> >
-> > The DAX allocation requirements can be handled by a preallocation
-> > call to filll holes with zeros, followed by an unshare call to break
-> > all the COW mappings, and then the extent map can be sealed. If you
-> > need to check for holes after sealing, SEEK_HOLE will tell you what
-> > you need to know...
-> >
-> > My preference really is for each fallocate command to do just one
-> > thing - having the seal operation also modify the extent map
-> > means it's not useful for the use cases where we need the extent map
-> > to remain unmodified....
-> >
-> > Thoughts?
+On Mon, Jul 31, 2017 at 12:28:25PM +0800, Eryu Guan wrote:
+> The warning in fs/iomap.c::iomap_dio_actor() could be triggered when
+> mixing dio and mmap I/O on the same sparse file. Several tests could
+> hit this warning now, like generic/095 generic/224 and generic/446.
+> So add this expected warning to whitelist too.
 > 
-> That does seem to better follow the principle of least surprise and
-> make the interface more composable. However, for the DAX case do we
-> now end up needing a SEEK_SHARED, or something similar to check that
-> we sealed the file without shared extents?
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> ---
 
-Don't we have an inode attribute flag for that? There's definitely a
-flag in the on disk XFS inode to indicate that there are shared
-extents on the file.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Hmmmm - for some reason it's not exposed in FS_IOC_FSGETXATTR.
-Darrick? Any reason we don't expose the "this file has shared
-extents" flag to userspace? How are we checking that on-disk state
-in xfstests?
-
-As it is, if we're adding an immutable extent flag, we've got to be
-able to query the immutable extent state of a file from userspace so
-I'm thinking that we'd need to expose it via the same interface that
-exposes the immutable flag. i.e. we could add the "shared extents
-present" flag to FS_IOC_FSGETXATTR at the same time...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  common/xfs | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 47b4e1ba4b7f..4995f8ba8dd8 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -596,10 +596,12 @@ _filter_xfs_dmesg()
+>  	local warn4="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_aio_read.*"
+>  	local warn5="WARNING:.*fs/iomap\.c:.*iomap_dio_rw.*"
+>  	local warn6="WARNING:.*fs/xfs/xfs_aops\.c:.*__xfs_get_blocks.*"
+> +	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
+>  	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
+>  	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
+>  	    -e "s#$warn3#Intentional warnings in xfs_file_read_iter#" \
+>  	    -e "s#$warn4#Intentional warnings in xfs_file_aio_read#" \
+>  	    -e "s#$warn5#Intentional warnings in iomap_dio_rw#" \
+> -	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#"
+> +	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
+> +	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#"
+>  }
+> -- 
+> 2.13.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
