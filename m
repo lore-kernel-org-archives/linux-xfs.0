@@ -1,115 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44570 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47388 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751183AbdHCPTW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Aug 2017 11:19:22 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 3BB967DD0A
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Aug 2017 15:19:22 +0000 (UTC)
-Received: from hades.localdomain.com (ovpn-204-197.brq.redhat.com [10.40.204.197])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 81096782D5
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Aug 2017 15:19:21 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH] Stop searching for free slots in an inode chunk when there are none
-Date: Thu,  3 Aug 2017 17:19:15 +0200
-Message-Id: <20170803151915.7861-1-cmaiolino@redhat.com>
+        id S1751244AbdHCQCS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Aug 2017 12:02:18 -0400
+Subject: Re: [PATCH 6/7] xfs_db: write values into dir/attr blocks and
+ recalculate CRCs
+References: <150153520589.26081.8786864874176090813.stgit@magnolia>
+ <150153524586.26081.6633141009302900940.stgit@magnolia>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <b024574b-7cb4-c0d7-3c8c-d586b1d46c47@redhat.com>
+Date: Thu, 3 Aug 2017 11:02:15 -0500
+MIME-Version: 1.0
+In-Reply-To: <150153524586.26081.6633141009302900940.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-In a filesystem without finobt, the Space manager selects an AG to alloc a new
-inode, where xfs_dialloc_ag_inobt() will search the AG for the free slot chunk.
+On 7/31/17 4:07 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Extend typ_t to (optionally) store a pointer to a function to calculate
+> the CRC of the block, provide functions to do this for the dir3 and
+> attr3 types, and then wire up the write command so that we can modify
+> directory and extended attribute block fields.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  db/attr.c  |   32 ++++++++++++++++++++++++++++++++
+>  db/attr.h  |    1 +
+>  db/dir2.c  |   37 +++++++++++++++++++++++++++++++++++++
+>  db/dir2.h  |    1 +
+>  db/type.c  |    8 ++++----
+>  db/type.h  |    2 ++
+>  db/write.c |    3 +++
+>  7 files changed, 80 insertions(+), 4 deletions(-)
+> 
+> 
+> diff --git a/db/attr.c b/db/attr.c
+> index 98fb069..2fa6690 100644
+> --- a/db/attr.c
+> +++ b/db/attr.c
+> @@ -602,6 +602,38 @@ const struct field	attr3_remote_crc_flds[] = {
+>  	{ NULL }
+>  };
+>  
+> +/* Set the CRC. */
+> +void
+> +xfs_attr3_set_crc(
+> +	struct xfs_buf		*bp)
+> +{
+> +	__be32			magic32;
+> +	__be16			magic16;
+> +
+> +	magic32 = *(__be32 *)bp->b_addr;
+> +	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
+> +
+> +	switch (magic16) {
+> +	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
 
-When the new inode is in the samge AG as its parent, the btree will be
-searched starting on the parent's record, and then retried from the top
-if no slot is available beyond the parent's record.
+Isn't it more typical to endian-swap magic16 and not have the
+swap in each case statement?  *shrug*
 
-To exit this loop though, xfs_dialloc_ag_inobt(), relies on the fact that the
-btree must have a free slot available, once its callers relied on the
-agi->freecount when deciding how/where to allocate this new inode.
+> +		xfs_buf_update_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF);
+> +		return;
+> +	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+> +		xfs_buf_update_cksum(bp, XFS_DA3_NODE_CRC_OFF);
+> +		return;
+> +	default:
+> +		break;
+> +	}
 
-In the case when the agi->freecount is corrupted, showing available
-inodes in an AG, when in fact there is none, this becomes an infinite
-loop.
+...
 
-Add a way to stop the loop when a free slot is not found in the btree,
-making the function to fall into the whole AG scan which will then, be
-able to detect the corruption and shut the filesystem down.
+>  
+> diff --git a/db/write.c b/db/write.c
+> index d24ea05..266bde4 100644
+> --- a/db/write.c
+> +++ b/db/write.c
+> @@ -173,6 +173,9 @@ write_f(
+>  	} else if (iocur_top->dquot_buf) {
+>  		local_ops.verify_write = xfs_verify_recalc_dquot_crc;
+>  		dbprintf(_("Allowing write of corrupted dquot with good CRC\n"));
+> +	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
+> +		local_ops.verify_write = iocur_top->typ->set_crc;
+> +		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
+>  	} else { /* invalid data */
+>  		local_ops.verify_write = xfs_verify_recalc_crc;
+>  		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
+looking at this else if else if else if gunk makes me think that this has
+grown a bit out of control.
 
-I have a xfstest to catch this agi->freecount corruption case, I'll send it to
-the list soon.
+We have other special types that require unique crc setting functions - dquots
+and inodes.  In those cases, we have TYP_F_NO_CRC_OFF but a special indicator
+that they are of this type (ino_buf, dquot_buf), with a hard-coded recalculation
+routine (xfs_verify_recalc_dquot_crc, xfs_verify_recalc_inode_crc).  Now for /other/
+types you've extended typ_t and put the function in there as an op, which makes
+sense.
 
- fs/xfs/libxfs/xfs_ialloc.c | 37 ++++++++++++++++++++++++-------------
- 1 file changed, 24 insertions(+), 13 deletions(-)
+It seems to me that it would be logical to move the existing crc recalculation
+routines for dquots & inodes into this new op as well, and locate & name everything
+consistently, no?
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index d41ade5d293e..8ebe0d89bdc5 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1123,6 +1123,7 @@ xfs_dialloc_ag_inobt(
- 	int			error;
- 	int			offset;
- 	int			i, j;
-+	int			retry = true; /* Search tree from the top */
- 
- 	pag = xfs_perag_get(mp, agno);
- 
-@@ -1205,6 +1206,12 @@ xfs_dialloc_ag_inobt(
- 			error = xfs_ialloc_next_rec(cur, &rec, &doneright, 0);
- 			if (error)
- 				goto error1;
-+
-+			/*
-+			 * We've already scanned the whole btree, no need to
-+			 * retry the search.
-+			 */
-+			retry = false;
- 		}
- 
- 		/*
-@@ -1268,19 +1275,23 @@ xfs_dialloc_ag_inobt(
- 				goto error1;
- 		}
- 
--		/*
--		 * We've reached the end of the btree. because
--		 * we are only searching a small chunk of the
--		 * btree each search, there is obviously free
--		 * inodes closer to the parent inode than we
--		 * are now. restart the search again.
--		 */
--		pag->pagl_pagino = NULLAGINO;
--		pag->pagl_leftrec = NULLAGINO;
--		pag->pagl_rightrec = NULLAGINO;
--		xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
--		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
--		goto restart_pagno;
-+		if (retry) {
-+			/*
-+			 * We've reached the end of the btree. because
-+			 * we are only searching a small chunk of the
-+			 * btree each search, there must be free
-+			 * inodes (unless something is corrupted)
-+			 * closer to the parent inode than we
-+			 * are now. restart the search again.
-+			 */
-+			pag->pagl_pagino = NULLAGINO;
-+			pag->pagl_leftrec = NULLAGINO;
-+			pag->pagl_rightrec = NULLAGINO;
-+			xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
-+			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+
-+			goto restart_pagno;
-+		}
- 	}
- 
- 	/*
--- 
-2.13.3
+Thanks,
+-Eric
+
 
