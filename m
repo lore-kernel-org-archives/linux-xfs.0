@@ -1,71 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:2104 "EHLO
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:24363 "EHLO
         ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753517AbdHEAEH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 20:04:07 -0400
-Date: Sat, 5 Aug 2017 10:04:03 +1000
+        by vger.kernel.org with ESMTP id S1753250AbdHDXRs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 19:17:48 -0400
+Date: Sat, 5 Aug 2017 09:17:44 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 2/5] fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
-Message-ID: <20170805000403.GH21024@dastard>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150181369754.32119.7390149918955188408.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170804233140.GF21024@dastard>
- <CAPcyv4iHjLag-YRO3kgHMzED1vpLh28Lo+JZULAeRtiq8QGP+g@mail.gmail.com>
+Subject: Re: [PATCH] Stop searching for free slots in an inode chunk when
+ there are none
+Message-ID: <20170804231744.GE21024@dastard>
+References: <20170803151915.7861-1-cmaiolino@redhat.com>
+ <20170803223538.GB21024@dastard>
+ <1977631726.66215858.1501836926842.JavaMail.zimbra@redhat.com>
+ <42743373.66226189.1501839361497.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4iHjLag-YRO3kgHMzED1vpLh28Lo+JZULAeRtiq8QGP+g@mail.gmail.com>
+In-Reply-To: <42743373.66226189.1501839361497.JavaMail.zimbra@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Carlos Eduardo Maiolino <cmaiolin@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Aug 04, 2017 at 04:43:50PM -0700, Dan Williams wrote:
-> On Fri, Aug 4, 2017 at 4:31 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Thu, Aug 03, 2017 at 07:28:17PM -0700, Dan Williams wrote:
-> >> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> >> index fe0f8f7f4bb7..46d8eb9e19fc 100644
-> >> --- a/fs/xfs/xfs_bmap_util.c
-> >> +++ b/fs/xfs/xfs_bmap_util.c
-> >> @@ -1393,6 +1393,107 @@ xfs_zero_file_space(
-> >>
-> >>  }
-> >>
-> >> +/* Return 1 if hole detected, 0 if not, and < 0 if fail to determine */
-> >> +STATIC int
-> >> +xfs_file_has_holes(
-> >> +     struct xfs_inode        *ip)
-> >> +{
-> >
-> > Why do we need this function?
-> >
-> > We've just run xfs_alloc_file_space() across the entire range we
-> > are sealing, so we've already guaranteed that it won't have holes
-> > in it.
+On Fri, Aug 04, 2017 at 05:36:01AM -0400, Carlos Eduardo Maiolino wrote:
+> One more thing.
 > 
-> I'm sure this is due to my ignorance of the scope of XFS_IOLOCK_EXCL
-> vs XFS_ILOCK_EXCL. I had assumed that since we drop and retake
-> XFS_ILOCK_EXCL that we need to re-validate the block map before
-> setting S_IOMAP_IMMUTABLE.
+> 
+> 
+> ----- Original Message -----
+> > From: "Carlos Eduardo Maiolino" <cmaiolin@redhat.com>
+> > To: "Dave Chinner" <david@fromorbit.com>
+> > Cc: linux-xfs@vger.kernel.org
+> > Sent: Friday, August 4, 2017 10:55:26 AM
+> > Subject: Re: [PATCH] Stop searching for free slots in an inode chunk when there are none
+> > 
+> > Hi Dave.
+> > 
+> > 
+> > > > Add a way to stop the loop when a free slot is not found in the btree,
+> > > > making the function to fall into the whole AG scan which will then, be
+> > > > able to detect the corruption and shut the filesystem down.
+> > > 
+> > > That doesn't sound quite right. The initial scan and the restart
+> > > loop are both limited to scanning search_distance records - we never
+> > > search the entire tree except when it's really small (i..e less than
+> > > 10-20 records (640-1280 inodes) depending on balance). If the
+> > > pagino record to end of btree distance in both directions is shorter
+> > > than the search distance for a given loop (i.e. less than 10 records
+> > > from pagino to end-of-btree) then that is the only time a corrupted
+> > > agi->freecount can cause this problem.
+> > > 
+> > 
+> > I agree with you, but still, we are feasible to have this corruption
+> > happening,
+> > and I've seen reports of users hitting it.
+> > 
+> > 
+> > > IOWs, on production systems where there's more than a few hundred
+> > > inodes (i.e. the vast majority of installations) a corrupted
+> > > agi->freecount won't lead to a endless loop because search_distance
+> > > will terminate the retry loop and we'll allocate a new inode.
+> > > 
+> > > To tell the truth, I'd much rather we just use the search distance
+> > > to prevent endless looping than add a second method of limiting
+> > > the search loop. i.e. don't reset search_distance when we restart
+> > > the search loop at pagino.  That means even for small trees (<
+> > > search_distance * 2 records) we'll retry when we get to the end of
+> > > tree, but we'll still break out of the loop and allocate new inodes
+> > > as soon as we hit the search distance limit.
+> > > 
+> > 
+> 
+> Here, you are assuming we enter into the 
+> 
+> while (!doneleft || !doneright) { }
+> 
+> on every interaction, so it will be able to decrease the searchdistance or you
+> mean by moving the --searchdistance somewhere else?
+> 
+> In very small trees we don't even enter the while loop (both doneleft and doneright are 1),
+> so searchdistance isn't decremented at all, resetting it or not will not make any difference
+> in this case.
 
-THe ILOCK is there to protect the inode metadata when there is
-concurrent access through the IO/MMAP lock paths.  However, if we
-hold the IOLOCK_EXCL and the MMAPLOCK_EXCL, then nothing can get
-through the IO interfaces to modify the data in the file.  This is
-required because APIs that directly modify the extent map (e.g.
-fallocate, truncate, etc) have to lock out the IO path to ensure
-there are no IOs in flight across the range we are manipulating.
+Seems like a minor issue - the first search step left+right is
+outside the while loop, and we don't account for that. So change
+where the search distance check to take that into account:
 
-Holding these locks also locks out other APIs that modify the extent
-map and so effectively nothing else can be accessing or modifying
-the extent map while a fallocate or truncate operation is in
-progress.
+	while (--searchdistance > 0 && (!doneleft || !doneright)) {
+		.....
+	}
 
-Cheers,
+	if (searchdistance <= 0) {
+		/* save current chunk indexes */
+		....
+		goto newino;
+	}
 
-Dave.
+	/* restart at pagino */
+	.....
+	goto restart_pagno;
 
+
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
