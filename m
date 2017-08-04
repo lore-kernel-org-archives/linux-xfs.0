@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:33481 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751877AbdHDAHx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 20:07:53 -0400
-Subject: [PATCH 02/22] xfs_scrub: common error handling
+Received: from aserp1040.oracle.com ([141.146.126.69]:25392 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751877AbdHDAIn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 20:08:43 -0400
+Subject: [PATCH 10/22] xfs_scrub: thread-safe stats counter
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 03 Aug 2017 17:07:49 -0700
-Message-ID: <150180526916.18784.5355456583517444164.stgit@magnolia>
+Date: Thu, 03 Aug 2017 17:08:37 -0700
+Message-ID: <150180531765.18784.15201552114192169638.stgit@magnolia>
 In-Reply-To: <150180525692.18784.13730590233404009267.stgit@magnolia>
 References: <150180525692.18784.13730590233404009267.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,232 +20,201 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Standardize how we record and report errors.
+Create a threaded stats counter that we'll use to track scan progress.
+This includes things like how much of the disk blocks we've scanned,
+or later how much progress we've made in each phase.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/common.c |  134 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/common.h |   28 ++++++++++++
- scrub/scrub.c  |    6 +++
- scrub/scrub.h  |   12 +++++
- 4 files changed, 180 insertions(+)
+ scrub/Makefile  |    2 +
+ scrub/counter.c |  122 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/counter.h |   29 +++++++++++++
+ 3 files changed, 153 insertions(+)
+ create mode 100644 scrub/counter.c
+ create mode 100644 scrub/counter.h
 
 
-diff --git a/scrub/common.c b/scrub/common.c
-index 7f2b4d2..4e47332 100644
---- a/scrub/common.c
-+++ b/scrub/common.c
-@@ -34,3 +34,137 @@
- #include "scrub.h"
- #include "common.h"
- #include "input.h"
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 13a0b55..deb352b 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -18,6 +18,7 @@ endif	# scrub_prereqs
+ HFILES = \
+ ../repair/threads.h \
+ common.h \
++counter.h \
+ disk.h \
+ ioctl.h \
+ scrub.h \
+@@ -26,6 +27,7 @@ xfs.h
+ CFILES = \
+ ../repair/threads.c \
+ common.c \
++counter.c \
+ disk.c \
+ ioctl.c \
+ phase1.c \
+diff --git a/scrub/counter.c b/scrub/counter.c
+new file mode 100644
+index 0000000..1aae0a3
+--- /dev/null
++++ b/scrub/counter.c
+@@ -0,0 +1,122 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "libxfs.h"
++#include <stdio.h>
++#include <dirent.h>
++#include <sys/statvfs.h>
++#include <math.h>
++#include "../repair/threads.h"
++#include "path.h"
++#include "disk.h"
++#include "scrub.h"
++#include "counter.h"
 +
 +/*
-+ * Reporting Status to the Console
++ * Per-Thread Counters
 + *
-+ * We aim for a roughly standard reporting format -- the severity of the
-+ * status being reported, a textual description of the objecting being
-+ * reported, and whatever the status happens to be.
-+ *
-+ * Errors are the most severe and reflect filesystem corruption.
-+ * Warnings indicate that something is amiss and needs the attention of
-+ * the administrator, but does not constitute a corruption.  Information
-+ * is merely advisory.
++ * This is a global counter object that uses per-thread counters to
++ * count things without having to content for a single shared lock.
++ * Provided we know the number of threads that will be accessing the
++ * counter, each thread gets its own thread-specific counter variable.
++ * Changing the value is fast, though retrieving the value is expensive
++ * and approximate.
 + */
-+
-+/* Too many errors? Bail out. */
-+bool
-+xfs_scrub_excessive_errors(
-+	struct scrub_ctx	*ctx)
-+{
-+	bool			ret;
-+
-+	pthread_mutex_lock(&ctx->lock);
-+	ret = ctx->max_errors > 0 && ctx->errors_found >= ctx->max_errors;
-+	pthread_mutex_unlock(&ctx->lock);
-+
-+	return ret;
-+}
-+
-+/* Print an error string and whatever error is stored in errno. */
-+void
-+__str_errno(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	const char		*file,
-+	int			line)
-+{
-+	char			buf[DESCR_BUFSZ];
-+
-+	pthread_mutex_lock(&ctx->lock);
-+	fprintf(stderr, _("Error: %s: %s."), descr,
-+			strerror_r(errno, buf, DESCR_BUFSZ));
-+	if (debug)
-+		fprintf(stderr, _(" (%s line %d)"), file, line);
-+	fprintf(stderr, "\n");
-+	ctx->runtime_errors++;
-+	pthread_mutex_unlock(&ctx->lock);
-+}
-+
-+/* Print an error string and some error text. */
-+void
-+__str_error(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	const char		*file,
-+	int			line,
-+	const char		*format,
-+	...)
-+{
-+	va_list			args;
-+
-+	pthread_mutex_lock(&ctx->lock);
-+	fprintf(stderr, _("Error: %s: "), descr);
-+	va_start(args, format);
-+	vfprintf(stderr, format, args);
-+	va_end(args);
-+	if (debug)
-+		fprintf(stderr, _(" (%s line %d)"), file, line);
-+	fprintf(stderr, "\n");
-+	ctx->errors_found++;
-+	pthread_mutex_unlock(&ctx->lock);
-+}
-+
-+/* Print a warning string and some warning text. */
-+void
-+__str_warn(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	const char		*file,
-+	int			line,
-+	const char		*format,
-+	...)
-+{
-+	va_list			args;
-+
-+	pthread_mutex_lock(&ctx->lock);
-+	fprintf(stderr, _("Warning: %s: "), descr);
-+	va_start(args, format);
-+	vfprintf(stderr, format, args);
-+	va_end(args);
-+	if (debug)
-+		fprintf(stderr, _(" (%s line %d)"), file, line);
-+	fprintf(stderr, "\n");
-+	ctx->warnings_found++;
-+	pthread_mutex_unlock(&ctx->lock);
-+}
-+
-+/* Print an informational string and some informational text. */
-+void
-+__str_info(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	const char		*file,
-+	int			line,
-+	const char		*format,
-+	...)
-+{
-+	va_list			args;
-+
-+	pthread_mutex_lock(&ctx->lock);
-+	fprintf(stdout, _("Info: %s: "), descr);
-+	va_start(args, format);
-+	vfprintf(stdout, format, args);
-+	va_end(args);
-+	if (debug)
-+		fprintf(stdout, _(" (%s line %d)"), file, line);
-+	fprintf(stdout, "\n");
-+	fflush(stdout);
-+	pthread_mutex_unlock(&ctx->lock);
-+}
-+
-+/* Catch fatal errors from pieces we import from xfs_repair. */
-+void __attribute__((noreturn))
-+do_error(char const *msg, ...)
-+{
-+	va_list args;
-+
-+	fprintf(stderr, _("\nfatal error -- "));
-+
-+	va_start(args, msg);
-+	vfprintf(stderr, msg, args);
-+	if (dumpcore)
-+		abort();
-+	exit(1);
-+}
-diff --git a/scrub/common.h b/scrub/common.h
-index f29e4d3..b7c5f47 100644
---- a/scrub/common.h
-+++ b/scrub/common.h
-@@ -20,4 +20,32 @@
- #ifndef XFS_SCRUB_COMMON_H_
- #define XFS_SCRUB_COMMON_H_
- 
-+/*
-+ * When reporting a defective metadata object to the console, this
-+ * is the size of the buffer to use to store the description of that
-+ * item.
-+ */
-+#define DESCR_BUFSZ	256
-+
-+bool xfs_scrub_excessive_errors(struct scrub_ctx *ctx);
-+
-+void __str_errno(struct scrub_ctx *ctx, const char *descr, const char *file,
-+		 int line);
-+void __str_error(struct scrub_ctx *ctx, const char *descr, const char *file,
-+		 int line, const char *format, ...);
-+void __str_warn(struct scrub_ctx *ctx, const char *descr, const char *file,
-+		int line, const char *format, ...);
-+void __str_info(struct scrub_ctx *ctx, const char *descr, const char *file,
-+		int line, const char *format, ...);
-+void __record_repair(struct scrub_ctx *ctx, const char *descr, const char *file,
-+		int line, const char *format, ...);
-+void __record_preen(struct scrub_ctx *ctx, const char *descr, const char *file,
-+		int line, const char *format, ...);
-+
-+#define str_errno(ctx, str)		__str_errno(ctx, str, __FILE__, __LINE__)
-+#define str_error(ctx, str, ...)	__str_error(ctx, str, __FILE__, __LINE__, __VA_ARGS__)
-+#define str_warn(ctx, str, ...)		__str_warn(ctx, str, __FILE__, __LINE__, __VA_ARGS__)
-+#define str_info(ctx, str, ...)		__str_info(ctx, str, __FILE__, __LINE__, __VA_ARGS__)
-+#define dbg_printf(fmt, ...)		{if (debug > 1) {printf(fmt, __VA_ARGS__);}}
-+
- #endif /* XFS_SCRUB_COMMON_H_ */
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index 4fe1590..bac1e8c 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -113,6 +113,12 @@
- /* Program name; needed for libxcmd error reports. */
- char				*progname = "xfs_scrub";
- 
-+/* Debug level; higher values mean more verbosity. */
-+unsigned int			debug;
-+
-+/* Should we dump core if errors happen? */
-+bool				dumpcore;
-+
- int
- main(
- 	int			argc,
-diff --git a/scrub/scrub.h b/scrub/scrub.h
-index b07029b..49de30b 100644
---- a/scrub/scrub.h
-+++ b/scrub/scrub.h
-@@ -20,4 +20,16 @@
- #ifndef XFS_SCRUB_SCRUB_H_
- #define XFS_SCRUB_SCRUB_H_
- 
-+extern unsigned int		debug;
-+extern bool			dumpcore;
-+
-+struct scrub_ctx {
-+	/* Mutable scrub state; use lock. */
-+	pthread_mutex_t		lock;
-+	unsigned long long	max_errors;
-+	unsigned long long	runtime_errors;
-+	unsigned long long	errors_found;
-+	unsigned long long	warnings_found;
++struct ptcounter {
++	pthread_key_t	key;
++	pthread_mutex_t	lock;
++	size_t		nr_used;
++	size_t		nr_counters;
++	uint64_t	counters[0];
 +};
++#define PTCOUNTER_SIZE(nr) (sizeof(struct ptcounter) + sizeof(uint64_t) * (nr))
 +
- #endif /* XFS_SCRUB_SCRUB_H_ */
++/* Initialize per-thread counter. */
++struct ptcounter *
++ptcounter_init(
++	size_t			nr)
++{
++	struct ptcounter	*p;
++	int			ret;
++
++	p = malloc(PTCOUNTER_SIZE(nr));
++	if (!p)
++		return NULL;
++	p->nr_counters = nr;
++	p->nr_used = 0;
++	memset(p->counters, 0, sizeof(uint64_t) * nr);
++	ret = pthread_mutex_init(&p->lock, NULL);
++	if (ret)
++		goto out;
++	ret = pthread_key_create(&p->key, NULL);
++	if (ret)
++		goto out_mutex;
++	return p;
++
++out_mutex:
++	pthread_mutex_destroy(&p->lock);
++out:
++	free(p);
++	return NULL;
++}
++
++/* Free per-thread counter. */
++void
++ptcounter_free(
++	struct ptcounter	*ptc)
++{
++	pthread_key_delete(ptc->key);
++	pthread_mutex_destroy(&ptc->lock);
++	free(ptc);
++}
++
++/* Add a quantity to the counter. */
++void
++ptcounter_add(
++	struct ptcounter	*ptc,
++	int64_t			nr)
++{
++	uint64_t		*p;
++
++	p = pthread_getspecific(ptc->key);
++	if (!p) {
++		pthread_mutex_lock(&ptc->lock);
++		assert(ptc->nr_used < ptc->nr_counters);
++		p = &ptc->counters[ptc->nr_used++];
++		pthread_setspecific(ptc->key, p);
++		pthread_mutex_unlock(&ptc->lock);
++	}
++	*p += nr;
++}
++
++/* Return the approximate value of this counter. */
++uint64_t
++ptcounter_value(
++	struct ptcounter	*ptc)
++{
++	size_t			i;
++	uint64_t		sum = 0;
++
++	pthread_mutex_lock(&ptc->lock);
++	for (i = 0; i < ptc->nr_used; i++)
++		sum += ptc->counters[i];
++	pthread_mutex_unlock(&ptc->lock);
++
++	return sum;
++}
+diff --git a/scrub/counter.h b/scrub/counter.h
+new file mode 100644
+index 0000000..f6225b2
+--- /dev/null
++++ b/scrub/counter.h
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef XFS_SCRUB_COUNTER_H_
++#define XFS_SCRUB_COUNTER_H_
++
++struct ptcounter;
++struct ptcounter *ptcounter_init(size_t nr);
++void ptcounter_free(struct ptcounter *ptc);
++void ptcounter_add(struct ptcounter *ptc, int64_t nr);
++uint64_t ptcounter_value(struct ptcounter *ptc);
++
++#endif /* XFS_SCRUB_COUNTER_H_ */
 
