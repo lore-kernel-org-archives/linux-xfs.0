@@ -1,132 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46944 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751231AbdHDCWC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Aug 2017 22:22:02 -0400
-Date: Fri, 4 Aug 2017 10:22:00 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 4/5] common/populate: enable xfs quota accounting
-Message-ID: <20170804022200.GC1991@eguan.usersys.redhat.com>
-References: <150067465981.30639.14801416171688538711.stgit@magnolia>
- <150067469221.30639.16711306489951233808.stgit@magnolia>
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:35148 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751845AbdHDCkM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 22:40:12 -0400
+Received: by mail-wm0-f52.google.com with SMTP id m85so9087648wma.0
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Aug 2017 19:40:11 -0700 (PDT)
+Subject: Re: Intermittent zeroed pages with AIO+DIO+XFS
+References: <dac170a5-d11f-c8ce-3890-8b5629364c18@scylladb.com>
+ <20170803220922.GA21024@dastard>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <9a63f206-d026-eae4-9556-957ef94855b4@scylladb.com>
+Date: Fri, 4 Aug 2017 05:40:07 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150067469221.30639.16711306489951233808.stgit@magnolia>
+In-Reply-To: <20170803220922.GA21024@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Glauber Costa <glauber@scylladb.com>, Raphael Carvalho <raphaelsc@scylladb.com>
 
-On Fri, Jul 21, 2017 at 03:04:52PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> When we're creating a populated xfs image, turn on quotas so that we can
-> fuzz those fields too.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  common/populate |   50 +++++++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 49 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/common/populate b/common/populate
-> index 498151f..b77c508 100644
-> --- a/common/populate
-> +++ b/common/populate
-> @@ -21,6 +21,7 @@
->  #  Contact information: Silicon Graphics, Inc., 1500 Crittenden Lane,
->  #  Mountain View, CA 94043, USA, or: http://www.sgi.com
->  #-----------------------------------------------------------------------
-> +. ./common/quota
->  
->  _require_populate_commands() {
->  	_require_xfs_io_command "falloc"
-> @@ -94,6 +95,47 @@ __populate_fill_fs() {
->  	done
->  }
->  
-> +# For XFS, force on all the quota options if quota is enabled
-> +# and the user didn't feed us noquota.
-> +_populate_xfs_qmount_option()
-> +{
-> +	# User explicitly told us not to quota
-> +	if echo "${MOUNT_OPTIONS}" | grep -q 'noquota'; then
-> +		return
-> +	fi
-> +
-> +	# Don't bother if we can't turn on quotas
-> +	if [ ! -f /proc/fs/xfs/xqmstat ]; then
-> +		# No quota support
-> +		return
-> +	elif [ "${USE_EXTERNAL}" = "yes" ] && [ ! -z "${SCRATCH_RTDEV}" ]; then
-> +		# Quotas not supported on rt filesystems
-> +		return
-> +	elif [ -z "${XFS_QUOTA_PROG}" ]; then
-> +		# xfs quota tools not installed
-> +		return
-> +	fi
-> +
-> +	# Turn on all the quotas
-> +	if xfs_info "${TEST_DIR}" | grep -q 'crc=1'; then
-> +		# v5 filesystems can have group & project quotas
-> +		quota="usrquota,grpquota,prjquota"
-> +	else
-> +		# v4 filesystems cannot mix group & project quotas
-> +		quota="usrquota,grpquota"
-> +	fi
-> +
-> +	# Inject our quota mount options
-> +	if echo "${MOUNT_OPTIONS}" | grep -q "${quota}"; then
-> +		return
-> +	elif echo "${MOUNT_OPTIONS}" | egrep -q '(quota|noenforce)'; then
-> +		_qmount_option "${quota}"
-> +	else
-> +		export MOUNT_OPTIONS="$MOUNT_OPTIONS -o ${quota}"
-> +		echo "MOUNT_OPTIONS = $MOUNT_OPTIONS" >>$seqres.full
-> +	fi
-> +}
-> +
->  # Populate an XFS on the scratch device with (we hope) all known
->  # types of metadata block
->  _scratch_xfs_populate() {
-> @@ -106,6 +148,7 @@ _scratch_xfs_populate() {
->  		esac
->  	done
->  
-> +	_populate_xfs_qmount_option
+On 08/04/2017 01:09 AM, Dave Chinner wrote:
+> On Thu, Aug 03, 2017 at 05:52:45PM +0300, Avi Kivity wrote:
+>> Hello,
+>>
+> Hi Avi,
+>
+>> I have an application that uses AIO+DIO to write data to a file on
+>> XFS. The writes use 128k buffers. Very rarely, I see aligned 4k
+>> blocks within the file that are zeroed. The blocks are not aligned
+>> to 128k boundary, just 4k. The buffers are allocated in anonymous
+>> memory, which is usually using transparent hugepages.  The files are
+>> fully allocated, not sparse (checked post-mortem).
+> Did you check that the extents are written? i.e. there aren't
+> sporadic 4k unwritten extents in the file? (xfs_bmap -vvp output)
 
-Sorry, another question just poped up..
+Raphael did that, and the result was that the file was NOT sparse.
 
-This enables quota and modifies MOUNT_OPTIONS unconditionally and
-implicitly, I suspect users of _scratch_populate_cached() or
-_scratch_xfs_populate() may be bitten by this implicit change.
+btw, we also run with the extent size hint set to 32MB.
 
-Would it be better if there's a argument to control this quota
-enablement and default to disable quota? Just like the "nofill"
-argument, introduce a new "quota" argument? So existing callers of
-_scratch_populate_cached() are not affected by this change, and tests
-want quota can enable it explicitly.
+> If you turn off transparent huge pages, does the problem go
+> away?
 
-Thanks,
-Eryu
+We did not check yet.
 
->  	_scratch_mount
->  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
->  	dblksz="$(xfs_info "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> @@ -720,7 +763,12 @@ _scratch_populate_cached() {
->  		test -n "${SCRATCH_LOGDEV}" && rm -f "${POPULATE_METADUMP}"
->  		;;
->  	"xfs")
-> -		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}";;
-> +		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}"
-> +		_populate_xfs_qmount_option
-> +		if echo "${MOUNT_OPTIONS}" | grep -q 'usrquota'; then
-> +			extra_descr="${extra_descr} QUOTAS"
-> +		fi
-> +		;;
->  	*)
->  		extra_descr="";;
->  	esac
-> 
+> What kernel version is this seen on? We've changed the XFS DIO
+> IO path implementation substantially in recent times....
+
+CentOS 7.2's kernel. Glauber, do you now the precise version string?
+
+>> The writes are concurrent and adjacent. To avoid serialization, we
+>> ftruncate() the file to a larger size, then ftruncate() it back when
+>> we know its final size.
+> So it's not extending the file on the writes, so it shouldn't be
+> triggering EOF block zeroing. The only thing I can think of is
+> either the data contains zeros or there's an occasional unwritten
+> extent in the file.
+
+The data is compressed, so it can't contain zeros originally. Of course 
+it's possible the application zeroed that page after preparing the 
+buffer and before the write hit the disk, but that's fairly unlikely. 
+Zeroing pages is a kernel thing; even if the application allocated 4k of 
+memory (not very common, but it does happen), it wouldn't zero it; and 
+that buffer of course is held during the write.
+
+We're adding code to check the buffer before and after the write, and 
+also read back from disk.
+
+>
+>> Does this trigger anything in anyone's mind?
+> Nope - do you have a reproducer you can share?
+>
+
+Run a certain NoSQL database for months on a cluster with lots of 
+activity, and _may_ see it a few time. It's very rare, but it's there.
+
