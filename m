@@ -1,123 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:30137 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751739AbdHWXz1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 Aug 2017 19:55:27 -0400
-Subject: [PATCH v6 5/5] fs, fcntl: add F_MAP_DIRECT
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 23 Aug 2017 16:49:02 -0700
-Message-ID: <150353214202.5039.15970856232454713994.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mail-ua0-f181.google.com ([209.85.217.181]:36379 "EHLO
+        mail-ua0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751260AbdHDUre (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 16:47:34 -0400
+Received: by mail-ua0-f181.google.com with SMTP id k43so11997279uaf.3
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Aug 2017 13:47:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20170804201412.GE24087@magnolia>
+References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150181371519.32119.2762945986660101008.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170804201412.GE24087@magnolia>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 4 Aug 2017 13:47:32 -0700
+Message-ID: <CAPcyv4himTRCu9t2zyyxHEDRKmNQ=h7z9aNxqdfEuxSM=A4bhg@mail.gmail.com>
+Subject: Re: [PATCH v2 5/5] xfs: toggle XFS_DIFLAG2_IOMAP_IMMUTABLE in
+ response to fallocate
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: akpm@linux-foundation.org
-Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-api@vger.kernel.org, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-A common pattern for granting a privilege to an unprivileged process is
-to pass it an established file descriptor over a unix domain socket.
-This enables fine grained access to the MAP_DIRECT mechanism instead of
-requiring the mapping process have CAP_LINUX_IMMUTABLE.
+On Fri, Aug 4, 2017 at 1:14 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> On Thu, Aug 03, 2017 at 07:28:35PM -0700, Dan Williams wrote:
+>> After validating the state of the file as not having holes, shared
+>> extents, or active mappings try to commit the
+>> XFS_DIFLAG2_IOMAP_IMMUTABLE flag to the on-disk inode metadata. If that
+>> succeeds then allow the S_IOMAP_IMMUTABLE to be set on the vfs inode.
+>>
+>> Cc: Jan Kara <jack@suse.cz>
+>> Cc: Jeff Moyer <jmoyer@redhat.com>
+>> Cc: Christoph Hellwig <hch@lst.de>
+>> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+>> Suggested-by: Dave Chinner <david@fromorbit.com>
+>> Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
+>> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>> ---
+>>  fs/xfs/xfs_bmap_util.c |   32 ++++++++++++++++++++++++++++++++
+>>  1 file changed, 32 insertions(+)
+>>
+>> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+>> index 70ac2d33ab27..8464c25a2403 100644
+>> --- a/fs/xfs/xfs_bmap_util.c
+>> +++ b/fs/xfs/xfs_bmap_util.c
+>> @@ -1436,9 +1436,11 @@ xfs_seal_file_space(
+>>       xfs_off_t               offset,
+>>       xfs_off_t               len)
+>>  {
+>> +     struct xfs_mount        *mp = ip->i_mount;
+>>       struct inode            *inode = VFS_I(ip);
+>>       struct address_space    *mapping = inode->i_mapping;
+>>       int                     error;
+>> +     struct xfs_trans        *tp;
+>>
+>>       ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
+>>
+>> @@ -1454,6 +1456,10 @@ xfs_seal_file_space(
+>>       if (error)
+>>               return error;
+>>
+>> +     error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
+>> +     if (error)
+>> +             return error;
+>> +
+>>       xfs_ilock(ip, XFS_ILOCK_EXCL);
+>>       /*
+>>        * Either the size changed after we performed allocation /
+>> @@ -1486,10 +1492,20 @@ xfs_seal_file_space(
+>>       if (error < 0)
+>>               goto out_unlock;
+>>
+>> +     xfs_trans_ijoin(tp, ip, 0);
+>
+> FWIW if you change that third parameter to XFS_ILOCK_EXCL then
+> xfs_trans_commit will do the xfs_iunlock(ip, XFS_ILOCK_EXCL) for you if
+> the commit succeeds...
+>
+>> +     ip->i_d.di_flags2 |= XFS_DIFLAG2_IOMAP_IMMUTABLE;
+>> +     xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>> +     error = xfs_trans_commit(tp);
+>> +     tp = NULL; /* nothing to cancel */
+>> +     if (error)
+>> +             goto out_unlock;
+>> +
+>>       inode->i_flags |= S_IOMAP_IMMUTABLE;
+>
+> ...and then you can just return out here.
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/fcntl.c                 |   15 +++++++++++++++
- include/linux/fs.h         |    5 +++--
- include/uapi/linux/fcntl.h |    5 +++++
- mm/mmap.c                  |    3 ++-
- 4 files changed, 25 insertions(+), 3 deletions(-)
-
-diff --git a/fs/fcntl.c b/fs/fcntl.c
-index 3b01b646e528..f2375c406e6f 100644
---- a/fs/fcntl.c
-+++ b/fs/fcntl.c
-@@ -318,6 +318,18 @@ static long fcntl_rw_hint(struct file *file, unsigned int cmd,
- 	}
- }
- 
-+static int fcntl_map_direct(struct file *filp)
-+{
-+	if (!capable(CAP_LINUX_IMMUTABLE))
-+		return -EACCES;
-+
-+	spin_lock(&filp->f_lock);
-+	filp->f_map_direct = 1;
-+	spin_unlock(&filp->f_lock);
-+
-+	return 0;
-+}
-+
- static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
- 		struct file *filp)
- {
-@@ -425,6 +437,9 @@ static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
- 	case F_SET_FILE_RW_HINT:
- 		err = fcntl_rw_hint(filp, cmd, arg);
- 		break;
-+	case F_MAP_DIRECT:
-+		err = fcntl_map_direct(filp);
-+		break;
- 	default:
- 		break;
- 	}
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index db42da9f98c4..ec2e1d6bf22c 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -855,11 +855,12 @@ struct file {
- 	const struct file_operations	*f_op;
- 
- 	/*
--	 * Protects f_ep_links, f_flags.
-+	 * Protects f_ep_links, f_flags, f_write_hint, and f_map_direct.
- 	 * Must not be taken from IRQ context.
- 	 */
- 	spinlock_t		f_lock;
--	enum rw_hint		f_write_hint;
-+	enum rw_hint		f_write_hint:3;
-+	unsigned int		f_map_direct:1;
- 	atomic_long_t		f_count;
- 	unsigned int 		f_flags;
- 	fmode_t			f_mode;
-diff --git a/include/uapi/linux/fcntl.h b/include/uapi/linux/fcntl.h
-index ec69d55bcec7..2a57a503174e 100644
---- a/include/uapi/linux/fcntl.h
-+++ b/include/uapi/linux/fcntl.h
-@@ -53,6 +53,11 @@
- #define F_SET_FILE_RW_HINT	(F_LINUX_SPECIFIC_BASE + 14)
- 
- /*
-+ * Enable MAP_DIRECT on the file without CAP_LINUX_IMMUTABLE
-+ */
-+#define F_MAP_DIRECT		(F_LINUX_SPECIFIC_BASE + 15)
-+
-+/*
-  * Valid hint values for F_{GET,SET}_RW_HINT. 0 is "not set", or can be
-  * used to clear any hints previously set.
-  */
-diff --git a/mm/mmap.c b/mm/mmap.c
-index 32417b2a668c..cf5e0cb7d0e3 100644
---- a/mm/mmap.c
-+++ b/mm/mmap.c
-@@ -1399,7 +1399,8 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
- 			if (flags & MAP_DIRECT) {
- 				if (!(prot & PROT_WRITE))
- 					return -EACCES;
--				if (!capable(CAP_LINUX_IMMUTABLE))
-+				if (!file->f_map_direct
-+						&& !capable(CAP_LINUX_IMMUTABLE))
- 					return -EACCES;
- 			}
- 
-
+Do we not need to hold XFS_ILOCK_EXCL over ->i_flags changes, or is
+XFS_IOLOCK_EXCL enough?
