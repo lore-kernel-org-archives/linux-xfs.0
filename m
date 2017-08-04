@@ -1,153 +1,170 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f50.google.com ([209.85.213.50]:35756 "EHLO
-        mail-vk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751988AbdHDUbb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 16:31:31 -0400
-Received: by mail-vk0-f50.google.com with SMTP id d124so9937971vkf.2
-        for <linux-xfs@vger.kernel.org>; Fri, 04 Aug 2017 13:31:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170804200037.GC24087@magnolia>
+Received: from userp1040.oracle.com ([156.151.31.81]:25422 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751475AbdHDUd2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 16:33:28 -0400
+Date: Fri, 4 Aug 2017 13:33:12 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 4/5] xfs: introduce XFS_DIFLAG2_IOMAP_IMMUTABLE
+Message-ID: <20170804203312.GF24087@magnolia>
 References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150181369070.32119.1019092252036976783.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170804200037.GC24087@magnolia>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 4 Aug 2017 13:31:28 -0700
-Message-ID: <CAPcyv4gfkt0QTPwTWZmXfFWAzJUovexkKCiAZhqgmjAbtEr7tA@mail.gmail.com>
-Subject: Re: [PATCH v2 1/5] fs, xfs: introduce S_IOMAP_IMMUTABLE
-Content-Type: text/plain; charset="UTF-8"
+ <150181371001.32119.599597939855384271.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150181371001.32119.599597939855384271.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-On Fri, Aug 4, 2017 at 1:00 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> On Thu, Aug 03, 2017 at 07:28:10PM -0700, Dan Williams wrote:
->> An inode with this flag set indicates that the file's block map cannot
->> be changed from the currently allocated set.
->>
->> The implementation of toggling the flag and sealing the state of the
->> extent map is saved for a later patch. The functionality provided by
->> S_IOMAP_IMMUTABLE, once toggle support is added, will be a superset of
->> that provided by S_SWAPFILE, and it is targeted to replace it.
->>
->> For now, only xfs and the core vfs are updated to consider the new flag.
->>
->> The additional checks that are added for this flag, beyond what we are
->> already doing for swapfiles, are:
->> * fail writes that try to extend the file size
->> * fail attempts to directly change the allocation map via fallocate or
->>   xfs ioctls. This can be done centrally by blocking
->>   xfs_alloc_file_space and xfs_free_file_space when the flag is set.
->>
->> Cc: Jan Kara <jack@suse.cz>
->> Cc: Jeff Moyer <jmoyer@redhat.com>
->> Cc: Christoph Hellwig <hch@lst.de>
->> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
->> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
->> Suggested-by: Dave Chinner <david@fromorbit.com>
->> Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->> ---
->>  fs/attr.c              |   10 ++++++++++
->>  fs/open.c              |    6 ++++++
->>  fs/read_write.c        |    3 +++
->>  fs/xfs/xfs_bmap_util.c |    6 ++++++
->>  fs/xfs/xfs_ioctl.c     |    6 ++++++
->>  include/linux/fs.h     |    2 ++
->>  mm/filemap.c           |    5 +++++
->>  7 files changed, 38 insertions(+)
->>
->> diff --git a/fs/attr.c b/fs/attr.c
->> index 135304146120..8573e364bd06 100644
->> --- a/fs/attr.c
->> +++ b/fs/attr.c
->> @@ -112,6 +112,16 @@ EXPORT_SYMBOL(setattr_prepare);
->>   */
->>  int inode_newsize_ok(const struct inode *inode, loff_t offset)
->>  {
->> +     if (IS_IOMAP_IMMUTABLE(inode)) {
->> +             /*
->> +              * Any size change is disallowed. Size increases may
->> +              * dirty metadata that an application is not prepared to
->> +              * sync, and a size decrease may expose free blocks to
->> +              * in-flight DMA.
->> +              */
->> +             return -ETXTBSY;
->> +     }
->> +
->>       if (inode->i_size < offset) {
->>               unsigned long limit;
->>
->> diff --git a/fs/open.c b/fs/open.c
->> index 35bb784763a4..7395860d7164 100644
->> --- a/fs/open.c
->> +++ b/fs/open.c
->> @@ -292,6 +292,12 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
->>               return -ETXTBSY;
->>
->>       /*
->> +      * We cannot allow any allocation changes on an iomap immutable file
->> +      */
->> +     if (IS_IOMAP_IMMUTABLE(inode))
->> +             return -ETXTBSY;
->> +
->> +     /*
->>        * Revalidate the write permissions, in case security policy has
->>        * changed since the files were opened.
->>        */
->> diff --git a/fs/read_write.c b/fs/read_write.c
->> index 0cc7033aa413..dc673be7c7cb 100644
->> --- a/fs/read_write.c
->> +++ b/fs/read_write.c
->> @@ -1706,6 +1706,9 @@ int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
->>       if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
->>               return -ETXTBSY;
->>
->> +     if (IS_IOMAP_IMMUTABLE(inode_in) || IS_IOMAP_IMMUTABLE(inode_out))
->> +             return -ETXTBSY;
->> +
->>       /* Don't reflink dirs, pipes, sockets... */
->>       if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
->>               return -EISDIR;
->> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
->> index 93e955262d07..fe0f8f7f4bb7 100644
->> --- a/fs/xfs/xfs_bmap_util.c
->> +++ b/fs/xfs/xfs_bmap_util.c
->> @@ -1044,6 +1044,9 @@ xfs_alloc_file_space(
->>       if (XFS_FORCED_SHUTDOWN(mp))
->>               return -EIO;
->>
->> +     if (IS_IOMAP_IMMUTABLE(VFS_I(ip)))
->> +             return -ETXTBSY;
->> +
->
-> Hm.  The 'seal this up' caller in the next patch doesn't check for
-> ETXTBSY (or if it does I missed that), so if you try to seal an already
-> sealed file you'll get an error code even though you actually got the
-> state you wanted.
+On Thu, Aug 03, 2017 at 07:28:30PM -0700, Dan Williams wrote:
+> Add an on-disk inode flag to record the state of the S_IOMAP_IMMUTABLE
+> in-memory vfs inode flags. This allows the protections against reflink
+> and hole punch to be automatically restored on a sub-sequent boot when
+> the in-memory inode is established.
+> 
+> The FS_XFLAG_IOMAP_IMMUTABLE is introduced to allow xfs_io to read the
+> state of the flag, but toggling the flag requires going through
+> fallocate(FALLOC_FL_[UN]SEAL_BLOCK_MAP). Support for toggling this
+> on-disk state is saved for a later patch.
+> 
+> Cc: Jan Kara <jack@suse.cz>
+> Cc: Jeff Moyer <jmoyer@redhat.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Suggested-by: Dave Chinner <david@fromorbit.com>
+> Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h |    5 ++++-
+>  fs/xfs/xfs_inode.c         |    2 ++
+>  fs/xfs/xfs_ioctl.c         |    1 +
+>  fs/xfs/xfs_iops.c          |    8 +++++---
+>  include/uapi/linux/fs.h    |    1 +
+>  5 files changed, 13 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index d4d9bef20c3a..9e720e55776b 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -1063,12 +1063,15 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+>  #define XFS_DIFLAG2_DAX_BIT	0	/* use DAX for this inode */
+>  #define XFS_DIFLAG2_REFLINK_BIT	1	/* file's blocks may be shared */
+>  #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
+> +#define XFS_DIFLAG2_IOMAP_IMMUTABLE_BIT 3 /* set S_IOMAP_IMMUTABLE for this inode */
 
-That's a good point, I'll fix that up.
+So... the greedy part of my brain that doesn't want to give out flags2
+bits has been wondering, what if we just didn't have an on-disk
+IOMAP_IMMUTABLE bit, and set FS_XFLAG based only on the in-core
+S_IOMAP_IMMUTABLE bit?  If a program wants the immutable iomap
+semantics, they will have to code some variant on the following:
 
->
-> Second question: How might we handle the situation where a filesystem
-> /has/ to alter a block mapping?  Hypothetically, if the block layer
-> tells the fs that some range of storage has gone bad and the fs decides
-> to punch out that part of the file (or mark it unwritten or whatever) to
-> avoid a machine check, can we lock out file IO, forcibly remove the
-> mapping from memory, make whatever block map updates we want, and then
-> unlock?
+fd = open(...);
+ret = fallocate(fd, FALLOC_FL_SEAL_BLOCK_MAP, 0, len...)
+if (ret) {
+	printf("couldn't seal block map");
+	close(fd);
+	return;
+}
 
-It's not clear that the filesystem /has/ to change the block mappings
-when the backing media supports error clearing. Unlike bad DRAM ranges
-where the address is permanently mapped out, we can clear pmem and
-disk errors by writing new data. The bad block can be repaired or
-remapped internal to the hardware device.
+mmap(fd...);
+/* do sensitive io operations here */
+munmap(fd...);
 
-As far as I can see no amount of fs locking will keep in-flight DMA
-from assuming it can continue to write to the storage address it
-thought was immutable. So, I think that means that the only error
-management that can be expected while the file is immutable is
-blkdev_issue_zeroout() to clear the error, or otherwise hope that the
-DMA operation can generate the properly sized/aligned write request
-that can clear the error.
+close(fd);
+
+Therefore the cost of not having the on-disk flag is that we'll have to
+do more unshare/alloc/test/set cycles than we would if we could remember
+the iomap-immutable state across unmounts and inode reclaiming.
+However, if the data map is already ready to go, this shouldn't have a
+lot of overhead since we only have to iterate the in-core extents.
+
+Just trying to make sure we /need/ the inode flag bit. :)
+
+--D
+
+>  #define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
+>  #define XFS_DIFLAG2_REFLINK     (1 << XFS_DIFLAG2_REFLINK_BIT)
+>  #define XFS_DIFLAG2_COWEXTSIZE  (1 << XFS_DIFLAG2_COWEXTSIZE_BIT)
+> +#define XFS_DIFLAG2_IOMAP_IMMUTABLE (1 << XFS_DIFLAG2_IOMAP_IMMUTABLE_BIT)
+>  
+>  #define XFS_DIFLAG2_ANY \
+> -	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE)
+> +	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE | \
+> +	 XFS_DIFLAG2_IOMAP_IMMUTABLE)
+>  
+>  /*
+>   * Inode number format:
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index ceef77c0416a..4ca22e272ce6 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -674,6 +674,8 @@ _xfs_dic2xflags(
+>  			flags |= FS_XFLAG_DAX;
+>  		if (di_flags2 & XFS_DIFLAG2_COWEXTSIZE)
+>  			flags |= FS_XFLAG_COWEXTSIZE;
+> +		if (di_flags2 & XFS_DIFLAG2_IOMAP_IMMUTABLE)
+> +			flags |= FS_XFLAG_IOMAP_IMMUTABLE;
+>  	}
+>  
+>  	if (has_attr)
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 2e64488bc4de..df2eef0f9d45 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -978,6 +978,7 @@ xfs_set_diflags(
+>  		return;
+>  
+>  	di_flags2 = (ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
+> +	di_flags2 |= (ip->i_d.di_flags2 & XFS_DIFLAG2_IOMAP_IMMUTABLE);
+>  	if (xflags & FS_XFLAG_DAX)
+>  		di_flags2 |= XFS_DIFLAG2_DAX;
+>  	if (xflags & FS_XFLAG_COWEXTSIZE)
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 469c9fa4c178..174ef95453f5 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -1186,9 +1186,10 @@ xfs_diflags_to_iflags(
+>  	struct xfs_inode	*ip)
+>  {
+>  	uint16_t		flags = ip->i_d.di_flags;
+> +	uint64_t		flags2 = ip->i_d.di_flags2;
+>  
+>  	inode->i_flags &= ~(S_IMMUTABLE | S_APPEND | S_SYNC |
+> -			    S_NOATIME | S_DAX);
+> +			    S_NOATIME | S_DAX | S_IOMAP_IMMUTABLE);
+>  
+>  	if (flags & XFS_DIFLAG_IMMUTABLE)
+>  		inode->i_flags |= S_IMMUTABLE;
+> @@ -1201,9 +1202,10 @@ xfs_diflags_to_iflags(
+>  	if (S_ISREG(inode->i_mode) &&
+>  	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
+>  	    !xfs_is_reflink_inode(ip) &&
+> -	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
+> -	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
+> +	    (ip->i_mount->m_flags & XFS_MOUNT_DAX || flags2 & XFS_DIFLAG2_DAX))
+>  		inode->i_flags |= S_DAX;
+> +	if (flags2 & XFS_DIFLAG2_IOMAP_IMMUTABLE)
+> +		inode->i_flags |= S_IOMAP_IMMUTABLE;
+>  }
+>  
+>  /*
+> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> index b7495d05e8de..4765e024ad74 100644
+> --- a/include/uapi/linux/fs.h
+> +++ b/include/uapi/linux/fs.h
+> @@ -182,6 +182,7 @@ struct fsxattr {
+>  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
+>  #define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
+>  #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
+> +#define FS_XFLAG_IOMAP_IMMUTABLE 0x00020000	/* block map immutable */
+>  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+>  
+>  /* the read-only stuff doesn't really belong here, but any other place is
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
