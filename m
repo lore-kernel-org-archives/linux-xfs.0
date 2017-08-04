@@ -1,104 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34449 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753609AbdHIPqa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2017 11:46:30 -0400
-Date: Wed, 9 Aug 2017 08:46:24 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:33666 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751970AbdHDUxz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 16:53:55 -0400
+Date: Fri, 4 Aug 2017 13:53:38 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] xfs: clear MS_ACTIVE after finishing log recovery to
- avoid inode leak
-Message-ID: <20170809154624.GS24087@magnolia>
-References: <20170809010444.GR24087@magnolia>
- <20170809123600.GA62448@bfoster.bfoster>
+Subject: Re: [PATCH v2 5/5] xfs: toggle XFS_DIFLAG2_IOMAP_IMMUTABLE in
+ response to fallocate
+Message-ID: <20170804205337.GG24087@magnolia>
+References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150181371519.32119.2762945986660101008.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170804201412.GE24087@magnolia>
+ <CAPcyv4himTRCu9t2zyyxHEDRKmNQ=h7z9aNxqdfEuxSM=A4bhg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170809123600.GA62448@bfoster.bfoster>
+In-Reply-To: <CAPcyv4himTRCu9t2zyyxHEDRKmNQ=h7z9aNxqdfEuxSM=A4bhg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-On Wed, Aug 09, 2017 at 08:36:03AM -0400, Brian Foster wrote:
-> On Tue, Aug 08, 2017 at 06:04:44PM -0700, Darrick J. Wong wrote:
-> > Way back when we established inode block-map redo log items, it was
-> > discovered that we needed to prevent the VFS from evicting inodes during
-> > log recovery because any given inode might be have bmap redo items to
-> > replay even if the inode has no link count and is ultimately deleted,
-> > and any eviction of an unlinked inode causes the inode to be truncated
-> > and freed too early.
-> > 
-> > To make this possible, we set MS_ACTIVE so that inodes would not be torn
-> > down immediately upon release.  Unfortunately, this also results in the
-> > quota inodes not being released at all if a later part of the mount
-> > process should fail, because we never reclaim the inodes.  So, clear
-> > MS_ACTIVE immediately after we finish the log recovery so that the quota
-> > inodes will be torn down properly if we abort the mount.
-> > 
-> > Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_mount.c |    6 ++++--
-> >  1 file changed, 4 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > index 40d4e8b..d463ab3 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -949,7 +949,9 @@ xfs_mountfs(
-> >  	 * iput to behave like they do for an active filesystem.
-> >  	 * xfs_fs_drop_inode needs to be able to prevent the deletion
-> >  	 * of inodes before we're done replaying log items on those
-> > -	 * inodes.
-> > +	 * inodes.  Turn it off immediately after xfs_log_mount_finish
-> > +	 * so that we don't leak the quota inodes if subsequent mount
-> > +	 * activities fail.
-> >  	 */
-> >  	mp->m_super->s_flags |= MS_ACTIVE;
-> >  
-> > @@ -959,6 +961,7 @@ xfs_mountfs(
-> >  	 * read in.
-> >  	 */
-> >  	error = xfs_log_mount_finish(mp);
-> > +	mp->m_super->s_flags &= ~MS_ACTIVE;
+On Fri, Aug 04, 2017 at 01:47:32PM -0700, Dan Williams wrote:
+> On Fri, Aug 4, 2017 at 1:14 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > On Thu, Aug 03, 2017 at 07:28:35PM -0700, Dan Williams wrote:
+> >> After validating the state of the file as not having holes, shared
+> >> extents, or active mappings try to commit the
+> >> XFS_DIFLAG2_IOMAP_IMMUTABLE flag to the on-disk inode metadata. If that
+> >> succeeds then allow the S_IOMAP_IMMUTABLE to be set on the vfs inode.
+> >>
+> >> Cc: Jan Kara <jack@suse.cz>
+> >> Cc: Jeff Moyer <jmoyer@redhat.com>
+> >> Cc: Christoph Hellwig <hch@lst.de>
+> >> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> >> Suggested-by: Dave Chinner <david@fromorbit.com>
+> >> Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
+> >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> >> ---
+> >>  fs/xfs/xfs_bmap_util.c |   32 ++++++++++++++++++++++++++++++++
+> >>  1 file changed, 32 insertions(+)
+> >>
+> >> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> >> index 70ac2d33ab27..8464c25a2403 100644
+> >> --- a/fs/xfs/xfs_bmap_util.c
+> >> +++ b/fs/xfs/xfs_bmap_util.c
+> >> @@ -1436,9 +1436,11 @@ xfs_seal_file_space(
+> >>       xfs_off_t               offset,
+> >>       xfs_off_t               len)
+> >>  {
+> >> +     struct xfs_mount        *mp = ip->i_mount;
+> >>       struct inode            *inode = VFS_I(ip);
+> >>       struct address_space    *mapping = inode->i_mapping;
+> >>       int                     error;
+> >> +     struct xfs_trans        *tp;
+> >>
+> >>       ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
+> >>
+> >> @@ -1454,6 +1456,10 @@ xfs_seal_file_space(
+> >>       if (error)
+> >>               return error;
+> >>
+> >> +     error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
+> >> +     if (error)
+> >> +             return error;
+> >> +
+> >>       xfs_ilock(ip, XFS_ILOCK_EXCL);
+> >>       /*
+> >>        * Either the size changed after we performed allocation /
+> >> @@ -1486,10 +1492,20 @@ xfs_seal_file_space(
+> >>       if (error < 0)
+> >>               goto out_unlock;
+> >>
+> >> +     xfs_trans_ijoin(tp, ip, 0);
+> >
+> > FWIW if you change that third parameter to XFS_ILOCK_EXCL then
+> > xfs_trans_commit will do the xfs_iunlock(ip, XFS_ILOCK_EXCL) for you if
+> > the commit succeeds...
+> >
+> >> +     ip->i_d.di_flags2 |= XFS_DIFLAG2_IOMAP_IMMUTABLE;
+> >> +     xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> >> +     error = xfs_trans_commit(tp);
+> >> +     tp = NULL; /* nothing to cancel */
+> >> +     if (error)
+> >> +             goto out_unlock;
+> >> +
+> >>       inode->i_flags |= S_IOMAP_IMMUTABLE;
+> >
+> > ...and then you can just return out here.
 > 
-> Just an aesthetic nit, but could we combine these two above hunks and
-> the associated comments so the intent is very obvious? E.g., so it looks
-> something like this:
-> 
-> 	/*
-> 	 * Set MS_ACTIVE around log recovery ...
-> 	 */
-> 	mp->m_super->s_flags |= MS_ACTIVE;
-> 	error = xfs_log_mount_finish(mp);
-> 	mp->m_super->s_flags &= ~MS_ACTIVE;
-> 	...
+> Do we not need to hold XFS_ILOCK_EXCL over ->i_flags changes, or is
+> XFS_IOLOCK_EXCL enough?
 
-Yes, that's fine.
+Oh, heh, I missed a piece.  Set the flag before the transaction commit,
+because if the commit fails the fs is shut down anyway. :)
 
 --D
 
-> 
-> Otherwise this looks fine:
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> >  	if (error) {
-> >  		xfs_warn(mp, "log mount finish failed");
-> >  		goto out_rtunmount;
-> > @@ -1028,7 +1031,6 @@ xfs_mountfs(
-> >   out_quota:
-> >  	xfs_qm_unmount_quotas(mp);
-> >   out_rtunmount:
-> > -	mp->m_super->s_flags &= ~MS_ACTIVE;
-> >  	xfs_rtunmount_inodes(mp);
-> >   out_rele_rip:
-> >  	IRELE(rip);
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
