@@ -1,110 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f43.google.com ([209.85.213.43]:33682 "EHLO
-        mail-vk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751231AbdHDCiM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 22:38:12 -0400
-Received: by mail-vk0-f43.google.com with SMTP id x10so1579935vkd.0
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Aug 2017 19:38:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:37546 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753691AbdHDXqT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 19:46:19 -0400
+Date: Sat, 5 Aug 2017 09:46:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 4/5] xfs: introduce XFS_DIFLAG2_IOMAP_IMMUTABLE
+Message-ID: <20170804234615.GG21024@dastard>
 References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 3 Aug 2017 19:38:11 -0700
-Message-ID: <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com>
-Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
- dma-to-storage, and swap
-Content-Type: text/plain; charset="UTF-8"
+ <150181371001.32119.599597939855384271.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170804203312.GF24087@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170804203312.GF24087@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, Linux API <linux-api@vger.kernel.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-[ adding linux-api to the cover letter for notification, will send the
-full set to linux-api for v3 ]
+On Fri, Aug 04, 2017 at 01:33:12PM -0700, Darrick J. Wong wrote:
+> On Thu, Aug 03, 2017 at 07:28:30PM -0700, Dan Williams wrote:
+> > Add an on-disk inode flag to record the state of the S_IOMAP_IMMUTABLE
+> > in-memory vfs inode flags. This allows the protections against reflink
+> > and hole punch to be automatically restored on a sub-sequent boot when
+> > the in-memory inode is established.
+> > 
+> > The FS_XFLAG_IOMAP_IMMUTABLE is introduced to allow xfs_io to read the
+> > state of the flag, but toggling the flag requires going through
+> > fallocate(FALLOC_FL_[UN]SEAL_BLOCK_MAP). Support for toggling this
+> > on-disk state is saved for a later patch.
+> > 
+> > Cc: Jan Kara <jack@suse.cz>
+> > Cc: Jeff Moyer <jmoyer@redhat.com>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > Suggested-by: Dave Chinner <david@fromorbit.com>
+> > Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
+> > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_format.h |    5 ++++-
+> >  fs/xfs/xfs_inode.c         |    2 ++
+> >  fs/xfs/xfs_ioctl.c         |    1 +
+> >  fs/xfs/xfs_iops.c          |    8 +++++---
+> >  include/uapi/linux/fs.h    |    1 +
+> >  5 files changed, 13 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> > index d4d9bef20c3a..9e720e55776b 100644
+> > --- a/fs/xfs/libxfs/xfs_format.h
+> > +++ b/fs/xfs/libxfs/xfs_format.h
+> > @@ -1063,12 +1063,15 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+> >  #define XFS_DIFLAG2_DAX_BIT	0	/* use DAX for this inode */
+> >  #define XFS_DIFLAG2_REFLINK_BIT	1	/* file's blocks may be shared */
+> >  #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
+> > +#define XFS_DIFLAG2_IOMAP_IMMUTABLE_BIT 3 /* set S_IOMAP_IMMUTABLE for this inode */
+> 
+> So... the greedy part of my brain that doesn't want to give out flags2
+> bits has been wondering,
 
-On Thu, Aug 3, 2017 at 7:28 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> Changes since v1 [1]:
-> * Add IS_IOMAP_IMMUTABLE() checks to xfs ioctl paths that perform block
->   map changes (xfs_alloc_file_space and xfs_free_file_space) (Darrick)
->
-> * Rather than complete a partial write, fail all writes that would
->   attempt to extend the file size (Darrick)
->
-> * Introduce FALLOC_FL_UNSEAL_BLOCK_MAP as an explicit operation type for
->   clearing S_IOMAP_IMMUTABLE (Dave)
->
-> * Rework xfs_seal_file_space() to first complete hole-fill and unshare
->   operations and then check the file for suitability under
->   XFS_ILOCK_EXCL. (Darrick)
->
-> * Add an FS_XFLAG_IOMAP_IMMUTABLE flag so the immutable state can be
->   seen by xfs_io. (Dave)
->
-> * Move the setting of S_IOMAP_IMMUTABLE to be atomic with respect to the
->   successful transaction that records XFS_DIFLAG2_IOMAP_IMMUTABLE.
->   (Darrick, Dave)
->
-> * Switch to a 'goto out_unlock' style in xfs_seal_file_space() to
->   cleanup 'if / else' tree, and use the mapping_mapped() helper. (Dave)
->
-> * Rely on XFS_MMAPLOCK_EXCL for reading a stable state of
->   mapping->i_mmap. (Dave)
->
-> [1]: http://marc.info/?l=linux-fsdevel&m=150135785712967&w=2
->
-> ---
->
-> The daxfile proposal a few weeks back [2] sought to piggy back on the
-> swapfile implementation to approximate a block map immutable file. This
-> is an idea Dave originated last year to solve the dax "flush from
-> userspace" problem [3].
->
-> The discussion yielded several results. First, Christoph pointed out
-> that swapfiles are subtly broken [4].  Second, Darrick [5] and Dave [6]
-> proposed how to properly implement a block map immutable file.  Finally,
-> Dave identified some improvements to swapfiles that can be built on the
-> block-map-immutable mechanism. These patches seek to implement the first
-> part of the proposal and save the swapfile work to build on top once the
-> base mechanism is complete.
->
-> While the initial motivation for this feature is support for
-> byte-addressable updates of persistent memory and managing cache
-> maintenance from userspace, the applications of the feature are broader.
-> In addition to being the start of a better swapfile mechanism it can
-> also support a DMA-to-storage use case.  This use case enables
-> data-acquisition hardware to DMA directly to a storage device address
-> while being safe in the knowledge that storage mappings will not change.
->
-> [2]: https://lkml.org/lkml/2017/6/16/790
-> [3]: https://lkml.org/lkml/2016/9/11/159
-> [4]: https://lkml.org/lkml/2017/6/18/31
-> [5]: https://lkml.org/lkml/2017/6/20/49
-> [6]: https://www.spinics.net/lists/linux-xfs/msg07871.html
->
-> ---
->
-> Dan Williams (5):
->       fs, xfs: introduce S_IOMAP_IMMUTABLE
->       fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
->       fs, xfs: introduce FALLOC_FL_UNSEAL_BLOCK_MAP
->       xfs: introduce XFS_DIFLAG2_IOMAP_IMMUTABLE
->       xfs: toggle XFS_DIFLAG2_IOMAP_IMMUTABLE in response to fallocate
->
->
->  fs/attr.c                   |   10 ++
->  fs/open.c                   |   22 +++++
->  fs/read_write.c             |    3 +
->  fs/xfs/libxfs/xfs_format.h  |    5 +
->  fs/xfs/xfs_bmap_util.c      |  181 +++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_bmap_util.h      |    5 +
->  fs/xfs/xfs_file.c           |   16 +++-
->  fs/xfs/xfs_inode.c          |    2
->  fs/xfs/xfs_ioctl.c          |    7 ++
->  fs/xfs/xfs_iops.c           |    8 +-
->  include/linux/falloc.h      |    4 +
->  include/linux/fs.h          |    2
->  include/uapi/linux/falloc.h |   20 +++++
->  include/uapi/linux/fs.h     |    1
->  mm/filemap.c                |    5 +
->  15 files changed, 282 insertions(+), 9 deletions(-)
+FWIW, I made di_flags2 a 64 bit value in the first place precisely
+so we didn't have a scarcity problem and can just give out flag
+bits for enabling new functionality like this...
+
+> what if we just didn't have an on-disk
+> IOMAP_IMMUTABLE bit, and set FS_XFLAG based only on the in-core
+> S_IOMAP_IMMUTABLE bit?  If a program wants the immutable iomap
+> semantics, they will have to code some variant on the following:
+> 
+> fd = open(...);
+> ret = fallocate(fd, FALLOC_FL_SEAL_BLOCK_MAP, 0, len...)
+> if (ret) {
+> 	printf("couldn't seal block map");
+> 	close(fd);
+> 	return;
+> }
+> 
+> mmap(fd...);
+> /* do sensitive io operations here */
+> munmap(fd...);
+> 
+> close(fd);
+> 
+> Therefore the cost of not having the on-disk flag is that we'll have to
+> do more unshare/alloc/test/set cycles than we would if we could remember
+> the iomap-immutable state across unmounts and inode reclaiming.
+> However, if the data map is already ready to go, this shouldn't have a
+> lot of overhead since we only have to iterate the in-core extents.
+> 
+> Just trying to make sure we /need/ the inode flag bit. :)
+
+IMO, fallocate() is for making permanent changes to file extents. If
+this is not going to be a permanent state change but only a
+runtime-while-the-inode-is-in-cache flag, then it's probably not the
+right interface to use.
+
+This also seems problematic for applications other than DAX where
+the block map may be sealed, the fd closed and access handed off to
+another entity for remote storage access. If the inode gets
+reclaimed due to memory pressure, the system loses the fact that
+that the inode has been sealed. Hence another process can come
+along, re-read the inode and modify the block map because it hasn't
+been sealed in this new cache life cycle.....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
