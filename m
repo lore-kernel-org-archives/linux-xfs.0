@@ -1,216 +1,308 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42287 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752160AbdHDPhO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 11:37:14 -0400
-Date: Fri, 4 Aug 2017 08:37:07 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:32937 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751342AbdHDTrT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 15:47:19 -0400
+Date: Fri, 4 Aug 2017 12:46:18 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v3 3/5] common/inject: refactor helpers to use new errortag
- interface
-Message-ID: <20170804153707.GA24087@magnolia>
-References: <150067465981.30639.14801416171688538711.stgit@magnolia>
- <150067468569.30639.11717903404151243816.stgit@magnolia>
+Subject: Re: [PATCH v2 2/5] fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
+Message-ID: <20170804194618.GB24087@magnolia>
+References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150181369754.32119.7390149918955188408.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150067468569.30639.11717903404151243816.stgit@magnolia>
+In-Reply-To: <150181369754.32119.7390149918955188408.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-Refactor the XFS error injection helpers to use the new errortag
-interface to configure error injection.  If that isn't present, fall
-back either to the xfs_io/ioctl based injection or the older sysfs
-knobs.  Refactor existing testcases to use the new helpers.
+On Thu, Aug 03, 2017 at 07:28:17PM -0700, Dan Williams wrote:
+> >From falloc.h:
+> 
+>     FALLOC_FL_SEAL_BLOCK_MAP is used to seal (make immutable) all of the
+>     file logical-to-physical extent offset mappings in the file. The
+>     purpose is to allow an application to assume that there are no holes
+>     or shared extents in the file and that the metadata needed to find
+>     all the physical extents of the file is stable and can never be
+>     dirtied.
+> 
+> For now this patch only permits setting the in-memory state of
+> S_IOMAP_IMMMUTABLE. Support for clearing and persisting the state is
+> saved for later patches.
+> 
+> The implementation is careful to not allow the immutable state to change
+> while any process might have any established mappings. It reuses the
+> existing xfs_reflink_unshare() and xfs_alloc_file_space() to unshare
+> extents and fill all holes in the file. It then holds XFS_ILOCK_EXCL
+> while it validates the file is in the proper state and sets
+> S_IOMAP_IMMUTABLE.
+> 
+> Cc: Jan Kara <jack@suse.cz>
+> Cc: Jeff Moyer <jmoyer@redhat.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+> Suggested-by: Dave Chinner <david@fromorbit.com>
+> Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  fs/open.c                   |   11 +++++
+>  fs/xfs/xfs_bmap_util.c      |  101 +++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_bmap_util.h      |    2 +
+>  fs/xfs/xfs_file.c           |   14 ++++--
+>  include/linux/falloc.h      |    3 +
+>  include/uapi/linux/falloc.h |   19 ++++++++
+>  6 files changed, 145 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/open.c b/fs/open.c
+> index 7395860d7164..e3aae59785ae 100644
+> --- a/fs/open.c
+> +++ b/fs/open.c
+> @@ -273,6 +273,17 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+>  	    (mode & ~(FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_KEEP_SIZE)))
+>  		return -EINVAL;
+>  
+> +	/*
+> +	 * Seal block map operation should only be used exclusively, and
+> +	 * with the IMMUTABLE capability.
+> +	 */
+> +	if (mode & FALLOC_FL_SEAL_BLOCK_MAP) {
+> +		if (!capable(CAP_LINUX_IMMUTABLE))
+> +			return -EPERM;
+> +		if (mode & ~FALLOC_FL_SEAL_BLOCK_MAP)
+> +			return -EINVAL;
+> +	}
+> +
+>  	if (!(file->f_mode & FMODE_WRITE))
+>  		return -EBADF;
+>  
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index fe0f8f7f4bb7..46d8eb9e19fc 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1393,6 +1393,107 @@ xfs_zero_file_space(
+>  
+>  }
+>  
+> +/* Return 1 if hole detected, 0 if not, and < 0 if fail to determine */
+> +STATIC int
+> +xfs_file_has_holes(
+> +	struct xfs_inode	*ip)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_bmbt_irec	*map;
+> +	const int		map_size = 10;	/* constrain memory overhead */
+> +	int			i, nmaps;
+> +	int			error = 0;
+> +	xfs_fileoff_t		lblkno = 0;
+> +	xfs_filblks_t		maxlblkcnt;
+> +
+> +	map = kmem_alloc(map_size * sizeof(*map), KM_SLEEP);
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v3: fix _notrun to _fail when we can't set a knob to a particular value
-v2: fix name of the 'find knob' function to communicate that it takes a
-mountpoint's device, not the mountpoint itself; check for debug before
-we check for knobs
----
- common/inject |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- tests/xfs/141 |    5 +++--
- tests/xfs/196 |   17 ++++++----------
- 3 files changed, 66 insertions(+), 15 deletions(-)
+Sleeping with an inode fully locked and (eventually) a running
+transaction?  Yikes.
 
-diff --git a/common/inject b/common/inject
-index 8ecc290..f30d0ba 100644
---- a/common/inject
-+++ b/common/inject
-@@ -35,12 +35,49 @@ _require_error_injection()
- 	esac
- }
- 
-+# Find the errortag injection knob in sysfs for a given xfs mount's
-+# block device.
-+_find_xfs_mountdev_errortag_knob()
-+{
-+	dev="$1"
-+	knob="$2"
-+	shortdev="$(_short_dev "${dev}")"
-+	tagfile="/sys/fs/xfs/${shortdev}/errortag/${knob}"
-+
-+	# Some of the new sysfs errortag knobs were previously available via
-+	# another sysfs path.
-+	case "${knob}" in
-+	"log_bad_crc")
-+		if [ ! -w "${tagfile}" ]; then
-+			tagfile="/sys/fs/xfs/${shortdev}/log/log_badcrc_factor"
-+		fi
-+		;;
-+	"drop_writes")
-+		if [ ! -w "${tagfile}" ]; then
-+			tagfile="/sys/fs/xfs/${shortdev}/drop_writes"
-+		fi
-+		if [ ! -w "${tagfile}" ]; then
-+			tagfile="/sys/fs/xfs/${shortdev}/fail_writes"
-+		fi
-+		;;
-+	*)
-+		;;
-+	esac
-+
-+	echo "${tagfile}"
-+}
-+
- # Requires that xfs_io inject command knows about this error type
- _require_xfs_io_error_injection()
- {
- 	type="$1"
- 	_require_error_injection
- 
-+	# Can we find the error injection knobs via the new errortag
-+	# configuration mechanism?
-+	knob="$(_find_xfs_mountdev_errortag_knob "${TEST_DEV}" "${type}")"
-+	test -w "${knob}" && return
-+
- 	# NOTE: We can't actually test error injection here because xfs
- 	# hasn't always range checked the argument to xfs_errortag_add.
- 	# We also don't want to trip an error before we're ready to deal
-@@ -54,16 +91,34 @@ _require_xfs_io_error_injection()
- _test_inject_error()
- {
- 	type="$1"
-+	value="$2"
- 
--	$XFS_IO_PROG -x -c "inject $type" $TEST_DIR
-+	knob="$(_find_xfs_mountdev_errortag_knob "${TEST_DEV}" "${type}")"
-+	if [ -w "${knob}" ]; then
-+		test -z "${value}" && value="default"
-+		echo -n "${value}" > "${knob}"
-+	elif [ -z "${value}" ] || [ "${value}" = "default" ]; then
-+		$XFS_IO_PROG -x -c "inject $type" $TEST_DIR
-+	else
-+		_fail "Cannot inject error ${type} value ${value}."
-+	fi
- }
- 
- # Inject an error into the scratch fs
- _scratch_inject_error()
- {
- 	type="$1"
-+	value="$2"
- 
--	$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
-+	knob="$(_find_xfs_mountdev_errortag_knob "${SCRATCH_DEV}" "${type}")"
-+	if [ -w "${knob}" ]; then
-+		test -z "${value}" && value="default"
-+		echo -n "${value}" > "${knob}"
-+	elif [ -z "${value}" ] || [ "${value}" = "default" ]; then
-+		$XFS_IO_PROG -x -c "inject $type" $SCRATCH_MNT
-+	else
-+		_fail "Cannot inject error ${type} value ${value}."
-+	fi
- }
- 
- # Unmount and remount the scratch device, dumping the log
-diff --git a/tests/xfs/141 b/tests/xfs/141
-index 56ff14e..f61e524 100755
---- a/tests/xfs/141
-+++ b/tests/xfs/141
-@@ -47,13 +47,14 @@ rm -f $seqres.full
- 
- # get standard environment, filters and checks
- . ./common/rc
-+. ./common/inject
- 
- # real QA test starts here
- 
- # Modify as appropriate.
- _supported_fs xfs
- _supported_os Linux
--_require_xfs_sysfs $(_short_dev $TEST_DEV)/log/log_badcrc_factor
-+_require_xfs_io_error_injection "log_bad_crc"
- _require_scratch
- _require_command "$KILLALL_PROG" killall
- 
-@@ -69,7 +70,7 @@ for i in $(seq 1 5); do
- 	# (increase this value to run fsstress longer).
- 	factor=$((RANDOM % 100 + 1))
- 	echo iteration $i log_badcrc_factor: $factor >> $seqres.full 2>&1
--	echo $factor > /sys/fs/xfs/$sdev/log/log_badcrc_factor
-+	_scratch_inject_error "log_bad_crc" "$factor"
- 
- 	# Run fsstress until the filesystem shuts down. It will shut down
- 	# automatically when error injection triggers.
-diff --git a/tests/xfs/196 b/tests/xfs/196
-index e9b0649..fe3f570 100755
---- a/tests/xfs/196
-+++ b/tests/xfs/196
-@@ -45,6 +45,7 @@ _cleanup()
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/punch
-+. ./common/inject
- 
- # real QA test starts here
- rm -f $seqres.full
-@@ -53,13 +54,7 @@ rm -f $seqres.full
- _supported_fs generic
- _supported_os Linux
- _require_scratch
--
--DROP_WRITES="drop_writes"
--# replace "drop_writes" with "fail_writes" for old kernel
--if [ -f /sys/fs/xfs/$(_short_dev $TEST_DEV)/fail_writes ];then
--	DROP_WRITES="fail_writes"
--fi
--_require_xfs_sysfs $(_short_dev $TEST_DEV)/${DROP_WRITES}
-+_require_xfs_io_error_injection "drop_writes"
- 
- _scratch_mkfs >/dev/null 2>&1
- _scratch_mount
-@@ -72,7 +67,7 @@ bytes=$((64 * 1024))
- $XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
- 
- # Enable write drops. All buffered writes are dropped from this point on.
--echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
-+_scratch_inject_error "drop_writes" 1
- 
- # Write every other 4k range to split the larger delalloc extent into many more
- # smaller extents. Use pwrite because with write failures enabled, all
-@@ -89,7 +84,7 @@ for i in $(seq 4096 8192 $endoff); do
- 	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
- done
- 
--echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
-+_scratch_inject_error "drop_writes" 0
- 
- _scratch_cycle_mount
- $XFS_IO_PROG -c 'bmap -vp' $file | _filter_bmap
-@@ -104,9 +99,9 @@ for offset in $(seq 0 100 500); do
- 	$XFS_IO_PROG -fc "pwrite ${offset}m 100m" $file >> $seqres.full 2>&1
- 
- 	punchoffset=$((offset + 75))
--	echo 1 > /sys/fs/xfs/$sdev/$DROP_WRITES
-+	_scratch_inject_error "drop_writes"
- 	$XFS_IO_PROG -c "pwrite ${punchoffset}m 4k" $file >> $seqres.full 2>&1
--	echo 0 > /sys/fs/xfs/$sdev/$DROP_WRITES
-+	_scratch_inject_error "drop_writes" 0
- done
- 
- echo "Silence is golden."
+Just allocate one xfs_bmbt_irec on the stack and pass in nmaps=1.
+
+This method might fit better in libxfs/xfs_bmap.c where it'll be
+able to scan the extent list more quickly with the iext helpers.
+
+> +
+> +	maxlblkcnt = XFS_B_TO_FSB(mp, i_size_read(VFS_I(ip)));
+> +	do {
+> +		nmaps = map_size;
+> +		error = xfs_bmapi_read(ip, lblkno, maxlblkcnt - lblkno,
+> +				       map, &nmaps, 0);
+> +		if (error)
+> +			break;
+> +
+> +		ASSERT(nmaps <= map_size);
+> +		for (i = 0; i < nmaps; i++) {
+> +			lblkno += map[i].br_blockcount;
+> +			if (map[i].br_startblock == HOLESTARTBLOCK) {
+
+I think we also need to check for unwritten extents here, because a
+write to an unwritten block requires some zeroing and a mapping metdata
+update.
+
+> +				error = 1;
+> +				break;
+> +			}
+> +		}
+> +	} while (nmaps > 0 && error == 0);
+> +
+> +	kmem_free(map);
+> +	return error;
+> +}
+> +
+> +int
+> +xfs_seal_file_space(
+> +	struct xfs_inode	*ip,
+> +	xfs_off_t		offset,
+> +	xfs_off_t		len)
+> +{
+> +	struct inode		*inode = VFS_I(ip);
+> +	struct address_space	*mapping = inode->i_mapping;
+> +	int			error;
+> +
+> +	ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
+
+The IOLOCK must be held here too.
+
+> +
+> +	if (offset)
+> +		return -EINVAL;
+> +
+> +	error = xfs_reflink_unshare(ip, offset, len);
+> +	if (error)
+> +		return error;
+> +
+> +	error = xfs_alloc_file_space(ip, offset, len,
+> +			XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO);
+> +	if (error)
+> +		return error;
+> +
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +	/*
+> +	 * Either the size changed after we performed allocation /
+> +	 * unsharing, or the request was too small to begin with.
+> +	 */
+> +	error = -EINVAL;
+> +	if (len < i_size_read(inode))
+> +		goto out_unlock;
+> +
+> +	/*
+> +	 * Allow DAX path to assume that the state of S_IOMAP_IMMUTABLE
+> +	 * will never change while any mapping is established.
+> +	 */
+> +	error = -EBUSY;
+> +	if (mapping_mapped(mapping))
+> +		goto out_unlock;
+> +
+> +	/* Did we race someone attempting to share extents? */
+> +	if (xfs_is_reflink_inode(ip))
+> +		goto out_unlock;
+> +
+> +	/* Did we race a hole punch? */
+> +	error = xfs_file_has_holes(ip);
+> +	if (error == 1) {
+> +		error = -EBUSY;
+> +		goto out_unlock;
+> +	}
+> +
+> +	/* Abort on an error reading the block map */
+> +	if (error < 0)
+> +		goto out_unlock;
+> +
+> +	inode->i_flags |= S_IOMAP_IMMUTABLE;
+> +
+> +out_unlock:
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +
+> +	return error;
+> +}
+> +
+>  /*
+>   * @next_fsb will keep track of the extent currently undergoing shift.
+>   * @stop_fsb will keep track of the extent at which we have to stop.
+> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+> index 0cede1043571..5115a32a2483 100644
+> --- a/fs/xfs/xfs_bmap_util.h
+> +++ b/fs/xfs/xfs_bmap_util.h
+> @@ -60,6 +60,8 @@ int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+>  				xfs_off_t len);
+>  int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
+>  				xfs_off_t len);
+> +int	xfs_seal_file_space(struct xfs_inode *, xfs_off_t offset,
+> +				xfs_off_t len);
+>  
+>  /* EOF block manipulation functions */
+>  bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index c4893e226fd8..e21121530a90 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -739,7 +739,8 @@ xfs_file_write_iter(
+>  #define	XFS_FALLOC_FL_SUPPORTED						\
+>  		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
+>  		 FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |	\
+> -		 FALLOC_FL_INSERT_RANGE | FALLOC_FL_UNSHARE_RANGE)
+> +		 FALLOC_FL_INSERT_RANGE | FALLOC_FL_UNSHARE_RANGE |	\
+> +		 FALLOC_FL_SEAL_BLOCK_MAP)
+>  
+>  STATIC long
+>  xfs_file_fallocate(
+> @@ -834,9 +835,14 @@ xfs_file_fallocate(
+>  				error = xfs_reflink_unshare(ip, offset, len);
+>  				if (error)
+>  					goto out_unlock;
+> -			}
+> -			error = xfs_alloc_file_space(ip, offset, len,
+> -						     XFS_BMAPI_PREALLOC);
+> +
+> +				error = xfs_alloc_file_space(ip, offset, len,
+> +						XFS_BMAPI_PREALLOC);
+> +			} else if (mode & FALLOC_FL_SEAL_BLOCK_MAP) {
+> +				error = xfs_seal_file_space(ip, offset, len);
+> +			} else
+> +				error = xfs_alloc_file_space(ip, offset, len,
+> +						XFS_BMAPI_PREALLOC);
+>  		}
+>  		if (error)
+>  			goto out_unlock;
+> diff --git a/include/linux/falloc.h b/include/linux/falloc.h
+> index 7494dc67c66f..48546c6fbec7 100644
+> --- a/include/linux/falloc.h
+> +++ b/include/linux/falloc.h
+> @@ -26,6 +26,7 @@ struct space_resv {
+>  					 FALLOC_FL_COLLAPSE_RANGE |	\
+>  					 FALLOC_FL_ZERO_RANGE |		\
+>  					 FALLOC_FL_INSERT_RANGE |	\
+> -					 FALLOC_FL_UNSHARE_RANGE)
+> +					 FALLOC_FL_UNSHARE_RANGE |	\
+> +					 FALLOC_FL_SEAL_BLOCK_MAP)
+>  
+>  #endif /* _FALLOC_H_ */
+> diff --git a/include/uapi/linux/falloc.h b/include/uapi/linux/falloc.h
+> index b075f601919b..39076975bf6f 100644
+> --- a/include/uapi/linux/falloc.h
+> +++ b/include/uapi/linux/falloc.h
+> @@ -76,4 +76,23 @@
+>   */
+>  #define FALLOC_FL_UNSHARE_RANGE		0x40
+>  
+> +/*
+> + * FALLOC_FL_SEAL_BLOCK_MAP is used to seal (make immutable) all of the
+> + * file logical-to-physical extent offset mappings in the file. The
+> + * purpose is to allow an application to assume that there are no holes
+> + * or shared extents in the file and that the metadata needed to find
+> + * all the physical extents of the file is stable and can never be
+> + * dirtied.
+> + *
+> + * The immutable property is in effect for the entire inode, so the
+> + * range for this operation must start at offset 0 and len must be
+> + * greater than or equal to the current size of the file. If greater,
+> + * this operation allocates, unshares, hole fills, and seals in one
+
+'allocates' is the same as 'hole fills', I think.
+
+This converts unwritten extents to zeroed written extents too, correct?
+
+> + * atomic step. If len is zero then the immutable state is cleared for
+> + * the inode.
+
+It's cleared if len == 0?  I thought that was what FL_UNSEAL is for?
+
+> + * This flag implies FALLOC_FL_UNSHARE_RANGE and as such cannot be used
+> + * with the punch, zero, collapse, or insert range modes.
+> + */
+> +#define FALLOC_FL_SEAL_BLOCK_MAP	0x080
+>  #endif /* _UAPI_FALLOC_H_ */
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
