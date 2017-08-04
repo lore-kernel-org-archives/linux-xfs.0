@@ -1,220 +1,193 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25392 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751877AbdHDAIn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 20:08:43 -0400
-Subject: [PATCH 10/22] xfs_scrub: thread-safe stats counter
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 03 Aug 2017 17:08:37 -0700
-Message-ID: <150180531765.18784.15201552114192169638.stgit@magnolia>
-In-Reply-To: <150180525692.18784.13730590233404009267.stgit@magnolia>
-References: <150180525692.18784.13730590233404009267.stgit@magnolia>
+Received: from mga11.intel.com ([192.55.52.93]:40420 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751910AbdHDCeu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Aug 2017 22:34:50 -0400
+Subject: [PATCH v2 3/5] fs, xfs: introduce FALLOC_FL_UNSEAL_BLOCK_MAP
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 03 Aug 2017 19:28:23 -0700
+Message-ID: <150181370272.32119.9941879917087053701.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Provide an explicit fallocate operation type for clearing the
+S_IOMAP_IMMUTABLE flag. Like the enable case it requires CAP_IMMUTABLE
+and it can only be performed while no process has the file mapped.
 
-Create a threaded stats counter that we'll use to track scan progress.
-This includes things like how much of the disk blocks we've scanned,
-or later how much progress we've made in each phase.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Suggested-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- scrub/Makefile  |    2 +
- scrub/counter.c |  122 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/counter.h |   29 +++++++++++++
- 3 files changed, 153 insertions(+)
- create mode 100644 scrub/counter.c
- create mode 100644 scrub/counter.h
+ fs/open.c                   |   17 +++++++++++------
+ fs/xfs/xfs_bmap_util.c      |   42 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_bmap_util.h      |    3 +++
+ fs/xfs/xfs_file.c           |    4 +++-
+ include/linux/falloc.h      |    3 ++-
+ include/uapi/linux/falloc.h |    1 +
+ 6 files changed, 62 insertions(+), 8 deletions(-)
 
-
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 13a0b55..deb352b 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -18,6 +18,7 @@ endif	# scrub_prereqs
- HFILES = \
- ../repair/threads.h \
- common.h \
-+counter.h \
- disk.h \
- ioctl.h \
- scrub.h \
-@@ -26,6 +27,7 @@ xfs.h
- CFILES = \
- ../repair/threads.c \
- common.c \
-+counter.c \
- disk.c \
- ioctl.c \
- phase1.c \
-diff --git a/scrub/counter.c b/scrub/counter.c
-new file mode 100644
-index 0000000..1aae0a3
---- /dev/null
-+++ b/scrub/counter.c
-@@ -0,0 +1,122 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "libxfs.h"
-+#include <stdio.h>
-+#include <dirent.h>
-+#include <sys/statvfs.h>
-+#include <math.h>
-+#include "../repair/threads.h"
-+#include "path.h"
-+#include "disk.h"
-+#include "scrub.h"
-+#include "counter.h"
-+
-+/*
-+ * Per-Thread Counters
-+ *
-+ * This is a global counter object that uses per-thread counters to
-+ * count things without having to content for a single shared lock.
-+ * Provided we know the number of threads that will be accessing the
-+ * counter, each thread gets its own thread-specific counter variable.
-+ * Changing the value is fast, though retrieving the value is expensive
-+ * and approximate.
-+ */
-+struct ptcounter {
-+	pthread_key_t	key;
-+	pthread_mutex_t	lock;
-+	size_t		nr_used;
-+	size_t		nr_counters;
-+	uint64_t	counters[0];
-+};
-+#define PTCOUNTER_SIZE(nr) (sizeof(struct ptcounter) + sizeof(uint64_t) * (nr))
-+
-+/* Initialize per-thread counter. */
-+struct ptcounter *
-+ptcounter_init(
-+	size_t			nr)
+diff --git a/fs/open.c b/fs/open.c
+index e3aae59785ae..ccfd8d3becc8 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -274,13 +274,17 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 		return -EINVAL;
+ 
+ 	/*
+-	 * Seal block map operation should only be used exclusively, and
+-	 * with the IMMUTABLE capability.
++	 * Seal/unseal block map operations should only be used
++	 * exclusively, and with the IMMUTABLE capability.
+ 	 */
+-	if (mode & FALLOC_FL_SEAL_BLOCK_MAP) {
++	if (mode & (FALLOC_FL_SEAL_BLOCK_MAP | FALLOC_FL_UNSEAL_BLOCK_MAP)) {
+ 		if (!capable(CAP_LINUX_IMMUTABLE))
+ 			return -EPERM;
+-		if (mode & ~FALLOC_FL_SEAL_BLOCK_MAP)
++		if (mode == (FALLOC_FL_SEAL_BLOCK_MAP
++					| FALLOC_FL_UNSEAL_BLOCK_MAP))
++			return -EINVAL;
++		if (mode & ~(FALLOC_FL_SEAL_BLOCK_MAP
++					| FALLOC_FL_UNSEAL_BLOCK_MAP))
+ 			return -EINVAL;
+ 	}
+ 
+@@ -303,9 +307,10 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 		return -ETXTBSY;
+ 
+ 	/*
+-	 * We cannot allow any allocation changes on an iomap immutable file
++	 * We cannot allow any allocation changes on an iomap immutable
++	 * file, but we can allow clearing the immutable state.
+ 	 */
+-	if (IS_IOMAP_IMMUTABLE(inode))
++	if (IS_IOMAP_IMMUTABLE(inode) && !(mode & FALLOC_FL_UNSEAL_BLOCK_MAP))
+ 		return -ETXTBSY;
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 46d8eb9e19fc..70ac2d33ab27 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1494,6 +1494,48 @@ xfs_seal_file_space(
+ 	return error;
+ }
+ 
++int
++xfs_unseal_file_space(
++	struct xfs_inode	*ip,
++	xfs_off_t		offset,
++	xfs_off_t		len)
 +{
-+	struct ptcounter	*p;
-+	int			ret;
++	struct inode		*inode = VFS_I(ip);
++	struct address_space	*mapping = inode->i_mapping;
++	int			error;
 +
-+	p = malloc(PTCOUNTER_SIZE(nr));
-+	if (!p)
-+		return NULL;
-+	p->nr_counters = nr;
-+	p->nr_used = 0;
-+	memset(p->counters, 0, sizeof(uint64_t) * nr);
-+	ret = pthread_mutex_init(&p->lock, NULL);
-+	if (ret)
-+		goto out;
-+	ret = pthread_key_create(&p->key, NULL);
-+	if (ret)
-+		goto out_mutex;
-+	return p;
++	ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
 +
-+out_mutex:
-+	pthread_mutex_destroy(&p->lock);
-+out:
-+	free(p);
-+	return NULL;
++	if (offset)
++		return -EINVAL;
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	/*
++	 * It does not make sense to unseal less than the full range of
++	 * the file.
++	 */
++	error = -EINVAL;
++	if (len < i_size_read(inode))
++		goto out_unlock;
++
++	/*
++	 * Provide safety against one thread changing the policy of not
++	 * requiring fsync/msync (for block allocations) behind another
++	 * thread's back.
++	 */
++	error = -EBUSY;
++	if (mapping_mapped(mapping))
++		goto out_unlock;
++
++	inode->i_flags &= ~S_IOMAP_IMMUTABLE;
++	error = 0;
++
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++	return error;
 +}
 +
-+/* Free per-thread counter. */
-+void
-+ptcounter_free(
-+	struct ptcounter	*ptc)
-+{
-+	pthread_key_delete(ptc->key);
-+	pthread_mutex_destroy(&ptc->lock);
-+	free(ptc);
-+}
+ /*
+  * @next_fsb will keep track of the extent currently undergoing shift.
+  * @stop_fsb will keep track of the extent at which we have to stop.
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index 5115a32a2483..b64653a75942 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -62,6 +62,9 @@ int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
+ 				xfs_off_t len);
+ int	xfs_seal_file_space(struct xfs_inode *, xfs_off_t offset,
+ 				xfs_off_t len);
++int	xfs_unseal_file_space(struct xfs_inode *, xfs_off_t offset,
++				xfs_off_t len);
 +
-+/* Add a quantity to the counter. */
-+void
-+ptcounter_add(
-+	struct ptcounter	*ptc,
-+	int64_t			nr)
-+{
-+	uint64_t		*p;
-+
-+	p = pthread_getspecific(ptc->key);
-+	if (!p) {
-+		pthread_mutex_lock(&ptc->lock);
-+		assert(ptc->nr_used < ptc->nr_counters);
-+		p = &ptc->counters[ptc->nr_used++];
-+		pthread_setspecific(ptc->key, p);
-+		pthread_mutex_unlock(&ptc->lock);
-+	}
-+	*p += nr;
-+}
-+
-+/* Return the approximate value of this counter. */
-+uint64_t
-+ptcounter_value(
-+	struct ptcounter	*ptc)
-+{
-+	size_t			i;
-+	uint64_t		sum = 0;
-+
-+	pthread_mutex_lock(&ptc->lock);
-+	for (i = 0; i < ptc->nr_used; i++)
-+		sum += ptc->counters[i];
-+	pthread_mutex_unlock(&ptc->lock);
-+
-+	return sum;
-+}
-diff --git a/scrub/counter.h b/scrub/counter.h
-new file mode 100644
-index 0000000..f6225b2
---- /dev/null
-+++ b/scrub/counter.h
-@@ -0,0 +1,29 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef XFS_SCRUB_COUNTER_H_
-+#define XFS_SCRUB_COUNTER_H_
-+
-+struct ptcounter;
-+struct ptcounter *ptcounter_init(size_t nr);
-+void ptcounter_free(struct ptcounter *ptc);
-+void ptcounter_add(struct ptcounter *ptc, int64_t nr);
-+uint64_t ptcounter_value(struct ptcounter *ptc);
-+
-+#endif /* XFS_SCRUB_COUNTER_H_ */
+ 
+ /* EOF block manipulation functions */
+ bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index e21121530a90..833f77700be2 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -740,7 +740,7 @@ xfs_file_write_iter(
+ 		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
+ 		 FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |	\
+ 		 FALLOC_FL_INSERT_RANGE | FALLOC_FL_UNSHARE_RANGE |	\
+-		 FALLOC_FL_SEAL_BLOCK_MAP)
++		 FALLOC_FL_SEAL_BLOCK_MAP | FALLOC_FL_UNSEAL_BLOCK_MAP)
+ 
+ STATIC long
+ xfs_file_fallocate(
+@@ -840,6 +840,8 @@ xfs_file_fallocate(
+ 						XFS_BMAPI_PREALLOC);
+ 			} else if (mode & FALLOC_FL_SEAL_BLOCK_MAP) {
+ 				error = xfs_seal_file_space(ip, offset, len);
++			} else if (mode & FALLOC_FL_UNSEAL_BLOCK_MAP) {
++				error = xfs_unseal_file_space(ip, offset, len);
+ 			} else
+ 				error = xfs_alloc_file_space(ip, offset, len,
+ 						XFS_BMAPI_PREALLOC);
+diff --git a/include/linux/falloc.h b/include/linux/falloc.h
+index 48546c6fbec7..b22c1368ed1e 100644
+--- a/include/linux/falloc.h
++++ b/include/linux/falloc.h
+@@ -27,6 +27,7 @@ struct space_resv {
+ 					 FALLOC_FL_ZERO_RANGE |		\
+ 					 FALLOC_FL_INSERT_RANGE |	\
+ 					 FALLOC_FL_UNSHARE_RANGE |	\
+-					 FALLOC_FL_SEAL_BLOCK_MAP)
++					 FALLOC_FL_SEAL_BLOCK_MAP |	\
++					 FALLOC_FL_UNSEAL_BLOCK_MAP)
+ 
+ #endif /* _FALLOC_H_ */
+diff --git a/include/uapi/linux/falloc.h b/include/uapi/linux/falloc.h
+index 39076975bf6f..a4949e1a2dae 100644
+--- a/include/uapi/linux/falloc.h
++++ b/include/uapi/linux/falloc.h
+@@ -95,4 +95,5 @@
+  * with the punch, zero, collapse, or insert range modes.
+  */
+ #define FALLOC_FL_SEAL_BLOCK_MAP	0x080
++#define FALLOC_FL_UNSEAL_BLOCK_MAP	0x100
+ #endif /* _UAPI_FALLOC_H_ */
 
