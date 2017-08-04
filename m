@@ -1,148 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f180.google.com ([209.85.217.180]:35539 "EHLO
-        mail-ua0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751970AbdHDUgC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 16:36:02 -0400
-Received: by mail-ua0-f180.google.com with SMTP id d29so11909206uai.2
-        for <linux-xfs@vger.kernel.org>; Fri, 04 Aug 2017 13:36:02 -0700 (PDT)
+Received: from mail-ua0-f175.google.com ([209.85.217.175]:37723 "EHLO
+        mail-ua0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751208AbdHDUpm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 16:45:42 -0400
+Received: by mail-ua0-f175.google.com with SMTP id f9so11949856uaf.4
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Aug 2017 13:45:42 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170804200446.GD24087@magnolia>
+In-Reply-To: <20170804203312.GF24087@magnolia>
 References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150181370272.32119.9941879917087053701.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170804200446.GD24087@magnolia>
+ <150181371001.32119.599597939855384271.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170804203312.GF24087@magnolia>
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 4 Aug 2017 13:36:01 -0700
-Message-ID: <CAPcyv4jTfchiWLB6zMrdKYTiymjJyzuxBGhh8TRKAbY8rsXWnA@mail.gmail.com>
-Subject: Re: [PATCH v2 3/5] fs, xfs: introduce FALLOC_FL_UNSEAL_BLOCK_MAP
+Date: Fri, 4 Aug 2017 13:45:41 -0700
+Message-ID: <CAPcyv4j0rWOAPSL2axNbLmTN-UJ=328Vj9kQzGKz1q9=ShM9Dg@mail.gmail.com>
+Subject: Re: [PATCH v2 4/5] xfs: introduce XFS_DIFLAG2_IOMAP_IMMUTABLE
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-On Fri, Aug 4, 2017 at 1:04 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> On Thu, Aug 03, 2017 at 07:28:23PM -0700, Dan Williams wrote:
->> Provide an explicit fallocate operation type for clearing the
->> S_IOMAP_IMMUTABLE flag. Like the enable case it requires CAP_IMMUTABLE
->> and it can only be performed while no process has the file mapped.
+On Fri, Aug 4, 2017 at 1:33 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> On Thu, Aug 03, 2017 at 07:28:30PM -0700, Dan Williams wrote:
+>> Add an on-disk inode flag to record the state of the S_IOMAP_IMMUTABLE
+>> in-memory vfs inode flags. This allows the protections against reflink
+>> and hole punch to be automatically restored on a sub-sequent boot when
+>> the in-memory inode is established.
+>>
+>> The FS_XFLAG_IOMAP_IMMUTABLE is introduced to allow xfs_io to read the
+>> state of the flag, but toggling the flag requires going through
+>> fallocate(FALLOC_FL_[UN]SEAL_BLOCK_MAP). Support for toggling this
+>> on-disk state is saved for a later patch.
 >>
 >> Cc: Jan Kara <jack@suse.cz>
 >> Cc: Jeff Moyer <jmoyer@redhat.com>
 >> Cc: Christoph Hellwig <hch@lst.de>
 >> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
->> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
->> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
 >> Suggested-by: Dave Chinner <david@fromorbit.com>
+>> Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
 >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 >> ---
->>  fs/open.c                   |   17 +++++++++++------
->>  fs/xfs/xfs_bmap_util.c      |   42 ++++++++++++++++++++++++++++++++++++++++++
->>  fs/xfs/xfs_bmap_util.h      |    3 +++
->>  fs/xfs/xfs_file.c           |    4 +++-
->>  include/linux/falloc.h      |    3 ++-
->>  include/uapi/linux/falloc.h |    1 +
->>  6 files changed, 62 insertions(+), 8 deletions(-)
+>>  fs/xfs/libxfs/xfs_format.h |    5 ++++-
+>>  fs/xfs/xfs_inode.c         |    2 ++
+>>  fs/xfs/xfs_ioctl.c         |    1 +
+>>  fs/xfs/xfs_iops.c          |    8 +++++---
+>>  include/uapi/linux/fs.h    |    1 +
+>>  5 files changed, 13 insertions(+), 4 deletions(-)
 >>
->> diff --git a/fs/open.c b/fs/open.c
->> index e3aae59785ae..ccfd8d3becc8 100644
->> --- a/fs/open.c
->> +++ b/fs/open.c
->> @@ -274,13 +274,17 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
->>               return -EINVAL;
->>
->>       /*
->> -      * Seal block map operation should only be used exclusively, and
->> -      * with the IMMUTABLE capability.
->> +      * Seal/unseal block map operations should only be used
->> +      * exclusively, and with the IMMUTABLE capability.
->>        */
->> -     if (mode & FALLOC_FL_SEAL_BLOCK_MAP) {
->> +     if (mode & (FALLOC_FL_SEAL_BLOCK_MAP | FALLOC_FL_UNSEAL_BLOCK_MAP)) {
->>               if (!capable(CAP_LINUX_IMMUTABLE))
->>                       return -EPERM;
->> -             if (mode & ~FALLOC_FL_SEAL_BLOCK_MAP)
->> +             if (mode == (FALLOC_FL_SEAL_BLOCK_MAP
->> +                                     | FALLOC_FL_UNSEAL_BLOCK_MAP))
->> +                     return -EINVAL;
->> +             if (mode & ~(FALLOC_FL_SEAL_BLOCK_MAP
->> +                                     | FALLOC_FL_UNSEAL_BLOCK_MAP))
->>                       return -EINVAL;
->>       }
->>
->> @@ -303,9 +307,10 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
->>               return -ETXTBSY;
->>
->>       /*
->> -      * We cannot allow any allocation changes on an iomap immutable file
->> +      * We cannot allow any allocation changes on an iomap immutable
->> +      * file, but we can allow clearing the immutable state.
->>        */
->> -     if (IS_IOMAP_IMMUTABLE(inode))
->> +     if (IS_IOMAP_IMMUTABLE(inode) && !(mode & FALLOC_FL_UNSEAL_BLOCK_MAP))
->>               return -ETXTBSY;
->>
->>       /*
->> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
->> index 46d8eb9e19fc..70ac2d33ab27 100644
->> --- a/fs/xfs/xfs_bmap_util.c
->> +++ b/fs/xfs/xfs_bmap_util.c
->> @@ -1494,6 +1494,48 @@ xfs_seal_file_space(
->>       return error;
->>  }
->>
->> +int
->> +xfs_unseal_file_space(
->> +     struct xfs_inode        *ip,
->> +     xfs_off_t               offset,
->> +     xfs_off_t               len)
->> +{
->> +     struct inode            *inode = VFS_I(ip);
->> +     struct address_space    *mapping = inode->i_mapping;
->> +     int                     error;
->> +
->> +     ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
+>> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+>> index d4d9bef20c3a..9e720e55776b 100644
+>> --- a/fs/xfs/libxfs/xfs_format.h
+>> +++ b/fs/xfs/libxfs/xfs_format.h
+>> @@ -1063,12 +1063,15 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+>>  #define XFS_DIFLAG2_DAX_BIT  0       /* use DAX for this inode */
+>>  #define XFS_DIFLAG2_REFLINK_BIT      1       /* file's blocks may be shared */
+>>  #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
+>> +#define XFS_DIFLAG2_IOMAP_IMMUTABLE_BIT 3 /* set S_IOMAP_IMMUTABLE for this inode */
 >
-> Same assert-on-the-iolock comment as the previous patch.
+> So... the greedy part of my brain that doesn't want to give out flags2
+> bits has been wondering, what if we just didn't have an on-disk
+> IOMAP_IMMUTABLE bit, and set FS_XFLAG based only on the in-core
+> S_IOMAP_IMMUTABLE bit?  If a program wants the immutable iomap
+> semantics, they will have to code some variant on the following:
+>
+> fd = open(...);
+> ret = fallocate(fd, FALLOC_FL_SEAL_BLOCK_MAP, 0, len...)
+> if (ret) {
+>         printf("couldn't seal block map");
+>         close(fd);
+>         return;
+> }
+>
+> mmap(fd...);
+> /* do sensitive io operations here */
+> munmap(fd...);
+>
+> close(fd);
+>
+> Therefore the cost of not having the on-disk flag is that we'll have to
+> do more unshare/alloc/test/set cycles than we would if we could remember
+> the iomap-immutable state across unmounts and inode reclaiming.
+> However, if the data map is already ready to go, this shouldn't have a
+> lot of overhead since we only have to iterate the in-core extents.
+>
+> Just trying to make sure we /need/ the inode flag bit. :)
 
-Ok.
+A fair point.
 
->
->> +
->> +     if (offset)
->> +             return -EINVAL;
->> +
->> +     xfs_ilock(ip, XFS_ILOCK_EXCL);
->> +     /*
->> +      * It does not make sense to unseal less than the full range of
->> +      * the file.
->> +      */
->> +     error = -EINVAL;
->> +     if (len < i_size_read(inode))
->> +             goto out_unlock;
->
-> Hmm, should we be picky and require len == i_size_read() here?
-
-Yes, I think so, otherwise we may have raced someone who increased the
-file size with unwritten extents.
-
->
->> +     /*
->> +      * Provide safety against one thread changing the policy of not
->> +      * requiring fsync/msync (for block allocations) behind another
->> +      * thread's back.
->> +      */
->> +     error = -EBUSY;
->> +     if (mapping_mapped(mapping))
->> +             goto out_unlock;
->> +
->> +     inode->i_flags &= ~S_IOMAP_IMMUTABLE;
->
-> It occurred to me, should we jump out early from the seal/unseal
-> operations if the flag state matches whatever the user is asking for?
-> This is perhaps not necessary for unseal since we don't do a lot of
-> work.
->
-
-Yes, I think I had that semantic in v1, but lost in the cleanups. Will
-bring it back.
+The use case I imagine is a privileged (CAP_IMMUTABLE) process setting
+up the data file space at server provisioning time, and then
+unprivileged processes using the immutable semantic thereafter.
