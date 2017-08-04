@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25539 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:25568 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751877AbdHDAJP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 20:09:15 -0400
-Subject: [PATCH 14/22] xfs_scrub: optionally use SCSI READ VERIFY commands
- to scrub data blocks on disk
+        with ESMTP id S1751877AbdHDAJV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 20:09:21 -0400
+Subject: [PATCH 15/22] xfs_scrub: check summary counters
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 03 Aug 2017 17:09:07 -0700
-Message-ID: <150180534787.18784.5397703447977282840.stgit@magnolia>
+Date: Thu, 03 Aug 2017 17:09:15 -0700
+Message-ID: <150180535573.18784.10402300673291394579.stgit@magnolia>
 In-Reply-To: <150180525692.18784.13730590233404009267.stgit@magnolia>
 References: <150180525692.18784.13730590233404009267.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,310 +20,450 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If we sense that we're talking to a raw SCSI disk, use the SCSI READ
-VERIFY command to ask the disk to verify a disk internally.  This can
-sharply reduce the runtime of the data block verification phase on
-devices whose internal bandwidth exceeds their link bandwidth.
+Make sure the filesystem summary counters are somewhat close to what
+we can find by scanning the filesystem.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- configure.ac          |    2 +
- include/builddefs.in  |    2 +
- m4/package_libcdev.m4 |   30 ++++++++++
- scrub/Makefile        |    8 +++
- scrub/disk.c          |  145 +++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/disk.h          |    1 
- 6 files changed, 187 insertions(+), 1 deletion(-)
+ scrub/Makefile |    1 
+ scrub/common.c |   28 +++++++
+ scrub/common.h |    3 +
+ scrub/phase7.c |  236 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/scrub.c  |    4 -
+ scrub/xfs.c    |   63 +++++++++++++++
+ scrub/xfs.h    |    7 ++
+ 7 files changed, 338 insertions(+), 4 deletions(-)
+ create mode 100644 scrub/phase7.c
 
 
-diff --git a/configure.ac b/configure.ac
-index b2b4566..8b65cf5 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -146,6 +146,8 @@ AC_HAVE_GETFSMAP
- AC_HAVE_MALLINFO
- AC_HAVE_OPENAT
- AC_HAVE_FSTATAT
-+AC_HAVE_SG_IO
-+AC_HAVE_HDIO_GETGEO
- 
- if test "$enable_blkid" = yes; then
- AC_HAVE_BLKID_TOPO
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 65d3d20..c90c76f 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -116,6 +116,8 @@ HAVE_GETFSMAP = @have_getfsmap@
- HAVE_MALLINFO = @have_mallinfo@
- HAVE_OPENAT = @have_openat@
- HAVE_FSTATAT = @have_fstatat@
-+HAVE_SG_IO = @have_sg_io@
-+HAVE_HDIO_GETGEO = @have_hdio_getgeo@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 540633a..8608d10 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -343,3 +343,33 @@ AC_DEFUN([AC_HAVE_FSTATAT],
-        #include <unistd.h>])
-     AC_SUBST(have_fstatat)
-   ])
-+
-+#
-+# Check if we have the SG_IO ioctl
-+#
-+AC_DEFUN([AC_HAVE_SG_IO],
-+  [ AC_MSG_CHECKING([for struct sg_io_hdr ])
-+    AC_TRY_COMPILE([#include <scsi/sg.h>],
-+    [
-+         struct sg_io_hdr hdr;
-+         ioctl(0, SG_IO, &hdr);
-+    ], have_sg_io=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_sg_io)
-+  ])
-+
-+#
-+# Check if we have the HDIO_GETGEO ioctl
-+#
-+AC_DEFUN([AC_HAVE_HDIO_GETGEO],
-+  [ AC_MSG_CHECKING([for struct hd_geometry ])
-+    AC_TRY_COMPILE([#include <linux/hdreg.h>],
-+    [
-+         struct hd_geometry hdr;
-+         ioctl(0, HDIO_GETGEO, &hdr);
-+    ], have_hdio_getgeo=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_hdio_getgeo)
-+  ])
 diff --git a/scrub/Makefile b/scrub/Makefile
-index 18a65b9..e8864cc 100644
+index e8864cc..461df83 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -58,6 +58,14 @@ ifeq ($(HAVE_SYNCFS),yes)
- LCFLAGS += -DHAVE_SYNCFS
- endif
- 
-+ifeq ($(HAVE_SG_IO),yes)
-+LCFLAGS += -DHAVE_SG_IO
-+endif
-+
-+ifeq ($(HAVE_HDIO_GETGEO),yes)
-+LCFLAGS += -DHAVE_HDIO_GETGEO
-+endif
-+
- default: depend $(LTCOMMAND)
- 
- include $(BUILDRULES)
-diff --git a/scrub/disk.c b/scrub/disk.c
-index 613e7fd..63aa844 100644
---- a/scrub/disk.c
-+++ b/scrub/disk.c
-@@ -21,6 +21,12 @@
- #include <sys/statvfs.h>
- #include <sys/types.h>
- #include <dirent.h>
-+#ifdef HAVE_SG_IO
-+# include <scsi/sg.h>
-+#endif
-+#ifdef HAVE_HDIO_GETGEO
-+# include <linux/hdreg.h>
-+#endif
- #include "../repair/threads.h"
- #include "path.h"
- #include "disk.h"
-@@ -80,12 +86,119 @@ disk_heads(
- 	return __disk_heads(disk);
+@@ -41,6 +41,7 @@ phase2.c \
+ phase3.c \
+ phase5.c \
+ phase6.c \
++phase7.c \
+ read_verify.c \
+ scrub.c \
+ vfs.c \
+diff --git a/scrub/common.c b/scrub/common.c
+index 167d373..4ec07a0 100644
+--- a/scrub/common.c
++++ b/scrub/common.c
+@@ -347,3 +347,31 @@ background_sleep(void)
+ 	tv.tv_nsec = time % 1000000;
+ 	nanosleep(&tv, NULL);
  }
- 
-+/*
-+ * Execute a SCSI VERIFY(16) to verify disk contents.
-+ * For devices that support this command, this can sharply reduce the
-+ * runtime of the data block verification phase if the storage device's
-+ * internal bandwidth exceeds its link bandwidth.  However, it only
-+ * works if we're talking to a raw SCSI device, and only if we trust the
-+ * firmware.
-+ */
-+#ifdef HAVE_SG_IO
-+# define SENSE_BUF_LEN		64
-+# define VERIFY16_CMDLEN	16
-+# define VERIFY16_CMD		0x8F
 +
-+# ifndef SG_FLAG_Q_AT_TAIL
-+#  define SG_FLAG_Q_AT_TAIL	0x10
-+# endif
-+static int
-+disk_scsi_verify(
-+	struct disk		*disk,
-+	uint64_t		startblock, /* lba */
-+	uint64_t		blockcount) /* lba */
++/* Decide if a value is within +/- (n/d) of a desired value. */
++bool
++within_range(
++	struct scrub_ctx	*ctx,
++	unsigned long long	value,
++	unsigned long long	desired,
++	unsigned long long	abs_threshold,
++	unsigned int		n,
++	unsigned int		d,
++	const char		*descr)
 +{
-+	struct sg_io_hdr	iohdr;
-+	unsigned char		cdb[VERIFY16_CMDLEN];
-+	unsigned char		sense[SENSE_BUF_LEN];
-+	uint64_t		llba;
-+	uint64_t		veri_len = blockcount;
-+	int			error;
++	assert(n < d);
 +
-+	assert(!debug_tweak_on("XFS_SCRUB_NO_SCSI_VERIFY"));
++	/* Don't complain if difference does not exceed an absolute value. */
++	if (value < desired && desired - value < abs_threshold)
++		return true;
++	if (value > desired && value - desired < abs_threshold)
++		return true;
 +
-+	llba = startblock + (disk->d_start >> BBSHIFT);
-+
-+	/* Borrowed from sg_verify */
-+	cdb[0] = VERIFY16_CMD;
-+	cdb[1] = 0; /* skip PI, DPO, and byte check. */
-+	cdb[2] = (llba >> 56) & 0xff;
-+	cdb[3] = (llba >> 48) & 0xff;
-+	cdb[4] = (llba >> 40) & 0xff;
-+	cdb[5] = (llba >> 32) & 0xff;
-+	cdb[6] = (llba >> 24) & 0xff;
-+	cdb[7] = (llba >> 16) & 0xff;
-+	cdb[8] = (llba >> 8) & 0xff;
-+	cdb[9] = llba & 0xff;
-+	cdb[10] = (veri_len >> 24) & 0xff;
-+	cdb[11] = (veri_len >> 16) & 0xff;
-+	cdb[12] = (veri_len >> 8) & 0xff;
-+	cdb[13] = veri_len & 0xff;
-+	cdb[14] = 0;
-+	cdb[15] = 0;
-+	memset(sense, 0, SENSE_BUF_LEN);
-+
-+	/* v3 SG_IO */
-+	memset(&iohdr, 0, sizeof(iohdr));
-+	iohdr.interface_id = 'S';
-+	iohdr.dxfer_direction = SG_DXFER_NONE;
-+	iohdr.cmdp = cdb;
-+	iohdr.cmd_len = VERIFY16_CMDLEN;
-+	iohdr.sbp = sense;
-+	iohdr.mx_sb_len = SENSE_BUF_LEN;
-+	iohdr.flags |= SG_FLAG_Q_AT_TAIL;
-+	iohdr.timeout = 30000; /* 30s */
-+
-+	error = ioctl(disk->d_fd, SG_IO, &iohdr);
-+	if (error)
-+		return error;
-+
-+	dbg_printf("VERIFY(16) fd %d lba %"PRIu64" len %"PRIu64" info %x "
-+			"status %d masked %d msg %d host %d driver %d "
-+			"duration %d resid %d\n",
-+			disk->d_fd, startblock, blockcount, iohdr.info,
-+			iohdr.status, iohdr.masked_status, iohdr.msg_status,
-+			iohdr.host_status, iohdr.driver_status, iohdr.duration,
-+			iohdr.resid);
-+
-+	if (iohdr.info & SG_INFO_CHECK) {
-+		dbg_printf("status: msg %x host %x driver %x\n",
-+				iohdr.msg_status, iohdr.host_status,
-+				iohdr.driver_status);
-+		errno = EIO;
-+		return -1;
-+	}
-+
-+	return error;
-+}
-+#else
-+# define disk_scsi_verify(...)		(ENOTTY)
-+#endif /* HAVE_SG_IO */
-+
-+/* Test the availability of the kernel scrub ioctl. */
-+static bool
-+disk_can_scsi_verify(
-+	struct disk		*disk)
-+{
-+	int			error;
-+
-+	if (debug_tweak_on("XFS_SCRUB_NO_SCSI_VERIFY"))
++	/* Complain if the difference exceeds a certain percentage. */
++	if (value < desired * (d - n) / d)
++		return false;
++	if (value > desired * (d + n) / d)
 +		return false;
 +
-+	error = disk_scsi_verify(disk, 0, 1);
-+	return error == 0;
++	return true;
++}
+diff --git a/scrub/common.h b/scrub/common.h
+index 7bbd061..7c35f3f 100644
+--- a/scrub/common.h
++++ b/scrub/common.h
+@@ -71,5 +71,8 @@ static inline int syncfs(int fd)
+ 
+ bool find_mountpoint(char *mtab, struct scrub_ctx *ctx);
+ void background_sleep(void);
++bool within_range(struct scrub_ctx *ctx, unsigned long long value,
++		unsigned long long desired, unsigned long long abs_threshold,
++		unsigned int n, unsigned int d, const char *descr);
+ 
+ #endif /* XFS_SCRUB_COMMON_H_ */
+diff --git a/scrub/phase7.c b/scrub/phase7.c
+new file mode 100644
+index 0000000..bdb4a79
+--- /dev/null
++++ b/scrub/phase7.c
+@@ -0,0 +1,236 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "libxfs.h"
++#include <sys/statvfs.h>
++#include <sys/types.h>
++#include <dirent.h>
++#include "disk.h"
++#include "../repair/threads.h"
++#include "handle.h"
++#include "path.h"
++#include "read_verify.h"
++#include "bitmap.h"
++#include "vfs.h"
++#include "scrub.h"
++#include "common.h"
++#include "ioctl.h"
++#include "xfs_fs.h"
++#include "xfs.h"
++
++/* Phase 7: Check summary counters. */
++
++struct xfs_summary_counts {
++	unsigned long long	inodes;		/* number of inodes */
++	unsigned long long	dbytes;		/* data dev bytes */
++	unsigned long long	rbytes;		/* rt dev bytes */
++	unsigned long long	next_phys;	/* next phys bytes we see? */
++	unsigned long long	agbytes;	/* freespace bytes */
++};
++
++struct xfs_inode_fork_summary {
++	struct bitmap		*tree;
++	unsigned long long	bytes;
++};
++
++/* Record inode and block usage. */
++static int
++xfs_record_inode_summary(
++	struct scrub_ctx		*ctx,
++	struct xfs_handle		*handle,
++	struct xfs_bstat		*bstat,
++	void				*arg)
++{
++	struct xfs_summary_counts	*counts = arg;
++
++	counts->inodes++;
++	return 0;
 +}
 +
- /* Open a disk device and discover its geometry. */
- int
- disk_open(
- 	const char		*pathname,
- 	struct disk		*disk)
- {
-+#ifdef HAVE_HDIO_GETGEO
-+	struct hd_geometry	bdgeo;
-+#endif
-+	bool			suspicious_disk = false;
- 	int			lba_sz;
++/* Record block usage. */
++static bool
++xfs_record_block_summary(
++	struct scrub_ctx		*ctx,
++	const char			*descr,
++	struct fsmap			*fsmap,
++	void				*arg)
++{
++	struct xfs_summary_counts	*counts = arg;
++	unsigned long long		len;
++
++	if (fsmap->fmr_device == ctx->fsinfo.fs_logdev)
++		return true;
++	if ((fsmap->fmr_flags & FMR_OF_SPECIAL_OWNER) &&
++	    fsmap->fmr_owner == XFS_FMR_OWN_FREE)
++		return true;
++
++	len = fsmap->fmr_length;
++
++	/* freesp btrees live in free space, need to adjust counters later. */
++	if ((fsmap->fmr_flags & FMR_OF_SPECIAL_OWNER) &&
++	    fsmap->fmr_owner == XFS_FMR_OWN_AG) {
++		counts->agbytes += fsmap->fmr_length;
++	}
++	if (fsmap->fmr_device == ctx->fsinfo.fs_rtdev) {
++		/* Count realtime extents. */
++		counts->rbytes += len;
++	} else {
++		/* Count datadev extents. */
++		if (counts->next_phys >= fsmap->fmr_physical + len)
++			return true;
++		else if (counts->next_phys > fsmap->fmr_physical)
++			len = counts->next_phys - fsmap->fmr_physical;
++		counts->dbytes += len;
++		counts->next_phys = fsmap->fmr_physical + fsmap->fmr_length;
++	}
++
++	return true;
++}
++
++/*
++ * Count all inodes and blocks in the filesystem as told by GETFSMAP and
++ * BULKSTAT, and compare that to summary counters.  Since this is a live
++ * filesystem we'll be content if the summary counts are within 10% of
++ * what we observed.
++ */
++bool
++xfs_scan_summary(
++	struct scrub_ctx		*ctx)
++{
++	struct xfs_summary_counts	*summary;
++	unsigned long long		fd;
++	unsigned long long		fr;
++	unsigned long long		fi;
++	unsigned long long		sd;
++	unsigned long long		sr;
++	unsigned long long		si;
++	unsigned long long		absdiff;
++	unsigned long long		d_blocks;
++	unsigned long long		d_bfree;
++	unsigned long long		r_blocks;
++	unsigned long long		r_bfree;
++	unsigned long long		f_files;
++	unsigned long long		f_free;
++	xfs_agnumber_t			agno;
++	bool				moveon;
++	bool				complain;
++	unsigned int			groups;
++	int				error;
++
++	groups = xfs_scan_all_blocks_array_size(ctx);
++	summary = calloc(groups, sizeof(struct xfs_summary_counts));
++	if (!summary) {
++		str_errno(ctx, ctx->mntpoint);
++		return false;
++	}
++
++	/* Flush everything out to disk before we start counting. */
++	error = syncfs(ctx->mnt_fd);
++	if (error) {
++		str_errno(ctx, ctx->mntpoint);
++		return false;
++	}
++
++	/* Use fsmap to count blocks. */
++	moveon = xfs_scan_all_blocks_array_arg(ctx, xfs_record_block_summary,
++			summary, sizeof(*summary));
++	if (!moveon)
++		goto out;
++
++	/* Scan the whole fs. */
++	moveon = xfs_scan_all_inodes_array_arg(ctx, xfs_record_inode_summary,
++			summary, sizeof(*summary));
++	if (!moveon)
++		goto out;
++
++	/* Sum the counts. */
++	for (agno = 1; agno < groups; agno++) {
++		summary[0].inodes += summary[agno].inodes;
++		summary[0].dbytes += summary[agno].dbytes;
++		summary[0].rbytes += summary[agno].rbytes;
++		summary[0].agbytes += summary[agno].agbytes;
++	}
++
++	moveon = xfs_scan_estimate_blocks(ctx, &d_blocks, &d_bfree, &r_blocks,
++			&r_bfree, &f_files, &f_free);
++	if (!moveon)
++		return moveon;
++
++	/*
++	 * If we counted blocks with fsmap, then dblocks includes
++	 * blocks for the AGFL and the freespace/rmap btrees.  The
++	 * filesystem treats them as "free", but since we scanned
++	 * them, we'll consider them used.
++	 */
++	d_bfree -= summary[0].agbytes >> ctx->blocklog;
++
++	/* Report on what we found. */
++	fd = (d_blocks - d_bfree) << ctx->blocklog;
++	fr = (r_blocks - r_bfree) << ctx->blocklog;
++	fi = f_files - f_free;
++	sd = summary[0].dbytes;
++	sr = summary[0].rbytes;
++	si = summary[0].inodes;
++
++	/*
++	 * Complain if the counts are off by more than 10% unless
++	 * the inaccuracy is less than 32MB worth of blocks or 100 inodes.
++	 */
++	absdiff = 1ULL << 25;
++	complain = !within_range(ctx, sd, fd, absdiff, 1, 10, _("data blocks"));
++	complain |= !within_range(ctx, sr, fr, absdiff, 1, 10, _("realtime blocks"));
++	complain |= !within_range(ctx, si, fi, 100, 1, 10, _("inodes"));
++
++	if (complain || verbose) {
++		double		d, r, i;
++		char		*du, *ru, *iu;
++
++		if (fr || sr) {
++			d = auto_space_units(fd, &du);
++			r = auto_space_units(fr, &ru);
++			i = auto_units(fi, &iu);
++			fprintf(stdout,
++_("%.1f%s data used;  %.1f%s realtime data used;  %.2f%s inodes used.\n"),
++					d, du, r, ru, i, iu);
++			d = auto_space_units(sd, &du);
++			r = auto_space_units(sr, &ru);
++			i = auto_units(si, &iu);
++			fprintf(stdout,
++_("%.1f%s data found; %.1f%s realtime data found; %.2f%s inodes found.\n"),
++					d, du, r, ru, i, iu);
++		} else {
++			d = auto_space_units(fd, &du);
++			i = auto_units(fi, &iu);
++			fprintf(stdout,
++_("%.1f%s data used;  %.1f%s inodes used.\n"),
++					d, du, i, iu);
++			d = auto_space_units(sd, &du);
++			i = auto_units(si, &iu);
++			fprintf(stdout,
++_("%.1f%s data found; %.1f%s inodes found.\n"),
++					d, du, i, iu);
++		}
++		fflush(stdout);
++	}
++	moveon = true;
++
++out:
++	free(summary);
++	return moveon;
++}
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index 97bd795..647e050 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -448,6 +448,7 @@ run_scrub_phases(
+ 		},
+ 		{
+ 			.descr = _("Check summary counters."),
++			.fn = xfs_scan_summary,
+ 		},
+ 		{
+ 			NULL
+@@ -517,9 +518,6 @@ main(
+ 	int			ret;
  	int			error;
  
-@@ -117,13 +230,34 @@ disk_open(
- 		error = ioctl(disk->d_fd, BLKBSZGET, &disk->d_blksize);
- 		if (error)
- 			disk->d_blksize = 0;
--		disk->d_start = 0;
-+#ifdef HAVE_HDIO_GETGEO
-+		error = ioctl(disk->d_fd, HDIO_GETGEO, &bdgeo);
-+		if (!error) {
-+			/*
-+			 * dm devices will pass through ioctls, which means
-+			 * we can't use SCSI VERIFY unless the start is 0.
-+			 * Most dm devices don't set geometry (unlike scsi
-+			 * and nvme) so use a zeroed out CHS to screen them
-+			 * out.
-+			 */
-+			if (bdgeo.start != 0 &&
-+			    (unsigned long long)bdgeo.heads * bdgeo.sectors *
-+					bdgeo.sectors == 0)
-+				suspicious_disk = true;
-+			disk->d_start = bdgeo.start << BBSHIFT;
-+		} else
-+#endif
-+			disk->d_start = 0;
- 	} else {
- 		disk->d_size = disk->d_sb.st_size;
- 		disk->d_blksize = disk->d_sb.st_blksize;
- 		disk->d_start = 0;
- 	}
- 
-+	/* Can we issue SCSI VERIFY? */
-+	if (!suspicious_disk && disk_can_scsi_verify(disk))
-+		disk->d_flags |= DISK_FLAG_SCSI_VERIFY;
-+
- 	return 0;
+-	fprintf(stderr, "XXX: This program is not complete!\n");
+-	return 4;
+-
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+ 	bindtextdomain(PACKAGE, LOCALEDIR);
+diff --git a/scrub/xfs.c b/scrub/xfs.c
+index 36a5ba1..4db0267 100644
+--- a/scrub/xfs.c
++++ b/scrub/xfs.c
+@@ -91,7 +91,7 @@ xfs_scan_all_inodes_array_size(
  }
  
-@@ -148,6 +282,10 @@ disk_is_open(
- 	return disk->d_fd >= 0;
- }
+ /* Scan all the inodes in a filesystem. */
+-static bool
++bool
+ xfs_scan_all_inodes_array_arg(
+ 	struct scrub_ctx	*ctx,
+ 	xfs_inode_iter_fn	fn,
+@@ -270,3 +270,64 @@ xfs_scan_all_blocks_array_arg(
  
-+#define BTOLBAT(d, bytes)	((uint64_t)(bytes) >> (d)->d_lbalog)
-+#define LBASIZE(d)		(1ULL << (d)->d_lbalog)
-+#define BTOLBA(d, bytes)	(((uint64_t)(bytes) + LBASIZE(d) - 1) >> (d)->d_lbalog)
-+
- /* Read-verify an extent of a disk device. */
- ssize_t
- disk_read_verify(
-@@ -156,5 +294,10 @@ disk_read_verify(
- 	uint64_t		start,
- 	uint64_t		length)
- {
-+	/* Convert to logical block size. */
-+	if (disk->d_flags & DISK_FLAG_SCSI_VERIFY)
-+		return disk_scsi_verify(disk, BTOLBAT(disk, start),
-+				BTOLBA(disk, length));
-+
- 	return pread(disk->d_fd, buf, length, start);
+ 	return sbx.moveon;
  }
-diff --git a/scrub/disk.h b/scrub/disk.h
-index 797fd71..34eb0a0 100644
---- a/scrub/disk.h
-+++ b/scrub/disk.h
-@@ -20,6 +20,7 @@
- #ifndef XFS_SCRUB_DISK_H_
- #define XFS_SCRUB_DISK_H_
++
++/* Estimate the number of blocks and inodes in the filesystem. */
++bool
++xfs_scan_estimate_blocks(
++	struct scrub_ctx		*ctx,
++	unsigned long long		*d_blocks,
++	unsigned long long		*d_bfree,
++	unsigned long long		*r_blocks,
++	unsigned long long		*r_bfree,
++	unsigned long long		*f_files,
++	unsigned long long		*f_free)
++{
++	struct xfs_fsop_counts		fc;
++	struct xfs_fsop_resblks		rb;
++	struct xfs_fsop_ag_resblks	arb;
++	struct statvfs			sfs;
++	int				error;
++
++	/* Grab the fstatvfs counters, since it has to report accurately. */
++	error = fstatvfs(ctx->mnt_fd, &sfs);
++	if (error) {
++		str_errno(ctx, ctx->mntpoint);
++		return false;
++	}
++
++	/* Fetch the filesystem counters. */
++	error = ioctl(ctx->mnt_fd, XFS_IOC_FSCOUNTS, &fc);
++	if (error) {
++		str_errno(ctx, ctx->mntpoint);
++		return false;
++	}
++
++	/*
++	 * XFS reserves some blocks to prevent hard ENOSPC, so add those
++	 * blocks back to the free data counts.
++	 */
++	error = ioctl(ctx->mnt_fd, XFS_IOC_GET_RESBLKS, &rb);
++	if (error)
++		str_errno(ctx, ctx->mntpoint);
++	sfs.f_bfree += rb.resblks_avail;
++
++	/*
++	 * XFS with rmap or reflink reserves blocks in each AG to
++	 * prevent the AG from running out of space for metadata blocks.
++	 * Add those back to the free data counts.
++	 */
++	memset(&arb, 0, sizeof(arb));
++	error = ioctl(ctx->mnt_fd, XFS_IOC_GET_AG_RESBLKS, &arb);
++	if (error && errno != ENOTTY)
++		str_errno(ctx, ctx->mntpoint);
++	sfs.f_bfree += arb.ar_current_resv;
++
++	*d_blocks = ctx->geo.datablocks;
++	*d_bfree = sfs.f_bfree;
++	*r_blocks = ctx->geo.rtblocks;
++	*r_bfree = fc.freertx;
++	*f_files = sfs.f_files;
++	*f_free = sfs.f_ffree;
++
++	return true;
++}
+diff --git a/scrub/xfs.h b/scrub/xfs.h
+index 7d087db..996f791 100644
+--- a/scrub/xfs.h
++++ b/scrub/xfs.h
+@@ -24,9 +24,15 @@ void xfs_shutdown_fs(struct scrub_ctx *ctx);
+ bool xfs_scan_all_inodes(struct scrub_ctx *ctx, xfs_inode_iter_fn fn);
+ bool xfs_scan_all_inodes_arg(struct scrub_ctx *ctx, xfs_inode_iter_fn fn,
+ 		void *arg);
++bool xfs_scan_all_inodes_array_arg(struct scrub_ctx *ctx, xfs_inode_iter_fn fn,
++		void *arg, size_t array_arg_size);
+ size_t xfs_scan_all_blocks_array_size(struct scrub_ctx *ctx);
+ bool xfs_scan_all_blocks_array_arg(struct scrub_ctx *ctx, xfs_fsmap_iter_fn fn,
+ 		void *arg, size_t array_arg_size);
++bool xfs_scan_estimate_blocks(struct scrub_ctx *ctx,
++		unsigned long long *d_blocks, unsigned long long *d_bfree,
++		unsigned long long *r_blocks, unsigned long long *r_bfree,
++		unsigned long long *f_files, unsigned long long *f_free);
  
-+#define DISK_FLAG_SCSI_VERIFY	0x1
- struct disk {
- 	struct stat	d_sb;
- 	int		d_fd;
+ /* Phase-specific functions. */
+ bool xfs_cleanup(struct scrub_ctx *ctx);
+@@ -35,5 +41,6 @@ bool xfs_scan_metadata(struct scrub_ctx *ctx);
+ bool xfs_scan_inodes(struct scrub_ctx *ctx);
+ bool xfs_scan_connections(struct scrub_ctx *ctx);
+ bool xfs_scan_blocks(struct scrub_ctx *ctx);
++bool xfs_scan_summary(struct scrub_ctx *ctx);
+ 
+ #endif /* XFS_SCRUB_XFS_H_ */
 
