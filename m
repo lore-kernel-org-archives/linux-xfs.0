@@ -1,92 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f181.google.com ([209.85.217.181]:36379 "EHLO
-        mail-ua0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751260AbdHDUre (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 16:47:34 -0400
-Received: by mail-ua0-f181.google.com with SMTP id k43so11997279uaf.3
-        for <linux-xfs@vger.kernel.org>; Fri, 04 Aug 2017 13:47:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170804201412.GE24087@magnolia>
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:17140 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752614AbdHDXbo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 19:31:44 -0400
+Date: Sat, 5 Aug 2017 09:31:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 2/5] fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
+Message-ID: <20170804233140.GF21024@dastard>
 References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150181371519.32119.2762945986660101008.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170804201412.GE24087@magnolia>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 4 Aug 2017 13:47:32 -0700
-Message-ID: <CAPcyv4himTRCu9t2zyyxHEDRKmNQ=h7z9aNxqdfEuxSM=A4bhg@mail.gmail.com>
-Subject: Re: [PATCH v2 5/5] xfs: toggle XFS_DIFLAG2_IOMAP_IMMUTABLE in
- response to fallocate
-Content-Type: text/plain; charset="UTF-8"
+ <150181369754.32119.7390149918955188408.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150181369754.32119.7390149918955188408.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: darrick.wong@oracle.com, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-On Fri, Aug 4, 2017 at 1:14 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> On Thu, Aug 03, 2017 at 07:28:35PM -0700, Dan Williams wrote:
->> After validating the state of the file as not having holes, shared
->> extents, or active mappings try to commit the
->> XFS_DIFLAG2_IOMAP_IMMUTABLE flag to the on-disk inode metadata. If that
->> succeeds then allow the S_IOMAP_IMMUTABLE to be set on the vfs inode.
->>
->> Cc: Jan Kara <jack@suse.cz>
->> Cc: Jeff Moyer <jmoyer@redhat.com>
->> Cc: Christoph Hellwig <hch@lst.de>
->> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
->> Suggested-by: Dave Chinner <david@fromorbit.com>
->> Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->> ---
->>  fs/xfs/xfs_bmap_util.c |   32 ++++++++++++++++++++++++++++++++
->>  1 file changed, 32 insertions(+)
->>
->> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
->> index 70ac2d33ab27..8464c25a2403 100644
->> --- a/fs/xfs/xfs_bmap_util.c
->> +++ b/fs/xfs/xfs_bmap_util.c
->> @@ -1436,9 +1436,11 @@ xfs_seal_file_space(
->>       xfs_off_t               offset,
->>       xfs_off_t               len)
->>  {
->> +     struct xfs_mount        *mp = ip->i_mount;
->>       struct inode            *inode = VFS_I(ip);
->>       struct address_space    *mapping = inode->i_mapping;
->>       int                     error;
->> +     struct xfs_trans        *tp;
->>
->>       ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
->>
->> @@ -1454,6 +1456,10 @@ xfs_seal_file_space(
->>       if (error)
->>               return error;
->>
->> +     error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
->> +     if (error)
->> +             return error;
->> +
->>       xfs_ilock(ip, XFS_ILOCK_EXCL);
->>       /*
->>        * Either the size changed after we performed allocation /
->> @@ -1486,10 +1492,20 @@ xfs_seal_file_space(
->>       if (error < 0)
->>               goto out_unlock;
->>
->> +     xfs_trans_ijoin(tp, ip, 0);
->
-> FWIW if you change that third parameter to XFS_ILOCK_EXCL then
-> xfs_trans_commit will do the xfs_iunlock(ip, XFS_ILOCK_EXCL) for you if
-> the commit succeeds...
->
->> +     ip->i_d.di_flags2 |= XFS_DIFLAG2_IOMAP_IMMUTABLE;
->> +     xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->> +     error = xfs_trans_commit(tp);
->> +     tp = NULL; /* nothing to cancel */
->> +     if (error)
->> +             goto out_unlock;
->> +
->>       inode->i_flags |= S_IOMAP_IMMUTABLE;
->
-> ...and then you can just return out here.
+On Thu, Aug 03, 2017 at 07:28:17PM -0700, Dan Williams wrote:
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index fe0f8f7f4bb7..46d8eb9e19fc 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1393,6 +1393,107 @@ xfs_zero_file_space(
+>  
+>  }
+>  
+> +/* Return 1 if hole detected, 0 if not, and < 0 if fail to determine */
+> +STATIC int
+> +xfs_file_has_holes(
+> +	struct xfs_inode	*ip)
+> +{
 
-Do we not need to hold XFS_ILOCK_EXCL over ->i_flags changes, or is
-XFS_IOLOCK_EXCL enough?
+Why do we need this function?
+
+We've just run xfs_alloc_file_space() across the entire range we
+are sealing, so we've already guaranteed that it won't have holes
+in it.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
