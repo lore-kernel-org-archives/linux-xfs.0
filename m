@@ -1,74 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54586 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46944 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751927AbdHIMgv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Aug 2017 08:36:51 -0400
-Date: Wed, 9 Aug 2017 08:36:49 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/3] xfs: don't leak linked inodes during log recovery
-Message-ID: <20170809123647.GB62448@bfoster.bfoster>
-References: <20170809010444.GR24087@magnolia>
- <20170809010650.GF4474@magnolia>
+        id S1751231AbdHDCWC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Aug 2017 22:22:02 -0400
+Date: Fri, 4 Aug 2017 10:22:00 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 4/5] common/populate: enable xfs quota accounting
+Message-ID: <20170804022200.GC1991@eguan.usersys.redhat.com>
+References: <150067465981.30639.14801416171688538711.stgit@magnolia>
+ <150067469221.30639.16711306489951233808.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170809010650.GF4474@magnolia>
+In-Reply-To: <150067469221.30639.16711306489951233808.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Tue, Aug 08, 2017 at 06:06:50PM -0700, Darrick J. Wong wrote:
-> When we introduced the bmap redo log items, we set MS_ACTIVE on the
-> mountpoint and XFS_IRECOVERY on the inode to prevent unlinked inodes
-> from being truncated prematurely during log recovery.  However, we
-> neglected to drop linked inodes that are recovered, and if we don't use
-> the inode between recovery and unmount, the inode will never be marked
-> reclaimable and thus we fail to free it at umount time.  If we're in
-> log recovery but IRECOVERY is /not/ set, the inode is linked and can be
-> reclaimed.
+On Fri, Jul 21, 2017 at 03:04:52PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-
-I follow the change in behavior in the previous commit and how this
-restores the original behavior for linked inodes, so this patch makes
-sense from that perspective. I'm not following where/how the leak occurs
-from the description, however. Wouldn't the inode end up on the lru to
-be shrunk/evicted/reclaimed at a later point? What happens if the inode
-is subsequently used that prevents the leak? (Whatever I'm missing, it
-would be nice to elaborate on in the commit log.)
-
-Also, if there is a memory leak vector for !drop linked inodes here,
-does that not apply to XFS_IRECOVERY inodes if log recovery itself
-happens to fail between bui recovery and iunlink processing?
-
-Brian
-
-> Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
+> When we're creating a populated xfs image, turn on quotas so that we can
+> fuzz those fields too.
+> 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_super.c |    7 +++++++
->  1 file changed, 7 insertions(+)
+>  common/populate |   50 +++++++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 49 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 38aaacd..9b06ca2 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1040,6 +1040,13 @@ xfs_fs_drop_inode(
->  	if (ip->i_flags & XFS_IRECOVERY) {
->  		ASSERT(ip->i_mount->m_log->l_flags & XLOG_RECOVERY_NEEDED);
->  		return 0;
-> +	} else if (ip->i_mount->m_log->l_flags & XLOG_RECOVERY_NEEDED) {
-> +		/*
-> +		 * This inode was loaded during recovery but is not
-> +		 * being unlinked, so we can free it without fear of
-> +		 * premature truncation.
-> +		 */
-> +		return 1;
->  	}
+> 
+> diff --git a/common/populate b/common/populate
+> index 498151f..b77c508 100644
+> --- a/common/populate
+> +++ b/common/populate
+> @@ -21,6 +21,7 @@
+>  #  Contact information: Silicon Graphics, Inc., 1500 Crittenden Lane,
+>  #  Mountain View, CA 94043, USA, or: http://www.sgi.com
+>  #-----------------------------------------------------------------------
+> +. ./common/quota
 >  
->  	return generic_drop_inode(inode) || (ip->i_flags & XFS_IDONTCACHE);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  _require_populate_commands() {
+>  	_require_xfs_io_command "falloc"
+> @@ -94,6 +95,47 @@ __populate_fill_fs() {
+>  	done
+>  }
+>  
+> +# For XFS, force on all the quota options if quota is enabled
+> +# and the user didn't feed us noquota.
+> +_populate_xfs_qmount_option()
+> +{
+> +	# User explicitly told us not to quota
+> +	if echo "${MOUNT_OPTIONS}" | grep -q 'noquota'; then
+> +		return
+> +	fi
+> +
+> +	# Don't bother if we can't turn on quotas
+> +	if [ ! -f /proc/fs/xfs/xqmstat ]; then
+> +		# No quota support
+> +		return
+> +	elif [ "${USE_EXTERNAL}" = "yes" ] && [ ! -z "${SCRATCH_RTDEV}" ]; then
+> +		# Quotas not supported on rt filesystems
+> +		return
+> +	elif [ -z "${XFS_QUOTA_PROG}" ]; then
+> +		# xfs quota tools not installed
+> +		return
+> +	fi
+> +
+> +	# Turn on all the quotas
+> +	if xfs_info "${TEST_DIR}" | grep -q 'crc=1'; then
+> +		# v5 filesystems can have group & project quotas
+> +		quota="usrquota,grpquota,prjquota"
+> +	else
+> +		# v4 filesystems cannot mix group & project quotas
+> +		quota="usrquota,grpquota"
+> +	fi
+> +
+> +	# Inject our quota mount options
+> +	if echo "${MOUNT_OPTIONS}" | grep -q "${quota}"; then
+> +		return
+> +	elif echo "${MOUNT_OPTIONS}" | egrep -q '(quota|noenforce)'; then
+> +		_qmount_option "${quota}"
+> +	else
+> +		export MOUNT_OPTIONS="$MOUNT_OPTIONS -o ${quota}"
+> +		echo "MOUNT_OPTIONS = $MOUNT_OPTIONS" >>$seqres.full
+> +	fi
+> +}
+> +
+>  # Populate an XFS on the scratch device with (we hope) all known
+>  # types of metadata block
+>  _scratch_xfs_populate() {
+> @@ -106,6 +148,7 @@ _scratch_xfs_populate() {
+>  		esac
+>  	done
+>  
+> +	_populate_xfs_qmount_option
+
+Sorry, another question just poped up..
+
+This enables quota and modifies MOUNT_OPTIONS unconditionally and
+implicitly, I suspect users of _scratch_populate_cached() or
+_scratch_xfs_populate() may be bitten by this implicit change.
+
+Would it be better if there's a argument to control this quota
+enablement and default to disable quota? Just like the "nofill"
+argument, introduce a new "quota" argument? So existing callers of
+_scratch_populate_cached() are not affected by this change, and tests
+want quota can enable it explicitly.
+
+Thanks,
+Eryu
+
+>  	_scratch_mount
+>  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+>  	dblksz="$(xfs_info "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
+> @@ -720,7 +763,12 @@ _scratch_populate_cached() {
+>  		test -n "${SCRATCH_LOGDEV}" && rm -f "${POPULATE_METADUMP}"
+>  		;;
+>  	"xfs")
+> -		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}";;
+> +		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}"
+> +		_populate_xfs_qmount_option
+> +		if echo "${MOUNT_OPTIONS}" | grep -q 'usrquota'; then
+> +			extra_descr="${extra_descr} QUOTAS"
+> +		fi
+> +		;;
+>  	*)
+>  		extra_descr="";;
+>  	esac
+> 
