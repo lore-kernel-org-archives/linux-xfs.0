@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:33531 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751877AbdHDAIA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 20:08:00 -0400
-Subject: [PATCH 03/22] xfs_scrub: set up command line argument parsing
+Received: from aserp1040.oracle.com ([141.146.126.69]:25473 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751877AbdHDAIz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 20:08:55 -0400
+Subject: [PATCH 12/22] xfs_scrub: create infrastructure to read verify data
+ blocks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 03 Aug 2017 17:07:55 -0700
-Message-ID: <150180527516.18784.14401549617845990192.stgit@magnolia>
+Date: Thu, 03 Aug 2017 17:08:49 -0700
+Message-ID: <150180532980.18784.10263073309779099054.stgit@magnolia>
 In-Reply-To: <150180525692.18784.13730590233404009267.stgit@magnolia>
 References: <150180525692.18784.13730590233404009267.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,307 +21,503 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Parse command line options in order to set up the context in which we
-will scrub the filesystem.
+Manage the scheduling, issuance, and reporting of data block
+verification reads.  This enables us to combine adjacent (or nearly
+adjacent) read requests, and to take advantage of high-IOPS devices by
+issuing IO from multiple threads.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/common.h |    8 ++
- scrub/scrub.c  |  206 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/scrub.h  |   31 ++++++++
- 3 files changed, 245 insertions(+)
+ scrub/Makefile      |    2 
+ scrub/phase1.c      |    1 
+ scrub/phase2.c      |    1 
+ scrub/phase3.c      |    1 
+ scrub/phase5.c      |    1 
+ scrub/read_verify.c |  224 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/read_verify.h |   58 +++++++++++++
+ scrub/scrub.c       |   25 ++++++
+ scrub/scrub.h       |   13 +++
+ 9 files changed, 326 insertions(+)
+ create mode 100644 scrub/read_verify.c
+ create mode 100644 scrub/read_verify.h
 
 
-diff --git a/scrub/common.h b/scrub/common.h
-index b7c5f47..b601680 100644
---- a/scrub/common.h
-+++ b/scrub/common.h
-@@ -48,4 +48,12 @@ void __record_preen(struct scrub_ctx *ctx, const char *descr, const char *file,
- #define str_info(ctx, str, ...)		__str_info(ctx, str, __FILE__, __LINE__, __VA_ARGS__)
- #define dbg_printf(fmt, ...)		{if (debug > 1) {printf(fmt, __VA_ARGS__);}}
+diff --git a/scrub/Makefile b/scrub/Makefile
+index b1cd393..5df3e95 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -23,6 +23,7 @@ common.h \
+ counter.h \
+ disk.h \
+ ioctl.h \
++read_verify.h \
+ scrub.h \
+ xfs.h
  
-+/* Is this debug tweak enabled? */
-+static inline bool
-+debug_tweak_on(
-+	const char		*name)
-+{
-+	return debug && getenv(name) != NULL;
-+}
-+
- #endif /* XFS_SCRUB_COMMON_H_ */
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index bac1e8c..2b620bf 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -33,6 +33,9 @@
+@@ -38,6 +39,7 @@ phase1.c \
+ phase2.c \
+ phase3.c \
+ phase5.c \
++read_verify.c \
+ scrub.c \
+ xfs.c
+ 
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index 6c3aab4..66f4aa3 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -25,6 +25,7 @@
+ #include "../repair/threads.h"
+ #include "handle.h"
  #include "path.h"
++#include "bitmap.h"
  #include "scrub.h"
  #include "common.h"
-+#include "input.h"
+ #include "ioctl.h"
+diff --git a/scrub/phase2.c b/scrub/phase2.c
+index b8b44ac..88136a3 100644
+--- a/scrub/phase2.c
++++ b/scrub/phase2.c
+@@ -25,6 +25,7 @@
+ #include "../repair/threads.h"
+ #include "handle.h"
+ #include "path.h"
++#include "bitmap.h"
+ #include "scrub.h"
+ #include "common.h"
+ #include "ioctl.h"
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+index cdd8a7c..b920995 100644
+--- a/scrub/phase3.c
++++ b/scrub/phase3.c
+@@ -25,6 +25,7 @@
+ #include "../repair/threads.h"
+ #include "handle.h"
+ #include "path.h"
++#include "bitmap.h"
+ #include "scrub.h"
+ #include "common.h"
+ #include "ioctl.h"
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index 7ea8b58..e5a5835 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -25,6 +25,7 @@
+ #include "../repair/threads.h"
+ #include "handle.h"
+ #include "path.h"
++#include "bitmap.h"
+ #include "scrub.h"
+ #include "common.h"
+ #include "ioctl.h"
+diff --git a/scrub/read_verify.c b/scrub/read_verify.c
+new file mode 100644
+index 0000000..18ba73a
+--- /dev/null
++++ b/scrub/read_verify.c
+@@ -0,0 +1,224 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "libxfs.h"
++#include <sys/statvfs.h>
++#include <sys/types.h>
++#include <dirent.h>
++#include "disk.h"
++#include "../repair/threads.h"
++#include "path.h"
++#include "disk.h"
++#include "read_verify.h"
++#include "scrub.h"
++#include "common.h"
++#include "counter.h"
 +
-+#define _PATH_PROC_MOUNTS	"/proc/mounts"
- 
- /*
-  * XFS Online Metadata Scrub (and Repair)
-@@ -119,11 +122,214 @@ unsigned int			debug;
- /* Should we dump core if errors happen? */
- bool				dumpcore;
- 
-+/* Display resource usage at the end of each phase? */
-+bool				display_rusage;
++/*
++ * Read Verify Pool
++ *
++ * Manages the data block read verification phase.  The caller schedules
++ * verification requests, which are then scheduled to be run by a thread
++ * pool worker.  Adjacent (or nearly adjacent) requests can be combined
++ * to reduce overhead when free space fragmentation is high.  The thread
++ * pool takes care of issuing multiple IOs to the device, if possible.
++ */
 +
-+/* Background mode; higher values insert more pauses between scrub calls. */
-+unsigned int			bg_mode;
++/* How many bytes have we verified? */
++static struct ptcounter		*verified_bytes;
 +
-+/* Maximum number of processors available to us. */
-+int				nproc;
++/* Tolerate 64k holes in adjacent read verify requests. */
++#define IO_BATCH_LOCALITY	(65536)
 +
-+/* Number of threads we're allowed to use. */
-+unsigned int			nr_threads;
-+
-+/* Verbosity; higher values print more information. */
-+bool				verbose;
-+
-+/* Should we scrub the data blocks? */
-+bool				scrub_data;
-+
-+/* Size of a memory page. */
-+long				page_size;
-+
-+static void __attribute__((noreturn))
-+usage(void)
++/* Create a thread pool to run read verifiers. */
++bool
++read_verify_pool_init(
++	struct read_verify_pool		**rvpp,
++	struct scrub_ctx		*ctx,
++	void				*readbuf,
++	size_t				readbufsz,
++	size_t				miniosz,
++	read_verify_ioerr_fn_t		ioerr_fn,
++	unsigned int			nproc)
 +{
-+	fprintf(stderr, _("Usage: %s [OPTIONS] mountpoint\n"), progname);
-+	fprintf(stderr, _("-a:\tStop after this many errors are found.\n"));
-+	fprintf(stderr, _("-b:\tBackground mode.\n"));
-+	fprintf(stderr, _("-e:\tWhat to do if errors are found.\n"));
-+	fprintf(stderr, _("-m:\tPath to /etc/mtab.\n"));
-+	fprintf(stderr, _("-n:\tDry run.  Do not modify anything.\n"));
-+	fprintf(stderr, _("-T:\tDisplay timing/usage information.\n"));
-+	fprintf(stderr, _("-v:\tVerbose output.\n"));
-+	fprintf(stderr, _("-V:\tPrint version.\n"));
-+	fprintf(stderr, _("-x:\tScrub file data too.\n"));
-+	fprintf(stderr, _("-y:\tRepair all errors.\n"));
++	struct read_verify_pool		*rvp;
 +
-+	exit(16);
++	rvp = calloc(sizeof(struct read_verify_pool), 1);
++	if (!rvp)
++		return false;
++	verified_bytes = ptcounter_init(nproc);
++	if (!verified_bytes) {
++		free(rvp);
++		return false;
++	}
++	rvp->rvp_readbuf = readbuf;
++	rvp->rvp_readbufsz = readbufsz;
++	rvp->rvp_miniosz = miniosz;
++	rvp->rvp_ctx = ctx;
++	rvp->rvp_ioerr_fn = ioerr_fn;
++	rvp->rvp_nproc = nproc;
++	create_work_queue(&rvp->rvp_wq, (struct xfs_mount *)rvp, nproc);
++	*rvpp = rvp;
++	return true;
 +}
 +
- int
- main(
- 	int			argc,
- 	char			**argv)
- {
-+	int			c;
-+	char			*mtab = NULL;
-+	struct scrub_ctx	ctx = {0};
-+	unsigned long long	total_errors;
-+	bool			moveon = true;
-+	static bool		injected;
-+	int			ret;
++/* Finish up any read verification work and tear it down. */
++void
++read_verify_pool_destroy(
++	struct read_verify_pool		**rvpp)
++{
++	struct read_verify_pool		*rvp = *rvpp;
 +
- 	fprintf(stderr, "XXX: This program is not complete!\n");
- 	return 4;
++	destroy_work_queue(&rvp->rvp_wq);
++	ptcounter_free(verified_bytes);
++	verified_bytes = NULL;
++	*rvpp = NULL;
++}
 +
-+	progname = basename(argv[0]);
-+	setlocale(LC_ALL, "");
-+	bindtextdomain(PACKAGE, LOCALEDIR);
-+	textdomain(PACKAGE);
++/*
++ * Issue a read-verify IO in big batches.
++ */
++static void
++read_verify(
++	struct work_queue		*wq,
++	xfs_agnumber_t			agno,
++	void				*arg)
++{
++	struct read_verify		*rv = arg;
++	struct read_verify_pool		*rvp;
++	unsigned long long		verified = 0;
++	ssize_t				sz;
++	ssize_t				len;
 +
-+	pthread_mutex_init(&ctx.lock, NULL);
-+	ctx.mode = SCRUB_MODE_DEFAULT;
-+	ctx.error_action = ERRORS_CONTINUE;
-+	while ((c = getopt(argc, argv, "a:bde:m:nTvxVy")) != EOF) {
-+		switch (c) {
-+		case 'a':
-+			ctx.max_errors = cvt_u64(optarg, 10);
-+			if (errno) {
-+				perror(optarg);
-+				usage();
-+			}
-+			break;
-+		case 'b':
-+			nr_threads = 1;
-+			bg_mode++;
-+			break;
-+		case 'd':
-+			debug++;
-+			dumpcore = true;
-+			break;
-+		case 'e':
-+			if (!strcmp("continue", optarg))
-+				ctx.error_action = ERRORS_CONTINUE;
-+			else if (!strcmp("shutdown", optarg))
-+				ctx.error_action = ERRORS_SHUTDOWN;
-+			else
-+				usage();
-+			break;
-+		case 'm':
-+			mtab = optarg;
-+			break;
-+		case 'n':
-+			if (ctx.mode != SCRUB_MODE_DEFAULT) {
-+				fprintf(stderr,
-+_("Only one of the options -n or -y may be specified.\n"));
-+				return 1;
-+			}
-+			ctx.mode = SCRUB_MODE_DRY_RUN;
-+			break;
-+		case 'T':
-+			display_rusage = true;
-+			break;
-+		case 'v':
-+			verbose = true;
-+			break;
-+		case 'V':
-+			fprintf(stdout, _("%s version %s\n"), progname,
-+					VERSION);
-+			fflush(stdout);
-+			exit(0);
-+		case 'x':
-+			scrub_data = true;
-+			break;
-+		case 'y':
-+			if (ctx.mode != SCRUB_MODE_DEFAULT) {
-+				fprintf(stderr,
-+_("Only one of the options -n or -y may be specified.\n"));
-+				return 1;
-+			}
-+			ctx.mode = SCRUB_MODE_REPAIR;
-+			break;
-+		case '?':
-+			/* fall through */
-+		default:
-+			usage();
++	rvp = (struct read_verify_pool *)wq->mp;
++	while (rv->io_length > 0) {
++		len = min(rv->io_length, rvp->rvp_readbufsz);
++		dbg_printf("diskverify %d %"PRIu64" %zu\n", rv->io_disk->d_fd,
++				rv->io_start, len);
++		sz = disk_read_verify(rv->io_disk, rvp->rvp_readbuf,
++				rv->io_start, len);
++		if (sz < 0) {
++			dbg_printf("IOERR %d %"PRIu64" %zu\n",
++					rv->io_disk->d_fd,
++					rv->io_start, len);
++			/* IO error, so try the next logical block. */
++			len = rvp->rvp_miniosz;
++			rvp->rvp_ioerr_fn(rvp, rv->io_disk, rv->io_start, len,
++					errno, rv->io_end_arg);
 +		}
++
++		verified += len;
++		rv->io_start += len;
++		rv->io_length -= len;
 +	}
 +
-+	/* Override thread count if debugger */
-+	if (debug_tweak_on("XFS_SCRUB_THREADS")) {
-+		unsigned int	x;
++	free(rv);
++	ptcounter_add(verified_bytes, verified);
++}
 +
-+		x = cvt_u32(getenv("XFS_SCRUB_THREADS"), 10);
-+		if (errno) {
-+			perror("nr_threads");
-+			usage();
-+		}
-+		nr_threads = x;
++/* Queue a read verify request. */
++static void
++read_verify_queue(
++	struct read_verify_pool		*rvp,
++	struct read_verify		*rv)
++{
++	struct read_verify		*tmp;
++
++	dbg_printf("verify fd %d start %"PRIu64" len %"PRIu64"\n",
++			rv->io_disk->d_fd, rv->io_start, rv->io_length);
++
++	tmp = malloc(sizeof(struct read_verify));
++	if (!tmp) {
++		rvp->rvp_ioerr_fn(rvp, rv->io_disk, rv->io_start, rv->io_length,
++				errno, rv->io_end_arg);
++		return;
 +	}
++	*tmp = *rv;
 +
-+	if (optind != argc - 1)
-+		usage();
++	queue_work(&rvp->rvp_wq, read_verify, 0, tmp);
++}
 +
-+	ctx.mntpoint = argv[optind];
++/*
++ * Issue an IO request.  We'll batch subsequent requests if they're
++ * within 64k of each other
++ */
++void
++read_verify_schedule(
++	struct read_verify_pool		*rvp,
++	struct read_verify		*rv,
++	struct disk			*disk,
++	uint64_t			start,
++	uint64_t			length,
++	void				*end_arg)
++{
++	uint64_t			req_end;
++	uint64_t			rv_end;
++
++	assert(rvp->rvp_readbuf);
++	req_end = start + length;
++	rv_end = rv->io_start + rv->io_length;
 +
 +	/*
-+	 * If the user did not specify an explicit mount table, try to use
-+	 * /proc/mounts if it is available, else /etc/mtab.  We prefer
-+	 * /proc/mounts because it is kernel controlled, while /etc/mtab
-+	 * may contain garbage that userspace tools like pam_mounts wrote
-+	 * into it.
++	 * If we have a stashed IO, we haven't changed fds, the error
++	 * reporting is the same, and the two extents are close,
++	 * we can combine them.
 +	 */
-+	if (!mtab) {
-+		if (access(_PATH_PROC_MOUNTS, R_OK) == 0)
-+			mtab = _PATH_PROC_MOUNTS;
-+		else
-+			mtab = _PATH_MOUNTED;
++	if (rv->io_length > 0 && disk == rv->io_disk &&
++	    end_arg == rv->io_end_arg &&
++	    ((start >= rv->io_start && start <= rv_end + IO_BATCH_LOCALITY) ||
++	     (rv->io_start >= start &&
++	      rv->io_start <= req_end + IO_BATCH_LOCALITY))) {
++		rv->io_start = min(rv->io_start, start);
++		rv->io_length = max(req_end, rv_end) - rv->io_start;
++	} else  {
++		/* Otherwise, issue the stashed IO (if there is one) */
++		if (rv->io_length > 0)
++			read_verify_queue(rvp, rv);
++
++		/* Stash the new IO. */
++		rv->io_disk = disk;
++		rv->io_start = start;
++		rv->io_length = length;
++		rv->io_end_arg = end_arg;
 +	}
++}
 +
-+	/* How many CPUs? */
-+	nproc = sysconf(_SC_NPROCESSORS_ONLN);
-+	if (nproc < 0)
-+		nproc = 1;
++/* Force any stashed IOs into the verifier. */
++void
++read_verify_force(
++	struct read_verify_pool		*rvp,
++	struct read_verify		*rv)
++{
++	assert(rvp->rvp_readbuf);
++	if (rv->io_length == 0)
++		return;
 +
-+	/* Set up a page-aligned buffer for read verification. */
-+	page_size = sysconf(_SC_PAGESIZE);
-+	if (page_size < 0) {
++	read_verify_queue(rvp, rv);
++	rv->io_length = 0;
++}
++
++/* How many bytes has this process verified? */
++unsigned long long
++read_verify_bytes(void)
++{
++	if (!verified_bytes)
++		return 0;
++	return ptcounter_value(verified_bytes);
++}
++
+diff --git a/scrub/read_verify.h b/scrub/read_verify.h
+new file mode 100644
+index 0000000..59cddd7
+--- /dev/null
++++ b/scrub/read_verify.h
+@@ -0,0 +1,58 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef XFS_SCRUB_READ_VERIFY_H_
++#define XFS_SCRUB_READ_VERIFY_H_
++
++struct read_verify_pool;
++
++/* Function called when an IO error happens. */
++typedef void (*read_verify_ioerr_fn_t)(struct read_verify_pool *rvp,
++		struct disk *disk, uint64_t start, uint64_t length,
++		int error, void *arg);
++
++struct read_verify_pool {
++	struct work_queue	rvp_wq;		/* thread pool */
++	struct scrub_ctx	*rvp_ctx;	/* scrub context */
++	void			*rvp_readbuf;	/* read buffer */
++	read_verify_ioerr_fn_t	rvp_ioerr_fn;	/* io error callback */
++	size_t			rvp_miniosz;	/* minimum io size, bytes */
++	size_t			rvp_readbufsz;	/* read buffer size, bytes */
++	int			rvp_nproc;	/* number of threads */
++};
++
++bool read_verify_pool_init(struct read_verify_pool **rvpp, struct scrub_ctx *ctx,
++		void *readbuf, size_t readbufsz, size_t miniosz,
++		read_verify_ioerr_fn_t ioerr_fn, unsigned int nproc);
++void read_verify_pool_destroy(struct read_verify_pool **rvpp);
++
++struct read_verify {
++	void			*io_end_arg;
++	struct disk		*io_disk;
++	uint64_t		io_start;	/* bytes */
++	uint64_t		io_length;	/* bytes */
++};
++
++void read_verify_schedule(struct read_verify_pool *rvp, struct read_verify *rv,
++		struct disk *disk, uint64_t start, uint64_t length,
++		void *end_arg);
++void read_verify_force(struct read_verify_pool *rvp, struct read_verify *rv);
++unsigned long long read_verify_bytes(void);
++
++#endif /* XFS_SCRUB_READ_VERIFY_H_ */
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index c2385da..d4527e4 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -32,6 +32,7 @@
+ #include "../repair/threads.h"
+ #include "path.h"
+ #include "disk.h"
++#include "read_verify.h"
+ #include "scrub.h"
+ #include "common.h"
+ #include "input.h"
+@@ -251,6 +252,8 @@ phase_start(
+ 		return false;
+ 	}
+ 
++	pi->verified_bytes = read_verify_bytes();
++
+ 	pi->descr = descr;
+ 	if ((verbose || display_rusage) && descr) {
+ 		fprintf(stdout, _("Phase %u: %s\n"), phase, descr);
+@@ -272,11 +275,14 @@ phase_end(
+ 	struct timeval		time_now;
+ 	char			phasebuf[DESCR_BUFSZ];
+ 	double			dt;
++	unsigned long long	verified;
+ 	long			in, out;
+ 	long			io;
+ 	double			i, o, t;
+ 	double			din, dout, dtot;
+ 	char			*iu, *ou, *tu, *dinu, *doutu, *dtotu;
++	double			v, dv;
++	char			*vu, *dvu;
+ 	int			error;
+ 
+ 	if (!display_rusage)
+@@ -339,6 +345,15 @@ _("%sI/O: %.1f%s in, %.1f%s out, %.1f%s tot\n"),
+ _("%sI/O rate: %.1f%s/s in, %.1f%s/s out, %.1f%s/s tot\n"),
+ 			phasebuf, din, dinu, dout, doutu, dtot, dtotu);
+ 	}
++
++	/* How many bytes were read-verified? */
++	verified = read_verify_bytes() - pi->verified_bytes;
++	if (verified) {
++		v = auto_space_units(verified, &vu);
++		dv = auto_space_units(verified / dt, &dvu);
++		fprintf(stdout, _("Phase %u: Verify: %.1f%s, rate: %.1f%s/s\n"),
++			phase, v, vu, dv, dvu);
++	}
+ 	fflush(stdout);
+ 
+ 	return true;
+@@ -496,6 +511,7 @@ main(
+ 	bool			ismnt;
+ 	static bool		injected;
+ 	int			ret;
++	int			error;
+ 
+ 	fprintf(stderr, "XXX: This program is not complete!\n");
+ 	return 4;
+@@ -639,6 +655,14 @@ _("Only one of the options -n or -y may be specified.\n"));
+ 		goto out;
+ 	}
+ 
++	/* Try to allocate a read buffer if we don't have one. */
++	error = posix_memalign((void **)&ctx.readbuf, page_size,
++			IO_MAX_SIZE);
++	if (error || !ctx.readbuf) {
 +		str_errno(&ctx, ctx.mntpoint);
 +		goto out;
 +	}
 +
-+	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR") && !injected) {
-+		ctx.mode = SCRUB_MODE_REPAIR;
-+		injected = true;
-+	}
-+
-+out:
-+	if (xfs_scrub_excessive_errors(&ctx))
-+		str_info(&ctx, ctx.mntpoint, _("Too many errors; aborting."));
-+
-+	if (debug_tweak_on("XFS_SCRUB_FORCE_ERROR"))
-+		str_error(&ctx, ctx.mntpoint, _("Injecting error."));
-+
-+	ret = 0;
-+	if (!moveon)
-+		ret |= 4;
-+
-+	total_errors = ctx.errors_found + ctx.runtime_errors;
-+	if (total_errors && ctx.warnings_found)
-+		fprintf(stderr,
-+_("%s: %llu errors and %llu warnings found.  Unmount and run xfs_repair.\n"),
-+			ctx.mntpoint, total_errors, ctx.warnings_found);
-+	else if (total_errors && ctx.warnings_found == 0)
-+		fprintf(stderr,
-+_("%s: %llu errors found.  Unmount and run xfs_repair.\n"),
-+			ctx.mntpoint, total_errors);
-+	else if (total_errors == 0 && ctx.warnings_found)
-+		fprintf(stderr,
-+_("%s: %llu warnings found.\n"),
-+			ctx.mntpoint, ctx.warnings_found);
-+	if (ctx.errors_found)
-+		ret |= 1;
-+	if (ctx.warnings_found)
-+		ret |= 2;
-+	if (ctx.runtime_errors)
-+		ret |= 4;
-+
-+	free(ctx.blkdev);
-+	free(ctx.mntpoint);
-+	return ret;
- }
+ 	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR") && !injected) {
+ 		ctx.mode = SCRUB_MODE_REPAIR;
+ 		injected = true;
+@@ -692,6 +716,7 @@ _("%s: %llu warnings found.\n"),
+ 	disk_close(&ctx.datadev);
+ 
+ 	free(ctx.blkdev);
++	free(ctx.readbuf);
+ 	free(ctx.mntpoint);
+ end:
+ 	return ret;
 diff --git a/scrub/scrub.h b/scrub/scrub.h
-index 49de30b..669c9dc 100644
+index 87f59d6..0b82d9f 100644
 --- a/scrub/scrub.h
 +++ b/scrub/scrub.h
-@@ -20,10 +20,41 @@
- #ifndef XFS_SCRUB_SCRUB_H_
- #define XFS_SCRUB_SCRUB_H_
+@@ -42,6 +42,15 @@ enum error_action {
+ 	ERRORS_SHUTDOWN,
+ };
  
-+extern unsigned int		nr_threads;
-+extern unsigned int		bg_mode;
- extern unsigned int		debug;
-+extern int			nproc;
-+extern bool			display_rusage;
- extern bool			dumpcore;
-+extern bool			verbose;
-+extern bool			scrub_data;
-+extern long			page_size;
++/*
++ * Perform all IO in 32M chunks.  This cannot exceed 65536 sectors
++ * because that's the biggest SCSI VERIFY(16) we dare to send.
++ */
++#define IO_MAX_SIZE		33554432
++#define IO_MAX_SECTORS		(IO_MAX_SIZE >> BBSHIFT)
 +
-+enum scrub_mode {
-+	SCRUB_MODE_DRY_RUN,
-+	SCRUB_MODE_PREEN,
-+	SCRUB_MODE_REPAIR,
-+};
-+#define SCRUB_MODE_DEFAULT			SCRUB_MODE_PREEN
++struct read_verify_pool;
 +
-+enum error_action {
-+	ERRORS_CONTINUE,
-+	ERRORS_SHUTDOWN,
-+};
- 
  struct scrub_ctx {
-+	/* Immutable scrub state. */
-+
-+	/* Strings we need for presentation */
-+	char			*mntpoint;
-+	char			*blkdev;
-+
-+	/* What does the user want us to do? */
-+	enum scrub_mode		mode;
-+
-+	/* How does the user want us to react to errors? */
-+	enum error_action	error_action;
+ 	/* Immutable scrub state. */
+ 
+@@ -81,8 +90,12 @@ struct scrub_ctx {
+ 	void			*fshandle;
+ 	size_t			fshandle_len;
+ 
++	/* Data block read verification buffer */
++	void			*readbuf;
 +
  	/* Mutable scrub state; use lock. */
  	pthread_mutex_t		lock;
++	struct read_verify_pool	*rvp;
  	unsigned long long	max_errors;
+ 	unsigned long long	runtime_errors;
+ 	unsigned long long	errors_found;
 
