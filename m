@@ -1,124 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37716 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752836AbdHIRRu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Aug 2017 13:17:50 -0400
-Date: Wed, 9 Aug 2017 13:17:48 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/3] xfs: don't leak linked inodes during log recovery
-Message-ID: <20170809171747.GE62448@bfoster.bfoster>
-References: <20170809010444.GR24087@magnolia>
- <20170809010650.GF4474@magnolia>
- <20170809123647.GB62448@bfoster.bfoster>
- <20170809164929.GU24087@magnolia>
+Received: from aserp1040.oracle.com ([141.146.126.69]:47211 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753894AbdHDX6B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 19:58:01 -0400
+Date: Fri, 4 Aug 2017 16:57:40 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 4/5] xfs: introduce XFS_DIFLAG2_IOMAP_IMMUTABLE
+Message-ID: <20170804235740.GH24087@magnolia>
+References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150181371001.32119.599597939855384271.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170804203312.GF24087@magnolia>
+ <20170804234615.GG21024@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170809164929.GU24087@magnolia>
+In-Reply-To: <20170804234615.GG21024@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-On Wed, Aug 09, 2017 at 09:49:29AM -0700, Darrick J. Wong wrote:
-> On Wed, Aug 09, 2017 at 08:36:49AM -0400, Brian Foster wrote:
-> > On Tue, Aug 08, 2017 at 06:06:50PM -0700, Darrick J. Wong wrote:
-> > > When we introduced the bmap redo log items, we set MS_ACTIVE on the
-> > > mountpoint and XFS_IRECOVERY on the inode to prevent unlinked inodes
-> > > from being truncated prematurely during log recovery.  However, we
-> > > neglected to drop linked inodes that are recovered, and if we don't use
-> > > the inode between recovery and unmount, the inode will never be marked
-> > > reclaimable and thus we fail to free it at umount time.  If we're in
-> > > log recovery but IRECOVERY is /not/ set, the inode is linked and can be
-> > > reclaimed.
+On Sat, Aug 05, 2017 at 09:46:15AM +1000, Dave Chinner wrote:
+> On Fri, Aug 04, 2017 at 01:33:12PM -0700, Darrick J. Wong wrote:
+> > On Thu, Aug 03, 2017 at 07:28:30PM -0700, Dan Williams wrote:
+> > > Add an on-disk inode flag to record the state of the S_IOMAP_IMMUTABLE
+> > > in-memory vfs inode flags. This allows the protections against reflink
+> > > and hole punch to be automatically restored on a sub-sequent boot when
+> > > the in-memory inode is established.
 > > > 
-> > 
-> > I follow the change in behavior in the previous commit and how this
-> > restores the original behavior for linked inodes, so this patch makes
-> > sense from that perspective. I'm not following where/how the leak occurs
-> > from the description, however.
-> 
-> Linked inodes are inode_add_lru()'d, but nothing ever calls
-> evict_inodes() to clean up that lru (sb->s_inodes).
-> 
-> > Wouldn't the inode end up on the lru to be shrunk/evicted/reclaimed at
-> > a later point?
-> 
-> > What happens if the inode is subsequently used that prevents the leak?
-> > (Whatever I'm missing, it would be nice to elaborate on in the commit
-> > log.)
-> 
-> If we make it all the way to a successful mount, then an unmount can
-> call generic_shutdown_super -> evict_inodes to clean up all the inodes
-> on the lru list.
-> 
-
-Ok, so you are saying that the leak occurs only if the mount ends up
-failing because the vfs doesn't expect to have to evict lru inodes until
-it sets the sb active, right? If so, that makes sense.. thanks.
-
-FWIW, I think it's just more that the patch description is a bit
-confusing here than anything. It doesn't mention mount failure and I'm
-still a little confused about what you mean by: "if we don't use the
-inode between recovery and unmount, the inode will never be marked
-reclaimable and thus we fail to free it at umount time." Does that mean
-that assuming imminent mount failure, the inode is leaked unless
-something else happens to lookup/release the inode after we clear
-MS_ACTIVE but before the mount failure sequence completes?
-
-> > Also, if there is a memory leak vector for !drop linked inodes here,
-> > does that not apply to XFS_IRECOVERY inodes if log recovery itself
-> > happens to fail between bui recovery and iunlink processing?
-> 
-> Ugh, I forgot about that possibility.  I think the solution is to
-> evict_inodes right after we clear MS_ACTIVE but before we see if
-> xfs_log_mount_finish actually failed.
-> 
-
-That sounds reasonable. If we do that, I suppose that means we can drop
-the additional logic in ->drop_inode() because that would cover both
-linked and unlinked inodes that make it onto the lru during recovery.
-
-Brian
-
-> --D
-> 
-> > 
-> > Brian
-> > 
-> > > Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > The FS_XFLAG_IOMAP_IMMUTABLE is introduced to allow xfs_io to read the
+> > > state of the flag, but toggling the flag requires going through
+> > > fallocate(FALLOC_FL_[UN]SEAL_BLOCK_MAP). Support for toggling this
+> > > on-disk state is saved for a later patch.
+> > > 
+> > > Cc: Jan Kara <jack@suse.cz>
+> > > Cc: Jeff Moyer <jmoyer@redhat.com>
+> > > Cc: Christoph Hellwig <hch@lst.de>
+> > > Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > > Suggested-by: Dave Chinner <david@fromorbit.com>
+> > > Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
+> > > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 > > > ---
-> > >  fs/xfs/xfs_super.c |    7 +++++++
-> > >  1 file changed, 7 insertions(+)
+> > >  fs/xfs/libxfs/xfs_format.h |    5 ++++-
+> > >  fs/xfs/xfs_inode.c         |    2 ++
+> > >  fs/xfs/xfs_ioctl.c         |    1 +
+> > >  fs/xfs/xfs_iops.c          |    8 +++++---
+> > >  include/uapi/linux/fs.h    |    1 +
+> > >  5 files changed, 13 insertions(+), 4 deletions(-)
 > > > 
-> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > index 38aaacd..9b06ca2 100644
-> > > --- a/fs/xfs/xfs_super.c
-> > > +++ b/fs/xfs/xfs_super.c
-> > > @@ -1040,6 +1040,13 @@ xfs_fs_drop_inode(
-> > >  	if (ip->i_flags & XFS_IRECOVERY) {
-> > >  		ASSERT(ip->i_mount->m_log->l_flags & XLOG_RECOVERY_NEEDED);
-> > >  		return 0;
-> > > +	} else if (ip->i_mount->m_log->l_flags & XLOG_RECOVERY_NEEDED) {
-> > > +		/*
-> > > +		 * This inode was loaded during recovery but is not
-> > > +		 * being unlinked, so we can free it without fear of
-> > > +		 * premature truncation.
-> > > +		 */
-> > > +		return 1;
-> > >  	}
-> > >  
-> > >  	return generic_drop_inode(inode) || (ip->i_flags & XFS_IDONTCACHE);
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> > > index d4d9bef20c3a..9e720e55776b 100644
+> > > --- a/fs/xfs/libxfs/xfs_format.h
+> > > +++ b/fs/xfs/libxfs/xfs_format.h
+> > > @@ -1063,12 +1063,15 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+> > >  #define XFS_DIFLAG2_DAX_BIT	0	/* use DAX for this inode */
+> > >  #define XFS_DIFLAG2_REFLINK_BIT	1	/* file's blocks may be shared */
+> > >  #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
+> > > +#define XFS_DIFLAG2_IOMAP_IMMUTABLE_BIT 3 /* set S_IOMAP_IMMUTABLE for this inode */
+> > 
+> > So... the greedy part of my brain that doesn't want to give out flags2
+> > bits has been wondering,
+> 
+> FWIW, I made di_flags2 a 64 bit value in the first place precisely
+> so we didn't have a scarcity problem and can just give out flag
+> bits for enabling new functionality like this...
+
+Ok.  That's what I thought.
+
+> > what if we just didn't have an on-disk
+> > IOMAP_IMMUTABLE bit, and set FS_XFLAG based only on the in-core
+> > S_IOMAP_IMMUTABLE bit?  If a program wants the immutable iomap
+> > semantics, they will have to code some variant on the following:
+> > 
+> > fd = open(...);
+> > ret = fallocate(fd, FALLOC_FL_SEAL_BLOCK_MAP, 0, len...)
+> > if (ret) {
+> > 	printf("couldn't seal block map");
+> > 	close(fd);
+> > 	return;
+> > }
+> > 
+> > mmap(fd...);
+> > /* do sensitive io operations here */
+> > munmap(fd...);
+> > 
+> > close(fd);
+> > 
+> > Therefore the cost of not having the on-disk flag is that we'll have to
+> > do more unshare/alloc/test/set cycles than we would if we could remember
+> > the iomap-immutable state across unmounts and inode reclaiming.
+> > However, if the data map is already ready to go, this shouldn't have a
+> > lot of overhead since we only have to iterate the in-core extents.
+> > 
+> > Just trying to make sure we /need/ the inode flag bit. :)
+> 
+> IMO, fallocate() is for making permanent changes to file extents. If
+> this is not going to be a permanent state change but only a
+> runtime-while-the-inode-is-in-cache flag, then it's probably not the
+> right interface to use.
+> 
+> This also seems problematic for applications other than DAX where
+> the block map may be sealed, the fd closed and access handed off to
+> another entity for remote storage access. If the inode gets
+> reclaimed due to memory pressure, the system loses the fact that
+> that the inode has been sealed. Hence another process can come
+> along, re-read the inode and modify the block map because it hasn't
+> been sealed in this new cache life cycle.....
+
+<nod> Ok, I'm convinced. :)
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
