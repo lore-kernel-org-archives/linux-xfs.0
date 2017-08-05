@@ -1,125 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47211 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753894AbdHDX6B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 19:58:01 -0400
-Date: Fri, 4 Aug 2017 16:57:40 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 4/5] xfs: introduce XFS_DIFLAG2_IOMAP_IMMUTABLE
-Message-ID: <20170804235740.GH24087@magnolia>
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:2104 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753517AbdHEAEH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 20:04:07 -0400
+Date: Sat, 5 Aug 2017 10:04:03 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 2/5] fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
+Message-ID: <20170805000403.GH21024@dastard>
 References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150181371001.32119.599597939855384271.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170804203312.GF24087@magnolia>
- <20170804234615.GG21024@dastard>
+ <150181369754.32119.7390149918955188408.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170804233140.GF21024@dastard>
+ <CAPcyv4iHjLag-YRO3kgHMzED1vpLh28Lo+JZULAeRtiq8QGP+g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170804234615.GG21024@dastard>
+In-Reply-To: <CAPcyv4iHjLag-YRO3kgHMzED1vpLh28Lo+JZULAeRtiq8QGP+g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-On Sat, Aug 05, 2017 at 09:46:15AM +1000, Dave Chinner wrote:
-> On Fri, Aug 04, 2017 at 01:33:12PM -0700, Darrick J. Wong wrote:
-> > On Thu, Aug 03, 2017 at 07:28:30PM -0700, Dan Williams wrote:
-> > > Add an on-disk inode flag to record the state of the S_IOMAP_IMMUTABLE
-> > > in-memory vfs inode flags. This allows the protections against reflink
-> > > and hole punch to be automatically restored on a sub-sequent boot when
-> > > the in-memory inode is established.
-> > > 
-> > > The FS_XFLAG_IOMAP_IMMUTABLE is introduced to allow xfs_io to read the
-> > > state of the flag, but toggling the flag requires going through
-> > > fallocate(FALLOC_FL_[UN]SEAL_BLOCK_MAP). Support for toggling this
-> > > on-disk state is saved for a later patch.
-> > > 
-> > > Cc: Jan Kara <jack@suse.cz>
-> > > Cc: Jeff Moyer <jmoyer@redhat.com>
-> > > Cc: Christoph Hellwig <hch@lst.de>
-> > > Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > > Suggested-by: Dave Chinner <david@fromorbit.com>
-> > > Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
-> > > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_format.h |    5 ++++-
-> > >  fs/xfs/xfs_inode.c         |    2 ++
-> > >  fs/xfs/xfs_ioctl.c         |    1 +
-> > >  fs/xfs/xfs_iops.c          |    8 +++++---
-> > >  include/uapi/linux/fs.h    |    1 +
-> > >  5 files changed, 13 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > > index d4d9bef20c3a..9e720e55776b 100644
-> > > --- a/fs/xfs/libxfs/xfs_format.h
-> > > +++ b/fs/xfs/libxfs/xfs_format.h
-> > > @@ -1063,12 +1063,15 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
-> > >  #define XFS_DIFLAG2_DAX_BIT	0	/* use DAX for this inode */
-> > >  #define XFS_DIFLAG2_REFLINK_BIT	1	/* file's blocks may be shared */
-> > >  #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
-> > > +#define XFS_DIFLAG2_IOMAP_IMMUTABLE_BIT 3 /* set S_IOMAP_IMMUTABLE for this inode */
-> > 
-> > So... the greedy part of my brain that doesn't want to give out flags2
-> > bits has been wondering,
+On Fri, Aug 04, 2017 at 04:43:50PM -0700, Dan Williams wrote:
+> On Fri, Aug 4, 2017 at 4:31 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Aug 03, 2017 at 07:28:17PM -0700, Dan Williams wrote:
+> >> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> >> index fe0f8f7f4bb7..46d8eb9e19fc 100644
+> >> --- a/fs/xfs/xfs_bmap_util.c
+> >> +++ b/fs/xfs/xfs_bmap_util.c
+> >> @@ -1393,6 +1393,107 @@ xfs_zero_file_space(
+> >>
+> >>  }
+> >>
+> >> +/* Return 1 if hole detected, 0 if not, and < 0 if fail to determine */
+> >> +STATIC int
+> >> +xfs_file_has_holes(
+> >> +     struct xfs_inode        *ip)
+> >> +{
+> >
+> > Why do we need this function?
+> >
+> > We've just run xfs_alloc_file_space() across the entire range we
+> > are sealing, so we've already guaranteed that it won't have holes
+> > in it.
 > 
-> FWIW, I made di_flags2 a 64 bit value in the first place precisely
-> so we didn't have a scarcity problem and can just give out flag
-> bits for enabling new functionality like this...
+> I'm sure this is due to my ignorance of the scope of XFS_IOLOCK_EXCL
+> vs XFS_ILOCK_EXCL. I had assumed that since we drop and retake
+> XFS_ILOCK_EXCL that we need to re-validate the block map before
+> setting S_IOMAP_IMMUTABLE.
 
-Ok.  That's what I thought.
+THe ILOCK is there to protect the inode metadata when there is
+concurrent access through the IO/MMAP lock paths.  However, if we
+hold the IOLOCK_EXCL and the MMAPLOCK_EXCL, then nothing can get
+through the IO interfaces to modify the data in the file.  This is
+required because APIs that directly modify the extent map (e.g.
+fallocate, truncate, etc) have to lock out the IO path to ensure
+there are no IOs in flight across the range we are manipulating.
 
-> > what if we just didn't have an on-disk
-> > IOMAP_IMMUTABLE bit, and set FS_XFLAG based only on the in-core
-> > S_IOMAP_IMMUTABLE bit?  If a program wants the immutable iomap
-> > semantics, they will have to code some variant on the following:
-> > 
-> > fd = open(...);
-> > ret = fallocate(fd, FALLOC_FL_SEAL_BLOCK_MAP, 0, len...)
-> > if (ret) {
-> > 	printf("couldn't seal block map");
-> > 	close(fd);
-> > 	return;
-> > }
-> > 
-> > mmap(fd...);
-> > /* do sensitive io operations here */
-> > munmap(fd...);
-> > 
-> > close(fd);
-> > 
-> > Therefore the cost of not having the on-disk flag is that we'll have to
-> > do more unshare/alloc/test/set cycles than we would if we could remember
-> > the iomap-immutable state across unmounts and inode reclaiming.
-> > However, if the data map is already ready to go, this shouldn't have a
-> > lot of overhead since we only have to iterate the in-core extents.
-> > 
-> > Just trying to make sure we /need/ the inode flag bit. :)
-> 
-> IMO, fallocate() is for making permanent changes to file extents. If
-> this is not going to be a permanent state change but only a
-> runtime-while-the-inode-is-in-cache flag, then it's probably not the
-> right interface to use.
-> 
-> This also seems problematic for applications other than DAX where
-> the block map may be sealed, the fd closed and access handed off to
-> another entity for remote storage access. If the inode gets
-> reclaimed due to memory pressure, the system loses the fact that
-> that the inode has been sealed. Hence another process can come
-> along, re-read the inode and modify the block map because it hasn't
-> been sealed in this new cache life cycle.....
+Holding these locks also locks out other APIs that modify the extent
+map and so effectively nothing else can be accessing or modifying
+the extent map while a fallocate or truncate operation is in
+progress.
 
-<nod> Ok, I'm convinced. :)
+Cheers,
 
---D
+Dave.
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Dave Chinner
+david@fromorbit.com
