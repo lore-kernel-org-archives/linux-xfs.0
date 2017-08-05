@@ -1,231 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24731 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752154AbdHJBns (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2017 21:43:48 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7A1hlpn012196
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:48 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v7A1hlYd012854
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:47 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7A1hlPL017023
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:47 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [RFC PATCH 01/13] xfs: get directory offset when adding directory name
-Date: Wed,  9 Aug 2017 18:41:21 -0700
-Message-Id: <1502329293-4091-2-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
-References: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
+Received: from verein.lst.de ([213.95.11.211]:33731 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751250AbdHEJuP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 5 Aug 2017 05:50:15 -0400
+Date: Sat, 5 Aug 2017 11:50:13 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
+        dma-to-storage, and swap
+Message-ID: <20170805095013.GC14930@lst.de>
+References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com> <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, Linux API <linux-api@vger.kernel.org>
 
-From: Mark Tinguely <tinguely@sgi.com>
+On Thu, Aug 03, 2017 at 07:38:11PM -0700, Dan Williams wrote:
+> [ adding linux-api to the cover letter for notification, will send the
+> full set to linux-api for v3 ]
 
-Return the directory offset information when adding an entry to the
-directory.
+Just don't send this crap ever again.  All the so called use cases in the
+earlier thread were incorrect and highly dangerous.
 
-This offset will be used as the parent pointer offset in xfs_create,
-xfs_symlink, xfs_link and xfs_rename.
+Promising that the block map is stable is not a useful userspace API,
+as it the block map is a complete internal implementation detail.
 
-[dchinner: forward ported and cleaned up]
-[dchinner: no s-o-b from Mark]
-[bfoster: rebased, use args->geo in dir code]
-[achender: rebased, chaged __uint32_t to xfs_dir2_dataptr_t]
+We've been through this a few times but let me repeat it:  The only
+sensible API gurantee is one that is observable and usable.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-:100644 100644 ae6de17... bce96d6... M	fs/xfs/libxfs/xfs_da_btree.h
-:100644 100644 ccf9783... a1ca460... M	fs/xfs/libxfs/xfs_dir2.c
-:100644 100644 21c8f8b... e349900... M	fs/xfs/libxfs/xfs_dir2.h
-:100644 100644 43c902f... 79684d5... M	fs/xfs/libxfs/xfs_dir2_block.c
-:100644 100644 27297a6... 2ac7a7e... M	fs/xfs/libxfs/xfs_dir2_leaf.c
-:100644 100644 682e2bf... 8bc91f8... M	fs/xfs/libxfs/xfs_dir2_node.c
-:100644 100644 be8b975... 489bdef... M	fs/xfs/libxfs/xfs_dir2_sf.c
-:100644 100644 ceef77c... cea1c56... M	fs/xfs/xfs_inode.c
-:100644 100644 23a50d7... f0c3fb5... M	fs/xfs/xfs_symlink.c
- fs/xfs/libxfs/xfs_da_btree.h   | 1 +
- fs/xfs/libxfs/xfs_dir2.c       | 8 ++++++--
- fs/xfs/libxfs/xfs_dir2.h       | 3 ++-
- fs/xfs/libxfs/xfs_dir2_block.c | 1 +
- fs/xfs/libxfs/xfs_dir2_leaf.c  | 2 ++
- fs/xfs/libxfs/xfs_dir2_node.c  | 2 ++
- fs/xfs/libxfs/xfs_dir2_sf.c    | 2 ++
- fs/xfs/xfs_inode.c             | 9 +++++----
- fs/xfs/xfs_symlink.c           | 2 +-
- 9 files changed, 22 insertions(+), 8 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index ae6de17..bce96d6 100644
---- a/fs/xfs/libxfs/xfs_da_btree.h
-+++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -86,6 +86,7 @@ typedef struct xfs_da_args {
- 	int		rmtvaluelen2;	/* remote attr value length in bytes */
- 	int		op_flags;	/* operation flags */
- 	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
-+	xfs_dir2_dataptr_t offset;	/* OUT: offset in directory */
- } xfs_da_args_t;
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index ccf9783..a1ca460 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -268,7 +268,8 @@ xfs_dir_createname(
- 	xfs_ino_t		inum,		/* new entry inode number */
- 	xfs_fsblock_t		*first,		/* bmap's firstblock */
- 	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
--	xfs_extlen_t		total)		/* bmap's total block count */
-+	xfs_extlen_t		total,		/* bmap's total block count */
-+	xfs_dir2_dataptr_t	*offset)	/* OUT entry's dir offset */
- {
- 	struct xfs_da_args	*args;
- 	int			rval;
-@@ -323,6 +324,9 @@ xfs_dir_createname(
- 	else
- 		rval = xfs_dir2_node_addname(args);
- 
-+	/* return the location that this entry was place in the parent inode */
-+	if (offset)
-+		*offset = args->offset;
- out_free:
- 	kmem_free(args);
- 	return rval;
-@@ -570,7 +574,7 @@ xfs_dir_canenter(
- 	xfs_inode_t	*dp,
- 	struct xfs_name	*name)		/* name of entry to add */
- {
--	return xfs_dir_createname(tp, dp, name, 0, NULL, NULL, 0);
-+	return xfs_dir_createname(tp, dp, name, 0, NULL, NULL, 0, NULL);
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index 21c8f8b..e349900 100644
---- a/fs/xfs/libxfs/xfs_dir2.h
-+++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -131,7 +131,8 @@ extern int xfs_dir_init(struct xfs_trans *tp, struct xfs_inode *dp,
- extern int xfs_dir_createname(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t inum,
- 				xfs_fsblock_t *first,
--				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
-+				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
-+				xfs_dir2_dataptr_t *offset);
- extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t *inum,
- 				struct xfs_name *ci_name);
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index 43c902f..79684d5 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -552,6 +552,7 @@ xfs_dir2_block_addname(
- 	dp->d_ops->data_put_ftype(dep, args->filetype);
- 	tagp = dp->d_ops->data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-+	args->offset = xfs_dir2_byte_to_dataptr((char *)dep - (char *)hdr);
- 	/*
- 	 * Clean up the bestfree array and log the header, tail, and entry.
- 	 */
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index 27297a6..2ac7a7e 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -863,6 +863,8 @@ xfs_dir2_leaf_addname(
- 	dp->d_ops->data_put_ftype(dep, args->filetype);
- 	tagp = dp->d_ops->data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-+	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, use_block,
-+						(char *)dep - (char *)hdr);
- 	/*
- 	 * Need to scan fix up the bestfree table.
- 	 */
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 682e2bf..8bc91f8 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -2022,6 +2022,8 @@ xfs_dir2_node_addname_int(
- 	dp->d_ops->data_put_ftype(dep, args->filetype);
- 	tagp = dp->d_ops->data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-+	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, dbno,
-+						  (char *)dep - (char *)hdr);
- 	xfs_dir2_data_log_entry(args, dbp, dep);
- 	/*
- 	 * Rescan the block for bestfree if needed.
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index be8b975..489bdef 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -407,6 +407,7 @@ xfs_dir2_sf_addname_easy(
- 	memcpy(sfep->name, args->name, sfep->namelen);
- 	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 	dp->d_ops->sf_put_ftype(sfep, args->filetype);
-+	args->offset = xfs_dir2_byte_to_dataptr(offset);
- 
- 	/*
- 	 * Update the header and inode.
-@@ -498,6 +499,7 @@ xfs_dir2_sf_addname_hard(
- 	memcpy(sfep->name, args->name, sfep->namelen);
- 	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 	dp->d_ops->sf_put_ftype(sfep, args->filetype);
-+	args->offset = xfs_dir2_byte_to_dataptr(offset);
- 	sfp->count++;
- 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
- 		sfp->i8count++;
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index ceef77c..cea1c56 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1250,7 +1250,8 @@ xfs_create(
- 
- 	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
- 					&first_block, &dfops, resblks ?
--					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
-+					resblks - XFS_IALLOC_SPACE_RES(mp) : 0,
-+					NULL);
- 	if (error) {
- 		ASSERT(error != -ENOSPC);
- 		goto out_trans_cancel;
-@@ -1493,7 +1494,7 @@ xfs_link(
- 	}
- 
- 	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
--					&first_block, &dfops, resblks);
-+				   &first_block, &dfops, resblks, NULL);
- 	if (error)
- 		goto error_return;
- 	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-@@ -3013,8 +3014,8 @@ xfs_rename(
- 		 * to account for the ".." reference from the new entry.
- 		 */
- 		error = xfs_dir_createname(tp, target_dp, target_name,
--						src_ip->i_ino, &first_block,
--						&dfops, spaceres);
-+					   src_ip->i_ino, &first_block, &dfops,
-+					   spaceres, NULL);
- 		if (error)
- 			goto out_bmap_cancel;
- 
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 23a50d7..f0c3fb5 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -363,7 +363,7 @@ xfs_symlink(
- 	 * Create the directory entry for the symlink.
- 	 */
- 	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino,
--					&first_block, &dfops, resblks);
-+				   &first_block, &dfops, resblks, NULL);
- 	if (error)
- 		goto out_bmap_cancel;
- 	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--- 
-2.7.4
+so Jan's synchronous page fault flag in one form or another makes
+perfect sense as it is a clear receipe for the user:  you don't
+have to call msync to persist your mmap writes.  This API is not,
+it guarantees that the block map does not change, but the application
+has absolutely no point of even knowing about the block map.
 
