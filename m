@@ -1,95 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:7562 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751958AbdHIVdL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2017 17:33:11 -0400
-Date: Thu, 10 Aug 2017 07:33:07 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
- conversion and the addition of an attribute
-Message-ID: <20170809213307.GJ21024@dastard>
-References: <1502276772-24293-1-git-send-email-alex@zadarastorage.com>
+Received: from verein.lst.de ([213.95.11.211]:33684 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751241AbdHEJp6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 5 Aug 2017 05:45:58 -0400
+Date: Sat, 5 Aug 2017 11:45:56 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/3] fs, xfs: introduce S_IOMAP_IMMUTABLE
+Message-ID: <20170805094556.GA14930@lst.de>
+References: <150135740948.35318.10730072114996910905.stgit@dwillia2-desk3.amr.corp.intel.com> <150135741519.35318.16765137368329971936.stgit@dwillia2-desk3.amr.corp.intel.com> <1501516968.579311.1058393288.0714478A@webmail.messagingengine.com> <CAPcyv4h_YWaAXG5pfkOJ0M74i5yEke1SoC3ESErTh41hngtG-w@mail.gmail.com> <1501518747.586018.1058450568.4B6F28FB@webmail.messagingengine.com> <1501522933.602272.1058529880.6C4A2D98@webmail.messagingengine.com> <20170731182352.GE4477@magnolia> <1501553712.1055225.1059044352.109C04CB@webmail.messagingengine.com> <20170801024218.GN17762@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1502276772-24293-1-git-send-email-alex@zadarastorage.com>
+In-Reply-To: <20170801024218.GN17762@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: alex@zadarastorage.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, darrick.wong@oracle.com, libor.klepac@bcom.cz
+To: Dave Chinner <david@fromorbit.com>
+Cc: Colin Walters <walters@verbum.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-On Wed, Aug 09, 2017 at 02:06:12PM +0300, alex@zadarastorage.com wrote:
-> From: Alex Lyakas <alex@zadarastorage.com>
-> 
-> The new attribute leaf buffer is not held locked across
-> the transaction roll between the shortform->leaf modification
-> and the addition of the new entry. As a result, the attribute
-> buffer modification being made is not atomic from
-> an operational perspective. Hence the AIL push can grab it in
-> the transient state of "just created" after the initial
-> transaction is rolled, because the buffer has been released.
-> This leads to xfs_attr3_leaf_verify() asserting that
-> hdr.count is zero, treating this as in-memory corruption,
-> and shutting down the filesystem.
-> 
-> Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c      | 19 ++++++++++++++++++-
->  fs/xfs/libxfs/xfs_attr_leaf.c |  4 +++-
->  fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++-
->  3 files changed, 23 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index de7b9bd..982e322 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -216,10 +216,11 @@
->  	struct xfs_defer_ops	dfops;
->  	struct xfs_trans_res	tres;
->  	xfs_fsblock_t		firstblock;
->  	int			rsvd = (flags & ATTR_ROOT) != 0;
->  	int			error, err2, local;
-> +	struct xfs_buf		*leaf_bp = NULL;
->  
->  	XFS_STATS_INC(mp, xs_attr_set);
->  
->  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
->  		return -EIO;
-> @@ -325,11 +326,17 @@
->  		/*
->  		 * It won't fit in the shortform, transform to a leaf block.
->  		 * GROT: another possible req'mt for a double-split btree op.
->  		 */
->  		xfs_defer_init(args.dfops, args.firstblock);
-> -		error = xfs_attr_shortform_to_leaf(&args);
-> +		error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
-> +		/*
-> +		 * Prevent the leaf buffer from being unlocked
-> +		 * when "args.trans" transaction commits.
-> +		 */
-> +		if (leaf_bp)
-> +			xfs_trans_bhold(args.trans, leaf_bp);
->  		if (!error)
->  			error = xfs_defer_finish(&args.trans, args.dfops, dp);
->  		if (error) {
->  			args.trans = NULL;
->  			xfs_defer_cancel(&dfops);
+On Tue, Aug 01, 2017 at 12:42:18PM +1000, Dave Chinner wrote:
+> I've outlined other use cases in previous discussions. To repeat
+> myself, every so often we get someone with, say, a new high
+> speed camera that want to dma the camera frames direct to the
+> storage because they can't push 500,000 frames/s through the CPU
+> to storage. Hence they want to bypass the OS and DMA the data direct
+> to the storage. To do this they need a mechanism to freeze and unfreeze
+> the block map of the file so that nothing modifies the block map
+> while the camera hardware is dumping data direct to the storage.
+> Immutable extent maps provide the functionality they need to
+> implement this safely.
 
-Hmmmm, looking closer at xfs_defer_finish(), just holding the buffer
-here isn't sufficient. xfs_defer_finish() can roll the transaction a
-number of times and holding the buffer is a one-shot deal. Hence the
-buffer held buffer will have BLI_HOLD removed on the next commit
-and be unlocked by the second commit, whether it be inside
-xfs_defer_finish() or the roll that occurs below.
+And we have such a mechanism already: it's called the iolock during
+I/O, and dirct I/O.  I've worked on plenty such schemes and the proper way
+works perfectly fine.  Just because people ask for stupid ways to
+archives that doesn't mean they understand what they are doing.
 
-ISTR a previous discussion with Darrick that we needed something
-like xfs_defer_join() with buffers instead of inodes to allow them
-to be held across a call to xfs_defer_finish()....
+> There's also other similar use cases for RDMA targets on PMEM
+> (regardless of whether DAX is enabled or not), and I've come across
+> a couple of requests for mechanisms to allow fabric based nvme
+> storage to do direct data transfers between storage devices, too.
+> All of these use cases can be safely implemented if there is a
+> mechanism to mark extent maps as immutable for the duration of
+> the operation they need to perform.
 
-Cheers,
+As someone who spent most of them time on the last 2 years in this
+area: we have a massive problem discoverability and addressing
+(lack of struct page) for p2p devices.  We have absolutely no problem
+with the direct I/O model with them.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> DAX isn't the driver of that functionality, it's the other use cases
+> that need it, and why the proposed "only remove flag if len == 0"
+> API is a non-starter....
+
+The other "use" cases are even more bullshit than the DAX one.
