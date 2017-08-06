@@ -1,112 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:37546 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753691AbdHDXqT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 19:46:19 -0400
-Date: Sat, 5 Aug 2017 09:46:15 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 4/5] xfs: introduce XFS_DIFLAG2_IOMAP_IMMUTABLE
-Message-ID: <20170804234615.GG21024@dastard>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150181371001.32119.599597939855384271.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170804203312.GF24087@magnolia>
+Received: from mail-ua0-f181.google.com ([209.85.217.181]:32869 "EHLO
+        mail-ua0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751341AbdHFSvw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Aug 2017 14:51:52 -0400
+Received: by mail-ua0-f181.google.com with SMTP id 80so23407284uas.0
+        for <linux-xfs@vger.kernel.org>; Sun, 06 Aug 2017 11:51:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170804203312.GF24087@magnolia>
+In-Reply-To: <20170805095013.GC14930@lst.de>
+References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com> <20170805095013.GC14930@lst.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Sun, 6 Aug 2017 11:51:50 -0700
+Message-ID: <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com>
+Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
+ dma-to-storage, and swap
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>
 
-On Fri, Aug 04, 2017 at 01:33:12PM -0700, Darrick J. Wong wrote:
-> On Thu, Aug 03, 2017 at 07:28:30PM -0700, Dan Williams wrote:
-> > Add an on-disk inode flag to record the state of the S_IOMAP_IMMUTABLE
-> > in-memory vfs inode flags. This allows the protections against reflink
-> > and hole punch to be automatically restored on a sub-sequent boot when
-> > the in-memory inode is established.
-> > 
-> > The FS_XFLAG_IOMAP_IMMUTABLE is introduced to allow xfs_io to read the
-> > state of the flag, but toggling the flag requires going through
-> > fallocate(FALLOC_FL_[UN]SEAL_BLOCK_MAP). Support for toggling this
-> > on-disk state is saved for a later patch.
-> > 
-> > Cc: Jan Kara <jack@suse.cz>
-> > Cc: Jeff Moyer <jmoyer@redhat.com>
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > Suggested-by: Dave Chinner <david@fromorbit.com>
-> > Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
-> > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_format.h |    5 ++++-
-> >  fs/xfs/xfs_inode.c         |    2 ++
-> >  fs/xfs/xfs_ioctl.c         |    1 +
-> >  fs/xfs/xfs_iops.c          |    8 +++++---
-> >  include/uapi/linux/fs.h    |    1 +
-> >  5 files changed, 13 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > index d4d9bef20c3a..9e720e55776b 100644
-> > --- a/fs/xfs/libxfs/xfs_format.h
-> > +++ b/fs/xfs/libxfs/xfs_format.h
-> > @@ -1063,12 +1063,15 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
-> >  #define XFS_DIFLAG2_DAX_BIT	0	/* use DAX for this inode */
-> >  #define XFS_DIFLAG2_REFLINK_BIT	1	/* file's blocks may be shared */
-> >  #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
-> > +#define XFS_DIFLAG2_IOMAP_IMMUTABLE_BIT 3 /* set S_IOMAP_IMMUTABLE for this inode */
-> 
-> So... the greedy part of my brain that doesn't want to give out flags2
-> bits has been wondering,
+On Sat, Aug 5, 2017 at 2:50 AM, Christoph Hellwig <hch@lst.de> wrote:
+> On Thu, Aug 03, 2017 at 07:38:11PM -0700, Dan Williams wrote:
+>> [ adding linux-api to the cover letter for notification, will send the
+>> full set to linux-api for v3 ]
+>
+> Just don't send this crap ever again.  All the so called use cases in the
+> earlier thread were incorrect and highly dangerous.
 
-FWIW, I made di_flags2 a 64 bit value in the first place precisely
-so we didn't have a scarcity problem and can just give out flag
-bits for enabling new functionality like this...
+I usually end up coming around to your position on these types of
+debates because you almost always put forward unassailable technical
+arguments. So far, you have not in this case.
 
-> what if we just didn't have an on-disk
-> IOMAP_IMMUTABLE bit, and set FS_XFLAG based only on the in-core
-> S_IOMAP_IMMUTABLE bit?  If a program wants the immutable iomap
-> semantics, they will have to code some variant on the following:
-> 
-> fd = open(...);
-> ret = fallocate(fd, FALLOC_FL_SEAL_BLOCK_MAP, 0, len...)
-> if (ret) {
-> 	printf("couldn't seal block map");
-> 	close(fd);
-> 	return;
-> }
-> 
-> mmap(fd...);
-> /* do sensitive io operations here */
-> munmap(fd...);
-> 
-> close(fd);
-> 
-> Therefore the cost of not having the on-disk flag is that we'll have to
-> do more unshare/alloc/test/set cycles than we would if we could remember
-> the iomap-immutable state across unmounts and inode reclaiming.
-> However, if the data map is already ready to go, this shouldn't have a
-> lot of overhead since we only have to iterate the in-core extents.
-> 
-> Just trying to make sure we /need/ the inode flag bit. :)
+> Promising that the block map is stable is not a useful userspace API,
+> as it the block map is a complete internal implementation detail.
 
-IMO, fallocate() is for making permanent changes to file extents. If
-this is not going to be a permanent state change but only a
-runtime-while-the-inode-is-in-cache flag, then it's probably not the
-right interface to use.
+Of course it's a useful API. An application already needs to worry
+about the block map, that's why we have fallocate, msync, fiemap
+and...
 
-This also seems problematic for applications other than DAX where
-the block map may be sealed, the fd closed and access handed off to
-another entity for remote storage access. If the inode gets
-reclaimed due to memory pressure, the system loses the fact that
-that the inode has been sealed. Hence another process can come
-along, re-read the inode and modify the block map because it hasn't
-been sealed in this new cache life cycle.....
+> We've been through this a few times but let me repeat it:  The only
+> sensible API gurantee is one that is observable and usable.
 
-Cheers,
+I'm missing how block-map immutable files violate this observable and
+usable constraint?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> so Jan's synchronous page fault flag in one form or another makes
+> perfect sense as it is a clear receipe for the user:  you don't
+> have to call msync to persist your mmap writes.  This API is not,
+> it guarantees that the block map does not change, but the application
+> has absolutely no point of even knowing about the block map.
+
+Jan's approach is great, it should go in, it solves a long standing
+problem with dax with the only drawback being potentially
+unpredictable latency spikes.
+
+This immutable approach should also go in, it solves the same problem
+without the the latency drawback, but yes, with the administrative
+overhead of CAP_LINUX_IMMUTABLE. Beyond flush from userspace it also
+can be used to solve the swapfile problems you highlighted and it
+allows safe ongoing dma to a filesystem-dax mapping beyond what we can
+already do with direct-I/O. There is demand for these capabilities
+that cannot be satisfied by just hand waving them away as invalid.
+
+The magnitude of opposition to this approach is out of step with the
+actual risk.
