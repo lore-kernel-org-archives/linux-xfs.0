@@ -1,68 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f181.google.com ([209.85.217.181]:32869 "EHLO
-        mail-ua0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751341AbdHFSvw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Aug 2017 14:51:52 -0400
-Received: by mail-ua0-f181.google.com with SMTP id 80so23407284uas.0
-        for <linux-xfs@vger.kernel.org>; Sun, 06 Aug 2017 11:51:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170805095013.GC14930@lst.de>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
- <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com> <20170805095013.GC14930@lst.de>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sun, 6 Aug 2017 11:51:50 -0700
-Message-ID: <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com>
-Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
- dma-to-storage, and swap
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([209.132.183.28]:52302 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753020AbdHGKRS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 Aug 2017 06:17:18 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id AC01C883BE
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Aug 2017 10:17:18 +0000 (UTC)
+Received: from hades.localdomain.com (ovpn-204-42.brq.redhat.com [10.40.204.42])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 08C5B6FB7D
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Aug 2017 10:17:17 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH V2] Stop searching for free slots in an inode chunk when there are none
+Date: Mon,  7 Aug 2017 12:17:10 +0200
+Message-Id: <20170807101710.18734-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Sat, Aug 5, 2017 at 2:50 AM, Christoph Hellwig <hch@lst.de> wrote:
-> On Thu, Aug 03, 2017 at 07:38:11PM -0700, Dan Williams wrote:
->> [ adding linux-api to the cover letter for notification, will send the
->> full set to linux-api for v3 ]
->
-> Just don't send this crap ever again.  All the so called use cases in the
-> earlier thread were incorrect and highly dangerous.
+In a filesystem without finobt, the Space manager selects an AG to alloc a new
+inode, where xfs_dialloc_ag_inobt() will search the AG for the free slot chunk.
 
-I usually end up coming around to your position on these types of
-debates because you almost always put forward unassailable technical
-arguments. So far, you have not in this case.
+When the new inode is in the samge AG as its parent, the btree will be searched
+starting on the parent's record, and then retried from the top if no slot is
+available beyond the parent's record.
 
-> Promising that the block map is stable is not a useful userspace API,
-> as it the block map is a complete internal implementation detail.
+To exit this loop though, xfs_dialloc_ag_inobt(), relies on the fact that the
+btree must have a free slot available, once its callers relied on the
+agi->freecount when deciding how/where to allocate this new inode.
 
-Of course it's a useful API. An application already needs to worry
-about the block map, that's why we have fallocate, msync, fiemap
-and...
+In the case when the agi->freecount is corrupted, showing available inodes in an
+AG, when in fact there is none, this becomes an infinite loop.
 
-> We've been through this a few times but let me repeat it:  The only
-> sensible API gurantee is one that is observable and usable.
+Add a way to stop the loop when a free slot is not found in the btree, making
+the function to fall into the whole AG scan which will then, be able to detect
+the corruption and shut the filesystem down.
 
-I'm missing how block-map immutable files violate this observable and
-usable constraint?
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
 
-> so Jan's synchronous page fault flag in one form or another makes
-> perfect sense as it is a clear receipe for the user:  you don't
-> have to call msync to persist your mmap writes.  This API is not,
-> it guarantees that the block map does not change, but the application
-> has absolutely no point of even knowing about the block map.
+V2: Use searchdistance variable to stop the infinite loop instead of adding a
+    new mechanism.
 
-Jan's approach is great, it should go in, it solves a long standing
-problem with dax with the only drawback being potentially
-unpredictable latency spikes.
+ fs/xfs/libxfs/xfs_ialloc.c | 34 ++++++++++++++++++----------------
+ 1 file changed, 18 insertions(+), 16 deletions(-)
 
-This immutable approach should also go in, it solves the same problem
-without the the latency drawback, but yes, with the administrative
-overhead of CAP_LINUX_IMMUTABLE. Beyond flush from userspace it also
-can be used to solve the swapfile problems you highlighted and it
-allows safe ongoing dma to a filesystem-dax mapping beyond what we can
-already do with direct-I/O. There is demand for these capabilities
-that cannot be satisfied by just hand waving them away as invalid.
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index d41ade5d293e..8e535290390d 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1123,6 +1123,7 @@ xfs_dialloc_ag_inobt(
+ 	int			error;
+ 	int			offset;
+ 	int			i, j;
++	int			searchdistance = 10;
+ 
+ 	pag = xfs_perag_get(mp, agno);
+ 
+@@ -1149,7 +1150,6 @@ xfs_dialloc_ag_inobt(
+ 	if (pagno == agno) {
+ 		int		doneleft;	/* done, to the left */
+ 		int		doneright;	/* done, to the right */
+-		int		searchdistance = 10;
+ 
+ 		error = xfs_inobt_lookup(cur, pagino, XFS_LOOKUP_LE, &i);
+ 		if (error)
+@@ -1210,10 +1210,10 @@ xfs_dialloc_ag_inobt(
+ 		/*
+ 		 * Loop until we find an inode chunk with a free inode.
+ 		 */
+-		while (!doneleft || !doneright) {
++		while (--searchdistance > 0 && (!doneleft || !doneright)) {
+ 			int	useleft;  /* using left inode chunk this time */
+ 
+-			if (!--searchdistance) {
++			if (searchdistance <= 0) {
+ 				/*
+ 				 * Not in range - save last search
+ 				 * location and allocate a new inode
+@@ -1268,19 +1268,21 @@ xfs_dialloc_ag_inobt(
+ 				goto error1;
+ 		}
+ 
+-		/*
+-		 * We've reached the end of the btree. because
+-		 * we are only searching a small chunk of the
+-		 * btree each search, there is obviously free
+-		 * inodes closer to the parent inode than we
+-		 * are now. restart the search again.
+-		 */
+-		pag->pagl_pagino = NULLAGINO;
+-		pag->pagl_leftrec = NULLAGINO;
+-		pag->pagl_rightrec = NULLAGINO;
+-		xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
+-		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+-		goto restart_pagno;
++		if (searchdistance > 0) {
++			/*
++			 * We've reached the end of the btree. because
++			 * we are only searching a small chunk of the
++			 * btree each search, there is obviously free
++			 * inodes closer to the parent inode than we
++			 * are now. restart the search again.
++			 */
++			pag->pagl_pagino = NULLAGINO;
++			pag->pagl_leftrec = NULLAGINO;
++			pag->pagl_rightrec = NULLAGINO;
++			xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
++			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++			goto restart_pagno;
++		}
+ 	}
+ 
+ 	/*
+-- 
+2.13.3
 
-The magnitude of opposition to this approach is out of step with the
-actual risk.
