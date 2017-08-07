@@ -1,263 +1,289 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38190 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751251AbdHCSF2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2017 14:05:28 -0400
-Date: Thu, 3 Aug 2017 11:05:19 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 8/7 V2] xfs_db: use TYP_F_CRC_FUNC for inodes & dquots
-Message-ID: <20170803180519.GV4477@magnolia>
-References: <150153520589.26081.8786864874176090813.stgit@magnolia>
- <150153525206.26081.8927560161890396433.stgit@magnolia>
- <ddf6bf02-e210-e299-6966-b7d926da4d2e@sandeen.net>
- <95262dad-848c-0582-d7e5-230d630f3349@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:11583 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751247AbdHGPQ4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 Aug 2017 11:16:56 -0400
+Date: Mon, 7 Aug 2017 11:16:54 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC - PATCH] xfs: hold xfs_buf locked between shortform->leaf
+ conversion and the addition of the first attribute
+Message-ID: <20170807151651.GA43920@bfoster.bfoster>
+References: <8948A7010F7A4A758A580103D54CE381@alyakaslap>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <95262dad-848c-0582-d7e5-230d630f3349@redhat.com>
+In-Reply-To: <8948A7010F7A4A758A580103D54CE381@alyakaslap>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: Alex Lyakas <alex@zadarastorage.com>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, Shyam Kaushik <shyam@zadarastorage.com>, Yair Hershko <yair@zadarastorage.com>
 
-On Thu, Aug 03, 2017 at 12:15:26PM -0500, Eric Sandeen wrote:
-> Now that typ_t has a ->set_crc method, use it for inodes & dquots
-> as well, rather than recognizing them as special types and calling
-> their crc functions directly by name.
+On Mon, Aug 07, 2017 at 03:54:03PM +0300, Alex Lyakas wrote:
+> The new attribute leaf buffer is not held locked across the transaction roll
+> between the shortform->leaf modification and the addition of the new entry.
+> As a result, the attribute buffer modification being made is not atomic
+> from an operational perspective.
+> Hence the AIL push can grab it in the transient state of "just created"
+> after the initial transaction is rolled, because the buffer has been
+> released.
+> This leads to xfs_attr3_leaf_verify() asserting that hdr.count is zero,
+> treating this as in-memory corruption, and shutting down the filesystem.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> More info at:
+> https://www.spinics.net/lists/linux-xfs/msg08778.html
+> 
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+FYI.. I'm not sure how appropriate it is to use URLs in commit log
+descriptions. Perhaps somebody else can chime in on that.
 
+> This patch is based on kernel 3.18.19, which is a long-term (although EOL)
+> kernel.
+> This is the reason it is marked as RFC.
+> 
+
+It's probably best to develop against the latest kernel, get the fix
+right, then worry about v3.18 for a backport.
+
+> Reproducing the issue is achieved by adding "msleep(1000)" after the
+> xfs_trans_roll() call.
+> From the limited testing, this patch seems to fix the issue.
+> Once/if the community approves this patch, we will do a formal testing.
+> 
+> Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
 > ---
+
+Note that your patch doesn't apply for me:
+
+...
+patching file fs/xfs/libxfs/xfs_attr.c
+Hunk #1 FAILED at 285.
+patch: **** malformed patch at line 70: commits */
+
+Perhaps it has been damaged by your mailer? Otherwise, a few initial
+comments...
+
+> fs/xfs/libxfs/xfs_attr.c      | 24 +++++++++++++++++++++---
+> fs/xfs/libxfs/xfs_attr_leaf.c |  5 ++++-
+> fs/xfs/libxfs/xfs_attr_leaf.h |  2 +-
+> 3 files changed, 26 insertions(+), 5 deletions(-)
 > 
-> V2: Remove one more buf type special case in write_f(), and call crc
-> writer helpers rather than open coded versions in write_cur()
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 353fb42..c0ced12 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -285,20 +285,21 @@ xfs_attr_set(
 > 
-> diff --git a/db/dquot.c b/db/dquot.c
-> index 061eca5..4e35df4 100644
-> --- a/db/dquot.c
-> +++ b/db/dquot.c
-> @@ -171,6 +171,17 @@ dquot_f(
->  }
->  
->  void
-> +xfs_dquot_set_crc(
-> +	struct xfs_buf *bp)
-> +{
-> +	ASSERT((iocur_top->dquot_buf));
-> +	ASSERT(iocur_top->bp == bp);
+>     xfs_trans_ijoin(args.trans, dp, 0);
+> 
+>     /*
+>      * If the attribute list is non-existent or a shortform list,
+>      * upgrade it to a single-leaf-block attribute list.
+>      */
+>     if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
+>         (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
+>          dp->i_d.di_anextents == 0)) {
+> +        xfs_buf_t *leaf_bp = NULL;
+
+Use struct xfs_buf here and throughout. We're attempting to remove uses
+of the old typedefs wherever possible.
+
+> 
+>         /*
+>          * Build initial attribute list (if required).
+>          */
+>         if (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS)
+>             xfs_attr_shortform_create(&args);
+> 
+>         /*
+>          * Try to add the attr to the attribute list in
+>          * the inode.
+> @@ -328,48 +329,65 @@ xfs_attr_set(
+>             xfs_iunlock(dp, XFS_ILOCK_EXCL);
+> 
+>             return error ? error : err2;
+>         }
+> 
+>         /*
+>          * It won't fit in the shortform, transform to a leaf block.
+>          * GROT: another possible req'mt for a double-split btree op.
+>          */
+>         xfs_bmap_init(args.flist, args.firstblock);
+> -        error = xfs_attr_shortform_to_leaf(&args);
+> +        error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
+> +        /* hold the leaf buffer locked, when "args.trans" transaction
+> commits */
+> +        if (leaf_bp)
+> +            xfs_trans_bhold(args.trans, leaf_bp);
+
+Indentation looks off here and throughout.
+
 > +
-> +	xfs_update_cksum(iocur_top->data, sizeof(struct xfs_dqblk),
-> +			 XFS_DQUOT_CRC_OFF);
-> +}
-> +
-> +void
->  dquot_init(void)
->  {
->  	add_command(&dquot_cmd);
-> diff --git a/db/dquot.h b/db/dquot.h
-> index 83a5118..12a7244 100644
-> --- a/db/dquot.h
-> +++ b/db/dquot.h
-> @@ -20,4 +20,5 @@ extern const struct field	disk_dquot_flds[];
->  extern const struct field	dqblk_flds[];
->  extern const struct field	dqblk_hfld[];
->  
-> +extern void	xfs_dquot_set_crc(struct xfs_buf *);
->  extern void	dquot_init(void);
-> diff --git a/db/fuzz.c b/db/fuzz.c
-> index e1c2045..a9b1577 100644
-> --- a/db/fuzz.c
-> +++ b/db/fuzz.c
-> @@ -125,8 +125,7 @@ fuzz_f(
->  		return 0;
->  	}
->  
-> -	if (invalid_data && iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF &&
-> -			!iocur_top->ino_buf && !iocur_top->dquot_buf) {
-> +	if (invalid_data && iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF) {
->  		dbprintf(_("Cannot recalculate CRCs on this type of object\n"));
->  		return 0;
->  	}
-> @@ -153,12 +152,6 @@ fuzz_f(
->  	if (corrupt) {
->  		local_ops.verify_write = xfs_dummy_verify;
->  		dbprintf(_("Allowing fuzz of corrupted data and bad CRC\n"));
-> -	} else if (iocur_top->ino_buf) {
-> -		local_ops.verify_write = xfs_verify_recalc_inode_crc;
-> -		dbprintf(_("Allowing fuzz of corrupted inode with good CRC\n"));
-> -	} else if (iocur_top->dquot_buf) {
-> -		local_ops.verify_write = xfs_verify_recalc_dquot_crc;
-> -		dbprintf(_("Allowing fuzz of corrupted dquot with good CRC\n"));
->  	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
->  		local_ops.verify_write = iocur_top->typ->set_crc;
->  		dbprintf(_("Allowing fuzz of corrupted data with good CRC\n"));
-> diff --git a/db/inode.c b/db/inode.c
-> index 6cc47d6..6f971c6 100644
-> --- a/db/inode.c
-> +++ b/db/inode.c
-> @@ -711,3 +711,14 @@ _("Metadata CRC error detected for ino %lld\n"),
->  	/* track updated info in ring */
->  	ring_add();
->  }
-> +
-> +void
-> +xfs_inode_set_crc(
-> +	struct xfs_buf *bp)
-> +{
-> +	ASSERT(iocur_top->ino_buf);
-> +	ASSERT(iocur_top->bp == bp);
-> +
-> +	libxfs_dinode_calc_crc(mp, iocur_top->data);
-> +	iocur_top->ino_crc_ok = 1;
-> +}
-> diff --git a/db/inode.h b/db/inode.h
-> index 1624f1d..d79b0a4 100644
-> --- a/db/inode.h
-> +++ b/db/inode.h
-> @@ -33,4 +33,5 @@ extern void	inode_init(void);
->  extern typnm_t	inode_next_type(void);
->  extern int	inode_size(void *obj, int startoff, int idx);
->  extern int	inode_u_size(void *obj, int startoff, int idx);
-> +extern void	xfs_inode_set_crc(struct xfs_buf *);
->  extern void	set_cur_inode(xfs_ino_t ino);
-> diff --git a/db/io.c b/db/io.c
-> index fd9b9f4..2716255 100644
-> --- a/db/io.c
-> +++ b/db/io.c
-> @@ -22,6 +22,7 @@
->  #include "faddr.h"
->  #include "fprint.h"
->  #include "field.h"
-> +#include "dquot.h"
->  #include "inode.h"
->  #include "io.h"
->  #include "output.h"
-> @@ -466,28 +467,6 @@ xfs_dummy_verify(
->  }
->  
->  void
-> -xfs_verify_recalc_inode_crc(
-> -	struct xfs_buf *bp)
-> -{
-> -	ASSERT(iocur_top->ino_buf);
-> -	ASSERT(iocur_top->bp == bp);
-> -
-> -	libxfs_dinode_calc_crc(mp, iocur_top->data);
-> -	iocur_top->ino_crc_ok = 1;
-> -}
-> -
-> -void
-> -xfs_verify_recalc_dquot_crc(
-> -	struct xfs_buf *bp)
-> -{
-> -	ASSERT((iocur_top->dquot_buf));
-> -	ASSERT(iocur_top->bp == bp);
-> -
-> -	xfs_update_cksum(iocur_top->data, sizeof(struct xfs_dqblk),
-> -			 XFS_DQUOT_CRC_OFF);
-> -}
-> -
-> -void
->  xfs_verify_recalc_crc(
->  	struct xfs_buf *bp)
->  {
-> @@ -510,14 +489,10 @@ write_cur(void)
->  		skip_crc = true;
->  
->  	if (!skip_crc) {
-> -		if (iocur_top->ino_buf) {
-> -			libxfs_dinode_calc_crc(mp, iocur_top->data);
-> -			iocur_top->ino_crc_ok = 1;
-> -		} else if (iocur_top->dquot_buf) {
-> -			xfs_update_cksum(iocur_top->data,
-> -					 sizeof(struct xfs_dqblk),
-> -					 XFS_DQUOT_CRC_OFF);
-> -		}
-> +		if (iocur_top->ino_buf)
-> +			xfs_inode_set_crc(iocur_top->bp);
-> +		else if (iocur_top->dquot_buf)
-> +			xfs_dquot_set_crc(iocur_top->bp);
->  	}
->  	if (iocur_top->bbmap)
->  		write_cur_bbs();
-> diff --git a/db/io.h b/db/io.h
-> index df0fdd7..374dd84 100644
-> --- a/db/io.h
-> +++ b/db/io.h
-> @@ -64,8 +64,6 @@ extern void	set_cur(const struct typ *type, xfs_daddr_t blknum,
->  extern void     ring_add(void);
->  extern void	set_iocur_type(const struct typ *type);
->  extern void	xfs_dummy_verify(struct xfs_buf *bp);
-> -extern void	xfs_verify_recalc_inode_crc(struct xfs_buf *bp);
-> -extern void	xfs_verify_recalc_dquot_crc(struct xfs_buf *bp);
->  extern void	xfs_verify_recalc_crc(struct xfs_buf *bp);
->  
->  /*
-> diff --git a/db/type.c b/db/type.c
-> index 740adc0..0c1ed37 100644
-> --- a/db/type.c
-> +++ b/db/type.c
-> @@ -105,12 +105,12 @@ static const typ_t	__typtab_crc[] = {
->  	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
->  		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
->  	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
-> -		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
-> +		&xfs_dquot_buf_ops, TYP_F_CRC_FUNC, xfs_dquot_set_crc },
->  	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
->  		&xfs_inobt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
->  	{ TYP_INODATA, "inodata", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
->  	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
-> -		&xfs_inode_buf_ops, TYP_F_NO_CRC_OFF },
-> +		&xfs_inode_buf_ops, TYP_F_CRC_FUNC, xfs_inode_set_crc },
->  	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
->  	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
->  	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
-> @@ -149,12 +149,12 @@ static const typ_t	__typtab_spcrc[] = {
->  	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
->  		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
->  	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
-> -		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
-> +		&xfs_dquot_buf_ops, TYP_F_CRC_FUNC, xfs_dquot_set_crc },
->  	{ TYP_INOBT, "inobt", handle_struct, inobt_spcrc_hfld,
->  		&xfs_inobt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
->  	{ TYP_INODATA, "inodata", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
->  	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
-> -		&xfs_inode_buf_ops, TYP_F_NO_CRC_OFF },
-> +		&xfs_inode_buf_ops, TYP_F_CRC_FUNC, xfs_inode_set_crc },
->  	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
->  	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
->  	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
-> diff --git a/db/write.c b/db/write.c
-> index 266bde4..9fc6d8e 100644
-> --- a/db/write.c
-> +++ b/db/write.c
-> @@ -138,9 +138,7 @@ write_f(
->  	}
->  
->  	if (invalid_data &&
-> -	    iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF &&
-> -	    !iocur_top->ino_buf &&
-> -	    !iocur_top->dquot_buf) {
-> +	    iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF) {
->  		dbprintf(_("Cannot recalculate CRCs on this type of object\n"));
->  		return 0;
->  	}
-> @@ -167,12 +165,6 @@ write_f(
->  	if (corrupt) {
->  		local_ops.verify_write = xfs_dummy_verify;
->  		dbprintf(_("Allowing write of corrupted data and bad CRC\n"));
-> -	} else if (iocur_top->ino_buf) {
-> -		local_ops.verify_write = xfs_verify_recalc_inode_crc;
-> -		dbprintf(_("Allowing write of corrupted inode with good CRC\n"));
-> -	} else if (iocur_top->dquot_buf) {
-> -		local_ops.verify_write = xfs_verify_recalc_dquot_crc;
-> -		dbprintf(_("Allowing write of corrupted dquot with good CRC\n"));
->  	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
->  		local_ops.verify_write = iocur_top->typ->set_crc;
->  		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
+>         if (!error) {
+>             error = xfs_bmap_finish(&args.trans, args.flist,
+>                         &committed);
+>         }
+>         if (error) {
+>             ASSERT(committed);
+> +            if (leaf_bp)
+> +                xfs_buf_relse(leaf_bp);
+
+Hmm, I don't think this is right. We don't want to release the buffer
+while the transaction still has a reference. Perhaps we should move this
+to the "out:" patch after the transaction cancel (and make sure the
+pointer is reset at the appropriate place)..?
+
+>             args.trans = NULL;
+>             xfs_bmap_cancel(&flist);
+>             goto out;
+>         }
+> 
+>         /*
+>          * bmap_finish() may have committed the last trans and started
+>          * a new one.  We need the inode to be in all transactions.
+> +         * We also need to rejoin the leaf buffer to the new transaction
+> +         * and prevent it from being unlocked, before we commit it in
+> xfs_trans_roll().
+> +         * If bmap_finish() did not commit, then we are in the same
+> transaction,
+> +         * and no need to call xfs_trans_bhold() again.
+>          */
+> -        if (committed)
+> +        if (committed) {
+>             xfs_trans_ijoin(args.trans, dp, 0);
+> +            xfs_trans_bjoin(args.trans, leaf_bp);
+> +            xfs_trans_bhold(args.trans, leaf_bp);
+
+I don't see why this is necessary. We still have the buffer held and
+locked, yes?
+
+> +        }
+> 
+>         /*
+>          * Commit the leaf transformation.  We'll need another (linked)
+>          * transaction to add the new attribute to the leaf.
+>          */
+> 
+>         error = xfs_trans_roll(&args.trans, dp);
+> -        if (error)
+> +        if (error) {
+> +            xfs_buf_relse(leaf_bp);
+
+Same problem as above.
+
+>             goto out;
+> +        }
+> 
+> +        /* rejoin the leaf buffer to the new transaction */
+> +        xfs_trans_bjoin(args.trans, leaf_bp);
+
+This comment should point out that this allows a subsequent read to find
+the buffer in the transaction (and avoid a deadlock).
+
+>     }
+> 
+>     if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+>         error = xfs_attr_leaf_addname(&args);
+>     else
+>         error = xfs_attr_node_addname(&args);
+>     if (error)
+>         goto out;
+> 
+>     /*
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index b7cd0a0..2e03c32 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -649,23 +649,24 @@ xfs_attr_shortform_getvalue(xfs_da_args_t *args)
+>         args->valuelen = sfe->valuelen;
+>         memcpy(args->value, &sfe->nameval[args->namelen],
+>                             args->valuelen);
+>         return -EEXIST;
+>     }
+>     return -ENOATTR;
+> }
+> 
+> /*
+>  * Convert from using the shortform to the leaf.
+> + * Upon success, return the leaf buffer.
+>  */
+> int
+> -xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
+> +xfs_attr_shortform_to_leaf(xfs_da_args_t *args, xfs_buf_t **bpp)
+> {
+>     xfs_inode_t *dp;
+>     xfs_attr_shortform_t *sf;
+>     xfs_attr_sf_entry_t *sfe;
+>     xfs_da_args_t nargs;
+>     char *tmpbuffer;
+>     int error, i, size;
+>     xfs_dablk_t blkno;
+>     struct xfs_buf *bp;
+>     xfs_ifork_t *ifp;
+> @@ -733,20 +734,22 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
+>         ASSERT(error == -ENOATTR);
+>         error = xfs_attr3_leaf_add(bp, &nargs);
+>         ASSERT(error != -ENOSPC);
+>         if (error)
+>             goto out;
+>         sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
+>     }
+>     error = 0;
+> 
+> out:
+> +    if (error == 0)
+> +        *bpp = bp;
+
+It looks like the only way error == 0 is where it is set just above, so
+we could probably move this before the label.
+
+I'm also wondering whether it might be cleaner to 1.) conditionally
+return the buffer when sf->hdr.count == 0 because that is the only case
+where the problem occurs and 2.) do the trans_bhold() here in
+shortform_to_leaf() when we do actually return it.
+
+Brian
+
+>     kmem_free(tmpbuffer);
+>     return error;
+> }
+> 
+> /*
+>  * Check a leaf attribute block to see if all the entries would fit into
+>  * a shortform attribute list.
+>  */
+> int
+> xfs_attr_shortform_allfit(
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+> index 4f3a60a..d58e9e4 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+> @@ -41,21 +41,21 @@ typedef struct xfs_attr_inactive_list {
+>  * Function prototypes for the kernel.
+>  *========================================================================*/
+> 
+> /*
+>  * Internal routines when attribute fork size < XFS_LITINO(mp).
+>  */
+> void    xfs_attr_shortform_create(struct xfs_da_args *args);
+> void    xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
+> int    xfs_attr_shortform_lookup(struct xfs_da_args *args);
+> int    xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+> -int    xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
+> +int    xfs_attr_shortform_to_leaf(struct xfs_da_args *args, xfs_buf_t
+> **bpp);
+> int    xfs_attr_shortform_remove(struct xfs_da_args *args);
+> int    xfs_attr_shortform_list(struct xfs_attr_list_context *context);
+> int    xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+> int    xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes);
+> void    xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
+> 
+> /*
+>  * Internal routines when attribute fork size == XFS_LBSIZE(mp).
+>  */
+> int    xfs_attr3_leaf_to_node(struct xfs_da_args *args);
+> -- 
+> 1.9.1
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
