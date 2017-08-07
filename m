@@ -1,203 +1,234 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39185 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752330AbdHINRj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Aug 2017 09:17:39 -0400
-Date: Wed, 9 Aug 2017 09:17:37 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
- conversion and the addition of an attribute
-Message-ID: <20170809131737.GD62448@bfoster.bfoster>
-References: <1502276772-24293-1-git-send-email-alex@zadarastorage.com>
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:35099 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750751AbdHGMyI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Aug 2017 08:54:08 -0400
+Received: by mail-wm0-f47.google.com with SMTP id m85so6453410wma.0
+        for <linux-xfs@vger.kernel.org>; Mon, 07 Aug 2017 05:54:08 -0700 (PDT)
+Message-ID: <8948A7010F7A4A758A580103D54CE381@alyakaslap>
+From: "Alex Lyakas" <alex@zadarastorage.com>
+Subject: [RFC - PATCH] xfs: hold xfs_buf locked between shortform->leaf conversion and the addition of the first attribute
+Date: Mon, 7 Aug 2017 15:54:03 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1502276772-24293-1-git-send-email-alex@zadarastorage.com>
+Content-Type: text/plain;
+        format=flowed;
+        charset="iso-8859-1";
+        reply-type=original
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: alex@zadarastorage.com
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, darrick.wong@oracle.com, libor.klepac@bcom.cz
+To: linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com, bfoster@redhat.com, Shyam Kaushik <shyam@zadarastorage.com>, Yair Hershko <yair@zadarastorage.com>
 
-On Wed, Aug 09, 2017 at 02:06:12PM +0300, alex@zadarastorage.com wrote:
-> From: Alex Lyakas <alex@zadarastorage.com>
-> 
-> The new attribute leaf buffer is not held locked across
-> the transaction roll between the shortform->leaf modification
-> and the addition of the new entry. As a result, the attribute
-> buffer modification being made is not atomic from
-> an operational perspective. Hence the AIL push can grab it in
-> the transient state of "just created" after the initial
-> transaction is rolled, because the buffer has been released.
-> This leads to xfs_attr3_leaf_verify() asserting that
-> hdr.count is zero, treating this as in-memory corruption,
-> and shutting down the filesystem.
-> 
-> Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
-> ---
+The new attribute leaf buffer is not held locked across the transaction roll
+between the shortform->leaf modification and the addition of the new entry.
+As a result, the attribute buffer modification being made is not atomic
+from an operational perspective.
+Hence the AIL push can grab it in the transient state of "just created"
+after the initial transaction is rolled, because the buffer has been 
+released.
+This leads to xfs_attr3_leaf_verify() asserting that hdr.count is zero,
+treating this as in-memory corruption, and shutting down the filesystem.
 
-Thanks for the fixups Alex. This patch applies clean and looks correct
-to me. Some minor comments..
+More info at:
+https://www.spinics.net/lists/linux-xfs/msg08778.html
 
->  fs/xfs/libxfs/xfs_attr.c      | 19 ++++++++++++++++++-
->  fs/xfs/libxfs/xfs_attr_leaf.c |  4 +++-
->  fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++-
->  3 files changed, 23 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index de7b9bd..982e322 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -216,10 +216,11 @@
->  	struct xfs_defer_ops	dfops;
->  	struct xfs_trans_res	tres;
->  	xfs_fsblock_t		firstblock;
->  	int			rsvd = (flags & ATTR_ROOT) != 0;
->  	int			error, err2, local;
-> +	struct xfs_buf		*leaf_bp = NULL;
->  
->  	XFS_STATS_INC(mp, xs_attr_set);
->  
->  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
->  		return -EIO;
-> @@ -325,11 +326,17 @@
->  		/*
->  		 * It won't fit in the shortform, transform to a leaf block.
->  		 * GROT: another possible req'mt for a double-split btree op.
->  		 */
->  		xfs_defer_init(args.dfops, args.firstblock);
-> -		error = xfs_attr_shortform_to_leaf(&args);
-> +		error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
-> +		/*
-> +		 * Prevent the leaf buffer from being unlocked
-> +		 * when "args.trans" transaction commits.
-> +		 */
+This patch is based on kernel 3.18.19, which is a long-term (although EOL) 
+kernel.
+This is the reason it is marked as RFC.
 
-I think this comment should explain why we're keeping the buffer locked
-here rather than reiterating what the code is doing. For example,
-something like the following:
+Reproducing the issue is achieved by adding "msleep(1000)" after the 
+xfs_trans_roll() call.
+>From the limited testing, this patch seems to fix the issue.
+Once/if the community approves this patch, we will do a formal testing.
 
-"Keep the buffer locked across the leaf conversion transaction to
-prevent it from being written back before the new xattr is added. The
-buffer could be in an invalid, intermediate state (i.e., empty) and
-trigger write verifier failure."
+Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
+---
+fs/xfs/libxfs/xfs_attr.c      | 24 +++++++++++++++++++++---
+fs/xfs/libxfs/xfs_attr_leaf.c |  5 ++++-
+fs/xfs/libxfs/xfs_attr_leaf.h |  2 +-
+3 files changed, 26 insertions(+), 5 deletions(-)
 
-> +		if (leaf_bp)
-> +			xfs_trans_bhold(args.trans, leaf_bp);
->  		if (!error)
->  			error = xfs_defer_finish(&args.trans, args.dfops, dp);
->  		if (error) {
->  			args.trans = NULL;
->  			xfs_defer_cancel(&dfops);
-> @@ -343,10 +350,18 @@
->  
->  		error = xfs_trans_roll(&args.trans, dp);
->  		if (error)
->  			goto out;
->  
-> +		/*
-> +		 * Rejoin the leaf buffer to the new transaction.
-> +		 * This allows a subsequent read to find the buffer in the
-> +		 * transaction (and avoid a deadlock).
-> +		 */
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 353fb42..c0ced12 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -285,20 +285,21 @@ xfs_attr_set(
 
-"Join the leaf buffer to the new transaction so addname can read it in
-its locked state (and avoid a deadlock)."
+     xfs_trans_ijoin(args.trans, dp, 0);
 
-> +		xfs_trans_bjoin(args.trans, leaf_bp);
-> +		/* Prevent from being released at the end of the function */
+     /*
+      * If the attribute list is non-existent or a shortform list,
+      * upgrade it to a single-leaf-block attribute list.
+      */
+     if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
+         (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
+          dp->i_d.di_anextents == 0)) {
++        xfs_buf_t *leaf_bp = NULL;
 
-Combine this comment with the one above (or just kill it, the code is
-self-explanatory).
+         /*
+          * Build initial attribute list (if required).
+          */
+         if (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS)
+             xfs_attr_shortform_create(&args);
 
-> +		leaf_bp = NULL;
->  	}
->  
->  	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
->  		error = xfs_attr_leaf_addname(&args);
->  	else
-> @@ -374,10 +389,12 @@
->  	return error;
->  
->  out:
->  	if (args.trans)
->  		xfs_trans_cancel(args.trans);
-> +	if (leaf_bp)
-> +		xfs_buf_relse(leaf_bp);
->  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
->  	return error;
->  }
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index c6c15e5..ab73e4b 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -738,13 +738,14 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args *args,
->  	return -ENOATTR;
->  }
->  
->  /*
->   * Convert from using the shortform to the leaf.
-> + * Upon success, return the leaf buffer.
->   */
->  int
-> -xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
-> +xfs_attr_shortform_to_leaf(xfs_da_args_t *args, struct xfs_buf **bpp)
->  {
->  	xfs_inode_t *dp;
->  	xfs_attr_shortform_t *sf;
->  	xfs_attr_sf_entry_t *sfe;
->  	xfs_da_args_t nargs;
-> @@ -820,10 +821,11 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args *args,
->  		if (error)
->  			goto out;
->  		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
->  	}
->  	error = 0;
-> +	*bpp = bp;
+         /*
+          * Try to add the attr to the attribute list in
+          * the inode.
+@@ -328,48 +329,65 @@ xfs_attr_set(
+             xfs_iunlock(dp, XFS_ILOCK_EXCL);
 
-This was probably lost in the discussion noise, but one thing I
-mentioned for the rfc was to call xfs_trans_bhold() here rather than in
-xfs_attr_set(), and do so (and set bpp) only when the leaf buffer is
-actually empty. If the inode already has xattrs, then it's fine for it
-to be written back in the meantime.
+             return error ? error : err2;
+         }
 
-I don't care as much about not holding the buffer when not totally
-necessary, but rather what I like about this is that it defines clear
-semantics for any callers of the function that the buffer, when
-returned, is the caller responsibility to put into a valid state before
-it is released. This seems a bit more clear to me than always setting
-the buffer on return.
+         /*
+          * It won't fit in the shortform, transform to a leaf block.
+          * GROT: another possible req'mt for a double-split btree op.
+          */
+         xfs_bmap_init(args.flist, args.firstblock);
+-        error = xfs_attr_shortform_to_leaf(&args);
++        error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
++        /* hold the leaf buffer locked, when "args.trans" transaction 
+commits */
++        if (leaf_bp)
++            xfs_trans_bhold(args.trans, leaf_bp);
++
+         if (!error) {
+             error = xfs_bmap_finish(&args.trans, args.flist,
+                         &committed);
+         }
+         if (error) {
+             ASSERT(committed);
++            if (leaf_bp)
++                xfs_buf_relse(leaf_bp);
+             args.trans = NULL;
+             xfs_bmap_cancel(&flist);
+             goto out;
+         }
 
-That said, this is a minor, subjective design point and I'm fine with
-the code as it is if that is preferred.
+         /*
+          * bmap_finish() may have committed the last trans and started
+          * a new one.  We need the inode to be in all transactions.
++         * We also need to rejoin the leaf buffer to the new transaction
++         * and prevent it from being unlocked, before we commit it in 
+xfs_trans_roll().
++         * If bmap_finish() did not commit, then we are in the same 
+transaction,
++         * and no need to call xfs_trans_bhold() again.
+          */
+-        if (committed)
++        if (committed) {
+             xfs_trans_ijoin(args.trans, dp, 0);
++            xfs_trans_bjoin(args.trans, leaf_bp);
++            xfs_trans_bhold(args.trans, leaf_bp);
++        }
 
-Brian
+         /*
+          * Commit the leaf transformation.  We'll need another (linked)
+          * transaction to add the new attribute to the leaf.
+          */
 
->  
->  out:
->  	kmem_free(tmpbuffer);
->  	return error;
->  }
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-> index f7dda0c..2b3c69df 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-> @@ -46,11 +46,12 @@
->   */
->  void	xfs_attr_shortform_create(struct xfs_da_args *args);
->  void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
->  int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
->  int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
-> -int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
-> +int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
-> +					struct xfs_buf **bpp);
->  int	xfs_attr_shortform_remove(struct xfs_da_args *args);
->  int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
->  int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
->  void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
->  
-> -- 
-> 1.9.1
-> 
+         error = xfs_trans_roll(&args.trans, dp);
+-        if (error)
++        if (error) {
++            xfs_buf_relse(leaf_bp);
+             goto out;
++        }
+
++        /* rejoin the leaf buffer to the new transaction */
++        xfs_trans_bjoin(args.trans, leaf_bp);
+     }
+
+     if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+         error = xfs_attr_leaf_addname(&args);
+     else
+         error = xfs_attr_node_addname(&args);
+     if (error)
+         goto out;
+
+     /*
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index b7cd0a0..2e03c32 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -649,23 +649,24 @@ xfs_attr_shortform_getvalue(xfs_da_args_t *args)
+         args->valuelen = sfe->valuelen;
+         memcpy(args->value, &sfe->nameval[args->namelen],
+                             args->valuelen);
+         return -EEXIST;
+     }
+     return -ENOATTR;
+}
+
+/*
+  * Convert from using the shortform to the leaf.
++ * Upon success, return the leaf buffer.
+  */
+int
+-xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
++xfs_attr_shortform_to_leaf(xfs_da_args_t *args, xfs_buf_t **bpp)
+{
+     xfs_inode_t *dp;
+     xfs_attr_shortform_t *sf;
+     xfs_attr_sf_entry_t *sfe;
+     xfs_da_args_t nargs;
+     char *tmpbuffer;
+     int error, i, size;
+     xfs_dablk_t blkno;
+     struct xfs_buf *bp;
+     xfs_ifork_t *ifp;
+@@ -733,20 +734,22 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
+         ASSERT(error == -ENOATTR);
+         error = xfs_attr3_leaf_add(bp, &nargs);
+         ASSERT(error != -ENOSPC);
+         if (error)
+             goto out;
+         sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
+     }
+     error = 0;
+
+out:
++    if (error == 0)
++        *bpp = bp;
+     kmem_free(tmpbuffer);
+     return error;
+}
+
+/*
+  * Check a leaf attribute block to see if all the entries would fit into
+  * a shortform attribute list.
+  */
+int
+xfs_attr_shortform_allfit(
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index 4f3a60a..d58e9e4 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -41,21 +41,21 @@ typedef struct xfs_attr_inactive_list {
+  * Function prototypes for the kernel.
+  *========================================================================*/
+
+/*
+  * Internal routines when attribute fork size < XFS_LITINO(mp).
+  */
+void    xfs_attr_shortform_create(struct xfs_da_args *args);
+void    xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
+int    xfs_attr_shortform_lookup(struct xfs_da_args *args);
+int    xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+-int    xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
++int    xfs_attr_shortform_to_leaf(struct xfs_da_args *args, xfs_buf_t 
+**bpp);
+int    xfs_attr_shortform_remove(struct xfs_da_args *args);
+int    xfs_attr_shortform_list(struct xfs_attr_list_context *context);
+int    xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+int    xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes);
+void    xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
+
+/*
+  * Internal routines when attribute fork size == XFS_LBSIZE(mp).
+  */
+int    xfs_attr3_leaf_to_node(struct xfs_da_args *args);
+-- 
+1.9.1
+
