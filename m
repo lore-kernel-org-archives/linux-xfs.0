@@ -1,93 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32778 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751722AbdHIMgF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Aug 2017 08:36:05 -0400
-Date: Wed, 9 Aug 2017 08:36:03 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: clear MS_ACTIVE after finishing log recovery to
- avoid inode leak
-Message-ID: <20170809123600.GA62448@bfoster.bfoster>
-References: <20170809010444.GR24087@magnolia>
+Received: from aserp1040.oracle.com ([141.146.126.69]:19657 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752017AbdHHQdP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2017 12:33:15 -0400
+Date: Tue, 8 Aug 2017 09:32:32 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 41/49] xfs: convert to bio_for_each_segment_all_sp()
+Message-ID: <20170808163232.GO24087@magnolia>
+References: <20170808084548.18963-1-ming.lei@redhat.com>
+ <20170808084548.18963-42-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170809010444.GR24087@magnolia>
+In-Reply-To: <20170808084548.18963-42-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>, Huang Ying <ying.huang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org
 
-On Tue, Aug 08, 2017 at 06:04:44PM -0700, Darrick J. Wong wrote:
-> Way back when we established inode block-map redo log items, it was
-> discovered that we needed to prevent the VFS from evicting inodes during
-> log recovery because any given inode might be have bmap redo items to
-> replay even if the inode has no link count and is ultimately deleted,
-> and any eviction of an unlinked inode causes the inode to be truncated
-> and freed too early.
-> 
-> To make this possible, we set MS_ACTIVE so that inodes would not be torn
-> down immediately upon release.  Unfortunately, this also results in the
-> quota inodes not being released at all if a later part of the mount
-> process should fail, because we never reclaim the inodes.  So, clear
-> MS_ACTIVE immediately after we finish the log recovery so that the quota
-> inodes will be torn down properly if we abort the mount.
-> 
-> Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Aug 08, 2017 at 04:45:40PM +0800, Ming Lei wrote:
+
+Sure would be nice to have a changelog explaining why we're doing this.
+
+> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> Cc: linux-xfs@vger.kernel.org
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
 > ---
->  fs/xfs/xfs_mount.c |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_aops.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 40d4e8b..d463ab3 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -949,7 +949,9 @@ xfs_mountfs(
->  	 * iput to behave like they do for an active filesystem.
->  	 * xfs_fs_drop_inode needs to be able to prevent the deletion
->  	 * of inodes before we're done replaying log items on those
-> -	 * inodes.
-> +	 * inodes.  Turn it off immediately after xfs_log_mount_finish
-> +	 * so that we don't leak the quota inodes if subsequent mount
-> +	 * activities fail.
->  	 */
->  	mp->m_super->s_flags |= MS_ACTIVE;
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 6bf120bb1a17..94df43dcae0b 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -139,6 +139,7 @@ xfs_destroy_ioend(
+>  	for (bio = &ioend->io_inline_bio; bio; bio = next) {
+>  		struct bio_vec	*bvec;
+>  		int		i;
+> +		struct bvec_iter_all bia;
 >  
-> @@ -959,6 +961,7 @@ xfs_mountfs(
->  	 * read in.
->  	 */
->  	error = xfs_log_mount_finish(mp);
-> +	mp->m_super->s_flags &= ~MS_ACTIVE;
+>  		/*
+>  		 * For the last bio, bi_private points to the ioend, so we
+> @@ -150,7 +151,7 @@ xfs_destroy_ioend(
+>  			next = bio->bi_private;
+>  
+>  		/* walk each page on bio, ending page IO on them */
+> -		bio_for_each_segment_all(bvec, bio, i)
+> +		bio_for_each_segment_all_sp(bvec, bio, i, bia)
 
-Just an aesthetic nit, but could we combine these two above hunks and
-the associated comments so the intent is very obvious? E.g., so it looks
-something like this:
+It's confusing that you're splitting the old bio_for_each_segment_all
+into multipage and singlepage variants, but bio_for_each_segment_all
+continues to exist?
 
-	/*
-	 * Set MS_ACTIVE around log recovery ...
-	 */
-	mp->m_super->s_flags |= MS_ACTIVE;
-	error = xfs_log_mount_finish(mp);
-	mp->m_super->s_flags &= ~MS_ACTIVE;
-	...
+Hmm, the new multipage variant aliases the name bio_for_each_segment_all,
+so clearly the _all function's sematics have changed a bit, but its name
+and signature haven't, which seems likely to trip up someone who didn't
+notice the behavioral change.
 
-Otherwise this looks fine:
+Is it still valid to call bio_for_each_segment_all?  I get the feeling
+from this patchset that you're really supposed to decide whether you
+want one page at a time or more than one page at a time and choose _sp
+or _mp?
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+(And, seeing how this was the only patch sent to this list, the chances
+are higher of someone missing out on these subtle changes...)
 
->  	if (error) {
->  		xfs_warn(mp, "log mount finish failed");
->  		goto out_rtunmount;
-> @@ -1028,7 +1031,6 @@ xfs_mountfs(
->   out_quota:
->  	xfs_qm_unmount_quotas(mp);
->   out_rtunmount:
-> -	mp->m_super->s_flags &= ~MS_ACTIVE;
->  	xfs_rtunmount_inodes(mp);
->   out_rele_rip:
->  	IRELE(rip);
+--D
+
+>  			xfs_finish_page_writeback(inode, bvec, error);
+>  
+>  		bio_put(bio);
+> -- 
+> 2.9.4
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
