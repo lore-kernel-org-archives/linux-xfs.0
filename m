@@ -1,24 +1,22 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:48433 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752855AbdHKNCf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 09:02:35 -0400
-Date: Fri, 11 Aug 2017 06:02:33 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] xfs: write unmount record for ro mounts
-Message-ID: <20170811130233.GA24839@infradead.org>
-References: <e98c7179-fdb0-1cc7-544b-c55489451db5@redhat.com>
- <94b5e8b2-64cf-8945-83ff-15336f64e1b6@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <94b5e8b2-64cf-8945-83ff-15336f64e1b6@sandeen.net>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33547 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751583AbdHHBKA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Aug 2017 21:10:00 -0400
+Received: by mail-pf0-f196.google.com with SMTP id c65so1843417pfl.0
+        for <linux-xfs@vger.kernel.org>; Mon, 07 Aug 2017 18:09:59 -0700 (PDT)
+From: "=?gb18030?B?wuvUxg==?=" <wang.yong@datatom.com>
+Subject: 
+Mime-Version: 1.0
+Content-Type: text/plain;
+        charset="gb18030"
+Content-Transfer-Encoding: base64
+Date: Tue, 8 Aug 2017 09:09:50 +0800
+Message-ID: <tencent_74057B3D23154D490598A24C@qq.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: =?gb18030?B?bGludXgteGZz?= <linux-xfs@vger.kernel.org>, =?gb18030?B?bWFqb3Jkb21v?= <majordomo@vger.kernel.org>
 
-Looks good,
+dW5zdWJzY3JpYmUgbGludXgteGZz
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
