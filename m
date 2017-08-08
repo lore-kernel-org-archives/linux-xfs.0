@@ -1,139 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25584 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:51457 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752154AbdHHVYX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2017 17:24:23 -0400
-Date: Tue, 8 Aug 2017 14:24:16 -0700
+        with ESMTP id S1752017AbdHHQfg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2017 12:35:36 -0400
+Date: Tue, 8 Aug 2017 09:35:30 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/5] common/populate: enable xfs quota accounting
-Message-ID: <20170808212416.GQ24087@magnolia>
-References: <150067465981.30639.14801416171688538711.stgit@magnolia>
- <150067469221.30639.16711306489951233808.stgit@magnolia>
- <20170804015435.GB1991@eguan.usersys.redhat.com>
+Subject: Re: xfs: use kmem_free to free return value of kmem_zalloc
+Message-ID: <20170808163530.GP24087@magnolia>
+References: <1502194677-28047-1-git-send-email-bianpan2016@163.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170804015435.GB1991@eguan.usersys.redhat.com>
+In-Reply-To: <1502194677-28047-1-git-send-email-bianpan2016@163.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Pan Bian <bianpan2016@163.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Aug 04, 2017 at 09:54:35AM +0800, Eryu Guan wrote:
-> On Fri, Jul 21, 2017 at 03:04:52PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > When we're creating a populated xfs image, turn on quotas so that we can
-> > fuzz those fields too.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  common/populate |   50 +++++++++++++++++++++++++++++++++++++++++++++++++-
-> >  1 file changed, 49 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/common/populate b/common/populate
-> > index 498151f..b77c508 100644
-> > --- a/common/populate
-> > +++ b/common/populate
-> > @@ -21,6 +21,7 @@
-> >  #  Contact information: Silicon Graphics, Inc., 1500 Crittenden Lane,
-> >  #  Mountain View, CA 94043, USA, or: http://www.sgi.com
-> >  #-----------------------------------------------------------------------
-> > +. ./common/quota
-> >  
-> >  _require_populate_commands() {
-> >  	_require_xfs_io_command "falloc"
-> > @@ -94,6 +95,47 @@ __populate_fill_fs() {
-> >  	done
-> >  }
-> >  
-> > +# For XFS, force on all the quota options if quota is enabled
-> > +# and the user didn't feed us noquota.
-> > +_populate_xfs_qmount_option()
-> > +{
-> > +	# User explicitly told us not to quota
-> > +	if echo "${MOUNT_OPTIONS}" | grep -q 'noquota'; then
-> > +		return
-> > +	fi
-> > +
-> > +	# Don't bother if we can't turn on quotas
-> > +	if [ ! -f /proc/fs/xfs/xqmstat ]; then
-> > +		# No quota support
-> > +		return
-> > +	elif [ "${USE_EXTERNAL}" = "yes" ] && [ ! -z "${SCRATCH_RTDEV}" ]; then
-> > +		# Quotas not supported on rt filesystems
-> > +		return
-> > +	elif [ -z "${XFS_QUOTA_PROG}" ]; then
-> > +		# xfs quota tools not installed
-> > +		return
-> > +	fi
-> > +
-> > +	# Turn on all the quotas
-> > +	if xfs_info "${TEST_DIR}" | grep -q 'crc=1'; then
-> > +		# v5 filesystems can have group & project quotas
-> > +		quota="usrquota,grpquota,prjquota"
-> > +	else
-> > +		# v4 filesystems cannot mix group & project quotas
-> > +		quota="usrquota,grpquota"
-> > +	fi
-> > +
-> > +	# Inject our quota mount options
-> > +	if echo "${MOUNT_OPTIONS}" | grep -q "${quota}"; then
-> > +		return
-> > +	elif echo "${MOUNT_OPTIONS}" | egrep -q '(quota|noenforce)'; then
-> > +		_qmount_option "${quota}"
-> > +	else
-> > +		export MOUNT_OPTIONS="$MOUNT_OPTIONS -o ${quota}"
-> > +		echo "MOUNT_OPTIONS = $MOUNT_OPTIONS" >>$seqres.full
-> > +	fi
+On Tue, Aug 08, 2017 at 08:17:57PM +0800, Pan Bian wrote:
+> In function xfs_test_remount_options(), kfree() is used to free memory
+> allocated by kmem_zalloc(). But it is better to use kmem_free().
+
+Looks fine (for 4.14),
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+> Signed-off-by: Pan Bian <bianpan2016@163.com>
+> ---
+>  fs/xfs/xfs_super.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> It looks like an unconditional '_qmount_option "${quota}"' would be
-> sufficient here. Did I miss anything?
-
-Turning on /all/ the quota types.
-
-> > +}
-> > +
-> >  # Populate an XFS on the scratch device with (we hope) all known
-> >  # types of metadata block
-> >  _scratch_xfs_populate() {
-> > @@ -106,6 +148,7 @@ _scratch_xfs_populate() {
-> >  		esac
-> >  	done
-> >  
-> > +	_populate_xfs_qmount_option
-> >  	_scratch_mount
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 38aaacd..c1c4c2e 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1220,7 +1220,7 @@ struct proc_xfs_info {
+>  	tmp_mp->m_super = sb;
+>  	error = xfs_parseargs(tmp_mp, options);
+>  	xfs_free_fsname(tmp_mp);
+> -	kfree(tmp_mp);
+> +	kmem_free(tmp_mp);
+>  
+>  	return error;
+>  }
+> -- 
+> 1.9.1
 > 
-> Then use _qmount? But it's in populate function for xfs, _scratch_mount
-> and _qmount doesn't have much difference, so either way seems fine.
-
-<shrug> fewer changes, then :)
-
---D
-
 > 
-> Thanks,
-> Eryu
-> 
-> >  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-> >  	dblksz="$(xfs_info "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> > @@ -720,7 +763,12 @@ _scratch_populate_cached() {
-> >  		test -n "${SCRATCH_LOGDEV}" && rm -f "${POPULATE_METADUMP}"
-> >  		;;
-> >  	"xfs")
-> > -		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}";;
-> > +		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}"
-> > +		_populate_xfs_qmount_option
-> > +		if echo "${MOUNT_OPTIONS}" | grep -q 'usrquota'; then
-> > +			extra_descr="${extra_descr} QUOTAS"
-> > +		fi
-> > +		;;
-> >  	*)
-> >  		extra_descr="";;
-> >  	esac
-> > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
