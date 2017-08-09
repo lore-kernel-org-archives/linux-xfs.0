@@ -1,93 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f175.google.com ([209.85.217.175]:37723 "EHLO
-        mail-ua0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751208AbdHDUpm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2017 16:45:42 -0400
-Received: by mail-ua0-f175.google.com with SMTP id f9so11949856uaf.4
-        for <linux-xfs@vger.kernel.org>; Fri, 04 Aug 2017 13:45:42 -0700 (PDT)
+Received: from aserp1040.oracle.com ([141.146.126.69]:34449 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753609AbdHIPqa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2017 11:46:30 -0400
+Date: Wed, 9 Aug 2017 08:46:24 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/3] xfs: clear MS_ACTIVE after finishing log recovery to
+ avoid inode leak
+Message-ID: <20170809154624.GS24087@magnolia>
+References: <20170809010444.GR24087@magnolia>
+ <20170809123600.GA62448@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20170804203312.GF24087@magnolia>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150181371001.32119.599597939855384271.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170804203312.GF24087@magnolia>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 4 Aug 2017 13:45:41 -0700
-Message-ID: <CAPcyv4j0rWOAPSL2axNbLmTN-UJ=328Vj9kQzGKz1q9=ShM9Dg@mail.gmail.com>
-Subject: Re: [PATCH v2 4/5] xfs: introduce XFS_DIFLAG2_IOMAP_IMMUTABLE
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170809123600.GA62448@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Aug 4, 2017 at 1:33 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> On Thu, Aug 03, 2017 at 07:28:30PM -0700, Dan Williams wrote:
->> Add an on-disk inode flag to record the state of the S_IOMAP_IMMUTABLE
->> in-memory vfs inode flags. This allows the protections against reflink
->> and hole punch to be automatically restored on a sub-sequent boot when
->> the in-memory inode is established.
->>
->> The FS_XFLAG_IOMAP_IMMUTABLE is introduced to allow xfs_io to read the
->> state of the flag, but toggling the flag requires going through
->> fallocate(FALLOC_FL_[UN]SEAL_BLOCK_MAP). Support for toggling this
->> on-disk state is saved for a later patch.
->>
->> Cc: Jan Kara <jack@suse.cz>
->> Cc: Jeff Moyer <jmoyer@redhat.com>
->> Cc: Christoph Hellwig <hch@lst.de>
->> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
->> Suggested-by: Dave Chinner <david@fromorbit.com>
->> Suggested-by: "Darrick J. Wong" <darrick.wong@oracle.com>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->> ---
->>  fs/xfs/libxfs/xfs_format.h |    5 ++++-
->>  fs/xfs/xfs_inode.c         |    2 ++
->>  fs/xfs/xfs_ioctl.c         |    1 +
->>  fs/xfs/xfs_iops.c          |    8 +++++---
->>  include/uapi/linux/fs.h    |    1 +
->>  5 files changed, 13 insertions(+), 4 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
->> index d4d9bef20c3a..9e720e55776b 100644
->> --- a/fs/xfs/libxfs/xfs_format.h
->> +++ b/fs/xfs/libxfs/xfs_format.h
->> @@ -1063,12 +1063,15 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
->>  #define XFS_DIFLAG2_DAX_BIT  0       /* use DAX for this inode */
->>  #define XFS_DIFLAG2_REFLINK_BIT      1       /* file's blocks may be shared */
->>  #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
->> +#define XFS_DIFLAG2_IOMAP_IMMUTABLE_BIT 3 /* set S_IOMAP_IMMUTABLE for this inode */
->
-> So... the greedy part of my brain that doesn't want to give out flags2
-> bits has been wondering, what if we just didn't have an on-disk
-> IOMAP_IMMUTABLE bit, and set FS_XFLAG based only on the in-core
-> S_IOMAP_IMMUTABLE bit?  If a program wants the immutable iomap
-> semantics, they will have to code some variant on the following:
->
-> fd = open(...);
-> ret = fallocate(fd, FALLOC_FL_SEAL_BLOCK_MAP, 0, len...)
-> if (ret) {
->         printf("couldn't seal block map");
->         close(fd);
->         return;
-> }
->
-> mmap(fd...);
-> /* do sensitive io operations here */
-> munmap(fd...);
->
-> close(fd);
->
-> Therefore the cost of not having the on-disk flag is that we'll have to
-> do more unshare/alloc/test/set cycles than we would if we could remember
-> the iomap-immutable state across unmounts and inode reclaiming.
-> However, if the data map is already ready to go, this shouldn't have a
-> lot of overhead since we only have to iterate the in-core extents.
->
-> Just trying to make sure we /need/ the inode flag bit. :)
+On Wed, Aug 09, 2017 at 08:36:03AM -0400, Brian Foster wrote:
+> On Tue, Aug 08, 2017 at 06:04:44PM -0700, Darrick J. Wong wrote:
+> > Way back when we established inode block-map redo log items, it was
+> > discovered that we needed to prevent the VFS from evicting inodes during
+> > log recovery because any given inode might be have bmap redo items to
+> > replay even if the inode has no link count and is ultimately deleted,
+> > and any eviction of an unlinked inode causes the inode to be truncated
+> > and freed too early.
+> > 
+> > To make this possible, we set MS_ACTIVE so that inodes would not be torn
+> > down immediately upon release.  Unfortunately, this also results in the
+> > quota inodes not being released at all if a later part of the mount
+> > process should fail, because we never reclaim the inodes.  So, clear
+> > MS_ACTIVE immediately after we finish the log recovery so that the quota
+> > inodes will be torn down properly if we abort the mount.
+> > 
+> > Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/xfs_mount.c |    6 ++++--
+> >  1 file changed, 4 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > index 40d4e8b..d463ab3 100644
+> > --- a/fs/xfs/xfs_mount.c
+> > +++ b/fs/xfs/xfs_mount.c
+> > @@ -949,7 +949,9 @@ xfs_mountfs(
+> >  	 * iput to behave like they do for an active filesystem.
+> >  	 * xfs_fs_drop_inode needs to be able to prevent the deletion
+> >  	 * of inodes before we're done replaying log items on those
+> > -	 * inodes.
+> > +	 * inodes.  Turn it off immediately after xfs_log_mount_finish
+> > +	 * so that we don't leak the quota inodes if subsequent mount
+> > +	 * activities fail.
+> >  	 */
+> >  	mp->m_super->s_flags |= MS_ACTIVE;
+> >  
+> > @@ -959,6 +961,7 @@ xfs_mountfs(
+> >  	 * read in.
+> >  	 */
+> >  	error = xfs_log_mount_finish(mp);
+> > +	mp->m_super->s_flags &= ~MS_ACTIVE;
+> 
+> Just an aesthetic nit, but could we combine these two above hunks and
+> the associated comments so the intent is very obvious? E.g., so it looks
+> something like this:
+> 
+> 	/*
+> 	 * Set MS_ACTIVE around log recovery ...
+> 	 */
+> 	mp->m_super->s_flags |= MS_ACTIVE;
+> 	error = xfs_log_mount_finish(mp);
+> 	mp->m_super->s_flags &= ~MS_ACTIVE;
+> 	...
 
-A fair point.
+Yes, that's fine.
 
-The use case I imagine is a privileged (CAP_IMMUTABLE) process setting
-up the data file space at server provisioning time, and then
-unprivileged processes using the immutable semantic thereafter.
+--D
+
+> 
+> Otherwise this looks fine:
+> 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> >  	if (error) {
+> >  		xfs_warn(mp, "log mount finish failed");
+> >  		goto out_rtunmount;
+> > @@ -1028,7 +1031,6 @@ xfs_mountfs(
+> >   out_quota:
+> >  	xfs_qm_unmount_quotas(mp);
+> >   out_rtunmount:
+> > -	mp->m_super->s_flags &= ~MS_ACTIVE;
+> >  	xfs_rtunmount_inodes(mp);
+> >   out_rele_rip:
+> >  	IRELE(rip);
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
