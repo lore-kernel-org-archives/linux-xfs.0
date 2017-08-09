@@ -1,53 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51457 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:34626 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752017AbdHHQfg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2017 12:35:36 -0400
-Date: Tue, 8 Aug 2017 09:35:30 -0700
+        with ESMTP id S1751989AbdHIBGx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2017 21:06:53 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7916qYF018613
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 9 Aug 2017 01:06:52 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7916pTQ027287
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 9 Aug 2017 01:06:52 GMT
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7916p83022693
+        for <linux-xfs@vger.kernel.org>; Wed, 9 Aug 2017 01:06:51 GMT
+Date: Tue, 8 Aug 2017 18:06:50 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: xfs: use kmem_free to free return value of kmem_zalloc
-Message-ID: <20170808163530.GP24087@magnolia>
-References: <1502194677-28047-1-git-send-email-bianpan2016@163.com>
+Subject: [PATCH 2/3] xfs: don't leak linked inodes during log recovery
+Message-ID: <20170809010650.GF4474@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1502194677-28047-1-git-send-email-bianpan2016@163.com>
+In-Reply-To: <20170809010444.GR24087@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pan Bian <bianpan2016@163.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Aug 08, 2017 at 08:17:57PM +0800, Pan Bian wrote:
-> In function xfs_test_remount_options(), kfree() is used to free memory
-> allocated by kmem_zalloc(). But it is better to use kmem_free().
+When we introduced the bmap redo log items, we set MS_ACTIVE on the
+mountpoint and XFS_IRECOVERY on the inode to prevent unlinked inodes
+from being truncated prematurely during log recovery.  However, we
+neglected to drop linked inodes that are recovered, and if we don't use
+the inode between recovery and unmount, the inode will never be marked
+reclaimable and thus we fail to free it at umount time.  If we're in
+log recovery but IRECOVERY is /not/ set, the inode is linked and can be
+reclaimed.
 
-Looks fine (for 4.14),
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_super.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-> Signed-off-by: Pan Bian <bianpan2016@163.com>
-> ---
->  fs/xfs/xfs_super.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 38aaacd..c1c4c2e 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1220,7 +1220,7 @@ struct proc_xfs_info {
->  	tmp_mp->m_super = sb;
->  	error = xfs_parseargs(tmp_mp, options);
->  	xfs_free_fsname(tmp_mp);
-> -	kfree(tmp_mp);
-> +	kmem_free(tmp_mp);
->  
->  	return error;
->  }
-> -- 
-> 1.9.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 38aaacd..9b06ca2 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1040,6 +1040,13 @@ xfs_fs_drop_inode(
+ 	if (ip->i_flags & XFS_IRECOVERY) {
+ 		ASSERT(ip->i_mount->m_log->l_flags & XLOG_RECOVERY_NEEDED);
+ 		return 0;
++	} else if (ip->i_mount->m_log->l_flags & XLOG_RECOVERY_NEEDED) {
++		/*
++		 * This inode was loaded during recovery but is not
++		 * being unlinked, so we can free it without fear of
++		 * premature truncation.
++		 */
++		return 1;
+ 	}
+ 
+ 	return generic_drop_inode(inode) || (ip->i_flags & XFS_IDONTCACHE);
