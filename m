@@ -1,48 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53392 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752799AbdHHIxr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Aug 2017 04:53:47 -0400
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH v3 41/49] xfs: convert to bio_for_each_segment_all_sp()
-Date: Tue,  8 Aug 2017 16:45:40 +0800
-Message-Id: <20170808084548.18963-42-ming.lei@redhat.com>
-In-Reply-To: <20170808084548.18963-1-ming.lei@redhat.com>
-References: <20170808084548.18963-1-ming.lei@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:46440 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750798AbdHIGb1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 Aug 2017 02:31:27 -0400
+Subject: Re: [PATCH 1/3] xfs: clear MS_ACTIVE after finishing log recovery to
+ avoid inode leak
+References: <20170809010444.GR24087@magnolia>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <216378c1-b182-cf4f-1888-855cc58ccb64@suse.com>
+Date: Wed, 9 Aug 2017 09:31:24 +0300
+MIME-Version: 1.0
+In-Reply-To: <20170809010444.GR24087@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>, Huang Ying <ying.huang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
 
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- fs/xfs/xfs_aops.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 6bf120bb1a17..94df43dcae0b 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -139,6 +139,7 @@ xfs_destroy_ioend(
- 	for (bio = &ioend->io_inline_bio; bio; bio = next) {
- 		struct bio_vec	*bvec;
- 		int		i;
-+		struct bvec_iter_all bia;
- 
- 		/*
- 		 * For the last bio, bi_private points to the ioend, so we
-@@ -150,7 +151,7 @@ xfs_destroy_ioend(
- 			next = bio->bi_private;
- 
- 		/* walk each page on bio, ending page IO on them */
--		bio_for_each_segment_all(bvec, bio, i)
-+		bio_for_each_segment_all_sp(bvec, bio, i, bia)
- 			xfs_finish_page_writeback(inode, bvec, error);
- 
- 		bio_put(bio);
--- 
-2.9.4
+
+On  9.08.2017 04:04, Darrick J. Wong wrote:
+> Way back when we established inode block-map redo log items, it was
+> discovered that we needed to prevent the VFS from evicting inodes during
+> log recovery because any given inode might be have bmap redo items to
+> replay even if the inode has no link count and is ultimately deleted,
+> and any eviction of an unlinked inode causes the inode to be truncated
+> and freed too early.
+> 
+> To make this possible, we set MS_ACTIVE so that inodes would not be torn
+> down immediately upon release.  Unfortunately, this also results in the
+> quota inodes not being released at all if a later part of the mount
+> process should fail, because we never reclaim the inodes.  So, clear
+> MS_ACTIVE immediately after we finish the log recovery so that the quota
+> inodes will be torn down properly if we abort the mount.
+> 
+> Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+I think the whole series warrants:
+Cc: <stable@vger.kernel.org> # 4.9
 
