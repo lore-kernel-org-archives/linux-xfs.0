@@ -1,54 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:40584 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752723AbdHKRJW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Aug 2017 13:09:22 -0400
-Date: Fri, 11 Aug 2017 19:09:21 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] xfs: open code end_buffer_async_write in
-        xfs_finish_page_writeback
-Message-ID: <20170811170921.GA1127@lst.de>
-References: <20170811095905.11241-1-hch@lst.de> <20170811095905.11241-2-hch@lst.de> <20170811162037.GB24087@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170811162037.GB24087@magnolia>
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:32822 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752122AbdHILG0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2017 07:06:26 -0400
+Received: by mail-wr0-f181.google.com with SMTP id v105so22768630wrb.0
+        for <linux-xfs@vger.kernel.org>; Wed, 09 Aug 2017 04:06:25 -0700 (PDT)
+From: alex@zadarastorage.com
+Subject: [PATCH] xfs: hold xfs_buf locked between shortform->leaf conversion and the addition of an attribute
+Date: Wed,  9 Aug 2017 14:06:12 +0300
+Message-Id: <1502276772-24293-1-git-send-email-alex@zadarastorage.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: bfoster@redhat.com, david@fromorbit.com, darrick.wong@oracle.com, libor.klepac@bcom.cz, Alex Lyakas <alex@zadarastorage.com>
 
-On Fri, Aug 11, 2017 at 09:20:38AM -0700, Darrick J. Wong wrote:
-> If we're going to open-code end_buffer_async_write, could we have a
-> comment here explaining that we've done so, and why?
+From: Alex Lyakas <alex@zadarastorage.com>
 
-Sure.
+The new attribute leaf buffer is not held locked across
+the transaction roll between the shortform->leaf modification
+and the addition of the new entry. As a result, the attribute
+buffer modification being made is not atomic from
+an operational perspective. Hence the AIL push can grab it in
+the transient state of "just created" after the initial
+transaction is rolled, because the buffer has been released.
+This leads to xfs_attr3_leaf_verify() asserting that
+hdr.count is zero, treating this as in-memory corruption,
+and shutting down the filesystem.
 
-> ASSERT(bh->b_end_io == end_buffer_async_write), just in case we ever get
-> passed a buffer head with an endio function that isn't what we're
-> open-coding?
+Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
+---
+ fs/xfs/libxfs/xfs_attr.c      | 19 ++++++++++++++++++-
+ fs/xfs/libxfs/xfs_attr_leaf.c |  4 +++-
+ fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++-
+ 3 files changed, 23 insertions(+), 3 deletions(-)
 
-Ok.
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index de7b9bd..982e322 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -216,10 +216,11 @@
+ 	struct xfs_defer_ops	dfops;
+ 	struct xfs_trans_res	tres;
+ 	xfs_fsblock_t		firstblock;
+ 	int			rsvd = (flags & ATTR_ROOT) != 0;
+ 	int			error, err2, local;
++	struct xfs_buf		*leaf_bp = NULL;
+ 
+ 	XFS_STATS_INC(mp, xs_attr_set);
+ 
+ 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+ 		return -EIO;
+@@ -325,11 +326,17 @@
+ 		/*
+ 		 * It won't fit in the shortform, transform to a leaf block.
+ 		 * GROT: another possible req'mt for a double-split btree op.
+ 		 */
+ 		xfs_defer_init(args.dfops, args.firstblock);
+-		error = xfs_attr_shortform_to_leaf(&args);
++		error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
++		/*
++		 * Prevent the leaf buffer from being unlocked
++		 * when "args.trans" transaction commits.
++		 */
++		if (leaf_bp)
++			xfs_trans_bhold(args.trans, leaf_bp);
+ 		if (!error)
+ 			error = xfs_defer_finish(&args.trans, args.dfops, dp);
+ 		if (error) {
+ 			args.trans = NULL;
+ 			xfs_defer_cancel(&dfops);
+@@ -343,10 +350,18 @@
+ 
+ 		error = xfs_trans_roll(&args.trans, dp);
+ 		if (error)
+ 			goto out;
+ 
++		/*
++		 * Rejoin the leaf buffer to the new transaction.
++		 * This allows a subsequent read to find the buffer in the
++		 * transaction (and avoid a deadlock).
++		 */
++		xfs_trans_bjoin(args.trans, leaf_bp);
++		/* Prevent from being released at the end of the function */
++		leaf_bp = NULL;
+ 	}
+ 
+ 	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+ 		error = xfs_attr_leaf_addname(&args);
+ 	else
+@@ -374,10 +389,12 @@
+ 	return error;
+ 
+ out:
+ 	if (args.trans)
+ 		xfs_trans_cancel(args.trans);
++	if (leaf_bp)
++		xfs_buf_relse(leaf_bp);
+ 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ 	return error;
+ }
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index c6c15e5..ab73e4b 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -738,13 +738,14 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args *args,
+ 	return -ENOATTR;
+ }
+ 
+ /*
+  * Convert from using the shortform to the leaf.
++ * Upon success, return the leaf buffer.
+  */
+ int
+-xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
++xfs_attr_shortform_to_leaf(xfs_da_args_t *args, struct xfs_buf **bpp)
+ {
+ 	xfs_inode_t *dp;
+ 	xfs_attr_shortform_t *sf;
+ 	xfs_attr_sf_entry_t *sfe;
+ 	xfs_da_args_t nargs;
+@@ -820,10 +821,11 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args *args,
+ 		if (error)
+ 			goto out;
+ 		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
+ 	}
+ 	error = 0;
++	*bpp = bp;
+ 
+ out:
+ 	kmem_free(tmpbuffer);
+ 	return error;
+ }
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index f7dda0c..2b3c69df 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -46,11 +46,12 @@
+  */
+ void	xfs_attr_shortform_create(struct xfs_da_args *args);
+ void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
+ int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
+ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+-int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
++int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
++					struct xfs_buf **bpp);
+ int	xfs_attr_shortform_remove(struct xfs_da_args *args);
+ int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+ int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+ void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
+ 
+-- 
+1.9.1
 
-> > +	if (unlikely(error && !quiet)) {
-> > +		xfs_err_ratelimited(XFS_I(inode)->i_mount,
-> > +			"read error on sector %llu", start);
-> 
-> Read error?  Isn't this writeback?
-
-Ooops, it is.
-
-> I also wonder about the wisdom of the text deviating from "lost async
-> page write", since scripts/admins have been trained to look for that as
-> evidence of writeback problems for years.
-
-We could keep the text, but I think it's rather confusing and doesn't
-fit the other XFS warnings.  And I don't think admins should rely on
-the sorts of warnings.  E.g. for btrfs they would not get these
-warnings either.
-
-> (That said, at least now it's a lot less spammy.)
-
-Yes - but we could still print the warning once per bio instead of
-once per bh if the message remains the same.
