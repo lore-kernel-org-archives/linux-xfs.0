@@ -1,90 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53368 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:6995 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751773AbdHBCf2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 Aug 2017 22:35:28 -0400
+        id S1751487AbdHJV5b (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 10 Aug 2017 17:57:31 -0400
+Subject: Re: [PATCH v2] fiemap: Allow to specify range to fiemap
+References: <20170810120439.GO21024@dastard>
+ <1502368241-8928-1-git-send-email-nborisov@suse.com>
+ <20170810161322.GV24087@magnolia>
+ <c254f712-e2bd-502b-515f-5ba20097bffd@suse.com>
+ <20170810211208.GY24087@magnolia>
+ <348c2665-f0e8-48ff-277f-c46748678a3c@sandeen.net>
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_metadump: zap stale date in DIR2_LEAF1 dirs
-Message-ID: <37cd41d1-335f-a3af-d92c-c0b4b6d1356a@redhat.com>
-Date: Tue, 1 Aug 2017 21:35:27 -0500
+Message-ID: <202242e0-6ae8-aebf-9b6f-ce4f91949b10@redhat.com>
+Date: Thu, 10 Aug 2017 14:57:29 -0700
 MIME-Version: 1.0
+In-Reply-To: <348c2665-f0e8-48ff-277f-c46748678a3c@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Stefan Ring <stefanrin@gmail.com>
+To: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org
 
-xfs_metadump attempts to zero out unused regions of metadata
-blocks to prevent data leaks when sharing metadata images.
+On 8/10/17 2:22 PM, Eric Sandeen wrote:
+> On 8/10/17 2:12 PM, Darrick J. Wong wrote:
+>> On Thu, Aug 10, 2017 at 07:46:35PM +0300, Nikolay Borisov wrote:
+>>>
+>>>
+>>> On 10.08.2017 19:13, Darrick J. Wong wrote:
+>>>> We don't decrement len each time through the ioctl loop?  Doesn't that
+>>>> cause us to request and retrieve rows for ranges we don't want?
+>>>
+>>> Hm, you are right, I believe on every iteration we should do:
+>>>
+>>> len -= last_logical - start_offset
+>>
+>> start_offset doesn't change, right?
+>>
+>> I would think len -= last_logical - fiemap->fm_start.
+>>
+>> Or just calculate end_offset = start_offset + length and set
+>> fiemap->fm_length = end_offset - last_logical... 
+>>
+>> ...though now that I look at that file even closer I wonder what is
+>> going on with that outer while loop counting extents?  Does -n exist to
+>> let users cap the number of records to print, even if that means we
+>> don't make it to the end of the range requested?
+> 
+> -n should simply be the size of each fiemap request, i.e. how many to
+> request and fill on each iteration.  It should not affect how many
+> get printed in the end.
+> 
+> At least that's how xfs_bmap is supposed to work, and therefore in theory
+> how xfs_io's fiemap should work.
 
-However, Stefan Ring reported a significant number of leaked
-strings when dumping his 1T filesystem.  Based on a reduced
-metadata set, I was able to identify "leaf" directories
-(with XFS_DIR2_LEAF1_MAGIC magic) as the primary culprit;
-the region between the end of the entries array and the start
-of the bests array was not getting zeroed out.  This patch
-seems to remedy that problem.
+... except apparently that is not actually how it works :(
 
-Reported-by: Stefan Ring <stefanrin@gmail.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-I may have missed some handy macro to work out some of the
-math below, if so I'd be perfectly happy to hear about it ;)
-
-diff --git a/db/metadump.c b/db/metadump.c
-index 96641e0..6d77d61 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1459,6 +1459,37 @@ process_dir_data_block(
- 	int		wantmagic;
- 	struct xfs_dir2_data_hdr *datahdr;
- 
-+	if (offset >= mp->m_dir_geo->freeblk) {
-+		/* TODO */
-+		return;
-+	} else if (offset >= mp->m_dir_geo->leafblk) {
-+		struct xfs_dir2_leaf		*leaf;
-+		struct xfs_dir2_leaf_tail	*ltp;
-+		struct xfs_dir3_icleaf_hdr 	leafhdr;
-+
-+		if (!zero_stale_data)
-+			return;
-+
-+		leaf = (struct xfs_dir2_leaf *)block;
-+		ltp = xfs_dir2_leaf_tail_p(mp->m_dir_geo, leaf);
-+		M_DIROPS(mp)->leaf_hdr_from_disk(&leafhdr, leaf);
-+
-+		/* Zero out space from end of ents[] to bests */
-+		if (leafhdr.magic == XFS_DIR2_LEAF1_MAGIC) {
-+			struct xfs_dir2_leaf_entry	*ents;
-+			__be16				*lbp;
-+			char				*start; /* end of ents */
-+
-+			ents = M_DIROPS(mp)->leaf_ents_p(leaf);
-+			start = (char *)&ents[leafhdr.count + leafhdr.stale];
-+			lbp = xfs_dir2_leaf_bests_p(ltp);
-+			memset(start, 0, (char *)lbp - start);
-+			iocur_top->need_crc = 1;
-+		}
-+		return;
-+	}
-+
-+	/* It's a data block. */
- 	datahdr = (struct xfs_dir2_data_hdr *)block;
- 
- 	if (is_block_format) {
-@@ -1800,9 +1831,6 @@ process_single_fsb_objects(
- 		dp = iocur_top->data;
- 		switch (btype) {
- 		case TYP_DIR2:
--			if (o >= mp->m_dir_geo->leafblk)
--				break;
--
- 			process_dir_data_block(dp, o,
- 					 last == mp->m_dir_geo->fsbcount);
- 			iocur_top->need_crc = 1;
-
+-Eric
