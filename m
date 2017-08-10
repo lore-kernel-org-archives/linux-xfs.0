@@ -1,61 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54740 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753353AbdHUSo4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Aug 2017 14:44:56 -0400
-Subject: Re: [PATCH] xfs_db: bit fuzzing should read the right bit when
- flipping
-References: <20170819153210.GR4796@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d8b6ff6c-7e46-a27a-8a58-7c85b8037ea0@sandeen.net>
-Date: Mon, 21 Aug 2017 13:44:54 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170819153210.GR4796@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mx2.suse.de ([195.135.220.15]:60922 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752243AbdHJLHu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 10 Aug 2017 07:07:50 -0400
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH] fiemap: Allow to specify range to fiemap
+Date: Thu, 10 Aug 2017 14:07:44 +0300
+Message-Id: <1502363264-32659-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, sandeen@redhat.com, Nikolay Borisov <nborisov@suse.com>
 
-On 8/19/17 10:32 AM, Darrick J. Wong wrote:
-> The middle and last bit flip fuzz verbs need to read the same bit that
-> they're trying to set.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Add 2 additional, optional, arguments to the embedded fiemap command,
+that way one can specify exact ranges to be fiemapped. This will be used
+for a btrfs test. Since the arguments are optional, omitting them just
+retains the old behavior. 
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+ io/fiemap.c | 34 ++++++++++++++++++++++++++++++++--
+ 1 file changed, 32 insertions(+), 2 deletions(-)
 
-> ---
->  db/fuzz.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/db/fuzz.c b/db/fuzz.c
-> index 53cedbc..d0d78a9 100644
-> --- a/db/fuzz.c
-> +++ b/db/fuzz.c
-> @@ -226,7 +226,7 @@ fuzz_lastbit(
->  	int		nbits)
->  {
->  	setbit_l((char *)buf, bitoff + nbits - 1,
-> -			!getbit_l((char *)buf, bitoff));
-> +			!getbit_l((char *)buf, bitoff + nbits - 1));
->  	return true;
->  }
->  
-> @@ -238,7 +238,7 @@ fuzz_middlebit(
->  	int		nbits)
->  {
->  	setbit_l((char *)buf, bitoff + nbits / 2,
-> -			!getbit_l((char *)buf, bitoff));
-> +			!getbit_l((char *)buf, bitoff + nbits / 2));
->  	return true;
->  }
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/io/fiemap.c b/io/fiemap.c
+index 75e8820..a3c0c89 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -216,7 +216,11 @@ fiemap_f(
+ 	int		flg_w = 5;
+ 	__u64		blocksize = 512;
+ 	__u64		last_logical = 0;
++	__u64		len = -1LL;
+ 	struct stat	st;
++	size_t 		fsblocksize, fssectsize;
++
++	init_cvtnum(&fsblocksize, &fssectsize);
+ 
+ 	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+ 		switch (c) {
+@@ -237,6 +241,32 @@ fiemap_f(
+ 		}
+ 	}
+ 
++	if (argc == optind + 2) {
++		off64_t start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (start_offset < 0) {
++			printf("non-numeric offset argument -- %s\n", argv[optind]);
++			return 0;
++		}
++		last_logical = start_offset;
++		last_logical = strtoull(argv[optind], NULL, 10);
++
++		optind++;
++
++		off64_t length = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (length < 0) {
++			printf("non-numeric len argument -- %s\n", argv[optind]);
++			return 0;
++		}
++		len = length;
++	} else if (argc == optind + 1) {
++		off64_t start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (last_logical < 0) {
++			printf("non-numeric offset argument -- %s\n", argv[optind]);
++			return 0;
++		}
++		last_logical = start_offset;
++	}
++
+ 	if (max_extents)
+ 		num_extents = min(num_extents, max_extents);
+ 	map_size = sizeof(struct fiemap) +
+@@ -259,7 +289,7 @@ fiemap_f(
+ 		memset(fiemap, 0, map_size);
+ 		fiemap->fm_flags = fiemap_flags;
+ 		fiemap->fm_start = last_logical;
+-		fiemap->fm_length = -1LL;
++		fiemap->fm_length = len;
+ 		fiemap->fm_extent_count = num_extents;
+ 
+ 		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+@@ -350,7 +380,7 @@ fiemap_init(void)
+ 	fiemap_cmd.argmin = 0;
+ 	fiemap_cmd.argmax = -1;
+ 	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+-	fiemap_cmd.args = _("[-alv] [-n nx]");
++	fiemap_cmd.args = _("[-alv] [-n nx] [start offset] [len]");
+ 	fiemap_cmd.oneline = _("print block mapping for a file");
+ 	fiemap_cmd.help = fiemap_help;
+ 
+-- 
+2.7.4
+
