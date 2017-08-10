@@ -1,108 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36318 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:37650 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752381AbdHJOvb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 Aug 2017 10:51:31 -0400
-Date: Thu, 10 Aug 2017 10:51:26 -0400
+        id S1752389AbdHJOvf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 10 Aug 2017 10:51:35 -0400
+Date: Thu, 10 Aug 2017 10:51:34 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/3] xfs: evict all inodes involved with log redo item
- recovery
-Message-ID: <20170810145126.GC3777@bfoster.bfoster>
+Subject: Re: [PATCH 3/3] xfs: don't leak quotacheck dquots when cow recovery
+ fails
+Message-ID: <20170810145134.GD3777@bfoster.bfoster>
 References: <150234262066.13754.6534116056866237943.stgit@magnolia>
- <150234263191.13754.5037661818451431724.stgit@magnolia>
+ <150234263808.13754.11636194057966589953.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150234263191.13754.5037661818451431724.stgit@magnolia>
+In-Reply-To: <150234263808.13754.11636194057966589953.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Aug 09, 2017 at 10:23:51PM -0700, Darrick J. Wong wrote:
+On Wed, Aug 09, 2017 at 10:23:58PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> When we introduced the bmap redo log items, we set MS_ACTIVE on the
-> mountpoint and XFS_IRECOVERY on the inode to prevent unlinked inodes
-> from being truncated prematurely during log recovery.  This also had the
-> effect of putting linked inodes on the lru instead of evicting them.
+> If we fail a mount on account of cow recovery errors, it's possible that
+> a previous quotacheck left some dquots in memory.  The bailout clause of
+> xfs_mountfs forgets to purge these, and so we leak them.  Fix that.
 > 
-> Unfortunately, we neglected to find all those unreferenced lru inodes
-> and evict them after finishing log recovery, which means that we leak
-> them if anything goes wrong in the rest of xfs_mountfs, because the lru
-> is only cleaned out on unmount.
-> 
-> Therefore, look for unreferenced inodes in the lru list immediately
-> after clearing MS_ACTIVE.  If we find any, igrab/iput them so that
-> they're evicted from memory.
-> 
-> Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_mount.c |   29 +++++++++++++++++++++++++++++
->  1 file changed, 29 insertions(+)
+> v2: unmount quotas, then free all the quota information
+> ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_mount.c |    2 ++
+>  1 file changed, 2 insertions(+)
 > 
 > 
 > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index d63a367..8da5155 100644
+> index 8da5155..d50f4a7 100644
 > --- a/fs/xfs/xfs_mount.c
 > +++ b/fs/xfs/xfs_mount.c
-> @@ -616,6 +616,34 @@ xfs_default_resblks(xfs_mount_t *mp)
->  }
->  
->  /*
-> + * Find inodes that were put on the LRU during the last part of log
-> + * recovery that are no longer referenced by anything, and igrab/iput
-> + * them so that they'll be evicted now.
-> + *
-> + * We let all inodes involved in redo item processing end up on the LRU
-> + * instead of being evicted immediately so that if we do something to an
-> + * unlinked inode, the irele won't cause premature truncation and
-> + * freeing of the inode, which results in log recovery failure.  We have
-> + * to evict the unreferenced lru inodes here because we don't otherwise
-> + * clean up the lru if there's a subsequent failure in xfs_mountfs,
-> + * which leads to us leaking the inodes if nothing else (e.g. quotacheck)
-> + * references the inodes before the failure occurs.
-> + */
-> +STATIC void
-> +xfs_mountfs_evict_log_redo_inodes(
-> +	struct xfs_mount	*mp)
-> +{
-> +	struct super_block	*sb = mp->m_super;
-> +	struct inode		*inode;
-> +	struct inode		*next;
-> +
-
-Perhaps assert that MS_ACTIVE is cleared here as a bit of
-self-documentation..?
-
-> +	list_for_each_entry_safe(inode, next, &sb->s_inodes, i_sb_list) {
-> +		if (!atomic_read(&inode->i_count))
-> +			iput(igrab(inode));
-> +	}
-
-I assume we don't need s_inodes_list_lock here since nothing else should
-be messing with the list..? If so, this looks fine otherwise. Though any
-reason you didn't end up calling evict_inodes() here? Because it's not
-exported..?
-
-Brian
-
-> +}
-> +
-> +/*
->   * This function does the following on an initial mount of a file system:
->   *	- reads the superblock from disk and init the mount struct
->   *	- if we're a 32-bit kernel, do a size check on the superblock
-> @@ -960,6 +988,7 @@ xfs_mountfs(
->  	mp->m_super->s_flags |= MS_ACTIVE;
->  	error = xfs_log_mount_finish(mp);
->  	mp->m_super->s_flags &= ~MS_ACTIVE;
-> +	xfs_mountfs_evict_log_redo_inodes(mp);
->  	if (error) {
->  		xfs_warn(mp, "log mount finish failed");
->  		goto out_rtunmount;
+> @@ -1057,6 +1057,8 @@ xfs_mountfs(
+>  	xfs_fs_unreserve_ag_blocks(mp);
+>   out_quota:
+>  	xfs_qm_unmount_quotas(mp);
+> +	/* Clean out dquots that might be in memory after quotacheck. */
+> +	xfs_qm_unmount(mp);
+>   out_rtunmount:
+>  	xfs_rtunmount_inodes(mp);
+>   out_rele_rip:
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
