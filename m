@@ -1,146 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51272 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752559AbdHJRya (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 Aug 2017 13:54:30 -0400
-Date: Thu, 10 Aug 2017 13:54:25 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/3] xfs: evict all inodes involved with log redo item
- recovery
-Message-ID: <20170810175425.GF3777@bfoster.bfoster>
-References: <150234262066.13754.6534116056866237943.stgit@magnolia>
- <150234263191.13754.5037661818451431724.stgit@magnolia>
- <20170810145126.GC3777@bfoster.bfoster>
- <20170810171851.GW24087@magnolia>
+Received: from userp1040.oracle.com ([156.151.31.81]:36477 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752767AbdHJR4F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2017 13:56:05 -0400
+Date: Thu, 10 Aug 2017 10:55:48 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
+ conversion and the addition of an attribute
+Message-ID: <20170810175548.GX24087@magnolia>
+References: <1502276772-24293-1-git-send-email-alex@zadarastorage.com>
+ <20170809213307.GJ21024@dastard>
+ <185A1C4516684B439A3711999ABACA79@alyakaslap>
+ <20170810113322.GM21024@dastard>
+ <63920C3663124B75BC0983A17533395A@alyakaslap>
+ <20170810145248.GE3777@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170810171851.GW24087@magnolia>
+In-Reply-To: <20170810145248.GE3777@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Alex Lyakas <alex@zadarastorage.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, libor.klepac@bcom.cz
 
-On Thu, Aug 10, 2017 at 10:18:51AM -0700, Darrick J. Wong wrote:
-> On Thu, Aug 10, 2017 at 10:51:26AM -0400, Brian Foster wrote:
-> > On Wed, Aug 09, 2017 at 10:23:51PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > When we introduced the bmap redo log items, we set MS_ACTIVE on the
-> > > mountpoint and XFS_IRECOVERY on the inode to prevent unlinked inodes
-> > > from being truncated prematurely during log recovery.  This also had the
-> > > effect of putting linked inodes on the lru instead of evicting them.
-> > > 
-> > > Unfortunately, we neglected to find all those unreferenced lru inodes
-> > > and evict them after finishing log recovery, which means that we leak
-> > > them if anything goes wrong in the rest of xfs_mountfs, because the lru
-> > > is only cleaned out on unmount.
-> > > 
-> > > Therefore, look for unreferenced inodes in the lru list immediately
-> > > after clearing MS_ACTIVE.  If we find any, igrab/iput them so that
-> > > they're evicted from memory.
-> > > 
-> > > Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/xfs_mount.c |   29 +++++++++++++++++++++++++++++
-> > >  1 file changed, 29 insertions(+)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > > index d63a367..8da5155 100644
-> > > --- a/fs/xfs/xfs_mount.c
-> > > +++ b/fs/xfs/xfs_mount.c
-> > > @@ -616,6 +616,34 @@ xfs_default_resblks(xfs_mount_t *mp)
-> > >  }
-> > >  
-> > >  /*
-> > > + * Find inodes that were put on the LRU during the last part of log
-> > > + * recovery that are no longer referenced by anything, and igrab/iput
-> > > + * them so that they'll be evicted now.
-> > > + *
-> > > + * We let all inodes involved in redo item processing end up on the LRU
-> > > + * instead of being evicted immediately so that if we do something to an
-> > > + * unlinked inode, the irele won't cause premature truncation and
-> > > + * freeing of the inode, which results in log recovery failure.  We have
-> > > + * to evict the unreferenced lru inodes here because we don't otherwise
-> > > + * clean up the lru if there's a subsequent failure in xfs_mountfs,
-> > > + * which leads to us leaking the inodes if nothing else (e.g. quotacheck)
-> > > + * references the inodes before the failure occurs.
-> > > + */
-> > > +STATIC void
-> > > +xfs_mountfs_evict_log_redo_inodes(
-> > > +	struct xfs_mount	*mp)
-> > > +{
-> > > +	struct super_block	*sb = mp->m_super;
-> > > +	struct inode		*inode;
-> > > +	struct inode		*next;
-> > > +
+On Thu, Aug 10, 2017 at 10:52:49AM -0400, Brian Foster wrote:
+> On Thu, Aug 10, 2017 at 03:09:09PM +0300, Alex Lyakas wrote:
+> > Hi Dave,
 > > 
-> > Perhaps assert that MS_ACTIVE is cleared here as a bit of
-> > self-documentation..?
-> 
-> Huh?  That's the previous patch; MS_ACTIVE should already be clear when
-> we get here.
-> 
-
-Right.. I mean add something like the following at the top of the
-function:
-
-ASSERT(!(mp->m_super->s_flags & MS_ACTIVE));
-
-... so it's clear that this function only serves a purpose when the
-filesystem is not active.
-
-> > > +	list_for_each_entry_safe(inode, next, &sb->s_inodes, i_sb_list) {
-> > > +		if (!atomic_read(&inode->i_count))
-> > > +			iput(igrab(inode));
-> > > +	}
+> > Thanks for the explanation. So it seems we cannot move forward with this
+> > fix.
 > > 
-> > I assume we don't need s_inodes_list_lock here since nothing else should
-> > be messing with the list..?
 > 
-> Nothing should be messing with the list, though the inode_lru_list_del
-> in iput_final will take s_inode_list_lock.
+> I don't think this completely invalidates the fix.. Dave is pointing out
+> a flaw that the deferred ops infrastructure doesn't properly handle the
+> technique we want to use here. IOW, it means there's a dependency that
+> needs to be implemented first.
 > 
-> > If so, this looks fine otherwise. Though any reason you didn't end up
-> > calling evict_inodes() here? Because it's not exported..?
+> FWIW, I also think this means that your approach on the older kernel to
+> join/hold the buffer to the finished transaction may be the right
+> approach (depending on whether I follow the perm transaction code
+> correctly or not, see below), but I think you'd need to relog the buffer
+> as well.
 > 
-> I felt there's less messing around with vfs internals by sticking to
-> igrab and iput (and letting them deal with the internal inode state)
-> since that's what xfs uses elsewhere to manage inode life cycles.
+> > Will somebody else in XFS community be working on fixing this issue? As you
+> > pointed out, it exists for over two decades. Our production systems hit this
+> > every couple of days, and shutting down the filesystem causes outage.
+> > 
 > 
+> I'm guessing the defer infrastructure needs to handle relogging a buffer
+> similar to how it currently handles joining/relogging inodes..?
+> 
+> ...
+> > -----Original Message----- From: Dave Chinner
+> ...
+> > The problem is that the locked buffer is not joined and logged in
+> > the rolling transactions run in xfs_defer_ops. Hence it can pin the
+> > tail of the AIL, and this can prevent the transaction roll from
+> > regranting the log space necessary to continue rolling the
+> > transaction for the required number of transactions to complete the
+> > deferred ops. If this happens, we end up with a log space deadlock.
+> > 
+> > Hence if we are holding an item that we logged in a transaction
+> > locked and we roll the transaction, we have to join, hold and log it
+> > in each subsequent transaction until we have finished with the item
+> > and can unlock and release it.
+> > 
+> > This is documented in xfs_trans_roll():
+> > 
+> >        /*
+> >         * Reserve space in the log for th next transaction.
+> >         * This also pushes items in the "AIL", the list of logged items,
+> >         * out to disk if they are taking up space at the tail of the log
+> >         * that we want to use.  This requires that either nothing be locked
+> >         * across this call, or that anything that is locked be logged in
+> >         * the prior and the next transactions.
+> >         */
+> > 
+> 
+> Good catch, though I'm wondering whether it's a real enough problem atm
+> to block this fix. A few thoughts/questions:
+> 
+> 1.) The transaction in this case has a t_log_count of 3, presumably to
+> cover the commits by the historical bmap_finish, the trans roll and the
+> final commit. If I'm following the permanent transaction code correctly,
+> doesn't that mean that we have room for at least 2 rolls (and 3 commits)
+> before this task would actually block on log reservation? AFAICT it
+> looks like the commit would dec ticket->t_cnt and replenish the current
+> log reservation. The subsequent xfs_trans_reserve() would just return if
+> t_cnt > 0.
+> 
+> This of course doesn't accommodate the fact the xfs_defer_finish() can
+> now roll a transaction an indeterminate number of times, which probably
+> needs to be handled in general, but...
 
-Ok, sounds good:
+I'd been wondering if tr_logcount needed upward adjusting, but so far
+haven't observed any problems.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 2.) It doesn't look like we actually defer any ops in this situation
+> unless rmapbt is enabled, assuming that we limit holding the buffer to
+> the empty leaf case, at least (see my comment on the previous version).
+> I also don't see where a deferred rmapbt update would itself ever roll
+> the transaction.
 
-> --D
+rmapbt split causes the agfl to hit the low water mark and refresh,
+requiring an allocation ... but I think that's all stuffed in the same
+transaction.  (So yeah I think I agree with you)
+
+> 3.) The buffer in this case is a new allocation, which I think means the
+> risk of it pinning the tail and causing a log deadlock here means that
+> on top of somehow depleting the initial permanent reservation, we'd have
+> to exhaust the log in the time between the first commit and the last
+> reservation.
+> 
+> Given the above, it seems reasonably safe enough to me to merge this
+> change as is and fix up the deferred ops stuff after the fact
+> (considering we know we need to rework the xattr stuff as such anyways).
+> This is still a landmine that should be fixed up, but I wouldn't be
+> against an ASSERT() or something for the time being if we could somehow
+> verify that the transaction ticket didn't require any extra reservation.
+> 
+> OTOH, just adding deferred ops buffer relogging might not be too much
+> trouble either. ;) Anyways, thoughts?
+
+I don't think it'd be difficult to add a _defer_bjoin operation that
+maintains a list of buffers that we need to bhold across rolls.
+
+I think xfs_buf->b_list is only used for delwri buffers, and a buffer
+cannot be part of a transaction /and/ on a delwri list at the same time,
+right?  So it shouldn't be hard to whip something up and couple this
+patch to that.
+
+--D
+
+> 
+> Brian
 > 
 > > 
-> > Brian
+> > Cheers,
 > > 
-> > > +}
-> > > +
-> > > +/*
-> > >   * This function does the following on an initial mount of a file system:
-> > >   *	- reads the superblock from disk and init the mount struct
-> > >   *	- if we're a 32-bit kernel, do a size check on the superblock
-> > > @@ -960,6 +988,7 @@ xfs_mountfs(
-> > >  	mp->m_super->s_flags |= MS_ACTIVE;
-> > >  	error = xfs_log_mount_finish(mp);
-> > >  	mp->m_super->s_flags &= ~MS_ACTIVE;
-> > > +	xfs_mountfs_evict_log_redo_inodes(mp);
-> > >  	if (error) {
-> > >  		xfs_warn(mp, "log mount finish failed");
-> > >  		goto out_rtunmount;
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Dave.
+> > 
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> > 
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > the body of a message to majordomo@vger.kernel.org
 > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
