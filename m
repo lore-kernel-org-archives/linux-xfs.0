@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22940 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752225AbdHJBnz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2017 21:43:55 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7A1hspa010120
+Received: from aserp1040.oracle.com ([141.146.126.69]:24775 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752237AbdHJBn4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2017 21:43:56 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7A1htc2012286
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:54 GMT
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:55 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v7A1hsSj012988
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7A1htOR017858
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:54 GMT
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:55 GMT
 Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7A1hsBX017108
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7A1hsgT017111
         for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:54 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [RFC PATCH 12/13] Add parent pointers to rename
-Date: Wed,  9 Aug 2017 18:41:32 -0700
-Message-Id: <1502329293-4091-13-git-send-email-allison.henderson@oracle.com>
+Subject: [RFC PATCH 13/13] Add the parent pointer support to the superblock version 5.
+Date: Wed,  9 Aug 2017 18:41:33 -0700
+Message-Id: <1502329293-4091-14-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
 References: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -26,123 +26,98 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Allison Henderson <allison.henderson@oracle.com>
 
+[dchinner: forward ported and cleaned up]
+[achender: rebased and added parent pointer attribute to
+           compatible attributes mask]
+
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
-:100644 100644 f5d0d3d... bd99ae2... M	fs/xfs/libxfs/xfs_dir2.c
-:100644 100644 0654ad8b.. 2bdade2... M	fs/xfs/xfs_inode.c
- fs/xfs/libxfs/xfs_dir2.c |  6 ++++--
- fs/xfs/xfs_inode.c       | 26 ++++++++++++++++++++------
- 2 files changed, 24 insertions(+), 8 deletions(-)
+:100644 100644 6cedd75... b00bf1d... M	fs/xfs/libxfs/xfs_format.h
+:100644 100644 fba0105... a18dd0c... M	fs/xfs/libxfs/xfs_fs.h
+:100644 100644 50fb3a2... d7b9010... M	fs/xfs/xfs_fsops.c
+ fs/xfs/libxfs/xfs_format.h | 13 ++++++++-----
+ fs/xfs/libxfs/xfs_fs.h     |  1 +
+ fs/xfs/xfs_fsops.c         |  4 +++-
+ 3 files changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index f5d0d3d..bd99ae2 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -324,10 +324,11 @@ xfs_dir_createname(
- 	else
- 		rval = xfs_dir2_node_addname(args);
- 
-+out_free:
- 	/* return the location that this entry was place in the parent inode */
- 	if (offset)
- 		*offset = args->offset;
--out_free:
-+
- 	kmem_free(args);
- 	return rval;
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 6cedd75..b00bf1d 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -464,10 +464,12 @@ xfs_sb_has_compat_feature(
+ #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+ #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+ #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
++#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)	/* parent inode ptr */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL \
+ 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+ 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+-		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
++		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
++		 XFS_SB_FEAT_RO_COMPAT_PARENT)
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+ xfs_sb_has_ro_compat_feature(
+@@ -507,17 +509,17 @@ xfs_sb_has_incompat_log_feature(
+ /*
+  * V5 superblock specific feature checks
+  */
+-static inline int xfs_sb_version_hascrc(struct xfs_sb *sbp)
++static inline bool xfs_sb_version_hascrc(struct xfs_sb *sbp)
+ {
+ 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
  }
-@@ -496,9 +497,10 @@ xfs_dir_removename(
- 		rval = xfs_dir2_leaf_removename(args);
- 	else
- 		rval = xfs_dir2_node_removename(args);
-+out_free:
- 	if (offset)
- 		*offset = args->offset;
--out_free:
-+
- 	kmem_free(args);
- 	return rval;
+ 
+-static inline int xfs_sb_version_has_pquotino(struct xfs_sb *sbp)
++static inline bool xfs_sb_version_has_pquotino(struct xfs_sb *sbp)
+ {
+ 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
  }
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 0654ad8b..2bdade2 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2971,6 +2971,8 @@ xfs_rename(
- 	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
- 	int			spaceres;
- 	int			error;
-+	xfs_dir2_dataptr_t	new_diroffset;
-+	xfs_dir2_dataptr_t	old_diroffset;
  
- 	trace_xfs_rename(src_dp, target_dp, src_name, target_name);
+-static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
++static inline bool xfs_sb_version_hasftype(struct xfs_sb *sbp)
+ {
+ 	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+ 		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_FTYPE)) ||
+@@ -563,7 +565,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
  
-@@ -3073,13 +3075,12 @@ xfs_rename(
- 		 */
- 		error = xfs_dir_createname(tp, target_dp, target_name,
- 					   src_ip->i_ino, &first_block, &dfops,
--					   spaceres, NULL);
-+					   spaceres, &new_diroffset);
- 		if (error)
- 			goto out_bmap_cancel;
+ static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+ {
+-	return false; /* We'll enable this at the end of the set */
++	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
++		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
+ }
  
- 		xfs_trans_ichgtime(tp, target_dp,
- 					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--
- 		if (new_parent && src_is_directory) {
- 			error = xfs_bumplink(tp, target_dp);
- 			if (error)
-@@ -3113,7 +3114,7 @@ xfs_rename(
- 		 */
- 		error = xfs_dir_replace(tp, target_dp, target_name,
- 					src_ip->i_ino, &first_block, &dfops,
--					spaceres, NULL);
-+					spaceres, &new_diroffset);
- 		if (error)
- 			goto out_bmap_cancel;
+ /*
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index fba0105..a18dd0c 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
+ #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
+ #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
++#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
  
-@@ -3148,7 +3149,7 @@ xfs_rename(
- 		 */
- 		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
- 					target_dp->i_ino, &first_block, &dfops,
--					spaceres, NULL);
-+					spaceres, &new_diroffset);
- 		ASSERT(error != -EEXIST);
- 		if (error)
- 			goto out_bmap_cancel;
-@@ -3187,11 +3188,12 @@ xfs_rename(
- 	 */
- 	if (wip) {
- 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
--					&first_block, &dfops, spaceres, NULL);
-+					&first_block, &dfops, spaceres,
-+					&old_diroffset);
- 	} else
- 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
- 					   &first_block, &dfops, spaceres,
--					   NULL);
-+					   &old_diroffset);
- 	if (error)
- 		goto out_bmap_cancel;
- 
-@@ -3221,6 +3223,18 @@ xfs_rename(
- 		VFS_I(wip)->i_state &= ~I_LINKABLE;
- 	}
- 
-+	if (new_parent && xfs_sb_version_hasparent(&mp->m_sb)) {
-+		error = xfs_parent_add(tp, target_dp, src_ip, target_name,
-+				       new_diroffset, &dfops, &first_block);
-+		if (error)
-+			goto out_bmap_cancel;
-+
-+		error = xfs_parent_remove(tp, src_dp, src_ip,
-+					  old_diroffset, &dfops, &first_block);
-+		if (error)
-+			goto out_bmap_cancel;
-+	}
-+
- 	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
- 	if (new_parent)
+ /*
+  * Minimum and maximum sizes need for growth checks.
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 50fb3a2..d7b9010 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -112,7 +112,9 @@ xfs_fs_geometry(
+ 			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
+ 				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
+ 			(xfs_sb_version_hasreflink(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
++				XFS_FSOP_GEOM_FLAGS_REFLINK : 0) |
++			(xfs_sb_version_hasparent(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_PARENT : 0);
+ 		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+ 				mp->m_sb.sb_logsectsize : BBSIZE;
+ 		geo->rtsectsize = mp->m_sb.sb_blocksize;
 -- 
 2.7.4
 
