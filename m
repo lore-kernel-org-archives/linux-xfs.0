@@ -1,108 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f173.google.com ([209.85.128.173]:34015 "EHLO
-        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752579AbdHBOaM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2017 10:30:12 -0400
-Received: by mail-wr0-f173.google.com with SMTP id 12so19535602wrb.1
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Aug 2017 07:30:12 -0700 (PDT)
-Subject: Re: [PATCH 1/7] mkfs: Save raw user input field to the opts struct
-References: <20170720092932.32580-1-jtulak@redhat.com>
- <20170720092932.32580-2-jtulak@redhat.com>
- <20170727162752.GK18884@wotan.suse.de>
- <0c34504a-923a-20ac-9f03-6972e38bbfde@redhat.com>
- <20170729171207.GN18884@wotan.suse.de>
-From: Jan Tulak <jtulak@redhat.com>
-Message-ID: <723e3733-0a80-1bf2-89ed-e80b914037ed@redhat.com>
-Date: Wed, 2 Aug 2017 16:30:09 +0200
+Received: from sandeen.net ([63.231.237.45]:36272 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751455AbdHJVaM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 10 Aug 2017 17:30:12 -0400
+Subject: [PATCH V2] xfs_metadump: zap stale date in DIR2_LEAF1 dirs
+References: <37cd41d1-335f-a3af-d92c-c0b4b6d1356a@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5f60ef75-8481-872e-91ac-76ea62588773@sandeen.net>
+Date: Thu, 10 Aug 2017 14:30:10 -0700
 MIME-Version: 1.0
-In-Reply-To: <20170729171207.GN18884@wotan.suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <37cd41d1-335f-a3af-d92c-c0b4b6d1356a@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Stefan Ring <stefanrin@gmail.com>
 
+xfs_metadump attempts to zero out unused regions of metadata
+blocks to prevent data leaks when sharing metadata images.
 
+However, Stefan Ring reported a significant number of leaked
+strings when dumping his 1T filesystem.  Based on a reduced
+metadata set, I was able to identify "leaf" directories
+(with XFS_DIR2_LEAF1_MAGIC magic) as the primary culprit;
+the region between the end of the entries array and the start
+of the bests array was not getting zeroed out.  This patch
+seems to remedy that problem.
 
-On 29/07/2017 19:12, Luis R. Rodriguez wrote:
-> On Fri, Jul 28, 2017 at 04:45:58PM +0200, Jan Tulak wrote:
->>
->> On 27/07/2017 18:27, Luis R. Rodriguez wrote:
->>> On Thu, Jul 20, 2017 at 11:29:26AM +0200, Jan Tulak wrote:
->>>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
->>>> index a69190b9..4b030101 100644
->>>> --- a/mkfs/xfs_mkfs.c
->>>> +++ b/mkfs/xfs_mkfs.c
->>>> @@ -107,6 +107,11 @@ unsigned int		sectorsize;
->>>>     *     sets what is used with simple specifying the subopt (-d file).
->>>>     *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
->>>>     *     value in any case.
->>>> + *
->>>> + *   raw_input INTERNAL
->>>> + *     Filled raw string from the user, so we never lose that information e.g.
->>>> + *     to print it back in case of an issue.
->>>> + *
->>>>     */
->>>>    struct opt_params {
->>>>    	const char	name;
->>>> @@ -122,6 +127,7 @@ struct opt_params {
->>>>    		long long	minval;
->>>>    		long long	maxval;
->>>>    		long long	defaultval;
->>>> +		const char	*raw_input;
->>>>    	}		subopt_params[MAX_SUBOPTS];
->>>>    };
->>>> @@ -729,6 +735,18 @@ struct opt_params mopts = {
->>>>     */
->>>>    #define WHACK_SIZE (128 * 1024)
->>>> +static inline void
->>>> +set_conf_raw(struct opt_params *opt, int subopt, const char *value)
->>>> +{
->>>> +	opt->subopt_params[subopt].raw_input = value;
->>>> +}
->>> There are no bounds check on the array here, I think set_conf_raw()
->>> should return int and we would check the return value. It could
->>> return -EINVAL if the subopt is invalid for instance.
->> Good idea. The only issue is with the return code, that causes some issues
->> when we are also returning values - I wanted the values to be turned into
->> uint64. But do we need to return an error? I don't see what usecase there
->> would be for it, other than detecting a bug. So an assert might be a better
->> solution - then it can't happen that a wrong index is used and result not
->> tested.
-> The setting of the value can be done by using an extra argument pointer. Then
-> if its set it be assigned. Otherwise it would be left alone. The return value
-> would return 0 on success, otherwise a standard return value indicating the
-> cause of the error.
-I strongly prefer to return the value, not an error code. We can do the 
-other way around, put the error code into an argument to get roughly the 
-same result, while constructions like set_conf_raw(FOO, BAR, baz * 
-get_conf_raw(FOO, BAR)) will continue to work without the need for 
-intermediate variables.
+Reported-by: Stefan Ring <stefanrin@gmail.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-The *_raw functions are used on few places only, so it would be only a 
-small issue there, but for consistency, (get|set)_conf_val should have 
-the same behavior and an intermediate variable for every use of those 
-would be really annoying. So, how about this?
+V2:
 
-static inline void
-set_conf_raw(struct opt_params *opt, int subopt, const char *value, int 
-*err)
-{
-     if (subopt < 0 || subopt >= MAX_SUBOPTS) {
-         if (err != NULL) *err = EINVAL;
-         return;
-     }
-     opt->subopt_params[subopt].raw_input = value;
-}
+- factor into new function, process_dir_leaf_block
+- add DIR3_LEAF1_MAGIC
+- don't add count+stale; count includes stale entries
+- move ltp into code block
 
-> I don't think we need the too small or too big, a simple range issue should
-> suffice and we have -ERANGE.
->
-At this moment, we are telling if it is too small or too big, but when 
-there is no standard error code for that, ERANGE has to suffice.
+diff --git a/db/metadump.c b/db/metadump.c
+index 3967df6..a8756d6 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1442,6 +1442,37 @@ process_sf_attr(
+ }
+ 
+ static void
++process_dir_leaf_block(
++	char				*block)
++{
++	struct xfs_dir2_leaf		*leaf;
++	struct xfs_dir3_icleaf_hdr 	leafhdr;
++
++	if (!zero_stale_data)
++		return;
++
++	/* Yes, this works for dir2 & dir3.  Difference is padding. */
++	leaf = (struct xfs_dir2_leaf *)block;
++	M_DIROPS(mp)->leaf_hdr_from_disk(&leafhdr, leaf);
++
++	/* Zero out space from end of ents[] to bests */
++	if (leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
++	    leafhdr.magic == XFS_DIR3_LEAF1_MAGIC) {
++		struct xfs_dir2_leaf_tail	*ltp;
++		__be16				*lbp;
++		struct xfs_dir2_leaf_entry	*ents;
++		char				*free; /* end of ents */
++
++		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
++		free = (char *)&ents[leafhdr.count];
++		ltp = xfs_dir2_leaf_tail_p(mp->m_dir_geo, leaf);
++		lbp = xfs_dir2_leaf_bests_p(ltp);
++		memset(free, 0, (char *)lbp - free);
++		iocur_top->need_crc = 1;
++	}
++}
++
++static void
+ process_dir_data_block(
+ 	char		*block,
+ 	xfs_fileoff_t	offset,
+@@ -1801,11 +1832,15 @@ process_single_fsb_objects(
+ 		dp = iocur_top->data;
+ 		switch (btype) {
+ 		case TYP_DIR2:
+-			if (o >= mp->m_dir_geo->leafblk)
++			if (o >= mp->m_dir_geo->freeblk) {
++				/* TODO, zap any stale data */
+ 				break;
+-
+-			process_dir_data_block(dp, o,
++			} else if (o >= mp->m_dir_geo->leafblk) {
++				process_dir_leaf_block(dp);
++			} else {
++				process_dir_data_block(dp, o,
+ 					 last == mp->m_dir_geo->fsbcount);
++			}
+ 			iocur_top->need_crc = 1;
+ 			break;
+ 		case TYP_SYMLINK:
 
-Cheers,
-Jan
