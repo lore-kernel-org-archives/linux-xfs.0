@@ -1,331 +1,241 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32440 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:22923 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751662AbdHGQhy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Aug 2017 12:37:54 -0400
-Date: Mon, 7 Aug 2017 09:37:44 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC - PATCH] xfs: hold xfs_buf locked between shortform->leaf
- conversion and the addition of the first attribute
-Message-ID: <20170807163744.GL24087@magnolia>
-References: <8948A7010F7A4A758A580103D54CE381@alyakaslap>
- <20170807151651.GA43920@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170807151651.GA43920@bfoster.bfoster>
+        with ESMTP id S1751890AbdHJBnt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2017 21:43:49 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7A1hmh0010065
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:49 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7A1hm1n028967
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:48 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7A1hmbo017085
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:48 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [RFC PATCH 03/13] xfs: get directory offset when replacing a directory name
+Date: Wed,  9 Aug 2017 18:41:23 -0700
+Message-Id: <1502329293-4091-4-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
+References: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Alex Lyakas <alex@zadarastorage.com>, linux-xfs@vger.kernel.org, david@fromorbit.com, Shyam Kaushik <shyam@zadarastorage.com>, Yair Hershko <yair@zadarastorage.com>
+To: linux-xfs@vger.kernel.org
+Cc: Allison Henderson <allison.henderson@oracle.com>
 
-On Mon, Aug 07, 2017 at 11:16:54AM -0400, Brian Foster wrote:
-> On Mon, Aug 07, 2017 at 03:54:03PM +0300, Alex Lyakas wrote:
-> > The new attribute leaf buffer is not held locked across the transaction roll
-> > between the shortform->leaf modification and the addition of the new entry.
-> > As a result, the attribute buffer modification being made is not atomic
-> > from an operational perspective.
-> > Hence the AIL push can grab it in the transient state of "just created"
-> > after the initial transaction is rolled, because the buffer has been
-> > released.
-> > This leads to xfs_attr3_leaf_verify() asserting that hdr.count is zero,
-> > treating this as in-memory corruption, and shutting down the filesystem.
-> > 
-> > More info at:
-> > https://www.spinics.net/lists/linux-xfs/msg08778.html
-> > 
-> 
-> FYI.. I'm not sure how appropriate it is to use URLs in commit log
-> descriptions. Perhaps somebody else can chime in on that.
+From: Mark Tinguely <tinguely@sgi.com>
 
-I prefer the changelog directly quote the relevant parts of the message
-in case spinics should end up getting knocked offline like gmane, though
-you can certainly use the url to cite the quotation.
+Return the directory offset information when replacing an entry to the
+directory.
 
-> > This patch is based on kernel 3.18.19, which is a long-term (although EOL)
-> > kernel.
-> > This is the reason it is marked as RFC.
-> > 
-> 
-> It's probably best to develop against the latest kernel, get the fix
-> right, then worry about v3.18 for a backport.
+This offset will be used as the parent pointer offset in xfs_rename.
 
-Yes, we've renamed a few things since then...
+[dchinner: forward ported and cleaned up]
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t]
 
-> > Reproducing the issue is achieved by adding "msleep(1000)" after the
-> > xfs_trans_roll() call.
-> > From the limited testing, this patch seems to fix the issue.
-> > Once/if the community approves this patch, we will do a formal testing.
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+:100644 100644 a34956e... f5d0d3d... M	fs/xfs/libxfs/xfs_dir2.c
+:100644 100644 ee98b2a... 67ce660... M	fs/xfs/libxfs/xfs_dir2.h
+:100644 100644 4dbe2fc... 69dfe64... M	fs/xfs/libxfs/xfs_dir2_block.c
+:100644 100644 197e627... 770b93f... M	fs/xfs/libxfs/xfs_dir2_leaf.c
+:100644 100644 13d5244... 860a612... M	fs/xfs/libxfs/xfs_dir2_node.c
+:100644 100644 9e90c22... 295458f... M	fs/xfs/libxfs/xfs_dir2_sf.c
+:100644 100644 f58f62a... 52c331e... M	fs/xfs/xfs_inode.c
+ fs/xfs/libxfs/xfs_dir2.c       | 16 ++++++++++------
+ fs/xfs/libxfs/xfs_dir2.h       |  3 ++-
+ fs/xfs/libxfs/xfs_dir2_block.c |  4 ++--
+ fs/xfs/libxfs/xfs_dir2_leaf.c  |  1 +
+ fs/xfs/libxfs/xfs_dir2_node.c  |  1 +
+ fs/xfs/libxfs/xfs_dir2_sf.c    |  2 ++
+ fs/xfs/xfs_inode.c             | 28 +++++++++++++---------------
+ 7 files changed, 31 insertions(+), 24 deletions(-)
 
-Do you have a reproducer script that could be turned into an xfstest to
-prevent future regressions?  We could add an error injection site at
-that point that would force an ail push to simulate the problem.
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index a34956e..f5d0d3d 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -508,13 +508,14 @@ xfs_dir_removename(
+  */
+ int
+ xfs_dir_replace(
+-	xfs_trans_t	*tp,
+-	xfs_inode_t	*dp,
+-	struct xfs_name	*name,		/* name of entry to replace */
+-	xfs_ino_t	inum,		/* new inode number */
+-	xfs_fsblock_t	*first,		/* bmap's firstblock */
++	xfs_trans_t		*tp,
++	xfs_inode_t		*dp,
++	struct xfs_name		*name,		/* name of entry to replace */
++	xfs_ino_t		inum,		/* new inode number */
++	xfs_fsblock_t		*first,		/* bmap's firstblock */
+ 	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
+-	xfs_extlen_t	total)		/* bmap's total block count */
++	xfs_extlen_t		total,		/* bmap's total block count */
++	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
+ {
+ 	struct xfs_da_args *args;
+ 	int		rval;
+@@ -563,6 +564,9 @@ xfs_dir_replace(
+ 		rval = xfs_dir2_leaf_replace(args);
+ 	else
+ 		rval = xfs_dir2_node_replace(args);
++
++	if (offset)
++		*offset = args->offset;
+ out_free:
+ 	kmem_free(args);
+ 	return rval;
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index ee98b2a..67ce660 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -144,7 +144,8 @@ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name, xfs_ino_t inum,
+ 				xfs_fsblock_t *first,
+-				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
++				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
++				xfs_dir2_dataptr_t *offset);
+ extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name);
+ 
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index 4dbe2fc..69dfe64 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -865,9 +865,9 @@ xfs_dir2_block_replace(
+ 	/*
+ 	 * Point to the data entry we need to change.
+ 	 */
++	args->offset = be32_to_cpu(blp[ent].address);
+ 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+-			xfs_dir2_dataptr_to_off(args->geo,
+-						be32_to_cpu(blp[ent].address)));
++			xfs_dir2_dataptr_to_off(args->geo, args->offset));
+ 	ASSERT(be64_to_cpu(dep->inumber) != args->inumber);
+ 	/*
+ 	 * Change the inode number to the new value.
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index 197e627..770b93f 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -1518,6 +1518,7 @@ xfs_dir2_leaf_replace(
+ 	/*
+ 	 * Point to the data entry.
+ 	 */
++	args->offset = be32_to_cpu(lep->address);
+ 	dep = (xfs_dir2_data_entry_t *)
+ 	      ((char *)dbp->b_addr +
+ 	       xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 13d5244..860a612 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -2237,6 +2237,7 @@ xfs_dir2_node_replace(
+ 		hdr = state->extrablk.bp->b_addr;
+ 		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+ 		       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
++		args->offset = be32_to_cpu(lep->address);
+ 		dep = (xfs_dir2_data_entry_t *)
+ 		      ((char *)hdr +
+ 		       xfs_dir2_dataptr_to_off(args->geo,
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index 9e90c22..295458f 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -1045,6 +1045,8 @@ xfs_dir2_sf_replace(
+ 				ASSERT(args->inumber != ino);
+ 				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
+ 				dp->d_ops->sf_put_ftype(sfep, args->filetype);
++				args->offset = xfs_dir2_byte_to_dataptr(
++						  xfs_dir2_sf_get_offset(sfep));
+ 				break;
+ 			}
+ 		}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index f58f62a..52c331e 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2756,16 +2756,14 @@ xfs_cross_rename(
+ 	int		dp2_flags = 0;
+ 
+ 	/* Swap inode number for dirent in first parent */
+-	error = xfs_dir_replace(tp, dp1, name1,
+-				ip2->i_ino,
+-				first_block, dfops, spaceres);
++	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, first_block, dfops,
++				spaceres, NULL);
+ 	if (error)
+ 		goto out_trans_abort;
+ 
+ 	/* Swap inode number for dirent in second parent */
+-	error = xfs_dir_replace(tp, dp2, name2,
+-				ip1->i_ino,
+-				first_block, dfops, spaceres);
++	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, first_block, dfops,
++				spaceres, NULL);
+ 	if (error)
+ 		goto out_trans_abort;
+ 
+@@ -2779,8 +2777,8 @@ xfs_cross_rename(
+ 
+ 		if (S_ISDIR(VFS_I(ip2)->i_mode)) {
+ 			error = xfs_dir_replace(tp, ip2, &xfs_name_dotdot,
+-						dp1->i_ino, first_block,
+-						dfops, spaceres);
++						dp1->i_ino, first_block, dfops,
++						spaceres, NULL);
+ 			if (error)
+ 				goto out_trans_abort;
+ 
+@@ -2806,8 +2804,8 @@ xfs_cross_rename(
+ 
+ 		if (S_ISDIR(VFS_I(ip1)->i_mode)) {
+ 			error = xfs_dir_replace(tp, ip1, &xfs_name_dotdot,
+-						dp2->i_ino, first_block,
+-						dfops, spaceres);
++						dp2->i_ino, first_block, dfops,
++						spaceres, NULL);
+ 			if (error)
+ 				goto out_trans_abort;
+ 
+@@ -3054,8 +3052,8 @@ xfs_rename(
+ 		 * name at the destination directory, remove it first.
+ 		 */
+ 		error = xfs_dir_replace(tp, target_dp, target_name,
+-					src_ip->i_ino,
+-					&first_block, &dfops, spaceres);
++					src_ip->i_ino, &first_block, &dfops,
++					spaceres, NULL);
+ 		if (error)
+ 			goto out_bmap_cancel;
+ 
+@@ -3089,8 +3087,8 @@ xfs_rename(
+ 		 * directory.
+ 		 */
+ 		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
+-					target_dp->i_ino,
+-					&first_block, &dfops, spaceres);
++					target_dp->i_ino, &first_block, &dfops,
++					spaceres, NULL);
+ 		ASSERT(error != -EEXIST);
+ 		if (error)
+ 			goto out_bmap_cancel;
+@@ -3129,7 +3127,7 @@ xfs_rename(
+ 	 */
+ 	if (wip) {
+ 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
+-					&first_block, &dfops, spaceres);
++					&first_block, &dfops, spaceres, NULL);
+ 	} else
+ 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+ 					   &first_block, &dfops, spaceres,
+-- 
+2.7.4
 
-> > Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
-> > ---
-> 
-> Note that your patch doesn't apply for me:
-> 
-> ...
-> patching file fs/xfs/libxfs/xfs_attr.c
-> Hunk #1 FAILED at 285.
-> patch: **** malformed patch at line 70: commits */
-> 
-> Perhaps it has been damaged by your mailer? Otherwise, a few initial
-> comments...
-
-Yes, I also see severe whitespace damage.
-
-> > fs/xfs/libxfs/xfs_attr.c      | 24 +++++++++++++++++++++---
-> > fs/xfs/libxfs/xfs_attr_leaf.c |  5 ++++-
-> > fs/xfs/libxfs/xfs_attr_leaf.h |  2 +-
-> > 3 files changed, 26 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index 353fb42..c0ced12 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > @@ -285,20 +285,21 @@ xfs_attr_set(
-> > 
-> >     xfs_trans_ijoin(args.trans, dp, 0);
-> > 
-> >     /*
-> >      * If the attribute list is non-existent or a shortform list,
-> >      * upgrade it to a single-leaf-block attribute list.
-> >      */
-> >     if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
-> >         (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
-> >          dp->i_d.di_anextents == 0)) {
-> > +        xfs_buf_t *leaf_bp = NULL;
-> 
-> Use struct xfs_buf here and throughout. We're attempting to remove uses
-> of the old typedefs wherever possible.
-> 
-> > 
-> >         /*
-> >          * Build initial attribute list (if required).
-> >          */
-> >         if (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS)
-> >             xfs_attr_shortform_create(&args);
-> > 
-> >         /*
-> >          * Try to add the attr to the attribute list in
-> >          * the inode.
-> > @@ -328,48 +329,65 @@ xfs_attr_set(
-> >             xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> > 
-> >             return error ? error : err2;
-> >         }
-> > 
-> >         /*
-> >          * It won't fit in the shortform, transform to a leaf block.
-> >          * GROT: another possible req'mt for a double-split btree op.
-> >          */
-> >         xfs_bmap_init(args.flist, args.firstblock);
-> > -        error = xfs_attr_shortform_to_leaf(&args);
-> > +        error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
-> > +        /* hold the leaf buffer locked, when "args.trans" transaction
-> > commits */
-> > +        if (leaf_bp)
-> > +            xfs_trans_bhold(args.trans, leaf_bp);
-> 
-> Indentation looks off here and throughout.
-> 
-> > +
-> >         if (!error) {
-> >             error = xfs_bmap_finish(&args.trans, args.flist,
-> >                         &committed);
-
-(FYI this is now xfs_defer_finish...)
-
-> >         }
-> >         if (error) {
-> >             ASSERT(committed);
-> > +            if (leaf_bp)
-> > +                xfs_buf_relse(leaf_bp);
-> 
-> Hmm, I don't think this is right. We don't want to release the buffer
-> while the transaction still has a reference. Perhaps we should move this
-> to the "out:" patch after the transaction cancel (and make sure the
-> pointer is reset at the appropriate place)..?
-
-I would've thought that the buffer would be relse'd by xfs_trans_cancel,
-having been bjoined to the first args.trans and bheld to any subsequent
-transactions?
-
-> 
-> >             args.trans = NULL;
-> >             xfs_bmap_cancel(&flist);
-> >             goto out;
-> >         }
-> > 
-> >         /*
-> >          * bmap_finish() may have committed the last trans and started
-> >          * a new one.  We need the inode to be in all transactions.
-> > +         * We also need to rejoin the leaf buffer to the new transaction
-> > +         * and prevent it from being unlocked, before we commit it in
-> > xfs_trans_roll().
-> > +         * If bmap_finish() did not commit, then we are in the same
-> > transaction,
-> > +         * and no need to call xfs_trans_bhold() again.
-> >          */
-> > -        if (committed)
-> > +        if (committed) {
-> >             xfs_trans_ijoin(args.trans, dp, 0);
-> > +            xfs_trans_bjoin(args.trans, leaf_bp);
-> > +            xfs_trans_bhold(args.trans, leaf_bp);
-> 
-> I don't see why this is necessary. We still have the buffer held and
-> locked, yes?
-
-The bhold means that after the transaction roll leaf_bp is still locked
-but not associated with a transaction, so it is necessary to bjoin
-leaf_bp to the new transaction.  Since the very next thing we do is roll
-the transaction again, we also want to bhold it for the second roll.
-
-(Question: is the second roll even necessary for this case?)
-
-> > +        }
-> > 
-> >         /*
-> >          * Commit the leaf transformation.  We'll need another (linked)
-> >          * transaction to add the new attribute to the leaf.
-> >          */
-> > 
-> >         error = xfs_trans_roll(&args.trans, dp);
-> > -        if (error)
-> > +        if (error) {
-> > +            xfs_buf_relse(leaf_bp);
-> 
-> Same problem as above.
-> 
-> >             goto out;
-> > +        }
-> > 
-> > +        /* rejoin the leaf buffer to the new transaction */
-> > +        xfs_trans_bjoin(args.trans, leaf_bp);
-> 
-> This comment should point out that this allows a subsequent read to find
-> the buffer in the transaction (and avoid a deadlock).
-> 
-> >     }
-> > 
-> >     if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-> >         error = xfs_attr_leaf_addname(&args);
-> >     else
-> >         error = xfs_attr_node_addname(&args);
-> >     if (error)
-> >         goto out;
-> > 
-> >     /*
-> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > index b7cd0a0..2e03c32 100644
-> > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > @@ -649,23 +649,24 @@ xfs_attr_shortform_getvalue(xfs_da_args_t *args)
-> >         args->valuelen = sfe->valuelen;
-> >         memcpy(args->value, &sfe->nameval[args->namelen],
-> >                             args->valuelen);
-> >         return -EEXIST;
-> >     }
-> >     return -ENOATTR;
-> > }
-> > 
-> > /*
-> >  * Convert from using the shortform to the leaf.
-> > + * Upon success, return the leaf buffer.
-> >  */
-> > int
-> > -xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
-> > +xfs_attr_shortform_to_leaf(xfs_da_args_t *args, xfs_buf_t **bpp)
-> > {
-> >     xfs_inode_t *dp;
-> >     xfs_attr_shortform_t *sf;
-> >     xfs_attr_sf_entry_t *sfe;
-> >     xfs_da_args_t nargs;
-> >     char *tmpbuffer;
-> >     int error, i, size;
-> >     xfs_dablk_t blkno;
-> >     struct xfs_buf *bp;
-> >     xfs_ifork_t *ifp;
-> > @@ -733,20 +734,22 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
-> >         ASSERT(error == -ENOATTR);
-> >         error = xfs_attr3_leaf_add(bp, &nargs);
-> >         ASSERT(error != -ENOSPC);
-> >         if (error)
-> >             goto out;
-> >         sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
-> >     }
-> >     error = 0;
-> > 
-> > out:
-> > +    if (error == 0)
-> > +        *bpp = bp;
-> 
-> It looks like the only way error == 0 is where it is set just above, so
-> we could probably move this before the label.
-> 
-> I'm also wondering whether it might be cleaner to 1.) conditionally
-> return the buffer when sf->hdr.count == 0 because that is the only case
-> where the problem occurs and 2.) do the trans_bhold() here in
-> shortform_to_leaf() when we do actually return it.
-
-I /think/ you could get rid of that second roll and do the bhold in
-shortform_to_leaf, though you'd still have to re-bjoin it after
-defer_finish.
-
---D
-
-> 
-> Brian
-> 
-> >     kmem_free(tmpbuffer);
-> >     return error;
-> > }
-> > 
-> > /*
-> >  * Check a leaf attribute block to see if all the entries would fit into
-> >  * a shortform attribute list.
-> >  */
-> > int
-> > xfs_attr_shortform_allfit(
-> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-> > index 4f3a60a..d58e9e4 100644
-> > --- a/fs/xfs/libxfs/xfs_attr_leaf.h
-> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-> > @@ -41,21 +41,21 @@ typedef struct xfs_attr_inactive_list {
-> >  * Function prototypes for the kernel.
-> >  *========================================================================*/
-> > 
-> > /*
-> >  * Internal routines when attribute fork size < XFS_LITINO(mp).
-> >  */
-> > void    xfs_attr_shortform_create(struct xfs_da_args *args);
-> > void    xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
-> > int    xfs_attr_shortform_lookup(struct xfs_da_args *args);
-> > int    xfs_attr_shortform_getvalue(struct xfs_da_args *args);
-> > -int    xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
-> > +int    xfs_attr_shortform_to_leaf(struct xfs_da_args *args, xfs_buf_t
-> > **bpp);
-> > int    xfs_attr_shortform_remove(struct xfs_da_args *args);
-> > int    xfs_attr_shortform_list(struct xfs_attr_list_context *context);
-> > int    xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
-> > int    xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes);
-> > void    xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
-> > 
-> > /*
-> >  * Internal routines when attribute fork size == XFS_LBSIZE(mp).
-> >  */
-> > int    xfs_attr3_leaf_to_node(struct xfs_da_args *args);
-> > -- 
-> > 1.9.1
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
