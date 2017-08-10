@@ -1,74 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45014 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752283AbdHJM2K (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 Aug 2017 08:28:10 -0400
-Date: Thu, 10 Aug 2017 08:28:07 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH V2] Stop searching for free slots in an inode chunk when
- there are none
-Message-ID: <20170810122804.GB3777@bfoster.bfoster>
-References: <20170807101710.18734-1-cmaiolino@redhat.com>
- <20170807151954.GB43920@bfoster.bfoster>
- <20170810115617.GN21024@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170810115617.GN21024@dastard>
+Received: from mx2.suse.de ([195.135.220.15]:41678 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752091AbdHJMaq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 10 Aug 2017 08:30:46 -0400
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH v2] fiemap: Allow to specify range to fiemap
+Date: Thu, 10 Aug 2017 15:30:41 +0300
+Message-Id: <1502368241-8928-1-git-send-email-nborisov@suse.com>
+In-Reply-To: <20170810120439.GO21024@dastard>
+References: <20170810120439.GO21024@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, sandeen@redhat.com, Nikolay Borisov <nborisov@suse.com>
 
-On Thu, Aug 10, 2017 at 09:56:18PM +1000, Dave Chinner wrote:
-> On Mon, Aug 07, 2017 at 11:19:56AM -0400, Brian Foster wrote:
-> > On Mon, Aug 07, 2017 at 12:17:10PM +0200, Carlos Maiolino wrote:
-> > Also note that this has potential for performance side effects in the
-> > common (non-corruption) case.
-> 
-> I'm not seeing an issue here once the code is corrected. Probably
-> just me being dumb again, but could you point it out for me, Brian?
-> 
+Add 2 additional, optional, arguments to the embedded fiemap command,
+that way one can specify exact ranges to be fiemapped. This will be used
+for a btrfs test. Since the arguments are optional, omitting them just
+retains the old behavior.
 
-Oh, I'm just pointing out that this version tweaks the normal runtime
-algorithm (by further limiting the record search window in certain
-cases) whereas the previous version did not and I didn't see any mention
-as to why that is safe. The first sentence below explains why I think
-the change has minimal performance impact, if any, and is probably fine.
-I'm basically just asking that if we fix this by tweaking the
-optimization algorithm, we add a brief justification for why this does
-not impact normal runtime performance in the commit log (if my
-understanding is correct, feel free to steal the text below).
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
 
-> > It looks to me that it shouldn't be a major problem because it only
-> > affects the situation where the cached search "wraps" to the outside of
-> > the tree, and that probably doesn't happen often with a search distance
-> > of 10 records and a large tree. I am a bit curious where the
-> > searchdistance of 10 comes from though (we fit many more records in a
-> > single inobt leaf block)..?
-> 
-> It was chosen based on CPU profiles and performance measurement to
-> limit the CPU usage of the problem case the finobt now solves. i.e.
-> finding the frees inode in a tree that indexes several million
-> allocated inodes and the free inodes are few and far between. It was
-> chosen to cap inode allocation performance degradation when free
-> inodes were extremely sparse at around 50% of the "lots of free
-> inodes that are easy to find" performance.
-> 
+Changes since v1:
+ * Added help in man describing the new options
+ * Removed whitespace damage
+ * Simplified/dedup the code used to get the parameters in
+ * Updated one line help to indicate that len param can't exist on its own
 
-Ah, Ok. So it was more of a CPU oriented optimization than an I/O one.
-That makes sense, thanks.
+ io/fiemap.c       | 28 ++++++++++++++++++++++++++--
+ man/man8/xfs_io.8 |  5 +++--
+ 2 files changed, 29 insertions(+), 4 deletions(-)
 
-Brian
+diff --git a/io/fiemap.c b/io/fiemap.c
+index 75e882057362..2a0698e9d1e9 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -34,6 +34,7 @@ fiemap_help(void)
+ "\n"
+ " Example:\n"
+ " 'fiemap -v' - tabular format verbose map\n"
++" 'fiemap 0 4k' - print fiemap extents for 0-4k range\n"
+ "\n"
+ " fiemap prints the map of disk blocks used by the current file.\n"
+ " The map lists each extent used by the file, as well as regions in the\n"
+@@ -216,7 +217,11 @@ fiemap_f(
+ 	int		flg_w = 5;
+ 	__u64		blocksize = 512;
+ 	__u64		last_logical = 0;
++	__u64		len = -1LL;
+ 	struct stat	st;
++	size_t		fsblocksize, fssectsize;
++
++	init_cvtnum(&fsblocksize, &fssectsize);
+ 
+ 	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+ 		switch (c) {
+@@ -237,6 +242,25 @@ fiemap_f(
+ 		}
+ 	}
+ 
++	if (optind < argc) {
++		off64_t start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (start_offset < 0) {
++			printf("non-numeric offset argument -- %s\n", argv[optind]);
++			return 0;
++		}
++		last_logical = start_offset;
++		optind++;
++	}
++
++	if (optind < argc) {
++		off64_t length = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (length < 0) {
++			printf("non-numeric len argument -- %s\n", argv[optind]);
++			return 0;
++		}
++		len = length;
++	}
++
+ 	if (max_extents)
+ 		num_extents = min(num_extents, max_extents);
+ 	map_size = sizeof(struct fiemap) +
+@@ -259,7 +283,7 @@ fiemap_f(
+ 		memset(fiemap, 0, map_size);
+ 		fiemap->fm_flags = fiemap_flags;
+ 		fiemap->fm_start = last_logical;
+-		fiemap->fm_length = -1LL;
++		fiemap->fm_length = len;
+ 		fiemap->fm_extent_count = num_extents;
+ 
+ 		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+@@ -350,7 +374,7 @@ fiemap_init(void)
+ 	fiemap_cmd.argmin = 0;
+ 	fiemap_cmd.argmax = -1;
+ 	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+-	fiemap_cmd.args = _("[-alv] [-n nx]");
++	fiemap_cmd.args = _("[-alv] [-n nx] [start offset [len]]");
+ 	fiemap_cmd.oneline = _("print block mapping for a file");
+ 	fiemap_cmd.help = fiemap_help;
+ 
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 273b9c54c52d..125db9181851 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -295,11 +295,12 @@ Prints the block mapping for the current open file. Refer to the
+ .BR xfs_bmap (8)
+ manual page for complete documentation.
+ .TP
+-.BI "fiemap [ \-alv ] [ \-n " nx " ]"
++.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
+ Prints the block mapping for the current open file using the fiemap
+ ioctl.  Options behave as described in the
+ .BR xfs_bmap (8)
+-manual page.
++manual page. Optionally, this command also supports passing the start offset 
++from where to begin the fiemap and the length of that region.
+ .TP
+ .BI "fsmap [ \-d | \-l | \-r ] [ \-m | \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
+ Prints the mapping of disk blocks used by the filesystem hosting the current
+-- 
+2.7.4
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
