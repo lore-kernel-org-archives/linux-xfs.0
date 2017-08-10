@@ -1,59 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43094 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750841AbdHJFYA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2017 01:24:00 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7A5Nxb3016787
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 05:23:59 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7A5NxHH008186
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 05:23:59 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7A5Nxjn015133
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 05:23:59 GMT
-Subject: [PATCH 3/3] xfs: don't leak quotacheck dquots when cow recovery
- fails
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 09 Aug 2017 22:23:58 -0700
-Message-ID: <150234263808.13754.11636194057966589953.stgit@magnolia>
-In-Reply-To: <150234262066.13754.6534116056866237943.stgit@magnolia>
-References: <150234262066.13754.6534116056866237943.stgit@magnolia>
+Received: from mail-wr0-f179.google.com ([209.85.128.179]:32948 "EHLO
+        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751488AbdHJICp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2017 04:02:45 -0400
+Received: by mail-wr0-f179.google.com with SMTP id v105so152377wrb.0
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:02:44 -0700 (PDT)
+Message-ID: <185A1C4516684B439A3711999ABACA79@alyakaslap>
+From: "Alex Lyakas" <alex@zadarastorage.com>
+References: <1502276772-24293-1-git-send-email-alex@zadarastorage.com> <20170809213307.GJ21024@dastard>
+In-Reply-To: <20170809213307.GJ21024@dastard>
+Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf conversion and the addition of an attribute
+Date: Thu, 10 Aug 2017 11:02:12 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+        format=flowed;
+        charset="iso-8859-1";
+        reply-type=original
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, darrick.wong@oracle.com, libor.klepac@bcom.cz
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi Dave,
 
-If we fail a mount on account of cow recovery errors, it's possible that
-a previous quotacheck left some dquots in memory.  The bailout clause of
-xfs_mountfs forgets to purge these, and so we leak them.  Fix that.
+Let's sayf that xfs_defer_finish() commits the current transaction and the 
+buffer has been held. Then xfs_defer_finish() opens the next transaction. 
+The buffer that has been held is not joined to the second transaction, i.e., 
+the second transaction knows nothing about this buffer, is that correct? If 
+so, the caller now holds the buffer exclusively, and he has one of two 
+options:
+- release the buffer explicitly
+- join the buffer to some transaction
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: unmount quotas, then free all the quota information
----
- fs/xfs/xfs_mount.c |    2 ++
- 1 file changed, 2 insertions(+)
+So it looks like I a missing the crux of your concern, can you please 
+comment?
+
+Thanks,
+Alex.
 
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 8da5155..d50f4a7 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1057,6 +1057,8 @@ xfs_mountfs(
- 	xfs_fs_unreserve_ag_blocks(mp);
-  out_quota:
- 	xfs_qm_unmount_quotas(mp);
-+	/* Clean out dquots that might be in memory after quotacheck. */
-+	xfs_qm_unmount(mp);
-  out_rtunmount:
- 	xfs_rtunmount_inodes(mp);
-  out_rele_rip:
+-----Original Message----- 
+From: Dave Chinner
+Sent: Thursday, August 10, 2017 12:33 AM
+To: alex@zadarastorage.com
+Cc: linux-xfs@vger.kernel.org ; bfoster@redhat.com ; darrick.wong@oracle.com 
+; libor.klepac@bcom.cz
+Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf 
+conversion and the addition of an attribute
+
+On Wed, Aug 09, 2017 at 02:06:12PM +0300, alex@zadarastorage.com wrote:
+> From: Alex Lyakas <alex@zadarastorage.com>
+>
+> The new attribute leaf buffer is not held locked across
+> the transaction roll between the shortform->leaf modification
+> and the addition of the new entry. As a result, the attribute
+> buffer modification being made is not atomic from
+> an operational perspective. Hence the AIL push can grab it in
+> the transient state of "just created" after the initial
+> transaction is rolled, because the buffer has been released.
+> This leads to xfs_attr3_leaf_verify() asserting that
+> hdr.count is zero, treating this as in-memory corruption,
+> and shutting down the filesystem.
+>
+> Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c      | 19 ++++++++++++++++++-
+>  fs/xfs/libxfs/xfs_attr_leaf.c |  4 +++-
+>  fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++-
+>  3 files changed, 23 insertions(+), 3 deletions(-)
+>
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index de7b9bd..982e322 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -216,10 +216,11 @@
+>  struct xfs_defer_ops dfops;
+>  struct xfs_trans_res tres;
+>  xfs_fsblock_t firstblock;
+>  int rsvd = (flags & ATTR_ROOT) != 0;
+>  int error, err2, local;
+> + struct xfs_buf *leaf_bp = NULL;
+>
+>  XFS_STATS_INC(mp, xs_attr_set);
+>
+>  if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+>  return -EIO;
+> @@ -325,11 +326,17 @@
+>  /*
+>  * It won't fit in the shortform, transform to a leaf block.
+>  * GROT: another possible req'mt for a double-split btree op.
+>  */
+>  xfs_defer_init(args.dfops, args.firstblock);
+> - error = xfs_attr_shortform_to_leaf(&args);
+> + error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
+> + /*
+> + * Prevent the leaf buffer from being unlocked
+> + * when "args.trans" transaction commits.
+> + */
+> + if (leaf_bp)
+> + xfs_trans_bhold(args.trans, leaf_bp);
+>  if (!error)
+>  error = xfs_defer_finish(&args.trans, args.dfops, dp);
+>  if (error) {
+>  args.trans = NULL;
+>  xfs_defer_cancel(&dfops);
+
+Hmmmm, looking closer at xfs_defer_finish(), just holding the buffer
+here isn't sufficient. xfs_defer_finish() can roll the transaction a
+number of times and holding the buffer is a one-shot deal. Hence the
+buffer held buffer will have BLI_HOLD removed on the next commit
+and be unlocked by the second commit, whether it be inside
+xfs_defer_finish() or the roll that occurs below.
+
+ISTR a previous discussion with Darrick that we needed something
+like xfs_defer_join() with buffers instead of inodes to allow them
+to be held across a call to xfs_defer_finish()....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com 
 
