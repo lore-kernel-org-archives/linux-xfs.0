@@ -1,13 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43026 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:43045 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750841AbdHJFXv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2017 01:23:51 -0400
-Subject: [PATCH 1/3] xfs: clear MS_ACTIVE after finishing log recovery to
- avoid inode leak
+        with ESMTP id S1750841AbdHJFXx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2017 01:23:53 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7A5Nre1016704
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 05:23:53 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7A5Nrx4007981
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 05:23:53 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7A5Nr2w012942
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 05:23:53 GMT
+Subject: [PATCH 2/3] xfs: evict all inodes involved with log redo item
+ recovery
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 09 Aug 2017 22:23:40 -0700
-Message-ID: <150234262066.13754.6534116056866237943.stgit@magnolia>
+Date: Wed, 09 Aug 2017 22:23:51 -0700
+Message-ID: <150234263191.13754.5037661818451431724.stgit@magnolia>
+In-Reply-To: <150234262066.13754.6534116056866237943.stgit@magnolia>
+References: <150234262066.13754.6534116056866237943.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -15,73 +28,75 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Way back when we established inode block-map redo log items, it was
-discovered that we needed to prevent the VFS from evicting inodes during
-log recovery because any given inode might be have bmap redo items to
-replay even if the inode has no link count and is ultimately deleted,
-and any eviction of an unlinked inode causes the inode to be truncated
-and freed too early.
+When we introduced the bmap redo log items, we set MS_ACTIVE on the
+mountpoint and XFS_IRECOVERY on the inode to prevent unlinked inodes
+from being truncated prematurely during log recovery.  This also had the
+effect of putting linked inodes on the lru instead of evicting them.
 
-To make this possible, we set MS_ACTIVE so that inodes would not be torn
-down immediately upon release.  Unfortunately, this also results in the
-quota inodes not being released at all if a later part of the mount
-process should fail, because we never reclaim the inodes.  So, clear
-MS_ACTIVE immediately after we finish the log recovery so that the quota
-inodes will be torn down properly if we abort the mount.
+Unfortunately, we neglected to find all those unreferenced lru inodes
+and evict them after finishing log recovery, which means that we leak
+them if anything goes wrong in the rest of xfs_mountfs, because the lru
+is only cleaned out on unmount.
+
+Therefore, look for unreferenced inodes in the lru list immediately
+after clearing MS_ACTIVE.  If we find any, igrab/iput them so that
+they're evicted from memory.
 
 Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
-v2: wrap the xfs_log_mount_finish more tightly with the MS_ACTIVE mods
----
- fs/xfs/xfs_mount.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_mount.c |   29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
 
 diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 40d4e8b..d63a367 100644
+index d63a367..8da5155 100644
 --- a/fs/xfs/xfs_mount.c
 +++ b/fs/xfs/xfs_mount.c
-@@ -945,20 +945,21 @@ xfs_mountfs(
- 	}
+@@ -616,6 +616,34 @@ xfs_default_resblks(xfs_mount_t *mp)
+ }
  
- 	/*
-+	 * Finish recovering the file system.  This part needed to be delayed
-+	 * until after the root and real-time bitmap inodes were consistently
-+	 * read in.
-+	 *
- 	 * During the second phase of log recovery, we need iget and
- 	 * iput to behave like they do for an active filesystem.
- 	 * xfs_fs_drop_inode needs to be able to prevent the deletion
- 	 * of inodes before we're done replaying log items on those
--	 * inodes.
-+	 * inodes.  Turn it off immediately after xfs_log_mount_finish
-+	 * so that we don't leak the quota inodes if subsequent mount
-+	 * activities fail.
- 	 */
+ /*
++ * Find inodes that were put on the LRU during the last part of log
++ * recovery that are no longer referenced by anything, and igrab/iput
++ * them so that they'll be evicted now.
++ *
++ * We let all inodes involved in redo item processing end up on the LRU
++ * instead of being evicted immediately so that if we do something to an
++ * unlinked inode, the irele won't cause premature truncation and
++ * freeing of the inode, which results in log recovery failure.  We have
++ * to evict the unreferenced lru inodes here because we don't otherwise
++ * clean up the lru if there's a subsequent failure in xfs_mountfs,
++ * which leads to us leaking the inodes if nothing else (e.g. quotacheck)
++ * references the inodes before the failure occurs.
++ */
++STATIC void
++xfs_mountfs_evict_log_redo_inodes(
++	struct xfs_mount	*mp)
++{
++	struct super_block	*sb = mp->m_super;
++	struct inode		*inode;
++	struct inode		*next;
++
++	list_for_each_entry_safe(inode, next, &sb->s_inodes, i_sb_list) {
++		if (!atomic_read(&inode->i_count))
++			iput(igrab(inode));
++	}
++}
++
++/*
+  * This function does the following on an initial mount of a file system:
+  *	- reads the superblock from disk and init the mount struct
+  *	- if we're a 32-bit kernel, do a size check on the superblock
+@@ -960,6 +988,7 @@ xfs_mountfs(
  	mp->m_super->s_flags |= MS_ACTIVE;
--
--	/*
--	 * Finish recovering the file system.  This part needed to be delayed
--	 * until after the root and real-time bitmap inodes were consistently
--	 * read in.
--	 */
  	error = xfs_log_mount_finish(mp);
-+	mp->m_super->s_flags &= ~MS_ACTIVE;
+ 	mp->m_super->s_flags &= ~MS_ACTIVE;
++	xfs_mountfs_evict_log_redo_inodes(mp);
  	if (error) {
  		xfs_warn(mp, "log mount finish failed");
  		goto out_rtunmount;
-@@ -1028,7 +1029,6 @@ xfs_mountfs(
-  out_quota:
- 	xfs_qm_unmount_quotas(mp);
-  out_rtunmount:
--	mp->m_super->s_flags &= ~MS_ACTIVE;
- 	xfs_rtunmount_inodes(mp);
-  out_rele_rip:
- 	IRELE(rip);
 
