@@ -1,123 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24775 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:43026 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752237AbdHJBn4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2017 21:43:56 -0400
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7A1htc2012286
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:55 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7A1htOR017858
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:55 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7A1hsgT017111
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:54 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [RFC PATCH 13/13] Add the parent pointer support to the superblock version 5.
-Date: Wed,  9 Aug 2017 18:41:33 -0700
-Message-Id: <1502329293-4091-14-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
-References: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
+        with ESMTP id S1750841AbdHJFXv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2017 01:23:51 -0400
+Subject: [PATCH 1/3] xfs: clear MS_ACTIVE after finishing log recovery to
+ avoid inode leak
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 09 Aug 2017 22:23:40 -0700
+Message-ID: <150234262066.13754.6534116056866237943.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>
 
-[dchinner: forward ported and cleaned up]
-[achender: rebased and added parent pointer attribute to
-           compatible attributes mask]
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Way back when we established inode block-map redo log items, it was
+discovered that we needed to prevent the VFS from evicting inodes during
+log recovery because any given inode might be have bmap redo items to
+replay even if the inode has no link count and is ultimately deleted,
+and any eviction of an unlinked inode causes the inode to be truncated
+and freed too early.
+
+To make this possible, we set MS_ACTIVE so that inodes would not be torn
+down immediately upon release.  Unfortunately, this also results in the
+quota inodes not being released at all if a later part of the mount
+process should fail, because we never reclaim the inodes.  So, clear
+MS_ACTIVE immediately after we finish the log recovery so that the quota
+inodes will be torn down properly if we abort the mount.
+
+Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
-:100644 100644 6cedd75... b00bf1d... M	fs/xfs/libxfs/xfs_format.h
-:100644 100644 fba0105... a18dd0c... M	fs/xfs/libxfs/xfs_fs.h
-:100644 100644 50fb3a2... d7b9010... M	fs/xfs/xfs_fsops.c
- fs/xfs/libxfs/xfs_format.h | 13 ++++++++-----
- fs/xfs/libxfs/xfs_fs.h     |  1 +
- fs/xfs/xfs_fsops.c         |  4 +++-
- 3 files changed, 12 insertions(+), 6 deletions(-)
+v2: wrap the xfs_log_mount_finish more tightly with the MS_ACTIVE mods
+---
+ fs/xfs/xfs_mount.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 6cedd75..b00bf1d 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -464,10 +464,12 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
- #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
- #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
-+#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)	/* parent inode ptr */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
--		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
-+		 XFS_SB_FEAT_RO_COMPAT_PARENT)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
-@@ -507,17 +509,17 @@ xfs_sb_has_incompat_log_feature(
- /*
-  * V5 superblock specific feature checks
-  */
--static inline int xfs_sb_version_hascrc(struct xfs_sb *sbp)
-+static inline bool xfs_sb_version_hascrc(struct xfs_sb *sbp)
- {
- 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
- }
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 40d4e8b..d63a367 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -945,20 +945,21 @@ xfs_mountfs(
+ 	}
  
--static inline int xfs_sb_version_has_pquotino(struct xfs_sb *sbp)
-+static inline bool xfs_sb_version_has_pquotino(struct xfs_sb *sbp)
- {
- 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
- }
- 
--static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
-+static inline bool xfs_sb_version_hasftype(struct xfs_sb *sbp)
- {
- 	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
- 		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_FTYPE)) ||
-@@ -563,7 +565,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
- 
- static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
- {
--	return false; /* We'll enable this at the end of the set */
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-+		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index fba0105..a18dd0c 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
- #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
- #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
-+#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
- 
- /*
-  * Minimum and maximum sizes need for growth checks.
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 50fb3a2..d7b9010 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -112,7 +112,9 @@ xfs_fs_geometry(
- 			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
- 				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
- 			(xfs_sb_version_hasreflink(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
-+				XFS_FSOP_GEOM_FLAGS_REFLINK : 0) |
-+			(xfs_sb_version_hasparent(&mp->m_sb) ?
-+				XFS_FSOP_GEOM_FLAGS_PARENT : 0);
- 		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
- 				mp->m_sb.sb_logsectsize : BBSIZE;
- 		geo->rtsectsize = mp->m_sb.sb_blocksize;
--- 
-2.7.4
+ 	/*
++	 * Finish recovering the file system.  This part needed to be delayed
++	 * until after the root and real-time bitmap inodes were consistently
++	 * read in.
++	 *
+ 	 * During the second phase of log recovery, we need iget and
+ 	 * iput to behave like they do for an active filesystem.
+ 	 * xfs_fs_drop_inode needs to be able to prevent the deletion
+ 	 * of inodes before we're done replaying log items on those
+-	 * inodes.
++	 * inodes.  Turn it off immediately after xfs_log_mount_finish
++	 * so that we don't leak the quota inodes if subsequent mount
++	 * activities fail.
+ 	 */
+ 	mp->m_super->s_flags |= MS_ACTIVE;
+-
+-	/*
+-	 * Finish recovering the file system.  This part needed to be delayed
+-	 * until after the root and real-time bitmap inodes were consistently
+-	 * read in.
+-	 */
+ 	error = xfs_log_mount_finish(mp);
++	mp->m_super->s_flags &= ~MS_ACTIVE;
+ 	if (error) {
+ 		xfs_warn(mp, "log mount finish failed");
+ 		goto out_rtunmount;
+@@ -1028,7 +1029,6 @@ xfs_mountfs(
+  out_quota:
+ 	xfs_qm_unmount_quotas(mp);
+  out_rtunmount:
+-	mp->m_super->s_flags &= ~MS_ACTIVE;
+ 	xfs_rtunmount_inodes(mp);
+  out_rele_rip:
+ 	IRELE(rip);
 
