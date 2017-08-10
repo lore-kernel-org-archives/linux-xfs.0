@@ -1,36 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:41116 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751190AbdH1UJ0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 28 Aug 2017 16:09:26 -0400
-Date: Mon, 28 Aug 2017 14:09:24 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 2/3] xfs: consolidate the various page fault handlers
-Message-ID: <20170828200924.GB17577@linux.intel.com>
-References: <20170824152207.30729-1-hch@lst.de>
- <20170824152207.30729-3-hch@lst.de>
- <20170824212942.GB20489@linux.intel.com>
- <20170825071538.GB9191@lst.de>
- <20170828175014.GA17577@linux.intel.com>
- <20170828175257.GA29190@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170828175257.GA29190@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:22937 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752231AbdHJBny (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2017 21:43:54 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7A1hrJu010116
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:54 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7A1hrxf017827
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:53 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7A1hrlN026593
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:53 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [RFC PATCH 11/13] xfs_bmap_add_attrfork(): re-add error handling from set_attrforkoff() call
+Date: Wed,  9 Aug 2017 18:41:31 -0700
+Message-Id: <1502329293-4091-12-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
+References: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: linux-xfs@vger.kernel.org
+Cc: Allison Henderson <allison.henderson@oracle.com>
 
-On Mon, Aug 28, 2017 at 07:52:57PM +0200, Christoph Hellwig wrote:
-> On Mon, Aug 28, 2017 at 11:50:14AM -0600, Ross Zwisler wrote:
-> > Yep - I'm doing that in include/trace/events/fs_dax.h if you want to just copy
-> > & paste.
-> 
-> Oh, nice.  But maybe we need the trace point in the core MM instead
-> of in XFS and the DAX code? :)
+From: Brian Foster <bfoster@redhat.com>
 
-Yea, there aren't any tracepoints at all in mm/memory.c.  I'm not sure if
-that's because we just haven't gotten around to putting them in, or if for
-some reason it was intentional to not trace that bit of code?
+- fix for "xfs: parent pointer attribute creation"
+
+[achender: rebased]
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+:100644 100644 91c403e... 0cb6d2e... M	fs/xfs/libxfs/xfs_bmap.c
+ fs/xfs/libxfs/xfs_bmap.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 91c403e..0cb6d2e 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1159,7 +1159,9 @@ xfs_bmap_add_attrfork(
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+-	xfs_bmap_set_attrforkoff(ip, size, &version);
++	error = xfs_bmap_set_attrforkoff(ip, size, &version);
++	if (error)
++		goto trans_cancel;
+ 
+ 	ASSERT(ip->i_afp == NULL);
+ 	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
+-- 
+2.7.4
+
