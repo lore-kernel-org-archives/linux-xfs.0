@@ -1,71 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:8699 "EHLO
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:22538 "EHLO
         ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753839AbdHKX1N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 19:27:13 -0400
-Date: Sat, 12 Aug 2017 09:27:08 +1000
+        by vger.kernel.org with ESMTP id S1751675AbdHKXmH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 19:42:07 -0400
+Date: Sat, 12 Aug 2017 09:42:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 2/6] fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
-Message-ID: <20170811232708.GT21024@dastard>
-References: <150243355681.8777.14902834768886160223.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150243356799.8777.11625037981403766282.stgit@dwillia2-desk3.amr.corp.intel.com>
+Subject: Re: [PATCH v2 2/3] xfs: evict all inodes involved with log redo item
+ recovery
+Message-ID: <20170811234204.GV21024@dastard>
+References: <150234262066.13754.6534116056866237943.stgit@magnolia>
+ <150234263191.13754.5037661818451431724.stgit@magnolia>
+ <20170811195010.GH24087@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150243356799.8777.11625037981403766282.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <20170811195010.GH24087@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: darrick.wong@oracle.com, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, viro@ZenIV.linux.org.uk, Christoph Hellwig <hch@infradead.org>
 
-On Thu, Aug 10, 2017 at 11:39:28PM -0700, Dan Williams wrote:
-> >From falloc.h:
+On Fri, Aug 11, 2017 at 12:50:10PM -0700, Darrick J. Wong wrote:
+> When we introduced the bmap redo log items, we set MS_ACTIVE on the
+> mountpoint and XFS_IRECOVERY on the inode to prevent unlinked inodes
+> from being truncated prematurely during log recovery.  This also had the
+> effect of putting linked inodes on the lru instead of evicting them.
 > 
->     FALLOC_FL_SEAL_BLOCK_MAP is used to seal (make immutable) all of the
->     file logical-to-physical extent offset mappings in the file. The
->     purpose is to allow an application to assume that there are no holes
->     or shared extents in the file and that the metadata needed to find
->     all the physical extents of the file is stable and can never be
->     dirtied.
+> Unfortunately, we neglected to find all those unreferenced lru inodes
+> and evict them after finishing log recovery, which means that we leak
+> them if anything goes wrong in the rest of xfs_mountfs, because the lru
+> is only cleaned out on unmount.
 > 
-> For now this patch only permits setting the in-memory state of
-> S_IOMAP_IMMMUTABLE. Support for clearing and persisting the state is
-> saved for later patches.
+> Therefore, evict unreferenced inodes in the lru list immediately
+> after clearing MS_ACTIVE.
 > 
-> The implementation is careful to not allow the immutable state to change
-> while any process might have any established mappings. It reuses the
-> existing xfs_reflink_unshare() and xfs_alloc_file_space() to unshare
-> extents and fill all holes in the file. It then holds XFS_ILOCK_EXCL
-> while it validates the file is in the proper state and sets
-> S_IOMAP_IMMUTABLE.
+> Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Cc: viro@ZenIV.linux.org.uk
+> ---
+> v2: use the vfs evict_inodes instead of duplicating it
+> ---
+>  fs/inode.c         |    1 +
+>  fs/internal.h      |    1 -
+>  fs/xfs/xfs_mount.c |   12 ++++++++++++
+>  include/linux/fs.h |    1 +
+>  4 files changed, 14 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/inode.c b/fs/inode.c
+> index 5037059..6a1626e 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -637,6 +637,7 @@ void evict_inodes(struct super_block *sb)
+>  
+>  	dispose_list(&dispose);
+>  }
+> +EXPORT_SYMBOL_GPL(evict_inodes);
+>  
+>  /**
+>   * invalidate_inodes	- attempt to free all inodes on a superblock
+> diff --git a/fs/internal.h b/fs/internal.h
+> index 9676fe1..fedfe94 100644
+> --- a/fs/internal.h
+> +++ b/fs/internal.h
+> @@ -132,7 +132,6 @@ static inline bool atime_needs_update_rcu(const struct path *path,
+>  extern void inode_io_list_del(struct inode *inode);
+>  
+>  extern long get_nr_dirty_inodes(void);
+> -extern void evict_inodes(struct super_block *);
+>  extern int invalidate_inodes(struct super_block *, bool);
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index a46c9d7..351e2c3 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -956,10 +956,22 @@ xfs_mountfs(
+>  	 * inodes.  Turn it off immediately after xfs_log_mount_finish
+>  	 * so that we don't leak the quota inodes if subsequent mount
+>  	 * activities fail.
+> +	 *
+> +	 * We let all inodes involved in redo item processing end up on
+> +	 * the LRU instead of being evicted immediately so that if we do
+> +	 * something to an unlinked inode, the irele won't cause
+> +	 * premature truncation and freeing of the inode, which results
+> +	 * in log recovery failure.  We have to evict the unreferenced
+> +	 * lru inodes after clearing MS_ACTIVE because we don't
+> +	 * otherwise clean up the lru if there's a subsequent failure in
+> +	 * xfs_mountfs, which leads to us leaking the inodes if nothing
+> +	 * else (e.g. quotacheck) references the inodes before the
+> +	 * mount failure occurs.
+>  	 */
+>  	mp->m_super->s_flags |= MS_ACTIVE;
+>  	error = xfs_log_mount_finish(mp);
+>  	mp->m_super->s_flags &= ~MS_ACTIVE;
+> +	evict_inodes(mp->m_super);
 
-SO I've been thinking about this - I'm thinking that we need to
-separate the changes to the extent map from the action of sealing
-the extent map.
-
-That is, I have a need to freeze an extent map without any
-modification to it at all and breaking all the sharing and filling
-all the holes completely screws up the file layout I need to
-preserve. i.e. I want to be able to freeze the maps of a pair of
-reflinked files so I can use FIEMAP to query only the changed blocks
-and then read out the data in the private/changed blocks in the
-reflinked file. I only need a temporary seal (if we crash it goes
-away), so maybe there's another command modifier flag needed here,
-too.
-
-The DAX allocation requirements can be handled by a preallocation
-call to filll holes with zeros, followed by an unshare call to break
-all the COW mappings, and then the extent map can be sealed. If you
-need to check for holes after sealing, SEEK_HOLE will tell you what
-you need to know...
-
-My preference really is for each fallocate command to do just one
-thing - having the seal operation also modify the extent map
-means it's not useful for the use cases where we need the extent map
-to remain unmodified....
-
-Thoughts?
+Shouldn't all this MS_ACTIVE flag and inode eviction stuff be put
+inside xfs_log_mount_finish()? Seems to me like wrapping it aroudn
+the outside is the wrong place to be putting it...
 
 Cheers,
 
