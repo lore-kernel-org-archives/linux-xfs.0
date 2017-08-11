@@ -1,12 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:44956 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751955AbdHKGpm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Aug 2017 02:45:42 -0400
-Subject: [PATCH v3 0/6] fs, xfs: block map immutable files
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 10 Aug 2017 23:39:17 -0700
-Message-ID: <150243355681.8777.14902834768886160223.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:17545 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752526AbdHKHKP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 03:10:15 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7B7AE6p017995
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 07:10:15 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7B7AEtL027335
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 07:10:14 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7B7AE5p020237
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 07:10:14 GMT
+Subject: [PATCH v9 00/16] xfs: online scrub xref support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 11 Aug 2017 00:10:12 -0700
+Message-ID: <150243541274.29473.1227559008347544526.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -14,79 +25,36 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Anna Schumaker <anna.schumaker@netapp.com>
+Cc: linux-xfs@vger.kernel.org
 
-Changes since v2 [1]:
-* Rather than have an IS_IOMAP_IMMUTABLE() check in
-  xfs_alloc_file_space(), place one centrally in xfs_bmapi_write() to
-  catch all attempts to write the block allocation map. (Dave)
+Hi all,
 
-* Make sealing an already sealed file, or unsealing an already unsealed
-  file return success (Darrick)
+This is the ninth revision of a patchset that adds to XFS kernel
+support for online metadata scrubbing and repair.  There aren't any
+on-disk format changes.  The overview of the online scrub functionality
+isn't any different than it was with the first kernel series, so I'll
+dive into what's in this set.
 
-* Set S_IOMAP_IMMUTABLE along with the transaction that sets
-  XFS_DIFLAG2_IOMAP_IMMUTABLE (Darrick)
+Today's submission is the third of four parts; it adds to the various
+metadata scrubbers the ability to cross-reference other metadata.  If
+a given record has a corresponding record somewhere else (e.g. each
+inobt record has a corresponding rmapbt record for inodes) or lacks a
+corresponding record elsewhere (e.g. each bmbt record does /not/ match
+to any bnobt records) then we can be far more certain of the
+filesystem's correctness.  We try to augment each scrubber with as many
+cross-reference checks as we possibly can, though we are careful to
+avoid deadlocks when taking locks in reverse order (rmapbt).
 
-* Round the range of the allocation and extent conversion performed by
-  FALLOC_FL_SEAL_BLOCK_MAP up to the filesystem block size.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.13-rc4.  xfsprogs[2] and xfstests[3] can be found in their usual
+places.  The git trees contain all four series' worth of changes.
 
-* Add a proof-of-concept patch for the use of immutable files with swap.
+This is an extraordinary way to eat your data.  Enjoy! 
+Comments and questions are, as always, welcome.
 
-[1]: https://lkml.org/lkml/2017/8/3/996
+--D
 
----
-
-The ability to make the physical block-allocation map of a file
-immutable is a powerful mechanism that allows userspace to have
-predictable dax-fault latencies, flush dax mappings to persistent memory
-without a syscall, and otherwise enable access to storage directly
-without ongoing mediation from the filesystem.
-
-This last aspect of direct storage addressability has been called a
-"horrible abuse" [2], but the reality is quite the reverse. Enabling
-files to be block-map immutable allows applications that would otherwise
-need to rely on dangerous raw device access to instead use a filesystem.
-Security, naming, re-provisioning capacity between usages are all better
-supported with safe semantics in a filesystem compared to a device file.
-
-It is time to "give up the idea that only the filesystem can access the
-storage underlying the filesystem" [3] to enable a better / safer
-alternative to using a raw device for userpace block servers, dax
-hypervisors, and peer-to-peer transfers to name a few use cases.
-
-[2]: https://lkml.org/lkml/2017/8/5/56
-[3]: https://lkml.org/lkml/2017/8/6/299
-
----
-
-Dan Williams (6):
-      fs, xfs: introduce S_IOMAP_IMMUTABLE
-      fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
-      fs, xfs: introduce FALLOC_FL_UNSEAL_BLOCK_MAP
-      xfs: introduce XFS_DIFLAG2_IOMAP_IMMUTABLE
-      xfs: toggle XFS_DIFLAG2_IOMAP_IMMUTABLE in response to fallocate
-      mm, xfs: protect swapfile contents with immutable + unwritten extents
-
-
- fs/attr.c                   |   10 +++
- fs/nfs/file.c               |    7 ++
- fs/open.c                   |   24 +++++++
- fs/read_write.c             |    3 +
- fs/xfs/libxfs/xfs_bmap.c    |    6 ++
- fs/xfs/libxfs/xfs_bmap.h    |   12 +++-
- fs/xfs/libxfs/xfs_format.h  |    5 +-
- fs/xfs/xfs_aops.c           |   54 ++++++++++++++++
- fs/xfs/xfs_bmap_util.c      |  142 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap_util.h      |    5 ++
- fs/xfs/xfs_file.c           |   16 ++++-
- fs/xfs/xfs_inode.c          |    2 +
- fs/xfs/xfs_ioctl.c          |    7 ++
- fs/xfs/xfs_iops.c           |    8 ++
- include/linux/falloc.h      |    4 +
- include/linux/fs.h          |    2 +
- include/uapi/linux/falloc.h |   18 +++++
- include/uapi/linux/fs.h     |    1 
- mm/filemap.c                |    5 ++
- mm/page_io.c                |    1 
- mm/swapfile.c               |   20 ++----
- 21 files changed, 328 insertions(+), 24 deletions(-)
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
