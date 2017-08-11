@@ -1,41 +1,510 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35990 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752610AbdHKMxN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 08:53:13 -0400
-Date: Fri, 11 Aug 2017 05:53:10 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
- conversion and the addition of an attribute
-Message-ID: <20170811125310.GA31001@infradead.org>
-References: <1502276772-24293-1-git-send-email-alex@zadarastorage.com>
- <20170809213307.GJ21024@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170809213307.GJ21024@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:34444 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752674AbdHKMar (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Aug 2017 08:30:47 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 50D635587A
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 12:30:46 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 2/6] mkfs: rename defaultval to flagval in opts
+Date: Fri, 11 Aug 2017 14:30:33 +0200
+Message-Id: <20170811123037.15962-3-jtulak@redhat.com>
+In-Reply-To: <20170811123037.15962-1-jtulak@redhat.com>
+References: <20170811123037.15962-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: alex@zadarastorage.com, linux-xfs@vger.kernel.org, bfoster@redhat.com, darrick.wong@oracle.com, libor.klepac@bcom.cz
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Thu, Aug 10, 2017 at 07:33:07AM +1000, Dave Chinner wrote:
-> Hmmmm, looking closer at xfs_defer_finish(), just holding the buffer
-> here isn't sufficient. xfs_defer_finish() can roll the transaction a
-> number of times and holding the buffer is a one-shot deal. Hence the
-> buffer held buffer will have BLI_HOLD removed on the next commit
-> and be unlocked by the second commit, whether it be inside
-> xfs_defer_finish() or the roll that occurs below.
-> 
-> ISTR a previous discussion with Darrick that we needed something
-> like xfs_defer_join() with buffers instead of inodes to allow them
-> to be held across a call to xfs_defer_finish()....
+The old name 'defaultval' was misleading - it is not the default value,
+but the value the option has when used as a flag by an user.
 
-We do.  I actually have patches lying around that remove the
-xfs_trans_roll and xfs_defer_finish inode arguments, and instead have a
-separate helper for rolling over an inode and adding an inode to the
-defer list.
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Reviewed-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ mkfs/xfs_mkfs.c | 120 ++++++++++++++++++++++++++++----------------------------
+ 1 file changed, 60 insertions(+), 60 deletions(-)
 
-I've not added a magic helper for buffers yet, but that would be a
-natural fit into that model.
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index fa0b475c..9431f010 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -101,7 +101,7 @@ unsigned int		sectorsize;
+  *     to zero. But if one value is different: minval=0 and maxval=1,
+  *     then it is OK.)
+  *
+- *   defaultval MANDATORY
++ *   flagval MANDATORY
+  *     The value used if user specifies the subopt, but no value.
+  *     If the subopt accepts some values (-d file=[1|0]), then this
+  *     sets what is used with simple specifying the subopt (-d file).
+@@ -126,7 +126,7 @@ struct opt_params {
+ 		int		conflicts[MAX_CONFLICTS];
+ 		long long	minval;
+ 		long long	maxval;
+-		long long	defaultval;
++		long long	flagval;
+ 		char		*raw_input;
+ 	}		subopt_params[MAX_SUBOPTS];
+ };
+@@ -146,7 +146,7 @@ struct opt_params bopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_BLOCKSIZE_LOG,
+ 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = B_SIZE,
+ 		  .convert = true,
+@@ -155,7 +155,7 @@ struct opt_params bopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_BLOCKSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+ };
+@@ -201,24 +201,24 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = XFS_MAX_AGNUMBER,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_FILE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = D_NAME,
+ 		  .conflicts = { LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SIZE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = XFS_AG_MIN_BYTES,
+ 		  .maxval = LLONG_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SUNIT,
+ 		  .conflicts = { D_NOALIGN,
+@@ -227,7 +227,7 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SWIDTH,
+ 		  .conflicts = { D_NOALIGN,
+@@ -236,7 +236,7 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_AGSIZE,
+ 		  .conflicts = { D_AGCOUNT,
+@@ -244,7 +244,7 @@ struct opt_params dopts = {
+ 		  .convert = true,
+ 		  .minval = XFS_AG_MIN_BYTES,
+ 		  .maxval = XFS_AG_MAX_BYTES,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SU,
+ 		  .conflicts = { D_NOALIGN,
+@@ -254,7 +254,7 @@ struct opt_params dopts = {
+ 		  .convert = true,
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SW,
+ 		  .conflicts = { D_NOALIGN,
+@@ -263,14 +263,14 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SECTLOG,
+ 		  .conflicts = { D_SECTSIZE,
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SECTSIZE,
+ 		  .conflicts = { D_SECTLOG,
+@@ -279,7 +279,7 @@ struct opt_params dopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_NOALIGN,
+ 		  .conflicts = { D_SU,
+@@ -289,25 +289,25 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = D_RTINHERIT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = D_PROJINHERIT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_EXTSZINHERIT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+ };
+@@ -339,7 +339,7 @@ struct opt_params iopts = {
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = I_LOG,
+ 		  .conflicts = { I_PERBLOCK,
+@@ -347,13 +347,13 @@ struct opt_params iopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_DINODE_MIN_LOG,
+ 		  .maxval = XFS_DINODE_MAX_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_MAXPCT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 100,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_PERBLOCK,
+ 		  .conflicts = { I_LOG,
+@@ -362,7 +362,7 @@ struct opt_params iopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_INODE_PERBLOCK,
+ 		  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_SIZE,
+ 		  .conflicts = { I_PERBLOCK,
+@@ -371,25 +371,25 @@ struct opt_params iopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_DINODE_MIN_SIZE,
+ 		  .maxval = XFS_DINODE_MAX_SIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_ATTR,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 2,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_PROJID32BIT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = I_SPINODES,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 	},
+ };
+@@ -429,7 +429,7 @@ struct opt_params lopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_INTERNAL,
+ 		  .conflicts = { L_FILE,
+@@ -437,27 +437,27 @@ struct opt_params lopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = L_SIZE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
+ 		  .maxval = XFS_MAX_LOG_BYTES,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_VERSION,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = 2,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SUNIT,
+ 		  .conflicts = { L_SU,
+ 				 LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SU,
+ 		  .conflicts = { L_SUNIT,
+@@ -465,20 +465,20 @@ struct opt_params lopts = {
+ 		  .convert = true,
+ 		  .minval = BBTOB(1),
+ 		  .maxval = XLOG_MAX_RECORD_BSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_DEV,
+ 		  .conflicts = { L_AGNUM,
+ 				 L_INTERNAL,
+ 				 LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SECTLOG,
+ 		  .conflicts = { L_SECTSIZE,
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SECTSIZE,
+ 		  .conflicts = { L_SECTLOG,
+@@ -487,26 +487,26 @@ struct opt_params lopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_FILE,
+ 		  .conflicts = { L_INTERNAL,
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = L_NAME,
+ 		  .conflicts = { L_AGNUM,
+ 				 L_INTERNAL,
+ 				 LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_LAZYSBCNTR,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 	},
+ };
+@@ -530,7 +530,7 @@ struct opt_params nopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_REC_DIRSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_SIZE,
+ 		  .conflicts = { N_LOG,
+@@ -539,19 +539,19 @@ struct opt_params nopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = 1 << XFS_MIN_REC_DIRSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_VERSION,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 2,
+ 		  .maxval = 2,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_FTYPE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 	},
+ };
+@@ -579,33 +579,33 @@ struct opt_params ropts = {
+ 		  .convert = true,
+ 		  .minval = XFS_MIN_RTEXTSIZE,
+ 		  .maxval = XFS_MAX_RTEXTSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_SIZE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = 0,
+ 		  .maxval = LLONG_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_DEV,
+ 		  .conflicts = { LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_FILE,
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		},
+ 		{ .index = R_NAME,
+ 		  .conflicts = { LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_NOALIGN,
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		},
+ 	},
+@@ -631,7 +631,7 @@ struct opt_params sopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SECTLOG,
+ 		  .conflicts = { S_SIZE,
+@@ -639,7 +639,7 @@ struct opt_params sopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SIZE,
+ 		  .conflicts = { S_LOG,
+@@ -649,7 +649,7 @@ struct opt_params sopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SECTSIZE,
+ 		  .conflicts = { S_LOG,
+@@ -659,7 +659,7 @@ struct opt_params sopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+ };
+@@ -684,29 +684,29 @@ struct opt_params mopts = {
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = M_FINOBT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = M_UUID,
+ 		  .conflicts = { LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = M_RMAPBT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = M_REFLINK,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 	},
+ };
+@@ -1398,9 +1398,9 @@ getnum(
+ 	check_opt(opts, index, false);
+ 	/* empty strings might just return a default value */
+ 	if (!str || *str == '\0') {
+-		if (sp->defaultval == SUBOPT_NEEDS_VAL)
++		if (sp->flagval == SUBOPT_NEEDS_VAL)
+ 			reqval(opts->name, (char **)opts->subopts, index);
+-		return sp->defaultval;
++		return sp->flagval;
+ 	}
+ 
+ 	if (sp->minval == 0 && sp->maxval == 0) {
+-- 
+2.13.3
+
