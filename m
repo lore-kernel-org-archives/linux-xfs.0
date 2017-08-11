@@ -1,54 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:38089 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:38287 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752631AbdHKKPP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Aug 2017 06:15:15 -0400
-Date: Fri, 11 Aug 2017 12:15:13 +0200
+        id S1751545AbdHKKob (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Aug 2017 06:44:31 -0400
+Date: Fri, 11 Aug 2017 12:44:29 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: AW: Locking problems with Linux 4.9 and 4.11 with NFSD and
-        `fs/iomap.c`
-Message-ID: <20170811101513.GA11531@lst.de>
-References: <20170508131843.GB29840@bfoster.bfoster> <20170509090534.GB2378@lst.de> <7ae18b0d-38e3-9b12-0989-ede68956ad43@molgen.mpg.de> <358037e8-6784-ebca-9fbb-ec7eef3977d6@molgen.mpg.de> <20170510171757.GA10534@localhost.localdomain> <f6115b81-918d-ecfe-e3d9-812bccf7c80f@molgen.mpg.de> <979473d1-9e8a-51ba-28d9-9ace63f8105b@molgen.mpg.de> <20170801225144.GP17762@dastard> <92d0933c-f031-f4e7-191e-eb3c9b1260aa@molgen.mpg.de> <12EF8D94C6F8734FB2FF37B9FBEDD173010E032482@EXCHANGE.collogia.de>
+Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
+        dma-to-storage, and swap
+Message-ID: <20170811104429.GA13736@lst.de>
+References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com> <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com> <20170805095013.GC14930@lst.de> <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <12EF8D94C6F8734FB2FF37B9FBEDD173010E032482@EXCHANGE.collogia.de>
+In-Reply-To: <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Markus Stockhausen <stockhausen@collogia.de>
-Cc: 'Paul Menzel' <pmenzel@molgen.mpg.de>, Dave Chinner <david@fromorbit.com>, "it+linux-nfs@molgen.mpg.de" <it+linux-nfs@molgen.mpg.de>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>
 
-On Thu, Aug 10, 2017 at 07:54:51PM +0000, Markus Stockhausen wrote:
-> Lets say you are trying to zero multiple of 4GB chunks. With bytes
-> evaluated towards 0 this will hit an endless loop within that iomap
-> function. That might explain your observation. If that is right a bugfix
-> would qualify for stable 4.8+
+On Sun, Aug 06, 2017 at 11:51:50AM -0700, Dan Williams wrote:
+> Of course it's a useful API. An application already needs to worry
+> about the block map, that's why we have fallocate, msync, fiemap
+> and...
 
-Yes, it seems like min_t casts arguments 2 and 3 to the type in argument
-1, which could lead to incorrect truncation.
+Fallocate and msync do not expose the block map in any way.  Proof:
+they work just fine over say nfs.
 
-Paul, please try the patch below:
+fiemap does indeed expose the block map, which is the whole point.
+But it's a debug tool that we don't event have a man page for.  And
+it's not usable for anything else, if only for the fact that it doesn't
+tell you what device your returned extents are relative to.
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 039266128b7f..59cc98ad7577 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -278,7 +278,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		unsigned long bytes;	/* Bytes to write to page */
- 
- 		offset = (pos & (PAGE_SIZE - 1));
--		bytes = min_t(unsigned long, PAGE_SIZE - offset, length);
-+		bytes = min_t(loff_t, PAGE_SIZE - offset, length);
- 
- 		rpage = __iomap_read_page(inode, pos);
- 		if (IS_ERR(rpage))
-@@ -373,7 +373,7 @@ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
- 		unsigned offset, bytes;
- 
- 		offset = pos & (PAGE_SIZE - 1); /* Within page */
--		bytes = min_t(unsigned, PAGE_SIZE - offset, count);
-+		bytes = min_t(loff_t, PAGE_SIZE - offset, count);
- 
- 		if (IS_DAX(inode))
- 			status = iomap_dax_zero(pos, offset, bytes, iomap);
+> > We've been through this a few times but let me repeat it:  The only
+> > sensible API gurantee is one that is observable and usable.
+> 
+> I'm missing how block-map immutable files violate this observable and
+> usable constraint?
+
+What is the observable behavior of an extent map change?  How can you
+describe your immutable extent map behavior so that when I violate
+them by e.g. moving one extent to a different place on disk you can
+observe that in userspace?
+
+> This immutable approach should also go in, it solves the same problem
+> without the the latency drawback,
+
+How is your latency going to be any different from MAP_SYNC on
+a fully allocated and pre-zeroed file?
+
+> Beyond flush from userspace it also
+> can be used to solve the swapfile problems you highlighted
+
+Which swapfile problem?
+
+> and it
+> allows safe ongoing dma to a filesystem-dax mapping beyond what we can
+> already do with direct-I/O.
+
+Please explain how this interface allows for any sort of safe userspace
+DMA.
