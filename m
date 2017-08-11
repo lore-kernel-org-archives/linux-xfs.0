@@ -1,77 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37949 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752989AbdHKQAC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 12:00:02 -0400
-Date: Fri, 11 Aug 2017 08:59:56 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:47302 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753538AbdHKQFO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 12:05:14 -0400
+Date: Fri, 11 Aug 2017 09:04:43 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix inobt inode allocation search optimization
-Message-ID: <20170811155956.GZ24087@magnolia>
-References: <a605146bb4b492462c44a5c8697533a40b9f57bb.1502426715.git.osandov@fb.com>
+Subject: Re: [PATCH] iomap: fix integer truncation issues in the zeroing and
+ dirtying helpers
+Message-ID: <20170811160443.GA24087@magnolia>
+References: <20170811151805.22896-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a605146bb4b492462c44a5c8697533a40b9f57bb.1502426715.git.osandov@fb.com>
+In-Reply-To: <20170811151805.22896-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Omar Sandoval <osandov@osandov.com>
-Cc: linux-xfs@vger.kernel.org, kernel-team@fb.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, pmenzel@molgen.mpg.de, stockhausen@collogia.de
 
-On Thu, Aug 10, 2017 at 09:45:45PM -0700, Omar Sandoval wrote:
+On Fri, Aug 11, 2017 at 05:18:05PM +0200, Christoph Hellwig wrote:
+> Fix the min_t calls in the zeroing and dirtying helpers to perform the
+> comparisms on 64-bit types, which prevents them from incorrectly
+> being truncated, and larger zeroing operations being stuck in a never
+> ending loop.
+> 
+> Special thanks to Markus Stockhausen for spotting the bug.
+> 
+> Reported-by: Paul Menzel <pmenzel@molgen.mpg.de>
+> Tested-by: Paul Menzel <pmenzel@molgen.mpg.de>
 
-Looks ok, will test...
+Looks fine to me,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
---D
+(Are you going to push this to Al yourself, or do you want me to drag it
+through the xfs tree?)
 
-> From: Omar Sandoval <osandov@fb.com>
-> 
-> When we try to allocate a free inode by searching the inobt, we try to
-> find the inode nearest the parent inode by searching chunks both left
-> and right of the chunk containing the parent. As an optimization, we
-> cache the leftmost and rightmost records that we previously searched; if
-> we do another allocation with the same parent inode, we'll pick up the
-> search where it last left off.
-> 
-> There's a bug in the case where we found a free inode to the left of the
-> parent's chunk: we need to update the cached left and right records, but
-> because we already reassigned the right record to point to the left, we
-> end up assigning the left record to both the cached left and right
-> records.
-> 
-> This isn't a correctness problem strictly, but it can result in the next
-> allocation rechecking chunks unnecessarily or allocating inodes further
-> away from the parent than it needs to. Fix it by swapping the record
-> pointer after we update the cached left and right records.
-> 
-> Fixes: bd169565993b ("xfs: speed up free inode search")
-> Signed-off-by: Omar Sandoval <osandov@fb.com>
 > ---
->  fs/xfs/libxfs/xfs_ialloc.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  fs/iomap.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index ffd5a15d1bb6..abf5beaae907 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -1246,13 +1246,13 @@ xfs_dialloc_ag_inobt(
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 039266128b7f..59cc98ad7577 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -278,7 +278,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  		unsigned long bytes;	/* Bytes to write to page */
 >  
->  			/* free inodes to the left? */
->  			if (useleft && trec.ir_freecount) {
-> -				rec = trec;
->  				xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
->  				cur = tcur;
+>  		offset = (pos & (PAGE_SIZE - 1));
+> -		bytes = min_t(unsigned long, PAGE_SIZE - offset, length);
+> +		bytes = min_t(loff_t, PAGE_SIZE - offset, length);
 >  
->  				pag->pagl_leftrec = trec.ir_startino;
->  				pag->pagl_rightrec = rec.ir_startino;
->  				pag->pagl_pagino = pagino;
-> +				rec = trec;
->  				goto alloc_inode;
->  			}
+>  		rpage = __iomap_read_page(inode, pos);
+>  		if (IS_ERR(rpage))
+> @@ -373,7 +373,7 @@ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
+>  		unsigned offset, bytes;
 >  
+>  		offset = pos & (PAGE_SIZE - 1); /* Within page */
+> -		bytes = min_t(unsigned, PAGE_SIZE - offset, count);
+> +		bytes = min_t(loff_t, PAGE_SIZE - offset, count);
+>  
+>  		if (IS_DAX(inode))
+>  			status = iomap_dax_zero(pos, offset, bytes, iomap);
 > -- 
-> 2.14.0
+> 2.11.0
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
