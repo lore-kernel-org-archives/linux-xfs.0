@@ -1,40 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:33731 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751250AbdHEJuP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 5 Aug 2017 05:50:15 -0400
-Date: Sat, 5 Aug 2017 11:50:13 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
-        dma-to-storage, and swap
-Message-ID: <20170805095013.GC14930@lst.de>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com> <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:50363 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751932AbdHKKCd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 06:02:33 -0400
+Date: Fri, 11 Aug 2017 03:02:30 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] vfs: freeze filesystems just prior to reboot
+Message-ID: <20170811100230.GC7064@infradead.org>
+References: <20170519002032.GA21202@birch.djwong.org>
+ <1495202431.1896310.982081664.066926F8@webmail.messagingengine.com>
+ <20170519190115.GJ4519@birch.djwong.org>
+ <1501791890.2285873.1062452112.61520C55@webmail.messagingengine.com>
+ <20170805141621.GA10457@infradead.org>
+ <20170805154528.GI24087@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com>
+In-Reply-To: <20170805154528.GI24087@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, Linux API <linux-api@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Colin Walters <walters@verbum.org>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Thu, Aug 03, 2017 at 07:38:11PM -0700, Dan Williams wrote:
-> [ adding linux-api to the cover letter for notification, will send the
-> full set to linux-api for v3 ]
+On Sat, Aug 05, 2017 at 08:45:28AM -0700, Darrick J. Wong wrote:
+> FSCHECKPOINT?  Since that's your requirement anyway...
+> 
+> "Ensures that all filesystem metadata (which may be in a journal
+> somewhere) has been checkpointed back to disk." ?
 
-Just don't send this crap ever again.  All the so called use cases in the
-earlier thread were incorrect and highly dangerous.
-
-Promising that the block map is stable is not a useful userspace API,
-as it the block map is a complete internal implementation detail.
-
-We've been through this a few times but let me repeat it:  The only
-sensible API gurantee is one that is observable and usable.
-
-so Jan's synchronous page fault flag in one form or another makes
-perfect sense as it is a clear receipe for the user:  you don't
-have to call msync to persist your mmap writes.  This API is not,
-it guarantees that the block map does not change, but the application
-has absolutely no point of even knowing about the block map.
-
+What about a file system that is entirely log structured and just
+garbage collects some times?
