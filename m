@@ -1,14 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49402 "EHLO mga01.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:44956 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752504AbdHKGp6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Aug 2017 02:45:58 -0400
-Subject: [PATCH v3 3/6] fs, xfs: introduce FALLOC_FL_UNSEAL_BLOCK_MAP
+        id S1751955AbdHKGpm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Aug 2017 02:45:42 -0400
+Subject: [PATCH v3 0/6] fs, xfs: block map immutable files
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 10 Aug 2017 23:39:33 -0700
-Message-ID: <150243357353.8777.17069711229218266643.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150243355681.8777.14902834768886160223.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150243355681.8777.14902834768886160223.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Thu, 10 Aug 2017 23:39:17 -0700
+Message-ID: <150243355681.8777.14902834768886160223.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,186 +14,79 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
-Provide an explicit fallocate operation type for clearing the
-S_IOMAP_IMMUTABLE flag. Like the enable case it requires CAP_IMMUTABLE
-and it can only be performed while no process has the file mapped.
+Changes since v2 [1]:
+* Rather than have an IS_IOMAP_IMMUTABLE() check in
+  xfs_alloc_file_space(), place one centrally in xfs_bmapi_write() to
+  catch all attempts to write the block allocation map. (Dave)
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+* Make sealing an already sealed file, or unsealing an already unsealed
+  file return success (Darrick)
+
+* Set S_IOMAP_IMMUTABLE along with the transaction that sets
+  XFS_DIFLAG2_IOMAP_IMMUTABLE (Darrick)
+
+* Round the range of the allocation and extent conversion performed by
+  FALLOC_FL_SEAL_BLOCK_MAP up to the filesystem block size.
+
+* Add a proof-of-concept patch for the use of immutable files with swap.
+
+[1]: https://lkml.org/lkml/2017/8/3/996
+
 ---
- fs/open.c                   |   20 ++++++++++++------
- fs/xfs/xfs_bmap_util.c      |   47 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap_util.h      |    3 +++
- fs/xfs/xfs_file.c           |    4 +++-
- include/linux/falloc.h      |    3 ++-
- include/uapi/linux/falloc.h |    1 +
- 6 files changed, 69 insertions(+), 9 deletions(-)
 
-diff --git a/fs/open.c b/fs/open.c
-index 76f57f7465c4..3075599f1c55 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -274,13 +274,17 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 		return -EINVAL;
- 
- 	/*
--	 * Seal block map operation should only be used exclusively, and
--	 * with the IMMUTABLE capability.
-+	 * Seal/unseal block map operations should only be used
-+	 * exclusively, and with the IMMUTABLE capability.
- 	 */
--	if (mode & FALLOC_FL_SEAL_BLOCK_MAP) {
-+	if (mode & (FALLOC_FL_SEAL_BLOCK_MAP | FALLOC_FL_UNSEAL_BLOCK_MAP)) {
- 		if (!capable(CAP_LINUX_IMMUTABLE))
- 			return -EPERM;
--		if (mode & ~FALLOC_FL_SEAL_BLOCK_MAP)
-+		if (mode == (FALLOC_FL_SEAL_BLOCK_MAP
-+					| FALLOC_FL_UNSEAL_BLOCK_MAP))
-+			return -EINVAL;
-+		if (mode & ~(FALLOC_FL_SEAL_BLOCK_MAP
-+					| FALLOC_FL_UNSEAL_BLOCK_MAP))
- 			return -EINVAL;
- 	}
- 
-@@ -303,10 +307,12 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 		return -ETXTBSY;
- 
- 	/*
--	 * We cannot allow any allocation changes on an iomap immutable file,
--	 * but we can allow the fs to validate if this request is redundant.
-+	 * We cannot allow any allocation changes on an iomap immutable
-+	 * file, but we can allow the fs to validate if this request is
-+	 * redundant, or unseal the block map.
- 	 */
--	if (IS_IOMAP_IMMUTABLE(inode) && !(mode & FALLOC_FL_SEAL_BLOCK_MAP))
-+	if (IS_IOMAP_IMMUTABLE(inode) && !(mode & (FALLOC_FL_SEAL_BLOCK_MAP
-+					| FALLOC_FL_UNSEAL_BLOCK_MAP)))
- 		return -ETXTBSY;
- 
- 	/*
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 2ac8f4ed5723..888bae801961 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1462,6 +1462,53 @@ xfs_seal_file_space(
- 	return error;
- }
- 
-+int
-+xfs_unseal_file_space(
-+	struct xfs_inode	*ip,
-+	xfs_off_t		offset,
-+	xfs_off_t		len)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+	struct address_space	*mapping = inode->i_mapping;
-+	int			error;
-+
-+	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL));
-+
-+	if (offset)
-+		return -EINVAL;
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	/*
-+	 * It does not make sense to unseal less than the full range of
-+	 * the file.
-+	 */
-+	error = -EINVAL;
-+	if (len != i_size_read(inode))
-+		goto out_unlock;
-+
-+	/* Are we already unsealed? */
-+	error = 0;
-+	if (!IS_IOMAP_IMMUTABLE(inode))
-+		goto out_unlock;
-+
-+	/*
-+	 * Provide safety against one thread changing the policy of not
-+	 * requiring fsync/msync (for block allocations) behind another
-+	 * thread's back.
-+	 */
-+	error = -EBUSY;
-+	if (mapping_mapped(mapping))
-+		goto out_unlock;
-+
-+	error = 0;
-+	inode->i_flags &= ~S_IOMAP_IMMUTABLE;
-+
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+
-+	return error;
-+}
-+
- /*
-  * @next_fsb will keep track of the extent currently undergoing shift.
-  * @stop_fsb will keep track of the extent at which we have to stop.
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 5115a32a2483..b64653a75942 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -62,6 +62,9 @@ int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
- int	xfs_seal_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
-+int	xfs_unseal_file_space(struct xfs_inode *, xfs_off_t offset,
-+				xfs_off_t len);
-+
- 
- /* EOF block manipulation functions */
- bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e21121530a90..833f77700be2 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -740,7 +740,7 @@ xfs_file_write_iter(
- 		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
- 		 FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |	\
- 		 FALLOC_FL_INSERT_RANGE | FALLOC_FL_UNSHARE_RANGE |	\
--		 FALLOC_FL_SEAL_BLOCK_MAP)
-+		 FALLOC_FL_SEAL_BLOCK_MAP | FALLOC_FL_UNSEAL_BLOCK_MAP)
- 
- STATIC long
- xfs_file_fallocate(
-@@ -840,6 +840,8 @@ xfs_file_fallocate(
- 						XFS_BMAPI_PREALLOC);
- 			} else if (mode & FALLOC_FL_SEAL_BLOCK_MAP) {
- 				error = xfs_seal_file_space(ip, offset, len);
-+			} else if (mode & FALLOC_FL_UNSEAL_BLOCK_MAP) {
-+				error = xfs_unseal_file_space(ip, offset, len);
- 			} else
- 				error = xfs_alloc_file_space(ip, offset, len,
- 						XFS_BMAPI_PREALLOC);
-diff --git a/include/linux/falloc.h b/include/linux/falloc.h
-index 48546c6fbec7..b22c1368ed1e 100644
---- a/include/linux/falloc.h
-+++ b/include/linux/falloc.h
-@@ -27,6 +27,7 @@ struct space_resv {
- 					 FALLOC_FL_ZERO_RANGE |		\
- 					 FALLOC_FL_INSERT_RANGE |	\
- 					 FALLOC_FL_UNSHARE_RANGE |	\
--					 FALLOC_FL_SEAL_BLOCK_MAP)
-+					 FALLOC_FL_SEAL_BLOCK_MAP |	\
-+					 FALLOC_FL_UNSEAL_BLOCK_MAP)
- 
- #endif /* _FALLOC_H_ */
-diff --git a/include/uapi/linux/falloc.h b/include/uapi/linux/falloc.h
-index e3867cfe31d5..5509e6216448 100644
---- a/include/uapi/linux/falloc.h
-+++ b/include/uapi/linux/falloc.h
-@@ -93,4 +93,5 @@
-  * with the punch, zero, collapse, or insert range modes.
-  */
- #define FALLOC_FL_SEAL_BLOCK_MAP	0x080
-+#define FALLOC_FL_UNSEAL_BLOCK_MAP	0x100
- #endif /* _UAPI_FALLOC_H_ */
+The ability to make the physical block-allocation map of a file
+immutable is a powerful mechanism that allows userspace to have
+predictable dax-fault latencies, flush dax mappings to persistent memory
+without a syscall, and otherwise enable access to storage directly
+without ongoing mediation from the filesystem.
 
+This last aspect of direct storage addressability has been called a
+"horrible abuse" [2], but the reality is quite the reverse. Enabling
+files to be block-map immutable allows applications that would otherwise
+need to rely on dangerous raw device access to instead use a filesystem.
+Security, naming, re-provisioning capacity between usages are all better
+supported with safe semantics in a filesystem compared to a device file.
+
+It is time to "give up the idea that only the filesystem can access the
+storage underlying the filesystem" [3] to enable a better / safer
+alternative to using a raw device for userpace block servers, dax
+hypervisors, and peer-to-peer transfers to name a few use cases.
+
+[2]: https://lkml.org/lkml/2017/8/5/56
+[3]: https://lkml.org/lkml/2017/8/6/299
+
+---
+
+Dan Williams (6):
+      fs, xfs: introduce S_IOMAP_IMMUTABLE
+      fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
+      fs, xfs: introduce FALLOC_FL_UNSEAL_BLOCK_MAP
+      xfs: introduce XFS_DIFLAG2_IOMAP_IMMUTABLE
+      xfs: toggle XFS_DIFLAG2_IOMAP_IMMUTABLE in response to fallocate
+      mm, xfs: protect swapfile contents with immutable + unwritten extents
+
+
+ fs/attr.c                   |   10 +++
+ fs/nfs/file.c               |    7 ++
+ fs/open.c                   |   24 +++++++
+ fs/read_write.c             |    3 +
+ fs/xfs/libxfs/xfs_bmap.c    |    6 ++
+ fs/xfs/libxfs/xfs_bmap.h    |   12 +++-
+ fs/xfs/libxfs/xfs_format.h  |    5 +-
+ fs/xfs/xfs_aops.c           |   54 ++++++++++++++++
+ fs/xfs/xfs_bmap_util.c      |  142 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_bmap_util.h      |    5 ++
+ fs/xfs/xfs_file.c           |   16 ++++-
+ fs/xfs/xfs_inode.c          |    2 +
+ fs/xfs/xfs_ioctl.c          |    7 ++
+ fs/xfs/xfs_iops.c           |    8 ++
+ include/linux/falloc.h      |    4 +
+ include/linux/fs.h          |    2 +
+ include/uapi/linux/falloc.h |   18 +++++
+ include/uapi/linux/fs.h     |    1 
+ mm/filemap.c                |    5 ++
+ mm/page_io.c                |    1 
+ mm/swapfile.c               |   20 ++----
+ 21 files changed, 328 insertions(+), 24 deletions(-)
