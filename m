@@ -1,82 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20555 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753325AbdHKTrT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 15:47:19 -0400
-Date: Fri, 11 Aug 2017 12:47:10 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:17531 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753325AbdHKTuh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 15:50:37 -0400
+Date: Fri, 11 Aug 2017 12:50:10 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2 V2] xfs: toggle readonly state around
- xfs_log_mount_finish
-Message-ID: <20170811194710.GF24087@magnolia>
-References: <e98c7179-fdb0-1cc7-544b-c55489451db5@redhat.com>
- <6c81fb42-4601-dc0f-6ebb-a73c7c40aaa4@sandeen.net>
- <537e1ca3-60be-8182-7130-dff3a1059078@sandeen.net>
+Subject: [PATCH v2 2/3] xfs: evict all inodes involved with log redo item
+ recovery
+Message-ID: <20170811195010.GH24087@magnolia>
+References: <150234262066.13754.6534116056866237943.stgit@magnolia>
+ <150234263191.13754.5037661818451431724.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <537e1ca3-60be-8182-7130-dff3a1059078@sandeen.net>
+In-Reply-To: <150234263191.13754.5037661818451431724.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: viro@ZenIV.linux.org.uk, Christoph Hellwig <hch@infradead.org>
 
-On Fri, Aug 11, 2017 at 12:45:05PM -0700, Eric Sandeen wrote:
-> When we do log recovery on a readonly mount, unlinked inode
-> processing does not happen due to the readonly checks in
-> xfs_inactive(), which are trying to prevent any I/O on a
-> readonly mount.
-> 
-> This is misguided - we do I/O on readonly mounts all the time,
-> for consistency; for example, log recovery.  So do the same
-> RDONLY flag twiddling around xfs_log_mount_finish() as we
-> do around xfs_log_mount(), for the same reason.
-> 
-> This all cries out for a big rework but for now this is a
-> simple fix to an obvious problem.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> 
-> V2: bool "readonly" per Christoph's request
-> 
+When we introduced the bmap redo log items, we set MS_ACTIVE on the
+mountpoint and XFS_IRECOVERY on the inode to prevent unlinked inodes
+from being truncated prematurely during log recovery.  This also had the
+effect of putting linked inodes on the lru instead of evicting them.
 
-Looks good, will test...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Unfortunately, we neglected to find all those unreferenced lru inodes
+and evict them after finishing log recovery, which means that we leak
+them if anything goes wrong in the rest of xfs_mountfs, because the lru
+is only cleaned out on unmount.
 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 0bd1341..ca56d85 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -743,16 +743,23 @@
->  	struct xfs_mount	*mp)
->  {
->  	int	error = 0;
-> +	bool	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
->  
->  	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
->  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
->  		return 0;
-> +	} else if (readonly) {
-> +		/* Allow unlinked processing to proceed */
-> +		mp->m_flags &= ~XFS_MOUNT_RDONLY;
->  	}
->  
->  	error = xlog_recover_finish(mp->m_log);
->  	if (!error)
->  		xfs_log_work_queue(mp);
->  
-> +	if (readonly)
-> +		mp->m_flags |= XFS_MOUNT_RDONLY;
-> +
->  	return error;
->  }
->  
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Therefore, evict unreferenced inodes in the lru list immediately
+after clearing MS_ACTIVE.
+
+Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: viro@ZenIV.linux.org.uk
+---
+v2: use the vfs evict_inodes instead of duplicating it
+---
+ fs/inode.c         |    1 +
+ fs/internal.h      |    1 -
+ fs/xfs/xfs_mount.c |   12 ++++++++++++
+ include/linux/fs.h |    1 +
+ 4 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/fs/inode.c b/fs/inode.c
+index 5037059..6a1626e 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -637,6 +637,7 @@ void evict_inodes(struct super_block *sb)
+ 
+ 	dispose_list(&dispose);
+ }
++EXPORT_SYMBOL_GPL(evict_inodes);
+ 
+ /**
+  * invalidate_inodes	- attempt to free all inodes on a superblock
+diff --git a/fs/internal.h b/fs/internal.h
+index 9676fe1..fedfe94 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -132,7 +132,6 @@ static inline bool atime_needs_update_rcu(const struct path *path,
+ extern void inode_io_list_del(struct inode *inode);
+ 
+ extern long get_nr_dirty_inodes(void);
+-extern void evict_inodes(struct super_block *);
+ extern int invalidate_inodes(struct super_block *, bool);
+ 
+ /*
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index a46c9d7..351e2c3 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -956,10 +956,22 @@ xfs_mountfs(
+ 	 * inodes.  Turn it off immediately after xfs_log_mount_finish
+ 	 * so that we don't leak the quota inodes if subsequent mount
+ 	 * activities fail.
++	 *
++	 * We let all inodes involved in redo item processing end up on
++	 * the LRU instead of being evicted immediately so that if we do
++	 * something to an unlinked inode, the irele won't cause
++	 * premature truncation and freeing of the inode, which results
++	 * in log recovery failure.  We have to evict the unreferenced
++	 * lru inodes after clearing MS_ACTIVE because we don't
++	 * otherwise clean up the lru if there's a subsequent failure in
++	 * xfs_mountfs, which leads to us leaking the inodes if nothing
++	 * else (e.g. quotacheck) references the inodes before the
++	 * mount failure occurs.
+ 	 */
+ 	mp->m_super->s_flags |= MS_ACTIVE;
+ 	error = xfs_log_mount_finish(mp);
+ 	mp->m_super->s_flags &= ~MS_ACTIVE;
++	evict_inodes(mp->m_super);
+ 	if (error) {
+ 		xfs_warn(mp, "log mount finish failed");
+ 		goto out_rtunmount;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 7b5d681..e730438 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2830,6 +2830,7 @@ static inline void lockdep_annotate_inode_mutex_key(struct inode *inode) { };
+ #endif
+ extern void unlock_new_inode(struct inode *);
+ extern unsigned int get_next_ino(void);
++extern void evict_inodes(struct super_block *sb);
+ 
+ extern void __iget(struct inode * inode);
+ extern void iget_failed(struct inode *);
