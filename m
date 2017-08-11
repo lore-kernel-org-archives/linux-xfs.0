@@ -1,84 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51692 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46664 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932347AbdHVKSH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 22 Aug 2017 06:18:07 -0400
-Date: Tue, 22 Aug 2017 12:18:04 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 13/13] ext4: Support for synchronous DAX faults
-Message-ID: <20170822101804.GG4909@quack2.suse.cz>
-References: <20170817160815.30466-1-jack@suse.cz>
- <20170817160815.30466-14-jack@suse.cz>
- <20170821191948.GD26220@linux.intel.com>
+        id S1752208AbdHKFiV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Aug 2017 01:38:21 -0400
+Subject: Re: [PATCH v2] fiemap: Allow to specify range to fiemap
+References: <20170810120439.GO21024@dastard>
+ <1502368241-8928-1-git-send-email-nborisov@suse.com>
+ <20170810161322.GV24087@magnolia>
+ <c254f712-e2bd-502b-515f-5ba20097bffd@suse.com>
+ <20170810211208.GY24087@magnolia>
+ <348c2665-f0e8-48ff-277f-c46748678a3c@sandeen.net>
+ <202242e0-6ae8-aebf-9b6f-ce4f91949b10@redhat.com>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <a4aa4ada-22c1-6783-f136-a9949d81c4e7@suse.com>
+Date: Fri, 11 Aug 2017 08:38:18 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170821191948.GD26220@linux.intel.com>
+In-Reply-To: <202242e0-6ae8-aebf-9b6f-ce4f91949b10@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>
+To: Eric Sandeen <sandeen@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon 21-08-17 13:19:48, Ross Zwisler wrote:
-> On Thu, Aug 17, 2017 at 06:08:15PM +0200, Jan Kara wrote:
-> > We return IOMAP_F_NEEDDSYNC flag from ext4_iomap_begin() for a
-> > synchronous write fault when inode has some uncommitted metadata
-> > changes. In the fault handler ext4_dax_fault() we then detect this case,
-> > call vfs_fsync_range() to make sure all metadata is committed, and call
-> > dax_pfn_mkwrite() to mark PTE as writeable. Note that this will also
+
+
+On 11.08.2017 00:57, Eric Sandeen wrote:
+> On 8/10/17 2:22 PM, Eric Sandeen wrote:
+>> On 8/10/17 2:12 PM, Darrick J. Wong wrote:
+>>> On Thu, Aug 10, 2017 at 07:46:35PM +0300, Nikolay Borisov wrote:
+>>>>
+>>>>
+>>>> On 10.08.2017 19:13, Darrick J. Wong wrote:
+>>>>> We don't decrement len each time through the ioctl loop?  Doesn't that
+>>>>> cause us to request and retrieve rows for ranges we don't want?
+>>>>
+>>>> Hm, you are right, I believe on every iteration we should do:
+>>>>
+>>>> len -= last_logical - start_offset
+>>>
+>>> start_offset doesn't change, right?
+>>>
+>>> I would think len -= last_logical - fiemap->fm_start.
+>>>
+>>> Or just calculate end_offset = start_offset + length and set
+>>> fiemap->fm_length = end_offset - last_logical... 
+>>>
+>>> ...though now that I look at that file even closer I wonder what is
+>>> going on with that outer while loop counting extents?  Does -n exist to
+>>> let users cap the number of records to print, even if that means we
+>>> don't make it to the end of the range requested?
+>>
+>> -n should simply be the size of each fiemap request, i.e. how many to
+>> request and fill on each iteration.  It should not affect how many
+>> get printed in the end.
+>>
+>> At least that's how xfs_bmap is supposed to work, and therefore in theory
+>> how xfs_io's fiemap should work.
 > 
-> Need to fix up the above line a little -
-> s/dax_pfn_mkwrite/dax_insert_pfn_mkwrite/, and we insert the PTE as well as
-> make it writeable.
+> ... except apparently that is not actually how it works :(
 
-Fixed up, thanks.
-
-> >  	if (write) {
-> > -		if (!IS_ERR(handle))
-> > -			ext4_journal_stop(handle);
-> > +		ext4_journal_stop(handle);
-> > +		/* Write fault but PFN mapped only RO? */
+In my tests passing -n 1 doesn't print anything irrespective of whether
+I use the newly added args, it was strange. It's supposed to define the
+batch of extents to query at a time. However, that's definitely not what
+it's doing... Also the man pages states that if -n is not passed fiemap
+would query the number of extents required and use that, however the
+code currently just uses the default of 32 extents ...
 > 
-> The above comment is out of date.
-
-Fixed.
-
-> > +		if (result & VM_FAULT_NEEDDSYNC) {
-> > +			int err;
-> > +			loff_t start = ((loff_t)vmf->pgoff) << PAGE_SHIFT;
-> > +			size_t len = 0;
-> > +
-> > +			if (pe_size == PE_SIZE_PTE)
-> > +				len = PAGE_SIZE;
-> > +#ifdef CONFIG_FS_DAX_PMD
-> > +			else if (pe_size == PE_SIZE_PMD)
-> > +				len = HPAGE_PMD_SIZE;
+> -Eric
 > 
-> In fs/dax.c we always use PMD_SIZE.  It looks like HPAGE_PMD_SIZE and PMD_SIZE
-> are always the same (from include/linux/huge_mm.h, the only defintion of
-> HPAGE_PMD_SIZE):
-> 
-> #define HPAGE_PMD_SHIFT PMD_SHIFT
-> #define HPAGE_PMD_SIZE	((1UL) << HPAGE_PMD_SHIFT)
-> 
-> and AFAICT PMD_SIZE is defined to be 1<<PMD_SHIFT for all architectures as
-> well.  I don't understand why we have both?
-> 
-> In any case, neither HPAGE_PMD_SIZE nor PMD_SIZE are used anywhere else in the
-> ext4 code, so can we use PMD_SIZE here for consistency?  If they ever did
-> manage to be different, I think we'd want PMD_SIZE anyway.
-
-Yeah, I've changed that to PMD_SIZE.
-
-> With those nits and an updated changelog:
-> 
-> Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-
-Thanks!
-
-								Honza
-
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
