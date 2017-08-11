@@ -1,173 +1,138 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50864 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751932AbdHKHL4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 03:11:56 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7B7Bsrs032343
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 07:11:55 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v7B7Bsdx010843
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 07:11:54 GMT
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7B7BscW027394
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 07:11:54 GMT
-Subject: [PATCH 16/16] xfs: shut off scrub-related error and corruption
- messages
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 11 Aug 2017 00:11:53 -0700
-Message-ID: <150243551310.29473.14099640784799039293.stgit@magnolia>
-In-Reply-To: <150243541274.29473.1227559008347544526.stgit@magnolia>
-References: <150243541274.29473.1227559008347544526.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([65.50.211.133]:38918 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753161AbdHKJ7Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 05:59:16 -0400
+Received: from 80-109-164-210.cable.dynamic.surfer.at ([80.109.164.210] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dg6ip-0001nN-Oi
+        for linux-xfs@vger.kernel.org; Fri, 11 Aug 2017 09:59:16 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: open code end_buffer_async_write in xfs_finish_page_writeback
+Date: Fri, 11 Aug 2017 11:59:05 +0200
+Message-Id: <20170811095905.11241-2-hch@lst.de>
+In-Reply-To: <20170811095905.11241-1-hch@lst.de>
+References: <20170811095905.11241-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Our loop in xfs_finish_page_writeback, which iterates over all buffer
+heads in a page and then calls end_buffer_async_write, which also
+iterates over all buffers in the page to check if any I/O is in flight
+is not only inefficient, but also potentially dangerous as
+end_buffer_async_write can cause the page and all buffers to be freed.
 
-While we're scrubbing and repairing, silence errors and corruption
-messages to avoid flooding the logs.
+Replace it with a single loop that does the work of end_buffer_async_write
+on a per-page basis.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/scrub.c |    6 +++++-
- fs/xfs/xfs_buf.c     |    3 +++
- fs/xfs/xfs_error.c   |    9 +++++++++
- fs/xfs/xfs_message.c |    3 +++
- fs/xfs/xfs_mount.h   |    1 +
- fs/xfs/xfs_super.c   |    1 +
- 6 files changed, 22 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_aops.c | 62 ++++++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 38 insertions(+), 24 deletions(-)
 
-
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index b59e004..5f2c71d 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -352,6 +352,8 @@ xfs_scrub_metadata(
- 		warned = true;
- 	}
- 
-+	atomic_inc(&mp->m_scrubbers);
-+
- retry_op:
- 	/* Set up for the operation. */
- 	memset(&sc, 0, sizeof(sc));
-@@ -374,7 +376,7 @@ xfs_scrub_metadata(
- 		 */
- 		error = xfs_scrub_teardown(&sc, ip, 0);
- 		if (error)
--			goto out;
-+			goto out_dec;
- 		try_harder = true;
- 		goto retry_op;
- 	} else if (error)
-@@ -386,6 +388,8 @@ xfs_scrub_metadata(
- 
- out_teardown:
- 	error = xfs_scrub_teardown(&sc, ip, error);
-+out_dec:
-+	atomic_dec(&mp->m_scrubbers);
- out:
- 	trace_xfs_scrub_done(ip, sm, error);
- 	return error;
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 72f0384..0a45e93 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -42,6 +42,7 @@
- #include "xfs_mount.h"
- #include "xfs_trace.h"
- #include "xfs_log.h"
-+#include "xfs_error.h"
- 
- static kmem_zone_t *xfs_buf_zone;
- 
-@@ -577,6 +578,8 @@ _xfs_buf_find(
- 	 */
- 	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_mount->m_sb.sb_dblocks);
- 	if (cmap.bm_bn < 0 || cmap.bm_bn >= eofs) {
-+		if (atomic_read(&btp->bt_mount->m_scrubbers) > 0)
-+			return NULL;
- 		/*
- 		 * XXX (dgc): we should really be returning -EFSCORRUPTED here,
- 		 * but none of the higher level infrastructure supports
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 2f4feb9..8cebbaa 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -309,6 +309,9 @@ xfs_error_report(
- 	int			linenum,
- 	void			*ra)
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 6bf120bb1a17..0ddda41ab428 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -84,12 +84,6 @@ xfs_find_bdev_for_inode(
+  * We're now finished for good with this page.  Update the page state via the
+  * associated buffer_heads, paying attention to the start and end offsets that
+  * we need to process on the page.
+- *
+- * Landmine Warning: bh->b_end_io() will call end_page_writeback() on the last
+- * buffer in the IO. Once it does this, it is unsafe to access the bufferhead or
+- * the page at all, as we may be racing with memory reclaim and it can free both
+- * the bufferhead chain and the page as it will see the page as clean and
+- * unused.
+  */
+ static void
+ xfs_finish_page_writeback(
+@@ -97,29 +91,42 @@ xfs_finish_page_writeback(
+ 	struct bio_vec		*bvec,
+ 	int			error)
  {
-+	if (atomic_read(&mp->m_scrubbers) > 0)
-+		return;
-+
- 	if (level <= xfs_error_level) {
- 		xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
- 		"Internal error %s at line %d of file %s.  Caller %pS",
-@@ -328,6 +331,9 @@ xfs_corruption_error(
- 	int			linenum,
- 	void			*ra)
- {
-+	if (atomic_read(&mp->m_scrubbers) > 0)
-+		return;
-+
- 	if (level <= xfs_error_level)
- 		xfs_hex_dump(p, 64);
- 	xfs_error_report(tag, level, mp, filename, linenum, ra);
-@@ -344,6 +350,9 @@ xfs_verifier_error(
- {
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
+-	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
+-	struct buffer_head	*head, *bh, *next;
++	struct buffer_head	*head = page_buffers(bvec->bv_page), *bh = head;
++	bool			busy = false;
+ 	unsigned int		off = 0;
+-	unsigned int		bsize;
++	unsigned long		flags;
  
-+	if (atomic_read(&mp->m_scrubbers) > 0)
-+		return;
+ 	ASSERT(bvec->bv_offset < PAGE_SIZE);
+ 	ASSERT((bvec->bv_offset & (i_blocksize(inode) - 1)) == 0);
+-	ASSERT(end < PAGE_SIZE);
++	ASSERT(bvec->bv_offset + bvec->bv_len <= PAGE_SIZE);
+ 	ASSERT((bvec->bv_len & (i_blocksize(inode) - 1)) == 0);
+ 
+-	bh = head = page_buffers(bvec->bv_page);
+-
+-	bsize = bh->b_size;
++	local_irq_save(flags);
++	bit_spin_lock(BH_Uptodate_Lock, &head->b_state);
+ 	do {
+-		if (off > end)
+-			break;
+-		next = bh->b_this_page;
+-		if (off < bvec->bv_offset)
+-			goto next_bh;
+-		bh->b_end_io(bh, !error);
+-next_bh:
+-		off += bsize;
+-	} while ((bh = next) != head);
++		if (off >= bvec->bv_offset &&
++		    off < bvec->bv_offset + bvec->bv_len) {
++			BUG_ON(!buffer_async_write(bh));
++			if (error) {
++				mark_buffer_write_io_error(bh);
++				clear_buffer_uptodate(bh);
++				SetPageError(bvec->bv_page);
++			} else {
++				set_buffer_uptodate(bh);
++			}
++			clear_buffer_async_write(bh);
++			unlock_buffer(bh);
++		} else if (buffer_async_write(bh)) {
++			BUG_ON(!buffer_locked(bh));
++			busy = true;
++		}
++		off += bh->b_size;
++	} while ((bh = bh->b_this_page) != head);
++	bit_spin_unlock(BH_Uptodate_Lock, &head->b_state);
++	local_irq_restore(flags);
 +
- 	xfs_alert(mp, "Metadata %s detected at %pF, %s block 0x%llx",
- 		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
- 		  __return_address, bp->b_ops->name, bp->b_bn);
-diff --git a/fs/xfs/xfs_message.c b/fs/xfs/xfs_message.c
-index e68bd10..a4ede17 100644
---- a/fs/xfs/xfs_message.c
-+++ b/fs/xfs/xfs_message.c
-@@ -46,6 +46,9 @@ void func(const struct xfs_mount *mp, const char *fmt, ...)	\
- 	va_list			args;				\
- 	int			level;				\
- 								\
-+	if (mp && atomic_read(&mp->m_scrubbers) > 0)		\
-+		return;						\
-+								\
- 	va_start(args, fmt);					\
- 								\
- 	vaf.fmt = fmt;						\
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index e0792d0..37a6c97 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -206,6 +206,7 @@ typedef struct xfs_mount {
- 	unsigned int		*m_errortag;
- 	struct xfs_kobj		m_errortag_kobj;
- #endif
-+	atomic_t		m_scrubbers;	/* # of active scrub processes */
- } xfs_mount_t;
++	if (!busy)
++		end_page_writeback(bvec->bv_page);
+ }
  
  /*
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 38aaacd..664db70 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1547,6 +1547,7 @@ xfs_fs_fill_super(
- 	spin_lock_init(&mp->m_sb_lock);
- 	mutex_init(&mp->m_growlock);
- 	atomic_set(&mp->m_active_trans, 0);
-+	atomic_set(&mp->m_scrubbers, 0);
- 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
- 	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
- 	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
+@@ -133,8 +140,10 @@ xfs_destroy_ioend(
+ 	int			error)
+ {
+ 	struct inode		*inode = ioend->io_inode;
+-	struct bio		*last = ioend->io_bio;
+-	struct bio		*bio, *next;
++	struct bio		*bio = &ioend->io_inline_bio;
++	struct bio		*last = ioend->io_bio, *next;
++	u64			start = bio->bi_iter.bi_sector;
++	bool			quiet = bio_flagged(bio, BIO_QUIET);
+ 
+ 	for (bio = &ioend->io_inline_bio; bio; bio = next) {
+ 		struct bio_vec	*bvec;
+@@ -155,6 +164,11 @@ xfs_destroy_ioend(
+ 
+ 		bio_put(bio);
+ 	}
++
++	if (unlikely(error && !quiet)) {
++		xfs_err_ratelimited(XFS_I(inode)->i_mount,
++			"read error on sector %llu", start);
++	}
+ }
+ 
+ /*
+-- 
+2.11.0
 
