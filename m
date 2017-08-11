@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50719 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751559AbdHKHLg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 03:11:36 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:18241 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751932AbdHKHLt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 03:11:49 -0400
 Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7B7Basq032089
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7B7Bmi7019258
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 07:11:36 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7B7BaLL023768
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 07:11:49 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7B7Bmpt024312
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 07:11:36 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7B7BZsq020790
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 07:11:35 GMT
-Subject: [PATCH 13/16] xfs: cross-reference refcount btree during scrub
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 07:11:48 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7B7BmTF020941
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 07:11:48 GMT
+Subject: [PATCH 15/16] xfs: cross-reference the block mappings when possible
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 11 Aug 2017 00:11:34 -0700
-Message-ID: <150243549432.29473.5775848033237095111.stgit@magnolia>
+Date: Fri, 11 Aug 2017 00:11:47 -0700
+Message-ID: <150243550695.29473.2019252707151205272.stgit@magnolia>
 In-Reply-To: <150243541274.29473.1227559008347544526.stgit@magnolia>
 References: <150243541274.29473.1227559008347544526.stgit@magnolia>
 MIME-Version: 1.0
@@ -31,411 +31,299 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-During metadata btree scrub, we should cross-reference with the
-reference counts.
+Use an inode's block mappings to cross-reference inode block counters
+and (if possible) cross reference rmapbt records against the bmbt to
+ensure that the bmbt isn't missing any records.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/agheader.c |   60 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/alloc.c    |   11 ++++++++
- fs/xfs/scrub/bmap.c     |   66 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/ialloc.c   |   11 ++++++++
- fs/xfs/scrub/rmap.c     |   66 +++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 214 insertions(+)
+ fs/xfs/scrub/inode.c |   63 +++++++++++++++++++
+ fs/xfs/scrub/rmap.c  |  162 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 224 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 569d3c0..8507153 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -33,6 +33,7 @@
- #include "xfs_alloc.h"
- #include "xfs_ialloc.h"
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 9a689cc..67c9366 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -38,6 +38,8 @@
+ #include "xfs_trans_priv.h"
+ #include "xfs_reflink.h"
  #include "xfs_rmap.h"
-+#include "xfs_refcount.h"
++#include "xfs_bmap.h"
++#include "xfs_bmap_util.h"
  #include "scrub/xfs_scrub.h"
  #include "scrub/scrub.h"
  #include "scrub/common.h"
-@@ -160,6 +161,7 @@ xfs_scrub_superblock(
- 	bool				is_freesp;
- 	bool				has_inodes;
- 	bool				has_rmap;
-+	bool				has_refcount;
- 	int				error;
- 	__be16				vernum_mask;
- 
-@@ -459,6 +461,14 @@ xfs_scrub_superblock(
- 			xfs_scrub_block_xref_check_ok(sc, bp, has_rmap);
- 	}
- 
-+	/* Cross-reference with the refcountbt. */
-+	if (psa->refc_cur) {
-+		error = xfs_refcount_has_record(psa->refc_cur, XFS_SB_BLOCK(mp),
-+				1, &has_refcount);
-+		if (xfs_scrub_should_xref(sc, &error, &psa->refc_cur))
-+			xfs_scrub_block_xref_check_ok(sc, bp, !has_refcount);
-+	}
-+
+@@ -122,6 +124,62 @@ xfs_scrub_inode_xref_rmap(
  	return error;
  }
  
-@@ -500,6 +510,7 @@ xfs_scrub_agf(
- 	bool				is_freesp;
- 	bool				has_inodes;
- 	bool				has_rmap;
-+	bool				has_refcount;
- 	int				have;
- 	int				level;
- 	int				error = 0;
-@@ -675,6 +686,25 @@ xfs_scrub_agf(
- 						agf->agf_btreeblks));
- 	}
- 
-+	/* Cross-reference with the refcountbt. */
-+	while (psa->refc_cur) {
-+		error = xfs_refcount_has_record(psa->refc_cur,
-+				XFS_AGF_BLOCK(mp), 1, &has_refcount);
-+		if (!xfs_scrub_should_xref(sc, &error, &psa->refc_cur))
-+			break;
-+		xfs_scrub_block_xref_check_ok(sc, sc->sa.agf_bp,
-+				!has_refcount);
-+
-+		error = xfs_btree_count_blocks(psa->refc_cur, &blocks);
-+		if (!xfs_scrub_should_xref(sc, &error, &psa->refc_cur))
-+			break;
-+
-+		xfs_scrub_block_xref_check_ok(sc, sc->sa.agf_bp,
-+				blocks ==
-+				be32_to_cpu(agf->agf_refcount_blocks));
-+		break;
-+	}
-+
- out:
- 	return error;
- }
-@@ -700,6 +730,7 @@ xfs_scrub_agfl_block(
- 	bool				is_freesp;
- 	bool				has_inodes;
- 	bool				has_rmap;
-+	bool				has_refcount;
- 	int				error = 0;
- 
- 	xfs_scrub_block_check_ok(sc, sc->sa.agfl_bp,
-@@ -748,6 +779,15 @@ xfs_scrub_agfl_block(
- 					has_rmap);
- 	}
- 
-+	/* Cross-reference with the refcountbt. */
-+	if (sc->sa.refc_cur) {
-+		error = xfs_refcount_has_record(sc->sa.refc_cur, agbno, 1,
-+				&has_refcount);
-+		if (xfs_scrub_should_xref(sc, &error, &sc->sa.refc_cur))
-+			xfs_scrub_block_xref_check_ok(sc, sc->sa.agfl_bp,
-+					!has_refcount);
-+	}
-+
- 	return error;
- }
- 
-@@ -763,6 +803,7 @@ xfs_scrub_agfl(
- 	bool				is_freesp;
- 	bool				has_inodes;
- 	bool				has_rmap;
-+	bool				has_refcount;
- 	int				error;
- 
- 	agno = sc->sm->sm_agno;
-@@ -813,6 +854,15 @@ xfs_scrub_agfl(
- 					has_rmap);
- 	}
- 
-+	/* Set up cross-reference with refcountbt. */
-+	if (sc->sa.refc_cur) {
-+		error = xfs_refcount_has_record(sc->sa.refc_cur,
-+				XFS_AGFL_BLOCK(mp), 1, &has_refcount);
-+		if (xfs_scrub_should_xref(sc, &error, &sc->sa.refc_cur))
-+			xfs_scrub_block_xref_check_ok(sc, sc->sa.agfl_bp,
-+					!has_refcount);
-+	}
-+
- 	/* Check the blocks in the AGFL. */
- 	xfs_rmap_ag_owner(&sagfl.oinfo, XFS_RMAP_OWN_AG);
- 	return xfs_scrub_walk_agfl(sc, xfs_scrub_agfl_block, &sagfl);
-@@ -844,6 +894,7 @@ xfs_scrub_agi(
- 	bool				is_freesp;
- 	bool				has_inodes;
- 	bool				has_rmap;
-+	bool				has_refcount;
- 	int				i;
- 	int				level;
- 	int				error = 0;
-@@ -966,6 +1017,15 @@ xfs_scrub_agi(
- 					has_rmap);
- 	}
- 
-+	/* Cross-reference with the refcountbt. */
-+	if (psa->refc_cur) {
-+		error = xfs_refcount_has_record(psa->refc_cur, XFS_AGI_BLOCK(mp),
-+				1, &has_refcount);
-+		if (xfs_scrub_should_xref(sc, &error, &psa->refc_cur))
-+			xfs_scrub_block_xref_check_ok(sc, sc->sa.agi_bp,
-+					!has_refcount);
-+	}
-+
- out:
- 	return error;
- }
-diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-index a45ca18..812843c 100644
---- a/fs/xfs/scrub/alloc.c
-+++ b/fs/xfs/scrub/alloc.c
-@@ -32,6 +32,7 @@
- #include "xfs_rmap.h"
- #include "xfs_alloc.h"
- #include "xfs_ialloc.h"
-+#include "xfs_refcount.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -69,6 +70,7 @@ xfs_scrub_allocbt_helper(
- 	xfs_extlen_t			len;
- 	bool				has_rmap;
- 	bool				has_inodes;
-+	bool				has_refcount;
- 	int				has_otherrec;
- 	int				error = 0;
- 
-@@ -140,6 +142,15 @@ xfs_scrub_allocbt_helper(
- 					!has_rmap);
- 	}
- 
-+	/* Cross-reference with the refcountbt. */
-+	if (psa->refc_cur) {
-+		error = xfs_refcount_has_record(psa->refc_cur, bno, len,
-+				&has_refcount);
-+		if (xfs_scrub_should_xref(bs->sc, &error, &psa->refc_cur))
-+			xfs_scrub_btree_xref_check_ok(bs->sc, psa->refc_cur, 0,
-+					!has_refcount);
-+	}
-+
- 	return error;
- }
- 
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 1bd16db..21d88aa 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -37,6 +37,7 @@
- #include "xfs_rmap.h"
- #include "xfs_alloc.h"
- #include "xfs_ialloc.h"
-+#include "xfs_refcount.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -210,6 +211,64 @@ xfs_scrub_bmap_xref_rmap(
- 			!(rmap.rm_flags & XFS_RMAP_BMBT_BLOCK));
- }
- 
-+/* Make sure the refcount records match this extent. */
++/* Cross reference the inode fields with the forks. */
 +STATIC void
-+xfs_scrub_bmap_xref_refc(
-+	struct xfs_scrub_bmap_info	*info,
-+	struct xfs_scrub_ag		*sa,
-+	struct xfs_bmbt_irec		*irec,
-+	xfs_fsblock_t			bno)
++xfs_scrub_inode_xref_bmap(
++	struct xfs_scrub_context	*sc,
++	struct xfs_dinode		*dip,
++	uint16_t			mode,
++	uint16_t			flags)
 +{
-+	struct xfs_refcount_irec	rc;
-+	unsigned long long		rec_end;
-+	xfs_agblock_t			fbno;
-+	xfs_extlen_t			flen;
-+	bool				has_cowflag;
-+	int				has_refcount;
++	struct xfs_bmbt_irec		got;
++	struct xfs_ifork		*ifp;
++	struct xfs_mount		*mp = sc->mp;
++	xfs_fileoff_t			lblk;
++	xfs_extnum_t			idx;
++	xfs_extnum_t			nextents;
++	xfs_filblks_t			count;
++	xfs_filblks_t			acount;
++	bool				found;
 +	int				error;
 +
-+	if (info->whichfork != XFS_COW_FORK) {
-+		/* If this is shared, the inode flag must be set. */
-+		error = xfs_refcount_find_shared(sa->refc_cur, bno,
-+				irec->br_blockcount, &fbno, &flen,
-+				false);
-+		if (xfs_scrub_should_xref(info->sc, &error, &sa->refc_cur))
-+			xfs_scrub_fblock_xref_check_ok(info->sc,
-+					info->whichfork, irec->br_startoff,
-+					flen == 0 ||
-+					xfs_is_reflink_inode(info->sc->ip));
++	/* Walk all the extents to check nextents/naextents/nblocks. */
++	error = xfs_bmap_count_blocks(sc->tp, sc->ip, XFS_DATA_FORK,
++			&nextents, &count);
++	if (!xfs_scrub_should_xref(sc, &error, NULL))
 +		return;
++	xfs_scrub_ino_xref_check_ok(sc, sc->ip->i_ino, NULL,
++			nextents >= be32_to_cpu(dip->di_nextents));
++
++	error = xfs_bmap_count_blocks(sc->tp, sc->ip, XFS_ATTR_FORK,
++			&nextents, &acount);
++	if (!xfs_scrub_should_xref(sc, &error, NULL))
++		return;
++	xfs_scrub_ino_xref_check_ok(sc, sc->ip->i_ino, NULL,
++			nextents == be16_to_cpu(dip->di_anextents));
++
++	/* Check nblocks against the inode. */
++	xfs_scrub_ino_xref_check_ok(sc, sc->ip->i_ino, NULL,
++			count + acount == be64_to_cpu(dip->di_nblocks));
++
++	/* Make sure we don't have any written extents after EOF. */
++	if (S_ISREG(mode) && !(flags & XFS_DIFLAG_PREALLOC) &&
++	    (dip->di_format == XFS_DINODE_FMT_EXTENTS ||
++	     dip->di_format == XFS_DINODE_FMT_BTREE)) {
++		lblk = XFS_B_TO_FSB(mp, i_size_read(VFS_I(sc->ip)));
++		ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
++		found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &idx, &got);
++		while (found) {
++			xfs_scrub_fblock_xref_check_ok(sc, XFS_DATA_FORK,
++					got.br_startoff,
++					got.br_startoff < lblk ||
++					got.br_state != XFS_EXT_NORM);
++			lblk = got.br_startoff + got.br_blockcount;
++			found = xfs_iext_get_extent(ifp, ++idx, &got);
++		}
 +	}
-+
-+	/* Check this CoW staging extent. */
-+	error = xfs_refcount_lookup_le(sa->refc_cur, bno + XFS_REFC_COW_START,
-+			&has_refcount);
-+	if (!xfs_scrub_should_xref(info->sc, &error, &sa->refc_cur) ||
-+	    !xfs_scrub_fblock_xref_check_ok(info->sc, info->whichfork,
-+			irec->br_startoff, has_refcount))
-+		return;
-+
-+	error = xfs_refcount_get_rec(sa->refc_cur, &rc, &has_refcount);
-+	if (!xfs_scrub_should_xref(info->sc, &error, &sa->refc_cur) ||
-+	    !xfs_scrub_fblock_xref_check_ok(info->sc, info->whichfork,
-+			irec->br_startoff, has_refcount))
-+		return;
-+
-+	has_cowflag = !!(rc.rc_startblock & XFS_REFC_COW_START);
-+	xfs_scrub_fblock_xref_check_ok(info->sc, info->whichfork,
-+			irec->br_startoff,
-+			(rc.rc_refcount == 1 && has_cowflag) ||
-+			(rc.rc_refcount != 1 && !has_cowflag));
-+
-+	rc.rc_startblock &= ~XFS_REFC_COW_START;
-+	rec_end = (unsigned long long)rc.rc_startblock + rc.rc_blockcount;
-+	xfs_scrub_fblock_xref_check_ok(info->sc, info->whichfork,
-+			irec->br_startoff,
-+			rc.rc_startblock <= bno &&
-+			bno + irec->br_blockcount <= rec_end &&
-+			rc.rc_refcount == 1);
 +}
 +
- /* Scrub a single extent record. */
- STATIC int
- xfs_scrub_bmap_extent(
-@@ -312,6 +371,13 @@ xfs_scrub_bmap_extent(
- 	if (sa.rmap_cur)
- 		xfs_scrub_bmap_xref_rmap(info, &sa, irec, bno);
- 
-+	/*
-+	 * If this is a non-shared file on a reflink filesystem,
-+	 * check the refcountbt to see if the flag is wrong.
-+	 */
-+	if (sa.refc_cur)
-+		xfs_scrub_bmap_xref_refc(info, &sa, irec, bno);
-+
- 	xfs_scrub_ag_free(info->sc, &sa);
- out:
- 	info->lastoff = irec->br_startoff + irec->br_blockcount;
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 310d5ad..08baab0 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -37,6 +37,7 @@
- #include "xfs_log.h"
- #include "xfs_trans_priv.h"
- #include "xfs_alloc.h"
-+#include "xfs_refcount.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -77,6 +78,7 @@ xfs_scrub_iallocbt_chunk(
- 	bool				is_freesp;
- 	bool				has_inodes;
- 	bool				has_rmap;
-+	bool				has_refcount;
- 	int				error = 0;
- 
- 	agf = XFS_BUF_TO_AGF(bs->sc->sa.agf_bp);
-@@ -128,6 +130,15 @@ xfs_scrub_iallocbt_chunk(
- 					has_rmap);
+ /* Scrub an inode. */
+ int
+ xfs_scrub_inode(
+@@ -136,7 +194,7 @@ xfs_scrub_inode(
+ 	size_t				fork_recs;
+ 	unsigned long long		isize;
+ 	uint64_t			flags2;
+-	uint32_t			nextents;
++	xfs_extnum_t			nextents;
+ 	uint32_t			extsize;
+ 	uint32_t			cowextsize;
+ 	uint16_t			flags;
+@@ -371,6 +429,9 @@ xfs_scrub_inode(
+ 			goto out;
  	}
  
-+	/* Cross-reference with the refcountbt. */
-+	if (psa->refc_cur) {
-+		error = xfs_refcount_has_record(psa->refc_cur, bno,
-+				len, &has_refcount);
-+		if (xfs_scrub_should_xref(bs->sc, &error, &psa->refc_cur))
-+			xfs_scrub_btree_xref_check_ok(bs->sc, psa->refc_cur, 0,
-+					!has_refcount);
-+	}
++	/* Cross reference the inode fields with the forks. */
++	xfs_scrub_inode_xref_bmap(sc, dip, mode, flags);
 +
- 	return true;
- }
- 
+ out:
+ 	if (bp)
+ 		xfs_trans_brelse(sc->tp, bp);
 diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
-index e5e648d..c11401b 100644
+index c11401b..e3129ed 100644
 --- a/fs/xfs/scrub/rmap.c
 +++ b/fs/xfs/scrub/rmap.c
-@@ -32,6 +32,7 @@
+@@ -29,9 +29,12 @@
+ #include "xfs_log_format.h"
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
++#include "xfs_inode.h"
++#include "xfs_icache.h"
  #include "xfs_rmap.h"
  #include "xfs_alloc.h"
  #include "xfs_ialloc.h"
-+#include "xfs_refcount.h"
++#include "xfs_bmap_btree.h"
+ #include "xfs_refcount.h"
  #include "scrub/xfs_scrub.h"
  #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -51,6 +52,66 @@ xfs_scrub_setup_ag_rmapbt(
+@@ -112,6 +115,161 @@ xfs_scrub_rmapbt_xref_refc(
+ 			crec.rc_refcount == 1);
+ }
  
- /* Reverse-mapping scrubber. */
- 
-+/* Cross-reference a rmap against the refcount btree. */
-+STATIC void
-+xfs_scrub_rmapbt_xref_refc(
-+	struct xfs_scrub_btree		*bs,
-+	struct xfs_rmap_irec		*irec,
-+	bool				non_inode,
-+	bool				is_attr,
-+	bool				is_bmbt,
-+	bool				is_unwritten)
-+{
-+	struct xfs_scrub_ag		*psa = &bs->sc->sa;
-+	struct xfs_refcount_irec	crec;
-+	unsigned long long		rec_end;
-+	xfs_agblock_t			fbno;
-+	xfs_extlen_t			flen;
-+	bool				has_cowflag;
-+	int				has_refcount;
-+	int				error;
++struct xfs_scrub_rmapbt_xref_bmbt {
++	xfs_fsblock_t		fsb;
++	xfs_extlen_t		len;
++};
 +
-+	if (irec->rm_owner != XFS_RMAP_OWN_COW) {
-+		/* If this is shared, must be a data fork extent. */
-+		error = xfs_refcount_find_shared(psa->refc_cur,
-+				irec->rm_startblock, irec->rm_blockcount,
-+				&fbno, &flen, false);
-+		if (xfs_scrub_should_xref(bs->sc, &error, &psa->refc_cur))
-+			xfs_scrub_btree_xref_check_ok(bs->sc, psa->refc_cur, 0,
-+					flen == 0 ||
-+					(!non_inode && !is_attr &&
-+					 !is_bmbt && !is_unwritten));
++/* Is this the bmbt block we're looking for? */
++STATIC int
++xfs_scrub_rmapbt_xref_bmap_find_bmbt_block(
++	struct xfs_btree_cur	*cur,
++	int			level,
++	void			*data)
++{
++	struct xfs_buf		*bp;
++	struct xfs_scrub_rmapbt_xref_bmbt	*x = data;
++	xfs_fsblock_t		fsb;
++
++	xfs_btree_get_block(cur, level, &bp);
++	if (!bp)
++		return 0;
++
++	fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
++	if (fsb >= x->fsb && fsb < x->fsb + x->len)
++		return XFS_BTREE_QUERY_RANGE_ABORT;
++	return 0;
++}
++
++/* Try to find a matching bmap extent for this inode data/attr fork rmap. */
++STATIC void
++xfs_scrub_rmapbt_xref_bmap(
++	struct xfs_scrub_btree	*bs,
++	struct xfs_rmap_irec	*irec,
++	bool			is_attr,
++	bool			is_bmbt,
++	bool			is_unwritten)
++{
++	struct xfs_scrub_rmapbt_xref_bmbt	x;
++	struct xfs_bmbt_irec	got;
++	struct xfs_inode	*ip;
++	struct xfs_ifork	*ifp;
++	struct xfs_btree_cur	*cur;
++	xfs_fileoff_t		off;
++	xfs_fileoff_t		endoff;
++	xfs_fsblock_t		fsb;
++	xfs_extnum_t		idx;
++	xfs_agnumber_t		agno;
++	uint			lockflags;
++	bool			found;
++	int			whichfork;
++	int			error;
++	uint8_t			fmt;
++
++	fsb = XFS_AGB_TO_FSB(bs->sc->mp, bs->sc->sa.agno, irec->rm_startblock);
++
++	/*
++	 * We can't access the AGI of a lower AG due to locking rules,
++	 * so skip this check if inodes aren't aligned and the inode is
++	 * in a lower AG.
++	 */
++	agno = XFS_INO_TO_AGNO(bs->sc->mp, irec->rm_owner);
++	if (!xfs_scrub_check_thoroughness(bs->sc,
++			bs->sc->mp->m_inoalign_mask != 0 ||
++			agno >= bs->sc->sa.agno))
 +		return;
++
++	/* Grab the inode. */
++	error = xfs_iget(bs->sc->mp, bs->sc->tp, irec->rm_owner, 0, 0, &ip);
++	if (!xfs_scrub_should_xref(bs->sc, &error, NULL))
++		return;
++
++	whichfork = is_attr ? XFS_ATTR_FORK : XFS_DATA_FORK;
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	lockflags = XFS_IOLOCK_SHARED | XFS_MMAPLOCK_SHARED | XFS_ILOCK_SHARED;
++
++lock_again:
++	/*
++	 * Try to grab the inode lock.  We cannot block here because the
++	 * usual XFS locking order is inode -> AGF, whereas here we have
++	 * the AGF but want an inode.  Blocking here could result in
++	 * deadlock, so we'll take an incomplete check over that.
++	 */
++	if (!xfs_ilock_nowait(ip, lockflags))
++		goto out_rele;
++
++	/* Inode had better have extent maps. */
++	fmt = XFS_IFORK_FORMAT(ip, whichfork);
++	if (!xfs_scrub_btree_xref_check_ok(bs->sc, bs->cur, 0,
++			ifp != NULL &&
++			(fmt == XFS_DINODE_FMT_BTREE ||
++			 fmt == XFS_DINODE_FMT_EXTENTS)))
++		goto out_unlock;
++
++	/* If we haven't loaded the extent list, try to relock with excl. */
++	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
++		if (!(lockflags & XFS_ILOCK_EXCL)) {
++			xfs_iunlock(ip, lockflags);
++			lockflags |= XFS_ILOCK_EXCL;
++			lockflags &= ~XFS_ILOCK_SHARED;
++			goto lock_again;
++		}
++		error = xfs_iread_extents(bs->sc->tp, ip, whichfork);
++		if (error)
++			goto out_unlock;
 +	}
 +
-+	/* Check this CoW staging extent. */
-+	error = xfs_refcount_lookup_le(psa->refc_cur,
-+			irec->rm_startblock + XFS_REFC_COW_START,
-+			&has_refcount);
-+	if (!xfs_scrub_should_xref(bs->sc, &error, &psa->refc_cur) ||
-+	    !xfs_scrub_btree_xref_check_ok(bs->sc, psa->refc_cur, 0,
-+			has_refcount))
-+		return;
++	/* If this is a bmbt record, see if we can find it. */
++	if (is_bmbt) {
++		x.fsb = fsb;
++		x.len = irec->rm_blockcount;
++		cur = xfs_bmbt_init_cursor(bs->sc->mp, bs->sc->tp, ip,
++				whichfork);
++		error = xfs_btree_visit_blocks(cur,
++				xfs_scrub_rmapbt_xref_bmap_find_bmbt_block,
++				&x);
++		xfs_scrub_btree_xref_check_ok(bs->sc, cur, 0,
++				error == XFS_BTREE_QUERY_RANGE_ABORT);
++		xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
++				XFS_BTREE_NOERROR);
++		goto out_unlock;
++	}
 +
-+	error = xfs_refcount_get_rec(psa->refc_cur, &crec, &has_refcount);
-+	if (!xfs_scrub_should_xref(bs->sc, &error, &psa->refc_cur) ||
-+	    !xfs_scrub_btree_xref_check_ok(bs->sc, psa->refc_cur, 0,
-+			has_refcount))
-+		return;
++	/* Now go make sure we find a bmap extent to cover this rmap. */
++	off = irec->rm_offset;
++	endoff = irec->rm_offset + irec->rm_blockcount - 1;
++	found = xfs_iext_lookup_extent(ip, ifp, off, &idx, &got);
++	xfs_scrub_btree_xref_check_ok(bs->sc, bs->cur, 0, found);
++	while (found) {
++		if (!xfs_scrub_btree_xref_check_ok(bs->sc, bs->cur, 0,
++				got.br_startoff <= off &&
++				got.br_startoff <= endoff))
++			goto out_unlock;
++		xfs_scrub_btree_xref_check_ok(bs->sc, bs->cur, 0,
++				(got.br_state == XFS_EXT_NORM ||
++				 is_unwritten) &&
++				(got.br_state == XFS_EXT_UNWRITTEN ||
++				 !is_unwritten) &&
++				got.br_startblock + (off - got.br_startoff) ==
++				fsb);
 +
-+	has_cowflag = !!(crec.rc_startblock & XFS_REFC_COW_START);
-+	xfs_scrub_btree_xref_check_ok(bs->sc, psa->refc_cur, 0,
-+			(crec.rc_refcount == 1 && has_cowflag) ||
-+			(crec.rc_refcount != 1 && !has_cowflag));
++		off = got.br_startoff + got.br_blockcount;
++		fsb = got.br_startblock + got.br_blockcount;
++		if (off >= endoff)
++			break;
++		found = xfs_iext_get_extent(ifp, ++idx, &got);
++		xfs_scrub_btree_xref_check_ok(bs->sc, bs->cur, 0,
++				found &&
++				got.br_startoff == off &&
++				got.br_startblock == fsb);
++	}
 +
-+	crec.rc_startblock &= ~XFS_REFC_COW_START;
-+	rec_end = (unsigned long long)crec.rc_startblock + crec.rc_blockcount;
-+	xfs_scrub_btree_xref_check_ok(bs->sc, psa->refc_cur, 0,
-+			crec.rc_startblock <= irec->rm_startblock &&
-+			rec_end >= irec->rm_startblock + irec->rm_blockcount &&
-+			crec.rc_refcount == 1);
++out_unlock:
++	xfs_iunlock(ip, lockflags);
++out_rele:
++	iput(VFS_I(ip));
 +}
 +
  /* Scrub an rmapbt record. */
  STATIC int
  xfs_scrub_rmapbt_helper(
-@@ -157,6 +218,11 @@ xfs_scrub_rmapbt_helper(
- 					!has_inodes);
- 	}
+@@ -223,6 +381,10 @@ xfs_scrub_rmapbt_helper(
+ 		xfs_scrub_rmapbt_xref_refc(bs, &irec, non_inode, is_attr,
+ 				is_bmbt, is_unwritten);
  
-+	/* Cross-reference with the refcount btree. */
-+	if (psa->refc_cur)
-+		xfs_scrub_rmapbt_xref_refc(bs, &irec, non_inode, is_attr,
-+				is_bmbt, is_unwritten);
-+
++	/* Cross-reference with an inode's bmbt if possible. */
++	if (!non_inode)
++		xfs_scrub_rmapbt_xref_bmap(bs, &irec, is_attr, is_bmbt,
++				is_unwritten);
  out:
  	return error;
  }
