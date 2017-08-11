@@ -1,25 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:50210 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751608AbdHMJI5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 13 Aug 2017 05:08:57 -0400
-Date: Sun, 13 Aug 2017 11:08:55 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] iomap: fix integer truncation issues in the zeroing
-        and dirtying helpers
-Message-ID: <20170813090855.GA32112@lst.de>
-References: <20170811151805.22896-1-hch@lst.de> <f4d52f4d8b1cb6dfb91acaa8612d4bba@molgen.mpg.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:37949 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752989AbdHKQAC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 12:00:02 -0400
+Date: Fri, 11 Aug 2017 08:59:56 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix inobt inode allocation search optimization
+Message-ID: <20170811155956.GZ24087@magnolia>
+References: <a605146bb4b492462c44a5c8697533a40b9f57bb.1502426715.git.osandov@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f4d52f4d8b1cb6dfb91acaa8612d4bba@molgen.mpg.de>
+In-Reply-To: <a605146bb4b492462c44a5c8697533a40b9f57bb.1502426715.git.osandov@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Paul Menzel <pmenzel@molgen.mpg.de>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, stockhausen@collogia.de, it+linux-nfs@molgen.mpg.de
+To: Omar Sandoval <osandov@osandov.com>
+Cc: linux-xfs@vger.kernel.org, kernel-team@fb.com
 
-Hi Paul,
+On Thu, Aug 10, 2017 at 09:45:45PM -0700, Omar Sandoval wrote:
 
-I'm overdue doing another XFS stable backport batch, and I will
-include this patch.
+Looks ok, will test...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> From: Omar Sandoval <osandov@fb.com>
+> 
+> When we try to allocate a free inode by searching the inobt, we try to
+> find the inode nearest the parent inode by searching chunks both left
+> and right of the chunk containing the parent. As an optimization, we
+> cache the leftmost and rightmost records that we previously searched; if
+> we do another allocation with the same parent inode, we'll pick up the
+> search where it last left off.
+> 
+> There's a bug in the case where we found a free inode to the left of the
+> parent's chunk: we need to update the cached left and right records, but
+> because we already reassigned the right record to point to the left, we
+> end up assigning the left record to both the cached left and right
+> records.
+> 
+> This isn't a correctness problem strictly, but it can result in the next
+> allocation rechecking chunks unnecessarily or allocating inodes further
+> away from the parent than it needs to. Fix it by swapping the record
+> pointer after we update the cached left and right records.
+> 
+> Fixes: bd169565993b ("xfs: speed up free inode search")
+> Signed-off-by: Omar Sandoval <osandov@fb.com>
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index ffd5a15d1bb6..abf5beaae907 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -1246,13 +1246,13 @@ xfs_dialloc_ag_inobt(
+>  
+>  			/* free inodes to the left? */
+>  			if (useleft && trec.ir_freecount) {
+> -				rec = trec;
+>  				xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+>  				cur = tcur;
+>  
+>  				pag->pagl_leftrec = trec.ir_startino;
+>  				pag->pagl_rightrec = rec.ir_startino;
+>  				pag->pagl_pagino = pagino;
+> +				rec = trec;
+>  				goto alloc_inode;
+>  			}
+>  
+> -- 
+> 2.14.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
