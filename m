@@ -1,45 +1,25 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24188 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753474AbdHKQ04 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 12:26:56 -0400
-Date: Fri, 11 Aug 2017 09:26:20 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] vfs: freeze filesystems just prior to reboot
-Message-ID: <20170811162620.GC24087@magnolia>
-References: <20170519002032.GA21202@birch.djwong.org>
- <1495202431.1896310.982081664.066926F8@webmail.messagingengine.com>
- <20170519190115.GJ4519@birch.djwong.org>
- <1501791890.2285873.1062452112.61520C55@webmail.messagingengine.com>
- <20170805141621.GA10457@infradead.org>
- <20170805154528.GI24087@magnolia>
- <20170811100230.GC7064@infradead.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:32949 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753170AbdHKNE7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 09:04:59 -0400
+Date: Fri, 11 Aug 2017 06:04:59 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2 V7] xfs: Add infrastructure needed for error
+ propagation during buffer IO failure
+Message-ID: <20170811130459.GA27121@infradead.org>
+References: <20170724133431.11479-1-cmaiolino@redhat.com>
+ <20170724133431.11479-2-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170811100230.GC7064@infradead.org>
+In-Reply-To: <20170724133431.11479-2-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Colin Walters <walters@verbum.org>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Aug 11, 2017 at 03:02:30AM -0700, Christoph Hellwig wrote:
-> On Sat, Aug 05, 2017 at 08:45:28AM -0700, Darrick J. Wong wrote:
-> > FSCHECKPOINT?  Since that's your requirement anyway...
-> > 
-> > "Ensures that all filesystem metadata (which may be in a journal
-> > somewhere) has been checkpointed back to disk." ?
-> 
-> What about a file system that is entirely log structured and just
-> garbage collects some times?
+Looks good,
 
-"Ensure that <insert insufficient engineering insult here> external fs
-drivers can find files on disk." :P
-
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Christoph Hellwig <hch@lst.de>
