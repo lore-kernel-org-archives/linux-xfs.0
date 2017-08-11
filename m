@@ -1,157 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f181.google.com ([209.85.128.181]:32822 "EHLO
-        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752122AbdHILG0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2017 07:06:26 -0400
-Received: by mail-wr0-f181.google.com with SMTP id v105so22768630wrb.0
-        for <linux-xfs@vger.kernel.org>; Wed, 09 Aug 2017 04:06:25 -0700 (PDT)
-From: alex@zadarastorage.com
-Subject: [PATCH] xfs: hold xfs_buf locked between shortform->leaf conversion and the addition of an attribute
-Date: Wed,  9 Aug 2017 14:06:12 +0300
-Message-Id: <1502276772-24293-1-git-send-email-alex@zadarastorage.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:37453 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753036AbdHKNDE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 09:03:04 -0400
+Date: Fri, 11 Aug 2017 06:03:03 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: toggle readonly state around
+ xfs_log_mount_finish
+Message-ID: <20170811130303.GB24839@infradead.org>
+References: <e98c7179-fdb0-1cc7-544b-c55489451db5@redhat.com>
+ <6c81fb42-4601-dc0f-6ebb-a73c7c40aaa4@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6c81fb42-4601-dc0f-6ebb-a73c7c40aaa4@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: bfoster@redhat.com, david@fromorbit.com, darrick.wong@oracle.com, libor.klepac@bcom.cz, Alex Lyakas <alex@zadarastorage.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Alex Lyakas <alex@zadarastorage.com>
+On Fri, Jul 21, 2017 at 10:25:35AM -0500, Eric Sandeen wrote:
+> When we do log recovery on a readonly mount, unlinked inode
+> processing does not happen due to the readonly checks in
+> xfs_inactive(), which are trying to prevent any I/O on a
+> readonly mount.
+> 
+> This is misguided - we do I/O on readonly mounts all the time,
+> for consistency; for example, log recovery.  So do the same
+> RDONLY flag twiddling around xfs_log_mount_finish() as we
+> do around xfs_log_mount(), for the same reason.
+> 
+> This all cries out for a big rework but for now this is a
+> simple fix to an obvious problem.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> 
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 0bd1341..ca56d85 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -743,16 +743,23 @@
+>  	struct xfs_mount	*mp)
+>  {
+>  	int	error = 0;
+> +	int	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
 
-The new attribute leaf buffer is not held locked across
-the transaction roll between the shortform->leaf modification
-and the addition of the new entry. As a result, the attribute
-buffer modification being made is not atomic from
-an operational perspective. Hence the AIL push can grab it in
-the transient state of "just created" after the initial
-transaction is rolled, because the buffer has been released.
-This leads to xfs_attr3_leaf_verify() asserting that
-hdr.count is zero, treating this as in-memory corruption,
-and shutting down the filesystem.
+bool?
 
-Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
----
- fs/xfs/libxfs/xfs_attr.c      | 19 ++++++++++++++++++-
- fs/xfs/libxfs/xfs_attr_leaf.c |  4 +++-
- fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++-
- 3 files changed, 23 insertions(+), 3 deletions(-)
+Otherwise looks good:
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index de7b9bd..982e322 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -216,10 +216,11 @@
- 	struct xfs_defer_ops	dfops;
- 	struct xfs_trans_res	tres;
- 	xfs_fsblock_t		firstblock;
- 	int			rsvd = (flags & ATTR_ROOT) != 0;
- 	int			error, err2, local;
-+	struct xfs_buf		*leaf_bp = NULL;
- 
- 	XFS_STATS_INC(mp, xs_attr_set);
- 
- 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
- 		return -EIO;
-@@ -325,11 +326,17 @@
- 		/*
- 		 * It won't fit in the shortform, transform to a leaf block.
- 		 * GROT: another possible req'mt for a double-split btree op.
- 		 */
- 		xfs_defer_init(args.dfops, args.firstblock);
--		error = xfs_attr_shortform_to_leaf(&args);
-+		error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
-+		/*
-+		 * Prevent the leaf buffer from being unlocked
-+		 * when "args.trans" transaction commits.
-+		 */
-+		if (leaf_bp)
-+			xfs_trans_bhold(args.trans, leaf_bp);
- 		if (!error)
- 			error = xfs_defer_finish(&args.trans, args.dfops, dp);
- 		if (error) {
- 			args.trans = NULL;
- 			xfs_defer_cancel(&dfops);
-@@ -343,10 +350,18 @@
- 
- 		error = xfs_trans_roll(&args.trans, dp);
- 		if (error)
- 			goto out;
- 
-+		/*
-+		 * Rejoin the leaf buffer to the new transaction.
-+		 * This allows a subsequent read to find the buffer in the
-+		 * transaction (and avoid a deadlock).
-+		 */
-+		xfs_trans_bjoin(args.trans, leaf_bp);
-+		/* Prevent from being released at the end of the function */
-+		leaf_bp = NULL;
- 	}
- 
- 	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
- 		error = xfs_attr_leaf_addname(&args);
- 	else
-@@ -374,10 +389,12 @@
- 	return error;
- 
- out:
- 	if (args.trans)
- 		xfs_trans_cancel(args.trans);
-+	if (leaf_bp)
-+		xfs_buf_relse(leaf_bp);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 	return error;
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index c6c15e5..ab73e4b 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -738,13 +738,14 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args *args,
- 	return -ENOATTR;
- }
- 
- /*
-  * Convert from using the shortform to the leaf.
-+ * Upon success, return the leaf buffer.
-  */
- int
--xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
-+xfs_attr_shortform_to_leaf(xfs_da_args_t *args, struct xfs_buf **bpp)
- {
- 	xfs_inode_t *dp;
- 	xfs_attr_shortform_t *sf;
- 	xfs_attr_sf_entry_t *sfe;
- 	xfs_da_args_t nargs;
-@@ -820,10 +821,11 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args *args,
- 		if (error)
- 			goto out;
- 		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
- 	}
- 	error = 0;
-+	*bpp = bp;
- 
- out:
- 	kmem_free(tmpbuffer);
- 	return error;
- }
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-index f7dda0c..2b3c69df 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.h
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-@@ -46,11 +46,12 @@
-  */
- void	xfs_attr_shortform_create(struct xfs_da_args *args);
- void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
- int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
- int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
--int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
-+int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
-+					struct xfs_buf **bpp);
- int	xfs_attr_shortform_remove(struct xfs_da_args *args);
- int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
- int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
- void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
- 
--- 
-1.9.1
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
