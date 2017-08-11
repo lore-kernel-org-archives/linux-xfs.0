@@ -1,57 +1,24 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:38221 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752169AbdHKKeM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Aug 2017 06:34:12 -0400
-Date: Fri, 11 Aug 2017 12:34:10 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 1/5] fs, xfs: introduce S_IOMAP_IMMUTABLE
-Message-ID: <20170811103410.GA13025@lst.de>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com> <150181369070.32119.1019092252036976783.stgit@dwillia2-desk3.amr.corp.intel.com> <20170805094708.GB14930@lst.de> <20170807002502.GI21024@dastard>
+Received: from bombadil.infradead.org ([65.50.211.133]:44249 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751618AbdHKLNq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 07:13:46 -0400
+Date: Fri, 11 Aug 2017 04:13:46 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] xfs: clear MS_ACTIVE after finishing log recovery to
+ avoid inode leak
+Message-ID: <20170811111346.GA27964@infradead.org>
+References: <150234262066.13754.6534116056866237943.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170807002502.GI21024@dastard>
+In-Reply-To: <150234262066.13754.6534116056866237943.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, darrick.wong@oracle.com, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Mon, Aug 07, 2017 at 10:25:02AM +1000, Dave Chinner wrote:
-> We've always told people not to do those "horrible abuses" because
-> of the TOCTOU race conditions inherent in getting accurate
-> BMAP/FIEMAP information to userspace. However, immutable extent maps
-> solve the TOCTOU problem and so removes the only *technical* barrier
-> in the way of using extent maps to implement functionality such as
-> userspace pNFS servers.
+This looks much more reasonable than what we had before:
 
-For pNFS block/scsi and my upcoming RDMA persistent memory layout?
-Hell no - we'll need concepts we can't expose to userspace for them,
-and to expose the advanced functionality people are asking for
-(reflinks, atomic updates, no stale data exposure) immutable extents
-maps won't work at all.
-
-> The core requirement for a userspace pNFS block server to be able to
-> safely export the block map of a file to remote clients is that the
-> extent map is allocated and will not change while the client has
-> been granted access to it.
-
-No.  The core feature for the block layout is to create an unwrittent
-extent that we can expose to the client for writing to it and only
-marking it as written after commit by converting the extent list.
-
-Now I know you're going to argue that this could work with pre-zeroing
-the extents, but for and actual SCSI or NVMe device that will suck
-badly.  And for RDMA-like layouts we don't even need the zeroing as
-we can control client behavior a lot better because memory registrations
-allow much more fine grained control.
-
-Either way we a good notification from the file system to the server
-when the extent map changes.
-
-But for either blocks or rdma layout and implementation with the filesystem
-in kernel space and the server in user is stupid as they need to interact
-closely.  There is a good reason why all successful NFS products have
-the server very tightly coupled to the file system, and a userspace <->
-kernel barrier does not help with that.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
