@@ -1,151 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32058 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752339AbdHNQyx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Aug 2017 12:54:53 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id EF2C0CCB66
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 16:54:52 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BA90B60600
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 16:54:52 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH RFC 1/2] xfs: refactor buffer logging into buffer dirtying helper
-Date: Mon, 14 Aug 2017 12:54:50 -0400
-Message-Id: <20170814165451.43788-2-bfoster@redhat.com>
-In-Reply-To: <20170814165451.43788-1-bfoster@redhat.com>
-References: <20170814165451.43788-1-bfoster@redhat.com>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:65499 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751715AbdHLAQ6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 20:16:58 -0400
+Date: Sat, 12 Aug 2017 10:16:37 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
+ conversion and the addition of an attribute
+Message-ID: <20170812001637.GW21024@dastard>
+References: <1502276772-24293-1-git-send-email-alex@zadarastorage.com>
+ <20170809213307.GJ21024@dastard>
+ <185A1C4516684B439A3711999ABACA79@alyakaslap>
+ <20170810113322.GM21024@dastard>
+ <63920C3663124B75BC0983A17533395A@alyakaslap>
+ <20170810145248.GE3777@bfoster.bfoster>
+ <20170810175548.GX24087@magnolia>
+ <20170810183233.GG3777@bfoster.bfoster>
+ <20170811022204.GQ21024@dastard>
+ <20170811142741.GA18609@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170811142741.GA18609@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Alex Lyakas <alex@zadarastorage.com>, linux-xfs@vger.kernel.org, libor.klepac@bcom.cz
 
-xfs_trans_log_buf() is responsible for logging the dirty segments of
-a buffer along with setting all of the necessary state on the
-transaction, buffer, bli, etc., to ensure that the associated items
-are marked as dirty and prepared for I/O. We have a couple use cases
-that need to to dirty a buffer in a transaction without actually
-logging dirty ranges of the buffer.  One existing use case is
-ordered buffers, which are currently logged with arbitrary ranges to
-accomplish this even though the content of ordered buffers is never
-written to the log. Another pending use case is to relog an already
-dirty buffer across rolled transactions within the deferred
-operations infrastructure. This is required to prevent a held
-(XFS_BLI_HOLD) buffer from pinning the tail of the log.
+On Fri, Aug 11, 2017 at 10:27:43AM -0400, Brian Foster wrote:
+> On Fri, Aug 11, 2017 at 12:22:04PM +1000, Dave Chinner wrote:
+> > On Thu, Aug 10, 2017 at 02:32:33PM -0400, Brian Foster wrote:
+> > > On Thu, Aug 10, 2017 at 10:55:48AM -0700, Darrick J. Wong wrote:
+> > > > On Thu, Aug 10, 2017 at 10:52:49AM -0400, Brian Foster wrote:
+> > > > > On Thu, Aug 10, 2017 at 03:09:09PM +0300, Alex Lyakas wrote:
+> > > ...
+> > > > > OTOH, just adding deferred ops buffer relogging might not be too much
+> > > > > trouble either. ;) Anyways, thoughts?
+> > > > 
+> > > > I don't think it'd be difficult to add a _defer_bjoin operation that
+> > > > maintains a list of buffers that we need to bhold across rolls.
+> > > > 
+> > > > I think xfs_buf->b_list is only used for delwri buffers, and a buffer
+> > > > cannot be part of a transaction /and/ on a delwri list at the same time,
+> > > > right?  So it shouldn't be hard to whip something up and couple this
+> > > > patch to that.
+> > > > 
+> > > 
+> > > Hmm.. so if a buffer is modified, logged, committed, put on the AIL and
+> > > pushed, xfs_buf_item_push() locks it, puts it on the delwri queue and
+> > > unlocks. At that point, I _think_ it may be possible for another thread
+> > > to lock the buffer and join it to a new transaction. The delwri submit
+> > > skips the buffer if it has become pinned or locked since the delwri
+> > > queue (though I'm wondering if that unlocked pin check is racy against
+> > > locked buffer modifications. I suppose that would require a full
+> > > lock->pin->unlock cycle between the pin check and trylock however).
+> > 
+> > If it does race, we still catch pinned buffers in xfs_buf_submit() and
+> > block there on them. SO a race is just sub-optimal behaviour, not a
+> > bug.
+> > 
+> 
+> Ah I see, thanks.
+> 
+> > > The question I have for buffer relogging is what's the best way to track
+> > > the parts of the buffer that need to be relogged after a roll?
+> > > Copy/translate the dirty (xfs_buf_log_format) segment map(s)?
+> > 
+> > Just mark it ordered?
+> > 
+> > That way it goes through the transaction commit, pinned and put into
+> > the CIL and  gets moved forward in the AIL when the log checkpoints.
+> > We don't need to relog the actual contents in this case, just ensure
+> > it moves forward in the AIL appropriately while we hold it locked.
+> 
+> Hmm.. is it safe to mark a previously logged and AIL resident buffer
+> ordered in a subsequent transaction?
 
-Refactor xfs_trans_log_buf() into a new function that contains all
-of the logic responsible to dirty the transaction, lidp, buffer and
-bli. This new function can be used in the future for the use cases
-outlined above. This patch does not introduce functional changes.
+That's what I'm asking - can we mark it ordered and not have to
+worry about what is already dirty?
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_trans.h     |  4 +++-
- fs/xfs/xfs_trans_buf.c | 46 ++++++++++++++++++++++++++++++----------------
- 2 files changed, 33 insertions(+), 17 deletions(-)
+> The problem in this particular
+> example is that the empty leaf buffer is logged, committed and unpinned
+> (and thus AIL resident). We want to relog the buffer to move it forward
+> in the AIL on the next transaction because we're holding it locked and
+> thus it cannot be written back (and thus could pin the log tail).
 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 6bdad6f..a9c4404 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -213,7 +213,9 @@ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
- void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
- void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
- void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
--void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
-+void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
-+				  uint);
-+void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
- void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
- 
- void		xfs_extent_free_init_defer_op(void);
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 86987d8..58818a0 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -493,25 +493,17 @@ xfs_trans_bhold_release(xfs_trans_t	*tp,
- }
- 
- /*
-- * This is called to mark bytes first through last inclusive of the given
-- * buffer as needing to be logged when the transaction is committed.
-- * The buffer must already be associated with the given transaction.
-- *
-- * First and last are numbers relative to the beginning of this buffer,
-- * so the first byte in the buffer is numbered 0 regardless of the
-- * value of b_blkno.
-+ * Mark a buffer dirty in the transaction.
-  */
- void
--xfs_trans_log_buf(xfs_trans_t	*tp,
--		  xfs_buf_t	*bp,
--		  uint		first,
--		  uint		last)
-+xfs_trans_dirty_buf(
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*bp)
- {
--	xfs_buf_log_item_t	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_fspriv;
- 
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
--	ASSERT(first <= last && last < BBTOB(bp->b_length));
- 	ASSERT(bp->b_iodone == NULL ||
- 	       bp->b_iodone == xfs_buf_iodone_callbacks);
- 
-@@ -531,8 +523,6 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
- 	bp->b_iodone = xfs_buf_iodone_callbacks;
- 	bip->bli_item.li_cb = xfs_buf_iodone;
- 
--	trace_xfs_trans_log_buf(bip);
--
- 	/*
- 	 * If we invalidated the buffer within this transaction, then
- 	 * cancel the invalidation now that we're dirtying the buffer
-@@ -545,15 +535,39 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
- 		bp->b_flags &= ~XBF_STALE;
- 		bip->__bli_format.blf_flags &= ~XFS_BLF_CANCEL;
- 	}
-+	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
- 
- 	tp->t_flags |= XFS_TRANS_DIRTY;
- 	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
-+}
-+
-+/*
-+ * This is called to mark bytes first through last inclusive of the given
-+ * buffer as needing to be logged when the transaction is committed.
-+ * The buffer must already be associated with the given transaction.
-+ *
-+ * First and last are numbers relative to the beginning of this buffer,
-+ * so the first byte in the buffer is numbered 0 regardless of the
-+ * value of b_blkno.
-+ */
-+void
-+xfs_trans_log_buf(
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*bp,
-+	uint			first,
-+	uint			last)
-+{
-+	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+
-+	ASSERT(first <= last && last < BBTOB(bp->b_length));
-+
-+	xfs_trans_dirty_buf(tp, bp);
- 
- 	/*
- 	 * If we have an ordered buffer we are not logging any dirty range but
- 	 * it still needs to be marked dirty and that it has been logged.
- 	 */
--	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
-+	trace_xfs_trans_log_buf(bip);
- 	if (!(bip->bli_flags & XFS_BLI_ORDERED))
- 		xfs_buf_item_log(bip, first, last);
- }
+Yup.
+
+> If we mark the buffer ordered in the subsequent transaction and that
+> transaction commits/checkpoints to the log, don't we push the buffer
+> forward in the AIL to a checkpoint that doesn't have the originally
+> logged data..? IOW, it seems like if this does end up pushing the tail
+> of the log and we crash, we've thrown away checkpointed but not written
+> back metadata and potentially corrupted the fs. Hm?
+
+Relogging of existing dirty regions is supposed to solve this
+problem. i.e. while the log item is dirty in the AIL, any
+transaction that logs and commits the log item will also log all the
+existing dirty regions on the buffer, hence the next checkpoint will
+contain everything it's supposed to.
+
+Hence in this case, we don't need to log any new regions of the
+buffer because it already has a record of all the dirty regions on
+it from the prior transaction we committed.  That means we don't
+actually need to mark any new ranges dirty, we just need to mark the
+log item dirty again to trigger relogging of the existing dirty
+ranges on the buffer.
+
+Using XFS_BLI_ORDERED allows us to log the buffer without recording
+a new dirty range on the buffer. IOWs, it retains whatever dirty range
+it already had, and so after joining, marking it ordered and then
+logging the buffer, we have a XFS_BLI_DIRTY | XFS_BLI_ORDERED buffer
+in the transaction.
+
+The question is this: what happens when a XFS_BLI_ORDERED buffer
+with a pre-existing dirty region is formatted for the CIL? We
+haven't done that before, so I'm betting that we don't relog the
+dirty region like we should be doing....
+
+... and we don't relog the existing dirty range because the
+ordered flag takes precedence.
+
+Ok, the ordered buffer checks in xfs_buf_item_size() and
+xfs_buf_item_format() need to also check for dirty regions. If dirty
+regions exist, then we treat it like a normal buffer rather than an
+ordered buffer. We can factor the dirty region check out of
+xfs_buf_item_unlock() for this...
+
+Actually, check the case in xfs_buf_item_size() and remove the
+ordered flag if there are dirty regions. Then xfs_buf_item_format()
+will do the right thing without needing a duplicate check...
+
+Nothing in XFS is ever simple, is it? :P
+
+Cheers,
+
+Dave.
 -- 
-2.9.4
-
+Dave Chinner
+david@fromorbit.com
