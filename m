@@ -1,78 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f169.google.com ([209.85.161.169]:34500 "EHLO
-        mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752942AbdHNQOn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 12:14:43 -0400
-Received: by mail-yw0-f169.google.com with SMTP id s143so57673903ywg.1
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 09:14:43 -0700 (PDT)
+Received: from userp1040.oracle.com ([156.151.31.81]:28770 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751972AbdHLCc2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 22:32:28 -0400
+Date: Fri, 11 Aug 2017 19:31:54 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 2/6] fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
+Message-ID: <20170812023154.GJ24087@magnolia>
+References: <150243355681.8777.14902834768886160223.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150243356799.8777.11625037981403766282.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170811232708.GT21024@dastard>
+ <CAPcyv4gwgYfLviDJ5wJ5ZRKbX+fDkw_i7A+OwQyMM+MKXe8e=w@mail.gmail.com>
+ <20170812003034.GX21024@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20170814124059.GC17820@quack2.suse.cz>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
- <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com>
- <20170805095013.GC14930@lst.de> <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com>
- <20170811104429.GA13736@lst.de> <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com>
- <20170812073349.GA12679@lst.de> <CAPcyv4iKG=Zoo1VXu23YBc6uWDFV4QSS+eAm9MSOynx2FjTHbw@mail.gmail.com>
- <20170813092436.GB32112@lst.de> <CAPcyv4ixTgSWG9K2Eg3XJmOvqJht81qL+Z3njoOjcXCD7XMpZw@mail.gmail.com>
- <20170814124059.GC17820@quack2.suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 14 Aug 2017 09:14:42 -0700
-Message-ID: <CAPcyv4hi_Y5Qj=h_Qf4Bcyv+EWBosa2gQT+-8ro3hPY9VMshSA@mail.gmail.com>
-Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
- dma-to-storage, and swap
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170812003034.GX21024@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-On Mon, Aug 14, 2017 at 5:40 AM, Jan Kara <jack@suse.cz> wrote:
-> On Sun 13-08-17 13:31:45, Dan Williams wrote:
->> On Sun, Aug 13, 2017 at 2:24 AM, Christoph Hellwig <hch@lst.de> wrote:
->> > Thay being said I think we absolutely should support RDMA memory
->> > registrations for DAX mappings.  I'm just not sure how S_IOMAP_IMMUTABLE
->> > helps with that.  We'll want a MAP_SYNC | MAP_POPULATE to make sure
->> > all the blocks are polulated and all ptes are set up.  Second we need
->> > to make sure get_user_page works, which for now means we'll need a
->> > struct page mapping for the region (which will be really annoying
->> > for PCIe mappings, like the upcoming NVMe persistent memory region),
->> > and we need to gurantee that the extent mapping won't change while
->> > the get_user_pages holds the pages inside it.  I think that is true
->> > due to side effects even with the current DAX code, but we'll need to
->> > make it explicit.  And maybe that's where we need to converge -
->> > "sealing" the extent map makes sense as such a temporary measure
->> > that is not persisted on disk, which automatically gets released
->> > when the holding process exits, because we sort of already do this
->> > implicitly.  It might also make sense to have explicitl breakable
->> > seals similar to what I do for the pNFS blocks kernel server, as
->> > any userspace RDMA file server would also need those semantics.
->>
->> Ok, how about a MAP_DIRECT flag that arranges for faults to that range to:
->>
->>     1/ only succeed if the fault can be satisfied without page cache
->>
->>     2/ only install a pte for the fault if it can do so without
->> triggering block map updates
->>
->> So, I think it would still end up setting an inode flag to make
->> xfs_bmapi_write() fail while any process has a MAP_DIRECT mapping
->> active. However, it would not record that state in the on-disk
->> metadata and it would automatically clear at munmap time. That should
->> be enough to support the host-persistent-memory, and
->> NVMe-persistent-memory use cases (provided we have struct page for
->> NVMe). Although, we need more safety infrastructure in the NVMe case
->> where we would need to software manage I/O coherence.
->
-> Hum, this proposal (and the problems you are trying to deal with) seem very
-> similar to Peter Zijlstra's mpin() proposal from 2014 [1], just moved to
-> the DAX area (and so additionally complicated by the fact that filesystems
-> now have to care). The patch set was not merged due to lack of interest I
-> think but it looked sensible and the proposed API would make sense for more
-> stuff than just DAX so maybe it would be better than MAP_DIRECT flag?
+On Sat, Aug 12, 2017 at 10:30:34AM +1000, Dave Chinner wrote:
+> On Fri, Aug 11, 2017 at 04:42:18PM -0700, Dan Williams wrote:
+> > On Fri, Aug 11, 2017 at 4:27 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > > On Thu, Aug 10, 2017 at 11:39:28PM -0700, Dan Williams wrote:
+> > >> >From falloc.h:
+> > >>
+> > >>     FALLOC_FL_SEAL_BLOCK_MAP is used to seal (make immutable) all of the
+> > >>     file logical-to-physical extent offset mappings in the file. The
+> > >>     purpose is to allow an application to assume that there are no holes
+> > >>     or shared extents in the file and that the metadata needed to find
+> > >>     all the physical extents of the file is stable and can never be
+> > >>     dirtied.
+> > >>
+> > >> For now this patch only permits setting the in-memory state of
+> > >> S_IOMAP_IMMMUTABLE. Support for clearing and persisting the state is
+> > >> saved for later patches.
+> > >>
+> > >> The implementation is careful to not allow the immutable state to change
+> > >> while any process might have any established mappings. It reuses the
+> > >> existing xfs_reflink_unshare() and xfs_alloc_file_space() to unshare
+> > >> extents and fill all holes in the file. It then holds XFS_ILOCK_EXCL
+> > >> while it validates the file is in the proper state and sets
+> > >> S_IOMAP_IMMUTABLE.
+> > >
+> > > SO I've been thinking about this - I'm thinking that we need to
+> > > separate the changes to the extent map from the action of sealing
+> > > the extent map.
+> > >
+> > > That is, I have a need to freeze an extent map without any
+> > > modification to it at all and breaking all the sharing and filling
+> > > all the holes completely screws up the file layout I need to
+> > > preserve. i.e. I want to be able to freeze the maps of a pair of
+> > > reflinked files so I can use FIEMAP to query only the changed blocks
+> > > and then read out the data in the private/changed blocks in the
+> > > reflinked file. I only need a temporary seal (if we crash it goes
+> > > away), so maybe there's another command modifier flag needed here,
+> > > too.
+> > >
+> > > The DAX allocation requirements can be handled by a preallocation
+> > > call to filll holes with zeros, followed by an unshare call to break
+> > > all the COW mappings, and then the extent map can be sealed. If you
+> > > need to check for holes after sealing, SEEK_HOLE will tell you what
+> > > you need to know...
+> > >
+> > > My preference really is for each fallocate command to do just one
+> > > thing - having the seal operation also modify the extent map
+> > > means it's not useful for the use cases where we need the extent map
+> > > to remain unmodified....
+> > >
+> > > Thoughts?
+> > 
+> > That does seem to better follow the principle of least surprise and
+> > make the interface more composable. However, for the DAX case do we
+> > now end up needing a SEEK_SHARED, or something similar to check that
+> > we sealed the file without shared extents?
 
-Interesting, but I'm not sure I see the correlation. mm_mpin() makes a
-"no-fault" guarantee and fixes the accounting of locked System RAM.
-MAP_DIRECT still allows faults, and DAX mappings don't consume System
-RAM so the accounting problem is not there for DAX. mm_pin() also does
-not appear to have a relationship to a file backed memory like mmap
-allows.
+Well, fiemap/bmap will tell you (presumably after you confirm that the
+file got sealed or whatever) if there are shared extents.
+
+> Don't we have an inode attribute flag for that? There's definitely a
+> flag in the on disk XFS inode to indicate that there are shared
+> extents on the file.
+> 
+> Hmmmm - for some reason it's not exposed in FS_IOC_FSGETXATTR.
+> Darrick? Any reason we don't expose the "this file has shared
+> extents" flag to userspace? How are we checking that on-disk state
+> in xfstests?
+> 
+> As it is, if we're adding an immutable extent flag, we've got to be
+> able to query the immutable extent state of a file from userspace so
+> I'm thinking that we'd need to expose it via the same interface that
+> exposes the immutable flag. i.e. we could add the "shared extents
+> present" flag to FS_IOC_FSGETXATTR at the same time...
+
+We used to have a FSGETXATTR flag; iirc hch nak'd it during the review.
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
