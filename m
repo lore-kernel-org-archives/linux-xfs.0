@@ -1,103 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:2435 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751970AbdHDCea (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Aug 2017 22:34:30 -0400
-Subject: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
- dma-to-storage, and swap
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 03 Aug 2017 19:28:04 -0700
-Message-ID: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:39254 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751361AbdHLAaj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 20:30:39 -0400
+Date: Sat, 12 Aug 2017 10:30:34 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 2/6] fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
+Message-ID: <20170812003034.GX21024@dastard>
+References: <150243355681.8777.14902834768886160223.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150243356799.8777.11625037981403766282.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170811232708.GT21024@dastard>
+ <CAPcyv4gwgYfLviDJ5wJ5ZRKbX+fDkw_i7A+OwQyMM+MKXe8e=w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4gwgYfLviDJ5wJ5ZRKbX+fDkw_i7A+OwQyMM+MKXe8e=w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-Changes since v1 [1]:
-* Add IS_IOMAP_IMMUTABLE() checks to xfs ioctl paths that perform block
-  map changes (xfs_alloc_file_space and xfs_free_file_space) (Darrick)
+On Fri, Aug 11, 2017 at 04:42:18PM -0700, Dan Williams wrote:
+> On Fri, Aug 11, 2017 at 4:27 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Aug 10, 2017 at 11:39:28PM -0700, Dan Williams wrote:
+> >> >From falloc.h:
+> >>
+> >>     FALLOC_FL_SEAL_BLOCK_MAP is used to seal (make immutable) all of the
+> >>     file logical-to-physical extent offset mappings in the file. The
+> >>     purpose is to allow an application to assume that there are no holes
+> >>     or shared extents in the file and that the metadata needed to find
+> >>     all the physical extents of the file is stable and can never be
+> >>     dirtied.
+> >>
+> >> For now this patch only permits setting the in-memory state of
+> >> S_IOMAP_IMMMUTABLE. Support for clearing and persisting the state is
+> >> saved for later patches.
+> >>
+> >> The implementation is careful to not allow the immutable state to change
+> >> while any process might have any established mappings. It reuses the
+> >> existing xfs_reflink_unshare() and xfs_alloc_file_space() to unshare
+> >> extents and fill all holes in the file. It then holds XFS_ILOCK_EXCL
+> >> while it validates the file is in the proper state and sets
+> >> S_IOMAP_IMMUTABLE.
+> >
+> > SO I've been thinking about this - I'm thinking that we need to
+> > separate the changes to the extent map from the action of sealing
+> > the extent map.
+> >
+> > That is, I have a need to freeze an extent map without any
+> > modification to it at all and breaking all the sharing and filling
+> > all the holes completely screws up the file layout I need to
+> > preserve. i.e. I want to be able to freeze the maps of a pair of
+> > reflinked files so I can use FIEMAP to query only the changed blocks
+> > and then read out the data in the private/changed blocks in the
+> > reflinked file. I only need a temporary seal (if we crash it goes
+> > away), so maybe there's another command modifier flag needed here,
+> > too.
+> >
+> > The DAX allocation requirements can be handled by a preallocation
+> > call to filll holes with zeros, followed by an unshare call to break
+> > all the COW mappings, and then the extent map can be sealed. If you
+> > need to check for holes after sealing, SEEK_HOLE will tell you what
+> > you need to know...
+> >
+> > My preference really is for each fallocate command to do just one
+> > thing - having the seal operation also modify the extent map
+> > means it's not useful for the use cases where we need the extent map
+> > to remain unmodified....
+> >
+> > Thoughts?
+> 
+> That does seem to better follow the principle of least surprise and
+> make the interface more composable. However, for the DAX case do we
+> now end up needing a SEEK_SHARED, or something similar to check that
+> we sealed the file without shared extents?
 
-* Rather than complete a partial write, fail all writes that would
-  attempt to extend the file size (Darrick)
+Don't we have an inode attribute flag for that? There's definitely a
+flag in the on disk XFS inode to indicate that there are shared
+extents on the file.
 
-* Introduce FALLOC_FL_UNSEAL_BLOCK_MAP as an explicit operation type for
-  clearing S_IOMAP_IMMUTABLE (Dave)
+Hmmmm - for some reason it's not exposed in FS_IOC_FSGETXATTR.
+Darrick? Any reason we don't expose the "this file has shared
+extents" flag to userspace? How are we checking that on-disk state
+in xfstests?
 
-* Rework xfs_seal_file_space() to first complete hole-fill and unshare
-  operations and then check the file for suitability under
-  XFS_ILOCK_EXCL. (Darrick)
+As it is, if we're adding an immutable extent flag, we've got to be
+able to query the immutable extent state of a file from userspace so
+I'm thinking that we'd need to expose it via the same interface that
+exposes the immutable flag. i.e. we could add the "shared extents
+present" flag to FS_IOC_FSGETXATTR at the same time...
 
-* Add an FS_XFLAG_IOMAP_IMMUTABLE flag so the immutable state can be
-  seen by xfs_io. (Dave)
+Cheers,
 
-* Move the setting of S_IOMAP_IMMUTABLE to be atomic with respect to the
-  successful transaction that records XFS_DIFLAG2_IOMAP_IMMUTABLE.
-  (Darrick, Dave)
-
-* Switch to a 'goto out_unlock' style in xfs_seal_file_space() to
-  cleanup 'if / else' tree, and use the mapping_mapped() helper. (Dave)
-
-* Rely on XFS_MMAPLOCK_EXCL for reading a stable state of
-  mapping->i_mmap. (Dave)
-
-[1]: http://marc.info/?l=linux-fsdevel&m=150135785712967&w=2
-
----
-
-The daxfile proposal a few weeks back [2] sought to piggy back on the
-swapfile implementation to approximate a block map immutable file. This
-is an idea Dave originated last year to solve the dax "flush from
-userspace" problem [3].
-
-The discussion yielded several results. First, Christoph pointed out
-that swapfiles are subtly broken [4].  Second, Darrick [5] and Dave [6]
-proposed how to properly implement a block map immutable file.  Finally,
-Dave identified some improvements to swapfiles that can be built on the
-block-map-immutable mechanism. These patches seek to implement the first
-part of the proposal and save the swapfile work to build on top once the
-base mechanism is complete.
-
-While the initial motivation for this feature is support for
-byte-addressable updates of persistent memory and managing cache
-maintenance from userspace, the applications of the feature are broader.
-In addition to being the start of a better swapfile mechanism it can
-also support a DMA-to-storage use case.  This use case enables
-data-acquisition hardware to DMA directly to a storage device address
-while being safe in the knowledge that storage mappings will not change.
-
-[2]: https://lkml.org/lkml/2017/6/16/790
-[3]: https://lkml.org/lkml/2016/9/11/159
-[4]: https://lkml.org/lkml/2017/6/18/31
-[5]: https://lkml.org/lkml/2017/6/20/49
-[6]: https://www.spinics.net/lists/linux-xfs/msg07871.html
-
----
-
-Dan Williams (5):
-      fs, xfs: introduce S_IOMAP_IMMUTABLE
-      fs, xfs: introduce FALLOC_FL_SEAL_BLOCK_MAP
-      fs, xfs: introduce FALLOC_FL_UNSEAL_BLOCK_MAP
-      xfs: introduce XFS_DIFLAG2_IOMAP_IMMUTABLE
-      xfs: toggle XFS_DIFLAG2_IOMAP_IMMUTABLE in response to fallocate
-
-
- fs/attr.c                   |   10 ++
- fs/open.c                   |   22 +++++
- fs/read_write.c             |    3 +
- fs/xfs/libxfs/xfs_format.h  |    5 +
- fs/xfs/xfs_bmap_util.c      |  181 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap_util.h      |    5 +
- fs/xfs/xfs_file.c           |   16 +++-
- fs/xfs/xfs_inode.c          |    2 
- fs/xfs/xfs_ioctl.c          |    7 ++
- fs/xfs/xfs_iops.c           |    8 +-
- include/linux/falloc.h      |    4 +
- include/linux/fs.h          |    2 
- include/uapi/linux/falloc.h |   20 +++++
- include/uapi/linux/fs.h     |    1 
- mm/filemap.c                |    5 +
- 15 files changed, 282 insertions(+), 9 deletions(-)
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
