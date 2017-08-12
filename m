@@ -1,71 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sender-pp-092.zoho.com ([135.84.80.237]:25476 "EHLO
-        sender-pp-092.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750915AbdHMVbu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Aug 2017 17:31:50 -0400
-Subject: Re: What is wrong with my run string?
-From: ToddAndMargo <ToddAndMargo@zoho.com>
-References: <06fb2d56-516c-bbee-5669-fba3af0cf46a@zoho.com>
-Message-ID: <970ed940-033b-1d00-6746-ce0a7ab6566e@zoho.com>
-Date: Sun, 13 Aug 2017 14:31:46 -0700
+Received: from verein.lst.de ([213.95.11.211]:44231 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751100AbdHLHe1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 12 Aug 2017 03:34:27 -0400
+Date: Sat, 12 Aug 2017 09:34:26 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
+        dma-to-storage, and swap
+Message-ID: <20170812073426.GB12679@lst.de>
+References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com> <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com> <20170805095013.GC14930@lst.de> <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com> <20170811104429.GA13736@lst.de> <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com> <CALCETrVvMbaxobdydtsdQWHyP1VhL1fpq1qS4M3=SmR1y4x5kw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <06fb2d56-516c-bbee-5669-fba3af0cf46a@zoho.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CALCETrVvMbaxobdydtsdQWHyP1VhL1fpq1qS4M3=SmR1y4x5kw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Andy Lutomirski <luto@kernel.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>
 
-On 08/11/2017 09:50 PM, ToddAndMargo wrote:
-> Dear Xfs,
-> 
-> Fedora 26 x64
-> xfsdump-3.1.6-4.fc26.x86_64
-> 
-> 
-> If you would allow me to mooch a free question off of you,
-> 
-> # df | grep "/dev/"
-> tmpfs            16417652       0   16417652   0% /dev/shm
-> /dev/md126p2    872803956 5891900  866912056   1% /
-> /dev/md126p1      1038336  226012     812324  22% /boot
-> /dev/sdd1      1952559608 2190200 1950369408   1% /lin-bak
-> 
-> 
-> I am trying to back up "/" (/dev/md126p2).
-> 
-> This is my run string:
-> 
-> # /usr/sbin/xfsdump -v verbose -M 1 -L 1 -l 0 -f 
-> /lin-bak/2017-08-11_21-39-07_md126p2.XfsDump  /dev/md126p2
-> 
-> Problem: I get millions of
-> /usr/sbin/xfsdump: WARNING: could not open regular file ino 1613157757 
-> mode 0x000081a4: Not a directory: not dumped
-> 
-> What am I doing wrong?
-> 
-> Many thanks,
-> -T
-> 
-> 
+On Fri, Aug 11, 2017 at 08:57:18PM -0700, Andy Lutomirski wrote:
+> One thing that makes me quite nervous about S_IOMAP_IMMUTABLE is the
+> degree to which things go badly if one program relies on it while
+> another program clears the flag: you risk corrupting unrelated
+> filesystem metadata.  I think a userspace interface to pin the extent
+> mapping of a file really wants a way to reliably keep it pinned (or to
+> reliably zap the userspace application if it gets unpinned).
 
-
-Follow UP:
-
-As it transpires, xfsdump did not like me calling "/" by
-is device of "/dev/md126p2".
-
-But it was okay with me calling "/boot" by "/dev/md126p1".
-So there was some confusion.
-
-
-
--- 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Computers are like air conditioners.
-They malfunction when you open windows
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+The nice thing is that no application can rely on it anyway..
