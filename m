@@ -1,30 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:44231 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751100AbdHLHe1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 12 Aug 2017 03:34:27 -0400
-Date: Sat, 12 Aug 2017 09:34:26 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
-        dma-to-storage, and swap
-Message-ID: <20170812073426.GB12679@lst.de>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com> <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com> <20170805095013.GC14930@lst.de> <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com> <20170811104429.GA13736@lst.de> <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com> <CALCETrVvMbaxobdydtsdQWHyP1VhL1fpq1qS4M3=SmR1y4x5kw@mail.gmail.com>
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:52036 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750761AbdHLJAx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 12 Aug 2017 05:00:53 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CALCETrVvMbaxobdydtsdQWHyP1VhL1fpq1qS4M3=SmR1y4x5kw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date: Sat, 12 Aug 2017 11:00:51 +0200
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Re: [PATCH] iomap: fix integer truncation issues in the zeroing and
+ dirtying helpers
+In-Reply-To: <20170811151805.22896-1-hch@lst.de>
+References: <20170811151805.22896-1-hch@lst.de>
+Message-ID: <f4d52f4d8b1cb6dfb91acaa8612d4bba@molgen.mpg.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andy Lutomirski <luto@kernel.org>
-Cc: Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, stockhausen@collogia.de, it+linux-nfs@molgen.mpg.de
 
-On Fri, Aug 11, 2017 at 08:57:18PM -0700, Andy Lutomirski wrote:
-> One thing that makes me quite nervous about S_IOMAP_IMMUTABLE is the
-> degree to which things go badly if one program relies on it while
-> another program clears the flag: you risk corrupting unrelated
-> filesystem metadata.  I think a userspace interface to pin the extent
-> mapping of a file really wants a way to reliably keep it pinned (or to
-> reliably zap the userspace application if it gets unpinned).
+Dear Christoph,
 
-The nice thing is that no application can rely on it anyway..
+
+On 2017-08-11 17:18, Christoph Hellwig wrote:
+> Fix the min_t calls in the zeroing and dirtying helpers to perform the
+> comparisms on 64-bit types, which prevents them from incorrectly
+> being truncated, and larger zeroing operations being stuck in a never
+> ending loop.
+> 
+> Special thanks to Markus Stockhausen for spotting the bug.
+> 
+> Reported-by: Paul Menzel <pmenzel@molgen.mpg.de>
+> Tested-by: Paul Menzel <pmenzel@molgen.mpg.de>
+
+Thank you very much for providing the fix that quickly.
+
+Please don’t forget to tag it for the stable series (4.8+).
+
+Cc: stable@vger.kernel.org
+
+
+Kind regards,
+
+Paul
