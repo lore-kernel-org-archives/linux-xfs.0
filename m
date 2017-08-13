@@ -1,120 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37360 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751439AbdHKX7a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 19:59:30 -0400
-Date: Fri, 11 Aug 2017 16:59:00 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 2/3] xfs: evict all inodes involved with log redo item
- recovery
-Message-ID: <20170811235900.GI24087@magnolia>
-References: <150234262066.13754.6534116056866237943.stgit@magnolia>
- <150234263191.13754.5037661818451431724.stgit@magnolia>
- <20170811195010.GH24087@magnolia>
- <20170811234204.GV21024@dastard>
+Received: from mail-yw0-f172.google.com ([209.85.161.172]:33911 "EHLO
+        mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752216AbdHMCoP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Aug 2017 22:44:15 -0400
+Received: by mail-yw0-f172.google.com with SMTP id s143so40095419ywg.1
+        for <linux-xfs@vger.kernel.org>; Sat, 12 Aug 2017 19:44:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170811234204.GV21024@dastard>
+In-Reply-To: <20170811100327.GD7064@infradead.org>
+References: <20170727131245.28279-1-jack@suse.cz> <x49zibq3rb0.fsf@segfault.boston.devel.redhat.com>
+ <20170727215713.GA22000@linux.intel.com> <CALCETrVzxrQ76BXEfo4kcRFyQmxbrMwCLE17yPyTJzz0tUs+Dg@mail.gmail.com>
+ <20170728093821.GB29433@quack2.suse.cz> <20170801110241.GE6742@infradead.org>
+ <20170801112603.GG4215@quack2.suse.cz> <CAPcyv4hdOsuA6cqRCnOZMLMXvycwZevg06xOVZz3u0kupm2Drw@mail.gmail.com>
+ <20170811100327.GD7064@infradead.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Sat, 12 Aug 2017 19:44:14 -0700
+Message-ID: <CAPcyv4hgqh8tHeWDNRnJnvwDh7hiFU8+3O0VWAHFQOEvPna11Q@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/7] dax, ext4: Synchronous page faults
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, viro@ZenIV.linux.org.uk, Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, linux-nvdimm <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-On Sat, Aug 12, 2017 at 09:42:04AM +1000, Dave Chinner wrote:
-> On Fri, Aug 11, 2017 at 12:50:10PM -0700, Darrick J. Wong wrote:
-> > When we introduced the bmap redo log items, we set MS_ACTIVE on the
-> > mountpoint and XFS_IRECOVERY on the inode to prevent unlinked inodes
-> > from being truncated prematurely during log recovery.  This also had the
-> > effect of putting linked inodes on the lru instead of evicting them.
-> > 
-> > Unfortunately, we neglected to find all those unreferenced lru inodes
-> > and evict them after finishing log recovery, which means that we leak
-> > them if anything goes wrong in the rest of xfs_mountfs, because the lru
-> > is only cleaned out on unmount.
-> > 
-> > Therefore, evict unreferenced inodes in the lru list immediately
-> > after clearing MS_ACTIVE.
-> > 
-> > Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Cc: viro@ZenIV.linux.org.uk
-> > ---
-> > v2: use the vfs evict_inodes instead of duplicating it
-> > ---
-> >  fs/inode.c         |    1 +
-> >  fs/internal.h      |    1 -
-> >  fs/xfs/xfs_mount.c |   12 ++++++++++++
-> >  include/linux/fs.h |    1 +
-> >  4 files changed, 14 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/inode.c b/fs/inode.c
-> > index 5037059..6a1626e 100644
-> > --- a/fs/inode.c
-> > +++ b/fs/inode.c
-> > @@ -637,6 +637,7 @@ void evict_inodes(struct super_block *sb)
-> >  
-> >  	dispose_list(&dispose);
-> >  }
-> > +EXPORT_SYMBOL_GPL(evict_inodes);
-> >  
-> >  /**
-> >   * invalidate_inodes	- attempt to free all inodes on a superblock
-> > diff --git a/fs/internal.h b/fs/internal.h
-> > index 9676fe1..fedfe94 100644
-> > --- a/fs/internal.h
-> > +++ b/fs/internal.h
-> > @@ -132,7 +132,6 @@ static inline bool atime_needs_update_rcu(const struct path *path,
-> >  extern void inode_io_list_del(struct inode *inode);
-> >  
-> >  extern long get_nr_dirty_inodes(void);
-> > -extern void evict_inodes(struct super_block *);
-> >  extern int invalidate_inodes(struct super_block *, bool);
-> >  
-> >  /*
-> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > index a46c9d7..351e2c3 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -956,10 +956,22 @@ xfs_mountfs(
-> >  	 * inodes.  Turn it off immediately after xfs_log_mount_finish
-> >  	 * so that we don't leak the quota inodes if subsequent mount
-> >  	 * activities fail.
-> > +	 *
-> > +	 * We let all inodes involved in redo item processing end up on
-> > +	 * the LRU instead of being evicted immediately so that if we do
-> > +	 * something to an unlinked inode, the irele won't cause
-> > +	 * premature truncation and freeing of the inode, which results
-> > +	 * in log recovery failure.  We have to evict the unreferenced
-> > +	 * lru inodes after clearing MS_ACTIVE because we don't
-> > +	 * otherwise clean up the lru if there's a subsequent failure in
-> > +	 * xfs_mountfs, which leads to us leaking the inodes if nothing
-> > +	 * else (e.g. quotacheck) references the inodes before the
-> > +	 * mount failure occurs.
-> >  	 */
-> >  	mp->m_super->s_flags |= MS_ACTIVE;
-> >  	error = xfs_log_mount_finish(mp);
-> >  	mp->m_super->s_flags &= ~MS_ACTIVE;
-> > +	evict_inodes(mp->m_super);
-> 
-> Shouldn't all this MS_ACTIVE flag and inode eviction stuff be put
-> inside xfs_log_mount_finish()? Seems to me like wrapping it aroudn
-> the outside is the wrong place to be putting it...
+On Fri, Aug 11, 2017 at 3:03 AM, Christoph Hellwig <hch@infradead.org> wrot=
+e:
+> On Mon, Aug 07, 2017 at 05:24:08PM -0700, Dan Williams wrote:
+>> Does sys_mmap() reject unknown flag values today? I'm either not
+>> looking in the right place or it's missing and we'll need some
+>> interface/mechanism to check if MAP_SYNC is honored.
+>
+> It doesn't seem to reject unknown flags.
+>
+> The lack of flags checking strikes back once more, sigh=E1=B9=AB.
 
-Yeah, I suppose we ought to shove everything into xfs_log_mount_finish
-instead of dumping it all here...
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+How about MAP_SYNC =3D=3D (MAP_SHARED|MAP_PRIVATE)? On older kernels that
+should get -EINVAL, and on new kernels it means SYNC+SHARED.
