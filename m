@@ -1,47 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:36345 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752730AbdHKNJ5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 09:09:57 -0400
-Date: Fri, 11 Aug 2017 06:09:57 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2 V7] xfs: Properly retry failed inode items in case of
- error during buffer writeback
-Message-ID: <20170811130957.GB27121@infradead.org>
-References: <20170724133431.11479-1-cmaiolino@redhat.com>
- <20170724133431.11479-3-cmaiolino@redhat.com>
+Received: from sender-pp-092.zoho.com ([135.84.80.237]:25456 "EHLO
+        sender-pp-092.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750915AbdHMVoN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Aug 2017 17:44:13 -0400
+From: ToddAndMargo <ToddAndMargo@zoho.com>
+Subject: RFE: xfsdump: better error message for existing dump file management
+Message-ID: <5c07cc97-c518-7052-d3c3-507d495373ea@zoho.com>
+Date: Sun, 13 Aug 2017 14:44:10 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170724133431.11479-3-cmaiolino@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
->  }
->  #endif
-> +
-> +static inline void
-> +xfs_clear_li_failed(
-> +	struct xfs_log_item	*lip)
-> +{
-> +	struct xfs_buf	*bp = lip->li_buf;
-> +
-> +	ASSERT(lip->li_flags & XFS_LI_IN_AIL);
-> +	lockdep_assert_held(&lip->li_ailp->xa_lock);
-> +
-> +	if (lip->li_flags & XFS_LI_FAILED) {
-> +		lip->li_flags &= ~XFS_LI_FAILED;
-> +		lip->li_buf = NULL;
-> +		xfs_buf_rele(bp);
+Hi All,
 
-This means we now nest pag->pag_buf_lock and bp->b_lock inside
-ailp->xa_lock.  I couldn't find any place where we take
-it in a different order, but it makes me feel a little nervous.
+When running this command twice in a row
 
-Also I think the set/clear failed helper might better be out of line
-instead of bloating the callers.
+# /usr/sbin/xfsdump -v verbose -M 1 -L 1 -l 0 -f 
+/lin-bak/2017-08-1121-39-07md126p2.XfsDump /
 
-Except for that the patch looks fine to me.
+It throws the following error message the second time the
+command is thrown.
+
+/usr/sbin/xfsdump:   stream 0 /lin-bak/2017-08-1121-39-07md126p2.XfsDump 
+ERROR (operator error or resource exhaustion)
+
+
+This error is caused by the second instance finding the backup
+file already existing.  (I presume "resource exhaustion" comes
+from the old tape back up days when you ran out of tapes.)
+
+And it takes a ton of time to figure out when it happens.
+Tears.
+
+
+Request for Enhancement (RFE):  Would you guys please consider
+a better error message that reflects what is actually happening.
+
+Perhaps:
+    "Destination file exists.  Overwrite (y/n)",   or
+    "Destination file exists.  Overwriting",       or
+    "Destination file exists.  Cowardly exiting.  Bummer dude!"
+
+Many thanks,
+-T
+
+
+
