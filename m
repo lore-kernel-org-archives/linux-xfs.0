@@ -1,84 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:50288 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750922AbdHMJYi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 13 Aug 2017 05:24:38 -0400
-Date: Sun, 13 Aug 2017 11:24:36 +0200
+Received: from bombadil.infradead.org ([65.50.211.133]:57439 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750880AbdHMOko (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Aug 2017 10:40:44 -0400
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dgu4K-0003I0-3G
+        for linux-xfs@vger.kernel.org; Sun, 13 Aug 2017 14:40:44 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
-        dma-to-storage, and swap
-Message-ID: <20170813092436.GB32112@lst.de>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com> <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com> <20170805095013.GC14930@lst.de> <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com> <20170811104429.GA13736@lst.de> <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com> <20170812073349.GA12679@lst.de> <CAPcyv4iKG=Zoo1VXu23YBc6uWDFV4QSS+eAm9MSOynx2FjTHbw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4iKG=Zoo1VXu23YBc6uWDFV4QSS+eAm9MSOynx2FjTHbw@mail.gmail.com>
+Subject: [PATCH v2] xfs: open code end_buffer_async_write in xfs_finish_page_writeback
+Date: Sun, 13 Aug 2017 16:40:40 +0200
+Message-Id: <20170813144040.11093-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Sat, Aug 12, 2017 at 12:19:50PM -0700, Dan Williams wrote:
-> The application does not need to know the storage address, it needs to
-> know that the storage address to file offset is fixed. With this
-> information it can make assumptions about the permanence of results it
-> gets from the kernel.
+Our loop in xfs_finish_page_writeback, which iterates over all buffer
+heads in a page and then calls end_buffer_async_write, which also
+iterates over all buffers in the page to check if any I/O is in flight
+is not only inefficient, but also potentially dangerous as
+end_buffer_async_write can cause the page and all buffers to be freed.
 
-Only if we clearly document that fact - and documenting the permanence
-is different from saying the block map won't change.
+Replace it with a single loop that does the work of end_buffer_async_write
+on a per-page basis.
 
-> For example get_user_pages() today makes no guarantees outside of
-> "page will not be freed",
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 68 ++++++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 45 insertions(+), 23 deletions(-)
 
-It also makes the extremely important gurantee that the page won't
-_move_ - e.g. that we won't do a memory migration for compaction or
-other reasons.  That's why for example RDMA can use to register
-memory and then we can later set up memory windows that point to this
-registration from userspace and implement userspace RDMA.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 6bf120bb1a17..845f77bf96a1 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -85,11 +85,11 @@ xfs_find_bdev_for_inode(
+  * associated buffer_heads, paying attention to the start and end offsets that
+  * we need to process on the page.
+  *
+- * Landmine Warning: bh->b_end_io() will call end_page_writeback() on the last
+- * buffer in the IO. Once it does this, it is unsafe to access the bufferhead or
+- * the page at all, as we may be racing with memory reclaim and it can free both
+- * the bufferhead chain and the page as it will see the page as clean and
+- * unused.
++ * Note that we open code the action in end_buffer_async_write here so that we
++ * only have to iterate over the buffers attached to the page once.  This is not
++ * only more efficient, but also ensures that we only calls end_page_writeback
++ * at the end of the iteration, and thus avoids the pitfall of having the page
++ * and buffers potentially freed after every call to end_buffer_async_write.
+  */
+ static void
+ xfs_finish_page_writeback(
+@@ -97,29 +97,44 @@ xfs_finish_page_writeback(
+ 	struct bio_vec		*bvec,
+ 	int			error)
+ {
+-	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
+-	struct buffer_head	*head, *bh, *next;
++	struct buffer_head	*head = page_buffers(bvec->bv_page), *bh = head;
++	bool			busy = false;
+ 	unsigned int		off = 0;
+-	unsigned int		bsize;
++	unsigned long		flags;
+ 
+ 	ASSERT(bvec->bv_offset < PAGE_SIZE);
+ 	ASSERT((bvec->bv_offset & (i_blocksize(inode) - 1)) == 0);
+-	ASSERT(end < PAGE_SIZE);
++	ASSERT(bvec->bv_offset + bvec->bv_len <= PAGE_SIZE);
+ 	ASSERT((bvec->bv_len & (i_blocksize(inode) - 1)) == 0);
+ 
+-	bh = head = page_buffers(bvec->bv_page);
+-
+-	bsize = bh->b_size;
++	local_irq_save(flags);
++	bit_spin_lock(BH_Uptodate_Lock, &head->b_state);
+ 	do {
+-		if (off > end)
+-			break;
+-		next = bh->b_this_page;
+-		if (off < bvec->bv_offset)
+-			goto next_bh;
+-		bh->b_end_io(bh, !error);
+-next_bh:
+-		off += bsize;
+-	} while ((bh = next) != head);
++		if (off >= bvec->bv_offset &&
++		    off < bvec->bv_offset + bvec->bv_len) {
++			ASSERT(buffer_async_write(bh));
++			ASSERT(bh->b_end_io == end_buffer_async_write);
++
++			if (error) {
++				mark_buffer_write_io_error(bh);
++				clear_buffer_uptodate(bh);
++				SetPageError(bvec->bv_page);
++			} else {
++				set_buffer_uptodate(bh);
++			}
++			clear_buffer_async_write(bh);
++			unlock_buffer(bh);
++		} else if (buffer_async_write(bh)) {
++			ASSERT(buffer_locked(bh));
++			busy = true;
++		}
++		off += bh->b_size;
++	} while ((bh = bh->b_this_page) != head);
++	bit_spin_unlock(BH_Uptodate_Lock, &head->b_state);
++	local_irq_restore(flags);
++
++	if (!busy)
++		end_page_writeback(bvec->bv_page);
+ }
+ 
+ /*
+@@ -133,8 +148,10 @@ xfs_destroy_ioend(
+ 	int			error)
+ {
+ 	struct inode		*inode = ioend->io_inode;
+-	struct bio		*last = ioend->io_bio;
+-	struct bio		*bio, *next;
++	struct bio		*bio = &ioend->io_inline_bio;
++	struct bio		*last = ioend->io_bio, *next;
++	u64			start = bio->bi_iter.bi_sector;
++	bool			quiet = bio_flagged(bio, BIO_QUIET);
+ 
+ 	for (bio = &ioend->io_inline_bio; bio; bio = next) {
+ 		struct bio_vec	*bvec;
+@@ -155,6 +172,11 @@ xfs_destroy_ioend(
+ 
+ 		bio_put(bio);
+ 	}
++
++	if (unlikely(error && !quiet)) {
++		xfs_err_ratelimited(XFS_I(inode)->i_mount,
++			"writeback error on sector %llu", start);
++	}
+ }
+ 
+ /*
+-- 
+2.11.0
 
-> but with immutable files and dax you now
-> have a mechanism for userspace to coordinate direct access to storage
-> addresses. Those raw storage addresses need not be exposed to the
-> application, as you say it doesn't need to know that detail. MAP_SYNC
-> does not fully satisfy this case because it requires agents that can
-> generate MMU faults to coordinate with the filesystem.
-
-The file system is always in the fault path, can you explain what other
-agents you are talking about?
-
-> All I know is that SMB Direct for persistent memory seems like a
-> potential consumer. I know they're not going to use a userspace
-> filesystem or put an SMB server in the kernel.
-
-Last I talked to the Samba folks they didn't expect a userspace
-SMB direct implementation to work anyway due to the fact that
-libibverbs memory registrations interact badly with their fork()ing
-daemon model.  That being said during the recent submission of the
-RDMA client code some comments were made about userspace versions of
-it, so I'm not sure if that opinion has changed in one way or another.
-
-Thay being said I think we absolutely should support RDMA memory
-registrations for DAX mappings.  I'm just not sure how S_IOMAP_IMMUTABLE
-helps with that.  We'll want a MAP_SYNC | MAP_POPULATE to make sure
-all the blocks are polulated and all ptes are set up.  Second we need
-to make sure get_user_page works, which for now means we'll need a
-struct page mapping for the region (which will be really annoying
-for PCIe mappings, like the upcoming NVMe persistent memory region),
-and we need to gurantee that the extent mapping won't change while
-the get_user_pages holds the pages inside it.  I think that is true
-due to side effects even with the current DAX code, but we'll need to
-make it explicit.  And maybe that's where we need to converge - 
-"sealing" the extent map makes sense as such a temporary measure
-that is not persisted on disk, which automatically gets released
-when the holding process exits, because we sort of already do this
-implicitly.  It might also make sense to have explicitl breakable
-seals similar to what I do for the pNFS blocks kernel server, as
-any userspace RDMA file server would also need those semantics.
-
-Last but not least we have any interesting additional case for modern
-Mellanox hardware - On Demand Paging where we don't actually do a
-get_user_pages but the hardware implements SVM and thus gets fed
-virtual addresses directly.  My head spins when talking about the
-implications for DAX mappings on that, so I'm just throwing that in
-for now instead of trying to come up with a solution.
