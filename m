@@ -1,78 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52016 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751011AbdHMOmZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Aug 2017 10:42:25 -0400
-Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dgu5x-0003XK-2A
-        for linux-xfs@vger.kernel.org; Sun, 13 Aug 2017 14:42:25 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/3] xfs: rename xfs_defer_join to xfs_defer_join_inode
-Date: Sun, 13 Aug 2017 16:42:15 +0200
-Message-Id: <20170813144216.11192-3-hch@lst.de>
-In-Reply-To: <20170813144216.11192-1-hch@lst.de>
-References: <20170813144216.11192-1-hch@lst.de>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:38597 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751000AbdHMRIo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Aug 2017 13:08:44 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170813092556.GA19019@infradead.org>
+References: <20170727131245.28279-1-jack@suse.cz> <x49zibq3rb0.fsf@segfault.boston.devel.redhat.com>
+ <20170727215713.GA22000@linux.intel.com> <CALCETrVzxrQ76BXEfo4kcRFyQmxbrMwCLE17yPyTJzz0tUs+Dg@mail.gmail.com>
+ <20170728093821.GB29433@quack2.suse.cz> <20170801110241.GE6742@infradead.org>
+ <20170801112603.GG4215@quack2.suse.cz> <CAPcyv4hdOsuA6cqRCnOZMLMXvycwZevg06xOVZz3u0kupm2Drw@mail.gmail.com>
+ <20170811100327.GD7064@infradead.org> <CAPcyv4hgqh8tHeWDNRnJnvwDh7hiFU8+3O0VWAHFQOEvPna11Q@mail.gmail.com>
+ <20170813092556.GA19019@infradead.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Sun, 13 Aug 2017 10:08:41 -0700
+Message-ID: <CAA9_cmd=fVP5n=Z=QThZEbCnWptNv2Amv6W7ujGG+O7VtXPs6g@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/7] dax, ext4: Synchronous page faults
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-nvdimm <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, Andy Lutomirski <luto@kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c  | 2 +-
- fs/xfs/libxfs/xfs_defer.c | 4 ++--
- fs/xfs/libxfs/xfs_defer.h | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+On Sun, Aug 13, 2017 at 2:25 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Sat, Aug 12, 2017 at 07:44:14PM -0700, Dan Williams wrote:
+>> How about MAP_SYNC == (MAP_SHARED|MAP_PRIVATE)? On older kernels that
+>> should get -EINVAL, and on new kernels it means SYNC+SHARED.
+>
+> Cute trick, but I'd hate to waster it just for our little flag.
+>
+> How about:
+>
+> #define __MAP_VALIDATE          MAP_SHARED|MAP_PRIVATE
+> #define MAP_SYNC                0x??? | __MAP_VALIDATE
+>
+> so that we can reuse that trick for any new flag?
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index c09c16b1ad3b..24eba36ef818 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -6452,7 +6452,7 @@ __xfs_bmap_add(
- 	bi->bi_whichfork = whichfork;
- 	bi->bi_bmap = *bmap;
- 
--	error = xfs_defer_join(dfops, bi->bi_owner);
-+	error = xfs_defer_join_inode(dfops, bi->bi_owner);
- 	if (error) {
- 		kmem_free(bi);
- 		return error;
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 87169bf56a09..043844f00f6e 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -281,7 +281,7 @@ xfs_defer_has_unfinished_work(
-  * to xfs_defer_finish().
-  */
- int
--xfs_defer_join(
-+xfs_defer_join_inode(
- 	struct xfs_defer_ops		*dop,
- 	struct xfs_inode		*ip)
- {
-@@ -324,7 +324,7 @@ xfs_defer_finish(
- 
- 	trace_xfs_defer_finish((*tp)->t_mountp, dop);
- 
--	xfs_defer_join(dop, ip);
-+	xfs_defer_join_inode(dop, ip);
- 
- 	/* Until we run out of pending work to finish... */
- 	while (xfs_defer_has_unfinished_work(dop)) {
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index f6e93ef0bffe..4632c798ea2b 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -77,7 +77,7 @@ int xfs_defer_finish(struct xfs_trans **tp, struct xfs_defer_ops *dop,
- void xfs_defer_cancel(struct xfs_defer_ops *dop);
- void xfs_defer_init(struct xfs_defer_ops *dop, xfs_fsblock_t *fbp);
- bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
--int xfs_defer_join(struct xfs_defer_ops *dop, struct xfs_inode *ip);
-+int xfs_defer_join_inode(struct xfs_defer_ops *dop, struct xfs_inode *ip);
- 
- /* Description of a deferred type. */
- struct xfs_defer_op_type {
--- 
-2.11.0
-
+Yes, even better. I think that effectively kicks the need for mmap3()
+down the road a bit.
