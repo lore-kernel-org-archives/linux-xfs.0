@@ -1,72 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f176.google.com ([209.85.128.176]:38721 "EHLO
-        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752027AbdHPJZb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 05:25:31 -0400
-Received: by mail-wr0-f176.google.com with SMTP id m57so10788364wrm.5
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 02:25:30 -0700 (PDT)
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:20406 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751202AbdHMXqN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Aug 2017 19:46:13 -0400
+Date: Mon, 14 Aug 2017 09:46:08 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
+ dma-to-storage, and swap
+Message-ID: <20170813234608.GZ21024@dastard>
+References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com>
+ <20170805095013.GC14930@lst.de>
+ <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com>
+ <20170811104429.GA13736@lst.de>
+ <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com>
+ <20170812073349.GA12679@lst.de>
+ <CAPcyv4iKG=Zoo1VXu23YBc6uWDFV4QSS+eAm9MSOynx2FjTHbw@mail.gmail.com>
+ <20170813092436.GB32112@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <37b25b0f-6d8b-eed5-a16a-46e4ed2b6cd0@sandeen.net>
-References: <20170811123037.15962-1-jtulak@redhat.com> <20170811123037.15962-6-jtulak@redhat.com>
- <20170814230722.GI4796@magnolia> <CACj3i72vYNfPgPZkWn_UeL1fGmQv2YVTbe2=BkJxxevRd2+74w@mail.gmail.com>
- <37b25b0f-6d8b-eed5-a16a-46e4ed2b6cd0@sandeen.net>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Wed, 16 Aug 2017 11:25:09 +0200
-Message-ID: <CACj3i71-dUpnQmUeem_hqSn5fcD9-5rf9UAYEwzO9odhU91HHw@mail.gmail.com>
-Subject: Re: [PATCH 5/6] mkfs: move getnum within the file
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170813092436.GB32112@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dan Williams <dan.j.williams@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>
 
-On Tue, Aug 15, 2017 at 11:09 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> On 8/15/17 5:14 AM, Jan Tulak wrote:
->> On Tue, Aug 15, 2017 at 1:07 AM, Darrick J. Wong
->> <darrick.wong@oracle.com> wrote:
->>> On Fri, Aug 11, 2017 at 02:30:36PM +0200, Jan Tulak wrote:
->>>> Move getnum, check_opt and illegal_option within the file. We have to do
->>>> this to avoid dependency issues with the following patch. There is no
->>>> other change in this patch, just cut&paste of these functions.
->>>>
->>>> Signed-off-by: Jan Tulak <jtulak@redhat.com>
->>>> ---
->>>>  mkfs/xfs_mkfs.c | 236 ++++++++++++++++++++++++++++----------------------------
->>>>  1 file changed, 118 insertions(+), 118 deletions(-)
->>>>
->>>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
->>>> index e3f7d345..3e7ba5f0 100644
->>>> --- a/mkfs/xfs_mkfs.c
->>>> +++ b/mkfs/xfs_mkfs.c
->>>> @@ -813,6 +813,124 @@ get_conf_raw_safe(const int opt, const int subopt)
->>>>       return str;
->>>>  }
->>>>
->>>> +static __attribute__((noreturn)) void
->>>> +illegal_option(
->>>
->>> How about declaring the functions at the top and leaving the definitions
->>> where they are?
->>
->> If I remember, Eric thought the opposite. :-)
->
-> I don't remember, but at this point I'm ok with whatever, this part
-> just isn't that important.
->
+On Sun, Aug 13, 2017 at 11:24:36AM +0200, Christoph Hellwig wrote:
+> And maybe that's where we need to converge - 
+> "sealing" the extent map makes sense as such a temporary measure
+> that is not persisted on disk, which automatically gets released
+> when the holding process exits, because we sort of already do this
+> implicitly.
 
-Just for the record, from the previous run:
+That seems reasonable to me. Personally I don't need persistent
+state, and I'd only intended persistence to be so that we didn't get
+arbitrary processes whacking holes in the file when the DAX app
+wasn't running that would then cause for userspace data sync. Seeing
+as the interface is morphing away from a "fill holes and persist"
+interface to just a "seal the existing map" interface, it'll be up
+to the app/library to prep check file layout for sanity every time
+it is sealed.
 
-On Thu, Jul 27, 2017 at 1:27 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> On 7/20/17 4:29 AM, Jan Tulak wrote:
->> Move getnum, check_opt and illegal_option within the file. We have to do
->> this to avoid dependency issues with the following patch. There is no
->> other change in this patch, just cut&paste of these functions.
->
-> Yeah, nice to have these up at the top of the file anyway.
->
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-:-)
+> It might also make sense to have explicitl breakable
+> seals similar to what I do for the pNFS blocks kernel server, as
+> any userspace RDMA file server would also need those semantics.
 
-Jan
+How would that work? IIUC, we'd need userspace to take out a file
+lease so that it gets notified when the seal is going to be broken
+by the filesystem via the break_layouts() interface, and the break
+then blocks until the app releases the lease? So the seal lifetime
+is bounded by the lease?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
