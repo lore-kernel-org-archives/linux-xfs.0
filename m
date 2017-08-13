@@ -1,39 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f172.google.com ([209.85.161.172]:33911 "EHLO
-        mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752216AbdHMCoP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Aug 2017 22:44:15 -0400
-Received: by mail-yw0-f172.google.com with SMTP id s143so40095419ywg.1
-        for <linux-xfs@vger.kernel.org>; Sat, 12 Aug 2017 19:44:15 -0700 (PDT)
+Received: from verein.lst.de ([213.95.11.211]:50288 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750922AbdHMJYi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 13 Aug 2017 05:24:38 -0400
+Date: Sun, 13 Aug 2017 11:24:36 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
+        dma-to-storage, and swap
+Message-ID: <20170813092436.GB32112@lst.de>
+References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com> <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com> <20170805095013.GC14930@lst.de> <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com> <20170811104429.GA13736@lst.de> <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com> <20170812073349.GA12679@lst.de> <CAPcyv4iKG=Zoo1VXu23YBc6uWDFV4QSS+eAm9MSOynx2FjTHbw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170811100327.GD7064@infradead.org>
-References: <20170727131245.28279-1-jack@suse.cz> <x49zibq3rb0.fsf@segfault.boston.devel.redhat.com>
- <20170727215713.GA22000@linux.intel.com> <CALCETrVzxrQ76BXEfo4kcRFyQmxbrMwCLE17yPyTJzz0tUs+Dg@mail.gmail.com>
- <20170728093821.GB29433@quack2.suse.cz> <20170801110241.GE6742@infradead.org>
- <20170801112603.GG4215@quack2.suse.cz> <CAPcyv4hdOsuA6cqRCnOZMLMXvycwZevg06xOVZz3u0kupm2Drw@mail.gmail.com>
- <20170811100327.GD7064@infradead.org>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 12 Aug 2017 19:44:14 -0700
-Message-ID: <CAPcyv4hgqh8tHeWDNRnJnvwDh7hiFU8+3O0VWAHFQOEvPna11Q@mail.gmail.com>
-Subject: Re: [RFC PATCH 0/7] dax, ext4: Synchronous page faults
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4iKG=Zoo1VXu23YBc6uWDFV4QSS+eAm9MSOynx2FjTHbw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>
 
-On Fri, Aug 11, 2017 at 3:03 AM, Christoph Hellwig <hch@infradead.org> wrot=
-e:
-> On Mon, Aug 07, 2017 at 05:24:08PM -0700, Dan Williams wrote:
->> Does sys_mmap() reject unknown flag values today? I'm either not
->> looking in the right place or it's missing and we'll need some
->> interface/mechanism to check if MAP_SYNC is honored.
->
-> It doesn't seem to reject unknown flags.
->
-> The lack of flags checking strikes back once more, sigh=E1=B9=AB.
+On Sat, Aug 12, 2017 at 12:19:50PM -0700, Dan Williams wrote:
+> The application does not need to know the storage address, it needs to
+> know that the storage address to file offset is fixed. With this
+> information it can make assumptions about the permanence of results it
+> gets from the kernel.
 
-How about MAP_SYNC =3D=3D (MAP_SHARED|MAP_PRIVATE)? On older kernels that
-should get -EINVAL, and on new kernels it means SYNC+SHARED.
+Only if we clearly document that fact - and documenting the permanence
+is different from saying the block map won't change.
+
+> For example get_user_pages() today makes no guarantees outside of
+> "page will not be freed",
+
+It also makes the extremely important gurantee that the page won't
+_move_ - e.g. that we won't do a memory migration for compaction or
+other reasons.  That's why for example RDMA can use to register
+memory and then we can later set up memory windows that point to this
+registration from userspace and implement userspace RDMA.
+
+> but with immutable files and dax you now
+> have a mechanism for userspace to coordinate direct access to storage
+> addresses. Those raw storage addresses need not be exposed to the
+> application, as you say it doesn't need to know that detail. MAP_SYNC
+> does not fully satisfy this case because it requires agents that can
+> generate MMU faults to coordinate with the filesystem.
+
+The file system is always in the fault path, can you explain what other
+agents you are talking about?
+
+> All I know is that SMB Direct for persistent memory seems like a
+> potential consumer. I know they're not going to use a userspace
+> filesystem or put an SMB server in the kernel.
+
+Last I talked to the Samba folks they didn't expect a userspace
+SMB direct implementation to work anyway due to the fact that
+libibverbs memory registrations interact badly with their fork()ing
+daemon model.  That being said during the recent submission of the
+RDMA client code some comments were made about userspace versions of
+it, so I'm not sure if that opinion has changed in one way or another.
+
+Thay being said I think we absolutely should support RDMA memory
+registrations for DAX mappings.  I'm just not sure how S_IOMAP_IMMUTABLE
+helps with that.  We'll want a MAP_SYNC | MAP_POPULATE to make sure
+all the blocks are polulated and all ptes are set up.  Second we need
+to make sure get_user_page works, which for now means we'll need a
+struct page mapping for the region (which will be really annoying
+for PCIe mappings, like the upcoming NVMe persistent memory region),
+and we need to gurantee that the extent mapping won't change while
+the get_user_pages holds the pages inside it.  I think that is true
+due to side effects even with the current DAX code, but we'll need to
+make it explicit.  And maybe that's where we need to converge - 
+"sealing" the extent map makes sense as such a temporary measure
+that is not persisted on disk, which automatically gets released
+when the holding process exits, because we sort of already do this
+implicitly.  It might also make sense to have explicitl breakable
+seals similar to what I do for the pNFS blocks kernel server, as
+any userspace RDMA file server would also need those semantics.
+
+Last but not least we have any interesting additional case for modern
+Mellanox hardware - On Demand Paging where we don't actually do a
+get_user_pages but the hardware implements SVM and thus gets fed
+virtual addresses directly.  My head spins when talking about the
+implications for DAX mappings on that, so I'm just throwing that in
+for now instead of trying to come up with a solution.
