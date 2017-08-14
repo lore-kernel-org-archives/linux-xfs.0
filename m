@@ -1,166 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:33522 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751471AbdHNISP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 04:18:15 -0400
-Received: by mail-qk0-f196.google.com with SMTP id d145so8755640qkc.0
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 01:18:15 -0700 (PDT)
-Date: Mon, 14 Aug 2017 05:18:10 -0300
-From: Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?=
-        <ernesto.mnd.fernandez@gmail.com>
-Subject: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
-Message-ID: <20170814081806.GA3924@debian.home>
+Received: from mail-yw0-f181.google.com ([209.85.161.181]:35960 "EHLO
+        mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753410AbdHNQEA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 12:04:00 -0400
+Received: by mail-yw0-f181.google.com with SMTP id u207so57464534ywc.3
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 09:04:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <ccf82f19-7693-25da-eaa6-a654830ca81e@netapp.com>
+References: <20170727131245.28279-1-jack@suse.cz> <x49zibq3rb0.fsf@segfault.boston.devel.redhat.com>
+ <20170727215713.GA22000@linux.intel.com> <CALCETrVzxrQ76BXEfo4kcRFyQmxbrMwCLE17yPyTJzz0tUs+Dg@mail.gmail.com>
+ <20170728093821.GB29433@quack2.suse.cz> <20170801110241.GE6742@infradead.org>
+ <20170801112603.GG4215@quack2.suse.cz> <CAPcyv4hdOsuA6cqRCnOZMLMXvycwZevg06xOVZz3u0kupm2Drw@mail.gmail.com>
+ <20170811100327.GD7064@infradead.org> <CAPcyv4hgqh8tHeWDNRnJnvwDh7hiFU8+3O0VWAHFQOEvPna11Q@mail.gmail.com>
+ <20170813092556.GA19019@infradead.org> <ccf82f19-7693-25da-eaa6-a654830ca81e@netapp.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 14 Aug 2017 09:03:59 -0700
+Message-ID: <CAPcyv4jWW5EH8KrGWe-9oAT7RvFryh1ci6CcGeDb-zcOS9QMxw@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/7] dax, ext4: Synchronous page faults
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>, Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?= <ernesto.mnd.fernandez@gmail.com>
+To: Boaz Harrosh <boazh@netapp.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, linux-nvdimm <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Amit Golander <amitg@netapp.com>
 
-When changing a file's ACL mask, xfs_set_acl() will first set the group
-bits of i_mode to the value of the mask, and only then set the actual
-extended attribute representing the new ACL.
+On Mon, Aug 14, 2017 at 7:04 AM, Boaz Harrosh <boazh@netapp.com> wrote:
+>
+> Thank you Jan, I'm patiently waiting for this MAP_SYNC flag since I asked for
+> it in 2014. I'm so glad its time is finally do.
+>
+> Thank you for working on this. Please CC me on future patches.
+> (note the new Netapp email)
+>
+> On 13/08/17 12:25, Christoph Hellwig wrote:
+>> On Sat, Aug 12, 2017 at 07:44:14PM -0700, Dan Williams wrote:
+>>> How about MAP_SYNC == (MAP_SHARED|MAP_PRIVATE)? On older kernels that
+>>> should get -EINVAL, and on new kernels it means SYNC+SHARED.
+>>
+>> Cute trick, but I'd hate to waster it just for our little flag.
+>>
+>> How about:
+>>
+>> #define __MAP_VALIDATE                MAP_SHARED|MAP_PRIVATE
+>> #define MAP_SYNC              0x??? | __MAP_VALIDATE
+>>
+>> so that we can reuse that trick for any new flag?
+>>
+>
+> YES! And please create a mask for all new flags and in validation
+> code if ((m_flags & __MAP_VALIDATE) == __MAP_VALIDATE) then you
+> want that (m_flags & __MAP_NEWFLAGS) does not come empty, this
+> way you actually preserve the old check that SHARED and PRIVATE
+> do not co exist.
+>
+> Few Comments on this new MAP_ flag
+>
+> 0] The name at least needs to be MAP_MSYNC because only meta-data is
+>     synced not the data pointed to. That is the responsibility of the app
+>
+> 1] This flag you have named MAP_SYNC but it is very much related to
+>    dax and the ability for user-mode to "flush" the data pointed by this
+>    now "synced" meta data.
+>    For example in ext4, this flag set on an inode that is *not* IS_DAX
+>    should fail the mmap. Because there is no point of synced meta if the
+>    data is actually in page-cache and we know for sure it was not yet synced,
+>    And there is no way for user-mode to directly "sync" the data as well.
+>
+> 2] The code should be constructed that the default check for the MAP_SYNC
+>    should fail, and only Hopped in FSs are allowed.
+>    (So not to modify all Implementations of file_operations->mmap() )
+>
+> 3] /dev/pmem could start serving DAX pages in mmap, if asked for MAP_MSYNC
+>    (which is also an API that says "I know I need to cl_flush". See 1. )
+>
+> 4] Once we have this flag. And properly implemented at least in one FS
+>    and optionally in /dev/pmemX we no longer have any justification for
+>    /dev/daxX and it can die a slow and happy death.
 
-If the second part fails (due to lack of space, for example) and the
-file had no ACL attribute to begin with, the system will from now on
-assume that the mask permission bits are actual group permission bits,
-potentially granting access to the wrong users.
+I'm all for replacing /dev/dax with filesystem equivalent
+functionality, but I don't think MAP_SYNC gets us fully there. That's
+what the MAP_DIRECT proposal [1] is meant to address.
 
-To prevent this, perform the mode update and the ACL update as part of
-the same transaction, and restore the original mode to the vfs inode in
-case of failure. This requires a change in how extended attributes are
-deleted: commit the transaction even if there was no attribute to
-remove, to log the standard inode fields.
-
-Signed-off-by: Ernesto A. Fernández <ernesto.mnd.fernandez@gmail.com>
----
-This issue is covered by generic/449 in xfstests. Several other filesystems
-are affected by this, some of them have already applied patches:
-  - 397e434 ext4: preserve i_mode if __ext4_set_acl() fails
-  - f070e5a jfs: preserve i_mode if __jfs_set_acl() fails
-  - fcea8ae reiserfs: preserve i_mode if __reiserfs_set_acl() fails
-  - fe26569 ext2: preserve i_mode if ext2_set_acl() fails
-The test won't exactly pass after this patch is applied. It will fail
-differently, this time claiming that the filesystem is inconsistent. This
-probably has something to do with setting too many extended attributes, as
-it goes away if you change the attribute size in the test from 1k to 64k.
-
- fs/xfs/libxfs/xfs_attr.c | 13 +++++++++++--
- fs/xfs/xfs_acl.c         | 39 ++++++++++++++-------------------------
- 2 files changed, 25 insertions(+), 27 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index de7b9bd..c3193e1 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -395,6 +395,7 @@ xfs_attr_remove(
- 	struct xfs_defer_ops	dfops;
- 	xfs_fsblock_t		firstblock;
- 	int			error;
-+	int			noattr = 0;
- 
- 	XFS_STATS_INC(mp, xs_attr_remove);
- 
-@@ -438,7 +439,12 @@ xfs_attr_remove(
- 	xfs_trans_ijoin(args.trans, dp, 0);
- 
- 	if (!xfs_inode_hasattr(dp)) {
--		error = -ENOATTR;
-+		/*
-+		 * Commit even if there is no attr to remove, because when
-+		 * setting ACLs the caller may be changing the mode in the
-+		 * same transaction.
-+		 */
-+		noattr = 1;
- 	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
- 		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
- 		error = xfs_attr_shortform_remove(&args);
-@@ -458,7 +464,7 @@ xfs_attr_remove(
- 	if (mp->m_flags & XFS_MOUNT_WSYNC)
- 		xfs_trans_set_sync(args.trans);
- 
--	if ((flags & ATTR_KERNOTIME) == 0)
-+	if ((flags & ATTR_KERNOTIME) == 0 && !noattr)
- 		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
- 
- 	/*
-@@ -468,6 +474,9 @@ xfs_attr_remove(
- 	error = xfs_trans_commit(args.trans);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 
-+	if (!error && noattr)
-+		error = -ENOATTR;
-+
- 	return error;
- 
- out:
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 7034e17..1fe4363 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -226,28 +226,13 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
- 	return error;
- }
- 
--static int
--xfs_set_mode(struct inode *inode, umode_t mode)
--{
--	int error = 0;
--
--	if (mode != inode->i_mode) {
--		struct iattr iattr;
--
--		iattr.ia_valid = ATTR_MODE | ATTR_CTIME;
--		iattr.ia_mode = mode;
--		iattr.ia_ctime = current_time(inode);
--
--		error = xfs_setattr_nonsize(XFS_I(inode), &iattr, XFS_ATTR_NOACL);
--	}
--
--	return error;
--}
--
- int
- xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
- {
- 	int error = 0;
-+	int mode_changed = 0;
-+	umode_t old_mode = inode->i_mode;
-+	struct timespec old_ctime = inode->i_ctime;
- 
- 	if (!acl)
- 		goto set_acl;
-@@ -257,16 +242,20 @@ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
- 		return error;
- 
- 	if (type == ACL_TYPE_ACCESS) {
--		umode_t mode;
--
--		error = posix_acl_update_mode(inode, &mode, &acl);
--		if (error)
--			return error;
--		error = xfs_set_mode(inode, mode);
-+		error = posix_acl_update_mode(inode, &inode->i_mode, &acl);
- 		if (error)
- 			return error;
-+		inode->i_ctime = current_time(inode);
-+		XFS_STATS_INC(XFS_I(inode)->i_mount, xs_ig_attrchg);
-+		mode_changed = 1;
- 	}
- 
-  set_acl:
--	return __xfs_set_acl(inode, acl, type);
-+	error = __xfs_set_acl(inode, acl, type);
-+	if (error && mode_changed) {
-+		inode->i_mode = old_mode;
-+		inode->i_ctime = old_ctime;
-+		XFS_STATS_DEC(XFS_I(inode)->i_mount, xs_ig_attrchg);
-+	}
-+	return error;
- }
--- 
-2.1.4
-
+[1]: https://lkml.org/lkml/2017/8/13/160
