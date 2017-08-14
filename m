@@ -1,184 +1,516 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41820 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751565AbdHOXHf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 Aug 2017 19:07:35 -0400
-Subject: Re: [PATCH 1/6 v2] mkfs: Save raw user input field to the opts struct
-References: <20170811123037.15962-1-jtulak@redhat.com>
- <20170815150812.32237-1-jtulak@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <806d4e0b-587c-4c12-db45-3942b4ab0753@sandeen.net>
-Date: Tue, 15 Aug 2017 18:07:33 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:22521 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752643AbdHNXVj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 19:21:39 -0400
+Date: Mon, 14 Aug 2017 16:21:33 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/6] mkfs: save user input values into opts
+Message-ID: <20170814232133.GK4796@magnolia>
+References: <20170811123058.16061-1-jtulak@redhat.com>
+ <20170811123058.16061-2-jtulak@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20170815150812.32237-1-jtulak@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170811123058.16061-2-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 8/15/17 10:08 AM, Jan Tulak wrote:
-> Save exactly what the user gave us for every option.  This way, we will
-> never lose the information if we need it to print back an issue.
-> (Just add the infrastructure now, used in the next patches.)
+On Fri, Aug 11, 2017 at 02:30:53PM +0200, Jan Tulak wrote:
+> Save the parsed values from users into the opts table. This will ensure
+> that the user values gets there and are validated, but we are not yet
+> using them for anything - the usage makes a lot of changes through the
+> code, so it is better if that is separated into smaller chunks.
 > 
 > Signed-off-by: Jan Tulak <jtulak@redhat.com>
-
-Sorry for not getting to the V1 review, catching up from a week off.
-
 > ---
-> CHANGE:
-> * test for NULL before strdup in get_conf_raw
-> * Translation and indentation for fprints
-> * add set_conf_raw_safe
+> Edit:
+>  * sectorizes fix
+>  * remove collateral assignments that are now covered within parse
+>    function
+>  * remove duplicit assignments into opts within one option
+>  * fix issue with proj(16|32)bit
+>  * updated description
 > ---
->  mkfs/xfs_mkfs.c | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 88 insertions(+)
+>  mkfs/xfs_mkfs.c | 239 +++++++++++++++++++++++++++++++++-----------------------
+>  1 file changed, 142 insertions(+), 97 deletions(-)
 > 
 > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 7bb6408f..adfbd376 100644
+> index 61ef09e8..12ffa715 100644
 > --- a/mkfs/xfs_mkfs.c
 > +++ b/mkfs/xfs_mkfs.c
-> @@ -107,6 +107,11 @@ unsigned int		sectorsize;
->   *     sets what is used with simple specifying the subopt (-d file).
->   *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
->   *     value in any case.
-> + *
-> + *   raw_input INTERNAL
-> + *     Filled raw string from the user, so we never lose that information e.g.
-> + *     to print it back in case of an issue.
-> + *
->   */
->  struct opt_params {
->  	const char	name;
-> @@ -122,6 +127,7 @@ struct opt_params {
->  		long long	minval;
->  		long long	maxval;
->  		long long	defaultval;
-> +		char		*raw_input;
->  	}		subopt_params[MAX_SUBOPTS];
->  };
+> @@ -1826,14 +1826,15 @@ main(
 >  
-> @@ -730,6 +736,88 @@ struct opt_params mopts = {
->  #define WHACK_SIZE (128 * 1024)
+>  				switch (getsubopt(&p, subopts, &value)) {
+>  				case B_LOG:
+> -					blocklog = getnum(value, &opts[OPT_B],
+> -								B_LOG);
+> +					blocklog = parse_conf_val(OPT_B, B_LOG,
+> +								  value);
+
+Eww, look at those arguments jammed up against the RHS of the screen.
+Now I really wish these were separate functions (or anything that
+reduces the amount of indentation, really...)
+
+But rebashing your whole mkfs series to fix minor whitespace problems is
+probably a PITA, so I'll defer to Eric on this one.  Personally I'd just
+throw an extra patch on the end to do it. :)
+
+Otherwise, this looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+>  					blocksize = 1 << blocklog;
+>  					blflag = 1;
+>  					break;
+>  				case B_SIZE:
+> -					blocksize = getnum(value, &opts[OPT_B],
+> -							   B_SIZE);
+> +					blocksize = parse_conf_val(OPT_B,
+> +								   B_SIZE,
+> +								   value);
+>  					blocklog = libxfs_highbit32(blocksize);
+>  					bsflag = 1;
+>  					break;
+> @@ -1851,80 +1852,92 @@ main(
 >  
->  /*
-> + * Return 0 on success, -ENOMEM if it could not allocate enough memory for
-> + * the string to be saved.
-> + */
-> +static int
-> +set_conf_raw(struct opt_params *opt, const int subopt, const char *value)
-> +{
-> +	if (subopt < 0 || subopt >= MAX_SUBOPTS) {
-> +		fprintf(stderr,
-> +			_("This is a bug: set_conf_raw called with invalid "
-> +			  "opt/subopt: %c/%d\n"),
-
-Usually best to just out-dent these long strings to column zero:
-
-_("This is a bug: set_conf_raw called with invalid opt/subopt: %c/%d\n"),
-
-and that makes them super grep-able.  Other places in xfsprogs do that.
-
-> +			opt->name, subopt);
-> +		return -EINVAL;
-> +	}
-> +	if (value == NULL) {
-> +		if (opt->subopt_params[subopt].raw_input != NULL)
-> +			free(opt->subopt_params[subopt].raw_input);
-> +		opt->subopt_params[subopt].raw_input = NULL;
-> +	} else {
-> +		opt->subopt_params[subopt].raw_input = strdup(value);
-> +		if (opt->subopt_params[subopt].raw_input == NULL)
-> +			return -ENOMEM;
-> +	}
-> +	return 0;
-> +}
-> +
-> +/*
-> + * Same as set_conf_raw(), except if any error occurs, return NULL.
-> + */
-
-Hm, that's not what this void function does.
-
-> +static void
-> +set_conf_raw_safe(struct opt_params *opt, const int subopt, const char *value)
-> +{
-> +	if (set_conf_raw(opt, subopt, value) != 0) {
-> +		exit(1);
-> +	}
-
-So on -ENOMEM error, we get a silent exit()?
-
-Also, not sure about the point of the wrapper.  Nothing in this series
-calls set_conf_raw() directly - do later patches use it?  If not,
-just lose the wrapper, I'd say, and roll up the behavior in set_conf_raw.
-
-> +}
-> +
-> +/*
-> + * Return 0 on success, -ENOMEM if it could not allocate enough memory for
-> + * the string to be saved into the out pointer.
-
-..., or -EINVAL if ___?  I guess this is the downside of excessive commenting ;)
-
-> + */
-> +static int
-> +get_conf_raw(const struct opt_params *opt, const int subopt, char **out)
-> +{
-> +	if (subopt < 0 || subopt >= MAX_SUBOPTS) {
-> +		fprintf(stderr,
-> +			_("This is a bug: get_conf_raw called with invalid "
-> +			  "opt/subopt: %c/%d\n"),
-
-Again I'd outdent this error string.
-
-> +			opt->name, subopt);
-> +		return -EINVAL;
-> +	}
-> +
-> +	if (opt->subopt_params[subopt].raw_input == NULL) {
-> +		*out = NULL;
-> +		return 0;
-> +	}
-> +
-> +	*out = strdup(opt->subopt_params[subopt].raw_input);
-> +	if (*out == NULL)
-> +		return -ENOMEM;
-> +	return 0;
-> +
-> +}
-> +
-> +/*
-> + * Same as get_conf_raw(), except it returns the string through return.
-> + * If any error occurs, return NULL.
-> + */
-> +static char *
-> +get_conf_raw_safe(const struct opt_params *opt, const int subopt)
-> +{
-> +	char *str;
-> +
-> +	str = NULL;
-> +
-> +	if (get_conf_raw(opt, subopt, &str) == -ENOMEM) {
-> +		fprintf(stderr, "Out of memory!");
-
-Seems like using strerror() would be better than a hand-rolled, un-
-translatable string?
-
-> +		return NULL;
-> +	}
-
-Again, I don't see that any subsequent patches ever call get_conf_raw();
-is there any reason to even have this wrapper now?
-
-> +	return str;
-> +}
-> +
-> +/*
->   * Convert lsu to lsunit for 512 bytes blocks and check validity of the values.
->   */
->  static void
+>  				switch (getsubopt(&p, subopts, &value)) {
+>  				case D_AGCOUNT:
+> -					agcount = getnum(value, &opts[OPT_D],
+> -							 D_AGCOUNT);
+> +					agcount = parse_conf_val(OPT_D,
+> +								 D_AGCOUNT,
+> +								 value);
+>  					daflag = 1;
+>  					break;
+>  				case D_AGSIZE:
+> -					agsize = getnum(value, &opts[OPT_D],
+> -								D_AGSIZE);
+> +					agsize = parse_conf_val(OPT_D,
+> +								D_AGSIZE,
+> +								value);
+>  					dasize = 1;
+>  					break;
+>  				case D_FILE:
+> -					xi.disfile = getnum(value,
+> -						&opts[OPT_D], D_FILE);
+> +					xi.disfile = parse_conf_val(OPT_D,
+> +								    D_FILE,
+> +								    value);
+>  					break;
+>  				case D_NAME:
+>  					xi.dname = getstr(value, &opts[OPT_D],
+>  								D_NAME);
+> +					set_conf_val(OPT_D, D_NAME,  1);
+>  					break;
+>  				case D_SIZE:
+> -					dbytes = getnum(value, &opts[OPT_D],
+> -								D_SIZE);
+> +					dbytes = parse_conf_val(OPT_D, D_SIZE,
+> +								value);
+>  					break;
+>  				case D_SUNIT:
+> -					dsunit = getnum(value, &opts[OPT_D],
+> -								D_SUNIT);
+> +					dsunit = parse_conf_val(OPT_D, D_SUNIT,
+> +								value);
+>  					dsflag = 1;
+>  					break;
+>  				case D_SWIDTH:
+> -					dswidth = getnum(value, &opts[OPT_D],
+> -							 D_SWIDTH);
+> +					dswidth = parse_conf_val(OPT_D,
+> +								 D_SWIDTH,
+> +								 value);
+>  					dsflag = 1;
+>  					break;
+>  				case D_SU:
+> -					dsu = getnum(value, &opts[OPT_D],
+> -								D_SU);
+> +					dsu = parse_conf_val(OPT_D, D_SU,
+> +							     value);
+>  					dsflag = 1;
+>  					break;
+>  				case D_SW:
+> -					dsw = getnum(value, &opts[OPT_D],
+> -								D_SW);
+> +					dsw = parse_conf_val(OPT_D, D_SW,
+> +							     value);
+>  					dsflag = 1;
+>  					break;
+>  				case D_NOALIGN:
+> -					nodsflag = getnum(value, &opts[OPT_D],
+> -								D_NOALIGN);
+> +					nodsflag = parse_conf_val(OPT_D,
+> +								  D_NOALIGN,
+> +								  value);
+>  					break;
+>  				case D_SECTLOG:
+> -					sectorlog = getnum(value, &opts[OPT_D],
+> -							   D_SECTLOG);
+> +					sectorlog = parse_conf_val(OPT_D,
+> +								   D_SECTLOG,
+> +								   value);
+>  					sectorsize = 1 << sectorlog;
+>  					slflag = 1;
+>  					break;
+>  				case D_SECTSIZE:
+> -					sectorsize = getnum(value,
+> -						&opts[OPT_D], D_SECTSIZE);
+> +					sectorsize = parse_conf_val(OPT_D,
+> +								    D_SECTSIZE,
+> +								    value);
+>  					sectorlog =
+>  						libxfs_highbit32(sectorsize);
+>  					ssflag = 1;
+>  					break;
+>  				case D_RTINHERIT:
+> -					c = getnum(value, &opts[OPT_D],
+> -								D_RTINHERIT);
+> +					c = parse_conf_val(OPT_D, D_RTINHERIT,
+> +							   value);
+>  					if (c)
+>  						fsx.fsx_xflags |=
+>  							XFS_DIFLAG_RTINHERIT;
+>  					break;
+>  				case D_PROJINHERIT:
+> -					fsx.fsx_projid = getnum(value,
+> -						&opts[OPT_D], D_PROJINHERIT);
+> +					fsx.fsx_projid =
+> +						parse_conf_val(OPT_D,
+> +							       D_PROJINHERIT,
+> +							       value);
+>  					fsx.fsx_xflags |=
+>  						XFS_DIFLAG_PROJINHERIT;
+>  					break;
+>  				case D_EXTSZINHERIT:
+> -					fsx.fsx_extsize = getnum(value,
+> -						&opts[OPT_D], D_EXTSZINHERIT);
+> +					fsx.fsx_extsize =
+> +						parse_conf_val(OPT_D,
+> +							       D_EXTSZINHERIT,
+> +							       value);
+>  					fsx.fsx_xflags |=
+>  						XFS_DIFLAG_EXTSZINHERIT;
+>  					break;
+> @@ -1942,45 +1955,49 @@ main(
+>  
+>  				switch (getsubopt(&p, subopts, &value)) {
+>  				case I_ALIGN:
+> -					sb_feat.inode_align = getnum(value,
+> -						&opts[OPT_I], I_ALIGN);
+> +					sb_feat.inode_align =
+> +						parse_conf_val(OPT_I, I_ALIGN,
+> +							       value);
+>  					break;
+>  				case I_LOG:
+> -					inodelog = getnum(value, &opts[OPT_I],
+> -								I_LOG);
+> +					inodelog = parse_conf_val(OPT_I, I_LOG,
+> +								  value);
+>  					isize = 1 << inodelog;
+>  					ilflag = 1;
+>  					break;
+>  				case I_MAXPCT:
+> -					imaxpct = getnum(value, &opts[OPT_I],
+> -							 I_MAXPCT);
+> +					imaxpct = parse_conf_val(OPT_I,
+> +								 I_MAXPCT,
+> +								 value);
+>  					imflag = 1;
+>  					break;
+>  				case I_PERBLOCK:
+> -					inopblock = getnum(value, &opts[OPT_I],
+> -							   I_PERBLOCK);
+> +					inopblock = parse_conf_val(OPT_I,
+> +								   I_PERBLOCK,
+> +								   value);
+>  					ipflag = 1;
+>  					break;
+>  				case I_SIZE:
+> -					isize = getnum(value, &opts[OPT_I],
+> -								I_SIZE);
+> +					isize = parse_conf_val(OPT_I, I_SIZE,
+> +							       value);
+>  					inodelog = libxfs_highbit32(isize);
+>  					isflag = 1;
+>  					break;
+>  				case I_ATTR:
+>  					sb_feat.attr_version =
+> -						getnum(value, &opts[OPT_I],
+> -								I_ATTR);
+> +						parse_conf_val(OPT_I, I_ATTR,
+> +							       value);
+>  					break;
+>  				case I_PROJID32BIT:
+>  					sb_feat.projid16bit =
+> -						!getnum(value, &opts[OPT_I],
+> -							I_PROJID32BIT);
+> +						!parse_conf_val(OPT_I,
+> +							I_PROJID32BIT, value);
+>  					break;
+>  				case I_SPINODES:
+> -					sb_feat.spinodes = getnum(value,
+> -								&opts[OPT_I],
+> -								I_SPINODES);
+> +					sb_feat.spinodes =
+> +						parse_conf_val(OPT_I,
+> +							       I_SPINODES,
+> +							       value);
+>  					break;
+>  				default:
+>  					unknown('i', value);
+> @@ -1996,27 +2013,31 @@ main(
+>  
+>  				switch (getsubopt(&p, subopts, &value)) {
+>  				case L_AGNUM:
+> -					logagno = getnum(value, &opts[OPT_L],
+> -								L_AGNUM);
+> +					logagno = parse_conf_val(OPT_L,
+> +								 L_AGNUM,
+> +								 value);
+>  					laflag = 1;
+>  					break;
+>  				case L_FILE:
+> -					xi.lisfile = getnum(value,
+> -						&opts[OPT_L], L_FILE);
+> +					xi.lisfile = parse_conf_val(OPT_L,
+> +								    L_FILE,
+> +								    value);
+>  					break;
+>  				case L_INTERNAL:
+> -					loginternal = getnum(value,
+> -						&opts[OPT_L], L_INTERNAL);
+> +					loginternal =
+> +						parse_conf_val(OPT_L,
+> +							       L_INTERNAL,
+> +							       value);
+>  					liflag = 1;
+>  					break;
+>  				case L_SU:
+> -					lsu = getnum(value, &opts[OPT_L],
+> -								L_SU);
+> +					lsu = parse_conf_val(OPT_L, L_SU,
+> +							     value);
+>  					lsuflag = 1;
+>  					break;
+>  				case L_SUNIT:
+> -					lsunit = getnum(value, &opts[OPT_L],
+> -								L_SUNIT);
+> +					lsunit = parse_conf_val(OPT_L, L_SUNIT,
+> +								value);
+>  					lsunitflag = 1;
+>  					break;
+>  				case L_NAME:
+> @@ -2026,34 +2047,42 @@ main(
+>  					xi.logname = logfile;
+>  					ldflag = 1;
+>  					loginternal = 0;
+> +					set_conf_val(OPT_L, L_NAME, 1);
+> +					set_conf_val(OPT_L, L_DEV, 1);
+>  					break;
+>  				case L_VERSION:
+>  					sb_feat.log_version =
+> -						getnum(value, &opts[OPT_L],
+> -								L_VERSION);
+> +						parse_conf_val(OPT_L,
+> +							       L_VERSION,
+> +							       value);
+>  					lvflag = 1;
+>  					break;
+>  				case L_SIZE:
+> -					logbytes = getnum(value,
+> -						&opts[OPT_L], L_SIZE);
+> +					logbytes = parse_conf_val(OPT_L,
+> +								  L_SIZE,
+> +								  value);
+>  					break;
+>  				case L_SECTLOG:
+> -					lsectorlog = getnum(value,
+> -						&opts[OPT_L], L_SECTLOG);
+> +					lsectorlog = parse_conf_val(OPT_L,
+> +								    L_SECTLOG,
+> +								    value);
+>  					lsectorsize = 1 << lsectorlog;
+>  					lslflag = 1;
+>  					break;
+>  				case L_SECTSIZE:
+> -					lsectorsize = getnum(value,
+> -						&opts[OPT_L], L_SECTSIZE);
+> +					lsectorsize =
+> +						parse_conf_val(OPT_L,
+> +							       L_SECTSIZE,
+> +							       value);
+>  					lsectorlog =
+>  						libxfs_highbit32(lsectorsize);
+>  					lssflag = 1;
+>  					break;
+>  				case L_LAZYSBCNTR:
+>  					sb_feat.lazy_sb_counters =
+> -						getnum(value, &opts[OPT_L],
+> -							L_LAZYSBCNTR);
+> +						parse_conf_val(OPT_L,
+> +							       L_LAZYSBCNTR,
+> +							       value);
+>  					break;
+>  				default:
+>  					unknown('l', value);
+> @@ -2075,29 +2104,33 @@ main(
+>  				switch (getsubopt(&p, subopts, &value)) {
+>  				case M_CRC:
+>  					sb_feat.crcs_enabled =
+> -						getnum(value, &opts[OPT_M],
+> -								M_CRC);
+> +						parse_conf_val(OPT_M, M_CRC,
+> +							       value);
+>  					if (sb_feat.crcs_enabled)
+>  						sb_feat.dirftype = true;
+>  					break;
+>  				case M_FINOBT:
+> -					sb_feat.finobt = getnum(
+> -						value, &opts[OPT_M], M_FINOBT);
+> +					sb_feat.finobt =
+> +						parse_conf_val(OPT_M, M_FINOBT,
+> +							       value);
+>  					break;
+>  				case M_UUID:
+>  					if (!value || *value == '\0')
+>  						reqval('m', subopts, M_UUID);
+>  					if (platform_uuid_parse(value, &uuid))
+>  						illegal(optarg, "m uuid");
+> +					set_conf_val(OPT_M, M_UUID, 1);
+>  					break;
+>  				case M_RMAPBT:
+> -					sb_feat.rmapbt = getnum(
+> -						value, &opts[OPT_M], M_RMAPBT);
+> +					sb_feat.rmapbt =
+> +						parse_conf_val(OPT_M, M_RMAPBT,
+> +							       value);
+>  					break;
+>  				case M_REFLINK:
+>  					sb_feat.reflink =
+> -						getnum(value, &opts[OPT_M],
+> -							M_REFLINK);
+> +						parse_conf_val(OPT_M,
+> +							       M_REFLINK,
+> +							       value);
+>  					break;
+>  				default:
+>  					unknown('m', value);
+> @@ -2113,14 +2146,16 @@ main(
+>  
+>  				switch (getsubopt(&p, subopts, &value)) {
+>  				case N_LOG:
+> -					dirblocklog = getnum(value,
+> -						&opts[OPT_N], N_LOG);
+> +					dirblocklog = parse_conf_val(OPT_N,
+> +								     N_LOG,
+> +								     value);
+>  					dirblocksize = 1 << dirblocklog;
+>  					nlflag = 1;
+>  					break;
+>  				case N_SIZE:
+> -					dirblocksize = getnum(value,
+> -						&opts[OPT_N], N_SIZE);
+> +					dirblocksize = parse_conf_val(OPT_N,
+> +								      N_SIZE,
+> +								      value);
+>  					dirblocklog =
+>  						libxfs_highbit32(dirblocksize);
+>  					nsflag = 1;
+> @@ -2134,14 +2169,17 @@ main(
+>  					} else {
+>  						sb_feat.dir_version =
+>  							getnum(value,
+> -							       &opts[OPT_N],
+> -							       N_VERSION);
+> +								&opts[OPT_N],
+> +								N_VERSION);
+>  					}
+>  					nvflag = 1;
+> +					set_conf_val(OPT_N, N_VERSION,
+> +						     sb_feat.dir_version);
+>  					break;
+>  				case N_FTYPE:
+> -					sb_feat.dirftype = getnum(value,
+> -						&opts[OPT_N], N_FTYPE);
+> +					sb_feat.dirftype =
+> +						parse_conf_val(OPT_N, N_FTYPE,
+> +							       value);
+>  					break;
+>  				default:
+>  					unknown('n', value);
+> @@ -2171,25 +2209,30 @@ main(
+>  
+>  				switch (getsubopt(&p, subopts, &value)) {
+>  				case R_EXTSIZE:
+> -					rtextbytes = getnum(value,
+> -						&opts[OPT_R], R_EXTSIZE);
+> +					rtextbytes = parse_conf_val(OPT_R,
+> +								    R_EXTSIZE,
+> +								    value);
+>  					break;
+>  				case R_FILE:
+> -					xi.risfile = getnum(value,
+> -						&opts[OPT_R], R_FILE);
+> +					xi.risfile = parse_conf_val(OPT_R,
+> +								    R_FILE,
+> +								    value);
+>  					break;
+>  				case R_NAME:
+>  				case R_DEV:
+>  					xi.rtname = getstr(value, &opts[OPT_R],
+>  							   R_NAME);
+> +					set_conf_val(OPT_R, R_NAME, 1);
+> +					set_conf_val(OPT_R, R_DEV, 1);
+>  					break;
+>  				case R_SIZE:
+> -					rtbytes = getnum(value, &opts[OPT_R],
+> -								R_SIZE);
+> +					rtbytes = parse_conf_val(OPT_R, R_SIZE,
+> +								 value);
+>  					break;
+>  				case R_NOALIGN:
+> -					norsflag = getnum(value, &opts[OPT_R],
+> -								R_NOALIGN);
+> +					norsflag = parse_conf_val(OPT_R,
+> +								  R_NOALIGN,
+> +								  value);
+>  					break;
+>  				default:
+>  					unknown('r', value);
+> @@ -2210,8 +2253,9 @@ main(
+>  						conflict('s', subopts,
+>  							 S_SECTSIZE,
+>  							 S_SECTLOG);
+> -					sectorlog = getnum(value, &opts[OPT_S],
+> -							   S_SECTLOG);
+> +					sectorlog = parse_conf_val(OPT_S,
+> +								   S_SECTLOG,
+> +								   value);
+>  					lsectorlog = sectorlog;
+>  					sectorsize = 1 << sectorlog;
+>  					lsectorsize = sectorsize;
+> @@ -2223,8 +2267,9 @@ main(
+>  						conflict('s', subopts,
+>  							 S_SECTLOG,
+>  							 S_SECTSIZE);
+> -					sectorsize = getnum(value,
+> -						&opts[OPT_S], S_SECTSIZE);
+> +					sectorsize = parse_conf_val(OPT_S,
+> +								    S_SECTSIZE,
+> +								    value);
+>  					lsectorsize = sectorsize;
+>  					sectorlog =
+>  						libxfs_highbit32(sectorsize);
+> -- 
+> 2.13.3
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
