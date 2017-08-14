@@ -1,139 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18535 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751471AbdHNVqm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 17:46:42 -0400
-Date: Mon, 14 Aug 2017 14:46:15 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:38053 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752916AbdHNWHH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 18:07:07 -0400
+Subject: [PATCH 1/3] xfs: clear MS_ACTIVE after finishing log recovery
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
- dma-to-storage, and swap
-Message-ID: <20170814214615.GB4796@magnolia>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
- <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com>
- <20170805095013.GC14930@lst.de>
- <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com>
- <20170811104429.GA13736@lst.de>
- <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com>
- <20170812073349.GA12679@lst.de>
- <CAPcyv4iKG=Zoo1VXu23YBc6uWDFV4QSS+eAm9MSOynx2FjTHbw@mail.gmail.com>
- <20170813092436.GB32112@lst.de>
- <CAPcyv4ixTgSWG9K2Eg3XJmOvqJht81qL+Z3njoOjcXCD7XMpZw@mail.gmail.com>
+Date: Mon, 14 Aug 2017 15:07:03 -0700
+Message-ID: <150274842319.16269.6356165894145725007.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4ixTgSWG9K2Eg3XJmOvqJht81qL+Z3njoOjcXCD7XMpZw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Sun, Aug 13, 2017 at 01:31:45PM -0700, Dan Williams wrote:
-> On Sun, Aug 13, 2017 at 2:24 AM, Christoph Hellwig <hch@lst.de> wrote:
-> > On Sat, Aug 12, 2017 at 12:19:50PM -0700, Dan Williams wrote:
-> >> The application does not need to know the storage address, it needs to
-> >> know that the storage address to file offset is fixed. With this
-> >> information it can make assumptions about the permanence of results it
-> >> gets from the kernel.
-> >
-> > Only if we clearly document that fact - and documenting the permanence
-> > is different from saying the block map won't change.
-> 
-> I can get on board with that.
-> 
-> >
-> >> For example get_user_pages() today makes no guarantees outside of
-> >> "page will not be freed",
-> >
-> > It also makes the extremely important gurantee that the page won't
-> > _move_ - e.g. that we won't do a memory migration for compaction or
-> > other reasons.  That's why for example RDMA can use to register
-> > memory and then we can later set up memory windows that point to this
-> > registration from userspace and implement userspace RDMA.
-> >
-> >> but with immutable files and dax you now
-> >> have a mechanism for userspace to coordinate direct access to storage
-> >> addresses. Those raw storage addresses need not be exposed to the
-> >> application, as you say it doesn't need to know that detail. MAP_SYNC
-> >> does not fully satisfy this case because it requires agents that can
-> >> generate MMU faults to coordinate with the filesystem.
-> >
-> > The file system is always in the fault path, can you explain what other
-> > agents you are talking about?
-> 
-> Exactly the one's you mention below. SVM hardware can just use a
-> MAP_SYNC mapping and be sure that its metadata dirtying writes are
-> synchronized with the filesystem through the fault path. Hardware that
-> does not have SVM, or hypervisors like Xen that want to attach their
-> own static metadata about the file offset to physical block mapping,
-> need a mechanism to make sure the block map is sealed while they have
-> it mapped.
-> 
-> >> All I know is that SMB Direct for persistent memory seems like a
-> >> potential consumer. I know they're not going to use a userspace
-> >> filesystem or put an SMB server in the kernel.
-> >
-> > Last I talked to the Samba folks they didn't expect a userspace
-> > SMB direct implementation to work anyway due to the fact that
-> > libibverbs memory registrations interact badly with their fork()ing
-> > daemon model.  That being said during the recent submission of the
-> > RDMA client code some comments were made about userspace versions of
-> > it, so I'm not sure if that opinion has changed in one way or another.
-> 
-> Ok.
-> 
-> >
-> > Thay being said I think we absolutely should support RDMA memory
-> > registrations for DAX mappings.  I'm just not sure how S_IOMAP_IMMUTABLE
-> > helps with that.  We'll want a MAP_SYNC | MAP_POPULATE to make sure
-> > all the blocks are polulated and all ptes are set up.  Second we need
-> > to make sure get_user_page works, which for now means we'll need a
-> > struct page mapping for the region (which will be really annoying
-> > for PCIe mappings, like the upcoming NVMe persistent memory region),
-> > and we need to gurantee that the extent mapping won't change while
-> > the get_user_pages holds the pages inside it.  I think that is true
-> > due to side effects even with the current DAX code, but we'll need to
-> > make it explicit.  And maybe that's where we need to converge -
-> > "sealing" the extent map makes sense as such a temporary measure
-> > that is not persisted on disk, which automatically gets released
-> > when the holding process exits, because we sort of already do this
-> > implicitly.  It might also make sense to have explicitl breakable
-> > seals similar to what I do for the pNFS blocks kernel server, as
-> > any userspace RDMA file server would also need those semantics.
-> 
-> Ok, how about a MAP_DIRECT flag that arranges for faults to that range to:
-> 
->     1/ only succeed if the fault can be satisfied without page cache
-> 
->     2/ only install a pte for the fault if it can do so without
-> triggering block map updates
-> 
-> So, I think it would still end up setting an inode flag to make
-> xfs_bmapi_write() fail while any process has a MAP_DIRECT mapping
-> active. However, it would not record that state in the on-disk
-> metadata and it would automatically clear at munmap time. That should
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-TBH even after the last round of 'do we need this on-disk flag?' I still
-wasn't 100% convinced that we really needed a permanent flag vs.
-requiring apps to ask for a sealed iomap mmap like what you just
-described, so I'm glad this converation has continue. :)
+Way back when we established inode block-map redo log items, it was
+discovered that we needed to prevent the VFS from evicting inodes during
+log recovery because any given inode might be have bmap redo items to
+replay even if the inode has no link count and is ultimately deleted,
+and any eviction of an unlinked inode causes the inode to be truncated
+and freed too early.
 
---D
+To make this possible, we set MS_ACTIVE so that inodes would not be torn
+down immediately upon release.  Unfortunately, this also results in the
+quota inodes not being released at all if a later part of the mount
+process should fail, because we never reclaim the inodes.  So, set
+MS_ACTIVE right before we do the last part of log recovery and clear it
+immediately after we finish the log recovery so that everything
+will be torn down properly if we abort the mount.
 
-> be enough to support the host-persistent-memory, and
-> NVMe-persistent-memory use cases (provided we have struct page for
-> NVMe). Although, we need more safety infrastructure in the NVMe case
-> where we would need to software manage I/O coherence.
-> 
-> > Last but not least we have any interesting additional case for modern
-> > Mellanox hardware - On Demand Paging where we don't actually do a
-> > get_user_pages but the hardware implements SVM and thus gets fed
-> > virtual addresses directly.  My head spins when talking about the
-> > implications for DAX mappings on that, so I'm just throwing that in
-> > for now instead of trying to come up with a solution.
-> 
-> Yeah, DAX + SVM needs more thought.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_log.c   |   11 +++++++++++
+ fs/xfs/xfs_mount.c |   10 ----------
+ 2 files changed, 11 insertions(+), 10 deletions(-)
+
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 0053bcf..4ebd0ba 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -749,9 +749,20 @@ xfs_log_mount_finish(
+ 		return 0;
+ 	}
+ 
++	/*
++	 * During the second phase of log recovery, we need iget and
++	 * iput to behave like they do for an active filesystem.
++	 * xfs_fs_drop_inode needs to be able to prevent the deletion
++	 * of inodes before we're done replaying log items on those
++	 * inodes.  Turn it off immediately after recovery finishes
++	 * so that we don't leak the quota inodes if subsequent mount
++	 * activities fail.
++	 */
++	mp->m_super->s_flags |= MS_ACTIVE;
+ 	error = xlog_recover_finish(mp->m_log);
+ 	if (!error)
+ 		xfs_log_work_queue(mp);
++	mp->m_super->s_flags &= ~MS_ACTIVE;
+ 
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 40d4e8b..151a82db 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -945,15 +945,6 @@ xfs_mountfs(
+ 	}
+ 
+ 	/*
+-	 * During the second phase of log recovery, we need iget and
+-	 * iput to behave like they do for an active filesystem.
+-	 * xfs_fs_drop_inode needs to be able to prevent the deletion
+-	 * of inodes before we're done replaying log items on those
+-	 * inodes.
+-	 */
+-	mp->m_super->s_flags |= MS_ACTIVE;
+-
+-	/*
+ 	 * Finish recovering the file system.  This part needed to be delayed
+ 	 * until after the root and real-time bitmap inodes were consistently
+ 	 * read in.
+@@ -1028,7 +1019,6 @@ xfs_mountfs(
+  out_quota:
+ 	xfs_qm_unmount_quotas(mp);
+  out_rtunmount:
+-	mp->m_super->s_flags &= ~MS_ACTIVE;
+ 	xfs_rtunmount_inodes(mp);
+  out_rele_rip:
+ 	IRELE(rip);
+
