@@ -1,156 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59730 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753090AbdHNKxz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Aug 2017 06:53:55 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D222D2FFC2F
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 10:53:54 +0000 (UTC)
-Received: from hades.localdomain.com (unknown [10.43.17.88])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 51642675BB
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 10:53:54 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH] Stop searching for free slots in an inode chunk when there are none
-Date: Mon, 14 Aug 2017 12:53:49 +0200
-Message-Id: <20170814105349.12391-1-cmaiolino@redhat.com>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:33522 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751471AbdHNISP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 04:18:15 -0400
+Received: by mail-qk0-f196.google.com with SMTP id d145so8755640qkc.0
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 01:18:15 -0700 (PDT)
+Date: Mon, 14 Aug 2017 05:18:10 -0300
+From: Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?=
+        <ernesto.mnd.fernandez@gmail.com>
+Subject: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
+Message-ID: <20170814081806.GA3924@debian.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>, Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?= <ernesto.mnd.fernandez@gmail.com>
 
-In a filesystem without finobt, the Space manager selects an AG to alloc a new
-inode, where xfs_dialloc_ag_inobt() will search the AG for the free slot chunk.
+When changing a file's ACL mask, xfs_set_acl() will first set the group
+bits of i_mode to the value of the mask, and only then set the actual
+extended attribute representing the new ACL.
 
-When the new inode is in the samge AG as its parent, the btree will be searched
-starting on the parent's record, and then retried from the top if no slot is
-available beyond the parent's record.
+If the second part fails (due to lack of space, for example) and the
+file had no ACL attribute to begin with, the system will from now on
+assume that the mask permission bits are actual group permission bits,
+potentially granting access to the wrong users.
 
-To exit this loop though, xfs_dialloc_ag_inobt() relies on the fact that the
-btree must have a free slot available, once its callers relied on the
-agi->freecount when deciding how/where to allocate this new inode.
+To prevent this, perform the mode update and the ACL update as part of
+the same transaction, and restore the original mode to the vfs inode in
+case of failure. This requires a change in how extended attributes are
+deleted: commit the transaction even if there was no attribute to
+remove, to log the standard inode fields.
 
-In the case when the agi->freecount is corrupted, showing available inodes in an
-AG, when in fact there is none, this becomes an infinite loop.
-
-Add a way to stop the loop when a free slot is not found in the btree, making
-the function to fall into the whole AG scan which will then, be able to detect
-the corruption and shut the filesystem down.
-
-As pointed by Brian, this might impact performance, giving the fact we
-don't reset the search distance anymore when we reach the end of the
-tree, giving it fewer tries before falling back to the whole AG search, but
-it will only affect searches that start within 10 records to the end of the tree.
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Ernesto A. Fernández <ernesto.mnd.fernandez@gmail.com>
 ---
-Changelog:
+This issue is covered by generic/449 in xfstests. Several other filesystems
+are affected by this, some of them have already applied patches:
+  - 397e434 ext4: preserve i_mode if __ext4_set_acl() fails
+  - f070e5a jfs: preserve i_mode if __jfs_set_acl() fails
+  - fcea8ae reiserfs: preserve i_mode if __reiserfs_set_acl() fails
+  - fe26569 ext2: preserve i_mode if ext2_set_acl() fails
+The test won't exactly pass after this patch is applied. It will fail
+differently, this time claiming that the filesystem is inconsistent. This
+probably has something to do with setting too many extended attributes, as
+it goes away if you change the attribute size in the test from 1k to 64k.
 
-	V3: - Move searchdistance state saving out of the while loop
-	    - Remove newino goto label
+ fs/xfs/libxfs/xfs_attr.c | 13 +++++++++++--
+ fs/xfs/xfs_acl.c         | 39 ++++++++++++++-------------------------
+ 2 files changed, 25 insertions(+), 27 deletions(-)
 
-	V2: - Use searchdistance variable to stop the infinite loop
-	      instead of adding a new mechanism
-
- fs/xfs/libxfs/xfs_ialloc.c | 55 +++++++++++++++++++++++-----------------------
- 1 file changed, 27 insertions(+), 28 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index d41ade5d293e..0e1cc51f05a1 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1123,6 +1123,7 @@ xfs_dialloc_ag_inobt(
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index de7b9bd..c3193e1 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -395,6 +395,7 @@ xfs_attr_remove(
+ 	struct xfs_defer_ops	dfops;
+ 	xfs_fsblock_t		firstblock;
  	int			error;
- 	int			offset;
- 	int			i, j;
-+	int			searchdistance = 10;
++	int			noattr = 0;
  
- 	pag = xfs_perag_get(mp, agno);
+ 	XFS_STATS_INC(mp, xs_attr_remove);
  
-@@ -1149,7 +1150,6 @@ xfs_dialloc_ag_inobt(
- 	if (pagno == agno) {
- 		int		doneleft;	/* done, to the left */
- 		int		doneright;	/* done, to the right */
--		int		searchdistance = 10;
+@@ -438,7 +439,12 @@ xfs_attr_remove(
+ 	xfs_trans_ijoin(args.trans, dp, 0);
  
- 		error = xfs_inobt_lookup(cur, pagino, XFS_LOOKUP_LE, &i);
- 		if (error)
-@@ -1210,21 +1210,9 @@ xfs_dialloc_ag_inobt(
- 		/*
- 		 * Loop until we find an inode chunk with a free inode.
- 		 */
--		while (!doneleft || !doneright) {
-+		while (--searchdistance > 0 && (!doneleft || !doneright)) {
- 			int	useleft;  /* using left inode chunk this time */
+ 	if (!xfs_inode_hasattr(dp)) {
+-		error = -ENOATTR;
++		/*
++		 * Commit even if there is no attr to remove, because when
++		 * setting ACLs the caller may be changing the mode in the
++		 * same transaction.
++		 */
++		noattr = 1;
+ 	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+ 		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+ 		error = xfs_attr_shortform_remove(&args);
+@@ -458,7 +464,7 @@ xfs_attr_remove(
+ 	if (mp->m_flags & XFS_MOUNT_WSYNC)
+ 		xfs_trans_set_sync(args.trans);
  
--			if (!--searchdistance) {
--				/*
--				 * Not in range - save last search
--				 * location and allocate a new inode
--				 */
--				xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
--				pag->pagl_leftrec = trec.ir_startino;
--				pag->pagl_rightrec = rec.ir_startino;
--				pag->pagl_pagino = pagino;
--				goto newino;
--			}
--
- 			/* figure out the closer block if both are valid. */
- 			if (!doneleft && !doneright) {
- 				useleft = pagino -
-@@ -1268,26 +1256,37 @@ xfs_dialloc_ag_inobt(
- 				goto error1;
- 		}
- 
--		/*
--		 * We've reached the end of the btree. because
--		 * we are only searching a small chunk of the
--		 * btree each search, there is obviously free
--		 * inodes closer to the parent inode than we
--		 * are now. restart the search again.
--		 */
--		pag->pagl_pagino = NULLAGINO;
--		pag->pagl_leftrec = NULLAGINO;
--		pag->pagl_rightrec = NULLAGINO;
--		xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
--		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
--		goto restart_pagno;
-+		if (searchdistance <= 0) {
-+			/*
-+			 * Not in range - save last search
-+			 * location and allocate a new inode
-+			 */
-+			xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
-+			pag->pagl_leftrec = trec.ir_startino;
-+			pag->pagl_rightrec = rec.ir_startino;
-+			pag->pagl_pagino = pagino;
-+
-+		} else {
-+			/*
-+			 * We've reached the end of the btree. because
-+			 * we are only searching a small chunk of the
-+			 * btree each search, there is obviously free
-+			 * inodes closer to the parent inode than we
-+			 * are now. restart the search again.
-+			 */
-+			pag->pagl_pagino = NULLAGINO;
-+			pag->pagl_leftrec = NULLAGINO;
-+			pag->pagl_rightrec = NULLAGINO;
-+			xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
-+			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+			goto restart_pagno;
-+		}
- 	}
+-	if ((flags & ATTR_KERNOTIME) == 0)
++	if ((flags & ATTR_KERNOTIME) == 0 && !noattr)
+ 		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
  
  	/*
- 	 * In a different AG from the parent.
- 	 * See if the most recently allocated block has any free.
- 	 */
--newino:
- 	if (agi->agi_newino != cpu_to_be32(NULLAGINO)) {
- 		error = xfs_inobt_lookup(cur, be32_to_cpu(agi->agi_newino),
- 					 XFS_LOOKUP_EQ, &i);
+@@ -468,6 +474,9 @@ xfs_attr_remove(
+ 	error = xfs_trans_commit(args.trans);
+ 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ 
++	if (!error && noattr)
++		error = -ENOATTR;
++
+ 	return error;
+ 
+ out:
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 7034e17..1fe4363 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -226,28 +226,13 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+ 	return error;
+ }
+ 
+-static int
+-xfs_set_mode(struct inode *inode, umode_t mode)
+-{
+-	int error = 0;
+-
+-	if (mode != inode->i_mode) {
+-		struct iattr iattr;
+-
+-		iattr.ia_valid = ATTR_MODE | ATTR_CTIME;
+-		iattr.ia_mode = mode;
+-		iattr.ia_ctime = current_time(inode);
+-
+-		error = xfs_setattr_nonsize(XFS_I(inode), &iattr, XFS_ATTR_NOACL);
+-	}
+-
+-	return error;
+-}
+-
+ int
+ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+ {
+ 	int error = 0;
++	int mode_changed = 0;
++	umode_t old_mode = inode->i_mode;
++	struct timespec old_ctime = inode->i_ctime;
+ 
+ 	if (!acl)
+ 		goto set_acl;
+@@ -257,16 +242,20 @@ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+ 		return error;
+ 
+ 	if (type == ACL_TYPE_ACCESS) {
+-		umode_t mode;
+-
+-		error = posix_acl_update_mode(inode, &mode, &acl);
+-		if (error)
+-			return error;
+-		error = xfs_set_mode(inode, mode);
++		error = posix_acl_update_mode(inode, &inode->i_mode, &acl);
+ 		if (error)
+ 			return error;
++		inode->i_ctime = current_time(inode);
++		XFS_STATS_INC(XFS_I(inode)->i_mount, xs_ig_attrchg);
++		mode_changed = 1;
+ 	}
+ 
+  set_acl:
+-	return __xfs_set_acl(inode, acl, type);
++	error = __xfs_set_acl(inode, acl, type);
++	if (error && mode_changed) {
++		inode->i_mode = old_mode;
++		inode->i_ctime = old_ctime;
++		XFS_STATS_DEC(XFS_I(inode)->i_mount, xs_ig_attrchg);
++	}
++	return error;
+ }
 -- 
-2.13.5
+2.1.4
 
