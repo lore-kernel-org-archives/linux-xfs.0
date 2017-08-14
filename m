@@ -1,248 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44841 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:45768 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752651AbdHNX44 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 19:56:56 -0400
+        with ESMTP id S1752744AbdHNX7n (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 19:59:43 -0400
 Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7ENutLZ015846
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7ENxh5E017948
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 23:56:55 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v7ENusoJ032337
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 23:59:43 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v7ENxguh004889
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 23:56:55 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7ENusuI021293
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 23:56:54 GMT
-Date: Mon, 14 Aug 2017 16:56:53 -0700
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 23:59:43 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7ENxgtc010831
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 23:59:42 GMT
+Date: Mon, 14 Aug 2017 16:59:42 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH 02/13] xfs: get directory offset when removing
- directory name
-Message-ID: <20170814235653.GQ4796@magnolia>
+Subject: Re: [RFC PATCH 05/13] xfs: define parent pointer xattr format
+Message-ID: <20170814235942.GR4796@magnolia>
 References: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
- <1502329293-4091-3-git-send-email-allison.henderson@oracle.com>
+ <1502329293-4091-6-git-send-email-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1502329293-4091-3-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1502329293-4091-6-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Allison Henderson <allison.henderson@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Aug 09, 2017 at 06:41:22PM -0700, Allison Henderson wrote:
-> From: Mark Tinguely <tinguely@sgi.com>
+On Wed, Aug 09, 2017 at 06:41:25PM -0700, Allison Henderson wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Return the directory offset information when removing an entry to the
-> directory.
+> We need to define the parent pointer attribute format before we
+> start adding support for it into all the code that needs to use it.
+> The EA format we will use encodes the following information:
 > 
-> This offset will be used as the parent pointer offset in xfs_remove.
+> 	name={parent inode #, parent inode generation, dirent offset}
+> 	value={dirent filename}
 > 
-> [dchinner: forward ported and cleaned up]
+> The inode/gen gives all the information we need to reliably identify
+> the parent without requiring child->parent lock ordering, and allows
+> userspace to do pathname component level reconstruction without the
+> kernel ever needing to verify the parent itself as part of ioctl
+> calls.
+> 
+> By using the dirent offset in the EA name, we have a method of
+> knowing the exact parent pointer EA we need to modify/remove in
+> rename/unlink without an unbound EA name search.
+> 
+> By keeping the dirent name in the value, we have enough information
+> to be able to validate and reconstruct damaged directory trees.
+> While the diroffset of a filename alone is not unique enough to
+> identify the child, the {diroffset,filename,child_inode} tuple is
+> sufficient. That is, if the diroffset gets reused and points to a
+> different filename, we can detect that from the contents of EA. If a
+> link of the same name is created, then we can check whether it
+> points at the same inode as the parent EA we current have.
+> 
 > [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t]
 > 
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
-> :100644 100644 a1ca460... a34956e... M	fs/xfs/libxfs/xfs_dir2.c
-> :100644 100644 e349900... ee98b2a... M	fs/xfs/libxfs/xfs_dir2.h
-> :100644 100644 79684d5... 4dbe2fc... M	fs/xfs/libxfs/xfs_dir2_block.c
-> :100644 100644 2ac7a7e... 197e627... M	fs/xfs/libxfs/xfs_dir2_leaf.c
-> :100644 100644 8bc91f8... 13d5244... M	fs/xfs/libxfs/xfs_dir2_node.c
-> :100644 100644 489bdef... 9e90c22... M	fs/xfs/libxfs/xfs_dir2_sf.c
-> :100644 100644 cea1c56... f58f62a... M	fs/xfs/xfs_inode.c
->  fs/xfs/libxfs/xfs_dir2.c       | 15 +++++++++------
->  fs/xfs/libxfs/xfs_dir2.h       |  3 ++-
->  fs/xfs/libxfs/xfs_dir2_block.c |  4 ++--
->  fs/xfs/libxfs/xfs_dir2_leaf.c  |  5 +++--
->  fs/xfs/libxfs/xfs_dir2_node.c  |  5 +++--
->  fs/xfs/libxfs/xfs_dir2_sf.c    |  2 ++
->  fs/xfs/xfs_inode.c             |  7 ++++---
->  7 files changed, 25 insertions(+), 16 deletions(-)
+> :100644 100644 d4d9bef... 91e2d5a... M	fs/xfs/libxfs/xfs_format.h
+>  fs/xfs/libxfs/xfs_format.h | 27 +++++++++++++++++++++++++++
+>  1 file changed, 27 insertions(+)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-> index a1ca460..a34956e 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.c
-> +++ b/fs/xfs/libxfs/xfs_dir2.c
-> @@ -443,13 +443,14 @@ xfs_dir_lookup(
->   */
->  int
->  xfs_dir_removename(
-> -	xfs_trans_t	*tp,
-> -	xfs_inode_t	*dp,
-> -	struct xfs_name	*name,
-> -	xfs_ino_t	ino,
-> -	xfs_fsblock_t	*first,		/* bmap's firstblock */
-> +	xfs_trans_t		*tp,
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index d4d9bef..91e2d5a 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -18,6 +18,8 @@
+>  #ifndef __XFS_FORMAT_H__
+>  #define __XFS_FORMAT_H__
+>  
+> +#include "xfs_da_format.h"
+> +
+>  /*
+>   * XFS On Disk Format Definitions
+>   *
+> @@ -1721,4 +1723,29 @@ struct xfs_acl {
+>  #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
+>  #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
+>  
+> +/*
+> + * Parent pointer attribute format definition
+> + *
+> + * EA name encodes the parent inode number, generation and the offset of
+> + * the dirent that points to the child inode. The EA value contains the
+> + * same name as the dirent in the parent directory.
+> + */
+> +struct xfs_parent_name_rec {
+> +	__be64	p_ino;
+> +	__be32	p_gen;
+> +	__be32	p_diroffset;
+> +};
+> +
+> +/*
+> + * incore version of the above, also contains name pointers so callers
+> + * can pass/obtain all the parent pointer information in a single structure
+> + */
+> +struct xfs_parent_name_irec {
+> +	uint64_t		p_ino;
 
-If you change a line containing a struct tyepdef type, please convert it
-back to the raw struct type.
+Should use incore xfs types, i.e. xfs_ino_t.
 
-	struct xfs_trans	*tp,
+> +	uint32_t		p_gen;
+> +	xfs_dir2_dataptr_t	p_diroffset;
+> +	const char		*p_name;
+> +	uint32_t		p_namelen;
 
-etc.  Some day we'll have managed to remove them all! :D
-
-> +	xfs_inode_t		*dp,
-> +	struct xfs_name		*name,
-> +	xfs_ino_t		ino,
-> +	xfs_fsblock_t		*first,		/* bmap's firstblock */
->  	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
-> -	xfs_extlen_t	total)		/* bmap's total block count */
-> +	xfs_extlen_t		total,		/* bmap's total block count */
-> +	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
-
-Hmm.  We /also/ pass a defer_ops into _dir_removename.  I wasn't going
-to say this until later in the patchset, but it's apropos now.
-
-The biggest complaint I have about this patch series is that we end up
-using separate transactions for each phase of the link/unlink
-operations.  There's no guarantee that once we start the process of
-expand-dir, add-name-to-dir, log-inode-cores, expand-attr,
-add-pptr-to-attrs that we actually get all the way to the end of that
-process, particularly if we crash in the middle and have to recover the
-log coming back up.
-
-Obviously, back in 2014 when Dave started on these patches there was no
-defer_ops, so a lot of effort goes into passing parameters up and down
-the stack and fiddling with the transaction reservation type
-declarations in order to guarantee that we can shove everything into a
-single transaction.  Now that we have a more general mechanism to split
-complex updates into a chain of smaller updates (and make log recovery
-pick up where we left off) it's time to figure out how to make attr (and
-maybe dir) updates a deferrable operation.
-
-This adds complexity to the log because we have to define an "attr add
-KEY:VALUE" and a "attr delete KEY" deferred op that hooks into the
-existing attr code.  For parent pointers it's not a big deal to log
-values since they're not big, but for the general case this idea needs
-more thought, or a decision that we'll just keep doing things the same
-way.
-
-Anyway, assuming the existence of a "attr delete KEY" log intent item we
-no longer have to pass the offsets around everywhere because instead
-_dir_removename attaches the defer item to the defer_ops and
-_defer_finish takes care of rolling through the updates.
-
-Thoughts?
+Pathname components are at most 255 bytes long, though I guess that
+doesn't save us any space here.
 
 --D
 
->  {
->  	struct xfs_da_args *args;
->  	int		rval;
-> @@ -495,6 +496,8 @@ xfs_dir_removename(
->  		rval = xfs_dir2_leaf_removename(args);
->  	else
->  		rval = xfs_dir2_node_removename(args);
-> +	if (offset)
-> +		*offset = args->offset;
->  out_free:
->  	kmem_free(args);
->  	return rval;
-> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-> index e349900..ee98b2a 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.h
-> +++ b/fs/xfs/libxfs/xfs_dir2.h
-> @@ -139,7 +139,8 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
->  extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
->  				struct xfs_name *name, xfs_ino_t ino,
->  				xfs_fsblock_t *first,
-> -				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
-> +				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
-> +				xfs_dir2_dataptr_t *offset);
->  extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
->  				struct xfs_name *name, xfs_ino_t inum,
->  				xfs_fsblock_t *first,
-> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-> index 79684d5..4dbe2fc 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_block.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
-> @@ -791,9 +791,9 @@ xfs_dir2_block_removename(
->  	/*
->  	 * Point to the data entry using the leaf entry.
->  	 */
-> +	args->offset = be32_to_cpu(blp[ent].address);
->  	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
-> -			xfs_dir2_dataptr_to_off(args->geo,
-> -						be32_to_cpu(blp[ent].address)));
-> +			xfs_dir2_dataptr_to_off(args->geo, args->offset));
->  	/*
->  	 * Mark the data entry's space free.
->  	 */
-> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> index 2ac7a7e..197e627 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> @@ -1383,9 +1383,10 @@ xfs_dir2_leaf_removename(
->  	 * Point to the leaf entry, use that to point to the data entry.
->  	 */
->  	lep = &ents[index];
-> -	db = xfs_dir2_dataptr_to_db(args->geo, be32_to_cpu(lep->address));
-> +	args->offset = be32_to_cpu(lep->address);
-> +	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
->  	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
-> -		xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
-> +		xfs_dir2_dataptr_to_off(args->geo, args->offset));
->  	needscan = needlog = 0;
->  	oldbest = be16_to_cpu(bf[0].length);
->  	ltp = xfs_dir2_leaf_tail_p(args->geo, leaf);
-> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> index 8bc91f8..13d5244 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> @@ -1238,9 +1238,10 @@ xfs_dir2_leafn_remove(
->  	/*
->  	 * Extract the data block and offset from the entry.
->  	 */
-> -	db = xfs_dir2_dataptr_to_db(args->geo, be32_to_cpu(lep->address));
-> +	args->offset = be32_to_cpu(lep->address);
-> +	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
->  	ASSERT(dblk->blkno == db);
-> -	off = xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address));
-> +	off = xfs_dir2_dataptr_to_off(args->geo, args->offset);
->  	ASSERT(dblk->index == off);
->  
->  	/*
-> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-> index 489bdef..9e90c22 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-> @@ -919,6 +919,8 @@ xfs_dir2_sf_removename(
->  								XFS_CMP_EXACT) {
->  			ASSERT(dp->d_ops->sf_get_ino(sfp, sfep) ==
->  			       args->inumber);
-> +			args->offset = xfs_dir2_byte_to_dataptr(
-> +						xfs_dir2_sf_get_offset(sfep));
->  			break;
->  		}
->  	}
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index cea1c56..f58f62a 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2621,8 +2621,8 @@ xfs_remove(
->  		goto out_trans_cancel;
->  
->  	xfs_defer_init(&dfops, &first_block);
-> -	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
-> -					&first_block, &dfops, resblks);
-> +	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
-> +				   &dfops, resblks, NULL);
->  	if (error) {
->  		ASSERT(error != -ENOENT);
->  		goto out_bmap_cancel;
-> @@ -3132,7 +3132,8 @@ xfs_rename(
->  					&first_block, &dfops, spaceres);
->  	} else
->  		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
-> -					   &first_block, &dfops, spaceres);
-> +					   &first_block, &dfops, spaceres,
-> +					   NULL);
->  	if (error)
->  		goto out_bmap_cancel;
->  
+> +};
+> +
+>  #endif /* __XFS_FORMAT_H__ */
 > -- 
 > 2.7.4
 > 
