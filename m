@@ -1,63 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f180.google.com ([209.85.216.180]:33438 "EHLO
-        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751007AbdHRL4d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Aug 2017 07:56:33 -0400
-Received: by mail-qt0-f180.google.com with SMTP id a18so52437066qta.0
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Aug 2017 04:56:32 -0700 (PDT)
+Received: from mx141.netapp.com ([216.240.21.12]:1976 "EHLO mx141.netapp.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752688AbdHNOEg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 14 Aug 2017 10:04:36 -0400
+Subject: Re: [RFC PATCH 0/7] dax, ext4: Synchronous page faults
+References: <20170727131245.28279-1-jack@suse.cz>
+ <x49zibq3rb0.fsf@segfault.boston.devel.redhat.com>
+ <20170727215713.GA22000@linux.intel.com>
+ <CALCETrVzxrQ76BXEfo4kcRFyQmxbrMwCLE17yPyTJzz0tUs+Dg@mail.gmail.com>
+ <20170728093821.GB29433@quack2.suse.cz> <20170801110241.GE6742@infradead.org>
+ <20170801112603.GG4215@quack2.suse.cz>
+ <CAPcyv4hdOsuA6cqRCnOZMLMXvycwZevg06xOVZz3u0kupm2Drw@mail.gmail.com>
+ <20170811100327.GD7064@infradead.org>
+ <CAPcyv4hgqh8tHeWDNRnJnvwDh7hiFU8+3O0VWAHFQOEvPna11Q@mail.gmail.com>
+ <20170813092556.GA19019@infradead.org>
+From: Boaz Harrosh <boazh@netapp.com>
+Message-ID: <ccf82f19-7693-25da-eaa6-a654830ca81e@netapp.com>
+Date: Mon, 14 Aug 2017 17:04:17 +0300
 MIME-Version: 1.0
-From: Ingard - <ingard1@gmail.com>
-Date: Fri, 18 Aug 2017 13:56:31 +0200
-Message-ID: <CAHeWggOTqbQUQB7xz1wUjejHU5W14w3wcN-oV-+KJxxyEEQ3TQ@mail.gmail.com>
-Subject: corrupt xfs log
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20170813092556.GA19019@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-
-After a server crash we've encountered a corrupt xfs filesystem. When
-trying to mount said filesystem normally the system hangs.
-This was initially on a ubuntu trusty server with 3.13 kernel with
-xfsprogs 3.1.9
-
-We've installed a newer kernel (4.4.0-92) and compiled xfsprogs v
-4.12.0 from source. We're still not able to mount the filesystem (and
-replay the log) normally.
-We are able to mount it -o ro,norecovery, but we're reluctant to do
-xfs_repair -L without trying everything we can first. The filesystem
-is browsable albeit a few paths which gives an error : "Structure
-needs cleaning"
-
-Does anyone have any advice as to how we might recover/repair the
-corrupt log so we can replay it? Or is xfs_repair -L the only way
-forward?
+To: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Amit Golander <amitg@netapp.com>
 
 
-Excerpt from kern.log:
-2017-08-17T13:40:41.122121+02:00 dn-238 kernel: [  294.300347] XFS
-(sdd1): Mounting V4 filesystem in no-recovery mode. Filesystem will be
-inconsistent.
+Thank you Jan, I'm patiently waiting for this MAP_SYNC flag since I asked for
+it in 2014. I'm so glad its time is finally do.
 
-2017-08-17T17:04:54.794194+02:00 dn-238 kernel: [12548.400260] XFS
-(sdd1): Metadata corruption detected at xfs_inode_buf_verify+0x6f/0xd0
-[xfs], xfs_inode block 0x81c9c210
-2017-08-17T17:04:54.794216+02:00 dn-238 kernel: [12548.400342] XFS
-(sdd1): Unmount and run xfs_repair
-2017-08-17T17:04:54.794218+02:00 dn-238 kernel: [12548.400374] XFS
-(sdd1): First 64 bytes of corrupted metadata buffer:
-2017-08-17T17:04:54.794220+02:00 dn-238 kernel: [12548.400418]
-ffff880171fff000: 3f 1a 33 54 5b 55 85 0b 7c f5 c6 d5 cf 51 47 41
-?.3T[U..|....QGA
-2017-08-17T17:04:54.794222+02:00 dn-238 kernel: [12548.400473]
-ffff880171fff010: 97 ba ba 03 5c e4 02 7a e6 bc fb 5d f1 72 db c1
-....\..z...].r..
-2017-08-17T17:04:54.794223+02:00 dn-238 kernel: [12548.400527]
-ffff880171fff020: c8 ad 3a 76 c7 e4 20 92 88 a2 35 0c 1f 36 cf b5
-..:v.. ...5..6..
-2017-08-17T17:04:54.794226+02:00 dn-238 kernel: [12548.400581]
-ffff880171fff030: 8a bc 42 75 86 50 a0 a2 be 2c 2d 99 96 2d e1 ee
-..Bu.P...,-..-..
+Thank you for working on this. Please CC me on future patches.
+(note the new Netapp email)
 
-kind regards
-ingard
+On 13/08/17 12:25, Christoph Hellwig wrote:
+> On Sat, Aug 12, 2017 at 07:44:14PM -0700, Dan Williams wrote:
+>> How about MAP_SYNC == (MAP_SHARED|MAP_PRIVATE)? On older kernels that
+>> should get -EINVAL, and on new kernels it means SYNC+SHARED.
+> 
+> Cute trick, but I'd hate to waster it just for our little flag.
+> 
+> How about:
+> 
+> #define __MAP_VALIDATE		MAP_SHARED|MAP_PRIVATE
+> #define MAP_SYNC		0x??? | __MAP_VALIDATE
+> 
+> so that we can reuse that trick for any new flag?
+> 
+
+YES! And please create a mask for all new flags and in validation
+code if ((m_flags & __MAP_VALIDATE) == __MAP_VALIDATE) then you
+want that (m_flags & __MAP_NEWFLAGS) does not come empty, this
+way you actually preserve the old check that SHARED and PRIVATE
+do not co exist.
+
+Few Comments on this new MAP_ flag
+
+0] The name at least needs to be MAP_MSYNC because only meta-data is
+    synced not the data pointed to. That is the responsibility of the app
+
+1] This flag you have named MAP_SYNC but it is very much related to
+   dax and the ability for user-mode to "flush" the data pointed by this
+   now "synced" meta data.
+   For example in ext4, this flag set on an inode that is *not* IS_DAX
+   should fail the mmap. Because there is no point of synced meta if the
+   data is actually in page-cache and we know for sure it was not yet synced,
+   And there is no way for user-mode to directly "sync" the data as well.
+
+2] The code should be constructed that the default check for the MAP_SYNC
+   should fail, and only Hopped in FSs are allowed.
+   (So not to modify all Implementations of file_operations->mmap() )
+
+3] /dev/pmem could start serving DAX pages in mmap, if asked for MAP_MSYNC
+   (which is also an API that says "I know I need to cl_flush". See 1. )
+
+4] Once we have this flag. And properly implemented at least in one FS
+   and optionally in /dev/pmemX we no longer have any justification for
+   /dev/daxX and it can die a slow and happy death.
+
+Thanks, Cheers
+Boaz
+
