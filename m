@@ -1,84 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx141.netapp.com ([216.240.21.12]:1976 "EHLO mx141.netapp.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45290 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752688AbdHNOEg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Aug 2017 10:04:36 -0400
-Subject: Re: [RFC PATCH 0/7] dax, ext4: Synchronous page faults
-References: <20170727131245.28279-1-jack@suse.cz>
- <x49zibq3rb0.fsf@segfault.boston.devel.redhat.com>
- <20170727215713.GA22000@linux.intel.com>
- <CALCETrVzxrQ76BXEfo4kcRFyQmxbrMwCLE17yPyTJzz0tUs+Dg@mail.gmail.com>
- <20170728093821.GB29433@quack2.suse.cz> <20170801110241.GE6742@infradead.org>
- <20170801112603.GG4215@quack2.suse.cz>
- <CAPcyv4hdOsuA6cqRCnOZMLMXvycwZevg06xOVZz3u0kupm2Drw@mail.gmail.com>
- <20170811100327.GD7064@infradead.org>
- <CAPcyv4hgqh8tHeWDNRnJnvwDh7hiFU8+3O0VWAHFQOEvPna11Q@mail.gmail.com>
- <20170813092556.GA19019@infradead.org>
-From: Boaz Harrosh <boazh@netapp.com>
-Message-ID: <ccf82f19-7693-25da-eaa6-a654830ca81e@netapp.com>
-Date: Mon, 14 Aug 2017 17:04:17 +0300
-MIME-Version: 1.0
-In-Reply-To: <20170813092556.GA19019@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+        id S1751565AbdHNQyx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 14 Aug 2017 12:54:53 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id A5FAD12B27
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 16:54:53 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C71DDA9491
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 16:54:52 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH RFC 2/2] xfs: don't log dirty ranges for ordered buffers
+Date: Mon, 14 Aug 2017 12:54:51 -0400
+Message-Id: <20170814165451.43788-3-bfoster@redhat.com>
+In-Reply-To: <20170814165451.43788-1-bfoster@redhat.com>
+References: <20170814165451.43788-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Amit Golander <amitg@netapp.com>
+To: linux-xfs@vger.kernel.org
 
+Ordered buffers are attached to transactions and pushed through the
+logging infrastructure just like normal buffers with the exception
+that they are not actually written to the log. Therefore, we don't
+need to log dirty ranges of ordered buffers. xfs_trans_log_buf() is
+called on ordered buffers to set up all of the dirty state on the
+transaction, buffer and log item and prepare the buffer for I/O.
 
-Thank you Jan, I'm patiently waiting for this MAP_SYNC flag since I asked for
-it in 2014. I'm so glad its time is finally do.
+Now that xfs_trans_dirty_buf() is available, call it from
+xfs_trans_ordered_buf() so the latter is now mutually exclusive with
+xfs_trans_log_buf(). This reflects the implementation of ordered
+buffers and helps eliminate confusion over the need to log ranges of
+ordered buffers just to set up internal log state.
 
-Thank you for working on this. Please CC me on future patches.
-(note the new Netapp email)
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_btree.c  |  3 ++-
+ fs/xfs/libxfs/xfs_ialloc.c |  2 --
+ fs/xfs/xfs_trans_buf.c     | 25 +++++++++++++------------
+ 3 files changed, 15 insertions(+), 15 deletions(-)
 
-On 13/08/17 12:25, Christoph Hellwig wrote:
-> On Sat, Aug 12, 2017 at 07:44:14PM -0700, Dan Williams wrote:
->> How about MAP_SYNC == (MAP_SHARED|MAP_PRIVATE)? On older kernels that
->> should get -EINVAL, and on new kernels it means SYNC+SHARED.
-> 
-> Cute trick, but I'd hate to waster it just for our little flag.
-> 
-> How about:
-> 
-> #define __MAP_VALIDATE		MAP_SHARED|MAP_PRIVATE
-> #define MAP_SYNC		0x??? | __MAP_VALIDATE
-> 
-> so that we can reuse that trick for any new flag?
-> 
-
-YES! And please create a mask for all new flags and in validation
-code if ((m_flags & __MAP_VALIDATE) == __MAP_VALIDATE) then you
-want that (m_flags & __MAP_NEWFLAGS) does not come empty, this
-way you actually preserve the old check that SHARED and PRIVATE
-do not co exist.
-
-Few Comments on this new MAP_ flag
-
-0] The name at least needs to be MAP_MSYNC because only meta-data is
-    synced not the data pointed to. That is the responsibility of the app
-
-1] This flag you have named MAP_SYNC but it is very much related to
-   dax and the ability for user-mode to "flush" the data pointed by this
-   now "synced" meta data.
-   For example in ext4, this flag set on an inode that is *not* IS_DAX
-   should fail the mmap. Because there is no point of synced meta if the
-   data is actually in page-cache and we know for sure it was not yet synced,
-   And there is no way for user-mode to directly "sync" the data as well.
-
-2] The code should be constructed that the default check for the MAP_SYNC
-   should fail, and only Hopped in FSs are allowed.
-   (So not to modify all Implementations of file_operations->mmap() )
-
-3] /dev/pmem could start serving DAX pages in mmap, if asked for MAP_MSYNC
-   (which is also an API that says "I know I need to cl_flush". See 1. )
-
-4] Once we have this flag. And properly implemented at least in one FS
-   and optionally in /dev/pmemX we no longer have any justification for
-   /dev/daxX and it can die a slow and happy death.
-
-Thanks, Cheers
-Boaz
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index e0bcc4a..9c97896 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4466,7 +4466,8 @@ xfs_btree_block_change_owner(
+ 	if (bp) {
+ 		if (cur->bc_tp) {
+ 			xfs_trans_ordered_buf(cur->bc_tp, bp);
+-			xfs_btree_log_block(cur, bp, XFS_BB_OWNER);
++			/*xfs_trans_buf_set_type(cur->bc_tp, bp,
++					       XFS_BLFT_BTREE_BUF);*/
+ 		} else {
+ 			xfs_buf_delwri_queue(bp, bbcoi->buffer_list);
+ 		}
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index ffd5a15..12c0452 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -378,8 +378,6 @@ xfs_ialloc_inode_init(
+ 				 * transaction and pin the log appropriately.
+ 				 */
+ 				xfs_trans_ordered_buf(tp, fbuf);
+-				xfs_trans_log_buf(tp, fbuf, 0,
+-						  BBTOB(fbuf->b_length) - 1);
+ 			}
+ 		} else {
+ 			fbuf->b_flags |= XBF_DONE;
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 58818a0..3a358cb 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -560,16 +560,12 @@ xfs_trans_log_buf(
+ 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+ 	ASSERT(first <= last && last < BBTOB(bp->b_length));
++	ASSERT(!(bip->bli_flags & XFS_BLI_ORDERED));
+ 
+ 	xfs_trans_dirty_buf(tp, bp);
+ 
+-	/*
+-	 * If we have an ordered buffer we are not logging any dirty range but
+-	 * it still needs to be marked dirty and that it has been logged.
+-	 */
+ 	trace_xfs_trans_log_buf(bip);
+-	if (!(bip->bli_flags & XFS_BLI_ORDERED))
+-		xfs_buf_item_log(bip, first, last);
++	xfs_buf_item_log(bip, first, last);
+ }
+ 
+ 
+@@ -722,12 +718,11 @@ xfs_trans_inode_alloc_buf(
+ }
+ 
+ /*
+- * Mark the buffer as ordered for this transaction. This means
+- * that the contents of the buffer are not recorded in the transaction
+- * but it is tracked in the AIL as though it was. This allows us
+- * to record logical changes in transactions rather than the physical
+- * changes we make to the buffer without changing writeback ordering
+- * constraints of metadata buffers.
++ * Mark the buffer as ordered for this transaction. This means that the contents
++ * of the buffer are not recorded in the transaction but it is tracked in the
++ * AIL as though it was. This allows us to record logical changes in
++ * transactions rather than the physical changes we make to the buffer without
++ * changing writeback ordering constraints of metadata buffers.
+  */
+ void
+ xfs_trans_ordered_buf(
+@@ -742,6 +737,12 @@ xfs_trans_ordered_buf(
+ 
+ 	bip->bli_flags |= XFS_BLI_ORDERED;
+ 	trace_xfs_buf_item_ordered(bip);
++
++	/*
++	 * We don't log a dirty range of an ordered buffer but it still needs
++	 * to be marked dirty and that it has been logged.
++	 */
++	xfs_trans_dirty_buf(tp, bp);
+ }
+ 
+ /*
+-- 
+2.9.4
 
