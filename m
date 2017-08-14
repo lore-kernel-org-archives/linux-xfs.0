@@ -1,112 +1,179 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29096 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:38459 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752516AbdHNWH0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 18:07:26 -0400
-Subject: [PATCH 3/3] xfs: evict all inodes involved with log redo item
+        with ESMTP id S1752912AbdHNW2e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 18:28:34 -0400
+Date: Mon, 14 Aug 2017 15:28:27 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 14 Aug 2017 15:07:19 -0700
-Message-ID: <150274843988.16269.18072771696022634179.stgit@magnolia>
-In-Reply-To: <150274842319.16269.6356165894145725007.stgit@magnolia>
-References: <150274842319.16269.6356165894145725007.stgit@magnolia>
+Subject: Re: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
+Message-ID: <20170814222827.GC4796@magnolia>
+References: <20170814081806.GA3924@debian.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170814081806.GA3924@debian.home>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, viro@ZenIV.linux.org.uk
+To: Ernesto =?iso-8859-1?Q?A=2E_Fern=E1ndez?= <ernesto.mnd.fernandez@gmail.com>
+Cc: linux-xfs@vger.kernel.org, Zorro Lang <zlang@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Aug 14, 2017 at 05:18:10AM -0300, Ernesto A. Fernández wrote:
+> When changing a file's ACL mask, xfs_set_acl() will first set the group
+> bits of i_mode to the value of the mask, and only then set the actual
+> extended attribute representing the new ACL.
+> 
+> If the second part fails (due to lack of space, for example) and the
+> file had no ACL attribute to begin with, the system will from now on
+> assume that the mask permission bits are actual group permission bits,
+> potentially granting access to the wrong users.
+> 
+> To prevent this, perform the mode update and the ACL update as part of
+> the same transaction, and restore the original mode to the vfs inode in
+> case of failure. This requires a change in how extended attributes are
+> deleted: commit the transaction even if there was no attribute to
+> remove, to log the standard inode fields.
+> 
+> Signed-off-by: Ernesto A. Fernández <ernesto.mnd.fernandez@gmail.com>
+> ---
+> This issue is covered by generic/449 in xfstests. Several other filesystems
+> are affected by this, some of them have already applied patches:
+>   - 397e434 ext4: preserve i_mode if __ext4_set_acl() fails
+>   - f070e5a jfs: preserve i_mode if __jfs_set_acl() fails
+>   - fcea8ae reiserfs: preserve i_mode if __reiserfs_set_acl() fails
+>   - fe26569 ext2: preserve i_mode if ext2_set_acl() fails
+> The test won't exactly pass after this patch is applied. It will fail
+> differently, this time claiming that the filesystem is inconsistent. This
 
-When we introduced the bmap redo log items, we set MS_ACTIVE on the
-mountpoint and XFS_IRECOVERY on the inode to prevent unlinked inodes
-from being truncated prematurely during log recovery.  This also had the
-effect of putting linked inodes on the lru instead of evicting them.
+I disagree that corrupting the filesystem is an acceptable strategy for
+dealing with insufficient space to handle setfacl.
 
-Unfortunately, we neglected to find all those unreferenced lru inodes
-and evict them after finishing log recovery, which means that we leak
-them if anything goes wrong in the rest of xfs_mountfs, because the lru
-is only cleaned out on unmount.
+> probably has something to do with setting too many extended attributes, as
+> it goes away if you change the attribute size in the test from 1k to 64k.
 
-Therefore, evict unreferenced inodes in the lru list immediately
-after clearing MS_ACTIVE.
+Hadn't you better look into why it does that and handle it?
 
-Fixes: 17c12bcd30 ("xfs: when replaying bmap operations, don't let unlinked inodes get reaped")
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Cc: viro@ZenIV.linux.org.uk
----
- fs/inode.c         |    1 +
- fs/internal.h      |    1 -
- fs/xfs/xfs_log.c   |   12 ++++++++++++
- include/linux/fs.h |    1 +
- 4 files changed, 14 insertions(+), 1 deletion(-)
+--D
 
-
-diff --git a/fs/inode.c b/fs/inode.c
-index 5037059..6a1626e 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -637,6 +637,7 @@ void evict_inodes(struct super_block *sb)
- 
- 	dispose_list(&dispose);
- }
-+EXPORT_SYMBOL_GPL(evict_inodes);
- 
- /**
-  * invalidate_inodes	- attempt to free all inodes on a superblock
-diff --git a/fs/internal.h b/fs/internal.h
-index 9676fe1..fedfe94 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -132,7 +132,6 @@ static inline bool atime_needs_update_rcu(const struct path *path,
- extern void inode_io_list_del(struct inode *inode);
- 
- extern long get_nr_dirty_inodes(void);
--extern void evict_inodes(struct super_block *);
- extern int invalidate_inodes(struct super_block *, bool);
- 
- /*
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 4ebd0ba..1c594e3 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -757,12 +757,24 @@ xfs_log_mount_finish(
- 	 * inodes.  Turn it off immediately after recovery finishes
- 	 * so that we don't leak the quota inodes if subsequent mount
- 	 * activities fail.
-+	 *
-+	 * We let all inodes involved in redo item processing end up on
-+	 * the LRU instead of being evicted immediately so that if we do
-+	 * something to an unlinked inode, the irele won't cause
-+	 * premature truncation and freeing of the inode, which results
-+	 * in log recovery failure.  We have to evict the unreferenced
-+	 * lru inodes after clearing MS_ACTIVE because we don't
-+	 * otherwise clean up the lru if there's a subsequent failure in
-+	 * xfs_mountfs, which leads to us leaking the inodes if nothing
-+	 * else (e.g. quotacheck) references the inodes before the
-+	 * mount failure occurs.
- 	 */
- 	mp->m_super->s_flags |= MS_ACTIVE;
- 	error = xlog_recover_finish(mp->m_log);
- 	if (!error)
- 		xfs_log_work_queue(mp);
- 	mp->m_super->s_flags &= ~MS_ACTIVE;
-+	evict_inodes(mp->m_super);
- 
- 	return error;
- }
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 7b5d681..e730438 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2830,6 +2830,7 @@ static inline void lockdep_annotate_inode_mutex_key(struct inode *inode) { };
- #endif
- extern void unlock_new_inode(struct inode *);
- extern unsigned int get_next_ino(void);
-+extern void evict_inodes(struct super_block *sb);
- 
- extern void __iget(struct inode * inode);
- extern void iget_failed(struct inode *);
-
+> 
+>  fs/xfs/libxfs/xfs_attr.c | 13 +++++++++++--
+>  fs/xfs/xfs_acl.c         | 39 ++++++++++++++-------------------------
+>  2 files changed, 25 insertions(+), 27 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index de7b9bd..c3193e1 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -395,6 +395,7 @@ xfs_attr_remove(
+>  	struct xfs_defer_ops	dfops;
+>  	xfs_fsblock_t		firstblock;
+>  	int			error;
+> +	int			noattr = 0;
+>  
+>  	XFS_STATS_INC(mp, xs_attr_remove);
+>  
+> @@ -438,7 +439,12 @@ xfs_attr_remove(
+>  	xfs_trans_ijoin(args.trans, dp, 0);
+>  
+>  	if (!xfs_inode_hasattr(dp)) {
+> -		error = -ENOATTR;
+> +		/*
+> +		 * Commit even if there is no attr to remove, because when
+> +		 * setting ACLs the caller may be changing the mode in the
+> +		 * same transaction.
+> +		 */
+> +		noattr = 1;
+>  	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+>  		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+>  		error = xfs_attr_shortform_remove(&args);
+> @@ -458,7 +464,7 @@ xfs_attr_remove(
+>  	if (mp->m_flags & XFS_MOUNT_WSYNC)
+>  		xfs_trans_set_sync(args.trans);
+>  
+> -	if ((flags & ATTR_KERNOTIME) == 0)
+> +	if ((flags & ATTR_KERNOTIME) == 0 && !noattr)
+>  		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
+>  
+>  	/*
+> @@ -468,6 +474,9 @@ xfs_attr_remove(
+>  	error = xfs_trans_commit(args.trans);
+>  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+>  
+> +	if (!error && noattr)
+> +		error = -ENOATTR;
+> +
+>  	return error;
+>  
+>  out:
+> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> index 7034e17..1fe4363 100644
+> --- a/fs/xfs/xfs_acl.c
+> +++ b/fs/xfs/xfs_acl.c
+> @@ -226,28 +226,13 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+>  	return error;
+>  }
+>  
+> -static int
+> -xfs_set_mode(struct inode *inode, umode_t mode)
+> -{
+> -	int error = 0;
+> -
+> -	if (mode != inode->i_mode) {
+> -		struct iattr iattr;
+> -
+> -		iattr.ia_valid = ATTR_MODE | ATTR_CTIME;
+> -		iattr.ia_mode = mode;
+> -		iattr.ia_ctime = current_time(inode);
+> -
+> -		error = xfs_setattr_nonsize(XFS_I(inode), &iattr, XFS_ATTR_NOACL);
+> -	}
+> -
+> -	return error;
+> -}
+> -
+>  int
+>  xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+>  {
+>  	int error = 0;
+> +	int mode_changed = 0;
+> +	umode_t old_mode = inode->i_mode;
+> +	struct timespec old_ctime = inode->i_ctime;
+>  
+>  	if (!acl)
+>  		goto set_acl;
+> @@ -257,16 +242,20 @@ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+>  		return error;
+>  
+>  	if (type == ACL_TYPE_ACCESS) {
+> -		umode_t mode;
+> -
+> -		error = posix_acl_update_mode(inode, &mode, &acl);
+> -		if (error)
+> -			return error;
+> -		error = xfs_set_mode(inode, mode);
+> +		error = posix_acl_update_mode(inode, &inode->i_mode, &acl);
+>  		if (error)
+>  			return error;
+> +		inode->i_ctime = current_time(inode);
+> +		XFS_STATS_INC(XFS_I(inode)->i_mount, xs_ig_attrchg);
+> +		mode_changed = 1;
+>  	}
+>  
+>   set_acl:
+> -	return __xfs_set_acl(inode, acl, type);
+> +	error = __xfs_set_acl(inode, acl, type);
+> +	if (error && mode_changed) {
+> +		inode->i_mode = old_mode;
+> +		inode->i_ctime = old_ctime;
+> +		XFS_STATS_DEC(XFS_I(inode)->i_mount, xs_ig_attrchg);
+> +	}
+> +	return error;
+>  }
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
