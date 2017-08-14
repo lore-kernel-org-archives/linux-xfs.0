@@ -1,40 +1,173 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:38597 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751000AbdHMRIo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Aug 2017 13:08:44 -0400
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:29898 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751395AbdHNAhY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Aug 2017 20:37:24 -0400
+Date: Mon, 14 Aug 2017 10:28:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
+ conversion and the addition of an attribute
+Message-ID: <20170814002809.GA21024@dastard>
+References: <185A1C4516684B439A3711999ABACA79@alyakaslap>
+ <20170810113322.GM21024@dastard>
+ <63920C3663124B75BC0983A17533395A@alyakaslap>
+ <20170810145248.GE3777@bfoster.bfoster>
+ <20170810175548.GX24087@magnolia>
+ <20170810183233.GG3777@bfoster.bfoster>
+ <20170811022204.GQ21024@dastard>
+ <20170811142741.GA18609@bfoster.bfoster>
+ <20170812001637.GW21024@dastard>
+ <20170812140433.GA31523@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20170813092556.GA19019@infradead.org>
-References: <20170727131245.28279-1-jack@suse.cz> <x49zibq3rb0.fsf@segfault.boston.devel.redhat.com>
- <20170727215713.GA22000@linux.intel.com> <CALCETrVzxrQ76BXEfo4kcRFyQmxbrMwCLE17yPyTJzz0tUs+Dg@mail.gmail.com>
- <20170728093821.GB29433@quack2.suse.cz> <20170801110241.GE6742@infradead.org>
- <20170801112603.GG4215@quack2.suse.cz> <CAPcyv4hdOsuA6cqRCnOZMLMXvycwZevg06xOVZz3u0kupm2Drw@mail.gmail.com>
- <20170811100327.GD7064@infradead.org> <CAPcyv4hgqh8tHeWDNRnJnvwDh7hiFU8+3O0VWAHFQOEvPna11Q@mail.gmail.com>
- <20170813092556.GA19019@infradead.org>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sun, 13 Aug 2017 10:08:41 -0700
-Message-ID: <CAA9_cmd=fVP5n=Z=QThZEbCnWptNv2Amv6W7ujGG+O7VtXPs6g@mail.gmail.com>
-Subject: Re: [RFC PATCH 0/7] dax, ext4: Synchronous page faults
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170812140433.GA31523@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-nvdimm <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, Andy Lutomirski <luto@kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Alex Lyakas <alex@zadarastorage.com>, linux-xfs@vger.kernel.org, libor.klepac@bcom.cz
 
-On Sun, Aug 13, 2017 at 2:25 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Sat, Aug 12, 2017 at 07:44:14PM -0700, Dan Williams wrote:
->> How about MAP_SYNC == (MAP_SHARED|MAP_PRIVATE)? On older kernels that
->> should get -EINVAL, and on new kernels it means SYNC+SHARED.
->
-> Cute trick, but I'd hate to waster it just for our little flag.
->
-> How about:
->
-> #define __MAP_VALIDATE          MAP_SHARED|MAP_PRIVATE
-> #define MAP_SYNC                0x??? | __MAP_VALIDATE
->
-> so that we can reuse that trick for any new flag?
+On Sat, Aug 12, 2017 at 10:04:34AM -0400, Brian Foster wrote:
+> On Sat, Aug 12, 2017 at 10:16:37AM +1000, Dave Chinner wrote:
+> > On Fri, Aug 11, 2017 at 10:27:43AM -0400, Brian Foster wrote:
+> > > On Fri, Aug 11, 2017 at 12:22:04PM +1000, Dave Chinner wrote:
+> > Using XFS_BLI_ORDERED allows us to log the buffer without recording
+> > a new dirty range on the buffer. IOWs, it retains whatever dirty range
+> > it already had, and so after joining, marking it ordered and then
+> > logging the buffer, we have a XFS_BLI_DIRTY | XFS_BLI_ORDERED buffer
+> > in the transaction.
+> > 
+> > The question is this: what happens when a XFS_BLI_ORDERED buffer
+> > with a pre-existing dirty region is formatted for the CIL? We
+> > haven't done that before, so I'm betting that we don't relog the
+> > dirty region like we should be doing....
+> > 
+> > ... and we don't relog the existing dirty range because the
+> > ordered flag takes precedence.
+> > 
+> 
+> Right.. so it seems that the current implementation for ordered buffers
+> assumes a buffer is only ever used in one mode or the other.
+> Additionally, the AIL assumes that any reinserted item has been fully
+> relogged and so it moves the LSN forward unconditionally. Current
+> ordered buffer processing violates this constraint for an already logged
+> buffer.
 
-Yes, even better. I think that effectively kicks the need for mmap3()
-down the road a bit.
+Right, but it's not been a concern until now because we've only ever
+used ordered buffers on newly allocated buffers that haven't been
+previously logged.
+
+> > Ok, the ordered buffer checks in xfs_buf_item_size() and
+> > xfs_buf_item_format() need to also check for dirty regions. If dirty
+> > regions exist, then we treat it like a normal buffer rather than an
+> > ordered buffer. We can factor the dirty region check out of
+> > xfs_buf_item_unlock() for this...
+> > 
+> > Actually, check the case in xfs_buf_item_size() and remove the
+> > ordered flag if there are dirty regions. Then xfs_buf_item_format()
+> > will do the right thing without needing a duplicate check...
+> > 
+> 
+> I think that would work, assuming we actually check the
+> xfs_buf_log_format for dirty-ness rather than just the log item. As it
+> is, note that ordered buffers are still "logged" in the transaction
+> because otherwise the transaction infrastructure will assume it made no
+> change to the buf and toss the log item at commit time (we also need to
+> set up I/O completion on the buf and whatnot).
+
+*nod*
+
+> What concerns me about this approach is that I think we introduce the
+> possibility for subtle bugs. Existing ordered buffer code does this:
+> 
+>         xfs_trans_ordered_buf(tp, fbuf);
+>         xfs_trans_log_buf(tp, fbuf, 0,
+>                           BBTOB(fbuf->b_length) - 1);
+> 
+> ... which should continue to work fine. Allowing ordered buffers to
+> physically log means that something like this:
+> 
+>         xfs_trans_log_buf(tp, fbuf, 0,
+>                           BBTOB(fbuf->b_length) - 1);
+>         xfs_trans_ordered_buf(tp, fbuf);
+> 
+> ... is now a bug that is only apparent after scrutiny of xfs_trans_*()
+> and logging internals. Granted, the above already is incorrect, but it
+> technically still works as expected. I don't see the need to turn that
+> into a real problem by actually logging the buffer when we might not
+> expect to.
+
+Well, it's not a "things go bad" bug. It's a "we screwed up an
+optimisation" bug, because logging the buffer contents unnecessarily
+only increases the required log bandwidth. It shouldn't affect
+replay because the buffer is still correctly ordered in the log.
+Hence both the transient and end states of the buffer during replay
+will still be the same...
+
+> So while I agree that this could probably be made to work and I think it
+> is ideal to doing any kind of logged range tracking in the deferred ops
+> code, it still seems more tricky than it needs to be. To relog a held
+> buffer in a new transaction, why not just mark the lidp dirty in the new
+> transaction so it inherits all existing dirty segments? AFAICT, all we
+> really need to do is:
+> 
+>         tp->t_flags |= XFS_TRANS_DIRTY;
+>         lidp->lid_flags |= XFS_LID_DIRTY;
+> 
+> ... on the new transaction and everything should just work as designed
+> (for a buffer that has been previously logged, held, rolled and
+> rejoined).
+
+We would also need to set:
+
+	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
+
+which means we should....
+
+> To elaborate a bit, I think we could refactor xfs_trans_log_buf() into a
+> new xfs_trans_dirty_buf() helper that covers all of the relevant bits
+> not related to actually dirtying the bli. xfs_trans_log_buf() would call
+> xfs_trans_dirty_buf() and thus would not change functionally.
+> xfs_trans_ordered_buf() could now call xfs_trans_dirty_buf() and thus
+> the existing ordered buf users would no longer need to log a range of
+> the buffer (which doesn't make much sense anyways).
+
+... do this. :)
+
+> Finally, the
+> deferred infrastructure could join/dirty/hold the buffer to the new
+> transaction after each roll without needing to track and relog specific
+> regions of the buffer. Thoughts?
+
+Yup, that's exactly what I was thinking should be possible by using
+ordered buffers.... :)
+
+And Christoph's rework of the transaction roll and deferred inode
+handling that he just posted should make adding buffer handling
+quite a bit neater and cleaner.
+
+> Unless I'm missing something as to why this is busted, I'll take a
+> closer look at the code and float an rfc next week since otherwise it
+> sounds like this is something we could actually fix up in the ordered
+> buffer code today.
+
+Cool.
+
+> > Nothing in XFS is ever simple, is it? :P
+> 
+> There used to be a level of satisfaction at feeling I understood some
+> new corner of XFS. Nowadays I know that just means I'm not yet aware of
+> whatever dragons remain in that corner (is that paranoia? not if it's
+> true!). :P
+
+Ah, the true signs of expertise: developing a knowledge base and
+insight deep enough to understand that there is always another
+hidden dragon poised to bite your head off. :)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
