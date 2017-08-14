@@ -1,80 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55800 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:45750 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751089AbdHPOm7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 Aug 2017 10:42:59 -0400
-Subject: Re: [PATCH 1/6 v2] mkfs: Save raw user input field to the opts struct
-References: <20170811123037.15962-1-jtulak@redhat.com>
- <20170815150812.32237-1-jtulak@redhat.com>
- <806d4e0b-587c-4c12-db45-3942b4ab0753@sandeen.net>
- <CACj3i72UC1vc9LD_JymfovkgnUkEdDt98=S5u9JSPUS=goiO=w@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b1e77067-8b6a-c64a-a4bd-80ccccefff59@sandeen.net>
-Date: Wed, 16 Aug 2017 09:42:58 -0500
+        id S1752253AbdHNMkk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 14 Aug 2017 08:40:40 -0400
+Date: Mon, 14 Aug 2017 08:40:35 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH V2] xfs_metadump: zap stale date in DIR2_LEAF1 dirs
+Message-ID: <20170814124034.GB39742@bfoster.bfoster>
+References: <37cd41d1-335f-a3af-d92c-c0b4b6d1356a@redhat.com>
+ <5f60ef75-8481-872e-91ac-76ea62588773@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <CACj3i72UC1vc9LD_JymfovkgnUkEdDt98=S5u9JSPUS=goiO=w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5f60ef75-8481-872e-91ac-76ea62588773@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Stefan Ring <stefanrin@gmail.com>
 
-On 8/16/17 4:11 AM, Jan Tulak wrote:
-> On Wed, Aug 16, 2017 at 1:07 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
->> On 8/15/17 10:08 AM, Jan Tulak wrote:
->>> Save exactly what the user gave us for every option.  This way, we will
->>> never lose the information if we need it to print back an issue.
->>> (Just add the infrastructure now, used in the next patches.)
->>>
->>> Signed-off-by: Jan Tulak <jtulak@redhat.com>
->>
->> Sorry for not getting to the V1 review, catching up from a week off.
+On Thu, Aug 10, 2017 at 02:30:10PM -0700, Eric Sandeen wrote:
+> xfs_metadump attempts to zero out unused regions of metadata
+> blocks to prevent data leaks when sharing metadata images.
 > 
-> I hope you enjoyed your holiday. :-)
-
-...
-
-
->>> +static char *
->>> +get_conf_raw_safe(const struct opt_params *opt, const int subopt)
->>> +{
->>> +     char *str;
->>> +
->>> +     str = NULL;
->>> +
->>> +     if (get_conf_raw(opt, subopt, &str) == -ENOMEM) {
->>> +             fprintf(stderr, "Out of memory!");
->>
->> Seems like using strerror() would be better than a hand-rolled, un-
->> translatable string?
+> However, Stefan Ring reported a significant number of leaked
+> strings when dumping his 1T filesystem.  Based on a reduced
+> metadata set, I was able to identify "leaf" directories
+> (with XFS_DIR2_LEAF1_MAGIC magic) as the primary culprit;
+> the region between the end of the entries array and the start
+> of the bests array was not getting zeroed out.  This patch
+> seems to remedy that problem.
 > 
-> Every day there is something new. :-)
+> Reported-by: Stefan Ring <stefanrin@gmail.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-Yeah, sorry.  But in general, strings need to be translatable; (that was
-pointed out before) and strerror() would do that for your for free.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->>
->>> +             return NULL;
->>> +     }
->>
->> Again, I don't see that any subsequent patches ever call get_conf_raw();
->> is there any reason to even have this wrapper now?
 > 
-> Luis had a pretty strong opinion about having them there when he will
-> need them in his own patches later on and I saw no reason why not to
-> add them right now when the functions are created. After all, they
-> will be useful later on also for me, when I want to limit the amount
-> of asserts and be more return-oriented. It's just not in this
-> patchset.
-
-Hm, ok.  Let me reread that, thread - I'm just looking at this patchset
-as sent.
-
-In general, I'm not clear on what your "_safe" and "_unsafe" variants
-are about but maybe it was discussed in the prior thread I skipped.
-
-Thanks,
--Eric
+> V2:
+> 
+> - factor into new function, process_dir_leaf_block
+> - add DIR3_LEAF1_MAGIC
+> - don't add count+stale; count includes stale entries
+> - move ltp into code block
+> 
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 3967df6..a8756d6 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -1442,6 +1442,37 @@ process_sf_attr(
+>  }
+>  
+>  static void
+> +process_dir_leaf_block(
+> +	char				*block)
+> +{
+> +	struct xfs_dir2_leaf		*leaf;
+> +	struct xfs_dir3_icleaf_hdr 	leafhdr;
+> +
+> +	if (!zero_stale_data)
+> +		return;
+> +
+> +	/* Yes, this works for dir2 & dir3.  Difference is padding. */
+> +	leaf = (struct xfs_dir2_leaf *)block;
+> +	M_DIROPS(mp)->leaf_hdr_from_disk(&leafhdr, leaf);
+> +
+> +	/* Zero out space from end of ents[] to bests */
+> +	if (leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
+> +	    leafhdr.magic == XFS_DIR3_LEAF1_MAGIC) {
+> +		struct xfs_dir2_leaf_tail	*ltp;
+> +		__be16				*lbp;
+> +		struct xfs_dir2_leaf_entry	*ents;
+> +		char				*free; /* end of ents */
+> +
+> +		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
+> +		free = (char *)&ents[leafhdr.count];
+> +		ltp = xfs_dir2_leaf_tail_p(mp->m_dir_geo, leaf);
+> +		lbp = xfs_dir2_leaf_bests_p(ltp);
+> +		memset(free, 0, (char *)lbp - free);
+> +		iocur_top->need_crc = 1;
+> +	}
+> +}
+> +
+> +static void
+>  process_dir_data_block(
+>  	char		*block,
+>  	xfs_fileoff_t	offset,
+> @@ -1801,11 +1832,15 @@ process_single_fsb_objects(
+>  		dp = iocur_top->data;
+>  		switch (btype) {
+>  		case TYP_DIR2:
+> -			if (o >= mp->m_dir_geo->leafblk)
+> +			if (o >= mp->m_dir_geo->freeblk) {
+> +				/* TODO, zap any stale data */
+>  				break;
+> -
+> -			process_dir_data_block(dp, o,
+> +			} else if (o >= mp->m_dir_geo->leafblk) {
+> +				process_dir_leaf_block(dp);
+> +			} else {
+> +				process_dir_data_block(dp, o,
+>  					 last == mp->m_dir_geo->fsbcount);
+> +			}
+>  			iocur_top->need_crc = 1;
+>  			break;
+>  		case TYP_SYMLINK:
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
