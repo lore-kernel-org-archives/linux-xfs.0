@@ -1,84 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f181.google.com ([209.85.161.181]:35960 "EHLO
-        mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753410AbdHNQEA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 12:04:00 -0400
-Received: by mail-yw0-f181.google.com with SMTP id u207so57464534ywc.3
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 09:04:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <ccf82f19-7693-25da-eaa6-a654830ca81e@netapp.com>
-References: <20170727131245.28279-1-jack@suse.cz> <x49zibq3rb0.fsf@segfault.boston.devel.redhat.com>
- <20170727215713.GA22000@linux.intel.com> <CALCETrVzxrQ76BXEfo4kcRFyQmxbrMwCLE17yPyTJzz0tUs+Dg@mail.gmail.com>
- <20170728093821.GB29433@quack2.suse.cz> <20170801110241.GE6742@infradead.org>
- <20170801112603.GG4215@quack2.suse.cz> <CAPcyv4hdOsuA6cqRCnOZMLMXvycwZevg06xOVZz3u0kupm2Drw@mail.gmail.com>
- <20170811100327.GD7064@infradead.org> <CAPcyv4hgqh8tHeWDNRnJnvwDh7hiFU8+3O0VWAHFQOEvPna11Q@mail.gmail.com>
- <20170813092556.GA19019@infradead.org> <ccf82f19-7693-25da-eaa6-a654830ca81e@netapp.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 14 Aug 2017 09:03:59 -0700
-Message-ID: <CAPcyv4jWW5EH8KrGWe-9oAT7RvFryh1ci6CcGeDb-zcOS9QMxw@mail.gmail.com>
-Subject: Re: [RFC PATCH 0/7] dax, ext4: Synchronous page faults
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([209.132.183.28]:32058 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752339AbdHNQyx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 14 Aug 2017 12:54:53 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id EF2C0CCB66
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 16:54:52 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BA90B60600
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 16:54:52 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH RFC 1/2] xfs: refactor buffer logging into buffer dirtying helper
+Date: Mon, 14 Aug 2017 12:54:50 -0400
+Message-Id: <20170814165451.43788-2-bfoster@redhat.com>
+In-Reply-To: <20170814165451.43788-1-bfoster@redhat.com>
+References: <20170814165451.43788-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Boaz Harrosh <boazh@netapp.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, linux-nvdimm <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Amit Golander <amitg@netapp.com>
+To: linux-xfs@vger.kernel.org
 
-On Mon, Aug 14, 2017 at 7:04 AM, Boaz Harrosh <boazh@netapp.com> wrote:
->
-> Thank you Jan, I'm patiently waiting for this MAP_SYNC flag since I asked for
-> it in 2014. I'm so glad its time is finally do.
->
-> Thank you for working on this. Please CC me on future patches.
-> (note the new Netapp email)
->
-> On 13/08/17 12:25, Christoph Hellwig wrote:
->> On Sat, Aug 12, 2017 at 07:44:14PM -0700, Dan Williams wrote:
->>> How about MAP_SYNC == (MAP_SHARED|MAP_PRIVATE)? On older kernels that
->>> should get -EINVAL, and on new kernels it means SYNC+SHARED.
->>
->> Cute trick, but I'd hate to waster it just for our little flag.
->>
->> How about:
->>
->> #define __MAP_VALIDATE                MAP_SHARED|MAP_PRIVATE
->> #define MAP_SYNC              0x??? | __MAP_VALIDATE
->>
->> so that we can reuse that trick for any new flag?
->>
->
-> YES! And please create a mask for all new flags and in validation
-> code if ((m_flags & __MAP_VALIDATE) == __MAP_VALIDATE) then you
-> want that (m_flags & __MAP_NEWFLAGS) does not come empty, this
-> way you actually preserve the old check that SHARED and PRIVATE
-> do not co exist.
->
-> Few Comments on this new MAP_ flag
->
-> 0] The name at least needs to be MAP_MSYNC because only meta-data is
->     synced not the data pointed to. That is the responsibility of the app
->
-> 1] This flag you have named MAP_SYNC but it is very much related to
->    dax and the ability for user-mode to "flush" the data pointed by this
->    now "synced" meta data.
->    For example in ext4, this flag set on an inode that is *not* IS_DAX
->    should fail the mmap. Because there is no point of synced meta if the
->    data is actually in page-cache and we know for sure it was not yet synced,
->    And there is no way for user-mode to directly "sync" the data as well.
->
-> 2] The code should be constructed that the default check for the MAP_SYNC
->    should fail, and only Hopped in FSs are allowed.
->    (So not to modify all Implementations of file_operations->mmap() )
->
-> 3] /dev/pmem could start serving DAX pages in mmap, if asked for MAP_MSYNC
->    (which is also an API that says "I know I need to cl_flush". See 1. )
->
-> 4] Once we have this flag. And properly implemented at least in one FS
->    and optionally in /dev/pmemX we no longer have any justification for
->    /dev/daxX and it can die a slow and happy death.
+xfs_trans_log_buf() is responsible for logging the dirty segments of
+a buffer along with setting all of the necessary state on the
+transaction, buffer, bli, etc., to ensure that the associated items
+are marked as dirty and prepared for I/O. We have a couple use cases
+that need to to dirty a buffer in a transaction without actually
+logging dirty ranges of the buffer.  One existing use case is
+ordered buffers, which are currently logged with arbitrary ranges to
+accomplish this even though the content of ordered buffers is never
+written to the log. Another pending use case is to relog an already
+dirty buffer across rolled transactions within the deferred
+operations infrastructure. This is required to prevent a held
+(XFS_BLI_HOLD) buffer from pinning the tail of the log.
 
-I'm all for replacing /dev/dax with filesystem equivalent
-functionality, but I don't think MAP_SYNC gets us fully there. That's
-what the MAP_DIRECT proposal [1] is meant to address.
+Refactor xfs_trans_log_buf() into a new function that contains all
+of the logic responsible to dirty the transaction, lidp, buffer and
+bli. This new function can be used in the future for the use cases
+outlined above. This patch does not introduce functional changes.
 
-[1]: https://lkml.org/lkml/2017/8/13/160
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_trans.h     |  4 +++-
+ fs/xfs/xfs_trans_buf.c | 46 ++++++++++++++++++++++++++++++----------------
+ 2 files changed, 33 insertions(+), 17 deletions(-)
+
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 6bdad6f..a9c4404 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -213,7 +213,9 @@ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
+ void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
+ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
+-void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
++void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
++				  uint);
++void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
+ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
+ 
+ void		xfs_extent_free_init_defer_op(void);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 86987d8..58818a0 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -493,25 +493,17 @@ xfs_trans_bhold_release(xfs_trans_t	*tp,
+ }
+ 
+ /*
+- * This is called to mark bytes first through last inclusive of the given
+- * buffer as needing to be logged when the transaction is committed.
+- * The buffer must already be associated with the given transaction.
+- *
+- * First and last are numbers relative to the beginning of this buffer,
+- * so the first byte in the buffer is numbered 0 regardless of the
+- * value of b_blkno.
++ * Mark a buffer dirty in the transaction.
+  */
+ void
+-xfs_trans_log_buf(xfs_trans_t	*tp,
+-		  xfs_buf_t	*bp,
+-		  uint		first,
+-		  uint		last)
++xfs_trans_dirty_buf(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp)
+ {
+-	xfs_buf_log_item_t	*bip = bp->b_fspriv;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+-	ASSERT(first <= last && last < BBTOB(bp->b_length));
+ 	ASSERT(bp->b_iodone == NULL ||
+ 	       bp->b_iodone == xfs_buf_iodone_callbacks);
+ 
+@@ -531,8 +523,6 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 	bp->b_iodone = xfs_buf_iodone_callbacks;
+ 	bip->bli_item.li_cb = xfs_buf_iodone;
+ 
+-	trace_xfs_trans_log_buf(bip);
+-
+ 	/*
+ 	 * If we invalidated the buffer within this transaction, then
+ 	 * cancel the invalidation now that we're dirtying the buffer
+@@ -545,15 +535,39 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 		bp->b_flags &= ~XBF_STALE;
+ 		bip->__bli_format.blf_flags &= ~XFS_BLF_CANCEL;
+ 	}
++	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
+ 
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ 	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
++}
++
++/*
++ * This is called to mark bytes first through last inclusive of the given
++ * buffer as needing to be logged when the transaction is committed.
++ * The buffer must already be associated with the given transaction.
++ *
++ * First and last are numbers relative to the beginning of this buffer,
++ * so the first byte in the buffer is numbered 0 regardless of the
++ * value of b_blkno.
++ */
++void
++xfs_trans_log_buf(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp,
++	uint			first,
++	uint			last)
++{
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++
++	ASSERT(first <= last && last < BBTOB(bp->b_length));
++
++	xfs_trans_dirty_buf(tp, bp);
+ 
+ 	/*
+ 	 * If we have an ordered buffer we are not logging any dirty range but
+ 	 * it still needs to be marked dirty and that it has been logged.
+ 	 */
+-	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
++	trace_xfs_trans_log_buf(bip);
+ 	if (!(bip->bli_flags & XFS_BLI_ORDERED))
+ 		xfs_buf_item_log(bip, first, last);
+ }
+-- 
+2.9.4
+
