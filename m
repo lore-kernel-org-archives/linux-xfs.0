@@ -1,225 +1,303 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:61923 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751810AbdHPHus (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 Aug 2017 03:50:48 -0400
-Subject: [PATCH v5 3/5] mm: introduce mmap3 for safely defining new mmap
- flags
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 16 Aug 2017 00:44:22 -0700
-Message-ID: <150286946261.8837.1454297295346610351.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150286944610.8837.9513410258028246174.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150286944610.8837.9513410258028246174.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:20120 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752665AbdHNXP7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 19:15:59 -0400
+Date: Mon, 14 Aug 2017 16:15:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/6] mkfs: extend opt_params with a value field
+Message-ID: <20170814231553.GJ4796@magnolia>
+References: <20170811123037.15962-1-jtulak@redhat.com>
+ <20170811123037.15962-7-jtulak@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170811123037.15962-7-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: akpm@linux-foundation.org
-Cc: Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, luto@kernel.org, linux-fsdevel@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-The mmap(2) syscall suffers from the ABI anti-pattern of not validating
-unknown flags. However, proposals like MAP_SYNC and MAP_DIRECT need a
-mechanism to define new behavior that is known to fail on older kernels
-without the support. Define a new mmap3 syscall that checks for
-unsupported flags at syscall entry and add a 'mmap_supported_mask' to
-'struct file_operations' so generic code can validate the ->mmap()
-handler knows about the specified flags. This also arranges for the
-flags to be passed to the handler so it can do further local validation
-if the requested behavior can be fulfilled.
+On Fri, Aug 11, 2017 at 02:30:37PM +0200, Jan Tulak wrote:
+> This patch adds infrastructure that will be used in subsequent patches.
+> 
+> The Value field is the actual value used in computations for creating
+> the filesystem.  This is initialized with sensible default values. If
+> initialized to 0, the value is considered disabled. User input will
+> override default values.  If the field is a string and not a number, the
+> value is set to a positive non-zero number when user input has been
+> supplied.
+> 
+> Add functions that can be used to get/set values to opts table.
+> 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> 
+> ---
+> Change:
+> * make the value type to be long long instead of uint64 for now
+> * add collateral updates
+> * add bounds to get/set functions
+> * update the description of commit/in code
+> * merge with another patch, which adds the get/set functions.
+> ---
+>  mkfs/xfs_mkfs.c | 194 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 194 insertions(+)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 3e7ba5f0..61ef09e8 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -117,6 +117,13 @@ unsigned int		sectorsize;
+>   *     Filled raw string from the user, so we never lose that information e.g.
+>   *     to print it back in case of an issue.
+>   *
+> + *   value OPTIONAL
+> + *     The actual value used in computations for creating the filesystem.
+> + *     This is initialized with sensible default values. If initialized to 0,
+> + *     the value is considered disabled. User input will override default
+> + *     values. If the field is a string and not a number, the value is set to
+> + *     a positive non-zero number when user input has been supplied.
+> + *
+>   */
+>  struct opt_params {
+>  	int		index;
+> @@ -134,6 +141,7 @@ struct opt_params {
+>  		long long	maxval;
+>  		long long	flagval;
+>  		char		*raw_input;
+> +		long long	value;
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Suggested-by: Andy Lutomirski <luto@kernel.org>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- arch/x86/entry/syscalls/syscall_32.tbl |    1 +
- arch/x86/entry/syscalls/syscall_64.tbl |    1 +
- include/linux/fs.h                     |    3 ++-
- include/linux/mm.h                     |    2 +-
- include/linux/mman.h                   |   34 ++++++++++++++++++++++++++++++++
- include/linux/syscalls.h               |    3 +++
- mm/mmap.c                              |   32 +++++++++++++++++++++++++++---
- 7 files changed, 71 insertions(+), 5 deletions(-)
+I think this is less sensitive for mkfs options, but for structures
+please keep variables of the same type together to reduce memory usage.
+That (char *) between the (long long) creates a 4-byte padding hole on
+32-bit machines.  I recommend pahole for things like this.
 
-diff --git a/arch/x86/entry/syscalls/syscall_32.tbl b/arch/x86/entry/syscalls/syscall_32.tbl
-index 448ac2161112..0618b5b38b45 100644
---- a/arch/x86/entry/syscalls/syscall_32.tbl
-+++ b/arch/x86/entry/syscalls/syscall_32.tbl
-@@ -391,3 +391,4 @@
- 382	i386	pkey_free		sys_pkey_free
- 383	i386	statx			sys_statx
- 384	i386	arch_prctl		sys_arch_prctl			compat_sys_arch_prctl
-+385	i386	mmap3			sys_mmap_pgoff_strict
-diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
-index 5aef183e2f85..e204c736d7e9 100644
---- a/arch/x86/entry/syscalls/syscall_64.tbl
-+++ b/arch/x86/entry/syscalls/syscall_64.tbl
-@@ -339,6 +339,7 @@
- 330	common	pkey_alloc		sys_pkey_alloc
- 331	common	pkey_free		sys_pkey_free
- 332	common	statx			sys_statx
-+333	common  mmap3			sys_mmap_pgoff_strict
- 
- #
- # x32-specific system call numbers start at 512 to avoid cache impact
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 405976022752..db42da9f98c4 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1674,6 +1674,7 @@ struct file_operations {
- 	long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
- 	long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
- 	int (*mmap) (struct file *, struct vm_area_struct *, unsigned long);
-+	unsigned long mmap_supported_mask;
- 	int (*open) (struct inode *, struct file *);
- 	int (*flush) (struct file *, fl_owner_t id);
- 	int (*release) (struct inode *, struct file *);
-@@ -1746,7 +1747,7 @@ static inline ssize_t call_write_iter(struct file *file, struct kiocb *kio,
- static inline int call_mmap(struct file *file, struct vm_area_struct *vma,
- 			    unsigned long flags)
- {
--	return file->f_op->mmap(file, vma, 0);
-+	return file->f_op->mmap(file, vma, flags);
- }
- 
- ssize_t rw_copy_check_uvector(int type, const struct iovec __user * uvector,
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 46b9ac5e8569..49eef48da4b7 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -2090,7 +2090,7 @@ extern unsigned long get_unmapped_area(struct file *, unsigned long, unsigned lo
- 
- extern unsigned long mmap_region(struct file *file, unsigned long addr,
- 	unsigned long len, vm_flags_t vm_flags, unsigned long pgoff,
--	struct list_head *uf);
-+	struct list_head *uf, unsigned long flags);
- extern unsigned long do_mmap(struct file *file, unsigned long addr,
- 	unsigned long len, unsigned long prot, unsigned long flags,
- 	vm_flags_t vm_flags, unsigned long pgoff, unsigned long *populate,
-diff --git a/include/linux/mman.h b/include/linux/mman.h
-index c8367041fafd..0e1de42c836f 100644
---- a/include/linux/mman.h
-+++ b/include/linux/mman.h
-@@ -7,6 +7,40 @@
- #include <linux/atomic.h>
- #include <uapi/linux/mman.h>
- 
-+#ifndef MAP_32BIT
-+#define MAP_32BIT 0
-+#endif
-+#ifndef MAP_HUGE_2MB
-+#define MAP_HUGE_2MB 0
-+#endif
-+#ifndef MAP_HUGE_1GB
-+#define MAP_HUGE_1GB 0
-+#endif
-+
-+/*
-+ * The historical set of flags that all mmap implementations implicitly
-+ * support when file_operations.mmap_supported_mask is zero.
-+ */
-+#define LEGACY_MAP_SUPPORTED_MASK (MAP_SHARED \
-+		| MAP_PRIVATE \
-+		| MAP_FIXED \
-+		| MAP_ANONYMOUS \
-+		| MAP_UNINITIALIZED \
-+		| MAP_GROWSDOWN \
-+		| MAP_DENYWRITE \
-+		| MAP_EXECUTABLE \
-+		| MAP_LOCKED \
-+		| MAP_NORESERVE \
-+		| MAP_POPULATE \
-+		| MAP_NONBLOCK \
-+		| MAP_STACK \
-+		| MAP_HUGETLB \
-+		| MAP_32BIT \
-+		| MAP_HUGE_2MB \
-+		| MAP_HUGE_1GB)
-+
-+#define	MAP_SUPPORTED_MASK (LEGACY_MAP_SUPPORTED_MASK)
-+
- extern int sysctl_overcommit_memory;
- extern int sysctl_overcommit_ratio;
- extern unsigned long sysctl_overcommit_kbytes;
-diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
-index 3cb15ea48aee..c0e0c99cf4ad 100644
---- a/include/linux/syscalls.h
-+++ b/include/linux/syscalls.h
-@@ -858,6 +858,9 @@ asmlinkage long sys_perf_event_open(
- asmlinkage long sys_mmap_pgoff(unsigned long addr, unsigned long len,
- 			unsigned long prot, unsigned long flags,
- 			unsigned long fd, unsigned long pgoff);
-+asmlinkage long sys_mmap_pgoff_strict(unsigned long addr, unsigned long len,
-+			unsigned long prot, unsigned long flags,
-+			unsigned long fd, unsigned long pgoff);
- asmlinkage long sys_old_mmap(struct mmap_arg_struct __user *arg);
- asmlinkage long sys_name_to_handle_at(int dfd, const char __user *name,
- 				      struct file_handle __user *handle,
-diff --git a/mm/mmap.c b/mm/mmap.c
-index 744faae86781..386706831d67 100644
---- a/mm/mmap.c
-+++ b/mm/mmap.c
-@@ -1464,7 +1464,7 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
- 			vm_flags |= VM_NORESERVE;
- 	}
- 
--	addr = mmap_region(file, addr, len, vm_flags, pgoff, uf);
-+	addr = mmap_region(file, addr, len, vm_flags, pgoff, uf, flags);
- 	if (!IS_ERR_VALUE(addr) &&
- 	    ((vm_flags & VM_LOCKED) ||
- 	     (flags & (MAP_POPULATE | MAP_NONBLOCK)) == MAP_POPULATE))
-@@ -1521,6 +1521,32 @@ SYSCALL_DEFINE6(mmap_pgoff, unsigned long, addr, unsigned long, len,
- 	return retval;
- }
- 
-+SYSCALL_DEFINE6(mmap_pgoff_strict, unsigned long, addr, unsigned long, len,
-+		unsigned long, prot, unsigned long, flags,
-+		unsigned long, fd, unsigned long, pgoff)
-+{
-+	if (flags & ~(MAP_SUPPORTED_MASK))
-+		return -EOPNOTSUPP;
-+
-+	if (!(flags & MAP_ANONYMOUS)) {
-+		unsigned long f_supported;
-+		struct file *file;
-+
-+		audit_mmap_fd(fd, flags);
-+		file = fget(fd);
-+		if (!file)
-+			return -EBADF;
-+		f_supported = file->f_op->mmap_supported_mask;
-+		fput(file);
-+		if (!f_supported)
-+			f_supported = LEGACY_MAP_SUPPORTED_MASK;
-+		if (flags & ~f_supported)
-+			return -EOPNOTSUPP;
-+	}
-+
-+	return sys_mmap_pgoff(addr, len, prot, flags, fd, pgoff);
-+}
-+
- #ifdef __ARCH_WANT_SYS_OLD_MMAP
- struct mmap_arg_struct {
- 	unsigned long addr;
-@@ -1601,7 +1627,7 @@ static inline int accountable_mapping(struct file *file, vm_flags_t vm_flags)
- 
- unsigned long mmap_region(struct file *file, unsigned long addr,
- 		unsigned long len, vm_flags_t vm_flags, unsigned long pgoff,
--		struct list_head *uf)
-+		struct list_head *uf, unsigned long flags)
- {
- 	struct mm_struct *mm = current->mm;
- 	struct vm_area_struct *vma, *prev;
-@@ -1686,7 +1712,7 @@ unsigned long mmap_region(struct file *file, unsigned long addr,
- 		 * new file must not have been exposed to user-space, yet.
- 		 */
- 		vma->vm_file = get_file(file);
--		error = call_mmap(file, vma, 0);
-+		error = call_mmap(file, vma, flags);
- 		if (error)
- 			goto unmap_and_free_vma;
- 
+>  	}		subopt_params[MAX_SUBOPTS];
+>  } opts[MAX_OPTS] = {
+>  #define OPT_B	0
+> @@ -750,6 +758,180 @@ struct opt_params {
+>  #define WHACK_SIZE (128 * 1024)
+>  
+>  /*
+> + * Get and set values to the opts table.
+> + */
+> +static int
+> +get_conf_val_unsafe(int opt, int subopt, uint64_t *output)
+> +{
+> +	if (subopt < 0 || subopt >= MAX_SUBOPTS ||
+> +	    opt < 0 || opt >= MAX_OPTS) {
+> +		fprintf(stderr,
+> +		"This is a bug: get_conf_val called with invalid opt/subopt: %d/%d\n",
 
+Oh yeah, I forgot to mention this a few patches back -- if these remain
+fprintfs, then shouldn't the string be enclosed in _() so that strings
+can be localized?
+
+> +		opt, subopt);
+> +		return -EINVAL;
+> +	}
+> +	*output = opts[opt].subopt_params[subopt].value;
+> +	return 0;
+> +}
+> +
+> +static long long
+> +get_conf_val(int opt, int subopt)
+> +{
+> +	uint64_t res;
+> +	if (get_conf_val_unsafe(opt, subopt, &res) != 0)
+> +	    exit(1);
+
+Tab then space indentation problem here.
+
+> +	return res;
+> +}
+> +
+> +static int
+> +set_conf_val_unsafe(int opt, int subopt, uint64_t val)
+> +{
+> +	if (subopt < 0 || subopt >= MAX_SUBOPTS ||
+> +	    opt < 0 || opt >= MAX_OPTS) {
+> +		fprintf(stderr,
+> +		"This is a bug: set_conf_val called with invalid opt/subopt: %d/%d\n",
+> +		opt, subopt);
+> +		return -EINVAL;
+> +	}
+> +	struct subopt_param *sp = &opts[opt].subopt_params[subopt];
+> +	sp->value = val;
+> +
+> +	return 0;
+> +}
+> +
+> +static void
+> +set_conf_val(int opt, int subopt, uint64_t val)
+> +{
+> +	if (set_conf_val_unsafe(opt, subopt, val) != 0)
+> +		exit(1);
+> +}
+> +
+> +/*
+> + * A wrapper around set_conf_val which updates also connected/collateral values.
+> + * E.g. when changing S_LOG, update S_SIZE too.
+> + */
+> +static void
+> +set_conf_val_collateral(int opt, int subopt, uint64_t val)
+
+"collateral"... I hope we're not trying to secure a loan here. :)
+
+I suggest using "connected" (or "correlated") here instead.
+
+> +{
+> +	set_conf_val(opt, subopt, val);
+> +
+> +	switch (opt) {
+> +	case OPT_B:
+> +		switch (subopt) {
+> +		case B_LOG:
+> +			set_conf_val(OPT_B, B_SIZE, 1 << val);
+> +			break;
+> +		case B_SIZE:
+> +			set_conf_val(OPT_B, B_LOG,
+> +				libxfs_highbit32(val));
+> +			break;
+> +		}
+> +		break;
+> +	case OPT_D:
+> +		switch (subopt) {
+> +		case D_SECTLOG:
+> +			set_conf_val(OPT_S, S_LOG, val);
+> +			set_conf_val(OPT_S, S_SECTLOG, val);
+> +			set_conf_val(OPT_D, D_SECTSIZE,
+> +					1 << val);
+> +			set_conf_val(OPT_S, S_SECTSIZE,
+> +					1 << val);
+> +			set_conf_val(OPT_S, S_SIZE,
+> +					1 << val);
+> +			break;
+> +		case D_SECTSIZE:
+> +			set_conf_val(OPT_S, S_SIZE, val);
+> +			set_conf_val(OPT_S, S_SECTSIZE, val);
+> +			set_conf_val(OPT_D, D_SECTLOG,
+> +				libxfs_highbit32(val));
+> +			set_conf_val(OPT_S, S_LOG,
+> +				libxfs_highbit32(val));
+> +			set_conf_val(OPT_S, S_SECTLOG,
+> +				libxfs_highbit32(val));
+> +			break;
+> +		}
+> +		break;
+> +	case OPT_I:
+> +		switch (subopt) {
+> +		case I_LOG:
+> +			set_conf_val(OPT_I, I_SIZE, 1 << val);
+> +			break;
+> +		case I_SIZE:
+> +			set_conf_val(OPT_I, I_LOG,
+> +				libxfs_highbit32(val));
+> +			break;
+> +		}
+> +		break;
+> +	case OPT_L:
+> +		switch (subopt) {
+> +		case L_SECTLOG:
+> +			set_conf_val(OPT_L, L_SECTSIZE,
+> +					1 << val);
+> +			break;
+> +		case L_SECTSIZE:
+> +			set_conf_val(OPT_L, L_SECTLOG,
+> +			     libxfs_highbit32(val));
+
+Tab/space indentation problem here too.
+
+(Wondering if the calls here are short enough for a single line?)
+
+> +			break;
+> +		}
+> +		break;
+> +	case OPT_M:
+> +		switch (subopt) {
+> +		}
+> +		break;
+> +	case OPT_N:
+> +		switch (subopt) {
+> +		case N_LOG:
+> +			set_conf_val(OPT_N, N_SIZE, 1 << val);
+> +			break;
+> +		case N_SIZE:
+> +			set_conf_val(OPT_N, N_LOG,
+> +				libxfs_highbit32(val));
+> +			break;
+> +		}
+> +		break;
+> +	case OPT_R:
+> +		switch (subopt) {
+> +		}
+> +		break;
+> +	case OPT_S:
+> +		switch (subopt) {
+> +		case S_LOG:
+> +		case S_SECTLOG:
+> +			set_conf_val(OPT_S, S_LOG, val);
+> +			set_conf_val(OPT_D, D_SECTLOG, val);
+> +			set_conf_val(OPT_L, L_SECTLOG, val);
+> +			set_conf_val(OPT_D, D_SECTSIZE,
+> +					1 << val);
+> +			set_conf_val(OPT_S, S_SIZE, 1 << val);
+> +			set_conf_val(OPT_S, S_SECTSIZE,
+> +					1 << val);
+> +			set_conf_val(OPT_L, L_SECTLOG, val);
+> +			set_conf_val(OPT_L,
+> +					L_SECTSIZE, 1 << val);
+> +
+> +			set_conf_val(OPT_L, L_SECTSIZE, val);
+> +			break;
+> +		case S_SIZE:
+> +		case S_SECTSIZE:
+> +			set_conf_val(OPT_S, S_SIZE, val);
+> +			set_conf_val(OPT_D, D_SECTSIZE, val);
+> +			set_conf_val(OPT_D, D_SECTLOG,
+> +				libxfs_highbit32(val));
+> +			set_conf_val(OPT_S, S_LOG,
+> +				libxfs_highbit32(val));
+> +			set_conf_val(OPT_S, S_SECTLOG,
+> +				libxfs_highbit32(val));
+> +			set_conf_val(OPT_L,
+> +					L_SECTSIZE, val);
+> +			set_conf_val(OPT_L, L_SECTLOG,
+> +					libxfs_highbit32(val));
+> +			break;
+> +		}
+> +		break;
+> +	}
+> +}
+> +
+> +/*
+>   * Return 0 on success, -ENOMEM if it could not allocate enough memory for
+>   * the string to be saved.
+>   */
+> @@ -932,6 +1114,18 @@ getnum(
+>  }
+>  
+>  /*
+> + * A wrapper for getnum and set_conf_val.
+> + */
+> +static inline long long
+> +parse_conf_val(int opt, int subopt, char *value)
+> +{
+> +	long long num = getnum(value, &opts[opt], subopt);
+> +
+> +	set_conf_val_collateral(opt, subopt, num);
+> +	return num;
+> +}
+> +
+> +/*
+>   * Convert lsu to lsunit for 512 bytes blocks and check validity of the values.
+>   */
+>  static void
+> -- 
+> 2.13.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
