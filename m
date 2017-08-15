@@ -1,104 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f178.google.com ([209.85.161.178]:34433 "EHLO
-        mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753033AbdHOXu5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 19:50:57 -0400
-Received: by mail-yw0-f178.google.com with SMTP id s143so13693820ywg.1
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2017 16:50:57 -0700 (PDT)
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:33491 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752725AbdHOJsP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 05:48:15 -0400
+Received: by mail-wr0-f181.google.com with SMTP id b65so1592234wrd.0
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2017 02:48:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170815083732.GB27505@quack2.suse.cz>
-References: <20170805095013.GC14930@lst.de> <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com>
- <20170811104429.GA13736@lst.de> <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com>
- <20170812073349.GA12679@lst.de> <CAPcyv4iKG=Zoo1VXu23YBc6uWDFV4QSS+eAm9MSOynx2FjTHbw@mail.gmail.com>
- <20170813092436.GB32112@lst.de> <CAPcyv4ixTgSWG9K2Eg3XJmOvqJht81qL+Z3njoOjcXCD7XMpZw@mail.gmail.com>
- <20170814124059.GC17820@quack2.suse.cz> <CAPcyv4hi_Y5Qj=h_Qf4Bcyv+EWBosa2gQT+-8ro3hPY9VMshSA@mail.gmail.com>
- <20170815083732.GB27505@quack2.suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 15 Aug 2017 16:50:55 -0700
-Message-ID: <CAPcyv4hFTn4Fz5o+Gm857mS-RA6WAVsf4CmwiLiK2O8w2_SamQ@mail.gmail.com>
-Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
- dma-to-storage, and swap
+In-Reply-To: <20170814225609.GE4796@magnolia>
+References: <20170811123037.15962-1-jtulak@redhat.com> <20170811123037.15962-2-jtulak@redhat.com>
+ <20170814225609.GE4796@magnolia>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Tue, 15 Aug 2017 11:47:53 +0200
+Message-ID: <CACj3i73h67AxoZcDoCOHrFwAwmXjJTZ7getCC=BC9Xhb+g8m7g@mail.gmail.com>
+Subject: Re: [PATCH 1/6] mkfs: Save raw user input field to the opts struct
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Aug 15, 2017 at 1:37 AM, Jan Kara <jack@suse.cz> wrote:
-> On Mon 14-08-17 09:14:42, Dan Williams wrote:
->> On Mon, Aug 14, 2017 at 5:40 AM, Jan Kara <jack@suse.cz> wrote:
->> > On Sun 13-08-17 13:31:45, Dan Williams wrote:
->> >> On Sun, Aug 13, 2017 at 2:24 AM, Christoph Hellwig <hch@lst.de> wrote:
->> >> > Thay being said I think we absolutely should support RDMA memory
->> >> > registrations for DAX mappings.  I'm just not sure how S_IOMAP_IMMUTABLE
->> >> > helps with that.  We'll want a MAP_SYNC | MAP_POPULATE to make sure
->> >> > all the blocks are polulated and all ptes are set up.  Second we need
->> >> > to make sure get_user_page works, which for now means we'll need a
->> >> > struct page mapping for the region (which will be really annoying
->> >> > for PCIe mappings, like the upcoming NVMe persistent memory region),
->> >> > and we need to gurantee that the extent mapping won't change while
->> >> > the get_user_pages holds the pages inside it.  I think that is true
->> >> > due to side effects even with the current DAX code, but we'll need to
->> >> > make it explicit.  And maybe that's where we need to converge -
->> >> > "sealing" the extent map makes sense as such a temporary measure
->> >> > that is not persisted on disk, which automatically gets released
->> >> > when the holding process exits, because we sort of already do this
->> >> > implicitly.  It might also make sense to have explicitl breakable
->> >> > seals similar to what I do for the pNFS blocks kernel server, as
->> >> > any userspace RDMA file server would also need those semantics.
->> >>
->> >> Ok, how about a MAP_DIRECT flag that arranges for faults to that range to:
->> >>
->> >>     1/ only succeed if the fault can be satisfied without page cache
->> >>
->> >>     2/ only install a pte for the fault if it can do so without
->> >> triggering block map updates
->> >>
->> >> So, I think it would still end up setting an inode flag to make
->> >> xfs_bmapi_write() fail while any process has a MAP_DIRECT mapping
->> >> active. However, it would not record that state in the on-disk
->> >> metadata and it would automatically clear at munmap time. That should
->> >> be enough to support the host-persistent-memory, and
->> >> NVMe-persistent-memory use cases (provided we have struct page for
->> >> NVMe). Although, we need more safety infrastructure in the NVMe case
->> >> where we would need to software manage I/O coherence.
->> >
->> > Hum, this proposal (and the problems you are trying to deal with) seem very
->> > similar to Peter Zijlstra's mpin() proposal from 2014 [1], just moved to
->> > the DAX area (and so additionally complicated by the fact that filesystems
->> > now have to care). The patch set was not merged due to lack of interest I
->> > think but it looked sensible and the proposed API would make sense for more
->> > stuff than just DAX so maybe it would be better than MAP_DIRECT flag?
+On Tue, Aug 15, 2017 at 12:56 AM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Fri, Aug 11, 2017 at 02:30:32PM +0200, Jan Tulak wrote:
+>> Save exactly what the user gave us for every option.  This way, we will
+>> never lose the information if we need it to print back an issue.
+>> (Just add the infrastructure now, used in the next patches.)
 >>
->> Interesting, but I'm not sure I see the correlation. mm_mpin() makes a
->> "no-fault" guarantee and fixes the accounting of locked System RAM.
->> MAP_DIRECT still allows faults, and DAX mappings don't consume System
->> RAM so the accounting problem is not there for DAX. mm_pin() also does
->> not appear to have a relationship to a file backed memory like mmap
->> allows.
+>> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+>>
+>> ---
+>> CHANGE:
+>> * added strdup
+>> * added boundary checks to set/get functions
+>> ---
+>>  mkfs/xfs_mkfs.c | 69 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 69 insertions(+)
+>>
+>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>> index 7bb6408f..fa0b475c 100644
+>> --- a/mkfs/xfs_mkfs.c
+>> +++ b/mkfs/xfs_mkfs.c
+>> @@ -107,6 +107,11 @@ unsigned int             sectorsize;
+>>   *     sets what is used with simple specifying the subopt (-d file).
+>>   *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
+>>   *     value in any case.
+>> + *
+>> + *   raw_input INTERNAL
+>> + *     Filled raw string from the user, so we never lose that information e.g.
+>> + *     to print it back in case of an issue.
+>> + *
+>>   */
+>>  struct opt_params {
+>>       const char      name;
+>> @@ -122,6 +127,7 @@ struct opt_params {
+>>               long long       minval;
+>>               long long       maxval;
+>>               long long       defaultval;
+>> +             char            *raw_input;
+>>       }               subopt_params[MAX_SUBOPTS];
+>>  };
+>>
+>> @@ -730,6 +736,69 @@ struct opt_params mopts = {
+>>  #define WHACK_SIZE (128 * 1024)
+>>
+>>  /*
+>> + * Return 0 on success, -ENOMEM if it could not allocate enough memory for
+>> + * the string to be saved.
+>> + */
+>> +static int
+>> +set_conf_raw(struct opt_params *opt, const int subopt, const char *value)
+>> +{
+>> +     if (subopt < 0 || subopt >= MAX_SUBOPTS) {
+>> +             fprintf(stderr,
+>> +             "This is a bug: set_conf_raw called with invalid opt/subopt: %c/%d\n",
+>> +             opt->name, subopt);
 >
-> So the accounting part is probably non-interesting for DAX purposes and I
-> agree there are other differences as well. But mm_mpin() prevented page
-> migrations which is parallel to your requirement of "offset->block mapping
-> is permanent".  Furthermore mm_mpin() work was there for RDMA so that it
-> has saner interface to pin pages than get_user_pages() and you mention RDMA
-> and similar technologies as a usecase for your work for similar reasons.
-> So my thought was that possibly we should have the same API for pinning
-> "storage" for RDMA transfers regardless of whether the backing is page
-> cache or pmem and the API should be usable for in-kernel users as well?
-> mmap flag seems a bit clumsy in this regard so maybe a form of a separate
-> syscall - be it mpin(start, len) or some other name - might be more
-> suitable?
+> ASSERT?  Or, if I'm just foolishly restarting an old bikeshed and the
+> fprintf/-EINVAL should stay, then the indentation of the arguments needs
+> fixing.
 
-Can you say about more about why an mmap flag for this feels awkward
-to you? I think there's symmetry between O_SYNC / O_DIRECT setting up
-synchronous / page-cache-bypass file descriptors and MAP_SYNC /
-MAP_DIRECT setting up synchronous and page-cache bypass mappings.
-"Pinning" also feels like the wrong mechanism when you consider
-hardware is moving toward eliminating the pinning requirement over
-time. SVM "Shared Virtual Memory" hardware will just operate on cpu
-virtual addresses directly and generate typical faults. On such
-hardware MAP_DIRECT would be a nop relative to MAP_SYNC, so you
-wouldn't want your application to be stuck with the legacy concept
-that pages need to be explicitly "pinned".
+It stays, so I'm fixing the indentation for the fprintf.
+
+>
+>> +             return -EINVAL;
+>> +     }
+>> +     if (value == NULL) {
+>> +             if (opt->subopt_params[subopt].raw_input != NULL)
+>> +                     free(opt->subopt_params[subopt].raw_input);
+>> +             opt->subopt_params[subopt].raw_input = NULL;
+>> +     } else {
+>> +             opt->subopt_params[subopt].raw_input = strdup(value);
+>> +             if (opt->subopt_params[subopt].raw_input == NULL)
+>> +                     return -ENOMEM;
+>> +     }
+>> +     return 0;
+>> +}
+>> +
+>> +/*
+>> + * Return 0 on success, -ENOMEM if it could not allocate enough memory for
+>> + * the string to be saved into the out pointer.
+>> + */
+>> +static int
+>> +get_conf_raw(const struct opt_params *opt, const int subopt, char **out)
+>> +{
+>> +     if (subopt < 0 || subopt >= MAX_SUBOPTS) {
+>> +             fprintf(stderr,
+>> +             "This is a bug: get_conf_raw called with invalid opt/subopt: %c/%d\n",
+>> +             opt->name, subopt);
+>> +             return -EINVAL;
+>
+> (Same here)
+>
+>> +     }
+>> +     *out = strdup(opt->subopt_params[subopt].raw_input);
+>
+> Given that raw_input can be set to NULL and strdup(NULL) segfaults on
+> glibc 2.23, do we need a null check of raw_input here?  Is it the case
+> that get_conf_raw is only called if we (somehow) know that there's a
+> value to get later?
+
+We need it here, when I added the check to set_conf_raw somehow didn't
+realise that it could fail on the other side as well.
+
+Thanks,
+Jan
