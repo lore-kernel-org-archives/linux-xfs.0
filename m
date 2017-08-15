@@ -1,213 +1,192 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f180.google.com ([209.85.220.180]:34780 "EHLO
-        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753193AbdHOGTE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 02:19:04 -0400
-Received: by mail-qk0-f180.google.com with SMTP id u139so289627qka.1
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 23:19:04 -0700 (PDT)
-Date: Tue, 15 Aug 2017 03:18:58 -0300
-From: Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?=
-        <ernesto.mnd.fernandez@gmail.com>
-Subject: Re: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
-Message-ID: <20170815061857.GA2803@debian.home>
-References: <20170814081806.GA3924@debian.home>
- <20170815020018.GF21024@dastard>
+Received: from mga09.intel.com ([134.134.136.24]:5072 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751666AbdHOGSg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 Aug 2017 02:18:36 -0400
+Subject: [PATCH v4 1/3] fs, xfs: introduce S_IOMAP_SEALED
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 14 Aug 2017 23:12:11 -0700
+Message-ID: <150277753139.23945.12474457435649645890.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20170815020018.GF21024@dastard>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>, Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?= <ernesto.mnd.fernandez@gmail.com>
+To: darrick.wong@oracle.com
+Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-Hi Dave, thanks for the review!
+When a filesystem sees this flag set it will not allow changes to the
+file-offset to physical-block-offset relationship of any extent in the
+file. The extent of the extents covered by the global S_IOMAP_SEALED is
+filesystem specific. In other words it is similar to the inode-wide
+XFS_DIFLAG2_REFLINK flag where we make the distinction apply globally to
+the inode even though we could theoretically limit that effect to a
+sub-range of the file.
 
-On Tue, Aug 15, 2017 at 12:00:18PM +1000, Dave Chinner wrote:
-> On Mon, Aug 14, 2017 at 05:18:10AM -0300, Ernesto A. Fernández wrote:
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index de7b9bd..c3193e1 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > @@ -395,6 +395,7 @@ xfs_attr_remove(
-> >  	struct xfs_defer_ops	dfops;
-> >  	xfs_fsblock_t		firstblock;
-> >  	int			error;
-> > +	int			noattr = 0;
-> 
-> bool.
-> 
-> And make it "bool has_attr = true" to avoid the nasty double
-> negative of "!noattr" later on.
+The interface that sets this flag (mmap(..., MAP_DIRECT, ...)) will be
+careful to document that it is implementation specific whether the
+'sealed' restrictions apply to a sub-range or the whole file.
+Applications should be prepared for unrelated ranges in the file to be
+effected.
 
-I called it noattr because the error was -ENOATTR, but you are right,
-has_attr is better. I assume you would prefer mode_changed to be a bool
-as well?
+The term 'sealed' is used instead of 'immutable' to better indicate that
+this is a file property that is temporary and can be undone.
 
-> 
-> >  
-> >  	XFS_STATS_INC(mp, xs_attr_remove);
-> >  
-> > @@ -438,7 +439,12 @@ xfs_attr_remove(
-> >  	xfs_trans_ijoin(args.trans, dp, 0);
-> >  
-> >  	if (!xfs_inode_hasattr(dp)) {
-> > -		error = -ENOATTR;
-> > +		/*
-> > +		 * Commit even if there is no attr to remove, because when
-> > +		 * setting ACLs the caller may be changing the mode in the
-> > +		 * same transaction.
-> > +		 */
-> > +		noattr = 1;
-> >  	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-> >  		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-> >  		error = xfs_attr_shortform_remove(&args);
-> > @@ -458,7 +464,7 @@ xfs_attr_remove(
-> >  	if (mp->m_flags & XFS_MOUNT_WSYNC)
-> >  		xfs_trans_set_sync(args.trans);
-> >  
-> > -	if ((flags & ATTR_KERNOTIME) == 0)
-> > +	if ((flags & ATTR_KERNOTIME) == 0 && !noattr)
-> >  		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
-> 
-> Why?
+Cc: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/attr.c                |   10 ++++++++++
+ fs/open.c                |    6 ++++++
+ fs/read_write.c          |    3 +++
+ fs/xfs/libxfs/xfs_bmap.c |    5 +++++
+ fs/xfs/xfs_bmap_util.c   |    3 +++
+ fs/xfs/xfs_ioctl.c       |    6 ++++++
+ include/linux/fs.h       |    2 ++
+ mm/filemap.c             |    5 +++++
+ 8 files changed, 40 insertions(+)
 
-Because we don't want the ctime to change when you try to delete an
-attribute that didn't exist in the first place. At least that's how
-it went before, so I tried to keep it the same.
+diff --git a/fs/attr.c b/fs/attr.c
+index 135304146120..d940386e0ca9 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -112,6 +112,16 @@ EXPORT_SYMBOL(setattr_prepare);
+  */
+ int inode_newsize_ok(const struct inode *inode, loff_t offset)
+ {
++	if (IS_IOMAP_SEALED(inode)) {
++		/*
++		 * Any size change is disallowed. Size increases may
++		 * dirty metadata that an application is not prepared to
++		 * sync, and a size decrease may expose free blocks to
++		 * in-flight DMA.
++		 */
++		return -ETXTBSY;
++	}
++
+ 	if (inode->i_size < offset) {
+ 		unsigned long limit;
+ 
+diff --git a/fs/open.c b/fs/open.c
+index 35bb784763a4..92d89ec2d6b3 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -292,6 +292,12 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 		return -ETXTBSY;
+ 
+ 	/*
++	 * We cannot allow any allocation changes on an iomap sealed file
++	 */
++	if (IS_IOMAP_SEALED(inode))
++		return -ETXTBSY;
++
++	/*
+ 	 * Revalidate the write permissions, in case security policy has
+ 	 * changed since the files were opened.
+ 	 */
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 0cc7033aa413..55700ca85f7e 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1706,6 +1706,9 @@ int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
+ 	if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
+ 		return -ETXTBSY;
+ 
++	if (IS_IOMAP_SEALED(inode_in) || IS_IOMAP_SEALED(inode_out))
++		return -ETXTBSY;
++
+ 	/* Don't reflink dirs, pipes, sockets... */
+ 	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
+ 		return -EISDIR;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index a2d64666cdd4..84d8ee9f414c 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4481,6 +4481,11 @@ xfs_bmapi_write(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
++	/* fail any attempts to mutate data extents */
++	if (IS_IOMAP_SEALED(VFS_I(ip))
++			&& !(flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ATTRFORK)))
++		return -ETXTBSY;
++
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 
+ 	XFS_STATS_INC(mp, xs_blk_mapw);
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 93e955262d07..ef4c4e8b0f58 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1294,6 +1294,9 @@ xfs_free_file_space(
+ 
+ 	trace_xfs_free_file_space(ip);
+ 
++	if (IS_IOMAP_SEALED(VFS_I(ip)))
++		return -ETXTBSY;
++
+ 	error = xfs_qm_dqattach(ip, 0);
+ 	if (error)
+ 		return error;
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index e75c40a47b7d..b716d184ae9a 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1755,6 +1755,12 @@ xfs_ioc_swapext(
+ 		goto out_put_tmp_file;
+ 	}
+ 
++	if (IS_IOMAP_SEALED(file_inode(f.file)) ||
++	    IS_IOMAP_SEALED(file_inode(tmp.file))) {
++		error = -EINVAL;
++		goto out_put_tmp_file;
++	}
++
+ 	/*
+ 	 * We need to ensure that the fds passed in point to XFS inodes
+ 	 * before we cast and access them as XFS structures as we have no
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 6e1fd5d21248..1104e5df39ef 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1829,6 +1829,7 @@ struct super_operations {
+ #else
+ #define S_DAX		0	/* Make all the DAX code disappear */
+ #endif
++#define S_IOMAP_SEALED 16384 /* logical-to-physical extent map is fixed */
+ 
+ /*
+  * Note that nosuid etc flags are inode-specific: setting some file-system
+@@ -1867,6 +1868,7 @@ struct super_operations {
+ #define IS_AUTOMOUNT(inode)	((inode)->i_flags & S_AUTOMOUNT)
+ #define IS_NOSEC(inode)		((inode)->i_flags & S_NOSEC)
+ #define IS_DAX(inode)		((inode)->i_flags & S_DAX)
++#define IS_IOMAP_SEALED(inode) ((inode)->i_flags & S_IOMAP_SEALED)
+ 
+ #define IS_WHITEOUT(inode)	(S_ISCHR(inode->i_mode) && \
+ 				 (inode)->i_rdev == WHITEOUT_DEV)
+diff --git a/mm/filemap.c b/mm/filemap.c
+index a49702445ce0..4c929961b538 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2806,6 +2806,11 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+ 	if (unlikely(pos >= inode->i_sb->s_maxbytes))
+ 		return -EFBIG;
+ 
++	/* Are we about to mutate the block map on a sealed file? */
++	if (IS_IOMAP_SEALED(inode)
++			&& (pos + iov_iter_count(from) > i_size_read(inode)))
++		return -ETXTBSY;
++
+ 	iov_iter_truncate(from, inode->i_sb->s_maxbytes - pos);
+ 	return iov_iter_count(from);
+ }
 
-> 
-> >  
-> >  	/*
-> > @@ -468,6 +474,9 @@ xfs_attr_remove(
-> >  	error = xfs_trans_commit(args.trans);
-> >  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> >  
-> > +	if (!error && noattr)
-> > +		error = -ENOATTR;
-> > +
-> >  	return error;
-> >  
-> >  out:
-> > diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> > index 7034e17..1fe4363 100644
-> > --- a/fs/xfs/xfs_acl.c
-> > +++ b/fs/xfs/xfs_acl.c
-> > @@ -226,28 +226,13 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
-> >  	return error;
-> >  }
-> >  
-> > -static int
-> > -xfs_set_mode(struct inode *inode, umode_t mode)
-> > -{
-> > -	int error = 0;
-> > -
-> > -	if (mode != inode->i_mode) {
-> > -		struct iattr iattr;
-> > -
-> > -		iattr.ia_valid = ATTR_MODE | ATTR_CTIME;
-> > -		iattr.ia_mode = mode;
-> > -		iattr.ia_ctime = current_time(inode);
-> > -
-> > -		error = xfs_setattr_nonsize(XFS_I(inode), &iattr, XFS_ATTR_NOACL);
-> > -	}
-> > -
-> > -	return error;
-> > -}
-> 
-> Ok, so that does an atomic, transactional change to the inode
-> mode....
-> 
-> >  int
-> >  xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
-> >  {
-> >  	int error = 0;
-> > +	int mode_changed = 0;
-> > +	umode_t old_mode = inode->i_mode;
-> > +	struct timespec old_ctime = inode->i_ctime;
-> >  
-> >  	if (!acl)
-> >  		goto set_acl;
-> > @@ -257,16 +242,20 @@ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
-> >  		return error;
-> >  
-> >  	if (type == ACL_TYPE_ACCESS) {
-> > -		umode_t mode;
-> > -
-> > -		error = posix_acl_update_mode(inode, &mode, &acl);
-> > -		if (error)
-> > -			return error;
-> > -		error = xfs_set_mode(inode, mode);
-> > +		error = posix_acl_update_mode(inode, &inode->i_mode, &acl);
-> >  		if (error)
-> >  			return error;
-> > +		inode->i_ctime = current_time(inode);
-> > +		XFS_STATS_INC(XFS_I(inode)->i_mount, xs_ig_attrchg);
-> > +		mode_changed = 1;
-> >  	}
-> 
-> And this doesn't.
-> 
-> So this breaks all our rules for inode metadata updates, both for
-> runtime access serialisation and for crash consistency.
-> 
-
-I'm only making changes to the vfs inode, and xfs_set_acl() should always
-be called with i_rwsem held for writing. I think that should be enough to
-serialize access to the vfs inode fields.
-
-I'm sorry, I'm not sure I follow the crash consistency part. This is not
-writing anything to disk. My expectation was that the changes I made to
-the vfs inode would be attached to the transaction later, when calling
-xfs_trans_log_inode() in xfs_attr_set() or xfs_attr_remove(). Would that
-not work as intended? I was mostly imitating how btrfs sets an ACL, so I
-could be misunderstanding how xfs does journaling.
-
-> >   set_acl:
-> > -	return __xfs_set_acl(inode, acl, type);
-> > +	error = __xfs_set_acl(inode, acl, type);
-> > +	if (error && mode_changed) {
-> > +		inode->i_mode = old_mode;
-> > +		inode->i_ctime = old_ctime;
-> > +		XFS_STATS_DEC(XFS_I(inode)->i_mount, xs_ig_attrchg);
-> > +	}
-> 
-> Same here.
-
-i_rwsem would still be held here. My reasoning is that, since there was
-an error, no changes were actually committed; so there would be no need
-to commit the restoration either, just restore the old in-memory vfs inode
-fields. Once again, this is inspired by btrfs, so I suppose it may fail
-here in some way I can't see.
-
-(I should probably clarify I did run tests before submitting)
-
-> IOWs, you can't just remove a transactional modification of inode
-> state and replace it with in-memory VFS inode level changes. You
-> need to do the changes in transaction context and with the correct
-> locks held.
->
-> IOWs, if you need to undo the mode changes xfs_set_mode() did, you
-> need to call xfs_set_mode() again. And because modifications have
-
-But that could fail as well, and how would we handle that? If this bug
-is to be fixed the whole thing needs to be a single transaction. That's
-why I removed the xfs_set_mode() function in the first place.
-
-> been made, the new ctime should remain in place, too.
->
-> Of course, this still isn't atomic from a runtime access POV, but
-> that's substantially harder to provide than just undoing the mode
-> change on ACL attribute save error.
->
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-
-Thanks,
-Ernest
