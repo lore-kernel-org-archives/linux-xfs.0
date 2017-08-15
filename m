@@ -1,56 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f170.google.com ([209.85.161.170]:33597 "EHLO
-        mail-yw0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752401AbdHPBPJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 21:15:09 -0400
-Received: by mail-yw0-f170.google.com with SMTP id p68so14490116ywg.0
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2017 18:15:09 -0700 (PDT)
+Received: from mail-yw0-f178.google.com ([209.85.161.178]:34954 "EHLO
+        mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752714AbdHOQYZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 12:24:25 -0400
+Received: by mail-yw0-f178.google.com with SMTP id l82so7621636ywc.2
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2017 09:24:25 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4h01os0Gc6bYmaGdMXt5q4G4zfirNRPWG3=gQi5POrpmg@mail.gmail.com>
+In-Reply-To: <20170815122701.GF27505@quack2.suse.cz>
 References: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150277754211.23945.458876600578531019.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170815124250.GG27505@quack2.suse.cz> <CAPcyv4h01os0Gc6bYmaGdMXt5q4G4zfirNRPWG3=gQi5POrpmg@mail.gmail.com>
+ <150277753660.23945.11500026891611444016.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170815122701.GF27505@quack2.suse.cz>
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 15 Aug 2017 18:15:08 -0700
-Message-ID: <CAPcyv4hNe6FiAUGV7nZGAz_DAyQLEAHD_ANqt2jU8ZmUJpHJ7Q@mail.gmail.com>
-Subject: Re: [PATCH v4 3/3] fs, xfs: introduce MAP_DIRECT for creating
- block-map-sealed file ranges
+Date: Tue, 15 Aug 2017 09:24:24 -0700
+Message-ID: <CAPcyv4hJ3VaCzE0tOtcSJPfMPDimH-_oeoUAha8MVJ6ZOQU8fw@mail.gmail.com>
+Subject: Re: [PATCH v4 2/3] mm: introduce MAP_VALIDATE a mechanism for adding
+ new mmap flags
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Jan Kara <jack@suse.cz>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 
-On Tue, Aug 15, 2017 at 9:29 AM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Tue, Aug 15, 2017 at 5:42 AM, Jan Kara <jack@suse.cz> wrote:
->> On Mon 14-08-17 23:12:22, Dan Williams wrote:
->>> diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
->>> index ff151814a02d..73fdc0ada9ee 100644
->>> --- a/include/linux/mm_types.h
->>> +++ b/include/linux/mm_types.h
->>> @@ -306,6 +306,7 @@ struct vm_area_struct {
->>>       struct mm_struct *vm_mm;        /* The address space we belong to. */
->>>       pgprot_t vm_page_prot;          /* Access permissions of this VMA. */
->>>       unsigned long vm_flags;         /* Flags, see mm.h. */
->>> +     unsigned long fs_flags;         /* fs flags, see MAP_DIRECT etc */
->>>
->>>       /*
->>>        * For areas with an address space and backing store,
+On Tue, Aug 15, 2017 at 5:27 AM, Jan Kara <jack@suse.cz> wrote:
+> On Mon 14-08-17 23:12:16, Dan Williams wrote:
+>> The mmap syscall suffers from the ABI anti-pattern of not validating
+>> unknown flags. However, proposals like MAP_SYNC and MAP_DIRECT need a
+>> mechanism to define new behavior that is known to fail on older kernels
+>> without the feature. Use the fact that specifying MAP_SHARED and
+>> MAP_PRIVATE at the same time is invalid as a cute hack to allow a new
+>> set of validated flags to be introduced.
 >>
->> Ah, OK, here are VMA flags I was missing in the previous patch :) But why
->> did you create separate fs_flags field for this? on 64-bit archs there's
->> still space in vm_flags and frankly I don't see why we should separate
->> MAP_DIRECT or MAP_SYNC from other flags?
+>> This also introduces the ->fmmap() file operation that is ->mmap() plus
+>> flags. Each ->fmmap() implementation must fail requests when a locally
+>> unsupported flag is specified.
+> ...
+>> diff --git a/include/linux/fs.h b/include/linux/fs.h
+>> index 1104e5df39ef..bbe755d0caee 100644
+>> --- a/include/linux/fs.h
+>> +++ b/include/linux/fs.h
+>> @@ -1674,6 +1674,7 @@ struct file_operations {
+>>       long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
+>>       long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
+>>       int (*mmap) (struct file *, struct vm_area_struct *);
+>> +     int (*fmmap) (struct file *, struct vm_area_struct *, unsigned long);
+>>       int (*open) (struct inode *, struct file *);
+>>       int (*flush) (struct file *, fl_owner_t id);
+>>       int (*release) (struct inode *, struct file *);
+>> @@ -1748,6 +1749,12 @@ static inline int call_mmap(struct file *file, struct vm_area_struct *vma)
+>>       return file->f_op->mmap(file, vma);
+>>  }
+>>
+>> +static inline int call_fmmap(struct file *file, struct vm_area_struct *vma,
+>> +             unsigned long flags)
+>> +{
+>> +     return file->f_op->fmmap(file, vma, flags);
+>> +}
+>> +
 >
-> Where would MAP_DIRECT go in the 32-bit case?
->
->> After all a difference in these
->> flags must also prevent VMA merging (which you forgot to handle I think)
->> and they need to be copied on split (which happens by chance even now).
->
-> Ah, yes I did miss blocking the merge of a vma with MAP_DIRECT and one
-> without. However, the vma split path looks ok.
+> Hum, I dislike a new file op for this when the only problem with ->mmap is
+> that it misses 'flags' argument. I understand there are lots of ->mmap
+> implementations out there and modifying prototype of them all is painful
+> but is it so bad? Coccinelle patch for this should be rather easy...
 
-The merge path already blocks merging vmas that have the ->close()
-operation defined in is_mergeable_vma().
+Changing the prototype is relatively easy with Coccinelle, but we
+still need the code in each ->mmap() implementation to validate a
+local list of supported flags. How about adding a 'supported mmap
+flags' field to 'struct file_operations' so that the validation code
+can be made generic? I'll go with that since it's a bit less
+surprising than a new operation type, and not as messy as teaching
+every mmap implementation in the kernel to validate flags that they
+will likely never care about.
+
+> Also for MAP_SYNC I want the flag to be copied in VMA anyway so for that I
+> don't need additional flags argument anyway. And I wonder how you want to
+> make things work without VMA flag in case of MAP_DIRECT as well - VMAs can
+> be split, partially unmapped etc. and so without VMA flag you are going to
+> have hard time to detect whether there's any mapping left which blocks
+> block mapping changes.
+
+Outside of requiring a 64-bit arch, we're out of vm_flags. Also, the
+core mm does not really care about MAP_DIRECT or MAP_SYNC so that's
+why I added a new ->fs_flags field since these are more filesystem
+properties than core mm.
+
+The problem of tracking MAP_DIRECT over vma splits appears to already
+be handled. __split_vma does:
+
+        /* most fields are the same, copy all, and then fixup */
+        *new = *vma;
+...
+
+        if (new->vm_ops && new->vm_ops->open)
+                new->vm_ops->open(new);
+
+In ->open() I'm checking if 'new' has MAP_DIRECT in ->fs_flags and
+taking a reference against the S_IOMAP_SEALED flag.
