@@ -1,52 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f170.google.com ([209.85.161.170]:34154 "EHLO
-        mail-yw0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753224AbdHOQ3b (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 12:29:31 -0400
-Received: by mail-yw0-f170.google.com with SMTP id s143so7759139ywg.1
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2017 09:29:31 -0700 (PDT)
+Received: from mail-yw0-f174.google.com ([209.85.161.174]:36001 "EHLO
+        mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752843AbdHORL2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 13:11:28 -0400
+Received: by mail-yw0-f174.google.com with SMTP id u207so8409096ywc.3
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2017 10:11:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170815124250.GG27505@quack2.suse.cz>
+In-Reply-To: <20170815091836.c3xpsfgfwz7w35od@node.shutemov.name>
 References: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
  <150277754211.23945.458876600578531019.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170815124250.GG27505@quack2.suse.cz>
+ <20170815091836.c3xpsfgfwz7w35od@node.shutemov.name>
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 15 Aug 2017 09:29:30 -0700
-Message-ID: <CAPcyv4h01os0Gc6bYmaGdMXt5q4G4zfirNRPWG3=gQi5POrpmg@mail.gmail.com>
+Date: Tue, 15 Aug 2017 10:11:27 -0700
+Message-ID: <CAPcyv4gmyFugKwMJCVwC9wFmQ8TL4TbHsa0p2Pqg2a6LziRHVw@mail.gmail.com>
 Subject: Re: [PATCH v4 3/3] fs, xfs: introduce MAP_DIRECT for creating
  block-map-sealed file ranges
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: "Kirill A. Shutemov" <kirill@shutemov.name>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-On Tue, Aug 15, 2017 at 5:42 AM, Jan Kara <jack@suse.cz> wrote:
-> On Mon 14-08-17 23:12:22, Dan Williams wrote:
->> diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
->> index ff151814a02d..73fdc0ada9ee 100644
->> --- a/include/linux/mm_types.h
->> +++ b/include/linux/mm_types.h
->> @@ -306,6 +306,7 @@ struct vm_area_struct {
->>       struct mm_struct *vm_mm;        /* The address space we belong to. */
->>       pgprot_t vm_page_prot;          /* Access permissions of this VMA. */
->>       unsigned long vm_flags;         /* Flags, see mm.h. */
->> +     unsigned long fs_flags;         /* fs flags, see MAP_DIRECT etc */
+On Tue, Aug 15, 2017 at 2:18 AM, Kirill A. Shutemov
+<kirill@shutemov.name> wrote:
+> On Mon, Aug 14, 2017 at 11:12:22PM -0700, Dan Williams wrote:
+>> MAP_DIRECT is an mmap(2) flag with the following semantics:
 >>
->>       /*
->>        * For areas with an address space and backing store,
+>>   MAP_DIRECT
+>>   In addition to this mapping having MAP_SHARED semantics, successful
+>>   faults in this range may assume that the block map (logical-file-offset
+>>   to physical memory address) is pinned for the lifetime of the mapping.
+>>   Successful MAP_DIRECT faults establish mappings that bypass any kernel
+>>   indirections like the page-cache. All updates are carried directly
+>>   through to the underlying file physical blocks (modulo cpu cache
+>>   effects).
+>>
+>>   ETXTBSY is returned on attempts to change the block map (allocate blocks
+>>   / convert unwritten extents / break shared extents) in the mapped range.
+>>   Some filesystems may extend these same restrictions outside the mapped
+>>   range and return ETXTBSY to any file operations that might mutate the
+>>   block map. MAP_DIRECT faults may fail with a SIGSEGV if the filesystem
+>>   needs to write the block map to satisfy the fault. For example, if the
+>>   mapping was established over a hole in a sparse file.
 >
-> Ah, OK, here are VMA flags I was missing in the previous patch :) But why
-> did you create separate fs_flags field for this? on 64-bit archs there's
-> still space in vm_flags and frankly I don't see why we should separate
-> MAP_DIRECT or MAP_SYNC from other flags?
+> We had issues before with user-imposed ETXTBSY. See MAP_DENYWRITE.
+>
+> Are we sure it won't a source of denial-of-service attacks?
 
-Where would MAP_DIRECT go in the 32-bit case?
+I believe MAP_DENYWRITE allowed any application with read access to be
+able to deny writes which is obviously problematic. MAP_DIRECT is
+different. You need write access to the file so you can already
+destroy data that another application might depend on, and this only
+blocks allocation and reflink.
 
-> After all a difference in these
-> flags must also prevent VMA merging (which you forgot to handle I think)
-> and they need to be copied on split (which happens by chance even now).
+However, I'm not opposed to adding more safety around this. I think we
+can address this concern with an fcntl seal as Dave suggests, but the
+seal only applies to the 'struct file' instance and only gates whether
+MAP_DIRECT is allowed on that file. The act of setting
+F_MAY_SEAL_IOMAP requires CAP_IMMUTABLE, but MAP_DIRECT does not. This
+allows the 'permission to mmap(MAP_DIRECT)' to be passed around with
+an open file descriptor.
 
-Ah, yes I did miss blocking the merge of a vma with MAP_DIRECT and one
-without. However, the vma split path looks ok.
+>
+>>   The kernel ignores attempts to mark a MAP_DIRECT mapping MAP_PRIVATE and
+>>   will silently fall back to MAP_SHARED semantics.
+>
+> Hm.. Any reason for this strage behaviour? Looks just broken to me.
+>
+>>
+>>   ERRORS
+>>   EACCES A MAP_DIRECT mapping was requested and PROT_WRITE was not set.
+>>
+>>   EINVAL MAP_ANONYMOUS was specified with MAP_DIRECT.
+>>
+>>   EOPNOTSUPP The filesystem explicitly does not support the flag
+>>
+>>   SIGSEGV Attempted to write a MAP_DIRECT mapping at a file offset that
+>>           might require block-map updates.
+>
+> I think it should be SIGBUS.
+
+Ok, that does seem to fit this definition from the mmap(2) man page:
+
+SIGBUS Attempted access to a portion of the buffer that does not
+correspond to the file  (for example, beyond the end of the file,
+including the case where another process has truncated the file).
