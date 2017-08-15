@@ -1,69 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx141.netapp.com ([216.240.21.12]:63649 "EHLO mx141.netapp.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752607AbdHOJGV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 Aug 2017 05:06:21 -0400
-Subject: Re: [RFC PATCH 0/7] dax, ext4: Synchronous page faults
-References: <20170727131245.28279-1-jack@suse.cz>
- <x49zibq3rb0.fsf@segfault.boston.devel.redhat.com>
- <20170727215713.GA22000@linux.intel.com>
- <CALCETrVzxrQ76BXEfo4kcRFyQmxbrMwCLE17yPyTJzz0tUs+Dg@mail.gmail.com>
- <20170728093821.GB29433@quack2.suse.cz> <20170801110241.GE6742@infradead.org>
- <20170801112603.GG4215@quack2.suse.cz>
- <CAPcyv4hdOsuA6cqRCnOZMLMXvycwZevg06xOVZz3u0kupm2Drw@mail.gmail.com>
- <20170811100327.GD7064@infradead.org>
- <CAPcyv4hgqh8tHeWDNRnJnvwDh7hiFU8+3O0VWAHFQOEvPna11Q@mail.gmail.com>
- <20170813092556.GA19019@infradead.org>
- <ccf82f19-7693-25da-eaa6-a654830ca81e@netapp.com>
- <CAPcyv4jWW5EH8KrGWe-9oAT7RvFryh1ci6CcGeDb-zcOS9QMxw@mail.gmail.com>
-From: Boaz Harrosh <boazh@netapp.com>
-Message-ID: <2ac0880f-d661-2493-0f80-1b930a8b858b@netapp.com>
-Date: Tue, 15 Aug 2017 12:06:02 +0300
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33238 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752497AbdHOJSj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 05:18:39 -0400
+Received: by mail-wm0-f65.google.com with SMTP id q189so837815wmd.0
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2017 02:18:39 -0700 (PDT)
+Date: Tue, 15 Aug 2017 12:18:36 +0300
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [PATCH v4 3/3] fs, xfs: introduce MAP_DIRECT for creating
+ block-map-sealed file ranges
+Message-ID: <20170815091836.c3xpsfgfwz7w35od@node.shutemov.name>
+References: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150277754211.23945.458876600578531019.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4jWW5EH8KrGWe-9oAT7RvFryh1ci6CcGeDb-zcOS9QMxw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150277754211.23945.458876600578531019.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, linux-nvdimm <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Amit Golander <amitg@netapp.com>
+Cc: darrick.wong@oracle.com, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-On 14/08/17 19:03, Dan Williams wrote:
-> On Mon, Aug 14, 2017 at 7:04 AM, Boaz Harrosh <boazh@netapp.com> wrote:
->>
->> Thank you Jan, I'm patiently waiting for this MAP_SYNC flag since I asked for
->> it in 2014. I'm so glad its time is finally do.
->>
-
-<>
-
->> 4] Once we have this flag. And properly implemented at least in one FS
->>    and optionally in /dev/pmemX we no longer have any justification for
->>    /dev/daxX and it can die a slow and happy death.
+On Mon, Aug 14, 2017 at 11:12:22PM -0700, Dan Williams wrote:
+> MAP_DIRECT is an mmap(2) flag with the following semantics:
 > 
-> I'm all for replacing /dev/dax with filesystem equivalent
-> functionality, but I don't think MAP_SYNC gets us fully there. That's
-> what the MAP_DIRECT proposal [1] is meant to address.
+>   MAP_DIRECT
+>   In addition to this mapping having MAP_SHARED semantics, successful
+>   faults in this range may assume that the block map (logical-file-offset
+>   to physical memory address) is pinned for the lifetime of the mapping.
+>   Successful MAP_DIRECT faults establish mappings that bypass any kernel
+>   indirections like the page-cache. All updates are carried directly
+>   through to the underlying file physical blocks (modulo cpu cache
+>   effects).
 > 
+>   ETXTBSY is returned on attempts to change the block map (allocate blocks
+>   / convert unwritten extents / break shared extents) in the mapped range.
+>   Some filesystems may extend these same restrictions outside the mapped
+>   range and return ETXTBSY to any file operations that might mutate the
+>   block map. MAP_DIRECT faults may fail with a SIGSEGV if the filesystem
+>   needs to write the block map to satisfy the fault. For example, if the
+>   mapping was established over a hole in a sparse file.
 
-OK This is true. Could you please summarise for us the exact semantics of both
-proposed flags?
+We had issues before with user-imposed ETXTBSY. See MAP_DENYWRITE.
 
-That said I think the big difference is the movability of physical blocks
-underneath the mmap mapping. Now for swap files that is a problem. because
-of the deadlocks that can happen with memory needed if blocks start moving.
-But for an application like nvml? why does it care. Why can't an nvml image file
-not be cloned and COWed underneath the NVM application transparently.
+Are we sure it won't a source of denial-of-service attacks?
 
-Sorry for being slow but I don't see why you need MAP_DIRECT from user-mode
-If you have MAP_SYNC. Please advise
+>   The kernel ignores attempts to mark a MAP_DIRECT mapping MAP_PRIVATE and
+>   will silently fall back to MAP_SHARED semantics.
 
-(not that the immutable patchset is not a very needed fixing)
+Hm.. Any reason for this strage behaviour? Looks just broken to me.
 
-> [1]: https://lkml.org/lkml/2017/8/13/160
 > 
+>   ERRORS
+>   EACCES A MAP_DIRECT mapping was requested and PROT_WRITE was not set.
+> 
+>   EINVAL MAP_ANONYMOUS was specified with MAP_DIRECT.
+> 
+>   EOPNOTSUPP The filesystem explicitly does not support the flag
+> 
+>   SIGSEGV Attempted to write a MAP_DIRECT mapping at a file offset that
+>           might require block-map updates.
 
-Thanks
-Boaz
+I think it should be SIGBUS.
 
+-- 
+ Kirill A. Shutemov
