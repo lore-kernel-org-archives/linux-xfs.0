@@ -1,73 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60156 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751076AbdHRXOm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 18 Aug 2017 19:14:42 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 08A1760FC5A
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Aug 2017 18:13:26 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsdump: v3.1.7 released
-Message-ID: <19bc1557-5d96-8091-a7d1-8f7a60b121b6@sandeen.net>
-Date: Fri, 18 Aug 2017 18:14:40 -0500
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:12526
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751819AbdHOJBV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 05:01:21 -0400
+Date: Tue, 15 Aug 2017 19:01:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v4 0/3] MAP_DIRECT and block-map sealed files
+Message-ID: <20170815090116.GL21024@dastard>
+References: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: darrick.wong@oracle.com, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Hi folks,
+On Mon, Aug 14, 2017 at 11:12:05PM -0700, Dan Williams wrote:
+> Changes since v3 [1]:
+> * Move from an fallocate(2) interface to a new mmap(2) flag and rename
+>   'immutable' to 'sealed'.
+> 
+> * Do not record the sealed state in permanent metadata it is now purely
+>   a temporary state for as long as a MAP_DIRECT vma is referencing the
+>   inode (Christoph)
+> 
+> * Drop the CAP_IMMUTABLE requirement, but do require a PROT_WRITE
+>   mapping.
+> 
+> [1]: https://lwn.net/Articles/730570/
+> 
+> ---
+> 
+> This is the next revision of a patch series that aims to enable
+> applications that otherwise need to resort to DAX mapping a raw device
+> file to instead move to a filesystem.
+> 
+> In the course of reviewing a previous posting, Christoph said:
+> 
+>     That being said I think we absolutely should support RDMA memory
+>     registrations for DAX mappings.  I'm just not sure how S_IOMAP_IMMUTABLE
+>     helps with that.  We'll want a MAP_SYNC | MAP_POPULATE to make sure all
+>     the blocks are populated and all ptes are set up.  Second we need to
+>     make sure get_user_page works, which for now means we'll need a struct
+>     page mapping for the region (which will be really annoying for PCIe
+>     mappings, like the upcoming NVMe persistent memory region), and we need
+>     to guarantee that the extent mapping won't change while the
+>     get_user_pages holds the pages inside it.  I think that is true due to
+>     side effects even with the current DAX code, but we'll need to make it
+>     explicit.  And maybe that's where we need to converge - "sealing" the
+>     extent map makes sense as such a temporary measure that is not persisted
+>     on disk, which automatically gets released when the holding process
+>     exits, because we sort of already do this implicitly.  It might also
+>     make sense to have explicitly breakable seals similar to what I do for
+>     the pNFS blocks kernel server, as any userspace RDMA file server would
+>     also need those semantics.
+> 
+> So, this is an attempt to converge on the idea that we need an explicit
+> and process-lifetime-temporary mechanism for a process to be able to
+> make assumptions about the mapping to physical page to dax-file-offset
+> relationship. The "explicitly breakable seals" aspect is not addressed
+> in these patches, but I wonder if it might be a voluntary mechanism that
+> can implemented via userfaultfd.
+> 
+> These pass a basic smoke test and are meant to just gauge 'right track'
+> / 'wrong track'. The main question it seems is whether the pinning done
+> in this patchset is too early (applies before get_user_pages()) and too
+> coarse (applies to the whole file). Perhaps this is where I discarded
+> too easily Jan's suggestion to look at Peter Z's mm_mpin() syscall [2]? On
+> the other hand, the coarseness and simple lifetime rules of MAP_DIRECT
+> make it an easy mechanism to implement and explain.
+> 
+> Another reason I kept the scope of S_IOMAP_SEALED coarsely defined was
+> to support Dave's desired use case of sealing for operating on reflinked
+> files [3].
 
-The xfsdump repository at:
+Which really needs a fcntl() interface to set/clear iomap seals.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
+Which, now that I look at it, already has a bunch of "file sealing"
+commands defined which arrived in 3.17. It appears to be a special
+purpose access control interface for memfd_create() to manage shared
+access to anonymous tmpfs files and will EINVAL on any fd that
+points to a real file.
 
-has just been updated, and tagged with the v3.1.7 release.
+Oh, even more problematic:
 
-Not a ton of change in this one but needed to at least get
-the 32-bit build fix out.
+	Seals are a property of an inode. [....] Furthermore, seals
+	can never be removed, only added.
 
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
+That seems somewhat difficult to reconcile with how I need
+F_SEAL_IOMAP to operate.
 
-The new head of the master branch is commit:
+/me calls it a day and goes looking for the hard liquor.....
 
-9fdb6df xfsdump: Release v3.1.7
+Cheers,
 
-New Commits:
-
-Eric Sandeen (4):
-      [25195eb] xfsdump: handle bind mount targets
-      [71860dc] fix build on 32-bit platforms
-      [acd0dda] xfsdump: Release v3.1.7-rc1
-      [9fdb6df] xfsdump: Release v3.1.7
-
-Eryu Guan (1):
-      [5903b44] xfsdump: fix race condition between lseek() and read()/write()
-
-Paulo Cezar A Junior (1):
-      [7f42274] xfsdump: Fix memory leak
-
-
-Code Diffstat:
-
- VERSION              |  2 +-
- common/inventory.c   |  4 ++--
- common/main.c        | 26 +++++++++++++++++++-------
- configure.ac         |  4 +++-
- debian/changelog     |  6 ++++++
- doc/CHANGES          |  9 +++++++++
- dump/content.c       | 21 +++++++++++++++++++--
- inventory/inv_api.c  |  5 ++---
- inventory/inv_core.c | 29 ++++++-----------------------
- inventory/inv_idx.c  |  4 ++--
- inventory/inv_priv.h | 21 ++++++---------------
- inventory/testmain.c | 34 +++++++++++++++++++++++-----------
- 12 files changed, 98 insertions(+), 67 deletions(-)
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
