@@ -1,346 +1,213 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:43783 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753193AbdHOGSq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 Aug 2017 02:18:46 -0400
-Subject: [PATCH v4 3/3] fs,
- xfs: introduce MAP_DIRECT for creating block-map-sealed file ranges
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 14 Aug 2017 23:12:22 -0700
-Message-ID: <150277754211.23945.458876600578531019.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mail-qk0-f180.google.com ([209.85.220.180]:34780 "EHLO
+        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753193AbdHOGTE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 02:19:04 -0400
+Received: by mail-qk0-f180.google.com with SMTP id u139so289627qka.1
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 23:19:04 -0700 (PDT)
+Date: Tue, 15 Aug 2017 03:18:58 -0300
+From: Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?=
+        <ernesto.mnd.fernandez@gmail.com>
+Subject: Re: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
+Message-ID: <20170815061857.GA2803@debian.home>
+References: <20170814081806.GA3924@debian.home>
+ <20170815020018.GF21024@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170815020018.GF21024@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>, Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?= <ernesto.mnd.fernandez@gmail.com>
 
-MAP_DIRECT is an mmap(2) flag with the following semantics:
+Hi Dave, thanks for the review!
 
-  MAP_DIRECT
-  In addition to this mapping having MAP_SHARED semantics, successful
-  faults in this range may assume that the block map (logical-file-offset
-  to physical memory address) is pinned for the lifetime of the mapping.
-  Successful MAP_DIRECT faults establish mappings that bypass any kernel
-  indirections like the page-cache. All updates are carried directly
-  through to the underlying file physical blocks (modulo cpu cache
-  effects).
+On Tue, Aug 15, 2017 at 12:00:18PM +1000, Dave Chinner wrote:
+> On Mon, Aug 14, 2017 at 05:18:10AM -0300, Ernesto A. Fernández wrote:
+> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > index de7b9bd..c3193e1 100644
+> > --- a/fs/xfs/libxfs/xfs_attr.c
+> > +++ b/fs/xfs/libxfs/xfs_attr.c
+> > @@ -395,6 +395,7 @@ xfs_attr_remove(
+> >  	struct xfs_defer_ops	dfops;
+> >  	xfs_fsblock_t		firstblock;
+> >  	int			error;
+> > +	int			noattr = 0;
+> 
+> bool.
+> 
+> And make it "bool has_attr = true" to avoid the nasty double
+> negative of "!noattr" later on.
 
-  ETXTBSY is returned on attempts to change the block map (allocate blocks
-  / convert unwritten extents / break shared extents) in the mapped range.
-  Some filesystems may extend these same restrictions outside the mapped
-  range and return ETXTBSY to any file operations that might mutate the
-  block map. MAP_DIRECT faults may fail with a SIGSEGV if the filesystem
-  needs to write the block map to satisfy the fault. For example, if the
-  mapping was established over a hole in a sparse file.
+I called it noattr because the error was -ENOATTR, but you are right,
+has_attr is better. I assume you would prefer mode_changed to be a bool
+as well?
 
-  The kernel ignores attempts to mark a MAP_DIRECT mapping MAP_PRIVATE and
-  will silently fall back to MAP_SHARED semantics.
+> 
+> >  
+> >  	XFS_STATS_INC(mp, xs_attr_remove);
+> >  
+> > @@ -438,7 +439,12 @@ xfs_attr_remove(
+> >  	xfs_trans_ijoin(args.trans, dp, 0);
+> >  
+> >  	if (!xfs_inode_hasattr(dp)) {
+> > -		error = -ENOATTR;
+> > +		/*
+> > +		 * Commit even if there is no attr to remove, because when
+> > +		 * setting ACLs the caller may be changing the mode in the
+> > +		 * same transaction.
+> > +		 */
+> > +		noattr = 1;
+> >  	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+> >  		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+> >  		error = xfs_attr_shortform_remove(&args);
+> > @@ -458,7 +464,7 @@ xfs_attr_remove(
+> >  	if (mp->m_flags & XFS_MOUNT_WSYNC)
+> >  		xfs_trans_set_sync(args.trans);
+> >  
+> > -	if ((flags & ATTR_KERNOTIME) == 0)
+> > +	if ((flags & ATTR_KERNOTIME) == 0 && !noattr)
+> >  		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
+> 
+> Why?
 
-  ERRORS
-  EACCES A MAP_DIRECT mapping was requested and PROT_WRITE was not set.
+Because we don't want the ctime to change when you try to delete an
+attribute that didn't exist in the first place. At least that's how
+it went before, so I tried to keep it the same.
 
-  EINVAL MAP_ANONYMOUS was specified with MAP_DIRECT.
+> 
+> >  
+> >  	/*
+> > @@ -468,6 +474,9 @@ xfs_attr_remove(
+> >  	error = xfs_trans_commit(args.trans);
+> >  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+> >  
+> > +	if (!error && noattr)
+> > +		error = -ENOATTR;
+> > +
+> >  	return error;
+> >  
+> >  out:
+> > diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> > index 7034e17..1fe4363 100644
+> > --- a/fs/xfs/xfs_acl.c
+> > +++ b/fs/xfs/xfs_acl.c
+> > @@ -226,28 +226,13 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+> >  	return error;
+> >  }
+> >  
+> > -static int
+> > -xfs_set_mode(struct inode *inode, umode_t mode)
+> > -{
+> > -	int error = 0;
+> > -
+> > -	if (mode != inode->i_mode) {
+> > -		struct iattr iattr;
+> > -
+> > -		iattr.ia_valid = ATTR_MODE | ATTR_CTIME;
+> > -		iattr.ia_mode = mode;
+> > -		iattr.ia_ctime = current_time(inode);
+> > -
+> > -		error = xfs_setattr_nonsize(XFS_I(inode), &iattr, XFS_ATTR_NOACL);
+> > -	}
+> > -
+> > -	return error;
+> > -}
+> 
+> Ok, so that does an atomic, transactional change to the inode
+> mode....
+> 
+> >  int
+> >  xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+> >  {
+> >  	int error = 0;
+> > +	int mode_changed = 0;
+> > +	umode_t old_mode = inode->i_mode;
+> > +	struct timespec old_ctime = inode->i_ctime;
+> >  
+> >  	if (!acl)
+> >  		goto set_acl;
+> > @@ -257,16 +242,20 @@ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+> >  		return error;
+> >  
+> >  	if (type == ACL_TYPE_ACCESS) {
+> > -		umode_t mode;
+> > -
+> > -		error = posix_acl_update_mode(inode, &mode, &acl);
+> > -		if (error)
+> > -			return error;
+> > -		error = xfs_set_mode(inode, mode);
+> > +		error = posix_acl_update_mode(inode, &inode->i_mode, &acl);
+> >  		if (error)
+> >  			return error;
+> > +		inode->i_ctime = current_time(inode);
+> > +		XFS_STATS_INC(XFS_I(inode)->i_mount, xs_ig_attrchg);
+> > +		mode_changed = 1;
+> >  	}
+> 
+> And this doesn't.
+> 
+> So this breaks all our rules for inode metadata updates, both for
+> runtime access serialisation and for crash consistency.
+> 
 
-  EOPNOTSUPP The filesystem explicitly does not support the flag
+I'm only making changes to the vfs inode, and xfs_set_acl() should always
+be called with i_rwsem held for writing. I think that should be enough to
+serialize access to the vfs inode fields.
 
-  SIGSEGV Attempted to write a MAP_DIRECT mapping at a file offset that
-          might require block-map updates.
+I'm sorry, I'm not sure I follow the crash consistency part. This is not
+writing anything to disk. My expectation was that the changes I made to
+the vfs inode would be attached to the transaction later, when calling
+xfs_trans_log_inode() in xfs_attr_set() or xfs_attr_remove(). Would that
+not work as intended? I was mostly imitating how btrfs sets an ACL, so I
+could be misunderstanding how xfs does journaling.
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/dax.c                               |    2 +
- fs/xfs/xfs_file.c                      |  109 ++++++++++++++++++++++++++++++++
- fs/xfs/xfs_inode.h                     |    1 
- fs/xfs/xfs_super.c                     |    1 
- include/linux/mm_types.h               |    1 
- include/linux/mman.h                   |    2 -
- include/uapi/asm-generic/mman-common.h |    1 
- mm/mmap.c                              |    2 +
- 8 files changed, 117 insertions(+), 2 deletions(-)
+> >   set_acl:
+> > -	return __xfs_set_acl(inode, acl, type);
+> > +	error = __xfs_set_acl(inode, acl, type);
+> > +	if (error && mode_changed) {
+> > +		inode->i_mode = old_mode;
+> > +		inode->i_ctime = old_ctime;
+> > +		XFS_STATS_DEC(XFS_I(inode)->i_mount, xs_ig_attrchg);
+> > +	}
+> 
+> Same here.
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 306c2b603fb8..a654b2dd9016 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1121,6 +1121,8 @@ static int dax_fault_return(int error)
- 		return VM_FAULT_NOPAGE;
- 	if (error == -ENOMEM)
- 		return VM_FAULT_OOM;
-+	if (error == -ETXTBSY)
-+		return VM_FAULT_SIGSEGV;
- 	return VM_FAULT_SIGBUS;
- }
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index c4893e226fd8..fcdf6d5768aa 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -40,6 +40,7 @@
- #include "xfs_iomap.h"
- #include "xfs_reflink.h"
- 
-+#include <linux/mman.h>
- #include <linux/dcache.h>
- #include <linux/falloc.h>
- #include <linux/pagevec.h>
-@@ -1001,6 +1002,23 @@ xfs_file_llseek(
- 	return vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
- }
- 
-+STATIC int
-+xfs_vma_checks(
-+	struct vm_area_struct	*vma,
-+	struct inode		*inode)
-+{
-+	if ((vma->fs_flags & MAP_DIRECT) != MAP_DIRECT)
-+		return 0;
-+
-+	if (xfs_is_reflink_inode(XFS_I(inode)))
-+		return VM_FAULT_SIGSEGV;
-+
-+	if (!IS_DAX(inode))
-+		return VM_FAULT_SIGSEGV;
-+
-+	return 0;
-+}
-+
- /*
-  * Locking for serialisation of IO during page faults. This results in a lock
-  * ordering of:
-@@ -1031,6 +1049,10 @@ xfs_filemap_page_mkwrite(
- 	file_update_time(vmf->vma->vm_file);
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
-+	ret = xfs_vma_checks(vmf->vma, inode);
-+	if (ret)
-+		goto out_unlock;
-+
- 	if (IS_DAX(inode)) {
- 		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
- 	} else {
-@@ -1038,6 +1060,7 @@ xfs_filemap_page_mkwrite(
- 		ret = block_page_mkwrite_return(ret);
- 	}
- 
-+out_unlock:
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	sb_end_pagefault(inode->i_sb);
- 
-@@ -1058,10 +1081,15 @@ xfs_filemap_fault(
- 		return xfs_filemap_page_mkwrite(vmf);
- 
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-+	ret = xfs_vma_checks(vmf->vma, inode);
-+	if (ret)
-+		goto out_unlock;
-+
- 	if (IS_DAX(inode))
- 		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
- 	else
- 		ret = filemap_fault(vmf);
-+out_unlock:
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
- 	return ret;
-@@ -1094,7 +1122,9 @@ xfs_filemap_huge_fault(
- 	}
- 
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
-+	ret = xfs_vma_checks(vmf->vma, inode);
-+	if (ret == 0)
-+		ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
- 	if (vmf->flags & FAULT_FLAG_WRITE)
-@@ -1137,12 +1167,63 @@ xfs_filemap_pfn_mkwrite(
- 
- }
- 
-+STATIC void
-+xfs_filemap_open(
-+	struct vm_area_struct	*vma)
-+{
-+	struct file		*filp = vma->vm_file;
-+	struct inode		*inode = file_inode(filp);
-+	struct xfs_inode	*ip = XFS_I(inode);
-+
-+	if ((vma->fs_flags & MAP_DIRECT) != MAP_DIRECT)
-+		return;
-+	atomic_inc(&ip->i_mapdcount);
-+}
-+
-+STATIC int
-+atomic_dec_and_xfs_ilock(
-+	atomic_t		*atomic,
-+	struct xfs_inode	*ip,
-+	uint			lock_flags)
-+{
-+	/* Subtract 1 from counter unless that drops it to 0 (ie. it was 1) */
-+	if (atomic_add_unless(atomic, -1, 1))
-+		return 0;
-+
-+	/* Otherwise do it the slow way */
-+	xfs_ilock(ip, lock_flags);
-+	if (atomic_dec_and_test(atomic))
-+		return 1;
-+	xfs_iunlock(ip, lock_flags);
-+	return 0;
-+}
-+
-+STATIC void
-+xfs_filemap_close(
-+	struct vm_area_struct	*vma)
-+{
-+	struct file		*filp = vma->vm_file;
-+	struct inode		*inode = file_inode(filp);
-+	struct xfs_inode	*ip = XFS_I(inode);
-+
-+	if ((vma->fs_flags & MAP_DIRECT) != MAP_DIRECT)
-+		return;
-+
-+	if (!atomic_dec_and_xfs_ilock(&ip->i_mapdcount, ip,
-+				XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL))
-+		return;
-+	inode->i_flags &= ~S_IOMAP_SEALED;
-+	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-+}
-+
- static const struct vm_operations_struct xfs_file_vm_ops = {
- 	.fault		= xfs_filemap_fault,
- 	.huge_fault	= xfs_filemap_huge_fault,
- 	.map_pages	= filemap_map_pages,
- 	.page_mkwrite	= xfs_filemap_page_mkwrite,
- 	.pfn_mkwrite	= xfs_filemap_pfn_mkwrite,
-+	.open		= xfs_filemap_open,
-+	.close		= xfs_filemap_close,
- };
- 
- STATIC int
-@@ -1157,6 +1238,31 @@ xfs_file_mmap(
- 	return 0;
- }
- 
-+#define	XFS_MAP_SUPPORTED (MAP_DIRECT)
-+
-+STATIC int
-+xfs_file_fmmap(
-+	struct file		*filp,
-+	struct vm_area_struct	*vma,
-+	unsigned long		flags)
-+{
-+	struct inode		*inode = file_inode(filp);
-+	struct xfs_inode	*ip = XFS_I(inode);
-+
-+	if (flags & ~(XFS_MAP_SUPPORTED))
-+		return -EOPNOTSUPP;
-+
-+	xfs_ilock(ip, XFS_MMAPLOCK_EXCL|XFS_IOLOCK_EXCL);
-+	if ((flags & MAP_DIRECT) == MAP_DIRECT) {
-+		vma->fs_flags |= MAP_DIRECT;
-+		inode->i_flags |= S_IOMAP_SEALED;
-+		atomic_inc(&ip->i_mapdcount);
-+	}
-+	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL|XFS_IOLOCK_EXCL);
-+
-+	return xfs_file_mmap(filp, vma);
-+}
-+
- const struct file_operations xfs_file_operations = {
- 	.llseek		= xfs_file_llseek,
- 	.read_iter	= xfs_file_read_iter,
-@@ -1168,6 +1274,7 @@ const struct file_operations xfs_file_operations = {
- 	.compat_ioctl	= xfs_file_compat_ioctl,
- #endif
- 	.mmap		= xfs_file_mmap,
-+	.fmmap		= xfs_file_fmmap,
- 	.open		= xfs_file_open,
- 	.release	= xfs_file_release,
- 	.fsync		= xfs_file_fsync,
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 0ee453de239a..50d3e1bca1a9 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -58,6 +58,7 @@ typedef struct xfs_inode {
- 	mrlock_t		i_lock;		/* inode lock */
- 	mrlock_t		i_mmaplock;	/* inode mmap IO lock */
- 	atomic_t		i_pincount;	/* inode pin count */
-+	atomic_t		i_mapdcount;	/* inode MAP_DIRECT count */
- 	spinlock_t		i_flags_lock;	/* inode i_flags lock */
- 	/* Miscellaneous state. */
- 	unsigned long		i_flags;	/* see defined flags below */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 664db709cd1a..2604568354db 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1011,6 +1011,7 @@ xfs_fs_inode_init_once(
- 
- 	/* xfs inode */
- 	atomic_set(&ip->i_pincount, 0);
-+	atomic_set(&ip->i_mapdcount, 0);
- 	spin_lock_init(&ip->i_flags_lock);
- 
- 	mrlock_init(&ip->i_mmaplock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
-diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
-index ff151814a02d..73fdc0ada9ee 100644
---- a/include/linux/mm_types.h
-+++ b/include/linux/mm_types.h
-@@ -306,6 +306,7 @@ struct vm_area_struct {
- 	struct mm_struct *vm_mm;	/* The address space we belong to. */
- 	pgprot_t vm_page_prot;		/* Access permissions of this VMA. */
- 	unsigned long vm_flags;		/* Flags, see mm.h. */
-+	unsigned long fs_flags;		/* fs flags, see MAP_DIRECT etc */
- 
- 	/*
- 	 * For areas with an address space and backing store,
-diff --git a/include/linux/mman.h b/include/linux/mman.h
-index 73d4ac7e7136..dc120995f684 100644
---- a/include/linux/mman.h
-+++ b/include/linux/mman.h
-@@ -8,7 +8,7 @@
- #include <uapi/linux/mman.h>
- 
- /* the MAP_VALIDATE set of supported flags */
--#define	MAP_SUPPORTED_MASK (0)
-+#define	MAP_SUPPORTED_MASK (MAP_DIRECT)
- 
- extern int sysctl_overcommit_memory;
- extern int sysctl_overcommit_ratio;
-diff --git a/include/uapi/asm-generic/mman-common.h b/include/uapi/asm-generic/mman-common.h
-index 8bf8c7828275..a16184402c45 100644
---- a/include/uapi/asm-generic/mman-common.h
-+++ b/include/uapi/asm-generic/mman-common.h
-@@ -25,6 +25,7 @@
- # define MAP_UNINITIALIZED 0x0		/* Don't support this flag */
- #endif
- #define MAP_VALIDATE (MAP_SHARED|MAP_PRIVATE) /* mechanism to define new shared semantics */
-+#define MAP_DIRECT (MAP_VALIDATE | 0x40)	/* shared, sealed, and no page cache */
- 
- /*
-  * Flags for mlock
-diff --git a/mm/mmap.c b/mm/mmap.c
-index d2919a9e25bf..f12de3859fec 100644
---- a/mm/mmap.c
-+++ b/mm/mmap.c
-@@ -1393,6 +1393,8 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
- 				return -EINVAL;
- 			if (!file->f_op->fmmap)
- 				return -EOPNOTSUPP;
-+			if ((flags & MAP_DIRECT) && !(prot & PROT_WRITE))
-+				return -EACCES;
- 			/* fall through */
- 		case MAP_SHARED:
- 			if ((prot&PROT_WRITE) && !(file->f_mode&FMODE_WRITE))
+i_rwsem would still be held here. My reasoning is that, since there was
+an error, no changes were actually committed; so there would be no need
+to commit the restoration either, just restore the old in-memory vfs inode
+fields. Once again, this is inspired by btrfs, so I suppose it may fail
+here in some way I can't see.
 
+(I should probably clarify I did run tests before submitting)
+
+> IOWs, you can't just remove a transactional modification of inode
+> state and replace it with in-memory VFS inode level changes. You
+> need to do the changes in transaction context and with the correct
+> locks held.
+>
+> IOWs, if you need to undo the mode changes xfs_set_mode() did, you
+> need to call xfs_set_mode() again. And because modifications have
+
+But that could fail as well, and how would we handle that? If this bug
+is to be fixed the whole thing needs to be a single transaction. That's
+why I removed the xfs_set_mode() function in the first place.
+
+> been made, the new ctime should remain in place, too.
+>
+> Of course, this still isn't atomic from a runtime access POV, but
+> that's substantially harder to provide than just undoing the mode
+> change on ACL attribute save error.
+>
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+
+Thanks,
+Ernest
