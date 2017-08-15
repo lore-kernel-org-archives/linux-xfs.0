@@ -1,80 +1,162 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:27226
-        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751666AbdHOFrp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 01:47:45 -0400
-Date: Tue, 15 Aug 2017 15:47:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 02/13] xfs: get directory offset when removing
- directory name
-Message-ID: <20170815054738.GJ21024@dastard>
-References: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
- <1502329293-4091-3-git-send-email-allison.henderson@oracle.com>
- <20170814235653.GQ4796@magnolia>
- <20170815032307.GH21024@dastard>
+Received: from mga09.intel.com ([134.134.136.24]:5072 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751666AbdHOGSl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 Aug 2017 02:18:41 -0400
+Subject: [PATCH v4 2/3] mm: introduce MAP_VALIDATE a mechanism for adding
+ new mmap flags
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 14 Aug 2017 23:12:16 -0700
+Message-ID: <150277753660.23945.11500026891611444016.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170815032307.GH21024@dastard>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Allison Henderson <allison.henderson@oracle.com>, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, luto@kernel.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 
-On Tue, Aug 15, 2017 at 01:23:07PM +1000, Dave Chinner wrote:
-> On Mon, Aug 14, 2017 at 04:56:53PM -0700, Darrick J. Wong wrote:
-> > The biggest complaint I have about this patch series is that we end up
-> > using separate transactions for each phase of the link/unlink
-> > operations.  There's no guarantee that once we start the process of
-> > expand-dir, add-name-to-dir, log-inode-cores, expand-attr,
-> > add-pptr-to-attrs that we actually get all the way to the end of that
-> > process, particularly if we crash in the middle and have to recover the
-> > log coming back up.
-> 
-> Yes, that's a problem that we had not been solved at the point in
-> time I wrote that patchset. After making the parent pointer
-> attributes be added and removed correctly, then next thing to do was
-> to make them atomic and replayable. And that's the bit I never got
-> to.
-> 
-> > Obviously, back in 2014 when Dave started on these patches there was no
-> > defer_ops, so a lot of effort goes into passing parameters up and down
-> > the stack and fiddling with the transaction reservation type
-> > declarations in order to guarantee that we can shove everything into a
-> > single transaction.  Now that we have a more general mechanism to split
-> > complex updates into a chain of smaller updates (and make log recovery
-> > pick up where we left off) it's time to figure out how to make attr (and
-> > maybe dir) updates a deferrable operation.
-> 
-> Right. We've got the infrastructure now, but it's nasty to retrofit
-> to all the attr code.
-> 
-> > This adds complexity to the log because we have to define an "attr add
-> > KEY:VALUE" and a "attr delete KEY" deferred op that hooks into the
-> > existing attr code.  For parent pointers it's not a big deal to log
-> > values since they're not big, but for the general case this idea needs
-> > more thought, or a decision that we'll just keep doing things the same
-> > way.
-> 
-> The problem with this is that it requires us to log the entire
-> attribute value, which could be 64k in size. That used to be a big
-> issue because log bandwidth was at a premium. That isn't so much a
-> problem now, so logging the attr value and getting rid of the
-> unlogged sync write for remote attr updates is the way I think we
-> should head.
+The mmap syscall suffers from the ABI anti-pattern of not validating
+unknown flags. However, proposals like MAP_SYNC and MAP_DIRECT need a
+mechanism to define new behavior that is known to fail on older kernels
+without the feature. Use the fact that specifying MAP_SHARED and
+MAP_PRIVATE at the same time is invalid as a cute hack to allow a new
+set of validated flags to be introduced.
 
-Just had another thought about this - if we rewrite any code to use
-a different set of transaction structures, we're going to need to
-use log incompat flags to identify each of the changed transaction
-sets that require redo item support to replay. That's not a huge
-deal - it just means that people taking filesystems back to old
-kernels will need to make sure the log is clean. i.e. mount sets,
-unmount/remount-ro clears the relevant log incompat flags.
+This also introduces the ->fmmap() file operation that is ->mmap() plus
+flags. Each ->fmmap() implementation must fail requests when a locally
+unsupported flag is specified.
 
-Cheers,
+Cc: Jan Kara <jack@suse.cz>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ include/linux/fs.h                     |    7 +++++++
+ include/linux/mm.h                     |    2 +-
+ include/linux/mman.h                   |    3 +++
+ include/uapi/asm-generic/mman-common.h |    1 +
+ mm/mmap.c                              |   20 +++++++++++++++++---
+ 5 files changed, 29 insertions(+), 4 deletions(-)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 1104e5df39ef..bbe755d0caee 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1674,6 +1674,7 @@ struct file_operations {
+ 	long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
+ 	long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
+ 	int (*mmap) (struct file *, struct vm_area_struct *);
++	int (*fmmap) (struct file *, struct vm_area_struct *, unsigned long);
+ 	int (*open) (struct inode *, struct file *);
+ 	int (*flush) (struct file *, fl_owner_t id);
+ 	int (*release) (struct inode *, struct file *);
+@@ -1748,6 +1749,12 @@ static inline int call_mmap(struct file *file, struct vm_area_struct *vma)
+ 	return file->f_op->mmap(file, vma);
+ }
+ 
++static inline int call_fmmap(struct file *file, struct vm_area_struct *vma,
++		unsigned long flags)
++{
++	return file->f_op->fmmap(file, vma, flags);
++}
++
+ ssize_t rw_copy_check_uvector(int type, const struct iovec __user * uvector,
+ 			      unsigned long nr_segs, unsigned long fast_segs,
+ 			      struct iovec *fast_pointer,
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 46b9ac5e8569..49eef48da4b7 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -2090,7 +2090,7 @@ extern unsigned long get_unmapped_area(struct file *, unsigned long, unsigned lo
+ 
+ extern unsigned long mmap_region(struct file *file, unsigned long addr,
+ 	unsigned long len, vm_flags_t vm_flags, unsigned long pgoff,
+-	struct list_head *uf);
++	struct list_head *uf, unsigned long flags);
+ extern unsigned long do_mmap(struct file *file, unsigned long addr,
+ 	unsigned long len, unsigned long prot, unsigned long flags,
+ 	vm_flags_t vm_flags, unsigned long pgoff, unsigned long *populate,
+diff --git a/include/linux/mman.h b/include/linux/mman.h
+index c8367041fafd..73d4ac7e7136 100644
+--- a/include/linux/mman.h
++++ b/include/linux/mman.h
+@@ -7,6 +7,9 @@
+ #include <linux/atomic.h>
+ #include <uapi/linux/mman.h>
+ 
++/* the MAP_VALIDATE set of supported flags */
++#define	MAP_SUPPORTED_MASK (0)
++
+ extern int sysctl_overcommit_memory;
+ extern int sysctl_overcommit_ratio;
+ extern unsigned long sysctl_overcommit_kbytes;
+diff --git a/include/uapi/asm-generic/mman-common.h b/include/uapi/asm-generic/mman-common.h
+index 8c27db0c5c08..8bf8c7828275 100644
+--- a/include/uapi/asm-generic/mman-common.h
++++ b/include/uapi/asm-generic/mman-common.h
+@@ -24,6 +24,7 @@
+ #else
+ # define MAP_UNINITIALIZED 0x0		/* Don't support this flag */
+ #endif
++#define MAP_VALIDATE (MAP_SHARED|MAP_PRIVATE) /* mechanism to define new shared semantics */
+ 
+ /*
+  * Flags for mlock
+diff --git a/mm/mmap.c b/mm/mmap.c
+index f19efcf75418..d2919a9e25bf 100644
+--- a/mm/mmap.c
++++ b/mm/mmap.c
+@@ -1388,6 +1388,12 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
+ 		struct inode *inode = file_inode(file);
+ 
+ 		switch (flags & MAP_TYPE) {
++		case MAP_VALIDATE:
++			if (flags & ~(MAP_SUPPORTED_MASK | MAP_VALIDATE))
++				return -EINVAL;
++			if (!file->f_op->fmmap)
++				return -EOPNOTSUPP;
++			/* fall through */
+ 		case MAP_SHARED:
+ 			if ((prot&PROT_WRITE) && !(file->f_mode&FMODE_WRITE))
+ 				return -EACCES;
+@@ -1464,7 +1470,12 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
+ 			vm_flags |= VM_NORESERVE;
+ 	}
+ 
+-	addr = mmap_region(file, addr, len, vm_flags, pgoff, uf);
++	if ((flags & MAP_VALIDATE) == MAP_VALIDATE)
++		flags &= MAP_SUPPORTED_MASK;
++	else
++		flags = 0;
++
++	addr = mmap_region(file, addr, len, vm_flags, pgoff, uf, flags);
+ 	if (!IS_ERR_VALUE(addr) &&
+ 	    ((vm_flags & VM_LOCKED) ||
+ 	     (flags & (MAP_POPULATE | MAP_NONBLOCK)) == MAP_POPULATE))
+@@ -1601,7 +1612,7 @@ static inline int accountable_mapping(struct file *file, vm_flags_t vm_flags)
+ 
+ unsigned long mmap_region(struct file *file, unsigned long addr,
+ 		unsigned long len, vm_flags_t vm_flags, unsigned long pgoff,
+-		struct list_head *uf)
++		struct list_head *uf, unsigned long flags)
+ {
+ 	struct mm_struct *mm = current->mm;
+ 	struct vm_area_struct *vma, *prev;
+@@ -1686,7 +1697,10 @@ unsigned long mmap_region(struct file *file, unsigned long addr,
+ 		 * new file must not have been exposed to user-space, yet.
+ 		 */
+ 		vma->vm_file = get_file(file);
+-		error = call_mmap(file, vma);
++		if (flags)
++			error = call_fmmap(file, vma, flags);
++		else
++			error = call_mmap(file, vma);
+ 		if (error)
+ 			goto unmap_and_free_vma;
+ 
+
