@@ -1,517 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22526 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752643AbdHNW4p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 18:56:45 -0400
-Date: Mon, 14 Aug 2017 15:56:34 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/6] mkfs: rename defaultval to flagval in opts
-Message-ID: <20170814225634.GF4796@magnolia>
-References: <20170811123037.15962-1-jtulak@redhat.com>
- <20170811123037.15962-3-jtulak@redhat.com>
+Received: from mail-yw0-f178.google.com ([209.85.161.178]:34433 "EHLO
+        mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753033AbdHOXu5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 19:50:57 -0400
+Received: by mail-yw0-f178.google.com with SMTP id s143so13693820ywg.1
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2017 16:50:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170811123037.15962-3-jtulak@redhat.com>
+In-Reply-To: <20170815083732.GB27505@quack2.suse.cz>
+References: <20170805095013.GC14930@lst.de> <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com>
+ <20170811104429.GA13736@lst.de> <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com>
+ <20170812073349.GA12679@lst.de> <CAPcyv4iKG=Zoo1VXu23YBc6uWDFV4QSS+eAm9MSOynx2FjTHbw@mail.gmail.com>
+ <20170813092436.GB32112@lst.de> <CAPcyv4ixTgSWG9K2Eg3XJmOvqJht81qL+Z3njoOjcXCD7XMpZw@mail.gmail.com>
+ <20170814124059.GC17820@quack2.suse.cz> <CAPcyv4hi_Y5Qj=h_Qf4Bcyv+EWBosa2gQT+-8ro3hPY9VMshSA@mail.gmail.com>
+ <20170815083732.GB27505@quack2.suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 15 Aug 2017 16:50:55 -0700
+Message-ID: <CAPcyv4hFTn4Fz5o+Gm857mS-RA6WAVsf4CmwiLiK2O8w2_SamQ@mail.gmail.com>
+Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
+ dma-to-storage, and swap
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>
 
-On Fri, Aug 11, 2017 at 02:30:33PM +0200, Jan Tulak wrote:
-> The old name 'defaultval' was misleading - it is not the default value,
-> but the value the option has when used as a flag by an user.
-> 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> Reviewed-by: Luis R. Rodriguez <mcgrof@kernel.org>
+On Tue, Aug 15, 2017 at 1:37 AM, Jan Kara <jack@suse.cz> wrote:
+> On Mon 14-08-17 09:14:42, Dan Williams wrote:
+>> On Mon, Aug 14, 2017 at 5:40 AM, Jan Kara <jack@suse.cz> wrote:
+>> > On Sun 13-08-17 13:31:45, Dan Williams wrote:
+>> >> On Sun, Aug 13, 2017 at 2:24 AM, Christoph Hellwig <hch@lst.de> wrote:
+>> >> > Thay being said I think we absolutely should support RDMA memory
+>> >> > registrations for DAX mappings.  I'm just not sure how S_IOMAP_IMMUTABLE
+>> >> > helps with that.  We'll want a MAP_SYNC | MAP_POPULATE to make sure
+>> >> > all the blocks are polulated and all ptes are set up.  Second we need
+>> >> > to make sure get_user_page works, which for now means we'll need a
+>> >> > struct page mapping for the region (which will be really annoying
+>> >> > for PCIe mappings, like the upcoming NVMe persistent memory region),
+>> >> > and we need to gurantee that the extent mapping won't change while
+>> >> > the get_user_pages holds the pages inside it.  I think that is true
+>> >> > due to side effects even with the current DAX code, but we'll need to
+>> >> > make it explicit.  And maybe that's where we need to converge -
+>> >> > "sealing" the extent map makes sense as such a temporary measure
+>> >> > that is not persisted on disk, which automatically gets released
+>> >> > when the holding process exits, because we sort of already do this
+>> >> > implicitly.  It might also make sense to have explicitl breakable
+>> >> > seals similar to what I do for the pNFS blocks kernel server, as
+>> >> > any userspace RDMA file server would also need those semantics.
+>> >>
+>> >> Ok, how about a MAP_DIRECT flag that arranges for faults to that range to:
+>> >>
+>> >>     1/ only succeed if the fault can be satisfied without page cache
+>> >>
+>> >>     2/ only install a pte for the fault if it can do so without
+>> >> triggering block map updates
+>> >>
+>> >> So, I think it would still end up setting an inode flag to make
+>> >> xfs_bmapi_write() fail while any process has a MAP_DIRECT mapping
+>> >> active. However, it would not record that state in the on-disk
+>> >> metadata and it would automatically clear at munmap time. That should
+>> >> be enough to support the host-persistent-memory, and
+>> >> NVMe-persistent-memory use cases (provided we have struct page for
+>> >> NVMe). Although, we need more safety infrastructure in the NVMe case
+>> >> where we would need to software manage I/O coherence.
+>> >
+>> > Hum, this proposal (and the problems you are trying to deal with) seem very
+>> > similar to Peter Zijlstra's mpin() proposal from 2014 [1], just moved to
+>> > the DAX area (and so additionally complicated by the fact that filesystems
+>> > now have to care). The patch set was not merged due to lack of interest I
+>> > think but it looked sensible and the proposed API would make sense for more
+>> > stuff than just DAX so maybe it would be better than MAP_DIRECT flag?
+>>
+>> Interesting, but I'm not sure I see the correlation. mm_mpin() makes a
+>> "no-fault" guarantee and fixes the accounting of locked System RAM.
+>> MAP_DIRECT still allows faults, and DAX mappings don't consume System
+>> RAM so the accounting problem is not there for DAX. mm_pin() also does
+>> not appear to have a relationship to a file backed memory like mmap
+>> allows.
+>
+> So the accounting part is probably non-interesting for DAX purposes and I
+> agree there are other differences as well. But mm_mpin() prevented page
+> migrations which is parallel to your requirement of "offset->block mapping
+> is permanent".  Furthermore mm_mpin() work was there for RDMA so that it
+> has saner interface to pin pages than get_user_pages() and you mention RDMA
+> and similar technologies as a usecase for your work for similar reasons.
+> So my thought was that possibly we should have the same API for pinning
+> "storage" for RDMA transfers regardless of whether the backing is page
+> cache or pmem and the API should be usable for in-kernel users as well?
+> mmap flag seems a bit clumsy in this regard so maybe a form of a separate
+> syscall - be it mpin(start, len) or some other name - might be more
+> suitable?
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-> ---
->  mkfs/xfs_mkfs.c | 120 ++++++++++++++++++++++++++++----------------------------
->  1 file changed, 60 insertions(+), 60 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index fa0b475c..9431f010 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -101,7 +101,7 @@ unsigned int		sectorsize;
->   *     to zero. But if one value is different: minval=0 and maxval=1,
->   *     then it is OK.)
->   *
-> - *   defaultval MANDATORY
-> + *   flagval MANDATORY
->   *     The value used if user specifies the subopt, but no value.
->   *     If the subopt accepts some values (-d file=[1|0]), then this
->   *     sets what is used with simple specifying the subopt (-d file).
-> @@ -126,7 +126,7 @@ struct opt_params {
->  		int		conflicts[MAX_CONFLICTS];
->  		long long	minval;
->  		long long	maxval;
-> -		long long	defaultval;
-> +		long long	flagval;
->  		char		*raw_input;
->  	}		subopt_params[MAX_SUBOPTS];
->  };
-> @@ -146,7 +146,7 @@ struct opt_params bopts = {
->  				 LAST_CONFLICT },
->  		  .minval = XFS_MIN_BLOCKSIZE_LOG,
->  		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = B_SIZE,
->  		  .convert = true,
-> @@ -155,7 +155,7 @@ struct opt_params bopts = {
->  				 LAST_CONFLICT },
->  		  .minval = XFS_MIN_BLOCKSIZE,
->  		  .maxval = XFS_MAX_BLOCKSIZE,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  	},
->  };
-> @@ -201,24 +201,24 @@ struct opt_params dopts = {
->  				 LAST_CONFLICT },
->  		  .minval = 1,
->  		  .maxval = XFS_MAX_AGNUMBER,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_FILE,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  		{ .index = D_NAME,
->  		  .conflicts = { LAST_CONFLICT },
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SIZE,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .convert = true,
->  		  .minval = XFS_AG_MIN_BYTES,
->  		  .maxval = LLONG_MAX,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SUNIT,
->  		  .conflicts = { D_NOALIGN,
-> @@ -227,7 +227,7 @@ struct opt_params dopts = {
->  				 LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SWIDTH,
->  		  .conflicts = { D_NOALIGN,
-> @@ -236,7 +236,7 @@ struct opt_params dopts = {
->  				 LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_AGSIZE,
->  		  .conflicts = { D_AGCOUNT,
-> @@ -244,7 +244,7 @@ struct opt_params dopts = {
->  		  .convert = true,
->  		  .minval = XFS_AG_MIN_BYTES,
->  		  .maxval = XFS_AG_MAX_BYTES,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SU,
->  		  .conflicts = { D_NOALIGN,
-> @@ -254,7 +254,7 @@ struct opt_params dopts = {
->  		  .convert = true,
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SW,
->  		  .conflicts = { D_NOALIGN,
-> @@ -263,14 +263,14 @@ struct opt_params dopts = {
->  				 LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SECTLOG,
->  		  .conflicts = { D_SECTSIZE,
->  				 LAST_CONFLICT },
->  		  .minval = XFS_MIN_SECTORSIZE_LOG,
->  		  .maxval = XFS_MAX_SECTORSIZE_LOG,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_SECTSIZE,
->  		  .conflicts = { D_SECTLOG,
-> @@ -279,7 +279,7 @@ struct opt_params dopts = {
->  		  .is_power_2 = true,
->  		  .minval = XFS_MIN_SECTORSIZE,
->  		  .maxval = XFS_MAX_SECTORSIZE,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_NOALIGN,
->  		  .conflicts = { D_SU,
-> @@ -289,25 +289,25 @@ struct opt_params dopts = {
->  				 LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  		{ .index = D_RTINHERIT,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 1,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  		{ .index = D_PROJINHERIT,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = D_EXTSZINHERIT,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  	},
->  };
-> @@ -339,7 +339,7 @@ struct opt_params iopts = {
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  		{ .index = I_LOG,
->  		  .conflicts = { I_PERBLOCK,
-> @@ -347,13 +347,13 @@ struct opt_params iopts = {
->  				 LAST_CONFLICT },
->  		  .minval = XFS_DINODE_MIN_LOG,
->  		  .maxval = XFS_DINODE_MAX_LOG,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = I_MAXPCT,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 100,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = I_PERBLOCK,
->  		  .conflicts = { I_LOG,
-> @@ -362,7 +362,7 @@ struct opt_params iopts = {
->  		  .is_power_2 = true,
->  		  .minval = XFS_MIN_INODE_PERBLOCK,
->  		  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = I_SIZE,
->  		  .conflicts = { I_PERBLOCK,
-> @@ -371,25 +371,25 @@ struct opt_params iopts = {
->  		  .is_power_2 = true,
->  		  .minval = XFS_DINODE_MIN_SIZE,
->  		  .maxval = XFS_DINODE_MAX_SIZE,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = I_ATTR,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 2,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = I_PROJID32BIT,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  		{ .index = I_SPINODES,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  	},
->  };
-> @@ -429,7 +429,7 @@ struct opt_params lopts = {
->  				 LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = UINT_MAX,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_INTERNAL,
->  		  .conflicts = { L_FILE,
-> @@ -437,27 +437,27 @@ struct opt_params lopts = {
->  				 LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  		{ .index = L_SIZE,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .convert = true,
->  		  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
->  		  .maxval = XFS_MAX_LOG_BYTES,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_VERSION,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 1,
->  		  .maxval = 2,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_SUNIT,
->  		  .conflicts = { L_SU,
->  				 LAST_CONFLICT },
->  		  .minval = 1,
->  		  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_SU,
->  		  .conflicts = { L_SUNIT,
-> @@ -465,20 +465,20 @@ struct opt_params lopts = {
->  		  .convert = true,
->  		  .minval = BBTOB(1),
->  		  .maxval = XLOG_MAX_RECORD_BSIZE,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_DEV,
->  		  .conflicts = { L_AGNUM,
->  				 L_INTERNAL,
->  				 LAST_CONFLICT },
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_SECTLOG,
->  		  .conflicts = { L_SECTSIZE,
->  				 LAST_CONFLICT },
->  		  .minval = XFS_MIN_SECTORSIZE_LOG,
->  		  .maxval = XFS_MAX_SECTORSIZE_LOG,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_SECTSIZE,
->  		  .conflicts = { L_SECTLOG,
-> @@ -487,26 +487,26 @@ struct opt_params lopts = {
->  		  .is_power_2 = true,
->  		  .minval = XFS_MIN_SECTORSIZE,
->  		  .maxval = XFS_MAX_SECTORSIZE,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_FILE,
->  		  .conflicts = { L_INTERNAL,
->  				 LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  		{ .index = L_NAME,
->  		  .conflicts = { L_AGNUM,
->  				 L_INTERNAL,
->  				 LAST_CONFLICT },
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = L_LAZYSBCNTR,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  	},
->  };
-> @@ -530,7 +530,7 @@ struct opt_params nopts = {
->  				 LAST_CONFLICT },
->  		  .minval = XFS_MIN_REC_DIRSIZE,
->  		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = N_SIZE,
->  		  .conflicts = { N_LOG,
-> @@ -539,19 +539,19 @@ struct opt_params nopts = {
->  		  .is_power_2 = true,
->  		  .minval = 1 << XFS_MIN_REC_DIRSIZE,
->  		  .maxval = XFS_MAX_BLOCKSIZE,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = N_VERSION,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 2,
->  		  .maxval = 2,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = N_FTYPE,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  	},
->  };
-> @@ -579,33 +579,33 @@ struct opt_params ropts = {
->  		  .convert = true,
->  		  .minval = XFS_MIN_RTEXTSIZE,
->  		  .maxval = XFS_MAX_RTEXTSIZE,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = R_SIZE,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .convert = true,
->  		  .minval = 0,
->  		  .maxval = LLONG_MAX,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = R_DEV,
->  		  .conflicts = { LAST_CONFLICT },
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = R_FILE,
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		  .conflicts = { LAST_CONFLICT },
->  		},
->  		{ .index = R_NAME,
->  		  .conflicts = { LAST_CONFLICT },
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = R_NOALIGN,
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		  .conflicts = { LAST_CONFLICT },
->  		},
->  	},
-> @@ -631,7 +631,7 @@ struct opt_params sopts = {
->  				 LAST_CONFLICT },
->  		  .minval = XFS_MIN_SECTORSIZE_LOG,
->  		  .maxval = XFS_MAX_SECTORSIZE_LOG,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = S_SECTLOG,
->  		  .conflicts = { S_SIZE,
-> @@ -639,7 +639,7 @@ struct opt_params sopts = {
->  				 LAST_CONFLICT },
->  		  .minval = XFS_MIN_SECTORSIZE_LOG,
->  		  .maxval = XFS_MAX_SECTORSIZE_LOG,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = S_SIZE,
->  		  .conflicts = { S_LOG,
-> @@ -649,7 +649,7 @@ struct opt_params sopts = {
->  		  .is_power_2 = true,
->  		  .minval = XFS_MIN_SECTORSIZE,
->  		  .maxval = XFS_MAX_SECTORSIZE,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = S_SECTSIZE,
->  		  .conflicts = { S_LOG,
-> @@ -659,7 +659,7 @@ struct opt_params sopts = {
->  		  .is_power_2 = true,
->  		  .minval = XFS_MIN_SECTORSIZE,
->  		  .maxval = XFS_MAX_SECTORSIZE,
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  	},
->  };
-> @@ -684,29 +684,29 @@ struct opt_params mopts = {
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  		{ .index = M_FINOBT,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  		{ .index = M_UUID,
->  		  .conflicts = { LAST_CONFLICT },
-> -		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		  .flagval = SUBOPT_NEEDS_VAL,
->  		},
->  		{ .index = M_RMAPBT,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  		{ .index = M_REFLINK,
->  		  .conflicts = { LAST_CONFLICT },
->  		  .minval = 0,
->  		  .maxval = 1,
-> -		  .defaultval = 1,
-> +		  .flagval = 1,
->  		},
->  	},
->  };
-> @@ -1398,9 +1398,9 @@ getnum(
->  	check_opt(opts, index, false);
->  	/* empty strings might just return a default value */
->  	if (!str || *str == '\0') {
-> -		if (sp->defaultval == SUBOPT_NEEDS_VAL)
-> +		if (sp->flagval == SUBOPT_NEEDS_VAL)
->  			reqval(opts->name, (char **)opts->subopts, index);
-> -		return sp->defaultval;
-> +		return sp->flagval;
->  	}
->  
->  	if (sp->minval == 0 && sp->maxval == 0) {
-> -- 
-> 2.13.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Can you say about more about why an mmap flag for this feels awkward
+to you? I think there's symmetry between O_SYNC / O_DIRECT setting up
+synchronous / page-cache-bypass file descriptors and MAP_SYNC /
+MAP_DIRECT setting up synchronous and page-cache bypass mappings.
+"Pinning" also feels like the wrong mechanism when you consider
+hardware is moving toward eliminating the pinning requirement over
+time. SVM "Shared Virtual Memory" hardware will just operate on cpu
+virtual addresses directly and generate typical faults. On such
+hardware MAP_DIRECT would be a nop relative to MAP_SYNC, so you
+wouldn't want your application to be stuck with the legacy concept
+that pages need to be explicitly "pinned".
