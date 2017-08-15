@@ -1,88 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f174.google.com ([209.85.161.174]:36001 "EHLO
-        mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752843AbdHORL2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 13:11:28 -0400
-Received: by mail-yw0-f174.google.com with SMTP id u207so8409096ywc.3
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2017 10:11:28 -0700 (PDT)
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:35013 "EHLO
+        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752647AbdHORNb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 13:13:31 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170815091836.c3xpsfgfwz7w35od@node.shutemov.name>
-References: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150277754211.23945.458876600578531019.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170815091836.c3xpsfgfwz7w35od@node.shutemov.name>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 15 Aug 2017 10:11:27 -0700
-Message-ID: <CAPcyv4gmyFugKwMJCVwC9wFmQ8TL4TbHsa0p2Pqg2a6LziRHVw@mail.gmail.com>
-Subject: Re: [PATCH v4 3/3] fs, xfs: introduce MAP_DIRECT for creating
- block-map-sealed file ranges
+In-Reply-To: <CAPaz=E+-+C-LXtADm99epmVEszpfT70Ep39tKedfPi1AN-P7tA@mail.gmail.com>
+References: <CAPaz=E+-+C-LXtADm99epmVEszpfT70Ep39tKedfPi1AN-P7tA@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 15 Aug 2017 19:13:29 +0200
+Message-ID: <CAOQ4uxj0-Q-ZdDCPKP2oPDOtGq1bLTF=_edvkcwwLntMNvwLmg@mail.gmail.com>
+Subject: Re: CrashMonkey: A Framework to Systematically Test File-System Crash Consistency
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: Vijay Chidambaram <vvijay03@gmail.com>
+Cc: Ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-btrfs@vger.kernel.og, vijay@cs.utexas.edu, Ashlie Martinez <ashmrtn@utexas.edu>, Josef Bacik <jbacik@fb.com>, Christoph Hellwig <hch@lst.de>
 
-On Tue, Aug 15, 2017 at 2:18 AM, Kirill A. Shutemov
-<kirill@shutemov.name> wrote:
-> On Mon, Aug 14, 2017 at 11:12:22PM -0700, Dan Williams wrote:
->> MAP_DIRECT is an mmap(2) flag with the following semantics:
->>
->>   MAP_DIRECT
->>   In addition to this mapping having MAP_SHARED semantics, successful
->>   faults in this range may assume that the block map (logical-file-offset
->>   to physical memory address) is pinned for the lifetime of the mapping.
->>   Successful MAP_DIRECT faults establish mappings that bypass any kernel
->>   indirections like the page-cache. All updates are carried directly
->>   through to the underlying file physical blocks (modulo cpu cache
->>   effects).
->>
->>   ETXTBSY is returned on attempts to change the block map (allocate blocks
->>   / convert unwritten extents / break shared extents) in the mapped range.
->>   Some filesystems may extend these same restrictions outside the mapped
->>   range and return ETXTBSY to any file operations that might mutate the
->>   block map. MAP_DIRECT faults may fail with a SIGSEGV if the filesystem
->>   needs to write the block map to satisfy the fault. For example, if the
->>   mapping was established over a hole in a sparse file.
+On Mon, Aug 14, 2017 at 6:32 PM, Vijay Chidambaram <vvijay03@gmail.com> wrote:
+> Hi,
 >
-> We had issues before with user-imposed ETXTBSY. See MAP_DENYWRITE.
+> I'm Vijay Chidambaram, an Assistant Professor at the University of
+> Texas at Austin. My research group is developing CrashMonkey, a
+> file-system agnostic framework to test file-system crash consistency
+> on power failures. We are developing CrashMonkey publicly at Github
+> [1]. This is very much a work-in-progress, so we welcome feedback.
 >
-> Are we sure it won't a source of denial-of-service attacks?
+> CrashMonkey works by recording all the IO from running a given
+> workload, then *constructing* possible crash states (while honoring
+> FUA and FLUSH flags). A crash state is the state of storage after an
+> abrupt power failure or crash. For each crash state, CrashMonkey runs
+> the filesystem-provided fsck on top of the state, and checks if the
+> file-system recovers correctly. Once the file system mounts correctly,
+> we can run further tests to check data consistency.  The work was
+> presented at HotStorage 17. The workshop paper is available at [2] and
+> the slides at [3].
+>
+> Our plan was to post on the mailing lists after reproducing an
+> existing bug. We are not there yet, but I saw some posts where others
+> were considering building something similar, so I thought I would post
+> about our work.
+>
+> [1] https://github.com/utsaslab/crashmonkey
+> [2] http://www.cs.utexas.edu/~vijay/papers/hotstorage17-crashmonkey.pdf
+> [3] http://www.cs.utexas.edu/~vijay/papers/hotstorage17-crashmonkey-slides.pdf
+>
 
-I believe MAP_DENYWRITE allowed any application with read access to be
-able to deny writes which is obviously problematic. MAP_DIRECT is
-different. You need write access to the file so you can already
-destroy data that another application might depend on, and this only
-blocks allocation and reflink.
+Hi Vijay,
 
-However, I'm not opposed to adding more safety around this. I think we
-can address this concern with an fcntl seal as Dave suggests, but the
-seal only applies to the 'struct file' instance and only gates whether
-MAP_DIRECT is allowed on that file. The act of setting
-F_MAY_SEAL_IOMAP requires CAP_IMMUTABLE, but MAP_DIRECT does not. This
-allows the 'permission to mmap(MAP_DIRECT)' to be passed around with
-an open file descriptor.
+Thanks a lot for sharing your work.
+Crash consistency is high on my TODO list.
 
->
->>   The kernel ignores attempts to mark a MAP_DIRECT mapping MAP_PRIVATE and
->>   will silently fall back to MAP_SHARED semantics.
->
-> Hm.. Any reason for this strage behaviour? Looks just broken to me.
->
->>
->>   ERRORS
->>   EACCES A MAP_DIRECT mapping was requested and PROT_WRITE was not set.
->>
->>   EINVAL MAP_ANONYMOUS was specified with MAP_DIRECT.
->>
->>   EOPNOTSUPP The filesystem explicitly does not support the flag
->>
->>   SIGSEGV Attempted to write a MAP_DIRECT mapping at a file offset that
->>           might require block-map updates.
->
-> I think it should be SIGBUS.
+Did you happen to run into this work by Joseph Bacik?
 
-Ok, that does seem to fit this definition from the mmap(2) man page:
+https://www.redhat.com/archives/dm-devel/2014-November/msg00083.html
 
-SIGBUS Attempted access to a portion of the buffer that does not
-correspond to the file  (for example, beyond the end of the file,
-including the case where another process has truncated the file).
+I wonder if the disk_wrapper driver could be made into something more standard
+like the suggested dm-power-fail target, so that it may be proposed
+for upstream?
+
+Thanks,
+Amir.
