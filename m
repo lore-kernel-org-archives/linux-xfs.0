@@ -1,75 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:29533
-        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752740AbdHOA1t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 20:27:49 -0400
-Date: Tue, 15 Aug 2017 10:25:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC 2/2] xfs: don't log dirty ranges for ordered buffers
-Message-ID: <20170815002540.GC21024@dastard>
-References: <20170814165451.43788-1-bfoster@redhat.com>
- <20170814165451.43788-3-bfoster@redhat.com>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:36007 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752813AbdHOA61 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 20:58:27 -0400
+Received: by mail-qk0-f193.google.com with SMTP id d136so10845954qkg.3
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2017 17:58:27 -0700 (PDT)
+Date: Mon, 14 Aug 2017 21:58:21 -0300
+From: Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?=
+        <ernesto.mnd.fernandez@gmail.com>
+Subject: Re: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
+Message-ID: <20170815005818.GA1700@debian.home>
+References: <20170814081806.GA3924@debian.home>
+ <20170814222827.GC4796@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20170814165451.43788-3-bfoster@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170814222827.GC4796@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Zorro Lang <zlang@redhat.com>, Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?= <ernesto.mnd.fernandez@gmail.com>
 
-On Mon, Aug 14, 2017 at 12:54:51PM -0400, Brian Foster wrote:
-> Ordered buffers are attached to transactions and pushed through the
-> logging infrastructure just like normal buffers with the exception
-> that they are not actually written to the log. Therefore, we don't
-> need to log dirty ranges of ordered buffers. xfs_trans_log_buf() is
-> called on ordered buffers to set up all of the dirty state on the
-> transaction, buffer and log item and prepare the buffer for I/O.
+On Mon, Aug 14, 2017 at 03:28:27PM -0700, Darrick J. Wong wrote:
+> On Mon, Aug 14, 2017 at 05:18:10AM -0300, Ernesto A. Fernández wrote:
+> > The test won't exactly pass after this patch is applied. It will fail
+> > differently, this time claiming that the filesystem is inconsistent. This
 > 
-> Now that xfs_trans_dirty_buf() is available, call it from
-> xfs_trans_ordered_buf() so the latter is now mutually exclusive with
-> xfs_trans_log_buf(). This reflects the implementation of ordered
-> buffers and helps eliminate confusion over the need to log ranges of
-> ordered buffers just to set up internal log state.
+> I disagree that corrupting the filesystem is an acceptable strategy for
+> dealing with insufficient space to handle setfacl.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_btree.c  |  3 ++-
->  fs/xfs/libxfs/xfs_ialloc.c |  2 --
->  fs/xfs/xfs_trans_buf.c     | 25 +++++++++++++------------
->  3 files changed, 15 insertions(+), 15 deletions(-)
+> > probably has something to do with setting too many extended attributes, as
+> > it goes away if you change the attribute size in the test from 1k to 64k.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index e0bcc4a..9c97896 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -4466,7 +4466,8 @@ xfs_btree_block_change_owner(
->  	if (bp) {
->  		if (cur->bc_tp) {
->  			xfs_trans_ordered_buf(cur->bc_tp, bp);
-> -			xfs_btree_log_block(cur, bp, XFS_BB_OWNER);
-> +			/*xfs_trans_buf_set_type(cur->bc_tp, bp,
-> +					       XFS_BLFT_BTREE_BUF);*/
+> Hadn't you better look into why it does that and handle it?
 
-Not sure we need this - a owner change is a rare once-off operation
-(e.g. defrag) and so typically we don't need to keep the btree
-blocks cached for next reuse.
+Hi Darrick, thank for your quick reply.
 
-i.e. the logging of the btree block would do this to reset the age
-of the buffer in the LRU as we're expecting it to be used again
-soon. e.g. next allocation to that file, next allocation from an AG,
-next allocation of an inode, etc.
+I think I failed to explain myself properly. The inconsistency issue is NOT
+being caused by my patch. It was already there, and my patch just makes it
+visible. I'll try to be more clear. The test generic/449 essentially goes
+like this:
 
-xfs_btree_block_change_owner() just isn't one of those "likely to
-use again shortly" type operations, so I think you can just get rid
-of it...
+  1) It sets as many extended attributes as possible so the filesystem will
+     run out of space for the ACL.
+  2) It tries to set the ACL, which will fail because of (1).
+  3) It checks that the mode was not altered by the failed setfacl.
+  4) It checks that the filesystem was not corrupted.
 
-Otherwise the patches look good.
+The filesystem becomes corrupted after step (1). Before my patch, the test
+was failing in step (3), so step (4) was never run. Once the ACL issue is
+fixed, step (3) will pass and the test will get to (4). So now the test
+announces the inconsistency, while before it was silent about it.
 
-Cheers,
+If the test is run without applying my patch, but changing it slightly so it
+passes step (3), the end result will be the same: inconsistent filesystem. A
+simple way to try this is to comment out the whole if block that deals with
+the call to setfacl.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+So whatever this issue is, it seems to be a general problem with extended
+attributes in xfs. It has nothing to do with the bug my patch intends to
+fix, other than the fact that generic/449 accidentally checks for both
+problems.
+
+My suggestion to adjust the attribute size in the test was so that we could
+focus on the issue at hand, not so we could ignore the other one. Of course
+it needs to be fixed as well. I will try to figure out what is going on and
+hopefully send another patch. But both issues are independent, so please
+take a look at my patch on its own merits. It does fix the ACL bug even if
+the test does not pass.
+
+Thank you for your attention,
+Ernest
