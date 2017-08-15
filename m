@@ -1,108 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4586 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751652AbdHOGSb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 Aug 2017 02:18:31 -0400
-Subject: [PATCH v4 0/3] MAP_DIRECT and block-map sealed files
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 14 Aug 2017 23:12:05 -0700
-Message-ID: <150277752553.23945.13932394738552748440.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mx2.suse.de ([195.135.220.15]:37840 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751150AbdHOIhm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 Aug 2017 04:37:42 -0400
+Date: Tue, 15 Aug 2017 10:37:32 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
+ dma-to-storage, and swap
+Message-ID: <20170815083732.GB27505@quack2.suse.cz>
+References: <20170805095013.GC14930@lst.de>
+ <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com>
+ <20170811104429.GA13736@lst.de>
+ <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com>
+ <20170812073349.GA12679@lst.de>
+ <CAPcyv4iKG=Zoo1VXu23YBc6uWDFV4QSS+eAm9MSOynx2FjTHbw@mail.gmail.com>
+ <20170813092436.GB32112@lst.de>
+ <CAPcyv4ixTgSWG9K2Eg3XJmOvqJht81qL+Z3njoOjcXCD7XMpZw@mail.gmail.com>
+ <20170814124059.GC17820@quack2.suse.cz>
+ <CAPcyv4hi_Y5Qj=h_Qf4Bcyv+EWBosa2gQT+-8ro3hPY9VMshSA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4hi_Y5Qj=h_Qf4Bcyv+EWBosa2gQT+-8ro3hPY9VMshSA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>
 
-Changes since v3 [1]:
-* Move from an fallocate(2) interface to a new mmap(2) flag and rename
-  'immutable' to 'sealed'.
+On Mon 14-08-17 09:14:42, Dan Williams wrote:
+> On Mon, Aug 14, 2017 at 5:40 AM, Jan Kara <jack@suse.cz> wrote:
+> > On Sun 13-08-17 13:31:45, Dan Williams wrote:
+> >> On Sun, Aug 13, 2017 at 2:24 AM, Christoph Hellwig <hch@lst.de> wrote:
+> >> > Thay being said I think we absolutely should support RDMA memory
+> >> > registrations for DAX mappings.  I'm just not sure how S_IOMAP_IMMUTABLE
+> >> > helps with that.  We'll want a MAP_SYNC | MAP_POPULATE to make sure
+> >> > all the blocks are polulated and all ptes are set up.  Second we need
+> >> > to make sure get_user_page works, which for now means we'll need a
+> >> > struct page mapping for the region (which will be really annoying
+> >> > for PCIe mappings, like the upcoming NVMe persistent memory region),
+> >> > and we need to gurantee that the extent mapping won't change while
+> >> > the get_user_pages holds the pages inside it.  I think that is true
+> >> > due to side effects even with the current DAX code, but we'll need to
+> >> > make it explicit.  And maybe that's where we need to converge -
+> >> > "sealing" the extent map makes sense as such a temporary measure
+> >> > that is not persisted on disk, which automatically gets released
+> >> > when the holding process exits, because we sort of already do this
+> >> > implicitly.  It might also make sense to have explicitl breakable
+> >> > seals similar to what I do for the pNFS blocks kernel server, as
+> >> > any userspace RDMA file server would also need those semantics.
+> >>
+> >> Ok, how about a MAP_DIRECT flag that arranges for faults to that range to:
+> >>
+> >>     1/ only succeed if the fault can be satisfied without page cache
+> >>
+> >>     2/ only install a pte for the fault if it can do so without
+> >> triggering block map updates
+> >>
+> >> So, I think it would still end up setting an inode flag to make
+> >> xfs_bmapi_write() fail while any process has a MAP_DIRECT mapping
+> >> active. However, it would not record that state in the on-disk
+> >> metadata and it would automatically clear at munmap time. That should
+> >> be enough to support the host-persistent-memory, and
+> >> NVMe-persistent-memory use cases (provided we have struct page for
+> >> NVMe). Although, we need more safety infrastructure in the NVMe case
+> >> where we would need to software manage I/O coherence.
+> >
+> > Hum, this proposal (and the problems you are trying to deal with) seem very
+> > similar to Peter Zijlstra's mpin() proposal from 2014 [1], just moved to
+> > the DAX area (and so additionally complicated by the fact that filesystems
+> > now have to care). The patch set was not merged due to lack of interest I
+> > think but it looked sensible and the proposed API would make sense for more
+> > stuff than just DAX so maybe it would be better than MAP_DIRECT flag?
+> 
+> Interesting, but I'm not sure I see the correlation. mm_mpin() makes a
+> "no-fault" guarantee and fixes the accounting of locked System RAM.
+> MAP_DIRECT still allows faults, and DAX mappings don't consume System
+> RAM so the accounting problem is not there for DAX. mm_pin() also does
+> not appear to have a relationship to a file backed memory like mmap
+> allows.
 
-* Do not record the sealed state in permanent metadata it is now purely
-  a temporary state for as long as a MAP_DIRECT vma is referencing the
-  inode (Christoph)
+So the accounting part is probably non-interesting for DAX purposes and I
+agree there are other differences as well. But mm_mpin() prevented page
+migrations which is parallel to your requirement of "offset->block mapping
+is permanent".  Furthermore mm_mpin() work was there for RDMA so that it
+has saner interface to pin pages than get_user_pages() and you mention RDMA
+and similar technologies as a usecase for your work for similar reasons.
+So my thought was that possibly we should have the same API for pinning
+"storage" for RDMA transfers regardless of whether the backing is page
+cache or pmem and the API should be usable for in-kernel users as well?
+mmap flag seems a bit clumsy in this regard so maybe a form of a separate
+syscall - be it mpin(start, len) or some other name - might be more
+suitable?
 
-* Drop the CAP_IMMUTABLE requirement, but do require a PROT_WRITE
-  mapping.
-
-[1]: https://lwn.net/Articles/730570/
-
----
-
-This is the next revision of a patch series that aims to enable
-applications that otherwise need to resort to DAX mapping a raw device
-file to instead move to a filesystem.
-
-In the course of reviewing a previous posting, Christoph said:
-
-    That being said I think we absolutely should support RDMA memory
-    registrations for DAX mappings.  I'm just not sure how S_IOMAP_IMMUTABLE
-    helps with that.  We'll want a MAP_SYNC | MAP_POPULATE to make sure all
-    the blocks are populated and all ptes are set up.  Second we need to
-    make sure get_user_page works, which for now means we'll need a struct
-    page mapping for the region (which will be really annoying for PCIe
-    mappings, like the upcoming NVMe persistent memory region), and we need
-    to guarantee that the extent mapping won't change while the
-    get_user_pages holds the pages inside it.  I think that is true due to
-    side effects even with the current DAX code, but we'll need to make it
-    explicit.  And maybe that's where we need to converge - "sealing" the
-    extent map makes sense as such a temporary measure that is not persisted
-    on disk, which automatically gets released when the holding process
-    exits, because we sort of already do this implicitly.  It might also
-    make sense to have explicitly breakable seals similar to what I do for
-    the pNFS blocks kernel server, as any userspace RDMA file server would
-    also need those semantics.
-
-So, this is an attempt to converge on the idea that we need an explicit
-and process-lifetime-temporary mechanism for a process to be able to
-make assumptions about the mapping to physical page to dax-file-offset
-relationship. The "explicitly breakable seals" aspect is not addressed
-in these patches, but I wonder if it might be a voluntary mechanism that
-can implemented via userfaultfd.
-
-These pass a basic smoke test and are meant to just gauge 'right track'
-/ 'wrong track'. The main question it seems is whether the pinning done
-in this patchset is too early (applies before get_user_pages()) and too
-coarse (applies to the whole file). Perhaps this is where I discarded
-too easily Jan's suggestion to look at Peter Z's mm_mpin() syscall [2]? On
-the other hand, the coarseness and simple lifetime rules of MAP_DIRECT
-make it an easy mechanism to implement and explain.
-
-Another reason I kept the scope of S_IOMAP_SEALED coarsely defined was
-to support Dave's desired use case of sealing for operating on reflinked
-files [3].
-
-Suggested mmap(2) man page edits are included in the changelog of patch
-3.
-
-[2]: https://lwn.net/Articles/600502/
-[3]: https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1467677.html
-
----
-
-Dan Williams (3):
-      fs, xfs: introduce S_IOMAP_SEALED
-      mm: introduce MAP_VALIDATE a mechanism for adding new mmap flags
-      fs, xfs: introduce MAP_DIRECT for creating block-map-sealed file ranges
-
-
- fs/attr.c                              |   10 +++
- fs/dax.c                               |    2 +
- fs/open.c                              |    6 ++
- fs/read_write.c                        |    3 +
- fs/xfs/libxfs/xfs_bmap.c               |    5 +
- fs/xfs/xfs_bmap_util.c                 |    3 +
- fs/xfs/xfs_file.c                      |  107 ++++++++++++++++++++++++++++++++
- fs/xfs/xfs_inode.h                     |    1 
- fs/xfs/xfs_ioctl.c                     |    6 ++
- fs/xfs/xfs_super.c                     |    1 
- include/linux/fs.h                     |    9 +++
- include/linux/mm.h                     |    2 -
- include/linux/mm_types.h               |    1 
- include/linux/mman.h                   |    3 +
- include/uapi/asm-generic/mman-common.h |    2 +
- mm/filemap.c                           |    5 +
- mm/mmap.c                              |   22 ++++++-
- 17 files changed, 183 insertions(+), 5 deletions(-)
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
