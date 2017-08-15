@@ -1,41 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48554 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752643AbdHNW4P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 18:56:15 -0400
-Date: Mon, 14 Aug 2017 15:56:09 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/6] mkfs: Save raw user input field to the opts struct
-Message-ID: <20170814225609.GE4796@magnolia>
+Received: from sandeen.net ([63.231.237.45]:41820 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751565AbdHOXHf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 Aug 2017 19:07:35 -0400
+Subject: Re: [PATCH 1/6 v2] mkfs: Save raw user input field to the opts struct
 References: <20170811123037.15962-1-jtulak@redhat.com>
- <20170811123037.15962-2-jtulak@redhat.com>
+ <20170815150812.32237-1-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <806d4e0b-587c-4c12-db45-3942b4ab0753@sandeen.net>
+Date: Tue, 15 Aug 2017 18:07:33 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170811123037.15962-2-jtulak@redhat.com>
+In-Reply-To: <20170815150812.32237-1-jtulak@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
 
-On Fri, Aug 11, 2017 at 02:30:32PM +0200, Jan Tulak wrote:
+On 8/15/17 10:08 AM, Jan Tulak wrote:
 > Save exactly what the user gave us for every option.  This way, we will
 > never lose the information if we need it to print back an issue.
 > (Just add the infrastructure now, used in the next patches.)
 > 
 > Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> 
+
+Sorry for not getting to the V1 review, catching up from a week off.
+
 > ---
 > CHANGE:
-> * added strdup
-> * added boundary checks to set/get functions
+> * test for NULL before strdup in get_conf_raw
+> * Translation and indentation for fprints
+> * add set_conf_raw_safe
 > ---
->  mkfs/xfs_mkfs.c | 69 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 69 insertions(+)
+>  mkfs/xfs_mkfs.c | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 88 insertions(+)
 > 
 > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 7bb6408f..fa0b475c 100644
+> index 7bb6408f..adfbd376 100644
 > --- a/mkfs/xfs_mkfs.c
 > +++ b/mkfs/xfs_mkfs.c
 > @@ -107,6 +107,11 @@ unsigned int		sectorsize;
@@ -58,7 +61,7 @@ On Fri, Aug 11, 2017 at 02:30:32PM +0200, Jan Tulak wrote:
 >  	}		subopt_params[MAX_SUBOPTS];
 >  };
 >  
-> @@ -730,6 +736,69 @@ struct opt_params mopts = {
+> @@ -730,6 +736,88 @@ struct opt_params mopts = {
 >  #define WHACK_SIZE (128 * 1024)
 >  
 >  /*
@@ -70,13 +73,16 @@ On Fri, Aug 11, 2017 at 02:30:32PM +0200, Jan Tulak wrote:
 > +{
 > +	if (subopt < 0 || subopt >= MAX_SUBOPTS) {
 > +		fprintf(stderr,
-> +		"This is a bug: set_conf_raw called with invalid opt/subopt: %c/%d\n",
-> +		opt->name, subopt);
+> +			_("This is a bug: set_conf_raw called with invalid "
+> +			  "opt/subopt: %c/%d\n"),
 
-ASSERT?  Or, if I'm just foolishly restarting an old bikeshed and the
-fprintf/-EINVAL should stay, then the indentation of the arguments needs
-fixing.
+Usually best to just out-dent these long strings to column zero:
 
+_("This is a bug: set_conf_raw called with invalid opt/subopt: %c/%d\n"),
+
+and that makes them super grep-able.  Other places in xfsprogs do that.
+
+> +			opt->name, subopt);
 > +		return -EINVAL;
 > +	}
 > +	if (value == NULL) {
@@ -92,30 +98,53 @@ fixing.
 > +}
 > +
 > +/*
+> + * Same as set_conf_raw(), except if any error occurs, return NULL.
+> + */
+
+Hm, that's not what this void function does.
+
+> +static void
+> +set_conf_raw_safe(struct opt_params *opt, const int subopt, const char *value)
+> +{
+> +	if (set_conf_raw(opt, subopt, value) != 0) {
+> +		exit(1);
+> +	}
+
+So on -ENOMEM error, we get a silent exit()?
+
+Also, not sure about the point of the wrapper.  Nothing in this series
+calls set_conf_raw() directly - do later patches use it?  If not,
+just lose the wrapper, I'd say, and roll up the behavior in set_conf_raw.
+
+> +}
+> +
+> +/*
 > + * Return 0 on success, -ENOMEM if it could not allocate enough memory for
 > + * the string to be saved into the out pointer.
+
+..., or -EINVAL if ___?  I guess this is the downside of excessive commenting ;)
+
 > + */
 > +static int
 > +get_conf_raw(const struct opt_params *opt, const int subopt, char **out)
 > +{
 > +	if (subopt < 0 || subopt >= MAX_SUBOPTS) {
 > +		fprintf(stderr,
-> +		"This is a bug: get_conf_raw called with invalid opt/subopt: %c/%d\n",
-> +		opt->name, subopt);
+> +			_("This is a bug: get_conf_raw called with invalid "
+> +			  "opt/subopt: %c/%d\n"),
+
+Again I'd outdent this error string.
+
+> +			opt->name, subopt);
 > +		return -EINVAL;
-
-(Same here)
-
 > +	}
+> +
+> +	if (opt->subopt_params[subopt].raw_input == NULL) {
+> +		*out = NULL;
+> +		return 0;
+> +	}
+> +
 > +	*out = strdup(opt->subopt_params[subopt].raw_input);
-
-Given that raw_input can be set to NULL and strdup(NULL) segfaults on
-glibc 2.23, do we need a null check of raw_input here?  Is it the case
-that get_conf_raw is only called if we (somehow) know that there's a
-value to get later?
-
---D
-
 > +	if (*out == NULL)
 > +		return -ENOMEM;
 > +	return 0;
@@ -135,8 +164,16 @@ value to get later?
 > +
 > +	if (get_conf_raw(opt, subopt, &str) == -ENOMEM) {
 > +		fprintf(stderr, "Out of memory!");
+
+Seems like using strerror() would be better than a hand-rolled, un-
+translatable string?
+
 > +		return NULL;
 > +	}
+
+Again, I don't see that any subsequent patches ever call get_conf_raw();
+is there any reason to even have this wrapper now?
+
 > +	return str;
 > +}
 > +
@@ -144,10 +181,4 @@ value to get later?
 >   * Convert lsu to lsunit for 512 bytes blocks and check validity of the values.
 >   */
 >  static void
-> -- 
-> 2.13.3
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
