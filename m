@@ -1,226 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f181.google.com ([209.85.216.181]:38747 "EHLO
-        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752220AbdHOT3p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 15:29:45 -0400
-Received: by mail-qt0-f181.google.com with SMTP id t37so9706445qtg.5
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2017 12:29:44 -0700 (PDT)
-Date: Tue, 15 Aug 2017 16:29:39 -0300
-From: Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?=
-        <ernesto.mnd.fernandez@gmail.com>
-Subject: Re: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
-Message-ID: <20170815192938.GA1247@debian.home>
-References: <20170814081806.GA3924@debian.home>
- <20170815020018.GF21024@dastard>
- <20170815061857.GA2803@debian.home>
- <20170815084430.GK21024@dastard>
+Received: from mail-yw0-f169.google.com ([209.85.161.169]:34446 "EHLO
+        mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751819AbdHORdw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 13:33:52 -0400
+Received: by mail-yw0-f169.google.com with SMTP id s143so8780554ywg.1
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2017 10:33:52 -0700 (PDT)
+Date: Tue, 15 Aug 2017 17:33:50 +0000
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: Re: CrashMonkey: A Framework to Systematically Test File-System
+ Crash Consistency
+Message-ID: <20170815173349.GA17774@li70-116.members.linode.com>
+References: <CAPaz=E+-+C-LXtADm99epmVEszpfT70Ep39tKedfPi1AN-P7tA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20170815084430.GK21024@dastard>
+In-Reply-To: <CAPaz=E+-+C-LXtADm99epmVEszpfT70Ep39tKedfPi1AN-P7tA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>, Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?= <ernesto.mnd.fernandez@gmail.com>
+To: Vijay Chidambaram <vvijay03@gmail.com>
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.og, vijay@cs.utexas.edu, Ashlie Martinez <ashmrtn@utexas.edu>
 
-On Tue, Aug 15, 2017 at 06:44:30PM +1000, Dave Chinner wrote:
-> On Tue, Aug 15, 2017 at 03:18:58AM -0300, Ernesto A. Fernández wrote:
-> > Hi Dave, thanks for the review!
-> > 
-> > On Tue, Aug 15, 2017 at 12:00:18PM +1000, Dave Chinner wrote:
-> > > On Mon, Aug 14, 2017 at 05:18:10AM -0300, Ernesto A. Fernández wrote:
-> > > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > > > index de7b9bd..c3193e1 100644
-> > > > --- a/fs/xfs/libxfs/xfs_attr.c
-> > > > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > > > @@ -395,6 +395,7 @@ xfs_attr_remove(
-> > > >  	struct xfs_defer_ops	dfops;
-> > > >  	xfs_fsblock_t		firstblock;
-> > > >  	int			error;
-> > > > +	int			noattr = 0;
-> > > 
-> > > bool.
-> > > 
-> > > And make it "bool has_attr = true" to avoid the nasty double
-> > > negative of "!noattr" later on.
-> > 
-> > I called it noattr because the error was -ENOATTR, but you are right,
-> > has_attr is better. I assume you would prefer mode_changed to be a bool
-> > as well?
-> > 
-> > > 
-> > > >  
-> > > >  	XFS_STATS_INC(mp, xs_attr_remove);
-> > > >  
-> > > > @@ -438,7 +439,12 @@ xfs_attr_remove(
-> > > >  	xfs_trans_ijoin(args.trans, dp, 0);
-> > > >  
-> > > >  	if (!xfs_inode_hasattr(dp)) {
-> > > > -		error = -ENOATTR;
-> > > > +		/*
-> > > > +		 * Commit even if there is no attr to remove, because when
-> > > > +		 * setting ACLs the caller may be changing the mode in the
-> > > > +		 * same transaction.
-> > > > +		 */
-> > > > +		noattr = 1;
-> > > >  	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-> > > >  		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-> > > >  		error = xfs_attr_shortform_remove(&args);
-> > > > @@ -458,7 +464,7 @@ xfs_attr_remove(
-> > > >  	if (mp->m_flags & XFS_MOUNT_WSYNC)
-> > > >  		xfs_trans_set_sync(args.trans);
-> > > >  
-> > > > -	if ((flags & ATTR_KERNOTIME) == 0)
-> > > > +	if ((flags & ATTR_KERNOTIME) == 0 && !noattr)
-> > > >  		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
-> > > 
-> > > Why?
-> > 
-> > Because we don't want the ctime to change when you try to delete an
-> > attribute that didn't exist in the first place. At least that's how
-> > it went before, so I tried to keep it the same.
+On Mon, Aug 14, 2017 at 11:32:02AM -0500, Vijay Chidambaram wrote:
+> Hi,
 > 
-> Which means the logic is convoluted and no longer obvious as to what
-> it does. i.e. the noattr case is running a transaction that dirties
-> an inode that no modifications were made to. Alarm bells right
-> there.
+> I'm Vijay Chidambaram, an Assistant Professor at the University of
+> Texas at Austin. My research group is developing CrashMonkey, a
+> file-system agnostic framework to test file-system crash consistency
+> on power failures. We are developing CrashMonkey publicly at Github
+> [1]. This is very much a work-in-progress, so we welcome feedback.
 > 
-> > > > @@ -257,16 +242,20 @@ xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
-> > > >  		return error;
-> > > >  
-> > > >  	if (type == ACL_TYPE_ACCESS) {
-> > > > -		umode_t mode;
-> > > > -
-> > > > -		error = posix_acl_update_mode(inode, &mode, &acl);
-> > > > -		if (error)
-> > > > -			return error;
-> > > > -		error = xfs_set_mode(inode, mode);
-> > > > +		error = posix_acl_update_mode(inode, &inode->i_mode, &acl);
-> > > >  		if (error)
-> > > >  			return error;
-> > > > +		inode->i_ctime = current_time(inode);
-> > > > +		XFS_STATS_INC(XFS_I(inode)->i_mount, xs_ig_attrchg);
-> > > > +		mode_changed = 1;
-> > > >  	}
-> > > 
-> > > And this doesn't.
-> > > 
-> > > So this breaks all our rules for inode metadata updates, both for
-> > > runtime access serialisation and for crash consistency.
-> > 
-> > I'm only making changes to the vfs inode, and xfs_set_acl() should always
-> > be called with i_rwsem held for writing. I think that should be enough to
-> > serialize access to the vfs inode fields.
+> CrashMonkey works by recording all the IO from running a given
+> workload, then *constructing* possible crash states (while honoring
+> FUA and FLUSH flags). A crash state is the state of storage after an
+> abrupt power failure or crash. For each crash state, CrashMonkey runs
+> the filesystem-provided fsck on top of the state, and checks if the
+> file-system recovers correctly. Once the file system mounts correctly,
+> we can run further tests to check data consistency.  The work was
+> presented at HotStorage 17. The workshop paper is available at [2] and
+> the slides at [3].
 > 
-> It's not. The i_rwsem does not protect XFS inode metadata, which is
-> what needs changing here. i.e. we change both the VFS inode and
-> the corresponding XFS inode metadata at the same time, under the
-> same XFS_ILOCK_EXCL lock, only inside a transaction context.
+> Our plan was to post on the mailing lists after reproducing an
+> existing bug. We are not there yet, but I saw some posts where others
+> were considering building something similar, so I thought I would post
+> about our work.
 > 
-> That's the rules, no exceptions.
+> [1] https://github.com/utsaslab/crashmonkey
+> [2] http://www.cs.utexas.edu/~vijay/papers/hotstorage17-crashmonkey.pdf
+> [3] http://www.cs.utexas.edu/~vijay/papers/hotstorage17-crashmonkey-slides.pdf
 > 
-> > I'm sorry, I'm not sure I follow the crash consistency part. This is not
-> > writing anything to disk.
-> 
-> xfs_set_mode() runs a transaction that is journalled to change the
-> inode mode. You break in-memory consistency by modifying the VFS
-> inode state directly without holding the correct locks (see
-> xfs_setattr_mode()), and you break the transactional change model
-> (i.e. on-disk journal consistency and on-disk metadata change
-> ordering) by making metadata changes this outside transaction
-> contexts and without holding the correct locks.
-> 
-> > My expectation was that the changes I made to
-> > the vfs inode would be attached to the transaction later, when calling
-> > xfs_trans_log_inode() in xfs_attr_set() or xfs_attr_remove(). Would that
-> > not work as intended?
-> 
-> No, it wouldn't.  You have to follow the filesystem specific update
-> rules to change inode metadata, not make up your own....
-> 
-> > I was mostly imitating how btrfs sets an ACL, so I
-> > could be misunderstanding how xfs does journaling.
-> 
-> ... and btrfs has a completely different transaction model and
-> implementation to XFS. IOWs, trying to do what works for btrfs in
-> XFS code will break XFS. And vice versa.
-> 
-> > > >   set_acl:
-> > > > -	return __xfs_set_acl(inode, acl, type);
-> > > > +	error = __xfs_set_acl(inode, acl, type);
-> > > > +	if (error && mode_changed) {
-> > > > +		inode->i_mode = old_mode;
-> > > > +		inode->i_ctime = old_ctime;
-> > > > +		XFS_STATS_DEC(XFS_I(inode)->i_mount, xs_ig_attrchg);
-> > > > +	}
-> > > 
-> > > Same here.
-> > 
-> > i_rwsem would still be held here. My reasoning is that, since there was
-> > an error, no changes were actually committed; so there would be no need
-> > to commit the restoration either, just restore the old in-memory vfs inode
-> > fields. Once again, this is inspired by btrfs, so I suppose it may fail
-> > here in some way I can't see.
-> > 
-> > (I should probably clarify I did run tests before submitting)
-> 
-> When you treat the code as a black box for testing, then end result
-> might appear to be what you want. That doesn't mean the
-> implementation is correct or that hidden transient states within the
-> block box are incorrect or invalid.
-> 
-> > > IOWs, you can't just remove a transactional modification of inode
-> > > state and replace it with in-memory VFS inode level changes. You
-> > > need to do the changes in transaction context and with the correct
-> > > locks held.
-> > >
-> > > IOWs, if you need to undo the mode changes xfs_set_mode() did, you
-> > > need to call xfs_set_mode() again. And because modifications have
-> > 
-> > But that could fail as well, and how would we handle that?
-> 
-> If the xattr change was not a fatal error (which will shut down the
-> filesystem), then calling xfs_set_mode() should work just fine as it
-> doesn't require any new space to be allocated (XFS != BTRFS - we can
-> run overwriting transactions even at ENOSPC).
-> 
-> And you need to run the mode undo as a separate transaction
-> because....
-> 
-> > If this bug
-> > is to be fixed the whole thing needs to be a single transaction.
-> 
-> .... this is simply not possible. Why? Because __xfs_set_acl() can
-> run up three separate transactions internally in adding the new
-> xattr. That means your unlogged vfs indoe change has already been
-> logged to the journal and so we *require* a transaction to overwrite
-> the new mode that has already been committed to the journal.
 
-It's clear that I don't understand xfs, and I'm causing more trouble than
-I'm helping. I should leave this issue to you guys.
- 
-> But I have to ask - why do we even need to modify the mode first?
-> Why not change the ACL first, then modify the mode+timestamp? If
-> setting the ACL fails, then we don't have anything to undo and all
-> is good....
+I did this same work 3 years ago
 
-I intended for the mode to be committed as part of the same transaction
-that sets or removes the ACL. In my mind making the changes later, as part
-of a separate transaction, would have meant that a crash between the two
-left the filesystem in an inconsistent state, with a new ACL but without
-the corresponding mode bits.
+https://github.com/torvalds/linux/blob/master/Documentation/device-mapper/log-writes.txt
+https://github.com/josefbacik/log-writes
 
-Of course that was based on a poor understanding of xfs journaling, so now
-I don't know.
+I have xfstests patches I need to get upstreamed at some point that does
+fsstress and then replays the logs and verifies, and also one that makes fsx
+store state so we can verify fsync() is doing the right thing.  We run this on
+our major releases on xfs, ext4, and btrfs to make sure everything is working
+right internally at Facebook.  You'll notice a bunch of commits recently because
+we thought we found an xfs replay problem (we didn't).  This stuff is actively
+used, I'd welcome contributions to it if you have anything to add.  One thing I
+haven't done yet and have on my list is to randomly replay writes between
+flush/fua, but it hasn't been a pressing priority yet.  Thanks,
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-
-Thanks,
-Ernest
+Josef
