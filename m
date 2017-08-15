@@ -1,168 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53187 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752820AbdHQQIa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Aug 2017 12:08:30 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 09/13] dax: Allow dax_iomap_fault() to return pfn
-Date: Thu, 17 Aug 2017 18:08:11 +0200
-Message-Id: <20170817160815.30466-10-jack@suse.cz>
-In-Reply-To: <20170817160815.30466-1-jack@suse.cz>
-References: <20170817160815.30466-1-jack@suse.cz>
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:53977
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753805AbdHOBhS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2017 21:37:18 -0400
+Date: Tue, 15 Aug 2017 11:37:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/3] xfs: rename xfs_defer_join to xfs_defer_join_inode
+Message-ID: <20170815013715.GE21024@dastard>
+References: <20170813144216.11192-1-hch@lst.de>
+ <20170813144216.11192-3-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170813144216.11192-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>, Jan Kara <jack@suse.cz>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-For synchronous page fault dax_iomap_fault() will need to return PFN
-which will then need to inserted into page tables after fsync()
-completes. Add necessary parameter to dax_iomap_fault().
+On Sun, Aug 13, 2017 at 04:42:15PM +0200, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c  | 2 +-
+>  fs/xfs/libxfs/xfs_defer.c | 4 ++--
+>  fs/xfs/libxfs/xfs_defer.h | 2 +-
+>  3 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index c09c16b1ad3b..24eba36ef818 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -6452,7 +6452,7 @@ __xfs_bmap_add(
+>  	bi->bi_whichfork = whichfork;
+>  	bi->bi_bmap = *bmap;
+>  
+> -	error = xfs_defer_join(dfops, bi->bi_owner);
+> +	error = xfs_defer_join_inode(dfops, bi->bi_owner);
+>  	if (error) {
+>  		kmem_free(bi);
+>  		return error;
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index 87169bf56a09..043844f00f6e 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -281,7 +281,7 @@ xfs_defer_has_unfinished_work(
+>   * to xfs_defer_finish().
+>   */
+>  int
+> -xfs_defer_join(
+> +xfs_defer_join_inode(
+>  	struct xfs_defer_ops		*dop,
+>  	struct xfs_inode		*ip)
+>  {
+> @@ -324,7 +324,7 @@ xfs_defer_finish(
+>  
+>  	trace_xfs_defer_finish((*tp)->t_mountp, dop);
+>  
+> -	xfs_defer_join(dop, ip);
+> +	xfs_defer_join_inode(dop, ip);
+>  
+>  	/* Until we run out of pending work to finish... */
+>  	while (xfs_defer_has_unfinished_work(dop)) {
+> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> index f6e93ef0bffe..4632c798ea2b 100644
+> --- a/fs/xfs/libxfs/xfs_defer.h
+> +++ b/fs/xfs/libxfs/xfs_defer.h
+> @@ -77,7 +77,7 @@ int xfs_defer_finish(struct xfs_trans **tp, struct xfs_defer_ops *dop,
+>  void xfs_defer_cancel(struct xfs_defer_ops *dop);
+>  void xfs_defer_init(struct xfs_defer_ops *dop, xfs_fsblock_t *fbp);
+>  bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
+> -int xfs_defer_join(struct xfs_defer_ops *dop, struct xfs_inode *ip);
+> +int xfs_defer_join_inode(struct xfs_defer_ops *dop, struct xfs_inode *ip);
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/dax.c            | 13 +++++++------
- fs/ext2/file.c      |  2 +-
- fs/ext4/file.c      |  2 +-
- fs/xfs/xfs_file.c   |  8 ++++----
- include/linux/dax.h |  2 +-
- 5 files changed, 14 insertions(+), 13 deletions(-)
+Looks good.
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 85ea49bbbdbf..bc040e654cc9 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1069,7 +1069,7 @@ static int dax_fault_return(int error)
- }
- 
- static int dax_iomap_pte_fault(struct vm_fault *vmf,
--			       const struct iomap_ops *ops)
-+			       const struct iomap_ops *ops, pfn_t *pfnp)
- {
- 	struct vm_area_struct *vma = vmf->vma;
- 	struct address_space *mapping = vma->vm_file->f_mapping;
-@@ -1270,7 +1270,7 @@ static int dax_pmd_load_hole(struct vm_fault *vmf, struct iomap *iomap,
- }
- 
- static int dax_iomap_pmd_fault(struct vm_fault *vmf,
--			       const struct iomap_ops *ops)
-+			       const struct iomap_ops *ops, pfn_t *pfnp)
- {
- 	struct vm_area_struct *vma = vmf->vma;
- 	struct address_space *mapping = vma->vm_file->f_mapping;
-@@ -1405,7 +1405,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
- }
- #else
- static int dax_iomap_pmd_fault(struct vm_fault *vmf,
--			       const struct iomap_ops *ops)
-+			       const struct iomap_ops *ops, pfn_t *pfnp)
- {
- 	return VM_FAULT_FALLBACK;
- }
-@@ -1416,6 +1416,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
-  * @vmf: The description of the fault
-  * @pe_size: Size of the page to fault in
-  * @ops: Iomap ops passed from the file system
-+ * @pfnp: PFN to insert for synchronous faults if fsync is required
-  *
-  * When a page fault occurs, filesystems may call this helper in
-  * their fault handler for DAX files. dax_iomap_fault() assumes the caller
-@@ -1423,13 +1424,13 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
-  * successfully.
-  */
- int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
--		    const struct iomap_ops *ops)
-+		    const struct iomap_ops *ops, pfn_t *pfnp)
- {
- 	switch (pe_size) {
- 	case PE_SIZE_PTE:
--		return dax_iomap_pte_fault(vmf, ops);
-+		return dax_iomap_pte_fault(vmf, ops, pfnp);
- 	case PE_SIZE_PMD:
--		return dax_iomap_pmd_fault(vmf, ops);
-+		return dax_iomap_pmd_fault(vmf, ops, pfnp);
- 	default:
- 		return VM_FAULT_FALLBACK;
- 	}
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index ff3a3636a5ca..689f17b5f444 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -99,7 +99,7 @@ static int ext2_dax_fault(struct vm_fault *vmf)
- 	}
- 	down_read(&ei->dax_sem);
- 
--	ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &ext2_iomap_ops);
-+	ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &ext2_iomap_ops, NULL);
- 
- 	up_read(&ei->dax_sem);
- 	if (vmf->flags & FAULT_FLAG_WRITE)
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 9dda70edba74..f84bb29e941e 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -291,7 +291,7 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
- 		down_read(&EXT4_I(inode)->i_mmap_sem);
- 	}
- 	if (!IS_ERR(handle))
--		result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops);
-+		result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops, NULL);
- 	else
- 		result = VM_FAULT_SIGBUS;
- 	if (write) {
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 62db8ffa83b9..c17ca982272c 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1032,7 +1032,7 @@ xfs_filemap_page_mkwrite(
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
- 	if (IS_DAX(inode)) {
--		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
-+		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops, NULL);
- 	} else {
- 		ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
- 		ret = block_page_mkwrite_return(ret);
-@@ -1059,7 +1059,7 @@ xfs_filemap_fault(
- 
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	if (IS_DAX(inode))
--		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
-+		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops, NULL);
- 	else
- 		ret = filemap_fault(vmf);
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-@@ -1094,7 +1094,7 @@ xfs_filemap_huge_fault(
- 	}
- 
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
-+	ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops, NULL);
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
- 	if (vmf->flags & FAULT_FLAG_WRITE)
-@@ -1130,7 +1130,7 @@ xfs_filemap_pfn_mkwrite(
- 	if (vmf->pgoff >= size)
- 		ret = VM_FAULT_SIGBUS;
- 	else if (IS_DAX(inode))
--		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
-+		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops, NULL);
- 	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
- 	sb_end_pagefault(inode->i_sb);
- 	return ret;
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index d0e32729ad1e..8f493d9879f7 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -91,7 +91,7 @@ void dax_write_cache(struct dax_device *dax_dev, bool wc);
- ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		const struct iomap_ops *ops);
- int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
--		    const struct iomap_ops *ops);
-+		    const struct iomap_ops *ops, pfn_t *pfnp);
- int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
- int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index);
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
 -- 
-2.12.3
-
+Dave Chinner
+david@fromorbit.com
