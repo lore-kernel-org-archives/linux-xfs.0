@@ -1,121 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f169.google.com ([209.85.220.169]:38319 "EHLO
-        mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751851AbdHPNGL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 09:06:11 -0400
-Received: by mail-qk0-f169.google.com with SMTP id x191so19503079qka.5
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 06:06:10 -0700 (PDT)
-Date: Wed, 16 Aug 2017 09:06:08 -0400
-From: Josef Bacik <josef@toxicpanda.com>
-Subject: Re: CrashMonkey: A Framework to Systematically Test File-System
- Crash Consistency
-Message-ID: <20170816130607.GA1347@destiny>
-References: <CAPaz=E+-+C-LXtADm99epmVEszpfT70Ep39tKedfPi1AN-P7tA@mail.gmail.com>
- <20170815173349.GA17774@li70-116.members.linode.com>
- <CAPaz=E+sPDK3uWYCepmYPMT2+nvTgA2C_OSyPY0a51iM=bBCsQ@mail.gmail.com>
- <CAOQ4uxhkT05yHfQz0csruH-mz_hTamMABh3eZaNmzjXX02J1=A@mail.gmail.com>
- <CAPaz=E+D7wpkXRx7=M9+7d=TUFpbG7MetK-nkECtWQXwO-Z8gA@mail.gmail.com>
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:54690 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751642AbdHPNfG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 09:35:06 -0400
+Date: Wed, 16 Aug 2017 23:35:02 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
+Message-ID: <20170816133502.GN21024@dastard>
+References: <20170814081806.GA3924@debian.home>
+ <20170815020018.GF21024@dastard>
+ <20170815061857.GA2803@debian.home>
+ <20170815084430.GK21024@dastard>
+ <20170815192938.GA1247@debian.home>
+ <20170816002511.GM21024@dastard>
+ <20170816071649.GA4143@debian.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <CAPaz=E+D7wpkXRx7=M9+7d=TUFpbG7MetK-nkECtWQXwO-Z8gA@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170816071649.GA4143@debian.home>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vijay Chidambaram <vvijay03@gmail.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, Josef Bacik <josef@toxicpanda.com>, Ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-btrfs@vger.kernel.org, Ashlie Martinez <ashmrtn@utexas.edu>, kernel-team@fb.com
+To: Ernesto =?iso-8859-1?Q?A=2E_Fern=E1ndez?= <ernesto.mnd.fernandez@gmail.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>
 
-On Tue, Aug 15, 2017 at 08:44:16PM -0500, Vijay Chidambaram wrote:
-> Hi Amir,
+On Wed, Aug 16, 2017 at 04:16:53AM -0300, Ernesto A. Fernández wrote:
+> On Wed, Aug 16, 2017 at 10:25:11AM +1000, Dave Chinner wrote:
+> > On Tue, Aug 15, 2017 at 04:29:39PM -0300, Ernesto A. Fernández wrote:
+> > > On Tue, Aug 15, 2017 at 06:44:30PM +1000, Dave Chinner wrote:
+> > > > On Tue, Aug 15, 2017 at 03:18:58AM -0300, Ernesto A. Fernández wrote:
+> > > > But I have to ask - why do we even need to modify the mode first?
+> > > > Why not change the ACL first, then modify the mode+timestamp? If
+> > > > setting the ACL fails, then we don't have anything to undo and all
+> > > > is good....
+> > > 
+> > > I intended for the mode to be committed as part of the same transaction
+> > > that sets or removes the ACL. In my mind making the changes later, as part
+> > > of a separate transaction, would have meant that a crash between the two
+> > > left the filesystem in an inconsistent state,
+> > 
+> > No, it will not leave the fileystem in an inconsistent state. It
+> > will leave the inode permissions in an /unwanted/ state, but there
+> > is no filesystem metadata inconsistency. 
+> > 
+> > > with a new ACL but without
+> > > the corresponding mode bits.
+> > 
+> > Yup, but that's no different from right now, where a crash after
+> > setting the mode bits could be applied but the ACL update is
+> > missing.
+> > 
+> > Either way is even rarely than "crash at the wrong time" implies,
+> > because we've also got to have a complete journal checkpoint occur
+> > between the two operations and then crash between the checkpoint and
+> > the second operation. Yes, it's possible, but in the entire time
+> > I've been working on XFS (almost 15 years now) I can count on one
+> > hand the number of times such a problem has occurred and been
+> > reported...
+> > 
+> > So, it's a rare problem, and one that will get solved in time
+> > because there's much more to solving the problem than just this
+> > case. e.g. I worte this in 2008:
+> > 
+> > http://xfs.org/index.php/Improving_Metadata_Performance_By_Reducing_Journal_Overhead#Atomic_Multi-Transaction_Operations
+> > 
+> > And we've really only got the infrastructure we could use to
+> > implement this in a widespread manner with the rmap/reflink
+> > functionality. But implementing it will require a large amount of
+> > re-organisation of filesystem operations, so it's something that
+> > will take time to roll out.
 > 
-> I neglected to mention this earlier: CrashMonkey does not require
-> recompiling the kernel (it is a stand-alone kernel module), and has
-> been tested with the kernel 4.4. It should work with future kernel
-> versions as long as there are no changes to the bio structure.
+> Alright, thanks for the explanation.
+>  
+> > With that in mind, here's waht I suggested above: set the mode after
+> > the xattr. I haven't tested it - can you check it solves the problem
+> > case you are testing?
 > 
-> As it is, I believe CrashMonkey is compatible with the current kernel.
-> It certainly provides functionality beyond log-writes (the ability to
-> replay a subset of writes between FLUSH/FUA), and we intend to add
-> more functionality in the future.
-> 
-> Right now, CrashMonkey does not do random sampling among possible
-> crash states -- it will simply test a given number of unique states.
-> Thus, right now I don't think it is very effective in finding
-> crash-consistency bugs. But the entire infrastructure to profile a
-> workload, construct crash states, and test them with fsck is present.
-> 
-> I'd be grateful if you could try it and give us feedback on what make
-> testing easier/more useful for you. As I mentioned before, this is a
-> work-in-progress, so we are happy to incorporate feedback.
-> 
+> It does. Of course the test still fails, as I said before, now claiming that
+> the filesystem is inconsistent. But that's a separate issue.
 
-Sorry I was travelling yesterday so I couldn't give this my full attention.
-Everything you guys do is already accomplished with dm-log-writes.  If you look
-at the example scripts I've provided
+It shouldn't be - what's the error that is being reported?
 
-https://github.com/josefbacik/log-writes/blob/master/replay-individual-faster.sh
-https://github.com/josefbacik/log-writes/blob/master/replay-fsck-wrapper.sh
+Cheers,
 
-The first initiates the replay, and points at the second script to run after
-each entry is replayed.  The whole point of this stuff was to make it as
-flexible as possible.  The way we use it is to replay, create a snapshot of the
-replay, mount, unmount, fsck, delete the snapshot and carry on to the next
-position in the log.
-
-There is nothing keeping us from generating random crash points, this has been
-something on my list of things to do forever.  All that would be required would
-be to hold the entries between flush/fua events in memory, and then replay them
-in whatever order you deemed fit.  That's the only functionality missing from my
-replay-log stuff that CrashMonkey has.
-
-The other part of this is getting user space applications to do more thorough
-checking of consistency that it expects, which I implemented here
-
-https://github.com/josefbacik/fstests/commit/70d41e17164b2afc9a3f2ae532f084bf64cb4a07
-
-fsx will randomly do operations to a file, and every time it fsync()'s it saves
-it's state and marks the log.  Then we can go back and replay the log to the
-mark and md5sum the file to make sure it matches the saved state.  This
-infrastructure was meant to be as simple as possible so the possiblities for
-crash consistency testing were endless.  One of the next areas we plan to use
-this in Facebook is just for application consistency, so we can replay the fs
-and verify the application works in whatever state the fs is at any given point.
-
-I looked at your code and you are logging entries at submit time, not completion
-time.  The reason I do those crazy acrobatics is because we have had bugs in
-previous kernels where we were not waiting for io completion of important
-metadata before writing out the super block, so logging only at completion
-allows us to catch that class of problems.
-
-The other thing CrashMonkey is missing is DISCARD support.  We fuck up discard
-support constantly, and being able to replay discards to make sure we're not
-discarding important data is very important.
-
-I'm not trying to shit on your project, obviously it's a good idea, that's why I
-did it years ago ;).  The community is going to use what is easiest to use, and
-modprobe dm-log-writes is a lot easier than compiling and insmod'ing an out of
-tree driver.  Also your driver won't work on upstream kernels because of the way
-the bio flags were changed recently, which is why we prefer using upstream
-solutions.
-
-If you guys want to get this stuff used then it would be better at this point to
-build on top of what we already have.  Just off the top of my head we need
-
-1) Random replay support for replay-log.  This is probably a day or two worth of
-work for a student.
-
-2) Documentation, because right now I'm the only one who knows how this works.
-
-3) My patches need to actually be pushed into upstream fstests.  This would be
-the largest win because then all the fs developers would be running the tests
-by default.
-
-4) Multi-device support.  One thing that would be good to have and is a dream of
-mine is to connect multiple devices to one log, so we can do things like make
-sure mdraid or btrfs's raid consistency.  We could do super evil things like
-only replay one device, or replay alternating writes on each device.  This would
-be a larger project but would be super helpful.
-
-Thanks,
-
-Josef
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
