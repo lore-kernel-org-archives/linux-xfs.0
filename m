@@ -1,100 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53176 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752610AbdHQQIa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Aug 2017 12:08:30 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 06/13] dax: Inline dax_insert_mapping() into the callsite
-Date: Thu, 17 Aug 2017 18:08:08 +0200
-Message-Id: <20170817160815.30466-7-jack@suse.cz>
-In-Reply-To: <20170817160815.30466-1-jack@suse.cz>
-References: <20170817160815.30466-1-jack@suse.cz>
+Received: from mail-yw0-f169.google.com ([209.85.161.169]:33749 "EHLO
+        mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751640AbdHPR2W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 13:28:22 -0400
+Received: by mail-yw0-f169.google.com with SMTP id p68so26873935ywg.0
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 10:28:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <150286946864.8837.17147962029964281564.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150286944610.8837.9513410258028246174.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150286946864.8837.17147962029964281564.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 16 Aug 2017 10:28:21 -0700
+Message-ID: <CAPcyv4i+GbwcqMwKscTmTAuoXnQNfqBtHsxUu-L0+NzNO2f4Lw@mail.gmail.com>
+Subject: Re: [PATCH v5 4/5] fs, xfs: introduce MAP_DIRECT for creating
+ block-map-atomic file ranges
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>, Jan Kara <jack@suse.cz>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-dax_insert_mapping() has only one callsite and we will need to further
-fine tune what it does for synchronous faults. Just inline it into the
-callsite so that we don't have to pass awkward bools around.
+On Wed, Aug 16, 2017 at 12:44 AM, Dan Williams <dan.j.williams@intel.com> wrote:
+> MAP_DIRECT is an mmap(2) flag with the following semantics:
+>
+>   MAP_DIRECT
+>   When specified with MAP_SHARED a successful fault in this range
+>   indicates that the kernel is maintaining the block map (user linear
+>   address to file offset to physical address relationship) in a manner
+>   that no external agent can observe any inconsistent changes. In other
+>   words, the block map of the mapping is effectively pinned, or the kernel
+>   is otherwise able to exchange a new physical extent atomically with
+>   respect to any hardware / software agent. As implied by this definition
+>   a successful fault in a MAP_DIRECT range bypasses kernel indirections
+>   like the page-cache, and all updates are carried directly through to the
+>   underlying file physical blocks (modulo cpu cache effects).
+>
+>   ETXTBSY may be returned to any third party operation on the file that
+>   attempts to update the block map (allocate blocks / convert unwritten
+>   extents / break shared extents). However, whether a filesystem returns
+>   EXTBSY for a certain state of the block relative to a MAP_DIRECT mapping
+>   is filesystem and kernel version dependent.
+>
+>   Some filesystems may extend these operation restrictions outside the
+>   mapped range and return ETXTBSY to any file operations that might mutate
+>   the block map. MAP_DIRECT faults may fail with a SIGBUS if the
+>   filesystem needs to write the block map to satisfy the fault. For
+>   example, if the mapping was established over a hole in a sparse file.
+>
+>   ERRORS
+>   EACCES A MAP_DIRECT mapping was requested and PROT_WRITE was not set,
+>   or the requesting process is missing CAP_LINUX_IMMUTABLE.
+>
+>   EINVAL MAP_ANONYMOUS or MAP_PRIVATE was specified with MAP_DIRECT.
+>
+>   EOPNOTSUPP The filesystem explicitly does not support the flag
+>
+>   SIGBUS Attempted to write a MAP_DIRECT mapping at a file offset that
+>          might require block-map updates.
+>
+> Cc: Jan Kara <jack@suse.cz>
+> Cc: Jeff Moyer <jmoyer@redhat.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+[..]
+> diff --git a/include/linux/mman.h b/include/linux/mman.h
+> index 0e1de42c836f..7c9e3d11027f 100644
+> --- a/include/linux/mman.h
+> +++ b/include/linux/mman.h
+> @@ -7,16 +7,6 @@
+>  #include <linux/atomic.h>
+>  #include <uapi/linux/mman.h>
+>
+> -#ifndef MAP_32BIT
+> -#define MAP_32BIT 0
+> -#endif
+> -#ifndef MAP_HUGE_2MB
+> -#define MAP_HUGE_2MB 0
+> -#endif
+> -#ifndef MAP_HUGE_1GB
+> -#define MAP_HUGE_1GB 0
+> -#endif
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/dax.c | 46 +++++++++++++++++++---------------------------
- 1 file changed, 19 insertions(+), 27 deletions(-)
-
-diff --git a/fs/dax.c b/fs/dax.c
-index 7c150eddc01a..766cb840c276 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -852,32 +852,6 @@ static int dax_iomap_pfn(struct iomap *iomap, loff_t pos, size_t size,
- 	return rc;
- }
- 
--static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
--			      loff_t pos, void *entry)
--{
--	const sector_t sector = dax_iomap_sector(iomap, pos);
--	struct vm_area_struct *vma = vmf->vma;
--	struct address_space *mapping = vma->vm_file->f_mapping;
--	unsigned long vaddr = vmf->address;
--	void *ret;
--	int rc;
--	pfn_t pfn;
--
--	rc = dax_iomap_pfn(iomap, pos, PAGE_SIZE, &pfn);
--	if (rc < 0)
--		return rc;
--
--	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector, 0);
--	if (IS_ERR(ret))
--		return PTR_ERR(ret);
--
--	trace_dax_insert_mapping(mapping->host, vmf, ret);
--	if (vmf->flags & FAULT_FLAG_WRITE)
--		return vm_insert_mixed_mkwrite(vma, vaddr, pfn);
--	else
--		return vm_insert_mixed(vma, vaddr, pfn);
--}
--
- /*
-  * The user has performed a load from a hole in the file.  Allocating a new
-  * page in the file would cause excessive storage usage for workloads with
-@@ -1108,6 +1082,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 	bool write = vmf->flags & FAULT_FLAG_WRITE;
- 	int vmf_ret = 0;
- 	void *entry;
-+	pfn_t pfn;
- 
- 	trace_dax_pte_fault(inode, vmf, vmf_ret);
- 	/*
-@@ -1190,7 +1165,24 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 			count_memcg_event_mm(vma->vm_mm, PGMAJFAULT);
- 			major = VM_FAULT_MAJOR;
- 		}
--		error = dax_insert_mapping(vmf, &iomap, pos, entry);
-+		error = dax_iomap_pfn(&iomap, pos, PAGE_SIZE, &pfn);
-+		if (error < 0)
-+			goto error_finish_iomap;
-+
-+		entry = dax_insert_mapping_entry(mapping, vmf, entry,
-+						 dax_iomap_sector(&iomap, pos),
-+						 0);
-+		if (IS_ERR(entry)) {
-+			error = PTR_ERR(entry);
-+			goto error_finish_iomap;
-+		}
-+
-+		trace_dax_insert_mapping(inode, vmf, entry);
-+		if (write)
-+			error = vm_insert_mixed_mkwrite(vma, vaddr, pfn);
-+		else
-+			error = vm_insert_mixed(vma, vaddr, pfn);
-+
- 		/* -EBUSY is fine, somebody else faulted on the same PTE */
- 		if (error == -EBUSY)
- 			error = 0;
--- 
-2.12.3
-
+This was inadvertent, we need this to build on non-x86 archs, will fix.
