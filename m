@@ -1,42 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53131 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751850AbdHQQI2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Aug 2017 12:08:28 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 01/13] mm: Remove VM_FAULT_HWPOISON_LARGE_MASK
-Date: Thu, 17 Aug 2017 18:08:03 +0200
-Message-Id: <20170817160815.30466-2-jack@suse.cz>
-In-Reply-To: <20170817160815.30466-1-jack@suse.cz>
-References: <20170817160815.30466-1-jack@suse.cz>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:36595 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752138AbdHPQrU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 12:47:20 -0400
+Received: by mail-wr0-f193.google.com with SMTP id y67so4013306wrb.3
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 09:47:19 -0700 (PDT)
+Date: Wed, 16 Aug 2017 19:47:17 +0300
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [PATCH v5 3/5] mm: introduce mmap3 for safely defining new mmap
+ flags
+Message-ID: <20170816164717.xjbtbdjtwnhvzukg@node.shutemov.name>
+References: <150286944610.8837.9513410258028246174.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150286946261.8837.1454297295346610351.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170816111541.6c4ulnipt5cxgfsb@node.shutemov.name>
+ <CAPcyv4gB1JycB_1k6mKe-_OwjZv1a7vPV6Hh393-U_HQ15RWEw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4gB1JycB_1k6mKe-_OwjZv1a7vPV6Hh393-U_HQ15RWEw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>, Jan Kara <jack@suse.cz>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-It is unused.
+On Wed, Aug 16, 2017 at 09:35:11AM -0700, Dan Williams wrote:
+> On Wed, Aug 16, 2017 at 4:15 AM, Kirill A. Shutemov
+> <kirill@shutemov.name> wrote:
+> > On Wed, Aug 16, 2017 at 12:44:22AM -0700, Dan Williams wrote:
+> >> diff --git a/include/linux/mman.h b/include/linux/mman.h
+> >> index c8367041fafd..0e1de42c836f 100644
+> >> --- a/include/linux/mman.h
+> >> +++ b/include/linux/mman.h
+> >> @@ -7,6 +7,40 @@
+> >>  #include <linux/atomic.h>
+> >>  #include <uapi/linux/mman.h>
+> >>
+> >> +#ifndef MAP_32BIT
+> >> +#define MAP_32BIT 0
+> >> +#endif
+> >> +#ifndef MAP_HUGE_2MB
+> >> +#define MAP_HUGE_2MB 0
+> >> +#endif
+> >> +#ifndef MAP_HUGE_1GB
+> >> +#define MAP_HUGE_1GB 0
+> >> +#endif
+> >> +
+> >> +/*
+> >> + * The historical set of flags that all mmap implementations implicitly
+> >> + * support when file_operations.mmap_supported_mask is zero.
+> >> + */
+> >> +#define LEGACY_MAP_SUPPORTED_MASK (MAP_SHARED \
+> >> +             | MAP_PRIVATE \
+> >> +             | MAP_FIXED \
+> >> +             | MAP_ANONYMOUS \
+> >> +             | MAP_UNINITIALIZED \
+> >> +             | MAP_GROWSDOWN \
+> >> +             | MAP_DENYWRITE \
+> >> +             | MAP_EXECUTABLE \
+> >> +             | MAP_LOCKED \
+> >> +             | MAP_NORESERVE \
+> >> +             | MAP_POPULATE \
+> >> +             | MAP_NONBLOCK \
+> >> +             | MAP_STACK \
+> >> +             | MAP_HUGETLB \
+> >> +             | MAP_32BIT \
+> >> +             | MAP_HUGE_2MB \
+> >> +             | MAP_HUGE_1GB)
+> >> +
+> >> +#define      MAP_SUPPORTED_MASK (LEGACY_MAP_SUPPORTED_MASK)
+> >> +
+> >>  extern int sysctl_overcommit_memory;
+> >>  extern int sysctl_overcommit_ratio;
+> >>  extern unsigned long sysctl_overcommit_kbytes;
+> >
+> > Since we looking into mmap(2) ABI, maybe we should consider re-defining
+> > MAP_DENYWRITE and MAP_EXECUTABLE as 0 in hope that we would be able to
+> > re-use these bits in the future? These flags are ignored now anyway.
+> 
+> Yes, we can make these -EOPNOTSUPP in the new syscall.
 
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- include/linux/mm.h | 2 --
- 1 file changed, 2 deletions(-)
+You cannot detect them, if we would redefine them as 0. :)
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 483e84cf9fc6..fa036093e76c 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1143,8 +1143,6 @@ static inline void clear_page_pfmemalloc(struct page *page)
- #define VM_FAULT_FALLBACK 0x0800	/* huge page fault failed, fall back to small */
- #define VM_FAULT_DONE_COW   0x1000	/* ->fault has fully handled COW */
- 
--#define VM_FAULT_HWPOISON_LARGE_MASK 0xf000 /* encodes hpage index for large hwpoison */
--
- #define VM_FAULT_ERROR	(VM_FAULT_OOM | VM_FAULT_SIGBUS | VM_FAULT_SIGSEGV | \
- 			 VM_FAULT_HWPOISON | VM_FAULT_HWPOISON_LARGE | \
- 			 VM_FAULT_FALLBACK)
 -- 
-2.12.3
-
+ Kirill A. Shutemov
