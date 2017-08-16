@@ -1,50 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53109 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751369AbdHQQI2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Aug 2017 12:08:28 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 04/13] dax: Create local variable for VMA in dax_iomap_pte_fault()
-Date: Thu, 17 Aug 2017 18:08:06 +0200
-Message-Id: <20170817160815.30466-5-jack@suse.cz>
-In-Reply-To: <20170817160815.30466-1-jack@suse.cz>
-References: <20170817160815.30466-1-jack@suse.cz>
+Received: from mail-yw0-f169.google.com ([209.85.161.169]:33940 "EHLO
+        mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752440AbdHPXmL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 19:42:11 -0400
+Received: by mail-yw0-f169.google.com with SMTP id s143so31981996ywg.1
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 16:42:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <150286944610.8837.9513410258028246174.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150286944610.8837.9513410258028246174.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 16 Aug 2017 16:42:08 -0700
+Message-ID: <CAPcyv4h64RKGWQ7Mgw7KpZVc32hm4zprryjpZKwGS171ATh+VA@mail.gmail.com>
+Subject: Re: [PATCH v5 0/5] MAP_DIRECT and block-map-atomic files
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>, Jan Kara <jack@suse.cz>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-There are already two users and more are coming.
+On Wed, Aug 16, 2017 at 12:44 AM, Dan Williams <dan.j.williams@intel.com> wrote:
+> Changes since v4 [1]:
+> * Drop the new vma ->fs_flags field, it can be replaced by just checking
+>   ->vm_ops locally in the filesystem. This approach also allows
+>   non-MAP_DIRECT vmas to be vma_merge() capable since vmas with
+>   vm_ops->close() disable vma merging. (Jan)
+>
+> * Drop the new ->fmmap() operation, instead convert all ->mmap()
+>   implementations tree-wide to take an extra 'map_flags' parameter.
+>   (Jan)
+>
+> * Drop the cute (MAP_SHARED|MAP_PRIVATE) hack/mechanism to add new
+>   validated flags mmap(2) and instead just define a new mmap syscall
+>   variant (sys_mmap_pgoff_strict). (Andy)
+>
+> * Fix the fact that MAP_PRIVATE|MAP_DIRECT would silently fallback to
+>   MAP_SHARED (addressed by the new syscall). (Kirill)
+>
+> * Require CAP_LINUX_IMMUTABLE for MAP_DIRECT to close any unforeseen
+>   denial of service for unmanaged + unprivileged MAP_DIRECT usage.
+>   (Kirill)
+>
+> * Switch MAP_DIRECT fault failures to SIGBUS (Kirill)
+>
+> * Add an fcntl mechanism to allow an unprivileged process to use
+>   MAP_DIRECT on an fd setup by a privileged process.
+>
+> * Rework the MAP_DIRECT description to allow for future hardware where
+>   it may not be required to software-pin the file offset to physical
+>   address relationship.
+>
+> Given the tree-wide touches in this revision the patchset is starting to
+> feel more like -mm material than strictly xfs.
+>
+> [1]: https://lkml.org/lkml/2017/8/15/39
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/dax.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+For easier testing / evaluation of these patches I went ahead and
+rebased them to v4.13-rc5, fixed up 0-day reports from the ->mmap()
+conversion, and published a for-4.14/map-direct branch here:
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 1122356f8b88..75aa0d9fb39f 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1097,7 +1097,8 @@ static int dax_fault_return(int error)
- static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 			       const struct iomap_ops *ops)
- {
--	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
-+	struct vm_area_struct *vma = vmf->vma;
-+	struct address_space *mapping = vma->vm_file->f_mapping;
- 	struct inode *inode = mapping->host;
- 	unsigned long vaddr = vmf->address;
- 	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
-@@ -1185,7 +1186,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 	case IOMAP_MAPPED:
- 		if (iomap.flags & IOMAP_F_NEW) {
- 			count_vm_event(PGMAJFAULT);
--			count_memcg_event_mm(vmf->vma->vm_mm, PGMAJFAULT);
-+			count_memcg_event_mm(vma->vm_mm, PGMAJFAULT);
- 			major = VM_FAULT_MAJOR;
- 		}
- 		error = dax_insert_mapping(vmf, &iomap, pos, entry);
--- 
-2.12.3
-
+    https://git.kernel.org/pub/scm/linux/kernel/git/djbw/nvdimm.git/log/?h=for-4.14/map-direct
