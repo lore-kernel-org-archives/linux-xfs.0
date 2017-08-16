@@ -1,90 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:54690 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751642AbdHPNfG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 09:35:06 -0400
-Date: Wed, 16 Aug 2017 23:35:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
-Message-ID: <20170816133502.GN21024@dastard>
-References: <20170814081806.GA3924@debian.home>
- <20170815020018.GF21024@dastard>
- <20170815061857.GA2803@debian.home>
- <20170815084430.GK21024@dastard>
- <20170815192938.GA1247@debian.home>
- <20170816002511.GM21024@dastard>
- <20170816071649.GA4143@debian.home>
+Received: from mx2.suse.de ([195.135.220.15]:51715 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751843AbdHPN6C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 16 Aug 2017 09:58:02 -0400
+Date: Wed, 16 Aug 2017 15:57:58 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
+ dma-to-storage, and swap
+Message-ID: <20170816135758.GD4898@quack2.suse.cz>
+References: <20170811104429.GA13736@lst.de>
+ <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com>
+ <20170812073349.GA12679@lst.de>
+ <CAPcyv4iKG=Zoo1VXu23YBc6uWDFV4QSS+eAm9MSOynx2FjTHbw@mail.gmail.com>
+ <20170813092436.GB32112@lst.de>
+ <CAPcyv4ixTgSWG9K2Eg3XJmOvqJht81qL+Z3njoOjcXCD7XMpZw@mail.gmail.com>
+ <20170814124059.GC17820@quack2.suse.cz>
+ <CAPcyv4hi_Y5Qj=h_Qf4Bcyv+EWBosa2gQT+-8ro3hPY9VMshSA@mail.gmail.com>
+ <20170815083732.GB27505@quack2.suse.cz>
+ <CAPcyv4hFTn4Fz5o+Gm857mS-RA6WAVsf4CmwiLiK2O8w2_SamQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20170816071649.GA4143@debian.home>
+In-Reply-To: <CAPcyv4hFTn4Fz5o+Gm857mS-RA6WAVsf4CmwiLiK2O8w2_SamQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ernesto =?iso-8859-1?Q?A=2E_Fern=E1ndez?= <ernesto.mnd.fernandez@gmail.com>
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>
 
-On Wed, Aug 16, 2017 at 04:16:53AM -0300, Ernesto A. Fernández wrote:
-> On Wed, Aug 16, 2017 at 10:25:11AM +1000, Dave Chinner wrote:
-> > On Tue, Aug 15, 2017 at 04:29:39PM -0300, Ernesto A. Fernández wrote:
-> > > On Tue, Aug 15, 2017 at 06:44:30PM +1000, Dave Chinner wrote:
-> > > > On Tue, Aug 15, 2017 at 03:18:58AM -0300, Ernesto A. Fernández wrote:
-> > > > But I have to ask - why do we even need to modify the mode first?
-> > > > Why not change the ACL first, then modify the mode+timestamp? If
-> > > > setting the ACL fails, then we don't have anything to undo and all
-> > > > is good....
-> > > 
-> > > I intended for the mode to be committed as part of the same transaction
-> > > that sets or removes the ACL. In my mind making the changes later, as part
-> > > of a separate transaction, would have meant that a crash between the two
-> > > left the filesystem in an inconsistent state,
-> > 
-> > No, it will not leave the fileystem in an inconsistent state. It
-> > will leave the inode permissions in an /unwanted/ state, but there
-> > is no filesystem metadata inconsistency. 
-> > 
-> > > with a new ACL but without
-> > > the corresponding mode bits.
-> > 
-> > Yup, but that's no different from right now, where a crash after
-> > setting the mode bits could be applied but the ACL update is
-> > missing.
-> > 
-> > Either way is even rarely than "crash at the wrong time" implies,
-> > because we've also got to have a complete journal checkpoint occur
-> > between the two operations and then crash between the checkpoint and
-> > the second operation. Yes, it's possible, but in the entire time
-> > I've been working on XFS (almost 15 years now) I can count on one
-> > hand the number of times such a problem has occurred and been
-> > reported...
-> > 
-> > So, it's a rare problem, and one that will get solved in time
-> > because there's much more to solving the problem than just this
-> > case. e.g. I worte this in 2008:
-> > 
-> > http://xfs.org/index.php/Improving_Metadata_Performance_By_Reducing_Journal_Overhead#Atomic_Multi-Transaction_Operations
-> > 
-> > And we've really only got the infrastructure we could use to
-> > implement this in a widespread manner with the rmap/reflink
-> > functionality. But implementing it will require a large amount of
-> > re-organisation of filesystem operations, so it's something that
-> > will take time to roll out.
+On Tue 15-08-17 16:50:55, Dan Williams wrote:
+> On Tue, Aug 15, 2017 at 1:37 AM, Jan Kara <jack@suse.cz> wrote:
+> > On Mon 14-08-17 09:14:42, Dan Williams wrote:
+> >> On Mon, Aug 14, 2017 at 5:40 AM, Jan Kara <jack@suse.cz> wrote:
+> >> > On Sun 13-08-17 13:31:45, Dan Williams wrote:
+> >> >> On Sun, Aug 13, 2017 at 2:24 AM, Christoph Hellwig <hch@lst.de> wrote:
+> >> >> > Thay being said I think we absolutely should support RDMA memory
+> >> >> > registrations for DAX mappings.  I'm just not sure how S_IOMAP_IMMUTABLE
+> >> >> > helps with that.  We'll want a MAP_SYNC | MAP_POPULATE to make sure
+> >> >> > all the blocks are polulated and all ptes are set up.  Second we need
+> >> >> > to make sure get_user_page works, which for now means we'll need a
+> >> >> > struct page mapping for the region (which will be really annoying
+> >> >> > for PCIe mappings, like the upcoming NVMe persistent memory region),
+> >> >> > and we need to gurantee that the extent mapping won't change while
+> >> >> > the get_user_pages holds the pages inside it.  I think that is true
+> >> >> > due to side effects even with the current DAX code, but we'll need to
+> >> >> > make it explicit.  And maybe that's where we need to converge -
+> >> >> > "sealing" the extent map makes sense as such a temporary measure
+> >> >> > that is not persisted on disk, which automatically gets released
+> >> >> > when the holding process exits, because we sort of already do this
+> >> >> > implicitly.  It might also make sense to have explicitl breakable
+> >> >> > seals similar to what I do for the pNFS blocks kernel server, as
+> >> >> > any userspace RDMA file server would also need those semantics.
+> >> >>
+> >> >> Ok, how about a MAP_DIRECT flag that arranges for faults to that range to:
+> >> >>
+> >> >>     1/ only succeed if the fault can be satisfied without page cache
+> >> >>
+> >> >>     2/ only install a pte for the fault if it can do so without
+> >> >> triggering block map updates
+> >> >>
+> >> >> So, I think it would still end up setting an inode flag to make
+> >> >> xfs_bmapi_write() fail while any process has a MAP_DIRECT mapping
+> >> >> active. However, it would not record that state in the on-disk
+> >> >> metadata and it would automatically clear at munmap time. That should
+> >> >> be enough to support the host-persistent-memory, and
+> >> >> NVMe-persistent-memory use cases (provided we have struct page for
+> >> >> NVMe). Although, we need more safety infrastructure in the NVMe case
+> >> >> where we would need to software manage I/O coherence.
+> >> >
+> >> > Hum, this proposal (and the problems you are trying to deal with) seem very
+> >> > similar to Peter Zijlstra's mpin() proposal from 2014 [1], just moved to
+> >> > the DAX area (and so additionally complicated by the fact that filesystems
+> >> > now have to care). The patch set was not merged due to lack of interest I
+> >> > think but it looked sensible and the proposed API would make sense for more
+> >> > stuff than just DAX so maybe it would be better than MAP_DIRECT flag?
+> >>
+> >> Interesting, but I'm not sure I see the correlation. mm_mpin() makes a
+> >> "no-fault" guarantee and fixes the accounting of locked System RAM.
+> >> MAP_DIRECT still allows faults, and DAX mappings don't consume System
+> >> RAM so the accounting problem is not there for DAX. mm_pin() also does
+> >> not appear to have a relationship to a file backed memory like mmap
+> >> allows.
+> >
+> > So the accounting part is probably non-interesting for DAX purposes and I
+> > agree there are other differences as well. But mm_mpin() prevented page
+> > migrations which is parallel to your requirement of "offset->block mapping
+> > is permanent".  Furthermore mm_mpin() work was there for RDMA so that it
+> > has saner interface to pin pages than get_user_pages() and you mention RDMA
+> > and similar technologies as a usecase for your work for similar reasons.
+> > So my thought was that possibly we should have the same API for pinning
+> > "storage" for RDMA transfers regardless of whether the backing is page
+> > cache or pmem and the API should be usable for in-kernel users as well?
+> > mmap flag seems a bit clumsy in this regard so maybe a form of a separate
+> > syscall - be it mpin(start, len) or some other name - might be more
+> > suitable?
 > 
-> Alright, thanks for the explanation.
->  
-> > With that in mind, here's waht I suggested above: set the mode after
-> > the xattr. I haven't tested it - can you check it solves the problem
-> > case you are testing?
-> 
-> It does. Of course the test still fails, as I said before, now claiming that
-> the filesystem is inconsistent. But that's a separate issue.
+> Can you say about more about why an mmap flag for this feels awkward
+> to you? I think there's symmetry between O_SYNC / O_DIRECT setting up
+> synchronous / page-cache-bypass file descriptors and MAP_SYNC /
+> MAP_DIRECT setting up synchronous and page-cache bypass mappings.
 
-It shouldn't be - what's the error that is being reported?
+So my thinking was, that for in-kernel users it might be a bit more
+difficult to use mmap flag directly as they generally won't need to setup
+the mapping. But that can be certainly dealt with by proper helpers for
+in-kernel users.
 
-Cheers,
+> "Pinning" also feels like the wrong mechanism when you consider
+> hardware is moving toward eliminating the pinning requirement over
+> time. SVM "Shared Virtual Memory" hardware will just operate on cpu
+> virtual addresses directly and generate typical faults. On such
+> hardware MAP_DIRECT would be a nop relative to MAP_SYNC, so you
+> wouldn't want your application to be stuck with the legacy concept
+> that pages need to be explicitly "pinned".
 
-Dave.
+OK, makes sense.
+
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
