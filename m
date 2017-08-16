@@ -1,96 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53985 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751162AbdHBQ5S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Aug 2017 12:57:18 -0400
-Date: Wed, 2 Aug 2017 18:57:16 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 6/7] mkfs: extend opt_params with a value field
-Message-ID: <20170802165716.GF18884@wotan.suse.de>
-References: <20170720092932.32580-1-jtulak@redhat.com>
- <20170720092932.32580-7-jtulak@redhat.com>
- <20170727161806.GJ18884@wotan.suse.de>
- <30eae9db-14fd-b245-3aab-5c1670894b44@redhat.com>
- <20170729170241.GM18884@wotan.suse.de>
- <27945607-28e6-31ec-7844-b63a729d040c@redhat.com>
+Received: from mail-wr0-f174.google.com ([209.85.128.174]:37521 "EHLO
+        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751580AbdHPPi0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 11:38:26 -0400
+Received: by mail-wr0-f174.google.com with SMTP id z91so9872140wrc.4
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 08:38:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <27945607-28e6-31ec-7844-b63a729d040c@redhat.com>
+In-Reply-To: <b1e77067-8b6a-c64a-a4bd-80ccccefff59@sandeen.net>
+References: <20170811123037.15962-1-jtulak@redhat.com> <20170815150812.32237-1-jtulak@redhat.com>
+ <806d4e0b-587c-4c12-db45-3942b4ab0753@sandeen.net> <CACj3i72UC1vc9LD_JymfovkgnUkEdDt98=S5u9JSPUS=goiO=w@mail.gmail.com>
+ <b1e77067-8b6a-c64a-a4bd-80ccccefff59@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Wed, 16 Aug 2017 17:38:04 +0200
+Message-ID: <CACj3i70v3qPvyXz3fXq=1QRGHmOYAWGfciObcFJhNfWbxKvGOw@mail.gmail.com>
+Subject: Re: [PATCH 1/6 v2] mkfs: Save raw user input field to the opts struct
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Aug 02, 2017 at 04:43:09PM +0200, Jan Tulak wrote:
-> On 29/07/2017 19:02, Luis R. Rodriguez wrote:
-> > On Fri, Jul 28, 2017 at 04:44:50PM +0200, Jan Tulak wrote:
-> > > And do we need better messages?
-> > We could later when parsing the configuration file, yes. An abort is fine too but
-> > seems rather grotesque. But also more importantly this is a matter of style and I
-> > realize the old style is to just abort/assert, so I figured it would be a good time
-> > now to ask ourselves if we want proper error messages dealt with / passed slowly
-> > moving forward.
-> > 
-> > But yes, I do suspect we may want better error messages when parsing these. This
-> > may mean for instance we want a string built into the struct that defines the sobopt
-> > so we can use it to inform userspace using a pointer to the description rather than
-> > doing a switch statement on each one and interpreting back to plain english.
-> > 
-> The reason for better messages is reasonable. About the style... well, it
-> makes sense. But I would certainly not do this in this set. So, I think
-> about a way how to keep the current behavior, but slowly build up the ground
-> for something like what you suggest.
-> 
-> Using the same style of error-returning logic from the other email ([PATCH
-> 1/7] mkfs: Save raw ...), the error argument pointer would be optional. So,
-> when you do parse_conf_val(OPT_D, D_AGCOUNT, str, NULL); then you get the
-> old behavior and any error causes a termination inside of this function. But
-> if you instead pass some pointer: parse_conf_val(OPT_D, D_AGCOUNT, str,
-> &err); then right now, we would print the message but do not terminate. And
-> later on, some other message handling can be added.
+On Wed, Aug 16, 2017 at 4:42 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 8/16/17 4:11 AM, Jan Tulak wrote:
+>> On Wed, Aug 16, 2017 at 1:07 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>>> On 8/15/17 10:08 AM, Jan Tulak wrote:
+>>>> Save exactly what the user gave us for every option.  This way, we will
+>>>> never lose the information if we need it to print back an issue.
+>>>> (Just add the infrastructure now, used in the next patches.)
+>>>>
+>>>> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+>>>
+>>>
+>>>> +             return NULL;
+>>>> +     }
+>>>
+>>> Again, I don't see that any subsequent patches ever call get_conf_raw();
+>>> is there any reason to even have this wrapper now?
+>>
+>> Luis had a pretty strong opinion about having them there when he will
+>> need them in his own patches later on and I saw no reason why not to
+>> add them right now when the functions are created. After all, they
+>> will be useful later on also for me, when I want to limit the amount
+>> of asserts and be more return-oriented. It's just not in this
+>> patchset.
+>
+> Hm, ok.  Let me reread that, thread - I'm just looking at this patchset
+> as sent.
+>
+> In general, I'm not clear on what your "_safe" and "_unsafe" variants
+> are about but maybe it was discussed in the prior thread I skipped.
 
-I think this is grotesque. Also, how would we know an error did happen then?
+>
 
-> > > If some value is out of range, or it is a
-> > > conflict, there is not much context needed, and better to not have to care
-> > > about these errors... Do you have an example when it would be helpful? If it
-> > > just spits out a return code, you have to add a check to every use and you
-> > > will have many times the same code like what is in getnum() at this moment
-> > Not really, if we are parsing say D_AGCOUNT we could have a member as part of the
-> > struct, say "description" then we can use say subopt[D_AGCOUNT].description on
-> > the error message, perhaps the only thing that would change for instance would be
-> > the context on which the error was run into, command line option passed or config
-> > file read, say with the filename and line number.
-> > 
-> > How would we be able to detect an error happened and pass exactly where the
-> > error happened otherwise on a config file for example?
-> Yes, I see the issue - getnum finds an error, but it doesn't know the line
-> in the config file to report it. But with what I write above about the error
-> handling, this could work.
-> 
-> if (c < sp->minval) {
->     if (config_file) illegal_config(str, line, opts, index, _("value is too
-> small"), err);
+It is about being able to decide what should happen when an error
+occurs and how good practice it is to just call exit() instead of
+propagating the error upwards in the stack. Right now, we can abort
+without a big issue (at least technically), but, for example, with a
+config file parsing, we will want to print the line of the config file
+which is invalid.
 
-How would it know what str and line are?
+These two threads should give you the details:
 
->     else illegal_option(str, opts, index, _("value is too small"), err);
-> }
+https://www.spinics.net/lists/linux-xfs/msg08635.html
+https://www.spinics.net/lists/linux-xfs/msg08636.html
 
-This seems convoluted and I don't really like it one bit.
+In any case, I will wait with sending further versions of these
+patches until you had the time to look at it.
 
-> ... and later in the code, if you are in the config file, you could do
-> something like:
-> 
-> parse_conf_val(opt, subopt, str, &err);
-> if (err) report_invalid_line(current_line);
-> 
-> Thoughts?
-
-Just my take: I prefer we do the right thing from the start. Even 
-if it takes us ages to move forward, baby steps, and clean patches
-and evolutions, moving slowly away from the old crazy habits.
-
-  Luis
+Cheers,
+Jan
