@@ -1,151 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53185 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752671AbdHQQIa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Aug 2017 12:08:30 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 13/13] ext4: Support for synchronous DAX faults
-Date: Thu, 17 Aug 2017 18:08:15 +0200
-Message-Id: <20170817160815.30466-14-jack@suse.cz>
-In-Reply-To: <20170817160815.30466-1-jack@suse.cz>
-References: <20170817160815.30466-1-jack@suse.cz>
+Received: from userp1040.oracle.com ([156.151.31.81]:16675 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751844AbdHPRRD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 13:17:03 -0400
+Date: Wed, 16 Aug 2017 10:16:58 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH RFC 1/2] xfs: refactor buffer logging into buffer
+ dirtying helper
+Message-ID: <20170816171658.GZ4796@magnolia>
+References: <20170814165451.43788-1-bfoster@redhat.com>
+ <20170814165451.43788-2-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170814165451.43788-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>, Jan Kara <jack@suse.cz>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-We return IOMAP_F_NEEDDSYNC flag from ext4_iomap_begin() for a
-synchronous write fault when inode has some uncommitted metadata
-changes. In the fault handler ext4_dax_fault() we then detect this case,
-call vfs_fsync_range() to make sure all metadata is committed, and call
-dax_pfn_mkwrite() to mark PTE as writeable. Note that this will also
-dirty corresponding radix tree entry which is what we want - fsync(2)
-will still provide data integrity guarantees for applications not using
-userspace flushing. And applications using userspace flushing can avoid
-calling fsync(2) and thus avoid the performance overhead.
+On Mon, Aug 14, 2017 at 12:54:50PM -0400, Brian Foster wrote:
+> xfs_trans_log_buf() is responsible for logging the dirty segments of
+> a buffer along with setting all of the necessary state on the
+> transaction, buffer, bli, etc., to ensure that the associated items
+> are marked as dirty and prepared for I/O. We have a couple use cases
+> that need to to dirty a buffer in a transaction without actually
+> logging dirty ranges of the buffer.  One existing use case is
+> ordered buffers, which are currently logged with arbitrary ranges to
+> accomplish this even though the content of ordered buffers is never
+> written to the log. Another pending use case is to relog an already
+> dirty buffer across rolled transactions within the deferred
+> operations infrastructure. This is required to prevent a held
+> (XFS_BLI_HOLD) buffer from pinning the tail of the log.
+> 
+> Refactor xfs_trans_log_buf() into a new function that contains all
+> of the logic responsible to dirty the transaction, lidp, buffer and
+> bli. This new function can be used in the future for the use cases
+> outlined above. This patch does not introduce functional changes.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/ext4/file.c       | 36 ++++++++++++++++++++++++++++++------
- fs/ext4/inode.c      |  4 ++++
- fs/jbd2/journal.c    | 17 +++++++++++++++++
- include/linux/jbd2.h |  1 +
- 4 files changed, 52 insertions(+), 6 deletions(-)
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 850037e140d7..3765c4ed1368 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -280,6 +280,7 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
- 	struct inode *inode = file_inode(vmf->vma->vm_file);
- 	struct super_block *sb = inode->i_sb;
- 	bool write = vmf->flags & FAULT_FLAG_WRITE;
-+	pfn_t pfn;
- 
- 	if (write) {
- 		sb_start_pagefault(sb);
-@@ -287,16 +288,39 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
- 		down_read(&EXT4_I(inode)->i_mmap_sem);
- 		handle = ext4_journal_start_sb(sb, EXT4_HT_WRITE_PAGE,
- 					       EXT4_DATA_TRANS_BLOCKS(sb));
-+		if (IS_ERR(handle)) {
-+			up_read(&EXT4_I(inode)->i_mmap_sem);
-+			sb_end_pagefault(sb);
-+			return VM_FAULT_SIGBUS;
-+		}
- 	} else {
- 		down_read(&EXT4_I(inode)->i_mmap_sem);
- 	}
--	if (!IS_ERR(handle))
--		result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops, NULL);
--	else
--		result = VM_FAULT_SIGBUS;
-+	result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops, &pfn);
- 	if (write) {
--		if (!IS_ERR(handle))
--			ext4_journal_stop(handle);
-+		ext4_journal_stop(handle);
-+		/* Write fault but PFN mapped only RO? */
-+		if (result & VM_FAULT_NEEDDSYNC) {
-+			int err;
-+			loff_t start = ((loff_t)vmf->pgoff) << PAGE_SHIFT;
-+			size_t len = 0;
-+
-+			if (pe_size == PE_SIZE_PTE)
-+				len = PAGE_SIZE;
-+#ifdef CONFIG_FS_DAX_PMD
-+			else if (pe_size == PE_SIZE_PMD)
-+				len = HPAGE_PMD_SIZE;
-+#endif
-+			else
-+				WARN_ON_ONCE(1);
-+			err = vfs_fsync_range(vmf->vma->vm_file, start,
-+					      start + len - 1, 1);
-+			if (err)
-+				result = VM_FAULT_SIGBUS;
-+			else
-+				result = dax_insert_pfn_mkwrite(vmf, pe_size,
-+								pfn);
-+		}
- 		up_read(&EXT4_I(inode)->i_mmap_sem);
- 		sb_end_pagefault(sb);
- 	} else {
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 3c600f02673f..7a7529c3f0c8 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3429,6 +3429,10 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 	}
- 
- 	iomap->flags = 0;
-+	if ((flags & IOMAP_WRITE) &&
-+	    !jbd2_transaction_committed(EXT4_SB(inode->i_sb)->s_journal,
-+					EXT4_I(inode)->i_datasync_tid))
-+		iomap->flags |= IOMAP_F_NEEDDSYNC;
- 	bdev = inode->i_sb->s_bdev;
- 	iomap->bdev = bdev;
- 	if (blk_queue_dax(bdev->bd_queue))
-diff --git a/fs/jbd2/journal.c b/fs/jbd2/journal.c
-index 7d5ef3bf3f3e..fa8cde498b4b 100644
---- a/fs/jbd2/journal.c
-+++ b/fs/jbd2/journal.c
-@@ -738,6 +738,23 @@ int jbd2_log_wait_commit(journal_t *journal, tid_t tid)
- 	return err;
- }
- 
-+/* Return 1 when transaction with given tid has already committed. */
-+int jbd2_transaction_committed(journal_t *journal, tid_t tid)
-+{
-+	int ret = 1;
-+
-+	read_lock(&journal->j_state_lock);
-+	if (journal->j_running_transaction &&
-+	    journal->j_running_transaction->t_tid == tid)
-+		ret = 0;
-+	if (journal->j_committing_transaction &&
-+	    journal->j_committing_transaction->t_tid == tid)
-+		ret = 0;
-+	read_unlock(&journal->j_state_lock);
-+	return ret;
-+}
-+EXPORT_SYMBOL(jbd2_transaction_committed);
-+
- /*
-  * When this function returns the transaction corresponding to tid
-  * will be completed.  If the transaction has currently running, start
-diff --git a/include/linux/jbd2.h b/include/linux/jbd2.h
-index 606b6bce3a5b..296d1e0ea87b 100644
---- a/include/linux/jbd2.h
-+++ b/include/linux/jbd2.h
-@@ -1367,6 +1367,7 @@ int jbd2_log_start_commit(journal_t *journal, tid_t tid);
- int __jbd2_log_start_commit(journal_t *journal, tid_t tid);
- int jbd2_journal_start_commit(journal_t *journal, tid_t *tid);
- int jbd2_log_wait_commit(journal_t *journal, tid_t tid);
-+int jbd2_transaction_committed(journal_t *journal, tid_t tid);
- int jbd2_complete_transaction(journal_t *journal, tid_t tid);
- int jbd2_log_do_checkpoint(journal_t *journal);
- int jbd2_trans_will_send_data_barrier(journal_t *journal, tid_t tid);
--- 
-2.12.3
+--D
 
+> ---
+>  fs/xfs/xfs_trans.h     |  4 +++-
+>  fs/xfs/xfs_trans_buf.c | 46 ++++++++++++++++++++++++++++++----------------
+>  2 files changed, 33 insertions(+), 17 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index 6bdad6f..a9c4404 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -213,7 +213,9 @@ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
+>  void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
+>  void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
+>  void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
+> -void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
+> +void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
+> +				  uint);
+> +void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
+>  void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
+>  
+>  void		xfs_extent_free_init_defer_op(void);
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index 86987d8..58818a0 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -493,25 +493,17 @@ xfs_trans_bhold_release(xfs_trans_t	*tp,
+>  }
+>  
+>  /*
+> - * This is called to mark bytes first through last inclusive of the given
+> - * buffer as needing to be logged when the transaction is committed.
+> - * The buffer must already be associated with the given transaction.
+> - *
+> - * First and last are numbers relative to the beginning of this buffer,
+> - * so the first byte in the buffer is numbered 0 regardless of the
+> - * value of b_blkno.
+> + * Mark a buffer dirty in the transaction.
+>   */
+>  void
+> -xfs_trans_log_buf(xfs_trans_t	*tp,
+> -		  xfs_buf_t	*bp,
+> -		  uint		first,
+> -		  uint		last)
+> +xfs_trans_dirty_buf(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*bp)
+>  {
+> -	xfs_buf_log_item_t	*bip = bp->b_fspriv;
+> +	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  
+>  	ASSERT(bp->b_transp == tp);
+>  	ASSERT(bip != NULL);
+> -	ASSERT(first <= last && last < BBTOB(bp->b_length));
+>  	ASSERT(bp->b_iodone == NULL ||
+>  	       bp->b_iodone == xfs_buf_iodone_callbacks);
+>  
+> @@ -531,8 +523,6 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+>  	bp->b_iodone = xfs_buf_iodone_callbacks;
+>  	bip->bli_item.li_cb = xfs_buf_iodone;
+>  
+> -	trace_xfs_trans_log_buf(bip);
+> -
+>  	/*
+>  	 * If we invalidated the buffer within this transaction, then
+>  	 * cancel the invalidation now that we're dirtying the buffer
+> @@ -545,15 +535,39 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+>  		bp->b_flags &= ~XBF_STALE;
+>  		bip->__bli_format.blf_flags &= ~XFS_BLF_CANCEL;
+>  	}
+> +	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
+>  
+>  	tp->t_flags |= XFS_TRANS_DIRTY;
+>  	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
+> +}
+> +
+> +/*
+> + * This is called to mark bytes first through last inclusive of the given
+> + * buffer as needing to be logged when the transaction is committed.
+> + * The buffer must already be associated with the given transaction.
+> + *
+> + * First and last are numbers relative to the beginning of this buffer,
+> + * so the first byte in the buffer is numbered 0 regardless of the
+> + * value of b_blkno.
+> + */
+> +void
+> +xfs_trans_log_buf(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*bp,
+> +	uint			first,
+> +	uint			last)
+> +{
+> +	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+> +
+> +	ASSERT(first <= last && last < BBTOB(bp->b_length));
+> +
+> +	xfs_trans_dirty_buf(tp, bp);
+>  
+>  	/*
+>  	 * If we have an ordered buffer we are not logging any dirty range but
+>  	 * it still needs to be marked dirty and that it has been logged.
+>  	 */
+> -	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
+> +	trace_xfs_trans_log_buf(bip);
+>  	if (!(bip->bli_flags & XFS_BLI_ORDERED))
+>  		xfs_buf_item_log(bip, first, last);
+>  }
+> -- 
+> 2.9.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
