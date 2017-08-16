@@ -1,62 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:34709 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751841AbdHPTbG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 15:31:06 -0400
-Received: by mail-qk0-f194.google.com with SMTP id q66so4261783qki.1
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 12:31:06 -0700 (PDT)
-Date: Wed, 16 Aug 2017 16:31:01 -0300
-From: Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?=
-        <ernesto.mnd.fernandez@gmail.com>
-Subject: Re: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
-Message-ID: <20170816193100.GA1216@debian.home>
-References: <20170814081806.GA3924@debian.home>
- <20170815020018.GF21024@dastard>
- <20170815061857.GA2803@debian.home>
- <20170815084430.GK21024@dastard>
- <20170815192938.GA1247@debian.home>
- <20170816002511.GM21024@dastard>
- <20170816071649.GA4143@debian.home>
- <20170816133502.GN21024@dastard>
+Received: from mail-qt0-f169.google.com ([209.85.216.169]:37237 "EHLO
+        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751969AbdHPUhf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 16:37:35 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20170816133502.GN21024@dastard>
+In-Reply-To: <CAOQ4uxipcTQBUC_yb5cMT5gsytp0h8QGfK3utVV_8vGHjuk70Q@mail.gmail.com>
+References: <CAPaz=E+-+C-LXtADm99epmVEszpfT70Ep39tKedfPi1AN-P7tA@mail.gmail.com>
+ <20170815173349.GA17774@li70-116.members.linode.com> <CAPaz=E+sPDK3uWYCepmYPMT2+nvTgA2C_OSyPY0a51iM=bBCsQ@mail.gmail.com>
+ <CAOQ4uxhkT05yHfQz0csruH-mz_hTamMABh3eZaNmzjXX02J1=A@mail.gmail.com>
+ <CAPaz=E+D7wpkXRx7=M9+7d=TUFpbG7MetK-nkECtWQXwO-Z8gA@mail.gmail.com>
+ <20170816130607.GA1347@destiny> <CAPaz=EJzXy+x4fKUyVtW_D49qSX-Xc1aqsnx8dLdMsVW=F+aXw@mail.gmail.com>
+ <CAOQ4uxipcTQBUC_yb5cMT5gsytp0h8QGfK3utVV_8vGHjuk70Q@mail.gmail.com>
+From: Vijay Chidambaram <vvijay03@gmail.com>
+Date: Wed, 16 Aug 2017 15:36:54 -0500
+Message-ID: <CAPaz=EJ7WZ9Ou89izVaY=exFxaHD0Q84gwqjxC3-DQn7y8RpTg@mail.gmail.com>
+Subject: Re: CrashMonkey: A Framework to Systematically Test File-System Crash Consistency
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>, Ernesto =?utf-8?Q?A=2E_Fern=C3=A1ndez?= <ernesto.mnd.fernandez@gmail.com>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Josef Bacik <josef@toxicpanda.com>, Ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Ashlie Martinez <ashmrtn@utexas.edu>, kernel-team@fb.com
 
-On Wed, Aug 16, 2017 at 11:35:02PM +1000, Dave Chinner wrote:
-> On Wed, Aug 16, 2017 at 04:16:53AM -0300, Ernesto A. Fernández wrote:
-> > On Wed, Aug 16, 2017 at 10:25:11AM +1000, Dave Chinner wrote:
-> > > With that in mind, here's waht I suggested above: set the mode after
-> > > the xattr. I haven't tested it - can you check it solves the problem
-> > > case you are testing?
-> > 
-> > It does. Of course the test still fails, as I said before, now claiming that
-> > the filesystem is inconsistent. But that's a separate issue.
-> 
-> It shouldn't be - what's the error that is being reported?
+Amir,
 
-xfs_repair, phase 3:
-bad magic number febe in block 512 (14452) for directory inode 131
-problem with attribute contents in inode 131
-would clear attr fork
-bad nblocks 11900 for inode 131, would reset to 11274
-bad anextents 1 for inode 131, would reset to 0
+That's a fair response. I certainly did not mean to add more work on
+your end :) Using dm-log-writes for now is a reasonable approach.
+
+Like I mentioned before, I think there is further work involved in
+getting CrashMonkey to a useful point (where it finds at least known
+bugs). Once this is done, I'd be happy to rework the device_wrapper as
+a DM target (or perhaps as a modification of log-writes) for upstream.
+I'm not sure how feasible it would be to keep functionality in-kernel
+simple, but we will try our best.
+
+We will keep this goal in mind as we continue development, so that we
+don't make any decisions that will prevent us from going the DM target
+route later.
+Thanks,
+Vijay
 
 
-This is not a result of your patch, it was already happening before.
-It seems to be caused by setting too many extended attributes to a
-file.
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+On Wed, Aug 16, 2017 at 3:27 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> On Wed, Aug 16, 2017 at 10:06 PM, Vijay Chidambaram <vvijay03@gmail.com> wrote:
+>> Hi Josef,
+>>
+>> Thank you for the detailed reply -- I think it provides several
+>> pointers for our future work. It sounds like we have a similar vision
+>> for where we want this to go, though we may disagree about how to
+>> implement this :) This is exciting!
+>>
+>> I agree that we should be building off existing work if it is a good
+>> option. We might end up using log-writes, but for now we see several
+>> problems:
+>>
+>> - The log-writes code is not documented well. As you have mentioned,
+>> at this point, only you know how it works, and we are not seeing a lot
+>> of adoption by other developers of log-writes as well.
+>>
+>> - I don't think our requirements exactly match what log-writes
+>> provides. For example, at some point we want to introduce checkpoints
+>> so that we can co-relate a crash state with file-system state at the
+>> time of crash. We also want to add functionality to guide creation of
+>> random crash states (see below). This might require changing
+>> log-writes significantly. I don't know if that would be a good idea.
+>>
+>> Regarding random crashes, there is a lot of complexity there that
+>> log-writes couldn't handle without significant changes. For example,
+>> just randomly generating crash states and testing each state is
+>> unlikely to catch bugs. We need a more nuanced way of doing this. We
+>> plan to add a lot of functionality to CrashMonkey to (a) let the user
+>> guide crash-state generation (b) focus on "interesting" states (by
+>> re-ordering or dropping metadata). All of this will likely require
+>> adding more sophistication to the kernel module. I don't think we want
+>> to take log-writes and add a lot of extra functionality.
+>>
+>> Regarding logging writes, I think there is a difference in approach
+>> between log-writes and CrashMonkey. We don't really care about the
+>> completion order since the device may anyway re-order the writes after
+>> that point. Thus, the set of crash states generated by CrashMonkey is
+>> bound only by FUA and FLUSH flags. It sounds as if log-writes focuses
+>> on a more restricted set of crash states.
+>>
+>> CrashMonkey works with the 4.4 kernel, and we will try and keep up
+>> with changes to the kernel that breaks CrashMonkey. CrashMonkey is
+>> useless without the user-space component, so users will be needing to
+>> compile some code anyway. I do not believe it will matter much whether
+>> it is in-tree or not, as long as it compiles with the latest kernel.
+>>
+>> Regarding discard, multi-device support, and application-level crash
+>> consistency, this is on our road-map too! Our current priority is to
+>> build enough scaffolding to reproduce a known crash-consistency bug
+>> (such as the delayed allocation bug of ext4), and then go on and try
+>> to find new bugs in newer file systems like btrfs.
+>>
+>> Adding CrashMonkey into the kernel is not a priority at this point (I
+>> don't think CrashMonkey is useful enough at this point to do so). When
+>> CrashMonkey becomes useful enough to do so, we will perhaps add the
+>> device_wrapper as a DM target to enable adoption.
+>>
+>> Our hope currently is that developers like Ari will try out
+>> CrashMonkey in its current form, which will guide us as to what
+>> functionality to add to CrashMonkey to find bugs more effectively.
+>>
+>
+> Vijay,
+>
+> I can only speak for myself, but I think I represent other filesystem
+> developers with this response:
+> - Often with competing projects the end
+> results is always for the best when project members cooperate to combine
+> the best of both projects.
+> - Some of your project goals (e.g. user guided crash states) sound very
+> intriguing
+> - IMO you are severely underestimating the pros in mainlined
+> kernel code for other developers. If you find the dm-log-writes target
+> is lacking functionality it would be MUCH better if you work to improve it.
+> Even more - it would be far better if you make sure that your userspace
+> tools can work also with the reduced functionality in mainline kernel.
+> - If you choose to complete your academic research before crossing over
+> to existing code base, that is a reasonable choice for you to make, but
+> the reasonable choice for me to make is to try Joseph's tools from his
+> repo (even if not documented) and *only* if it doesn't meet my needs
+> I would make the extra effort to try out  CrashMonkey.
+> - AFAIK the state of filesystem crash consistency testing tools is so bright
+> (maybe except in Facebook ;) , so my priority is to get *some* automated
+> testing tools in motion
+>
+> In any case, I'm glad this discussion started and I hope it would expedite
+> the adoption of crash testing tools.
+> I wish you all the best with your project.
+>
+> Amir.
