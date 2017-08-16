@@ -1,69 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f176.google.com ([209.85.216.176]:35902 "EHLO
-        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752147AbdHPBo5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 21:44:57 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:16635 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750827AbdHPGWW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 02:22:22 -0400
+Date: Tue, 15 Aug 2017 23:22:13 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH RFC] xfs: fix buffer check for primary sb in userspace
+ libxfs
+Message-ID: <20170816062213.GV4796@magnolia>
+References: <20170718141337.46255-1-bfoster@redhat.com>
+ <20170718231202.GP17762@dastard>
+ <20170719111741.GA53744@bfoster.bfoster>
+ <20170720024855.GS17762@dastard>
+ <20170720115159.GB3944@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxhkT05yHfQz0csruH-mz_hTamMABh3eZaNmzjXX02J1=A@mail.gmail.com>
-References: <CAPaz=E+-+C-LXtADm99epmVEszpfT70Ep39tKedfPi1AN-P7tA@mail.gmail.com>
- <20170815173349.GA17774@li70-116.members.linode.com> <CAPaz=E+sPDK3uWYCepmYPMT2+nvTgA2C_OSyPY0a51iM=bBCsQ@mail.gmail.com>
- <CAOQ4uxhkT05yHfQz0csruH-mz_hTamMABh3eZaNmzjXX02J1=A@mail.gmail.com>
-From: Vijay Chidambaram <vvijay03@gmail.com>
-Date: Tue, 15 Aug 2017 20:44:16 -0500
-Message-ID: <CAPaz=E+D7wpkXRx7=M9+7d=TUFpbG7MetK-nkECtWQXwO-Z8gA@mail.gmail.com>
-Subject: Re: CrashMonkey: A Framework to Systematically Test File-System Crash Consistency
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170720115159.GB3944@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Josef Bacik <josef@toxicpanda.com>, Ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-btrfs@vger.kernel.og, Ashlie Martinez <ashmrtn@utexas.edu>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-Hi Amir,
+On Thu, Jul 20, 2017 at 07:52:01AM -0400, Brian Foster wrote:
+> On Thu, Jul 20, 2017 at 12:48:55PM +1000, Dave Chinner wrote:
+> > On Wed, Jul 19, 2017 at 07:17:41AM -0400, Brian Foster wrote:
+> > > On Wed, Jul 19, 2017 at 09:12:02AM +1000, Dave Chinner wrote:
+> > > > On Tue, Jul 18, 2017 at 10:13:37AM -0400, Brian Foster wrote:
+> > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > > ---
+> > > > > 
+> > > > > Hi all,
+> > > > > 
+> > > > > This patch is actually targeted at userspace. The previous change in commit
+> > > > > f3d7ebde ("xfs: fix superblock inprogress check") to use ->b_maps technically
+> > > > > breaks the logic in userspace in a similar way to the original problem because
+> > > > > userspace has no concept of uncached buffers.  ->b_maps is NULL in userspace
+> > > > > unless the buffer is truly discontiguous.
+> > > > > 
+> > > > > This would normally result in a segfault but this appears to be hidden
+> > > > > by gcc optimization as -O2 is enabled by default and the
+> > > > > check_inprogress param to xfs_mount_validate_sb() is unused in
+> > > > > userspace. Therefore, the segfault is only reproducible when
+> > > > > optimization is disabled (which is a useful configuration for
+> > > > > debugging).
+> > > > > 
+> > > > > There are obviously different ways to fix this. I'm floating this (untested)
+> > > > > rfc as a kernel patch (do we ever sync libxfs from xfsprogs -> kernel?) with
+> > > > > the objective of keeping the libxfs code the same between the kernel and
+> > > > > userspace. We could alternatively create a custom helper/macro with the
+> > > > > appropriate check in each place. Thoughts?
+> > > > 
+> > > > Wouldn't it be better to simply fix the userspace buffer
+> > > > initialisation to always have a valid bp->b_maps, just like the
+> > > > kernel does? (See xfs_buf_get_maps() in the kernel code).  That way
+> > > > we don't have a landmine lurking in all the shared libxfs code we
+> > > > bring from the kernel that may interact with uncached buffers.
+> > > > 
+> > > 
+> > > We could certainly create a bp->__b_map field in xfsprogs libxfs and
+> > > initialize ->b_maps similar to the kernel for nmap == 1 buffers. Given
+> > > the lack of overlap of uncached buffers between xfsprogs and the kernel
+> > > (I'm not sure there are other cases where such buffers are commonly
+> > > handled), I don't personally think one way is notably better than the
+> > > other.
+> > > 
+> > > The tradeoffs seem to be that this patch is fairly localized but leaves
+> > > the potentially different states for uncached buffers in kernel vs.
+> > > xfsprogs context. The above approach addresses that issue at the cost of
+> > > slightly increasing the size of xfs_buf in userspace for something that
+> > > may not ever be necessary outside of an isolated bit of code. It also
+> > > only requires a change to xfsprogs libxfs.
+> > > 
+> > > Given the tradeoffs, I have no real preference on which approach we
+> > > take. Do you prefer the latter? If so and there are no other objections,
+> > > I'll send a patch along those lines.
+> > 
+> > I'd prefer the latter (the bp->__b_map solution) simply so we don't
+> > have to worry about it in future. The closer the kernel and
+> > userspace buffer caches are in terms of behaviour, implementation
+> > and structure members the less likely we are to have problems
+> > related to the kernel using uncached buffers...
+> > 
+> > FWIW, my wish list contains porting the kernel side buffer cache
+> > implementation to userspace to solve the scalabilty problems in the
+> > current userspace implementation that are exposed when repair
+> > hammers multiple AGs at once. Hence anything that gets kernel +
+> > userspace closer together helps get us (minutely) closer to that
+> > goal....
+> > 
+> 
+> Sounds reasonable to me. I'll post the xfsprogs __b_map patch I cooked
+> up and started testing yesterday a bit later...
 
-I neglected to mention this earlier: CrashMonkey does not require
-recompiling the kernel (it is a stand-alone kernel module), and has
-been tested with the kernel 4.4. It should work with future kernel
-versions as long as there are no changes to the bio structure.
+Did this ever happen?  Someone was complaining about this on IRC just now.
 
-As it is, I believe CrashMonkey is compatible with the current kernel.
-It certainly provides functionality beyond log-writes (the ability to
-replay a subset of writes between FLUSH/FUA), and we intend to add
-more functionality in the future.
+--D
 
-Right now, CrashMonkey does not do random sampling among possible
-crash states -- it will simply test a given number of unique states.
-Thus, right now I don't think it is very effective in finding
-crash-consistency bugs. But the entire infrastructure to profile a
-workload, construct crash states, and test them with fsck is present.
-
-I'd be grateful if you could try it and give us feedback on what make
-testing easier/more useful for you. As I mentioned before, this is a
-work-in-progress, so we are happy to incorporate feedback.
-
-Thanks,
-Vijay Chidambaram,
-http://www.cs.utexas.edu/~vijay/
-
-
-On Tue, Aug 15, 2017 at 3:32 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> On Tue, Aug 15, 2017 at 8:01 PM, Vijay Chidambaram <vvijay03@gmail.com> wrote:
->> Hi Josef and Amir,
->>
-> ...
->>
->> @Amir: Given that Josef's code is already in the kernel, do you think
->> changing CrashMonkey code would be useful? We are always happy to
->> provide something for upstream, but we want to be sure how much work
->> would be involved.
->>
->
-> Simply put, people (myself included) are more likely to use CrashMonkey
-> if it uses upstream kernel and/or if it brings valuable functionality
-> to filesystem
-> testing, beyond what log-writes already does -
-> I am have not studies either tools yet to be able to determine if that
-> is the case.
->
-> Cheers,
-> Amir.
+> 
+> Brian
+> 
+> > Cheers,
+> > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
