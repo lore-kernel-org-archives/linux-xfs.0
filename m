@@ -1,150 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53115 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751561AbdHQQI2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Aug 2017 12:08:28 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 03/13] dax: Factor out getting of pfn out of iomap
-Date: Thu, 17 Aug 2017 18:08:05 +0200
-Message-Id: <20170817160815.30466-4-jack@suse.cz>
-In-Reply-To: <20170817160815.30466-1-jack@suse.cz>
-References: <20170817160815.30466-1-jack@suse.cz>
+Received: from mail-yw0-f178.google.com ([209.85.161.178]:34377 "EHLO
+        mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752154AbdHPQwR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 12:52:17 -0400
+Received: by mail-yw0-f178.google.com with SMTP id s143so26217421ywg.1
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 09:52:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20170816164717.xjbtbdjtwnhvzukg@node.shutemov.name>
+References: <150286944610.8837.9513410258028246174.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150286946261.8837.1454297295346610351.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170816111541.6c4ulnipt5cxgfsb@node.shutemov.name> <CAPcyv4gB1JycB_1k6mKe-_OwjZv1a7vPV6Hh393-U_HQ15RWEw@mail.gmail.com>
+ <20170816164717.xjbtbdjtwnhvzukg@node.shutemov.name>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 16 Aug 2017 09:52:16 -0700
+Message-ID: <CAPcyv4hGP19iaqvMTUDm6Gu5Tiacm1LFDV7qE-KFnR7pmYK-wg@mail.gmail.com>
+Subject: Re: [PATCH v5 3/5] mm: introduce mmap3 for safely defining new mmap flags
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>, Jan Kara <jack@suse.cz>
+To: "Kirill A. Shutemov" <kirill@shutemov.name>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-Factor out code to get pfn out of iomap that is shared between PTE and
-PMD fault path.
+On Wed, Aug 16, 2017 at 9:47 AM, Kirill A. Shutemov
+<kirill@shutemov.name> wrote:
+> On Wed, Aug 16, 2017 at 09:35:11AM -0700, Dan Williams wrote:
+>> On Wed, Aug 16, 2017 at 4:15 AM, Kirill A. Shutemov
+>> <kirill@shutemov.name> wrote:
+>> > On Wed, Aug 16, 2017 at 12:44:22AM -0700, Dan Williams wrote:
+>> >> diff --git a/include/linux/mman.h b/include/linux/mman.h
+>> >> index c8367041fafd..0e1de42c836f 100644
+>> >> --- a/include/linux/mman.h
+>> >> +++ b/include/linux/mman.h
+>> >> @@ -7,6 +7,40 @@
+>> >>  #include <linux/atomic.h>
+>> >>  #include <uapi/linux/mman.h>
+>> >>
+>> >> +#ifndef MAP_32BIT
+>> >> +#define MAP_32BIT 0
+>> >> +#endif
+>> >> +#ifndef MAP_HUGE_2MB
+>> >> +#define MAP_HUGE_2MB 0
+>> >> +#endif
+>> >> +#ifndef MAP_HUGE_1GB
+>> >> +#define MAP_HUGE_1GB 0
+>> >> +#endif
+>> >> +
+>> >> +/*
+>> >> + * The historical set of flags that all mmap implementations implicitly
+>> >> + * support when file_operations.mmap_supported_mask is zero.
+>> >> + */
+>> >> +#define LEGACY_MAP_SUPPORTED_MASK (MAP_SHARED \
+>> >> +             | MAP_PRIVATE \
+>> >> +             | MAP_FIXED \
+>> >> +             | MAP_ANONYMOUS \
+>> >> +             | MAP_UNINITIALIZED \
+>> >> +             | MAP_GROWSDOWN \
+>> >> +             | MAP_DENYWRITE \
+>> >> +             | MAP_EXECUTABLE \
+>> >> +             | MAP_LOCKED \
+>> >> +             | MAP_NORESERVE \
+>> >> +             | MAP_POPULATE \
+>> >> +             | MAP_NONBLOCK \
+>> >> +             | MAP_STACK \
+>> >> +             | MAP_HUGETLB \
+>> >> +             | MAP_32BIT \
+>> >> +             | MAP_HUGE_2MB \
+>> >> +             | MAP_HUGE_1GB)
+>> >> +
+>> >> +#define      MAP_SUPPORTED_MASK (LEGACY_MAP_SUPPORTED_MASK)
+>> >> +
+>> >>  extern int sysctl_overcommit_memory;
+>> >>  extern int sysctl_overcommit_ratio;
+>> >>  extern unsigned long sysctl_overcommit_kbytes;
+>> >
+>> > Since we looking into mmap(2) ABI, maybe we should consider re-defining
+>> > MAP_DENYWRITE and MAP_EXECUTABLE as 0 in hope that we would be able to
+>> > re-use these bits in the future? These flags are ignored now anyway.
+>>
+>> Yes, we can make these -EOPNOTSUPP in the new syscall.
+>
+> You cannot detect them, if we would redefine them as 0. :)
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/dax.c | 81 +++++++++++++++++++++++++++++++++-------------------------------
- 1 file changed, 42 insertions(+), 39 deletions(-)
-
-diff --git a/fs/dax.c b/fs/dax.c
-index fbbb6d176987..1122356f8b88 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -819,30 +819,53 @@ static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
- 	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
- }
- 
--static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
--			      loff_t pos, void *entry)
-+static int dax_iomap_pfn(struct iomap *iomap, loff_t pos, size_t size,
-+			 pfn_t *pfnp)
- {
- 	const sector_t sector = dax_iomap_sector(iomap, pos);
--	struct vm_area_struct *vma = vmf->vma;
--	struct address_space *mapping = vma->vm_file->f_mapping;
--	unsigned long vaddr = vmf->address;
--	void *ret, *kaddr;
- 	pgoff_t pgoff;
-+	void *kaddr;
- 	int id, rc;
--	pfn_t pfn;
-+	long length;
- 
--	rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
-+	rc = bdev_dax_pgoff(iomap->bdev, sector, size, &pgoff);
- 	if (rc)
- 		return rc;
--
- 	id = dax_read_lock();
--	rc = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(PAGE_SIZE),
--			       &kaddr, &pfn);
--	if (rc < 0) {
--		dax_read_unlock(id);
--		return rc;
-+	length = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(size),
-+				   &kaddr, pfnp);
-+	if (length < 0) {
-+		rc = length;
-+		goto out;
- 	}
-+	rc = -EINVAL;
-+	if (PFN_PHYS(length) < size)
-+		goto out;
-+	if (pfn_t_to_pfn(*pfnp) & (PHYS_PFN(size)-1))
-+		goto out;
-+	/* For larger pages we need devmap */
-+	if (length > 1 && !pfn_t_devmap(*pfnp))
-+		goto out;
-+	rc = 0;
-+out:
- 	dax_read_unlock(id);
-+	return rc;
-+}
-+
-+static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
-+			      loff_t pos, void *entry)
-+{
-+	const sector_t sector = dax_iomap_sector(iomap, pos);
-+	struct vm_area_struct *vma = vmf->vma;
-+	struct address_space *mapping = vma->vm_file->f_mapping;
-+	unsigned long vaddr = vmf->address;
-+	void *ret;
-+	int rc;
-+	pfn_t pfn;
-+
-+	rc = dax_iomap_pfn(iomap, pos, PAGE_SIZE, &pfn);
-+	if (rc < 0)
-+		return rc;
- 
- 	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector, 0);
- 	if (IS_ERR(ret))
-@@ -1218,44 +1241,24 @@ static int dax_pmd_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
- {
- 	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
- 	const sector_t sector = dax_iomap_sector(iomap, pos);
--	struct dax_device *dax_dev = iomap->dax_dev;
--	struct block_device *bdev = iomap->bdev;
- 	struct inode *inode = mapping->host;
--	const size_t size = PMD_SIZE;
--	void *ret = NULL, *kaddr;
--	long length = 0;
--	pgoff_t pgoff;
-+	void *ret = NULL;
- 	pfn_t pfn;
--	int id;
-+	int rc;
- 
--	if (bdev_dax_pgoff(bdev, sector, size, &pgoff) != 0)
-+	rc = dax_iomap_pfn(iomap, pos, PMD_SIZE, &pfn);
-+	if (rc < 0)
- 		goto fallback;
- 
--	id = dax_read_lock();
--	length = dax_direct_access(dax_dev, pgoff, PHYS_PFN(size), &kaddr, &pfn);
--	if (length < 0)
--		goto unlock_fallback;
--	length = PFN_PHYS(length);
--
--	if (length < size)
--		goto unlock_fallback;
--	if (pfn_t_to_pfn(pfn) & PG_PMD_COLOUR)
--		goto unlock_fallback;
--	if (!pfn_t_devmap(pfn))
--		goto unlock_fallback;
--	dax_read_unlock(id);
--
- 	ret = dax_insert_mapping_entry(mapping, vmf, entry, sector,
- 			RADIX_DAX_PMD);
- 	if (IS_ERR(ret))
- 		goto fallback;
- 
--	trace_dax_pmd_insert_mapping(inode, vmf, length, pfn, ret);
-+	trace_dax_pmd_insert_mapping(inode, vmf, PMD_SIZE, pfn, ret);
- 	return vmf_insert_pfn_pmd(vmf->vma, vmf->address, vmf->pmd,
- 			pfn, vmf->flags & FAULT_FLAG_WRITE);
- 
--unlock_fallback:
--	dax_read_unlock(id);
- fallback:
- 	trace_dax_pmd_insert_mapping_fallback(inode, vmf, length, pfn, ret);
- 	return VM_FAULT_FALLBACK;
--- 
-2.12.3
-
+Yes, we can, there will now be missing bits in
+LEGACY_MAP_SUPPORTED_MASK that will fail those bit values until we
+re-define them. Everything else is a an exercise for libc about what
+it wants to do when it sees those values.
