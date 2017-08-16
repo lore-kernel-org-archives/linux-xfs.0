@@ -1,63 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:35013 "EHLO
-        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752647AbdHORNb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 13:13:31 -0400
+Received: from mail-qt0-f176.google.com ([209.85.216.176]:35902 "EHLO
+        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752147AbdHPBo5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2017 21:44:57 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAPaz=E+-+C-LXtADm99epmVEszpfT70Ep39tKedfPi1AN-P7tA@mail.gmail.com>
+In-Reply-To: <CAOQ4uxhkT05yHfQz0csruH-mz_hTamMABh3eZaNmzjXX02J1=A@mail.gmail.com>
 References: <CAPaz=E+-+C-LXtADm99epmVEszpfT70Ep39tKedfPi1AN-P7tA@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 15 Aug 2017 19:13:29 +0200
-Message-ID: <CAOQ4uxj0-Q-ZdDCPKP2oPDOtGq1bLTF=_edvkcwwLntMNvwLmg@mail.gmail.com>
+ <20170815173349.GA17774@li70-116.members.linode.com> <CAPaz=E+sPDK3uWYCepmYPMT2+nvTgA2C_OSyPY0a51iM=bBCsQ@mail.gmail.com>
+ <CAOQ4uxhkT05yHfQz0csruH-mz_hTamMABh3eZaNmzjXX02J1=A@mail.gmail.com>
+From: Vijay Chidambaram <vvijay03@gmail.com>
+Date: Tue, 15 Aug 2017 20:44:16 -0500
+Message-ID: <CAPaz=E+D7wpkXRx7=M9+7d=TUFpbG7MetK-nkECtWQXwO-Z8gA@mail.gmail.com>
 Subject: Re: CrashMonkey: A Framework to Systematically Test File-System Crash Consistency
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vijay Chidambaram <vvijay03@gmail.com>
-Cc: Ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-btrfs@vger.kernel.og, vijay@cs.utexas.edu, Ashlie Martinez <ashmrtn@utexas.edu>, Josef Bacik <jbacik@fb.com>, Christoph Hellwig <hch@lst.de>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Josef Bacik <josef@toxicpanda.com>, Ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-btrfs@vger.kernel.og, Ashlie Martinez <ashmrtn@utexas.edu>
 
-On Mon, Aug 14, 2017 at 6:32 PM, Vijay Chidambaram <vvijay03@gmail.com> wrote:
-> Hi,
->
-> I'm Vijay Chidambaram, an Assistant Professor at the University of
-> Texas at Austin. My research group is developing CrashMonkey, a
-> file-system agnostic framework to test file-system crash consistency
-> on power failures. We are developing CrashMonkey publicly at Github
-> [1]. This is very much a work-in-progress, so we welcome feedback.
->
-> CrashMonkey works by recording all the IO from running a given
-> workload, then *constructing* possible crash states (while honoring
-> FUA and FLUSH flags). A crash state is the state of storage after an
-> abrupt power failure or crash. For each crash state, CrashMonkey runs
-> the filesystem-provided fsck on top of the state, and checks if the
-> file-system recovers correctly. Once the file system mounts correctly,
-> we can run further tests to check data consistency.  The work was
-> presented at HotStorage 17. The workshop paper is available at [2] and
-> the slides at [3].
->
-> Our plan was to post on the mailing lists after reproducing an
-> existing bug. We are not there yet, but I saw some posts where others
-> were considering building something similar, so I thought I would post
-> about our work.
->
-> [1] https://github.com/utsaslab/crashmonkey
-> [2] http://www.cs.utexas.edu/~vijay/papers/hotstorage17-crashmonkey.pdf
-> [3] http://www.cs.utexas.edu/~vijay/papers/hotstorage17-crashmonkey-slides.pdf
->
+Hi Amir,
 
-Hi Vijay,
+I neglected to mention this earlier: CrashMonkey does not require
+recompiling the kernel (it is a stand-alone kernel module), and has
+been tested with the kernel 4.4. It should work with future kernel
+versions as long as there are no changes to the bio structure.
 
-Thanks a lot for sharing your work.
-Crash consistency is high on my TODO list.
+As it is, I believe CrashMonkey is compatible with the current kernel.
+It certainly provides functionality beyond log-writes (the ability to
+replay a subset of writes between FLUSH/FUA), and we intend to add
+more functionality in the future.
 
-Did you happen to run into this work by Joseph Bacik?
+Right now, CrashMonkey does not do random sampling among possible
+crash states -- it will simply test a given number of unique states.
+Thus, right now I don't think it is very effective in finding
+crash-consistency bugs. But the entire infrastructure to profile a
+workload, construct crash states, and test them with fsck is present.
 
-https://www.redhat.com/archives/dm-devel/2014-November/msg00083.html
-
-I wonder if the disk_wrapper driver could be made into something more standard
-like the suggested dm-power-fail target, so that it may be proposed
-for upstream?
+I'd be grateful if you could try it and give us feedback on what make
+testing easier/more useful for you. As I mentioned before, this is a
+work-in-progress, so we are happy to incorporate feedback.
 
 Thanks,
-Amir.
+Vijay Chidambaram,
+http://www.cs.utexas.edu/~vijay/
+
+
+On Tue, Aug 15, 2017 at 3:32 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> On Tue, Aug 15, 2017 at 8:01 PM, Vijay Chidambaram <vvijay03@gmail.com> wrote:
+>> Hi Josef and Amir,
+>>
+> ...
+>>
+>> @Amir: Given that Josef's code is already in the kernel, do you think
+>> changing CrashMonkey code would be useful? We are always happy to
+>> provide something for upstream, but we want to be sure how much work
+>> would be involved.
+>>
+>
+> Simply put, people (myself included) are more likely to use CrashMonkey
+> if it uses upstream kernel and/or if it brings valuable functionality
+> to filesystem
+> testing, beyond what log-writes already does -
+> I am have not studies either tools yet to be able to determine if that
+> is the case.
+>
+> Cheers,
+> Amir.
