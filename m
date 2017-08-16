@@ -1,167 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40962 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752219AbdHPL5O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 Aug 2017 07:57:14 -0400
-Date: Wed, 16 Aug 2017 07:57:12 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v3] xfs: open code end_buffer_async_write in
- xfs_finish_page_writeback
-Message-ID: <20170816115712.GD54738@bfoster.bfoster>
-References: <20170816085157.24074-1-hch@lst.de>
+Received: from mail-qk0-f169.google.com ([209.85.220.169]:38319 "EHLO
+        mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751851AbdHPNGL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 09:06:11 -0400
+Received: by mail-qk0-f169.google.com with SMTP id x191so19503079qka.5
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 06:06:10 -0700 (PDT)
+Date: Wed, 16 Aug 2017 09:06:08 -0400
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: Re: CrashMonkey: A Framework to Systematically Test File-System
+ Crash Consistency
+Message-ID: <20170816130607.GA1347@destiny>
+References: <CAPaz=E+-+C-LXtADm99epmVEszpfT70Ep39tKedfPi1AN-P7tA@mail.gmail.com>
+ <20170815173349.GA17774@li70-116.members.linode.com>
+ <CAPaz=E+sPDK3uWYCepmYPMT2+nvTgA2C_OSyPY0a51iM=bBCsQ@mail.gmail.com>
+ <CAOQ4uxhkT05yHfQz0csruH-mz_hTamMABh3eZaNmzjXX02J1=A@mail.gmail.com>
+ <CAPaz=E+D7wpkXRx7=M9+7d=TUFpbG7MetK-nkECtWQXwO-Z8gA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170816085157.24074-1-hch@lst.de>
+In-Reply-To: <CAPaz=E+D7wpkXRx7=M9+7d=TUFpbG7MetK-nkECtWQXwO-Z8gA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Vijay Chidambaram <vvijay03@gmail.com>
+Cc: Amir Goldstein <amir73il@gmail.com>, Josef Bacik <josef@toxicpanda.com>, Ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-btrfs@vger.kernel.org, Ashlie Martinez <ashmrtn@utexas.edu>, kernel-team@fb.com
 
-On Wed, Aug 16, 2017 at 10:51:57AM +0200, Christoph Hellwig wrote:
-> Our loop in xfs_finish_page_writeback, which iterates over all buffer
-> heads in a page and then calls end_buffer_async_write, which also
-> iterates over all buffers in the page to check if any I/O is in flight
-> is not only inefficient, but also potentially dangerous as
-> end_buffer_async_write can cause the page and all buffers to be freed.
+On Tue, Aug 15, 2017 at 08:44:16PM -0500, Vijay Chidambaram wrote:
+> Hi Amir,
 > 
-> Replace it with a single loop that does the work of end_buffer_async_write
-> on a per-page basis.
+> I neglected to mention this earlier: CrashMonkey does not require
+> recompiling the kernel (it is a stand-alone kernel module), and has
+> been tested with the kernel 4.4. It should work with future kernel
+> versions as long as there are no changes to the bio structure.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> As it is, I believe CrashMonkey is compatible with the current kernel.
+> It certainly provides functionality beyond log-writes (the ability to
+> replay a subset of writes between FLUSH/FUA), and we intend to add
+> more functionality in the future.
+> 
+> Right now, CrashMonkey does not do random sampling among possible
+> crash states -- it will simply test a given number of unique states.
+> Thus, right now I don't think it is very effective in finding
+> crash-consistency bugs. But the entire infrastructure to profile a
+> workload, construct crash states, and test them with fsck is present.
+> 
+> I'd be grateful if you could try it and give us feedback on what make
+> testing easier/more useful for you. As I mentioned before, this is a
+> work-in-progress, so we are happy to incorporate feedback.
+> 
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Sorry I was travelling yesterday so I couldn't give this my full attention.
+Everything you guys do is already accomplished with dm-log-writes.  If you look
+at the example scripts I've provided
 
-> 
-> Changes since V2:
->  - set b_end_io to NULL
-> 
->  fs/xfs/xfs_aops.c | 71 ++++++++++++++++++++++++++++++++++++-------------------
->  1 file changed, 47 insertions(+), 24 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 6bf120bb1a17..f9efd67f6fa1 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -85,11 +85,11 @@ xfs_find_bdev_for_inode(
->   * associated buffer_heads, paying attention to the start and end offsets that
->   * we need to process on the page.
->   *
-> - * Landmine Warning: bh->b_end_io() will call end_page_writeback() on the last
-> - * buffer in the IO. Once it does this, it is unsafe to access the bufferhead or
-> - * the page at all, as we may be racing with memory reclaim and it can free both
-> - * the bufferhead chain and the page as it will see the page as clean and
-> - * unused.
-> + * Note that we open code the action in end_buffer_async_write here so that we
-> + * only have to iterate over the buffers attached to the page once.  This is not
-> + * only more efficient, but also ensures that we only calls end_page_writeback
-> + * at the end of the iteration, and thus avoids the pitfall of having the page
-> + * and buffers potentially freed after every call to end_buffer_async_write.
->   */
->  static void
->  xfs_finish_page_writeback(
-> @@ -97,29 +97,44 @@ xfs_finish_page_writeback(
->  	struct bio_vec		*bvec,
->  	int			error)
->  {
-> -	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
-> -	struct buffer_head	*head, *bh, *next;
-> +	struct buffer_head	*head = page_buffers(bvec->bv_page), *bh = head;
-> +	bool			busy = false;
->  	unsigned int		off = 0;
-> -	unsigned int		bsize;
-> +	unsigned long		flags;
->  
->  	ASSERT(bvec->bv_offset < PAGE_SIZE);
->  	ASSERT((bvec->bv_offset & (i_blocksize(inode) - 1)) == 0);
-> -	ASSERT(end < PAGE_SIZE);
-> +	ASSERT(bvec->bv_offset + bvec->bv_len <= PAGE_SIZE);
->  	ASSERT((bvec->bv_len & (i_blocksize(inode) - 1)) == 0);
->  
-> -	bh = head = page_buffers(bvec->bv_page);
-> -
-> -	bsize = bh->b_size;
-> +	local_irq_save(flags);
-> +	bit_spin_lock(BH_Uptodate_Lock, &head->b_state);
->  	do {
-> -		if (off > end)
-> -			break;
-> -		next = bh->b_this_page;
-> -		if (off < bvec->bv_offset)
-> -			goto next_bh;
-> -		bh->b_end_io(bh, !error);
-> -next_bh:
-> -		off += bsize;
-> -	} while ((bh = next) != head);
-> +		if (off >= bvec->bv_offset &&
-> +		    off < bvec->bv_offset + bvec->bv_len) {
-> +			ASSERT(buffer_async_write(bh));
-> +			ASSERT(bh->b_end_io == NULL);
-> +
-> +			if (error) {
-> +				mark_buffer_write_io_error(bh);
-> +				clear_buffer_uptodate(bh);
-> +				SetPageError(bvec->bv_page);
-> +			} else {
-> +				set_buffer_uptodate(bh);
-> +			}
-> +			clear_buffer_async_write(bh);
-> +			unlock_buffer(bh);
-> +		} else if (buffer_async_write(bh)) {
-> +			ASSERT(buffer_locked(bh));
-> +			busy = true;
-> +		}
-> +		off += bh->b_size;
-> +	} while ((bh = bh->b_this_page) != head);
-> +	bit_spin_unlock(BH_Uptodate_Lock, &head->b_state);
-> +	local_irq_restore(flags);
-> +
-> +	if (!busy)
-> +		end_page_writeback(bvec->bv_page);
->  }
->  
->  /*
-> @@ -133,8 +148,10 @@ xfs_destroy_ioend(
->  	int			error)
->  {
->  	struct inode		*inode = ioend->io_inode;
-> -	struct bio		*last = ioend->io_bio;
-> -	struct bio		*bio, *next;
-> +	struct bio		*bio = &ioend->io_inline_bio;
-> +	struct bio		*last = ioend->io_bio, *next;
-> +	u64			start = bio->bi_iter.bi_sector;
-> +	bool			quiet = bio_flagged(bio, BIO_QUIET);
->  
->  	for (bio = &ioend->io_inline_bio; bio; bio = next) {
->  		struct bio_vec	*bvec;
-> @@ -155,6 +172,11 @@ xfs_destroy_ioend(
->  
->  		bio_put(bio);
->  	}
-> +
-> +	if (unlikely(error && !quiet)) {
-> +		xfs_err_ratelimited(XFS_I(inode)->i_mount,
-> +			"writeback error on sector %llu", start);
-> +	}
->  }
->  
->  /*
-> @@ -423,7 +445,8 @@ xfs_start_buffer_writeback(
->  	ASSERT(!buffer_delay(bh));
->  	ASSERT(!buffer_unwritten(bh));
->  
-> -	mark_buffer_async_write(bh);
-> +	bh->b_end_io = NULL;
-> +	set_buffer_async_write(bh);
->  	set_buffer_uptodate(bh);
->  	clear_buffer_dirty(bh);
->  }
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+https://github.com/josefbacik/log-writes/blob/master/replay-individual-faster.sh
+https://github.com/josefbacik/log-writes/blob/master/replay-fsck-wrapper.sh
+
+The first initiates the replay, and points at the second script to run after
+each entry is replayed.  The whole point of this stuff was to make it as
+flexible as possible.  The way we use it is to replay, create a snapshot of the
+replay, mount, unmount, fsck, delete the snapshot and carry on to the next
+position in the log.
+
+There is nothing keeping us from generating random crash points, this has been
+something on my list of things to do forever.  All that would be required would
+be to hold the entries between flush/fua events in memory, and then replay them
+in whatever order you deemed fit.  That's the only functionality missing from my
+replay-log stuff that CrashMonkey has.
+
+The other part of this is getting user space applications to do more thorough
+checking of consistency that it expects, which I implemented here
+
+https://github.com/josefbacik/fstests/commit/70d41e17164b2afc9a3f2ae532f084bf64cb4a07
+
+fsx will randomly do operations to a file, and every time it fsync()'s it saves
+it's state and marks the log.  Then we can go back and replay the log to the
+mark and md5sum the file to make sure it matches the saved state.  This
+infrastructure was meant to be as simple as possible so the possiblities for
+crash consistency testing were endless.  One of the next areas we plan to use
+this in Facebook is just for application consistency, so we can replay the fs
+and verify the application works in whatever state the fs is at any given point.
+
+I looked at your code and you are logging entries at submit time, not completion
+time.  The reason I do those crazy acrobatics is because we have had bugs in
+previous kernels where we were not waiting for io completion of important
+metadata before writing out the super block, so logging only at completion
+allows us to catch that class of problems.
+
+The other thing CrashMonkey is missing is DISCARD support.  We fuck up discard
+support constantly, and being able to replay discards to make sure we're not
+discarding important data is very important.
+
+I'm not trying to shit on your project, obviously it's a good idea, that's why I
+did it years ago ;).  The community is going to use what is easiest to use, and
+modprobe dm-log-writes is a lot easier than compiling and insmod'ing an out of
+tree driver.  Also your driver won't work on upstream kernels because of the way
+the bio flags were changed recently, which is why we prefer using upstream
+solutions.
+
+If you guys want to get this stuff used then it would be better at this point to
+build on top of what we already have.  Just off the top of my head we need
+
+1) Random replay support for replay-log.  This is probably a day or two worth of
+work for a student.
+
+2) Documentation, because right now I'm the only one who knows how this works.
+
+3) My patches need to actually be pushed into upstream fstests.  This would be
+the largest win because then all the fs developers would be running the tests
+by default.
+
+4) Multi-device support.  One thing that would be good to have and is a dream of
+mine is to connect multiple devices to one log, so we can do things like make
+sure mdraid or btrfs's raid consistency.  We could do super evil things like
+only replay one device, or replay alternating writes on each device.  This would
+be a larger project but would be super helpful.
+
+Thanks,
+
+Josef
