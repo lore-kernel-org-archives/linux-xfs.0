@@ -1,38 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f171.google.com ([209.85.128.171]:37001 "EHLO
-        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751580AbdHPLMr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 07:12:47 -0400
-Received: by mail-wr0-f171.google.com with SMTP id z91so2846268wrc.4
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 04:12:47 -0700 (PDT)
-Date: Wed, 16 Aug 2017 14:12:44 +0300
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:34182 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751542AbdHPLPo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 07:15:44 -0400
+Received: by mail-wr0-f194.google.com with SMTP id x43so2467507wrb.1
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 04:15:44 -0700 (PDT)
+Date: Wed, 16 Aug 2017 14:15:41 +0300
 From: "Kirill A. Shutemov" <kirill@shutemov.name>
-Subject: Re: [PATCH v5 4/5] fs, xfs: introduce MAP_DIRECT for creating
- block-map-atomic file ranges
-Message-ID: <20170816111244.uxx6kvbi3cn5clqd@node.shutemov.name>
+Subject: Re: [PATCH v5 3/5] mm: introduce mmap3 for safely defining new mmap
+ flags
+Message-ID: <20170816111541.6c4ulnipt5cxgfsb@node.shutemov.name>
 References: <150286944610.8837.9513410258028246174.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150286946864.8837.17147962029964281564.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150286946261.8837.1454297295346610351.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150286946864.8837.17147962029964281564.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150286946261.8837.1454297295346610351.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dan Williams <dan.j.williams@intel.com>
-Cc: akpm@linux-foundation.org, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-api@vger.kernel.org, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+Cc: akpm@linux-foundation.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, linux-nvdimm@lists.01.org, linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, luto@kernel.org, linux-fsdevel@vger.kernel.org
 
-On Wed, Aug 16, 2017 at 12:44:28AM -0700, Dan Williams wrote:
-> @@ -1411,6 +1422,9 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
+On Wed, Aug 16, 2017 at 12:44:22AM -0700, Dan Williams wrote:
+> diff --git a/include/linux/mman.h b/include/linux/mman.h
+> index c8367041fafd..0e1de42c836f 100644
+> --- a/include/linux/mman.h
+> +++ b/include/linux/mman.h
+> @@ -7,6 +7,40 @@
+>  #include <linux/atomic.h>
+>  #include <uapi/linux/mman.h>
 >  
->  			/* fall through */
->  		case MAP_PRIVATE:
-> +			if ((flags & (MAP_PRIVATE|MAP_DIRECT))
-> +					== (MAP_PRIVATE|MAP_DIRECT))
-> +				return -EINVAL;
+> +#ifndef MAP_32BIT
+> +#define MAP_32BIT 0
+> +#endif
+> +#ifndef MAP_HUGE_2MB
+> +#define MAP_HUGE_2MB 0
+> +#endif
+> +#ifndef MAP_HUGE_1GB
+> +#define MAP_HUGE_1GB 0
+> +#endif
+> +
+> +/*
+> + * The historical set of flags that all mmap implementations implicitly
+> + * support when file_operations.mmap_supported_mask is zero.
+> + */
+> +#define LEGACY_MAP_SUPPORTED_MASK (MAP_SHARED \
+> +		| MAP_PRIVATE \
+> +		| MAP_FIXED \
+> +		| MAP_ANONYMOUS \
+> +		| MAP_UNINITIALIZED \
+> +		| MAP_GROWSDOWN \
+> +		| MAP_DENYWRITE \
+> +		| MAP_EXECUTABLE \
+> +		| MAP_LOCKED \
+> +		| MAP_NORESERVE \
+> +		| MAP_POPULATE \
+> +		| MAP_NONBLOCK \
+> +		| MAP_STACK \
+> +		| MAP_HUGETLB \
+> +		| MAP_32BIT \
+> +		| MAP_HUGE_2MB \
+> +		| MAP_HUGE_1GB)
+> +
+> +#define	MAP_SUPPORTED_MASK (LEGACY_MAP_SUPPORTED_MASK)
+> +
+>  extern int sysctl_overcommit_memory;
+>  extern int sysctl_overcommit_ratio;
+>  extern unsigned long sysctl_overcommit_kbytes;
 
-We've already checked for MAP_PRIVATE in this codepath. Simple (flags &
-MAP_DIRECT) would be enough.
+Since we looking into mmap(2) ABI, maybe we should consider re-defining
+MAP_DENYWRITE and MAP_EXECUTABLE as 0 in hope that we would be able to
+re-use these bits in the future? These flags are ignored now anyway.
 
 -- 
  Kirill A. Shutemov
