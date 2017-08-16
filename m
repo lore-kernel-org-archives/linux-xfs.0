@@ -1,134 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f169.google.com ([209.85.216.169]:37237 "EHLO
-        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751969AbdHPUhf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 16:37:35 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:40606 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752339AbdHPViV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 17:38:21 -0400
+Date: Wed, 16 Aug 2017 14:38:12 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/6 v2] mkfs: extend opt_params with a value field
+Message-ID: <20170816213812.GC4796@magnolia>
+References: <20170811123037.15962-1-jtulak@redhat.com>
+ <20170815150812.32237-1-jtulak@redhat.com>
+ <20170815150812.32237-5-jtulak@redhat.com>
+ <4a7d1fe9-8094-78e8-aca9-f7f0156f0aa7@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxipcTQBUC_yb5cMT5gsytp0h8QGfK3utVV_8vGHjuk70Q@mail.gmail.com>
-References: <CAPaz=E+-+C-LXtADm99epmVEszpfT70Ep39tKedfPi1AN-P7tA@mail.gmail.com>
- <20170815173349.GA17774@li70-116.members.linode.com> <CAPaz=E+sPDK3uWYCepmYPMT2+nvTgA2C_OSyPY0a51iM=bBCsQ@mail.gmail.com>
- <CAOQ4uxhkT05yHfQz0csruH-mz_hTamMABh3eZaNmzjXX02J1=A@mail.gmail.com>
- <CAPaz=E+D7wpkXRx7=M9+7d=TUFpbG7MetK-nkECtWQXwO-Z8gA@mail.gmail.com>
- <20170816130607.GA1347@destiny> <CAPaz=EJzXy+x4fKUyVtW_D49qSX-Xc1aqsnx8dLdMsVW=F+aXw@mail.gmail.com>
- <CAOQ4uxipcTQBUC_yb5cMT5gsytp0h8QGfK3utVV_8vGHjuk70Q@mail.gmail.com>
-From: Vijay Chidambaram <vvijay03@gmail.com>
-Date: Wed, 16 Aug 2017 15:36:54 -0500
-Message-ID: <CAPaz=EJ7WZ9Ou89izVaY=exFxaHD0Q84gwqjxC3-DQn7y8RpTg@mail.gmail.com>
-Subject: Re: CrashMonkey: A Framework to Systematically Test File-System Crash Consistency
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4a7d1fe9-8094-78e8-aca9-f7f0156f0aa7@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Josef Bacik <josef@toxicpanda.com>, Ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Ashlie Martinez <ashmrtn@utexas.edu>, kernel-team@fb.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
 
-Amir,
+On Wed, Aug 16, 2017 at 04:13:52PM -0500, Eric Sandeen wrote:
+> On 8/15/17 10:08 AM, Jan Tulak wrote:
+> > This patch adds infrastructure that will be used in subsequent patches.
+> > 
+> > The Value field is the actual value used in computations for creating
+> > the filesystem.  This is initialized with sensible default values. If
+> > initialized to 0, the value is considered disabled. User input will
+> > override default values.  If the field is a string and not a number, the
+> > value is set to a positive non-zero number when user input has been
+> > supplied.
+> > 
+> > Add functions that can be used to get/set values to opts table.
+> 
+> Ok, I need to back up here a bit and look at this conceptually.
+> 
+> (Again, though, if this is infra for some other patchset, I'd just send
+> it with /that/ patchset, not this one ...)
+> 
+> But anyway, things like this confuse and worry me:
+> 
+> > +	case OPT_S:
+> > +		switch (subopt) {
+> > +		case S_LOG:
+> > +		case S_SECTLOG:
+> > +			set_conf_val(OPT_S, S_LOG, val);
+> > +			set_conf_val(OPT_D, D_SECTLOG, val);
+> > +			set_conf_val(OPT_L, L_SECTLOG, val);
+> > +			set_conf_val(OPT_D, D_SECTSIZE, 1 << val);
+> > +			set_conf_val(OPT_S, S_SIZE, 1 << val);
+> > +			set_conf_val(OPT_S, S_SECTSIZE, 1 << val);
+> > +			set_conf_val(OPT_L, L_SECTLOG, val);
+> > +			set_conf_val(OPT_L, L_SECTSIZE, 1 << val);
+> > +			set_conf_val(OPT_L, L_SECTSIZE, val);> +			break;
+> > +		case S_SIZE:
+> > +		case S_SECTSIZE:
+> > +			set_conf_val(OPT_S, S_SIZE, val);
+> > +			set_conf_val(OPT_D, D_SECTSIZE, val);
+> > +			set_conf_val(OPT_D, D_SECTLOG, libxfs_highbit32(val));
+> > +			set_conf_val(OPT_S, S_LOG, libxfs_highbit32(val));
+> > +			set_conf_val(OPT_S, S_SECTLOG, libxfs_highbit32(val));
+> > +			set_conf_val(OPT_L, L_SECTSIZE, val);
+> > +			set_conf_val(OPT_L, L_SECTLOG, libxfs_highbit32(val));
+> > +			break;
+> > +		}
+> > +		break;
+> > +	}
+> 
+> Partly because this seems to be going opposite of the simplicity
+> we were aiming for - before all this work, if we set teh data sector size,
+> via any of these options, it got stored in a variable - "sectorsize".
+> 
+> Now, if we issue "-s size=4k" the code will calculate and set that same
+> value (or its log) into 7 to (or 9?) different internal variables?
+> Why is that needed?  There is/are only one (or two) sector size(s) in the
+> filesystem, so should there not be one point of truth here?
+> 
+> But also because the above is wrong; it is possible for the filesystem data
+> portion and log portion to have different sector sizes, if the log is external. [1]
+> The above would seem to break that, always setting data & log sizes together.
+> 
+> On top of that, it's getting so complicated that it seems to be difficult to get
+> right; i.e. this:
+> 
+> > +			set_conf_val(OPT_L, L_SECTSIZE, 1 << val);
+> > +			set_conf_val(OPT_L, L_SECTSIZE, val);
+> 
+> surely isn't correct.  I found that when noticing that 1 block sets 9 vals, while
+> the other only 7, and wondered why.  So that accounts for one.  After another minute
+> of scrutiny I see that OPT_S, S_SECTSIZE isn't set in the 2nd chunk, so that's a bug
+> as well.
+> 
+> This makes me fear fragility in this approach.
+> 
+> One goal of all this work, I thought, was to clearly describe interdependencies between
+> options, but the above seems to add nasty, hidden, implicit, and wrong dependencies
+> between log & data sector sizes (for example).
 
-That's a fair response. I certainly did not mean to add more work on
-your end :) Using dm-log-writes for now is a reasonable approach.
+FWIW I thought all this really did was replace the dozens of local
+variables holding geometry info with a huge nested struct, which is a
+reasonable start on adding support for a config file (where is that,
+anyway?) but didn't make any functional changes.
 
-Like I mentioned before, I think there is further work involved in
-getting CrashMonkey to a useful point (where it finds at least known
-bugs). Once this is done, I'd be happy to rework the device_wrapper as
-a DM target (or perhaps as a modification of log-writes) for upstream.
-I'm not sure how feasible it would be to keep functionality in-kernel
-simple, but we will try our best.
+Ofc I didn't realize that xfs/191-input-validation isn't a totally
+thorough exerciser of all the mkfs options.
 
-We will keep this goal in mind as we continue development, so that we
-don't make any decisions that will prevent us from going the DM target
-route later.
-Thanks,
-Vijay
+> If we have several commandline options that all set the same fundamental property,
+> (i.e. data sector size), then it seems that should somehow be stored in one single
+> point of truth within mkfs as it was before.
+> 
+> -Eric
+> 
+> [1] # mkfs.xfs -dfile,name=fsfile,size=1g,sectsize=4k -lfile,name=logfile,size=512m,sectsize=512
 
+I see -d sectsize is in the --help screen but not the manpage.  Can we
+fix that?
 
-On Wed, Aug 16, 2017 at 3:27 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> On Wed, Aug 16, 2017 at 10:06 PM, Vijay Chidambaram <vvijay03@gmail.com> wrote:
->> Hi Josef,
->>
->> Thank you for the detailed reply -- I think it provides several
->> pointers for our future work. It sounds like we have a similar vision
->> for where we want this to go, though we may disagree about how to
->> implement this :) This is exciting!
->>
->> I agree that we should be building off existing work if it is a good
->> option. We might end up using log-writes, but for now we see several
->> problems:
->>
->> - The log-writes code is not documented well. As you have mentioned,
->> at this point, only you know how it works, and we are not seeing a lot
->> of adoption by other developers of log-writes as well.
->>
->> - I don't think our requirements exactly match what log-writes
->> provides. For example, at some point we want to introduce checkpoints
->> so that we can co-relate a crash state with file-system state at the
->> time of crash. We also want to add functionality to guide creation of
->> random crash states (see below). This might require changing
->> log-writes significantly. I don't know if that would be a good idea.
->>
->> Regarding random crashes, there is a lot of complexity there that
->> log-writes couldn't handle without significant changes. For example,
->> just randomly generating crash states and testing each state is
->> unlikely to catch bugs. We need a more nuanced way of doing this. We
->> plan to add a lot of functionality to CrashMonkey to (a) let the user
->> guide crash-state generation (b) focus on "interesting" states (by
->> re-ordering or dropping metadata). All of this will likely require
->> adding more sophistication to the kernel module. I don't think we want
->> to take log-writes and add a lot of extra functionality.
->>
->> Regarding logging writes, I think there is a difference in approach
->> between log-writes and CrashMonkey. We don't really care about the
->> completion order since the device may anyway re-order the writes after
->> that point. Thus, the set of crash states generated by CrashMonkey is
->> bound only by FUA and FLUSH flags. It sounds as if log-writes focuses
->> on a more restricted set of crash states.
->>
->> CrashMonkey works with the 4.4 kernel, and we will try and keep up
->> with changes to the kernel that breaks CrashMonkey. CrashMonkey is
->> useless without the user-space component, so users will be needing to
->> compile some code anyway. I do not believe it will matter much whether
->> it is in-tree or not, as long as it compiles with the latest kernel.
->>
->> Regarding discard, multi-device support, and application-level crash
->> consistency, this is on our road-map too! Our current priority is to
->> build enough scaffolding to reproduce a known crash-consistency bug
->> (such as the delayed allocation bug of ext4), and then go on and try
->> to find new bugs in newer file systems like btrfs.
->>
->> Adding CrashMonkey into the kernel is not a priority at this point (I
->> don't think CrashMonkey is useful enough at this point to do so). When
->> CrashMonkey becomes useful enough to do so, we will perhaps add the
->> device_wrapper as a DM target to enable adoption.
->>
->> Our hope currently is that developers like Ari will try out
->> CrashMonkey in its current form, which will guide us as to what
->> functionality to add to CrashMonkey to find bugs more effectively.
->>
->
-> Vijay,
->
-> I can only speak for myself, but I think I represent other filesystem
-> developers with this response:
-> - Often with competing projects the end
-> results is always for the best when project members cooperate to combine
-> the best of both projects.
-> - Some of your project goals (e.g. user guided crash states) sound very
-> intriguing
-> - IMO you are severely underestimating the pros in mainlined
-> kernel code for other developers. If you find the dm-log-writes target
-> is lacking functionality it would be MUCH better if you work to improve it.
-> Even more - it would be far better if you make sure that your userspace
-> tools can work also with the reduced functionality in mainline kernel.
-> - If you choose to complete your academic research before crossing over
-> to existing code base, that is a reasonable choice for you to make, but
-> the reasonable choice for me to make is to try Joseph's tools from his
-> repo (even if not documented) and *only* if it doesn't meet my needs
-> I would make the extra effort to try out  CrashMonkey.
-> - AFAIK the state of filesystem crash consistency testing tools is so bright
-> (maybe except in Facebook ;) , so my priority is to get *some* automated
-> testing tools in motion
->
-> In any case, I'm glad this discussion started and I hope it would expedite
-> the adoption of crash testing tools.
-> I wish you all the best with your project.
->
-> Amir.
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
