@@ -1,153 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49510 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751767AbdHPIwD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 04:52:03 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3] xfs: open code end_buffer_async_write in xfs_finish_page_writeback
-Date: Wed, 16 Aug 2017 10:51:57 +0200
-Message-Id: <20170816085157.24074-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:58088 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751620AbdHQQBN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Aug 2017 12:01:13 -0400
+Subject: Re: [PATCH] xfsprogs: add sectsize/sectlog to the man page
+References: <20170817073844.1351-1-jtulak@redhat.com>
+ <20170817083538.GQ21024@dastard>
+ <CACj3i7301p_NZJpaATZG-YCf-AAuvnh05kWhXHjMc3GTBQm2Hg@mail.gmail.com>
+ <20170817112217.GS21024@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b2f6971d-fbb5-0e25-35ce-64bf697f7ae4@sandeen.net>
+Date: Thu, 17 Aug 2017 11:01:12 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170817112217.GS21024@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: bfoster@redhat.com
+To: Dave Chinner <david@fromorbit.com>, Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-Our loop in xfs_finish_page_writeback, which iterates over all buffer
-heads in a page and then calls end_buffer_async_write, which also
-iterates over all buffers in the page to check if any I/O is in flight
-is not only inefficient, but also potentially dangerous as
-end_buffer_async_write can cause the page and all buffers to be freed.
+On 8/17/17 6:22 AM, Dave Chinner wrote:
+> On Thu, Aug 17, 2017 at 11:45:34AM +0200, Jan Tulak wrote:
+>> On Thu, Aug 17, 2017 at 10:35 AM, Dave Chinner <david@fromorbit.com> wrote:
+>>> On Thu, Aug 17, 2017 at 09:38:44AM +0200, Jan Tulak wrote:
+>>>> The man page is missing description of these options.
+>>>> Add it.
+>>>
+>>> Just remove the options. They are redundant as they cannot be
+>>> different from the values set by the "-s" sector size options.
+>>> They aren't documented, so just remove them from mkfs.
+>>>
+>>
+>> The code doesn't look like that. From what it does:
+>>
+>> -d sectsize: will set data section sector size
+>> -l sectsize: will set log section sector size (and as I see now, this
+>> is not in man page as well)
+>> -s size: will set both data and log sector size
+> 
+> If you just look at the option parsing, then it appears that way.
+> 
+> But go an look at the code that validates and uses these options.
+> It will only take a log sector size specification for external logs,
+> other wise it will use the global sector size. Which is the same as
+> the data section sector size.
+> 
+> Hence for internal log filesystems, "-l sectsize" is ignored, and
+> "-s size" and "-d sectsize" set exactly the same variable.  And for
+> external logs, having "-s size" override the "-l sectsize" is
+> completely wrong, but that's what it does....
 
-Replace it with a single loop that does the work of end_buffer_async_write
-on a per-page basis.
+Is it even safe/legit to have different sector sizes specified
+for log vs data?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
-
-Changes since V2:
- - set b_end_io to NULL
-
- fs/xfs/xfs_aops.c | 71 ++++++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 47 insertions(+), 24 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 6bf120bb1a17..f9efd67f6fa1 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -85,11 +85,11 @@ xfs_find_bdev_for_inode(
-  * associated buffer_heads, paying attention to the start and end offsets that
-  * we need to process on the page.
-  *
-- * Landmine Warning: bh->b_end_io() will call end_page_writeback() on the last
-- * buffer in the IO. Once it does this, it is unsafe to access the bufferhead or
-- * the page at all, as we may be racing with memory reclaim and it can free both
-- * the bufferhead chain and the page as it will see the page as clean and
-- * unused.
-+ * Note that we open code the action in end_buffer_async_write here so that we
-+ * only have to iterate over the buffers attached to the page once.  This is not
-+ * only more efficient, but also ensures that we only calls end_page_writeback
-+ * at the end of the iteration, and thus avoids the pitfall of having the page
-+ * and buffers potentially freed after every call to end_buffer_async_write.
-  */
- static void
- xfs_finish_page_writeback(
-@@ -97,29 +97,44 @@ xfs_finish_page_writeback(
- 	struct bio_vec		*bvec,
- 	int			error)
- {
--	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
--	struct buffer_head	*head, *bh, *next;
-+	struct buffer_head	*head = page_buffers(bvec->bv_page), *bh = head;
-+	bool			busy = false;
- 	unsigned int		off = 0;
--	unsigned int		bsize;
-+	unsigned long		flags;
- 
- 	ASSERT(bvec->bv_offset < PAGE_SIZE);
- 	ASSERT((bvec->bv_offset & (i_blocksize(inode) - 1)) == 0);
--	ASSERT(end < PAGE_SIZE);
-+	ASSERT(bvec->bv_offset + bvec->bv_len <= PAGE_SIZE);
- 	ASSERT((bvec->bv_len & (i_blocksize(inode) - 1)) == 0);
- 
--	bh = head = page_buffers(bvec->bv_page);
--
--	bsize = bh->b_size;
-+	local_irq_save(flags);
-+	bit_spin_lock(BH_Uptodate_Lock, &head->b_state);
- 	do {
--		if (off > end)
--			break;
--		next = bh->b_this_page;
--		if (off < bvec->bv_offset)
--			goto next_bh;
--		bh->b_end_io(bh, !error);
--next_bh:
--		off += bsize;
--	} while ((bh = next) != head);
-+		if (off >= bvec->bv_offset &&
-+		    off < bvec->bv_offset + bvec->bv_len) {
-+			ASSERT(buffer_async_write(bh));
-+			ASSERT(bh->b_end_io == NULL);
-+
-+			if (error) {
-+				mark_buffer_write_io_error(bh);
-+				clear_buffer_uptodate(bh);
-+				SetPageError(bvec->bv_page);
-+			} else {
-+				set_buffer_uptodate(bh);
-+			}
-+			clear_buffer_async_write(bh);
-+			unlock_buffer(bh);
-+		} else if (buffer_async_write(bh)) {
-+			ASSERT(buffer_locked(bh));
-+			busy = true;
-+		}
-+		off += bh->b_size;
-+	} while ((bh = bh->b_this_page) != head);
-+	bit_spin_unlock(BH_Uptodate_Lock, &head->b_state);
-+	local_irq_restore(flags);
-+
-+	if (!busy)
-+		end_page_writeback(bvec->bv_page);
- }
- 
- /*
-@@ -133,8 +148,10 @@ xfs_destroy_ioend(
- 	int			error)
- {
- 	struct inode		*inode = ioend->io_inode;
--	struct bio		*last = ioend->io_bio;
--	struct bio		*bio, *next;
-+	struct bio		*bio = &ioend->io_inline_bio;
-+	struct bio		*last = ioend->io_bio, *next;
-+	u64			start = bio->bi_iter.bi_sector;
-+	bool			quiet = bio_flagged(bio, BIO_QUIET);
- 
- 	for (bio = &ioend->io_inline_bio; bio; bio = next) {
- 		struct bio_vec	*bvec;
-@@ -155,6 +172,11 @@ xfs_destroy_ioend(
- 
- 		bio_put(bio);
- 	}
-+
-+	if (unlikely(error && !quiet)) {
-+		xfs_err_ratelimited(XFS_I(inode)->i_mount,
-+			"writeback error on sector %llu", start);
-+	}
- }
- 
- /*
-@@ -423,7 +445,8 @@ xfs_start_buffer_writeback(
- 	ASSERT(!buffer_delay(bh));
- 	ASSERT(!buffer_unwritten(bh));
- 
--	mark_buffer_async_write(bh);
-+	bh->b_end_io = NULL;
-+	set_buffer_async_write(bh);
- 	set_buffer_uptodate(bh);
- 	clear_buffer_dirty(bh);
- }
--- 
-2.11.0
-
+-Eric
