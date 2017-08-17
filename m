@@ -1,173 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31887 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751843AbdHPPpD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 11:45:03 -0400
-Date: Wed, 16 Aug 2017 08:44:54 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3] xfs: open code end_buffer_async_write in
- xfs_finish_page_writeback
-Message-ID: <20170816154454.GX4796@magnolia>
-References: <20170816085157.24074-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:57898 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751107AbdHQP6p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Aug 2017 11:58:45 -0400
+Subject: Re: xfs_repair fails to clean directory inode
+References: <9c1f39a3-c4cf-e98d-4331-475b037268b7@suse.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <eb3d746b-ddc3-6a91-6f69-21051e22c102@sandeen.net>
+Date: Thu, 17 Aug 2017 10:58:44 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170816085157.24074-1-hch@lst.de>
+In-Reply-To: <9c1f39a3-c4cf-e98d-4331-475b037268b7@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Aug 16, 2017 at 10:51:57AM +0200, Christoph Hellwig wrote:
-> Our loop in xfs_finish_page_writeback, which iterates over all buffer
-> heads in a page and then calls end_buffer_async_write, which also
-> iterates over all buffers in the page to check if any I/O is in flight
-> is not only inefficient, but also potentially dangerous as
-> end_buffer_async_write can cause the page and all buffers to be freed.
-> 
-> Replace it with a single loop that does the work of end_buffer_async_write
-> on a per-page basis.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On 8/17/17 7:13 AM, Hannes Reinecke wrote:
+> Hi all,
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Hi Hannes - 
+ 
+> I've managed to corrupt my fs after a storage array failure earlier this
+> week. After calling 'xfs_repair -L' on the FS running xfs_repair
+> consistently gives me:
+> 
+> # xfs_repair /dev/dm-2
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan and clear agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+> bogus .. inode number (0) in directory inode 128, clearing inode number
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+>         - process newly discovered inodes...
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 0
+>         - agno = 2
+>         - agno = 1
+>         - agno = 3
+> bogus .. inode number (0) in directory inode 128, clearing inode number
+> Phase 5 - rebuild AG headers and trees...
+>         - reset superblock...
+> Phase 6 - check inode connectivity...
+>         - resetting contents of realtime bitmap and summary inodes
+>         - traversing filesystem ...
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> Phase 7 - verify and correct link counts...
+> done
+> 
+> irrespective on how many times I'm calling xfs_repair.
+> (And yes, this is with latest xfsprogs)
 
-I'm assuming 4.14 for this one, unless you know of people banging into
-use-after-free problems and therefore need it pushed into 4.13?
+Which version, specifically?
 
---D
+Would you be willing to provide a compressed xfs_metadump (offline, probably),
+and then I could take a look at the behavior directly?  Would be easier
+than reverse engineering it from the printfs above.  :)
 
-> ---
-> 
-> Changes since V2:
->  - set b_end_io to NULL
-> 
->  fs/xfs/xfs_aops.c | 71 ++++++++++++++++++++++++++++++++++++-------------------
->  1 file changed, 47 insertions(+), 24 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 6bf120bb1a17..f9efd67f6fa1 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -85,11 +85,11 @@ xfs_find_bdev_for_inode(
->   * associated buffer_heads, paying attention to the start and end offsets that
->   * we need to process on the page.
->   *
-> - * Landmine Warning: bh->b_end_io() will call end_page_writeback() on the last
-> - * buffer in the IO. Once it does this, it is unsafe to access the bufferhead or
-> - * the page at all, as we may be racing with memory reclaim and it can free both
-> - * the bufferhead chain and the page as it will see the page as clean and
-> - * unused.
-> + * Note that we open code the action in end_buffer_async_write here so that we
-> + * only have to iterate over the buffers attached to the page once.  This is not
-> + * only more efficient, but also ensures that we only calls end_page_writeback
-> + * at the end of the iteration, and thus avoids the pitfall of having the page
-> + * and buffers potentially freed after every call to end_buffer_async_write.
->   */
->  static void
->  xfs_finish_page_writeback(
-> @@ -97,29 +97,44 @@ xfs_finish_page_writeback(
->  	struct bio_vec		*bvec,
->  	int			error)
->  {
-> -	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
-> -	struct buffer_head	*head, *bh, *next;
-> +	struct buffer_head	*head = page_buffers(bvec->bv_page), *bh = head;
-> +	bool			busy = false;
->  	unsigned int		off = 0;
-> -	unsigned int		bsize;
-> +	unsigned long		flags;
->  
->  	ASSERT(bvec->bv_offset < PAGE_SIZE);
->  	ASSERT((bvec->bv_offset & (i_blocksize(inode) - 1)) == 0);
-> -	ASSERT(end < PAGE_SIZE);
-> +	ASSERT(bvec->bv_offset + bvec->bv_len <= PAGE_SIZE);
->  	ASSERT((bvec->bv_len & (i_blocksize(inode) - 1)) == 0);
->  
-> -	bh = head = page_buffers(bvec->bv_page);
-> -
-> -	bsize = bh->b_size;
-> +	local_irq_save(flags);
-> +	bit_spin_lock(BH_Uptodate_Lock, &head->b_state);
->  	do {
-> -		if (off > end)
-> -			break;
-> -		next = bh->b_this_page;
-> -		if (off < bvec->bv_offset)
-> -			goto next_bh;
-> -		bh->b_end_io(bh, !error);
-> -next_bh:
-> -		off += bsize;
-> -	} while ((bh = next) != head);
-> +		if (off >= bvec->bv_offset &&
-> +		    off < bvec->bv_offset + bvec->bv_len) {
-> +			ASSERT(buffer_async_write(bh));
-> +			ASSERT(bh->b_end_io == NULL);
-> +
-> +			if (error) {
-> +				mark_buffer_write_io_error(bh);
-> +				clear_buffer_uptodate(bh);
-> +				SetPageError(bvec->bv_page);
-> +			} else {
-> +				set_buffer_uptodate(bh);
-> +			}
-> +			clear_buffer_async_write(bh);
-> +			unlock_buffer(bh);
-> +		} else if (buffer_async_write(bh)) {
-> +			ASSERT(buffer_locked(bh));
-> +			busy = true;
-> +		}
-> +		off += bh->b_size;
-> +	} while ((bh = bh->b_this_page) != head);
-> +	bit_spin_unlock(BH_Uptodate_Lock, &head->b_state);
-> +	local_irq_restore(flags);
-> +
-> +	if (!busy)
-> +		end_page_writeback(bvec->bv_page);
->  }
->  
->  /*
-> @@ -133,8 +148,10 @@ xfs_destroy_ioend(
->  	int			error)
->  {
->  	struct inode		*inode = ioend->io_inode;
-> -	struct bio		*last = ioend->io_bio;
-> -	struct bio		*bio, *next;
-> +	struct bio		*bio = &ioend->io_inline_bio;
-> +	struct bio		*last = ioend->io_bio, *next;
-> +	u64			start = bio->bi_iter.bi_sector;
-> +	bool			quiet = bio_flagged(bio, BIO_QUIET);
->  
->  	for (bio = &ioend->io_inline_bio; bio; bio = next) {
->  		struct bio_vec	*bvec;
-> @@ -155,6 +172,11 @@ xfs_destroy_ioend(
->  
->  		bio_put(bio);
->  	}
-> +
-> +	if (unlikely(error && !quiet)) {
-> +		xfs_err_ratelimited(XFS_I(inode)->i_mount,
-> +			"writeback error on sector %llu", start);
-> +	}
->  }
->  
->  /*
-> @@ -423,7 +445,8 @@ xfs_start_buffer_writeback(
->  	ASSERT(!buffer_delay(bh));
->  	ASSERT(!buffer_unwritten(bh));
->  
-> -	mark_buffer_async_write(bh);
-> +	bh->b_end_io = NULL;
-> +	set_buffer_async_write(bh);
->  	set_buffer_uptodate(bh);
->  	clear_buffer_dirty(bh);
->  }
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+(note, metadump is still leaking a bit of stale data here and there,
+so treat the file accordingly if there's anything sensitive on the
+filesystem)
+
+Thanks,
+-Eric
