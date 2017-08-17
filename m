@@ -1,121 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51715 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751843AbdHPN6C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 Aug 2017 09:58:02 -0400
-Date: Wed, 16 Aug 2017 15:57:58 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
- dma-to-storage, and swap
-Message-ID: <20170816135758.GD4898@quack2.suse.cz>
-References: <20170811104429.GA13736@lst.de>
- <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com>
- <20170812073349.GA12679@lst.de>
- <CAPcyv4iKG=Zoo1VXu23YBc6uWDFV4QSS+eAm9MSOynx2FjTHbw@mail.gmail.com>
- <20170813092436.GB32112@lst.de>
- <CAPcyv4ixTgSWG9K2Eg3XJmOvqJht81qL+Z3njoOjcXCD7XMpZw@mail.gmail.com>
- <20170814124059.GC17820@quack2.suse.cz>
- <CAPcyv4hi_Y5Qj=h_Qf4Bcyv+EWBosa2gQT+-8ro3hPY9VMshSA@mail.gmail.com>
- <20170815083732.GB27505@quack2.suse.cz>
- <CAPcyv4hFTn4Fz5o+Gm857mS-RA6WAVsf4CmwiLiK2O8w2_SamQ@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:48156 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753147AbdHQTyb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Aug 2017 15:54:31 -0400
+Subject: Re: [PATCH] xfsprogs: add sectsize/sectlog to the man page
+References: <20170817073844.1351-1-jtulak@redhat.com>
+ <20170817083538.GQ21024@dastard>
+ <CACj3i7301p_NZJpaATZG-YCf-AAuvnh05kWhXHjMc3GTBQm2Hg@mail.gmail.com>
+ <20170817112217.GS21024@dastard>
+ <b2f6971d-fbb5-0e25-35ce-64bf697f7ae4@sandeen.net>
+ <CACj3i72RcsEsLbUggD1wOQkCcSZGVWsZzCe-cL7107RJ+PeY2A@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <4c8fe736-5749-dc80-40f7-e18275c521eb@sandeen.net>
+Date: Thu, 17 Aug 2017 14:54:30 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4hFTn4Fz5o+Gm857mS-RA6WAVsf4CmwiLiK2O8w2_SamQ@mail.gmail.com>
+In-Reply-To: <CACj3i72RcsEsLbUggD1wOQkCcSZGVWsZzCe-cL7107RJ+PeY2A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Tue 15-08-17 16:50:55, Dan Williams wrote:
-> On Tue, Aug 15, 2017 at 1:37 AM, Jan Kara <jack@suse.cz> wrote:
-> > On Mon 14-08-17 09:14:42, Dan Williams wrote:
-> >> On Mon, Aug 14, 2017 at 5:40 AM, Jan Kara <jack@suse.cz> wrote:
-> >> > On Sun 13-08-17 13:31:45, Dan Williams wrote:
-> >> >> On Sun, Aug 13, 2017 at 2:24 AM, Christoph Hellwig <hch@lst.de> wrote:
-> >> >> > Thay being said I think we absolutely should support RDMA memory
-> >> >> > registrations for DAX mappings.  I'm just not sure how S_IOMAP_IMMUTABLE
-> >> >> > helps with that.  We'll want a MAP_SYNC | MAP_POPULATE to make sure
-> >> >> > all the blocks are polulated and all ptes are set up.  Second we need
-> >> >> > to make sure get_user_page works, which for now means we'll need a
-> >> >> > struct page mapping for the region (which will be really annoying
-> >> >> > for PCIe mappings, like the upcoming NVMe persistent memory region),
-> >> >> > and we need to gurantee that the extent mapping won't change while
-> >> >> > the get_user_pages holds the pages inside it.  I think that is true
-> >> >> > due to side effects even with the current DAX code, but we'll need to
-> >> >> > make it explicit.  And maybe that's where we need to converge -
-> >> >> > "sealing" the extent map makes sense as such a temporary measure
-> >> >> > that is not persisted on disk, which automatically gets released
-> >> >> > when the holding process exits, because we sort of already do this
-> >> >> > implicitly.  It might also make sense to have explicitl breakable
-> >> >> > seals similar to what I do for the pNFS blocks kernel server, as
-> >> >> > any userspace RDMA file server would also need those semantics.
-> >> >>
-> >> >> Ok, how about a MAP_DIRECT flag that arranges for faults to that range to:
-> >> >>
-> >> >>     1/ only succeed if the fault can be satisfied without page cache
-> >> >>
-> >> >>     2/ only install a pte for the fault if it can do so without
-> >> >> triggering block map updates
-> >> >>
-> >> >> So, I think it would still end up setting an inode flag to make
-> >> >> xfs_bmapi_write() fail while any process has a MAP_DIRECT mapping
-> >> >> active. However, it would not record that state in the on-disk
-> >> >> metadata and it would automatically clear at munmap time. That should
-> >> >> be enough to support the host-persistent-memory, and
-> >> >> NVMe-persistent-memory use cases (provided we have struct page for
-> >> >> NVMe). Although, we need more safety infrastructure in the NVMe case
-> >> >> where we would need to software manage I/O coherence.
-> >> >
-> >> > Hum, this proposal (and the problems you are trying to deal with) seem very
-> >> > similar to Peter Zijlstra's mpin() proposal from 2014 [1], just moved to
-> >> > the DAX area (and so additionally complicated by the fact that filesystems
-> >> > now have to care). The patch set was not merged due to lack of interest I
-> >> > think but it looked sensible and the proposed API would make sense for more
-> >> > stuff than just DAX so maybe it would be better than MAP_DIRECT flag?
-> >>
-> >> Interesting, but I'm not sure I see the correlation. mm_mpin() makes a
-> >> "no-fault" guarantee and fixes the accounting of locked System RAM.
-> >> MAP_DIRECT still allows faults, and DAX mappings don't consume System
-> >> RAM so the accounting problem is not there for DAX. mm_pin() also does
-> >> not appear to have a relationship to a file backed memory like mmap
-> >> allows.
-> >
-> > So the accounting part is probably non-interesting for DAX purposes and I
-> > agree there are other differences as well. But mm_mpin() prevented page
-> > migrations which is parallel to your requirement of "offset->block mapping
-> > is permanent".  Furthermore mm_mpin() work was there for RDMA so that it
-> > has saner interface to pin pages than get_user_pages() and you mention RDMA
-> > and similar technologies as a usecase for your work for similar reasons.
-> > So my thought was that possibly we should have the same API for pinning
-> > "storage" for RDMA transfers regardless of whether the backing is page
-> > cache or pmem and the API should be usable for in-kernel users as well?
-> > mmap flag seems a bit clumsy in this regard so maybe a form of a separate
-> > syscall - be it mpin(start, len) or some other name - might be more
-> > suitable?
+On 8/17/17 2:50 PM, Jan Tulak wrote:
+> On Thu, Aug 17, 2017 at 6:01 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>> On 8/17/17 6:22 AM, Dave Chinner wrote:
+>>> On Thu, Aug 17, 2017 at 11:45:34AM +0200, Jan Tulak wrote:
+>>>> On Thu, Aug 17, 2017 at 10:35 AM, Dave Chinner <david@fromorbit.com> wrote:
+>>>>> On Thu, Aug 17, 2017 at 09:38:44AM +0200, Jan Tulak wrote:
+>>>>>> The man page is missing description of these options.
+>>>>>> Add it.
+>>>>>
+>>>>> Just remove the options. They are redundant as they cannot be
+>>>>> different from the values set by the "-s" sector size options.
+>>>>> They aren't documented, so just remove them from mkfs.
+>>>>>
+>>>>
+>>>> The code doesn't look like that. From what it does:
+>>>>
+>>>> -d sectsize: will set data section sector size
+>>>> -l sectsize: will set log section sector size (and as I see now, this
+>>>> is not in man page as well)
+>>>> -s size: will set both data and log sector size
+>>>
+>>> If you just look at the option parsing, then it appears that way.
+>>>
+>>> But go an look at the code that validates and uses these options.
+>>> It will only take a log sector size specification for external logs,
+>>> other wise it will use the global sector size. Which is the same as
+>>> the data section sector size.
+>>>
+>>> Hence for internal log filesystems, "-l sectsize" is ignored, and
+>>> "-s size" and "-d sectsize" set exactly the same variable.  And for
+>>> external logs, having "-s size" override the "-l sectsize" is
+>>> completely wrong, but that's what it does....
+>>
+>> Is it even safe/legit to have different sector sizes specified
+>> for log vs data?
+>>
 > 
-> Can you say about more about why an mmap flag for this feels awkward
-> to you? I think there's symmetry between O_SYNC / O_DIRECT setting up
-> synchronous / page-cache-bypass file descriptors and MAP_SYNC /
-> MAP_DIRECT setting up synchronous and page-cache bypass mappings.
+> From my understanding, if the log is external (on another device), it
+> is completely ok. Unless there is some hiccup somewhere deep in the
+> code...
 
-So my thinking was, that for in-kernel users it might be a bit more
-difficult to use mmap flag directly as they generally won't need to setup
-the mapping. But that can be certainly dealt with by proper helpers for
-in-kernel users.
+It can be specified, but I wonder if it's safe to have i.e. a 4k log
+sector replaying onto a 512 byte sector data section, or vice versa.
 
-> "Pinning" also feels like the wrong mechanism when you consider
-> hardware is moving toward eliminating the pinning requirement over
-> time. SVM "Shared Virtual Memory" hardware will just operate on cpu
-> virtual addresses directly and generate typical faults. On such
-> hardware MAP_DIRECT would be a nop relative to MAP_SYNC, so you
-> wouldn't want your application to be stuck with the legacy concept
-> that pages need to be explicitly "pinned".
-
-OK, makes sense.
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+-Eric
