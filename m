@@ -1,104 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from dmzsha2062.multrix.com ([87.233.41.63]:48303 "EHLO
-        dmzsha2062.multrix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752632AbdHQULQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 16:11:16 -0400
-Subject: Re: Issue with "no space left on device"
-References: <1502981688167.22881@true.nl>
- <20170817164751.GA62570@bfoster.bfoster>
- <a3012e54-dc24-b069-a7a9-c235168d0499@true.nl>
- <f8390140-cdcf-96ff-3013-3cffe66fc9f6@sandeen.net>
-From: Sander van Schie <sander.vanschie@true.nl>
-Message-ID: <0a03ddab-6e81-dc89-ab2d-92a005313901@true.nl>
-Date: Thu, 17 Aug 2017 22:11:14 +0200
+Received: from userp1040.oracle.com ([156.151.31.81]:48838 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753342AbdHQXcQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 19:32:16 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7HNWFaa027404
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:32:15 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7HNWFvs024004
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:32:15 GMT
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7HNWFQ4007883
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:32:15 GMT
+Subject: [PATCH 07/12] xfs: create structure verifier function for shortform
+ xattrs
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 17 Aug 2017 16:32:13 -0700
+Message-ID: <150301273377.5851.13810004820315022849.stgit@magnolia>
+In-Reply-To: <150301268960.5851.2513223883233763065.stgit@magnolia>
+References: <150301268960.5851.2513223883233763065.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <f8390140-cdcf-96ff-3013-3cffe66fc9f6@sandeen.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Brian Foster <bfoster@redhat.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+Create a function to perform structure verification for short form
+extended attributes.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr_leaf.c |   70 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_attr_leaf.h |    1 +
+ 2 files changed, 71 insertions(+)
 
 
-On 17-08-17 19:45, Eric Sandeen wrote:
-> On 8/17/17 12:15 PM, Sander van Schie wrote:
->>
->> On 17-08-17 18:47, Brian Foster wrote:
-> 
-> ...
-> 
->>> With 2k sized inodes, the most likely cause is free space fragmentation.
->>> What does 'xfs_db -c "freesp -s" <dev>' print for this fs?
->>>
->>> Brian
->>>
->>
->> The output of the command is as follows:
->>
->> # xfs_db -c "freesp -s" /dev/vdc1
->>     from      to extents  blocks    pct
->>        1       1      28      28   0,00
->>        2       3      50     149   0,00
->>        4       7     907    3799   0,07
->>        8      15    1369   12990   0,25
->>       16      31  183206 5126962  99,34
->>       32      63     492   17197   0,33
->> total free extents 186052
->> total free blocks 5161125
->> average free extent size 27,7402
->>
->> (not sure what I'm looking at myself)
-> 
-> It shows you where the freespace is in the filesystem, and how large the
-> various freespace extents are; i.e. you have 28 single blocks free,
-> and 50 free extents containing two to three free filesystem blocks,
-> etc.
-> 
-> We allocate inodes in contiguous chunks of 64; with 2k inodes and 4k blocks,
-> that means we allocate inodes in chunks of 32 blocks.
-> 
-> So you do have 492 extents with 32 free blocks or more, but allocation also
-> has alignment requirements - these allocated chunks must also be aligned,
-> in this case aligned to a 32-block boundary.  From the output above, we don't
-> know the alignment of that freespace
-> 
-> recent xfsprogs v4.12 has a new option to freesp, to specify alignment filters,
-> i.e.
-> 
->      xfs_db> freesp -A 32
->      
->      will show only 32-block aligned free extents.
-> 
-> You may not have that recent of xfsprogs, but you could check out the git
-> tree from git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git, build
-> it, and run xfs_db from within the tree, i.e.
-> 
-> # db/xfs_db -c "freesp -A 32 -s" /dev/vdc1
-> 
-> Can you provide that output?
-> 
-> -Eric
-> 
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 16bc966..742e8a3 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -873,6 +873,76 @@ xfs_attr_shortform_allfit(
+ 	return xfs_attr_shortform_bytesfit(dp, bytes);
+ }
+ 
++/* Verify the consistency of an inline attribute fork. */
++void *
++xfs_attr_shortform_verify(
++	struct xfs_inode		*ip)
++{
++	struct xfs_attr_shortform	*sfp;
++	struct xfs_attr_sf_entry	*sfep;
++	struct xfs_attr_sf_entry	*next_sfep;
++	char				*endp;
++	struct xfs_ifork		*ifp;
++	int				i;
++	int				size;
++
++	ASSERT(ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL);
++	ifp = XFS_IFORK_PTR(ip, XFS_ATTR_FORK);
++	sfp = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
++	size = ifp->if_bytes;
++
++	/*
++	 * Give up if the attribute is way too short.
++	 */
++	if (size < sizeof(struct xfs_attr_sf_hdr))
++		return __this_address;
++
++	endp = (char *)sfp + size;
++
++	/* Check all reported entries */
++	sfep = &sfp->list[0];
++	for (i = 0; i < sfp->hdr.count; i++) {
++		/*
++		 * struct xfs_attr_sf_entry has a variable length.
++		 * Check the fixed-offset parts of the structure are
++		 * within the data buffer.
++		 */
++		if (((char *)sfep + sizeof(*sfep)) >= endp)
++			return __this_address;
++
++		/* Don't allow names with known bad length. */
++		if (sfep->namelen == 0)
++			return __this_address;
++
++		/*
++		 * Check that the variable-length part of the structure is
++		 * within the data buffer.  The next entry starts after the
++		 * name component, so nextentry is an acceptable test.
++		 */
++		next_sfep = XFS_ATTR_SF_NEXTENTRY(sfep);
++		if ((char *)next_sfep > endp)
++			return __this_address;
++
++		/*
++		 * Check for unknown flags.  Short form doesn't support
++		 * the incomplete or local bits.
++		 */
++		if (sfep->flags & ~(XFS_ATTR_ROOT | XFS_ATTR_SECURE))
++			return __this_address;
++
++		/* Check for invalid namespace combinations. */
++		if ((sfep->flags & XFS_ATTR_ROOT) &&
++		    (sfep->flags & XFS_ATTR_SECURE))
++			return __this_address;
++
++		sfep = next_sfep;
++	}
++	if ((void *)sfep != (void *)endp)
++		return __this_address;
++
++	return NULL;
++}
++
+ /*
+  * Convert a leaf attribute list to shortform attribute list
+  */
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index f7dda0c..f7bc912 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -52,6 +52,7 @@ int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
+ int	xfs_attr_shortform_remove(struct xfs_da_args *args);
+ int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+ int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
++void	*xfs_attr_shortform_verify(struct xfs_inode *ip);
+ void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
+ 
+ /*
 
-Thank you for the explanation!
-
-The output of the command is as follows:
-
-# db/xfs_db -c "freesp -A 32 -s" /dev/vdc1
-    from      to extents  blocks    pct
-       1       1       1       1   0,00
-       2       3       7      21   0,01
-       4       7     235     970   0,24
-       8      15     130    1313   0,33
-      16      31   14214  397375  99,42
-total free extents 14587
-total free blocks 399680
-average free extent size 27,3997
-
-For what it's worth, practically all files (194024 out of 196385) on the 
-filesystem are 80102 bytes in size.
-
-- Sander
