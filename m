@@ -1,52 +1,162 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sender-pp-092.zoho.com ([135.84.80.237]:25441 "EHLO
-        sender-pp-092.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751831AbdHTF5y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 Aug 2017 01:57:54 -0400
-From: ToddAndMargo <ToddAndMargo@zoho.com>
-Subject: xfs errors
-Message-ID: <42ebd50b-a327-0afb-a53a-e2dedd003415@zoho.com>
-Date: Sat, 19 Aug 2017 22:57:49 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:27019 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753375AbdHQXbj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 19:31:39 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7HNVbaE027910
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:31:38 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7HNVbpR022295
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:31:37 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7HNVbXw007757
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:31:37 GMT
+Subject: [PATCH 01/12] xfs: refactor long-format btree header verification
+ routines
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 17 Aug 2017 16:31:35 -0700
+Message-ID: <150301269586.5851.9572562139178100075.stgit@magnolia>
+In-Reply-To: <150301268960.5851.2513223883233763065.stgit@magnolia>
+References: <150301268960.5851.2513223883233763065.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-Dear Xfs,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Do I report this to you or Red Hat?
+Create two helper functions to verify the headers of a long format
+btree block.  We'll use this later for the realtime rmapbt.
 
-Fedora Core 26, x564
-xfsdump-3.1.6-4.fc26.x86_64
-
-When I run the following
-
-     # /sbin/xfsdump -v verbose -M 1 -L 1 -l 0 -f 
-/lin-bak/2017-08-19_22-30-27_md126p2.XfsDump  /
-
-randomly, I get this error message when I run xfsdump:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_bmap_btree.c |   22 ++-----------------
+ fs/xfs/libxfs/xfs_btree.c      |   47 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_btree.h      |    3 +++
+ 3 files changed, 52 insertions(+), 20 deletions(-)
 
 
-     /sbin/xfsdump: ino map phase 1: constructing initial dump list
-     /sbin/xfsdump: WARNING: failed to get bulkstat information for 
-inode 739
-     /sbin/xfsdump: WARNING: failed to get bulkstat information for 
-inode 954
-     /sbin/xfsdump: WARNING: failed to get bulkstat information for 
-inode 1118
-     about 40 more of them
-
-And the next time it will run clean.  What gives?
-
-I put a `sunc; sync` before the dump command and it seems to help, but 
-it is random, so who knows.
-
-Is this a bug?  Or am I doing something wrong?
-
-Many thanks,
--T
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index eddc1df..99bdf08 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -627,17 +627,11 @@ xfs_bmbt_verify(
+ 
+ 	switch (block->bb_magic) {
+ 	case cpu_to_be32(XFS_BMAP_CRC_MAGIC):
+-		if (!xfs_sb_version_hascrc(&mp->m_sb))
+-			return false;
+-		if (!uuid_equal(&block->bb_u.l.bb_uuid, &mp->m_sb.sb_meta_uuid))
+-			return false;
+-		if (be64_to_cpu(block->bb_u.l.bb_blkno) != bp->b_bn)
+-			return false;
+ 		/*
+ 		 * XXX: need a better way of verifying the owner here. Right now
+ 		 * just make sure there has been one set.
+ 		 */
+-		if (be64_to_cpu(block->bb_u.l.bb_owner) == 0)
++		if (!xfs_btree_lblock_v5hdr_verify(bp, XFS_RMAP_OWN_UNKNOWN))
+ 			return false;
+ 		/* fall through */
+ 	case cpu_to_be32(XFS_BMAP_MAGIC):
+@@ -656,20 +650,8 @@ xfs_bmbt_verify(
+ 	level = be16_to_cpu(block->bb_level);
+ 	if (level > max(mp->m_bm_maxlevels[0], mp->m_bm_maxlevels[1]))
+ 		return false;
+-	if (be16_to_cpu(block->bb_numrecs) > mp->m_bmap_dmxr[level != 0])
+-		return false;
+-
+-	/* sibling pointer verification */
+-	if (!block->bb_u.l.bb_leftsib ||
+-	    (block->bb_u.l.bb_leftsib != cpu_to_be64(NULLFSBLOCK) &&
+-	     !XFS_FSB_SANITY_CHECK(mp, be64_to_cpu(block->bb_u.l.bb_leftsib))))
+-		return false;
+-	if (!block->bb_u.l.bb_rightsib ||
+-	    (block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK) &&
+-	     !XFS_FSB_SANITY_CHECK(mp, be64_to_cpu(block->bb_u.l.bb_rightsib))))
+-		return false;
+ 
+-	return true;
++	return xfs_btree_lblock_verify(bp, mp->m_bmap_dmxr[level != 0]);
+ }
+ 
+ static void
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 9ba49dd..0ba9edb 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4493,6 +4493,53 @@ xfs_btree_change_owner(
+ 			&bbcoi);
+ }
+ 
++/* Verify the v5 fields of a long-format btree block. */
++bool
++xfs_btree_lblock_v5hdr_verify(
++	struct xfs_buf		*bp,
++	uint64_t		owner)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return false;
++	if (!uuid_equal(&block->bb_u.l.bb_uuid, &mp->m_sb.sb_meta_uuid))
++		return false;
++	if (block->bb_u.l.bb_blkno != cpu_to_be64(bp->b_bn))
++		return false;
++	if (owner != XFS_RMAP_OWN_UNKNOWN &&
++	    be64_to_cpu(block->bb_u.l.bb_owner) != owner)
++		return false;
++	return true;
++}
++
++/* Verify a long-format btree block. */
++bool
++xfs_btree_lblock_verify(
++	struct xfs_buf		*bp,
++	unsigned int		max_recs)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
++
++	/* numrecs verification */
++	if (be16_to_cpu(block->bb_numrecs) > max_recs)
++		return false;
++
++	/* sibling pointer verification */
++	if (!block->bb_u.l.bb_leftsib ||
++	    (block->bb_u.l.bb_leftsib != cpu_to_be64(NULLFSBLOCK) &&
++	     !XFS_FSB_SANITY_CHECK(mp, be64_to_cpu(block->bb_u.l.bb_leftsib))))
++		return false;
++	if (!block->bb_u.l.bb_rightsib ||
++	    (block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK) &&
++	     !XFS_FSB_SANITY_CHECK(mp, be64_to_cpu(block->bb_u.l.bb_rightsib))))
++		return false;
++
++	return true;
++}
++
+ /**
+  * xfs_btree_sblock_v5hdr_verify() -- verify the v5 fields of a short-format
+  *				      btree block
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 0575c56..0b5813e 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -480,6 +480,9 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
+ 
+ bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
+ bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
++bool xfs_btree_lblock_v5hdr_verify(struct xfs_buf *bp, uint64_t owner);
++bool xfs_btree_lblock_verify(struct xfs_buf *bp, unsigned int max_recs);
++
+ uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
+ 				 unsigned long len);
+ unsigned long long xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
 
