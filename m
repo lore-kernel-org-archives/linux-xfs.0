@@ -1,24 +1,24 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48838 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753342AbdHQXcQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 19:32:16 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:27266 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753342AbdHQXcW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 19:32:22 -0400
 Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7HNWFaa027404
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7HNWLBj028523
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:32:15 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7HNWFvs024004
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:32:22 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7HNWLEC024244
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:32:15 GMT
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7HNWFQ4007883
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:32:15 GMT
-Subject: [PATCH 07/12] xfs: create structure verifier function for shortform
- xattrs
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:32:21 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7HNWLIF022771
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:32:21 GMT
+Subject: [PATCH 08/12] xfs: create structure verifier function for short
+ form symlinks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 17 Aug 2017 16:32:13 -0700
-Message-ID: <150301273377.5851.13810004820315022849.stgit@magnolia>
+Date: Thu, 17 Aug 2017 16:32:19 -0700
+Message-ID: <150301273984.5851.15964411095845428523.stgit@magnolia>
 In-Reply-To: <150301268960.5851.2513223883233763065.stgit@magnolia>
 References: <150301268960.5851.2513223883233763065.stgit@magnolia>
 MIME-Version: 1.0
@@ -31,107 +31,68 @@ To: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a function to perform structure verification for short form
-extended attributes.
+Create a function to check the structure of short form symlink targets.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c |   70 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_attr_leaf.h |    1 +
- 2 files changed, 71 insertions(+)
+ fs/xfs/libxfs/xfs_shared.h         |    1 +
+ fs/xfs/libxfs/xfs_symlink_remote.c |   36 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 16bc966..742e8a3 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -873,6 +873,76 @@ xfs_attr_shortform_allfit(
- 	return xfs_attr_shortform_bytesfit(dp, bytes);
- }
+diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+index c6f4eb4..536fb35 100644
+--- a/fs/xfs/libxfs/xfs_shared.h
++++ b/fs/xfs/libxfs/xfs_shared.h
+@@ -143,5 +143,6 @@ bool xfs_symlink_hdr_ok(xfs_ino_t ino, uint32_t offset,
+ 			uint32_t size, struct xfs_buf *bp);
+ void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
+ 				 struct xfs_inode *ip, struct xfs_ifork *ifp);
++void *xfs_symlink_shortform_verify(struct xfs_inode *ip);
  
-+/* Verify the consistency of an inline attribute fork. */
+ #endif /* __XFS_SHARED_H__ */
+diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
+index 1ac8c4d..ef5e754 100644
+--- a/fs/xfs/libxfs/xfs_symlink_remote.c
++++ b/fs/xfs/libxfs/xfs_symlink_remote.c
+@@ -209,3 +209,39 @@ xfs_symlink_local_to_remote(
+ 	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsymlink_hdr) +
+ 					ifp->if_bytes - 1);
+ }
++
++/* Verify the consistency of an inline symlink. */
 +void *
-+xfs_attr_shortform_verify(
-+	struct xfs_inode		*ip)
++xfs_symlink_shortform_verify(
++	struct xfs_inode	*ip)
 +{
-+	struct xfs_attr_shortform	*sfp;
-+	struct xfs_attr_sf_entry	*sfep;
-+	struct xfs_attr_sf_entry	*next_sfep;
-+	char				*endp;
-+	struct xfs_ifork		*ifp;
-+	int				i;
-+	int				size;
++	char			*sfp;
++	char			*endp;
++	struct xfs_ifork	*ifp;
++	int			size;
 +
-+	ASSERT(ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL);
-+	ifp = XFS_IFORK_PTR(ip, XFS_ATTR_FORK);
-+	sfp = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
++	ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL);
++	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	sfp = (char *)ifp->if_u1.if_data;
 +	size = ifp->if_bytes;
++	endp = sfp + size;
 +
-+	/*
-+	 * Give up if the attribute is way too short.
-+	 */
-+	if (size < sizeof(struct xfs_attr_sf_hdr))
++	/* Zero length symlinks can exist while we're deleting a remote one. */
++	if (size == 0)
++		return NULL;
++
++	/* No negative sizes or overly long symlink targets. */
++	if (size < 0 || size > XFS_SYMLINK_MAXLEN)
 +		return __this_address;
 +
-+	endp = (char *)sfp + size;
-+
-+	/* Check all reported entries */
-+	sfep = &sfp->list[0];
-+	for (i = 0; i < sfp->hdr.count; i++) {
-+		/*
-+		 * struct xfs_attr_sf_entry has a variable length.
-+		 * Check the fixed-offset parts of the structure are
-+		 * within the data buffer.
-+		 */
-+		if (((char *)sfep + sizeof(*sfep)) >= endp)
++	/* No NULLs in the target either. */
++	for (; sfp < endp; sfp++) {
++		if (*sfp == 0)
 +			return __this_address;
-+
-+		/* Don't allow names with known bad length. */
-+		if (sfep->namelen == 0)
-+			return __this_address;
-+
-+		/*
-+		 * Check that the variable-length part of the structure is
-+		 * within the data buffer.  The next entry starts after the
-+		 * name component, so nextentry is an acceptable test.
-+		 */
-+		next_sfep = XFS_ATTR_SF_NEXTENTRY(sfep);
-+		if ((char *)next_sfep > endp)
-+			return __this_address;
-+
-+		/*
-+		 * Check for unknown flags.  Short form doesn't support
-+		 * the incomplete or local bits.
-+		 */
-+		if (sfep->flags & ~(XFS_ATTR_ROOT | XFS_ATTR_SECURE))
-+			return __this_address;
-+
-+		/* Check for invalid namespace combinations. */
-+		if ((sfep->flags & XFS_ATTR_ROOT) &&
-+		    (sfep->flags & XFS_ATTR_SECURE))
-+			return __this_address;
-+
-+		sfep = next_sfep;
 +	}
-+	if ((void *)sfep != (void *)endp)
-+		return __this_address;
 +
++	/* We /did/ null-terminate the buffer, right? */
++	if (*endp != 0)
++		return __this_address;
 +	return NULL;
 +}
-+
- /*
-  * Convert a leaf attribute list to shortform attribute list
-  */
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-index f7dda0c..f7bc912 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.h
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-@@ -52,6 +52,7 @@ int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
- int	xfs_attr_shortform_remove(struct xfs_da_args *args);
- int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
- int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
-+void	*xfs_attr_shortform_verify(struct xfs_inode *ip);
- void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
- 
- /*
 
