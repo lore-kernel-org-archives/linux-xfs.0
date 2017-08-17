@@ -1,90 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f169.google.com ([209.85.161.169]:33749 "EHLO
-        mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751640AbdHPR2W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 13:28:22 -0400
-Received: by mail-yw0-f169.google.com with SMTP id p68so26873935ywg.0
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 10:28:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <150286946864.8837.17147962029964281564.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150286944610.8837.9513410258028246174.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150286946864.8837.17147962029964281564.stgit@dwillia2-desk3.amr.corp.intel.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 16 Aug 2017 10:28:21 -0700
-Message-ID: <CAPcyv4i+GbwcqMwKscTmTAuoXnQNfqBtHsxUu-L0+NzNO2f4Lw@mail.gmail.com>
-Subject: Re: [PATCH v5 4/5] fs, xfs: introduce MAP_DIRECT for creating
- block-map-atomic file ranges
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx2.suse.de ([195.135.220.15]:53177 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752628AbdHQQIa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Aug 2017 12:08:30 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 11/13] dax, iomap: Add support for synchronous faults
+Date: Thu, 17 Aug 2017 18:08:13 +0200
+Message-Id: <20170817160815.30466-12-jack@suse.cz>
+In-Reply-To: <20170817160815.30466-1-jack@suse.cz>
+References: <20170817160815.30466-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>, Jan Kara <jack@suse.cz>
 
-On Wed, Aug 16, 2017 at 12:44 AM, Dan Williams <dan.j.williams@intel.com> wrote:
-> MAP_DIRECT is an mmap(2) flag with the following semantics:
->
->   MAP_DIRECT
->   When specified with MAP_SHARED a successful fault in this range
->   indicates that the kernel is maintaining the block map (user linear
->   address to file offset to physical address relationship) in a manner
->   that no external agent can observe any inconsistent changes. In other
->   words, the block map of the mapping is effectively pinned, or the kernel
->   is otherwise able to exchange a new physical extent atomically with
->   respect to any hardware / software agent. As implied by this definition
->   a successful fault in a MAP_DIRECT range bypasses kernel indirections
->   like the page-cache, and all updates are carried directly through to the
->   underlying file physical blocks (modulo cpu cache effects).
->
->   ETXTBSY may be returned to any third party operation on the file that
->   attempts to update the block map (allocate blocks / convert unwritten
->   extents / break shared extents). However, whether a filesystem returns
->   EXTBSY for a certain state of the block relative to a MAP_DIRECT mapping
->   is filesystem and kernel version dependent.
->
->   Some filesystems may extend these operation restrictions outside the
->   mapped range and return ETXTBSY to any file operations that might mutate
->   the block map. MAP_DIRECT faults may fail with a SIGBUS if the
->   filesystem needs to write the block map to satisfy the fault. For
->   example, if the mapping was established over a hole in a sparse file.
->
->   ERRORS
->   EACCES A MAP_DIRECT mapping was requested and PROT_WRITE was not set,
->   or the requesting process is missing CAP_LINUX_IMMUTABLE.
->
->   EINVAL MAP_ANONYMOUS or MAP_PRIVATE was specified with MAP_DIRECT.
->
->   EOPNOTSUPP The filesystem explicitly does not support the flag
->
->   SIGBUS Attempted to write a MAP_DIRECT mapping at a file offset that
->          might require block-map updates.
->
-> Cc: Jan Kara <jack@suse.cz>
-> Cc: Jeff Moyer <jmoyer@redhat.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Dave Chinner <david@fromorbit.com>
-> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
-[..]
-> diff --git a/include/linux/mman.h b/include/linux/mman.h
-> index 0e1de42c836f..7c9e3d11027f 100644
-> --- a/include/linux/mman.h
-> +++ b/include/linux/mman.h
-> @@ -7,16 +7,6 @@
->  #include <linux/atomic.h>
->  #include <uapi/linux/mman.h>
->
-> -#ifndef MAP_32BIT
-> -#define MAP_32BIT 0
-> -#endif
-> -#ifndef MAP_HUGE_2MB
-> -#define MAP_HUGE_2MB 0
-> -#endif
-> -#ifndef MAP_HUGE_1GB
-> -#define MAP_HUGE_1GB 0
-> -#endif
+Add a flag to iomap interface informing the caller that inode needs
+fdstasync(2) for returned extent to become persistent and use it in DAX
+fault code so that we map such extents only read only. We propagate the
+information that the page table entry has been inserted write-protected
+from dax_iomap_fault() with a new VM_FAULT_RO flag. Filesystem fault
+handler is then responsible for calling fdatasync(2) and updating page
+tables to map pfns read-write. dax_iomap_fault() also takes care of
+updating vmf->orig_pte to match the PTE that was inserted so that we can
+safely recheck that PTE did not change while write-enabling it.
 
-This was inadvertent, we need this to build on non-x86 archs, will fix.
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c              | 31 +++++++++++++++++++++++++++++++
+ include/linux/iomap.h |  2 ++
+ include/linux/mm.h    |  6 +++++-
+ 3 files changed, 38 insertions(+), 1 deletion(-)
+
+diff --git a/fs/dax.c b/fs/dax.c
+index bc040e654cc9..ca88fc356786 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1177,6 +1177,22 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 			goto error_finish_iomap;
+ 		}
+ 
++		/*
++		 * If we are doing synchronous page fault and inode needs fsync,
++		 * we can insert PTE into page tables only after that happens.
++		 * Skip insertion for now and return the pfn so that caller can
++		 * insert it after fsync is done.
++		 */
++		if (write && (vma->vm_flags & VM_SYNC) &&
++		    (iomap.flags & IOMAP_F_NEEDDSYNC)) {
++			if (WARN_ON_ONCE(!pfnp)) {
++				error = -EIO;
++				goto error_finish_iomap;
++			}
++			*pfnp = pfn;
++			vmf_ret = VM_FAULT_NEEDDSYNC | major;
++			goto finish_iomap;
++		}
+ 		trace_dax_insert_mapping(inode, vmf, entry);
+ 		if (write)
+ 			error = vm_insert_mixed_mkwrite(vma, vaddr, pfn);
+@@ -1362,6 +1378,21 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
+ 		if (IS_ERR(entry))
+ 			goto finish_iomap;
+ 
++		/*
++		 * If we are doing synchronous page fault and inode needs fsync,
++		 * we can insert PMD into page tables only after that happens.
++		 * Skip insertion for now and return the pfn so that caller can
++		 * insert it after fsync is done.
++		 */
++		if (write && (vmf->vma->vm_flags & VM_SYNC) &&
++		    (iomap.flags & IOMAP_F_NEEDDSYNC)) {
++			if (WARN_ON_ONCE(!pfnp))
++				goto finish_iomap;
++			*pfnp = pfn;
++			result = VM_FAULT_NEEDDSYNC;
++			goto finish_iomap;
++		}
++
+ 		trace_dax_pmd_insert_mapping(inode, vmf, PMD_SIZE, pfn, entry);
+ 		result = vmf_insert_pfn_pmd(vma, vmf->address, vmf->pmd, pfn,
+ 					    write);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index f64dc6ce5161..957463602f6e 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -22,6 +22,8 @@ struct vm_fault;
+  * Flags for all iomap mappings:
+  */
+ #define IOMAP_F_NEW	0x01	/* blocks have been newly allocated */
++#define IOMAP_F_NEEDDSYNC	0x02	/* inode needs fdatasync for storage to
++					 * become persistent */
+ 
+ /*
+  * Flags that only need to be reported for IOMAP_REPORT requests:
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index d0fb385414a4..20e95c3a7701 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1143,6 +1143,9 @@ static inline void clear_page_pfmemalloc(struct page *page)
+ #define VM_FAULT_RETRY	0x0400	/* ->fault blocked, must retry */
+ #define VM_FAULT_FALLBACK 0x0800	/* huge page fault failed, fall back to small */
+ #define VM_FAULT_DONE_COW   0x1000	/* ->fault has fully handled COW */
++#define VM_FAULT_NEEDDSYNC  0x2000	/* ->fault did not modify page tables
++					 * and needs fsync() to complete (for
++					 * synchronous page faults in DAX) */
+ 
+ #define VM_FAULT_ERROR	(VM_FAULT_OOM | VM_FAULT_SIGBUS | VM_FAULT_SIGSEGV | \
+ 			 VM_FAULT_HWPOISON | VM_FAULT_HWPOISON_LARGE | \
+@@ -1160,7 +1163,8 @@ static inline void clear_page_pfmemalloc(struct page *page)
+ 	{ VM_FAULT_LOCKED,		"LOCKED" }, \
+ 	{ VM_FAULT_RETRY,		"RETRY" }, \
+ 	{ VM_FAULT_FALLBACK,		"FALLBACK" }, \
+-	{ VM_FAULT_DONE_COW,		"DONE_COW" }
++	{ VM_FAULT_DONE_COW,		"DONE_COW" }, \
++	{ VM_FAULT_NEEDDSYNC,		"NEEDDSYNC" }
+ 
+ /* Encode hstate index for a hwpoisoned large page */
+ #define VM_FAULT_SET_HINDEX(x) ((x) << 12)
+-- 
+2.12.3
+
