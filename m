@@ -1,30 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:3368 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751843AbdHRWIx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 18 Aug 2017 18:08:53 -0400
-Date: Fri, 18 Aug 2017 16:08:52 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 05/13] dax: Create local variable for vmf->flags &
- FAULT_FLAG_WRITE test
-Message-ID: <20170818220851.GD32627@linux.intel.com>
+Received: from mx2.suse.de ([195.135.220.15]:53167 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752545AbdHQQIa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Aug 2017 12:08:30 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 12/13] dax: Implement dax_insert_pfn_mkwrite()
+Date: Thu, 17 Aug 2017 18:08:14 +0200
+Message-Id: <20170817160815.30466-13-jack@suse.cz>
+In-Reply-To: <20170817160815.30466-1-jack@suse.cz>
 References: <20170817160815.30466-1-jack@suse.cz>
- <20170817160815.30466-6-jack@suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170817160815.30466-6-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>, Jan Kara <jack@suse.cz>
 
-On Thu, Aug 17, 2017 at 06:08:07PM +0200, Jan Kara wrote:
-> There are already two users and more are coming.
-> 
-> Signed-off-by: Jan Kara <jack@suse.cz>
+Implement a function that inserts a writeable page table entry (PTE or
+PMD) and takes care of marking it dirty in the radix tree. This function
+will be used to finish synchronous page fault.
 
-Sure, and this is much nicer to read.
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c                      | 52 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/dax.h           |  2 ++
+ include/trace/events/fs_dax.h |  2 ++
+ 3 files changed, 56 insertions(+)
 
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+diff --git a/fs/dax.c b/fs/dax.c
+index ca88fc356786..ca81084f6608 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1467,3 +1467,55 @@ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(dax_iomap_fault);
++
++/**
++ * dax_insert_pfn_mkwrite - insert PTE or PMD entry into page tables
++ * @vmf: The description of the fault
++ * @pe_size: Size of entry to be inserted
++ * @pfn: PFN to insert
++ *
++ * This function inserts writeable PTE or PMD entry into page tables for mmaped
++ * DAX file.  It takes care of marking corresponding radix tree entry as dirty
++ * as well.
++ */
++int dax_insert_pfn_mkwrite(struct vm_fault *vmf, enum page_entry_size pe_size,
++			   pfn_t pfn)
++{
++	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
++	void *entry, **slot;
++	pgoff_t index = vmf->pgoff;
++	int vmf_ret, error;
++
++	spin_lock_irq(&mapping->tree_lock);
++	entry = get_unlocked_mapping_entry(mapping, index, &slot);
++	/* Did we race with someone splitting entry or so? */
++	if (!entry || (pe_size == PE_SIZE_PTE && !dax_is_pte_entry(entry)) ||
++	    (pe_size == PE_SIZE_PMD && !dax_is_pmd_entry(entry))) {
++		put_unlocked_mapping_entry(mapping, index, entry);
++		spin_unlock_irq(&mapping->tree_lock);
++		trace_dax_insert_pfn_mkwrite_no_entry(mapping->host, vmf,
++						      VM_FAULT_NOPAGE);
++		return VM_FAULT_NOPAGE;
++	}
++	radix_tree_tag_set(&mapping->page_tree, index, PAGECACHE_TAG_DIRTY);
++	entry = lock_slot(mapping, slot);
++	spin_unlock_irq(&mapping->tree_lock);
++	switch (pe_size) {
++	case PE_SIZE_PTE:
++		error = vm_insert_mixed_mkwrite(vmf->vma, vmf->address, pfn);
++		vmf_ret = dax_fault_return(error);
++		break;
++#ifdef CONFIG_FS_DAX_PMD
++	case PE_SIZE_PMD:
++		vmf_ret = vmf_insert_pfn_pmd(vmf->vma, vmf->address, vmf->pmd,
++			pfn, true);
++		break;
++#endif
++	default:
++		vmf_ret = VM_FAULT_FALLBACK;
++	}
++	put_locked_mapping_entry(mapping, index);
++	trace_dax_insert_pfn_mkwrite(mapping->host, vmf, vmf_ret);
++	return vmf_ret;
++}
++EXPORT_SYMBOL_GPL(dax_insert_pfn_mkwrite);
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 8f493d9879f7..d8e67995a958 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -92,6 +92,8 @@ ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		const struct iomap_ops *ops);
+ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
+ 		    const struct iomap_ops *ops, pfn_t *pfnp);
++int dax_insert_pfn_mkwrite(struct vm_fault *vmf, enum page_entry_size pe_size,
++			   pfn_t pfn);
+ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
+ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
+ 				      pgoff_t index);
+diff --git a/include/trace/events/fs_dax.h b/include/trace/events/fs_dax.h
+index 88a9d19b8ff8..7725459fafef 100644
+--- a/include/trace/events/fs_dax.h
++++ b/include/trace/events/fs_dax.h
+@@ -190,6 +190,8 @@ DEFINE_EVENT(dax_pte_fault_class, name, \
+ DEFINE_PTE_FAULT_EVENT(dax_pte_fault);
+ DEFINE_PTE_FAULT_EVENT(dax_pte_fault_done);
+ DEFINE_PTE_FAULT_EVENT(dax_load_hole);
++DEFINE_PTE_FAULT_EVENT(dax_insert_pfn_mkwrite_no_entry);
++DEFINE_PTE_FAULT_EVENT(dax_insert_pfn_mkwrite);
+ 
+ TRACE_EVENT(dax_insert_mapping,
+ 	TP_PROTO(struct inode *inode, struct vm_fault *vmf, void *radix_entry),
+-- 
+2.12.3
+
