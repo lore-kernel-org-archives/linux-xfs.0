@@ -1,173 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:49634 "EHLO mga07.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38234 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753217AbdHXV3o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Aug 2017 17:29:44 -0400
-Date: Thu, 24 Aug 2017 15:29:42 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 2/3] xfs: consolidate the various page fault handlers
-Message-ID: <20170824212942.GB20489@linux.intel.com>
-References: <20170824152207.30729-1-hch@lst.de>
- <20170824152207.30729-3-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170824152207.30729-3-hch@lst.de>
+        id S1750926AbdHQHjW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Aug 2017 03:39:22 -0400
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH] xfsprogs: add sectsize/sectlog to the man page
+Date: Thu, 17 Aug 2017 09:38:44 +0200
+Message-Id: <20170817073844.1351-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>
+To: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, Jan Tulak <jtulak@redhat.com>
 
-On Thu, Aug 24, 2017 at 05:22:06PM +0200, Christoph Hellwig wrote:
-> Add a new __xfs_filemap_fault helper that implements all four page fault
-> callouts, and make these methods themselves small stubs that set the
-> correct write_fault flag, and exit early for the non-DAX case for the
-> hugepage related ones.
-> 
-> Life would be so much simpler if we only had one method for all this.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+The man page is missing description of these options.
+Add it.
 
-A few nits and a question below.  This looks much simpler and gets rid of a
-lot of duplication.
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ man/man8/mkfs.xfs.8 | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index b2bc223b..8ee64660 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -297,6 +297,24 @@ suboption is used only to make a filesystem image. If the
+ .I value
+ is omitted then 1 is assumed.
+ .TP
++.BI sectsize= value
++This is used to specify the sector size for data section. The size is specified
++as a value in bytes. The minimum value is 512 bytes; the maximum is 32768
++(32 KiB). The sector size must be a power of 2 and cannot be made larger than
++the filesystem block size. The default size is 512 bytes. This option is
++mutually exclusive with
++.B \-d sectlog
++option.
++.TP
++.BI sectlog= value
++This is used to specify the sector size for data section. The size is specified
++as a base two logarithm. The minimum value is 512 bytes; the maximum is 32768
++(32 KiB). The sector size must be a power of 2 and cannot be made larger than
++the filesystem block size. The default size is 512 bytes. This option is
++mutually exclusive with
++.B \-d sectsize
++option.
++.TP
+ .BI size= value
+ This is used to specify the size of the data section. This suboption
+ is required if
+-- 
+2.13.3
 
-<>
->  STATIC int
->  xfs_filemap_huge_fault(
->  	struct vm_fault		*vmf,
->  	enum page_entry_size	pe_size)
->  {
-> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> -	struct xfs_inode	*ip = XFS_I(inode);
-> -	int			ret;
-> -
-> -	if (!IS_DAX(inode))
-> +	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
->  		return VM_FAULT_FALLBACK;
->  
-> -	trace_xfs_filemap_huge_fault(ip);
-> -
-> -	if (vmf->flags & FAULT_FLAG_WRITE) {
-> -		sb_start_pagefault(inode->i_sb);
-> -		file_update_time(vmf->vma->vm_file);
-> -	}
-> -
-> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -	ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
-> -	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -
-> -	if (vmf->flags & FAULT_FLAG_WRITE)
-> -		sb_end_pagefault(inode->i_sb);
-> +	/* DAX can shortcut the normal fault path on write faults! */
-
-Does this comment still make sense for the PMD case?  Here's what I *think* it
-means: For DAX write faults we make the PTE writeable in the ->fault() code
-and don't rely on a follow-up ->page_mkwrite() call.  This happens in
-do_shared_fault(), where we return before the ->page_mkwrite() call because
-the DAX write fault returns VM_FAULT_NOPAGE.
-
-This is in contrast to the normal page fault case where the ->fault() call
-ends up calling filemap_fault(), which populates the page read-only, and then
-do_shared_fault() does a follow-up ->page_mkwrite() call which makes the page
-writable.
-
-First, is the above correct?  :)  If so, I think the comment doesn't make
-sense for the PMD fault path because in that case we always make the PMD
-writeable in the first ->huge_fault() call, as there is no follow-up
-*_mkwrite()?
-
-> +	return __xfs_filemap_fault(vmf, pe_size,
-> +			(vmf->flags & FAULT_FLAG_WRITE));
-> +}
->  
-> -	return ret;
-> +STATIC int
-> +xfs_filemap_page_mkwrite(
-> +	struct vm_fault		*vmf)
-> +{
-> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
->  }
->  
-> -/*
-> - * pfn_mkwrite was originally inteneded to ensure we capture time stamp
-> - * updates on write faults. In reality, it's need to serialise against
-> - * truncate similar to page_mkwrite. Hence we cycle the XFS_MMAPLOCK_SHARED
-> - * to ensure we serialise the fault barrier in place.
-> - */
->  static int
-
-   STATIC
-
->  xfs_filemap_pfn_mkwrite(
->  	struct vm_fault		*vmf)
->  {
-> -
-> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> -	struct xfs_inode	*ip = XFS_I(inode);
-> -	int			ret = VM_FAULT_NOPAGE;
-> -	loff_t			size;
-> -
-> -	trace_xfs_filemap_pfn_mkwrite(ip);
-> -
-> -	sb_start_pagefault(inode->i_sb);
-> -	file_update_time(vmf->vma->vm_file);
-> -
-> -	/* check if the faulting page hasn't raced with truncate */
-> -	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
-> -	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
-
-I see that this size check is gone from the new code, and we now rely on the
-equivalent check in dax_iomap_fault().  Nice.
-
-> -	if (vmf->pgoff >= size)
-> -		ret = VM_FAULT_SIGBUS;
-> -	else if (IS_DAX(inode))
-> -		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &xfs_iomap_ops);
-> -	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
-> -	sb_end_pagefault(inode->i_sb);
-> -	return ret;
-> -
-> +	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
-> +		return VM_FAULT_NOPAGE;
-> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
->  }
->  
->  static const struct vm_operations_struct xfs_file_vm_ops = {
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index bcc3cdf8e1c5..3f41d5340eb8 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -689,10 +689,26 @@ DEFINE_INODE_EVENT(xfs_inode_set_cowblocks_tag);
->  DEFINE_INODE_EVENT(xfs_inode_clear_cowblocks_tag);
->  DEFINE_INODE_EVENT(xfs_inode_free_cowblocks_invalid);
->  
-> -DEFINE_INODE_EVENT(xfs_filemap_fault);
-> -DEFINE_INODE_EVENT(xfs_filemap_huge_fault);
-> -DEFINE_INODE_EVENT(xfs_filemap_page_mkwrite);
-> -DEFINE_INODE_EVENT(xfs_filemap_pfn_mkwrite);
-> +TRACE_EVENT(xfs_filemap_fault,
-> +	TP_PROTO(struct xfs_inode *ip, enum page_entry_size pe_size,
-> +		 bool write_fault),
-> +	TP_ARGS(ip, pe_size, write_fault),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(xfs_ino_t, ino)
-> +		__field(enum page_entry_size, pe_size)
-> +		__field(bool, write_fault)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-> +		__entry->ino = ip->i_ino;
-> +		__entry->pe_size = pe_size;
-> +		__entry->write_fault = write_fault;
-> +	),
-> +	TP_printk("dev %d:%d ino 0x%llx pe_size %d write_fault %d",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> +		  __entry->ino, __entry->pe_size, __entry->write_fault)
-> +)
-
-I wonder if pe_size would be more readable as a string via __print_symbolic()
-so we see "pe_size PMD" instead of "pe_size 1" from enum page_entry_size?
