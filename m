@@ -1,65 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:59145 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752632AbdHQWyc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 18:54:32 -0400
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (1.0)
-Subject: Re: xfs_repair fails: mismatched UUID?
-From: Link Dupont <link@sub-pop.net>
-In-Reply-To: <d83f6b0d-6881-edc1-4353-eb357ed55730@sandeen.net>
-Date: Thu, 17 Aug 2017 15:54:30 -0700
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <1AF5F743-A613-4E2A-9D50-9DF84D4D3532@sub-pop.net>
-References: <1502946903.3034.25.camel@sub-pop.net> <d31ec46a-cc4c-5865-6ee4-fffdcb32c254@sandeen.net> <e285d801-755b-b84e-028a-b889f4ee336c@sandeen.net> <1502948579.29878.8.camel@sub-pop.net> <d83f6b0d-6881-edc1-4353-eb357ed55730@sandeen.net>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:39515 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753324AbdHQXAM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 19:00:12 -0400
+Date: Fri, 18 Aug 2017 08:59:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 6/6 v2] mkfs: extend opt_params with a value field
+Message-ID: <20170817225952.GV21024@dastard>
+References: <20170811123037.15962-1-jtulak@redhat.com>
+ <20170815150812.32237-1-jtulak@redhat.com>
+ <20170815150812.32237-5-jtulak@redhat.com>
+ <4a7d1fe9-8094-78e8-aca9-f7f0156f0aa7@sandeen.net>
+ <20170816213812.GC4796@magnolia>
+ <CACj3i72+wAWL0ZVBmC8Kk4_B7=du_J_yoDsyeT=G359u-nv+hw@mail.gmail.com>
+ <20170817110324.GR21024@dastard>
+ <CACj3i73CN_0YE8gEV6+qxq5hcGEu1aXiL8fCO=VLv7qvhqoNpg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CACj3i73CN_0YE8gEV6+qxq5hcGEu1aXiL8fCO=VLv7qvhqoNpg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
 
+On Thu, Aug 17, 2017 at 04:56:18PM +0200, Jan Tulak wrote:
+> On Thu, Aug 17, 2017 at 1:03 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > Hi folks,
+> >
+> > I'm going to put my 2c worth in here in the form of a patch.  The
+> > tl;dr of it all is that I think we need to reset and reflect on what
+> > I was originally trying to acheive with the table based option
+> > parsing: factoring and simplifying mkfs into an easy to understand,
+> > maintainable code base....
+> >
+> > And, while I remember, there's a handful of input validation bugs I
+> > found in the code whiel I was doing this (like missing conflict
+> > checks).
+> >
+> > Anyway, have a look, based on the current for-next branch.
+> >
+> >> >> [1] # mkfs.xfs -dfile,name=fsfile,size=1g,sectsize=4k -lfile,name=logfile,size=512m,sectsize=512
+> >> >
+> >> > I see -d sectsize is in the --help screen but not the manpage.  Can we
+> >> > fix that?
+> >>
+> >> I made it, but Dave would rather see the -d sectsize option removed.
+> >> Which I'm not sure about...
+> >> See "[PATCH] xfsprogs: add sectsize/sectlog to the man page"
+> >
+> > Slash and burn - there is so much useless, redundant crap in the CLI
+> > we've been holding onto for 15 years that we should just get rid of
+> > it. That's what I was intending to do originally with this rework
+> > and I still see no reason why we should be keeping stuff that just
+> > causes user confusion and implemention complexity.
+> 
+> I went through it and I admit that his shot seems to go in a much
+> better way than my patches; I focused on the opts structure too much I
+> guess. :-)
 
+That's not your fault - if anyone is to blame it's me for not
+providing you with better guidance in the first place.
 
-> On Aug 16, 2017, at 10:48 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->=20
->=20
->=20
->> On 8/17/17 12:42 AM, Link Dupont wrote:
->>> On Thu, 2017-08-17 at 00:26 -0500, Eric Sandeen wrote:
->>> Oh right, you did say RAID enclosure.
->>>=20
->>> My money is on the enclosure no longer presenting you with sectors in
->>> the original order, or in an otherwise severely damaged form, for
->>> whatever reason.
->>=20
->> The problem *could* be from the enclosure itself; I don't have a second o=
-ne to
->> test. I'm fairly sure the cause is a failing drive (I get a red LED from o=
-ne of
->> the two status LEDs on the front of the enclosure).
->>=20
->>> xfs_repair restores filesystem consistency but it is not a data recovery=
- or
->>> storage repair tool.  ;)
->>=20
->> I get that. But since the files are there, it seemed like the file-system=
- could
->> be repaired. I'll dig up the output.
->=20
-> My worry is that the "log uuid" was neither zeros nor the proper UUID; it w=
-as
-> something else.  So it wasn't bad, unreadable sectors which got filled in w=
-ith
-> zeros by ddrescue, it was apparently some random data coughed up by the
-> enclosure for some unknown reason.
->=20
-> If it did that to the log, it may well have done that to many other parts
-> of the filesystem as well.
->=20
-> -Eric
->=20
+> So, thanks for this restart. I'm going to compare it with
+> my changes and check which parts of my set makes sense in this
+> direction as well and which do not...
 
-This almost makes it seem more like the enclosure controller is at fault her=
-e. I'll chase down another one.=
+Having slept on it, I suspect that I'll generate an "input
+parameters" structure to replace the hacked up "cli geometry",
+similar to what Luis first wanted to add. If it works out the way I
+think it will, we'll end up with a set of key,value inputs in that
+structure that we can trivially generate using a config file rather
+than the CLI....
 
+> And this is maybe a bit premature idea now, but should we add some way
+> how to tell the user "this option is deprecated, use XXX"? I think
+> that it is a good idea if we are removing parts of the CLI, which
+> might break some user scripts or workflow. It would be pretty easy to
+> do - with something like your *_opts_parser() functions, just a case,
+> print the error and return EINVAL.
+
+Depends on how we decide to do the removal. If we go with
+deprecation and later removal, then I think this is a good idea.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
