@@ -1,83 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:49319 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751662AbdH2VwB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 17:52:01 -0400
-Date: Wed, 30 Aug 2017 07:51:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 15/30] xfs: Define usercopy region in xfs_inode slab
- cache
-Message-ID: <20170829215157.GC10621@dastard>
-References: <1503956111-36652-1-git-send-email-keescook@chromium.org>
- <1503956111-36652-16-git-send-email-keescook@chromium.org>
- <20170829081453.GA10196@infradead.org>
- <20170829123126.GB10621@dastard>
- <20170829124536.GA26339@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170829124536.GA26339@infradead.org>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:55481 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751169AbdHQFnI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 01:43:08 -0400
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailout.nyi.internal (Postfix) with ESMTP id D3E3920BB1
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 01:43:07 -0400 (EDT)
+Received: from oryx (c-73-202-12-204.hsd1.ca.comcast.net [73.202.12.204])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 0B661240A4
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 01:43:05 -0400 (EDT)
+Message-ID: <1502948579.29878.8.camel@sub-pop.net>
+Subject: Re: xfs_repair fails: mismatched UUID?
+From: Link Dupont <link@sub-pop.net>
+Date: Wed, 16 Aug 2017 22:42:59 -0700
+In-Reply-To: <e285d801-755b-b84e-028a-b889f4ee336c@sandeen.net>
+References: <1502946903.3034.25.camel@sub-pop.net>
+         <d31ec46a-cc4c-5865-6ee4-fffdcb32c254@sandeen.net>
+         <e285d801-755b-b84e-028a-b889f4ee336c@sandeen.net>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-ktnPNncQqqA4Qn2u+gnJ"
+Mime-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, kernel-hardening@lists.openwall.com
+To: linux-xfs@vger.kernel.org
 
-On Tue, Aug 29, 2017 at 05:45:36AM -0700, Christoph Hellwig wrote:
-> On Tue, Aug 29, 2017 at 10:31:26PM +1000, Dave Chinner wrote:
-> > Probably should.  I've already been looking at killing the inline
-> > extents array to simplify the management of the extent list (much
-> > simpler to index by rbtree when we don't have direct/indirect
-> > structures), so killing the inline data would get rid of the other
-> > part of the union the inline data sits in.
-> 
-> That's exactly where I came form with my extent list work.  Although
-> the rbtree performance was horrible due to the memory overhead and
-> I've switched to a modified b+tree at the moment..
 
-Right, I've looked at btrees, too, but it's more complex than just
-using an rbtree. I originally looked at using Peter Z's old
-RCU-aware btree code, but it doesn't hold data in the tree leaves.
-So that needed significant modification to make work without a
-memory alloc per extent and that didn't work with original aim of
-RCU-safe extent lookups.  I also looked at that "generic" btree
-stuff that came from logfs, and after a little while ran away
-screaming. So if we are going to use a b+tree, it sounds like you
-are probably going the right way.
+--=-ktnPNncQqqA4Qn2u+gnJ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-As it is, I've been looking at using interval tree - I have kinda
-working code - which basically leaves the page based extent arrays
-intact but adds an rbnode/interval state header to the start of each
-page to track the offsets within the node and propagate them back up
-to the root for fast offset based extent lookups. With a lookaside
-cache on the root, it should behave and perform almost identically
-to the current indirect array and should have very little extra
-overhead....
+On Thu, 2017-08-17 at 00:26 -0500, Eric Sandeen wrote:
+> Oh right, you did say RAID enclosure.
+>=20
+> My money is on the enclosure no longer presenting you with sectors in
+> the original order, or in an otherwise severely damaged form, for
+> whatever reason.
 
-The sticking point, IMO, is the extent array index based lookups in
-all the bmbt code.  I've been looking at converting all that to use
-offset based lookups and a cursor w/ lookup/inc/dec/insert/delete
-ioperations wrapping xfs_iext_lookup_ext() and friends. This means
-the modifications are pretty much identical to the on-disk extent
-btree, so they can be abstracted out into a single extent update
-interface for both trees.  Have you planned/done any cleanup/changes
-with this code?
+The problem *could* be from the enclosure itself; I don't have a second one=
+ to
+test. I'm fairly sure the cause is a failing drive (I get a red LED from on=
+e of
+the two status LEDs on the front of the enclosure).
 
-> > OTOH, if we're going to have to dynamically allocate the memory for
-> > the extent/inline data for the data fork, it may just be easier to
-> > make the entire data fork a dynamic allocation (like the attr fork).
-> 
-> I though about this a bit, but it turned out that we basically
-> always need the data anyway, so I don't think it's going to buy
-> us much unless we shrink the inode enough so that they better fit
-> into a page.
+> xfs_repair restores filesystem consistency but it is not a data recovery =
+or
+> storage repair tool.  ;)
 
-True. Keep it mind for when we've shrunk the inode by another
-100 bytes...
+I get that. But since the files are there, it seemed like the file-system c=
+ould
+be repaired. I'll dig up the output.
 
-Cheers,
+> > All of this has been performed on my ddrescue clone (not the original
+> device).
+>=20
+> <cue applause!>  :)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I don't always directly edit properties of my filesystems, but when I do, I=
+ do
+it on a clone. :)
+--=-ktnPNncQqqA4Qn2u+gnJ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEEqa+yVxzJn+17d/PuSGi9TERQ3rwFAlmVLOMACgkQSGi9TERQ
+3rwSCgf+PnDOnesrYVvNzAJr2aJuF8mdej1Ra5PeQRgCl/+v8Nnrwcyk6yTfbmKD
+ojSiOOqocVZRzPQxI6jS+UtaCbEInFMO7jZyeVX90FmOgMFcXDP/zqAJwLVdicoP
+LpjoYCGy6Wl1h8vWQNa+FfasRbf6pdLZPPWQpwYRaH16iUQLvWp8Yi3nvsARoHNk
+fPswtSW2bSWqDz80C3yFdh95lBBF7+k+bI54fUJjIAsLadqNH1bBxawnNfuipCbn
+7Im6C3MA2EmfZAzctfz5sP9LcpinrtAR6e99PEzeOwGJTfvXklLcbZKIMfPArqAR
+ipgSi9ZNZddEVgIXllOu+Zat8LRqHQ==
+=DoLl
+-----END PGP SIGNATURE-----
+
+--=-ktnPNncQqqA4Qn2u+gnJ--
+
