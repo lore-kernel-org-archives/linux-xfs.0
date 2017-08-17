@@ -1,48 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr001msb.fastweb.it ([85.18.95.85]:58061 "EHLO
-        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751848AbdHSKKU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Aug 2017 06:10:20 -0400
-Received: from ceres.assyoma.it (93.63.55.57) by mr001msb.fastweb.it (8.5.140.05)
-        id 59918211002E58B3 for linux-xfs@vger.kernel.org; Sat, 19 Aug 2017 12:05:07 +0200
-Subject: Estimate =?UTF-8?Q?xfs=5Frepair=20run=20time?=
+Received: from dmzsha2062.multrix.com ([87.233.41.63]:15503 "EHLO
+        dmzsha2062.multrix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753403AbdHQRP5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 13:15:57 -0400
+Subject: Re: Issue with "no space left on device"
+References: <1502981688167.22881@true.nl>
+ <20170817164751.GA62570@bfoster.bfoster>
+From: Sander van Schie <sander.vanschie@true.nl>
+Message-ID: <a3012e54-dc24-b069-a7a9-c235168d0499@true.nl>
+Date: Thu, 17 Aug 2017 19:15:55 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+In-Reply-To: <20170817164751.GA62570@bfoster.bfoster>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-Date: Sat, 19 Aug 2017 12:05:07 +0200
-From: Gionatan Danti <g.danti@assyoma.it>
-Message-ID: <22ed5cf73260ae39bf59779b302d8ad3@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-Hi list,
-using XFS on relatively big filesystems (> 8TB) I was wondering if it is 
-possible to estimate how much time an emergency "xfs_repair" would take.
 
-Some specific questions:
-- will total time depend on how much the filesystem is filled (I think 
-so...)?
-- will total time depend on how data are layed on the physical disks 
-(ie: fragmented vs sequential)?
-- will total time scale down with increasing spindle count (ie: single 
-disk vs 4-way RAID10)?
+On 17-08-17 18:47, Brian Foster wrote:
+> On Thu, Aug 17, 2017 at 02:54:48PM +0000, Sander van Schie / True wrote:
+>> Hello,
+>>
+>> I have a 35 GB XFS partition with both plenty of free space and inodes, but I'm still getting the error "No space left on device" when trying to create new files.
+>>
+>> Mount options:
+>>
+>> # mount | grep vdc1
+>> /dev/vdc1 on /mnt type xfs (rw,relatime,attr2,inode64,noquota)
+>>
+>> Used disk space:
+>>
+>> # df /dev/vdc1
+>> Filesystem     1K-blocks     Used Available Use% Mounted on
+>> /dev/vdc1       36681200 16066576  20614624  44% /mnt
+>>
+>> Used inodes:
+>>
+>> # df -i /dev/vdc1
+>> Filesystem     Inodes  IUsed  IFree IUse% Mounted on
+>> /dev/vdc1      917440 199616 717824   22% /mnt
+>>
+>> xfs info:
+>>
+>> # xfs_info /dev/vdc1
+>> meta-data=/dev/vdc1              isize=2048   agcount=4, agsize=2293695 blks
+> 
+> With 2k sized inodes, the most likely cause is free space fragmentation.
+> What does 'xfs_db -c "freesp -s" <dev>' print for this fs?
+> 
+> Brian
+> 
 
-On a related question: I generally use LVM to segregate/isolate my 
-virtual machine images. In this manner, even a completely blowed up 
-filesystem on one LV can not affect other LV.
+The output of the command is as follows:
 
-How do you feel using a single big LV + XFS + preallocated RAW disk 
-images? Can a problem on the main XFS filesystem be contained on only 
-some VM files, or it really risks to destroy the entire filesystem?
+# xfs_db -c "freesp -s" /dev/vdc1
+    from      to extents  blocks    pct
+       1       1      28      28   0,00
+       2       3      50     149   0,00
+       4       7     907    3799   0,07
+       8      15    1369   12990   0,25
+      16      31  183206 5126962  99,34
+      32      63     492   17197   0,33
+total free extents 186052
+total free blocks 5161125
+average free extent size 27,7402
 
-Thank you all.
+(not sure what I'm looking at myself)
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+
+>>           =                       sectsz=512   attr=2, projid32bit=1
+>>           =                       crc=1        finobt=1 spinodes=0
+>> data     =                       bsize=4096   blocks=9174779, imaxpct=5
+>>           =                       sunit=0      swidth=0 blks
+>> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+>> log      =internal               bsize=4096   blocks=4479, version=2
+>>           =                       sectsz=512   sunit=0 blks, lazy-count=1
+>> realtime =none                   extsz=4096   blocks=0, rtextents=0
+>>
+>>
+>> I've already tried repairing and rebooting, which unfortunately didn't help.
+>>
+>> Any idea what's wrong?
+>>
+>> Thanks!
+>>
+>> - Sander--
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
