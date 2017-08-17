@@ -1,62 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f169.google.com ([209.85.161.169]:33940 "EHLO
-        mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752440AbdHPXmL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 19:42:11 -0400
-Received: by mail-yw0-f169.google.com with SMTP id s143so31981996ywg.1
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 16:42:09 -0700 (PDT)
+Received: from mail1.g1.pair.com ([66.39.3.162]:52606 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752599AbdHQN3Q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Aug 2017 09:29:16 -0400
+Date: Thu, 17 Aug 2017 15:29:19 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: xfs_repair fails to clean directory inode
+Message-ID: <20170817152919.74346980@harpe.intellique.com>
+In-Reply-To: <9c1f39a3-c4cf-e98d-4331-475b037268b7@suse.de>
+References: <9c1f39a3-c4cf-e98d-4331-475b037268b7@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <150286944610.8837.9513410258028246174.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150286944610.8837.9513410258028246174.stgit@dwillia2-desk3.amr.corp.intel.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 16 Aug 2017 16:42:08 -0700
-Message-ID: <CAPcyv4h64RKGWQ7Mgw7KpZVc32hm4zprryjpZKwGS171ATh+VA@mail.gmail.com>
-Subject: Re: [PATCH v5 0/5] MAP_DIRECT and block-map-atomic files
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/OY1kxYoRFHb5JpoJIf2JwKi"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Wed, Aug 16, 2017 at 12:44 AM, Dan Williams <dan.j.williams@intel.com> wrote:
-> Changes since v4 [1]:
-> * Drop the new vma ->fs_flags field, it can be replaced by just checking
->   ->vm_ops locally in the filesystem. This approach also allows
->   non-MAP_DIRECT vmas to be vma_merge() capable since vmas with
->   vm_ops->close() disable vma merging. (Jan)
->
-> * Drop the new ->fmmap() operation, instead convert all ->mmap()
->   implementations tree-wide to take an extra 'map_flags' parameter.
->   (Jan)
->
-> * Drop the cute (MAP_SHARED|MAP_PRIVATE) hack/mechanism to add new
->   validated flags mmap(2) and instead just define a new mmap syscall
->   variant (sys_mmap_pgoff_strict). (Andy)
->
-> * Fix the fact that MAP_PRIVATE|MAP_DIRECT would silently fallback to
->   MAP_SHARED (addressed by the new syscall). (Kirill)
->
-> * Require CAP_LINUX_IMMUTABLE for MAP_DIRECT to close any unforeseen
->   denial of service for unmanaged + unprivileged MAP_DIRECT usage.
->   (Kirill)
->
-> * Switch MAP_DIRECT fault failures to SIGBUS (Kirill)
->
-> * Add an fcntl mechanism to allow an unprivileged process to use
->   MAP_DIRECT on an fd setup by a privileged process.
->
-> * Rework the MAP_DIRECT description to allow for future hardware where
->   it may not be required to software-pin the file offset to physical
->   address relationship.
->
-> Given the tree-wide touches in this revision the patchset is starting to
-> feel more like -mm material than strictly xfs.
->
-> [1]: https://lkml.org/lkml/2017/8/15/39
+--Sig_/OY1kxYoRFHb5JpoJIf2JwKi
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-For easier testing / evaluation of these patches I went ahead and
-rebased them to v4.13-rc5, fixed up 0-day reports from the ->mmap()
-conversion, and published a for-4.14/map-direct branch here:
+Le Thu, 17 Aug 2017 14:13:24 +0200
+Hannes Reinecke <hare@suse.de> =C3=A9crivait:
 
-    https://git.kernel.org/pub/scm/linux/kernel/git/djbw/nvdimm.git/log/?h=for-4.14/map-direct
+> bogus .. inode number (0) in directory inode 128, clearing inode
+> number xfs_repair: dir2.c:1419: process_dir2: Assertion `(ino !=3D
+> mp->m_sb.sb_rootino && ino !=3D *parent) || (ino =3D=3D mp->m_sb.sb_rooti=
+no
+> && (ino =3D=3D *parent || need_root_dotdot =3D=3D 1))' failed.
+> Aborted (core dumped)
+>=20
+> Needless to say, the kernel refuses to mount that fs.
+>=20
+> The really annoying thing is that this FS hosted my various
+> development git trees, and I really would hate to see the data gone.
+>=20
+> Thanks for any hints.
+>=20
+
+Which version of xfs_repair are you using? You should probably try the
+latest (4.12) first of all.
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/OY1kxYoRFHb5JpoJIf2JwKi
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAlmVmi8ACgkQX3jQXNUicVYTswCgk4hwWw/NYYSFRRCobdMfWH/R
+N0gAniQyxW+RNiHBWos8yzMD8OwQVgoL
+=JY9M
+-----END PGP SIGNATURE-----
+
+--Sig_/OY1kxYoRFHb5JpoJIf2JwKi--
