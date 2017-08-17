@@ -1,38 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:44292 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751851AbdHQHFb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Aug 2017 03:05:31 -0400
-Date: Thu, 17 Aug 2017 09:05:29 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] iomap: fix integer truncation issues in the zeroing
-        and dirtying helpers
-Message-ID: <20170817070529.GA23920@lst.de>
-References: <20170811151805.22896-1-hch@lst.de> <20170811160443.GA24087@magnolia> <20170811160658.GA8956@lst.de> <20170816215255.GD4796@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170816215255.GD4796@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:53120 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751575AbdHQQI2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Aug 2017 12:08:28 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [RFC PATCH 0/13 v2] dax, ext4: Synchronous page faults
+Date: Thu, 17 Aug 2017 18:08:02 +0200
+Message-Id: <20170817160815.30466-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, pmenzel@molgen.mpg.de, stockhausen@collogia.de
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>, Jan Kara <jack@suse.cz>
 
-On Wed, Aug 16, 2017 at 02:52:55PM -0700, Darrick J. Wong wrote:
-> On Fri, Aug 11, 2017 at 06:06:58PM +0200, Christoph Hellwig wrote:
-> > On Fri, Aug 11, 2017 at 09:04:43AM -0700, Darrick J. Wong wrote:
-> > > Looks fine to me,
-> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > (Are you going to push this to Al yourself, or do you want me to drag it
-> > > through the xfs tree?)
-> > 
-> > In general we've maintained iomap.c through the XFS tree so far.
-> > I think it's easiest to stick to that.
-> 
-> Needs signed-off-by. :(
+Hello,
 
-Feel free to add it:
+here is second version of my patches to implement synchronous page faults for
+DAX mappings to make flushing of DAX mappings possible from userspace so that
+they can be flushed on finer than page granularity and also avoid the overhead
+of a syscall.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+We use a new mmap flag MAP_SYNC to indicate that page faults for the mapping
+should be synchronous.  The guarantee provided by this flag is: While a block
+is writeably mapped into page tables of this mapping, it is guaranteed to be
+visible in the file at that offset also after a crash.
+
+How I implement this is that ->iomap_begin() indicates by a flag that inode
+block mapping metadata is unstable and may need flushing (use the same test as
+whether fdatasync() has metadata to write). If yes, DAX fault handler refrains
+from inserting / write-enabling the page table entry and returns special flag
+VM_FAULT_NEEDDSYNC together with a PFN to map to the filesystem fault handler.
+The handler then calls fdatasync() (vfs_fsync_range()) for the affected range
+and after that calls DAX code to update the page table entry appropriately.
+
+>From my (fairly limited) knowledge of XFS it seems XFS should be able to do the
+same and it should be even possible for filesystem to implement safe remapping
+of a file offset to a different block (i.e. break reflink, do defrag, or
+similar stuff) like:
+
+1) Block page faults
+2) fdatasync() remapped range (there can be outstanding data modifications
+   not yet flushed)
+3) unmap_mapping_range()
+4) Now remap blocks
+5) Unblock page faults
+
+Basically we do the same on events like punch hole so there is not much new
+there.
+
+Note that the implementation of MAP_SYNC flag is pretty crude for now just to
+enable testing since Dan is working in the same area to implement another mmap
+flag. Once the decision on how to implement new mmap flag is settled, I can
+clean up that patch.
+
+I did some basic performance testing on the patches over ramdisk - timed
+latency of page faults when faulting 512 pages. I did several tests: with file
+preallocated / with file empty, with background file copying going on / without
+it, with / without MAP_SYNC (so that we get comparison).  The results are
+(numbers are in microseconds):
+
+File preallocated, no background load no MAP_SYNC:
+min=5 avg=6 max=42
+4 - 7 us: 398
+8 - 15 us: 110
+16 - 31 us: 2
+32 - 63 us: 2
+
+File preallocated, no background load, MAP_SYNC:
+min=10 avg=10 max=43
+8 - 15 us: 509
+16 - 31 us: 2
+32 - 63 us: 1
+
+File empty, no background load, no MAP_SYNC:
+min=21 avg=23 max=76
+16 - 31 us: 503
+32 - 63 us: 8
+64 - 127 us: 1
+
+File empty, no background load, MAP_SYNC:
+min=91 avg=108 max=234
+64 - 127 us: 467
+128 - 255 us: 45
+
+File empty, background load, no MAP_SYNC:
+min=21 avg=23 max=67
+16 - 31 us: 507
+32 - 63 us: 4
+64 - 127 us: 1
+
+File empty, background load, MAP_SYNC:
+min=94 avg=112 max=181
+64 - 127 us: 489
+128 - 255 us: 23
+
+So here we can see the difference between MAP_SYNC vs non MAP_SYNC is about
+100-200 us when we need to wait for transaction commit in this setup. 
+
+Anyway, here are the patches, comments are welcome.
+
+Changes since v1:
+* switched to using mmap flag MAP_SYNC
+* cleaned up fault handlers to avoid passing pfn in vmf->orig_pte
+* switched to not touching page tables before we are ready to insert final
+  entry as it was unnecessary and not really simplifying anything
+* renamed fault flag to VM_FAULT_NEEDDSYNC
+* other smaller fixes found by reviewers
+
+								Honza
