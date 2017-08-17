@@ -1,34 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56701 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752096AbdHKLWF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2017 07:22:05 -0400
-Date: Fri, 11 Aug 2017 04:22:03 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/3] xfs: evict all inodes involved with log redo item
- recovery
-Message-ID: <20170811112203.GC27964@infradead.org>
-References: <150234262066.13754.6534116056866237943.stgit@magnolia>
- <150234263191.13754.5037661818451431724.stgit@magnolia>
- <20170810145126.GC3777@bfoster.bfoster>
- <20170810171851.GW24087@magnolia>
+Received: from sandeen.net ([63.231.237.45]:55598 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753005AbdHQV24 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Aug 2017 17:28:56 -0400
+Subject: Re: Issue with "no space left on device"
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <1502981688167.22881@true.nl>
+ <20170817164751.GA62570@bfoster.bfoster>
+ <a3012e54-dc24-b069-a7a9-c235168d0499@true.nl>
+ <f8390140-cdcf-96ff-3013-3cffe66fc9f6@sandeen.net>
+ <0a03ddab-6e81-dc89-ab2d-92a005313901@true.nl>
+ <8dbbdb4d-300c-e625-1402-d1720b6cfe60@sandeen.net>
+Message-ID: <f7d1164f-07fc-940d-b350-c6572fae7d2b@sandeen.net>
+Date: Thu, 17 Aug 2017 16:28:55 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170810171851.GW24087@magnolia>
+In-Reply-To: <8dbbdb4d-300c-e625-1402-d1720b6cfe60@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Sander van Schie <sander.vanschie@true.nl>, Brian Foster <bfoster@redhat.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Thu, Aug 10, 2017 at 10:18:51AM -0700, Darrick J. Wong wrote:
-> I felt there's less messing around with vfs internals by sticking to
-> igrab and iput (and letting them deal with the internal inode state)
-> since that's what xfs uses elsewhere to manage inode life cycles.
+On 8/17/17 4:21 PM, Eric Sandeen wrote:
+> On 8/17/17 3:11 PM, Sander van Schie wrote:
+>>
+>> On 17-08-17 19:45, Eric Sandeen wrote:
+> 
+> ...
+> 
+>>> recent xfsprogs v4.12 has a new option to freesp, to specify alignment filters,
+>>> i.e.
+>>>
+>>>      xfs_db> freesp -A 32
+>>>           will show only 32-block aligned free extents.
+>>>
+>>> You may not have that recent of xfsprogs, but you could check out the git
+>>> tree from git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git, build
+>>> it, and run xfs_db from within the tree, i.e.
+>>>
+>>> # db/xfs_db -c "freesp -A 32 -s" /dev/vdc1
+>>>
+>>> Can you provide that output?
+>>>
+>>> -Eric
+>>>
+>>
+>> Thank you for the explanation!
+>>
+>> The output of the command is as follows:
+>>
+>> # db/xfs_db -c "freesp -A 32 -s" /dev/vdc1
+>>    from      to extents  blocks    pct
+>>       1       1       1       1   0,00
+>>       2       3       7      21   0,01
+>>       4       7     235     970   0,24
+>>       8      15     130    1313   0,33
+>>      16      31   14214  397375  99,42
+> 
+> So, I think that's the problem: There are no 32-block aligned
+> free regions of 32 blocks length or greater.
+> 
+> (now that I think about it, the -A filter filters on free extents
+> /starting/ on that alignment; I don't know if the inode allocator
+> can make use of, say, a 64 block free extent which /overlaps/ an
+> aligned 32-block range... hm)
+> 
+> Out of curiosity, what was the reason for 2k inodes?
 
-I'd feel much safer calling evict_inodes rather than reimplementing
-it poorly.  In fact we might want to just call it in the VFS after
-a failed mount?
+Also for what it's worth - the sparse inodes feature, which is
+default on newer filesystems, alleviates this problem.  When
+mounted, what does xfs_info /mount/point say, does it contain
+output for "spinodes?"
 
-Either way please also add Al to the Cc for the next version.
+If you need 2k inodes, you probaboy want to get userspace+kernel
+that can support sparse inode allocation.
+
+-Eric
