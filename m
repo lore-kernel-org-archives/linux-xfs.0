@@ -1,43 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f172.google.com ([209.85.161.172]:34903 "EHLO
-        mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752114AbdHPQct (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 12:32:49 -0400
-Received: by mail-yw0-f172.google.com with SMTP id l82so25833444ywc.2
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Aug 2017 09:32:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAPcyv4iFzbVMgEJen--QNnFH7uuU7PWCV6S9c3fPwDMrr3iZjA@mail.gmail.com>
-References: <150286944610.8837.9513410258028246174.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150286946864.8837.17147962029964281564.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170816111244.uxx6kvbi3cn5clqd@node.shutemov.name> <CAPcyv4iFzbVMgEJen--QNnFH7uuU7PWCV6S9c3fPwDMrr3iZjA@mail.gmail.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 16 Aug 2017 09:32:48 -0700
-Message-ID: <CAPcyv4ioikcZvVqZQZmy9kU6tSX5zRgOqJTKHZLxes2TtT9UkA@mail.gmail.com>
-Subject: Re: [PATCH v5 4/5] fs, xfs: introduce MAP_DIRECT for creating
- block-map-atomic file ranges
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx2.suse.de ([195.135.220.15]:53126 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751620AbdHQQI2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Aug 2017 12:08:28 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 02/13] dax: Simplify arguments of dax_insert_mapping()
+Date: Thu, 17 Aug 2017 18:08:04 +0200
+Message-Id: <20170817160815.30466-3-jack@suse.cz>
+In-Reply-To: <20170817160815.30466-1-jack@suse.cz>
+References: <20170817160815.30466-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>, Jan Kara <jack@suse.cz>
 
-On Wed, Aug 16, 2017 at 9:29 AM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Wed, Aug 16, 2017 at 4:12 AM, Kirill A. Shutemov
-> <kirill@shutemov.name> wrote:
->> On Wed, Aug 16, 2017 at 12:44:28AM -0700, Dan Williams wrote:
->>> @@ -1411,6 +1422,9 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
->>>
->>>                       /* fall through */
->>>               case MAP_PRIVATE:
->>> +                     if ((flags & (MAP_PRIVATE|MAP_DIRECT))
->>> +                                     == (MAP_PRIVATE|MAP_DIRECT))
->>> +                             return -EINVAL;
->>
->> We've already checked for MAP_PRIVATE in this codepath. Simple (flags &
->> MAP_DIRECT) would be enough.
->
-> True, willl fix.
+dax_insert_mapping() has lots of arguments and a lot of them is actuall
+duplicated by passing vm_fault structure as well. Change the function to
+take the same arguments as dax_pmd_insert_mapping().
 
-Actually, no, because of the fallthrough we need to check MAP_SHARED
-or MAP_PRIVATE along with MAP_DIRECT.
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/fs/dax.c b/fs/dax.c
+index 75760f7bdf5d..fbbb6d176987 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -814,23 +814,30 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ }
+ EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
+ 
+-static int dax_insert_mapping(struct address_space *mapping,
+-		struct block_device *bdev, struct dax_device *dax_dev,
+-		sector_t sector, size_t size, void *entry,
+-		struct vm_area_struct *vma, struct vm_fault *vmf)
++static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
++{
++	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
++}
++
++static int dax_insert_mapping(struct vm_fault *vmf, struct iomap *iomap,
++			      loff_t pos, void *entry)
+ {
++	const sector_t sector = dax_iomap_sector(iomap, pos);
++	struct vm_area_struct *vma = vmf->vma;
++	struct address_space *mapping = vma->vm_file->f_mapping;
+ 	unsigned long vaddr = vmf->address;
+ 	void *ret, *kaddr;
+ 	pgoff_t pgoff;
+ 	int id, rc;
+ 	pfn_t pfn;
+ 
+-	rc = bdev_dax_pgoff(bdev, sector, size, &pgoff);
++	rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
+ 	if (rc)
+ 		return rc;
+ 
+ 	id = dax_read_lock();
+-	rc = dax_direct_access(dax_dev, pgoff, PHYS_PFN(size), &kaddr, &pfn);
++	rc = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(PAGE_SIZE),
++			       &kaddr, &pfn);
+ 	if (rc < 0) {
+ 		dax_read_unlock(id);
+ 		return rc;
+@@ -930,11 +937,6 @@ int __dax_zero_page_range(struct block_device *bdev,
+ }
+ EXPORT_SYMBOL_GPL(__dax_zero_page_range);
+ 
+-static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
+-{
+-	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
+-}
+-
+ static loff_t
+ dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		struct iomap *iomap)
+@@ -1076,7 +1078,6 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 	struct inode *inode = mapping->host;
+ 	unsigned long vaddr = vmf->address;
+ 	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
+-	sector_t sector;
+ 	struct iomap iomap = { 0 };
+ 	unsigned flags = IOMAP_FAULT;
+ 	int error, major = 0;
+@@ -1129,9 +1130,9 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 		goto error_finish_iomap;
+ 	}
+ 
+-	sector = dax_iomap_sector(&iomap, pos);
+-
+ 	if (vmf->cow_page) {
++		sector_t sector = dax_iomap_sector(&iomap, pos);
++
+ 		switch (iomap.type) {
+ 		case IOMAP_HOLE:
+ 		case IOMAP_UNWRITTEN:
+@@ -1164,8 +1165,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+ 			count_memcg_event_mm(vmf->vma->vm_mm, PGMAJFAULT);
+ 			major = VM_FAULT_MAJOR;
+ 		}
+-		error = dax_insert_mapping(mapping, iomap.bdev, iomap.dax_dev,
+-				sector, PAGE_SIZE, entry, vmf->vma, vmf);
++		error = dax_insert_mapping(vmf, &iomap, pos, entry);
+ 		/* -EBUSY is fine, somebody else faulted on the same PTE */
+ 		if (error == -EBUSY)
+ 			error = 0;
+-- 
+2.12.3
+
