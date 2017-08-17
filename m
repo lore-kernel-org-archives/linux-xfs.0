@@ -1,57 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53159 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752236AbdHQQIa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Aug 2017 12:08:30 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 05/13] dax: Create local variable for vmf->flags & FAULT_FLAG_WRITE test
-Date: Thu, 17 Aug 2017 18:08:07 +0200
-Message-Id: <20170817160815.30466-6-jack@suse.cz>
-In-Reply-To: <20170817160815.30466-1-jack@suse.cz>
-References: <20170817160815.30466-1-jack@suse.cz>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:14576 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751461AbdHQAA6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Aug 2017 20:00:58 -0400
+Date: Thu, 17 Aug 2017 10:00:42 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: preserve i_mode if __xfs_set_acl() fails
+Message-ID: <20170817000042.GO21024@dastard>
+References: <20170814081806.GA3924@debian.home>
+ <20170815020018.GF21024@dastard>
+ <20170815061857.GA2803@debian.home>
+ <20170815084430.GK21024@dastard>
+ <20170815192938.GA1247@debian.home>
+ <20170816002511.GM21024@dastard>
+ <20170816071649.GA4143@debian.home>
+ <20170816133502.GN21024@dastard>
+ <20170816193100.GA1216@debian.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170816193100.GA1216@debian.home>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>, Jan Kara <jack@suse.cz>
+To: Ernesto =?iso-8859-1?Q?A=2E_Fern=E1ndez?= <ernesto.mnd.fernandez@gmail.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Zorro Lang <zlang@redhat.com>
 
-There are already two users and more are coming.
+On Wed, Aug 16, 2017 at 04:31:01PM -0300, Ernesto A. Fernández wrote:
+> On Wed, Aug 16, 2017 at 11:35:02PM +1000, Dave Chinner wrote:
+> > On Wed, Aug 16, 2017 at 04:16:53AM -0300, Ernesto A. Fernández wrote:
+> > > On Wed, Aug 16, 2017 at 10:25:11AM +1000, Dave Chinner wrote:
+> > > > With that in mind, here's waht I suggested above: set the mode after
+> > > > the xattr. I haven't tested it - can you check it solves the problem
+> > > > case you are testing?
+> > > 
+> > > It does. Of course the test still fails, as I said before, now claiming that
+> > > the filesystem is inconsistent. But that's a separate issue.
+> > 
+> > It shouldn't be - what's the error that is being reported?
+> 
+> xfs_repair, phase 3:
+> bad magic number febe in block 512 (14452) for directory inode 131
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/dax.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Hmmmm - that's a magic number for a non-crc DA node. Kinda implies
+that it ENOSPC'd in the middle of a tree split.
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 75aa0d9fb39f..7c150eddc01a 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1105,6 +1105,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 	struct iomap iomap = { 0 };
- 	unsigned flags = IOMAP_FAULT;
- 	int error, major = 0;
-+	bool write = vmf->flags & FAULT_FLAG_WRITE;
- 	int vmf_ret = 0;
- 	void *entry;
- 
-@@ -1119,7 +1120,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 		goto out;
- 	}
- 
--	if ((vmf->flags & FAULT_FLAG_WRITE) && !vmf->cow_page)
-+	if (write && !vmf->cow_page)
- 		flags |= IOMAP_WRITE;
- 
- 	entry = grab_mapping_entry(mapping, vmf->pgoff, 0);
-@@ -1196,7 +1197,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
- 		break;
- 	case IOMAP_UNWRITTEN:
- 	case IOMAP_HOLE:
--		if (!(vmf->flags & FAULT_FLAG_WRITE)) {
-+		if (!write) {
- 			vmf_ret = dax_load_hole(mapping, entry, vmf);
- 			goto finish_iomap;
- 		}
+Can you test on a CRC enabled filesystem and see if there are any
+other errors that are detected either at runtime or by repair? If it
+does fail, can youpost the full output of xfs_repair?
+
+> It seems to be caused by setting too many extended attributes to a
+> file.
+
+Yeah, > 500 blocks in the attribute tree implies at least several
+megabytes of xattrs on a file, which is something that pretty much
+never happens on production workloads. It's not likely to be a
+frequently exercised path...
+
+Cheers,
+
+Dave.
 -- 
-2.12.3
-
+Dave Chinner
+david@fromorbit.com
