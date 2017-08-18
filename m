@@ -1,421 +1,163 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49013 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753775AbdHQXct (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 19:32:49 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7HNWlgZ027700
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:32:48 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7HNWlPE009201
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:32:47 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7HNWlSL016960
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:32:47 GMT
-Subject: [PATCH 12/12] xfs: create a new buf_ops pointer to verify structure
- metadata
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 17 Aug 2017 16:32:45 -0700
-Message-ID: <150301276585.5851.10650491013456649407.stgit@magnolia>
-In-Reply-To: <150301268960.5851.2513223883233763065.stgit@magnolia>
-References: <150301268960.5851.2513223883233763065.stgit@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:19562 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753891AbdHRCEp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 22:04:45 -0400
+Date: Fri, 18 Aug 2017 12:04:42 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
+ conversion and the addition of an attribute
+Message-ID: <20170818020442.GW21024@dastard>
+References: <63920C3663124B75BC0983A17533395A@alyakaslap>
+ <20170810145248.GE3777@bfoster.bfoster>
+ <20170810175548.GX24087@magnolia>
+ <20170810183233.GG3777@bfoster.bfoster>
+ <20170811022204.GQ21024@dastard>
+ <20170811142741.GA18609@bfoster.bfoster>
+ <20170812001637.GW21024@dastard>
+ <20170812140433.GA31523@bfoster.bfoster>
+ <20170814002809.GA21024@dastard>
+ <20170817203826.GB62570@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170817203826.GB62570@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Alex Lyakas <alex@zadarastorage.com>, linux-xfs@vger.kernel.org, libor.klepac@bcom.cz
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Aug 17, 2017 at 04:38:26PM -0400, Brian Foster wrote:
+> On Mon, Aug 14, 2017 at 10:28:09AM +1000, Dave Chinner wrote:
+> > On Sat, Aug 12, 2017 at 10:04:34AM -0400, Brian Foster wrote:
+> > > On Sat, Aug 12, 2017 at 10:16:37AM +1000, Dave Chinner wrote:
+> > > > On Fri, Aug 11, 2017 at 10:27:43AM -0400, Brian Foster wrote:
+> > > > > On Fri, Aug 11, 2017 at 12:22:04PM +1000, Dave Chinner wrote:
+> > > > Using XFS_BLI_ORDERED allows us to log the buffer without recording
+> > > > a new dirty range on the buffer. IOWs, it retains whatever dirty range
+> > > > it already had, and so after joining, marking it ordered and then
+> > > > logging the buffer, we have a XFS_BLI_DIRTY | XFS_BLI_ORDERED buffer
+> > > > in the transaction.
+> > > > 
+> > > > The question is this: what happens when a XFS_BLI_ORDERED buffer
+> > > > with a pre-existing dirty region is formatted for the CIL? We
+> > > > haven't done that before, so I'm betting that we don't relog the
+> > > > dirty region like we should be doing....
+> > > > 
+> > > > ... and we don't relog the existing dirty range because the
+> > > > ordered flag takes precedence.
+> > > > 
+> > > 
+> > > Right.. so it seems that the current implementation for ordered buffers
+> > > assumes a buffer is only ever used in one mode or the other.
+> > > Additionally, the AIL assumes that any reinserted item has been fully
+> > > relogged and so it moves the LSN forward unconditionally. Current
+> > > ordered buffer processing violates this constraint for an already logged
+> > > buffer.
+> > 
+> > Right, but it's not been a concern until now because we've only ever
+> > used ordered buffers on newly allocated buffers that haven't been
+> > previously logged.
+> > 
+> 
+> Shortly after starting to test the latest refactoring with some asserts
+> that enforce "strict" buffer ordering, I (sure enough ;)) ran into an
+> instance of the above.
+> 
+> The issue is with the bmbt owner change operation that is part of the
+> swap extent sequence.
 
-Expose all metadata structure buffer verifier functions via buf_ops.
-These will be used by the online scrub mechanism to look for problems
-with buffers that are already sitting around in memory.
+Ah, I forgot about that. I was thinking that it went away with
+rmapbt....
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_alloc.c          |   14 ++++++++------
- fs/xfs/libxfs/xfs_alloc_btree.c    |    1 +
- fs/xfs/libxfs/xfs_attr_leaf.c      |    1 +
- fs/xfs/libxfs/xfs_attr_remote.c    |   32 ++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_bmap_btree.c     |    1 +
- fs/xfs/libxfs/xfs_da_btree.c       |   25 +++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_dir2_block.c     |    1 +
- fs/xfs/libxfs/xfs_dir2_data.c      |    1 +
- fs/xfs/libxfs/xfs_dir2_leaf.c      |   16 ++++++++++++++++
- fs/xfs/libxfs/xfs_dir2_node.c      |    1 +
- fs/xfs/libxfs/xfs_dquot_buf.c      |   12 ++++++++++++
- fs/xfs/libxfs/xfs_ialloc.c         |    1 +
- fs/xfs/libxfs/xfs_ialloc_btree.c   |    1 +
- fs/xfs/libxfs/xfs_refcount_btree.c |    1 +
- fs/xfs/libxfs/xfs_rmap_btree.c     |    1 +
- fs/xfs/libxfs/xfs_symlink_remote.c |    1 +
- fs/xfs/xfs_buf.h                   |    1 +
- 17 files changed, 105 insertions(+), 6 deletions(-)
+> The owner change code ends up setting a buffer
+> ordered that is currently dirty due to an unrelated previous
+> transaction. The potential side effects of this are basically what we've
+> already laid out above. Note that this is only relevant on
+> crc=1,rmapbt=0 filesystems.
 
+.... but obviously I was wrong. :/
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index d49b1e3..21a1c21 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -604,6 +604,7 @@ const struct xfs_buf_ops xfs_agfl_buf_ops = {
- 	.name = "xfs_agfl",
- 	.verify_read = xfs_agfl_read_verify,
- 	.verify_write = xfs_agfl_write_verify,
-+	.verify_struct = xfs_agfl_verify,
- };
- 
- /*
-@@ -2393,10 +2394,10 @@ xfs_alloc_put_freelist(
- 
- static void *
- xfs_agf_verify(
--	struct xfs_mount *mp,
--	struct xfs_buf	*bp)
-- {
--	struct xfs_agf	*agf = XFS_BUF_TO_AGF(bp);
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_agf		*agf = XFS_BUF_TO_AGF(bp);
- 
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		if (!uuid_equal(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid))
-@@ -2457,7 +2458,7 @@ xfs_agf_read_verify(
- 	if (xfs_sb_version_hascrc(&mp->m_sb) &&
- 	    !xfs_buf_verify_cksum(bp, XFS_AGF_CRC_OFF))
- 		xfs_buf_ioerror(bp, -EFSBADCRC);
--	else if (XFS_TEST_ERROR((failed_at = xfs_agf_verify(mp, bp)), mp,
-+	else if (XFS_TEST_ERROR((failed_at = xfs_agf_verify(bp)), mp,
- 				XFS_ERRTAG_ALLOC_READ_AGF))
- 		xfs_buf_ioerror(bp, -EFSCORRUPTED);
- 
-@@ -2473,7 +2474,7 @@ xfs_agf_write_verify(
- 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
- 	void			*failed_at;
- 
--	if ((failed_at = xfs_agf_verify(mp, bp))) {
-+	if ((failed_at = xfs_agf_verify(bp))) {
- 		xfs_buf_ioerror(bp, -EFSCORRUPTED);
- 		xfs_verifier_error(bp, failed_at);
- 		return;
-@@ -2492,6 +2493,7 @@ const struct xfs_buf_ops xfs_agf_buf_ops = {
- 	.name = "xfs_agf",
- 	.verify_read = xfs_agf_read_verify,
- 	.verify_write = xfs_agf_write_verify,
-+	.verify_struct = xfs_agf_verify,
- };
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 8d4c004..eb79f6c 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -397,6 +397,7 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
- 	.name = "xfs_allocbt",
- 	.verify_read = xfs_allocbt_read_verify,
- 	.verify_write = xfs_allocbt_write_verify,
-+	.verify_struct = xfs_allocbt_verify,
- };
- 
- 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index bde5269..3a563c5 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -339,6 +339,7 @@ const struct xfs_buf_ops xfs_attr3_leaf_buf_ops = {
- 	.name = "xfs_attr3_leaf",
- 	.verify_read = xfs_attr3_leaf_read_verify,
- 	.verify_write = xfs_attr3_leaf_write_verify,
-+	.verify_struct = xfs_attr3_leaf_verify,
- };
- 
- int
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-index d33a4d3..164c366 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.c
-+++ b/fs/xfs/libxfs/xfs_attr_remote.c
-@@ -203,10 +203,42 @@ xfs_attr3_rmt_write_verify(
- 	ASSERT(len == 0);
- }
- 
-+static void *
-+xfs_attr3_rmt_verify_struct(
-+	struct xfs_buf	*bp)
-+{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	char		*ptr;
-+	void		*failed_at;
-+	int		len;
-+	xfs_daddr_t	bno;
-+	int		blksize = mp->m_attr_geo->blksize;
-+
-+	/* no verification of non-crc buffers */
-+	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return NULL;
-+
-+	ptr = bp->b_addr;
-+	bno = bp->b_bn;
-+	len = BBTOB(bp->b_length);
-+	ASSERT(len >= blksize);
-+
-+	while (len > 0) {
-+		if ((failed_at = xfs_attr3_rmt_verify(mp, ptr, blksize, bno)))
-+			return failed_at;
-+		len -= blksize;
-+		ptr += blksize;
-+		bno += BTOBB(blksize);
-+	}
-+
-+	return NULL;
-+}
-+
- const struct xfs_buf_ops xfs_attr3_rmt_buf_ops = {
- 	.name = "xfs_attr3_rmt",
- 	.verify_read = xfs_attr3_rmt_read_verify,
- 	.verify_write = xfs_attr3_rmt_write_verify,
-+	.verify_struct = xfs_attr3_rmt_verify_struct,
- };
- 
- STATIC int
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index d613080..0d5dd7b 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -692,6 +692,7 @@ const struct xfs_buf_ops xfs_bmbt_buf_ops = {
- 	.name = "xfs_bmbt",
- 	.verify_read = xfs_bmbt_read_verify,
- 	.verify_write = xfs_bmbt_write_verify,
-+	.verify_struct = xfs_bmbt_verify,
- };
- 
- 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index f3544fb..af738bf 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -247,10 +247,35 @@ xfs_da3_node_read_verify(
- 	xfs_verifier_error(bp, failed_at);
- }
- 
-+/* Verify the structure of a da3 block. */
-+static void *
-+xfs_da3_node_verify_struct(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_da_blkinfo	*info = bp->b_addr;
-+
-+	switch (be16_to_cpu(info->magic)) {
-+	case XFS_DA3_NODE_MAGIC:
-+	case XFS_DA_NODE_MAGIC:
-+		return xfs_da3_node_verify(bp);
-+	case XFS_ATTR_LEAF_MAGIC:
-+	case XFS_ATTR3_LEAF_MAGIC:
-+		bp->b_ops = &xfs_attr3_leaf_buf_ops;
-+		return bp->b_ops->verify_struct(bp);
-+	case XFS_DIR2_LEAFN_MAGIC:
-+	case XFS_DIR3_LEAFN_MAGIC:
-+		bp->b_ops = &xfs_dir3_leafn_buf_ops;
-+		return bp->b_ops->verify_struct(bp);
-+	default:
-+		return __this_address;
-+	}
-+}
-+
- const struct xfs_buf_ops xfs_da3_node_buf_ops = {
- 	.name = "xfs_da3_node",
- 	.verify_read = xfs_da3_node_read_verify,
- 	.verify_write = xfs_da3_node_write_verify,
-+	.verify_struct = xfs_da3_node_verify_struct,
- };
- 
- int
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index 6c54d03..6dce935 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -126,6 +126,7 @@ const struct xfs_buf_ops xfs_dir3_block_buf_ops = {
- 	.name = "xfs_dir3_block",
- 	.verify_read = xfs_dir3_block_read_verify,
- 	.verify_write = xfs_dir3_block_write_verify,
-+	.verify_struct = xfs_dir3_block_verify,
- };
- 
- int
-diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index 5e27b71..d08a7ac 100644
---- a/fs/xfs/libxfs/xfs_dir2_data.c
-+++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -318,6 +318,7 @@ const struct xfs_buf_ops xfs_dir3_data_buf_ops = {
- 	.name = "xfs_dir3_data",
- 	.verify_read = xfs_dir3_data_read_verify,
- 	.verify_write = xfs_dir3_data_write_verify,
-+	.verify_struct = xfs_dir3_data_verify,
- };
- 
- static const struct xfs_buf_ops xfs_dir3_data_reada_buf_ops = {
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index 00dcfef..792fd98 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -218,6 +218,13 @@ __write_verify(
- 	xfs_buf_update_cksum(bp, XFS_DIR3_LEAF_CRC_OFF);
- }
- 
-+static void *
-+xfs_dir3_leaf1_verify(
-+	struct xfs_buf	*bp)
-+{
-+	return xfs_dir3_leaf_verify(bp, XFS_DIR2_LEAF1_MAGIC);
-+}
-+
- static void
- xfs_dir3_leaf1_read_verify(
- 	struct xfs_buf	*bp)
-@@ -232,6 +239,13 @@ xfs_dir3_leaf1_write_verify(
- 	__write_verify(bp, XFS_DIR2_LEAF1_MAGIC);
- }
- 
-+static void *
-+xfs_dir3_leafn_verify(
-+	struct xfs_buf	*bp)
-+{
-+	return xfs_dir3_leaf_verify(bp, XFS_DIR2_LEAFN_MAGIC);
-+}
-+
- static void
- xfs_dir3_leafn_read_verify(
- 	struct xfs_buf	*bp)
-@@ -250,12 +264,14 @@ const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
- 	.name = "xfs_dir3_leaf1",
- 	.verify_read = xfs_dir3_leaf1_read_verify,
- 	.verify_write = xfs_dir3_leaf1_write_verify,
-+	.verify_struct = xfs_dir3_leaf1_verify,
- };
- 
- const struct xfs_buf_ops xfs_dir3_leafn_buf_ops = {
- 	.name = "xfs_dir3_leafn",
- 	.verify_read = xfs_dir3_leafn_read_verify,
- 	.verify_write = xfs_dir3_leafn_write_verify,
-+	.verify_struct = xfs_dir3_leafn_verify,
- };
- 
- int
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index a11585b..1a5e383 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -155,6 +155,7 @@ const struct xfs_buf_ops xfs_dir3_free_buf_ops = {
- 	.name = "xfs_dir3_free",
- 	.verify_read = xfs_dir3_free_read_verify,
- 	.verify_write = xfs_dir3_free_write_verify,
-+	.verify_struct = xfs_dir3_free_verify,
- };
- 
- /* Everything ok in the free block header? */
-diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-index 5561011..8ce5239 100644
---- a/fs/xfs/libxfs/xfs_dquot_buf.c
-+++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-@@ -242,6 +242,17 @@ xfs_dquot_buf_verify(
- 	return true;
- }
- 
-+static void *
-+xfs_dquot_buf_verify_struct(
-+	struct xfs_buf	*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+
-+	if (!xfs_dquot_buf_verify(mp, bp, 0))
-+		return __this_address;
-+	return NULL;
-+}
-+
- static void
- xfs_dquot_buf_read_verify(
- 	struct xfs_buf	*bp)
-@@ -298,6 +309,7 @@ const struct xfs_buf_ops xfs_dquot_buf_ops = {
- 	.name = "xfs_dquot",
- 	.verify_read = xfs_dquot_buf_read_verify,
- 	.verify_write = xfs_dquot_buf_write_verify,
-+	.verify_struct = xfs_dquot_buf_verify_struct,
- };
- 
- const struct xfs_buf_ops xfs_dquot_buf_ra_ops = {
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index f27edc9..1c316f8 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2586,6 +2586,7 @@ const struct xfs_buf_ops xfs_agi_buf_ops = {
- 	.name = "xfs_agi",
- 	.verify_read = xfs_agi_read_verify,
- 	.verify_write = xfs_agi_write_verify,
-+	.verify_struct = xfs_agi_verify,
- };
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 38d6a50..f920ca6 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -327,6 +327,7 @@ const struct xfs_buf_ops xfs_inobt_buf_ops = {
- 	.name = "xfs_inobt",
- 	.verify_read = xfs_inobt_read_verify,
- 	.verify_write = xfs_inobt_write_verify,
-+	.verify_struct = xfs_inobt_verify,
- };
- 
- STATIC int
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index 8d6c0fc..a151b4d 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -288,6 +288,7 @@ const struct xfs_buf_ops xfs_refcountbt_buf_ops = {
- 	.name			= "xfs_refcountbt",
- 	.verify_read		= xfs_refcountbt_read_verify,
- 	.verify_write		= xfs_refcountbt_write_verify,
-+	.verify_struct		= xfs_refcountbt_verify,
- };
- 
- STATIC int
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index 4fd77e7..ec7b216 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -380,6 +380,7 @@ const struct xfs_buf_ops xfs_rmapbt_buf_ops = {
- 	.name			= "xfs_rmapbt",
- 	.verify_read		= xfs_rmapbt_read_verify,
- 	.verify_write		= xfs_rmapbt_write_verify,
-+	.verify_struct		= xfs_rmapbt_verify,
- };
- 
- STATIC int
-diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
-index ef5e754..53732f4 100644
---- a/fs/xfs/libxfs/xfs_symlink_remote.c
-+++ b/fs/xfs/libxfs/xfs_symlink_remote.c
-@@ -173,6 +173,7 @@ const struct xfs_buf_ops xfs_symlink_buf_ops = {
- 	.name = "xfs_symlink",
- 	.verify_read = xfs_symlink_read_verify,
- 	.verify_write = xfs_symlink_write_verify,
-+	.verify_struct = xfs_symlink_verify,
- };
- 
- void
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 2072126..094e3e7 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -139,6 +139,7 @@ struct xfs_buf_ops {
- 	char *name;
- 	void (*verify_read)(struct xfs_buf *);
- 	void (*verify_write)(struct xfs_buf *);
-+	void *(*verify_struct)(struct xfs_buf *);
- };
- 
- typedef struct xfs_buf {
+[....]
 
+> 
+> 4.) Implement the ordered buffer relogging logic discussed below: detect
+> ordered buffers with previously logged segments and relog them at
+> ->iop_format() time. I suppose I could alleviate my aforementioned
+> concerns with an assert that verifies an ordered buffer isn't already
+> dirtied by the _current_ transaction (i.e., to catch the case of the
+> "screwed up optimization" I was concerned about).
+
+Yeah, that would work, except .....
+
+> That aside, I think there is another problem here that we missed
+> previously: transactions that use ordered buffers don't reserve log
+> space for them, but relogged items require log reservation. If I follow
+> the code correctly, a relogged item that is presently in the CIL may not
+> use reservation in a subsequent tx. If the item resides in the AIL at
+> relog commit time, however, the relogging transaction must have
+> reservation for the item (the physical log space for the item is freed
+> and the space used for the relog is accounted out of the reservation).
+
+... this.
+
+Yes, you are right, Brian, that if the item is in the CIL then we
+don't need a new reservation because the space is already accounted
+for in the current checkpoint. This, however, is still racy as the
+item in the CIL can be committed while we have it locked and so
+when we commit it's the same as "in the AIL and we need a
+reservation".
+
+> So I think the only way we can support the ability to relog previously
+> dirty buffers that have been marked ordered is to require log
+> reservation for them as for normal physically logged buffers, which kind
+> of defeats the purpose.
+> 
+> 5.) A deferred op variant of the bmbt owner change algorithm. I haven't
+> fully thought this one through yet so it may not be viable, but the
+> general idea is to use deferred ops to conditionally physically log
+> previously dirty buffers where required. For example, use a transaction
+> with log reservation for one full buffer, log a new bmbt owner change
+> intent and start running through the bmbt scan attempting to order
+> buffers. Update xfs_trans_ordered_buf() to explicitly fail on buffers
+> with dirty segments. When said failure occurs during the bmbt scan,
+> physically log the buffer and terminate the scan with -EAGAIN. The
+> deferred infra rolls the tx, relogs the intent and has to restart the
+> bmbt scan over again. This repeats until we've processed the entire
+> tree.
+
+Problem is that a deferred op variant isn't backwards compatible,
+and given this is a v4 filesystem issue, that's a big problem
+because we can't just use a log incompat flag while the op is active
+in the log.
+
+However, I think we can do this with just normal rolling
+transactions. Like you suggest, we can create the transaction with a
+small amount of buffer space that can be logged (e.g. enough for N
+complete buffers). Then we modify xfs_trans_buf_ordered() to "try
+ordering the buffer". If the buffer needs relogging, then it fails
+and we log the owner field in the buffer as per a normal buffer. (or
+maybe just take the range we need to log and log that instead of
+ordering the buffer - as long as we can count the buffers that do
+this.)
+
+On the N-th relogged buffer, roll the transaction to trigger
+regranting of the log space for another N buffers and keep going
+with the owner change.  The transaction roll will then commit the
+buffer owner change to the log.
+
+In recovery, we just replay the owner change as we currently do,
+knowing that if the buffer was logged during the owner change and
+written to a later checkpoint, the replay of that buffer will
+contain the owner change we just did and so we won't lose anything.
+
+I think this should work on all v4 filesystems without any need to
+modify log recovery or new log items....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
