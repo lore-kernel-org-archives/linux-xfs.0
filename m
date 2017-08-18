@@ -1,154 +1,512 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38666 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:59726 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750943AbdHQFV1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Aug 2017 01:21:27 -0400
-Subject: Re: xfs_repair fails: mismatched UUID?
-References: <1502946903.3034.25.camel@sub-pop.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d31ec46a-cc4c-5865-6ee4-fffdcb32c254@sandeen.net>
-Date: Thu, 17 Aug 2017 00:21:19 -0500
-MIME-Version: 1.0
-In-Reply-To: <1502946903.3034.25.camel@sub-pop.net>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="xeMvHpxPt05rjBwTkBtgimH9U0WdpGSOV"
+        id S1750967AbdHRKj1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 18 Aug 2017 06:39:27 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 510C2C04B303
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Aug 2017 10:39:27 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH] mkfs: rename defaultval to flagval in opts
+Date: Fri, 18 Aug 2017 12:39:32 +0200
+Message-Id: <20170818103932.24607-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Link Dupont <link@sub-pop.net>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---xeMvHpxPt05rjBwTkBtgimH9U0WdpGSOV
-Content-Type: multipart/mixed; boundary="vkTfqHUnVqVNnSkmOsmkWBnnodva94Xex";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: Link Dupont <link@sub-pop.net>, linux-xfs@vger.kernel.org
-Message-ID: <d31ec46a-cc4c-5865-6ee4-fffdcb32c254@sandeen.net>
-Subject: Re: xfs_repair fails: mismatched UUID?
-References: <1502946903.3034.25.camel@sub-pop.net>
-In-Reply-To: <1502946903.3034.25.camel@sub-pop.net>
+The old name 'defaultval' was misleading - it is not the default value,
+but the value the option has when used as a flag by an user.
 
---vkTfqHUnVqVNnSkmOsmkWBnnodva94Xex
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Reviewed-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-On 8/17/17 12:15 AM, Link Dupont wrote:
-> Hello,
->=20
-> I have a JMicron USB RAID enclosure that is exhibiting read failures.
->=20
->> [59996.137762] sd 5:0:0:0: [sdd] tag#0 FAILED Result: hostbyte=3DDID_O=
-K
->> driverbyte=3DDRIVER_SENSE
->> [59996.137786] sd 5:0:0:0: [sdd] tag#0 Sense Key : Aborted Command [cu=
-rrent]=20
->> [59996.137792] sd 5:0:0:0: [sdd] tag#0 Add. Sense: No additional sense=
+---
+Picked out of my set which may end up not used at all.
+---
+ mkfs/xfs_mkfs.c | 120 ++++++++++++++++++++++++++++----------------------------
+ 1 file changed, 60 insertions(+), 60 deletions(-)
 
->> information
->> [59996.137798] sd 5:0:0:0: [sdd] tag#0 CDB: Read(16) 88 00 00 00 00 00=
- a6 42
->> 1d d8 00 00 00 08 00 00
->> [59996.137804] blk_update_request: I/O error, dev sdd, sector 27893508=
-72
->> [59996.137816] Buffer I/O error on dev sdd, logical block 348668859, a=
-sync
->> page read
->>
->=20
-> I ran ddrescue to block copy the device to another external USB drive. =
-This
-> appears to have been successful (though not without errors). The new dr=
-ive shows
-> an identical UUID to the original.
->=20
->> # xfs_admin -u /dev/sdc1
->> UUID =3D 7b2fc6f7-0f6b-40fb-b264-75d25e9d0d1e
->> # xfs_admin -u /dev/sdd1
->> UUID =3D 7b2fc6f7-0f6b-40fb-b264-75d25e9d0d1e
->=20
-> I'm still unable to mount the file-system on sdc1.
->=20
->> # mount /dev/sdc1 mnt
->> mount: /root/mnt: mount(2) system call failed: Structure needs cleanin=
-g.
->=20
-> I ran xfs_repair.
->=20
->> # xfs_repair /dev/sdc1
->> Phase 1 - find and verify superblock...
->>         - reporting progress in intervals of 15 minutes
->> Phase 2 - using internal log
->>         - zero log...
->> * ERROR: mismatched uuid in log
->> *            SB : 7b2fc6f7-0f6b-40fb-b264-75d25e9d0d1e
->> *            log: 00000001-0038-8e56-0000-000100388e2e
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 7bb6408f..091ca530 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -101,7 +101,7 @@ unsigned int		sectorsize;
+  *     to zero. But if one value is different: minval=0 and maxval=1,
+  *     then it is OK.)
+  *
+- *   defaultval MANDATORY
++ *   flagval MANDATORY
+  *     The value used if user specifies the subopt, but no value.
+  *     If the subopt accepts some values (-d file=[1|0]), then this
+  *     sets what is used with simple specifying the subopt (-d file).
+@@ -121,7 +121,7 @@ struct opt_params {
+ 		int		conflicts[MAX_CONFLICTS];
+ 		long long	minval;
+ 		long long	maxval;
+-		long long	defaultval;
++		long long	flagval;
+ 	}		subopt_params[MAX_SUBOPTS];
+ };
+ 
+@@ -140,7 +140,7 @@ struct opt_params bopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_BLOCKSIZE_LOG,
+ 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = B_SIZE,
+ 		  .convert = true,
+@@ -149,7 +149,7 @@ struct opt_params bopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_BLOCKSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+ };
+@@ -195,24 +195,24 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = XFS_MAX_AGNUMBER,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_FILE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = D_NAME,
+ 		  .conflicts = { LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SIZE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = XFS_AG_MIN_BYTES,
+ 		  .maxval = LLONG_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SUNIT,
+ 		  .conflicts = { D_NOALIGN,
+@@ -221,7 +221,7 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SWIDTH,
+ 		  .conflicts = { D_NOALIGN,
+@@ -230,7 +230,7 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_AGSIZE,
+ 		  .conflicts = { D_AGCOUNT,
+@@ -238,7 +238,7 @@ struct opt_params dopts = {
+ 		  .convert = true,
+ 		  .minval = XFS_AG_MIN_BYTES,
+ 		  .maxval = XFS_AG_MAX_BYTES,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SU,
+ 		  .conflicts = { D_NOALIGN,
+@@ -248,7 +248,7 @@ struct opt_params dopts = {
+ 		  .convert = true,
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SW,
+ 		  .conflicts = { D_NOALIGN,
+@@ -257,14 +257,14 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SECTLOG,
+ 		  .conflicts = { D_SECTSIZE,
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SECTSIZE,
+ 		  .conflicts = { D_SECTLOG,
+@@ -273,7 +273,7 @@ struct opt_params dopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_NOALIGN,
+ 		  .conflicts = { D_SU,
+@@ -283,25 +283,25 @@ struct opt_params dopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = D_RTINHERIT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = D_PROJINHERIT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_EXTSZINHERIT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+ };
+@@ -333,7 +333,7 @@ struct opt_params iopts = {
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = I_LOG,
+ 		  .conflicts = { I_PERBLOCK,
+@@ -341,13 +341,13 @@ struct opt_params iopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_DINODE_MIN_LOG,
+ 		  .maxval = XFS_DINODE_MAX_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_MAXPCT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 100,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_PERBLOCK,
+ 		  .conflicts = { I_LOG,
+@@ -356,7 +356,7 @@ struct opt_params iopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_INODE_PERBLOCK,
+ 		  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_SIZE,
+ 		  .conflicts = { I_PERBLOCK,
+@@ -365,25 +365,25 @@ struct opt_params iopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_DINODE_MIN_SIZE,
+ 		  .maxval = XFS_DINODE_MAX_SIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_ATTR,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 2,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_PROJID32BIT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = I_SPINODES,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 	},
+ };
+@@ -423,7 +423,7 @@ struct opt_params lopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_INTERNAL,
+ 		  .conflicts = { L_FILE,
+@@ -431,27 +431,27 @@ struct opt_params lopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = L_SIZE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
+ 		  .maxval = XFS_MAX_LOG_BYTES,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_VERSION,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = 2,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SUNIT,
+ 		  .conflicts = { L_SU,
+ 				 LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SU,
+ 		  .conflicts = { L_SUNIT,
+@@ -459,20 +459,20 @@ struct opt_params lopts = {
+ 		  .convert = true,
+ 		  .minval = BBTOB(1),
+ 		  .maxval = XLOG_MAX_RECORD_BSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_DEV,
+ 		  .conflicts = { L_AGNUM,
+ 				 L_INTERNAL,
+ 				 LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SECTLOG,
+ 		  .conflicts = { L_SECTSIZE,
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SECTSIZE,
+ 		  .conflicts = { L_SECTLOG,
+@@ -481,26 +481,26 @@ struct opt_params lopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_FILE,
+ 		  .conflicts = { L_INTERNAL,
+ 				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = L_NAME,
+ 		  .conflicts = { L_AGNUM,
+ 				 L_INTERNAL,
+ 				 LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_LAZYSBCNTR,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 	},
+ };
+@@ -524,7 +524,7 @@ struct opt_params nopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_REC_DIRSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_SIZE,
+ 		  .conflicts = { N_LOG,
+@@ -533,19 +533,19 @@ struct opt_params nopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = 1 << XFS_MIN_REC_DIRSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_VERSION,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 2,
+ 		  .maxval = 2,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_FTYPE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 	},
+ };
+@@ -573,33 +573,33 @@ struct opt_params ropts = {
+ 		  .convert = true,
+ 		  .minval = XFS_MIN_RTEXTSIZE,
+ 		  .maxval = XFS_MAX_RTEXTSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_SIZE,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = 0,
+ 		  .maxval = LLONG_MAX,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_DEV,
+ 		  .conflicts = { LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_FILE,
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		},
+ 		{ .index = R_NAME,
+ 		  .conflicts = { LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_NOALIGN,
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		},
+ 	},
+@@ -625,7 +625,7 @@ struct opt_params sopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SECTLOG,
+ 		  .conflicts = { S_SIZE,
+@@ -633,7 +633,7 @@ struct opt_params sopts = {
+ 				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SIZE,
+ 		  .conflicts = { S_LOG,
+@@ -643,7 +643,7 @@ struct opt_params sopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SECTSIZE,
+ 		  .conflicts = { S_LOG,
+@@ -653,7 +653,7 @@ struct opt_params sopts = {
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+ };
+@@ -678,29 +678,29 @@ struct opt_params mopts = {
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = M_FINOBT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = M_UUID,
+ 		  .conflicts = { LAST_CONFLICT },
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .flagval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = M_RMAPBT,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 		{ .index = M_REFLINK,
+ 		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+-		  .defaultval = 1,
++		  .flagval = 1,
+ 		},
+ 	},
+ };
+@@ -1329,9 +1329,9 @@ getnum(
+ 	check_opt(opts, index, false);
+ 	/* empty strings might just return a default value */
+ 	if (!str || *str == '\0') {
+-		if (sp->defaultval == SUBOPT_NEEDS_VAL)
++		if (sp->flagval == SUBOPT_NEEDS_VAL)
+ 			reqval(opts->name, (char **)opts->subopts, index);
+-		return sp->defaultval;
++		return sp->flagval;
+ 	}
+ 
+ 	if (sp->minval == 0 && sp->maxval == 0) {
+-- 
+2.13.3
 
-Thjat looks suspiciously /not/ like a UUID.
-
-Which makes me think that the "log" was not the log, and your enclosure
-scrambled data around somehow.
-
-Forcing that mess through repair may have yielded more harm than good.
-So, good thing it was on the clone.
-
-Did the enclosure contain multiple disks?  Did they possibly get
-re-ordered or otherwise scrambled?
-
-
-=2E..
-
-> All of this has been performed on my ddrescue clone (not the original d=
-evice).
-
-<cue applause!>  :)
-
-> And with kernel 4.12.5 and xfsprogs 4.10.0.
-
-> I understand corrupt blocks and the data lost incurred from that. I can=
- poke
-> around and try to recover what I can when mounted in 'norecovery'. What=
- I am
-> perplexed by is the total loss of file-system info when xfs_repair -L i=
-s run;
-> not even a lost+found?
-
-Collecting and sharing the xfs_repair output might yield some insight as =
-well,
-but first I'd look at what you're copying from; just how badly damaged is=
- it?
-xfs_repair restores filesystem consistency but it is not a data recovery =
-or
-storage repair tool.  ;)
-
--Eric
-
-
---vkTfqHUnVqVNnSkmOsmkWBnnodva94Xex--
-
---xeMvHpxPt05rjBwTkBtgimH9U0WdpGSOV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJZlSfWAAoJECCuFpLhPd7gCyAP/1gM4DgMuddDBi7cuCCXxhtP
-Y4/gpr69rwSB92ofV/Hqdm0XsOs3zXaLMfEKBwalDzK4arDRMMiiouU9FImMqWST
-M37BeJA2Ngnz3P///J+SjDPfugt6duOlF9wYSnDnye1eZKpNQwfT35c6nFfB/qjx
-+8oB5YBDuqpIZFuMcWaywy1XjOsW3hD7f440aB99swTNTBuVJnwEz5bvXMvuvcff
-BU+xzbWcCA6wfc7fThaReyCGj/wd6cJlFWiIuJjMKR3Excni5qdVsLLvhTZE7soJ
-sUEoD39tSbT2TOBj3dIyzHCEQBlJ/y2oEUp/wouTQjUdzTBXI5pZumlNZRnZ9Lxt
-s6bzRSITojTqJykm0baPHsK1u3hKJwobqVDMB00YrsPukjqirebgsOJvINqWT+9S
-F+uJDudhv7jepjap2+51jJpSkp6aV9flf1NUALZq5XVDQ//FPEGHuNgWd4KlHHOk
-LxgPvLooMdwbmyYa+nvweCObhDgtkcVzvGe7h6fN4OSlyTWBVfPgpDi0vKsq14Cg
-qImkjmTF1HOyjCzoabtVL/MSUC48ENCa3f2mLe00tv5dp8u9nZv4uyP2AV1rBPtg
-zlmHnO2x5PeQngbg81Ddujq+L5fP3PrOPj9Ts73bjGDA9qtyDQapIU9O/3wQiICr
-ZVmSmUfGLwU2+F++0onw
-=o0/W
------END PGP SIGNATURE-----
-
---xeMvHpxPt05rjBwTkBtgimH9U0WdpGSOV--
