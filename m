@@ -1,117 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53167 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752545AbdHQQIa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Aug 2017 12:08:30 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 12/13] dax: Implement dax_insert_pfn_mkwrite()
-Date: Thu, 17 Aug 2017 18:08:14 +0200
-Message-Id: <20170817160815.30466-13-jack@suse.cz>
-In-Reply-To: <20170817160815.30466-1-jack@suse.cz>
-References: <20170817160815.30466-1-jack@suse.cz>
+Received: from aserp1040.oracle.com ([141.146.126.69]:34623 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751169AbdHSPqw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Aug 2017 11:46:52 -0400
+Date: Sat, 19 Aug 2017 08:46:45 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: test xfs_db fuzz command verbs
+Message-ID: <20170819154645.GD4794@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>, Jan Kara <jack@suse.cz>
+To: Eryu Guan <eguan@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-Implement a function that inserts a writeable page table entry (PTE or
-PMD) and takes care of marking it dirty in the radix tree. This function
-will be used to finish synchronous page fault.
+Ensure that the fuzz command does what it says.
 
-Signed-off-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/dax.c                      | 52 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/dax.h           |  2 ++
- include/trace/events/fs_dax.h |  2 ++
- 3 files changed, 56 insertions(+)
+ tests/xfs/1386     |   74 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1386.out |   28 ++++++++++++++++++++
+ tests/xfs/group    |    1 +
+ 3 files changed, 103 insertions(+)
+ create mode 100755 tests/xfs/1386
+ create mode 100644 tests/xfs/1386.out
 
-diff --git a/fs/dax.c b/fs/dax.c
-index ca88fc356786..ca81084f6608 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1467,3 +1467,55 @@ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
- 	}
- }
- EXPORT_SYMBOL_GPL(dax_iomap_fault);
+diff --git a/tests/xfs/1386 b/tests/xfs/1386
+new file mode 100755
+index 0000000..1c8eb83
+--- /dev/null
++++ b/tests/xfs/1386
+@@ -0,0 +1,74 @@
++#! /bin/bash
++# FS QA Test No. 1386
++#
++# Ensure that xfs_db fuzz command works as advertised.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
 +
-+/**
-+ * dax_insert_pfn_mkwrite - insert PTE or PMD entry into page tables
-+ * @vmf: The description of the fault
-+ * @pe_size: Size of entry to be inserted
-+ * @pfn: PFN to insert
-+ *
-+ * This function inserts writeable PTE or PMD entry into page tables for mmaped
-+ * DAX file.  It takes care of marking corresponding radix tree entry as dirty
-+ * as well.
-+ */
-+int dax_insert_pfn_mkwrite(struct vm_fault *vmf, enum page_entry_size pe_size,
-+			   pfn_t pfn)
++seq=`basename "$0"`
++seqres="$RESULT_DIR/$seq"
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
-+	void *entry, **slot;
-+	pgoff_t index = vmf->pgoff;
-+	int vmf_ret, error;
-+
-+	spin_lock_irq(&mapping->tree_lock);
-+	entry = get_unlocked_mapping_entry(mapping, index, &slot);
-+	/* Did we race with someone splitting entry or so? */
-+	if (!entry || (pe_size == PE_SIZE_PTE && !dax_is_pte_entry(entry)) ||
-+	    (pe_size == PE_SIZE_PMD && !dax_is_pmd_entry(entry))) {
-+		put_unlocked_mapping_entry(mapping, index, entry);
-+		spin_unlock_irq(&mapping->tree_lock);
-+		trace_dax_insert_pfn_mkwrite_no_entry(mapping->host, vmf,
-+						      VM_FAULT_NOPAGE);
-+		return VM_FAULT_NOPAGE;
-+	}
-+	radix_tree_tag_set(&mapping->page_tree, index, PAGECACHE_TAG_DIRTY);
-+	entry = lock_slot(mapping, slot);
-+	spin_unlock_irq(&mapping->tree_lock);
-+	switch (pe_size) {
-+	case PE_SIZE_PTE:
-+		error = vm_insert_mixed_mkwrite(vmf->vma, vmf->address, pfn);
-+		vmf_ret = dax_fault_return(error);
-+		break;
-+#ifdef CONFIG_FS_DAX_PMD
-+	case PE_SIZE_PMD:
-+		vmf_ret = vmf_insert_pfn_pmd(vmf->vma, vmf->address, vmf->pmd,
-+			pfn, true);
-+		break;
-+#endif
-+	default:
-+		vmf_ret = VM_FAULT_FALLBACK;
-+	}
-+	put_locked_mapping_entry(mapping, index);
-+	trace_dax_insert_pfn_mkwrite(mapping->host, vmf, vmf_ret);
-+	return vmf_ret;
++	cd /
++	rm -rf "$tmp".*
 +}
-+EXPORT_SYMBOL_GPL(dax_insert_pfn_mkwrite);
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 8f493d9879f7..d8e67995a958 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -92,6 +92,8 @@ ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		const struct iomap_ops *ops);
- int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
- 		    const struct iomap_ops *ops, pfn_t *pfnp);
-+int dax_insert_pfn_mkwrite(struct vm_fault *vmf, enum page_entry_size pe_size,
-+			   pfn_t pfn);
- int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
- int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index);
-diff --git a/include/trace/events/fs_dax.h b/include/trace/events/fs_dax.h
-index 88a9d19b8ff8..7725459fafef 100644
---- a/include/trace/events/fs_dax.h
-+++ b/include/trace/events/fs_dax.h
-@@ -190,6 +190,8 @@ DEFINE_EVENT(dax_pte_fault_class, name, \
- DEFINE_PTE_FAULT_EVENT(dax_pte_fault);
- DEFINE_PTE_FAULT_EVENT(dax_pte_fault_done);
- DEFINE_PTE_FAULT_EVENT(dax_load_hole);
-+DEFINE_PTE_FAULT_EVENT(dax_insert_pfn_mkwrite_no_entry);
-+DEFINE_PTE_FAULT_EVENT(dax_insert_pfn_mkwrite);
- 
- TRACE_EVENT(dax_insert_mapping,
- 	TP_PROTO(struct inode *inode, struct vm_fault *vmf, void *radix_entry),
--- 
-2.12.3
-
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_nocheck
++_require_command "$XFS_DB_PROG" "xfs_db"
++_require_xfs_db_command "fuzz"
++
++rm -f "$seqres.full"
++
++echo "Format"
++_scratch_mkfs > "$seqres.full" 2>&1
++
++# Make sure that each fuzz verb works.  For the firstbit/middlebit/lastbit
++# tests, we depend on 'ones' having set the field to all ones.
++field="fdblocks"
++_scratch_xfs_db -x -c 'sb 0' -c "write -d ${field} 0"
++SCRATCH_XFS_LIST_FUZZ_VERBS= _scratch_xfs_list_fuzz_verbs | while read verb; do
++	test "${verb}" = "random" && continue
++	echo "Test verb ${verb}"
++	_scratch_xfs_db -x -c 'sb 0' -c "fuzz -d ${field} ${verb}"
++done
++
++echo "Test verb random"
++before="$(_scratch_xfs_get_metadata_field "${field}" 'sb 0')"
++_scratch_xfs_db -x -c 'sb 0' -c "fuzz -d ${field} random" >> $seqres.full
++after="$(_scratch_xfs_get_metadata_field "${field}" 'sb 0')"
++test "${before}" != "${after}" && echo "${field} changed"
++
++echo "Done"
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1386.out b/tests/xfs/1386.out
+new file mode 100644
+index 0000000..f30da83
+--- /dev/null
++++ b/tests/xfs/1386.out
+@@ -0,0 +1,28 @@
++QA output created by 1386
++Format
++Allowing write of corrupted data with good CRC
++fdblocks = 0
++Test verb zeroes
++Allowing fuzz of corrupted data with good CRC
++fdblocks = 0
++Test verb ones
++Allowing fuzz of corrupted data with good CRC
++fdblocks = 18446744073709551615
++Test verb firstbit
++Allowing fuzz of corrupted data with good CRC
++fdblocks = 9223372036854775807
++Test verb middlebit
++Allowing fuzz of corrupted data with good CRC
++fdblocks = 9223372034707292159
++Test verb lastbit
++Allowing fuzz of corrupted data with good CRC
++fdblocks = 9223372034707292158
++Test verb add
++Allowing fuzz of corrupted data with good CRC
++fdblocks = 9223372034707294175
++Test verb sub
++Allowing fuzz of corrupted data with good CRC
++fdblocks = 9223372034707292158
++Test verb random
++fdblocks changed
++Done
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 1bb40f9..0468e4b 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -428,3 +428,4 @@
+ 1383 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 1384 dangerous_fuzzers dangerous_scrub dangerous_repair
+ 1385 dangerous_fuzzers dangerous_scrub dangerous_online_repair
++1386 auto quick fuzzers
