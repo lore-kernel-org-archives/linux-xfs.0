@@ -1,94 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from dmzsha2062.multrix.com ([87.233.41.63]:15503 "EHLO
-        dmzsha2062.multrix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753403AbdHQRP5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 13:15:57 -0400
-Subject: Re: Issue with "no space left on device"
-References: <1502981688167.22881@true.nl>
- <20170817164751.GA62570@bfoster.bfoster>
-From: Sander van Schie <sander.vanschie@true.nl>
-Message-ID: <a3012e54-dc24-b069-a7a9-c235168d0499@true.nl>
-Date: Thu, 17 Aug 2017 19:15:55 +0200
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:21425 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752021AbdHSXUO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Aug 2017 19:20:14 -0400
+Date: Sun, 20 Aug 2017 09:20:10 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC 00/12] xfs: more and better verifiers
+Message-ID: <20170819232010.GO10621@dastard>
+References: <150301268960.5851.2513223883233763065.stgit@magnolia>
+ <20170818070516.GA15291@infradead.org>
+ <20170818170607.GK4796@magnolia>
+ <20170818184511.GL4796@magnolia>
+ <20170819003300.GL10621@dastard>
+ <20170819005816.GO4796@magnolia>
+ <20170819011246.GN10621@dastard>
+ <20170819011721.GP4796@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20170817164751.GA62570@bfoster.bfoster>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170819011721.GP4796@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-
-On 17-08-17 18:47, Brian Foster wrote:
-> On Thu, Aug 17, 2017 at 02:54:48PM +0000, Sander van Schie / True wrote:
->> Hello,
->>
->> I have a 35 GB XFS partition with both plenty of free space and inodes, but I'm still getting the error "No space left on device" when trying to create new files.
->>
->> Mount options:
->>
->> # mount | grep vdc1
->> /dev/vdc1 on /mnt type xfs (rw,relatime,attr2,inode64,noquota)
->>
->> Used disk space:
->>
->> # df /dev/vdc1
->> Filesystem     1K-blocks     Used Available Use% Mounted on
->> /dev/vdc1       36681200 16066576  20614624  44% /mnt
->>
->> Used inodes:
->>
->> # df -i /dev/vdc1
->> Filesystem     Inodes  IUsed  IFree IUse% Mounted on
->> /dev/vdc1      917440 199616 717824   22% /mnt
->>
->> xfs info:
->>
->> # xfs_info /dev/vdc1
->> meta-data=/dev/vdc1              isize=2048   agcount=4, agsize=2293695 blks
+On Fri, Aug 18, 2017 at 06:17:21PM -0700, Darrick J. Wong wrote:
+> On Sat, Aug 19, 2017 at 11:12:46AM +1000, Dave Chinner wrote:
+> > On Fri, Aug 18, 2017 at 05:58:16PM -0700, Darrick J. Wong wrote:
+> > > On Sat, Aug 19, 2017 at 10:33:00AM +1000, Dave Chinner wrote:
+> > > > On Fri, Aug 18, 2017 at 11:45:11AM -0700, Darrick J. Wong wrote:
+> > > > > On Fri, Aug 18, 2017 at 10:06:07AM -0700, Darrick J. Wong wrote:
+> > > > > > ...which is totally worthless, unless we want to compile all the verifier
+> > > > > > functions with __attribute__((optimize("O0"))), which is bogus.
+> > > > > > 
+> > > > > > <sigh> Back to the drawing board on that one.
+> > > > > 
+> > > > > Ok, there's /slightly/ less awful way to prevent gcc from optimizing the
+> > > > > verifier function to the point of imprecise pointer value, but it involves
+> > > > > writing to a volatile int:
+> > > > > 
+> > > > > /* stupidly prevent gcc from over-optimizing getting the instruction ptr */
+> > > > > extern volatile int xfs_lineno;
+> > > > > #define __this_address ({ __label__ __here; __here: xfs_lineno = __LINE__; &&__here; })
+> > > > > 
+> > > > > <grumble> Yucky, but it more or less works.
+> > > > 
+> > > > Can you declare the label as volatile, like you can an asm
+> > > > statement to prevent the compiler from optimising out asm
+> > > > statements?
+> > > > 
+> > > > Even so, given the yuckiness is very isolated and should only affect
+> > > > the slow path code, I can live with this.
+> > > 
+> > > Hmmm.  I can't declare the label as volatile, but I /can/ inject
+> > > asm volatile("") and that seems to prevent gcc from moving code hunks
+> > > around:
+> > > 
+> > > #define __this_address	({ __label__ __here; __here: asm volatile(""); &&__here; })
+> > 
+> > That seems cleaner to me, and I /think/ the gcc manual says it won't
+> > remove such statements, but it also says:
+> > 
+> > 	Under certain circumstances, GCC may duplicate (or remove duplicates
+> > 	of) your assembly code when optimizing.
+> > 
+> > So I have no real idea whether this is going to be robust or not.
+> > I'm not a gcc/asm expert at all (that stuff is mostly black magic
+> > to me).
 > 
-> With 2k sized inodes, the most likely cause is free space fragmentation.
-> What does 'xfs_db -c "freesp -s" <dev>' print for this fs?
-> 
-> Brian
-> 
+> Same here.  I figure if we start getting complaints about totally wacko
+> function pointers in the dmesg/xfsrepair output, we can put the
+> set-a-volatile-int cobwebs back in.
 
-The output of the command is as follows:
+Doh, it's taking me longer to remember things I forgot 10+ years ago
+these days...
 
-# xfs_db -c "freesp -s" /dev/vdc1
-    from      to extents  blocks    pct
-       1       1      28      28   0,00
-       2       3      50     149   0,00
-       4       7     907    3799   0,07
-       8      15    1369   12990   0,25
-      16      31  183206 5126962  99,34
-      32      63     492   17197   0,33
-total free extents 186052
-total free blocks 5161125
-average free extent size 27,7402
+>From include/linux/gcc-compiler.h:
 
-(not sure what I'm looking at myself)
+/* Optimization barrier */
 
+/* The "volatile" is due to gcc bugs */
+#define barrier() __asm__ __volatile__("": : :"memory")
 
->>           =                       sectsz=512   attr=2, projid32bit=1
->>           =                       crc=1        finobt=1 spinodes=0
->> data     =                       bsize=4096   blocks=9174779, imaxpct=5
->>           =                       sunit=0      swidth=0 blks
->> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
->> log      =internal               bsize=4096   blocks=4479, version=2
->>           =                       sectsz=512   sunit=0 blks, lazy-count=1
->> realtime =none                   extsz=4096   blocks=0, rtextents=0
->>
->>
->> I've already tried repairing and rebooting, which unfortunately didn't help.
->>
->> Any idea what's wrong?
->>
->> Thanks!
->>
->> - Sander--
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So I think we can just dump a barrier() call in the macro and it
+should work without us having to care about it. Still need a comment
+to explain why the barrier is there, though...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
