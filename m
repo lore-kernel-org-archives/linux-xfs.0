@@ -1,47 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48578 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753375AbdHQXbd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 19:31:33 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7HNVWaw026797
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:31:32 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7HNVVEJ006322
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:31:31 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7HNVVsJ007738
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Aug 2017 23:31:31 GMT
-Subject: [RFC 00/12] xfs: more and better verifiers
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 17 Aug 2017 16:31:29 -0700
-Message-ID: <150301268960.5851.2513223883233763065.stgit@magnolia>
+Received: from mr001msb.fastweb.it ([85.18.95.85]:41730 "EHLO
+        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751561AbdHSQkD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Aug 2017 12:40:03 -0400
+Subject: Re: Estimate =?UTF-8?Q?xfs=5Frepair=20run=20time?=
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+Date: Sat, 19 Aug 2017 18:39:58 +0200
+From: Gionatan Danti <g.danti@assyoma.it>
+In-Reply-To: <20170819162025.GT4796@magnolia>
+References: <22ed5cf73260ae39bf59779b302d8ad3@assyoma.it>
+ <d80ca25cd28ec433c39a7d7d22c4e371@assyoma.it>
+ <20170819154804.GS4796@magnolia>
+ <3fcdaa5ea4365a1ddb7c76070236e6b3@assyoma.it>
+ <20170819162025.GT4796@magnolia>
+Message-ID: <a42886b91433dcf4d7fdd3f541f2374a@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, g.danti@assyoma.it
 
-Hi all,
+Il 19-08-2017 18:20 Darrick J. Wong ha scritto:
+> I meant the per-inode extent size hint.  See 'extsize' in the xfs_io 
+> manpage.
 
-This RFC combines all the random little fixes and improvements to the
-verifiers that we've been talking about for the past month or so into a
-single patch series!
+I did not know about per-file extent hint. Thank you very much for 
+pointing me that!
 
-We start by refactoring the long format btree block header verifier into
-a single helper functionn and de-macroing dir block verifiers to make
-them less shouty.  Next, we change verifier functions to return the
-approximate instruction pointer of the faulting test so that we can
-report more precise fault information to dmesg/tracepoints.  Then, we
-move on to creating verifiers for all the inline format fork formats,
-and create a helper function for _iget that can dispatch inline
-verification.  The ability to supply custom verifier functions will be
-used by xfs_repair to deal with corrupt inodes.  The last patch enables
-us to (re)check the structure of incore metadata buffers to try to
-detect memory corruption.
+> {yes, yes, depends on which spindle(s) metadata end up on and how many
+> files cross AGs} in that order. :)
 
---D
+Mmm ok, as expected :)
+Do you have any direct experience of xfs_repair run times on big and 
+full XFS filesystems?
+
+Thanks.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
