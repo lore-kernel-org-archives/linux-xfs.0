@@ -1,60 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56038 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753122AbdHTR7e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 20 Aug 2017 13:59:34 -0400
-Subject: Re: xfs errors
-References: <42ebd50b-a327-0afb-a53a-e2dedd003415@zoho.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <da41ec6e-0009-6515-7c60-a48c3b07369b@sandeen.net>
-Date: Sun, 20 Aug 2017 12:59:33 -0500
+Received: from mr002msb.fastweb.it ([85.18.95.86]:46514 "EHLO
+        mr002msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751308AbdHSQPd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Aug 2017 12:15:33 -0400
+Subject: Re: Estimate =?UTF-8?Q?xfs=5Frepair=20run=20time?=
 MIME-Version: 1.0
-In-Reply-To: <42ebd50b-a327-0afb-a53a-e2dedd003415@zoho.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date: Sat, 19 Aug 2017 18:15:28 +0200
+From: Gionatan Danti <g.danti@assyoma.it>
+In-Reply-To: <20170819154804.GS4796@magnolia>
+References: <22ed5cf73260ae39bf59779b302d8ad3@assyoma.it>
+ <d80ca25cd28ec433c39a7d7d22c4e371@assyoma.it>
+ <20170819154804.GS4796@magnolia>
+Message-ID: <3fcdaa5ea4365a1ddb7c76070236e6b3@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: ToddAndMargo <ToddAndMargo@zoho.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, g.danti@assyoma.it
 
-On 8/20/17 12:57 AM, ToddAndMargo wrote:
-> Dear Xfs,
-> 
-> Do I report this to you or Red Hat?
-> 
-> Fedora Core 26, x564
+Il 19-08-2017 17:48 Darrick J. Wong ha scritto:
+> Should work fine; be sure to set the extent size hint to reduce 
+> fragmentation.
 
-Here is fine, or Fedora if you want, but it'll be the same people responding in any case.
+Hi, do you mean tuning the "allocsize" mount option? If I remember 
+correctly, this parameter should be auto-tuned by XFS during normal 
+operation, right?
 
-> xfsdump-3.1.6-4.fc26.x86_64
-> 
-> When I run the following
-> 
->     # /sbin/xfsdump -v verbose -M 1 -L 1 -l 0 -f /lin-bak/2017-08-19_22-30-27_md126p2.XfsDump  /
-> 
-> randomly, I get this error message when I run xfsdump:
-> 
-> 
->     /sbin/xfsdump: ino map phase 1: constructing initial dump list
->     /sbin/xfsdump: WARNING: failed to get bulkstat information for inode 739
->     /sbin/xfsdump: WARNING: failed to get bulkstat information for inode 954
->     /sbin/xfsdump: WARNING: failed to get bulkstat information for inode 1118
->     about 40 more of them
-> 
-> And the next time it will run clean.  What gives?
+Any thoughts on the xfs_repair matter?
+Thanks.
 
-Most likely it's files that got deleted while xfsdump was running.  xfsdump has a bad habit of issuing warnings for things that are not actually problematic.
-
-But you could also look for those inodes on the filesystem you're dumping; what are they?  Are they still there, or were they transient files?
-
-If you quiesce the filesystem first, or dump from a snapshot, you should not see such errors.
-
--Eric
-
-> I put a `sunc; sync` before the dump command and it seems to help, but it is random, so who knows.
-> 
-> Is this a bug?  Or am I doing something wrong?
-> 
-> Many thanks,
-> -T
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
