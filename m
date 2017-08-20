@@ -1,45 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:55654 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751017AbdHSBDD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Aug 2017 21:03:03 -0400
-Date: Sat, 19 Aug 2017 11:03:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] mkfs: rename defaultval to flagval in opts
-Message-ID: <20170819010300.GM10621@dastard>
-References: <20170818103932.24607-1-jtulak@redhat.com>
+Received: from mr002msb.fastweb.it ([85.18.95.86]:34176 "EHLO
+        mr002msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751105AbdHTFF4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 Aug 2017 01:05:56 -0400
+Subject: Re: Estimate =?UTF-8?Q?xfs=5Frepair=20run=20time?=
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170818103932.24607-1-jtulak@redhat.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date: Sun, 20 Aug 2017 07:05:50 +0200
+From: Gionatan Danti <g.danti@assyoma.it>
+In-Reply-To: <20170820020438.GQ10621@dastard>
+References: <22ed5cf73260ae39bf59779b302d8ad3@assyoma.it>
+ <d80ca25cd28ec433c39a7d7d22c4e371@assyoma.it>
+ <20170819154804.GS4796@magnolia>
+ <3fcdaa5ea4365a1ddb7c76070236e6b3@assyoma.it>
+ <20170819162025.GT4796@magnolia>
+ <a42886b91433dcf4d7fdd3f541f2374a@assyoma.it>
+ <20170820020438.GQ10621@dastard>
+Message-ID: <128ec64d954acd2b8760d017fd16db46@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, g.danti@assyoma.it
 
-On Fri, Aug 18, 2017 at 12:39:32PM +0200, Jan Tulak wrote:
-> The old name 'defaultval' was misleading - it is not the default value,
-> but the value the option has when used as a flag by an user.
+Hi Dave,
 
-Hmmm - ok, what we have here is the difference between design intent
-and the current use of the field.
+Il 20-08-2017 04:04 Dave Chinner ha scritto:
+> 
+> Yes. And there's no hard and fast number we can give you because
+> runtime will depends on the amount and density of the metadata, the
+> speed of the underlying storage, how much RAM you have and how badly
+> corrupted the filesystem is.
+> 
+> IOWs, runtime can vary from a few minutes to a few days as you vary
+> those parameters, and there's really no way to tell in advance where
+> in that massive variance any specific production filesystem will
+> land.
+> 
+> Doing a test run (xfs_repair -n) to get a ballpark figure during a
+> planned downtime period is the only way you'll get any idea of the
+> *best case* repair duration on a *clean* filesystem. But the moment
+> repair finds corruptions, all guesses you can make about runtime go
+> out the window...
 
-The design intent is that the defaultval field can contain the
-default value for any type of config field. It gets used when a user
-either doesn't specify the option or doesn't specify a value for the
-option that is being parsed. The special "need value" value tells
-the code that there isn't a defined default that can be used, so the
-option must be specified with a value.
+ok, so I at least need to try & see how well xfs_repair does on a clean 
+filesystem.
 
-The current implementation only contains default values for flag
-fields, but that doesn't mean we can't use it for fields that are
-not flags. And if that's the case, then renaming the field "flagval"
-isn't the right thing to do....
+Thanks.
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
