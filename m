@@ -1,97 +1,305 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:37630 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751003AbdHXCGF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 22:06:05 -0400
-Date: Thu, 24 Aug 2017 12:06:01 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC 0/3] xfs: add customizable default values for error
- configuration
-Message-ID: <20170824020601.GE21024@dastard>
-References: <1503316462-16553-1-git-send-email-houtao1@huawei.com>
- <20170821225003.GR10621@dastard>
- <6b4f210c-4ea3-4a9d-b7ea-e60480be76e2@huawei.com>
- <20170824001637.GB21024@dastard>
- <20170824004609.GD4796@magnolia>
- <20170824010052.GD21024@dastard>
- <e0cee76e-f356-2788-0e04-13edfe0300a2@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e0cee76e-f356-2788-0e04-13edfe0300a2@huawei.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:43411 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751069AbdHUIYI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2017 04:24:08 -0400
+Received: from [46.125.249.109] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dji0F-0008Vs-6W
+        for linux-xfs@vger.kernel.org; Mon, 21 Aug 2017 08:24:07 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: remove "no-allocation" reservations for file creations
+Date: Mon, 21 Aug 2017 10:24:04 +0200
+Message-Id: <20170821082404.3387-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Hou Tao <houtao1@huawei.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, cmaiolino@redhat.com
+To: linux-xfs@vger.kernel.org
 
-On Thu, Aug 24, 2017 at 09:42:27AM +0800, Hou Tao wrote:
-> Hi Dave and Darrick,
-> 
-> On 2017/8/24 9:00, Dave Chinner wrote:
-> > On Wed, Aug 23, 2017 at 05:46:09PM -0700, Darrick J. Wong wrote:
-> >> On Thu, Aug 24, 2017 at 10:16:37AM +1000, Dave Chinner wrote:
-> >>> On Wed, Aug 23, 2017 at 05:26:36PM +0800, Hou Tao wrote:
-> >>>> Hi Dave,
-> >>>>
-> >>>> On 2017/8/22 6:50, Dave Chinner wrote:
-> >>>>> On Mon, Aug 21, 2017 at 07:54:19PM +0800, Hou Tao wrote:
-> >>>>>> Hi all,
-> >>>>>>
-> >>>>>> XFS has the configurable error handlers for each mounted device, but
-> >>>>>> the default values of these configuration are static. It will be useful
-> >>>>>> to make the default values customizable when there are many XFS filesystems
-> >>>>>> and we need to shutdown the filesystem after getting any error.
-> >>>>>
-> >>>>> Nice! I can see the usefulness of this functionality - it's a piece
-> >>>>> of the puzzle we are missing. I've had a quick look over the code,
-> >>>>> and have a few high level questions that I can't answer from looking
-> >>>>> at the code.
-> >>>>> Was there any reason you decided to put the default policy
-> >>>>> management into the kernel rather than try to provide a mechanism to
-> >>>>> allow userspace to manage it (e.g. via a udev event at mount time)?
-> >>>> No special reason for the kernel-side default policy, just because I didn't
-> >>>> find an uevent for the mount event. If the uevent is available or added (?),
-> >>>> writing an udev rule to set the default error configuration seems simpler and
-> >>>> works for our scenario.
-> >>>
-> >>> I think we'd need to add one, but given we already have a kobj for
-> >>> the filesystem being mounted, it seems to me like we should be able
-> >>> to add a mount notification without too much trouble via
-> >>> kobject_uevent(KOBJ_ONLINE)
-> >>
-> >> <ENGAGE BIKESHED MODE>
-> >>
-> >> It might be useful to think more broadly about modifying XFS to send
-> >> uevents.  In addition to sending KOBJ_ONLINE to broadcast the mount to
-> >> error configuration tools, we could (in the future say) schedule online
-> >> fscks with a service manager.  Or we could send KOBJ_CHANGE notices when
-> >> we hit IO errors, or someone remounts the fs with different options?
-> >>
-> >> <END BIKESHED MODE>
-> > 
-> > Agreed, that's what I'd like to be able to do in the future. Let's
-> > make the small step first of being able to emit an online event,
-> > because that has no other information passed with it that can trap
-> > us into a corner in future. Other events and custom events are
-> > outside the scope of error config injection at mount time....
-> So do we plan to add a mount and umount uevent only, or to add both
-> the uevent and a "default" value for the error configuration?
+If we create a new file we will need an inode, and usually some metadata
+in the parent direction.  Aiming for everything to go well despite the
+lack of a reservation leads to dirty transactions cancelled under a heavy
+create/delete load.  This patch removes those nospace transactions, which
+will lead to slightly earlier ENOSPC on some workloads, but instead
+prevent file system shutdowns due to cancelling dirty transactions for
+others.
 
-Both, I think. They are separable pieces of work, though. The
-uevents can be a single patch, the "default" value handling would be a
-part of your series to introduce a global error default config.
+A customer could observe assertations failures and shutdowns due to
+cancelation of dirty transactions during heavy NFS workloads as shown
+below:
 
-> The former will be enough for our scenario, thought it introduces
-> a dependency on the udevd program.
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728125] XFS: Assertion failed: error != -ENOSPC, file: fs/xfs/xfs_inode.c, line: 1262
 
-Pretty much everything a modern distro does w.r.t. block device
-management requires udev to be present and functional, so I don't
-see that there's going to be a problem with this.
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728222] Call Trace:
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728246]  [<ffffffff81795daf>] dump_stack+0x63/0x81
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728262]  [<ffffffff810a1a5a>] warn_slowpath_common+0x8a/0xc0
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728264]  [<ffffffff810a1b8a>] warn_slowpath_null+0x1a/0x20
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728285]  [<ffffffffa01bf403>] asswarn+0x33/0x40 [xfs]
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728308]  [<ffffffffa01bb07e>] xfs_create+0x7be/0x7d0 [xfs]
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728329]  [<ffffffffa01b6ffb>] xfs_generic_create+0x1fb/0x2e0 [xfs]
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728348]  [<ffffffffa01b7114>] xfs_vn_mknod+0x14/0x20 [xfs]
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728366]  [<ffffffffa01b7153>] xfs_vn_create+0x13/0x20 [xfs]
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728380]  [<ffffffff81231de5>] vfs_create+0xd5/0x140
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728390]  [<ffffffffa045ddb9>] do_nfsd_create+0x499/0x610 [nfsd]
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728396]  [<ffffffffa0465fa5>] nfsd3_proc_create+0x135/0x210 [nfsd]
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728401]  [<ffffffffa04561e3>] nfsd_dispatch+0xc3/0x210 [nfsd]
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728416]  [<ffffffffa03bfa43>] svc_process_common+0x453/0x6f0 [sunrpc]
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728423]  [<ffffffffa03bfdf3>] svc_process+0x113/0x1f0 [sunrpc]
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728427]  [<ffffffffa0455bcf>] nfsd+0x10f/0x180 [nfsd]
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728432]  [<ffffffffa0455ac0>] ? nfsd_destroy+0x80/0x80 [nfsd]
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728438]  [<ffffffff810c0d58>] kthread+0xd8/0xf0
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728441]  [<ffffffff810c0c80>] ? kthread_create_on_node+0x1b0/0x1b0
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728451]  [<ffffffff8179d962>] ret_from_fork+0x42/0x70
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728453]  [<ffffffff810c0c80>] ? kthread_create_on_node+0x1b0/0x1b0
+2017-05-30 21:17:06 kernel: WARNING: [ 2670.728454] ---[ end trace f9822c842fec81d4 ]---
 
-Cheers,
+2017-05-30 21:17:06 kernel: ALERT: [ 2670.728477] XFS (sdb): Internal error xfs_trans_cancel at line 983 of file fs/xfs/xfs_trans.c.  Caller xfs_create+0x4ee/0x7d0 [xfs]
 
-Dave.
+2017-05-30 21:17:06 kernel: ALERT: [ 2670.728684] XFS (sdb): Corruption of in-memory data detected. Shutting down filesystem
+2017-05-30 21:17:06 kernel: ALERT: [ 2670.728685] XFS (sdb): Please umount the filesystem and rectify the problem(s)
+---
+ fs/xfs/libxfs/xfs_ialloc.c | 10 +++-------
+ fs/xfs/libxfs/xfs_ialloc.h |  1 -
+ fs/xfs/xfs_inode.c         | 33 +++++++--------------------------
+ fs/xfs/xfs_inode.h         |  2 +-
+ fs/xfs/xfs_qm.c            |  4 ++--
+ fs/xfs/xfs_symlink.c       | 15 +--------------
+ 6 files changed, 14 insertions(+), 51 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index abf5beaae907..6af9ef5d33de 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -921,8 +921,7 @@ STATIC xfs_agnumber_t
+ xfs_ialloc_ag_select(
+ 	xfs_trans_t	*tp,		/* transaction pointer */
+ 	xfs_ino_t	parent,		/* parent directory inode number */
+-	umode_t		mode,		/* bits set to indicate file type */
+-	int		okalloc)	/* ok to allocate more space */
++	umode_t		mode)		/* bits set to indicate file type */
+ {
+ 	xfs_agnumber_t	agcount;	/* number of ag's in the filesystem */
+ 	xfs_agnumber_t	agno;		/* current ag number */
+@@ -979,9 +978,6 @@ xfs_ialloc_ag_select(
+ 			return agno;
+ 		}
+ 
+-		if (!okalloc)
+-			goto nextag;
+-
+ 		if (!pag->pagf_init) {
+ 			error = xfs_alloc_pagf_init(mp, tp, agno, flags);
+ 			if (error)
+@@ -1682,7 +1678,6 @@ xfs_dialloc(
+ 	struct xfs_trans	*tp,
+ 	xfs_ino_t		parent,
+ 	umode_t			mode,
+-	int			okalloc,
+ 	struct xfs_buf		**IO_agbp,
+ 	xfs_ino_t		*inop)
+ {
+@@ -1694,6 +1689,7 @@ xfs_dialloc(
+ 	int			noroom = 0;
+ 	xfs_agnumber_t		start_agno;
+ 	struct xfs_perag	*pag;
++	int			okalloc = 1;
+ 
+ 	if (*IO_agbp) {
+ 		/*
+@@ -1709,7 +1705,7 @@ xfs_dialloc(
+ 	 * We do not have an agbp, so select an initial allocation
+ 	 * group for inode allocation.
+ 	 */
+-	start_agno = xfs_ialloc_ag_select(tp, parent, mode, okalloc);
++	start_agno = xfs_ialloc_ag_select(tp, parent, mode);
+ 	if (start_agno == NULLAGNUMBER) {
+ 		*inop = NULLFSINO;
+ 		return 0;
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index b32cfb5aeb5b..72311a636458 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -81,7 +81,6 @@ xfs_dialloc(
+ 	struct xfs_trans *tp,		/* transaction pointer */
+ 	xfs_ino_t	parent,		/* parent inode (directory) */
+ 	umode_t		mode,		/* mode bits for new inode */
+-	int		okalloc,	/* ok to allocate more space */
+ 	struct xfs_buf	**agbp,		/* buf for a.g. inode header */
+ 	xfs_ino_t	*inop);		/* inode number allocated */
+ 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index ff48f0096810..6af59418f4ab 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -769,7 +769,6 @@ xfs_ialloc(
+ 	xfs_nlink_t	nlink,
+ 	xfs_dev_t	rdev,
+ 	prid_t		prid,
+-	int		okalloc,
+ 	xfs_buf_t	**ialloc_context,
+ 	xfs_inode_t	**ipp)
+ {
+@@ -785,7 +784,7 @@ xfs_ialloc(
+ 	 * Call the space management code to pick
+ 	 * the on-disk inode to be allocated.
+ 	 */
+-	error = xfs_dialloc(tp, pip ? pip->i_ino : 0, mode, okalloc,
++	error = xfs_dialloc(tp, pip ? pip->i_ino : 0, mode,
+ 			    ialloc_context, &ino);
+ 	if (error)
+ 		return error;
+@@ -977,7 +976,6 @@ xfs_dir_ialloc(
+ 	xfs_nlink_t	nlink,
+ 	xfs_dev_t	rdev,
+ 	prid_t		prid,		/* project id */
+-	int		okalloc,	/* ok to allocate new space */
+ 	xfs_inode_t	**ipp,		/* pointer to inode; it will be
+ 					   locked. */
+ 	int		*committed)
+@@ -1008,8 +1006,8 @@ xfs_dir_ialloc(
+ 	 * transaction commit so that no other process can steal
+ 	 * the inode(s) that we've just allocated.
+ 	 */
+-	code = xfs_ialloc(tp, dp, mode, nlink, rdev, prid, okalloc,
+-			  &ialloc_context, &ip);
++	code = xfs_ialloc(tp, dp, mode, nlink, rdev, prid, &ialloc_context,
++			&ip);
+ 
+ 	/*
+ 	 * Return an error if we were unable to allocate a new inode.
+@@ -1081,7 +1079,7 @@ xfs_dir_ialloc(
+ 		 * this call should always succeed.
+ 		 */
+ 		code = xfs_ialloc(tp, dp, mode, nlink, rdev, prid,
+-				  okalloc, &ialloc_context, &ip);
++				  &ialloc_context, &ip);
+ 
+ 		/*
+ 		 * If we get an error at this point, return to the caller
+@@ -1203,11 +1201,6 @@ xfs_create(
+ 		xfs_flush_inodes(mp);
+ 		error = xfs_trans_alloc(mp, tres, resblks, 0, 0, &tp);
+ 	}
+-	if (error == -ENOSPC) {
+-		/* No space at all so try a "no-allocation" reservation */
+-		resblks = 0;
+-		error = xfs_trans_alloc(mp, tres, 0, 0, 0, &tp);
+-	}
+ 	if (error)
+ 		goto out_release_inode;
+ 
+@@ -1224,19 +1217,13 @@ xfs_create(
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-	if (!resblks) {
+-		error = xfs_dir_canenter(tp, dp, name);
+-		if (error)
+-			goto out_trans_cancel;
+-	}
+-
+ 	/*
+ 	 * A newly created regular or special file just has one directory
+ 	 * entry pointing to them, but a directory also the "." entry
+ 	 * pointing to itself.
+ 	 */
+-	error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev,
+-			       prid, resblks > 0, &ip, NULL);
++	error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev, prid, &ip,
++			NULL);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+@@ -1361,11 +1348,6 @@ xfs_create_tmpfile(
+ 	tres = &M_RES(mp)->tr_create_tmpfile;
+ 
+ 	error = xfs_trans_alloc(mp, tres, resblks, 0, 0, &tp);
+-	if (error == -ENOSPC) {
+-		/* No space at all so try a "no-allocation" reservation */
+-		resblks = 0;
+-		error = xfs_trans_alloc(mp, tres, 0, 0, 0, &tp);
+-	}
+ 	if (error)
+ 		goto out_release_inode;
+ 
+@@ -1374,8 +1356,7 @@ xfs_create_tmpfile(
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-	error = xfs_dir_ialloc(&tp, dp, mode, 1, 0,
+-				prid, resblks > 0, &ip, NULL);
++	error = xfs_dir_ialloc(&tp, dp, mode, 1, 0, prid, &ip, NULL);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 0ee453de239a..ef9b634e4a0a 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -428,7 +428,7 @@ xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
+ xfs_extlen_t	xfs_get_cowextsz_hint(struct xfs_inode *ip);
+ 
+ int		xfs_dir_ialloc(struct xfs_trans **, struct xfs_inode *, umode_t,
+-			       xfs_nlink_t, xfs_dev_t, prid_t, int,
++			       xfs_nlink_t, xfs_dev_t, prid_t,
+ 			       struct xfs_inode **, int *);
+ 
+ /* from xfs_file.c */
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 15751dc2a27d..b1e45ac8ada7 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -792,8 +792,8 @@ xfs_qm_qino_alloc(
+ 		return error;
+ 
+ 	if (need_alloc) {
+-		error = xfs_dir_ialloc(&tp, NULL, S_IFREG, 1, 0, 0, 1, ip,
+-								&committed);
++		error = xfs_dir_ialloc(&tp, NULL, S_IFREG, 1, 0, 0, ip,
++				&committed);
+ 		if (error) {
+ 			xfs_trans_cancel(tp);
+ 			return error;
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 23a50d7aa46a..ae8071a4d035 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -232,11 +232,6 @@ xfs_symlink(
+ 	resblks = XFS_SYMLINK_SPACE_RES(mp, link_name->len, fs_blocks);
+ 
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_symlink, resblks, 0, 0, &tp);
+-	if (error == -ENOSPC && fs_blocks == 0) {
+-		resblks = 0;
+-		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_symlink, 0, 0, 0,
+-				&tp);
+-	}
+ 	if (error)
+ 		goto out_release_inode;
+ 
+@@ -260,14 +255,6 @@ xfs_symlink(
+ 		goto out_trans_cancel;
+ 
+ 	/*
+-	 * Check for ability to enter directory entry, if no space reserved.
+-	 */
+-	if (!resblks) {
+-		error = xfs_dir_canenter(tp, dp, link_name);
+-		if (error)
+-			goto out_trans_cancel;
+-	}
+-	/*
+ 	 * Initialize the bmap freelist prior to calling either
+ 	 * bmapi or the directory create code.
+ 	 */
+@@ -277,7 +264,7 @@ xfs_symlink(
+ 	 * Allocate an inode for the symlink.
+ 	 */
+ 	error = xfs_dir_ialloc(&tp, dp, S_IFLNK | (mode & ~S_IFMT), 1, 0,
+-			       prid, resblks > 0, &ip, NULL);
++			       prid, &ip, NULL);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.11.0
+
