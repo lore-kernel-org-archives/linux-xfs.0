@@ -1,137 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37217 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754131AbdHWPL2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 Aug 2017 11:11:28 -0400
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: [PATCH 3/4] fiemap: Simplify internals of fiemap_f.
-Date: Wed, 23 Aug 2017 18:11:21 +0300
-Message-Id: <1503501082-16983-3-git-send-email-nborisov@suse.com>
-In-Reply-To: <1503501082-16983-1-git-send-email-nborisov@suse.com>
-References: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
- <1503501082-16983-1-git-send-email-nborisov@suse.com>
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:35194 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752542AbdHUMIo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2017 08:08:44 -0400
+Received: by mail-qt0-f194.google.com with SMTP id e2so1104459qta.2
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Aug 2017 05:08:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20170818121725.GA1665@bfoster.bfoster>
+References: <CAHeWggOTqbQUQB7xz1wUjejHU5W14w3wcN-oV-+KJxxyEEQ3TQ@mail.gmail.com>
+ <20170818120224.GA27778@redhat.com> <20170818121725.GA1665@bfoster.bfoster>
+From: Ingard - <ingard1@gmail.com>
+Date: Mon, 21 Aug 2017 14:08:43 +0200
+Message-ID: <CAHeWggM-dGJHRNyyXZrW5aX7v3r-b0t1LTbrbN-OSTLdLzuPhg@mail.gmail.com>
+Subject: Re: corrupt xfs log
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net
-Cc: linux-xfs@vger.kernel.org, Nikolay Borisov <nborisov@suse.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
 
-So far fiemap used some rather convoluted logic to terminate the iteration and
-calculate the number of extents to pass to fm_extent_count. Simplify this by:
+On Fri, Aug 18, 2017 at 2:17 PM, Brian Foster <bfoster@redhat.com> wrote:
+> On Fri, Aug 18, 2017 at 07:02:24AM -0500, Bill O'Donnell wrote:
+>> On Fri, Aug 18, 2017 at 01:56:31PM +0200, Ingard - wrote:
+>> > After a server crash we've encountered a corrupt xfs filesystem. When
+>> > trying to mount said filesystem normally the system hangs.
+>> > This was initially on a ubuntu trusty server with 3.13 kernel with
+>> > xfsprogs 3.1.9
+>> >
+>> > We've installed a newer kernel (4.4.0-92) and compiled xfsprogs v
+>> > 4.12.0 from source. We're still not able to mount the filesystem (and
+>> > replay the log) normally.
+>> > We are able to mount it -o ro,norecovery, but we're reluctant to do
+>> > xfs_repair -L without trying everything we can first. The filesystem
+>> > is browsable albeit a few paths which gives an error : "Structure
+>> > needs cleaning"
+>> >
+>> > Does anyone have any advice as to how we might recover/repair the
+>> > corrupt log so we can replay it? Or is xfs_repair -L the only way
+>> > forward?
+>>
+>> Can you try xfs_repair -n (only scans the fs and reports what repairs
+>> would be made)?
+>>
+>
+> An xfs_metadump of the fs might be useful as well. Then we can see if we
+> can reproduce the mount hang on latest kernels and if so, potentially
+> try and root cause it.
+>
+> Brian
 
-* Get the whole number of extents that this file has and keep iterating until
-we've printed all extents
+Here is a link for the metadump :
+https://www.jottacloud.com/p/ingardme/95ec2e45ba80431d962345981d38bdff
+And the repair -n output :
+https://www.jottacloud.com/p/ingardme/0205c6ca6f7e495ebcda5f255b96f63d
 
-* Always use a hard-coded batch of 32 extents so we don't have to worry about
-any extra calculations
+kind regards
+ingard
 
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
----
- io/fiemap.c | 37 +++++++++++++++++++++----------------
- 1 file changed, 21 insertions(+), 16 deletions(-)
-
-diff --git a/io/fiemap.c b/io/fiemap.c
-index 30c49112e089..ef54b265ab91 100644
---- a/io/fiemap.c
-+++ b/io/fiemap.c
-@@ -23,6 +23,8 @@
- #include "init.h"
- #include "io.h"
- 
-+#define EXTENT_BATCH 32
-+
- static cmdinfo_t fiemap_cmd;
- static const __u64 blocksize = 512;
- static int max_extents = 0;
-@@ -95,7 +97,7 @@ print_verbose(
- 		memset(lbuf, 0, sizeof(lbuf));
- 	}
- 
--	if ((*cur_extent + 1) == max_extents)
-+	if (*cur_extent == max_extents)
- 		return;
- 
- 	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
-@@ -137,7 +139,7 @@ print_plain(
- 		(*cur_extent)++;
- 	}
- 
--	if ((*cur_extent + 1) == max_extents)
-+	if (*cur_extent == max_extents)
- 		return;
- 
- 	printf("\t%d: [%llu..%llu]: %llu..%llu", *cur_extent,
-@@ -215,7 +217,7 @@ fiemap_f(
- 	char		**argv)
- {
- 	struct fiemap	*fiemap;
--	int		num_extents = 32;
-+	int		num_extents;
- 	int		last = 0;
- 	int		lflag = 0;
- 	int		vflag = 0;
-@@ -251,10 +253,15 @@ fiemap_f(
- 		}
- 	}
- 
--	if (max_extents)
--		num_extents = min(num_extents, max_extents);
-+	ret = get_extent_count(file->fd, last_logical, -1);
-+	if (ret < 0) {
-+		exitcode = 1;
-+		return 0;
-+	}
-+	num_extents = ret;
-+
- 	map_size = sizeof(struct fiemap) +
--		(num_extents * sizeof(struct fiemap_extent));
-+		(EXTENT_BATCH * sizeof(struct fiemap_extent));
- 	fiemap = malloc(map_size);
- 	if (!fiemap) {
- 		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
-@@ -265,16 +272,14 @@ fiemap_f(
- 
- 	printf("%s:\n", file->name);
- 
--	while (!last && ((cur_extent + 1) != max_extents)) {
--		if (max_extents)
--			num_extents = min(num_extents,
--					  max_extents - (cur_extent + 1));
-+	while (!last && num_extents) {
- 
-+		/* Query a batch worth of extents */
- 		memset(fiemap, 0, map_size);
- 		fiemap->fm_flags = fiemap_flags;
- 		fiemap->fm_start = last_logical;
- 		fiemap->fm_length = -1LL;
--		fiemap->fm_extent_count = num_extents;
-+		fiemap->fm_extent_count = EXTENT_BATCH;
- 
- 		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
- 		if (ret < 0) {
-@@ -307,17 +312,17 @@ fiemap_f(
- 				print_plain(extent, lflag, blocksize,
- 					    &cur_extent, &last_logical);
- 
--			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
-+			if (extent->fe_flags & FIEMAP_EXTENT_LAST ||
-+			    cur_extent == max_extents) {
- 				last = 1;
- 				break;
- 			}
--
--			if ((cur_extent + 1) == max_extents)
--				break;
- 		}
-+
-+		num_extents -= fiemap->fm_mapped_extents;
- 	}
- 
--	if ((cur_extent + 1) == max_extents)
-+	if (cur_extent == max_extents)
- 		goto out;
- 
- 	memset(&st, 0, sizeof(st));
--- 
-2.7.4
-
+>
+>> Thanks-
+>> Bill
+>>
+>>
+>> >
+>> >
+>> > Excerpt from kern.log:
+>> > 2017-08-17T13:40:41.122121+02:00 dn-238 kernel: [  294.300347] XFS
+>> > (sdd1): Mounting V4 filesystem in no-recovery mode. Filesystem will be
+>> > inconsistent.
+>> >
+>> > 2017-08-17T17:04:54.794194+02:00 dn-238 kernel: [12548.400260] XFS
+>> > (sdd1): Metadata corruption detected at xfs_inode_buf_verify+0x6f/0xd0
+>> > [xfs], xfs_inode block 0x81c9c210
+>> > 2017-08-17T17:04:54.794216+02:00 dn-238 kernel: [12548.400342] XFS
+>> > (sdd1): Unmount and run xfs_repair
+>> > 2017-08-17T17:04:54.794218+02:00 dn-238 kernel: [12548.400374] XFS
+>> > (sdd1): First 64 bytes of corrupted metadata buffer:
+>> > 2017-08-17T17:04:54.794220+02:00 dn-238 kernel: [12548.400418]
+>> > ffff880171fff000: 3f 1a 33 54 5b 55 85 0b 7c f5 c6 d5 cf 51 47 41
+>> > ?.3T[U..|....QGA
+>> > 2017-08-17T17:04:54.794222+02:00 dn-238 kernel: [12548.400473]
+>> > ffff880171fff010: 97 ba ba 03 5c e4 02 7a e6 bc fb 5d f1 72 db c1
+>> > ....\..z...].r..
+>> > 2017-08-17T17:04:54.794223+02:00 dn-238 kernel: [12548.400527]
+>> > ffff880171fff020: c8 ad 3a 76 c7 e4 20 92 88 a2 35 0c 1f 36 cf b5
+>> > ..:v.. ...5..6..
+>> > 2017-08-17T17:04:54.794226+02:00 dn-238 kernel: [12548.400581]
+>> > ffff880171fff030: 8a bc 42 75 86 50 a0 a2 be 2c 2d 99 96 2d e1 ee
+>> > ..Bu.P...,-..-..
+>> >
+>> > kind regards
+>> > ingard
+>> > --
+>> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> > the body of a message to majordomo@vger.kernel.org
+>> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
