@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:4521 "EHLO
+Received: from szxga04-in.huawei.com ([45.249.212.190]:4524 "EHLO
         szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750967AbdHULt2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2017 07:49:28 -0400
+        with ESMTP id S1752234AbdHULth (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2017 07:49:37 -0400
 From: Hou Tao <houtao1@huawei.com>
-Subject: [PATCH RFC 2/3] xfs: add sysfs files for default values of error configuration
-Date: Mon, 21 Aug 2017 19:54:21 +0800
-Message-ID: <1503316462-16553-3-git-send-email-houtao1@huawei.com>
+Subject: [PATCH RFC 3/3] xfs: make the default values of error configuration customizable and workable
+Date: Mon, 21 Aug 2017 19:54:22 +0800
+Message-ID: <1503316462-16553-4-git-send-email-houtao1@huawei.com>
 In-Reply-To: <1503316462-16553-1-git-send-email-houtao1@huawei.com>
 References: <1503316462-16553-1-git-send-email-houtao1@huawei.com>
 MIME-Version: 1.0
@@ -17,350 +17,354 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: darrick.wong@oracle.com, cmaiolino@redhat.com
 
-Both the hierarchies and the names are the same with the sysfs tree
-of the mount-point specific error configuration. The only difference
-is the root of error configuration sysfs tree: for the sysfs tree of
-default values it is "xfs/default_error" instead of "xfs/<dev_name>/error".
+Merge the error initialization table into the error configurations of the
+default error object, and assign the error configurations to mount point
+specific error object when initializing the sysfs tree of mount point.
+
+When any default value is being modified and the value of mount point
+specific configuration is same with the old default value, the value of
+mount point specific configuration will be updated and synced with
+the new default value.
 
 Signed-off-by: Hou Tao <houtao1@huawei.com>
 ---
- fs/xfs/xfs_mount.h |  14 +++++
- fs/xfs/xfs_super.c |  11 +++-
- fs/xfs/xfs_sysfs.c | 158 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_sysfs.h |   2 +
- 4 files changed, 180 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_mount.c |   3 -
+ fs/xfs/xfs_mount.h |   3 +
+ fs/xfs/xfs_sysfs.c | 185 ++++++++++++++++++++++++++++++++++++++---------------
+ 3 files changed, 137 insertions(+), 54 deletions(-)
 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index d67b5b6..3a6d2e0 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -703,9 +703,6 @@ xfs_mountfs(
+ 
+ 	xfs_set_maxicount(mp);
+ 
+-	/* enable fail_at_unmount as default */
+-	mp->m_eobj.fail_unmount = 1;
+-
+ 	error = xfs_sysfs_init(&mp->m_kobj, &xfs_mp_ktype, NULL, mp->m_fsname);
+ 	if (error)
+ 		goto out;
 diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 3e80aff..a655821 100644
+index a655821..bd22064 100644
 --- a/fs/xfs/xfs_mount.h
 +++ b/fs/xfs/xfs_mount.h
-@@ -73,6 +73,13 @@ struct xfs_mp_error_cfg_kobj {
- 	struct xfs_error_cfg cfg;
+@@ -81,6 +81,7 @@ struct xfs_dft_error_cfg_kobj {
  };
  
-+struct xfs_dft_error_cfg_kobj {
-+	struct xfs_kobj kobj;
-+	struct xfs_error_cfg cfg;
-+	int error_class;
-+	int error_nr;
-+};
-+
  struct xfs_mp_error_obj {
++	struct list_head node;
  	struct xfs_kobj kobj;
  	struct xfs_kobj meta_kobj;
-@@ -80,6 +87,13 @@ struct xfs_mp_error_obj {
- 	bool fail_unmount;
+ 	struct xfs_mp_error_cfg_kobj cfg_kobj[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
+@@ -88,6 +89,8 @@ struct xfs_mp_error_obj {
  };
  
-+struct xfs_dft_error_obj {
-+	struct xfs_kobj kobj;
-+	struct xfs_kobj meta_kobj;
-+	struct xfs_dft_error_cfg_kobj cfg_kobj[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
-+	bool fail_unmount;
-+};
-+
- typedef struct xfs_mount {
- 	struct super_block	*m_super;
- 	xfs_tid_t		m_tid;		/* next unused tid for fs */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 38aaacd..3a3812b4 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -2043,11 +2043,15 @@ init_xfs_fs(void)
- 	if (error)
- 		goto out_free_stats;
- 
-+	error = xfs_dft_error_sysfs_init(xfs_kset);
-+	if (error)
-+		goto out_remove_stats_kobj;
-+
- #ifdef DEBUG
- 	xfs_dbg_kobj.kobject.kset = xfs_kset;
- 	error = xfs_sysfs_init(&xfs_dbg_kobj, &xfs_dbg_ktype, NULL, "debug");
- 	if (error)
--		goto out_remove_stats_kobj;
-+		goto out_remove_dft_error_sysfs;
- #endif
- 
- 	error = xfs_qm_init();
-@@ -2064,8 +2068,10 @@ init_xfs_fs(void)
-  out_remove_dbg_kobj:
- #ifdef DEBUG
- 	xfs_sysfs_del(&xfs_dbg_kobj);
-- out_remove_stats_kobj:
-+ out_remove_dft_error_sysfs:
- #endif
-+	xfs_dft_error_sysfs_del();
-+ out_remove_stats_kobj:
- 	xfs_sysfs_del(&xfsstats.xs_kobj);
-  out_free_stats:
- 	free_percpu(xfsstats.xs_stats);
-@@ -2095,6 +2101,7 @@ exit_xfs_fs(void)
- #ifdef DEBUG
- 	xfs_sysfs_del(&xfs_dbg_kobj);
- #endif
-+	xfs_dft_error_sysfs_del();
- 	xfs_sysfs_del(&xfsstats.xs_kobj);
- 	free_percpu(xfsstats.xs_stats);
- 	kset_unregister(xfs_kset);
+ struct xfs_dft_error_obj {
++	struct mutex lock;
++	struct list_head head;
+ 	struct xfs_kobj kobj;
+ 	struct xfs_kobj meta_kobj;
+ 	struct xfs_dft_error_cfg_kobj cfg_kobj[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
 diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 7c15cba..9270cb1 100644
+index 9270cb1..51b6a48 100644
 --- a/fs/xfs/xfs_sysfs.c
 +++ b/fs/xfs/xfs_sysfs.c
-@@ -45,6 +45,8 @@ struct xfs_sysfs_attr {
+@@ -45,6 +45,10 @@ struct xfs_sysfs_attr {
  			 size_t count);
  };
  
-+static struct xfs_dft_error_obj xfs_dft_eobj;
++static const char *xfs_error_meta_name[XFS_ERR_ERRNO_MAX] = {
++	"default", "EIO", "ENOSPC", "ENODEV",
++};
 +
+ static struct xfs_dft_error_obj xfs_dft_eobj;
+ 
  static inline struct xfs_sysfs_attr *
- to_attr(struct attribute *attr)
+@@ -457,8 +461,35 @@ dft_max_retries_store(
  {
-@@ -57,8 +59,12 @@ to_attr(struct attribute *attr)
- 	static struct xfs_sysfs_attr xfs_sysfs_attr_##name = __ATTR_RO(name)
- #define XFS_SYSFS_ATTR_WO(name) \
- 	static struct xfs_sysfs_attr xfs_sysfs_attr_##name = __ATTR_WO(name)
-+#define XFS_SYSFS_DFT_ATTR_RW(name) \
-+	static struct xfs_sysfs_attr xfs_sysfs_attr_dft_##name = \
-+		__ATTR(name, 0644, dft_##name##_show, dft_##name##_store)
+ 	struct xfs_dft_error_cfg_kobj *cfg_kobj =
+ 	    to_dft_error_cfg_kobj(kobject);
++	struct xfs_error_cfg *cfg = &cfg_kobj->cfg;
++	int old_val;
++	int ret;
++	struct xfs_dft_error_obj *eobj;
++	struct xfs_mp_error_obj *mp_eobj;
++	int cls;
++	int nr;
++
++	old_val = cfg->max_retries;
++	ret = __max_retries_store(cfg, buf, count);
++	if (ret < 0)
++		return ret;
  
--#define ATTR_LIST(name) &xfs_sysfs_attr_##name.attr
-+#define ATTR_LIST(name) (&xfs_sysfs_attr_##name.attr)
-+#define DFT_ATTR_LIST(name) (&xfs_sysfs_attr_dft_##name.attr)
+-	return __max_retries_store(&cfg_kobj->cfg, buf, count);
++	eobj = &xfs_dft_eobj;
++	cls = cfg_kobj->error_class;
++	nr = cfg_kobj->error_nr;
++	ASSERT(cls >= 0 && cls < XFS_ERR_CLASS_MAX);
++	ASSERT(nr >= 0 && nr < XFS_ERR_ERRNO_MAX);
++
++	mutex_lock(&eobj->lock);
++	list_for_each_entry(mp_eobj, &eobj->head, node) {
++		struct xfs_error_cfg *mp_cfg = &mp_eobj->cfg_kobj[cls][nr].cfg;
++
++		if (mp_cfg->max_retries == old_val)
++			mp_cfg->max_retries = cfg->max_retries;
++	}
++	mutex_unlock(&eobj->lock);
++
++	return ret;
+ }
+ XFS_SYSFS_DFT_ATTR_RW(max_retries);
  
- STATIC ssize_t
- xfs_sysfs_object_show(
-@@ -344,16 +350,34 @@ static inline struct xfs_mp_error_cfg_kobj *
- to_mp_error_cfg_kobj(struct kobject *kobject)
+@@ -544,8 +575,35 @@ dft_retry_timeout_seconds_store(
  {
- 	struct xfs_kobj *kobj = to_kobj(kobject);
+ 	struct xfs_dft_error_cfg_kobj *cfg_kobj =
+ 	    to_dft_error_cfg_kobj(kobject);
++	struct xfs_error_cfg *cfg = &cfg_kobj->cfg;
++	int old_val;
++	int ret;
++	struct xfs_dft_error_obj *eobj;
++	struct xfs_mp_error_obj *mp_eobj;
++	int cls;
++	int nr;
 +
- 	return container_of(kobj, struct xfs_mp_error_cfg_kobj, kobj);
- }
++	old_val = cfg->retry_timeout;
++	ret = __retry_timeout_seconds_store(cfg, buf, count);
++	if (ret < 0)
++		return ret;
  
-+static inline struct xfs_dft_error_cfg_kobj *
-+to_dft_error_cfg_kobj(struct kobject *kobject)
-+{
-+	struct xfs_kobj *kobj = to_kobj(kobject);
+-	return __retry_timeout_seconds_store(&cfg_kobj->cfg, buf, count);
++	eobj = &xfs_dft_eobj;
++	cls = cfg_kobj->error_class;
++	nr = cfg_kobj->error_nr;
++	ASSERT(cls >= 0 && cls < XFS_ERR_CLASS_MAX);
++	ASSERT(nr >= 0 && nr < XFS_ERR_ERRNO_MAX);
 +
-+	return container_of(kobj, struct xfs_dft_error_cfg_kobj, kobj);
-+}
++	mutex_lock(&eobj->lock);
++	list_for_each_entry(mp_eobj, &eobj->head, node) {
++		struct xfs_error_cfg *mp_cfg = &mp_eobj->cfg_kobj[cls][nr].cfg;
 +
- static inline struct xfs_mp_error_obj *
- to_mp_error_obj(struct kobject *kobject)
++		if (mp_cfg->retry_timeout == old_val)
++			mp_cfg->retry_timeout = cfg->retry_timeout;
++	}
++	mutex_unlock(&eobj->lock);
++
++	return ret;
+ }
+ XFS_SYSFS_DFT_ATTR_RW(retry_timeout_seconds);
+ 
+@@ -616,8 +674,23 @@ dft_fail_at_unmount_store(
+ 	size_t		count)
  {
- 	struct xfs_kobj *kobj = to_kobj(kobject);
+ 	struct xfs_dft_error_obj *eobj = to_dft_error_obj(kobject);
++	struct xfs_mp_error_obj *mp_eobj;
++	bool old_val;
++	int ret;
+ 
+-	return __fail_at_unmount_store(&eobj->fail_unmount, buf, count);
++	old_val = eobj->fail_unmount;
++	ret = __fail_at_unmount_store(&eobj->fail_unmount, buf, count);
++	if (ret < 0)
++		return ret;
 +
- 	return container_of(kobj, struct xfs_mp_error_obj, kobj);
++	mutex_lock(&eobj->lock);
++	list_for_each_entry(mp_eobj, &eobj->head, node) {
++		if (mp_eobj->fail_unmount == old_val)
++			mp_eobj->fail_unmount = eobj->fail_unmount;
++	}
++	mutex_unlock(&eobj->lock);
++
++	return ret;
  }
+ XFS_SYSFS_DFT_ATTR_RW(fail_at_unmount);
  
-+static inline struct xfs_dft_error_obj *
-+to_dft_error_obj(struct kobject *kobject)
-+{
-+	struct xfs_kobj *kobj = to_kobj(kobject);
-+
-+	return container_of(kobj, struct xfs_dft_error_obj, kobj);
-+}
-+
- static ssize_t
- __max_retries_show(
- 	struct xfs_error_cfg *cfg,
-@@ -415,6 +439,30 @@ max_retries_store(
- XFS_SYSFS_ATTR_RW(max_retries);
- 
- static ssize_t
-+dft_max_retries_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+	struct xfs_dft_error_cfg_kobj *cfg_kobj =
-+	    to_dft_error_cfg_kobj(kobject);
-+
-+	return __max_retries_show(&cfg_kobj->cfg, buf);
-+}
-+
-+static ssize_t
-+dft_max_retries_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
-+{
-+	struct xfs_dft_error_cfg_kobj *cfg_kobj =
-+	    to_dft_error_cfg_kobj(kobject);
-+
-+	return __max_retries_store(&cfg_kobj->cfg, buf, count);
-+}
-+XFS_SYSFS_DFT_ATTR_RW(max_retries);
-+
-+static ssize_t
- __retry_timeout_seconds_show(
- 	struct xfs_error_cfg *cfg,
- 	char		*buf)
-@@ -477,6 +525,30 @@ retry_timeout_seconds_store(
- }
- XFS_SYSFS_ATTR_RW(retry_timeout_seconds);
- 
-+static ssize_t
-+dft_retry_timeout_seconds_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+	struct xfs_dft_error_cfg_kobj *cfg_kobj =
-+	    to_dft_error_cfg_kobj(kobject);
-+
-+	return __retry_timeout_seconds_show(&cfg_kobj->cfg, buf);
-+}
-+
-+static ssize_t
-+dft_retry_timeout_seconds_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
-+{
-+	struct xfs_dft_error_cfg_kobj *cfg_kobj =
-+	    to_dft_error_cfg_kobj(kobject);
-+
-+	return __retry_timeout_seconds_store(&cfg_kobj->cfg, buf, count);
-+}
-+XFS_SYSFS_DFT_ATTR_RW(retry_timeout_seconds);
-+
- static inline ssize_t
- __fail_at_unmount_show(
- 	bool fail_unmount,
-@@ -527,12 +599,39 @@ fail_at_unmount_store(
- }
- XFS_SYSFS_ATTR_RW(fail_at_unmount);
- 
-+static ssize_t
-+dft_fail_at_unmount_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+	struct xfs_dft_error_obj *eobj = to_dft_error_obj(kobject);
-+
-+	return __fail_at_unmount_show(eobj->fail_unmount, buf);
-+}
-+
-+static ssize_t
-+dft_fail_at_unmount_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
-+{
-+	struct xfs_dft_error_obj *eobj = to_dft_error_obj(kobject);
-+
-+	return __fail_at_unmount_store(&eobj->fail_unmount, buf, count);
-+}
-+XFS_SYSFS_DFT_ATTR_RW(fail_at_unmount);
-+
- static struct attribute *xfs_error_attrs[] = {
- 	ATTR_LIST(max_retries),
- 	ATTR_LIST(retry_timeout_seconds),
- 	NULL,
- };
- 
-+static struct attribute *xfs_dft_error_attrs[] = {
-+	DFT_ATTR_LIST(max_retries),
-+	DFT_ATTR_LIST(retry_timeout_seconds),
-+	NULL,
-+};
- 
- static struct kobj_type xfs_error_cfg_ktype = {
- 	.release = xfs_sysfs_release,
-@@ -540,6 +639,12 @@ static struct kobj_type xfs_error_cfg_ktype = {
- 	.default_attrs = xfs_error_attrs,
- };
- 
-+static struct kobj_type xfs_dft_error_cfg_ktype = {
-+	.release = xfs_sysfs_release,
-+	.sysfs_ops = &xfs_sysfs_ops,
-+	.default_attrs = xfs_dft_error_attrs,
-+};
-+
- static struct kobj_type xfs_error_ktype = {
- 	.release = xfs_sysfs_release,
+@@ -650,43 +723,12 @@ static struct kobj_type xfs_error_ktype = {
  	.sysfs_ops = &xfs_sysfs_ops,
-@@ -621,7 +726,7 @@ __xfs_error_sysfs_init(
+ };
+ 
+-/*
+- * Error initialization tables. These need to be ordered in the same
+- * order as the enums used to index the array. All class init tables need to
+- * define a "default" behaviour as the first entry, all other entries can be
+- * empty.
+- */
+-struct xfs_error_init {
+-	char		*name;
+-	int		max_retries;
+-	int		retry_timeout;	/* in seconds */
+-};
+-
+-static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
+-	{ .name = "default",
+-	  .max_retries = XFS_ERR_RETRY_FOREVER,
+-	  .retry_timeout = XFS_ERR_RETRY_FOREVER,
+-	},
+-	{ .name = "EIO",
+-	  .max_retries = XFS_ERR_RETRY_FOREVER,
+-	  .retry_timeout = XFS_ERR_RETRY_FOREVER,
+-	},
+-	{ .name = "ENOSPC",
+-	  .max_retries = XFS_ERR_RETRY_FOREVER,
+-	  .retry_timeout = XFS_ERR_RETRY_FOREVER,
+-	},
+-	{ .name = "ENODEV",
+-	  .max_retries = 0,	/* We can't recover from devices disappearing */
+-	  .retry_timeout = 0,
+-	},
+-};
+-
+ static int
+ xfs_error_sysfs_init_class(
+ 	struct xfs_error_sysfs_arg *arg,
+ 	int			class,
+ 	const char		*parent_name,
+-	const struct xfs_error_init init[])
++	const char		**names)
  {
  	int			error;
+ 	int			i;
+@@ -702,7 +744,7 @@ xfs_error_sysfs_init_class(
+ 		struct xfs_kobj *kobj = arg->get_cfg_kobj(arg->priv, class, i);
  
--	/* .../xfs/<dev>/error/ */
-+	/* .../xfs/default_error/ or .../xfs/<dev>/error/ */
- 	error = xfs_sysfs_init(arg->kobj, &xfs_error_ktype, parent, name);
- 	if (error)
- 		return error;
-@@ -630,7 +735,7 @@ __xfs_error_sysfs_init(
+ 		error = xfs_sysfs_init(kobj, arg->cfg_ktype,
+-					arg->meta_kobj, init[i].name);
++					arg->meta_kobj, names[i]);
+ 		if (error)
+ 			goto out_error;
+ 	}
+@@ -737,7 +779,7 @@ __xfs_error_sysfs_init(
+ 
+ 	/* .../xfs/error/metadata/ or .../xfs/<dev>/error/metadata/ */
+ 	error = xfs_error_sysfs_init_class(arg, XFS_ERR_METADATA,
+-				"metadata", xfs_error_meta_init);
++				"metadata", xfs_error_meta_name);
  	if (error)
  		goto out_error;
  
--	/* .../xfs/<dev>/error/metadata/ */
-+	/* .../xfs/error/metadata/ or .../xfs/<dev>/error/metadata/ */
- 	error = xfs_error_sysfs_init_class(arg, XFS_ERR_METADATA,
- 				"metadata", xfs_error_meta_init);
- 	if (error)
-@@ -758,3 +863,50 @@ xfs_error_get_cfg(
- 
- 	return &eobj->cfg_kobj[error_class][idx].cfg;
+@@ -776,24 +818,36 @@ xfs_get_mp_error_cfg_kobj(
  }
-+
-+static struct xfs_kobj *
-+xfs_get_dft_error_cfg_kobj(
-+	void *priv,
-+	int class,
-+	int nr)
-+{
-+	struct xfs_dft_error_obj *eobj = priv;
-+
-+	return &eobj->cfg_kobj[class][nr].kobj;
-+}
-+
-+int
-+xfs_dft_error_sysfs_init(struct kset *kset)
-+{
-+	struct xfs_dft_error_obj *eobj = &xfs_dft_eobj;
-+	struct xfs_error_sysfs_arg arg;
-+
-+	eobj->kobj.kobject.kset = kset;
-+
-+	eobj->fail_unmount = 1;
-+
-+	arg.kobj = &eobj->kobj;
-+	arg.meta_kobj = &eobj->meta_kobj;
-+	arg.fail_unmount_attr = DFT_ATTR_LIST(fail_at_unmount);
-+	arg.cfg_ktype = &xfs_dft_error_cfg_ktype;
-+	arg.get_cfg_kobj = xfs_get_dft_error_cfg_kobj;
-+	arg.priv = eobj;
-+
-+	return __xfs_error_sysfs_init(&arg, "default_error", NULL);
-+}
-+
-+void
-+xfs_dft_error_sysfs_del(void)
-+{
-+	struct xfs_dft_error_obj *eobj = &xfs_dft_eobj;
-+	struct xfs_error_sysfs_arg arg;
-+
-+	arg.kobj = &eobj->kobj;
-+	arg.meta_kobj = &eobj->meta_kobj;
-+	arg.fail_unmount_attr = NULL;
-+	arg.cfg_ktype = NULL;
-+	arg.get_cfg_kobj = xfs_get_dft_error_cfg_kobj;
-+	arg.priv = eobj;
-+
-+	__xfs_error_sysfs_del(&arg);
-+}
-diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
-index 4c8b62c..acfaa70 100644
---- a/fs/xfs/xfs_sysfs.h
-+++ b/fs/xfs/xfs_sysfs.h
-@@ -63,5 +63,7 @@ xfs_sysfs_del(
- int	xfs_error_sysfs_init(struct xfs_mp_error_obj *eobj,
- 		struct xfs_kobj *parent);
- void	xfs_error_sysfs_del(struct xfs_mp_error_obj *eobj);
-+int	xfs_dft_error_sysfs_init(struct kset *kset);
-+void	xfs_dft_error_sysfs_del(void);
  
- #endif	/* __XFS_SYSFS_H__ */
+ static void
+-xfs_error_mp_cfg_init(
++xfs_error_dft_cfg_detach(
+ 	struct xfs_mp_error_obj *eobj,
+-	int class,
+-	const struct xfs_error_init *init)
++	struct xfs_dft_error_obj *dft_eobj)
++{
++	mutex_lock(&dft_eobj->lock);
++	list_del_init(&eobj->node);
++	mutex_unlock(&dft_eobj->lock);
++}
++
++static void
++xfs_error_dft_cfg_attach(
++	struct xfs_mp_error_obj *eobj,
++	struct xfs_dft_error_obj *dft_eobj)
+ {
+ 	int i;
+-	struct xfs_error_cfg *cfg;
+ 
++	/*
++	 * When the default error cfg is being modified, to ensure
++	 * the final default error cfg will be propagated to the
++	 * mount point specific error cfg, the lock needs to protect
++	 * the initialization of mount point specific error cfg as well.
++	 */
++	mutex_lock(&dft_eobj->lock);
++	eobj->fail_unmount = dft_eobj->fail_unmount;
+ 	for (i = 0; i < XFS_ERR_ERRNO_MAX; i++) {
+-		cfg = &eobj->cfg_kobj[class][i].cfg;
+-
+-		cfg->max_retries = init[i].max_retries;
+-		if (init[i].retry_timeout == XFS_ERR_RETRY_FOREVER)
+-			cfg->retry_timeout = XFS_ERR_RETRY_FOREVER;
+-		else
+-			cfg->retry_timeout = msecs_to_jiffies(
+-					init[i].retry_timeout * MSEC_PER_SEC);
++		eobj->cfg_kobj[XFS_ERR_METADATA][i].cfg =
++			dft_eobj->cfg_kobj[XFS_ERR_METADATA][i].cfg;
+ 	}
++	list_add_tail(&eobj->node, &dft_eobj->head);
++	mutex_unlock(&dft_eobj->lock);
+ }
+ 
+ int
+@@ -804,7 +858,7 @@ xfs_error_sysfs_init(
+ 	int error;
+ 	struct xfs_error_sysfs_arg arg;
+ 
+-	xfs_error_mp_cfg_init(eobj, XFS_ERR_METADATA, xfs_error_meta_init);
++	xfs_error_dft_cfg_attach(eobj, &xfs_dft_eobj);
+ 
+ 	arg.kobj = &eobj->kobj;
+ 	arg.meta_kobj = &eobj->meta_kobj;
+@@ -813,8 +867,10 @@ xfs_error_sysfs_init(
+ 	arg.get_cfg_kobj = xfs_get_mp_error_cfg_kobj;
+ 	arg.priv = eobj;
+ 	error = __xfs_error_sysfs_init(&arg, "error", parent);
+-	if (error)
++	if (error) {
++		xfs_error_dft_cfg_detach(eobj, &xfs_dft_eobj);
+ 		return error;
++	}
+ 
+ 	return 0;
+ }
+@@ -825,6 +881,8 @@ xfs_error_sysfs_del(
+ {
+ 	struct xfs_error_sysfs_arg arg;
+ 
++	xfs_error_dft_cfg_detach(eobj, &xfs_dft_eobj);
++
+ 	arg.kobj = &eobj->kobj;
+ 	arg.meta_kobj = &eobj->meta_kobj;
+ 	arg.fail_unmount_attr = NULL;
+@@ -875,15 +933,40 @@ xfs_get_dft_error_cfg_kobj(
+ 	return &eobj->cfg_kobj[class][nr].kobj;
+ }
+ 
++static void
++xfs_dft_error_cfg_init(
++	int class,
++	struct xfs_dft_error_cfg_kobj *tbl)
++{
++	int i;
++
++	for (i = 0; i < XFS_ERR_ERRNO_MAX; i++) {
++		tbl[i].cfg.max_retries = XFS_ERR_RETRY_FOREVER;
++		tbl[i].cfg.retry_timeout = XFS_ERR_RETRY_FOREVER;
++		tbl[i].error_class = class;
++		tbl[i].error_nr = i;
++	}
++
++	/* We can't recover from devices disappearing */
++	tbl[XFS_ERR_ENODEV].cfg.max_retries = 0;
++	tbl[XFS_ERR_ENODEV].cfg.retry_timeout = 0;
++}
++
+ int
+ xfs_dft_error_sysfs_init(struct kset *kset)
+ {
+ 	struct xfs_dft_error_obj *eobj = &xfs_dft_eobj;
+ 	struct xfs_error_sysfs_arg arg;
+ 
++	mutex_init(&eobj->lock);
++	INIT_LIST_HEAD(&eobj->head);
++
+ 	eobj->kobj.kobject.kset = kset;
+ 
++	/* enable fail_at_unmount as default */
+ 	eobj->fail_unmount = 1;
++	xfs_dft_error_cfg_init(XFS_ERR_METADATA,
++			eobj->cfg_kobj[XFS_ERR_METADATA]);
+ 
+ 	arg.kobj = &eobj->kobj;
+ 	arg.meta_kobj = &eobj->meta_kobj;
 -- 
 2.5.0
 
