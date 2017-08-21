@@ -1,25 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:41151 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932396AbdHWScJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 14:32:09 -0400
-Date: Wed, 23 Aug 2017 11:32:09 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 07/13] dax: Inline dax_pmd_insert_mapping() into the
- callsite
-Message-ID: <20170823183209.GE13778@infradead.org>
+Received: from mga02.intel.com ([134.134.136.20]:65450 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754461AbdHUV5Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Aug 2017 17:57:24 -0400
+Date: Mon, 21 Aug 2017 15:57:03 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 10/13] mm: Wire up MAP_SYNC
+Message-ID: <20170821215703.GA24473@linux.intel.com>
 References: <20170817160815.30466-1-jack@suse.cz>
- <20170817160815.30466-8-jack@suse.cz>
+ <20170817160815.30466-11-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170817160815.30466-8-jack@suse.cz>
+In-Reply-To: <20170817160815.30466-11-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boazh@netapp.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>
 
-Looks fine,
+On Thu, Aug 17, 2017 at 06:08:12PM +0200, Jan Kara wrote:
+> Pretty crude for now...
+> 
+> Signed-off-by: Jan Kara <jack@suse.cz>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+One other thing that should probably be wired up before this is all said and
+done is the VmFlag string in /proc/<pid>/smaps.  Right now when we set this
+flag it ends up as ??:
+
+7f44e6cbd000-7f44e6dbd000 rw-s 00000000 103:00 12              /root/dax/data
+Size:               1024 kB
+Rss:                   0 kB
+Pss:                   0 kB
+Shared_Clean:          0 kB
+Shared_Dirty:          0 kB
+Private_Clean:         0 kB
+Private_Dirty:         0 kB
+Referenced:            0 kB
+Anonymous:             0 kB
+LazyFree:              0 kB
+AnonHugePages:         0 kB
+ShmemPmdMapped:        0 kB
+Shared_Hugetlb:        0 kB
+Private_Hugetlb:       0 kB
+Swap:                  0 kB
+SwapPss:               0 kB
+KernelPageSize:        4 kB
+MMUPageSize:           4 kB
+Locked:                0 kB
+VmFlags: rd wr sh mr mw me ms ?? mm hg 
+
+The quick one-liner at the end of this patch changes that to:
+
+7fe30e87f000-7fe30e97f000 rw-s 00000000 103:00 12               /root/dax/data
+Size:               1024 kB
+Rss:                   0 kB
+Pss:                   0 kB
+Shared_Clean:          0 kB
+Shared_Dirty:          0 kB
+Private_Clean:         0 kB
+Private_Dirty:         0 kB
+Referenced:            0 kB
+Anonymous:             0 kB
+LazyFree:              0 kB
+AnonHugePages:         0 kB
+ShmemPmdMapped:        0 kB
+Shared_Hugetlb:        0 kB
+Private_Hugetlb:       0 kB
+Swap:                  0 kB
+SwapPss:               0 kB
+KernelPageSize:        4 kB
+MMUPageSize:           4 kB
+Locked:                0 kB
+VmFlags: rd wr sh mr mw me ms sf mm hg
+
+I think that of software can rely on this flag for userspace flushing without
+worrying about any new TOCTOU races because there isn't a way to unset the
+VM_SYNC flag once it is set - it should be valid as long as the mmap() remains
+open and the mmap'd address is valid.
+
+--- 8< ---
+ fs/proc/task_mmu.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+index b836fd6..a2a82ed 100644
+--- a/fs/proc/task_mmu.c
++++ b/fs/proc/task_mmu.c
+@@ -650,6 +650,7 @@ static void show_smap_vma_flags(struct seq_file *m, struct vm_area_struct *vma)
+ 		[ilog2(VM_ACCOUNT)]	= "ac",
+ 		[ilog2(VM_NORESERVE)]	= "nr",
+ 		[ilog2(VM_HUGETLB)]	= "ht",
++		[ilog2(VM_SYNC)]	= "sf",
+ 		[ilog2(VM_ARCH_1)]	= "ar",
+ 		[ilog2(VM_DONTDUMP)]	= "dd",
+ #ifdef CONFIG_MEM_SOFT_DIRTY
