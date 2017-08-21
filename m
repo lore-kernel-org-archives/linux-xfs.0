@@ -1,152 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34623 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751169AbdHSPqw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Aug 2017 11:46:52 -0400
-Date: Sat, 19 Aug 2017 08:46:45 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: test xfs_db fuzz command verbs
-Message-ID: <20170819154645.GD4794@magnolia>
+Received: from sandeen.net ([63.231.237.45]:40666 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750742AbdHUDBF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 20 Aug 2017 23:01:05 -0400
+Subject: Re: xfs errors
+References: <42ebd50b-a327-0afb-a53a-e2dedd003415@zoho.com>
+ <da41ec6e-0009-6515-7c60-a48c3b07369b@sandeen.net>
+ <2fd2a278-4c78-3072-e10d-d9745f5183fb@zoho.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c9ee564c-8627-ad00-cc86-5548c9688298@sandeen.net>
+Date: Sun, 20 Aug 2017 22:01:04 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <2fd2a278-4c78-3072-e10d-d9745f5183fb@zoho.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+To: ToddAndMargo <ToddAndMargo@zoho.com>, linux-xfs@vger.kernel.org
 
-Ensure that the fuzz command does what it says.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/1386     |   74 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1386.out |   28 ++++++++++++++++++++
- tests/xfs/group    |    1 +
- 3 files changed, 103 insertions(+)
- create mode 100755 tests/xfs/1386
- create mode 100644 tests/xfs/1386.out
 
-diff --git a/tests/xfs/1386 b/tests/xfs/1386
-new file mode 100755
-index 0000000..1c8eb83
---- /dev/null
-+++ b/tests/xfs/1386
-@@ -0,0 +1,74 @@
-+#! /bin/bash
-+# FS QA Test No. 1386
-+#
-+# Ensure that xfs_db fuzz command works as advertised.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -rf "$tmp".*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/fuzzy
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_nocheck
-+_require_command "$XFS_DB_PROG" "xfs_db"
-+_require_xfs_db_command "fuzz"
-+
-+rm -f "$seqres.full"
-+
-+echo "Format"
-+_scratch_mkfs > "$seqres.full" 2>&1
-+
-+# Make sure that each fuzz verb works.  For the firstbit/middlebit/lastbit
-+# tests, we depend on 'ones' having set the field to all ones.
-+field="fdblocks"
-+_scratch_xfs_db -x -c 'sb 0' -c "write -d ${field} 0"
-+SCRATCH_XFS_LIST_FUZZ_VERBS= _scratch_xfs_list_fuzz_verbs | while read verb; do
-+	test "${verb}" = "random" && continue
-+	echo "Test verb ${verb}"
-+	_scratch_xfs_db -x -c 'sb 0' -c "fuzz -d ${field} ${verb}"
-+done
-+
-+echo "Test verb random"
-+before="$(_scratch_xfs_get_metadata_field "${field}" 'sb 0')"
-+_scratch_xfs_db -x -c 'sb 0' -c "fuzz -d ${field} random" >> $seqres.full
-+after="$(_scratch_xfs_get_metadata_field "${field}" 'sb 0')"
-+test "${before}" != "${after}" && echo "${field} changed"
-+
-+echo "Done"
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1386.out b/tests/xfs/1386.out
-new file mode 100644
-index 0000000..f30da83
---- /dev/null
-+++ b/tests/xfs/1386.out
-@@ -0,0 +1,28 @@
-+QA output created by 1386
-+Format
-+Allowing write of corrupted data with good CRC
-+fdblocks = 0
-+Test verb zeroes
-+Allowing fuzz of corrupted data with good CRC
-+fdblocks = 0
-+Test verb ones
-+Allowing fuzz of corrupted data with good CRC
-+fdblocks = 18446744073709551615
-+Test verb firstbit
-+Allowing fuzz of corrupted data with good CRC
-+fdblocks = 9223372036854775807
-+Test verb middlebit
-+Allowing fuzz of corrupted data with good CRC
-+fdblocks = 9223372034707292159
-+Test verb lastbit
-+Allowing fuzz of corrupted data with good CRC
-+fdblocks = 9223372034707292158
-+Test verb add
-+Allowing fuzz of corrupted data with good CRC
-+fdblocks = 9223372034707294175
-+Test verb sub
-+Allowing fuzz of corrupted data with good CRC
-+fdblocks = 9223372034707292158
-+Test verb random
-+fdblocks changed
-+Done
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 1bb40f9..0468e4b 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -428,3 +428,4 @@
- 1383 dangerous_fuzzers dangerous_scrub dangerous_online_repair
- 1384 dangerous_fuzzers dangerous_scrub dangerous_repair
- 1385 dangerous_fuzzers dangerous_scrub dangerous_online_repair
-+1386 auto quick fuzzers
+On 8/20/17 8:26 PM, ToddAndMargo wrote:
+> On 08/20/2017 10:59 AM, Eric Sandeen wrote:
+>> On 8/20/17 12:57 AM, ToddAndMargo wrote:
+>>> Dear Xfs,
+>>>
+>>> Do I report this to you or Red Hat?
+>>>
+>>> Fedora Core 26, x564
+>>
+>> Here is fine, or Fedora if you want, but it'll be the same people responding in any case.
+>>
+>>> xfsdump-3.1.6-4.fc26.x86_64
+>>>
+>>> When I run the following
+>>>
+>>>      # /sbin/xfsdump -v verbose -M 1 -L 1 -l 0 -f /lin-bak/2017-08-19_22-30-27_md126p2.XfsDump  /
+>>>
+>>> randomly, I get this error message when I run xfsdump:
+>>>
+>>>
+>>>      /sbin/xfsdump: ino map phase 1: constructing initial dump list
+>>>      /sbin/xfsdump: WARNING: failed to get bulkstat information for inode 739
+>>>      /sbin/xfsdump: WARNING: failed to get bulkstat information for inode 954
+>>>      /sbin/xfsdump: WARNING: failed to get bulkstat information for inode 1118
+>>>      about 40 more of them
+>>>
+>>> And the next time it will run clean.  What gives?
+>>
+>> Most likely it's files that got deleted while xfsdump was running.  xfsdump has a bad habit of issuing warnings for things that are not actually problematic.
+>>
+>> But you could also look for those inodes on the filesystem you're dumping; what are they?  Are they still there, or were they transient files?
+>>
+>> If you quiesce the filesystem first, or dump from a snapshot, you should not see such errors.
+>>
+>> -Eric
+>>
+>>> I put a `sunc; sync` before the dump command and it seems to help, but it is random, so who knows.
+>>>
+>>> Is this a bug?  Or am I doing something wrong?
+>>>
+>>> Many thanks,
+>>> -T
+> 
+> Hi Eric,
+> 
+> Thank you for responding!
+> 
+> After I added `sync; sync` before the call to xfsdump, I ran
+> about 10 more backups without a hitch.
+> 
+> I also run xfsdump at my office.  It does complain about missing
+> stuff if I leave Thunderbird running during the backup.
+> But it is the occasional single error.  Not a broken fire hydrant
+> of millions of errors.
+> 
+> My office version is xfsdump-3.1.4-1.el7.x86_64  (Scientific
+> Linux, a.k.a. "old-out-of-date").
+> 
+> As a test, I ssh logged into the server question while writing
+> this, it having been running overnight, and ran the sync
+> modified dump again.  The problem did not reproduce.
+> 
+> The difference between my office and the customer is
+> that I use a hardware raid (raid 1) card and the customer
+> uses RSTe ("e" for enterprise) RAID 1, which is a pseudo
+> software raid.  Maybe a lot of stuff is floating around
+> in the either (cache) that is not sync'ed to the drive pair
+> and xfsdump is not happy about it.
+
+The underlying storage will not affect this.
+
+> I am wonder if it would be possible for xfsdump to can
+> "sync; sync" itself before starting.  That would insure
+> a clean slate.
+
+No; that's a guess, not a root cause analysis - we won't
+be putting hacks like that in based on hunches.
+
+If you want to investigate more, find out where in the code
+the error spits out, and do more error reporting there; find out
+what error code is actually being returned.  actually I suppose
+strace would work for this as well.  Knowing which error code
+the ioctl fails with would offer a clue about why.
+
+-Eric
+
+> -T
+> 
