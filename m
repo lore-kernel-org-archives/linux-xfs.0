@@ -1,85 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37441 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932251AbdHWRFk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 13:05:40 -0400
-Date: Wed, 23 Aug 2017 10:05:33 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/4] fiemap: Introduce get_extent_count
-Message-ID: <20170823170533.GY4796@magnolia>
-References: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
- <1503501082-16983-1-git-send-email-nborisov@suse.com>
- <1503501082-16983-2-git-send-email-nborisov@suse.com>
+Received: from mail-qt0-f181.google.com ([209.85.216.181]:34180 "EHLO
+        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754262AbdHUUYd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2017 16:24:33 -0400
+Received: by mail-qt0-f181.google.com with SMTP id z10so8457776qtz.1
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Aug 2017 13:24:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1503501082-16983-2-git-send-email-nborisov@suse.com>
+In-Reply-To: <20170821155152.GA56278@bfoster.bfoster>
+References: <CAHeWggOTqbQUQB7xz1wUjejHU5W14w3wcN-oV-+KJxxyEEQ3TQ@mail.gmail.com>
+ <20170818120224.GA27778@redhat.com> <20170818121725.GA1665@bfoster.bfoster>
+ <CAHeWggM-dGJHRNyyXZrW5aX7v3r-b0t1LTbrbN-OSTLdLzuPhg@mail.gmail.com> <20170821155152.GA56278@bfoster.bfoster>
+From: Ingard - <ingard1@gmail.com>
+Date: Mon, 21 Aug 2017 22:24:32 +0200
+Message-ID: <CAHeWggPzVSXXGK+35jEf9FD2gM-QcL_3iebaKzjOK7DbRmWDiA@mail.gmail.com>
+Subject: Re: corrupt xfs log
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
 
-On Wed, Aug 23, 2017 at 06:11:20PM +0300, Nikolay Borisov wrote:
-> This function will be used in future patches and will aid in implementing
-> ranged fiemap queries
-> 
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> ---
->  io/fiemap.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/io/fiemap.c b/io/fiemap.c
-> index d1584aba7818..30c49112e089 100644
-> --- a/io/fiemap.c
-> +++ b/io/fiemap.c
-> @@ -193,6 +193,22 @@ calc_print_format(
->  	}
->  }
->  
-> +/* Use ssize so that we can return also an error code in case the ioctl fails */
-> +static ssize_t
-> +get_extent_count(int fd, __u64 startoffset, __u64 len)
+On Mon, Aug 21, 2017 at 5:51 PM, Brian Foster <bfoster@redhat.com> wrote:
+> On Mon, Aug 21, 2017 at 02:08:43PM +0200, Ingard - wrote:
+>> On Fri, Aug 18, 2017 at 2:17 PM, Brian Foster <bfoster@redhat.com> wrote:
+>> > On Fri, Aug 18, 2017 at 07:02:24AM -0500, Bill O'Donnell wrote:
+>> >> On Fri, Aug 18, 2017 at 01:56:31PM +0200, Ingard - wrote:
+>> >> > After a server crash we've encountered a corrupt xfs filesystem. When
+>> >> > trying to mount said filesystem normally the system hangs.
+>> >> > This was initially on a ubuntu trusty server with 3.13 kernel with
+>> >> > xfsprogs 3.1.9
+>> >> >
+>> >> > We've installed a newer kernel (4.4.0-92) and compiled xfsprogs v
+>> >> > 4.12.0 from source. We're still not able to mount the filesystem (and
+>> >> > replay the log) normally.
+>> >> > We are able to mount it -o ro,norecovery, but we're reluctant to do
+>> >> > xfs_repair -L without trying everything we can first. The filesystem
+>> >> > is browsable albeit a few paths which gives an error : "Structure
+>> >> > needs cleaning"
+>> >> >
+>> >> > Does anyone have any advice as to how we might recover/repair the
+>> >> > corrupt log so we can replay it? Or is xfs_repair -L the only way
+>> >> > forward?
+>> >>
+>> >> Can you try xfs_repair -n (only scans the fs and reports what repairs
+>> >> would be made)?
+>> >>
+>> >
+>> > An xfs_metadump of the fs might be useful as well. Then we can see if we
+>> > can reproduce the mount hang on latest kernels and if so, potentially
+>> > try and root cause it.
+>> >
+>> > Brian
+>>
+>> Here is a link for the metadump :
+>> https://www.jottacloud.com/p/ingardme/95ec2e45ba80431d962345981d38bdff
+>
+> This points to a 29GB image file, apparently uncompressed..? Could you
+> upload a compressed file? Thanks.
 
-Argument indentation -- this should be:
+Hi. Sorry about that. Didnt realize the output would be compressable.
+Here is a link to the compressed tgz (6G)
+https://www.jottacloud.com/p/ingardme/cac6939649e14b98b928647f5222a2ae
 
-static ssize_t
-get_extent_count(
-	int		fd
-	__u64		startoffset,
-	__u64		len)
-{
-
-to match the rest of the file.
-
-> +{
-> +       struct fiemap fiemap = { 0 } ;
-
-Needs space between variable declaration and code.
-
-> +       fiemap.fm_start = startoffset;
-> +       fiemap.fm_length = len;
-> +       if (ioctl(fd, FS_IOC_FIEMAP, (unsigned long)&fiemap) < 0) {
-> +               fprintf(stderr, _("%s: Failed to query fiemap extent count.\n"),
-> +                       progname);
-
-perror/strerror to print the exact error code?
-
---D
-
-> +               return -1;
-> +       }
-> +
-> +       return fiemap.fm_mapped_extents;
-> +}
-> +
->  int
->  fiemap_f(
->  	int		argc,
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> Brian
+>
+>> And the repair -n output :
+>> https://www.jottacloud.com/p/ingardme/0205c6ca6f7e495ebcda5f255b96f63d
+>>
+>> kind regards
+>> ingard
+>>
+>> >
+>> >> Thanks-
+>> >> Bill
+>> >>
+>> >>
+>> >> >
+>> >> >
+>> >> > Excerpt from kern.log:
+>> >> > 2017-08-17T13:40:41.122121+02:00 dn-238 kernel: [  294.300347] XFS
+>> >> > (sdd1): Mounting V4 filesystem in no-recovery mode. Filesystem will be
+>> >> > inconsistent.
+>> >> >
+>> >> > 2017-08-17T17:04:54.794194+02:00 dn-238 kernel: [12548.400260] XFS
+>> >> > (sdd1): Metadata corruption detected at xfs_inode_buf_verify+0x6f/0xd0
+>> >> > [xfs], xfs_inode block 0x81c9c210
+>> >> > 2017-08-17T17:04:54.794216+02:00 dn-238 kernel: [12548.400342] XFS
+>> >> > (sdd1): Unmount and run xfs_repair
+>> >> > 2017-08-17T17:04:54.794218+02:00 dn-238 kernel: [12548.400374] XFS
+>> >> > (sdd1): First 64 bytes of corrupted metadata buffer:
+>> >> > 2017-08-17T17:04:54.794220+02:00 dn-238 kernel: [12548.400418]
+>> >> > ffff880171fff000: 3f 1a 33 54 5b 55 85 0b 7c f5 c6 d5 cf 51 47 41
+>> >> > ?.3T[U..|....QGA
+>> >> > 2017-08-17T17:04:54.794222+02:00 dn-238 kernel: [12548.400473]
+>> >> > ffff880171fff010: 97 ba ba 03 5c e4 02 7a e6 bc fb 5d f1 72 db c1
+>> >> > ....\..z...].r..
+>> >> > 2017-08-17T17:04:54.794223+02:00 dn-238 kernel: [12548.400527]
+>> >> > ffff880171fff020: c8 ad 3a 76 c7 e4 20 92 88 a2 35 0c 1f 36 cf b5
+>> >> > ..:v.. ...5..6..
+>> >> > 2017-08-17T17:04:54.794226+02:00 dn-238 kernel: [12548.400581]
+>> >> > ffff880171fff030: 8a bc 42 75 86 50 a0 a2 be 2c 2d 99 96 2d e1 ee
+>> >> > ..Bu.P...,-..-..
+>> >> >
+>> >> > kind regards
+>> >> > ingard
+>> >> > --
+>> >> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> >> > the body of a message to majordomo@vger.kernel.org
+>> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> >> --
+>> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> >> the body of a message to majordomo@vger.kernel.org
+>> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
