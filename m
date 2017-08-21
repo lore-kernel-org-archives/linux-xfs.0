@@ -1,103 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41226 "EHLO mga09.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:7396 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754404AbdHUVJR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Aug 2017 17:09:17 -0400
-Date: Mon, 21 Aug 2017 15:09:16 -0600
+        id S1753600AbdHUTTu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Aug 2017 15:19:50 -0400
+Date: Mon, 21 Aug 2017 13:19:48 -0600
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 11/13] dax, iomap: Add support for synchronous faults
-Message-ID: <20170821210916.GF26220@linux.intel.com>
+Subject: Re: [PATCH 13/13] ext4: Support for synchronous DAX faults
+Message-ID: <20170821191948.GD26220@linux.intel.com>
 References: <20170817160815.30466-1-jack@suse.cz>
- <20170817160815.30466-12-jack@suse.cz>
+ <20170817160815.30466-14-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170817160815.30466-12-jack@suse.cz>
+In-Reply-To: <20170817160815.30466-14-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Jan Kara <jack@suse.cz>
 Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>
 
-On Thu, Aug 17, 2017 at 06:08:13PM +0200, Jan Kara wrote:
-> Add a flag to iomap interface informing the caller that inode needs
-> fdstasync(2) for returned extent to become persistent and use it in DAX
-> fault code so that we map such extents only read only. We propagate the
-> information that the page table entry has been inserted write-protected
-> from dax_iomap_fault() with a new VM_FAULT_RO flag. Filesystem fault
-> handler is then responsible for calling fdatasync(2) and updating page
-> tables to map pfns read-write. dax_iomap_fault() also takes care of
-> updating vmf->orig_pte to match the PTE that was inserted so that we can
-> safely recheck that PTE did not change while write-enabling it.
+On Thu, Aug 17, 2017 at 06:08:15PM +0200, Jan Kara wrote:
+> We return IOMAP_F_NEEDDSYNC flag from ext4_iomap_begin() for a
+> synchronous write fault when inode has some uncommitted metadata
+> changes. In the fault handler ext4_dax_fault() we then detect this case,
+> call vfs_fsync_range() to make sure all metadata is committed, and call
+> dax_pfn_mkwrite() to mark PTE as writeable. Note that this will also
+
+Need to fix up the above line a little -
+s/dax_pfn_mkwrite/dax_insert_pfn_mkwrite/, and we insert the PTE as well as
+make it writeable.
+
+> dirty corresponding radix tree entry which is what we want - fsync(2)
+> will still provide data integrity guarantees for applications not using
+> userspace flushing. And applications using userspace flushing can avoid
+> calling fsync(2) and thus avoid the performance overhead.
 > 
 > Signed-off-by: Jan Kara <jack@suse.cz>
 > ---
->  fs/dax.c              | 31 +++++++++++++++++++++++++++++++
->  include/linux/iomap.h |  2 ++
->  include/linux/mm.h    |  6 +++++-
->  3 files changed, 38 insertions(+), 1 deletion(-)
+>  fs/ext4/file.c       | 36 ++++++++++++++++++++++++++++++------
+>  fs/ext4/inode.c      |  4 ++++
+>  fs/jbd2/journal.c    | 17 +++++++++++++++++
+>  include/linux/jbd2.h |  1 +
+>  4 files changed, 52 insertions(+), 6 deletions(-)
 > 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index bc040e654cc9..ca88fc356786 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -1177,6 +1177,22 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
->  			goto error_finish_iomap;
->  		}
+> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+> index 850037e140d7..3765c4ed1368 100644
+> --- a/fs/ext4/file.c
+> +++ b/fs/ext4/file.c
+> @@ -280,6 +280,7 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
+>  	struct inode *inode = file_inode(vmf->vma->vm_file);
+>  	struct super_block *sb = inode->i_sb;
+>  	bool write = vmf->flags & FAULT_FLAG_WRITE;
+> +	pfn_t pfn;
 >  
-> +		/*
-> +		 * If we are doing synchronous page fault and inode needs fsync,
-> +		 * we can insert PTE into page tables only after that happens.
-> +		 * Skip insertion for now and return the pfn so that caller can
-> +		 * insert it after fsync is done.
-> +		 */
-> +		if (write && (vma->vm_flags & VM_SYNC) &&
-> +		    (iomap.flags & IOMAP_F_NEEDDSYNC)) {
-> +			if (WARN_ON_ONCE(!pfnp)) {
-> +				error = -EIO;
-> +				goto error_finish_iomap;
-> +			}
-> +			*pfnp = pfn;
-> +			vmf_ret = VM_FAULT_NEEDDSYNC | major;
-> +			goto finish_iomap;
+>  	if (write) {
+>  		sb_start_pagefault(sb);
+> @@ -287,16 +288,39 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
+>  		down_read(&EXT4_I(inode)->i_mmap_sem);
+>  		handle = ext4_journal_start_sb(sb, EXT4_HT_WRITE_PAGE,
+>  					       EXT4_DATA_TRANS_BLOCKS(sb));
+> +		if (IS_ERR(handle)) {
+> +			up_read(&EXT4_I(inode)->i_mmap_sem);
+> +			sb_end_pagefault(sb);
+> +			return VM_FAULT_SIGBUS;
 > +		}
+>  	} else {
+>  		down_read(&EXT4_I(inode)->i_mmap_sem);
+>  	}
+> -	if (!IS_ERR(handle))
+> -		result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops, NULL);
+> -	else
+> -		result = VM_FAULT_SIGBUS;
+> +	result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops, &pfn);
+>  	if (write) {
+> -		if (!IS_ERR(handle))
+> -			ext4_journal_stop(handle);
+> +		ext4_journal_stop(handle);
+> +		/* Write fault but PFN mapped only RO? */
 
-Sorry for the second reply, but I spotted this during my testing.
+The above comment is out of date.
 
-The radix tree entry is inserted and marked as dirty by the
-dax_insert_mapping_entry() call a few lines above this newly added block.
+> +		if (result & VM_FAULT_NEEDDSYNC) {
+> +			int err;
+> +			loff_t start = ((loff_t)vmf->pgoff) << PAGE_SHIFT;
+> +			size_t len = 0;
+> +
+> +			if (pe_size == PE_SIZE_PTE)
+> +				len = PAGE_SIZE;
+> +#ifdef CONFIG_FS_DAX_PMD
+> +			else if (pe_size == PE_SIZE_PMD)
+> +				len = HPAGE_PMD_SIZE;
 
-I think that this patch should prevent the radix tree entry that we insert
-from being marked as dirty, and let the dax_insert_pfn_mkwrite() handler do
-that work.  Right now it is being made dirty twice, which we don't need.
+In fs/dax.c we always use PMD_SIZE.  It looks like HPAGE_PMD_SIZE and PMD_SIZE
+are always the same (from include/linux/huge_mm.h, the only defintion of
+HPAGE_PMD_SIZE):
 
-Just inserting the entry as clean here and then marking it as dirty later in
-dax_insert_pfn_mkwrite() keeps the radix tree entry dirty state consistent
-with the PTE dirty state.  It also solves an issue we have right now where the
-newly inserted dirty entry will immediately be flushed as part of the
-vfs_fsync_range() call that the filesystem will do before
-dax_insert_pfn_mkwrite(). 
+#define HPAGE_PMD_SHIFT PMD_SHIFT
+#define HPAGE_PMD_SIZE	((1UL) << HPAGE_PMD_SHIFT)
 
-For example, here's a trace of a PMD write fault on a completely sparse file:
+and AFAICT PMD_SIZE is defined to be 1<<PMD_SHIFT for all architectures as
+well.  I don't understand why we have both?
 
-  dax_pmd_fault: dev 259:0 ino 0xc shared WRITE|ALLOW_RETRY|KILLABLE|USER
-  address 0x7feab8e00000 vm_start 0x7feab8e00000 vm_end 0x7feab9000000 pgoff
-  0x0 max_pgoff 0x1ff 
-  
-  dax_pmd_fault_done: dev 259:0 ino 0xc shared WRITE|ALLOW_RETRY|KILLABLE|USER
-  address 0x7feab8e00000 vm_start 0x7feab8e00000 vm_end 0x7feab9000000 pgoff
-  0x0 max_pgoff 0x1ff NEEDDSYNC
-  
-  dax_writeback_range: dev 259:0 ino 0xc pgoff 0x0-0x1ff
-  
-  dax_writeback_one: dev 259:0 ino 0xc pgoff 0x0 pglen 0x200
-  
-  dax_writeback_range_done: dev 259:0 ino 0xc pgoff 0x1-0x1ff
-  
-  dax_insert_pfn_mkwrite: dev 259:0 ino 0xc shared
-  WRITE|ALLOW_RETRY|KILLABLE|USER address 0x7feab8e00000 pgoff 0x0 NOPAGE
+In any case, neither HPAGE_PMD_SIZE nor PMD_SIZE are used anywhere else in the
+ext4 code, so can we use PMD_SIZE here for consistency?  If they ever did
+manage to be different, I think we'd want PMD_SIZE anyway.
 
-The PMD that we are writing back with dax_writeback_one() is the one that we
-just made dirty via the first 1/2 of the sync fault, before we've installed a
-page table entry.  This fix might speed up some of your test measurements as
-well.
+With those nits and an updated changelog:
+
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
