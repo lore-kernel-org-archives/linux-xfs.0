@@ -1,186 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42521 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751350AbdHRSpi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Aug 2017 14:45:38 -0400
-Date: Fri, 18 Aug 2017 11:45:11 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC 00/12] xfs: more and better verifiers
-Message-ID: <20170818184511.GL4796@magnolia>
-References: <150301268960.5851.2513223883233763065.stgit@magnolia>
- <20170818070516.GA15291@infradead.org>
- <20170818170607.GK4796@magnolia>
+Received: from mailrelay.collogia.de ([194.8.207.98]:50509 "HELO
+        mailrelay.collogia.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1751050AbdHUIBG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2017 04:01:06 -0400
+From: Markus Stockhausen <stockhausen@collogia.de>
+Subject: another possible integer truncation in xfs
+Date: Mon, 21 Aug 2017 08:01:03 +0000
+Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD173010E035CD2@EXCHANGE.collogia.de>
+Content-Language: de-DE
+Content-Type: multipart/mixed;
+        boundary="----=_NextPartTM-000-dcdd7352-d849-4199-9e30-d9e31d3a7c1d"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170818170607.GK4796@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "pmenzel@molgen.mpg.de" <pmenzel@molgen.mpg.de>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Fri, Aug 18, 2017 at 10:06:07AM -0700, Darrick J. Wong wrote:
-> On Fri, Aug 18, 2017 at 12:05:16AM -0700, Christoph Hellwig wrote:
-> > On Thu, Aug 17, 2017 at 04:31:29PM -0700, Darrick J. Wong wrote:
-> > > Hi all,
-> > > 
-> > > This RFC combines all the random little fixes and improvements to the
-> > > verifiers that we've been talking about for the past month or so into a
-> > > single patch series!
-> > > 
-> > > We start by refactoring the long format btree block header verifier into
-> > > a single helper functionn and de-macroing dir block verifiers to make
-> > > them less shouty.  Next, we change verifier functions to return the
-> > > approximate instruction pointer of the faulting test so that we can
-> > > report more precise fault information to dmesg/tracepoints.
-> > 
-> > Just jumping here quickly because I don't have time for a detailed
-> > review:
-> > 
-> > How good does this instruction pointer thing resolved to the actual
-> > issue?
-> 
-> Ugh, it's terrible once you turn on the optimizer.
-> 
->         if (!xfs_sb_version_hascrc(&mp->m_sb))                                  
->                 return __this_address;                                          
->         if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))        
->                 return __this_address;                                          
->         if (block->bb_u.s.bb_blkno != cpu_to_be64(bp->b_bn))                    
->                 return __this_address;                                          
->         if (pag && be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)        
->                 return __this_address;                                          
->         return NULL;                                                            
-> 
-> becomes:
-> 
->         if (!xfs_sb_version_hascrc(&mp->m_sb))                                  
->                 goto out;                                          
->         if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))        
->                 goto out;                                          
->         if (block->bb_u.s.bb_blkno != cpu_to_be64(bp->b_bn))                    
->                 goto out;                                          
->         if (pag && be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)        
->                 goto out;                                          
->         return NULL;                                                            
-> out:
-> 	return __this_address;
-> 
-> ...which is totally worthless, unless we want to compile all the verifier
-> functions with __attribute__((optimize("O0"))), which is bogus.
-> 
-> <sigh> Back to the drawing board on that one.
 
-Ok, there's /slightly/ less awful way to prevent gcc from optimizing the
-verifier function to the point of imprecise pointer value, but it involves
-writing to a volatile int:
+This is a multi-part message in MIME format.
 
-/* stupidly prevent gcc from over-optimizing getting the instruction ptr */
-extern volatile int xfs_lineno;
-#define __this_address ({ __label__ __here; __here: xfs_lineno = __LINE__; &&__here; })
+------=_NextPartTM-000-dcdd7352-d849-4199-9e30-d9e31d3a7c1d
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-<grumble> Yucky, but it more or less works.
+Hi Christoph,=0A=
+=0A=
+out of curiosity I looked for other use cases of min_t in xfs. At least =0A=
+until 4.12 there is a similar constellation in xfs_dir2_leaf_readbuf:=0A=
+=0A=
+  if (trim_map) {=0A=
+    mip->map_blocks -=3D geo->fsbcount;=0A=
+    /*=0A=
+     * Loop to get rid of the extents for the=0A=
+     * directory block.=0A=
+     */=0A=
+    for (i =3D geo->fsbcount; i > 0; ) {=0A=
+      j =3D min_t(int, map->br_blockcount, i);=0A=
+      map->br_blockcount -=3D j;=0A=
+      map->br_startblock +=3D j;=0A=
+      map->br_startoff +=3D j;=0A=
+=0A=
+The loop could go havoc if map->br_blockcount is larger than =0A=
+2G. If you think it could classify for stable feel free to add it too.=0A=
+=0A=
+Best regards.=0A=
+=0A=
+Markus=0A=
+------=_NextPartTM-000-dcdd7352-d849-4199-9e30-d9e31d3a7c1d
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="InterScan_Disclaimer.txt"
 
---D
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
 
-> 
-> > I'm currently watching a customer issue where a write verifier
-> > triggers, and I gave them a patch to add a debug print to every failing
-> > statement, including printing out the mismatch values if it's not
-> > simply a binary comparism.  I though about preparing that patch as
-> > well as others for mainline.  Here is the one I have at the moment:
-> > 
-> > ---
-> > From 6c5e2efc6f857228461d439feb3c98be58fb9744 Mon Sep 17 00:00:00 2001
-> > From: Christoph Hellwig <hch@lst.de>
-> > Date: Sat, 5 Aug 2017 16:34:15 +0200
-> > Subject: xfs: print verbose information on dir leaf verifier failures
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/libxfs/xfs_dir2_leaf.c | 33 ++++++++++++++++++++++++++-------
-> >  1 file changed, 26 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> > index b887fb2a2bcf..4386c68f72c6 100644
-> > --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-> > +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> > @@ -113,27 +113,37 @@ xfs_dir3_leaf_check_int(
-> >  	 * Should factor in the size of the bests table as well.
-> >  	 * We can deduce a value for that from di_size.
-> >  	 */
-> > -	if (hdr->count > ops->leaf_max_ents(geo))
-> > +	if (hdr->count > ops->leaf_max_ents(geo)) {
-> > +		xfs_warn(mp, "count (%d) above max (%d)\n",
-> > +			hdr->count, ops->leaf_max_ents(geo));
-> >  		return false;
-> > +	}
-> >  
-> >  	/* Leaves and bests don't overlap in leaf format. */
-> >  	if ((hdr->magic == XFS_DIR2_LEAF1_MAGIC ||
-> >  	     hdr->magic == XFS_DIR3_LEAF1_MAGIC) &&
-> > -	    (char *)&ents[hdr->count] > (char *)xfs_dir2_leaf_bests_p(ltp))
-> > +	    (char *)&ents[hdr->count] > (char *)xfs_dir2_leaf_bests_p(ltp)) {
-> > +		xfs_warn(mp, "ents overlappings bests\n");
-> >  		return false;
-> > +	}
-> >  
-> >  	/* Check hash value order, count stale entries.  */
-> >  	for (i = stale = 0; i < hdr->count; i++) {
-> >  		if (i + 1 < hdr->count) {
-> >  			if (be32_to_cpu(ents[i].hashval) >
-> > -					be32_to_cpu(ents[i + 1].hashval))
-> > +					be32_to_cpu(ents[i + 1].hashval)) {
-> > +				xfs_warn(mp, "broken hash order\n");
-> >  				return false;
-> > +			}
-> >  		}
-> >  		if (ents[i].address == cpu_to_be32(XFS_DIR2_NULL_DATAPTR))
-> >  			stale++;
-> >  	}
-> > -	if (hdr->stale != stale)
-> > +	if (hdr->stale != stale) {
-> > +		xfs_warn(mp, "incorrect stalte count (%d, expected %d)\n",
-> > +			hdr->stale, stale);
-> >  		return false;
-> > +	}
-> >  	return true;
-> >  }
-> >  
-> > @@ -159,12 +169,21 @@ xfs_dir3_leaf_verify(
-> >  		magic3 = (magic == XFS_DIR2_LEAF1_MAGIC) ? XFS_DIR3_LEAF1_MAGIC
-> >  							 : XFS_DIR3_LEAFN_MAGIC;
-> >  
-> > -		if (leaf3->info.hdr.magic != cpu_to_be16(magic3))
-> > +		if (leaf3->info.hdr.magic != cpu_to_be16(magic3)) {
-> > +			xfs_warn(mp, "incorrect magic number (0x%hx, expected 0x%hx)\n",
-> > +					leaf3->info.hdr.magic, magic3);
-> >  			return false;
-> > -		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
-> > +		}
-> > +		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid)) {
-> > +			xfs_warn(mp, "incorrect uuid, (%pUb, expected %pUb)\n",
-> > +				&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid);
-> >  			return false;
-> > -		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
-> > +		}
-> > +		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn) {
-> > +			xfs_warn(mp, "incorrect blkno, (%lld, expected %lld)\n",
-> > +				be64_to_cpu(leaf3->info.blkno), bp->b_bn);
-> >  			return false;
-> > +		}
-> >  		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
-> >  			return false;
-> >  	} else {
-> > -- 
-> > 2.11.0
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
+
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
+
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
+
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+President of the supervisory board:
+Hans Kristian Langva
+
+Registry office: district court Cologne
+Register number: HRB 52 497
+
+****************************************************************************
+
+------=_NextPartTM-000-dcdd7352-d849-4199-9e30-d9e31d3a7c1d--
