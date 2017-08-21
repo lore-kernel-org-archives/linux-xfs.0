@@ -1,114 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35454 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753245AbdHUPvy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Aug 2017 11:51:54 -0400
-Date: Mon, 21 Aug 2017 11:51:52 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: corrupt xfs log
-Message-ID: <20170821155152.GA56278@bfoster.bfoster>
-References: <CAHeWggOTqbQUQB7xz1wUjejHU5W14w3wcN-oV-+KJxxyEEQ3TQ@mail.gmail.com>
- <20170818120224.GA27778@redhat.com>
- <20170818121725.GA1665@bfoster.bfoster>
- <CAHeWggM-dGJHRNyyXZrW5aX7v3r-b0t1LTbrbN-OSTLdLzuPhg@mail.gmail.com>
+Received: from sender-pp-092.zoho.com ([135.84.80.237]:25420 "EHLO
+        sender-pp-092.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752439AbdHUKsO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2017 06:48:14 -0400
+Subject: Re: xfs errors
+References: <42ebd50b-a327-0afb-a53a-e2dedd003415@zoho.com>
+ <da41ec6e-0009-6515-7c60-a48c3b07369b@sandeen.net>
+ <2fd2a278-4c78-3072-e10d-d9745f5183fb@zoho.com>
+ <c9ee564c-8627-ad00-cc86-5548c9688298@sandeen.net>
+From: ToddAndMargo <ToddAndMargo@zoho.com>
+Message-ID: <eacdbe57-7833-4b7f-c14a-47948b0b2113@zoho.com>
+Date: Mon, 21 Aug 2017 03:48:12 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHeWggM-dGJHRNyyXZrW5aX7v3r-b0t1LTbrbN-OSTLdLzuPhg@mail.gmail.com>
+In-Reply-To: <c9ee564c-8627-ad00-cc86-5548c9688298@sandeen.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ingard - <ingard1@gmail.com>
-Cc: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Aug 21, 2017 at 02:08:43PM +0200, Ingard - wrote:
-> On Fri, Aug 18, 2017 at 2:17 PM, Brian Foster <bfoster@redhat.com> wrote:
-> > On Fri, Aug 18, 2017 at 07:02:24AM -0500, Bill O'Donnell wrote:
-> >> On Fri, Aug 18, 2017 at 01:56:31PM +0200, Ingard - wrote:
-> >> > After a server crash we've encountered a corrupt xfs filesystem. When
-> >> > trying to mount said filesystem normally the system hangs.
-> >> > This was initially on a ubuntu trusty server with 3.13 kernel with
-> >> > xfsprogs 3.1.9
-> >> >
-> >> > We've installed a newer kernel (4.4.0-92) and compiled xfsprogs v
-> >> > 4.12.0 from source. We're still not able to mount the filesystem (and
-> >> > replay the log) normally.
-> >> > We are able to mount it -o ro,norecovery, but we're reluctant to do
-> >> > xfs_repair -L without trying everything we can first. The filesystem
-> >> > is browsable albeit a few paths which gives an error : "Structure
-> >> > needs cleaning"
-> >> >
-> >> > Does anyone have any advice as to how we might recover/repair the
-> >> > corrupt log so we can replay it? Or is xfs_repair -L the only way
-> >> > forward?
-> >>
-> >> Can you try xfs_repair -n (only scans the fs and reports what repairs
-> >> would be made)?
-> >>
-> >
-> > An xfs_metadump of the fs might be useful as well. Then we can see if we
-> > can reproduce the mount hang on latest kernels and if so, potentially
-> > try and root cause it.
-> >
-> > Brian
+On 08/20/2017 08:01 PM, Eric Sandeen wrote:
+>> The difference between my office and the customer is
+>> that I use a hardware raid (raid 1) card and the customer
+>> uses RSTe ("e" for enterprise) RAID 1, which is a pseudo
+>> software raid.  Maybe a lot of stuff is floating around
+>> in the either (cache) that is not sync'ed to the drive pair
+>> and xfsdump is not happy about it.
+
+> The underlying storage will not affect this.
+
+>> I am wonder if it would be possible for xfsdump to can
+>> "sync; sync" itself before starting.  That would insure
+>> a clean slate.
+
+> No; that's a guess, not a root cause analysis - we won't
+> be putting hacks like that in based on hunches.
+
+You have a point.  It is still in the hunch phase.
+
+> If you want to investigate more, find out where in the code
+> the error spits out, and do more error reporting there; find out
+> what error code is actually being returned.  actually I suppose
+> strace would work for this as well.  Knowing which error code
+> the ioctl fails with would offer a clue about why.
 > 
-> Here is a link for the metadump :
-> https://www.jottacloud.com/p/ingardme/95ec2e45ba80431d962345981d38bdff
-
-This points to a 29GB image file, apparently uncompressed..? Could you
-upload a compressed file? Thanks.
-
-Brian
-
-> And the repair -n output :
-> https://www.jottacloud.com/p/ingardme/0205c6ca6f7e495ebcda5f255b96f63d
+> -Eric
 > 
-> kind regards
-> ingard
-> 
-> >
-> >> Thanks-
-> >> Bill
-> >>
-> >>
-> >> >
-> >> >
-> >> > Excerpt from kern.log:
-> >> > 2017-08-17T13:40:41.122121+02:00 dn-238 kernel: [  294.300347] XFS
-> >> > (sdd1): Mounting V4 filesystem in no-recovery mode. Filesystem will be
-> >> > inconsistent.
-> >> >
-> >> > 2017-08-17T17:04:54.794194+02:00 dn-238 kernel: [12548.400260] XFS
-> >> > (sdd1): Metadata corruption detected at xfs_inode_buf_verify+0x6f/0xd0
-> >> > [xfs], xfs_inode block 0x81c9c210
-> >> > 2017-08-17T17:04:54.794216+02:00 dn-238 kernel: [12548.400342] XFS
-> >> > (sdd1): Unmount and run xfs_repair
-> >> > 2017-08-17T17:04:54.794218+02:00 dn-238 kernel: [12548.400374] XFS
-> >> > (sdd1): First 64 bytes of corrupted metadata buffer:
-> >> > 2017-08-17T17:04:54.794220+02:00 dn-238 kernel: [12548.400418]
-> >> > ffff880171fff000: 3f 1a 33 54 5b 55 85 0b 7c f5 c6 d5 cf 51 47 41
-> >> > ?.3T[U..|....QGA
-> >> > 2017-08-17T17:04:54.794222+02:00 dn-238 kernel: [12548.400473]
-> >> > ffff880171fff010: 97 ba ba 03 5c e4 02 7a e6 bc fb 5d f1 72 db c1
-> >> > ....\..z...].r..
-> >> > 2017-08-17T17:04:54.794223+02:00 dn-238 kernel: [12548.400527]
-> >> > ffff880171fff020: c8 ad 3a 76 c7 e4 20 92 88 a2 35 0c 1f 36 cf b5
-> >> > ..:v.. ...5..6..
-> >> > 2017-08-17T17:04:54.794226+02:00 dn-238 kernel: [12548.400581]
-> >> > ffff880171fff030: 8a bc 42 75 86 50 a0 a2 be 2c 2d 99 96 2d e1 ee
-> >> > ..Bu.P...,-..-..
-> >> >
-> >> > kind regards
-> >> > ingard
-> >> > --
-> >> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> > the body of a message to majordomo@vger.kernel.org
-> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+I have no idea how to do that.  :'(
+
+-Todd
+
