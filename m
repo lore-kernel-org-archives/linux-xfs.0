@@ -1,46 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46405 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932205AbdHVJg1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 22 Aug 2017 05:36:27 -0400
-Date: Tue, 22 Aug 2017 11:36:25 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 10/13] mm: Wire up MAP_SYNC
-Message-ID: <20170822093625.GD4909@quack2.suse.cz>
-References: <20170817160815.30466-1-jack@suse.cz>
- <20170817160815.30466-11-jack@suse.cz>
- <20170821213704.GG26220@linux.intel.com>
+Received: from mail-ua0-f179.google.com ([209.85.217.179]:36198 "EHLO
+        mail-ua0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752533AbdHVWhJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2017 18:37:09 -0400
+Received: by mail-ua0-f179.google.com with SMTP id w17so256182uaw.3
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Aug 2017 15:37:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170821213704.GG26220@linux.intel.com>
+In-Reply-To: <20170822111053.7jypthbydpkn2tj4@breakpoint.cc>
+References: <20170821190414.long2535xppcxvvd@breakpoint.cc>
+ <CAJCQCtSUS9yZfv9xLe9a5o5x8ZSkOUWC_6QaeUi6oQ_QXg4GRQ@mail.gmail.com> <20170822111053.7jypthbydpkn2tj4@breakpoint.cc>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Tue, 22 Aug 2017 16:37:07 -0600
+Message-ID: <CAJCQCtTF2bWgB1++v3XOwaPqpPxc7-0Lv+Qc_3bebb0zMDNszA@mail.gmail.com>
+Subject: Re: Support for data CRC
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Chris Murphy <lists@colorremedies.com>, xfs list <linux-xfs@vger.kernel.org>
 
-On Mon 21-08-17 15:37:04, Ross Zwisler wrote:
-> > diff --git a/mm/mmap.c b/mm/mmap.c
-> > index f19efcf75418..18453c04b09f 100644
-> > --- a/mm/mmap.c
-> > +++ b/mm/mmap.c
-> > @@ -1423,12 +1423,17 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
-> >  				return -ENODEV;
-> >  			if (vm_flags & (VM_GROWSDOWN|VM_GROWSUP))
-> >  				return -EINVAL;
-> > +			if (!(vm_flags & VM_SHARED) && (vm_flags & VM_SYNC))
-> > +				return -EINVAL;
-> 
-> I know this will be reworked with Dan's new mmap() interface, but I was
-> curious what the !(vm_flags & VM_SHARED) check here was for.  We're in a
-> MAP_PRIVATE case, so is it ever possible for VM_SHARED to be set in vm_flags?
-> I tried to make this happen with some various test scenarios, but wasn't able.
+On Tue, Aug 22, 2017 at 5:10 AM, Sebastian Andrzej Siewior
+<sebastian@breakpoint.cc> wrote:
+> On 2017-08-21 13:52:48 [-0600], Chris Murphy wrote:
+>> On Mon, Aug 21, 2017 at 1:04 PM, Sebastian Andrzej Siewior
+>> <sebastian@breakpoint.cc> wrote:
+>> > Hi,
+>> >
+>> > my understanding is that only metadata is protected by CRC in the new
+>> > on-disk format. Are there any plans to also protect data?
+>>
+>> See dm-integrity, merged as of 4.12 kernel. I haven't seen any
+>> performance benchmarking so far.
+>
+> So this ensures integrity with the help of crypto algorithms. This is a
+> bit much as something like crc32c/crc64 would be sufficient. However
+> dm-integrity does not provide a way to recover (as far as I can tell).
 
-I was also caught by this :). Check how MAP_SHARED case above falls through
-to the MAP_PRIVATE case...
+If a block fails integrity checking, there's a read error that goes to
+the next layer which would need to have replication such as mdadm/lvm
+RAID. And that layer would grab a good copy, and fix the bad copy. So
+every physical drive would first have dm-integrity applied, which is a
+1:1 mapping, and then each dm-integrity logical device is made a PV
+for LVM, and then you create raid1/5/6 LV's or whatever you want, and
+then format it whatever you want.
 
-								Honza
+Documentation says either crc or hash is possible, including crc32.
+https://www.kernel.org/doc/Documentation/device-mapper/dm-integrity.txt
+
+
+> My idea was that if the "normal" path is faulty (and noticed by the crc
+> check) it (xfs or the dm layer) would try to read the data via an
+> alternative path if possible (say on RAID1/5/6).
+
+Yes you have to build each layer you want separately with this method.
+Otherwise you're looking at ZFS or Btrfs if you want it integrated.
+
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Chris Murphy
