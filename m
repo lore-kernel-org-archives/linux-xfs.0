@@ -1,40 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([146.0.238.67]:50296 "EHLO
-        Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932350AbdHVLKz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2017 07:10:55 -0400
-Date: Tue, 22 Aug 2017 13:10:53 +0200
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: Re: Support for data CRC
-Message-ID: <20170822111053.7jypthbydpkn2tj4@breakpoint.cc>
-References: <20170821190414.long2535xppcxvvd@breakpoint.cc>
- <CAJCQCtSUS9yZfv9xLe9a5o5x8ZSkOUWC_6QaeUi6oQ_QXg4GRQ@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:16875 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751061AbdHVQYT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2017 12:24:19 -0400
+Date: Tue, 22 Aug 2017 09:24:16 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: test xfs_db fuzz command verbs
+Message-ID: <20170822162415.GE4794@magnolia>
+References: <20170819154645.GD4794@magnolia>
+ <20170822070614.GG31418@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJCQCtSUS9yZfv9xLe9a5o5x8ZSkOUWC_6QaeUi6oQ_QXg4GRQ@mail.gmail.com>
+In-Reply-To: <20170822070614.GG31418@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: xfs list <linux-xfs@vger.kernel.org>
+To: Eryu Guan <eguan@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-On 2017-08-21 13:52:48 [-0600], Chris Murphy wrote:
-> On Mon, Aug 21, 2017 at 1:04 PM, Sebastian Andrzej Siewior
-> <sebastian@breakpoint.cc> wrote:
-> > Hi,
-> >
-> > my understanding is that only metadata is protected by CRC in the new
-> > on-disk format. Are there any plans to also protect data?
+On Tue, Aug 22, 2017 at 03:06:14PM +0800, Eryu Guan wrote:
+> Hi Darrick,
 > 
-> See dm-integrity, merged as of 4.12 kernel. I haven't seen any
-> performance benchmarking so far.
+> On Sat, Aug 19, 2017 at 08:46:45AM -0700, Darrick J. Wong wrote:
+> > Ensure that the fuzz command does what it says.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> I applied your patch "[PATCH] xfs_db: bit fuzzing should read the right
+> bit when flipping" on top of xfsprogs for-next branch (which contains
+> commit ef209a960d82 "xfs_db: make write/fuzz -c and -d work on non-crc
+> filesystems") and tested this patch. All worked fine on CRC enabled XFS,
+> but test failed with non-CRC xfs as it missed lines like:
+> 
+> Allowing fuzz of corrupted data with good CRC
+> 
+> I did the following modifications and test passed with both CRC and
+> non-CRC XFS, if you think it's OK then I can fold the changes to your
+> patch and no need for a resend :)
 
-So this ensures integrity with the help of crypto algorithms. This is a
-bit much as something like crc32c/crc64 would be sufficient. However
-dm-integrity does not provide a way to recover (as far as I can tell).
-My idea was that if the "normal" path is faulty (and noticed by the crc
-check) it (xfs or the dm layer) would try to read the data via an
-alternative path if possible (say on RAID1/5/6).
+Looks fine to me, go ahead and fold it in.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Sebastian
+--D
+
+> 
+> Thanks,
+> Eryu
+> 
+> diff --git a/tests/xfs/058 b/tests/xfs/058
+> index 4a39942..32ceb0d 100755
+> --- a/tests/xfs/058
+> +++ b/tests/xfs/058
+> @@ -50,21 +50,31 @@ _require_xfs_db_command "fuzz"
+>  rm -f "$seqres.full"
+>  
+>  echo "Format"
+> -_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >> "$seqres.full"
+> +source $tmp.mkfs
+> +
+> +do_xfs_db()
+> +{
+> +       local cmd=$1
+> +       if [ $_fs_has_crcs -eq 0 ]; then
+> +               echo "Allowing $cmd of corrupted data with good CRC"
+> +       fi
+> +       _scratch_xfs_db -x -c 'sb 0' -c "$*"
+> +}
+>  
+>  # Make sure that each fuzz verb works.  For the firstbit/middlebit/lastbit
+>  # tests, we depend on 'ones' having set the field to all ones.
+>  field="fdblocks"
+> -_scratch_xfs_db -x -c 'sb 0' -c "write -d ${field} 0"
+> +do_xfs_db write -d ${field} 0
+>  SCRATCH_XFS_LIST_FUZZ_VERBS= _scratch_xfs_list_fuzz_verbs | while read verb; do
+>         test "${verb}" = "random" && continue
+>         echo "Test verb ${verb}"
+> -       _scratch_xfs_db -x -c 'sb 0' -c "fuzz -d ${field} ${verb}"
+> +       do_xfs_db fuzz -d ${field} ${verb}
+>  done
+>  
+>  echo "Test verb random"
+>  before="$(_scratch_xfs_get_metadata_field "${field}" 'sb 0')"
+> -_scratch_xfs_db -x -c 'sb 0' -c "fuzz -d ${field} random" >> $seqres.full
+> +do_xfs_db fuzz -d ${field} random >> $seqres.full
+>  after="$(_scratch_xfs_get_metadata_field "${field}" 'sb 0')"
+>  test "${before}" != "${after}" && echo "${field} changed"
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
