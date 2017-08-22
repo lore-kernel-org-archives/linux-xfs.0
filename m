@@ -1,54 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33342 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753739AbdHUULn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Aug 2017 16:11:43 -0400
-Subject: Re: xfs_metadump as a backup tool
-References: <c8f366449091c278310acb5fbb13a11f@assyoma.it>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <be09cfb0-39ab-9645-468b-79d6a81aaec8@sandeen.net>
-Date: Mon, 21 Aug 2017 15:11:42 -0500
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:48244 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752376AbdHVX2e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2017 19:28:34 -0400
+Date: Wed, 23 Aug 2017 09:28:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS Bug Report
+Message-ID: <20170822232831.GY21024@dastard>
+References: <CAFzqJcahyU7F5CJcYKTPabWBVCnufwSMS4QcJijHVVux-Ndv+Q@mail.gmail.com>
+ <ad807068-5de9-3200-68ef-de9e42401a5a@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <c8f366449091c278310acb5fbb13a11f@assyoma.it>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ad807068-5de9-3200-68ef-de9e42401a5a@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Ruoxin Jiang <rj2394@columbia.edu>, linux-xfs@vger.kernel.org, Suman Jana <sumanj@gmail.com>
 
-On 8/21/17 2:59 PM, Gionatan Danti wrote:
-> Hi all,
-> I wish to ask if someone is using xfs_metadump as a "real" backup tool - ie: in production.
-
-Short answer is "No," because:
-xfs_metadump is only a diagnostic tool.  It is not tested or supported for any other use.
-
-If nothing else, on a normal live filesystem your metadata and data is constantly changing; if you replay old metadata over a filesystem, you'll end up pointing to file data blocks that are incorrect.
-
-If you really truly have only statically-allocated files from start to finish, then maybe... 
-
-But more than anything else, the tool was not designed or tested for anything other than developer diagnostics.
-
-For disaster recovery, having periodic metadata snapshots might come in handy from a forensic POV, but I would not rely on this as a primary part of your normal backup/recovery scheme.
-
-> I was wondering how to lower recovery time in case of filesystem corruption, and the idea of using xfs_metadump + xfs_mdrestore struck me.
+On Tue, Aug 22, 2017 at 05:33:24PM -0500, Eric Sandeen wrote:
+> On 8/22/17 4:10 PM, Ruoxin Jiang wrote:
+> > Hello,
+> > 
+> > We are researchers from Columbia University, New York. As part of our
+> > current research we have run into some issues using xfs filesystem.
+> > For example, we encountered a case where the setuid bit of a modified
+> > executable was not removed as desired.
 > 
-> I plan to have a single, relatively big XFS volume with an handfull of fully preallocated large files (VM disk images). Basically, I was thinking about:
-> - take a LVM snapshot;
-> - mount the snap volume as read-only;
-> - copy the user data (via tar/rsync/whatever);
-> - additionally, xfs_metadump its metadata content.
-
-If you've already done a proper backup wit tar/rsync/(xfsdump?) then you have everything you need to restore the filesystem without resorting to xfs_metadump cleverness, right?
-
-> If a major filesystem corruption occour, as a first step I should be able to simply restore its metadata with xfs_mdrestore and re-gain access to files/data blocks. A potential pitfall would be related to extents that at the time of xfs_metadump where marked as "unwritten" but later were written - restoring the old metadata will immediately turn user data into zeroes. It is possible to fully allocate a file *without* marking the allocated extents as "unwritten"? Yes, I know this has security implications...
-
-No, it's not possible to preallocate space on xfs without marking it as unwritten.
-
--Eric
-
-> Is this a good idea? I am missing something?
-> Thanks.
+> Thanks for the reports.
 > 
+> For case 1:
+> 
+> > * In xfs, function `xfs_file_aio_write_checks` calls `file_remove_privs` which
+> > removes special file priviledges when the executable is written to or truncated.
+> > 
+> > * If an DIO write is not aligned to device logical sector size, the syscall
+> > fails with  EINVAL` before `xfs_file_aio_write_checks` is called. Thus the setuid
+> > bit will not be removed from the modified executable.
+> 
+> If the write did not happen, why should the setuid bit be removed?
+> The write failed and the file's contents were not modified.  It seems
+> like xfs's behavior makes sense; is there a posix specification that
+> indicates the behavior should be different?
+> 
+> Case 2 does look problematic (failed mmap write extending the file EOF)
+
+mmap should not be able to extend the file at all. It should segv
+if an attempt to write past EOF occurs.
+
+> Case 3 seems to show xfs violating this rule, I guess?
+> 
+>        When  the  owner or group of an executable file are changed by a
+>        non-superuser, the S_ISUID and S_ISGID mode  bits  are  cleared.
+>        POSIX does not specify whether this also should happen when root
+>        does the chown(); the Linux behavior depends on the kernel  ver-
+>        sion.   In  case  of  a non-group-executable file (i.e., one for
+>        which the S_IXGRP bit is not  set)  the  S_ISGID  bit  indicates
+>        mandatory locking, and is not cleared by a chown().
+> 
+> I thought this was all handled at the vfs, though, odd.
+
+xfs_setattr_nonsize() does:
+
+                /*
+                 * CAP_FSETID overrides the following restrictions:
+                 *
+                 * The set-user-ID and set-group-ID bits of a file will be
+                 * cleared upon successful return from chown()
+                 */
+                if ((inode->i_mode & (S_ISUID|S_ISGID)) &&
+                    !capable(CAP_FSETID))
+                        inode->i_mode &= ~(S_ISUID|S_ISGID);
+
+Whereas the VFS has this check in should_remove_suid():
+
+        /*
+         * sgid without any exec bits is just a mandatory locking mark; leave
+         * it alone.  If some exec bits are set, it's a real sgid; kill it.
+         */
+        if (unlikely((mode & S_ISGID) && (mode & S_IXGRP)))
+                kill |= ATTR_KILL_SGID;
+
+	if (unlikely(kill && !capable(CAP_FSETID) && S_ISREG(mode)))
+                return kill;
+
+So the VFS is doing the right thing but the XFS code does it's own
+thing for reasons I don't remember. Given the VFS handles this, maybe
+we should finally remove it from the XFS code?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
