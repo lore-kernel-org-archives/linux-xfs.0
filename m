@@ -1,71 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33846 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932329AbdHVPEQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 22 Aug 2017 11:04:16 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id BBE46612234
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Aug 2017 10:02:54 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs: for-next updated to b97ad96
-Message-ID: <cb8e0f77-bb29-6bec-88d6-c5c2f375d0a9@sandeen.net>
-Date: Tue, 22 Aug 2017 10:04:15 -0500
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:36622 "EHLO
+        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751777AbdHVR1V (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2017 13:27:21 -0400
+Received: by mail-oi0-f50.google.com with SMTP id g131so192721468oic.3
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Aug 2017 10:27:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20170821215703.GA24473@linux.intel.com>
+References: <20170817160815.30466-1-jack@suse.cz> <20170817160815.30466-11-jack@suse.cz>
+ <20170821215703.GA24473@linux.intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 22 Aug 2017 10:27:19 -0700
+Message-ID: <CAPcyv4jpM_4fY+f+0i6ysnQ=0i2W9eq1pUCO0axYTHKbOtaufg@mail.gmail.com>
+Subject: Re: [PATCH 10/13] mm: Wire up MAP_SYNC
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Andy Lutomirski <luto@kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>
 
-Hi folks,
+On Mon, Aug 21, 2017 at 2:57 PM, Ross Zwisler
+<ross.zwisler@linux.intel.com> wrote:
+> On Thu, Aug 17, 2017 at 06:08:12PM +0200, Jan Kara wrote:
+>> Pretty crude for now...
+>>
+>> Signed-off-by: Jan Kara <jack@suse.cz>
+>
+> One other thing that should probably be wired up before this is all said and
+> done is the VmFlag string in /proc/<pid>/smaps.  Right now when we set this
+> flag it ends up as ??:
+>
+> 7f44e6cbd000-7f44e6dbd000 rw-s 00000000 103:00 12              /root/dax/data
+> Size:               1024 kB
+> Rss:                   0 kB
+> Pss:                   0 kB
+> Shared_Clean:          0 kB
+> Shared_Dirty:          0 kB
+> Private_Clean:         0 kB
+> Private_Dirty:         0 kB
+> Referenced:            0 kB
+> Anonymous:             0 kB
+> LazyFree:              0 kB
+> AnonHugePages:         0 kB
+> ShmemPmdMapped:        0 kB
+> Shared_Hugetlb:        0 kB
+> Private_Hugetlb:       0 kB
+> Swap:                  0 kB
+> SwapPss:               0 kB
+> KernelPageSize:        4 kB
+> MMUPageSize:           4 kB
+> Locked:                0 kB
+> VmFlags: rd wr sh mr mw me ms ?? mm hg
+>
+> The quick one-liner at the end of this patch changes that to:
+>
+> 7fe30e87f000-7fe30e97f000 rw-s 00000000 103:00 12               /root/dax/data
+> Size:               1024 kB
+> Rss:                   0 kB
+> Pss:                   0 kB
+> Shared_Clean:          0 kB
+> Shared_Dirty:          0 kB
+> Private_Clean:         0 kB
+> Private_Dirty:         0 kB
+> Referenced:            0 kB
+> Anonymous:             0 kB
+> LazyFree:              0 kB
+> AnonHugePages:         0 kB
+> ShmemPmdMapped:        0 kB
+> Shared_Hugetlb:        0 kB
+> Private_Hugetlb:       0 kB
+> Swap:                  0 kB
+> SwapPss:               0 kB
+> KernelPageSize:        4 kB
+> MMUPageSize:           4 kB
+> Locked:                0 kB
+> VmFlags: rd wr sh mr mw me ms sf mm hg
+>
+> I think that of software can rely on this flag for userspace flushing without
+> worrying about any new TOCTOU races because there isn't a way to unset the
+> VM_SYNC flag once it is set - it should be valid as long as the mmap() remains
+> open and the mmap'd address is valid.
+>
+> --- 8< ---
+>  fs/proc/task_mmu.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+> index b836fd6..a2a82ed 100644
+> --- a/fs/proc/task_mmu.c
+> +++ b/fs/proc/task_mmu.c
+> @@ -650,6 +650,7 @@ static void show_smap_vma_flags(struct seq_file *m, struct vm_area_struct *vma)
+>                 [ilog2(VM_ACCOUNT)]     = "ac",
+>                 [ilog2(VM_NORESERVE)]   = "nr",
+>                 [ilog2(VM_HUGETLB)]     = "ht",
+> +               [ilog2(VM_SYNC)]        = "sf",
+>                 [ilog2(VM_ARCH_1)]      = "ar",
+>                 [ilog2(VM_DONTDUMP)]    = "dd",
+>  #ifdef CONFIG_MEM_SOFT_DIRTY
 
-The xfsprogs repository at:
+So, I'm not sure I agree with this. I'm explicitly *not* advertising
+MAP_DIRECT in ->vm_flags in my patches because we've seen applications
+try to use smaps as an API rather than a debug tool. The toctou race
+is fundamentally unsolvable unless you trust the agent that setup the
+mapping will not tear it down while you've observed the sync flag.
+Otherwise, if you do trust that the mapping will not be torn down then
+userspace can already just trust itself and not rely on the kernel to
+communicate the flag state.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the for-next branch is commit:
-
-b97ad96 xfs_repair: fix thread creation failure recovery
-
-New Commits:
-
-Andreas Gruenbacher (1):
-      [866d7fc] xfs_io: add seek consistency checks
-
-Darrick J. Wong (4):
-      [a749e25] xfs_db: reset metadump output flag
-      [6a07c22] xfs_db: free field list when failing out of fuzz
-      [ef209a9] xfs_db: make write/fuzz -c and -d work on non-crc filesystems
-      [592c101] xfs_db: bit fuzzing should read the right bit when flipping
-
-Jan Tulak (1):
-      [02c3e10] mkfs: add missing translation
-
-Jeff Mahoney (4):
-      [8d2666e] fsr: fix uninitialized fs usage after timeout
-      [53dc81d] xfs_repair: clear pthread_t when pthread_create fails
-      [e8ff627] xfs_repair: add prefetch trace calls to debug thread creation failures
-      [b97ad96] xfs_repair: fix thread creation failure recovery
-
-
-Code Diffstat:
-
- db/fuzz.c         | 21 ++++++++++++---------
- db/metadump.c     |  1 +
- db/write.c        |  7 +++++--
- fsr/xfs_fsr.c     | 13 +++++++------
- io/seek.c         | 13 ++++++++++++-
- mkfs/xfs_mkfs.c   |  2 +-
- repair/prefetch.c | 49 ++++++++++++++++++++++++++++++++++++++++++-------
- 7 files changed, 80 insertions(+), 26 deletions(-)
+I'm not against adding it, but the reasoning should be for debug and
+not an api guarantee that applications will rely on, and unfortunately
+I think we've seen that applications will rely on smaps no matter how
+we document it.
