@@ -1,111 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:4549 "EHLO
-        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753691AbdHWKaG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 06:30:06 -0400
-Subject: Re: [PATCH RFC 0/3] xfs: add customizable default values for error
- configuration
-References: <1503316462-16553-1-git-send-email-houtao1@huawei.com>
- <20170821225003.GR10621@dastard> <20170822165918.GW4796@magnolia>
-From: Hou Tao <houtao1@huawei.com>
-Message-ID: <6c090c0b-664d-e567-7409-dafce3a5a25d@huawei.com>
-Date: Wed, 23 Aug 2017 18:29:26 +0800
+Received: from mx2.suse.de ([195.135.220.15]:47766 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932305AbdHVJq5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 22 Aug 2017 05:46:57 -0400
+Date: Tue, 22 Aug 2017 11:46:55 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 11/13] dax, iomap: Add support for synchronous faults
+Message-ID: <20170822094655.GE4909@quack2.suse.cz>
+References: <20170817160815.30466-1-jack@suse.cz>
+ <20170817160815.30466-12-jack@suse.cz>
+ <20170821185830.GB26220@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20170822165918.GW4796@magnolia>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170821185830.GB26220@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, cmaiolino@redhat.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>
 
-Hi Darrick,
+On Mon 21-08-17 12:58:30, Ross Zwisler wrote:
+> On Thu, Aug 17, 2017 at 06:08:13PM +0200, Jan Kara wrote:
+> > Add a flag to iomap interface informing the caller that inode needs
+> > fdstasync(2) for returned extent to become persistent and use it in DAX
+> > fault code so that we map such extents only read only. We propagate the
+> > information that the page table entry has been inserted write-protected
+> > from dax_iomap_fault() with a new VM_FAULT_RO flag. Filesystem fault
+> > handler is then responsible for calling fdatasync(2) and updating page
+> > tables to map pfns read-write. dax_iomap_fault() also takes care of
+> > updating vmf->orig_pte to match the PTE that was inserted so that we can
+> > safely recheck that PTE did not change while write-enabling it.
+> 
+> This changelog needs a little love.  s/VM_FAULT_RO/VM_FAULT_NEEDDSYNC/, the
+> new path doesn't do the RO mapping, but instead just does the entire RW
+> mapping after the fdatasync is complete, the vmf->orig_pte manipulation went
+> away, etc.
 
-On 2017/8/23 0:59, Darrick J. Wong wrote:
-> On Tue, Aug 22, 2017 at 08:50:03AM +1000, Dave Chinner wrote:
->> On Mon, Aug 21, 2017 at 07:54:19PM +0800, Hou Tao wrote:
->>> Hi all,
->>>
->>> XFS has the configurable error handlers for each mounted device, but
->>> the default values of these configuration are static. It will be useful
->>> to make the default values customizable when there are many XFS filesystems
->>> and we need to shutdown the filesystem after getting any error.
->>
->> Nice! I can see the usefulness of this functionality - it's a piece
->> of the puzzle we are missing. I've had a quick look over the code,
->> and have a few high level questions that I can't answer from looking
->> at the code.
->>
->> Was there any reason you decided to put the default policy
->> management into the kernel rather than try to provide a mechanism to
->> allow userspace to manage it (e.g. via a udev event at mount time)?
->> We've still got to manage per filesystem specific settings from
->> userspace (e.g.  root volume might be different to data volumes), so
->> I'm interested to know if you have any ideas on how we can handle
->> that side of the problem, too?
->>
->>> The patches are simple. A sysfs tree is created under .../xfs/default_error
->>> and its hierarchies are the same with the tree under .../fs/xfs/<dev>/error.
->>>
->>> When the default value of any error configuration is being modified, the
->>> corresponding value of all mount points will be checked again the old
->>> default value. If they are the same, the value of the mount point will
->>> be updated to the new default value as well, else the value of the mount
->>> point will NOT be changed.
->>
->> Assuming we are going to put default policy into the kernel, this
->> notifier structure seems overly complex when compared to a single
->> structure that holds the default values and looking it up when a
->> specific mount error config holds a flag that says "use the
->> default".
->>
->> The "check the default flag and grab values" code could all be
->> hidden inside xfs_error_get_cfg() so propagation happens on demand.
->> This means all the mounts pick up changes to the default config
->> without needing to be chained to a notifier.
-> 
-> Agreed.
-> 
->> The "use defaults" flag could be cleared when a new value is set for
->> that error config, and potentionally we could reset it in the store
->> method if it matches the current default value.
-> 
-> I prefer letting userspace explicitly declare that it wants the default
-> value via:
-> 
-> echo default > /sys/fs/xfs/sda/error/metadata/EFUBAR/something
-> Say the the default of some attribute is currently 7 and the admin
-> deploys a script to set sda's value to 6 because they tested it and 6
-> was the value for them for sda.  Later they upgrade to a kernel where
-> the default is 6 -- they still want specifically 6, not "whatever the
-> default is".
-> (FWIW the sysfs errortag interface lets you set an explicit numeric
-> value for injection frequency or 'default' to take whatever we baked
-> into the code.)
-The explicit request of default value is a good idea, so even when the default
-value and the specific value is the same and the default value is updated, there
-is no need to update the specific value because it is NOT default.
+Yeah, fixed. Thanks for noticing.
 
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> >  fs/dax.c              | 31 +++++++++++++++++++++++++++++++
+> >  include/linux/iomap.h |  2 ++
+> >  include/linux/mm.h    |  6 +++++-
+> >  3 files changed, 38 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/dax.c b/fs/dax.c
+> > index bc040e654cc9..ca88fc356786 100644
+> > --- a/fs/dax.c
+> > +++ b/fs/dax.c
+> > @@ -1177,6 +1177,22 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf,
+> >  			goto error_finish_iomap;
+> >  		}
+> >  
+> > +		/*
+> > +		 * If we are doing synchronous page fault and inode needs fsync,
+> > +		 * we can insert PTE into page tables only after that happens.
+> > +		 * Skip insertion for now and return the pfn so that caller can
+> > +		 * insert it after fsync is done.
+> > +		 */
+> > +		if (write && (vma->vm_flags & VM_SYNC) &&
+> > +		    (iomap.flags & IOMAP_F_NEEDDSYNC)) {
+> 
+> Just a small nit, but I don't think we really need to check for 'write' here.
+> The fact that IOMAP_F_NEEDDSYNC is set tells us that we are doing a write.
+> 
+> 	if ((flags & IOMAP_WRITE) &&
+> 	    !jbd2_transaction_committed(EXT4_SB(inode->i_sb)->s_journal,
+> 					EXT4_I(inode)->i_datasync_tid))
+> 		iomap->flags |= IOMAP_F_NEEDDSYNC;
+> 
+> Ditto for the PMD case.
 
-> --D
-> 
->>
->> I might be missing something here (I frequently do, so please tell
->> me if I have!), but my initial thoughts are that we can do this in a
->> much simpler manner. What do you think, Tao?
->>
->> Cheers,
->>
->> Dave.
->> -- 
->> Dave Chinner
->> david@fromorbit.com
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
+OK, done.
 
+> With that one simplification and a cleaned up changelog, you can add:
+> 
+> Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+
+Thanks.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
