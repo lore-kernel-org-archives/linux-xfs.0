@@ -1,65 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:44956 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753021AbdHXU46 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 16:56:58 -0400
-Date: Thu, 24 Aug 2017 13:56:47 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/6] xfs_bmap: fix -n documentation in manpage
-Message-ID: <20170824205647.GJ4796@magnolia>
-References: <1503575272-28263-1-git-send-email-nborisov@suse.com>
- <5fb3c541-ceaf-409c-3536-96bf8805076c@sandeen.net>
+Received: from sandeen.net ([63.231.237.45]:41336 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751976AbdHVEFp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 22 Aug 2017 00:05:45 -0400
+Subject: Re: [PATCH RFC 0/3] xfs: add customizable default values for error
+ configuration
+References: <1503316462-16553-1-git-send-email-houtao1@huawei.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <4fdb34d1-e18d-3c99-4cae-e68bdf05f3b9@sandeen.net>
+Date: Mon, 21 Aug 2017 23:05:43 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5fb3c541-ceaf-409c-3536-96bf8805076c@sandeen.net>
+In-Reply-To: <1503316462-16553-1-git-send-email-houtao1@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Nikolay Borisov <nborisov@suse.com>, linux-xfs@vger.kernel.org, sandeen@redhat.com
+To: Hou Tao <houtao1@huawei.com>, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, cmaiolino@redhat.com
 
-On Thu, Aug 24, 2017 at 03:09:32PM -0500, Eric Sandeen wrote:
-> xfs_bmap's manpage mis-describes the behavior from the
-> -n option.  xfs_io's fiemap command references the xfs_bmap
-> manpage, and has the same problem:
+On 8/21/17 6:54 AM, Hou Tao wrote:
+> Hi all,
 > 
-> -n does not change the query batch size, it limits the number
-> of extents displayed.
+> XFS has the configurable error handlers for each mounted device, but
+> the default values of these configuration are static. It will be useful
+> to make the default values customizable when there are many XFS filesystems
+> and we need to shutdown the filesystem after getting any error.
 > 
-> This has been true for 15+ years, so change the documentation
-> to match reality.
+> The patches are simple. A sysfs tree is created under .../xfs/default_error
+> and its hierarchies are the same with the tree under .../fs/xfs/<dev>/error.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> When the default value of any error configuration is being modified, the
+> corresponding value of all mount points will be checked again the old
+> default value. If they are the same, the value of the mount point will
+> be updated to the new default value as well, else the value of the mount
+> point will NOT be changed.
+> 
+> Thoughts, reviews, flames appreciated.
 
-For patches 6 & 7,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+I recognize that it's an RFC, but if this goes in please also update
+Documentation/filesystems/xfs.txt which documents the current error
+handling tunables.
 
---D
+Thanks!
 
-> ---
-> 
-> diff --git a/man/man8/xfs_bmap.8 b/man/man8/xfs_bmap.8
-> index 098cfae..c725519 100644
-> --- a/man/man8/xfs_bmap.8
-> +++ b/man/man8/xfs_bmap.8
-> @@ -77,12 +77,11 @@ option is used.
->  .BI \-n " num_extents"
->  If this option is given,
->  .B xfs_bmap
-> -obtains the extent list of the file in groups of
-> +will display at most
->  .I num_extents
->  extents. In the absence of
->  .BR \-n ", " xfs_bmap
-> -queries the system for the number of extents in the file and uses that
-> -value to compute the group size.
-> +will display all extents in the file.
->  .TP
->  .B \-p
->  If this option is used,
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Eric
