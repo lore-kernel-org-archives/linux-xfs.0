@@ -1,86 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34910 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932109AbdHWRRu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 Aug 2017 13:17:50 -0400
-Subject: Re: [PATCH 3/4] fiemap: Simplify internals of fiemap_f.
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
- <1503501082-16983-1-git-send-email-nborisov@suse.com>
- <1503501082-16983-3-git-send-email-nborisov@suse.com>
- <17826470-3112-248e-2d89-21c6d532e2ef@sandeen.net>
-Message-ID: <bdccad2a-87c0-e90b-d2e2-794bec6e9e61@sandeen.net>
-Date: Wed, 23 Aug 2017 12:17:49 -0500
+Received: from mailrelay.collogia.de ([194.8.207.98]:19827 "HELO
+        mailrelay.collogia.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1751362AbdHVRVL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2017 13:21:11 -0400
+From: Markus Stockhausen <stockhausen@collogia.de>
+Subject: AW: another possible integer truncation in xfs
+Date: Tue, 22 Aug 2017 17:20:56 +0000
+Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD173010E0364FB@EXCHANGE.collogia.de>
+References: <12EF8D94C6F8734FB2FF37B9FBEDD173010E035CD2@EXCHANGE.collogia.de>
+ <20170821081603.GA6581@lst.de>,<20170822164134.GV4796@magnolia>
+In-Reply-To: <20170822164134.GV4796@magnolia>
+Content-Language: de-DE
+Content-Type: multipart/mixed;
+        boundary="----=_NextPartTM-000-4abe830b-0773-4213-affe-4d603bfbc226"
 MIME-Version: 1.0
-In-Reply-To: <17826470-3112-248e-2d89-21c6d532e2ef@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
+Cc: "pmenzel@molgen.mpg.de" <pmenzel@molgen.mpg.de>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
 
+This is a multi-part message in MIME format.
 
-On 8/23/17 10:51 AM, Eric Sandeen wrote:
-> On 8/23/17 10:11 AM, Nikolay Borisov wrote:
->> So far fiemap used some rather convoluted logic to terminate the iteration and
->> calculate the number of extents to pass to fm_extent_count. Simplify this by:
->>
->> * Get the whole number of extents that this file has and keep iterating until
->> we've printed all extents
->>
->> * Always use a hard-coded batch of 32 extents so we don't have to worry about
->> any extra calculations
-> 
-> As discussed on IRC, these types of changes:
-> 
->> -	if ((*cur_extent + 1) == max_extents)
->> +	if (*cur_extent == max_extents)
->>  		return;
-> 
-> are a functional change not described in the changelog above; they should be
-> in their own patch with their own changelog, explaining why the test was off by one,
-> and what this fixes.  This stuff is complex enough that it's not obvious to the
-> casual reader now, and certainly won't be a few years later.  ;)
+------=_NextPartTM-000-4abe830b-0773-4213-affe-4d603bfbc226
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Ok, so this is fixing the "-n" argument, to actually print $ARG extents
-instead of $ARG - 1 extents.
+> Von: Darrick J. Wong [darrick.wong@oracle.com]=0A=
+> Gesendet: Dienstag, 22. August 2017 18:41=0A=
+> An: Christoph Hellwig=0A=
+> Cc: Markus Stockhausen; pmenzel@molgen.mpg.de; linux-xfs@vger.kernel.org=
+=0A=
+> Betreff: Re: another possible integer truncation in xfs=0A=
+> =0A=
+> On Mon, Aug 21, 2017 at 10:16:03AM +0200, Christoph Hellwig wrote:=0A=
+> > On Mon, Aug 21, 2017 at 08:01:03AM +0000, Markus Stockhausen wrote:=0A=
+> > > Hi Christoph,=0A=
+> > >=0A=
+> > > out of curiosity I looked for other use cases of min_t in xfs. At lea=
+st=0A=
+> > > until 4.12 there is a similar constellation in xfs_dir2_leaf_readbuf:=
+=0A=
+> > >=0A=
+> > >   if (trim_map) {=0A=
+> > >     mip->map_blocks -=3D geo->fsbcount;=0A=
+> > >     /*=0A=
+> > >      * Loop to get rid of the extents for the=0A=
+> > >      * directory block.=0A=
+> > >      */=0A=
+> > >     for (i =3D geo->fsbcount; i > 0; ) {=0A=
+> > >       j =3D min_t(int, map->br_blockcount, i);=0A=
+> > >       map->br_blockcount -=3D j;=0A=
+> > >       map->br_startblock +=3D j;=0A=
+> > >       map->br_startoff +=3D j;=0A=
+> > >=0A=
+> > > The loop could go havoc if map->br_blockcount is larger than=0A=
+> > > 2G. If you think it could classify for stable feel free to add it too=
+.=0A=
+> =0A=
+> "2G"... are you concerned about an integer overflow if map->br_blockcount=
+=0A=
+> is a value larger than 2147483647, or if *map itself represents an=0A=
+> extent longer than 2GiB?  (I'm pretty sure you're talking about the=0A=
+> first scenario, but the units here are ambiguous.)=0A=
+> =0A=
+> I /think/ the correct answer here is that file extent records can't ever=
+=0A=
+> be longer than 2^20 blocks so this min_t ought to be fine.=0A=
+=0A=
+Hi Darrick,=0A=
+=0A=
+It was just the same educated guess as the first spotting. 64 bit=0A=
+variables minified by their lower 32 bits. Thus truncation "could" =0A=
+lead to strange side effects. If it cannot happen - sorry for the =0A=
+noise.=0A=
+=0A=
+Markus=0A=
+=0A=
+> --D=0A=
+> =0A=
+> > I don't think it has a chance to be larger in practice, but we should=
+=0A=
+> > fix it anyway.  I'll prepare a patch.=0A=
+> >=0A=
+> > Thanks for spotting this!=0A=
+> > --=0A=
+------=_NextPartTM-000-4abe830b-0773-4213-affe-4d603bfbc226
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="InterScan_Disclaimer.txt"
 
-instead of today:
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
 
-# xfs_io -c "fiemap -n 4" holefile
-holefile:
-	0: [0..7]: hole
-	1: [8..15]: 172560120..172560127
-	2: [16..23]: hole
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
 
-now it does more expected:
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
 
-# io/xfs_io -c "fiemap -n 4" holefile
-holefile:
-	0: [0..7]: hole
-	1: [8..15]: 172560120..172560127
-	2: [16..23]: hole
-	3: [24..31]: 172560136..172560143
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
 
-so it probably just needs a doc fix along w/ this behavior fix.
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
 
-(note, bmap behaves the same way, except properly):
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
 
-# xfs_io -c "bmap -n 4" holefile
-holefile:
-	0: [0..7]: hole
-	1: [8..15]: 172560120..172560127
-	2: [16..23]: hole
-	3: [24..31]: 172560136..172560143
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
 
-Thanks,
--Eric
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
 
- 
-> Thanks,
-> -Eric
->
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+President of the supervisory board:
+Hans Kristian Langva
+
+Registry office: district court Cologne
+Register number: HRB 52 497
+
+****************************************************************************
+
+------=_NextPartTM-000-4abe830b-0773-4213-affe-4d603bfbc226--
