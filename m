@@ -1,226 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37221 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754136AbdHWPL2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 Aug 2017 11:11:28 -0400
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: [PATCH 4/4] fiemap: Add support for ranged query
-Date: Wed, 23 Aug 2017 18:11:22 +0300
-Message-Id: <1503501082-16983-4-git-send-email-nborisov@suse.com>
-In-Reply-To: <1503501082-16983-1-git-send-email-nborisov@suse.com>
-References: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
- <1503501082-16983-1-git-send-email-nborisov@suse.com>
+Received: from mx1.redhat.com ([209.132.183.28]:42520 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754565AbdHVHGQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 22 Aug 2017 03:06:16 -0400
+Date: Tue, 22 Aug 2017 15:06:14 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] xfs: test xfs_db fuzz command verbs
+Message-ID: <20170822070614.GG31418@eguan.usersys.redhat.com>
+References: <20170819154645.GD4794@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170819154645.GD4794@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net
-Cc: linux-xfs@vger.kernel.org, Nikolay Borisov <nborisov@suse.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-Introduce two optional arguments which can be used to perform fiemap queries
-for a particular range in a file. Those are 'offset' and 'length' they can be
-used like so:
+Hi Darrick,
 
-xfs_io -c "fiemap 0 12k" - query for extents covering the first 12kb of the
-target file.
+On Sat, Aug 19, 2017 at 08:46:45AM -0700, Darrick J. Wong wrote:
+> Ensure that the fuzz command does what it says.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now that such queries are supposed also modify the logic for printing the last
-hole to only cover the range which is asked. So if we ask for 0-10kb and the
-range 8k-12k is actually a whole, then limit the last whole only to this range:
+I applied your patch "[PATCH] xfs_db: bit fuzzing should read the right
+bit when flipping" on top of xfsprogs for-next branch (which contains
+commit ef209a960d82 "xfs_db: make write/fuzz -c and -d work on non-crc
+filesystems") and tested this patch. All worked fine on CRC enabled XFS,
+but test failed with non-CRC xfs as it missed lines like:
 
-So for a file which has the following contents :
+Allowing fuzz of corrupted data with good CRC
 
-|-----hole-------|-------data--------|-----hole-----|
-0                8k                  12k            16k
+I did the following modifications and test passed with both CRC and
+non-CRC XFS, if you think it's OK then I can fold the changes to your
+patch and no need for a resend :)
 
-The output would be:
+Thanks,
+Eryu
 
-xfs_io -c "fiemap -v 0 13k" test-dir/fragmented-file
-test-dir/fragmented-file:
- EXT: FILE-OFFSET      BLOCK-RANGE          TOTAL FLAGS
-   0: [0..15]:         hole                    16
-   1: [16..23]:        897847296..897847303     8   0x0
-   2: [24..25]:        hole                     2
-
-Furthermore in cases where the queried range is covered by a whole then the
-existing while() loop would have never executed, due to num_exents = 0. Fix this
-by converting it to a do {} while ()
-
-_
-
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
----
- io/fiemap.c       | 75 +++++++++++++++++++++++++++++++++++++++----------------
- man/man8/xfs_io.8 |  6 +++--
- 2 files changed, 57 insertions(+), 24 deletions(-)
-
-diff --git a/io/fiemap.c b/io/fiemap.c
-index ef54b265ab91..2e03a81dc57a 100644
---- a/io/fiemap.c
-+++ b/io/fiemap.c
-@@ -27,7 +27,7 @@
+diff --git a/tests/xfs/058 b/tests/xfs/058
+index 4a39942..32ceb0d 100755
+--- a/tests/xfs/058
++++ b/tests/xfs/058
+@@ -50,21 +50,31 @@ _require_xfs_db_command "fuzz"
+ rm -f "$seqres.full"
  
- static cmdinfo_t fiemap_cmd;
- static const __u64 blocksize = 512;
--static int max_extents = 0;
-+static int max_extents = -1;
- 
- static void
- fiemap_help(void)
-@@ -38,6 +38,7 @@ fiemap_help(void)
- "\n"
- " Example:\n"
- " 'fiemap -v' - tabular format verbose map\n"
-+" 'fiemap 0 4k' - print fiemap extents for 0-4k range\n"
- "\n"
- " fiemap prints the map of disk blocks used by the current file.\n"
- " The map lists each extent used by the file, as well as regions in the\n"
-@@ -231,9 +232,14 @@ fiemap_f(
- 	int		boff_w = 16;
- 	int		tot_w = 5;	/* 5 since its just one number */
- 	int		flg_w = 5;
--	__u64		last_logical = 0;
-+	__u64		start_offset = 0, last_logical = 0;
-+	__u64		len = -1;
-+	__u64		end_offset = 0, llast;
-+	size_t		fsblocksize, fssectsize;
- 	struct stat	st;
- 
-+	init_cvtnum(&fsblocksize, &fssectsize);
+ echo "Format"
+-_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >> "$seqres.full"
++source $tmp.mkfs
 +
- 	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
- 		switch (c) {
- 		case 'a':
-@@ -253,7 +259,41 @@ fiemap_f(
- 		}
- 	}
++do_xfs_db()
++{
++       local cmd=$1
++       if [ $_fs_has_crcs -eq 0 ]; then
++               echo "Allowing $cmd of corrupted data with good CRC"
++       fi
++       _scratch_xfs_db -x -c 'sb 0' -c "$*"
++}
  
--	ret = get_extent_count(file->fd, last_logical, -1);
-+
-+	if (optind < argc) {
-+	        off64_t start = cvtnum(fsblocksize, fssectsize, argv[optind]);
-+	        if (start_offset < 0) {
-+	                printf("non-numeric offset argument -- %s\n", argv[optind]);
-+			exitcode = 1;
-+	                return 0;
-+	        }
-+	        last_logical = start_offset = start;
-+	        optind++;
-+	}
-+
-+	if (optind < argc) {
-+	        off64_t length = cvtnum(fsblocksize, fssectsize, argv[optind]);
-+	        if (length < 0) {
-+	                printf("non-numeric len argument -- %s\n", argv[optind]);
-+			exitcode = 1;
-+	                return 0;
-+	        }
-+	        len = length;
-+		end_offset = (start_offset + len) / blocksize;
-+	}
-+
-+	memset(&st, 0, sizeof(st));
-+	if (fstat(file->fd, &st)) {
-+		fprintf(stderr, "%s: fstat failed: %s\n", progname,
-+			strerror(errno));
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	if (!end_offset)
-+		end_offset = (start_offset + st.st_size) / blocksize;
-+
-+	ret = get_extent_count(file->fd, last_logical, len);
- 	if (ret < 0) {
- 		exitcode = 1;
- 		return 0;
-@@ -272,13 +312,12 @@ fiemap_f(
+ # Make sure that each fuzz verb works.  For the firstbit/middlebit/lastbit
+ # tests, we depend on 'ones' having set the field to all ones.
+ field="fdblocks"
+-_scratch_xfs_db -x -c 'sb 0' -c "write -d ${field} 0"
++do_xfs_db write -d ${field} 0
+ SCRATCH_XFS_LIST_FUZZ_VERBS= _scratch_xfs_list_fuzz_verbs | while read verb; do
+        test "${verb}" = "random" && continue
+        echo "Test verb ${verb}"
+-       _scratch_xfs_db -x -c 'sb 0' -c "fuzz -d ${field} ${verb}"
++       do_xfs_db fuzz -d ${field} ${verb}
+ done
  
- 	printf("%s:\n", file->name);
- 
--	while (!last && num_extents) {
--
-+	do {
- 		/* Query a batch worth of extents */
- 		memset(fiemap, 0, map_size);
- 		fiemap->fm_flags = fiemap_flags;
- 		fiemap->fm_start = last_logical;
--		fiemap->fm_length = -1LL;
-+		fiemap->fm_length = len - (last_logical - start_offset);
- 		fiemap->fm_extent_count = EXTENT_BATCH;
- 
- 		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-@@ -320,35 +359,27 @@ fiemap_f(
- 		}
- 
- 		num_extents -= fiemap->fm_mapped_extents;
--	}
-+	} while (!last && num_extents);
- 
- 	if (cur_extent == max_extents)
- 		goto out;
- 
--	memset(&st, 0, sizeof(st));
--	if (fstat(file->fd, &st)) {
--		fprintf(stderr, "%s: fstat failed: %s\n", progname,
--			strerror(errno));
--		free(fiemap);
--		exitcode = 1;
--		return 0;
--	}
--
--	if (cur_extent && last_logical < st.st_size) {
-+	llast = last_logical / blocksize;
-+	if (cur_extent && llast < end_offset) {
- 		char	lbuf[32];
-+		__u64 difference = end_offset - llast;
- 
- 		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:",
--			 last_logical / blocksize, (st.st_size / blocksize) - 1);
-+			 llast, llast + difference - 1);
- 		if (vflag) {
- 			printf("%4d: %-*s %-*s %*llu\n", cur_extent,
- 			       foff_w, lbuf, boff_w, _("hole"), tot_w,
--			       (st.st_size - last_logical) / blocksize);
-+			       difference);
- 		} else {
- 			printf("\t%d: %s %s", cur_extent, lbuf,
- 			       _("hole"));
- 			if (lflag)
--				printf(_(" %llu blocks\n"),
--				       (st.st_size - last_logical) / blocksize);
-+				printf(_(" %llu blocks\n"), len / blocksize);
- 			else
- 				printf("\n");
- 		}
-@@ -367,7 +398,7 @@ fiemap_init(void)
- 	fiemap_cmd.argmin = 0;
- 	fiemap_cmd.argmax = -1;
- 	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
--	fiemap_cmd.args = _("[-alv] [-n nx]");
-+	fiemap_cmd.args = _("[-alv] [-n nx] [offset [lenght]]");
- 	fiemap_cmd.oneline = _("print block mapping for a file");
- 	fiemap_cmd.help = fiemap_help;
- 
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 273b9c54c52d..9b57aed1d8d6 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -295,11 +295,13 @@ Prints the block mapping for the current open file. Refer to the
- .BR xfs_bmap (8)
- manual page for complete documentation.
- .TP
--.BI "fiemap [ \-alv ] [ \-n " nx " ]"
-+.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
- Prints the block mapping for the current open file using the fiemap
- ioctl.  Options behave as described in the
- .BR xfs_bmap (8)
--manual page.
-+manual page. Optionally, this command also supports passing the start offset
-+from where to begin the fiemap and the length of that region. It also supports
-+the standard unit suffixes.
- .TP
- .BI "fsmap [ \-d | \-l | \-r ] [ \-m | \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
- Prints the mapping of disk blocks used by the filesystem hosting the current
--- 
-2.7.4
+ echo "Test verb random"
+ before="$(_scratch_xfs_get_metadata_field "${field}" 'sb 0')"
+-_scratch_xfs_db -x -c 'sb 0' -c "fuzz -d ${field} random" >> $seqres.full
++do_xfs_db fuzz -d ${field} random >> $seqres.full
+ after="$(_scratch_xfs_get_metadata_field "${field}" 'sb 0')"
+ test "${before}" != "${after}" && echo "${field} changed"
 
