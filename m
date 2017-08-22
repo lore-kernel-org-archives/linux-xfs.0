@@ -1,68 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr001msb.fastweb.it ([85.18.95.85]:34658 "EHLO
-        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751317AbdHVGLt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2017 02:11:49 -0400
-Subject: Re: =?UTF-8?Q?xfs=5Fmetadump=20as=20a=20backup=20tool?=
+Received: from sandeen.net ([63.231.237.45]:41414 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751643AbdHVWnp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 22 Aug 2017 18:43:45 -0400
+Subject: Re: XFS Bug Report
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <CAFzqJcahyU7F5CJcYKTPabWBVCnufwSMS4QcJijHVVux-Ndv+Q@mail.gmail.com>
+ <ad807068-5de9-3200-68ef-de9e42401a5a@sandeen.net>
+Message-ID: <1b00bb62-6c46-fbb5-f127-e1157c1a83fc@sandeen.net>
+Date: Tue, 22 Aug 2017 17:43:43 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date: Tue, 22 Aug 2017 08:11:46 +0200
-From: Gionatan Danti <g.danti@assyoma.it>
-In-Reply-To: <be09cfb0-39ab-9645-468b-79d6a81aaec8@sandeen.net>
-References: <c8f366449091c278310acb5fbb13a11f@assyoma.it>
- <be09cfb0-39ab-9645-468b-79d6a81aaec8@sandeen.net>
-Message-ID: <78a3bcf1cac9fbf47c809cc03a48640b@assyoma.it>
+In-Reply-To: <ad807068-5de9-3200-68ef-de9e42401a5a@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org, g.danti@assyoma.it
+To: Ruoxin Jiang <rj2394@columbia.edu>, linux-xfs@vger.kernel.org
+Cc: Suman Jana <sumanj@gmail.com>
 
-Il 21-08-2017 22:11 Eric Sandeen ha scritto:
-> Short answer is "No," because:
-> xfs_metadump is only a diagnostic tool.  It is not tested or supported
-> for any other use.
+
+
+On 8/22/17 5:33 PM, Eric Sandeen wrote:
+> On 8/22/17 4:10 PM, Ruoxin Jiang wrote:
+>> Hello,
+>>
+>> We are researchers from Columbia University, New York. As part of our
+>> current research we have run into some issues using xfs filesystem.
+>> For example, we encountered a case where the setuid bit of a modified
+>> executable was not removed as desired.
 > 
-> If nothing else, on a normal live filesystem your metadata and data is
-> constantly changing; if you replay old metadata over a filesystem,
-> you'll end up pointing to file data blocks that are incorrect.
+> Thanks for the reports.
 > 
-> If you really truly have only statically-allocated files from start to
-> finish, then maybe...
+> For case 1:
 > 
-> But more than anything else, the tool was not designed or tested for
-> anything other than developer diagnostics.
+>> * In xfs, function `xfs_file_aio_write_checks` calls `file_remove_privs` which
+>> removes special file priviledges when the executable is written to or truncated.
+>>
+>> * If an DIO write is not aligned to device logical sector size, the syscall
+>> fails with  EINVAL` before `xfs_file_aio_write_checks` is called. Thus the setuid
+>> bit will not be removed from the modified executable.
 > 
-> For disaster recovery, having periodic metadata snapshots might come
-> in handy from a forensic POV, but I would not rely on this as a
-> primary part of your normal backup/recovery scheme.
+> If the write did not happen, why should the setuid bit be removed?
+> The write failed and the file's contents were not modified.  It seems
+> like xfs's behavior makes sense; is there a posix specification that
+> indicates the behavior should be different?
 
-Hi Eric,
-thank for your reply. From xfs_metadump man page is read that the tool 
-should be only used as a debugging aid, but hey - maybe someone used it 
-in more clever ways ;)
+In fact, POSIX says:
 
-> If you've already done a proper backup wit tar/rsync/(xfsdump?) then
-> you have everything you need to restore the filesystem without
-> resorting to xfs_metadump cleverness, right?
+"/Upon successful completion/ where nbyte is greater than 0, write() shall mark for update the st_ctime and st_mtime fields of the file, and if the file is a regular file, the S_ISUID and S_ISGID bits of the file mode may be cleared."
 
-Sure, but restoring metadata on a corrupted, but healty, volume would be 
-much faster than restoring both data and metadata. As a first-stop 
-recovery, maybe it was worth a try. But if nobody is doing that, it 
-should not be a good idea...
+(emphasis mine ... in your case, the write did not successfully complete, and 0 bytes were written)
 
-> No, it's not possible to preallocate space on xfs without marking it
-> as unwritten.
-
-Understood.
-Thanks Eric.
-
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
-
+-Eric
