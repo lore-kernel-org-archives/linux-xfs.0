@@ -1,40 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20484 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750908AbdHaUtY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 16:49:24 -0400
-Date: Thu, 31 Aug 2017 13:49:18 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] fsmap: fix documentation of FMR_OF_LAST
-Message-ID: <20170831204918.GA7404@magnolia>
+Received: from mga04.intel.com ([192.55.52.120]:30137 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751739AbdHWXz1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 23 Aug 2017 19:55:27 -0400
+Subject: [PATCH v6 5/5] fs, fcntl: add F_MAP_DIRECT
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 23 Aug 2017 16:49:02 -0700
+Message-ID: <150353214202.5039.15970856232454713994.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: linux-api@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: akpm@linux-foundation.org
+Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-api@vger.kernel.org, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-The FMR_OF_LAST flag is set on the last fsmap record being returned for
-the dataset requested, contrary to what the header file says.  Fix the
-docs to reflect the behavior of all fsmap implementations.
+A common pattern for granting a privilege to an unprivileged process is
+to pass it an established file descriptor over a unix domain socket.
+This enables fine grained access to the MAP_DIRECT mechanism instead of
+requiring the mapping process have CAP_LINUX_IMMUTABLE.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- include/uapi/linux/fsmap.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/fcntl.c                 |   15 +++++++++++++++
+ include/linux/fs.h         |    5 +++--
+ include/uapi/linux/fcntl.h |    5 +++++
+ mm/mmap.c                  |    3 ++-
+ 4 files changed, 25 insertions(+), 3 deletions(-)
 
-diff --git a/include/uapi/linux/fsmap.h b/include/uapi/linux/fsmap.h
-index 7e8e5f0b..e5213c3 100644
---- a/include/uapi/linux/fsmap.h
-+++ b/include/uapi/linux/fsmap.h
-@@ -96,7 +96,7 @@ fsmap_advance(
- #define FMR_OF_EXTENT_MAP	0x4	/* segment = extent map */
- #define FMR_OF_SHARED		0x8	/* segment = shared with another file */
- #define FMR_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
--#define FMR_OF_LAST		0x20	/* segment is the last in the FS */
-+#define FMR_OF_LAST		0x20	/* segment is the last in the dataset */
+diff --git a/fs/fcntl.c b/fs/fcntl.c
+index 3b01b646e528..f2375c406e6f 100644
+--- a/fs/fcntl.c
++++ b/fs/fcntl.c
+@@ -318,6 +318,18 @@ static long fcntl_rw_hint(struct file *file, unsigned int cmd,
+ 	}
+ }
  
- /* Each FS gets to define its own special owner codes. */
- #define FMR_OWNER(type, code)	(((__u64)type << 32) | \
++static int fcntl_map_direct(struct file *filp)
++{
++	if (!capable(CAP_LINUX_IMMUTABLE))
++		return -EACCES;
++
++	spin_lock(&filp->f_lock);
++	filp->f_map_direct = 1;
++	spin_unlock(&filp->f_lock);
++
++	return 0;
++}
++
+ static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
+ 		struct file *filp)
+ {
+@@ -425,6 +437,9 @@ static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
+ 	case F_SET_FILE_RW_HINT:
+ 		err = fcntl_rw_hint(filp, cmd, arg);
+ 		break;
++	case F_MAP_DIRECT:
++		err = fcntl_map_direct(filp);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index db42da9f98c4..ec2e1d6bf22c 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -855,11 +855,12 @@ struct file {
+ 	const struct file_operations	*f_op;
+ 
+ 	/*
+-	 * Protects f_ep_links, f_flags.
++	 * Protects f_ep_links, f_flags, f_write_hint, and f_map_direct.
+ 	 * Must not be taken from IRQ context.
+ 	 */
+ 	spinlock_t		f_lock;
+-	enum rw_hint		f_write_hint;
++	enum rw_hint		f_write_hint:3;
++	unsigned int		f_map_direct:1;
+ 	atomic_long_t		f_count;
+ 	unsigned int 		f_flags;
+ 	fmode_t			f_mode;
+diff --git a/include/uapi/linux/fcntl.h b/include/uapi/linux/fcntl.h
+index ec69d55bcec7..2a57a503174e 100644
+--- a/include/uapi/linux/fcntl.h
++++ b/include/uapi/linux/fcntl.h
+@@ -53,6 +53,11 @@
+ #define F_SET_FILE_RW_HINT	(F_LINUX_SPECIFIC_BASE + 14)
+ 
+ /*
++ * Enable MAP_DIRECT on the file without CAP_LINUX_IMMUTABLE
++ */
++#define F_MAP_DIRECT		(F_LINUX_SPECIFIC_BASE + 15)
++
++/*
+  * Valid hint values for F_{GET,SET}_RW_HINT. 0 is "not set", or can be
+  * used to clear any hints previously set.
+  */
+diff --git a/mm/mmap.c b/mm/mmap.c
+index 32417b2a668c..cf5e0cb7d0e3 100644
+--- a/mm/mmap.c
++++ b/mm/mmap.c
+@@ -1399,7 +1399,8 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
+ 			if (flags & MAP_DIRECT) {
+ 				if (!(prot & PROT_WRITE))
+ 					return -EACCES;
+-				if (!capable(CAP_LINUX_IMMUTABLE))
++				if (!file->f_map_direct
++						&& !capable(CAP_LINUX_IMMUTABLE))
+ 					return -EACCES;
+ 			}
+ 
+
