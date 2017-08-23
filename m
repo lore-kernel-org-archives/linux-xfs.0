@@ -1,34 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:36144 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753600AbdHUXCh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2017 19:02:37 -0400
-Date: Tue, 22 Aug 2017 09:02:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Support for data CRC
-Message-ID: <20170821230232.GS10621@dastard>
-References: <20170821190414.long2535xppcxvvd@breakpoint.cc>
+Received: from bombadil.infradead.org ([65.50.211.133]:53429 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932396AbdHWShP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 14:37:15 -0400
+Date: Wed, 23 Aug 2017 11:37:14 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 13/13] ext4: Support for synchronous DAX faults
+Message-ID: <20170823183714.GH13778@infradead.org>
+References: <20170817160815.30466-1-jack@suse.cz>
+ <20170817160815.30466-14-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170821190414.long2535xppcxvvd@breakpoint.cc>
+In-Reply-To: <20170817160815.30466-14-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boazh@netapp.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org
 
-On Mon, Aug 21, 2017 at 09:04:15PM +0200, Sebastian Andrzej Siewior wrote:
-> Hi,
-> 
-> my understanding is that only metadata is protected by CRC in the new
-> on-disk format. Are there any plans to also protect data?
+> +	pfn_t pfn;
+>  
+>  	if (write) {
+>  		sb_start_pagefault(sb);
+> @@ -287,16 +288,39 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
+>  		down_read(&EXT4_I(inode)->i_mmap_sem);
+>  		handle = ext4_journal_start_sb(sb, EXT4_HT_WRITE_PAGE,
+>  					       EXT4_DATA_TRANS_BLOCKS(sb));
+> +		if (IS_ERR(handle)) {
+> +			up_read(&EXT4_I(inode)->i_mmap_sem);
+> +			sb_end_pagefault(sb);
+> +			return VM_FAULT_SIGBUS;
+> +		}
+>  	} else {
+>  		down_read(&EXT4_I(inode)->i_mmap_sem);
+>  	}
+> -	if (!IS_ERR(handle))
+> -		result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops, NULL);
+> -	else
+> -		result = VM_FAULT_SIGBUS;
+> +	result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops, &pfn);
 
-Not in XFS.
+Maybe split the error handling refactor into a simple prep patch to
+make this one more readable?
 
-Cheers,
+> +		/* Write fault but PFN mapped only RO? */
+> +		if (result & VM_FAULT_NEEDDSYNC) {
+> +			int err;
+> +			loff_t start = ((loff_t)vmf->pgoff) << PAGE_SHIFT;
+> +			size_t len = 0;
+> +
+> +			if (pe_size == PE_SIZE_PTE)
+> +				len = PAGE_SIZE;
+> +#ifdef CONFIG_FS_DAX_PMD
+> +			else if (pe_size == PE_SIZE_PMD)
+> +				len = HPAGE_PMD_SIZE;
+> +#endif
+> +			else
+> +				WARN_ON_ONCE(1);
+> +			err = vfs_fsync_range(vmf->vma->vm_file, start,
+> +					      start + len - 1, 1);
+> +			if (err)
+> +				result = VM_FAULT_SIGBUS;
+> +			else
+> +				result = dax_insert_pfn_mkwrite(vmf, pe_size,
+> +								pfn);
+> +		}
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I think this needs to become a helper exported from the DAX code,
+way too much magic inside the file system as-is.
