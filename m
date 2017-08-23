@@ -1,48 +1,173 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:36803 "EHLO
-        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751615AbdHXRmK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 13:42:10 -0400
-Received: by mail-oi0-f51.google.com with SMTP id r9so1392335oie.3
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2017 10:42:09 -0700 (PDT)
+Received: from userp1040.oracle.com ([156.151.31.81]:47767 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750715AbdHWWDU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 18:03:20 -0400
+Date: Wed, 23 Aug 2017 15:03:14 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/5] common/populate: enable xfs quota accounting
+Message-ID: <20170823220314.GG4794@magnolia>
+References: <150067465981.30639.14801416171688538711.stgit@magnolia>
+ <150067469221.30639.16711306489951233808.stgit@magnolia>
+ <20170804022200.GC1991@eguan.usersys.redhat.com>
+ <20170808212216.GD4474@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20170824165838.GB3121@infradead.org>
-References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150353211985.5039.4333061601382775843.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170824165838.GB3121@infradead.org>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 24 Aug 2017 10:42:09 -0700
-Message-ID: <CAPcyv4gd1qgtP7DjfRnXDebhYb1_4jnuM3HTL-ma2snz7FMAOg@mail.gmail.com>
-Subject: Re: [PATCH v6 1/5] vfs: add flags parameter to ->mmap() in 'struct file_operations'
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170808212216.GD4474@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, David Airlie <airlied@linux.ie>, Linux API <linux-api@vger.kernel.org>, Takashi Iwai <tiwai@suse.com>, Maling list - DRI developers <dri-devel@lists.freedesktop.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Daniel Vetter <daniel.vetter@intel.com>, Linux MM <linux-mm@kvack.org>
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Aug 24, 2017 at 9:58 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Wed, Aug 23, 2017 at 04:48:40PM -0700, Dan Williams wrote:
->> We are running running short of vma->vm_flags. We can avoid needing a
->> new VM_* flag in some cases if the original @flags submitted to mmap(2)
->> is made available to the ->mmap() 'struct file_operations'
->> implementation. For example, the proposed addition of MAP_DIRECT can be
->> implemented without taking up a new vm_flags bit. Another motivation to
->> avoid vm_flags is that they appear in /proc/$pid/smaps, and we have seen
->> software that tries to dangerously (TOCTOU) read smaps to infer the
->> behavior of a virtual address range.
->>
->> This conversion was performed by the following semantic patch. There
->> were a few manual edits for oddities like proc_reg_mmap.
->>
->> Thanks to Julia for helping me with coccinelle iteration to cover cases
->> where the mmap routine is defined in a separate file from the 'struct
->> file_operations' instance that consumes it.
->
-> How are we going to check that an instance actually supports any
-> of those flags?
+On Tue, Aug 08, 2017 at 02:22:17PM -0700, Darrick J. Wong wrote:
+> On Fri, Aug 04, 2017 at 10:22:00AM +0800, Eryu Guan wrote:
+> > On Fri, Jul 21, 2017 at 03:04:52PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > When we're creating a populated xfs image, turn on quotas so that we can
+> > > fuzz those fields too.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  common/populate |   50 +++++++++++++++++++++++++++++++++++++++++++++++++-
+> > >  1 file changed, 49 insertions(+), 1 deletion(-)
+> > > 
+> > > 
+> > > diff --git a/common/populate b/common/populate
+> > > index 498151f..b77c508 100644
+> > > --- a/common/populate
+> > > +++ b/common/populate
+> > > @@ -21,6 +21,7 @@
+> > >  #  Contact information: Silicon Graphics, Inc., 1500 Crittenden Lane,
+> > >  #  Mountain View, CA 94043, USA, or: http://www.sgi.com
+> > >  #-----------------------------------------------------------------------
+> > > +. ./common/quota
+> > >  
+> > >  _require_populate_commands() {
+> > >  	_require_xfs_io_command "falloc"
+> > > @@ -94,6 +95,47 @@ __populate_fill_fs() {
+> > >  	done
+> > >  }
+> > >  
+> > > +# For XFS, force on all the quota options if quota is enabled
+> > > +# and the user didn't feed us noquota.
+> > > +_populate_xfs_qmount_option()
+> > > +{
+> > > +	# User explicitly told us not to quota
+> > > +	if echo "${MOUNT_OPTIONS}" | grep -q 'noquota'; then
+> > > +		return
+> > > +	fi
+> > > +
+> > > +	# Don't bother if we can't turn on quotas
+> > > +	if [ ! -f /proc/fs/xfs/xqmstat ]; then
+> > > +		# No quota support
+> > > +		return
+> > > +	elif [ "${USE_EXTERNAL}" = "yes" ] && [ ! -z "${SCRATCH_RTDEV}" ]; then
+> > > +		# Quotas not supported on rt filesystems
+> > > +		return
+> > > +	elif [ -z "${XFS_QUOTA_PROG}" ]; then
+> > > +		# xfs quota tools not installed
+> > > +		return
+> > > +	fi
+> > > +
+> > > +	# Turn on all the quotas
+> > > +	if xfs_info "${TEST_DIR}" | grep -q 'crc=1'; then
+> > > +		# v5 filesystems can have group & project quotas
+> > > +		quota="usrquota,grpquota,prjquota"
+> > > +	else
+> > > +		# v4 filesystems cannot mix group & project quotas
+> > > +		quota="usrquota,grpquota"
+> > > +	fi
+> > > +
+> > > +	# Inject our quota mount options
+> > > +	if echo "${MOUNT_OPTIONS}" | grep -q "${quota}"; then
+> > > +		return
+> > > +	elif echo "${MOUNT_OPTIONS}" | egrep -q '(quota|noenforce)'; then
+> > > +		_qmount_option "${quota}"
+> > > +	else
+> > > +		export MOUNT_OPTIONS="$MOUNT_OPTIONS -o ${quota}"
+> > > +		echo "MOUNT_OPTIONS = $MOUNT_OPTIONS" >>$seqres.full
+> > > +	fi
+> > > +}
+> > > +
+> > >  # Populate an XFS on the scratch device with (we hope) all known
+> > >  # types of metadata block
+> > >  _scratch_xfs_populate() {
+> > > @@ -106,6 +148,7 @@ _scratch_xfs_populate() {
+> > >  		esac
+> > >  	done
+> > >  
+> > > +	_populate_xfs_qmount_option
+> > 
+> > Sorry, another question just poped up..
+> > 
+> > This enables quota and modifies MOUNT_OPTIONS unconditionally and
+> > implicitly, I suspect users of _scratch_populate_cached() or
+> > _scratch_xfs_populate() may be bitten by this implicit change.
+> 
+> I suppose we could be more explicit about the fact that we
+> unconditionally enable all quota types and change MOUNT_OPTIONS, though
+> I did go run all the _scratch_xfs_populate tests and they all seemed
+> fine.
+> 
+> (Well, as fine as we can get considering that most of them are fuzz
+> tests that cause all manners of other crazy behavior.)
+> 
+> > Would it be better if there's a argument to control this quota
+> > enablement and default to disable quota? Just like the "nofill"
+> > argument, introduce a new "quota" argument? So existing callers of
+> > _scratch_populate_cached() are not affected by this change, and tests
+> > want quota can enable it explicitly.
+> 
+> Hmm.  The way I look at it, though, _scratch_xfs_populate is supposed to
+> create all types of filesystem metadata, which includes quota files, so
+> we have to enable the quota options or we're not actually doing what the
+> documentation says it's supposed to be doing:
+> 
+> # Populate an XFS on the scratch device with (we hope) all known
+> # types of metadata block
 
-In patch 3 I validate the flags by introducing an
-"mmap_supported_mask" field to 'struct file_operations'. It will be
-zero by default for almost all implementations and zero means "support
-the legacy mmap flags".
+Ping?
+
+--D
+
+> 
+> The reason there's a 'nofill' option is that, having created an fs with
+> all known types of metadata, we can optionally use up any remaining free
+> space, but doing so isn't necessary to create all known types of
+> metadata block.
+> 
+> --D
+> 
+> > 
+> > Thanks,
+> > Eryu
+> > 
+> > >  	_scratch_mount
+> > >  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+> > >  	dblksz="$(xfs_info "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
+> > > @@ -720,7 +763,12 @@ _scratch_populate_cached() {
+> > >  		test -n "${SCRATCH_LOGDEV}" && rm -f "${POPULATE_METADUMP}"
+> > >  		;;
+> > >  	"xfs")
+> > > -		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}";;
+> > > +		extra_descr="LOGDEV ${SCRATCH_LOGDEV} USE_EXTERNAL ${USE_EXTERNAL} RTDEV ${SCRATCH_RTDEV}"
+> > > +		_populate_xfs_qmount_option
+> > > +		if echo "${MOUNT_OPTIONS}" | grep -q 'usrquota'; then
+> > > +			extra_descr="${extra_descr} QUOTAS"
+> > > +		fi
+> > > +		;;
+> > >  	*)
+> > >  		extra_descr="";;
+> > >  	esac
+> > > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
