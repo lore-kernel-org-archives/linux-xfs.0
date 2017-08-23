@@ -1,55 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:4523 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752234AbdHULtd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2017 07:49:33 -0400
-From: Hou Tao <houtao1@huawei.com>
-Subject: [PATCH RFC 0/3] xfs: add customizable default values for error configuration
-Date: Mon, 21 Aug 2017 19:54:19 +0800
-Message-ID: <1503316462-16553-1-git-send-email-houtao1@huawei.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:49864 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932458AbdHWSnt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 14:43:49 -0400
+Date: Wed, 23 Aug 2017 11:43:49 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 10/13] mm: Wire up MAP_SYNC
+Message-ID: <20170823184349.GA12660@infradead.org>
+References: <20170817160815.30466-1-jack@suse.cz>
+ <20170817160815.30466-11-jack@suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170817160815.30466-11-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, cmaiolino@redhat.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>
 
-Hi all,
+On Thu, Aug 17, 2017 at 06:08:12PM +0200, Jan Kara wrote:
+> Pretty crude for now...
+> 
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/ext4/file.c                  | 2 ++
+>  include/linux/mm.h              | 1 +
+>  include/linux/mman.h            | 3 ++-
+>  include/uapi/asm-generic/mman.h | 1 +
+>  mm/mmap.c                       | 5 +++++
+>  5 files changed, 11 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+> index f84bb29e941e..850037e140d7 100644
+> --- a/fs/ext4/file.c
+> +++ b/fs/ext4/file.c
+> @@ -340,6 +340,8 @@ static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
+>  		vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
+>  	} else {
+>  		vma->vm_ops = &ext4_file_vm_ops;
+> +		if (vma->vm_flags & VM_SYNC)
+> +			return -EOPNOTSUPP;
+>  	}
 
-XFS has the configurable error handlers for each mounted device, but
-the default values of these configuration are static. It will be useful
-to make the default values customizable when there are many XFS filesystems
-and we need to shutdown the filesystem after getting any error.
+So each mmap instance would need to reject the flag explicitly?
 
-The patches are simple. A sysfs tree is created under .../xfs/default_error
-and its hierarchies are the same with the tree under .../fs/xfs/<dev>/error.
-
-When the default value of any error configuration is being modified, the
-corresponding value of all mount points will be checked again the old
-default value. If they are the same, the value of the mount point will
-be updated to the new default value as well, else the value of the mount
-point will NOT be changed.
-
-Thoughts, reviews, flames appreciated.
-
-Tao
-
-Hou Tao (3):
-  xfs: prepare for the customizable default values of error
-    configuration
-  xfs: add sysfs files for default values of error configuration
-  xfs: make the default values of error configuration customizable and
-    workable
-
- fs/xfs/xfs_buf_item.c |   6 +-
- fs/xfs/xfs_mount.c    |   9 +-
- fs/xfs/xfs_mount.h    |  37 +++-
- fs/xfs/xfs_super.c    |  11 +-
- fs/xfs/xfs_sysfs.c    | 569 +++++++++++++++++++++++++++++++++++++++++---------
- fs/xfs/xfs_sysfs.h    |   9 +-
- 6 files changed, 518 insertions(+), 123 deletions(-)
-
--- 
-2.5.0
-
+Or do I misunderstand this VM_SYNC flag?
