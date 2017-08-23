@@ -1,143 +1,531 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24735 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752154AbdHJBnu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2017 21:43:50 -0400
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7A1hndl012201
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:49 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7A1hmfa017701
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:49 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7A1hmF9017090
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2017 01:43:48 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [RFC PATCH 04/13] xfs: add parent pointer support to attribute code
-Date: Wed,  9 Aug 2017 18:41:24 -0700
-Message-Id: <1502329293-4091-5-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
-References: <1502329293-4091-1-git-send-email-allison.henderson@oracle.com>
+Received: from mx2.suse.de ([195.135.220.15]:50968 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753386AbdHWIHr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 23 Aug 2017 04:07:47 -0400
+Subject: Re: [PATCH] fiemap: Refactor fiemap + implement range parameters
+References: <1502452529-19437-1-git-send-email-nborisov@suse.com>
+ <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <8bad738d-306f-8138-967d-22475707009b@suse.com>
+Date: Wed, 23 Aug 2017 11:07:44 +0300
+MIME-Version: 1.0
+In-Reply-To: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>
+To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
 
-From: Mark Tinguely <tinguely@sgi.com>
 
-Add the new parent attribute type. XFS_ATTR_PARENT is used only for
-parent pointer entries; it uses reserved blocks like XFS_ATTR_ROOT.
 
-[dchinner: forward ported and cleaned up]
-[achender: rebased]
+On 22.08.2017 22:11, Eric Sandeen wrote:
+> On 8/11/17 6:55 AM, Nikolay Borisov wrote:
+>> fiemap's code was rather complicated for the simple task it did so this
+>> patch aims to rectify the situation.
+> 
+> Thanks for looking into this.
+> 
+> Yes, it is complicated.  It's funny; e2fsprogs' filefrag is horribly
+> complex too.  What is it about extent mapping? ;)
+> 
+>> The main changes are:
+>>
+>> * Add a start_offset, len parameters, this allows to specify a range of the
+>> file for which we want information, if those parameters are omitted the old
+>> behavior is retained i.e. we get information for the whole file.
+>>
+>> * We now always allocate as many struct fiemap_extent structs as necessary
+>> to hold the information for the passed range (or the whole file)
+> 
+> Hm, what if a file has a huge number of extents?  It could, in theory
+> be hundreds of thousands, resulting in a multi-megabyte allocation.
+> Is that a good tradeoff?
+> 
+> Darrick reminds me that xfs_getbmap does:
+> 
+>         out = kmem_zalloc_large(bmv->bmv_count * sizeof(struct getbmapx), 0);
+>         if (!out)
+>                 return -ENOMEM;
+> 
+> and until very recently, the FIEMAP ioctl went through xfs_getbmap, so I think
+> this introduces a new chance of failure on older kernels due to -ENOMEM.  For
+> that reason, I think it's probably necessary to do the queries in smaller,
+> chunks, I'm afraid.
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
-:100644 100644 de7b9bd... 646d41b... M	fs/xfs/libxfs/xfs_attr.c
-:100644 100644 3771edc... 5f94c84... M	fs/xfs/libxfs/xfs_da_format.h
-:100644 100644 5d5a5e2... 3031a09... M	fs/xfs/xfs_attr.h
- fs/xfs/libxfs/xfs_attr.c      |  9 +++++----
- fs/xfs/libxfs/xfs_da_format.h | 12 ++++++++----
- fs/xfs/xfs_attr.h             |  2 ++
- 3 files changed, 15 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index de7b9bd..646d41b 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -216,7 +216,7 @@ xfs_attr_set(
- 	struct xfs_defer_ops	dfops;
- 	struct xfs_trans_res	tres;
- 	xfs_fsblock_t		firstblock;
--	int			rsvd = (flags & ATTR_ROOT) != 0;
-+	bool			rsvd = (flags & (ATTR_ROOT | ATTR_PARENT)) != 0;
- 	int			error, err2, local;
- 
- 	XFS_STATS_INC(mp, xs_attr_set);
-@@ -395,6 +395,7 @@ xfs_attr_remove(
- 	struct xfs_defer_ops	dfops;
- 	xfs_fsblock_t		firstblock;
- 	int			error;
-+	int			rsvd = 0;
- 
- 	XFS_STATS_INC(mp, xs_attr_remove);
- 
-@@ -423,10 +424,10 @@ xfs_attr_remove(
- 	 * Root fork attributes can use reserved data blocks for this
- 	 * operation if necessary
- 	 */
-+	if (flags & (ATTR_ROOT | ATTR_PARENT))
-+		rsvd = XFS_TRANS_RESERVE;
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_attrrm,
--			XFS_ATTRRM_SPACE_RES(mp), 0,
--			(flags & ATTR_ROOT) ? XFS_TRANS_RESERVE : 0,
--			&args.trans);
-+				XFS_ATTRRM_SPACE_RES(mp), 0, rsvd, &args.trans);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 3771edc..5f94c84 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -758,24 +758,28 @@ struct xfs_attr3_icleaf_hdr {
- #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
- #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
- #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
-+#define XFS_ATTR_PARENT_BIT	3	/* parent pointer secure attrs */
- #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
- #define XFS_ATTR_LOCAL		(1 << XFS_ATTR_LOCAL_BIT)
- #define XFS_ATTR_ROOT		(1 << XFS_ATTR_ROOT_BIT)
- #define XFS_ATTR_SECURE		(1 << XFS_ATTR_SECURE_BIT)
-+#define XFS_ATTR_PARENT		(1 << XFS_ATTR_PARENT_BIT)
- #define XFS_ATTR_INCOMPLETE	(1 << XFS_ATTR_INCOMPLETE_BIT)
- 
- /*
-  * Conversion macros for converting namespace bits from argument flags
-  * to ondisk flags.
-  */
--#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE)
--#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
-+#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE | XFS_ATTR_PARENT)
-+#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
- #define XFS_ATTR_NSP_ONDISK(flags)	((flags) & XFS_ATTR_NSP_ONDISK_MASK)
- #define XFS_ATTR_NSP_ARGS(flags)	((flags) & XFS_ATTR_NSP_ARGS_MASK)
- #define XFS_ATTR_NSP_ARGS_TO_ONDISK(x)	(((x) & ATTR_ROOT ? XFS_ATTR_ROOT : 0) |\
--					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0))
-+					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0) | \
-+					 ((x) & ATTR_PARENT ? XFS_ATTR_PARENT : 0))
- #define XFS_ATTR_NSP_ONDISK_TO_ARGS(x)	(((x) & XFS_ATTR_ROOT ? ATTR_ROOT : 0) |\
--					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0))
-+					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0) | \
-+					 ((x) & XFS_ATTR_PARENT ? ATTR_PARENT : 0))
- 
- /*
-  * Alignment for namelist and valuelist entries (since they are mixed
-diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-index 5d5a5e2..3031a09 100644
---- a/fs/xfs/xfs_attr.h
-+++ b/fs/xfs/xfs_attr.h
-@@ -44,6 +44,7 @@ struct xfs_attr_list_context;
- #define ATTR_SECURE	0x0008	/* use attrs in security namespace */
- #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
- #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
-+#define ATTR_PARENT	0x0040	/*  use attrs in parent namespace */
- 
- #define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
- #define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
-@@ -55,6 +56,7 @@ struct xfs_attr_list_context;
- 	{ ATTR_SECURE,		"SECURE" }, \
- 	{ ATTR_CREATE,		"CREATE" }, \
- 	{ ATTR_REPLACE,		"REPLACE" }, \
-+	{ ATTR_PARENT,		"PARENT" }, \
- 	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
- 	{ ATTR_KERNOVAL,	"KERNOVAL" }
- 
--- 
-2.7.4
+Okay I will do it in batches then.
 
+> 
+>> * Made max_extents, blocksize global variables. They are never modified apart
+>> from the initilization of the program.
+>>
+>> * Eliminated the outer while loop, now that we allocate enough extent to
+>> perform a single fiemap ioctl call there is no need for it.
+>>
+>> * As a result the -n parameter works correctly for -n 1
+>>
+>> * Also changed the way the last hole is being calculated, so far every time
+>> the outter while loop finished the extenet from last_logical .. file size would
+>> be output as a hole. This was not always true
+> 
+> Ok, so that's a lot of changes all wrapped into one.  Could you please
+> resubmit this in more reviewable, bisectable chunks?
+> 
+> At a minimum, the change to add new arguments should be a patch
+> after any preparatory refactoring.  The change to preallocate the entire
+> extent array should stand on its own as well, but given my above concern,
+> I'm not sure we should make that change.  It seems like the
+> "last hole" change is a bugfix that should stand on its own too, yes?
+
+Sure. Actually now that I think more about the last_hole. It does make
+sense in the case where we don't have the range arguments. Because what
+happens is that we print all the extents of the file and anything which
+goes beyond the last extents is supposed to be a hole. However, with the
+introduction of the range parameter this no longer holds. I will pay
+attention to this detail when splitting up the patches.
+
+> 
+> Other comments below.
+> 
+>> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+>> ---
+>>
+>> Hello, 
+>>
+>> Here is more or less a major cleanup of the fiemap code. I've tested it with a 
+>> file with with the following layout HDHDHDHDHDHD (H - hole, D-data) and 
+>> varying permutation of the arguments and so far everthing seems to work as 
+>> expected. The biggest benefit I see is that the code is easier to follow now.
+> 
+> Have you run it through the xfstests which test fiemap, specifically
+> generic/094 and generic/225?
+> 
+> (those two do seem to pass here, FWIW)
+> 
+>>
+>>
+>>  io/fiemap.c       | 187 +++++++++++++++++++++++++++++-------------------------
+>>  man/man8/xfs_io.8 |   5 +-
+>>  2 files changed, 104 insertions(+), 88 deletions(-)
+>>
+>> diff --git a/io/fiemap.c b/io/fiemap.c
+>> index 75e882057362..5659f16d767d 100644
+>> --- a/io/fiemap.c
+>> +++ b/io/fiemap.c
+>> @@ -24,6 +24,8 @@
+>>  #include "io.h"
+>>  
+>>  static cmdinfo_t fiemap_cmd;
+>> +static const __u64 blocksize = 512;
+>> +static int max_extents = 0;
+>>  
+>>  static void
+>>  fiemap_help(void)
+>> @@ -34,6 +36,7 @@ fiemap_help(void)
+>>  "\n"
+>>  " Example:\n"
+>>  " 'fiemap -v' - tabular format verbose map\n"
+>> +" 'fiemap 0 4k' - print fiemap extents for 0-4k range\n"
+>>  "\n"
+>>  " fiemap prints the map of disk blocks used by the current file.\n"
+>>  " The map lists each extent used by the file, as well as regions in the\n"
+>> @@ -52,12 +55,10 @@ fiemap_help(void)
+>>  static void
+>>  print_verbose(
+>>  	struct fiemap_extent	*extent,
+>> -	int			blocksize,
+>>  	int			foff_w,
+>>  	int			boff_w,
+>>  	int			tot_w,
+>>  	int			flg_w,
+>> -	int			max_extents,
+>>  	int			*cur_extent,
+>>  	__u64			*last_logical)
+>>  {
+>> @@ -85,6 +86,7 @@ print_verbose(
+>>  			flg_w, _("FLAGS"));
+>>  	}
+>>  
+>> +
+> 
+> gratuitous newline ;)
+> 
+>>  	if (lstart != llast) {
+>>  		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", llast,
+>>  			 lstart - 1ULL);
+>> @@ -94,7 +96,7 @@ print_verbose(
+>>  		memset(lbuf, 0, sizeof(lbuf));
+>>  	}
+>>  
+>> -	if ((*cur_extent + 1) == max_extents)
+>> +	if (max_extents && *cur_extent == max_extents)
+> 
+> is this the "last hole" change?
+
+So this is not the last hole, but rather the  -n1 actually working. So
+it's a fix for the limit argument.
+
+> 
+>>  		return;
+>>  
+>>  	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
+>> @@ -112,8 +114,6 @@ static void
+>>  print_plain(
+>>  	struct fiemap_extent	*extent,
+>>  	int			lflag,
+>> -	int			blocksize,
+>> -	int			max_extents,
+>>  	int			*cur_extent,
+>>  	__u64			*last_logical)
+>>  {
+>> @@ -137,7 +137,7 @@ print_plain(
+>>  		(*cur_extent)++;
+>>  	}
+>>  
+>> -	if ((*cur_extent + 1) == max_extents)
+>> +	if (max_extents && *cur_extent == max_extents)
+>>  		return;
+>>  
+>>  	printf("\t%d: [%llu..%llu]: %llu..%llu", *cur_extent,
+>> @@ -159,13 +159,12 @@ print_plain(
+>>  static void
+>>  calc_print_format(
+>>  	struct fiemap		*fiemap,
+>> -	__u64			blocksize,
+>>  	int			*foff_w,
+>>  	int			*boff_w,
+>>  	int			*tot_w,
+>>  	int			*flg_w)
+>>  {
+>> -	int 			i;
+>> +	int			i;
+>>  	char			lbuf[32];
+>>  	char			bbuf[32];
+>>  	__u64			logical;
+>> @@ -193,15 +192,28 @@ calc_print_format(
+>>  	}
+>>  }
+>>  
+>> +static ssize_t
+> 
+> isn't fm_mapped_extents a u32?
+> 
+> Is this ssize_t so that you can return the -1?  I suppose a comment about
+> it might be good.
+
+I will add a comment.
+
+> 
+>> +get_extent_num(int fd, __u64 startoffset, __u64 len)
+> 
+> could you rename this get_extent_count()?  "num" sounds like
+> an ordinal (i.e. "this is extent number 12") vs a count
+> ("This range contains 12 extents")
+> 
+>> +{
+>> +	struct fiemap fiemap = { 0 } ;
+>> +	fiemap.fm_start = startoffset;
+>> +	fiemap.fm_length = len;
+>> +	if (ioctl(fd, FS_IOC_FIEMAP, (unsigned long)&fiemap) < 0) {
+>> +		fprintf(stderr, _("%s: Failed to query fiemap extent count.\n"),
+>> +			progname);
+>> +		return -1;
+>> +	}
+>> +
+>> +	return fiemap.fm_mapped_extents;
+>> +}
+>> +
+>>  int
+>>  fiemap_f(
+>>  	int		argc,
+>>  	char		**argv)
+>>  {
+>>  	struct fiemap	*fiemap;
+>> -	int		max_extents = 0;
+>> -	int		num_extents = 32;
+>> -	int		last = 0;
+>> +	int		num_extents;
+>>  	int		lflag = 0;
+>>  	int		vflag = 0;
+>>  	int		fiemap_flags = FIEMAP_FLAG_SYNC;
+>> @@ -210,24 +222,29 @@ fiemap_f(
+>>  	int		map_size;
+>>  	int		ret;
+>>  	int		cur_extent = 0;
+>> -	int		foff_w = 16;	/* 16 just for a good minimum range */
+>> +	int		foff_w = 16; /* 16 just for a good minimum range */
+> 
+> Dumb nitpick, but I don't see a reason to remove the tab.  Lined
+> up comments look nice and the line was < 80chars... *shrug*
+
+That's some sort of braino, will be gone in next repost.
+
+> 
+>>  	int		boff_w = 16;
+>>  	int		tot_w = 5;	/* 5 since its just one number */
+>>  	int		flg_w = 5;
+>> -	__u64		blocksize = 512;
+>>  	__u64		last_logical = 0;
+>> -	struct stat	st;
+>> +	__u64		len = -1LL;
+>> +	size_t		fsblocksize, fssectsize;
+>> +	off64_t		start_offset = 0;
+>> +	__u64		end_offset;
+>> +	__u64		llast;
+>> +	bool		last_extent = false;
+>> +
+>> +	init_cvtnum(&fsblocksize, &fssectsize);
+> 
+> <this makes me want to make cvtnum blocksize & sector size globals, and 
+> run init_cvtnum only when we switch files in xfs_io, but that's
+> a patch for a different day> :)
+> 
+>>  	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+>>  		switch (c) {
+>>  		case 'a':
+>>  			fiemap_flags |= FIEMAP_FLAG_XATTR;
+>>  			break;
+>> -		case 'l':
+>> -			lflag = 1;
+>> -			break;
+>>  		case 'n':
+>>  			max_extents = atoi(optarg);
+>> +		case 'l':
+>> +			lflag = 1;
+> 
+> Why reorder this?  Seems gratuitous.
+
+Mistake on my part.
+
+> 
+>>  			break;
+>>  		case 'v':
+>>  			vflag++;
+>> @@ -237,8 +254,35 @@ fiemap_f(
+>>  		}
+>>  	}
+>>  
+>> -	if (max_extents)
+>> -		num_extents = min(num_extents, max_extents);
+>> +	if (optind < argc) {
+>> +		start_offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
+>> +		if (start_offset < 0) {
+>> +			printf("non-numeric offset argument -- %s\n", argv[optind]);
+>> +			return 0;
+>> +		}
+>> +		last_logical = start_offset;
+> 
+> Hm, why do we have both last_logical and start_offset at this point?
+> Is there a need to hold this value in 2 different variables?
+> 
+> (the print functions can modify last_logical, but I think we're done
+> with start_offset by then, right?)
+
+Seems you are right.
+
+> 
+>> +		optind++;
+>> +	}
+>> +
+>> +	if (optind < argc) {
+>> +		off64_t length = cvtnum(fsblocksize, fssectsize, argv[optind]);
+>> +		if (length < 0) {
+>> +			printf("non-numeric len argument -- %s\n", argv[optind]);
+>> +			return 0;
+>> +		}
+>> +		len = length;
+>> +	}
+>> +
+>> +
+>> +	end_offset = (start_offset + len) / blocksize;
+>> +
+>> +	ret = get_extent_num(file->fd, last_logical, len);
+>> +	if (ret < 0) {
+>> +		exitcode = 1;
+>> +		return 0;
+>> +	}
+>> +	num_extents = ret;
+>> +
+>>  	map_size = sizeof(struct fiemap) +
+>>  		(num_extents * sizeof(struct fiemap_extent));
+>>  	fiemap = malloc(map_size);
+>> @@ -251,92 +295,63 @@ fiemap_f(
+>>  
+>>  	printf("%s:\n", file->name);
+>>  
+>> -	while (!last && ((cur_extent + 1) != max_extents)) {
+>> -		if (max_extents)
+>> -			num_extents = min(num_extents,
+>> -					  max_extents - (cur_extent + 1));
+>> -
+>> -		memset(fiemap, 0, map_size);
+>> -		fiemap->fm_flags = fiemap_flags;
+>> -		fiemap->fm_start = last_logical;
+>> -		fiemap->fm_length = -1LL;
+>> -		fiemap->fm_extent_count = num_extents;
+>> -
+>> -		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+>> -		if (ret < 0) {
+>> -			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
+>> -				"%s\n", progname, file->name, strerror(errno));
+>> -			free(fiemap);
+>> -			exitcode = 1;
+>> -			return 0;
+>> -		}
+>> +	memset(fiemap, 0, map_size);
+>> +	fiemap->fm_flags = fiemap_flags;
+>> +	fiemap->fm_start = last_logical;
+>> +	fiemap->fm_length = len;
+>> +	fiemap->fm_extent_count = num_extents;
+>>  
+>> -		/* No more extents to map, exit */
+>> -		if (!fiemap->fm_mapped_extents)
+>> -			break;
+>> +	ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+>> +	if (ret < 0) {
+>> +		fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
+>> +			"%s\n", progname, file->name, strerror(errno));
+>> +		free(fiemap);
+>> +		exitcode = 1;
+>> +		return 0;
+>> +	}
+>> +
+>> +	for (i = 0; i < fiemap->fm_mapped_extents; i++) {
+>> +		struct fiemap_extent	*extent;
+>>  
+>> -		for (i = 0; i < fiemap->fm_mapped_extents; i++) {
+>> -			struct fiemap_extent	*extent;
+>> -
+>> -			extent = &fiemap->fm_extents[i];
+>> -			if (vflag) {
+>> -				if (cur_extent == 0) {
+>> -					calc_print_format(fiemap, blocksize,
+>> -							  &foff_w, &boff_w,
+>> -							  &tot_w, &flg_w);
+>> -				}
+>> -
+>> -				print_verbose(extent, blocksize, foff_w,
+>> -					      boff_w, tot_w, flg_w,
+>> -					      max_extents, &cur_extent,
+>> -					      &last_logical);
+>> -			} else
+>> -				print_plain(extent, lflag, blocksize,
+>> -					    max_extents, &cur_extent,
+>> -					    &last_logical);
+>> -
+>> -			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
+>> -				last = 1;
+>> -				break;
+>> +		extent = &fiemap->fm_extents[i];
+>> +		if (vflag) {
+>> +			if (cur_extent == 0) {
+>> +				calc_print_format(fiemap, &foff_w, &boff_w,
+>> +						  &tot_w, &flg_w);
+>>  			}
+>>  
+>> -			if ((cur_extent + 1) == max_extents)
+>> -				break;
+>> -		}
+>> -	}
+>> +			print_verbose(extent, foff_w, boff_w, tot_w, flg_w,
+>> +				      &cur_extent, &last_logical);
+>> +		} else
+>> +			print_plain(extent, lflag, &cur_extent, &last_logical);
+>>  
+>> -	if ((cur_extent + 1) == max_extents)
+>> -		goto out;
+>> +		if (max_extents && cur_extent == max_extents)
+>> +			goto out;
+>> +
+>> +		if (extent->fe_flags & FIEMAP_EXTENT_LAST)
+>> +			last_extent = true;
+>>  
+>> -	memset(&st, 0, sizeof(st));
+>> -	if (fstat(file->fd, &st)) {
+>> -		fprintf(stderr, "%s: fstat failed: %s\n", progname,
+>> -			strerror(errno));
+>> -		free(fiemap);
+>> -		exitcode = 1;
+>> -		return 0;
+>>  	}
+>>  
+>> -	if (cur_extent && last_logical < st.st_size) {
+>> -		char	lbuf[32];
+>> +	llast = last_logical / blocksize;
+>> +	if (!last_extent && llast < end_offset) {
+>> +		char lbuf[32];
+>> +		__u64 difference = end_offset - llast;
+>> +		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", llast, llast + difference);
+>>  
+>> -		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:",
+>> -			 last_logical / blocksize, (st.st_size / blocksize) - 1);
+>>  		if (vflag) {
+>>  			printf("%4d: %-*s %-*s %*llu\n", cur_extent,
+>>  			       foff_w, lbuf, boff_w, _("hole"), tot_w,
+>> -			       (st.st_size - last_logical) / blocksize);
+>> +			       difference);
+>>  		} else {
+>>  			printf("\t%d: %s %s", cur_extent, lbuf,
+>>  			       _("hole"));
+>>  			if (lflag)
+>> -				printf(_(" %llu blocks\n"),
+>> -				       (st.st_size - last_logical) / blocksize);
+>> +				printf(_(" %llu blocks\n"), len / blocksize);
+>>  			else
+>>  				printf("\n");
+>>  		}
+>>  	}
+>> -
+>>  out:
+>>  	free(fiemap);
+>>  	return 0;
+>> @@ -350,7 +365,7 @@ fiemap_init(void)
+>>  	fiemap_cmd.argmin = 0;
+>>  	fiemap_cmd.argmax = -1;
+>>  	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+>> -	fiemap_cmd.args = _("[-alv] [-n nx]");
+>> +	fiemap_cmd.args = _("[-alv] [-n nx] [start offset [len]]");
+> 
+> should probably be "start_offset" so it doesn't look like 2 args.
+> Or maybe better, just "offset" to match the manpage.
+
+Ack
+
+> 
+>>  	fiemap_cmd.oneline = _("print block mapping for a file");
+>>  	fiemap_cmd.help = fiemap_help;
+>>  
+>> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+>> index 273b9c54c52d..125db9181851 100644
+>> --- a/man/man8/xfs_io.8
+>> +++ b/man/man8/xfs_io.8
+>> @@ -295,11 +295,12 @@ Prints the block mapping for the current open file. Refer to the
+>>  .BR xfs_bmap (8)
+>>  manual page for complete documentation.
+>>  .TP
+>> -.BI "fiemap [ \-alv ] [ \-n " nx " ]"
+>> +.BI "fiemap [ \-alv ] [ \-n " nx " ] [ " offset " [ " len " ]]"
+>>  Prints the block mapping for the current open file using the fiemap
+>>  ioctl.  Options behave as described in the
+>>  .BR xfs_bmap (8)
+>> -manual page.
+>> +manual page. Optionally, this command also supports passing the start offset 
+>> +from where to begin the fiemap and the length of that region.
+> 
+> Perhaps mention that offset & len can take the standard unit suffixes.
+
+Ack
+> 
+> -Eric
+> 
+>>  .TP
+>>  .BI "fsmap [ \-d | \-l | \-r ] [ \-m | \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
+>>  Prints the mapping of disk blocks used by the filesystem hosting the current
+>>
+> 
+
+
+Thanks for the review, I will be incorporating it and reposting.
