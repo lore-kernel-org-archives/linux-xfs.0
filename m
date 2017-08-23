@@ -1,129 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35488 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752650AbdHXLr6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Aug 2017 07:47:58 -0400
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: [PATCH 5/6] fiemap: Factor out common code used for printing holes
-Date: Thu, 24 Aug 2017 14:47:51 +0300
-Message-Id: <1503575272-28263-6-git-send-email-nborisov@suse.com>
-In-Reply-To: <1503575272-28263-1-git-send-email-nborisov@suse.com>
-References: <1503575272-28263-1-git-send-email-nborisov@suse.com>
+Received: from sandeen.net ([63.231.237.45]:44032 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932458AbdHWTMF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 23 Aug 2017 15:12:05 -0400
+Subject: Re: [PATCH 4/4] fiemap: Add support for ranged query
+References: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
+ <1503501082-16983-1-git-send-email-nborisov@suse.com>
+ <1503501082-16983-4-git-send-email-nborisov@suse.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <9ad449bc-96ff-8b48-275d-1ec49f54cb50@sandeen.net>
+Date: Wed, 23 Aug 2017 14:12:04 -0500
+MIME-Version: 1.0
+In-Reply-To: <1503501082-16983-4-git-send-email-nborisov@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: sandeen@redhat.com, Nikolay Borisov <nborisov@suse.com>
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org
 
-The code responsible for printing holes is scattered across 3 places:
-plain print function, verbose print function and in the block handling EOF hole.
-Introduce a new function factoring out the common code and replace the 3 sites
-where the code is used with it. This reduces duplication and makes it apparent
-when we are printing holes. No functional changes.
+On 8/23/17 10:11 AM, Nikolay Borisov wrote:
+> Introduce two optional arguments which can be used to perform fiemap queries
+> for a particular range in a file. Those are 'offset' and 'length' they can be
+> used like so:
+> 
+> xfs_io -c "fiemap 0 12k" - query for extents covering the first 12kb of the
+> target file.
+> 
+> Now that such queries are supposed also modify the logic for printing the last
+> hole to only cover the range which is asked. So if we ask for 0-10kb and the
+> range 8k-12k is actually a whole, then limit the last whole only to this range:
+> 
+> So for a file which has the following contents :
+> 
+> |-----hole-------|-------data--------|-----hole-----|
+> 0                8k                  12k            16k
+> 
+> The output would be:
+> 
+> xfs_io -c "fiemap -v 0 13k" test-dir/fragmented-file
+> test-dir/fragmented-file:
+>  EXT: FILE-OFFSET      BLOCK-RANGE          TOTAL FLAGS
+>    0: [0..15]:         hole                    16
+>    1: [16..23]:        897847296..897847303     8   0x0
+>    2: [24..25]:        hole                     2
+> 
+> Furthermore in cases where the queried range is covered by a whole then the
+> existing while() loop would have never executed, due to num_exents = 0. Fix this
+> by converting it to a do {} while ()
+> 
+> _
+> 
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> ---
+>  io/fiemap.c       | 75 +++++++++++++++++++++++++++++++++++++++----------------
+>  man/man8/xfs_io.8 |  6 +++--
+>  2 files changed, 57 insertions(+), 24 deletions(-)
+> 
+> diff --git a/io/fiemap.c b/io/fiemap.c
+> index ef54b265ab91..2e03a81dc57a 100644
+> --- a/io/fiemap.c
+> +++ b/io/fiemap.c
+> @@ -27,7 +27,7 @@
+>  
+>  static cmdinfo_t fiemap_cmd;
+>  static const __u64 blocksize = 512;
+> -static int max_extents = 0;
+> +static int max_extents = -1;
+>  
+>  static void
+>  fiemap_help(void)
+> @@ -38,6 +38,7 @@ fiemap_help(void)
+>  "\n"
+>  " Example:\n"
+>  " 'fiemap -v' - tabular format verbose map\n"
+> +" 'fiemap 0 4k' - print fiemap extents for 0-4k range\n"
+>  "\n"
+>  " fiemap prints the map of disk blocks used by the current file.\n"
+>  " The map lists each extent used by the file, as well as regions in the\n"
+> @@ -231,9 +232,14 @@ fiemap_f(
+>  	int		boff_w = 16;
+>  	int		tot_w = 5;	/* 5 since its just one number */
+>  	int		flg_w = 5;
+> -	__u64		last_logical = 0;
+> +	__u64		start_offset = 0, last_logical = 0;
+> +	__u64		len = -1;
+> +	__u64		end_offset = 0, llast;
+> +	size_t		fsblocksize, fssectsize;
+>  	struct stat	st;
+>  
+> +	init_cvtnum(&fsblocksize, &fssectsize);
+> +
+>  	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+>  		switch (c) {
+>  		case 'a':
+> @@ -253,7 +259,41 @@ fiemap_f(
+>  		}
+>  	}
+>  
+> -	ret = get_extent_count(file->fd, last_logical, -1);
+> +
+> +	if (optind < argc) {
+> +	        off64_t start = cvtnum(fsblocksize, fssectsize, argv[optind]);
+> +	        if (start_offset < 0) {
 
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
----
- io/fiemap.c | 66 +++++++++++++++++++++++++++++++++----------------------------
- 1 file changed, 36 insertions(+), 30 deletions(-)
+This is testing the wrong var.
 
-diff --git a/io/fiemap.c b/io/fiemap.c
-index 0f04b874fd5f..44a64870d711 100644
---- a/io/fiemap.c
-+++ b/io/fiemap.c
-@@ -52,6 +52,36 @@ fiemap_help(void)
- "\n"));
- }
- 
-+static void
-+print_hole(
-+	   int		foff_w,
-+	   int		boff_w,
-+	   int		tot_w,
-+	   int		cur_extent,
-+	   int		lflag,
-+	   bool		plain,
-+	   __u64	llast,
-+	   __u64	lstart)
-+{
-+	   char		lbuf[48];
-+
-+	   if (plain) {
-+		printf("\t%d: [%llu..%llu]: hole", cur_extent,
-+		       llast, lstart - 1ULL);
-+		if (lflag)
-+			printf(_(" %llu blocks\n"), lstart - llast);
-+		else
-+			printf("\n");
-+	   } else {
-+		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", llast,
-+			 lstart - 1ULL);
-+		printf("%4d: %-*s %-*s %*llu\n", cur_extent, foff_w, lbuf,
-+		       boff_w, _("hole"), tot_w, lstart - llast);
-+	   }
-+
-+
-+}
-+
- static int
- print_verbose(
- 	struct fiemap_extent	*extent,
-@@ -87,11 +117,8 @@ print_verbose(
- 	}
- 
- 	if (lstart != llast) {
--		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", llast,
--			 lstart - 1ULL);
--		printf("%4d: %-*s %-*s %*llu\n", cur_extent, foff_w, lbuf,
--		       boff_w, _("hole"), tot_w, lstart - llast);
--		memset(lbuf, 0, sizeof(lbuf));
-+		print_hole(foff_w, boff_w, tot_w, cur_extent, 0, false, llast,
-+			   lstart);
- 		cur_extent++;
- 	}
- 
-@@ -126,12 +153,7 @@ print_plain(
- 	block = BTOBBT(extent->fe_physical);
- 
- 	if (lstart != llast) {
--		printf("\t%d: [%llu..%llu]: hole", cur_extent,
--		       llast, lstart - 1ULL);
--		if (lflag)
--			printf(_(" %llu blocks\n"), lstart - llast);
--		else
--			printf("\n");
-+		print_hole(0, 0, 0, cur_extent, lflag, true, llast, lstart);
- 		cur_extent++;
- 	}
- 
-@@ -309,25 +331,9 @@ fiemap_f(
- 		return 0;
- 	}
- 
--	if (cur_extent && last_logical < st.st_size) {
--		char	lbuf[32];
--
--		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:",
--			 BTOBBT(last_logical), BTOBBT(st.st_size) - 1);
--		if (vflag) {
--			printf("%4d: %-*s %-*s %*llu\n", cur_extent,
--			       foff_w, lbuf, boff_w, _("hole"), tot_w,
--			       BTOBBT(st.st_size - last_logical));
--		} else {
--			printf("\t%d: %s %s", cur_extent, lbuf,
--			       _("hole"));
--			if (lflag)
--				printf(_(" %llu blocks\n"),
--				       BTOBBT(st.st_size - last_logical));
--			else
--				printf("\n");
--		}
--	}
-+	if (cur_extent && last_logical < st.st_size)
-+		print_hole(foff_w, boff_w, tot_w, cur_extent, lflag, !vflag,
-+			   BTOBBT(last_logical), BTOBBT(st.st_size));
- 
- out:
- 	free(fiemap);
--- 
-2.7.4
+Ok, I got totally distracted on this; looking to see if it can't just be
+cleaned up wholesale... it's still so full of weird special cases :/
 
+-Eric
