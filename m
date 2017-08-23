@@ -1,31 +1,25 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47461 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753557AbdHUTBX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Aug 2017 15:01:23 -0400
-Date: Mon, 21 Aug 2017 13:01:21 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 12/13] dax: Implement dax_insert_pfn_mkwrite()
-Message-ID: <20170821190121.GC26220@linux.intel.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:41151 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932396AbdHWScJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 14:32:09 -0400
+Date: Wed, 23 Aug 2017 11:32:09 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 07/13] dax: Inline dax_pmd_insert_mapping() into the
+ callsite
+Message-ID: <20170823183209.GE13778@infradead.org>
 References: <20170817160815.30466-1-jack@suse.cz>
- <20170817160815.30466-13-jack@suse.cz>
+ <20170817160815.30466-8-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170817160815.30466-13-jack@suse.cz>
+In-Reply-To: <20170817160815.30466-8-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>
+Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boazh@netapp.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org
 
-On Thu, Aug 17, 2017 at 06:08:14PM +0200, Jan Kara wrote:
-> Implement a function that inserts a writeable page table entry (PTE or
-> PMD) and takes care of marking it dirty in the radix tree. This function
-> will be used to finish synchronous page fault.
-> 
-> Signed-off-by: Jan Kara <jack@suse.cz>
+Looks fine,
 
-Yep, this looks great.
-
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
