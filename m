@@ -1,60 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:35676 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751020AbdHWWd4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 18:33:56 -0400
-Subject: Re: [PATCH] ioctl_getfsmap.2: correct semantics of FMR_OF_LAST flag
-References: <20170823195225.GF4794@magnolia>
-From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Message-ID: <613388f9-3e18-f99c-5f80-07d196138f60@gmail.com>
-Date: Thu, 24 Aug 2017 00:33:48 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170823195225.GF4794@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mx2.suse.de ([195.135.220.15]:37208 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753985AbdHWPL1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 23 Aug 2017 11:11:27 -0400
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH 1/4] fiemap: Move global variables out of function scope
+Date: Wed, 23 Aug 2017 18:11:19 +0300
+Message-Id: <1503501082-16983-1-git-send-email-nborisov@suse.com>
+In-Reply-To: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
+References: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: mtk.manpages@gmail.com, linux-api@vger.kernel.org, linux-man@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
+To: sandeen@sandeen.net
+Cc: linux-xfs@vger.kernel.org, Nikolay Borisov <nborisov@suse.com>
 
-On 08/23/2017 09:52 PM, Darrick J. Wong wrote:
-> The FMR_OF_LAST flag is applied to the last record in the returned
-> dataset, which is not necessarily the last record in the filesystem.
-> Correct the documentation to reflect the actual behavior of both
-> getfsmap implementations.
+Move the blocksize and max_extent variables to the top of the file since they
+are globals. Also blocksize never changes to mark it const. Also stop passing
+max_extents around and refer to it directly.
 
-Thanks, Darrick. Applied.
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+ io/fiemap.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-Cheers,
-
-Michael
-
-
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  man2/ioctl_getfsmap.2 |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/man2/ioctl_getfsmap.2 b/man2/ioctl_getfsmap.2
-> index 2a3cf06..047a624 100644
-> --- a/man2/ioctl_getfsmap.2
-> +++ b/man2/ioctl_getfsmap.2
-> @@ -225,7 +225,7 @@ The
->  field contains a special value instead of an inode number.
->  .TP
->  .B FMR_OF_LAST
-> -This is the last record in the filesystem.
-> +This is the last record in the data set.
->  .RE
->  .PP
->  The
-> 
-
-
+diff --git a/io/fiemap.c b/io/fiemap.c
+index 75e882057362..d1584aba7818 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -24,6 +24,8 @@
+ #include "io.h"
+ 
+ static cmdinfo_t fiemap_cmd;
++static const __u64 blocksize = 512;
++static int max_extents = 0;
+ 
+ static void
+ fiemap_help(void)
+@@ -57,7 +59,6 @@ print_verbose(
+ 	int			boff_w,
+ 	int			tot_w,
+ 	int			flg_w,
+-	int			max_extents,
+ 	int			*cur_extent,
+ 	__u64			*last_logical)
+ {
+@@ -113,7 +114,6 @@ print_plain(
+ 	struct fiemap_extent	*extent,
+ 	int			lflag,
+ 	int			blocksize,
+-	int			max_extents,
+ 	int			*cur_extent,
+ 	__u64			*last_logical)
+ {
+@@ -165,7 +165,7 @@ calc_print_format(
+ 	int			*tot_w,
+ 	int			*flg_w)
+ {
+-	int 			i;
++	int			i;
+ 	char			lbuf[32];
+ 	char			bbuf[32];
+ 	__u64			logical;
+@@ -199,7 +199,6 @@ fiemap_f(
+ 	char		**argv)
+ {
+ 	struct fiemap	*fiemap;
+-	int		max_extents = 0;
+ 	int		num_extents = 32;
+ 	int		last = 0;
+ 	int		lflag = 0;
+@@ -214,7 +213,6 @@ fiemap_f(
+ 	int		boff_w = 16;
+ 	int		tot_w = 5;	/* 5 since its just one number */
+ 	int		flg_w = 5;
+-	__u64		blocksize = 512;
+ 	__u64		last_logical = 0;
+ 	struct stat	st;
+ 
+@@ -288,12 +286,10 @@ fiemap_f(
+ 
+ 				print_verbose(extent, blocksize, foff_w,
+ 					      boff_w, tot_w, flg_w,
+-					      max_extents, &cur_extent,
+-					      &last_logical);
++					      &cur_extent, &last_logical);
+ 			} else
+ 				print_plain(extent, lflag, blocksize,
+-					    max_extents, &cur_extent,
+-					    &last_logical);
++					    &cur_extent, &last_logical);
+ 
+ 			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
+ 				last = 1;
 -- 
-Michael Kerrisk
-Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
-Linux/UNIX System Programming Training: http://man7.org/training/
+2.7.4
+
