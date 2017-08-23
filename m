@@ -1,14 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32623 "EHLO mga09.intel.com"
+Received: from mga04.intel.com ([192.55.52.120]:6087 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751356AbdHWXzK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 Aug 2017 19:55:10 -0400
-Subject: [PATCH v6 2/5] fs, xfs: introduce S_IOMAP_SEALED
+        id S1751135AbdHWXy7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 23 Aug 2017 19:54:59 -0400
+Subject: [PATCH v6 0/5] MAP_DIRECT and block-map-atomic files
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 23 Aug 2017 16:48:45 -0700
-Message-ID: <150353212577.5039.14069456126848863439.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Wed, 23 Aug 2017 16:48:34 -0700
+Message-ID: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,177 +14,251 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: akpm@linux-foundation.org
-Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-api@vger.kernel.org, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, David Airlie <airlied@linux.ie>, linux-api@vger.kernel.org, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, Takashi Iwai <tiwai@suse.com>, dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>, Jeff Moyer <jmoyer@redhat.com>, linux-mm@kvack.org, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Daniel Vetter <daniel.vetter@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-When a filesystem sees this flag set it will not allow changes to the
-file-offset to physical-block-offset relationship of any extent in the
-file. The extent of the extents covered by the global S_IOMAP_SEALED is
-filesystem specific. In other words it is similar to the inode-wide
-XFS_DIFLAG2_REFLINK flag where we make the distinction apply globally to
-the inode even though we could theoretically limit that effect to a
-sub-range of the file.
+Changes since v5 [1]:
+* Compile fixes from a much improved coccinelle semantic patch (thanks
+  Julia!) that adds a 'flags' argument to all the ->mmap()
+  implementations in the kernel. (0day-kbuild-robot)
 
-The interface that sets this flag (mmap(..., MAP_DIRECT, ...)) will be
-careful to document that it is implementation specific whether the
-'sealed' restrictions apply to a sub-range or the whole file.
-Applications should be prepared for unrelated ranges in the file to be
-effected.
+* Make the deprecated MAP_DENYWRITE and MAP_EXECUTABLE flags return
+  EOPNOTSUPP with the new mmap3() syscall. (Kirill)
 
-The term 'sealed' is used instead of 'immutable' to better indicate that
-this is a file property that is temporary and can be undone.
+* Minor changelog updates.
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+* Updated cover letter with a clarified summary and checklist of
+  questions to answer before proceeding further.
+
 ---
- fs/attr.c                |   10 ++++++++++
- fs/open.c                |    6 ++++++
- fs/read_write.c          |    3 +++
- fs/xfs/libxfs/xfs_bmap.c |    5 +++++
- fs/xfs/xfs_bmap_util.c   |    3 +++
- fs/xfs/xfs_ioctl.c       |    6 ++++++
- include/linux/fs.h       |    2 ++
- mm/filemap.c             |    5 +++++
- 8 files changed, 40 insertions(+)
 
-diff --git a/fs/attr.c b/fs/attr.c
-index 135304146120..d940386e0ca9 100644
---- a/fs/attr.c
-+++ b/fs/attr.c
-@@ -112,6 +112,16 @@ EXPORT_SYMBOL(setattr_prepare);
-  */
- int inode_newsize_ok(const struct inode *inode, loff_t offset)
- {
-+	if (IS_IOMAP_SEALED(inode)) {
-+		/*
-+		 * Any size change is disallowed. Size increases may
-+		 * dirty metadata that an application is not prepared to
-+		 * sync, and a size decrease may expose free blocks to
-+		 * in-flight DMA.
-+		 */
-+		return -ETXTBSY;
-+	}
-+
- 	if (inode->i_size < offset) {
- 		unsigned long limit;
- 
-diff --git a/fs/open.c b/fs/open.c
-index 35bb784763a4..92d89ec2d6b3 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -292,6 +292,12 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 		return -ETXTBSY;
- 
- 	/*
-+	 * We cannot allow any allocation changes on an iomap sealed file
-+	 */
-+	if (IS_IOMAP_SEALED(inode))
-+		return -ETXTBSY;
-+
-+	/*
- 	 * Revalidate the write permissions, in case security policy has
- 	 * changed since the files were opened.
- 	 */
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 0cc7033aa413..55700ca85f7e 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1706,6 +1706,9 @@ int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
- 	if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
- 		return -ETXTBSY;
- 
-+	if (IS_IOMAP_SEALED(inode_in) || IS_IOMAP_SEALED(inode_out))
-+		return -ETXTBSY;
-+
- 	/* Don't reflink dirs, pipes, sockets... */
- 	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
- 		return -EISDIR;
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index c09c16b1ad3b..241f3a272f49 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4481,6 +4481,11 @@ xfs_bmapi_write(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
-+	/* fail any attempts to mutate data extents */
-+	if (IS_IOMAP_SEALED(VFS_I(ip))
-+			&& !(flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ATTRFORK)))
-+		return -ETXTBSY;
-+
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 
- 	XFS_STATS_INC(mp, xs_blk_mapw);
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 93e955262d07..ef4c4e8b0f58 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1294,6 +1294,9 @@ xfs_free_file_space(
- 
- 	trace_xfs_free_file_space(ip);
- 
-+	if (IS_IOMAP_SEALED(VFS_I(ip)))
-+		return -ETXTBSY;
-+
- 	error = xfs_qm_dqattach(ip, 0);
- 	if (error)
- 		return error;
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 9c0c7a920304..845587e6928b 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1730,6 +1730,12 @@ xfs_ioc_swapext(
- 		goto out_put_tmp_file;
- 	}
- 
-+	if (IS_IOMAP_SEALED(file_inode(f.file)) ||
-+	    IS_IOMAP_SEALED(file_inode(tmp.file))) {
-+		error = -EINVAL;
-+		goto out_put_tmp_file;
-+	}
-+
- 	/*
- 	 * We need to ensure that the fds passed in point to XFS inodes
- 	 * before we cast and access them as XFS structures as we have no
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 47249bbe973c..33d1ee8f51be 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1830,6 +1830,7 @@ struct super_operations {
- #else
- #define S_DAX		0	/* Make all the DAX code disappear */
- #endif
-+#define S_IOMAP_SEALED 16384 /* logical-to-physical extent map is fixed */
- 
- /*
-  * Note that nosuid etc flags are inode-specific: setting some file-system
-@@ -1868,6 +1869,7 @@ struct super_operations {
- #define IS_AUTOMOUNT(inode)	((inode)->i_flags & S_AUTOMOUNT)
- #define IS_NOSEC(inode)		((inode)->i_flags & S_NOSEC)
- #define IS_DAX(inode)		((inode)->i_flags & S_DAX)
-+#define IS_IOMAP_SEALED(inode) ((inode)->i_flags & S_IOMAP_SEALED)
- 
- #define IS_WHITEOUT(inode)	(S_ISCHR(inode->i_mode) && \
- 				 (inode)->i_rdev == WHITEOUT_DEV)
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 2457e34d10e0..4cbcf9d589fa 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -2810,6 +2810,11 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
- 	if (unlikely(pos >= inode->i_sb->s_maxbytes))
- 		return -EFBIG;
- 
-+	/* Are we about to mutate the block map on a sealed file? */
-+	if (IS_IOMAP_SEALED(inode)
-+			&& (pos + iov_iter_count(from) > i_size_read(inode)))
-+		return -ETXTBSY;
-+
- 	iov_iter_truncate(from, inode->i_sb->s_maxbytes - pos);
- 	return iov_iter_count(from);
- }
+MAP_DIRECT is a mechanism to ask the kernel to atomically manage the
+file-offset to physical-address block relationship of a mapping relative
+to any memory-mapped access. It is complimentary to the proposed
+MAP_SYNC mechanism which makes the same guarantee relative to cpu
+faults. MAP_DIRECT goes a step further and makes this guarantee for
+agents that may not generate mmu faults, but at the cost of restricting
+the kernel's ability to mutate the block-map at will.
 
+MAP_SYNC is preferred for scenarios that want full filesystem feature
+support while avoiding fsync/msync overhead, but also do not need to
+contend with hypervisors or RDMA agents that do not give the kernel an
+mmu fault. In other words, the need for MAP_DIRECT is driven by the
+scarcity of SVM capable hardware (Shared Virtual Memory, where hardware
+generates mmu faults), hypervisors like Xen that need to interrogate the
+physical address layout of a file to maintain their own physical-address
+mapping metadata outside the kernel, and peer-to-peer DMA use cases that
+always bypass the mmu.
+
+The MAP_DIRECT mechanism allows a filesystem to be used for capacity
+provisioning and access control where these aforementioned applications
+would otherwise be forced to roll a custom solution on top of a raw
+device-file.
+
+Questions:
+1/ Is the definition of MAP_DIRECT constrained enough to allow us to
+   make the restrictions it imposes on the kernel finer grained over time?
+
+2/ Do the XFS changes look sane? They attempt to avoid adding any
+   overhead to the non-MAP_DIRECT case at the expense of the new
+   i_mapdcount atomic counter in the XFS inode.
+
+3/ While the generic MAP_DIRECT description warns that the block-map may
+   not be actually be immutable for the lifetime of the mapping it also
+   does not preclude a filesystem from making that guarantee. In fact,
+   Dave wants to be able to get a stable view of the physical mapping
+   [2], and Xen has a need to do the same [3]. Do we want userspace to
+   start making "XFS + MAP_DIRECT == Immutable" assumptions, or do we
+   need a separate mechanism for that guarantee?
+
+[1]: https://lkml.org/lkml/2017/8/16/114
+[2]: https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1467677.html
+[3]: https://lists.xen.org/archives/html/xen-devel/2017-04/msg00419.html
+
+---
+
+Dan Williams (5):
+      vfs: add flags parameter to ->mmap() in 'struct file_operations'
+      fs, xfs: introduce S_IOMAP_SEALED
+      mm: introduce mmap3 for safely defining new mmap flags
+      fs, xfs: introduce MAP_DIRECT for creating block-map-atomic file ranges
+      fs, fcntl: add F_MAP_DIRECT
+
+
+ arch/arc/kernel/arc_hostlink.c                     |    3 -
+ arch/mips/kernel/vdso.c                            |    2 
+ arch/powerpc/kernel/proc_powerpc.c                 |    3 -
+ arch/powerpc/kvm/book3s_64_vio.c                   |    3 -
+ arch/powerpc/platforms/cell/spufs/file.c           |   21 ++--
+ arch/powerpc/platforms/powernv/opal-prd.c          |    3 -
+ arch/um/drivers/mmapper_kern.c                     |    3 -
+ arch/x86/entry/syscalls/syscall_32.tbl             |    1 
+ arch/x86/entry/syscalls/syscall_64.tbl             |    1 
+ drivers/android/binder.c                           |    3 -
+ drivers/char/agp/frontend.c                        |    3 -
+ drivers/char/bsr.c                                 |    3 -
+ drivers/char/hpet.c                                |    6 +
+ drivers/char/mbcs.c                                |    3 -
+ drivers/char/mbcs.h                                |    3 -
+ drivers/char/mem.c                                 |   11 +-
+ drivers/char/mspec.c                               |    9 +-
+ drivers/char/uv_mmtimer.c                          |    6 +
+ drivers/dax/device.c                               |    3 -
+ drivers/dma-buf/dma-buf.c                          |    4 +
+ drivers/firewire/core-cdev.c                       |    3 -
+ drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c            |    3 -
+ drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.h            |    3 -
+ drivers/gpu/drm/amd/amdkfd/kfd_chardev.c           |    5 +
+ drivers/gpu/drm/arc/arcpgu_drv.c                   |    5 +
+ drivers/gpu/drm/ast/ast_drv.h                      |    3 -
+ drivers/gpu/drm/ast/ast_ttm.c                      |    3 -
+ drivers/gpu/drm/bochs/bochs.h                      |    3 -
+ drivers/gpu/drm/bochs/bochs_mm.c                   |    3 -
+ drivers/gpu/drm/cirrus/cirrus_drv.h                |    3 -
+ drivers/gpu/drm/cirrus/cirrus_ttm.c                |    3 -
+ drivers/gpu/drm/drm_gem.c                          |    3 -
+ drivers/gpu/drm/drm_gem_cma_helper.c               |    6 +
+ drivers/gpu/drm/drm_vm.c                           |    3 -
+ drivers/gpu/drm/etnaviv/etnaviv_drv.h              |    3 -
+ drivers/gpu/drm/etnaviv/etnaviv_gem.c              |    5 +
+ drivers/gpu/drm/exynos/exynos_drm_gem.c            |    5 +
+ drivers/gpu/drm/exynos/exynos_drm_gem.h            |    3 -
+ drivers/gpu/drm/hisilicon/hibmc/hibmc_drm_drv.h    |    3 -
+ drivers/gpu/drm/hisilicon/hibmc/hibmc_ttm.c        |    3 -
+ drivers/gpu/drm/i810/i810_dma.c                    |    3 -
+ drivers/gpu/drm/i915/i915_gem_dmabuf.c             |    2 
+ drivers/gpu/drm/mediatek/mtk_drm_gem.c             |    5 +
+ drivers/gpu/drm/mediatek/mtk_drm_gem.h             |    3 -
+ drivers/gpu/drm/mgag200/mgag200_drv.h              |    3 -
+ drivers/gpu/drm/mgag200/mgag200_ttm.c              |    3 -
+ drivers/gpu/drm/msm/msm_drv.h                      |    3 -
+ drivers/gpu/drm/msm/msm_gem.c                      |    5 +
+ drivers/gpu/drm/nouveau/nouveau_ttm.c              |    5 +
+ drivers/gpu/drm/nouveau/nouveau_ttm.h              |    2 
+ drivers/gpu/drm/omapdrm/omap_drv.h                 |    3 -
+ drivers/gpu/drm/omapdrm/omap_gem.c                 |    5 +
+ drivers/gpu/drm/qxl/qxl_drv.h                      |    3 -
+ drivers/gpu/drm/qxl/qxl_ttm.c                      |    3 -
+ drivers/gpu/drm/radeon/radeon_drv.c                |    3 -
+ drivers/gpu/drm/radeon/radeon_ttm.c                |    3 -
+ drivers/gpu/drm/rockchip/rockchip_drm_gem.c        |    5 +
+ drivers/gpu/drm/rockchip/rockchip_drm_gem.h        |    3 -
+ drivers/gpu/drm/tegra/gem.c                        |    5 +
+ drivers/gpu/drm/tegra/gem.h                        |    3 -
+ drivers/gpu/drm/udl/udl_drv.h                      |    3 -
+ drivers/gpu/drm/udl/udl_gem.c                      |    5 +
+ drivers/gpu/drm/vc4/vc4_bo.c                       |    5 +
+ drivers/gpu/drm/vc4/vc4_drv.h                      |    3 -
+ drivers/gpu/drm/vgem/vgem_drv.c                    |    7 +
+ drivers/gpu/drm/virtio/virtgpu_drv.h               |    3 -
+ drivers/gpu/drm/virtio/virtgpu_ttm.c               |    3 -
+ drivers/gpu/drm/vmwgfx/vmwgfx_drv.h                |    3 -
+ drivers/gpu/drm/vmwgfx/vmwgfx_ttm_glue.c           |    3 -
+ drivers/hsi/clients/cmt_speech.c                   |    3 -
+ drivers/hwtracing/intel_th/msu.c                   |    3 -
+ drivers/hwtracing/stm/core.c                       |    3 -
+ drivers/infiniband/core/uverbs_main.c              |    3 -
+ drivers/infiniband/hw/hfi1/file_ops.c              |    6 +
+ drivers/infiniband/hw/qib/qib_file_ops.c           |    5 +
+ drivers/media/v4l2-core/v4l2-dev.c                 |    3 -
+ drivers/misc/aspeed-lpc-ctrl.c                     |    3 -
+ drivers/misc/cxl/api.c                             |    5 +
+ drivers/misc/cxl/cxl.h                             |    3 -
+ drivers/misc/cxl/file.c                            |    3 -
+ drivers/misc/genwqe/card_dev.c                     |    3 -
+ drivers/misc/mic/scif/scif_fd.c                    |    3 -
+ drivers/misc/mic/vop/vop_vringh.c                  |    3 -
+ drivers/misc/sgi-gru/grufile.c                     |    3 -
+ drivers/mtd/mtdchar.c                              |    3 -
+ drivers/pci/proc.c                                 |    3 -
+ drivers/rapidio/devices/rio_mport_cdev.c           |    3 -
+ drivers/sbus/char/flash.c                          |    3 -
+ drivers/sbus/char/jsflash.c                        |    3 -
+ drivers/scsi/cxlflash/superpipe.c                  |    5 +
+ drivers/scsi/sg.c                                  |    3 -
+ drivers/staging/android/ashmem.c                   |    3 -
+ drivers/staging/comedi/comedi_fops.c               |    3 -
+ .../staging/lustre/lustre/llite/llite_internal.h   |    3 -
+ drivers/staging/lustre/lustre/llite/llite_mmap.c   |    5 +
+ drivers/staging/vboxvideo/vbox_drv.h               |    3 -
+ drivers/staging/vboxvideo/vbox_ttm.c               |    3 -
+ drivers/staging/vme/devices/vme_user.c             |    3 -
+ drivers/uio/uio.c                                  |    3 -
+ drivers/usb/core/devio.c                           |    3 -
+ drivers/usb/mon/mon_bin.c                          |    3 -
+ drivers/vfio/vfio.c                                |    7 +
+ drivers/video/fbdev/core/fbmem.c                   |    3 -
+ drivers/video/fbdev/pxa3xx-gcu.c                   |    3 -
+ drivers/xen/gntalloc.c                             |    3 -
+ drivers/xen/gntdev.c                               |    3 -
+ drivers/xen/privcmd.c                              |    3 -
+ drivers/xen/xenbus/xenbus_dev_backend.c            |    3 -
+ drivers/xen/xenfs/xenstored.c                      |    3 -
+ fs/9p/vfs_file.c                                   |   10 +-
+ fs/aio.c                                           |    3 -
+ fs/attr.c                                          |   10 ++
+ fs/btrfs/file.c                                    |    3 -
+ fs/ceph/addr.c                                     |    3 -
+ fs/ceph/super.h                                    |    3 -
+ fs/cifs/cifsfs.h                                   |    6 +
+ fs/cifs/file.c                                     |   10 +-
+ fs/coda/file.c                                     |    5 +
+ fs/ecryptfs/file.c                                 |    5 +
+ fs/ext2/file.c                                     |    5 +
+ fs/ext4/file.c                                     |    3 -
+ fs/f2fs/file.c                                     |    3 -
+ fs/fcntl.c                                         |   15 +++
+ fs/fuse/file.c                                     |    8 +
+ fs/gfs2/file.c                                     |    3 -
+ fs/hugetlbfs/inode.c                               |    3 -
+ fs/kernfs/file.c                                   |    3 -
+ fs/ncpfs/mmap.c                                    |    3 -
+ fs/ncpfs/ncp_fs.h                                  |    2 
+ fs/nfs/file.c                                      |    5 +
+ fs/nfs/internal.h                                  |    2 
+ fs/nilfs2/file.c                                   |    3 -
+ fs/ocfs2/mmap.c                                    |    3 -
+ fs/ocfs2/mmap.h                                    |    3 -
+ fs/open.c                                          |    6 +
+ fs/orangefs/file.c                                 |    5 +
+ fs/proc/inode.c                                    |    7 +
+ fs/proc/vmcore.c                                   |    6 +
+ fs/ramfs/file-nommu.c                              |    6 +
+ fs/read_write.c                                    |    3 +
+ fs/romfs/mmap-nommu.c                              |    3 -
+ fs/ubifs/file.c                                    |    5 +
+ fs/xfs/libxfs/xfs_bmap.c                           |    5 +
+ fs/xfs/xfs_bmap_util.c                             |    3 +
+ fs/xfs/xfs_file.c                                  |  114 +++++++++++++++++++-
+ fs/xfs/xfs_inode.h                                 |    1 
+ fs/xfs/xfs_ioctl.c                                 |    6 +
+ fs/xfs/xfs_super.c                                 |    1 
+ include/drm/drm_gem.h                              |    3 -
+ include/drm/drm_gem_cma_helper.h                   |    3 -
+ include/drm/drm_legacy.h                           |    3 -
+ include/linux/fs.h                                 |   21 ++--
+ include/linux/mm.h                                 |    2 
+ include/linux/mman.h                               |   46 ++++++++
+ include/linux/syscalls.h                           |    3 +
+ include/misc/cxl.h                                 |    3 -
+ include/uapi/asm-generic/mman.h                    |    1 
+ include/uapi/linux/fcntl.h                         |    5 +
+ ipc/shm.c                                          |    5 +
+ kernel/events/core.c                               |    3 -
+ kernel/kcov.c                                      |    3 -
+ kernel/relay.c                                     |    3 -
+ mm/filemap.c                                       |   19 ++-
+ mm/mmap.c                                          |   56 +++++++++-
+ mm/nommu.c                                         |    4 -
+ mm/shmem.c                                         |    3 -
+ net/socket.c                                       |    6 +
+ security/selinux/selinuxfs.c                       |    6 +
+ sound/core/compress_offload.c                      |    3 -
+ sound/core/hwdep.c                                 |    3 -
+ sound/core/info.c                                  |    3 -
+ sound/core/init.c                                  |    3 -
+ sound/core/oss/pcm_oss.c                           |    3 -
+ sound/core/pcm_native.c                            |    3 -
+ sound/oss/soundcard.c                              |    3 -
+ sound/oss/swarm_cs4297a.c                          |    3 -
+ virt/kvm/kvm_main.c                                |    3 -
+ 177 files changed, 689 insertions(+), 234 deletions(-)
