@@ -1,60 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40652 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751643AbdHVWdZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 22 Aug 2017 18:33:25 -0400
-Subject: Re: XFS Bug Report
-References: <CAFzqJcahyU7F5CJcYKTPabWBVCnufwSMS4QcJijHVVux-Ndv+Q@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ad807068-5de9-3200-68ef-de9e42401a5a@sandeen.net>
-Date: Tue, 22 Aug 2017 17:33:24 -0500
+Received: from bombadil.infradead.org ([65.50.211.133]:50409 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753057AbdHWGTd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 02:19:33 -0400
+Date: Tue, 22 Aug 2017 23:19:31 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Support for data CRC
+Message-ID: <20170823061931.GA30488@infradead.org>
+References: <20170821190414.long2535xppcxvvd@breakpoint.cc>
+ <20170821230232.GS10621@dastard>
+ <20170822055136.GA2697@infradead.org>
+ <20170822111322.jt66qlzvalsiju6n@breakpoint.cc>
 MIME-Version: 1.0
-In-Reply-To: <CAFzqJcahyU7F5CJcYKTPabWBVCnufwSMS4QcJijHVVux-Ndv+Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170822111322.jt66qlzvalsiju6n@breakpoint.cc>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ruoxin Jiang <rj2394@columbia.edu>, linux-xfs@vger.kernel.org
-Cc: Suman Jana <sumanj@gmail.com>
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On 8/22/17 4:10 PM, Ruoxin Jiang wrote:
-> Hello,
-> 
-> We are researchers from Columbia University, New York. As part of our
-> current research we have run into some issues using xfs filesystem.
-> For example, we encountered a case where the setuid bit of a modified
-> executable was not removed as desired.
+On Tue, Aug 22, 2017 at 01:13:22PM +0200, Sebastian Andrzej Siewior wrote:
+> copy on write. So the data crc is dead / not possible / not wanted or
+> part of copy on write?
 
-Thanks for the reports.
-
-For case 1:
-
-> * In xfs, function `xfs_file_aio_write_checks` calls `file_remove_privs` which
-> removes special file priviledges when the executable is written to or truncated.
-> 
-> * If an DIO write is not aligned to device logical sector size, the syscall
-> fails with  EINVAL` before `xfs_file_aio_write_checks` is called. Thus the setuid
-> bit will not be removed from the modified executable.
-
-If the write did not happen, why should the setuid bit be removed?
-The write failed and the file's contents were not modified.  It seems
-like xfs's behavior makes sense; is there a posix specification that
-indicates the behavior should be different?
-
-Case 2 does look problematic (failed mmap write extending the file EOF)
-
-Case 3 seems to show xfs violating this rule, I guess?
-
-       When  the  owner or group of an executable file are changed by a
-       non-superuser, the S_ISUID and S_ISGID mode  bits  are  cleared.
-       POSIX does not specify whether this also should happen when root
-       does the chown(); the Linux behavior depends on the kernel  ver-
-       sion.   In  case  of  a non-group-executable file (i.e., one for
-       which the S_IXGRP bit is not  set)  the  S_ISGID  bit  indicates
-       mandatory locking, and is not cleared by a chown().
-
-I thought this was all handled at the vfs, though, odd.
-
--Eric
+We support copy on write (or redirect on write to be correct) now
+as part of the reflink feature.  These out of place writes are
+a requirement to implement data checksums, as otherwise your data
+and checksum can not be updated atomically.  Everything else is
+beyond that at this point is vapourware.  We'd have to decided
+first if we really want the feature, and then where to place the
+checksum (extent structure, rmap, ?).
