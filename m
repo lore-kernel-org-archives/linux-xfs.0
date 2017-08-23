@@ -1,97 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:48244 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752376AbdHVX2e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2017 19:28:34 -0400
-Date: Wed, 23 Aug 2017 09:28:31 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS Bug Report
-Message-ID: <20170822232831.GY21024@dastard>
-References: <CAFzqJcahyU7F5CJcYKTPabWBVCnufwSMS4QcJijHVVux-Ndv+Q@mail.gmail.com>
- <ad807068-5de9-3200-68ef-de9e42401a5a@sandeen.net>
+Received: from userp1040.oracle.com ([156.151.31.81]:37441 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932251AbdHWRFk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 13:05:40 -0400
+Date: Wed, 23 Aug 2017 10:05:33 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/4] fiemap: Introduce get_extent_count
+Message-ID: <20170823170533.GY4796@magnolia>
+References: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
+ <1503501082-16983-1-git-send-email-nborisov@suse.com>
+ <1503501082-16983-2-git-send-email-nborisov@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ad807068-5de9-3200-68ef-de9e42401a5a@sandeen.net>
+In-Reply-To: <1503501082-16983-2-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Ruoxin Jiang <rj2394@columbia.edu>, linux-xfs@vger.kernel.org, Suman Jana <sumanj@gmail.com>
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org
 
-On Tue, Aug 22, 2017 at 05:33:24PM -0500, Eric Sandeen wrote:
-> On 8/22/17 4:10 PM, Ruoxin Jiang wrote:
-> > Hello,
-> > 
-> > We are researchers from Columbia University, New York. As part of our
-> > current research we have run into some issues using xfs filesystem.
-> > For example, we encountered a case where the setuid bit of a modified
-> > executable was not removed as desired.
+On Wed, Aug 23, 2017 at 06:11:20PM +0300, Nikolay Borisov wrote:
+> This function will be used in future patches and will aid in implementing
+> ranged fiemap queries
 > 
-> Thanks for the reports.
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> ---
+>  io/fiemap.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
 > 
-> For case 1:
+> diff --git a/io/fiemap.c b/io/fiemap.c
+> index d1584aba7818..30c49112e089 100644
+> --- a/io/fiemap.c
+> +++ b/io/fiemap.c
+> @@ -193,6 +193,22 @@ calc_print_format(
+>  	}
+>  }
+>  
+> +/* Use ssize so that we can return also an error code in case the ioctl fails */
+> +static ssize_t
+> +get_extent_count(int fd, __u64 startoffset, __u64 len)
+
+Argument indentation -- this should be:
+
+static ssize_t
+get_extent_count(
+	int		fd
+	__u64		startoffset,
+	__u64		len)
+{
+
+to match the rest of the file.
+
+> +{
+> +       struct fiemap fiemap = { 0 } ;
+
+Needs space between variable declaration and code.
+
+> +       fiemap.fm_start = startoffset;
+> +       fiemap.fm_length = len;
+> +       if (ioctl(fd, FS_IOC_FIEMAP, (unsigned long)&fiemap) < 0) {
+> +               fprintf(stderr, _("%s: Failed to query fiemap extent count.\n"),
+> +                       progname);
+
+perror/strerror to print the exact error code?
+
+--D
+
+> +               return -1;
+> +       }
+> +
+> +       return fiemap.fm_mapped_extents;
+> +}
+> +
+>  int
+>  fiemap_f(
+>  	int		argc,
+> -- 
+> 2.7.4
 > 
-> > * In xfs, function `xfs_file_aio_write_checks` calls `file_remove_privs` which
-> > removes special file priviledges when the executable is written to or truncated.
-> > 
-> > * If an DIO write is not aligned to device logical sector size, the syscall
-> > fails with  EINVAL` before `xfs_file_aio_write_checks` is called. Thus the setuid
-> > bit will not be removed from the modified executable.
-> 
-> If the write did not happen, why should the setuid bit be removed?
-> The write failed and the file's contents were not modified.  It seems
-> like xfs's behavior makes sense; is there a posix specification that
-> indicates the behavior should be different?
-> 
-> Case 2 does look problematic (failed mmap write extending the file EOF)
-
-mmap should not be able to extend the file at all. It should segv
-if an attempt to write past EOF occurs.
-
-> Case 3 seems to show xfs violating this rule, I guess?
-> 
->        When  the  owner or group of an executable file are changed by a
->        non-superuser, the S_ISUID and S_ISGID mode  bits  are  cleared.
->        POSIX does not specify whether this also should happen when root
->        does the chown(); the Linux behavior depends on the kernel  ver-
->        sion.   In  case  of  a non-group-executable file (i.e., one for
->        which the S_IXGRP bit is not  set)  the  S_ISGID  bit  indicates
->        mandatory locking, and is not cleared by a chown().
-> 
-> I thought this was all handled at the vfs, though, odd.
-
-xfs_setattr_nonsize() does:
-
-                /*
-                 * CAP_FSETID overrides the following restrictions:
-                 *
-                 * The set-user-ID and set-group-ID bits of a file will be
-                 * cleared upon successful return from chown()
-                 */
-                if ((inode->i_mode & (S_ISUID|S_ISGID)) &&
-                    !capable(CAP_FSETID))
-                        inode->i_mode &= ~(S_ISUID|S_ISGID);
-
-Whereas the VFS has this check in should_remove_suid():
-
-        /*
-         * sgid without any exec bits is just a mandatory locking mark; leave
-         * it alone.  If some exec bits are set, it's a real sgid; kill it.
-         */
-        if (unlikely((mode & S_ISGID) && (mode & S_IXGRP)))
-                kill |= ATTR_KILL_SGID;
-
-	if (unlikely(kill && !capable(CAP_FSETID) && S_ISREG(mode)))
-                return kill;
-
-So the VFS is doing the right thing but the XFS code does it's own
-thing for reasons I don't remember. Given the VFS handles this, maybe
-we should finally remove it from the XFS code?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
