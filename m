@@ -1,61 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f179.google.com ([209.85.217.179]:36198 "EHLO
-        mail-ua0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752533AbdHVWhJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2017 18:37:09 -0400
-Received: by mail-ua0-f179.google.com with SMTP id w17so256182uaw.3
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Aug 2017 15:37:08 -0700 (PDT)
+Received: from sandeen.net ([63.231.237.45]:34910 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932109AbdHWRRu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 23 Aug 2017 13:17:50 -0400
+Subject: Re: [PATCH 3/4] fiemap: Simplify internals of fiemap_f.
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
+ <1503501082-16983-1-git-send-email-nborisov@suse.com>
+ <1503501082-16983-3-git-send-email-nborisov@suse.com>
+ <17826470-3112-248e-2d89-21c6d532e2ef@sandeen.net>
+Message-ID: <bdccad2a-87c0-e90b-d2e2-794bec6e9e61@sandeen.net>
+Date: Wed, 23 Aug 2017 12:17:49 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170822111053.7jypthbydpkn2tj4@breakpoint.cc>
-References: <20170821190414.long2535xppcxvvd@breakpoint.cc>
- <CAJCQCtSUS9yZfv9xLe9a5o5x8ZSkOUWC_6QaeUi6oQ_QXg4GRQ@mail.gmail.com> <20170822111053.7jypthbydpkn2tj4@breakpoint.cc>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Tue, 22 Aug 2017 16:37:07 -0600
-Message-ID: <CAJCQCtTF2bWgB1++v3XOwaPqpPxc7-0Lv+Qc_3bebb0zMDNszA@mail.gmail.com>
-Subject: Re: Support for data CRC
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <17826470-3112-248e-2d89-21c6d532e2ef@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: Chris Murphy <lists@colorremedies.com>, xfs list <linux-xfs@vger.kernel.org>
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Aug 22, 2017 at 5:10 AM, Sebastian Andrzej Siewior
-<sebastian@breakpoint.cc> wrote:
-> On 2017-08-21 13:52:48 [-0600], Chris Murphy wrote:
->> On Mon, Aug 21, 2017 at 1:04 PM, Sebastian Andrzej Siewior
->> <sebastian@breakpoint.cc> wrote:
->> > Hi,
->> >
->> > my understanding is that only metadata is protected by CRC in the new
->> > on-disk format. Are there any plans to also protect data?
+
+
+On 8/23/17 10:51 AM, Eric Sandeen wrote:
+> On 8/23/17 10:11 AM, Nikolay Borisov wrote:
+>> So far fiemap used some rather convoluted logic to terminate the iteration and
+>> calculate the number of extents to pass to fm_extent_count. Simplify this by:
 >>
->> See dm-integrity, merged as of 4.12 kernel. I haven't seen any
->> performance benchmarking so far.
+>> * Get the whole number of extents that this file has and keep iterating until
+>> we've printed all extents
+>>
+>> * Always use a hard-coded batch of 32 extents so we don't have to worry about
+>> any extra calculations
+> 
+> As discussed on IRC, these types of changes:
+> 
+>> -	if ((*cur_extent + 1) == max_extents)
+>> +	if (*cur_extent == max_extents)
+>>  		return;
+> 
+> are a functional change not described in the changelog above; they should be
+> in their own patch with their own changelog, explaining why the test was off by one,
+> and what this fixes.  This stuff is complex enough that it's not obvious to the
+> casual reader now, and certainly won't be a few years later.  ;)
+
+Ok, so this is fixing the "-n" argument, to actually print $ARG extents
+instead of $ARG - 1 extents.
+
+instead of today:
+
+# xfs_io -c "fiemap -n 4" holefile
+holefile:
+	0: [0..7]: hole
+	1: [8..15]: 172560120..172560127
+	2: [16..23]: hole
+
+now it does more expected:
+
+# io/xfs_io -c "fiemap -n 4" holefile
+holefile:
+	0: [0..7]: hole
+	1: [8..15]: 172560120..172560127
+	2: [16..23]: hole
+	3: [24..31]: 172560136..172560143
+
+so it probably just needs a doc fix along w/ this behavior fix.
+
+(note, bmap behaves the same way, except properly):
+
+# xfs_io -c "bmap -n 4" holefile
+holefile:
+	0: [0..7]: hole
+	1: [8..15]: 172560120..172560127
+	2: [16..23]: hole
+	3: [24..31]: 172560136..172560143
+
+Thanks,
+-Eric
+
+ 
+> Thanks,
+> -Eric
 >
-> So this ensures integrity with the help of crypto algorithms. This is a
-> bit much as something like crc32c/crc64 would be sufficient. However
-> dm-integrity does not provide a way to recover (as far as I can tell).
-
-If a block fails integrity checking, there's a read error that goes to
-the next layer which would need to have replication such as mdadm/lvm
-RAID. And that layer would grab a good copy, and fix the bad copy. So
-every physical drive would first have dm-integrity applied, which is a
-1:1 mapping, and then each dm-integrity logical device is made a PV
-for LVM, and then you create raid1/5/6 LV's or whatever you want, and
-then format it whatever you want.
-
-Documentation says either crc or hash is possible, including crc32.
-https://www.kernel.org/doc/Documentation/device-mapper/dm-integrity.txt
-
-
-> My idea was that if the "normal" path is faulty (and noticed by the crc
-> check) it (xfs or the dm layer) would try to read the data via an
-> alternative path if possible (say on RAID1/5/6).
-
-Yes you have to build each layer you want separately with this method.
-Otherwise you're looking at ZFS or Btrfs if you want it integrated.
-
-
--- 
-Chris Murphy
