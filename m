@@ -1,81 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60090 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751092AbdHWWg2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 Aug 2017 18:36:28 -0400
-Subject: Re: [PATCH 1/4] fiemap: Move global variables out of function scope
-References: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
- <1503501082-16983-1-git-send-email-nborisov@suse.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e6ca6543-2ca0-f3d3-06b1-f792197de024@sandeen.net>
-Date: Wed, 23 Aug 2017 17:36:27 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:50508 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932443AbdHWUYH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 16:24:07 -0400
+Date: Wed, 23 Aug 2017 13:24:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/3] libxfs: handle 0 blocksize or sectorsize in cvtnum
+Message-ID: <20170823202400.GB4796@magnolia>
+References: <2b5a5742-5343-671f-8b89-9d1dc9841c17@redhat.com>
+ <2e0acf4a-a863-8304-65d3-5027368c69e2@sandeen.net>
+ <20170823010153.GZ21024@dastard>
+ <c09f8778-361e-b3aa-4eb6-00215e4af005@sandeen.net>
+ <20170823201435.GZ4796@magnolia>
+ <c7dfc3a9-25a2-fc6a-e429-4933a908a4ca@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <1503501082-16983-1-git-send-email-nborisov@suse.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c7dfc3a9-25a2-fc6a-e429-4933a908a4ca@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On 8/23/17 10:11 AM, Nikolay Borisov wrote:
-> Move the blocksize and max_extent variables to the top of the file since they
-> are globals. Also blocksize never changes to mark it const. Also stop passing
-> max_extents around and refer to it directly.
+On Wed, Aug 23, 2017 at 03:18:45PM -0500, Eric Sandeen wrote:
+> 
+> 
+> On 8/23/17 3:14 PM, Darrick J. Wong wrote:
+> > On Tue, Aug 22, 2017 at 09:13:03PM -0500, Eric Sandeen wrote:
+> >> On 8/22/17 8:01 PM, Dave Chinner wrote:
+> >>> On Tue, Aug 22, 2017 at 04:12:48PM -0500, Eric Sandeen wrote:
+> >>>> Blocksize and sectorsize are unique in that they must
+> >>>> be provided, unlike every other suffix which can be
+> >>>> calculated from constants.
+> >>>>
+> >>>> Nothing protects against unspecified block & sector size,
+> >>>> so catch it if it happens and return a parsing error.
+> >>>>
+> >>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >>>> ---
+> >>>>
+> >>>> diff --git a/libxcmd/input.c b/libxcmd/input.c
+> >>>> index 7a69dc1..7b86225 100644
+> >>>> --- a/libxcmd/input.c
+> >>>> +++ b/libxcmd/input.c
+> >>>> @@ -330,8 +330,12 @@ cvtnum(
+> >>>>  	c = tolower(*sp);
+> >>>>  	switch (c) {
+> >>>>  	case 'b':
+> >>>> +		if (!blocksize)
+> >>>> +			return -1LL;
+> >>>>  		return i * blocksize;
+> >>>>  	case 's':
+> >>>> +		if (!sectorsize)
+> >>>> +			return -1LL;
+> >>>>  		return i * sectorsize;
+> >>>>  	case 'k':
+> >>>>  		return KILOBYTES(i);
+> >>>
+> >>> With this you could have mkfs call the generic function, too.
+> >>
+> >> Yep, or at least closer; mkfs does a printf and usage()/exit()
+> >> and it indicates a user error (most likely)
+> >>
+> >> in libxcmd/xfs_io it's more of a programming error, with no 
+> >> printf to the user at least today... so would need a little more
+> >> finessing.
+> > 
+> > This series looks mostly fine to me, but I'm wondering if io_cvtnum
+> > should be promoted so that mkfs/spaceman/quota/etc can take advantage of
+> > it too?
+> 
+> I thought about that, but it relies on the global var "file" that io uses,
+> which seems a bit unique to io, no?
 
-Having looked at this for way too long, here are things that I think could be
-done, in more or less this order as separate patches, but rearrange or
-add/remove as you see fit...
+Spaceman has it too.
 
-- Get rid of the blocksize variable, and use BTOBBT()
-- Turn num_extents into #define EXTENT_BATCH 32, fixed query map size
-- make max_extents global if you like
-- Clean up the control loop(s) and exit point(s), there are now exits on:
-  + fm_mapped_extents == 0 (we got none from our query)
-  + FIEMAP_EXTENT_LAST set (kernel tells us this one is last)
-  + max_extents hit (we hit the user's limit)
-  + end of requested range hit (after range is implemented)
-  ... there's a lot in there that is messy. :/
-- Fix the "-n" behavior (a minimally as possible) and update xfs_bmap(8) to match
+I guess quota does its own weird thing...
 
-finally:
+--D
 
-- Implement your range query (I think this can be done by simply
-  modifying the initial fm_start and fm_length, no?  Or, by only
-  modifying fm_start, and breaking out of the loop when we retrieve
-  an extent that goes beyond the end of the requested region?)
-
-Other things I noticed:
-
-- print_plain and print_verbose are pretty nasty the way they
-  hide increments of cur_extent & last_logical.  I think it would
-  be better to:
-
-   + pass cur_extent & last_logical by value
-   + return nr of extents printed, so the caller can increment cur_extent
-   + update last_logical in fiemap_f after, not in, the print functions
-
-- The last hunk that handles a hole at EOF is ick; something like this
-  may be better, re-using the print functions with a special "EOF
-  extent"; the print functions would then return after printing a hole
-  if they are handed a 0 length extent with LAST set, or something.
-
-        /* Handle a hole at EOF if there is one */
-        if (cur_extent && last_logical < st.st_size) {
-                struct fiemap_extent hole = { 0 };
-
-                /* special 0-length extent to show formatters it's hole @ EOF */
-                hole.fe_logical = st.st_size;
-                hole.fe_length = 0;
-                hole.fe_flags = FIEMAP_EXTENT_LAST;
-
-                if (vflag)
-                        print_verbose(&hole, foff_w, boff_w, tot_w, flg_w,
-                                      max_extents, cur_extent, last_logical);
-                else
-                        print_plain(&hole, lflag,
-                                    max_extents, cur_extent, last_logical);
-        }
-
+> 
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
