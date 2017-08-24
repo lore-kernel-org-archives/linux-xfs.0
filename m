@@ -1,78 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54577 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752844AbdHXPWX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 11:22:23 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/3] xfs: support for synchronous DAX faults
-Date: Thu, 24 Aug 2017 17:22:07 +0200
-Message-Id: <20170824152207.30729-4-hch@lst.de>
-In-Reply-To: <20170824152207.30729-1-hch@lst.de>
-References: <20170824152207.30729-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:55784 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753288AbdHXQEA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 12:04:00 -0400
+Subject: Re: [PATCH 6/6] fiemap: Fix semantics of max_extents (-n arguments)
+References: <1503575272-28263-1-git-send-email-nborisov@suse.com>
+ <1503575272-28263-7-git-send-email-nborisov@suse.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <53c70cbc-1c81-0fc3-6ef8-a9fdd98d89c0@sandeen.net>
+Date: Thu, 24 Aug 2017 11:03:58 -0500
+MIME-Version: 1.0
+In-Reply-To: <1503575272-28263-7-git-send-email-nborisov@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>
+To: Nikolay Borisov <nborisov@suse.com>, linux-xfs@vger.kernel.org
+Cc: sandeen@redhat.com
 
-Return IOMAP_F_NEEDDSYNC from xfs_file_iomap_begin() for a synchronous
-write fault when inode is pinned, and has dirty fields other than the
-timestamps.  In xfs_filemap_huge_fault() we then detect this case and
-call dax_finish_sync_fault() to make sure all metadata is committed, and
-to insert the page table entry.
+On 8/24/17 6:47 AM, Nikolay Borisov wrote:
+> Currently the semantics of the -n argument are a bit idiosyncratic. We want the
+> argument to be the limit of extents that are going to be output by the tool. This
+> is clearly broken now as evident from the following example on a fragmented file:
+> 
+> xfs_io -c "fiemap -v -n 5" test-dir/fragmented-file
+> test-dir/fragmented-file:
+>  EXT: FILE-OFFSET      BLOCK-RANGE          TOTAL FLAGS
+>    0: [0..15]:         hole                    16
+>    1: [16..23]:        897847296..897847303     8   0x0
+>    2: [24..31]:        hole                     8
+>    3: [32..39]:        897851392..897851399     8   0x0
+> 
+> So we want at most 5 extents printed, yet we get 4. So we always print n - 1
+> extents.
+> 
+> With this modification the output looks like:
+> 
+> xfs_io -c "fiemap -v -n 5" test-dir/fragmented-file
+> test-dir/fragmented-file:
+>  EXT: FILE-OFFSET      BLOCK-RANGE          TOTAL FLAGS
+>    0: [0..15]:         hole                    16
+>    1: [16..23]:        897847296..897847303     8   0x0
+>    2: [24..31]:        hole                     8
+>    3: [32..39]:        897851392..897851399     8   0x0
+>    4: [40..47]:        hole                     8
+> 
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> ---
+>  io/fiemap.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/io/fiemap.c b/io/fiemap.c
+> index 44a64870d711..7b275275465d 100644
+> --- a/io/fiemap.c
+> +++ b/io/fiemap.c
+> @@ -122,7 +122,7 @@ print_verbose(
+>  		cur_extent++;
+>  	}
+>  
+> -	if ((cur_extent + 1) == max_extents)
+> +	if (cur_extent == max_extents)
+>  		return 1;
+>  
+>  	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
+> @@ -157,7 +157,7 @@ print_plain(
+>  		cur_extent++;
+>  	}
+>  
+> -	if ((cur_extent + 1) == max_extents)
+> +	if (cur_extent == max_extents)
+>  		return 1;
+>  
+>  	printf("\t%d: [%llu..%llu]: %llu..%llu", cur_extent,
+> @@ -264,7 +264,7 @@ fiemap_f(
+>  
+>  	printf("%s:\n", file->name);
+>  
+> -	while (!last && ((cur_extent + 1) != max_extents)) {
+> +	while (!last && (cur_extent != max_extents)) {
 
-Note that this will also dirty corresponding radix tree entry which is
-what we want - fsync(2) will still provide data integrity guarantees for
-applications not using userspace flushing. And applications using
-userspace flushing can avoid calling fsync(2) and thus avoid the
-performance overhead.
+In my testing, for a bare fiemap (no -n) we get here with
+cur_extent == max_extents == 0 and so nothing happens:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c  | 6 +++++-
- fs/xfs/xfs_iomap.c | 5 +++++
- 2 files changed, 10 insertions(+), 1 deletion(-)
+# xfs_io -c fiemap testfile
+testfile:
+#
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 460ca9639e66..5c3597b7dbf9 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1031,7 +1031,11 @@ __xfs_filemap_fault(
- 
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	if (IS_DAX(inode)) {
--		ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
-+		pfn_t pfn;
-+
-+		ret = dax_iomap_fault(vmf, pe_size, &pfn, &xfs_iomap_ops);
-+		if (ret & VM_FAULT_NEEDDSYNC)
-+			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
- 	} else {
- 		if (write_fault)
- 			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 813394c62849..e7c762c8fe27 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -33,6 +33,7 @@
- #include "xfs_error.h"
- #include "xfs_trans.h"
- #include "xfs_trans_space.h"
-+#include "xfs_inode_item.h"
- #include "xfs_iomap.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-@@ -1085,6 +1086,10 @@ xfs_file_iomap_begin(
- 		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
- 	}
- 
-+	if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
-+	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
-+		iomap->flags |= IOMAP_F_NEEDDSYNC;
-+
- 	xfs_bmbt_to_iomap(ip, iomap, &imap);
- 
- 	/* optionally associate a dax device with the iomap bdev */
--- 
-2.11.0
+(this causes every xfstest which invokes fiemap to fail).
 
+I think initializing max_extents to -1 is a simple way to fix this.
+
+>  
+>  		memset(fiemap, 0, map_size);
+>  		fiemap->fm_flags = fiemap_flags;
+> @@ -314,12 +314,12 @@ fiemap_f(
+>  				break;
+>  			}
+>  
+> -			if ((cur_extent + 1) == max_extents)
+> +			if (cur_extent == max_extents)
+>  				break;
+>  		}
+>  	}
+>  
+> -	if ((cur_extent + 1) == max_extents)
+> +	if (cur_extent  == max_extents)
+                       ^ extra space ;)
+
+Thanks,
+-Eric
+
+
+>  		goto out;
+>  
+>  	memset(&st, 0, sizeof(st));
+> 
