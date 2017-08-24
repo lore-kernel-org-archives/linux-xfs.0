@@ -1,54 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44828 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60230 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751277AbdHXH04 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Aug 2017 03:26:56 -0400
-Date: Thu, 24 Aug 2017 09:26:54 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 09/13] dax: Allow dax_iomap_fault() to return pfn
-Message-ID: <20170824072654.GD20465@quack2.suse.cz>
-References: <20170817160815.30466-1-jack@suse.cz>
- <20170817160815.30466-10-jack@suse.cz>
- <20170823183400.GG13778@infradead.org>
+        id S1751348AbdHXK4h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 06:56:37 -0400
+Date: Thu, 24 Aug 2017 12:56:35 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH] xfs: Drop setting redundant PF_KSWAPD in kswapd context
+Message-ID: <20170824105635.GA5965@dhcp22.suse.cz>
+References: <20170824104247.8288-1-khandual@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170823183400.GG13778@infradead.org>
+In-Reply-To: <20170824104247.8288-1-khandual@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, Boaz Harrosh <boazh@netapp.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org
+To: Anshuman Khandual <khandual@linux.vnet.ibm.com>
+Cc: linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, dchinner@redhat.com, bfoster@redhat.com, sandeen@sandeen.net
 
-On Wed 23-08-17 11:34:00, Christoph Hellwig wrote:
-> > @@ -1416,6 +1416,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
-> >   * @vmf: The description of the fault
-> >   * @pe_size: Size of the page to fault in
-> >   * @ops: Iomap ops passed from the file system
-> > + * @pfnp: PFN to insert for synchronous faults if fsync is required
-> >   *
-> >   * When a page fault occurs, filesystems may call this helper in
-> >   * their fault handler for DAX files. dax_iomap_fault() assumes the caller
-> > @@ -1423,13 +1424,13 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf,
-> >   * successfully.
-> >   */
-> >  int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
-> > -		    const struct iomap_ops *ops)
-> > +		    const struct iomap_ops *ops, pfn_t *pfnp)
+On Thu 24-08-17 16:12:47, Anshuman Khandual wrote:
+> xfs_btree_split() calls xfs_btree_split_worker() with args.kswapd set
+> if current->flags alrady has PF_KSWAPD. Hence we should not again add
+> PF_KSWAPD into the current flags inside kswapd context. So drop this
+> redundant flag addition.
+
+I am not familiar with the code but your change seems incorect. The
+whole point of args->kswapd is to convey the kswapd context to the
+worker which is obviously running in a different context. So this patch
+loses the kswapd context.
+
+> Signed-off-by: Anshuman Khandual <khandual@linux.vnet.ibm.com>
+> ---
+>  fs/xfs/libxfs/xfs_btree.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Please keep the iomap_ops argument the last one for the exported
-> function (and probably all others for consistency).
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index e0bcc4a..b3c85e3 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -2895,7 +2895,7 @@ struct xfs_btree_split_args {
+>  	 * in any way.
+>  	 */
+>  	if (args->kswapd)
+> -		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
+> +		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE;
+>  
+>  	current_set_flags_nested(&pflags, new_pflags);
+>  
+> -- 
+> 1.8.5.2
 
-Hum, I wanted the output argument to be the last one. But I don't care
-much. Swapped.
-
-> Otherwise looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Thanks!
-
-								Honza
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Michal Hocko
+SUSE Labs
