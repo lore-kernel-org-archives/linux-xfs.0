@@ -1,42 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:54216 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753456AbdHYACI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 20:02:08 -0400
-Date: Fri, 25 Aug 2017 10:01:37 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Drop setting redundant PF_KSWAPD in kswapd context
-Message-ID: <20170825000137.GI21024@dastard>
-References: <20170824104247.8288-1-khandual@linux.vnet.ibm.com>
- <20170824105635.GA5965@dhcp22.suse.cz>
+Received: from mx2.suse.de ([195.135.220.15]:41471 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753492AbdHXWLS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 18:11:18 -0400
+From: NeilBrown <neilb@suse.com>
+Date: Fri, 25 Aug 2017 08:11:05 +1000
+Subject: Re: Filesystem configuration parsers - (was: Re: [RESEND][PATCH] xfs: add online uevent for mount operation)
+In-Reply-To: <20170824180441.GL27873@wotan.suse.de>
+References: <1503582115-37220-1-git-send-email-houtao1@huawei.com> <20170824171028.GF4796@magnolia> <20170824180441.GL27873@wotan.suse.de>
+Message-ID: <87a82ok45i.fsf@notabene.neil.brown.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170824105635.GA5965@dhcp22.suse.cz>
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Anshuman Khandual <khandual@linux.vnet.ibm.com>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, dchinner@redhat.com, bfoster@redhat.com, sandeen@sandeen.net
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Hou Tao <houtao1@huawei.com>, linux-xfs@vger.kernel.org, david@fromorbit.com, linux-fsdevel@vger.kernel.org, Jeff Mahoney <jeffm@suse.com>, Tso Ted <tytso@mit.edu>, Dmitri Pal <dpal@redhat.com>
 
-On Thu, Aug 24, 2017 at 12:56:35PM +0200, Michal Hocko wrote:
-> On Thu 24-08-17 16:12:47, Anshuman Khandual wrote:
-> > xfs_btree_split() calls xfs_btree_split_worker() with args.kswapd set
-> > if current->flags alrady has PF_KSWAPD. Hence we should not again add
-> > PF_KSWAPD into the current flags inside kswapd context. So drop this
-> > redundant flag addition.
-> 
-> I am not familiar with the code but your change seems incorect. The
-> whole point of args->kswapd is to convey the kswapd context to the
-> worker which is obviously running in a different context. So this patch
-> loses the kswapd context.
+--=-=-=
+Content-Type: text/plain
 
-Yup. That's what the code does, and removing the PF_KSWAPD from it
-will break it.
+On Thu, Aug 24 2017, Luis R. Rodriguez wrote:
+>
+> Just saying, we better damn be sure this is the way we want to go.
+>
 
-Cheers,
+Just to provide contrast, NFS has a config file which can provide
+certain defaults for mounted filesystems.  However it doesn't require a
+udev event to achieve this.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Instead, it provides "/sbin/mount.nfs" which imposes the defaults at
+mount time, rather than just after mount time.
+
+There could, conceivably, be an "/sbin/mount.xfs" which read the config
+file and set all the defaults concurrently with the mount operation.
+
+I'm not necessarily saying this is a better way to go, but I agree with
+the need to be sure, and this provides evidence that other approaches
+are possible and worth considering.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlmfTvoACgkQOeye3VZi
+gbmHBQ//RKm4qdqBWM7Hhqhu62HJ1FLquSWpoJqPLI4A90/b9ij6aut09WRuNq/v
+vVxkqsj4u22JNUb3exsTgpwzlSIMonrj0LVjnc8FPJY+2AGEzMoq61ILglJq0EwF
+wt2ly26lVcg26/ZM330PeVXjgFaTxm0LTKe35JVQucOruvxZBVUP3lNhTSjSpvRD
+OhG0u983Uw0dHtb5W/GkmA8jM8oAcCq8d0SEyTmpi039Kuhp9KKb2zF5LhbBz1bq
+h/QRb2+e/inzgUKL0gqKBYdbHQqCcsw6GDk2c5bD/11N0CvAyuVpgrg/q9p/0gMC
+BVe3sIFZBB4lgw0GiI9plPfZGju1Szf8ABDVLW4hco25hCFhcgg+MnCeJarDv2W0
+bHaD7chGzBPTf2GS6pCRql/3NNiPIW666GfYGTiIHdqNIR8PEp0cN36GGs/CUPRO
+vQ8qtYLBJlblYs90OAO2ICHsZ+h37MMbtu6XnOjG1jYWK77Mpfz7S/LjoHcNso83
+xp0O7Cs7D+MH0ybIEHNF+22awtBG0T5ytqJj+nHk6DPLBeZRmj/9LkqjkqFcy86G
+QwHoTYAJnJisMNAxrOHB9TmC4tb8JnnOrmpCI/ZbbBUGTxzuu3GDW+Df9/kDSIj/
+J3YynLgOJ4b0Xhv0GI6cilwlX+jLGxszltGwBMTkQHDC4ZPvO10=
+=qd+G
+-----END PGP SIGNATURE-----
+--=-=-=--
