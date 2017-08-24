@@ -1,38 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42335 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752842AbdHXQp5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Aug 2017 12:45:57 -0400
-Date: Thu, 24 Aug 2017 18:45:54 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 11/13] dax, iomap: Add support for synchronous faults
-Message-ID: <20170824164554.GA14410@quack2.suse.cz>
-References: <20170817160815.30466-1-jack@suse.cz>
- <20170817160815.30466-12-jack@suse.cz>
- <20170824122720.GA9961@infradead.org>
- <20170824123451.GA6187@quack2.suse.cz>
- <20170824133809.GA29607@infradead.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:44956 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753021AbdHXU46 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 16:56:58 -0400
+Date: Thu, 24 Aug 2017 13:56:47 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 7/6] xfs_bmap: fix -n documentation in manpage
+Message-ID: <20170824205647.GJ4796@magnolia>
+References: <1503575272-28263-1-git-send-email-nborisov@suse.com>
+ <5fb3c541-ceaf-409c-3536-96bf8805076c@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170824133809.GA29607@infradead.org>
+In-Reply-To: <5fb3c541-ceaf-409c-3536-96bf8805076c@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Nikolay Borisov <nborisov@suse.com>, linux-xfs@vger.kernel.org, sandeen@redhat.com
 
-On Thu 24-08-17 06:38:09, Christoph Hellwig wrote:
-> On Thu, Aug 24, 2017 at 02:34:51PM +0200, Jan Kara wrote:
-> > In a subtle but important way ;). The main difference is that if the extent
-> > has been already allocated by previous write, but the changing transaction
-> > is not yet committed, we will return IOMAP_F_NEEDDSYNC but not IOMAP_F_NEW.
+On Thu, Aug 24, 2017 at 03:09:32PM -0500, Eric Sandeen wrote:
+> xfs_bmap's manpage mis-describes the behavior from the
+> -n option.  xfs_io's fiemap command references the xfs_bmap
+> manpage, and has the same problem:
 > 
-> Ok.  How about a IOMAP_F_DIRTY flag and a better explanation?
+> -n does not change the query batch size, it limits the number
+> of extents displayed.
+> 
+> This has been true for 15+ years, so change the documentation
+> to match reality.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-OK, will change it.
+For patches 6 & 7,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+--D
+
+> ---
+> 
+> diff --git a/man/man8/xfs_bmap.8 b/man/man8/xfs_bmap.8
+> index 098cfae..c725519 100644
+> --- a/man/man8/xfs_bmap.8
+> +++ b/man/man8/xfs_bmap.8
+> @@ -77,12 +77,11 @@ option is used.
+>  .BI \-n " num_extents"
+>  If this option is given,
+>  .B xfs_bmap
+> -obtains the extent list of the file in groups of
+> +will display at most
+>  .I num_extents
+>  extents. In the absence of
+>  .BR \-n ", " xfs_bmap
+> -queries the system for the number of extents in the file and uses that
+> -value to compute the group size.
+> +will display all extents in the file.
+>  .TP
+>  .B \-p
+>  If this option is used,
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
