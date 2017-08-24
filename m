@@ -1,106 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:11363 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753492AbdHYA16 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 20:27:58 -0400
-Date: Fri, 25 Aug 2017 10:27:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RESEND][PATCH] xfs: add online uevent for mount operation
-Message-ID: <20170825002752.GJ21024@dastard>
+Received: from imap.thunk.org ([74.207.234.97]:52210 "EHLO imap.thunk.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753428AbdHXXfC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 19:35:02 -0400
+Date: Thu, 24 Aug 2017 19:34:53 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: Filesystem configuration parsers - (was: Re: [RESEND][PATCH]
+ xfs: add online uevent for mount operation)
+Message-ID: <20170824233453.eqxxlckkelp334yi@thunk.org>
 References: <1503582115-37220-1-git-send-email-houtao1@huawei.com>
  <20170824171028.GF4796@magnolia>
+ <20170824180441.GL27873@wotan.suse.de>
+ <87a82ok45i.fsf@notabene.neil.brown.name>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170824171028.GF4796@magnolia>
+In-Reply-To: <87a82ok45i.fsf@notabene.neil.brown.name>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Hou Tao <houtao1@huawei.com>, linux-xfs@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Hou Tao <houtao1@huawei.com>, linux-xfs@vger.kernel.org, david@fromorbit.com, linux-fsdevel@vger.kernel.org, Jeff Mahoney <jeffm@suse.com>, Dmitri Pal <dpal@redhat.com>
 
-On Thu, Aug 24, 2017 at 10:10:28AM -0700, Darrick J. Wong wrote:
-> On Thu, Aug 24, 2017 at 09:41:55PM +0800, Hou Tao wrote:
-> > It will be useful if there is a corresponding online uevent after
-> > a XFS filesystem has been mounted. A typical usage of the uevent
-> > is setting the error configuration for a specific XFS filesystem
-> > or all XFS filesystems by using udevd.
-> > 
-> > The following is an example of udevd rule which will shutdown
-> > any XFS filesystem after the filesystem gets any IO error:
-> > 
-> >     ACTION=="online", SUBSYSTEM=="xfs", DEVPATH=="/fs/xfs/*", \
-> >     RUN+="/bin/sh -c 'echo 0 > /sys%p/error/metadata/default/max_retries; \
-> > 	    echo 0 > /sys%p/error/metadata/EIO/max_retries; \
-> > 	    echo 0 > /sys%p/error/metadata/ENOSPC/max_retries; \
-> > 	    echo 0 > /sys%p/error/metadata/ENODEV/max_retries'"
-> >
-> > Suggested-by: Dave Chinner <david@fromorbit.com>
-> > Signed-off-by: Hou Tao <houtao1@huawei.com>
-> > ---
-> >  fs/xfs/xfs_super.c | 15 +++++++++++++++
-> >  1 file changed, 15 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 38aaacd..695fe85f 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1530,6 +1530,19 @@ xfs_destroy_percpu_counters(
-> >  	percpu_counter_destroy(&mp->m_fdblocks);
-> >  }
-> >  
-> > +static void
-> > +xfs_fs_uevent(
-> > +	struct xfs_mount	*mp,
-> > +	enum kobject_action	action)
-> > +{
-> > +	int err;
-> > +
-> > +	err = kobject_uevent(&mp->m_kobj.kobject, action);
+On Fri, Aug 25, 2017 at 08:11:05AM +1000, NeilBrown wrote:
 > 
-> It might be useful to send kobject_uevent_env so that we can squeeze in
-> things like the fs uuid for easier identification?  I envision a
-> /etc/xfs/fs.conf file like this:
-> 
-> [903db5b1-82cd-4f26-8221-443a4ed0563a]
-> error.metadata.EIO.max_retries = 0
-> error.fail_at_unmount = 1
-> config.cowextsize = 1048576
-> config.inherit_noatime = 1
-> 
-> With a udev helper that uses the fsuuid to find the appropriate section
-> of the ini^Wconfig file and load the appropriate values into sysfs.  If
-> we ever decide to expose more config knobs through sysfs then they'll
-> be automatically supported.
+> Just to provide contrast, NFS has a config file which can provide
+> certain defaults for mounted filesystems.  However it doesn't require a
+> udev event to achieve this.
 
-Yup, that's sounds like a good idea.
+I think we're mixing multiple things, and that may be confusing the
+discussion.  A config file parser is a technology.  *How* you use the
+config file parser can be quite different even if it is using the same
+config file parser or config file format.
 
-> > +	if (err)
-> > +		xfs_notice(mp, "Sending XFS uevent %d got error %d",
-> > +				action, err);
-> > +}
-> > +
-> >  STATIC int
-> >  xfs_fs_fill_super(
-> >  	struct super_block	*sb,
-> > @@ -1667,6 +1680,8 @@ xfs_fs_fill_super(
-> >  		goto out_unmount;
-> >  	}
-> >  
-> > +	xfs_fs_uevent(mp, KOBJ_ONLINE);
+>From what I've seen in this e-mail thread, there are at least three
+different use cases:
+
+1)  How mkfs uses to create the file system
+2)  How the file system should be configured when/while it is mounted
+3)  Message marshalling and unmarshalling when communicating with the
+    kernel via uevents
+
+> Instead, it provides "/sbin/mount.nfs" which imposes the defaults at
+> mount time, rather than just after mount time.
 > 
-> That said, I wonder if we ought to move this discussion to fsdevel to
-> pull in any /other/ filesystems that have sysfs knobs that they might
-> like to be able to persist?  ext4 has a bunch of tunables too...
+> There could, conceivably, be an "/sbin/mount.xfs" which read the config
+> file and set all the defaults concurrently with the mount operation.
 
-Nope. We'll never get anywhere if we do that, just like the last
-umpteenth times that generic fs events have been discussed. These
-are XFS specific kobjs so we can do what we like with them and we
-have an XFS specific problem that needs solving....
+For nfs there are a large number of knobs that are of interest at
+mount time, such that specifying them all as mount options on the
+command line, or in /etc/fstab, gets spectacularly painful.  Which is
+why /etc/nfsmount.conf makes sense.
+
+For ext4 and nfs we have many more knobs that come into play when the
+file system is created, and so for ext4 that's why I have
+/etc/mke2fs.conf, where I might have some complex stanzas such as:
+
+    hugefile = {
+        features = extent,huge_file,bigalloc,flex_bg,uninit_bg,dir_nlink,extra_isize,^resize_inode,sparse_super2
+        cluster_size = 32768
+        hash_alg = half_md4
+        reserved_ratio = 0.0
+        num_backup_sb = 0
+        packed_meta_blocks = 1
+        make_hugefiles = 1
+        inode_ratio = 4194304
+        hugefiles_dir = /huge-dir
+        hugefiles_name = huge-data
+        hugefiles_digits = 0
+        hugefiles_size = 0
+        hugefiles_align = 256M
+        hugefiles_align_disk = true
+        num_hugefiles = 1
+        zero_hugefiles = false
+	flex_bg_size = 262144
+    }
+
+...and then the sysadmin only has to type "mke2fs -T hugefile
+/dev/sdc3" (for example).
+
+The question of using the same parser for uevents is yet another can
+of worms.  And there, I think we need to be careful about what the
+requirements are for these uevents.  Uevents is just the technology.
+There are many use cases for that technology; are you using them to
+signal mounts/unmounts?  And at the file system level or at the mount
+namespace level?
+
+Are you using them to single file system corruption problems?  And if
+so, are you trying to trying to send a single bit of information ---
+"the file system is corrupted"?  Or are you trying to send much more
+information --- for example, sending each inode that file system found
+that was corrupted, and each block number where the SCSI device found
+a media error?  (We have a solution that does this inside Google, and
+it uses a netlink socket to do the delievery.  I'm pretty sure that if
+you used uevents, udev could melt down if there are a large number of
+errors reported.)
+
+And then the final question here is how much does standardization
+help?  Are there use cases where progams really want to use the same
+format when updating /etc/mke2fs.conf versus /etc/nfsmount.conf versus
+/etc/mkfs.xfs.conf?  Or is this more of, "let's try to make life
+slightly easier for the user by keeping things mostly the same as we
+can"?  Or is this just a matter of file system developers sharing
+their experiences of various different designs, just so that they are
+aware of what libaries or code bases are available for them to use?
 
 Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+						- Ted
