@@ -1,114 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44032 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932458AbdHWTMF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 Aug 2017 15:12:05 -0400
-Subject: Re: [PATCH 4/4] fiemap: Add support for ranged query
-References: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
- <1503501082-16983-1-git-send-email-nborisov@suse.com>
- <1503501082-16983-4-git-send-email-nborisov@suse.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9ad449bc-96ff-8b48-275d-1ec49f54cb50@sandeen.net>
-Date: Wed, 23 Aug 2017 14:12:04 -0500
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:65362 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753702AbdHXX6r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 19:58:47 -0400
+Date: Fri, 25 Aug 2017 09:58:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] mkfs: rename defaultval to flagval in opts
+Message-ID: <20170824235843.GH21024@dastard>
+References: <20170818103932.24607-1-jtulak@redhat.com>
+ <20170819010300.GM10621@dastard>
+ <CACj3i72XgoXfNuSQPHn4ireQBRTiuhH4ngSdzhHgzW5uNWLVng@mail.gmail.com>
+ <20170820015624.GP10621@dastard>
+ <20170824191502.GT27873@wotan.suse.de>
 MIME-Version: 1.0
-In-Reply-To: <1503501082-16983-4-git-send-email-nborisov@suse.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170824191502.GT27873@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Dmitri Pal <dpal@redhat.com>
 
-On 8/23/17 10:11 AM, Nikolay Borisov wrote:
-> Introduce two optional arguments which can be used to perform fiemap queries
-> for a particular range in a file. Those are 'offset' and 'length' they can be
-> used like so:
+On Thu, Aug 24, 2017 at 09:15:02PM +0200, Luis R. Rodriguez wrote:
+> On Sun, Aug 20, 2017 at 11:56:24AM +1000, Dave Chinner wrote:
+> > Let me finish factoring all the code into a set of usable
+> > structures, then we can start looking at the option table and config
+> > files from a fresh perspective. This time, we need to come up with a
+> > clean design and clear direction before any patches are written...
 > 
-> xfs_io -c "fiemap 0 12k" - query for extents covering the first 12kb of the
-> target file.
+> While you're on it, I should mention I ran across a nice feature as part of one
+> of the libraries I evaluated when considering configuration file parsing. The
+> library libini_config has a rules checker which allows one to build rules from
+> yet-another file, it uses ini_rules_read_from_file() to let you pass your
+> rules, you then use ini_rules_check() to check if the configuration file
+> applies to rules previously loaded. An example INI file for rules is that
+> of the upstream SSSD:
 > 
-> Now that such queries are supposed also modify the logic for printing the last
-> hole to only cover the range which is asked. So if we ask for 0-10kb and the
-> range 8k-12k is actually a whole, then limit the last whole only to this range:
+> https://github.com/SSSD/sssd/blob/master/src/config/cfg_rules.ini
 > 
-> So for a file which has the following contents :
+> I haven't yet dove too much into this but from what I gather the
+> validator can be a built-in one or a local one.
 > 
-> |-----hole-------|-------data--------|-----hole-----|
-> 0                8k                  12k            16k
+> A curious thing about our use is we'd want a validator for both configuration
+> file and command line parameters. But such language above may allow us to
+> easily specify and handle both.
 > 
-> The output would be:
-> 
-> xfs_io -c "fiemap -v 0 13k" test-dir/fragmented-file
-> test-dir/fragmented-file:
->  EXT: FILE-OFFSET      BLOCK-RANGE          TOTAL FLAGS
->    0: [0..15]:         hole                    16
->    1: [16..23]:        897847296..897847303     8   0x0
->    2: [24..25]:        hole                     2
-> 
-> Furthermore in cases where the queried range is covered by a whole then the
-> existing while() loop would have never executed, due to num_exents = 0. Fix this
-> by converting it to a do {} while ()
-> 
-> _
-> 
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> ---
->  io/fiemap.c       | 75 +++++++++++++++++++++++++++++++++++++++----------------
->  man/man8/xfs_io.8 |  6 +++--
->  2 files changed, 57 insertions(+), 24 deletions(-)
-> 
-> diff --git a/io/fiemap.c b/io/fiemap.c
-> index ef54b265ab91..2e03a81dc57a 100644
-> --- a/io/fiemap.c
-> +++ b/io/fiemap.c
-> @@ -27,7 +27,7 @@
->  
->  static cmdinfo_t fiemap_cmd;
->  static const __u64 blocksize = 512;
-> -static int max_extents = 0;
-> +static int max_extents = -1;
->  
->  static void
->  fiemap_help(void)
-> @@ -38,6 +38,7 @@ fiemap_help(void)
->  "\n"
->  " Example:\n"
->  " 'fiemap -v' - tabular format verbose map\n"
-> +" 'fiemap 0 4k' - print fiemap extents for 0-4k range\n"
->  "\n"
->  " fiemap prints the map of disk blocks used by the current file.\n"
->  " The map lists each extent used by the file, as well as regions in the\n"
-> @@ -231,9 +232,14 @@ fiemap_f(
->  	int		boff_w = 16;
->  	int		tot_w = 5;	/* 5 since its just one number */
->  	int		flg_w = 5;
-> -	__u64		last_logical = 0;
-> +	__u64		start_offset = 0, last_logical = 0;
-> +	__u64		len = -1;
-> +	__u64		end_offset = 0, llast;
-> +	size_t		fsblocksize, fssectsize;
->  	struct stat	st;
->  
-> +	init_cvtnum(&fsblocksize, &fssectsize);
-> +
->  	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
->  		switch (c) {
->  		case 'a':
-> @@ -253,7 +259,41 @@ fiemap_f(
->  		}
->  	}
->  
-> -	ret = get_extent_count(file->fd, last_logical, -1);
-> +
-> +	if (optind < argc) {
-> +	        off64_t start = cvtnum(fsblocksize, fssectsize, argv[optind]);
-> +	        if (start_offset < 0) {
+> Food for thought as we're trying to come up with a clean design now.
 
-This is testing the wrong var.
+Conflating config files to change defaults with command line parsing
+is what got us into this mess in the first place. It's not a clean
+design - it's like trying to fit a square peg into a round hole.
+The result is stupidly complicated and needlessly bleeds config file
+implementation all through the rest of the mkfs code.
 
-Ok, I got totally distracted on this; looking to see if it can't just be
-cleaned up wholesale... it's still so full of weird special cases :/
+A clean design isolates the different functionality into
+self-contained modules and connects them with simple, easy to
+understand structures and minimal APIs.
 
--Eric
+The default behaviours we can modify are a much smaller subset of
+options than the CLI can modify. Hence if we define a structure that
+contains all the default options we can set, we also define the
+required config file contents. And it also defines the interface
+between built in defaults, config file defaults and how that feeds
+into command line parsing.  The command line parsing can remain
+entirely unchanged from where it is now, except for the structure it
+stores the configured options in.
+
+And, finally, we have a set of validated and configured values that
+mkfs uses to create the on-disk structures - the mkfs configuration
+if you like. This is currently splayed across single variables used
+to hold the defaults, cli options and validated mkfs values at
+different points in time. So we need to separate these out into a
+set of validated "mkfs parameters" structure that we can feed to the
+on disk formatting.
+
+IOWs, we have 4 clear modules and a set of data that is needed
+as inputs into each module:
+
+Module				Connecting structure
+Setting defaults
+				struct mkfs_default_params
+CLI parsing
+				struct cli_params
+Validation + calculation
+				struct mkfs_params
+On disk formatting
+
+Note that there's nothing here that dictates how each module is
+implemented - all I've done is define modules and the data that
+needs to flow between the modules. I've simply applied a basic
+software engineering technique (SADT - structured analysis and
+design technique) and made a ruidmentary data flow diagram in my
+head to get to this.
+
+We have a nasty habit of engineering software around here, and a key
+engineering process is understanding why something we tried to build
+failed catastrophically. And once a failure has been understood, we
+put in place processes that make sure that mistake doesn't happen
+again.
+
+The last 3 modules in the above list were what I originally intended
+to do with mkfs - the CLI options table was simply an implementation
+detail inside the CLI parsing module. Then we got feature creep in
+the middle of all this - config file based defaults, json config
+input/output, etc.
+
+We tried to factor that into the *CLI parsing module
+implementation*, rather than stepping back and looking at the
+overall design.  That's where it all went wrong and that's the
+reason we need to reset: we made a mistake at the design level and
+no amount of implementation complexity was going to fix that.
+
+We failed and had to reset here because I didn't sufficiently
+communicate the original goals, design, etc, to the people who took
+up the work. And to make matters worse, I then allowed feature creep
+to take hold without really considering how those features should
+fit into the bigger picture.
+
+A year ago I was pretty much beyond caring about this work because I
+was >this< close to burning out so I just let it all go. That's not
+a problem for me anymore, so now I'm cleaning up the mess I let
+happen on my watch. And that means I need to make sure everyone
+understands:
+
+	1. the reasons we have to reset this work,
+	2. the design of the new code and the reasons for it; and
+	3. make damn sure that feature creep doesn't derail this
+	   work again
+
+So, once the refactoring is done and I've added the stubs to allow
+config files to be used to override build time defaults, we can
+bikeshed about the config file format used in the "setting defaults"
+module all we want because it won't affect the design or
+implementation of any other part of mkfs.
+
+This is a lot longer and a *lot* stronger than I was originally
+intending to write, but it comes down to one fundamental principle:
+
+	Never make the same mistake twice.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
