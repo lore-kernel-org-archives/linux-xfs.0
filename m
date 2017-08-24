@@ -1,83 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43901 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751231AbdHXHSW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Aug 2017 03:18:22 -0400
-Date: Thu, 24 Aug 2017 09:18:19 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 13/13] ext4: Support for synchronous DAX faults
-Message-ID: <20170824071819.GC20465@quack2.suse.cz>
-References: <20170817160815.30466-1-jack@suse.cz>
- <20170817160815.30466-14-jack@suse.cz>
- <20170823183714.GH13778@infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:52012 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751124AbdHXJDh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 05:03:37 -0400
+Date: Thu, 24 Aug 2017 17:03:35 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 5/5] xfs: test fuzzing every field of a dquot
+Message-ID: <20170824090335.GM31418@eguan.usersys.redhat.com>
+References: <150067465981.30639.14801416171688538711.stgit@magnolia>
+ <150067469875.30639.1164952553984333812.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170823183714.GH13778@infradead.org>
+In-Reply-To: <150067469875.30639.1164952553984333812.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, Boaz Harrosh <boazh@netapp.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Wed 23-08-17 11:37:14, Christoph Hellwig wrote:
-> > +	pfn_t pfn;
-> >  
-> >  	if (write) {
-> >  		sb_start_pagefault(sb);
-> > @@ -287,16 +288,39 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
-> >  		down_read(&EXT4_I(inode)->i_mmap_sem);
-> >  		handle = ext4_journal_start_sb(sb, EXT4_HT_WRITE_PAGE,
-> >  					       EXT4_DATA_TRANS_BLOCKS(sb));
-> > +		if (IS_ERR(handle)) {
-> > +			up_read(&EXT4_I(inode)->i_mmap_sem);
-> > +			sb_end_pagefault(sb);
-> > +			return VM_FAULT_SIGBUS;
-> > +		}
-> >  	} else {
-> >  		down_read(&EXT4_I(inode)->i_mmap_sem);
-> >  	}
-> > -	if (!IS_ERR(handle))
-> > -		result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops, NULL);
-> > -	else
-> > -		result = VM_FAULT_SIGBUS;
-> > +	result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops, &pfn);
+On Fri, Jul 21, 2017 at 03:04:58PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Maybe split the error handling refactor into a simple prep patch to
-> make this one more readable?
-
-OK, will do.
-
-> > +		/* Write fault but PFN mapped only RO? */
-> > +		if (result & VM_FAULT_NEEDDSYNC) {
-> > +			int err;
-> > +			loff_t start = ((loff_t)vmf->pgoff) << PAGE_SHIFT;
-> > +			size_t len = 0;
-> > +
-> > +			if (pe_size == PE_SIZE_PTE)
-> > +				len = PAGE_SIZE;
-> > +#ifdef CONFIG_FS_DAX_PMD
-> > +			else if (pe_size == PE_SIZE_PMD)
-> > +				len = HPAGE_PMD_SIZE;
-> > +#endif
-> > +			else
-> > +				WARN_ON_ONCE(1);
-> > +			err = vfs_fsync_range(vmf->vma->vm_file, start,
-> > +					      start + len - 1, 1);
-> > +			if (err)
-> > +				result = VM_FAULT_SIGBUS;
-> > +			else
-> > +				result = dax_insert_pfn_mkwrite(vmf, pe_size,
-> > +								pfn);
-> > +		}
+> See what happens when we fuzz every field of a quota information structure.
 > 
-> I think this needs to become a helper exported from the DAX code,
-> way too much magic inside the file system as-is.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Good point, there isn't anything fs specific in there.
+These tests all failed in the same way like:
 
-								Honza
+    +scrub didn't fail with diskdq.magic = zeroes.
+    +scrub didn't fail with diskdq.magic = ones.
+    +scrub didn't fail with diskdq.magic = firstbit.
+    +scrub didn't fail with diskdq.magic = middlebit.
+    ...
 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+with 4.13-rc5 kernel and xfsprogs for-next branch. I assume that's
+something need to be fixed in the kernel?
+
+...
+
+> diff --git a/tests/xfs/1382 b/tests/xfs/1382
+> new file mode 100755
+> index 0000000..fd7e50d
+> --- /dev/null
+> +++ b/tests/xfs/1382
+> @@ -0,0 +1,63 @@
+> +#! /bin/bash
+> +# FS QA Test No. 1380
+                    ^^^^ I changed it to 1382 then renumbered.
+
+Thanks,
+Eryu
