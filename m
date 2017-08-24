@@ -1,56 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41414 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751643AbdHVWnp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 22 Aug 2017 18:43:45 -0400
-Subject: Re: XFS Bug Report
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <CAFzqJcahyU7F5CJcYKTPabWBVCnufwSMS4QcJijHVVux-Ndv+Q@mail.gmail.com>
- <ad807068-5de9-3200-68ef-de9e42401a5a@sandeen.net>
-Message-ID: <1b00bb62-6c46-fbb5-f127-e1157c1a83fc@sandeen.net>
-Date: Tue, 22 Aug 2017 17:43:43 -0500
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:3599 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751003AbdHXAQk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 20:16:40 -0400
+Date: Thu, 24 Aug 2017 10:16:37 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH RFC 0/3] xfs: add customizable default values for error
+ configuration
+Message-ID: <20170824001637.GB21024@dastard>
+References: <1503316462-16553-1-git-send-email-houtao1@huawei.com>
+ <20170821225003.GR10621@dastard>
+ <6b4f210c-4ea3-4a9d-b7ea-e60480be76e2@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <ad807068-5de9-3200-68ef-de9e42401a5a@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6b4f210c-4ea3-4a9d-b7ea-e60480be76e2@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ruoxin Jiang <rj2394@columbia.edu>, linux-xfs@vger.kernel.org
-Cc: Suman Jana <sumanj@gmail.com>
+To: Hou Tao <houtao1@huawei.com>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, cmaiolino@redhat.com
 
-
-
-On 8/22/17 5:33 PM, Eric Sandeen wrote:
-> On 8/22/17 4:10 PM, Ruoxin Jiang wrote:
->> Hello,
->>
->> We are researchers from Columbia University, New York. As part of our
->> current research we have run into some issues using xfs filesystem.
->> For example, we encountered a case where the setuid bit of a modified
->> executable was not removed as desired.
+On Wed, Aug 23, 2017 at 05:26:36PM +0800, Hou Tao wrote:
+> Hi Dave,
 > 
-> Thanks for the reports.
-> 
-> For case 1:
-> 
->> * In xfs, function `xfs_file_aio_write_checks` calls `file_remove_privs` which
->> removes special file priviledges when the executable is written to or truncated.
->>
->> * If an DIO write is not aligned to device logical sector size, the syscall
->> fails with  EINVAL` before `xfs_file_aio_write_checks` is called. Thus the setuid
->> bit will not be removed from the modified executable.
-> 
-> If the write did not happen, why should the setuid bit be removed?
-> The write failed and the file's contents were not modified.  It seems
-> like xfs's behavior makes sense; is there a posix specification that
-> indicates the behavior should be different?
+> On 2017/8/22 6:50, Dave Chinner wrote:
+> > On Mon, Aug 21, 2017 at 07:54:19PM +0800, Hou Tao wrote:
+> >> Hi all,
+> >>
+> >> XFS has the configurable error handlers for each mounted device, but
+> >> the default values of these configuration are static. It will be useful
+> >> to make the default values customizable when there are many XFS filesystems
+> >> and we need to shutdown the filesystem after getting any error.
+> > 
+> > Nice! I can see the usefulness of this functionality - it's a piece
+> > of the puzzle we are missing. I've had a quick look over the code,
+> > and have a few high level questions that I can't answer from looking
+> > at the code.
+> > Was there any reason you decided to put the default policy
+> > management into the kernel rather than try to provide a mechanism to
+> > allow userspace to manage it (e.g. via a udev event at mount time)?
+> No special reason for the kernel-side default policy, just because I didn't
+> find an uevent for the mount event. If the uevent is available or added (?),
+> writing an udev rule to set the default error configuration seems simpler and
+> works for our scenario.
 
-In fact, POSIX says:
+I think we'd need to add one, but given we already have a kobj for
+the filesystem being mounted, it seems to me like we should be able
+to add a mount notification without too much trouble via
+kobject_uevent(KOBJ_ONLINE)
 
-"/Upon successful completion/ where nbyte is greater than 0, write() shall mark for update the st_ctime and st_mtime fields of the file, and if the file is a regular file, the S_ISUID and S_ISGID bits of the file mode may be cleared."
+> > We've still got to manage per filesystem specific settings from
+> > userspace (e.g.  root volume might be different to data volumes), so
+> > I'm interested to know if you have any ideas on how we can handle
+> > that side of the problem, too?
+> Do you mean providing extra tools or files to let userspace to manage
+> fs specific error settings or something else ? For us, the current sysfs
+> files of error configuration are enough and there is no need for anything more.
 
-(emphasis mine ... in your case, the write did not successfully complete, and 0 bytes were written)
+I was thinking we should provide a generic userspace tool to catch
+the XFS uevents. On a mount notification it can grab the error
+config from a config file (e.g.  /etc/xfs/error.conf) and push the
+config specified in that file into the sysfs error config files of
+the newly mounted filesystem....
 
--Eric
+> > Assuming we are going to put default policy into the kernel, this
+> > notifier structure seems overly complex when compared to a single
+> > structure that holds the default values and looking it up when a
+> > specific mount error config holds a flag that says "use the
+> > default".
+> > The "check the default flag and grab values" code could all be
+> > hidden inside xfs_error_get_cfg() so propagation happens on demand.
+> > This means all the mounts pick up changes to the default config
+> > without needing to be chained to a notifier.
+> > 
+> > The "use defaults" flag could be cleared when a new value is set for
+> > that error config, and potentionally we could reset it in the store
+> > method if it matches the current default value.
+> > 
+> > I might be missing something here (I frequently do, so please tell
+> > me if I have!), but my initial thoughts are that we can do this in a
+> > much simpler manner. What do you think, Tao?
+>
+> Yes, I agree that the notifier method is over-weighted, and the proposed method
+> is much better. However it has no way to reset the "use default flag" of a specific
+> configuration when the modified default value is modified again to a new value when
+> the old default value is equal with the current specific value. Maybe the reset is
+> unnecessary ?
+
+In that case I think the reset is unnecessary. The fact the default
+was changed to match a specific filesystem config doesn't mean that
+filesystem should start using the defaults. i.e. if you want to
+reset the filesystem to default config, then you need to rewrite
+it's config to match the current defaults.
+
+It's a bit clunky, but it's a simple rule that's easy to understand
+and it keeps the API and both the kernel and userspace code really
+simple.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
