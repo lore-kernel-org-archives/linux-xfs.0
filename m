@@ -1,48 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19134 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751438AbdHSPcS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Aug 2017 11:32:18 -0400
-Date: Sat, 19 Aug 2017 08:32:11 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs_db: bit fuzzing should read the right bit when flipping
-Message-ID: <20170819153210.GR4796@magnolia>
+Received: from sandeen.net ([63.231.237.45]:56060 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753719AbdHXQHh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 12:07:37 -0400
+Subject: Re: [PATCH 6/6] fiemap: Fix semantics of max_extents (-n arguments)
+References: <1503575272-28263-1-git-send-email-nborisov@suse.com>
+ <1503575272-28263-7-git-send-email-nborisov@suse.com>
+ <53c70cbc-1c81-0fc3-6ef8-a9fdd98d89c0@sandeen.net>
+ <6201098e-3095-9c8d-8e81-aed77c2f2052@suse.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c690c91c-108e-885e-e131-fb9ac045047b@sandeen.net>
+Date: Thu, 24 Aug 2017 11:07:35 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <6201098e-3095-9c8d-8e81-aed77c2f2052@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Nikolay Borisov <nborisov@suse.com>, linux-xfs@vger.kernel.org
+Cc: sandeen@redhat.com
 
-The middle and last bit flip fuzz verbs need to read the same bit that
-they're trying to set.
+On 8/24/17 11:06 AM, Nikolay Borisov wrote:
+> 
+> 
+> On 24.08.2017 19:03, Eric Sandeen wrote:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- db/fuzz.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+...
 
-diff --git a/db/fuzz.c b/db/fuzz.c
-index 53cedbc..d0d78a9 100644
---- a/db/fuzz.c
-+++ b/db/fuzz.c
-@@ -226,7 +226,7 @@ fuzz_lastbit(
- 	int		nbits)
- {
- 	setbit_l((char *)buf, bitoff + nbits - 1,
--			!getbit_l((char *)buf, bitoff));
-+			!getbit_l((char *)buf, bitoff + nbits - 1));
- 	return true;
- }
- 
-@@ -238,7 +238,7 @@ fuzz_middlebit(
- 	int		nbits)
- {
- 	setbit_l((char *)buf, bitoff + nbits / 2,
--			!getbit_l((char *)buf, bitoff));
-+			!getbit_l((char *)buf, bitoff + nbits / 2));
- 	return true;
- }
- 
+>> In my testing, for a bare fiemap (no -n) we get here with
+>> cur_extent == max_extents == 0 and so nothing happens:
+>>
+>> # xfs_io -c fiemap testfile
+>> testfile:
+>> #
+>>
+>> (this causes every xfstest which invokes fiemap to fail).
+>>
+>> I think initializing max_extents to -1 is a simple way to fix this.
+> 
+> Ah, you are right, I've come to the same conclusion during my testing of
+> earlier versions. Would you care to fold that fix if that's the only
+> problem found?
+
+Sure, I can fix it on the way in.
+
+-Eric
+
