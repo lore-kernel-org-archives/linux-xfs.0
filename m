@@ -1,55 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59840 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753011AbdHXPWR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 11:22:17 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/3] iomap: return VM_FAULT_* codes from iomap_page_mkwrite
-Date: Thu, 24 Aug 2017 17:22:05 +0200
-Message-Id: <20170824152207.30729-2-hch@lst.de>
-In-Reply-To: <20170824152207.30729-1-hch@lst.de>
-References: <20170824152207.30729-1-hch@lst.de>
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:34978 "EHLO
+        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752891AbdHXRgD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 13:36:03 -0400
+Received: by mail-oi0-f41.google.com with SMTP id k77so1297398oib.2
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2017 10:36:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20170824165546.GA3121@infradead.org>
+References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150353213097.5039.6729469069608762658.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170824165546.GA3121@infradead.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 24 Aug 2017 10:36:02 -0700
+Message-ID: <CAPcyv4iN0QpUSgOUvisnNQsiV1Pp=4dh7CwAV8FFj=_rFU=aug@mail.gmail.com>
+Subject: Re: [PATCH v6 3/5] mm: introduce mmap3 for safely defining new mmap flags
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap.c        | 4 ++--
- fs/xfs/xfs_file.c | 1 -
- 2 files changed, 2 insertions(+), 3 deletions(-)
+On Thu, Aug 24, 2017 at 9:55 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Wed, Aug 23, 2017 at 04:48:51PM -0700, Dan Williams wrote:
+>> The mmap(2) syscall suffers from the ABI anti-pattern of not validating
+>> unknown flags. However, proposals like MAP_SYNC and MAP_DIRECT need a
+>> mechanism to define new behavior that is known to fail on older kernels
+>> without the support. Define a new mmap3 syscall that checks for
+>> unsupported flags at syscall entry and add a 'mmap_supported_mask' to
+>> 'struct file_operations' so generic code can validate the ->mmap()
+>> handler knows about the specified flags. This also arranges for the
+>> flags to be passed to the handler so it can do further local validation
+>> if the requested behavior can be fulfilled.
+>
+> What is the reason to not go with __MAP_VALID hack?  Adding new
+> syscalls is extremely painful, it will take forever to trickle this
+> through all architectures (especially with the various 32-bit
+> architectures having all kinds of different granularities for the
+> offset) and then the various C libraries, never mind applications.
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 039266128b7f..22ffdfeabeda 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -477,10 +477,10 @@ int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
- 
- 	set_page_dirty(page);
- 	wait_for_stable_page(page);
--	return 0;
-+	return VM_FAULT_LOCKED;
- out_unlock:
- 	unlock_page(page);
--	return ret;
-+	return block_page_mkwrite_return(ret);
- }
- EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index afa226b8c290..4213f02325a2 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1035,7 +1035,6 @@ xfs_filemap_page_mkwrite(
- 		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &xfs_iomap_ops);
- 	} else {
- 		ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
--		ret = block_page_mkwrite_return(ret);
- 	}
- 
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--- 
-2.11.0
+I'll let Andy and Kirill restate their concerns, but one of the
+arguments that swayed me is that any new mmap flag with this hack must
+be documented to only work with MAP_SHARED and that MAP_PRIVATE is
+silently ignored. I agree with the mess and delays it causes for other
+archs and libc, but at the same time this is for new applications and
+libraries that know to look for the new flag, so they need to do the
+extra work to check for the new syscall.
 
+However, if the fcntl lease approach works for the DMA cases then we
+only have the one mmap flag to add for now, so maybe the weird
+MAP_{SHARED|PRIVATE} semantics are tolerable.
