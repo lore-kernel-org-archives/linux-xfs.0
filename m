@@ -1,45 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25074 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750998AbdHaUNC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 16:13:02 -0400
-Date: Thu, 31 Aug 2017 13:12:55 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs_repair: take the ag_lock before recording rmap for a
- bmbt record
-Message-ID: <20170831201255.GP3775@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from bombadil.infradead.org ([65.50.211.133]:54577 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752844AbdHXPWX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 11:22:23 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/3] xfs: support for synchronous DAX faults
+Date: Thu, 24 Aug 2017 17:22:07 +0200
+Message-Id: <20170824152207.30729-4-hch@lst.de>
+In-Reply-To: <20170824152207.30729-1-hch@lst.de>
+References: <20170824152207.30729-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: matorola@gmail.com, xfs <linux-xfs@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>
 
-When the (threaded) inode scanner iterates the blocks of a bmbt tree and
-wants to record the bmbt blocks in the in-core rmap database, we have to
-take the ag_lock for the AG that the bmbt block is in, or else we can
-accidentally corrupt the rmap slab by calling slab_add from two threads.
+Return IOMAP_F_NEEDDSYNC from xfs_file_iomap_begin() for a synchronous
+write fault when inode is pinned, and has dirty fields other than the
+timestamps.  In xfs_filemap_huge_fault() we then detect this case and
+call dax_finish_sync_fault() to make sure all metadata is committed, and
+to insert the page table entry.
 
-Reported-by: matorola@gmail.com
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Note that this will also dirty corresponding radix tree entry which is
+what we want - fsync(2) will still provide data integrity guarantees for
+applications not using userspace flushing. And applications using
+userspace flushing can avoid calling fsync(2) and thus avoid the
+performance overhead.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/scan.c |    3 +++
- 1 file changed, 3 insertions(+)
+ fs/xfs/xfs_file.c  | 6 +++++-
+ fs/xfs/xfs_iomap.c | 5 +++++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/repair/scan.c b/repair/scan.c
-index 6c9f5e7..ccf60a6 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -386,7 +386,10 @@ _("bad state %d, inode %" PRIu64 " bmap block 0x%" PRIx64 "\n"),
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 460ca9639e66..5c3597b7dbf9 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1031,7 +1031,11 @@ __xfs_filemap_fault(
  
- 	/* Record BMBT blocks in the reverse-mapping data. */
- 	if (check_dups && collect_rmaps) {
-+		agno = XFS_FSB_TO_AGNO(mp, bno);
-+		pthread_mutex_lock(&ag_locks[agno].lock);
- 		error = rmap_add_bmbt_rec(mp, ino, whichfork, bno);
-+		pthread_mutex_unlock(&ag_locks[agno].lock);
- 		if (error)
- 			do_error(
- _("couldn't add inode %"PRIu64" bmbt block %"PRIu64" reverse-mapping data."),
+ 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 	if (IS_DAX(inode)) {
+-		ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
++		pfn_t pfn;
++
++		ret = dax_iomap_fault(vmf, pe_size, &pfn, &xfs_iomap_ops);
++		if (ret & VM_FAULT_NEEDDSYNC)
++			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
+ 	} else {
+ 		if (write_fault)
+ 			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 813394c62849..e7c762c8fe27 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -33,6 +33,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trans.h"
+ #include "xfs_trans_space.h"
++#include "xfs_inode_item.h"
+ #include "xfs_iomap.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
+@@ -1085,6 +1086,10 @@ xfs_file_iomap_begin(
+ 		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
+ 	}
+ 
++	if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
++	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
++		iomap->flags |= IOMAP_F_NEEDDSYNC;
++
+ 	xfs_bmbt_to_iomap(ip, iomap, &imap);
+ 
+ 	/* optionally associate a dax device with the iomap bdev */
+-- 
+2.11.0
+
