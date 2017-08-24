@@ -1,73 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:4568 "EHLO
-        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751895AbdHXNhD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 09:37:03 -0400
-From: Hou Tao <houtao1@huawei.com>
-Subject: [RESEND][PATCH] xfs: add online uevent for mount operation
-Date: Thu, 24 Aug 2017 21:41:55 +0800
-Message-ID: <1503582115-37220-1-git-send-email-houtao1@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx2.suse.de ([195.135.220.15]:35475 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751462AbdHXLr5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 07:47:57 -0400
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH 2/6] fiemap: Make max_extents a global var
+Date: Thu, 24 Aug 2017 14:47:48 +0300
+Message-Id: <1503575272-28263-3-git-send-email-nborisov@suse.com>
+In-Reply-To: <1503575272-28263-1-git-send-email-nborisov@suse.com>
+References: <1503575272-28263-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, david@fromorbit.com
+Cc: sandeen@redhat.com, Nikolay Borisov <nborisov@suse.com>
 
-It will be useful if there is a corresponding online uevent after
-a XFS filesystem has been mounted. A typical usage of the uevent
-is setting the error configuration for a specific XFS filesystem
-or all XFS filesystems by using udevd.
-
-The following is an example of udevd rule which will shutdown
-any XFS filesystem after the filesystem gets any IO error:
-
-    ACTION=="online", SUBSYSTEM=="xfs", DEVPATH=="/fs/xfs/*", \
-    RUN+="/bin/sh -c 'echo 0 > /sys%p/error/metadata/default/max_retries; \
-	    echo 0 > /sys%p/error/metadata/EIO/max_retries; \
-	    echo 0 > /sys%p/error/metadata/ENOSPC/max_retries; \
-	    echo 0 > /sys%p/error/metadata/ENODEV/max_retries'"
-
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Hou Tao <houtao1@huawei.com>
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
 ---
- fs/xfs/xfs_super.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ io/fiemap.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 38aaacd..695fe85f 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1530,6 +1530,19 @@ xfs_destroy_percpu_counters(
- 	percpu_counter_destroy(&mp->m_fdblocks);
- }
+diff --git a/io/fiemap.c b/io/fiemap.c
+index ed3a8be1dcc4..d284248e4fe1 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -24,6 +24,7 @@
+ #include "io.h"
  
-+static void
-+xfs_fs_uevent(
-+	struct xfs_mount	*mp,
-+	enum kobject_action	action)
-+{
-+	int err;
-+
-+	err = kobject_uevent(&mp->m_kobj.kobject, action);
-+	if (err)
-+		xfs_notice(mp, "Sending XFS uevent %d got error %d",
-+				action, err);
-+}
-+
- STATIC int
- xfs_fs_fill_super(
- 	struct super_block	*sb,
-@@ -1667,6 +1680,8 @@ xfs_fs_fill_super(
- 		goto out_unmount;
- 	}
+ static cmdinfo_t fiemap_cmd;
++static int max_extents = 0;
  
-+	xfs_fs_uevent(mp, KOBJ_ONLINE);
-+
- 	return 0;
+ static void
+ fiemap_help(void)
+@@ -56,7 +57,6 @@ print_verbose(
+ 	int			boff_w,
+ 	int			tot_w,
+ 	int			flg_w,
+-	int			max_extents,
+ 	int			*cur_extent,
+ 	__u64			*last_logical)
+ {
+@@ -111,7 +111,6 @@ static void
+ print_plain(
+ 	struct fiemap_extent	*extent,
+ 	int			lflag,
+-	int			max_extents,
+ 	int			*cur_extent,
+ 	__u64			*last_logical)
+ {
+@@ -196,7 +195,6 @@ fiemap_f(
+ 	char		**argv)
+ {
+ 	struct fiemap	*fiemap;
+-	int		max_extents = 0;
+ 	int		num_extents = 32;
+ 	int		last = 0;
+ 	int		lflag = 0;
+@@ -283,11 +281,11 @@ fiemap_f(
+ 				}
  
-  out_filestream_unmount:
+ 				print_verbose(extent, foff_w, boff_w, tot_w,
+-					      flg_w, max_extents, &cur_extent,
++					      flg_w, &cur_extent,
+ 					      &last_logical);
+ 			} else
+-				print_plain(extent, lflag, max_extents,
+-					    &cur_extent, &last_logical);
++				print_plain(extent, lflag, &cur_extent,
++					    &last_logical);
+ 
+ 			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
+ 				last = 1;
 -- 
-2.5.0
+2.7.4
 
