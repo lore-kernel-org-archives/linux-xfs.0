@@ -1,156 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41506 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751241AbdH2EZt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 00:25:49 -0400
-Date: Mon, 28 Aug 2017 21:25:42 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: iov_iter_pipe warning.
-Message-ID: <20170829042542.GO4757@magnolia>
-References: <20170412162709.bn5qfk4seues3yos@codemonkey.org.uk>
- <20170412170723.GQ29622@ZenIV.linux.org.uk>
- <20170412190318.srkkdytf2ebrjzrg@codemonkey.org.uk>
- <20170421175430.GT29622@ZenIV.linux.org.uk>
- <20170428152955.mafs3f22srmm34aw@codemonkey.org.uk>
- <20170428164313.GK29622@ZenIV.linux.org.uk>
- <20170428165024.ofyl2atpjwohekqa@codemonkey.org.uk>
- <20170428172024.GL29622@ZenIV.linux.org.uk>
- <20170807201818.kykqzexce6ap6aik@codemonkey.org.uk>
- <20170828203130.y6dq5fqovev6wmrv@codemonkey.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170828203130.y6dq5fqovev6wmrv@codemonkey.org.uk>
+Received: from mx2.suse.de ([195.135.220.15]:35493 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751422AbdHXLr7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 07:47:59 -0400
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH 6/6] fiemap: Fix semantics of max_extents (-n arguments)
+Date: Thu, 24 Aug 2017 14:47:52 +0300
+Message-Id: <1503575272-28263-7-git-send-email-nborisov@suse.com>
+In-Reply-To: <1503575272-28263-1-git-send-email-nborisov@suse.com>
+References: <1503575272-28263-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Jones <davej@codemonkey.org.uk>, Al Viro <viro@ZenIV.linux.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: sandeen@redhat.com, Nikolay Borisov <nborisov@suse.com>
 
-On Mon, Aug 28, 2017 at 04:31:30PM -0400, Dave Jones wrote:
-> On Mon, Aug 07, 2017 at 04:18:18PM -0400, Dave Jones wrote:
->  > On Fri, Apr 28, 2017 at 06:20:25PM +0100, Al Viro wrote:
->  >  > On Fri, Apr 28, 2017 at 12:50:24PM -0400, Dave Jones wrote:
->  >  > > currently running v4.11-rc8-75-gf83246089ca0
->  >  > > 
->  >  > > sunrpc bit is for the other unrelated problem I'm chasing.
->  >  > > 
->  >  > > note also, I saw the backtrace without the fs/splice.c changes.
->  >  > 
->  >  > 	Interesting...  Could you add this and see if that triggers?
->  >  > 
->  >  > diff --git a/fs/splice.c b/fs/splice.c
->  >  > index 540c4a44756c..12a12d9c313f 100644
->  >  > --- a/fs/splice.c
->  >  > +++ b/fs/splice.c
->  >  > @@ -306,6 +306,9 @@ ssize_t generic_file_splice_read(struct file *in, loff_t *ppos,
->  >  >  	kiocb.ki_pos = *ppos;
->  >  >  	ret = call_read_iter(in, &kiocb, &to);
->  >  >  	if (ret > 0) {
->  >  > +		if (WARN_ON(iov_iter_count(&to) != len - ret))
->  >  > +			printk(KERN_ERR "ops %p: was %zd, left %zd, returned %d\n",
->  >  > +				in->f_op, len, iov_iter_count(&to), ret);
->  >  >  		*ppos = kiocb.ki_pos;
->  >  >  		file_accessed(in);
->  >  >  	} else if (ret < 0) {
->  > 
->  > Hey Al,
->  >  Due to a git stash screw up on my part, I've had this leftover WARN_ON
->  > in my tree for the last couple months. (That screw-up might turn out to be
->  > serendipitous if this is a real bug..)
->  > 
->  > Today I decided to change things up and beat up on xfs for a change, and
->  > was able to trigger this again.
->  > 
->  > Is this check no longer valid, or am I triggering the same bug we were chased
->  > down in nfs, but now in xfs ?  (None of the other detritus from that debugging
->  > back in April made it, just those three lines above).
-> 
-> Revisiting this. I went back and dug out some of the other debug diffs [1]
-> from that old thread.
-> 
-> I can easily trigger this spew on xfs.
-> 
-> 
-> WARNING: CPU: 1 PID: 2251 at fs/splice.c:292 test_it+0xd4/0x1d0
-> CPU: 1 PID: 2251 Comm: trinity-c42 Not tainted 4.13.0-rc7-think+ #1 
-> task: ffff880459173a40 task.stack: ffff88044f7d0000
-> RIP: 0010:test_it+0xd4/0x1d0
-> RSP: 0018:ffff88044f7d7878 EFLAGS: 00010283
-> RAX: 0000000000000000 RBX: ffff88044f44b968 RCX: ffffffff81511ea0
-> RDX: 0000000000000003 RSI: dffffc0000000000 RDI: ffff88044f44ba68
-> RBP: ffff88044f7d78c8 R08: ffff88046b218ec0 R09: 0000000000000000
-> R10: ffff88044f7d7518 R11: 0000000000000000 R12: 0000000000001000
-> R13: 0000000000000001 R14: 00000000ffffffff R15: 0000000000000001
-> FS:  00007fdbc09b2700(0000) GS:ffff88046b200000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 0000000000000000 CR3: 0000000459e1d000 CR4: 00000000001406e0
-> Call Trace:
->  generic_file_splice_read+0x414/0x4e0
->  ? opipe_prep.part.14+0x180/0x180
->  ? lockdep_init_map+0xb2/0x2b0
->  ? rw_verify_area+0x65/0x150
->  do_splice_to+0xab/0xc0
->  splice_direct_to_actor+0x1f5/0x540
->  ? generic_pipe_buf_nosteal+0x10/0x10
->  ? do_splice_to+0xc0/0xc0
->  ? rw_verify_area+0x9d/0x150
->  do_splice_direct+0x1b9/0x230
->  ? splice_direct_to_actor+0x540/0x540
->  ? __sb_start_write+0x164/0x1c0
->  ? do_sendfile+0x7b3/0x840
->  do_sendfile+0x428/0x840
->  ? do_compat_pwritev64+0xb0/0xb0
->  ? __might_sleep+0x72/0xe0
->  ? kasan_check_write+0x14/0x20
->  SyS_sendfile64+0xa4/0x120
->  ? SyS_sendfile+0x150/0x150
->  ? mark_held_locks+0x23/0xb0
->  ? do_syscall_64+0xc0/0x3e0
->  ? SyS_sendfile+0x150/0x150
->  do_syscall_64+0x1bc/0x3e0
->  ? syscall_return_slowpath+0x240/0x240
->  ? mark_held_locks+0x23/0xb0
->  ? return_from_SYSCALL_64+0x2d/0x7a
->  ? trace_hardirqs_on_caller+0x182/0x260
->  ? trace_hardirqs_on_thunk+0x1a/0x1c
->  entry_SYSCALL64_slow_path+0x25/0x25
-> RIP: 0033:0x7fdbc02dd219
-> RSP: 002b:00007ffc5024fa48 EFLAGS: 00000246
->  ORIG_RAX: 0000000000000028
-> RAX: ffffffffffffffda RBX: 0000000000000028 RCX: 00007fdbc02dd219
-> RDX: 00007fdbbe348000 RSI: 0000000000000011 RDI: 0000000000000015
-> RBP: 00007ffc5024faf0 R08: 000000000000006d R09: 0094e82f2c730a50
-> R10: 0000000000001000 R11: 0000000000000246 R12: 0000000000000002
-> R13: 00007fdbc0885058 R14: 00007fdbc09b2698 R15: 00007fdbc0885000
-> ---[ end trace a5847ef0f7be7e20 ]---
-> asked to read 4096, claims to have read 1
-> actual size of data in pipe 4096 
-> [0:4096]
-> f_op: ffffffffa058c920, f_flags: 49154, pos: 0/1, size: 0
-> 
-> 
-> I'm still trying to narrow down an exact reproducer, but it seems having
-> trinity do a combination of sendfile & writev, with pipes and regular
-> files as fd's is the best repro.
-> 
-> Is this a real problem, or am I chasing ghosts ?  That it doesn't happen
-> on ext4 or btrfs is making me wonder...
+Currently the semantics of the -n argument are a bit idiosyncratic. We want the
+argument to be the limit of extents that are going to be output by the tool. This
+is clearly broken now as evident from the following example on a fragmented file:
 
-<shrug> I haven't heard of any problems w/ directio xfs lately, but OTOH
-I think it's the only filesystem that uses iomap_dio_rw, which would
-explain why ext4/btrfs don't have this problem.
+xfs_io -c "fiemap -v -n 5" test-dir/fragmented-file
+test-dir/fragmented-file:
+ EXT: FILE-OFFSET      BLOCK-RANGE          TOTAL FLAGS
+   0: [0..15]:         hole                    16
+   1: [16..23]:        897847296..897847303     8   0x0
+   2: [24..31]:        hole                     8
+   3: [32..39]:        897851392..897851399     8   0x0
 
-Granted that's idle speculation; is there a reproducer/xfstest for this?
+So we want at most 5 extents printed, yet we get 4. So we always print n - 1
+extents.
 
---D
+With this modification the output looks like:
 
-> 
-> 	Dave
-> 
-> 
-> [1] https://lkml.org/lkml/2017/4/11/921
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+xfs_io -c "fiemap -v -n 5" test-dir/fragmented-file
+test-dir/fragmented-file:
+ EXT: FILE-OFFSET      BLOCK-RANGE          TOTAL FLAGS
+   0: [0..15]:         hole                    16
+   1: [16..23]:        897847296..897847303     8   0x0
+   2: [24..31]:        hole                     8
+   3: [32..39]:        897851392..897851399     8   0x0
+   4: [40..47]:        hole                     8
+
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+ io/fiemap.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/io/fiemap.c b/io/fiemap.c
+index 44a64870d711..7b275275465d 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -122,7 +122,7 @@ print_verbose(
+ 		cur_extent++;
+ 	}
+ 
+-	if ((cur_extent + 1) == max_extents)
++	if (cur_extent == max_extents)
+ 		return 1;
+ 
+ 	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
+@@ -157,7 +157,7 @@ print_plain(
+ 		cur_extent++;
+ 	}
+ 
+-	if ((cur_extent + 1) == max_extents)
++	if (cur_extent == max_extents)
+ 		return 1;
+ 
+ 	printf("\t%d: [%llu..%llu]: %llu..%llu", cur_extent,
+@@ -264,7 +264,7 @@ fiemap_f(
+ 
+ 	printf("%s:\n", file->name);
+ 
+-	while (!last && ((cur_extent + 1) != max_extents)) {
++	while (!last && (cur_extent != max_extents)) {
+ 
+ 		memset(fiemap, 0, map_size);
+ 		fiemap->fm_flags = fiemap_flags;
+@@ -314,12 +314,12 @@ fiemap_f(
+ 				break;
+ 			}
+ 
+-			if ((cur_extent + 1) == max_extents)
++			if (cur_extent == max_extents)
+ 				break;
+ 		}
+ 	}
+ 
+-	if ((cur_extent + 1) == max_extents)
++	if (cur_extent  == max_extents)
+ 		goto out;
+ 
+ 	memset(&st, 0, sizeof(st));
+-- 
+2.7.4
+
