@@ -1,55 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60230 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751348AbdHXK4h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Aug 2017 06:56:37 -0400
-Date: Thu, 24 Aug 2017 12:56:35 +0200
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] xfs: Drop setting redundant PF_KSWAPD in kswapd context
-Message-ID: <20170824105635.GA5965@dhcp22.suse.cz>
-References: <20170824104247.8288-1-khandual@linux.vnet.ibm.com>
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:36643 "EHLO
+        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754038AbdHXQbS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 12:31:18 -0400
+Received: by mail-oi0-f41.google.com with SMTP id t196so10072234oif.3
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2017 09:31:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170824104247.8288-1-khandual@linux.vnet.ibm.com>
+In-Reply-To: <20170824161152.GB27591@lst.de>
+References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150353213655.5039.7662200155640827407.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170824161152.GB27591@lst.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 24 Aug 2017 09:31:17 -0700
+Message-ID: <CAPcyv4jjNi_+c5DW9nsBLEnYMBtsR_v67+bF6bC4Cb9mY7T+Ww@mail.gmail.com>
+Subject: Re: [PATCH v6 4/5] fs, xfs: introduce MAP_DIRECT for creating
+ block-map-atomic file ranges
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Anshuman Khandual <khandual@linux.vnet.ibm.com>
-Cc: linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, dchinner@redhat.com, bfoster@redhat.com, sandeen@sandeen.net
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, xen-devel@lists.xen.org
 
-On Thu 24-08-17 16:12:47, Anshuman Khandual wrote:
-> xfs_btree_split() calls xfs_btree_split_worker() with args.kswapd set
-> if current->flags alrady has PF_KSWAPD. Hence we should not again add
-> PF_KSWAPD into the current flags inside kswapd context. So drop this
-> redundant flag addition.
+[ adding Xen ]
 
-I am not familiar with the code but your change seems incorect. The
-whole point of args->kswapd is to convey the kswapd context to the
-worker which is obviously running in a different context. So this patch
-loses the kswapd context.
+On Thu, Aug 24, 2017 at 9:11 AM, Christoph Hellwig <hch@lst.de> wrote:
+> I still can't make any sense of this description.  What is an external
+> agent?  Userspace obviously can't ever see a change in the extent
+> map, so it can't be meant.
 
-> Signed-off-by: Anshuman Khandual <khandual@linux.vnet.ibm.com>
-> ---
->  fs/xfs/libxfs/xfs_btree.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index e0bcc4a..b3c85e3 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -2895,7 +2895,7 @@ struct xfs_btree_split_args {
->  	 * in any way.
->  	 */
->  	if (args->kswapd)
-> -		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
-> +		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE;
->  
->  	current_set_flags_nested(&pflags, new_pflags);
->  
-> -- 
-> 1.8.5.2
+External agent is a DMA device, or a hypervisor like Xen. In the DMA
+case perhaps we can use the fcntl lease mechanism, I'll investigate.
+In the Xen case it actually would need to use fiemap() to discover the
+physical addresses that back the file to setup their M2P tables.
+Here's the discussion where we discovered that physical address
+dependency:
 
--- 
-Michal Hocko
-SUSE Labs
+    https://lists.xen.org/archives/html/xen-devel/2017-04/msg00419.html
+
+> It would help a lot if you could come up with a concrete user for this,
+> including example code.
+
+Will do.
