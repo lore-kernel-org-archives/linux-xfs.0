@@ -1,106 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:10923 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751768AbdH1DzK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 27 Aug 2017 23:55:10 -0400
-Subject: [PATCH v2 2/2] ext2, ext4: use the super_block dax_device
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sun, 27 Aug 2017 20:48:46 -0700
-Message-ID: <150389212595.25151.10721705529768874001.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <150389211501.25151.6477753201827914462.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <150389211501.25151.6477753201827914462.stgit@dwillia2-desk3.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mail-pg0-f41.google.com ([74.125.83.41]:38891 "EHLO
+        mail-pg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753428AbdHXXuS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 19:50:18 -0400
+Received: by mail-pg0-f41.google.com with SMTP id b8so5219243pgn.5
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2017 16:50:18 -0700 (PDT)
+From: Omar Sandoval <osandov@osandov.com>
+Subject: [PATCH] xfs: check for race with xfs_reclaim_inode() in xfs_ifree_cluster()
+Date: Thu, 24 Aug 2017 16:50:09 -0700
+Message-Id: <93321e051fb5f80c4727844748cca04604a8757a.1503618336.git.osandov@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: Theodore Ts'o <tytso@mit.edu>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.com>, jack@suse.cz, linux-ext4@vger.kernel.org, hch@lst.de
+To: linux-xfs@vger.kernel.org
+Cc: kernel-team@fb.com
 
-The ->iomap_begin() operation is a hot path, and now that mount_bdev()
-arranges for the dax_device to be populated in the super_block, we can
-just reference that attribute directly rather than perform a new lookup.
+From: Omar Sandoval <osandov@fb.com>
 
-Cc: Jan Kara <jack@suse.com>
-Cc: "Theodore Ts'o" <tytso@mit.edu>
-Cc: Andreas Dilger <adilger.kernel@dilger.ca>
-Reported-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+After xfs_ifree_cluster() finds an inode in the radix tree and verifies
+that the inode number is what it expected, xfs_reclaim_inode() can swoop
+in and free it. xfs_ifree_cluster() will then happily continue working
+on the freed inode. Most importantly, it will mark the inode stale,
+which will probably be overwritten when the inode slab object is
+reallocated, but if it has already been reallocated then we can end up
+with an inode spuriously marked stale.
+
+In 8a17d7ddedb4 ("xfs: mark reclaimed inodes invalid earlier") we added
+a second check to xfs_iflush_cluster() to detect this race, but the
+similar RCU lookup in xfs_ifree_cluster() needs the same treatment.
+
+Signed-off-by: Omar Sandoval <osandov@fb.com>
 ---
- fs/ext2/inode.c |   10 ++--------
- fs/ext4/inode.c |   10 ++--------
- 2 files changed, 4 insertions(+), 16 deletions(-)
+Based on v4.13-rc6. Let me know if my reasoning here is completely off,
+the XFS inode machinery makes my head spin.
 
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 30163d007b2f..7102b77a83c6 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -800,7 +800,6 @@ int ext2_get_block(struct inode *inode, sector_t iblock,
- static int ext2_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 		unsigned flags, struct iomap *iomap)
- {
--	struct block_device *bdev;
- 	unsigned int blkbits = inode->i_blkbits;
- 	unsigned long first_block = offset >> blkbits;
- 	unsigned long max_blocks = (length + (1 << blkbits) - 1) >> blkbits;
-@@ -814,13 +813,9 @@ static int ext2_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 		return ret;
+ fs/xfs/xfs_icache.c | 10 +++++-----
+ fs/xfs/xfs_inode.c  | 23 ++++++++++++++++++-----
+ 2 files changed, 23 insertions(+), 10 deletions(-)
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 0a9e6985a0d0..34227115a5d6 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1124,11 +1124,11 @@ xfs_reclaim_inode(
+ 	 * Because we use RCU freeing we need to ensure the inode always appears
+ 	 * to be reclaimed with an invalid inode number when in the free state.
+ 	 * We do this as early as possible under the ILOCK so that
+-	 * xfs_iflush_cluster() can be guaranteed to detect races with us here.
+-	 * By doing this, we guarantee that once xfs_iflush_cluster has locked
+-	 * XFS_ILOCK that it will see either a valid, flushable inode that will
+-	 * serialise correctly, or it will see a clean (and invalid) inode that
+-	 * it can skip.
++	 * xfs_iflush_cluster() and xfs_ifree_cluster() can be guaranteed to
++	 * detect races with us here. By doing this, we guarantee that once
++	 * xfs_iflush_cluster() or xfs_ifree_cluster() has locked XFS_ILOCK that
++	 * it will see either a valid inode that will serialise correctly, or it
++	 * will see an invalid inode that it can skip.
+ 	 */
+ 	spin_lock(&ip->i_flags_lock);
+ 	ip->i_flags = XFS_IRECLAIM;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index ff48f0096810..97045e8dfed5 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2359,11 +2359,24 @@ xfs_ifree_cluster(
+ 			 * already marked stale. If we can't lock it, back off
+ 			 * and retry.
+ 			 */
+-			if (ip != free_ip &&
+-			    !xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
+-				rcu_read_unlock();
+-				delay(1);
+-				goto retry;
++			if (ip != free_ip) {
++				if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
++					rcu_read_unlock();
++					delay(1);
++					goto retry;
++				}
++
++				/*
++				 * Check the inode number again in case we're
++				 * racing with freeing in xfs_reclaim_inode().
++				 * See the comments in that function for more
++				 * information as to why the initial check is
++				 * not sufficient.
++				 */
++				if (ip->i_ino != inum + i) {
++					xfs_iunlock(ip, XFS_ILOCK_EXCL);
++					continue;
++				}
+ 			}
+ 			rcu_read_unlock();
  
- 	iomap->flags = 0;
--	bdev = inode->i_sb->s_bdev;
--	iomap->bdev = bdev;
-+	iomap->bdev = inode->i_sb->s_bdev;
- 	iomap->offset = (u64)first_block << blkbits;
--	if (blk_queue_dax(bdev->bd_queue))
--		iomap->dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
--	else
--		iomap->dax_dev = NULL;
-+	iomap->dax_dev = inode->i_sb->s_daxdev;
- 
- 	if (ret == 0) {
- 		iomap->type = IOMAP_HOLE;
-@@ -842,7 +837,6 @@ static int
- ext2_iomap_end(struct inode *inode, loff_t offset, loff_t length,
- 		ssize_t written, unsigned flags, struct iomap *iomap)
- {
--	fs_put_dax(iomap->dax_dev);
- 	if (iomap->type == IOMAP_MAPPED &&
- 	    written < length &&
- 	    (flags & IOMAP_WRITE))
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index c774bdc22759..311690522366 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3404,7 +3404,6 @@ static int ext4_releasepage(struct page *page, gfp_t wait)
- static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 			    unsigned flags, struct iomap *iomap)
- {
--	struct block_device *bdev;
- 	unsigned int blkbits = inode->i_blkbits;
- 	unsigned long first_block = offset >> blkbits;
- 	unsigned long last_block = (offset + length - 1) >> blkbits;
-@@ -3473,12 +3472,8 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 	}
- 
- 	iomap->flags = 0;
--	bdev = inode->i_sb->s_bdev;
--	iomap->bdev = bdev;
--	if (blk_queue_dax(bdev->bd_queue))
--		iomap->dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
--	else
--		iomap->dax_dev = NULL;
-+	iomap->bdev = inode->i_sb->s_bdev;
-+	iomap->dax_dev = inode->i_sb->s_daxdev;
- 	iomap->offset = first_block << blkbits;
- 
- 	if (ret == 0) {
-@@ -3511,7 +3506,6 @@ static int ext4_iomap_end(struct inode *inode, loff_t offset, loff_t length,
- 	int blkbits = inode->i_blkbits;
- 	bool truncate = false;
- 
--	fs_put_dax(iomap->dax_dev);
- 	if (!(flags & IOMAP_WRITE) || (flags & IOMAP_FAULT))
- 		return 0;
- 
+-- 
+2.14.1
 
