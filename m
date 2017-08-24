@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18322 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:20434 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753005AbdHQQxl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Aug 2017 12:53:41 -0400
-Date: Thu, 17 Aug 2017 09:53:31 -0700
+        with ESMTP id S1753836AbdHXU4A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 16:56:00 -0400
+Date: Thu, 24 Aug 2017 13:55:55 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs_db: make write/fuzz -c and -d work on non-crc filesystems
-Message-ID: <20170817165331.GF4796@magnolia>
+Subject: [PATCH] xfs_io: clarify the fsmap documentation
+Message-ID: <20170824205555.GI4796@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -14,67 +14,57 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, eguan@redhat.com
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-For a non-crc filesystem, make write/fuzz -c and -d work properly
-instead of bailing out.  Since there's no checksum to update, both
-cases collapse to setting the field value without calling the write
-verifier.
+Explicitly declare that the 'start' and 'end' arguments to fsmap require
+one of -d, -l, or -r to select the data, log, or realtime device, and fix
+misspelled command name while we're at it.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/fuzz.c  |    8 ++++++--
- db/write.c |    7 +++++--
- 2 files changed, 11 insertions(+), 4 deletions(-)
+ io/fsmap.c        |    2 ++
+ man/man8/xfs_io.8 |    7 +++++--
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/db/fuzz.c b/db/fuzz.c
-index 76dbf94..53cedbc 100644
---- a/db/fuzz.c
-+++ b/db/fuzz.c
-@@ -125,7 +125,9 @@ fuzz_f(
- 		return 0;
- 	}
+diff --git a/io/fsmap.c b/io/fsmap.c
+index 9e70c7b..448fb53 100644
+--- a/io/fsmap.c
++++ b/io/fsmap.c
+@@ -48,6 +48,8 @@ fsmap_help(void)
+ " -n -- query n extents at a time.\n"
+ " -m -- output machine-readable format.\n"
+ " -v -- Verbose information, show AG and offsets.  Show flags legend on 2nd -v\n"
++"\n"
++"The optional start and end arguments require one of -d, -l, or -r to be set.\n"
+ "\n"));
+ }
  
--	if (invalid_data && iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF) {
-+	if (invalid_data &&
-+	    iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF &&
-+	    xfs_sb_version_hascrc(&mp->m_sb)) {
- 		dbprintf(_("Cannot recalculate CRCs on this type of object\n"));
- 		return 0;
- 	}
-@@ -149,7 +151,9 @@ fuzz_f(
- 	local_ops.verify_read = stashed_ops->verify_read;
- 	iocur_top->bp->b_ops = &local_ops;
- 
--	if (corrupt) {
-+	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
-+		local_ops.verify_write = xfs_dummy_verify;
-+	} else if (corrupt) {
- 		local_ops.verify_write = xfs_dummy_verify;
- 		dbprintf(_("Allowing fuzz of corrupted data and bad CRC\n"));
- 	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
-diff --git a/db/write.c b/db/write.c
-index 9fc6d8e..5ef76bc 100644
---- a/db/write.c
-+++ b/db/write.c
-@@ -138,7 +138,8 @@ write_f(
- 	}
- 
- 	if (invalid_data &&
--	    iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF) {
-+	    iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF &&
-+	    xfs_sb_version_hascrc(&mp->m_sb)) {
- 		dbprintf(_("Cannot recalculate CRCs on this type of object\n"));
- 		return 0;
- 	}
-@@ -162,7 +163,9 @@ write_f(
- 	local_ops.verify_read = stashed_ops->verify_read;
- 	iocur_top->bp->b_ops = &local_ops;
- 
--	if (corrupt) {
-+	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
-+		local_ops.verify_write = xfs_dummy_verify;
-+	} else if (corrupt) {
- 		local_ops.verify_write = xfs_dummy_verify;
- 		dbprintf(_("Allowing write of corrupted data and bad CRC\n"));
- 	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index c87db0b..0082ca9 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -323,6 +323,9 @@ and
+ .I end
+ arguments can be used to constrain the output to a particular range of
+ disk blocks.
++If these two options are specified, exactly one of
++.BR "-d" ", " "-l" ", or " "-r"
++must also be set.
+ .RE
+ .RS 1.0i
+ .PD 0
+@@ -372,12 +375,12 @@ for other filesystem metadata.
+ .TP
+ .BI \-n " num_extents"
+ If this option is given,
+-.B xfs_fsmap
++.B fsmap
+ obtains the extent list of the file in groups of
+ .I num_extents
+ extents.
+ In the absence of
+-.BR \-n ", " xfs_fsmap
++.BR "-n" ", " "fsmap"
+ queries the system for extents in groups of 131,072 records.
+ .TP
+ .B \-v
