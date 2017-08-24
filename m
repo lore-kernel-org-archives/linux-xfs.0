@@ -1,91 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46749 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751004AbdHXA5o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 20:57:44 -0400
-Date: Wed, 23 Aug 2017 17:57:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: remove "no-allocation" reservations for file
- creations
-Message-ID: <20170824005736.GE4796@magnolia>
-References: <20170821082404.3387-1-hch@lst.de>
- <20170823202213.GA4796@magnolia>
- <20170824004755.GC21024@dastard>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:34901 "EHLO
+        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753210AbdHXU04 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 16:26:56 -0400
+Received: by mail-oi0-f45.google.com with SMTP id k77so5264685oib.2
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2017 13:26:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170824004755.GC21024@dastard>
+In-Reply-To: <20170824163925.GA28503@lst.de>
+References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150353213655.5039.7662200155640827407.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170824161152.GB27591@lst.de> <CAPcyv4jjNi_+c5DW9nsBLEnYMBtsR_v67+bF6bC4Cb9mY7T+Ww@mail.gmail.com>
+ <20170824163925.GA28503@lst.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 24 Aug 2017 13:26:55 -0700
+Message-ID: <CAPcyv4j06mdEek-aYfZCbTW0MaL6gy7OpUsgyv4hBB5yy_rW6A@mail.gmail.com>
+Subject: Re: [PATCH v6 4/5] fs, xfs: introduce MAP_DIRECT for creating
+ block-map-atomic file ranges
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, xen-devel@lists.xen.org
 
-On Thu, Aug 24, 2017 at 10:47:55AM +1000, Dave Chinner wrote:
-> On Wed, Aug 23, 2017 at 01:22:13PM -0700, Darrick J. Wong wrote:
-> > On Mon, Aug 21, 2017 at 10:24:04AM +0200, Christoph Hellwig wrote:
-> > > If we create a new file we will need an inode, and usually some metadata
-> > > in the parent direction.  Aiming for everything to go well despite the
-> > > lack of a reservation leads to dirty transactions cancelled under a heavy
-> > > create/delete load.  This patch removes those nospace transactions, which
-> > > will lead to slightly earlier ENOSPC on some workloads, but instead
-> > > prevent file system shutdowns due to cancelling dirty transactions for
-> > > others.
-> > > 
-> > > A customer could observe assertations failures and shutdowns due to
-> > > cancelation of dirty transactions during heavy NFS workloads as shown
-> > > below:
-> > 
-> > Looks ok... but is there a xfstest somewhere that can be coaxed into
-> > reproducing this?  I'm looking at what this code does and have been
-> > wondering why it even tries this weird workaround in the first place?
-> 
-> Because back in 1997 SGI had a customer that didn't like getting
-> ENOSPC being reported trying to rename file near ENOSPC when df said
-> the filesystem had <some tiny amount> of space available and the
-> directory blocks weren't full:
-> 
-> commit f5029ed542697e8daf728b57d8fec0d9f1abc66c
-> Author: Doug Doucette <doucette@engr.sgi.com>
-> Date:   Tue Jul 15 17:54:13 1997 +0000
-> 
->     Add xfs_dir_canenter to check for entering name in a directory
->     with no space allocation.  Initialize new da_arg field justcheck,
->     use it in xfs_dir_node_addname.
-> 
-> commit 9b9c81137b07d40d864e468cf3168f1b55d83c13
-> Author: Doug Doucette <doucette@engr.sgi.com>
-> Date:   Fri Jul 11 16:33:02 1997 +0000
-> 
->     Make xfs_dir_createname fail gracefully if the total argument is
->     0 and we actually need space.  Same treatment for xfs_dir_node_addname.
->     Part of making rename work sometimes with 0 space reservation.
-> 
-> > IOWS, the weirdness removed by this patch didn't quite smell right, but
-> > at the same time I want to know more about why the smelly weirdness was
-> > there at all before I rip it out. Context, anyone? :)
-> 
-> It's always been a crufty corner case. xfs_rename and xfs_remove
-> need to be able to operate at ENOSPC where reservations may not be
-> possible so they can free up space. However, create/symlink/link
-> don't really need to work when so close to ENOSPC we can't get a
-> reservation of a few blocks, so I don't see a huge problem with
-> this.
+On Thu, Aug 24, 2017 at 9:39 AM, Christoph Hellwig <hch@lst.de> wrote:
+> On Thu, Aug 24, 2017 at 09:31:17AM -0700, Dan Williams wrote:
+>> External agent is a DMA device, or a hypervisor like Xen. In the DMA
+>> case perhaps we can use the fcntl lease mechanism, I'll investigate.
+>> In the Xen case it actually would need to use fiemap() to discover the
+>> physical addresses that back the file to setup their M2P tables.
+>> Here's the discussion where we discovered that physical address
+>> dependency:
+>>
+>>     https://lists.xen.org/archives/html/xen-devel/2017-04/msg00419.html
+>
+> fiemap does not work to discover physical addresses.  If they want
+> to do anything involving physical address they will need a kernel
+> driver.
 
-<nod> I agree that for rm and rename we might have to do twisted things
-to avoid blowing up; it was more that doing so for inode allocation as
-part of create/symlink that just seemed ... weird to me.
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+True, it's broken with respect to multi-device filesystems and these
+patches do nothing to fix that problem. Ok, I'm fine to let that use
+case depend on a kernel driver and just focus on fixing the DMA case.
