@@ -1,73 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13970 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753701AbdHXT0e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Aug 2017 15:26:34 -0400
-Date: Thu, 24 Aug 2017 13:26:24 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 1/3] iomap: return VM_FAULT_* codes from
- iomap_page_mkwrite
-Message-ID: <20170824192624.GA20489@linux.intel.com>
-References: <20170824152207.30729-1-hch@lst.de>
- <20170824152207.30729-2-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:43795 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751231AbdHXHQ2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 03:16:28 -0400
+Date: Thu, 24 Aug 2017 09:16:24 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 10/13] mm: Wire up MAP_SYNC
+Message-ID: <20170824071624.GB20465@quack2.suse.cz>
+References: <20170817160815.30466-1-jack@suse.cz>
+ <20170817160815.30466-11-jack@suse.cz>
+ <20170823184349.GA12660@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170824152207.30729-2-hch@lst.de>
+In-Reply-To: <20170823184349.GA12660@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>
 
-On Thu, Aug 24, 2017 at 05:22:05PM +0200, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-This is obviously correct, but the lack of changelog makes it unclear why the
-change is being made.  Does a later patch in the series depend on
-iomap_page_mkwrite() returning VM_FAULT_* codes?  Is this just cleanup so you
-can hide the block_page_mkwrite_return() call inside of iomap_page_mkwrite()?
-
-I think it's the former, so the logic in __xfs_filemap_fault() is simpler?
-
-Anyway, the code is correct, so you can add:
-
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-
-> ---
->  fs/iomap.c        | 4 ++--
->  fs/xfs/xfs_file.c | 1 -
->  2 files changed, 2 insertions(+), 3 deletions(-)
+On Wed 23-08-17 11:43:49, Christoph Hellwig wrote:
+> On Thu, Aug 17, 2017 at 06:08:12PM +0200, Jan Kara wrote:
+> > Pretty crude for now...
+> > 
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> >  fs/ext4/file.c                  | 2 ++
+> >  include/linux/mm.h              | 1 +
+> >  include/linux/mman.h            | 3 ++-
+> >  include/uapi/asm-generic/mman.h | 1 +
+> >  mm/mmap.c                       | 5 +++++
+> >  5 files changed, 11 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+> > index f84bb29e941e..850037e140d7 100644
+> > --- a/fs/ext4/file.c
+> > +++ b/fs/ext4/file.c
+> > @@ -340,6 +340,8 @@ static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
+> >  		vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
+> >  	} else {
+> >  		vma->vm_ops = &ext4_file_vm_ops;
+> > +		if (vma->vm_flags & VM_SYNC)
+> > +			return -EOPNOTSUPP;
+> >  	}
 > 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 039266128b7f..22ffdfeabeda 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -477,10 +477,10 @@ int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
->  
->  	set_page_dirty(page);
->  	wait_for_stable_page(page);
-> -	return 0;
-> +	return VM_FAULT_LOCKED;
->  out_unlock:
->  	unlock_page(page);
-> -	return ret;
-> +	return block_page_mkwrite_return(ret);
->  }
->  EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
->  
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index afa226b8c290..4213f02325a2 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1035,7 +1035,6 @@ xfs_filemap_page_mkwrite(
->  		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &xfs_iomap_ops);
->  	} else {
->  		ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-> -		ret = block_page_mkwrite_return(ret);
->  	}
->  
->  	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -- 
-> 2.11.0
+> So each mmap instance would need to reject the flag explicitly?
 > 
+> Or do I misunderstand this VM_SYNC flag?
+
+Yes, if this should be cleaned up, then each mmap instance not supporting
+it would need to reject it. However Dan has in his version of mmap()
+syscall a mask of supported flags so when I switch to that, it would be
+just opt-in. Or I could just reject VM_SYNC for any !IS_DAX inode so then
+only ext2 & xfs would need to reject it... But the biggest problem with
+this patch is that we need to settle on a safe way of adding new mmap flag.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
