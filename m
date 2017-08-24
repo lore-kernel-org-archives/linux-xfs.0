@@ -1,52 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:34978 "EHLO
-        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752891AbdHXRgD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 13:36:03 -0400
-Received: by mail-oi0-f41.google.com with SMTP id k77so1297398oib.2
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2017 10:36:03 -0700 (PDT)
+Received: from mx2.suse.de ([195.135.220.15]:53593 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753314AbdHXSNU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 14:13:20 -0400
+Date: Thu, 24 Aug 2017 20:13:18 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: Filesystem configuration parsers - (was: Re: [RESEND][PATCH]
+ xfs: add online uevent for mount operation)
+Message-ID: <20170824181318.GM27873@wotan.suse.de>
+References: <1503582115-37220-1-git-send-email-houtao1@huawei.com>
+ <20170824171028.GF4796@magnolia>
+ <20170824180441.GL27873@wotan.suse.de>
 MIME-Version: 1.0
-In-Reply-To: <20170824165546.GA3121@infradead.org>
-References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150353213097.5039.6729469069608762658.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170824165546.GA3121@infradead.org>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 24 Aug 2017 10:36:02 -0700
-Message-ID: <CAPcyv4iN0QpUSgOUvisnNQsiV1Pp=4dh7CwAV8FFj=_rFU=aug@mail.gmail.com>
-Subject: Re: [PATCH v6 3/5] mm: introduce mmap3 for safely defining new mmap flags
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170824180441.GL27873@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Hou Tao <houtao1@huawei.com>, linux-xfs@vger.kernel.org, david@fromorbit.com, linux-fsdevel@vger.kernel.org, Jeff Mahoney <jeffm@suse.com>, NeilBrown <neilb@suse.com>, Tso Ted <tytso@mit.edu>, Dmitri Pal <dpal@redhat.com>
 
-On Thu, Aug 24, 2017 at 9:55 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Wed, Aug 23, 2017 at 04:48:51PM -0700, Dan Williams wrote:
->> The mmap(2) syscall suffers from the ABI anti-pattern of not validating
->> unknown flags. However, proposals like MAP_SYNC and MAP_DIRECT need a
->> mechanism to define new behavior that is known to fail on older kernels
->> without the support. Define a new mmap3 syscall that checks for
->> unsupported flags at syscall entry and add a 'mmap_supported_mask' to
->> 'struct file_operations' so generic code can validate the ->mmap()
->> handler knows about the specified flags. This also arranges for the
->> flags to be passed to the handler so it can do further local validation
->> if the requested behavior can be fulfilled.
->
-> What is the reason to not go with __MAP_VALID hack?  Adding new
-> syscalls is extremely painful, it will take forever to trickle this
-> through all architectures (especially with the various 32-bit
-> architectures having all kinds of different granularities for the
-> offset) and then the various C libraries, never mind applications.
+On the other thread we can discuss the configuration file parser used,
+this other thread we can use for the sysfs knobs and if it makes sense
+to share anything in consideration for a possible future udev event.
+More below.
 
-I'll let Andy and Kirill restate their concerns, but one of the
-arguments that swayed me is that any new mmap flag with this hack must
-be documented to only work with MAP_SHARED and that MAP_PRIVATE is
-silently ignored. I agree with the mess and delays it causes for other
-archs and libc, but at the same time this is for new applications and
-libraries that know to look for the new flag, so they need to do the
-extra work to check for the new syscall.
+On Thu, Aug 24, 2017 at 08:04:41PM +0200, Luis R. Rodriguez wrote:
+> On Thu, Aug 24, 2017 at 10:10:28AM -0700, Darrick J. Wong wrote:
+> > It might be useful to send kobject_uevent_env so that we can squeeze in
+> > things like the fs uuid for easier identification?  I envision a
+> > /etc/xfs/fs.conf file like this:
+> > 
+> > [903db5b1-82cd-4f26-8221-443a4ed0563a]
+> > error.metadata.EIO.max_retries = 0
+> > error.fail_at_unmount = 1
+> > config.cowextsize = 1048576
+> > config.inherit_noatime = 1
+> > 
+> > With a udev helper that uses the fsuuid to find the appropriate section
+> > of the ini^Wconfig file and load the appropriate values into sysfs.
+> 
+> While all this is nice, I'm sure we're all aware of the dangers of setting
+> things in stone through sysfs, its likely already decided for the above
+> tunables,
 
-However, if the fcntl lease approach works for the DMA cases then we
-only have the one mmap flag to add for now, so maybe the weird
-MAP_{SHARED|PRIVATE} semantics are tolerable.
+<-- udev thing and now snip -->
+
+> Just saying, we better damn be sure this is the way we want to go.
+> 
+> > > +	if (err)
+> > > +		xfs_notice(mp, "Sending XFS uevent %d got error %d",
+> > > +				action, err);
+> > > +}
+> > > +
+> > >  STATIC int
+> > >  xfs_fs_fill_super(
+> > >  	struct super_block	*sb,
+> > > @@ -1667,6 +1680,8 @@ xfs_fs_fill_super(
+> > >  		goto out_unmount;
+> > >  	}
+> > >  
+> > > +	xfs_fs_uevent(mp, KOBJ_ONLINE);
+> > 
+> > That said, I wonder if we ought to move this discussion to fsdevel to
+> > pull in any /other/ filesystems that have sysfs knobs that they might
+> > like to be able to persist?  ext4 has a bunch of tunables too...
+
+So were you thinking perhaps if we are going to use udev that it may make
+sense then to instead consider if we want to share tunables for uevents?
+Then instead of each filesystem having its own parser, etc, we have set
+of common knobs for any filesystem possible.
+
+Is that what you had in mind to discuss?
+
+  Luis
