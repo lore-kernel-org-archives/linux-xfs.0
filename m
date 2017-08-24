@@ -1,104 +1,235 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:36194 "EHLO
-        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751062AbdHZPPo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 26 Aug 2017 11:15:44 -0400
-Received: by mail-oi0-f49.google.com with SMTP id r9so18576268oie.3
-        for <linux-xfs@vger.kernel.org>; Sat, 26 Aug 2017 08:15:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170826074047.GA6292@ls3530.fritz.box>
-References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150353213097.5039.6729469069608762658.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170824165546.GA3121@infradead.org> <CAPcyv4iN0QpUSgOUvisnNQsiV1Pp=4dh7CwAV8FFj=_rFU=aug@mail.gmail.com>
- <20170825130011.GA30072@infradead.org> <20170825155803.4km7wttzadfqw2vb@node.shutemov.name>
- <20170825160236.GA2561@infradead.org> <20170825161607.6v6beg4zjktllt2z@node.shutemov.name>
- <4de21e8d-5e10-ec40-c731-0c079953cf48@gmx.de> <CAPcyv4jeZc8P+E0aHNChzy-wfNpOx3GehKck1nXqJ1b9JdydFA@mail.gmail.com>
- <20170826074047.GA6292@ls3530.fritz.box>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 26 Aug 2017 08:15:43 -0700
-Message-ID: <CAPcyv4ic0zxQzWEipZ=1LpDC8VnmphGzVSYmrFcjOAgX7esfUw@mail.gmail.com>
-Subject: Re: [PATCH v6 3/5] mm: introduce mmap3 for safely defining new mmap flags
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([65.50.211.133]:35110 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753111AbdHXPWU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 11:22:20 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/3] xfs: consolidate the various page fault handlers
+Date: Thu, 24 Aug 2017 17:22:06 +0200
+Message-Id: <20170824152207.30729-3-hch@lst.de>
+In-Reply-To: <20170824152207.30729-1-hch@lst.de>
+References: <20170824152207.30729-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Helge Deller <deller@gmx.de>
-Cc: "Kirill A. Shutemov" <kirill@shutemov.name>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-parisc@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>
 
-On Sat, Aug 26, 2017 at 12:40 AM, Helge Deller <deller@gmx.de> wrote:
-> * Dan Williams <dan.j.williams@intel.com>:
->> On Fri, Aug 25, 2017 at 9:19 AM, Helge Deller <deller@gmx.de> wrote:
->> > On 25.08.2017 18:16, Kirill A. Shutemov wrote:
->> >> On Fri, Aug 25, 2017 at 09:02:36AM -0700, Christoph Hellwig wrote:
->> >>> On Fri, Aug 25, 2017 at 06:58:03PM +0300, Kirill A. Shutemov wrote:
->> >>>> Not all archs are ready for this:
->> >>>>
->> >>>> arch/parisc/include/uapi/asm/mman.h:#define MAP_TYPE    0x03            /* Mask for type of mapping */
->> >>>> arch/parisc/include/uapi/asm/mman.h:#define MAP_FIXED   0x04            /* Interpret addr exactly */
->> >>>
->> >>> I'd be happy to say that we should not care about parisc for
->> >>> persistent memory.  We'll just have to find a way to exclude
->> >>> parisc without making life too ugly.
->> >>
->> >> I don't think creapling mmap() interface for one arch is the right way to
->> >> go. I think the interface should be universal.
->> >>
->> >> I may imagine MAP_DIRECT can be useful not only for persistent memory.
->> >> For tmpfs instead of mlock()?
->> >
->> > On parisc we have
->> > #define MAP_SHARED      0x01            /* Share changes */
->> > #define MAP_PRIVATE     0x02            /* Changes are private */
->> > #define MAP_TYPE        0x03            /* Mask for type of mapping */
->> > #define MAP_FIXED       0x04            /* Interpret addr exactly */
->> > #define MAP_ANONYMOUS   0x10            /* don't use a file */
->> >
->> > So, if you need a MAP_DIRECT, wouldn't e.g.
->> > #define MAP_DIRECT      0x08
->> > be possible (for parisc, and others 0x04).
->> > And if MAP_TYPE needs to include this flag on parisc:
->> > #define MAP_TYPE        (0x03 | 0x08)  /* Mask for type of mapping */
->>
->> The problem here is that to support new the mmap flags the arch needs
->> to find a flag that is guaranteed to fail on older kernels. Defining
->> MAP_DIRECT to 0x8 on parisc doesn't work because it will simply be
->> ignored on older parisc kernels.
->>
->> However, it's already the case that several archs have their own
->> sys_mmap entry points. Those archs that can't follow the common scheme
->> (only parsic it seems) will need to add a new mmap syscall. I think
->> that's a reasonable tradeoff to allow every other architecture to add
->> this support with their existing mmap syscall paths.
->
-> I don't want other architectures to suffer just because of parisc.
-> But adding a new syscall just for usage on parisc won't work either,
-> because nobody will add code to call it then.
+Add a new __xfs_filemap_fault helper that implements all four page fault
+callouts, and make these methods themselves small stubs that set the
+correct write_fault flag, and exit early for the non-DAX case for the
+hugepage related ones.
 
-I don't understand this comment, if / when parisc gets around to
-adding pmem and dax support why wouldn't libc grow support for the new
-parisc mmap variant? Also, it's not just MAP_DIRECT you would also
-need space for a MAP_SYNC flag.
+Life would be so much simpler if we only had one method for all this.
 
->> That means MAP_DIRECT should be defined to MAP_TYPE on parisc until it
->> later defines an opt-in mechanism to a new syscall that honors
->> MAP_DIRECT as a valid flag.
->
-> I'd instead propose to to introduce an ABI breakage for parisc users
-> (which aren't many). Most parisc users update their kernel regularily
-> anyway, because we fixed so many bugs in the latest kernel.
->
-> With the following patch pushed down to the stable kernel series,
-> MAP_DIRECT will fail as expected on those kernels, while we can
-> keep parisc up with current developments regarding MAP_DIRECT.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_file.c  | 120 +++++++++++++++--------------------------------------
+ fs/xfs/xfs_trace.h |  24 +++++++++--
+ 2 files changed, 54 insertions(+), 90 deletions(-)
 
-The whole point is to avoid an ABI regression and the chance for false
-positive results. We're immediately stuck if some application was
-expecting 0x8 to be ignored, or conversely an application that
-absolutely needs to rely on MAP_SYNC/MAP_DIRECT semantics assumes the
-wrong result on a parisc kernel where they are ignored.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 4213f02325a2..460ca9639e66 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1012,34 +1012,36 @@ xfs_file_llseek(
+  *         i_lock (XFS - extent map serialisation)
+  */
+ 
+-/*
+- * mmap()d file has taken write protection fault and is being made writable. We
+- * can set the page state up correctly for a writable page, which means we can
+- * do correct delalloc accounting (ENOSPC checking!) and unwritten extent
+- * mapping.
+- */
+ STATIC int
+-xfs_filemap_page_mkwrite(
+-	struct vm_fault		*vmf)
++__xfs_filemap_fault(
++	struct vm_fault		*vmf,
++	enum page_entry_size	pe_size,
++	bool			write_fault)
+ {
+ 	struct inode		*inode = file_inode(vmf->vma->vm_file);
++	struct xfs_inode	*ip = XFS_I(inode);
+ 	int			ret;
+ 
+-	trace_xfs_filemap_page_mkwrite(XFS_I(inode));
++	trace_xfs_filemap_fault(ip, pe_size, write_fault);
+ 
+-	sb_start_pagefault(inode->i_sb);
+-	file_update_time(vmf->vma->vm_file);
+-	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
++	if (write_fault) {
++		sb_start_pagefault(inode->i_sb);
++		file_update_time(vmf->vma->vm_file);
++	}
+ 
++	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 	if (IS_DAX(inode)) {
+-		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &xfs_iomap_ops);
++		ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
+ 	} else {
+-		ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
++		if (write_fault)
++			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
++		else
++			ret = filemap_fault(vmf);
+ 	}
+-
+ 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+-	sb_end_pagefault(inode->i_sb);
+ 
++	if (write_fault)
++		sb_end_pagefault(inode->i_sb);
+ 	return ret;
+ }
+ 
+@@ -1047,93 +1049,39 @@ STATIC int
+ xfs_filemap_fault(
+ 	struct vm_fault		*vmf)
+ {
+-	struct inode		*inode = file_inode(vmf->vma->vm_file);
+-	int			ret;
+-
+-	trace_xfs_filemap_fault(XFS_I(inode));
+-
+ 	/* DAX can shortcut the normal fault path on write faults! */
+-	if ((vmf->flags & FAULT_FLAG_WRITE) && IS_DAX(inode))
+-		return xfs_filemap_page_mkwrite(vmf);
+-
+-	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+-	if (IS_DAX(inode))
+-		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &xfs_iomap_ops);
+-	else
+-		ret = filemap_fault(vmf);
+-	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+-
+-	return ret;
++	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
++			IS_DAX(file_inode(vmf->vma->vm_file)) &&
++			(vmf->flags & FAULT_FLAG_WRITE));
+ }
+ 
+-/*
+- * Similar to xfs_filemap_fault(), the DAX fault path can call into here on
+- * both read and write faults. Hence we need to handle both cases. There is no
+- * ->huge_mkwrite callout for huge pages, so we have a single function here to
+- * handle both cases here. @flags carries the information on the type of fault
+- * occuring.
+- */
+ STATIC int
+ xfs_filemap_huge_fault(
+ 	struct vm_fault		*vmf,
+ 	enum page_entry_size	pe_size)
+ {
+-	struct inode		*inode = file_inode(vmf->vma->vm_file);
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	int			ret;
+-
+-	if (!IS_DAX(inode))
++	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
+ 		return VM_FAULT_FALLBACK;
+ 
+-	trace_xfs_filemap_huge_fault(ip);
+-
+-	if (vmf->flags & FAULT_FLAG_WRITE) {
+-		sb_start_pagefault(inode->i_sb);
+-		file_update_time(vmf->vma->vm_file);
+-	}
+-
+-	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+-	ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
+-	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+-
+-	if (vmf->flags & FAULT_FLAG_WRITE)
+-		sb_end_pagefault(inode->i_sb);
++	/* DAX can shortcut the normal fault path on write faults! */
++	return __xfs_filemap_fault(vmf, pe_size,
++			(vmf->flags & FAULT_FLAG_WRITE));
++}
+ 
+-	return ret;
++STATIC int
++xfs_filemap_page_mkwrite(
++	struct vm_fault		*vmf)
++{
++	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
+ }
+ 
+-/*
+- * pfn_mkwrite was originally inteneded to ensure we capture time stamp
+- * updates on write faults. In reality, it's need to serialise against
+- * truncate similar to page_mkwrite. Hence we cycle the XFS_MMAPLOCK_SHARED
+- * to ensure we serialise the fault barrier in place.
+- */
+ static int
+ xfs_filemap_pfn_mkwrite(
+ 	struct vm_fault		*vmf)
+ {
+-
+-	struct inode		*inode = file_inode(vmf->vma->vm_file);
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	int			ret = VM_FAULT_NOPAGE;
+-	loff_t			size;
+-
+-	trace_xfs_filemap_pfn_mkwrite(ip);
+-
+-	sb_start_pagefault(inode->i_sb);
+-	file_update_time(vmf->vma->vm_file);
+-
+-	/* check if the faulting page hasn't raced with truncate */
+-	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
+-	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
+-	if (vmf->pgoff >= size)
+-		ret = VM_FAULT_SIGBUS;
+-	else if (IS_DAX(inode))
+-		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &xfs_iomap_ops);
+-	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
+-	sb_end_pagefault(inode->i_sb);
+-	return ret;
+-
++	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
++		return VM_FAULT_NOPAGE;
++	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
+ }
+ 
+ static const struct vm_operations_struct xfs_file_vm_ops = {
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index bcc3cdf8e1c5..3f41d5340eb8 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -689,10 +689,26 @@ DEFINE_INODE_EVENT(xfs_inode_set_cowblocks_tag);
+ DEFINE_INODE_EVENT(xfs_inode_clear_cowblocks_tag);
+ DEFINE_INODE_EVENT(xfs_inode_free_cowblocks_invalid);
+ 
+-DEFINE_INODE_EVENT(xfs_filemap_fault);
+-DEFINE_INODE_EVENT(xfs_filemap_huge_fault);
+-DEFINE_INODE_EVENT(xfs_filemap_page_mkwrite);
+-DEFINE_INODE_EVENT(xfs_filemap_pfn_mkwrite);
++TRACE_EVENT(xfs_filemap_fault,
++	TP_PROTO(struct xfs_inode *ip, enum page_entry_size pe_size,
++		 bool write_fault),
++	TP_ARGS(ip, pe_size, write_fault),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(enum page_entry_size, pe_size)
++		__field(bool, write_fault)
++	),
++	TP_fast_assign(
++		__entry->dev = VFS_I(ip)->i_sb->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->pe_size = pe_size;
++		__entry->write_fault = write_fault;
++	),
++	TP_printk("dev %d:%d ino 0x%llx pe_size %d write_fault %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino, __entry->pe_size, __entry->write_fault)
++)
+ 
+ DECLARE_EVENT_CLASS(xfs_iref_class,
+ 	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
+-- 
+2.11.0
 
-I have not seen any patches for parisc pmem+dax enabling so it seems
-too early to worry about these "last mile" enabling features of
-MAP_DIRECT and MAP_SYNC. In particular parisc doesn't appear to have
-ARCH_ENABLE_MEMORY_HOTPLUG, so as far as I can see it can't yet
-support the ZONE_DEVICE scheme that is a pre-requisite for MAP_DIRECT.
