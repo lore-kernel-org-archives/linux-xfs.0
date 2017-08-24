@@ -1,109 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39992 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751004AbdHXA1E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 20:27:04 -0400
-Date: Wed, 23 Aug 2017 17:26:44 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: XFS Bug Report
-Message-ID: <20170824002644.GC4796@magnolia>
-References: <CAFzqJcahyU7F5CJcYKTPabWBVCnufwSMS4QcJijHVVux-Ndv+Q@mail.gmail.com>
- <ad807068-5de9-3200-68ef-de9e42401a5a@sandeen.net>
- <20170822232831.GY21024@dastard>
- <20170823163543.GX4796@magnolia>
- <20170823235946.GA21024@dastard>
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:46588 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751003AbdHXAr6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2017 20:47:58 -0400
+Date: Thu, 24 Aug 2017 10:47:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: remove "no-allocation" reservations for file
+ creations
+Message-ID: <20170824004755.GC21024@dastard>
+References: <20170821082404.3387-1-hch@lst.de>
+ <20170823202213.GA4796@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170823235946.GA21024@dastard>
+In-Reply-To: <20170823202213.GA4796@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Ruoxin Jiang <rj2394@columbia.edu>, linux-xfs@vger.kernel.org, Suman Jana <sumanj@gmail.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Thu, Aug 24, 2017 at 09:59:46AM +1000, Dave Chinner wrote:
-> On Wed, Aug 23, 2017 at 09:35:43AM -0700, Darrick J. Wong wrote:
-> > On Wed, Aug 23, 2017 at 09:28:31AM +1000, Dave Chinner wrote:
-> > > On Tue, Aug 22, 2017 at 05:33:24PM -0500, Eric Sandeen wrote:
-> > > > On 8/22/17 4:10 PM, Ruoxin Jiang wrote:
-> > > > > Hello,
-> > > > > 
-> > > > > We are researchers from Columbia University, New York. As part of our
-> > > > > current research we have run into some issues using xfs filesystem.
-> > > > > For example, we encountered a case where the setuid bit of a modified
-> > > > > executable was not removed as desired.
-> > > > 
-> > > > Thanks for the reports.
-> > > > 
-> > > > For case 1:
-> > > > 
-> > > > > * In xfs, function `xfs_file_aio_write_checks` calls `file_remove_privs` which
-> > > > > removes special file priviledges when the executable is written to or truncated.
-> > > > > 
-> > > > > * If an DIO write is not aligned to device logical sector size, the syscall
-> > > > > fails with  EINVAL` before `xfs_file_aio_write_checks` is called. Thus the setuid
-> > > > > bit will not be removed from the modified executable.
-> > > > 
-> > > > If the write did not happen, why should the setuid bit be removed?
-> > > > The write failed and the file's contents were not modified.  It seems
-> > > > like xfs's behavior makes sense; is there a posix specification that
-> > > > indicates the behavior should be different?
-> > > > 
-> > > > Case 2 does look problematic (failed mmap write extending the file EOF)
-> > > 
-> > > mmap should not be able to extend the file at all. It should segv
-> > > if an attempt to write past EOF occurs.
-> 
-> ....
-> > Create a 48k mapping at 0x20000000 to some anonymous memory... with
-> > PROT_NONE.
+On Wed, Aug 23, 2017 at 01:22:13PM -0700, Darrick J. Wong wrote:
+> On Mon, Aug 21, 2017 at 10:24:04AM +0200, Christoph Hellwig wrote:
+> > If we create a new file we will need an inode, and usually some metadata
+> > in the parent direction.  Aiming for everything to go well despite the
+> > lack of a reservation leads to dirty transactions cancelled under a heavy
+> > create/delete load.  This patch removes those nospace transactions, which
+> > will lead to slightly earlier ENOSPC on some workloads, but instead
+> > prevent file system shutdowns due to cancelling dirty transactions for
+> > others.
 > > 
-> >   r[5] = syscall(__NR_write, r[0], 0x2000b000ul, 0x1ul, 0, 0, 0, 0, 0, 0);
-> >   printf("write()=%ld, errno=%d\n", r[5], errno);
-> > 
-> > Then try to write 1 byte to r0 (whose pos is 10) from this anonymous
-> > region, which bails out with EFAULT because the region is PROT_NONE.
-> > This is effectively pwrite(r[0], <unreadable>, 1, 10);
+> > A customer could observe assertations failures and shutdowns due to
+> > cancelation of dirty transactions during heavy NFS workloads as shown
+> > below:
 > 
-> My bad - I didn't look at the code for that case, I was just
-> commenting on Eric's statement about mmap extending the file.
-> 
-> > Therefore, it's not an mmap write that extends the file length, it's the
-> > write call that moves out EOF in preparation for the write, only to have
-> > the buffered write fail because the process doesn't have read access to
-> > the memory buffer.
-> > 
-> > Not sure what to do about this corner case, though -- I guess you could
-> > check that at least the first byte of the write will succeed, and only
-> > then call xfs_zero_eof.  Could still be a TOCTOU race though.
-> > 
-> > Thoughts?
-> 
-> The zeroing succeeded, yes? So there's no stale data exposure at
-> all?
+> Looks ok... but is there a xfstest somewhere that can be coaxed into
+> reproducing this?  I'm looking at what this code does and have been
+> wondering why it even tries this weird workaround in the first place?
 
-Correct.
+Because back in 1997 SGI had a customer that didn't like getting
+ENOSPC being reported trying to rename file near ENOSPC when df said
+the filesystem had <some tiny amount> of space available and the
+directory blocks weren't full:
 
-> Given it's such a whacky corner case, do we really care what
-> happens to the file size on error as long as we don't expose stale
-> data?
+commit f5029ed542697e8daf728b57d8fec0d9f1abc66c
+Author: Doug Doucette <doucette@engr.sgi.com>
+Date:   Tue Jul 15 17:54:13 1997 +0000
 
-I'd just as soon focus on sharper problems, so I'll just throw out the
-usual "patches welcomed" and see if anyone feels motivated to fix this.
+    Add xfs_dir_canenter to check for entering name in a directory
+    with no space allocation.  Initialize new da_arg field justcheck,
+    use it in xfs_dir_node_addname.
 
-:)
+commit 9b9c81137b07d40d864e468cf3168f1b55d83c13
+Author: Doug Doucette <doucette@engr.sgi.com>
+Date:   Fri Jul 11 16:33:02 1997 +0000
 
---D
+    Make xfs_dir_createname fail gracefully if the total argument is
+    0 and we actually need space.  Same treatment for xfs_dir_node_addname.
+    Part of making rename work sometimes with 0 space reservation.
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> IOWS, the weirdness removed by this patch didn't quite smell right, but
+> at the same time I want to know more about why the smelly weirdness was
+> there at all before I rip it out. Context, anyone? :)
+
+It's always been a crufty corner case. xfs_rename and xfs_remove
+need to be able to operate at ENOSPC where reservations may not be
+possible so they can free up space. However, create/symlink/link
+don't really need to work when so close to ENOSPC we can't get a
+reservation of a few blocks, so I don't see a huge problem with
+this.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
