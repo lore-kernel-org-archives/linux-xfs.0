@@ -1,97 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:65450 "EHLO mga02.intel.com"
+Received: from sandeen.net ([63.231.237.45]:59482 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754461AbdHUV5Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Aug 2017 17:57:24 -0400
-Date: Mon, 21 Aug 2017 15:57:03 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 10/13] mm: Wire up MAP_SYNC
-Message-ID: <20170821215703.GA24473@linux.intel.com>
-References: <20170817160815.30466-1-jack@suse.cz>
- <20170817160815.30466-11-jack@suse.cz>
+        id S1753590AbdHXWJV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 18:09:21 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 8C761611EBD
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2017 17:07:56 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: xfsprogs: for-next updated to 2fc6b16
+Message-ID: <12945512-0b3f-d6c6-ced1-94bf2570d9be@sandeen.net>
+Date: Thu, 24 Aug 2017 17:09:20 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170817160815.30466-11-jack@suse.cz>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Boaz Harrosh <boazh@netapp.com>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Aug 17, 2017 at 06:08:12PM +0200, Jan Kara wrote:
-> Pretty crude for now...
-> 
-> Signed-off-by: Jan Kara <jack@suse.cz>
+Hi folks,
 
-One other thing that should probably be wired up before this is all said and
-done is the VmFlag string in /proc/<pid>/smaps.  Right now when we set this
-flag it ends up as ??:
+The for-next branch of the xfsprogs repository at:
 
-7f44e6cbd000-7f44e6dbd000 rw-s 00000000 103:00 12              /root/dax/data
-Size:               1024 kB
-Rss:                   0 kB
-Pss:                   0 kB
-Shared_Clean:          0 kB
-Shared_Dirty:          0 kB
-Private_Clean:         0 kB
-Private_Dirty:         0 kB
-Referenced:            0 kB
-Anonymous:             0 kB
-LazyFree:              0 kB
-AnonHugePages:         0 kB
-ShmemPmdMapped:        0 kB
-Shared_Hugetlb:        0 kB
-Private_Hugetlb:       0 kB
-Swap:                  0 kB
-SwapPss:               0 kB
-KernelPageSize:        4 kB
-MMUPageSize:           4 kB
-Locked:                0 kB
-VmFlags: rd wr sh mr mw me ms ?? mm hg 
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-The quick one-liner at the end of this patch changes that to:
+has just been updated.
 
-7fe30e87f000-7fe30e97f000 rw-s 00000000 103:00 12               /root/dax/data
-Size:               1024 kB
-Rss:                   0 kB
-Pss:                   0 kB
-Shared_Clean:          0 kB
-Shared_Dirty:          0 kB
-Private_Clean:         0 kB
-Private_Dirty:         0 kB
-Referenced:            0 kB
-Anonymous:             0 kB
-LazyFree:              0 kB
-AnonHugePages:         0 kB
-ShmemPmdMapped:        0 kB
-Shared_Hugetlb:        0 kB
-Private_Hugetlb:       0 kB
-Swap:                  0 kB
-SwapPss:               0 kB
-KernelPageSize:        4 kB
-MMUPageSize:           4 kB
-Locked:                0 kB
-VmFlags: rd wr sh mr mw me ms sf mm hg
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
 
-I think that of software can rely on this flag for userspace flushing without
-worrying about any new TOCTOU races because there isn't a way to unset the
-VM_SYNC flag once it is set - it should be valid as long as the mmap() remains
-open and the mmap'd address is valid.
+The new head of the for-next branch is commit:
 
---- 8< ---
- fs/proc/task_mmu.c | 1 +
- 1 file changed, 1 insertion(+)
+2fc6b16 xfs_io: clarify the fsmap documentation
 
-diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-index b836fd6..a2a82ed 100644
---- a/fs/proc/task_mmu.c
-+++ b/fs/proc/task_mmu.c
-@@ -650,6 +650,7 @@ static void show_smap_vma_flags(struct seq_file *m, struct vm_area_struct *vma)
- 		[ilog2(VM_ACCOUNT)]	= "ac",
- 		[ilog2(VM_NORESERVE)]	= "nr",
- 		[ilog2(VM_HUGETLB)]	= "ht",
-+		[ilog2(VM_SYNC)]	= "sf",
- 		[ilog2(VM_ARCH_1)]	= "ar",
- 		[ilog2(VM_DONTDUMP)]	= "dd",
- #ifdef CONFIG_MEM_SOFT_DIRTY
+(I've also added lightweight tags for old vX.Y.0 releases; I was
+wishing for those for some old archaeology recently)
+
+New Commits:
+
+Darrick J. Wong (1):
+      [2fc6b16] xfs_io: clarify the fsmap documentation
+
+Eric Sandeen (1):
+      [fa9f6f1] xfs_bmap: fix -n documentation in manpage
+
+Nikolay Borisov (6):
+      [3d12c08] fiemap: Remove blocksize variable
+      [05ef291] fiemap: Make max_extents a global var
+      [cb404e2] fiemap: Eliminate num_extents
+      [997bfca] fiemap: De-obfuscate last_logical and cur_extent manipulation
+      [abd0c76] fiemap: Factor out common code used for printing holes
+      [e7eaace] fiemap: Fix semantics of max_extents (-n arguments)
+
+
+Code Diffstat:
+
+ io/fiemap.c         | 174 +++++++++++++++++++++++++++++++++++-----------------------------------
+ io/fsmap.c          |   2 +
+ man/man8/xfs_bmap.8 |   5 +-
+ man/man8/xfs_io.8   |   7 ++-
+ 4 files changed, 95 insertions(+), 93 deletions(-)
