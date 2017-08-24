@@ -1,34 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:50634 "EHLO newverein.lst.de"
+Received: from sandeen.net ([63.231.237.45]:40946 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753598AbdHXQj1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Aug 2017 12:39:27 -0400
-Date: Thu, 24 Aug 2017 18:39:25 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v6 4/5] fs, xfs: introduce MAP_DIRECT for creating
-        block-map-atomic file ranges
-Message-ID: <20170824163925.GA28503@lst.de>
-References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com> <150353213655.5039.7662200155640827407.stgit@dwillia2-desk3.amr.corp.intel.com> <20170824161152.GB27591@lst.de> <CAPcyv4jjNi_+c5DW9nsBLEnYMBtsR_v67+bF6bC4Cb9mY7T+Ww@mail.gmail.com>
+        id S1753348AbdHXSn6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 14:43:58 -0400
+Subject: Re: [PATCH 6/6] fiemap: Fix semantics of max_extents (-n arguments)
+References: <1503575272-28263-1-git-send-email-nborisov@suse.com>
+ <1503575272-28263-7-git-send-email-nborisov@suse.com>
+ <20170824175159.GH4796@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <94192a37-fd08-c8fe-747b-25cd77cfe852@sandeen.net>
+Date: Thu, 24 Aug 2017 13:43:57 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4jjNi_+c5DW9nsBLEnYMBtsR_v67+bF6bC4Cb9mY7T+Ww@mail.gmail.com>
+In-Reply-To: <20170824175159.GH4796@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, xen-devel@lists.xen.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@redhat.com
 
-On Thu, Aug 24, 2017 at 09:31:17AM -0700, Dan Williams wrote:
-> External agent is a DMA device, or a hypervisor like Xen. In the DMA
-> case perhaps we can use the fcntl lease mechanism, I'll investigate.
-> In the Xen case it actually would need to use fiemap() to discover the
-> physical addresses that back the file to setup their M2P tables.
-> Here's the discussion where we discovered that physical address
-> dependency:
+On 8/24/17 12:51 PM, Darrick J. Wong wrote:
+> On Thu, Aug 24, 2017 at 02:47:52PM +0300, Nikolay Borisov wrote:
+>> Currently the semantics of the -n argument are a bit idiosyncratic. We want the
+>> argument to be the limit of extents that are going to be output by the tool. This
+>> is clearly broken now as evident from the following example on a fragmented file:
 > 
->     https://lists.xen.org/archives/html/xen-devel/2017-04/msg00419.html
+> Please update the documentation, since the xfs_io fiemap section refers
+> readers to xfs_bmap(8), which says:
+> 
+> "If this [-n] option is given, xfs_bmap obtains the extent list of the
+> file in groups of num_extents extents."
+> 
+> Which is no longer correct, because now -n limits the number of records
+> output, if I'm reading this patch correctly.  TBH I think -n for bmap is
+> also wrong...
 
-fiemap does not work to discover physical addresses.  If they want
-to do anything involving physical address they will need a kernel
-driver.
+Yep.  That's fine as patch 7/6 I think - this patch doesn't make the
+documentation any more wrong than it already is, but it does need to be
+fixed in any case.
+
+> The other patches leading up to this one have been
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Thanks!  They looked good to me too modulo the one problem I found.
+
+-Eric
