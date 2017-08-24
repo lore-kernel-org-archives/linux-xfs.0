@@ -1,77 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53593 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:43901 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753314AbdHXSNU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Aug 2017 14:13:20 -0400
-Date: Thu, 24 Aug 2017 20:13:18 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: Filesystem configuration parsers - (was: Re: [RESEND][PATCH]
- xfs: add online uevent for mount operation)
-Message-ID: <20170824181318.GM27873@wotan.suse.de>
-References: <1503582115-37220-1-git-send-email-houtao1@huawei.com>
- <20170824171028.GF4796@magnolia>
- <20170824180441.GL27873@wotan.suse.de>
+        id S1751231AbdHXHSW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 03:18:22 -0400
+Date: Thu, 24 Aug 2017 09:18:19 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 13/13] ext4: Support for synchronous DAX faults
+Message-ID: <20170824071819.GC20465@quack2.suse.cz>
+References: <20170817160815.30466-1-jack@suse.cz>
+ <20170817160815.30466-14-jack@suse.cz>
+ <20170823183714.GH13778@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170824180441.GL27873@wotan.suse.de>
+In-Reply-To: <20170823183714.GH13778@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Hou Tao <houtao1@huawei.com>, linux-xfs@vger.kernel.org, david@fromorbit.com, linux-fsdevel@vger.kernel.org, Jeff Mahoney <jeffm@suse.com>, NeilBrown <neilb@suse.com>, Tso Ted <tytso@mit.edu>, Dmitri Pal <dpal@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, Boaz Harrosh <boazh@netapp.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andy Lutomirski <luto@kernel.org>, linux-ext4@vger.kernel.org
 
-On the other thread we can discuss the configuration file parser used,
-this other thread we can use for the sysfs knobs and if it makes sense
-to share anything in consideration for a possible future udev event.
-More below.
-
-On Thu, Aug 24, 2017 at 08:04:41PM +0200, Luis R. Rodriguez wrote:
-> On Thu, Aug 24, 2017 at 10:10:28AM -0700, Darrick J. Wong wrote:
-> > It might be useful to send kobject_uevent_env so that we can squeeze in
-> > things like the fs uuid for easier identification?  I envision a
-> > /etc/xfs/fs.conf file like this:
-> > 
-> > [903db5b1-82cd-4f26-8221-443a4ed0563a]
-> > error.metadata.EIO.max_retries = 0
-> > error.fail_at_unmount = 1
-> > config.cowextsize = 1048576
-> > config.inherit_noatime = 1
-> > 
-> > With a udev helper that uses the fsuuid to find the appropriate section
-> > of the ini^Wconfig file and load the appropriate values into sysfs.
+On Wed 23-08-17 11:37:14, Christoph Hellwig wrote:
+> > +	pfn_t pfn;
+> >  
+> >  	if (write) {
+> >  		sb_start_pagefault(sb);
+> > @@ -287,16 +288,39 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
+> >  		down_read(&EXT4_I(inode)->i_mmap_sem);
+> >  		handle = ext4_journal_start_sb(sb, EXT4_HT_WRITE_PAGE,
+> >  					       EXT4_DATA_TRANS_BLOCKS(sb));
+> > +		if (IS_ERR(handle)) {
+> > +			up_read(&EXT4_I(inode)->i_mmap_sem);
+> > +			sb_end_pagefault(sb);
+> > +			return VM_FAULT_SIGBUS;
+> > +		}
+> >  	} else {
+> >  		down_read(&EXT4_I(inode)->i_mmap_sem);
+> >  	}
+> > -	if (!IS_ERR(handle))
+> > -		result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops, NULL);
+> > -	else
+> > -		result = VM_FAULT_SIGBUS;
+> > +	result = dax_iomap_fault(vmf, pe_size, &ext4_iomap_ops, &pfn);
 > 
-> While all this is nice, I'm sure we're all aware of the dangers of setting
-> things in stone through sysfs, its likely already decided for the above
-> tunables,
+> Maybe split the error handling refactor into a simple prep patch to
+> make this one more readable?
 
-<-- udev thing and now snip -->
+OK, will do.
 
-> Just saying, we better damn be sure this is the way we want to go.
+> > +		/* Write fault but PFN mapped only RO? */
+> > +		if (result & VM_FAULT_NEEDDSYNC) {
+> > +			int err;
+> > +			loff_t start = ((loff_t)vmf->pgoff) << PAGE_SHIFT;
+> > +			size_t len = 0;
+> > +
+> > +			if (pe_size == PE_SIZE_PTE)
+> > +				len = PAGE_SIZE;
+> > +#ifdef CONFIG_FS_DAX_PMD
+> > +			else if (pe_size == PE_SIZE_PMD)
+> > +				len = HPAGE_PMD_SIZE;
+> > +#endif
+> > +			else
+> > +				WARN_ON_ONCE(1);
+> > +			err = vfs_fsync_range(vmf->vma->vm_file, start,
+> > +					      start + len - 1, 1);
+> > +			if (err)
+> > +				result = VM_FAULT_SIGBUS;
+> > +			else
+> > +				result = dax_insert_pfn_mkwrite(vmf, pe_size,
+> > +								pfn);
+> > +		}
 > 
-> > > +	if (err)
-> > > +		xfs_notice(mp, "Sending XFS uevent %d got error %d",
-> > > +				action, err);
-> > > +}
-> > > +
-> > >  STATIC int
-> > >  xfs_fs_fill_super(
-> > >  	struct super_block	*sb,
-> > > @@ -1667,6 +1680,8 @@ xfs_fs_fill_super(
-> > >  		goto out_unmount;
-> > >  	}
-> > >  
-> > > +	xfs_fs_uevent(mp, KOBJ_ONLINE);
-> > 
-> > That said, I wonder if we ought to move this discussion to fsdevel to
-> > pull in any /other/ filesystems that have sysfs knobs that they might
-> > like to be able to persist?  ext4 has a bunch of tunables too...
+> I think this needs to become a helper exported from the DAX code,
+> way too much magic inside the file system as-is.
 
-So were you thinking perhaps if we are going to use udev that it may make
-sense then to instead consider if we want to share tunables for uevents?
-Then instead of each filesystem having its own parser, etc, we have set
-of common knobs for any filesystem possible.
+Good point, there isn't anything fs specific in there.
 
-Is that what you had in mind to discuss?
+								Honza
 
-  Luis
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
