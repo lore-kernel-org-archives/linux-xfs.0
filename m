@@ -1,98 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37208 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753985AbdHWPL1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 Aug 2017 11:11:27 -0400
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: [PATCH 1/4] fiemap: Move global variables out of function scope
-Date: Wed, 23 Aug 2017 18:11:19 +0300
-Message-Id: <1503501082-16983-1-git-send-email-nborisov@suse.com>
-In-Reply-To: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
-References: <5fc15693-7df3-c1bf-9f78-020eed30b567@sandeen.net>
+Received: from userp1040.oracle.com ([156.151.31.81]:19494 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753487AbdHXRxH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 13:53:07 -0400
+Date: Thu, 24 Aug 2017 10:51:59 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/6] fiemap: Fix semantics of max_extents (-n arguments)
+Message-ID: <20170824175159.GH4796@magnolia>
+References: <1503575272-28263-1-git-send-email-nborisov@suse.com>
+ <1503575272-28263-7-git-send-email-nborisov@suse.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1503575272-28263-7-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net
-Cc: linux-xfs@vger.kernel.org, Nikolay Borisov <nborisov@suse.com>
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@redhat.com
 
-Move the blocksize and max_extent variables to the top of the file since they
-are globals. Also blocksize never changes to mark it const. Also stop passing
-max_extents around and refer to it directly.
+On Thu, Aug 24, 2017 at 02:47:52PM +0300, Nikolay Borisov wrote:
+> Currently the semantics of the -n argument are a bit idiosyncratic. We want the
+> argument to be the limit of extents that are going to be output by the tool. This
+> is clearly broken now as evident from the following example on a fragmented file:
 
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
----
- io/fiemap.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+Please update the documentation, since the xfs_io fiemap section refers
+readers to xfs_bmap(8), which says:
 
-diff --git a/io/fiemap.c b/io/fiemap.c
-index 75e882057362..d1584aba7818 100644
---- a/io/fiemap.c
-+++ b/io/fiemap.c
-@@ -24,6 +24,8 @@
- #include "io.h"
- 
- static cmdinfo_t fiemap_cmd;
-+static const __u64 blocksize = 512;
-+static int max_extents = 0;
- 
- static void
- fiemap_help(void)
-@@ -57,7 +59,6 @@ print_verbose(
- 	int			boff_w,
- 	int			tot_w,
- 	int			flg_w,
--	int			max_extents,
- 	int			*cur_extent,
- 	__u64			*last_logical)
- {
-@@ -113,7 +114,6 @@ print_plain(
- 	struct fiemap_extent	*extent,
- 	int			lflag,
- 	int			blocksize,
--	int			max_extents,
- 	int			*cur_extent,
- 	__u64			*last_logical)
- {
-@@ -165,7 +165,7 @@ calc_print_format(
- 	int			*tot_w,
- 	int			*flg_w)
- {
--	int 			i;
-+	int			i;
- 	char			lbuf[32];
- 	char			bbuf[32];
- 	__u64			logical;
-@@ -199,7 +199,6 @@ fiemap_f(
- 	char		**argv)
- {
- 	struct fiemap	*fiemap;
--	int		max_extents = 0;
- 	int		num_extents = 32;
- 	int		last = 0;
- 	int		lflag = 0;
-@@ -214,7 +213,6 @@ fiemap_f(
- 	int		boff_w = 16;
- 	int		tot_w = 5;	/* 5 since its just one number */
- 	int		flg_w = 5;
--	__u64		blocksize = 512;
- 	__u64		last_logical = 0;
- 	struct stat	st;
- 
-@@ -288,12 +286,10 @@ fiemap_f(
- 
- 				print_verbose(extent, blocksize, foff_w,
- 					      boff_w, tot_w, flg_w,
--					      max_extents, &cur_extent,
--					      &last_logical);
-+					      &cur_extent, &last_logical);
- 			} else
- 				print_plain(extent, lflag, blocksize,
--					    max_extents, &cur_extent,
--					    &last_logical);
-+					    &cur_extent, &last_logical);
- 
- 			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
- 				last = 1;
--- 
-2.7.4
+"If this [-n] option is given, xfs_bmap obtains the extent list of the
+file in groups of num_extents extents."
 
+Which is no longer correct, because now -n limits the number of records
+output, if I'm reading this patch correctly.  TBH I think -n for bmap is
+also wrong...
+
+The other patches leading up to this one have been
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> xfs_io -c "fiemap -v -n 5" test-dir/fragmented-file
+> test-dir/fragmented-file:
+>  EXT: FILE-OFFSET      BLOCK-RANGE          TOTAL FLAGS
+>    0: [0..15]:         hole                    16
+>    1: [16..23]:        897847296..897847303     8   0x0
+>    2: [24..31]:        hole                     8
+>    3: [32..39]:        897851392..897851399     8   0x0
+> 
+> So we want at most 5 extents printed, yet we get 4. So we always print n - 1
+> extents.
+> 
+> With this modification the output looks like:
+> 
+> xfs_io -c "fiemap -v -n 5" test-dir/fragmented-file
+> test-dir/fragmented-file:
+>  EXT: FILE-OFFSET      BLOCK-RANGE          TOTAL FLAGS
+>    0: [0..15]:         hole                    16
+>    1: [16..23]:        897847296..897847303     8   0x0
+>    2: [24..31]:        hole                     8
+>    3: [32..39]:        897851392..897851399     8   0x0
+>    4: [40..47]:        hole                     8
+> 
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> ---
+>  io/fiemap.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/io/fiemap.c b/io/fiemap.c
+> index 44a64870d711..7b275275465d 100644
+> --- a/io/fiemap.c
+> +++ b/io/fiemap.c
+> @@ -122,7 +122,7 @@ print_verbose(
+>  		cur_extent++;
+>  	}
+>  
+> -	if ((cur_extent + 1) == max_extents)
+> +	if (cur_extent == max_extents)
+>  		return 1;
+>  
+>  	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
+> @@ -157,7 +157,7 @@ print_plain(
+>  		cur_extent++;
+>  	}
+>  
+> -	if ((cur_extent + 1) == max_extents)
+> +	if (cur_extent == max_extents)
+>  		return 1;
+>  
+>  	printf("\t%d: [%llu..%llu]: %llu..%llu", cur_extent,
+> @@ -264,7 +264,7 @@ fiemap_f(
+>  
+>  	printf("%s:\n", file->name);
+>  
+> -	while (!last && ((cur_extent + 1) != max_extents)) {
+> +	while (!last && (cur_extent != max_extents)) {
+>  
+>  		memset(fiemap, 0, map_size);
+>  		fiemap->fm_flags = fiemap_flags;
+> @@ -314,12 +314,12 @@ fiemap_f(
+>  				break;
+>  			}
+>  
+> -			if ((cur_extent + 1) == max_extents)
+> +			if (cur_extent == max_extents)
+>  				break;
+>  		}
+>  	}
+>  
+> -	if ((cur_extent + 1) == max_extents)
+> +	if (cur_extent  == max_extents)
+>  		goto out;
+>  
+>  	memset(&st, 0, sizeof(st));
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
