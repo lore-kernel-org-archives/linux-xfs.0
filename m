@@ -1,27 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:50476 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751895AbdHXQLy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Aug 2017 12:11:54 -0400
-Date: Thu, 24 Aug 2017 18:11:52 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v6 4/5] fs, xfs: introduce MAP_DIRECT for creating
-        block-map-atomic file ranges
-Message-ID: <20170824161152.GB27591@lst.de>
-References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com> <150353213655.5039.7662200155640827407.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mx2.suse.de ([195.135.220.15]:58250 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752974AbdHXS7j (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 14:59:39 -0400
+Date: Thu, 24 Aug 2017 20:59:36 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: Filesystem configuration parsers - (was: Re: [RESEND][PATCH]
+ xfs: add online uevent for mount operation)
+Message-ID: <20170824185936.GN27873@wotan.suse.de>
+References: <1503582115-37220-1-git-send-email-houtao1@huawei.com>
+ <20170824171028.GF4796@magnolia>
+ <20170824180441.GL27873@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150353213655.5039.7662200155640827407.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <20170824180441.GL27873@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: akpm@linux-foundation.org, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-api@vger.kernel.org, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, luto@kernel.org, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Hou Tao <houtao1@huawei.com>, linux-xfs@vger.kernel.org, david@fromorbit.com, linux-fsdevel@vger.kernel.org, Jeff Mahoney <jeffm@suse.com>, NeilBrown <neilb@suse.com>, Tso Ted <tytso@mit.edu>, Dmitri Pal <dpal@redhat.com>
 
-I still can't make any sense of this description.  What is an external
-agent?  Userspace obviously can't ever see a change in the extent
-map, so it can't be meant.
+On Thu, Aug 24, 2017 at 08:04:41PM +0200, Luis R. Rodriguez wrote:
+> On that note FWIW, at this point I've reviewed 4 libraries for mkfs.xfs:
+> 
+>   o libconfig -- we want to stay away from this [0]
+>   o e2fsprogs libprofile -- its a fork of krb5 libparser, size-wise this is [1]
+>     a best option, however its also a fork on its own, or 
+>   o libini_config -- my pick and what I recommend [2] due it supporting
+>     uint64_t well, having a good new community traction, and a good set of
+>     tests
+>   o nfs: has its own incarnation of a library
+> 
+> *Iff* we want to share the same library for mkfs.xfs and also a udev helper,
+> then a new requirement here is perhaps also having a respective library on
+> other higher level language like python for instance, if not now perhaps
+> for the future. Unless of course we'd expect such udev heleprs to be C
+> based.
+> 
+> [0] https://gitlab.com/mcgrof/libconfig-int64-issues
+> [1] https://gitlab.com/mcgrof/libekprofile
+> [2] https://gitlab.com/mcgrof/libini_config-demo
 
-It would help a lot if you could come up with a concrete user for this,
-including example code.
+FWIW -- for a more thorough evaluation folks can read a bit more about
+configuration file uses for filesystems on this work-in-progress paper:
+
+https://gitlab.com/mcgrof/filesystem-configuration-paper/blob/master/paper.pdf
+
+It does not take into account the newly mentioned possible use case as this
+is new and just now considered.
+
+Feedback/rants on other points welcomed.
+
+  Luis
