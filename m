@@ -1,50 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:35641 "EHLO
-        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751121AbdHZWqY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 26 Aug 2017 18:46:24 -0400
-Received: by mail-oi0-f45.google.com with SMTP id k77so22384423oib.2
-        for <linux-xfs@vger.kernel.org>; Sat, 26 Aug 2017 15:46:24 -0700 (PDT)
+Received: from userp1040.oracle.com ([156.151.31.81]:27240 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933269AbdHYWRO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 18:17:14 -0400
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7PMHDde022054
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:14 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v7PMHDg4016164
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:13 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7PMHDCC022901
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:13 GMT
+Subject: [PATCH 03/19] xfs: add repair helpers for the reverse mapping btree
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 25 Aug 2017 15:17:08 -0700
+Message-ID: <150369942803.9957.11932753417949296877.stgit@magnolia>
+In-Reply-To: <150369940879.9957.6303798184036268321.stgit@magnolia>
+References: <150369940879.9957.6303798184036268321.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <35692b04-eb4f-740c-e35c-8ccbf69e0e97@gmx.de>
-References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150353213097.5039.6729469069608762658.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170824165546.GA3121@infradead.org> <CAPcyv4iN0QpUSgOUvisnNQsiV1Pp=4dh7CwAV8FFj=_rFU=aug@mail.gmail.com>
- <20170825130011.GA30072@infradead.org> <20170825155803.4km7wttzadfqw2vb@node.shutemov.name>
- <20170825160236.GA2561@infradead.org> <20170825161607.6v6beg4zjktllt2z@node.shutemov.name>
- <4de21e8d-5e10-ec40-c731-0c079953cf48@gmx.de> <CAPcyv4jeZc8P+E0aHNChzy-wfNpOx3GehKck1nXqJ1b9JdydFA@mail.gmail.com>
- <20170826074047.GA6292@ls3530.fritz.box> <CAPcyv4ic0zxQzWEipZ=1LpDC8VnmphGzVSYmrFcjOAgX7esfUw@mail.gmail.com>
- <35692b04-eb4f-740c-e35c-8ccbf69e0e97@gmx.de>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 26 Aug 2017 15:46:22 -0700
-Message-ID: <CAPcyv4i0+3Smg9bfynKa150y7qvQ-WVRBHyCrK=R1b4oVj3URA@mail.gmail.com>
-Subject: Re: [PATCH v6 3/5] mm: introduce mmap3 for safely defining new mmap flags
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Helge Deller <deller@gmx.de>
-Cc: "Kirill A. Shutemov" <kirill@shutemov.name>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-parisc@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Sat, Aug 26, 2017 at 12:50 PM, Helge Deller <deller@gmx.de> wrote:
-> On 26.08.2017 17:15, Dan Williams wrote:
-[..]
->> I have not seen any patches for parisc pmem+dax enabling so it seems
->> too early to worry about these "last mile" enabling features of
->> MAP_DIRECT and MAP_SYNC. In particular parisc doesn't appear to have
->> ARCH_ENABLE_MEMORY_HOTPLUG, so as far as I can see it can't yet
->> support the ZONE_DEVICE scheme that is a pre-requisite for MAP_DIRECT.
->
-> I see, but then it's probably best to not to define any MAP_DIRECT or
-> MAP_SYNC at all in the headers of those arches which don't support
-> pmem+dax (parisc, m68k, alpha, and probably quite some others).
-> That way applications can detect at configure time if the platform
-> supports that, and can leave out the functionality completely.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yes, that's a good idea we can handle this similar to
-CONFIG_MMAP_ALLOW_UNINITIALIZED. These patches will also modify
-'struct file_operations' so that do_mmap() can validate whether a flag
-is supported on per architecture basis. Also the plan is to plumb the
-flags passed to the syscall all the way down to the individual mmap
-implementations. The ext4 and xfs ->mmap() operations will be able to
-return -EOPNOTSUP based on runtime variables.
+Add a couple of functions to the reverse mapping btree that will be used
+to repair the rmapbt.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_rmap.c |   79 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rmap.h |    4 ++
+ 2 files changed, 83 insertions(+)
+
+
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 9c33fd6..d14af8b 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -1977,6 +1977,34 @@ xfs_rmap_map_shared(
+ 	return error;
+ }
+ 
++/* Insert a raw rmap into the rmapbt. */
++int
++xfs_rmap_map_raw(
++	struct xfs_btree_cur	*cur,
++	struct xfs_rmap_irec	*rmap)
++{
++	struct xfs_owner_info	oinfo;
++
++	oinfo.oi_owner = rmap->rm_owner;
++	oinfo.oi_offset = rmap->rm_offset;
++	oinfo.oi_flags = 0;
++	if (rmap->rm_flags & XFS_RMAP_ATTR_FORK)
++		oinfo.oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
++	if (rmap->rm_flags & XFS_RMAP_BMBT_BLOCK)
++		oinfo.oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
++
++	if (rmap->rm_flags || XFS_RMAP_NON_INODE_OWNER(rmap->rm_owner))
++		return xfs_rmap_map(cur, rmap->rm_startblock,
++				rmap->rm_blockcount,
++				rmap->rm_flags & XFS_RMAP_UNWRITTEN,
++				&oinfo);
++
++	return xfs_rmap_map_shared(cur, rmap->rm_startblock,
++			rmap->rm_blockcount,
++			rmap->rm_flags & XFS_RMAP_UNWRITTEN,
++			&oinfo);
++}
++
+ struct xfs_rmap_query_range_info {
+ 	xfs_rmap_query_range_fn	fn;
+ 	void				*priv;
+@@ -2391,3 +2419,54 @@ xfs_rmap_record_exists(
+ 		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
+ 	return 0;
+ }
++
++struct xfs_rmap_has_other_keys {
++	uint64_t			owner;
++	uint64_t			offset;
++	bool				*has_rmap;
++	unsigned int			flags;
++};
++
++/* For each rmap given, figure out if it doesn't match the key we want. */
++STATIC int
++xfs_rmap_has_other_keys_helper(
++	struct xfs_btree_cur		*cur,
++	struct xfs_rmap_irec		*rec,
++	void				*priv)
++{
++	struct xfs_rmap_has_other_keys	*rhok = priv;
++
++	if (rhok->owner == rec->rm_owner && rhok->offset == rec->rm_offset &&
++	    ((rhok->flags & rec->rm_flags) & XFS_RMAP_KEY_FLAGS) == rhok->flags)
++		return 0;
++	*rhok->has_rmap = true;
++	return XFS_BTREE_QUERY_RANGE_ABORT;
++}
++
++/*
++ * Given an extent and some owner info, can we find records overlapping
++ * the extent whose owner info does not match the given owner?
++ */
++int
++xfs_rmap_has_other_keys(
++	struct xfs_btree_cur		*cur,
++	xfs_agblock_t			bno,
++	xfs_extlen_t			len,
++	struct xfs_owner_info		*oinfo,
++	bool				*has_rmap)
++{
++	struct xfs_rmap_irec		low = {0};
++	struct xfs_rmap_irec		high;
++	struct xfs_rmap_has_other_keys	rhok;
++
++	xfs_owner_info_unpack(oinfo, &rhok.owner, &rhok.offset, &rhok.flags);
++	*has_rmap = false;
++	rhok.has_rmap = has_rmap;
++
++	low.rm_startblock = bno;
++	memset(&high, 0xFF, sizeof(high));
++	high.rm_startblock = bno + len - 1;
++
++	return xfs_rmap_query_range(cur, &low, &high,
++			xfs_rmap_has_other_keys_helper, &rhok);
++}
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 32c9382..180b127 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -224,5 +224,9 @@ int xfs_rmap_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ 		xfs_extlen_t len, struct xfs_owner_info *oinfo,
+ 		bool *has_rmap);
++int xfs_rmap_has_other_keys(struct xfs_btree_cur *cur, xfs_agblock_t bno,
++		xfs_extlen_t len, struct xfs_owner_info *oinfo,
++		bool *has_rmap);
++int xfs_rmap_map_raw(struct xfs_btree_cur *cur, struct xfs_rmap_irec *rmap);
+ 
+ #endif	/* __XFS_RMAP_H__ */
+
