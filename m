@@ -1,196 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47589 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754648AbdHYQyE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 12:54:04 -0400
-Date: Fri, 25 Aug 2017 09:53:59 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 9/9] xfs: relog dirty buffers during swapext bmbt owner
- change
-Message-ID: <20170825165359.GR4796@magnolia>
-References: <20170825150557.43010-1-bfoster@redhat.com>
- <20170825150557.43010-10-bfoster@redhat.com>
+Received: from mga02.intel.com ([134.134.136.20]:25030 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754231AbdHYQ4R (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 Aug 2017 12:56:17 -0400
+Date: Fri, 25 Aug 2017 19:56:12 +0300
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Re: [PATCH v6 3/5] mm: introduce mmap3 for safely defining new mmap
+ flags
+Message-ID: <20170825165612.xsv3akgjk6tajcpk@black.fi.intel.com>
+References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150353213097.5039.6729469069608762658.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170824165546.GA3121@infradead.org>
+ <CAPcyv4iN0QpUSgOUvisnNQsiV1Pp=4dh7CwAV8FFj=_rFU=aug@mail.gmail.com>
+ <20170825130011.GA30072@infradead.org>
+ <20170825155803.4km7wttzadfqw2vb@node.shutemov.name>
+ <20170825160236.GA2561@infradead.org>
+ <20170825161607.6v6beg4zjktllt2z@node.shutemov.name>
+ <4de21e8d-5e10-ec40-c731-0c079953cf48@gmx.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170825150557.43010-10-bfoster@redhat.com>
+In-Reply-To: <4de21e8d-5e10-ec40-c731-0c079953cf48@gmx.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Helge Deller <deller@gmx.de>
+Cc: "Kirill A. Shutemov" <kirill@shutemov.name>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-parisc@vger.kernel.org
 
-On Fri, Aug 25, 2017 at 11:05:57AM -0400, Brian Foster wrote:
-> The owner change bmbt scan that occurs during extent swap operations
-> does not handle ordered buffer failures. Buffers that cannot be
-> marked ordered must be physically logged so previously dirty ranges
-> of the buffer can be relogged in the transaction.
+On Fri, Aug 25, 2017 at 04:19:19PM +0000, Helge Deller wrote:
+> On 25.08.2017 18:16, Kirill A. Shutemov wrote:
+> > On Fri, Aug 25, 2017 at 09:02:36AM -0700, Christoph Hellwig wrote:
+> >> On Fri, Aug 25, 2017 at 06:58:03PM +0300, Kirill A. Shutemov wrote:
+> >>> Not all archs are ready for this:
+> >>>
+> >>> arch/parisc/include/uapi/asm/mman.h:#define MAP_TYPE    0x03            /* Mask for type of mapping */
+> >>> arch/parisc/include/uapi/asm/mman.h:#define MAP_FIXED   0x04            /* Interpret addr exactly */
+> >>
+> >> I'd be happy to say that we should not care about parisc for
+> >> persistent memory.  We'll just have to find a way to exclude
+> >> parisc without making life too ugly.
+> > 
+> > I don't think creapling mmap() interface for one arch is the right way to
+> > go. I think the interface should be universal.
+> > 
+> > I may imagine MAP_DIRECT can be useful not only for persistent memory.
+> > For tmpfs instead of mlock()?
 > 
-> Since the bmbt scan may need to process and potentially log a large
-> number of blocks, we can't expect to complete this operation in a
-> single transaction. Update extent swap to use a permanent
-> transaction with enough log reservation to physically log a buffer.
-> Update the bmbt scan to physically log any buffers that cannot be
-> ordered and to terminate the scan with -EAGAIN. On -EAGAIN, the
-> caller rolls the transaction and restarts the scan. Finally, update
-> the bmbt scan helper function to skip bmbt blocks that already match
-> the expected owner so they are not reprocessed after scan restarts.
+> On parisc we have
+> #define MAP_SHARED      0x01            /* Share changes */
+> #define MAP_PRIVATE     0x02            /* Changes are private */
+> #define MAP_TYPE        0x03            /* Mask for type of mapping */
+> #define MAP_FIXED       0x04            /* Interpret addr exactly */
+> #define MAP_ANONYMOUS   0x10            /* don't use a file */
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> So, if you need a MAP_DIRECT, wouldn't e.g.
+> #define MAP_DIRECT      0x08
+> be possible (for parisc, and others 0x04).
+> And if MAP_TYPE needs to include this flag on parisc:
+> #define MAP_TYPE        (0x03 | 0x08)  /* Mask for type of mapping */
 
-Looks ok, I think...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+I guess it's better to re-define MAP_TYPE as 0x3 everywhere and make
+MAP_DIRECT a normal flag. It's not new type of mapping anyway.
 
-> ---
->  fs/xfs/libxfs/xfs_btree.c | 26 ++++++++++++++-------
->  fs/xfs/xfs_bmap_util.c    | 57 ++++++++++++++++++++++++++++++++++++++---------
->  2 files changed, 65 insertions(+), 18 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index d06b04d..c466a23 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -4452,10 +4452,15 @@ xfs_btree_block_change_owner(
->  
->  	/* modify the owner */
->  	block = xfs_btree_get_block(cur, level, &bp);
-> -	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
-> +	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-> +		if (block->bb_u.l.bb_owner == cpu_to_be64(bbcoi->new_owner))
-> +			return 0;
->  		block->bb_u.l.bb_owner = cpu_to_be64(bbcoi->new_owner);
-> -	else
-> +	} else {
-> +		if (block->bb_u.s.bb_owner == cpu_to_be32(bbcoi->new_owner))
-> +			return 0;
->  		block->bb_u.s.bb_owner = cpu_to_be32(bbcoi->new_owner);
-> +	}
->  
->  	/*
->  	 * If the block is a root block hosted in an inode, we might not have a
-> @@ -4464,14 +4469,19 @@ xfs_btree_block_change_owner(
->  	 * block is formatted into the on-disk inode fork. We still change it,
->  	 * though, so everything is consistent in memory.
->  	 */
-> -	if (bp) {
-> -		if (cur->bc_tp)
-> -			xfs_trans_ordered_buf(cur->bc_tp, bp);
-> -		else
-> -			xfs_buf_delwri_queue(bp, bbcoi->buffer_list);
-> -	} else {
-> +	if (!bp) {
->  		ASSERT(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE);
->  		ASSERT(level == cur->bc_nlevels - 1);
-> +		return 0;
-> +	}
-> +
-> +	if (cur->bc_tp) {
-> +		if (!xfs_trans_ordered_buf(cur->bc_tp, bp)) {
-> +			xfs_btree_log_block(cur, bp, XFS_BB_OWNER);
-> +			return -EAGAIN;
-> +		}
-> +	} else {
-> +		xfs_buf_delwri_queue(bp, bbcoi->buffer_list);
->  	}
->  
->  	return 0;
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index ee8fb9a..3e9b7a4 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1929,6 +1929,48 @@ xfs_swap_extent_forks(
->  	return 0;
->  }
->  
-> +/*
-> + * Fix up the owners of the bmbt blocks to refer to the current inode. The
-> + * change owner scan attempts to order all modified buffers in the current
-> + * transaction. In the event of ordered buffer failure, the offending buffer is
-> + * physically logged as a fallback and the scan returns -EAGAIN. We must roll
-> + * the transaction in this case to replenish the fallback log reservation and
-> + * restart the scan. This process repeats until the scan completes.
-> + */
-> +static int
-> +xfs_swap_change_owner(
-> +	struct xfs_trans	**tpp,
-> +	struct xfs_inode	*ip,
-> +	struct xfs_inode	*tmpip)
-> +{
-> +	int			error;
-> +	struct xfs_trans	*tp = *tpp;
-> +
-> +	do {
-> +		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK, ip->i_ino,
-> +					      NULL);
-> +		/* success or fatal error */
-> +		if (error != -EAGAIN)
-> +			break;
-> +
-> +		error = xfs_trans_roll(tpp, NULL);
-> +		if (error)
-> +			break;
-> +		tp = *tpp;
-> +
-> +		/*
-> +		 * Redirty both inodes so they can relog and keep the log tail
-> +		 * moving forward.
-> +		 */
-> +		xfs_trans_ijoin(tp, ip, 0);
-> +		xfs_trans_ijoin(tp, tmpip, 0);
-> +		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> +		xfs_trans_log_inode(tp, tmpip, XFS_ILOG_CORE);
-> +	} while (true);
-> +
-> +	return error;
-> +}
-> +
->  int
->  xfs_swap_extents(
->  	struct xfs_inode	*ip,	/* target inode */
-> @@ -1943,7 +1985,7 @@ xfs_swap_extents(
->  	int			lock_flags;
->  	struct xfs_ifork	*cowfp;
->  	uint64_t		f;
-> -	int			resblks;
-> +	int			resblks = 0;
->  
->  	/*
->  	 * Lock the inodes against other IO, page faults and truncate to
-> @@ -1991,11 +2033,8 @@ xfs_swap_extents(
->  			  XFS_SWAP_RMAP_SPACE_RES(mp,
->  				XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK),
->  				XFS_DATA_FORK);
-> -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks,
-> -				0, 0, &tp);
-> -	} else
-> -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0,
-> -				0, 0, &tp);
-> +	}
-> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
->  	if (error)
->  		goto out_unlock;
->  
-> @@ -2087,14 +2126,12 @@ xfs_swap_extents(
->  	 * inode number of the current inode.
->  	 */
->  	if (src_log_flags & XFS_ILOG_DOWNER) {
-> -		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK,
-> -					      ip->i_ino, NULL);
-> +		error = xfs_swap_change_owner(&tp, ip, tip);
->  		if (error)
->  			goto out_trans_cancel;
->  	}
->  	if (target_log_flags & XFS_ILOG_DOWNER) {
-> -		error = xfs_bmbt_change_owner(tp, tip, XFS_DATA_FORK,
-> -					      tip->i_ino, NULL);
-> +		error = xfs_swap_change_owner(&tp, tip, ip);
->  		if (error)
->  			goto out_trans_cancel;
->  	}
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+ Kirill A. Shutemov
