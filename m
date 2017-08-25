@@ -1,97 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32962 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756135AbdHYSLb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Aug 2017 14:11:31 -0400
-Date: Fri, 25 Aug 2017 14:11:29 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/9] xfs: skip bmbt block ino validation during owner
- change
-Message-ID: <20170825181129.GB40964@bfoster.bfoster>
-References: <20170825150557.43010-1-bfoster@redhat.com>
- <20170825150557.43010-7-bfoster@redhat.com>
- <20170825153553.GM4796@magnolia>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:34680 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758500AbdHYUYc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 16:24:32 -0400
+Received: by mail-oi0-f53.google.com with SMTP id j144so7792619oib.1
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 13:24:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170825153553.GM4796@magnolia>
+In-Reply-To: <4de21e8d-5e10-ec40-c731-0c079953cf48@gmx.de>
+References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150353213097.5039.6729469069608762658.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170824165546.GA3121@infradead.org> <CAPcyv4iN0QpUSgOUvisnNQsiV1Pp=4dh7CwAV8FFj=_rFU=aug@mail.gmail.com>
+ <20170825130011.GA30072@infradead.org> <20170825155803.4km7wttzadfqw2vb@node.shutemov.name>
+ <20170825160236.GA2561@infradead.org> <20170825161607.6v6beg4zjktllt2z@node.shutemov.name>
+ <4de21e8d-5e10-ec40-c731-0c079953cf48@gmx.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 25 Aug 2017 13:24:31 -0700
+Message-ID: <CAPcyv4jeZc8P+E0aHNChzy-wfNpOx3GehKck1nXqJ1b9JdydFA@mail.gmail.com>
+Subject: Re: [PATCH v6 3/5] mm: introduce mmap3 for safely defining new mmap flags
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Helge Deller <deller@gmx.de>
+Cc: "Kirill A. Shutemov" <kirill@shutemov.name>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-parisc@vger.kernel.org
 
-On Fri, Aug 25, 2017 at 08:35:53AM -0700, Darrick J. Wong wrote:
-> On Fri, Aug 25, 2017 at 11:05:54AM -0400, Brian Foster wrote:
-> > Extent swap uses xfs_btree_visit_blocks() to fix up bmbt block
-> > owners on v5 (!rmapbt) filesystems. The bmbt scan uses
-> > xfs_btree_lookup_get_block() to read bmbt blocks which verifies the
-> > current owner of the block against the parent inode of the bmbt.
-> > This works during extent swap because the bmbt owners are updated to
-> > the opposite inode number before the inode extent forks are swapped.
-> > 
-> > The modified bmbt blocks are marked as ordered buffers which allows
-> > everything to commit in a single transaction. If the transaction
-> > commits to the log and the system crashes such that recovery of the
-> > extent swap is required, log recovery restarts the bmbt scan to fix
-> > up any bmbt blocks that may have not been written back before the
-> > crash. The log recovery bmbt scan occurs after the inode forks have
-> > been swapped, however. This causes the bmbt block owner verification
-> > to fail, leads to log recovery failure and requires xfs_repair to
-> > zap the log to recover.
-> > 
-> > Define a new invalid inode owner flag to inform the btree block
-> > lookup mechanism that the current inode may be invalid with respect
-> > to the current owner of the bmbt block. Set this flag on the cursor
-> > used for change owner scans to allow this operation to work at
-> > runtime and during log recovery.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap_btree.c | 1 +
-> >  fs/xfs/libxfs/xfs_btree.c      | 1 +
-> >  fs/xfs/libxfs/xfs_btree.h      | 3 ++-
-> >  3 files changed, 4 insertions(+), 1 deletion(-)
-> > 
-...
-> > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> > index 9c95e96..c803ddc 100644
-> > --- a/fs/xfs/libxfs/xfs_btree.h
-> > +++ b/fs/xfs/libxfs/xfs_btree.h
-> > @@ -233,7 +233,8 @@ typedef struct xfs_btree_cur
-> >  			short		forksize;	/* fork's inode space */
-> >  			char		whichfork;	/* data or attr fork */
-> >  			char		flags;		/* flags */
-> > -#define	XFS_BTCUR_BPRV_WASDEL	1			/* was delayed */
-> > +#define	XFS_BTCUR_BPRV_WASDEL		(1<<0)		/* was delayed */
-> > +#define	XFS_BTCUR_BPRV_INVALIDINO	(1<<1)		/* for ext swap */
-> 
-> I think I'd call this invalid owner since that's the name of the field
-> that we're (not) validating.
-> 
+On Fri, Aug 25, 2017 at 9:19 AM, Helge Deller <deller@gmx.de> wrote:
+> On 25.08.2017 18:16, Kirill A. Shutemov wrote:
+>> On Fri, Aug 25, 2017 at 09:02:36AM -0700, Christoph Hellwig wrote:
+>>> On Fri, Aug 25, 2017 at 06:58:03PM +0300, Kirill A. Shutemov wrote:
+>>>> Not all archs are ready for this:
+>>>>
+>>>> arch/parisc/include/uapi/asm/mman.h:#define MAP_TYPE    0x03            /* Mask for type of mapping */
+>>>> arch/parisc/include/uapi/asm/mman.h:#define MAP_FIXED   0x04            /* Interpret addr exactly */
+>>>
+>>> I'd be happy to say that we should not care about parisc for
+>>> persistent memory.  We'll just have to find a way to exclude
+>>> parisc without making life too ugly.
+>>
+>> I don't think creapling mmap() interface for one arch is the right way to
+>> go. I think the interface should be universal.
+>>
+>> I may imagine MAP_DIRECT can be useful not only for persistent memory.
+>> For tmpfs instead of mlock()?
+>
+> On parisc we have
+> #define MAP_SHARED      0x01            /* Share changes */
+> #define MAP_PRIVATE     0x02            /* Changes are private */
+> #define MAP_TYPE        0x03            /* Mask for type of mapping */
+> #define MAP_FIXED       0x04            /* Interpret addr exactly */
+> #define MAP_ANONYMOUS   0x10            /* don't use a file */
+>
+> So, if you need a MAP_DIRECT, wouldn't e.g.
+> #define MAP_DIRECT      0x08
+> be possible (for parisc, and others 0x04).
+> And if MAP_TYPE needs to include this flag on parisc:
+> #define MAP_TYPE        (0x03 | 0x08)  /* Mask for type of mapping */
 
-Sure, I'll change it to XFS_BTCUR_BPRV_INVALID_OWNER unless I hear
-otherwise and incorporate the other cleanups for v2. Thanks for the
-reviews.
+The problem here is that to support new the mmap flags the arch needs
+to find a flag that is guaranteed to fail on older kernels. Defining
+MAP_DIRECT to 0x8 on parisc doesn't work because it will simply be
+ignored on older parisc kernels.
 
-Brian
+However, it's already the case that several archs have their own
+sys_mmap entry points. Those archs that can't follow the common scheme
+(only parsic it seems) will need to add a new mmap syscall. I think
+that's a reasonable tradeoff to allow every other architecture to add
+this support with their existing mmap syscall paths.
 
-> Otherwise looks fine,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> --D
-> 
-> >  		} b;
-> >  	}		bc_private;	/* per-btree type data */
-> >  } xfs_btree_cur_t;
-> > -- 
-> > 2.9.5
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+That means MAP_DIRECT should be defined to MAP_TYPE on parisc until it
+later defines an opt-in mechanism to a new syscall that honors
+MAP_DIRECT as a valid flag.
