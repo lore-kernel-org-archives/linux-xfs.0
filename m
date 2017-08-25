@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35622 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54156 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933503AbdHYPGA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S933501AbdHYPGA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Fri, 25 Aug 2017 11:06:00 -0400
 Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id EF0A2C04B941
+        by mx1.redhat.com (Postfix) with ESMTPS id CECF8267FB
         for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 15:05:59 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BEB3C6C436
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9BFC06C434
         for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 15:05:59 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 9/9] xfs: relog dirty buffers during swapext bmbt owner change
-Date: Fri, 25 Aug 2017 11:05:57 -0400
-Message-Id: <20170825150557.43010-10-bfoster@redhat.com>
+Subject: [PATCH 4/9] xfs: refactor buffer logging into buffer dirtying helper
+Date: Fri, 25 Aug 2017 11:05:52 -0400
+Message-Id: <20170825150557.43010-5-bfoster@redhat.com>
 In-Reply-To: <20170825150557.43010-1-bfoster@redhat.com>
 References: <20170825150557.43010-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,168 +22,132 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-The owner change bmbt scan that occurs during extent swap operations
-does not handle ordered buffer failures. Buffers that cannot be
-marked ordered must be physically logged so previously dirty ranges
-of the buffer can be relogged in the transaction.
+xfs_trans_log_buf() is responsible for logging the dirty segments of
+a buffer along with setting all of the necessary state on the
+transaction, buffer, bli, etc., to ensure that the associated items
+are marked as dirty and prepared for I/O. We have a couple use cases
+that need to to dirty a buffer in a transaction without actually
+logging dirty ranges of the buffer.  One existing use case is
+ordered buffers, which are currently logged with arbitrary ranges to
+accomplish this even though the content of ordered buffers is never
+written to the log. Another pending use case is to relog an already
+dirty buffer across rolled transactions within the deferred
+operations infrastructure. This is required to prevent a held
+(XFS_BLI_HOLD) buffer from pinning the tail of the log.
 
-Since the bmbt scan may need to process and potentially log a large
-number of blocks, we can't expect to complete this operation in a
-single transaction. Update extent swap to use a permanent
-transaction with enough log reservation to physically log a buffer.
-Update the bmbt scan to physically log any buffers that cannot be
-ordered and to terminate the scan with -EAGAIN. On -EAGAIN, the
-caller rolls the transaction and restarts the scan. Finally, update
-the bmbt scan helper function to skip bmbt blocks that already match
-the expected owner so they are not reprocessed after scan restarts.
+Refactor xfs_trans_log_buf() into a new function that contains all
+of the logic responsible to dirty the transaction, lidp, buffer and
+bli. This new function can be used in the future for the use cases
+outlined above. This patch does not introduce functional changes.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_btree.c | 26 ++++++++++++++-------
- fs/xfs/xfs_bmap_util.c    | 57 ++++++++++++++++++++++++++++++++++++++---------
- 2 files changed, 65 insertions(+), 18 deletions(-)
+ fs/xfs/xfs_trans.h     |  4 +++-
+ fs/xfs/xfs_trans_buf.c | 46 ++++++++++++++++++++++++++++++----------------
+ 2 files changed, 33 insertions(+), 17 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index d06b04d..c466a23 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4452,10 +4452,15 @@ xfs_btree_block_change_owner(
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 7d62772..b3632eb 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -217,7 +217,9 @@ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
+ void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
+ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
+-void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
++void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
++				  uint);
++void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
+ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
  
- 	/* modify the owner */
- 	block = xfs_btree_get_block(cur, level, &bp);
--	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-+		if (block->bb_u.l.bb_owner == cpu_to_be64(bbcoi->new_owner))
-+			return 0;
- 		block->bb_u.l.bb_owner = cpu_to_be64(bbcoi->new_owner);
--	else
-+	} else {
-+		if (block->bb_u.s.bb_owner == cpu_to_be32(bbcoi->new_owner))
-+			return 0;
- 		block->bb_u.s.bb_owner = cpu_to_be32(bbcoi->new_owner);
-+	}
- 
- 	/*
- 	 * If the block is a root block hosted in an inode, we might not have a
-@@ -4464,14 +4469,19 @@ xfs_btree_block_change_owner(
- 	 * block is formatted into the on-disk inode fork. We still change it,
- 	 * though, so everything is consistent in memory.
- 	 */
--	if (bp) {
--		if (cur->bc_tp)
--			xfs_trans_ordered_buf(cur->bc_tp, bp);
--		else
--			xfs_buf_delwri_queue(bp, bbcoi->buffer_list);
--	} else {
-+	if (!bp) {
- 		ASSERT(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE);
- 		ASSERT(level == cur->bc_nlevels - 1);
-+		return 0;
-+	}
-+
-+	if (cur->bc_tp) {
-+		if (!xfs_trans_ordered_buf(cur->bc_tp, bp)) {
-+			xfs_btree_log_block(cur, bp, XFS_BB_OWNER);
-+			return -EAGAIN;
-+		}
-+	} else {
-+		xfs_buf_delwri_queue(bp, bbcoi->buffer_list);
- 	}
- 
- 	return 0;
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index ee8fb9a..3e9b7a4 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1929,6 +1929,48 @@ xfs_swap_extent_forks(
- 	return 0;
+ void		xfs_extent_free_init_defer_op(void);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index cac8abb..8c99813 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -493,25 +493,17 @@ xfs_trans_bhold_release(xfs_trans_t	*tp,
  }
  
-+/*
-+ * Fix up the owners of the bmbt blocks to refer to the current inode. The
-+ * change owner scan attempts to order all modified buffers in the current
-+ * transaction. In the event of ordered buffer failure, the offending buffer is
-+ * physically logged as a fallback and the scan returns -EAGAIN. We must roll
-+ * the transaction in this case to replenish the fallback log reservation and
-+ * restart the scan. This process repeats until the scan completes.
-+ */
-+static int
-+xfs_swap_change_owner(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*ip,
-+	struct xfs_inode	*tmpip)
-+{
-+	int			error;
-+	struct xfs_trans	*tp = *tpp;
-+
-+	do {
-+		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK, ip->i_ino,
-+					      NULL);
-+		/* success or fatal error */
-+		if (error != -EAGAIN)
-+			break;
-+
-+		error = xfs_trans_roll(tpp, NULL);
-+		if (error)
-+			break;
-+		tp = *tpp;
-+
-+		/*
-+		 * Redirty both inodes so they can relog and keep the log tail
-+		 * moving forward.
-+		 */
-+		xfs_trans_ijoin(tp, ip, 0);
-+		xfs_trans_ijoin(tp, tmpip, 0);
-+		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+		xfs_trans_log_inode(tp, tmpip, XFS_ILOG_CORE);
-+	} while (true);
-+
-+	return error;
+ /*
+- * This is called to mark bytes first through last inclusive of the given
+- * buffer as needing to be logged when the transaction is committed.
+- * The buffer must already be associated with the given transaction.
+- *
+- * First and last are numbers relative to the beginning of this buffer,
+- * so the first byte in the buffer is numbered 0 regardless of the
+- * value of b_blkno.
++ * Mark a buffer dirty in the transaction.
+  */
+ void
+-xfs_trans_log_buf(xfs_trans_t	*tp,
+-		  xfs_buf_t	*bp,
+-		  uint		first,
+-		  uint		last)
++xfs_trans_dirty_buf(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp)
+ {
+-	xfs_buf_log_item_t	*bip = bp->b_fspriv;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+-	ASSERT(first <= last && last < BBTOB(bp->b_length));
+ 	ASSERT(bp->b_iodone == NULL ||
+ 	       bp->b_iodone == xfs_buf_iodone_callbacks);
+ 
+@@ -531,8 +523,6 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 	bp->b_iodone = xfs_buf_iodone_callbacks;
+ 	bip->bli_item.li_cb = xfs_buf_iodone;
+ 
+-	trace_xfs_trans_log_buf(bip);
+-
+ 	/*
+ 	 * If we invalidated the buffer within this transaction, then
+ 	 * cancel the invalidation now that we're dirtying the buffer
+@@ -545,15 +535,39 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 		bp->b_flags &= ~XBF_STALE;
+ 		bip->__bli_format.blf_flags &= ~XFS_BLF_CANCEL;
+ 	}
++	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
+ 
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ 	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
 +}
 +
- int
- xfs_swap_extents(
- 	struct xfs_inode	*ip,	/* target inode */
-@@ -1943,7 +1985,7 @@ xfs_swap_extents(
- 	int			lock_flags;
- 	struct xfs_ifork	*cowfp;
- 	uint64_t		f;
--	int			resblks;
-+	int			resblks = 0;
++/*
++ * This is called to mark bytes first through last inclusive of the given
++ * buffer as needing to be logged when the transaction is committed.
++ * The buffer must already be associated with the given transaction.
++ *
++ * First and last are numbers relative to the beginning of this buffer,
++ * so the first byte in the buffer is numbered 0 regardless of the
++ * value of b_blkno.
++ */
++void
++xfs_trans_log_buf(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp,
++	uint			first,
++	uint			last)
++{
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++
++	ASSERT(first <= last && last < BBTOB(bp->b_length));
++
++	xfs_trans_dirty_buf(tp, bp);
  
  	/*
- 	 * Lock the inodes against other IO, page faults and truncate to
-@@ -1991,11 +2033,8 @@ xfs_swap_extents(
- 			  XFS_SWAP_RMAP_SPACE_RES(mp,
- 				XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK),
- 				XFS_DATA_FORK);
--		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks,
--				0, 0, &tp);
--	} else
--		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0,
--				0, 0, &tp);
-+	}
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
- 	if (error)
- 		goto out_unlock;
- 
-@@ -2087,14 +2126,12 @@ xfs_swap_extents(
- 	 * inode number of the current inode.
+ 	 * If we have an ordered buffer we are not logging any dirty range but
+ 	 * it still needs to be marked dirty and that it has been logged.
  	 */
- 	if (src_log_flags & XFS_ILOG_DOWNER) {
--		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK,
--					      ip->i_ino, NULL);
-+		error = xfs_swap_change_owner(&tp, ip, tip);
- 		if (error)
- 			goto out_trans_cancel;
- 	}
- 	if (target_log_flags & XFS_ILOG_DOWNER) {
--		error = xfs_bmbt_change_owner(tp, tip, XFS_DATA_FORK,
--					      tip->i_ino, NULL);
-+		error = xfs_swap_change_owner(&tp, tip, ip);
- 		if (error)
- 			goto out_trans_cancel;
- 	}
+-	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
++	trace_xfs_trans_log_buf(bip);
+ 	if (!(bip->bli_flags & XFS_BLI_ORDERED))
+ 		xfs_buf_item_log(bip, first, last);
+ }
 -- 
 2.9.5
 
