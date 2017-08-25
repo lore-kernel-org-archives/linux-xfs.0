@@ -1,122 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41246 "EHLO mx1.redhat.com"
+Received: from imap.thunk.org ([74.207.234.97]:54528 "EHLO imap.thunk.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933499AbdHYPGA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Aug 2017 11:06:00 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id BD7E8883C1
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 15:05:59 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9ECA26E501
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 15:05:59 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 7/9] xfs: move bmbt owner change to last step of extent swap
-Date: Fri, 25 Aug 2017 11:05:55 -0400
-Message-Id: <20170825150557.43010-8-bfoster@redhat.com>
-In-Reply-To: <20170825150557.43010-1-bfoster@redhat.com>
-References: <20170825150557.43010-1-bfoster@redhat.com>
+        id S933536AbdHYPOw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 Aug 2017 11:14:52 -0400
+Date: Fri, 25 Aug 2017 11:14:45 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH] ext4: introduce per-inode DAX flag
+Message-ID: <20170825151445.ycf5xomoxvebgaez@thunk.org>
+References: <1501690186-17607-1-git-send-email-lczerner@redhat.com>
+ <20170805084601.GA12425@infradead.org>
+ <20170807121212.nuiho4afmdjf5vsd@rh_laptop>
+ <20170808090016.lxfbcrhoybmyfvlc@rh_laptop>
+ <20170811100147.GB7064@infradead.org>
+ <20170811121132.bj5y77scrvkgy7uo@rh_laptop>
+ <20170811125849.GA15300@infradead.org>
+ <20170811134130.o46y5jpekrpj5qvw@rh_laptop>
+ <20170824182057.amdirlrbugezrahy@thunk.org>
+ <20170825075415.GA748@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170825075415.GA748@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-ext4@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-xfs@vger.kernel.org
 
-The extent swap operation currently resets bmbt block owners before
-the inode forks are swapped. The bmbt buffers are marked as ordered
-so they do not have to be physically logged in the transaction.
+On Fri, Aug 25, 2017 at 12:54:15AM -0700, Christoph Hellwig wrote:
+> > 1)  Has there been any other difficulty that XFS has had due to the
+> > fact that they have this DAX flag added?  e.g., are there any
+> > operational, or practical code maintainability issues at stake here?
+> > Or is this mostly an design philosophy debate?
+> 
+> It hasn't yet.  It will create really annoying problems once we
+> use raw DAX access for metadata, which I had prototype a while ago
+> and plan to finnally get in in the next months.
+> 
+> > 2) Are there any users using the DAX flag with XFS such that, if XFS
+> > were to remove the DAX flag support, those users would complain
+> > bitterly?
+> 
+> I don't know of anyone that actually uses the flag.  If someone did
+> that would probably run into problems like changing that changing it
+> on a file that's currently mmaped would crash an burn badly.
 
-This use of ordered buffers is not safe as bmbt buffers may have
-been previously physically logged. The bmbt owner change algorithm
-needs to be updated to physically log buffers that are already dirty
-when/if they are encountered. This means that an extent swap will
-eventually require multiple rolling transactions to handle large
-btrees. In addition, all inode related changes must be logged before
-the bmbt owner change scan begins and can roll the transaction for
-the first time to preserve fs consistency via log recovery.
+Crash and burn meaning the *kernel* will crash and burn?  Or will data
+be damaged?
 
-In preparation for such fixes to the bmbt owner change algorithm,
-refactor the bmbt scan out of the extent fork swap code to the last
-operation before the transaction is committed. Update
-xfs_swap_extent_forks() to only set the inode log flags when an
-owner change scan is necessary. Update xfs_swap_extents() to trigger
-the owner change based on the inode log flags. Note that since the
-owner change now occurs after the extent fork swap, the inode btrees
-must be fixed up with the inode number of the current inode (similar
-to log recovery).
+Given that, maybe XFS should withdraw support for the DAX and hope no
+one is actually using it?
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_bmap_util.c | 44 ++++++++++++++++++++++++++------------------
- 1 file changed, 26 insertions(+), 18 deletions(-)
+					- Ted
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 93e9552..ee8fb9a 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1840,29 +1840,18 @@ xfs_swap_extent_forks(
- 	}
- 
- 	/*
--	 * Before we've swapped the forks, lets set the owners of the forks
--	 * appropriately. We have to do this as we are demand paging the btree
--	 * buffers, and so the validation done on read will expect the owner
--	 * field to be correctly set. Once we change the owners, we can swap the
--	 * inode forks.
-+	 * Btree format (v3) inodes have the inode number stamped in the bmbt
-+	 * block headers. We can't start changing the bmbt blocks until the
-+	 * inode owner change is logged so recovery does the right thing in the
-+	 * event of a crash. Set the owner change log flags now and leave the
-+	 * bmbt scan as the last step.
- 	 */
- 	if (ip->i_d.di_version == 3 &&
--	    ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
-+	    ip->i_d.di_format == XFS_DINODE_FMT_BTREE)
- 		(*target_log_flags) |= XFS_ILOG_DOWNER;
--		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK,
--					      tip->i_ino, NULL);
--		if (error)
--			return error;
--	}
--
- 	if (tip->i_d.di_version == 3 &&
--	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
-+	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
- 		(*src_log_flags) |= XFS_ILOG_DOWNER;
--		error = xfs_bmbt_change_owner(tp, tip, XFS_DATA_FORK,
--					      ip->i_ino, NULL);
--		if (error)
--			return error;
--	}
- 
- 	/*
- 	 * Swap the data forks of the inodes
-@@ -2092,6 +2081,25 @@ xfs_swap_extents(
- 	xfs_trans_log_inode(tp, tip, target_log_flags);
- 
- 	/*
-+	 * The extent forks have been swapped, but crc=1,rmapbt=0 filesystems
-+	 * have inode number owner values in the bmbt blocks that still refer to
-+	 * the old inode. Scan each bmbt to fix up the owner values with the
-+	 * inode number of the current inode.
-+	 */
-+	if (src_log_flags & XFS_ILOG_DOWNER) {
-+		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK,
-+					      ip->i_ino, NULL);
-+		if (error)
-+			goto out_trans_cancel;
-+	}
-+	if (target_log_flags & XFS_ILOG_DOWNER) {
-+		error = xfs_bmbt_change_owner(tp, tip, XFS_DATA_FORK,
-+					      tip->i_ino, NULL);
-+		if (error)
-+			goto out_trans_cancel;
-+	}
-+
-+	/*
- 	 * If this is a synchronous mount, make sure that the
- 	 * transaction goes to disk before returning to the user.
- 	 */
--- 
-2.9.5
+
 
