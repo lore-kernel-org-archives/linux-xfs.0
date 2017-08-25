@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38070 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35622 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933443AbdHYPF7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Aug 2017 11:05:59 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        id S933503AbdHYPGA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 Aug 2017 11:06:00 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 65ADD81233
+        by mx1.redhat.com (Postfix) with ESMTPS id EF0A2C04B941
         for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 15:05:59 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 36FAC80E8F
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BEB3C6C436
         for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 15:05:59 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/9] xfs: remove unnecessary dirty bli format check for ordered bufs
-Date: Fri, 25 Aug 2017 11:05:50 -0400
-Message-Id: <20170825150557.43010-3-bfoster@redhat.com>
+Subject: [PATCH 9/9] xfs: relog dirty buffers during swapext bmbt owner change
+Date: Fri, 25 Aug 2017 11:05:57 -0400
+Message-Id: <20170825150557.43010-10-bfoster@redhat.com>
 In-Reply-To: <20170825150557.43010-1-bfoster@redhat.com>
 References: <20170825150557.43010-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,122 +22,168 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-xfs_buf_item_unlock() historically checked the dirty state of the
-buffer by manually checking the buffer log formats for dirty
-segments. The introduction of ordered buffers invalidated this check
-because ordered buffers have dirty bli's but no dirty (logged)
-segments. The check was updated to accommodate ordered buffers by
-looking at the bli state first and considering the blf only if the
-bli is clean.
+The owner change bmbt scan that occurs during extent swap operations
+does not handle ordered buffer failures. Buffers that cannot be
+marked ordered must be physically logged so previously dirty ranges
+of the buffer can be relogged in the transaction.
 
-This logic is safe but unnecessary. There is no valid case where the
-bli is clean yet the blf has dirty segments. The bli is set dirty
-whenever the blf is logged (via xfs_trans_log_buf()) and the blf is
-cleared in the only place BLI_DIRTY is cleared (xfs_trans_binval()).
-
-Remove the conditional blf dirty checks and replace with an assert
-that should catch any discrepencies between bli and blf dirty
-states. Refactor the old blf dirty check into a helper function to
-be used by the assert.
+Since the bmbt scan may need to process and potentially log a large
+number of blocks, we can't expect to complete this operation in a
+single transaction. Update extent swap to use a permanent
+transaction with enough log reservation to physically log a buffer.
+Update the bmbt scan to physically log any buffers that cannot be
+ordered and to terminate the scan with -EAGAIN. On -EAGAIN, the
+caller rolls the transaction and restarts the scan. Finally, update
+the bmbt scan helper function to skip bmbt blocks that already match
+the expected owner so they are not reprocessed after scan restarts.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c | 46 +++++++++++++++++++++++++++++++---------------
- fs/xfs/xfs_buf_item.h |  1 +
- 2 files changed, 32 insertions(+), 15 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c | 26 ++++++++++++++-------
+ fs/xfs/xfs_bmap_util.c    | 57 ++++++++++++++++++++++++++++++++++++++---------
+ 2 files changed, 65 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index cdae0ad5e0..9f4dbca 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -575,8 +575,9 @@ xfs_buf_item_unlock(
- {
- 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
- 	struct xfs_buf		*bp = bip->bli_buf;
--	bool			clean;
-+	bool			dirty;
- 	bool			aborted;
-+	bool			ordered;
- 	int			flags;
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index d06b04d..c466a23 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4452,10 +4452,15 @@ xfs_btree_block_change_owner(
  
- 	/* Clear the buffer's association with this transaction. */
-@@ -620,20 +621,13 @@ xfs_buf_item_unlock(
- 	 * regardless of whether it is dirty or not. A dirty abort implies a
- 	 * shutdown, anyway.
- 	 *
--	 * Ordered buffers are dirty but may have no recorded changes, so ensure
--	 * we only release clean items here.
-+	 * The bli dirty state should match whether the blf has logged segments
-+	 * except for ordered buffers, where only the bli should be dirty.
- 	 */
--	clean = (flags & XFS_BLI_DIRTY) ? false : true;
--	if (clean) {
--		int i;
--		for (i = 0; i < bip->bli_format_count; i++) {
--			if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
--				     bip->bli_formats[i].blf_map_size)) {
--				clean = false;
--				break;
--			}
--		}
--	}
-+	dirty = (flags & XFS_BLI_DIRTY) ? true : false;
-+	ordered = (flags & XFS_BLI_ORDERED) ? true : false;
-+	ASSERT((!ordered && dirty == xfs_buf_item_dirty_format(bip)) ||
-+	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
+ 	/* modify the owner */
+ 	block = xfs_btree_get_block(cur, level, &bp);
+-	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
++	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
++		if (block->bb_u.l.bb_owner == cpu_to_be64(bbcoi->new_owner))
++			return 0;
+ 		block->bb_u.l.bb_owner = cpu_to_be64(bbcoi->new_owner);
+-	else
++	} else {
++		if (block->bb_u.s.bb_owner == cpu_to_be32(bbcoi->new_owner))
++			return 0;
+ 		block->bb_u.s.bb_owner = cpu_to_be32(bbcoi->new_owner);
++	}
  
  	/*
- 	 * Clean buffers, by definition, cannot be in the AIL. However, aborted
-@@ -652,7 +646,7 @@ xfs_buf_item_unlock(
- 			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
- 			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
- 			xfs_buf_item_relse(bp);
--		} else if (clean)
-+		} else if (!dirty)
- 			xfs_buf_item_relse(bp);
- 	}
- 
-@@ -945,6 +939,28 @@ xfs_buf_item_log(
- }
- 
- 
-+/*
-+ * Return true if the buffer has any ranges logged/dirtied by a transaction,
-+ * false otherwise.
-+ */
-+bool
-+xfs_buf_item_dirty_format(
-+	struct xfs_buf_log_item	*bip)
-+{
-+	int			i;
-+	bool			dirty = false;
-+
-+	for (i = 0; i < bip->bli_format_count; i++) {
-+		if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
-+			     bip->bli_formats[i].blf_map_size)) {
-+			dirty = true;
-+			break;
-+		}
+ 	 * If the block is a root block hosted in an inode, we might not have a
+@@ -4464,14 +4469,19 @@ xfs_btree_block_change_owner(
+ 	 * block is formatted into the on-disk inode fork. We still change it,
+ 	 * though, so everything is consistent in memory.
+ 	 */
+-	if (bp) {
+-		if (cur->bc_tp)
+-			xfs_trans_ordered_buf(cur->bc_tp, bp);
+-		else
+-			xfs_buf_delwri_queue(bp, bbcoi->buffer_list);
+-	} else {
++	if (!bp) {
+ 		ASSERT(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE);
+ 		ASSERT(level == cur->bc_nlevels - 1);
++		return 0;
 +	}
 +
-+	return dirty;
++	if (cur->bc_tp) {
++		if (!xfs_trans_ordered_buf(cur->bc_tp, bp)) {
++			xfs_btree_log_block(cur, bp, XFS_BB_OWNER);
++			return -EAGAIN;
++		}
++	} else {
++		xfs_buf_delwri_queue(bp, bbcoi->buffer_list);
+ 	}
+ 
+ 	return 0;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index ee8fb9a..3e9b7a4 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1929,6 +1929,48 @@ xfs_swap_extent_forks(
+ 	return 0;
+ }
+ 
++/*
++ * Fix up the owners of the bmbt blocks to refer to the current inode. The
++ * change owner scan attempts to order all modified buffers in the current
++ * transaction. In the event of ordered buffer failure, the offending buffer is
++ * physically logged as a fallback and the scan returns -EAGAIN. We must roll
++ * the transaction in this case to replenish the fallback log reservation and
++ * restart the scan. This process repeats until the scan completes.
++ */
++static int
++xfs_swap_change_owner(
++	struct xfs_trans	**tpp,
++	struct xfs_inode	*ip,
++	struct xfs_inode	*tmpip)
++{
++	int			error;
++	struct xfs_trans	*tp = *tpp;
++
++	do {
++		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK, ip->i_ino,
++					      NULL);
++		/* success or fatal error */
++		if (error != -EAGAIN)
++			break;
++
++		error = xfs_trans_roll(tpp, NULL);
++		if (error)
++			break;
++		tp = *tpp;
++
++		/*
++		 * Redirty both inodes so they can relog and keep the log tail
++		 * moving forward.
++		 */
++		xfs_trans_ijoin(tp, ip, 0);
++		xfs_trans_ijoin(tp, tmpip, 0);
++		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++		xfs_trans_log_inode(tp, tmpip, XFS_ILOG_CORE);
++	} while (true);
++
++	return error;
 +}
 +
- STATIC void
- xfs_buf_item_free(
- 	xfs_buf_log_item_t	*bip)
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index e0e744a..9690ce6 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -64,6 +64,7 @@ typedef struct xfs_buf_log_item {
- int	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
- void	xfs_buf_item_relse(struct xfs_buf *);
- void	xfs_buf_item_log(xfs_buf_log_item_t *, uint, uint);
-+bool	xfs_buf_item_dirty_format(struct xfs_buf_log_item *);
- void	xfs_buf_attach_iodone(struct xfs_buf *,
- 			      void(*)(struct xfs_buf *, xfs_log_item_t *),
- 			      xfs_log_item_t *);
+ int
+ xfs_swap_extents(
+ 	struct xfs_inode	*ip,	/* target inode */
+@@ -1943,7 +1985,7 @@ xfs_swap_extents(
+ 	int			lock_flags;
+ 	struct xfs_ifork	*cowfp;
+ 	uint64_t		f;
+-	int			resblks;
++	int			resblks = 0;
+ 
+ 	/*
+ 	 * Lock the inodes against other IO, page faults and truncate to
+@@ -1991,11 +2033,8 @@ xfs_swap_extents(
+ 			  XFS_SWAP_RMAP_SPACE_RES(mp,
+ 				XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK),
+ 				XFS_DATA_FORK);
+-		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks,
+-				0, 0, &tp);
+-	} else
+-		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0,
+-				0, 0, &tp);
++	}
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
+ 	if (error)
+ 		goto out_unlock;
+ 
+@@ -2087,14 +2126,12 @@ xfs_swap_extents(
+ 	 * inode number of the current inode.
+ 	 */
+ 	if (src_log_flags & XFS_ILOG_DOWNER) {
+-		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK,
+-					      ip->i_ino, NULL);
++		error = xfs_swap_change_owner(&tp, ip, tip);
+ 		if (error)
+ 			goto out_trans_cancel;
+ 	}
+ 	if (target_log_flags & XFS_ILOG_DOWNER) {
+-		error = xfs_bmbt_change_owner(tp, tip, XFS_DATA_FORK,
+-					      tip->i_ino, NULL);
++		error = xfs_swap_change_owner(&tp, tip, ip);
+ 		if (error)
+ 			goto out_trans_cancel;
+ 	}
 -- 
 2.9.5
 
