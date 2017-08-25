@@ -1,149 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48258 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55944 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756322AbdHYN5D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Aug 2017 09:57:03 -0400
-Date: Fri, 25 Aug 2017 09:57:01 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: check for race with xfs_reclaim_inode() in
- xfs_ifree_cluster()
-Message-ID: <20170825135659.GA40964@bfoster.bfoster>
-References: <93321e051fb5f80c4727844748cca04604a8757a.1503618336.git.osandov@fb.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <93321e051fb5f80c4727844748cca04604a8757a.1503618336.git.osandov@fb.com>
+        id S1756577AbdHYMH4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 Aug 2017 08:07:56 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id EFEF181E01
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 12:07:55 +0000 (UTC)
+Received: from hades.localdomain.com (unknown [10.43.17.88])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 746EE17D27
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 12:07:55 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [RFC PATCH] xfs: Properly retry failed dquot items in case of error during buffer writeback
+Date: Fri, 25 Aug 2017 14:07:52 +0200
+Message-Id: <20170825120752.22553-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Omar Sandoval <osandov@osandov.com>
-Cc: linux-xfs@vger.kernel.org, kernel-team@fb.com
+To: linux-xfs@vger.kernel.org
 
-On Thu, Aug 24, 2017 at 04:50:09PM -0700, Omar Sandoval wrote:
-> From: Omar Sandoval <osandov@fb.com>
-> 
-> After xfs_ifree_cluster() finds an inode in the radix tree and verifies
-> that the inode number is what it expected, xfs_reclaim_inode() can swoop
-> in and free it. xfs_ifree_cluster() will then happily continue working
-> on the freed inode. Most importantly, it will mark the inode stale,
-> which will probably be overwritten when the inode slab object is
-> reallocated, but if it has already been reallocated then we can end up
-> with an inode spuriously marked stale.
-> 
-> In 8a17d7ddedb4 ("xfs: mark reclaimed inodes invalid earlier") we added
-> a second check to xfs_iflush_cluster() to detect this race, but the
-> similar RCU lookup in xfs_ifree_cluster() needs the same treatment.
-> 
-> Signed-off-by: Omar Sandoval <osandov@fb.com>
-> ---
-> Based on v4.13-rc6. Let me know if my reasoning here is completely off,
-> the XFS inode machinery makes my head spin.
-> 
->  fs/xfs/xfs_icache.c | 10 +++++-----
->  fs/xfs/xfs_inode.c  | 23 ++++++++++++++++++-----
->  2 files changed, 23 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 0a9e6985a0d0..34227115a5d6 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1124,11 +1124,11 @@ xfs_reclaim_inode(
->  	 * Because we use RCU freeing we need to ensure the inode always appears
->  	 * to be reclaimed with an invalid inode number when in the free state.
->  	 * We do this as early as possible under the ILOCK so that
-> -	 * xfs_iflush_cluster() can be guaranteed to detect races with us here.
-> -	 * By doing this, we guarantee that once xfs_iflush_cluster has locked
-> -	 * XFS_ILOCK that it will see either a valid, flushable inode that will
-> -	 * serialise correctly, or it will see a clean (and invalid) inode that
-> -	 * it can skip.
-> +	 * xfs_iflush_cluster() and xfs_ifree_cluster() can be guaranteed to
-> +	 * detect races with us here. By doing this, we guarantee that once
-> +	 * xfs_iflush_cluster() or xfs_ifree_cluster() has locked XFS_ILOCK that
-> +	 * it will see either a valid inode that will serialise correctly, or it
-> +	 * will see an invalid inode that it can skip.
->  	 */
->  	spin_lock(&ip->i_flags_lock);
->  	ip->i_flags = XFS_IRECLAIM;
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index ff48f0096810..97045e8dfed5 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2359,11 +2359,24 @@ xfs_ifree_cluster(
->  			 * already marked stale. If we can't lock it, back off
->  			 * and retry.
->  			 */
-> -			if (ip != free_ip &&
-> -			    !xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-> -				rcu_read_unlock();
-> -				delay(1);
-> -				goto retry;
-> +			if (ip != free_ip) {
-> +				if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-> +					rcu_read_unlock();
-> +					delay(1);
-> +					goto retry;
-> +				}
-> +
-> +				/*
-> +				 * Check the inode number again in case we're
-> +				 * racing with freeing in xfs_reclaim_inode().
-> +				 * See the comments in that function for more
-> +				 * information as to why the initial check is
-> +				 * not sufficient.
-> +				 */
-> +				if (ip->i_ino != inum + i) {
-> +					xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +					continue;
-> +				}
+Hi,
 
-Ok, so we're down in the codepath where we've removed the last inode in
-a chunk and we've freed the inode chunk. We lock each cluster buffer,
-lookup each inode in the cluster to mark it stale, then invalidate the
-buffer.
+Once the fix for inode item writeback errors is already queued
+(d3a304b62), I believe it's time to fix the same problem in dquot code.
 
-Here, we check the inode number and stale state under the spinlock while
-on the reclaim side, we do the lookup and set the reclaim flag under the
-spinlock. It seems both paths can get at least that far without
-necessarily stomping on eachother.
+Although there were no reports of users hitting this bug in dquot code
+(at least none I've seen), the bug is there and I was already planning
+to fix it when the correct approach to fix the inodes part was decided.
 
-Next, both paths acquire the ilock...
+So, this is an RFC patch to fix the same problem in dquot code,
+regarding failed buffers being unable to be resubmitted once they are
+flush locked.
 
-If xfs_ifree_cluster() gets the lock it acquires the flush lock and
-marks the inode stale (possibly attaching to the invalidated buffer if
-it is dirty, which I think is irrelevant here). Hence when reclaim
-acquires the lock, it sees a stale inode and immediately reclaims it. So
-far so good.
+The semantics are quite similar to inode items path, although during
+xfs_qm_dqflush_done(), I'm not sure if the changes I made are correct.
 
-If reclaim had acquired the lock, it (potentially) reclaims the inode
-and resets i_ino = 0 before the ilock is released as indication. Then
-the inode is removed from the tree and scheduled for rcu freeing. On the
-xfs_ifree_cluster() side, each ilock trylock failure cycles the rcu read
-lock and retries the initial lookup. I think that means there's a good
-chance the previous i_ino check would either fail the lookup or detect
-the reclaimed inode and skip it appropriately. That said, it does appear
-like there's a very small window where if the lookup and i_flags_lock
-checks (in xfs_ifree_cluster()) occur before reclaim resets i_ino but
-reclaim releases ilock such that the (xfs_ifree_cluster()) ilock trylock
-does not fail, we go on and stale a possibly free inode.
+Comments much appreciated :)
 
-This code is hairy and it's easily possible that I'm missing something
-as well. Even so, I think the additional check is harmless and
-defensive and so this looks Ok to me:
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+BTW, This patch should be applied only over branch xfs-4.14-merge, it requires
+my previous patches, which are not in the master branch yet.
 
-I am curious whether you've hit a problem that this patch addresses or
-if this is just an observation?
+Cheers.
 
-Brian
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_dquot.c      | 11 ++++++++---
+ fs/xfs/xfs_dquot_item.c | 37 +++++++++++++++++++++++++++++++++++--
+ 2 files changed, 43 insertions(+), 5 deletions(-)
 
->  			}
->  			rcu_read_unlock();
->  
-> -- 
-> 2.14.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index fd2ef8c2c9a7..8198c20212a2 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -987,14 +987,19 @@ xfs_qm_dqflush_done(
+ 	 * holding the lock before removing the dquot from the AIL.
+ 	 */
+ 	if ((lip->li_flags & XFS_LI_IN_AIL) &&
+-	    lip->li_lsn == qip->qli_flush_lsn) {
++	   (lip->li_lsn == qip->qli_flush_lsn) ||
++	    lip->li_flags & XFS_LI_FAILED) {
+ 
+ 		/* xfs_trans_ail_delete() drops the AIL lock. */
+ 		spin_lock(&ailp->xa_lock);
+-		if (lip->li_lsn == qip->qli_flush_lsn)
++		if (lip->li_lsn == qip->qli_flush_lsn) {
+ 			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
+-		else
++		} else if (lip->li_flags & XFS_LI_FAILED) {
++			xfs_clear_li_failed(lip);
+ 			spin_unlock(&ailp->xa_lock);
++		} else {
++			spin_unlock(&ailp->xa_lock);
++		}
+ 	}
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index 2c7a1629e064..35fd6d71bc42 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -137,6 +137,23 @@ xfs_qm_dqunpin_wait(
+ 	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
+ }
+ 
++/*
++ * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
++ * have been failed during writeback
++ *
++ * this informs the AIL that the dquot is already flush locked on the next push,
++ * and acquires a hold on the buffer to ensure that it isn't reclaimed before
++ * dirty data makes it to disk.
++ */
++STATIC void
++xfs_dquot_item_error(
++	struct xfs_log_item	*lip,
++	struct xfs_buf		*bp)
++{
++	ASSERT(XFS_DQ_IS_LOCKED(DQUOT_ITEM(lip)->qli_item));
++	xfs_set_li_failed(lip, bp);
++}
++
+ STATIC uint
+ xfs_qm_dquot_logitem_push(
+ 	struct xfs_log_item	*lip,
+@@ -144,13 +161,28 @@ xfs_qm_dquot_logitem_push(
+ 					      __acquires(&lip->li_ailp->xa_lock)
+ {
+ 	struct xfs_dquot	*dqp = DQUOT_ITEM(lip)->qli_dquot;
+-	struct xfs_buf		*bp = NULL;
++	struct xfs_buf		*bp = lip->li_buf;
+ 	uint			rval = XFS_ITEM_SUCCESS;
+ 	int			error;
+ 
+ 	if (atomic_read(&dqp->q_pincount) > 0)
+ 		return XFS_ITEM_PINNED;
+ 
++	/*
++	 * The buffer containing this item failed to be written back
++	 * previously. Resubmit the buffer for IO
++	 */
++	if (lip->li_flags & XFS_LI_FAILED) {
++		if (!xfs_buf_trylock(bp))
++			return XFS_ITEM_LOCKED;
++
++		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
++			rval = XFS_ITEM_FLUSHING;
++
++		xfs_buf_unlock(bp);
++		return rval;
++	}
++
+ 	if (!xfs_dqlock_nowait(dqp))
+ 		return XFS_ITEM_LOCKED;
+ 
+@@ -242,7 +274,8 @@ static const struct xfs_item_ops xfs_dquot_item_ops = {
+ 	.iop_unlock	= xfs_qm_dquot_logitem_unlock,
+ 	.iop_committed	= xfs_qm_dquot_logitem_committed,
+ 	.iop_push	= xfs_qm_dquot_logitem_push,
+-	.iop_committing = xfs_qm_dquot_logitem_committing
++	.iop_committing = xfs_qm_dquot_logitem_committing,
++	.iop_error	= xfs_dquot_item_error
+ };
+ 
+ /*
+-- 
+2.13.5
+
