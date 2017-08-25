@@ -1,66 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56654 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755826AbdHYNAT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 09:00:19 -0400
-Date: Fri, 25 Aug 2017 06:00:11 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v6 3/5] mm: introduce mmap3 for safely defining new mmap
- flags
-Message-ID: <20170825130011.GA30072@infradead.org>
-References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150353213097.5039.6729469069608762658.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170824165546.GA3121@infradead.org>
- <CAPcyv4iN0QpUSgOUvisnNQsiV1Pp=4dh7CwAV8FFj=_rFU=aug@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4iN0QpUSgOUvisnNQsiV1Pp=4dh7CwAV8FFj=_rFU=aug@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60904 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933341AbdHYPF7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 Aug 2017 11:05:59 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 46A68C058EBF
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 15:05:59 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 2ADD380E8D
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 15:05:59 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 1/9] xfs: open-code xfs_buf_item_dirty()
+Date: Fri, 25 Aug 2017 11:05:49 -0400
+Message-Id: <20170825150557.43010-2-bfoster@redhat.com>
+In-Reply-To: <20170825150557.43010-1-bfoster@redhat.com>
+References: <20170825150557.43010-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Aug 24, 2017 at 10:36:02AM -0700, Dan Williams wrote:
-> I'll let Andy and Kirill restate their concerns, but one of the
-> arguments that swayed me is that any new mmap flag with this hack must
-> be documented to only work with MAP_SHARED and that MAP_PRIVATE is
-> silently ignored. I agree with the mess and delays it causes for other
-> archs and libc, but at the same time this is for new applications and
-> libraries that know to look for the new flag, so they need to do the
-> extra work to check for the new syscall.
+It checks a single flag and has one caller. It probably isn't worth
+its own function.
 
-True.  That is for the original hack, but I spent some more time
-looking at the mmap code, and there is one thing I noticed:
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_buf_item.c  | 11 -----------
+ fs/xfs/xfs_buf_item.h  |  1 -
+ fs/xfs/xfs_trans_buf.c |  2 +-
+ 3 files changed, 1 insertion(+), 13 deletions(-)
 
-include/uapi/asm-generic/mman-common.h:
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 573fc72..cdae0ad5e0 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -945,17 +945,6 @@ xfs_buf_item_log(
+ }
+ 
+ 
+-/*
+- * Return 1 if the buffer has been logged or ordered in a transaction (at any
+- * point, not just the current transaction) and 0 if not.
+- */
+-uint
+-xfs_buf_item_dirty(
+-	xfs_buf_log_item_t	*bip)
+-{
+-	return (bip->bli_flags & XFS_BLI_DIRTY);
+-}
+-
+ STATIC void
+ xfs_buf_item_free(
+ 	xfs_buf_log_item_t	*bip)
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index 530686e..e0e744a 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -64,7 +64,6 @@ typedef struct xfs_buf_log_item {
+ int	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
+ void	xfs_buf_item_relse(struct xfs_buf *);
+ void	xfs_buf_item_log(xfs_buf_log_item_t *, uint, uint);
+-uint	xfs_buf_item_dirty(xfs_buf_log_item_t *);
+ void	xfs_buf_attach_iodone(struct xfs_buf *,
+ 			      void(*)(struct xfs_buf *, xfs_log_item_t *),
+ 			      xfs_log_item_t *);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 86987d8..cac8abb 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -435,7 +435,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
+ 	if (XFS_FORCED_SHUTDOWN(tp->t_mountp) && freed) {
+ 		xfs_trans_ail_remove(&bip->bli_item, SHUTDOWN_LOG_IO_ERROR);
+ 		xfs_buf_item_relse(bp);
+-	} else if (!xfs_buf_item_dirty(bip)) {
++	} else if (!(bip->bli_flags & XFS_BLI_DIRTY)) {
+ /***
+ 		ASSERT(bp->b_pincount == 0);
+ ***/
+-- 
+2.9.5
 
-#define MAP_SHARED      0x01            /* Share changes */
-#define MAP_PRIVATE     0x02            /* Changes are private */
-#define MAP_TYPE        0x0f            /* Mask for type of mapping */
-
-mm/mmap.c:
-
-	if (file) {
-		struct inode *inode = file_inode(file);
-
-		switch (flags & MAP_TYPE) {
-                case MAP_SHARED:
-			...
-		case MAP_PRIVATE:
-			...
-		default:
-			return -EINVAL;
-		}
-
-and very similar for the anonymous and nommu cases.
-
-So if we pick e.g. 0x4 as the valid bit we don't even need to overload
-the MAP_SHARED and MAP_PRIVATE meaning.
-
-> 
-> However, if the fcntl lease approach works for the DMA cases then we
-> only have the one mmap flag to add for now, so maybe the weird
-> MAP_{SHARED|PRIVATE} semantics are tolerable.
----end quoted text---
