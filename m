@@ -1,49 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:54864 "EHLO imap.thunk.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934326AbdHYQ2l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Aug 2017 12:28:41 -0400
-Date: Fri, 25 Aug 2017 12:28:37 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH] ext4: introduce per-inode DAX flag
-Message-ID: <20170825162837.urica6l4eamu356w@thunk.org>
-References: <20170807121212.nuiho4afmdjf5vsd@rh_laptop>
- <20170808090016.lxfbcrhoybmyfvlc@rh_laptop>
- <20170811100147.GB7064@infradead.org>
- <20170811121132.bj5y77scrvkgy7uo@rh_laptop>
- <20170811125849.GA15300@infradead.org>
- <20170811134130.o46y5jpekrpj5qvw@rh_laptop>
- <20170824182057.amdirlrbugezrahy@thunk.org>
- <20170825075415.GA748@infradead.org>
- <20170825151445.ycf5xomoxvebgaez@thunk.org>
- <20170825154032.GA1827@infradead.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:45804 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754383AbdHYQuh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 12:50:37 -0400
+Date: Fri, 25 Aug 2017 09:50:32 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 8/9] xfs: disallow marking previously dirty buffers as
+ ordered
+Message-ID: <20170825165032.GQ4796@magnolia>
+References: <20170825150557.43010-1-bfoster@redhat.com>
+ <20170825150557.43010-9-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170825154032.GA1827@infradead.org>
+In-Reply-To: <20170825150557.43010-9-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-ext4@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Aug 25, 2017 at 08:40:32AM -0700, Christoph Hellwig wrote:
-> On Fri, Aug 25, 2017 at 11:14:45AM -0400, Theodore Ts'o wrote:
-> > > I don't know of anyone that actually uses the flag.  If someone did
-> > > that would probably run into problems like changing that changing it
-> > > on a file that's currently mmaped would crash an burn badly.
-> > 
-> > Crash and burn meaning the *kernel* will crash and burn?  Or will data
-> > be damaged?
-> > 
-> > Given that, maybe XFS should withdraw support for the DAX and hope no
-> > one is actually using it?
+On Fri, Aug 25, 2017 at 11:05:56AM -0400, Brian Foster wrote:
+> Ordered buffers are used in situations where the buffer is not
+> physically logged but must pass through the transaction/logging
+> pipeline for a particular transaction. As a result, ordered buffers
+> are not unpinned and written back until the transaction commits to
+> the log. Ordered buffers have a strict requirement that the target
+> buffer must not be currently dirty and resident in the log pipeline
+> at the time it is marked ordered. If a dirty+ordered buffer is
+> committed, the buffer is reinserted to the AIL but not physically
+> relogged at the LSN of the associated checkpoint. The buffer log
+> item is assigned the LSN of the latest checkpoint and the AIL
+> effectively releases the previously logged buffer content from the
+> active log before the buffer has been written back. If the tail
+> pushes forward and a filesystem crash occurs while in this state, an
+> inconsistent filesystem could result.
 > 
-> Nah, -o dax works very well.  It's just the flag instead of the -o dax
-> option or rather switching it on a mapped file will probably be very dangerous.
+> It is currently the caller responsibility to ensure an ordered
+> buffer is not already dirty from a previous modification. This is
+> unclear and error prone when not used in situations where it is
+> guaranteed a buffer has not been previously modified (such as new
+> metadata allocations).
+> 
+> To facilitate general purpose use of ordered buffers, update
+> xfs_trans_ordered_buf() to conditionally order the buffer based on
+> state of the log item and return the status of the result. If the
+> bli is dirty, do not order the buffer and return false. The caller
+> must either physically log the buffer (having acquired the
+> appropriate log reservation) or push it from the AIL to clean it
+> before it can be marked ordered in the current transaction.
+> 
+> Note that ordered buffers are currently only used in two situations:
+> 1.) inode chunk allocation where previously logged buffers are not
+> possible and 2.) extent swap which will be updated to handle ordered
+> buffer failures in a separate patch.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Sorry, I was suggested XFS withdrawing support for the pre-file dax
-flag.  I thought part of the argument for why ext4 should accept this
-patch is that XFS already has the per-file DAX flag?
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-      	      	  	      	  	   - Ted
+> ---
+>  fs/xfs/xfs_trans.h     | 2 +-
+>  fs/xfs/xfs_trans_buf.c | 7 +++++--
+>  2 files changed, 6 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index b3632eb..4709823 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -212,7 +212,7 @@ void		xfs_trans_bhold_release(xfs_trans_t *, struct xfs_buf *);
+>  void		xfs_trans_binval(xfs_trans_t *, struct xfs_buf *);
+>  void		xfs_trans_inode_buf(xfs_trans_t *, struct xfs_buf *);
+>  void		xfs_trans_stale_inode_buf(xfs_trans_t *, struct xfs_buf *);
+> -void		xfs_trans_ordered_buf(xfs_trans_t *, struct xfs_buf *);
+> +bool		xfs_trans_ordered_buf(xfs_trans_t *, struct xfs_buf *);
+>  void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
+>  void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
+>  void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index 3089e80..3ba7a96 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -724,7 +724,7 @@ xfs_trans_inode_alloc_buf(
+>   * transactions rather than the physical changes we make to the buffer without
+>   * changing writeback ordering constraints of metadata buffers.
+>   */
+> -void
+> +bool
+>  xfs_trans_ordered_buf(
+>  	struct xfs_trans	*tp,
+>  	struct xfs_buf		*bp)
+> @@ -734,7 +734,9 @@ xfs_trans_ordered_buf(
+>  	ASSERT(bp->b_transp == tp);
+>  	ASSERT(bip != NULL);
+>  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+> -	ASSERT(!xfs_buf_item_dirty_format(bip));
+> +
+> +	if (xfs_buf_item_dirty_format(bip))
+> +		return false;
+>  
+>  	bip->bli_flags |= XFS_BLI_ORDERED;
+>  	trace_xfs_buf_item_ordered(bip);
+> @@ -744,6 +746,7 @@ xfs_trans_ordered_buf(
+>  	 * to be marked dirty and that it has been logged.
+>  	 */
+>  	xfs_trans_dirty_buf(tp, bp);
+> +	return true;
+>  }
+>  
+>  /*
+> -- 
+> 2.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
