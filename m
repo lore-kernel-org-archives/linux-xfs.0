@@ -1,129 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51346 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933738AbdHYP5y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 11:57:54 -0400
-Date: Fri, 25 Aug 2017 08:57:49 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/9] xfs: move bmbt owner change to last step of extent
- swap
-Message-ID: <20170825155749.GP4796@magnolia>
-References: <20170825150557.43010-1-bfoster@redhat.com>
- <20170825150557.43010-8-bfoster@redhat.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:38217 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933662AbdHYP6G (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 11:58:06 -0400
+Received: by mail-wm0-f65.google.com with SMTP id z132so188346wmg.5
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 08:58:05 -0700 (PDT)
+Date: Fri, 25 Aug 2017 18:58:03 +0300
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [PATCH v6 3/5] mm: introduce mmap3 for safely defining new mmap
+ flags
+Message-ID: <20170825155803.4km7wttzadfqw2vb@node.shutemov.name>
+References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150353213097.5039.6729469069608762658.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170824165546.GA3121@infradead.org>
+ <CAPcyv4iN0QpUSgOUvisnNQsiV1Pp=4dh7CwAV8FFj=_rFU=aug@mail.gmail.com>
+ <20170825130011.GA30072@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170825150557.43010-8-bfoster@redhat.com>
+In-Reply-To: <20170825130011.GA30072@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-On Fri, Aug 25, 2017 at 11:05:55AM -0400, Brian Foster wrote:
-> The extent swap operation currently resets bmbt block owners before
-> the inode forks are swapped. The bmbt buffers are marked as ordered
-> so they do not have to be physically logged in the transaction.
+On Fri, Aug 25, 2017 at 06:00:11AM -0700, Christoph Hellwig wrote:
+> On Thu, Aug 24, 2017 at 10:36:02AM -0700, Dan Williams wrote:
+> > I'll let Andy and Kirill restate their concerns, but one of the
+> > arguments that swayed me is that any new mmap flag with this hack must
+> > be documented to only work with MAP_SHARED and that MAP_PRIVATE is
+> > silently ignored. I agree with the mess and delays it causes for other
+> > archs and libc, but at the same time this is for new applications and
+> > libraries that know to look for the new flag, so they need to do the
+> > extra work to check for the new syscall.
 > 
-> This use of ordered buffers is not safe as bmbt buffers may have
-> been previously physically logged. The bmbt owner change algorithm
-> needs to be updated to physically log buffers that are already dirty
-> when/if they are encountered. This means that an extent swap will
-> eventually require multiple rolling transactions to handle large
-> btrees. In addition, all inode related changes must be logged before
-> the bmbt owner change scan begins and can roll the transaction for
-> the first time to preserve fs consistency via log recovery.
+> True.  That is for the original hack, but I spent some more time
+> looking at the mmap code, and there is one thing I noticed:
 > 
-> In preparation for such fixes to the bmbt owner change algorithm,
-> refactor the bmbt scan out of the extent fork swap code to the last
-> operation before the transaction is committed. Update
-> xfs_swap_extent_forks() to only set the inode log flags when an
-> owner change scan is necessary. Update xfs_swap_extents() to trigger
-> the owner change based on the inode log flags. Note that since the
-> owner change now occurs after the extent fork swap, the inode btrees
-> must be fixed up with the inode number of the current inode (similar
-> to log recovery).
+> include/uapi/asm-generic/mman-common.h:
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> #define MAP_SHARED      0x01            /* Share changes */
+> #define MAP_PRIVATE     0x02            /* Changes are private */
+> #define MAP_TYPE        0x0f            /* Mask for type of mapping */
+> 
+> mm/mmap.c:
+> 
+> 	if (file) {
+> 		struct inode *inode = file_inode(file);
+> 
+> 		switch (flags & MAP_TYPE) {
+>                 case MAP_SHARED:
+> 			...
+> 		case MAP_PRIVATE:
+> 			...
+> 		default:
+> 			return -EINVAL;
+> 		}
+> 
+> and very similar for the anonymous and nommu cases.
+> 
+> So if we pick e.g. 0x4 as the valid bit we don't even need to overload
+> the MAP_SHARED and MAP_PRIVATE meaning.
 
-Looks ok I think,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Not all archs are ready for this:
 
-> ---
->  fs/xfs/xfs_bmap_util.c | 44 ++++++++++++++++++++++++++------------------
->  1 file changed, 26 insertions(+), 18 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 93e9552..ee8fb9a 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1840,29 +1840,18 @@ xfs_swap_extent_forks(
->  	}
->  
->  	/*
-> -	 * Before we've swapped the forks, lets set the owners of the forks
-> -	 * appropriately. We have to do this as we are demand paging the btree
-> -	 * buffers, and so the validation done on read will expect the owner
-> -	 * field to be correctly set. Once we change the owners, we can swap the
-> -	 * inode forks.
-> +	 * Btree format (v3) inodes have the inode number stamped in the bmbt
-> +	 * block headers. We can't start changing the bmbt blocks until the
-> +	 * inode owner change is logged so recovery does the right thing in the
-> +	 * event of a crash. Set the owner change log flags now and leave the
-> +	 * bmbt scan as the last step.
->  	 */
->  	if (ip->i_d.di_version == 3 &&
-> -	    ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
-> +	    ip->i_d.di_format == XFS_DINODE_FMT_BTREE)
->  		(*target_log_flags) |= XFS_ILOG_DOWNER;
-> -		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK,
-> -					      tip->i_ino, NULL);
-> -		if (error)
-> -			return error;
-> -	}
-> -
->  	if (tip->i_d.di_version == 3 &&
-> -	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
-> +	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
->  		(*src_log_flags) |= XFS_ILOG_DOWNER;
-> -		error = xfs_bmbt_change_owner(tp, tip, XFS_DATA_FORK,
-> -					      ip->i_ino, NULL);
-> -		if (error)
-> -			return error;
-> -	}
->  
->  	/*
->  	 * Swap the data forks of the inodes
-> @@ -2092,6 +2081,25 @@ xfs_swap_extents(
->  	xfs_trans_log_inode(tp, tip, target_log_flags);
->  
->  	/*
-> +	 * The extent forks have been swapped, but crc=1,rmapbt=0 filesystems
-> +	 * have inode number owner values in the bmbt blocks that still refer to
-> +	 * the old inode. Scan each bmbt to fix up the owner values with the
-> +	 * inode number of the current inode.
-> +	 */
-> +	if (src_log_flags & XFS_ILOG_DOWNER) {
-> +		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK,
-> +					      ip->i_ino, NULL);
-> +		if (error)
-> +			goto out_trans_cancel;
-> +	}
-> +	if (target_log_flags & XFS_ILOG_DOWNER) {
-> +		error = xfs_bmbt_change_owner(tp, tip, XFS_DATA_FORK,
-> +					      tip->i_ino, NULL);
-> +		if (error)
-> +			goto out_trans_cancel;
-> +	}
-> +
-> +	/*
->  	 * If this is a synchronous mount, make sure that the
->  	 * transaction goes to disk before returning to the user.
->  	 */
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+arch/parisc/include/uapi/asm/mman.h:#define MAP_TYPE    0x03            /* Mask for type of mapping */
+arch/parisc/include/uapi/asm/mman.h:#define MAP_FIXED   0x04            /* Interpret addr exactly */
+
+-- 
+ Kirill A. Shutemov
