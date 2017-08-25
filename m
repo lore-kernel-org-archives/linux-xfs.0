@@ -1,139 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47324 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:51346 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933909AbdHYPvs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 11:51:48 -0400
-Date: Fri, 25 Aug 2017 08:51:41 -0700
+        with ESMTP id S933738AbdHYP5y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 11:57:54 -0400
+Date: Fri, 25 Aug 2017 08:57:49 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/9] xfs: don't log dirty ranges for ordered buffers
-Message-ID: <20170825155141.GO4796@magnolia>
+Subject: Re: [PATCH 7/9] xfs: move bmbt owner change to last step of extent
+ swap
+Message-ID: <20170825155749.GP4796@magnolia>
 References: <20170825150557.43010-1-bfoster@redhat.com>
- <20170825150557.43010-6-bfoster@redhat.com>
+ <20170825150557.43010-8-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170825150557.43010-6-bfoster@redhat.com>
+In-Reply-To: <20170825150557.43010-8-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Aug 25, 2017 at 11:05:53AM -0400, Brian Foster wrote:
-> Ordered buffers are attached to transactions and pushed through the
-> logging infrastructure just like normal buffers with the exception
-> that they are not actually written to the log. Therefore, we don't
-> need to log dirty ranges of ordered buffers. xfs_trans_log_buf() is
-> called on ordered buffers to set up all of the dirty state on the
-> transaction, buffer and log item and prepare the buffer for I/O.
+On Fri, Aug 25, 2017 at 11:05:55AM -0400, Brian Foster wrote:
+> The extent swap operation currently resets bmbt block owners before
+> the inode forks are swapped. The bmbt buffers are marked as ordered
+> so they do not have to be physically logged in the transaction.
 > 
-> Now that xfs_trans_dirty_buf() is available, call it from
-> xfs_trans_ordered_buf() so the latter is now mutually exclusive with
-> xfs_trans_log_buf(). This reflects the implementation of ordered
-> buffers and helps eliminate confusion over the need to log ranges of
-> ordered buffers just to set up internal log state.
+> This use of ordered buffers is not safe as bmbt buffers may have
+> been previously physically logged. The bmbt owner change algorithm
+> needs to be updated to physically log buffers that are already dirty
+> when/if they are encountered. This means that an extent swap will
+> eventually require multiple rolling transactions to handle large
+> btrees. In addition, all inode related changes must be logged before
+> the bmbt owner change scan begins and can roll the transaction for
+> the first time to preserve fs consistency via log recovery.
+> 
+> In preparation for such fixes to the bmbt owner change algorithm,
+> refactor the bmbt scan out of the extent fork swap code to the last
+> operation before the transaction is committed. Update
+> xfs_swap_extent_forks() to only set the inode log flags when an
+> owner change scan is necessary. Update xfs_swap_extents() to trigger
+> the owner change based on the inode log flags. Note that since the
+> owner change now occurs after the extent fork swap, the inode btrees
+> must be fixed up with the inode number of the current inode (similar
+> to log recovery).
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
+Looks ok I think,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 > ---
->  fs/xfs/libxfs/xfs_btree.c  |  6 ++----
->  fs/xfs/libxfs/xfs_ialloc.c |  2 --
->  fs/xfs/xfs_trans_buf.c     | 26 ++++++++++++++------------
->  3 files changed, 16 insertions(+), 18 deletions(-)
+>  fs/xfs/xfs_bmap_util.c | 44 ++++++++++++++++++++++++++------------------
+>  1 file changed, 26 insertions(+), 18 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index e0bcc4a..0b7905a 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -4464,12 +4464,10 @@ xfs_btree_block_change_owner(
->  	 * though, so everything is consistent in memory.
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 93e9552..ee8fb9a 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1840,29 +1840,18 @@ xfs_swap_extent_forks(
+>  	}
+>  
+>  	/*
+> -	 * Before we've swapped the forks, lets set the owners of the forks
+> -	 * appropriately. We have to do this as we are demand paging the btree
+> -	 * buffers, and so the validation done on read will expect the owner
+> -	 * field to be correctly set. Once we change the owners, we can swap the
+> -	 * inode forks.
+> +	 * Btree format (v3) inodes have the inode number stamped in the bmbt
+> +	 * block headers. We can't start changing the bmbt blocks until the
+> +	 * inode owner change is logged so recovery does the right thing in the
+> +	 * event of a crash. Set the owner change log flags now and leave the
+> +	 * bmbt scan as the last step.
 >  	 */
->  	if (bp) {
-> -		if (cur->bc_tp) {
-> +		if (cur->bc_tp)
->  			xfs_trans_ordered_buf(cur->bc_tp, bp);
-> -			xfs_btree_log_block(cur, bp, XFS_BB_OWNER);
-> -		} else {
-> +		else
->  			xfs_buf_delwri_queue(bp, bbcoi->buffer_list);
-> -		}
->  	} else {
->  		ASSERT(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE);
->  		ASSERT(level == cur->bc_nlevels - 1);
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 1e0658a..988bb3f 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -378,8 +378,6 @@ xfs_ialloc_inode_init(
->  				 * transaction and pin the log appropriately.
->  				 */
->  				xfs_trans_ordered_buf(tp, fbuf);
-> -				xfs_trans_log_buf(tp, fbuf, 0,
-> -						  BBTOB(fbuf->b_length) - 1);
->  			}
->  		} else {
->  			fbuf->b_flags |= XBF_DONE;
-> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-> index 8c99813..3089e80 100644
-> --- a/fs/xfs/xfs_trans_buf.c
-> +++ b/fs/xfs/xfs_trans_buf.c
-> @@ -560,16 +560,12 @@ xfs_trans_log_buf(
->  	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  	if (ip->i_d.di_version == 3 &&
+> -	    ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+> +	    ip->i_d.di_format == XFS_DINODE_FMT_BTREE)
+>  		(*target_log_flags) |= XFS_ILOG_DOWNER;
+> -		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK,
+> -					      tip->i_ino, NULL);
+> -		if (error)
+> -			return error;
+> -	}
+> -
+>  	if (tip->i_d.di_version == 3 &&
+> -	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+> +	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
+>  		(*src_log_flags) |= XFS_ILOG_DOWNER;
+> -		error = xfs_bmbt_change_owner(tp, tip, XFS_DATA_FORK,
+> -					      ip->i_ino, NULL);
+> -		if (error)
+> -			return error;
+> -	}
 >  
->  	ASSERT(first <= last && last < BBTOB(bp->b_length));
-> +	ASSERT(!(bip->bli_flags & XFS_BLI_ORDERED));
+>  	/*
+>  	 * Swap the data forks of the inodes
+> @@ -2092,6 +2081,25 @@ xfs_swap_extents(
+>  	xfs_trans_log_inode(tp, tip, target_log_flags);
 >  
->  	xfs_trans_dirty_buf(tp, bp);
->  
-> -	/*
-> -	 * If we have an ordered buffer we are not logging any dirty range but
-> -	 * it still needs to be marked dirty and that it has been logged.
-> -	 */
->  	trace_xfs_trans_log_buf(bip);
-> -	if (!(bip->bli_flags & XFS_BLI_ORDERED))
-> -		xfs_buf_item_log(bip, first, last);
-> +	xfs_buf_item_log(bip, first, last);
->  }
->  
->  
-> @@ -722,12 +718,11 @@ xfs_trans_inode_alloc_buf(
->  }
->  
->  /*
-> - * Mark the buffer as ordered for this transaction. This means
-> - * that the contents of the buffer are not recorded in the transaction
-> - * but it is tracked in the AIL as though it was. This allows us
-> - * to record logical changes in transactions rather than the physical
-> - * changes we make to the buffer without changing writeback ordering
-> - * constraints of metadata buffers.
-> + * Mark the buffer as ordered for this transaction. This means that the contents
-> + * of the buffer are not recorded in the transaction but it is tracked in the
-> + * AIL as though it was. This allows us to record logical changes in
-> + * transactions rather than the physical changes we make to the buffer without
-> + * changing writeback ordering constraints of metadata buffers.
->   */
->  void
->  xfs_trans_ordered_buf(
-> @@ -739,9 +734,16 @@ xfs_trans_ordered_buf(
->  	ASSERT(bp->b_transp == tp);
->  	ASSERT(bip != NULL);
->  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
-> +	ASSERT(!xfs_buf_item_dirty_format(bip));
->  
->  	bip->bli_flags |= XFS_BLI_ORDERED;
->  	trace_xfs_buf_item_ordered(bip);
+>  	/*
+> +	 * The extent forks have been swapped, but crc=1,rmapbt=0 filesystems
+> +	 * have inode number owner values in the bmbt blocks that still refer to
+> +	 * the old inode. Scan each bmbt to fix up the owner values with the
+> +	 * inode number of the current inode.
+> +	 */
+> +	if (src_log_flags & XFS_ILOG_DOWNER) {
+> +		error = xfs_bmbt_change_owner(tp, ip, XFS_DATA_FORK,
+> +					      ip->i_ino, NULL);
+> +		if (error)
+> +			goto out_trans_cancel;
+> +	}
+> +	if (target_log_flags & XFS_ILOG_DOWNER) {
+> +		error = xfs_bmbt_change_owner(tp, tip, XFS_DATA_FORK,
+> +					      tip->i_ino, NULL);
+> +		if (error)
+> +			goto out_trans_cancel;
+> +	}
 > +
 > +	/*
-> +	 * We don't log a dirty range of an ordered buffer but it still needs
-> +	 * to be marked dirty and that it has been logged.
-> +	 */
-> +	xfs_trans_dirty_buf(tp, bp);
->  }
->  
->  /*
+>  	 * If this is a synchronous mount, make sure that the
+>  	 * transaction goes to disk before returning to the user.
+>  	 */
 > -- 
 > 2.9.5
 > 
