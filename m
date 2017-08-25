@@ -1,235 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35110 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753111AbdHXPWU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 11:22:20 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/3] xfs: consolidate the various page fault handlers
-Date: Thu, 24 Aug 2017 17:22:06 +0200
-Message-Id: <20170824152207.30729-3-hch@lst.de>
-In-Reply-To: <20170824152207.30729-1-hch@lst.de>
-References: <20170824152207.30729-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:53702 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754256AbdHYBUE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Aug 2017 21:20:04 -0400
+Date: Fri, 25 Aug 2017 03:20:01 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: Filesystem configuration parsers - (was: Re: [RESEND][PATCH]
+ xfs: add online uevent for mount operation)
+Message-ID: <20170825012001.GY27873@wotan.suse.de>
+References: <1503582115-37220-1-git-send-email-houtao1@huawei.com>
+ <20170824171028.GF4796@magnolia>
+ <20170824180441.GL27873@wotan.suse.de>
+ <20170825010155.GK21024@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170825010155.GK21024@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Hou Tao <houtao1@huawei.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Jeff Mahoney <jeffm@suse.com>, NeilBrown <neilb@suse.com>, Tso Ted <tytso@mit.edu>, Dmitri Pal <dpal@redhat.com>
 
-Add a new __xfs_filemap_fault helper that implements all four page fault
-callouts, and make these methods themselves small stubs that set the
-correct write_fault flag, and exit early for the non-DAX case for the
-hugepage related ones.
+On Fri, Aug 25, 2017 at 11:01:55AM +1000, Dave Chinner wrote:
+> On Thu, Aug 24, 2017 at 08:04:41PM +0200, Luis R. Rodriguez wrote:
+> > While all this is nice, I'm sure we're all aware of the dangers of setting
+> > things in stone through sysfs, its likely already decided for the above
+> > tunables, but adding a uevent *is* yet another layer of user interface
+> > which userspace can *expect* and we should be certain we want this so
+> > we won't regress userspace later.
+> > 
+> > Just saying, we better damn be sure this is the way we want to go.
+> 
+> I'm not sure what you are trying to warn us about? :/
+> 
+> These are events on an XFS specific kobj, it's not a generic VFS
+> filesystem event we are generating here. It's no different from a
+> hardware device generating it's own uevents to tell userspace
+> something changed in the device.
 
-Life would be so much simpler if we only had one method for all this.
+I meant that once its sent even if it is XFS specific, it will be
+something that some userspace can expect and then we'd always have
+to send it later.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c  | 120 +++++++++++++++--------------------------------------
- fs/xfs/xfs_trace.h |  24 +++++++++--
- 2 files changed, 54 insertions(+), 90 deletions(-)
+> A quick grep would have told you that GFS2 already has it's own
+> online/offline uevents (e.g. gfs2_online_uevent()), as does the
+> DLM code. Orangefs seems to use quite a few of uevent notifications,
+> too. So it's not like we're doing something controversial or unique
+> here, nor something that locks us out of a non-existent VFS event
+> notification mechanism.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 4213f02325a2..460ca9639e66 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1012,34 +1012,36 @@ xfs_file_llseek(
-  *         i_lock (XFS - extent map serialisation)
-  */
- 
--/*
-- * mmap()d file has taken write protection fault and is being made writable. We
-- * can set the page state up correctly for a writable page, which means we can
-- * do correct delalloc accounting (ENOSPC checking!) and unwritten extent
-- * mapping.
-- */
- STATIC int
--xfs_filemap_page_mkwrite(
--	struct vm_fault		*vmf)
-+__xfs_filemap_fault(
-+	struct vm_fault		*vmf,
-+	enum page_entry_size	pe_size,
-+	bool			write_fault)
- {
- 	struct inode		*inode = file_inode(vmf->vma->vm_file);
-+	struct xfs_inode	*ip = XFS_I(inode);
- 	int			ret;
- 
--	trace_xfs_filemap_page_mkwrite(XFS_I(inode));
-+	trace_xfs_filemap_fault(ip, pe_size, write_fault);
- 
--	sb_start_pagefault(inode->i_sb);
--	file_update_time(vmf->vma->vm_file);
--	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-+	if (write_fault) {
-+		sb_start_pagefault(inode->i_sb);
-+		file_update_time(vmf->vma->vm_file);
-+	}
- 
-+	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	if (IS_DAX(inode)) {
--		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &xfs_iomap_ops);
-+		ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
- 	} else {
--		ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-+		if (write_fault)
-+			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-+		else
-+			ret = filemap_fault(vmf);
- 	}
--
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	sb_end_pagefault(inode->i_sb);
- 
-+	if (write_fault)
-+		sb_end_pagefault(inode->i_sb);
- 	return ret;
- }
- 
-@@ -1047,93 +1049,39 @@ STATIC int
- xfs_filemap_fault(
- 	struct vm_fault		*vmf)
- {
--	struct inode		*inode = file_inode(vmf->vma->vm_file);
--	int			ret;
--
--	trace_xfs_filemap_fault(XFS_I(inode));
--
- 	/* DAX can shortcut the normal fault path on write faults! */
--	if ((vmf->flags & FAULT_FLAG_WRITE) && IS_DAX(inode))
--		return xfs_filemap_page_mkwrite(vmf);
--
--	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	if (IS_DAX(inode))
--		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &xfs_iomap_ops);
--	else
--		ret = filemap_fault(vmf);
--	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--
--	return ret;
-+	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
-+			IS_DAX(file_inode(vmf->vma->vm_file)) &&
-+			(vmf->flags & FAULT_FLAG_WRITE));
- }
- 
--/*
-- * Similar to xfs_filemap_fault(), the DAX fault path can call into here on
-- * both read and write faults. Hence we need to handle both cases. There is no
-- * ->huge_mkwrite callout for huge pages, so we have a single function here to
-- * handle both cases here. @flags carries the information on the type of fault
-- * occuring.
-- */
- STATIC int
- xfs_filemap_huge_fault(
- 	struct vm_fault		*vmf,
- 	enum page_entry_size	pe_size)
- {
--	struct inode		*inode = file_inode(vmf->vma->vm_file);
--	struct xfs_inode	*ip = XFS_I(inode);
--	int			ret;
--
--	if (!IS_DAX(inode))
-+	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
- 		return VM_FAULT_FALLBACK;
- 
--	trace_xfs_filemap_huge_fault(ip);
--
--	if (vmf->flags & FAULT_FLAG_WRITE) {
--		sb_start_pagefault(inode->i_sb);
--		file_update_time(vmf->vma->vm_file);
--	}
--
--	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
--	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--
--	if (vmf->flags & FAULT_FLAG_WRITE)
--		sb_end_pagefault(inode->i_sb);
-+	/* DAX can shortcut the normal fault path on write faults! */
-+	return __xfs_filemap_fault(vmf, pe_size,
-+			(vmf->flags & FAULT_FLAG_WRITE));
-+}
- 
--	return ret;
-+STATIC int
-+xfs_filemap_page_mkwrite(
-+	struct vm_fault		*vmf)
-+{
-+	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
- }
- 
--/*
-- * pfn_mkwrite was originally inteneded to ensure we capture time stamp
-- * updates on write faults. In reality, it's need to serialise against
-- * truncate similar to page_mkwrite. Hence we cycle the XFS_MMAPLOCK_SHARED
-- * to ensure we serialise the fault barrier in place.
-- */
- static int
- xfs_filemap_pfn_mkwrite(
- 	struct vm_fault		*vmf)
- {
--
--	struct inode		*inode = file_inode(vmf->vma->vm_file);
--	struct xfs_inode	*ip = XFS_I(inode);
--	int			ret = VM_FAULT_NOPAGE;
--	loff_t			size;
--
--	trace_xfs_filemap_pfn_mkwrite(ip);
--
--	sb_start_pagefault(inode->i_sb);
--	file_update_time(vmf->vma->vm_file);
--
--	/* check if the faulting page hasn't raced with truncate */
--	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
--	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
--	if (vmf->pgoff >= size)
--		ret = VM_FAULT_SIGBUS;
--	else if (IS_DAX(inode))
--		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, &xfs_iomap_ops);
--	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
--	sb_end_pagefault(inode->i_sb);
--	return ret;
--
-+	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
-+		return VM_FAULT_NOPAGE;
-+	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
- }
- 
- static const struct vm_operations_struct xfs_file_vm_ops = {
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index bcc3cdf8e1c5..3f41d5340eb8 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -689,10 +689,26 @@ DEFINE_INODE_EVENT(xfs_inode_set_cowblocks_tag);
- DEFINE_INODE_EVENT(xfs_inode_clear_cowblocks_tag);
- DEFINE_INODE_EVENT(xfs_inode_free_cowblocks_invalid);
- 
--DEFINE_INODE_EVENT(xfs_filemap_fault);
--DEFINE_INODE_EVENT(xfs_filemap_huge_fault);
--DEFINE_INODE_EVENT(xfs_filemap_page_mkwrite);
--DEFINE_INODE_EVENT(xfs_filemap_pfn_mkwrite);
-+TRACE_EVENT(xfs_filemap_fault,
-+	TP_PROTO(struct xfs_inode *ip, enum page_entry_size pe_size,
-+		 bool write_fault),
-+	TP_ARGS(ip, pe_size, write_fault),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(enum page_entry_size, pe_size)
-+		__field(bool, write_fault)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->pe_size = pe_size;
-+		__entry->write_fault = write_fault;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx pe_size %d write_fault %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino, __entry->pe_size, __entry->write_fault)
-+)
- 
- DECLARE_EVENT_CLASS(xfs_iref_class,
- 	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
--- 
-2.11.0
+I don't think its controversial *at all*. Just that a mount uevent,
+with uuid, sounds like something we could at least agree is pretty generic.
 
+Regardless of what we end up doing with it or how.
+
+  Luis
