@@ -1,56 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:34899 "EHLO
-        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758356AbdHYToa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 15:44:30 -0400
-Received: by mail-oi0-f45.google.com with SMTP id k77so6831982oib.2
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 12:44:30 -0700 (PDT)
+Received: from userp1040.oracle.com ([156.151.31.81]:27135 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932833AbdHYWQw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 18:16:52 -0400
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7PMGpK2021710
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:16:51 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v7PMGoPd015543
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:16:51 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7PMGo9T023416
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:16:50 GMT
+Subject: [PATCH v9 00/19] xfs: online fs repair support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 25 Aug 2017 15:16:49 -0700
+Message-ID: <150369940879.9957.6303798184036268321.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4gWD7sTLdmwoX7Ce+McMvtLKhOf60e-1ax12qQs7=Qzdg@mail.gmail.com>
-References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150353212577.5039.14069456126848863439.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170824161347.GC27591@lst.de> <CAPcyv4gWD7sTLdmwoX7Ce+McMvtLKhOf60e-1ax12qQs7=Qzdg@mail.gmail.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 25 Aug 2017 12:44:29 -0700
-Message-ID: <CAPcyv4iT+7M6NwzE0WDZLZVjDYRr1Tj0_ug-Bcu9YWDtq13rXg@mail.gmail.com>
-Subject: Re: [PATCH v6 2/5] fs, xfs: introduce S_IOMAP_SEALED
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Aug 24, 2017 at 11:00 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Thu, Aug 24, 2017 at 9:13 AM, Christoph Hellwig <hch@lst.de> wrote:
->> I'm still very unhappy about the get/set flag state.  What is the
->> reason you can't use/extend leases? (take a look at the fcntl
->> man page and look for Leases).  A variant of the concept is what
->> the pNFS block server uses.
->
-> So I think leases could potentially be extended to replace the inode
-> flag. A MAP_DIRECT operation would take out a lease that is broken by
-> break_layouts(). However, like the pNFS case the lease break would
-> need to held off while any DMA might be in-flight. We can use an
-> elevated page count as that indication as ZONE_DEVICE pages only ever
-> have an elevated page count in response to get_user_pages().
->
-> However, I think the only practical difference is turning an immediate
-> ETXTBSY response that S_IOMAP_SEALED provides into an indefinite
-> blocking wait for break_layouts() to complete. Can pNFS run
-> break_layouts() in bounded time?
->
-> As far I can see a lease and S_IOMAP_SEALED have the same DMA
-> cancelling problem, so a lease is not better in that regard. Absent an
-> overlaying protocol like pNFS, I think S_IOMAP_SEALED is cleaner
-> because it fails incompatible operations outright rather than stalls
-> them in break_layouts(). Were their other benefits to a lease over an
-> inode flag that you had in mind for this case where the protocol is
-> userspace defined? Maybe I'm thinking too small on the ways a lease
-> might be extended.
+Hi all,
 
-At a minimum I can at least use a new lease type as an indication of
-when to bail out an block-map operation with ETXTBSY, and reuse the
-lease security model. That way we at least start to converge the
-in-kernel lease machinery for pinning blocks with this userspace
-mechanism.
+This is the ninth revision of a patchset that adds to XFS kernel
+support for online metadata scrubbing and repair.  There aren't any
+on-disk format changes.  The overview of the online scrub functionality
+isn't any different than it was with the first kernel series, so I'll
+dive into what's in this set.
+
+Today's submission is the fourth of four parts; here we add the ability
+to regenerate damaged per-AG metadata and inode fork maps from the
+reverse mapping btree.  We also implement a limited ability to correct
+minor problems in AG headers and inode records.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.13-rc6.  xfsprogs[2] and xfstests[3] can be found in their usual
+places.  The git trees contain all four series' worth of changes.
+
+This is an extraordinary way to eat your data.  Enjoy! 
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
