@@ -1,131 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:53487 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750736AbdHZHlk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 26 Aug 2017 03:41:40 -0400
-Date: Sat, 26 Aug 2017 09:40:47 +0200
-From: Helge Deller <deller@gmx.de>
-Subject: Re: [PATCH v6 3/5] mm: introduce mmap3 for safely defining new mmap
- flags
-Message-ID: <20170826074047.GA6292@ls3530.fritz.box>
-References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150353213097.5039.6729469069608762658.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170824165546.GA3121@infradead.org>
- <CAPcyv4iN0QpUSgOUvisnNQsiV1Pp=4dh7CwAV8FFj=_rFU=aug@mail.gmail.com>
- <20170825130011.GA30072@infradead.org>
- <20170825155803.4km7wttzadfqw2vb@node.shutemov.name>
- <20170825160236.GA2561@infradead.org>
- <20170825161607.6v6beg4zjktllt2z@node.shutemov.name>
- <4de21e8d-5e10-ec40-c731-0c079953cf48@gmx.de>
- <CAPcyv4jeZc8P+E0aHNChzy-wfNpOx3GehKck1nXqJ1b9JdydFA@mail.gmail.com>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:40831 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753838AbdHYBCj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 21:02:39 -0400
+Date: Fri, 25 Aug 2017 11:01:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Filesystem configuration parsers - (was: Re: [RESEND][PATCH]
+ xfs: add online uevent for mount operation)
+Message-ID: <20170825010155.GK21024@dastard>
+References: <1503582115-37220-1-git-send-email-houtao1@huawei.com>
+ <20170824171028.GF4796@magnolia>
+ <20170824180441.GL27873@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4jeZc8P+E0aHNChzy-wfNpOx3GehKck1nXqJ1b9JdydFA@mail.gmail.com>
+In-Reply-To: <20170824180441.GL27873@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Helge Deller <deller@gmx.de>, "Kirill A. Shutemov" <kirill@shutemov.name>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-parisc@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Hou Tao <houtao1@huawei.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Jeff Mahoney <jeffm@suse.com>, NeilBrown <neilb@suse.com>, Tso Ted <tytso@mit.edu>, Dmitri Pal <dpal@redhat.com>
 
-* Dan Williams <dan.j.williams@intel.com>:
-> On Fri, Aug 25, 2017 at 9:19 AM, Helge Deller <deller@gmx.de> wrote:
-> > On 25.08.2017 18:16, Kirill A. Shutemov wrote:
-> >> On Fri, Aug 25, 2017 at 09:02:36AM -0700, Christoph Hellwig wrote:
-> >>> On Fri, Aug 25, 2017 at 06:58:03PM +0300, Kirill A. Shutemov wrote:
-> >>>> Not all archs are ready for this:
-> >>>>
-> >>>> arch/parisc/include/uapi/asm/mman.h:#define MAP_TYPE    0x03            /* Mask for type of mapping */
-> >>>> arch/parisc/include/uapi/asm/mman.h:#define MAP_FIXED   0x04            /* Interpret addr exactly */
-> >>>
-> >>> I'd be happy to say that we should not care about parisc for
-> >>> persistent memory.  We'll just have to find a way to exclude
-> >>> parisc without making life too ugly.
-> >>
-> >> I don't think creapling mmap() interface for one arch is the right way to
-> >> go. I think the interface should be universal.
-> >>
-> >> I may imagine MAP_DIRECT can be useful not only for persistent memory.
-> >> For tmpfs instead of mlock()?
-> >
-> > On parisc we have
-> > #define MAP_SHARED      0x01            /* Share changes */
-> > #define MAP_PRIVATE     0x02            /* Changes are private */
-> > #define MAP_TYPE        0x03            /* Mask for type of mapping */
-> > #define MAP_FIXED       0x04            /* Interpret addr exactly */
-> > #define MAP_ANONYMOUS   0x10            /* don't use a file */
-> >
-> > So, if you need a MAP_DIRECT, wouldn't e.g.
-> > #define MAP_DIRECT      0x08
-> > be possible (for parisc, and others 0x04).
-> > And if MAP_TYPE needs to include this flag on parisc:
-> > #define MAP_TYPE        (0x03 | 0x08)  /* Mask for type of mapping */
+On Thu, Aug 24, 2017 at 08:04:41PM +0200, Luis R. Rodriguez wrote:
+> While all this is nice, I'm sure we're all aware of the dangers of setting
+> things in stone through sysfs, its likely already decided for the above
+> tunables, but adding a uevent *is* yet another layer of user interface
+> which userspace can *expect* and we should be certain we want this so
+> we won't regress userspace later.
 > 
-> The problem here is that to support new the mmap flags the arch needs
-> to find a flag that is guaranteed to fail on older kernels. Defining
-> MAP_DIRECT to 0x8 on parisc doesn't work because it will simply be
-> ignored on older parisc kernels.
-> 
-> However, it's already the case that several archs have their own
-> sys_mmap entry points. Those archs that can't follow the common scheme
-> (only parsic it seems) will need to add a new mmap syscall. I think
-> that's a reasonable tradeoff to allow every other architecture to add
-> this support with their existing mmap syscall paths.
+> Just saying, we better damn be sure this is the way we want to go.
 
-I don't want other architectures to suffer just because of parisc.
-But adding a new syscall just for usage on parisc won't work either,
-because nobody will add code to call it then.
- 
-> That means MAP_DIRECT should be defined to MAP_TYPE on parisc until it
-> later defines an opt-in mechanism to a new syscall that honors
-> MAP_DIRECT as a valid flag.
+I'm not sure what you are trying to warn us about? :/
 
-I'd instead propose to to introduce an ABI breakage for parisc users
-(which aren't many). Most parisc users update their kernel regularily
-anyway, because we fixed so many bugs in the latest kernel.
+These are events on an XFS specific kobj, it's not a generic VFS
+filesystem event we are generating here. It's no different from a
+hardware device generating it's own uevents to tell userspace
+something changed in the device.
 
-With the following patch pushed down to the stable kernel series,
-MAP_DIRECT will fail as expected on those kernels, while we can
-keep parisc up with current developments regarding MAP_DIRECT.
+A quick grep would have told you that GFS2 already has it's own
+online/offline uevents (e.g. gfs2_online_uevent()), as does the
+DLM code. Orangefs seems to use quite a few of uevent notifications,
+too. So it's not like we're doing something controversial or unique
+here, nor something that locks us out of a non-existent VFS event
+notification mechanism.
 
-diff --git a/arch/parisc/include/uapi/asm/mman.h b/arch/parisc/include/uapi/asm/mman.h
-index 9a9c2fe..43b9a1e 100644
---- a/arch/parisc/include/uapi/asm/mman.h
-+++ b/arch/parisc/include/uapi/asm/mman.h
-@@ -13,6 +13,7 @@
- #define MAP_PRIVATE	0x02		/* Changes are private */
- #define MAP_TYPE	0x03		/* Mask for type of mapping */
- #define MAP_FIXED	0x04		/* Interpret addr exactly */
-+#define MAP_DIRECT	0x08		/* Interpret addr exactly */
- #define MAP_ANONYMOUS	0x10		/* don't use a file */
- 
- #define MAP_DENYWRITE	0x0800		/* ETXTBSY */
-diff --git a/arch/parisc/kernel/sys_parisc.c b/arch/parisc/kernel/sys_parisc.c
-index 378a754..0499f87 100644
---- a/arch/parisc/kernel/sys_parisc.c
-+++ b/arch/parisc/kernel/sys_parisc.c
-@@ -270,6 +270,10 @@ asmlinkage unsigned long sys_mmap2(unsigned long addr, unsigned long len,
- {
- 	/* Make sure the shift for mmap2 is constant (12), no matter what PAGE_SIZE
- 	   we have. */
-+#if !defined(CONFIG_HAVE_MAP_DIRECT_SUPPORT)
-+	if (flags & MAP_DIRECT)
-+		return -EINVAL;
-+#endif
- 	return sys_mmap_pgoff(addr, len, prot, flags, fd,
- 			      pgoff >> (PAGE_SHIFT - 12));
- }
-@@ -278,6 +282,10 @@ asmlinkage unsigned long sys_mmap(unsigned long addr, unsigned long len,
- 		unsigned long prot, unsigned long flags, unsigned long fd,
- 		unsigned long offset)
- {
-+#if !defined(CONFIG_HAVE_MAP_DIRECT_SUPPORT)
-+	if (flags & MAP_DIRECT)
-+		return -EINVAL;
-+#endif
- 	if (!(offset & ~PAGE_MASK)) {
- 		return sys_mmap_pgoff(addr, len, prot, flags, fd,
- 					offset >> PAGE_SHIFT);
+Please, talk all you want about a Grand Unified VFS Event
+Notification infrastructure and filesystem tool libraries, but
+please don't hijack an unrelated discussion to do it.
 
+Cheers,
 
-Helge
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
