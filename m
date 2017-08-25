@@ -1,72 +1,179 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:34680 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758500AbdHYUYc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 16:24:32 -0400
-Received: by mail-oi0-f53.google.com with SMTP id j144so7792619oib.1
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 13:24:32 -0700 (PDT)
+Received: from userp1040.oracle.com ([156.151.31.81]:21971 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932398AbdHYV5P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 17:57:15 -0400
+Date: Fri, 25 Aug 2017 14:57:01 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC PATCH] xfs: Properly retry failed dquot items in case of
+ error during buffer writeback
+Message-ID: <20170825215701.GT4796@magnolia>
+References: <20170825120752.22553-1-cmaiolino@redhat.com>
+ <20170825170400.GS4796@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <4de21e8d-5e10-ec40-c731-0c079953cf48@gmx.de>
-References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150353213097.5039.6729469069608762658.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170824165546.GA3121@infradead.org> <CAPcyv4iN0QpUSgOUvisnNQsiV1Pp=4dh7CwAV8FFj=_rFU=aug@mail.gmail.com>
- <20170825130011.GA30072@infradead.org> <20170825155803.4km7wttzadfqw2vb@node.shutemov.name>
- <20170825160236.GA2561@infradead.org> <20170825161607.6v6beg4zjktllt2z@node.shutemov.name>
- <4de21e8d-5e10-ec40-c731-0c079953cf48@gmx.de>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 25 Aug 2017 13:24:31 -0700
-Message-ID: <CAPcyv4jeZc8P+E0aHNChzy-wfNpOx3GehKck1nXqJ1b9JdydFA@mail.gmail.com>
-Subject: Re: [PATCH v6 3/5] mm: introduce mmap3 for safely defining new mmap flags
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170825170400.GS4796@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Helge Deller <deller@gmx.de>
-Cc: "Kirill A. Shutemov" <kirill@shutemov.name>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-parisc@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Aug 25, 2017 at 9:19 AM, Helge Deller <deller@gmx.de> wrote:
-> On 25.08.2017 18:16, Kirill A. Shutemov wrote:
->> On Fri, Aug 25, 2017 at 09:02:36AM -0700, Christoph Hellwig wrote:
->>> On Fri, Aug 25, 2017 at 06:58:03PM +0300, Kirill A. Shutemov wrote:
->>>> Not all archs are ready for this:
->>>>
->>>> arch/parisc/include/uapi/asm/mman.h:#define MAP_TYPE    0x03            /* Mask for type of mapping */
->>>> arch/parisc/include/uapi/asm/mman.h:#define MAP_FIXED   0x04            /* Interpret addr exactly */
->>>
->>> I'd be happy to say that we should not care about parisc for
->>> persistent memory.  We'll just have to find a way to exclude
->>> parisc without making life too ugly.
->>
->> I don't think creapling mmap() interface for one arch is the right way to
->> go. I think the interface should be universal.
->>
->> I may imagine MAP_DIRECT can be useful not only for persistent memory.
->> For tmpfs instead of mlock()?
->
-> On parisc we have
-> #define MAP_SHARED      0x01            /* Share changes */
-> #define MAP_PRIVATE     0x02            /* Changes are private */
-> #define MAP_TYPE        0x03            /* Mask for type of mapping */
-> #define MAP_FIXED       0x04            /* Interpret addr exactly */
-> #define MAP_ANONYMOUS   0x10            /* don't use a file */
->
-> So, if you need a MAP_DIRECT, wouldn't e.g.
-> #define MAP_DIRECT      0x08
-> be possible (for parisc, and others 0x04).
-> And if MAP_TYPE needs to include this flag on parisc:
-> #define MAP_TYPE        (0x03 | 0x08)  /* Mask for type of mapping */
+On Fri, Aug 25, 2017 at 10:04:01AM -0700, Darrick J. Wong wrote:
+> On Fri, Aug 25, 2017 at 02:07:52PM +0200, Carlos Maiolino wrote:
+> > Hi,
+> > 
+> > Once the fix for inode item writeback errors is already queued
+> > (d3a304b62), I believe it's time to fix the same problem in dquot code.
+> > 
+> > Although there were no reports of users hitting this bug in dquot code
+> > (at least none I've seen), the bug is there and I was already planning
+> > to fix it when the correct approach to fix the inodes part was decided.
+> > 
+> > So, this is an RFC patch to fix the same problem in dquot code,
+> > regarding failed buffers being unable to be resubmitted once they are
+> > flush locked.
+> > 
+> > The semantics are quite similar to inode items path, although during
+> > xfs_qm_dqflush_done(), I'm not sure if the changes I made are correct.
+> > 
+> > Comments much appreciated :)
+> > 
+> > 
+> > BTW, This patch should be applied only over branch xfs-4.14-merge, it requires
+> > my previous patches, which are not in the master branch yet.
+> 
+> Looks ok, but is there an xfstests case to cover this?
 
-The problem here is that to support new the mmap flags the arch needs
-to find a flag that is guaranteed to fail on older kernels. Defining
-MAP_DIRECT to 0x8 on parisc doesn't work because it will simply be
-ignored on older parisc kernels.
+Then I tried compiling it, which broke, and then I went digging more than
+I would've for an RFC:
 
-However, it's already the case that several archs have their own
-sys_mmap entry points. Those archs that can't follow the common scheme
-(only parsic it seems) will need to add a new mmap syscall. I think
-that's a reasonable tradeoff to allow every other architecture to add
-this support with their existing mmap syscall paths.
+> --D
+> 
+> > 
+> > Cheers.
+> > 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> >  fs/xfs/xfs_dquot.c      | 11 ++++++++---
+> >  fs/xfs/xfs_dquot_item.c | 37 +++++++++++++++++++++++++++++++++++--
+> >  2 files changed, 43 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> > index fd2ef8c2c9a7..8198c20212a2 100644
+> > --- a/fs/xfs/xfs_dquot.c
+> > +++ b/fs/xfs/xfs_dquot.c
+> > @@ -987,14 +987,19 @@ xfs_qm_dqflush_done(
+> >  	 * holding the lock before removing the dquot from the AIL.
+> >  	 */
+> >  	if ((lip->li_flags & XFS_LI_IN_AIL) &&
+> > -	    lip->li_lsn == qip->qli_flush_lsn) {
+> > +	   (lip->li_lsn == qip->qli_flush_lsn) ||
+> > +	    lip->li_flags & XFS_LI_FAILED) {
 
-That means MAP_DIRECT should be defined to MAP_TYPE on parisc until it
-later defines an opt-in mechanism to a new syscall that honors
-MAP_DIRECT as a valid flag.
+...come to think of it, shouldn't there be a couple extra pairs of parentheses
+in this somewhere?...
+
+> >  
+> >  		/* xfs_trans_ail_delete() drops the AIL lock. */
+> >  		spin_lock(&ailp->xa_lock);
+> > -		if (lip->li_lsn == qip->qli_flush_lsn)
+> > +		if (lip->li_lsn == qip->qli_flush_lsn) {
+> >  			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
+> > -		else
+> > +		} else if (lip->li_flags & XFS_LI_FAILED) {
+> > +			xfs_clear_li_failed(lip);
+> >  			spin_unlock(&ailp->xa_lock);
+> > +		} else {
+> > +			spin_unlock(&ailp->xa_lock);
+> > +		}
+> >  	}
+> >  
+> >  	/*
+> > diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+> > index 2c7a1629e064..35fd6d71bc42 100644
+> > --- a/fs/xfs/xfs_dquot_item.c
+> > +++ b/fs/xfs/xfs_dquot_item.c
+> > @@ -137,6 +137,23 @@ xfs_qm_dqunpin_wait(
+> >  	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
+> >  }
+> >  
+> > +/*
+> > + * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
+> > + * have been failed during writeback
+> > + *
+> > + * this informs the AIL that the dquot is already flush locked on the next push,
+> > + * and acquires a hold on the buffer to ensure that it isn't reclaimed before
+> > + * dirty data makes it to disk.
+> > + */
+> > +STATIC void
+> > +xfs_dquot_item_error(
+> > +	struct xfs_log_item	*lip,
+> > +	struct xfs_buf		*bp)
+> > +{
+> > +	ASSERT(XFS_DQ_IS_LOCKED(DQUOT_ITEM(lip)->qli_item));
+
+...and isn't this qli_dquot, not qli_item?
+
+(Does this compile at all?)
+
+--D
+
+> > +	xfs_set_li_failed(lip, bp);
+> > +}
+> > +
+> >  STATIC uint
+> >  xfs_qm_dquot_logitem_push(
+> >  	struct xfs_log_item	*lip,
+> > @@ -144,13 +161,28 @@ xfs_qm_dquot_logitem_push(
+> >  					      __acquires(&lip->li_ailp->xa_lock)
+> >  {
+> >  	struct xfs_dquot	*dqp = DQUOT_ITEM(lip)->qli_dquot;
+> > -	struct xfs_buf		*bp = NULL;
+> > +	struct xfs_buf		*bp = lip->li_buf;
+> >  	uint			rval = XFS_ITEM_SUCCESS;
+> >  	int			error;
+> >  
+> >  	if (atomic_read(&dqp->q_pincount) > 0)
+> >  		return XFS_ITEM_PINNED;
+> >  
+> > +	/*
+> > +	 * The buffer containing this item failed to be written back
+> > +	 * previously. Resubmit the buffer for IO
+> > +	 */
+> > +	if (lip->li_flags & XFS_LI_FAILED) {
+> > +		if (!xfs_buf_trylock(bp))
+> > +			return XFS_ITEM_LOCKED;
+> > +
+> > +		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
+> > +			rval = XFS_ITEM_FLUSHING;
+> > +
+> > +		xfs_buf_unlock(bp);
+> > +		return rval;
+> > +	}
+> > +
+> >  	if (!xfs_dqlock_nowait(dqp))
+> >  		return XFS_ITEM_LOCKED;
+> >  
+> > @@ -242,7 +274,8 @@ static const struct xfs_item_ops xfs_dquot_item_ops = {
+> >  	.iop_unlock	= xfs_qm_dquot_logitem_unlock,
+> >  	.iop_committed	= xfs_qm_dquot_logitem_committed,
+> >  	.iop_push	= xfs_qm_dquot_logitem_push,
+> > -	.iop_committing = xfs_qm_dquot_logitem_committing
+> > +	.iop_committing = xfs_qm_dquot_logitem_committing,
+> > +	.iop_error	= xfs_dquot_item_error
+> >  };
+> >  
+> >  /*
+> > -- 
+> > 2.13.5
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
