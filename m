@@ -1,57 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:54528 "EHLO imap.thunk.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933536AbdHYPOw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Aug 2017 11:14:52 -0400
-Date: Fri, 25 Aug 2017 11:14:45 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH] ext4: introduce per-inode DAX flag
-Message-ID: <20170825151445.ycf5xomoxvebgaez@thunk.org>
-References: <1501690186-17607-1-git-send-email-lczerner@redhat.com>
- <20170805084601.GA12425@infradead.org>
- <20170807121212.nuiho4afmdjf5vsd@rh_laptop>
- <20170808090016.lxfbcrhoybmyfvlc@rh_laptop>
- <20170811100147.GB7064@infradead.org>
- <20170811121132.bj5y77scrvkgy7uo@rh_laptop>
- <20170811125849.GA15300@infradead.org>
- <20170811134130.o46y5jpekrpj5qvw@rh_laptop>
- <20170824182057.amdirlrbugezrahy@thunk.org>
- <20170825075415.GA748@infradead.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:30278 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933386AbdHYP0L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 11:26:11 -0400
+Date: Fri, 25 Aug 2017 08:26:05 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/9] xfs: ordered buffer log items are never formatted
+Message-ID: <20170825152605.GK4796@magnolia>
+References: <20170825150557.43010-1-bfoster@redhat.com>
+ <20170825150557.43010-4-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170825075415.GA748@infradead.org>
+In-Reply-To: <20170825150557.43010-4-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-ext4@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Aug 25, 2017 at 12:54:15AM -0700, Christoph Hellwig wrote:
-> > 1)  Has there been any other difficulty that XFS has had due to the
-> > fact that they have this DAX flag added?  e.g., are there any
-> > operational, or practical code maintainability issues at stake here?
-> > Or is this mostly an design philosophy debate?
+On Fri, Aug 25, 2017 at 11:05:51AM -0400, Brian Foster wrote:
+> Ordered buffers pass through the logging infrastructure without ever
+> being written to the log. The way this works is that the ordered
+> buffer status is transferred to the log vector at commit time via
+> the ->iop_size() callback. In xlog_cil_insert_format_items(),
+> ordered log vectors bypass ->iop_format() processing altogether.
 > 
-> It hasn't yet.  It will create really annoying problems once we
-> use raw DAX access for metadata, which I had prototype a while ago
-> and plan to finnally get in in the next months.
+> Therefore it is unnecessary for xfs_buf_item_format() to handle
+> ordered buffers. Remove the unnecessary logic and assert that an
+> ordered buffer never reaches this point.
 > 
-> > 2) Are there any users using the DAX flag with XFS such that, if XFS
-> > were to remove the DAX flag support, those users would complain
-> > bitterly?
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_buf_item.c | 12 ++----------
+>  fs/xfs/xfs_trace.h    |  1 -
+>  2 files changed, 2 insertions(+), 11 deletions(-)
 > 
-> I don't know of anyone that actually uses the flag.  If someone did
-> that would probably run into problems like changing that changing it
-> on a file that's currently mmaped would crash an burn badly.
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 9f4dbca..4df4581 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -323,6 +323,8 @@ xfs_buf_item_format(
+>  	ASSERT((bip->bli_flags & XFS_BLI_STALE) ||
+>  	       (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF
+>  	        && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF));
+> +	ASSERT(!(bip->bli_flags & XFS_BLI_ORDERED) ||
+> +	       bip->bli_flags & XFS_BLI_STALE);
 
-Crash and burn meaning the *kernel* will crash and burn?  Or will data
-be damaged?
+Needs parentheses around the stale check.
 
-Given that, maybe XFS should withdraw support for the DAX and hope no
-one is actually using it?
+--D
 
-					- Ted
-
-
-
+>  
+>  
+>  	/*
+> @@ -347,16 +349,6 @@ xfs_buf_item_format(
+>  		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
+>  	}
+>  
+> -	if ((bip->bli_flags & (XFS_BLI_ORDERED|XFS_BLI_STALE)) ==
+> -							XFS_BLI_ORDERED) {
+> -		/*
+> -		 * The buffer has been logged just to order it.  It is not being
+> -		 * included in the transaction commit, so don't format it.
+> -		 */
+> -		trace_xfs_buf_item_format_ordered(bip);
+> -		return;
+> -	}
+> -
+>  	for (i = 0; i < bip->bli_format_count; i++) {
+>  		xfs_buf_item_format_segment(bip, lv, &vecp, offset,
+>  					    &bip->bli_formats[i]);
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 6881047..e839ab4 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -517,7 +517,6 @@ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size);
+>  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_ordered);
+>  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_stale);
+>  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format);
+> -DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_ordered);
+>  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_stale);
+>  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_ordered);
+>  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_pin);
+> -- 
+> 2.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
