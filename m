@@ -1,123 +1,175 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:33591 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:27440 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751453AbdHYFaH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 01:30:07 -0400
-Date: Thu, 24 Aug 2017 22:29:03 -0700
+        with ESMTP id S933883AbdHYWSP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 18:18:15 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7PMIEsH022711
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:18:14 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7PMIDJm014494
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:18:14 GMT
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7PMIDom023946
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:18:13 GMT
+Subject: [PATCH 12/19] xfs: rebuild the AGI
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Filesystem configuration parsers - (was: Re: [RESEND][PATCH]
- xfs: add online uevent for mount operation)
-Message-ID: <20170825052903.GE4800@magnolia>
-References: <1503582115-37220-1-git-send-email-houtao1@huawei.com>
- <20170824171028.GF4796@magnolia>
- <20170824180441.GL27873@wotan.suse.de>
- <20170825010155.GK21024@dastard>
- <20170825012001.GY27873@wotan.suse.de>
- <20170825021830.GM21024@dastard>
+Date: Fri, 25 Aug 2017 15:18:12 -0700
+Message-ID: <150369949210.9957.18386712677796411175.stgit@magnolia>
+In-Reply-To: <150369940879.9957.6303798184036268321.stgit@magnolia>
+References: <150369940879.9957.6303798184036268321.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170825021830.GM21024@dastard>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Hou Tao <houtao1@huawei.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Jeff Mahoney <jeffm@suse.com>, NeilBrown <neilb@suse.com>, Tso Ted <tytso@mit.edu>, Dmitri Pal <dpal@redhat.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Aug 25, 2017 at 12:18:30PM +1000, Dave Chinner wrote:
-> On Fri, Aug 25, 2017 at 03:20:01AM +0200, Luis R. Rodriguez wrote:
-> > On Fri, Aug 25, 2017 at 11:01:55AM +1000, Dave Chinner wrote:
-> > > On Thu, Aug 24, 2017 at 08:04:41PM +0200, Luis R. Rodriguez wrote:
-> > > > While all this is nice, I'm sure we're all aware of the dangers of setting
-> > > > things in stone through sysfs, its likely already decided for the above
-> > > > tunables, but adding a uevent *is* yet another layer of user interface
-> > > > which userspace can *expect* and we should be certain we want this so
-> > > > we won't regress userspace later.
-> > > > 
-> > > > Just saying, we better damn be sure this is the way we want to go.
-> > > 
-> > > I'm not sure what you are trying to warn us about? :/
-> > > 
-> > > These are events on an XFS specific kobj, it's not a generic VFS
-> > > filesystem event we are generating here. It's no different from a
-> > > hardware device generating it's own uevents to tell userspace
-> > > something changed in the device.
-> > 
-> > I meant that once its sent even if it is XFS specific, it will be
-> > something that some userspace can expect and then we'd always have
-> > to send it later.
-> 
-> Well, yes. Just like we have to support ioctls, /proc and /sysfs
-> interfaces and the quota event interface essentially forever.
-> There's nothing new or difficult about that.
-> 
-> > > A quick grep would have told you that GFS2 already has it's own
-> > > online/offline uevents (e.g. gfs2_online_uevent()), as does the
-> > > DLM code. Orangefs seems to use quite a few of uevent notifications,
-> > > too. So it's not like we're doing something controversial or unique
-> > > here, nor something that locks us out of a non-existent VFS event
-> > > notification mechanism.
-> > 
-> > I don't think its controversial *at all*. Just that a mount uevent,
-> > with uuid, sounds like something we could at least agree is pretty generic.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-It's not a slam dunk -- look at all the rattling that went on when
-overlayfs tried to use s_uuid.
+Rebuild the AGI header items with some help from the rmapbt.
 
-> Yeah, right. Call me cynical, but every single time this has been
-> brought up it devolves into a paint-fest where everyone wants
-> something to be added before anything can be done because generic
-> filesystem events is a deep, dark complex hole. e.g. think of bind
-> mounts: go and develop arguments for and against whether we should
-> send generic mount notifications for bind mounts. Generic doesn't
-> mean simple.
->
-> IOWs, what you describe as "pretty generic", I see as "a great big
-> can of worms".
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/agheader.c |  100 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.h   |    1 
+ fs/xfs/scrub/scrub.c    |    1 
+ 3 files changed, 102 insertions(+)
 
-By my count there are 70 filesystems (in fs/ anyway) so the likelihood
-of successfully coordinating the development of a common vfs uevent
-anything is so low I wasn't even going to consider it.  I've proposed
-patches that change things across all the filesystems before; it sucks,
-and meh.
 
-I don't see a problem with continuing to let individual filesystems
-manage their own kobject attributes and events, but frankly I've found
-it very useful to absorb a more diverse set of points of view by asking
-other filesystem developers what they've done and what pain points they
-might have hit.
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index 40c31ed..0f83ea3 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -1536,3 +1536,103 @@ xfs_scrub_agi(
+ out:
+ 	return error;
+ }
++
++/* Repair the AGI. */
++int
++xfs_repair_agi(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_repair_find_ag_btree	fab[] = {
++		{XFS_RMAP_OWN_INOBT, &xfs_inobt_buf_ops, XFS_IBT_CRC_MAGIC, 0, 0},
++		{XFS_RMAP_OWN_INOBT, &xfs_inobt_buf_ops, XFS_FIBT_CRC_MAGIC, 0, 0},
++		{0, NULL, 0, 0, 0},
++	};
++	struct xfs_agi			old_agi;
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_buf			*agi_bp;
++	struct xfs_buf			*agf_bp;
++	struct xfs_agi			*agi;
++	struct xfs_btree_cur		*cur;
++	struct xfs_perag		*pag;
++	xfs_agino_t			old_count;
++	xfs_agino_t			old_freecount;
++	xfs_agino_t			count;
++	xfs_agino_t			freecount;
++	int				bucket;
++	int				error;
++
++	/* We require the rmapbt to rebuild anything. */
++	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return -EOPNOTSUPP;
++
++	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
++			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGI_DADDR(mp)),
++			XFS_FSS_TO_BB(mp, 1), 0, &agi_bp, NULL);
++	if (error)
++		return error;
++	agi_bp->b_ops = &xfs_agi_buf_ops;
++
++	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
++	if (error)
++		return error;
++	if (!agf_bp)
++		return -ENOMEM;
++
++	/* Find the btree roots. */
++	error = xfs_repair_find_ag_btree_roots(sc, agf_bp, fab, NULL);
++	if (error)
++		return error;
++	if (fab[0].root == NULLAGBLOCK || fab[0].level > XFS_BTREE_MAXLEVELS)
++		return -EFSCORRUPTED;
++	if (xfs_sb_version_hasfinobt(&mp->m_sb) &&
++	    (fab[1].root == NULLAGBLOCK || fab[1].level > XFS_BTREE_MAXLEVELS))
++		return -EFSCORRUPTED;
++
++	/* Start rewriting the header. */
++	agi = XFS_BUF_TO_AGI(agi_bp);
++	old_agi = *agi;
++	old_count = be32_to_cpu(old_agi.agi_count);
++	old_freecount = be32_to_cpu(old_agi.agi_freecount);
++	memset(agi, 0, mp->m_sb.sb_sectsize);
++	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
++	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
++	agi->agi_seqno = cpu_to_be32(sc->sa.agno);
++	agi->agi_length = cpu_to_be32(xfs_scrub_ag_blocks(mp, sc->sa.agno));
++	agi->agi_newino = cpu_to_be32(NULLAGINO);
++	agi->agi_dirino = cpu_to_be32(NULLAGINO);
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
++	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
++		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
++	agi->agi_root = cpu_to_be32(fab[0].root);
++	agi->agi_level = cpu_to_be32(fab[0].level);
++	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
++		agi->agi_free_root = cpu_to_be32(fab[1].root);
++		agi->agi_free_level = cpu_to_be32(fab[1].level);
++	}
++
++	/* Update the AGI counters. */
++	cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, sc->sa.agno,
++			XFS_BTNUM_INO);
++	error = xfs_ialloc_count_inodes(cur, &count, &freecount);
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	if (error)
++		goto err;
++	agi->agi_count = cpu_to_be32(count);
++	agi->agi_freecount = cpu_to_be32(freecount);
++	if (old_count != count || old_freecount != freecount) {
++		pag = xfs_perag_get(mp, sc->sa.agno);
++		pag->pagi_init = 0;
++		xfs_perag_put(pag);
++		sc->reset_counters = true;
++	}
++
++	/* Write this to disk. */
++	xfs_trans_buf_set_type(sc->tp, agi_bp, XFS_BLFT_AGI_BUF);
++	xfs_trans_log_buf(sc->tp, agi_bp, 0, mp->m_sb.sb_sectsize - 1);
++	return error;
++
++err:
++	*agi = old_agi;
++	return error;
++}
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 6c544eb..e80f2e3 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -73,5 +73,6 @@ int xfs_repair_setup_btree_extent_collection(struct xfs_scrub_context *sc);
+ int xfs_repair_superblock(struct xfs_scrub_context *sc);
+ int xfs_repair_agf(struct xfs_scrub_context *sc);
+ int xfs_repair_agfl(struct xfs_scrub_context *sc);
++int xfs_repair_agi(struct xfs_scrub_context *sc);
+ 
+ #endif	/* __XFS_SCRUB_REPAIR_H__ */
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 3ddfe09..03da10a 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -231,6 +231,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 	{ /* agi */
+ 		.setup	= xfs_scrub_setup_ag_header,
+ 		.scrub	= xfs_scrub_agi,
++		.repair	= xfs_repair_agi,
+ 	},
+ 	{ /* bnobt */
+ 		.setup	= xfs_scrub_setup_ag_allocbt,
 
-What I'd really like to see is that XFS retains control of its per-fs
-kobj.  We'll add FS UUID as an environment variable to the uevent patch
-(XFS has uuids, no controversy there!) and run it by fsdevel to see if
-anyone from the wider fsdevel audience can make a convincing argument to
-add/remove/change the variables that get passed to the uevent, or even
-to consider a different approach.  (This is what seems to be happening,
-if in a somewhat incohesive manner.)  Then we do our usual rounds of
-review and (presumably) merge it along with the appropriate xfsprogs
-helper.
-
-Since uevents can send freeform text to the uevent handler in the form
-of environment variables, this means that any other fs project that
-might be considering adding uevents can build on the keys we've created.
-They can also do their own thing.  I've written udev rule files, it's
-not difficult to adapt the ruleset to format shifts, at least not as
-difficult as structure changes to an ABI.
-
-IOWs, I'm looking for de facto coordination if/where desired, not a
-heavy top down coordination process.  If your project doesn't like it,
-you're not bound by it.
-
-Maybe I should've been more explicit with what I was looking for, but
-TBH in the email just prior to this thread being cc'd to fsdevel I
-really was only asking the xfs list "should we take this to fsdevel or
-just leave it here"?
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
