@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41905 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933269AbdHYWRm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 18:17:42 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7PMHeR1013463
+Received: from userp1040.oracle.com ([156.151.31.81]:27325 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933269AbdHYWRr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 18:17:47 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7PMHlIL022277
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:41 GMT
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:47 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v7PMHeL8003076
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7PMHlkb022707
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:40 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7PMHe1X023713
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:40 GMT
-Subject: [PATCH 07/19] xfs: create tracepoints for online repair
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:47 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7PMHkf5023761
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:47 GMT
+Subject: [PATCH 08/19] xfs: implement the metadata repair ioctl flag
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 25 Aug 2017 15:17:37 -0700
-Message-ID: <150369945760.9957.14285425672997392968.stgit@magnolia>
+Date: Fri, 25 Aug 2017 15:17:45 -0700
+Message-ID: <150369946542.9957.12755552154555796419.stgit@magnolia>
 In-Reply-To: <150369940879.9957.6303798184036268321.stgit@magnolia>
 References: <150369940879.9957.6303798184036268321.stgit@magnolia>
 MIME-Version: 1.0
@@ -31,196 +31,288 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-These tracepoints will be used to debug the online repair routines.
+Plumb in the pieces necessary to make the "scrub" subfunction of
+the scrub ioctl actually work.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/trace.h |  166 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 166 insertions(+)
+ fs/xfs/Kconfig       |   17 ++++++++
+ fs/xfs/scrub/scrub.c |  107 +++++++++++++++++++++++++++++++++++++++++++++++---
+ fs/xfs/scrub/scrub.h |   10 +++++
+ fs/xfs/xfs_error.c   |    3 +
+ fs/xfs/xfs_error.h   |    4 +-
+ 5 files changed, 133 insertions(+), 8 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 6769e02..f389501 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -68,6 +68,8 @@ DEFINE_EVENT(xfs_scrub_class, name, \
- DEFINE_SCRUB_EVENT(xfs_scrub_start);
- DEFINE_SCRUB_EVENT(xfs_scrub_done);
- DEFINE_SCRUB_EVENT(xfs_scrub_deadlock_retry);
-+DEFINE_SCRUB_EVENT(xfs_repair_attempt);
-+DEFINE_SCRUB_EVENT(xfs_repair_done);
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index f42fcf1..06be67d 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -88,6 +88,23 @@ config XFS_ONLINE_SCRUB
  
- TRACE_EVENT(xfs_scrub_op_error,
- 	TP_PROTO(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
-@@ -489,6 +491,170 @@ TRACE_EVENT(xfs_scrub_xref_error,
- 		  __entry->ret_ip)
- );
+ 	  If unsure, say N.
  
-+/* repair tracepoints */
++config XFS_ONLINE_REPAIR
++	bool "XFS online metadata repair support"
++	default n
++	depends on XFS_FS && XFS_ONLINE_SCRUB
++	help
++	  If you say Y here you will be able to repair metadata on a
++	  mounted XFS filesystem.  This feature is intended to reduce
++	  filesystem downtime even further by fixing minor problems
++	  before they cause the filesystem to go down.  However, it
++	  requires that the filesystem be formatted with secondary
++	  metadata, such as reverse mappings and inode parent pointers.
 +
-+/* XXX sort out this mess (and the two others below) later */
++	  This feature is considered EXPERIMENTAL.  Use with caution!
 +
-+#define trace_xfs_repair_free_or_unmap_extent(...)
-+#define trace_xfs_repair_collect_btree_extent(...)
-+#if 0
-+DEFINE_BUSY_EVENT(xfs_repair_free_or_unmap_extent);
-+DEFINE_BUSY_EVENT(xfs_repair_collect_btree_extent);
++	  See the xfs_scrub man page in section 8 for additional information.
++
++	  If unsure, say N.
+ config XFS_WARN
+ 	bool "XFS Verbose Warnings"
+ 	depends on XFS_FS && !XFS_DEBUG
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 5f2c71d..cdc8233 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -42,6 +42,9 @@
+ #include "xfs_refcount_btree.h"
+ #include "xfs_rmap.h"
+ #include "xfs_rmap_btree.h"
++#include "xfs_error.h"
++#include "xfs_log.h"
++#include "xfs_trans_priv.h"
+ #include "scrub/xfs_scrub.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+@@ -121,6 +124,24 @@
+  * XCORRUPT flag; btree query function errors are noted by setting the
+  * XFAIL flag and deleting the cursor to prevent further attempts to
+  * cross-reference with a defective btree.
++ *
++ * If a piece of metadata proves corrupt or suboptimal, the userspace
++ * program can ask the kernel to apply some tender loving care (TLC) to
++ * the metadata object by setting the REPAIR flag and re-calling the
++ * scrub ioctl.  "Corruption" is defined by metadata violating the
++ * on-disk specification; operations cannot continue if the violation is
++ * left untreated.  It is possible for XFS to continue if an object is
++ * "suboptimal", however performance may be degraded.  Repairs are
++ * usually performed by rebuilding the metadata entirely out of
++ * redundant metadata.  Optimizing, on the other hand, can sometimes be
++ * done without rebuilding entire structures.
++ *
++ * Generally speaking, the repair code has the following code structure:
++ * Lock -> scrub -> repair -> commit -> re-lock -> re-scrub -> unlock.
++ * The first check helps us figure out if we need to rebuild or simply
++ * optimize the structure so that the rebuild knows what to do.  The
++ * second check evaluates the completeness of the repair; that is what
++ * is reported to userspace.
+  */
+ 
+ /*
+@@ -162,7 +183,10 @@ xfs_scrub_teardown(
+ {
+ 	xfs_scrub_ag_free(sc, &sc->sa);
+ 	if (sc->tp) {
+-		xfs_trans_cancel(sc->tp);
++		if (error == 0 && (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
++			error = xfs_trans_commit(sc->tp);
++		else
++			xfs_trans_cancel(sc->tp);
+ 		sc->tp = NULL;
+ 	}
+ 	if (sc->ip) {
+@@ -184,6 +208,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 	{ /* ioctl presence test */
+ 		.setup	= xfs_scrub_setup_fs,
+ 		.scrub	= xfs_scrub_tester,
++		.repair = xfs_scrub_tester,
+ 	},
+ 	{ /* superblock */
+ 		.setup	= xfs_scrub_setup_ag_header,
+@@ -295,6 +320,18 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ #endif
+ };
+ 
++#if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
++static inline bool xfs_scrub_can_repair(struct xfs_mount *mp)
++{
++	return xfs_sb_version_hascrc(&mp->m_sb);
++}
++#else
++static inline bool xfs_scrub_can_repair(struct xfs_mount *mp)
++{
++	return false;
++}
 +#endif
 +
-+TRACE_EVENT(xfs_repair_init_btblock,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
-+		 xfs_btnum_t btnum),
-+	TP_ARGS(mp, agno, agbno, btnum),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(uint32_t, btnum)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->agbno = agbno;
-+		__entry->btnum = btnum;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u btnum %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
-+		  __entry->agbno, __entry->btnum)
-+)
-+TRACE_EVENT(xfs_repair_find_ag_btree_roots_helper,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
-+		 uint32_t magic, uint16_t level),
-+	TP_ARGS(mp, agno, agbno, magic, level),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(uint32_t, magic)
-+		__field(uint16_t, level)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->agbno = agbno;
-+		__entry->magic = magic;
-+		__entry->level = level;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u magic 0x%x level %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
-+		  __entry->agbno, __entry->magic, __entry->level)
-+)
-+TRACE_EVENT(xfs_repair_calc_ag_resblks,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agino_t icount, xfs_agblock_t aglen, xfs_agblock_t freelen,
-+		 xfs_agblock_t usedlen),
-+	TP_ARGS(mp, agno, icount, aglen, freelen, usedlen),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agino_t, icount)
-+		__field(xfs_agblock_t, aglen)
-+		__field(xfs_agblock_t, freelen)
-+		__field(xfs_agblock_t, usedlen)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->icount = icount;
-+		__entry->aglen = aglen;
-+		__entry->freelen = freelen;
-+		__entry->usedlen = usedlen;
-+	),
-+	TP_printk("dev %d:%d agno %d icount %u aglen %u freelen %u usedlen %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
-+		  __entry->icount, __entry->aglen, __entry->freelen,
-+		  __entry->usedlen)
-+)
-+TRACE_EVENT(xfs_repair_calc_ag_resblks_btsize,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agblock_t bnobt_sz, xfs_agblock_t inobt_sz,
-+		 xfs_agblock_t rmapbt_sz, xfs_agblock_t refcbt_sz),
-+	TP_ARGS(mp, agno, bnobt_sz, inobt_sz, rmapbt_sz, refcbt_sz),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, bnobt_sz)
-+		__field(xfs_agblock_t, inobt_sz)
-+		__field(xfs_agblock_t, rmapbt_sz)
-+		__field(xfs_agblock_t, refcbt_sz)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->bnobt_sz = bnobt_sz;
-+		__entry->inobt_sz = inobt_sz;
-+		__entry->rmapbt_sz = rmapbt_sz;
-+		__entry->refcbt_sz = refcbt_sz;
-+	),
-+	TP_printk("dev %d:%d agno %d bno %u ino %u rmap %u refcount %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
-+		  __entry->bnobt_sz, __entry->inobt_sz, __entry->rmapbt_sz,
-+		  __entry->refcbt_sz)
-+)
-+TRACE_EVENT(xfs_repair_reset_counters,
-+	TP_PROTO(struct xfs_mount *mp),
-+	TP_ARGS(mp),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+	),
-+	TP_printk("dev %d:%d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev))
-+)
-+
-+#define trace_xfs_repair_agfl_insert(...)
-+#define trace_xfs_repair_alloc_extent_fn(...)
-+#define trace_xfs_repair_ialloc_extent_fn(...)
-+#if 0
-+DEFINE_BUSY_EVENT(xfs_repair_agfl_insert);
-+DEFINE_RMAPBT_EVENT(xfs_repair_alloc_extent_fn);
-+DEFINE_RMAPBT_EVENT(xfs_repair_ialloc_extent_fn);
-+#endif
-+
-+TRACE_EVENT(xfs_repair_ialloc_insert,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agino_t startino, uint16_t holemask, uint8_t count,
-+		 uint8_t freecount, uint64_t freemask),
-+	TP_ARGS(mp, agno, startino, holemask, count, freecount, freemask),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agino_t, startino)
-+		__field(uint16_t, holemask)
-+		__field(uint8_t, count)
-+		__field(uint8_t, freecount)
-+		__field(uint64_t, freemask)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->startino = startino;
-+		__entry->holemask = holemask;
-+		__entry->count = count;
-+		__entry->freecount = freecount;
-+		__entry->freemask = freemask;
-+	),
-+	TP_printk("dev %d:%d agno %d startino %u holemask 0x%x count %u freecount %u freemask 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
-+		  __entry->startino, __entry->holemask, __entry->count,
-+		  __entry->freecount, __entry->freemask)
-+)
-+#define trace_xfs_repair_rmap_extent_fn(...)
-+#define trace_xfs_repair_refcount_extent_fn(...)
-+#define trace_xfs_repair_bmap_extent_fn(...)
-+#if 0
-+DEFINE_RMAPBT_EVENT(xfs_repair_rmap_extent_fn);
-+DEFINE_REFCOUNT_EXTENT_EVENT(xfs_repair_refcount_extent_fn);
-+DEFINE_RMAPBT_EVENT(xfs_repair_bmap_extent_fn);
-+#endif
-+
- #endif /* _TRACE_XFS_SCRUB_TRACE_H */
+ /* Dispatch metadata scrubbing. */
+ int
+ xfs_scrub_metadata(
+@@ -304,7 +341,10 @@ xfs_scrub_metadata(
+ 	struct xfs_scrub_context	sc;
+ 	struct xfs_mount		*mp = ip->i_mount;
+ 	const struct xfs_scrub_meta_ops	*ops;
++	char				*errstr;
+ 	bool				try_harder = false;
++	bool				already_fixed = false;
++	bool				was_corrupt = false;
+ 	int				error = 0;
  
- #undef TRACE_INCLUDE_PATH
+ 	trace_xfs_scrub_start(ip, sm, error);
+@@ -337,10 +377,17 @@ xfs_scrub_metadata(
+ 	if (ops->has && !ops->has(&mp->m_sb))
+ 		goto out;
+ 
+-	/* We don't know how to repair anything yet. */
+-	error = -EOPNOTSUPP;
+-	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
+-		goto out;
++	/* Can we repair it? */
++	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) {
++		/* Only allow repair for metadata we know how to fix. */
++		error = -EOPNOTSUPP;
++		if (!xfs_scrub_can_repair(mp) || ops->repair == NULL)
++			goto out;
++
++		error = -EROFS;
++		if (mp->m_flags & XFS_MOUNT_RDONLY)
++			goto out;
++	}
+ 
+ 	/* This isn't a stable feature.  Use with care. */
+ 	{
+@@ -382,9 +429,55 @@ xfs_scrub_metadata(
+ 	} else if (error)
+ 		goto out_teardown;
+ 
++	/* Let debug users force us into the repair routines. */
++	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) && !already_fixed &&
++	    XFS_TEST_ERROR(false, mp,
++			XFS_ERRTAG_FORCE_SCRUB_REPAIR)) {
++		sc.sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++	}
++	if (!already_fixed)
++		was_corrupt = !!(sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
++						    XFS_SCRUB_OFLAG_XCORRUPT));
++
++	if (!already_fixed && xfs_scrub_should_fix(sc.sm)) {
++		xfs_scrub_ag_btcur_free(&sc.sa);
++
++		/* Ok, something's wrong.  Repair it. */
++		trace_xfs_repair_attempt(ip, sc.sm, error);
++		error = sc.ops->repair(&sc);
++		trace_xfs_repair_done(ip, sc.sm, error);
++		if (!try_harder && error == -EDEADLOCK) {
++			error = xfs_scrub_teardown(&sc, ip, 0);
++			if (error)
++				goto out_dec;
++			try_harder = true;
++			goto retry_op;
++		} else if (error)
++			goto out_teardown;
++
++		/*
++		 * Commit the fixes and perform a second dry-run scrub
++		 * so that we can tell userspace if we fixed the problem.
++		 */
++		error = xfs_scrub_teardown(&sc, ip, error);
++		if (error)
++			goto out_dec;
++		sc.sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
++		already_fixed = true;
++		goto retry_op;
++	}
++
+ 	if (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
+-			       XFS_SCRUB_OFLAG_XCORRUPT))
+-		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
++			    XFS_SCRUB_OFLAG_XCORRUPT)) {
++		if (sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
++			errstr = "Corruption not fixed during online repair.  "
++				 "Unmount and run xfs_repair.";
++		else
++			errstr = "Corruption detected during scrub.";
++		xfs_alert_ratelimited(mp, errstr);
++	} else if (already_fixed && was_corrupt) {
++		xfs_alert_ratelimited(mp, "Corruption repaired during scrub.");
++	}
+ 
+ out_teardown:
+ 	error = xfs_scrub_teardown(&sc, ip, error);
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 3218664..0713eda 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -26,9 +26,19 @@ struct xfs_scrub_meta_ops {
+ 	int		(*setup)(struct xfs_scrub_context *,
+ 				 struct xfs_inode *);
+ 	int		(*scrub)(struct xfs_scrub_context *);
++	int		(*repair)(struct xfs_scrub_context *);
+ 	bool		(*has)(struct xfs_sb *);
+ };
+ 
++/* Did userspace tell us we can repair /and/ we found something to fix? */
++static inline bool xfs_scrub_should_fix(struct xfs_scrub_metadata *sm)
++{
++	return (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
++	       (sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
++				XFS_SCRUB_OFLAG_XCORRUPT |
++				XFS_SCRUB_OFLAG_PREEN));
++}
++
+ /* Buffer pointers and btree cursors for an entire AG. */
+ struct xfs_scrub_ag {
+ 	xfs_agnumber_t			agno;
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 8cebbaa..5ff86c4 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -57,6 +57,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_AG_RESV_CRITICAL,
+ 	XFS_RANDOM_DROP_WRITES,
+ 	XFS_RANDOM_LOG_BAD_CRC,
++	XFS_RANDOM_FORCE_SCRUB_REPAIR,
+ };
+ 
+ struct xfs_errortag_attr {
+@@ -161,6 +162,7 @@ XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
+ XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
+ XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
+ XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
++XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
+ 
+ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(noerror),
+@@ -193,6 +195,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
+ 	XFS_ERRORTAG_ATTR_LIST(drop_writes),
+ 	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
++	XFS_ERRORTAG_ATTR_LIST(force_repair),
+ 	NULL,
+ };
+ 
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 7577be5..6ee23eb 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -106,7 +106,8 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+  */
+ #define XFS_ERRTAG_DROP_WRITES				28
+ #define XFS_ERRTAG_LOG_BAD_CRC				29
+-#define XFS_ERRTAG_MAX					30
++#define XFS_ERRTAG_FORCE_SCRUB_REPAIR			30
++#define XFS_ERRTAG_MAX					31
+ 
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -141,6 +142,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+ #define XFS_RANDOM_AG_RESV_CRITICAL			4
+ #define XFS_RANDOM_DROP_WRITES				1
+ #define XFS_RANDOM_LOG_BAD_CRC				1
++#define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
+ 
+ #ifdef DEBUG
+ extern int xfs_errortag_init(struct xfs_mount *mp);
 
