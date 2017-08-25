@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27325 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933269AbdHYWRr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 18:17:47 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:41985 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933883AbdHYWSI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 18:18:08 -0400
 Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7PMHlIL022277
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7PMI7cd013898
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:47 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7PMHlkb022707
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:18:08 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7PMI7Vb023750
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:47 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7PMHkf5023761
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:47 GMT
-Subject: [PATCH 08/19] xfs: implement the metadata repair ioctl flag
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:18:07 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7PMI7vU023307
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:18:07 GMT
+Subject: [PATCH 11/19] xfs: repair the AGF and AGFL
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 25 Aug 2017 15:17:45 -0700
-Message-ID: <150369946542.9957.12755552154555796419.stgit@magnolia>
+Date: Fri, 25 Aug 2017 15:18:05 -0700
+Message-ID: <150369948573.9957.14446310389598001586.stgit@magnolia>
 In-Reply-To: <150369940879.9957.6303798184036268321.stgit@magnolia>
 References: <150369940879.9957.6303798184036268321.stgit@magnolia>
 MIME-Version: 1.0
@@ -31,288 +31,547 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Plumb in the pieces necessary to make the "scrub" subfunction of
-the scrub ioctl actually work.
+Regenerate the AGF and AGFL from the rmap data.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Kconfig       |   17 ++++++++
- fs/xfs/scrub/scrub.c |  107 +++++++++++++++++++++++++++++++++++++++++++++++---
- fs/xfs/scrub/scrub.h |   10 +++++
- fs/xfs/xfs_error.c   |    3 +
- fs/xfs/xfs_error.h   |    4 +-
- 5 files changed, 133 insertions(+), 8 deletions(-)
+ fs/xfs/scrub/agheader.c |  472 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.h   |    2 
+ fs/xfs/scrub/scrub.c    |    2 
+ 3 files changed, 476 insertions(+)
 
 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index f42fcf1..06be67d 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -88,6 +88,23 @@ config XFS_ONLINE_SCRUB
- 
- 	  If unsure, say N.
- 
-+config XFS_ONLINE_REPAIR
-+	bool "XFS online metadata repair support"
-+	default n
-+	depends on XFS_FS && XFS_ONLINE_SCRUB
-+	help
-+	  If you say Y here you will be able to repair metadata on a
-+	  mounted XFS filesystem.  This feature is intended to reduce
-+	  filesystem downtime even further by fixing minor problems
-+	  before they cause the filesystem to go down.  However, it
-+	  requires that the filesystem be formatted with secondary
-+	  metadata, such as reverse mappings and inode parent pointers.
-+
-+	  This feature is considered EXPERIMENTAL.  Use with caution!
-+
-+	  See the xfs_scrub man page in section 8 for additional information.
-+
-+	  If unsure, say N.
- config XFS_WARN
- 	bool "XFS Verbose Warnings"
- 	depends on XFS_FS && !XFS_DEBUG
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 5f2c71d..cdc8233 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -42,6 +42,9 @@
- #include "xfs_refcount_btree.h"
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index d59444c..40c31ed 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -31,13 +31,18 @@
+ #include "xfs_sb.h"
+ #include "xfs_inode.h"
+ #include "xfs_alloc.h"
++#include "xfs_alloc_btree.h"
+ #include "xfs_ialloc.h"
++#include "xfs_ialloc_btree.h"
  #include "xfs_rmap.h"
- #include "xfs_rmap_btree.h"
-+#include "xfs_error.h"
-+#include "xfs_log.h"
-+#include "xfs_trans_priv.h"
++#include "xfs_rmap_btree.h"
+ #include "xfs_refcount.h"
++#include "xfs_refcount_btree.h"
  #include "scrub/xfs_scrub.h"
  #include "scrub/scrub.h"
  #include "scrub/common.h"
-@@ -121,6 +124,24 @@
-  * XCORRUPT flag; btree query function errors are noted by setting the
-  * XFAIL flag and deleting the cursor to prevent further attempts to
-  * cross-reference with a defective btree.
-+ *
-+ * If a piece of metadata proves corrupt or suboptimal, the userspace
-+ * program can ask the kernel to apply some tender loving care (TLC) to
-+ * the metadata object by setting the REPAIR flag and re-calling the
-+ * scrub ioctl.  "Corruption" is defined by metadata violating the
-+ * on-disk specification; operations cannot continue if the violation is
-+ * left untreated.  It is possible for XFS to continue if an object is
-+ * "suboptimal", however performance may be degraded.  Repairs are
-+ * usually performed by rebuilding the metadata entirely out of
-+ * redundant metadata.  Optimizing, on the other hand, can sometimes be
-+ * done without rebuilding entire structures.
-+ *
-+ * Generally speaking, the repair code has the following code structure:
-+ * Lock -> scrub -> repair -> commit -> re-lock -> re-scrub -> unlock.
-+ * The first check helps us figure out if we need to rebuild or simply
-+ * optimize the structure so that the rebuild knows what to do.  The
-+ * second check evaluates the completeness of the repair; that is what
-+ * is reported to userspace.
-  */
+ #include "scrub/trace.h"
++#include "scrub/repair.h"
  
- /*
-@@ -162,7 +183,10 @@ xfs_scrub_teardown(
- {
- 	xfs_scrub_ag_free(sc, &sc->sa);
- 	if (sc->tp) {
--		xfs_trans_cancel(sc->tp);
-+		if (error == 0 && (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
-+			error = xfs_trans_commit(sc->tp);
-+		else
-+			xfs_trans_cancel(sc->tp);
- 		sc->tp = NULL;
- 	}
- 	if (sc->ip) {
-@@ -184,6 +208,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 	{ /* ioctl presence test */
- 		.setup	= xfs_scrub_setup_fs,
- 		.scrub	= xfs_scrub_tester,
-+		.repair = xfs_scrub_tester,
- 	},
- 	{ /* superblock */
- 		.setup	= xfs_scrub_setup_ag_header,
-@@ -295,6 +320,18 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- #endif
- };
- 
-+#if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
-+static inline bool xfs_scrub_can_repair(struct xfs_mount *mp)
-+{
-+	return xfs_sb_version_hascrc(&mp->m_sb);
-+}
-+#else
-+static inline bool xfs_scrub_can_repair(struct xfs_mount *mp)
-+{
-+	return false;
-+}
-+#endif
-+
- /* Dispatch metadata scrubbing. */
+ /* Set us up to check an AG header. */
  int
- xfs_scrub_metadata(
-@@ -304,7 +341,10 @@ xfs_scrub_metadata(
- 	struct xfs_scrub_context	sc;
- 	struct xfs_mount		*mp = ip->i_mount;
- 	const struct xfs_scrub_meta_ops	*ops;
-+	char				*errstr;
- 	bool				try_harder = false;
-+	bool				already_fixed = false;
-+	bool				was_corrupt = false;
- 	int				error = 0;
+@@ -744,6 +749,256 @@ xfs_scrub_agf(
+ 	return error;
+ }
  
- 	trace_xfs_scrub_start(ip, sm, error);
-@@ -337,10 +377,17 @@ xfs_scrub_metadata(
- 	if (ops->has && !ops->has(&mp->m_sb))
- 		goto out;
- 
--	/* We don't know how to repair anything yet. */
--	error = -EOPNOTSUPP;
--	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
--		goto out;
-+	/* Can we repair it? */
-+	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) {
-+		/* Only allow repair for metadata we know how to fix. */
-+		error = -EOPNOTSUPP;
-+		if (!xfs_scrub_can_repair(mp) || ops->repair == NULL)
-+			goto out;
++struct xfs_repair_agf_allocbt {
++	xfs_agblock_t			freeblks;
++	xfs_agblock_t			longest;
++};
 +
-+		error = -EROFS;
-+		if (mp->m_flags & XFS_MOUNT_RDONLY)
-+			goto out;
-+	}
- 
- 	/* This isn't a stable feature.  Use with care. */
- 	{
-@@ -382,9 +429,55 @@ xfs_scrub_metadata(
- 	} else if (error)
- 		goto out_teardown;
- 
-+	/* Let debug users force us into the repair routines. */
-+	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) && !already_fixed &&
-+	    XFS_TEST_ERROR(false, mp,
-+			XFS_ERRTAG_FORCE_SCRUB_REPAIR)) {
-+		sc.sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+	}
-+	if (!already_fixed)
-+		was_corrupt = !!(sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-+						    XFS_SCRUB_OFLAG_XCORRUPT));
-+
-+	if (!already_fixed && xfs_scrub_should_fix(sc.sm)) {
-+		xfs_scrub_ag_btcur_free(&sc.sa);
-+
-+		/* Ok, something's wrong.  Repair it. */
-+		trace_xfs_repair_attempt(ip, sc.sm, error);
-+		error = sc.ops->repair(&sc);
-+		trace_xfs_repair_done(ip, sc.sm, error);
-+		if (!try_harder && error == -EDEADLOCK) {
-+			error = xfs_scrub_teardown(&sc, ip, 0);
-+			if (error)
-+				goto out_dec;
-+			try_harder = true;
-+			goto retry_op;
-+		} else if (error)
-+			goto out_teardown;
-+
-+		/*
-+		 * Commit the fixes and perform a second dry-run scrub
-+		 * so that we can tell userspace if we fixed the problem.
-+		 */
-+		error = xfs_scrub_teardown(&sc, ip, error);
-+		if (error)
-+			goto out_dec;
-+		sc.sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-+		already_fixed = true;
-+		goto retry_op;
-+	}
-+
- 	if (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
--			       XFS_SCRUB_OFLAG_XCORRUPT))
--		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
-+			    XFS_SCRUB_OFLAG_XCORRUPT)) {
-+		if (sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
-+			errstr = "Corruption not fixed during online repair.  "
-+				 "Unmount and run xfs_repair.";
-+		else
-+			errstr = "Corruption detected during scrub.";
-+		xfs_alert_ratelimited(mp, errstr);
-+	} else if (already_fixed && was_corrupt) {
-+		xfs_alert_ratelimited(mp, "Corruption repaired during scrub.");
-+	}
- 
- out_teardown:
- 	error = xfs_scrub_teardown(&sc, ip, error);
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 3218664..0713eda 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -26,9 +26,19 @@ struct xfs_scrub_meta_ops {
- 	int		(*setup)(struct xfs_scrub_context *,
- 				 struct xfs_inode *);
- 	int		(*scrub)(struct xfs_scrub_context *);
-+	int		(*repair)(struct xfs_scrub_context *);
- 	bool		(*has)(struct xfs_sb *);
- };
- 
-+/* Did userspace tell us we can repair /and/ we found something to fix? */
-+static inline bool xfs_scrub_should_fix(struct xfs_scrub_metadata *sm)
++/* Record free space shape information. */
++STATIC int
++xfs_repair_agf_walk_allocbt(
++	struct xfs_btree_cur		*cur,
++	struct xfs_alloc_rec_incore	*rec,
++	void				*priv)
 +{
-+	return (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
-+	       (sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-+				XFS_SCRUB_OFLAG_XCORRUPT |
-+				XFS_SCRUB_OFLAG_PREEN));
++	struct xfs_repair_agf_allocbt	*raa = priv;
++	int				error = 0;
++
++	if (xfs_scrub_should_terminate(&error))
++		return error;
++
++	raa->freeblks += rec->ar_blockcount;
++	if (rec->ar_blockcount > raa->longest)
++		raa->longest = rec->ar_blockcount;
++	return error;
 +}
 +
- /* Buffer pointers and btree cursors for an entire AG. */
- struct xfs_scrub_ag {
- 	xfs_agnumber_t			agno;
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 8cebbaa..5ff86c4 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -57,6 +57,7 @@ static unsigned int xfs_errortag_random_default[] = {
- 	XFS_RANDOM_AG_RESV_CRITICAL,
- 	XFS_RANDOM_DROP_WRITES,
- 	XFS_RANDOM_LOG_BAD_CRC,
-+	XFS_RANDOM_FORCE_SCRUB_REPAIR,
- };
++/* Does this AGFL look sane? */
++STATIC int
++xfs_repair_agf_check_agfl(
++	struct xfs_scrub_context	*sc,
++	struct xfs_agf			*agf,
++	__be32				*agfl_bno)
++{
++	struct xfs_mount		*mp = sc->mp;
++	xfs_agblock_t			aglen;
++	xfs_agblock_t			bno;
++	unsigned int			flfirst;
++	unsigned int			fllast;
++	int				i;
++
++	if (agf->agf_flcount == cpu_to_be32(0))
++		return 0;
++
++	flfirst = be32_to_cpu(agf->agf_flfirst);
++	fllast = be32_to_cpu(agf->agf_fllast);
++	aglen = be32_to_cpu(agf->agf_length);
++
++	/* first to last is a consecutive list. */
++	if (fllast >= flfirst) {
++		for (i = flfirst; i <= fllast; i++) {
++			bno = be32_to_cpu(agfl_bno[i]);
++			if (xfs_scrub_extent_covers_ag_head(mp, bno, 1) ||
++					bno > aglen || bno == NULLAGBLOCK)
++				return -EFSCORRUPTED;
++		}
++
++		return 0;
++	}
++
++	/* first to the end */
++	for (i = flfirst; i < XFS_AGFL_SIZE(mp); i++) {
++		bno = be32_to_cpu(agfl_bno[i]);
++		if (xfs_scrub_extent_covers_ag_head(mp, bno, 1) ||
++				bno > aglen || bno == NULLAGBLOCK)
++			return -EFSCORRUPTED;
++	}
++
++	/* the start to last. */
++	for (i = 0; i <= fllast; i++) {
++		bno = be32_to_cpu(agfl_bno[i]);
++		if (xfs_scrub_extent_covers_ag_head(mp, bno, 1) ||
++				bno > aglen || bno == NULLAGBLOCK)
++			return -EFSCORRUPTED;
++	}
++	return 0;
++}
++
++/* Repair the AGF. */
++int
++xfs_repair_agf(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_repair_find_ag_btree	fab[] = {
++		{XFS_RMAP_OWN_AG, &xfs_allocbt_buf_ops, XFS_ABTB_CRC_MAGIC, 0, 0},
++		{XFS_RMAP_OWN_AG, &xfs_allocbt_buf_ops, XFS_ABTC_CRC_MAGIC, 0, 0},
++		{XFS_RMAP_OWN_AG, &xfs_rmapbt_buf_ops, XFS_RMAP_CRC_MAGIC, 0, 0},
++		{XFS_RMAP_OWN_REFC, &xfs_refcountbt_buf_ops, XFS_REFC_CRC_MAGIC, 0, 0},
++		{0, NULL, 0, 0, 0},
++	};
++	struct xfs_repair_agf_allocbt	raa = {0};
++	struct xfs_agf			old_agf;
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_buf			*agf_bp;
++	struct xfs_buf			*agfl_bp;
++	struct xfs_agf			*agf;
++	struct xfs_btree_cur		*cur = NULL;
++	struct xfs_perag		*pag;
++	xfs_agblock_t			blocks;
++	xfs_agblock_t			freesp_blocks;
++	int				error;
++
++	/* We require the rmapbt to rebuild anything. */
++	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return -EOPNOTSUPP;
++
++	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
++			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGF_DADDR(mp)),
++			XFS_FSS_TO_BB(mp, 1), 0, &agf_bp, NULL);
++	if (error)
++		return error;
++	agf_bp->b_ops = &xfs_agf_buf_ops;
++
++	/*
++	 * Load the AGFL so that we can screen out OWN_AG blocks that
++	 * are on the AGFL now; these blocks might have once been part
++	 * of the bno/cnt/rmap btrees but are not now.
++	 */
++	error = xfs_alloc_read_agfl(mp, sc->tp, sc->sa.agno, &agfl_bp);
++	if (error)
++		return error;
++	error = xfs_repair_agf_check_agfl(sc, XFS_BUF_TO_AGF(agf_bp),
++			XFS_BUF_TO_AGFL_BNO(mp, agfl_bp));
++	if (error)
++		return error;
++
++	/* Find the btree roots. */
++	error = xfs_repair_find_ag_btree_roots(sc, agf_bp, fab, agfl_bp);
++	if (error)
++		return error;
++	if (fab[0].root == NULLAGBLOCK || fab[0].level > XFS_BTREE_MAXLEVELS ||
++	    fab[1].root == NULLAGBLOCK || fab[1].level > XFS_BTREE_MAXLEVELS ||
++	    fab[2].root == NULLAGBLOCK || fab[2].level > XFS_BTREE_MAXLEVELS)
++		return -EFSCORRUPTED;
++	if (xfs_sb_version_hasreflink(&mp->m_sb) &&
++	    (fab[3].root == NULLAGBLOCK || fab[3].level > XFS_BTREE_MAXLEVELS))
++		return -EFSCORRUPTED;
++
++	/* Start rewriting the header. */
++	agf = XFS_BUF_TO_AGF(agf_bp);
++	old_agf = *agf;
++	/*
++	 * We relied on the rmapbt to reconstruct the AGF.  If we get a
++	 * different root then something's seriously wrong.
++	 */
++	if (be32_to_cpu(old_agf.agf_roots[XFS_BTNUM_RMAPi]) != fab[2].root)
++		return -EFSCORRUPTED;
++	memset(agf, 0, mp->m_sb.sb_sectsize);
++	agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
++	agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
++	agf->agf_seqno = cpu_to_be32(sc->sa.agno);
++	agf->agf_length = cpu_to_be32(xfs_scrub_ag_blocks(mp, sc->sa.agno));
++	agf->agf_roots[XFS_BTNUM_BNOi] = cpu_to_be32(fab[0].root);
++	agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(fab[1].root);
++	agf->agf_roots[XFS_BTNUM_RMAPi] = cpu_to_be32(fab[2].root);
++	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(fab[0].level);
++	agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(fab[1].level);
++	agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(fab[2].level);
++	agf->agf_flfirst = old_agf.agf_flfirst;
++	agf->agf_fllast = old_agf.agf_fllast;
++	agf->agf_flcount = old_agf.agf_flcount;
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid);
++	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++		agf->agf_refcount_root = cpu_to_be32(fab[3].root);
++		agf->agf_refcount_level = cpu_to_be32(fab[3].level);
++	}
++
++	/* Update the AGF counters from the bnobt. */
++	cur = xfs_allocbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno,
++			XFS_BTNUM_BNO);
++	error = xfs_alloc_query_all(cur, xfs_repair_agf_walk_allocbt, &raa);
++	if (error)
++		goto err;
++	error = xfs_btree_count_blocks(cur, &blocks);
++	if (error)
++		goto err;
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	freesp_blocks = blocks - 1;
++	agf->agf_freeblks = cpu_to_be32(raa.freeblks);
++	agf->agf_longest = cpu_to_be32(raa.longest);
++
++	/* Update the AGF counters from the cntbt. */
++	cur = xfs_allocbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno,
++			XFS_BTNUM_CNT);
++	error = xfs_btree_count_blocks(cur, &blocks);
++	if (error)
++		goto err;
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	freesp_blocks += blocks - 1;
++
++	/* Update the AGF counters from the rmapbt. */
++	cur = xfs_rmapbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno);
++	error = xfs_btree_count_blocks(cur, &blocks);
++	if (error)
++		goto err;
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	agf->agf_rmap_blocks = cpu_to_be32(blocks);
++	freesp_blocks += blocks - 1;
++
++	/* Update the AGF counters from the refcountbt. */
++	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++		cur = xfs_refcountbt_init_cursor(mp, sc->tp, agf_bp,
++				sc->sa.agno, NULL);
++		error = xfs_btree_count_blocks(cur, &blocks);
++		if (error)
++			goto err;
++		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++		agf->agf_refcount_blocks = cpu_to_be32(blocks);
++	}
++	agf->agf_btreeblks = cpu_to_be32(freesp_blocks);
++	cur = NULL;
++
++	/* Trigger reinitialization of the in-core data. */
++	if (raa.freeblks != be32_to_cpu(old_agf.agf_freeblks) ||
++	    freesp_blocks != be32_to_cpu(old_agf.agf_btreeblks) ||
++	    raa.longest != be32_to_cpu(old_agf.agf_longest) ||
++	    fab[0].level != be32_to_cpu(old_agf.agf_levels[XFS_BTNUM_BNOi]) ||
++	    fab[1].level != be32_to_cpu(old_agf.agf_levels[XFS_BTNUM_CNTi]) ||
++	    fab[2].level != be32_to_cpu(old_agf.agf_levels[XFS_BTNUM_RMAPi]) ||
++	    fab[3].level != be32_to_cpu(old_agf.agf_refcount_level)) {
++		pag = xfs_perag_get(mp, sc->sa.agno);
++		if (pag->pagf_init) {
++			pag->pagf_freeblks = be32_to_cpu(agf->agf_freeblks);
++			pag->pagf_btreeblks = be32_to_cpu(agf->agf_btreeblks);
++			pag->pagf_flcount = be32_to_cpu(agf->agf_flcount);
++			pag->pagf_longest = be32_to_cpu(agf->agf_longest);
++			pag->pagf_levels[XFS_BTNUM_BNOi] =
++				be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
++			pag->pagf_levels[XFS_BTNUM_CNTi] =
++				be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
++			pag->pagf_levels[XFS_BTNUM_RMAPi] =
++				be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAPi]);
++			pag->pagf_refcount_level =
++				be32_to_cpu(agf->agf_refcount_level);
++		}
++		xfs_perag_put(pag);
++		sc->reset_counters = true;
++	}
++
++	/* Write this to disk. */
++	xfs_trans_buf_set_type(sc->tp, agf_bp, XFS_BLFT_AGF_BUF);
++	xfs_trans_log_buf(sc->tp, agf_bp, 0, mp->m_sb.sb_sectsize - 1);
++	return error;
++
++err:
++	if (cur)
++		xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
++				XFS_BTREE_NOERROR);
++	*agf = old_agf;
++	return error;
++}
++
+ /* AGFL */
  
- struct xfs_errortag_attr {
-@@ -161,6 +162,7 @@ XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
- XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
- XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
- XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
-+XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
+ struct xfs_scrub_agfl {
+@@ -905,6 +1160,223 @@ xfs_scrub_agfl(
+ 	return error;
+ }
  
- static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(noerror),
-@@ -193,6 +195,7 @@ static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
- 	XFS_ERRORTAG_ATTR_LIST(drop_writes),
- 	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
-+	XFS_ERRORTAG_ATTR_LIST(force_repair),
- 	NULL,
- };
++/* AGFL repair. */
++
++struct xfs_repair_agfl {
++	struct list_head		freesp_list;
++	struct list_head		agmeta_list;
++	struct xfs_scrub_context	*sc;
++};
++
++/* Record all freespace information. */
++STATIC int
++xfs_repair_agfl_rmap_fn(
++	struct xfs_btree_cur		*cur,
++	struct xfs_rmap_irec		*rec,
++	void				*priv)
++{
++	struct xfs_repair_agfl		*ra = priv;
++	struct xfs_buf			*bp;
++	xfs_fsblock_t			fsb;
++	int				i;
++	int				error = 0;
++
++	if (xfs_scrub_should_terminate(&error))
++		return error;
++
++	/* Record all the OWN_AG blocks... */
++	if (rec->rm_owner == XFS_RMAP_OWN_AG) {
++		fsb = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
++				rec->rm_startblock);
++		error = xfs_repair_collect_btree_extent(ra->sc,
++				&ra->freesp_list, fsb, rec->rm_blockcount);
++		if (error)
++			return error;
++	}
++
++	/* ...and all the rmapbt blocks... */
++	for (i = 0; i < cur->bc_nlevels && cur->bc_ptrs[i] == 1; i++) {
++		xfs_btree_get_block(cur, i, &bp);
++		if (!bp)
++			continue;
++		fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
++		error = xfs_repair_collect_btree_extent(ra->sc,
++				&ra->agmeta_list, fsb, 1);
++		if (error)
++			return error;
++	}
++
++	return 0;
++}
++
++/* Add a btree block to the agmeta list. */
++STATIC int
++xfs_repair_agfl_visit_btblock(
++	struct xfs_btree_cur		*cur,
++	int				level,
++	void				*priv)
++{
++	struct xfs_repair_agfl		*ra = priv;
++	struct xfs_buf			*bp;
++	xfs_fsblock_t			fsb;
++	int				error = 0;
++
++	if (xfs_scrub_should_terminate(&error))
++		return error;
++
++	xfs_btree_get_block(cur, level, &bp);
++	if (!bp)
++		return 0;
++
++	fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
++	return xfs_repair_collect_btree_extent(ra->sc, &ra->agmeta_list,
++			fsb, 1);
++}
++
++/* Repair the AGFL. */
++int
++xfs_repair_agfl(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_repair_agfl		ra;
++	struct xfs_owner_info		oinfo;
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_buf			*agf_bp;
++	struct xfs_buf			*agfl_bp;
++	struct xfs_agf			*agf;
++	struct xfs_agfl			*agfl;
++	struct xfs_btree_cur		*cur = NULL;
++	struct xfs_perag		*pag;
++	__be32				*agfl_bno;
++	struct xfs_repair_btree_extent	*rbe;
++	struct xfs_repair_btree_extent	*n;
++	xfs_agblock_t			flcount;
++	xfs_agblock_t			agbno;
++	xfs_agblock_t			bno;
++	xfs_agblock_t			old_flcount;
++	int				error;
++
++	/* We require the rmapbt to rebuild anything. */
++	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return -EOPNOTSUPP;
++
++	INIT_LIST_HEAD(&ra.freesp_list);
++	INIT_LIST_HEAD(&ra.agmeta_list);
++	ra.sc = sc;
++
++	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
++	if (error)
++		return error;
++	if (!agf_bp)
++		return -ENOMEM;
++
++	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
++			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGFL_DADDR(mp)),
++			XFS_FSS_TO_BB(mp, 1), 0, &agfl_bp, NULL);
++	if (error)
++		return error;
++	agfl_bp->b_ops = &xfs_agfl_buf_ops;
++
++	/* Find all space used by the free space btrees & rmapbt. */
++	cur = xfs_rmapbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno);
++	error = xfs_rmap_query_all(cur, xfs_repair_agfl_rmap_fn, &ra);
++	if (error)
++		goto err;
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++
++	/* Find all space used by bnobt. */
++	cur = xfs_allocbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno,
++			XFS_BTNUM_BNO);
++	error = xfs_btree_visit_blocks(cur, xfs_repair_agfl_visit_btblock,
++			&ra);
++	if (error)
++		goto err;
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++
++	/* Find all space used by cntbt. */
++	cur = xfs_allocbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno,
++			XFS_BTNUM_CNT);
++	error = xfs_btree_visit_blocks(cur, xfs_repair_agfl_visit_btblock,
++			&ra);
++	if (error)
++		goto err;
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	cur = NULL;
++
++	/*
++	 * Drop the freesp meta blocks that are in use by btrees.
++	 * The remaining blocks /should/ be AGFL blocks.
++	 */
++	error = xfs_repair_subtract_extents(sc, &ra.freesp_list,
++			&ra.agmeta_list);
++	if (error)
++		goto err;
++	xfs_repair_cancel_btree_extents(sc, &ra.agmeta_list);
++
++	/* Start rewriting the header. */
++	agfl = XFS_BUF_TO_AGFL(agfl_bp);
++	memset(agfl, 0xFF, mp->m_sb.sb_sectsize);
++	agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
++	agfl->agfl_seqno = cpu_to_be32(sc->sa.agno);
++	uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
++
++	/* Fill the AGFL with the remaining blocks. */
++	flcount = 0;
++	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agfl_bp);
++	list_for_each_entry_safe(rbe, n, &ra.freesp_list, list) {
++		agbno = XFS_FSB_TO_AGBNO(mp, rbe->fsbno);
++
++		trace_xfs_repair_agfl_insert(mp, sc->sa.agno, agbno, rbe->len);
++
++		for (bno = 0; bno < rbe->len; bno++) {
++			if (flcount >= XFS_AGFL_SIZE(mp) - 1)
++				break;
++			agfl_bno[flcount + 1] = cpu_to_be32(agbno + bno);
++			flcount++;
++		}
++		rbe->fsbno += bno;
++		rbe->len -= bno;
++		if (rbe->len)
++			break;
++		list_del(&rbe->list);
++		kmem_free(rbe);
++	}
++
++	/* Update the AGF counters. */
++	agf = XFS_BUF_TO_AGF(agf_bp);
++	old_flcount = be32_to_cpu(agf->agf_flcount);
++	agf->agf_flfirst = cpu_to_be32(1);
++	agf->agf_flcount = cpu_to_be32(flcount);
++	agf->agf_fllast = cpu_to_be32(flcount);
++
++	/* Trigger reinitialization of the in-core data. */
++	if (flcount != old_flcount) {
++		pag = xfs_perag_get(mp, sc->sa.agno);
++		if (pag->pagf_init)
++			pag->pagf_flcount = flcount;
++		xfs_perag_put(pag);
++		sc->reset_counters = true;
++	}
++
++	/* Write AGF and AGFL to disk. */
++	xfs_alloc_log_agf(sc->tp, agf_bp,
++			XFS_AGF_FLFIRST | XFS_AGF_FLLAST | XFS_AGF_FLCOUNT);
++	xfs_trans_buf_set_type(sc->tp, agfl_bp, XFS_BLFT_AGFL_BUF);
++	xfs_trans_log_buf(sc->tp, agfl_bp, 0, mp->m_sb.sb_sectsize - 1);
++
++	/* Dump any AGFL overflow. */
++	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
++	return xfs_repair_reap_btree_extents(sc, &ra.freesp_list, &oinfo,
++			XFS_AG_RESV_AGFL);
++err:
++	xfs_repair_cancel_btree_extents(sc, &ra.agmeta_list);
++	xfs_repair_cancel_btree_extents(sc, &ra.freesp_list);
++	if (cur)
++		xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
++				XFS_BTREE_NOERROR);
++	return error;
++}
++
+ /* AGI */
  
-diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-index 7577be5..6ee23eb 100644
---- a/fs/xfs/xfs_error.h
-+++ b/fs/xfs/xfs_error.h
-@@ -106,7 +106,8 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
-  */
- #define XFS_ERRTAG_DROP_WRITES				28
- #define XFS_ERRTAG_LOG_BAD_CRC				29
--#define XFS_ERRTAG_MAX					30
-+#define XFS_ERRTAG_FORCE_SCRUB_REPAIR			30
-+#define XFS_ERRTAG_MAX					31
+ /* Scrub the AGI. */
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index fc5dcaa..6c544eb 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -71,5 +71,7 @@ int xfs_repair_setup_btree_extent_collection(struct xfs_scrub_context *sc);
  
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -141,6 +142,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
- #define XFS_RANDOM_AG_RESV_CRITICAL			4
- #define XFS_RANDOM_DROP_WRITES				1
- #define XFS_RANDOM_LOG_BAD_CRC				1
-+#define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
+ /* Metadata repairers */
+ int xfs_repair_superblock(struct xfs_scrub_context *sc);
++int xfs_repair_agf(struct xfs_scrub_context *sc);
++int xfs_repair_agfl(struct xfs_scrub_context *sc);
  
- #ifdef DEBUG
- extern int xfs_errortag_init(struct xfs_mount *mp);
+ #endif	/* __XFS_SCRUB_REPAIR_H__ */
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 401a446..3ddfe09 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -221,10 +221,12 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 	{ /* agf */
+ 		.setup	= xfs_scrub_setup_ag_header,
+ 		.scrub	= xfs_scrub_agf,
++		.repair	= xfs_repair_agf,
+ 	},
+ 	{ /* agfl */
+ 		.setup	= xfs_scrub_setup_ag_header,
+ 		.scrub	= xfs_scrub_agfl,
++		.repair	= xfs_repair_agfl,
+ 	},
+ 	{ /* agi */
+ 		.setup	= xfs_scrub_setup_ag_header,
 
