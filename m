@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27170 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933269AbdHYWQ6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 18:16:58 -0400
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7PMGvOY021766
+Received: from aserp1040.oracle.com ([141.146.126.69]:41794 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933269AbdHYWRE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 18:17:04 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7PMH32v013213
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:16:58 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v7PMGvOR015653
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:03 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7PMH3Gi012328
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:16:57 GMT
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7PMGu6b023509
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:16:56 GMT
-Subject: [PATCH 01/19] xfs: add helpers to calculate btree size
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:03 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7PMH3ks015169
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2017 22:17:03 GMT
+Subject: [PATCH 02/19] xfs: expose various functions to repair code
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 25 Aug 2017 15:16:55 -0700
-Message-ID: <150369941532.9957.17414330880220606716.stgit@magnolia>
+Date: Fri, 25 Aug 2017 15:17:01 -0700
+Message-ID: <150369942177.9957.4757848629478852004.stgit@magnolia>
 In-Reply-To: <150369940879.9957.6303798184036268321.stgit@magnolia>
 References: <150369940879.9957.6303798184036268321.stgit@magnolia>
 MIME-Version: 1.0
@@ -31,142 +31,79 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a bunch of helper functions that calculate the sizes of various
-btrees.  These will be used to repair btrees and btree headers.
+Expose various helpers that the repair code will want to use.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc_btree.c  |    9 +++++++++
- fs/xfs/libxfs/xfs_alloc_btree.h  |    2 ++
- fs/xfs/libxfs/xfs_bmap_btree.c   |    9 +++++++++
- fs/xfs/libxfs/xfs_bmap_btree.h   |    3 +++
- fs/xfs/libxfs/xfs_btree.c        |    4 ++--
- fs/xfs/libxfs/xfs_btree.h        |    2 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c |    9 +++++++++
- fs/xfs/libxfs/xfs_ialloc_btree.h |    2 ++
- 8 files changed, 37 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c   |    2 +-
+ fs/xfs/libxfs/xfs_ialloc.h   |    3 +++
+ fs/xfs/libxfs/xfs_refcount.c |    4 ++--
+ fs/xfs/libxfs/xfs_refcount.h |    5 +++++
+ 4 files changed, 11 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index cfde0a0..89346e6 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -544,3 +544,12 @@ xfs_allocbt_maxrecs(
- 		return blocklen / sizeof(xfs_alloc_rec_t);
- 	return blocklen / (sizeof(xfs_alloc_key_t) + sizeof(xfs_alloc_ptr_t));
- }
-+
-+/* Calculate the freespace btree size for some records. */
-+xfs_extlen_t
-+xfs_allocbt_calc_size(
-+	struct xfs_mount	*mp,
-+	unsigned long long	len)
-+{
-+	return xfs_btree_calc_size(mp, mp->m_alloc_mnr, len);
-+}
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.h b/fs/xfs/libxfs/xfs_alloc_btree.h
-index 45e189e..2fd5472 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.h
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.h
-@@ -61,5 +61,7 @@ extern struct xfs_btree_cur *xfs_allocbt_init_cursor(struct xfs_mount *,
- 		struct xfs_trans *, struct xfs_buf *,
- 		xfs_agnumber_t, xfs_btnum_t);
- extern int xfs_allocbt_maxrecs(struct xfs_mount *, int, int);
-+extern xfs_extlen_t xfs_allocbt_calc_size(struct xfs_mount *mp,
-+		unsigned long long len);
- 
- #endif	/* __XFS_ALLOC_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 85de225..eddc1df 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -863,3 +863,12 @@ xfs_bmbt_change_owner(
- 	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
- 	return error;
- }
-+
-+/* Calculate the bmap btree size for some records. */
-+unsigned long long
-+xfs_bmbt_calc_size(
-+	struct xfs_mount	*mp,
-+	unsigned long long	len)
-+{
-+	return xfs_btree_calc_size(mp, mp->m_bmap_dmnr, len);
-+}
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-index 9da5a8d..d6dae86 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-@@ -146,4 +146,7 @@ static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
- 	return false;
- }
- 
-+extern unsigned long long xfs_bmbt_calc_size(struct xfs_mount *mp,
-+		unsigned long long len);
-+
- #endif	/* __XFS_BMAP_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 42af403..11cf13e 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4863,7 +4863,7 @@ xfs_btree_query_all(
-  * Calculate the number of blocks needed to store a given number of records
-  * in a short-format (per-AG metadata) btree.
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 6ec2655..b7d4a1b 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -147,7 +147,7 @@ xfs_inobt_get_rec(
+ /*
+  * Insert a single inobt record. Cursor must already point to desired location.
   */
--xfs_extlen_t
-+unsigned long long
- xfs_btree_calc_size(
- 	struct xfs_mount	*mp,
- 	uint			*limits,
-@@ -4871,7 +4871,7 @@ xfs_btree_calc_size(
- {
- 	int			level;
- 	int			maxrecs;
--	xfs_extlen_t		rval;
-+	unsigned long long	rval;
+-STATIC int
++int
+ xfs_inobt_insert_rec(
+ 	struct xfs_btree_cur	*cur,
+ 	uint16_t		holemask,
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index 7a26cf7..42b8c34 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -177,6 +177,9 @@ int xfs_ialloc_has_inode_record(struct xfs_btree_cur *cur, xfs_agino_t low,
+ 		xfs_agino_t high, bool *exists);
+ int xfs_ialloc_count_inodes(struct xfs_btree_cur *cur, xfs_agino_t *count,
+ 		xfs_agino_t *freecount);
++int xfs_inobt_insert_rec(struct xfs_btree_cur *cur, uint16_t holemask,
++		uint8_t count, int32_t freecount, xfs_inofree_t free,
++		int *stat);
  
- 	maxrecs = limits[0];
- 	for (level = 0, rval = 0; len > 1; level++) {
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 3c6b966..89da887 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -482,7 +482,7 @@ bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
- bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
- uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
- 				 unsigned long len);
--xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
-+unsigned long long xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
- 		unsigned long long len);
+ int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
  
- /* return codes */
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 317caba..2d2c3ea 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -584,3 +584,12 @@ xfs_finobt_calc_reserves(
- 	*used += tree_len;
- 	return 0;
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 728133f..dc3fbcb 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -88,7 +88,7 @@ xfs_refcount_lookup_ge(
  }
-+
-+/* Calculate the inobt btree size for some records. */
-+xfs_extlen_t
-+xfs_iallocbt_calc_size(
-+	struct xfs_mount	*mp,
-+	unsigned long long	len)
-+{
-+	return xfs_btree_calc_size(mp, mp->m_inobt_mnr, len);
-+}
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
-index aa81e2e..4acdd54 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.h
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
-@@ -74,5 +74,7 @@ int xfs_inobt_rec_check_count(struct xfs_mount *,
  
- int xfs_finobt_calc_reserves(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		xfs_extlen_t *ask, xfs_extlen_t *used);
-+extern xfs_extlen_t xfs_iallocbt_calc_size(struct xfs_mount *mp,
-+		unsigned long long len);
+ /* Convert on-disk record to in-core format. */
+-static inline void
++void
+ xfs_refcount_btrec_to_irec(
+ 	union xfs_btree_rec		*rec,
+ 	struct xfs_refcount_irec	*irec)
+@@ -148,7 +148,7 @@ xfs_refcount_update(
+  * by [bno, len, refcount].
+  * This either works (return 0) or gets an EFSCORRUPTED error.
+  */
+-STATIC int
++int
+ xfs_refcount_insert(
+ 	struct xfs_btree_cur		*cur,
+ 	struct xfs_refcount_irec	*irec,
+diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
+index 2a731ac..5856abb 100644
+--- a/fs/xfs/libxfs/xfs_refcount.h
++++ b/fs/xfs/libxfs/xfs_refcount.h
+@@ -85,5 +85,10 @@ static inline xfs_fileoff_t xfs_refcount_max_unmap(int log_res)
  
- #endif	/* __XFS_IALLOC_BTREE_H__ */
+ extern int xfs_refcount_has_record(struct xfs_btree_cur *cur,
+ 		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
++union xfs_btree_rec;
++extern void xfs_refcount_btrec_to_irec(union xfs_btree_rec *rec,
++		struct xfs_refcount_irec *irec);
++extern int xfs_refcount_insert(struct xfs_btree_cur *cur,
++		struct xfs_refcount_irec *irec, int *stat);
+ 
+ #endif	/* __XFS_REFCOUNT_H__ */
 
