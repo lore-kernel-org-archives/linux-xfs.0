@@ -1,89 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:35673 "EHLO
-        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753456AbdHYANz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2017 20:13:55 -0400
-Received: by mail-oi0-f47.google.com with SMTP id k77so9101602oib.2
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2017 17:13:55 -0700 (PDT)
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33085 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751120AbdHZX4N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 26 Aug 2017 19:56:13 -0400
+Received: by mail-wm0-f67.google.com with SMTP id e67so3431487wmd.0
+        for <linux-xfs@vger.kernel.org>; Sat, 26 Aug 2017 16:56:13 -0700 (PDT)
+Date: Sun, 27 Aug 2017 02:56:09 +0300
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [PATCH v6 3/5] mm: introduce mmap3 for safely defining new mmap
+ flags
+Message-ID: <20170826235609.xwdah3raqlqdp3xx@node.shutemov.name>
+References: <20170825130011.GA30072@infradead.org>
+ <20170825155803.4km7wttzadfqw2vb@node.shutemov.name>
+ <20170825160236.GA2561@infradead.org>
+ <20170825161607.6v6beg4zjktllt2z@node.shutemov.name>
+ <4de21e8d-5e10-ec40-c731-0c079953cf48@gmx.de>
+ <CAPcyv4jeZc8P+E0aHNChzy-wfNpOx3GehKck1nXqJ1b9JdydFA@mail.gmail.com>
+ <20170826074047.GA6292@ls3530.fritz.box>
+ <CAPcyv4ic0zxQzWEipZ=1LpDC8VnmphGzVSYmrFcjOAgX7esfUw@mail.gmail.com>
+ <35692b04-eb4f-740c-e35c-8ccbf69e0e97@gmx.de>
+ <CAPcyv4i0+3Smg9bfynKa150y7qvQ-WVRBHyCrK=R1b4oVj3URA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170824152207.30729-4-hch@lst.de>
-References: <20170824152207.30729-1-hch@lst.de> <20170824152207.30729-4-hch@lst.de>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 24 Aug 2017 17:13:54 -0700
-Message-ID: <CAPcyv4i0kNowtfDQpjJPU+o1xnsAskB+-O8cFzdLivdeoEEJkw@mail.gmail.com>
-Subject: Re: [PATCH 3/3] xfs: support for synchronous DAX faults
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4i0+3Smg9bfynKa150y7qvQ-WVRBHyCrK=R1b4oVj3URA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Helge Deller <deller@gmx.de>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-parisc@vger.kernel.org
 
-On Thu, Aug 24, 2017 at 8:22 AM, Christoph Hellwig <hch@lst.de> wrote:
-> Return IOMAP_F_NEEDDSYNC from xfs_file_iomap_begin() for a synchronous
-> write fault when inode is pinned, and has dirty fields other than the
-> timestamps.  In xfs_filemap_huge_fault() we then detect this case and
-> call dax_finish_sync_fault() to make sure all metadata is committed, and
-> to insert the page table entry.
->
-> Note that this will also dirty corresponding radix tree entry which is
-> what we want - fsync(2) will still provide data integrity guarantees for
-> applications not using userspace flushing. And applications using
-> userspace flushing can avoid calling fsync(2) and thus avoid the
-> performance overhead.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_file.c  | 6 +++++-
->  fs/xfs/xfs_iomap.c | 5 +++++
->  2 files changed, 10 insertions(+), 1 deletion(-)
->
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 460ca9639e66..5c3597b7dbf9 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1031,7 +1031,11 @@ __xfs_filemap_fault(
->
->         xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
->         if (IS_DAX(inode)) {
-> -               ret = dax_iomap_fault(vmf, pe_size, NULL, &xfs_iomap_ops);
-> +               pfn_t pfn;
-> +
-> +               ret = dax_iomap_fault(vmf, pe_size, &pfn, &xfs_iomap_ops);
-> +               if (ret & VM_FAULT_NEEDDSYNC)
-> +                       ret = dax_finish_sync_fault(vmf, pe_size, pfn);
->         } else {
->                 if (write_fault)
->                         ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 813394c62849..e7c762c8fe27 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -33,6 +33,7 @@
->  #include "xfs_error.h"
->  #include "xfs_trans.h"
->  #include "xfs_trans_space.h"
-> +#include "xfs_inode_item.h"
->  #include "xfs_iomap.h"
->  #include "xfs_trace.h"
->  #include "xfs_icache.h"
-> @@ -1085,6 +1086,10 @@ xfs_file_iomap_begin(
->                 trace_xfs_iomap_found(ip, offset, length, 0, &imap);
->         }
->
-> +       if ((flags & IOMAP_WRITE) && xfs_ipincount(ip) &&
-> +           (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
-> +               iomap->flags |= IOMAP_F_NEEDDSYNC;
-> +
+On Sat, Aug 26, 2017 at 03:46:22PM -0700, Dan Williams wrote:
+> On Sat, Aug 26, 2017 at 12:50 PM, Helge Deller <deller@gmx.de> wrote:
+> > On 26.08.2017 17:15, Dan Williams wrote:
+> [..]
+> >> I have not seen any patches for parisc pmem+dax enabling so it seems
+> >> too early to worry about these "last mile" enabling features of
+> >> MAP_DIRECT and MAP_SYNC. In particular parisc doesn't appear to have
+> >> ARCH_ENABLE_MEMORY_HOTPLUG, so as far as I can see it can't yet
+> >> support the ZONE_DEVICE scheme that is a pre-requisite for MAP_DIRECT.
+> >
+> > I see, but then it's probably best to not to define any MAP_DIRECT or
+> > MAP_SYNC at all in the headers of those arches which don't support
+> > pmem+dax (parisc, m68k, alpha, and probably quite some others).
+> > That way applications can detect at configure time if the platform
+> > supports that, and can leave out the functionality completely.
+> 
+> Yes, that's a good idea we can handle this similar to
+> CONFIG_MMAP_ALLOW_UNINITIALIZED. These patches will also modify
+> 'struct file_operations' so that do_mmap() can validate whether a flag
+> is supported on per architecture basis. Also the plan is to plumb the
+> flags passed to the syscall all the way down to the individual mmap
+> implementations. The ext4 and xfs ->mmap() operations will be able to
+> return -EOPNOTSUP based on runtime variables.
 
-So this behaves differently than ext4 that returns EOPNOTSUP in the !DAX case.
+BTW, we may be able to reuse the bit used for MAP_UNINITIALIZED -- it's
+only used on !MMU machines.
 
-Are we generally documenting MAP_SYNC to be ignored in the pagecache
-case? Or should we explicitly fail MAP_SYNC for the !DAX case on all
-filesystems?
-
-Another option is to finish block allocations at fault time in the
-pagecache+MAP_SYNC case, but still require fsync to writeback dirty
-pages, but that seems pointless.
-
-Whatever we do I think all implementations should agree.
+-- 
+ Kirill A. Shutemov
