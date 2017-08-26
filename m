@@ -1,179 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21971 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932398AbdHYV5P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 17:57:15 -0400
-Date: Fri, 25 Aug 2017 14:57:01 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH] xfs: Properly retry failed dquot items in case of
- error during buffer writeback
-Message-ID: <20170825215701.GT4796@magnolia>
-References: <20170825120752.22553-1-cmaiolino@redhat.com>
- <20170825170400.GS4796@magnolia>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:35641 "EHLO
+        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751121AbdHZWqY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 26 Aug 2017 18:46:24 -0400
+Received: by mail-oi0-f45.google.com with SMTP id k77so22384423oib.2
+        for <linux-xfs@vger.kernel.org>; Sat, 26 Aug 2017 15:46:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170825170400.GS4796@magnolia>
+In-Reply-To: <35692b04-eb4f-740c-e35c-8ccbf69e0e97@gmx.de>
+References: <150353211413.5039.5228914877418362329.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150353213097.5039.6729469069608762658.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170824165546.GA3121@infradead.org> <CAPcyv4iN0QpUSgOUvisnNQsiV1Pp=4dh7CwAV8FFj=_rFU=aug@mail.gmail.com>
+ <20170825130011.GA30072@infradead.org> <20170825155803.4km7wttzadfqw2vb@node.shutemov.name>
+ <20170825160236.GA2561@infradead.org> <20170825161607.6v6beg4zjktllt2z@node.shutemov.name>
+ <4de21e8d-5e10-ec40-c731-0c079953cf48@gmx.de> <CAPcyv4jeZc8P+E0aHNChzy-wfNpOx3GehKck1nXqJ1b9JdydFA@mail.gmail.com>
+ <20170826074047.GA6292@ls3530.fritz.box> <CAPcyv4ic0zxQzWEipZ=1LpDC8VnmphGzVSYmrFcjOAgX7esfUw@mail.gmail.com>
+ <35692b04-eb4f-740c-e35c-8ccbf69e0e97@gmx.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Sat, 26 Aug 2017 15:46:22 -0700
+Message-ID: <CAPcyv4i0+3Smg9bfynKa150y7qvQ-WVRBHyCrK=R1b4oVj3URA@mail.gmail.com>
+Subject: Re: [PATCH v6 3/5] mm: introduce mmap3 for safely defining new mmap flags
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Helge Deller <deller@gmx.de>
+Cc: "Kirill A. Shutemov" <kirill@shutemov.name>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux API <linux-api@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-parisc@vger.kernel.org
 
-On Fri, Aug 25, 2017 at 10:04:01AM -0700, Darrick J. Wong wrote:
-> On Fri, Aug 25, 2017 at 02:07:52PM +0200, Carlos Maiolino wrote:
-> > Hi,
-> > 
-> > Once the fix for inode item writeback errors is already queued
-> > (d3a304b62), I believe it's time to fix the same problem in dquot code.
-> > 
-> > Although there were no reports of users hitting this bug in dquot code
-> > (at least none I've seen), the bug is there and I was already planning
-> > to fix it when the correct approach to fix the inodes part was decided.
-> > 
-> > So, this is an RFC patch to fix the same problem in dquot code,
-> > regarding failed buffers being unable to be resubmitted once they are
-> > flush locked.
-> > 
-> > The semantics are quite similar to inode items path, although during
-> > xfs_qm_dqflush_done(), I'm not sure if the changes I made are correct.
-> > 
-> > Comments much appreciated :)
-> > 
-> > 
-> > BTW, This patch should be applied only over branch xfs-4.14-merge, it requires
-> > my previous patches, which are not in the master branch yet.
-> 
-> Looks ok, but is there an xfstests case to cover this?
+On Sat, Aug 26, 2017 at 12:50 PM, Helge Deller <deller@gmx.de> wrote:
+> On 26.08.2017 17:15, Dan Williams wrote:
+[..]
+>> I have not seen any patches for parisc pmem+dax enabling so it seems
+>> too early to worry about these "last mile" enabling features of
+>> MAP_DIRECT and MAP_SYNC. In particular parisc doesn't appear to have
+>> ARCH_ENABLE_MEMORY_HOTPLUG, so as far as I can see it can't yet
+>> support the ZONE_DEVICE scheme that is a pre-requisite for MAP_DIRECT.
+>
+> I see, but then it's probably best to not to define any MAP_DIRECT or
+> MAP_SYNC at all in the headers of those arches which don't support
+> pmem+dax (parisc, m68k, alpha, and probably quite some others).
+> That way applications can detect at configure time if the platform
+> supports that, and can leave out the functionality completely.
 
-Then I tried compiling it, which broke, and then I went digging more than
-I would've for an RFC:
-
-> --D
-> 
-> > 
-> > Cheers.
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> >  fs/xfs/xfs_dquot.c      | 11 ++++++++---
-> >  fs/xfs/xfs_dquot_item.c | 37 +++++++++++++++++++++++++++++++++++--
-> >  2 files changed, 43 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> > index fd2ef8c2c9a7..8198c20212a2 100644
-> > --- a/fs/xfs/xfs_dquot.c
-> > +++ b/fs/xfs/xfs_dquot.c
-> > @@ -987,14 +987,19 @@ xfs_qm_dqflush_done(
-> >  	 * holding the lock before removing the dquot from the AIL.
-> >  	 */
-> >  	if ((lip->li_flags & XFS_LI_IN_AIL) &&
-> > -	    lip->li_lsn == qip->qli_flush_lsn) {
-> > +	   (lip->li_lsn == qip->qli_flush_lsn) ||
-> > +	    lip->li_flags & XFS_LI_FAILED) {
-
-...come to think of it, shouldn't there be a couple extra pairs of parentheses
-in this somewhere?...
-
-> >  
-> >  		/* xfs_trans_ail_delete() drops the AIL lock. */
-> >  		spin_lock(&ailp->xa_lock);
-> > -		if (lip->li_lsn == qip->qli_flush_lsn)
-> > +		if (lip->li_lsn == qip->qli_flush_lsn) {
-> >  			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
-> > -		else
-> > +		} else if (lip->li_flags & XFS_LI_FAILED) {
-> > +			xfs_clear_li_failed(lip);
-> >  			spin_unlock(&ailp->xa_lock);
-> > +		} else {
-> > +			spin_unlock(&ailp->xa_lock);
-> > +		}
-> >  	}
-> >  
-> >  	/*
-> > diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-> > index 2c7a1629e064..35fd6d71bc42 100644
-> > --- a/fs/xfs/xfs_dquot_item.c
-> > +++ b/fs/xfs/xfs_dquot_item.c
-> > @@ -137,6 +137,23 @@ xfs_qm_dqunpin_wait(
-> >  	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
-> >  }
-> >  
-> > +/*
-> > + * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
-> > + * have been failed during writeback
-> > + *
-> > + * this informs the AIL that the dquot is already flush locked on the next push,
-> > + * and acquires a hold on the buffer to ensure that it isn't reclaimed before
-> > + * dirty data makes it to disk.
-> > + */
-> > +STATIC void
-> > +xfs_dquot_item_error(
-> > +	struct xfs_log_item	*lip,
-> > +	struct xfs_buf		*bp)
-> > +{
-> > +	ASSERT(XFS_DQ_IS_LOCKED(DQUOT_ITEM(lip)->qli_item));
-
-...and isn't this qli_dquot, not qli_item?
-
-(Does this compile at all?)
-
---D
-
-> > +	xfs_set_li_failed(lip, bp);
-> > +}
-> > +
-> >  STATIC uint
-> >  xfs_qm_dquot_logitem_push(
-> >  	struct xfs_log_item	*lip,
-> > @@ -144,13 +161,28 @@ xfs_qm_dquot_logitem_push(
-> >  					      __acquires(&lip->li_ailp->xa_lock)
-> >  {
-> >  	struct xfs_dquot	*dqp = DQUOT_ITEM(lip)->qli_dquot;
-> > -	struct xfs_buf		*bp = NULL;
-> > +	struct xfs_buf		*bp = lip->li_buf;
-> >  	uint			rval = XFS_ITEM_SUCCESS;
-> >  	int			error;
-> >  
-> >  	if (atomic_read(&dqp->q_pincount) > 0)
-> >  		return XFS_ITEM_PINNED;
-> >  
-> > +	/*
-> > +	 * The buffer containing this item failed to be written back
-> > +	 * previously. Resubmit the buffer for IO
-> > +	 */
-> > +	if (lip->li_flags & XFS_LI_FAILED) {
-> > +		if (!xfs_buf_trylock(bp))
-> > +			return XFS_ITEM_LOCKED;
-> > +
-> > +		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
-> > +			rval = XFS_ITEM_FLUSHING;
-> > +
-> > +		xfs_buf_unlock(bp);
-> > +		return rval;
-> > +	}
-> > +
-> >  	if (!xfs_dqlock_nowait(dqp))
-> >  		return XFS_ITEM_LOCKED;
-> >  
-> > @@ -242,7 +274,8 @@ static const struct xfs_item_ops xfs_dquot_item_ops = {
-> >  	.iop_unlock	= xfs_qm_dquot_logitem_unlock,
-> >  	.iop_committed	= xfs_qm_dquot_logitem_committed,
-> >  	.iop_push	= xfs_qm_dquot_logitem_push,
-> > -	.iop_committing = xfs_qm_dquot_logitem_committing
-> > +	.iop_committing = xfs_qm_dquot_logitem_committing,
-> > +	.iop_error	= xfs_dquot_item_error
-> >  };
-> >  
-> >  /*
-> > -- 
-> > 2.13.5
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes, that's a good idea we can handle this similar to
+CONFIG_MMAP_ALLOW_UNINITIALIZED. These patches will also modify
+'struct file_operations' so that do_mmap() can validate whether a flag
+is supported on per architecture basis. Also the plan is to plumb the
+flags passed to the syscall all the way down to the individual mmap
+implementations. The ext4 and xfs ->mmap() operations will be able to
+return -EOPNOTSUP based on runtime variables.
