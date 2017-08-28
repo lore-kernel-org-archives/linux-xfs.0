@@ -1,421 +1,261 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34324 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751192AbdH1Q2l (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 12:28:41 -0400
-Date: Mon, 28 Aug 2017 09:28:27 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:35741 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751232AbdH1RDu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 13:03:50 -0400
+Date: Mon, 28 Aug 2017 10:03:40 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 1/2] fs, xfs: perform dax_device lookup at mount
-Message-ID: <20170828162827.GA4757@magnolia>
-References: <150389211501.25151.6477753201827914462.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150389212075.25151.17146973298430877023.stgit@dwillia2-desk3.amr.corp.intel.com>
+Subject: Re: [PATCH 2/2] xfs: consolidate the various page fault handlers
+Message-ID: <20170828170340.GC4757@magnolia>
+References: <20170828063659.21045-1-hch@lst.de>
+ <20170828063659.21045-3-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150389212075.25151.17146973298430877023.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <20170828063659.21045-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, hch@lst.de
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, jack@suse.cz
 
-On Sun, Aug 27, 2017 at 08:48:40PM -0700, Dan Williams wrote:
-> The ->iomap_begin() operation is a hot path, so cache the
-> fs_dax_get_by_host() result at mount time to avoid the incurring the
-> hash lookup overhead on a per-i/o basis.
+On Mon, Aug 28, 2017 at 08:36:59AM +0200, Christoph Hellwig wrote:
+> Add a new __xfs_filemap_fault helper that implements all four page fault
+> callouts, and make these methods themselves small stubs that set the
+> correct write_fault flag, and exit early for the non-DAX case for the
+> hugepage related ones.
 > 
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Reported-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> Also remove the extra size checking in the pfn_fault path, which is now
+> handled in the core DAX code.
+> 
+> Life would be so much simpler if we only had one method for all this.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Looks good,
+Looks ok, will test....
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+--D
+
 > ---
->  drivers/dax/super.c |   10 ++++++++++
->  fs/super.c          |   26 +++++++++++++++++++++++---
->  fs/xfs/xfs_aops.c   |   13 +++++++++++++
->  fs/xfs/xfs_aops.h   |    1 +
->  fs/xfs/xfs_buf.c    |    4 +++-
->  fs/xfs/xfs_buf.h    |    3 ++-
->  fs/xfs/xfs_iomap.c  |   10 +---------
->  fs/xfs/xfs_super.c  |   21 +++++++++++++++++----
->  include/linux/dax.h |    6 ++++++
->  include/linux/fs.h  |    1 +
->  10 files changed, 77 insertions(+), 18 deletions(-)
+>  fs/xfs/xfs_file.c  | 127 ++++++++++++++++-------------------------------------
+>  fs/xfs/xfs_trace.h |  29 ++++++++++--
+>  2 files changed, 62 insertions(+), 94 deletions(-)
 > 
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index 938eb4868f7f..b699aac268a6 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -46,6 +46,8 @@ void dax_read_unlock(int id)
->  EXPORT_SYMBOL_GPL(dax_read_unlock);
->  
->  #ifdef CONFIG_BLOCK
-> +#include <linux/blkdev.h>
-> +
->  int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
->  		pgoff_t *pgoff)
->  {
-> @@ -59,6 +61,14 @@ int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
->  }
->  EXPORT_SYMBOL(bdev_dax_pgoff);
->  
-> +struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
-> +{
-> +	if (!blk_queue_dax(bdev->bd_queue))
-> +		return NULL;
-> +	return fs_dax_get_by_host(bdev->bd_disk->disk_name);
-> +}
-> +EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
-> +
->  /**
->   * __bdev_dax_supported() - Check if the device supports dax for filesystem
->   * @sb: The superblock of the device
-> diff --git a/fs/super.c b/fs/super.c
-> index 6bc3352adcf3..671889b02bed 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -23,6 +23,7 @@
->  #include <linux/export.h>
->  #include <linux/slab.h>
->  #include <linux/blkdev.h>
-> +#include <linux/dax.h>
->  #include <linux/mount.h>
->  #include <linux/security.h>
->  #include <linux/writeback.h>		/* for the emergency remount stuff */
-> @@ -1048,9 +1049,17 @@ struct dentry *mount_ns(struct file_system_type *fs_type,
->  EXPORT_SYMBOL(mount_ns);
->  
->  #ifdef CONFIG_BLOCK
-> +struct sget_devs {
-> +	struct block_device *bdev;
-> +	struct dax_device *dax_dev;
-> +};
-> +
->  static int set_bdev_super(struct super_block *s, void *data)
->  {
-> -	s->s_bdev = data;
-> +	struct sget_devs *devs = data;
-> +
-> +	s->s_bdev = devs->bdev;
-> +	s->s_daxdev = devs->dax_dev;
->  	s->s_dev = s->s_bdev->bd_dev;
->  	s->s_bdi = bdi_get(s->s_bdev->bd_bdi);
->  
-> @@ -1059,14 +1068,18 @@ static int set_bdev_super(struct super_block *s, void *data)
->  
->  static int test_bdev_super(struct super_block *s, void *data)
->  {
-> -	return (void *)s->s_bdev == data;
-> +	struct sget_devs *devs = data;
-> +
-> +	return s->s_bdev == devs->bdev;
->  }
->  
->  struct dentry *mount_bdev(struct file_system_type *fs_type,
->  	int flags, const char *dev_name, void *data,
->  	int (*fill_super)(struct super_block *, void *, int))
->  {
-> +	struct sget_devs devs;
->  	struct block_device *bdev;
-> +	struct dax_device *dax_dev;
->  	struct super_block *s;
->  	fmode_t mode = FMODE_READ | FMODE_EXCL;
->  	int error = 0;
-> @@ -1077,6 +1090,7 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
->  	bdev = blkdev_get_by_path(dev_name, mode, fs_type);
->  	if (IS_ERR(bdev))
->  		return ERR_CAST(bdev);
-> +	dax_dev = fs_dax_get_by_bdev(bdev);
->  
->  	/*
->  	 * once the super is inserted into the list by sget, s_umount
-> @@ -1089,8 +1103,10 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
->  		error = -EBUSY;
->  		goto error_bdev;
->  	}
-> +	devs.bdev = bdev;
-> +	devs.dax_dev = dax_dev;
->  	s = sget(fs_type, test_bdev_super, set_bdev_super, flags | MS_NOSEC,
-> -		 bdev);
-> +		 &devs);
->  	mutex_unlock(&bdev->bd_fsfreeze_mutex);
->  	if (IS_ERR(s))
->  		goto error_s;
-> @@ -1111,6 +1127,7 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
->  		 */
->  		up_write(&s->s_umount);
->  		blkdev_put(bdev, mode);
-> +		fs_put_dax(dax_dev);
->  		down_write(&s->s_umount);
->  	} else {
->  		s->s_mode = mode;
-> @@ -1132,6 +1149,7 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
->  	error = PTR_ERR(s);
->  error_bdev:
->  	blkdev_put(bdev, mode);
-> +	fs_put_dax(dax_dev);
->  error:
->  	return ERR_PTR(error);
->  }
-> @@ -1140,6 +1158,7 @@ EXPORT_SYMBOL(mount_bdev);
->  void kill_block_super(struct super_block *sb)
->  {
->  	struct block_device *bdev = sb->s_bdev;
-> +	struct dax_device *dax_dev = sb->s_daxdev;
->  	fmode_t mode = sb->s_mode;
->  
->  	bdev->bd_super = NULL;
-> @@ -1147,6 +1166,7 @@ void kill_block_super(struct super_block *sb)
->  	sync_blockdev(bdev);
->  	WARN_ON_ONCE(!(mode & FMODE_EXCL));
->  	blkdev_put(bdev, mode | FMODE_EXCL);
-> +	fs_put_dax(dax_dev);
->  }
->  
->  EXPORT_SYMBOL(kill_block_super);
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 6bf120bb1a17..78185f3b10b2 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -80,6 +80,19 @@ xfs_find_bdev_for_inode(
->  		return mp->m_ddev_targp->bt_bdev;
->  }
->  
-> +struct dax_device *
-> +xfs_find_daxdev_for_inode(
-> +	struct inode		*inode)
-> +{
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +
-> +	if (XFS_IS_REALTIME_INODE(ip))
-> +		return mp->m_rtdev_targp->bt_daxdev;
-> +	else
-> +		return mp->m_ddev_targp->bt_daxdev;
-> +}
-> +
->  /*
->   * We're now finished for good with this page.  Update the page state via the
->   * associated buffer_heads, paying attention to the start and end offsets that
-> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-> index cc174ec6c2fd..88c85ea63da0 100644
-> --- a/fs/xfs/xfs_aops.h
-> +++ b/fs/xfs/xfs_aops.h
-> @@ -59,5 +59,6 @@ int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
->  
->  extern void xfs_count_page_state(struct page *, int *, int *);
->  extern struct block_device *xfs_find_bdev_for_inode(struct inode *);
-> +extern struct dax_device *xfs_find_daxdev_for_inode(struct inode *);
->  
->  #endif /* __XFS_AOPS_H__ */
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 72f038492ba8..6deb86c845d1 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1802,7 +1802,8 @@ xfs_setsize_buftarg_early(
->  xfs_buftarg_t *
->  xfs_alloc_buftarg(
->  	struct xfs_mount	*mp,
-> -	struct block_device	*bdev)
-> +	struct block_device	*bdev,
-> +	struct dax_device	*dax_dev)
->  {
->  	xfs_buftarg_t		*btp;
->  
-> @@ -1811,6 +1812,7 @@ xfs_alloc_buftarg(
->  	btp->bt_mount = mp;
->  	btp->bt_dev =  bdev->bd_dev;
->  	btp->bt_bdev = bdev;
-> +	btp->bt_daxdev = dax_dev;
->  
->  	if (xfs_setsize_buftarg_early(btp, bdev))
->  		goto error;
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 20721261dae5..bf71507ddb16 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -108,6 +108,7 @@ typedef unsigned int xfs_buf_flags_t;
->  typedef struct xfs_buftarg {
->  	dev_t			bt_dev;
->  	struct block_device	*bt_bdev;
-> +	struct dax_device	*bt_daxdev;
->  	struct xfs_mount	*bt_mount;
->  	unsigned int		bt_meta_sectorsize;
->  	size_t			bt_meta_sectormask;
-> @@ -385,7 +386,7 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
->   *	Handling of buftargs.
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 8b0181c6d2a6..d2b53fefa6a5 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1011,129 +1011,76 @@ xfs_file_llseek(
+>   *       page_lock (MM)
+>   *         i_lock (XFS - extent map serialisation)
 >   */
->  extern xfs_buftarg_t *xfs_alloc_buftarg(struct xfs_mount *,
-> -			struct block_device *);
-> +			struct block_device *, struct dax_device *);
->  extern void xfs_free_buftarg(struct xfs_mount *, struct xfs_buftarg *);
->  extern void xfs_wait_buftarg(xfs_buftarg_t *);
->  extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 813394c62849..7c934e407332 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -69,6 +69,7 @@ xfs_bmbt_to_iomap(
->  	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
->  	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
->  	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
-> +	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
->  }
->  
->  xfs_extlen_t
-> @@ -976,7 +977,6 @@ xfs_file_iomap_begin(
->  	int			nimaps = 1, error = 0;
->  	bool			shared = false, trimmed = false;
->  	unsigned		lockmode;
-> -	struct block_device	*bdev;
->  
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
-> @@ -1087,13 +1087,6 @@ xfs_file_iomap_begin(
->  
->  	xfs_bmbt_to_iomap(ip, iomap, &imap);
->  
-> -	/* optionally associate a dax device with the iomap bdev */
-> -	bdev = iomap->bdev;
-> -	if (blk_queue_dax(bdev->bd_queue))
-> -		iomap->dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
-> -	else
-> -		iomap->dax_dev = NULL;
 > -
->  	if (shared)
->  		iomap->flags |= IOMAP_F_SHARED;
->  	return 0;
-> @@ -1171,7 +1164,6 @@ xfs_file_iomap_end(
->  	unsigned		flags,
->  	struct iomap		*iomap)
+> -/*
+> - * mmap()d file has taken write protection fault and is being made writable. We
+> - * can set the page state up correctly for a writable page, which means we can
+> - * do correct delalloc accounting (ENOSPC checking!) and unwritten extent
+> - * mapping.
+> - */
+> -STATIC int
+> -xfs_filemap_page_mkwrite(
+> -	struct vm_fault		*vmf)
+> +static int
+> +__xfs_filemap_fault(
+> +	struct vm_fault		*vmf,
+> +	enum page_entry_size	pe_size,
+> +	bool			write_fault)
 >  {
-> -	fs_put_dax(iomap->dax_dev);
->  	if ((flags & IOMAP_WRITE) && iomap->type == IOMAP_DELALLOC)
->  		return xfs_file_iomap_end_delalloc(XFS_I(inode), offset,
->  				length, written, iomap);
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 38aaacdbb8b3..d863f96b16e2 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -716,13 +716,19 @@ xfs_close_devices(
->  {
->  	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
->  		struct block_device *logdev = mp->m_logdev_targp->bt_bdev;
-> +		struct dax_device *dax_logdev = mp->m_logdev_targp->bt_daxdev;
-> +
->  		xfs_free_buftarg(mp, mp->m_logdev_targp);
->  		xfs_blkdev_put(logdev);
-> +		fs_put_dax(dax_logdev);
->  	}
->  	if (mp->m_rtdev_targp) {
->  		struct block_device *rtdev = mp->m_rtdev_targp->bt_bdev;
-> +		struct dax_device *dax_rtdev = mp->m_rtdev_targp->bt_daxdev;
-> +
->  		xfs_free_buftarg(mp, mp->m_rtdev_targp);
->  		xfs_blkdev_put(rtdev);
-> +		fs_put_dax(dax_rtdev);
->  	}
->  	xfs_free_buftarg(mp, mp->m_ddev_targp);
->  }
-> @@ -742,7 +748,9 @@ xfs_open_devices(
->  	struct xfs_mount	*mp)
->  {
->  	struct block_device	*ddev = mp->m_super->s_bdev;
-> +	struct dax_device	*dax_ddev = mp->m_super->s_daxdev;
->  	struct block_device	*logdev = NULL, *rtdev = NULL;
-> +	struct dax_device	*dax_logdev = NULL, *dax_rtdev = NULL;
->  	int			error;
+>  	struct inode		*inode = file_inode(vmf->vma->vm_file);
+> +	struct xfs_inode	*ip = XFS_I(inode);
+>  	int			ret;
 >  
->  	/*
-> @@ -752,6 +760,7 @@ xfs_open_devices(
->  		error = xfs_blkdev_get(mp, mp->m_logname, &logdev);
->  		if (error)
->  			goto out;
-> +		dax_logdev = fs_dax_get_by_bdev(logdev);
->  	}
+> -	trace_xfs_filemap_page_mkwrite(XFS_I(inode));
+> +	trace_xfs_filemap_fault(ip, pe_size, write_fault);
 >  
->  	if (mp->m_rtname) {
-> @@ -765,24 +774,25 @@ xfs_open_devices(
->  			error = -EINVAL;
->  			goto out_close_rtdev;
->  		}
-> +		dax_rtdev = fs_dax_get_by_bdev(rtdev);
->  	}
->  
->  	/*
->  	 * Setup xfs_mount buffer target pointers
->  	 */
->  	error = -ENOMEM;
-> -	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev);
-> +	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev, dax_ddev);
->  	if (!mp->m_ddev_targp)
->  		goto out_close_rtdev;
->  
->  	if (rtdev) {
-> -		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev);
-> +		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev, dax_rtdev);
->  		if (!mp->m_rtdev_targp)
->  			goto out_free_ddev_targ;
->  	}
->  
->  	if (logdev && logdev != ddev) {
-> -		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev);
-> +		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev, dax_logdev);
->  		if (!mp->m_logdev_targp)
->  			goto out_free_rtdev_targ;
->  	} else {
-> @@ -798,9 +808,12 @@ xfs_open_devices(
->  	xfs_free_buftarg(mp, mp->m_ddev_targp);
->   out_close_rtdev:
->  	xfs_blkdev_put(rtdev);
-> +	fs_put_dax(dax_rtdev);
->   out_close_logdev:
-> -	if (logdev && logdev != ddev)
-> +	if (logdev && logdev != ddev) {
->  		xfs_blkdev_put(logdev);
-> +		fs_put_dax(dax_logdev);
+> -	sb_start_pagefault(inode->i_sb);
+> -	file_update_time(vmf->vma->vm_file);
+> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> +	if (write_fault) {
+> +		sb_start_pagefault(inode->i_sb);
+> +		file_update_time(vmf->vma->vm_file);
 > +	}
->   out:
->  	return error;
->  }
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index df97b7af7e2c..6e32be3badec 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -57,6 +57,7 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
->  	put_dax(dax_dev);
+>  
+> +	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+>  	if (IS_DAX(inode)) {
+> -		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
+> +		ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
+>  	} else {
+> -		ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
+> +		if (write_fault)
+> +			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
+> +		else
+> +			ret = filemap_fault(vmf);
+>  	}
+> -
+>  	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -	sb_end_pagefault(inode->i_sb);
+>  
+> +	if (write_fault)
+> +		sb_end_pagefault(inode->i_sb);
+>  	return ret;
 >  }
 >  
-> +struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
->  #else
->  static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
+> -STATIC int
+> +static int
+>  xfs_filemap_fault(
+>  	struct vm_fault		*vmf)
 >  {
-> @@ -71,6 +72,11 @@ static inline struct dax_device *fs_dax_get_by_host(const char *host)
->  static inline void fs_put_dax(struct dax_device *dax_dev)
->  {
+> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
+> -	int			ret;
+> -
+> -	trace_xfs_filemap_fault(XFS_I(inode));
+> -
+>  	/* DAX can shortcut the normal fault path on write faults! */
+> -	if ((vmf->flags & FAULT_FLAG_WRITE) && IS_DAX(inode))
+> -		return xfs_filemap_page_mkwrite(vmf);
+> -
+> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -	if (IS_DAX(inode))
+> -		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
+> -	else
+> -		ret = filemap_fault(vmf);
+> -	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -
+> -	return ret;
+> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
+> +			IS_DAX(file_inode(vmf->vma->vm_file)) &&
+> +			(vmf->flags & FAULT_FLAG_WRITE));
 >  }
-> +
-> +struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
-> +{
-> +	return NULL;
+>  
+> -/*
+> - * Similar to xfs_filemap_fault(), the DAX fault path can call into here on
+> - * both read and write faults. Hence we need to handle both cases. There is no
+> - * ->huge_mkwrite callout for huge pages, so we have a single function here to
+> - * handle both cases here. @flags carries the information on the type of fault
+> - * occuring.
+> - */
+> -STATIC int
+> +static int
+>  xfs_filemap_huge_fault(
+>  	struct vm_fault		*vmf,
+>  	enum page_entry_size	pe_size)
+>  {
+> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
+> -	struct xfs_inode	*ip = XFS_I(inode);
+> -	int			ret;
+> -
+> -	if (!IS_DAX(inode))
+> +	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
+>  		return VM_FAULT_FALLBACK;
+>  
+> -	trace_xfs_filemap_huge_fault(ip);
+> -
+> -	if (vmf->flags & FAULT_FLAG_WRITE) {
+> -		sb_start_pagefault(inode->i_sb);
+> -		file_update_time(vmf->vma->vm_file);
+> -	}
+> -
+> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -	ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
+> -	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -
+> -	if (vmf->flags & FAULT_FLAG_WRITE)
+> -		sb_end_pagefault(inode->i_sb);
+> +	/* DAX can shortcut the normal fault path on write faults! */
+> +	return __xfs_filemap_fault(vmf, pe_size,
+> +			(vmf->flags & FAULT_FLAG_WRITE));
 > +}
->  #endif
 >  
->  int dax_read_lock(void);
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 6e1fd5d21248..d0e3234a1fae 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1334,6 +1334,7 @@ struct super_block {
->  	struct hlist_bl_head	s_anon;		/* anonymous dentries for (nfs) exporting */
->  	struct list_head	s_mounts;	/* list of mounts; _not_ for fs use */
->  	struct block_device	*s_bdev;
-> +	struct dax_device	*s_daxdev;
->  	struct backing_dev_info *s_bdi;
->  	struct mtd_info		*s_mtd;
->  	struct hlist_node	s_instances;
+> -	return ret;
+> +static int
+> +xfs_filemap_page_mkwrite(
+> +	struct vm_fault		*vmf)
+> +{
+> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
+>  }
+>  
+> -/*
+> - * pfn_mkwrite was originally inteneded to ensure we capture time stamp
+> - * updates on write faults. In reality, it's need to serialise against
+> - * truncate similar to page_mkwrite. Hence we cycle the XFS_MMAPLOCK_SHARED
+> - * to ensure we serialise the fault barrier in place.
+> - */
+>  static int
+>  xfs_filemap_pfn_mkwrite(
+>  	struct vm_fault		*vmf)
+>  {
+> -
+> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
+> -	struct xfs_inode	*ip = XFS_I(inode);
+> -	int			ret = VM_FAULT_NOPAGE;
+> -	loff_t			size;
+> -
+> -	trace_xfs_filemap_pfn_mkwrite(ip);
+> -
+> -	sb_start_pagefault(inode->i_sb);
+> -	file_update_time(vmf->vma->vm_file);
+> -
+> -	/* check if the faulting page hasn't raced with truncate */
+> -	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
+> -	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
+> -	if (vmf->pgoff >= size)
+> -		ret = VM_FAULT_SIGBUS;
+> -	else if (IS_DAX(inode))
+> -		ret = dax_pfn_mkwrite(vmf);
+> -	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
+> -	sb_end_pagefault(inode->i_sb);
+> -	return ret;
+> -
+> +	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
+> +		return VM_FAULT_NOPAGE;
+> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
+>  }
+>  
+>  static const struct vm_operations_struct xfs_file_vm_ops = {
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index bcc3cdf8e1c5..78626f77fe3e 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -689,10 +689,31 @@ DEFINE_INODE_EVENT(xfs_inode_set_cowblocks_tag);
+>  DEFINE_INODE_EVENT(xfs_inode_clear_cowblocks_tag);
+>  DEFINE_INODE_EVENT(xfs_inode_free_cowblocks_invalid);
+>  
+> -DEFINE_INODE_EVENT(xfs_filemap_fault);
+> -DEFINE_INODE_EVENT(xfs_filemap_huge_fault);
+> -DEFINE_INODE_EVENT(xfs_filemap_page_mkwrite);
+> -DEFINE_INODE_EVENT(xfs_filemap_pfn_mkwrite);
+> +TRACE_EVENT(xfs_filemap_fault,
+> +	TP_PROTO(struct xfs_inode *ip, enum page_entry_size pe_size,
+> +		 bool write_fault),
+> +	TP_ARGS(ip, pe_size, write_fault),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(xfs_ino_t, ino)
+> +		__field(enum page_entry_size, pe_size)
+> +		__field(bool, write_fault)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+> +		__entry->ino = ip->i_ino;
+> +		__entry->pe_size = pe_size;
+> +		__entry->write_fault = write_fault;
+> +	),
+> +	TP_printk("dev %d:%d ino 0x%llx %s write_fault %d",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __entry->ino,
+> +		  __print_symbolic(__entry->pe_size,
+> +			{ PE_SIZE_PTE,	"PTE" },
+> +			{ PE_SIZE_PMD,	"PMD" },
+> +			{ PE_SIZE_PUD,	"PUD" }),
+> +		  __entry->write_fault)
+> +)
+>  
+>  DECLARE_EVENT_CLASS(xfs_iref_class,
+>  	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
+> -- 
+> 2.11.0
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
