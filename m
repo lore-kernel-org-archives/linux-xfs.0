@@ -1,681 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52112 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750767AbdH1HpN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 03:45:13 -0400
-Received: from [46.125.249.11] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dmEjQ-0003Rf-Bk
-        for linux-xfs@vger.kernel.org; Mon, 28 Aug 2017 07:45:12 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/3] xfs: remove the ip argument to xfs_defer_finish
-Date: Mon, 28 Aug 2017 09:44:58 +0200
-Message-Id: <20170828074458.23786-4-hch@lst.de>
-In-Reply-To: <20170828074458.23786-1-hch@lst.de>
-References: <20170828074458.23786-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:34637 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751677AbdH1I12 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 28 Aug 2017 04:27:28 -0400
+Date: Mon, 28 Aug 2017 10:27:24 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v2 2/2] ext2, ext4: use the super_block dax_device
+Message-ID: <20170828082724.GA12609@quack2.suse.cz>
+References: <150389211501.25151.6477753201827914462.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150389212595.25151.10721705529768874001.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <150389212595.25151.10721705529768874001.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.com>, jack@suse.cz, linux-ext4@vger.kernel.org, hch@lst.de
 
-And instead require callers to explicitly join the inode using
-xfs_defer_ijoin.  Also consolidate the defer error handling in
-a few places using a goto label.
+On Sun 27-08-17 20:48:46, Dan Williams wrote:
+> The ->iomap_begin() operation is a hot path, and now that mount_bdev()
+> arranges for the dax_device to be populated in the super_block, we can
+> just reference that attribute directly rather than perform a new lookup.
+> 
+> Cc: Jan Kara <jack@suse.com>
+> Cc: "Theodore Ts'o" <tytso@mit.edu>
+> Cc: Andreas Dilger <adilger.kernel@dilger.ca>
+> Reported-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_attr.c        | 140 +++++++++++++++++++++-------------------
- fs/xfs/libxfs/xfs_attr_remote.c |  35 +++++-----
- fs/xfs/libxfs/xfs_bmap.c        |   4 +-
- fs/xfs/libxfs/xfs_defer.c       |   8 +--
- fs/xfs/libxfs/xfs_defer.h       |   3 +-
- fs/xfs/libxfs/xfs_refcount.c    |   2 +-
- fs/xfs/xfs_bmap_item.c          |   2 +-
- fs/xfs/xfs_bmap_util.c          |  10 +--
- fs/xfs/xfs_dquot.c              |   2 +-
- fs/xfs/xfs_inode.c              |  13 ++--
- fs/xfs/xfs_iomap.c              |   6 +-
- fs/xfs/xfs_refcount_item.c      |   2 +-
- fs/xfs/xfs_reflink.c            |  11 ++--
- fs/xfs/xfs_rtalloc.c            |   2 +-
- fs/xfs/xfs_symlink.c            |   5 +-
- 15 files changed, 129 insertions(+), 116 deletions(-)
+Looks good. You can add:
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index bafa0f6bfafa..6249c92671de 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -328,13 +328,12 @@ xfs_attr_set(
- 		 */
- 		xfs_defer_init(args.dfops, args.firstblock);
- 		error = xfs_attr_shortform_to_leaf(&args);
--		if (!error)
--			error = xfs_defer_finish(&args.trans, args.dfops, dp);
--		if (error) {
--			args.trans = NULL;
--			xfs_defer_cancel(&dfops);
--			goto out;
--		}
-+		if (error)
-+			goto out_defer_cancel;
-+		xfs_defer_ijoin(args.dfops, dp);
-+		error = xfs_defer_finish(&args.trans, args.dfops);
-+		if (error)
-+			goto out_defer_cancel;
- 
- 		/*
- 		 * Commit the leaf transformation.  We'll need another (linked)
-@@ -373,6 +372,9 @@ xfs_attr_set(
- 
- 	return error;
- 
-+out_defer_cancel:
-+	xfs_defer_cancel(&dfops);
-+	args.trans = NULL;
- out:
- 	if (args.trans)
- 		xfs_trans_cancel(args.trans);
-@@ -593,13 +595,12 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
- 		 */
- 		xfs_defer_init(args->dfops, args->firstblock);
- 		error = xfs_attr3_leaf_to_node(args);
--		if (!error)
--			error = xfs_defer_finish(&args->trans, args->dfops, dp);
--		if (error) {
--			args->trans = NULL;
--			xfs_defer_cancel(args->dfops);
--			return error;
--		}
-+		if (error)
-+			goto out_defer_cancel;
-+		xfs_defer_ijoin(args->dfops, dp);
-+		error = xfs_defer_finish(&args->trans, args->dfops);
-+		if (error)
-+			goto out_defer_cancel;
- 
- 		/*
- 		 * Commit the current trans (including the inode) and start
-@@ -684,14 +685,12 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
- 			xfs_defer_init(args->dfops, args->firstblock);
- 			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
- 			/* bp is gone due to xfs_da_shrink_inode */
--			if (!error)
--				error = xfs_defer_finish(&args->trans,
--							args->dfops, dp);
--			if (error) {
--				args->trans = NULL;
--				xfs_defer_cancel(args->dfops);
--				return error;
--			}
-+			if (error)
-+				goto out_defer_cancel;
-+			xfs_defer_ijoin(args->dfops, dp);
-+			error = xfs_defer_finish(&args->trans, args->dfops);
-+			if (error)
-+				goto out_defer_cancel;
- 		}
- 
- 		/*
-@@ -706,6 +705,10 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
- 		error = xfs_attr3_leaf_clearflag(args);
- 	}
- 	return error;
-+out_defer_cancel:
-+	xfs_defer_cancel(args->dfops);
-+	args->trans = NULL;
-+	return error;
- }
- 
- /*
-@@ -747,15 +750,18 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
- 		xfs_defer_init(args->dfops, args->firstblock);
- 		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
- 		/* bp is gone due to xfs_da_shrink_inode */
--		if (!error)
--			error = xfs_defer_finish(&args->trans, args->dfops, dp);
--		if (error) {
--			args->trans = NULL;
--			xfs_defer_cancel(args->dfops);
--			return error;
--		}
-+		if (error)
-+			goto out_defer_cancel;
-+		xfs_defer_ijoin(args->dfops, dp);
-+		error = xfs_defer_finish(&args->trans, args->dfops);
-+		if (error)
-+			goto out_defer_cancel;
- 	}
- 	return 0;
-+out_defer_cancel:
-+	xfs_defer_cancel(args->dfops);
-+	args->trans = NULL;
-+	return error;
- }
- 
- /*
-@@ -872,14 +878,12 @@ xfs_attr_node_addname(xfs_da_args_t *args)
- 			state = NULL;
- 			xfs_defer_init(args->dfops, args->firstblock);
- 			error = xfs_attr3_leaf_to_node(args);
--			if (!error)
--				error = xfs_defer_finish(&args->trans,
--							args->dfops, dp);
--			if (error) {
--				args->trans = NULL;
--				xfs_defer_cancel(args->dfops);
--				goto out;
--			}
-+			if (error)
-+				goto out_defer_cancel;
-+			xfs_defer_ijoin(args->dfops, dp);
-+			error = xfs_defer_finish(&args->trans, args->dfops);
-+			if (error)
-+				goto out_defer_cancel;
- 
- 			/*
- 			 * Commit the node conversion and start the next
-@@ -900,13 +904,12 @@ xfs_attr_node_addname(xfs_da_args_t *args)
- 		 */
- 		xfs_defer_init(args->dfops, args->firstblock);
- 		error = xfs_da3_split(state);
--		if (!error)
--			error = xfs_defer_finish(&args->trans, args->dfops, dp);
--		if (error) {
--			args->trans = NULL;
--			xfs_defer_cancel(args->dfops);
--			goto out;
--		}
-+		if (error)
-+			goto out_defer_cancel;
-+		xfs_defer_ijoin(args->dfops, dp);
-+		error = xfs_defer_finish(&args->trans, args->dfops);
-+		if (error)
-+			goto out_defer_cancel;
- 	} else {
- 		/*
- 		 * Addition succeeded, update Btree hashvals.
-@@ -999,14 +1002,12 @@ xfs_attr_node_addname(xfs_da_args_t *args)
- 		if (retval && (state->path.active > 1)) {
- 			xfs_defer_init(args->dfops, args->firstblock);
- 			error = xfs_da3_join(state);
--			if (!error)
--				error = xfs_defer_finish(&args->trans,
--							args->dfops, dp);
--			if (error) {
--				args->trans = NULL;
--				xfs_defer_cancel(args->dfops);
--				goto out;
--			}
-+			if (error)
-+				goto out_defer_cancel;
-+			xfs_defer_ijoin(args->dfops, dp);
-+			error = xfs_defer_finish(&args->trans, args->dfops);
-+			if (error)
-+				goto out_defer_cancel;
- 		}
- 
- 		/*
-@@ -1032,6 +1033,10 @@ xfs_attr_node_addname(xfs_da_args_t *args)
- 	if (error)
- 		return error;
- 	return retval;
-+out_defer_cancel:
-+	xfs_defer_cancel(args->dfops);
-+	args->trans = NULL;
-+	goto out;
- }
- 
- /*
-@@ -1122,13 +1127,12 @@ xfs_attr_node_removename(xfs_da_args_t *args)
- 	if (retval && (state->path.active > 1)) {
- 		xfs_defer_init(args->dfops, args->firstblock);
- 		error = xfs_da3_join(state);
--		if (!error)
--			error = xfs_defer_finish(&args->trans, args->dfops, dp);
--		if (error) {
--			args->trans = NULL;
--			xfs_defer_cancel(args->dfops);
--			goto out;
--		}
-+		if (error)
-+			goto out_defer_cancel;
-+		xfs_defer_ijoin(args->dfops, dp);
-+		error = xfs_defer_finish(&args->trans, args->dfops);
-+		if (error)
-+			goto out_defer_cancel;
- 		/*
- 		 * Commit the Btree join operation and start a new trans.
- 		 */
-@@ -1156,14 +1160,12 @@ xfs_attr_node_removename(xfs_da_args_t *args)
- 			xfs_defer_init(args->dfops, args->firstblock);
- 			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
- 			/* bp is gone due to xfs_da_shrink_inode */
--			if (!error)
--				error = xfs_defer_finish(&args->trans,
--							args->dfops, dp);
--			if (error) {
--				args->trans = NULL;
--				xfs_defer_cancel(args->dfops);
--				goto out;
--			}
-+			if (error)
-+				goto out_defer_cancel;
-+			xfs_defer_ijoin(args->dfops, dp);
-+			error = xfs_defer_finish(&args->trans, args->dfops);
-+			if (error)
-+				goto out_defer_cancel;
- 		} else
- 			xfs_trans_brelse(args->trans, bp);
- 	}
-@@ -1172,6 +1174,10 @@ xfs_attr_node_removename(xfs_da_args_t *args)
- out:
- 	xfs_da_state_free(state);
- 	return error;
-+out_defer_cancel:
-+	xfs_defer_cancel(args->dfops);
-+	args->trans = NULL;
-+	goto out;
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-index 433c36714e40..d56caf037ca0 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.c
-+++ b/fs/xfs/libxfs/xfs_attr_remote.c
-@@ -467,13 +467,12 @@ xfs_attr_rmtval_set(
- 		error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)lblkno,
- 				  blkcnt, XFS_BMAPI_ATTRFORK, args->firstblock,
- 				  args->total, &map, &nmap, args->dfops);
--		if (!error)
--			error = xfs_defer_finish(&args->trans, args->dfops, dp);
--		if (error) {
--			args->trans = NULL;
--			xfs_defer_cancel(args->dfops);
--			return error;
--		}
-+		if (error)
-+			goto out_defer_cancel;
-+		xfs_defer_ijoin(args->dfops, dp);
-+		error = xfs_defer_finish(&args->trans, args->dfops);
-+		if (error)
-+			goto out_defer_cancel;
- 
- 		ASSERT(nmap == 1);
- 		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
-@@ -539,6 +538,10 @@ xfs_attr_rmtval_set(
- 	}
- 	ASSERT(valuelen == 0);
- 	return 0;
-+out_defer_cancel:
-+	xfs_defer_cancel(args->dfops);
-+	args->trans = NULL;
-+	return error;
- }
- 
- /*
-@@ -609,14 +612,12 @@ xfs_attr_rmtval_remove(
- 		error = xfs_bunmapi(args->trans, args->dp, lblkno, blkcnt,
- 				    XFS_BMAPI_ATTRFORK, 1, args->firstblock,
- 				    args->dfops, &done);
--		if (!error)
--			error = xfs_defer_finish(&args->trans, args->dfops,
--						args->dp);
--		if (error) {
--			args->trans = NULL;
--			xfs_defer_cancel(args->dfops);
--			return error;
--		}
-+		if (error)
-+			goto out_defer_cancel;
-+		xfs_defer_ijoin(args->dfops, args->dp);
-+		error = xfs_defer_finish(&args->trans, args->dfops);
-+		if (error)
-+			goto out_defer_cancel;
- 
- 		/*
- 		 * Close out trans and start the next one in the chain.
-@@ -626,4 +627,8 @@ xfs_attr_rmtval_remove(
- 			return error;
- 	}
- 	return 0;
-+out_defer_cancel:
-+	xfs_defer_cancel(args->dfops);
-+	args->trans = NULL;
-+	return error;
- }
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index dcefadd4fc3a..28ac796abe45 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1196,7 +1196,7 @@ xfs_bmap_add_attrfork(
- 			xfs_log_sb(tp);
- 	}
- 
--	error = xfs_defer_finish(&tp, &dfops, NULL);
-+	error = xfs_defer_finish(&tp, &dfops);
- 	if (error)
- 		goto bmap_cancel;
- 	error = xfs_trans_commit(tp);
-@@ -6402,7 +6402,7 @@ xfs_bmap_split_extent(
- 	if (error)
- 		goto out;
- 
--	error = xfs_defer_finish(&tp, &dfops, NULL);
-+	error = xfs_defer_finish(&tp, &dfops);
- 	if (error)
- 		goto out;
- 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 6c0da24c68c9..072ebfe1d6ae 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -277,8 +277,7 @@ xfs_defer_has_unfinished_work(
- 
- /*
-  * Add this inode to the deferred op.  Each joined inode is relogged
-- * each time we roll the transaction, in addition to any inode passed
-- * to xfs_defer_finish().
-+ * each time we roll the transaction.
-  */
- int
- xfs_defer_ijoin(
-@@ -310,8 +309,7 @@ xfs_defer_ijoin(
- int
- xfs_defer_finish(
- 	struct xfs_trans		**tp,
--	struct xfs_defer_ops		*dop,
--	struct xfs_inode		*ip)
-+	struct xfs_defer_ops		*dop)
- {
- 	struct xfs_defer_pending	*dfp;
- 	struct list_head		*li;
-@@ -324,8 +322,6 @@ xfs_defer_finish(
- 
- 	trace_xfs_defer_finish((*tp)->t_mountp, dop);
- 
--	xfs_defer_ijoin(dop, ip);
--
- 	/* Until we run out of pending work to finish... */
- 	while (xfs_defer_has_unfinished_work(dop)) {
- 		/* Log intents for work items sitting in the intake. */
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 70c944b21a2a..d4f046dd44bd 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -72,8 +72,7 @@ struct xfs_defer_ops {
- 
- void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
- 		struct list_head *h);
--int xfs_defer_finish(struct xfs_trans **tp, struct xfs_defer_ops *dop,
--		struct xfs_inode *ip);
-+int xfs_defer_finish(struct xfs_trans **tp, struct xfs_defer_ops *dop);
- void xfs_defer_cancel(struct xfs_defer_ops *dop);
- void xfs_defer_init(struct xfs_defer_ops *dop, xfs_fsblock_t *fbp);
- bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 45b1c3b4e047..9d5406b4f663 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1679,7 +1679,7 @@ xfs_refcount_recover_cow_leftovers(
- 		xfs_bmap_add_free(mp, &dfops, fsb,
- 				rr->rr_rrec.rc_blockcount, NULL);
- 
--		error = xfs_defer_finish(&tp, &dfops, NULL);
-+		error = xfs_defer_finish(&tp, &dfops);
- 		if (error)
- 			goto out_defer;
- 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 88073910fa5d..dd136f7275e4 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -502,7 +502,7 @@ xfs_bui_recover(
- 	}
- 
- 	/* Finish transaction, free inodes. */
--	error = xfs_defer_finish(&tp, &dfops, NULL);
-+	error = xfs_defer_finish(&tp, &dfops);
- 	if (error)
- 		goto err_dfops;
- 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 93e955262d07..f7f04aebcade 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1136,7 +1136,7 @@ xfs_alloc_file_space(
- 		/*
- 		 * Complete the transaction
- 		 */
--		error = xfs_defer_finish(&tp, &dfops, NULL);
-+		error = xfs_defer_finish(&tp, &dfops);
- 		if (error)
- 			goto error0;
- 
-@@ -1202,7 +1202,8 @@ xfs_unmap_extent(
- 	if (error)
- 		goto out_bmap_cancel;
- 
--	error = xfs_defer_finish(&tp, &dfops, ip);
-+	xfs_defer_ijoin(&dfops, ip);
-+	error = xfs_defer_finish(&tp, &dfops);
- 	if (error)
- 		goto out_bmap_cancel;
- 
-@@ -1496,7 +1497,7 @@ xfs_shift_file_space(
- 		if (error)
- 			goto out_bmap_cancel;
- 
--		error = xfs_defer_finish(&tp, &dfops, NULL);
-+		error = xfs_defer_finish(&tp, &dfops);
- 		if (error)
- 			goto out_bmap_cancel;
- 
-@@ -1777,7 +1778,8 @@ xfs_swap_extent_rmap(
- 			if (error)
- 				goto out_defer;
- 
--			error = xfs_defer_finish(tpp, &dfops, ip);
-+			xfs_defer_ijoin(&dfops, ip);
-+			error = xfs_defer_finish(tpp, &dfops);
- 			if (error)
- 				goto out_defer;
- 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index fd2ef8c2c9a7..cd82429d8df7 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -383,7 +383,7 @@ xfs_qm_dqalloc(
- 
- 	xfs_trans_bhold(tp, bp);
- 
--	error = xfs_defer_finish(tpp, &dfops, NULL);
-+	error = xfs_defer_finish(tpp, &dfops);
- 	if (error)
- 		goto error1;
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 5b4eda44f39f..97644604a21a 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1285,7 +1285,7 @@ xfs_create(
- 	 */
- 	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp, pdqp);
- 
--	error = xfs_defer_finish(&tp, &dfops, NULL);
-+	error = xfs_defer_finish(&tp, &dfops);
- 	if (error)
- 		goto out_bmap_cancel;
- 
-@@ -1513,7 +1513,7 @@ xfs_link(
- 	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
- 		xfs_trans_set_sync(tp);
- 
--	error = xfs_defer_finish(&tp, &dfops, NULL);
-+	error = xfs_defer_finish(&tp, &dfops);
- 	if (error) {
- 		xfs_defer_cancel(&dfops);
- 		goto error_return;
-@@ -1607,7 +1607,8 @@ xfs_itruncate_extents(
- 		 * Duplicate the transaction that has the permanent
- 		 * reservation and commit the old transaction.
- 		 */
--		error = xfs_defer_finish(&tp, &dfops, ip);
-+		xfs_defer_ijoin(&dfops, ip);
-+		error = xfs_defer_finish(&tp, &dfops);
- 		if (error)
- 			goto out_bmap_cancel;
- 
-@@ -1855,7 +1856,7 @@ xfs_inactive_ifree(
- 	 * Just ignore errors at this point.  There is nothing we can do except
- 	 * to try to keep going. Make sure it's not a silent error.
- 	 */
--	error = xfs_defer_finish(&tp, &dfops, NULL);
-+	error = xfs_defer_finish(&tp, &dfops);
- 	if (error) {
- 		xfs_notice(mp, "%s: xfs_defer_finish returned error %d",
- 			__func__, error);
-@@ -2637,7 +2638,7 @@ xfs_remove(
- 	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
- 		xfs_trans_set_sync(tp);
- 
--	error = xfs_defer_finish(&tp, &dfops, NULL);
-+	error = xfs_defer_finish(&tp, &dfops);
- 	if (error)
- 		goto out_bmap_cancel;
- 
-@@ -2723,7 +2724,7 @@ xfs_finish_rename(
- 	if (tp->t_mountp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
- 		xfs_trans_set_sync(tp);
- 
--	error = xfs_defer_finish(&tp, dfops, NULL);
-+	error = xfs_defer_finish(&tp, dfops);
- 	if (error) {
- 		xfs_defer_cancel(dfops);
- 		xfs_trans_cancel(tp);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 813394c62849..1b625d050441 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -274,7 +274,7 @@ xfs_iomap_write_direct(
- 	/*
- 	 * Complete the transaction
- 	 */
--	error = xfs_defer_finish(&tp, &dfops, NULL);
-+	error = xfs_defer_finish(&tp, &dfops);
- 	if (error)
- 		goto out_bmap_cancel;
- 
-@@ -784,7 +784,7 @@ xfs_iomap_write_allocate(
- 			if (error)
- 				goto trans_cancel;
- 
--			error = xfs_defer_finish(&tp, &dfops, NULL);
-+			error = xfs_defer_finish(&tp, &dfops);
- 			if (error)
- 				goto trans_cancel;
- 
-@@ -906,7 +906,7 @@ xfs_iomap_write_unwritten(
- 			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 		}
- 
--		error = xfs_defer_finish(&tp, &dfops, NULL);
-+		error = xfs_defer_finish(&tp, &dfops);
- 		if (error)
- 			goto error_on_bmapi_transaction;
- 
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 96fe209b5eb6..8f2e2fac4255 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -525,7 +525,7 @@ xfs_cui_recover(
- 	}
- 
- 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
--	error = xfs_defer_finish(&tp, &dfops, NULL);
-+	error = xfs_defer_finish(&tp, &dfops);
- 	if (error)
- 		goto abort_defer;
- 	set_bit(XFS_CUI_RECOVERED, &cuip->cui_flags);
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index f45fbf0db9bb..3246815c24d6 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -464,7 +464,7 @@ xfs_reflink_allocate_cow(
- 		goto out_bmap_cancel;
- 
- 	/* Finish up. */
--	error = xfs_defer_finish(&tp, &dfops, NULL);
-+	error = xfs_defer_finish(&tp, &dfops);
- 	if (error)
- 		goto out_bmap_cancel;
- 
-@@ -602,7 +602,8 @@ xfs_reflink_cancel_cow_blocks(
- 					-(long)del.br_blockcount);
- 
- 			/* Roll the transaction */
--			error = xfs_defer_finish(tpp, &dfops, ip);
-+			xfs_defer_ijoin(&dfops, ip);
-+			error = xfs_defer_finish(tpp, &dfops);
- 			if (error) {
- 				xfs_defer_cancel(&dfops);
- 				break;
-@@ -791,7 +792,8 @@ xfs_reflink_end_cow(
- 		/* Remove the mapping from the CoW fork. */
- 		xfs_bmap_del_extent_cow(ip, &idx, &got, &del);
- 
--		error = xfs_defer_finish(&tp, &dfops, ip);
-+		xfs_defer_ijoin(&dfops, ip);
-+		error = xfs_defer_finish(&tp, &dfops);
- 		if (error)
- 			goto out_defer;
- next_extent:
-@@ -1152,7 +1154,8 @@ xfs_reflink_remap_extent(
- 
- next_extent:
- 		/* Process all the deferred stuff. */
--		error = xfs_defer_finish(&tp, &dfops, ip);
-+		xfs_defer_ijoin(&dfops, ip);
-+		error = xfs_defer_finish(&tp, &dfops);
- 		if (error)
- 			goto out_defer;
- 	}
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 91472193643b..488719d43ca8 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -810,7 +810,7 @@ xfs_growfs_rt_alloc(
- 		/*
- 		 * Free any blocks freed up in the transaction, then commit.
- 		 */
--		error = xfs_defer_finish(&tp, &dfops, NULL);
-+		error = xfs_defer_finish(&tp, &dfops);
- 		if (error)
- 			goto out_bmap_cancel;
- 		error = xfs_trans_commit(tp);
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 23a50d7aa46a..68d3ca2c4968 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -378,7 +378,7 @@ xfs_symlink(
- 		xfs_trans_set_sync(tp);
- 	}
- 
--	error = xfs_defer_finish(&tp, &dfops, NULL);
-+	error = xfs_defer_finish(&tp, &dfops);
- 	if (error)
- 		goto out_bmap_cancel;
- 
-@@ -497,7 +497,8 @@ xfs_inactive_symlink_rmt(
- 	/*
- 	 * Commit the first transaction.  This logs the EFI and the inode.
- 	 */
--	error = xfs_defer_finish(&tp, &dfops, ip);
-+	xfs_defer_ijoin(&dfops, ip);
-+	error = xfs_defer_finish(&tp, &dfops);
- 	if (error)
- 		goto error_bmap_cancel;
- 	/*
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
+
+> ---
+>  fs/ext2/inode.c |   10 ++--------
+>  fs/ext4/inode.c |   10 ++--------
+>  2 files changed, 4 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+> index 30163d007b2f..7102b77a83c6 100644
+> --- a/fs/ext2/inode.c
+> +++ b/fs/ext2/inode.c
+> @@ -800,7 +800,6 @@ int ext2_get_block(struct inode *inode, sector_t iblock,
+>  static int ext2_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+>  		unsigned flags, struct iomap *iomap)
+>  {
+> -	struct block_device *bdev;
+>  	unsigned int blkbits = inode->i_blkbits;
+>  	unsigned long first_block = offset >> blkbits;
+>  	unsigned long max_blocks = (length + (1 << blkbits) - 1) >> blkbits;
+> @@ -814,13 +813,9 @@ static int ext2_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+>  		return ret;
+>  
+>  	iomap->flags = 0;
+> -	bdev = inode->i_sb->s_bdev;
+> -	iomap->bdev = bdev;
+> +	iomap->bdev = inode->i_sb->s_bdev;
+>  	iomap->offset = (u64)first_block << blkbits;
+> -	if (blk_queue_dax(bdev->bd_queue))
+> -		iomap->dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
+> -	else
+> -		iomap->dax_dev = NULL;
+> +	iomap->dax_dev = inode->i_sb->s_daxdev;
+>  
+>  	if (ret == 0) {
+>  		iomap->type = IOMAP_HOLE;
+> @@ -842,7 +837,6 @@ static int
+>  ext2_iomap_end(struct inode *inode, loff_t offset, loff_t length,
+>  		ssize_t written, unsigned flags, struct iomap *iomap)
+>  {
+> -	fs_put_dax(iomap->dax_dev);
+>  	if (iomap->type == IOMAP_MAPPED &&
+>  	    written < length &&
+>  	    (flags & IOMAP_WRITE))
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index c774bdc22759..311690522366 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -3404,7 +3404,6 @@ static int ext4_releasepage(struct page *page, gfp_t wait)
+>  static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+>  			    unsigned flags, struct iomap *iomap)
+>  {
+> -	struct block_device *bdev;
+>  	unsigned int blkbits = inode->i_blkbits;
+>  	unsigned long first_block = offset >> blkbits;
+>  	unsigned long last_block = (offset + length - 1) >> blkbits;
+> @@ -3473,12 +3472,8 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+>  	}
+>  
+>  	iomap->flags = 0;
+> -	bdev = inode->i_sb->s_bdev;
+> -	iomap->bdev = bdev;
+> -	if (blk_queue_dax(bdev->bd_queue))
+> -		iomap->dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
+> -	else
+> -		iomap->dax_dev = NULL;
+> +	iomap->bdev = inode->i_sb->s_bdev;
+> +	iomap->dax_dev = inode->i_sb->s_daxdev;
+>  	iomap->offset = first_block << blkbits;
+>  
+>  	if (ret == 0) {
+> @@ -3511,7 +3506,6 @@ static int ext4_iomap_end(struct inode *inode, loff_t offset, loff_t length,
+>  	int blkbits = inode->i_blkbits;
+>  	bool truncate = false;
+>  
+> -	fs_put_dax(iomap->dax_dev);
+>  	if (!(flags & IOMAP_WRITE) || (flags & IOMAP_FAULT))
+>  		return 0;
+>  
+> 
 -- 
-2.11.0
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
