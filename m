@@ -1,149 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47130 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750841AbdH1VuT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 17:50:19 -0400
-Date: Mon, 28 Aug 2017 14:49:57 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:37397 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751198AbdH1Qdb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 12:33:31 -0400
+Date: Mon, 28 Aug 2017 09:33:20 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 15/30] xfs: Define usercopy region in xfs_inode slab
- cache
-Message-ID: <20170828214957.GJ4757@magnolia>
-References: <1503956111-36652-1-git-send-email-keescook@chromium.org>
- <1503956111-36652-16-git-send-email-keescook@chromium.org>
+Subject: Re: [PATCH 1/2] iomap: return VM_FAULT_* codes from
+ iomap_page_mkwrite
+Message-ID: <20170828163320.GB4757@magnolia>
+References: <20170828063659.21045-1-hch@lst.de>
+ <20170828063659.21045-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1503956111-36652-16-git-send-email-keescook@chromium.org>
+In-Reply-To: <20170828063659.21045-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Kees Cook <keescook@chromium.org>
-Cc: linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, kernel-hardening@lists.openwall.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, jack@suse.cz
 
-On Mon, Aug 28, 2017 at 02:34:56PM -0700, Kees Cook wrote:
-> From: David Windsor <dave@nullcore.net>
+On Mon, Aug 28, 2017 at 08:36:58AM +0200, Christoph Hellwig wrote:
+> All callers will need the VM_FAULT_* flags, so convert in the helper.
 > 
-> The XFS inline inode data, stored in struct xfs_inode_t field
-> i_df.if_u2.if_inline_data and therefore contained in the xfs_inode slab
-> cache, needs to be copied to/from userspace.
-> 
-> cache object allocation:
->     fs/xfs/xfs_icache.c:
->         xfs_inode_alloc(...):
->             ...
->             ip = kmem_zone_alloc(xfs_inode_zone, KM_SLEEP);
-> 
->     fs/xfs/libxfs/xfs_inode_fork.c:
->         xfs_init_local_fork(...):
->             ...
->             if (mem_size <= sizeof(ifp->if_u2.if_inline_data))
->                     ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Hmm, what happens when mem_size > sizeof(if_inline_data)?  A slab object
-will be allocated for ifp->if_u1.if_data which can then be used for
-readlink in the same manner as the example usage trace below.  Does
-that allocated object have a need for a usercopy annotation like
-the one we're adding for if_inline_data?  Or is that already covered
-elsewhere?
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
---D
-
->             ...
-> 
->     fs/xfs/xfs_symlink.c:
->         xfs_symlink(...):
->             ...
->             xfs_init_local_fork(ip, XFS_DATA_FORK, target_path, pathlen);
-> 
-> example usage trace:
->     readlink_copy+0x43/0x70
->     vfs_readlink+0x62/0x110
->     SyS_readlinkat+0x100/0x130
-> 
->     fs/xfs/xfs_iops.c:
->         (via inode->i_op->get_link)
->         xfs_vn_get_link_inline(...):
->             ...
->             return XFS_I(inode)->i_df.if_u1.if_data;
-> 
->     fs/namei.c:
->         readlink_copy(..., link):
->             ...
->             copy_to_user(..., link, len);
-> 
->         generic_readlink(dentry, ...):
->             struct inode *inode = d_inode(dentry);
->             const char *link = inode->i_link;
->             ...
->             if (!link) {
->                     link = inode->i_op->get_link(dentry, inode, &done);
->             ...
->             readlink_copy(..., link);
-> 
-> In support of usercopy hardening, this patch defines a region in the
-> xfs_inode slab cache in which userspace copy operations are allowed.
-> 
-> This region is known as the slab cache's usercopy region. Slab caches can
-> now check that each copy operation involving cache-managed memory falls
-> entirely within the slab's usercopy region.
-> 
-> This patch is modified from Brad Spengler/PaX Team's PAX_USERCOPY
-> whitelisting code in the last public patch of grsecurity/PaX based on my
-> understanding of the code. Changes or omissions from the original code are
-> mine and don't reflect the original grsecurity/PaX code.
-> 
-> Signed-off-by: David Windsor <dave@nullcore.net>
-> [kees: adjust commit log, provide usage trace]
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Cc: linux-xfs@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
 > ---
->  fs/xfs/kmem.h      | 10 ++++++++++
->  fs/xfs/xfs_super.c |  7 +++++--
->  2 files changed, 15 insertions(+), 2 deletions(-)
+>  fs/iomap.c        | 4 ++--
+>  fs/xfs/xfs_file.c | 1 -
+>  2 files changed, 2 insertions(+), 3 deletions(-)
 > 
-> diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-> index 4d85992d75b2..08358f38dee6 100644
-> --- a/fs/xfs/kmem.h
-> +++ b/fs/xfs/kmem.h
-> @@ -110,6 +110,16 @@ kmem_zone_init_flags(int size, char *zone_name, unsigned long flags,
->  	return kmem_cache_create(zone_name, size, 0, flags, construct);
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 59cc98ad7577..8554a8d75281 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -477,10 +477,10 @@ int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
+>  
+>  	set_page_dirty(page);
+>  	wait_for_stable_page(page);
+> -	return 0;
+> +	return VM_FAULT_LOCKED;
+>  out_unlock:
+>  	unlock_page(page);
+> -	return ret;
+> +	return block_page_mkwrite_return(ret);
 >  }
+>  EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
 >  
-> +static inline kmem_zone_t *
-> +kmem_zone_init_flags_usercopy(int size, char *zone_name, unsigned long flags,
-> +				size_t useroffset, size_t usersize,
-> +				void (*construct)(void *))
-> +{
-> +	return kmem_cache_create_usercopy(zone_name, size, 0, flags,
-> +				useroffset, usersize, construct);
-> +}
-> +
-> +
->  static inline void
->  kmem_zone_free(kmem_zone_t *zone, void *ptr)
->  {
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 38aaacdbb8b3..6ca428c6f943 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1829,9 +1829,12 @@ xfs_init_zones(void)
->  		goto out_destroy_efd_zone;
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index c4893e226fd8..8b0181c6d2a6 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1035,7 +1035,6 @@ xfs_filemap_page_mkwrite(
+>  		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
+>  	} else {
+>  		ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
+> -		ret = block_page_mkwrite_return(ret);
+>  	}
 >  
->  	xfs_inode_zone =
-> -		kmem_zone_init_flags(sizeof(xfs_inode_t), "xfs_inode",
-> +		kmem_zone_init_flags_usercopy(sizeof(xfs_inode_t), "xfs_inode",
->  			KM_ZONE_HWALIGN | KM_ZONE_RECLAIM | KM_ZONE_SPREAD |
-> -			KM_ZONE_ACCOUNT, xfs_fs_inode_init_once);
-> +				KM_ZONE_ACCOUNT,
-> +			offsetof(xfs_inode_t, i_df.if_u2.if_inline_data),
-> +			sizeof_field(xfs_inode_t, i_df.if_u2.if_inline_data),
-> +			xfs_fs_inode_init_once);
->  	if (!xfs_inode_zone)
->  		goto out_destroy_efi_zone;
->  
+>  	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
 > -- 
-> 2.7.4
+> 2.11.0
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
