@@ -1,59 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59530 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:40700 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754350AbdH2O3w (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 Aug 2017 10:29:52 -0400
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH 2/4] iomap: Add IOMAP_F_DATA_INLINE flag
-Date: Tue, 29 Aug 2017 16:29:40 +0200
-Message-Id: <20170829142942.21594-3-agruenba@redhat.com>
-In-Reply-To: <20170829142942.21594-1-agruenba@redhat.com>
-References: <20170829142942.21594-1-agruenba@redhat.com>
+        id S1751192AbdH1TfJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 28 Aug 2017 15:35:09 -0400
+Date: Mon, 28 Aug 2017 21:35:07 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] xfs: rewrite getbmap using the xfs_iext_* helpers
+Message-ID: <20170828193507.GA31009@lst.de>
+References: <20170828150612.16437-1-hch@lst.de> <20170828183142.GG4757@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170828183142.GG4757@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, Andreas Gruenbacher <agruenba@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-Add a new IOMAP_F_DATA_INLINE flag to indicate that a mapping is in a
-disk area that contains data as well as metadata.  In iomap_fiemap, map
-this flag to FIEMAP_EXTENT_DATA_INLINE.
+On Mon, Aug 28, 2017 at 11:31:42AM -0700, Darrick J. Wong wrote:
+> Hmm... this causes at least a couple of xfstests regressions:
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/iomap.c            | 2 ++
- include/linux/iomap.h | 5 +++--
- 2 files changed, 5 insertions(+), 2 deletions(-)
+Oh.  Looks like I didn't do a rmap run as none of my runs showed
+a regression.
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 7bc1797c2292..f0a263482a0e 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -510,6 +510,8 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
- 		flags |= FIEMAP_EXTENT_MERGED;
- 	if (iomap->flags & IOMAP_F_SHARED)
- 		flags |= FIEMAP_EXTENT_SHARED;
-+	if (iomap->flags & IOMAP_F_DATA_INLINE)
-+		flags |= FIEMAP_EXTENT_DATA_INLINE;
- 
- 	return fiemap_fill_next_extent(fi, iomap->offset,
- 			iomap->addr != IOMAP_NULL_ADDR ? iomap->addr : 0,
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 7b8a615fa021..2b0790dbd6ea 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -26,8 +26,9 @@ struct vm_fault;
- /*
-  * Flags that only need to be reported for IOMAP_REPORT requests:
-  */
--#define IOMAP_F_MERGED	0x10	/* contains multiple blocks/extents */
--#define IOMAP_F_SHARED	0x20	/* block shared with another file */
-+#define IOMAP_F_MERGED		0x10	/* contains multiple blocks/extents */
-+#define IOMAP_F_SHARED		0x20	/* block shared with another file */
-+#define IOMAP_F_DATA_INLINE	0x40	/* data inline in the inode */
- 
- /*
-  * Magic value for addr:
--- 
-2.13.3
+> xfs/310, because we no longer merge adjacent bmap records.  I think the
+> solution here is to change the extent count check to allow 2 extents.
+
+Yeah.
+
+> xfs/245 because zero-mapping forks are no longer reported as having one
+> big "hole" extent; instead zero extents are reported back.  How do we
+> want to handle this case?
+
+Hmm.  Looks like that is the COW fork, as even the current code
+never reports a hole at then end when there are no extents at all.
+It does however when we have at least one extent:
+
+root@brick:/home/hch/work/xfs# uname -a
+Linux brick 4.9.0-3-amd64 #1 SMP Debian 4.9.30-2+deb9u2 (2017-06-26) x86_64 GNU/Linux
+root@brick:/home/hch/work/xfs# truncate --size 10g foo
+root@brick:/home/hch/work/xfs# xfs_bmap foo
+foo: no extents
+root@brick:/home/hch/work/xfs# fallocate -l 10m foo
+root@brick:/home/hch/work/xfs# xfs_bmap foo
+foo:
+	0: [0..20479]: 786860592..786881071
+	1: [20480..20971519]: hole
+
+in this case I suspect we should try to treat the COW fork the
+same.  But let me take a more detailed look at xfs/245 on what's
+going on there.
 
