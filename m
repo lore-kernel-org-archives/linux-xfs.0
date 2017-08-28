@@ -1,159 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17516 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754410AbdHYREF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2017 13:04:05 -0400
-Date: Fri, 25 Aug 2017 10:04:01 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH] xfs: Properly retry failed dquot items in case of
- error during buffer writeback
-Message-ID: <20170825170400.GS4796@magnolia>
-References: <20170825120752.22553-1-cmaiolino@redhat.com>
+Received: from mga05.intel.com ([192.55.52.43]:10923 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751768AbdH1DzK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 27 Aug 2017 23:55:10 -0400
+Subject: [PATCH v2 2/2] ext2, ext4: use the super_block dax_device
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Sun, 27 Aug 2017 20:48:46 -0700
+Message-ID: <150389212595.25151.10721705529768874001.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150389211501.25151.6477753201827914462.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150389211501.25151.6477753201827914462.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170825120752.22553-1-cmaiolino@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: Theodore Ts'o <tytso@mit.edu>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.com>, jack@suse.cz, linux-ext4@vger.kernel.org, hch@lst.de
 
-On Fri, Aug 25, 2017 at 02:07:52PM +0200, Carlos Maiolino wrote:
-> Hi,
-> 
-> Once the fix for inode item writeback errors is already queued
-> (d3a304b62), I believe it's time to fix the same problem in dquot code.
-> 
-> Although there were no reports of users hitting this bug in dquot code
-> (at least none I've seen), the bug is there and I was already planning
-> to fix it when the correct approach to fix the inodes part was decided.
-> 
-> So, this is an RFC patch to fix the same problem in dquot code,
-> regarding failed buffers being unable to be resubmitted once they are
-> flush locked.
-> 
-> The semantics are quite similar to inode items path, although during
-> xfs_qm_dqflush_done(), I'm not sure if the changes I made are correct.
-> 
-> Comments much appreciated :)
-> 
-> 
-> BTW, This patch should be applied only over branch xfs-4.14-merge, it requires
-> my previous patches, which are not in the master branch yet.
+The ->iomap_begin() operation is a hot path, and now that mount_bdev()
+arranges for the dax_device to be populated in the super_block, we can
+just reference that attribute directly rather than perform a new lookup.
 
-Looks ok, but is there an xfstests case to cover this?
+Cc: Jan Kara <jack@suse.com>
+Cc: "Theodore Ts'o" <tytso@mit.edu>
+Cc: Andreas Dilger <adilger.kernel@dilger.ca>
+Reported-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/ext2/inode.c |   10 ++--------
+ fs/ext4/inode.c |   10 ++--------
+ 2 files changed, 4 insertions(+), 16 deletions(-)
 
---D
+diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+index 30163d007b2f..7102b77a83c6 100644
+--- a/fs/ext2/inode.c
++++ b/fs/ext2/inode.c
+@@ -800,7 +800,6 @@ int ext2_get_block(struct inode *inode, sector_t iblock,
+ static int ext2_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+ 		unsigned flags, struct iomap *iomap)
+ {
+-	struct block_device *bdev;
+ 	unsigned int blkbits = inode->i_blkbits;
+ 	unsigned long first_block = offset >> blkbits;
+ 	unsigned long max_blocks = (length + (1 << blkbits) - 1) >> blkbits;
+@@ -814,13 +813,9 @@ static int ext2_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+ 		return ret;
+ 
+ 	iomap->flags = 0;
+-	bdev = inode->i_sb->s_bdev;
+-	iomap->bdev = bdev;
++	iomap->bdev = inode->i_sb->s_bdev;
+ 	iomap->offset = (u64)first_block << blkbits;
+-	if (blk_queue_dax(bdev->bd_queue))
+-		iomap->dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
+-	else
+-		iomap->dax_dev = NULL;
++	iomap->dax_dev = inode->i_sb->s_daxdev;
+ 
+ 	if (ret == 0) {
+ 		iomap->type = IOMAP_HOLE;
+@@ -842,7 +837,6 @@ static int
+ ext2_iomap_end(struct inode *inode, loff_t offset, loff_t length,
+ 		ssize_t written, unsigned flags, struct iomap *iomap)
+ {
+-	fs_put_dax(iomap->dax_dev);
+ 	if (iomap->type == IOMAP_MAPPED &&
+ 	    written < length &&
+ 	    (flags & IOMAP_WRITE))
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index c774bdc22759..311690522366 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3404,7 +3404,6 @@ static int ext4_releasepage(struct page *page, gfp_t wait)
+ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+ 			    unsigned flags, struct iomap *iomap)
+ {
+-	struct block_device *bdev;
+ 	unsigned int blkbits = inode->i_blkbits;
+ 	unsigned long first_block = offset >> blkbits;
+ 	unsigned long last_block = (offset + length - 1) >> blkbits;
+@@ -3473,12 +3472,8 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+ 	}
+ 
+ 	iomap->flags = 0;
+-	bdev = inode->i_sb->s_bdev;
+-	iomap->bdev = bdev;
+-	if (blk_queue_dax(bdev->bd_queue))
+-		iomap->dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
+-	else
+-		iomap->dax_dev = NULL;
++	iomap->bdev = inode->i_sb->s_bdev;
++	iomap->dax_dev = inode->i_sb->s_daxdev;
+ 	iomap->offset = first_block << blkbits;
+ 
+ 	if (ret == 0) {
+@@ -3511,7 +3506,6 @@ static int ext4_iomap_end(struct inode *inode, loff_t offset, loff_t length,
+ 	int blkbits = inode->i_blkbits;
+ 	bool truncate = false;
+ 
+-	fs_put_dax(iomap->dax_dev);
+ 	if (!(flags & IOMAP_WRITE) || (flags & IOMAP_FAULT))
+ 		return 0;
+ 
 
-> 
-> Cheers.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  fs/xfs/xfs_dquot.c      | 11 ++++++++---
->  fs/xfs/xfs_dquot_item.c | 37 +++++++++++++++++++++++++++++++++++--
->  2 files changed, 43 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index fd2ef8c2c9a7..8198c20212a2 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -987,14 +987,19 @@ xfs_qm_dqflush_done(
->  	 * holding the lock before removing the dquot from the AIL.
->  	 */
->  	if ((lip->li_flags & XFS_LI_IN_AIL) &&
-> -	    lip->li_lsn == qip->qli_flush_lsn) {
-> +	   (lip->li_lsn == qip->qli_flush_lsn) ||
-> +	    lip->li_flags & XFS_LI_FAILED) {
->  
->  		/* xfs_trans_ail_delete() drops the AIL lock. */
->  		spin_lock(&ailp->xa_lock);
-> -		if (lip->li_lsn == qip->qli_flush_lsn)
-> +		if (lip->li_lsn == qip->qli_flush_lsn) {
->  			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
-> -		else
-> +		} else if (lip->li_flags & XFS_LI_FAILED) {
-> +			xfs_clear_li_failed(lip);
->  			spin_unlock(&ailp->xa_lock);
-> +		} else {
-> +			spin_unlock(&ailp->xa_lock);
-> +		}
->  	}
->  
->  	/*
-> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-> index 2c7a1629e064..35fd6d71bc42 100644
-> --- a/fs/xfs/xfs_dquot_item.c
-> +++ b/fs/xfs/xfs_dquot_item.c
-> @@ -137,6 +137,23 @@ xfs_qm_dqunpin_wait(
->  	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
->  }
->  
-> +/*
-> + * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
-> + * have been failed during writeback
-> + *
-> + * this informs the AIL that the dquot is already flush locked on the next push,
-> + * and acquires a hold on the buffer to ensure that it isn't reclaimed before
-> + * dirty data makes it to disk.
-> + */
-> +STATIC void
-> +xfs_dquot_item_error(
-> +	struct xfs_log_item	*lip,
-> +	struct xfs_buf		*bp)
-> +{
-> +	ASSERT(XFS_DQ_IS_LOCKED(DQUOT_ITEM(lip)->qli_item));
-> +	xfs_set_li_failed(lip, bp);
-> +}
-> +
->  STATIC uint
->  xfs_qm_dquot_logitem_push(
->  	struct xfs_log_item	*lip,
-> @@ -144,13 +161,28 @@ xfs_qm_dquot_logitem_push(
->  					      __acquires(&lip->li_ailp->xa_lock)
->  {
->  	struct xfs_dquot	*dqp = DQUOT_ITEM(lip)->qli_dquot;
-> -	struct xfs_buf		*bp = NULL;
-> +	struct xfs_buf		*bp = lip->li_buf;
->  	uint			rval = XFS_ITEM_SUCCESS;
->  	int			error;
->  
->  	if (atomic_read(&dqp->q_pincount) > 0)
->  		return XFS_ITEM_PINNED;
->  
-> +	/*
-> +	 * The buffer containing this item failed to be written back
-> +	 * previously. Resubmit the buffer for IO
-> +	 */
-> +	if (lip->li_flags & XFS_LI_FAILED) {
-> +		if (!xfs_buf_trylock(bp))
-> +			return XFS_ITEM_LOCKED;
-> +
-> +		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
-> +			rval = XFS_ITEM_FLUSHING;
-> +
-> +		xfs_buf_unlock(bp);
-> +		return rval;
-> +	}
-> +
->  	if (!xfs_dqlock_nowait(dqp))
->  		return XFS_ITEM_LOCKED;
->  
-> @@ -242,7 +274,8 @@ static const struct xfs_item_ops xfs_dquot_item_ops = {
->  	.iop_unlock	= xfs_qm_dquot_logitem_unlock,
->  	.iop_committed	= xfs_qm_dquot_logitem_committed,
->  	.iop_push	= xfs_qm_dquot_logitem_push,
-> -	.iop_committing = xfs_qm_dquot_logitem_committing
-> +	.iop_committing = xfs_qm_dquot_logitem_committing,
-> +	.iop_error	= xfs_dquot_item_error
->  };
->  
->  /*
-> -- 
-> 2.13.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
