@@ -1,428 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35198 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753509AbdH1Ibn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 28 Aug 2017 04:31:43 -0400
-Date: Mon, 28 Aug 2017 10:31:40 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v2 1/2] fs, xfs: perform dax_device lookup at mount
-Message-ID: <20170828083140.GB12609@quack2.suse.cz>
-References: <150389211501.25151.6477753201827914462.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150389212075.25151.17146973298430877023.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mail-yw0-f172.google.com ([209.85.161.172]:33855 "EHLO
+        mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753232AbdH1Idm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 04:33:42 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150389212075.25151.17146973298430877023.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 28 Aug 2017 11:33:41 +0300
+Message-ID: <CAOQ4uxg7FJ6sLRuRcV_AYRx_crZyVzVMzPgkZb8msLxtZvL12A@mail.gmail.com>
+Subject: XFS bug discovered by crash tests?
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-nvdimm@lists.01.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, hch@lst.de
+To: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Josef Bacik <jbacik@fb.com>, Eryu Guan <eguan@redhat.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Sun 27-08-17 20:48:40, Dan Williams wrote:
-> The ->iomap_begin() operation is a hot path, so cache the
-> fs_dax_get_by_host() result at mount time to avoid the incurring the
-> hash lookup overhead on a per-i/o basis.
-> 
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Reported-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Christoph, Darrick,
 
-Looks good to me. For the generic parts:
+As I reported last week, I started running Josef's log-writes crash
+tests and immediately got reports on data checksum errors when
+running the tests on xfs.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Unlike ext4 and btrfs, xfs tests seemed to fail arbitrarily for any
+value of random seed I tried. Unlike xfs, I never observed data
+checksum errors on ext4 and btrfs (only fsck errors).
 
-[XFS part looks correct to me as well but I don't feel expert enough to
-give any tags there].
+It's quite easy to reproduce the reported checksum errors when
+running the test currently on my xfstests branch:
+https://github.com/amir73il/xfstests/commits/dm-log-writes
 
-								Honza
+Looking closer at the reported checksum errors, in all cases
+I examined, the problem was, that after a sequence of
+PUNCH_HOLE+FSYNC on a test file, a partially zeroed block,
+both at beginning and end of zero range is not zeroed after
+crash.
 
-> ---
->  drivers/dax/super.c |   10 ++++++++++
->  fs/super.c          |   26 +++++++++++++++++++++++---
->  fs/xfs/xfs_aops.c   |   13 +++++++++++++
->  fs/xfs/xfs_aops.h   |    1 +
->  fs/xfs/xfs_buf.c    |    4 +++-
->  fs/xfs/xfs_buf.h    |    3 ++-
->  fs/xfs/xfs_iomap.c  |   10 +---------
->  fs/xfs/xfs_super.c  |   21 +++++++++++++++++----
->  include/linux/dax.h |    6 ++++++
->  include/linux/fs.h  |    1 +
->  10 files changed, 77 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index 938eb4868f7f..b699aac268a6 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -46,6 +46,8 @@ void dax_read_unlock(int id)
->  EXPORT_SYMBOL_GPL(dax_read_unlock);
->  
->  #ifdef CONFIG_BLOCK
-> +#include <linux/blkdev.h>
-> +
->  int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
->  		pgoff_t *pgoff)
->  {
-> @@ -59,6 +61,14 @@ int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
->  }
->  EXPORT_SYMBOL(bdev_dax_pgoff);
->  
-> +struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
-> +{
-> +	if (!blk_queue_dax(bdev->bd_queue))
-> +		return NULL;
-> +	return fs_dax_get_by_host(bdev->bd_disk->disk_name);
-> +}
-> +EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
-> +
->  /**
->   * __bdev_dax_supported() - Check if the device supports dax for filesystem
->   * @sb: The superblock of the device
-> diff --git a/fs/super.c b/fs/super.c
-> index 6bc3352adcf3..671889b02bed 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -23,6 +23,7 @@
->  #include <linux/export.h>
->  #include <linux/slab.h>
->  #include <linux/blkdev.h>
-> +#include <linux/dax.h>
->  #include <linux/mount.h>
->  #include <linux/security.h>
->  #include <linux/writeback.h>		/* for the emergency remount stuff */
-> @@ -1048,9 +1049,17 @@ struct dentry *mount_ns(struct file_system_type *fs_type,
->  EXPORT_SYMBOL(mount_ns);
->  
->  #ifdef CONFIG_BLOCK
-> +struct sget_devs {
-> +	struct block_device *bdev;
-> +	struct dax_device *dax_dev;
-> +};
-> +
->  static int set_bdev_super(struct super_block *s, void *data)
->  {
-> -	s->s_bdev = data;
-> +	struct sget_devs *devs = data;
-> +
-> +	s->s_bdev = devs->bdev;
-> +	s->s_daxdev = devs->dax_dev;
->  	s->s_dev = s->s_bdev->bd_dev;
->  	s->s_bdi = bdi_get(s->s_bdev->bd_bdi);
->  
-> @@ -1059,14 +1068,18 @@ static int set_bdev_super(struct super_block *s, void *data)
->  
->  static int test_bdev_super(struct super_block *s, void *data)
->  {
-> -	return (void *)s->s_bdev == data;
-> +	struct sget_devs *devs = data;
-> +
-> +	return s->s_bdev == devs->bdev;
->  }
->  
->  struct dentry *mount_bdev(struct file_system_type *fs_type,
->  	int flags, const char *dev_name, void *data,
->  	int (*fill_super)(struct super_block *, void *, int))
->  {
-> +	struct sget_devs devs;
->  	struct block_device *bdev;
-> +	struct dax_device *dax_dev;
->  	struct super_block *s;
->  	fmode_t mode = FMODE_READ | FMODE_EXCL;
->  	int error = 0;
-> @@ -1077,6 +1090,7 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
->  	bdev = blkdev_get_by_path(dev_name, mode, fs_type);
->  	if (IS_ERR(bdev))
->  		return ERR_CAST(bdev);
-> +	dax_dev = fs_dax_get_by_bdev(bdev);
->  
->  	/*
->  	 * once the super is inserted into the list by sget, s_umount
-> @@ -1089,8 +1103,10 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
->  		error = -EBUSY;
->  		goto error_bdev;
->  	}
-> +	devs.bdev = bdev;
-> +	devs.dax_dev = dax_dev;
->  	s = sget(fs_type, test_bdev_super, set_bdev_super, flags | MS_NOSEC,
-> -		 bdev);
-> +		 &devs);
->  	mutex_unlock(&bdev->bd_fsfreeze_mutex);
->  	if (IS_ERR(s))
->  		goto error_s;
-> @@ -1111,6 +1127,7 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
->  		 */
->  		up_write(&s->s_umount);
->  		blkdev_put(bdev, mode);
-> +		fs_put_dax(dax_dev);
->  		down_write(&s->s_umount);
->  	} else {
->  		s->s_mode = mode;
-> @@ -1132,6 +1149,7 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
->  	error = PTR_ERR(s);
->  error_bdev:
->  	blkdev_put(bdev, mode);
-> +	fs_put_dax(dax_dev);
->  error:
->  	return ERR_PTR(error);
->  }
-> @@ -1140,6 +1158,7 @@ EXPORT_SYMBOL(mount_bdev);
->  void kill_block_super(struct super_block *sb)
->  {
->  	struct block_device *bdev = sb->s_bdev;
-> +	struct dax_device *dax_dev = sb->s_daxdev;
->  	fmode_t mode = sb->s_mode;
->  
->  	bdev->bd_super = NULL;
-> @@ -1147,6 +1166,7 @@ void kill_block_super(struct super_block *sb)
->  	sync_blockdev(bdev);
->  	WARN_ON_ONCE(!(mode & FMODE_EXCL));
->  	blkdev_put(bdev, mode | FMODE_EXCL);
-> +	fs_put_dax(dax_dev);
->  }
->  
->  EXPORT_SYMBOL(kill_block_super);
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 6bf120bb1a17..78185f3b10b2 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -80,6 +80,19 @@ xfs_find_bdev_for_inode(
->  		return mp->m_ddev_targp->bt_bdev;
->  }
->  
-> +struct dax_device *
-> +xfs_find_daxdev_for_inode(
-> +	struct inode		*inode)
-> +{
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +
-> +	if (XFS_IS_REALTIME_INODE(ip))
-> +		return mp->m_rtdev_targp->bt_daxdev;
-> +	else
-> +		return mp->m_ddev_targp->bt_daxdev;
-> +}
-> +
->  /*
->   * We're now finished for good with this page.  Update the page state via the
->   * associated buffer_heads, paying attention to the start and end offsets that
-> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-> index cc174ec6c2fd..88c85ea63da0 100644
-> --- a/fs/xfs/xfs_aops.h
-> +++ b/fs/xfs/xfs_aops.h
-> @@ -59,5 +59,6 @@ int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
->  
->  extern void xfs_count_page_state(struct page *, int *, int *);
->  extern struct block_device *xfs_find_bdev_for_inode(struct inode *);
-> +extern struct dax_device *xfs_find_daxdev_for_inode(struct inode *);
->  
->  #endif /* __XFS_AOPS_H__ */
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 72f038492ba8..6deb86c845d1 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1802,7 +1802,8 @@ xfs_setsize_buftarg_early(
->  xfs_buftarg_t *
->  xfs_alloc_buftarg(
->  	struct xfs_mount	*mp,
-> -	struct block_device	*bdev)
-> +	struct block_device	*bdev,
-> +	struct dax_device	*dax_dev)
->  {
->  	xfs_buftarg_t		*btp;
->  
-> @@ -1811,6 +1812,7 @@ xfs_alloc_buftarg(
->  	btp->bt_mount = mp;
->  	btp->bt_dev =  bdev->bd_dev;
->  	btp->bt_bdev = bdev;
-> +	btp->bt_daxdev = dax_dev;
->  
->  	if (xfs_setsize_buftarg_early(btp, bdev))
->  		goto error;
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 20721261dae5..bf71507ddb16 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -108,6 +108,7 @@ typedef unsigned int xfs_buf_flags_t;
->  typedef struct xfs_buftarg {
->  	dev_t			bt_dev;
->  	struct block_device	*bt_bdev;
-> +	struct dax_device	*bt_daxdev;
->  	struct xfs_mount	*bt_mount;
->  	unsigned int		bt_meta_sectorsize;
->  	size_t			bt_meta_sectormask;
-> @@ -385,7 +386,7 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
->   *	Handling of buftargs.
->   */
->  extern xfs_buftarg_t *xfs_alloc_buftarg(struct xfs_mount *,
-> -			struct block_device *);
-> +			struct block_device *, struct dax_device *);
->  extern void xfs_free_buftarg(struct xfs_mount *, struct xfs_buftarg *);
->  extern void xfs_wait_buftarg(xfs_buftarg_t *);
->  extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 813394c62849..7c934e407332 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -69,6 +69,7 @@ xfs_bmbt_to_iomap(
->  	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
->  	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
->  	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
-> +	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
->  }
->  
->  xfs_extlen_t
-> @@ -976,7 +977,6 @@ xfs_file_iomap_begin(
->  	int			nimaps = 1, error = 0;
->  	bool			shared = false, trimmed = false;
->  	unsigned		lockmode;
-> -	struct block_device	*bdev;
->  
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
-> @@ -1087,13 +1087,6 @@ xfs_file_iomap_begin(
->  
->  	xfs_bmbt_to_iomap(ip, iomap, &imap);
->  
-> -	/* optionally associate a dax device with the iomap bdev */
-> -	bdev = iomap->bdev;
-> -	if (blk_queue_dax(bdev->bd_queue))
-> -		iomap->dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
-> -	else
-> -		iomap->dax_dev = NULL;
-> -
->  	if (shared)
->  		iomap->flags |= IOMAP_F_SHARED;
->  	return 0;
-> @@ -1171,7 +1164,6 @@ xfs_file_iomap_end(
->  	unsigned		flags,
->  	struct iomap		*iomap)
->  {
-> -	fs_put_dax(iomap->dax_dev);
->  	if ((flags & IOMAP_WRITE) && iomap->type == IOMAP_DELALLOC)
->  		return xfs_file_iomap_end_delalloc(XFS_I(inode), offset,
->  				length, written, iomap);
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 38aaacdbb8b3..d863f96b16e2 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -716,13 +716,19 @@ xfs_close_devices(
->  {
->  	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
->  		struct block_device *logdev = mp->m_logdev_targp->bt_bdev;
-> +		struct dax_device *dax_logdev = mp->m_logdev_targp->bt_daxdev;
-> +
->  		xfs_free_buftarg(mp, mp->m_logdev_targp);
->  		xfs_blkdev_put(logdev);
-> +		fs_put_dax(dax_logdev);
->  	}
->  	if (mp->m_rtdev_targp) {
->  		struct block_device *rtdev = mp->m_rtdev_targp->bt_bdev;
-> +		struct dax_device *dax_rtdev = mp->m_rtdev_targp->bt_daxdev;
-> +
->  		xfs_free_buftarg(mp, mp->m_rtdev_targp);
->  		xfs_blkdev_put(rtdev);
-> +		fs_put_dax(dax_rtdev);
->  	}
->  	xfs_free_buftarg(mp, mp->m_ddev_targp);
->  }
-> @@ -742,7 +748,9 @@ xfs_open_devices(
->  	struct xfs_mount	*mp)
->  {
->  	struct block_device	*ddev = mp->m_super->s_bdev;
-> +	struct dax_device	*dax_ddev = mp->m_super->s_daxdev;
->  	struct block_device	*logdev = NULL, *rtdev = NULL;
-> +	struct dax_device	*dax_logdev = NULL, *dax_rtdev = NULL;
->  	int			error;
->  
->  	/*
-> @@ -752,6 +760,7 @@ xfs_open_devices(
->  		error = xfs_blkdev_get(mp, mp->m_logname, &logdev);
->  		if (error)
->  			goto out;
-> +		dax_logdev = fs_dax_get_by_bdev(logdev);
->  	}
->  
->  	if (mp->m_rtname) {
-> @@ -765,24 +774,25 @@ xfs_open_devices(
->  			error = -EINVAL;
->  			goto out_close_rtdev;
->  		}
-> +		dax_rtdev = fs_dax_get_by_bdev(rtdev);
->  	}
->  
->  	/*
->  	 * Setup xfs_mount buffer target pointers
->  	 */
->  	error = -ENOMEM;
-> -	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev);
-> +	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev, dax_ddev);
->  	if (!mp->m_ddev_targp)
->  		goto out_close_rtdev;
->  
->  	if (rtdev) {
-> -		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev);
-> +		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev, dax_rtdev);
->  		if (!mp->m_rtdev_targp)
->  			goto out_free_ddev_targ;
->  	}
->  
->  	if (logdev && logdev != ddev) {
-> -		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev);
-> +		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev, dax_logdev);
->  		if (!mp->m_logdev_targp)
->  			goto out_free_rtdev_targ;
->  	} else {
-> @@ -798,9 +808,12 @@ xfs_open_devices(
->  	xfs_free_buftarg(mp, mp->m_ddev_targp);
->   out_close_rtdev:
->  	xfs_blkdev_put(rtdev);
-> +	fs_put_dax(dax_rtdev);
->   out_close_logdev:
-> -	if (logdev && logdev != ddev)
-> +	if (logdev && logdev != ddev) {
->  		xfs_blkdev_put(logdev);
-> +		fs_put_dax(dax_logdev);
-> +	}
->   out:
->  	return error;
->  }
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index df97b7af7e2c..6e32be3badec 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -57,6 +57,7 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
->  	put_dax(dax_dev);
->  }
->  
-> +struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
->  #else
->  static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
->  {
-> @@ -71,6 +72,11 @@ static inline struct dax_device *fs_dax_get_by_host(const char *host)
->  static inline void fs_put_dax(struct dax_device *dax_dev)
->  {
->  }
-> +
-> +struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
-> +{
-> +	return NULL;
-> +}
->  #endif
->  
->  int dax_read_lock(void);
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 6e1fd5d21248..d0e3234a1fae 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1334,6 +1334,7 @@ struct super_block {
->  	struct hlist_bl_head	s_anon;		/* anonymous dentries for (nfs) exporting */
->  	struct list_head	s_mounts;	/* list of mounts; _not_ for fs use */
->  	struct block_device	*s_bdev;
-> +	struct dax_device	*s_daxdev;
->  	struct backing_dev_info *s_bdi;
->  	struct mtd_info		*s_mtd;
->  	struct hlist_node	s_instances;
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+For example, the following file does not have zeroes after crash
+at end of logical block #11:
+
+---------------------
+Filesystem type is: 58465342
+File size of /mnt/scratch/testfile2 is 248338 (61 blocks of 4096 bytes)
+ ext:     logical_offset:        physical_offset: length:   expected: flags:
+   0:        1..       3:         33..        35:      3:             unwritten
+   1:       10..      10:         93..        93:      1:         36:
+   2:       20..      23:        147..       150:      4:         94: unwritten
+   3:       24..      31:        158..       165:      8:        151: unwritten
+   4:       34..      34:        146..       146:      1:        166: unwritten
+   5:       35..      38:        151..       154:      4:        147: unwritten
+   6:       41..      44:        167..       170:      4:        155: unwritten
+   7:       46..      46:        166..       166:      1:        171:
+   8:       47..      50:         89..        92:      4:        167:
+   9:       51..      60:        171..       180:     10:         93: last,eof
+/mnt/scratch/testfile2: 10 extents found
+
+/mnt/scratch/testfile2 (bad):
+0000000 0000 0000 0000 0000 0000 0000 0000 0000
+*
+000a510 5858 5858 5858 5858 5858 5858 5858 5858
+*
+000b000 0000 0000 0000 0000 0000 0000 0000 0000
+*
+002e280 0000 0000 0000 0000 0000 0000 5858 5858
+002e290 5858 5858 5858 5858 5858 5858 5858 5858
+*
+0038720 5858 5858 0000 0000 0000 0000 0000 0000
+0038730 0000 0000 0000 0000 0000 0000 0000 0000
+*
+003ca12
+------------------
+
+However, this crash checkpoint (testfile2.mark1) was taken
+after punch+fsync that should have zeroed the end of block #11
+(0xa988..000b000):
+-------------------
+...
+2: 16 punch     from 0xa988 to 0xf126, (0x479e bytes)
+2: 17 read      0x12420 thru    0x1aa08 (0x85e9 bytes)
+2: 18 write     0x30d11 thru    0x3a723 (0x9a13 bytes)
+2: 19 punch     from 0x27988 to 0x2aaed, (0x3165 bytes)
+2: 20 write     0x2d6ff thru    0x369f3 (0x92f5 bytes)
+2: 21 zero      from 0x22882 to 0x22e14, (0x592 bytes)
+2: 22 zero      from 0x14655 to 0x1e636, (0x9fe1 bytes)
+2: 23 zero      from 0x17c91 to 0x1fb75, (0x7ee4 bytes)
+2: 24 punch     from 0x273eb to 0x3028c, (0x8ea1 bytes)
+2: 25 zero      from 0x29eb2 to 0x2c692, (0x27e0 bytes)
+2: 26 zero      from 0x11ac to 0x3910, (0x2764 bytes)
+2: truncating to largest ever: 0x3ea12
+2: 27 trunc     from 0x3a724 to 0x3ea12
+2: 28 collapse  from 0x2d000 to 0x2f000, (0x2000 bytes)
+2: 29 falloc    from 0x22cf2 to 0x2733b (0x4649 bytes)
+2: 30 mapread   0x3466a thru    0x3ca11 (0x83a8 bytes)
+2: 31 fsync
+2: Dumped fsync buffer to testfile2.mark1
+
+/mnt/test/fsxtests/testfile2.mark1 (good):
+0000000 0000 0000 0000 0000 0000 0000 0000 0000
+*
+000a510 5858 5858 5858 5858 5858 5858 5858 5858
+*
+000a980 5858 5858 5858 5858 0000 0000 0000 0000
+000a990 0000 0000 0000 0000 0000 0000 0000 0000
+*
+002e280 0000 0000 0000 0000 0000 0000 5858 5858
+002e290 5858 5858 5858 5858 5858 5858 5858 5858
+*
+0038720 5858 5858 0000 0000 0000 0000 0000 0000
+0038730 0000 0000 0000 0000 0000 0000 0000 0000
+*
+003ca12
+
+--------------------------
+
+Anyway, I went to look at xfs_zero_range() and while I admit
+it was hard for me to follow down all the actors into block
+layer, I couldn't find where partial zeroed page is marked dirty.
+
+Can you please have a look and say what you make of this?
+
+Thanks,
+Amir.
+
+P.S. if needed I can provide the recorded writes log to replay the
+I/O sequence that results in the reported error (it's 13K compressed)
+but the problem seems obvious and easy to reproduce using the
+xfstest (reproduced at high probability not always).
