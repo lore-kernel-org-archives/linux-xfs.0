@@ -1,259 +1,391 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35741 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751232AbdH1RDu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 13:03:50 -0400
-Date: Mon, 28 Aug 2017 10:03:40 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:34847 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751249AbdH1RdO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 13:33:14 -0400
+Date: Mon, 28 Aug 2017 10:33:09 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: consolidate the various page fault handlers
-Message-ID: <20170828170340.GC4757@magnolia>
-References: <20170828063659.21045-1-hch@lst.de>
- <20170828063659.21045-3-hch@lst.de>
+Subject: Re: [PATCH 1/3] xfs: refactor xfs_trans_roll
+Message-ID: <20170828173309.GD4757@magnolia>
+References: <20170828074458.23786-1-hch@lst.de>
+ <20170828074458.23786-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170828063659.21045-3-hch@lst.de>
+In-Reply-To: <20170828074458.23786-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, jack@suse.cz
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Aug 28, 2017 at 08:36:59AM +0200, Christoph Hellwig wrote:
-> Add a new __xfs_filemap_fault helper that implements all four page fault
-> callouts, and make these methods themselves small stubs that set the
-> correct write_fault flag, and exit early for the non-DAX case for the
-> hugepage related ones.
-> 
-> Also remove the extra size checking in the pfn_fault path, which is now
-> handled in the core DAX code.
-> 
-> Life would be so much simpler if we only had one method for all this.
+On Mon, Aug 28, 2017 at 09:44:56AM +0200, Christoph Hellwig wrote:
+> Split xfs_trans_roll into a low-level helper that just rolls the
+> actual transaction and a new higher level xfs_trans_roll_inode
+> that takes care of logging and rejoining the inode.  This gets
+> rid of the NULL inode case, and allows to simplify the special
+> cases in the deferred operation code.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Looks ok, will test....
+Looks ok, will test...
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
---D
-
 > ---
->  fs/xfs/xfs_file.c  | 127 ++++++++++++++++-------------------------------------
->  fs/xfs/xfs_trace.h |  29 ++++++++++--
->  2 files changed, 62 insertions(+), 94 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c        | 16 ++++++++--------
+>  fs/xfs/libxfs/xfs_attr_leaf.c   |  6 +++---
+>  fs/xfs/libxfs/xfs_attr_remote.c |  4 ++--
+>  fs/xfs/libxfs/xfs_defer.c       | 23 +++++++++--------------
+>  fs/xfs/xfs_attr_inactive.c      |  6 +++---
+>  fs/xfs/xfs_inode.c              |  4 ++--
+>  fs/xfs/xfs_trans.c              | 28 +++++-----------------------
+>  fs/xfs/xfs_trans.h              |  3 ++-
+>  fs/xfs/xfs_trans_inode.c        | 14 ++++++++++++++
+>  9 files changed, 48 insertions(+), 56 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 8b0181c6d2a6..d2b53fefa6a5 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1011,129 +1011,76 @@ xfs_file_llseek(
->   *       page_lock (MM)
->   *         i_lock (XFS - extent map serialisation)
->   */
-> -
-> -/*
-> - * mmap()d file has taken write protection fault and is being made writable. We
-> - * can set the page state up correctly for a writable page, which means we can
-> - * do correct delalloc accounting (ENOSPC checking!) and unwritten extent
-> - * mapping.
-> - */
-> -STATIC int
-> -xfs_filemap_page_mkwrite(
-> -	struct vm_fault		*vmf)
-> +static int
-> +__xfs_filemap_fault(
-> +	struct vm_fault		*vmf,
-> +	enum page_entry_size	pe_size,
-> +	bool			write_fault)
->  {
->  	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> +	struct xfs_inode	*ip = XFS_I(inode);
->  	int			ret;
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index de7b9bd30bec..bafa0f6bfafa 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -341,7 +341,7 @@ xfs_attr_set(
+>  		 * transaction to add the new attribute to the leaf.
+>  		 */
 >  
-> -	trace_xfs_filemap_page_mkwrite(XFS_I(inode));
-> +	trace_xfs_filemap_fault(ip, pe_size, write_fault);
+> -		error = xfs_trans_roll(&args.trans, dp);
+> +		error = xfs_trans_roll_inode(&args.trans, dp);
+>  		if (error)
+>  			goto out;
 >  
-> -	sb_start_pagefault(inode->i_sb);
-> -	file_update_time(vmf->vma->vm_file);
-> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> +	if (write_fault) {
-> +		sb_start_pagefault(inode->i_sb);
-> +		file_update_time(vmf->vma->vm_file);
-> +	}
+> @@ -605,7 +605,7 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+>  		 * Commit the current trans (including the inode) and start
+>  		 * a new one.
+>  		 */
+> -		error = xfs_trans_roll(&args->trans, dp);
+> +		error = xfs_trans_roll_inode(&args->trans, dp);
+>  		if (error)
+>  			return error;
 >  
-> +	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
->  	if (IS_DAX(inode)) {
-> -		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
-> +		ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
->  	} else {
-> -		ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-> +		if (write_fault)
-> +			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-> +		else
-> +			ret = filemap_fault(vmf);
+> @@ -620,7 +620,7 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+>  	 * Commit the transaction that added the attr name so that
+>  	 * later routines can manage their own transactions.
+>  	 */
+> -	error = xfs_trans_roll(&args->trans, dp);
+> +	error = xfs_trans_roll_inode(&args->trans, dp);
+>  	if (error)
+>  		return error;
+>  
+> @@ -697,7 +697,7 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+>  		/*
+>  		 * Commit the remove and start the next trans in series.
+>  		 */
+> -		error = xfs_trans_roll(&args->trans, dp);
+> +		error = xfs_trans_roll_inode(&args->trans, dp);
+>  
+>  	} else if (args->rmtblkno > 0) {
+>  		/*
+> @@ -885,7 +885,7 @@ xfs_attr_node_addname(xfs_da_args_t *args)
+>  			 * Commit the node conversion and start the next
+>  			 * trans in the chain.
+>  			 */
+> -			error = xfs_trans_roll(&args->trans, dp);
+> +			error = xfs_trans_roll_inode(&args->trans, dp);
+>  			if (error)
+>  				goto out;
+>  
+> @@ -925,7 +925,7 @@ xfs_attr_node_addname(xfs_da_args_t *args)
+>  	 * Commit the leaf addition or btree split and start the next
+>  	 * trans in the chain.
+>  	 */
+> -	error = xfs_trans_roll(&args->trans, dp);
+> +	error = xfs_trans_roll_inode(&args->trans, dp);
+>  	if (error)
+>  		goto out;
+>  
+> @@ -1012,7 +1012,7 @@ xfs_attr_node_addname(xfs_da_args_t *args)
+>  		/*
+>  		 * Commit and start the next trans in the chain.
+>  		 */
+> -		error = xfs_trans_roll(&args->trans, dp);
+> +		error = xfs_trans_roll_inode(&args->trans, dp);
+>  		if (error)
+>  			goto out;
+>  
+> @@ -1132,7 +1132,7 @@ xfs_attr_node_removename(xfs_da_args_t *args)
+>  		/*
+>  		 * Commit the Btree join operation and start a new trans.
+>  		 */
+> -		error = xfs_trans_roll(&args->trans, dp);
+> +		error = xfs_trans_roll_inode(&args->trans, dp);
+>  		if (error)
+>  			goto out;
 >  	}
-> -
->  	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -	sb_end_pagefault(inode->i_sb);
->  
-> +	if (write_fault)
-> +		sb_end_pagefault(inode->i_sb);
->  	return ret;
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index c6c15e5717e4..5c16db86b38f 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -2608,7 +2608,7 @@ xfs_attr3_leaf_clearflag(
+>  	/*
+>  	 * Commit the flag value change and start the next trans in series.
+>  	 */
+> -	return xfs_trans_roll(&args->trans, args->dp);
+> +	return xfs_trans_roll_inode(&args->trans, args->dp);
 >  }
 >  
-> -STATIC int
-> +static int
->  xfs_filemap_fault(
->  	struct vm_fault		*vmf)
->  {
-> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> -	int			ret;
-> -
-> -	trace_xfs_filemap_fault(XFS_I(inode));
-> -
->  	/* DAX can shortcut the normal fault path on write faults! */
-> -	if ((vmf->flags & FAULT_FLAG_WRITE) && IS_DAX(inode))
-> -		return xfs_filemap_page_mkwrite(vmf);
-> -
-> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -	if (IS_DAX(inode))
-> -		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
-> -	else
-> -		ret = filemap_fault(vmf);
-> -	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -
-> -	return ret;
-> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
-> +			IS_DAX(file_inode(vmf->vma->vm_file)) &&
-> +			(vmf->flags & FAULT_FLAG_WRITE));
+>  /*
+> @@ -2659,7 +2659,7 @@ xfs_attr3_leaf_setflag(
+>  	/*
+>  	 * Commit the flag value change and start the next trans in series.
+>  	 */
+> -	return xfs_trans_roll(&args->trans, args->dp);
+> +	return xfs_trans_roll_inode(&args->trans, args->dp);
 >  }
 >  
-> -/*
-> - * Similar to xfs_filemap_fault(), the DAX fault path can call into here on
-> - * both read and write faults. Hence we need to handle both cases. There is no
-> - * ->huge_mkwrite callout for huge pages, so we have a single function here to
-> - * handle both cases here. @flags carries the information on the type of fault
-> - * occuring.
-> - */
-> -STATIC int
-> +static int
->  xfs_filemap_huge_fault(
->  	struct vm_fault		*vmf,
->  	enum page_entry_size	pe_size)
->  {
-> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> -	struct xfs_inode	*ip = XFS_I(inode);
-> -	int			ret;
-> -
-> -	if (!IS_DAX(inode))
-> +	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
->  		return VM_FAULT_FALLBACK;
+>  /*
+> @@ -2777,7 +2777,7 @@ xfs_attr3_leaf_flipflags(
+>  	/*
+>  	 * Commit the flag value change and start the next trans in series.
+>  	 */
+> -	error = xfs_trans_roll(&args->trans, args->dp);
+> +	error = xfs_trans_roll_inode(&args->trans, args->dp);
 >  
-> -	trace_xfs_filemap_huge_fault(ip);
-> -
-> -	if (vmf->flags & FAULT_FLAG_WRITE) {
-> -		sb_start_pagefault(inode->i_sb);
-> -		file_update_time(vmf->vma->vm_file);
+>  	return error;
+>  }
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> index 5236d8e45146..433c36714e40 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> @@ -484,7 +484,7 @@ xfs_attr_rmtval_set(
+>  		/*
+>  		 * Start the next trans in the chain.
+>  		 */
+> -		error = xfs_trans_roll(&args->trans, dp);
+> +		error = xfs_trans_roll_inode(&args->trans, dp);
+>  		if (error)
+>  			return error;
+>  	}
+> @@ -621,7 +621,7 @@ xfs_attr_rmtval_remove(
+>  		/*
+>  		 * Close out trans and start the next one in the chain.
+>  		 */
+> -		error = xfs_trans_roll(&args->trans, args->dp);
+> +		error = xfs_trans_roll_inode(&args->trans, args->dp);
+>  		if (error)
+>  			return error;
+>  	}
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index 5c2929f94bd3..4ea2f068d95c 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -240,23 +240,19 @@ xfs_defer_trans_abort(
+>  STATIC int
+>  xfs_defer_trans_roll(
+>  	struct xfs_trans		**tp,
+> -	struct xfs_defer_ops		*dop,
+> -	struct xfs_inode		*ip)
+> +	struct xfs_defer_ops		*dop)
+>  {
+>  	int				i;
+>  	int				error;
+>  
+> -	/* Log all the joined inodes except the one we passed in. */
+> -	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++) {
+> -		if (dop->dop_inodes[i] == ip)
+> -			continue;
+> +	/* Log all the joined inodes. */
+> +	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
+>  		xfs_trans_log_inode(*tp, dop->dop_inodes[i], XFS_ILOG_CORE);
 > -	}
-> -
-> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -	ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
-> -	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -
-> -	if (vmf->flags & FAULT_FLAG_WRITE)
-> -		sb_end_pagefault(inode->i_sb);
-> +	/* DAX can shortcut the normal fault path on write faults! */
-> +	return __xfs_filemap_fault(vmf, pe_size,
-> +			(vmf->flags & FAULT_FLAG_WRITE));
-> +}
 >  
-> -	return ret;
-> +static int
-> +xfs_filemap_page_mkwrite(
-> +	struct vm_fault		*vmf)
-> +{
-> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
+>  	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
+>  
+>  	/* Roll the transaction. */
+> -	error = xfs_trans_roll(tp, ip);
+> +	error = xfs_trans_roll(tp);
+>  	if (error) {
+>  		trace_xfs_defer_trans_roll_error((*tp)->t_mountp, dop, error);
+>  		xfs_defer_trans_abort(*tp, dop, error);
+> @@ -264,12 +260,9 @@ xfs_defer_trans_roll(
+>  	}
+>  	dop->dop_committed = true;
+>  
+> -	/* Rejoin the joined inodes except the one we passed in. */
+> -	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++) {
+> -		if (dop->dop_inodes[i] == ip)
+> -			continue;
+> +	/* Rejoin the joined inodes. */
+> +	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
+>  		xfs_trans_ijoin(*tp, dop->dop_inodes[i], 0);
+> -	}
+>  
+>  	return error;
 >  }
+> @@ -331,13 +324,15 @@ xfs_defer_finish(
 >  
-> -/*
-> - * pfn_mkwrite was originally inteneded to ensure we capture time stamp
-> - * updates on write faults. In reality, it's need to serialise against
-> - * truncate similar to page_mkwrite. Hence we cycle the XFS_MMAPLOCK_SHARED
-> - * to ensure we serialise the fault barrier in place.
-> - */
->  static int
->  xfs_filemap_pfn_mkwrite(
->  	struct vm_fault		*vmf)
+>  	trace_xfs_defer_finish((*tp)->t_mountp, dop);
+>  
+> +	xfs_defer_join(dop, ip);
+> +
+>  	/* Until we run out of pending work to finish... */
+>  	while (xfs_defer_has_unfinished_work(dop)) {
+>  		/* Log intents for work items sitting in the intake. */
+>  		xfs_defer_intake_work(*tp, dop);
+>  
+>  		/* Roll the transaction. */
+> -		error = xfs_defer_trans_roll(tp, dop, ip);
+> +		error = xfs_defer_trans_roll(tp, dop);
+>  		if (error)
+>  			goto out;
+>  
+> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+> index be0b79d8900f..ebd66b19fbfc 100644
+> --- a/fs/xfs/xfs_attr_inactive.c
+> +++ b/fs/xfs/xfs_attr_inactive.c
+> @@ -97,7 +97,7 @@ xfs_attr3_leaf_freextent(
+>  			/*
+>  			 * Roll to next transaction.
+>  			 */
+> -			error = xfs_trans_roll(trans, dp);
+> +			error = xfs_trans_roll_inode(trans, dp);
+>  			if (error)
+>  				return error;
+>  		}
+> @@ -308,7 +308,7 @@ xfs_attr3_node_inactive(
+>  		/*
+>  		 * Atomically commit the whole invalidate stuff.
+>  		 */
+> -		error = xfs_trans_roll(trans, dp);
+> +		error = xfs_trans_roll_inode(trans, dp);
+>  		if (error)
+>  			return  error;
+>  	}
+> @@ -375,7 +375,7 @@ xfs_attr3_root_inactive(
+>  	/*
+>  	 * Commit the invalidate and start the next transaction.
+>  	 */
+> -	error = xfs_trans_roll(trans, dp);
+> +	error = xfs_trans_roll_inode(trans, dp);
+>  
+>  	return error;
+>  }
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index ff48f0096810..5b4eda44f39f 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1055,7 +1055,7 @@ xfs_dir_ialloc(
+>  			tp->t_flags &= ~(XFS_TRANS_DQ_DIRTY);
+>  		}
+>  
+> -		code = xfs_trans_roll(&tp, NULL);
+> +		code = xfs_trans_roll(&tp);
+>  		if (committed != NULL)
+>  			*committed = 1;
+>  
+> @@ -1611,7 +1611,7 @@ xfs_itruncate_extents(
+>  		if (error)
+>  			goto out_bmap_cancel;
+>  
+> -		error = xfs_trans_roll(&tp, ip);
+> +		error = xfs_trans_roll_inode(&tp, ip);
+>  		if (error)
+>  			goto out;
+>  	}
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index 2011620008de..a87f657f59c9 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -1035,25 +1035,18 @@ xfs_trans_cancel(
+>   */
+>  int
+>  xfs_trans_roll(
+> -	struct xfs_trans	**tpp,
+> -	struct xfs_inode	*dp)
+> +	struct xfs_trans	**tpp)
 >  {
+> -	struct xfs_trans	*trans;
+> +	struct xfs_trans	*trans = *tpp;
+>  	struct xfs_trans_res	tres;
+>  	int			error;
+>  
+>  	/*
+> -	 * Ensure that the inode is always logged.
+> -	 */
+> -	trans = *tpp;
+> -	if (dp)
+> -		xfs_trans_log_inode(trans, dp, XFS_ILOG_CORE);
 > -
-> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> -	struct xfs_inode	*ip = XFS_I(inode);
-> -	int			ret = VM_FAULT_NOPAGE;
-> -	loff_t			size;
+> -	/*
+>  	 * Copy the critical parameters from one trans to the next.
+>  	 */
+>  	tres.tr_logres = trans->t_log_res;
+>  	tres.tr_logcount = trans->t_log_count;
+> +
+>  	*tpp = xfs_trans_dup(trans);
+>  
+>  	/*
+> @@ -1067,10 +1060,8 @@ xfs_trans_roll(
+>  	if (error)
+>  		return error;
+>  
+> -	trans = *tpp;
 > -
-> -	trace_xfs_filemap_pfn_mkwrite(ip);
+>  	/*
+> -	 * Reserve space in the log for th next transaction.
+> +	 * Reserve space in the log for the next transaction.
+>  	 * This also pushes items in the "AIL", the list of logged items,
+>  	 * out to disk if they are taking up space at the tail of the log
+>  	 * that we want to use.  This requires that either nothing be locked
+> @@ -1078,14 +1069,5 @@ xfs_trans_roll(
+>  	 * the prior and the next transactions.
+>  	 */
+>  	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
+> -	error = xfs_trans_reserve(trans, &tres, 0, 0);
+> -	/*
+> -	 *  Ensure that the inode is in the new transaction and locked.
+> -	 */
+> -	if (error)
+> -		return error;
 > -
-> -	sb_start_pagefault(inode->i_sb);
-> -	file_update_time(vmf->vma->vm_file);
-> -
-> -	/* check if the faulting page hasn't raced with truncate */
-> -	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
-> -	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
-> -	if (vmf->pgoff >= size)
-> -		ret = VM_FAULT_SIGBUS;
-> -	else if (IS_DAX(inode))
-> -		ret = dax_pfn_mkwrite(vmf);
-> -	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
-> -	sb_end_pagefault(inode->i_sb);
-> -	return ret;
-> -
-> +	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
-> +		return VM_FAULT_NOPAGE;
-> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
+> -	if (dp)
+> -		xfs_trans_ijoin(trans, dp, 0);
+> -	return 0;
+> +	return xfs_trans_reserve(*tpp, &tres, 0, 0);
 >  }
->  
->  static const struct vm_operations_struct xfs_file_vm_ops = {
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index bcc3cdf8e1c5..78626f77fe3e 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -689,10 +689,31 @@ DEFINE_INODE_EVENT(xfs_inode_set_cowblocks_tag);
->  DEFINE_INODE_EVENT(xfs_inode_clear_cowblocks_tag);
->  DEFINE_INODE_EVENT(xfs_inode_free_cowblocks_invalid);
->  
-> -DEFINE_INODE_EVENT(xfs_filemap_fault);
-> -DEFINE_INODE_EVENT(xfs_filemap_huge_fault);
-> -DEFINE_INODE_EVENT(xfs_filemap_page_mkwrite);
-> -DEFINE_INODE_EVENT(xfs_filemap_pfn_mkwrite);
-> +TRACE_EVENT(xfs_filemap_fault,
-> +	TP_PROTO(struct xfs_inode *ip, enum page_entry_size pe_size,
-> +		 bool write_fault),
-> +	TP_ARGS(ip, pe_size, write_fault),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(xfs_ino_t, ino)
-> +		__field(enum page_entry_size, pe_size)
-> +		__field(bool, write_fault)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-> +		__entry->ino = ip->i_ino;
-> +		__entry->pe_size = pe_size;
-> +		__entry->write_fault = write_fault;
-> +	),
-> +	TP_printk("dev %d:%d ino 0x%llx %s write_fault %d",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> +		  __entry->ino,
-> +		  __print_symbolic(__entry->pe_size,
-> +			{ PE_SIZE_PTE,	"PTE" },
-> +			{ PE_SIZE_PMD,	"PMD" },
-> +			{ PE_SIZE_PUD,	"PUD" }),
-> +		  __entry->write_fault)
-> +)
->  
->  DECLARE_EVENT_CLASS(xfs_iref_class,
->  	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index 7d627721e4b3..b25d3d22e289 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -228,7 +228,8 @@ int		xfs_trans_free_extent(struct xfs_trans *,
+>  				      struct xfs_efd_log_item *, xfs_fsblock_t,
+>  				      xfs_extlen_t, struct xfs_owner_info *);
+>  int		xfs_trans_commit(struct xfs_trans *);
+> -int		xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
+> +int		xfs_trans_roll(struct xfs_trans **);
+> +int		xfs_trans_roll_inode(struct xfs_trans **, struct xfs_inode *);
+>  void		xfs_trans_cancel(xfs_trans_t *);
+>  int		xfs_trans_ail_init(struct xfs_mount *);
+>  void		xfs_trans_ail_destroy(struct xfs_mount *);
+> diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+> index dab8daa676f9..daa7615497f9 100644
+> --- a/fs/xfs/xfs_trans_inode.c
+> +++ b/fs/xfs/xfs_trans_inode.c
+> @@ -134,3 +134,17 @@ xfs_trans_log_inode(
+>  	flags |= ip->i_itemp->ili_last_fields;
+>  	ip->i_itemp->ili_fields |= flags;
+>  }
+> +
+> +int
+> +xfs_trans_roll_inode(
+> +	struct xfs_trans	**tpp,
+> +	struct xfs_inode	*ip)
+> +{
+> +	int			error;
+> +
+> +	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
+> +	error = xfs_trans_roll(tpp);
+> +	if (!error)
+> +		xfs_trans_ijoin(*tpp, ip, 0);
+> +	return error;
+> +}
 > -- 
 > 2.11.0
 > 
