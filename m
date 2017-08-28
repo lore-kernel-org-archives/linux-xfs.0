@@ -1,144 +1,162 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f175.google.com ([209.85.161.175]:33178 "EHLO
-        mail-yw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751213AbdH1SJi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 14:09:38 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:23536 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751182AbdH1SQj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 14:16:39 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7SIGcen018652
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Aug 2017 18:16:38 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v7SIGcp0027124
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Aug 2017 18:16:38 GMT
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7SIGbch018780
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Aug 2017 18:16:38 GMT
+Subject: [PATCH 01/12] xfs: refactor long-format btree header verification
+ routines
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 28 Aug 2017 11:16:36 -0700
+Message-ID: <150394419606.24826.3469181916211366453.stgit@magnolia>
+In-Reply-To: <150394418979.24826.12970283067445908653.stgit@magnolia>
+References: <150394418979.24826.12970283067445908653.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20170828175229.GF4757@magnolia>
-References: <CAOQ4uxg7FJ6sLRuRcV_AYRx_crZyVzVMzPgkZb8msLxtZvL12A@mail.gmail.com>
- <CAOQ4uxj4LRj=B8aHwPTGWkOmg9b-W6bJb7U9V76z4dMV3c4MOA@mail.gmail.com> <20170828175229.GF4757@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 28 Aug 2017 21:09:36 +0300
-Message-ID: <CAOQ4uxi-oVGCtg9jSF31SE8-T_Pdw4GpkO7ox_65FzZLKqv-KQ@mail.gmail.com>
-Subject: Re: XFS bug discovered by crash tests?
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Josef Bacik <jbacik@fb.com>, Eryu Guan <eguan@redhat.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Mon, Aug 28, 2017 at 8:52 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Mon, Aug 28, 2017 at 11:36:38AM +0300, Amir Goldstein wrote:
->> On Mon, Aug 28, 2017 at 11:33 AM, Amir Goldstein <amir73il@gmail.com> wrote:
->> > Christoph, Darrick,
->> >
->> > As I reported last week, I started running Josef's log-writes crash
->> > tests and immediately got reports on data checksum errors when
->> > running the tests on xfs.
->> >
->> > Unlike ext4 and btrfs, xfs tests seemed to fail arbitrarily for any
->> > value of random seed I tried. Unlike xfs, I never observed data
->> > checksum errors on ext4 and btrfs (only fsck errors).
->> >
->> > It's quite easy to reproduce the reported checksum errors when
->> > running the test currently on my xfstests branch:
->> > https://github.com/amir73il/xfstests/commits/dm-log-writes
->> >
->> > Looking closer at the reported checksum errors, in all cases
->> > I examined, the problem was, that after a sequence of
->> > PUNCH_HOLE+FSYNC on a test file, a partially zeroed block,
->> > both at beginning and end of zero range is not zeroed after
->> > crash.
->> >
->> > For example, the following file does not have zeroes after crash
->> > at end of logical block #11:
->>
->> Block #10 that is... #11 is unmapped.
->>
->> >
->> > ---------------------
->> > Filesystem type is: 58465342
->> > File size of /mnt/scratch/testfile2 is 248338 (61 blocks of 4096 bytes)
->> >  ext:     logical_offset:        physical_offset: length:   expected: flags:
->> >    0:        1..       3:         33..        35:      3:             unwritten
->> >    1:       10..      10:         93..        93:      1:         36:
->> >    2:       20..      23:        147..       150:      4:         94: unwritten
->> >    3:       24..      31:        158..       165:      8:        151: unwritten
->> >    4:       34..      34:        146..       146:      1:        166: unwritten
->> >    5:       35..      38:        151..       154:      4:        147: unwritten
->> >    6:       41..      44:        167..       170:      4:        155: unwritten
->> >    7:       46..      46:        166..       166:      1:        171:
->> >    8:       47..      50:         89..        92:      4:        167:
->> >    9:       51..      60:        171..       180:     10:         93: last,eof
->> > /mnt/scratch/testfile2: 10 extents found
->> >
->> > /mnt/scratch/testfile2 (bad):
->> > 0000000 0000 0000 0000 0000 0000 0000 0000 0000
->> > *
->> > 000a510 5858 5858 5858 5858 5858 5858 5858 5858
->> > *
->> > 000b000 0000 0000 0000 0000 0000 0000 0000 0000
->> > *
->> > 002e280 0000 0000 0000 0000 0000 0000 5858 5858
->> > 002e290 5858 5858 5858 5858 5858 5858 5858 5858
->> > *
->> > 0038720 5858 5858 0000 0000 0000 0000 0000 0000
->> > 0038730 0000 0000 0000 0000 0000 0000 0000 0000
->> > *
->> > 003ca12
->> > ------------------
->> >
->> > However, this crash checkpoint (testfile2.mark1) was taken
->> > after punch+fsync that should have zeroed the end of block #11
->> > (0xa988..000b000):
->> > -------------------
->> > ...
->> > 2: 16 punch     from 0xa988 to 0xf126, (0x479e bytes)
->> > 2: 17 read      0x12420 thru    0x1aa08 (0x85e9 bytes)
->> > 2: 18 write     0x30d11 thru    0x3a723 (0x9a13 bytes)
->> > 2: 19 punch     from 0x27988 to 0x2aaed, (0x3165 bytes)
->> > 2: 20 write     0x2d6ff thru    0x369f3 (0x92f5 bytes)
->> > 2: 21 zero      from 0x22882 to 0x22e14, (0x592 bytes)
->> > 2: 22 zero      from 0x14655 to 0x1e636, (0x9fe1 bytes)
->> > 2: 23 zero      from 0x17c91 to 0x1fb75, (0x7ee4 bytes)
->> > 2: 24 punch     from 0x273eb to 0x3028c, (0x8ea1 bytes)
->> > 2: 25 zero      from 0x29eb2 to 0x2c692, (0x27e0 bytes)
->> > 2: 26 zero      from 0x11ac to 0x3910, (0x2764 bytes)
->> > 2: truncating to largest ever: 0x3ea12
->> > 2: 27 trunc     from 0x3a724 to 0x3ea12
->> > 2: 28 collapse  from 0x2d000 to 0x2f000, (0x2000 bytes)
->> > 2: 29 falloc    from 0x22cf2 to 0x2733b (0x4649 bytes)
->> > 2: 30 mapread   0x3466a thru    0x3ca11 (0x83a8 bytes)
->> > 2: 31 fsync
->> > 2: Dumped fsync buffer to testfile2.mark1
->> >
->> > /mnt/test/fsxtests/testfile2.mark1 (good):
->> > 0000000 0000 0000 0000 0000 0000 0000 0000 0000
->> > *
->> > 000a510 5858 5858 5858 5858 5858 5858 5858 5858
->> > *
->> > 000a980 5858 5858 5858 5858 0000 0000 0000 0000
->> > 000a990 0000 0000 0000 0000 0000 0000 0000 0000
->> > *
->> > 002e280 0000 0000 0000 0000 0000 0000 5858 5858
->> > 002e290 5858 5858 5858 5858 5858 5858 5858 5858
->> > *
->> > 0038720 5858 5858 0000 0000 0000 0000 0000 0000
->> > 0038730 0000 0000 0000 0000 0000 0000 0000 0000
->> > *
->> > 003ca12
->> >
->> > --------------------------
->> >
->> > Anyway, I went to look at xfs_zero_range() and while I admit
->> > it was hard for me to follow down all the actors into block
->> > layer, I couldn't find where partial zeroed page is marked dirty.
->> >
->> > Can you please have a look and say what you make of this?
->
-> <shrug> /me would have thought the page gets dirty via:
->
-> xfs_zero_range -> iomap_zero_range -> iomap_zero_range_actor ->
-> iomap_zero -> iomap_write_end -> generic_write_end -> block_write_end ->
-> __block_commit_write -> mark_buffer_dirty -> __set_page_dirty
->
-> But maybe that doesn't happen?
->
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yap, that looks right. Will try to come up with a less random reproducer.
-Any ideas where to look would be welcome.
+Create two helper functions to verify the headers of a long format
+btree block.  We'll use this later for the realtime rmapbt.
 
-Thanks,
-Amir.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_bmap_btree.c |   22 ++-----------------
+ fs/xfs/libxfs/xfs_btree.c      |   47 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_btree.h      |    3 +++
+ 3 files changed, 52 insertions(+), 20 deletions(-)
+
+
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index eddc1df..99bdf08 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -627,17 +627,11 @@ xfs_bmbt_verify(
+ 
+ 	switch (block->bb_magic) {
+ 	case cpu_to_be32(XFS_BMAP_CRC_MAGIC):
+-		if (!xfs_sb_version_hascrc(&mp->m_sb))
+-			return false;
+-		if (!uuid_equal(&block->bb_u.l.bb_uuid, &mp->m_sb.sb_meta_uuid))
+-			return false;
+-		if (be64_to_cpu(block->bb_u.l.bb_blkno) != bp->b_bn)
+-			return false;
+ 		/*
+ 		 * XXX: need a better way of verifying the owner here. Right now
+ 		 * just make sure there has been one set.
+ 		 */
+-		if (be64_to_cpu(block->bb_u.l.bb_owner) == 0)
++		if (!xfs_btree_lblock_v5hdr_verify(bp, XFS_RMAP_OWN_UNKNOWN))
+ 			return false;
+ 		/* fall through */
+ 	case cpu_to_be32(XFS_BMAP_MAGIC):
+@@ -656,20 +650,8 @@ xfs_bmbt_verify(
+ 	level = be16_to_cpu(block->bb_level);
+ 	if (level > max(mp->m_bm_maxlevels[0], mp->m_bm_maxlevels[1]))
+ 		return false;
+-	if (be16_to_cpu(block->bb_numrecs) > mp->m_bmap_dmxr[level != 0])
+-		return false;
+-
+-	/* sibling pointer verification */
+-	if (!block->bb_u.l.bb_leftsib ||
+-	    (block->bb_u.l.bb_leftsib != cpu_to_be64(NULLFSBLOCK) &&
+-	     !XFS_FSB_SANITY_CHECK(mp, be64_to_cpu(block->bb_u.l.bb_leftsib))))
+-		return false;
+-	if (!block->bb_u.l.bb_rightsib ||
+-	    (block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK) &&
+-	     !XFS_FSB_SANITY_CHECK(mp, be64_to_cpu(block->bb_u.l.bb_rightsib))))
+-		return false;
+ 
+-	return true;
++	return xfs_btree_lblock_verify(bp, mp->m_bmap_dmxr[level != 0]);
+ }
+ 
+ static void
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 9ba49dd..0ba9edb 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4493,6 +4493,53 @@ xfs_btree_change_owner(
+ 			&bbcoi);
+ }
+ 
++/* Verify the v5 fields of a long-format btree block. */
++bool
++xfs_btree_lblock_v5hdr_verify(
++	struct xfs_buf		*bp,
++	uint64_t		owner)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return false;
++	if (!uuid_equal(&block->bb_u.l.bb_uuid, &mp->m_sb.sb_meta_uuid))
++		return false;
++	if (block->bb_u.l.bb_blkno != cpu_to_be64(bp->b_bn))
++		return false;
++	if (owner != XFS_RMAP_OWN_UNKNOWN &&
++	    be64_to_cpu(block->bb_u.l.bb_owner) != owner)
++		return false;
++	return true;
++}
++
++/* Verify a long-format btree block. */
++bool
++xfs_btree_lblock_verify(
++	struct xfs_buf		*bp,
++	unsigned int		max_recs)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
++
++	/* numrecs verification */
++	if (be16_to_cpu(block->bb_numrecs) > max_recs)
++		return false;
++
++	/* sibling pointer verification */
++	if (!block->bb_u.l.bb_leftsib ||
++	    (block->bb_u.l.bb_leftsib != cpu_to_be64(NULLFSBLOCK) &&
++	     !XFS_FSB_SANITY_CHECK(mp, be64_to_cpu(block->bb_u.l.bb_leftsib))))
++		return false;
++	if (!block->bb_u.l.bb_rightsib ||
++	    (block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK) &&
++	     !XFS_FSB_SANITY_CHECK(mp, be64_to_cpu(block->bb_u.l.bb_rightsib))))
++		return false;
++
++	return true;
++}
++
+ /**
+  * xfs_btree_sblock_v5hdr_verify() -- verify the v5 fields of a short-format
+  *				      btree block
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 8666cc6..13fb833 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -480,6 +480,9 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
+ 
+ bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
+ bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
++bool xfs_btree_lblock_v5hdr_verify(struct xfs_buf *bp, uint64_t owner);
++bool xfs_btree_lblock_verify(struct xfs_buf *bp, unsigned int max_recs);
++
+ uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
+ 				 unsigned long len);
+ unsigned long long xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
+
