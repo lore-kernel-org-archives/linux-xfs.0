@@ -1,118 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23893 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754360AbdH2O3z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 Aug 2017 10:29:55 -0400
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH 3/4] ext4: Add iomap support for inline data
-Date: Tue, 29 Aug 2017 16:29:41 +0200
-Message-Id: <20170829142942.21594-4-agruenba@redhat.com>
-In-Reply-To: <20170829142942.21594-1-agruenba@redhat.com>
-References: <20170829142942.21594-1-agruenba@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:45712 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751232AbdH1Rwi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 13:52:38 -0400
+Date: Mon, 28 Aug 2017 10:52:29 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: XFS bug discovered by crash tests?
+Message-ID: <20170828175229.GF4757@magnolia>
+References: <CAOQ4uxg7FJ6sLRuRcV_AYRx_crZyVzVMzPgkZb8msLxtZvL12A@mail.gmail.com>
+ <CAOQ4uxj4LRj=B8aHwPTGWkOmg9b-W6bJb7U9V76z4dMV3c4MOA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxj4LRj=B8aHwPTGWkOmg9b-W6bJb7U9V76z4dMV3c4MOA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, Andreas Gruenbacher <agruenba@redhat.com>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Josef Bacik <jbacik@fb.com>, Eryu Guan <eguan@redhat.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-Report inline data as an IOMAP_F_DATA_INLINE mapping.  This allows to
-switch to iomap_seek_hole and iomap_seek_data in ext4_llseek, and will
-make switching to iomap_fiemap in ext4_fiemap easier as well.
+On Mon, Aug 28, 2017 at 11:36:38AM +0300, Amir Goldstein wrote:
+> On Mon, Aug 28, 2017 at 11:33 AM, Amir Goldstein <amir73il@gmail.com> wrote:
+> > Christoph, Darrick,
+> >
+> > As I reported last week, I started running Josef's log-writes crash
+> > tests and immediately got reports on data checksum errors when
+> > running the tests on xfs.
+> >
+> > Unlike ext4 and btrfs, xfs tests seemed to fail arbitrarily for any
+> > value of random seed I tried. Unlike xfs, I never observed data
+> > checksum errors on ext4 and btrfs (only fsck errors).
+> >
+> > It's quite easy to reproduce the reported checksum errors when
+> > running the test currently on my xfstests branch:
+> > https://github.com/amir73il/xfstests/commits/dm-log-writes
+> >
+> > Looking closer at the reported checksum errors, in all cases
+> > I examined, the problem was, that after a sequence of
+> > PUNCH_HOLE+FSYNC on a test file, a partially zeroed block,
+> > both at beginning and end of zero range is not zeroed after
+> > crash.
+> >
+> > For example, the following file does not have zeroes after crash
+> > at end of logical block #11:
+> 
+> Block #10 that is... #11 is unmapped.
+> 
+> >
+> > ---------------------
+> > Filesystem type is: 58465342
+> > File size of /mnt/scratch/testfile2 is 248338 (61 blocks of 4096 bytes)
+> >  ext:     logical_offset:        physical_offset: length:   expected: flags:
+> >    0:        1..       3:         33..        35:      3:             unwritten
+> >    1:       10..      10:         93..        93:      1:         36:
+> >    2:       20..      23:        147..       150:      4:         94: unwritten
+> >    3:       24..      31:        158..       165:      8:        151: unwritten
+> >    4:       34..      34:        146..       146:      1:        166: unwritten
+> >    5:       35..      38:        151..       154:      4:        147: unwritten
+> >    6:       41..      44:        167..       170:      4:        155: unwritten
+> >    7:       46..      46:        166..       166:      1:        171:
+> >    8:       47..      50:         89..        92:      4:        167:
+> >    9:       51..      60:        171..       180:     10:         93: last,eof
+> > /mnt/scratch/testfile2: 10 extents found
+> >
+> > /mnt/scratch/testfile2 (bad):
+> > 0000000 0000 0000 0000 0000 0000 0000 0000 0000
+> > *
+> > 000a510 5858 5858 5858 5858 5858 5858 5858 5858
+> > *
+> > 000b000 0000 0000 0000 0000 0000 0000 0000 0000
+> > *
+> > 002e280 0000 0000 0000 0000 0000 0000 5858 5858
+> > 002e290 5858 5858 5858 5858 5858 5858 5858 5858
+> > *
+> > 0038720 5858 5858 0000 0000 0000 0000 0000 0000
+> > 0038730 0000 0000 0000 0000 0000 0000 0000 0000
+> > *
+> > 003ca12
+> > ------------------
+> >
+> > However, this crash checkpoint (testfile2.mark1) was taken
+> > after punch+fsync that should have zeroed the end of block #11
+> > (0xa988..000b000):
+> > -------------------
+> > ...
+> > 2: 16 punch     from 0xa988 to 0xf126, (0x479e bytes)
+> > 2: 17 read      0x12420 thru    0x1aa08 (0x85e9 bytes)
+> > 2: 18 write     0x30d11 thru    0x3a723 (0x9a13 bytes)
+> > 2: 19 punch     from 0x27988 to 0x2aaed, (0x3165 bytes)
+> > 2: 20 write     0x2d6ff thru    0x369f3 (0x92f5 bytes)
+> > 2: 21 zero      from 0x22882 to 0x22e14, (0x592 bytes)
+> > 2: 22 zero      from 0x14655 to 0x1e636, (0x9fe1 bytes)
+> > 2: 23 zero      from 0x17c91 to 0x1fb75, (0x7ee4 bytes)
+> > 2: 24 punch     from 0x273eb to 0x3028c, (0x8ea1 bytes)
+> > 2: 25 zero      from 0x29eb2 to 0x2c692, (0x27e0 bytes)
+> > 2: 26 zero      from 0x11ac to 0x3910, (0x2764 bytes)
+> > 2: truncating to largest ever: 0x3ea12
+> > 2: 27 trunc     from 0x3a724 to 0x3ea12
+> > 2: 28 collapse  from 0x2d000 to 0x2f000, (0x2000 bytes)
+> > 2: 29 falloc    from 0x22cf2 to 0x2733b (0x4649 bytes)
+> > 2: 30 mapread   0x3466a thru    0x3ca11 (0x83a8 bytes)
+> > 2: 31 fsync
+> > 2: Dumped fsync buffer to testfile2.mark1
+> >
+> > /mnt/test/fsxtests/testfile2.mark1 (good):
+> > 0000000 0000 0000 0000 0000 0000 0000 0000 0000
+> > *
+> > 000a510 5858 5858 5858 5858 5858 5858 5858 5858
+> > *
+> > 000a980 5858 5858 5858 5858 0000 0000 0000 0000
+> > 000a990 0000 0000 0000 0000 0000 0000 0000 0000
+> > *
+> > 002e280 0000 0000 0000 0000 0000 0000 5858 5858
+> > 002e290 5858 5858 5858 5858 5858 5858 5858 5858
+> > *
+> > 0038720 5858 5858 0000 0000 0000 0000 0000 0000
+> > 0038730 0000 0000 0000 0000 0000 0000 0000 0000
+> > *
+> > 003ca12
+> >
+> > --------------------------
+> >
+> > Anyway, I went to look at xfs_zero_range() and while I admit
+> > it was hard for me to follow down all the actors into block
+> > layer, I couldn't find where partial zeroed page is marked dirty.
+> >
+> > Can you please have a look and say what you make of this?
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/ext4/ext4.h   |  4 ++++
- fs/ext4/inline.c | 33 +++++++++++++++++++++++++++++++++
- fs/ext4/inode.c  | 10 ++++++++--
- 3 files changed, 45 insertions(+), 2 deletions(-)
+<shrug> /me would have thought the page gets dirty via:
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index a2bb7d2870e4..017e55942a49 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -3048,6 +3048,10 @@ extern struct buffer_head *ext4_get_first_inline_block(struct inode *inode,
- extern int ext4_inline_data_fiemap(struct inode *inode,
- 				   struct fiemap_extent_info *fieinfo,
- 				   int *has_inline, __u64 start, __u64 len);
-+
-+struct iomap;
-+extern int ext4_inline_data_iomap(struct inode *inode, struct iomap *iomap);
-+
- extern int ext4_try_to_evict_inline_data(handle_t *handle,
- 					 struct inode *inode,
- 					 int needed);
-diff --git a/fs/ext4/inline.c b/fs/ext4/inline.c
-index 28c5c3abddb3..21a078fef80f 100644
---- a/fs/ext4/inline.c
-+++ b/fs/ext4/inline.c
-@@ -12,6 +12,7 @@
-  * GNU General Public License for more details.
-  */
- 
-+#include <linux/iomap.h>
- #include <linux/fiemap.h>
- 
- #include "ext4_jbd2.h"
-@@ -1827,6 +1828,38 @@ int ext4_destroy_inline_data(handle_t *handle, struct inode *inode)
- 	return ret;
- }
- 
-+int ext4_inline_data_iomap(struct inode *inode, struct iomap *iomap)
-+{
-+	__u64 addr;
-+	int error = -ENOENT;
-+	struct ext4_iloc iloc;
-+
-+	down_read(&EXT4_I(inode)->xattr_sem);
-+	if (!ext4_has_inline_data(inode))
-+		goto out;
-+
-+	error = ext4_get_inode_loc(inode, &iloc);
-+	if (error)
-+		goto out;
-+
-+	addr = (__u64)iloc.bh->b_blocknr << inode->i_sb->s_blocksize_bits;
-+	addr += (char *)ext4_raw_inode(&iloc) - iloc.bh->b_data;
-+	addr += offsetof(struct ext4_inode, i_block);
-+
-+	brelse(iloc.bh);
-+
-+	iomap->addr = addr;
-+	iomap->offset = 0;
-+	iomap->length = min_t(loff_t, ext4_get_inline_size(inode),
-+			      i_size_read(inode));
-+	iomap->type = 0;
-+	iomap->flags = IOMAP_F_DATA_INLINE;
-+
-+out:
-+	up_read(&EXT4_I(inode)->xattr_sem);
-+	return error;
-+}
-+
- int ext4_inline_data_fiemap(struct inode *inode,
- 			    struct fiemap_extent_info *fieinfo,
- 			    int *has_inline, __u64 start, __u64 len)
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 429f0afde9f2..ab6ab835255e 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3411,8 +3411,14 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 	struct ext4_map_blocks map;
- 	int ret;
- 
--	if (WARN_ON_ONCE(ext4_has_inline_data(inode)))
--		return -ERANGE;
-+	if ((flags & IOMAP_REPORT) && ext4_has_inline_data(inode)) {
-+		ret = ext4_inline_data_iomap(inode, iomap);
-+		if (ret != -ENOENT) {
-+			if (ret == 0 && offset >= iomap->length)
-+				ret = -ENOENT;
-+			return ret;
-+		}
-+	}
- 
- 	map.m_lblk = first_block;
- 	map.m_len = last_block - first_block + 1;
--- 
-2.13.3
+xfs_zero_range -> iomap_zero_range -> iomap_zero_range_actor ->
+iomap_zero -> iomap_write_end -> generic_write_end -> block_write_end ->
+__block_commit_write -> mark_buffer_dirty -> __set_page_dirty
 
+But maybe that doesn't happen?
+
+--D
+
+> >
+> > Thanks,
+> > Amir.
+> >
+> > P.S. if needed I can provide the recorded writes log to replay the
+> > I/O sequence that results in the reported error (it's 13K compressed)
+> > but the problem seems obvious and easy to reproduce using the
+> > xfstest (reproduced at high probability not always).
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
