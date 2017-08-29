@@ -1,78 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40830 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751182AbdH1VBb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 17:01:31 -0400
-Date: Mon, 28 Aug 2017 14:01:25 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: rewrite getbmap using the xfs_iext_* helpers
-Message-ID: <20170828210125.GH4757@magnolia>
-References: <20170828150612.16437-1-hch@lst.de>
- <20170828183142.GG4757@magnolia>
- <20170828193507.GA31009@lst.de>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:62415 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751310AbdH2WP0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 18:15:26 -0400
+Date: Wed, 30 Aug 2017 08:15:22 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 15/30] xfs: Define usercopy region in xfs_inode slab
+ cache
+Message-ID: <20170829221522.GE10621@dastard>
+References: <1503956111-36652-1-git-send-email-keescook@chromium.org>
+ <1503956111-36652-16-git-send-email-keescook@chromium.org>
+ <20170828214957.GJ4757@magnolia>
+ <CAGXu5j+pvxRjASUuBE49+uH34Mw26a4mtcWrZd=CEqcRHjetvA@mail.gmail.com>
+ <20170829044707.GP4757@magnolia>
+ <CAGXu5jJX1DA9D1LtrKkNoBXKZEYhbSE148YmUOP=WXsBCFsCyw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170828193507.GA31009@lst.de>
+In-Reply-To: <CAGXu5jJX1DA9D1LtrKkNoBXKZEYhbSE148YmUOP=WXsBCFsCyw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, LKML <linux-kernel@vger.kernel.org>, David Windsor <dave@nullcore.net>, linux-xfs@vger.kernel.org, Linux-MM <linux-mm@kvack.org>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>
 
-On Mon, Aug 28, 2017 at 09:35:07PM +0200, Christoph Hellwig wrote:
-> On Mon, Aug 28, 2017 at 11:31:42AM -0700, Darrick J. Wong wrote:
-> > Hmm... this causes at least a couple of xfstests regressions:
+On Tue, Aug 29, 2017 at 11:48:49AM -0700, Kees Cook wrote:
+> On Mon, Aug 28, 2017 at 9:47 PM, Darrick J. Wong
+> <darrick.wong@oracle.com> wrote:
+> > On Mon, Aug 28, 2017 at 02:57:14PM -0700, Kees Cook wrote:
+> >> On Mon, Aug 28, 2017 at 2:49 PM, Darrick J. Wong
+> >> <darrick.wong@oracle.com> wrote:
+> >> > On Mon, Aug 28, 2017 at 02:34:56PM -0700, Kees Cook wrote:
+> >> >> From: David Windsor <dave@nullcore.net>
+> >> >>
+> >> >> The XFS inline inode data, stored in struct xfs_inode_t field
+> >> >> i_df.if_u2.if_inline_data and therefore contained in the xfs_inode slab
+> >> >> cache, needs to be copied to/from userspace.
+> >> >>
+> >> >> cache object allocation:
+> >> >>     fs/xfs/xfs_icache.c:
+> >> >>         xfs_inode_alloc(...):
+> >> >>             ...
+> >> >>             ip = kmem_zone_alloc(xfs_inode_zone, KM_SLEEP);
+> >> >>
+> >> >>     fs/xfs/libxfs/xfs_inode_fork.c:
+> >> >>         xfs_init_local_fork(...):
+> >> >>             ...
+> >> >>             if (mem_size <= sizeof(ifp->if_u2.if_inline_data))
+> >> >>                     ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
+> >> >
+> >> > Hmm, what happens when mem_size > sizeof(if_inline_data)?  A slab object
+> >> > will be allocated for ifp->if_u1.if_data which can then be used for
+> >> > readlink in the same manner as the example usage trace below.  Does
+> >> > that allocated object have a need for a usercopy annotation like
+> >> > the one we're adding for if_inline_data?  Or is that already covered
+> >> > elsewhere?
+> >>
+> >> Yeah, the xfs helper kmem_alloc() is used in the other case, which
+> >> ultimately boils down to a call to kmalloc(), which is entirely
+> >> whitelisted by an earlier patch in the series:
+> >>
+> >> https://lkml.org/lkml/2017/8/28/1026
+> >
+> > Ah.  It would've been helpful to have the first three patches cc'd to
+> > the xfs list.  So basically this series establishes the ability to set
 > 
-> Oh.  Looks like I didn't do a rmap run as none of my runs showed
-> a regression.
-> 
-> > xfs/310, because we no longer merge adjacent bmap records.  I think the
-> > solution here is to change the extent count check to allow 2 extents.
-> 
-> Yeah.
-> 
-> > xfs/245 because zero-mapping forks are no longer reported as having one
-> > big "hole" extent; instead zero extents are reported back.  How do we
-> > want to handle this case?
-> 
-> Hmm.  Looks like that is the COW fork, as even the current code
-> never reports a hole at then end when there are no extents at all.
-> It does however when we have at least one extent:
-> 
-> root@brick:/home/hch/work/xfs# uname -a
-> Linux brick 4.9.0-3-amd64 #1 SMP Debian 4.9.30-2+deb9u2 (2017-06-26) x86_64 GNU/Linux
-> root@brick:/home/hch/work/xfs# truncate --size 10g foo
-> root@brick:/home/hch/work/xfs# xfs_bmap foo
-> foo: no extents
-> root@brick:/home/hch/work/xfs# fallocate -l 10m foo
-> root@brick:/home/hch/work/xfs# xfs_bmap foo
-> foo:
-> 	0: [0..20479]: 786860592..786881071
-> 	1: [20480..20971519]: hole
-> 
-> in this case I suspect we should try to treat the COW fork the
-> same.  But let me take a more detailed look at xfs/245 on what's
-> going on there.
+> I went back and forth on that, and given all the things it touched, it
+> seemed like too large a CC list. :) I can explicitly add the xfs list
+> to the first three for any future versions.
 
-Aha, I see, it's only if you pass in -e to xfs_bmap then you get a hole record:
+If you are touching multiple filesystems, you really should cc the
+entire patchset to linux-fsdevel, similar to how you sent the entire
+patchset to lkml. That way the entire series will end up on a list
+that almost all fs developers read. LKML is not a list you can rely
+on all filesystem developers reading (or developers in any other
+subsystem, for that matter)...
 
-$ truncate -s 50m /storage/tmp/a
-$ xfs_io -c 'bmap -elpv' /storage/tmp/a
-/storage/tmp/a:
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET         TOTAL FLAGS
-   0: [0..102399]:     hole                                 102400
-$ xfs_bmap /storage/tmp/a
-/storage/tmp/a: no extents
-$ xfs_io -c 'bmap -lpv' /storage/tmp/a
-/storage/tmp/a: no extents
+Cheers,
 
-(eesh.)
-
---D
-
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
