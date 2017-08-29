@@ -1,137 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35576 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751523AbdH2TfR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 15:35:17 -0400
-Date: Tue, 29 Aug 2017 12:35:11 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/8] xfs: move some code around inside
- xfs_bmap_shift_extents
-Message-ID: <20170829193511.GE4757@magnolia>
-References: <20170829174835.2218-1-hch@lst.de>
- <20170829174835.2218-5-hch@lst.de>
+Received: from verein.lst.de ([213.95.11.211]:46526 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751408AbdH2V0I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 Aug 2017 17:26:08 -0400
+Date: Tue, 29 Aug 2017 23:26:06 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 1/2] fs, xfs: perform dax_device lookup at mount
+Message-ID: <20170829212606.GC8608@lst.de>
+References: <150389211501.25151.6477753201827914462.stgit@dwillia2-desk3.amr.corp.intel.com> <150389212075.25151.17146973298430877023.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170829174835.2218-5-hch@lst.de>
+In-Reply-To: <150389212075.25151.17146973298430877023.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-nvdimm@lists.01.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, hch@lst.de
 
-On Tue, Aug 29, 2017 at 07:48:31PM +0200, Christoph Hellwig wrote:
-> For the first right move we need to look up next_fsb.  That means
-> our last fsb that contains next_fsb must also be the current extent,
-> so take advantage of that by moving the code around a bit.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Call me nitpicky, but..
 
-Looks ok, will test...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+First this really should be three patches, one for the DAX code, one
+for the VFS code and one for XFS.  The DAX and XFS bits looks fine to
+me:
 
-Though I gotta ask, for the cases where we check current_ext against
-stop_extent and return -EIO, isn't that only possible if there's
-something seriously wrong with the extent map?  In which case
--EFSCORRUPTED might be a more appropriate choice?
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-(Separate fix, obviously...)
-
---D
-
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 54 ++++++++++++++++++++++++++----------------------
->  1 file changed, 29 insertions(+), 25 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index c944987c485d..6af3cc1fc630 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -6127,7 +6127,6 @@ xfs_bmap_shift_extents(
->  	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->  	ASSERT(direction == SHIFT_LEFT || direction == SHIFT_RIGHT);
-> -	ASSERT(*next_fsb != NULLFSBLOCK || direction == SHIFT_RIGHT);
->  
->  	ifp = XFS_IFORK_PTR(ip, whichfork);
->  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> @@ -6159,43 +6158,48 @@ xfs_bmap_shift_extents(
->  	 * In case of first right shift, we need to initialize next_fsb
->  	 */
->  	if (*next_fsb == NULLFSBLOCK) {
-> -		gotp = xfs_iext_get_ext(ifp, total_extents - 1);
-> +		ASSERT(direction == SHIFT_RIGHT);
-> +
-> +		current_ext = total_extents - 1;
-> +		gotp = xfs_iext_get_ext(ifp, current_ext);
->  		xfs_bmbt_get_all(gotp, &got);
->  		*next_fsb = got.br_startoff;
->  		if (stop_fsb > *next_fsb) {
->  			*done = 1;
->  			goto del_cursor;
->  		}
-> +	} else {
-> +		/*
-> +		 * Look up the extent index for the fsb where we start shifting. We can
-> +		 * henceforth iterate with current_ext as extent list changes are locked
-> +		 * out via ilock.
-> +		 *
-> +		 * gotp can be null in 2 cases: 1) if there are no extents or 2)
-> +		 * *next_fsb lies in a hole beyond which there are no extents. Either
-> +		 * way, we are done.
-> +		 */
-> +		gotp = xfs_iext_bno_to_ext(ifp, *next_fsb, &current_ext);
-> +		if (!gotp) {
-> +			*done = 1;
-> +			goto del_cursor;
-> +		}
->  	}
->  
->  	/* Lookup the extent index at which we have to stop */
->  	if (direction == SHIFT_RIGHT) {
-> -		gotp = xfs_iext_bno_to_ext(ifp, stop_fsb, &stop_extent);
-> +		xfs_iext_bno_to_ext(ifp, stop_fsb, &stop_extent);
->  		/* Make stop_extent exclusive of shift range */
->  		stop_extent--;
-> -	} else
-> +		if (current_ext <= stop_extent) {
-> +			error = -EIO;
-> +			goto del_cursor;
-> +		}
-> +	} else {
->  		stop_extent = total_extents;
-> -
-> -	/*
-> -	 * Look up the extent index for the fsb where we start shifting. We can
-> -	 * henceforth iterate with current_ext as extent list changes are locked
-> -	 * out via ilock.
-> -	 *
-> -	 * gotp can be null in 2 cases: 1) if there are no extents or 2)
-> -	 * *next_fsb lies in a hole beyond which there are no extents. Either
-> -	 * way, we are done.
-> -	 */
-> -	gotp = xfs_iext_bno_to_ext(ifp, *next_fsb, &current_ext);
-> -	if (!gotp) {
-> -		*done = 1;
-> -		goto del_cursor;
-> -	}
-> -
-> -	/* some sanity checking before we finally start shifting extents */
-> -	if ((direction == SHIFT_LEFT && current_ext >= stop_extent) ||
-> -	     (direction == SHIFT_RIGHT && current_ext <= stop_extent)) {
-> -		error = -EIO;
-> -		goto del_cursor;
-> +		if (current_ext >= stop_extent) {
-> +			error = -EIO;
-> +			goto del_cursor;
-> +		}
->  	}
->  
->  	while (nexts++ < num_exts) {
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But I'm a little worried about stuffing more DAX knowledge into the
+block mount_bdev helper.  For now it's probably ok as everything
+else would involve a lot of refactoring and/or duplication, but
+I'm generally not too happy about it.
