@@ -1,136 +1,226 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37398 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56410 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751157AbdH1K7v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 28 Aug 2017 06:59:51 -0400
-Date: Mon, 28 Aug 2017 06:59:47 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: corrupt xfs log
-Message-ID: <20170828105947.GD3098@localhost.localdomain>
-References: <CAHeWggOTqbQUQB7xz1wUjejHU5W14w3wcN-oV-+KJxxyEEQ3TQ@mail.gmail.com>
- <20170818120224.GA27778@redhat.com>
- <20170818121725.GA1665@bfoster.bfoster>
- <CAHeWggM-dGJHRNyyXZrW5aX7v3r-b0t1LTbrbN-OSTLdLzuPhg@mail.gmail.com>
- <20170821155152.GA56278@bfoster.bfoster>
- <CAHeWggPzVSXXGK+35jEf9FD2gM-QcL_3iebaKzjOK7DbRmWDiA@mail.gmail.com>
- <CAHeWggO7r0nFBg3-1M3srRkLx8V3UJq+YWUuaCWyxAf6Mgw4tQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHeWggO7r0nFBg3-1M3srRkLx8V3UJq+YWUuaCWyxAf6Mgw4tQ@mail.gmail.com>
+        id S1753591AbdH2O3u (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 Aug 2017 10:29:50 -0400
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH 1/4] iomap: Switch from blkno to disk offset
+Date: Tue, 29 Aug 2017 16:29:39 +0200
+Message-Id: <20170829142942.21594-2-agruenba@redhat.com>
+In-Reply-To: <20170829142942.21594-1-agruenba@redhat.com>
+References: <20170829142942.21594-1-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ingard - <ingard1@gmail.com>
-Cc: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, Andreas Gruenbacher <agruenba@redhat.com>
 
-On Mon, Aug 28, 2017 at 10:56:13AM +0200, Ingard - wrote:
-> On Mon, Aug 21, 2017 at 10:24 PM, Ingard - <ingard1@gmail.com> wrote:
-> > On Mon, Aug 21, 2017 at 5:51 PM, Brian Foster <bfoster@redhat.com> wrote:
-> >> On Mon, Aug 21, 2017 at 02:08:43PM +0200, Ingard - wrote:
-> >>> On Fri, Aug 18, 2017 at 2:17 PM, Brian Foster <bfoster@redhat.com> wrote:
-> >>> > On Fri, Aug 18, 2017 at 07:02:24AM -0500, Bill O'Donnell wrote:
-> >>> >> On Fri, Aug 18, 2017 at 01:56:31PM +0200, Ingard - wrote:
-> >>> >> > After a server crash we've encountered a corrupt xfs filesystem. When
-> >>> >> > trying to mount said filesystem normally the system hangs.
-> >>> >> > This was initially on a ubuntu trusty server with 3.13 kernel with
-> >>> >> > xfsprogs 3.1.9
-> >>> >> >
-> >>> >> > We've installed a newer kernel (4.4.0-92) and compiled xfsprogs v
-> >>> >> > 4.12.0 from source. We're still not able to mount the filesystem (and
-> >>> >> > replay the log) normally.
-> >>> >> > We are able to mount it -o ro,norecovery, but we're reluctant to do
-> >>> >> > xfs_repair -L without trying everything we can first. The filesystem
-> >>> >> > is browsable albeit a few paths which gives an error : "Structure
-> >>> >> > needs cleaning"
-> >>> >> >
-> >>> >> > Does anyone have any advice as to how we might recover/repair the
-> >>> >> > corrupt log so we can replay it? Or is xfs_repair -L the only way
-> >>> >> > forward?
-> >>> >>
-> >>> >> Can you try xfs_repair -n (only scans the fs and reports what repairs
-> >>> >> would be made)?
-> >>> >>
-> >>> >
-> >>> > An xfs_metadump of the fs might be useful as well. Then we can see if we
-> >>> > can reproduce the mount hang on latest kernels and if so, potentially
-> >>> > try and root cause it.
-> >>> >
-> >>> > Brian
-> >>>
-> >>> Here is a link for the metadump :
-> >>> https://www.jottacloud.com/p/ingardme/95ec2e45ba80431d962345981d38bdff
-> >>
-> >> This points to a 29GB image file, apparently uncompressed..? Could you
-> >> upload a compressed file? Thanks.
-> >
-> > Hi. Sorry about that. Didnt realize the output would be compressable.
-> > Here is a link to the compressed tgz (6G)
-> > https://www.jottacloud.com/p/ingardme/cac6939649e14b98b928647f5222a2ae
-> 
-> Hi
-> Did you have a chance to look at the log/metadump ?
-> 
+Replace iomap->blkno, the sector number, with iomap->addr, the disk
+offset in bytes.  For invalid disk offsets, use the special value
+IOMAP_NULL_ADDR instead of IOMAP_NULL_BLOCK.  This allows to use iomap
+for mappings which are not block aligned, such as inline data on ext4
+and stuffed inodes on gfs2.
 
-Not yet. I have it downloaded somewhere but I haven't got to it yet.
-It's on the todo list, hopefully soon.
+Tested on xfs and ext4 with xfstests; seems to be working correctly.
 
-Brian
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+---
+ fs/buffer.c           |  4 ++--
+ fs/dax.c              |  2 +-
+ fs/ext2/inode.c       |  4 ++--
+ fs/ext4/inode.c       |  4 ++--
+ fs/iomap.c            | 11 +++++------
+ fs/nfsd/blocklayout.c |  4 ++--
+ fs/xfs/xfs_iomap.c    |  6 +++---
+ include/linux/iomap.h | 10 +++++-----
+ 8 files changed, 22 insertions(+), 23 deletions(-)
 
-> ingard
-> >
-> >>
-> >> Brian
-> >>
-> >>> And the repair -n output :
-> >>> https://www.jottacloud.com/p/ingardme/0205c6ca6f7e495ebcda5f255b96f63d
-> >>>
-> >>> kind regards
-> >>> ingard
-> >>>
-> >>> >
-> >>> >> Thanks-
-> >>> >> Bill
-> >>> >>
-> >>> >>
-> >>> >> >
-> >>> >> >
-> >>> >> > Excerpt from kern.log:
-> >>> >> > 2017-08-17T13:40:41.122121+02:00 dn-238 kernel: [  294.300347] XFS
-> >>> >> > (sdd1): Mounting V4 filesystem in no-recovery mode. Filesystem will be
-> >>> >> > inconsistent.
-> >>> >> >
-> >>> >> > 2017-08-17T17:04:54.794194+02:00 dn-238 kernel: [12548.400260] XFS
-> >>> >> > (sdd1): Metadata corruption detected at xfs_inode_buf_verify+0x6f/0xd0
-> >>> >> > [xfs], xfs_inode block 0x81c9c210
-> >>> >> > 2017-08-17T17:04:54.794216+02:00 dn-238 kernel: [12548.400342] XFS
-> >>> >> > (sdd1): Unmount and run xfs_repair
-> >>> >> > 2017-08-17T17:04:54.794218+02:00 dn-238 kernel: [12548.400374] XFS
-> >>> >> > (sdd1): First 64 bytes of corrupted metadata buffer:
-> >>> >> > 2017-08-17T17:04:54.794220+02:00 dn-238 kernel: [12548.400418]
-> >>> >> > ffff880171fff000: 3f 1a 33 54 5b 55 85 0b 7c f5 c6 d5 cf 51 47 41
-> >>> >> > ?.3T[U..|....QGA
-> >>> >> > 2017-08-17T17:04:54.794222+02:00 dn-238 kernel: [12548.400473]
-> >>> >> > ffff880171fff010: 97 ba ba 03 5c e4 02 7a e6 bc fb 5d f1 72 db c1
-> >>> >> > ....\..z...].r..
-> >>> >> > 2017-08-17T17:04:54.794223+02:00 dn-238 kernel: [12548.400527]
-> >>> >> > ffff880171fff020: c8 ad 3a 76 c7 e4 20 92 88 a2 35 0c 1f 36 cf b5
-> >>> >> > ..:v.. ...5..6..
-> >>> >> > 2017-08-17T17:04:54.794226+02:00 dn-238 kernel: [12548.400581]
-> >>> >> > ffff880171fff030: 8a bc 42 75 86 50 a0 a2 be 2c 2d 99 96 2d e1 ee
-> >>> >> > ..Bu.P...,-..-..
-> >>> >> >
-> >>> >> > kind regards
-> >>> >> > ingard
-> >>> >> > --
-> >>> >> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >>> >> > the body of a message to majordomo@vger.kernel.org
-> >>> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>> >> --
-> >>> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >>> >> the body of a message to majordomo@vger.kernel.org
-> >>> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>> --
-> >>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >>> the body of a message to majordomo@vger.kernel.org
-> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 5715dac7821f..b9d20076bb8f 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -1979,8 +1979,8 @@ iomap_to_bh(struct inode *inode, sector_t block, struct buffer_head *bh,
+ 	case IOMAP_MAPPED:
+ 		if (offset >= i_size_read(inode))
+ 			set_buffer_new(bh);
+-		bh->b_blocknr = (iomap->blkno >> (inode->i_blkbits - 9)) +
+-				((offset - iomap->offset) >> inode->i_blkbits);
++		bh->b_blocknr = (iomap->addr + offset - iomap->offset) >>
++				inode->i_blkbits;
+ 		set_buffer_mapped(bh);
+ 		break;
+ 	}
+diff --git a/fs/dax.c b/fs/dax.c
+index 865d42c63e23..539aaa0b9c45 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -987,7 +987,7 @@ EXPORT_SYMBOL_GPL(__dax_zero_page_range);
+ 
+ static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
+ {
+-	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
++	return (iomap->addr + (pos & PAGE_MASK) - iomap->offset) >> 9;
+ }
+ 
+ static loff_t
+diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+index 30163d007b2f..e7d8925d0140 100644
+--- a/fs/ext2/inode.c
++++ b/fs/ext2/inode.c
+@@ -824,11 +824,11 @@ static int ext2_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+ 
+ 	if (ret == 0) {
+ 		iomap->type = IOMAP_HOLE;
+-		iomap->blkno = IOMAP_NULL_BLOCK;
++		iomap->addr = IOMAP_NULL_ADDR;
+ 		iomap->length = 1 << blkbits;
+ 	} else {
+ 		iomap->type = IOMAP_MAPPED;
+-		iomap->blkno = (sector_t)bno << (blkbits - 9);
++		iomap->addr = (u64)bno << blkbits;
+ 		iomap->length = (u64)ret << blkbits;
+ 		iomap->flags |= IOMAP_F_MERGED;
+ 	}
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index c774bdc22759..429f0afde9f2 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3483,7 +3483,7 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+ 
+ 	if (ret == 0) {
+ 		iomap->type = IOMAP_HOLE;
+-		iomap->blkno = IOMAP_NULL_BLOCK;
++		iomap->addr = IOMAP_NULL_ADDR;
+ 		iomap->length = (u64)map.m_len << blkbits;
+ 	} else {
+ 		if (map.m_flags & EXT4_MAP_MAPPED) {
+@@ -3494,7 +3494,7 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+ 			WARN_ON_ONCE(1);
+ 			return -EIO;
+ 		}
+-		iomap->blkno = (sector_t)map.m_pblk << (blkbits - 9);
++		iomap->addr = (u64)map.m_pblk << blkbits;
+ 		iomap->length = (u64)map.m_len << blkbits;
+ 	}
+ 
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 59cc98ad7577..7bc1797c2292 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -350,8 +350,8 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+ static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+ 		struct iomap *iomap)
+ {
+-	sector_t sector = iomap->blkno +
+-		(((pos & ~(PAGE_SIZE - 1)) - iomap->offset) >> 9);
++	sector_t sector = (iomap->addr +
++			   (pos & PAGE_MASK) - iomap->offset) >> 9;
+ 
+ 	return __dax_zero_page_range(iomap->bdev, iomap->dax_dev, sector,
+ 			offset, bytes);
+@@ -512,9 +512,8 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
+ 		flags |= FIEMAP_EXTENT_SHARED;
+ 
+ 	return fiemap_fill_next_extent(fi, iomap->offset,
+-			iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
++			iomap->addr != IOMAP_NULL_ADDR ? iomap->addr : 0,
+ 			iomap->length, flags);
+-
+ }
+ 
+ static loff_t
+@@ -807,7 +806,7 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
+ 	bio = bio_alloc(GFP_KERNEL, 1);
+ 	bio->bi_bdev = iomap->bdev;
+ 	bio->bi_iter.bi_sector =
+-		iomap->blkno + ((pos - iomap->offset) >> 9);
++		(iomap->addr + pos - iomap->offset) >> 9;
+ 	bio->bi_private = dio;
+ 	bio->bi_end_io = iomap_dio_bio_end_io;
+ 
+@@ -886,7 +885,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 		bio = bio_alloc(GFP_KERNEL, nr_pages);
+ 		bio->bi_bdev = iomap->bdev;
+ 		bio->bi_iter.bi_sector =
+-			iomap->blkno + ((pos - iomap->offset) >> 9);
++			(iomap->addr + pos - iomap->offset) >> 9;
+ 		bio->bi_write_hint = dio->iocb->ki_hint;
+ 		bio->bi_private = dio;
+ 		bio->bi_end_io = iomap_dio_bio_end_io;
+diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
+index c862c2489df0..2d1d37b27dc7 100644
+--- a/fs/nfsd/blocklayout.c
++++ b/fs/nfsd/blocklayout.c
+@@ -65,7 +65,7 @@ nfsd4_block_proc_layoutget(struct inode *inode, const struct svc_fh *fhp,
+ 			bex->es = PNFS_BLOCK_READ_DATA;
+ 		else
+ 			bex->es = PNFS_BLOCK_READWRITE_DATA;
+-		bex->soff = (iomap.blkno << 9);
++		bex->soff = iomap.addr;
+ 		break;
+ 	case IOMAP_UNWRITTEN:
+ 		if (seg->iomode & IOMODE_RW) {
+@@ -78,7 +78,7 @@ nfsd4_block_proc_layoutget(struct inode *inode, const struct svc_fh *fhp,
+ 			}
+ 
+ 			bex->es = PNFS_BLOCK_INVALID_DATA;
+-			bex->soff = (iomap.blkno << 9);
++			bex->soff = iomap.addr;
+ 			break;
+ 		}
+ 		/*FALLTHRU*/
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 813394c62849..1bcc5d0373a5 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -54,13 +54,13 @@ xfs_bmbt_to_iomap(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 
+ 	if (imap->br_startblock == HOLESTARTBLOCK) {
+-		iomap->blkno = IOMAP_NULL_BLOCK;
++		iomap->addr = IOMAP_NULL_ADDR;
+ 		iomap->type = IOMAP_HOLE;
+ 	} else if (imap->br_startblock == DELAYSTARTBLOCK) {
+-		iomap->blkno = IOMAP_NULL_BLOCK;
++		iomap->addr = IOMAP_NULL_ADDR;
+ 		iomap->type = IOMAP_DELALLOC;
+ 	} else {
+-		iomap->blkno = xfs_fsb_to_db(ip, imap->br_startblock);
++		iomap->addr = (u64)xfs_fsb_to_db(ip, imap->br_startblock) << 9;
+ 		if (imap->br_state == XFS_EXT_UNWRITTEN)
+ 			iomap->type = IOMAP_UNWRITTEN;
+ 		else
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index f64dc6ce5161..7b8a615fa021 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -15,8 +15,8 @@ struct vm_fault;
+  */
+ #define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
+ #define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
+-#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
+-#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
++#define IOMAP_MAPPED	0x03	/* blocks allocated at @addr */
++#define IOMAP_UNWRITTEN	0x04	/* blocks allocated at @addr in unwritten state */
+ 
+ /*
+  * Flags for all iomap mappings:
+@@ -30,12 +30,12 @@ struct vm_fault;
+ #define IOMAP_F_SHARED	0x20	/* block shared with another file */
+ 
+ /*
+- * Magic value for blkno:
++ * Magic value for addr:
+  */
+-#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
++#define IOMAP_NULL_ADDR -1ULL	/* addr is not valid */
+ 
+ struct iomap {
+-	sector_t		blkno;	/* 1st sector of mapping, 512b units */
++	u64			addr; /* disk offset of mapping, bytes */
+ 	loff_t			offset;	/* file offset of mapping, bytes */
+ 	u64			length;	/* length of mapping, bytes */
+ 	u16			type;	/* type of mapping */
+-- 
+2.13.3
+
