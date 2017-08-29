@@ -1,21 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:27944 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:11621 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751933AbdH2XvI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:08 -0400
+        by vger.kernel.org with ESMTP id S1751845AbdH2XvB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:01 -0400
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1dmqHW-0002d7-V4
+        id 1dmqHX-0002ds-CE
         for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.89)
         (envelope-from <david@fromorbit.com>)
-        id 1dmqHW-0005WM-Tm
-        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
+        id 1dmqHX-0005X5-B1
+        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 21/42] mkfs: factor sectorsize validation
-Date: Wed, 30 Aug 2017 09:50:31 +1000
-Message-Id: <20170829235052.21050-22-david@fromorbit.com>
+Subject: [PATCH 36/42] mkfs: factor AG alignment
+Date: Wed, 30 Aug 2017 09:50:46 +1000
+Message-Id: <20170829235052.21050-37-david@fromorbit.com>
 In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
 References: <20170829235052.21050-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -25,278 +25,329 @@ To: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Start factoring all the sector size validation code into a
-function that takes cli, dft and cfg structures. This starts
-removing option flags and some of the temporary code in the input
-parsing structures.
-
 Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 207 +++++++++++++++++++++++++++++++-------------------------
- 1 file changed, 114 insertions(+), 93 deletions(-)
+ mkfs/xfs_mkfs.c | 246 +++++++++++++++++++++++++++-----------------------------
+ 1 file changed, 117 insertions(+), 129 deletions(-)
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 7b71f59dc654..a6d2dd516319 100644
+index a0dcea2609a6..1ab9e98b8b02 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -1903,6 +1903,107 @@ parse_subopts(
+@@ -2750,6 +2750,121 @@ _("agsize (%s) not a multiple of fs blk size (%d)\n"),
+ 	}
  }
  
- static void
-+validate_sectorsize(
-+	struct mkfs_params	*cfg,
-+	struct cli_params	*cli,
-+	struct mkfs_default_params *dft,
-+	struct fs_topology	*ft,
-+	char			*dfile,
-+	int			dry_run,
-+	int			force_overwrite)
++/*
++ * Align the AG size to stripe geometry. If this fails and we are using
++ * discovered stripe geometry, tell the caller to clear the stripe geometry.
++ * Otherwise, set the aligned geometry (valid or invalid!) so that the
++ * validation call will fail and exit.
++ */
++static void
++align_ag_geometry(
++	struct mkfs_params	*cfg)
 +{
-+	/* set configured sector sizes in preparation for checks */
-+	if (!cli->sectorsize) {
-+		cfg->sectorsize = dft->sectorsize;
-+	} else {
-+		cfg->sectorsize = cli->sectorsize;
-+	}
-+	cfg->sectorlog = libxfs_highbit32(cfg->sectorsize);
++	uint64_t	tmp_agsize;
++	int		dsunit = cfg->dsunit;
++
++	if (!dsunit)
++		return;
 +
 +	/*
-+	 * Before anything else, verify that we are correctly operating on
-+	 * files or block devices and set the control parameters correctly.
++	 * agsize is not a multiple of dsunit
 +	 */
-+	check_device_type(dfile, &cli->xi->disfile, !cli->dsize, !dfile,
-+			  dry_run ? NULL : &cli->xi->dcreat,
-+			  force_overwrite, "d");
-+	if (!cli->loginternal)
-+		check_device_type(cli->xi->logname, &cli->xi->lisfile,
-+				  !cli->logsize, !cli->xi->logname,
-+				  dry_run ? NULL : &cli->xi->lcreat,
-+				  force_overwrite, "l");
-+	if (cli->xi->rtname)
-+		check_device_type(cli->xi->rtname, &cli->xi->risfile,
-+				  !cli->rtsize, !cli->xi->rtname,
-+				  dry_run ? NULL : &cli->xi->rcreat,
-+				  force_overwrite, "r");
-+
-+	/*
-+	 * Explicitly disable direct IO for image files so we don't error out on
-+	 * sector size mismatches between the new filesystem and the underlying
-+	 * host filesystem.
-+	 */
-+	if (cli->xi->disfile || cli->xi->lisfile || cli->xi->risfile)
-+		cli->xi->isdirect = 0;
-+
-+	memset(ft, 0, sizeof(*ft));
-+	get_topology(cli->xi, ft, force_overwrite);
-+
-+	if (!cli->sectorsize) {
++	if ((cfg->agsize % dsunit) != 0) {
 +		/*
-+		 * Unless specified manually on the command line use the
-+		 * advertised sector size of the device.  We use the physical
-+		 * sector size unless the requested block size is smaller
-+		 * than that, then we can use logical, but warn about the
-+		 * inefficiency.
-+		 *
-+		 * Set the topology sectors if they were not probed to the
-+		 * minimum supported sector size.
++		 * Round up to stripe unit boundary. Also make sure
++		 * that agsize is still larger than
++		 * XFS_AG_MIN_BLOCKS(blocklog)
 +		 */
++		tmp_agsize = ((cfg->agsize + dsunit - 1) / dsunit) * dsunit;
++		/*
++		 * Round down to stripe unit boundary if rounding up
++		 * created an AG size that is larger than the AG max.
++		 */
++		if (tmp_agsize > XFS_AG_MAX_BLOCKS(cfg->blocklog))
++			tmp_agsize = (cfg->agsize / dsunit) * dsunit;
 +
-+		if (!ft->lsectorsize)
-+			ft->lsectorsize = XFS_MIN_SECTORSIZE;
++		if (tmp_agsize < XFS_AG_MIN_BLOCKS(cfg->blocklog) &&
++		    tmp_agsize > XFS_AG_MAX_BLOCKS(cfg->blocklog)) {
 +
-+		/* Older kernels may not have physical/logical distinction */
-+		if (!ft->psectorsize)
-+			ft->psectorsize = ft->lsectorsize;
-+
-+		cfg->sectorsize = ft->psectorsize;
-+		if (cfg->blocksize < cfg->sectorsize &&
-+		    cfg->blocksize >= ft->lsectorsize) {
-+			fprintf(stderr,
-+_("specified blocksize %d is less than device physical sector size %d\n"
-+  "switching to logical sector size %d\n"),
-+				cfg->blocksize, ft->psectorsize,
-+				ft->lsectorsize);
-+			cfg->sectorsize = ft->lsectorsize;
++			/*
++			 * If the AG size is invalid and we are using device
++			 * probed stripe alignment, just clear the alignment
++			 * and continue on.
++			 */
++			if (!cli_opt_set(&dopts, D_SUNIT) &&
++			    !cli_opt_set(&dopts, D_SU)) {
++				cfg->dsunit = 0;
++				cfg->dswidth = 0;
++				goto validate;
++			}
++			/*
++			 * set the agsize to the invalid value so the following
++			 * validation of the ag will fail and print a nice error
++			 * and exit.
++			 */
++			cfg->agsize = tmp_agsize;
++			goto validate;
 +		}
 +
-+		cfg->sectorlog = libxfs_highbit32(cfg->sectorsize);
++		/* update geometry to be stripe unit aligned */
++		cfg->agsize = tmp_agsize;
++		if (!cli_opt_set(&dopts, D_AGCOUNT))
++			cfg->agcount = cfg->dblocks / cfg->agsize +
++					(cfg->dblocks % cfg->agsize != 0);
++		if (cli_opt_set(&dopts, D_AGSIZE))
++			fprintf(stderr,
++_("agsize rounded to %lld, sunit = %d\n"),
++				(long long)cfg->agsize, dsunit);
 +	}
 +
-+	/* validate specified/probed sector size */
-+	if (cfg->sectorsize < XFS_MIN_SECTORSIZE ||
-+	    cfg->sectorsize > XFS_MAX_SECTORSIZE) {
-+		fprintf(stderr, _("illegal sector size %d\n"), cfg->sectorsize);
-+		usage();
++	if ((cfg->agsize % cfg->dswidth) == 0 && cfg->agcount > 1) {
++
++		if (cli_opt_set(&dopts, D_AGCOUNT) ||
++		    cli_opt_set(&dopts, D_AGSIZE)) {
++			fprintf(stderr, _(
++"Warning: AG size is a multiple of stripe width.  This can cause performance\n\
++problems by aligning all AGs on the same disk.  To avoid this, run mkfs with\n\
++an AG size that is one stripe unit smaller or larger, for example %llu.\n"),
++				(unsigned long long)cfg->agsize - dsunit);
++			goto validate;
++		}
++
++		/*
++		 * This is a non-optimal configuration because all AGs start on
++		 * the same disk in the stripe.  Changing the AG size by one
++		 * sunit will guarantee that this does not happen.
++		 */
++		tmp_agsize = cfg->agsize - dsunit;
++		if (tmp_agsize < XFS_AG_MIN_BLOCKS(cfg->blocklog)) {
++			tmp_agsize = cfg->agsize + dsunit;
++			if (cfg->dblocks < cfg->agsize) {
++				/* oh well, nothing to do */
++				tmp_agsize = cfg->agsize;
++			}
++		}
++
++		cfg->agsize = tmp_agsize;
++		cfg->agcount = cfg->dblocks / cfg->agsize +
++				(cfg->dblocks % cfg->agsize != 0);
 +	}
 +
-+	if (cfg->blocksize < cfg->sectorsize) {
-+		fprintf(stderr,
-+_("block size %d cannot be smaller than sector size %d\n"),
-+			cfg->blocksize, cfg->sectorsize);
-+		usage();
++	/*
++	 * If the last AG is too small, reduce the filesystem size
++	 * and drop the blocks.
++	 */
++	if (cfg->dblocks % cfg->agsize != 0 &&
++	     (cfg->dblocks % cfg->agsize < XFS_AG_MIN_BLOCKS(cfg->blocklog))) {
++		ASSERT(!cli_opt_set(&dopts, D_AGCOUNT));
++		cfg->dblocks = (xfs_rfsblock_t)((cfg->agcount - 1) * cfg->agsize);
++		cfg->agcount--;
++		ASSERT(cfg->agcount != 0);
 +	}
 +
-+	if (cfg->sectorsize < ft->lsectorsize) {
-+		fprintf(stderr, _("illegal sector size %d; hw sector is %d\n"),
-+			cfg->sectorsize, ft->lsectorsize);
-+		usage();
-+	}
++validate:
++	validate_ag_geometry(cfg->blocklog, cfg->dblocks,
++			     cfg->agsize, cfg->agcount);
 +}
 +
-+static void
+ static void
  print_mkfs_cfg(
  	struct mkfs_params	*cfg,
- 	char			*dfile,
-@@ -2601,8 +2702,6 @@ main(
+@@ -3381,8 +3496,6 @@ main(
+ 	int			blocklog;
+ 	xfs_buf_t		*buf;
+ 	int			c;
+-	int			daflag;
+-	int			dasize;
+ 	xfs_rfsblock_t		dblocks;
+ 	char			*dfile;
+ 	int			dirblocklog;
+@@ -3413,7 +3526,6 @@ main(
+ 	xfs_mount_t		*mp;
+ 	xfs_mount_t		mbuf;
+ 	xfs_extlen_t		nbmblocks;
+-	int			nodsflag;
+ 	int			dry_run = 0;
+ 	int			discard = 1;
+ 	char			*protofile;
+@@ -3425,7 +3537,6 @@ main(
+ 	char			*rtfile;
  	xfs_sb_t		*sbp;
  	int			sectorlog;
- 	uint64_t		sector_mask;
--	int			slflag;
--	int			ssflag;
- 	uint64_t		tmp_agsize;
+-	uint64_t		tmp_agsize;
  	uuid_t			uuid;
  	int			worst_freelist;
-@@ -2660,10 +2759,10 @@ main(
- 	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
- 	memcpy(&cli.fsx, &dft.fsx, sizeof(cli.fsx));
+ 	libxfs_init_t		xi;
+@@ -3489,7 +3600,7 @@ main(
+ 	 */
+ 	cli.loginternal = 1;	/* internal by default */
  
--	blflag = bsflag = slflag = ssflag = lslflag = lssflag = 0;
-+	blflag = bsflag = lslflag = lssflag = 0;
- 	blocklog = blocksize = 0;
--	sectorlog = lsectorlog = 0;
--	sectorsize = lsectorsize = 0;
-+	lsectorlog = 0;
-+	lsectorsize = 0;
- 	agsize = daflag = dasize = dblocks = 0;
- 	ilflag = imflag = ipflag = isflag = 0;
- 	liflag = laflag = lsflag = lsuflag = lsunitflag = ldflag = lvflag = 0;
-@@ -2724,11 +2823,6 @@ main(
- 				  cli_opt_set(&dopts, D_SWIDTH);
- 			nodsflag = cli_opt_set(&dopts, D_NOALIGN);
+-	agsize = daflag = dasize = dblocks = 0;
++	agsize = dblocks = 0;
+ 	imflag = 0;
+ 	laflag = lsflag = 0;
+ 	loginternal = 1;
+@@ -3498,7 +3609,6 @@ main(
+ 	dfile = logfile = rtfile = NULL;
+ 	logsize = protofile = NULL;
+ 	dsunit = dswidth = lalign = lsunit = 0;
+-	nodsflag = 0;
+ 	force_overwrite = 0;
+ 	worst_freelist = 0;
+ 	memset(&fsx, 0, sizeof(fsx));
+@@ -3523,13 +3633,6 @@ main(
+ 			parse_subopts(c, optarg, &cli);
  
--			sectorsize = cli.sectorsize;
--			sectorlog = libxfs_highbit32(sectorsize);
--			slflag = cli_opt_set(&dopts, D_SECTLOG);
--			ssflag = cli_opt_set(&dopts, D_SECTSIZE);
+ 			/* temp don't break code */
+-			agcount = cli.agcount;
+-			if (cli_opt_set(&dopts, D_AGSIZE)) {
+-				agsize = getnum(cli.agsize, &dopts, D_AGSIZE);
+-				dasize = 1;
+-			}
+-			daflag = cli_opt_set(&dopts, D_AGCOUNT);
 -
  			fsx.fsx_xflags |= cli.fsx.fsx_xflags;
  			fsx.fsx_projid = cli.fsx.fsx_projid;
  			fsx.fsx_extsize = cli.fsx.fsx_extsize;
-@@ -2826,14 +2920,12 @@ main(
- 			parse_subopts(c, optarg, &cli);
- 
- 			/* temp don't break code */
--			sectorsize = cli.sectorsize;
--			lsectorlog = libxfs_highbit32(sectorsize);
- 			lsectorsize = cli.lsectorsize;
- 			lsectorlog = libxfs_highbit32(lsectorsize);
--			lslflag = slflag = cli_opt_set(&sopts, S_LOG) ||
-+			lslflag = cli_opt_set(&sopts, S_LOG) ||
- 					   cli_opt_set(&sopts, S_SECTLOG);
- 
--			lssflag = ssflag = cli_opt_set(&sopts, S_SIZE) ||
-+			lssflag = cli_opt_set(&sopts, S_SIZE) ||
- 					   cli_opt_set(&sopts, S_SECTSIZE);
- 			break;
- 		case 'V':
-@@ -2879,89 +2971,18 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
- 		usage();
- 	}
- 
--	if (!slflag && !ssflag) {
--		sectorlog = XFS_MIN_SECTORSIZE_LOG;
--		sectorsize = XFS_MIN_SECTORSIZE;
--	}
--	if (!lslflag && !lssflag) {
--		lsectorlog = sectorlog;
--		lsectorsize = sectorsize;
--	}
--
- 	/*
--	 * Before anything else, verify that we are correctly operating on
--	 * files or block devices and set the control parameters correctly.
--	 * Explicitly disable direct IO for image files so we don't error out on
--	 * sector size mismatches between the new filesystem and the underlying
--	 * host filesystem.
-+	 * Extract as much of the valid config as we can from the CLI input
-+	 * before opening the libxfs devices.
+@@ -3641,6 +3744,7 @@ main(
+ 	 * aligns to device geometry correctly.
  	 */
--	check_device_type(dfile, &xi.disfile, !dsize, !dfile,
--			  dry_run ? NULL : &xi.dcreat, force_overwrite, "d");
--	if (!loginternal)
--		check_device_type(xi.logname, &xi.lisfile, !logsize, !xi.logname,
--				  dry_run ? NULL : &xi.lcreat,
--				  force_overwrite, "l");
--	if (xi.rtname)
--		check_device_type(xi.rtname, &xi.risfile, !rtsize, !xi.rtname,
--				  dry_run ? NULL : &xi.rcreat,
--				  force_overwrite, "r");
--	if (xi.disfile || xi.lisfile || xi.risfile)
--		xi.isdirect = 0;
+ 	calculate_initial_ag_geometry(&cfg, &cli);
++	align_ag_geometry(&cfg);
+ 
+ 	/* temp don't break code */
+ 	sectorsize = cfg.sectorsize;
+@@ -3665,127 +3769,11 @@ main(
+ 	dsunit = cfg.dsunit;
+ 	dswidth = cfg.dswidth;
+ 	lsunit = cfg.lsunit;
+-	nodsflag = cfg.sb_feat.nodalign;
+ 	agsize = cfg.agsize;
+ 	agcount = cfg.agcount;
+ 	/* end temp don't break code */
+ 
+ 
+-	/*
+-	 * If dsunit is a multiple of fs blocksize, then check that is a
+-	 * multiple of the agsize too
+-	 */
+-	if (dsunit && !(BBTOB(dsunit) % blocksize) &&
+-	    dswidth && !(BBTOB(dswidth) % blocksize)) {
 -
--	memset(&ft, 0, sizeof(ft));
--	get_topology(&xi, &ft, force_overwrite);
+-		/* convert from 512 byte blocks to fs blocksize */
+-		dsunit = DTOBT(dsunit, blocklog);
+-		dswidth = DTOBT(dswidth, blocklog);
 -
--	if (!ssflag) {
 -		/*
--		 * Unless specified manually on the command line use the
--		 * advertised sector size of the device.  We use the physical
--		 * sector size unless the requested block size is smaller
--		 * than that, then we can use logical, but warn about the
--		 * inefficiency.
+-		 * agsize is not a multiple of dsunit
 -		 */
+-		if ((agsize % dsunit) != 0) {
+-			/*
+-			 * Round up to stripe unit boundary. Also make sure
+-			 * that agsize is still larger than
+-			 * XFS_AG_MIN_BLOCKS(blocklog)
+-		 	 */
+-			tmp_agsize = ((agsize + (dsunit - 1))/ dsunit) * dsunit;
+-			/*
+-			 * Round down to stripe unit boundary if rounding up
+-			 * created an AG size that is larger than the AG max.
+-			 */
+-			if (tmp_agsize > XFS_AG_MAX_BLOCKS(blocklog))
+-				tmp_agsize = ((agsize) / dsunit) * dsunit;
 -
--		/* Older kernels may not have physical/logical distinction */
--		if (!ft.psectorsize)
--			ft.psectorsize = ft.lsectorsize;
--
--		sectorsize = ft.psectorsize ? ft.psectorsize :
--					      XFS_MIN_SECTORSIZE;
--
--		if ((blocksize < sectorsize) && (blocksize >= ft.lsectorsize)) {
+-			if ((tmp_agsize >= XFS_AG_MIN_BLOCKS(blocklog)) &&
+-			    (tmp_agsize <= XFS_AG_MAX_BLOCKS(blocklog))) {
+-				agsize = tmp_agsize;
+-				if (!daflag)
+-					agcount = dblocks/agsize +
+-						(dblocks % agsize != 0);
+-				if (dasize)
+-					fprintf(stderr,
+-				_("agsize rounded to %lld, swidth = %d\n"),
+-						(long long)agsize, dswidth);
+-			} else {
+-				if (nodsflag) {
+-					dsunit = dswidth = 0;
+-				} else {
+-					/*
+-					 * agsize is out of bounds, this will
+-					 * print nice details & exit.
+-					 */
+-					validate_ag_geometry(blocklog, dblocks,
+-							    agsize, agcount);
+-					exit(1);
+-				}
+-			}
+-		}
+-		if (dswidth && ((agsize % dswidth) == 0) && (agcount > 1)) {
+-			/* This is a non-optimal configuration because all AGs
+-			 * start on the same disk in the stripe.  Changing
+-			 * the AG size by one sunit will guarantee that this
+-			 * does not happen.
+-			 */
+-			tmp_agsize = agsize - dsunit;
+-			if (tmp_agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
+-				tmp_agsize = agsize + dsunit;
+-				if (dblocks < agsize) {
+-					/* oh well, nothing to do */
+-					tmp_agsize = agsize;
+-				}
+-			}
+-			if (daflag || dasize) {
+-				fprintf(stderr, _(
+-"Warning: AG size is a multiple of stripe width.  This can cause performance\n\
+-problems by aligning all AGs on the same disk.  To avoid this, run mkfs with\n\
+-an AG size that is one stripe unit smaller, for example %llu.\n"),
+-					(unsigned long long)tmp_agsize);
+-			} else {
+-				agsize = tmp_agsize;
+-				agcount = dblocks/agsize + (dblocks % agsize != 0);
+-				/*
+-				 * If the last AG is too small, reduce the
+-				 * filesystem size and drop the blocks.
+-				 */
+-				if ( dblocks % agsize != 0 &&
+-				    (dblocks % agsize <
+-				    XFS_AG_MIN_BLOCKS(blocklog))) {
+-					dblocks = (xfs_rfsblock_t)((agcount - 1) * agsize);
+-					agcount--;
+-					ASSERT(agcount != 0);
+-				}
+-			}
+-		}
+-	} else {
+-		if (nodsflag)
+-			dsunit = dswidth = 0;
+-		else {
 -			fprintf(stderr,
--_("specified blocksize %d is less than device physical sector size %d\n"),
--				blocksize, ft.psectorsize);
--			fprintf(stderr,
--_("switching to logical sector size %d\n"),
--				ft.lsectorsize);
--			sectorsize = ft.lsectorsize ? ft.lsectorsize :
--						      XFS_MIN_SECTORSIZE;
+-				_("%s: Stripe unit(%d) or stripe width(%d) is "
+-				"not a multiple of the block size(%d)\n"),
+-				progname, BBTOB(dsunit), BBTOB(dswidth),
+-				blocksize);
+-			exit(1);
 -		}
 -	}
-+	validate_sectorsize(&cfg, &cli, &dft, &ft, dfile, dry_run,
-+			    force_overwrite);
+-
+-	/*
+-	 * If the last AG is too small, reduce the filesystem size
+-	 * and drop the blocks.
+-	 */
+-	if ( dblocks % agsize != 0 &&
+-	     (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
+-		ASSERT(!daflag);
+-		dblocks = (xfs_rfsblock_t)((agcount - 1) * agsize);
+-		agcount--;
+-		ASSERT(agcount != 0);
+-	}
+-
+-	validate_ag_geometry(blocklog, dblocks, agsize, agcount);
+-
+ 	if (!imflag)
+ 		imaxpct = calc_default_imaxpct(blocklog, dblocks);
  
--	if (!ssflag) {
--		sectorlog = libxfs_highbit32(sectorsize);
--		if (loginternal) {
--			lsectorsize = sectorsize;
--			lsectorlog = sectorlog;
--		}
--	}
-+	/* temp don't break code */
-+	sectorsize = cfg.sectorsize;
-+	sectorlog = cfg.sectorlog;
-+	/* end temp don't break code */
- 
--	if (sectorsize < XFS_MIN_SECTORSIZE ||
--	    sectorsize > XFS_MAX_SECTORSIZE || sectorsize > blocksize) {
--		if (ssflag)
--			fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
--		else
--			fprintf(stderr,
--_("block size %d cannot be smaller than logical sector size %d\n"),
--				blocksize, ft.lsectorsize);
--		usage();
--	}
--	if (sectorsize < ft.lsectorsize) {
--		fprintf(stderr, _("illegal sector size %d; hw sector is %d\n"),
--			sectorsize, ft.lsectorsize);
--		usage();
--	}
- 	if (lsectorsize < XFS_MIN_SECTORSIZE ||
- 	    lsectorsize > XFS_MAX_SECTORSIZE || lsectorsize > blocksize) {
- 		fprintf(stderr, _("illegal log sector size %d\n"), lsectorsize);
 -- 
 2.13.3
 
