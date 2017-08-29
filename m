@@ -1,248 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38880 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:51848 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750735AbdH1GhP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 02:37:15 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/2] xfs: consolidate the various page fault handlers
-Date: Mon, 28 Aug 2017 08:36:59 +0200
-Message-Id: <20170828063659.21045-3-hch@lst.de>
-In-Reply-To: <20170828063659.21045-1-hch@lst.de>
-References: <20170828063659.21045-1-hch@lst.de>
+        with ESMTP id S1751514AbdH2Mpn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 08:45:43 -0400
+Date: Tue, 29 Aug 2017 05:45:36 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 15/30] xfs: Define usercopy region in xfs_inode slab
+ cache
+Message-ID: <20170829124536.GA26339@infradead.org>
+References: <1503956111-36652-1-git-send-email-keescook@chromium.org>
+ <1503956111-36652-16-git-send-email-keescook@chromium.org>
+ <20170829081453.GA10196@infradead.org>
+ <20170829123126.GB10621@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170829123126.GB10621@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: jack@suse.cz
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, kernel-hardening@lists.openwall.com
 
-Add a new __xfs_filemap_fault helper that implements all four page fault
-callouts, and make these methods themselves small stubs that set the
-correct write_fault flag, and exit early for the non-DAX case for the
-hugepage related ones.
+On Tue, Aug 29, 2017 at 10:31:26PM +1000, Dave Chinner wrote:
+> Probably should.  I've already been looking at killing the inline
+> extents array to simplify the management of the extent list (much
+> simpler to index by rbtree when we don't have direct/indirect
+> structures), so killing the inline data would get rid of the other
+> part of the union the inline data sits in.
 
-Also remove the extra size checking in the pfn_fault path, which is now
-handled in the core DAX code.
+That's exactly where I came form with my extent list work.  Although
+the rbtree performance was horrible due to the memory overhead and
+I've switched to a modified b+tree at the moment..
 
-Life would be so much simpler if we only had one method for all this.
+> OTOH, if we're going to have to dynamically allocate the memory for
+> the extent/inline data for the data fork, it may just be easier to
+> make the entire data fork a dynamic allocation (like the attr fork).
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- fs/xfs/xfs_file.c  | 127 ++++++++++++++++-------------------------------------
- fs/xfs/xfs_trace.h |  29 ++++++++++--
- 2 files changed, 62 insertions(+), 94 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 8b0181c6d2a6..d2b53fefa6a5 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1011,129 +1011,76 @@ xfs_file_llseek(
-  *       page_lock (MM)
-  *         i_lock (XFS - extent map serialisation)
-  */
--
--/*
-- * mmap()d file has taken write protection fault and is being made writable. We
-- * can set the page state up correctly for a writable page, which means we can
-- * do correct delalloc accounting (ENOSPC checking!) and unwritten extent
-- * mapping.
-- */
--STATIC int
--xfs_filemap_page_mkwrite(
--	struct vm_fault		*vmf)
-+static int
-+__xfs_filemap_fault(
-+	struct vm_fault		*vmf,
-+	enum page_entry_size	pe_size,
-+	bool			write_fault)
- {
- 	struct inode		*inode = file_inode(vmf->vma->vm_file);
-+	struct xfs_inode	*ip = XFS_I(inode);
- 	int			ret;
- 
--	trace_xfs_filemap_page_mkwrite(XFS_I(inode));
-+	trace_xfs_filemap_fault(ip, pe_size, write_fault);
- 
--	sb_start_pagefault(inode->i_sb);
--	file_update_time(vmf->vma->vm_file);
--	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-+	if (write_fault) {
-+		sb_start_pagefault(inode->i_sb);
-+		file_update_time(vmf->vma->vm_file);
-+	}
- 
-+	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	if (IS_DAX(inode)) {
--		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
-+		ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
- 	} else {
--		ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-+		if (write_fault)
-+			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-+		else
-+			ret = filemap_fault(vmf);
- 	}
--
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	sb_end_pagefault(inode->i_sb);
- 
-+	if (write_fault)
-+		sb_end_pagefault(inode->i_sb);
- 	return ret;
- }
- 
--STATIC int
-+static int
- xfs_filemap_fault(
- 	struct vm_fault		*vmf)
- {
--	struct inode		*inode = file_inode(vmf->vma->vm_file);
--	int			ret;
--
--	trace_xfs_filemap_fault(XFS_I(inode));
--
- 	/* DAX can shortcut the normal fault path on write faults! */
--	if ((vmf->flags & FAULT_FLAG_WRITE) && IS_DAX(inode))
--		return xfs_filemap_page_mkwrite(vmf);
--
--	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	if (IS_DAX(inode))
--		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
--	else
--		ret = filemap_fault(vmf);
--	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--
--	return ret;
-+	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
-+			IS_DAX(file_inode(vmf->vma->vm_file)) &&
-+			(vmf->flags & FAULT_FLAG_WRITE));
- }
- 
--/*
-- * Similar to xfs_filemap_fault(), the DAX fault path can call into here on
-- * both read and write faults. Hence we need to handle both cases. There is no
-- * ->huge_mkwrite callout for huge pages, so we have a single function here to
-- * handle both cases here. @flags carries the information on the type of fault
-- * occuring.
-- */
--STATIC int
-+static int
- xfs_filemap_huge_fault(
- 	struct vm_fault		*vmf,
- 	enum page_entry_size	pe_size)
- {
--	struct inode		*inode = file_inode(vmf->vma->vm_file);
--	struct xfs_inode	*ip = XFS_I(inode);
--	int			ret;
--
--	if (!IS_DAX(inode))
-+	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
- 		return VM_FAULT_FALLBACK;
- 
--	trace_xfs_filemap_huge_fault(ip);
--
--	if (vmf->flags & FAULT_FLAG_WRITE) {
--		sb_start_pagefault(inode->i_sb);
--		file_update_time(vmf->vma->vm_file);
--	}
--
--	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
--	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--
--	if (vmf->flags & FAULT_FLAG_WRITE)
--		sb_end_pagefault(inode->i_sb);
-+	/* DAX can shortcut the normal fault path on write faults! */
-+	return __xfs_filemap_fault(vmf, pe_size,
-+			(vmf->flags & FAULT_FLAG_WRITE));
-+}
- 
--	return ret;
-+static int
-+xfs_filemap_page_mkwrite(
-+	struct vm_fault		*vmf)
-+{
-+	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
- }
- 
--/*
-- * pfn_mkwrite was originally inteneded to ensure we capture time stamp
-- * updates on write faults. In reality, it's need to serialise against
-- * truncate similar to page_mkwrite. Hence we cycle the XFS_MMAPLOCK_SHARED
-- * to ensure we serialise the fault barrier in place.
-- */
- static int
- xfs_filemap_pfn_mkwrite(
- 	struct vm_fault		*vmf)
- {
--
--	struct inode		*inode = file_inode(vmf->vma->vm_file);
--	struct xfs_inode	*ip = XFS_I(inode);
--	int			ret = VM_FAULT_NOPAGE;
--	loff_t			size;
--
--	trace_xfs_filemap_pfn_mkwrite(ip);
--
--	sb_start_pagefault(inode->i_sb);
--	file_update_time(vmf->vma->vm_file);
--
--	/* check if the faulting page hasn't raced with truncate */
--	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
--	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
--	if (vmf->pgoff >= size)
--		ret = VM_FAULT_SIGBUS;
--	else if (IS_DAX(inode))
--		ret = dax_pfn_mkwrite(vmf);
--	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
--	sb_end_pagefault(inode->i_sb);
--	return ret;
--
-+	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
-+		return VM_FAULT_NOPAGE;
-+	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
- }
- 
- static const struct vm_operations_struct xfs_file_vm_ops = {
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index bcc3cdf8e1c5..78626f77fe3e 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -689,10 +689,31 @@ DEFINE_INODE_EVENT(xfs_inode_set_cowblocks_tag);
- DEFINE_INODE_EVENT(xfs_inode_clear_cowblocks_tag);
- DEFINE_INODE_EVENT(xfs_inode_free_cowblocks_invalid);
- 
--DEFINE_INODE_EVENT(xfs_filemap_fault);
--DEFINE_INODE_EVENT(xfs_filemap_huge_fault);
--DEFINE_INODE_EVENT(xfs_filemap_page_mkwrite);
--DEFINE_INODE_EVENT(xfs_filemap_pfn_mkwrite);
-+TRACE_EVENT(xfs_filemap_fault,
-+	TP_PROTO(struct xfs_inode *ip, enum page_entry_size pe_size,
-+		 bool write_fault),
-+	TP_ARGS(ip, pe_size, write_fault),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(enum page_entry_size, pe_size)
-+		__field(bool, write_fault)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->pe_size = pe_size;
-+		__entry->write_fault = write_fault;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx %s write_fault %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __print_symbolic(__entry->pe_size,
-+			{ PE_SIZE_PTE,	"PTE" },
-+			{ PE_SIZE_PMD,	"PMD" },
-+			{ PE_SIZE_PUD,	"PUD" }),
-+		  __entry->write_fault)
-+)
- 
- DECLARE_EVENT_CLASS(xfs_iref_class,
- 	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
--- 
-2.11.0
-
+I though about this a bit, but it turned out that we basically
+always need the data anyway, so I don't think it's going to buy
+us much unless we shrink the inode enough so that they better fit
+into a page.
