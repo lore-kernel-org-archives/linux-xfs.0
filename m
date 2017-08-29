@@ -1,21 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:36957 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:27944 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751935AbdH2XvK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:10 -0400
+        by vger.kernel.org with ESMTP id S1751843AbdH2Xu6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:50:58 -0400
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1dmqHW-0002cG-KP
+        id 1dmqHW-0002c4-Hk
         for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.89)
         (envelope-from <david@fromorbit.com>)
-        id 1dmqHW-0005Vp-Ih
+        id 1dmqHW-0005Vj-GX
         for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/42] mkfs: factor naming subopts parser
-Date: Wed, 30 Aug 2017 09:50:20 +1000
-Message-Id: <20170829235052.21050-11-david@fromorbit.com>
+Subject: [PATCH 08/42] mkfs: factor log subopts parser
+Date: Wed, 30 Aug 2017 09:50:18 +1000
+Message-Id: <20170829235052.21050-9-david@fromorbit.com>
 In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
 References: <20170829235052.21050-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -27,35 +27,55 @@ From: Dave Chinner <dchinner@redhat.com>
 
 Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 68 +++++++++++++++++++++++++--------------------------------
- 1 file changed, 30 insertions(+), 38 deletions(-)
+ mkfs/xfs_mkfs.c | 127 +++++++++++++++++++++++++++++---------------------------
+ 1 file changed, 65 insertions(+), 62 deletions(-)
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 7b967ffe6893..e3ee1f1c87fc 100644
+index d702010c2854..8e42fe0301fb 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -1693,6 +1693,28 @@ naming_opts_parser(
+@@ -1607,6 +1607,48 @@ log_opts_parser(
  	char			*value,
  	struct cli_params	*cli)
  {
++	int			lsectorlog;
++
 +	switch (subopt) {
-+	case N_LOG:
-+		cli->dirblocklog = getnum(value, opts, N_LOG);
++	case L_AGNUM:
++		cli->logagno = getnum(value, &lopts, L_AGNUM);
 +		break;
-+	case N_SIZE:
-+		cli->dirblocksize = getstr(value, opts, N_SIZE);
++	case L_FILE:
++		cli->xi->lisfile = getnum(value, &lopts, L_FILE);
 +		break;
-+	case N_VERSION:
-+		value = getstr(value, &nopts, N_VERSION);
-+		if (!strcasecmp(value, "ci")) {
-+			/* ASCII CI mode */
-+			cli->sb_feat.nci = true;
-+		} else {
-+			cli->sb_feat.dir_version = getnum(value, opts, N_VERSION);
-+		}
++	case L_INTERNAL:
++		cli->loginternal = getnum(value, &lopts, L_INTERNAL);
 +		break;
-+	case N_FTYPE:
-+		cli->sb_feat.dirftype = getnum(value, opts, N_FTYPE);
++	case L_SU:
++		cli->lsu = getstr(value, &lopts, L_SU);
++		break;
++	case L_SUNIT:
++		cli->lsunit = getnum(value, &lopts, L_SUNIT);
++		break;
++	case L_NAME:
++	case L_DEV:
++		cli->xi->logname = getstr(value, &lopts, L_NAME);
++		cli->loginternal = 0;
++		break;
++	case L_VERSION:
++		cli->sb_feat.log_version = getnum(value, &lopts, L_VERSION);
++		break;
++	case L_SIZE:
++		cli->logsize = getstr(value, &lopts, L_SIZE);
++		break;
++	case L_SECTLOG:
++		lsectorlog = getnum(value, &lopts, L_SECTLOG);
++		cli->lsectorsize = 1 << lsectorlog;
++		break;
++	case L_SECTSIZE:
++		cli->lsectorsize = getnum(value, &lopts, L_SECTSIZE);
++		break;
++	case L_LAZYSBCNTR:
++		cli->sb_feat.lazy_sb_counters = getnum(value, &lopts, L_LAZYSBCNTR);
 +		break;
 +	default:
 +		return -EINVAL;
@@ -63,60 +83,100 @@ index 7b967ffe6893..e3ee1f1c87fc 100644
  	return 0;
  }
  
-@@ -2015,45 +2037,15 @@ main(
+@@ -1910,70 +1952,31 @@ main(
  			/* end temp don't break code */
  			break;
- 		case 'n':
+ 		case 'l':
 -			p = optarg;
 -			while (*p != '\0') {
--				char	**subopts = (char **)nopts.subopts;
+-				char	**subopts = (char **)lopts.subopts;
 -				char	*value;
 +			parse_subopts(c, optarg, &cli);
  
 -				switch (getsubopt(&p, subopts, &value)) {
--				case N_LOG:
--					dirblocklog = getnum(value, &nopts,
--							     N_LOG);
--					dirblocksize = 1 << dirblocklog;
--					nlflag = 1;
+-				case L_AGNUM:
+-					logagno = getnum(value, &lopts, L_AGNUM);
+-					laflag = 1;
 -					break;
--				case N_SIZE:
--					dirblocksize = getnum(value, &nopts,
--							      N_SIZE);
--					dirblocklog =
--						libxfs_highbit32(dirblocksize);
--					nsflag = 1;
+-				case L_FILE:
+-					xi.lisfile = getnum(value, &lopts,
+-							    L_FILE);
 -					break;
--				case N_VERSION:
--					value = getstr(value, &nopts, N_VERSION);
--					if (!strcasecmp(value, "ci")) {
--						/* ASCII CI mode */
--						sb_feat.nci = true;
--					} else {
--						sb_feat.dir_version =
--							getnum(value, &nopts,
--							       N_VERSION);
--					}
--					nvflag = 1;
+-				case L_INTERNAL:
+-					loginternal = getnum(value, &lopts,
+-							     L_INTERNAL);
+-					liflag = 1;
 -					break;
--				case N_FTYPE:
--					sb_feat.dirftype = getnum(value, &nopts,
--								  N_FTYPE);
+-				case L_SU:
+-					lsu = getnum(value, &lopts, L_SU);
+-					lsuflag = 1;
+-					break;
+-				case L_SUNIT:
+-					lsunit = getnum(value, &lopts, L_SUNIT);
+-					lsunitflag = 1;
+-					break;
+-				case L_NAME:
+-				case L_DEV:
+-					logfile = getstr(value, &lopts, L_NAME);
+-					xi.logname = logfile;
+-					ldflag = 1;
+-					loginternal = 0;
+-					break;
+-				case L_VERSION:
+-					sb_feat.log_version =
+-						getnum(value, &lopts, L_VERSION);
+-					lvflag = 1;
+-					break;
+-				case L_SIZE:
+-					logsize = getstr(value, &lopts, L_SIZE);
+-					break;
+-				case L_SECTLOG:
+-					lsectorlog = getnum(value, &lopts,
+-							    L_SECTLOG);
+-					lsectorsize = 1 << lsectorlog;
+-					lslflag = 1;
+-					break;
+-				case L_SECTSIZE:
+-					lsectorsize = getnum(value, &lopts,
+-							     L_SECTSIZE);
+-					lsectorlog =
+-						libxfs_highbit32(lsectorsize);
+-					lssflag = 1;
+-					break;
+-				case L_LAZYSBCNTR:
+-					sb_feat.lazy_sb_counters =
+-							getnum(value, &lopts,
+-							       L_LAZYSBCNTR);
 -					break;
 -				default:
--					unknown('n', value);
+-					unknown('l', value);
 -				}
--			}
 +			/* temp don't break code */
-+			if ((nsflag = cli_opt_set(&nopts, N_SIZE)))
-+				dirblocksize = getnum(cli.dirblocksize, &nopts, N_SIZE);
-+			dirblocklog = cli.dirblocklog;
++			logagno = cli.logagno;
++			loginternal = cli.loginternal;
++			logfile = xi.logname;
++			logsize = cli.logsize;
++			lsectorsize = cli.lsectorsize;
++			lsectorlog = libxfs_highbit32(lsectorsize);
 +
-+			nlflag = cli_opt_set(&nopts, N_LOG);
++			lsunit = cli.lsunit;
++			lsunitflag = cli_opt_set(&lopts, L_SUNIT);
++			if (cli_opt_set(&lopts, L_SU)) {
++				lsu = getnum(cli.lsu, &lopts, L_SU);
++				lsuflag = 1;
+ 			}
++
++			laflag = cli_opt_set(&lopts, L_AGNUM);
++			liflag = cli_opt_set(&lopts, L_INTERNAL);
++			ldflag = cli_opt_set(&lopts, L_NAME) ||
++				 cli_opt_set(&lopts, L_DEV);
++			lvflag = cli_opt_set(&lopts, L_VERSION);
++			lslflag = cli_opt_set(&lopts, L_SECTLOG);
++			lssflag = cli_opt_set(&lopts, L_SECTSIZE);
 +			/* end temp don't break code */
  			break;
- 		case 'N':
- 			Nflag = 1;
+ 		case 'L':
+ 			if (strlen(optarg) > sizeof(sbp->sb_fname))
 -- 
 2.13.3
 
