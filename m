@@ -1,78 +1,156 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:32988 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751366AbdH3NyH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 Aug 2017 09:54:07 -0400
-Subject: Re: [PATCH] mkfs.xfs: Don't stagger AG for a single disk
-References: <1504066712-26973-1-git-send-email-ddouwsma@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9aacc5d8-c935-24f0-4a0b-89993dd48769@sandeen.net>
-Date: Wed, 30 Aug 2017 08:54:06 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:41506 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751241AbdH2EZt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 00:25:49 -0400
+Date: Mon, 28 Aug 2017 21:25:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: iov_iter_pipe warning.
+Message-ID: <20170829042542.GO4757@magnolia>
+References: <20170412162709.bn5qfk4seues3yos@codemonkey.org.uk>
+ <20170412170723.GQ29622@ZenIV.linux.org.uk>
+ <20170412190318.srkkdytf2ebrjzrg@codemonkey.org.uk>
+ <20170421175430.GT29622@ZenIV.linux.org.uk>
+ <20170428152955.mafs3f22srmm34aw@codemonkey.org.uk>
+ <20170428164313.GK29622@ZenIV.linux.org.uk>
+ <20170428165024.ofyl2atpjwohekqa@codemonkey.org.uk>
+ <20170428172024.GL29622@ZenIV.linux.org.uk>
+ <20170807201818.kykqzexce6ap6aik@codemonkey.org.uk>
+ <20170828203130.y6dq5fqovev6wmrv@codemonkey.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <1504066712-26973-1-git-send-email-ddouwsma@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170828203130.y6dq5fqovev6wmrv@codemonkey.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Donald Douwsma <ddouwsma@redhat.com>, linux-xfs@vger.kernel.org
+To: Dave Jones <davej@codemonkey.org.uk>, Al Viro <viro@ZenIV.linux.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-On 8/29/17 11:18 PM, Donald Douwsma wrote:
-> When sunit and swidth are used mkfs.xfs tries to avoid all allocation
-> groups aligning on the same stripe and will attempt to stagger them
-> across the stripes that make up swidth.  If there is only one stripe
-> then there is no benefit in this optimisation.
+On Mon, Aug 28, 2017 at 04:31:30PM -0400, Dave Jones wrote:
+> On Mon, Aug 07, 2017 at 04:18:18PM -0400, Dave Jones wrote:
+>  > On Fri, Apr 28, 2017 at 06:20:25PM +0100, Al Viro wrote:
+>  >  > On Fri, Apr 28, 2017 at 12:50:24PM -0400, Dave Jones wrote:
+>  >  > > currently running v4.11-rc8-75-gf83246089ca0
+>  >  > > 
+>  >  > > sunrpc bit is for the other unrelated problem I'm chasing.
+>  >  > > 
+>  >  > > note also, I saw the backtrace without the fs/splice.c changes.
+>  >  > 
+>  >  > 	Interesting...  Could you add this and see if that triggers?
+>  >  > 
+>  >  > diff --git a/fs/splice.c b/fs/splice.c
+>  >  > index 540c4a44756c..12a12d9c313f 100644
+>  >  > --- a/fs/splice.c
+>  >  > +++ b/fs/splice.c
+>  >  > @@ -306,6 +306,9 @@ ssize_t generic_file_splice_read(struct file *in, loff_t *ppos,
+>  >  >  	kiocb.ki_pos = *ppos;
+>  >  >  	ret = call_read_iter(in, &kiocb, &to);
+>  >  >  	if (ret > 0) {
+>  >  > +		if (WARN_ON(iov_iter_count(&to) != len - ret))
+>  >  > +			printk(KERN_ERR "ops %p: was %zd, left %zd, returned %d\n",
+>  >  > +				in->f_op, len, iov_iter_count(&to), ret);
+>  >  >  		*ppos = kiocb.ki_pos;
+>  >  >  		file_accessed(in);
+>  >  >  	} else if (ret < 0) {
+>  > 
+>  > Hey Al,
+>  >  Due to a git stash screw up on my part, I've had this leftover WARN_ON
+>  > in my tree for the last couple months. (That screw-up might turn out to be
+>  > serendipitous if this is a real bug..)
+>  > 
+>  > Today I decided to change things up and beat up on xfs for a change, and
+>  > was able to trigger this again.
+>  > 
+>  > Is this check no longer valid, or am I triggering the same bug we were chased
+>  > down in nfs, but now in xfs ?  (None of the other detritus from that debugging
+>  > back in April made it, just those three lines above).
 > 
-> $ truncate -s10G xfs_10G_su256k_sw1.image
-> $ mkfs.xfs -d su=256k,sw=1 xfs_10G_su256k_sw1.image
-> meta-data=xfs_10G_su256k_sw1.image isize=512    agcount=16, agsize=163776 blks
->          =                       sectsz=512   attr=2, projid32bit=1
->          =                       crc=1        finobt=0, sparse=0
-> data     =                       bsize=4096   blocks=2620416, imaxpct=25
->          =                       sunit=64     swidth=64 blks
-> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> log      =internal log           bsize=4096   blocks=2560, version=2
->          =                       sectsz=512   sunit=64 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> Revisiting this. I went back and dug out some of the other debug diffs [1]
+> from that old thread.
 > 
-> A side effect of the optimisation is that the size adjustment used to stager
-> the allocation groups causes the last sunit of storage to be unused.
+> I can easily trigger this spew on xfs.
 > 
-> $ echo $((2620416*4096))
-> 10733223936
-> $ ls -l xfs_10G_su256k_sw1.image
-> -rw-rw-r--. 1 test test 10737418240 Aug 30 10:54 xfs_10G_su256k_sw1.image
 > 
-> Skip this optimisation when sunit == swidth.
+> WARNING: CPU: 1 PID: 2251 at fs/splice.c:292 test_it+0xd4/0x1d0
+> CPU: 1 PID: 2251 Comm: trinity-c42 Not tainted 4.13.0-rc7-think+ #1 
+> task: ffff880459173a40 task.stack: ffff88044f7d0000
+> RIP: 0010:test_it+0xd4/0x1d0
+> RSP: 0018:ffff88044f7d7878 EFLAGS: 00010283
+> RAX: 0000000000000000 RBX: ffff88044f44b968 RCX: ffffffff81511ea0
+> RDX: 0000000000000003 RSI: dffffc0000000000 RDI: ffff88044f44ba68
+> RBP: ffff88044f7d78c8 R08: ffff88046b218ec0 R09: 0000000000000000
+> R10: ffff88044f7d7518 R11: 0000000000000000 R12: 0000000000001000
+> R13: 0000000000000001 R14: 00000000ffffffff R15: 0000000000000001
+> FS:  00007fdbc09b2700(0000) GS:ffff88046b200000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000000000000000 CR3: 0000000459e1d000 CR4: 00000000001406e0
+> Call Trace:
+>  generic_file_splice_read+0x414/0x4e0
+>  ? opipe_prep.part.14+0x180/0x180
+>  ? lockdep_init_map+0xb2/0x2b0
+>  ? rw_verify_area+0x65/0x150
+>  do_splice_to+0xab/0xc0
+>  splice_direct_to_actor+0x1f5/0x540
+>  ? generic_pipe_buf_nosteal+0x10/0x10
+>  ? do_splice_to+0xc0/0xc0
+>  ? rw_verify_area+0x9d/0x150
+>  do_splice_direct+0x1b9/0x230
+>  ? splice_direct_to_actor+0x540/0x540
+>  ? __sb_start_write+0x164/0x1c0
+>  ? do_sendfile+0x7b3/0x840
+>  do_sendfile+0x428/0x840
+>  ? do_compat_pwritev64+0xb0/0xb0
+>  ? __might_sleep+0x72/0xe0
+>  ? kasan_check_write+0x14/0x20
+>  SyS_sendfile64+0xa4/0x120
+>  ? SyS_sendfile+0x150/0x150
+>  ? mark_held_locks+0x23/0xb0
+>  ? do_syscall_64+0xc0/0x3e0
+>  ? SyS_sendfile+0x150/0x150
+>  do_syscall_64+0x1bc/0x3e0
+>  ? syscall_return_slowpath+0x240/0x240
+>  ? mark_held_locks+0x23/0xb0
+>  ? return_from_SYSCALL_64+0x2d/0x7a
+>  ? trace_hardirqs_on_caller+0x182/0x260
+>  ? trace_hardirqs_on_thunk+0x1a/0x1c
+>  entry_SYSCALL64_slow_path+0x25/0x25
+> RIP: 0033:0x7fdbc02dd219
+> RSP: 002b:00007ffc5024fa48 EFLAGS: 00000246
+>  ORIG_RAX: 0000000000000028
+> RAX: ffffffffffffffda RBX: 0000000000000028 RCX: 00007fdbc02dd219
+> RDX: 00007fdbbe348000 RSI: 0000000000000011 RDI: 0000000000000015
+> RBP: 00007ffc5024faf0 R08: 000000000000006d R09: 0094e82f2c730a50
+> R10: 0000000000001000 R11: 0000000000000246 R12: 0000000000000002
+> R13: 00007fdbc0885058 R14: 00007fdbc09b2698 R15: 00007fdbc0885000
+> ---[ end trace a5847ef0f7be7e20 ]---
+> asked to read 4096, claims to have read 1
+> actual size of data in pipe 4096 
+> [0:4096]
+> f_op: ffffffffa058c920, f_flags: 49154, pos: 0/1, size: 0
 > 
-> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+> 
+> I'm still trying to narrow down an exact reproducer, but it seems having
+> trinity do a combination of sendfile & writev, with pipes and regular
+> files as fd's is the best repro.
+> 
+> Is this a real problem, or am I chasing ghosts ?  That it doesn't happen
+> on ext4 or btrfs is making me wonder...
 
-Interesting.  Yeah, I suppose this makes sense, though I'm surprised
-anyone would notice.  :)
+<shrug> I haven't heard of any problems w/ directio xfs lately, but OTOH
+I think it's the only filesystem that uses iomap_dio_rw, which would
+explain why ext4/btrfs don't have this problem.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Granted that's idle speculation; is there a reproducer/xfstest for this?
 
-Thanks,
--Eric
+--D
 
-> ---
->  mkfs/xfs_mkfs.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index b5c3a57..35dae48 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -2534,7 +2534,9 @@ reported by the device (%u).\n"),
->  				}
->  			}
->  		}
-> -		if (dswidth && ((agsize % dswidth) == 0) && (agcount > 1)) {
-> +		if (dswidth && ((agsize % dswidth) == 0)
-> +			    && (dswidth != dsunit)
-> +			    && (agcount > 1)) {
->  			/* This is a non-optimal configuration because all AGs
->  			 * start on the same disk in the stripe.  Changing
->  			 * the AG size by one sunit will guarantee that this
+> 	Dave
 > 
+> 
+> [1] https://lkml.org/lkml/2017/4/11/921
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
