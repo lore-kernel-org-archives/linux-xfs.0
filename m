@@ -1,66 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20075 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751207AbdH2AZY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 20:25:24 -0400
-Date: Mon, 28 Aug 2017 17:25:20 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:17775 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750758AbdH2EEG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 00:04:06 -0400
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7T445oZ003374
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2017 04:04:05 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v7T445CQ029766
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2017 04:04:05 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7T444ge003763
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2017 04:04:05 GMT
+Date: Mon, 28 Aug 2017 21:04:03 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: My thesis about mkfs
-Message-ID: <20170829002520.GK4757@magnolia>
-References: <CACj3i71iYMn8+nwUmXUHfR-c2c8XdqfdTsgx5Ohkb2k1FXUd0w@mail.gmail.com>
+Subject: Out for 2 weeks
+Message-ID: <20170829040403.GN4757@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CACj3i71iYMn8+nwUmXUHfR-c2c8XdqfdTsgx5Ohkb2k1FXUd0w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Aug 28, 2017 at 04:39:48PM +0200, Jan Tulak wrote:
-> Hi guys
-> 
-> This email is about my thesis I did and which I'm sending you in case
-> you are interested: Refactoring and Verification of the Code of
-> mkfs.xfs
-> 
-> The refactoring part (intro and summary of chapter 3) can be somehow
-> interesting if you want to get a small overview of how it feels to
-> just jump into a project like this without any experience in regular
-> development of bigger open source projects (bigger than 1-2 man
-> shows). Other than that, you won't find there much.
-> 
-> The testing part (chapters 5 and 6) shows how CppCheck, Coverity, and
-> GCC and Clang compares to each other, in various levels of
-> aggressiveness. Spoiler: Coverity is pretty good and we are doing well
-> that we use it. :-)
-> 
-> I'm sorry I didn't publish it right after the defence; I wanted to go
-> through it and make some minor edits, but in the weeks since the
-> defence, I forgot what they told me, so I decided I will just send it
-> as it is, with no other delays. :-)
-> 
-> The thesis was defended and I got a master degree, but I still
-> appreciate any comments. :-)
-> 
-> 
-> Download here:
-> https://github.com/jtulak/thesis-mmm/releases
+Hi all,
 
-Congratulations!  I'll look it over soon.
+I am taking two weeks off (9/5 - 9/51) to get married.  Since the merge
+window will probably open on Sunday, I'd appreciate it if everyone could
+get their 4.14 merge window patches reviewed on the list by Thursday
+morning to give me the weekend to soak-test everything and send a pull
+request to Linus as soon as the window is open.  I'll push things to
+for-next as soon as they make it through my test farm.
 
---D
+If you have patches for any seriously hot bugs while I'm gone, Dave or
+Eric can push them in.  Regression and bug fixes will be accepted at any
+time during the 4.14 cycle as usual.
 
-> 
-> 
-> 
-> Cheers,
-> Jan
-> 
-> PS: Eric, I hope I didn't overlook anything you pointed out in the
-> proofreading. Thank you once more for that. :-)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks!
+
+--Darrick
