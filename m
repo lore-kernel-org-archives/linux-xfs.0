@@ -1,224 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27514 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751186AbdH2StG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 14:49:06 -0400
-Date: Tue, 29 Aug 2017 11:48:57 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:43543 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751186AbdH2StX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 14:49:23 -0400
+Date: Tue, 29 Aug 2017 11:49:13 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: consolidate the various page fault handlers
-Message-ID: <20170829184857.GB4757@magnolia>
-References: <20170829162613.27270-1-hch@lst.de>
- <20170829162613.27270-3-hch@lst.de>
+Subject: Re: [PATCH v2 3/9] xfs: ordered buffer log items are never formatted
+Message-ID: <20170829184913.GC4757@magnolia>
+References: <20170829143758.58990-1-bfoster@redhat.com>
+ <20170829143758.58990-4-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170829162613.27270-3-hch@lst.de>
+In-Reply-To: <20170829143758.58990-4-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, jack@suse.cz
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Aug 29, 2017 at 06:26:13PM +0200, Christoph Hellwig wrote:
-> Add a new __xfs_filemap_fault helper that implements all four page fault
-> callouts, and make these methods themselves small stubs that set the
-> correct write_fault flag, and exit early for the non-DAX case for the
-> hugepage related ones.
+On Tue, Aug 29, 2017 at 10:37:52AM -0400, Brian Foster wrote:
+> Ordered buffers pass through the logging infrastructure without ever
+> being written to the log. The way this works is that the ordered
+> buffer status is transferred to the log vector at commit time via
+> the ->iop_size() callback. In xlog_cil_insert_format_items(),
+> ordered log vectors bypass ->iop_format() processing altogether.
 > 
-> Also remove the extra size checking in the pfn_fault path, which is now
-> handled in the core DAX code.
+> Therefore it is unnecessary for xfs_buf_item_format() to handle
+> ordered buffers. Remove the unnecessary logic and assert that an
+> ordered buffer never reaches this point.
 > 
-> Life would be so much simpler if we only had one method for all this.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Looks ok, will test (again),
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 > ---
->  fs/xfs/xfs_file.c  | 96 +++++++++++++++++++-----------------------------------
->  fs/xfs/xfs_trace.h | 29 +++++++++++++++--
->  2 files changed, 60 insertions(+), 65 deletions(-)
+>  fs/xfs/xfs_buf_item.c | 12 ++----------
+>  fs/xfs/xfs_trace.h    |  1 -
+>  2 files changed, 2 insertions(+), 11 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 8b0181c6d2a6..0debbc7e3f03 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1011,95 +1011,67 @@ xfs_file_llseek(
->   *       page_lock (MM)
->   *         i_lock (XFS - extent map serialisation)
->   */
-> -
-> -/*
-> - * mmap()d file has taken write protection fault and is being made writable. We
-> - * can set the page state up correctly for a writable page, which means we can
-> - * do correct delalloc accounting (ENOSPC checking!) and unwritten extent
-> - * mapping.
-> - */
-> -STATIC int
-> -xfs_filemap_page_mkwrite(
-> -	struct vm_fault		*vmf)
-> +static int
-> +__xfs_filemap_fault(
-> +	struct vm_fault		*vmf,
-> +	enum page_entry_size	pe_size,
-> +	bool			write_fault)
->  {
->  	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> +	struct xfs_inode	*ip = XFS_I(inode);
->  	int			ret;
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index ff076d1..ef2c137 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -323,6 +323,8 @@ xfs_buf_item_format(
+>  	ASSERT((bip->bli_flags & XFS_BLI_STALE) ||
+>  	       (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF
+>  	        && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF));
+> +	ASSERT(!(bip->bli_flags & XFS_BLI_ORDERED) ||
+> +	       (bip->bli_flags & XFS_BLI_STALE));
 >  
-> -	trace_xfs_filemap_page_mkwrite(XFS_I(inode));
-> +	trace_xfs_filemap_fault(ip, pe_size, write_fault);
 >  
-> -	sb_start_pagefault(inode->i_sb);
-> -	file_update_time(vmf->vma->vm_file);
-> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> +	if (write_fault) {
-> +		sb_start_pagefault(inode->i_sb);
-> +		file_update_time(vmf->vma->vm_file);
-> +	}
->  
-> +	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
->  	if (IS_DAX(inode)) {
-> -		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
-> +		ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
->  	} else {
-> -		ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-> +		if (write_fault)
-> +			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
-> +		else
-> +			ret = filemap_fault(vmf);
+>  	/*
+> @@ -347,16 +349,6 @@ xfs_buf_item_format(
+>  		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
 >  	}
-> -
->  	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -	sb_end_pagefault(inode->i_sb);
 >  
-> +	if (write_fault)
-> +		sb_end_pagefault(inode->i_sb);
->  	return ret;
->  }
->  
-> -STATIC int
-> +static int
->  xfs_filemap_fault(
->  	struct vm_fault		*vmf)
->  {
-> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> -	int			ret;
-> -
-> -	trace_xfs_filemap_fault(XFS_I(inode));
-> -
->  	/* DAX can shortcut the normal fault path on write faults! */
-> -	if ((vmf->flags & FAULT_FLAG_WRITE) && IS_DAX(inode))
-> -		return xfs_filemap_page_mkwrite(vmf);
-> -
-> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -	if (IS_DAX(inode))
-> -		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
-> -	else
-> -		ret = filemap_fault(vmf);
-> -	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -
-> -	return ret;
-> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
-> +			IS_DAX(file_inode(vmf->vma->vm_file)) &&
-> +			(vmf->flags & FAULT_FLAG_WRITE));
->  }
->  
-> -/*
-> - * Similar to xfs_filemap_fault(), the DAX fault path can call into here on
-> - * both read and write faults. Hence we need to handle both cases. There is no
-> - * ->huge_mkwrite callout for huge pages, so we have a single function here to
-> - * handle both cases here. @flags carries the information on the type of fault
-> - * occuring.
-> - */
-> -STATIC int
-> +static int
->  xfs_filemap_huge_fault(
->  	struct vm_fault		*vmf,
->  	enum page_entry_size	pe_size)
->  {
-> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> -	struct xfs_inode	*ip = XFS_I(inode);
-> -	int			ret;
-> -
-> -	if (!IS_DAX(inode))
-> +	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
->  		return VM_FAULT_FALLBACK;
->  
-> -	trace_xfs_filemap_huge_fault(ip);
-> -
-> -	if (vmf->flags & FAULT_FLAG_WRITE) {
-> -		sb_start_pagefault(inode->i_sb);
-> -		file_update_time(vmf->vma->vm_file);
+> -	if ((bip->bli_flags & (XFS_BLI_ORDERED|XFS_BLI_STALE)) ==
+> -							XFS_BLI_ORDERED) {
+> -		/*
+> -		 * The buffer has been logged just to order it.  It is not being
+> -		 * included in the transaction commit, so don't format it.
+> -		 */
+> -		trace_xfs_buf_item_format_ordered(bip);
+> -		return;
 > -	}
 > -
-> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -	ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
-> -	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -
-> -	if (vmf->flags & FAULT_FLAG_WRITE)
-> -		sb_end_pagefault(inode->i_sb);
-> +	/* DAX can shortcut the normal fault path on write faults! */
-> +	return __xfs_filemap_fault(vmf, pe_size,
-> +			(vmf->flags & FAULT_FLAG_WRITE));
-> +}
->  
-> -	return ret;
-> +static int
-> +xfs_filemap_page_mkwrite(
-> +	struct vm_fault		*vmf)
-> +{
-> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
->  }
->  
->  /*
+>  	for (i = 0; i < bip->bli_format_count; i++) {
+>  		xfs_buf_item_format_segment(bip, lv, &vecp, offset,
+>  					    &bip->bli_formats[i]);
 > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index bcc3cdf8e1c5..bae243ad7f3b 100644
+> index 6881047..e839ab4 100644
 > --- a/fs/xfs/xfs_trace.h
 > +++ b/fs/xfs/xfs_trace.h
-> @@ -689,11 +689,34 @@ DEFINE_INODE_EVENT(xfs_inode_set_cowblocks_tag);
->  DEFINE_INODE_EVENT(xfs_inode_clear_cowblocks_tag);
->  DEFINE_INODE_EVENT(xfs_inode_free_cowblocks_invalid);
->  
-> -DEFINE_INODE_EVENT(xfs_filemap_fault);
-> -DEFINE_INODE_EVENT(xfs_filemap_huge_fault);
-> -DEFINE_INODE_EVENT(xfs_filemap_page_mkwrite);
->  DEFINE_INODE_EVENT(xfs_filemap_pfn_mkwrite);
->  
-> +TRACE_EVENT(xfs_filemap_fault,
-> +	TP_PROTO(struct xfs_inode *ip, enum page_entry_size pe_size,
-> +		 bool write_fault),
-> +	TP_ARGS(ip, pe_size, write_fault),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(xfs_ino_t, ino)
-> +		__field(enum page_entry_size, pe_size)
-> +		__field(bool, write_fault)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-> +		__entry->ino = ip->i_ino;
-> +		__entry->pe_size = pe_size;
-> +		__entry->write_fault = write_fault;
-> +	),
-> +	TP_printk("dev %d:%d ino 0x%llx %s write_fault %d",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> +		  __entry->ino,
-> +		  __print_symbolic(__entry->pe_size,
-> +			{ PE_SIZE_PTE,	"PTE" },
-> +			{ PE_SIZE_PMD,	"PMD" },
-> +			{ PE_SIZE_PUD,	"PUD" }),
-> +		  __entry->write_fault)
-> +)
-> +
->  DECLARE_EVENT_CLASS(xfs_iref_class,
->  	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
->  	TP_ARGS(ip, caller_ip),
+> @@ -517,7 +517,6 @@ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size);
+>  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_ordered);
+>  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_stale);
+>  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format);
+> -DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_ordered);
+>  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_stale);
+>  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_ordered);
+>  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_pin);
 > -- 
-> 2.11.0
+> 2.9.5
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
