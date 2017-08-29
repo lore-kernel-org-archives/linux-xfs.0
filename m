@@ -1,133 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f181.google.com ([209.85.161.181]:34666 "EHLO
-        mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751263AbdH1Igj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2017 04:36:39 -0400
+Received: from mail-vk0-f44.google.com ([209.85.213.44]:38583 "EHLO
+        mail-vk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751597AbdH2NqI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 09:46:08 -0400
+Received: by mail-vk0-f44.google.com with SMTP id l132so9567532vke.5
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2017 06:46:08 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxg7FJ6sLRuRcV_AYRx_crZyVzVMzPgkZb8msLxtZvL12A@mail.gmail.com>
-References: <CAOQ4uxg7FJ6sLRuRcV_AYRx_crZyVzVMzPgkZb8msLxtZvL12A@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 28 Aug 2017 11:36:38 +0300
-Message-ID: <CAOQ4uxj4LRj=B8aHwPTGWkOmg9b-W6bJb7U9V76z4dMV3c4MOA@mail.gmail.com>
-Subject: Re: XFS bug discovered by crash tests?
+In-Reply-To: <20170725124511.GG19943@quack2.suse.cz>
+References: <20170629135420.21357-1-hch@lst.de> <20170629135420.21357-6-hch@lst.de>
+ <20170725124511.GG19943@quack2.suse.cz>
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Date: Tue, 29 Aug 2017 15:46:07 +0200
+Message-ID: <CAHc6FU5e7SaEtZGVRPWdnLBHZ72dqd-3JTOHjJsPMQ=mOe9ZbA@mail.gmail.com>
+Subject: Re: [PATCH 5/5] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Josef Bacik <jbacik@fb.com>, Eryu Guan <eguan@redhat.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Mon, Aug 28, 2017 at 11:33 AM, Amir Goldstein <amir73il@gmail.com> wrote:
-> Christoph, Darrick,
->
-> As I reported last week, I started running Josef's log-writes crash
-> tests and immediately got reports on data checksum errors when
-> running the tests on xfs.
->
-> Unlike ext4 and btrfs, xfs tests seemed to fail arbitrarily for any
-> value of random seed I tried. Unlike xfs, I never observed data
-> checksum errors on ext4 and btrfs (only fsck errors).
->
-> It's quite easy to reproduce the reported checksum errors when
-> running the test currently on my xfstests branch:
-> https://github.com/amir73il/xfstests/commits/dm-log-writes
->
-> Looking closer at the reported checksum errors, in all cases
-> I examined, the problem was, that after a sequence of
-> PUNCH_HOLE+FSYNC on a test file, a partially zeroed block,
-> both at beginning and end of zero range is not zeroed after
-> crash.
->
-> For example, the following file does not have zeroes after crash
-> at end of logical block #11:
+Jan,
 
-Block #10 that is... #11 is unmapped.
+On Tue, Jul 25, 2017 at 2:45 PM, Jan Kara <jack@suse.cz> wrote:
+> On Thu 29-06-17 06:54:20, Christoph Hellwig wrote:
+>> @@ -3359,6 +3358,7 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+>>       unsigned long first_block = offset >> blkbits;
+>>       unsigned long last_block = (offset + length - 1) >> blkbits;
+>>       struct ext4_map_blocks map;
+>> +     bool delalloc = false;
+>>       int ret;
+>>
+>>       if (WARN_ON_ONCE(ext4_has_inline_data(inode)))
+>> @@ -3369,6 +3369,27 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+>>
+>>       if (!(flags & IOMAP_WRITE)) {
+>>               ret = ext4_map_blocks(NULL, inode, &map, 0);
+>> +             if (!ret) {
+>> +                     struct extent_status es = {};
+>> +
+>> +                     ext4_es_find_delayed_extent_range(inode, map.m_lblk,
+>> +                                     map.m_lblk + map.m_len - 1, &es);
+>> +                     /* Is delalloc data before next block in extent tree? */
+>> +                     if (es.es_len && es.es_lblk < map.m_lblk + map.m_len) {
+>> +                             ext4_lblk_t offset = 0;
+>> +
+>> +                             if (es.es_lblk < map.m_lblk)
+>> +                                     offset = map.m_lblk - es.es_lblk;
+>> +                             map.m_lblk = es.es_lblk + offset;
+>> +                             map.m_pblk = ext4_es_pblock(&es) + offset;
+>
+> This is wrong for delalloc extent - adding offset to some magic block
+> value...
 
+Right.
+
+>> +                             map.m_len = es.es_len - offset;
+>> +                             if (ext4_es_status(&es) & EXTENT_STATUS_UNWRITTEN)
+>> +                                     map.m_flags |= EXT4_MAP_UNWRITTEN;
+>> +                             if (ext4_es_status(&es) & EXTENT_STATUS_DELAYED)
+>> +                                     delalloc = true;
+>> +                             ret = 1;
+>> +                     }
+>> +             }
 >
-> ---------------------
-> Filesystem type is: 58465342
-> File size of /mnt/scratch/testfile2 is 248338 (61 blocks of 4096 bytes)
->  ext:     logical_offset:        physical_offset: length:   expected: flags:
->    0:        1..       3:         33..        35:      3:             unwritten
->    1:       10..      10:         93..        93:      1:         36:
->    2:       20..      23:        147..       150:      4:         94: unwritten
->    3:       24..      31:        158..       165:      8:        151: unwritten
->    4:       34..      34:        146..       146:      1:        166: unwritten
->    5:       35..      38:        151..       154:      4:        147: unwritten
->    6:       41..      44:        167..       170:      4:        155: unwritten
->    7:       46..      46:        166..       166:      1:        171:
->    8:       47..      50:         89..        92:      4:        167:
->    9:       51..      60:        171..       180:     10:         93: last,eof
-> /mnt/scratch/testfile2: 10 extents found
+> Also the delalloc handling seems to be wrong that if we have file as:
 >
-> /mnt/scratch/testfile2 (bad):
-> 0000000 0000 0000 0000 0000 0000 0000 0000 0000
-> *
-> 000a510 5858 5858 5858 5858 5858 5858 5858 5858
-> *
-> 000b000 0000 0000 0000 0000 0000 0000 0000 0000
-> *
-> 002e280 0000 0000 0000 0000 0000 0000 5858 5858
-> 002e290 5858 5858 5858 5858 5858 5858 5858 5858
-> *
-> 0038720 5858 5858 0000 0000 0000 0000 0000 0000
-> 0038730 0000 0000 0000 0000 0000 0000 0000 0000
-> *
-> 003ca12
-> ------------------
+> HD
 >
-> However, this crash checkpoint (testfile2.mark1) was taken
-> after punch+fsync that should have zeroed the end of block #11
-> (0xa988..000b000):
-> -------------------
-> ...
-> 2: 16 punch     from 0xa988 to 0xf126, (0x479e bytes)
-> 2: 17 read      0x12420 thru    0x1aa08 (0x85e9 bytes)
-> 2: 18 write     0x30d11 thru    0x3a723 (0x9a13 bytes)
-> 2: 19 punch     from 0x27988 to 0x2aaed, (0x3165 bytes)
-> 2: 20 write     0x2d6ff thru    0x369f3 (0x92f5 bytes)
-> 2: 21 zero      from 0x22882 to 0x22e14, (0x592 bytes)
-> 2: 22 zero      from 0x14655 to 0x1e636, (0x9fe1 bytes)
-> 2: 23 zero      from 0x17c91 to 0x1fb75, (0x7ee4 bytes)
-> 2: 24 punch     from 0x273eb to 0x3028c, (0x8ea1 bytes)
-> 2: 25 zero      from 0x29eb2 to 0x2c692, (0x27e0 bytes)
-> 2: 26 zero      from 0x11ac to 0x3910, (0x2764 bytes)
-> 2: truncating to largest ever: 0x3ea12
-> 2: 27 trunc     from 0x3a724 to 0x3ea12
-> 2: 28 collapse  from 0x2d000 to 0x2f000, (0x2000 bytes)
-> 2: 29 falloc    from 0x22cf2 to 0x2733b (0x4649 bytes)
-> 2: 30 mapread   0x3466a thru    0x3ca11 (0x83a8 bytes)
-> 2: 31 fsync
-> 2: Dumped fsync buffer to testfile2.mark1
+> where H is hole, D is delalloc block, and iomap is called at offset 0, we
+> should be getting back "hole at 0" back but instead you will return
+> "delalloc at 1".
 >
-> /mnt/test/fsxtests/testfile2.mark1 (good):
-> 0000000 0000 0000 0000 0000 0000 0000 0000 0000
-> *
-> 000a510 5858 5858 5858 5858 5858 5858 5858 5858
-> *
-> 000a980 5858 5858 5858 5858 0000 0000 0000 0000
-> 000a990 0000 0000 0000 0000 0000 0000 0000 0000
-> *
-> 002e280 0000 0000 0000 0000 0000 0000 5858 5858
-> 002e290 5858 5858 5858 5858 5858 5858 5858 5858
-> *
-> 0038720 5858 5858 0000 0000 0000 0000 0000 0000
-> 0038730 0000 0000 0000 0000 0000 0000 0000 0000
-> *
-> 003ca12
->
-> --------------------------
->
-> Anyway, I went to look at xfs_zero_range() and while I admit
-> it was hard for me to follow down all the actors into block
-> layer, I couldn't find where partial zeroed page is marked dirty.
->
-> Can you please have a look and say what you make of this?
->
-> Thanks,
-> Amir.
->
-> P.S. if needed I can provide the recorded writes log to replay the
-> I/O sequence that results in the reported error (it's 13K compressed)
-> but the problem seems obvious and easy to reproduce using the
-> xfstest (reproduced at high probability not always).
+> We deal with a similar situation in ext4_da_map_blocks() so it would be
+> good if we could reuse that one rather than reimplementing it here. But
+> factoring the necessary functionality out isn't that easy.
+
+I've tried to figure out where the issue might be, and I really don't see any.
+
+It may be confusing that ext4_iomap_begin doesn't split up
+IOMAP_UNWRITTEN maps into holes and data as ext4_find_unwritten_pgoff
+did. This splitting is instead done generically in
+iomap_seek_{hole,data} for IOMAP_UNWRITTEN maps using
+page_cache_seek_hole_data.
+
+I'll post an improved version of this patch queue shortly.
+
+Thanks,
+Andreas
