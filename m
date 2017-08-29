@@ -1,117 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:36957 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751941AbdH2XvJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:09 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1dmqHW-0002cm-On
-        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.89)
-        (envelope-from <david@fromorbit.com>)
-        id 1dmqHW-0005W1-Nc
-        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 14/42] mkfs: factor printing of mkfs config
-Date: Wed, 30 Aug 2017 09:50:24 +1000
-Message-Id: <20170829235052.21050-15-david@fromorbit.com>
-In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
-References: <20170829235052.21050-1-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60240 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754336AbdH2O3q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 Aug 2017 10:29:46 -0400
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH 0/4] ext4: SEEK_HOLE / SEEK_DATA via iomap
+Date: Tue, 29 Aug 2017 16:29:38 +0200
+Message-Id: <20170829142942.21594-1-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, Andreas Gruenbacher <agruenba@redhat.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+Add IOMAP_REPORT support to ext4, including support for inline data
+which iomap couldn't report so far.  Switch to iomap_seek_{hole,data} on
+ext4.
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- mkfs/xfs_mkfs.c | 60 +++++++++++++++++++++++++++++++++------------------------
- 1 file changed, 35 insertions(+), 25 deletions(-)
+This patch set seems to be working correctly on ext4 as well as xfs
+under xfstests.  Jan Kara has pointed out an issue that I can't
+reproduce though, so please review carefully.
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index b92c3316358f..4c67062047d9 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1881,6 +1881,40 @@ parse_subopts(
- 	}
- }
- 
-+static void
-+print_mkfs_cfg(
-+	struct mkfs_params	*cfg,
-+	char			*dfile,
-+	char			*logfile,
-+	char			*rtfile)
-+{
-+	struct sb_feat_args	*fp = &cfg->sb_feat;
-+
-+	printf(_(
-+"meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
-+"         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
-+"         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u, reflink=%u\n"
-+"data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
-+"         =%-22s sunit=%-6u swidth=%u blks\n"
-+"naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
-+"log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
-+"         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
-+"realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
-+		dfile, cfg->inodesize, (long long)cfg->agcount,
-+			(long long)cfg->agsize,
-+		"", cfg->sectorsize, fp->attr_version, !fp->projid16bit,
-+		"", fp->crcs_enabled, fp->finobt, fp->spinodes, fp->rmapbt,
-+			fp->reflink,
-+		"", cfg->blocksize, (long long)cfg->dblocks, cfg->imaxpct,
-+		"", cfg->dsunit, cfg->dswidth,
-+		fp->dir_version, cfg->dirblocksize, fp->nci, fp->dirftype,
-+		logfile, cfg->blocksize, (long long)cfg->logblocks,
-+			fp->log_version,
-+		"", cfg->lsectorsize, cfg->lsunit, fp->lazy_sb_counters,
-+		rtfile, (int)cfg->rtextblocks << cfg->blocklog,
-+			(long long)cfg->rtblocks, (long long)cfg->rtextents);
-+}
-+
- int
- main(
- 	int			argc,
-@@ -3052,35 +3086,11 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	/* end temp support code */
- 
- 	if (!qflag || Nflag) {
--		printf(_(
--		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
--		   "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
--		   "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u, reflink=%u\n"
--		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
--		   "         =%-22s sunit=%-6u swidth=%u blks\n"
--		   "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
--		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
--		   "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
--		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
--			dfile, isize, (long long)agcount, (long long)agsize,
--			"", sectorsize, sb_feat.attr_version,
--				    !sb_feat.projid16bit,
--			"", sb_feat.crcs_enabled, sb_feat.finobt, sb_feat.spinodes,
--			sb_feat.rmapbt, sb_feat.reflink,
--			"", blocksize, (long long)dblocks, imaxpct,
--			"", dsunit, dswidth,
--			sb_feat.dir_version, dirblocksize, sb_feat.nci,
--				sb_feat.dirftype,
--			logfile, 1 << blocklog, (long long)logblocks,
--			sb_feat.log_version, "", lsectorsize, lsunit,
--				sb_feat.lazy_sb_counters,
--			rtfile, rtextblocks << blocklog,
--			(long long)rtblocks, (long long)rtextents);
-+		print_mkfs_cfg(&cfg, dfile, logfile, rtfile);
- 		if (Nflag)
- 			exit(0);
- 	}
- 
--
- 	if (label)
- 		strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
- 	sbp->sb_magicnum = XFS_SB_MAGIC;
+Thanks,
+Andreas
+
+Andreas Gruenbacher (3):
+  iomap: Switch from blkno to disk offset
+  iomap: Add IOMAP_F_DATA_INLINE flag
+  ext4: Add iomap support for inline data
+
+Christoph Hellwig (1):
+  ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
+
+ fs/buffer.c           |   4 +-
+ fs/dax.c              |   2 +-
+ fs/ext2/inode.c       |   4 +-
+ fs/ext4/Kconfig       |   1 +
+ fs/ext4/ext4.h        |   7 +-
+ fs/ext4/file.c        | 271 +++-----------------------------------------------
+ fs/ext4/inline.c      |  33 ++++++
+ fs/ext4/inode.c       | 114 +++++++--------------
+ fs/iomap.c            |  13 +--
+ fs/nfsd/blocklayout.c |   4 +-
+ fs/xfs/xfs_iomap.c    |   6 +-
+ include/linux/iomap.h |  15 +--
+ 12 files changed, 115 insertions(+), 359 deletions(-)
+
 -- 
 2.13.3
 
