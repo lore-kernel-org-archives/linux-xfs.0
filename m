@@ -1,21 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:27944 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:40488 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751910AbdH2XvF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:05 -0400
+        by vger.kernel.org with ESMTP id S1751953AbdH2XvK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:10 -0400
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1dmqHX-0002dL-2g
+        id 1dmqHX-0002dn-Bc
         for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.89)
         (envelope-from <david@fromorbit.com>)
-        id 1dmqHX-0005Wb-1M
+        id 1dmqHX-0005X2-A6
         for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 26/42] mkfs: factor inode size validation
-Date: Wed, 30 Aug 2017 09:50:36 +1000
-Message-Id: <20170829235052.21050-27-david@fromorbit.com>
+Subject: [PATCH 35/42] mkfs: factor AG geometry calculations
+Date: Wed, 30 Aug 2017 09:50:45 +1000
+Message-Id: <20170829235052.21050-36-david@fromorbit.com>
 In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
 References: <20170829235052.21050-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -27,61 +27,45 @@ From: Dave Chinner <dchinner@redhat.com>
 
 Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 101 +++++++++++++++++++++++++++++---------------------------
- 1 file changed, 53 insertions(+), 48 deletions(-)
+ mkfs/xfs_mkfs.c | 61 +++++++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 42 insertions(+), 19 deletions(-)
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 72b21d715613..0062380254c9 100644
+index c6032e4af4c5..a0dcea2609a6 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -2245,6 +2245,54 @@ validate_dirblocksize(
+@@ -2719,6 +2719,38 @@ reported by the device (%u).\n"),
  }
  
  static void
-+validate_inodesize(
++calculate_initial_ag_geometry(
 +	struct mkfs_params	*cfg,
 +	struct cli_params	*cli)
 +{
++	if (cli->agsize) {		/* User-specified AG size */
++		cfg->agsize = getnum(cli->agsize, &dopts, D_AGSIZE);
 +
-+	if (cli->inopblock)
-+		cfg->inodelog = cfg->blocklog - libxfs_highbit32(cli->inopblock);
-+	else if (cli->inodesize)
-+		cfg->inodelog = libxfs_highbit32(cli->inodesize);
-+	else if (cfg->sb_feat.crcs_enabled)
-+		cfg->inodelog = XFS_DINODE_DFL_CRC_LOG;
-+	else
-+		cfg->inodelog = XFS_DINODE_DFL_LOG;
-+
-+	cfg->inodesize = 1 << cfg->inodelog;
-+	cfg->inopblock = cfg->blocksize / cfg->inodesize;
-+
-+	/* input parsing has already validated non-crc inode size range */
-+	if (cfg->sb_feat.crcs_enabled &&
-+	    cfg->inodelog < XFS_DINODE_DFL_CRC_LOG) {
-+		fprintf(stderr,
-+		_("Minimum inode size for CRCs is %d bytes\n"),
-+			1 << XFS_DINODE_DFL_CRC_LOG);
-+		usage();
-+	}
-+
-+	if (cfg->inodesize > cfg->blocksize / XFS_MIN_INODE_PERBLOCK ||
-+	    cfg->inopblock < XFS_MIN_INODE_PERBLOCK ||
-+	    cfg->inodesize < XFS_DINODE_MIN_SIZE ||
-+	    cfg->inodesize > XFS_DINODE_MAX_SIZE) {
-+		int	maxsz;
-+
-+		fprintf(stderr, _("illegal inode size %d\n"), cfg->inodesize);
-+		maxsz = MIN(cfg->blocksize / XFS_MIN_INODE_PERBLOCK,
-+			    XFS_DINODE_MAX_SIZE);
-+		if (XFS_DINODE_MIN_SIZE == maxsz)
++		/*
++		 * Check specified agsize is a multiple of blocksize.
++		 */
++		if (cfg->agsize % cfg->blocksize) {
 +			fprintf(stderr,
-+			_("allowable inode size with %d byte blocks is %d\n"),
-+				cfg->blocksize, XFS_DINODE_MIN_SIZE);
-+		else
-+			fprintf(stderr,
-+	_("allowable inode size with %d byte blocks is between %d and %d\n"),
-+				cfg->blocksize, XFS_DINODE_MIN_SIZE, maxsz);
-+		exit(1);
++_("agsize (%s) not a multiple of fs blk size (%d)\n"),
++				cli->agsize, cfg->blocksize);
++			usage();
++		}
++		cfg->agsize /= cfg->blocksize;
++		cfg->agcount = cfg->dblocks / cfg->agsize +
++				(cfg->dblocks % cfg->agsize != 0);
++
++	} else if (cli->agcount) {	/* User-specified AG count */
++		cfg->agcount = cli->agcount;
++		cfg->agsize = cfg->dblocks / cfg->agcount +
++				(cfg->dblocks % cfg->agcount != 0);
++	} else {
++		calc_default_ag_geometry(cfg->blocklog, cfg->dblocks,
++					 cfg->dsunit, &cfg->agsize,
++					 &cfg->agcount);
 +	}
 +}
 +
@@ -89,112 +73,51 @@ index 72b21d715613..0062380254c9 100644
  print_mkfs_cfg(
  	struct mkfs_params	*cfg,
  	char			*dfile,
-@@ -2889,13 +2937,10 @@ main(
- 	int			dsflag;
- 	int			force_overwrite;
- 	struct fsxattr		fsx;
--	int			ilflag;
- 	int			imaxpct;
- 	int			imflag;
- 	int			inodelog;
- 	int			inopblock;
--	int			ipflag;
--	int			isflag;
- 	int			isize;
- 	char			*label = NULL;
- 	int			laflag;
-@@ -3001,7 +3046,7 @@ main(
- 	cli.loginternal = 1;	/* internal by default */
+@@ -3602,6 +3634,14 @@ main(
+ 	validate_logdev(&cfg, &cli, &logfile);
+ 	validate_rtdev(&cfg, &cli, &rtfile);
  
- 	agsize = daflag = dasize = dblocks = 0;
--	ilflag = imflag = ipflag = isflag = 0;
-+	imflag = 0;
- 	liflag = laflag = lsflag = lsuflag = lsunitflag = ldflag = lvflag = 0;
- 	loginternal = 1;
- 	logagno = logblocks = rtblocks = rtextblocks = 0;
-@@ -3061,13 +3106,6 @@ main(
- 			parse_subopts(c, optarg, &cli);
- 
- 			/* temp don't break code */
--			isize = cli.inodesize;
--			inodelog = libxfs_highbit32(isize);
--			inopblock = cli.inopblock;
--			ilflag = cli_opt_set(&iopts, I_LOG);
--			isflag = cli_opt_set(&iopts, I_SIZE);
--			ipflag = cli_opt_set(&iopts, I_PERBLOCK);
--
- 			imaxpct = cli.imaxpct;
- 			imflag = cli_opt_set(&iopts, I_MAXPCT);
- 			/* end temp don't break code */
-@@ -3166,6 +3204,7 @@ main(
- 	 * the cfg structure for them, not the command line structure.
- 	 */
- 	validate_dirblocksize(&cfg, &cli);
-+	validate_inodesize(&cfg, &cli);
- 
++	/*
++	 * At this point when know exactly what size all the devices are,
++	 * so we can start validating and calculating layout options that are
++	 * dependent on device sizes. Once calculated, make sure everything
++	 * aligns to device geometry correctly.
++	 */
++	calculate_initial_ag_geometry(&cfg, &cli);
++
  	/* temp don't break code */
  	sectorsize = cfg.sectorsize;
-@@ -3178,6 +3217,9 @@ main(
- 	platform_uuid_copy(&uuid, &cfg.uuid);
- 	dirblocksize = cfg.dirblocksize;
- 	dirblocklog = cfg.dirblocklog;
-+	isize = cfg.inodesize;
-+	inodelog = cfg.inodelog;
-+	inopblock = cfg.inopblock;
+ 	sectorlog = cfg.sectorlog;
+@@ -3626,27 +3666,10 @@ main(
+ 	dswidth = cfg.dswidth;
+ 	lsunit = cfg.lsunit;
+ 	nodsflag = cfg.sb_feat.nodalign;
++	agsize = cfg.agsize;
++	agcount = cfg.agcount;
  	/* end temp don't break code */
  
- 	if (dsize) {
-@@ -3197,21 +3239,6 @@ main(
- 				(long long)dbytes, blocksize,
- 				(long long)(dblocks << blocklog));
- 	}
--	if (ipflag) {
--		inodelog = blocklog - libxfs_highbit32(inopblock);
--		isize = 1 << inodelog;
--	} else if (!ilflag && !isflag) {
--		inodelog = sb_feat.crcs_enabled ? XFS_DINODE_DFL_CRC_LOG
--						: XFS_DINODE_DFL_LOG;
--		isize = 1 << inodelog;
--	}
--	if (sb_feat.crcs_enabled && inodelog < XFS_DINODE_DFL_CRC_LOG) {
--		fprintf(stderr,
--		_("Minimum inode size for CRCs is %d bytes\n"),
--			1 << XFS_DINODE_DFL_CRC_LOG);
--		usage();
--	}
--
- 	if (logsize) {
- 		uint64_t logbytes;
- 
-@@ -3290,28 +3317,6 @@ main(
- 	}
- 	ASSERT(rtextblocks);
- 
--	/*
--	 * Check some argument sizes against mins, maxes.
--	 */
--	if (isize > blocksize / XFS_MIN_INODE_PERBLOCK ||
--	    isize < XFS_DINODE_MIN_SIZE ||
--	    isize > XFS_DINODE_MAX_SIZE) {
--		int	maxsz;
--
--		fprintf(stderr, _("illegal inode size %d\n"), isize);
--		maxsz = MIN(blocksize / XFS_MIN_INODE_PERBLOCK,
--			    XFS_DINODE_MAX_SIZE);
--		if (XFS_DINODE_MIN_SIZE == maxsz)
+-	if (dasize) {		/* User-specified AG size */
+-		/*
+-		 * Check specified agsize is a multiple of blocksize.
+-		 */
+-		if (agsize % blocksize) {
 -			fprintf(stderr,
--			_("allowable inode size with %d byte blocks is %d\n"),
--				blocksize, XFS_DINODE_MIN_SIZE);
--		else
--			fprintf(stderr,
--	_("allowable inode size with %d byte blocks is between %d and %d\n"),
--				blocksize, XFS_DINODE_MIN_SIZE, maxsz);
--		exit(1);
--	}
+-		_("agsize (%lld) not a multiple of fs blk size (%d)\n"),
+-				(long long)agsize, blocksize);
+-			usage();
+-		}
+-		agsize /= blocksize;
+-		agcount = dblocks / agsize + (dblocks % agsize != 0);
 -
- 	calc_stripe_factors(dsu, dsw, sectorsize, lsu, lsectorsize,
- 				&dsunit, &dswidth, &lsunit);
+-	} else if (daflag) {	/* User-specified AG count */
+-		agsize = dblocks / agcount + (dblocks % agcount != 0);
+-	} else {
+-		calc_default_ag_geometry(blocklog, dblocks,
+-				dsunit | dswidth, &agsize, &agcount);
+-	}
  
+ 	/*
+ 	 * If dsunit is a multiple of fs blocksize, then check that is a
 -- 
 2.13.3
 
