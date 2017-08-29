@@ -1,150 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:36957 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:45741 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751913AbdH2XvI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:08 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1dmqHW-0002d3-TB
-        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.89)
-        (envelope-from <david@fromorbit.com>)
-        id 1dmqHW-0005WG-S1
-        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
+        by vger.kernel.org with ESMTP id S1751272AbdH2WWu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 18:22:50 -0400
+Date: Wed, 30 Aug 2017 08:22:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 19/42] mkfs: introduce default configuration structure
-Date: Wed, 30 Aug 2017 09:50:29 +1000
-Message-Id: <20170829235052.21050-20-david@fromorbit.com>
-In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
-References: <20170829235052.21050-1-david@fromorbit.com>
+Subject: Re: [RFC 00/12] xfs: more and better verifiers
+Message-ID: <20170829222247.GF10621@dastard>
+References: <150301268960.5851.2513223883233763065.stgit@magnolia>
+ <20170818070516.GA15291@infradead.org>
+ <20170818170607.GK4796@magnolia>
+ <20170821081333.GB31761@infradead.org>
+ <20170829151159.GA12841@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170829151159.GA12841@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Aug 29, 2017 at 08:11:59AM -0700, Christoph Hellwig wrote:
+> On Mon, Aug 21, 2017 at 01:13:33AM -0700, Christoph Hellwig wrote:
+> > So what do you think of the version that adds real printks for
+> > each condition including more details like the one verifier I
+> > did below?  Probably needs some unlikely annotations, though.
+> 
+> Given that there was another resend of the series I'd be really
+> curious about the answer to this?
 
-mkfs has lots of options that require default values. Some of these
-are centralised, but others aren't. Introduce a new structure
-designed to hold default values for all the parameters that need
-defaults in one place.
+If we increase the size of the hexdump on error, then most of the
+specific numbers in the print statements can be pulled from the
+hexdump. And if the verifier tells us exactly what check failed,
+we don't have to decode the entire hexdump to know what field was
+out of band.
 
-This structure also provides a mechanism for providing mkfs defaults
-from a config file. This is not implemented in this series, but a
-comment is left where it is expected this functionality will hook
-in.
+Perhaps what we should think about here is adding a mode to xfs_db
+to decode the hexdump into structured output so we don't have to
+manually decode the hex dumps ever again....
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- mkfs/xfs_mkfs.c | 77 +++++++++++++++++++++++++++++++++++++++++++++------------
- 1 file changed, 61 insertions(+), 16 deletions(-)
+Cheers,
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 1fd5108be520..e53e56a1bd47 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -851,6 +851,27 @@ struct mkfs_params {
- 	struct sb_feat_args	sb_feat;
- };
- 
-+/*
-+ * Default filesystem features and configuration values
-+ *
-+ * This structure contains the default mkfs values that are to be used when
-+ * a user does not specify the option on the command line. We do not use these
-+ * values directly - they are inputs to the mkfs geometry validation and
-+ * calculations.
-+ */
-+struct mkfs_default_params {
-+	char	*source;	/* where the defaults came from */
-+
-+	int	sectorsize;
-+	int	blocksize;
-+
-+	/* feature flags that are set */
-+	struct sb_feat_args	sb_feat;
-+
-+	/* root inode characteristics */
-+	struct fsxattr		fsx;
-+};
-+
- #define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
- #define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
- #define MEGABYTES(count, blog)	((uint64_t)(count) << (20 - (blog)))
-@@ -2587,25 +2608,33 @@ main(
- 	int			worst_freelist;
- 	libxfs_init_t		xi;
- 	struct fs_topology	ft;
--	struct sb_feat_args	sb_feat = {
--		.finobt = 1,
--		.spinodes = 0,
--		.log_version = 2,
--		.attr_version = 2,
--		.dir_version = XFS_DFL_DIR_VERSION,
--		.inode_align = XFS_IFLAG_ALIGN,
--		.nci = false,
--		.lazy_sb_counters = true,
--		.projid16bit = false,
--		.crcs_enabled = true,
--		.dirftype = true,
--		.parent_pointers = false,
--		.rmapbt = false,
--		.reflink = false,
-+	struct sb_feat_args	sb_feat;
-+	/* build time defaults */
-+	struct mkfs_default_params	dft = {
-+		.source = "package build definitions",
-+		.sectorsize = XFS_MIN_SECTORSIZE,
-+		.blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG,
-+		.sb_feat = {
-+			.log_version = 2,
-+			.attr_version = 2,
-+			.dir_version = XFS_DFL_DIR_VERSION,
-+			.inode_align = XFS_IFLAG_ALIGN,
-+			.nci = false,
-+			.lazy_sb_counters = true,
-+			.projid16bit = false,
-+			.crcs_enabled = true,
-+			.dirftype = true,
-+			.finobt = true,
-+			.spinodes = false,
-+			.rmapbt = false,
-+			.reflink = false,
-+			.parent_pointers = false,
-+			.nodalign = false,
-+			.nortalign = false,
-+		},
- 	};
- 	struct cli_params	cli = {
- 		.xi = &xi,
--		.sb_feat = sb_feat,
- 	};
- 	struct mkfs_params	cfg = {};
- 
-@@ -2615,6 +2644,22 @@ main(
- 	bindtextdomain(PACKAGE, LOCALEDIR);
- 	textdomain(PACKAGE);
- 
-+	/*
-+	 * TODO: Sourcing defaults from a config file
-+	 *
-+	 * Before anything else, see if there's a config file with different
-+	 * defaults. If a file exists in <package location>, read in the new
-+	 * default values and overwrite them in the &dft structure. This way the
-+	 * new defaults will apply before we parse the CLI, and the CLI will
-+	 * still be able to override them. Emit a message to indicate where the
-+	 * defaults being used came from.
-+	 */
-+	printf(_("Default configuration sourced from %s\n"), dft.source);
-+
-+	/* copy new defaults into CLI parsing structure */
-+	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
-+	memcpy(&cli.fsx, &dft.fsx, sizeof(cli.fsx));
-+
- 	blflag = bsflag = slflag = ssflag = lslflag = lssflag = 0;
- 	blocklog = blocksize = 0;
- 	sectorlog = lsectorlog = 0;
+Dave.
 -- 
-2.13.3
-
+Dave Chinner
+david@fromorbit.com
