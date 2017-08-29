@@ -1,50 +1,161 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50794 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752018AbdHLD5k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Aug 2017 23:57:40 -0400
-Received: from mail-vk0-f49.google.com (mail-vk0-f49.google.com [209.85.213.49])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9467E22DA8
-        for <linux-xfs@vger.kernel.org>; Sat, 12 Aug 2017 03:57:39 +0000 (UTC)
-Received: by mail-vk0-f49.google.com with SMTP id u133so19049333vke.3
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Aug 2017 20:57:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com>
-References: <150181368442.32119.13336247800141074356.stgit@dwillia2-desk3.amr.corp.intel.com>
- <CAPcyv4ii41F-Rj9pPGc0FHwrQ=hkSF_f0niQDn5_NjU-wcL+gg@mail.gmail.com>
- <20170805095013.GC14930@lst.de> <CAPcyv4jgKmakB0WRUjx=2eD3YJ1x+C8cgnR6tA+g4+m+0etawQ@mail.gmail.com>
- <20170811104429.GA13736@lst.de> <CAPcyv4jrZ5a+zmAehZDxfP=+6BNCFAXOFWro2L7ruLkk+cY7OQ@mail.gmail.com>
-From: Andy Lutomirski <luto@kernel.org>
-Date: Fri, 11 Aug 2017 20:57:18 -0700
-Message-ID: <CALCETrVvMbaxobdydtsdQWHyP1VhL1fpq1qS4M3=SmR1y4x5kw@mail.gmail.com>
-Subject: Re: [PATCH v2 0/5] fs, xfs: block map immutable files for dax,
- dma-to-storage, and swap
-Content-Type: text/plain; charset="UTF-8"
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:11621 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751877AbdH2XvG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:06 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1dmqHW-0002ch-O5
+        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.89)
+        (envelope-from <david@fromorbit.com>)
+        id 1dmqHW-0005Vy-MO
+        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 13/42] mkfs: Introduce mkfs configuration structure
+Date: Wed, 30 Aug 2017 09:50:23 +1000
+Message-Id: <20170829235052.21050-14-david@fromorbit.com>
+In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
+References: <20170829235052.21050-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux API <linux-api@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Aug 11, 2017 at 3:26 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Fri, Aug 11, 2017 at 3:44 AM, Christoph Hellwig <hch@lst.de> wrote:
->> Please explain how this interface allows for any sort of safe userspace
->> DMA.
->
-> So this is where I continue to see S_IOMAP_IMMUTABLE being able to
-> support applications that MAP_SYNC does not. Dave mentioned userspace
-> pNFS4 servers, but there's also Samba and other protocols that want to
-> negotiate a direct path to pmem outside the kernel. Xen support has
-> thus far not been able to follow in the footsteps of KVM enabling due
-> to a dependence on static M2P tables that assume a static
-> guest-physical to host-physical relationship [1]. Immutable files
-> would allow Xen to follow the same "mmap a file" semantic as KVM.
+From: Dave Chinner <dchinner@redhat.com>
 
-One thing that makes me quite nervous about S_IOMAP_IMMUTABLE is the
-degree to which things go badly if one program relies on it while
-another program clears the flag: you risk corrupting unrelated
-filesystem metadata.  I think a userspace interface to pin the extent
-mapping of a file really wants a way to reliably keep it pinned (or to
-reliably zap the userspace application if it gets unpinned).
+Formatting the on disk XFS structures requires a certain set of
+validated and calculated parameters. By the time we start writing
+information to diskm this has all be done. Abstract this information
+out into a separate structure and initialise it with all the
+calculated parameters so we can factor the mkfs formatting code
+to use it.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 87 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 87 insertions(+)
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 5a646b89cd0f..b92c3316358f 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -799,6 +799,58 @@ struct cli_params {
+ 	struct libxfs_xinit	*xi;
+ };
+ 
++/*
++ * Calculated filesystem feature and geometry information.
++ *
++ * This structure contains the information we will use to create the on-disk
++ * filesystem from. The validation and calculation code uses it to store all the
++ * temporary and final config state for the filesystem.
++ *
++ * The information in this structure will contain a mix of validated CLI input
++ * variables, default feature state and calculated values that are needed to
++ * construct the superblock and other on disk features. These are all in one
++ * place so that we don't have to pass handfuls of seemingly arbitrary variables
++ * around to different functions to do teh work we need to do.
++ */
++struct mkfs_params {
++	int		blocksize;
++	int		blocklog;
++	int		sectorsize;
++	int		sectorlog;
++	int		lsectorsize;
++	int		lsectorlog;
++	int		dirblocksize;
++	int		dirblocklog;
++	int		inodesize;
++	int		inodelog;
++	int		inopblock;
++
++	uint64_t	dblocks;
++	uint64_t	logblocks;
++	uint64_t	rtblocks;
++	uint64_t	rtextblocks;
++	uint64_t	rtextents;
++	uint64_t	rtbmblocks;	/* rt bitmap blocks */
++
++	int		dsunit;		/* in FSBs */
++	int		dswidth;	/* in FSBs */
++	int		lsunit;		/* in FSBs */
++
++	uint64_t	agsize;
++	uint64_t	agcount;
++
++	int		imaxpct;
++
++	bool		loginternal;
++	uint64_t	logstart;
++	uint64_t	logagno;
++
++	uuid_t		uuid;
++	char		*label;
++
++	struct sb_feat_args	sb_feat;
++};
++
+ #define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
+ #define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
+ #define MEGABYTES(count, blog)	((uint64_t)(count) << (20 - (blog)))
+@@ -1941,6 +1993,7 @@ main(
+ 		.xi = &xi,
+ 		.sb_feat = sb_feat,
+ 	};
++	struct mkfs_params	cfg = {};
+ 
+ 	platform_uuid_generate(&uuid);
+ 	progname = basename(argv[0]);
+@@ -2965,6 +3018,39 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	}
+ 	validate_log_size(logblocks, blocklog, min_logblocks);
+ 
++	/* Temp support code  to set up mkfs cfg parameters */
++	cfg.blocksize = blocksize;
++	cfg.blocklog = blocklog;
++	cfg.sectorsize = sectorsize;
++	cfg.sectorlog = sectorlog;
++	cfg.lsectorsize = lsectorsize;
++	cfg.lsectorlog = lsectorlog;
++	cfg.dirblocksize = dirblocksize;
++	cfg.dirblocklog = dirblocklog;
++	cfg.inodesize = isize;
++	cfg.inodelog = inodelog;
++	cfg.inopblock = inopblock;
++
++	cfg.dblocks = dblocks;
++	cfg.logblocks = logblocks;
++	cfg.rtblocks = rtblocks;
++	cfg.rtextblocks = rtextblocks;
++	cfg.rtextents = rtextents;
++	cfg.rtbmblocks = nbmblocks;
++	cfg.dsunit = dsunit;
++	cfg.dswidth = dswidth;
++	cfg.lsunit = lsunit;
++	cfg.agsize = agsize;
++	cfg.agcount = agcount;
++	cfg.imaxpct = imaxpct;
++	cfg.loginternal = loginternal;
++	cfg.logstart = logstart;
++	cfg.logagno = logagno;
++	cfg.label = label;
++	platform_uuid_copy(&cfg.uuid, &uuid);
++	memcpy(&cfg.sb_feat, &sb_feat, sizeof(sb_feat));
++	/* end temp support code */
++
+ 	if (!qflag || Nflag) {
+ 		printf(_(
+ 		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
+@@ -2994,6 +3080,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			exit(0);
+ 	}
+ 
++
+ 	if (label)
+ 		strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
+ 	sbp->sb_magicnum = XFS_SB_MAGIC;
+-- 
+2.13.3
+
