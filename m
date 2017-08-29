@@ -1,91 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43543 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751186AbdH2StX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 14:49:23 -0400
-Date: Tue, 29 Aug 2017 11:49:13 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 3/9] xfs: ordered buffer log items are never formatted
-Message-ID: <20170829184913.GC4757@magnolia>
-References: <20170829143758.58990-1-bfoster@redhat.com>
- <20170829143758.58990-4-bfoster@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170829143758.58990-4-bfoster@redhat.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:36957 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751913AbdH2XvF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:05 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1dmqHX-0002dc-7Y
+        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.89)
+        (envelope-from <david@fromorbit.com>)
+        id 1dmqHX-0005Wq-66
+        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 31/42] mkfs: factor device opening
+Date: Wed, 30 Aug 2017 09:50:41 +1000
+Message-Id: <20170829235052.21050-32-david@fromorbit.com>
+In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
+References: <20170829235052.21050-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Aug 29, 2017 at 10:37:52AM -0400, Brian Foster wrote:
-> Ordered buffers pass through the logging infrastructure without ever
-> being written to the log. The way this works is that the ordered
-> buffer status is transferred to the log vector at commit time via
-> the ->iop_size() callback. In xlog_cil_insert_format_items(),
-> ordered log vectors bypass ->iop_format() processing altogether.
-> 
-> Therefore it is unnecessary for xfs_buf_item_format() to handle
-> ordered buffers. Remove the unnecessary logic and assert that an
-> ordered buffer never reaches this point.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+From: Dave Chinner <dchinner@redhat.com>
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 92 ++++++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 51 insertions(+), 41 deletions(-)
 
-> ---
->  fs/xfs/xfs_buf_item.c | 12 ++----------
->  fs/xfs/xfs_trace.h    |  1 -
->  2 files changed, 2 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index ff076d1..ef2c137 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -323,6 +323,8 @@ xfs_buf_item_format(
->  	ASSERT((bip->bli_flags & XFS_BLI_STALE) ||
->  	       (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF
->  	        && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF));
-> +	ASSERT(!(bip->bli_flags & XFS_BLI_ORDERED) ||
-> +	       (bip->bli_flags & XFS_BLI_STALE));
->  
->  
->  	/*
-> @@ -347,16 +349,6 @@ xfs_buf_item_format(
->  		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
->  	}
->  
-> -	if ((bip->bli_flags & (XFS_BLI_ORDERED|XFS_BLI_STALE)) ==
-> -							XFS_BLI_ORDERED) {
-> -		/*
-> -		 * The buffer has been logged just to order it.  It is not being
-> -		 * included in the transaction commit, so don't format it.
-> -		 */
-> -		trace_xfs_buf_item_format_ordered(bip);
-> -		return;
-> -	}
-> -
->  	for (i = 0; i < bip->bli_format_count; i++) {
->  		xfs_buf_item_format_segment(bip, lv, &vecp, offset,
->  					    &bip->bli_formats[i]);
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 6881047..e839ab4 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -517,7 +517,6 @@ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size);
->  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_ordered);
->  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_stale);
->  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format);
-> -DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_ordered);
->  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_stale);
->  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_ordered);
->  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_pin);
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index fe380d2b388d..e8fa53fea8e0 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2482,6 +2482,52 @@ _("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
+ }
+ 
+ static void
++open_devices(
++	struct mkfs_params	*cfg,
++	struct libxfs_xinit	*xi,
++	bool			discard)
++{
++	uint64_t		sector_mask;
++
++	/*
++	 * Initialize.  This will open the log and rt devices as well.
++	 */
++	xi->setblksize = cfg->sectorsize;
++	if (!libxfs_init(xi))
++		usage();
++	if (!xi->ddev) {
++		fprintf(stderr, _("no device name given in argument list\n"));
++		usage();
++	}
++
++	/*
++	 * Ok, Linux only has a 1024-byte resolution on device _size_,
++	 * and the sizes below are in basic 512-byte blocks,
++	 * so if we have (size % 2), on any partition, we can't get
++	 * to the last 512 bytes.  The same issue exists for larger
++	 * sector sizes - we cannot write past the last sector.
++	 *
++	 * So, we reduce the size (in basic blocks) to a perfect
++	 * multiple of the sector size, or 1024, whichever is larger.
++	 */
++	sector_mask = (uint64_t)-1 << (MAX(cfg->sectorlog, 10) - BBSHIFT);
++	xi->dsize &= sector_mask;
++	xi->rtsize &= sector_mask;
++	xi->logBBsize &= (uint64_t)-1 << (MAX(cfg->lsectorlog, 10) - BBSHIFT);
++
++
++	if (!discard)
++		return;
++
++	if (!xi->disfile)
++		discard_blocks(xi->ddev, xi->dsize);
++	if (xi->rtdev && !xi->risfile)
++		discard_blocks(xi->rtdev, xi->rtsize);
++	if (xi->logdev && xi->logdev != xi->ddev && !xi->lisfile)
++		discard_blocks(xi->logdev, xi->logBBsize);
++}
++
++static void
+ print_mkfs_cfg(
+ 	struct mkfs_params	*cfg,
+ 	char			*dfile,
+@@ -3161,7 +3207,6 @@ main(
+ 	char			*rtsize;
+ 	xfs_sb_t		*sbp;
+ 	int			sectorlog;
+-	uint64_t		sector_mask;
+ 	uint64_t		tmp_agsize;
+ 	uuid_t			uuid;
+ 	int			worst_freelist;
+@@ -3378,6 +3423,11 @@ main(
+ 	validate_rtextsize(&cfg, &cli, &ft);
+ 	calc_stripe_factors(&cfg, &cli, &ft);
+ 
++	/*
++	 * Open and validate the device configurations
++	 */
++	open_devices(&cfg, &xi, (discard && !dry_run));
++
+ 	/* temp don't break code */
+ 	sectorsize = cfg.sectorsize;
+ 	sectorlog = cfg.sectorlog;
+@@ -3402,46 +3452,6 @@ main(
+ 	nodsflag = cfg.sb_feat.nodalign;
+ 	/* end temp don't break code */
+ 
+-
+-	xi.setblksize = sectorsize;
+-
+-	/*
+-	 * Initialize.  This will open the log and rt devices as well.
+-	 */
+-	if (!libxfs_init(&xi))
+-		usage();
+-	if (!xi.ddev) {
+-		fprintf(stderr, _("no device name given in argument list\n"));
+-		usage();
+-	}
+-
+-	/*
+-	 * Ok, Linux only has a 1024-byte resolution on device _size_,
+-	 * and the sizes below are in basic 512-byte blocks,
+-	 * so if we have (size % 2), on any partition, we can't get
+-	 * to the last 512 bytes.  The same issue exists for larger
+-	 * sector sizes - we cannot write past the last sector.
+-	 *
+-	 * So, we reduce the size (in basic blocks) to a perfect
+-	 * multiple of the sector size, or 1024, whichever is larger.
+-	 */
+-
+-	sector_mask = (uint64_t)-1 << (MAX(sectorlog, 10) - BBSHIFT);
+-	xi.dsize &= sector_mask;
+-	xi.rtsize &= sector_mask;
+-	xi.logBBsize &= (uint64_t)-1 << (MAX(lsectorlog, 10) - BBSHIFT);
+-
+-
+-	/* don't do discards on print-only runs or on files */
+-	if (discard && !dry_run) {
+-		if (!xi.disfile)
+-			discard_blocks(xi.ddev, xi.dsize);
+-		if (xi.rtdev && !xi.risfile)
+-			discard_blocks(xi.rtdev, xi.rtsize);
+-		if (xi.logdev && xi.logdev != xi.ddev && !xi.lisfile)
+-			discard_blocks(xi.logdev, xi.logBBsize);
+-	}
+-
+ 	if (!liflag && !ldflag)
+ 		loginternal = xi.logdev == 0;
+ 	if (xi.logname)
+-- 
+2.13.3
+
