@@ -1,21 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:36957 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:11621 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751891AbdH2XvE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:04 -0400
+        by vger.kernel.org with ESMTP id S1751913AbdH2XvL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:11 -0400
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1dmqHX-0002dQ-4a
-        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
+        id 1dmqHW-0002d6-U7
+        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.89)
         (envelope-from <david@fromorbit.com>)
-        id 1dmqHX-0005Wh-34
-        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
+        id 1dmqHW-0005WJ-Sp
+        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 28/42] mkfs: fix hidden parameter in DTOBT()
-Date: Wed, 30 Aug 2017 09:50:38 +1000
-Message-Id: <20170829235052.21050-29-david@fromorbit.com>
+Subject: [PATCH 20/42] mkfs: rename top level CLI parameters
+Date: Wed, 30 Aug 2017 09:50:30 +1000
+Message-Id: <20170829235052.21050-21-david@fromorbit.com>
 In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
 References: <20170829235052.21050-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -25,109 +25,101 @@ To: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Hiding references to variables inside macros instead of passing them
-as parameters is just plain nasty. Fix it before going any further.
+Names like "qflag" and "Nflag" don't tell us what the flag is
+supposed to do, so rename them to be obvious in function.
 
 Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+ mkfs/xfs_mkfs.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index e7e366cc518c..1f41d5f813f0 100644
+index e53e56a1bd47..7b71f59dc654 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -879,7 +879,7 @@ struct mkfs_default_params {
- /*
-  * Use this macro before we have superblock and mount structure
-  */
--#define	DTOBT(d)	((xfs_rfsblock_t)((d) >> (blocklog - BBSHIFT)))
-+#define	DTOBT(d, bl)	((xfs_rfsblock_t)((d) >> ((bl) - BBSHIFT)))
+@@ -2587,11 +2587,11 @@ main(
+ 	int			norsflag;
+ 	int			nsflag;
+ 	int			nvflag;
+-	int			Nflag;
++	int			dry_run;
+ 	int			discard = 1;
+ 	char			*protofile;
+ 	char			*protostring;
+-	int			qflag;
++	int			quiet;
+ 	xfs_rfsblock_t		rtblocks;
+ 	xfs_extlen_t		rtextblocks;
+ 	xfs_rtblock_t		rtextents;
+@@ -2669,9 +2669,9 @@ main(
+ 	liflag = laflag = lsflag = lsuflag = lsunitflag = ldflag = lvflag = 0;
+ 	loginternal = 1;
+ 	logagno = logblocks = rtblocks = rtextblocks = 0;
+-	Nflag = nlflag = nsflag = nvflag = 0;
++	dry_run = nlflag = nsflag = nvflag = 0;
+ 	dirblocklog = dirblocksize = 0;
+-	qflag = 0;
++	quiet = 0;
+ 	imaxpct = inodelog = inopblock = isize = 0;
+ 	dfile = logfile = rtfile = NULL;
+ 	dsize = logsize = rtsize = rtextsize = protofile = NULL;
+@@ -2800,7 +2800,7 @@ main(
+ 			/* end temp don't break code */
+ 			break;
+ 		case 'N':
+-			Nflag = 1;
++			dry_run = 1;
+ 			break;
+ 		case 'K':
+ 			discard = 0;
+@@ -2811,7 +2811,7 @@ main(
+ 			protofile = optarg;
+ 			break;
+ 		case 'q':
+-			qflag = 1;
++			quiet = 1;
+ 			break;
+ 		case 'r':
+ 			parse_subopts(c, optarg, &cli);
+@@ -2896,14 +2896,14 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
+ 	 * host filesystem.
+ 	 */
+ 	check_device_type(dfile, &xi.disfile, !dsize, !dfile,
+-			  Nflag ? NULL : &xi.dcreat, force_overwrite, "d");
++			  dry_run ? NULL : &xi.dcreat, force_overwrite, "d");
+ 	if (!loginternal)
+ 		check_device_type(xi.logname, &xi.lisfile, !logsize, !xi.logname,
+-				  Nflag ? NULL : &xi.lcreat,
++				  dry_run ? NULL : &xi.lcreat,
+ 				  force_overwrite, "l");
+ 	if (xi.rtname)
+ 		check_device_type(xi.rtname, &xi.risfile, !rtsize, !xi.rtname,
+-				  Nflag ? NULL : &xi.rcreat,
++				  dry_run ? NULL : &xi.rcreat,
+ 				  force_overwrite, "r");
+ 	if (xi.disfile || xi.lisfile || xi.risfile)
+ 		xi.isdirect = 0;
+@@ -3259,7 +3259,7 @@ _("rmapbt not supported with realtime devices\n"));
  
- /*
-  * Use this for block reservations needed for mkfs's conditions
-@@ -3295,7 +3295,7 @@ main(
  
- 		/* check that rswidth is a multiple of fs blocksize */
- 		if (!norsflag && rswidth && !(BBTOB(rswidth) % blocksize)) {
--			rswidth = DTOBT(rswidth);
-+			rswidth = DTOBT(rswidth, blocklog);
- 			rtextbytes = rswidth << blocklog;
- 			if (XFS_MIN_RTEXTSIZE <= rtextbytes &&
- 			    (rtextbytes <= XFS_MAX_RTEXTSIZE)) {
-@@ -3374,14 +3374,14 @@ main(
- 		rtfile = _("volume rt");
- 	else if (!xi.rtdev)
- 		rtfile = _("none");
--	if (dsize && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
-+	if (dsize && xi.dsize > 0 && dblocks > DTOBT(xi.dsize, blocklog)) {
- 		fprintf(stderr,
- 			_("size %s specified for data subvolume is too large, "
- 			"maximum is %lld blocks\n"),
--			dsize, (long long)DTOBT(xi.dsize));
-+			dsize, (long long)DTOBT(xi.dsize, blocklog));
- 		usage();
- 	} else if (!dsize && xi.dsize > 0)
--		dblocks = DTOBT(xi.dsize);
-+		dblocks = DTOBT(xi.dsize, blocklog);
- 	else if (!dsize) {
- 		fprintf(stderr, _("can't get size of data subvolume\n"));
- 		usage();
-@@ -3422,14 +3422,14 @@ reported by the device (%u).\n"),
- 			sectorsize, xi.rtbsize);
+ 	/* don't do discards on print-only runs or on files */
+-	if (discard && !Nflag) {
++	if (discard && !dry_run) {
+ 		if (!xi.disfile)
+ 			discard_blocks(xi.ddev, xi.dsize);
+ 		if (xi.rtdev && !xi.risfile)
+@@ -3709,9 +3709,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	memcpy(&cfg.sb_feat, &sb_feat, sizeof(sb_feat));
+ 	/* end temp support code */
+ 
+-	if (!qflag || Nflag) {
++	if (!quiet || dry_run) {
+ 		print_mkfs_cfg(&cfg, dfile, logfile, rtfile);
+-		if (Nflag)
++		if (dry_run)
+ 			exit(0);
  	}
  
--	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
-+	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize, blocklog)) {
- 		fprintf(stderr,
- 			_("size %s specified for rt subvolume is too large, "
- 			"maximum is %lld blocks\n"),
--			rtsize, (long long)DTOBT(xi.rtsize));
-+			rtsize, (long long)DTOBT(xi.rtsize, blocklog));
- 		usage();
- 	} else if (!rtsize && xi.rtsize > 0)
--		rtblocks = DTOBT(xi.rtsize);
-+		rtblocks = DTOBT(xi.rtsize, blocklog);
- 	else if (rtsize && !xi.rtdev) {
- 		fprintf(stderr,
- 			_("size specified for non-existent rt subvolume\n"));
-@@ -3494,8 +3494,8 @@ reported by the device (%u).\n"),
- 	    dswidth && !(BBTOB(dswidth) % blocksize)) {
- 
- 		/* convert from 512 byte blocks to fs blocksize */
--		dsunit = DTOBT(dsunit);
--		dswidth = DTOBT(dswidth);
-+		dsunit = DTOBT(dsunit, blocklog);
-+		dswidth = DTOBT(dswidth, blocklog);
- 
- 		/*
- 		 * agsize is not a multiple of dsunit
-@@ -3610,7 +3610,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 
- 	if (lsunit) {
- 		/* convert from 512 byte blocks to fs blocks */
--		lsunit = DTOBT(lsunit);
-+		lsunit = DTOBT(lsunit, blocklog);
- 	} else if (sb_feat.log_version == 2 && loginternal && dsunit) {
- 		/* lsunit and dsunit now in fs blocks */
- 		lsunit = dsunit;
-@@ -3638,13 +3638,13 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
- 	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
- 		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
--	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
-+	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize, blocklog)) {
- 		fprintf(stderr,
- _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
--			logsize, (long long)DTOBT(xi.logBBsize));
-+			logsize, (long long)DTOBT(xi.logBBsize, blocklog));
- 		usage();
- 	} else if (!logsize && xi.logBBsize > 0) {
--		logblocks = DTOBT(xi.logBBsize);
-+		logblocks = DTOBT(xi.logBBsize, blocklog);
- 	} else if (logsize && !xi.logdev && !loginternal) {
- 		fprintf(stderr,
- 			_("size specified for non-existent log subvolume\n"));
 -- 
 2.13.3
 
