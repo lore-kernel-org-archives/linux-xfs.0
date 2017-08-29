@@ -1,58 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:47719 "EHLO mail1.g1.pair.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59530 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751241AbdH1Rn0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 28 Aug 2017 13:43:26 -0400
-Date: Mon, 28 Aug 2017 19:43:30 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: My thesis about mkfs
-Message-ID: <20170828194330.48f159e2@harpe.intellique.com>
-In-Reply-To: <CACj3i71iYMn8+nwUmXUHfR-c2c8XdqfdTsgx5Ohkb2k1FXUd0w@mail.gmail.com>
-References: <CACj3i71iYMn8+nwUmXUHfR-c2c8XdqfdTsgx5Ohkb2k1FXUd0w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/7q_6WwVFuOd5WwcI_ns14gL"; protocol="application/pgp-signature"
+        id S1754350AbdH2O3w (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 Aug 2017 10:29:52 -0400
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH 2/4] iomap: Add IOMAP_F_DATA_INLINE flag
+Date: Tue, 29 Aug 2017 16:29:40 +0200
+Message-Id: <20170829142942.21594-3-agruenba@redhat.com>
+In-Reply-To: <20170829142942.21594-1-agruenba@redhat.com>
+References: <20170829142942.21594-1-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, Andreas Gruenbacher <agruenba@redhat.com>
 
---Sig_/7q_6WwVFuOd5WwcI_ns14gL
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Add a new IOMAP_F_DATA_INLINE flag to indicate that a mapping is in a
+disk area that contains data as well as metadata.  In iomap_fiemap, map
+this flag to FIEMAP_EXTENT_DATA_INLINE.
 
-Le Mon, 28 Aug 2017 16:39:48 +0200
-Jan Tulak <jtulak@redhat.com> =C3=A9crivait:
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+---
+ fs/iomap.c            | 2 ++
+ include/linux/iomap.h | 5 +++--
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-> The thesis was defended and I got a master degree, but I still
-> appreciate any comments. :-)
->=20
->=20
-> Download here:
-> https://github.com/jtulak/thesis-mmm/releases
->=20
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 7bc1797c2292..f0a263482a0e 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -510,6 +510,8 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
+ 		flags |= FIEMAP_EXTENT_MERGED;
+ 	if (iomap->flags & IOMAP_F_SHARED)
+ 		flags |= FIEMAP_EXTENT_SHARED;
++	if (iomap->flags & IOMAP_F_DATA_INLINE)
++		flags |= FIEMAP_EXTENT_DATA_INLINE;
+ 
+ 	return fiemap_fill_next_extent(fi, iomap->offset,
+ 			iomap->addr != IOMAP_NULL_ADDR ? iomap->addr : 0,
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 7b8a615fa021..2b0790dbd6ea 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -26,8 +26,9 @@ struct vm_fault;
+ /*
+  * Flags that only need to be reported for IOMAP_REPORT requests:
+  */
+-#define IOMAP_F_MERGED	0x10	/* contains multiple blocks/extents */
+-#define IOMAP_F_SHARED	0x20	/* block shared with another file */
++#define IOMAP_F_MERGED		0x10	/* contains multiple blocks/extents */
++#define IOMAP_F_SHARED		0x20	/* block shared with another file */
++#define IOMAP_F_DATA_INLINE	0x40	/* data inline in the inode */
+ 
+ /*
+  * Magic value for addr:
+-- 
+2.13.3
 
-Well it was interesting, thanks for sharing, I've read it all :)
-
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
-
---Sig_/7q_6WwVFuOd5WwcI_ns14gL
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlmkVkMACgkQX3jQXNUicVY6WgCfXONde4Fs0C6u+6eHeIhfvBpy
-pvYAn0HGQGJQEfTF4TJxffAl1moA9c+w
-=3mNh
------END PGP SIGNATURE-----
-
---Sig_/7q_6WwVFuOd5WwcI_ns14gL--
