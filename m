@@ -1,107 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50094 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751191AbdH2RtR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 13:49:17 -0400
-Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dmkdY-0007jv-Or
-        for linux-xfs@vger.kernel.org; Tue, 29 Aug 2017 17:49:17 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 8/8] xfs: replace xfs_qm_get_rtblks with a direct call to xfs_bmap_count_leaves
-Date: Tue, 29 Aug 2017 19:48:35 +0200
-Message-Id: <20170829174835.2218-9-hch@lst.de>
-In-Reply-To: <20170829174835.2218-1-hch@lst.de>
-References: <20170829174835.2218-1-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:34304 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751223AbdH2SEw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 14:04:52 -0400
+Date: Tue, 29 Aug 2017 11:04:45 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: remove "no-allocation" reservations for file
+ creations
+Message-ID: <20170829180445.GU4757@magnolia>
+References: <20170821082404.3387-1-hch@lst.de>
+ <20170823202213.GA4796@magnolia>
+ <20170824004755.GC21024@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170824004755.GC21024@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-Use the existing functionality instead of directly poking into the extent
-list.
+On Thu, Aug 24, 2017 at 10:47:55AM +1000, Dave Chinner wrote:
+> On Wed, Aug 23, 2017 at 01:22:13PM -0700, Darrick J. Wong wrote:
+> > On Mon, Aug 21, 2017 at 10:24:04AM +0200, Christoph Hellwig wrote:
+> > > If we create a new file we will need an inode, and usually some metadata
+> > > in the parent direction.  Aiming for everything to go well despite the
+> > > lack of a reservation leads to dirty transactions cancelled under a heavy
+> > > create/delete load.  This patch removes those nospace transactions, which
+> > > will lead to slightly earlier ENOSPC on some workloads, but instead
+> > > prevent file system shutdowns due to cancelling dirty transactions for
+> > > others.
+> > > 
+> > > A customer could observe assertations failures and shutdowns due to
+> > > cancelation of dirty transactions during heavy NFS workloads as shown
+> > > below:
+> > 
+> > Looks ok... but is there a xfstest somewhere that can be coaxed into
+> > reproducing this?  I'm looking at what this code does and have been
+> > wondering why it even tries this weird workaround in the first place?
+> 
+> Because back in 1997 SGI had a customer that didn't like getting
+> ENOSPC being reported trying to rename file near ENOSPC when df said
+> the filesystem had <some tiny amount> of space available and the
+> directory blocks weren't full:
+> 
+> commit f5029ed542697e8daf728b57d8fec0d9f1abc66c
+> Author: Doug Doucette <doucette@engr.sgi.com>
+> Date:   Tue Jul 15 17:54:13 1997 +0000
+> 
+>     Add xfs_dir_canenter to check for entering name in a directory
+>     with no space allocation.  Initialize new da_arg field justcheck,
+>     use it in xfs_dir_node_addname.
+> 
+> commit 9b9c81137b07d40d864e468cf3168f1b55d83c13
+> Author: Doug Doucette <doucette@engr.sgi.com>
+> Date:   Fri Jul 11 16:33:02 1997 +0000
+> 
+>     Make xfs_dir_createname fail gracefully if the total argument is
+>     0 and we actually need space.  Same treatment for xfs_dir_node_addname.
+>     Part of making rename work sometimes with 0 space reservation.
+> 
+> > IOWS, the weirdness removed by this patch didn't quite smell right, but
+> > at the same time I want to know more about why the smelly weirdness was
+> > there at all before I rip it out. Context, anyone? :)
+> 
+> It's always been a crufty corner case. xfs_rename and xfs_remove
+> need to be able to operate at ENOSPC where reservations may not be
+> possible so they can free up space. However, create/symlink/link
+> don't really need to work when so close to ENOSPC we can't get a
+> reservation of a few blocks, so I don't see a huge problem with
+> this.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_qm.c | 44 ++++++++++++--------------------------------
- 1 file changed, 12 insertions(+), 32 deletions(-)
+Hmm.  Across the testing farm, I see a new behavior -- some of the
+xfs/013 runs now get stuck in the cleaner thread, waiting for fsstress
+to create some directories for it to remove, only fsstress crashed out
+with ENOSPC long ago.  Prior to that, the test would finish with a ton
+of ENOSPC messages.
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 15751dc2a27d..010a13a201aa 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -31,6 +31,7 @@
- #include "xfs_error.h"
- #include "xfs_bmap.h"
- #include "xfs_bmap_btree.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_trans.h"
- #include "xfs_trans_space.h"
- #include "xfs_qm.h"
-@@ -1120,31 +1121,6 @@ xfs_qm_quotacheck_dqadjust(
- 	return 0;
- }
- 
--STATIC int
--xfs_qm_get_rtblks(
--	xfs_inode_t	*ip,
--	xfs_qcnt_t	*O_rtblks)
--{
--	xfs_filblks_t	rtblks;			/* total rt blks */
--	xfs_extnum_t	idx;			/* extent record index */
--	xfs_ifork_t	*ifp;			/* inode fork pointer */
--	xfs_extnum_t	nextents;		/* number of extent entries */
--	int		error;
--
--	ASSERT(XFS_IS_REALTIME_INODE(ip));
--	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
--	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
--		if ((error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK)))
--			return error;
--	}
--	rtblks = 0;
--	nextents = xfs_iext_count(ifp);
--	for (idx = 0; idx < nextents; idx++)
--		rtblks += xfs_bmbt_get_blockcount(xfs_iext_get_ext(ifp, idx));
--	*O_rtblks = (xfs_qcnt_t)rtblks;
--	return 0;
--}
--
- /*
-  * callback routine supplied to bulkstat(). Given an inumber, find its
-  * dquots and update them to account for resources taken by that inode.
-@@ -1160,7 +1136,8 @@ xfs_qm_dqusage_adjust(
- 	int		*res)		/* result code value */
- {
- 	xfs_inode_t	*ip;
--	xfs_qcnt_t	nblks, rtblks = 0;
-+	xfs_qcnt_t	nblks;
-+	xfs_filblks_t	rtblks = 0;	/* total rt blks */
- 	int		error;
- 
- 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-@@ -1190,12 +1167,15 @@ xfs_qm_dqusage_adjust(
- 	ASSERT(ip->i_delayed_blks == 0);
- 
- 	if (XFS_IS_REALTIME_INODE(ip)) {
--		/*
--		 * Walk thru the extent list and count the realtime blocks.
--		 */
--		error = xfs_qm_get_rtblks(ip, &rtblks);
--		if (error)
--			goto error0;
-+		struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+
-+		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-+			error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-+			if (error)
-+				goto error0;
-+		}
-+
-+		xfs_bmap_count_leaves(ifp, &rtblks);
- 	}
- 
- 	nblks = (xfs_qcnt_t)ip->i_d.di_nblocks - rtblks;
--- 
-2.11.0
+I'm /fairly/ sure this is just xfs/013 being slightly stupid, but in any
+case I'm going to hang onto this one a little more while I try to figure
+out what exactly xfs/013 is trying to do.  My guess is that the cleaner
+thread should just exit if fsstress goes away, but then there's also the
+question of whether or not it matter that we spew out the ENOSPC
+messages even without this patch applied.
 
+(IOWs I think the problem I see is due to the test, not this patch.)
+
+<muttering>
+
+Ultimately this comes down to a behavioral change, where we trade a
+fairly improbably bad event (fs shutdown) for a somewhat more probably
+not as bad event (enospc with a few free blocks), which makes this
+decision hard, especially with the current cloudy trend of running
+systems much closer to the limits than we used to, as Dave pointed out
+elsewhere.
+
+My off-the-cuff opinion is that systems ought to be provisioned with
+enough storage to keep the fs from getting anywhere past 90% full, let
+alone full to the point where we even need to try a no-allocation
+transaction; and that shutdowns are bad, especially if they're
+avoidable. :)
+
+</muttering>
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
