@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:44716 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:50094 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751236AbdH2RtN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 13:49:13 -0400
+        with ESMTP id S1751191AbdH2RtR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 13:49:17 -0400
 Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dmkdU-0007jp-Am
-        for linux-xfs@vger.kernel.org; Tue, 29 Aug 2017 17:49:12 +0000
+        id 1dmkdY-0007jv-Or
+        for linux-xfs@vger.kernel.org; Tue, 29 Aug 2017 17:49:17 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 7/8] xfs: rewrite xfs_bmap_count_leaves using xfs_iext_get_extent
-Date: Tue, 29 Aug 2017 19:48:34 +0200
-Message-Id: <20170829174835.2218-8-hch@lst.de>
+Subject: [PATCH 8/8] xfs: replace xfs_qm_get_rtblks with a direct call to xfs_bmap_count_leaves
+Date: Tue, 29 Aug 2017 19:48:35 +0200
+Message-Id: <20170829174835.2218-9-hch@lst.de>
 In-Reply-To: <20170829174835.2218-1-hch@lst.de>
 References: <20170829174835.2218-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,74 +18,90 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This avoids poking into the internals of the extent list.  Also return
-the number of extents as the return value instead of an additional
-by reference argument, and make it available to callers outside of
-xfs_bmap_util.c
+Use the existing functionality instead of directly poking into the extent
+list.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_bmap_util.c | 21 ++++++++++-----------
- fs/xfs/xfs_bmap_util.h |  1 +
- 2 files changed, 11 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_qm.c | 44 ++++++++++++--------------------------------
+ 1 file changed, 12 insertions(+), 32 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 93e955262d07..ea737ebafc53 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -222,22 +222,21 @@ xfs_bmap_eof(
-  * Count leaf blocks given a range of extent records.  Delayed allocation
-  * extents are not counted towards the totals.
-  */
--STATIC void
-+xfs_extnum_t
- xfs_bmap_count_leaves(
- 	struct xfs_ifork	*ifp,
--	xfs_extnum_t		*numrecs,
- 	xfs_filblks_t		*count)
- {
--	xfs_extnum_t		i;
--	xfs_extnum_t		nr_exts = xfs_iext_count(ifp);
--
--	for (i = 0; i < nr_exts; i++) {
--		xfs_bmbt_rec_host_t *frp = xfs_iext_get_ext(ifp, i);
--		if (!isnullstartblock(xfs_bmbt_get_startblock(frp))) {
--			(*numrecs)++;
--			*count += xfs_bmbt_get_blockcount(frp);
-+	struct xfs_bmbt_irec	got;
-+	xfs_extnum_t		numrecs = 0, i = 0;
-+
-+	while (xfs_iext_get_extent(ifp, i++, &got)) {
-+		if (!isnullstartblock(got.br_startblock)) {
-+			*count += got.br_blockcount;
-+			numrecs++;
- 		}
- 	}
-+	return numrecs;
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 15751dc2a27d..010a13a201aa 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -31,6 +31,7 @@
+ #include "xfs_error.h"
+ #include "xfs_bmap.h"
+ #include "xfs_bmap_btree.h"
++#include "xfs_bmap_util.h"
+ #include "xfs_trans.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_qm.h"
+@@ -1120,31 +1121,6 @@ xfs_qm_quotacheck_dqadjust(
+ 	return 0;
  }
  
+-STATIC int
+-xfs_qm_get_rtblks(
+-	xfs_inode_t	*ip,
+-	xfs_qcnt_t	*O_rtblks)
+-{
+-	xfs_filblks_t	rtblks;			/* total rt blks */
+-	xfs_extnum_t	idx;			/* extent record index */
+-	xfs_ifork_t	*ifp;			/* inode fork pointer */
+-	xfs_extnum_t	nextents;		/* number of extent entries */
+-	int		error;
+-
+-	ASSERT(XFS_IS_REALTIME_INODE(ip));
+-	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+-	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+-		if ((error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK)))
+-			return error;
+-	}
+-	rtblks = 0;
+-	nextents = xfs_iext_count(ifp);
+-	for (idx = 0; idx < nextents; idx++)
+-		rtblks += xfs_bmbt_get_blockcount(xfs_iext_get_ext(ifp, idx));
+-	*O_rtblks = (xfs_qcnt_t)rtblks;
+-	return 0;
+-}
+-
  /*
-@@ -370,7 +369,7 @@ xfs_bmap_count_blocks(
+  * callback routine supplied to bulkstat(). Given an inumber, find its
+  * dquots and update them to account for resources taken by that inode.
+@@ -1160,7 +1136,8 @@ xfs_qm_dqusage_adjust(
+ 	int		*res)		/* result code value */
+ {
+ 	xfs_inode_t	*ip;
+-	xfs_qcnt_t	nblks, rtblks = 0;
++	xfs_qcnt_t	nblks;
++	xfs_filblks_t	rtblks = 0;	/* total rt blks */
+ 	int		error;
  
- 	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
- 	case XFS_DINODE_FMT_EXTENTS:
--		xfs_bmap_count_leaves(ifp, nextents, count);
-+		*nextents = xfs_bmap_count_leaves(ifp, count);
- 		return 0;
- 	case XFS_DINODE_FMT_BTREE:
- 		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 0cede1043571..0eaa81dc49be 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -70,6 +70,7 @@ int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+@@ -1190,12 +1167,15 @@ xfs_qm_dqusage_adjust(
+ 	ASSERT(ip->i_delayed_blks == 0);
  
- xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
+ 	if (XFS_IS_REALTIME_INODE(ip)) {
+-		/*
+-		 * Walk thru the extent list and count the realtime blocks.
+-		 */
+-		error = xfs_qm_get_rtblks(ip, &rtblks);
+-		if (error)
+-			goto error0;
++		struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++
++		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
++			error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
++			if (error)
++				goto error0;
++		}
++
++		xfs_bmap_count_leaves(ifp, &rtblks);
+ 	}
  
-+xfs_extnum_t xfs_bmap_count_leaves(struct xfs_ifork *ifp, xfs_filblks_t *count);
- int xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
- 			  int whichfork, xfs_extnum_t *nextents,
- 			  xfs_filblks_t *count);
+ 	nblks = (xfs_qcnt_t)ip->i_d.di_nblocks - rtblks;
 -- 
 2.11.0
 
