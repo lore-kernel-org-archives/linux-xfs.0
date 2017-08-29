@@ -1,21 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:11621 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:36957 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751869AbdH2XvH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:07 -0400
+        by vger.kernel.org with ESMTP id S1751669AbdH2XvL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:11 -0400
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1dmqHX-0002dd-8T
+        id 1dmqHX-0002dI-24
         for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.89)
         (envelope-from <david@fromorbit.com>)
-        id 1dmqHX-0005Wt-76
+        id 1dmqHX-0005WY-0d
         for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 32/42] mkfs: factor data device validation
-Date: Wed, 30 Aug 2017 09:50:42 +1000
-Message-Id: <20170829235052.21050-33-david@fromorbit.com>
+Subject: [PATCH 25/42] mkfs: factor directory blocksize validation
+Date: Wed, 30 Aug 2017 09:50:35 +1000
+Message-Id: <20170829235052.21050-26-david@fromorbit.com>
 In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
 References: <20170829235052.21050-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -27,130 +27,147 @@ From: Dave Chinner <dchinner@redhat.com>
 
 Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 75 +++++++++++++++++++++++++++++++++++++--------------------
- 1 file changed, 49 insertions(+), 26 deletions(-)
+ mkfs/xfs_mkfs.c | 78 +++++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 42 insertions(+), 36 deletions(-)
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index e8fa53fea8e0..81f1e12a941e 100644
+index 1c697dd5d4e1..72b21d715613 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -2528,6 +2528,53 @@ open_devices(
+@@ -2215,6 +2215,36 @@ _("rmapbt not supported with realtime devices\n"));
  }
  
  static void
-+validate_datadev(
++validate_dirblocksize(
 +	struct mkfs_params	*cfg,
 +	struct cli_params	*cli)
 +{
-+	struct libxfs_xinit	*xi = cli->xi;
 +
-+	if (!xi->dsize) {
-+		/*
-+		 * if the device is a file, we can't validate the size here.
-+		 * Instead, the file will be truncated to the correct length
-+		 * later on. if it's not a file, we've got a dud device.
-+		 */
-+		if (!xi->disfile) {
-+			fprintf(stderr, _("can't get size of data subvolume\n"));
++	if (cli->dirblocksize)
++		cfg->dirblocksize = getnum(cli->dirblocksize, &nopts, N_SIZE);
++	if (cli->dirblocklog)
++		cfg->dirblocksize = 1 << cli->dirblocklog;
++
++	if (cfg->dirblocksize) {
++		if (cfg->dirblocksize < cfg->blocksize ||
++		    cfg->dirblocksize > XFS_MAX_BLOCKSIZE) {
++			fprintf(stderr, _("illegal directory block size %d\n"),
++				cfg->dirblocksize);
 +			usage();
 +		}
-+		ASSERT(cfg->dblocks);
-+	} else if (cfg->dblocks) {
-+		/* check the size fits into the underlying device */
-+		if (cfg->dblocks > DTOBT(xi->dsize, cfg->blocklog)) {
-+			fprintf(stderr,
-+_("size %s specified for data subvolume is too large, maximum is %lld blocks\n"),
-+				cli->dsize,
-+				(long long)DTOBT(xi->dsize, cfg->blocklog));
-+			usage();
-+		}
-+	} else {
-+		/* no user size, so use the full block device */
-+		cfg->dblocks = DTOBT(xi->dsize, cfg->blocklog);
++		cfg->dirblocklog = libxfs_highbit32(cfg->dirblocksize);
++		return;
 +	}
 +
-+	if (cfg->dblocks < XFS_MIN_DATA_BLOCKS) {
-+		fprintf(stderr,
-+_("size %lld of data subvolume is too small, minimum %d blocks\n"),
-+			(long long)cfg->dblocks, XFS_MIN_DATA_BLOCKS);
-+		usage();
-+	}
-+
-+	if (xi->dbsize > cfg->sectorsize) {
-+		fprintf(stderr, _(
-+"Warning: the data subvolume sector size %u is less than the sector size \n\
-+reported by the device (%u).\n"),
-+			cfg->sectorsize, xi->dbsize);
-+	}
++	/* use default size based on current block size */
++	if (cfg->blocksize < (1 << XFS_MIN_REC_DIRSIZE))
++		cfg->dirblocklog = XFS_MIN_REC_DIRSIZE;
++	else
++		cfg->dirblocklog = cfg->blocklog;
++	cfg->dirblocksize = 1 << cfg->dirblocklog;
 +}
 +
 +static void
  print_mkfs_cfg(
  	struct mkfs_params	*cfg,
  	char			*dfile,
-@@ -3164,7 +3211,6 @@ main(
- 	char			*dfile;
- 	int			dirblocklog;
- 	int			dirblocksize;
--	char			*dsize;
- 	int			dsunit;
- 	int			dswidth;
- 	int			force_overwrite;
-@@ -3278,7 +3324,7 @@ main(
+@@ -2890,16 +2920,13 @@ main(
+ 	xfs_mount_t		*mp;
+ 	xfs_mount_t		mbuf;
+ 	xfs_extlen_t		nbmblocks;
+-	int			nlflag;
+ 	int			nodsflag;
+ 	int			norsflag;
+-	int			nsflag;
+-	int			nvflag;
+-	int			dry_run;
++	int			dry_run = 0;
+ 	int			discard = 1;
+ 	char			*protofile;
+ 	char			*protostring;
+-	int			quiet;
++	int			quiet = 0;
+ 	xfs_rfsblock_t		rtblocks;
+ 	xfs_extlen_t		rtextblocks;
+ 	xfs_rtblock_t		rtextents;
+@@ -2978,9 +3005,6 @@ main(
+ 	liflag = laflag = lsflag = lsuflag = lsunitflag = ldflag = lvflag = 0;
+ 	loginternal = 1;
  	logagno = logblocks = rtblocks = rtextblocks = 0;
+-	dry_run = nlflag = nsflag = nvflag = 0;
+-	dirblocklog = dirblocksize = 0;
+-	quiet = 0;
  	imaxpct = inodelog = inopblock = isize = 0;
  	dfile = logfile = rtfile = NULL;
--	dsize = logsize = rtsize = protofile = NULL;
-+	logsize = rtsize = protofile = NULL;
- 	dsunit = dswidth = lalign = lsunit = 0;
- 	nodsflag = 0;
- 	force_overwrite = 0;
-@@ -3427,6 +3473,7 @@ main(
- 	 * Open and validate the device configurations
- 	 */
- 	open_devices(&cfg, &xi, (discard && !dry_run));
-+	validate_datadev(&cfg, &cli);
+ 	dsize = logsize = rtsize = rtextsize = protofile = NULL;
+@@ -3001,6 +3025,7 @@ main(
+ 			force_overwrite = 1;
+ 			break;
+ 		case 'b':
++		case 'n':
+ 		case 's':
+ 			parse_subopts(c, optarg, &cli);
+ 			break;
+@@ -3082,17 +3107,6 @@ main(
+ 			platform_uuid_copy(&uuid, &cli.uuid);
+ 			/* end temp don't break code */
+ 			break;
+-		case 'n':
+-			parse_subopts(c, optarg, &cli);
+-
+-			/* temp don't break code */
+-			if ((nsflag = cli_opt_set(&nopts, N_SIZE)))
+-				dirblocksize = getnum(cli.dirblocksize, &nopts, N_SIZE);
+-			dirblocklog = cli.dirblocklog;
+-
+-			nlflag = cli_opt_set(&nopts, N_LOG);
+-			/* end temp don't break code */
+-			break;
+ 		case 'N':
+ 			dry_run = 1;
+ 			break;
+@@ -3146,6 +3160,13 @@ main(
+ 	validate_log_sectorsize(&cfg, &cli, &dft);
+ 	validate_sb_features(&cfg, &cli);
  
++	/*
++	 * we've now completed basic validation of the features, sector and
++	 * block sizes, so from this point onwards we use the values found in
++	 * the cfg structure for them, not the command line structure.
++	 */
++	validate_dirblocksize(&cfg, &cli);
++
  	/* temp don't break code */
  	sectorsize = cfg.sectorsize;
-@@ -3471,24 +3518,6 @@ main(
- 		rtfile = _("volume rt");
- 	else if (!xi.rtdev)
- 		rtfile = _("none");
--	if (dsize && xi.dsize > 0 && dblocks > DTOBT(xi.dsize, blocklog)) {
--		fprintf(stderr,
--			_("size %s specified for data subvolume is too large, "
--			"maximum is %lld blocks\n"),
--			dsize, (long long)DTOBT(xi.dsize, blocklog));
--		usage();
--	} else if (!dsize && xi.dsize > 0)
--		dblocks = DTOBT(xi.dsize, blocklog);
--	else if (!dsize) {
--		fprintf(stderr, _("can't get size of data subvolume\n"));
--		usage();
--	}
--	if (dblocks < XFS_MIN_DATA_BLOCKS) {
--		fprintf(stderr,
--	_("size %lld of data subvolume is too small, minimum %d blocks\n"),
--			(long long)dblocks, XFS_MIN_DATA_BLOCKS);
--		usage();
--	}
+ 	sectorlog = cfg.sectorlog;
+@@ -3155,25 +3176,10 @@ main(
+ 	lsectorlog = cfg.lsectorlog;
+ 	sb_feat = cfg.sb_feat;
+ 	platform_uuid_copy(&uuid, &cfg.uuid);
++	dirblocksize = cfg.dirblocksize;
++	dirblocklog = cfg.dirblocklog;
+ 	/* end temp don't break code */
  
- 	if (loginternal && xi.logdev) {
- 		fprintf(stderr,
-@@ -3500,12 +3529,6 @@ main(
- 		usage();
- 	}
- 
--	if (xi.dbsize > sectorsize) {
--		fprintf(stderr, _(
--"Warning: the data subvolume sector size %u is less than the sector size \n\
--reported by the device (%u).\n"),
--			sectorsize, xi.dbsize);
+-
+-	if (nsflag || nlflag) {
+-		if (dirblocksize < blocksize ||
+-					dirblocksize > XFS_MAX_BLOCKSIZE) {
+-			fprintf(stderr, _("illegal directory block size %d\n"),
+-				dirblocksize);
+-			usage();
+-		}
+-	} else {
+-		if (blocksize < (1 << XFS_MIN_REC_DIRSIZE))
+-			dirblocklog = XFS_MIN_REC_DIRSIZE;
+-		else
+-			dirblocklog = blocklog;
+-		dirblocksize = 1 << dirblocklog;
 -	}
- 	if (!loginternal && xi.lbsize > lsectorsize) {
- 		fprintf(stderr, _(
- "Warning: the log subvolume sector size %u is less than the sector size\n\
+-
+-
+ 	if (dsize) {
+ 		uint64_t dbytes;
+ 
 -- 
 2.13.3
 
