@@ -1,21 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:55482 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:40488 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751856AbdH2XvF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:05 -0400
+        by vger.kernel.org with ESMTP id S1751869AbdH2XvJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:09 -0400
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1dmqHX-0002de-9M
-        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
+        id 1dmqHW-0002cr-Qe
+        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.89)
         (envelope-from <david@fromorbit.com>)
-        id 1dmqHX-0005Ww-86
-        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
+        id 1dmqHW-0005W7-PB
+        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 33/42] mkfs: factor log device validation
-Date: Wed, 30 Aug 2017 09:50:43 +1000
-Message-Id: <20170829235052.21050-34-david@fromorbit.com>
+Subject: [PATCH 16/42] mkfs: factor out device preparation
+Date: Wed, 30 Aug 2017 09:50:26 +1000
+Message-Id: <20170829235052.21050-17-david@fromorbit.com>
 In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
 References: <20170829235052.21050-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -25,225 +25,214 @@ To: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
+Prior to formating the device(s), we have to take several steps to
+prepare them and check that they are appropriate for the formatting
+that is about to take place. Pull all this into a single function
+that is run before mounting the libxfs infrastructure.
+
 Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 147 ++++++++++++++++++++++++++++++++++----------------------
- 1 file changed, 89 insertions(+), 58 deletions(-)
+ mkfs/xfs_mkfs.c | 167 ++++++++++++++++++++++++++++++++------------------------
+ 1 file changed, 96 insertions(+), 71 deletions(-)
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 81f1e12a941e..2fcc0d39a0a8 100644
+index 0e115bf3cf4d..2438e50d3f33 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -2574,6 +2574,92 @@ reported by the device (%u).\n"),
+@@ -1993,6 +1993,97 @@ setup_superblock(
  	}
  }
  
 +/*
-+ * This is more complex than it needs to be because we still support volume
-+ * based external logs. They are only discovered *after* the devices have been
-+ * opened, hence the crazy "is this really an internal log" checks here.
++ * Sanitise the data and log devices and prepare them so libxfs can mount the
++ * device successfully. Also check we can access the rt device if configured.
 + */
 +static void
-+validate_logdev(
++prepare_devices(
 +	struct mkfs_params	*cfg,
-+	struct cli_params	*cli,
-+	char			**devname)
++	struct libxfs_xinit	*xi,
++	struct xfs_mount	*mp,
++	struct xfs_sb		*sbp,
++	bool			clear_stale)
 +{
-+	struct libxfs_xinit	*xi = cli->xi;
++	struct xfs_buf		*buf;
++	int			whack_blks = BTOBB(WHACK_SIZE);
 +
-+	*devname = NULL;
++	/*
++	 * If there's an old XFS filesystem on the device with enough intact
++	 * information that we can parse the superblock, there's enough
++	 * information on disk to confuse a future xfs_repair call. To avoid
++	 * this, whack all the old secondary superblocks that we can find.
++	 */
++	if (clear_stale)
++		zero_old_xfs_structures(xi, sbp);
 +
-+	/* check for volume log first */
-+	if (cli->loginternal && xi->volname && xi->logdev) {
-+		*devname = _("volume log");
-+		cfg->loginternal = false;
-+	} else
-+		cfg->loginternal = cli->loginternal;
-+
-+	/* now run device checks */
-+	if (cfg->loginternal) {
-+		if (xi->logdev) {
++	/*
++	 * If the data device is a file, grow out the file to its final size if
++	 * needed so that the reads for the end of the device in the mount code
++	 * will succeed.
++	 */
++	if (xi->disfile &&
++	    xi->dsize * xi->dbsize < cfg->dblocks * cfg->blocksize) {
++		if (ftruncate(xi->dfd, cfg->dblocks * cfg->blocksize) < 0) {
 +			fprintf(stderr,
-+_("can't have both external and internal logs\n"));
-+			usage();
++				_("%s: Growing the data section failed\n"),
++				progname);
++			exit(1);
 +		}
 +
-+		/*
-+		 * if no sector size has been specified on the command line,
-+		 * use what has been configured and validated for the data
-+		 * device.
-+		 */
-+		if (!cli->lsectorsize) {
-+			cfg->lsectorsize = cfg->sectorsize;
-+			cfg->lsectorlog = cfg->sectorlog;
-+		}
-+
-+		if (cfg->sectorsize != cfg->lsectorsize) {
-+			fprintf(stderr,
-+_("data and log sector sizes must be equal for internal logs\n"));
-+			usage();
-+		}
-+		if (cli->logsize && cfg->logblocks >= cfg->dblocks) {
-+			fprintf(stderr,
-+_("log size %lld too large for internal log\n"),
-+				(long long)cfg->logblocks);
-+			usage();
-+		}
-+		*devname = _("internal log");
-+		return;
++		/* update size to be able to whack blocks correctly */
++		xi->dsize = BTOBB(cfg->dblocks * cfg->blocksize);
 +	}
 +
-+	/* External/log subvolume checks */
-+	if (xi->logname)
-+		*devname = xi->logname;
-+	if (!*devname || !xi->logdev) {
-+		fprintf(stderr, _("no log subvolume or external log.\n"));
-+		usage();
++	/*
++	 * Zero out the end to obliterate any old MD RAID (or other) metadata at
++	 * the end of the device.  (MD sb is ~64k from the end, take out a wider
++	 * swath to be sure)
++	 */
++	buf = libxfs_getbuf(mp->m_ddev_targp, (xi->dsize - whack_blks),
++			    whack_blks);
++	memset(XFS_BUF_PTR(buf), 0, WHACK_SIZE);
++	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
++	libxfs_purgebuf(buf);
++
++	/*
++	 * Now zero out the beginning of the device, to obliterate any old
++	 * filesystem signatures out there.  This should take care of
++	 * swap (somewhere around the page size), jfs (32k),
++	 * ext[2,3] and reiserfs (64k) - and hopefully all else.
++	 */
++	buf = libxfs_getbuf(mp->m_ddev_targp, 0, whack_blks);
++	memset(XFS_BUF_PTR(buf), 0, WHACK_SIZE);
++	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
++	libxfs_purgebuf(buf);
++
++	/* OK, now write the superblock... */
++	buf = libxfs_getbuf(mp->m_ddev_targp, XFS_SB_DADDR, XFS_FSS_TO_BB(mp, 1));
++	buf->b_ops = &xfs_sb_buf_ops;
++	memset(XFS_BUF_PTR(buf), 0, cfg->sectorsize);
++	libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp);
++	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
++	libxfs_purgebuf(buf);
++
++	/* ...and zero the log.... */
++	libxfs_log_clear(mp->m_logdev_targp, NULL,
++			 XFS_FSB_TO_DADDR(mp, cfg->logstart),
++			 (xfs_extlen_t)XFS_FSB_TO_BB(mp, cfg->logblocks),
++			 &sbp->sb_uuid, cfg->sb_feat.log_version,
++			 sbp->sb_logsunit, XLOG_FMT, XLOG_INIT_CYCLE, false);
++
++	/* finally, check we can write the last block in the realtime area */
++	if (mp->m_rtdev_targp->dev && cfg->rtblocks > 0) {
++		buf = libxfs_getbuf(mp->m_rtdev_targp,
++				    XFS_FSB_TO_BB(mp, cfg->rtblocks - 1LL),
++				    BTOBB(cfg->blocksize));
++		memset(XFS_BUF_PTR(buf), 0, cfg->blocksize);
++		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
++		libxfs_purgebuf(buf);
 +	}
 +
-+	if (!cfg->logblocks) {
-+		if (xi->logBBsize == 0) {
-+			fprintf(stderr,
-+_("unable to get size of the log subvolume.\n"));
-+			usage();
-+		}
-+		cfg->logblocks = DTOBT(xi->logBBsize, cfg->blocklog);
-+	} else if (cfg->logblocks > DTOBT(xi->logBBsize, cfg->blocklog)) {
-+		fprintf(stderr,
-+_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
-+			cli->logsize,
-+			(long long)DTOBT(xi->logBBsize, cfg->blocklog));
-+		usage();
-+	}
-+
-+	if (xi->lbsize > cfg->lsectorsize) {
-+		fprintf(stderr, _(
-+"Warning: the log subvolume sector size %u is less than the sector size\n\
-+reported by the device (%u).\n"),
-+			cfg->lsectorsize, xi->lbsize);
-+	}
 +}
 +
- static void
- print_mkfs_cfg(
- 	struct mkfs_params	*cfg,
-@@ -3223,15 +3309,12 @@ main(
- 	char			*label = NULL;
- 	int			laflag;
- 	int			lalign;
--	int			ldflag;
--	int			liflag;
- 	xfs_agnumber_t		logagno;
- 	xfs_rfsblock_t		logblocks;
- 	char			*logfile;
- 	int			loginternal;
- 	char			*logsize;
- 	xfs_fsblock_t		logstart;
--	int			lvflag;
- 	int			lsflag;
- 	int			lsectorlog;
- 	int			lsectorsize;
-@@ -3319,7 +3402,7 @@ main(
- 
- 	agsize = daflag = dasize = dblocks = 0;
- 	imflag = 0;
--	liflag = laflag = lsflag = ldflag = lvflag = 0;
-+	laflag = lsflag = 0;
- 	loginternal = 1;
- 	logagno = logblocks = rtblocks = rtextblocks = 0;
- 	imaxpct = inodelog = inopblock = isize = 0;
-@@ -3375,15 +3458,7 @@ main(
- 
- 			/* temp don't break code */
- 			logagno = cli.logagno;
--			loginternal = cli.loginternal;
--			logfile = xi.logname;
--			logsize = cli.logsize;
--
- 			laflag = cli_opt_set(&lopts, L_AGNUM);
--			liflag = cli_opt_set(&lopts, L_INTERNAL);
--			ldflag = cli_opt_set(&lopts, L_NAME) ||
--				 cli_opt_set(&lopts, L_DEV);
--			lvflag = cli_opt_set(&lopts, L_VERSION);
- 			/* end temp don't break code */
- 			break;
- 		case 'L':
-@@ -3474,6 +3549,7 @@ main(
+ int
+ main(
+ 	int			argc,
+@@ -3174,65 +3265,17 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
  	 */
- 	open_devices(&cfg, &xi, (discard && !dry_run));
- 	validate_datadev(&cfg, &cli);
-+	validate_logdev(&cfg, &cli, &logfile);
+ 	setup_superblock(&cfg, mp, sbp);
  
- 	/* temp don't break code */
- 	sectorsize = cfg.sectorsize;
-@@ -3499,18 +3575,6 @@ main(
- 	nodsflag = cfg.sb_feat.nodalign;
- 	/* end temp don't break code */
- 
--	if (!liflag && !ldflag)
--		loginternal = xi.logdev == 0;
--	if (xi.logname)
--		logfile = xi.logname;
--	else if (loginternal)
--		logfile = _("internal log");
--	else if (xi.volname && xi.logdev)
--		logfile = _("volume log");
--	else if (!ldflag) {
--		fprintf(stderr, _("no log subvolume or internal log\n"));
--		usage();
--	}
- 	if (xi.rtname)
- 		rtfile = xi.rtname;
- 	else
-@@ -3519,22 +3583,6 @@ main(
- 	else if (!xi.rtdev)
- 		rtfile = _("none");
- 
--	if (loginternal && xi.logdev) {
--		fprintf(stderr,
--			_("can't have both external and internal logs\n"));
--		usage();
--	} else if (loginternal && sectorsize != lsectorsize) {
--		fprintf(stderr,
--	_("data and log sector sizes must be equal for internal logs\n"));
--		usage();
+-	if (force_overwrite)
+-		zero_old_xfs_structures(&xi, sbp);
+-
+ 	/*
+-	 * Zero out the beginning of the device, to obliterate any old
+-	 * filesystem signatures out there.  This should take care of
+-	 * swap (somewhere around the page size), jfs (32k),
+-	 * ext[2,3] and reiserfs (64k) - and hopefully all else.
++	 * we need the libxfs buffer cache from here on in.
+ 	 */
+ 	libxfs_buftarg_init(mp, xi.ddev, xi.logdev, xi.rtdev);
+-	buf = libxfs_getbuf(mp->m_ddev_targp, 0, BTOBB(WHACK_SIZE));
+-	memset(XFS_BUF_PTR(buf), 0, WHACK_SIZE);
+-	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+-	libxfs_purgebuf(buf);
+-
+-	/* OK, now write the superblock */
+-	buf = libxfs_getbuf(mp->m_ddev_targp, XFS_SB_DADDR, XFS_FSS_TO_BB(mp, 1));
+-	buf->b_ops = &xfs_sb_buf_ops;
+-	memset(XFS_BUF_PTR(buf), 0, sectorsize);
+-	libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp);
+-	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+-	libxfs_purgebuf(buf);
+-
+-	/*
+-	 * If the data area is a file, then grow it out to its final size
+-	 * if needed so that the reads for the end of the device in the mount
+-	 * code will succeed.
+-	 */
+-	if (xi.disfile && xi.dsize * xi.dbsize < dblocks * blocksize) {
+-		if (ftruncate(xi.dfd, dblocks * blocksize) < 0) {
+-			fprintf(stderr,
+-				_("%s: Growing the data section failed\n"),
+-				progname);
+-			exit(1);
+-		}
 -	}
 -
--	if (!loginternal && xi.lbsize > lsectorsize) {
--		fprintf(stderr, _(
--"Warning: the log subvolume sector size %u is less than the sector size\n\
--reported by the device (%u).\n"),
--			lsectorsize, xi.lbsize);
+-	/*
+-	 * Zero out the end of the device, to obliterate any
+-	 * old MD RAID (or other) metadata at the end of the device.
+-	 * (MD sb is ~64k from the end, take out a wider swath to be sure)
+-	 */
+-	if (!xi.disfile) {
+-		buf = libxfs_getbuf(mp->m_ddev_targp,
+-				    (xi.dsize - BTOBB(WHACK_SIZE)),
+-				    BTOBB(WHACK_SIZE));
+-		memset(XFS_BUF_PTR(buf), 0, WHACK_SIZE);
+-		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+-		libxfs_purgebuf(buf);
 -	}
- 	if (rtsize && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
- 		fprintf(stderr, _(
- "Warning: the realtime subvolume sector size %u is less than the sector size\n\
-@@ -3711,24 +3759,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
- 	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
- 		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
--	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize, blocklog)) {
--		fprintf(stderr,
--_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
--			logsize, (long long)DTOBT(xi.logBBsize, blocklog));
--		usage();
--	} else if (!logsize && xi.logBBsize > 0) {
--		logblocks = DTOBT(xi.logBBsize, blocklog);
--	} else if (logsize && !xi.logdev && !loginternal) {
--		fprintf(stderr,
--			_("size specified for non-existent log subvolume\n"));
--		usage();
--	} else if (loginternal && logsize && logblocks >= dblocks) {
--		fprintf(stderr, _("size %lld too large for internal log\n"),
--			(long long)logblocks);
--		usage();
--	} else if (!loginternal && !xi.logdev) {
--		logblocks = 0;
--	} else if (loginternal && !logsize) {
-+	if (loginternal && !logsize) {
  
- 		if (dblocks < GIGABYTES(1, blocklog)) {
- 			/* tiny filesystems get minimum sized logs. */
+ 	/*
+-	 * Zero the log....
++	 * Before we mount the filesystem we need to make sure the devices have
++	 * enough of the filesystem structure on them that allows libxfs to
++	 * mount.
+ 	 */
+-	libxfs_log_clear(mp->m_logdev_targp, NULL,
+-		XFS_FSB_TO_DADDR(mp, logstart),
+-		(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
+-		&sbp->sb_uuid, sb_feat.log_version, lsunit, XLOG_FMT, XLOG_INIT_CYCLE, false);
+-
++	prepare_devices(&cfg, &xi, mp, sbp, force_overwrite);
+ 	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 0);
+ 	if (mp == NULL) {
+ 		fprintf(stderr, _("%s: filesystem failed to initialize\n"),
+@@ -3576,24 +3619,6 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	}
+ 
+ 	/*
+-	 * Touch last block, make fs the right size if it's a file.
+-	 */
+-	buf = libxfs_getbuf(mp->m_ddev_targp,
+-		(xfs_daddr_t)XFS_FSB_TO_BB(mp, dblocks - 1LL), bsize);
+-	memset(XFS_BUF_PTR(buf), 0, blocksize);
+-	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+-
+-	/*
+-	 * Make sure we can write the last block in the realtime area.
+-	 */
+-	if (mp->m_rtdev_targp->dev && rtblocks > 0) {
+-		buf = libxfs_getbuf(mp->m_rtdev_targp,
+-				XFS_FSB_TO_BB(mp, rtblocks - 1LL), bsize);
+-		memset(XFS_BUF_PTR(buf), 0, blocksize);
+-		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+-	}
+-
+-	/*
+ 	 * BNO, CNT free block list
+ 	 */
+ 	for (agno = 0; agno < agcount; agno++) {
 -- 
 2.13.3
 
