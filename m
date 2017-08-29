@@ -1,94 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:37162 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751435AbdH3Ovc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 10:51:32 -0400
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v2 08/14] fsx: add support for --record-ops
-Date: Wed, 30 Aug 2017 17:51:40 +0300
-Message-Id: <1504104706-11965-9-git-send-email-amir73il@gmail.com>
-In-Reply-To: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
-References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:47412 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752195AbdH2PtZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 Aug 2017 11:49:25 -0400
+Date: Tue, 29 Aug 2017 17:49:22 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] ext4: introduce per-inode DAX flag
+Message-ID: <20170829154922.GA24592@quack2.suse.cz>
+References: <20170811121132.bj5y77scrvkgy7uo@rh_laptop>
+ <20170811125849.GA15300@infradead.org>
+ <20170811134130.o46y5jpekrpj5qvw@rh_laptop>
+ <20170824182057.amdirlrbugezrahy@thunk.org>
+ <20170825075415.GA748@infradead.org>
+ <20170825151445.ycf5xomoxvebgaez@thunk.org>
+ <20170825154032.GA1827@infradead.org>
+ <20170825233358.GC17782@dastard>
+ <20170828073853.GA23262@infradead.org>
+ <20170828101014.GD17782@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170828101014.GD17782@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-xfs@vger.kernel.org
 
-Usually, fsx dumps an .fsxops file on failure with same basename
-as work file and possibly under dirctory specified by -P dirpath.
+On Mon 28-08-17 20:10:14, Dave Chinner wrote:
+> On Mon, Aug 28, 2017 at 12:38:54AM -0700, Christoph Hellwig wrote:
+> > On Sat, Aug 26, 2017 at 09:33:58AM +1000, Dave Chinner wrote:
+> > > > Nah, -o dax works very well.  It's just the flag instead of the -o dax
+> > > > option or rather switching it on a mapped file will probably be very dangerous.
+> > > 
+> > > In what way is it dangerous, Christoph?
+> > 
+> > When I run the following script as a normal user:
+> > 
+> > FSXDIR=~/xfstests/ltp/
+> > FILE=/mnt/foo
+> > 
+> > ${FSXDIR}/fsx $FILE &
+> > 
+> > while true; do
+> >     xfs_io -c 'chattr +x' $FILE
+> >     xfs_io -c 'chattr -x' $FILE
+> > done
+> >
+> > I get this nice little crash:
+> 
+> Can you please package that up into an xfstest?
+> 
+> > root@testvm:~# sh test.sh
+> > skipping zero size read
+> > skipping insert range behind EOF
+> > truncating to largest ever: 0x3a290
+> > zero_range to largest ever: 0x3a8d1
+> > zero_range to largest ever: 0x3fe3e
+> > zero_range to largest ever: 0x40000
+> > [  344.898390] BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
+> > [  344.899306] IP: iomap_page_mkwrite+0x17/0xf0
+> > [  344.899795] PGD 7db37067
+> > [  344.899796] P4D 7db37067
+> > [  344.900099] PUD 78c61067
+> > [  344.900389] PMD 0
+> > [  344.900665]
+> > [  344.901075] Oops: 0000 [#1] SMP
+> > [  344.901536] Modules linked in:
+> > [  344.901716] CPU: 3 PID: 6052 Comm: fsx Not tainted 4.12.0+ #2199
+> > [  344.901716] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.10.2-0-g5f4c7b1-prebuilt.qemu-project.org 04/01/2014
+> > [  344.901716] task: ffff880079a0da00 task.stack: ffffc900068a4000
+> > [  344.901716] RIP: 0010:iomap_page_mkwrite+0x17/0xf0
+> > [  344.901716] RSP: 0000:ffffc900068a7d38 EFLAGS: 00010246
+> > [  344.901716] RAX: ffff8800798dd0d0 RBX: 0000000000000200 RCX: 0000000000000001
+> > [  344.901716] RDX: 0000000070eb898e RSI: ffffffff82109010 RDI: ffffc900068a7df0
+> > [  344.901716] RBP: ffffc900068a7d60 R08: ffffffff82ff9fa8 R09: 0000000000000000
+> > [  344.901716] R10: ffffc900068a7cb0 R11: ffffffff8159b5cc R12: ffffffff82109010
+> > [  344.901716] R13: 0000000000000000 R14: ffffc900068a7df0 R15: ffff88007da89580
+>                       ^^^^^^^^^^^^^^^^
+> 
+> vmf->page is null.
+> 
+> Which means IS_DAX changed half way through a fault, despite us
+> holding the MMAPLOCK and protecting all the filesystem side of the
+> fault code from races.
+> 
+> Seems to me that even allowing filesystems to switch between
+> different mapping tree behaviours based on an inode flag is a
+> fundamentally broken model. The fault action that needs to taken by
+> the filesystem has already been predetermined by the fault
+> processing that has already occurred and placed into the contents of
+> the vmf we've been passed.
 
-The --record-ops[=opsfile] flag can be use to dump ops file also
-on success and to optionally specify the ops file name.
+I don't think the problem is actually within MM in this particular case.
+The problem seems to be that xfs_filemap_fault() checks IS_DAX without
+holding MMAPLOCK and so it can change after that test and before the test
+in xfs_filemap_page_mkwrite().
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- ltp/fsx.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+> Hence I think that if we need to process the fault as a DAX fault
+> then the vmf needs to tell us that, not require us to look up an
+> inode flag to determine what to do. ANd if the inode flag changes,
+> then that needs to be propagated through the mapping and VMAs in a
+> sane fashion, not just run an invalidation from the filesystem. I
+> don't know enough about the VM code to say anything useful about how
+> this needs to be set up, but it's clear that mapping invalidation
+> and behaviour swaps can't be completely serialised against page
+> faults from the filesystem side.
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index a6420f6..dd6b637 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -180,6 +180,7 @@ int aio_rw(int rw, int fd, char *buf, unsigned len, unsigned offset);
- #endif
- 
- const char *replayops = NULL;
-+const char *recordops = NULL;
- FILE *	fsxlogf = NULL;
- FILE *	replayopsf = NULL;
- char opsfile[1024];
-@@ -1677,6 +1678,8 @@ usage(void)
- 	-W: mapped write operations DISabled\n\
-         -R: read() system calls only (mapped reads disabled)\n\
-         -Z: O_DIRECT (use -R, -W, -r and -w too)\n\
-+	--replay-ops opsfile: replay ops from recorded .fsxops file\n\
-+	--record-ops[=opsfile]: dump ops file also on success. optionally specify ops file name\n\
- 	fname: this filename is REQUIRED (no default)\n");
- 	exit(90);
- }
-@@ -1845,6 +1848,7 @@ __test_fallocate(int mode, const char *mode_str)
- 
- static struct option longopts[] = {
- 	{"replay-ops", required_argument, 0, 256},
-+	{"record-ops", optional_argument, 0, 255},
- 	{ }
- };
- 
-@@ -2034,6 +2038,11 @@ main(int argc, char **argv)
- 		case 'Z':
- 			o_direct = O_DIRECT;
- 			break;
-+		case 255:  /* --record-ops */
-+			if (optarg)
-+				strncpy(opsfile, optarg, sizeof(opsfile));
-+			recordops = opsfile;
-+			break;
- 		case 256:  /* --replay-ops */
- 			replayops = optarg;
- 			break;
-@@ -2113,8 +2122,10 @@ main(int argc, char **argv)
- 		prterr(logfile);
- 		exit(93);
- 	}
--	strncat(opsfile, dirpath ? bname : fname, 256);
--	strcat(opsfile, ".fsxops");
-+	if (!*opsfile) {
-+		strncat(opsfile, dirpath ? bname : fname, 256);
-+		strcat(opsfile, ".fsxops");
-+	}
- 	unlink(opsfile);
- 
- 	if (replayops) {
-@@ -2195,6 +2206,8 @@ main(int argc, char **argv)
- 		report_failure(99);
- 	}
- 	prt("All %lu operations completed A-OK!\n", testcalls);
-+	if (recordops)
-+		logdump();
- 
- 	exit(0);
- 	return 0;
+But there is no difference in vmf setup from generic MM side. In particular
+vmf->page is set by the ->fault handler and then it is passed to
+->page_mkwrite handler. And changes to mapping behavior between these two
+callbacks should be prevented by the page lock / radix entry lock...
+
+								Honza
 -- 
-2.7.4
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
