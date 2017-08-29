@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58178 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50094 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754544AbdH2OiA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 Aug 2017 10:38:00 -0400
+        id S1754539AbdH2Oh7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 Aug 2017 10:37:59 -0400
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 19D257E435
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2017 14:38:00 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id C6D074E4C6
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2017 14:37:59 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id DDD986FF01
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 973F26BF9C
         for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2017 14:37:59 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 5/9] xfs: don't log dirty ranges for ordered buffers
-Date: Tue, 29 Aug 2017 10:37:54 -0400
-Message-Id: <20170829143758.58990-6-bfoster@redhat.com>
+Subject: [PATCH v2 4/9] xfs: refactor buffer logging into buffer dirtying helper
+Date: Tue, 29 Aug 2017 10:37:53 -0400
+Message-Id: <20170829143758.58990-5-bfoster@redhat.com>
 In-Reply-To: <20170829143758.58990-1-bfoster@redhat.com>
 References: <20170829143758.58990-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,119 +22,133 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Ordered buffers are attached to transactions and pushed through the
-logging infrastructure just like normal buffers with the exception
-that they are not actually written to the log. Therefore, we don't
-need to log dirty ranges of ordered buffers. xfs_trans_log_buf() is
-called on ordered buffers to set up all of the dirty state on the
-transaction, buffer and log item and prepare the buffer for I/O.
+xfs_trans_log_buf() is responsible for logging the dirty segments of
+a buffer along with setting all of the necessary state on the
+transaction, buffer, bli, etc., to ensure that the associated items
+are marked as dirty and prepared for I/O. We have a couple use cases
+that need to to dirty a buffer in a transaction without actually
+logging dirty ranges of the buffer.  One existing use case is
+ordered buffers, which are currently logged with arbitrary ranges to
+accomplish this even though the content of ordered buffers is never
+written to the log. Another pending use case is to relog an already
+dirty buffer across rolled transactions within the deferred
+operations infrastructure. This is required to prevent a held
+(XFS_BLI_HOLD) buffer from pinning the tail of the log.
 
-Now that xfs_trans_dirty_buf() is available, call it from
-xfs_trans_ordered_buf() so the latter is now mutually exclusive with
-xfs_trans_log_buf(). This reflects the implementation of ordered
-buffers and helps eliminate confusion over the need to log ranges of
-ordered buffers just to set up internal log state.
+Refactor xfs_trans_log_buf() into a new function that contains all
+of the logic responsible to dirty the transaction, lidp, buffer and
+bli. This new function can be used in the future for the use cases
+outlined above. This patch does not introduce functional changes.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_btree.c  |  6 ++----
- fs/xfs/libxfs/xfs_ialloc.c |  2 --
- fs/xfs/xfs_trans_buf.c     | 26 ++++++++++++++------------
- 3 files changed, 16 insertions(+), 18 deletions(-)
+ fs/xfs/xfs_trans.h     |  4 +++-
+ fs/xfs/xfs_trans_buf.c | 46 ++++++++++++++++++++++++++++++----------------
+ 2 files changed, 33 insertions(+), 17 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index e0bcc4a..0b7905a 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4464,12 +4464,10 @@ xfs_btree_block_change_owner(
- 	 * though, so everything is consistent in memory.
- 	 */
- 	if (bp) {
--		if (cur->bc_tp) {
-+		if (cur->bc_tp)
- 			xfs_trans_ordered_buf(cur->bc_tp, bp);
--			xfs_btree_log_block(cur, bp, XFS_BB_OWNER);
--		} else {
-+		else
- 			xfs_buf_delwri_queue(bp, bbcoi->buffer_list);
--		}
- 	} else {
- 		ASSERT(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE);
- 		ASSERT(level == cur->bc_nlevels - 1);
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 1e0658a..988bb3f 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -378,8 +378,6 @@ xfs_ialloc_inode_init(
- 				 * transaction and pin the log appropriately.
- 				 */
- 				xfs_trans_ordered_buf(tp, fbuf);
--				xfs_trans_log_buf(tp, fbuf, 0,
--						  BBTOB(fbuf->b_length) - 1);
- 			}
- 		} else {
- 			fbuf->b_flags |= XBF_DONE;
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 7d62772..b3632eb 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -217,7 +217,9 @@ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
+ void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
+ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
+-void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
++void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
++				  uint);
++void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
+ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
+ 
+ void		xfs_extent_free_init_defer_op(void);
 diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 8c99813..3089e80 100644
+index cac8abb..8c99813 100644
 --- a/fs/xfs/xfs_trans_buf.c
 +++ b/fs/xfs/xfs_trans_buf.c
-@@ -560,16 +560,12 @@ xfs_trans_log_buf(
- 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
- 
- 	ASSERT(first <= last && last < BBTOB(bp->b_length));
-+	ASSERT(!(bip->bli_flags & XFS_BLI_ORDERED));
- 
- 	xfs_trans_dirty_buf(tp, bp);
- 
--	/*
--	 * If we have an ordered buffer we are not logging any dirty range but
--	 * it still needs to be marked dirty and that it has been logged.
--	 */
- 	trace_xfs_trans_log_buf(bip);
--	if (!(bip->bli_flags & XFS_BLI_ORDERED))
--		xfs_buf_item_log(bip, first, last);
-+	xfs_buf_item_log(bip, first, last);
- }
- 
- 
-@@ -722,12 +718,11 @@ xfs_trans_inode_alloc_buf(
+@@ -493,25 +493,17 @@ xfs_trans_bhold_release(xfs_trans_t	*tp,
  }
  
  /*
-- * Mark the buffer as ordered for this transaction. This means
-- * that the contents of the buffer are not recorded in the transaction
-- * but it is tracked in the AIL as though it was. This allows us
-- * to record logical changes in transactions rather than the physical
-- * changes we make to the buffer without changing writeback ordering
-- * constraints of metadata buffers.
-+ * Mark the buffer as ordered for this transaction. This means that the contents
-+ * of the buffer are not recorded in the transaction but it is tracked in the
-+ * AIL as though it was. This allows us to record logical changes in
-+ * transactions rather than the physical changes we make to the buffer without
-+ * changing writeback ordering constraints of metadata buffers.
+- * This is called to mark bytes first through last inclusive of the given
+- * buffer as needing to be logged when the transaction is committed.
+- * The buffer must already be associated with the given transaction.
+- *
+- * First and last are numbers relative to the beginning of this buffer,
+- * so the first byte in the buffer is numbered 0 regardless of the
+- * value of b_blkno.
++ * Mark a buffer dirty in the transaction.
   */
  void
- xfs_trans_ordered_buf(
-@@ -739,9 +734,16 @@ xfs_trans_ordered_buf(
+-xfs_trans_log_buf(xfs_trans_t	*tp,
+-		  xfs_buf_t	*bp,
+-		  uint		first,
+-		  uint		last)
++xfs_trans_dirty_buf(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp)
+ {
+-	xfs_buf_log_item_t	*bip = bp->b_fspriv;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
  	ASSERT(bp->b_transp == tp);
  	ASSERT(bip != NULL);
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
-+	ASSERT(!xfs_buf_item_dirty_format(bip));
+-	ASSERT(first <= last && last < BBTOB(bp->b_length));
+ 	ASSERT(bp->b_iodone == NULL ||
+ 	       bp->b_iodone == xfs_buf_iodone_callbacks);
  
- 	bip->bli_flags |= XFS_BLI_ORDERED;
- 	trace_xfs_buf_item_ordered(bip);
+@@ -531,8 +523,6 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 	bp->b_iodone = xfs_buf_iodone_callbacks;
+ 	bip->bli_item.li_cb = xfs_buf_iodone;
+ 
+-	trace_xfs_trans_log_buf(bip);
+-
+ 	/*
+ 	 * If we invalidated the buffer within this transaction, then
+ 	 * cancel the invalidation now that we're dirtying the buffer
+@@ -545,15 +535,39 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 		bp->b_flags &= ~XBF_STALE;
+ 		bip->__bli_format.blf_flags &= ~XFS_BLF_CANCEL;
+ 	}
++	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
+ 
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ 	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
++}
 +
-+	/*
-+	 * We don't log a dirty range of an ordered buffer but it still needs
-+	 * to be marked dirty and that it has been logged.
-+	 */
++/*
++ * This is called to mark bytes first through last inclusive of the given
++ * buffer as needing to be logged when the transaction is committed.
++ * The buffer must already be associated with the given transaction.
++ *
++ * First and last are numbers relative to the beginning of this buffer,
++ * so the first byte in the buffer is numbered 0 regardless of the
++ * value of b_blkno.
++ */
++void
++xfs_trans_log_buf(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp,
++	uint			first,
++	uint			last)
++{
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++
++	ASSERT(first <= last && last < BBTOB(bp->b_length));
++
 +	xfs_trans_dirty_buf(tp, bp);
- }
  
- /*
+ 	/*
+ 	 * If we have an ordered buffer we are not logging any dirty range but
+ 	 * it still needs to be marked dirty and that it has been logged.
+ 	 */
+-	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
++	trace_xfs_trans_log_buf(bip);
+ 	if (!(bip->bli_flags & XFS_BLI_ORDERED))
+ 		xfs_buf_item_log(bip, first, last);
+ }
 -- 
 2.9.5
 
