@@ -1,43 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:48865 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751274AbdH2QXO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 12:23:14 -0400
-Date: Tue, 29 Aug 2017 09:23:10 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS reflinks
-Message-ID: <20170829162310.GA22552@infradead.org>
-References: <04eacb90-aac9-7c47-f074-fa91eb253822@bytemark.co.uk>
- <20170829130046.GA28896@infradead.org>
- <20170829160308.GR4757@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170829160308.GR4757@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:27944 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751820AbdH2XvA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:00 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1dmqHW-0002bu-Ea
+        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.89)
+        (envelope-from <david@fromorbit.com>)
+        id 1dmqHW-0005VX-DV
+        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 04/42] mkfs: add generic subopt parsing table
+Date: Wed, 30 Aug 2017 09:50:14 +1000
+Message-Id: <20170829235052.21050-5-david@fromorbit.com>
+In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
+References: <20170829235052.21050-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Chris Cottam <chris.cottam@bytemark.co.uk>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Aug 29, 2017 at 09:03:08AM -0700, Darrick J. Wong wrote:
-> First, should we land the incore extent map rework (not that I've seen a
-> patchset yet) so that the increased extent map fragmentation resulting
-> from cow/dedupe don't overwhelm the memory allocator with high order
-> allocations?  Incore extent map memory usage hasn't been an issue here...
+From: Dave Chinner <dchinner@redhat.com>
 
-Working on this now, but so far this hasn't been a major issue.
-The main workload where the extent list currently hurts and that
-prompted my work in this area doesn't even involve reflinks (sparse
-VM image).
+Abstract out the common subopt parsing code into a common function
+and type table so we can factor the parsing code. Add the function
+stubs in preparation for factoring.
 
-> Second, regarding realtime + reflink: Right now we don't forbid mounting
-> a filesystem with reflink enabled and a realtime device.  You can't have
-> an inode with both realtime and reflink flags set, so if future xfs
-> supports it, old kernels won't totally stumble over those inodes.
-> (Though, EFSCORRUPTED is a little rude.)  Is that ok? or should we (a)
-> make reflink work on realtime devices, (b) complain at mount time, or
-> (c) leave everything the way it is?
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 130 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 130 insertions(+)
 
-I think the current situation is fine - if we add reflinks on the RT
-device we can just add a ROCOMPAT flag.
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 2b264ec32974..022fb84016f6 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1467,6 +1467,136 @@ getstr(
+ 	return str;
+ }
+ 
++static int
++block_opts_parser(
++	struct opt_params	*opts,
++	int			subopt,
++	char			*value,
++	struct cli_params	*cli)
++{
++	return 0;
++}
++
++static int
++data_opts_parser(
++	struct opt_params	*opts,
++	int			subopt,
++	char			*value,
++	struct cli_params	*cli)
++{
++	return 0;
++}
++
++static int
++inode_opts_parser(
++	struct opt_params	*opts,
++	int			subopt,
++	char			*value,
++	struct cli_params	*cli)
++{
++	return 0;
++}
++
++static int
++log_opts_parser(
++	struct opt_params	*opts,
++	int			subopt,
++	char			*value,
++	struct cli_params	*cli)
++{
++	return 0;
++}
++
++static int
++meta_opts_parser(
++	struct opt_params	*opts,
++	int			subopt,
++	char			*value,
++	struct cli_params	*cli)
++{
++	return 0;
++}
++
++static int
++naming_opts_parser(
++	struct opt_params	*opts,
++	int			subopt,
++	char			*value,
++	struct cli_params	*cli)
++{
++	return 0;
++}
++
++static int
++rtdev_opts_parser(
++	struct opt_params	*opts,
++	int			subopt,
++	char			*value,
++	struct cli_params	*cli)
++{
++	return 0;
++}
++
++static int
++sector_opts_parser(
++	struct opt_params	*opts,
++	int			subopt,
++	char			*value,
++	struct cli_params	*cli)
++{
++	return 0;
++}
++
++struct subopts {
++	char		opt;
++	struct opt_params *opts;
++	int		(*parser)();
++} subopt_tab[] = {
++	{ 'b', &bopts, block_opts_parser },
++	{ 'd', &dopts, data_opts_parser },
++	{ 'i', &iopts, inode_opts_parser },
++	{ 'l', &lopts, log_opts_parser },
++	{ 'm', &mopts, meta_opts_parser },
++	{ 'n', &nopts, naming_opts_parser },
++	{ 'r', &ropts, rtdev_opts_parser },
++	{ 's', &sopts, sector_opts_parser },
++	{ '\0', NULL, NULL },
++};
++
++static void
++parse_subopts(
++	char		opt,
++	char		*arg,
++	struct cli_params *cli)
++{
++	struct subopts	*sop = &subopt_tab[0];
++	char		*p;
++	int		ret = 0;
++
++	while (sop->opts) {
++		if (sop->opt == opt)
++			break;
++		sop++;
++	}
++
++	/* should never happen */
++	if (!sop->opts)
++		return;
++
++	p = arg;
++	while (*p != '\0') {
++		char	**subopts = (char **)sop->opts->subopts;
++		char	*value;
++		int	subopt;
++
++		subopt = getsubopt(&p, subopts, &value);
++
++		ret = (sop->parser)(sop->opts, subopt, value, cli);
++		if (ret)
++			unknown(opt, value);
++	}
++}
++
+ int
+ main(
+ 	int			argc,
+-- 
+2.13.3
+
