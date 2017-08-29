@@ -1,96 +1,226 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:37239 "EHLO
-        mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751215AbdH2Ssu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 14:48:50 -0400
-Received: by mail-io0-f173.google.com with SMTP id d81so24518569ioj.4
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2017 11:48:50 -0700 (PDT)
+Received: from aserp1040.oracle.com ([141.146.126.69]:27514 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751186AbdH2StG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 14:49:06 -0400
+Date: Tue, 29 Aug 2017 11:48:57 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] xfs: consolidate the various page fault handlers
+Message-ID: <20170829184857.GB4757@magnolia>
+References: <20170829162613.27270-1-hch@lst.de>
+ <20170829162613.27270-3-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20170829044707.GP4757@magnolia>
-References: <1503956111-36652-1-git-send-email-keescook@chromium.org>
- <1503956111-36652-16-git-send-email-keescook@chromium.org>
- <20170828214957.GJ4757@magnolia> <CAGXu5j+pvxRjASUuBE49+uH34Mw26a4mtcWrZd=CEqcRHjetvA@mail.gmail.com>
- <20170829044707.GP4757@magnolia>
-From: Kees Cook <keescook@chromium.org>
-Date: Tue, 29 Aug 2017 11:48:49 -0700
-Message-ID: <CAGXu5jJX1DA9D1LtrKkNoBXKZEYhbSE148YmUOP=WXsBCFsCyw@mail.gmail.com>
-Subject: Re: [PATCH v2 15/30] xfs: Define usercopy region in xfs_inode slab cache
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170829162613.27270-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, David Windsor <dave@nullcore.net>, linux-xfs@vger.kernel.org, Linux-MM <linux-mm@kvack.org>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, jack@suse.cz
 
-On Mon, Aug 28, 2017 at 9:47 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Mon, Aug 28, 2017 at 02:57:14PM -0700, Kees Cook wrote:
->> On Mon, Aug 28, 2017 at 2:49 PM, Darrick J. Wong
->> <darrick.wong@oracle.com> wrote:
->> > On Mon, Aug 28, 2017 at 02:34:56PM -0700, Kees Cook wrote:
->> >> From: David Windsor <dave@nullcore.net>
->> >>
->> >> The XFS inline inode data, stored in struct xfs_inode_t field
->> >> i_df.if_u2.if_inline_data and therefore contained in the xfs_inode slab
->> >> cache, needs to be copied to/from userspace.
->> >>
->> >> cache object allocation:
->> >>     fs/xfs/xfs_icache.c:
->> >>         xfs_inode_alloc(...):
->> >>             ...
->> >>             ip = kmem_zone_alloc(xfs_inode_zone, KM_SLEEP);
->> >>
->> >>     fs/xfs/libxfs/xfs_inode_fork.c:
->> >>         xfs_init_local_fork(...):
->> >>             ...
->> >>             if (mem_size <= sizeof(ifp->if_u2.if_inline_data))
->> >>                     ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
->> >
->> > Hmm, what happens when mem_size > sizeof(if_inline_data)?  A slab object
->> > will be allocated for ifp->if_u1.if_data which can then be used for
->> > readlink in the same manner as the example usage trace below.  Does
->> > that allocated object have a need for a usercopy annotation like
->> > the one we're adding for if_inline_data?  Or is that already covered
->> > elsewhere?
->>
->> Yeah, the xfs helper kmem_alloc() is used in the other case, which
->> ultimately boils down to a call to kmalloc(), which is entirely
->> whitelisted by an earlier patch in the series:
->>
->> https://lkml.org/lkml/2017/8/28/1026
->
-> Ah.  It would've been helpful to have the first three patches cc'd to
-> the xfs list.  So basically this series establishes the ability to set
+On Tue, Aug 29, 2017 at 06:26:13PM +0200, Christoph Hellwig wrote:
+> Add a new __xfs_filemap_fault helper that implements all four page fault
+> callouts, and make these methods themselves small stubs that set the
+> correct write_fault flag, and exit early for the non-DAX case for the
+> hugepage related ones.
+> 
+> Also remove the extra size checking in the pfn_fault path, which is now
+> handled in the core DAX code.
+> 
+> Life would be so much simpler if we only had one method for all this.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-I went back and forth on that, and given all the things it touched, it
-seemed like too large a CC list. :) I can explicitly add the xfs list
-to the first three for any future versions.
+Looks ok, will test (again),
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> regions within a slab object into which copy_to_user can copy memory
-> contents, and vice versa.  Have you seen any runtime performance impact?
-> The overhead looks like it ought to be minimal.
-
-Under CONFIG_HARDENED_USERCOPY, there's no difference in performance
-between the earlier bounds checking (of the whole slab object) vs the
-new bounds checking (of the useroffset/usersize portion of the slab
-object). Perf difference of CONFIG_HARDENED_USERCOPY itself has proven
-hard to measure, which likely means it's very minimal.
-
->> (It's possible that at some future time we can start segregating
->> kernel-only kmallocs from usercopy-able kmallocs, but for now, there
->> are no plans for this.)
->
-> A pity.  It would be interesting to create no-usercopy versions of the
-> kmalloc-* slabs and see how much of XFS' memory consumption never
-> touches userspace buffers. :)
-
-There are plans for building either a new helper (kmalloc_usercopy())
-or adding a new flag (GFP_USERCOPY), but I haven't had time yet to
-come back around to it. I wanted to land this step first, and we could
-then move forward on the rest in future.
-
--Kees
-
--- 
-Kees Cook
-Pixel Security
+> ---
+>  fs/xfs/xfs_file.c  | 96 +++++++++++++++++++-----------------------------------
+>  fs/xfs/xfs_trace.h | 29 +++++++++++++++--
+>  2 files changed, 60 insertions(+), 65 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 8b0181c6d2a6..0debbc7e3f03 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1011,95 +1011,67 @@ xfs_file_llseek(
+>   *       page_lock (MM)
+>   *         i_lock (XFS - extent map serialisation)
+>   */
+> -
+> -/*
+> - * mmap()d file has taken write protection fault and is being made writable. We
+> - * can set the page state up correctly for a writable page, which means we can
+> - * do correct delalloc accounting (ENOSPC checking!) and unwritten extent
+> - * mapping.
+> - */
+> -STATIC int
+> -xfs_filemap_page_mkwrite(
+> -	struct vm_fault		*vmf)
+> +static int
+> +__xfs_filemap_fault(
+> +	struct vm_fault		*vmf,
+> +	enum page_entry_size	pe_size,
+> +	bool			write_fault)
+>  {
+>  	struct inode		*inode = file_inode(vmf->vma->vm_file);
+> +	struct xfs_inode	*ip = XFS_I(inode);
+>  	int			ret;
+>  
+> -	trace_xfs_filemap_page_mkwrite(XFS_I(inode));
+> +	trace_xfs_filemap_fault(ip, pe_size, write_fault);
+>  
+> -	sb_start_pagefault(inode->i_sb);
+> -	file_update_time(vmf->vma->vm_file);
+> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> +	if (write_fault) {
+> +		sb_start_pagefault(inode->i_sb);
+> +		file_update_time(vmf->vma->vm_file);
+> +	}
+>  
+> +	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+>  	if (IS_DAX(inode)) {
+> -		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
+> +		ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
+>  	} else {
+> -		ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
+> +		if (write_fault)
+> +			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
+> +		else
+> +			ret = filemap_fault(vmf);
+>  	}
+> -
+>  	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -	sb_end_pagefault(inode->i_sb);
+>  
+> +	if (write_fault)
+> +		sb_end_pagefault(inode->i_sb);
+>  	return ret;
+>  }
+>  
+> -STATIC int
+> +static int
+>  xfs_filemap_fault(
+>  	struct vm_fault		*vmf)
+>  {
+> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
+> -	int			ret;
+> -
+> -	trace_xfs_filemap_fault(XFS_I(inode));
+> -
+>  	/* DAX can shortcut the normal fault path on write faults! */
+> -	if ((vmf->flags & FAULT_FLAG_WRITE) && IS_DAX(inode))
+> -		return xfs_filemap_page_mkwrite(vmf);
+> -
+> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -	if (IS_DAX(inode))
+> -		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
+> -	else
+> -		ret = filemap_fault(vmf);
+> -	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -
+> -	return ret;
+> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
+> +			IS_DAX(file_inode(vmf->vma->vm_file)) &&
+> +			(vmf->flags & FAULT_FLAG_WRITE));
+>  }
+>  
+> -/*
+> - * Similar to xfs_filemap_fault(), the DAX fault path can call into here on
+> - * both read and write faults. Hence we need to handle both cases. There is no
+> - * ->huge_mkwrite callout for huge pages, so we have a single function here to
+> - * handle both cases here. @flags carries the information on the type of fault
+> - * occuring.
+> - */
+> -STATIC int
+> +static int
+>  xfs_filemap_huge_fault(
+>  	struct vm_fault		*vmf,
+>  	enum page_entry_size	pe_size)
+>  {
+> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
+> -	struct xfs_inode	*ip = XFS_I(inode);
+> -	int			ret;
+> -
+> -	if (!IS_DAX(inode))
+> +	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
+>  		return VM_FAULT_FALLBACK;
+>  
+> -	trace_xfs_filemap_huge_fault(ip);
+> -
+> -	if (vmf->flags & FAULT_FLAG_WRITE) {
+> -		sb_start_pagefault(inode->i_sb);
+> -		file_update_time(vmf->vma->vm_file);
+> -	}
+> -
+> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -	ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
+> -	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -
+> -	if (vmf->flags & FAULT_FLAG_WRITE)
+> -		sb_end_pagefault(inode->i_sb);
+> +	/* DAX can shortcut the normal fault path on write faults! */
+> +	return __xfs_filemap_fault(vmf, pe_size,
+> +			(vmf->flags & FAULT_FLAG_WRITE));
+> +}
+>  
+> -	return ret;
+> +static int
+> +xfs_filemap_page_mkwrite(
+> +	struct vm_fault		*vmf)
+> +{
+> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index bcc3cdf8e1c5..bae243ad7f3b 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -689,11 +689,34 @@ DEFINE_INODE_EVENT(xfs_inode_set_cowblocks_tag);
+>  DEFINE_INODE_EVENT(xfs_inode_clear_cowblocks_tag);
+>  DEFINE_INODE_EVENT(xfs_inode_free_cowblocks_invalid);
+>  
+> -DEFINE_INODE_EVENT(xfs_filemap_fault);
+> -DEFINE_INODE_EVENT(xfs_filemap_huge_fault);
+> -DEFINE_INODE_EVENT(xfs_filemap_page_mkwrite);
+>  DEFINE_INODE_EVENT(xfs_filemap_pfn_mkwrite);
+>  
+> +TRACE_EVENT(xfs_filemap_fault,
+> +	TP_PROTO(struct xfs_inode *ip, enum page_entry_size pe_size,
+> +		 bool write_fault),
+> +	TP_ARGS(ip, pe_size, write_fault),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(xfs_ino_t, ino)
+> +		__field(enum page_entry_size, pe_size)
+> +		__field(bool, write_fault)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+> +		__entry->ino = ip->i_ino;
+> +		__entry->pe_size = pe_size;
+> +		__entry->write_fault = write_fault;
+> +	),
+> +	TP_printk("dev %d:%d ino 0x%llx %s write_fault %d",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __entry->ino,
+> +		  __print_symbolic(__entry->pe_size,
+> +			{ PE_SIZE_PTE,	"PTE" },
+> +			{ PE_SIZE_PMD,	"PMD" },
+> +			{ PE_SIZE_PUD,	"PUD" }),
+> +		  __entry->write_fault)
+> +)
+> +
+>  DECLARE_EVENT_CLASS(xfs_iref_class,
+>  	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
+>  	TP_ARGS(ip, caller_ip),
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
