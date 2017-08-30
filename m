@@ -1,103 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:5084 "EHLO
-        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750762AbdIAB0V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 21:26:21 -0400
-Subject: Re: [PATCH v2] xfs: add online uevent for mount operation
-References: <1504189030-18608-1-git-send-email-houtao1@huawei.com>
- <20170831150334.GI3775@magnolia> <20170831233416.GU10621@dastard>
-From: Hou Tao <houtao1@huawei.com>
-Message-ID: <70654563-0abd-6786-ef64-a3df4ce5fa34@huawei.com>
-Date: Fri, 1 Sep 2017 09:26:08 +0800
+Received: from mx2.suse.de ([195.135.220.15]:45953 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750761AbdH3WK5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 Aug 2017 18:10:57 -0400
+Date: Thu, 31 Aug 2017 00:10:56 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
+Message-ID: <20170830221056.GU27873@wotan.suse.de>
+References: <20170829235052.21050-1-david@fromorbit.com>
+ <20170830041635.GK27873@wotan.suse.de>
+ <20170830054420.GI10621@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20170831233416.GU10621@dastard>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170830054420.GI10621@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
 
-Hi,
+On Wed, Aug 30, 2017 at 03:44:20PM +1000, Dave Chinner wrote:
+> On Wed, Aug 30, 2017 at 06:16:35AM +0200, Luis R. Rodriguez wrote:
+> > On Wed, Aug 30, 2017 at 09:50:10AM +1000, Dave Chinner wrote:
+> > > Everyone who tries to modify mkfs quickly learns that it is a pile
+> > > of spaghetti, the only difference in opinion is whether it is a
+> > > steaming, cold or rotten pile. This patchset attempts to untangle
+> > > the ball of pasta and turn it into a set of clear, obvious
+> > > operations that lead to a filesystem being formatted correctly.
+> > 
+> > Yay.
+> > 
+> > > The patch series is really in three parts, splitting the code up
+> > > into roughly three modules.
+> > 
+> > Any reason you ended up with 3 instead of 4 as originally envisioned?
+> 
+> Because the 4th module - config file support - doesn't exist yet.
 
-On 2017/9/1 7:34, Dave Chinner wrote:
->>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
->>> index 3a3812b4..6f8351c 100644
->>> --- a/fs/xfs/xfs_super.c
->>> +++ b/fs/xfs/xfs_super.c
->>> @@ -70,6 +70,11 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
->>>  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
->>>  #endif
->>>  
->>> +enum {
->>> +	XFS_UEVENT_ENV_CNT = 2,
->>
->> XFS_UEVENT_MAX_ENV_COUNT ?
-> 
-> Why 2 when there's only one environment string passed?
-Will fix them, I take the last NULL pointer into account, and
-Yes, "XFS_UEVENT_MAX_ENV_COUNT" is a better name.
+To be fair you had itemized before:
 
->>> +	XFS_UEVENT_UUID_LEN = UUID_STRING_LEN + 6,
-> 
-> And the magic number needs a comment.
-> 
-> Actually, I think it needs more than this - it's tightly bound to
-> the implementation in xfs_fs_uevent(), so this enum should be
-> defined there, not as a global all this distance away.....
-OK, I will move it into xfs_fs_uevent().
+  1) Settings default - struct mkfs_default_params
+  2) CLI parsing - struct cli_params
+  3) Validation + calculation - struct mkfs_params
+  4) On disk formatting
 
->>> +};
->>> +
->>>  /*
->>>   * Table driven mount option parser.
->>>   */
->>> @@ -1530,6 +1535,28 @@ xfs_destroy_percpu_counters(
->>>  	percpu_counter_destroy(&mp->m_fdblocks);
->>>  }
->>>  
->>> +static void
->>> +xfs_fs_uevent(
->>> +	struct xfs_mount	*mp,
->>> +	enum kobject_action	action)
->>> +{
->>> +	int err;
->>> +	char *envp[XFS_UEVENT_ENV_CNT];
->>> +	int i = 0;
-> 
-> Indent the variables to match the function declaration.
-I will fix them. I didn't event notice the indentations of these variables before.
+> > > The result is three modules - input parsing, validation+calculations
+> > > and formatting - with well defined data flow between them.
 
->>> +
->>> +	if (!uuid_is_null(&mp->m_super->s_uuid)) {
-> 
-> This will never be false. XFS filesystems should always have a valid
-> UUID.
-A null uuid is possible if we use "nouuid" to mount a XFS filesystem, so
-the check is still needed.
+And you instead ended up with:
 
-> 
->>> +		char uuid[XFS_UEVENT_UUID_LEN];
->>> +
->>> +		snprintf(uuid, sizeof(uuid), "UUID=%pUb", &mp->m_super->s_uuid);
-> 
-> That buffer is not a uuid. i.e. this code looks to me like it is
-> encoding a string larger than a uuid into a uuid that is the
-> size of a uuid. Perhaps something like this?
-> 
-> 		char *id = "ID_FS_UUID=";
-> 		char buf[UUID_STRING_LEN + strlen(id) + 1] = {};
-> 
-> 		snprintf(buf, sizeof(buf), "%s%pUb", id, &mp->m_super->s_uuid);
-> 
-Accepted, much clearer than the original code.
+  1) Input parsing - struct mkfs_default_params and I guess struct cli_params
+  2) Validation + calculation - struct mkfs_params
+  3) On disk formatting
 
->> Should this be "ID_FS_UUID=%pUb" to keep the name consistent with
->> what blkid injects into the udev environment for block devices?
+Hence my question.
+
+> Maybe you can come up with a way of automating this, but for a
+> one-off piece of work that affects a point-in-time snapshot of mkfs
+> functionality, I'm not sure it's worth the effort to try to make a
+> generic test to do this sort of thing.
+
+In Dave we trust!
+
+> > > finally, one for config file support),
+> > > but otherwise the majority of the factoring work is now complete.
+> > > 
+> > > Comments, flames, etc all welcome.
+> > 
+> > Just one thing, got a git tree I can use? I honestly can't be bothered
+> > reviewing the delta in between, I just want to move on with life. Thanks
+> > for cleaning up the manure pile buttress.
 > 
-> Sounds like a good idea to me...
-OK, I will check blkid and fix the name of the uuid environment accordingly.
+> Nope, not right now. Tag all the patches, save them to an mbox
+> file, run 'git-am <mbox-file>' to apply them all. Takes all of 20s
+> to do with mutt....
 
-Tao
+Turns out mutt re-orders tagged messages in what I think may be the order you
+got them in so the order on the input output filename may differ from the patch
+order intent. Even when I manually sort them and apply them, the patches failed
+on both origin/master and origin/for-next, so I must be doing something wrong
+or using an incorrect branch or commit ID. What branch and commit ID should I
+use?
 
+It also seems I didn't get patch #20 in my inbox, could you resend?
+
+On the latest origin/for-next applying your patches fails at patch #3, you need
+git am -3, but then after that it fails at patch #9 even with git am -3.
+
+  Luis
