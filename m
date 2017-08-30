@@ -1,162 +1,232 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:40488 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751916AbdH2XvG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:06 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1dmqHX-0002du-Cu
-        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.89)
-        (envelope-from <david@fromorbit.com>)
-        id 1dmqHX-0005X8-Bo
-        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 37/42] mkfs: rework imaxpct calculation
-Date: Wed, 30 Aug 2017 09:50:47 +1000
-Message-Id: <20170829235052.21050-38-david@fromorbit.com>
-In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
-References: <20170829235052.21050-1-david@fromorbit.com>
+Received: from mx2.suse.de ([195.135.220.15]:58919 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750835AbdH3Jes (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 Aug 2017 05:34:48 -0400
+Date: Wed, 30 Aug 2017 11:34:45 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 2/2] xfs: consolidate the various page fault handlers
+Message-ID: <20170830093445.GB28354@quack2.suse.cz>
+References: <20170829162613.27270-1-hch@lst.de>
+ <20170829162613.27270-3-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170829162613.27270-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, jack@suse.cz
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue 29-08-17 18:26:13, Christoph Hellwig wrote:
+> Add a new __xfs_filemap_fault helper that implements all four page fault
+> callouts, and make these methods themselves small stubs that set the
+> correct write_fault flag, and exit early for the non-DAX case for the
+> hugepage related ones.
+> 
+> Also remove the extra size checking in the pfn_fault path, which is now
+> handled in the core DAX code.
+> 
+> Life would be so much simpler if we only had one method for all this.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- mkfs/xfs_mkfs.c | 65 +++++++++++++++++++++++++--------------------------------
- 1 file changed, 29 insertions(+), 36 deletions(-)
+Looks good to me. You can add:
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 1ab9e98b8b02..ae6514cb0a1f 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1055,28 +1055,6 @@ validate_log_size(uint64_t logblocks, int blocklog, int min_logblocks)
- 	}
- }
- 
--static int
--calc_default_imaxpct(
--	int		blocklog,
--	uint64_t	dblocks)
--{
--	/*
--	 * This returns the % of the disk space that is used for
--	 * inodes, it changes relatively to the FS size:
--	 *  - over  50 TB, use 1%,
--	 *  - 1TB - 50 TB, use 5%,
--	 *  - under  1 TB, use XFS_DFL_IMAXIMUM_PCT (25%).
--	 */
--
--	if (dblocks < TERABYTES(1, blocklog)) {
--		return XFS_DFL_IMAXIMUM_PCT;
--	} else if (dblocks < TERABYTES(50, blocklog)) {
--		return 5;
--	}
--
--	return 1;
--}
--
- static void
- validate_ag_geometry(
- 	int		blocklog,
-@@ -2866,6 +2844,31 @@ validate:
- }
- 
- static void
-+calculate_imaxpct(
-+	struct mkfs_params	*cfg,
-+	struct cli_params	*cli)
-+{
-+	cfg->imaxpct = cli->imaxpct;
-+	if (cfg->imaxpct)
-+		return;
-+
-+	/*
-+	 * This returns the % of the disk space that is used for
-+	 * inodes, it changes relatively to the FS size:
-+	 *  - over  50 TB, use 1%,
-+	 *  - 1TB - 50 TB, use 5%,
-+	 *  - under  1 TB, use XFS_DFL_IMAXIMUM_PCT (25%).
-+	 */
-+
-+	if (cfg->dblocks < TERABYTES(1, cfg->blocklog))
-+		cfg->imaxpct = XFS_DFL_IMAXIMUM_PCT;
-+	else if (cfg->dblocks < TERABYTES(50, cfg->blocklog))
-+		cfg->imaxpct = 5;
-+	else
-+		cfg->imaxpct = 1;
-+}
-+
-+static void
- print_mkfs_cfg(
- 	struct mkfs_params	*cfg,
- 	char			*dfile,
-@@ -3505,7 +3508,6 @@ main(
- 	int			force_overwrite;
- 	struct fsxattr		fsx;
- 	int			imaxpct;
--	int			imflag;
- 	int			inodelog;
- 	int			inopblock;
- 	int			isize;
-@@ -3601,7 +3603,6 @@ main(
- 	cli.loginternal = 1;	/* internal by default */
- 
- 	agsize = dblocks = 0;
--	imflag = 0;
- 	laflag = lsflag = 0;
- 	loginternal = 1;
- 	logagno = logblocks = rtblocks = rtextblocks = 0;
-@@ -3624,6 +3625,7 @@ main(
- 			force_overwrite = 1;
- 			break;
- 		case 'b':
-+		case 'i':
- 		case 'n':
- 		case 'r':
- 		case 's':
-@@ -3638,14 +3640,6 @@ main(
- 			fsx.fsx_extsize = cli.fsx.fsx_extsize;
- 			/* end temp don't break code */
- 			break;
--		case 'i':
--			parse_subopts(c, optarg, &cli);
--
--			/* temp don't break code */
--			imaxpct = cli.imaxpct;
--			imflag = cli_opt_set(&iopts, I_MAXPCT);
--			/* end temp don't break code */
--			break;
- 		case 'l':
- 			parse_subopts(c, optarg, &cli);
- 
-@@ -3746,6 +3740,8 @@ main(
- 	calculate_initial_ag_geometry(&cfg, &cli);
- 	align_ag_geometry(&cfg);
- 
-+	calculate_imaxpct(&cfg, &cli);
-+
- 	/* temp don't break code */
- 	sectorsize = cfg.sectorsize;
- 	sectorlog = cfg.sectorlog;
-@@ -3771,12 +3767,9 @@ main(
- 	lsunit = cfg.lsunit;
- 	agsize = cfg.agsize;
- 	agcount = cfg.agcount;
-+	imaxpct = cfg.imaxpct;
- 	/* end temp don't break code */
- 
--
--	if (!imflag)
--		imaxpct = calc_default_imaxpct(blocklog, dblocks);
--
- 	min_logblocks = max_trans_res(agsize,
- 				   sb_feat.crcs_enabled, sb_feat.dir_version,
- 				   sectorlog, blocklog, inodelog, dirblocklog,
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+Just I'd note that the check for IS_DAX in xfs_filemap_fault() (to set
+write_fault argument) is racy wrt changing of the inode flag (as it was
+before) but that's a problem to be fixed separately I guess.
+
+								Honza
+
+> ---
+>  fs/xfs/xfs_file.c  | 96 +++++++++++++++++++-----------------------------------
+>  fs/xfs/xfs_trace.h | 29 +++++++++++++++--
+>  2 files changed, 60 insertions(+), 65 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 8b0181c6d2a6..0debbc7e3f03 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1011,95 +1011,67 @@ xfs_file_llseek(
+>   *       page_lock (MM)
+>   *         i_lock (XFS - extent map serialisation)
+>   */
+> -
+> -/*
+> - * mmap()d file has taken write protection fault and is being made writable. We
+> - * can set the page state up correctly for a writable page, which means we can
+> - * do correct delalloc accounting (ENOSPC checking!) and unwritten extent
+> - * mapping.
+> - */
+> -STATIC int
+> -xfs_filemap_page_mkwrite(
+> -	struct vm_fault		*vmf)
+> +static int
+> +__xfs_filemap_fault(
+> +	struct vm_fault		*vmf,
+> +	enum page_entry_size	pe_size,
+> +	bool			write_fault)
+>  {
+>  	struct inode		*inode = file_inode(vmf->vma->vm_file);
+> +	struct xfs_inode	*ip = XFS_I(inode);
+>  	int			ret;
+>  
+> -	trace_xfs_filemap_page_mkwrite(XFS_I(inode));
+> +	trace_xfs_filemap_fault(ip, pe_size, write_fault);
+>  
+> -	sb_start_pagefault(inode->i_sb);
+> -	file_update_time(vmf->vma->vm_file);
+> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> +	if (write_fault) {
+> +		sb_start_pagefault(inode->i_sb);
+> +		file_update_time(vmf->vma->vm_file);
+> +	}
+>  
+> +	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+>  	if (IS_DAX(inode)) {
+> -		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
+> +		ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
+>  	} else {
+> -		ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
+> +		if (write_fault)
+> +			ret = iomap_page_mkwrite(vmf, &xfs_iomap_ops);
+> +		else
+> +			ret = filemap_fault(vmf);
+>  	}
+> -
+>  	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -	sb_end_pagefault(inode->i_sb);
+>  
+> +	if (write_fault)
+> +		sb_end_pagefault(inode->i_sb);
+>  	return ret;
+>  }
+>  
+> -STATIC int
+> +static int
+>  xfs_filemap_fault(
+>  	struct vm_fault		*vmf)
+>  {
+> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
+> -	int			ret;
+> -
+> -	trace_xfs_filemap_fault(XFS_I(inode));
+> -
+>  	/* DAX can shortcut the normal fault path on write faults! */
+> -	if ((vmf->flags & FAULT_FLAG_WRITE) && IS_DAX(inode))
+> -		return xfs_filemap_page_mkwrite(vmf);
+> -
+> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -	if (IS_DAX(inode))
+> -		ret = dax_iomap_fault(vmf, PE_SIZE_PTE, &xfs_iomap_ops);
+> -	else
+> -		ret = filemap_fault(vmf);
+> -	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -
+> -	return ret;
+> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
+> +			IS_DAX(file_inode(vmf->vma->vm_file)) &&
+> +			(vmf->flags & FAULT_FLAG_WRITE));
+>  }
+>  
+> -/*
+> - * Similar to xfs_filemap_fault(), the DAX fault path can call into here on
+> - * both read and write faults. Hence we need to handle both cases. There is no
+> - * ->huge_mkwrite callout for huge pages, so we have a single function here to
+> - * handle both cases here. @flags carries the information on the type of fault
+> - * occuring.
+> - */
+> -STATIC int
+> +static int
+>  xfs_filemap_huge_fault(
+>  	struct vm_fault		*vmf,
+>  	enum page_entry_size	pe_size)
+>  {
+> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
+> -	struct xfs_inode	*ip = XFS_I(inode);
+> -	int			ret;
+> -
+> -	if (!IS_DAX(inode))
+> +	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
+>  		return VM_FAULT_FALLBACK;
+>  
+> -	trace_xfs_filemap_huge_fault(ip);
+> -
+> -	if (vmf->flags & FAULT_FLAG_WRITE) {
+> -		sb_start_pagefault(inode->i_sb);
+> -		file_update_time(vmf->vma->vm_file);
+> -	}
+> -
+> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -	ret = dax_iomap_fault(vmf, pe_size, &xfs_iomap_ops);
+> -	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -
+> -	if (vmf->flags & FAULT_FLAG_WRITE)
+> -		sb_end_pagefault(inode->i_sb);
+> +	/* DAX can shortcut the normal fault path on write faults! */
+> +	return __xfs_filemap_fault(vmf, pe_size,
+> +			(vmf->flags & FAULT_FLAG_WRITE));
+> +}
+>  
+> -	return ret;
+> +static int
+> +xfs_filemap_page_mkwrite(
+> +	struct vm_fault		*vmf)
+> +{
+> +	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index bcc3cdf8e1c5..bae243ad7f3b 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -689,11 +689,34 @@ DEFINE_INODE_EVENT(xfs_inode_set_cowblocks_tag);
+>  DEFINE_INODE_EVENT(xfs_inode_clear_cowblocks_tag);
+>  DEFINE_INODE_EVENT(xfs_inode_free_cowblocks_invalid);
+>  
+> -DEFINE_INODE_EVENT(xfs_filemap_fault);
+> -DEFINE_INODE_EVENT(xfs_filemap_huge_fault);
+> -DEFINE_INODE_EVENT(xfs_filemap_page_mkwrite);
+>  DEFINE_INODE_EVENT(xfs_filemap_pfn_mkwrite);
+>  
+> +TRACE_EVENT(xfs_filemap_fault,
+> +	TP_PROTO(struct xfs_inode *ip, enum page_entry_size pe_size,
+> +		 bool write_fault),
+> +	TP_ARGS(ip, pe_size, write_fault),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(xfs_ino_t, ino)
+> +		__field(enum page_entry_size, pe_size)
+> +		__field(bool, write_fault)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+> +		__entry->ino = ip->i_ino;
+> +		__entry->pe_size = pe_size;
+> +		__entry->write_fault = write_fault;
+> +	),
+> +	TP_printk("dev %d:%d ino 0x%llx %s write_fault %d",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __entry->ino,
+> +		  __print_symbolic(__entry->pe_size,
+> +			{ PE_SIZE_PTE,	"PTE" },
+> +			{ PE_SIZE_PMD,	"PMD" },
+> +			{ PE_SIZE_PUD,	"PUD" }),
+> +		  __entry->write_fault)
+> +)
+> +
+>  DECLARE_EVENT_CLASS(xfs_iref_class,
+>  	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
+>  	TP_ARGS(ip, caller_ip),
+> -- 
+> 2.11.0
+> 
 -- 
-2.13.3
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
