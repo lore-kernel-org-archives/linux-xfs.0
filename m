@@ -1,12 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24288 "EHLO mga09.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:52986 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750941AbdH3TuM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 Aug 2017 15:50:12 -0400
-Subject: [PATCH v3 0/4] fs, dax: lookup dax_device at mount time
+        id S1750758AbdH3TuR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 Aug 2017 15:50:17 -0400
+Subject: [PATCH v3 1/4] dax: introduce a fs_dax_get_by_bdev() helper
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 30 Aug 2017 12:43:47 -0700
-Message-ID: <150412222686.10177.8031279869867070772.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Wed, 30 Aug 2017 12:43:52 -0700
+Message-ID: <150412223265.10177.11004612169458058274.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150412222686.10177.8031279869867070772.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <150412222686.10177.8031279869867070772.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -14,49 +16,74 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, linux-nvdimm@lists.01.org
 
-Changes since v2 [1]:
-* Split fs_dax_get_by_bdev() to its own patch (Christoph)
+Add a helper that can replace the following common pattern:
 
-* Push dax_device reference management into <fs>_{fill,put}_super()
-  rather than the generic vfs. (Christoph)
+	if (blk_queue_dax(bdev->bd_queue))
+		fs_dax_get_by_host(bdev->bd_disk->disk_name);
 
-[1]: https://lists.01.org/pipermail/linux-nvdimm/2017-August/012133.html
+This will be used to move dax_device lookup from iomap-operation time to
+fs-mount time.
 
+Cc: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
-
-Christoph notes:
-
-    I just noticed that we now do a fs_dax_get_by_host in every
-    iomap_begin call for DAX. This function iterates a list, does a
-    string compared and igrab. I really think we need to cache this in
-    the superblock (possible even the fs superblock) similar to what we
-    do for the block device.
-
-This passes the libnvdimm unit tests.
-
----
-
-Dan Williams (4):
-      dax: introduce a fs_dax_get_by_bdev() helper
-      xfs: perform dax_device lookup at mount
-      ext2: perform dax_device lookup at mount
-      ext4: perform dax_device lookup at mount
-
-
  drivers/dax/super.c |   10 ++++++++++
- fs/ext2/ext2.h      |    1 +
- fs/ext2/inode.c     |   11 +++--------
- fs/ext2/super.c     |    5 +++++
- fs/ext4/ext4.h      |    1 +
- fs/ext4/inode.c     |   11 +++--------
- fs/ext4/super.c     |    5 +++++
- fs/xfs/xfs_aops.c   |   13 +++++++++++++
- fs/xfs/xfs_aops.h   |    1 +
- fs/xfs/xfs_buf.c    |    4 +++-
- fs/xfs/xfs_buf.h    |    3 ++-
- fs/xfs/xfs_iomap.c  |   10 +---------
- fs/xfs/xfs_super.c  |   25 +++++++++++++++++++++----
  include/linux/dax.h |    6 ++++++
- 14 files changed, 75 insertions(+), 31 deletions(-)
+ 2 files changed, 16 insertions(+)
+
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index 938eb4868f7f..b699aac268a6 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -46,6 +46,8 @@ void dax_read_unlock(int id)
+ EXPORT_SYMBOL_GPL(dax_read_unlock);
+ 
+ #ifdef CONFIG_BLOCK
++#include <linux/blkdev.h>
++
+ int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
+ 		pgoff_t *pgoff)
+ {
+@@ -59,6 +61,14 @@ int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
+ }
+ EXPORT_SYMBOL(bdev_dax_pgoff);
+ 
++struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
++{
++	if (!blk_queue_dax(bdev->bd_queue))
++		return NULL;
++	return fs_dax_get_by_host(bdev->bd_disk->disk_name);
++}
++EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
++
+ /**
+  * __bdev_dax_supported() - Check if the device supports dax for filesystem
+  * @sb: The superblock of the device
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index df97b7af7e2c..ac8afa18f707 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -57,6 +57,7 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
+ 	put_dax(dax_dev);
+ }
+ 
++struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
+ #else
+ static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
+ {
+@@ -71,6 +72,11 @@ static inline struct dax_device *fs_dax_get_by_host(const char *host)
+ static inline void fs_put_dax(struct dax_device *dax_dev)
+ {
+ }
++
++static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
++{
++	return NULL;
++}
+ #endif
+ 
+ int dax_read_lock(void);
+
