@@ -1,102 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52492 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750761AbdHaAFV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 Aug 2017 20:05:21 -0400
-Date: Thu, 31 Aug 2017 02:05:19 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
-Message-ID: <20170831000519.GW27873@wotan.suse.de>
-References: <20170829235052.21050-1-david@fromorbit.com>
- <20170830041635.GK27873@wotan.suse.de>
- <20170830054420.GI10621@dastard>
- <20170830221056.GU27873@wotan.suse.de>
- <20170830232216.GM10621@dastard>
+Received: from sandeen.net ([63.231.237.45]:32988 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751366AbdH3NyH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 Aug 2017 09:54:07 -0400
+Subject: Re: [PATCH] mkfs.xfs: Don't stagger AG for a single disk
+References: <1504066712-26973-1-git-send-email-ddouwsma@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <9aacc5d8-c935-24f0-4a0b-89993dd48769@sandeen.net>
+Date: Wed, 30 Aug 2017 08:54:06 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170830232216.GM10621@dastard>
+In-Reply-To: <1504066712-26973-1-git-send-email-ddouwsma@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
+To: Donald Douwsma <ddouwsma@redhat.com>, linux-xfs@vger.kernel.org
 
-On Thu, Aug 31, 2017 at 09:22:16AM +1000, Dave Chinner wrote:
-> On Thu, Aug 31, 2017 at 12:10:56AM +0200, Luis R. Rodriguez wrote:
-> > On Wed, Aug 30, 2017 at 03:44:20PM +1000, Dave Chinner wrote:
-> > > Maybe you can come up with a way of automating this, but for a
-> > > one-off piece of work that affects a point-in-time snapshot of mkfs
-> > > functionality, I'm not sure it's worth the effort to try to make a
-> > > generic test to do this sort of thing.
-> > 
-> > In Dave we trust!
+On 8/29/17 11:18 PM, Donald Douwsma wrote:
+> When sunit and swidth are used mkfs.xfs tries to avoid all allocation
+> groups aligning on the same stripe and will attempt to stagger them
+> across the stripes that make up swidth.  If there is only one stripe
+> then there is no benefit in this optimisation.
 > 
-> No, definitely don't do that.  Don't trust a damn thing I do - I'm
-> full of dangerous ideas, I write shit code and should be kept on a
-> short leash at all times.....
-
-Well its great you have a job then!
-
-> > > > > finally, one for config file support),
-> > > > > but otherwise the majority of the factoring work is now complete.
-> > > > > 
-> > > > > Comments, flames, etc all welcome.
-> > > > 
-> > > > Just one thing, got a git tree I can use? I honestly can't be bothered
-> > > > reviewing the delta in between, I just want to move on with life. Thanks
-> > > > for cleaning up the manure pile buttress.
-> > > 
-> > > Nope, not right now. Tag all the patches, save them to an mbox
-> > > file, run 'git-am <mbox-file>' to apply them all. Takes all of 20s
-> > > to do with mutt....
-> > 
-> > Turns out mutt re-orders tagged messages
+> $ truncate -s10G xfs_10G_su256k_sw1.image
+> $ mkfs.xfs -d su=256k,sw=1 xfs_10G_su256k_sw1.image
+> meta-data=xfs_10G_su256k_sw1.image isize=512    agcount=16, agsize=163776 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=0, sparse=0
+> data     =                       bsize=4096   blocks=2620416, imaxpct=25
+>          =                       sunit=64     swidth=64 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> log      =internal log           bsize=4096   blocks=2560, version=2
+>          =                       sectsz=512   sunit=64 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
 > 
-> It does? I've never come across that. I always tag the entire thread
-> they've always come out in the correct sent order for me. And I've
-> been doing that for many, many years....
-
-Yeah the order also comes out different on the thread on mutt for me,
-it turns out I have:
-
-set sort_aux=last-date-received
-
-And you need:
-
-set sort_aux=date
-
-which is the default.
-
-> > in what I think may be the order you got them in so the order on
-> > the input output filename may differ from the patch order intent.
-> > Even when I manually sort them and apply them, the patches failed
-> > on both origin/master and origin/for-next, so I must be doing
-> > something wrong or using an incorrect branch or commit ID. What
-> > branch and commit ID should I use?
+> A side effect of the optimisation is that the size adjustment used to stager
+> the allocation groups causes the last sunit of storage to be unused.
 > 
-> Applies to:
+> $ echo $((2620416*4096))
+> 10733223936
+> $ ls -l xfs_10G_su256k_sw1.image
+> -rw-rw-r--. 1 test test 10737418240 Aug 30 10:54 xfs_10G_su256k_sw1.image
 > 
-> $ glo -n 1 origin/for-next
-> 3540b418ba48 xfs_db: btdump should avoid eval for push and pop of cursor
-> $
+> Skip this optimisation when sunit == swidth.
 > 
-> I forgot to update the branch before my last pass over the
-> patchset...
+> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+
+Interesting.  Yeah, I suppose this makes sense, though I'm surprised
+anyone would notice.  :)
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+Thanks,
+-Eric
+
+> ---
+>  mkfs/xfs_mkfs.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> > It also seems I didn't get patch #20 in my inbox, could you
-> > resend?
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index b5c3a57..35dae48 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2534,7 +2534,9 @@ reported by the device (%u).\n"),
+>  				}
+>  			}
+>  		}
+> -		if (dswidth && ((agsize % dswidth) == 0) && (agcount > 1)) {
+> +		if (dswidth && ((agsize % dswidth) == 0)
+> +			    && (dswidth != dsunit)
+> +			    && (agcount > 1)) {
+>  			/* This is a non-optimal configuration because all AGs
+>  			 * start on the same disk in the stripe.  Changing
+>  			 * the AG size by one sunit will guarantee that this
 > 
-> Probably best in one-off cases like this is to grab it from the
-> archive - the whole patchset made it back to me from the list, so it
-> should be in the archive. If it's not, then we've got a more general
-> list delivery problem rather than it just being a problem somewhere
-> in your mail delivery path...
-
-One-off, I definitely don't have that patch but it is in the archive.
-
-For those lazy:
-
-https://gitlab.com/mcgrof/xfsprogs-dev/tree/20170830-dave-mkfs
-
-  Luis
