@@ -1,138 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f179.google.com ([209.85.128.179]:34820 "EHLO
-        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751317AbdH3NiB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 09:38:01 -0400
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:38892 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751386AbdH3OvW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 10:51:22 -0400
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH] xfs: fix incorrect log_flushed on fsync
-Date: Wed, 30 Aug 2017 16:38:22 +0300
-Message-Id: <1504100302-3297-1-git-send-email-amir73il@gmail.com>
+Subject: [PATCH v2 00/14] Crash consistency xfstest using dm-log-writes
+Date: Wed, 30 Aug 2017 17:51:32 +0300
+Message-Id: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Josef Bacik <jbacik@fb.com>, stable@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-When calling into _xfs_log_force{,_lsn}() with a pointer
-to log_flushed variable, log_flushed will be set to 1 if:
-1. xlog_sync() is called to flush the active log buffer
-AND/OR
-2. xlog_wait() is called to wait on a syncing log buffers
+Hi all,
 
-xfs_file_fsync() checks the value of log_flushed after
-_xfs_log_force_lsn() call to optimize away an explicit
-PREFLUSH request to the data block device after writing
-out all the file's pages to disk.
+This is the 2nd revision of crash consistency patch set.
+The main thing that changed since v1 is my confidence in the failures
+reported by the test, along with some more debugging options for
+running the test tools.
 
-This optimization is incorrect in the following sequence of events:
+I've collected these patches that have been sitting in Josef Bacik's
+tree for a few years and kicked them a bit into shape.
+The dm-log-writes target has been merged to kernel v4.1, see:
+https://github.com/torvalds/linux/blob/master/Documentation/device-mapper/log-writes.txt
 
- Task A                    Task B
- -------------------------------------------------------
- xfs_file_fsync()
-   _xfs_log_force_lsn()
-     xlog_sync()
-        [submit PREFLUSH] 
-                           xfs_file_fsync()
-                             file_write_and_wait_range()
-                               [submit WRITE X]
-                               [endio  WRITE X]
-                             _xfs_log_force_lsn()
-                               xlog_wait()
-        [endio  PREFLUSH]
+For this posting, I kept the random seeds constant for the test.
+I set these constant seeds after running with random seed for a little
+while and getting failure reports. With the current values in the test
+I was able to reproduce at high probablity failures with xfs, ext4 and btrfs.
+The probablity of reproducing the failure is higher on a spinning disk.
 
-The write X is not guarantied to be on persistent storage
-when PREFLUSH request in completed, because write A was submitted
-after the PREFLUSH request, but xfs_file_fsync() of task A will
-be notified of log_flushed=1 and will skip explicit flush.
+For xfs, I posted a fix for potential data loss post fsync+crash.
+For ext4, I posted a reliable reproducer using dm-flakey.
+For btrfs, I shared the recorded log with Josef.
 
-If the system crashes after fsync of task A, write X may not be
-present on disk after reboot.
+There is an outstanding problem with the test - when I run it with
+kvm-xfstests, the test halts and I get soft lockup of log_writes_kthread.
+I suppose its a bug in dm-log-writes with some kernel config or with virtio
+I wasn't able to determine the reason and have little time to debug this.
 
-This bug was discovered and demonstrated using Josef Bacik's
-dm-log-writes target, which can be used to record block io operations
-and then replay a subset of these operations onto the target device.
-The test goes something like this:
-- Use fsx to execute ops of a file and record ops on log device
-- Every now and then fsync the file, store md5 of file and mark
-  the location in the log
-- Then replay log onto device for each mark, mount fs and compare
-  md5 of file to stored value
+Since dm-log-writes is anyway in upstream kernel, I don't think a bug
+in dm-log-writes for a certain config is a reason to block this xfstest
+from being merged.
+Anyway, I would be glad if someone could take a look at the soft lockup
+issue. Josef?
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Josef Bacik <jbacik@fb.com>
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
-
-Christoph, Dave,
-
-It's hard to believe, but I think the reported bug has been around
-since 2005 f538d4da8d52 ("[XFS] write barrier support"), but I did
-not try to test old kernels.
-
-I tripped over this aleged bug a week ago when I started testing
-crash consistecy with dm-log-writes:
-https://marc.info/?l=linux-fsdevel&m=150350333427447&w=2
-Since then, I have been trying to prove that dm-log-writes was
-false accusing, but turned out that it wasn't.
-
-The reproducer is an xfstest, which I am going to re-post soon
-and is also available here:
-https://github.com/amir73il/xfstests/commits/dm-log-writes
-On a system with spinning disk it reproduces the issue with close
-100% probability within less than a minute.
-
-Anyway, with Darrick going on vacation, let's expedite review
-of this fix and try to merge some fix for v4.14-rc1 (although this
-bug fix may be eligible to later rc's as well).
-
-The change obviously changes behavior for the worse for workload
-of intensive parallel fsyncing tasks, but I don't see another quick
-way to fix correctness without hurting this workload.
-It might be worth to get a feedback from file_write_and_wait_range(),
-whether dirty pages writes have been issued at all.
-
-I started running full xftests cycle, but wanted to send this one out
-early for comments. I can test other patches if needed.
-
-Cheers,
+Thanks,
 Amir.
 
- fs/xfs/xfs_log.c | 7 -------
- 1 file changed, 7 deletions(-)
+Amir Goldstein (14):
+  common/rc: convert some egrep to grep
+  common/rc: fix _require_xfs_io_command params check
+  fsx: fixes to random seed
+  fsx: fix path of .fsx* files
+  fsx: fix compile warnings
+  fsx: add support for integrity check with dm-log-writes target
+  fsx: add optional logid prefix to log messages
+  fsx: add support for --record-ops
+  fsx: add support for -g filldata
+  log-writes: add replay-log program to replay dm-log-writes target
+  replay-log: output log replay offset in verbose mode
+  replay-log: add support for replaying ops in target device range
+  fstests: add support for working with dm-log-writes target
+  fstests: add crash consistency fsx test using dm-log-writes
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 0053bcf..ec159c5 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -3342,8 +3342,6 @@ _xfs_log_force(
- 		 */
- 		if (iclog->ic_state & XLOG_STATE_IOERROR)
- 			return -EIO;
--		if (log_flushed)
--			*log_flushed = 1;
- 	} else {
- 
- no_sleep:
-@@ -3447,8 +3445,6 @@ _xfs_log_force_lsn(
- 
- 				xlog_wait(&iclog->ic_prev->ic_write_wait,
- 							&log->l_icloglock);
--				if (log_flushed)
--					*log_flushed = 1;
- 				already_slept = 1;
- 				goto try_again;
- 			}
-@@ -3482,9 +3478,6 @@ _xfs_log_force_lsn(
- 			 */
- 			if (iclog->ic_state & XLOG_STATE_IOERROR)
- 				return -EIO;
--
--			if (log_flushed)
--				*log_flushed = 1;
- 		} else {		/* just return */
- 			spin_unlock(&log->l_icloglock);
- 		}
+ .gitignore                   |   1 +
+ README                       |   2 +
+ common/dmlogwrites           |  84 +++++++++
+ common/rc                    |  15 +-
+ doc/auxiliary-programs.txt   |   8 +
+ doc/requirement-checking.txt |  20 +++
+ ltp/fsx.c                    | 220 +++++++++++++++++++----
+ src/Makefile                 |   2 +-
+ src/log-writes/Makefile      |  23 +++
+ src/log-writes/SOURCE        |   6 +
+ src/log-writes/log-writes.c  | 410 +++++++++++++++++++++++++++++++++++++++++++
+ src/log-writes/log-writes.h  |  72 ++++++++
+ src/log-writes/replay-log.c  | 381 ++++++++++++++++++++++++++++++++++++++++
+ tests/generic/500            | 138 +++++++++++++++
+ tests/generic/500.out        |   2 +
+ tests/generic/group          |   1 +
+ 16 files changed, 1340 insertions(+), 45 deletions(-)
+ create mode 100644 common/dmlogwrites
+ create mode 100644 src/log-writes/Makefile
+ create mode 100644 src/log-writes/SOURCE
+ create mode 100644 src/log-writes/log-writes.c
+ create mode 100644 src/log-writes/log-writes.h
+ create mode 100644 src/log-writes/replay-log.c
+ create mode 100755 tests/generic/500
+ create mode 100644 tests/generic/500.out
+
 -- 
 2.7.4
 
