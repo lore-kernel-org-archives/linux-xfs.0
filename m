@@ -1,123 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51780 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751802AbdH3P6M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 11:58:12 -0400
-Date: Wed, 30 Aug 2017 08:58:00 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: null pointer reference after crash
-Message-ID: <20170830155800.GJ4757@magnolia>
-References: <ED0CA266-63AF-4A99-A8B9-DC4C452EC217@flyingcircus.io>
- <20170828174238.GE4757@magnolia>
- <BE1D250C-EDA0-4E9B-A085-1DD62497BEA8@flyingcircus.io>
- <289A60E8-9FE0-43B0-8882-F7C96D03DDCF@flyingcircus.io>
+Received: from mx1.redhat.com ([209.132.183.28]:45238 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751691AbdH3O0d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 Aug 2017 10:26:33 -0400
+Date: Wed, 30 Aug 2017 10:26:31 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: skip free eofblocks if inode is under written back
+Message-ID: <20170830142631.GA16641@bfoster.bfoster>
+References: <20170830042628.5592-1-eguan@redhat.com>
+ <20170830072950.GJ10621@dastard>
+ <20170830091206.GB27835@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <289A60E8-9FE0-43B0-8882-F7C96D03DDCF@flyingcircus.io>
+In-Reply-To: <20170830091206.GB27835@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christian Theune <ct@flyingcircus.io>
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Wed, Aug 30, 2017 at 03:56:05PM +0200, Christian Theune wrote:
-> Hi,
-> 
-> just got it again on a different call path, maybe that helps:
-> 
-> [ 1070.136303] Oops: 0000 [#1] SMP
-> [ 1070.142577] Modules linked in: nf_log_ipv4 nf_conntrack_ipv4 nf_defrag_ipv4 nf_log_ipv6 nf_log_common xt_LOG xt_limit nf_conntrack_ipv6 nf_defrag_ipv6 xt_conntrack sch_fq x86_pkg_temp_thermal kvm_intel kvm irqbypass nvme crc32c_intel ixgbe nvme_core mdio acpi_cpufreq nbd nf_conntrack_ftp nf_conntrack dm_zero dm_thin_pool dm_persistent_data dm_bio_prison dm_round_robin dm_multipath xts aesni_intel glue_helper lrw ablk_helper cryptd aes_x86_64 fuse dm_snapshot dm_bufio dm_crypt dm_mirror dm_region_hash dm_log
-> [ 1070.233784] CPU: 19 PID: 7460 Comm: ceph-osd Not tainted 4.9.43 #1
-> [ 1070.246124] Hardware name: Thomas-Krenn.AG X9DR3-F/X9DR3-F, BIOS 3.0a 07/31/2013
-> [ 1070.260895] task: ffff8810517d0000 task.stack: ffffc9002abec000
-> [ 1070.272710] RIP: 0010:[<ffffffff81312320>]  [<ffffffff81312320>] xfs_da3_node_read+0x30/0xb0
-> [ 1070.289592] RSP: 0018:ffffc9002abefd28  EFLAGS: 00010286
-> [ 1070.300199] RAX: 0000000000000000 RBX: ffff88104d859a48 RCX: 0000000000000001
-> [ 1070.314447] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffc9002abefce0
-> [ 1070.328694] RBP: ffffc9002abefd48 R08: 0000000066656566 R09: ffffc9002abefbc0
-> [ 1070.342942] R10: fffffffffffffffe R11: 0000000000000001 R12: ffffc9002abefd78
-> [ 1070.357191] R13: ffff88066b430780 R14: 0000000000000005 R15: 0000000066656566
-> [ 1070.371436] FS:  00007fe511bfc700(0000) GS:ffff88107fbc0000(0000) knlGS:0000000000000000
-> [ 1070.387590] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ 1070.399066] CR2: 00000000000000a0 CR3: 0000000f14d50000 CR4: 00000000001406e0
-> [ 1070.413311] Stack:
-> [ 1070.417332]  ffffffff81a44fe0 ffffc9002abefd48 ffffc9002abefdd0 0000000000000005
-> [ 1070.432239]  ffffc9002abefdb8 ffffffff81337404 0000000200000008 ffff8809b5cab040
-> [ 1070.447144]  000000005e94ce38 ffff880c25e1c600 0000000000000000 0000000000000000
-> [ 1070.462051] Call Trace:
-> [ 1070.466949]  [<ffffffff81337404>] xfs_attr3_node_inactive+0x174/0x210
-> [ 1070.479802]  [<ffffffff813376da>] xfs_attr_inactive+0x23a/0x250
-> [ 1070.491625]  [<ffffffff81350a4b>] xfs_inactive+0x7b/0x110
-> [ 1070.502403]  [<ffffffff81359344>] xfs_fs_destroy_inode+0xa4/0x210
-> [ 1070.514573]  [<ffffffff811c46cb>] destroy_inode+0x3b/0x60
-> [ 1070.525352]  [<ffffffff811c4819>] evict+0x129/0x190
-> [ 1070.535093]  [<ffffffff811c4c4a>] iput+0x19a/0x200
-> [ 1070.544660]  [<ffffffff811b9129>] do_unlinkat+0x129/0x2d0
-> [ 1070.555445]  [<ffffffff811b9d26>] SyS_unlink+0x16/0x20
-> [ 1070.565706]  [<ffffffff81885260>] entry_SYSCALL_64_fastpath+0x13/0x94
+On Wed, Aug 30, 2017 at 05:12:06PM +0800, Eryu Guan wrote:
+> On Wed, Aug 30, 2017 at 05:29:50PM +1000, Dave Chinner wrote:
+> > On Wed, Aug 30, 2017 at 12:26:28PM +0800, Eryu Guan wrote:
+> > > xfs_vm_writepages() saves a cached imap in a writeback context
+> > > structure and passes it to xfs_do_writepage() for every page in this
+> > > writeback, so xfs_writepage_map() (called by xfs_do_writepage())
+> > > doesn't have to lookup & recalculate the mapping for every buffer it
+> > > writes if the cached imap is considered as valid.
+> > > 
+> > > But there's a chance that the cached imap becomes stale (doesn't
+> > > match the real extent entry) due to the removing of speculative
+> > > preallocated blocks, in this case xfs_imap_valid() still reports
+> > > imap as valid, because the buffer it's writing is still within the
+> > > cached imap range. This could result in fs corruption and data
+> > > corruption (data written to wrong block).
+> > > 
+> > > For example, the following sequences make it possible (assuming 4k
+> > > block size XFS):
+> > > 
+> > >   1. delalloc write 1072 blocks, with speculative preallocation,
+> > >   2032 blocks got allocated
+> > > 
+> > >   2. started a WB_SYNC_NONE writeback (so it wrote all
+> > >   PAGECACHE_TAG_DIRTY pages, additional dirty page from step 4 can
+> > >   be picked up, this could be a background writeback, or a bare
+> > >   SYNC_FILE_RANGE_WRITE sync_file_range() call) on this inode,
+> > >   filled in br_startblock, converted delayed allocation to real
+> > >   allocation, but br_blockcount was unchanged, still 2032, and this
+> > >   imap got cached in writeback context structure for writing
+> > >   subsequent pages
+> > 
 
-This looks like the same call stack as last time.
+Thanks Eryu, nice work indeed. :) FWIW, I have patch (appended) that
+helps detect this problem consistently in DEBUG mode by essentially
+revalidating the ioend at submit time. I suppose it could be updated to
+validate the bio target as well, but care to validate that independently
+and possibly include it in your next post?
 
-Is this with a patched 4.9.43 kernel, or just vanilla?
+> > Excellent work in tracking this down, Eryu! This has been a
+> > longstanding issue - we've been caching the writeback map for
+> > multi-page writeback since, well, longer than I've been working on
+> > XFS....
+> 
+> If I read the git history correctly, previously the imap was only cached
+> for buffer heads within the same page, commit fbcc02561359 ("xfs:
+> Introduce writeback context for writepages") made the cached imap live
+> longer, across the whole xfs_vm_writepages() call, which made the window
+> wider.
+>
 
---D
+The difference here is that the previous code used xfs_cluster_write()
+which implicitly limited the scope of the cached mapping to within EOF.
+By implicitly, I mean that we only flushed up to EOF at the time the
+mapping was created. I think this aspect of the problem is sort of a
+regression as of the writeback rework and could be addressed by simply
+trimming the cached mapping to EOF (I had previously run a test that
+allowed the lustre-racer test to survive a weekend without any issues
+with such a tweak). Note that the previous code also limited the
+lifetime of the cached mapping to a single writeback "cycle," fwiw.
 
-> [ 1070.578562] Code: 55 48 89 e5 41 54 53 4d 89 c4 48 89 fb 48 83 ec 10 48 c7 04 24 e0 4f a4 81 e8 fd fe ff ff 85 c0 75 46 48 85 db 74 41 49 8b 34 24 <48> 8b 96 a0 00 00 00 0f b7 52 08 66 c1 c2 08 66 81 fa be 3e 74
-> [ 1070.618459] RIP  [<ffffffff81312320>] xfs_da3_node_read+0x30/0xb0
-> [ 1070.630663]  RSP <ffffc9002abefd28>
-> [ 1070.637630] CR2: 00000000000000a0
-> [ 1070.644858] ---[ end trace bc2d3667eef00f69 ]—
-> 
-> As of now the system doesn’t have the same following issues and the other FS’s are still functioning. I’ll run xfs_repair later today on all filesystems for good measure.
-> 
-> Christian
-> 
-> > On Aug 28, 2017, at 9:00 PM, Christian Theune <ct@flyingcircus.io> wrote:
-> > 
-> > Hi,
-> > 
-> >> On Aug 28, 2017, at 7:42 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >> 
-> >> On Mon, Aug 28, 2017 at 07:23:19PM +0200, Christian Theune wrote:
-> >>> Hi,
-> >>> 
-> >>> we stumbled over this today as a host rebooted with an unrelated (iommu)
-> >>> kernel crash and got completely stuck after this:
-> >>> 
-> >>> I’m currently running xfs_repair on all disks and will then see whether this
-> >>> will resolve, still I guess you want to know about it. Kernel is 4.9.43
-> >>> vanilla. Let me know if you need more data.
-> >> 
-> >> Does commit cd87d8679201 ("xfs: don't crash on unexpected holes in dir/attr
-> >> btrees") fix this problem?  It'll be in 4.13, maybe someone can backport it
-> >> to 4.9?
-> > 
-> > Thanks for the suggestion. I’ll keep that in mind in case I see this again.
-> > 
-> >> (Assuming you can get it to reproduce reliably?)
-> > 
-> > I have only seen it once today and hopefully won’t see it again. We have had some storage servers that run multiple SSD and HDD disks (for Ceph) crash multiple times a week lastly due to the IOMMU issues that resulted in hardware watchdog reboots, so I guess those xfs' did have quite some noise in it.
-> > 
-> > Not sure I can do anything to reproduce it at all. *fingers crossed*
-> > 
-> > Christian
-> > 
-> > --
-> > Christian Theune · ct@flyingcircus.io · +49 345 219401 0
-> > Flying Circus Internet Operations GmbH · http://flyingcircus.io
-> > Forsterstraße 29 · 06112 Halle (Saale) · Deutschland
-> > HR Stendal HRB 21169 · Geschäftsführer: Christian Theune, Christian Zagrodnick
-> 
-> Liebe Grüße,
-> Christian Theune
-> 
-> --
-> Christian Theune · ct@flyingcircus.io · +49 345 219401 0
-> Flying Circus Internet Operations GmbH · http://flyingcircus.io
-> Forsterstraße 29 · 06112 Halle (Saale) · Deutschland
-> HR Stendal HRB 21169 · Geschäftsführer: Christian Theune, Christian Zagrodnick
+Given the nature of the above, could we try to independently verify
+whether there is also an issue that might go further back than that?
+Even if these are both fixed by the same patch, it would be good to have
+independent analysis of the separate issues in the commit logs. For
+example, what happens if writeback maps a largish delalloc extent, then
+stalls (i.e., introduce an artificial delay), and then some other task
+comes in and truncates off the last block of the just allocated extent
+and then does another buffered write to place a delalloc block at that
+offset? Note that hole punch probably won't work here because it waits
+for writeback. Also note that this may be further complicated by the
+fact that some writeback cases tag the pages to writeback up front.
+
+> But I can't reproduce the bug until commit bb18782aa47d ("xfs: build bios
+> directly in xfs_add_to_ioend"), I didn't dig into it deeply, perhaps it
+> made the window even wider?
 > 
 
+Perhaps doing bio allocation at page processing time rather than submit
+time is enough to stretch the window the mapping has to remain valid..?
+I believe we've always done ioend allocation at this time, but those
+look like they come from a memory pool and so may return quickly.
 
+Brian
+
+--- 8< ---
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 6bf120b..71b55b0 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -457,6 +457,47 @@ static inline int xfs_bio_add_buffer(struct bio *bio, struct buffer_head *bh)
+ 	return bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
+ }
+ 
++#ifdef DEBUG
++static int
++xfs_validate_ioend(
++	struct xfs_ioend	*ioend)
++{
++	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_fileoff_t		offset = XFS_B_TO_FSB(mp, ioend->io_offset);
++	xfs_filblks_t		count = XFS_B_TO_FSB(mp, ioend->io_size);
++	xfs_extnum_t		idx;
++	struct xfs_bmbt_irec	got;
++	int			error;
++
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
++
++	error = -EFSCORRUPTED;
++	while (count) {
++		if (!xfs_iext_lookup_extent(ip, ifp, offset, &idx, &got))
++			goto out;
++		if (isnullstartblock(got.br_startblock))
++			goto out;
++		offset += got.br_blockcount;
++		count -= min_t(xfs_filblks_t, count, got.br_blockcount);
++	}
++
++	error = 0;
++out:
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++	if (error) {
++		xfs_alert(mp,
++		"I/O submission to invalid extent (ino 0x%llx offset 0x%llx).",
++			  ip->i_ino, ioend->io_offset);
++		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++	}
++	return error;
++}
++#else
++#define xfs_validate_ioend(ioend)	(0)
++#endif
++
+ /*
+  * Submit the bio for an ioend. We are passed an ioend with a bio attached to
+  * it, and we submit that bio. The ioend may be used for multiple bio
+@@ -506,6 +547,10 @@ xfs_submit_ioend(
+ 		return status;
+ 	}
+ 
++	status = xfs_validate_ioend(ioend);
++	if (status)
++		return status;
++
+ 	ioend->io_bio->bi_write_hint = ioend->io_inode->i_write_hint;
+ 	submit_bio(ioend->io_bio);
+ 	return 0;
