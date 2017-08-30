@@ -1,47 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34258 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751290AbdHVVMt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 22 Aug 2017 17:12:49 -0400
-Subject: [PATCH 1/3] libxfs: handle 0 blocksize or sectorsize in cvtnum
-References: <2b5a5742-5343-671f-8b89-9d1dc9841c17@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <2e0acf4a-a863-8304-65d3-5027368c69e2@sandeen.net>
-Date: Tue, 22 Aug 2017 16:12:48 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:51464 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751415AbdH3P5y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 11:57:54 -0400
+Date: Wed, 30 Aug 2017 08:55:17 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: don't set DAX flag for v2 inodes
+Message-ID: <20170830155517.GI4757@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <2b5a5742-5343-671f-8b89-9d1dc9841c17@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>
 
-Blocksize and sectorsize are unique in that they must
-be provided, unlike every other suffix which can be
-calculated from constants.
+The DAX flag can only be persisted for v3 inodes, so don't allow users
+to set the flag on older filesystems.
 
-Nothing protects against unspecified block & sector size,
-so catch it if it happens and return a parsing error.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ fs/xfs/xfs_ioctl.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/libxcmd/input.c b/libxcmd/input.c
-index 7a69dc1..7b86225 100644
---- a/libxcmd/input.c
-+++ b/libxcmd/input.c
-@@ -330,8 +330,12 @@ cvtnum(
- 	c = tolower(*sp);
- 	switch (c) {
- 	case 'b':
-+		if (!blocksize)
-+			return -1LL;
- 		return i * blocksize;
- 	case 's':
-+		if (!sectorsize)
-+			return -1LL;
- 		return i * sectorsize;
- 	case 'k':
- 		return KILOBYTES(i);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 9c0c7a9..fa17f89 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1043,6 +1043,10 @@ xfs_ioctl_setattr_xflags(
+ 	if ((fa->fsx_xflags & FS_XFLAG_DAX) && xfs_is_reflink_inode(ip))
+ 		return -EINVAL;
+ 
++	/* Don't allow us to set DAX mode for a non-v3 inode. */
++	if ((fa->fsx_xflags & FS_XFLAG_DAX) && ip->i_d.di_version < 3)
++		return -EINVAL;
++
+ 	/*
+ 	 * Can't modify an immutable/append-only file unless
+ 	 * we have appropriate permission.
