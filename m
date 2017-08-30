@@ -1,36 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:48709 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751236AbdH3HDe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 03:03:34 -0400
-Date: Wed, 30 Aug 2017 00:03:29 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS reflinks
-Message-ID: <20170830070329.GA7835@infradead.org>
-References: <04eacb90-aac9-7c47-f074-fa91eb253822@bytemark.co.uk>
- <20170829130046.GA28896@infradead.org>
- <20170829160308.GR4757@magnolia>
- <20170829162310.GA22552@infradead.org>
- <20170829220316.GD10621@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170829220316.GD10621@dastard>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:37148 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751805AbdH3Ov2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 10:51:28 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v2 05/14] fsx: fix compile warnings
+Date: Wed, 30 Aug 2017 17:51:37 +0300
+Message-Id: <1504104706-11965-6-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
+References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Chris Cottam <chris.cottam@bytemark.co.uk>, linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Wed, Aug 30, 2017 at 08:03:16AM +1000, Dave Chinner wrote:
-> Christoph, ignoring the CoW consideration, this is top of my list of
-> "things we've been ignoring for too long that need to be fixed
-> ASAP". I've got the time to work on this right now, so if you don't
-> have time to get it done in the next merge cycle I can probably make
-> that happen....
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ ltp/fsx.c | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
 
-I've been working on it for a while, and it's not just spare time
-but customer work.  I've finally found a data structure that fits,
-and I've already posted various cleanups to isolate the extent list.
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index 1502905..e789aad 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -211,9 +211,9 @@ prt(const char *fmt, ...)
+ 	va_start(args, fmt);
+ 	vsnprintf(buffer, BUF_SIZE, fmt, args);
+ 	va_end(args);
+-	fprintf(stdout, buffer);
++	fputs(buffer, stdout);
+ 	if (fsxlogf)
+-		fprintf(fsxlogf, buffer);
++		fputs(buffer, fsxlogf);
+ }
+ 
+ void
+@@ -569,14 +569,20 @@ check_trunc_hack(void)
+ {
+ 	struct stat statbuf;
+ 
+-	ftruncate(fd, (off_t)0);
+-	ftruncate(fd, (off_t)100000);
++	if (ftruncate(fd, (off_t)0))
++		goto ftruncate_err;
++	if (ftruncate(fd, (off_t)100000))
++		goto ftruncate_err;
+ 	fstat(fd, &statbuf);
+ 	if (statbuf.st_size != (off_t)100000) {
+ 		prt("no extend on truncate! not posix!\n");
+ 		exit(130);
+ 	}
+-	ftruncate(fd, 0);
++	if (ftruncate(fd, 0)) {
++ftruncate_err:
++		prterr("check_trunc_hack: ftruncate");
++		exit(131);
++	}
+ }
+ 
+ void
+@@ -1742,7 +1748,10 @@ __test_fallocate(int mode, const char *mode_str)
+ 					mode_str);
+ 		} else {
+ 			ret = 1;
+-			ftruncate(fd, 0);
++			if (ftruncate(fd, 0)) {
++				warn("main: ftruncate");
++				exit(132);
++			}
+ 		}
+ 	}
+ 	return ret;
+-- 
+2.7.4
 
-I'll have something ready to post in the next few weeks.
