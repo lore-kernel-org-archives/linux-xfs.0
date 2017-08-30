@@ -1,259 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18497 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750761AbdH3Vmn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 17:42:43 -0400
-Date: Wed, 30 Aug 2017 14:42:37 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 2/4] xfs: perform dax_device lookup at mount
-Message-ID: <20170830214237.GV4757@magnolia>
-References: <150412222686.10177.8031279869867070772.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150412223801.10177.4972035211701096310.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:23322 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750972AbdH3XWT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 19:22:19 -0400
+Date: Thu, 31 Aug 2017 09:22:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
+Message-ID: <20170830232216.GM10621@dastard>
+References: <20170829235052.21050-1-david@fromorbit.com>
+ <20170830041635.GK27873@wotan.suse.de>
+ <20170830054420.GI10621@dastard>
+ <20170830221056.GU27873@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150412223801.10177.4972035211701096310.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <20170830221056.GU27873@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, Christoph Hellwig <hch@lst.de>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Aug 30, 2017 at 12:43:58PM -0700, Dan Williams wrote:
-> The ->iomap_begin() operation is a hot path, so cache the
-> fs_dax_get_by_host() result at mount time to avoid the incurring the
-> hash lookup overhead on a per-i/o basis.
+On Thu, Aug 31, 2017 at 12:10:56AM +0200, Luis R. Rodriguez wrote:
+> On Wed, Aug 30, 2017 at 03:44:20PM +1000, Dave Chinner wrote:
+> > On Wed, Aug 30, 2017 at 06:16:35AM +0200, Luis R. Rodriguez wrote:
+> > > On Wed, Aug 30, 2017 at 09:50:10AM +1000, Dave Chinner wrote:
+> > > > Everyone who tries to modify mkfs quickly learns that it is a pile
+> > > > of spaghetti, the only difference in opinion is whether it is a
+> > > > steaming, cold or rotten pile. This patchset attempts to untangle
+> > > > the ball of pasta and turn it into a set of clear, obvious
+> > > > operations that lead to a filesystem being formatted correctly.
+> > > 
+> > > Yay.
+> > > 
+> > > > The patch series is really in three parts, splitting the code up
+> > > > into roughly three modules.
+> > > 
+> > > Any reason you ended up with 3 instead of 4 as originally envisioned?
+> > 
+> > Because the 4th module - config file support - doesn't exist yet.
 > 
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Reported-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> To be fair you had itemized before:
+> 
+>   1) Settings default - struct mkfs_default_params
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+As I said: this module doesn't exist yet, so it's output struct
+mkfs_default_params is statically defined (i.e. built in defaults)
+to provide input to the next module. Hence there are only three
+modules in this patchset:
 
-> ---
->  fs/xfs/xfs_aops.c  |   13 +++++++++++++
->  fs/xfs/xfs_aops.h  |    1 +
->  fs/xfs/xfs_buf.c   |    4 +++-
->  fs/xfs/xfs_buf.h   |    3 ++-
->  fs/xfs/xfs_iomap.c |   10 +---------
->  fs/xfs/xfs_super.c |   25 +++++++++++++++++++++----
->  6 files changed, 41 insertions(+), 15 deletions(-)
+>   2) CLI parsing - struct cli_params
+>   3) Validation + calculation - struct mkfs_params
+>   4) On disk formatting
+
+[....]
+
+> > Maybe you can come up with a way of automating this, but for a
+> > one-off piece of work that affects a point-in-time snapshot of mkfs
+> > functionality, I'm not sure it's worth the effort to try to make a
+> > generic test to do this sort of thing.
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 6bf120bb1a17..78185f3b10b2 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -80,6 +80,19 @@ xfs_find_bdev_for_inode(
->  		return mp->m_ddev_targp->bt_bdev;
->  }
->  
-> +struct dax_device *
-> +xfs_find_daxdev_for_inode(
-> +	struct inode		*inode)
-> +{
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +
-> +	if (XFS_IS_REALTIME_INODE(ip))
-> +		return mp->m_rtdev_targp->bt_daxdev;
-> +	else
-> +		return mp->m_ddev_targp->bt_daxdev;
-> +}
-> +
->  /*
->   * We're now finished for good with this page.  Update the page state via the
->   * associated buffer_heads, paying attention to the start and end offsets that
-> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-> index cc174ec6c2fd..88c85ea63da0 100644
-> --- a/fs/xfs/xfs_aops.h
-> +++ b/fs/xfs/xfs_aops.h
-> @@ -59,5 +59,6 @@ int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
->  
->  extern void xfs_count_page_state(struct page *, int *, int *);
->  extern struct block_device *xfs_find_bdev_for_inode(struct inode *);
-> +extern struct dax_device *xfs_find_daxdev_for_inode(struct inode *);
->  
->  #endif /* __XFS_AOPS_H__ */
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 72f038492ba8..6deb86c845d1 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1802,7 +1802,8 @@ xfs_setsize_buftarg_early(
->  xfs_buftarg_t *
->  xfs_alloc_buftarg(
->  	struct xfs_mount	*mp,
-> -	struct block_device	*bdev)
-> +	struct block_device	*bdev,
-> +	struct dax_device	*dax_dev)
->  {
->  	xfs_buftarg_t		*btp;
->  
-> @@ -1811,6 +1812,7 @@ xfs_alloc_buftarg(
->  	btp->bt_mount = mp;
->  	btp->bt_dev =  bdev->bd_dev;
->  	btp->bt_bdev = bdev;
-> +	btp->bt_daxdev = dax_dev;
->  
->  	if (xfs_setsize_buftarg_early(btp, bdev))
->  		goto error;
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 20721261dae5..bf71507ddb16 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -108,6 +108,7 @@ typedef unsigned int xfs_buf_flags_t;
->  typedef struct xfs_buftarg {
->  	dev_t			bt_dev;
->  	struct block_device	*bt_bdev;
-> +	struct dax_device	*bt_daxdev;
->  	struct xfs_mount	*bt_mount;
->  	unsigned int		bt_meta_sectorsize;
->  	size_t			bt_meta_sectormask;
-> @@ -385,7 +386,7 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
->   *	Handling of buftargs.
->   */
->  extern xfs_buftarg_t *xfs_alloc_buftarg(struct xfs_mount *,
-> -			struct block_device *);
-> +			struct block_device *, struct dax_device *);
->  extern void xfs_free_buftarg(struct xfs_mount *, struct xfs_buftarg *);
->  extern void xfs_wait_buftarg(xfs_buftarg_t *);
->  extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 813394c62849..7c934e407332 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -69,6 +69,7 @@ xfs_bmbt_to_iomap(
->  	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
->  	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
->  	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
-> +	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
->  }
->  
->  xfs_extlen_t
-> @@ -976,7 +977,6 @@ xfs_file_iomap_begin(
->  	int			nimaps = 1, error = 0;
->  	bool			shared = false, trimmed = false;
->  	unsigned		lockmode;
-> -	struct block_device	*bdev;
->  
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
-> @@ -1087,13 +1087,6 @@ xfs_file_iomap_begin(
->  
->  	xfs_bmbt_to_iomap(ip, iomap, &imap);
->  
-> -	/* optionally associate a dax device with the iomap bdev */
-> -	bdev = iomap->bdev;
-> -	if (blk_queue_dax(bdev->bd_queue))
-> -		iomap->dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
-> -	else
-> -		iomap->dax_dev = NULL;
-> -
->  	if (shared)
->  		iomap->flags |= IOMAP_F_SHARED;
->  	return 0;
-> @@ -1171,7 +1164,6 @@ xfs_file_iomap_end(
->  	unsigned		flags,
->  	struct iomap		*iomap)
->  {
-> -	fs_put_dax(iomap->dax_dev);
->  	if ((flags & IOMAP_WRITE) && iomap->type == IOMAP_DELALLOC)
->  		return xfs_file_iomap_end_delalloc(XFS_I(inode), offset,
->  				length, written, iomap);
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 38aaacdbb8b3..ee4225c65f0c 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -714,17 +714,26 @@ STATIC void
->  xfs_close_devices(
->  	struct xfs_mount	*mp)
->  {
-> +	struct dax_device *dax_ddev = mp->m_ddev_targp->bt_daxdev;
-> +
->  	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
->  		struct block_device *logdev = mp->m_logdev_targp->bt_bdev;
-> +		struct dax_device *dax_logdev = mp->m_logdev_targp->bt_daxdev;
-> +
->  		xfs_free_buftarg(mp, mp->m_logdev_targp);
->  		xfs_blkdev_put(logdev);
-> +		fs_put_dax(dax_logdev);
->  	}
->  	if (mp->m_rtdev_targp) {
->  		struct block_device *rtdev = mp->m_rtdev_targp->bt_bdev;
-> +		struct dax_device *dax_rtdev = mp->m_rtdev_targp->bt_daxdev;
-> +
->  		xfs_free_buftarg(mp, mp->m_rtdev_targp);
->  		xfs_blkdev_put(rtdev);
-> +		fs_put_dax(dax_rtdev);
->  	}
->  	xfs_free_buftarg(mp, mp->m_ddev_targp);
-> +	fs_put_dax(dax_ddev);
->  }
->  
->  /*
-> @@ -742,6 +751,8 @@ xfs_open_devices(
->  	struct xfs_mount	*mp)
->  {
->  	struct block_device	*ddev = mp->m_super->s_bdev;
-> +	struct dax_device	*dax_ddev = fs_dax_get_by_bdev(ddev);
-> +	struct dax_device	*dax_logdev = NULL, *dax_rtdev = NULL;
->  	struct block_device	*logdev = NULL, *rtdev = NULL;
->  	int			error;
->  
-> @@ -752,6 +763,7 @@ xfs_open_devices(
->  		error = xfs_blkdev_get(mp, mp->m_logname, &logdev);
->  		if (error)
->  			goto out;
-> +		dax_logdev = fs_dax_get_by_bdev(logdev);
->  	}
->  
->  	if (mp->m_rtname) {
-> @@ -765,24 +777,25 @@ xfs_open_devices(
->  			error = -EINVAL;
->  			goto out_close_rtdev;
->  		}
-> +		dax_rtdev = fs_dax_get_by_bdev(rtdev);
->  	}
->  
->  	/*
->  	 * Setup xfs_mount buffer target pointers
->  	 */
->  	error = -ENOMEM;
-> -	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev);
-> +	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev, dax_ddev);
->  	if (!mp->m_ddev_targp)
->  		goto out_close_rtdev;
->  
->  	if (rtdev) {
-> -		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev);
-> +		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev, dax_rtdev);
->  		if (!mp->m_rtdev_targp)
->  			goto out_free_ddev_targ;
->  	}
->  
->  	if (logdev && logdev != ddev) {
-> -		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev);
-> +		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev, dax_logdev);
->  		if (!mp->m_logdev_targp)
->  			goto out_free_rtdev_targ;
->  	} else {
-> @@ -798,10 +811,14 @@ xfs_open_devices(
->  	xfs_free_buftarg(mp, mp->m_ddev_targp);
->   out_close_rtdev:
->  	xfs_blkdev_put(rtdev);
-> +	fs_put_dax(dax_rtdev);
->   out_close_logdev:
-> -	if (logdev && logdev != ddev)
-> +	if (logdev && logdev != ddev) {
->  		xfs_blkdev_put(logdev);
-> +		fs_put_dax(dax_logdev);
-> +	}
->   out:
-> +	fs_put_dax(dax_ddev);
->  	return error;
->  }
->  
+> In Dave we trust!
+
+No, definitely don't do that.  Don't trust a damn thing I do - I'm
+full of dangerous ideas, I write shit code and should be kept on a
+short leash at all times.....
+
+> > > > finally, one for config file support),
+> > > > but otherwise the majority of the factoring work is now complete.
+> > > > 
+> > > > Comments, flames, etc all welcome.
+> > > 
+> > > Just one thing, got a git tree I can use? I honestly can't be bothered
+> > > reviewing the delta in between, I just want to move on with life. Thanks
+> > > for cleaning up the manure pile buttress.
+> > 
+> > Nope, not right now. Tag all the patches, save them to an mbox
+> > file, run 'git-am <mbox-file>' to apply them all. Takes all of 20s
+> > to do with mutt....
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Turns out mutt re-orders tagged messages
+
+It does? I've never come across that. I always tag the entire thread
+they've always come out in the correct sent order for me. And I've
+been doing that for many, many years....
+
+> in what I think may be the order you got them in so the order on
+> the input output filename may differ from the patch order intent.
+> Even when I manually sort them and apply them, the patches failed
+> on both origin/master and origin/for-next, so I must be doing
+> something wrong or using an incorrect branch or commit ID. What
+> branch and commit ID should I use?
+
+Applies to:
+
+$ glo -n 1 origin/for-next
+3540b418ba48 xfs_db: btdump should avoid eval for push and pop of cursor
+$
+
+I forgot to update the branch before my last pass over the
+patchset...
+
+> It also seems I didn't get patch #20 in my inbox, could you
+> resend?
+
+Probably best in one-off cases like this is to grab it from the
+archive - the whole patchset made it back to me from the list, so it
+should be in the archive. If it's not, then we've got a more general
+list delivery problem rather than it just being a problem somewhere
+in your mail delivery path...
+
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
