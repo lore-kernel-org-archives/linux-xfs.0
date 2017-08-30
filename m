@@ -1,119 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:23322 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750972AbdH3XWT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 19:22:19 -0400
-Date: Thu, 31 Aug 2017 09:22:16 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
-Message-ID: <20170830232216.GM10621@dastard>
-References: <20170829235052.21050-1-david@fromorbit.com>
- <20170830041635.GK27873@wotan.suse.de>
- <20170830054420.GI10621@dastard>
- <20170830221056.GU27873@wotan.suse.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20381 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751110AbdH3WbO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 18:31:14 -0400
+Date: Wed, 30 Aug 2017 15:31:10 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 5/4] generic/173: don't dump core when mwrite fails
+Message-ID: <20170830223110.GA4754@magnolia>
+References: <150406805060.31349.16766271336969357123.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170830221056.GU27873@wotan.suse.de>
+In-Reply-To: <150406805060.31349.16766271336969357123.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-xfs@vger.kernel.org
+To: eguan@redhat.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Aug 31, 2017 at 12:10:56AM +0200, Luis R. Rodriguez wrote:
-> On Wed, Aug 30, 2017 at 03:44:20PM +1000, Dave Chinner wrote:
-> > On Wed, Aug 30, 2017 at 06:16:35AM +0200, Luis R. Rodriguez wrote:
-> > > On Wed, Aug 30, 2017 at 09:50:10AM +1000, Dave Chinner wrote:
-> > > > Everyone who tries to modify mkfs quickly learns that it is a pile
-> > > > of spaghetti, the only difference in opinion is whether it is a
-> > > > steaming, cold or rotten pile. This patchset attempts to untangle
-> > > > the ball of pasta and turn it into a set of clear, obvious
-> > > > operations that lead to a filesystem being formatted correctly.
-> > > 
-> > > Yay.
-> > > 
-> > > > The patch series is really in three parts, splitting the code up
-> > > > into roughly three modules.
-> > > 
-> > > Any reason you ended up with 3 instead of 4 as originally envisioned?
-> > 
-> > Because the 4th module - config file support - doesn't exist yet.
-> 
-> To be fair you had itemized before:
-> 
->   1) Settings default - struct mkfs_default_params
+In generic/173, we try to force a CoW to a mmap'd region to fail if
+there's no space to actually stage the CoW operation.  That failure
+comes in the form of a SIGBUS to xfs_io.  If the tester just happens to
+have a nonzero coresize ulimit set, a core dump is generated and the
+test is marked as having failed, even though the dump generation is
+exactly the correct behavior.
 
-As I said: this module doesn't exist yet, so it's output struct
-mkfs_default_params is statically defined (i.e. built in defaults)
-to provide input to the next module. Hence there are only three
-modules in this patchset:
+Therefore, set the coresize ulimit to zero while calling _mwrite_byte.
 
->   2) CLI parsing - struct cli_params
->   3) Validation + calculation - struct mkfs_params
->   4) On disk formatting
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/generic/173 |    3 +++
+ 1 file changed, 3 insertions(+)
 
-[....]
-
-> > Maybe you can come up with a way of automating this, but for a
-> > one-off piece of work that affects a point-in-time snapshot of mkfs
-> > functionality, I'm not sure it's worth the effort to try to make a
-> > generic test to do this sort of thing.
-> 
-> In Dave we trust!
-
-No, definitely don't do that.  Don't trust a damn thing I do - I'm
-full of dangerous ideas, I write shit code and should be kept on a
-short leash at all times.....
-
-> > > > finally, one for config file support),
-> > > > but otherwise the majority of the factoring work is now complete.
-> > > > 
-> > > > Comments, flames, etc all welcome.
-> > > 
-> > > Just one thing, got a git tree I can use? I honestly can't be bothered
-> > > reviewing the delta in between, I just want to move on with life. Thanks
-> > > for cleaning up the manure pile buttress.
-> > 
-> > Nope, not right now. Tag all the patches, save them to an mbox
-> > file, run 'git-am <mbox-file>' to apply them all. Takes all of 20s
-> > to do with mutt....
-> 
-> Turns out mutt re-orders tagged messages
-
-It does? I've never come across that. I always tag the entire thread
-they've always come out in the correct sent order for me. And I've
-been doing that for many, many years....
-
-> in what I think may be the order you got them in so the order on
-> the input output filename may differ from the patch order intent.
-> Even when I manually sort them and apply them, the patches failed
-> on both origin/master and origin/for-next, so I must be doing
-> something wrong or using an incorrect branch or commit ID. What
-> branch and commit ID should I use?
-
-Applies to:
-
-$ glo -n 1 origin/for-next
-3540b418ba48 xfs_db: btdump should avoid eval for push and pop of cursor
-$
-
-I forgot to update the branch before my last pass over the
-patchset...
-
-> It also seems I didn't get patch #20 in my inbox, could you
-> resend?
-
-Probably best in one-off cases like this is to grab it from the
-archive - the whole patchset made it back to me from the list, so it
-should be in the archive. If it's not, then we've got a more general
-list delivery problem rather than it just being a problem somewhere
-in your mail delivery path...
-
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/tests/generic/173 b/tests/generic/173
+index ad4e5da..526590b 100755
+--- a/tests/generic/173
++++ b/tests/generic/173
+@@ -81,6 +81,8 @@ _fill_fs $((blksz * nr_free)) $testdir/space $blksz 0 >> $seqres.full 2>&1
+ sync
+ 
+ echo "mmap CoW the big file"
++core_ulimit="$(ulimit -c)"
++ulimit -c 0
+ out="$(_mwrite_byte 0x62 0 $((blksz * nr_blks)) $((blksz * nr_blks)) $testdir/bigfile 2>&1)"
+ err="$?"
+ if [ $err -lt 128 ]; then
+@@ -95,6 +97,7 @@ err="$?"
+ if [ $err -lt 128 ]; then
+ 	echo "mmap CoW should have failed with SIGBUS, got SIG$(kill -l $err)"
+ fi
++ulimit -c "${core_ulimit}"
+ 
+ # success, all done
+ status=0
