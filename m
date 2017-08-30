@@ -1,102 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.161.182]:33633 "EHLO
-        mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751011AbdHaOhI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 10:37:08 -0400
+Received: from mail-qt0-f173.google.com ([209.85.216.173]:34994 "EHLO
+        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751722AbdH3PXb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 11:23:31 -0400
+Received: by mail-qt0-f173.google.com with SMTP id x36so28619158qtx.2
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Aug 2017 08:23:31 -0700 (PDT)
+Date: Wed, 30 Aug 2017 11:23:28 -0400
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: Re: [PATCH v2 00/14] Crash consistency xfstest using dm-log-writes
+Message-ID: <20170830152326.vil3fhsrecp2ccql@destiny>
+References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
+ <CAOQ4uxh8av5H87SHdFw92BDTvCtYgd9chS2Nfv5fA4=upoqRfA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170831134722.GA6912@lst.de>
-References: <1504100302-3297-1-git-send-email-amir73il@gmail.com> <20170831134722.GA6912@lst.de>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 31 Aug 2017 17:37:06 +0300
-Message-ID: <CAOQ4uxgrdijqVpFm+rZ4JE_ZY0A_CZdSPHQEb8S1_R_dyJYzSg@mail.gmail.com>
-Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxh8av5H87SHdFw92BDTvCtYgd9chS2Nfv5fA4=upoqRfA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Eryu Guan <eguan@redhat.com>, Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Aug 31, 2017 at 4:47 PM, Christoph Hellwig <hch@lst.de> wrote:
-> I think something like the following patch (totally untested,
-> just an idea) should fix the issue, right?
+On Wed, Aug 30, 2017 at 06:04:26PM +0300, Amir Goldstein wrote:
+> Sorry noise xfs list, I meant to CC fsdevel
+> 
+> On Wed, Aug 30, 2017 at 5:51 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> > Hi all,
+> >
+> > This is the 2nd revision of crash consistency patch set.
+> > The main thing that changed since v1 is my confidence in the failures
+> > reported by the test, along with some more debugging options for
+> > running the test tools.
+> >
+> > I've collected these patches that have been sitting in Josef Bacik's
+> > tree for a few years and kicked them a bit into shape.
+> > The dm-log-writes target has been merged to kernel v4.1, see:
+> > https://github.com/torvalds/linux/blob/master/Documentation/device-mapper/log-writes.txt
+> >
+> > For this posting, I kept the random seeds constant for the test.
+> > I set these constant seeds after running with random seed for a little
+> > while and getting failure reports. With the current values in the test
+> > I was able to reproduce at high probablity failures with xfs, ext4 and btrfs.
+> > The probablity of reproducing the failure is higher on a spinning disk.
+> >
 
-I think that is not enough.
+I'd rather we make it as evil as possible.  As long as we're printing out the
+seed that was used in the output then we can go in and manually change the test
+to use the same seed over and over again if we need to debug a problem.
 
->
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index c4893e226fd8..555fcae9a18f 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -135,7 +135,7 @@ xfs_file_fsync(
->         struct xfs_inode        *ip = XFS_I(inode);
->         struct xfs_mount        *mp = ip->i_mount;
->         int                     error = 0;
-> -       int                     log_flushed = 0;
-> +       unsigned int            flushseq;
->         xfs_lsn_t               lsn = 0;
->
->         trace_xfs_file_fsync(ip);
-> @@ -143,6 +143,7 @@ xfs_file_fsync(
->         error = file_write_and_wait_range(file, start, end);
->         if (error)
->                 return error;
-> +       flushseq = READ_ONCE(mp->m_flushseq);
+> > For xfs, I posted a fix for potential data loss post fsync+crash.
+> > For ext4, I posted a reliable reproducer using dm-flakey.
+> > For btrfs, I shared the recorded log with Josef.
+> >
 
-imagine that flush was submitted and completed before
-file_write_and_wait_range() but m_flushseq incremented  after.
-maybe here READ m_flush_submitted_seq...
+I posted a patch to fix the problem you reported by the way, but my
+git-send-email thing isn't set to cc people in the commit, sorry about that.
 
->
->         if (XFS_FORCED_SHUTDOWN(mp))
->                 return -EIO;
-> @@ -181,7 +182,7 @@ xfs_file_fsync(
->         }
->
->         if (lsn) {
-> -               error = _xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, &log_flushed);
-> +               error = _xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, NULL);
->                 ip->i_itemp->ili_fsync_fields = 0;
->         }
->         xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> @@ -193,8 +194,9 @@ xfs_file_fsync(
->          * an already allocated file and thus do not have any metadata to
->          * commit.
->          */
-> -       if (!log_flushed && !XFS_IS_REALTIME_INODE(ip) &&
-> -           mp->m_logdev_targp == mp->m_ddev_targp)
-> +       if (!XFS_IS_REALTIME_INODE(ip) &&
-> +           mp->m_logdev_targp == mp->m_ddev_targp &&
-> +           flushseq == READ_ONCE(mp->m_flushseq))
+> > There is an outstanding problem with the test - when I run it with
+> > kvm-xfstests, the test halts and I get soft lockup of log_writes_kthread.
+> > I suppose its a bug in dm-log-writes with some kernel config or with virtio
+> > I wasn't able to determine the reason and have little time to debug this.
+> >
+> > Since dm-log-writes is anyway in upstream kernel, I don't think a bug
+> > in dm-log-writes for a certain config is a reason to block this xfstest
+> > from being merged.
+> > Anyway, I would be glad if someone could take a look at the soft lockup
+> > issue. Josef?
+> >
 
-... and here READ m_flush_completed_seq
-if (m_flush_completed_seq > m_flush_submitted_seq)
-it is safe to skip issue flush.
-Then probably READ_ONCE() is not enough and need smb_rmb?
+Yeah can you give this a try and see if the soft lockup goes away?
 
->                 xfs_blkdev_issue_flush(mp->m_ddev_targp);
->
->         return error;
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index bcb2f860e508..3c0cbb98581e 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -2922,6 +2922,8 @@ xlog_state_done_syncing(
->                 iclog->ic_state = XLOG_STATE_DONE_SYNC;
->         }
->
-> +       log->l_mp->m_flushseq++;
-
-I recon this should use WRITE_ONCE or smp_wmb()
-and then also increment m_flush_submitted_seq *before*
-issueing flush
-
-If state machine does not allow more than a single flush
-to be in flight (?) then the 2 seq counters could be reduced
-to single seq counter with (m_flushseq % 2) == 1 for submitted
-and  (m_flushseq % 2) == 0 for completed and the test in fsync
-would be (flushseq % 2) == (READ_ONCE(mp->m_flushseq) % 2)
-
-... maybe?
-
-Amir.
+diff --git a/drivers/md/dm-log-writes.c b/drivers/md/dm-log-writes.c
+index a1da0eb..b900758 100644
+--- a/drivers/md/dm-log-writes.c
++++ b/drivers/md/dm-log-writes.c
+@@ -345,6 +345,7 @@ static int log_writes_kthread(void *arg)
+ 		struct pending_block *block = NULL;
+ 		int ret;
+ 
++		cond_resched();
+ 		spin_lock_irq(&lc->blocks_lock);
+ 		if (!list_empty(&lc->logging_blocks)) {
+ 			block = list_first_entry(&lc->logging_blocks,
