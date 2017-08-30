@@ -1,125 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:11621 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751913AbdH2XvL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2017 19:51:11 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1dmqHW-0002d6-U7
-        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.89)
-        (envelope-from <david@fromorbit.com>)
-        id 1dmqHW-0005WJ-Sp
-        for linux-xfs@vger.kernel.org; Wed, 30 Aug 2017 09:50:54 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 20/42] mkfs: rename top level CLI parameters
-Date: Wed, 30 Aug 2017 09:50:30 +1000
-Message-Id: <20170829235052.21050-21-david@fromorbit.com>
-In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
-References: <20170829235052.21050-1-david@fromorbit.com>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:35051 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751763AbdH3Ovb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 10:51:31 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v2 07/14] fsx: add optional logid prefix to log messages
+Date: Wed, 30 Aug 2017 17:51:39 +0300
+Message-Id: <1504104706-11965-8-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
+References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+When writing the intermixed output of several fsx processes
+to a single log file, it is usefull to prefix logs with a log id.
+Use fsx -j <logid> to define the log messages prefix.
 
-Names like "qflag" and "Nflag" don't tell us what the flag is
-supposed to do, so rename them to be obvious in function.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- mkfs/xfs_mkfs.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ ltp/fsx.c | 28 +++++++++++++++++++---------
+ 1 file changed, 19 insertions(+), 9 deletions(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index e53e56a1bd47..7b71f59dc654 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2587,11 +2587,11 @@ main(
- 	int			norsflag;
- 	int			nsflag;
- 	int			nvflag;
--	int			Nflag;
-+	int			dry_run;
- 	int			discard = 1;
- 	char			*protofile;
- 	char			*protostring;
--	int			qflag;
-+	int			quiet;
- 	xfs_rfsblock_t		rtblocks;
- 	xfs_extlen_t		rtextblocks;
- 	xfs_rtblock_t		rtextents;
-@@ -2669,9 +2669,9 @@ main(
- 	liflag = laflag = lsflag = lsuflag = lsunitflag = ldflag = lvflag = 0;
- 	loginternal = 1;
- 	logagno = logblocks = rtblocks = rtextblocks = 0;
--	Nflag = nlflag = nsflag = nvflag = 0;
-+	dry_run = nlflag = nsflag = nvflag = 0;
- 	dirblocklog = dirblocksize = 0;
--	qflag = 0;
-+	quiet = 0;
- 	imaxpct = inodelog = inopblock = isize = 0;
- 	dfile = logfile = rtfile = NULL;
- 	dsize = logsize = rtsize = rtextsize = protofile = NULL;
-@@ -2800,7 +2800,7 @@ main(
- 			/* end temp don't break code */
- 			break;
- 		case 'N':
--			Nflag = 1;
-+			dry_run = 1;
- 			break;
- 		case 'K':
- 			discard = 0;
-@@ -2811,7 +2811,7 @@ main(
- 			protofile = optarg;
- 			break;
- 		case 'q':
--			qflag = 1;
-+			quiet = 1;
- 			break;
- 		case 'r':
- 			parse_subopts(c, optarg, &cli);
-@@ -2896,14 +2896,14 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
- 	 * host filesystem.
- 	 */
- 	check_device_type(dfile, &xi.disfile, !dsize, !dfile,
--			  Nflag ? NULL : &xi.dcreat, force_overwrite, "d");
-+			  dry_run ? NULL : &xi.dcreat, force_overwrite, "d");
- 	if (!loginternal)
- 		check_device_type(xi.logname, &xi.lisfile, !logsize, !xi.logname,
--				  Nflag ? NULL : &xi.lcreat,
-+				  dry_run ? NULL : &xi.lcreat,
- 				  force_overwrite, "l");
- 	if (xi.rtname)
- 		check_device_type(xi.rtname, &xi.risfile, !rtsize, !xi.rtname,
--				  Nflag ? NULL : &xi.rcreat,
-+				  dry_run ? NULL : &xi.rcreat,
- 				  force_overwrite, "r");
- 	if (xi.disfile || xi.lisfile || xi.risfile)
- 		xi.isdirect = 0;
-@@ -3259,7 +3259,7 @@ _("rmapbt not supported with realtime devices\n"));
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index d206a3a..a6420f6 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -132,6 +132,7 @@ unsigned long	simulatedopcount = 0;	/* -b flag */
+ int	closeprob = 0;			/* -c flag */
+ int	debug = 0;			/* -d flag */
+ unsigned long	debugstart = 0;		/* -D flag */
++int	logid = 0;			/* -j flag */
+ int	flush = 0;			/* -f flag */
+ int	do_fsync = 0;			/* -y flag */
+ unsigned long	maxfilelen = 256 * 1024;	/* -l flag */
+@@ -195,13 +196,16 @@ static void *round_ptr_up(void *ptr, unsigned long align, unsigned long offset)
+ }
  
+ void
+-vwarnc(int code, const char *fmt, va_list ap) {
+-  fprintf(stderr, "fsx: ");
+-  if (fmt != NULL) {
+-	vfprintf(stderr, fmt, ap);
+-	fprintf(stderr, ": ");
+-  }
+-  fprintf(stderr, "%s\n", strerror(code));
++vwarnc(int code, const char *fmt, va_list ap)
++{
++	if (logid)
++		fprintf(stderr, "%d: ", logid);
++	fprintf(stderr, "fsx: ");
++	if (fmt != NULL) {
++		vfprintf(stderr, fmt, ap);
++		fprintf(stderr, ": ");
++	}
++	fprintf(stderr, "%s\n", strerror(code));
+ }
  
- 	/* don't do discards on print-only runs or on files */
--	if (discard && !Nflag) {
-+	if (discard && !dry_run) {
- 		if (!xi.disfile)
- 			discard_blocks(xi.ddev, xi.dsize);
- 		if (xi.rtdev && !xi.risfile)
-@@ -3709,9 +3709,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	memcpy(&cfg.sb_feat, &sb_feat, sizeof(sb_feat));
- 	/* end temp support code */
+ void
+@@ -223,6 +227,8 @@ prt(const char *fmt, ...)
+ 	va_start(args, fmt);
+ 	vsnprintf(buffer, BUF_SIZE, fmt, args);
+ 	va_end(args);
++	if (logid)
++		fprintf(stdout, "%d: ", logid);
+ 	fputs(buffer, stdout);
+ 	if (fsxlogf)
+ 		fputs(buffer, fsxlogf);
+@@ -1624,12 +1630,13 @@ void
+ usage(void)
+ {
+ 	fprintf(stdout, "usage: %s",
+-		"fsx [-dnqxAFLOWZ] [-b opnum] [-c Prob] [-i logdev] [-l flen] [-m start:end] [-o oplen] [-p progressinterval] [-r readbdy] [-s style] [-t truncbdy] [-w writebdy] [-D startingop] [-N numops] [-P dirpath] [-S seed] fname\n\
++		"fsx [-dnqxAFLOWZ] [-b opnum] [-c Prob] [-i logdev] [-j logid] [-l flen] [-m start:end] [-o oplen] [-p progressinterval] [-r readbdy] [-s style] [-t truncbdy] [-w writebdy] [-D startingop] [-N numops] [-P dirpath] [-S seed] fname\n\
+ 	-b opnum: beginning operation number (default 1)\n\
+ 	-c P: 1 in P chance of file close+open at each op (default infinity)\n\
+ 	-d: debug output for all operations\n\
+ 	-f flush and invalidate cache after I/O\n\
+ 	-i logdev: do integrity testing, logdev is the dm log writes device\n\
++	-j logid: prefix logs with this id\n\
+ 	-l flen: the upper bound on file size (default 262144)\n\
+ 	-m startop:endop: monitor (print debug output) specified byte range (default 0:infinity)\n\
+ 	-n: no verifications of file size\n\
+@@ -1862,7 +1869,7 @@ main(int argc, char **argv)
+ 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
  
--	if (!qflag || Nflag) {
-+	if (!quiet || dry_run) {
- 		print_mkfs_cfg(&cfg, dfile, logfile, rtfile);
--		if (Nflag)
-+		if (dry_run)
- 			exit(0);
- 	}
- 
+ 	while ((ch = getopt_long(argc, argv,
+-				 "b:c:dfi:l:m:no:p:qr:s:t:w:xyAD:FKHzCILN:OP:RS:WZ",
++				 "b:c:dfi:j:l:m:no:p:qr:s:t:w:xyAD:FKHzCILN:OP:RS:WZ",
+ 				 longopts, NULL)) != EOF)
+ 		switch (ch) {
+ 		case 'b':
+@@ -1897,6 +1904,9 @@ main(int argc, char **argv)
+ 				exit(101);
+ 			}
+ 			break;
++		case 'j':
++			logid = getnum(optarg, &endp);
++			break;
+ 		case 'l':
+ 			maxfilelen = getnum(optarg, &endp);
+ 			if (maxfilelen <= 0)
 -- 
-2.13.3
+2.7.4
 
