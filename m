@@ -1,117 +1,179 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44192 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751323AbdH3JMI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 Aug 2017 05:12:08 -0400
-Date: Wed, 30 Aug 2017 17:12:06 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfs: skip free eofblocks if inode is under written back
-Message-ID: <20170830091206.GB27835@eguan.usersys.redhat.com>
-References: <20170830042628.5592-1-eguan@redhat.com>
- <20170830072950.GJ10621@dastard>
+Received: from mx2.suse.de ([195.135.220.15]:33234 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751321AbdH3KBD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 Aug 2017 06:01:03 -0400
+Date: Wed, 30 Aug 2017 12:00:59 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] ext4: introduce per-inode DAX flag
+Message-ID: <20170830100059.GC28354@quack2.suse.cz>
+References: <20170811134130.o46y5jpekrpj5qvw@rh_laptop>
+ <20170824182057.amdirlrbugezrahy@thunk.org>
+ <20170825075415.GA748@infradead.org>
+ <20170825151445.ycf5xomoxvebgaez@thunk.org>
+ <20170825154032.GA1827@infradead.org>
+ <20170825233358.GC17782@dastard>
+ <20170828073853.GA23262@infradead.org>
+ <20170828101014.GD17782@dastard>
+ <20170829154922.GA24592@quack2.suse.cz>
+ <20170829225717.GG10621@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170830072950.GJ10621@dastard>
+In-Reply-To: <20170829225717.GG10621@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-xfs@vger.kernel.org
 
-On Wed, Aug 30, 2017 at 05:29:50PM +1000, Dave Chinner wrote:
-> On Wed, Aug 30, 2017 at 12:26:28PM +0800, Eryu Guan wrote:
-> > xfs_vm_writepages() saves a cached imap in a writeback context
-> > structure and passes it to xfs_do_writepage() for every page in this
-> > writeback, so xfs_writepage_map() (called by xfs_do_writepage())
-> > doesn't have to lookup & recalculate the mapping for every buffer it
-> > writes if the cached imap is considered as valid.
+On Wed 30-08-17 08:57:17, Dave Chinner wrote:
+> On Tue, Aug 29, 2017 at 05:49:22PM +0200, Jan Kara wrote:
+> > On Mon 28-08-17 20:10:14, Dave Chinner wrote:
+> > > On Mon, Aug 28, 2017 at 12:38:54AM -0700, Christoph Hellwig wrote:
+> > > > On Sat, Aug 26, 2017 at 09:33:58AM +1000, Dave Chinner wrote:
+> > > > > > Nah, -o dax works very well.  It's just the flag instead of the -o dax
+> > > > > > option or rather switching it on a mapped file will probably be very dangerous.
+> > > > > 
+> > > > > In what way is it dangerous, Christoph?
+> > > > 
+> > > > When I run the following script as a normal user:
+> > > > 
+> > > > FSXDIR=~/xfstests/ltp/
+> > > > FILE=/mnt/foo
+> > > > 
+> > > > ${FSXDIR}/fsx $FILE &
+> > > > 
+> > > > while true; do
+> > > >     xfs_io -c 'chattr +x' $FILE
+> > > >     xfs_io -c 'chattr -x' $FILE
+> > > > done
+> > > >
+> > > > I get this nice little crash:
+> > > 
+> > > Can you please package that up into an xfstest?
+> > > 
+> > > > root@testvm:~# sh test.sh
+> > > > skipping zero size read
+> > > > skipping insert range behind EOF
+> > > > truncating to largest ever: 0x3a290
+> > > > zero_range to largest ever: 0x3a8d1
+> > > > zero_range to largest ever: 0x3fe3e
+> > > > zero_range to largest ever: 0x40000
+> > > > [  344.898390] BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
+> > > > [  344.899306] IP: iomap_page_mkwrite+0x17/0xf0
+> > > > [  344.899795] PGD 7db37067
+> > > > [  344.899796] P4D 7db37067
+> > > > [  344.900099] PUD 78c61067
+> > > > [  344.900389] PMD 0
+> > > > [  344.900665]
+> > > > [  344.901075] Oops: 0000 [#1] SMP
+> > > > [  344.901536] Modules linked in:
+> > > > [  344.901716] CPU: 3 PID: 6052 Comm: fsx Not tainted 4.12.0+ #2199
+> > > > [  344.901716] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.10.2-0-g5f4c7b1-prebuilt.qemu-project.org 04/01/2014
+> > > > [  344.901716] task: ffff880079a0da00 task.stack: ffffc900068a4000
+> > > > [  344.901716] RIP: 0010:iomap_page_mkwrite+0x17/0xf0
+> > > > [  344.901716] RSP: 0000:ffffc900068a7d38 EFLAGS: 00010246
+> > > > [  344.901716] RAX: ffff8800798dd0d0 RBX: 0000000000000200 RCX: 0000000000000001
+> > > > [  344.901716] RDX: 0000000070eb898e RSI: ffffffff82109010 RDI: ffffc900068a7df0
+> > > > [  344.901716] RBP: ffffc900068a7d60 R08: ffffffff82ff9fa8 R09: 0000000000000000
+> > > > [  344.901716] R10: ffffc900068a7cb0 R11: ffffffff8159b5cc R12: ffffffff82109010
+> > > > [  344.901716] R13: 0000000000000000 R14: ffffc900068a7df0 R15: ffff88007da89580
+> > >                       ^^^^^^^^^^^^^^^^
+> > > 
+> > > vmf->page is null.
+> > > 
+> > > Which means IS_DAX changed half way through a fault, despite us
+> > > holding the MMAPLOCK and protecting all the filesystem side of the
+> > > fault code from races.
+> > > 
+> > > Seems to me that even allowing filesystems to switch between
+> > > different mapping tree behaviours based on an inode flag is a
+> > > fundamentally broken model. The fault action that needs to taken by
+> > > the filesystem has already been predetermined by the fault
+> > > processing that has already occurred and placed into the contents of
+> > > the vmf we've been passed.
 > > 
-> > But there's a chance that the cached imap becomes stale (doesn't
-> > match the real extent entry) due to the removing of speculative
-> > preallocated blocks, in this case xfs_imap_valid() still reports
-> > imap as valid, because the buffer it's writing is still within the
-> > cached imap range. This could result in fs corruption and data
-> > corruption (data written to wrong block).
+> > I don't think the problem is actually within MM in this particular case.
+> > The problem seems to be that xfs_filemap_fault() checks IS_DAX without
+> > holding MMAPLOCK and so it can change after that test and before the test
+> > in xfs_filemap_page_mkwrite().
+> 
+> First thing I did was fix that, and it still paniced with vmf->page
+> = null in iomap_page_mkwrite, then I realised it was irrelevant
+
+OK, drat.
+
+> because if it can change between xfs_filemap_fault() and
+> xfs_filemap_page_mkwrite() it can change anytime in the fault path
+> we are not holding the MMAPLOCK....
+
+Agreed but...
+
+> > > Hence I think that if we need to process the fault as a DAX fault
+> > > then the vmf needs to tell us that, not require us to look up an
+> > > inode flag to determine what to do. ANd if the inode flag changes,
+> > > then that needs to be propagated through the mapping and VMAs in a
+> > > sane fashion, not just run an invalidation from the filesystem. I
+> > > don't know enough about the VM code to say anything useful about how
+> > > this needs to be set up, but it's clear that mapping invalidation
+> > > and behaviour swaps can't be completely serialised against page
+> > > faults from the filesystem side.
 > > 
-> > For example, the following sequences make it possible (assuming 4k
-> > block size XFS):
-> > 
-> >   1. delalloc write 1072 blocks, with speculative preallocation,
-> >   2032 blocks got allocated
-> > 
-> >   2. started a WB_SYNC_NONE writeback (so it wrote all
-> >   PAGECACHE_TAG_DIRTY pages, additional dirty page from step 4 can
-> >   be picked up, this could be a background writeback, or a bare
-> >   SYNC_FILE_RANGE_WRITE sync_file_range() call) on this inode,
-> >   filled in br_startblock, converted delayed allocation to real
-> >   allocation, but br_blockcount was unchanged, still 2032, and this
-> >   imap got cached in writeback context structure for writing
-> >   subsequent pages
+> > But there is no difference in vmf setup from generic MM side. In particular
+> > vmf->page is set by the ->fault handler and then it is passed to
+> > ->page_mkwrite handler.
 > 
-> Excellent work in tracking this down, Eryu! This has been a
-> longstanding issue - we've been caching the writeback map for
-> multi-page writeback since, well, longer than I've been working on
-> XFS....
-
-If I read the git history correctly, previously the imap was only cached
-for buffer heads within the same page, commit fbcc02561359 ("xfs:
-Introduce writeback context for writepages") made the cached imap live
-longer, across the whole xfs_vm_writepages() call, which made the window
-wider.
-
-But I can't reproduce the bug until commit bb18782aa47d ("xfs: build bios
-directly in xfs_add_to_ioend"), I didn't dig into it deeply, perhaps it
-made the window even wider?
-
+> Yes there is. DAX can call the .fault() handler directly from
+> handle_pte_fault() for write faults on DAX when there is no pte
+> installed. In which case vmf->page is null because we don't go
+> through do_wp_page() to install the page we faulted on in the vmf
+> before calling .page_mkwrite().
 > 
-> First thing - checking for PAGECACHE_TAG_WRITEBACK in xfs_release()
-> is racy as writeback can start between the check and the EOF blocks
-> being trimmed in xfs_free_eofblocks(), so it's not really a solution
-> to the problem.
+> IOWs, if we fault between the invalidation in the IS_DAX changing
+> code and dropping the MMAPLOCK once the transaction inode change is
+> complete, then that fault will find an empty pte. It will then call
+> ->filemap_fault with vmf->page = NULL, and block on the MMAPLOCK
+> until the filesystem transaction is complete. Then it checks
+> IS_DAX, finds it's not set, so assumes that we have a page cache
+> fault, not a DAX fault....
 
-Ah, you're right, I missed that. 
+So if you get to xfs_filemap_fault(), lock MMAPLOCK, then check IS_DAX() -
+not set - then you go to filemap_fault() which is perfectly fine with
+vmf->page being NULL. What am I missing?
 
-> 
-> The root cause of the problem is that xfs_imap_valid() code doesn't
-> return false when the extent tree is modified and the map is
-> rendered potentially incorrect. If this was to notice we changed the
-> extent tree, it would trigger the writeback code to look up a new
-> map.
-> 
-> Hmmmm, that means the scope is probably wider than
-> xfs_free_eofblocks() - that's a xfs_bunmapi call, but we've also got
-> to consider that other IO operations might change the extent map,
-> too.
+The oops can happen if you call iomap_page_mkwrite() with vmf->page set
+to NULL. However I don't see how that is possible after all IS_DAX checks
+are under MMAPLOCK - iomap_page_mkwrite() cannot be called through
+xfs_filemap_fault() anymore once DAX checks are consistent. And if it gets
+called through xfs_filemap_page_mkwrite(), it means that
+xfs_filemap_fault() was called before and must have returned
+VM_FAULT_LOCKED which means that it has set vmf->page to a correct page.
+[sorry, the page lock and entry lock I was speaking about in my previous
+email was indeed wrong]
 
-Agreed, I did think about a way to notify writeback code an extent
-change was made, but I didn't know the relevant code well enough to do
-this nicely. And I thought free eofblocks in xfs_release() was the only
-place that could race with writeback to cause problems, so I thought
-simply skipping free eoflblocks was easier.
+I've tried to reproduce this on my machine but for some reason setting of
+per-inode DAX flag does not work. I have (with today's checkout of
+xfsprogs):
 
-> 
-> Quick patch below, doesn't work on reflink filesystems yet because
-> the way it handles cached COW mapping invalidation is unnecessarily
-> special and so doesn't work.
+marvin5:~/:[0]# cat /proc/mounts
+...
+/dev/ram0 /mnt xfs rw,relatime,attr2,dax,inode64,noquota 0 0
 
-I've hit this problem and the same assert failure when I was testing
-another version of fix, the usage of xfs_map_cow() cut the imap
-validation work flow :)
+marvin5:~/:[0]# ls /mnt/
+fsxfile  fsxfile.fsxgood  fsxfile.fsxlog
 
-(The basic idea of another version of my fix is comparing timestamp
-saved in struct xfs_inode at free eofblocks time with timestamp saved in
-struct xfs_writepage_ctx, if timestamp in xfs_inode is newer than that
-in xfs_writepage_ctx, invalidate the cached imap and map it again. But
-that still only focused on free of eofblocks, ignored other paths that
-might change the map.)
+marvin5:~/:[0]# ./xfsprogs-dev/io/xfs_io -c 'lsattr' /mnt/fsxfile
+-p-------------- /mnt/fsxfile 
 
-> Can you test it and see if it fixes the
-> problem?
+marvin5:~/:[0]# ./xfsprogs-dev/io/xfs_io -c 'chattr +x' /mnt/fsxfile
 
-Yes, patch works for me, lustre-racer test survived 50 iterations,
-previously it would fail within 5 runs.
+marvin5:~/:[0]# ./xfsprogs-dev/io/xfs_io -c 'lsattr' /mnt/fsxfile
+-p-------------- /mnt/fsxfile 
 
-Thanks!
+No DAX flag set and no error... What am I doing wrong?
 
-Eryu
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
