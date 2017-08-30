@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49840 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:49856 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750749AbdH3ElH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 00:41:07 -0400
-Subject: [PATCH 3/4] xfs: test rmapbt updates are correct with
- insert/collapse range
+        with ESMTP id S1750749AbdH3ElO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 00:41:14 -0400
+Subject: [PATCH 4/4] generic: try various unicode normalization games
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 29 Aug 2017 21:41:02 -0700
-Message-ID: <150406806291.31349.16354828502139354709.stgit@magnolia>
+Date: Tue, 29 Aug 2017 21:41:09 -0700
+Message-ID: <150406806922.31349.14339807533367840438.stgit@magnolia>
 In-Reply-To: <150406805060.31349.16766271336969357123.stgit@magnolia>
 References: <150406805060.31349.16766271336969357123.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,77 +20,36 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Make sure that we update the rmapbt correctly when we collapse-range a
-file and the extents on both sides of the hole can be merged.  We can
-construct this pretty trivially with insert-range and write, so test
-that too.
+Linux filesystems generally treat filenames as a bag of bytes, which
+means that there can be unique sequences of bytes that render the same
+on most modern GUIs.  So, let's rig up a test to see if it's really
+true that we can create filenames that look the same but point to
+different files.  xfs_scrub will warn about these kinds of situations,
+though they're not technically fs "corruption".
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- src/punch-alternating.c |   15 +++++-
- tests/xfs/706           |  127 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/706.out       |    9 +++
- tests/xfs/group         |    1 
- 4 files changed, 150 insertions(+), 2 deletions(-)
- create mode 100755 tests/xfs/706
- create mode 100644 tests/xfs/706.out
+ tests/generic/703     |  151 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/703.out |    6 ++
+ tests/generic/group   |    1 
+ 3 files changed, 158 insertions(+)
+ create mode 100755 tests/generic/703
+ create mode 100644 tests/generic/703.out
 
 
-diff --git a/src/punch-alternating.c b/src/punch-alternating.c
-index 25228cd..281e283 100644
---- a/src/punch-alternating.c
-+++ b/src/punch-alternating.c
-@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
- 	struct stat	s;
- 	struct statfs	sf;
- 	off_t		offset;
-+	off_t		start_offset = 0;
- 	int		fd;
- 	blksize_t	blksz;
- 	off_t		sz;
-@@ -33,11 +34,19 @@ int main(int argc, char *argv[])
- 	int		size = 1;	/* punch $SIZE blocks ... */
- 	int		interval = 2;	/* every $INTERVAL blocks */
- 
--	while ((c = getopt(argc, argv, "i:s:")) != EOF) {
-+	while ((c = getopt(argc, argv, "i:o:s:")) != EOF) {
- 		switch (c) {
- 		case 'i':
- 			interval = atoi(optarg);
- 			break;
-+		case 'o':
-+			errno = 0;
-+			start_offset = strtoull(optarg, NULL, 0);
-+			if (errno) {
-+				fprintf(stderr, "invalid offset '%s'\n", optarg);
-+				return 1;
-+			}
-+			break;
- 		case 's':
- 			size = atoi(optarg);
- 			break;
-@@ -75,7 +84,9 @@ int main(int argc, char *argv[])
- 	blksz = sf.f_bsize;
- 
- 	mode = FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE;
--	for (offset = 0; offset < sz; offset += blksz * interval) {
-+	for (offset = start_offset * blksz;
-+	     offset < sz;
-+	     offset += blksz * interval) {
- 		error = fallocate(fd, mode, offset, blksz * size);
- 		if (error)
- 			goto err;
-diff --git a/tests/xfs/706 b/tests/xfs/706
+diff --git a/tests/generic/703 b/tests/generic/703
 new file mode 100755
-index 0000000..88d789b
+index 0000000..1ae70ed
 --- /dev/null
-+++ b/tests/xfs/706
-@@ -0,0 +1,127 @@
++++ b/tests/generic/703
+@@ -0,0 +1,151 @@
 +#! /bin/bash
-+# FS QA Test No. 706
++# FS QA Test No. 703
 +#
-+# Make sure that we can handle insert-range followed by collapse-range.
-+# XFS had a bug where the rmap wasn't getting updated for that case.
++# Create a directory with multiple filenames that all appear the same
++# (in unicode, anyway) but point to different inodes.  In theory all
++# Linux filesystems should allow this (filenames are a sequence of
++# arbitrary bytes) even if the user implications are horrifying.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
@@ -121,121 +79,140 @@ index 0000000..88d789b
 +
 +_cleanup()
 +{
-+	cd /
-+	rm -rf "$tmp".*
++	rm -f $tmp.*
 +}
 +
 +# get standard environment, filters and checks
 +. ./common/rc
-+. ./common/filter
-+. ./common/reflink
 +
-+# real QA test starts here
 +_supported_os Linux
-+_supported_fs xfs
-+_require_test_program "punch-alternating"
-+_require_xfs_scratch_rmapbt
-+_require_xfs_io_command "fcollapse"
-+_require_xfs_io_command "finsert"
-+
-+rm -f "$seqres.full"
++_require_scratch
 +
 +echo "Format and mount"
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount
-+blksz=65536
-+blocks1=150	# enough extents to force btree format
-+blocks2=16	# local format
-+len1=$((blocks1 * blksz))
-+len2=$((blocks2 * blksz))
-+file_blksz=$(_get_file_block_size $SCRATCH_MNT)
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
 +
-+echo "Create some files"
-+$XFS_IO_PROG -f \
-+	-c "falloc 0 $len1" \
-+	-c "pwrite -S 0x68 -b 1048576 0 $len1" \
-+	$SCRATCH_MNT/f1 >> $seqres.full
-+$XFS_IO_PROG -f \
-+	-c "falloc 0 $len2" \
-+	-c "pwrite -S 0x68 -b 1048576 0 $len2" \
-+	$SCRATCH_MNT/f2 >> $seqres.full
++testdir="${SCRATCH_MNT}/test-${seq}"
++mkdir $testdir
 +
-+./src/punch-alternating -o $((16 * blksz / file_blksz)) \
-+	-s $((blksz / file_blksz)) \
-+	-i $((blksz * 2 / file_blksz)) \
-+	$SCRATCH_MNT/f1 >> "$seqres.full"
++hexbytes() {
++	echo -n "$1" | od -tx1 -w99999 | head -n1 | sed -e 's/^0* //g'
++}
 +
-+echo "Insert and write file range"
-+$XFS_IO_PROG \
-+	-c "finsert $((8 * blksz)) $blksz" \
-+	-c "pwrite -S 0x69 $((8 * blksz)) $blksz" \
-+	-c "fsync" \
-+	$SCRATCH_MNT/f1 >> $seqres.full
-+$XFS_IO_PROG \
-+	-c "finsert $((8 * blksz)) $blksz" \
-+	-c "pwrite -S 0x69 $((8 * blksz)) $blksz" \
-+	-c "fsync" \
-+	$SCRATCH_MNT/f2 >> $seqres.full
++setf() {
++	key="$(echo -e "$1")"
++	value="$2"
 +
-+# Make reflink copies to force it to use the fancy rmap operations.
-+# The test's functionality doesn't depend on the fs supporting reflink.
-+_cp_reflink $SCRATCH_MNT/f1 $SCRATCH_MNT/e1 >> $seqres.full 2>&1
-+_cp_reflink $SCRATCH_MNT/f2 $SCRATCH_MNT/e2 >> $seqres.full 2>&1
++	echo "${value}" > "${testdir}/${key}"
++	echo "Storing ${key} ($(hexbytes "${key}")) -> ${value}" >> $seqres.full
++}
 +
-+echo "f1 bmap" >> $seqres.full
-+$XFS_IO_PROG -c 'bmap -elpv' $SCRATCH_MNT/f1 >> $seqres.full
-+echo "f2 bmap" >> $seqres.full
-+$XFS_IO_PROG -c 'bmap -elpv' $SCRATCH_MNT/f2 >> $seqres.full
-+echo "fsmap" >> $seqres.full
-+$XFS_IO_PROG -c 'fsmap -v' $SCRATCH_MNT >> $seqres.full
++testf() {
++	key="$(echo -e "$1")"
++	value="$2"
++	fname="${testdir}/${key}"
 +
-+echo "Remount"
-+_scratch_unmount
-+_scratch_xfs_check
-+_scratch_mount
++	echo "Testing ${key} ($(hexbytes "${key}")) -> ${value}" >> $seqres.full
 +
-+echo "Collapse file"
-+$XFS_IO_PROG -c "fcollapse $((8 * blksz)) $blksz" $SCRATCH_MNT/f1 >> $seqres.full
-+$XFS_IO_PROG -c "fcollapse $((8 * blksz)) $blksz" $SCRATCH_MNT/f2 >> $seqres.full
++	if [ ! -e "${fname}" ]; then
++		echo "Key ${key} does not exist for ${value} test??"
++		return
++	fi
 +
-+echo "f1 bmap" >> $seqres.full
-+$XFS_IO_PROG -c 'bmap -elpv' $SCRATCH_MNT/f1 >> $seqres.full
-+echo "f2 bmap" >> $seqres.full
-+$XFS_IO_PROG -c 'bmap -elpv' $SCRATCH_MNT/f2 >> $seqres.full
-+echo "fsmap" >> $seqres.full
-+$XFS_IO_PROG -c 'fsmap -v' $SCRATCH_MNT >> $seqres.full
++	actual_value="$(cat "${fname}")"
++	if [ "${actual_value}" != "${value}" ]; then
++		echo "Key ${key} has value ${value}, expected ${actual_value}."
++	fi
++}
 +
-+echo "Check file"
-+md5sum $SCRATCH_MNT/f1 | _filter_scratch
-+md5sum $SCRATCH_MNT/f2 | _filter_scratch
-+od -tx1 -Ad -c $SCRATCH_MNT/f1 >> $seqres.full
-+od -tx1 -Ad -c $SCRATCH_MNT/f2 >> $seqres.full
++filter_scrub() {
++	grep 'Unicode' | sed -e 's/^.*Duplicate/Duplicate/g'
++}
++
++echo "Create files"
++# These two render the same
++setf "french_caf\xc3\xa9.txt" "NFC"
++setf "french_cafe\xcc\x81.txt" "NFD"
++
++# These two may have different widths
++setf "chinese_\xef\xbd\xb6.txt" "NFKC1"
++setf "chinese_\xe3\x82\xab.txt" "NFKC2"
++
++# Same point, different byte representations in NFC/NFD/NFKC/NFKD
++setf "greek_\xcf\x93.txt" "GREEK UPSILON WITH ACUTE AND HOOK SYMBOL, NFC"
++setf "greek_\xcf\x92\xcc\x81.txt" "GREEK UPSILON WITH ACUTE AND HOOK SYMBOL, NFD"
++setf "greek_\xce\x8e.txt" "GREEK UPSILON WITH ACUTE AND HOOK SYMBOL, NFKC"
++setf "greek_\xce\xa5\xcc\x81.txt" "GREEK UPSILON WITH ACUTE AND HOOK SYMBOL, NFKD"
++
++# Arabic code point can expand into a muuuch longer series
++setf "arabic_\xef\xb7\xba.txt" "ARABIC LIGATURE SALLALLAHOU ALAYHE WASALLAM, NFC"
++setf "arabic_\xd8\xb5\xd9\x84\xd9\x89\x20\xd8\xa7\xd9\x84\xd9\x84\xd9\x87\x20\xd8\xb9\xd9\x84\xd9\x8a\xd9\x87\x20\xd9\x88\xd8\xb3\xd9\x84\xd9\x85.txt" "ARABIC LIGATURE SALLALLAHOU ALAYHE WASALLAM, NFKC"
++
++# Fake slash?
++setf "urk\xc0\xafmoo" "FAKESLASH"
++
++ls -la $testdir >> $seqres.full
++
++echo "Test files"
++testf "french_caf\xc3\xa9.txt" "NFC"
++testf "french_cafe\xcc\x81.txt" "NFD"
++
++testf "chinese_\xef\xbd\xb6.txt" "NFKC1"
++testf "chinese_\xe3\x82\xab.txt" "NFKC2"
++
++testf "greek_\xcf\x93.txt" "GREEK UPSILON WITH ACUTE AND HOOK SYMBOL, NFC"
++testf "greek_\xcf\x92\xcc\x81.txt" "GREEK UPSILON WITH ACUTE AND HOOK SYMBOL, NFD"
++testf "greek_\xce\x8e.txt" "GREEK UPSILON WITH ACUTE AND HOOK SYMBOL, NFKC"
++testf "greek_\xce\xa5\xcc\x81.txt" "GREEK UPSILON WITH ACUTE AND HOOK SYMBOL, NFKD"
++
++testf "arabic_\xef\xb7\xba.txt" "ARABIC LIGATURE SALLALLAHOU ALAYHE WASALLAM, NFC"
++testf "arabic_\xd8\xb5\xd9\x84\xd9\x89\x20\xd8\xa7\xd9\x84\xd9\x84\xd9\x87\x20\xd8\xb9\xd9\x84\xd9\x8a\xd9\x87\x20\xd9\x88\xd8\xb3\xd9\x84\xd9\x85.txt" "ARABIC LIGATURE SALLALLAHOU ALAYHE WASALLAM, NFKC"
++
++testf "urk\xc0\xafmoo" "FAKESLASH"
++
++echo "Uniqueness of inodes?"
++stat -c '%i' "${testdir}/"* | sort | uniq -c | while read nr inum; do
++	if [ "${nr}" -gt 1 ]; then
++		echo "${nr} ${inum}"
++	fi
++done
++
++echo "Test XFS online scrub, if applicable"
++# Only run this on xfs if xfs_scrub is available and has the unicode checker
++if [ "${FSTYP}" = "xfs" ] && \
++   [ -x "${XFS_SCRUB_PROG}" ] && \
++   type ldd > /dev/null 2>&1 && ldd "${XFS_SCRUB_PROG}" | grep -q libunistring; then
++	output="$(${XFS_SCRUB_PROG} -n "${SCRATCH_MNT}" 2>&1 | filter_scrub)"
++	echo "${output}" | grep -q "french_" || echo "No complaints about french e accent?"
++	echo "${output}" | grep -q "chinese_" || echo "No complaints about chinese width-different?"
++	echo "${output}" | grep -q "greek_" || echo "No complaints about greek letter mess?"
++	echo "${output}" | grep -q "arabic_" || echo "No complaints about arabic expanded string?"
++	echo "Actual xfs_scrub output:" >> $seqres.full
++	echo "${output}" >> $seqres.full
++fi
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/706.out b/tests/xfs/706.out
+diff --git a/tests/generic/703.out b/tests/generic/703.out
 new file mode 100644
-index 0000000..064d33c
+index 0000000..f46b1c6
 --- /dev/null
-+++ b/tests/xfs/706.out
-@@ -0,0 +1,9 @@
-+QA output created by 706
++++ b/tests/generic/703.out
+@@ -0,0 +1,6 @@
++QA output created by 703
 +Format and mount
-+Create some files
-+Insert and write file range
-+Remount
-+Collapse file
-+Check file
-+f45e899d0ed7c055f7baa4e2039eb152  SCRATCH_MNT/f1
-+e57a7dd63e41d5ba02a754dd72386c3d  SCRATCH_MNT/f2
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 5977330..bfed828 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -426,3 +426,4 @@
- 428 dangerous_fuzzers dangerous_scrub dangerous_online_repair
- 429 dangerous_fuzzers dangerous_scrub dangerous_repair
- 430 dangerous_fuzzers dangerous_scrub dangerous_online_repair
-+706 auto quick clone rmap
++Create files
++Test files
++Uniqueness of inodes?
++Test XFS online scrub, if applicable
+diff --git a/tests/generic/group b/tests/generic/group
+index 044ec3f..2255865 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -453,3 +453,4 @@
+ 448 auto quick rw
+ 449 auto quick acl enospc
+ 450 auto quick rw
++703 auto quick dir
 
