@@ -1,57 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51228 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751394AbdH3NDd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 Aug 2017 09:03:33 -0400
-Date: Wed, 30 Aug 2017 14:54:31 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 3/4] ext4: Add iomap support for inline data
-Message-ID: <20170830125431.GB31735@quack2.suse.cz>
-References: <20170829142942.21594-1-agruenba@redhat.com>
- <20170829142942.21594-4-agruenba@redhat.com>
+Received: from mail-yw0-f172.google.com ([209.85.161.172]:33889 "EHLO
+        mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751913AbdH3OML (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 10:12:11 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170829142942.21594-4-agruenba@redhat.com>
+In-Reply-To: <20170830134629.GA32355@lst.de>
+References: <1504100302-3297-1-git-send-email-amir73il@gmail.com> <20170830134629.GA32355@lst.de>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 30 Aug 2017 17:12:10 +0300
+Message-ID: <CAOQ4uxhqjwZv+H=6RXai2_ap_1OktNje+DtHFR3ZoXoDtxuC0g@mail.gmail.com>
+Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, stable <stable@vger.kernel.org>
 
-On Tue 29-08-17 16:29:41, Andreas Gruenbacher wrote:
-> Report inline data as an IOMAP_F_DATA_INLINE mapping.  This allows to
-> switch to iomap_seek_hole and iomap_seek_data in ext4_llseek, and will
-> make switching to iomap_fiemap in ext4_fiemap easier as well.
-> 
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+On Wed, Aug 30, 2017 at 4:46 PM, Christoph Hellwig <hch@lst.de> wrote:
+> Oops.
+>
+> Yes, except for the case of calling xlog_state_release_iclog
+> ourselves we can't claim that the cache has been flushed.  In
+> fact I'm not even sure that is save, if ic_refcnt makes
+> xlog_state_release_iclog exit early, so we might have to
+> pass additional information around there.
 
-...
+With this change, for the multiple fsyncing tasks workload, the majority won't
+be optimized, so the remaining code is only really optimizing the single
+process doing seldom fsync case.
 
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 429f0afde9f2..ab6ab835255e 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -3411,8 +3411,14 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
->  	struct ext4_map_blocks map;
->  	int ret;
->  
-> -	if (WARN_ON_ONCE(ext4_has_inline_data(inode)))
-> -		return -ERANGE;
-> +	if ((flags & IOMAP_REPORT) && ext4_has_inline_data(inode)) {
-> +		ret = ext4_inline_data_iomap(inode, iomap);
-> +		if (ret != -ENOENT) {
-> +			if (ret == 0 && offset >= iomap->length)
-> +				ret = -ENOENT;
-> +			return ret;
-> +		}
-> +	}
-
-One more thing: Please keep that WARN_ON and bail out for !IOMAP_REPORT
-cases. Thanks!
-
-								Honza
-
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+I wonder if it's worth keeping the optimization around at all?
