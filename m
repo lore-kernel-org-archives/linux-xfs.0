@@ -1,218 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:37196 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751763AbdH3Ovk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 10:51:40 -0400
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v2 14/14] fstests: add crash consistency fsx test using dm-log-writes
-Date: Wed, 30 Aug 2017 17:51:46 +0300
-Message-Id: <1504104706-11965-15-git-send-email-amir73il@gmail.com>
-In-Reply-To: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
-References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51780 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751802AbdH3P6M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 11:58:12 -0400
+Date: Wed, 30 Aug 2017 08:58:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: null pointer reference after crash
+Message-ID: <20170830155800.GJ4757@magnolia>
+References: <ED0CA266-63AF-4A99-A8B9-DC4C452EC217@flyingcircus.io>
+ <20170828174238.GE4757@magnolia>
+ <BE1D250C-EDA0-4E9B-A085-1DD62497BEA8@flyingcircus.io>
+ <289A60E8-9FE0-43B0-8882-F7C96D03DDCF@flyingcircus.io>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <289A60E8-9FE0-43B0-8882-F7C96D03DDCF@flyingcircus.io>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Christian Theune <ct@flyingcircus.io>
+Cc: linux-xfs@vger.kernel.org
 
-DO NOT MERGE!!! this test fails most likely due to test bug.
+On Wed, Aug 30, 2017 at 03:56:05PM +0200, Christian Theune wrote:
+> Hi,
+> 
+> just got it again on a different call path, maybe that helps:
+> 
+> [ 1070.136303] Oops: 0000 [#1] SMP
+> [ 1070.142577] Modules linked in: nf_log_ipv4 nf_conntrack_ipv4 nf_defrag_ipv4 nf_log_ipv6 nf_log_common xt_LOG xt_limit nf_conntrack_ipv6 nf_defrag_ipv6 xt_conntrack sch_fq x86_pkg_temp_thermal kvm_intel kvm irqbypass nvme crc32c_intel ixgbe nvme_core mdio acpi_cpufreq nbd nf_conntrack_ftp nf_conntrack dm_zero dm_thin_pool dm_persistent_data dm_bio_prison dm_round_robin dm_multipath xts aesni_intel glue_helper lrw ablk_helper cryptd aes_x86_64 fuse dm_snapshot dm_bufio dm_crypt dm_mirror dm_region_hash dm_log
+> [ 1070.233784] CPU: 19 PID: 7460 Comm: ceph-osd Not tainted 4.9.43 #1
+> [ 1070.246124] Hardware name: Thomas-Krenn.AG X9DR3-F/X9DR3-F, BIOS 3.0a 07/31/2013
+> [ 1070.260895] task: ffff8810517d0000 task.stack: ffffc9002abec000
+> [ 1070.272710] RIP: 0010:[<ffffffff81312320>]  [<ffffffff81312320>] xfs_da3_node_read+0x30/0xb0
+> [ 1070.289592] RSP: 0018:ffffc9002abefd28  EFLAGS: 00010286
+> [ 1070.300199] RAX: 0000000000000000 RBX: ffff88104d859a48 RCX: 0000000000000001
+> [ 1070.314447] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffc9002abefce0
+> [ 1070.328694] RBP: ffffc9002abefd48 R08: 0000000066656566 R09: ffffc9002abefbc0
+> [ 1070.342942] R10: fffffffffffffffe R11: 0000000000000001 R12: ffffc9002abefd78
+> [ 1070.357191] R13: ffff88066b430780 R14: 0000000000000005 R15: 0000000066656566
+> [ 1070.371436] FS:  00007fe511bfc700(0000) GS:ffff88107fbc0000(0000) knlGS:0000000000000000
+> [ 1070.387590] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [ 1070.399066] CR2: 00000000000000a0 CR3: 0000000f14d50000 CR4: 00000000001406e0
+> [ 1070.413311] Stack:
+> [ 1070.417332]  ffffffff81a44fe0 ffffc9002abefd48 ffffc9002abefdd0 0000000000000005
+> [ 1070.432239]  ffffc9002abefdb8 ffffffff81337404 0000000200000008 ffff8809b5cab040
+> [ 1070.447144]  000000005e94ce38 ffff880c25e1c600 0000000000000000 0000000000000000
+> [ 1070.462051] Call Trace:
+> [ 1070.466949]  [<ffffffff81337404>] xfs_attr3_node_inactive+0x174/0x210
+> [ 1070.479802]  [<ffffffff813376da>] xfs_attr_inactive+0x23a/0x250
+> [ 1070.491625]  [<ffffffff81350a4b>] xfs_inactive+0x7b/0x110
+> [ 1070.502403]  [<ffffffff81359344>] xfs_fs_destroy_inode+0xa4/0x210
+> [ 1070.514573]  [<ffffffff811c46cb>] destroy_inode+0x3b/0x60
+> [ 1070.525352]  [<ffffffff811c4819>] evict+0x129/0x190
+> [ 1070.535093]  [<ffffffff811c4c4a>] iput+0x19a/0x200
+> [ 1070.544660]  [<ffffffff811b9129>] do_unlinkat+0x129/0x2d0
+> [ 1070.555445]  [<ffffffff811b9d26>] SyS_unlink+0x16/0x20
+> [ 1070.565706]  [<ffffffff81885260>] entry_SYSCALL_64_fastpath+0x13/0x94
 
-The random seed values in this patch fail the test consistently on ext4
-always with the same fsck error ((end of extent exceeds allowed value).
-btrfs also fails, but with slightly different fsck errors each run.
-xfs fails sometimes on file checksum error.
+This looks like the same call stack as last time.
 
-Cherry-picked the test from commit 70d41e17164b
-in Josef Bacik's fstests tree (https://github.com/josefbacik/fstests).
-Quoting from Josef's commit message:
+Is this with a patched 4.9.43 kernel, or just vanilla?
 
-  The test just runs some ops and exits, then finds all of the good buffers
-  in the directory we provided and:
-  - replays up to the mark given
-  - mounts the file system and compares the md5sum
-  - unmounts and fsck's to check for metadata integrity
+--D
 
-  dm-log-writes will pretend to do discard and the replay-log tool will
-  replay it properly depending on the underlying device, either by writing
-  0's or actually calling the discard ioctl, so I've enabled discard in the
-  test for maximum fun.
+> [ 1070.578562] Code: 55 48 89 e5 41 54 53 4d 89 c4 48 89 fb 48 83 ec 10 48 c7 04 24 e0 4f a4 81 e8 fd fe ff ff 85 c0 75 46 48 85 db 74 41 49 8b 34 24 <48> 8b 96 a0 00 00 00 0f b7 52 08 66 c1 c2 08 66 81 fa be 3e 74
+> [ 1070.618459] RIP  [<ffffffff81312320>] xfs_da3_node_read+0x30/0xb0
+> [ 1070.630663]  RSP <ffffc9002abefd28>
+> [ 1070.637630] CR2: 00000000000000a0
+> [ 1070.644858] ---[ end trace bc2d3667eef00f69 ]—
+> 
+> As of now the system doesn’t have the same following issues and the other FS’s are still functioning. I’ll run xfs_repair later today on all filesystems for good measure.
+> 
+> Christian
+> 
+> > On Aug 28, 2017, at 9:00 PM, Christian Theune <ct@flyingcircus.io> wrote:
+> > 
+> > Hi,
+> > 
+> >> On Aug 28, 2017, at 7:42 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >> 
+> >> On Mon, Aug 28, 2017 at 07:23:19PM +0200, Christian Theune wrote:
+> >>> Hi,
+> >>> 
+> >>> we stumbled over this today as a host rebooted with an unrelated (iommu)
+> >>> kernel crash and got completely stuck after this:
+> >>> 
+> >>> I’m currently running xfs_repair on all disks and will then see whether this
+> >>> will resolve, still I guess you want to know about it. Kernel is 4.9.43
+> >>> vanilla. Let me know if you need more data.
+> >> 
+> >> Does commit cd87d8679201 ("xfs: don't crash on unexpected holes in dir/attr
+> >> btrees") fix this problem?  It'll be in 4.13, maybe someone can backport it
+> >> to 4.9?
+> > 
+> > Thanks for the suggestion. I’ll keep that in mind in case I see this again.
+> > 
+> >> (Assuming you can get it to reproduce reliably?)
+> > 
+> > I have only seen it once today and hopefully won’t see it again. We have had some storage servers that run multiple SSD and HDD disks (for Ceph) crash multiple times a week lastly due to the IOMMU issues that resulted in hardware watchdog reboots, so I guess those xfs' did have quite some noise in it.
+> > 
+> > Not sure I can do anything to reproduce it at all. *fingers crossed*
+> > 
+> > Christian
+> > 
+> > --
+> > Christian Theune · ct@flyingcircus.io · +49 345 219401 0
+> > Flying Circus Internet Operations GmbH · http://flyingcircus.io
+> > Forsterstraße 29 · 06112 Halle (Saale) · Deutschland
+> > HR Stendal HRB 21169 · Geschäftsführer: Christian Theune, Christian Zagrodnick
+> 
+> Liebe Grüße,
+> Christian Theune
+> 
+> --
+> Christian Theune · ct@flyingcircus.io · +49 345 219401 0
+> Flying Circus Internet Operations GmbH · http://flyingcircus.io
+> Forsterstraße 29 · 06112 Halle (Saale) · Deutschland
+> HR Stendal HRB 21169 · Geschäftsführer: Christian Theune, Christian Zagrodnick
+> 
 
-[Amir:]
-- Removed unneeded _test_falloc_support dynamic FSX_OPTS
-- Added place holders for using constant random seeds
-- Add test to new 'replay' group
-
-Cc: Josef Bacik <jbacik@fb.com>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- tests/generic/500     | 138 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/500.out |   2 +
- tests/generic/group   |   1 +
- 3 files changed, 141 insertions(+)
- create mode 100755 tests/generic/500
- create mode 100644 tests/generic/500.out
-
-diff --git a/tests/generic/500 b/tests/generic/500
-new file mode 100755
-index 0000000..81d45ef
---- /dev/null
-+++ b/tests/generic/500
-@@ -0,0 +1,138 @@
-+#! /bin/bash
-+# FS QA Test No. 500
-+#
-+# Run fsx with log writes to verify power fail safeness.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Facebook. All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+	_cleanup_log_writes
-+}
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmlogwrites
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_test
-+_require_scratch_nocheck
-+_require_log_writes
-+
-+rm -f $seqres.full
-+rm -rf $TEST_DIR/fsxtests
-+
-+check_files()
-+{
-+	local _name=$1
-+
-+	# Now look for our files
-+	for i in $(find $SANITY_DIR -type f | grep $_name | grep mark)
-+	do
-+		local filename=$(basename $i)
-+		local mark="${filename##*.}"
-+		local expected_size=$(_ls_l -h $i | awk '{ print $5 }')
-+		echo "checking $filename ($expected_size)" >> $seqres.full
-+		_replay_log $filename
-+		_scratch_mount
-+		local expected_md5=$(md5sum $i | cut -f 1 -d ' ')
-+		local md5=$(md5sum $SCRATCH_MNT/$_name | cut -f 1 -d ' ')
-+		local size=$(_ls_l -h $SCRATCH_MNT/$_name | awk '{ print $5 }')
-+		[ "${md5}" != "${expected_md5}" ] && _fatal "$filename ($size) md5sum mismatched"
-+		_scratch_unmount
-+		_check_scratch_fs
-+	done
-+}
-+
-+SANITY_DIR=$TEST_DIR/fsxtests
-+mkdir $SANITY_DIR
-+
-+# Create the log
-+_init_log_writes
-+
-+_log_writes_mkfs >> $seqres.full 2>&1
-+
-+# Log writes emulates discard support, turn it on for maximum crying.
-+_mount_log_writes -o discard
-+
-+NUM_FILES=4
-+NUM_OPS=200
-+FSX_OPTS="-N $NUM_OPS -d -P $SANITY_DIR -i $LOGWRITES_DMDEV"
-+# Set random seeds for fsx runs (0 for timestamp + pid)
-+seeds=(- 2885 2886 2887 2888)
-+# Run fsx for a while
-+for j in `seq 1 $NUM_FILES`
-+do
-+	run_check $here/ltp/fsx $FSX_OPTS -S ${seeds[$j]} -j $j $SCRATCH_MNT/testfile$j &
-+done
-+wait
-+
-+test_md5=()
-+test_size=()
-+for j in `seq 1 $NUM_FILES`
-+do
-+	test_md5[$j]=$(md5sum $SCRATCH_MNT/testfile$j | cut -f 1 -d ' ')
-+	test_size[$j]=$(_ls_l -h $SCRATCH_MNT/testfile$j | awk '{ print $5 }')
-+done
-+
-+# Unmount the scratch dir and tear down the log writes target
-+_log_writes_mark last
-+_unmount_log_writes
-+_log_writes_mark end
-+_log_writes_remove
-+_check_scratch_fs
-+
-+# check pre umount
-+_replay_log last
-+_scratch_mount
-+_scratch_unmount
-+_check_scratch_fs
-+
-+for j in `seq 1 $NUM_FILES`
-+do
-+	check_files testfile$j
-+done
-+
-+# Check the end
-+_replay_log end
-+_scratch_mount
-+for j in `seq 1 $NUM_FILES`
-+do
-+	md5=$(md5sum $SCRATCH_MNT/testfile$j | cut -f 1 -d ' ')
-+	size=$(_ls_l -h $SCRATCH_MNT/testfile$j | awk '{ print $5 }')
-+	[ "${md5}" != "${test_md5[$j]}" ] && _fatal "testfile$j end md5sum mismatched ($size:${test_size[$j]})"
-+done
-+_scratch_unmount
-+_check_scratch_fs
-+
-+echo "Silence is golden"
-+status=0
-+exit
-+
-diff --git a/tests/generic/500.out b/tests/generic/500.out
-new file mode 100644
-index 0000000..883b2ca
---- /dev/null
-+++ b/tests/generic/500.out
-@@ -0,0 +1,2 @@
-+QA output created by 500
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index 044ec3f..2396b72 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -453,3 +453,4 @@
- 448 auto quick rw
- 449 auto quick acl enospc
- 450 auto quick rw
-+500 auto log replay
--- 
-2.7.4
 
