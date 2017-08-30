@@ -1,84 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f173.google.com ([209.85.216.173]:34994 "EHLO
-        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751722AbdH3PXb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 11:23:31 -0400
-Received: by mail-qt0-f173.google.com with SMTP id x36so28619158qtx.2
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Aug 2017 08:23:31 -0700 (PDT)
-Date: Wed, 30 Aug 2017 11:23:28 -0400
-From: Josef Bacik <josef@toxicpanda.com>
-Subject: Re: [PATCH v2 00/14] Crash consistency xfstest using dm-log-writes
-Message-ID: <20170830152326.vil3fhsrecp2ccql@destiny>
-References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
- <CAOQ4uxh8av5H87SHdFw92BDTvCtYgd9chS2Nfv5fA4=upoqRfA@mail.gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:45841 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751415AbdH3QRH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 12:17:07 -0400
+Date: Wed, 30 Aug 2017 09:17:01 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: disable per-inode DAX flag
+Message-ID: <20170830161701.GM4757@magnolia>
+References: <20170830145119.3013-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxh8av5H87SHdFw92BDTvCtYgd9chS2Nfv5fA4=upoqRfA@mail.gmail.com>
+In-Reply-To: <20170830145119.3013-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Eryu Guan <eguan@redhat.com>, Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Aug 30, 2017 at 06:04:26PM +0300, Amir Goldstein wrote:
-> Sorry noise xfs list, I meant to CC fsdevel
+On Wed, Aug 30, 2017 at 04:51:19PM +0200, Christoph Hellwig wrote:
+> Currently flag switching can be used to easily crash the kernel.  Disable
+> the per-inode DAX flag until that is sorted out.
 > 
-> On Wed, Aug 30, 2017 at 5:51 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> > Hi all,
-> >
-> > This is the 2nd revision of crash consistency patch set.
-> > The main thing that changed since v1 is my confidence in the failures
-> > reported by the test, along with some more debugging options for
-> > running the test tools.
-> >
-> > I've collected these patches that have been sitting in Josef Bacik's
-> > tree for a few years and kicked them a bit into shape.
-> > The dm-log-writes target has been merged to kernel v4.1, see:
-> > https://github.com/torvalds/linux/blob/master/Documentation/device-mapper/log-writes.txt
-> >
-> > For this posting, I kept the random seeds constant for the test.
-> > I set these constant seeds after running with random seed for a little
-> > while and getting failure reports. With the current values in the test
-> > I was able to reproduce at high probablity failures with xfs, ext4 and btrfs.
-> > The probablity of reproducing the failure is higher on a spinning disk.
-> >
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_ioctl.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 9c0c7a920304..06ca244c323a 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1008,11 +1008,12 @@ xfs_diflags_to_linux(
+>  		inode->i_flags |= S_NOATIME;
+>  	else
+>  		inode->i_flags &= ~S_NOATIME;
+> +#if 0	/* disabled until the flag switching races are sorted out */
 
-I'd rather we make it as evil as possible.  As long as we're printing out the
-seed that was used in the output then we can go in and manually change the test
-to use the same seed over and over again if we need to debug a problem.
+#ifdef DEBUG ?
 
-> > For xfs, I posted a fix for potential data loss post fsync+crash.
-> > For ext4, I posted a reliable reproducer using dm-flakey.
-> > For btrfs, I shared the recorded log with Josef.
-> >
+So that we developers can play with DAX without having to patch this out?
 
-I posted a patch to fix the problem you reported by the way, but my
-git-send-email thing isn't set to cc people in the commit, sorry about that.
+If that's fine with you I'll just change it on the way in.
 
-> > There is an outstanding problem with the test - when I run it with
-> > kvm-xfstests, the test halts and I get soft lockup of log_writes_kthread.
-> > I suppose its a bug in dm-log-writes with some kernel config or with virtio
-> > I wasn't able to determine the reason and have little time to debug this.
-> >
-> > Since dm-log-writes is anyway in upstream kernel, I don't think a bug
-> > in dm-log-writes for a certain config is a reason to block this xfstest
-> > from being merged.
-> > Anyway, I would be glad if someone could take a look at the soft lockup
-> > issue. Josef?
-> >
+--D
 
-Yeah can you give this a try and see if the soft lockup goes away?
-
-diff --git a/drivers/md/dm-log-writes.c b/drivers/md/dm-log-writes.c
-index a1da0eb..b900758 100644
---- a/drivers/md/dm-log-writes.c
-+++ b/drivers/md/dm-log-writes.c
-@@ -345,6 +345,7 @@ static int log_writes_kthread(void *arg)
- 		struct pending_block *block = NULL;
- 		int ret;
- 
-+		cond_resched();
- 		spin_lock_irq(&lc->blocks_lock);
- 		if (!list_empty(&lc->logging_blocks)) {
- 			block = list_first_entry(&lc->logging_blocks,
+>  	if (xflags & FS_XFLAG_DAX)
+>  		inode->i_flags |= S_DAX;
+>  	else
+>  		inode->i_flags &= ~S_DAX;
+> -
+> +#endif
+>  }
+>  
+>  static int
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
