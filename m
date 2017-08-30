@@ -1,113 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51254 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751034AbdHaORW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Aug 2017 10:17:22 -0400
-Date: Thu, 31 Aug 2017 10:17:20 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: don't set v3 xflags for v2 inodes
-Message-ID: <20170831141720.GE21939@bfoster.bfoster>
-References: <20170830155517.GI4757@magnolia>
- <20170830163825.GQ4757@magnolia>
- <20170831131723.GD19544@infradead.org>
- <20170831133420.GB21939@bfoster.bfoster>
- <20170831140932.GB26555@infradead.org>
+Received: from mx2.suse.de ([195.135.220.15]:37581 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751358AbdH3O7Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 Aug 2017 10:59:24 -0400
+Date: Wed, 30 Aug 2017 16:59:21 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 4/4] ext4: Switch to iomap for SEEK_HOLE / SEEK_DATA
+Message-ID: <20170830145921.GB5920@quack2.suse.cz>
+References: <20170829142942.21594-1-agruenba@redhat.com>
+ <20170829142942.21594-5-agruenba@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="r5Pyd7+fXNt84Ff3"
 Content-Disposition: inline
-In-Reply-To: <20170831140932.GB26555@infradead.org>
+In-Reply-To: <20170829142942.21594-5-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>
 
-On Thu, Aug 31, 2017 at 07:09:32AM -0700, Christoph Hellwig wrote:
-> So maybe something like this (totally untested, will attempt for
-> a QA run over the night):
-> 
-> 
 
-That looks reasonable/correct to me, fwiw.
+--r5Pyd7+fXNt84Ff3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Brian
-
-> From d4da594cd1c42b88673b7eae5187827a3099ec42 Mon Sep 17 00:00:00 2001
+On Tue 29-08-17 16:29:42, Andreas Gruenbacher wrote:
 > From: Christoph Hellwig <hch@lst.de>
-> Date: Thu, 31 Aug 2017 15:14:36 +0200
-> Subject: xfs: don't set v3 xflags for v2 inodes
 > 
-> Reject attempts to set XFLAGS that correspond to di_flags2 inode flags
-> if the inode isn't a v3 inode, because di_flags2 only exists on v3.
+> Switch to the iomap_seek_hole and iomap_seek_data helpers for
+> implementing lseek SEEK_HOLE / SEEK_DATA, and remove all the code that
+> isn't needed any more.
+> 
+> Note that with this patch, ext4 will now always depend on the iomap code
+> instead of only when CONFIG_DAX is enabled, and it requires adding a
+> call into the extent status tree for iomap_begin as well to properly
+> deal with delalloc extents.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_ioctl.c | 19 ++++++++++++-------
->  1 file changed, 12 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 9c0c7a920304..84a80210b2e1 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -931,7 +931,7 @@ xfs_ioc_fsgetxattr(
->  	return 0;
->  }
+> [Minor fixes and cleanups by Andreas]
+> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+
+...
+
+> @@ -3425,6 +3425,29 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
 >  
-> -STATIC void
-> +STATIC int
->  xfs_set_diflags(
->  	struct xfs_inode	*ip,
->  	unsigned int		xflags)
-> @@ -970,11 +970,6 @@ xfs_set_diflags(
->  		if (xflags & FS_XFLAG_EXTSIZE)
->  			di_flags |= XFS_DIFLAG_EXTSIZE;
->  	}
-> -	ip->i_d.di_flags = di_flags;
-> -
-> -	/* diflags2 only valid for v3 inodes. */
-> -	if (ip->i_d.di_version < 3)
-> -		return;
->  
->  	di_flags2 = (ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
->  	if (xflags & FS_XFLAG_DAX)
-> @@ -982,7 +977,13 @@ xfs_set_diflags(
->  	if (xflags & FS_XFLAG_COWEXTSIZE)
->  		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
->  
-> +	/* diflags2 only valid for v3 inodes. */
-> +	if (di_flags2 && ip->i_d.di_version < 3)
-> +		return -EINVAL;
+>  	if (!(flags & IOMAP_WRITE)) {
+>  		ret = ext4_map_blocks(NULL, inode, &map, 0);
+> +		if (ret < 0)
+> +			return ret;
+
+One general question about IOMAP_REPORT: When there is unwritten extent, we
+use page_cache_seek_hole_data() to determine what is actually a hole and
+what is data. We could use exactly the same function to determine what is a
+hole and what is data in an IOMAP_HOLE extent, couldn't we? Now I
+understand that a filesystem is supposed to return IOMAP_DELALLOC extent if
+there is delayed allocation data covering queried offset so probably it's
+not a great idea to use that however it still seems a bit like an
+unnecessary duplication...
+
+> +		if (!ret) {
+
+Please go to this branch only for IOMAP_REPORT case to avoid unnecessary
+overhead for DAX mappings...
+
+> +			struct extent_status es = {};
 > +
-> +	ip->i_d.di_flags = di_flags;
->  	ip->i_d.di_flags2 = di_flags2;
-> +	return 0;
->  }
->  
->  STATIC void
-> @@ -1022,6 +1023,7 @@ xfs_ioctl_setattr_xflags(
->  	struct fsxattr		*fa)
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
-> +	int			error;
->  
->  	/* Can't change realtime flag if any extents are allocated. */
->  	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
-> @@ -1052,7 +1054,10 @@ xfs_ioctl_setattr_xflags(
->  	    !capable(CAP_LINUX_IMMUTABLE))
->  		return -EPERM;
->  
-> -	xfs_set_diflags(ip, fa->fsx_xflags);
-> +	error = xfs_set_diflags(ip, fa->fsx_xflags);
-> +	if (error)
-> +		return error;
+> +			ext4_es_find_delayed_extent_range(inode, map.m_lblk,
+> +					map.m_lblk + map.m_len - 1, &es);
+> +			/* Is delalloc data before next block in extent tree? */
+> +			if (es.es_len && es.es_lblk < map.m_lblk + map.m_len) {
+
+And this is still wrong - I have actually verified that with attached patch
+that disables caching of extents (so it is equivalent to *very* aggresive
+slab reclaim happening). With that patch applied you'll get:
+
+kvm0:~ # rm /mnt/file; xfs_io -f -c "pwrite 4096 4096" -c "seek -a 0"
+/mnt/file
+wrote 4096/4096 bytes at offset 4096
+4 KiB, 1 ops; 0.0000 sec (16.693 MiB/sec and 4273.5043 ops/sec)
+Whence	Result
+DATA	0
+HOLE	8192
+
+Which is obviously wrong - hole should be 0, data should be 4096.
+
+And the reason why this is wrong is that when we are asked to map things at
+first_block and there is a hole at that offset, we need to just truncate
+the hole extent returned by ext4_map_blocks() by possibly following
+delalloc allocation. But we still need to return that there *is a hole* at
+first_block. But your patch seems to try to return the delalloc extent
+instead which is wrong.
+
+> +				ext4_lblk_t offs = 0;
 > +
->  	xfs_diflags_to_linux(ip);
->  	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
->  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +				if (es.es_lblk < map.m_lblk)
+> +					offs = map.m_lblk - es.es_lblk;
+> +				map.m_lblk = es.es_lblk + offs;
+> +				map.m_pblk = ext4_es_pblock(&es) + offs;
+> +				map.m_len = es.es_len - offs;
+> +				if (ext4_es_is_unwritten(&es))
+> +					map.m_flags |= EXT4_MAP_UNWRITTEN;
+> +				if (ext4_es_is_delayed(&es))
+> +					delalloc = true;
+> +				ret = 1;
+> +			}
+> +		}
+>  	} else {
+>  		int dio_credits;
+>  		handle_t *handle;
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
+
+--r5Pyd7+fXNt84Ff3
+Content-Type: text/x-patch; charset=us-ascii
+Content-Disposition: attachment; filename="extent_status_disable.diff"
+
+diff --git a/fs/ext4/extents_status.c b/fs/ext4/extents_status.c
+index e7f12a204cbc..32b55cdf9b82 100644
+--- a/fs/ext4/extents_status.c
++++ b/fs/ext4/extents_status.c
+@@ -698,7 +698,7 @@ int ext4_es_insert_extent(struct inode *inode, ext4_lblk_t lblk,
+ 	es_debug("add [%u/%u) %llu %x to extent status tree of inode %lu\n",
+ 		 lblk, len, pblk, status, inode->i_ino);
+ 
+-	if (!len)
++	if (!len || !(status & EXTENT_STATUS_DELAYED))
+ 		return 0;
+ 
+ 	BUG_ON(end < lblk);
+
+--r5Pyd7+fXNt84Ff3--
