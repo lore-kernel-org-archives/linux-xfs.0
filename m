@@ -1,70 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:36110 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751752AbdHaQYT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 12:24:19 -0400
-Received: by mail-wm0-f50.google.com with SMTP id f127so788571wmf.1
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2017 09:24:19 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:24755 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751205AbdH3Xou (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 19:44:50 -0400
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1dnCf9-0004LW-OC
+        for linux-xfs@vger.kernel.org; Thu, 31 Aug 2017 09:44:47 +1000
+Date: Thu, 31 Aug 2017 09:44:47 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 36/42] mkfs: factor AG alignment
+Message-ID: <20170830234447.GF17782@dastard>
+References: <20170829235052.21050-1-david@fromorbit.com>
+ <20170829235052.21050-37-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <20170830054420.GI10621@dastard>
-References: <20170829235052.21050-1-david@fromorbit.com> <20170830041635.GK27873@wotan.suse.de>
- <20170830054420.GI10621@dastard>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Thu, 31 Aug 2017 18:23:57 +0200
-Message-ID: <CACj3i73Bo22VQpkTL6gRuQ5Kit9UpQJwy0bWv7oysha_F3Y8Rw@mail.gmail.com>
-Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170829235052.21050-37-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Wed, Aug 30, 2017 at 7:44 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Wed, Aug 30, 2017 at 06:16:35AM +0200, Luis R. Rodriguez wrote:
->>
->> However this still begs the question of what tests we should run
->> prior and after the full set, and if we had any missing test what
->> we should add, or if we've considered that.
->
-> We have nothing that actually tests that the on-disk filesystem
-> format values match what is specified on the command line, so
-> testing/validation has all been completely manual. I'm not sure we
-> can automate it, given the math needed to check that all the fields
-> in the superblock are correct and sane for arbitrary mkfs
-> configurations on arbitrary block devices.
->
-> In the end I basically ran some configs with an old mkfs, dumped the
-> superblock with xfs_db for each config, then did the same with the
-> new mkfs. I then diffed the output to see if anything came out
-> differently. I fixed all the things I found that were different.  I
-> ran the checks on 4k and 512 byte sector devices, just to make sure
-> nothing went wrong with using probed device sector sizes by default.
-> Then I diffed logprint output for different log options (e.g. sector
-> size, lsunit, etc) to make sure everything was correct, etc. I
-> mounted each filesystem, ran repair on them, etc so that both the
-> kernel and repair code could validate the format, too (the kernel
-> found the first log formatting bug via CRC errors).  And, of course,
-> I ran xfstests over a variety of configs - different block sizes,
-> rmap, DAX, etc.
->
-> Maybe you can come up with a way of automating this, but for a
-> one-off piece of work that affects a point-in-time snapshot of mkfs
-> functionality, I'm not sure it's worth the effort to try to make a
-> generic test to do this sort of thing.
->
+On Wed, Aug 30, 2017 at 09:50:46AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+....
 
-I actually tried to automate this kind of testing. Something similar
-to xfs/191, but with testing if the physically written fs is valid and
-expected. But I didn't find a way that would work with xfstests
-without hacking it to use some other version of mkfs.xfs manually, and
-without doing all the math craziness that would be so error-prone...
-
-Anyway, I'm on the sea until 10th September. I might be able to
-continue my review and write something tomorrow (Friday) in the
-morning before I depart, but more likely I will keep all my comments
-until after I return, and see what changes in the meantime. But so
-far, it looks like a good job, Dave. :-)
+This patch needs this delta fix, otherwise large filesystems will be
+configured wrongly.
 
 Cheers,
-Jan
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
+
+
+agcount wrong when at full 1TB sized AGs:
+$ sudo ~/packages/mkfs.xfs -f -d size=4t,file,name=/mnt/test/foo
+Default configuration sourced from package build definitions
+meta-data=/mnt/test/foo          isize=512    agcount=5, agsize=268435455 blks
+
+---
+ mkfs/xfs_mkfs.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index bec12d473099..21394a1ae946 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2707,7 +2707,7 @@ align_ag_geometry(
+ 	int		dsunit = cfg->dsunit;
+ 
+ 	if (!dsunit)
+-		return;
++		goto validate;
+ 
+ 	/*
+ 	 * agsize is not a multiple of dsunit
+@@ -2791,6 +2791,7 @@ an AG size that is one stripe unit smaller or larger, for example %llu.\n"),
+ 				(cfg->dblocks % cfg->agsize != 0);
+ 	}
+ 
++validate:
+ 	/*
+ 	 * If the last AG is too small, reduce the filesystem size
+ 	 * and drop the blocks.
+@@ -2803,7 +2804,6 @@ an AG size that is one stripe unit smaller or larger, for example %llu.\n"),
+ 		ASSERT(cfg->agcount != 0);
+ 	}
+ 
+-validate:
+ 	validate_ag_geometry(cfg->blocklog, cfg->dblocks,
+ 			     cfg->agsize, cfg->agcount);
+ }
