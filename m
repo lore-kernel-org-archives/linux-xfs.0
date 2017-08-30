@@ -1,76 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39511 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751443AbdH3QIn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 12:08:43 -0400
-Date: Wed, 30 Aug 2017 09:08:39 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 0/9] xfs: refactor ordered buffer logging code
-Message-ID: <20170830160839.GK4757@magnolia>
-References: <20170829143758.58990-1-bfoster@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:52276 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751242AbdH3HOF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 03:14:05 -0400
+Date: Wed, 30 Aug 2017 00:14:03 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 15/30] xfs: Define usercopy region in xfs_inode slab
+ cache
+Message-ID: <20170830071403.GA8904@infradead.org>
+References: <1503956111-36652-1-git-send-email-keescook@chromium.org>
+ <1503956111-36652-16-git-send-email-keescook@chromium.org>
+ <20170829081453.GA10196@infradead.org>
+ <20170829123126.GB10621@dastard>
+ <20170829124536.GA26339@infradead.org>
+ <20170829215157.GC10621@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170829143758.58990-1-bfoster@redhat.com>
+In-Reply-To: <20170829215157.GC10621@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, kernel-hardening@lists.openwall.com
 
-On Tue, Aug 29, 2017 at 10:37:49AM -0400, Brian Foster wrote:
-> Hi all,
-> 
-> Here's v2 of the ordered buffer / buffer relogging refactoring series.
-> Only minor updates in this version. I've also tagged patch 6 for stable
-> as it fixes a log recovery regression for bmbt owner change operations.
+On Wed, Aug 30, 2017 at 07:51:57AM +1000, Dave Chinner wrote:
+> Right, I've looked at btrees, too, but it's more complex than just
+> using an rbtree. I originally looked at using Peter Z's old
+> RCU-aware btree code, but it doesn't hold data in the tree leaves.
+> So that needed significant modification to make work without a
+> memory alloc per extent and that didn't work with original aim of
+> RCU-safe extent lookups.  I also looked at that "generic" btree
+> stuff that came from logfs, and after a little while ran away
+> screaming.
 
-Seems to have passed testing cycle, queued for next.
+I started with the latter, but it's not really looking like it any more:
+there nodes are formatted as a series of u64s instead of all the
+long magic, and the data is stored inline - in fact I use a cute
+trick to keep the size down, derived from our "compressed" on disk
+extent format:
 
---D
+Key:
 
-> 
-> Brian
-> 
-> v2:
-> - Various cleanups.
-> - Rename bmbt scan invalid owner flag.
-> - Added stable CC for bmbt owner change log recovery fix (6/9).
-> v1: https://marc.info/?l=linux-xfs&m=150367356112090&w=2
-> - Drop unnecessary buffer type set in xfs_btree_block_change_owner().
-> - Several new cleanup patches.
-> - Fix bmbt owner change (extent swap) log recovery.
-> - Update buffer ordering to fail on previously dirty buffers.
-> - Rework bmbt owner change to use ordered buffers correctly.
-> rfc: https://marc.info/?l=linux-xfs&m=150272969407981&w=2
-> 
-> Brian Foster (9):
->   xfs: open-code xfs_buf_item_dirty()
->   xfs: remove unnecessary dirty bli format check for ordered bufs
->   xfs: ordered buffer log items are never formatted
->   xfs: refactor buffer logging into buffer dirtying helper
->   xfs: don't log dirty ranges for ordered buffers
->   xfs: skip bmbt block ino validation during owner change
->   xfs: move bmbt owner change to last step of extent swap
->   xfs: disallow marking previously dirty buffers as ordered
->   xfs: relog dirty buffers during swapext bmbt owner change
-> 
->  fs/xfs/libxfs/xfs_bmap_btree.c |  1 +
->  fs/xfs/libxfs/xfs_btree.c      | 27 ++++++++----
->  fs/xfs/libxfs/xfs_btree.h      |  3 +-
->  fs/xfs/libxfs/xfs_ialloc.c     |  2 -
->  fs/xfs/xfs_bmap_util.c         | 93 +++++++++++++++++++++++++++++++-----------
->  fs/xfs/xfs_buf_item.c          | 75 +++++++++++++---------------------
->  fs/xfs/xfs_buf_item.h          |  2 +-
->  fs/xfs/xfs_trace.h             |  1 -
->  fs/xfs/xfs_trans.h             |  6 ++-
->  fs/xfs/xfs_trans_buf.c         | 79 +++++++++++++++++++++--------------
->  10 files changed, 173 insertions(+), 116 deletions(-)
-> 
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ +-------+----------------------------+
+ | 00:51 | all 52 bits of startoff    |
+ | 52:63 | low 12 bits of startblock  |
+ +-------+----------------------------+
+
+Value
+
+ +-------+----------------------------+
+ | 00:20 | all 21 bits of length      |
+ |    21 | unwritten extent bit       |
+ | 22:63 | high 42 bits of startblock |
+ +-------+----------------------------+
+
+So we only need a 64-bit key and a 64-bit value by abusing parts
+of the key to store bits of the startblock.
+
+For non-leaf nodes we iterate through the keys only, never touching
+the cache lines for the value.  For the leaf nodes we have to touch
+the value anyway because we have to do a range lookup to find the
+exact record.
+
+This works fine so far in an isolated simulator, and now I'm ammending
+it to be a b+tree with pointers to the previous and next node so
+that we can nicely implement our extent iterators instead of doing
+full lookups.
+
+> The sticking point, IMO, is the extent array index based lookups in
+> all the bmbt code.  I've been looking at converting all that to use
+> offset based lookups and a cursor w/ lookup/inc/dec/insert/delete
+> ioperations wrapping xfs_iext_lookup_ext() and friends. This means
+> the modifications are pretty much identical to the on-disk extent
+> btree, so they can be abstracted out into a single extent update
+> interface for both trees.  Have you planned/done any cleanup/changes
+> with this code?
+
+I've done various cleanups, but I've not yet consolidated the two.
+Basically step one at the moment is to move everyone to
+xfs_iext_lookup_extent + xfs_iext_get_extent that removes all the
+bad intrusion.
+
+Once we move to the actual b+trees the extnum_t cursor will be replaced
+with a real cursor structure that contains a pointer to the current
+b+tree leaf node, and an index inside that, which will allows us very
+efficient iteration.  The xfs_iext_get_extent calls will be replaced
+with more specific xfs_iext_prev_extent, xfs_iext_next_extent calls
+that include the now slightly more complex cursor decrement, increment
+as well as a new xfs_iext_last_extent helper for the last extent
+that we need in a few places.
+
+insert/delete remain very similar to what they do right now, they'll
+get a different cursor type, and the manual xfs_iext_add calls will
+go away.  The new xfs_iext_update_extent helper I posted to the list
+yesterday will become a bit more complex, as changing the startoff
+will have to be propagated up the tree.
