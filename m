@@ -1,87 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22807 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:38246 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751425AbdHaO6E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 10:58:04 -0400
-Date: Thu, 31 Aug 2017 07:57:52 -0700
+        with ESMTP id S1751333AbdH3Q4i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 12:56:38 -0400
+Date: Wed, 30 Aug 2017 09:56:32 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: linux-next: build warning after merge of the xfs tree
-Message-ID: <20170831145752.GH3775@magnolia>
-References: <20170831100703.16eeb69f@canb.auug.org.au>
- <20170831103040.GB21508@bfoster.bfoster>
+Subject: Re: [PATCH] xfs: disable per-inode DAX flag
+Message-ID: <20170830165632.GR4757@magnolia>
+References: <20170830145119.3013-1-hch@lst.de>
+ <20170830161701.GM4757@magnolia>
+ <20170830161756.GA3040@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170831103040.GB21508@bfoster.bfoster>
+In-Reply-To: <20170830161756.GA3040@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Aug 31, 2017 at 06:30:41AM -0400, Brian Foster wrote:
-> On Thu, Aug 31, 2017 at 10:07:03AM +1000, Stephen Rothwell wrote:
-> > Hi all,
+On Wed, Aug 30, 2017 at 06:17:56PM +0200, Christoph Hellwig wrote:
+> On Wed, Aug 30, 2017 at 09:17:01AM -0700, Darrick J. Wong wrote:
+> > #ifdef DEBUG ?
 > > 
-> > After merging the xfs tree, today's linux-next build (powerpc
-> > ppc64_defconfig) produced this warning:
+> > So that we developers can play with DAX without having to patch this out?
 > > 
-> > fs/xfs/xfs_buf_item.c: In function 'xfs_buf_item_unlock':
-> > fs/xfs/xfs_buf_item.c:573:9: warning: unused variable 'ordered' [-Wunused-variable]
-> >   bool   ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
-> >          ^
-> > 
-> > Introduced by commit
-> > 
-> >   a097077ef708 ("xfs: remove unnecessary dirty bli format check for ordered bufs")
-> > 
+> > If that's fine with you I'll just change it on the way in.
 > 
-> Ugh, this is due to the refactoring of this patch between v1 and v2. I
-> specifically recall testing for this in v1 because I added the ordered
-> bool purely to clean up the ASSERT(), then I apparently lost of track of
-> it for v2.
-> 
-> Anyways.. Christoph, Darrick, preferences to clean this up..? I have no
-> preference between the v1 or v2 factoring. Or if it's easier, we could
-> always just drop something like the hunk below on top. Thoughts?
-> 
-> Brian
-> 
-> --- 8< ---
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index ef2c137..f5d25f5 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -567,10 +567,15 @@ xfs_buf_item_unlock(
->  {
->  	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
->  	struct xfs_buf		*bp = bip->bli_buf;
-> -	bool			aborted = !!(lip->li_flags & XFS_LI_ABORTED);
-> -	bool			hold = !!(bip->bli_flags & XFS_BLI_HOLD);
-> -	bool			dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
-> -	bool			ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
-> +	bool			aborted;
-> +	bool			hold;
-> +	bool			dirty;
-> +	bool			ordered;
-> +
-> +	aborted = !!(lip->li_flags & XFS_LI_ABORTED);
-> +	hold = !!(bip->bli_flags & XFS_BLI_HOLD);
-> +	dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
-> +	ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
+> You can always mount with -o dax and get DAX support.  That's how
+> ext2/ext4 also work..
 
-The trouble is, 'ordered' is still an unused variable on !DEBUG builds,
-since the only user of ordered is that ASSERT.  So either we #ifdef
-DEBUG the variable out of existence or employ one of those silly
-'ordered = ordered' constructions to shut up gcc, if that even still
-works.
+Ok, fair enough.
 
---D
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
->  
->  	/* Clear the buffer's association with this transaction. */
->  	bp->b_transp = NULL;
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
