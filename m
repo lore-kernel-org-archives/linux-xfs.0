@@ -1,96 +1,257 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17359 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:18497 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751519AbdH3VkG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 17:40:06 -0400
-Date: Wed, 30 Aug 2017 14:39:51 -0700
+        with ESMTP id S1750761AbdH3Vmn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 17:42:43 -0400
+Date: Wed, 30 Aug 2017 14:42:37 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 1/4] dax: introduce a fs_dax_get_by_bdev() helper
-Message-ID: <20170830213951.GU4757@magnolia>
+Subject: Re: [PATCH v3 2/4] xfs: perform dax_device lookup at mount
+Message-ID: <20170830214237.GV4757@magnolia>
 References: <150412222686.10177.8031279869867070772.stgit@dwillia2-desk3.amr.corp.intel.com>
- <150412223265.10177.11004612169458058274.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150412223801.10177.4972035211701096310.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <150412223265.10177.11004612169458058274.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <150412223801.10177.4972035211701096310.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, linux-nvdimm@lists.01.org
+Cc: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, Christoph Hellwig <hch@lst.de>
 
-On Wed, Aug 30, 2017 at 12:43:52PM -0700, Dan Williams wrote:
-> Add a helper that can replace the following common pattern:
+On Wed, Aug 30, 2017 at 12:43:58PM -0700, Dan Williams wrote:
+> The ->iomap_begin() operation is a hot path, so cache the
+> fs_dax_get_by_host() result at mount time to avoid the incurring the
+> hash lookup overhead on a per-i/o basis.
 > 
-> 	if (blk_queue_dax(bdev->bd_queue))
-> 		fs_dax_get_by_host(bdev->bd_disk->disk_name);
-> 
-> This will be used to move dax_device lookup from iomap-operation time to
-> fs-mount time.
-> 
-> Cc: Jan Kara <jack@suse.cz>
-> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> Reported-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 > ---
->  drivers/dax/super.c |   10 ++++++++++
->  include/linux/dax.h |    6 ++++++
->  2 files changed, 16 insertions(+)
+>  fs/xfs/xfs_aops.c  |   13 +++++++++++++
+>  fs/xfs/xfs_aops.h  |    1 +
+>  fs/xfs/xfs_buf.c   |    4 +++-
+>  fs/xfs/xfs_buf.h   |    3 ++-
+>  fs/xfs/xfs_iomap.c |   10 +---------
+>  fs/xfs/xfs_super.c |   25 +++++++++++++++++++++----
+>  6 files changed, 41 insertions(+), 15 deletions(-)
 > 
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index 938eb4868f7f..b699aac268a6 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -46,6 +46,8 @@ void dax_read_unlock(int id)
->  EXPORT_SYMBOL_GPL(dax_read_unlock);
->  
->  #ifdef CONFIG_BLOCK
-> +#include <linux/blkdev.h>
-> +
->  int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
->  		pgoff_t *pgoff)
->  {
-> @@ -59,6 +61,14 @@ int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 6bf120bb1a17..78185f3b10b2 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -80,6 +80,19 @@ xfs_find_bdev_for_inode(
+>  		return mp->m_ddev_targp->bt_bdev;
 >  }
->  EXPORT_SYMBOL(bdev_dax_pgoff);
 >  
-> +struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
+> +struct dax_device *
+> +xfs_find_daxdev_for_inode(
+> +	struct inode		*inode)
 > +{
-> +	if (!blk_queue_dax(bdev->bd_queue))
-> +		return NULL;
-> +	return fs_dax_get_by_host(bdev->bd_disk->disk_name);
-> +}
-> +EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
+> +	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_mount	*mp = ip->i_mount;
 > +
->  /**
->   * __bdev_dax_supported() - Check if the device supports dax for filesystem
->   * @sb: The superblock of the device
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index df97b7af7e2c..ac8afa18f707 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -57,6 +57,7 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
->  	put_dax(dax_dev);
+> +	if (XFS_IS_REALTIME_INODE(ip))
+> +		return mp->m_rtdev_targp->bt_daxdev;
+> +	else
+> +		return mp->m_ddev_targp->bt_daxdev;
+> +}
+> +
+>  /*
+>   * We're now finished for good with this page.  Update the page state via the
+>   * associated buffer_heads, paying attention to the start and end offsets that
+> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+> index cc174ec6c2fd..88c85ea63da0 100644
+> --- a/fs/xfs/xfs_aops.h
+> +++ b/fs/xfs/xfs_aops.h
+> @@ -59,5 +59,6 @@ int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
+>  
+>  extern void xfs_count_page_state(struct page *, int *, int *);
+>  extern struct block_device *xfs_find_bdev_for_inode(struct inode *);
+> +extern struct dax_device *xfs_find_daxdev_for_inode(struct inode *);
+>  
+>  #endif /* __XFS_AOPS_H__ */
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 72f038492ba8..6deb86c845d1 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1802,7 +1802,8 @@ xfs_setsize_buftarg_early(
+>  xfs_buftarg_t *
+>  xfs_alloc_buftarg(
+>  	struct xfs_mount	*mp,
+> -	struct block_device	*bdev)
+> +	struct block_device	*bdev,
+> +	struct dax_device	*dax_dev)
+>  {
+>  	xfs_buftarg_t		*btp;
+>  
+> @@ -1811,6 +1812,7 @@ xfs_alloc_buftarg(
+>  	btp->bt_mount = mp;
+>  	btp->bt_dev =  bdev->bd_dev;
+>  	btp->bt_bdev = bdev;
+> +	btp->bt_daxdev = dax_dev;
+>  
+>  	if (xfs_setsize_buftarg_early(btp, bdev))
+>  		goto error;
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index 20721261dae5..bf71507ddb16 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -108,6 +108,7 @@ typedef unsigned int xfs_buf_flags_t;
+>  typedef struct xfs_buftarg {
+>  	dev_t			bt_dev;
+>  	struct block_device	*bt_bdev;
+> +	struct dax_device	*bt_daxdev;
+>  	struct xfs_mount	*bt_mount;
+>  	unsigned int		bt_meta_sectorsize;
+>  	size_t			bt_meta_sectormask;
+> @@ -385,7 +386,7 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
+>   *	Handling of buftargs.
+>   */
+>  extern xfs_buftarg_t *xfs_alloc_buftarg(struct xfs_mount *,
+> -			struct block_device *);
+> +			struct block_device *, struct dax_device *);
+>  extern void xfs_free_buftarg(struct xfs_mount *, struct xfs_buftarg *);
+>  extern void xfs_wait_buftarg(xfs_buftarg_t *);
+>  extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 813394c62849..7c934e407332 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -69,6 +69,7 @@ xfs_bmbt_to_iomap(
+>  	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
+>  	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
+>  	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
+> +	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
 >  }
 >  
-> +struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
->  #else
->  static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
->  {
-> @@ -71,6 +72,11 @@ static inline struct dax_device *fs_dax_get_by_host(const char *host)
->  static inline void fs_put_dax(struct dax_device *dax_dev)
->  {
->  }
-> +
-> +static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
-> +{
-> +	return NULL;
-> +}
->  #endif
+>  xfs_extlen_t
+> @@ -976,7 +977,6 @@ xfs_file_iomap_begin(
+>  	int			nimaps = 1, error = 0;
+>  	bool			shared = false, trimmed = false;
+>  	unsigned		lockmode;
+> -	struct block_device	*bdev;
 >  
->  int dax_read_lock(void);
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+> @@ -1087,13 +1087,6 @@ xfs_file_iomap_begin(
+>  
+>  	xfs_bmbt_to_iomap(ip, iomap, &imap);
+>  
+> -	/* optionally associate a dax device with the iomap bdev */
+> -	bdev = iomap->bdev;
+> -	if (blk_queue_dax(bdev->bd_queue))
+> -		iomap->dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
+> -	else
+> -		iomap->dax_dev = NULL;
+> -
+>  	if (shared)
+>  		iomap->flags |= IOMAP_F_SHARED;
+>  	return 0;
+> @@ -1171,7 +1164,6 @@ xfs_file_iomap_end(
+>  	unsigned		flags,
+>  	struct iomap		*iomap)
+>  {
+> -	fs_put_dax(iomap->dax_dev);
+>  	if ((flags & IOMAP_WRITE) && iomap->type == IOMAP_DELALLOC)
+>  		return xfs_file_iomap_end_delalloc(XFS_I(inode), offset,
+>  				length, written, iomap);
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 38aaacdbb8b3..ee4225c65f0c 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -714,17 +714,26 @@ STATIC void
+>  xfs_close_devices(
+>  	struct xfs_mount	*mp)
+>  {
+> +	struct dax_device *dax_ddev = mp->m_ddev_targp->bt_daxdev;
+> +
+>  	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
+>  		struct block_device *logdev = mp->m_logdev_targp->bt_bdev;
+> +		struct dax_device *dax_logdev = mp->m_logdev_targp->bt_daxdev;
+> +
+>  		xfs_free_buftarg(mp, mp->m_logdev_targp);
+>  		xfs_blkdev_put(logdev);
+> +		fs_put_dax(dax_logdev);
+>  	}
+>  	if (mp->m_rtdev_targp) {
+>  		struct block_device *rtdev = mp->m_rtdev_targp->bt_bdev;
+> +		struct dax_device *dax_rtdev = mp->m_rtdev_targp->bt_daxdev;
+> +
+>  		xfs_free_buftarg(mp, mp->m_rtdev_targp);
+>  		xfs_blkdev_put(rtdev);
+> +		fs_put_dax(dax_rtdev);
+>  	}
+>  	xfs_free_buftarg(mp, mp->m_ddev_targp);
+> +	fs_put_dax(dax_ddev);
+>  }
+>  
+>  /*
+> @@ -742,6 +751,8 @@ xfs_open_devices(
+>  	struct xfs_mount	*mp)
+>  {
+>  	struct block_device	*ddev = mp->m_super->s_bdev;
+> +	struct dax_device	*dax_ddev = fs_dax_get_by_bdev(ddev);
+> +	struct dax_device	*dax_logdev = NULL, *dax_rtdev = NULL;
+>  	struct block_device	*logdev = NULL, *rtdev = NULL;
+>  	int			error;
+>  
+> @@ -752,6 +763,7 @@ xfs_open_devices(
+>  		error = xfs_blkdev_get(mp, mp->m_logname, &logdev);
+>  		if (error)
+>  			goto out;
+> +		dax_logdev = fs_dax_get_by_bdev(logdev);
+>  	}
+>  
+>  	if (mp->m_rtname) {
+> @@ -765,24 +777,25 @@ xfs_open_devices(
+>  			error = -EINVAL;
+>  			goto out_close_rtdev;
+>  		}
+> +		dax_rtdev = fs_dax_get_by_bdev(rtdev);
+>  	}
+>  
+>  	/*
+>  	 * Setup xfs_mount buffer target pointers
+>  	 */
+>  	error = -ENOMEM;
+> -	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev);
+> +	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev, dax_ddev);
+>  	if (!mp->m_ddev_targp)
+>  		goto out_close_rtdev;
+>  
+>  	if (rtdev) {
+> -		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev);
+> +		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev, dax_rtdev);
+>  		if (!mp->m_rtdev_targp)
+>  			goto out_free_ddev_targ;
+>  	}
+>  
+>  	if (logdev && logdev != ddev) {
+> -		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev);
+> +		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev, dax_logdev);
+>  		if (!mp->m_logdev_targp)
+>  			goto out_free_rtdev_targ;
+>  	} else {
+> @@ -798,10 +811,14 @@ xfs_open_devices(
+>  	xfs_free_buftarg(mp, mp->m_ddev_targp);
+>   out_close_rtdev:
+>  	xfs_blkdev_put(rtdev);
+> +	fs_put_dax(dax_rtdev);
+>   out_close_logdev:
+> -	if (logdev && logdev != ddev)
+> +	if (logdev && logdev != ddev) {
+>  		xfs_blkdev_put(logdev);
+> +		fs_put_dax(dax_logdev);
+> +	}
+>   out:
+> +	fs_put_dax(dax_ddev);
+>  	return error;
+>  }
+>  
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
