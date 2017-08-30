@@ -1,144 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.gocept.net ([195.62.125.19]:42097 "EHLO mail.gocept.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750814AbdH3TDS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 Aug 2017 15:03:18 -0400
-From: Christian Theune <ct@flyingcircus.io>
-Message-Id: <F0B84B50-6DB4-4285-A2DE-DBECFE03C065@flyingcircus.io>
-Content-Type: multipart/signed;
- boundary="Apple-Mail=_76F8EE82-A531-48E6-B923-6E716B93E6ED";
- protocol="application/pgp-signature"; micalg=pgp-sha512
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: null pointer reference after crash
-Date: Wed, 30 Aug 2017 21:03:15 +0200
-In-Reply-To: <20170830155800.GJ4757@magnolia>
-References: <ED0CA266-63AF-4A99-A8B9-DC4C452EC217@flyingcircus.io>
- <20170828174238.GE4757@magnolia>
- <BE1D250C-EDA0-4E9B-A085-1DD62497BEA8@flyingcircus.io>
- <289A60E8-9FE0-43B0-8882-F7C96D03DDCF@flyingcircus.io>
- <20170830155800.GJ4757@magnolia>
+Received: from mail-yw0-f175.google.com ([209.85.161.175]:33356 "EHLO
+        mail-yw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751264AbdH3Tnb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 15:43:31 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170830185512.7q5mnh5ja6o4mpds@destiny>
+References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
+ <CAOQ4uxh8av5H87SHdFw92BDTvCtYgd9chS2Nfv5fA4=upoqRfA@mail.gmail.com>
+ <20170830152326.vil3fhsrecp2ccql@destiny> <CAOQ4uxjE20+vY4OPWM3Z=FU-+4oC1KrYtJ5e7-rQDW4xx5t4RA@mail.gmail.com>
+ <20170830185512.7q5mnh5ja6o4mpds@destiny>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 30 Aug 2017 22:43:29 +0300
+Message-ID: <CAOQ4uxipsvjjMF6YRJbN62tBrPNWOFjHztoDJ7CrsFfjNxRQBQ@mail.gmail.com>
+Subject: Re: [PATCH v2 00/14] Crash consistency xfstest using dm-log-writes
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: Eryu Guan <eguan@redhat.com>, Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
+On Wed, Aug 30, 2017 at 9:55 PM, Josef Bacik <josef@toxicpanda.com> wrote:
+> On Wed, Aug 30, 2017 at 09:39:39PM +0300, Amir Goldstein wrote:
+>> On Wed, Aug 30, 2017 at 6:23 PM, Josef Bacik <josef@toxicpanda.com> wrote:
+>> > On Wed, Aug 30, 2017 at 06:04:26PM +0300, Amir Goldstein wrote:
+>> >> Sorry noise xfs list, I meant to CC fsdevel
+>> >>
+>> >> On Wed, Aug 30, 2017 at 5:51 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+>> >> > Hi all,
+>> >> >
+>> >> > This is the 2nd revision of crash consistency patch set.
+>> >> > The main thing that changed since v1 is my confidence in the failures
+>> >> > reported by the test, along with some more debugging options for
+>> >> > running the test tools.
+>> >> >
+>> >> > I've collected these patches that have been sitting in Josef Bacik's
+>> >> > tree for a few years and kicked them a bit into shape.
+>> >> > The dm-log-writes target has been merged to kernel v4.1, see:
+>> >> > https://github.com/torvalds/linux/blob/master/Documentation/device-mapper/log-writes.txt
+>> >> >
+>> >> > For this posting, I kept the random seeds constant for the test.
+>> >> > I set these constant seeds after running with random seed for a little
+>> >> > while and getting failure reports. With the current values in the test
+>> >> > I was able to reproduce at high probablity failures with xfs, ext4 and btrfs.
+>> >> > The probablity of reproducing the failure is higher on a spinning disk.
+>> >> >
+>> >
+>> > I'd rather we make it as evil as possible.  As long as we're printing out the
+>> > seed that was used in the output then we can go in and manually change the test
+>> > to use the same seed over and over again if we need to debug a problem.
+>>
+>> Yeh that's what I did, but then I found values that reproduce a problem,
+>> so maybe its worth clinging on to these values now until the bugs are fixed in
+>> upstream and then as regression tests.
+>>
+>> Anyway, I can keep these presets commented out, or run the test twice,
+>> once with presets and once with random seed, whatever Eryu decides.
+>>
+>>
+>> >
+>> >> > There is an outstanding problem with the test - when I run it with
+>> >> > kvm-xfstests, the test halts and I get soft lockup of log_writes_kthread.
+>> >> > I suppose its a bug in dm-log-writes with some kernel config or with virtio
+>> >> > I wasn't able to determine the reason and have little time to debug this.
+>> >> >
+>> >> > Since dm-log-writes is anyway in upstream kernel, I don't think a bug
+>> >> > in dm-log-writes for a certain config is a reason to block this xfstest
+>> >> > from being merged.
+>> >> > Anyway, I would be glad if someone could take a look at the soft lockup
+>> >> > issue. Josef?
+>> >> >
+>> >
+>> > Yeah can you give this a try and see if the soft lockup goes away?
+>> >
+>>
+>> It does go away. Thanks!
+>> Now something's wrong with the log.
+>> it get corrupted in most of the test runs, something like this:
+>>
+>> replaying 17624@158946: sector 8651296, size 4096, flags 0
+>> replaying 17625@158955: sector 0, size 0, flags 0
+>> replaying 17626@158956: sector 72057596591815616, size 103079215104, flags 0
+>> Error allocating buffer 103079215104 entry 17626
+>>
+>> I'll look into it
+>
+> Oh are the devices 4k sectorsize devices?  I fucked up 4k sectorsize support, I
+> sent some patches to fix it but they haven't been integrated yet, I'll poke
+> those again.  They are in my dm-log-writes-fixes branch in my btrfs-next tree on
+> kernel.org.  Thanks,
+>
 
---Apple-Mail=_76F8EE82-A531-48E6-B923-6E716B93E6ED
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=utf-8
-
-Hi,
-
-> On Aug 30, 2017, at 5:58 PM, Darrick J. Wong <darrick.wong@oracle.com> =
-wrote:
->=20
-> On Wed, Aug 30, 2017 at 03:56:05PM +0200, Christian Theune wrote:
->> Hi,
->>=20
->> just got it again on a different call path, maybe that helps:
->>=20
->> [ 1070.136303] Oops: 0000 [#1] SMP
->> [ 1070.142577] Modules linked in: nf_log_ipv4 nf_conntrack_ipv4 =
-nf_defrag_ipv4 nf_log_ipv6 nf_log_common xt_LOG xt_limit =
-nf_conntrack_ipv6 nf_defrag_ipv6 xt_conntrack sch_fq =
-x86_pkg_temp_thermal kvm_intel kvm irqbypass nvme crc32c_intel ixgbe =
-nvme_core mdio acpi_cpufreq nbd nf_conntrack_ftp nf_conntrack dm_zero =
-dm_thin_pool dm_persistent_data dm_bio_prison dm_round_robin =
-dm_multipath xts aesni_intel glue_helper lrw ablk_helper cryptd =
-aes_x86_64 fuse dm_snapshot dm_bufio dm_crypt dm_mirror dm_region_hash =
-dm_log
->> [ 1070.233784] CPU: 19 PID: 7460 Comm: ceph-osd Not tainted 4.9.43 #1
->> [ 1070.246124] Hardware name: Thomas-Krenn.AG X9DR3-F/X9DR3-F, BIOS =
-3.0a 07/31/2013
->> [ 1070.260895] task: ffff8810517d0000 task.stack: ffffc9002abec000
->> [ 1070.272710] RIP: 0010:[<ffffffff81312320>]  [<ffffffff81312320>] =
-xfs_da3_node_read+0x30/0xb0
->> [ 1070.289592] RSP: 0018:ffffc9002abefd28  EFLAGS: 00010286
->> [ 1070.300199] RAX: 0000000000000000 RBX: ffff88104d859a48 RCX: =
-0000000000000001
->> [ 1070.314447] RDX: 0000000000000000 RSI: 0000000000000000 RDI: =
-ffffc9002abefce0
->> [ 1070.328694] RBP: ffffc9002abefd48 R08: 0000000066656566 R09: =
-ffffc9002abefbc0
->> [ 1070.342942] R10: fffffffffffffffe R11: 0000000000000001 R12: =
-ffffc9002abefd78
->> [ 1070.357191] R13: ffff88066b430780 R14: 0000000000000005 R15: =
-0000000066656566
->> [ 1070.371436] FS:  00007fe511bfc700(0000) GS:ffff88107fbc0000(0000) =
-knlGS:0000000000000000
->> [ 1070.387590] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> [ 1070.399066] CR2: 00000000000000a0 CR3: 0000000f14d50000 CR4: =
-00000000001406e0
->> [ 1070.413311] Stack:
->> [ 1070.417332]  ffffffff81a44fe0 ffffc9002abefd48 ffffc9002abefdd0 =
-0000000000000005
->> [ 1070.432239]  ffffc9002abefdb8 ffffffff81337404 0000000200000008 =
-ffff8809b5cab040
->> [ 1070.447144]  000000005e94ce38 ffff880c25e1c600 0000000000000000 =
-0000000000000000
->> [ 1070.462051] Call Trace:
->> [ 1070.466949]  [<ffffffff81337404>] =
-xfs_attr3_node_inactive+0x174/0x210
->> [ 1070.479802]  [<ffffffff813376da>] xfs_attr_inactive+0x23a/0x250
-
-there=E2=80=99s a subtle difference: xfs_inactive is calling =
-xfs_attr_inactive. That wasn=E2=80=99t in there the last time. As I =
-don=E2=80=99t know the internals it might also be irrelevant and you =
-filtered that out correctly whereas it appeared maybe important to me. =
-:)
-
->> [ 1070.491625]  [<ffffffff81350a4b>] xfs_inactive+0x7b/0x110
->> [ 1070.502403]  [<ffffffff81359344>] xfs_fs_destroy_inode+0xa4/0x210
->> [ 1070.514573]  [<ffffffff811c46cb>] destroy_inode+0x3b/0x60
->> [ 1070.525352]  [<ffffffff811c4819>] evict+0x129/0x190
->> [ 1070.535093]  [<ffffffff811c4c4a>] iput+0x19a/0x200
->> [ 1070.544660]  [<ffffffff811b9129>] do_unlinkat+0x129/0x2d0
->> [ 1070.555445]  [<ffffffff811b9d26>] SyS_unlink+0x16/0x20
->> [ 1070.565706]  [<ffffffff81885260>] =
-entry_SYSCALL_64_fastpath+0x13/0x94
->=20
-> This looks like the same call stack as last time.
->=20
-> Is this with a patched 4.9.43 kernel, or just vanilla?
-
-Just vanilla. Didn=E2=80=99t have time to do any patching: also this is =
-in production and individually the hosts take up to 14 days before =
-crashing right now.
-
-The system has been up for 6 hours now and aside from the one defect FS =
-the other mounted filesystems are performing OK.
-
-Christian
-
-PS: Shouldn=E2=80=99t you be offline? :)
-
---
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 http://flyingcircus.io
-Forsterstra=C3=9Fe 29 =C2=B7 06112 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
-
-
---Apple-Mail=_76F8EE82-A531-48E6-B923-6E716B93E6ED
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP
-
------BEGIN PGP SIGNATURE-----
-
-iQEcBAEBCgAGBQJZpwvzAAoJEKuh8lKpfGLOWk8H/0q0CgjZ1pgjGlV6doEZPkMf
-JzlwOCvAx2FsT9M5A6koqtJXMYDLKjddK22tNRG+BVh9IibuusW359xrGKIYdOl8
-d6NrmLAZmxQjMM1KO7Px81zcE9h/Qm/4sCtWFqpPRS1B05SaRMbdxNrKEqN++jMU
-otaaBOCt3oQ6kIputsz2XqETEWfmGyxKtblAXeCXmyKMPwE4kdQmYxXj9ieJOP6O
-3vtFtHen5UmOzWx5q3wBQ2KCUMRy53p70+JIrMxhwM9619jn1qJ10hilEuj3pBit
-VWIMTOxv3oCT7Eh5Tn0pCF7lSNzgSOMKh7nf+8FLp8VVCoJ34iQ+5Bj3tHp2MU0=
-=pg9C
------END PGP SIGNATURE-----
-
---Apple-Mail=_76F8EE82-A531-48E6-B923-6E716B93E6ED--
+No they are just virtio devices in kvm reflecting my ssd LV, on whom
+the same test works just fine not inside kvm.
