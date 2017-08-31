@@ -1,89 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:55723 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751086AbdHaNRX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 09:17:23 -0400
-Date: Thu, 31 Aug 2017 06:17:23 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfs: don't set v3 xflags for v2 inodes
-Message-ID: <20170831131723.GD19544@infradead.org>
-References: <20170830155517.GI4757@magnolia>
- <20170830163825.GQ4757@magnolia>
+Received: from verein.lst.de ([213.95.11.211]:55440 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750968AbdHaNaU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Aug 2017 09:30:20 -0400
+Date: Thu, 31 Aug 2017 15:30:19 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] xfs: remove experimental tag for reflinks
+Message-ID: <20170831133019.GA5468@lst.de>
+References: <20170830145400.3681-1-hch@lst.de> <20170831064033.GF3775@magnolia> <20170831124321.GA21939@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170830163825.GQ4757@magnolia>
+In-Reply-To: <20170831124321.GA21939@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-Hmm.  I thought of something like that patch below:
+On Thu, Aug 31, 2017 at 08:43:21AM -0400, Brian Foster wrote:
+> FWIW, I don't really have a strong opinion. To me, removing experimental
+> means we feel the code has stabilized long enough in principle, there
+> are no significant problems (i.e., corruption/crash vectors) that we are
+> aware of and the feature is complete (full userspace tool support, etc).
+> The in-core extent list thing seems like more of a general problem to me
 
----
-From: Christoph Hellwig <hch@lst.de>
-Date: Thu, 31 Aug 2017 15:14:36 +0200
-Subject: xfs: don't set v3 xflags for v2 inodes
+Agreed so far.
 
-Reject attempts to set XFLAGS that correspond to di_flags2 inode flags
-if the inode isn't a v3 inode, because di_flags2 only exists on v3.
+> That aside, shouldn't we consider the rmapbt experimental tag first, or
+> at least at the same time? It's been around for slightly longer.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_ioctl.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 9c0c7a920304..9fea768e9f70 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -931,7 +931,7 @@ xfs_ioc_fsgetxattr(
- 	return 0;
- }
- 
--STATIC void
-+STATIC int
- xfs_set_diflags(
- 	struct xfs_inode	*ip,
- 	unsigned int		xflags)
-@@ -974,7 +974,7 @@ xfs_set_diflags(
- 
- 	/* diflags2 only valid for v3 inodes. */
- 	if (ip->i_d.di_version < 3)
--		return;
-+		return -EINVAL;
- 
- 	di_flags2 = (ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
- 	if (xflags & FS_XFLAG_DAX)
-@@ -983,6 +983,7 @@ xfs_set_diflags(
- 		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
- 
- 	ip->i_d.di_flags2 = di_flags2;
-+	return 0;
- }
- 
- STATIC void
-@@ -1022,6 +1023,7 @@ xfs_ioctl_setattr_xflags(
- 	struct fsxattr		*fa)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
-+	int			error;
- 
- 	/* Can't change realtime flag if any extents are allocated. */
- 	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
-@@ -1052,7 +1054,10 @@ xfs_ioctl_setattr_xflags(
- 	    !capable(CAP_LINUX_IMMUTABLE))
- 		return -EPERM;
- 
--	xfs_set_diflags(ip, fa->fsx_xflags);
-+	error = xfs_set_diflags(ip, fa->fsx_xflags);
-+	if (error)
-+		return error;
-+
- 	xfs_diflags_to_linux(ip);
- 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--- 
-2.11.0
-
+I've not done much testing on that or have experience with it in general,
+nor do I have a customer with a big QA team beating it hard, so I can't
+really comment on that one.
