@@ -1,117 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41408 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750990AbdHaNfw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Aug 2017 09:35:52 -0400
-Date: Thu, 31 Aug 2017 09:35:50 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: don't set v3 xflags for v2 inodes
-Message-ID: <20170831133550.GC21939@bfoster.bfoster>
-References: <20170830155517.GI4757@magnolia>
- <20170830163825.GQ4757@magnolia>
+Received: from sender-pp-092.zoho.com ([135.84.80.237]:25307 "EHLO
+        sender-pp-092.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750895AbdHaScD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 14:32:03 -0400
+Subject: Re: What is the proper way to remove an xfs partition?
+References: <837b6a2a-5989-385a-88e3-158f8b614637@zoho.com>
+ <e74da24b-b604-b9af-e6b7-6943543fa56a@sandeen.net>
+From: ToddAndMargo <ToddAndMargo@zoho.com>
+Message-ID: <a1e12c3c-5238-e319-e2ea-982606e808b3@zoho.com>
+Date: Thu, 31 Aug 2017 11:32:00 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170830163825.GQ4757@magnolia>
+In-Reply-To: <e74da24b-b604-b9af-e6b7-6943543fa56a@sandeen.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>
+To: linux-xfs@vger.kernel.org
 
-On Wed, Aug 30, 2017 at 09:38:25AM -0700, Darrick J. Wong wrote:
-> Reject attempts to set XFLAGS that correspond to di_flags2 inode flags
-> if the inode isn't a v3 inode, because di_flags2 only exists on v3.
+On 08/31/2017 11:16 AM, Eric Sandeen wrote:
+> xOn 8/31/17 1:04 PM, ToddAndMargo wrote:
+>> Hi All,
+>>
+>> Fedora 26
+>> BIOS boot = legacy (EUFI give me hives)
+>>
+>> I have a SATA backup drive formatted gpt, one partition, xfs. I went into gparted, erased the partition, recreated the partition as ext4 and formatted it as ext4.
+>>
+>> Then I mounted it as ext4, copied some files to it, unmounted it. When I went to remount it, mount told me there was something wrong with ext4.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+> What "something" was that?
 
-That lazy reflink flag clear still seems hacky. That aside, this looks
-fine to me:
+mount: /lin-bak: wrong fs type, bad option, bad superblock on /dev/sdd1, 
+missing codepage or helper program, or other error.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_ioctl.c |   37 +++++++++++++++++++++++++++++--------
->  1 file changed, 29 insertions(+), 8 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 06ca244..82d14fe 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1016,32 +1016,37 @@ xfs_diflags_to_linux(
->  #endif
->  }
->  
-> +#define XFS_V3_INODE_XFLAGS	(FS_XFLAG_DAX | \
-> +				 FS_XFLAG_COWEXTSIZE)
->  static int
-> -xfs_ioctl_setattr_xflags(
-> -	struct xfs_trans	*tp,
-> +xfs_check_diflags(
->  	struct xfs_inode	*ip,
-> -	struct fsxattr		*fa)
-> +	__u32			xflags)
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  
-> +	/* Can't set flags2 fields on a v2 inode. */
-> +	if (ip->i_d.di_version < 3 && (xflags & XFS_V3_INODE_XFLAGS))
-> +		return -EINVAL;
-> +
->  	/* Can't change realtime flag if any extents are allocated. */
->  	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
-> -	    XFS_IS_REALTIME_INODE(ip) != (fa->fsx_xflags & FS_XFLAG_REALTIME))
-> +	    XFS_IS_REALTIME_INODE(ip) != (xflags & FS_XFLAG_REALTIME))
->  		return -EINVAL;
->  
->  	/* If realtime flag is set then must have realtime device */
-> -	if (fa->fsx_xflags & FS_XFLAG_REALTIME) {
-> +	if (xflags & FS_XFLAG_REALTIME) {
->  		if (mp->m_sb.sb_rblocks == 0 || mp->m_sb.sb_rextsize == 0 ||
->  		    (ip->i_d.di_extsize % mp->m_sb.sb_rextsize))
->  			return -EINVAL;
->  	}
->  
->  	/* Clear reflink if we are actually able to set the rt flag. */
-> -	if ((fa->fsx_xflags & FS_XFLAG_REALTIME) && xfs_is_reflink_inode(ip))
-> +	if ((xflags & FS_XFLAG_REALTIME) && xfs_is_reflink_inode(ip))
->  		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
->  
->  	/* Don't allow us to set DAX mode for a reflinked file for now. */
-> -	if ((fa->fsx_xflags & FS_XFLAG_DAX) && xfs_is_reflink_inode(ip))
-> +	if ((xflags & FS_XFLAG_DAX) && xfs_is_reflink_inode(ip))
->  		return -EINVAL;
->  
->  	/*
-> @@ -1049,10 +1054,26 @@ xfs_ioctl_setattr_xflags(
->  	 * we have appropriate permission.
->  	 */
->  	if (((ip->i_d.di_flags & (XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND)) ||
-> -	     (fa->fsx_xflags & (FS_XFLAG_IMMUTABLE | FS_XFLAG_APPEND))) &&
-> +	     (xflags & (FS_XFLAG_IMMUTABLE | FS_XFLAG_APPEND))) &&
->  	    !capable(CAP_LINUX_IMMUTABLE))
->  		return -EPERM;
->  
-> +	return 0;
-> +}
-> +
-> +static int
-> +xfs_ioctl_setattr_xflags(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_inode	*ip,
-> +	struct fsxattr		*fa)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	int			ret;
-> +
-> +	ret = xfs_check_diflags(ip, fa->fsx_xflags);
-> +	if (ret)
-> +		return ret;
-> +
->  	xfs_set_diflags(ip, fa->fsx_xflags);
->  	xfs_diflags_to_linux(ip);
->  	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> So I mounted it as xfs AND IT WORKED! I repeated with the same result. The drive thinks it is ext4 until the second mount.
+> 
+> This should not be the case.  It's possible to leave old magic numbers & signatures lying around in general, but mkfs.ext4, in my testing, zeros out the XFS superblock at offset 0; xfs should fail to mount after that.  It sounds like there may be more going on, here.
+
+I have notices issues in the past with gparted.  It use to not
+format an ntfs partition that Windows recognized.  Now
+it can't label and ntfs partition that Windows also recognized.
+But these were usually relegated to Windows problems.
+I would love it if gparted would FINALLY support luks.
+
+>> Out of shear frustration, I did a dd /dev/zero overwrite of the stinker and left it running overnight.  That did the trick, but it takes
+>> forever and I have four more drives to go.
+>>
+>> What is the official way to remove an xfs partition?
+> 
+> It's not usually needed, but if you don't want the kernel and/or utilities to recognize an xfs block device as xfs anymore, simply zero the first 512 bytes of that block device.
+
+I can do that!
+
+I was concerned about the gpt stuff at the end of the drive.
+Ignored if I clobber the first 512 bytes?
+
+> Or more conveniently, there's also the wipefs utility:
+> 
+> NAME
+>         wipefs - wipe a signature from a device
+
+Didn't know about that one.  Thank you!
+
+-T
+
+> -Eric
+> 
+
+
