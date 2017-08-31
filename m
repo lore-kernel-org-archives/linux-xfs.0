@@ -1,182 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59802 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751354AbdHaKUQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Aug 2017 06:20:16 -0400
-Date: Thu, 31 Aug 2017 06:20:13 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: corrupt xfs log
-Message-ID: <20170831102008.GA21508@bfoster.bfoster>
-References: <CAHeWggOTqbQUQB7xz1wUjejHU5W14w3wcN-oV-+KJxxyEEQ3TQ@mail.gmail.com>
- <20170818120224.GA27778@redhat.com>
- <20170818121725.GA1665@bfoster.bfoster>
- <CAHeWggM-dGJHRNyyXZrW5aX7v3r-b0t1LTbrbN-OSTLdLzuPhg@mail.gmail.com>
- <20170821155152.GA56278@bfoster.bfoster>
- <CAHeWggPzVSXXGK+35jEf9FD2gM-QcL_3iebaKzjOK7DbRmWDiA@mail.gmail.com>
- <20170830145808.GB16641@bfoster.bfoster>
- <CAHeWggPh-1E8E6f+feZipdM_fQAejnv09r+bLwo6FLGC1pjAeg@mail.gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:20857 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751743AbdHaPlW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 11:41:22 -0400
+Date: Thu, 31 Aug 2017 08:41:13 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: linux-next: build warning after merge of the xfs tree
+Message-ID: <20170831154113.GK3775@magnolia>
+References: <20170831100703.16eeb69f@canb.auug.org.au>
+ <20170831103040.GB21508@bfoster.bfoster>
+ <20170831145752.GH3775@magnolia>
+ <20170831152220.GF21939@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAHeWggPh-1E8E6f+feZipdM_fQAejnv09r+bLwo6FLGC1pjAeg@mail.gmail.com>
+In-Reply-To: <20170831152220.GF21939@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ingard - <ingard1@gmail.com>
-Cc: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Thu, Aug 31, 2017 at 09:27:52AM +0200, Ingard - wrote:
-> On Wed, Aug 30, 2017 at 4:58 PM, Brian Foster <bfoster@redhat.com> wrote:
-> > On Mon, Aug 21, 2017 at 10:24:32PM +0200, Ingard - wrote:
-> >> On Mon, Aug 21, 2017 at 5:51 PM, Brian Foster <bfoster@redhat.com> wrote:
-> >> > On Mon, Aug 21, 2017 at 02:08:43PM +0200, Ingard - wrote:
-> >> >> On Fri, Aug 18, 2017 at 2:17 PM, Brian Foster <bfoster@redhat.com> wrote:
-> >> >> > On Fri, Aug 18, 2017 at 07:02:24AM -0500, Bill O'Donnell wrote:
-> >> >> >> On Fri, Aug 18, 2017 at 01:56:31PM +0200, Ingard - wrote:
-> >> >> >> > After a server crash we've encountered a corrupt xfs filesystem. When
-> >> >> >> > trying to mount said filesystem normally the system hangs.
-> >> >> >> > This was initially on a ubuntu trusty server with 3.13 kernel with
-> >> >> >> > xfsprogs 3.1.9
-> >> >> >> >
-> >> >> >> > We've installed a newer kernel (4.4.0-92) and compiled xfsprogs v
-> >> >> >> > 4.12.0 from source. We're still not able to mount the filesystem (and
-> >> >> >> > replay the log) normally.
-> >> >> >> > We are able to mount it -o ro,norecovery, but we're reluctant to do
-> >> >> >> > xfs_repair -L without trying everything we can first. The filesystem
-> >> >> >> > is browsable albeit a few paths which gives an error : "Structure
-> >> >> >> > needs cleaning"
-> >> >> >> >
-> >> >> >> > Does anyone have any advice as to how we might recover/repair the
-> >> >> >> > corrupt log so we can replay it? Or is xfs_repair -L the only way
-> >> >> >> > forward?
-> >> >> >>
-> >> >> >> Can you try xfs_repair -n (only scans the fs and reports what repairs
-> >> >> >> would be made)?
-> >> >> >>
-> >> >> >
-> >> >> > An xfs_metadump of the fs might be useful as well. Then we can see if we
-> >> >> > can reproduce the mount hang on latest kernels and if so, potentially
-> >> >> > try and root cause it.
-> >> >> >
-> >> >> > Brian
-> >> >>
-> >> >> Here is a link for the metadump :
-> >> >> https://www.jottacloud.com/p/ingardme/95ec2e45ba80431d962345981d38bdff
-> >> >
-> >> > This points to a 29GB image file, apparently uncompressed..? Could you
-> >> > upload a compressed file? Thanks.
-> >>
-> >> Hi. Sorry about that. Didnt realize the output would be compressable.
-> >> Here is a link to the compressed tgz (6G)
-> >> https://www.jottacloud.com/p/ingardme/cac6939649e14b98b928647f5222a2ae
-> >>
-> >
-> > I finally played around with this image a bit. Note that mount does not
-> > hang on latest kernels. Instead, log recovery emits a torn write message
-> > due to a bad crc at the head of the log and then ultimately fails due to
-> > a bad crc at the tail of the log. I ran a couple experiments to skip the
-> > bad crc records and/or to completely ignore all bad crc's and both still
-> > either fail to mount (due to other corruption) or continue to show
-> > corruption in the recovered fs.
-> >
-> > It's not clear to me what would have caused this corruption or log
-> > state. Have you encountered any corruption before? If not, is this kind
-> > of crash or unclean shutdown of the server an uncommon event?
-> We failed to notice the log messages of corrupt fs at first. After a
-> few days of these messages the filesystem got shut down due to
-> excessive? corruption.
-> At that point we tried to reboot normally, but ended up with having to
-> do a hard reset of the server.
-> It is not clear to us either why the corruption happened in the first
-> place either. The underlying raid has been in optimal state the whole
-> time
+On Thu, Aug 31, 2017 at 11:22:20AM -0400, Brian Foster wrote:
+> On Thu, Aug 31, 2017 at 07:57:52AM -0700, Darrick J. Wong wrote:
+> > On Thu, Aug 31, 2017 at 06:30:41AM -0400, Brian Foster wrote:
+> > > On Thu, Aug 31, 2017 at 10:07:03AM +1000, Stephen Rothwell wrote:
+> > > > Hi all,
+> > > > 
+> > > > After merging the xfs tree, today's linux-next build (powerpc
+> > > > ppc64_defconfig) produced this warning:
+> > > > 
+> > > > fs/xfs/xfs_buf_item.c: In function 'xfs_buf_item_unlock':
+> > > > fs/xfs/xfs_buf_item.c:573:9: warning: unused variable 'ordered' [-Wunused-variable]
+> > > >   bool   ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
+> > > >          ^
+> > > > 
+> > > > Introduced by commit
+> > > > 
+> > > >   a097077ef708 ("xfs: remove unnecessary dirty bli format check for ordered bufs")
+> > > > 
+> > > 
+> > > Ugh, this is due to the refactoring of this patch between v1 and v2. I
+> > > specifically recall testing for this in v1 because I added the ordered
+> > > bool purely to clean up the ASSERT(), then I apparently lost of track of
+> > > it for v2.
+> > > 
+> > > Anyways.. Christoph, Darrick, preferences to clean this up..? I have no
+> > > preference between the v1 or v2 factoring. Or if it's easier, we could
+> > > always just drop something like the hunk below on top. Thoughts?
+> > > 
+> > > Brian
+> > > 
+> > > --- 8< ---
+> > > 
+> > > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> > > index ef2c137..f5d25f5 100644
+> > > --- a/fs/xfs/xfs_buf_item.c
+> > > +++ b/fs/xfs/xfs_buf_item.c
+> > > @@ -567,10 +567,15 @@ xfs_buf_item_unlock(
+> > >  {
+> > >  	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+> > >  	struct xfs_buf		*bp = bip->bli_buf;
+> > > -	bool			aborted = !!(lip->li_flags & XFS_LI_ABORTED);
+> > > -	bool			hold = !!(bip->bli_flags & XFS_BLI_HOLD);
+> > > -	bool			dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
+> > > -	bool			ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
+> > > +	bool			aborted;
+> > > +	bool			hold;
+> > > +	bool			dirty;
+> > > +	bool			ordered;
+> > > +
+> > > +	aborted = !!(lip->li_flags & XFS_LI_ABORTED);
+> > > +	hold = !!(bip->bli_flags & XFS_BLI_HOLD);
+> > > +	dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
+> > > +	ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
+> > 
+> > The trouble is, 'ordered' is still an unused variable on !DEBUG builds,
+> > since the only user of ordered is that ASSERT.  So either we #ifdef
+> > DEBUG the variable out of existence or employ one of those silly
+> > 'ordered = ordered' constructions to shut up gcc, if that even still
+> > works.
+> > 
 > 
+> The warning goes away for me if we separate the initialization of
+> ordered from the declaration. Do you observe otherwise?
 
-Ok, so corruption was the first problem. If the filesystem shutdown with
-something other than a log I/O error, chances are the log was flushed at
-that time. It is strange that log records end up corrupted, though not
-terribly out of the ordinary for the mount to ultimately fail if
-recovery stumbled over existing on-disk corruption, for instance.
-An xfs_repair was probably a foregone conclusion given the corruption
-started on disk, anyways.
+Hm.  Seems to shut up gcc, so I guess it's fine.  In the past it would
+whine, but I guess they fixed it or something.
 
-Brian
+Want to send it as a real [PATCH]?
 
-> >
-> > That aside, I think the best course of action is to run 'xfs_repair -L'
-> > on the fs. I ran a v4.12 version against the metadump image and it
-> > successfully repaired the fs. I've attached the repair output for
-> > reference, but I would recommend to first restore your metadump to a
-> > temporary location, attempt to repair that and examine the results
-> > before repairing the original fs. Note that the metadump will not have
-> > any file content, but will represent which files might be cleared, moved
-> > to lost+found, etc.
-> Ok. Thanks for looking into it. We'll proceed with the suggested
-> course of action.
+--D
+
 > 
-> ingard
-> >
-> > Brian
-> >
-> >> >
-> >> > Brian
-> >> >
-> >> >> And the repair -n output :
-> >> >> https://www.jottacloud.com/p/ingardme/0205c6ca6f7e495ebcda5f255b96f63d
-> >> >>
-> >> >> kind regards
-> >> >> ingard
-> >> >>
-> >> >> >
-> >> >> >> Thanks-
-> >> >> >> Bill
-> >> >> >>
-> >> >> >>
-> >> >> >> >
-> >> >> >> >
-> >> >> >> > Excerpt from kern.log:
-> >> >> >> > 2017-08-17T13:40:41.122121+02:00 dn-238 kernel: [  294.300347] XFS
-> >> >> >> > (sdd1): Mounting V4 filesystem in no-recovery mode. Filesystem will be
-> >> >> >> > inconsistent.
-> >> >> >> >
-> >> >> >> > 2017-08-17T17:04:54.794194+02:00 dn-238 kernel: [12548.400260] XFS
-> >> >> >> > (sdd1): Metadata corruption detected at xfs_inode_buf_verify+0x6f/0xd0
-> >> >> >> > [xfs], xfs_inode block 0x81c9c210
-> >> >> >> > 2017-08-17T17:04:54.794216+02:00 dn-238 kernel: [12548.400342] XFS
-> >> >> >> > (sdd1): Unmount and run xfs_repair
-> >> >> >> > 2017-08-17T17:04:54.794218+02:00 dn-238 kernel: [12548.400374] XFS
-> >> >> >> > (sdd1): First 64 bytes of corrupted metadata buffer:
-> >> >> >> > 2017-08-17T17:04:54.794220+02:00 dn-238 kernel: [12548.400418]
-> >> >> >> > ffff880171fff000: 3f 1a 33 54 5b 55 85 0b 7c f5 c6 d5 cf 51 47 41
-> >> >> >> > ?.3T[U..|....QGA
-> >> >> >> > 2017-08-17T17:04:54.794222+02:00 dn-238 kernel: [12548.400473]
-> >> >> >> > ffff880171fff010: 97 ba ba 03 5c e4 02 7a e6 bc fb 5d f1 72 db c1
-> >> >> >> > ....\..z...].r..
-> >> >> >> > 2017-08-17T17:04:54.794223+02:00 dn-238 kernel: [12548.400527]
-> >> >> >> > ffff880171fff020: c8 ad 3a 76 c7 e4 20 92 88 a2 35 0c 1f 36 cf b5
-> >> >> >> > ..:v.. ...5..6..
-> >> >> >> > 2017-08-17T17:04:54.794226+02:00 dn-238 kernel: [12548.400581]
-> >> >> >> > ffff880171fff030: 8a bc 42 75 86 50 a0 a2 be 2c 2d 99 96 2d e1 ee
-> >> >> >> > ..Bu.P...,-..-..
-> >> >> >> >
-> >> >> >> > kind regards
-> >> >> >> > ingard
-> >> >> >> > --
-> >> >> >> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> >> >> > the body of a message to majordomo@vger.kernel.org
-> >> >> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >> >> >> --
-> >> >> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> >> >> the body of a message to majordomo@vger.kernel.org
-> >> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >> >> --
-> >> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> >> the body of a message to majordomo@vger.kernel.org
-> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Brian
+> 
+> > --D
+> > 
+> > >  
+> > >  	/* Clear the buffer's association with this transaction. */
+> > >  	bp->b_transp = NULL;
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
