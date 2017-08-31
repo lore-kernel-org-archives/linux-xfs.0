@@ -1,52 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36474 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750972AbdH3XKw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 19:10:52 -0400
-Date: Wed, 30 Aug 2017 16:10:47 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 9/8] xfs: simplify the rmap code in xfs_bmse_merge
-Message-ID: <20170830231047.GC3775@magnolia>
-References: <20170829174835.2218-1-hch@lst.de>
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:36110 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751752AbdHaQYT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 12:24:19 -0400
+Received: by mail-wm0-f50.google.com with SMTP id f127so788571wmf.1
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2017 09:24:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170829174835.2218-1-hch@lst.de>
+In-Reply-To: <20170830054420.GI10621@dastard>
+References: <20170829235052.21050-1-david@fromorbit.com> <20170830041635.GK27873@wotan.suse.de>
+ <20170830054420.GI10621@dastard>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Thu, 31 Aug 2017 18:23:57 +0200
+Message-ID: <CACj3i73Bo22VQpkTL6gRuQ5Kit9UpQJwy0bWv7oysha_F3Y8Rw@mail.gmail.com>
+Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Aug 30, 2017 at 7:44 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Wed, Aug 30, 2017 at 06:16:35AM +0200, Luis R. Rodriguez wrote:
+>>
+>> However this still begs the question of what tests we should run
+>> prior and after the full set, and if we had any missing test what
+>> we should add, or if we've considered that.
+>
+> We have nothing that actually tests that the on-disk filesystem
+> format values match what is specified on the command line, so
+> testing/validation has all been completely manual. I'm not sure we
+> can automate it, given the math needed to check that all the fields
+> in the superblock are correct and sane for arbitrary mkfs
+> configurations on arbitrary block devices.
+>
+> In the end I basically ran some configs with an old mkfs, dumped the
+> superblock with xfs_db for each config, then did the same with the
+> new mkfs. I then diffed the output to see if anything came out
+> differently. I fixed all the things I found that were different.  I
+> ran the checks on 4k and 512 byte sector devices, just to make sure
+> nothing went wrong with using probed device sector sizes by default.
+> Then I diffed logprint output for different log options (e.g. sector
+> size, lsunit, etc) to make sure everything was correct, etc. I
+> mounted each filesystem, ran repair on them, etc so that both the
+> kernel and repair code could validate the format, too (the kernel
+> found the first log formatting bug via CRC errors).  And, of course,
+> I ran xfstests over a variety of configs - different block sizes,
+> rmap, DAX, etc.
+>
+> Maybe you can come up with a way of automating this, but for a
+> one-off piece of work that affects a point-in-time snapshot of mkfs
+> functionality, I'm not sure it's worth the effort to try to make a
+> generic test to do this sort of thing.
+>
 
-In Christoph's patch to refactor xfs_bmse_merge, the updated rmap code
-does more work than it needs to (because map-extent auto-merges
-records).  Remove the unnecessary unmap and save ourselves a deferred
-op.
+I actually tried to automate this kind of testing. Something similar
+to xfs/191, but with testing if the physically written fs is valid and
+expected. But I didn't find a way that would work with xfstests
+without hacking it to use some other version of mkfs.xfs manually, and
+without doing all the math craziness that would be so error-prone...
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+Anyway, I'm on the sea until 10th September. I might be able to
+continue my review and write something tomorrow (Friday) in the
+morning before I depart, but more likely I will keep all my comments
+until after I return, and see what changes in the meantime. But so
+far, it looks like a good job, Dave. :-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9b87702..9558f5e 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5942,13 +5942,12 @@ xfs_bmse_merge(
- 	xfs_iext_update_extent(ifp, current_ext - 1, &new);
- 	xfs_iext_remove(ip, current_ext, 1, 0);
- 
--	/* update reverse mapping */
-+	/* update reverse mapping. rmap functions merge the rmaps for us */
- 	error = xfs_rmap_unmap_extent(mp, dfops, ip, whichfork, got);
- 	if (error)
- 		return error;
--	error = xfs_rmap_unmap_extent(mp, dfops, ip, whichfork, left);
--	if (error)
--		return error;
-+	memcpy(&new, got, sizeof(new));
-+	new.br_startoff = left->br_startoff + left->br_blockcount;
- 	return xfs_rmap_map_extent(mp, dfops, ip, whichfork, &new);
- }
+Cheers,
+Jan
