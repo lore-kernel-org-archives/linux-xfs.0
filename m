@@ -1,66 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58318 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750772AbdHaK2k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Aug 2017 06:28:40 -0400
-Date: Thu, 31 Aug 2017 18:28:37 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 3/4] xfs: test rmapbt updates are correct with
- insert/collapse range
-Message-ID: <20170831102837.GK27835@eguan.usersys.redhat.com>
-References: <150406805060.31349.16766271336969357123.stgit@magnolia>
- <150406806291.31349.16354828502139354709.stgit@magnolia>
+Received: from yrk.mx.bytemark.co.uk ([80.68.81.84]:42504 "EHLO
+        yrk.mx.bytemark.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750772AbdHaKdr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 06:33:47 -0400
+Subject: Re: XFS reflinks
+References: <04eacb90-aac9-7c47-f074-fa91eb253822@bytemark.co.uk>
+ <20170829130046.GA28896@infradead.org> <20170829160308.GR4757@magnolia>
+ <20170829162310.GA22552@infradead.org> <20170829220316.GD10621@dastard>
+From: Chris Cottam <chris.cottam@bytemark.co.uk>
+Message-ID: <3b025b43-3ca5-567f-d9e0-c45245d37ecb@bytemark.co.uk>
+Date: Thu, 31 Aug 2017 11:33:44 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <150406806291.31349.16354828502139354709.stgit@magnolia>
+In-Reply-To: <20170829220316.GD10621@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Tue, Aug 29, 2017 at 09:41:02PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On 29/08/17 23:03, Dave Chinner wrote:
+> On Tue, Aug 29, 2017 at 09:23:10AM -0700, Christoph Hellwig wrote:
+>> On Tue, Aug 29, 2017 at 09:03:08AM -0700, Darrick J. Wong wrote:
+>>> First, should we land the incore extent map rework (not that I've seen a
+>>> patchset yet) so that the increased extent map fragmentation resulting
+>>> from cow/dedupe don't overwhelm the memory allocator with high order
+>>> allocations?  Incore extent map memory usage hasn't been an issue here...
+>>
+>> Working on this now, but so far this hasn't been a major issue.
+>> The main workload where the extent list currently hurts and that
+>> prompted my work in this area doesn't even involve reflinks (sparse
+>> VM image).
 > 
-> Make sure that we update the rmapbt correctly when we collapse-range a
-> file and the extents on both sides of the hole can be merged.  We can
-> construct this pretty trivially with insert-range and write, so test
-> that too.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  src/punch-alternating.c |   15 +++++-
->  tests/xfs/706           |  127 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/706.out       |    9 +++
->  tests/xfs/group         |    1 
->  4 files changed, 150 insertions(+), 2 deletions(-)
->  create mode 100755 tests/xfs/706
->  create mode 100644 tests/xfs/706.out
-> 
-> 
-> diff --git a/src/punch-alternating.c b/src/punch-alternating.c
-> index 25228cd..281e283 100644
-> --- a/src/punch-alternating.c
-> +++ b/src/punch-alternating.c
-> @@ -24,6 +24,7 @@ int main(int argc, char *argv[])
->  	struct stat	s;
->  	struct statfs	sf;
->  	off_t		offset;
-> +	off_t		start_offset = 0;
->  	int		fd;
->  	blksize_t	blksz;
->  	off_t		sz;
-> @@ -33,11 +34,19 @@ int main(int argc, char *argv[])
->  	int		size = 1;	/* punch $SIZE blocks ... */
->  	int		interval = 2;	/* every $INTERVAL blocks */
->  
-> -	while ((c = getopt(argc, argv, "i:s:")) != EOF) {
-> +	while ((c = getopt(argc, argv, "i:o:s:")) != EOF) {
+> Yup, that's a problem, and it's going to be even more of a problem
+> once people start using reflink to snapshot sparse VM images. I
+> think that the extent rework is probably the most important thing we
+> need to solve for COW to be generally usable.
 
-Update usage info too?
+Assuming I was feeling brave, what should I be doing to limit the
+chances of hitting this issue? Would smaller filesystems or lots of
+memory on the host help etc?
+Also what should I be monitoring to warn me before anything actually breaks?
 
-Otherwise looks fine to me.
+Thanks for the help so far.
 
-Thanks,
-Eryu
+Chris
