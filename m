@@ -1,65 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from scorn.kernelslacker.org ([45.56.101.199]:49690 "EHLO
-        scorn.kernelslacker.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751973AbdH3RR3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 13:17:29 -0400
-Date: Wed, 30 Aug 2017 13:17:28 -0400
-From: Dave Jones <davej@codemonkey.org.uk>
-Subject: Re: iov_iter_pipe warning.
-Message-ID: <20170830171728.cwe34lhjnkwafe3z@codemonkey.org.uk>
-References: <20170421175430.GT29622@ZenIV.linux.org.uk>
- <20170428152955.mafs3f22srmm34aw@codemonkey.org.uk>
- <20170428164313.GK29622@ZenIV.linux.org.uk>
- <20170428165024.ofyl2atpjwohekqa@codemonkey.org.uk>
- <20170428172024.GL29622@ZenIV.linux.org.uk>
- <20170807201818.kykqzexce6ap6aik@codemonkey.org.uk>
- <20170828203130.y6dq5fqovev6wmrv@codemonkey.org.uk>
- <20170829042542.GO4757@magnolia>
- <20170830170523.a4bysufgifdhtm43@codemonkey.org.uk>
- <20170830171343.GT4757@magnolia>
+Received: from userp1040.oracle.com ([156.151.31.81]:49342 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751040AbdHaPb5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 11:31:57 -0400
+Date: Thu, 31 Aug 2017 08:31:48 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: remove experimental tag for reflinks
+Message-ID: <20170831153148.GJ3775@magnolia>
+References: <20170830145400.3681-1-hch@lst.de>
+ <20170831064033.GF3775@magnolia>
+ <20170831124321.GA21939@bfoster.bfoster>
+ <20170831133019.GA5468@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170830171343.GT4757@magnolia>
+In-Reply-To: <20170831133019.GA5468@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Al Viro <viro@ZenIV.linux.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-On Wed, Aug 30, 2017 at 10:13:43AM -0700, Darrick J. Wong wrote:
+On Thu, Aug 31, 2017 at 03:30:19PM +0200, Christoph Hellwig wrote:
+> On Thu, Aug 31, 2017 at 08:43:21AM -0400, Brian Foster wrote:
+> > FWIW, I don't really have a strong opinion. To me, removing experimental
+> > means we feel the code has stabilized long enough in principle, there
+> > are no significant problems (i.e., corruption/crash vectors) that we are
+> > aware of and the feature is complete (full userspace tool support, etc).
+> > The in-core extent list thing seems like more of a general problem to me
+> 
+> Agreed so far.
 
+<nod> Dave?  Eric?  Any perspective you'd like to offer? :)
 
- > > I reverted the debug patches mentioned above, and ran trinity for a while again,
- > > and got this which smells really suspiciously related
- > > 
- > > WARNING: CPU: 1 PID: 10380 at fs/iomap.c:993 iomap_dio_rw+0x825/0x840
- > > RAX: 00000000fffffff0 RBX: ffff88046a64d0e8 RCX: 0000000000000000
- > > 
- > > 
- > > 
- > > That's this..
- > > 
- > >  987         ret = filemap_write_and_wait_range(mapping, start, end);
- > >  988         if (ret)
- > >  989                 goto out_free_dio;
- > >  990 
- > >  991         ret = invalidate_inode_pages2_range(mapping,
- > >  992                         start >> PAGE_SHIFT, end >> PAGE_SHIFT);
- > >  993         WARN_ON_ONCE(ret);
- > > 
- > > 
- > > Plot thickens..
- > 
- > Hm, that's the WARN_ON that comes from a failed pagecache invalidation
- > prior to a dio operation, which implies that something's mixing buffered
- > and dio?
+> > That aside, shouldn't we consider the rmapbt experimental tag first, or
+> > at least at the same time? It's been around for slightly longer.
+> 
+> I've not done much testing on that or have experience with it in general,
+> nor do I have a customer with a big QA team beating it hard, so I can't
+> really comment on that one.
 
-Plausible. Judging by RAX, we got -EBUSY
+rmapbt will remain EXPERIMENTAL because I still have more patches to
+send to finish the feature for realtime devices.  Speaking of which,
+it's now been 53 weeks since the last dump of that, so I'll go do that
+now. :P
 
- > Given that it's syzkaller it wouldn't surprise me to hear that it's
- > doing that... :)
+FWIW I /also/ run rmapbt everywhere and haven't had any trouble with it
+since adding the per-AG reservations.
 
-s/syzkaller/trinity/, but yes.
+--D
 
-	Dave
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
