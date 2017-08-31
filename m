@@ -1,68 +1,197 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:49973 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750757AbdHaCnX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2017 22:43:23 -0400
-Date: Thu, 31 Aug 2017 12:43:21 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC 00/12] xfs: more and better verifiers
-Message-ID: <20170831024320.GN10621@dastard>
-References: <150301268960.5851.2513223883233763065.stgit@magnolia>
- <20170818070516.GA15291@infradead.org>
- <20170818170607.GK4796@magnolia>
- <20170821081333.GB31761@infradead.org>
- <20170829151159.GA12841@infradead.org>
- <20170829222247.GF10621@dastard>
- <20170831001009.GD3775@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170831001009.GD3775@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:58876 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751040AbdHaECq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Aug 2017 00:02:46 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] generic: test race between block map change and writeback
+Date: Thu, 31 Aug 2017 12:02:37 +0800
+Message-Id: <20170831040237.16022-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-On Wed, Aug 30, 2017 at 05:10:09PM -0700, Darrick J. Wong wrote:
-> On Wed, Aug 30, 2017 at 08:22:47AM +1000, Dave Chinner wrote:
-> > On Tue, Aug 29, 2017 at 08:11:59AM -0700, Christoph Hellwig wrote:
-> > > On Mon, Aug 21, 2017 at 01:13:33AM -0700, Christoph Hellwig wrote:
-> > > > So what do you think of the version that adds real printks for
-> > > > each condition including more details like the one verifier I
-> > > > did below?  Probably needs some unlikely annotations, though.
-> > > 
-> > > Given that there was another resend of the series I'd be really
-> > > curious about the answer to this?
-> > 
-> > If we increase the size of the hexdump on error, then most of the
-> > specific numbers in the print statements can be pulled from the
-> > hexdump. And if the verifier tells us exactly what check failed,
-> > we don't have to decode the entire hexdump to know what field was
-> > out of band.
-> 
-> How much do we increase the size of the hexdump?  64 -> 128?  Or
-> whatever the structure header size is?
+Run delalloc writes & append writes & non-data-integrity syncs
+concurrently to test the race between block map change vs writeback.
 
-I choose 64 because it captured the primary header for most 
-structures for CRC enabled filesystems, so it would have
-owner/crc/uuid/etc in it. I wasn't really trying to capture the
-object specific metadata in it, but increasing to 128 bytes would
-capture most of that block headers, too. Won't really help with
-inodes, though, as the core is 176 bytes and the owner/crc stuff is
-at the end....
+This is to cover an XFS bug that data could be written to wrong
+block and delay allocated blocks are leaked because the block map
+was changed due to the removal of speculative allocated eofblocks
+when writeback is in progress.
 
-> How about if xfs_error_level >=
-> XFS_ERRORLEVEL_HIGH then we dump the entire buffer?
+And this test partially mimics what lustre-racer[1] test does, using
+which this bug was first found.
 
-Excellent idea. We can easily capture the entire output for
-corruptions the users can easily trip over. Maybe put in the short
-dump a line "turn error level up to 11 to get a full dump of the
-corruption"?
+[1] https://git.hpdd.intel.com/?p=fs/lustre-release.git;a=tree;f=lustre/tests/racer;hb=HEAD
 
-Cheers,
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
 
-Dave.
+This may not reproduce the bug on all hosts, but it does reproduce the XFS
+corruption issue reliably on my different test hosts.
+
+ tests/generic/451     | 130 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/451.out |   2 +
+ tests/generic/group   |   1 +
+ 3 files changed, 133 insertions(+)
+ create mode 100755 tests/generic/451
+ create mode 100644 tests/generic/451.out
+
+diff --git a/tests/generic/451 b/tests/generic/451
+new file mode 100755
+index 000000000000..72cdd1c01de2
+--- /dev/null
++++ b/tests/generic/451
+@@ -0,0 +1,130 @@
++#! /bin/bash
++# FS QA Test 451
++#
++# Run delalloc writes & append writes & non-data-integrity syncs concurrently
++# to test the race between block map change vs writeback.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Red Hat Inc. All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++MAXFILES=200
++BLOCK_SZ=65536
++
++LOOP_CNT=12
++LOOP_TIME=5
++PROC_CNT=16
++
++stop=$tmp.stop
++
++# get a random file to work on
++getfile()
++{
++	echo $SCRATCH_MNT/$((RANDOM % MAXFILES))
++}
++
++# delalloc write a relative big file to get enough dirty pages to be written
++# back, and XFS needs big enough file to trigger speculative preallocations, so
++# freeing these eofblocks could change the extent record
++do_write()
++{
++	local blockcount=$((RANDOM % 100))
++	local filesize=$((blockcount * BLOCK_SZ))
++	$XFS_IO_PROG -ftc "pwrite -b $BLOCK_SZ 0 $filesize" `getfile` >/dev/null 2>&1
++}
++
++# append another dirty page to the file, the writeback might pick it up too if
++# the file is already under writeback
++do_append()
++{
++	echo "test string" >> `getfile`
++}
++
++# issue WB_SYNC_NONE writeback with the '-w' option of sync_range xfs_io
++# command, so that the last dirty page from append write can be picked up in
++# this writeback cycle. This is not mandatory but could help reproduce XFS
++# corruption more easily.
++do_writeback()
++{
++	$XFS_IO_PROG -c "sync_range -w 0 0" `getfile` >/dev/null 2>&1
++}
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++# do fsck after each iteration in test
++_require_scratch_nocheck
++_require_xfs_io_command "sync_range"
++
++_scratch_mkfs >>$seqres.full 2>&1
++_scratch_mount
++
++# loop for $LOOP_CNT iterations, and each iteration starts $PROC_CNT processes
++# for each operation and runs for $LOOP_TIME seconds, and check filesystem
++# consistency after each iteration
++for i in `seq 1 $LOOP_CNT`; do
++	rm -f $stop
++	for j in `seq 1 $PROC_CNT`; do
++		while [ ! -e $stop ]; do
++			do_write
++		done &
++
++		while [ ! -e $stop ]; do
++			do_append
++		done &
++
++		while [ ! -e $stop ]; do
++			do_writeback
++		done &
++	done
++	sleep $LOOP_TIME
++	touch $stop
++	wait
++
++	_scratch_unmount
++	# test exits here if fs is inconsistent
++	_check_scratch_fs
++	_scratch_mount
++done
++
++echo "Silence is golden"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/451.out b/tests/generic/451.out
+new file mode 100644
+index 000000000000..db924411b72f
+--- /dev/null
++++ b/tests/generic/451.out
+@@ -0,0 +1,2 @@
++QA output created by 451
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index 044ec3f355ed..b4bd66bc65a9 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -453,3 +453,4 @@
+ 448 auto quick rw
+ 449 auto quick acl enospc
+ 450 auto quick rw
++451 auto rw
 -- 
-Dave Chinner
-david@fromorbit.com
+2.13.5
+
