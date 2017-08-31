@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:5076 "EHLO
+Received: from szxga05-in.huawei.com ([45.249.212.191]:5077 "EHLO
         szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751205AbdHaOLO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 10:11:14 -0400
+        with ESMTP id S1751351AbdHaOLP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 10:11:15 -0400
 From: Hou Tao <houtao1@huawei.com>
-Subject: [PATCH 7/7] xfs: document the customizable default values of error configuration
-Date: Thu, 31 Aug 2017 22:15:58 +0800
-Message-ID: <1504188958-18374-8-git-send-email-houtao1@huawei.com>
+Subject: [PATCH 6/7] xfs: show the summary of error configurations for debugging purpose
+Date: Thu, 31 Aug 2017 22:15:57 +0800
+Message-ID: <1504188958-18374-7-git-send-email-houtao1@huawei.com>
 In-Reply-To: <1504188958-18374-1-git-send-email-houtao1@huawei.com>
 References: <1504188958-18374-1-git-send-email-houtao1@huawei.com>
 MIME-Version: 1.0
@@ -17,95 +17,213 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: darrick.wong@oracle.com, david@fromorbit.com, cmaiolino@redhat.com
 
-Mainly the sysfs paths of the default values and the difference between
-the default errror configuration and the fs-specific one.
+When the value of an error configuration is "default", the actual
+value used by XFS error handler is decided by the corresponding
+default error configuration. To ensure they are the same, add
+a sysfs file named "summary" to display the actual used values.
 
 Signed-off-by: Hou Tao <houtao1@huawei.com>
 ---
- Documentation/filesystems/xfs.txt | 31 ++++++++++++++++++++++++++++++-
- 1 file changed, 30 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_sysfs.c | 115 +++++++++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 89 insertions(+), 26 deletions(-)
 
-diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-index 3b9b5c1..0be68fc 100644
---- a/Documentation/filesystems/xfs.txt
-+++ b/Documentation/filesystems/xfs.txt
-@@ -397,12 +397,25 @@ Where:
-   <error>
- 	The individual error handler configurations.
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index cd7dfca..0af5e56 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -30,6 +30,9 @@
+ #define XFS_ERR_CFG_DEFAULT_VALUE "default"
+ #define XFS_ERR_CFG_DEFAULT_VALUE_LEN 7
  
-+For the convenience of error configuration, there are also configuration files
-+used for the default values of error configuration of all mounted filesystem:
++static void _xfs_error_get_cfg(struct xfs_error_obj *eobj, int error_class,
++		int error_idx, struct xfs_error_cfg *cfg);
 +
-+  /sys/fs/xfs/default_error/<class>/<error>/
+ struct xfs_sysfs_attr {
+ 	struct attribute attr;
+ 	ssize_t (*show)(struct kobject *kobject, char *buf);
+@@ -381,26 +384,33 @@ is_value_of_dft_error_cfg(
+ 			  buf[XFS_ERR_CFG_DEFAULT_VALUE_LEN + 1] == '\0')));
+ }
+ 
++static int
++to_max_retries_show_fmt(
++	int max_retries)
++{
++	int		retries;
 +
-+There is only one difference between the error configuration options under
-+these two sysfs trees: the options under <dev>/error/ can have a value of
-+"default", and the options under default_error/ can not.
- 
- Each filesystem has "global" error configuration options defined in their top
- level directory:
- 
-   /sys/fs/xfs/<dev>/error/
- 
-+For the default values of the "global" error configuration options, the
-+directory is:
++	if (max_retries == XFS_ERR_RETRY_FOREVER)
++		retries = -1;
++	else
++		retries = max_retries;
 +
-+  /sys/fs/xfs/default_error/
++	return retries;
++}
 +
-   fail_at_unmount		(Min:  0  Default:  1  Max: 1)
- 	Defines the filesystem error behavior at unmount time.
+ static ssize_t
+ max_retries_show(
+ 	struct kobject	*kobject,
+ 	char		*buf)
+ {
+-	int		retries;
+ 	struct xfs_error_cfg_kobj *cfg_kobj = to_error_cfg_kobj(kobject);
+-	struct xfs_error_cfg *cfg;
  
-@@ -417,6 +430,9 @@ level directory:
- 	filesystem from ever unmounting fully in the case of "retry forever"
- 	handler configurations.
+ 	if (is_dft_error_cfg(&cfg_kobj->flags,
+ 				XFS_ERR_CFG_BIT_PRIV_MAX_RETRIES))
+ 		return dft_error_cfg_show(buf);
  
-+	If set to "default", the behavior will be decided by the value of
-+	/sys/fs/xfs/default_error/fail_at_unmount.
+-	cfg = &cfg_kobj->cfg;
+-	if (cfg->max_retries == XFS_ERR_RETRY_FOREVER)
+-		retries = -1;
+-	else
+-		retries = cfg->max_retries;
+-
+-	return snprintf(buf, PAGE_SIZE, "%d\n", retries);
++	return snprintf(buf, PAGE_SIZE, "%d\n",
++			to_max_retries_show_fmt(cfg_kobj->cfg.max_retries));
+ }
+ 
+ static ssize_t
+@@ -441,26 +451,33 @@ max_retries_store(
+ }
+ XFS_SYSFS_ATTR_RW(max_retries);
+ 
++static int
++to_retry_timeout_show_fmt(
++	long retry_timeout)
++{
++	int		timeout;
 +
- 	Note: there is no guarantee that fail_at_unmount can be set whilst an
- 	unmount is in progress. It is possible that the sysfs entries are
- 	removed by the unmounting filesystem before a "retry forever" error
-@@ -427,12 +443,17 @@ level directory:
- Each filesystem has specific error class handlers that define the error
- propagation behaviour for specific errors. There is also a "default" error
- handler defined, which defines the behaviour for all errors that don't have
--specific handlers defined. Where multiple retry constraints are configuredi for
-+specific handlers defined. Where multiple retry constraints are configured for
- a single error, the first retry configuration that expires will cause the error
- to be propagated. The handler configurations are found in the directory:
- 
-   /sys/fs/xfs/<dev>/error/<class>/<error>/
- 
-+There is also a corresponding directory for the default values of these
-+handler configuration:
++	if (retry_timeout == XFS_ERR_RETRY_FOREVER)
++		timeout = -1;
++	else
++		timeout = jiffies_to_msecs(retry_timeout) / MSEC_PER_SEC;
 +
-+  /sys/fs/xfs/default_error/<class>/<error>/
++	return timeout;
++}
 +
-   max_retries			(Min: -1  Default: Varies  Max: INTMAX)
- 	Defines the allowed number of retries of a specific error before
- 	the filesystem will propagate the error. The retry count for a given
-@@ -448,6 +469,10 @@ to be propagated. The handler configurations are found in the directory:
- 	Setting the value to "N" (where 0 < N < Max) will make XFS retry the
- 	operation "N" times before propagating the error.
+ static ssize_t
+ retry_timeout_seconds_show(
+ 	struct kobject	*kobject,
+ 	char		*buf)
+ {
+-	int		timeout;
+ 	struct xfs_error_cfg_kobj *cfg_kobj = to_error_cfg_kobj(kobject);
+-	struct xfs_error_cfg *cfg;
  
-+	Setting the value to "default" will let the default value of the handler,
-+	namely the value of default_error/<class>/<error>/max_retries,
-+	to decide the error propagation behavior.
-+
-   retry_timeout_seconds		(Min:  -1  Default:  Varies  Max: 1 day)
- 	Define the amount of time (in seconds) that the filesystem is
- 	allowed to retry its operations when the specific error is
-@@ -462,6 +487,10 @@ to be propagated. The handler configurations are found in the directory:
- 	Setting the value to "N" (where 0 < N < Max) will allow XFS to retry the
- 	operation for up to "N" seconds before propagating the error.
+ 	if (is_dft_error_cfg(&cfg_kobj->flags,
+ 				XFS_ERR_CFG_BIT_PRIV_RETRY_TIMEOUT))
+ 		return dft_error_cfg_show(buf);
  
-+	Setting the value to "default" will let the default value of the handler,
-+	namely the value of default_error/<class>/<error>/retry_timeout_seconds,
-+	to decide the error propagation behavior.
+-	cfg = &cfg_kobj->cfg;
+-	if (cfg->retry_timeout == XFS_ERR_RETRY_FOREVER)
+-		timeout = -1;
+-	else
+-		timeout = jiffies_to_msecs(cfg->retry_timeout) / MSEC_PER_SEC;
+-
+-	return snprintf(buf, PAGE_SIZE, "%d\n", timeout);
++	return snprintf(buf, PAGE_SIZE, "%d\n",
++			to_retry_timeout_show_fmt(cfg_kobj->cfg.retry_timeout));
+ }
+ 
+ static ssize_t
+@@ -550,6 +567,35 @@ fail_at_unmount_store(
+ }
+ XFS_SYSFS_ATTR_RW(fail_at_unmount);
+ 
++#ifdef DEBUG
++static ssize_t
++summary_show(
++	struct kobject	*kobject,
++	char		*buf)
++{
++	struct xfs_error_obj *eobj = err_to_mp(kobject);
++	int len = PAGE_SIZE;
++	int used = 0;
++	int i;
++	struct xfs_error_cfg cfg;
 +
- Note: The default behaviour for a specific error handler is dependent on both
- the class and error context. For example, the default values for
- "metadata/ENODEV" are "0" rather than "-1" so that this error handler defaults
++	used += snprintf(buf + used, len - used, "fail_at_unmount: %d\n",
++			xfs_fail_at_unmount(eobj));
++	for (i = 0; used < len && i < XFS_ERR_ERRNO_MAX; i++) {
++		_xfs_error_get_cfg(eobj, XFS_ERR_METADATA, i, &cfg);
++
++		used += snprintf(buf + used, len - used,
++				"metadata %s: retries %d timeout %d\n",
++				xfs_error_meta_name[i],
++				to_max_retries_show_fmt(cfg.max_retries),
++				to_retry_timeout_show_fmt(cfg.retry_timeout));
++	}
++
++	return used;
++}
++XFS_SYSFS_ATTR_RO(summary);
++#endif /* DEBUG */
++
+ static struct attribute *xfs_error_attrs[] = {
+ 	ATTR_LIST(max_retries),
+ 	ATTR_LIST(retry_timeout_seconds),
+@@ -631,6 +677,12 @@ xfs_error_sysfs_init(
+ 	if (error)
+ 		goto out_error;
+ 
++#ifdef DEBUG
++	error = sysfs_create_file(&eobj->kobj.kobject, ATTR_LIST(summary));
++	if (error)
++		goto out_error;
++#endif
++
+ 	/* .../xfs/error/metadata/ or .../xfs/<dev>/error/metadata/ */
+ 	error = xfs_error_sysfs_init_class(eobj, XFS_ERR_METADATA,
+ 				"metadata", &eobj->meta_kobj,
+@@ -706,6 +758,24 @@ xfs_dft_error_sysfs_del(void)
+ }
+ 
+ void
++_xfs_error_get_cfg(
++	struct xfs_error_obj	*eobj,
++	int	error_class,
++	int	error_idx,
++	struct xfs_error_cfg *cfg)
++{
++	struct xfs_error_cfg_kobj *kobj;
++
++	*cfg = xfs_dft_eobj.cfg_kobj[error_class][error_idx].cfg;
++
++	kobj = &eobj->cfg_kobj[error_class][error_idx];
++	if (test_bit(XFS_ERR_CFG_BIT_PRIV_MAX_RETRIES, &kobj->flags))
++		cfg->max_retries = kobj->cfg.max_retries;
++	if (test_bit(XFS_ERR_CFG_BIT_PRIV_RETRY_TIMEOUT, &kobj->flags))
++		cfg->retry_timeout = kobj->cfg.retry_timeout;
++}
++
++void
+ xfs_error_get_cfg(
+ 	struct xfs_error_obj	*eobj,
+ 	int			error_class,
+@@ -713,7 +783,6 @@ xfs_error_get_cfg(
+ 	struct xfs_error_cfg	*cfg)
+ {
+ 	int idx;
+-	struct xfs_error_cfg_kobj *kobj;
+ 
+ 	if (error < 0)
+ 		error = -error;
+@@ -733,13 +802,7 @@ xfs_error_get_cfg(
+ 		break;
+ 	}
+ 
+-	*cfg = xfs_dft_eobj.cfg_kobj[error_class][idx].cfg;
+-
+-	kobj = &eobj->cfg_kobj[error_class][idx];
+-	if (test_bit(XFS_ERR_CFG_BIT_PRIV_MAX_RETRIES, &kobj->flags))
+-		cfg->max_retries = kobj->cfg.max_retries;
+-	if (test_bit(XFS_ERR_CFG_BIT_PRIV_RETRY_TIMEOUT, &kobj->flags))
+-		cfg->retry_timeout = kobj->cfg.retry_timeout;
++	_xfs_error_get_cfg(eobj, error_class, idx, cfg);
+ }
+ 
+ bool
 -- 
 2.5.0
 
