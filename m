@@ -1,23 +1,24 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35971 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751725AbdHaUeg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 16:34:36 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7VKYZeM022717
+Received: from userp1040.oracle.com ([156.151.31.81]:48478 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751743AbdHaUen (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 16:34:43 -0400
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7VKYfJY014800
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2017 20:34:35 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v7VKYYDL010329
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2017 20:34:42 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v7VKYf38000706
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2017 20:34:35 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7VKYYZA024418
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2017 20:34:34 GMT
-Subject: [PATCH 11/19] xfs: add realtime reverse map inode to superblock
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2017 20:34:41 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v7VKYeen018259
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2017 20:34:41 GMT
+Subject: [PATCH 12/19] xfs: wire up a new inode fork type for the realtime
+ rmap
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 31 Aug 2017 13:34:32 -0700
-Message-ID: <150421167224.17458.14561547883032810702.stgit@magnolia>
+Date: Thu, 31 Aug 2017 13:34:38 -0700
+Message-ID: <150421167841.17458.2367795764317191849.stgit@magnolia>
 In-Reply-To: <150421160433.17458.10817316901867396010.stgit@magnolia>
 References: <150421160433.17458.10817316901867396010.stgit@magnolia>
 MIME-Version: 1.0
@@ -31,269 +32,470 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a field to the superblock to record the rt rmapbt inode and load
-it at mount time.  The rtrmapbt inode will have a unique extent format
-code, which means that we also have to update the inode validation and
-flush routines to look for it.
+Plumb in the pieces we need to embed the root of the realtime rmap
+btree in an inode's data fork, complete with new fork type and
+on-disk interpretation functions.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_format.h       |   10 +++++++++-
- fs/xfs/libxfs/xfs_inode_fork.c   |   11 +++++++++++
- fs/xfs/libxfs/xfs_rtrmap_btree.c |    2 +-
- fs/xfs/libxfs/xfs_sb.c           |    2 ++
- fs/xfs/xfs_inode.c               |    9 ++++++++-
- fs/xfs/xfs_inode_item.c          |    2 ++
- fs/xfs/xfs_itable.c              |    1 +
- fs/xfs/xfs_log_recover.c         |   13 ++++++++++++-
- fs/xfs/xfs_mount.h               |    1 +
- fs/xfs/xfs_ondisk.h              |    2 +-
- fs/xfs/xfs_rtalloc.c             |   21 +++++++++++++++++++++
- 11 files changed, 69 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_format.h       |    8 +
+ fs/xfs/libxfs/xfs_inode_fork.c   |   48 +++++++
+ fs/xfs/libxfs/xfs_rtrmap_btree.c |  248 ++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rtrmap_btree.h |   51 ++++++++
+ 4 files changed, 353 insertions(+), 2 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index c5760ca..bfa86f7 100644
+index bfa86f7..ffc26bb 100644
 --- a/fs/xfs/libxfs/xfs_format.h
 +++ b/fs/xfs/libxfs/xfs_format.h
-@@ -183,6 +183,7 @@ typedef struct xfs_sb {
- 	xfs_ino_t	sb_pquotino;	/* project quota inode */
- 	xfs_lsn_t	sb_lsn;		/* last write sequence */
- 	uuid_t		sb_meta_uuid;	/* metadata file system unique id */
-+	xfs_ino_t	sb_rrmapino;	/* realtime reverse map inode */
- 
- 	/* must be padded to 64 bit alignment */
- } xfs_sb_t;
-@@ -270,6 +271,7 @@ typedef struct xfs_dsb {
- 	__be64		sb_pquotino;	/* project quota inode */
- 	__be64		sb_lsn;		/* last write sequence */
- 	uuid_t		sb_meta_uuid;	/* metadata file system unique id */
-+	__be64		sb_rrmapino;	/* realtime reverse map inode */
- 
- 	/* must be padded to 64 bit alignment */
- } xfs_dsb_t;
-@@ -553,6 +555,11 @@ static inline bool xfs_sb_version_hasrmapbt(struct xfs_sb *sbp)
- 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_RMAPBT);
- }
- 
-+static inline bool xfs_sb_version_hasrtrmapbt(struct xfs_sb *sbp)
-+{
-+	return sbp->sb_rblocks > 0 && xfs_sb_version_hasrmapbt(sbp);
-+}
-+
- static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
- {
- 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-@@ -946,7 +953,8 @@ typedef enum xfs_dinode_fmt {
- 	XFS_DINODE_FMT_LOCAL,		/* bulk data */
- 	XFS_DINODE_FMT_EXTENTS,		/* struct xfs_bmbt_rec */
- 	XFS_DINODE_FMT_BTREE,		/* struct xfs_bmdr_block */
--	XFS_DINODE_FMT_UUID		/* uuid_t */
-+	XFS_DINODE_FMT_UUID,		/* uuid_t */
-+	XFS_DINODE_FMT_RMAP,		/* reverse mapping btree */
- } xfs_dinode_fmt_t;
+@@ -1477,6 +1477,14 @@ typedef __be32 xfs_rmap_ptr_t;
+ #define	XFS_RTRMAP_CRC_MAGIC	0x4d415052	/* 'MAPR' */
  
  /*
++ * rtrmap root header, on-disk form only.
++ */
++struct xfs_rtrmap_root {
++	__be16		bb_level;	/* 0 is a leaf */
++	__be16		bb_numrecs;	/* current # of data records */
++};
++
++/*
+  * Data record structure
+  */
+ struct xfs_rtrmap_rec {
 diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 3ca2d0f..ad9e7a3 100644
+index ad9e7a3..e5ea9ae 100644
 --- a/fs/xfs/libxfs/xfs_inode_fork.c
 +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -87,6 +87,13 @@ xfs_iformat_fork(
- 		case XFS_DINODE_FMT_BTREE:
- 			error = xfs_iformat_btree(ip, dip, XFS_DATA_FORK);
+@@ -37,12 +37,14 @@
+ #include "xfs_dir2_priv.h"
+ #include "xfs_attr_leaf.h"
+ #include "xfs_shared.h"
++#include "xfs_rtrmap_btree.h"
+ 
+ kmem_zone_t *xfs_ifork_zone;
+ 
+ STATIC int xfs_iformat_local(xfs_inode_t *, xfs_dinode_t *, int, int);
+ STATIC int xfs_iformat_extents(xfs_inode_t *, xfs_dinode_t *, int);
+ STATIC int xfs_iformat_btree(xfs_inode_t *, xfs_dinode_t *, int);
++STATIC int xfs_iformat_rmap(struct xfs_inode *ip, struct xfs_dinode *dip);
+ 
+ /*
+  * Move inode type and inode format specific information from the
+@@ -92,7 +94,7 @@ xfs_iformat_fork(
+ 				return -EFSCORRUPTED;
+ 			if (ip->i_ino != ip->i_mount->m_sb.sb_rrmapino)
+ 				return -EFSCORRUPTED;
+-			/* to be implemented later */
++			error = xfs_iformat_rmap(ip, dip);
  			break;
-+		case XFS_DINODE_FMT_RMAP:
-+			if (!xfs_sb_version_hasrtrmapbt(&ip->i_mount->m_sb))
-+				return -EFSCORRUPTED;
-+			if (ip->i_ino != ip->i_mount->m_sb.sb_rrmapino)
-+				return -EFSCORRUPTED;
-+			/* to be implemented later */
-+			break;
  		default:
  			return -EFSCORRUPTED;
- 		}
-@@ -671,6 +678,10 @@ xfs_iflush_fork(
- 		}
- 		break;
- 
-+	case XFS_DINODE_FMT_RMAP:
-+		/* to be implemented later */
-+		break;
-+
- 	default:
- 		ASSERT(0);
- 		break;
-diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-index 31d61d3..d640184 100644
---- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-@@ -356,7 +356,7 @@ xfs_rtrmapbt_verify(
- 	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
- 		return __this_address;
- 	if ((failed_at = xfs_btree_lblock_v5hdr_verify(bp,
--			XFS_RMAP_OWN_UNKNOWN)))
-+			mp->m_sb.sb_rrmapino)))
- 		return failed_at;
- 	level = be16_to_cpu(block->bb_level);
- 	if (level > mp->m_rtrmap_maxlevels)
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 063ecfc..84dba50 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -431,6 +431,7 @@ __xfs_sb_from_disk(
- 		uuid_copy(&to->sb_meta_uuid, &from->sb_meta_uuid);
- 	else
- 		uuid_copy(&to->sb_meta_uuid, &from->sb_uuid);
-+	to->sb_rrmapino = be64_to_cpu(from->sb_rrmapino);
- 	/* Convert on-disk flags to in-memory flags? */
- 	if (convert_xquota)
- 		xfs_sb_quota_from_disk(to);
-@@ -574,6 +575,7 @@ xfs_sb_to_disk(
- 		to->sb_lsn = cpu_to_be64(from->sb_lsn);
- 		if (xfs_sb_version_hasmetauuid(from))
- 			uuid_copy(&to->sb_meta_uuid, &from->sb_meta_uuid);
-+		to->sb_rrmapino = cpu_to_be64(from->sb_rrmapino);
- 	}
- }
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 4e05325..9207d61 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3525,7 +3525,14 @@ xfs_iflush_int(
- 			__func__, ip->i_ino, be16_to_cpu(dip->di_magic), dip);
- 		goto corrupt_out;
- 	}
--	if (S_ISREG(VFS_I(ip)->i_mode)) {
-+	if (ip->i_ino == mp->m_sb.sb_rrmapino) {
-+		if (ip->i_d.di_format != XFS_DINODE_FMT_RMAP) {
-+			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
-+				"%s: Bad rtrmap inode %llu, ptr 0x%p",
-+				__func__, ip->i_ino, ip);
-+			goto corrupt_out;
-+		}
-+	} else if (S_ISREG(VFS_I(ip)->i_mode)) {
- 		if (XFS_TEST_ERROR(
- 		    (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS) &&
- 		    (ip->i_d.di_format != XFS_DINODE_FMT_BTREE),
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 013cc78..d111240 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -56,6 +56,7 @@ xfs_inode_item_data_fork_size(
- 		}
- 		break;
- 	case XFS_DINODE_FMT_BTREE:
-+	case XFS_DINODE_FMT_RMAP:
- 		if ((iip->ili_fields & XFS_ILOG_DBROOT) &&
- 		    ip->i_df.if_broot_bytes > 0) {
- 			*nbytes += ip->i_df.if_broot_bytes;
-@@ -179,6 +180,7 @@ xfs_inode_item_format_data_fork(
- 		}
- 		break;
- 	case XFS_DINODE_FMT_BTREE:
-+	case XFS_DINODE_FMT_RMAP:
- 		iip->ili_fields &=
- 			~(XFS_ILOG_DDATA | XFS_ILOG_DEXT |
- 			  XFS_ILOG_DEV | XFS_ILOG_UUID);
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index c393a2f..55642cd 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -37,6 +37,7 @@ xfs_internal_inum(
- 	xfs_ino_t	ino)
- {
- 	return (ino == mp->m_sb.sb_rbmino || ino == mp->m_sb.sb_rsumino ||
-+		ino == mp->m_sb.sb_rrmapino ||
- 		(xfs_sb_version_hasquota(&mp->m_sb) &&
- 		 xfs_is_quota_inode(&mp->m_sb, ino)));
- }
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index cfe37fc..f415a2b 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3075,7 +3075,18 @@ xlog_recover_inode_pass2(
- 	/* Take the opportunity to reset the flush iteration count */
- 	ldip->di_flushiter = 0;
- 
--	if (unlikely(S_ISREG(ldip->di_mode))) {
-+	if (in_f->ilf_ino == mp->m_sb.sb_rrmapino) {
-+		if (ldip->di_format != XFS_DINODE_FMT_RMAP) {
-+			XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(3)",
-+					 XFS_ERRLEVEL_LOW, mp, ldip);
-+			xfs_alert(mp,
-+		"%s: Bad rtrmapbt inode log record, rec ptr 0x%p, "
-+		"ino ptr = 0x%p, ino bp = 0x%p, ino %Ld",
-+				__func__, item, dip, bp, in_f->ilf_ino);
-+			error = -EFSCORRUPTED;
-+			goto out_release;
-+		}
-+	} else if (unlikely(S_ISREG(ldip->di_mode))) {
- 		if ((ldip->di_format != XFS_DINODE_FMT_EXTENTS) &&
- 		    (ldip->di_format != XFS_DINODE_FMT_BTREE)) {
- 			XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(3)",
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 72a5360..7821b6e 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -103,6 +103,7 @@ typedef struct xfs_mount {
- 	uint			m_rsumsize;	/* size of rt summary, bytes */
- 	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */
- 	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
-+	struct xfs_inode	*m_rrmapip;	/* pointer to rmap inode */
- 	struct xfs_inode	*m_rootip;	/* pointer to root directory */
- 	struct xfs_quotainfo	*m_quotainfo;	/* disk quota information */
- 	xfs_buftarg_t		*m_ddev_targp;	/* saves taking the address */
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 88c771e..779b5f0 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -45,7 +45,7 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_dqblk,			136);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,			264);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,			272);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_dsymlink_hdr,		56);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_key,		4);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_rec,		16);
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 9147219..5e14fd2 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1227,6 +1227,25 @@ xfs_rtmount_inodes(
- 		return error;
- 	}
- 	ASSERT(mp->m_rsumip != NULL);
-+
-+	/* If we have rmap and a realtime device, look for the rtrmapbt. */
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb) && mp->m_sb.sb_rblocks > 0) {
-+		ASSERT(sbp->sb_rrmapino != NULLFSINO);
-+		error = xfs_iget(mp, NULL, sbp->sb_rrmapino, 0, 0,
-+				&mp->m_rrmapip);
-+		if (error) {
-+			if (mp->m_rrmapip)
-+				IRELE(mp->m_rrmapip);
-+			return error;
-+		}
-+		ASSERT(mp->m_rrmapip != NULL);
-+		if (mp->m_rrmapip->i_d.di_format != XFS_DINODE_FMT_RMAP) {
-+			IRELE(mp->m_rrmapip);
-+			mp->m_rrmapip = NULL;
-+			return -EFSCORRUPTED;
-+		}
-+	}
-+
+@@ -343,6 +345,37 @@ xfs_iformat_btree(
  	return 0;
  }
  
-@@ -1234,6 +1253,8 @@ void
- xfs_rtunmount_inodes(
- 	struct xfs_mount	*mp)
- {
-+	if (mp->m_rrmapip)
-+		IRELE(mp->m_rrmapip);
- 	if (mp->m_rbmip)
- 		IRELE(mp->m_rbmip);
- 	if (mp->m_rsumip)
++/* The file is a reverse mapping tree. */
++STATIC int
++xfs_iformat_rmap(
++	struct xfs_inode	*ip,
++	struct xfs_dinode	*dip)
++{
++	struct xfs_rtrmap_root	*dfp;
++	struct xfs_ifork	*ifp;
++	/* REFERENCED */
++	int			size;
++	int			whichfork = XFS_DATA_FORK;
++
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	dfp = (struct xfs_rtrmap_root *)XFS_DFORK_PTR(dip, whichfork);
++	size = XFS_RTRMAP_BROOT_SPACE(dfp);
++
++	ifp->if_broot_bytes = size;
++	ifp->if_broot = kmem_alloc(size, KM_SLEEP | KM_NOFS);
++	ASSERT(ifp->if_broot != NULL);
++	/*
++	 * Copy and convert from the on-disk structure
++	 * to the in-memory structure.
++	 */
++	xfs_rtrmapbt_from_disk(ip, dfp,
++			XFS_DFORK_SIZE(dip, ip->i_mount, whichfork),
++			ifp->if_broot, size);
++	ifp->if_flags = XFS_IFBROOT;
++
++	return 0;
++}
++
+ /*
+  * Read in extents from a btree-format inode.
+  * Allocate and fill in if_extents.  Real work is done in xfs_bmap.c.
+@@ -679,7 +712,18 @@ xfs_iflush_fork(
+ 		break;
+ 
+ 	case XFS_DINODE_FMT_RMAP:
+-		/* to be implemented later */
++		ASSERT(whichfork == XFS_DATA_FORK);
++		ASSERT(ip->i_ino == mp->m_sb.sb_rrmapino);
++		if ((iip->ili_fields & brootflag[whichfork]) &&
++		    (ifp->if_broot_bytes > 0)) {
++			ASSERT(ifp->if_broot != NULL);
++			ASSERT(XFS_RTRMAP_ROOT_SPACE(ifp->if_broot) <=
++				XFS_IFORK_SIZE(ip, whichfork));
++			xfs_rtrmapbt_to_disk(mp, ifp->if_broot,
++				ifp->if_broot_bytes,
++				(struct xfs_rtrmap_root *)cp,
++				XFS_DFORK_SIZE(dip, mp, whichfork));
++		}
+ 		break;
+ 
+ 	default:
+diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+index d640184..0a4385b 100644
+--- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
+@@ -224,6 +224,42 @@ xfs_rtrmapbt_get_maxrecs(
+ 	return cur->bc_mp->m_rtrmap_mxr[level != 0];
+ }
+ 
++/*
++ * Calculate number of records in a realtime rmap btree inode root.
++ */
++STATIC int
++xfs_rtrmapbt_root_maxrecs(
++	int			blocklen,
++	bool			leaf)
++{
++	blocklen -= sizeof(struct xfs_rtrmap_root);
++
++	if (leaf)
++		return blocklen / sizeof(struct xfs_rtrmap_rec);
++	return blocklen / (2 * sizeof(struct xfs_rtrmap_key) +
++			sizeof(xfs_rtrmap_ptr_t));
++}
++
++/*
++ * Get the maximum records we could store in the on-disk format.
++ *
++ * For non-root nodes this is equivalent to xfs_bmbt_get_maxrecs, but
++ * for the root node this checks the available space in the dinode fork
++ * so that we can resize the in-memory buffer to match it.  After a
++ * resize to the maximum size this function returns the same value
++ * as xfs_bmbt_get_maxrecs for the root node, too.
++ */
++STATIC int
++xfs_rtrmapbt_get_dmaxrecs(
++	struct xfs_btree_cur	*cur,
++	int			level)
++{
++	if (level != cur->bc_nlevels - 1)
++		return cur->bc_mp->m_rtrmap_mxr[level != 0];
++	return xfs_rtrmapbt_root_maxrecs(cur->bc_private.b.forksize,
++			level == 0);
++}
++
+ STATIC void
+ xfs_rtrmapbt_init_key_from_rec(
+ 	union xfs_btree_key	*key,
+@@ -341,6 +377,127 @@ xfs_rtrmapbt_diff_two_keys(
+ 	return 0;
+ }
+ 
++/*
++ * Reallocate the space for if_broot based on the number of records
++ * being added or deleted as indicated in rec_diff.  Move the records
++ * and pointers in if_broot to fit the new size.  When shrinking this
++ * will eliminate holes between the records and pointers created by
++ * the caller.  When growing this will create holes to be filled in
++ * by the caller.
++ *
++ * The caller must not request to add more records than would fit in
++ * the on-disk inode root.  If the if_broot is currently NULL, then
++ * if we are adding records, one will be allocated.  The caller must also
++ * not request that the number of records go below zero, although
++ * it can go to zero.
++ */
++STATIC void
++xfs_rtrmapbt_iroot_realloc(
++	struct xfs_btree_cur	*cur,
++	int			rec_diff)
++{
++	struct xfs_inode	*ip = cur->bc_private.b.ip;
++	int			whichfork = cur->bc_private.b.whichfork;
++	struct xfs_mount	*mp = ip->i_mount;
++	int			cur_max;
++	struct xfs_ifork	*ifp;
++	struct xfs_btree_block	*new_broot;
++	struct xfs_btree_block	*broot;
++	int			new_max;
++	size_t			new_size;
++	char			*np;
++	char			*op;
++	int			level;
++
++	/*
++	 * Handle the degenerate case quietly.
++	 */
++	if (rec_diff == 0)
++		return;
++
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	if (rec_diff > 0) {
++		/*
++		 * If there wasn't any memory allocated before, just
++		 * allocate it now and get out.
++		 */
++		if (ifp->if_broot_bytes == 0) {
++			new_size = XFS_RTRMAP_BROOT_SPACE_CALC(rec_diff,
++					cur->bc_nlevels - 1);
++			ifp->if_broot = kmem_alloc(new_size,
++					KM_SLEEP | KM_NOFS);
++			ifp->if_broot_bytes = (int)new_size;
++			return;
++		}
++
++		/*
++		 * If there is already an existing if_broot, then we need
++		 * to realloc() it and shift the pointers to their new
++		 * location.  The records don't change location because
++		 * they are kept butted up against the btree block header.
++		 */
++		broot = (struct xfs_btree_block *)ifp->if_broot;
++		level = be16_to_cpu(broot->bb_level);
++		cur_max = xfs_rtrmapbt_maxrecs(mp, ifp->if_broot_bytes,
++				level == 0);
++		new_max = cur_max + rec_diff;
++		new_size = XFS_RTRMAP_BROOT_SPACE_CALC(new_max, level);
++		ifp->if_broot = kmem_realloc(ifp->if_broot, new_size,
++				KM_SLEEP | KM_NOFS);
++		if (level > 0) {
++			op = (char *)XFS_RTRMAP_BROOT_PTR_ADDR(ifp->if_broot,
++					1, ifp->if_broot_bytes);
++			np = (char *)XFS_RTRMAP_BROOT_PTR_ADDR(ifp->if_broot,
++					1, (int)new_size);
++			memmove(np, op, cur_max * sizeof(xfs_fsblock_t));
++		}
++		ifp->if_broot_bytes = (int)new_size;
++		ASSERT(XFS_RTRMAP_ROOT_SPACE(ifp->if_broot) <=
++				XFS_IFORK_SIZE(ip, whichfork));
++		return;
++	}
++
++	/*
++	 * rec_diff is less than 0.  In this case, we are shrinking the
++	 * if_broot buffer.  It must already exist.  If we go to zero
++	 * records, just get rid of the root and clear the status bit.
++	 */
++	ASSERT((ifp->if_broot != NULL) && (ifp->if_broot_bytes > 0));
++	broot = (struct xfs_btree_block *)ifp->if_broot;
++	level = be16_to_cpu(broot->bb_level);
++	cur_max = xfs_rtrmapbt_maxrecs(mp, ifp->if_broot_bytes, level == 0);
++	new_max = cur_max + rec_diff;
++	if (new_max < 0)
++		new_max = 0;
++	new_size = XFS_RTRMAP_BROOT_SPACE_CALC(new_max, level);
++	new_broot = kmem_alloc(new_size, KM_SLEEP | KM_NOFS);
++	memcpy(new_broot, ifp->if_broot, XFS_RTRMAP_BLOCK_LEN);
++
++	/* Copy the records or keys and pointers. */
++	if (level > 0) {
++		op = (char *)XFS_RTRMAP_KEY_ADDR(ifp->if_broot, 1);
++		np = (char *)XFS_RTRMAP_KEY_ADDR(new_broot, 1);
++		memcpy(np, op, new_max * 2 * sizeof(struct xfs_rtrmap_key));
++
++		op = (char *)XFS_RTRMAP_BROOT_PTR_ADDR(ifp->if_broot, 1,
++				ifp->if_broot_bytes);
++		np = (char *)XFS_RTRMAP_BROOT_PTR_ADDR(new_broot, 1,
++				(int)new_size);
++		memcpy(np, op, new_max * sizeof(xfs_fsblock_t));
++	} else {
++		op = (char *)XFS_RTRMAP_REC_ADDR(ifp->if_broot, 1);
++		np = (char *)XFS_RTRMAP_REC_ADDR(new_broot, 1);
++		memcpy(np, op, new_max * sizeof(struct xfs_rtrmap_rec));
++	}
++
++	kmem_free(ifp->if_broot);
++	ifp->if_broot = new_broot;
++	ifp->if_broot_bytes = (int)new_size;
++	if (ifp->if_broot)
++		ASSERT(XFS_RTRMAP_ROOT_SPACE(ifp->if_broot) <=
++				XFS_IFORK_SIZE(ip, whichfork));
++}
++
+ static void *
+ xfs_rtrmapbt_verify(
+ 	struct xfs_buf		*bp)
+@@ -450,12 +607,14 @@ static const struct xfs_btree_ops xfs_rtrmapbt_ops = {
+ 	.free_block		= xfs_rtrmapbt_free_block,
+ 	.get_minrecs		= xfs_rtrmapbt_get_minrecs,
+ 	.get_maxrecs		= xfs_rtrmapbt_get_maxrecs,
++	.get_dmaxrecs		= xfs_rtrmapbt_get_dmaxrecs,
+ 	.init_key_from_rec	= xfs_rtrmapbt_init_key_from_rec,
+ 	.init_high_key_from_rec	= xfs_rtrmapbt_init_high_key_from_rec,
+ 	.init_rec_from_cur	= xfs_rtrmapbt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_rtrmapbt_init_ptr_from_cur,
+ 	.key_diff		= xfs_rtrmapbt_key_diff,
+ 	.buf_ops		= &xfs_rtrmapbt_buf_ops,
++	.iroot_realloc		= xfs_rtrmapbt_iroot_realloc,
+ 	.diff_two_keys		= xfs_rtrmapbt_diff_two_keys,
+ 	.keys_inorder		= xfs_rtrmapbt_keys_inorder,
+ 	.recs_inorder		= xfs_rtrmapbt_recs_inorder,
+@@ -522,3 +681,92 @@ xfs_rtrmapbt_compute_maxlevels(
+ 			mp->m_rtrmap_mnr, mp->m_sb.sb_rblocks);
+ 	ASSERT(mp->m_rtrmap_maxlevels <= XFS_BTREE_MAXLEVELS);
+ }
++
++/*
++ * Convert on-disk form of btree root to in-memory form.
++ */
++void
++xfs_rtrmapbt_from_disk(
++	struct xfs_inode	*ip,
++	struct xfs_rtrmap_root	*dblock,
++	int			dblocklen,
++	struct xfs_btree_block	*rblock,
++	int			rblocklen)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	int			dmxr;
++	struct xfs_rtrmap_key	*fkp;
++	__be64			*fpp;
++	struct xfs_rtrmap_key	*tkp;
++	__be64			*tpp;
++	struct xfs_rtrmap_rec	*frp;
++	struct xfs_rtrmap_rec	*trp;
++
++	xfs_btree_init_block_int(mp, rblock, XFS_BUF_DADDR_NULL,
++			 XFS_BTNUM_RTRMAP, 0, 0, ip->i_ino,
++			 XFS_BTREE_LONG_PTRS | XFS_BTREE_CRC_BLOCKS);
++
++	rblock->bb_level = dblock->bb_level;
++	rblock->bb_numrecs = dblock->bb_numrecs;
++
++	if (be16_to_cpu(rblock->bb_level) > 0) {
++		dmxr = xfs_rtrmapbt_maxrecs(mp, dblocklen, 0);
++		fkp = XFS_RTRMAP_ROOT_KEY_ADDR(dblock, 1);
++		tkp = XFS_RTRMAP_KEY_ADDR(rblock, 1);
++		fpp = XFS_RTRMAP_ROOT_PTR_ADDR(dblock, 1, dmxr);
++		tpp = XFS_RTRMAP_BROOT_PTR_ADDR(rblock, 1, rblocklen);
++		dmxr = be16_to_cpu(dblock->bb_numrecs);
++		memcpy(tkp, fkp, 2 * sizeof(*fkp) * dmxr);
++		memcpy(tpp, fpp, sizeof(*fpp) * dmxr);
++	} else {
++		frp = XFS_RTRMAP_ROOT_REC_ADDR(dblock, 1);
++		trp = XFS_RTRMAP_REC_ADDR(rblock, 1);
++		dmxr = be16_to_cpu(dblock->bb_numrecs);
++		memcpy(trp, frp, sizeof(*frp) * dmxr);
++	}
++}
++
++/*
++ * Convert in-memory form of btree root to on-disk form.
++ */
++void
++xfs_rtrmapbt_to_disk(
++	struct xfs_mount	*mp,
++	struct xfs_btree_block	*rblock,
++	int			rblocklen,
++	struct xfs_rtrmap_root	*dblock,
++	int			dblocklen)
++{
++	int			dmxr;
++	struct xfs_rtrmap_key	*fkp;
++	__be64			*fpp;
++	struct xfs_rtrmap_key	*tkp;
++	__be64			*tpp;
++	struct xfs_rtrmap_rec	*frp;
++	struct xfs_rtrmap_rec	*trp;
++
++	ASSERT(rblock->bb_magic == cpu_to_be32(XFS_RTRMAP_CRC_MAGIC));
++	ASSERT(uuid_equal(&rblock->bb_u.l.bb_uuid, &mp->m_sb.sb_meta_uuid));
++	ASSERT(rblock->bb_u.l.bb_blkno == cpu_to_be64(XFS_BUF_DADDR_NULL));
++	ASSERT(rblock->bb_u.l.bb_leftsib == cpu_to_be64(NULLFSBLOCK));
++	ASSERT(rblock->bb_u.l.bb_rightsib == cpu_to_be64(NULLFSBLOCK));
++
++	dblock->bb_level = rblock->bb_level;
++	dblock->bb_numrecs = rblock->bb_numrecs;
++
++	if (be16_to_cpu(rblock->bb_level) > 0) {
++		dmxr = xfs_rtrmapbt_maxrecs(mp, dblocklen, 0);
++		fkp = XFS_RTRMAP_KEY_ADDR(rblock, 1);
++		tkp = XFS_RTRMAP_ROOT_KEY_ADDR(dblock, 1);
++		fpp = XFS_RTRMAP_BROOT_PTR_ADDR(rblock, 1, rblocklen);
++		tpp = XFS_RTRMAP_ROOT_PTR_ADDR(dblock, 1, dmxr);
++		dmxr = be16_to_cpu(rblock->bb_numrecs);
++		memcpy(tkp, fkp, 2 * sizeof(*fkp) * dmxr);
++		memcpy(tpp, fpp, sizeof(*fpp) * dmxr);
++	} else {
++		frp = XFS_RTRMAP_REC_ADDR(rblock, 1);
++		trp = XFS_RTRMAP_ROOT_REC_ADDR(dblock, 1);
++		dmxr = be16_to_cpu(rblock->bb_numrecs);
++		memcpy(trp, frp, sizeof(*frp) * dmxr);
++	}
++}
+diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.h b/fs/xfs/libxfs/xfs_rtrmap_btree.h
+index 9cc4f66..01bacb1 100644
+--- a/fs/xfs/libxfs/xfs_rtrmap_btree.h
++++ b/fs/xfs/libxfs/xfs_rtrmap_btree.h
+@@ -54,9 +54,60 @@ struct xfs_mount;
+ 		 (maxrecs) * 2 * sizeof(struct xfs_rtrmap_key) + \
+ 		 ((index) - 1) * sizeof(xfs_rtrmap_ptr_t)))
+ 
++/* Macros for handling the inode root */
++
++#define XFS_RTRMAP_ROOT_REC_ADDR(block, index) \
++	((struct xfs_rtrmap_rec *) \
++		((char *)(block) + \
++		 sizeof(struct xfs_rtrmap_root) + \
++		 ((index) - 1) * sizeof(struct xfs_rtrmap_rec)))
++
++#define XFS_RTRMAP_ROOT_KEY_ADDR(block, index) \
++	((struct xfs_rtrmap_key *) \
++		((char *)(block) + \
++		 sizeof(struct xfs_rtrmap_root) + \
++		 ((index) - 1) * 2 * sizeof(struct xfs_rtrmap_key)))
++
++#define XFS_RTRMAP_ROOT_PTR_ADDR(block, index, maxrecs) \
++	((xfs_rtrmap_ptr_t *) \
++		((char *)(block) + \
++		 sizeof(struct xfs_rtrmap_root) + \
++		 (maxrecs) * 2 * sizeof(struct xfs_rtrmap_key) + \
++		 ((index) - 1) * sizeof(xfs_rtrmap_ptr_t)))
++
++#define XFS_RTRMAP_BROOT_PTR_ADDR(bb, i, sz) \
++	XFS_RTRMAP_PTR_ADDR(bb, i, xfs_rtrmapbt_maxrecs(mp, sz, 0))
++
++#define XFS_RTRMAP_BROOT_SPACE_CALC(nrecs, level) \
++	(int)(XFS_RTRMAP_BLOCK_LEN + ((level) > 0 ? \
++	       ((nrecs) * (2 * sizeof(struct xfs_rtrmap_key) + \
++			   sizeof(xfs_rtrmap_ptr_t))) : \
++	       ((nrecs) * sizeof(struct xfs_rtrmap_rec))))
++
++#define XFS_RTRMAP_BROOT_SPACE(bb) \
++	(XFS_RTRMAP_BROOT_SPACE_CALC(be16_to_cpu((bb)->bb_numrecs), \
++				     be16_to_cpu((bb)->bb_level)))
++
++#define XFS_RTRMAP_ROOT_SPACE_CALC(nrecs, level) \
++	(int)(sizeof(struct xfs_rtrmap_root) + ((level) > 0 ? \
++	       ((nrecs) * (2 * sizeof(struct xfs_rtrmap_key) + \
++			   sizeof(xfs_rtrmap_ptr_t))) : \
++	       ((nrecs) * sizeof(struct xfs_rtrmap_rec))))
++
++#define XFS_RTRMAP_ROOT_SPACE(bb) \
++	(XFS_RTRMAP_ROOT_SPACE_CALC(be16_to_cpu((bb)->bb_numrecs), \
++				    be16_to_cpu((bb)->bb_level)))
++
+ struct xfs_btree_cur *xfs_rtrmapbt_init_cursor(struct xfs_mount *mp,
+ 				struct xfs_trans *tp, struct xfs_inode *ip);
+ int xfs_rtrmapbt_maxrecs(struct xfs_mount *mp, int blocklen, bool leaf);
+ extern void xfs_rtrmapbt_compute_maxlevels(struct xfs_mount *mp);
+ 
++void xfs_rtrmapbt_from_disk(struct xfs_inode *ip,
++		struct xfs_rtrmap_root *dblock, int dblocklen,
++		struct xfs_btree_block *rblock, int rblocklen);
++void xfs_rtrmapbt_to_disk(struct xfs_mount *mp,
++		struct xfs_btree_block *rblock, int rblocklen,
++		struct xfs_rtrmap_root *dblock, int dblocklen);
++
+ #endif	/* __XFS_RTRMAP_BTREE_H__ */
 
