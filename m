@@ -1,114 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:34982 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750955AbdHaUJs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 16:09:48 -0400
-Date: Thu, 31 Aug 2017 13:09:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: remove experimental tag for reflinks
-Message-ID: <20170831200936.GO3775@magnolia>
-References: <20170830145400.3681-1-hch@lst.de>
- <20170831064033.GF3775@magnolia>
- <20170831124321.GA21939@bfoster.bfoster>
- <20170831133019.GA5468@lst.de>
- <20170831153148.GJ3775@magnolia>
- <20170831155923.GG21939@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:40108 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750955AbdHaUKu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Aug 2017 16:10:50 -0400
+Date: Thu, 31 Aug 2017 16:10:48 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
+Message-ID: <20170831201048.GA25053@bfoster.bfoster>
+References: <1504100302-3297-1-git-send-email-amir73il@gmail.com>
+ <20170831134722.GA6912@lst.de>
+ <CAOQ4uxgrdijqVpFm+rZ4JE_ZY0A_CZdSPHQEb8S1_R_dyJYzSg@mail.gmail.com>
+ <20170831163954.GH21939@bfoster.bfoster>
+ <CAOQ4uxisPbcoNp8N8Y4yGdWDBfZ=PR7CgkKGbLGS6cbU6bx2rw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170831155923.GG21939@bfoster.bfoster>
+In-Reply-To: <CAOQ4uxisPbcoNp8N8Y4yGdWDBfZ=PR7CgkKGbLGS6cbU6bx2rw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
 
-On Thu, Aug 31, 2017 at 11:59:24AM -0400, Brian Foster wrote:
-> On Thu, Aug 31, 2017 at 08:31:48AM -0700, Darrick J. Wong wrote:
-> > On Thu, Aug 31, 2017 at 03:30:19PM +0200, Christoph Hellwig wrote:
-> > > On Thu, Aug 31, 2017 at 08:43:21AM -0400, Brian Foster wrote:
-> > > > FWIW, I don't really have a strong opinion. To me, removing experimental
-> > > > means we feel the code has stabilized long enough in principle, there
-> > > > are no significant problems (i.e., corruption/crash vectors) that we are
-> > > > aware of and the feature is complete (full userspace tool support, etc).
-> > > > The in-core extent list thing seems like more of a general problem to me
-> > > 
-> > > Agreed so far.
-> > 
-> > <nod> Dave?  Eric?  Any perspective you'd like to offer? :)
-> > 
-> > > > That aside, shouldn't we consider the rmapbt experimental tag first, or
-> > > > at least at the same time? It's been around for slightly longer.
-> > > 
-> > > I've not done much testing on that or have experience with it in general,
-> > > nor do I have a customer with a big QA team beating it hard, so I can't
-> > > really comment on that one.
-> > 
-> > rmapbt will remain EXPERIMENTAL because I still have more patches to
-> > send to finish the feature for realtime devices.  Speaking of which,
-> > it's now been 53 weeks since the last dump of that, so I'll go do that
-> > now. :P
-> > 
-> > FWIW I /also/ run rmapbt everywhere and haven't had any trouble with it
-> > since adding the per-AG reservations.
-> > 
+On Thu, Aug 31, 2017 at 10:20:19PM +0300, Amir Goldstein wrote:
+> On Thu, Aug 31, 2017 at 7:39 PM, Brian Foster <bfoster@redhat.com> wrote:
+> > On Thu, Aug 31, 2017 at 05:37:06PM +0300, Amir Goldstein wrote:
+> >> On Thu, Aug 31, 2017 at 4:47 PM, Christoph Hellwig <hch@lst.de> wrote:
+> >> > I think something like the following patch (totally untested,
+> >> > just an idea) should fix the issue, right?
+> >>
+> >> I think that is not enough.
+> >>
+> >> >
+> >> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> >> > index c4893e226fd8..555fcae9a18f 100644
+> >> > --- a/fs/xfs/xfs_file.c
+> >> > +++ b/fs/xfs/xfs_file.c
+> >> > @@ -135,7 +135,7 @@ xfs_file_fsync(
+> >> >         struct xfs_inode        *ip = XFS_I(inode);
+> >> >         struct xfs_mount        *mp = ip->i_mount;
+> >> >         int                     error = 0;
+> >> > -       int                     log_flushed = 0;
+> >> > +       unsigned int            flushseq;
+> >> >         xfs_lsn_t               lsn = 0;
+> >> >
+> >> >         trace_xfs_file_fsync(ip);
+> >> > @@ -143,6 +143,7 @@ xfs_file_fsync(
+> >> >         error = file_write_and_wait_range(file, start, end);
+> >> >         if (error)
+> >> >                 return error;
+> >> > +       flushseq = READ_ONCE(mp->m_flushseq);
+> >>
+> >> imagine that flush was submitted and completed before
+> >> file_write_and_wait_range() but m_flushseq incremented  after.
+> >> maybe here READ m_flush_submitted_seq...
+> >>
+> >> >
+> >> >         if (XFS_FORCED_SHUTDOWN(mp))
+> >> >                 return -EIO;
+> >> > @@ -181,7 +182,7 @@ xfs_file_fsync(
+> >> >         }
+> >> >
+> >> >         if (lsn) {
+> >> > -               error = _xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, &log_flushed);
+> >> > +               error = _xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, NULL);
+> >> >                 ip->i_itemp->ili_fsync_fields = 0;
+> >> >         }
+> >> >         xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> >> > @@ -193,8 +194,9 @@ xfs_file_fsync(
+> >> >          * an already allocated file and thus do not have any metadata to
+> >> >          * commit.
+> >> >          */
+> >> > -       if (!log_flushed && !XFS_IS_REALTIME_INODE(ip) &&
+> >> > -           mp->m_logdev_targp == mp->m_ddev_targp)
+> >> > +       if (!XFS_IS_REALTIME_INODE(ip) &&
+> >> > +           mp->m_logdev_targp == mp->m_ddev_targp &&
+> >> > +           flushseq == READ_ONCE(mp->m_flushseq))
+> >>
+> >> ... and here READ m_flush_completed_seq
+> >> if (m_flush_completed_seq > m_flush_submitted_seq)
+> >> it is safe to skip issue flush.
+> >> Then probably READ_ONCE() is not enough and need smb_rmb?
+> >>
+> >
+> > IIUC, basically we need to guarantee that a flush submits after
+> > file_write_and_wait() and completes before we return.
 > 
-> My question then is do we want to encourage users to run reflink without
-> rmapbt because of the latter being experimental, and only so because of
-> a lack of realtime support? *shrug* Maybe it doesn't really matter.
-
-Probably not, I think realtime users are fairly infrequent and
-especially so on v5.  The only reasons I can think of to extend our new
-features to rt are (a) to avoid screwing over the existing usecases and
-(b) I guess you could build a hybrid xfs between an SSD and a SMR drive
-wherein we always CoW from one end of the disk to the other.  (That's
-crazy, but hey.)
-
-> But realistically, how likely is it that the stability of forthcoming
-> rmapbt+realtime code has any bearing on making rmapbt non-experimental
-> in general?
-
-The biggest code churn to add realtime rmap is reworking the btree code
-to support putting btree records in an inode fork.  The rmap code itself
-is relatively unchanged aside from widening rm_startblock/rm_blockcount
-to 64 bits.
-
-> I suspect we're not going to leave it experimental for another however
-> many months just to let the rt code sit around. I also suspect not
-> many people will be actually using/testing that code outside of some
-> of us, but maybe there are real users out there and I'm just not aware
-> of them..? (This all coming from somebody who has CONFIG_XFS_RT
-> disabled on his configs. ;)
-
-/me has it enabled and (occasionally) runs with realtime to see what
-breaks. :)
-
-> If realtime is the only barrier, ISTM we could remove the experimental
-> rmapbt status and just disable rmapbt+rt for now. Then re-enable
-> EXPERIMENTAL just for rmapbt+rt when that code goes in (which seems like
-> the most likely end result to me anyways).
-
-It's already disabled.  I suppose it's not /that/ big of a deal if old
-kernels reject certain feature combinations...
-
-...by the way, we can't add a rt device to an already-mounted
-filesystem, right?
-
---D
-
+> Yeh. unless we check if file_write_and_wait() submitted anything
+> at all.
 > 
-> Brian
+
+Ok, thanks.
+
+> > If we do something
+> > like the above, I wonder if that means we could wait for the submit ==
+> > complete if we observe submit was bumped since it was initially sampled
+> > above (rather than issue another flush, which would be necessary if a
+> > submit hadn't occurred))..?
+> >
+> > If we do end up with something like this, I think it's a bit cleaner to
+> > stuff the counter(s) in the xfs_buftarg structure and update them from
+> > the generic buffer submit/completion code based on XBF_FLUSH. FWIW, I
+> > suspect we could also update said counter(s) from
+> > xfs_blkdev_issue_flush().
+> >
 > 
-> > --D
-> > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I think what you are suggesting is to optimize more cases which are
+> not optimized now. That is probably possible, but also more complicated
+> to get right and not sure if the workloads that gain from this are important
+> enough.
+> 
+
+Not necessarily. I'm just suggesting that the code could be factored
+more generically/elegantly such that the logic is easier to follow. That
+may facilitate optimizing more cases, but that's a secondary benefit. In
+practice, the log buffer code is the only place we actually set
+XBF_FLUSH, for example.
+
+We could toss the waiting idea for now and issue the flush unless we
+know one has submitted & completed since the writeback based on the
+counters. Waiting on a log buffer may already do the wait for us in most
+cases anyways, we just don't know if it submitted after the writeback or
+not without the submit counter.
+
+> If I am not mistaken the way to fix the current optimization is to record
+> the last SYNC_DONE lsn (which is sort of what Christoph suggested)
+> and the last WANY_SYNC|ACTIVE lsn.
+> After  file_write_and_wait() need to save pre_sync_lsn and before
+> return need to make sure that post_sync_lsn >= pre_sync_lsn or
+> issue a flush.
+> 
+
+Perhaps, but I'm not quite following what you mean by pre/post LSNs.
+Note that I believe log buffers can complete out of order, if that is
+relevant here. Either way, this still seems like underhanded logic
+IMO...
+
+If the requirement is a simple "issue a flush if we can't detect that
+one has submitted+completed on this device since our writeback
+completed" rule, why intentionally obfuscate that with internal log
+buffer state such as log buffer header LSN and log state machine values?
+Just track flush submission/completions as you suggested earlier and the
+fsync logic is much easier to follow. Then we don't need to work
+backwards from the XFS logging infrastructure just to try and verify
+whether a flush has occurred in all cases. :)
+
+Brian
+
+> Amir.
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
