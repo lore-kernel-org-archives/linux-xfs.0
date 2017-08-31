@@ -1,123 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48865 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751386AbdHaPDm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 11:03:42 -0400
-Date: Thu, 31 Aug 2017 08:03:34 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: add online uevent for mount operation
-Message-ID: <20170831150334.GI3775@magnolia>
-References: <1504189030-18608-1-git-send-email-houtao1@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51566 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751625AbdHaPWW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Aug 2017 11:22:22 -0400
+Date: Thu, 31 Aug 2017 11:22:20 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: linux-next: build warning after merge of the xfs tree
+Message-ID: <20170831152220.GF21939@bfoster.bfoster>
+References: <20170831100703.16eeb69f@canb.auug.org.au>
+ <20170831103040.GB21508@bfoster.bfoster>
+ <20170831145752.GH3775@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1504189030-18608-1-git-send-email-houtao1@huawei.com>
+In-Reply-To: <20170831145752.GH3775@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Hou Tao <houtao1@huawei.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Thu, Aug 31, 2017 at 10:17:10PM +0800, Hou Tao wrote:
-> It will be useful if there is a corresponding online uevent after
-> a XFS filesystem has been mounted. A typical usage of the uevent
-> is setting the error configuration for a specific XFS filesystem
-> or all XFS filesystems by using udevd.
+On Thu, Aug 31, 2017 at 07:57:52AM -0700, Darrick J. Wong wrote:
+> On Thu, Aug 31, 2017 at 06:30:41AM -0400, Brian Foster wrote:
+> > On Thu, Aug 31, 2017 at 10:07:03AM +1000, Stephen Rothwell wrote:
+> > > Hi all,
+> > > 
+> > > After merging the xfs tree, today's linux-next build (powerpc
+> > > ppc64_defconfig) produced this warning:
+> > > 
+> > > fs/xfs/xfs_buf_item.c: In function 'xfs_buf_item_unlock':
+> > > fs/xfs/xfs_buf_item.c:573:9: warning: unused variable 'ordered' [-Wunused-variable]
+> > >   bool   ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
+> > >          ^
+> > > 
+> > > Introduced by commit
+> > > 
+> > >   a097077ef708 ("xfs: remove unnecessary dirty bli format check for ordered bufs")
+> > > 
+> > 
+> > Ugh, this is due to the refactoring of this patch between v1 and v2. I
+> > specifically recall testing for this in v1 because I added the ordered
+> > bool purely to clean up the ASSERT(), then I apparently lost of track of
+> > it for v2.
+> > 
+> > Anyways.. Christoph, Darrick, preferences to clean this up..? I have no
+> > preference between the v1 or v2 factoring. Or if it's easier, we could
+> > always just drop something like the hunk below on top. Thoughts?
+> > 
+> > Brian
+> > 
+> > --- 8< ---
+> > 
+> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> > index ef2c137..f5d25f5 100644
+> > --- a/fs/xfs/xfs_buf_item.c
+> > +++ b/fs/xfs/xfs_buf_item.c
+> > @@ -567,10 +567,15 @@ xfs_buf_item_unlock(
+> >  {
+> >  	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+> >  	struct xfs_buf		*bp = bip->bli_buf;
+> > -	bool			aborted = !!(lip->li_flags & XFS_LI_ABORTED);
+> > -	bool			hold = !!(bip->bli_flags & XFS_BLI_HOLD);
+> > -	bool			dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
+> > -	bool			ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
+> > +	bool			aborted;
+> > +	bool			hold;
+> > +	bool			dirty;
+> > +	bool			ordered;
+> > +
+> > +	aborted = !!(lip->li_flags & XFS_LI_ABORTED);
+> > +	hold = !!(bip->bli_flags & XFS_BLI_HOLD);
+> > +	dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
+> > +	ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
 > 
-> The following is an example of udevd rule which will shutdown
-> any XFS filesystem after the filesystem gets any IO error:
+> The trouble is, 'ordered' is still an unused variable on !DEBUG builds,
+> since the only user of ordered is that ASSERT.  So either we #ifdef
+> DEBUG the variable out of existence or employ one of those silly
+> 'ordered = ordered' constructions to shut up gcc, if that even still
+> works.
 > 
->     ACTION=="online", SUBSYSTEM=="xfs", DEVPATH=="/fs/xfs/*", \
->     RUN+="/bin/sh -c 'echo 0 > /sys%p/error/metadata/default/max_retries; \
-> 	    echo 0 > /sys%p/error/metadata/EIO/max_retries; \
-> 	    echo 0 > /sys%p/error/metadata/ENOSPC/max_retries; \
-> 	    echo 0 > /sys%p/error/metadata/ENODEV/max_retries'"
-> 
-> You also could apply an udevd rule to a specific XFS filesystem by
-> UUID filtering:
-> 
->     ACTION=="online", SUBSYSTEM=="xfs", \
->     ENV{UUID}=="8f789c27-391f-4bd7-b17d-9bcf2443dc9c", \
->     RUN+="/bin/sh -c 'echo 5 > /sys%p/error/metadata/EIO/max_retries'"
-> 
-> Suggested-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Hou Tao <houtao1@huawei.com>
-> ---
-> v2:
->     * add UUID property for mount uevent
->     * add an udev example for UUID filtering
-> v1:
->     * http://www.spinics.net/lists/linux-xfs/msg09484.html
-> ---
->  fs/xfs/xfs_super.c | 29 +++++++++++++++++++++++++++++
->  1 file changed, 29 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 3a3812b4..6f8351c 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -70,6 +70,11 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
->  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
->  #endif
->  
-> +enum {
-> +	XFS_UEVENT_ENV_CNT = 2,
 
-XFS_UEVENT_MAX_ENV_COUNT ?
+The warning goes away for me if we separate the initialization of
+ordered from the declaration. Do you observe otherwise?
 
-> +	XFS_UEVENT_UUID_LEN = UUID_STRING_LEN + 6,
-> +};
-> +
->  /*
->   * Table driven mount option parser.
->   */
-> @@ -1530,6 +1535,28 @@ xfs_destroy_percpu_counters(
->  	percpu_counter_destroy(&mp->m_fdblocks);
->  }
->  
-> +static void
-> +xfs_fs_uevent(
-> +	struct xfs_mount	*mp,
-> +	enum kobject_action	action)
-> +{
-> +	int err;
-> +	char *envp[XFS_UEVENT_ENV_CNT];
-> +	int i = 0;
-> +
-> +	if (!uuid_is_null(&mp->m_super->s_uuid)) {
-> +		char uuid[XFS_UEVENT_UUID_LEN];
-> +
-> +		snprintf(uuid, sizeof(uuid), "UUID=%pUb", &mp->m_super->s_uuid);
+Brian
 
-Should this be "ID_FS_UUID=%pUb" to keep the name consistent with what
-blkid injects into the udev environment for block devices?
-
---D
-
-> +		envp[i++] = uuid;
-> +	}
-> +	envp[i] = NULL;
-> +	err = kobject_uevent_env(&mp->m_kobj.kobject, action, envp);
-> +	if (err)
-> +		xfs_notice(mp, "Sending XFS uevent %d got error %d",
-> +				action, err);
-> +}
-> +
->  STATIC int
->  xfs_fs_fill_super(
->  	struct super_block	*sb,
-> @@ -1667,6 +1694,8 @@ xfs_fs_fill_super(
->  		goto out_unmount;
->  	}
->  
-> +	xfs_fs_uevent(mp, KOBJ_ONLINE);
-> +
->  	return 0;
->  
->   out_filestream_unmount:
-> -- 
-> 2.5.0
+> --D
 > 
+> >  
+> >  	/* Clear the buffer's association with this transaction. */
+> >  	bp->b_transp = NULL;
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
