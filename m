@@ -1,82 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5890 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41408 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751583AbdHaP7a (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Aug 2017 11:59:30 -0400
-Date: Thu, 31 Aug 2017 11:59:24 -0400
+        id S1750990AbdHaNfw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Aug 2017 09:35:52 -0400
+Date: Thu, 31 Aug 2017 09:35:50 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: remove experimental tag for reflinks
-Message-ID: <20170831155923.GG21939@bfoster.bfoster>
-References: <20170830145400.3681-1-hch@lst.de>
- <20170831064033.GF3775@magnolia>
- <20170831124321.GA21939@bfoster.bfoster>
- <20170831133019.GA5468@lst.de>
- <20170831153148.GJ3775@magnolia>
+Subject: Re: [PATCH v2] xfs: don't set v3 xflags for v2 inodes
+Message-ID: <20170831133550.GC21939@bfoster.bfoster>
+References: <20170830155517.GI4757@magnolia>
+ <20170830163825.GQ4757@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170831153148.GJ3775@magnolia>
+In-Reply-To: <20170830163825.GQ4757@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>
 
-On Thu, Aug 31, 2017 at 08:31:48AM -0700, Darrick J. Wong wrote:
-> On Thu, Aug 31, 2017 at 03:30:19PM +0200, Christoph Hellwig wrote:
-> > On Thu, Aug 31, 2017 at 08:43:21AM -0400, Brian Foster wrote:
-> > > FWIW, I don't really have a strong opinion. To me, removing experimental
-> > > means we feel the code has stabilized long enough in principle, there
-> > > are no significant problems (i.e., corruption/crash vectors) that we are
-> > > aware of and the feature is complete (full userspace tool support, etc).
-> > > The in-core extent list thing seems like more of a general problem to me
-> > 
-> > Agreed so far.
+On Wed, Aug 30, 2017 at 09:38:25AM -0700, Darrick J. Wong wrote:
+> Reject attempts to set XFLAGS that correspond to di_flags2 inode flags
+> if the inode isn't a v3 inode, because di_flags2 only exists on v3.
 > 
-> <nod> Dave?  Eric?  Any perspective you'd like to offer? :)
-> 
-> > > That aside, shouldn't we consider the rmapbt experimental tag first, or
-> > > at least at the same time? It's been around for slightly longer.
-> > 
-> > I've not done much testing on that or have experience with it in general,
-> > nor do I have a customer with a big QA team beating it hard, so I can't
-> > really comment on that one.
-> 
-> rmapbt will remain EXPERIMENTAL because I still have more patches to
-> send to finish the feature for realtime devices.  Speaking of which,
-> it's now been 53 weeks since the last dump of that, so I'll go do that
-> now. :P
-> 
-> FWIW I /also/ run rmapbt everywhere and haven't had any trouble with it
-> since adding the per-AG reservations.
-> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-My question then is do we want to encourage users to run reflink without
-rmapbt because of the latter being experimental, and only so because of
-a lack of realtime support? *shrug* Maybe it doesn't really matter.
+That lazy reflink flag clear still seems hacky. That aside, this looks
+fine to me:
 
-But realistically, how likely is it that the stability of forthcoming
-rmapbt+realtime code has any bearing on making rmapbt non-experimental
-in general? I suspect we're not going to leave it experimental for
-another however many months just to let the rt code sit around. I also
-suspect not many people will be actually using/testing that code outside
-of some of us, but maybe there are real users out there and I'm just not
-aware of them..? (This all coming from somebody who has CONFIG_XFS_RT
-disabled on his configs. ;)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-If realtime is the only barrier, ISTM we could remove the experimental
-rmapbt status and just disable rmapbt+rt for now. Then re-enable
-EXPERIMENTAL just for rmapbt+rt when that code goes in (which seems like
-the most likely end result to me anyways).
-
-Brian
-
-> --D
+>  fs/xfs/xfs_ioctl.c |   37 +++++++++++++++++++++++++++++--------
+>  1 file changed, 29 insertions(+), 8 deletions(-)
 > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 06ca244..82d14fe 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1016,32 +1016,37 @@ xfs_diflags_to_linux(
+>  #endif
+>  }
+>  
+> +#define XFS_V3_INODE_XFLAGS	(FS_XFLAG_DAX | \
+> +				 FS_XFLAG_COWEXTSIZE)
+>  static int
+> -xfs_ioctl_setattr_xflags(
+> -	struct xfs_trans	*tp,
+> +xfs_check_diflags(
+>  	struct xfs_inode	*ip,
+> -	struct fsxattr		*fa)
+> +	__u32			xflags)
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  
+> +	/* Can't set flags2 fields on a v2 inode. */
+> +	if (ip->i_d.di_version < 3 && (xflags & XFS_V3_INODE_XFLAGS))
+> +		return -EINVAL;
+> +
+>  	/* Can't change realtime flag if any extents are allocated. */
+>  	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
+> -	    XFS_IS_REALTIME_INODE(ip) != (fa->fsx_xflags & FS_XFLAG_REALTIME))
+> +	    XFS_IS_REALTIME_INODE(ip) != (xflags & FS_XFLAG_REALTIME))
+>  		return -EINVAL;
+>  
+>  	/* If realtime flag is set then must have realtime device */
+> -	if (fa->fsx_xflags & FS_XFLAG_REALTIME) {
+> +	if (xflags & FS_XFLAG_REALTIME) {
+>  		if (mp->m_sb.sb_rblocks == 0 || mp->m_sb.sb_rextsize == 0 ||
+>  		    (ip->i_d.di_extsize % mp->m_sb.sb_rextsize))
+>  			return -EINVAL;
+>  	}
+>  
+>  	/* Clear reflink if we are actually able to set the rt flag. */
+> -	if ((fa->fsx_xflags & FS_XFLAG_REALTIME) && xfs_is_reflink_inode(ip))
+> +	if ((xflags & FS_XFLAG_REALTIME) && xfs_is_reflink_inode(ip))
+>  		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+>  
+>  	/* Don't allow us to set DAX mode for a reflinked file for now. */
+> -	if ((fa->fsx_xflags & FS_XFLAG_DAX) && xfs_is_reflink_inode(ip))
+> +	if ((xflags & FS_XFLAG_DAX) && xfs_is_reflink_inode(ip))
+>  		return -EINVAL;
+>  
+>  	/*
+> @@ -1049,10 +1054,26 @@ xfs_ioctl_setattr_xflags(
+>  	 * we have appropriate permission.
+>  	 */
+>  	if (((ip->i_d.di_flags & (XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND)) ||
+> -	     (fa->fsx_xflags & (FS_XFLAG_IMMUTABLE | FS_XFLAG_APPEND))) &&
+> +	     (xflags & (FS_XFLAG_IMMUTABLE | FS_XFLAG_APPEND))) &&
+>  	    !capable(CAP_LINUX_IMMUTABLE))
+>  		return -EPERM;
+>  
+> +	return 0;
+> +}
+> +
+> +static int
+> +xfs_ioctl_setattr_xflags(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	struct fsxattr		*fa)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	int			ret;
+> +
+> +	ret = xfs_check_diflags(ip, fa->fsx_xflags);
+> +	if (ret)
+> +		return ret;
+> +
+>  	xfs_set_diflags(ip, fa->fsx_xflags);
+>  	xfs_diflags_to_linux(ip);
+>  	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
