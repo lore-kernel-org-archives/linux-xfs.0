@@ -1,88 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49144 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750732AbdHaGki (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 02:40:38 -0400
-Date: Wed, 30 Aug 2017 23:40:33 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: remove experimental tag for reflinks
-Message-ID: <20170831064033.GF3775@magnolia>
-References: <20170830145400.3681-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:56156 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751541AbdHaIXf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Aug 2017 04:23:35 -0400
+Date: Thu, 31 Aug 2017 10:22:53 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v3 3/4] ext2: perform dax_device lookup at mount
+Message-ID: <20170831082253.GD7897@quack2.suse.cz>
+References: <150412222686.10177.8031279869867070772.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150412224334.10177.12994820445044936627.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170830145400.3681-1-hch@lst.de>
+In-Reply-To: <150412224334.10177.12994820445044936627.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, Andreas Dilger <adilger.kernel@dilger.ca>, Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>
 
-On Wed, Aug 30, 2017 at 04:54:00PM +0200, Christoph Hellwig wrote:
-> But reject reflink + DAX file systems for now until the code to
-> support reflinks on DAX is actually implemented.
+On Wed 30-08-17 12:44:03, Dan Williams wrote:
+> The ->iomap_begin() operation is a hot path, so cache the
+> fs_dax_get_by_host() result at mount time to avoid the incurring the
+> hash lookup overhead on a per-i/o basis.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_super.c | 8 +++-----
->  1 file changed, 3 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 38aaacdbb8b3..92521032468e 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1634,7 +1634,9 @@ xfs_fs_fill_super(
->  		}
->  		if (xfs_sb_version_hasreflink(&mp->m_sb))
->  			xfs_alert(mp,
-> -		"DAX and reflink have not been tested together!");
-> +		"DAX and reflink can not be used together!");
-> +			error = -EINVAL;
-> +			goto out_filestream_unmount;
+> Cc: "Theodore Ts'o" <tytso@mit.edu>
+> Cc: Andreas Dilger <adilger.kernel@dilger.ca>
+> Cc: Jan Kara <jack@suse.cz>
+> Reported-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-/This/ hunk seems fine, but...
+Looks good to me (and it looks even cleaner than your previous approach).
+Just one nit below. You can add:
 
->  	}
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+> diff --git a/fs/ext2/super.c b/fs/ext2/super.c
+> index 7b1bc9059863..d9dd999568c2 100644
+> --- a/fs/ext2/super.c
+> +++ b/fs/ext2/super.c
+> @@ -144,6 +144,7 @@ static void ext2_put_super (struct super_block * sb)
+>  	int db_count;
+>  	int i;
+>  	struct ext2_sb_info *sbi = EXT2_SB(sb);
+> +	struct dax_device *dax_dev = sbi->s_daxdev;
 >  
->  	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-> @@ -1648,10 +1650,6 @@ xfs_fs_fill_super(
->  	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
->  	}
+>  	ext2_quota_off_umount(sb);
 >  
-> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> -		xfs_alert(mp,
-> -	"EXPERIMENTAL reflink feature enabled. Use at your own risk!");
-> -
+> @@ -172,6 +173,7 @@ static void ext2_put_super (struct super_block * sb)
+>  	sb->s_fs_info = NULL;
+>  	kfree(sbi->s_blockgroup_lock);
+>  	kfree(sbi);
+> +	fs_put_dax(dax_dev);
 
-...I frankly would rather wait until we land and stabilize the incore
-extent rework, because I'd rather not have the reflink story be: 1) we
-declare reflink stable in 4.14; 2) immediately people start loading up
-XFSes with sparse VM images that blow up on high order allocations and
-then 3) we get a whole lot of complaints about it.  Then in 4.15 we 4)
-land the incore extent map only now we're dragging those same users
-through the mud while /that/ stabilizes, with the result 5) that
-everyone thinks we've gone off the deep end and doesn't trust us
-anymore.
+The local variable looks superfluous here. I'd just do
+	fs_put_dax(sbi->s_daxdev);
 
-I wish that didn't also mean waiting another 6 months for something that
-none of us /developers/ have seen in practice, especially since the
-enterprise distros will have plenty of time to backport all this stuff
-before their next big releases if it /does/ become a problem.  It's fine
-enough for me (and Christoph's customers, evidently) but is that enough?
-
-<shrug> Not sure what to do about my own fear factor. :)  Anyone want to
-offer further comments?  A quick git history trip says sparse inodes
-took about 13 months to go from initial commit to EXPERIMENTAL removed?
-
---D
-
->  	error = xfs_mountfs(mp);
->  	if (error)
->  		goto out_filestream_unmount;
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
