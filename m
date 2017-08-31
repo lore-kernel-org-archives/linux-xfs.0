@@ -1,49 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40946 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753348AbdHXSn6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Aug 2017 14:43:58 -0400
-Subject: Re: [PATCH 6/6] fiemap: Fix semantics of max_extents (-n arguments)
-References: <1503575272-28263-1-git-send-email-nborisov@suse.com>
- <1503575272-28263-7-git-send-email-nborisov@suse.com>
- <20170824175159.GH4796@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <94192a37-fd08-c8fe-747b-25cd77cfe852@sandeen.net>
-Date: Thu, 24 Aug 2017 13:43:57 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:25074 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750998AbdHaUNC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 16:13:02 -0400
+Date: Thu, 31 Aug 2017 13:12:55 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs_repair: take the ag_lock before recording rmap for a
+ bmbt record
+Message-ID: <20170831201255.GP3775@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20170824175159.GH4796@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org, sandeen@redhat.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: matorola@gmail.com, xfs <linux-xfs@vger.kernel.org>
 
-On 8/24/17 12:51 PM, Darrick J. Wong wrote:
-> On Thu, Aug 24, 2017 at 02:47:52PM +0300, Nikolay Borisov wrote:
->> Currently the semantics of the -n argument are a bit idiosyncratic. We want the
->> argument to be the limit of extents that are going to be output by the tool. This
->> is clearly broken now as evident from the following example on a fragmented file:
-> 
-> Please update the documentation, since the xfs_io fiemap section refers
-> readers to xfs_bmap(8), which says:
-> 
-> "If this [-n] option is given, xfs_bmap obtains the extent list of the
-> file in groups of num_extents extents."
-> 
-> Which is no longer correct, because now -n limits the number of records
-> output, if I'm reading this patch correctly.  TBH I think -n for bmap is
-> also wrong...
+When the (threaded) inode scanner iterates the blocks of a bmbt tree and
+wants to record the bmbt blocks in the in-core rmap database, we have to
+take the ag_lock for the AG that the bmbt block is in, or else we can
+accidentally corrupt the rmap slab by calling slab_add from two threads.
 
-Yep.  That's fine as patch 7/6 I think - this patch doesn't make the
-documentation any more wrong than it already is, but it does need to be
-fixed in any case.
+Reported-by: matorola@gmail.com
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ repair/scan.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-> The other patches leading up to this one have been
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Thanks!  They looked good to me too modulo the one problem I found.
-
--Eric
+diff --git a/repair/scan.c b/repair/scan.c
+index 6c9f5e7..ccf60a6 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -386,7 +386,10 @@ _("bad state %d, inode %" PRIu64 " bmap block 0x%" PRIx64 "\n"),
+ 
+ 	/* Record BMBT blocks in the reverse-mapping data. */
+ 	if (check_dups && collect_rmaps) {
++		agno = XFS_FSB_TO_AGNO(mp, bno);
++		pthread_mutex_lock(&ag_locks[agno].lock);
+ 		error = rmap_add_bmbt_rec(mp, ino, whichfork, bno);
++		pthread_mutex_unlock(&ag_locks[agno].lock);
+ 		if (error)
+ 			do_error(
+ _("couldn't add inode %"PRIu64" bmbt block %"PRIu64" reverse-mapping data."),
