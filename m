@@ -1,190 +1,243 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:42131 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751009AbdIABA3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 21:00:29 -0400
-Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
-        by m0089730.ppops.net (8.16.0.21/8.16.0.21) with SMTP id v810xErW010507
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2017 18:00:29 -0700
-Received: from maileast.thefacebook.com ([199.201.65.23])
-        by m0089730.ppops.net with ESMTP id 2cps6m91g2-1
-        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2017 18:00:29 -0700
-From: Richard Wareing <rwareing@fb.com>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: [PATCH 1/3] xfs: Add rtdefault mount option
-Message-ID: <25856B28-A65C-4C5B-890D-159F8822393D@fb.com>
-Date: Thu, 31 Aug 2017 18:00:21 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:48360 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751367AbdHaUeX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 16:34:23 -0400
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v7VKYMZg014596
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2017 20:34:23 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v7VKYMMd032671
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2017 20:34:22 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v7VKYMbR024343
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2017 20:34:22 GMT
+Subject: [PATCH 09/19] xfs: add a realtime flag to the rmap update log redo
+ items
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 31 Aug 2017 13:34:20 -0700
+Message-ID: <150421166007.17458.12558380953001911329.stgit@magnolia>
+In-Reply-To: <150421160433.17458.10817316901867396010.stgit@magnolia>
+References: <150421160433.17458.10817316901867396010.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Hello all,=20
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-It turns out, XFS real-time volumes are actually a very useful/cool =
-feature, I am wondering if there is support in the community to make =
-this feature a bit more user friendly, easier to operate and interact =
-with. To kick things off I bring patches table :).
+Extend the rmap update (RUI) log items with a new realtime flag that
+indicates that the updates apply against the realtime rmapbt.  We'll
+wire up the actual rmap code later.
 
-For those who aren't familiar with real-time XFS volumes, they are =
-basically a method of storing the data blocks of some files on a =
-separate device. In our specific application, are using real-time =
-devices to store large files (>256KB) on HDDS, while all metadata & =
-journal updates goto an SSD of suitable endurance & capacity. We also =
-see use-cases for this for distributed storage systems such as GlusterFS =
-which are heavy in metadata operations (80%+ of IOPs). By using =
-real-time devices to tier your XFS filesystem storage, you can =
-dramatically reduce HDD IOPs (50% in our case) and dramatically improve =
-metadata and small file latency (HDD->SSD like reductions).
-
-Here are the features in the proposed patch set:
-
-1. rtdefault  - Defaulting block allocations to the real-time device via =
-a mount flag rtdefault, vs using an inheritance flag or ioctl's. This =
-options gives users tier'ing of their metadata out of the box with ease, =
-and in a manner more users are familiar with (mount flags), vs having to =
-set inheritance bits or use ioctls (many distributed storage developers =
-are resistant to including FS specific code into their stacks).
-
-2. rtstatfs  - Returning real-time block device free space instead of =
-the non-realtime device via the "rtstatfs" flag. This creates an =
-experience/semantics which is a bit more familiar to users if they use =
-real-time in a tiering configuration. "df" reports the space on your =
-HDDs, and the metadata space can be returned by a tool like xfs_info (I =
-have patches for this too if there is interest) or xfs_io. I think this =
-might be a bit more intuitive for the masses than the reverse (having to =
-goto xfs_io for the HDD space, and df for the SSD metadata).
-
-3. rtfallocmin - This option can be combined with either rtdefault or =
-standalone. When combined with rtdefault, it uses fallocate as "signal" =
-to *exempt* storage on the real-time device, automatically promoting =
-small fallocations to the SSD, while directing larger ones (or =
-fallocation-less creations) to the HDD. This option also works really =
-well with tools like "rsync" which support fallocate (--preallocate =
-flag) so users can easily promote/demote files to/from the SSD.
-
-Ideally, I'd like to help build-out more tiering features into XFS if =
-there is interest in the community, but figured I'd start with these =
-patches first.  Other ideas/improvements: automatic eviction from SSD =
-once file grows beyond rtfallocmin, automatic fall-back to real-time =
-device if non-RT device (SSD) is out of blocks, add support for the more =
-sophisticated AG based block allocator to RT (bitmapped version works =
-well for us, but multi-threaded use-cases might not do as well).
-
-Looking forward to getting feedback!
-
-Richard Wareing
-
-Note: The patches should patch clean against the XFS Kernel master =
-branch @ https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git (SHA: =
-6f7da290413ba713f0cdd9ff1a2a9bb129ef4f6c).
-
-=3D=3D=3D=3D=3D=3D=3D
-
-- Adds rtdefault mount option to default writes to real-time device.
-This removes the need for ioctl calls or inheritance bits to get files
-to flow to real-time device.
-- Enables XFS to store FS metadata on non-RT device (e.g. SSD) while
-storing data blocks on real-time device.  Negates any code changes by
-application, install kernel, format, mount and profit.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-fs/xfs/xfs_inode.c |  8 ++++++++
-fs/xfs/xfs_mount.h |  5 +++++
-fs/xfs/xfs_super.c | 13 ++++++++++++-
-3 files changed, 25 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index ec9826c..1611195 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -873,6 +873,14 @@ xfs_ialloc(
-		break;
-	case S_IFREG:
-	case S_IFDIR:
-+		/* Set flags if we are defaulting to real-time device */
-+		if (mp->m_rtdev_targp !=3D NULL &&
-+		   mp->m_flags & XFS_MOUNT_RTDEFAULT) {
-+			if (S_ISDIR(mode))
-+				ip->i_d.di_flags |=3D =
-XFS_DIFLAG_RTINHERIT;
-+			else if (S_ISREG(mode))
-+				ip->i_d.di_flags |=3D =
-XFS_DIFLAG_REALTIME;
-+		}
-		if (pip && (pip->i_d.di_flags & XFS_DIFLAG_ANY)) {
-			uint64_t	di_flags2 =3D 0;
-			uint		di_flags =3D 0;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 9fa312a..da25398 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -243,6 +243,11 @@ typedef struct xfs_mount {
-						   allocator */
-#define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 =
-format */
-
-+/* FB Real-time device options */
-+#define XFS_MOUNT_RTDEFAULT	(1ULL << 61)	/* Always allocate =
-blocks from
-+						 * RT device
-+						 */
-+
-#define XFS_MOUNT_DAX		(1ULL << 62)	/* TEST ONLY! */
+ fs/xfs/libxfs/xfs_log_format.h |    4 +++-
+ fs/xfs/libxfs/xfs_rmap.c       |   17 ++++++++++-------
+ fs/xfs/libxfs/xfs_rmap.h       |    1 +
+ fs/xfs/xfs_rmap_item.c         |    4 +++-
+ fs/xfs/xfs_trans.h             |    2 +-
+ fs/xfs/xfs_trans_rmap.c        |    9 +++++++--
+ 6 files changed, 25 insertions(+), 12 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 455a575..e4f85a9 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -83,7 +83,7 @@ enum {
-	Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota, =
-Opt_prjquota,
-	Opt_uquota, Opt_gquota, Opt_pquota,
-	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, =
-Opt_qnoenforce,
--	Opt_discard, Opt_nodiscard, Opt_dax, Opt_err,
-+	Opt_discard, Opt_nodiscard, Opt_dax, Opt_rtdefault, Opt_err,
-};
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 8372e9b..73d3c65 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -647,11 +647,13 @@ struct xfs_map_extent {
+ #define XFS_RMAP_EXTENT_ATTR_FORK	(1U << 31)
+ #define XFS_RMAP_EXTENT_BMBT_BLOCK	(1U << 30)
+ #define XFS_RMAP_EXTENT_UNWRITTEN	(1U << 29)
++#define XFS_RMAP_EXTENT_REALTIME	(1U << 28)
+ 
+ #define XFS_RMAP_EXTENT_FLAGS		(XFS_RMAP_EXTENT_TYPE_MASK | \
+ 					 XFS_RMAP_EXTENT_ATTR_FORK | \
+ 					 XFS_RMAP_EXTENT_BMBT_BLOCK | \
+-					 XFS_RMAP_EXTENT_UNWRITTEN)
++					 XFS_RMAP_EXTENT_UNWRITTEN | \
++					 XFS_RMAP_EXTENT_REALTIME)
+ 
+ /*
+  * This is the structure used to lay out an rui log item in the
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index bf63a25..efcd63d 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2246,11 +2246,13 @@ __xfs_rmap_add(
+ 	enum xfs_rmap_intent_type	type,
+ 	uint64_t			owner,
+ 	int				whichfork,
+-	struct xfs_bmbt_irec		*bmap)
++	struct xfs_bmbt_irec		*bmap,
++	bool				realtime)
+ {
+ 	struct xfs_rmap_intent	*ri;
+ 
+-	trace_xfs_rmap_defer(mp, XFS_FSB_TO_AGNO(mp, bmap->br_startblock),
++	trace_xfs_rmap_defer(mp, realtime ? NULLAGNUMBER :
++			XFS_FSB_TO_AGNO(mp, bmap->br_startblock),
+ 			type,
+ 			XFS_FSB_TO_AGBNO(mp, bmap->br_startblock),
+ 			owner, whichfork,
+@@ -2264,6 +2266,7 @@ __xfs_rmap_add(
+ 	ri->ri_owner = owner;
+ 	ri->ri_whichfork = whichfork;
+ 	ri->ri_bmap = *bmap;
++	ri->ri_realtime = realtime;
+ 
+ 	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_RMAP, &ri->ri_list);
+ 	return 0;
+@@ -2283,7 +2286,7 @@ xfs_rmap_map_extent(
+ 
+ 	return __xfs_rmap_add(mp, dfops, xfs_is_reflink_inode(ip) ?
+ 			XFS_RMAP_MAP_SHARED : XFS_RMAP_MAP, ip->i_ino,
+-			whichfork, PREV);
++			whichfork, PREV, XFS_IS_REALTIME_INODE(ip));
+ }
+ 
+ /* Unmap an extent out of a file. */
+@@ -2300,7 +2303,7 @@ xfs_rmap_unmap_extent(
+ 
+ 	return __xfs_rmap_add(mp, dfops, xfs_is_reflink_inode(ip) ?
+ 			XFS_RMAP_UNMAP_SHARED : XFS_RMAP_UNMAP, ip->i_ino,
+-			whichfork, PREV);
++			whichfork, PREV, XFS_IS_REALTIME_INODE(ip));
+ }
+ 
+ /* Convert a data fork extent from unwritten to real or vice versa. */
+@@ -2317,7 +2320,7 @@ xfs_rmap_convert_extent(
+ 
+ 	return __xfs_rmap_add(mp, dfops, xfs_is_reflink_inode(ip) ?
+ 			XFS_RMAP_CONVERT_SHARED : XFS_RMAP_CONVERT, ip->i_ino,
+-			whichfork, PREV);
++			whichfork, PREV, XFS_IS_REALTIME_INODE(ip));
+ }
+ 
+ /* Schedule the creation of an rmap for non-file data. */
+@@ -2341,7 +2344,7 @@ xfs_rmap_alloc_extent(
+ 	bmap.br_state = XFS_EXT_NORM;
+ 
+ 	return __xfs_rmap_add(mp, dfops, XFS_RMAP_ALLOC, owner,
+-			XFS_DATA_FORK, &bmap);
++			XFS_DATA_FORK, &bmap, false);
+ }
+ 
+ /* Schedule the deletion of an rmap for non-file data. */
+@@ -2365,7 +2368,7 @@ xfs_rmap_free_extent(
+ 	bmap.br_state = XFS_EXT_NORM;
+ 
+ 	return __xfs_rmap_add(mp, dfops, XFS_RMAP_FREE, owner,
+-			XFS_DATA_FORK, &bmap);
++			XFS_DATA_FORK, &bmap, false);
+ }
+ 
+ /* Compare rmap records.  Returns -1 if a < b, 1 if a > b, and 0 if equal. */
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 8b1791e..1e58e02 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -182,6 +182,7 @@ struct xfs_rmap_intent {
+ 	uint64_t				ri_owner;
+ 	int					ri_whichfork;
+ 	struct xfs_bmbt_irec			ri_bmap;
++	bool					ri_realtime;
+ };
+ 
+ /* functions for updating the rmapbt based on bmbt map/unmap operations */
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index f3b139c..13490b5 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -428,6 +428,7 @@ xfs_rui_recover(
+ 	xfs_exntst_t			state;
+ 	struct xfs_trans		*tp;
+ 	struct xfs_btree_cur		*rcur = NULL;
++	bool				rt;
+ 
+ 	ASSERT(!test_bit(XFS_RUI_RECOVERED, &ruip->rui_flags));
+ 
+@@ -481,6 +482,7 @@ xfs_rui_recover(
+ 				XFS_EXT_UNWRITTEN : XFS_EXT_NORM;
+ 		whichfork = (rmap->me_flags & XFS_RMAP_EXTENT_ATTR_FORK) ?
+ 				XFS_ATTR_FORK : XFS_DATA_FORK;
++		rt = !!(rmap->me_flags & XFS_RMAP_EXTENT_REALTIME);
+ 		switch (rmap->me_flags & XFS_RMAP_EXTENT_TYPE_MASK) {
+ 		case XFS_RMAP_EXTENT_MAP:
+ 			type = XFS_RMAP_MAP;
+@@ -513,7 +515,7 @@ xfs_rui_recover(
+ 		error = xfs_trans_log_finish_rmap_update(tp, rudp, type,
+ 				rmap->me_owner, whichfork,
+ 				rmap->me_startoff, rmap->me_startblock,
+-				rmap->me_len, state, &rcur);
++				rmap->me_len, state, rt, &rcur);
+ 		if (error)
+ 			goto abort_error;
+ 
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 6bdad6f..cef1971 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -247,7 +247,7 @@ int xfs_trans_log_finish_rmap_update(struct xfs_trans *tp,
+ 		struct xfs_rud_log_item *rudp, enum xfs_rmap_intent_type type,
+ 		uint64_t owner, int whichfork, xfs_fileoff_t startoff,
+ 		xfs_fsblock_t startblock, xfs_filblks_t blockcount,
+-		xfs_exntst_t state, struct xfs_btree_cur **pcur);
++		xfs_exntst_t state, bool rt, struct xfs_btree_cur **pcur);
+ 
+ /* refcount updates */
+ enum xfs_refcount_intent_type;
+diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
+index 9b577be..aab0d31 100644
+--- a/fs/xfs/xfs_trans_rmap.c
++++ b/fs/xfs/xfs_trans_rmap.c
+@@ -37,13 +37,16 @@ xfs_trans_set_rmap_flags(
+ 	struct xfs_map_extent		*rmap,
+ 	enum xfs_rmap_intent_type	type,
+ 	int				whichfork,
+-	xfs_exntst_t			state)
++	xfs_exntst_t			state,
++	bool				rt)
+ {
+ 	rmap->me_flags = 0;
+ 	if (state == XFS_EXT_UNWRITTEN)
+ 		rmap->me_flags |= XFS_RMAP_EXTENT_UNWRITTEN;
+ 	if (whichfork == XFS_ATTR_FORK)
+ 		rmap->me_flags |= XFS_RMAP_EXTENT_ATTR_FORK;
++	if (rt)
++		rmap->me_flags |= XFS_RMAP_EXTENT_REALTIME;
+ 	switch (type) {
+ 	case XFS_RMAP_MAP:
+ 		rmap->me_flags |= XFS_RMAP_EXTENT_MAP;
+@@ -102,6 +105,7 @@ xfs_trans_log_finish_rmap_update(
+ 	xfs_fsblock_t			startblock,
+ 	xfs_filblks_t			blockcount,
+ 	xfs_exntst_t			state,
++	bool				rt,
+ 	struct xfs_btree_cur		**pcur)
+ {
+ 	int				error;
+@@ -190,7 +194,7 @@ xfs_rmap_update_log_item(
+ 	map->me_startoff = rmap->ri_bmap.br_startoff;
+ 	map->me_len = rmap->ri_bmap.br_blockcount;
+ 	xfs_trans_set_rmap_flags(map, rmap->ri_type, rmap->ri_whichfork,
+-			rmap->ri_bmap.br_state);
++			rmap->ri_bmap.br_state, rmap->ri_realtime);
+ }
+ 
+ /* Get an RUD so we can process all the deferred rmap updates. */
+@@ -223,6 +227,7 @@ xfs_rmap_update_finish_item(
+ 			rmap->ri_bmap.br_startblock,
+ 			rmap->ri_bmap.br_blockcount,
+ 			rmap->ri_bmap.br_state,
++			rmap->ri_realtime,
+ 			(struct xfs_btree_cur **)state);
+ 	kmem_free(rmap);
+ 	return error;
 
-static const match_table_t tokens =3D {
-@@ -133,6 +133,9 @@ static const match_table_t tokens =3D {
-
-	{Opt_dax,	"dax"},		/* Enable direct access to bdev =
-pages */
-
-+#ifdef CONFIG_XFS_RT
-+	{Opt_rtdefault,	"rtdefault"},	/* Default to real-time device =
-*/
-+#endif
-	/* Deprecated mount options scheduled for removal */
-	{Opt_barrier,	"barrier"},	/* use writer barriers for log =
-write and
-					 * unwritten extent conversion =
-*/
-@@ -367,6 +370,11 @@ xfs_parseargs(
-		case Opt_nodiscard:
-			mp->m_flags &=3D ~XFS_MOUNT_DISCARD;
-			break;
-+#ifdef CONFIG_XFS_RT
-+		case Opt_rtdefault:
-+			mp->m_flags |=3D XFS_MOUNT_RTDEFAULT;
-+			break;
-+#endif
-#ifdef CONFIG_FS_DAX
-		case Opt_dax:
-			mp->m_flags |=3D XFS_MOUNT_DAX;
-@@ -492,6 +500,9 @@ xfs_showargs(
-		{ XFS_MOUNT_DISCARD,		",discard" },
-		{ XFS_MOUNT_SMALL_INUMS,	",inode32" },
-		{ XFS_MOUNT_DAX,		",dax" },
-+#ifdef CONFIG_XFS_RT
-+		{ XFS_MOUNT_RTDEFAULT,          ",rtdefault" },
-+#endif
-		{ 0, NULL }
-	};
-	static struct proc_xfs_info xfs_info_unset[] =3D {
---=20
-2.9.3=
