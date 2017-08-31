@@ -1,56 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49342 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751040AbdHaPb5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 11:31:57 -0400
-Date: Thu, 31 Aug 2017 08:31:48 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: remove experimental tag for reflinks
-Message-ID: <20170831153148.GJ3775@magnolia>
-References: <20170830145400.3681-1-hch@lst.de>
- <20170831064033.GF3775@magnolia>
- <20170831124321.GA21939@bfoster.bfoster>
- <20170831133019.GA5468@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:42642 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750757AbdHaKam (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Aug 2017 06:30:42 -0400
+Date: Thu, 31 Aug 2017 06:30:41 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: linux-next: build warning after merge of the xfs tree
+Message-ID: <20170831103040.GB21508@bfoster.bfoster>
+References: <20170831100703.16eeb69f@canb.auug.org.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170831133019.GA5468@lst.de>
+In-Reply-To: <20170831100703.16eeb69f@canb.auug.org.au>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Thu, Aug 31, 2017 at 03:30:19PM +0200, Christoph Hellwig wrote:
-> On Thu, Aug 31, 2017 at 08:43:21AM -0400, Brian Foster wrote:
-> > FWIW, I don't really have a strong opinion. To me, removing experimental
-> > means we feel the code has stabilized long enough in principle, there
-> > are no significant problems (i.e., corruption/crash vectors) that we are
-> > aware of and the feature is complete (full userspace tool support, etc).
-> > The in-core extent list thing seems like more of a general problem to me
+On Thu, Aug 31, 2017 at 10:07:03AM +1000, Stephen Rothwell wrote:
+> Hi all,
 > 
-> Agreed so far.
-
-<nod> Dave?  Eric?  Any perspective you'd like to offer? :)
-
-> > That aside, shouldn't we consider the rmapbt experimental tag first, or
-> > at least at the same time? It's been around for slightly longer.
+> After merging the xfs tree, today's linux-next build (powerpc
+> ppc64_defconfig) produced this warning:
 > 
-> I've not done much testing on that or have experience with it in general,
-> nor do I have a customer with a big QA team beating it hard, so I can't
-> really comment on that one.
+> fs/xfs/xfs_buf_item.c: In function 'xfs_buf_item_unlock':
+> fs/xfs/xfs_buf_item.c:573:9: warning: unused variable 'ordered' [-Wunused-variable]
+>   bool   ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
+>          ^
+> 
+> Introduced by commit
+> 
+>   a097077ef708 ("xfs: remove unnecessary dirty bli format check for ordered bufs")
+> 
 
-rmapbt will remain EXPERIMENTAL because I still have more patches to
-send to finish the feature for realtime devices.  Speaking of which,
-it's now been 53 weeks since the last dump of that, so I'll go do that
-now. :P
+Ugh, this is due to the refactoring of this patch between v1 and v2. I
+specifically recall testing for this in v1 because I added the ordered
+bool purely to clean up the ASSERT(), then I apparently lost of track of
+it for v2.
 
-FWIW I /also/ run rmapbt everywhere and haven't had any trouble with it
-since adding the per-AG reservations.
+Anyways.. Christoph, Darrick, preferences to clean this up..? I have no
+preference between the v1 or v2 factoring. Or if it's easier, we could
+always just drop something like the hunk below on top. Thoughts?
 
---D
+Brian
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- 8< ---
+
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index ef2c137..f5d25f5 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -567,10 +567,15 @@ xfs_buf_item_unlock(
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+ 	struct xfs_buf		*bp = bip->bli_buf;
+-	bool			aborted = !!(lip->li_flags & XFS_LI_ABORTED);
+-	bool			hold = !!(bip->bli_flags & XFS_BLI_HOLD);
+-	bool			dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
+-	bool			ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
++	bool			aborted;
++	bool			hold;
++	bool			dirty;
++	bool			ordered;
++
++	aborted = !!(lip->li_flags & XFS_LI_ABORTED);
++	hold = !!(bip->bli_flags & XFS_BLI_HOLD);
++	dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
++	ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
+ 
+ 	/* Clear the buffer's association with this transaction. */
+ 	bp->b_transp = NULL;
