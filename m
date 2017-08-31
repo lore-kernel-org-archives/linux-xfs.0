@@ -1,75 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38334 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:47174 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751309AbdHaDF1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 Aug 2017 23:05:27 -0400
-Subject: Re: [RFC 00/12] xfs: more and better verifiers
-References: <150301268960.5851.2513223883233763065.stgit@magnolia>
- <20170818070516.GA15291@infradead.org> <20170818170607.GK4796@magnolia>
- <20170821081333.GB31761@infradead.org> <20170829151159.GA12841@infradead.org>
- <20170829222247.GF10621@dastard> <20170831001009.GD3775@magnolia>
- <20170831024320.GN10621@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <bb27a635-a1d6-6a84-7810-b37cebac8350@sandeen.net>
-Date: Wed, 30 Aug 2017 22:05:25 -0500
+        id S1751001AbdHaDiU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 Aug 2017 23:38:20 -0400
+Date: Thu, 31 Aug 2017 11:38:18 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2 00/14] Crash consistency xfstest using dm-log-writes
+Message-ID: <20170831033818.GH27835@eguan.usersys.redhat.com>
+References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
+ <CAOQ4uxh8av5H87SHdFw92BDTvCtYgd9chS2Nfv5fA4=upoqRfA@mail.gmail.com>
+ <20170830152326.vil3fhsrecp2ccql@destiny>
+ <CAOQ4uxjE20+vY4OPWM3Z=FU-+4oC1KrYtJ5e7-rQDW4xx5t4RA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170831024320.GN10621@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxjE20+vY4OPWM3Z=FU-+4oC1KrYtJ5e7-rQDW4xx5t4RA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Josef Bacik <josef@toxicpanda.com>, Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On 8/30/17 9:43 PM, Dave Chinner wrote:
-> On Wed, Aug 30, 2017 at 05:10:09PM -0700, Darrick J. Wong wrote:
->> On Wed, Aug 30, 2017 at 08:22:47AM +1000, Dave Chinner wrote:
->>> On Tue, Aug 29, 2017 at 08:11:59AM -0700, Christoph Hellwig wrote:
->>>> On Mon, Aug 21, 2017 at 01:13:33AM -0700, Christoph Hellwig wrote:
->>>>> So what do you think of the version that adds real printks for
->>>>> each condition including more details like the one verifier I
->>>>> did below?  Probably needs some unlikely annotations, though.
->>>>
->>>> Given that there was another resend of the series I'd be really
->>>> curious about the answer to this?
->>>
->>> If we increase the size of the hexdump on error, then most of the
->>> specific numbers in the print statements can be pulled from the
->>> hexdump. And if the verifier tells us exactly what check failed,
->>> we don't have to decode the entire hexdump to know what field was
->>> out of band.
->>
->> How much do we increase the size of the hexdump?  64 -> 128?  Or
->> whatever the structure header size is?
+On Wed, Aug 30, 2017 at 09:39:39PM +0300, Amir Goldstein wrote:
+> On Wed, Aug 30, 2017 at 6:23 PM, Josef Bacik <josef@toxicpanda.com> wrote:
+> > On Wed, Aug 30, 2017 at 06:04:26PM +0300, Amir Goldstein wrote:
+> >> Sorry noise xfs list, I meant to CC fsdevel
+> >>
+> >> On Wed, Aug 30, 2017 at 5:51 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> >> > Hi all,
+> >> >
+> >> > This is the 2nd revision of crash consistency patch set.
+> >> > The main thing that changed since v1 is my confidence in the failures
+> >> > reported by the test, along with some more debugging options for
+> >> > running the test tools.
+> >> >
+> >> > I've collected these patches that have been sitting in Josef Bacik's
+> >> > tree for a few years and kicked them a bit into shape.
+> >> > The dm-log-writes target has been merged to kernel v4.1, see:
+> >> > https://github.com/torvalds/linux/blob/master/Documentation/device-mapper/log-writes.txt
+> >> >
+> >> > For this posting, I kept the random seeds constant for the test.
+> >> > I set these constant seeds after running with random seed for a little
+> >> > while and getting failure reports. With the current values in the test
+> >> > I was able to reproduce at high probablity failures with xfs, ext4 and btrfs.
+> >> > The probablity of reproducing the failure is higher on a spinning disk.
+> >> >
+> >
+> > I'd rather we make it as evil as possible.  As long as we're printing out the
+> > seed that was used in the output then we can go in and manually change the test
+> > to use the same seed over and over again if we need to debug a problem.
 > 
-> I choose 64 because it captured the primary header for most 
-> structures for CRC enabled filesystems, so it would have
-> owner/crc/uuid/etc in it. I wasn't really trying to capture the
-> object specific metadata in it, but increasing to 128 bytes would
-> capture most of that block headers, too. Won't really help with
-> inodes, though, as the core is 176 bytes and the owner/crc stuff is
-> at the end....
+> Yeh that's what I did, but then I found values that reproduce a problem,
+> so maybe its worth clinging on to these values now until the bugs are fixed in
+> upstream and then as regression tests.
 > 
->> How about if xfs_error_level >=
->> XFS_ERRORLEVEL_HIGH then we dump the entire buffer?
+> Anyway, I can keep these presets commented out, or run the test twice,
+> once with presets and once with random seed, whatever Eryu decides.
+
+My thought on this with first glance is using random seed, if a specific
+seed reproduce something, maybe another targeted regression test can be
+added, as what you did for that ext4 corruption?
+
 > 
-> Excellent idea. We can easily capture the entire output for
-> corruptions the users can easily trip over. Maybe put in the short
-> dump a line "turn error level up to 11 to get a full dump of the
-> corruption"?
+> 
+> >
+> >> > There is an outstanding problem with the test - when I run it with
+> >> > kvm-xfstests, the test halts and I get soft lockup of log_writes_kthread.
+> >> > I suppose its a bug in dm-log-writes with some kernel config or with virtio
+> >> > I wasn't able to determine the reason and have little time to debug this.
+> >> >
+> >> > Since dm-log-writes is anyway in upstream kernel, I don't think a bug
+> >> > in dm-log-writes for a certain config is a reason to block this xfstest
+> >> > from being merged.
+> >> > Anyway, I would be glad if someone could take a look at the soft lockup
+> >> > issue. Josef?
+> >> >
+> >
+> > Yeah can you give this a try and see if the soft lockup goes away?
+> >
+> 
+> It does go away. Thanks!
+> Now something's wrong with the log.
+> it get corrupted in most of the test runs, something like this:
+> 
+> replaying 17624@158946: sector 8651296, size 4096, flags 0
+> replaying 17625@158955: sector 0, size 0, flags 0
+> replaying 17626@158956: sector 72057596591815616, size 103079215104, flags 0
+> Error allocating buffer 103079215104 entry 17626
+> 
+> I'll look into it
+> 
+> Amir.
 
-Yep, the thing about "more info only if you tune it" is that nobody
-will know to tune it.  Unless you printk that info...
+The first 6 patches are all prepare work and seem fine, so I probably
+will push them out this week. But I may need more time to look into all
+these log-writes dm target and fsx changes.
 
-Of course nobody will know what "turn error up ..." means, either.
+But seems that there're still problems not sorted out (e.g. this
+log-write bug), I'd prefer, when they get merged, removing the auto
+group for now until things settle down a bit.
 
-Hm, at one point I had a patch to add object size to the
-xfs_buf_ops struct and print that many bytes, but can't find it now :/
-(not that it was very complicated...)
-
-Anyway, point is making it vary with the size of the object wouldn't
-be too hard.
-
--Eric
+Thanks,
+Eryu
