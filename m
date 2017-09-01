@@ -1,91 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45953 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750761AbdH3WK5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 Aug 2017 18:10:57 -0400
-Date: Thu, 31 Aug 2017 00:10:56 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
-Message-ID: <20170830221056.GU27873@wotan.suse.de>
-References: <20170829235052.21050-1-david@fromorbit.com>
- <20170830041635.GK27873@wotan.suse.de>
- <20170830054420.GI10621@dastard>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:26278 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751404AbdIAAag (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 20:30:36 -0400
+Date: Fri, 1 Sep 2017 10:30:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] fsmap: fix documentation of FMR_OF_LAST
+Message-ID: <20170901003029.GX10621@dastard>
+References: <20170831204918.GA7404@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170830054420.GI10621@dastard>
+In-Reply-To: <20170831204918.GA7404@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, linux-api@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Wed, Aug 30, 2017 at 03:44:20PM +1000, Dave Chinner wrote:
-> On Wed, Aug 30, 2017 at 06:16:35AM +0200, Luis R. Rodriguez wrote:
-> > On Wed, Aug 30, 2017 at 09:50:10AM +1000, Dave Chinner wrote:
-> > > Everyone who tries to modify mkfs quickly learns that it is a pile
-> > > of spaghetti, the only difference in opinion is whether it is a
-> > > steaming, cold or rotten pile. This patchset attempts to untangle
-> > > the ball of pasta and turn it into a set of clear, obvious
-> > > operations that lead to a filesystem being formatted correctly.
-> > 
-> > Yay.
-> > 
-> > > The patch series is really in three parts, splitting the code up
-> > > into roughly three modules.
-> > 
-> > Any reason you ended up with 3 instead of 4 as originally envisioned?
+On Thu, Aug 31, 2017 at 01:49:18PM -0700, Darrick J. Wong wrote:
+> The FMR_OF_LAST flag is set on the last fsmap record being returned for
+> the dataset requested, contrary to what the header file says.  Fix the
+> docs to reflect the behavior of all fsmap implementations.
 > 
-> Because the 4th module - config file support - doesn't exist yet.
-
-To be fair you had itemized before:
-
-  1) Settings default - struct mkfs_default_params
-  2) CLI parsing - struct cli_params
-  3) Validation + calculation - struct mkfs_params
-  4) On disk formatting
-
-> > > The result is three modules - input parsing, validation+calculations
-> > > and formatting - with well defined data flow between them.
-
-And you instead ended up with:
-
-  1) Input parsing - struct mkfs_default_params and I guess struct cli_params
-  2) Validation + calculation - struct mkfs_params
-  3) On disk formatting
-
-Hence my question.
-
-> Maybe you can come up with a way of automating this, but for a
-> one-off piece of work that affects a point-in-time snapshot of mkfs
-> functionality, I'm not sure it's worth the effort to try to make a
-> generic test to do this sort of thing.
-
-In Dave we trust!
-
-> > > finally, one for config file support),
-> > > but otherwise the majority of the factoring work is now complete.
-> > > 
-> > > Comments, flames, etc all welcome.
-> > 
-> > Just one thing, got a git tree I can use? I honestly can't be bothered
-> > reviewing the delta in between, I just want to move on with life. Thanks
-> > for cleaning up the manure pile buttress.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  include/uapi/linux/fsmap.h |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Nope, not right now. Tag all the patches, save them to an mbox
-> file, run 'git-am <mbox-file>' to apply them all. Takes all of 20s
-> to do with mutt....
+> diff --git a/include/uapi/linux/fsmap.h b/include/uapi/linux/fsmap.h
+> index 7e8e5f0b..e5213c3 100644
+> --- a/include/uapi/linux/fsmap.h
+> +++ b/include/uapi/linux/fsmap.h
+> @@ -96,7 +96,7 @@ fsmap_advance(
+>  #define FMR_OF_EXTENT_MAP	0x4	/* segment = extent map */
+>  #define FMR_OF_SHARED		0x8	/* segment = shared with another file */
+>  #define FMR_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
+> -#define FMR_OF_LAST		0x20	/* segment is the last in the FS */
+> +#define FMR_OF_LAST		0x20	/* segment is the last in the dataset */
+>  
+>  /* Each FS gets to define its own special owner codes. */
+>  #define FMR_OWNER(type, code)	(((__u64)type << 32) | \
 
-Turns out mutt re-orders tagged messages in what I think may be the order you
-got them in so the order on the input output filename may differ from the patch
-order intent. Even when I manually sort them and apply them, the patches failed
-on both origin/master and origin/for-next, so I must be doing something wrong
-or using an incorrect branch or commit ID. What branch and commit ID should I
-use?
+Looks fine.
 
-It also seems I didn't get patch #20 in my inbox, could you resend?
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-On the latest origin/for-next applying your patches fails at patch #3, you need
-git am -3, but then after that it fails at patch #9 even with git am -3.
-
-  Luis
+-- 
+Dave Chinner
+david@fromorbit.com
