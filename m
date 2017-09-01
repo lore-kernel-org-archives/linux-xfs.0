@@ -1,32 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60286 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752451AbdIATsD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 15:48:03 -0400
-Date: Fri, 1 Sep 2017 12:48:03 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3] xfs: fix compiler warnings
-Message-ID: <20170901194803.GA3615@infradead.org>
-References: <20170901171327.GG3775@magnolia>
+Received: from verein.lst.de ([213.95.11.211]:34171 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750955AbdIAUGX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Sep 2017 16:06:23 -0400
+Date: Fri, 1 Sep 2017 22:06:21 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/8] xfs: use xfs_iext_get_extent in
+        xfs_bmap_first_unused
+Message-ID: <20170901200621.GA24728@lst.de>
+References: <20170829174835.2218-1-hch@lst.de> <20170829174835.2218-4-hch@lst.de> <20170829184148.GX4757@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170901171327.GG3775@magnolia>
+In-Reply-To: <20170829184148.GX4757@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Fri, Sep 01, 2017 at 10:13:27AM -0700, Darrick J. Wong wrote:
-> Fix up all the compiler warnings that have crept in.
+On Tue, Aug 29, 2017 at 11:41:48AM -0700, Darrick J. Wong wrote:
+> This probably ought to have a justification in the changelog, such as
+> "Use the bmap abstraction instead of open-coding bmbt details here."
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v3: fix everything that comes up with a W=1 build
-> v2: get more aggressive with the refactoring variables out
+> Code otherwise looks ok.
 
-Looks ok (ok because I don't like the ifdef mess, but lets fix the
-warnings for now..)
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Sure.  Do you just want to add the above?
