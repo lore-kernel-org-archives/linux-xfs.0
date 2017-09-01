@@ -1,121 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:32789 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751237AbdIAHVv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 03:21:51 -0400
-Date: Fri, 1 Sep 2017 00:21:49 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfs: don't set v3 xflags for v2 inodes
-Message-ID: <20170901072149.GA7443@infradead.org>
-References: <20170830155517.GI4757@magnolia>
- <20170830163825.GQ4757@magnolia>
- <20170831131723.GD19544@infradead.org>
- <20170831133420.GB21939@bfoster.bfoster>
- <20170831140932.GB26555@infradead.org>
- <20170831195729.GM3775@magnolia>
+Received: from mail-yw0-f176.google.com ([209.85.161.176]:34716 "EHLO
+        mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751354AbdIAH3k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 03:29:40 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170831195729.GM3775@magnolia>
+In-Reply-To: <20170831033818.GH27835@eguan.usersys.redhat.com>
+References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
+ <CAOQ4uxh8av5H87SHdFw92BDTvCtYgd9chS2Nfv5fA4=upoqRfA@mail.gmail.com>
+ <20170830152326.vil3fhsrecp2ccql@destiny> <CAOQ4uxjE20+vY4OPWM3Z=FU-+4oC1KrYtJ5e7-rQDW4xx5t4RA@mail.gmail.com>
+ <20170831033818.GH27835@eguan.usersys.redhat.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 1 Sep 2017 10:29:38 +0300
+Message-ID: <CAOQ4uxiYqo9w7Qf_CmaViUiVicPgQ_hr==r5waLTC-wrdTSbMg@mail.gmail.com>
+Subject: Re: [PATCH v2 00/14] Crash consistency xfstest using dm-log-writes
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>
+To: Eryu Guan <eguan@redhat.com>
+Cc: Josef Bacik <josef@toxicpanda.com>, Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Aug 31, 2017 at 12:57:29PM -0700, Darrick J. Wong wrote:
-> TBH I like this less because now the responsibility for checking valid
-> inputs is split between xfs_ioctl_setattr_xflags and xfs_set_diflags.
-> I'd rather increase the function count by one than morph the setting
-> function into check-and-set.
+On Thu, Aug 31, 2017 at 6:38 AM, Eryu Guan <eguan@redhat.com> wrote:
+...
+> The first 6 patches are all prepare work and seem fine, so I probably
+> will push them out this week. But I may need more time to look into all
+> these log-writes dm target and fsx changes.
+>
+> But seems that there're still problems not sorted out (e.g. this
+> log-write bug), I'd prefer, when they get merged, removing the auto
+> group for now until things settle down a bit.
+>
 
-I'm not worried about the function count - I'm worried about duplicating
-the information of which flags are stored in di_flags2.  With this patch
-we have one point where we can naturally check this.  In your patch
-we need another define that needs to be kept uptodate.
+I don't object to removing the auto group, but keep in mind that this test
+is opt-in anyway, because it requires to define LOGWRITES_DEV
+(well it SHOULD require, I actually forgot to check it...)
 
-If you are worried about the check and set we could move the set into
-the caller, but to me that doesn't seem any cleaner.  Example attached
-below:
+For now, it seems that the problem observed with kvm-xfstests
+is specific to kvm-qemu aio=threads config, so you shouldn't have any
+problems trying out the test on non kvm setup.
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 9c0c7a920304..511cd7c830ab 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -931,16 +931,15 @@ xfs_ioc_fsgetxattr(
- 	return 0;
- }
- 
--STATIC void
--xfs_set_diflags(
-+STATIC unsigned int
-+xfs_flags2diflags(
- 	struct xfs_inode	*ip,
- 	unsigned int		xflags)
- {
--	unsigned int		di_flags;
--	uint64_t		di_flags2;
--
- 	/* can't set PREALLOC this way, just preserve it */
--	di_flags = (ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
-+	unsigned int		di_flags =
-+		(ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
-+
- 	if (xflags & FS_XFLAG_IMMUTABLE)
- 		di_flags |= XFS_DIFLAG_IMMUTABLE;
- 	if (xflags & FS_XFLAG_APPEND)
-@@ -970,19 +969,24 @@ xfs_set_diflags(
- 		if (xflags & FS_XFLAG_EXTSIZE)
- 			di_flags |= XFS_DIFLAG_EXTSIZE;
- 	}
--	ip->i_d.di_flags = di_flags;
- 
--	/* diflags2 only valid for v3 inodes. */
--	if (ip->i_d.di_version < 3)
--		return;
-+	return di_flags;
-+}
-+
-+STATIC uint64_t
-+xfs_flags2diflags2(
-+	struct xfs_inode	*ip,
-+	unsigned int		xflags)
-+{
-+	uint64_t		di_flags2 =
-+		(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
- 
--	di_flags2 = (ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
- 	if (xflags & FS_XFLAG_DAX)
- 		di_flags2 |= XFS_DIFLAG2_DAX;
- 	if (xflags & FS_XFLAG_COWEXTSIZE)
- 		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
- 
--	ip->i_d.di_flags2 = di_flags2;
-+	return di_flags2;
- }
- 
- STATIC void
-@@ -1022,6 +1026,7 @@ xfs_ioctl_setattr_xflags(
- 	struct fsxattr		*fa)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
-+	uint64_t		di_flags2;
- 
- 	/* Can't change realtime flag if any extents are allocated. */
- 	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
-@@ -1052,7 +1057,14 @@ xfs_ioctl_setattr_xflags(
- 	    !capable(CAP_LINUX_IMMUTABLE))
- 		return -EPERM;
- 
--	xfs_set_diflags(ip, fa->fsx_xflags);
-+	/* diflags2 only valid for v3 inodes. */
-+	di_flags2 = xfs_flags2diflags(ip, fa->fsx_xflags);
-+	if (di_flags2 && ip->i_d.di_version < 3)
-+		return -EINVAL;
-+
-+	ip->i_d.di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
-+	ip->i_d.di_flags2 = di_flags2;
-+
- 	xfs_diflags_to_linux(ip);
- 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+Amir.
