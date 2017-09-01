@@ -1,229 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49927 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:21021 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750955AbdIAPL0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 11:11:26 -0400
-Date: Fri, 1 Sep 2017 08:11:19 -0700
+        with ESMTP id S1751039AbdIAPUZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 11:20:25 -0400
+Date: Fri, 1 Sep 2017 08:20:16 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: corrupt xfs log
-Message-ID: <20170901151119.GX3775@magnolia>
-References: <20170818120224.GA27778@redhat.com>
- <20170818121725.GA1665@bfoster.bfoster>
- <CAHeWggM-dGJHRNyyXZrW5aX7v3r-b0t1LTbrbN-OSTLdLzuPhg@mail.gmail.com>
- <20170821155152.GA56278@bfoster.bfoster>
- <CAHeWggPzVSXXGK+35jEf9FD2gM-QcL_3iebaKzjOK7DbRmWDiA@mail.gmail.com>
- <20170830145808.GB16641@bfoster.bfoster>
- <CAHeWggPh-1E8E6f+feZipdM_fQAejnv09r+bLwo6FLGC1pjAeg@mail.gmail.com>
- <20170831102008.GA21508@bfoster.bfoster>
- <CAHeWggM2-Pv28Fg09iL43n0msDfoni=Qeza7n0XL6YzPYQ3E3g@mail.gmail.com>
- <20170901113306.GE28241@bfoster.bfoster>
+Subject: Re: [PATCH v2] xfs: add online uevent for mount operation
+Message-ID: <20170901152016.GY3775@magnolia>
+References: <1504189030-18608-1-git-send-email-houtao1@huawei.com>
+ <20170831150334.GI3775@magnolia>
+ <20170831233416.GU10621@dastard>
+ <70654563-0abd-6786-ef64-a3df4ce5fa34@huawei.com>
+ <20170901020643.GY10621@dastard>
+ <4cc94844-e154-c002-04b8-9e006bad4750@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170901113306.GE28241@bfoster.bfoster>
+In-Reply-To: <4cc94844-e154-c002-04b8-9e006bad4750@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Ingard - <ingard1@gmail.com>, Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+To: Hou Tao <houtao1@huawei.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Fri, Sep 01, 2017 at 07:33:07AM -0400, Brian Foster wrote:
-> On Fri, Sep 01, 2017 at 08:48:03AM +0200, Ingard - wrote:
-> > On Thu, Aug 31, 2017 at 12:20 PM, Brian Foster <bfoster@redhat.com> wrote:
-> > > On Thu, Aug 31, 2017 at 09:27:52AM +0200, Ingard - wrote:
-> > >> On Wed, Aug 30, 2017 at 4:58 PM, Brian Foster <bfoster@redhat.com> wrote:
-> > >> > On Mon, Aug 21, 2017 at 10:24:32PM +0200, Ingard - wrote:
-> > >> >> On Mon, Aug 21, 2017 at 5:51 PM, Brian Foster <bfoster@redhat.com> wrote:
-> > >> >> > On Mon, Aug 21, 2017 at 02:08:43PM +0200, Ingard - wrote:
-> > >> >> >> On Fri, Aug 18, 2017 at 2:17 PM, Brian Foster <bfoster@redhat.com> wrote:
-> > >> >> >> > On Fri, Aug 18, 2017 at 07:02:24AM -0500, Bill O'Donnell wrote:
-> > >> >> >> >> On Fri, Aug 18, 2017 at 01:56:31PM +0200, Ingard - wrote:
-> > >> >> >> >> > After a server crash we've encountered a corrupt xfs filesystem. When
-> > >> >> >> >> > trying to mount said filesystem normally the system hangs.
-> > >> >> >> >> > This was initially on a ubuntu trusty server with 3.13 kernel with
-> > >> >> >> >> > xfsprogs 3.1.9
-> > >> >> >> >> >
-> > >> >> >> >> > We've installed a newer kernel (4.4.0-92) and compiled xfsprogs v
-> > >> >> >> >> > 4.12.0 from source. We're still not able to mount the filesystem (and
-> > >> >> >> >> > replay the log) normally.
-> > >> >> >> >> > We are able to mount it -o ro,norecovery, but we're reluctant to do
-> > >> >> >> >> > xfs_repair -L without trying everything we can first. The filesystem
-> > >> >> >> >> > is browsable albeit a few paths which gives an error : "Structure
-> > >> >> >> >> > needs cleaning"
-> > >> >> >> >> >
-> > >> >> >> >> > Does anyone have any advice as to how we might recover/repair the
-> > >> >> >> >> > corrupt log so we can replay it? Or is xfs_repair -L the only way
-> > >> >> >> >> > forward?
-> > >> >> >> >>
-> > >> >> >> >> Can you try xfs_repair -n (only scans the fs and reports what repairs
-> > >> >> >> >> would be made)?
-> > >> >> >> >>
-> > >> >> >> >
-> > >> >> >> > An xfs_metadump of the fs might be useful as well. Then we can see if we
-> > >> >> >> > can reproduce the mount hang on latest kernels and if so, potentially
-> > >> >> >> > try and root cause it.
-> > >> >> >> >
-> > >> >> >> > Brian
-> > >> >> >>
-> > >> >> >> Here is a link for the metadump :
-> > >> >> >> https://www.jottacloud.com/p/ingardme/95ec2e45ba80431d962345981d38bdff
-> > >> >> >
-> > >> >> > This points to a 29GB image file, apparently uncompressed..? Could you
-> > >> >> > upload a compressed file? Thanks.
-> > >> >>
-> > >> >> Hi. Sorry about that. Didnt realize the output would be compressable.
-> > >> >> Here is a link to the compressed tgz (6G)
-> > >> >> https://www.jottacloud.com/p/ingardme/cac6939649e14b98b928647f5222a2ae
-> > >> >>
-> > >> >
-> > >> > I finally played around with this image a bit. Note that mount does not
-> > >> > hang on latest kernels. Instead, log recovery emits a torn write message
-> > >> > due to a bad crc at the head of the log and then ultimately fails due to
-> > >> > a bad crc at the tail of the log. I ran a couple experiments to skip the
-> > >> > bad crc records and/or to completely ignore all bad crc's and both still
-> > >> > either fail to mount (due to other corruption) or continue to show
-> > >> > corruption in the recovered fs.
-> > >> >
-> > >> > It's not clear to me what would have caused this corruption or log
-> > >> > state. Have you encountered any corruption before? If not, is this kind
-> > >> > of crash or unclean shutdown of the server an uncommon event?
-> > >> We failed to notice the log messages of corrupt fs at first. After a
-> > >> few days of these messages the filesystem got shut down due to
-> > >> excessive? corruption.
-> > >> At that point we tried to reboot normally, but ended up with having to
-> > >> do a hard reset of the server.
-> > >> It is not clear to us either why the corruption happened in the first
-> > >> place either. The underlying raid has been in optimal state the whole
-> > >> time
-> > >>
-> > >
-> > > Ok, so corruption was the first problem. If the filesystem shutdown with
-> > > something other than a log I/O error, chances are the log was flushed at
-> > > that time. It is strange that log records end up corrupted, though not
-> > > terribly out of the ordinary for the mount to ultimately fail if
-> > > recovery stumbled over existing on-disk corruption, for instance.
-> > > An xfs_repair was probably a foregone conclusion given the corruption
-> > > started on disk, anyways.
-> > 
-> > Out of curiosity, how long did the xfs_mdrestore command run ? I'm
-> > pushing 20ish hours now and noticed the following in kern.log :
-> > 2017-09-01T08:47:23.414139+02:00 dn-238 kernel: [1278740.983304] XFS:
-> > xfs_mdrestore(5176) possible memory allocation deadlock size 37136 in
-> > kmem_alloc (mode:0x2400240)
-> > 
+On Fri, Sep 01, 2017 at 01:11:09PM +0800, Hou Tao wrote:
+> Hi Dave,
 > 
-> Heh. It certainly wasn't quick since it had to restore ~30GB or so of
-> metadata, but it didn't take that long. If I had to guess, I'd say it
-> restored within an hour.
+> On 2017/9/1 10:06, Dave Chinner wrote:
+> > On Fri, Sep 01, 2017 at 09:26:08AM +0800, Hou Tao wrote:
+> >> Hi,
+> >>
+> >> On 2017/9/1 7:34, Dave Chinner wrote:
+> >>>>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> >>>>> index 3a3812b4..6f8351c 100644
+> >>>>> --- a/fs/xfs/xfs_super.c
+> >>>>> +++ b/fs/xfs/xfs_super.c
+> >>>>> @@ -70,6 +70,11 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
+> >>>>>  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
+> >>>>>  #endif
+> >>>>>  
+> >>>>> +enum {
+> >>>>> +	XFS_UEVENT_ENV_CNT = 2,
+> >>>>
+> >>>> XFS_UEVENT_MAX_ENV_COUNT ?
+> >>>
+> >>> Why 2 when there's only one environment string passed?
+> >> Will fix them, I take the last NULL pointer into account, and
+> >> Yes, "XFS_UEVENT_MAX_ENV_COUNT" is a better name.
+> >>
+> >>>>> +	XFS_UEVENT_UUID_LEN = UUID_STRING_LEN + 6,
+> >>>
+> >>> And the magic number needs a comment.
+> >>>
+> >>> Actually, I think it needs more than this - it's tightly bound to
+> >>> the implementation in xfs_fs_uevent(), so this enum should be
+> >>> defined there, not as a global all this distance away.....
+> >> OK, I will move it into xfs_fs_uevent().
+> >>
+> >>>>> +};
+> >>>>> +
+> >>>>>  /*
+> >>>>>   * Table driven mount option parser.
+> >>>>>   */
+> >>>>> @@ -1530,6 +1535,28 @@ xfs_destroy_percpu_counters(
+> >>>>>  	percpu_counter_destroy(&mp->m_fdblocks);
+> >>>>>  }
+> >>>>>  
+> >>>>> +static void
+> >>>>> +xfs_fs_uevent(
+> >>>>> +	struct xfs_mount	*mp,
+> >>>>> +	enum kobject_action	action)
+> >>>>> +{
+> >>>>> +	int err;
+> >>>>> +	char *envp[XFS_UEVENT_ENV_CNT];
+> >>>>> +	int i = 0;
+> >>>
+> >>> Indent the variables to match the function declaration.
+> >> I will fix them. I didn't event notice the indentations of these variables before.
+> >>
+> >>>>> +
+> >>>>> +	if (!uuid_is_null(&mp->m_super->s_uuid)) {
+> >>>
+> >>> This will never be false. XFS filesystems should always have a valid
+> >>> UUID.
+> >> A null uuid is possible if we use "nouuid" to mount a XFS filesystem, so
+> >> the check is still needed.
+> > 
+> > The "nouuid" mount option means "don't check if there is already a
+> > filesystem ialready mounted with the same uuid as the one we are
+> > mounting". It does not mean the filesystem does not have a UUID.
+> > 
+> > Indeed, in xfs_uuid_mount():
+> > 
+> > xfs_uuid_mount(
+> >         struct xfs_mount        *mp)
+> > {
+> >         uuid_t                  *uuid = &mp->m_sb.sb_uuid;
+> >         int                     hole, i;
+> > 
+> >         /* Publish UUID in struct super_block */
+> >         uuid_copy(&mp->m_super->s_uuid, uuid);
+> > 
+> >         if (mp->m_flags & XFS_MOUNT_NOUUID)
+> >                 return 0;
+> > 
+> > We copy the filesystem's uuid into the VFS superblock before we
+> > check the nouuid mount option flag. Hence a mounted XFS filesystem
+> > always has a valid UUID in the superblock s_uuid field.
+> Maybe you miss the following "uuid_is_null(uuid)" check in xfs_uuid_mount() ?
 > 
-> It seems like you're running into the in-core extent list problem, which
-> causes pain for highly sparse or fragmented files because we store the
-> entire extent list in memory. An fiemap of the restored image I have
-> lying around shows over 1.5m extents. :/ You may need a box with more
-> RAM (I had 32GB) or otherwise find another large enough block device to
-> use the metadump. :/ If you had to bypass that step, you could at least
-> run 'xfs_repair -n' on the original fs to see whether repair runs to
-> completion in your environment.
+> xfs_uuid_mount(
+>     struct xfs_mount    *mp)
+> {
+> 
+>     if (mp->m_flags & XFS_MOUNT_NOUUID)
+>         return 0;
+> 
+>     if (uuid_is_null(uuid)) {
+>         xfs_warn(mp, "Filesystem has null UUID - can't mount");
+>         return -EINVAL;
+>     }
+> 
+> And we can clear the uuid of a XFS filesystem, and mount it with "nouuid" option successfully.
+> $ xfs_admin -U nil /dev/vda
+> $ mount -t xfs -o nouuid /dev/vda /tmp/vda
+> 
+> So I still think the null check in xfs_fs_uevent is needed.
 
-/me wonders if it'd help if mdrestore had a command line arg to
-fallocate the target file beforehand (lots of wasted space but fewer
-extents) or set an extent size hint (only useful if metadata isn't
-fragmented) but yes we should fix the incore extent cache memory usage
-problem.
+I was /about/ to reply with "Why does it matter if the UUID is null?
+That's just another value, albeit a weird one.", but then I actually
+tried it:
+
+$ truncate -s 500m /tmp/a
+$ mkfs.xfs -m uuid=00000000-0000-0000-0000-000000000000 -f /tmp/a
+$ sudo mount /tmp/a /mnt
+[161296.189297] XFS (loop0): Filesystem has nil UUID - can't mount
+$ sudo mount /tmp/a /mnt -o nouuid
+[161301.335715] XFS (loop0): Mounting V5 Filesystem
+[161301.335881] XFS (loop0): nil uuid in log - IRIX style log
+[161301.338524] XFS (loop0): Ending clean mount
+[161311.233536] XFS (loop0): Unmounting Filesystem
+
+Now I'm wondering just what that's all about, especially on a v5 fs? :)
+
+Getting back to the original conversation, it doesn't matter if the UUID
+is all zeroes; one can certainly mkfs such a filesystem.  Send out
+the UUID with the uevent even if it is all zeroes.
 
 --D
 
 > 
-> Brian
+> Regards,
 > 
-> > ingard
-> > 
-> > >
-> > > Brian
-> > >
-> > >> >
-> > >> > That aside, I think the best course of action is to run 'xfs_repair -L'
-> > >> > on the fs. I ran a v4.12 version against the metadump image and it
-> > >> > successfully repaired the fs. I've attached the repair output for
-> > >> > reference, but I would recommend to first restore your metadump to a
-> > >> > temporary location, attempt to repair that and examine the results
-> > >> > before repairing the original fs. Note that the metadump will not have
-> > >> > any file content, but will represent which files might be cleared, moved
-> > >> > to lost+found, etc.
-> > >> Ok. Thanks for looking into it. We'll proceed with the suggested
-> > >> course of action.
-> > >>
-> > >> ingard
-> > >> >
-> > >> > Brian
-> > >> >
-> > >> >> >
-> > >> >> > Brian
-> > >> >> >
-> > >> >> >> And the repair -n output :
-> > >> >> >> https://www.jottacloud.com/p/ingardme/0205c6ca6f7e495ebcda5f255b96f63d
-> > >> >> >>
-> > >> >> >> kind regards
-> > >> >> >> ingard
-> > >> >> >>
-> > >> >> >> >
-> > >> >> >> >> Thanks-
-> > >> >> >> >> Bill
-> > >> >> >> >>
-> > >> >> >> >>
-> > >> >> >> >> >
-> > >> >> >> >> >
-> > >> >> >> >> > Excerpt from kern.log:
-> > >> >> >> >> > 2017-08-17T13:40:41.122121+02:00 dn-238 kernel: [  294.300347] XFS
-> > >> >> >> >> > (sdd1): Mounting V4 filesystem in no-recovery mode. Filesystem will be
-> > >> >> >> >> > inconsistent.
-> > >> >> >> >> >
-> > >> >> >> >> > 2017-08-17T17:04:54.794194+02:00 dn-238 kernel: [12548.400260] XFS
-> > >> >> >> >> > (sdd1): Metadata corruption detected at xfs_inode_buf_verify+0x6f/0xd0
-> > >> >> >> >> > [xfs], xfs_inode block 0x81c9c210
-> > >> >> >> >> > 2017-08-17T17:04:54.794216+02:00 dn-238 kernel: [12548.400342] XFS
-> > >> >> >> >> > (sdd1): Unmount and run xfs_repair
-> > >> >> >> >> > 2017-08-17T17:04:54.794218+02:00 dn-238 kernel: [12548.400374] XFS
-> > >> >> >> >> > (sdd1): First 64 bytes of corrupted metadata buffer:
-> > >> >> >> >> > 2017-08-17T17:04:54.794220+02:00 dn-238 kernel: [12548.400418]
-> > >> >> >> >> > ffff880171fff000: 3f 1a 33 54 5b 55 85 0b 7c f5 c6 d5 cf 51 47 41
-> > >> >> >> >> > ?.3T[U..|....QGA
-> > >> >> >> >> > 2017-08-17T17:04:54.794222+02:00 dn-238 kernel: [12548.400473]
-> > >> >> >> >> > ffff880171fff010: 97 ba ba 03 5c e4 02 7a e6 bc fb 5d f1 72 db c1
-> > >> >> >> >> > ....\..z...].r..
-> > >> >> >> >> > 2017-08-17T17:04:54.794223+02:00 dn-238 kernel: [12548.400527]
-> > >> >> >> >> > ffff880171fff020: c8 ad 3a 76 c7 e4 20 92 88 a2 35 0c 1f 36 cf b5
-> > >> >> >> >> > ..:v.. ...5..6..
-> > >> >> >> >> > 2017-08-17T17:04:54.794226+02:00 dn-238 kernel: [12548.400581]
-> > >> >> >> >> > ffff880171fff030: 8a bc 42 75 86 50 a0 a2 be 2c 2d 99 96 2d e1 ee
-> > >> >> >> >> > ..Bu.P...,-..-..
-> > >> >> >> >> >
-> > >> >> >> >> > kind regards
-> > >> >> >> >> > ingard
-> > >> >> >> >> > --
-> > >> >> >> >> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > >> >> >> >> > the body of a message to majordomo@vger.kernel.org
-> > >> >> >> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > >> >> >> >> --
-> > >> >> >> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > >> >> >> >> the body of a message to majordomo@vger.kernel.org
-> > >> >> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > >> >> >> --
-> > >> >> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > >> >> >> the body of a message to majordomo@vger.kernel.org
-> > >> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > >> >> --
-> > >> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > >> >> the body of a message to majordomo@vger.kernel.org
-> > >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > >> --
-> > >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > >> the body of a message to majordomo@vger.kernel.org
-> > >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Tao
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
