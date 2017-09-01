@@ -1,37 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42840 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751945AbdIAPzY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 11:55:24 -0400
-Date: Fri, 1 Sep 2017 08:54:53 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:47130 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752213AbdIAUIi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 16:08:38 -0400
+Date: Fri, 1 Sep 2017 13:08:33 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: fix compiler warnings
-Message-ID: <20170901155453.GZ3775@magnolia>
-References: <20170831233833.GT3775@magnolia>
- <20170901081005.GB32746@infradead.org>
+Subject: Re: [PATCH 3/8] xfs: use xfs_iext_get_extent in xfs_bmap_first_unused
+Message-ID: <20170901200833.GK3775@magnolia>
+References: <20170829174835.2218-1-hch@lst.de>
+ <20170829174835.2218-4-hch@lst.de>
+ <20170829184148.GX4757@magnolia>
+ <20170901200621.GA24728@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170901081005.GB32746@infradead.org>
+In-Reply-To: <20170901200621.GA24728@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Sep 01, 2017 at 01:10:05AM -0700, Christoph Hellwig wrote:
-> Can we please just ensure ASSERT always evaluates the argument,
-> similar to BUG()?
+On Fri, Sep 01, 2017 at 10:06:21PM +0200, Christoph Hellwig wrote:
+> On Tue, Aug 29, 2017 at 11:41:48AM -0700, Darrick J. Wong wrote:
+> > This probably ought to have a justification in the changelog, such as
+> > "Use the bmap abstraction instead of open-coding bmbt details here."
+> > 
+> > Code otherwise looks ok.
+> 
+> Sure.  Do you just want to add the above?
 
-Assuming you meant BUG_ON or something that actually takes a parameter,
-yes you can do that, though now we have to fix up a bunch of things like
-the xfs_trans debug counter asserts and anything that asserts on
-xfs_isilocked.
-
--.text                         785555      0
-+.text                         787843      0
-
-I guess that's only 0.29% larger...
+Done.
 
 --D
 
