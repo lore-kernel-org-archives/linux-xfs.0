@@ -1,382 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53310 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750952AbdISHgU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 Sep 2017 03:36:20 -0400
-Date: Tue, 19 Sep 2017 15:36:16 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] test race when checking i_size on direct i/o read
-Message-ID: <20170919073616.GP8034@eguan.usersys.redhat.com>
-References: <799f63d9-de03-eab3-1e6e-cd747aa04c36@redhat.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:1100 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752400AbdIAWHm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 18:07:42 -0400
+Date: Sat, 2 Sep 2017 08:07:39 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix unused variable warning in xfs_buf_item_unlock()
+Message-ID: <20170901220739.GB10621@dastard>
+References: <20170831160458.24886-1-bfoster@redhat.com>
+ <20170831164107.GL3775@magnolia>
+ <20170831215209.GQ10621@dastard>
+ <20170901102420.GA28241@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <799f63d9-de03-eab3-1e6e-cd747aa04c36@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170901102420.GA28241@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: fstests <fstests@vger.kernel.org>, Zheng Liu <wenqing.lz@taobao.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Fri, Aug 18, 2017 at 03:35:02PM -0500, Eric Sandeen wrote:
-> From: Zheng Liu <wenqing.lz@taobao.com>
+On Fri, Sep 01, 2017 at 06:24:20AM -0400, Brian Foster wrote:
+> On Fri, Sep 01, 2017 at 07:52:09AM +1000, Dave Chinner wrote:
+> > On Thu, Aug 31, 2017 at 09:41:07AM -0700, Darrick J. Wong wrote:
+> > > On Thu, Aug 31, 2017 at 12:04:58PM -0400, Brian Foster wrote:
+> > > > The ordered variable generates an unused warning on !DEBUG builds.
+> > > > Separate the initialization of the associated variables from the
+> > > > declarations to quiet gcc.
+> > > > 
+> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > 
+> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > And merged before everyone in different timezones has had a chance
+> > to comment. :(
+> > 
+> > I just built the latest for-next with CONFIG_XFS_DEBUG=n and there's
+> > three set-but-unused warnings, one of which is introduced by this
+> > patch.
+> > 
+> > fs/xfs/libxfs/xfs_inode_fork.c: In function ¿xfs_iext_realloc_indirect¿:
+> > fs/xfs/libxfs/xfs_inode_fork.c:1503:7: error: variable ¿size¿ set but not used [-Werror=unused-but-set-variable]
+> >   int  size;  /* current indirection array size */
+> >        ^~~~
+> > 
+> > fs/xfs/xfs_buf_item.c: In function ¿xfs_buf_item_unlock¿:
+> > fs/xfs/xfs_buf_item.c:573:9: error: variable ¿ordered¿ set but not used [-Werror=unused-but-set-variable]
+> >   bool   ordered;
+> >          ^~~~~~~
+> > 
+> > fs/xfs/xfs_log_recover.c: In function ¿xlog_recover_process_intents¿:
+> > fs/xfs/xfs_log_recover.c:4830:13: error: variable ¿last_lsn¿ set but not used [-Werror=unused-but-set-variable]
+> >   xfs_lsn_t  last_lsn;
+> >              ^~~~~~~~
+> > 
+> > Yeah, maintainer habits die hard; I'm still patching fs/xfs/Makefile
+> > in my build trees with this:
+> > 
+> > -ccflags-y += -I$(src)                  # needed for trace events
+> > +ccflags-y += -I$(src) -Werror -Wunused-but-set-variable
+> > 
+> > Which catches stupid problems like this that will the userspace
+> > libxfs build will trip over when the next merge occurs.
+> > 
 > 
-> In this commit a new test case is added to test that i_size races don't
-> occur under dio reads/writes.  We add a program in /src dir, which
-> has a writer to issue some append dio writes.  Meanwhile it has a reader
-> in this test to do some dio reads.  As we expect, reader should read
-> nothing or data with 'a'.  But it might read some data with '0'.
+> Note that the associated bli code is not shared with userspace, fwiw. We
+> should probably fix the warnings regardless...
 > 
-> The bug can be reproduced by this test case [1].
-> 
-> 1.  http://patchwork.ozlabs.org/patch/311761/
-> 
-> This ostensibly tests commit:
-> 9fe55eea7 Fix race when checking i_size on direct i/o read
-> 
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Rich Johnston <rjohnston@sgi.com>
-> Cc: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
-> [sandeen: update to recent xfstests, update commitlog]
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> This test was originally titled:
-> 
->  xfstests: add a new test case to test i_size updated properly under dio
-> 
-> but I think the issue is more of when and how it's tested, not how
-> it's updated.
-> 
-> Note, this passes on xfs on 4.10, but fails on 4.12.
-> ext4 on 4.10 passes as well but is very slow.
-> 
-> iomap dio maybe?  Not sure yet.
+> Hmm, I don't see that option enabled in xfsprogs. Is the issue then that
+> it is more of a default behavior and the kernel disables it somewhere?
 
-My test with 4.10 kernel suggested that test still failed there. And I
-digged into this test a bit, and found that it was commit d531d91d6990
-("xfs: always use unwritten extents for direct I/O writes") introduced
-this failure, which is in v3.14 kernel.
+Yup, it's default gcc behaviour since early 5.x, IIRC, and the
+kernel build disables a bunch of different warnings including this
+one.
 
-This is because we start allocating unwritten extents for direct writes
-that can extend i_size, but in xfs_dio_write_end_io() we update in-core
-i_size before converting unwritten extents to real allocations. So a
-racing direct read could find the not-yet converted unwritten extents
-and read zeros instead of actual data.
+> After poking around a bit, that appears to be the case. We can run 'make
+> W=1' to generate these (and more) in the kernel build.
 
-But I'm not sure what's the best way to fix it. I think taking exclusive
-iolock instead of shared lock for direct writes that can extend i_size
-could fix the non-aio dio write case, but aio-dio write still fails,
-because in the aio-dio write case we defer end_io to a workqueue, which
-doesn't take any iolock at all..
+Oh, yeah, but we don't want to do that by default because the kernel
+headers throw huge numbers of warnings (e.g. signed v unsigned char)
+that won't ever get fixed.  There's been heat and light expended on
+LKML over fixing these warnings in the past, but the only outcome of
+those discussion was to add the "-W1" option to allow people who
+cared to see all the warnings that don't indicate a problem and
+so won't get fixed....
 
-ext4 has no such problem because ext4 converts unwritten extents before
-updating i_size, and ext4 doesn't support appending aio dio writes.
+Hence I started adding my own flags for XFS builds so I would avoid
+adding code to the kernel that would throw userspace warnings.
 
-(Keep the rest of patch untrimmed for reference, as I added linux-xfs to
-cc list.)
+Cheers,
 
-Thanks,
-Eryu
-
-> 
-> changelog v3:
->  * rebase against latest xfstests/master branch
->  * update commit log
-> 
-> changelog v2:
->  * add '-lpthread' into LLDLIBS
-> 
-> diff --git a/configure.ac b/configure.ac
-> index 57092f1..4663004 100644
-> --- a/configure.ac
-> +++ b/configure.ac
-> @@ -59,6 +59,7 @@ AC_PACKAGE_NEED_GETXATTR_LIBATTR
->  AC_PACKAGE_NEED_SYS_ACL_H
->  AC_PACKAGE_NEED_ACL_LIBACL_H
->  AC_PACKAGE_NEED_ACLINIT_LIBACL
-> +AC_PACKAGE_NEED_PTHREADMUTEXINIT
->  
->  AC_PACKAGE_WANT_GDBM
->  AC_PACKAGE_WANT_AIO
-> diff --git a/include/builddefs.in b/include/builddefs.in
-> index cb52b99..fcc8b90 100644
-> --- a/include/builddefs.in
-> +++ b/include/builddefs.in
-> @@ -25,6 +25,7 @@ LIBGDBM = @libgdbm@
->  LIBUUID = @libuuid@
->  LIBHANDLE = @libhdl@
->  LIBDM = @libdm@
-> +LIBPTHREAD = @libpthread@
->  LIBTEST = $(TOPDIR)/lib/libtest.la
->  prefix = @prefix@
->  
-> diff --git a/src/Makefile b/src/Makefile
-> index b8aff49..e9419bd 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -23,7 +23,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec cloner \
->  	renameat2 t_getcwd e4compact test-nextquota punch-alternating \
->  	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
-> -	dio-invalidate-cache stat_test t_encrypted_d_revalidate
-> +	dio-invalidate-cache stat_test t_encrypted_d_revalidate diotest
->  
->  SUBDIRS =
->  
-> diff --git a/src/diotest.c b/src/diotest.c
-> new file mode 100644
-> index 0000000..7d2378f
-> --- /dev/null
-> +++ b/src/diotest.c
-> @@ -0,0 +1,166 @@
-> +/*
-> + * Copyright (c) 2013 Alibaba Group.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +
-> +/*
-> + * This is a normal case that we do some append dio writes and meanwhile
-> + * we do some dio reads.  Currently in vfs we don't ensure that i_size
-> + * is updated properly.  Hence the reader will read some data with '0'.
-> + * But we expect that the reader should read nothing or data with 'a'.
-> + */
-> +
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <string.h>
-> +
-> +#include <unistd.h>
-> +#include <sys/types.h>
-> +#include <sys/stat.h>
-> +#include <fcntl.h>
-> +#include <errno.h>
-> +
-> +#include <pthread.h>
-> +
-> +static char *prog;
-> +
-> +struct writer_data {
-> +	int fd;
-> +	size_t blksize;
-> +	char *buf;
-> +};
-> +
-> +static void usage(void)
-> +{
-> +	fprintf(stderr, "usage: %s [FILE]\n", prog);
-> +}
-> +
-> +static void *writer(void *arg)
-> +{
-> +	struct writer_data *data = (struct writer_data *)arg;
-> +	int ret;
-> +
-> +	ret = write(data->fd, data->buf, data->blksize);
-> +	if (ret < 0)
-> +		fprintf(stderr, "write file failed: %s\n", strerror(errno));
-> +
-> +	return NULL;
-> +}
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +	pthread_t tid;
-> +	struct writer_data wdata;
-> +	size_t max_blocks = 128;		/* 128 */
-> +	size_t blksize = 1 * 1024 * 1024;	/* 1M */
-> +	char *rbuf = NULL, *wbuf = NULL;
-> +	int rfd = 0, wfd = 0;
-> +	int i, j;
-> +	int ret = 0;
-> +
-> +	prog = basename(argv[0]);
-> +
-> +	if (argc != 2) {
-> +		usage();
-> +		exit(1);
-> +	}
-> +
-> +	wfd = open(argv[1], O_CREAT|O_DIRECT|O_WRONLY|O_APPEND|O_TRUNC, S_IRWXU);
-> +	if (wfd < 0) {
-> +		fprintf(stderr, "failed to open write file: %s\n",
-> +			strerror(errno));
-> +		exit(1);
-> +	}
-> +
-> +	rfd = open(argv[1], O_DIRECT|O_RDONLY, S_IRWXU);
-> +	if (wfd < 0) {
-> +		fprintf(stderr, "failed to open read file: %s\n",
-> +			strerror(errno));
-> +		ret = 1;
-> +		goto err;
-> +	}
-> +
-> +	/*
-> +	 * We set 1024 as an alignment size for write buf.  Feel free to change
-> +	 * it with 4096.  But the problem is also hitted.
-> +	 */
-> +	if (posix_memalign((void **)&wbuf, 1024, blksize)) {
-> +		fprintf(stderr, "failed to alloc memory: %s\n", strerror(errno));
-> +		ret = 1;
-> +		goto err;
-> +	}
-> +
-> +	if (posix_memalign((void **)&rbuf, 4096, blksize)) {
-> +		fprintf(stderr, "failed to alloc memory: %s\n", strerror(errno));
-> +		ret = 1;
-> +		goto err;
-> +	}
-> +
-> +	memset(wbuf, 'a', blksize);
-> +	wdata.fd = wfd;
-> +	wdata.blksize = blksize;
-> +	wdata.buf = wbuf;
-> +
-> +	for (i = 0; i < max_blocks; i++) {
-> +		void *retval;
-> +
-> +		if (pthread_create(&tid, NULL, writer, &wdata)) {
-> +			fprintf(stderr, "create thread failed: %s\n",
-> +				strerror(errno));
-> +			ret = 1;
-> +			goto err;
-> +		}
-> +
-> +		memset(rbuf, 'b', blksize);
-> +		do {
-> +			ret = pread(rfd, rbuf, blksize, i * blksize);
-> +			if (ret < 0)
-> +				fprintf(stderr, "read file failed: %s\n",
-> +					strerror(errno));
-> +		} while (ret <= 0);
-> +
-> +		if (pthread_join(tid, &retval)) {
-> +			fprintf(stderr, " pthread join failed: %s\n",
-> +				strerror(errno));
-> +			ret = 1;
-> +			goto err;
-> +		}
-> +
-> +		if (ret >= 0) {
-> +			for (j = 0; j < ret; j ++) {
-> +				if (rbuf[j] != 'a') {
-> +					fprintf(stderr, "encounter an error: "
-> +						"offset %d content %c\n",
-> +						i, rbuf[j]);
-> +					ret = 1;
-> +					goto err;
-> +				}
-> +			}
-> +		}
-> +	}
-> +
-> +err:
-> +	if (rfd)
-> +		close(rfd);
-> +	if (wfd)
-> +		close(wfd);
-> +	if (rbuf)
-> +		free(rbuf);
-> +	if (wbuf)
-> +		free(wbuf);
-> +
-> +	return ret;
-> +}
-> diff --git a/tests/generic/450 b/tests/generic/450
-> new file mode 100755
-> index 0000000..cfb424c
-> --- /dev/null
-> +++ b/tests/generic/450
-> @@ -0,0 +1,56 @@
-> +#! /bin/bash
-> +# FS QA Test No. 450
-> +#
-> +# Test i_size is updated properly under dio read/write
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 Alibaba Group.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    cd /
-> +    rm -f $tmp.* $testfile
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +
-> +testfile=$TEST_DIR/$seq.$$
-> +
-> +[ -x $here/src/diotest ] || _notrun "diotest not built"
-> +
-> +$here/src/diotest $testfile # > $seqres.full 2>&1 ||
-> +	# _fail "i_size isn't update properly!"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/450.out b/tests/generic/450.out
-> new file mode 100644
-> index 0000000..734761a
-> --- /dev/null
-> +++ b/tests/generic/450.out
-> @@ -0,0 +1 @@
-> +QA output created by 450
-> diff --git a/tests/generic/group b/tests/generic/group
-> index b9cd0e8..a555fa0 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -452,3 +452,4 @@
->  447 auto quick clone
->  448 auto quick rw
->  449 auto quick acl enospc
-> +450 auto rw quick
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
