@@ -1,104 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from relayout01-q01.e.movistar.es ([86.109.101.141]:53369 "EHLO
-        relayout01-q01.e.movistar.es" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753050AbdIDAOk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 20:14:40 -0400
-Received: from relayout01-redir.e.movistar.es (unknown [86.109.101.201])
-        by relayout01-out.e.movistar.es (Postfix) with ESMTP id 3xlr272L0wzjYYG
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Sep 2017 02:14:39 +0200 (CEST)
-Received: from Telcontar.valinor (240.red-83-33-32.dynamicip.rima-tde.net [83.33.32.240])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: robin.listas2)
-        by relayout01.e.movistar.es (Postfix) with ESMTPSA id 3xlr25212MzfZy5
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Sep 2017 02:14:37 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-        by Telcontar.valinor (Postfix) with ESMTP id 78BCB12091F
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Sep 2017 02:14:34 +0200 (CEST)
-Received: from Telcontar.valinor ([127.0.0.1])
-        by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
-        with LMTP id Olkpjt64YMsH for <linux-xfs@vger.kernel.org>;
-        Mon,  4 Sep 2017 02:14:34 +0200 (CEST)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        by Telcontar.valinor (Postfix) with ESMTP id 540F4120901
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Sep 2017 02:14:33 +0200 (CEST)
-Subject: Re: What is the proper way to remove an xfs partition?
-References: <837b6a2a-5989-385a-88e3-158f8b614637@zoho.com>
- <7887d301-c849-e740-57ef-39d9221fcc86@zoho.com>
- <3e4309b6-f84a-abcc-c075-76e798c70154@telefonica.net>
- <4741099f-1dcc-acff-46e1-61cd29ecf198@zoho.com>
-From: "Carlos E. R." <robin.listas@telefonica.net>
-Message-ID: <6bae012e-5ac7-16d7-7ee6-da7b3729aa72@telefonica.net>
-Date: Mon, 4 Sep 2017 02:14:32 +0200
+Received: from aserp1040.oracle.com ([141.146.126.69]:47544 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752537AbdIAWWD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 18:22:03 -0400
+Date: Fri, 1 Sep 2017 15:21:57 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] misc: fix more stupid compiler warnings
+Message-ID: <20170901222157.GL3775@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <4741099f-1dcc-acff-46e1-61cd29ecf198@zoho.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="gvGmdpqB4QpJobp8P9bLl8wqTVucIKaqp"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---gvGmdpqB4QpJobp8P9bLl8wqTVucIKaqp
-Content-Type: multipart/mixed; boundary="LP2cfRKb5uGTGE5cvuOrk3Koc8Amev8He";
- protected-headers="v1"
-From: "Carlos E. R." <robin.listas@telefonica.net>
-To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
-Message-ID: <6bae012e-5ac7-16d7-7ee6-da7b3729aa72@telefonica.net>
-Subject: Re: What is the proper way to remove an xfs partition?
-References: <837b6a2a-5989-385a-88e3-158f8b614637@zoho.com>
- <7887d301-c849-e740-57ef-39d9221fcc86@zoho.com>
- <3e4309b6-f84a-abcc-c075-76e798c70154@telefonica.net>
- <4741099f-1dcc-acff-46e1-61cd29ecf198@zoho.com>
-In-Reply-To: <4741099f-1dcc-acff-46e1-61cd29ecf198@zoho.com>
+Fix more compiler warnings about pointless checks, unchecked return
+values, brace problems, and missing parentheses.
 
---LP2cfRKb5uGTGE5cvuOrk3Koc8Amev8He
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/check.c           |    2 --
+ libxfs/init.c        |   17 ++++++++++++-----
+ libxfs/libxfs_priv.h |    4 ++--
+ libxfs/xfs_bmap.c    |    2 +-
+ repair/phase6.c      |    4 ++--
+ repair/rmap.c        |    2 +-
+ 6 files changed, 18 insertions(+), 13 deletions(-)
 
-On 2017-09-04 02:03, ToddAndMargo wrote:
-> On 09/03/2017 05:34 AM, Carlos E. R. wrote:
-
-
->> So this is not a problem with XFS, but a problem caused by gparted
->> (feature needed). You have to manually destroy key areas manually,
->> probably just a few sectors at partition start.
->>
->>
->=20
-> Thank you!  And something for 1478707 to reproduce!
-
-If you are interested, these are the openSUSE bugzillas:
-
-https://bugzilla.opensuse.org/show_bug.cgi?id=3D1046268
-USB Keys are mis-identified by device notifier
-
-https://bugzilla.opensuse.org/show_bug.cgi?id=3D1046096
-Can't mount fat32 USB stick: issue on the partition table
-
---=20
-Cheers / Saludos,
-
-		Carlos E. R.
-		(from 42.2 x86_64 "Malachite" at Telcontar)
-
-
---LP2cfRKb5uGTGE5cvuOrk3Koc8Amev8He--
-
---gvGmdpqB4QpJobp8P9bLl8wqTVucIKaqp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlmsmukACgkQtTMYHG2NR9UUvwCeJC88jIpwu4Du4uWaVUrGVf9z
-RjUAnAxNfJlYvQPpQ64+sKbX0Q4ARKke
-=8SOg
------END PGP SIGNATURE-----
-
---gvGmdpqB4QpJobp8P9bLl8wqTVucIKaqp--
+diff --git a/db/check.c b/db/check.c
+index 12a0aed..6076540 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -3220,9 +3220,7 @@ process_leaf_node_dir_v2_free(
+ 		return;
+ 	}
+ 	if (be32_to_cpu(free->hdr.nvalid) > maxent ||
+-				be32_to_cpu(free->hdr.nvalid) < 0 ||
+ 				be32_to_cpu(free->hdr.nused) > maxent ||
+-				be32_to_cpu(free->hdr.nused) < 0 ||
+ 				be32_to_cpu(free->hdr.nused) >
+ 					be32_to_cpu(free->hdr.nvalid)) {
+ 		if (!sflag || v)
+diff --git a/libxfs/init.c b/libxfs/init.c
+index d77a9e6..2479220 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -262,7 +262,10 @@ libxfs_init(libxfs_init_t *a)
+ 	a->dsize = a->lbsize = a->rtbsize = 0;
+ 	a->dbsize = a->logBBsize = a->logBBstart = a->rtsize = 0;
+ 
+-	(void)getcwd(curdir,MAXPATHLEN);
++	if (!getcwd(curdir, MAXPATHLEN)) {
++		perror("getcwd");
++		strcpy(curdir, ".");
++	}
+ 	needcd = 0;
+ 	fd = -1;
+ 	flags = (a->isreadonly | a->isdirect);
+@@ -284,7 +287,8 @@ libxfs_init(libxfs_init_t *a)
+ 	}
+ 	if (dname) {
+ 		if (dname[0] != '/' && needcd)
+-			chdir(curdir);
++			if (chdir(curdir))
++				perror(curdir);
+ 		if (a->disfile) {
+ 			a->ddev= libxfs_device_open(dname, a->dcreat, flags,
+ 						    a->setblksize);
+@@ -305,7 +309,8 @@ libxfs_init(libxfs_init_t *a)
+ 		a->dsize = 0;
+ 	if (logname) {
+ 		if (logname[0] != '/' && needcd)
+-			chdir(curdir);
++			if (chdir(curdir))
++				perror(curdir);
+ 		if (a->lisfile) {
+ 			a->logdev = libxfs_device_open(logname,
+ 					a->lcreat, flags, a->setblksize);
+@@ -326,7 +331,8 @@ libxfs_init(libxfs_init_t *a)
+ 		a->logBBsize = 0;
+ 	if (rtname) {
+ 		if (rtname[0] != '/' && needcd)
+-			chdir(curdir);
++			if (chdir(curdir))
++				perror(curdir);
+ 		if (a->risfile) {
+ 			a->rtdev = libxfs_device_open(rtname,
+ 					a->rcreat, flags, a->setblksize);
+@@ -361,7 +367,8 @@ libxfs_init(libxfs_init_t *a)
+ 		goto done;
+ 	}
+ 	if (needcd)
+-		chdir(curdir);
++		if (chdir(curdir))
++			perror(curdir);
+ 	if (!libxfs_bhash_size)
+ 		libxfs_bhash_size = LIBXFS_BHASHSIZE(sbp);
+ 	libxfs_bcache = cache_init(a->bcache_flags, libxfs_bhash_size,
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 19bdbdb..94804fe 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -504,8 +504,8 @@ int libxfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
+ bool xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
+ 
+ /* xfs_icache.c */
+-#define xfs_inode_set_cowblocks_tag(ip)
+-#define xfs_inode_set_eofblocks_tag(ip)
++#define xfs_inode_set_cowblocks_tag(ip)	do { } while (0)
++#define xfs_inode_set_eofblocks_tag(ip)	do { } while (0)
+ 
+ /* xfs_stats.h */
+ #define XFS_STATS_CALC_INDEX(member)	0
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 31a631a..ab5853d 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -570,7 +570,7 @@ xfs_bmap_validate_ret(
+ 
+ #else
+ #define xfs_bmap_check_leaf_extents(cur, ip, whichfork)		do { } while (0)
+-#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)
++#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)	do { } while (0)
+ #endif /* DEBUG */
+ 
+ /*
+diff --git a/repair/phase6.c b/repair/phase6.c
+index b051a44..f360aed 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -3092,11 +3092,11 @@ mark_standalone_inodes(xfs_mount_t *mp)
+ 	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rsumino),
+ 			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino));
+ 
++	ASSERT(irec != NULL);
++
+ 	offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino) -
+ 			irec->ino_startnum;
+ 
+-	ASSERT(irec != NULL);
+-
+ 	add_inode_reached(irec, offset);
+ 
+ 	if (fs_quotas)  {
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 9710565..07d1ba8 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -1542,7 +1542,7 @@ rmap_populate_realtime_rmapbt(
+ 		imap.br_startoff = rm_rec->rm_offset;
+ 		imap.br_startblock = rm_rec->rm_startblock;
+ 		imap.br_blockcount = rm_rec->rm_blockcount;
+-		imap.br_state = (rm_rec->rm_flags & XFS_RMAP_UNWRITTEN ?
++		imap.br_state = ((rm_rec->rm_flags & XFS_RMAP_UNWRITTEN) ?
+ 				XFS_EXT_UNWRITTEN : XFS_EXT_NORM);
+ 		fakei.i_ino = rm_rec->rm_owner;
+ 		error = -libxfs_rmap_map_extent(mp, &dfops, &fakei,
