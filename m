@@ -1,97 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39362 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750993AbdIMN5H (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 13 Sep 2017 09:57:07 -0400
-Subject: Re: [PATCH v2] xfs_repair: don't use do_warn for normal log message
-References: <20170913113044.23081-1-yamato@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <749512b4-ec1a-3527-8db9-47a738ba40c8@sandeen.net>
-Date: Wed, 13 Sep 2017 08:57:06 -0500
+Received: from mail-wr0-f172.google.com ([209.85.128.172]:35659 "EHLO
+        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751479AbdIALkW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 07:40:22 -0400
+Received: by mail-wr0-f172.google.com with SMTP id y15so5850493wrc.2
+        for <linux-xfs@vger.kernel.org>; Fri, 01 Sep 2017 04:40:21 -0700 (PDT)
+Date: Fri, 1 Sep 2017 13:40:18 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs_repair: take the ag_lock before recording rmap for a
+ bmbt record
+Message-ID: <20170901114018.q2dyxvn77c4ua4b6@hades.localdomain>
+References: <20170831201255.GP3775@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20170913113044.23081-1-yamato@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170831201255.GP3775@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Masatake YAMATO <yamato@redhat.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, matorola@gmail.com, xfs <linux-xfs@vger.kernel.org>
 
-On 9/13/17 6:30 AM, Masatake YAMATO wrote:
-> In some case, exit statuses of xfs_repair -n are different even for the
-> same file system when -v is specified or not. This patch fixes this
-> behavior.
+On Thu, Aug 31, 2017 at 01:12:55PM -0700, Darrick J. Wong wrote:
+> When the (threaded) inode scanner iterates the blocks of a bmbt tree and
+> wants to record the bmbt blocks in the in-core rmap database, we have to
+> take the ag_lock for the AG that the bmbt block is in, or else we can
+> accidentally corrupt the rmap slab by calling slab_add from two threads.
+> 
+> Reported-by: matorola@gmail.com
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ah yes, we've fixed some of these before I think, though I can't find
-them now... there's at least one more in main(), 
+Looks good,
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-               if (fstat(fd, &statbuf) < 0)
-                       do_warn(_("%s: couldn't stat \"%s\"\n"),
-                               progname, fs_name);
-
-This patch looks fine, though, thanks:
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> If -v is specified, do_warn() is used in zero_log() for printing
-> a normal message. That makes the exit status to 1 though there
-> is no dirtiness in the file system.
-> 
-> The original zero_log():
-> 
-> 	error = xlog_find_tail(log, &head_blk, &tail_blk);
-> 	if (error) {...
-> 	} else {
-> 		if (verbose) {
-> 			do_warn(
-> 	_("zero_log: head block %" PRId64 " tail block %" PRId64 "\n"),
-> 				head_blk, tail_blkn);
-> 		}
-> 
-> do_warn() is used for the message, "zero_log:...".  do_log
-> should be used instead because this log message is for just reporting the
-> values of head_blk, and tail_blk. do_log is for "just reporting".
-> 
-> Using do_warn unintentionally has an impact.
-> It causes the exit status of the command.
-> do_warn sets fs_is_dirty global variable.
-> That refers in main function to decide the exit status.
-> 
->     void
->     do_warn(char const *msg, ...)
->     {
-> 	    va_list args;
-> 
-> 	    fs_is_dirty = 1;
-> 
->     int
->     main(int argc, char **argv)
->     {
->     ...
-> 
-> 		    if (fs_is_dirty)
-> 			    return(1);
-> 
-> Signed-off-by: Masatake YAMATO <yamato@redhat.com>
 > ---
->  Please, ignore the original patch I submitted a few minutes ago.
->  The change is applied to wrong if/else block in the original patch.
+>  repair/scan.c |    3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/repair/scan.c b/repair/scan.c
+> index 6c9f5e7..ccf60a6 100644
+> --- a/repair/scan.c
+> +++ b/repair/scan.c
+> @@ -386,7 +386,10 @@ _("bad state %d, inode %" PRIu64 " bmap block 0x%" PRIx64 "\n"),
 >  
->  repair/phase2.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/repair/phase2.c b/repair/phase2.c
-> index c21778b8..850cd99e 100644
-> --- a/repair/phase2.c
-> +++ b/repair/phase2.c
-> @@ -86,7 +86,7 @@ zero_log(
->  			exit(2);
->  	} else {
->  		if (verbose) {
-> -			do_warn(
-> +			do_log(
->  	_("zero_log: head block %" PRId64 " tail block %" PRId64 "\n"),
->  				head_blk, tail_blk);
->  		}
-> 
+>  	/* Record BMBT blocks in the reverse-mapping data. */
+>  	if (check_dups && collect_rmaps) {
+> +		agno = XFS_FSB_TO_AGNO(mp, bno);
+> +		pthread_mutex_lock(&ag_locks[agno].lock);
+>  		error = rmap_add_bmbt_rec(mp, ino, whichfork, bno);
+> +		pthread_mutex_unlock(&ag_locks[agno].lock);
+>  		if (error)
+>  			do_error(
+>  _("couldn't add inode %"PRIu64" bmbt block %"PRIu64" reverse-mapping data."),
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
