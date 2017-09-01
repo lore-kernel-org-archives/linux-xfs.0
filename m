@@ -1,36 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:59860 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:59520 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751670AbdIAJwY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Sep 2017 05:52:24 -0400
-Date: Fri, 1 Sep 2017 11:52:22 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] xfs: fix incorrect log_flushed on fsync
-Message-ID: <20170901095222.GC24482@lst.de>
-References: <1504100302-3297-1-git-send-email-amir73il@gmail.com> <20170831134722.GA6912@lst.de> <CAOQ4uxgrdijqVpFm+rZ4JE_ZY0A_CZdSPHQEb8S1_R_dyJYzSg@mail.gmail.com> <20170831163954.GH21939@bfoster.bfoster> <CAOQ4uxisPbcoNp8N8Y4yGdWDBfZ=PR7CgkKGbLGS6cbU6bx2rw@mail.gmail.com>
+        id S1751670AbdIAKYV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Sep 2017 06:24:21 -0400
+Date: Fri, 1 Sep 2017 06:24:20 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: fix unused variable warning in xfs_buf_item_unlock()
+Message-ID: <20170901102420.GA28241@bfoster.bfoster>
+References: <20170831160458.24886-1-bfoster@redhat.com>
+ <20170831164107.GL3775@magnolia>
+ <20170831215209.GQ10621@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxisPbcoNp8N8Y4yGdWDBfZ=PR7CgkKGbLGS6cbU6bx2rw@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170831215209.GQ10621@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Thu, Aug 31, 2017 at 10:20:19PM +0300, Amir Goldstein wrote:
-> > IIUC, basically we need to guarantee that a flush submits after
-> > file_write_and_wait() and completes before we return.
+On Fri, Sep 01, 2017 at 07:52:09AM +1000, Dave Chinner wrote:
+> On Thu, Aug 31, 2017 at 09:41:07AM -0700, Darrick J. Wong wrote:
+> > On Thu, Aug 31, 2017 at 12:04:58PM -0400, Brian Foster wrote:
+> > > The ordered variable generates an unused warning on !DEBUG builds.
+> > > Separate the initialization of the associated variables from the
+> > > declarations to quiet gcc.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > 
+> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Yeh. unless we check if file_write_and_wait() submitted anything
-> at all.
+> And merged before everyone in different timezones has had a chance
+> to comment. :(
+> 
+> I just built the latest for-next with CONFIG_XFS_DEBUG=n and there's
+> three set-but-unused warnings, one of which is introduced by this
+> patch.
+> 
+> fs/xfs/libxfs/xfs_inode_fork.c: In function ¿xfs_iext_realloc_indirect¿:
+> fs/xfs/libxfs/xfs_inode_fork.c:1503:7: error: variable ¿size¿ set but not used [-Werror=unused-but-set-variable]
+>   int  size;  /* current indirection array size */
+>        ^~~~
+> 
+> fs/xfs/xfs_buf_item.c: In function ¿xfs_buf_item_unlock¿:
+> fs/xfs/xfs_buf_item.c:573:9: error: variable ¿ordered¿ set but not used [-Werror=unused-but-set-variable]
+>   bool   ordered;
+>          ^~~~~~~
+> 
+> fs/xfs/xfs_log_recover.c: In function ¿xlog_recover_process_intents¿:
+> fs/xfs/xfs_log_recover.c:4830:13: error: variable ¿last_lsn¿ set but not used [-Werror=unused-but-set-variable]
+>   xfs_lsn_t  last_lsn;
+>              ^~~~~~~~
+> 
+> Yeah, maintainer habits die hard; I'm still patching fs/xfs/Makefile
+> in my build trees with this:
+> 
+> -ccflags-y += -I$(src)                  # needed for trace events
+> +ccflags-y += -I$(src) -Werror -Wunused-but-set-variable
+> 
+> Which catches stupid problems like this that will the userspace
+> libxfs build will trip over when the next merge occurs.
+> 
 
-Even if file_write_and_wait did not submit anything we need to
-make sure a flush was submitted and completed after entering
-xfs_file_fsync.  For one to deal with the case where we wrote
-back data from the flusher threads or the VM, and also for
-the direct I/O case.
+Note that the associated bli code is not shared with userspace, fwiw. We
+should probably fix the warnings regardless...
 
+Hmm, I don't see that option enabled in xfsprogs. Is the issue then that
+it is more of a default behavior and the kernel disables it somewhere?
+After poking around a bit, that appears to be the case. We can run 'make
+W=1' to generate these (and more) in the kernel build.
 
-Btw, do you have any results for your simple catch?  I wonder
-how much of an issue it actually is in practice.
+Brian
+
+> Playing games with declaration/initialisation order to avoid
+> warnigns just doesn't work.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
