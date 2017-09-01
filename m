@@ -1,53 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sender-pp-092.zoho.com ([135.84.80.237]:25383 "EHLO
-        sender-pp-092.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752635AbdIBAeQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 20:34:16 -0400
-Subject: Re: What is the proper way to remove an xfs partition?
-From: ToddAndMargo <ToddAndMargo@zoho.com>
-References: <837b6a2a-5989-385a-88e3-158f8b614637@zoho.com>
-Message-ID: <7887d301-c849-e740-57ef-39d9221fcc86@zoho.com>
-Date: Fri, 1 Sep 2017 17:34:13 -0700
+Received: from bombadil.infradead.org ([65.50.211.133]:32789 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751237AbdIAHVv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 03:21:51 -0400
+Date: Fri, 1 Sep 2017 00:21:49 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] xfs: don't set v3 xflags for v2 inodes
+Message-ID: <20170901072149.GA7443@infradead.org>
+References: <20170830155517.GI4757@magnolia>
+ <20170830163825.GQ4757@magnolia>
+ <20170831131723.GD19544@infradead.org>
+ <20170831133420.GB21939@bfoster.bfoster>
+ <20170831140932.GB26555@infradead.org>
+ <20170831195729.GM3775@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <837b6a2a-5989-385a-88e3-158f8b614637@zoho.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170831195729.GM3775@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>
 
-On 08/31/2017 11:04 AM, ToddAndMargo wrote:
-> Hi All,
-> 
-> Fedora 26
-> BIOS boot = legacy (EUFI give me hives)
-> 
-> I have a SATA backup drive formatted gpt, one partition, xfs. I went 
-> into gparted, erased the partition, recreated the partition as ext4 and 
-> formatted it as ext4.
-> 
-> Then I mounted it as ext4, copied some files to it, unmounted it. When I 
-> went to remount it, mount told me there was something wrong with ext4. 
-> So I mounted it as xfs AND IT WORKED! I repeated with the same result. 
-> The drive thinks it is ext4 until the second mount.
-> 
-> Out of shear frustration, I did a dd /dev/zero overwrite of the stinker 
-> and left it running overnight.  That did the trick, but it takes
-> forever and I have four more drives to go.
-> 
-> What is the official way to remove an xfs partition?
-> 
-> Many thanks,
-> -T
+On Thu, Aug 31, 2017 at 12:57:29PM -0700, Darrick J. Wong wrote:
+> TBH I like this less because now the responsibility for checking valid
+> inputs is split between xfs_ioctl_setattr_xflags and xfs_set_diflags.
+> I'd rather increase the function count by one than morph the setting
+> function into check-and-set.
 
-I don't know if you guys care about such things, but I just
-request that gparted do a disk blank
+I'm not worried about the function count - I'm worried about duplicating
+the information of which flags are stored in di_flags2.  With this patch
+we have one point where we can naturally check this.  In your patch
+we need another define that needs to be kept uptodate.
 
-https://bugzilla.redhat.com/show_bug.cgi?id=1487807
+If you are worried about the check and set we could move the set into
+the caller, but to me that doesn't seem any cleaner.  Example attached
+below:
 
-By the way, thank you all for the help and support
-through all this!
-
-
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 9c0c7a920304..511cd7c830ab 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -931,16 +931,15 @@ xfs_ioc_fsgetxattr(
+ 	return 0;
+ }
+ 
+-STATIC void
+-xfs_set_diflags(
++STATIC unsigned int
++xfs_flags2diflags(
+ 	struct xfs_inode	*ip,
+ 	unsigned int		xflags)
+ {
+-	unsigned int		di_flags;
+-	uint64_t		di_flags2;
+-
+ 	/* can't set PREALLOC this way, just preserve it */
+-	di_flags = (ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
++	unsigned int		di_flags =
++		(ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
++
+ 	if (xflags & FS_XFLAG_IMMUTABLE)
+ 		di_flags |= XFS_DIFLAG_IMMUTABLE;
+ 	if (xflags & FS_XFLAG_APPEND)
+@@ -970,19 +969,24 @@ xfs_set_diflags(
+ 		if (xflags & FS_XFLAG_EXTSIZE)
+ 			di_flags |= XFS_DIFLAG_EXTSIZE;
+ 	}
+-	ip->i_d.di_flags = di_flags;
+ 
+-	/* diflags2 only valid for v3 inodes. */
+-	if (ip->i_d.di_version < 3)
+-		return;
++	return di_flags;
++}
++
++STATIC uint64_t
++xfs_flags2diflags2(
++	struct xfs_inode	*ip,
++	unsigned int		xflags)
++{
++	uint64_t		di_flags2 =
++		(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
+ 
+-	di_flags2 = (ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
+ 	if (xflags & FS_XFLAG_DAX)
+ 		di_flags2 |= XFS_DIFLAG2_DAX;
+ 	if (xflags & FS_XFLAG_COWEXTSIZE)
+ 		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
+ 
+-	ip->i_d.di_flags2 = di_flags2;
++	return di_flags2;
+ }
+ 
+ STATIC void
+@@ -1022,6 +1026,7 @@ xfs_ioctl_setattr_xflags(
+ 	struct fsxattr		*fa)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
++	uint64_t		di_flags2;
+ 
+ 	/* Can't change realtime flag if any extents are allocated. */
+ 	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
+@@ -1052,7 +1057,14 @@ xfs_ioctl_setattr_xflags(
+ 	    !capable(CAP_LINUX_IMMUTABLE))
+ 		return -EPERM;
+ 
+-	xfs_set_diflags(ip, fa->fsx_xflags);
++	/* diflags2 only valid for v3 inodes. */
++	di_flags2 = xfs_flags2diflags(ip, fa->fsx_xflags);
++	if (di_flags2 && ip->i_d.di_version < 3)
++		return -EINVAL;
++
++	ip->i_d.di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
++	ip->i_d.di_flags2 = di_flags2;
++
+ 	xfs_diflags_to_linux(ip);
+ 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
