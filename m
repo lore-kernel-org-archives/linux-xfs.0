@@ -1,112 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:6220 "EHLO
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:50414 "EHLO
         ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750925AbdHaWTz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 18:19:55 -0400
-Date: Fri, 1 Sep 2017 08:19:52 +1000
+        by vger.kernel.org with ESMTP id S1750952AbdIACGq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2017 22:06:46 -0400
+Date: Fri, 1 Sep 2017 12:06:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: remove experimental tag for reflinks
-Message-ID: <20170831221951.GR10621@dastard>
-References: <20170830145400.3681-1-hch@lst.de>
- <20170831064033.GF3775@magnolia>
+Subject: Re: [PATCH v2] xfs: add online uevent for mount operation
+Message-ID: <20170901020643.GY10621@dastard>
+References: <1504189030-18608-1-git-send-email-houtao1@huawei.com>
+ <20170831150334.GI3775@magnolia>
+ <20170831233416.GU10621@dastard>
+ <70654563-0abd-6786-ef64-a3df4ce5fa34@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170831064033.GF3775@magnolia>
+In-Reply-To: <70654563-0abd-6786-ef64-a3df4ce5fa34@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Hou Tao <houtao1@huawei.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Wed, Aug 30, 2017 at 11:40:33PM -0700, Darrick J. Wong wrote:
-> On Wed, Aug 30, 2017 at 04:54:00PM +0200, Christoph Hellwig wrote:
-> > But reject reflink + DAX file systems for now until the code to
-> > support reflinks on DAX is actually implemented.
+On Fri, Sep 01, 2017 at 09:26:08AM +0800, Hou Tao wrote:
+> Hi,
+> 
+> On 2017/9/1 7:34, Dave Chinner wrote:
+> >>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> >>> index 3a3812b4..6f8351c 100644
+> >>> --- a/fs/xfs/xfs_super.c
+> >>> +++ b/fs/xfs/xfs_super.c
+> >>> @@ -70,6 +70,11 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
+> >>>  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
+> >>>  #endif
+> >>>  
+> >>> +enum {
+> >>> +	XFS_UEVENT_ENV_CNT = 2,
+> >>
+> >> XFS_UEVENT_MAX_ENV_COUNT ?
 > > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/xfs_super.c | 8 +++-----
-> >  1 file changed, 3 insertions(+), 5 deletions(-)
+> > Why 2 when there's only one environment string passed?
+> Will fix them, I take the last NULL pointer into account, and
+> Yes, "XFS_UEVENT_MAX_ENV_COUNT" is a better name.
+> 
+> >>> +	XFS_UEVENT_UUID_LEN = UUID_STRING_LEN + 6,
 > > 
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 38aaacdbb8b3..92521032468e 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1634,7 +1634,9 @@ xfs_fs_fill_super(
-> >  		}
-> >  		if (xfs_sb_version_hasreflink(&mp->m_sb))
-> >  			xfs_alert(mp,
-> > -		"DAX and reflink have not been tested together!");
-> > +		"DAX and reflink can not be used together!");
-> > +			error = -EINVAL;
-> > +			goto out_filestream_unmount;
+> > And the magic number needs a comment.
+> > 
+> > Actually, I think it needs more than this - it's tightly bound to
+> > the implementation in xfs_fs_uevent(), so this enum should be
+> > defined there, not as a global all this distance away.....
+> OK, I will move it into xfs_fs_uevent().
 > 
-> /This/ hunk seems fine, but...
+> >>> +};
+> >>> +
+> >>>  /*
+> >>>   * Table driven mount option parser.
+> >>>   */
+> >>> @@ -1530,6 +1535,28 @@ xfs_destroy_percpu_counters(
+> >>>  	percpu_counter_destroy(&mp->m_fdblocks);
+> >>>  }
+> >>>  
+> >>> +static void
+> >>> +xfs_fs_uevent(
+> >>> +	struct xfs_mount	*mp,
+> >>> +	enum kobject_action	action)
+> >>> +{
+> >>> +	int err;
+> >>> +	char *envp[XFS_UEVENT_ENV_CNT];
+> >>> +	int i = 0;
+> > 
+> > Indent the variables to match the function declaration.
+> I will fix them. I didn't event notice the indentations of these variables before.
 > 
-> >  	}
-> >  
-> >  	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-> > @@ -1648,10 +1650,6 @@ xfs_fs_fill_super(
-> >  	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
-> >  	}
-> >  
-> > -	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> > -		xfs_alert(mp,
-> > -	"EXPERIMENTAL reflink feature enabled. Use at your own risk!");
-> > -
-> 
-> ...I frankly would rather wait until we land and stabilize the incore
-> extent rework, because I'd rather not have the reflink story be: 1) we
-> declare reflink stable in 4.14; 2) immediately people start loading up
-> XFSes with sparse VM images that blow up on high order allocations and
-> then 3) we get a whole lot of complaints about it.  Then in 4.15 we 4)
-> land the incore extent map only now we're dragging those same users
-> through the mud while /that/ stabilizes, with the result 5) that
-> everyone thinks we've gone off the deep end and doesn't trust us
-> anymore.
+> >>> +
+> >>> +	if (!uuid_is_null(&mp->m_super->s_uuid)) {
+> > 
+> > This will never be false. XFS filesystems should always have a valid
+> > UUID.
+> A null uuid is possible if we use "nouuid" to mount a XFS filesystem, so
+> the check is still needed.
 
-Which is a lose-lose proposition. IOWs, to be avoided at all costs.
+The "nouuid" mount option means "don't check if there is already a
+filesystem ialready mounted with the same uuid as the one we are
+mounting". It does not mean the filesystem does not have a UUID.
 
-> I wish that didn't also mean waiting another 6 months for something that
-> none of us /developers/ have seen in practice,
+Indeed, in xfs_uuid_mount():
 
-Oh, I've seen it plenty of times in practice. Restoring large
-metadumps with (tens of) millions of tiny extents is the common
-cause for me.
+xfs_uuid_mount(
+        struct xfs_mount        *mp)
+{
+        uuid_t                  *uuid = &mp->m_sb.sb_uuid;
+        int                     hole, i;
 
-> especially since the
-> enterprise distros will have plenty of time to backport all this stuff
-> before their next big releases if it /does/ become a problem.  It's fine
-> enough for me (and Christoph's customers, evidently) but is that enough?
+        /* Publish UUID in struct super_block */
+        uuid_copy(&mp->m_super->s_uuid, uuid);
 
-FYI, this has been a problem on RHEL for a long time. It's a long
-standing, well known problem and that's one of the reasons why
-it's at the top of my list to fix right now.
+        if (mp->m_flags & XFS_MOUNT_NOUUID)
+                return 0;
 
-> <shrug> Not sure what to do about my own fear factor. :)  Anyone want to
-> offer further comments?  A quick git history trip says sparse inodes
-> took about 13 months to go from initial commit to EXPERIMENTAL removed?
-
-I always aimed to remove the experimental tag 4 kernel releases
-after the initial merge, assuming testing and required functionality
-was all there and complete early on in the stabilisation process.
-Generally I had a set of criteria that needed to be fulfilled before
-I'd remove the tag, and ticked them off as fixes were merged.
-
-e.g.  CRCs were introduced in 3.10, the experimental tag was removed
-in 3.15, so 5 releases in that case. We didn't get CRCs working
-sanely until 3.11 and there was still a lot of userspace stuff that
-lagged (and having a fully working userspace was a criteria for
-removing experimental from the kernel code), so it took longer to
-stabilise than something smaller like sparse inodes.
-
-Fixing the extent list memory allocation problem was always
-something on my list of "need to fix before reflink can be deployed
-in anger", so I'd much prefer that we are conservative in removing
-the experimental tag. It doesn't hurt anyone if we keep it on until
-we get the extent tree rework merged, and it's better to err on the
-side of keeping it too long than not long enough.
+We copy the filesystem's uuid into the VFS superblock before we
+check the nouuid mount option flag. Hence a mounted XFS filesystem
+always has a valid UUID in the superblock s_uuid field.
 
 Cheers,
 
