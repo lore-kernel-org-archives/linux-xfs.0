@@ -1,161 +1,215 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39324 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46196 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751811AbdIALQW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Sep 2017 07:16:22 -0400
-Date: Fri, 1 Sep 2017 07:16:18 -0400
+        id S1751546AbdIALdO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Sep 2017 07:33:14 -0400
+Date: Fri, 1 Sep 2017 07:33:07 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: remove experimental tag for reflinks
-Message-ID: <20170901111618.GD28241@bfoster.bfoster>
-References: <20170830145400.3681-1-hch@lst.de>
- <20170831064033.GF3775@magnolia>
- <20170831124321.GA21939@bfoster.bfoster>
- <20170831133019.GA5468@lst.de>
- <20170831153148.GJ3775@magnolia>
- <20170831155923.GG21939@bfoster.bfoster>
- <20170831200936.GO3775@magnolia>
- <20170831203613.GB25053@bfoster.bfoster>
- <20170831225839.GS10621@dastard>
+Subject: Re: corrupt xfs log
+Message-ID: <20170901113306.GE28241@bfoster.bfoster>
+References: <CAHeWggOTqbQUQB7xz1wUjejHU5W14w3wcN-oV-+KJxxyEEQ3TQ@mail.gmail.com>
+ <20170818120224.GA27778@redhat.com>
+ <20170818121725.GA1665@bfoster.bfoster>
+ <CAHeWggM-dGJHRNyyXZrW5aX7v3r-b0t1LTbrbN-OSTLdLzuPhg@mail.gmail.com>
+ <20170821155152.GA56278@bfoster.bfoster>
+ <CAHeWggPzVSXXGK+35jEf9FD2gM-QcL_3iebaKzjOK7DbRmWDiA@mail.gmail.com>
+ <20170830145808.GB16641@bfoster.bfoster>
+ <CAHeWggPh-1E8E6f+feZipdM_fQAejnv09r+bLwo6FLGC1pjAeg@mail.gmail.com>
+ <20170831102008.GA21508@bfoster.bfoster>
+ <CAHeWggM2-Pv28Fg09iL43n0msDfoni=Qeza7n0XL6YzPYQ3E3g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170831225839.GS10621@dastard>
+In-Reply-To: <CAHeWggM2-Pv28Fg09iL43n0msDfoni=Qeza7n0XL6YzPYQ3E3g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+To: Ingard - <ingard1@gmail.com>
+Cc: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
 
-On Fri, Sep 01, 2017 at 08:58:39AM +1000, Dave Chinner wrote:
-> On Thu, Aug 31, 2017 at 04:36:14PM -0400, Brian Foster wrote:
-> > On Thu, Aug 31, 2017 at 01:09:36PM -0700, Darrick J. Wong wrote:
-> > > On Thu, Aug 31, 2017 at 11:59:24AM -0400, Brian Foster wrote:
-> > > > On Thu, Aug 31, 2017 at 08:31:48AM -0700, Darrick J. Wong wrote:
-> > > > > On Thu, Aug 31, 2017 at 03:30:19PM +0200, Christoph Hellwig wrote:
-> > > > > > On Thu, Aug 31, 2017 at 08:43:21AM -0400, Brian Foster wrote:
-> > > > > > > FWIW, I don't really have a strong opinion. To me, removing experimental
-> > > > > > > means we feel the code has stabilized long enough in principle, there
-> > > > > > > are no significant problems (i.e., corruption/crash vectors) that we are
-> > > > > > > aware of and the feature is complete (full userspace tool support, etc).
-> > > > > > > The in-core extent list thing seems like more of a general problem to me
-> > > > > > 
-> > > > > > Agreed so far.
-> > > > > 
-> > > > > <nod> Dave?  Eric?  Any perspective you'd like to offer? :)
-> > > > > 
-> > > > > > > That aside, shouldn't we consider the rmapbt experimental tag first, or
-> > > > > > > at least at the same time? It's been around for slightly longer.
-> > > > > > 
-> > > > > > I've not done much testing on that or have experience with it in general,
-> > > > > > nor do I have a customer with a big QA team beating it hard, so I can't
-> > > > > > really comment on that one.
-> > > > > 
-> > > > > rmapbt will remain EXPERIMENTAL because I still have more patches to
-> > > > > send to finish the feature for realtime devices.  Speaking of which,
-> > > > > it's now been 53 weeks since the last dump of that, so I'll go do that
-> > > > > now. :P
-> > > > > 
-> > > > > FWIW I /also/ run rmapbt everywhere and haven't had any trouble with it
-> > > > > since adding the per-AG reservations.
-> > > > > 
-> > > > 
-> > > > My question then is do we want to encourage users to run reflink without
-> > > > rmapbt because of the latter being experimental, and only so because of
-> > > > a lack of realtime support? *shrug* Maybe it doesn't really matter.
-> > > 
-> > > Probably not, I think realtime users are fairly infrequent and
-> > > especially so on v5.  The only reasons I can think of to extend our new
-> > > features to rt are (a) to avoid screwing over the existing usecases and
-> > > (b) I guess you could build a hybrid xfs between an SSD and a SMR drive
-> > > wherein we always CoW from one end of the disk to the other.  (That's
-> > > crazy, but hey.)
+On Fri, Sep 01, 2017 at 08:48:03AM +0200, Ingard - wrote:
+> On Thu, Aug 31, 2017 at 12:20 PM, Brian Foster <bfoster@redhat.com> wrote:
+> > On Thu, Aug 31, 2017 at 09:27:52AM +0200, Ingard - wrote:
+> >> On Wed, Aug 30, 2017 at 4:58 PM, Brian Foster <bfoster@redhat.com> wrote:
+> >> > On Mon, Aug 21, 2017 at 10:24:32PM +0200, Ingard - wrote:
+> >> >> On Mon, Aug 21, 2017 at 5:51 PM, Brian Foster <bfoster@redhat.com> wrote:
+> >> >> > On Mon, Aug 21, 2017 at 02:08:43PM +0200, Ingard - wrote:
+> >> >> >> On Fri, Aug 18, 2017 at 2:17 PM, Brian Foster <bfoster@redhat.com> wrote:
+> >> >> >> > On Fri, Aug 18, 2017 at 07:02:24AM -0500, Bill O'Donnell wrote:
+> >> >> >> >> On Fri, Aug 18, 2017 at 01:56:31PM +0200, Ingard - wrote:
+> >> >> >> >> > After a server crash we've encountered a corrupt xfs filesystem. When
+> >> >> >> >> > trying to mount said filesystem normally the system hangs.
+> >> >> >> >> > This was initially on a ubuntu trusty server with 3.13 kernel with
+> >> >> >> >> > xfsprogs 3.1.9
+> >> >> >> >> >
+> >> >> >> >> > We've installed a newer kernel (4.4.0-92) and compiled xfsprogs v
+> >> >> >> >> > 4.12.0 from source. We're still not able to mount the filesystem (and
+> >> >> >> >> > replay the log) normally.
+> >> >> >> >> > We are able to mount it -o ro,norecovery, but we're reluctant to do
+> >> >> >> >> > xfs_repair -L without trying everything we can first. The filesystem
+> >> >> >> >> > is browsable albeit a few paths which gives an error : "Structure
+> >> >> >> >> > needs cleaning"
+> >> >> >> >> >
+> >> >> >> >> > Does anyone have any advice as to how we might recover/repair the
+> >> >> >> >> > corrupt log so we can replay it? Or is xfs_repair -L the only way
+> >> >> >> >> > forward?
+> >> >> >> >>
+> >> >> >> >> Can you try xfs_repair -n (only scans the fs and reports what repairs
+> >> >> >> >> would be made)?
+> >> >> >> >>
+> >> >> >> >
+> >> >> >> > An xfs_metadump of the fs might be useful as well. Then we can see if we
+> >> >> >> > can reproduce the mount hang on latest kernels and if so, potentially
+> >> >> >> > try and root cause it.
+> >> >> >> >
+> >> >> >> > Brian
+> >> >> >>
+> >> >> >> Here is a link for the metadump :
+> >> >> >> https://www.jottacloud.com/p/ingardme/95ec2e45ba80431d962345981d38bdff
+> >> >> >
+> >> >> > This points to a 29GB image file, apparently uncompressed..? Could you
+> >> >> > upload a compressed file? Thanks.
+> >> >>
+> >> >> Hi. Sorry about that. Didnt realize the output would be compressable.
+> >> >> Here is a link to the compressed tgz (6G)
+> >> >> https://www.jottacloud.com/p/ingardme/cac6939649e14b98b928647f5222a2ae
+> >> >>
+> >> >
+> >> > I finally played around with this image a bit. Note that mount does not
+> >> > hang on latest kernels. Instead, log recovery emits a torn write message
+> >> > due to a bad crc at the head of the log and then ultimately fails due to
+> >> > a bad crc at the tail of the log. I ran a couple experiments to skip the
+> >> > bad crc records and/or to completely ignore all bad crc's and both still
+> >> > either fail to mount (due to other corruption) or continue to show
+> >> > corruption in the recovered fs.
+> >> >
+> >> > It's not clear to me what would have caused this corruption or log
+> >> > state. Have you encountered any corruption before? If not, is this kind
+> >> > of crash or unclean shutdown of the server an uncommon event?
+> >> We failed to notice the log messages of corrupt fs at first. After a
+> >> few days of these messages the filesystem got shut down due to
+> >> excessive? corruption.
+> >> At that point we tried to reboot normally, but ended up with having to
+> >> do a hard reset of the server.
+> >> It is not clear to us either why the corruption happened in the first
+> >> place either. The underlying raid has been in optimal state the whole
+> >> time
+> >>
+> >
+> > Ok, so corruption was the first problem. If the filesystem shutdown with
+> > something other than a log I/O error, chances are the log was flushed at
+> > that time. It is strange that log records end up corrupted, though not
+> > terribly out of the ordinary for the mount to ultimately fail if
+> > recovery stumbled over existing on-disk corruption, for instance.
+> > An xfs_repair was probably a foregone conclusion given the corruption
+> > started on disk, anyways.
 > 
-> Or use RT files as VM image files with deterministic, low overhead
-> allocation characteristics. And for that use case, I^Hwe want rmap
-> and reflink on the realtime device so we can scrub and
-> snapshot/send/recv those image files......
-> 
-> > Yeah, the only use cases I've really heard wrt to realtime any time in
-> > the recent past has been these kind of future facing experiments as
-> > opposed to traditional use. Not to say there aren't users out there, but
-> 
-> Let's not forget that there are tens of millions of existing
-> XFS RT filesystems out there in smart TVs and DVRs.
-> 
-
-Oh, I'm not suggesting there are zero users or that we should never port
-over the associated features to RT. I'm just suggesting that if we were
-going to untag reflink as experimental, it may not be worth holding back
-doing the same for rmapbt if lack of RT support is the only concern.
-
-I do question how many of these existing RT users may be on newer
-features like v5 filesystems (if supported?), or kernels that even
-support v5 filesystems for that matter. ;)
-
-> > I also can't recall seeing any bug reports or anything of that nature
-> > either any time recently. Maybe it's just perfect code. ;)
-> 
-> No, just carefully constrained applications and a lot of QA.
-> 
-
-I'd hope we have at least the same amount of QA for !RT releases. (I
-know from experience that the margins on many of those kinds of consumer
-devices don't exactly facilitate the level of QE we typically see at the
-enterprise level). If anything, I'd guess that whatever historical sense
-of reliability this feature offers for things like embedded environments
-stems more from using older kernels and code that basically never
-changes than anything else. The one time I tried using RT way back when,
-it fell on its face fairly hard and fairly quickly. Granted that is
-anecdotal and I don't recall the specifics anyways. Maybe its been fixed
-up since then.
-
-> > I think Dave has thought about the SMR+RT thing in the past.
-> 
-> Yes, and I wrote a document describing it for the device vendors
-> that were screaming for us to do something to be able to go away and
-> implement.....  <crickets>
-> 
-> Regardless, IIRC, there have been people using RT devices with SMR
-> drives for some years now, mainly because the RT device could
-> guarantee zone aligned and sized allocations for sequential write
-> applications like video recording....
+> Out of curiosity, how long did the xfs_mdrestore command run ? I'm
+> pushing 20ish hours now and noticed the following in kern.log :
+> 2017-09-01T08:47:23.414139+02:00 dn-238 kernel: [1278740.983304] XFS:
+> xfs_mdrestore(5176) possible memory allocation deadlock size 37136 in
+> kmem_alloc (mode:0x2400240)
 > 
 
-Yep, I recall that discussion.
+Heh. It certainly wasn't quick since it had to restore ~30GB or so of
+metadata, but it didn't take that long. If I had to guess, I'd say it
+restored within an hour.
 
-> > > > If realtime is the only barrier, ISTM we could remove the experimental
-> > > > rmapbt status and just disable rmapbt+rt for now. Then re-enable
-> > > > EXPERIMENTAL just for rmapbt+rt when that code goes in (which seems like
-> > > > the most likely end result to me anyways).
-> > > 
-> > > It's already disabled.  I suppose it's not /that/ big of a deal if old
-> > > kernels reject certain feature combinations...
-> 
-> Just add an incompat bit for rtrmapbt and rtreflink when they come
-> along, and everything will be fine :P
-> 
-
-That sounds quite reasonable to me.
+It seems like you're running into the in-core extent list problem, which
+causes pain for highly sparse or fragmented files because we store the
+entire extent list in memory. An fiemap of the restored image I have
+lying around shows over 1.5m extents. :/ You may need a box with more
+RAM (I had 32GB) or otherwise find another large enough block device to
+use the metadump. :/ If you had to bypass that step, you could at least
+run 'xfs_repair -n' on the original fs to see whether repair runs to
+completion in your environment.
 
 Brian
 
-> > > ...by the way, we can't add a rt device to an already-mounted
-> > > filesystem, right?
-> > 
-> > I thought it was a mkfs time thing, but I could be mistaken...
+> ingard
 > 
-> It is at the moment, but there's nothing that prevents us from
-> adding it dynamically if we wanted (same as journal resizing). e.g.
-> via a remount to specify and open the rt device and growfs to resize
-> it from zero to device size and allocate and initialise the bitmap
-> and summary inodes.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> >
+> > Brian
+> >
+> >> >
+> >> > That aside, I think the best course of action is to run 'xfs_repair -L'
+> >> > on the fs. I ran a v4.12 version against the metadump image and it
+> >> > successfully repaired the fs. I've attached the repair output for
+> >> > reference, but I would recommend to first restore your metadump to a
+> >> > temporary location, attempt to repair that and examine the results
+> >> > before repairing the original fs. Note that the metadump will not have
+> >> > any file content, but will represent which files might be cleared, moved
+> >> > to lost+found, etc.
+> >> Ok. Thanks for looking into it. We'll proceed with the suggested
+> >> course of action.
+> >>
+> >> ingard
+> >> >
+> >> > Brian
+> >> >
+> >> >> >
+> >> >> > Brian
+> >> >> >
+> >> >> >> And the repair -n output :
+> >> >> >> https://www.jottacloud.com/p/ingardme/0205c6ca6f7e495ebcda5f255b96f63d
+> >> >> >>
+> >> >> >> kind regards
+> >> >> >> ingard
+> >> >> >>
+> >> >> >> >
+> >> >> >> >> Thanks-
+> >> >> >> >> Bill
+> >> >> >> >>
+> >> >> >> >>
+> >> >> >> >> >
+> >> >> >> >> >
+> >> >> >> >> > Excerpt from kern.log:
+> >> >> >> >> > 2017-08-17T13:40:41.122121+02:00 dn-238 kernel: [  294.300347] XFS
+> >> >> >> >> > (sdd1): Mounting V4 filesystem in no-recovery mode. Filesystem will be
+> >> >> >> >> > inconsistent.
+> >> >> >> >> >
+> >> >> >> >> > 2017-08-17T17:04:54.794194+02:00 dn-238 kernel: [12548.400260] XFS
+> >> >> >> >> > (sdd1): Metadata corruption detected at xfs_inode_buf_verify+0x6f/0xd0
+> >> >> >> >> > [xfs], xfs_inode block 0x81c9c210
+> >> >> >> >> > 2017-08-17T17:04:54.794216+02:00 dn-238 kernel: [12548.400342] XFS
+> >> >> >> >> > (sdd1): Unmount and run xfs_repair
+> >> >> >> >> > 2017-08-17T17:04:54.794218+02:00 dn-238 kernel: [12548.400374] XFS
+> >> >> >> >> > (sdd1): First 64 bytes of corrupted metadata buffer:
+> >> >> >> >> > 2017-08-17T17:04:54.794220+02:00 dn-238 kernel: [12548.400418]
+> >> >> >> >> > ffff880171fff000: 3f 1a 33 54 5b 55 85 0b 7c f5 c6 d5 cf 51 47 41
+> >> >> >> >> > ?.3T[U..|....QGA
+> >> >> >> >> > 2017-08-17T17:04:54.794222+02:00 dn-238 kernel: [12548.400473]
+> >> >> >> >> > ffff880171fff010: 97 ba ba 03 5c e4 02 7a e6 bc fb 5d f1 72 db c1
+> >> >> >> >> > ....\..z...].r..
+> >> >> >> >> > 2017-08-17T17:04:54.794223+02:00 dn-238 kernel: [12548.400527]
+> >> >> >> >> > ffff880171fff020: c8 ad 3a 76 c7 e4 20 92 88 a2 35 0c 1f 36 cf b5
+> >> >> >> >> > ..:v.. ...5..6..
+> >> >> >> >> > 2017-08-17T17:04:54.794226+02:00 dn-238 kernel: [12548.400581]
+> >> >> >> >> > ffff880171fff030: 8a bc 42 75 86 50 a0 a2 be 2c 2d 99 96 2d e1 ee
+> >> >> >> >> > ..Bu.P...,-..-..
+> >> >> >> >> >
+> >> >> >> >> > kind regards
+> >> >> >> >> > ingard
+> >> >> >> >> > --
+> >> >> >> >> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> >> >> >> > the body of a message to majordomo@vger.kernel.org
+> >> >> >> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >> >> >> >> --
+> >> >> >> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> >> >> >> the body of a message to majordomo@vger.kernel.org
+> >> >> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >> >> >> --
+> >> >> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> >> >> the body of a message to majordomo@vger.kernel.org
+> >> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >> >> --
+> >> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> >> the body of a message to majordomo@vger.kernel.org
+> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
