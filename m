@@ -1,59 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25545 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752213AbdIATk5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 15:40:57 -0400
-Date: Fri, 1 Sep 2017 12:40:24 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: don't set v3 xflags for v2 inodes
-Message-ID: <20170901194024.GI3775@magnolia>
-References: <20170830155517.GI4757@magnolia>
- <20170830163825.GQ4757@magnolia>
- <20170831131723.GD19544@infradead.org>
- <20170831133420.GB21939@bfoster.bfoster>
- <20170831140932.GB26555@infradead.org>
- <20170831195729.GM3775@magnolia>
- <20170901072149.GA7443@infradead.org>
- <20170901175223.GH3775@magnolia>
- <20170901192958.GA30923@infradead.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:60286 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752451AbdIATsD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 15:48:03 -0400
+Date: Fri, 1 Sep 2017 12:48:03 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3] xfs: fix compiler warnings
+Message-ID: <20170901194803.GA3615@infradead.org>
+References: <20170901171327.GG3775@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170901192958.GA30923@infradead.org>
+In-Reply-To: <20170901171327.GG3775@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
 
-On Fri, Sep 01, 2017 at 12:29:58PM -0700, Christoph Hellwig wrote:
-> On Fri, Sep 01, 2017 at 10:52:23AM -0700, Darrick J. Wong wrote:
-> > >  {
-> > > -	unsigned int		di_flags;
-> > > -	uint64_t		di_flags2;
-> > > -
-> > >  	/* can't set PREALLOC this way, just preserve it */
-> > > -	di_flags = (ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
-> > > +	unsigned int		di_flags =
-> > > +		(ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
-> > 
-> > ip->i_d.di_flags is uint16_t, so di_flags ought to match, right?
+On Fri, Sep 01, 2017 at 10:13:27AM -0700, Darrick J. Wong wrote:
+> Fix up all the compiler warnings that have crept in.
 > 
-> The existing code uses unsigned int as seen above.  But yes, it
-> could be fixed to be a uint16_t.
-> 
-> > Otherwise, I guess this looks ok, want to send it as a real patch?
-> 
-> Sure.  Doing some quick QA runs and it will be out.
-> 
-> Note that I'll assume it'll be for a tree without the previous
-> patch, unlike current for-next..
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v3: fix everything that comes up with a W=1 build
+> v2: get more aggressive with the refactoring variables out
 
-Yeah, I'll rebase that whole mess...
+Looks ok (ok because I don't like the ifdef mess, but lets fix the
+warnings for now..)
 
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Christoph Hellwig <hch@lst.de>
