@@ -1,88 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:51286 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751263AbdISDwk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2017 23:52:40 -0400
-Received: from pps.filterd (m0044010.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8J3oBeQ019987
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2017 20:52:39 -0700
-Received: from mail.thefacebook.com ([199.201.64.23])
-        by mx0a-00082601.pphosted.com with ESMTP id 2d2ud202md-1
-        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2017 20:52:39 -0700
-From: Richard Wareing <rwareing@fb.com>
-Subject: [PATCH v4 1/3] xfs: Show realtime device stats on statfs calls if inherit flag set
-Date: Mon, 18 Sep 2017 20:52:36 -0700
-Message-ID: <20170919035238.3976871-2-rwareing@fb.com>
-In-Reply-To: <20170919035238.3976871-1-rwareing@fb.com>
-References: <20170919035238.3976871-1-rwareing@fb.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:32289 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752197AbdIARN6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 13:13:58 -0400
+Date: Fri, 1 Sep 2017 10:13:27 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v3] xfs: fix compiler warnings
+Message-ID: <20170901171327.GG3775@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
 
-- Reports realtime device free blocks in statfs calls if inheritance
-  bit is set on the inode of directory.  This is a bit more intuitive,
-  especially for use-cases which are using a much larger device for
-  the realtime device.
-- Add XFS_IS_REALTIME_MOUNT option to gate based on the existence of a
-  realtime device on the mount, similar to the XFS_IS_REALTIME_INODE
-  option.
+Fix up all the compiler warnings that have crept in.
 
-Signed-off-by: Richard Wareing <rwareing@fb.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-Changes since v3:
-* Fixed accounting bug, we are not required to substract m_alloc_set_aside
-  as this is a data device only requirement.
-* Added XFS_IS_REALTIME_MOUNT macro based on learnings from CVE-2017-14340,
-  now provides similar gating on the mount as XFS_IS_REALTIME_INODE does
-  for the inode.
+v3: fix everything that comes up with a W=1 build
+v2: get more aggressive with the refactoring variables out
+---
+ fs/xfs/libxfs/xfs_bmap.c       |    2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c |    9 +++------
+ fs/xfs/xfs_buf_item.c          |    2 ++
+ fs/xfs/xfs_iops.c              |    2 +-
+ fs/xfs/xfs_log_recover.c       |    4 ++++
+ 5 files changed, 11 insertions(+), 8 deletions(-)
 
-Changes since v2:
-* Style updated per Christoph Hellwig's comment
-* Fixed bug: statp->f_bavail = statp->f_bfree
-
- fs/xfs/xfs_linux.h | 2 ++
- fs/xfs/xfs_super.c | 8 ++++++++
- 2 files changed, 10 insertions(+)
-
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 044fb0e..fe46e71 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -280,8 +280,10 @@ static inline __uint64_t howmany_64(__uint64_t x, __uint32_t y)
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 9558f5e..459f4b4f0 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -579,7 +579,7 @@ xfs_bmap_validate_ret(
  
- #ifdef CONFIG_XFS_RT
- #define XFS_IS_REALTIME_INODE(ip) ((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME)
-+#define XFS_IS_REALTIME_MOUNT(mp) ((mp)->m_rtdev_targp ? 1 : 0)
  #else
- #define XFS_IS_REALTIME_INODE(ip) (0)
-+#define XFS_IS_REALTIME_MOUNT(mp) (0)
- #endif
+ #define xfs_bmap_check_leaf_extents(cur, ip, whichfork)		do { } while (0)
+-#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)
++#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)	do { } while (0)
+ #endif /* DEBUG */
  
- #endif /* __XFS_LINUX__ */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 455a575..6d33a5e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1136,6 +1136,14 @@ xfs_fs_statfs(
- 	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
- 			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
- 		xfs_qm_statvfs(ip, statp);
-+
-+	if (XFS_IS_REALTIME_MOUNT(mp) &&
-+	    (ip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)) {
-+		statp->f_blocks = sbp->sb_rblocks;
-+		statp->f_bavail = statp->f_bfree =
-+			sbp->sb_frextents * sbp->sb_rextsize;
-+	}
-+
- 	return 0;
- }
+ /*
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index fb310d0..31840ca 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -1499,14 +1499,11 @@ xfs_iext_realloc_indirect(
+ 	xfs_ifork_t	*ifp,		/* inode fork pointer */
+ 	int		new_size)	/* new indirection array size */
+ {
+-	int		nlists;		/* number of irec's (ex lists) */
+-	int		size;		/* current indirection array size */
+-
+ 	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-	size = nlists * sizeof(xfs_ext_irec_t);
+ 	ASSERT(ifp->if_real_bytes);
+-	ASSERT((new_size >= 0) && (new_size != size));
++	ASSERT((new_size >= 0) &&
++	       (new_size != ((ifp->if_real_bytes / XFS_IEXT_BUFSZ) *
++			     sizeof(xfs_ext_irec_t))));
+ 	if (new_size == 0) {
+ 		xfs_iext_destroy(ifp);
+ 	} else {
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index ef2c137..e0a0af0 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -570,7 +570,9 @@ xfs_buf_item_unlock(
+ 	bool			aborted = !!(lip->li_flags & XFS_LI_ABORTED);
+ 	bool			hold = !!(bip->bli_flags & XFS_BLI_HOLD);
+ 	bool			dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
++#if defined(DEBUG) || defined(XFS_WARN)
+ 	bool			ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
++#endif
  
--- 
-2.9.5
-
+ 	/* Clear the buffer's association with this transaction. */
+ 	bp->b_transp = NULL;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 469c9fa..17081c7 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -817,7 +817,7 @@ xfs_vn_setattr_nonsize(
+  * Caution: The caller of this function is responsible for calling
+  * setattr_prepare() or otherwise verifying the change is fine.
+  */
+-int
++STATIC int
+ xfs_setattr_size(
+ 	struct xfs_inode	*ip,
+ 	struct iattr		*iattr)
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index a362399..ee34899 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4827,12 +4827,16 @@ xlog_recover_process_intents(
+ 	int			error = 0;
+ 	struct xfs_ail_cursor	cur;
+ 	struct xfs_ail		*ailp;
++#if defined(DEBUG) || defined(XFS_WARN)
+ 	xfs_lsn_t		last_lsn;
++#endif
+ 
+ 	ailp = log->l_ailp;
+ 	spin_lock(&ailp->xa_lock);
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
++#if defined(DEBUG) || defined(XFS_WARN)
+ 	last_lsn = xlog_assign_lsn(log->l_curr_cycle, log->l_curr_block);
++#endif
+ 	while (lip != NULL) {
+ 		/*
+ 		 * We're done when we see something other than an intent.
