@@ -1,130 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:5506 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751367AbdIAFLn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 01:11:43 -0400
-Subject: Re: [PATCH v2] xfs: add online uevent for mount operation
-References: <1504189030-18608-1-git-send-email-houtao1@huawei.com>
- <20170831150334.GI3775@magnolia> <20170831233416.GU10621@dastard>
- <70654563-0abd-6786-ef64-a3df4ce5fa34@huawei.com>
- <20170901020643.GY10621@dastard>
-From: Hou Tao <houtao1@huawei.com>
-Message-ID: <4cc94844-e154-c002-04b8-9e006bad4750@huawei.com>
-Date: Fri, 1 Sep 2017 13:11:09 +0800
+Received: from userp1040.oracle.com ([156.151.31.81]:34378 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751968AbdIAQTt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 12:19:49 -0400
+Date: Fri, 1 Sep 2017 09:19:18 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2] xfs: fix compiler warnings
+Message-ID: <20170901161918.GC3775@magnolia>
+References: <20170831233833.GT3775@magnolia>
+ <20170901102622.GB28241@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20170901020643.GY10621@dastard>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170901102622.GB28241@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
 
-Hi Dave,
-
-On 2017/9/1 10:06, Dave Chinner wrote:
-> On Fri, Sep 01, 2017 at 09:26:08AM +0800, Hou Tao wrote:
->> Hi,
->>
->> On 2017/9/1 7:34, Dave Chinner wrote:
->>>>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
->>>>> index 3a3812b4..6f8351c 100644
->>>>> --- a/fs/xfs/xfs_super.c
->>>>> +++ b/fs/xfs/xfs_super.c
->>>>> @@ -70,6 +70,11 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
->>>>>  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
->>>>>  #endif
->>>>>  
->>>>> +enum {
->>>>> +	XFS_UEVENT_ENV_CNT = 2,
->>>>
->>>> XFS_UEVENT_MAX_ENV_COUNT ?
->>>
->>> Why 2 when there's only one environment string passed?
->> Will fix them, I take the last NULL pointer into account, and
->> Yes, "XFS_UEVENT_MAX_ENV_COUNT" is a better name.
->>
->>>>> +	XFS_UEVENT_UUID_LEN = UUID_STRING_LEN + 6,
->>>
->>> And the magic number needs a comment.
->>>
->>> Actually, I think it needs more than this - it's tightly bound to
->>> the implementation in xfs_fs_uevent(), so this enum should be
->>> defined there, not as a global all this distance away.....
->> OK, I will move it into xfs_fs_uevent().
->>
->>>>> +};
->>>>> +
->>>>>  /*
->>>>>   * Table driven mount option parser.
->>>>>   */
->>>>> @@ -1530,6 +1535,28 @@ xfs_destroy_percpu_counters(
->>>>>  	percpu_counter_destroy(&mp->m_fdblocks);
->>>>>  }
->>>>>  
->>>>> +static void
->>>>> +xfs_fs_uevent(
->>>>> +	struct xfs_mount	*mp,
->>>>> +	enum kobject_action	action)
->>>>> +{
->>>>> +	int err;
->>>>> +	char *envp[XFS_UEVENT_ENV_CNT];
->>>>> +	int i = 0;
->>>
->>> Indent the variables to match the function declaration.
->> I will fix them. I didn't event notice the indentations of these variables before.
->>
->>>>> +
->>>>> +	if (!uuid_is_null(&mp->m_super->s_uuid)) {
->>>
->>> This will never be false. XFS filesystems should always have a valid
->>> UUID.
->> A null uuid is possible if we use "nouuid" to mount a XFS filesystem, so
->> the check is still needed.
+On Fri, Sep 01, 2017 at 06:26:23AM -0400, Brian Foster wrote:
+> On Thu, Aug 31, 2017 at 04:38:33PM -0700, Darrick J. Wong wrote:
+> > Fix up all the compiler warnings that have crept in.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_inode_fork.c |    9 +++------
+> >  fs/xfs/xfs_buf_item.c          |    2 ++
+> >  fs/xfs/xfs_log_recover.c       |    4 ++++
+> >  3 files changed, 9 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> > index fb310d0..31840ca 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> > @@ -1499,14 +1499,11 @@ xfs_iext_realloc_indirect(
+> >  	xfs_ifork_t	*ifp,		/* inode fork pointer */
+> >  	int		new_size)	/* new indirection array size */
+> >  {
+> > -	int		nlists;		/* number of irec's (ex lists) */
+> > -	int		size;		/* current indirection array size */
+> > -
+> >  	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+> > -	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+> > -	size = nlists * sizeof(xfs_ext_irec_t);
+> >  	ASSERT(ifp->if_real_bytes);
+> > -	ASSERT((new_size >= 0) && (new_size != size));
+> > +	ASSERT((new_size >= 0) &&
+> > +	       (new_size != ((ifp->if_real_bytes / XFS_IEXT_BUFSZ) *
+> > +			     sizeof(xfs_ext_irec_t))));
+> >  	if (new_size == 0) {
+> >  		xfs_iext_destroy(ifp);
+> >  	} else {
+> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> > index ef2c137..1a7814a 100644
+> > --- a/fs/xfs/xfs_buf_item.c
+> > +++ b/fs/xfs/xfs_buf_item.c
+> > @@ -570,7 +570,9 @@ xfs_buf_item_unlock(
+> >  	bool			aborted = !!(lip->li_flags & XFS_LI_ABORTED);
+> >  	bool			hold = !!(bip->bli_flags & XFS_BLI_HOLD);
+> >  	bool			dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
+> > +#ifdef DEBUG
+> >  	bool			ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
+> > +#endif
+> >  
 > 
-> The "nouuid" mount option means "don't check if there is already a
-> filesystem ialready mounted with the same uuid as the one we are
-> mounting". It does not mean the filesystem does not have a UUID.
+> This and the hunk below will break the CONFIG_XFS_WARN build.
+
+Oops, good catch.
+
+> Brian
 > 
-> Indeed, in xfs_uuid_mount():
-> 
-> xfs_uuid_mount(
->         struct xfs_mount        *mp)
-> {
->         uuid_t                  *uuid = &mp->m_sb.sb_uuid;
->         int                     hole, i;
-> 
->         /* Publish UUID in struct super_block */
->         uuid_copy(&mp->m_super->s_uuid, uuid);
-> 
->         if (mp->m_flags & XFS_MOUNT_NOUUID)
->                 return 0;
-> 
-> We copy the filesystem's uuid into the VFS superblock before we
-> check the nouuid mount option flag. Hence a mounted XFS filesystem
-> always has a valid UUID in the superblock s_uuid field.
-Maybe you miss the following "uuid_is_null(uuid)" check in xfs_uuid_mount() ?
+> >  	/* Clear the buffer's association with this transaction. */
+> >  	bp->b_transp = NULL;
+> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > index a362399..04a131c 100644
+> > --- a/fs/xfs/xfs_log_recover.c
+> > +++ b/fs/xfs/xfs_log_recover.c
+> > @@ -4827,12 +4827,16 @@ xlog_recover_process_intents(
+> >  	int			error = 0;
+> >  	struct xfs_ail_cursor	cur;
+> >  	struct xfs_ail		*ailp;
+> > +#ifdef DEBUG
+> >  	xfs_lsn_t		last_lsn;
+> > +#endif
+> >  
+> >  	ailp = log->l_ailp;
+> >  	spin_lock(&ailp->xa_lock);
+> >  	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+> > +#ifdef DEBUG
+> >  	last_lsn = xlog_assign_lsn(log->l_curr_cycle, log->l_curr_block);
+> > +#endif
 
-xfs_uuid_mount(
-    struct xfs_mount    *mp)
-{
+This one ought to be fine, because the ASSERT is itself protected by an
+'#ifdef DEBUG'.
 
-    if (mp->m_flags & XFS_MOUNT_NOUUID)
-        return 0;
+--D
 
-    if (uuid_is_null(uuid)) {
-        xfs_warn(mp, "Filesystem has null UUID - can't mount");
-        return -EINVAL;
-    }
-
-And we can clear the uuid of a XFS filesystem, and mount it with "nouuid" option successfully.
-$ xfs_admin -U nil /dev/vda
-$ mount -t xfs -o nouuid /dev/vda /tmp/vda
-
-So I still think the null check in xfs_fs_uevent is needed.
-
-Regards,
-
-Tao
-
+> >  	while (lip != NULL) {
+> >  		/*
+> >  		 * We're done when we see something other than an intent.
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
