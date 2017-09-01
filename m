@@ -1,431 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:39660 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751497AbdICHam (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 03:30:42 -0400
-Received: from [91.114.64.3] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1doPMf-0007Kn-Lw
-        for linux-xfs@vger.kernel.org; Sun, 03 Sep 2017 07:30:42 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/17] xfs: pass a struct xfs_bmbt_irec to xfs_bmbt_lookup_eq
-Date: Sun,  3 Sep 2017 09:29:53 +0200
-Message-Id: <20170903072956.3175-15-hch@lst.de>
-In-Reply-To: <20170903072956.3175-1-hch@lst.de>
-References: <20170903072956.3175-1-hch@lst.de>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:5506 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751367AbdIAFLn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 01:11:43 -0400
+Subject: Re: [PATCH v2] xfs: add online uevent for mount operation
+References: <1504189030-18608-1-git-send-email-houtao1@huawei.com>
+ <20170831150334.GI3775@magnolia> <20170831233416.GU10621@dastard>
+ <70654563-0abd-6786-ef64-a3df4ce5fa34@huawei.com>
+ <20170901020643.GY10621@dastard>
+From: Hou Tao <houtao1@huawei.com>
+Message-ID: <4cc94844-e154-c002-04b8-9e006bad4750@huawei.com>
+Date: Fri, 1 Sep 2017 13:11:09 +0800
+MIME-Version: 1.0
+In-Reply-To: <20170901020643.GY10621@dastard>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-Now that we've massaged the callers into the right form we can always
-pass the actual extent record instead of the individual fields.
+Hi Dave,
 
-As an additional benefit the btree cursor will now be prepoulated with
-the correct extent state instead of having to fix it up later.
+On 2017/9/1 10:06, Dave Chinner wrote:
+> On Fri, Sep 01, 2017 at 09:26:08AM +0800, Hou Tao wrote:
+>> Hi,
+>>
+>> On 2017/9/1 7:34, Dave Chinner wrote:
+>>>>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>>>>> index 3a3812b4..6f8351c 100644
+>>>>> --- a/fs/xfs/xfs_super.c
+>>>>> +++ b/fs/xfs/xfs_super.c
+>>>>> @@ -70,6 +70,11 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
+>>>>>  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
+>>>>>  #endif
+>>>>>  
+>>>>> +enum {
+>>>>> +	XFS_UEVENT_ENV_CNT = 2,
+>>>>
+>>>> XFS_UEVENT_MAX_ENV_COUNT ?
+>>>
+>>> Why 2 when there's only one environment string passed?
+>> Will fix them, I take the last NULL pointer into account, and
+>> Yes, "XFS_UEVENT_MAX_ENV_COUNT" is a better name.
+>>
+>>>>> +	XFS_UEVENT_UUID_LEN = UUID_STRING_LEN + 6,
+>>>
+>>> And the magic number needs a comment.
+>>>
+>>> Actually, I think it needs more than this - it's tightly bound to
+>>> the implementation in xfs_fs_uevent(), so this enum should be
+>>> defined there, not as a global all this distance away.....
+>> OK, I will move it into xfs_fs_uevent().
+>>
+>>>>> +};
+>>>>> +
+>>>>>  /*
+>>>>>   * Table driven mount option parser.
+>>>>>   */
+>>>>> @@ -1530,6 +1535,28 @@ xfs_destroy_percpu_counters(
+>>>>>  	percpu_counter_destroy(&mp->m_fdblocks);
+>>>>>  }
+>>>>>  
+>>>>> +static void
+>>>>> +xfs_fs_uevent(
+>>>>> +	struct xfs_mount	*mp,
+>>>>> +	enum kobject_action	action)
+>>>>> +{
+>>>>> +	int err;
+>>>>> +	char *envp[XFS_UEVENT_ENV_CNT];
+>>>>> +	int i = 0;
+>>>
+>>> Indent the variables to match the function declaration.
+>> I will fix them. I didn't event notice the indentations of these variables before.
+>>
+>>>>> +
+>>>>> +	if (!uuid_is_null(&mp->m_super->s_uuid)) {
+>>>
+>>> This will never be false. XFS filesystems should always have a valid
+>>> UUID.
+>> A null uuid is possible if we use "nouuid" to mount a XFS filesystem, so
+>> the check is still needed.
+> 
+> The "nouuid" mount option means "don't check if there is already a
+> filesystem ialready mounted with the same uuid as the one we are
+> mounting". It does not mean the filesystem does not have a UUID.
+> 
+> Indeed, in xfs_uuid_mount():
+> 
+> xfs_uuid_mount(
+>         struct xfs_mount        *mp)
+> {
+>         uuid_t                  *uuid = &mp->m_sb.sb_uuid;
+>         int                     hole, i;
+> 
+>         /* Publish UUID in struct super_block */
+>         uuid_copy(&mp->m_super->s_uuid, uuid);
+> 
+>         if (mp->m_flags & XFS_MOUNT_NOUUID)
+>                 return 0;
+> 
+> We copy the filesystem's uuid into the VFS superblock before we
+> check the nouuid mount option flag. Hence a mounted XFS filesystem
+> always has a valid UUID in the superblock s_uuid field.
+Maybe you miss the following "uuid_is_null(uuid)" check in xfs_uuid_mount() ?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 145 +++++++++++++----------------------------------
- 1 file changed, 39 insertions(+), 106 deletions(-)
+xfs_uuid_mount(
+    struct xfs_mount    *mp)
+{
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9d1e66c708f9..05c0cde3f415 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -113,14 +113,10 @@ xfs_bmap_compute_maxlevels(
- STATIC int				/* error */
- xfs_bmbt_lookup_eq(
- 	struct xfs_btree_cur	*cur,
--	xfs_fileoff_t		off,
--	xfs_fsblock_t		bno,
--	xfs_filblks_t		len,
-+	struct xfs_bmbt_irec	*irec,
- 	int			*stat)	/* success/failure */
- {
--	cur->bc_rec.b.br_startoff = off;
--	cur->bc_rec.b.br_startblock = bno;
--	cur->bc_rec.b.br_blockcount = len;
-+	cur->bc_rec.b = *irec;
- 	return xfs_btree_lookup(cur, XFS_LOOKUP_EQ, stat);
- }
- 
-@@ -1711,9 +1707,7 @@ xfs_bmap_add_extent_delay_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			error = xfs_bmbt_lookup_eq(bma->cur, RIGHT.br_startoff,
--					RIGHT.br_startblock,
--					RIGHT.br_blockcount, &i);
-+			error = xfs_bmbt_lookup_eq(bma->cur, &RIGHT, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -1749,9 +1743,7 @@ xfs_bmap_add_extent_delay_real(
- 			rval = XFS_ILOG_DEXT;
- 		else {
- 			rval = 0;
--			error = xfs_bmbt_lookup_eq(bma->cur, old.br_startoff,
--					old.br_startblock, old.br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(bma->cur, &old, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -1777,9 +1769,7 @@ xfs_bmap_add_extent_delay_real(
- 			rval = XFS_ILOG_DEXT;
- 		else {
- 			rval = 0;
--			error = xfs_bmbt_lookup_eq(bma->cur, RIGHT.br_startoff,
--					RIGHT.br_startblock,
--					RIGHT.br_blockcount, &i);
-+			error = xfs_bmbt_lookup_eq(bma->cur, &RIGHT, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -1806,13 +1796,10 @@ xfs_bmap_add_extent_delay_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			error = xfs_bmbt_lookup_eq(bma->cur, new->br_startoff,
--					new->br_startblock, new->br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(bma->cur, new, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
--			bma->cur->bc_rec.b.br_state = XFS_EXT_NORM;
- 			error = xfs_btree_insert(bma->cur, &i);
- 			if (error)
- 				goto done;
-@@ -1836,9 +1823,7 @@ xfs_bmap_add_extent_delay_real(
- 			rval = XFS_ILOG_DEXT;
- 		else {
- 			rval = 0;
--			error = xfs_bmbt_lookup_eq(bma->cur, old.br_startoff,
--					old.br_startblock, old.br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(bma->cur, &old, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -1872,13 +1857,10 @@ xfs_bmap_add_extent_delay_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			error = xfs_bmbt_lookup_eq(bma->cur, new->br_startoff,
--					new->br_startblock, new->br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(bma->cur, new, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
--			bma->cur->bc_rec.b.br_state = XFS_EXT_NORM;
- 			error = xfs_btree_insert(bma->cur, &i);
- 			if (error)
- 				goto done;
-@@ -1924,9 +1906,7 @@ xfs_bmap_add_extent_delay_real(
- 			rval = XFS_ILOG_DEXT;
- 		else {
- 			rval = 0;
--			error = xfs_bmbt_lookup_eq(bma->cur, RIGHT.br_startoff,
--					RIGHT.br_startblock,
--					RIGHT.br_blockcount, &i);
-+			error = xfs_bmbt_lookup_eq(bma->cur, &RIGHT, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -1959,13 +1939,10 @@ xfs_bmap_add_extent_delay_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			error = xfs_bmbt_lookup_eq(bma->cur, new->br_startoff,
--					new->br_startblock, new->br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(bma->cur, new, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
--			bma->cur->bc_rec.b.br_state = XFS_EXT_NORM;
- 			error = xfs_btree_insert(bma->cur, &i);
- 			if (error)
- 				goto done;
-@@ -2035,13 +2012,10 @@ xfs_bmap_add_extent_delay_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			error = xfs_bmbt_lookup_eq(bma->cur, new->br_startoff,
--					new->br_startblock, new->br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(bma->cur, new, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
--			bma->cur->bc_rec.b.br_state = XFS_EXT_NORM;
- 			error = xfs_btree_insert(bma->cur, &i);
- 			if (error)
- 				goto done;
-@@ -2273,9 +2247,8 @@ xfs_bmap_add_extent_unwritten_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			if ((error = xfs_bmbt_lookup_eq(cur, RIGHT.br_startoff,
--					RIGHT.br_startblock,
--					RIGHT.br_blockcount, &i)))
-+			error = xfs_bmbt_lookup_eq(cur, &RIGHT, &i);
-+			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_btree_delete(cur, &i)))
-@@ -2315,9 +2288,8 @@ xfs_bmap_add_extent_unwritten_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			if ((error = xfs_bmbt_lookup_eq(cur, PREV.br_startoff,
--					PREV.br_startblock, PREV.br_blockcount,
--					&i)))
-+			error = xfs_bmbt_lookup_eq(cur, &PREV, &i);
-+			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_btree_delete(cur, &i)))
-@@ -2350,9 +2322,8 @@ xfs_bmap_add_extent_unwritten_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			if ((error = xfs_bmbt_lookup_eq(cur, RIGHT.br_startoff,
--					RIGHT.br_startblock,
--					RIGHT.br_blockcount, &i)))
-+			error = xfs_bmbt_lookup_eq(cur, &RIGHT, &i);
-+			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_btree_delete(cur, &i)))
-@@ -2382,9 +2353,8 @@ xfs_bmap_add_extent_unwritten_real(
- 			rval = XFS_ILOG_DEXT;
- 		else {
- 			rval = 0;
--			if ((error = xfs_bmbt_lookup_eq(cur, new->br_startoff,
--					new->br_startblock, new->br_blockcount,
--					&i)))
-+			error = xfs_bmbt_lookup_eq(cur, new, &i);
-+			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(cur, &PREV);
-@@ -2417,9 +2387,7 @@ xfs_bmap_add_extent_unwritten_real(
- 			rval = XFS_ILOG_DEXT;
- 		else {
- 			rval = 0;
--			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
--					old.br_startblock, old.br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(cur, &old, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -2455,9 +2423,7 @@ xfs_bmap_add_extent_unwritten_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
--					old.br_startblock, old.br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(cur, &old, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -2495,9 +2461,7 @@ xfs_bmap_add_extent_unwritten_real(
- 			rval = XFS_ILOG_DEXT;
- 		else {
- 			rval = 0;
--			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
--					old.br_startblock, old.br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(cur, &old, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -2533,21 +2497,17 @@ xfs_bmap_add_extent_unwritten_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
--					old.br_startblock, old.br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(cur, &old, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(cur, &PREV);
- 			if (error)
- 				goto done;
--			if ((error = xfs_bmbt_lookup_eq(cur, new->br_startoff,
--					new->br_startblock, new->br_blockcount,
--					&i)))
-+			error = xfs_bmbt_lookup_eq(cur, new, &i);
-+			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
--			cur->bc_rec.b.br_state = new->br_state;
- 			if ((error = xfs_btree_insert(cur, &i)))
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -2582,9 +2542,7 @@ xfs_bmap_add_extent_unwritten_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
--					old.br_startblock, old.br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(cur, &old, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -2602,13 +2560,11 @@ xfs_bmap_add_extent_unwritten_real(
- 			 * we are about to insert as we can't trust it after
- 			 * the previous insert.
- 			 */
--			if ((error = xfs_bmbt_lookup_eq(cur, new->br_startoff,
--					new->br_startblock, new->br_blockcount,
--					&i)))
-+			error = xfs_bmbt_lookup_eq(cur, new, &i);
-+			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
- 			/* new middle extent - newext */
--			cur->bc_rec.b.br_state = new->br_state;
- 			if ((error = xfs_btree_insert(cur, &i)))
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -2917,9 +2873,7 @@ xfs_bmap_add_extent_hole_real(
- 			rval = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
- 		} else {
- 			rval = XFS_ILOG_CORE;
--			error = xfs_bmbt_lookup_eq(cur, right.br_startoff,
--					right.br_startblock, right.br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(cur, &right, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -2954,9 +2908,7 @@ xfs_bmap_add_extent_hole_real(
- 			rval = xfs_ilog_fext(whichfork);
- 		} else {
- 			rval = 0;
--			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
--					old.br_startblock, old.br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(cur, &old, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -2984,9 +2936,7 @@ xfs_bmap_add_extent_hole_real(
- 			rval = xfs_ilog_fext(whichfork);
- 		} else {
- 			rval = 0;
--			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
--					old.br_startblock, old.br_blockcount,
--					&i);
-+			error = xfs_bmbt_lookup_eq(cur, &old, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -3009,14 +2959,10 @@ xfs_bmap_add_extent_hole_real(
- 			rval = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
- 		} else {
- 			rval = XFS_ILOG_CORE;
--			error = xfs_bmbt_lookup_eq(cur,
--					new->br_startoff,
--					new->br_startblock,
--					new->br_blockcount, &i);
-+			error = xfs_bmbt_lookup_eq(cur, new, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
--			cur->bc_rec.b.br_state = new->br_state;
- 			error = xfs_btree_insert(cur, &i);
- 			if (error)
- 				goto done;
-@@ -5116,8 +5062,7 @@ xfs_bmap_del_extent_real(
- 
- 	del_endblock = del->br_startblock + del->br_blockcount;
- 	if (cur) {
--		error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
--				got.br_startblock, got.br_blockcount, &i);
-+		error = xfs_bmbt_lookup_eq(cur, &got, &i);
- 		if (error)
- 			goto done;
- 		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -5220,9 +5165,7 @@ xfs_bmap_del_extent_real(
- 				 * Reset the cursor, don't trust it after any
- 				 * insert operation.
- 				 */
--				error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
--						got.br_startblock,
--						got.br_blockcount, &i);
-+				error = xfs_bmbt_lookup_eq(cur, &got, &i);
- 				if (error)
- 					goto done;
- 				XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -5750,8 +5693,7 @@ xfs_bmse_merge(
- 	}
- 
- 	/* lookup and remove the extent to merge */
--	error = xfs_bmbt_lookup_eq(cur, got->br_startoff, got->br_startblock,
--				   got->br_blockcount, &i);
-+	error = xfs_bmbt_lookup_eq(cur, got, &i);
- 	if (error)
- 		return error;
- 	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
-@@ -5762,8 +5704,7 @@ xfs_bmse_merge(
- 	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
- 
- 	/* lookup and update size of the previous extent */
--	error = xfs_bmbt_lookup_eq(cur, left->br_startoff, left->br_startblock,
--				   left->br_blockcount, &i);
-+	error = xfs_bmbt_lookup_eq(cur, left, &i);
- 	if (error)
- 		return error;
- 	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
-@@ -5879,8 +5820,7 @@ xfs_bmse_shift_one(
- 	new.br_startoff = startoff;
- 
- 	if (cur) {
--		error = xfs_bmbt_lookup_eq(cur, got->br_startoff,
--				got->br_startblock, got->br_blockcount, &i);
-+		error = xfs_bmbt_lookup_eq(cur, got, &i);
- 		if (error)
- 			return error;
- 		XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
-@@ -6132,10 +6072,7 @@ xfs_bmap_split_extent_at(
- 		cur->bc_private.b.firstblock = *firstfsb;
- 		cur->bc_private.b.dfops = dfops;
- 		cur->bc_private.b.flags = 0;
--		error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
--				got.br_startblock,
--				got.br_blockcount,
--				&i);
-+		error = xfs_bmbt_lookup_eq(cur, &got, &i);
- 		if (error)
- 			goto del_cursor;
- 		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, del_cursor);
-@@ -6159,14 +6096,10 @@ xfs_bmap_split_extent_at(
- 			   XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
- 
- 	if (cur) {
--		error = xfs_bmbt_lookup_eq(cur, new.br_startoff,
--				new.br_startblock, new.br_blockcount,
--				&i);
-+		error = xfs_bmbt_lookup_eq(cur, &new, &i);
- 		if (error)
- 			goto del_cursor;
- 		XFS_WANT_CORRUPTED_GOTO(mp, i == 0, del_cursor);
--		cur->bc_rec.b.br_state = new.br_state;
--
- 		error = xfs_btree_insert(cur, &i);
- 		if (error)
- 			goto del_cursor;
--- 
-2.11.0
+    if (mp->m_flags & XFS_MOUNT_NOUUID)
+        return 0;
+
+    if (uuid_is_null(uuid)) {
+        xfs_warn(mp, "Filesystem has null UUID - can't mount");
+        return -EINVAL;
+    }
+
+And we can clear the uuid of a XFS filesystem, and mount it with "nouuid" option successfully.
+$ xfs_admin -U nil /dev/vda
+$ mount -t xfs -o nouuid /dev/vda /tmp/vda
+
+So I still think the null check in xfs_fs_uevent is needed.
+
+Regards,
+
+Tao
 
