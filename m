@@ -1,177 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57789 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751461AbdICHaY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 03:30:24 -0400
-Received: from [91.114.64.3] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1doPMN-0006x1-PF
-        for linux-xfs@vger.kernel.org; Sun, 03 Sep 2017 07:30:24 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/17] xfs: refactor xfs_del_extent_real
-Date: Sun,  3 Sep 2017 09:29:47 +0200
-Message-Id: <20170903072956.3175-9-hch@lst.de>
-In-Reply-To: <20170903072956.3175-1-hch@lst.de>
-References: <20170903072956.3175-1-hch@lst.de>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:49251 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752780AbdIBWmC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Sep 2017 18:42:02 -0400
+Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
+        by m0001303.ppops.net (8.16.0.21/8.16.0.21) with SMTP id v82McQo6027287
+        for <linux-xfs@vger.kernel.org>; Sat, 2 Sep 2017 15:42:01 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by m0001303.ppops.net with ESMTP id 2cqrafs9yr-5
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Sat, 02 Sep 2017 15:42:01 -0700
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v2 3/3] fs/xfs: Add rtfallocmin mount option
+Date: Sat, 2 Sep 2017 15:41:45 -0700
+Message-ID: <20170902224145.1291030-4-rwareing@fb.com>
+In-Reply-To: <20170902224145.1291030-1-rwareing@fb.com>
+References: <20170902224145.1291030-1-rwareing@fb.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: Richard Wareing <rwareing@fb.com>, david@fromorbit.com, darrick.wong@oracle.com
 
-Use xfs_iext_update_extent to update entries in the in-core extent list.
-This isolates the function from the detailed layout of the extent list,
-and generally makes the code a lot more readable.
+- Gates real-time block device fallocation's to rtfallocmin bytes
+- Use case: Allows developers to send files to the SSD with ease simply
+  by fallocating them, if they are below rtfallocmin XFS will allocate the
+  blocks from the non-RT device (e.g. an SSD)
+- Useful to automagically store small files on the SSD vs. RT device
+  (HDD) for tiered XFS setups without having to rely on XFS specific
+  ioctl calls.  Userland tools such as rsync can also use fallocation
+  behavior to migrate files between SSD and RT (HDD) device without
+  modifiction (e.g. w/ --preallocate flag).
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Richard Wareing <rwareing@fb.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 60 ++++++++++++++++++++++++------------------------
- 1 file changed, 30 insertions(+), 30 deletions(-)
+ fs/xfs/xfs_file.c  | 16 ++++++++++++++++
+ fs/xfs/xfs_mount.h |  1 +
+ fs/xfs/xfs_super.c | 15 ++++++++++++++-
+ 3 files changed, 31 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 0a4bcef1cca8..c15b81611403 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5078,10 +5078,9 @@ xfs_bmap_del_extent_real(
- 	xfs_fsblock_t		del_endblock=0;	/* first block past del */
- 	xfs_fileoff_t		del_endoff;	/* first offset past del */
- 	int			do_fx;	/* free extent at end of routine */
--	xfs_bmbt_rec_host_t	*ep;	/* current extent entry pointer */
- 	int			error;	/* error return value */
- 	int			flags = 0;/* inode logging flags */
--	xfs_bmbt_irec_t		got;	/* current extent entry */
-+	struct xfs_bmbt_irec	got;	/* current extent entry */
- 	xfs_fileoff_t		got_endoff;	/* first offset past got */
- 	int			i;	/* temp state */
- 	xfs_ifork_t		*ifp;	/* inode fork pointer */
-@@ -5090,9 +5089,8 @@ xfs_bmap_del_extent_real(
- 	xfs_bmbt_irec_t		new;	/* new record to be inserted */
- 	/* REFERENCED */
- 	uint			qfield;	/* quota field to update */
--	xfs_filblks_t		temp;	/* for indirect length calculations */
--	xfs_filblks_t		temp2;	/* for indirect length calculations */
- 	int			state = 0;
-+	struct xfs_bmbt_irec	old;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 5fb5a09..a29f6e8 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -730,6 +730,7 @@ xfs_file_fallocate(
+ {
+ 	struct inode		*inode = file_inode(file);
+ 	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_mount	*mp = ip->i_mount;
+ 	long			error;
+ 	enum xfs_prealloc_flags	flags = 0;
+ 	uint			iolock = XFS_IOLOCK_EXCL;
+@@ -749,6 +750,21 @@ xfs_file_fallocate(
+ 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+ 	iolock |= XFS_MMAPLOCK_EXCL;
  
- 	mp = ip->i_mount;
- 	XFS_STATS_INC(mp, xs_del_exlist);
-@@ -5105,8 +5103,7 @@ xfs_bmap_del_extent_real(
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	ASSERT((*idx >= 0) && (*idx < xfs_iext_count(ifp)));
- 	ASSERT(del->br_blockcount > 0);
--	ep = xfs_iext_get_ext(ifp, *idx);
--	xfs_bmbt_get_all(ep, &got);
-+	xfs_iext_get_extent(ifp, *idx, &got);
- 	ASSERT(got.br_startoff <= del->br_startoff);
- 	del_endoff = del->br_startoff + del->br_blockcount;
- 	got_endoff = got.br_startoff + got.br_blockcount;
-@@ -5193,54 +5190,56 @@ xfs_bmap_del_extent_real(
- 		 * Deleting the first part of the extent.
- 		 */
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_startoff(ep, del_endoff);
--		temp = got.br_blockcount - del->br_blockcount;
--		xfs_bmbt_set_blockcount(ep, temp);
--		xfs_bmbt_set_startblock(ep, del_endblock);
-+		got.br_startoff = del_endoff;
-+		got.br_startblock = del_endblock;
-+		got.br_blockcount -= del->br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx, &got);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 		if (!cur) {
- 			flags |= xfs_ilog_fext(whichfork);
++	/*
++	 * If fallocating a file < rtfallocmin store it on the non RT device.
++	 * In a tiered storage setup, this device might be a device suitable
++	 * for better small file storage/performance (e.g. SSD).
++	 */
++	if (mp->m_rtdev_targp && mp->m_rtfallocmin && !offset &&
++			!inode->i_size) {
++		if (len >= mp->m_rtfallocmin) {
++			ip->i_d.di_flags |= XFS_DIFLAG_REALTIME;
++		/* Clear flag if inheritence or rtdefault is being used */
++		} else {
++			ip->i_d.di_flags &= ~XFS_DIFLAG_REALTIME;
++		}
++	}
++
+ 	if (mode & FALLOC_FL_PUNCH_HOLE) {
+ 		error = xfs_free_file_space(ip, offset, len);
+ 		if (error)
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 8016ddb..f5593bb 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -84,6 +84,7 @@ typedef struct xfs_mount {
+ 	char			*m_fsname;	/* filesystem name */
+ 	int			m_fsname_len;	/* strlen of fs name */
+ 	char			*m_rtname;	/* realtime device name */
++	int			m_rtfallocmin;  /* Min size for RT fallocate */
+ 	char			*m_logname;	/* external log device name */
+ 	int			m_bsize;	/* fs logical block size */
+ 	xfs_agnumber_t		m_agfrotor;	/* last ag where space found */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index a1d6968..01a2ab4 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -83,7 +83,8 @@ enum {
+ 	Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota, Opt_prjquota,
+ 	Opt_uquota, Opt_gquota, Opt_pquota,
+ 	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
+-	Opt_discard, Opt_nodiscard, Opt_dax, Opt_rtdisable, Opt_err,
++	Opt_discard, Opt_nodiscard, Opt_dax, Opt_rtdisable, Opt_rtfallocmin,
++	Opt_err,
+ };
+ 
+ static const match_table_t tokens = {
+@@ -135,6 +136,9 @@ static const match_table_t tokens = {
+ 
+ #ifdef CONFIG_XFS_RT
+ 	{Opt_rtdisable, "rtdisable"},   /* Ignore real-time flags */
++	{Opt_rtfallocmin, "rtfallocmin=%u"}, /* Min fallocation required
++										  * for rt device
++										  */
+ #endif
+ 	/* Deprecated mount options scheduled for removal */
+ 	{Opt_barrier,	"barrier"},	/* use writer barriers for log write and
+@@ -374,6 +378,10 @@ xfs_parseargs(
+ 		case Opt_rtdisable:
+ 			mp->m_flags |= XFS_MOUNT_RTDISABLE;
  			break;
- 		}
--		if ((error = xfs_bmbt_update(cur, del_endoff, del_endblock,
--				got.br_blockcount - del->br_blockcount,
--				got.br_state)))
-+		error = xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
-+				got.br_blockcount, got.br_state);
-+		if (error)
- 			goto done;
- 		break;
- 	case BMAP_RIGHT_CONTIG:
- 		/*
- 		 * Deleting the last part of the extent.
- 		 */
--		temp = got.br_blockcount - del->br_blockcount;
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep, temp);
-+		got.br_blockcount -= del->br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx, &got);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 		if (!cur) {
- 			flags |= xfs_ilog_fext(whichfork);
- 			break;
- 		}
--		if ((error = xfs_bmbt_update(cur, got.br_startoff,
--				got.br_startblock,
--				got.br_blockcount - del->br_blockcount,
--				got.br_state)))
-+		error = xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
-+				got.br_blockcount, got.br_state);
-+		if (error)
- 			goto done;
- 		break;
- 	case 0:
- 		/*
- 		 * Deleting the middle of the extent.
- 		 */
--		temp = del->br_startoff - got.br_startoff;
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep, temp);
++		case Opt_rtfallocmin:
++			if (match_int(args, &mp->m_rtfallocmin))
++				return -EINVAL;
++			break;
+ #endif
+ #ifdef CONFIG_FS_DAX
+ 		case Opt_dax:
+@@ -538,6 +546,11 @@ xfs_showargs(
+ 	if (mp->m_rtname)
+ 		seq_show_option(m, "rtdev", mp->m_rtname);
+ 
++#ifdef CONFIG_XFS_RT
++	if (mp->m_rtfallocmin > 0)
++		seq_printf(m, ",rtfallocmin=%d", mp->m_rtfallocmin);
++#endif
 +
-+		old = got;
-+		got.br_blockcount = del->br_startoff - got.br_startoff;
-+		xfs_iext_update_extent(ifp, *idx, &got);
-+
- 		new.br_startoff = del_endoff;
--		temp2 = got_endoff - del_endoff;
--		new.br_blockcount = temp2;
-+		new.br_blockcount = got_endoff - del_endoff;
- 		new.br_state = got.br_state;
- 		new.br_startblock = del_endblock;
-+
- 		flags |= XFS_ILOG_CORE;
- 		if (cur) {
- 			error = xfs_bmbt_update(cur, got.br_startoff,
--					got.br_startblock, temp,
-+					got.br_startblock, got.br_blockcount,
- 					got.br_state);
- 			if (error)
- 				goto done;
-@@ -5262,7 +5261,8 @@ xfs_bmap_del_extent_real(
- 				 * insert operation.
- 				 */
- 				error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
--						got.br_startblock, temp, &i);
-+						got.br_startblock,
-+						got.br_blockcount, &i);
- 				if (error)
- 					goto done;
- 				XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -5270,17 +5270,17 @@ xfs_bmap_del_extent_real(
- 				 * Update the btree record back
- 				 * to the original value.
- 				 */
--				error = xfs_bmbt_update(cur, got.br_startoff,
--						got.br_startblock,
--						got.br_blockcount,
--						got.br_state);
-+				error = xfs_bmbt_update(cur, old.br_startoff,
-+						old.br_startblock,
-+						old.br_blockcount,
-+						old.br_state);
- 				if (error)
- 					goto done;
- 				/*
- 				 * Reset the extent record back
- 				 * to the original value.
- 				 */
--				xfs_bmbt_set_blockcount(ep, got.br_blockcount);
-+				xfs_iext_update_extent(ifp, *idx, &old);
- 				flags = 0;
- 				error = -ENOSPC;
- 				goto done;
+ 	if (mp->m_dalign > 0)
+ 		seq_printf(m, ",sunit=%d",
+ 				(int)XFS_FSB_TO_BB(mp, mp->m_dalign));
 -- 
-2.11.0
+2.9.3
 
