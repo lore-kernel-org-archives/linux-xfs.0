@@ -1,58 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51153 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752732AbdIBRJF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Sep 2017 13:09:05 -0400
-Date: Sat, 2 Sep 2017 10:08:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3] xfs: open code end_buffer_async_write in
- xfs_finish_page_writeback
-Message-ID: <20170902170858.GD4073@magnolia>
-References: <20170816085157.24074-1-hch@lst.de>
- <20170816154454.GX4796@magnolia>
- <20170902163245.GA6141@lst.de>
+Received: from mail-pg0-f41.google.com ([74.125.83.41]:36310 "EHLO
+        mail-pg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752787AbdIBXmb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Sep 2017 19:42:31 -0400
+Received: by mail-pg0-f41.google.com with SMTP id r133so9572632pgr.3
+        for <linux-xfs@vger.kernel.org>; Sat, 02 Sep 2017 16:42:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170902163245.GA6141@lst.de>
+In-Reply-To: <20170902222003.GD10621@dastard>
+References: <20170902215451.29265-1-raj.khem@gmail.com> <20170902222003.GD10621@dastard>
+From: Khem Raj <raj.khem@gmail.com>
+Date: Sat, 2 Sep 2017 16:42:00 -0700
+Message-ID: <CAMKF1srdtshKkRAx0_3iybFfQv_fkHx-+KE+W2=JCZ7uJXQ+gw@mail.gmail.com>
+Subject: Re: [PATCH] Rename progname as it is provided by libc
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Sat, Sep 02, 2017 at 06:32:45PM +0200, Christoph Hellwig wrote:
-> On Wed, Aug 16, 2017 at 08:44:54AM -0700, Darrick J. Wong wrote:
-> > On Wed, Aug 16, 2017 at 10:51:57AM +0200, Christoph Hellwig wrote:
-> > > Our loop in xfs_finish_page_writeback, which iterates over all buffer
-> > > heads in a page and then calls end_buffer_async_write, which also
-> > > iterates over all buffers in the page to check if any I/O is in flight
-> > > is not only inefficient, but also potentially dangerous as
-> > > end_buffer_async_write can cause the page and all buffers to be freed.
-> > > 
-> > > Replace it with a single loop that does the work of end_buffer_async_write
-> > > on a per-page basis.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Looks ok,
-> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > I'm assuming 4.14 for this one, unless you know of people banging into
-> > use-after-free problems and therefore need it pushed into 4.13?
-> 
-> Looks like it didn't make it into for-next for 4.14 either.
+On Sat, Sep 2, 2017 at 3:20 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Sat, Sep 02, 2017 at 02:54:51PM -0700, Khem Raj wrote:
+>> Rename local variable progname to avoid a clash with libc
+>> global symbols
+>
+> What libc is causing this problem?
+>
+> And why is it considered ok for that libc to pollute the global
+> variable namespace with it's own internal variables?
+>
 
-Fortunately, I received this email just as I was about to kick off the
-weekend soak tests, so it'll be the last thing that goes in for 4.14
-(assuming QA tests pass and all that stuff).  It's a 3 day weekend which
-means it's easier to commandeer everything for a mass test. :)
+I am building with -staitc -pie options
 
-Anyway, thanks for the reminder(s) everyone.
+xfs_mdrestore.o: relocation R_ARM_REL32 against external or undefined
+symbol `progname' can not be used when making a PIE executable;
+recompile with -fPIC
 
---D
+libcs have __progname, So I will have to check where is progname coming from
+probably an external header. I think renaming to avoid conflict is
+good thing regardless.
 
+> Cheers,
+>
+> Dave.
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Dave Chinner
+> david@fromorbit.com
