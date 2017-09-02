@@ -1,84 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:36982 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751129AbdICHVX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 03:21:23 -0400
-Received: by mail-pg0-f67.google.com with SMTP id t193so2631809pgc.4
-        for <linux-xfs@vger.kernel.org>; Sun, 03 Sep 2017 00:21:23 -0700 (PDT)
-Date: Sun, 3 Sep 2017 00:21:20 -0700
-From: Khem Raj <raj.khem@gmail.com>
-Subject: Re: [PATCH] Rename progname as it is provided by libc
-Message-ID: <20170903072120.bqlcn76qzc3qze6z@apollo>
-References: <20170902215451.29265-1-raj.khem@gmail.com>
- <20170902222003.GD10621@dastard>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:39056 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752780AbdIBWmB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Sep 2017 18:42:01 -0400
+Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v82MfMQD021548
+        for <linux-xfs@vger.kernel.org>; Sat, 2 Sep 2017 15:42:00 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0a-00082601.pphosted.com with ESMTP id 2cqrp71bpe-2
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Sat, 02 Sep 2017 15:42:00 -0700
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v2 2/3] fs/xfs: Add real-time device support to statfs
+Date: Sat, 2 Sep 2017 15:41:44 -0700
+Message-ID: <20170902224145.1291030-3-rwareing@fb.com>
+In-Reply-To: <20170902224145.1291030-1-rwareing@fb.com>
+References: <20170902224145.1291030-1-rwareing@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <20170902222003.GD10621@dastard>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Richard Wareing <rwareing@fb.com>, david@fromorbit.com, darrick.wong@oracle.com
 
-On Sun, Sep 03, 2017 at 08:20:03AM +1000, Dave Chinner wrote:
-> On Sat, Sep 02, 2017 at 02:54:51PM -0700, Khem Raj wrote:
-> > Rename local variable progname to avoid a clash with libc
-> > global symbols
->=20
-> What libc is causing this problem?
->=20
-> And why is it considered ok for that libc to pollute the global
-> variable namespace with it's own internal variables?
+- Reports real-time device free blocks in statfs calls if
+inheritance bit is set on the inode of directory.  This is a bit more
+intuitive, especially for use-cases which are using a much larger
+device for the real-time device.
 
-A closer look reveals that its getting the function from another local libr=
-ary which is used
-on the linker commandline. below is full cmdline
+Signed-off-by: Richard Wareing <rwareing@fb.com>
+---
+ fs/xfs/xfs_super.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-=2E./arm-bec-linux-musleabi-libtool --quiet --tag=3DCC --mode=3Dlink ../../=
-recipe-sysroot-native/usr/bin/arm-bec-linux-musleabi/arm-bec-linux-musleabi=
--clang -march=3Darmv7ve -mthumb -mfpu=3Dneon-vfpv4 -mfloat-abi=3Dhard -mcpu=
-=3Dcortex-a7 -mlittle-endian -D__extern_always_inline=3Dinline -no-integrat=
-ed-as -Wno-error=3Dunused-command-line-argument -Qunused-arguments -fstack-=
-protector-strong  -D_FORTIFY_SOURCE=3D2 -Wformat -Wformat-security -Werror=
-=3Dformat-security --sysroot=3D/mnt/a/oe/build/tmp/work/cortexa7t2hf-neon-v=
-fpv4-bec-linux-musleabi/xfsprogs/4.12.0-r0/recipe-sysroot -o xfs_io -Wl,-O1=
- -Wl,--hash-style=3Dgnu -Wl,--as-needed -fstack-protector-strong -Wl,-z,rel=
-ro,-z,now -Wl,-O1 -Wl,--hash-style=3Dgnu -Wl,--as-needed -fstack-protector-=
-strong -Wl,-z,relro,-z,now  -Wl,-O1 -Wl,--hash-style=3Dgnu -Wl,--as-needed =
--fstack-protector-strong -Wl,-z,relro,-z,now  -Wl,-O1 -Wl,--hash-style=3Dgn=
-u -Wl,--as-needed -fstack-protector-strong -Wl,-z,relro,-z,now -static-libt=
-ool-libs  init.o attr.o bmap.o cowextsize.o encrypt.o file.o freeze.o fsync=
-=2Eo getrusage.o imap.o link.o mmap.o open.o parent.o pread.o prealloc.o pw=
-rite.o reflink.o seek.o shutdown.o stat.o sync.o truncate.o utimes.o fadvis=
-e.o madvise.o mincore.o sendfile.o fiemap.o inject.o resblks.o copy_file_ra=
-nge.o sync_file_range.o readdir.o fsmap.o   ../libxcmd/libxcmd.la ../libhan=
-dle/libhandle.la -luuid -lpthread -lreadline
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 4dbf95c..a1d6968 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1148,6 +1148,12 @@ xfs_fs_statfs(
+ 	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
+ 			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
+ 		xfs_qm_statvfs(ip, statp);
++	if ((ip->i_d.di_flags & XFS_DIFLAG_RTINHERIT) &&
++		(mp->m_rtdev_targp != NULL)) {
++		statp->f_blocks = sbp->sb_rblocks;
++		statp->f_bfree = sbp->sb_frextents * sbp->sb_rextsize -
++			mp->m_alloc_set_aside;
++	}
+ 	return 0;
+ }
+ 
+-- 
+2.9.3
 
-
-libxfs.so.0                   init.o (progname)
-
-and also from init.o object from current directory
-
-$ readelf -sW init.o | grep progname                                       =
-                                                                           =
-                                                                          (=
-09-03 00:17)
-    56: 00000004     4 OBJECT  GLOBAL DEFAULT  COM progname
-
-readelf -sW ../libxfs/.libs/libxfs.so.0 | grep progname                    =
-                                                                           =
-                                                                        (09=
--03 00:19)
-   214: 0005d004     4 OBJECT  GLOBAL DEFAULT   18 progname
-
-Thats what is causing the conflict.
-
->=20
-> Cheers,
->=20
-> Dave.
-> --=20
-> Dave Chinner
-> david@fromorbit.com
