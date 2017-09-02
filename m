@@ -1,131 +1,216 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sender-pp-092.zoho.com ([135.84.80.237]:25358 "EHLO
-        sender-pp-092.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750955AbdIAXmA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 19:42:00 -0400
-Subject: Re: How do I stop the roll backs?
-References: <15e3d125e44.1006338d5356.4004547008347294090@zoho.com>
- <20170901113853.27txrjvdcnc7gcgb@hades.localdomain>
-From: ToddAndMargo <ToddAndMargo@zoho.com>
-Message-ID: <52e5faf2-9e64-17e1-c368-38d193ffeb86@zoho.com>
-Date: Fri, 1 Sep 2017 16:41:56 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170901113853.27txrjvdcnc7gcgb@hades.localdomain>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33229 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752761AbdIBVzJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Sep 2017 17:55:09 -0400
+Received: by mail-pf0-f196.google.com with SMTP id r25so2157405pfk.0
+        for <linux-xfs@vger.kernel.org>; Sat, 02 Sep 2017 14:55:09 -0700 (PDT)
+From: Khem Raj <raj.khem@gmail.com>
+Subject: [PATCH] Rename progname as it is provided by libc
+Date: Sat,  2 Sep 2017 14:54:51 -0700
+Message-Id: <20170902215451.29265-1-raj.khem@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: Khem Raj <raj.khem@gmail.com>
 
-On 09/01/2017 04:38 AM, Carlos Maiolino wrote:
-> Hi,
-> 
-> On Fri, Sep 01, 2017 at 03:52:47AM -0700, toddandmargo wrote:
->> Hi All,
->>
->> Fedora 26
->>
->> Every time I shutdown, everything i have modifies or added  gets rolled back.
->> And I have to restore everything from backup, including most of the customer's
->> data that was copied from Samba on the old server.  It is a disaster.
->>
-> 
-> This is quite weird, are you able to reproduce it by just
-> mounting/modifying/unmounting the filesystem?
-> 
-> Only thing that comes to my mind at a first glance would be if something went
-> wrong with the journal.
-> 
-> Can you provide more details about your setup? Mainly regarding the storage
-> organization where your XFS filesystem is in. Logs, from the system too.
-> 
-> A good guide of what information to provide can be found here:
-> 
-> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-> 
-> 
->> How do I stop this?
->>
->> Many thanks,
->> -T
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Rename local variable progname to avoid a clash with libc
+global symbols
 
-Hi Carlos,
+Signed-off-by: Khem Raj <raj.khem@gmail.com>
+---
+ io/init.c                 | 10 +++++-----
+ mdrestore/xfs_mdrestore.c | 10 +++++-----
+ quota/init.c              | 10 +++++-----
+ spaceman/init.c           |  8 ++++----
+ 4 files changed, 19 insertions(+), 19 deletions(-)
 
-For the full run down and details on this stinker, see
-https://bugzilla.redhat.com/show_bug.cgi?id=1483279
-It includes a full hardware and OS list.
-
-Basically, the stinking (not my "actual" word) backup drive itself
-turned out to be the problem: Western Digital WD20NPVZ 2TB.
-
-If you are using the OS drive when this happens, you are just toast.
-If you are booted off a live USB, then this is the error you get:
-
-     Failed to mount "894 GB Volume"
-     Error mounting /dev/md126p2 at 
-/run/media/todd/f1c297de-d5c6-48ba-ac8f-d2c1a7b4702d: Command-line 
-`mount -t "xfs" -o "uhelper=udisks2,nodev,nosuid" "/dev/md126p2" 
-"/run/media/todd/f1c297de-d5c6-48ba-ac8f-d2c1a7b4702d"' exited with 
-non-zero exit status 32: mount: 
-/run/media/todd/f1c297de-d5c6-48ba-ac8f-d2c1a7b4702d: can't read 
-superblock on /dev/md126p2.
-
-The bug report is full of details.
-
-You unmount the drive, pull it out of the hot swap sleave,
-put it back in, wait 20 seconds, and your main hard drive
-seizes.  You have to power off to recover.  The one fingered
-reset doesn't even work,  Then XFS senses a crash and journals
-(rolls back) gigabytes of your data.
-
-So XFS was actually doing what it was suppose to do, which
-is to fix a crash.  For my purposes, it was altogether much to
-aggressive.  I would prefer it checked for corruptions before
-it journaled backwards.
-
-I converted the system to all ext4.  I was at the customer's
-site till 06:00 in the morning repairing everything.  Fortunately
-I keep good backup.  Unfortunately, when switching file systems
-your can't just restore your home partition and use the new
-install.  I tried about five different ways and then just
-went through everything an reinstalled it from backup.  Some of
-the back up data was journalled too.  Fortunately I has old
-backups too.  And having to switch from "legacy" to "EUFI"
-was a pain in the neck (again, not my "actual" word).
-
-And SELinux almost ate my lunch.  But I prevailed
-and kept extensive notes on each service it affected: cups-lpd,
-samba, named, ssh, xrdp, iptables.  About drove me nuts.
-Samba was a "real treat" to figure out.
-
-
-So, I got to see XFS in action.  I can see were this would be
-an advantage in a large data setting.  But, again, it is way too
-aggressive for me.  I would rather it did an fsck and then
-journaled back what it couldn't fix.
-
-Oh, I came up with a unique way of blanking out a disk!
-In BIOS set it up as RAID (which blanks the drive), then
-remove it from the raid for reuse.
-
-gparted really need some kind of blank the drive option.
-It gave me fits at times.  I must have installed the OS 20 times
-last night narrowing the hot swap crash down to the stinking back
-up drive.  This weird as I do this all over the place, including
-my own office.
-
-I figure I am now out about 1000 U$D with all the free
-troubleshooting to figure this out.  And a lot of lost sleep.
-Life in the fast lane.  Huh!
-
--T
+diff --git a/io/init.c b/io/init.c
+index 20d5f80..e82e101 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -23,7 +23,7 @@
+ #include "init.h"
+ #include "io.h"
+ 
+-char	*progname;
++char	*io_progname;
+ int	exitcode;
+ int	expert;
+ int	idlethread;
+@@ -35,7 +35,7 @@ usage(void)
+ {
+ 	fprintf(stderr,
+ _("Usage: %s [-adfinrRstVx] [-m mode] [-p prog] [[-c|-C] cmd]... file\n"),
+-		progname);
++		io_progname);
+ 	exit(1);
+ }
+ 
+@@ -142,7 +142,7 @@ init(
+ 	xfs_fsop_geom_t	geometry = { 0 };
+ 	struct fs_path	fsp;
+ 
+-	progname = basename(argv[0]);
++	io_progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+ 	bindtextdomain(PACKAGE, LOCALEDIR);
+ 	textdomain(PACKAGE);
+@@ -186,7 +186,7 @@ init(
+ 			flags |= IO_NONBLOCK;
+ 			break;
+ 		case 'p':
+-			progname = optarg;
++			io_progname = optarg;
+ 			break;
+ 		case 'r':
+ 			flags |= IO_READONLY;
+@@ -207,7 +207,7 @@ init(
+ 			expert = 1;
+ 			break;
+ 		case 'V':
+-			printf(_("%s version %s\n"), progname, VERSION);
++			printf(_("%s version %s\n"), io_progname, VERSION);
+ 			exit(0);
+ 		default:
+ 			usage();
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index 9d1b4e8..b840a54 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -19,7 +19,7 @@
+ #include "libxfs.h"
+ #include "xfs_metadump.h"
+ 
+-char 		*progname;
++char 		*mdrestore_progname;
+ int		show_progress = 0;
+ int		show_info = 0;
+ int		progress_since_warning = 0;
+@@ -30,7 +30,7 @@ fatal(const char *msg, ...)
+ 	va_list		args;
+ 
+ 	va_start(args, msg);
+-	fprintf(stderr, "%s: ", progname);
++	fprintf(stderr, "%s: ", mdrestore_progname);
+ 	vfprintf(stderr, msg, args);
+ 	exit(1);
+ }
+@@ -194,7 +194,7 @@ perform_restore(
+ static void
+ usage(void)
+ {
+-	fprintf(stderr, "Usage: %s [-V] [-g] source target\n", progname);
++	fprintf(stderr, "Usage: %s [-V] [-g] source target\n", mdrestore_progname);
+ 	exit(1);
+ }
+ 
+@@ -212,7 +212,7 @@ main(
+ 	struct stat	statbuf;
+ 	int		is_target_file;
+ 
+-	progname = basename(argv[0]);
++	mdrestore_progname = basename(argv[0]);
+ 
+ 	while ((c = getopt(argc, argv, "giV")) != EOF) {
+ 		switch (c) {
+@@ -223,7 +223,7 @@ main(
+ 				show_info = 1;
+ 				break;
+ 			case 'V':
+-				printf("%s version %s\n", progname, VERSION);
++				printf("%s version %s\n", mdrestore_progname, VERSION);
+ 				exit(0);
+ 			default:
+ 				usage();
+diff --git a/quota/init.c b/quota/init.c
+index d45dc4c..46403de 100644
+--- a/quota/init.c
++++ b/quota/init.c
+@@ -21,7 +21,7 @@
+ #include "input.h"
+ #include "init.h"
+ 
+-char	*progname;
++char	*quota_progname;
+ int	exitcode;
+ int	expert;
+ bool	foreign_allowed = false;
+@@ -47,7 +47,7 @@ usage(void)
+ {
+ 	fprintf(stderr,
+ 		_("Usage: %s [-V] [-x] [-f] [-p prog] [-c cmd]... [-d project]... [path]\n"),
+-		progname);
++		quota_progname);
+ 	exit(1);
+ }
+ 
+@@ -147,7 +147,7 @@ init(
+ {
+ 	int		c;
+ 
+-	progname = basename(argv[0]);
++	quota_progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+ 	bindtextdomain(PACKAGE, LOCALEDIR);
+ 	textdomain(PACKAGE);
+@@ -173,13 +173,13 @@ init(
+ 			projid_file = optarg;
+ 			break;
+ 		case 'p':
+-			progname = optarg;
++			quota_progname = optarg;
+ 			break;
+ 		case 'x':
+ 			expert++;
+ 			break;
+ 		case 'V':
+-			printf(_("%s version %s\n"), progname, VERSION);
++			printf(_("%s version %s\n"), quota_progname, VERSION);
+ 			exit(0);
+ 		default:
+ 			usage();
+diff --git a/spaceman/init.c b/spaceman/init.c
+index b3eface..bedf112 100644
+--- a/spaceman/init.c
++++ b/spaceman/init.c
+@@ -23,7 +23,7 @@
+ #include "path.h"
+ #include "space.h"
+ 
+-char	*progname;
++char	*spaceman_progname;
+ int	exitcode;
+ 
+ void
+@@ -31,7 +31,7 @@ usage(void)
+ {
+ 	fprintf(stderr,
+ 		_("Usage: %s [-c cmd] file\n"),
+-		progname);
++		spaceman_progname);
+ 	exit(1);
+ }
+ 
+@@ -74,7 +74,7 @@ init(
+ 	xfs_fsop_geom_t	geometry = { 0 };
+ 	struct fs_path	fsp;
+ 
+-	progname = basename(argv[0]);
++	spaceman_progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+ 	bindtextdomain(PACKAGE, LOCALEDIR);
+ 	textdomain(PACKAGE);
+@@ -86,7 +86,7 @@ init(
+ 			add_user_command(optarg);
+ 			break;
+ 		case 'V':
+-			printf(_("%s version %s\n"), progname, VERSION);
++			printf(_("%s version %s\n"), spaceman_progname, VERSION);
+ 			exit(0);
+ 		default:
+ 			usage();
+-- 
+2.14.1
 
