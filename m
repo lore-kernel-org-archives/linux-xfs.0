@@ -1,449 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53507 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751702AbdICHag (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 03:30:36 -0400
-Received: from [91.114.64.3] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1doPMZ-0007Jn-I1
-        for linux-xfs@vger.kernel.org; Sun, 03 Sep 2017 07:30:36 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/17] xfs: refactor xfs_bmap_add_extent_unwritten_real
-Date: Sun,  3 Sep 2017 09:29:51 +0200
-Message-Id: <20170903072956.3175-13-hch@lst.de>
-In-Reply-To: <20170903072956.3175-1-hch@lst.de>
-References: <20170903072956.3175-1-hch@lst.de>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:49250 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752785AbdIBWmC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Sep 2017 18:42:02 -0400
+Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
+        by m0001303.ppops.net (8.16.0.21/8.16.0.21) with SMTP id v82McQo5027287
+        for <linux-xfs@vger.kernel.org>; Sat, 2 Sep 2017 15:42:01 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by m0001303.ppops.net with ESMTP id 2cqrafs9yr-4
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Sat, 02 Sep 2017 15:42:01 -0700
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v2 1/3] fs/xfs: Add rtdisable option
+Date: Sat, 2 Sep 2017 15:41:43 -0700
+Message-ID: <20170902224145.1291030-2-rwareing@fb.com>
+In-Reply-To: <20170902224145.1291030-1-rwareing@fb.com>
+References: <20170902224145.1291030-1-rwareing@fb.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: Richard Wareing <rwareing@fb.com>, david@fromorbit.com, darrick.wong@oracle.com
 
-Use xfs_iext_get_extent to find, and xfs_iext_update_extent to update
-entries in the in-core extent list.  This isolates the function from
-the detailed layout of the extent list, and generally makes the code
-a lot more readable.
+- Adds rtdisable mount option to ignore any real-time inheritance flag
+  set on directories.  Designed to be used as a "kill-switch" for
+  this behavior, negating the need to walk/kill flags on FS.
 
-Also get rid of the oldext and newext variables as using the extent
-records is a lot more descriptive.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Richard Wareing <rwareing@fb.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 208 +++++++++++++++++++++++------------------------
- 1 file changed, 104 insertions(+), 104 deletions(-)
+ fs/xfs/xfs_inode.c |  6 ++++--
+ fs/xfs/xfs_ioctl.c |  7 +++++--
+ fs/xfs/xfs_mount.h |  1 +
+ fs/xfs/xfs_super.c | 14 +++++++++++++-
+ 4 files changed, 23 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index edea670a3f74..bc41fc18cceb 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -2171,18 +2171,16 @@ xfs_bmap_add_extent_unwritten_real(
- 	int			*logflagsp) /* inode logging flags */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index ec9826c..dc53731 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -878,7 +878,8 @@ xfs_ialloc(
+ 			uint		di_flags = 0;
+ 
+ 			if (S_ISDIR(mode)) {
+-				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
++				if (!(mp->m_flags & XFS_MOUNT_RTDISABLE) &&
++					pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
+ 					di_flags |= XFS_DIFLAG_RTINHERIT;
+ 				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
+ 					di_flags |= XFS_DIFLAG_EXTSZINHERIT;
+@@ -887,7 +888,8 @@ xfs_ialloc(
+ 				if (pip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+ 					di_flags |= XFS_DIFLAG_PROJINHERIT;
+ 			} else if (S_ISREG(mode)) {
+-				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
++				if (!(mp->m_flags & XFS_MOUNT_RTDISABLE) &&
++					pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
+ 					di_flags |= XFS_DIFLAG_REALTIME;
+ 				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
+ 					di_flags |= XFS_DIFLAG_EXTSIZE;
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 6190697..5a6d45d 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -937,6 +937,7 @@ xfs_set_diflags(
+ 	struct xfs_inode	*ip,
+ 	unsigned int		xflags)
  {
- 	xfs_btree_cur_t		*cur;	/* btree cursor */
--	xfs_bmbt_rec_host_t	*ep;	/* extent entry for idx */
- 	int			error;	/* error return value */
- 	int			i;	/* temp state */
- 	xfs_ifork_t		*ifp;	/* inode fork pointer */
- 	xfs_fileoff_t		new_endoff;	/* end offset of new entry */
--	xfs_exntst_t		newext;	/* new extent state */
--	xfs_exntst_t		oldext;	/* old extent state */
- 	xfs_bmbt_irec_t		r[3];	/* neighbor extent entries */
- 					/* left is 0, right is 1, prev is 2 */
- 	int			rval=0;	/* return value (logging flags) */
- 	int			state = 0;/* state bits, accessed thru macros */
- 	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_bmbt_irec	old;
++	struct xfs_mount        *mp = ip->i_mount;
+ 	unsigned int		di_flags;
+ 	uint64_t		di_flags2;
  
- 	*logflagsp = 0;
+@@ -957,7 +958,8 @@ xfs_set_diflags(
+ 	if (xflags & FS_XFLAG_FILESTREAM)
+ 		di_flags |= XFS_DIFLAG_FILESTREAM;
+ 	if (S_ISDIR(VFS_I(ip)->i_mode)) {
+-		if (xflags & FS_XFLAG_RTINHERIT)
++		if (!(mp->m_flags & XFS_MOUNT_RTDISABLE) &&
++			xflags & FS_XFLAG_RTINHERIT)
+ 			di_flags |= XFS_DIFLAG_RTINHERIT;
+ 		if (xflags & FS_XFLAG_NOSYMLINKS)
+ 			di_flags |= XFS_DIFLAG_NOSYMLINKS;
+@@ -966,7 +968,8 @@ xfs_set_diflags(
+ 		if (xflags & FS_XFLAG_PROJINHERIT)
+ 			di_flags |= XFS_DIFLAG_PROJINHERIT;
+ 	} else if (S_ISREG(VFS_I(ip)->i_mode)) {
+-		if (xflags & FS_XFLAG_REALTIME)
++		if (!(mp->m_flags & XFS_MOUNT_RTDISABLE) &&
++			xflags & FS_XFLAG_REALTIME)
+ 			di_flags |= XFS_DIFLAG_REALTIME;
+ 		if (xflags & FS_XFLAG_EXTSIZE)
+ 			di_flags |= XFS_DIFLAG_EXTSIZE;
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 9fa312a..8016ddb 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -243,6 +243,7 @@ typedef struct xfs_mount {
+ 						   allocator */
+ #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
  
-@@ -2205,12 +2203,8 @@ xfs_bmap_add_extent_unwritten_real(
- 	 * Set up a bunch of variables to make the tests simpler.
- 	 */
- 	error = 0;
--	ep = xfs_iext_get_ext(ifp, *idx);
--	xfs_bmbt_get_all(ep, &PREV);
--	newext = new->br_state;
--	oldext = (newext == XFS_EXT_UNWRITTEN) ?
--		XFS_EXT_NORM : XFS_EXT_UNWRITTEN;
--	ASSERT(PREV.br_state == oldext);
-+	xfs_iext_get_extent(ifp, *idx, &PREV);
-+	ASSERT(new->br_state != PREV.br_state);
- 	new_endoff = new->br_startoff + new->br_blockcount;
- 	ASSERT(PREV.br_startoff <= new->br_startoff);
- 	ASSERT(PREV.br_startoff + PREV.br_blockcount >= new_endoff);
-@@ -2239,7 +2233,7 @@ xfs_bmap_add_extent_unwritten_real(
- 	if ((state & BMAP_LEFT_VALID) && !(state & BMAP_LEFT_DELAY) &&
- 	    LEFT.br_startoff + LEFT.br_blockcount == new->br_startoff &&
- 	    LEFT.br_startblock + LEFT.br_blockcount == new->br_startblock &&
--	    LEFT.br_state == newext &&
-+	    LEFT.br_state == new->br_state &&
- 	    LEFT.br_blockcount + new->br_blockcount <= MAXEXTLEN)
- 		state |= BMAP_LEFT_CONTIG;
++#define XFS_MOUNT_RTDISABLE    (1ULL << 61)    /* Ignore RT flags */
+ #define XFS_MOUNT_DAX		(1ULL << 62)	/* TEST ONLY! */
  
-@@ -2258,7 +2252,7 @@ xfs_bmap_add_extent_unwritten_real(
- 	if ((state & BMAP_RIGHT_VALID) && !(state & BMAP_RIGHT_DELAY) &&
- 	    new_endoff == RIGHT.br_startoff &&
- 	    new->br_startblock + new->br_blockcount == RIGHT.br_startblock &&
--	    newext == RIGHT.br_state &&
-+	    new->br_state == RIGHT.br_state &&
- 	    new->br_blockcount + RIGHT.br_blockcount <= MAXEXTLEN &&
- 	    ((state & (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
- 		       BMAP_RIGHT_FILLING)) !=
-@@ -2282,9 +2276,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		--*idx;
  
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
--			LEFT.br_blockcount + PREV.br_blockcount +
--			RIGHT.br_blockcount);
-+		LEFT.br_blockcount += PREV.br_blockcount + RIGHT.br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx, &LEFT);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 455a575..4dbf95c 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -83,7 +83,7 @@ enum {
+ 	Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota, Opt_prjquota,
+ 	Opt_uquota, Opt_gquota, Opt_pquota,
+ 	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
+-	Opt_discard, Opt_nodiscard, Opt_dax, Opt_err,
++	Opt_discard, Opt_nodiscard, Opt_dax, Opt_rtdisable, Opt_err,
+ };
  
- 		xfs_iext_remove(ip, *idx + 1, 2, state);
-@@ -2311,10 +2304,10 @@ xfs_bmap_add_extent_unwritten_real(
- 			if ((error = xfs_btree_decrement(cur, 0, &i)))
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			if ((error = xfs_bmbt_update(cur, LEFT.br_startoff,
--				LEFT.br_startblock,
--				LEFT.br_blockcount + PREV.br_blockcount +
--				RIGHT.br_blockcount, LEFT.br_state)))
-+			error = xfs_bmbt_update(cur, LEFT.br_startoff,
-+					LEFT.br_startblock, LEFT.br_blockcount,
-+					LEFT.br_state);
-+			if (error)
- 				goto done;
- 		}
- 		break;
-@@ -2327,8 +2320,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		--*idx;
+ static const match_table_t tokens = {
+@@ -133,6 +133,9 @@ static const match_table_t tokens = {
  
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
--			LEFT.br_blockcount + PREV.br_blockcount);
-+		LEFT.br_blockcount += PREV.br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx, &LEFT);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 	{Opt_dax,	"dax"},		/* Enable direct access to bdev pages */
  
- 		xfs_iext_remove(ip, *idx + 1, 1, state);
-@@ -2349,10 +2342,10 @@ xfs_bmap_add_extent_unwritten_real(
- 			if ((error = xfs_btree_decrement(cur, 0, &i)))
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			if ((error = xfs_bmbt_update(cur, LEFT.br_startoff,
--				LEFT.br_startblock,
--				LEFT.br_blockcount + PREV.br_blockcount,
--				LEFT.br_state)))
-+			error = xfs_bmbt_update(cur, LEFT.br_startoff,
-+					LEFT.br_startblock, LEFT.br_blockcount,
-+					LEFT.br_state);
-+			if (error)
- 				goto done;
- 		}
- 		break;
-@@ -2363,10 +2356,11 @@ xfs_bmap_add_extent_unwritten_real(
- 		 * The right neighbor is contiguous, the left is not.
- 		 */
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep,
--			PREV.br_blockcount + RIGHT.br_blockcount);
--		xfs_bmbt_set_state(ep, newext);
-+		PREV.br_blockcount += RIGHT.br_blockcount;
-+		PREV.br_state = new->br_state;
-+		xfs_iext_update_extent(ifp, *idx, &PREV);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
++#ifdef CONFIG_XFS_RT
++	{Opt_rtdisable, "rtdisable"},   /* Ignore real-time flags */
++#endif
+ 	/* Deprecated mount options scheduled for removal */
+ 	{Opt_barrier,	"barrier"},	/* use writer barriers for log write and
+ 					 * unwritten extent conversion */
+@@ -367,6 +370,11 @@ xfs_parseargs(
+ 		case Opt_nodiscard:
+ 			mp->m_flags &= ~XFS_MOUNT_DISCARD;
+ 			break;
++#ifdef CONFIG_XFS_RT
++		case Opt_rtdisable:
++			mp->m_flags |= XFS_MOUNT_RTDISABLE;
++			break;
++#endif
+ #ifdef CONFIG_FS_DAX
+ 		case Opt_dax:
+ 			mp->m_flags |= XFS_MOUNT_DAX;
+@@ -492,6 +500,10 @@ xfs_showargs(
+ 		{ XFS_MOUNT_DISCARD,		",discard" },
+ 		{ XFS_MOUNT_SMALL_INUMS,	",inode32" },
+ 		{ XFS_MOUNT_DAX,		",dax" },
++#ifdef CONFIG_XFS_RT
++		{ XFS_MOUNT_RTDISABLE,          ",rtdisable" },
++#endif
 +
- 		xfs_iext_remove(ip, *idx + 1, 1, state);
- 		XFS_IFORK_NEXT_SET(ip, whichfork,
- 				XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
-@@ -2385,10 +2379,10 @@ xfs_bmap_add_extent_unwritten_real(
- 			if ((error = xfs_btree_decrement(cur, 0, &i)))
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			if ((error = xfs_bmbt_update(cur, new->br_startoff,
--				new->br_startblock,
--				new->br_blockcount + RIGHT.br_blockcount,
--				newext)))
-+			error = xfs_bmbt_update(cur, PREV.br_startoff,
-+					PREV.br_startblock, PREV.br_blockcount,
-+					PREV.br_state);
-+			if (error)
- 				goto done;
- 		}
- 		break;
-@@ -2400,7 +2394,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		 * the new one.
- 		 */
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_state(ep, newext);
-+		PREV.br_state = new->br_state;
-+		xfs_iext_update_extent(ifp, *idx, &PREV);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		if (cur == NULL)
-@@ -2412,9 +2407,10 @@ xfs_bmap_add_extent_unwritten_real(
- 					&i)))
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			if ((error = xfs_bmbt_update(cur, new->br_startoff,
--				new->br_startblock, new->br_blockcount,
--				newext)))
-+			error = xfs_bmbt_update(cur, PREV.br_startoff,
-+					PREV.br_startblock, PREV.br_blockcount,
-+					PREV.br_state);
-+			if (error)
- 				goto done;
- 		}
- 		break;
-@@ -2425,17 +2421,16 @@ xfs_bmap_add_extent_unwritten_real(
- 		 * The left neighbor is contiguous.
- 		 */
- 		trace_xfs_bmap_pre_update(ip, *idx - 1, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx - 1),
--			LEFT.br_blockcount + new->br_blockcount);
--		xfs_bmbt_set_startoff(ep,
--			PREV.br_startoff + new->br_blockcount);
-+		LEFT.br_blockcount += new->br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx - 1, &LEFT);
- 		trace_xfs_bmap_post_update(ip, *idx - 1, state, _THIS_IP_);
- 
-+		old = PREV;
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_startblock(ep,
--			new->br_startblock + new->br_blockcount);
--		xfs_bmbt_set_blockcount(ep,
--			PREV.br_blockcount - new->br_blockcount);
-+		PREV.br_startoff += new->br_blockcount;
-+		PREV.br_startblock += new->br_blockcount;
-+		PREV.br_blockcount -= new->br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx, &PREV);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		--*idx;
-@@ -2444,23 +2439,23 @@ xfs_bmap_add_extent_unwritten_real(
- 			rval = XFS_ILOG_DEXT;
- 		else {
- 			rval = 0;
--			if ((error = xfs_bmbt_lookup_eq(cur, PREV.br_startoff,
--					PREV.br_startblock, PREV.br_blockcount,
--					&i)))
-+			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
-+					old.br_startblock, old.br_blockcount,
-+					&i);
-+			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			if ((error = xfs_bmbt_update(cur,
--				PREV.br_startoff + new->br_blockcount,
--				PREV.br_startblock + new->br_blockcount,
--				PREV.br_blockcount - new->br_blockcount,
--				oldext)))
-+			error = xfs_bmbt_update(cur, PREV.br_startoff,
-+					PREV.br_startblock, PREV.br_blockcount,
-+					PREV.br_state);
-+			if (error)
- 				goto done;
--			if ((error = xfs_btree_decrement(cur, 0, &i)))
-+			error = xfs_btree_decrement(cur, 0, &i);
-+			if (error)
- 				goto done;
- 			error = xfs_bmbt_update(cur, LEFT.br_startoff,
--				LEFT.br_startblock,
--				LEFT.br_blockcount + new->br_blockcount,
--				LEFT.br_state);
-+					LEFT.br_startblock, LEFT.br_blockcount,
-+					LEFT.br_state);
- 			if (error)
- 				goto done;
- 		}
-@@ -2471,13 +2466,12 @@ xfs_bmap_add_extent_unwritten_real(
- 		 * Setting the first part of a previous oldext extent to newext.
- 		 * The left neighbor is not contiguous.
- 		 */
-+		old = PREV;
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		ASSERT(ep && xfs_bmbt_get_state(ep) == oldext);
--		xfs_bmbt_set_startoff(ep, new_endoff);
--		xfs_bmbt_set_blockcount(ep,
--			PREV.br_blockcount - new->br_blockcount);
--		xfs_bmbt_set_startblock(ep,
--			new->br_startblock + new->br_blockcount);
-+		PREV.br_startoff += new->br_blockcount;
-+		PREV.br_startblock += new->br_blockcount;
-+		PREV.br_blockcount -= new->br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx, &PREV);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		xfs_iext_insert(ip, *idx, 1, new, state);
-@@ -2487,16 +2481,16 @@ xfs_bmap_add_extent_unwritten_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			if ((error = xfs_bmbt_lookup_eq(cur, PREV.br_startoff,
--					PREV.br_startblock, PREV.br_blockcount,
--					&i)))
-+			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
-+					old.br_startblock, old.br_blockcount,
-+					&i);
-+			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			if ((error = xfs_bmbt_update(cur,
--				PREV.br_startoff + new->br_blockcount,
--				PREV.br_startblock + new->br_blockcount,
--				PREV.br_blockcount - new->br_blockcount,
--				oldext)))
-+			error = xfs_bmbt_update(cur, PREV.br_startoff,
-+					PREV.br_startblock, PREV.br_blockcount,
-+					PREV.br_state);
-+			if (error)
- 				goto done;
- 			cur->bc_rec.b = *new;
- 			if ((error = xfs_btree_insert(cur, &i)))
-@@ -2510,39 +2504,43 @@ xfs_bmap_add_extent_unwritten_real(
- 		 * Setting the last part of a previous oldext extent to newext.
- 		 * The right neighbor is contiguous with the new allocation.
- 		 */
-+		old = PREV;
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep,
--			PREV.br_blockcount - new->br_blockcount);
-+		PREV.br_blockcount -= new->br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx, &PREV);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		++*idx;
- 
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
--			new->br_startoff, new->br_startblock,
--			new->br_blockcount + RIGHT.br_blockcount, newext);
-+		RIGHT.br_startoff = new->br_startoff;
-+		RIGHT.br_startblock = new->br_startblock;
-+		RIGHT.br_blockcount += new->br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx, &RIGHT);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		if (cur == NULL)
- 			rval = XFS_ILOG_DEXT;
- 		else {
- 			rval = 0;
--			if ((error = xfs_bmbt_lookup_eq(cur, PREV.br_startoff,
--					PREV.br_startblock,
--					PREV.br_blockcount, &i)))
-+			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
-+					old.br_startblock, old.br_blockcount,
-+					&i);
-+			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			if ((error = xfs_bmbt_update(cur, PREV.br_startoff,
--				PREV.br_startblock,
--				PREV.br_blockcount - new->br_blockcount,
--				oldext)))
-+			error = xfs_bmbt_update(cur, PREV.br_startoff,
-+					PREV.br_startblock, PREV.br_blockcount,
-+					PREV.br_state);
-+			if (error)
- 				goto done;
--			if ((error = xfs_btree_increment(cur, 0, &i)))
-+			error = xfs_btree_increment(cur, 0, &i);
-+			if (error)
- 				goto done;
--			if ((error = xfs_bmbt_update(cur, new->br_startoff,
--				new->br_startblock,
--				new->br_blockcount + RIGHT.br_blockcount,
--				newext)))
-+			error = xfs_bmbt_update(cur, RIGHT.br_startoff,
-+					RIGHT.br_startblock,
-+					RIGHT.br_blockcount, RIGHT.br_state);
-+			if (error)
- 				goto done;
- 		}
- 		break;
-@@ -2552,9 +2550,10 @@ xfs_bmap_add_extent_unwritten_real(
- 		 * Setting the last part of a previous oldext extent to newext.
- 		 * The right neighbor is not contiguous.
- 		 */
-+		old = PREV;
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep,
--			PREV.br_blockcount - new->br_blockcount);
-+		PREV.br_blockcount -= new->br_blockcount;
-+		xfs_iext_update_extent(ifp, *idx, &PREV);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		++*idx;
-@@ -2566,15 +2565,16 @@ xfs_bmap_add_extent_unwritten_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			if ((error = xfs_bmbt_lookup_eq(cur, PREV.br_startoff,
--					PREV.br_startblock, PREV.br_blockcount,
--					&i)))
-+			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
-+					old.br_startblock, old.br_blockcount,
-+					&i);
-+			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			if ((error = xfs_bmbt_update(cur, PREV.br_startoff,
--				PREV.br_startblock,
--				PREV.br_blockcount - new->br_blockcount,
--				oldext)))
-+			error = xfs_bmbt_update(cur, PREV.br_startoff,
-+					PREV.br_startblock, PREV.br_blockcount,
-+					PREV.br_state);
-+			if (error)
- 				goto done;
- 			if ((error = xfs_bmbt_lookup_eq(cur, new->br_startoff,
- 					new->br_startblock, new->br_blockcount,
-@@ -2594,17 +2594,18 @@ xfs_bmap_add_extent_unwritten_real(
- 		 * newext.  Contiguity is impossible here.
- 		 * One extent becomes three extents.
- 		 */
-+		old = PREV;
- 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep,
--			new->br_startoff - PREV.br_startoff);
-+		PREV.br_blockcount = new->br_startoff - PREV.br_startoff;
-+		xfs_iext_update_extent(ifp, *idx, &PREV);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		r[0] = *new;
- 		r[1].br_startoff = new_endoff;
- 		r[1].br_blockcount =
--			PREV.br_startoff + PREV.br_blockcount - new_endoff;
-+			old.br_startoff + old.br_blockcount - new_endoff;
- 		r[1].br_startblock = new->br_startblock + new->br_blockcount;
--		r[1].br_state = oldext;
-+		r[1].br_state = PREV.br_state;
- 
- 		++*idx;
- 		xfs_iext_insert(ip, *idx, 2, &r[0], state);
-@@ -2615,9 +2616,10 @@ xfs_bmap_add_extent_unwritten_real(
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
- 			rval = XFS_ILOG_CORE;
--			if ((error = xfs_bmbt_lookup_eq(cur, PREV.br_startoff,
--					PREV.br_startblock, PREV.br_blockcount,
--					&i)))
-+			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
-+					old.br_startblock, old.br_blockcount,
-+					&i);
-+			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			/* new right extent - oldext */
-@@ -2627,8 +2629,6 @@ xfs_bmap_add_extent_unwritten_real(
- 				goto done;
- 			/* new left extent - oldext */
- 			cur->bc_rec.b = PREV;
--			cur->bc_rec.b.br_blockcount =
--				new->br_startoff - PREV.br_startoff;
- 			if ((error = xfs_btree_insert(cur, &i)))
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 		{ 0, NULL }
+ 	};
+ 	static struct proc_xfs_info xfs_info_unset[] = {
 -- 
-2.11.0
+2.9.3
 
