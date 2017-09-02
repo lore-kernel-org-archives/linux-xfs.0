@@ -1,107 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sender-pp-092.zoho.com ([135.84.80.237]:25459 "EHLO
-        sender-pp-092.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752817AbdICCsk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Sep 2017 22:48:40 -0400
-From: ToddAndMargo <ToddAndMargo@zoho.com>
-Subject: error: "Your hard drive is failing" ???
-Message-ID: <7f2b8d9d-3748-0ce1-7e88-76409e8717cb@zoho.com>
-Date: Sat, 2 Sep 2017 19:48:36 -0700
+Received: from mx1.redhat.com ([209.132.183.28]:59122 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751510AbdIBHts (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 2 Sep 2017 03:49:48 -0400
+Date: Sat, 2 Sep 2017 15:49:45 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [BUG] sb_fdblocks counting error caused by too large indlen
+ returned from xfs_bmap_worst_indlen()
+Message-ID: <20170902074945.GT27835@eguan.usersys.redhat.com>
+References: <20170707120040.GG29475@eguan.usersys.redhat.com>
+ <20170708064937.GH4103@magnolia>
+ <20170709140818.GI29475@eguan.usersys.redhat.com>
+ <20170710161824.GI4103@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170710161824.GI4103@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Dear Xfs,
+On Mon, Jul 10, 2017 at 09:18:24AM -0700, Darrick J. Wong wrote:
+> On Sun, Jul 09, 2017 at 10:08:18PM +0800, Eryu Guan wrote:
+> > On Fri, Jul 07, 2017 at 11:49:37PM -0700, Darrick J. Wong wrote:
+> > > On Fri, Jul 07, 2017 at 08:01:43PM +0800, Eryu Guan wrote:
+> > > > Hi all,
+> > > > 
+> > > > I recently hit a repeatable sb_fdblocks corruption as below:
+> > > > 
+> > > > Phase 1 - find and verify superblock...
+> > > > Phase 2 - using internal log
+> > > >         - zero log...
+> > > >         - scan filesystem freespace and inode maps...
+> > > > sb_fdblocks 14538692, counted 14669764
+> > > >         - found root inode chunk
+> > > > Phase 3 - for each AG...
+> > > > ...
+> > > > 
+> > > > And the count diff is always 14669764 - 14538692 = 131072 (128k). The
+> > > > XFS in question was formated with "-m rmapbt=1 -b 1k" option.
 
-Scientific Linux 7.3
+I hit this corruption again today in my fstests release testing, and it
+reminded me this old thread :)
 
-$ rpm -qa \*xfsdump\*
-xfsdump-3.1.4-1.el7.x86_64
+...
 
+> > > 
+> > > So maybe the solution is to revert this patch and see if generic/224
+> > > still blows up when suint/swidth are set?  I tried the steps given in
+> > > your email from 18 Nov 2016 ("[BUG] dd doesn't return on ENOSPC and hang
+> > > when fulfilling rmapbt XFS") with sunit=32,swidth=224 (numbers I
+> > > entirely made up) and it ran just fine.  I then ran it with the
+> > > reproducer steps you outlined above, and that ran just fine too.
+> > > I did not run the rest of xfstests.
+> > 
+> > Reverting commit fd26a88093ba works for me, I can't reproduce the
+> > sb_fdblocks accounting error nor the dd hang bug.
+> 
+> <nod> I'll consider posting a revert patch for the post -rc1 fixes.
+> 
+> But... merge window stuff comes first. :)
 
-When I do a backup to /dev/sda1 (/lin-bak), I get told
+Is reverting commit fd26a88093ba still the plan? Maybe we can do it for
+4.14.
 
-     WARNING: Your hard drive is failing
-     Device: /dev/sda [SAT], unable to open device
-
-xfs_repair finda nothing wrong with /dev/sda1.
-gsmartcontrol -- both the long and short test -- find
-nothing either.
-
-Any words of wisdom?  Is this a false positive?
-
-
-Many thanks,
--T
-
-/home
-      /dev/dm-2
-      xfs
-      RAID 1 and resides on an LSI 3ware LSI00216 SAS 9750-4i
-
-/lin-bak
-     /dev/sda1
-
-
-/usr/sbin/xfsdump -v verbose -M 1 -L 1 -l 0 -f 
-/lin-bak/2017-09-02_13-59-28_homeXfsDump  /home
-/usr/sbin/xfsdump: using file dump (drive_simple) strategy
-/usr/sbin/xfsdump: version 3.1.4 (dump format 3.0) - type ^C for status 
-and control
-/usr/sbin/xfsdump: level 0 dump of rn4.rent-a-nerd.local:/home
-/usr/sbin/xfsdump: dump date: Sat Sep  2 13:59:36 2017
-/usr/sbin/xfsdump: session id: bcaf0ce7-e742-41bc-ad9d-2db722c69e74
-/usr/sbin/xfsdump: session label: "1"
-/usr/sbin/xfsdump: ino map phase 1: constructing initial dump list
-/usr/sbin/xfsdump: ino map phase 2: skipping (no pruning necessary)
-/usr/sbin/xfsdump: ino map phase 3: skipping (only one dump stream)
-/usr/sbin/xfsdump: ino map construction complete
-/usr/sbin/xfsdump: estimated dump size: 659337362880 bytes
-/usr/sbin/xfsdump: creating dump session media file 0 (media 0, file 0)
-/usr/sbin/xfsdump: dumping ino map
-/usr/sbin/xfsdump: dumping directories
-/usr/sbin/xfsdump: dumping non-directory files
-WARNING: Your hard drive is failing
-Device: /dev/sda [SAT], unable to open device
-
-umount: /lin-bak (/dev/mapper/lin-bak) unmounted
-/sbin/xfs_repair /dev/sda1
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-         - zero log...
-         - scan filesystem freespace and inode maps...
-         - found root inode chunk
-Phase 3 - for each AG...
-         - scan and clear agi unlinked lists...
-         - process known inodes and perform inode discovery...
-         - agno = 0
-         - agno = 1
-         - agno = 2
-         - agno = 3
-         - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-         - setting up duplicate extent list...
-         - check for inodes claiming duplicate blocks...
-         - agno = 1
-         - agno = 3
-         - agno = 2
-         - agno = 0
-Phase 5 - rebuild AG headers and trees...
-         - reset superblock...
-Phase 6 - check inode connectivity...
-         - resetting contents of realtime bitmap and summary inodes
-         - traversing filesystem ...
-         - traversal finished ...
-         - moving disconnected inodes to lost+found ...
-Phase 7 - verify and correct link counts...
-done
-
-/lin-bak dismounted
-           starting capacaity (used space): 65%
-           stopping capacaity (used space): 68% Remaining space: 620224 MB
-
+Thanks,
+Eryu
