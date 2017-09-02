@@ -1,41 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:51993 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752862AbdIFLlS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Sep 2017 07:41:18 -0400
-Date: Wed, 6 Sep 2017 13:41:16 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2] xfs: fix incorrect log_flushed on fsync
-Message-ID: <20170906114116.GA25884@lst.de>
-References: <1504280365-25354-1-git-send-email-amir73il@gmail.com> <20170902131955.GB36492@bfoster.bfoster> <CAOQ4uxhLTtMV9FSr4um-dYefmpZ0NJseBiQzykxjy15kLqLsww@mail.gmail.com> <20170905144006.GA48515@bfoster.bfoster> <20170905145442.GA6869@lst.de> <20170905153439.GB48515@bfoster.bfoster>
+Received: from aserp1040.oracle.com ([141.146.126.69]:50868 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752732AbdIBRGc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Sep 2017 13:06:32 -0400
+Date: Sat, 2 Sep 2017 10:06:26 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: revert "xfs: factor rmap btree size into the indlen
+ calculations"
+Message-ID: <20170902170626.GC4073@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170905153439.GB48515@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, "stable [v4.9]" <stable@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Eryu Guan <eguan@redhat.com>
 
-On Tue, Sep 05, 2017 at 11:34:39AM -0400, Brian Foster wrote:
-> In xfs_log_force_lsn(), the iclog has to be ACTIVE. We switch it to
-> WANT_SYNC, bump the refcnt and call release_iclog(). The latter may or
-> may not do anything depending on the refcount. We set log_flushed
-> immediately after the release before we know whether an xlog_sync() has
-> actually occurred (is that your concern?). If XFS_LOG_SYNC is set, we
-> wait on the iclog before _force_lsn() returns, which means the log
-> buffer I/O has to have completed before we return either way. If the
-> iclog is still WANT_SYNC, the release didn't do anything, but we wait on
-> ic_force_wait which is triggered during I/O completion handling. If the
-> iclog is already DIRTY/ACTIVE, then the I/O has already submitted and
-> completed.
-> 
-> fsync looks like the only the user of log_flushed and it also uses
-> XFS_LOG_SYNC. ISTM that the code is probably still bogus in principle,
-> but in practice the fsync code may be safe. Thoughts? Am I missing
-> something else?
+In commit fd26a88093ba we added a worst case estimate for rmapbt blocks
+needed to satisfy the block mapping request.  Since then, we added the
+ability to reserve enough space in each AG such that we should never run
+out of blocks to grow the rmapbt, which makes this calculation
+unnecessary.  Revert the commit because it makes the extra delalloc
+indlen accounting unnecessary and incorrect.
 
-Yes, I think you're right - the extra XFS_LOG_SYNC code papers over
-the issue.  But given that the log_flushed indicator makes very
-little sene without XFS_LOG_SYNC it should be ok.
+Reported-by: Eryu Guan <eguan@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c |   17 ++---------------
+ 1 file changed, 2 insertions(+), 15 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 459f4b4f0..044a363 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -49,7 +49,6 @@
+ #include "xfs_rmap.h"
+ #include "xfs_ag_resv.h"
+ #include "xfs_refcount.h"
+-#include "xfs_rmap_btree.h"
+ #include "xfs_icache.h"
+ 
+ 
+@@ -192,12 +191,8 @@ xfs_bmap_worst_indlen(
+ 	int		maxrecs;	/* maximum record count at this level */
+ 	xfs_mount_t	*mp;		/* mount structure */
+ 	xfs_filblks_t	rval;		/* return value */
+-	xfs_filblks_t   orig_len;
+ 
+ 	mp = ip->i_mount;
+-
+-	/* Calculate the worst-case size of the bmbt. */
+-	orig_len = len;
+ 	maxrecs = mp->m_bmap_dmxr[0];
+ 	for (level = 0, rval = 0;
+ 	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
+@@ -205,20 +200,12 @@ xfs_bmap_worst_indlen(
+ 		len += maxrecs - 1;
+ 		do_div(len, maxrecs);
+ 		rval += len;
+-		if (len == 1) {
+-			rval += XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
++		if (len == 1)
++			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
+ 				level - 1;
+-			break;
+-		}
+ 		if (level == 0)
+ 			maxrecs = mp->m_bmap_dmxr[1];
+ 	}
+-
+-	/* Calculate the worst-case size of the rmapbt. */
+-	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+-		rval += 1 + xfs_rmapbt_calc_size(mp, orig_len) +
+-				mp->m_rmap_maxlevels;
+-
+ 	return rval;
+ }
+ 
