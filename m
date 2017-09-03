@@ -1,87 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38025 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:36820 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751129AbdICHYe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 03:24:34 -0400
-Date: Sun, 3 Sep 2017 00:24:33 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] misc: fix more stupid compiler warnings
-Message-ID: <20170903072432.GA32095@infradead.org>
-References: <20170901222157.GL3775@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170901222157.GL3775@magnolia>
+        with ESMTP id S1751617AbdICHaV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 03:30:21 -0400
+Received: from [91.114.64.3] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1doPMK-0006we-TW
+        for linux-xfs@vger.kernel.org; Sun, 03 Sep 2017 07:30:21 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 07/17] xfs: use the proper state defines in xfs_bmap_del_extent_real
+Date: Sun,  3 Sep 2017 09:29:46 +0200
+Message-Id: <20170903072956.3175-8-hch@lst.de>
+In-Reply-To: <20170903072956.3175-1-hch@lst.de>
+References: <20170903072956.3175-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-Can you splits this up a bit to be more self explanatory, e.g.
-one patch per warning class or logical change?
+Use the same defines as the other extent add and delete helpers, which
+both improves code readability and trace point output.
 
->  	if (be32_to_cpu(free->hdr.nvalid) > maxent ||
-> -				be32_to_cpu(free->hdr.nvalid) < 0 ||
->  				be32_to_cpu(free->hdr.nused) > maxent ||
-> -				be32_to_cpu(free->hdr.nused) < 0 ||
->  				be32_to_cpu(free->hdr.nused) >
->  					be32_to_cpu(free->hdr.nvalid)) {
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 21 +++++++++------------
+ 1 file changed, 9 insertions(+), 12 deletions(-)
 
-be32_to_cpu returns uint, so this makese sense.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index add690cb19a3..0a4bcef1cca8 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5162,13 +5162,13 @@ xfs_bmap_del_extent_real(
+ 		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 	}
+ 
+-	/*
+-	 * Set flag value to use in switch statement.
+-	 * Left-contig is 2, right-contig is 1.
+-	 */
+-	switch (((got.br_startoff == del->br_startoff) << 1) |
+-		(got_endoff == del_endoff)) {
+-	case 3:
++	if (got.br_startoff == del->br_startoff)
++		state |= BMAP_LEFT_CONTIG;
++	if (got_endoff == del_endoff)
++		state |= BMAP_RIGHT_CONTIG;
++
++	switch (state & (BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG)) {
++	case BMAP_LEFT_CONTIG | BMAP_RIGHT_CONTIG:
+ 		/*
+ 		 * Matches the whole extent.  Delete the entry.
+ 		 */
+@@ -5188,8 +5188,7 @@ xfs_bmap_del_extent_real(
+ 			goto done;
+ 		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 		break;
+-
+-	case 2:
++	case BMAP_LEFT_CONTIG:
+ 		/*
+ 		 * Deleting the first part of the extent.
+ 		 */
+@@ -5208,8 +5207,7 @@ xfs_bmap_del_extent_real(
+ 				got.br_state)))
+ 			goto done;
+ 		break;
+-
+-	case 1:
++	case BMAP_RIGHT_CONTIG:
+ 		/*
+ 		 * Deleting the last part of the extent.
+ 		 */
+@@ -5227,7 +5225,6 @@ xfs_bmap_del_extent_real(
+ 				got.br_state)))
+ 			goto done;
+ 		break;
+-
+ 	case 0:
+ 		/*
+ 		 * Deleting the middle of the extent.
+-- 
+2.11.0
 
-> -	(void)getcwd(curdir,MAXPATHLEN);
-> +	if (!getcwd(curdir, MAXPATHLEN)) {
-> +		perror("getcwd");
-> +		strcpy(curdir, ".");
-> +	}
-
-All this chdir magic will need a lot more explanation.  To me it
-seems like most of this is a left over from IRIX days where we
-could have device names relative to a volume.  The proper fix
-probably is to just remove that whole thing - if we'd ever
-need to bring it back we should use openat relative to a dirfd
-instead.
-
-> +#define xfs_inode_set_cowblocks_tag(ip)	do { } while (0)
-> +#define xfs_inode_set_eofblocks_tag(ip)	do { } while (0)
-
-This part looks fine.
-
->  #else
->  #define xfs_bmap_check_leaf_extents(cur, ip, whichfork)		do { } while (0)
-> -#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)
-> +#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)	do { } while (0)
->  #endif /* DEBUG */
-
-This as well.
-
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index b051a44..f360aed 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -3092,11 +3092,11 @@ mark_standalone_inodes(xfs_mount_t *mp)
->  	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rsumino),
->  			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino));
->  
-> +	ASSERT(irec != NULL);
-> +
->  	offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino) -
->  			irec->ino_startnum;
->  
-> -	ASSERT(irec != NULL);
-> -
-
-What's the point in even having this assert?   Either we turn this
-into something like
-
-	if (!irec)
-		abort();
-
-or just let the code dereference it.
-
-> -		imap.br_state = (rm_rec->rm_flags & XFS_RMAP_UNWRITTEN ?
-> +		imap.br_state = ((rm_rec->rm_flags & XFS_RMAP_UNWRITTEN) ?
->  				XFS_EXT_UNWRITTEN : XFS_EXT_NORM);
-
-Looks fine.
