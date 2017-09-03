@@ -1,50 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sender-pp-092.zoho.com ([135.84.80.237]:25339 "EHLO
-        sender-pp-092.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752827AbdICDSE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Sep 2017 23:18:04 -0400
-Subject: Re: error: "Your hard drive is failing" ???
-References: <7f2b8d9d-3748-0ce1-7e88-76409e8717cb@zoho.com>
- <b699dac3-321a-9029-87cb-2b5ced17ddd1@sandeen.net>
-From: ToddAndMargo <ToddAndMargo@zoho.com>
-Message-ID: <4b74027e-34ee-d365-e454-d3a0f524c408@zoho.com>
-Date: Sat, 2 Sep 2017 20:18:01 -0700
+Received: from mx1.redhat.com ([209.132.183.28]:56602 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752847AbdICDlv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 2 Sep 2017 23:41:51 -0400
+Subject: Re: [PATCH] misc: fix more stupid compiler warnings
+References: <20170901222157.GL3775@magnolia>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <ec6ee070-0cb3-70d0-80c4-c1629f618753@redhat.com>
+Date: Sat, 2 Sep 2017 22:41:50 -0500
 MIME-Version: 1.0
-In-Reply-To: <b699dac3-321a-9029-87cb-2b5ced17ddd1@sandeen.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20170901222157.GL3775@magnolia>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On 09/02/2017 08:08 PM, Eric Sandeen wrote:
-> On 9/2/17 9:48 PM, ToddAndMargo wrote:
->> Dear Xfs,
->>
->> Scientific Linux 7.3
->>
->> $ rpm -qa \*xfsdump\*
->> xfsdump-3.1.4-1.el7.x86_64
->>
->> When I do a backup to /dev/sda1 (/lin-bak), I get told
->>
->>      WARNING: Your hard drive is failing
->>      Device: /dev/sda [SAT], unable to open device
+On 9/1/17 5:21 PM, Darrick J. Wong wrote:
+> Fix more compiler warnings about pointless checks, unchecked return
+> values, brace problems, and missing parentheses.
 > 
-> That's a message from smartctl, it has nothing to do with
-> xfs or xfsdump.  It's probably related to your creative use
-> of hotplug.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  db/check.c           |    2 --
+>  libxfs/init.c        |   17 ++++++++++++-----
+>  libxfs/libxfs_priv.h |    4 ++--
+>  libxfs/xfs_bmap.c    |    2 +-
+>  repair/phase6.c      |    4 ++--
+>  repair/rmap.c        |    2 +-
+>  6 files changed, 18 insertions(+), 13 deletions(-)
 > 
-> -Eric
-> 
+> diff --git a/db/check.c b/db/check.c
+> index 12a0aed..6076540 100644
+> --- a/db/check.c
+> +++ b/db/check.c
+> @@ -3220,9 +3220,7 @@ process_leaf_node_dir_v2_free(
+>  		return;
+>  	}
+>  	if (be32_to_cpu(free->hdr.nvalid) > maxent ||
+> -				be32_to_cpu(free->hdr.nvalid) < 0 ||
+>  				be32_to_cpu(free->hdr.nused) > maxent ||
+> -				be32_to_cpu(free->hdr.nused) < 0 ||
+>  				be32_to_cpu(free->hdr.nused) >
+>  					be32_to_cpu(free->hdr.nvalid)) {
+>  		if (!sflag || v)
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index d77a9e6..2479220 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -262,7 +262,10 @@ libxfs_init(libxfs_init_t *a)
+>  	a->dsize = a->lbsize = a->rtbsize = 0;
+>  	a->dbsize = a->logBBsize = a->logBBstart = a->rtsize = 0;
+>  
+> -	(void)getcwd(curdir,MAXPATHLEN);
+> +	if (!getcwd(curdir, MAXPATHLEN)) {
+> +		perror("getcwd");
+> +		strcpy(curdir, ".");
+> +	}
 
-Then I am just going to ignore it then.
+I can't quite figure out what this curdir/needcd stuff is
+for, but assuming it's not pointless, crazy cruft, I don't
+think this is safe; later code does "chdir(curdir)"
+and chdir(".") isn't going to do what the code expects, is
+it?
 
-/dev/sda1 is always dismounted unless it is doing a backup
-(or I am restoring something).  It is always dismounted
-when I change it.
+>  	needcd = 0;
+>  	fd = -1;
+>  	flags = (a->isreadonly | a->isdirect);
+> @@ -284,7 +287,8 @@ libxfs_init(libxfs_init_t *a)
+>  	}
+>  	if (dname) {
+>  		if (dname[0] != '/' && needcd)
+> -			chdir(curdir);
+> +			if (chdir(curdir))
+> +				perror(curdir);
 
-Thank you for the help!
+and again, if we fail, we print something and carry on?
+It may shut up gcc, but this doesn't look like error handling to me :)
 
+Could you tell what this chdir/curdir/needcd stuff is for?
+
+-Eric
