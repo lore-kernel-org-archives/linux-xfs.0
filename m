@@ -1,166 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:39178 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752585AbdICMOw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 3 Sep 2017 08:14:52 -0400
-Date: Sun, 3 Sep 2017 14:14:51 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: test getbmap on reflinked files
-Message-ID: <20170903121451.GA18274@lst.de>
+Received: from relayout03-q02.e.movistar.es ([86.109.101.162]:50773 "EHLO
+        relayout03-q02.e.movistar.es" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751611AbdICMPH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 08:15:07 -0400
+Received: from relayout03-redir.e.movistar.es (relayout03-redir.e.movistar.es [86.109.101.203])
+        by relayout03-out.e.movistar.es (Postfix) with ESMTP id 3xlWtS3ZkPzQlF6
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2017 14:06:56 +0200 (CEST)
+Received: from Telcontar.valinor (130.red-79-146-117.dynamicip.rima-tde.net [79.146.117.130])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: robin.listas2)
+        by relayout03.e.movistar.es (Postfix) with ESMTPSA id 3xlWtS0jCnzMl4B
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2017 14:06:55 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by Telcontar.valinor (Postfix) with ESMTP id 48F6012094D
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2017 14:06:53 +0200 (CEST)
+Received: from Telcontar.valinor ([127.0.0.1])
+        by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
+        with LMTP id SN-yk7b3gbCw for <linux-xfs@vger.kernel.org>;
+        Sun,  3 Sep 2017 14:06:53 +0200 (CEST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        by Telcontar.valinor (Postfix) with ESMTP id 199B2120946
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2017 14:06:53 +0200 (CEST)
+Subject: Re: How do I stop the roll backs?
+References: <15e3d125e44.1006338d5356.4004547008347294090@zoho.com>
+ <20170901113853.27txrjvdcnc7gcgb@hades.localdomain>
+ <52e5faf2-9e64-17e1-c368-38d193ffeb86@zoho.com>
+ <CAAxjCEzzYJ3z2pNMQ=vm+aAFdLOpKKuN0buQcvQk7ApVFF+kXQ@mail.gmail.com>
+From: "Carlos E. R." <robin.listas@telefonica.net>
+Message-ID: <fc1fbac5-803c-fb11-6175-e17f87d36d95@telefonica.net>
+Date: Sun, 3 Sep 2017 14:06:52 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <CAAxjCEzzYJ3z2pNMQ=vm+aAFdLOpKKuN0buQcvQk7ApVFF+kXQ@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="nIMDw44VcHoILFK1lpbJBIurrt6O3QWVu"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
 
-Test that we correctly report shared and unshared regions in a file.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--nIMDw44VcHoILFK1lpbJBIurrt6O3QWVu
+Content-Type: multipart/mixed; boundary="NnWn2qBKsqBgRF7kkRIFEKLKslv68Xlrp";
+ protected-headers="v1"
+From: "Carlos E. R." <robin.listas@telefonica.net>
+To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
+Message-ID: <fc1fbac5-803c-fb11-6175-e17f87d36d95@telefonica.net>
+Subject: Re: How do I stop the roll backs?
+References: <15e3d125e44.1006338d5356.4004547008347294090@zoho.com>
+ <20170901113853.27txrjvdcnc7gcgb@hades.localdomain>
+ <52e5faf2-9e64-17e1-c368-38d193ffeb86@zoho.com>
+ <CAAxjCEzzYJ3z2pNMQ=vm+aAFdLOpKKuN0buQcvQk7ApVFF+kXQ@mail.gmail.com>
+In-Reply-To: <CAAxjCEzzYJ3z2pNMQ=vm+aAFdLOpKKuN0buQcvQk7ApVFF+kXQ@mail.gmail.com>
 
-To do so we also update _filter_bmap to include the shared flag.
+--NnWn2qBKsqBgRF7kkRIFEKLKslv68Xlrp
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-CA
+Content-Transfer-Encoding: quoted-printable
 
-Based on a test case from Darrick Wong.
+On 2017-09-02 09:55, Stefan Ring wrote:
+> On Sat, Sep 2, 2017 at 1:41 AM, ToddAndMargo <> wrote:
+>>
+>> For the full run down and details on this stinker, see
+>> https://bugzilla.redhat.com/show_bug.cgi?id=3D1483279
+>> It includes a full hardware and OS list.
+>=20
+> TBH, I've never heard of SATA hotplug and would not in my wildest
+> dreams expect it to work, let alone put it to work at a customer site.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+I have been using SATA hotplug for years, and it works reliably.
 
-diff --git a/common/punch b/common/punch
-index c4ed261..3c400c1 100644
---- a/common/punch
-+++ b/common/punch
-@@ -263,6 +263,10 @@ _filter_bmap()
- 			print $1, $2, $3;
- 			next;
- 		}
-+		$7 ~ /1[01][01][01][01][01]/ {
-+			print $1, $2, "shared";
-+			next;
-+		}
- 		$7 ~ /1[01][01][01][01]/ {
- 			print $1, $2, "unwritten";
- 			next;
-diff --git a/tests/xfs/115 b/tests/xfs/115
-new file mode 100755
-index 0000000..eb456dc
---- /dev/null
-+++ b/tests/xfs/115
-@@ -0,0 +1,88 @@
-+#! /bin/bash
-+# FS QA Test 115
-+#
-+# Check getbmap reporting for reflinked files
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Christoph Hellwig.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+file=$TEST_DIR/${seq}.file
-+clone=$TEST_DIR/${seq}.clone
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	rm -f ${file} ${clone}
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+. ./common/punch
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os Linux
-+_require_test
-+_require_test_reflink
-+_require_cp_reflink
-+
-+# write file and check extent map
-+touch ${file}
-+xfs_io -c 'pwrite 0 1m' \
-+	-c 'fsync' ${file} >/dev/null
-+echo "initial file layout:"
-+xfs_io -c 'bmap -elpv' ${file} | _filter_test_dir | _filter_bmap
-+echo
-+
-+# reflink file and check for the shared bit in the extent map
-+cp --reflink=always ${file} ${clone} >/dev/null
-+echo "layout after reflink"
-+xfs_io -c 'bmap -elpv' ${file} | _filter_test_dir | _filter_bmap
-+echo
-+
-+# break COW and check the shared split in the extent map
-+xfs_io -c 'pwrite 200k 4k' \
-+	-c 'pwrite 700k 4k' \
-+	-c 'fsync' ${clone} | >/dev/null
-+echo "layout after partial unshare:"
-+xfs_io -c 'bmap -elpv' ${file} | _filter_test_dir | _filter_bmap
-+
-+# optional stuff if your test has verbose output to help resolve problems
-+#echo
-+#echo "If failure, check $seqres.full (this) and $seqres.full.ok (reference)"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/115.out b/tests/xfs/115.out
-new file mode 100644
-index 0000000..45e1d3c
---- /dev/null
-+++ b/tests/xfs/115.out
-@@ -0,0 +1,13 @@
-+QA output created by 115
-+initial file layout:
-+0: [0..2047]: data
-+
-+layout after reflink
-+0: [0..2047]: shared
-+
-+layout after partial unshare:
-+0: [0..399]: shared
-+1: [400..407]: data
-+2: [408..1399]: shared
-+3: [1400..1407]: data
-+4: [1408..2047]: shared
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 5c02498..97d6eee 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -112,6 +112,7 @@
- 112 fuzzers
- 113 fuzzers
- 114 auto rw dangerous
-+115 auto quick ioctl clone
- 116 quota auto quick
- 117 fuzzers
- 118 auto quick fsr dangerous
+However, the OS disk can not be swapped, and I have not tested it with
+RAID components.
+
+I use it to connect backup or extra data disks, usually with a single
+big XFS partition on them, sometimes encrypted with LUKS.
+
+It doesn't work on all firmware: for instance on the desktop computer
+I'm using now, there are two SATA connectors that can't hotswap.
+
+https://en.wikipedia.org/wiki/Serial_ATA
+
+=C2=ABThe Serial ATA Spec includes logic for SATA device hotplugging. Dev=
+ices
+and motherboards that meet the interoperability specification are
+capable of hot plugging.
+
+Unlike PATA, both SATA and eSATA support hot swapping by design.
+However, this feature requires proper support at the host, device
+(drive), and operating-system levels. In general, all SATA devices
+(drives) support hot swapping (due to the requirements on the
+device-side), also most SATA host adapters support this command.[1]=C2=BB=
+
+
+--=20
+Cheers / Saludos,
+
+		Carlos E. R.
+		(from 42.2 x86_64 "Malachite" at Telcontar)
+
+
+--NnWn2qBKsqBgRF7kkRIFEKLKslv68Xlrp--
+
+--nIMDw44VcHoILFK1lpbJBIurrt6O3QWVu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAlmr8FwACgkQtTMYHG2NR9W4DgCgk1tNZg9/r4lYwwlnh6/EnaeX
+LuYAnRhaa7Jp7LL+ANP+UGhHz0ZJh6tF
+=D+7I
+-----END PGP SIGNATURE-----
+
+--nIMDw44VcHoILFK1lpbJBIurrt6O3QWVu--
