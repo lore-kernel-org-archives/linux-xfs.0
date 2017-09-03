@@ -1,47 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f182.google.com ([209.85.220.182]:33866 "EHLO
-        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752847AbdICOJK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 10:09:10 -0400
-Received: by mail-qk0-f182.google.com with SMTP id z143so2092636qkb.1
-        for <linux-xfs@vger.kernel.org>; Sun, 03 Sep 2017 07:09:10 -0700 (PDT)
+Received: from sender-pp-092.zoho.com ([135.84.80.237]:25433 "EHLO
+        sender-pp-092.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753036AbdIDAAC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 20:00:02 -0400
+Subject: Re: error: "Your hard drive is failing" ???
+References: <7f2b8d9d-3748-0ce1-7e88-76409e8717cb@zoho.com>
+ <b699dac3-321a-9029-87cb-2b5ced17ddd1@sandeen.net>
+ <4b74027e-34ee-d365-e454-d3a0f524c408@zoho.com>
+ <b2a570b1-d062-b880-5371-33c454fac70f@telefonica.net>
+From: ToddAndMargo <ToddAndMargo@zoho.com>
+Message-ID: <11db60f4-746c-ea37-96e3-90c43ebc1b2c@zoho.com>
+Date: Sun, 3 Sep 2017 16:59:55 -0700
 MIME-Version: 1.0
-In-Reply-To: <20170903074306.GA8351@infradead.org>
-References: <CABXGCsOL+_OgC0dpO1+Zeg=iu7ryZRZT4S7k-io8EGB0ZRgZGw@mail.gmail.com>
- <20170903074306.GA8351@infradead.org>
-From: =?UTF-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?=
-        <mikhail.v.gavrilov@gmail.com>
-Date: Sun, 3 Sep 2017 19:08:54 +0500
-Message-ID: <CABXGCsMmEvEh__R2L47jqVnxv9XDaT_KP67jzsUeDLhF2OuOyA@mail.gmail.com>
-Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <b2a570b1-d062-b880-5371-33c454fac70f@telefonica.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org
+To: "Carlos E. R." <robin.listas@telefonica.net>, Linux-XFS mailing list <linux-xfs@vger.kernel.org>
 
-On 3 September 2017 at 12:43, Christoph Hellwig <hch@infradead.org> wrote:
->
-> This is:
->
->         bh = head = page_buffers(page);
->
-> Which looks odd and like some sort of VM/writeback change might
-> have triggered that we get a page without buffers, despite always
-> creating buffers in iomap_begin/end and page_mkwrite.
->
-> Ccing linux-mm if anything odd happen in that area recently.
->
-> Can you tell anything about the workload you are running?
->
+On 09/03/2017 05:32 AM, Carlos E. R. wrote:
+> On 2017-09-03 05:18, ToddAndMargo wrote:
+>> On 09/02/2017 08:08 PM, Eric Sandeen wrote:
+>>> On 9/2/17 9:48 PM, ToddAndMargo wrote:
+>>>> Dear Xfs,
+>>>>
+>>>> Scientific Linux 7.3
+>>>>
+>>>> $ rpm -qa \*xfsdump\*
+>>>> xfsdump-3.1.4-1.el7.x86_64
+>>>>
+>>>> When I do a backup to /dev/sda1 (/lin-bak), I get told
+>>>>
+>>>>       WARNING: Your hard drive is failing
+>>>>       Device: /dev/sda [SAT], unable to open device
+>>>
+>>> That's a message from smartctl, it has nothing to do with
+>>> xfs or xfsdump.  It's probably related to your creative use
+>>> of hotplug.
+> 
+>> Then I am just going to ignore it then.
+> 
+> smartctl daemon may not be aware that you swapped a disk and be
+> confused. You may have to restart it.
+> 
 
-On XFS partition stored launched KVM VM images, + home partition with
-Google Chrome profiles.
-Seems the bug triggering by high memory consumption and using swap
-which two times larger than system memory.
-I saw that it happens when swap has reached size of system memory.
+Hi Carlos,
 
---
-Best Regards,
-Mike Gavrilov.
+I am not finding a smartctl daemon running.  Is it
+known by another name?
+
+# systemctl status smartctld
+Unit smartctld.service could not be found.
+
+# systemctl status smartctl
+Unit smartctl.service could not be found.
+
+# ps ax | grep -i [s]martctl
+<nothing>
+
+And can I just do a "systemctl restart xxx" on it?  Or will
+it just confuse the issue.
+
+
+-T
+
