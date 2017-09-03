@@ -1,96 +1,183 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f171.google.com ([209.85.216.171]:34085 "EHLO
-        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751766AbdICEWd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 00:22:33 -0400
-Received: by mail-qt0-f171.google.com with SMTP id u11so13484473qtu.1
-        for <linux-xfs@vger.kernel.org>; Sat, 02 Sep 2017 21:22:33 -0700 (PDT)
-MIME-Version: 1.0
-From: =?UTF-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?=
-        <mikhail.v.gavrilov@gmail.com>
-Date: Sun, 3 Sep 2017 09:22:17 +0500
-Message-ID: <CABXGCsOL+_OgC0dpO1+Zeg=iu7ryZRZT4S7k-io8EGB0ZRgZGw@mail.gmail.com>
-Subject: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([65.50.211.133]:37796 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751543AbdICHaM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 03:30:12 -0400
+Received: from [91.114.64.3] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1doPMB-0006vI-W9
+        for linux-xfs@vger.kernel.org; Sun, 03 Sep 2017 07:30:12 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 04/17] xfs: rename bno to end in __xfs_bunmapi
+Date: Sun,  3 Sep 2017 09:29:43 +0200
+Message-Id: <20170903072956.3175-5-hch@lst.de>
+In-Reply-To: <20170903072956.3175-1-hch@lst.de>
+References: <20170903072956.3175-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-[281502.961248] ------------[ cut here ]------------
-[281502.961257] kernel BUG at fs/xfs/xfs_aops.c:853!
-[281502.961263] invalid opcode: 0000 [#1] SMP
-[281502.961299] Modules linked in: xt_CHECKSUM ipt_MASQUERADE
-nf_nat_masquerade_ipv4 tun nls_utf8 isofs rfcomm fuse
-nf_conntrack_netbios_ns nf_conntrack_broadcast xt_CT ip6t_rpfilter
-ip6t_REJECT nf_reject_ipv6 xt_conntrack ip_set nfnetlink ebtable_nat
-ebtable_broute bridge stp llc ip6table_nat nf_conntrack_ipv6
-nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_raw
-ip6table_security iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4
-nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_raw
-iptable_security ebtable_filter ebtables ip6table_filter ip6_tables
-bnep sunrpc vfat fat xfs libcrc32c snd_usb_audio snd_usbmidi_lib
-snd_rawmidi intel_rapl x86_pkg_temp_thermal intel_powerclamp coretemp
-kvm_intel kvm irqbypass crct10dif_pclmul crc32_pclmul btrfs
-ghash_clmulni_intel intel_cstate iTCO_wdt iTCO_vendor_support
-[281502.961684]  ppdev intel_uncore xor intel_rapl_perf i2c_i801
-huawei_cdc_ncm option raid6_pq cdc_wdm joydev cdc_ncm btusb usb_wwan
-snd_hda_codec_hdmi snd_hda_codec_realtek btrtl btbcm
-snd_hda_codec_ca0132 btintel snd_hda_codec_generic bluetooth
-gspca_zc3xx gspca_main v4l2_common snd_hda_intel videodev cdc_ether
-snd_hda_codec usbnet media ecdh_generic snd_hda_core rfkill snd_hwdep
-snd_seq snd_seq_device snd_pcm snd_timer mei_me snd mei lpc_ich
-soundcore shpchp parport_pc parport tpm_infineon tpm_tis tpm_tis_core
-tpm binfmt_misc hid_logitech_hidpp hid_logitech_dj uas usb_storage
-i915 crc32c_intel i2c_algo_bit drm_kms_helper drm r8169 mii video bfq
-[281502.962014] CPU: 7 PID: 81 Comm: kswapd0 Not tainted
-4.13.0-0.rc6.git4.1.fc28.x86_64 #1
-[281502.962052] Hardware name: Gigabyte Technology Co., Ltd.
-Z87M-D3H/Z87M-D3H, BIOS F11 08/12/2014
-[281502.962094] task: ffff9f5b31acb300 task.stack: ffffabcd43e48000
-[281502.962161] RIP: 0010:xfs_do_writepage+0x735/0x830 [xfs]
-[281502.962188] RSP: 0018:ffffabcd43e4b988 EFLAGS: 00010246
-[281502.962216] RAX: 0000000000001000 RBX: ffffabcd43e4ba98 RCX:
-000000000000000c
-[281502.962251] RDX: 0017ffffc0030009 RSI: ffffe8881f3cf900 RDI:
-0000000000000246
-[281502.962287] RBP: ffffabcd43e4ba30 R08: ffffe8881f3cf900 R09:
-0000000000000002
-[281502.962321] R10: ffffabcd43e4b9e0 R11: 0000000000000000 R12:
-ffff9f57fa7b6110
-[281502.962356] R13: ffffabcd43e4bc40 R14: ffffabcd43e4ba40 R15:
-ffffe8881f3cf920
-[281502.962392] FS:  0000000000000000(0000) GS:ffff9f5b5da00000(0000)
-knlGS:0000000000000000
-[281502.962430] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[281502.962458] CR2: 00007ff86cb39018 CR3: 0000000815e11000 CR4:
-00000000001426e0
-[281502.962494] Call Trace:
-[281502.962515]  ? sched_clock+0x9/0x10
-[281502.962539]  ? clear_page_dirty_for_io+0x140/0x2b0
-[281502.962590]  xfs_vm_writepage+0x3b/0x70 [xfs]
-[281502.962618]  pageout.isra.54+0x103/0x420
-[281502.962646]  shrink_page_list+0x982/0xdf0
-[281502.962674]  shrink_inactive_list+0x225/0x630
-[281502.962704]  shrink_node_memcg+0x36c/0x770
-[281502.962734]  shrink_node+0xf7/0x2f0
-[281502.962753]  ? shrink_node+0xf7/0x2f0
-[281502.962779]  kswapd+0x325/0x990
-[281502.962804]  kthread+0x133/0x150
-[281502.962824]  ? mem_cgroup_shrink_node+0x330/0x330
-[281502.962849]  ? kthread_create_on_node+0x70/0x70
-[281502.962875]  ret_from_fork+0x2a/0x40
-[281502.962898] Code: ce 48 c7 00 00 00 00 00 48 c7 44 30 f8 00 00 00
-00 48 83 e7 f8 48 29 f8 01 c1 89 c8 c1 e8 03 89 c1 31 c0 f3 48 ab e9
-0f fe ff ff <0f> 0b e8 54 44 3a d9 85 c0 0f 85 44 fe ff ff 48 c7 c2 48
-a2 df
-[281502.963085] RIP: xfs_do_writepage+0x735/0x830 [xfs] RSP: ffffabcd43e4b988
-[281502.972614] ---[ end trace 1ba3042d56323a9c ]---
+Rename the bno variable that's used as the end of the range in
+__xfs_bunmapi to end, which better describes it.  Additionally change
+the start variable which takes the initial value of bno to be the
+function parameter itself.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 49 ++++++++++++++++++++++++------------------------
+ 1 file changed, 24 insertions(+), 25 deletions(-)
 
-Anybody can look what is culprit here?
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index b5b30415aa2b..6c65954fc42c 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5410,7 +5410,7 @@ int						/* error */
+ __xfs_bunmapi(
+ 	xfs_trans_t		*tp,		/* transaction pointer */
+ 	struct xfs_inode	*ip,		/* incore inode */
+-	xfs_fileoff_t		bno,		/* starting offset to unmap */
++	xfs_fileoff_t		start,		/* first file offset deleted */
+ 	xfs_filblks_t		*rlen,		/* i/o: amount remaining */
+ 	int			flags,		/* misc flags */
+ 	xfs_extnum_t		nexts,		/* number of extents max */
+@@ -5429,7 +5429,6 @@ __xfs_bunmapi(
+ 	int			logflags;	/* transaction logging flags */
+ 	xfs_extlen_t		mod;		/* rt extent offset */
+ 	xfs_mount_t		*mp;		/* mount structure */
+-	xfs_fileoff_t		start;		/* first file offset deleted */
+ 	int			tmp_logflags;	/* partial logging flags */
+ 	int			wasdel;		/* was a delayed alloc extent */
+ 	int			whichfork;	/* data or attribute fork */
+@@ -5437,8 +5436,9 @@ __xfs_bunmapi(
+ 	xfs_filblks_t		len = *rlen;	/* length to unmap in file */
+ 	xfs_fileoff_t		max_len;
+ 	xfs_agnumber_t		prev_agno = NULLAGNUMBER, agno;
++	xfs_fileoff_t		end;
+ 
+-	trace_xfs_bunmap(ip, bno, len, flags, _RET_IP_);
++	trace_xfs_bunmap(ip, start, len, flags, _RET_IP_);
+ 
+ 	whichfork = xfs_bmapi_whichfork(flags);
+ 	ASSERT(whichfork != XFS_COW_FORK);
+@@ -5477,17 +5477,16 @@ __xfs_bunmapi(
+ 	}
+ 	XFS_STATS_INC(mp, xs_blk_unmap);
+ 	isrt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
+-	start = bno;
+-	bno = start + len - 1;
++	end = start + len - 1;
+ 
+ 	/*
+ 	 * Check to see if the given block number is past the end of the
+ 	 * file, back up to the last block if so...
+ 	 */
+-	if (!xfs_iext_lookup_extent(ip, ifp, bno, &lastx, &got)) {
++	if (!xfs_iext_lookup_extent(ip, ifp, end, &lastx, &got)) {
+ 		ASSERT(lastx > 0);
+ 		xfs_iext_get_extent(ifp, --lastx, &got);
+-		bno = got.br_startoff + got.br_blockcount - 1;
++		end = got.br_startoff + got.br_blockcount - 1;
+ 	}
+ 
+ 	logflags = 0;
+@@ -5511,13 +5510,13 @@ __xfs_bunmapi(
+ 	}
+ 
+ 	extno = 0;
+-	while (bno != (xfs_fileoff_t)-1 && bno >= start && lastx >= 0 &&
++	while (end != (xfs_fileoff_t)-1 && end >= start && lastx >= 0 &&
+ 	       (nexts == 0 || extno < nexts) && max_len > 0) {
+ 		/*
+-		 * Is the found extent after a hole in which bno lives?
++		 * Is the found extent after a hole in which end lives?
+ 		 * Just back up to the previous extent, if so.
+ 		 */
+-		if (got.br_startoff > bno) {
++		if (got.br_startoff > end) {
+ 			if (--lastx < 0)
+ 				break;
+ 			xfs_iext_get_extent(ifp, lastx, &got);
+@@ -5526,9 +5525,9 @@ __xfs_bunmapi(
+ 		 * Is the last block of this extent before the range
+ 		 * we're supposed to delete?  If so, we're done.
+ 		 */
+-		bno = XFS_FILEOFF_MIN(bno,
++		end = XFS_FILEOFF_MIN(end,
+ 			got.br_startoff + got.br_blockcount - 1);
+-		if (bno < start)
++		if (end < start)
+ 			break;
+ 		/*
+ 		 * Then deal with the (possibly delayed) allocated space
+@@ -5553,8 +5552,8 @@ __xfs_bunmapi(
+ 			if (!wasdel)
+ 				del.br_startblock += start - got.br_startoff;
+ 		}
+-		if (del.br_startoff + del.br_blockcount > bno + 1)
+-			del.br_blockcount = bno + 1 - del.br_startoff;
++		if (del.br_startoff + del.br_blockcount > end + 1)
++			del.br_blockcount = end + 1 - del.br_startoff;
+ 
+ 		/* How much can we safely unmap? */
+ 		if (max_len < del.br_blockcount) {
+@@ -5580,10 +5579,10 @@ __xfs_bunmapi(
+ 				 * This piece is unwritten, or we're not
+ 				 * using unwritten extents.  Skip over it.
+ 				 */
+-				ASSERT(bno >= mod);
+-				bno -= mod > del.br_blockcount ?
++				ASSERT(end >= mod);
++				end -= mod > del.br_blockcount ?
+ 					del.br_blockcount : mod;
+-				if (bno < got.br_startoff) {
++				if (end < got.br_startoff) {
+ 					if (--lastx >= 0)
+ 						xfs_iext_get_extent(ifp, lastx,
+ 								&got);
+@@ -5632,9 +5631,9 @@ __xfs_bunmapi(
+ 				 * Can't make it unwritten.  There isn't
+ 				 * a full extent here so just skip it.
+ 				 */
+-				ASSERT(bno >= del.br_blockcount);
+-				bno -= del.br_blockcount;
+-				if (got.br_startoff > bno && --lastx >= 0)
++				ASSERT(end >= del.br_blockcount);
++				end -= del.br_blockcount;
++				if (got.br_startoff > end && --lastx >= 0)
+ 					xfs_iext_get_extent(ifp, lastx, &got);
+ 				continue;
+ 			} else if (del.br_state == XFS_EXT_UNWRITTEN) {
+@@ -5737,24 +5736,24 @@ __xfs_bunmapi(
+ 			xfs_mod_fdblocks(mp, (int64_t)del.br_blockcount, false);
+ 
+ 		max_len -= del.br_blockcount;
+-		bno = del.br_startoff - 1;
++		end = del.br_startoff - 1;
+ nodelete:
+ 		/*
+ 		 * If not done go on to the next (previous) record.
+ 		 */
+-		if (bno != (xfs_fileoff_t)-1 && bno >= start) {
++		if (end != (xfs_fileoff_t)-1 && end >= start) {
+ 			if (lastx >= 0) {
+ 				xfs_iext_get_extent(ifp, lastx, &got);
+-				if (got.br_startoff > bno && --lastx >= 0)
++				if (got.br_startoff > end && --lastx >= 0)
+ 					xfs_iext_get_extent(ifp, lastx, &got);
+ 			}
+ 			extno++;
+ 		}
+ 	}
+-	if (bno == (xfs_fileoff_t)-1 || bno < start || lastx < 0)
++	if (end == (xfs_fileoff_t)-1 || end < start || lastx < 0)
+ 		*rlen = 0;
+ 	else
+-		*rlen = bno - start + 1;
++		*rlen = end - start + 1;
+ 
+ 	/*
+ 	 * Convert to a btree if necessary.
+-- 
+2.11.0
 
-
---
-Best Regards,
-Mike Gavrilov.
