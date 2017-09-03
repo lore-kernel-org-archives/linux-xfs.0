@@ -1,53 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34505 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751149AbdIEHg3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2017 03:36:29 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v857XbZN007741
-        for <linux-xfs@vger.kernel.org>; Tue, 5 Sep 2017 03:36:28 -0400
-Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2csq86hm3a-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Sep 2017 03:36:28 -0400
-Received: from localhost
-        by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Tue, 5 Sep 2017 17:36:25 +1000
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: Re: [PATCH] mkfs: Remove messages printed when blocksize < physical sectorsize
-Date: Tue, 05 Sep 2017 13:07:07 +0530
-In-Reply-To: <20170905064208.GB15686@vader>
-References: <20170905054442.28615-1-chandan@linux.vnet.ibm.com> <20170905063139.GA679@infradead.org> <20170905064208.GB15686@vader>
+Received: from bombadil.infradead.org ([65.50.211.133]:56871 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751119AbdICIlC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 04:41:02 -0400
+Date: Sun, 3 Sep 2017 01:41:02 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] fsmap: fix documentation of FMR_OF_LAST
+Message-ID: <20170903084102.GC32385@infradead.org>
+References: <20170831204918.GA7404@magnolia>
+ <20170901080904.GA32746@infradead.org>
+ <20170901150716.GW3775@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-Message-Id: <2656563.n056MvCHVb@localhost.localdomain>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170901150716.GW3775@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Omar Sandoval <osandov@osandov.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@fb.com>, linux-xfs@vger.kernel.org, sandeen@sandeen.net, Omar Sandoval <osandov@fb.com>, linux-block@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>, linux-api@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Tuesday, September 5, 2017 12:12:08 PM IST Omar Sandoval wrote:
-> On Mon, Sep 04, 2017 at 11:31:39PM -0700, Christoph Hellwig wrote:
-> > On Tue, Sep 05, 2017 at 11:14:42AM +0530, Chandan Rajendra wrote:
-> > > Linux kernel commit 6c6b6f28b3335fd85ec833ee0005d9c9dca6c003 (loop: set
-> > > physical block size to PAGE_SIZE) now sets PAGE_SIZE as the default
-> > > physical sector size of loop devices. On ppc64, this causes loop devices
-> > > to have 64k as the physical sector size.
-> > 
-> > Eek.  We'll need to revert the loop change ASAP!
+On Fri, Sep 01, 2017 at 08:07:16AM -0700, Darrick J. Wong wrote:
+> fmh_entries is the number of records returned, not the number of records
+> in the dataset.  If, for example, you allocate space for 100 records and
+> perform a query for a block that has been reflinked 1000 times, the
+> dataset size is 1000 but fmh_entries is set to 100.  The lack of a LAST
+> flag on the 100th record tells you that there's more records to return.
 > 
-> Most annoying patch series ever. It hasn't made it to Linus' tree yet,
-> right? We can revert (although the later change depends on that), fold
-> in a fix, or apply a fix on top of it, whatever Jens prefers.
-> 
-> 
+> If however you allocate space for 100 records and the block is reflinked
+> exactly 100 times, there's no way (without the flag) for userspace to
+> know that record 100 is the end of the dataset, so the only thing it can
+> do is to fsmap_advance() and try the query again, only to receive zero
+> results.  Granted I don't think fsmap queries are all /that/ expensive,
+> but it's trivial for the kernel to set the flag.
 
-My bad. 6c6b6f28b3335fd85ec833ee0005d9c9dca6c003 is the commit id from 
-Linux-next. I don't see this commit in Linus's git tree.
+Oh, ok - it had to look up this defintion of dataset first.  With
+that the explanation makes total sense:
 
--- 
-chandan
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
