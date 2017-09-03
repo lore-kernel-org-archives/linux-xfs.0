@@ -1,206 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42388 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750731AbdIELHn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Sep 2017 07:07:43 -0400
-Date: Tue, 5 Sep 2017 19:07:37 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2 12/14] replay-log: add support for replaying ops in
- target device sector range
-Message-ID: <20170905110737.GD8034@eguan.usersys.redhat.com>
-References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
- <1504104706-11965-13-git-send-email-amir73il@gmail.com>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:41847 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752952AbdICWDf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 18:03:35 -0400
+From: Richard Wareing <rwareing@fb.com>
+Subject: Re: [PATCH v2 0/3] XFS real-time device tweaks
+Date: Sun, 3 Sep 2017 22:02:41 +0000
+Message-ID: <30E1D468-6E15-469E-8026-8EE542201422@fb.com>
+References: <20170902224145.1291030-1-rwareing@fb.com>
+ <20170903085602.GF32385@infradead.org>
+In-Reply-To: <20170903085602.GF32385@infradead.org>
+Content-Language: en-US
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <7DBAEBF697D9CA44802DA32405044710@namprd15.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1504104706-11965-13-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "david@fromorbit.com" <david@fromorbit.com>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>
 
-On Wed, Aug 30, 2017 at 05:51:44PM +0300, Amir Goldstein wrote:
-> Using command line options --start-sector and --end-sector, only
-> operations acting on the specified target device range will be
-> replayed.
-> 
-> Single vebbose mode (-v) prints out only replayed operations.
-> Double verbose mode (-vv) prints out also skipped operations.
-> 
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
->  src/log-writes/log-writes.c | 33 +++++++++++++++++++++++++++++++--
->  src/log-writes/log-writes.h |  2 ++
->  src/log-writes/replay-log.c | 31 +++++++++++++++++++++++++++++++
->  3 files changed, 64 insertions(+), 2 deletions(-)
-> 
-> diff --git a/src/log-writes/log-writes.c b/src/log-writes/log-writes.c
-> index ba66a5c..d832c2a 100644
-> --- a/src/log-writes/log-writes.c
-> +++ b/src/log-writes/log-writes.c
-> @@ -119,6 +119,24 @@ int log_discard(struct log *log, struct log_write_entry *entry)
->  
->  /*
->   * @log: the log we are replaying.
-> + * @entry: entry to be replayed.
-> + *
-> + * @return: 0 if we should replay the entry, > 0 if we should skip it.
-> + *
-> + * Should we skip the entry in our log or replay onto the replay device.
-> + */
-> +int log_should_skip(struct log *log, struct log_write_entry *entry)
-> +{
-> +	if (!entry->nr_sectors)
-> +		return 0;
-> +	if (entry->sector + entry->nr_sectors < log->start_sector ||
-> +	    entry->sector > log->end_sector)
 
-Seems values from entry can't be used directly, need le64_to_cpu first I
-think.
+> On Sep 3, 2017, at 1:56 AM, Christoph Hellwig <hch@infradead.org> wrote:
+>=20
+> On Sat, Sep 02, 2017 at 03:41:42PM -0700, Richard Wareing wrote:
+>> - Replaced rtdefault with rtdisable, this yields similar operational
+>> benefits when combined with the existing mkfs time setting of the inheri=
+tance
+>> flag on the root directory.  Allows temporary disabling of real-time all=
+ocation
+>> without having to walk entire FS to remove flags (which could be time co=
+nsuming).
+>> I still don't think it's super obvious to an admin the real-time flag wa=
+s put
+>> there at mkfs time (vs. rtdefault being in mount flags), but this gets m=
+e
+>> half of what I'm after.
+>=20
+> I still don't understand this option.  What is the use case of
+> dynamically switching on/off these default to the rt device?
+>=20
 
-> +		return 1;
-> +	return 0;
-> +}
-> +
-> +/*
-> + * @log: the log we are replaying.
->   * @entry: where we put the entry.
->   * @read_data: read the entry data as well, entry must be log->sectorsize sized
->   * if this is set.
-> @@ -137,6 +155,7 @@ int log_replay_next_entry(struct log *log, struct log_write_entry *entry,
->  	char *buf;
->  	ssize_t ret;
->  	off_t offset;
-> +	u64 skip = 0;
+Say you are in a bit of an emergency, and you need IOPs *now* (incident rec=
+overy), w/ rtdisable you could funnel the IO to the SSD without having to s=
+trip the inheritance bits from all the directories (which would require two=
+ walks....one to remove and one to add them all back).    I think this is a=
+bout having some options during incidents, and a "kill-switch" should the n=
+eed arise.
 
-int skip? and log_should_skip returns int too.
+>> - rtfallocmin no changes, need to think more about this.  Still a pretty=
+ big
+>> fan of this option for reasons already stated; at least until a more ele=
+gant
+>> solution such as preferred AGs (we'd need a tunable size for the "prefer=
+red"
+>> AG, since our SSD partitions are a fraction of the size of a normal AG) =
+can=20
+>> be implemented.  The only other idea I have is to make a new ioctl e.g.=
+=20
+>> "norealtime", which causes the RT bits to stay cleared regardless of=20
+>> inheritance bits on the containing directory.  This would allowing the=20
+>> "steering" of files to the data device (e.g. SSD); this is probably a sa=
+fer=20
+>> design than defaulting to SSD and steering to the HDD via the realtime i=
+octl. =20
+>=20
+> Jens just added a nice new fcntl to declare the life time of write
+> streams (and in theory can add other I/O hints).
+>=20
+> How about a a mount option that moves all I/O with a given hint
+> to the RT device?  E.g. rt=3Dlonglife would direct I/O on a file
+> with an rw hint of RWH_WRITE_LIFE_LONG or RWH_WRITE_LIFE_EXTREME to the
+> RT subvolume as long as there aren't any previous extents.
 
-Thanks,
-Eryu
+You seem to trust application developers more than I :).  The problem I see=
+ with the lifetime, or allocation size as a hint is that a user could later=
+ append to the file and fill up the SSD.  A "norealtime" or fallocation req=
+uest is a bit more explicit and high signal about the intent vs. the lifeti=
+me or allocation size alone.  It's possible, I happen to trickle writes int=
+o a file which may ultimately become very very large (e.g. logging), or per=
+haps introduce a performance or buffering bug which triggers smaller writes=
+ (allocations) and altered write lifetimes.  With fallocmin, this won't hap=
+pen as the assumption/relationship here is clear, you are clearly declaring=
+ your intent to write a file of N bytes, and based on that we promote or de=
+mote you to the appropriate tier of storage.
 
->  
->  	if (log->cur_entry >= log->nr_entries)
->  		return 1;
-> @@ -158,9 +177,11 @@ int log_replay_next_entry(struct log *log, struct log_write_entry *entry,
->  		}
->  	}
->  
-> -	if (log_writes_verbose) {
-> +	skip = log_should_skip(log, entry);
-> +	if (log_writes_verbose > 1 || (log_writes_verbose && !skip)) {
->  		offset = lseek(log->logfd, 0, SEEK_CUR);
-> -		printf("replaying %d@%llu: sector %llu, size %llu, flags %llu\n",
-> +		printf("%s %d@%llu: sector %llu, size %llu, flags %llu\n",
-> +		       skip ? "skipping" : "replaying",
->  		       (int)log->cur_entry - 1, offset / log->sectorsize,
->  		       (unsigned long long)le64_to_cpu(entry->sector),
->  		       (unsigned long long)size,
-> @@ -173,6 +194,14 @@ int log_replay_next_entry(struct log *log, struct log_write_entry *entry,
->  	if (flags & LOG_DISCARD_FLAG)
->  		return log_discard(log, entry);
->  
-> +	if (skip) {
-> +		if (lseek(log->logfd, size, SEEK_CUR) == (off_t)-1) {
-> +			fprintf(stderr, "Error seeking in log: %d\n", errno);
-> +			return -1;
-> +		}
-> +		return 0;
-> +	}
-> +
->  	buf = malloc(size);
->  	if (!buf) {
->  		fprintf(stderr, "Error allocating buffer %llu entry %llu\n", (unsigned long long)size, (unsigned long long)log->cur_entry - 1);
-> diff --git a/src/log-writes/log-writes.h b/src/log-writes/log-writes.h
-> index 13f98ff..fc84acf 100644
-> --- a/src/log-writes/log-writes.h
-> +++ b/src/log-writes/log-writes.h
-> @@ -53,6 +53,8 @@ struct log {
->  	int replayfd;
->  	unsigned long flags;
->  	u64 sectorsize;
-> +	u64 start_sector;
-> +	u64 end_sector;
->  	u64 nr_entries;
->  	u64 cur_entry;
->  	u64 max_zero_size;
-> diff --git a/src/log-writes/replay-log.c b/src/log-writes/replay-log.c
-> index 87c03a2..971974b 100644
-> --- a/src/log-writes/replay-log.c
-> +++ b/src/log-writes/replay-log.c
-> @@ -20,6 +20,8 @@ enum option_indexes {
->  	FSCK,
->  	CHECK,
->  	START_MARK,
-> +	START_SECTOR,
-> +	END_SECTOR,
->  };
->  
->  static struct option long_options[] = {
-> @@ -37,6 +39,8 @@ static struct option long_options[] = {
->  	{"fsck", required_argument, NULL, 0},
->  	{"check", required_argument, NULL, 0},
->  	{"start-mark", required_argument, NULL, 0},
-> +	{"start-sector", required_argument, NULL, 0},
-> +	{"end-sector", required_argument, NULL, 0},
->  	{ NULL, 0, NULL, 0 },
->  };
->  
-> @@ -61,6 +65,12 @@ static void usage(void)
->  		"--check\n");
->  	fprintf(stderr, "\t--check [<number>|flush|fua] when to check the "
->  		"file system, mush specify --fsck\n");
-> +	fprintf(stderr, "\t--start-sector <sector> - replay ops on region "
-> +		"from <sector> onto <device>\n");
-> +	fprintf(stderr, "\t--end-sector <sector> - replay ops on region "
-> +		"to <sector> onto <device>\n");
-> +	fprintf(stderr, "\t-v or --verbose - print replayed ops\n");
-> +	fprintf(stderr, "\t-vv - print also skipped ops\n");
->  	exit(1);
->  }
->  
-> @@ -120,6 +130,8 @@ int main(int argc, char **argv)
->  	struct log_write_entry *entry;
->  	u64 stop_flags = 0;
->  	u64 start_entry = 0;
-> +	u64 start_sector = 0;
-> +	u64 end_sector = -1ULL;
->  	u64 run_limit = 0;
->  	u64 num_entries = 0;
->  	u64 check_number = 0;
-> @@ -240,6 +252,22 @@ int main(int argc, char **argv)
->  				tmp = NULL;
->  			}
->  			break;
-> +		case START_SECTOR:
-> +			start_sector = strtoull(optarg, &tmp, 0);
-> +			if (tmp && *tmp != '\0') {
-> +				fprintf(stderr, "Invalid sector number\n");
-> +				exit(1);
-> +			}
-> +			tmp = NULL;
-> +			break;
-> +		case END_SECTOR:
-> +			end_sector = strtoull(optarg, &tmp, 0);
-> +			if (tmp && *tmp != '\0') {
-> +				fprintf(stderr, "Invalid sector number\n");
-> +				exit(1);
-> +			}
-> +			tmp = NULL;
-> +			break;
->  		default:
->  			usage();
->  		}
-> @@ -257,6 +285,9 @@ int main(int argc, char **argv)
->  	if (!discard)
->  		log->flags |= LOG_IGNORE_DISCARD;
->  
-> +	log->start_sector = start_sector;
-> +	log->end_sector = end_sector;
-> +
->  	entry = malloc(log->sectorsize);
->  	if (!entry) {
->  		fprintf(stderr, "Couldn't allocate buffer\n");
-> -- 
-> 2.7.4
-> 
+The other problem I see is accessibility and usability.  By making these de=
+cisions buried in more generic XFS allocation mechanisms or fnctl's, few de=
+velopers are going to really understand how to safely use them (e.g. withou=
+t blowing up their SSD's WAF or endurance).  Fallocation is a better unders=
+tood notion, easier to use and has wider support amongst existing utilities=
+.  Keep in mind, we need our SSDs to last >3 years (w/ only a mere 70-80 TB=
+W; 300TBW if we are lucky), so we want to design things such that applicati=
+on developers are less likely to step on land mines causing pre-mature SSD =
+failure.
+
+Whatever the ultimate solution here, it should be designed such that it's r=
+elatively difficult to accidentally write data to the non-RT device (e.g. S=
+SD in our case); intent must be clear and high signal.  Thus my similar "hi=
+gh-signal" bias in my first patchset w/ rtdefault; sure inheritance bits sh=
+ould be there if somebody mkfs'd, but if somehow they were removed, it coul=
+d wind up costing 10's of millions of dollars in reduced SSD write lifetime=
+ at our scale.  An explicit mount option makes me sleep better at night, th=
+ings like chef/cfengine can enforce this through traditional policy mechani=
+sms, and removing the behavior has a higher bar (remount + change chef/cfen=
+gine) than a trivial call to xfs_io.  From a production engineering/reliabi=
+lity stand-point the design decision is pretty clear; inheritance bits are =
+nearly unenforcible with policy engines such as cfengine or chef (somebody/=
+something could remove a bit buried in the FS and you'd find it only by wal=
+king the entire FS), and as result they are bombs waiting to go off compare=
+d to the rtdefault flag.
+
+I'd ideally like to take things even further with fallocmin, and revert to =
+the RT device should the non-RT device fill up (subtracting some % of space=
+ for metadata); this brings the behavior more along the lines of a "preferr=
+ed" device vs. a must-have.
+
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
