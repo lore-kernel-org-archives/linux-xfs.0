@@ -1,49 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33531 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751068AbdICI4D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 04:56:03 -0400
-Date: Sun, 3 Sep 2017 01:56:02 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 0/3] XFS real-time device tweaks
-Message-ID: <20170903085602.GF32385@infradead.org>
-References: <20170902224145.1291030-1-rwareing@fb.com>
+Received: from verein.lst.de ([213.95.11.211]:38841 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751461AbdICJd0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 3 Sep 2017 05:33:26 -0400
+Date: Sun, 3 Sep 2017 11:33:25 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: test the per-inode DAX flag
+Message-ID: <20170903093325.GA16272@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170902224145.1291030-1-rwareing@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Richard Wareing <rwareing@fb.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, darrick.wong@oracle.com
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Sat, Sep 02, 2017 at 03:41:42PM -0700, Richard Wareing wrote:
-> - Replaced rtdefault with rtdisable, this yields similar operational
-> benefits when combined with the existing mkfs time setting of the inheritance
-> flag on the root directory.  Allows temporary disabling of real-time allocation
-> without having to walk entire FS to remove flags (which could be time consuming).
-> I still don't think it's super obvious to an admin the real-time flag was put
-> there at mkfs time (vs. rtdefault being in mount flags), but this gets me
-> half of what I'm after.
+This tests checks that the per-inode DAX flag is either reject
+or sticks around, and that rapidly setting/clearing it will not
+crash the kernel.
 
-I still don't understand this option.  What is the use case of
-dynamically switching on/off these default to the rt device?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> - rtfallocmin no changes, need to think more about this.  Still a pretty big
-> fan of this option for reasons already stated; at least until a more elegant
-> solution such as preferred AGs (we'd need a tunable size for the "preferred"
-> AG, since our SSD partitions are a fraction of the size of a normal AG) can 
-> be implemented.  The only other idea I have is to make a new ioctl e.g. 
-> "norealtime", which causes the RT bits to stay cleared regardless of 
-> inheritance bits on the containing directory.  This would allowing the 
-> "steering" of files to the data device (e.g. SSD); this is probably a safer 
-> design than defaulting to SSD and steering to the HDD via the realtime ioctl.  
-
-Jens just added a nice new fcntl to declare the life time of write
-streams (and in theory can add other I/O hints).
-
-How about a a mount option that moves all I/O with a given hint
-to the RT device?  E.g. rt=longlife would direct I/O on a file
-with an rw hint of RWH_WRITE_LIFE_LONG or RWH_WRITE_LIFE_EXTREME to the
-RT subvolume as long as there aren't any previous extents.
+diff --git a/tests/xfs/114 b/tests/xfs/114
+new file mode 100755
+index 0000000..4b6472f
+--- /dev/null
++++ b/tests/xfs/114
+@@ -0,0 +1,92 @@
++#! /bin/bash
++# FS QA Test 114
++#
++# Test that the DAX xflag works, and rapidly setting/clearing it doesn't
++# crash the kernel
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Christoph Hellwig.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++file=$TEST_DIR/test.$seq
++
++_lets_get_pidst()
++{
++	if [ -n "$pid" ]; then
++		kill -TERM $pid 2>/dev/null
++		pid=""
++		wait 2>/dev/null
++	fi
++}
++
++_cleanup()
++{
++	cd /
++	_lets_get_pidst
++	rm -f $tmp.*
++	rm -f $file*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_test
++
++# test that the +x flag sticks if we don't get an error
++touch $file
++xfs_io -c 'chattr +x' $file > $tmp.log 2>&1
++if grep -q "Invalid argument" $tmp.log; then
++    _notrun "file system doesn't support the DAX flag"
++fi
++
++echo "checking for DAX flag:"
++xfs_io -c 'lsattr' $file | _filter_test_dir
++rm -f $file
++
++# run fsx racing with setting/clearing the DAX flag
++$here/ltp/fsx -N 1000 $file > $tmp.log 2>&1 &
++pid=$!
++
++for i in `seq 1 1000`; do
++    xfs_io -c 'chattr +x' $file
++    xfs_io -c 'chattr -x' $file
++done
++
++_lets_get_pidst
++
++# success, all done
++echo "*** done"
++status=0
++exit
+diff --git a/tests/xfs/114.out b/tests/xfs/114.out
+new file mode 100644
+index 0000000..652276a
+--- /dev/null
++++ b/tests/xfs/114.out
+@@ -0,0 +1,4 @@
++QA output created by 114
++checking for DAX flag:
++--------------x- TEST_DIR/test.114 
++*** done
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 5977330..5c02498 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -111,6 +111,7 @@
+ 111 ioctl
+ 112 fuzzers
+ 113 fuzzers
++114 auto rw dangerous
+ 116 quota auto quick
+ 117 fuzzers
+ 118 auto quick fsr dangerous
