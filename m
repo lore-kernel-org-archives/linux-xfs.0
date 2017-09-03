@@ -1,87 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47126 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753748AbdIDPeJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Sep 2017 11:34:09 -0400
-Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
-References: <20170829235052.21050-1-david@fromorbit.com>
- <3637079.ALR5oY5V5m@localhost.localdomain>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <205f6c19-4d89-ea99-6687-b3bbbf3d5264@sandeen.net>
-Date: Mon, 4 Sep 2017 10:34:08 -0500
+Received: from relayout03-q02.e.movistar.es ([86.109.101.162]:33273 "EHLO
+        relayout03-q02.e.movistar.es" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751934AbdICMcl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 08:32:41 -0400
+Received: from relayout03-redir.e.movistar.es (unknown [86.109.101.203])
+        by relayout03-out.e.movistar.es (Postfix) with ESMTP id 3xlXS81fq0zQkvk
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2017 14:32:40 +0200 (CEST)
+Received: from Telcontar.valinor (130.red-79-146-117.dynamicip.rima-tde.net [79.146.117.130])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: robin.listas2)
+        by relayout03.e.movistar.es (Postfix) with ESMTPSA id 3xlXS800vZzMlmd
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2017 14:32:39 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by Telcontar.valinor (Postfix) with ESMTP id 6D77912094D
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2017 14:32:37 +0200 (CEST)
+Received: from Telcontar.valinor ([127.0.0.1])
+        by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
+        with LMTP id Mnz9fHwHvIvc for <linux-xfs@vger.kernel.org>;
+        Sun,  3 Sep 2017 14:32:37 +0200 (CEST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        by Telcontar.valinor (Postfix) with ESMTP id 48CDC120946
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2017 14:32:37 +0200 (CEST)
+Subject: Re: error: "Your hard drive is failing" ???
+References: <7f2b8d9d-3748-0ce1-7e88-76409e8717cb@zoho.com>
+ <b699dac3-321a-9029-87cb-2b5ced17ddd1@sandeen.net>
+ <4b74027e-34ee-d365-e454-d3a0f524c408@zoho.com>
+From: "Carlos E. R." <robin.listas@telefonica.net>
+Message-ID: <b2a570b1-d062-b880-5371-33c454fac70f@telefonica.net>
+Date: Sun, 3 Sep 2017 14:32:29 +0200
 MIME-Version: 1.0
-In-Reply-To: <3637079.ALR5oY5V5m@localhost.localdomain>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <4b74027e-34ee-d365-e454-d3a0f524c408@zoho.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="mQ5Xa7wSc2T0qtNV5jquE2jLDdNmXMX9T"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chandan Rajendra <chandan@linux.vnet.ibm.com>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
 
-On 9/4/17 7:31 AM, Chandan Rajendra wrote:
-> On Wednesday, August 30, 2017 5:20:10 AM IST Dave Chinner wrote:
->> Everyone who tries to modify mkfs quickly learns that it is a pile
->> of spaghetti, the only difference in opinion is whether it is a
->> steaming, cold or rotten pile. This patchset attempts to untangle
->> the ball of pasta and turn it into a set of clear, obvious
->> operations that lead to a filesystem being formatted correctly.
->>
->> The patch series is really in three parts, splitting the code up
->> into roughly three modules. The first part introduces a mkfs
->> parameters structure and factors the on-disk formatting code to use
->> only information in that structure. The second part introduces a
->> command line input structure and factors the input parsing to use
->> it. This requires a bunch of temporary code to keep the rest of
->> the code working. The third part is factoring the input validation
->> and geometry calculation code to use the input structure and put
->> the output into the mkfs parameter structure and to remove all the
->> temporary support code.
->>
->> The result is three modules - input parsing, validation+calculations
->> and formatting - with well defined data flow between them. This also
->> paves the way to supporting config files to set defaults via a
->> separate (new) module. The overall data flow now looks like this:
->>
->> Build defaults --\
->>                   ---> mkfs_default_params -> CLI -> mkfs_params
->> config file -----/
->>
->> It is not worth spending a lot of time reviewing the temporary code
->> that is added - it gets removed before the end of the series. No
->> attempt has been made to ensure that mkfs works 100% correctly after
->> each patch is applied - the only guarantee is that it will build
->> cleanly. It /should/ work if a bisect lands in the middle of the
->> series, but trying to exhaustively test each patch is OK would take
->> more effort than it is worth. As such, testing has only been
->> performed on the whole series.
->>
->> The new output from mkfs to indicate where it has sourced the
->> defaults from causes xfstests to have conniptions. This requires
->> some updates to the mkfs output filters that are already in place
->> but it is a fairly trivial update. Test xfs/191 has a couple of new
->> failures, but that is because the new code now correctly parses
->> things like agsize so that block and sector size based
->> specifications work with default mkfs values. This will require test
->> updates.
->>
->> Future work will be to split the xfs_mkfs.c file into a file per
->> module (i.e. seperate files for CLI parsing, mkfs formating,
->> validation+calculation and, finally, one for config file support),
->> but otherwise the majority of the factoring work is now complete.
->>
->> Comments, flames, etc all welcome.
-> Hi Dave,
-> 
-> I am trying to test the "mkfs refactor" patchset on a ppc64 machine. But "git
-> am ~/mkfs-xfs-rewrite/\[PATCH\ 03_42\]\ mkfs_introduce\ a\ structure\ to\
-> hold\ CLI\ options.mbox" fails to apply cleanly on top of xfsprogs/master
-> (with patches 01 and 02 already applied) branch. Can you please let me know
-> the id of the topmost commit on which the "mkfs refactor" patches are applied? 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--mQ5Xa7wSc2T0qtNV5jquE2jLDdNmXMX9T
+Content-Type: multipart/mixed; boundary="Um5BrGcQnPrAGrlrMjeiQ7GU0nI7QSgVV";
+ protected-headers="v1"
+From: "Carlos E. R." <robin.listas@telefonica.net>
+To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
+Message-ID: <b2a570b1-d062-b880-5371-33c454fac70f@telefonica.net>
+Subject: Re: error: "Your hard drive is failing" ???
+References: <7f2b8d9d-3748-0ce1-7e88-76409e8717cb@zoho.com>
+ <b699dac3-321a-9029-87cb-2b5ced17ddd1@sandeen.net>
+ <4b74027e-34ee-d365-e454-d3a0f524c408@zoho.com>
+In-Reply-To: <4b74027e-34ee-d365-e454-d3a0f524c408@zoho.com>
 
-I think that
-02c3e10 mkfs: add missing translation
-is the problem, sorry.
+--Um5BrGcQnPrAGrlrMjeiQ7GU0nI7QSgVV
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-CA
+Content-Transfer-Encoding: quoted-printable
 
--Eric
+On 2017-09-03 05:18, ToddAndMargo wrote:
+> On 09/02/2017 08:08 PM, Eric Sandeen wrote:
+>> On 9/2/17 9:48 PM, ToddAndMargo wrote:
+>>> Dear Xfs,
+>>>
+>>> Scientific Linux 7.3
+>>>
+>>> $ rpm -qa \*xfsdump\*
+>>> xfsdump-3.1.4-1.el7.x86_64
+>>>
+>>> When I do a backup to /dev/sda1 (/lin-bak), I get told
+>>>
+>>>      WARNING: Your hard drive is failing
+>>>      Device: /dev/sda [SAT], unable to open device
+>>
+>> That's a message from smartctl, it has nothing to do with
+>> xfs or xfsdump.  It's probably related to your creative use
+>> of hotplug.
+
+> Then I am just going to ignore it then.
+
+smartctl daemon may not be aware that you swapped a disk and be
+confused. You may have to restart it.
+
+--=20
+Cheers / Saludos,
+
+		Carlos E. R.
+		(from 42.2 x86_64 "Malachite" at Telcontar)
+
+
+--Um5BrGcQnPrAGrlrMjeiQ7GU0nI7QSgVV--
+
+--mQ5Xa7wSc2T0qtNV5jquE2jLDdNmXMX9T
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAlmr9mUACgkQtTMYHG2NR9UzXgCeLz1/zt2pJjOWtEytUg4D3ag9
+hsIAn36n2+PpazT2fzdJ0RwG768q58Pz
+=A+uD
+-----END PGP SIGNATURE-----
+
+--mQ5Xa7wSc2T0qtNV5jquE2jLDdNmXMX9T--
