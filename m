@@ -1,40 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56871 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:37747 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751119AbdICIlC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 04:41:02 -0400
-Date: Sun, 3 Sep 2017 01:41:02 -0700
+        with ESMTP id S1751119AbdICItQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 04:49:16 -0400
+Date: Sun, 3 Sep 2017 01:49:14 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] fsmap: fix documentation of FMR_OF_LAST
-Message-ID: <20170903084102.GC32385@infradead.org>
-References: <20170831204918.GA7404@magnolia>
- <20170901080904.GA32746@infradead.org>
- <20170901150716.GW3775@magnolia>
+Subject: Re: [PATCH v2 2/3] fs/xfs: Add real-time device support to statfs
+Message-ID: <20170903084914.GD32385@infradead.org>
+References: <20170902224145.1291030-1-rwareing@fb.com>
+ <20170902224145.1291030-3-rwareing@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170901150716.GW3775@magnolia>
+In-Reply-To: <20170902224145.1291030-3-rwareing@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>, linux-api@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Richard Wareing <rwareing@fb.com>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, darrick.wong@oracle.com
 
-On Fri, Sep 01, 2017 at 08:07:16AM -0700, Darrick J. Wong wrote:
-> fmh_entries is the number of records returned, not the number of records
-> in the dataset.  If, for example, you allocate space for 100 records and
-> perform a query for a block that has been reflinked 1000 times, the
-> dataset size is 1000 but fmh_entries is set to 100.  The lack of a LAST
-> flag on the 100th record tells you that there's more records to return.
+On Sat, Sep 02, 2017 at 03:41:44PM -0700, Richard Wareing wrote:
+> - Reports real-time device free blocks in statfs calls if
+> inheritance bit is set on the inode of directory.  This is a bit more
+> intuitive, especially for use-cases which are using a much larger
+> device for the real-time device.
 > 
-> If however you allocate space for 100 records and the block is reflinked
-> exactly 100 times, there's no way (without the flag) for userspace to
-> know that record 100 is the end of the dataset, so the only thing it can
-> do is to fsmap_advance() and try the query again, only to receive zero
-> results.  Granted I don't think fsmap queries are all /that/ expensive,
-> but it's trivial for the kernel to set the flag.
+> Signed-off-by: Richard Wareing <rwareing@fb.com>
+> ---
+>  fs/xfs/xfs_super.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 4dbf95c..a1d6968 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1148,6 +1148,12 @@ xfs_fs_statfs(
+>  	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
+>  			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
+>  		xfs_qm_statvfs(ip, statp);
+> +	if ((ip->i_d.di_flags & XFS_DIFLAG_RTINHERIT) &&
+> +		(mp->m_rtdev_targp != NULL)) {
 
-Oh, ok - it had to look up this defintion of dataset first.  With
-that the explanation makes total sense:
+	if ((ip->i_d.di_flags & XFS_DIFLAG_RTINHERIT) && mp->m_rtdev_targp) {
+
+> +		statp->f_blocks = sbp->sb_rblocks;
+> +		statp->f_bfree = sbp->sb_frextents * sbp->sb_rextsize -
+> +			mp->m_alloc_set_aside;
+> +	}
+
+Otherwise this looks fine to me:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
