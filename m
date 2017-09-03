@@ -1,40 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:32908 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751030AbdICFIt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 3 Sep 2017 01:08:49 -0400
-Subject: Re: error: "Your hard drive is failing" ???
-References: <7f2b8d9d-3748-0ce1-7e88-76409e8717cb@zoho.com>
- <b699dac3-321a-9029-87cb-2b5ced17ddd1@sandeen.net>
- <0b3fb1d0-c4a0-f465-5afe-2b10d6e56195@zoho.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a5e0f1ea-b498-5c23-6d96-4947549c35c8@sandeen.net>
-Date: Sun, 3 Sep 2017 00:08:48 -0500
+Received: from bombadil.infradead.org ([65.50.211.133]:38025 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751129AbdICHYe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 03:24:34 -0400
+Date: Sun, 3 Sep 2017 00:24:33 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] misc: fix more stupid compiler warnings
+Message-ID: <20170903072432.GA32095@infradead.org>
+References: <20170901222157.GL3775@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <0b3fb1d0-c4a0-f465-5afe-2b10d6e56195@zoho.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170901222157.GL3775@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: ToddAndMargo <ToddAndMargo@zoho.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On 9/3/17 12:00 AM, ToddAndMargo wrote:
-> On 09/02/2017 08:08 PM, Eric Sandeen wrote:
->> It's probably related to your creative use
->> of hotplug.
-> 
-> Here is a nice list of hot swap carriages:
-> https://www.cru-inc.com/products/removable/
-> 
-> This is the carriage I am using:
-> https://www.cru-inc.com/products/dataport/dp10_sassata_6g/
+Can you splits this up a bit to be more self explanatory, e.g.
+one patch per warning class or logical change?
 
-Please restrict your emails to linux-xfs to topics which are
-relevant to the XFS filesystem.  There are hundreds of subscribers
-to this list, and it's important to stay on topic to keep it
-manageable.
+>  	if (be32_to_cpu(free->hdr.nvalid) > maxent ||
+> -				be32_to_cpu(free->hdr.nvalid) < 0 ||
+>  				be32_to_cpu(free->hdr.nused) > maxent ||
+> -				be32_to_cpu(free->hdr.nused) < 0 ||
+>  				be32_to_cpu(free->hdr.nused) >
+>  					be32_to_cpu(free->hdr.nvalid)) {
 
-Thanks,
--Eric
+be32_to_cpu returns uint, so this makese sense.
+
+> -	(void)getcwd(curdir,MAXPATHLEN);
+> +	if (!getcwd(curdir, MAXPATHLEN)) {
+> +		perror("getcwd");
+> +		strcpy(curdir, ".");
+> +	}
+
+All this chdir magic will need a lot more explanation.  To me it
+seems like most of this is a left over from IRIX days where we
+could have device names relative to a volume.  The proper fix
+probably is to just remove that whole thing - if we'd ever
+need to bring it back we should use openat relative to a dirfd
+instead.
+
+> +#define xfs_inode_set_cowblocks_tag(ip)	do { } while (0)
+> +#define xfs_inode_set_eofblocks_tag(ip)	do { } while (0)
+
+This part looks fine.
+
+>  #else
+>  #define xfs_bmap_check_leaf_extents(cur, ip, whichfork)		do { } while (0)
+> -#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)
+> +#define	xfs_bmap_validate_ret(bno,len,flags,mval,onmap,nmap)	do { } while (0)
+>  #endif /* DEBUG */
+
+This as well.
+
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index b051a44..f360aed 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -3092,11 +3092,11 @@ mark_standalone_inodes(xfs_mount_t *mp)
+>  	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rsumino),
+>  			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino));
+>  
+> +	ASSERT(irec != NULL);
+> +
+>  	offset = XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rsumino) -
+>  			irec->ino_startnum;
+>  
+> -	ASSERT(irec != NULL);
+> -
+
+What's the point in even having this assert?   Either we turn this
+into something like
+
+	if (!irec)
+		abort();
+
+or just let the code dereference it.
+
+> -		imap.br_state = (rm_rec->rm_flags & XFS_RMAP_UNWRITTEN ?
+> +		imap.br_state = ((rm_rec->rm_flags & XFS_RMAP_UNWRITTEN) ?
+>  				XFS_EXT_UNWRITTEN : XFS_EXT_NORM);
+
+Looks fine.
