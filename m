@@ -1,73 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20032 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753764AbdIDPqn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2017 11:46:43 -0400
-Date: Mon, 4 Sep 2017 08:46:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC][PATCH] fstests: regression test for xfs leftover CoW
- extent error
-Message-ID: <20170904154635.GF4671@magnolia>
-References: <1504451271-29202-1-git-send-email-amir73il@gmail.com>
- <20170903174513.GI4073@magnolia>
- <20170903182133.GA1757@lst.de>
- <20170903210427.GJ4073@magnolia>
- <20170904153026.GA6469@lst.de>
+Received: from bombadil.infradead.org ([65.50.211.133]:47827 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751068AbdICIi6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 04:38:58 -0400
+Date: Sun, 3 Sep 2017 01:38:57 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] mkfs: pass a custom cowextsize into the created
+ filesystem
+Message-ID: <20170903083857.GB32385@infradead.org>
+References: <20170901164035.GF3775@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170904153026.GA6469@lst.de>
+In-Reply-To: <20170901164035.GF3775@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Amir Goldstein <amir73il@gmail.com>, Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Sep 04, 2017 at 05:30:26PM +0200, Christoph Hellwig wrote:
-> On Sun, Sep 03, 2017 at 02:04:27PM -0700, Darrick J. Wong wrote:
-> > On Sun, Sep 03, 2017 at 08:21:33PM +0200, Christoph Hellwig wrote:
-> > > > So basically there are two bugs here -- the fcollapse/finsert code needs
-> > > > to shift the CoW fork extents down and up;
-> > > 
-> > > Or make sure that we don't have any extents in the COW fork?
-> > 
-> > It's a big hammer approach, but yes that'd work.
-> > 
-> > We're already forcing all the dirty pages out anyway so I guess it's no
-> > big deal.
+On Fri, Sep 01, 2017 at 09:40:35AM -0700, Darrick J. Wong wrote:
+> Create a -d option to mkfs.xfs that enables administrators to set
+> the CoW extent size hint on the created files.
 > 
-> It might be a big deal for my O_ATOMIC work, but I'll need to need
-> to find that work and actually define semantics vs nasty operations
-> like insert and swapext for that.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  libxfs/util.c       |   26 ++++++++++++++++++++++++--
+>  man/man8/mkfs.xfs.8 |    7 +++++++
+>  mkfs/xfs_mkfs.c     |   20 ++++++++++++++++++++
+>  3 files changed, 51 insertions(+), 2 deletions(-)
 > 
-> Then again shifting the cow forks seems relatively easy - we'd just
-> need to look at the whichfork argument in the low-level helpers
-> basically.
+> diff --git a/libxfs/util.c b/libxfs/util.c
+> index 0e2f29e..4f82d7f 100644
+> --- a/libxfs/util.c
+> +++ b/libxfs/util.c
+> @@ -175,6 +175,26 @@ libxfs_trans_ichgtime(
+>  	}
+>  }
+>  
+> +static inline uint16_t
+> +xflags_to_diflags(
+> +	__u32		xflags)
+> +{
+> +	/* bottom 15 xflag bits correspond to diflag bits */
+> +	return xflags & 0x7FFF;
 
-Yes, it looks pretty straightforward.  I'll send my dumb version that
-merely evicts everything from the cow fork to the list and see if that
-motivates anyone to try their hand at shifting the cow fork.
+Do we really want to rely on that fact?
 
-> > > >         /*
-> > > >          * Clear the reflink flag if we truncated everything.
-> > > >          */
-> > > > -       if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip)) {
-> > > > +       if (ip->i_d.di_nblocks == 0 && ip->i_cnextents == 0 && xfs_is_reflink_inode(ip)) {
-> > > 
-> > > Btw, it seems like we should generally clear the reflink flag and
-> > > tag if ip->i_cnextents is zero and not even bother looking at di_nblocks.
-> > 
-> > We can't -- imagine shortening to 8k a reflinked 12k file that hasn't been
-> > written to.  It has no cow extents, but we cannot drop the reflink flag.
-> 
-> True for the reflink flag.  But we should be able to clear the cowblocks
-> tag whenever i_cnextents reaches zero.
+> +}
+> +
+> +static inline uint64_t
+> +xflags_to_diflags2(
+> +	__u32		xflags)
+> +{
+> +	uint64_t	ret = 0;
+> +
+> +	if (xflags & FS_XFLAG_COWEXTSIZE)
+> +		ret |= XFS_DIFLAG2_COWEXTSIZE;
+> +
+> +	return ret;
+> +}
 
-<nod> I was about to send out a cleaner patch.
+It seems like we should just lift the kernels xfs_flags2diflags and
+xfs_flags2diflags2 to libxfs and use them here?
 
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
