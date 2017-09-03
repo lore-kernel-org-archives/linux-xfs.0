@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:37796 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:50255 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751543AbdICHaM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 03:30:12 -0400
+        with ESMTP id S1751702AbdICHas (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 03:30:48 -0400
 Received: from [91.114.64.3] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1doPMB-0006vI-W9
-        for linux-xfs@vger.kernel.org; Sun, 03 Sep 2017 07:30:12 +0000
+        id 1doPMl-0007Lq-Ki
+        for linux-xfs@vger.kernel.org; Sun, 03 Sep 2017 07:30:48 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/17] xfs: rename bno to end in __xfs_bunmapi
-Date: Sun,  3 Sep 2017 09:29:43 +0200
-Message-Id: <20170903072956.3175-5-hch@lst.de>
+Subject: [PATCH 16/17] xfs: remove all xfs_bmbt_set_* helpers except for xfs_bmbt_set_all
+Date: Sun,  3 Sep 2017 09:29:55 +0200
+Message-Id: <20170903072956.3175-17-hch@lst.de>
 In-Reply-To: <20170903072956.3175-1-hch@lst.de>
 References: <20170903072956.3175-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,166 +18,158 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Rename the bno variable that's used as the end of the range in
-__xfs_bunmapi to end, which better describes it.  Additionally change
-the start variable which takes the initial value of bno to be the
-function parameter itself.
+Unused after the big bmap refactor.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 49 ++++++++++++++++++++++++------------------------
- 1 file changed, 24 insertions(+), 25 deletions(-)
+ fs/xfs/libxfs/xfs_bmap_btree.c | 102 ++++++-----------------------------------
+ fs/xfs/libxfs/xfs_bmap_btree.h |   6 ---
+ 2 files changed, 14 insertions(+), 94 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index b5b30415aa2b..6c65954fc42c 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5410,7 +5410,7 @@ int						/* error */
- __xfs_bunmapi(
- 	xfs_trans_t		*tp,		/* transaction pointer */
- 	struct xfs_inode	*ip,		/* incore inode */
--	xfs_fileoff_t		bno,		/* starting offset to unmap */
-+	xfs_fileoff_t		start,		/* first file offset deleted */
- 	xfs_filblks_t		*rlen,		/* i/o: amount remaining */
- 	int			flags,		/* misc flags */
- 	xfs_extnum_t		nexts,		/* number of extents max */
-@@ -5429,7 +5429,6 @@ __xfs_bunmapi(
- 	int			logflags;	/* transaction logging flags */
- 	xfs_extlen_t		mod;		/* rt extent offset */
- 	xfs_mount_t		*mp;		/* mount structure */
--	xfs_fileoff_t		start;		/* first file offset deleted */
- 	int			tmp_logflags;	/* partial logging flags */
- 	int			wasdel;		/* was a delayed alloc extent */
- 	int			whichfork;	/* data or attribute fork */
-@@ -5437,8 +5436,9 @@ __xfs_bunmapi(
- 	xfs_filblks_t		len = *rlen;	/* length to unmap in file */
- 	xfs_fileoff_t		max_len;
- 	xfs_agnumber_t		prev_agno = NULLAGNUMBER, agno;
-+	xfs_fileoff_t		end;
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 7e2d981626ef..e66ebd982cfb 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -188,44 +188,27 @@ xfs_bmbt_disk_get_startoff(
+ 		 xfs_mask64lo(64 - BMBT_EXNTFLAG_BITLEN)) >> 9;
+ }
  
--	trace_xfs_bunmap(ip, bno, len, flags, _RET_IP_);
-+	trace_xfs_bunmap(ip, start, len, flags, _RET_IP_);
+-
+ /*
+- * Set all the fields in a bmap extent record from the arguments.
++ * Set all the fields in a bmap extent record from the uncompressed form.
+  */
+ void
+-xfs_bmbt_set_allf(
+-	xfs_bmbt_rec_host_t	*r,
+-	xfs_fileoff_t		startoff,
+-	xfs_fsblock_t		startblock,
+-	xfs_filblks_t		blockcount,
+-	xfs_exntst_t		state)
++xfs_bmbt_set_all(
++	struct xfs_bmbt_rec_host *r,
++	struct xfs_bmbt_irec	*s)
+ {
+-	int		extent_flag = (state == XFS_EXT_NORM) ? 0 : 1;
+-
+-	ASSERT(state == XFS_EXT_NORM || state == XFS_EXT_UNWRITTEN);
+-	ASSERT((startoff & xfs_mask64hi(64-BMBT_STARTOFF_BITLEN)) == 0);
+-	ASSERT((blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)) == 0);
++	int			extent_flag = (s->br_state != XFS_EXT_NORM);
  
- 	whichfork = xfs_bmapi_whichfork(flags);
- 	ASSERT(whichfork != XFS_COW_FORK);
-@@ -5477,17 +5477,16 @@ __xfs_bunmapi(
- 	}
- 	XFS_STATS_INC(mp, xs_blk_unmap);
- 	isrt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
--	start = bno;
--	bno = start + len - 1;
-+	end = start + len - 1;
+-	ASSERT((startblock & xfs_mask64hi(64-BMBT_STARTBLOCK_BITLEN)) == 0);
++	ASSERT(s->br_state == XFS_EXT_NORM || s->br_state == XFS_EXT_UNWRITTEN);
++	ASSERT(!(s->br_startoff & xfs_mask64hi(64-BMBT_STARTOFF_BITLEN)));
++	ASSERT(!(s->br_blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)));
++	ASSERT(!(s->br_startblock & xfs_mask64hi(64-BMBT_STARTBLOCK_BITLEN)));
  
- 	/*
- 	 * Check to see if the given block number is past the end of the
- 	 * file, back up to the last block if so...
- 	 */
--	if (!xfs_iext_lookup_extent(ip, ifp, bno, &lastx, &got)) {
-+	if (!xfs_iext_lookup_extent(ip, ifp, end, &lastx, &got)) {
- 		ASSERT(lastx > 0);
- 		xfs_iext_get_extent(ifp, --lastx, &got);
--		bno = got.br_startoff + got.br_blockcount - 1;
-+		end = got.br_startoff + got.br_blockcount - 1;
- 	}
+ 	r->l0 = ((xfs_bmbt_rec_base_t)extent_flag << 63) |
+-		((xfs_bmbt_rec_base_t)startoff << 9) |
+-		((xfs_bmbt_rec_base_t)startblock >> 43);
+-	r->l1 = ((xfs_bmbt_rec_base_t)startblock << 21) |
+-		((xfs_bmbt_rec_base_t)blockcount &
+-		(xfs_bmbt_rec_base_t)xfs_mask64lo(21));
+-}
+-
+-/*
+- * Set all the fields in a bmap extent record from the uncompressed form.
+- */
+-void
+-xfs_bmbt_set_all(
+-	xfs_bmbt_rec_host_t *r,
+-	xfs_bmbt_irec_t	*s)
+-{
+-	xfs_bmbt_set_allf(r, s->br_startoff, s->br_startblock,
+-			     s->br_blockcount, s->br_state);
++		 ((xfs_bmbt_rec_base_t)s->br_startoff << 9) |
++		 ((xfs_bmbt_rec_base_t)s->br_startblock >> 43);
++	r->l1 = ((xfs_bmbt_rec_base_t)s->br_startblock << 21) |
++		 ((xfs_bmbt_rec_base_t)s->br_blockcount &
++		  (xfs_bmbt_rec_base_t)xfs_mask64lo(21));
+ }
  
- 	logflags = 0;
-@@ -5511,13 +5510,13 @@ __xfs_bunmapi(
- 	}
+ /*
+@@ -254,63 +237,6 @@ xfs_bmbt_disk_set_all(
+ }
  
- 	extno = 0;
--	while (bno != (xfs_fileoff_t)-1 && bno >= start && lastx >= 0 &&
-+	while (end != (xfs_fileoff_t)-1 && end >= start && lastx >= 0 &&
- 	       (nexts == 0 || extno < nexts) && max_len > 0) {
- 		/*
--		 * Is the found extent after a hole in which bno lives?
-+		 * Is the found extent after a hole in which end lives?
- 		 * Just back up to the previous extent, if so.
- 		 */
--		if (got.br_startoff > bno) {
-+		if (got.br_startoff > end) {
- 			if (--lastx < 0)
- 				break;
- 			xfs_iext_get_extent(ifp, lastx, &got);
-@@ -5526,9 +5525,9 @@ __xfs_bunmapi(
- 		 * Is the last block of this extent before the range
- 		 * we're supposed to delete?  If so, we're done.
- 		 */
--		bno = XFS_FILEOFF_MIN(bno,
-+		end = XFS_FILEOFF_MIN(end,
- 			got.br_startoff + got.br_blockcount - 1);
--		if (bno < start)
-+		if (end < start)
- 			break;
- 		/*
- 		 * Then deal with the (possibly delayed) allocated space
-@@ -5553,8 +5552,8 @@ __xfs_bunmapi(
- 			if (!wasdel)
- 				del.br_startblock += start - got.br_startoff;
- 		}
--		if (del.br_startoff + del.br_blockcount > bno + 1)
--			del.br_blockcount = bno + 1 - del.br_startoff;
-+		if (del.br_startoff + del.br_blockcount > end + 1)
-+			del.br_blockcount = end + 1 - del.br_startoff;
+ /*
+- * Set the blockcount field in a bmap extent record.
+- */
+-void
+-xfs_bmbt_set_blockcount(
+-	xfs_bmbt_rec_host_t *r,
+-	xfs_filblks_t	v)
+-{
+-	ASSERT((v & xfs_mask64hi(43)) == 0);
+-	r->l1 = (r->l1 & (xfs_bmbt_rec_base_t)xfs_mask64hi(43)) |
+-		  (xfs_bmbt_rec_base_t)(v & xfs_mask64lo(21));
+-}
+-
+-/*
+- * Set the startblock field in a bmap extent record.
+- */
+-void
+-xfs_bmbt_set_startblock(
+-	xfs_bmbt_rec_host_t *r,
+-	xfs_fsblock_t	v)
+-{
+-	ASSERT((v & xfs_mask64hi(12)) == 0);
+-	r->l0 = (r->l0 & (xfs_bmbt_rec_base_t)xfs_mask64hi(55)) |
+-		  (xfs_bmbt_rec_base_t)(v >> 43);
+-	r->l1 = (r->l1 & (xfs_bmbt_rec_base_t)xfs_mask64lo(21)) |
+-		  (xfs_bmbt_rec_base_t)(v << 21);
+-}
+-
+-/*
+- * Set the startoff field in a bmap extent record.
+- */
+-void
+-xfs_bmbt_set_startoff(
+-	xfs_bmbt_rec_host_t *r,
+-	xfs_fileoff_t	v)
+-{
+-	ASSERT((v & xfs_mask64hi(9)) == 0);
+-	r->l0 = (r->l0 & (xfs_bmbt_rec_base_t) xfs_mask64hi(1)) |
+-		((xfs_bmbt_rec_base_t)v << 9) |
+-		  (r->l0 & (xfs_bmbt_rec_base_t)xfs_mask64lo(9));
+-}
+-
+-/*
+- * Set the extent state field in a bmap extent record.
+- */
+-void
+-xfs_bmbt_set_state(
+-	xfs_bmbt_rec_host_t *r,
+-	xfs_exntst_t	v)
+-{
+-	ASSERT(v == XFS_EXT_NORM || v == XFS_EXT_UNWRITTEN);
+-	if (v == XFS_EXT_NORM)
+-		r->l0 &= xfs_mask64lo(64 - BMBT_EXNTFLAG_BITLEN);
+-	else
+-		r->l0 |= xfs_mask64hi(BMBT_EXNTFLAG_BITLEN);
+-}
+-
+-/*
+  * Convert in-memory form of btree root to on-disk form.
+  */
+ void
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+index bd3c56f1cd03..93f95bcee915 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.h
++++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+@@ -109,12 +109,6 @@ extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(xfs_bmbt_rec_t *r);
+ extern xfs_fileoff_t xfs_bmbt_disk_get_startoff(xfs_bmbt_rec_t *r);
  
- 		/* How much can we safely unmap? */
- 		if (max_len < del.br_blockcount) {
-@@ -5580,10 +5579,10 @@ __xfs_bunmapi(
- 				 * This piece is unwritten, or we're not
- 				 * using unwritten extents.  Skip over it.
- 				 */
--				ASSERT(bno >= mod);
--				bno -= mod > del.br_blockcount ?
-+				ASSERT(end >= mod);
-+				end -= mod > del.br_blockcount ?
- 					del.br_blockcount : mod;
--				if (bno < got.br_startoff) {
-+				if (end < got.br_startoff) {
- 					if (--lastx >= 0)
- 						xfs_iext_get_extent(ifp, lastx,
- 								&got);
-@@ -5632,9 +5631,9 @@ __xfs_bunmapi(
- 				 * Can't make it unwritten.  There isn't
- 				 * a full extent here so just skip it.
- 				 */
--				ASSERT(bno >= del.br_blockcount);
--				bno -= del.br_blockcount;
--				if (got.br_startoff > bno && --lastx >= 0)
-+				ASSERT(end >= del.br_blockcount);
-+				end -= del.br_blockcount;
-+				if (got.br_startoff > end && --lastx >= 0)
- 					xfs_iext_get_extent(ifp, lastx, &got);
- 				continue;
- 			} else if (del.br_state == XFS_EXT_UNWRITTEN) {
-@@ -5737,24 +5736,24 @@ __xfs_bunmapi(
- 			xfs_mod_fdblocks(mp, (int64_t)del.br_blockcount, false);
+ extern void xfs_bmbt_set_all(xfs_bmbt_rec_host_t *r, xfs_bmbt_irec_t *s);
+-extern void xfs_bmbt_set_allf(xfs_bmbt_rec_host_t *r, xfs_fileoff_t o,
+-			xfs_fsblock_t b, xfs_filblks_t c, xfs_exntst_t v);
+-extern void xfs_bmbt_set_blockcount(xfs_bmbt_rec_host_t *r, xfs_filblks_t v);
+-extern void xfs_bmbt_set_startblock(xfs_bmbt_rec_host_t *r, xfs_fsblock_t v);
+-extern void xfs_bmbt_set_startoff(xfs_bmbt_rec_host_t *r, xfs_fileoff_t v);
+-extern void xfs_bmbt_set_state(xfs_bmbt_rec_host_t *r, xfs_exntst_t v);
  
- 		max_len -= del.br_blockcount;
--		bno = del.br_startoff - 1;
-+		end = del.br_startoff - 1;
- nodelete:
- 		/*
- 		 * If not done go on to the next (previous) record.
- 		 */
--		if (bno != (xfs_fileoff_t)-1 && bno >= start) {
-+		if (end != (xfs_fileoff_t)-1 && end >= start) {
- 			if (lastx >= 0) {
- 				xfs_iext_get_extent(ifp, lastx, &got);
--				if (got.br_startoff > bno && --lastx >= 0)
-+				if (got.br_startoff > end && --lastx >= 0)
- 					xfs_iext_get_extent(ifp, lastx, &got);
- 			}
- 			extno++;
- 		}
- 	}
--	if (bno == (xfs_fileoff_t)-1 || bno < start || lastx < 0)
-+	if (end == (xfs_fileoff_t)-1 || end < start || lastx < 0)
- 		*rlen = 0;
- 	else
--		*rlen = bno - start + 1;
-+		*rlen = end - start + 1;
- 
- 	/*
- 	 * Convert to a btree if necessary.
+ extern void xfs_bmbt_to_bmdr(struct xfs_mount *, struct xfs_btree_block *, int,
+ 			xfs_bmdr_block_t *, int);
 -- 
 2.11.0
 
