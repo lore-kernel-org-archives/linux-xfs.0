@@ -1,127 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:50474 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753905AbdIGKbU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2017 06:31:20 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v87ASsC1087839
-        for <linux-xfs@vger.kernel.org>; Thu, 7 Sep 2017 06:31:20 -0400
-Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2cu2qcnect-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 07 Sep 2017 06:31:19 -0400
-Received: from localhost
-        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Thu, 7 Sep 2017 20:31:16 +1000
-Received: from d23av05.au.ibm.com (d23av05.au.ibm.com [9.190.234.119])
-        by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v87AVEfv36372550
-        for <linux-xfs@vger.kernel.org>; Thu, 7 Sep 2017 20:31:14 +1000
-Received: from d23av05.au.ibm.com (localhost [127.0.0.1])
-        by d23av05.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v87AVDub019472
-        for <linux-xfs@vger.kernel.org>; Thu, 7 Sep 2017 20:31:13 +1000
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
-Date: Thu, 07 Sep 2017 16:01:57 +0530
-In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
-References: <20170829235052.21050-1-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-Message-Id: <16359260.pvgM9Ovr5r@localhost.localdomain>
+Received: from bombadil.infradead.org ([65.50.211.133]:44908 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751702AbdICHaa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 03:30:30 -0400
+Received: from [91.114.64.3] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1doPMT-00078P-NH
+        for linux-xfs@vger.kernel.org; Sun, 03 Sep 2017 07:30:30 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 10/17] xfs: refactor xfs_bmap_add_extent_hole_real
+Date: Sun,  3 Sep 2017 09:29:49 +0200
+Message-Id: <20170903072956.3175-11-hch@lst.de>
+In-Reply-To: <20170903072956.3175-1-hch@lst.de>
+References: <20170903072956.3175-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wednesday, August 30, 2017 5:20:10 AM IST Dave Chinner wrote:
-> Everyone who tries to modify mkfs quickly learns that it is a pile
-> of spaghetti, the only difference in opinion is whether it is a
-> steaming, cold or rotten pile. This patchset attempts to untangle
-> the ball of pasta and turn it into a set of clear, obvious
-> operations that lead to a filesystem being formatted correctly.
-> 
-> The patch series is really in three parts, splitting the code up
-> into roughly three modules. The first part introduces a mkfs
-> parameters structure and factors the on-disk formatting code to use
-> only information in that structure. The second part introduces a
-> command line input structure and factors the input parsing to use
-> it. This requires a bunch of temporary code to keep the rest of
-> the code working. The third part is factoring the input validation
-> and geometry calculation code to use the input structure and put
-> the output into the mkfs parameter structure and to remove all the
-> temporary support code.
-> 
-> The result is three modules - input parsing, validation+calculations
-> and formatting - with well defined data flow between them. This also
-> paves the way to supporting config files to set defaults via a
-> separate (new) module. The overall data flow now looks like this:
-> 
-> Build defaults --\
->                   ---> mkfs_default_params -> CLI -> mkfs_params
-> config file -----/
-> 
-> It is not worth spending a lot of time reviewing the temporary code
-> that is added - it gets removed before the end of the series. No
-> attempt has been made to ensure that mkfs works 100% correctly after
-> each patch is applied - the only guarantee is that it will build
-> cleanly. It /should/ work if a bisect lands in the middle of the
-> series, but trying to exhaustively test each patch is OK would take
-> more effort than it is worth. As such, testing has only been
-> performed on the whole series.
-> 
-> The new output from mkfs to indicate where it has sourced the
-> defaults from causes xfstests to have conniptions. This requires
-> some updates to the mkfs output filters that are already in place
-> but it is a fairly trivial update. Test xfs/191 has a couple of new
-> failures, but that is because the new code now correctly parses
-> things like agsize so that block and sector size based
-> specifications work with default mkfs values. This will require test
-> updates.
-> 
-> Future work will be to split the xfs_mkfs.c file into a file per
-> module (i.e. seperate files for CLI parsing, mkfs formating,
-> validation+calculation and, finally, one for config file support),
-> but otherwise the majority of the factoring work is now complete.
-> 
-> Comments, flames, etc all welcome.
-> 
+Use xfs_iext_update_extent to update entries in the in-core extent list.
+This isolates the function from the detailed layout of the extent list,
+and generally makes the code a lot more readable.
 
-Hi Dave,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 48 +++++++++++++++++++++---------------------------
+ 1 file changed, 21 insertions(+), 27 deletions(-)
 
-For 4k blocksized xfs filesystem on ppc64, xfs/058 fails with mkfs refactor 
-patchset applied.
-
-[root@localhost xfstests-dev]# ./check xfs/058
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/ppc64 localhost 4.13.0-next-20170905-00001-g9730219
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop1
-MOUNT_OPTIONS -- /dev/loop1 /mnt/btrfs-xfstest-scratch
-
-xfs/058 2s ... - output mismatch (see /root/repos/xfstests-dev/results//xfs/058.out.bad)
-    --- tests/xfs/058.out       2017-09-03 02:23:13.432063287 -0500
-    +++ /root/repos/xfstests-dev/results//xfs/058.out.bad       2017-09-07 05:07:49.850183977 -0500
-    @@ -13,16 +13,16 @@
-     fdblocks = 9223372036854775807
-     Test verb middlebit
-     Allowing fuzz of corrupted data with good CRC
-    -fdblocks = 9223372034707292159
-    +fdblocks = 9223372036854775807
-     Test verb lastbit
-     Allowing fuzz of corrupted data with good CRC
-    ...
-    (Run 'diff -u tests/xfs/058.out /root/repos/xfstests-dev/results//xfs/058.out.bad'  to see the entire diff)
-Ran: xfs/058
-Failures: xfs/058
-Failed 1 of 1 tests
-
-I will debug this further and let you know about the results.
-
-Also, xfs/206 fails because the line 
-"Default configuration sourced from package build definitions" isn't getting 
-filtered out.
-
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index eae66f7999c8..05d4778ce528 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2860,6 +2860,7 @@ xfs_bmap_add_extent_hole_real(
+ 	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
+ 	int			rval=0;	/* return value (logging flags) */
+ 	int			state;	/* state bits, accessed thru macros */
++	struct xfs_bmbt_irec	old;
+ 
+ 	ASSERT(*idx >= 0);
+ 	ASSERT(*idx <= xfs_iext_count(ifp));
+@@ -2929,9 +2930,8 @@ xfs_bmap_add_extent_hole_real(
+ 		 */
+ 		--*idx;
+ 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+-		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
+-			left.br_blockcount + new->br_blockcount +
+-			right.br_blockcount);
++		left.br_blockcount += new->br_blockcount + right.br_blockcount;
++		xfs_iext_update_extent(ifp, *idx, &left);
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 
+ 		xfs_iext_remove(ip, *idx + 1, 1, state);
+@@ -2958,10 +2958,7 @@ xfs_bmap_add_extent_hole_real(
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 			error = xfs_bmbt_update(cur, left.br_startoff,
+ 					left.br_startblock,
+-					left.br_blockcount +
+-						new->br_blockcount +
+-						right.br_blockcount,
+-					left.br_state);
++					left.br_blockcount, left.br_state);
+ 			if (error)
+ 				goto done;
+ 		}
+@@ -2974,26 +2971,25 @@ xfs_bmap_add_extent_hole_real(
+ 		 * Merge the new allocation with the left neighbor.
+ 		 */
+ 		--*idx;
++		old = left;
+ 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+-		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
+-			left.br_blockcount + new->br_blockcount);
++		left.br_blockcount += new->br_blockcount;
++		xfs_iext_update_extent(ifp, *idx, &left);
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 
+ 		if (cur == NULL) {
+ 			rval = xfs_ilog_fext(whichfork);
+ 		} else {
+ 			rval = 0;
+-			error = xfs_bmbt_lookup_eq(cur, left.br_startoff,
+-					left.br_startblock, left.br_blockcount,
++			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
++					old.br_startblock, old.br_blockcount,
+ 					&i);
+ 			if (error)
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 			error = xfs_bmbt_update(cur, left.br_startoff,
+ 					left.br_startblock,
+-					left.br_blockcount +
+-						new->br_blockcount,
+-					left.br_state);
++					left.br_blockcount, left.br_state);
+ 			if (error)
+ 				goto done;
+ 		}
+@@ -3005,29 +3001,27 @@ xfs_bmap_add_extent_hole_real(
+ 		 * on the right.
+ 		 * Merge the new allocation with the right neighbor.
+ 		 */
++		old = right;
+ 		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+-		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
+-			new->br_startoff, new->br_startblock,
+-			new->br_blockcount + right.br_blockcount,
+-			right.br_state);
++		right.br_startoff = new->br_startoff;
++		right.br_startblock = new->br_startblock;
++		right.br_blockcount += new->br_blockcount;
++		xfs_iext_update_extent(ifp, *idx, &right);
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 
+ 		if (cur == NULL) {
+ 			rval = xfs_ilog_fext(whichfork);
+ 		} else {
+ 			rval = 0;
+-			error = xfs_bmbt_lookup_eq(cur,
+-					right.br_startoff,
+-					right.br_startblock,
+-					right.br_blockcount, &i);
++			error = xfs_bmbt_lookup_eq(cur, old.br_startoff,
++					old.br_startblock, old.br_blockcount,
++					&i);
+ 			if (error)
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+-			error = xfs_bmbt_update(cur, new->br_startoff,
+-					new->br_startblock,
+-					new->br_blockcount +
+-						right.br_blockcount,
+-					right.br_state);
++			error = xfs_bmbt_update(cur, right.br_startoff,
++					right.br_startblock,
++					right.br_blockcount, right.br_state);
+ 			if (error)
+ 				goto done;
+ 		}
 -- 
-chandan
+2.11.0
 
