@@ -1,31 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55540 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750975AbdIEKqn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Sep 2017 06:46:43 -0400
-Date: Tue, 5 Sep 2017 18:46:41 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2 07/14] fsx: add optional logid prefix to log messages
-Message-ID: <20170905104641.GA8034@eguan.usersys.redhat.com>
-References: <1504104706-11965-1-git-send-email-amir73il@gmail.com>
- <1504104706-11965-8-git-send-email-amir73il@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1504104706-11965-8-git-send-email-amir73il@gmail.com>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34546 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752878AbdICPH0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 11:07:26 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [RFC][PATCH] fstests: regression test for xfs leftover CoW extent error
+Date: Sun,  3 Sep 2017 18:07:51 +0300
+Message-Id: <1504451271-29202-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Josef Bacik <jbacik@fb.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Eryu Guan <eguan@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Wed, Aug 30, 2017 at 05:51:39PM +0300, Amir Goldstein wrote:
-> When writing the intermixed output of several fsx processes
-> to a single log file, it is usefull to prefix logs with a log id.
-> Use fsx -j <logid> to define the log messages prefix.
+The following error are reported after the test:
 
-Would it be better to allow any string as prefix, not limit to id
-number?
+*** xfs_check output ***
+leftover CoW extent (0/2147483736) len 1
+block 0/2147483736 out of range
+blocks 0/2147483736..2147483736 claimed by block 0/6
+leftover CoW extent (0/2147483738) len 2
+blocks 0/2147483738..2147483739 out of range
+blocks 0/2147483738..2147483739 claimed by block 0/6
+leftover CoW extent (0/2147483741) len 3
+blocks 0/2147483741..2147483743 out of range
+blocks 0/2147483741..2147483743 claimed by block 0/6
+block 0/88 type unknown not expected
+block 0/90 type unknown not expected
+block 0/91 type unknown not expected
+block 0/93 type unknown not expected
+block 0/94 type unknown not expected
+block 0/95 type unknown not expected
 
-Thanks,
-Eryu
+*** xfs_repair -n output ***
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+leftover CoW extent (0/88) len 1
+leftover CoW extent (0/90) len 2
+leftover CoW extent (0/93) len 3
+        - found root inode chunk
+
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+
+Christoph,
+
+I started playing with crash tests for xfs reflink
+and created a variant of the crash test which clones
+files and runs fsx on the clones.
+
+I quickly stumbled on an fsck error that is reproduced
+without any crash at all.
+
+The sequence of operations (zero,collapse,insert,truncate)
+was recorded by fsx, I only bisected the minimal sequence
+to reproduce the error.
+
+When you understand what went on, it would be better to
+provide less arbitrary values of offset;length and add
+commentary to this test before merging it.
+
+Amir.
+
+
+ tests/generic/503     | 69 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/503.out |  2 ++
+ tests/generic/group   |  1 +
+ 3 files changed, 72 insertions(+)
+ create mode 100755 tests/generic/503
+ create mode 100644 tests/generic/503.out
+
+diff --git a/tests/generic/503 b/tests/generic/503
+new file mode 100755
+index 0000000..ebda756
+--- /dev/null
++++ b/tests/generic/503
+@@ -0,0 +1,69 @@
++#! /bin/bash
++# FS QA Test No. 503
++#
++# Regression test for xfs leftover CoW extents error
++#
++#-----------------------------------------------------------------------
++# Copyright (C) 2017 CTERA Networks. All Rights Reserved.
++# Author: Amir Goldstein <amir73il@gmail.com>
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch_reflink
++_require_cp_reflink
++
++rm -f $seqres.full
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++$XFS_IO_PROG -f -c "pwrite 0 0x40000" \
++	$SCRATCH_MNT/foo > /dev/null 2>&1
++
++cp --reflink $SCRATCH_MNT/foo $SCRATCH_MNT/bar
++
++$XFS_IO_PROG -f -c "fzero -k 0x169f 0x387c" \
++		-c "fcollapse 0x29000 0xd000" \
++		-c "finsert 0 0x8000" \
++		-c "truncate 0x8000" \
++	$SCRATCH_MNT/foo > /dev/null 2>&1
++
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/generic/503.out b/tests/generic/503.out
+new file mode 100644
+index 0000000..6c1400a
+--- /dev/null
++++ b/tests/generic/503.out
+@@ -0,0 +1,2 @@
++QA output created by 503
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index 4324775..7a9cd78 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -460,3 +460,4 @@
+ 500 auto log replay
+ 501 auto quick metadata
+ 502 auto log replay clone
++503 auto quick clone
+-- 
+2.7.4
+
