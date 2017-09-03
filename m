@@ -1,164 +1,281 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:63239 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752643AbdIAWzm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2017 18:55:42 -0400
-Date: Sat, 2 Sep 2017 08:55:39 +1000
-From: Dave Chinner <david@fromorbit.com>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:38626 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752821AbdICAoW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Sep 2017 20:44:22 -0400
+From: Richard Wareing <rwareing@fb.com>
 Subject: Re: [PATCH 1/3] xfs: Add rtdefault mount option
-Message-ID: <20170901225539.GC10621@dastard>
+Date: Sun, 3 Sep 2017 00:43:57 +0000
+Message-ID: <E62CB1B9-AB21-4880-A9CF-88297C4051B8@fb.com>
 References: <25856B28-A65C-4C5B-890D-159F8822393D@fb.com>
  <20170901043151.GZ10621@dastard>
  <C6F6823D-65D7-4B73-9AC7-CBA4125F2429@fb.com>
  <20170901193237.GF29225@bfoster.bfoster>
  <BF1D2F17-045E-4BF7-839D-FF7D0643329E@fb.com>
+ <20170901225539.GC10621@dastard>
+ <67F62657-D116-4B85-9452-5BAB52EC7041@fb.com>
+ <20170902115545.GA36492@bfoster.bfoster>
+In-Reply-To: <20170902115545.GA36492@bfoster.bfoster>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <0E905E14BEE44C48AC205C407D7DA7B2@namprd15.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <BF1D2F17-045E-4BF7-839D-FF7D0643329E@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Richard Wareing <rwareing@fb.com>
-Cc: Brian Foster <bfoster@redhat.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-[satuday morning here, so just a quick comment]
-
-On Fri, Sep 01, 2017 at 08:36:53PM +0000, Richard Wareing wrote:
-> > On Sep 1, 2017, at 12:32 PM, Brian Foster <bfoster@redhat.com> wrote:
-> > 
-> > On Fri, Sep 01, 2017 at 06:39:09PM +0000, Richard Wareing wrote:
-> >> Thanks for the quick feedback Dave!  My comments are in-line below.
-> >> 
-> >> 
-> >>> On Aug 31, 2017, at 9:31 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >>> 
-> >>> Hi Richard,
-> >>> 
-> >>> On Thu, Aug 31, 2017 at 06:00:21PM -0700, Richard Wareing wrote:
-> > ...
-> >>>> add
-> >>>> support for the more sophisticated AG based block allocator to RT
-> >>>> (bitmapped version works well for us, but multi-threaded use-cases
-> >>>> might not do as well).
-> >>> 
-> >>> That's a great big can of worms - not sure we want to open it. The
-> >>> simplicity of the rt allocator is one of it's major benefits to
-> >>> workloads that require deterministic allocation behaviour...
-> >> 
-> >> Agreed, I took a quick look at what it might take and came to a similar conclusion, but I can dream :).
-> >> 
-> > 
-> > Just a side point based on the discussion so far... I kind of get the
-> > impression that the primary reason for using realtime support here is
-> > for the simple fact that it's a separate physical device. That provides
-> > a basic mechanism to split files across fast and slow physical storage
-> > based on some up-front heuristic. The fact that the realtime feature
-> > uses a separate allocation algorithm is actually irrelevant (and
-> > possibly a problem in the future).
-> > 
-> > Is that an accurate assessment? If so, it makes me wonder whether it's
-> > worth thinking about if there are ways to get the same behavior using
-> > traditional functionality. This ignores Dave's question about how much
-> > of the performance actually comes from simply separating out the log,
-> > but for example suppose we had a JBOD block device made up of a
-> > combination of spinning and solid state disks via device-mapper with the
-> > requirement that a boundary from fast -> slow and vice versa was always
-> > at something like a 100GB alignment. Then if you formatted that device
-> > with XFS using 100GB AGs (or whatever to make them line up), and could
-> > somehow tag each AG as "fast" or "slow" based on the known underlying
-> > device mapping,
-
-Not a new idea. :)
-
-I've got old xfs_spaceman patches sitting around somewhere for
-ioctls to add such information to individual AGs. I think I called
-them "concat groups" to allow multiple AGs to sit inside a single
-concatenation, and they added a policy layer over the top of AGs
-to control things like metadata placement....
-
-> > could you potentially get the same results by using the
-> > same heuristics to direct files to particular sets of AGs rather than
-> > between two physical devices?
-
-That's pretty much what I was working on back at SGI in 2007. i.e.
-providing a method for configuring AGs with difference
-characteristics and a userspace policy interface to configure and
-make use of it....
-
-http://oss.sgi.com/archives/xfs/2009-02/msg00250.html
-
-
-> > Obviously there are some differences like
-> > metadata being spread across the fast/slow devices (though I think we
-> > had such a thing as metadata only AGs), etc.
-
-We have "metadata preferred" AGs, and that is what the inode32
-policy uses to place all the inodes and directory/atribute metadata
-in the 32bit inode address space. It doesn't get used for data
-unless the rest of the filesystem is ENOSPC.
-
-> > I'm just handwaving here to
-> > try and better understand the goal.
-
-We've been down these paths many times - the problem has always been
-that the people who want complex, configurable allocation policies
-for their workload have never provided the resources needed to
-implement past "here's a mount option hack that works for us".....
-
-> Sorry I forgot to clarify the origins of the performance wins
-> here.   This is obviously very workload dependent (e.g.
-> write/flush/inode updatey workloads benefit the most) but for our
-> use case about ~65% of the IOP savings (~1/3 journal + slightly
-> less than 1/3 sync of metadata from journal, slightly less as some
-> journal entries get canceled), the remainder 1/3 of the win comes
-> from reading small files from the SSD vs. HDDs (about 25-30% of
-> our file population is <=256k; depending on the cluster).  To be
-> clear, we don't split files, we store all data blocks of the files
-> either entirely on the SSD (e.g. small files <=256k) and the rest
-> on the real-time HDD device.  The basic principal here being that,
-> larger files MIGHT have small IOPs to them (in our use-case this
-> happens to be rare, but not impossible), but small files always
-> do, and when 25-30% of your population is small...that's a big
-> chunk of your IOPs.
-
-So here's a test for you. Make a device with a SSD as the first 1TB,
-and you HDD as the rest (use dm to do this). Then use the inode32
-allocator (mount option) to split metadata from data. The filesysetm
-will keep inodes/directories on the SSD and file data on the HDD
-automatically.
-
-Better yet: have data allocations smaller than stripe units target
-metadata prefferred AGs (i.e. the SSD region) and allocations larger
-than stripe unit target the data-preferred AGs. Set the stripe unit
-to match your SSD/HDD threshold....
-
-[snip]
-
-> The AG based could work, though it's going to be a very hard sell
-> to use dm mapper, this isn't code we have ever used in our storage
-> stack.  At our scale, there are important operational reasons we
-> need to keep the storage stack simple (less bugs to hit), so
-> keeping the solution contained within XFS is a necessary
-> requirement for us.
-
-Modifying the filesysetm on-disk format is far more complex than
-adding dm to your stack. Filesystem modifications are difficult and
-time consuming because if we screw up, users lose all their data.
-
-If you can solve the problem with DM and a little bit of additional
-in-memory kernel code to categorise and select which AG to use for
-what (i.e. policy stuff that can be held in userspace), then that is
-the pretty much the only answer that makes sense from a filesystem
-developer's point of view....
-
-Start by thinking about exposing AG behaviour controls through sysfs
-objects and configuring them at mount time through udev event
-notifications.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+DQoNCk9uIDkvMi8xNywgNDo1NSBBTSwgIkJyaWFuIEZvc3RlciIgPGJmb3N0ZXJAcmVkaGF0LmNv
+bT4gd3JvdGU6DQoNCiAgICBPbiBGcmksIFNlcCAwMSwgMjAxNyBhdCAxMTozNzozN1BNICswMDAw
+LCBSaWNoYXJkIFdhcmVpbmcgd3JvdGU6DQogICAgPiANCiAgICA+ID4gT24gU2VwIDEsIDIwMTcs
+IGF0IDM6NTUgUE0sIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4gd3JvdGU6DQog
+ICAgPiA+IA0KICAgID4gPiBbc2F0dWRheSBtb3JuaW5nIGhlcmUsIHNvIGp1c3QgYSBxdWljayBj
+b21tZW50XQ0KICAgID4gPiANCiAgICA+ID4gT24gRnJpLCBTZXAgMDEsIDIwMTcgYXQgMDg6MzY6
+NTNQTSArMDAwMCwgUmljaGFyZCBXYXJlaW5nIHdyb3RlOg0KICAgID4gPj4+IE9uIFNlcCAxLCAy
+MDE3LCBhdCAxMjozMiBQTSwgQnJpYW4gRm9zdGVyIDxiZm9zdGVyQHJlZGhhdC5jb20+IHdyb3Rl
+Og0KICAgID4gPj4+IA0KICAgID4gPj4+IE9uIEZyaSwgU2VwIDAxLCAyMDE3IGF0IDA2OjM5OjA5
+UE0gKzAwMDAsIFJpY2hhcmQgV2FyZWluZyB3cm90ZToNCiAgICA+ID4+Pj4gVGhhbmtzIGZvciB0
+aGUgcXVpY2sgZmVlZGJhY2sgRGF2ZSEgIE15IGNvbW1lbnRzIGFyZSBpbi1saW5lIGJlbG93Lg0K
+ICAgID4gPj4+PiANCiAgICA+ID4+Pj4gDQogICAgPiA+Pj4+PiBPbiBBdWcgMzEsIDIwMTcsIGF0
+IDk6MzEgUE0sIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4gd3JvdGU6DQogICAg
+PiA+Pj4+PiANCiAgICA+ID4+Pj4+IEhpIFJpY2hhcmQsDQogICAgPiA+Pj4+PiANCiAgICA+ID4+
+Pj4+IE9uIFRodSwgQXVnIDMxLCAyMDE3IGF0IDA2OjAwOjIxUE0gLTA3MDAsIFJpY2hhcmQgV2Fy
+ZWluZyB3cm90ZToNCiAgICA+ID4+PiAuLi4NCiAgICA+ID4+Pj4+PiBhZGQNCiAgICA+ID4+Pj4+
+PiBzdXBwb3J0IGZvciB0aGUgbW9yZSBzb3BoaXN0aWNhdGVkIEFHIGJhc2VkIGJsb2NrIGFsbG9j
+YXRvciB0byBSVA0KICAgID4gPj4+Pj4+IChiaXRtYXBwZWQgdmVyc2lvbiB3b3JrcyB3ZWxsIGZv
+ciB1cywgYnV0IG11bHRpLXRocmVhZGVkIHVzZS1jYXNlcw0KICAgID4gPj4+Pj4+IG1pZ2h0IG5v
+dCBkbyBhcyB3ZWxsKS4NCiAgICA+ID4+Pj4+IA0KICAgID4gPj4+Pj4gVGhhdCdzIGEgZ3JlYXQg
+YmlnIGNhbiBvZiB3b3JtcyAtIG5vdCBzdXJlIHdlIHdhbnQgdG8gb3BlbiBpdC4gVGhlDQogICAg
+PiA+Pj4+PiBzaW1wbGljaXR5IG9mIHRoZSBydCBhbGxvY2F0b3IgaXMgb25lIG9mIGl0J3MgbWFq
+b3IgYmVuZWZpdHMgdG8NCiAgICA+ID4+Pj4+IHdvcmtsb2FkcyB0aGF0IHJlcXVpcmUgZGV0ZXJt
+aW5pc3RpYyBhbGxvY2F0aW9uIGJlaGF2aW91ci4uLg0KICAgID4gPj4+PiANCiAgICA+ID4+Pj4g
+QWdyZWVkLCBJIHRvb2sgYSBxdWljayBsb29rIGF0IHdoYXQgaXQgbWlnaHQgdGFrZSBhbmQgY2Ft
+ZSB0byBhIHNpbWlsYXIgY29uY2x1c2lvbiwgYnV0IEkgY2FuIGRyZWFtIDopLg0KICAgID4gPj4+
+PiANCiAgICA+ID4+PiANCiAgICA+ID4+PiBKdXN0IGEgc2lkZSBwb2ludCBiYXNlZCBvbiB0aGUg
+ZGlzY3Vzc2lvbiBzbyBmYXIuLi4gSSBraW5kIG9mIGdldCB0aGUNCiAgICA+ID4+PiBpbXByZXNz
+aW9uIHRoYXQgdGhlIHByaW1hcnkgcmVhc29uIGZvciB1c2luZyByZWFsdGltZSBzdXBwb3J0IGhl
+cmUgaXMNCiAgICA+ID4+PiBmb3IgdGhlIHNpbXBsZSBmYWN0IHRoYXQgaXQncyBhIHNlcGFyYXRl
+IHBoeXNpY2FsIGRldmljZS4gVGhhdCBwcm92aWRlcw0KICAgID4gPj4+IGEgYmFzaWMgbWVjaGFu
+aXNtIHRvIHNwbGl0IGZpbGVzIGFjcm9zcyBmYXN0IGFuZCBzbG93IHBoeXNpY2FsIHN0b3JhZ2UN
+CiAgICA+ID4+PiBiYXNlZCBvbiBzb21lIHVwLWZyb250IGhldXJpc3RpYy4gVGhlIGZhY3QgdGhh
+dCB0aGUgcmVhbHRpbWUgZmVhdHVyZQ0KICAgID4gPj4+IHVzZXMgYSBzZXBhcmF0ZSBhbGxvY2F0
+aW9uIGFsZ29yaXRobSBpcyBhY3R1YWxseSBpcnJlbGV2YW50IChhbmQNCiAgICA+ID4+PiBwb3Nz
+aWJseSBhIHByb2JsZW0gaW4gdGhlIGZ1dHVyZSkuDQogICAgPiA+Pj4gDQogICAgPiA+Pj4gSXMg
+dGhhdCBhbiBhY2N1cmF0ZSBhc3Nlc3NtZW50PyBJZiBzbywgaXQgbWFrZXMgbWUgd29uZGVyIHdo
+ZXRoZXIgaXQncw0KICAgID4gPj4+IHdvcnRoIHRoaW5raW5nIGFib3V0IGlmIHRoZXJlIGFyZSB3
+YXlzIHRvIGdldCB0aGUgc2FtZSBiZWhhdmlvciB1c2luZw0KICAgID4gPj4+IHRyYWRpdGlvbmFs
+IGZ1bmN0aW9uYWxpdHkuIFRoaXMgaWdub3JlcyBEYXZlJ3MgcXVlc3Rpb24gYWJvdXQgaG93IG11
+Y2gNCiAgICA+ID4+PiBvZiB0aGUgcGVyZm9ybWFuY2UgYWN0dWFsbHkgY29tZXMgZnJvbSBzaW1w
+bHkgc2VwYXJhdGluZyBvdXQgdGhlIGxvZywNCiAgICA+ID4+PiBidXQgZm9yIGV4YW1wbGUgc3Vw
+cG9zZSB3ZSBoYWQgYSBKQk9EIGJsb2NrIGRldmljZSBtYWRlIHVwIG9mIGENCiAgICA+ID4+PiBj
+b21iaW5hdGlvbiBvZiBzcGlubmluZyBhbmQgc29saWQgc3RhdGUgZGlza3MgdmlhIGRldmljZS1t
+YXBwZXIgd2l0aCB0aGUNCiAgICA+ID4+PiByZXF1aXJlbWVudCB0aGF0IGEgYm91bmRhcnkgZnJv
+bSBmYXN0IC0+IHNsb3cgYW5kIHZpY2UgdmVyc2Egd2FzIGFsd2F5cw0KICAgID4gPj4+IGF0IHNv
+bWV0aGluZyBsaWtlIGEgMTAwR0IgYWxpZ25tZW50LiBUaGVuIGlmIHlvdSBmb3JtYXR0ZWQgdGhh
+dCBkZXZpY2UNCiAgICA+ID4+PiB3aXRoIFhGUyB1c2luZyAxMDBHQiBBR3MgKG9yIHdoYXRldmVy
+IHRvIG1ha2UgdGhlbSBsaW5lIHVwKSwgYW5kIGNvdWxkDQogICAgPiA+Pj4gc29tZWhvdyB0YWcg
+ZWFjaCBBRyBhcyAiZmFzdCIgb3IgInNsb3ciIGJhc2VkIG9uIHRoZSBrbm93biB1bmRlcmx5aW5n
+DQogICAgPiA+Pj4gZGV2aWNlIG1hcHBpbmcsDQogICAgPiA+IA0KICAgID4gPiBOb3QgYSBuZXcg
+aWRlYS4gOikNCiAgICA+ID4gDQogICAgDQogICAgWWVhaCAod2hhdCBldmVyIGlzPyA6UCkuLiBJ
+IGtub3cgd2UndmUgZGlzY3Vzc2VkIGhhdmluZyBtb3JlIGNvbnRyb2xzIG9yDQogICAgYXR0cmli
+dXRlcyBvZiBBR3MgZm9yIHZhcmlvdXMgdGhpbmdzIGluIHRoZSBwYXN0LiBJJ20gbm90IHRyeWlu
+ZyB0bw0KICAgIHByb3Bvc2UgYSBwYXJ0aWN1bGFyIGRlc2lnbiBoZXJlLCBidXQgcmF0aGVyIHRy
+eWluZyB0byBzdGVwIGJhY2sgZnJvbQ0KICAgIHRoZSBmb2N1cyBvbiBSVCBhbmQgdW5kZXJzdGFu
+ZCB3aGF0IHRoZSBnZW5lcmFsIHJlcXVpcmVtZW50cyBhcmUNCiAgICAobXVsdGktZGV2aWNlLCB0
+aWVyaW5nLCBldGMuKS4gSSd2ZSBub3Qgc2VlbiB0aGUgcGx1Z2dhYmxlIGFsbG9jYXRpb24NCiAg
+ICBzdHVmZiBiZWZvcmUsIGJ1dCBpdCBzb3VuZHMgbGlrZSB0aGF0IGNvdWxkIHN1aXQgdGhpcyB1
+c2UgY2FzZSBwZXJmZWN0bHkuDQogICAgDQogICAgPiA+IEkndmUgZ290IG9sZCB4ZnNfc3BhY2Vt
+YW4gcGF0Y2hlcyBzaXR0aW5nIGFyb3VuZCBzb21ld2hlcmUgZm9yDQogICAgPiA+IGlvY3RscyB0
+byBhZGQgc3VjaCBpbmZvcm1hdGlvbiB0byBpbmRpdmlkdWFsIEFHcy4gSSB0aGluayBJIGNhbGxl
+ZA0KICAgID4gPiB0aGVtICJjb25jYXQgZ3JvdXBzIiB0byBhbGxvdyBtdWx0aXBsZSBBR3MgdG8g
+c2l0IGluc2lkZSBhIHNpbmdsZQ0KICAgID4gPiBjb25jYXRlbmF0aW9uLCBhbmQgdGhleSBhZGRl
+ZCBhIHBvbGljeSBsYXllciBvdmVyIHRoZSB0b3Agb2YgQUdzDQogICAgPiA+IHRvIGNvbnRyb2wg
+dGhpbmdzIGxpa2UgbWV0YWRhdGEgcGxhY2VtZW50Li4uLg0KICAgID4gPiANCiAgICANCiAgICBZ
+ZWFoLCB0aGUgYWxpZ25tZW50IHRoaW5nIGlzIGp1c3QgdGhlIGZpcnN0IHRoaW5nIHRoYXQgcG9w
+cGVkIGluIG15IGhlYWQNCiAgICBmb3IgYSB0aG91Z2h0IGV4cGVyaW1lbnQuIFByb2dyYW1tYXRp
+YyBrbm9icyBvbiBBR3MgdmlhIGlvY3RsKCkgb3Igc3lzZnMNCiAgICBpcyBjZXJ0YWlubHkgYSBt
+b3JlIGxlZ2l0aW1hdGUgc29sdXRpb24uDQogICAgDQogICAgPiA+Pj4gY291bGQgeW91IHBvdGVu
+dGlhbGx5IGdldCB0aGUgc2FtZSByZXN1bHRzIGJ5IHVzaW5nIHRoZQ0KICAgID4gPj4+IHNhbWUg
+aGV1cmlzdGljcyB0byBkaXJlY3QgZmlsZXMgdG8gcGFydGljdWxhciBzZXRzIG9mIEFHcyByYXRo
+ZXIgdGhhbg0KICAgID4gPj4+IGJldHdlZW4gdHdvIHBoeXNpY2FsIGRldmljZXM/DQogICAgPiA+
+IA0KICAgID4gPiBUaGF0J3MgcHJldHR5IG11Y2ggd2hhdCBJIHdhcyB3b3JraW5nIG9uIGJhY2sg
+YXQgU0dJIGluIDIwMDcuIGkuZS4NCiAgICA+ID4gcHJvdmlkaW5nIGEgbWV0aG9kIGZvciBjb25m
+aWd1cmluZyBBR3Mgd2l0aCBkaWZmZXJlbmNlDQogICAgPiA+IGNoYXJhY3RlcmlzdGljcyBhbmQg
+YSB1c2Vyc3BhY2UgcG9saWN5IGludGVyZmFjZSB0byBjb25maWd1cmUgYW5kDQogICAgPiA+IG1h
+a2UgdXNlIG9mIGl0Li4uLg0KICAgID4gPiANCiAgICA+ID4gaHR0cHM6Ly91cmxkZWZlbnNlLnBy
+b29mcG9pbnQuY29tL3YyL3VybD91PWh0dHAtM0FfX29zcy5zZ2kuY29tX2FyY2hpdmVzX3hmc18y
+MDA5LTJEMDJfbXNnMDAyNTAuaHRtbCZkPUR3SUJBZyZjPTVWRDBSVHRObFRoM3ljZDQxYjNNVXcm
+cj1xSjhMcDd5U2ZwUWtscTNRWnI0NEl3Jm09MmFHSXBHSlZuS090UEtEUVFSZk01MlJ2NU5UQXdv
+SzE1V0hjUUlvZElHNCZzPWJBT1ZXT3JEdVdtOTJqNHRUQ3hablpPUXhoVVAxRVZsai1KU0hwQzF5
+b0EmZT0gDQogICAgPiA+IA0KICAgID4gPiANCiAgICA+ID4+PiBPYnZpb3VzbHkgdGhlcmUgYXJl
+IHNvbWUgZGlmZmVyZW5jZXMgbGlrZQ0KICAgID4gPj4+IG1ldGFkYXRhIGJlaW5nIHNwcmVhZCBh
+Y3Jvc3MgdGhlIGZhc3Qvc2xvdyBkZXZpY2VzICh0aG91Z2ggSSB0aGluayB3ZQ0KICAgID4gPj4+
+IGhhZCBzdWNoIGEgdGhpbmcgYXMgbWV0YWRhdGEgb25seSBBR3MpLCBldGMuDQogICAgPiA+IA0K
+ICAgID4gPiBXZSBoYXZlICJtZXRhZGF0YSBwcmVmZXJyZWQiIEFHcywgYW5kIHRoYXQgaXMgd2hh
+dCB0aGUgaW5vZGUzMg0KICAgID4gPiBwb2xpY3kgdXNlcyB0byBwbGFjZSBhbGwgdGhlIGlub2Rl
+cyBhbmQgZGlyZWN0b3J5L2F0cmlidXRlIG1ldGFkYXRhDQogICAgPiA+IGluIHRoZSAzMmJpdCBp
+bm9kZSBhZGRyZXNzIHNwYWNlLiBJdCBkb2Vzbid0IGdldCB1c2VkIGZvciBkYXRhDQogICAgPiA+
+IHVubGVzcyB0aGUgcmVzdCBvZiB0aGUgZmlsZXN5c3RlbSBpcyBFTk9TUEMuDQogICAgPiA+IA0K
+ICAgIA0KICAgIEFoLCByaWdodC4gVGhhbmtzLg0KICAgIA0KICAgID4gPj4+IEknbSBqdXN0IGhh
+bmR3YXZpbmcgaGVyZSB0bw0KICAgID4gPj4+IHRyeSBhbmQgYmV0dGVyIHVuZGVyc3RhbmQgdGhl
+IGdvYWwuDQogICAgPiA+IA0KICAgID4gPiBXZSd2ZSBiZWVuIGRvd24gdGhlc2UgcGF0aHMgbWFu
+eSB0aW1lcyAtIHRoZSBwcm9ibGVtIGhhcyBhbHdheXMgYmVlbg0KICAgID4gPiB0aGF0IHRoZSBw
+ZW9wbGUgd2hvIHdhbnQgY29tcGxleCwgY29uZmlndXJhYmxlIGFsbG9jYXRpb24gcG9saWNpZXMN
+CiAgICA+ID4gZm9yIHRoZWlyIHdvcmtsb2FkIGhhdmUgbmV2ZXIgcHJvdmlkZWQgdGhlIHJlc291
+cmNlcyBuZWVkZWQgdG8NCiAgICA+ID4gaW1wbGVtZW50IHBhc3QgImhlcmUncyBhIG1vdW50IG9w
+dGlvbiBoYWNrIHRoYXQgd29ya3MgZm9yIHVzIi4uLi4uDQogICAgPiA+IA0KICAgIA0KICAgIFll
+cC4gVG8gYmUgZmFpciwgSSB0aGluayB3aGF0IFJpY2hhcmQgaXMgZG9pbmcgaXMgYW4gaW50ZXJl
+c3RpbmcgYW5kDQogICAgdXNlZnVsIGV4cGVyaW1lbnQuIElmIG9uZSB3YW50cyB0byBkZXRlcm1p
+bmUgd2hldGhlciB0aGVyZSdzIHZhbHVlIGluDQogICAgZGlyZWN0aW5nIGZpbGVzIGFjcm9zcyBz
+ZXBhcmF0ZSBkZXZpY2VzIHZpYSBmaWxlIHNpemUgaW4gYSBjb25zdHJhaW5lZA0KICAgIHdvcmts
+b2FkLCBpdCBtYWtlcyBzZW5zZSB0byBoYWNrIHVwIHRoaW5ncyBsaWtlIFJUIGFuZCBmYWxsb2Nh
+dGUoKQ0KICAgIGJlY2F1c2UgdGhleSBwcm92aWRlIHRoZSBiYXNpYyBtZWNoYW5pc21zIHlvdSdk
+IHdhbnQgdG8gdGFrZSBhZHZhbnRhZ2UNCiAgICBvZiB3aXRob3V0IGhhdmluZyB0byByZWltcGxl
+bWVudCB0aGF0IHN0dWZmIGp1c3QgdG8gcHJvdmUgYSBjb25jZXB0Lg0KICAgIA0KICAgIFRoZSBj
+aGFsbGVuZ2Ugb2YgY291cnNlIGlzIHRoZW4gcmVhbGl6aW5nIHdoZW4geW91J3JlIGRvbmUgdGhh
+dCB0aGlzIGlzDQogICAgbm90IGEgZ2VuZXJpYyBzb2x1dGlvbi4gSXQgYWJ1c2VzIGZlYXR1cmVz
+L2ludGVyZmFjZXMgaW4gd2F5cyB0aGV5IHdlcmUNCiAgICBub3QgZGVzaWduZWQgZm9yLCBkaXNy
+dXB0cyB0cmFkaXRpb25hbCBmdW5jdGlvbmFsaXR5LCBtYWtlcyBhc3N1bXB0aW9ucw0KICAgIHRo
+YXQgbWF5IG5vdCBiZSB2YWxpZCBmb3IgYWxsIHVzZXJzIChpLmUuLCBmaWxlIHNpemUgYmFzZWQg
+ZmlsdGVyaW5nLA0KICAgIG51bWJlciBvZiBkZXZpY2VzLCBkZXZpY2UgdG8gZGV2aWNlIHJhdGlv
+cyksIGV0Yy4gU28gd2UgaGF2ZSB0byBzdGVwDQogICAgYmFjayBhbmQgdHJ5IHRvIHBpZWNlIHRv
+Z2V0aGVyIGEgbW9yZSBnZW5lcmljLCB1cHN0cmVhbS13b3J0aHkgYXBwcm9hY2guDQogICAgVG8g
+eW91ciBwb2ludCwgaXQgd291bGQgYmUgbmljZSBpZiB0aG9zZSBleHBsb3JpbmcgdGhlc2Uga2lu
+ZCBvZiBoYWNrcw0KICAgIHdvdWxkIGNvbnRyaWJ1dGUgbW9yZSB0byB0aGF0IHVwc3RyZWFtIHBy
+b2Nlc3MgcmF0aGVyIHRoYW4gc2V0dGxlIG9uDQogICAgcnVubmluZyB0aGUgImN1c3RvbSBmaXQi
+IGhhY2sgdW50aWwgdXBzdHJlYW0gY29tZXMgYXJvdW5kIHdpdGggc29tZXRoaW5nDQogICAgYmV0
+dGVyIG9uIGl0cyBvd24uIDspIChUaG91Z2ggc2VuZGluZyBpdCBvdXQgaXMgc3RpbGwgYmV0dGVy
+IHRoYW4gbm90LA0KICAgIHNvIHRoYW5rcyBmb3IgdGhhdC4gOikNCiAgICANCiAgICA+ID4+IFNv
+cnJ5IEkgZm9yZ290IHRvIGNsYXJpZnkgdGhlIG9yaWdpbnMgb2YgdGhlIHBlcmZvcm1hbmNlIHdp
+bnMNCiAgICA+ID4+IGhlcmUuICAgVGhpcyBpcyBvYnZpb3VzbHkgdmVyeSB3b3JrbG9hZCBkZXBl
+bmRlbnQgKGUuZy4NCiAgICA+ID4+IHdyaXRlL2ZsdXNoL2lub2RlIHVwZGF0ZXkgd29ya2xvYWRz
+IGJlbmVmaXQgdGhlIG1vc3QpIGJ1dCBmb3Igb3VyDQogICAgPiA+PiB1c2UgY2FzZSBhYm91dCB+
+NjUlIG9mIHRoZSBJT1Agc2F2aW5ncyAofjEvMyBqb3VybmFsICsgc2xpZ2h0bHkNCiAgICA+ID4+
+IGxlc3MgdGhhbiAxLzMgc3luYyBvZiBtZXRhZGF0YSBmcm9tIGpvdXJuYWwsIHNsaWdodGx5IGxl
+c3MgYXMgc29tZQ0KICAgID4gPj4gam91cm5hbCBlbnRyaWVzIGdldCBjYW5jZWxlZCksIHRoZSBy
+ZW1haW5kZXIgMS8zIG9mIHRoZSB3aW4gY29tZXMNCiAgICA+ID4+IGZyb20gcmVhZGluZyBzbWFs
+bCBmaWxlcyBmcm9tIHRoZSBTU0QgdnMuIEhERHMgKGFib3V0IDI1LTMwJSBvZg0KICAgID4gPj4g
+b3VyIGZpbGUgcG9wdWxhdGlvbiBpcyA8PTI1Nms7IGRlcGVuZGluZyBvbiB0aGUgY2x1c3Rlciku
+ICBUbyBiZQ0KICAgID4gPj4gY2xlYXIsIHdlIGRvbid0IHNwbGl0IGZpbGVzLCB3ZSBzdG9yZSBh
+bGwgZGF0YSBibG9ja3Mgb2YgdGhlIGZpbGVzDQogICAgPiA+PiBlaXRoZXIgZW50aXJlbHkgb24g
+dGhlIFNTRCAoZS5nLiBzbWFsbCBmaWxlcyA8PTI1NmspIGFuZCB0aGUgcmVzdA0KICAgID4gPj4g
+b24gdGhlIHJlYWwtdGltZSBIREQgZGV2aWNlLiAgVGhlIGJhc2ljIHByaW5jaXBhbCBoZXJlIGJl
+aW5nIHRoYXQsDQogICAgPiA+PiBsYXJnZXIgZmlsZXMgTUlHSFQgaGF2ZSBzbWFsbCBJT1BzIHRv
+IHRoZW0gKGluIG91ciB1c2UtY2FzZSB0aGlzDQogICAgPiA+PiBoYXBwZW5zIHRvIGJlIHJhcmUs
+IGJ1dCBub3QgaW1wb3NzaWJsZSksIGJ1dCBzbWFsbCBmaWxlcyBhbHdheXMNCiAgICA+ID4+IGRv
+LCBhbmQgd2hlbiAyNS0zMCUgb2YgeW91ciBwb3B1bGF0aW9uIGlzIHNtYWxsLi4udGhhdCdzIGEg
+YmlnDQogICAgPiA+PiBjaHVuayBvZiB5b3VyIElPUHMuDQogICAgPiA+IA0KICAgID4gPiBTbyBo
+ZXJlJ3MgYSB0ZXN0IGZvciB5b3UuIE1ha2UgYSBkZXZpY2Ugd2l0aCBhIFNTRCBhcyB0aGUgZmly
+c3QgMVRCLA0KICAgID4gPiBhbmQgeW91IEhERCBhcyB0aGUgcmVzdCAodXNlIGRtIHRvIGRvIHRo
+aXMpLiBUaGVuIHVzZSB0aGUgaW5vZGUzMg0KICAgID4gPiBhbGxvY2F0b3IgKG1vdW50IG9wdGlv
+bikgdG8gc3BsaXQgbWV0YWRhdGEgZnJvbSBkYXRhLiBUaGUgZmlsZXN5c2V0bQ0KICAgID4gPiB3
+aWxsIGtlZXAgaW5vZGVzL2RpcmVjdG9yaWVzIG9uIHRoZSBTU0QgYW5kIGZpbGUgZGF0YSBvbiB0
+aGUgSEREDQogICAgPiA+IGF1dG9tYXRpY2FsbHkuDQogICAgPiA+IA0KICAgID4gPiBCZXR0ZXIg
+eWV0OiBoYXZlIGRhdGEgYWxsb2NhdGlvbnMgc21hbGxlciB0aGFuIHN0cmlwZSB1bml0cyB0YXJn
+ZXQNCiAgICA+ID4gbWV0YWRhdGEgcHJlZmZlcnJlZCBBR3MgKGkuZS4gdGhlIFNTRCByZWdpb24p
+IGFuZCBhbGxvY2F0aW9ucyBsYXJnZXINCiAgICA+ID4gdGhhbiBzdHJpcGUgdW5pdCB0YXJnZXQg
+dGhlIGRhdGEtcHJlZmVycmVkIEFHcy4gU2V0IHRoZSBzdHJpcGUgdW5pdA0KICAgID4gPiB0byBt
+YXRjaCB5b3VyIFNTRC9IREQgdGhyZXNob2xkLi4uLg0KICAgID4gPiANCiAgICA+ID4gW3NuaXBd
+DQogICAgPiA+IA0KICAgID4gPj4gVGhlIEFHIGJhc2VkIGNvdWxkIHdvcmssIHRob3VnaCBpdCdz
+IGdvaW5nIHRvIGJlIGEgdmVyeSBoYXJkIHNlbGwNCiAgICA+ID4+IHRvIHVzZSBkbSBtYXBwZXIs
+IHRoaXMgaXNuJ3QgY29kZSB3ZSBoYXZlIGV2ZXIgdXNlZCBpbiBvdXIgc3RvcmFnZQ0KICAgID4g
+Pj4gc3RhY2suICBBdCBvdXIgc2NhbGUsIHRoZXJlIGFyZSBpbXBvcnRhbnQgb3BlcmF0aW9uYWwg
+cmVhc29ucyB3ZQ0KICAgID4gPj4gbmVlZCB0byBrZWVwIHRoZSBzdG9yYWdlIHN0YWNrIHNpbXBs
+ZSAobGVzcyBidWdzIHRvIGhpdCksIHNvDQogICAgPiA+PiBrZWVwaW5nIHRoZSBzb2x1dGlvbiBj
+b250YWluZWQgd2l0aGluIFhGUyBpcyBhIG5lY2Vzc2FyeQ0KICAgID4gPj4gcmVxdWlyZW1lbnQg
+Zm9yIHVzLg0KICAgID4gPiANCiAgICANCiAgICBJIGFtIG9idmlvdXNseSBub3QgYXQgYWxsIGZh
+bWlsaWFyIHdpdGggeW91ciBzdG9yYWdlIHN0YWNrIGFuZCB0aGUNCiAgICByZXF1aXJlbWVudHMg
+b2YgeW91ciBlbnZpcm9ubWVudCBhbmQgd2hhdG5vYXQuIEl0J3MgY2VydGFpbmx5IHBvc3NpYmxl
+DQogICAgdGhhdCB0aGVyZSdzIHNvbWUgdGVjaG5pY2FsIHJlYXNvbiB5b3UgY2FuJ3QgdXNlIGRt
+LCBidXQgSSBmaW5kIGl0IHZlcnkNCiAgICBoYXJkIHRvIGJlbGlldmUgdGhhdCByZWFzb24gaXMg
+InRoZXJlIG1pZ2h0IGJlIGJ1Z3MiIGlmIHlvdSdyZSBpbnN0ZWFkDQogICAgd2lsbGluZyB0byBo
+YWNrIHVwIGFuZCBkZXBsb3kgYSBiYXJlbHkgdGVzdGVkIGZlYXR1cmUgc3VjaCBhcyBYRlMgUlQu
+DQogICAgVXNpbmcgZG0gZm9yIGJhc2ljIGxpbmVhciBtYXBwaW5nIChpLmUuLCBwYXJ0aXRpb25p
+bmcpIHNlZW1zIHByZXR0eSBtdWNoDQogICAgdWJpcXVpdG91cyBpbiB0aGUgTGludXggd29ybGQg
+dGhlc2UgZGF5cy4NCiAgICANCkJ1Z3MgYXJlbuKAmXQgdGhlIG9ubHkgcmVhc29uIG9mIGNvdXJz
+ZSwgYnV0IHdl4oCZdmUgYmVlbiB3b3JraW5nIG9uIHRoaXMgZm9yIGEgbnVtYmVyIG9mIG1vbnRo
+cywgd2UgYWxzbyBoYXZlIHRob3VzYW5kcyBvZiBwcm9kdWN0aW9uIGhvdXJzICgqID4xMCBGU2Vz
+IHBlciBzeXN0ZW0gPT0gPjFNIGhvdXJzIG9uIHRoZSByZWFsLXRpbWUgY29kZSkgb24gdGhpcyBz
+ZXR1cCwgSeKAmW0gYWxzbyBkb2luZyBtb3JlIHRlc3Rpbmcgd2l0aCBkbS1mbGFreSArIGRtLWxv
+ZyB3LyB4ZnMtdGVzdHMgYWxvbmcgd2l0aCB0aGlzLiAgSW4gYW55IGV2ZW50LCBsYXJnZSBkZXZp
+YXRpb25zIChvciBzdGFydGluZyBvdmVyIGZyb20gc2NyYXRjaCkgb24gb3VyIHNldHVwIGlzbuKA
+mXQgc29tZXRoaW5nIHdl4oCZZCBsaWtlIHRvIGRvLiAgQXQgdGhpcyBwb2ludCBJIHRydXN0IHRo
+ZSBSVCBhbGxvY2F0b3IgYSBnb29kIGFtb3VudCwgYW5kIGl0cyBzaGVlciBzaW1wbGljaXR5IGlz
+IHNvbWV0aGluZyBvZiBhbiBhc3NldCBmb3IgdXMuDQoNClRvIGJlIGhvbmVzdCwgaWYgYW4gQUcg
+YWxsb2NhdG9yIHNvbHV0aW9uIHdlcmUgYXZhaWxhYmxlLCBJ4oCZZCBoYXZlIHRvIHRoaW5rIGNh
+cmVmdWxseSBpZiBpdCB3b3VsZCBtYWtlIHNlbnNlIGZvciB1cyAodGhvdWdoIEnigJlkIGJlIHdp
+bGxpbmcgdG8gaGVscCB0ZXN0L2NyZWF0ZSBpdCkuICBPbmNlIHlvdSBoYXZlIHRoZSBzbWFsbCBm
+aWxlcyBmaWx0ZXJlZCBvdXQgdG8gYW4gU1NELCB5b3UgY2FuIGRyYW1hdGljYWxseSBpbmNyZWFz
+ZSB0aGUgZXh0ZW50IHNpemVzIG9uIHRoZSBSVCBGUyAoeW91IGRvbuKAmXQgd2FzdGUgc3BhY2Ug
+Zm9yIHNtYWxsIGFsbG9jYXRpb25zKSwgeWllbGRpbmcgdmVyeSBkZXBlbmRhYmxlL2NvbnRpZ3Vv
+dXMgcmVhZHMvd3JpdGUgSU9zICh3ZSB3YW50IG11bHRpLU1CIGF2ZSBJT3MpLCBhbmQgdGhlIGRl
+cGVuZGFibGUgbGF0ZW5jaWVzIG1lc2ggd2VsbCB3aXRoIHRoZSBuZWVkcyBvZiBhIGRpc3RyaWJ1
+dGVkIEZTLiAgSeKAmWQgbmVlZCB0byBtYWtlIHN1cmUgdGhlc2UgY2hhcmFjdGVyaXN0aWNzIHdl
+cmUgYWNoaWV2YWJsZSB3aXRoIHRoZSBtb3JlIEFHIGFsbG9jYXRvciAoeWVzIHRoZXJlIGlzIOKA
+nGFsbG9jc2l6ZeKAnSBvcHRpb24gYnV0IGl04oCZcyBtb3JlIG9mIGEgc3VnZ2VzdGlvbiB0aGFu
+IHRoZSBoYXJkIGd1YXJhbnRlZSBvZiB0aGUgUlQgZXh0ZW50cyksIGl04oCZcyBjb21wbGV4aXR5
+IGFsc28gbWFrZXMgZGV2ZWxvcGVycyBwcm9uZSB0byB0cmVhdGluZyBpdCBhcyBhIOKAnGJsYWNr
+IGJveOKAnSBhbmQgZW5kaW5nIHVwIHdpdGggbGVzcyB0aGFuIHN0ZWxsYXIgSU8gZWZmaWNpZW5j
+aWVzLg0KDQogICAgPiA+IE1vZGlmeWluZyB0aGUgZmlsZXN5c2V0bSBvbi1kaXNrIGZvcm1hdCBp
+cyBmYXIgbW9yZSBjb21wbGV4IHRoYW4NCiAgICA+ID4gYWRkaW5nIGRtIHRvIHlvdXIgc3RhY2su
+IEZpbGVzeXN0ZW0gbW9kaWZpY2F0aW9ucyBhcmUgZGlmZmljdWx0IGFuZA0KICAgID4gPiB0aW1l
+IGNvbnN1bWluZyBiZWNhdXNlIGlmIHdlIHNjcmV3IHVwLCB1c2VycyBsb3NlIGFsbCB0aGVpciBk
+YXRhLg0KICAgID4gPiANCiAgICA+ID4gSWYgeW91IGNhbiBzb2x2ZSB0aGUgcHJvYmxlbSB3aXRo
+IERNIGFuZCBhIGxpdHRsZSBiaXQgb2YgYWRkaXRpb25hbA0KICAgID4gPiBpbi1tZW1vcnkga2Vy
+bmVsIGNvZGUgdG8gY2F0ZWdvcmlzZSBhbmQgc2VsZWN0IHdoaWNoIEFHIHRvIHVzZSBmb3INCiAg
+ICA+ID4gd2hhdCAoaS5lLiBwb2xpY3kgc3R1ZmYgdGhhdCBjYW4gYmUgaGVsZCBpbiB1c2Vyc3Bh
+Y2UpLCB0aGVuIHRoYXQgaXMNCiAgICA+ID4gdGhlIHByZXR0eSBtdWNoIHRoZSBvbmx5IGFuc3dl
+ciB0aGF0IG1ha2VzIHNlbnNlIGZyb20gYSBmaWxlc3lzdGVtDQogICAgPiA+IGRldmVsb3Blcidz
+IHBvaW50IG9mIHZpZXcuLi4uDQogICAgPiA+IA0KICAgIA0KICAgIFllcCwgYWdyZWVkLg0KICAg
+IA0KICAgID4gPiBTdGFydCBieSB0aGlua2luZyBhYm91dCBleHBvc2luZyBBRyBiZWhhdmlvdXIg
+Y29udHJvbHMgdGhyb3VnaCBzeXNmcw0KICAgID4gPiBvYmplY3RzIGFuZCBjb25maWd1cmluZyB0
+aGVtIGF0IG1vdW50IHRpbWUgdGhyb3VnaCB1ZGV2IGV2ZW50DQogICAgPiA+IG5vdGlmaWNhdGlv
+bnMuDQogICAgPiA+IA0KICAgID4gDQogICAgPiBWZXJ5IGNvb2wgaWRlYS4gIEEgZGV0YWlsIHdo
+aWNoIEkgbGVmdCBvdXQgd2hpY2ggbWlnaHQgY29tcGxpY2F0ZSB0aGlzLCBpcyB3ZSBvbmx5IHVz
+ZSAxN0dCIG9mIFNTRCBmb3IgZWFjaCB+OC0xMFRCIEhERCAod2Ugc2hhcmUganVzdCBhIHNtYWxs
+IDI1NkcgU1NEIGZvciBhYm91dCAxNSBkcml2ZXMpLCBhbmQgZXZlbiB0aGVuIHdlIGRvbid0IGV2
+ZW4gdXNlIDUwJSBvZiB0aGUgU1NEIGZvciB0aGVzZSBwYXJ0aXRpb25zLiAgV2UgYWxzbyB3YW50
+IHRvIGJlIHZlcnkgc2VsZWN0aXZlIGFib3V0IHdoYXQgZGF0YSB3ZSBsZXQgdG91Y2ggdGhlIFNT
+RCwgd2UgZG9uJ3Qgd2FudCBmb2xrcyB3aG8gd3JpdGUgbGFyZ2UgZmlsZXMgYnkgZG9pbmcgc21h
+bGwgSU8gdG8gdG91Y2ggdGhlIFNTRCwgb25seSBJTyB0byBzbWFsbCBmaWxlcyAod2hpY2ggYXJl
+IGltbXV0YWJsZSBpbiBvdXIgdXNlLWNhc2UpLg0KICAgID4gDQogICAgDQogICAgSSB0aGluayBE
+YXZlJ3MgbW9yZSBhZnRlciB0aGUgZGF0YSBwb2ludCBvZiBob3cgbXVjaCBiYXNpYyBtZXRhZGF0
+YS9kYXRhDQogICAgc2VwYXJhdGlvbiBoZWxwcyB5b3VyIHdvcmtsb2FkLiBUaGlzIGlzIGFuIGV4
+cGVyaW1lbnQgeW91IGNhbiBydW4gdG8gZ2V0DQogICAgdGhhdCBiZWhhdmlvciB3aXRob3V0IGhh
+dmluZyB0byB3cml0ZSBhbnkgY29kZSAobWF5YmUgYSBsaXR0bGUgZm9yIHRoZQ0KICAgIHN0cmlw
+ZSB1bml0IHRoaW5nIDspLiBJZiB0aGVyZSdzIGEgcGh5c2ljYWwgZGV2aWNlIHNpemUgbGltaXRh
+dGlvbiwNCiAgICBwZXJoYXBzIHlvdSBjYW4gZG8gc29tZXRoaW5nIGNyYXp5IGxpa2UgY3JlYXRl
+IGEgc3BhcnNlIDFUQiBmaWxlIG9uIHRoZQ0KICAgIFNTRCwgbWFwIHRoYXQgdG8gYSBibG9jayBk
+ZXZpY2Ugb3ZlciBsb29wIG9yIHNvbWV0aGluZyBhbmQgcHJvY2VlZCBmcm9tDQogICAgdGhlcmUu
+DQoNCldlIGhhdmUgYSB2ZXJ5IGdvb2QgaWRlYSBvbiB0aGlzIGFscmVhZHksIHdlIGFsc28gaGF2
+ZSBkYXRhIGZvciBhIDcgZGF5IHBlcmlvZCB3aGVuIHdlIHNpbXBseSBkaWQgTUQgb2ZmbG9hZCB0
+byBTU0QgYWxvbmUuICBQcmlvciB0byBldmVuIGRvaW5nIHRoaXMgc2V0dXAsIHdlIHVzZWQgYmxr
+dHJhY2UgYW5kIGV4YW1pbmVkIGFsbCB0aGUgbWV0YWRhdGEgSU8gcmVxdWVzdHMgKGUuZy4gcGVy
+IHRoZSBSV0JTIGZpZWxkKS4gIEl04oCZcyBhYm91dCA2MC02NSUgb2YgdGhlIElPIHNhdmluZ3Ms
+IHRoZSByZW1haW5pbmcgfjM1JSBpcyBmcm9tIHRoZSBzbWFsbCBmaWxlIElPLiAgRm9yIHVzLCBp
+dOKAmXMgd29ydGggc2F2aW5nLg0KDQpXcnQgdG8gcGVyZm9ybWFuY2UsIHdlIG9ic2VydmUgYXZl
+cmFnZSA1MCUrIGRyb3BzIGluIGxhdGVuY3kgZm9yIG5lYXJseSBhbGwgSU8gcmVxdWVzdHMsIHRo
+ZSBzbWFsbGVyIElPIHJlcXVlc3RzIHNob3VsZCBiZSBxdWl0ZSBhIGJpdCBtb3JlIGJ1dCB3ZSBu
+ZWVkIHRvIGNoYW5nZSBvdXIgdGhyZWFkaW5nIG1vZGVsIHRvIGhhbmRsZSBhIGJpdCB0byB0YWtl
+IGFkdmFudGFnZSBvZiB0aGUgZmFjdCB0aGUgc21hbGwgZmlsZXMgYXJlIG9uIHRoZSBTU0RzIChh
+bmQgdGhlcmVmb3JlIGRvbuKAmXQgbmVlZCB0byB3YWl0IGJlaGluZCBvdGhlciByZXF1ZXN0cyBj
+b21pbmcgZnJvbSB0aGUgSEREcykuDQogICAgDQogICAgVGhvdWdoIEkgZ3Vlc3MgdGhhdCBzaW5j
+ZSB0aGlzIGlzIGEgcGVyZm9ybWFuY2UgZXhwZXJpbWVudCwgYSBiZXR0ZXINCiAgICBpZGVhIG1h
+eSBiZSB0byBmaW5kIGEgYmlnZ2VyIFNTRCBvciBjb25jYXQgNCBvZiB0aGUgMjU2R0IgZGV2aWNl
+cyBpbnRvDQogICAgMVRCIGFuZCB1c2UgdGhhdCwgYXNzdW1pbmcgeW91J3JlIGFibGUgdG8gcHJv
+Y3VyZSBlbm91Z2ggZGV2aWNlcyB0byBydW4NCiAgICBhbiBpbmZvcm1hdGl2ZSB0ZXN0Lg0KICAg
+IA0KICAgIEJyaWFuDQogICAgDQogICAgPiBPbiBhbiB1bnJlbGF0ZWQgbm90ZSwgYWZ0ZXIgdGFs
+a2luZyB0byBPbWFyIFNhbmRvdmFsICYgQ2hyaXMgTWFzb24gb3ZlciBoZXJlLCBJJ20gcmV3b3Jr
+aW5nIHJ0ZGVmYXVsdCB0byBjaGFuZ2UgaXQgdG8gInJ0ZGlzYWJsZSIgd2hpY2ggZ2l2ZXMgdGhl
+IHNhbWUgb3BlcmF0aW9uYWwgb3V0Y29tZSB2cy4gcnRkZWZhdWx0IHcvbyBzZXR0aW5nIGluaGVy
+aXRhbmNlIGJpdHMgKHNlZSBwcmlvciBlLW1haWwpLiAgVGhpcyB3YXkgZm9sa3MgaGF2ZSBhIGtp
+bGwgc3dpdGNoIG9mIHNvcnRzLCB5ZXQgb3RoZXJ3aXNlIG1haW50YWlucyB0aGUgZXhpc3Rpbmcg
+InBlcnNpc3RlbnQiIGJlaGF2aW9yLg0KICAgID4gDQogICAgPiANCiAgICA+ID4gQ2hlZXJzLA0K
+ICAgID4gPiANCiAgICA+ID4gRGF2ZS4NCiAgICA+ID4gLS0gDQogICAgPiA+IERhdmUgQ2hpbm5l
+cg0KICAgID4gPiBkYXZpZEBmcm9tb3JiaXQuY29tDQogICAgPiANCiAgICA+IC0tDQogICAgPiBU
+byB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUg
+bGludXgteGZzIiBpbg0KICAgID4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2
+Z2VyLmtlcm5lbC5vcmcNCiAgICA+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2Vy
+Lmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KICAgIA0KDQo=
