@@ -1,66 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47827 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:40800 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751068AbdICIi6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 04:38:58 -0400
-Date: Sun, 3 Sep 2017 01:38:57 -0700
+        with ESMTP id S1753994AbdIDTdw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2017 15:33:52 -0400
+Date: Mon, 4 Sep 2017 12:33:52 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] mkfs: pass a custom cowextsize into the created
- filesystem
-Message-ID: <20170903083857.GB32385@infradead.org>
-References: <20170901164035.GF3775@magnolia>
+Subject: Re: [PATCH 2/2] xfs: don't unconditionally clear the reflink flag on
+ zero-block files
+Message-ID: <20170904193352.GB12275@infradead.org>
+References: <20170904154944.GG4671@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170901164035.GF3775@magnolia>
+In-Reply-To: <20170904154944.GG4671@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+Cc: xfs <linux-xfs@vger.kernel.org>, Amir Goldstein <amir73il@gmail.com>, Christoph Hellwig <hch@infradead.org>
 
-On Fri, Sep 01, 2017 at 09:40:35AM -0700, Darrick J. Wong wrote:
-> Create a -d option to mkfs.xfs that enables administrators to set
-> the CoW extent size hint on the created files.
+On Mon, Sep 04, 2017 at 08:49:44AM -0700, Darrick J. Wong wrote:
+> If we have speculative cow preallocations hanging around in the cow
+> fork, don't let a truncate operation clear the reflink flag because if
+> we do then there's a chance we'll forget to free those extents when we
+> destroy the incore inode.
 > 
+> Reported-by: Amir Goldstein <amir73il@gmail.com>
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  libxfs/util.c       |   26 ++++++++++++++++++++++++--
->  man/man8/mkfs.xfs.8 |    7 +++++++
->  mkfs/xfs_mkfs.c     |   20 ++++++++++++++++++++
->  3 files changed, 51 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_inode.c |    8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
 > 
-> diff --git a/libxfs/util.c b/libxfs/util.c
-> index 0e2f29e..4f82d7f 100644
-> --- a/libxfs/util.c
-> +++ b/libxfs/util.c
-> @@ -175,6 +175,26 @@ libxfs_trans_ichgtime(
->  	}
->  }
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 5599dda..4ec5b7f 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1624,10 +1624,12 @@ xfs_itruncate_extents(
+>  		goto out;
 >  
-> +static inline uint16_t
-> +xflags_to_diflags(
-> +	__u32		xflags)
-> +{
-> +	/* bottom 15 xflag bits correspond to diflag bits */
-> +	return xflags & 0x7FFF;
+>  	/*
+> -	 * Clear the reflink flag if we truncated everything.
+> +	 * Clear the reflink flag if there are no data fork blocks and
+> +	 * there are no extents staged in the cow fork.
+>  	 */
+> -	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip)) {
+> -		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+> +	if (xfs_is_reflink_inode(ip) && ip->i_cnextents == 0) {
+> +		if (ip->i_d.di_nblocks == 0)
+> +			ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+>  		xfs_inode_clear_cowblocks_tag(ip);
 
-Do we really want to rely on that fact?
+This part looks ok:
 
-> +}
-> +
-> +static inline uint64_t
-> +xflags_to_diflags2(
-> +	__u32		xflags)
-> +{
-> +	uint64_t	ret = 0;
-> +
-> +	if (xflags & FS_XFLAG_COWEXTSIZE)
-> +		ret |= XFS_DIFLAG2_COWEXTSIZE;
-> +
-> +	return ret;
-> +}
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-It seems like we should just lift the kernels xfs_flags2diflags and
-xfs_flags2diflags2 to libxfs and use them here?
+But while looking at that I decided I'd want to take a look at
+other places where we potentially clear XFS_DIFLAG2_REFLINK.
 
+In xfs_ioctl_setattr_xflags it seems like it's not currently safe
+for setting the RT flag vs having COW extents?  I also think we'd
+need the iolock for every change to the rt flag, so this probably
+needs a bigger rework..
+
+swapext also doesn't seem to flush out existing cow extents.
