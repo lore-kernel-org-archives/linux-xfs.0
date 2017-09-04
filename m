@@ -1,117 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59396 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751030AbdICHnH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 03:43:07 -0400
-Date: Sun, 3 Sep 2017 00:43:06 -0700
-From: Christoph Hellwig <hch@infradead.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:17535 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753180AbdIDCUl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 22:20:41 -0400
+Date: Sun, 3 Sep 2017 19:20:02 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
-Message-ID: <20170903074306.GA8351@infradead.org>
+Message-ID: <20170904022002.GD4671@magnolia>
 References: <CABXGCsOL+_OgC0dpO1+Zeg=iu7ryZRZT4S7k-io8EGB0ZRgZGw@mail.gmail.com>
+ <20170903074306.GA8351@infradead.org>
+ <20170904014353.GG10621@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CABXGCsOL+_OgC0dpO1+Zeg=iu7ryZRZT4S7k-io8EGB0ZRgZGw@mail.gmail.com>
+In-Reply-To: <20170904014353.GG10621@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.cz>
 
-On Sun, Sep 03, 2017 at 09:22:17AM +0500, Михаил Гаврилов wrote:
-> [281502.961248] ------------[ cut here ]------------
-> [281502.961257] kernel BUG at fs/xfs/xfs_aops.c:853!
+[add jan kara to cc]
 
-This is:
-
-	bh = head = page_buffers(page);
-
-Which looks odd and like some sort of VM/writeback change might
-have triggered that we get a page without buffers, despite always
-creating buffers in iomap_begin/end and page_mkwrite.
-
-Ccing linux-mm if anything odd happen in that area recently.
-
-Can you tell anything about the workload you are running?
-
-> [281502.961263] invalid opcode: 0000 [#1] SMP
-> [281502.961299] Modules linked in: xt_CHECKSUM ipt_MASQUERADE
-> nf_nat_masquerade_ipv4 tun nls_utf8 isofs rfcomm fuse
-> nf_conntrack_netbios_ns nf_conntrack_broadcast xt_CT ip6t_rpfilter
-> ip6t_REJECT nf_reject_ipv6 xt_conntrack ip_set nfnetlink ebtable_nat
-> ebtable_broute bridge stp llc ip6table_nat nf_conntrack_ipv6
-> nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_raw
-> ip6table_security iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4
-> nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_raw
-> iptable_security ebtable_filter ebtables ip6table_filter ip6_tables
-> bnep sunrpc vfat fat xfs libcrc32c snd_usb_audio snd_usbmidi_lib
-> snd_rawmidi intel_rapl x86_pkg_temp_thermal intel_powerclamp coretemp
-> kvm_intel kvm irqbypass crct10dif_pclmul crc32_pclmul btrfs
-> ghash_clmulni_intel intel_cstate iTCO_wdt iTCO_vendor_support
-> [281502.961684]  ppdev intel_uncore xor intel_rapl_perf i2c_i801
-> huawei_cdc_ncm option raid6_pq cdc_wdm joydev cdc_ncm btusb usb_wwan
-> snd_hda_codec_hdmi snd_hda_codec_realtek btrtl btbcm
-> snd_hda_codec_ca0132 btintel snd_hda_codec_generic bluetooth
-> gspca_zc3xx gspca_main v4l2_common snd_hda_intel videodev cdc_ether
-> snd_hda_codec usbnet media ecdh_generic snd_hda_core rfkill snd_hwdep
-> snd_seq snd_seq_device snd_pcm snd_timer mei_me snd mei lpc_ich
-> soundcore shpchp parport_pc parport tpm_infineon tpm_tis tpm_tis_core
-> tpm binfmt_misc hid_logitech_hidpp hid_logitech_dj uas usb_storage
-> i915 crc32c_intel i2c_algo_bit drm_kms_helper drm r8169 mii video bfq
-> [281502.962014] CPU: 7 PID: 81 Comm: kswapd0 Not tainted
-> 4.13.0-0.rc6.git4.1.fc28.x86_64 #1
-> [281502.962052] Hardware name: Gigabyte Technology Co., Ltd.
-> Z87M-D3H/Z87M-D3H, BIOS F11 08/12/2014
-> [281502.962094] task: ffff9f5b31acb300 task.stack: ffffabcd43e48000
-> [281502.962161] RIP: 0010:xfs_do_writepage+0x735/0x830 [xfs]
-> [281502.962188] RSP: 0018:ffffabcd43e4b988 EFLAGS: 00010246
-> [281502.962216] RAX: 0000000000001000 RBX: ffffabcd43e4ba98 RCX:
-> 000000000000000c
-> [281502.962251] RDX: 0017ffffc0030009 RSI: ffffe8881f3cf900 RDI:
-> 0000000000000246
-> [281502.962287] RBP: ffffabcd43e4ba30 R08: ffffe8881f3cf900 R09:
-> 0000000000000002
-> [281502.962321] R10: ffffabcd43e4b9e0 R11: 0000000000000000 R12:
-> ffff9f57fa7b6110
-> [281502.962356] R13: ffffabcd43e4bc40 R14: ffffabcd43e4ba40 R15:
-> ffffe8881f3cf920
-> [281502.962392] FS:  0000000000000000(0000) GS:ffff9f5b5da00000(0000)
-> knlGS:0000000000000000
-> [281502.962430] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [281502.962458] CR2: 00007ff86cb39018 CR3: 0000000815e11000 CR4:
-> 00000000001426e0
-> [281502.962494] Call Trace:
-> [281502.962515]  ? sched_clock+0x9/0x10
-> [281502.962539]  ? clear_page_dirty_for_io+0x140/0x2b0
-> [281502.962590]  xfs_vm_writepage+0x3b/0x70 [xfs]
-> [281502.962618]  pageout.isra.54+0x103/0x420
-> [281502.962646]  shrink_page_list+0x982/0xdf0
-> [281502.962674]  shrink_inactive_list+0x225/0x630
-> [281502.962704]  shrink_node_memcg+0x36c/0x770
-> [281502.962734]  shrink_node+0xf7/0x2f0
-> [281502.962753]  ? shrink_node+0xf7/0x2f0
-> [281502.962779]  kswapd+0x325/0x990
-> [281502.962804]  kthread+0x133/0x150
-> [281502.962824]  ? mem_cgroup_shrink_node+0x330/0x330
-> [281502.962849]  ? kthread_create_on_node+0x70/0x70
-> [281502.962875]  ret_from_fork+0x2a/0x40
-> [281502.962898] Code: ce 48 c7 00 00 00 00 00 48 c7 44 30 f8 00 00 00
-> 00 48 83 e7 f8 48 29 f8 01 c1 89 c8 c1 e8 03 89 c1 31 c0 f3 48 ab e9
-> 0f fe ff ff <0f> 0b e8 54 44 3a d9 85 c0 0f 85 44 fe ff ff 48 c7 c2 48
-> a2 df
-> [281502.963085] RIP: xfs_do_writepage+0x735/0x830 [xfs] RSP: ffffabcd43e4b988
-> [281502.972614] ---[ end trace 1ba3042d56323a9c ]---
+On Mon, Sep 04, 2017 at 11:43:53AM +1000, Dave Chinner wrote:
+> On Sun, Sep 03, 2017 at 12:43:06AM -0700, Christoph Hellwig wrote:
+> > On Sun, Sep 03, 2017 at 09:22:17AM +0500, Михаил Гаврилов wrote:
+> > > [281502.961248] ------------[ cut here ]------------
+> > > [281502.961257] kernel BUG at fs/xfs/xfs_aops.c:853!
+> > 
+> > This is:
+> > 
+> > 	bh = head = page_buffers(page);
+> > 
+> > Which looks odd and like some sort of VM/writeback change might
+> > have triggered that we get a page without buffers, despite always
+> > creating buffers in iomap_begin/end and page_mkwrite.
+> 
+> Pretty sure this can still happen when buffer_heads_over_limit comes
+> true. In that case, shrink_active_list() will attempt to strip
+> the bufferheads off the page even if it's a dirty page. i.e. this
+> code:
+> 
+>                 if (unlikely(buffer_heads_over_limit)) {
+>                         if (page_has_private(page) && trylock_page(page)) {
+>                                 if (page_has_private(page))
+>                                         try_to_release_page(page, 0);
+>                                 unlock_page(page);
+>                         }
+>                 }
 > 
 > 
-> Anybody can look what is culprit here?
+> There was some discussion about this a while back, the consensus was
+> that it is a mm bug, but nobody wanted to add a PageDirty check
+> to try_to_release_page() and so nothing ended up being done about
+> it in the mm/ subsystem. Instead, filesystems needed to avoid it
+> if it was a problem for them. Indeed, we fixed it in the filesystem
+> in 4.8:
+> 
+> 99579ccec4e2 xfs: skip dirty pages in ->releasepage()
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 3ba0809e0be8..6135787500fc 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1040,6 +1040,20 @@ xfs_vm_releasepage(
+>  
+>         trace_xfs_releasepage(page->mapping->host, page, 0, 0);
+>  
+> +       /*
+> +        * mm accommodates an old ext3 case where clean pages might not have had
+> +        * the dirty bit cleared. Thus, it can send actual dirty pages to
+> +        * ->releasepage() via shrink_active_list(). Conversely,
+> +        * block_invalidatepage() can send pages that are still marked dirty
+> +        * but otherwise have invalidated buffers.
+> +        *
+> +        * We've historically freed buffers on the latter. Instead, quietly
+> +        * filter out all dirty pages to avoid spurious buffer state warnings.
+> +        * This can likely be removed once shrink_active_list() is fixed.
+> +        */
+> +       if (PageDirty(page))
+> +               return 0;
+> +
+>         xfs_count_page_state(page, &delalloc, &unwritten);
+> 
+> But looking at the current code, the comment is still mostly there
+> but the PageDirty() check isn't.
+> 
+> <sigh>
+> 
+> In 4.10, this was done:
+> 
+> commit 0a417b8dc1f10b03e8f558b8a831f07ec4c23795
+> Author: Jan Kara <jack@suse.cz>
+> Date:   Wed Jan 11 10:20:04 2017 -0800
+> 
+>     xfs: Timely free truncated dirty pages
+>     
+>     Commit 99579ccec4e2 "xfs: skip dirty pages in ->releasepage()" started
+>     to skip dirty pages in xfs_vm_releasepage() which also has the effect
+>     that if a dirty page is truncated, it does not get freed by
+>     block_invalidatepage() and is lingering in LRU list waiting for reclaim.
+>     So a simple loop like:
+>     
+>     while true; do
+>             dd if=/dev/zero of=file bs=1M count=100
+>             rm file
+>     done
+>     
+>     will keep using more and more memory until we hit low watermarks and
+>     start pagecache reclaim which will eventually reclaim also the truncate
+>     pages. Keeping these truncated (and thus never usable) pages in memory
+>     is just a waste of memory, is unnecessarily stressing page cache
+>     reclaim, and reportedly also leads to anonymous mmap(2) returning ENOMEM
+>     prematurely.
+>     
+>     So instead of just skipping dirty pages in xfs_vm_releasepage(), return
+>     to old behavior of skipping them only if they have delalloc or unwritten
+>     buffers and fix the spurious warnings by warning only if the page is
+>     clean.
+>     
+>     CC: stable@vger.kernel.org
+>     CC: Brian Foster <bfoster@redhat.com>
+>     CC: Vlastimil Babka <vbabka@suse.cz>
+>     Reported-by: Petr T�ma <petr.tuma@d3s.mff.cuni.cz>
+>     Fixes: 99579ccec4e271c3d4d4e7c946058766812afdab
+>     Signed-off-by: Jan Kara <jack@suse.cz>
+>     Reviewed-by: Brian Foster <bfoster@redhat.com>
+>     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
 > 
-> --
-> Best Regards,
-> Mike Gavrilov.
+> So, yeah, we reverted the fix for a crash rather than trying to fix
+> the adverse behaviour caused by invalidation of a dirty page.
+> 
+> e.g. why didn't we simply clear the PageDirty flag in
+> xfs_vm_invalidatepage()?  The page is being invalidated - it's
+> contents will never get written back - so having delalloc or
+> unwritten extents over that page at the time it is invalidated is a
+> bug and the original fix would have triggered warnings about
+> this....
+
+Seems like a reasonable revert/change, but given that ext3 was killed
+off long ago, is it even still the case that the mm can feed releasepage
+a dirty clean page?  If that is the case, then isn't it time to fix the
+mm too?
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
