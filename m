@@ -1,144 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:29413 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753120AbdIDBn5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2017 21:43:57 -0400
-Date: Mon, 4 Sep 2017 11:43:53 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: kernel BUG at fs/xfs/xfs_aops.c:853! in kernel 4.13 rc6
-Message-ID: <20170904014353.GG10621@dastard>
-References: <CABXGCsOL+_OgC0dpO1+Zeg=iu7ryZRZT4S7k-io8EGB0ZRgZGw@mail.gmail.com>
- <20170903074306.GA8351@infradead.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:43382 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753549AbdIDMaX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2017 08:30:23 -0400
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v84CS9I4056313
+        for <linux-xfs@vger.kernel.org>; Mon, 4 Sep 2017 08:30:23 -0400
+Received: from e23smtp01.au.ibm.com (e23smtp01.au.ibm.com [202.81.31.143])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2cs0kum36y-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Sep 2017 08:30:22 -0400
+Received: from localhost
+        by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Mon, 4 Sep 2017 22:30:20 +1000
+Received: from d23av06.au.ibm.com (d23av06.au.ibm.com [9.190.235.151])
+        by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v84CUH1V43122908
+        for <linux-xfs@vger.kernel.org>; Mon, 4 Sep 2017 22:30:18 +1000
+Received: from d23av06.au.ibm.com (localhost [127.0.0.1])
+        by d23av06.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v84CUHKx005027
+        for <linux-xfs@vger.kernel.org>; Mon, 4 Sep 2017 22:30:17 +1000
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: Re: [PATCH 00/42] mkfs: factor the crap out of the code
+Date: Mon, 04 Sep 2017 18:01:02 +0530
+In-Reply-To: <20170829235052.21050-1-david@fromorbit.com>
+References: <20170829235052.21050-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20170903074306.GA8351@infradead.org>
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+Message-Id: <3637079.ALR5oY5V5m@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: =?utf-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Sun, Sep 03, 2017 at 12:43:06AM -0700, Christoph Hellwig wrote:
-> On Sun, Sep 03, 2017 at 09:22:17AM +0500, Михаил Гаврилов wrote:
-> > [281502.961248] ------------[ cut here ]------------
-> > [281502.961257] kernel BUG at fs/xfs/xfs_aops.c:853!
+On Wednesday, August 30, 2017 5:20:10 AM IST Dave Chinner wrote:
+> Everyone who tries to modify mkfs quickly learns that it is a pile
+> of spaghetti, the only difference in opinion is whether it is a
+> steaming, cold or rotten pile. This patchset attempts to untangle
+> the ball of pasta and turn it into a set of clear, obvious
+> operations that lead to a filesystem being formatted correctly.
 > 
-> This is:
+> The patch series is really in three parts, splitting the code up
+> into roughly three modules. The first part introduces a mkfs
+> parameters structure and factors the on-disk formatting code to use
+> only information in that structure. The second part introduces a
+> command line input structure and factors the input parsing to use
+> it. This requires a bunch of temporary code to keep the rest of
+> the code working. The third part is factoring the input validation
+> and geometry calculation code to use the input structure and put
+> the output into the mkfs parameter structure and to remove all the
+> temporary support code.
 > 
-> 	bh = head = page_buffers(page);
+> The result is three modules - input parsing, validation+calculations
+> and formatting - with well defined data flow between them. This also
+> paves the way to supporting config files to set defaults via a
+> separate (new) module. The overall data flow now looks like this:
 > 
-> Which looks odd and like some sort of VM/writeback change might
-> have triggered that we get a page without buffers, despite always
-> creating buffers in iomap_begin/end and page_mkwrite.
+> Build defaults --\
+>                   ---> mkfs_default_params -> CLI -> mkfs_params
+> config file -----/
+> 
+> It is not worth spending a lot of time reviewing the temporary code
+> that is added - it gets removed before the end of the series. No
+> attempt has been made to ensure that mkfs works 100% correctly after
+> each patch is applied - the only guarantee is that it will build
+> cleanly. It /should/ work if a bisect lands in the middle of the
+> series, but trying to exhaustively test each patch is OK would take
+> more effort than it is worth. As such, testing has only been
+> performed on the whole series.
+> 
+> The new output from mkfs to indicate where it has sourced the
+> defaults from causes xfstests to have conniptions. This requires
+> some updates to the mkfs output filters that are already in place
+> but it is a fairly trivial update. Test xfs/191 has a couple of new
+> failures, but that is because the new code now correctly parses
+> things like agsize so that block and sector size based
+> specifications work with default mkfs values. This will require test
+> updates.
+> 
+> Future work will be to split the xfs_mkfs.c file into a file per
+> module (i.e. seperate files for CLI parsing, mkfs formating,
+> validation+calculation and, finally, one for config file support),
+> but otherwise the majority of the factoring work is now complete.
+> 
+> Comments, flames, etc all welcome.
+Hi Dave,
 
-Pretty sure this can still happen when buffer_heads_over_limit comes
-true. In that case, shrink_active_list() will attempt to strip
-the bufferheads off the page even if it's a dirty page. i.e. this
-code:
+I am trying to test the "mkfs refactor" patchset on a ppc64 machine. But "git
+am ~/mkfs-xfs-rewrite/\[PATCH\ 03_42\]\ mkfs_introduce\ a\ structure\ to\
+hold\ CLI\ options.mbox" fails to apply cleanly on top of xfsprogs/master
+(with patches 01 and 02 already applied) branch. Can you please let me know
+the id of the topmost commit on which the "mkfs refactor" patches are applied? 
 
-                if (unlikely(buffer_heads_over_limit)) {
-                        if (page_has_private(page) && trylock_page(page)) {
-                                if (page_has_private(page))
-                                        try_to_release_page(page, 0);
-                                unlock_page(page);
-                        }
-                }
-
-
-There was some discussion about this a while back, the consensus was
-that it is a mm bug, but nobody wanted to add a PageDirty check
-to try_to_release_page() and so nothing ended up being done about
-it in the mm/ subsystem. Instead, filesystems needed to avoid it
-if it was a problem for them. Indeed, we fixed it in the filesystem
-in 4.8:
-
-99579ccec4e2 xfs: skip dirty pages in ->releasepage()
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 3ba0809e0be8..6135787500fc 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1040,6 +1040,20 @@ xfs_vm_releasepage(
- 
-        trace_xfs_releasepage(page->mapping->host, page, 0, 0);
- 
-+       /*
-+        * mm accommodates an old ext3 case where clean pages might not have had
-+        * the dirty bit cleared. Thus, it can send actual dirty pages to
-+        * ->releasepage() via shrink_active_list(). Conversely,
-+        * block_invalidatepage() can send pages that are still marked dirty
-+        * but otherwise have invalidated buffers.
-+        *
-+        * We've historically freed buffers on the latter. Instead, quietly
-+        * filter out all dirty pages to avoid spurious buffer state warnings.
-+        * This can likely be removed once shrink_active_list() is fixed.
-+        */
-+       if (PageDirty(page))
-+               return 0;
-+
-        xfs_count_page_state(page, &delalloc, &unwritten);
-
-But looking at the current code, the comment is still mostly there
-but the PageDirty() check isn't.
-
-<sigh>
-
-In 4.10, this was done:
-
-commit 0a417b8dc1f10b03e8f558b8a831f07ec4c23795
-Author: Jan Kara <jack@suse.cz>
-Date:   Wed Jan 11 10:20:04 2017 -0800
-
-    xfs: Timely free truncated dirty pages
-    
-    Commit 99579ccec4e2 "xfs: skip dirty pages in ->releasepage()" started
-    to skip dirty pages in xfs_vm_releasepage() which also has the effect
-    that if a dirty page is truncated, it does not get freed by
-    block_invalidatepage() and is lingering in LRU list waiting for reclaim.
-    So a simple loop like:
-    
-    while true; do
-            dd if=/dev/zero of=file bs=1M count=100
-            rm file
-    done
-    
-    will keep using more and more memory until we hit low watermarks and
-    start pagecache reclaim which will eventually reclaim also the truncate
-    pages. Keeping these truncated (and thus never usable) pages in memory
-    is just a waste of memory, is unnecessarily stressing page cache
-    reclaim, and reportedly also leads to anonymous mmap(2) returning ENOMEM
-    prematurely.
-    
-    So instead of just skipping dirty pages in xfs_vm_releasepage(), return
-    to old behavior of skipping them only if they have delalloc or unwritten
-    buffers and fix the spurious warnings by warning only if the page is
-    clean.
-    
-    CC: stable@vger.kernel.org
-    CC: Brian Foster <bfoster@redhat.com>
-    CC: Vlastimil Babka <vbabka@suse.cz>
-    Reported-by: Petr T�ma <petr.tuma@d3s.mff.cuni.cz>
-    Fixes: 99579ccec4e271c3d4d4e7c946058766812afdab
-    Signed-off-by: Jan Kara <jack@suse.cz>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-
-So, yeah, we reverted the fix for a crash rather than trying to fix
-the adverse behaviour caused by invalidation of a dirty page.
-
-e.g. why didn't we simply clear the PageDirty flag in
-xfs_vm_invalidatepage()?  The page is being invalidated - it's
-contents will never get written back - so having delalloc or
-unwritten extents over that page at the time it is invalidated is a
-bug and the original fix would have triggered warnings about
-this....
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+chandan
+
